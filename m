@@ -1,48 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:36602 "EHLO
-	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750860AbaHDQw0 (ORCPT
+Received: from cassarossa.samfundet.no ([193.35.52.29]:33498 "EHLO
+	cassarossa.samfundet.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751163AbaH3SpU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Aug 2014 12:52:26 -0400
-Date: Mon, 4 Aug 2014 17:52:02 +0100
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-To: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
-Cc: Arend van Spriel <arend@broadcom.com>, brudley@broadcom.com,
-	Franky Lin <frankyl@broadcom.com>, meuleman@broadcom.com,
-	linville@tuxdriver.com, pieterpg@broadcom.com, dekim@broadcom.com,
-	mcgrof@do-not-panic.com, antonio@open-mesh.com,
-	johannes.berg@intel.com, linux-wireless@vger.kernel.org,
-	brcm80211-dev-list@broadcom.com, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-mmc@vger.kernel.org
-Subject: Re: [PATCH] brcmfmac: prevent watchdog from interfering with
-	scanning and connecting
-Message-ID: <20140804165202.GG30282@n2100.arm.linux.org.uk> (sfid-20140804_185250_284580_47F84158)
-References: <539E8559.3010601@linux.intel.com> <539EA79C.7010206@broadcom.com> <53A30F96.3010206@linux.intel.com> <53A311E4.301@broadcom.com> <53CCC44C.2070507@linux.intel.com> <53D124B3.7030807@linux.intel.com> <53DFB6A1.7040900@linux.intel.com>
+	Sat, 30 Aug 2014 14:45:20 -0400
+Received: from pannekake.samfundet.no ([2001:67c:29f4::50] ident=unknown)
+	by cassarossa.samfundet.no with esmtps (TLS1.2:DHE_RSA_AES_128_CBC_SHA1:128)
+	(Exim 4.80)
+	(envelope-from <sesse@samfundet.no>)
+	id 1XNneG-0001fL-FK
+	for linux-wireless@vger.kernel.org; Sat, 30 Aug 2014 20:45:16 +0200
+Received: from sesse by pannekake.samfundet.no with local (Exim 4.80)
+	(envelope-from <sesse@samfundet.no>)
+	id 1XNneG-0008Ts-7O
+	for linux-wireless@vger.kernel.org; Sat, 30 Aug 2014 20:45:16 +0200
+Date: Sat, 30 Aug 2014 20:45:16 +0200
+From: "Steinar H. Gunderson" <sgunderson@bigfoot.com>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] Support DTPC IE (from Cisco Client eXtensions)
+Message-ID: <20140830184516.GA31497@sesse.net> (sfid-20140830_204523_546629_C95B65C4)
+References: <20140824103728.GA2938@sesse.net>
+ <E1XLZxt-0002h9-Um@pannekake.samfundet.no>
+ <1409211818.2505.12.camel@jlt4.sipsolutions.net>
+ <20140828083738.GA19530@sesse.net>
+ <20140829081902.GB21763@sesse.net>
+ <20140830002418.GA20725@sesse.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <53DFB6A1.7040900@linux.intel.com>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20140830002418.GA20725@sesse.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 05, 2014 at 12:36:49AM +0800, Fu, Zhonghui wrote:
-> Hi, Arend
-> 
-> I investigated this issue, and its root cause is still that sdio
-> controller can't receive interrupts from WiFi chip on sdio bus when
-> sdio controller is in runtime suspend status. I am running 3.16-rc5
-> linux kernel on ASUS T100TA tablet, and using sdhci-acpi driver.
+On Sat, Aug 30, 2014 at 02:24:18AM +0200, Steinar H. Gunderson wrote:
+> ...and of course, in the refactoring, I removed the part that actually sets
+> sdata->ap_power_level, so my new patch series is borked, too. I'll fix,
+> do some more testing, and then send a new patch series.
 
-That's the root cause.  I fixed this with the Freescale i.MX SD driver
-which is now able to report pending SDIO interrupts while runtime PM
-suspended.
+The fix was trivial (just add back the line). I'll be traveling a bit the
+next two weeks, so I guess I'll be seeing a few different installations and
+see how this pans out. But in my home network, it now looks to be working
+very well.
 
-Other host drivers probably need fixing too, or having runtime PM
-disabled on them - if you can't receive SDIO interrupts while runtime
-PM suspended, then entering runtime PM while you have a SDIO device
-attached is a bug.
+Sending v4 of the patch series as response to this email.
 
-This is something for the MMC people to deal with rather than Arend.
-
+/* Steinar */
 -- 
-FTTC broadband for 0.8mile line: currently at 9.5Mbps down 400kbps up
-according to speedtest.net.
+Homepage: http://www.sesse.net/
