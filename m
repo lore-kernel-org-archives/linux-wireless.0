@@ -1,50 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:51459 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932157AbaHGJNu (ORCPT
+Received: from mail-we0-f177.google.com ([74.125.82.177]:63346 "EHLO
+	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752370AbaH3V0z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Aug 2014 05:13:50 -0400
-Received: by mail-wi0-f172.google.com with SMTP id n3so10348032wiv.5
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Aug 2014 02:13:49 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
+	Sat, 30 Aug 2014 17:26:55 -0400
+Received: by mail-we0-f177.google.com with SMTP id u56so3693288wes.36
+        for <linux-wireless@vger.kernel.org>; Sat, 30 Aug 2014 14:26:53 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
 Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 1/5] ath10k: fix legacy irq workaround
-Date: Thu,  7 Aug 2014 11:04:16 +0200
-Message-Id: <1407402260-29854-2-git-send-email-michal.kazior@tieto.com> (sfid-20140807_111354_052809_C85A4D77)
-In-Reply-To: <1407402260-29854-1-git-send-email-michal.kazior@tieto.com>
-References: <1407402260-29854-1-git-send-email-michal.kazior@tieto.com>
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 18/23] staging: vt6655: replace typedef struct tagSRTS_a_FB with struct vnt_rts_a_fb
+Date: Sat, 30 Aug 2014 22:25:44 +0100
+Message-Id: <1409433949-5468-18-git-send-email-tvboxspy@gmail.com> (sfid-20140830_234535_220042_A5A35E3D)
+In-Reply-To: <1409433949-5468-1-git-send-email-tvboxspy@gmail.com>
+References: <1409433949-5468-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wrong register was being set up. This could
-prevent firmware from booting in some rare cases
-when using legacy interrupts.
+Replacing members
+a, wDuration, wReserved, wRTSDuration_f0, wRTSDuration_f1 and data
+with
+a, duration, reserved, rts_duration_f0, rts_duration_f1 and data
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+unsigned short is replaced with u16 or __le16 where necessary.
+
+cast void pointer to pvRTS
+
+Creating the new structure in rxtx.h
+
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/pci.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ drivers/staging/vt6655/desc.h | 11 -----------
+ drivers/staging/vt6655/rxtx.c | 41 +++++++++++++++++++++++++----------------
+ drivers/staging/vt6655/rxtx.h |  9 +++++++++
+ 3 files changed, 34 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index cfc1da2..54deea3 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -2418,9 +2418,10 @@ static int ath10k_pci_wait_for_target_init(struct ath10k *ar)
+diff --git a/drivers/staging/vt6655/desc.h b/drivers/staging/vt6655/desc.h
+index de459d8..f0a31a8 100644
+--- a/drivers/staging/vt6655/desc.h
++++ b/drivers/staging/vt6655/desc.h
+@@ -352,17 +352,6 @@ union vnt_phy_field_swap {
+ 	u32 field_write;
+ };
  
- 		if (ar_pci->num_msi_intrs == 0)
- 			/* Fix potential race by repeating CORE_BASE writes */
--			ath10k_pci_soc_write32(ar, PCIE_INTR_ENABLE_ADDRESS,
--					       PCIE_INTR_FIRMWARE_MASK |
--					       PCIE_INTR_CE_MASK_ALL);
-+			ath10k_pci_write32(ar, SOC_CORE_BASE_ADDRESS +
-+					   PCIE_INTR_ENABLE_ADDRESS,
-+					   PCIE_INTR_FIRMWARE_MASK |
-+					   PCIE_INTR_CE_MASK_ALL);
+-typedef struct tagSRTS_a_FB {
+-	struct vnt_phy_field a;
+-	unsigned short wDuration;
+-	unsigned short wReserved;
+-	unsigned short wRTSDuration_f0;
+-	unsigned short wRTSDuration_f1;
+-	struct ieee80211_rts data;
+-} __attribute__ ((__packed__))
+-SRTS_a_FB, *PSRTS_a_FB;
+-typedef const SRTS_a_FB *PCSRTS_a_FB;
+-
+ //
+ // CTS buffer header
+ //
+diff --git a/drivers/staging/vt6655/rxtx.c b/drivers/staging/vt6655/rxtx.c
+index 420fcf5..0721fbb 100644
+--- a/drivers/staging/vt6655/rxtx.c
++++ b/drivers/staging/vt6655/rxtx.c
+@@ -950,32 +950,40 @@ s_vFillRTSHead(
+ 				memcpy(&buf->data.ta, psEthHeader->abySrcAddr, ETH_ALEN);
  
- 		mdelay(10);
- 	} while (time_before(jiffies, timeout));
+ 		} else {
+-			PSRTS_a_FB pBuf = (PSRTS_a_FB)pvRTS;
++			struct vnt_rts_a_fb *buf = pvRTS;
+ 			/* Get SignalField, ServiceField & Length */
+ 			vnt_get_phy_field(pDevice, uRTSFrameLen,
+ 					  pDevice->byTopOFDMBasicRate,
+-					  byPktType, &pBuf->a);
+-			//Get Duration
+-			pBuf->wDuration = cpu_to_le16((unsigned short)s_uGetRTSCTSDuration(pDevice, RTSDUR_AA, cbFrameLength, byPktType, wCurrentRate, bNeedAck, byFBOption)); //0:RTSDuration_aa, 0:5G, 0: 5G OFDMData
+-			pBuf->wRTSDuration_f0 = cpu_to_le16((unsigned short)s_uGetRTSCTSDuration(pDevice, RTSDUR_AA_F0, cbFrameLength, byPktType, wCurrentRate, bNeedAck, byFBOption)); //5:RTSDuration_aa_f0, 0:5G, 0: 5G OFDMData
+-			pBuf->wRTSDuration_f1 = cpu_to_le16((unsigned short)s_uGetRTSCTSDuration(pDevice, RTSDUR_AA_F1, cbFrameLength, byPktType, wCurrentRate, bNeedAck, byFBOption)); //7:RTSDuration_aa_f1, 0:5G, 0:
+-			pBuf->data.duration = pBuf->wDuration;
++					  byPktType, &buf->a);
++			/* Get Duration */
++			buf->duration =
++				cpu_to_le16((u16)s_uGetRTSCTSDuration(pDevice, RTSDUR_AA, cbFrameLength,
++								      byPktType, wCurrentRate,
++								      bNeedAck, byFBOption));
++			buf->rts_duration_f0 =
++				cpu_to_le16((u16)s_uGetRTSCTSDuration(pDevice, RTSDUR_AA_F0, cbFrameLength,
++								      byPktType, wCurrentRate,
++								      bNeedAck, byFBOption));
++			buf->rts_duration_f1 =
++				cpu_to_le16((u16)s_uGetRTSCTSDuration(pDevice, RTSDUR_AA_F1, cbFrameLength,
++								      byPktType, wCurrentRate,
++								      bNeedAck, byFBOption));
++			buf->data.duration = buf->duration;
+ 			/* Get RTS Frame body */
+-			pBuf->data.frame_control =
++			buf->data.frame_control =
+ 					cpu_to_le16(IEEE80211_FTYPE_CTL |
+ 						    IEEE80211_STYPE_RTS);
+ 
+-
+ 			if ((pDevice->eOPMode == OP_MODE_ADHOC) ||
+ 			    (pDevice->eOPMode == OP_MODE_AP)) {
+-				memcpy(&pBuf->data.ra, psEthHeader->abyDstAddr, ETH_ALEN);
++				memcpy(&buf->data.ra, psEthHeader->abyDstAddr, ETH_ALEN);
+ 			} else {
+-				memcpy(&pBuf->data.ra, pDevice->abyBSSID, ETH_ALEN);
++				memcpy(&buf->data.ra, pDevice->abyBSSID, ETH_ALEN);
+ 			}
+ 			if (pDevice->eOPMode == OP_MODE_AP)
+-				memcpy(&pBuf->data.ta, pDevice->abyBSSID, ETH_ALEN);
++				memcpy(&buf->data.ta, pDevice->abyBSSID, ETH_ALEN);
+ 			else
+-				memcpy(&pBuf->data.ta, psEthHeader->abySrcAddr, ETH_ALEN);
++				memcpy(&buf->data.ta, psEthHeader->abySrcAddr, ETH_ALEN);
+ 		}
+ 	} else if (byPktType == PK_TYPE_11B) {
+ 		struct vnt_rts_ab *buf = pvRTS;
+@@ -1434,11 +1442,12 @@ s_cbFillTxBufHead(struct vnt_private *pDevice, unsigned char byPktType,
+ 			if (bRTS == true) {//RTS_need
+ 				pvRrvTime = (void *)(pbyTxBufferAddr + wTxBufSize);
+ 				pMICHDR = (struct vnt_mic_hdr *) (pbyTxBufferAddr + wTxBufSize + sizeof(struct vnt_rrv_time_ab));
+-				pvRTS = (PSRTS_a_FB) (pbyTxBufferAddr + wTxBufSize + sizeof(struct vnt_rrv_time_ab) + cbMICHDR);
++				pvRTS = (void *)(pbyTxBufferAddr + wTxBufSize + sizeof(struct vnt_rrv_time_ab) + cbMICHDR);
+ 				pvCTS = NULL;
+-				pvTxDataHd = (void *)(pbyTxBufferAddr + wTxBufSize + sizeof(struct vnt_rrv_time_ab) + cbMICHDR + sizeof(SRTS_a_FB));
++				pvTxDataHd = (void *)(pbyTxBufferAddr + wTxBufSize +
++					sizeof(struct vnt_rrv_time_ab) + cbMICHDR + sizeof(struct vnt_rts_a_fb));
+ 				cbHeaderLength = wTxBufSize + sizeof(struct vnt_rrv_time_ab) +
+-					cbMICHDR + sizeof(SRTS_a_FB) + sizeof(struct vnt_tx_datahead_a_fb);
++					cbMICHDR + sizeof(struct vnt_rts_a_fb) + sizeof(struct vnt_tx_datahead_a_fb);
+ 			} else { //RTS_needless
+ 				pvRrvTime = (void *)(pbyTxBufferAddr + wTxBufSize);
+ 				pMICHDR = (struct vnt_mic_hdr *)(pbyTxBufferAddr + wTxBufSize + sizeof(struct vnt_rrv_time_ab));
+diff --git a/drivers/staging/vt6655/rxtx.h b/drivers/staging/vt6655/rxtx.h
+index 807753c..bac2214 100644
+--- a/drivers/staging/vt6655/rxtx.h
++++ b/drivers/staging/vt6655/rxtx.h
+@@ -145,6 +145,15 @@ struct vnt_rts_ab {
+ 	struct ieee80211_rts data;
+ } __packed;
+ 
++struct vnt_rts_a_fb {
++	struct vnt_phy_field a;
++	__le16 duration;
++	u16 reserved;
++	__le16 rts_duration_f0;
++	__le16 rts_duration_f1;
++	struct ieee80211_rts data;
++} __packed;
++
+ struct vnt_tx_short_buf_head {
+ 	__le16 fifo_ctl;
+ 	u16 time_stamp;
 -- 
-1.8.5.3
+1.9.1
 
