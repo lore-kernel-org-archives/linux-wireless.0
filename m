@@ -1,87 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:65150 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751666AbaHQTnO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Aug 2014 15:43:14 -0400
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 5/5] staging: vt6655: remove remaining comments of PLICE_DEBUG
-Date: Sun, 17 Aug 2014 20:42:29 +0100
-Message-Id: <1408304549-22363-5-git-send-email-tvboxspy@gmail.com> (sfid-20140817_214349_395601_801F61E3)
-In-Reply-To: <1408304549-22363-1-git-send-email-tvboxspy@gmail.com>
-References: <1408304549-22363-1-git-send-email-tvboxspy@gmail.com>
+Received: from hauke-m.de ([5.39.93.123]:40741 "EHLO hauke-m.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751608AbaH3Nd1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 30 Aug 2014 09:33:27 -0400
+Message-ID: <5401D2A4.7070402@hauke-m.de> (sfid-20140830_153338_291364_CE1B42FF)
+Date: Sat, 30 Aug 2014 15:33:24 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: Arnd Bergmann <arnd@arndb.de>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: "linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Booting bcm47xx (bcma & stuff), sharing code with bcm53xx
+References: <CACna6rzRf7qf0YAFWqp4VgwR76-N8HO12eSz_H5NW9LpjBArdw@mail.gmail.com> <53FF9D9B.30106@hauke-m.de> <CACna6rzaXHww2UXoP4Fi-zA3uNve4NQ48DeChF8zoBS-_-mtyw@mail.gmail.com> <5882203.GXbhhcHqjK@wuerfel>
+In-Reply-To: <5882203.GXbhhcHqjK@wuerfel>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/device.h | 4 ----
- drivers/staging/vt6655/dpc.c    | 7 +++----
- 2 files changed, 3 insertions(+), 8 deletions(-)
+On 08/29/2014 10:04 PM, Arnd Bergmann wrote:
+> On Friday 29 August 2014 17:21:18 Rafał Miłecki wrote:
+>> On 28 August 2014 23:22, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+>>> On 08/28/2014 01:56 PM, Arnd Bergmann wrote:
+>>>> On Thursday 28 August 2014 13:39:55 Rafał Miłecki wrote:
+>>>>> Well, that depends. Hauke was planning to put info about flash in DT.
+>>>>>> I think it would make sense to have a common driver that has both
+>>>>>> an 'early' init part used by MIPS and a regular init part used by
+>>>>>> ARM and potentially also on MIPS if we want. Most of the code can
+>>>>>> still be shared.
+>>>>>
+>>>>> OK, now it's clear what you meant.
+>>>>> The thing is that we may want to call probe function from
+>>>>> drivers/bcma/main.c. I think we never meant to call it directly from
+>>>>> arch code. This code in drivers/bcma/main.c is used on both: MIPS and
+>>>>> ARM. So I wonder if there is much sense in doing it like
+>>>>> #ifdev MIPS
+>>>>> bcm47xx_nvram_init(nvram_address);
+>>>>> #endif
+>>>>> #ifdef ARM
+>>>>> nvram_device.resource[0].start = nvram_address;
+>>>>> platform_device_register(nvram_device);
+>>>>> #endif
+>>>>>
+>>>>> What do you think about this?
+>>>>
+>>>> I definitely don't want to see any manual platform_device_register()
+>>>> calls on ARM, any device should be either a platform_device probed
+>>>> from DT, or a bcma_device that comes from the bcma bus.
+>>>>
+>>>> I suspect I'm still missing part of the story here. How is the
+>>>> nvram chip actually connected?
+>>>
+>>> I think we have to provide an own device tree for every board, like it
+>>> is done for other arm boards. If we do so I do not see a problem to
+>>> specify the nvram address space in device tree.
+>>
+>> Alright, I think we should try to answer one main question at this
+>> point: how much data we want to put in DTS? It's still not clear to
+>> me.
 
-diff --git a/drivers/staging/vt6655/device.h b/drivers/staging/vt6655/device.h
-index fadebe9..1abad5d 100644
---- a/drivers/staging/vt6655/device.h
-+++ b/drivers/staging/vt6655/device.h
-@@ -141,9 +141,7 @@
- 
- #define	AVAIL_TD(p, q)	((p)->sOpts.nTxDescs[(q)] - ((p)->iTDUsed[(q)]))
- 
--//PLICE_DEBUG ->
- #define	NUM				64
--//PLICE_DEUBG <-
- 
- #define PRIVATE_Message                 0
- 
-@@ -404,11 +402,9 @@ struct vnt_private {
- 
- 	spinlock_t                  lock;
- 
--//PLICE_DEBUG ->
- 	pid_t			MLMEThr_pid;
- 	struct completion	notify;
- 	struct semaphore	mlme_semaphore;
--//PLICE_DEBUG <-
- 
- 	u32                         rx_bytes;
- 
-diff --git a/drivers/staging/vt6655/dpc.c b/drivers/staging/vt6655/dpc.c
-index 7589cb4..60eb129 100644
---- a/drivers/staging/vt6655/dpc.c
-+++ b/drivers/staging/vt6655/dpc.c
-@@ -312,10 +312,9 @@ device_receive_frame(
- 
- 	skb = pRDInfo->skb;
- 
--//PLICE_DEBUG->
- 	pci_unmap_single(pDevice->pcid, pRDInfo->skb_dma,
- 			 pDevice->rx_buf_sz, PCI_DMA_FROMDEVICE);
--//PLICE_DEBUG<-
-+
- 	pwFrameSize = (unsigned short *)(skb->data + 2);
- 	FrameSize = cpu_to_le16(pCurrRD->m_rd1RD1.wReqCount) - cpu_to_le16(pCurrRD->m_rd0RD0.wResCount);
- 
-@@ -344,7 +343,7 @@ device_receive_frame(
- 		pr_debug("---------- WRONG Length 2\n");
- 		return false;
- 	}
--//PLICE_DEBUG->
-+
- 	// update receive statistic counter
- 	STAvUpdateRDStatCounter(&pDevice->scStatistic,
- 				*pbyRsr,
-@@ -354,7 +353,7 @@ device_receive_frame(
- 				FrameSize);
- 
- 	pMACHeader = (PS802_11Header)((unsigned char *)(skb->data) + 8);
--//PLICE_DEBUG<-
-+
- 	if (pDevice->bMeasureInProgress) {
- 		if ((*pbyRsr & RSR_CRCOK) != 0)
- 			pDevice->byBasicMap |= 0x01;
--- 
-1.9.1
+I think we need a separate device tree description for every board
+anyway (to specify the GPIO configuration) and then I do not see a big
+problem specifying if this board boots from serial or nand flash.
+
+>>
+>> What about this flash memory mapping? You added this in your RFC:
+>> reg = <0x1c000000 0x01000000>;
+>>
+>> As I described, the first part (address 0x1c000000) could be extracted
+>> on runtime. For that you need my patch:
+>> [PATCH] bcma: get & store info about flash type SoC booted from
+>> http://www.spinics.net/lists/linux-wireless/msg126163.html
+>>
+>> And then add some simple "swtich" like:
+>> switch (boot_device) {
+>> case BCMA_BOOT_DEV_NAND:
+>>     nvram_address = 0x1c000000;
+>>     break;
+>> case BCMA_BOOT_DEV_SERIAL:
+>>     nvram_address = 0x1e000000;
+>>     break;
+>> }
+> 
+> At the very least, those addresses should come from DT in some form.
+> We should never hardcode register locations in kernel code, since those
+> tend to change when a new hardware version comes out. Even if you are
+> sure that wouldn't happen with bcm53xx, it's still bad style and I
+> want to avoid having other developers copy code like that into a new
+> platform or driver.
+> 
+>> So... should we handle it on runtime? Or do we really want this in DTS?
+>> I was thinking about doing this on runtime. This would limit amount of
+>> DTS entries and this is what makes more sense to me. The same way
+>> don't hardcode many other hardware details. For example we don't store
+>> flash size, block size, erase size in DTS. We simply use JEDEC and
+>> mtd's spi-nor framework database.
+> 
+> I think the main difference is that for the example of the flash
+> chip, we can find out that information by looking at the device itself:
+> The DT describes how to find the device and from there we can do
+> proper hardware probing.
+> 
+> For the case of the nvram, I don't see how that would be done, since
+> the presence of the device itself is something your code above tries
+> to derive from something that from an unrelated setting, so I'd rather
+> see it done explicit in DT.
+> 
+> You mentioned that the 'boot_device' variable in your code snippet
+> comes from a hardware register that can be accessed easily, right?
+> A possible way to handle it would then be to have two DT entries
+> like
+> 
+> 	nvram@1c000000 {
+> 		compatible = "bcm,bcm4710-nvram";
+> 		reg = <0x1c000000 0x1000000>;
+> 		bcm,boot-device = BCMA_BOOT_DEV_NAND;
+> 	};	
+> 
+> 	nvram@1c000000 {
+> 		compatible = "bcm,bcm4710-nvram";
+> 		reg = <0x1e000000 0x1000000>;
+> 		bcm,boot-device = BCMA_BOOT_DEV_SERIAL;
+> 	};
+> 
+> We would then have two platform device instances and get the
+> driver's probe function to reject any device whose bcm,boot-device
+> property doesn't match the contents of the register.
+> 
+> That would correctly describe the hardware while still allowing
+> automatic probing of the device, but I don't see a value in
+> the extra complexity compared to just marking one of the two
+> as status="disabled".
+
+This looks interesting.
+
+But when we have an own device tree description for every board I do not
+see many advantages over using status="disabled". Anyway we can share
+all the common device tree description parts and  we can add the device
+tree description after building the kernel, we are doing both for now.
+
+Hauke
 
