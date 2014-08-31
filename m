@@ -1,164 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f169.google.com ([74.125.82.169]:54759 "EHLO
-	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754572AbaHGJNM (ORCPT
+Received: from mail-ie0-f171.google.com ([209.85.223.171]:47235 "EHLO
+	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751038AbaHaJUm convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Aug 2014 05:13:12 -0400
-Received: by mail-we0-f169.google.com with SMTP id u56so3861420wes.28
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Aug 2014 02:13:10 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 5/6] ath10k: remove htc->stopped
-Date: Thu,  7 Aug 2014 11:03:31 +0200
-Message-Id: <1407402212-29809-6-git-send-email-michal.kazior@tieto.com> (sfid-20140807_111325_864702_7013C9A9)
-In-Reply-To: <1407402212-29809-1-git-send-email-michal.kazior@tieto.com>
-References: <1407402212-29809-1-git-send-email-michal.kazior@tieto.com>
+	Sun, 31 Aug 2014 05:20:42 -0400
+Received: by mail-ie0-f171.google.com with SMTP id rp18so4807662iec.16
+        for <linux-wireless@vger.kernel.org>; Sun, 31 Aug 2014 02:20:41 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <5882203.GXbhhcHqjK@wuerfel>
+References: <CACna6rzRf7qf0YAFWqp4VgwR76-N8HO12eSz_H5NW9LpjBArdw@mail.gmail.com>
+	<53FF9D9B.30106@hauke-m.de>
+	<CACna6rzaXHww2UXoP4Fi-zA3uNve4NQ48DeChF8zoBS-_-mtyw@mail.gmail.com>
+	<5882203.GXbhhcHqjK@wuerfel>
+Date: Sun, 31 Aug 2014 11:20:41 +0200
+Message-ID: <CACna6rwmNtS1JSi=VHXWHu6mOM72Y8sBrr5EqCRbpYUHFrMnCg@mail.gmail.com> (sfid-20140831_112045_957828_23F33530)
+Subject: Re: Booting bcm47xx (bcma & stuff), sharing code with bcm53xx
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is not necessary anymore. There are no more
-uncontrolled htc tx entry points.
+On 29 August 2014 22:04, Arnd Bergmann <arnd@arndb.de> wrote:
+> You mentioned that the 'boot_device' variable in your code snippet
+> comes from a hardware register that can be accessed easily, right?
+> A possible way to handle it would then be to have two DT entries
+> like
+>
+>         nvram@1c000000 {
+>                 compatible = "bcm,bcm4710-nvram";
+>                 reg = <0x1c000000 0x1000000>;
+>                 bcm,boot-device = BCMA_BOOT_DEV_NAND;
+>         };
+>
+>         nvram@1c000000 {
+>                 compatible = "bcm,bcm4710-nvram";
+>                 reg = <0x1e000000 0x1000000>;
+>                 bcm,boot-device = BCMA_BOOT_DEV_SERIAL;
+>         };
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/core.c | 13 +++++--------
- drivers/net/wireless/ath/ath10k/htc.c  | 16 ----------------
- drivers/net/wireless/ath/ath10k/htc.h  |  5 +----
- 3 files changed, 6 insertions(+), 28 deletions(-)
+This sounds like a nice consensus for me! Actually it seems to be
+similar to what we already do for other hardware parts.
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 2790aad..8eae2aa 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -780,7 +780,7 @@ int ath10k_core_start(struct ath10k *ar)
- 	if (status <= 0) {
- 		ath10k_warn("wmi service ready event not received");
- 		status = -ETIMEDOUT;
--		goto err_htc_stop;
-+		goto err_hif_stop;
- 	}
- 
- 	ath10k_dbg(ATH10K_DBG_BOOT, "firmware %s booted\n",
-@@ -789,25 +789,25 @@ int ath10k_core_start(struct ath10k *ar)
- 	status = ath10k_wmi_cmd_init(ar);
- 	if (status) {
- 		ath10k_err("could not send WMI init command (%d)\n", status);
--		goto err_htc_stop;
-+		goto err_hif_stop;
- 	}
- 
- 	status = ath10k_wmi_wait_for_unified_ready(ar);
- 	if (status <= 0) {
- 		ath10k_err("wmi unified ready event not received\n");
- 		status = -ETIMEDOUT;
--		goto err_htc_stop;
-+		goto err_hif_stop;
- 	}
- 
- 	status = ath10k_htt_setup(&ar->htt);
- 	if (status) {
- 		ath10k_err("failed to setup htt: %d\n", status);
--		goto err_htc_stop;
-+		goto err_hif_stop;
- 	}
- 
- 	status = ath10k_debug_start(ar);
- 	if (status)
--		goto err_htc_stop;
-+		goto err_hif_stop;
- 
- 	if (test_bit(ATH10K_FW_FEATURE_WMI_10X, ar->fw_features))
- 		ar->free_vdev_map = (1 << TARGET_10X_NUM_VDEVS) - 1;
-@@ -836,8 +836,6 @@ int ath10k_core_start(struct ath10k *ar)
- 
- 	return 0;
- 
--err_htc_stop:
--	ath10k_htc_stop(&ar->htc);
- err_hif_stop:
- 	ath10k_hif_stop(ar);
- err_htt_rx_detach:
-@@ -882,7 +880,6 @@ void ath10k_core_stop(struct ath10k *ar)
- 		ath10k_wait_for_suspend(ar, WMI_PDEV_SUSPEND_AND_DISABLE_INTR);
- 
- 	ath10k_debug_stop(ar);
--	ath10k_htc_stop(&ar->htc);
- 	ath10k_hif_stop(ar);
- 	ath10k_htt_tx_free(&ar->htt);
- 	ath10k_htt_rx_free(&ar->htt);
-diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
-index 5fdc40d..7e08bb3 100644
---- a/drivers/net/wireless/ath/ath10k/htc.c
-+++ b/drivers/net/wireless/ath/ath10k/htc.c
-@@ -138,14 +138,6 @@ int ath10k_htc_send(struct ath10k_htc *htc,
- 		return -ENOENT;
- 	}
- 
--	/* FIXME: This looks ugly, can we fix it? */
--	spin_lock_bh(&htc->tx_lock);
--	if (htc->stopped) {
--		spin_unlock_bh(&htc->tx_lock);
--		return -ESHUTDOWN;
--	}
--	spin_unlock_bh(&htc->tx_lock);
--
- 	skb_push(skb, sizeof(struct ath10k_htc_hdr));
- 
- 	if (ep->tx_credit_flow_enabled) {
-@@ -846,13 +838,6 @@ int ath10k_htc_start(struct ath10k_htc *htc)
- 	return 0;
- }
- 
--void ath10k_htc_stop(struct ath10k_htc *htc)
--{
--	spin_lock_bh(&htc->tx_lock);
--	htc->stopped = true;
--	spin_unlock_bh(&htc->tx_lock);
--}
--
- /* registered target arrival callback from the HIF layer */
- int ath10k_htc_init(struct ath10k *ar)
- {
-@@ -862,7 +847,6 @@ int ath10k_htc_init(struct ath10k *ar)
- 
- 	spin_lock_init(&htc->tx_lock);
- 
--	htc->stopped = false;
- 	ath10k_htc_reset_endpoint_states(htc);
- 
- 	/* setup HIF layer callbacks */
-diff --git a/drivers/net/wireless/ath/ath10k/htc.h b/drivers/net/wireless/ath/ath10k/htc.h
-index 4716d33..b5a9daa 100644
---- a/drivers/net/wireless/ath/ath10k/htc.h
-+++ b/drivers/net/wireless/ath/ath10k/htc.h
-@@ -332,7 +332,7 @@ struct ath10k_htc {
- 	struct ath10k *ar;
- 	struct ath10k_htc_ep endpoint[ATH10K_HTC_EP_COUNT];
- 
--	/* protects endpoint and stopped fields */
-+	/* protects endpoints */
- 	spinlock_t tx_lock;
- 
- 	struct ath10k_htc_ops htc_ops;
-@@ -345,8 +345,6 @@ struct ath10k_htc {
- 	int total_transmit_credits;
- 	struct ath10k_htc_svc_tx_credits service_tx_alloc[ATH10K_HTC_EP_COUNT];
- 	int target_credit_size;
--
--	bool stopped;
- };
- 
- int ath10k_htc_init(struct ath10k *ar);
-@@ -357,7 +355,6 @@ int ath10k_htc_connect_service(struct ath10k_htc *htc,
- 			       struct ath10k_htc_svc_conn_resp *conn_resp);
- int ath10k_htc_send(struct ath10k_htc *htc, enum ath10k_htc_ep_id eid,
- 		    struct sk_buff *packet);
--void ath10k_htc_stop(struct ath10k_htc *htc);
- struct sk_buff *ath10k_htc_alloc_skb(int size);
- 
- #endif
+E.g. in bcm4708.dtsi Hauke put registers location of 4 Ethernet cores
+(gmac@0, gmac@1, gmac@2, gmac@3). I believe this board is ready for 4
+Ethernet cores so DT matches hardware capabilities. Then most vendors
+use/activate only one (maybe up to 2?) Ethernet cores. It's up to the
+driver to detect if core is activated/used.
+
+AFAIU having two flash mappings (as suggested above) would follow this
+logic. It would match hardware capabilities. And then it would be up
+to driver to detect which one mapping is really in use for this
+particular board.
+
+Does it make sense?
+
 -- 
-1.8.5.3
-
+Rafał
