@@ -1,37 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hauke-m.de ([5.39.93.123]:44685 "EHLO hauke-m.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754174AbaICTsn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Sep 2014 15:48:43 -0400
-Message-ID: <54077098.5070303@hauke-m.de> (sfid-20140903_214846_913325_7449A193)
-Date: Wed, 03 Sep 2014 21:48:40 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH 1/2] bcma: move bus struct setup into early part of host
- specific code
-References: <1409605867-30051-1-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1409605867-30051-1-git-send-email-zajec5@gmail.com>
-Content-Type: text/plain; charset=utf-8
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:47723 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751500AbaIALyh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Sep 2014 07:54:37 -0400
+From: Shakil A Khan <shakilk1729@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	davem@davemloft.net, linville@tuxdriver.com,
+	johannes@sipsolutions.net, Shakil A Khan <shakilk1729@gmail.com>
+Subject: [PATCH 2/2] nl80211.c: Fixed the wdev_id being used uninitialized.
+Date: Mon,  1 Sep 2014 07:54:27 -0400
+Message-Id: <1409572467-50908-1-git-send-email-shakilk1729@gmail.com> (sfid-20140901_135501_620374_EFCBB00E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/01/2014 11:11 PM, Rafał Miłecki wrote:
-> This change is important for SoC host. In future we will want to know
-> chip ID (needed for early MIPS boot) before doing cores scanning.
-> 
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Signed-off-by: Shakil A Khan <shakilk1729@gmail.com>
+---
+ net/wireless/nl80211.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Acked-by: Hauke Mehrtens <hauke@hauke-m.de>
-
-> ---
->  drivers/bcma/host_pci.c   | 3 +++
->  drivers/bcma/host_soc.c   | 3 +++
->  drivers/bcma/main.c       | 2 --
->  drivers/bcma/scan.c       | 7 -------
->  include/linux/bcma/bcma.h | 1 -
->  5 files changed, 6 insertions(+), 10 deletions(-)
-> 
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index df7b133..6cd7df2 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -76,7 +76,7 @@ __cfg80211_wdev_from_attrs(struct net *netns, struct nlattr **attrs)
+ 	struct wireless_dev *result = NULL;
+ 	bool have_ifidx = attrs[NL80211_ATTR_IFINDEX];
+ 	bool have_wdev_id = attrs[NL80211_ATTR_WDEV];
+-	u64 wdev_id;
++	u64 wdev_id = 0;
+ 	int wiphy_idx = -1;
+ 	int ifidx = -1;
+ 
+-- 
+1.7.1
 
