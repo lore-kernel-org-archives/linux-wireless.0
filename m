@@ -1,313 +1,183 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:62135 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753536AbaI3IXY (ORCPT
+Received: from mail-la0-f45.google.com ([209.85.215.45]:38362 "EHLO
+	mail-la0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752997AbaIALeh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Sep 2014 04:23:24 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 3/6] brcmfmac: Avoid usage of GFP_ATOMIC.
-Date: Tue, 30 Sep 2014 10:23:15 +0200
-Message-ID: <1412065398-14316-4-git-send-email-arend@broadcom.com> (sfid-20140930_102342_384807_C10EB977)
-In-Reply-To: <1412065398-14316-1-git-send-email-arend@broadcom.com>
-References: <1412065398-14316-1-git-send-email-arend@broadcom.com>
+	Mon, 1 Sep 2014 07:34:37 -0400
+Received: by mail-la0-f45.google.com with SMTP id pn19so5935232lab.32
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Sep 2014 04:34:35 -0700 (PDT)
+From: Henning Rogge <hrogge@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+Subject: iw: Add support for mesh proxy path dump
+Date: Mon, 01 Sep 2014 13:34:33 +0200
+Message-ID: <1576867.1mLXgWJdDk@rogge-hp-probook-6470b> (sfid-20140901_133442_633761_8F11D401)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+Add "mpp get" and "mpp dump" command to query to mac80211s
+mesh proxy path table.
 
-Msgbuf is using GFP_ATOMIC where GFP_KERNEL is also sufficient. On
-some platforms the coherent DMA memory is very limited when using
-GFP_ATOMIC. This patch changes usage of GFP_ATOMIC to GFP_KERNEL and
-uses worker to make this possible for creation of flowring.
-
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Henning Rogge <henning.rogge@fkie.fraunhofer.de>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/flowring.c |   4 +-
- drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c   | 128 +++++++++++++++++----
- 2 files changed, 108 insertions(+), 24 deletions(-)
+ Makefile  |  2 +-
+ mpp.c     | 84 
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ nl80211.h | 11 +++++++++
+ 3 files changed, 96 insertions(+), 1 deletion(-)
+ create mode 100644 mpp.c
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/flowring.c b/drivers/net/wireless/brcm80211/brcmfmac/flowring.c
-index a1016b8..1faa929 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/flowring.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/flowring.c
-@@ -354,7 +354,7 @@ struct brcmf_flowring *brcmf_flowring_attach(struct device *dev, u16 nrofrings)
- 	struct brcmf_flowring *flow;
- 	u32 i;
+diff --git a/Makefile b/Makefile
+index f042e30..c05b2c4 100644
+--- a/Makefile
++++ b/Makefile
+@@ -14,7 +14,7 @@ CFLAGS += -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs -
+fno-strict-aliasing
  
--	flow = kzalloc(sizeof(*flow), GFP_ATOMIC);
-+	flow = kzalloc(sizeof(*flow), GFP_KERNEL);
- 	if (flow) {
- 		flow->dev = dev;
- 		flow->nrofrings = nrofrings;
-@@ -364,7 +364,7 @@ struct brcmf_flowring *brcmf_flowring_attach(struct device *dev, u16 nrofrings)
- 		for (i = 0; i < ARRAY_SIZE(flow->hash); i++)
- 			flow->hash[i].ifidx = BRCMF_FLOWRING_INVALID_IFIDX;
- 		flow->rings = kcalloc(nrofrings, sizeof(*flow->rings),
--				      GFP_ATOMIC);
-+				      GFP_KERNEL);
- 		if (!flow->rings) {
- 			kfree(flow);
- 			flow = NULL;
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
-index 106e6bf..11cc051 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
-@@ -208,6 +208,14 @@ struct msgbuf_flowring_flush_resp {
- 	__le32				rsvd0[3];
- };
- 
-+struct brcmf_msgbuf_work_item {
-+	struct list_head queue;
-+	u32 flowid;
-+	int ifidx;
-+	u8 sa[ETH_ALEN];
-+	u8 da[ETH_ALEN];
-+};
+ OBJS = iw.o genl.o event.o info.o phy.o \
+ 	interface.o ibss.o station.o survey.o util.o \
+-	mesh.o mpath.o scan.o reg.o version.o \
++	mesh.o mpath.o mpp.o scan.o reg.o version.o \
+ 	reason.o status.o connect.o link.o offch.o ps.o cqm.o \
+ 	bitrate.o wowlan.o coalesce.o roc.o p2p.o
+ OBJS += sections.o
+diff --git a/mpp.c b/mpp.c
+new file mode 100644
+index 0000000..2d20d6b
+--- /dev/null
++++ b/mpp.c
+@@ -0,0 +1,84 @@
++#include <net/if.h>
++#include <errno.h>
++#include <string.h>
 +
- struct brcmf_msgbuf {
- 	struct brcmf_pub *drvr;
- 
-@@ -248,6 +256,10 @@ struct brcmf_msgbuf {
- 	struct work_struct txflow_work;
- 	unsigned long *flow_map;
- 	unsigned long *txstatus_done_map;
++#include <netlink/genl/genl.h>
++#include <netlink/genl/family.h>
++#include <netlink/genl/ctrl.h>
++#include <netlink/msg.h>
++#include <netlink/attr.h>
 +
-+	struct work_struct flowring_work;
-+	spinlock_t flowring_work_lock;
-+	struct list_head work_queue;
- };
- 
- struct brcmf_msgbuf_pktid {
-@@ -284,11 +296,11 @@ brcmf_msgbuf_init_pktids(u32 nr_array_entries,
- 	struct brcmf_msgbuf_pktid *array;
- 	struct brcmf_msgbuf_pktids *pktids;
- 
--	array = kcalloc(nr_array_entries, sizeof(*array), GFP_ATOMIC);
-+	array = kcalloc(nr_array_entries, sizeof(*array), GFP_KERNEL);
- 	if (!array)
- 		return NULL;
- 
--	pktids = kzalloc(sizeof(*pktids), GFP_ATOMIC);
-+	pktids = kzalloc(sizeof(*pktids), GFP_KERNEL);
- 	if (!pktids) {
- 		kfree(array);
- 		return NULL;
-@@ -544,11 +556,29 @@ brcmf_msgbuf_remove_flowring(struct brcmf_msgbuf *msgbuf, u16 flowid)
- }
- 
- 
--static u32 brcmf_msgbuf_flowring_create(struct brcmf_msgbuf *msgbuf, int ifidx,
--					struct sk_buff *skb)
-+static struct brcmf_msgbuf_work_item *
-+brcmf_msgbuf_dequeue_work(struct brcmf_msgbuf *msgbuf)
++#include "nl80211.h"
++#include "iw.h"
++
++SECTION(mpp);
++
++static int print_mpp_handler(struct nl_msg *msg, void *arg)
 +{
-+	struct brcmf_msgbuf_work_item *work = NULL;
-+	ulong flags;
++	struct nlattr *tb[NL80211_ATTR_MAX + 1];
++	struct genlmsghdr *gnlh = nlmsg_data(nlmsg_hdr(msg));
++	char dst[20], next_hop[20], dev[20];
 +
-+	spin_lock_irqsave(&msgbuf->flowring_work_lock, flags);
-+	if (!list_empty(&msgbuf->work_queue)) {
-+		work = list_first_entry(&msgbuf->work_queue,
-+					struct brcmf_msgbuf_work_item, queue);
-+		list_del(&work->queue);
-+	}
-+	spin_unlock_irqrestore(&msgbuf->flowring_work_lock, flags);
++	nla_parse(tb, NL80211_ATTR_MAX, genlmsg_attrdata(gnlh, 0),
++		  genlmsg_attrlen(gnlh, 0), NULL);
 +
-+	return work;
++	/*
++	 * TODO: validate the interface and mac address!
++	 * Otherwise, there's a race condition as soon as
++	 * the kernel starts sending mpath notifications.
++	 */
++
++	mac_addr_n2a(dst, nla_data(tb[NL80211_ATTR_MAC]));
++	mac_addr_n2a(next_hop, nla_data(tb[NL80211_ATTR_MPATH_NEXT_HOP]));
++	if_indextoname(nla_get_u32(tb[NL80211_ATTR_IFINDEX]), dev);
++	printf("%s %s %s\n", dst, next_hop, dev);
++
++	return NL_SKIP;
 +}
 +
-+
-+static u32
-+brcmf_msgbuf_flowring_create_worker(struct brcmf_msgbuf *msgbuf,
-+				    struct brcmf_msgbuf_work_item *work)
- {
- 	struct msgbuf_tx_flowring_create_req *create;
--	struct ethhdr *eh = (struct ethhdr *)(skb->data);
- 	struct brcmf_commonring *commonring;
- 	void *ret_ptr;
- 	u32 flowid;
-@@ -557,16 +587,11 @@ static u32 brcmf_msgbuf_flowring_create(struct brcmf_msgbuf *msgbuf, int ifidx,
- 	long long address;
- 	int err;
- 
--	flowid = brcmf_flowring_create(msgbuf->flow, eh->h_dest,
--				       skb->priority, ifidx);
--	if (flowid == BRCMF_FLOWRING_INVALID_ID)
--		return flowid;
--
-+	flowid = work->flowid;
- 	dma_sz = BRCMF_H2D_TXFLOWRING_MAX_ITEM * BRCMF_H2D_TXFLOWRING_ITEMSIZE;
--
- 	dma_buf = dma_alloc_coherent(msgbuf->drvr->bus_if->dev, dma_sz,
- 				     &msgbuf->flowring_dma_handle[flowid],
--				     GFP_ATOMIC);
-+				     GFP_KERNEL);
- 	if (!dma_buf) {
- 		brcmf_err("dma_alloc_coherent failed\n");
- 		brcmf_flowring_delete(msgbuf->flow, flowid);
-@@ -589,13 +614,13 @@ static u32 brcmf_msgbuf_flowring_create(struct brcmf_msgbuf *msgbuf, int ifidx,
- 
- 	create = (struct msgbuf_tx_flowring_create_req *)ret_ptr;
- 	create->msg.msgtype = MSGBUF_TYPE_FLOW_RING_CREATE;
--	create->msg.ifidx = ifidx;
-+	create->msg.ifidx = work->ifidx;
- 	create->msg.request_id = 0;
- 	create->tid = brcmf_flowring_tid(msgbuf->flow, flowid);
- 	create->flow_ring_id = cpu_to_le16(flowid +
- 					   BRCMF_NROF_H2D_COMMON_MSGRINGS);
--	memcpy(create->sa, eh->h_source, ETH_ALEN);
--	memcpy(create->da, eh->h_dest, ETH_ALEN);
-+	memcpy(create->sa, work->sa, ETH_ALEN);
-+	memcpy(create->da, work->da, ETH_ALEN);
- 	address = (long long)(long)msgbuf->flowring_dma_handle[flowid];
- 	create->flow_ring_addr.high_addr = cpu_to_le32(address >> 32);
- 	create->flow_ring_addr.low_addr = cpu_to_le32(address & 0xffffffff);
-@@ -603,7 +628,7 @@ static u32 brcmf_msgbuf_flowring_create(struct brcmf_msgbuf *msgbuf, int ifidx,
- 	create->len_item = cpu_to_le16(BRCMF_H2D_TXFLOWRING_ITEMSIZE);
- 
- 	brcmf_dbg(MSGBUF, "Send Flow Create Req flow ID %d for peer %pM prio %d ifindex %d\n",
--		  flowid, eh->h_dest, create->tid, ifidx);
-+		  flowid, work->da, create->tid, work->ifidx);
- 
- 	err = brcmf_commonring_write_complete(commonring);
- 	brcmf_commonring_unlock(commonring);
-@@ -617,6 +642,53 @@ static u32 brcmf_msgbuf_flowring_create(struct brcmf_msgbuf *msgbuf, int ifidx,
- }
- 
- 
-+static void brcmf_msgbuf_flowring_worker(struct work_struct *work)
++static int handle_mpp_get(struct nl80211_state *state,
++			  struct nl_cb *cb,
++			  struct nl_msg *msg,
++			  int argc, char **argv,
++			  enum id_input id)
 +{
-+	struct brcmf_msgbuf *msgbuf;
-+	struct brcmf_msgbuf_work_item *create;
++	unsigned char dst[ETH_ALEN];
 +
-+	msgbuf = container_of(work, struct brcmf_msgbuf, flowring_work);
++	if (argc < 1)
++		return 1;
 +
-+	while ((create = brcmf_msgbuf_dequeue_work(msgbuf))) {
-+		brcmf_msgbuf_flowring_create_worker(msgbuf, create);
-+		kfree(create);
++	if (mac_addr_a2n(dst, argv[0])) {
++		fprintf(stderr, "invalid mac address\n");
++		return 2;
 +	}
++	argc--;
++	argv++;
++
++	if (argc)
++		return 1;
++
++	NLA_PUT(msg, NL80211_ATTR_MAC, ETH_ALEN, dst);
++
++	nl_cb_set(cb, NL_CB_VALID, NL_CB_CUSTOM, print_mpp_handler, NULL);
++
++	return 0;
++ nla_put_failure:
++	return -ENOBUFS;
 +}
++COMMAND(mpp, get, "<MAC address>",
++	NL80211_CMD_GET_MPP, 0, CIB_NETDEV, handle_mpp_get,
++	"Get information on mesh proxy path to the given node.");
 +
-+
-+static u32 brcmf_msgbuf_flowring_create(struct brcmf_msgbuf *msgbuf, int ifidx,
-+					struct sk_buff *skb)
++static int handle_mpp_dump(struct nl80211_state *state,
++			     struct nl_cb *cb,
++			     struct nl_msg *msg,
++			     int argc, char **argv,
++			     enum id_input id)
 +{
-+	struct brcmf_msgbuf_work_item *create;
-+	struct ethhdr *eh = (struct ethhdr *)(skb->data);
-+	u32 flowid;
-+	ulong flags;
-+
-+	create = kzalloc(sizeof(*create), GFP_ATOMIC);
-+	if (create == NULL)
-+		return BRCMF_FLOWRING_INVALID_ID;
-+
-+	flowid = brcmf_flowring_create(msgbuf->flow, eh->h_dest,
-+				       skb->priority, ifidx);
-+	if (flowid == BRCMF_FLOWRING_INVALID_ID) {
-+		kfree(create);
-+		return flowid;
-+	}
-+
-+	create->flowid = flowid;
-+	create->ifidx = ifidx;
-+	memcpy(create->sa, eh->h_source, ETH_ALEN);
-+	memcpy(create->da, eh->h_dest, ETH_ALEN);
-+
-+	spin_lock_irqsave(&msgbuf->flowring_work_lock, flags);
-+	list_add_tail(&create->queue, &msgbuf->work_queue);
-+	spin_unlock_irqrestore(&msgbuf->flowring_work_lock, flags);
-+	schedule_work(&msgbuf->flowring_work);
-+
-+	return flowid;
++	printf("DEST ADDR         PROXY NODE        IFACE\n");
++	nl_cb_set(cb, NL_CB_VALID, NL_CB_CUSTOM, print_mpp_handler, NULL);
++	return 0;
 +}
++COMMAND(mpp, dump, NULL,
++	NL80211_CMD_GET_MPP, NLM_F_DUMP, CIB_NETDEV, handle_mpp_dump,
++	"List known mesh proxy paths.");
+diff --git a/nl80211.h b/nl80211.h
+index be9519b..80cff48 100644
+--- a/nl80211.h
++++ b/nl80211.h
+@@ -722,6 +722,10 @@
+  *	QoS mapping is relevant for IP packets, it is only valid during an
+  *	association. This is cleared on disassociation and AP restart.
+  *
++ * @NL80211_CMD_GET_MPP: Get mesh path attributes for mesh proxy path to
++ *	destination %NL80211_ATTR_MAC on the interface identified by
++ *	%NL80211_ATTR_IFINDEX.
++ *
+  * @NL80211_CMD_MAX: highest used command number
+  * @__NL80211_CMD_AFTER_LAST: internal use
+  */
+@@ -893,6 +897,8 @@ enum nl80211_commands {
+ 
+ 	NL80211_CMD_SET_QOS_MAP,
+ 
++	NL80211_CMD_GET_MPP,
 +
+ 	/* add new commands above here */
+ 
+ 	/* used to define NL80211_CMD_MAX below */
+@@ -1591,6 +1597,9 @@ enum nl80211_commands {
+  *	creation then the new interface will be owned by the netlink socket
+  *	that created it and will be destroyed when the socket is closed
+  *
++ * @NL80211_ATTR_TDLS_INITIATOR: flag attribute indicating the current end is
++ *	the TDLS link initiator.
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -1931,6 +1940,8 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_CSA_C_OFFSETS_TX,
+ 	NL80211_ATTR_MAX_CSA_COUNTERS,
+ 
++	NL80211_ATTR_TDLS_INITIATOR,
 +
- static void brcmf_msgbuf_txflow(struct brcmf_msgbuf *msgbuf, u8 flowid)
- {
- 	struct brcmf_flowring *flow = msgbuf->flow;
-@@ -1272,7 +1344,7 @@ int brcmf_proto_msgbuf_attach(struct brcmf_pub *drvr)
- 	u32 count;
+ 	/* add attributes here, update the policy in nl80211.c */
  
- 	if_msgbuf = drvr->bus_if->msgbuf;
--	msgbuf = kzalloc(sizeof(*msgbuf), GFP_ATOMIC);
-+	msgbuf = kzalloc(sizeof(*msgbuf), GFP_KERNEL);
- 	if (!msgbuf)
- 		goto fail;
- 
-@@ -1283,11 +1355,11 @@ int brcmf_proto_msgbuf_attach(struct brcmf_pub *drvr)
- 	}
- 	INIT_WORK(&msgbuf->txflow_work, brcmf_msgbuf_txflow_worker);
- 	count = BITS_TO_LONGS(if_msgbuf->nrof_flowrings);
--	msgbuf->flow_map = kzalloc(count, GFP_ATOMIC);
-+	msgbuf->flow_map = kzalloc(count, GFP_KERNEL);
- 	if (!msgbuf->flow_map)
- 		goto fail;
- 
--	msgbuf->txstatus_done_map = kzalloc(count, GFP_ATOMIC);
-+	msgbuf->txstatus_done_map = kzalloc(count, GFP_KERNEL);
- 	if (!msgbuf->txstatus_done_map)
- 		goto fail;
- 
-@@ -1295,7 +1367,7 @@ int brcmf_proto_msgbuf_attach(struct brcmf_pub *drvr)
- 	msgbuf->ioctbuf = dma_alloc_coherent(drvr->bus_if->dev,
- 					     BRCMF_TX_IOCTL_MAX_MSG_SIZE,
- 					     &msgbuf->ioctbuf_handle,
--					     GFP_ATOMIC);
-+					     GFP_KERNEL);
- 	if (!msgbuf->ioctbuf)
- 		goto fail;
- 	address = (long long)(long)msgbuf->ioctbuf_handle;
-@@ -1318,7 +1390,7 @@ int brcmf_proto_msgbuf_attach(struct brcmf_pub *drvr)
- 	msgbuf->flowrings = (struct brcmf_commonring **)if_msgbuf->flowrings;
- 	msgbuf->nrof_flowrings = if_msgbuf->nrof_flowrings;
- 	msgbuf->flowring_dma_handle = kzalloc(msgbuf->nrof_flowrings *
--		sizeof(*msgbuf->flowring_dma_handle), GFP_ATOMIC);
-+		sizeof(*msgbuf->flowring_dma_handle), GFP_KERNEL);
- 	if (!msgbuf->flowring_dma_handle)
- 		goto fail;
- 
-@@ -1358,6 +1430,10 @@ int brcmf_proto_msgbuf_attach(struct brcmf_pub *drvr)
- 	brcmf_msgbuf_rxbuf_event_post(msgbuf);
- 	brcmf_msgbuf_rxbuf_ioctlresp_post(msgbuf);
- 
-+	INIT_WORK(&msgbuf->flowring_work, brcmf_msgbuf_flowring_worker);
-+	spin_lock_init(&msgbuf->flowring_work_lock);
-+	INIT_LIST_HEAD(&msgbuf->work_queue);
-+
- 	return 0;
- 
- fail:
-@@ -1380,11 +1456,19 @@ fail:
- void brcmf_proto_msgbuf_detach(struct brcmf_pub *drvr)
- {
- 	struct brcmf_msgbuf *msgbuf;
-+	struct brcmf_msgbuf_work_item *work;
- 
- 	brcmf_dbg(TRACE, "Enter\n");
- 	if (drvr->proto->pd) {
- 		msgbuf = (struct brcmf_msgbuf *)drvr->proto->pd;
--
-+		cancel_work_sync(&msgbuf->flowring_work);
-+		while (!list_empty(&msgbuf->work_queue)) {
-+			work = list_first_entry(&msgbuf->work_queue,
-+						struct brcmf_msgbuf_work_item,
-+						queue);
-+			list_del(&work->queue);
-+			kfree(work);
-+		}
- 		kfree(msgbuf->flow_map);
- 		kfree(msgbuf->txstatus_done_map);
- 		if (msgbuf->txflow_wq)
+ 	__NL80211_ATTR_AFTER_LAST,
 -- 
 1.9.1
+
 
