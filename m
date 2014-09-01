@@ -1,56 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:4690 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751263AbaIJNfN (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:52103 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751787AbaIACA5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Sep 2014 09:35:13 -0400
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH 04/22] wil6210: some more debug for the WMI mechanism
-Date: Wed, 10 Sep 2014 16:34:33 +0300
-Message-ID: <1410356091-19219-5-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140910_153537_366791_7C385AA7)
-In-Reply-To: <1410356091-19219-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1410356091-19219-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sun, 31 Aug 2014 22:00:57 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH] ath9k: Fix offchannel duration calculation
+Date: Mon,  1 Sep 2014 07:31:03 +0530
+Message-Id: <1409536863-19781-1-git-send-email-sujith@msujith.org> (sfid-20140901_040103_931818_08DA4BCF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Log worker thread start/stop; as well as every handler invocation
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Currently, different units are used for handling
+sc->offchannel.duration. In scan mode, it contains jiffies and in RoC
+mode, milliseconds is used. This causes confusion since in
+ath_chanctx_switch(), TU_TO_USEC is used to determine the offchannel
+duration, resulting in incorrect values. Fix this by using jiffies in
+both modes.
+
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/wil6210/wmi.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/net/wireless/ath/ath9k/channel.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index b1aaaee..490c278 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -1128,6 +1128,9 @@ static void wmi_event_handle(struct wil6210_priv *wil,
- 		struct wil6210_mbox_hdr_wmi *wmi = (void *)(&hdr[1]);
- 		void *evt_data = (void *)(&wmi[1]);
- 		u16 id = le16_to_cpu(wmi->id);
-+
-+		wil_dbg_wmi(wil, "Handle WMI 0x%04x (reply_id 0x%04x)\n",
-+			    id, wil->reply_id);
- 		/* check if someone waits for this event */
- 		if (wil->reply_id && wil->reply_id == id) {
- 			if (wil->reply_buf) {
-@@ -1184,9 +1187,11 @@ void wmi_event_worker(struct work_struct *work)
- 	struct pending_wmi_event *evt;
- 	struct list_head *lh;
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index 047a76f..7a6ca44 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -601,7 +601,7 @@ static void ath_chanctx_switch(struct ath_softc *sc, struct ath_chanctx *ctx,
  
-+	wil_dbg_wmi(wil, "Start %s\n", __func__);
- 	while ((lh = next_wmi_ev(wil)) != NULL) {
- 		evt = list_entry(lh, struct pending_wmi_event, list);
- 		wmi_event_handle(wil, &evt->event.hdr);
- 		kfree(evt);
- 	}
-+	wil_dbg_wmi(wil, "Finished %s\n", __func__);
- }
+ 	if (sc->next_chan == &sc->offchannel.chan) {
+ 		sc->sched.offchannel_duration =
+-			TU_TO_USEC(sc->offchannel.duration) +
++			jiffies_to_usecs(sc->offchannel.duration) +
+ 			sc->sched.channel_switch_time;
+ 
+ 		if (chandef) {
+@@ -688,7 +688,8 @@ void ath_offchannel_next(struct ath_softc *sc)
+ 	} else if (sc->offchannel.roc_vif) {
+ 		vif = sc->offchannel.roc_vif;
+ 		sc->offchannel.chan.txpower = vif->bss_conf.txpower;
+-		sc->offchannel.duration = sc->offchannel.roc_duration;
++		sc->offchannel.duration =
++			msecs_to_jiffies(sc->offchannel.roc_duration);
+ 		sc->offchannel.state = ATH_OFFCHANNEL_ROC_START;
+ 		ath_chanctx_offchan_switch(sc, sc->offchannel.roc_chan);
+ 	} else {
+@@ -959,8 +960,8 @@ static void ath_offchannel_channel_change(struct ath_softc *sc)
+ 			break;
+ 
+ 		sc->offchannel.state = ATH_OFFCHANNEL_ROC_WAIT;
+-		mod_timer(&sc->offchannel.timer, jiffies +
+-			  msecs_to_jiffies(sc->offchannel.duration));
++		mod_timer(&sc->offchannel.timer,
++			  jiffies + sc->offchannel.duration);
+ 		ieee80211_ready_on_channel(sc->hw);
+ 		break;
+ 	case ATH_OFFCHANNEL_ROC_DONE:
 -- 
-1.9.1
+2.1.0
 
