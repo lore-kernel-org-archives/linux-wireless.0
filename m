@@ -1,66 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:36366 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753907AbaIHQ42 (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:56304 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752012AbaIAHak (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Sep 2014 12:56:28 -0400
-Received: by mail-wi0-f181.google.com with SMTP id e4so3042967wiv.14
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Sep 2014 09:56:27 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Luciano Coelho <luciano.coelho@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 03/12] iwlwifi: mvm: set MAC_FILTER_IN_BEACON correctly for STA/P2P client
-Date: Mon,  8 Sep 2014 19:56:08 +0300
-Message-Id: <1410195377-10075-3-git-send-email-egrumbach@gmail.com> (sfid-20140908_185631_674611_6CABC4B5)
-In-Reply-To: <540DDF37.5030801@gmail.com>
-References: <540DDF37.5030801@gmail.com>
+	Mon, 1 Sep 2014 03:30:40 -0400
+From: Avinash Patil <patila@marvell.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
+	<huxm@marvell.com>, <yangyang@marvell.com>, <cluo@marvell.com>,
+	<maithili@marvell.com>, Avinash Patil <patila@marvell.com>
+Subject: [PATCH 01/17] mwifiex: fix probable memory corruption while processing TDLS frame
+Date: Mon, 1 Sep 2014 18:28:49 +0530
+Message-ID: <1409576345-13717-2-git-send-email-patila@marvell.com> (sfid-20140901_093042_982096_CB1B0932)
+In-Reply-To: <1409576345-13717-1-git-send-email-patila@marvell.com>
+References: <1409576345-13717-1-git-send-email-patila@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+Size of RSN IE buffer in driver is 254 while maximum size of received buffer
+to be copied to RSN IE buffer can be 255. Add boundary check to copy maximum
+of 254 bytes into RSN IE buffer.
 
-In commit cad3f08c (iwlwifi: mvm: enable MAC_FILTER_IN_BEACON when
-forced_assoc_off is set) the code to set the MAC_FILTER_IN_BEACON flag
-was accidentally moved to the main block of the if statement, while it
-should be in the else block instead.  Move it to the right place.
-
-Fixes: cad3f08c23de ("iwlwifi: mvm: enable MAC_FILTER_IN_BEACON when forced_assoc_off is set")
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/net/wireless/mwifiex/tdls.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-index 0e523e2..8242e68 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-@@ -721,11 +721,6 @@ static int iwl_mvm_mac_ctxt_cmd_sta(struct iwl_mvm *mvm,
- 	    !force_assoc_off) {
- 		u32 dtim_offs;
- 
--		/* Allow beacons to pass through as long as we are not
--		 * associated, or we do not have dtim period information.
--		 */
--		cmd.filter_flags |= cpu_to_le32(MAC_FILTER_IN_BEACON);
--
- 		/*
- 		 * The DTIM count counts down, so when it is N that means N
- 		 * more beacon intervals happen until the DTIM TBTT. Therefore
-@@ -759,6 +754,11 @@ static int iwl_mvm_mac_ctxt_cmd_sta(struct iwl_mvm *mvm,
- 		ctxt_sta->is_assoc = cpu_to_le32(1);
- 	} else {
- 		ctxt_sta->is_assoc = cpu_to_le32(0);
-+
-+		/* Allow beacons to pass through as long as we are not
-+		 * associated, or we do not have dtim period information.
-+		 */
-+		cmd.filter_flags |= cpu_to_le32(MAC_FILTER_IN_BEACON);
- 	}
- 
- 	ctxt_sta->bi = cpu_to_le32(vif->bss_conf.beacon_int);
+diff --git a/drivers/net/wireless/mwifiex/tdls.c b/drivers/net/wireless/mwifiex/tdls.c
+index 4c5fd95..e294907 100644
+--- a/drivers/net/wireless/mwifiex/tdls.c
++++ b/drivers/net/wireless/mwifiex/tdls.c
+@@ -871,7 +871,9 @@ void mwifiex_process_tdls_action_frame(struct mwifiex_private *priv,
+ 			break;
+ 		case WLAN_EID_RSN:
+ 			memcpy((u8 *)&sta_ptr->tdls_cap.rsn_ie, pos,
+-			       sizeof(struct ieee_types_header) + pos[1]);
++			       sizeof(struct ieee_types_header) +
++			       min_t(u8, pos[1], IEEE_MAX_IE_SIZE -
++				     sizeof(struct ieee_types_header)));
+ 			break;
+ 		case WLAN_EID_QOS_CAPA:
+ 			sta_ptr->tdls_cap.qos_info = pos[2];
 -- 
-1.9.1
+1.8.1.4
 
