@@ -1,37 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:51882 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753637AbaICDJP (ORCPT
+Received: from mail-lb0-f181.google.com ([209.85.217.181]:64473 "EHLO
+	mail-lb0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754061AbaIAQvV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Sep 2014 23:09:15 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH v2 0/6] ath9k patches
-Date: Wed,  3 Sep 2014 08:39:19 +0530
-Message-Id: <1409713765-9358-1-git-send-email-sujith@msujith.org> (sfid-20140903_050939_490005_2D4453ED)
+	Mon, 1 Sep 2014 12:51:21 -0400
+MIME-Version: 1.0
+In-Reply-To: <54046CA1.4040108@broadcom.com>
+References: <1409329464-768-1-git-send-email-geert@linux-m68k.org>
+	<54042CA1.6010904@broadcom.com>
+	<CAMuHMdV2hV_r_OASkv+U-AGVov18qFOrAVm-nDHHPHXZ6fcxxg@mail.gmail.com>
+	<54046CA1.4040108@broadcom.com>
+Date: Mon, 1 Sep 2014 18:51:19 +0200
+Message-ID: <CAMuHMdWEbyXmNyPW1Mubv+idYuqsqbVVKuGyML5=vJ+58iTZig@mail.gmail.com> (sfid-20140901_185140_409373_EBC1F6DF)
+Subject: Re: [PATCH] brcmfmac: BRCMFMAC should depend on HAS_DMA
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Brett Rudley <brudley@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	brcm80211-dev-list@broadcom.com,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Hi Arend,
 
-Pending patches for ath9k, rebased over 3.17-rc3.
+On Mon, Sep 1, 2014 at 2:54 PM, Arend van Spriel <arend@broadcom.com> wrote:
+> On 09/01/14 10:44, Geert Uytterhoeven wrote:
+>> On Mon, Sep 1, 2014 at 10:21 AM, Arend van Spriel<arend@broadcom.com>
+>> wrote:
+>>>>
+>>>>    config BRCMFMAC
+>>>>          tristate "Broadcom IEEE802.11n embedded FullMAC WLAN driver"
+>>>> -       depends on CFG80211
+>>>> +       depends on CFG80211A&&   HAS_DMA
+>>>
+>>> Not sure what happened here, but CFG80211 kconfig option did was not
+>>> renamed
+>>> as far as I know. Anyway, I would like to propose a different solution.
+>>> Will get back to you when I have it ready.
 
-Sujith Manoharan (6):
-  ath9k: Fix beacon configuration for channel contexts
-  ath9k: Fix beacons for managed mode
-  ath9k: Fix panic when adding an AP interface
-  ath9k: Fix NoA start time calculation
-  ath9k: Fix offchannel duration calculation
-  ath9k: Add CTWindow support
+> I added Kconfig options for the proto layer which are selected by the host
+> interface selection. So the HAS_DMA dependency is checked for BRCMFMAC_PCIE.
 
- drivers/net/wireless/ath/ath9k/ath9k.h   |  2 ++
- drivers/net/wireless/ath/ath9k/beacon.c  | 12 ++++++++++
- drivers/net/wireless/ath/ath9k/channel.c | 39 +++++++++++++++++++++++++++-----
- drivers/net/wireless/ath/ath9k/init.c    |  5 ++--
- drivers/net/wireless/ath/ath9k/main.c    | 10 ++++----
- 5 files changed, 56 insertions(+), 12 deletions(-)
+Thanks!
 
--- 
-2.1.0
+> I am wondering whether GENERIC_IO should also be checked.
 
+Probably not. Let's see if anyone complains ;-)
+
+> Can you verify the patch below works with your configuration?
+
+Yes, it compiles and links fine now (after applying it manually due to
+whitespace mess-up).
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
