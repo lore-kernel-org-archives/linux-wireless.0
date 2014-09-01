@@ -1,97 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s87.loopia.se ([194.9.94.111]:11666 "EHLO s87.loopia.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751023AbaIFDUU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Sep 2014 23:20:20 -0400
-From: Hans Wennborg <hans@hanshq.net>
-To: linville@tuxdriver.com, larry.finger@lwfinger.net,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Hans Wennborg <hans@hanshq.net>
-Subject: [PATCH 1/1] rtlwifi: fix %d confusingly prefixed with 0x in format strings
-Date: Fri,  5 Sep 2014 20:19:50 -0700
-Message-Id: <1409973590-25352-1-git-send-email-hans@hanshq.net> (sfid-20140906_052029_229464_D747E8DF)
-In-Reply-To: <20140825201255.GG1966@tuxdriver.com>
-References: <20140825201255.GG1966@tuxdriver.com>
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:59218 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751078AbaIAHaJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Sep 2014 03:30:09 -0400
+From: Avinash Patil <patila@marvell.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
+	<huxm@marvell.com>, <yangyang@marvell.com>, <cluo@marvell.com>,
+	<maithili@marvell.com>, Avinash Patil <patila@marvell.com>
+Subject: [PATCH 00/17] mwifiex updates for 3.17
+Date: Mon, 1 Sep 2014 18:28:48 +0530
+Message-ID: <1409576345-13717-1-git-send-email-patila@marvell.com> (sfid-20140901_093021_564968_26043116)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Hans Wennborg <hans@hanshq.net>
----
- drivers/net/wireless/rtlwifi/pci.c           | 6 +++---
- drivers/net/wireless/rtlwifi/rtl8192de/phy.c | 8 ++++----
- 2 files changed, 7 insertions(+), 7 deletions(-)
+This patch series brings in scan enhancement including scan channel gap,
+support for parsing FW API version from HW_SPEC command response,
+support for processing RX in work queue and few trivial fixes for 
+SDIO multiport aggregation.
 
-diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
-index 67d1ee6..74a8ba4 100644
---- a/drivers/net/wireless/rtlwifi/pci.c
-+++ b/drivers/net/wireless/rtlwifi/pci.c
-@@ -646,7 +646,7 @@ static void _rtl_pci_tx_isr(struct ieee80211_hw *hw, int prio)
- 				== 2) {
- 
- 			RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--				 "more desc left, wake skb_queue@%d, ring->idx = %d, skb_queue_len = 0x%d\n",
-+				 "more desc left, wake skb_queue@%d, ring->idx = %d, skb_queue_len = 0x%x\n",
- 				 prio, ring->idx,
- 				 skb_queue_len(&ring->queue));
- 
-@@ -1469,7 +1469,7 @@ static int rtl_pci_tx(struct ieee80211_hw *hw,
- 
- 		if ((own == 1) && (hw_queue != BEACON_QUEUE)) {
- 			RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
--				 "No more TX desc@%d, ring->idx = %d, idx = %d, skb_queue_len = 0x%d\n",
-+				 "No more TX desc@%d, ring->idx = %d, idx = %d, skb_queue_len = 0x%x\n",
- 				 hw_queue, ring->idx, idx,
- 				 skb_queue_len(&ring->queue));
- 
-@@ -1511,7 +1511,7 @@ static int rtl_pci_tx(struct ieee80211_hw *hw,
- 	if ((ring->entries - skb_queue_len(&ring->queue)) < 2 &&
- 	    hw_queue != BEACON_QUEUE) {
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--			 "less desc left, stop skb_queue@%d, ring->idx = %d, idx = %d, skb_queue_len = 0x%d\n",
-+			 "less desc left, stop skb_queue@%d, ring->idx = %d, idx = %d, skb_queue_len = 0x%x\n",
- 			 hw_queue, ring->idx, idx,
- 			 skb_queue_len(&ring->queue));
- 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/phy.c b/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
-index 592125a..1961b8e 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
-@@ -677,7 +677,7 @@ static void _rtl92d_store_pwrindex_diffrate_offset(struct ieee80211_hw *hw,
- 
- 	rtlphy->mcs_offset[rtlphy->pwrgroup_cnt][index] = data;
- 	RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
--		 "MCSTxPowerLevelOriginalOffset[%d][%d] = 0x%ulx\n",
-+		 "MCSTxPowerLevelOriginalOffset[%d][%d] = 0x%x\n",
- 		 rtlphy->pwrgroup_cnt, index,
- 		 rtlphy->mcs_offset[rtlphy->pwrgroup_cnt][index]);
- 	if (index == 13)
-@@ -2531,7 +2531,7 @@ static void _rtl92d_phy_reload_lck_setting(struct ieee80211_hw *hw,
- 	if (rtlpriv->rtlhal.current_bandtype == BAND_ON_5G) {/* Path-A for 5G */
- 		u4tmp = curveindex_5g[channel-1];
- 		RTPRINT(rtlpriv, FINIT, INIT_IQK,
--			"ver 1 set RF-A, 5G,	0x28 = 0x%ulx !!\n", u4tmp);
-+			"ver 1 set RF-A, 5G,	0x28 = 0x%x !!\n", u4tmp);
- 		if (rtlpriv->rtlhal.macphymode == DUALMAC_DUALPHY &&
- 			rtlpriv->rtlhal.interfaceindex == 1) {
- 			bneed_powerdown_radio =
-@@ -2550,7 +2550,7 @@ static void _rtl92d_phy_reload_lck_setting(struct ieee80211_hw *hw,
- 	} else if (rtlpriv->rtlhal.current_bandtype == BAND_ON_2_4G) {
- 		u4tmp = curveindex_2g[channel-1];
- 		RTPRINT(rtlpriv, FINIT, INIT_IQK,
--			"ver 3 set RF-B, 2G, 0x28 = 0x%ulx !!\n", u4tmp);
-+			"ver 3 set RF-B, 2G, 0x28 = 0x%x !!\n", u4tmp);
- 		if (rtlpriv->rtlhal.macphymode == DUALMAC_DUALPHY &&
- 			rtlpriv->rtlhal.interfaceindex == 0) {
- 			bneed_powerdown_radio =
-@@ -2562,7 +2562,7 @@ static void _rtl92d_phy_reload_lck_setting(struct ieee80211_hw *hw,
- 		}
- 		rtl_set_rfreg(hw, erfpath, RF_SYN_G4, 0x3f800, u4tmp);
- 		RTPRINT(rtlpriv, FINIT, INIT_IQK,
--			"ver 3 set RF-B, 2G, 0x28 = 0x%ulx !!\n",
-+			"ver 3 set RF-B, 2G, 0x28 = 0x%x !!\n",
- 			rtl_get_rfreg(hw,  erfpath, RF_SYN_G4, 0x3f800));
- 		if (bneed_powerdown_radio)
- 			_rtl92d_phy_restore_rf_env(hw, erfpath, &u4regvalue);
+Amitkumar Karwar (7):
+  mwifiex: fix a bug in Tx multiport aggregation
+  mwifiex: minor cleanup in multiport aggregation
+  mwifiex: fix left_len calculation issue
+  mwifiex: rename macro and variables related to API revision
+  mwifiex: use firmware API revision from GET_HW_SPEC response
+  mwifiex: remove redundant variable report_scan_result
+  mwifiex: remove low priority scan handling
+
+Avinash Patil (9):
+  mwifiex: fix probable memory corruption while processing TDLS frame
+  mwifiex: avoid processing RX packets with invalid length
+  mwifiex: rework internal scan for association
+  mwifiex: support for event done interrupt
+  mwifiex: set passive scan type for scan requests with no ssid
+  mwifiex: bring in scan channel gap feature
+  mwifiex: remove restriction of single channel scan when connected
+  mwifiex: process TX even when scan is ongoing
+  mwifiex: add rx workqueue support
+
+Xinming Hu (1):
+  mwifiex: fix 5G association failure after leaving 2.4G IBSS
+
+ drivers/net/wireless/mwifiex/11n_rxreorder.c |  14 ++
+ drivers/net/wireless/mwifiex/cfg80211.c      |  13 +-
+ drivers/net/wireless/mwifiex/cmdevt.c        |  28 ++--
+ drivers/net/wireless/mwifiex/fw.h            |  17 ++-
+ drivers/net/wireless/mwifiex/init.c          |  25 +++-
+ drivers/net/wireless/mwifiex/main.c          | 194 +++++++++++++--------------
+ drivers/net/wireless/mwifiex/main.h          |  49 +++++--
+ drivers/net/wireless/mwifiex/pcie.c          |  37 ++++-
+ drivers/net/wireless/mwifiex/pcie.h          |   5 +-
+ drivers/net/wireless/mwifiex/scan.c          | 112 ++++++++++------
+ drivers/net/wireless/mwifiex/sdio.c          |  28 ++--
+ drivers/net/wireless/mwifiex/sta_cmd.c       |   2 +-
+ drivers/net/wireless/mwifiex/sta_cmdresp.c   |   4 +-
+ drivers/net/wireless/mwifiex/sta_ioctl.c     |  13 +-
+ drivers/net/wireless/mwifiex/tdls.c          |   4 +-
+ 15 files changed, 339 insertions(+), 206 deletions(-)
+
 -- 
-2.1.0.rc2.206.gedb03e5
+1.8.1.4
 
