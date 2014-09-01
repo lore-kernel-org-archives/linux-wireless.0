@@ -1,68 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from merlin.infradead.org ([205.233.59.134]:42888 "EHLO
-	merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750784AbaIIOB5 (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:63691 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752329AbaIAHbL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Sep 2014 10:01:57 -0400
-Date: Tue, 9 Sep 2014 10:01:54 -0400
-From: Kyle McMartin <kyle@infradead.org>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: Kyle McMartin <kyle@infradead.org>, linux-firmware@kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>
-Subject: Re: pull request: new firmware for 7260 / 7265 / 3160: 25.222.9.0
-Message-ID: <20140909140154.GH15412@merlin.infradead.org> (sfid-20140909_160200_764176_73F36BF2)
-References: <54057C59.4020807@gmail.com>
- <20140902153035.GG15412@merlin.infradead.org>
- <CANUX_P1gZ22Ge2pLKtb=1-3831yTRC2KmisZ59gzJk=MDw0JYA@mail.gmail.com>
+	Mon, 1 Sep 2014 03:31:11 -0400
+From: Avinash Patil <patila@marvell.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
+	<huxm@marvell.com>, <yangyang@marvell.com>, <cluo@marvell.com>,
+	<maithili@marvell.com>, Avinash Patil <patila@marvell.com>
+Subject: [PATCH 04/17] mwifiex: support for event done interrupt
+Date: Mon, 1 Sep 2014 18:28:52 +0530
+Message-ID: <1409576345-13717-5-git-send-email-patila@marvell.com> (sfid-20140901_093115_567093_861CB5DE)
+In-Reply-To: <1409576345-13717-1-git-send-email-patila@marvell.com>
+References: <1409576345-13717-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CANUX_P1gZ22Ge2pLKtb=1-3831yTRC2KmisZ59gzJk=MDw0JYA@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Sep 07, 2014 at 11:19:22AM +0300, Emmanuel Grumbach wrote:
-> Emmanuel Grumbach
-> egrumbach@gmail.com
-> 
-> 
-> On Tue, Sep 2, 2014 at 6:30 PM, Kyle McMartin <kyle@infradead.org> wrote:
-> > On Tue, Sep 02, 2014 at 11:14:17AM +0300, Emmanuel Grumbach wrote:
-> >> Dear linux-firmware.git maintainers,
-> >>
-> >> Intel released a new -9 firmware for its WiFi adpaters for the 7000 family.
-> >> No new features here, but only bug fixes.
-> >>
-> >> The following changes since commit e2844339cb779c00f856c554958e16beca99b462:
-> >>
-> >>   iwlwifi: update firmware for 3160 / 7260 / 7265 (2014-05-19 14:45:28 +0300)
-> >>
-> >> are available in the git repository at:
-> >>
-> >>   git://git.kernel.org/pub/scm/linux/kernel/git/egrumbach/linux-firmware.git master
-> >>
-> >> for you to fetch changes up to e302d06fb8cd3ceade38ce484636094b1cd25a23:
-> >>
-> >>   iwlwifi: update firmware for 3160 / 7260 / 7265 (2014-09-02 11:06:42 +0300)
-> >>
-> >> ----------------------------------------------------------------
-> >> Emmanuel Grumbach (1):
-> >>       iwlwifi: update firmware for 3160 / 7260 / 7265
-> >>
-> >>  WHENCE               |   6 +++---
-> >>  iwlwifi-3160-9.ucode | Bin 666792 -> 669156 bytes
-> >>  iwlwifi-7260-9.ucode | Bin 679380 -> 681464 bytes
-> >>  iwlwifi-7265-9.ucode | Bin 691960 -> 697012 bytes
-> >>  4 files changed, 3 insertions(+), 3 deletions(-)
-> >>
-> >
-> > thanks, i'll get to this today.
-> 
-> I couldn't find the new firmware in linux-firmware.git, am I missing something?
-> 
+This patch adds support for writing CPU event interrupt done back
+to device.
+Patch also increases interrupt buffer ring size from 4 to 8.
 
-no, sorry, i hadn't gotten around to pushing it out. will get to it
-asap today.
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+---
+ drivers/net/wireless/mwifiex/pcie.c | 7 +++++++
+ drivers/net/wireless/mwifiex/pcie.h | 5 +++--
+ 2 files changed, 10 insertions(+), 2 deletions(-)
 
-regards, kyle
+diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
+index 27c2bf8..2ada1b7 100644
+--- a/drivers/net/wireless/mwifiex/pcie.c
++++ b/drivers/net/wireless/mwifiex/pcie.c
+@@ -1726,6 +1726,13 @@ static int mwifiex_pcie_process_event_ready(struct mwifiex_adapter *adapter)
+ 		   buffer is released. This is just to make things simpler,
+ 		   we need to find a better method of managing these buffers.
+ 		*/
++	} else {
++		if (mwifiex_write_reg(adapter, PCIE_CPU_INT_EVENT,
++				      CPU_INTR_EVENT_DONE)) {
++			dev_warn(adapter->dev,
++				 "Write register failed\n");
++			return -1;
++		}
+ 	}
+ 
+ 	return 0;
+diff --git a/drivers/net/wireless/mwifiex/pcie.h b/drivers/net/wireless/mwifiex/pcie.h
+index a1a8fd3..200e8b0 100644
+--- a/drivers/net/wireless/mwifiex/pcie.h
++++ b/drivers/net/wireless/mwifiex/pcie.h
+@@ -40,8 +40,8 @@
+ #define MWIFIEX_TXBD_MASK			0x3F
+ #define MWIFIEX_RXBD_MASK			0x3F
+ 
+-#define MWIFIEX_MAX_EVT_BD			0x04
+-#define MWIFIEX_EVTBD_MASK			0x07
++#define MWIFIEX_MAX_EVT_BD			0x08
++#define MWIFIEX_EVTBD_MASK			0x0f
+ 
+ /* PCIE INTERNAL REGISTERS */
+ #define PCIE_SCRATCH_0_REG				0xC10
+@@ -69,6 +69,7 @@
+ #define CPU_INTR_DOOR_BELL				BIT(1)
+ #define CPU_INTR_SLEEP_CFM_DONE			BIT(2)
+ #define CPU_INTR_RESET					BIT(3)
++#define CPU_INTR_EVENT_DONE				BIT(5)
+ 
+ #define HOST_INTR_DNLD_DONE				BIT(0)
+ #define HOST_INTR_UPLD_RDY				BIT(1)
+-- 
+1.8.1.4
 
