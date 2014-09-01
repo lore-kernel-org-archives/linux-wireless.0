@@ -1,95 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f181.google.com ([74.125.82.181]:62892 "EHLO
-	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753226AbaIOFNn (ORCPT
+Received: from ems.wolfvision.net ([213.33.91.163]:37896 "EHLO
+	ems.wolfvision.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751405AbaIAHNp convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Sep 2014 01:13:43 -0400
-Received: by mail-we0-f181.google.com with SMTP id w62so3299624wes.26
-        for <linux-wireless@vger.kernel.org>; Sun, 14 Sep 2014 22:13:42 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Arik Nemtsov <arik@wizery.com>,
-	Arik Nemtsov <arikx.nemtsov@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 26/28] iwlwifi: mvm: fix PSM disable during TDLS
-Date: Mon, 15 Sep 2014 08:12:58 +0300
-Message-Id: <1410757980-2138-26-git-send-email-egrumbach@gmail.com> (sfid-20140915_073114_883805_0C435F99)
-In-Reply-To: <5416742C.3070804@gmail.com>
-References: <5416742C.3070804@gmail.com>
+	Mon, 1 Sep 2014 03:13:45 -0400
+From: Matthias Fend <Matthias.Fend@wolfvision.net>
+To: Andreas Hartmann <andihartmann@freenet.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: "users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
+Subject: AW: [rt2x00-users] rt2x00: Ralink RT5572 (TL-WDN3200) sporadic
+ damages
+Date: Mon, 1 Sep 2014 07:06:15 +0000
+Message-ID: <CC2A85E271C1FB479D9C17305347F69A04D2A3CF@WOLFSERVER19.wolfvision-at.intra> (sfid-20140901_091348_458637_8424EA95)
+References: <CC2A85E271C1FB479D9C17305347F69A04C60591@WOLFSERVER19.wolfvision-at.intra>
+ <54036D77.6040708@maya.org>
+In-Reply-To: <54036D77.6040708@maya.org>
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+Hi Andreas,
 
-Simplify the code and check for TDLS stations just before sending the
-MAC_POWER_TABLE command. The previous version of the code still allowed
-PM in some multi-interface scenarios even with TDLS connected.
+> -----Ursprüngliche Nachricht-----
+> Von: Andreas Hartmann [mailto:andihartmann@freenet.de]
+> Gesendet: Sonntag, 31. August 2014 20:46
+> An: Matthias Fend; linux-wireless@vger.kernel.org
+> Cc: users@rt2x00.serialmonkey.com
+> Betreff: Re: [rt2x00-users] rt2x00: Ralink RT5572 (TL-WDN3200) sporadic
+> damages
+> 
+> Hello Matthias.
+> 
+> Matthias Fend wrote:
+> > Hello,
+> >
+> > While continuing stability tests after fixing the high current peaks while
+> sending uninitialized beacons [1] we still have occasional cases where
+> suddenly a stick stops working and is getting very hot.
+> > In this case very hot means that the plastic molding of the dongle shows
+> very clear deformations and the stick won't work properly anymore.
+> > One can see continuous vendor request failed message in case when a
+> stick stops working or when a damaged stick is inserted.
+> >
+> > So far we always tested with our custom hardware. To rule out hardware
+> topics we decided to build up a test farm with a more common platform.
+> > For a test we setup 10 raspberry pi with this setup:
+> > Kernel: https://github.com/raspberrypi/linux/tree/rpi-3.16.y
+> > WLAN-Stick Firmware: V0.33
+> > ap: hostapd 1.0
+> > ap:config:
+> > interface=wlan0
+> > driver=nl80211
+> > ieee80211n=1
+> > wmm_enabled=1
+> > ssid=MyPi1
+> > channel=36
+> > disassoc_low_ack=0
+> > country_code=DE
+> > ieee80211d=1
+> > hw_mode=a
+> > ht_capab=[HT40+][SHORT-GI-20][SHORT-GI-40]
+> > wpa=2
+> > wpa_passphrase=raspberry
+> > wpa_key_mgmt=WPA-PSK
+> > wpa_pairwise=TKIP CCMP
+> >
+> > Within the first 48 hours three of the ten setups failed with the mentioned
+> problems. Since the broken sticks had been replaced the test is now running
+> since five days without further problems.
+> > At least this test helped to figure out that this issue does not depend on
+> our hardware.
+> > Unfortunately this bug is really rare and currently I have absolutely no idea
+> what is triggering this damages.
+> > Has anybody observed similar behavior or has some helpful hints?
+> 
+> 
+> Your problem with hardware getting extremely hot is old and is not specific
+> to your device. I wrote about this problem long ago. This is one more reason
+> why I'm not using rt2800usb but the original Ralink drivers from
+> manufacturer.
 
-Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/power.c | 14 +++-----------
- 1 file changed, 3 insertions(+), 11 deletions(-)
+I always thought that the original vendor driver does not support ap mode??
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/power.c b/drivers/net/wireless/iwlwifi/mvm/power.c
-index ff842ee..5b85b0c 100644
---- a/drivers/net/wireless/iwlwifi/mvm/power.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/power.c
-@@ -336,7 +336,7 @@ static void iwl_mvm_power_build_cmd(struct iwl_mvm *mvm,
- 	cmd->flags |= cpu_to_le16(POWER_FLAGS_POWER_SAVE_ENA_MSK);
- 
- 	if (!vif->bss_conf.ps || iwl_mvm_vif_low_latency(mvmvif) ||
--	    !mvmvif->pm_enabled)
-+	    !mvmvif->pm_enabled || iwl_mvm_tdls_sta_count(mvm, vif))
- 		return;
- 
- 	cmd->flags |= cpu_to_le16(POWER_FLAGS_POWER_MANAGEMENT_ENA_MSK);
-@@ -510,8 +510,6 @@ struct iwl_power_vifs {
- 	bool bss_active;
- 	bool ap_active;
- 	bool monitor_active;
--	bool bss_tdls;
--	bool p2p_tdls;
- };
- 
- static void iwl_mvm_power_disable_pm_iterator(void *_data, u8* mac,
-@@ -566,8 +564,6 @@ static void iwl_mvm_power_get_vifs_iterator(void *_data, u8 *mac,
- 		/* only a single MAC of the same type */
- 		WARN_ON(power_iterator->p2p_vif);
- 		power_iterator->p2p_vif = vif;
--		power_iterator->p2p_tdls =
--			!!iwl_mvm_tdls_sta_count(power_iterator->mvm, vif);
- 		if (mvmvif->phy_ctxt)
- 			if (mvmvif->phy_ctxt->id < MAX_PHYS)
- 				power_iterator->p2p_active = true;
-@@ -577,8 +573,6 @@ static void iwl_mvm_power_get_vifs_iterator(void *_data, u8 *mac,
- 		/* only a single MAC of the same type */
- 		WARN_ON(power_iterator->bss_vif);
- 		power_iterator->bss_vif = vif;
--		power_iterator->bss_tdls =
--			!!iwl_mvm_tdls_sta_count(power_iterator->mvm, vif);
- 		if (mvmvif->phy_ctxt)
- 			if (mvmvif->phy_ctxt->id < MAX_PHYS)
- 				power_iterator->bss_active = true;
-@@ -621,15 +615,13 @@ static void iwl_mvm_power_set_pm(struct iwl_mvm *mvm,
- 		ap_mvmvif = iwl_mvm_vif_from_mac80211(vifs->ap_vif);
- 
- 	/* enable PM on bss if bss stand alone */
--	if (vifs->bss_active && !vifs->p2p_active && !vifs->ap_active &&
--	    !vifs->bss_tdls) {
-+	if (vifs->bss_active && !vifs->p2p_active && !vifs->ap_active) {
- 		bss_mvmvif->pm_enabled = true;
- 		return;
- 	}
- 
- 	/* enable PM on p2p if p2p stand alone */
--	if (vifs->p2p_active && !vifs->bss_active && !vifs->ap_active &&
--	    !vifs->p2p_tdls) {
-+	if (vifs->p2p_active && !vifs->bss_active && !vifs->ap_active) {
- 		if (mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_P2P_PM)
- 			p2p_mvmvif->pm_enabled = true;
- 		return;
--- 
-1.9.1
+> 
+> The reason from my point of view is the different USB handling:
+> rt2800usb uses a lot of small USB packages and therefore needs a lot of more
+> interrupts compared to the original driver, which uses big USB packages.
+> 
+> See:
+> http://news.gmane.org/find-
+> root.php?group=gmane.linux.drivers.rt2x00.user&article=615
 
+In my opinion there are two problematic things. One is the USB communication with the chipset and one is the register configuration itself.
+Meanwhile the communication timing got tweaked in a way that it seems stable to me - at least for my setup.
+The register configuration is somehow different than the one used by the original vendor driver for windows.
+But it's very hard to find out the crucial difference or maybe the set of differences since there is no/very little reliable documentation about the register meanings.
+
+Thanks,
+ ~Matthias
+
+> 
+> 
+> Regards,
+> Andreas
