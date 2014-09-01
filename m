@@ -1,34 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:55030 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750793AbaIYFsK (ORCPT
+Received: from userp1040.oracle.com ([156.151.31.81]:17295 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754289AbaIAR2F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Sep 2014 01:48:10 -0400
+	Mon, 1 Sep 2014 13:28:05 -0400
+Date: Mon, 1 Sep 2014 20:27:29 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Eric Lapuyade <eric.lapuyade@linux.intel.com>
+Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+	linux-wireless@vger.kernel.org, linux-nfc@ml01.01.org,
+	kernel-janitors@vger.kernel.org, Kees Cook <keescook@chromium.org>
+Subject: [patch -RESEND] NFC: potential overflows in
+ microread_target_discovered()
+Message-ID: <20140901172729.GA6549@mwanda> (sfid-20140901_192811_020844_431450BE)
 MIME-Version: 1.0
-In-Reply-To: <1411597048-25470-1-git-send-email-hauke@hauke-m.de>
-References: <1411597048-25470-1-git-send-email-hauke@hauke-m.de>
-Date: Thu, 25 Sep 2014 07:48:09 +0200
-Message-ID: <CACna6rx7d56-94Tsn=rb+FaS89DYZuvA1ZOFoSpRVCsVvPvWZA@mail.gmail.com> (sfid-20140925_074814_635442_0A94EB09)
-Subject: Re: [PATCH v5 1/2] bcma: register bcma as device tree driver
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: John Linville <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Arend Van Spriel <arend@broadcom.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Arnd Bergmann <arnd@arndb.de>, devicetree@vger.kernel.org,
-	varkabhadram@gmail.com
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 25 September 2014 00:17, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> This driver is used by the bcm53xx ARM SoC code. Now it is possible to
-> give the address of the chipcommon core in device tree and bcma will
-> search for all the other cores.
+Smatch says that skb->data is untrusted so we need to check to make sure
+that the memcpy() doesn't overflow.
 
-Hauke: I just noticed you sent this V5 patch as 1/2. I was wondering
-if it makes a sense to treat it as a standalone patch? Should we ask
-John to pick this one and you could work on this IRQ stuff
-independently?
+Fixes: cfad1ba87150 ('NFC: Initial support for Inside Secure microread')
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+---
+I sent this in January but never received any response.  I don't know
+the subsystem very well but it looks like it could have security
+implications.
+
+Compile tested only.
+
+diff --git a/drivers/nfc/microread/microread.c b/drivers/nfc/microread/microread.c
+index f868333271aa..963a4a5dc88e 100644
+--- a/drivers/nfc/microread/microread.c
++++ b/drivers/nfc/microread/microread.c
+@@ -501,9 +501,13 @@ static void microread_target_discovered(struct nfc_hci_dev *hdev, u8 gate,
+ 		targets->sens_res =
+ 			 be16_to_cpu(*(u16 *)&skb->data[MICROREAD_EMCF_A_ATQA]);
+ 		targets->sel_res = skb->data[MICROREAD_EMCF_A_SAK];
+-		memcpy(targets->nfcid1, &skb->data[MICROREAD_EMCF_A_UID],
+-		       skb->data[MICROREAD_EMCF_A_LEN]);
+ 		targets->nfcid1_len = skb->data[MICROREAD_EMCF_A_LEN];
++		if (targets->nfcid1_len > sizeof(targets->nfcid1)) {
++			r = -EINVAL;
++			goto exit_free;
++		}
++		memcpy(targets->nfcid1, &skb->data[MICROREAD_EMCF_A_UID],
++		       targets->nfcid1_len);
+ 		break;
+ 	case MICROREAD_GATE_ID_MREAD_ISO_A_3:
+ 		targets->supported_protocols =
+@@ -511,9 +515,13 @@ static void microread_target_discovered(struct nfc_hci_dev *hdev, u8 gate,
+ 		targets->sens_res =
+ 			 be16_to_cpu(*(u16 *)&skb->data[MICROREAD_EMCF_A3_ATQA]);
+ 		targets->sel_res = skb->data[MICROREAD_EMCF_A3_SAK];
+-		memcpy(targets->nfcid1, &skb->data[MICROREAD_EMCF_A3_UID],
+-		       skb->data[MICROREAD_EMCF_A3_LEN]);
+ 		targets->nfcid1_len = skb->data[MICROREAD_EMCF_A3_LEN];
++		if (targets->nfcid1_len > sizeof(targets->nfcid1)) {
++			r = -EINVAL;
++			goto exit_free;
++		}
++		memcpy(targets->nfcid1, &skb->data[MICROREAD_EMCF_A3_UID],
++		       targets->nfcid1_len);
+ 		break;
+ 	case MICROREAD_GATE_ID_MREAD_ISO_B:
+ 		targets->supported_protocols = NFC_PROTO_ISO14443_B_MASK;
