@@ -1,59 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:45612 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754214AbaIHQ4s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Sep 2014 12:56:48 -0400
-Message-ID: <540DDFC8.5050000@openwrt.org> (sfid-20140908_185652_972938_A9380D50)
-Date: Mon, 08 Sep 2014 18:56:40 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:11283 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752521AbaIAHcK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Sep 2014 03:32:10 -0400
+From: Avinash Patil <patila@marvell.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
+	<huxm@marvell.com>, <yangyang@marvell.com>, <cluo@marvell.com>,
+	<maithili@marvell.com>, Avinash Patil <patila@marvell.com>
+Subject: [PATCH 15/17] mwifiex: remove redundant variable report_scan_result
+Date: Mon, 1 Sep 2014 18:29:03 +0530
+Message-ID: <1409576345-13717-16-git-send-email-patila@marvell.com> (sfid-20140901_093215_051507_46B6593C)
+In-Reply-To: <1409576345-13717-1-git-send-email-patila@marvell.com>
+References: <1409576345-13717-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
-To: Rostislav Lisovy <lisovy@gmail.com>,
-	linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-CC: burak.simsek@volkswagen.de, s.sander@nordsys.de,
-	sojkam1@fel.cvut.cz, jan-niklas.meier@volkswagen.de,
-	emmanuel.thierry@yogoko.fr, thierry.ernst@yogoko.fr,
-	oyunaash@gmail.com, laszlo.virag@commsignia.com
-Subject: Re: 802.11p rate control
-References: <1410193824.10388.24.camel@umadbro>
-In-Reply-To: <1410193824.10388.24.camel@umadbro>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2014-09-08 18:30, Rostislav Lisovy wrote:
-> The possible obstacles are:
-> * 802.11p will be used mainly for two independent C2X protocol stacks --
-> one is the European ETSI ITS-G5, the other one is the US WAVE (IEEE
-> 1609). I assume that these two protocol stack implementations will
-> differ mainly in the user-space while the kernel part will be the same.
-> * ITS-G5 already speaks about the "default datarate" for different
-> channels ([1] 4.3, Table 2) -- i.e. 6 Mbit/s for channel no. 180; 12
-> Mbit/s for channel no. 178. This should be probably defined when
-> "joining the network" on a fixed channel.
-> 
-> The possible (first implementation) solution might be either to
-> implement some "dummy" rate control algorithm that will set a fixed
-> datarate only once (during "ocb join" command) or to use the Minstrel
-> while limiting the allowed datarate to be the lowest one; i.e.
->     mand_rates = ieee80211_mandatory_rates(sband, scan_width);
->     sta->sta.supp_rates[band] =
->         find_first_bit(&mand_rates, sizeof(u32));
-> 
-> If I am not mistaken, it is not possible to live without an in-kernel
-> rate_control algorithm?
-> One interesting idea I got from one colleague is to implement the
-> algorithm logic in the user-space -- kernel would contain just a thin
-> shell controlled from the user-space (via netlink?). This is probably
-> not as insane as it may sound since the purpose of the rate-control
-> algorithm for 802.11p (at least for ITS-G5) is not to "maximize the
-> immediate throughput" but more like "shared medium congestion control",
-> which may require much slower frequency of a control loop.
-I think doing this in userspace is overkill. minstrel should be able to
-handle rate control for 802.11p just fine if you set up the supported
-rates properly.
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-By the way, minstrel does not try to "maximize the immediate
-throughput", it tries to maximize the ratio of throughput vs used
-airtime, which should be good for 802.11p as well.
+This variable is never used, get rid of it.
 
-- Felix
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+---
+ drivers/net/wireless/mwifiex/main.h        | 1 -
+ drivers/net/wireless/mwifiex/scan.c        | 3 ---
+ drivers/net/wireless/mwifiex/sta_cmdresp.c | 2 --
+ 3 files changed, 6 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 18c327c..4e8e881 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -548,7 +548,6 @@ struct mwifiex_private {
+ 	u8 nick_name[16];
+ 	u16 current_key_index;
+ 	struct semaphore async_sem;
+-	u8 report_scan_result;
+ 	struct cfg80211_scan_request *scan_request;
+ 	u8 cfg_bssid[6];
+ 	struct wps wps;
+diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
+index 7c85f61..7b07da2 100644
+--- a/drivers/net/wireless/mwifiex/scan.c
++++ b/drivers/net/wireless/mwifiex/scan.c
+@@ -1778,9 +1778,6 @@ static void mwifiex_check_next_scan_command(struct mwifiex_private *priv)
+ 		if (!adapter->ext_scan)
+ 			mwifiex_complete_scan(priv);
+ 
+-		if (priv->report_scan_result)
+-			priv->report_scan_result = false;
+-
+ 		if (priv->scan_request) {
+ 			dev_dbg(adapter->dev, "info: notifying scan done\n");
+ 			cfg80211_scan_done(priv->scan_request, 0);
+diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+index 62866b0..4aad446 100644
+--- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
++++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+@@ -85,8 +85,6 @@ mwifiex_process_cmdresp_error(struct mwifiex_private *priv,
+ 		spin_lock_irqsave(&adapter->mwifiex_cmd_lock, flags);
+ 		adapter->scan_processing = false;
+ 		spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, flags);
+-		if (priv->report_scan_result)
+-			priv->report_scan_result = false;
+ 		break;
+ 
+ 	case HostCmd_CMD_MAC_CONTROL:
+-- 
+1.8.1.4
+
