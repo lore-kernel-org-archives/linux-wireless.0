@@ -1,79 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f49.google.com ([74.125.82.49]:54854 "EHLO
-	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751601AbaIYGXh convert rfc822-to-8bit (ORCPT
+Received: from mail-oa0-f41.google.com ([209.85.219.41]:34342 "EHLO
+	mail-oa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754164AbaIASlU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Sep 2014 02:23:37 -0400
-Received: by mail-wg0-f49.google.com with SMTP id x12so7425012wgg.32
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Sep 2014 23:23:36 -0700 (PDT)
+	Mon, 1 Sep 2014 14:41:20 -0400
+Received: by mail-oa0-f41.google.com with SMTP id i7so4034316oag.14
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Sep 2014 11:41:20 -0700 (PDT)
+Message-ID: <5404BDCE.1050007@lwfinger.net> (sfid-20140901_204129_584090_DA9F3DA6)
+Date: Mon, 01 Sep 2014 13:41:18 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <5422F1C2.4090100@candelatech.com>
-References: <1411518383-32634-1-git-send-email-greearb@candelatech.com>
-	<1411518383-32634-2-git-send-email-greearb@candelatech.com>
-	<CA+BoTQ=fS30xz9KcdBJcioNers6PovOFEeqPCCSFn52HkscXug@mail.gmail.com>
-	<5422D6CF.10408@candelatech.com>
-	<CA+BoTQk=X2qVJsY64ZH88h29L6+Y5M9K07nLtzo=0ga1bUsXGw@mail.gmail.com>
-	<5422F1C2.4090100@candelatech.com>
-Date: Thu, 25 Sep 2014 08:23:35 +0200
-Message-ID: <CA+BoTQkncctvMFx7U0Qzq7+7W2o9Vo5qKcDEi6DUdJTEQWDfAA@mail.gmail.com> (sfid-20140925_082340_263770_526FA2AA)
-Subject: Re: [RFC 2/2] ath10k: re-config ht_caps when chainmask is modified.
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+To: Amitav Mohanty <amitavmohanty01@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Help needed to interpret kernel warning and call trace
+References: <CAG0uzYMST12cBwX9v_RAmh+d1muFhQEHSHUhdfMRrTGnPPJq=w@mail.gmail.com>
+In-Reply-To: <CAG0uzYMST12cBwX9v_RAmh+d1muFhQEHSHUhdfMRrTGnPPJq=w@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 24 September 2014 18:30, Ben Greear <greearb@candelatech.com> wrote:
-> On 09/24/2014 08:05 AM, Michal Kazior wrote:
->> On 24 September 2014 16:35, Ben Greear <greearb@candelatech.com> wrote:
->>> On 09/24/2014 12:51 AM, Michal Kazior wrote:
->>>> On 24 September 2014 02:26,  <greearb@candelatech.com> wrote:
->>>> [...]
->>>>>
->>>>> +static struct ieee80211_sta_vht_cap ath10k_create_vht_cap(struct ath10k
->>>>> *ar,
->>>>> +                                                         bool
->>>>> use_cfg_chains)
->>>>>   {
->>>>>          struct ieee80211_sta_vht_cap vht_cap = {0};
->>>>>          u16 mcs_map;
->>>>>          int i;
->>>>> +       int nrf = ar->num_rf_chains;
->>>>> +
->>>>> +       if (use_cfg_chains && ar->cfg_tx_chainmask)
->>>>> +               nrf = get_nss_from_chainmask(ar->cfg_tx_chainmask);
->>>>
->>>>
->>>> Is use_cfg_chains really necessary here? Is setting tx/rx chainmask to
->>>> 0x0 make any sense at all? Shouldn't we deny it or make it fallback to
->>>> the supported tx/rx chainmask values?
->>>
->>> It would cause the logic to flip back to the defaults, so seems mildly
->>> useful.  I'm not sure
->>> upper layers would ever let it be < 1 though.
->>
->> 0 is a valid argument as far as upper layers are concerned and should
->> be treated as "use all available antennas" (see `iw list` output
->> before ever setting antenna, after setting to, e.g. 1 and then to 0).
->>
->> This implies current set_antenna() implementation is actually buggy
->> (pdev param should involve using supp_tx/rx_chainmask). Your
->> assumption in recent patches is also incorrect as antenna mask = 0
->> should imply max nss, not 1.
->
-> I tested this using:
->
-> iw phy wiphy1 set antenna 0 0
->
-> This flips it back to 3x3 (I had previously configured it for 2x2),
-> so I think the patches are working properly.
+On 09/01/2014 01:28 PM, Amitav Mohanty wrote:
+> Hey
+> 
+> How do I interpret the following kernel warning?
+> 
+> Sep 01 17:13:30 TSS-ARCH kernel: ------------[ cut here ]------------
+> Sep 01 17:13:30 TSS-ARCH kernel: WARNING: CPU: 0 PID: 4 at
+> net/wireless/reg.c:1806 reg_process_hint+0x2d1/0x460 [cfg80211]()
 
-Mea culpa. It will flip back indeed.
+That warning comes from
 
-But I still don't see why use_cfg_chains is necessary. I don't see how
-cfg_tx_chainmask could be non-zero when ath10k is registering to mac.
+        /*
+         * Two consecutive Country IE hints on the same wiphy.
+         * This should be picked up early by the driver/stack
+         */
+        if (WARN_ON(regdom_changes(country_ie_request->alpha2)))
+                return REG_REQ_OK;
+        return REG_REQ_ALREADY_SET;
 
+The problem appears to arise in iwldvm, but before anyone devotes very much
+effort to finding the cause, you will need to reproduce it without that "P"
+taint. From the module list, the offending module appears to be unloaded, but
+the taint remains.
 
-Michał
+Larry
+
