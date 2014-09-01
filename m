@@ -1,32 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f170.google.com ([209.85.223.170]:65009 "EHLO
-	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750774AbaIYFfJ (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:30223 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753673AbaIAPkb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Sep 2014 01:35:09 -0400
+	Mon, 1 Sep 2014 11:40:31 -0400
+From: qca_dlansky <qca_dlansky@qualcomm.com>
+To: Anuj Garg <anujgarg@buffalo.edu>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: Making Wil6210 card work on ubuntu
+Date: Mon, 1 Sep 2014 15:40:17 +0000
+Message-ID: <65502A17874025489B7D8479C16CFA635C7702CA@nasanexd02f.na.qualcomm.com> (sfid-20140901_174034_504607_E5AB4B97)
+References: <CANLxO2Ai-FFfPXmMLmnxW05wedO7uOd2dn521xBQJFvd79rObQ@mail.gmail.com>
+In-Reply-To: <CANLxO2Ai-FFfPXmMLmnxW05wedO7uOd2dn521xBQJFvd79rObQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <1411597048-25470-1-git-send-email-hauke@hauke-m.de>
-References: <1411597048-25470-1-git-send-email-hauke@hauke-m.de>
-Date: Thu, 25 Sep 2014 07:35:08 +0200
-Message-ID: <CACna6rxOt3Ln8uoN7kgSNDPs+ZWAwnBFEh==e8D+8w3zjL-Peg@mail.gmail.com> (sfid-20140925_073515_629216_CDE71F97)
-Subject: Re: [PATCH v5 1/2] bcma: register bcma as device tree driver
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: John Linville <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Arend Van Spriel <arend@broadcom.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Arnd Bergmann <arnd@arndb.de>, devicetree@vger.kernel.org,
-	varkabhadram@gmail.com
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 25 September 2014 00:17, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> changes since:
-> v4:
->  - move the code adding the device tree to the child driver into this patch
->  - remove all references to irq from this patch
-
-Makes sense, thanks!
+SGksDQoNCmxzcGNpIHNob3VsZCBzaG93IHNvbWV0aGluZyBsaWtlIGJlbG93Og0KDQpsc3BjaSAt
+bm4gfCBncmVwIDFhZTkNCjBjOjAwLjAgUENJIGJyaWRnZSBbMDYwNF06IFdpbG9jaXR5IEx0ZC4g
+V2lsNjIwMCBQQ0kgRXhwcmVzcyBSb290IFBvcnQgWzFhZTk6MDEwMV0gKHJldiAwNCkNCjBkOjAw
+LjAgUENJIGJyaWRnZSBbMDYwNF06IFdpbG9jaXR5IEx0ZC4gV2lsNjIwMCBQQ0kgRXhwcmVzcyBQ
+b3J0IFsxYWU5OjAyMDBdIChyZXYgMDQpDQowZDowMS4wIFBDSSBicmlkZ2UgWzA2MDRdOiBXaWxv
+Y2l0eSBMdGQuIERldmljZSBbMWFlOTowMjAyXSAocmV2IDA0KQ0KMGQ6MDIuMCBQQ0kgYnJpZGdl
+IFswNjA0XTogV2lsb2NpdHkgTHRkLiBXaWw2MjAwIFdpcmVsZXNzIFBDSSBFeHByZXNzIFBvcnQg
+WzFhZTk6MDIwMV0gKHJldiAxNCkNCjBkOjAzLjAgUENJIGJyaWRnZSBbMDYwNF06IFdpbG9jaXR5
+IEx0ZC4gV2lsNjIwMCBXaXJlbGVzcyBQQ0kgRXhwcmVzcyBQb3J0IFsxYWU5OjAyMDFdIChyZXYg
+MTQpDQowZjowMC4wIE5ldHdvcmsgY29udHJvbGxlciBbMDI4MF06IFdpbG9jaXR5IEx0ZC4gV2ls
+NjIwMCA4MDIuMTFhZCBXaXJlbGVzcyBOZXR3b3JrIEFkYXB0ZXIgWzFhZTk6MDMwMV0gKHJldiAw
+NCkNCg0KTXkgZ3Vlc3MgaXMgdGhhdCB0aGUgbGFzdCBsaW5lIGlzIG1pc3NpbmcgZm9yIHlvdSAo
+ZGV2IDAzMDEpLiBJdCBtZWFucyB0aGUgY2FyZCBpcyBpbiBXQkUgbW9kZSwgd2hpY2ggaXMgdGhl
+IG9ubHkgbW9kZSBvZmZpY2lhbGx5IHN1cHBvcnRlZC4NClRoZSBjYXJkIG5lZWRzIHRvIGJlIGlu
+IFdpZmkgbW9kZSBpbiBvcmRlciB0byB3b3JrIHdpdGggdGhlIHdpbDYyMTAgZHJpdmVyLiBVbmZv
+cnR1bmF0ZWx5LCB0aGlzIG1vZGUgaXMgY3VycmVudGx5IG5vdCBvZmZpY2lhbGx5IHN1cHBvcnRl
+ZC4NCg0KVGhhbmtzLA0KIERlZHkuDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9t
+OiBsaW51eC13aXJlbGVzcy1vd25lckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC13aXJl
+bGVzcy1vd25lckB2Z2VyLmtlcm5lbC5vcmddIE9uIEJlaGFsZiBPZiBBbnVqIEdhcmcNClNlbnQ6
+IFNhdHVyZGF5LCBBdWd1c3QgMzAsIDIwMTQgMjo0MyBBTQ0KVG86IGxpbnV4LXdpcmVsZXNzQHZn
+ZXIua2VybmVsLm9yZw0KU3ViamVjdDogTWFraW5nIFdpbDYyMTAgY2FyZCB3b3JrIG9uIHVidW50
+dQ0KDQpIaSwNCg0KSSBhbSBuZXcgdG8gdGhpcyBsaXN0LiBJIHJlY2VudGx5IGdvdCB0d28gV2ls
+NjIxMCBjYXJkcyBhbmQgYW0gdHJ5aW5nIHRvIGdldCB0aGVtIHdvcmtpbmcgb24gdWJ1bnR1LiBJ
+IHVzZWQgdGhlIGxzcGNpIGNvbW1hbmQgdG8gc2VlIHRoZSBsaXN0IG9mIGNvbm5lY3RlZCBkZXZp
+Y2VzLCBidXQgSSBjYW4ndCBmaW5kIFdpbDYyMTAgb24gaXQuIERvIHRoZXNlIGNhcmRzIHdvcmsg
+d2l0aCBsaW51eD8gQW55b25lIGV4cGVyaWVuY2VkIHRoaXMgcHJvYmxlbSBiZWZvcmU/DQoNClRo
+YW5rcw0KQW51ag0KLS0NClRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBs
+aW5lICJ1bnN1YnNjcmliZSBsaW51eC13aXJlbGVzcyIgaW4gdGhlIGJvZHkgb2YgYSBtZXNzYWdl
+IHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcgTW9yZSBtYWpvcmRvbW8gaW5mbyBhdCAgaHR0
+cDovL3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1sDQo=
