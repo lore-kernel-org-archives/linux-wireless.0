@@ -1,45 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:59038 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755203AbaIRJmb (ORCPT
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:65311 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751078AbaIAHLX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Sep 2014 05:42:31 -0400
-Message-ID: <541AA904.1070002@broadcom.com> (sfid-20140918_114237_324820_12133F12)
-Date: Thu, 18 Sep 2014 11:42:28 +0200
-From: Arend van Spriel <arend@broadcom.com>
+	Mon, 1 Sep 2014 03:11:23 -0400
+Received: by mail-wg0-f52.google.com with SMTP id m15so4906114wgh.35
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Sep 2014 00:11:21 -0700 (PDT)
+Message-ID: <54041C13.7000905@gmail.com> (sfid-20140901_091127_094519_01851D65)
+Date: Mon, 01 Sep 2014 10:11:15 +0300
+From: Emmanuel Grumbach <egrumbach@gmail.com>
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: Hauke Mehrtens <hauke@hauke-m.de>,
-	John Linville <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Arnd Bergmann <arnd@arndb.de>, <devicetree@vger.kernel.org>
-Subject: Re: [PATCH v2 1/2] bcma: register bcma as device tree driver
-References: <1410904582-6519-1-git-send-email-hauke@hauke-m.de> <CACna6rzGa6wiKTrXbtUSGekRNq7gUkC0kyu4RQ_p4fG0Hd+DjQ@mail.gmail.com>
-In-Reply-To: <CACna6rzGa6wiKTrXbtUSGekRNq7gUkC0kyu4RQ_p4fG0Hd+DjQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+To: John Linville <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	ilw@linux.intel.com
+Subject: pull request: iwlwifi 2014-09-01
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="vBpSL2VO7L20QDmxDEmTUteT10w9oNaN2"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/17/14 17:10, Rafał Miłecki wrote:
-> On 16 September 2014 23:56, Hauke Mehrtens<hauke@hauke-m.de>  wrote:
->> This driver is used by the bcm53xx ARM SoC code. Now it is possible to
->> give the address of the chipcommon core in device tree and bcma will
->> search for all the other cores.
->
-> Did you get any answer from Arend about detecting IRQs?
->
-> If not:
-> Arend: how much time it make take you to get an answer?
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--vBpSL2VO7L20QDmxDEmTUteT10w9oNaN2
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-I already discussed this with our chip architect. There is a chip design 
-rule that core index corresponds to the irq number. This at least is 
-true for the bcm43xx devices, but unsure about others. So that option 
-does not seem to fit. That leaves the OOB_ROUTER core I mentioned 
-earlier, but it is a chip designers nightmare as they told me. Did not 
-sound encouraging enough to start digging in there to obtain the 
-information.
+Hi John,
 
-Regards,
-Arend
+I just came back from a long period of travels and I am really just start=
+ing to catch up.
+So this is the first pull request with various things that piled up, but =
+I am really only
+in the middle of the patch list. I still wanted to send now these since t=
+hey have been
+waiting for a while already.
+
+I revert a patch that disabled CTS to self in dvm because users reported =
+issues. The revert
+is CCed to stable since the offending patch was sent to stable too. I als=
+o bump the firmware
+API versions since a new firmware is coming up. On top of that, Marcel fi=
+xes a bug I introduced
+while fixing a bug in our Kconfig file.
+
+Please pull and let me know if you have issues.
+Thanks!
+
+
+The following changes since commit 77b2f2865956b7573f9b040db7a9f808b434ac=
+d1:
+
+  iwlwifi: mvm: disable scheduled scan to prevent firmware crash (2014-08=
+-14 19:47:41 +0300)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git=
+ for-john
+
+for you to fetch changes up to d88c8958dc13b4e4eb7fc57e3f06dc1c4abc7b1f:
+
+  iwlwifi: bump firmware API version to 10 for 7000 and 8000 (2014-09-01 =
+09:50:14 +0300)
+
+----------------------------------------------------------------
+Emmanuel Grumbach (2):
+      Revert "iwlwifi: dvm: don't enable CTS to self"
+      iwlwifi: bump firmware API version to 10 for 7000 and 8000
+
+Marcel Holtmann (1):
+      iwlwifi: Remove module build requirement for Intel Wireless WiFi
+
+ drivers/net/wireless/iwlwifi/Kconfig    |  2 --
+ drivers/net/wireless/iwlwifi/dvm/rxon.c | 12 ++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-7000.c |  4 ++--
+ drivers/net/wireless/iwlwifi/iwl-8000.c |  2 +-
+ 4 files changed, 15 insertions(+), 5 deletions(-)
+
+
+
+--vBpSL2VO7L20QDmxDEmTUteT10w9oNaN2
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUBBwXAAoJEC0Llv5uNjIB2jsP/R1a7CetZaZStHLSUDjL6mAb
+5+7ddSqIp+n+6yU8qpKbiF3OEkqVachnNLzBQHw9AM+OUN2iAnls07kPBdLUA+Au
+qIzlq00yoZL7RSpYKSuCuTDGtig30map98o9InraMBsGXmAT6S4R5csa6bOo9Vt2
+fdyU+aHBz8D011ueKSjP9jj8ve/K6cqI3G+5SMhaeMHlftu0C2UjcQANOFhyidux
++4hG1NkIPas6jk/RRHjBRbhjbkc5IHw+/Pf5+Qvh7UnuUw+iNiyaljTP7rtgFyN0
+kxP7FWzp/ghXy9QwlKlxwY77BU/IpZDIuzAPYHqIlyJSu8NAUdYR3xHSvk577rmP
+eeAn9zE7goJpS0UBkXBhlKwFJlxQFypg++xPl/sa0rIZDgFhWTDPiYHdvl9B0RFM
+f7gbhr0aUDyhmrfMw5VcyNAqxA7+tJeGi3kys93+xOJKNJXttDIfEnJqPHGNa5J6
+Y+c4NVZM2WWGnOouO39JmScVRxCUTntxq+Zw5eJyeQe9v04NajpZcjaNBo0qlWnB
+kq+Oiowuk1e9KC8qNYs3FCUeRnYwWX0JxjYhr6y9mNJ6CWIslh+8FaEQyeKtmGP1
+s/VkqeW+WiKCZkicPXfblsHwzFmNAhvB2qb/njen9C4X2kmcJXYHhs1I7U698GXK
+gtphoGj+7NqNdfWrQ7nP
+=JD9V
+-----END PGP SIGNATURE-----
+
+--vBpSL2VO7L20QDmxDEmTUteT10w9oNaN2--
