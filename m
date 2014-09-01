@@ -1,89 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f177.google.com ([74.125.82.177]:53934 "EHLO
-	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750782AbaI3KWk (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:46002 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752521AbaIAHb6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Sep 2014 06:22:40 -0400
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	linux-arm-kernel@lists.infradead.org, arnd@arndb.de,
-	devicetree@vger.kernel.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH V3] bcma: use device from DT (brcm,bus-chipcommon) for SoC GPIO chip
-Date: Tue, 30 Sep 2014 12:22:26 +0200
-Message-Id: <1412072546-3529-1-git-send-email-zajec5@gmail.com> (sfid-20140930_122249_955306_ADF35967)
-In-Reply-To: <1411892641-5662-1-git-send-email-zajec5@gmail.com>
-References: <1411892641-5662-1-git-send-email-zajec5@gmail.com>
+	Mon, 1 Sep 2014 03:31:58 -0400
+From: Avinash Patil <patila@marvell.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
+	<huxm@marvell.com>, <yangyang@marvell.com>, <cluo@marvell.com>,
+	<maithili@marvell.com>, Avinash Patil <patila@marvell.com>
+Subject: [PATCH 10/17] mwifiex: use firmware API revision from GET_HW_SPEC response
+Date: Mon, 1 Sep 2014 18:28:58 +0530
+Message-ID: <1409576345-13717-11-git-send-email-patila@marvell.com> (sfid-20140901_093204_552391_CCBFD43D)
+In-Reply-To: <1409576345-13717-1-git-send-email-patila@marvell.com>
+References: <1409576345-13717-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This will allow us to define GPIO-attached devices (LEDs, buttons) in
-the the device tree.
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Newer firmware returns API revision in GET_HW_SPEC command
+response. We will make use of it instead of parsing this
+information from FW release number.
+
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
 ---
-This is based on top of
-[PATCH v6] bcma: register bcma as device tree driver
-that I hope will reach wireless-next git tree.
+ drivers/net/wireless/mwifiex/cmdevt.c | 7 +++++++
+ drivers/net/wireless/mwifiex/fw.h     | 1 +
+ 2 files changed, 8 insertions(+)
 
-V2: Describe axi chilren and make gpio a child of chipcommon core.
-V3: Make chipcommon a GPIO controller (avoid extra sub-child)
-    Speed up finding OF node in driver_gpio.c
----
- Documentation/devicetree/bindings/bus/bcma.txt | 13 +++++++++++++
- drivers/bcma/driver_gpio.c                     |  6 ++++++
- 2 files changed, 19 insertions(+)
-
-diff --git a/Documentation/devicetree/bindings/bus/bcma.txt b/Documentation/devicetree/bindings/bus/bcma.txt
-index e9070c1..0538692 100644
---- a/Documentation/devicetree/bindings/bus/bcma.txt
-+++ b/Documentation/devicetree/bindings/bus/bcma.txt
-@@ -9,6 +9,11 @@ Required properties:
- The cores on the AXI bus are automatically detected by bcma with the
- memory ranges they are using and they get registered afterwards.
+diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
+index 720e519..fcc70ae 100644
+--- a/drivers/net/wireless/mwifiex/cmdevt.c
++++ b/drivers/net/wireless/mwifiex/cmdevt.c
+@@ -1552,6 +1552,13 @@ int mwifiex_ret_get_hw_spec(struct mwifiex_private *priv,
+ 						adapter->key_api_major_ver,
+ 						adapter->key_api_minor_ver);
+ 					break;
++				case FW_API_VER_ID:
++					adapter->fw_api_ver =
++							api_rev->major_ver;
++					dev_dbg(adapter->dev,
++						"Firmware api version %d\n",
++						adapter->fw_api_ver);
++					break;
+ 				default:
+ 					dev_warn(adapter->dev,
+ 						 "Unknown api_id: %d\n",
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index adc47f3..6a703ea 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -846,6 +846,7 @@ struct host_cmd_ds_802_11_ps_mode_enh {
  
-+The top-level axi bus may contain children representing attached cores
-+(devices). This is needed since some hardware details can't be auto
-+detected (e.g. IRQ numbers). Also some of the cores may be responsible
-+for extra things, e.g. ChipCommon providing access to the GPIO chip.
-+
- Example:
+ enum API_VER_ID {
+ 	KEY_API_VER_ID = 1,
++	FW_API_VER_ID = 2,
+ };
  
- 	axi@18000000 {
-@@ -17,4 +22,12 @@ Example:
- 		ranges = <0x00000000 0x18000000 0x00100000>;
- 		#address-cells = <1>;
- 		#size-cells = <1>;
-+
-+		chipcommon {
-+			compatible = "brcm,bus-chipcommon";
-+			reg = <0x00000000 0x1000>;
-+
-+			gpio-controller;
-+			#gpio-cells = <2>;
-+		};
- 	};
-diff --git a/drivers/bcma/driver_gpio.c b/drivers/bcma/driver_gpio.c
-index 8ea497c..28bdbe5 100644
---- a/drivers/bcma/driver_gpio.c
-+++ b/drivers/bcma/driver_gpio.c
-@@ -218,6 +218,12 @@ int bcma_gpio_init(struct bcma_drv_cc *cc)
- #if IS_BUILTIN(CONFIG_BCM47XX)
- 	chip->to_irq		= bcma_gpio_to_irq;
- #endif
-+#if IS_BUILTIN(CONFIG_OF)
-+	if (cc->core->bus->hosttype == BCMA_HOSTTYPE_SOC)
-+		chip->of_node	= of_find_compatible_node(
-+					bus->host_pdev->dev.of_node, NULL,
-+					"brcm,bus-chipcommon");
-+#endif
- 	switch (cc->core->bus->chipinfo.id) {
- 	case BCMA_CHIP_ID_BCM5357:
- 	case BCMA_CHIP_ID_BCM53572:
+ struct hw_spec_api_rev {
 -- 
-1.8.4.5
+1.8.1.4
 
