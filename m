@@ -1,46 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:52718 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750796AbaIXAXo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Sep 2014 20:23:44 -0400
-Message-ID: <54220F0F.4060401@candelatech.com> (sfid-20140924_022348_028555_DCC7B00B)
-Date: Tue, 23 Sep 2014 17:23:43 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Sujith Manoharan <sujith@msujith.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: How are ht-caps changes propagated after ieee80211_register_hw?
-References: <5421FF7F.2080109@candelatech.com> <21538.3575.430682.821603@gargle.gargle.HOWL>
-In-Reply-To: <21538.3575.430682.821603@gargle.gargle.HOWL>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mout.perfora.net ([74.208.4.197]:60928 "EHLO mout.perfora.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751000AbaIACXM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 31 Aug 2014 22:23:12 -0400
+From: Jim Rees <rees@umich.edu>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] Revert "iwlwifi: dvm: don't enable CTS to self"
+Date: Sun, 31 Aug 2014 22:22:27 -0400
+Message-Id: <1409538147-1564-1-git-send-email-rees@umich.edu> (sfid-20140901_042315_997053_0F423CC3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/23/2014 05:19 PM, Sujith Manoharan wrote:
-> Ben Greear wrote:
->> In ath9k, when you set the chainmask to 2x2 on a 3x3 NIC,
->> the ht-caps appear as 2-streams in station association requests.
->>
->> But, in ath10k, they still appear as 3x3.  I don't see any obvious way
->> that ath9k notifies the mac80211 stack that it changed the
->> ht-caps, but it must be working somehow.
-> 
-> In ath9k, we re-register the new HT parameters with mac80211
-> when set_antenna() is called.
+Without this revert, my Thinkpad x220 with iwlwifi Ultimate-N 6300 AGN gets
+35% packet drop rate.
 
-Yeah, I think I have it working in ath10k now, using that same
-approach.
+This reverts commit 43d826ca5979927131685cc2092c7ce862cb91cd.
 
-Thanks!
-Ben
+Signed-off-by: Jim Rees <rees@umich.edu>
+---
+ drivers/net/wireless/iwlwifi/dvm/rxon.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-> 
-> Sujith
-> 
-
-
+diff --git a/drivers/net/wireless/iwlwifi/dvm/rxon.c b/drivers/net/wireless/iwlwifi/dvm/rxon.c
+index 6dc5dd3..ed50de6 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/rxon.c
++++ b/drivers/net/wireless/iwlwifi/dvm/rxon.c
+@@ -1068,6 +1068,13 @@ int iwlagn_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
+ 	/* recalculate basic rates */
+ 	iwl_calc_basic_rates(priv, ctx);
+ 
++	/*
++	 * force CTS-to-self frames protection if RTS-CTS is not preferred
++	 * one aggregation protection method
++	 */
++	if (!priv->hw_params.use_rts_for_aggregation)
++		ctx->staging.flags |= RXON_FLG_SELF_CTS_EN;
++
+ 	if ((ctx->vif && ctx->vif->bss_conf.use_short_slot) ||
+ 	    !(ctx->staging.flags & RXON_FLG_BAND_24G_MSK))
+ 		ctx->staging.flags |= RXON_FLG_SHORT_SLOT_MSK;
+@@ -1473,6 +1480,11 @@ void iwlagn_bss_info_changed(struct ieee80211_hw *hw,
+ 	else
+ 		ctx->staging.flags &= ~RXON_FLG_TGG_PROTECT_MSK;
+ 
++	if (bss_conf->use_cts_prot)
++		ctx->staging.flags |= RXON_FLG_SELF_CTS_EN;
++	else
++		ctx->staging.flags &= ~RXON_FLG_SELF_CTS_EN;
++
+ 	memcpy(ctx->staging.bssid_addr, bss_conf->bssid, ETH_ALEN);
+ 
+ 	if (vif->type == NL80211_IFTYPE_AP ||
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.1.0
 
