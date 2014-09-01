@@ -1,48 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:46978 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751383AbaIXGRw (ORCPT
+Received: from arrakis.dune.hu ([78.24.191.176]:49646 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751464AbaIAUp5 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Sep 2014 02:17:52 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH 4/5] ath9k: Use normal queues for offchannel frames
-Date: Wed, 24 Sep 2014 11:48:15 +0530
-Message-Id: <1411539496-30595-5-git-send-email-sujith@msujith.org> (sfid-20140924_081759_837904_C1052A8C)
-In-Reply-To: <1411539496-30595-1-git-send-email-sujith@msujith.org>
-References: <1411539496-30595-1-git-send-email-sujith@msujith.org>
+	Mon, 1 Sep 2014 16:45:57 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by arrakis.dune.hu (Postfix) with ESMTP id E20B128BB74
+	for <linux-wireless@vger.kernel.org>; Mon,  1 Sep 2014 22:45:33 +0200 (CEST)
+Received: from mail-qc0-f171.google.com (mail-qc0-f171.google.com [209.85.216.171])
+	by arrakis.dune.hu (Postfix) with ESMTPSA id 608AD28BB92
+	for <linux-wireless@vger.kernel.org>; Mon,  1 Sep 2014 22:45:27 +0200 (CEST)
+Received: by mail-qc0-f171.google.com with SMTP id x3so5956358qcv.30
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Sep 2014 13:45:45 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4072992.6HB7sP7z87@wuerfel>
+References: <CACna6rzRf7qf0YAFWqp4VgwR76-N8HO12eSz_H5NW9LpjBArdw@mail.gmail.com>
+ <CACna6rwmNtS1JSi=VHXWHu6mOM72Y8sBrr5EqCRbpYUHFrMnCg@mail.gmail.com>
+ <CACna6rwMovK133ZoFYsLcsnH39umU7=UAoyG6jmgM8ZVq0AYRA@mail.gmail.com> <4072992.6HB7sP7z87@wuerfel>
+From: Jonas Gorski <jogo@openwrt.org>
+Date: Mon, 1 Sep 2014 22:45:25 +0200
+Message-ID: <CAOiHx==sRquiqrQW6T0S+UsOz5H8V1Wt7x1RD=SVo6=gu7M1Vg@mail.gmail.com> (sfid-20140901_224608_922620_571297FE)
+Subject: Re: Booting bcm47xx (bcma & stuff), sharing code with bcm53xx
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Mon, Sep 1, 2014 at 4:57 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Monday 01 September 2014 09:48:48 Rafał Miłecki wrote:
+>> On 31 August 2014 11:20, Rafał Miłecki <zajec5@gmail.com> wrote:
+>> So I think we'll need to change our vision of flash access in
+>> bcm74xx_nvram driver. I guess we will have to:
+>> 1) Register NAND core early
+>> 2) Initialize NAND driver
+>> 3) Use mtd/nand API in bcm47xx_nvram
+>
+> This would mean it's available really late. Is that a problem?
 
-There is no reason why frames marked with
-IEEE80211_TX_CTL_TX_OFFCHAN have to be sent using
-the UAPSD queue. Since mac80211 makes sure that
-RoC is done before pushing an offchannel frame
-to the driver, we can use the normal TX queues
-for transmission.
+That's probably mostly fine (for MIPS), except for two places:
+a) the kernel command line is stored in nvram, and used for finding
+out the correct console tty.
+b) on one specific chip, the configured system clock rate needs to be
+read out from nvram.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/xmit.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+Both can be also done through DT, but b) is somewhat important to do
+right, as it will cause the time running fast/slow if the value is
+wrong.
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 2c8327f..00931b6 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -2253,8 +2253,7 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	if (txctl->an && queue)
- 		tid = ath_get_skb_tid(sc, txctl->an, skb);
- 
--	if (info->flags & (IEEE80211_TX_CTL_PS_RESPONSE |
--			   IEEE80211_TX_CTL_TX_OFFCHAN)) {
-+	if (info->flags & IEEE80211_TX_CTL_PS_RESPONSE) {
- 		ath_txq_unlock(sc, txq);
- 		txq = sc->tx.uapsdq;
- 		ath_txq_lock(sc, txq);
--- 
-2.1.0
+> A possible solution for this would be to use the boot wrapper
+> I mentioned earlier, to put all the data from nvram into DT
+> properties before the kernel gets started.
 
+That sounds like quite a bit of effort, and a bit over-engineered for
+just 2.5 platforms.
+
+
+Jonas
