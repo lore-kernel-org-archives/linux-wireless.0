@@ -1,95 +1,179 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:60276 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751222AbaIKPxh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Sep 2014 11:53:37 -0400
-Message-ID: <1410450802.22863.16.camel@jlt4.sipsolutions.net> (sfid-20140911_175422_415675_623B95FA)
-Subject: Re: [PATCH net-next 2/2] mac80211: Resolve sk_refcnt/sk_wmem_alloc
- issue in wifi ack path
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alexander Duyck <alexander.h.duyck@intel.com>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	davem@davemloft.net, eric.dumazet@gmail.com, linville@tuxdriver.com
-Date: Thu, 11 Sep 2014 17:53:22 +0200
-In-Reply-To: <5411BDEF.7070105@intel.com>
-References: <20140910215837.23225.39149.stgit@ahduyck-bv4.jf.intel.com>
-		 <20140910220536.23225.92956.stgit@ahduyck-bv4.jf.intel.com>
-	 <1410419198.1825.5.camel@jlt4.sipsolutions.net>
-	 <5411BDEF.7070105@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:25806 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753635AbaIAMzB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Sep 2014 08:55:01 -0400
+Message-ID: <54046CA1.4040108@broadcom.com> (sfid-20140901_145554_067000_0B7238EB)
+Date: Mon, 1 Sep 2014 14:54:57 +0200
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+CC: Brett Rudley <brudley@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	<brcm80211-dev-list@broadcom.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] brcmfmac: BRCMFMAC should depend on HAS_DMA
+References: <1409329464-768-1-git-send-email-geert@linux-m68k.org>	<54042CA1.6010904@broadcom.com> <CAMuHMdV2hV_r_OASkv+U-AGVov18qFOrAVm-nDHHPHXZ6fcxxg@mail.gmail.com>
+In-Reply-To: <CAMuHMdV2hV_r_OASkv+U-AGVov18qFOrAVm-nDHHPHXZ6fcxxg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-09-11 at 08:21 -0700, Alexander Duyck wrote:
+On 09/01/14 10:44, Geert Uytterhoeven wrote:
+> Hi Arend,
+>
+> On Mon, Sep 1, 2014 at 10:21 AM, Arend van Spriel<arend@broadcom.com>  wrote:
+>>>    config BRCMFMAC
+>>>          tristate "Broadcom IEEE802.11n embedded FullMAC WLAN driver"
+>>> -       depends on CFG80211
+>>> +       depends on CFG80211A&&   HAS_DMA
+>>
+>> Not sure what happened here, but CFG80211 kconfig option did was not renamed
+>> as far as I know. Anyway, I would like to propose a different solution. Will
+>
+> Oops, that was me typing the vim append-command twice :-(
+> Thanks for noticing!
+>
+>> get back to you when I have it ready.
+>
+> OK. Thanks again!
 
-[...]
-> >>  EXPORT_SYMBOL_GPL(skb_complete_wifi_ack);
-> > 
-> > Here I'm not sure it matters *for this function*? Wouldn't it be freed
-> > then in sock_put(), which has the same net effect on this function
-> > overall? It doesn't use it after sock_queue_err_skb().
-> 
-> The significant piece is that we are calling sock_put *after*.  So if we
-> are dropping the last reference the buffer is already in the
-> sk_error_queue and will be purged when __sk_free is called.
+Hi Geert,
 
-Yeah, I understand. But that's more of a problem of sock_queue_err_skb()
-rather than this function.
+I added Kconfig options for the proto layer which are selected by the 
+host interface selection. So the HAS_DMA dependency is checked for 
+BRCMFMAC_PCIE. I am wondering whether GENERIC_IO should also be checked.
 
-> > Seems like maybe this should be in sock_queue_err_skb() itself, since it
-> > does the orphaning first and then looks at the socket. Or the
-> > documentation for that function should state that it has to be held, but
-> > there are plenty of callers?
-> 
-> The problem is there are a number of cases where the sock_hold/put are
-> not needed.  For example, if we were to clone the skb and immediately
-> send the clone up the sk_error_queue then we don't need it.  We only
-> need it if there is a risk that orphaning the buffer sent could
-> potentially result in the destructor calling __sk_free.
+Can you verify the patch below works with your configuration?
 
-Ok, that's reasonable. Maybe then you can add that to the documentation
-of sock_queue_err_skb() - that it must (somehow) ensure the socket can't
-go away while it's being called? That way this caller change would
-become clearer IMHO.
+Regards,
+Arend
+---
+diff --git a/drivers/net/wireless/brcm80211/Kconfig 
+b/drivers/net/wireless/brcm80211/Kconfig
+index b8e2561..fe3dc12 100644
+--- a/drivers/net/wireless/brcm80211/Kconfig
++++ b/drivers/net/wireless/brcm80211/Kconfig
+@@ -27,10 +27,17 @@ config BRCMFMAC
+  	  one of the bus interface support. If you choose to build a module,
+  	  it'll be called brcmfmac.ko.
 
-> > So you're removing this part, but can't we really not reuse the clone_sk
-> > copy? The difference is that it's charged, but that's fine for the
-> > purposes here, no? Or am I misunderstanding that?
++config BRCMFMAC_PROTO_BCDC
++	bool
++
++config BRCMFMAC_PROTO_MSGBUF
++	bool
++
+  config BRCMFMAC_SDIO
+  	bool "SDIO bus interface support for FullMAC driver"
+  	depends on (MMC = y || MMC = BRCMFMAC)
+  	depends on BRCMFMAC
++	select BRCMFMAC_PROTO_BCDC
+  	select FW_LOADER
+  	default y
+  	---help---
+@@ -42,6 +49,7 @@ config BRCMFMAC_USB
+  	bool "USB bus interface support for FullMAC driver"
+  	depends on (USB = y || USB = BRCMFMAC)
+  	depends on BRCMFMAC
++	select BRCMFMAC_PROTO_BCDC
+  	select FW_LOADER
+  	---help---
+  	  This option enables the USB bus interface support for Broadcom
+@@ -52,6 +60,8 @@ config BRCMFMAC_PCIE
+  	bool "PCIE bus interface support for FullMAC driver"
+  	depends on BRCMFMAC
+  	depends on PCI
++	depends on HAS_DMA
++	select BRCMFMAC_PROTO_MSGBUF
+  	select FW_LOADER
+  	---help---
+  	  This option enables the PCIE bus interface support for Broadcom
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/Makefile 
+b/drivers/net/wireless/brcm80211/brcmfmac/Makefile
+index c35adf4..90a977f 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/Makefile
++++ b/drivers/net/wireless/brcm80211/brcmfmac/Makefile
+@@ -30,16 +30,18 @@ brcmfmac-objs += \
+  		fwsignal.o \
+  		p2p.o \
+  		proto.o \
+-		bcdc.o \
+-		commonring.o \
+-		flowring.o \
+-		msgbuf.o \
+  		dhd_common.o \
+  		dhd_linux.o \
+  		firmware.o \
+  		feature.o \
+  		btcoex.o \
+  		vendor.o
++brcmfmac-$(CONFIG_BRCMFMAC_PROTO_BCDC) += \
++		bcdc.o
++brcmfmac-$(CONFIG_BRCMFMAC_PROTO_MSGBUF) += \
++		commonring.o \
++		flowring.o \
++		msgbuf.o
+  brcmfmac-$(CONFIG_BRCMFMAC_SDIO) += \
+  		dhd_sdio.o \
+  		bcmsdh.o
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcdc.h 
+b/drivers/net/wireless/brcm80211/brcmfmac/bcdc.h
+index 17e8c03..6003179 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcdc.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcdc.h
+@@ -16,9 +16,12 @@
+  #ifndef BRCMFMAC_BCDC_H
+  #define BRCMFMAC_BCDC_H
 
-> The copy being held cannot really be used for transmit.  The problem is
-> that it is holding the wrong kind of reference.
+-
++#ifdef CONFIG_BRCMFMAC_PROTO_BCDC
+  int brcmf_proto_bcdc_attach(struct brcmf_pub *drvr);
+  void brcmf_proto_bcdc_detach(struct brcmf_pub *drvr);
+-
++#else
++static inline int brcmf_proto_bcdc_attach(struct brcmf_pub *drvr) { 
+return 0; }
++static inline void brcmf_proto_bcdc_detach(struct brcmf_pub *drvr) {}
++#endif
 
-Ok.
+  #endif /* BRCMFMAC_BCDC_H */
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.h 
+b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.h
+index f901ae5..e6395ee 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.h
+@@ -32,9 +32,16 @@
 
-> The problem lies in the order things are released.  The sock_put
-> function will dec_and_test sk_refcnt, once it reaches 0 it will do a
-> dec_and_test on sk_wmem_alloc to see if it should call __sk_free.  Until
-> that reaches 0 sk_wmem_alloc cannot reach 0.  Once either of these drops
-> to 0 we cannot bring the value back up from there.  So if I were to
-> transmit the clone then it could let the sk_refcnt drop to 0 in which
-> case any calls to sock_hold are invalid.
-> 
-> I would need to somehow hold the reference based on sk_wmem_alloc if we
-> want to transmit the clone.  Many of the hardware timestamping drivers
-> seem to just clone the original skb, queue that clone onto the
-> sk_error_queue, and then free the original after completing the call.  I
-> suppose we could change it to something like that, but you are still
-> looking at possibly 2 clones in that case anyway.
 
-Well, no need. I just had originally wanted to reuse the clone so under
-these corner case conditions we didn't clone twice - no big deal, it
-never happens anyway (that IDR thing should never actually run out of
-space)
+  int brcmf_proto_msgbuf_rx_trigger(struct device *dev);
++void brcmf_msgbuf_delete_flowring(struct brcmf_pub *drvr, u8 flowid);
++#ifdef CONFIG_BRCMFMAC_PROTO_MSGBUF
+  int brcmf_proto_msgbuf_attach(struct brcmf_pub *drvr);
+  void brcmf_proto_msgbuf_detach(struct brcmf_pub *drvr);
+-void brcmf_msgbuf_delete_flowring(struct brcmf_pub *drvr, u8 flowid);
+-
++#else
++static inline int brcmf_proto_msgbuf_attach(struct brcmf_pub *drvr)
++{
++	return 0;
++}
++static inline void brcmf_proto_msgbuf_detach(struct brcmf_pub *drvr) {}
++#endif
 
-Anyway, thanks. I expect due to the patch 1 davem will apply both
-patches (and I'm going to be on vacation anyway), so 
-
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-
-for both patches.
-
-Thanks!
-
-johannes
+  #endif /* BRCMFMAC_MSGBUF_H */
+> Gr{oetje,eeting}s,
+>
+>                          Geert
+>
+> --
+> Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+>
+> In personal conversations with technical people, I call myself a hacker. But
+> when I'm talking to journalists I just say "programmer" or something like that.
+>                                  -- Linus Torvalds
 
