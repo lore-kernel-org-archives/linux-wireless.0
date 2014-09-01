@@ -1,46 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:39153 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751693AbaIXLBE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Sep 2014 07:01:04 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH v2 3/3] ath10k: add cal_data debugfs file
-References: <20140923143219.23585.34114.stgit@potku.adurom.net>
-	<20140923143234.23585.2139.stgit@potku.adurom.net>
-	<CA+BoTQ=O8j1x-71SCLq9ZiXBU28Ax9M7tyfbvB=mjsWUwgPSjw@mail.gmail.com>
-Date: Wed, 24 Sep 2014 14:00:37 +0300
-In-Reply-To: <CA+BoTQ=O8j1x-71SCLq9ZiXBU28Ax9M7tyfbvB=mjsWUwgPSjw@mail.gmail.com>
-	(Michal Kazior's message of "Wed, 24 Sep 2014 09:00:39 +0200")
-Message-ID: <87egv18eqy.fsf@kamboji.qca.qualcomm.com> (sfid-20140924_130110_074123_61B5D47E)
-MIME-Version: 1.0
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:5646 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751078AbaIAHem convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Sep 2014 03:34:42 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id s817YflK026330
+	for <linux-wireless@vger.kernel.org>; Mon, 1 Sep 2014 00:34:41 -0700
+Received: from sc-owa04.marvell.com ([199.233.58.150])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1p3keemn3g-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Mon, 01 Sep 2014 00:34:41 -0700
+From: Avinash Patil <patila@marvell.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Mon, 1 Sep 2014 00:33:36 -0700
+Subject: RE: mwifiex: parse TDLS action frames during RX
+Message-ID: <CBACCFA0AEB13A41977475BCF3E896FC4781147CC8@SC-VEXCH2.marvell.com> (sfid-20140901_093446_071247_A509EF0C)
+References: <20140828132352.GD24477@mwanda>
+In-Reply-To: <20140828132352.GD24477@mwanda>
 Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+Hi Dan,
 
-> On 23 September 2014 16:32, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> [...]
->> diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
->> index 101c6f9cf2a8..426341480262 100644
->> --- a/drivers/net/wireless/ath/ath10k/debug.c
->> +++ b/drivers/net/wireless/ath/ath10k/debug.c
-> [...]
->> +static int ath10k_cal_data_open(struct inode *inode, struct file *file)
->
-> Shouldn't functions in debug.c have ath10k_debug_ prefix? I'm aware
-> other fops stuff doesn't include the _debug word as well so this is
-> somewhat consistent with the current code but is this okay in the
-> grand scheme of things? Just wondering.
+Thanks for reporting static checker warning.
+Patch has been submitted which ensures we do not copy beyond end.
 
-IMHO we should use ath10k_debug_ with fops functions as well, I just
-haven't been that picky about that.
+Thanks,
+Avinash.
+________________________________________
+From: Dan Carpenter [dan.carpenter@oracle.com]
+Sent: Thursday, August 28, 2014 6:53 PM
+To: Avinash Patil
+Cc: linux-wireless@vger.kernel.org
+Subject: re: mwifiex: parse TDLS action frames during RX
 
-I'll change this as well and send v3. Thanks for review!
+Hello Avinash Patil,
 
--- 
-Kalle Valo
+The patch 5f2caaf32bc6: "mwifiex: parse TDLS action frames during RX"
+from Feb 7, 2014, leads to the following static checker warning:
+
+        drivers/net/wireless/mwifiex/tdls.c:873 mwifiex_process_tdls_action_frame()
+        error: '2 + pos[1]' from user is not capped properly
+
+drivers/net/wireless/mwifiex/tdls.c
+   868                          memcpy((u8 *)&sta_ptr->tdls_cap.extcap, pos,
+   869                                 sizeof(struct ieee_types_header) +
+   870                                 min_t(u8, pos[1], 8));
+   871                          break;
+   872                  case WLAN_EID_RSN:
+   873                          memcpy((u8 *)&sta_ptr->tdls_cap.rsn_ie, pos,
+   874                                 sizeof(struct ieee_types_header) + pos[1]);
+
+The ->rsn_ie buffer is 256 bytes large.
+sizeof(struct ieee_types_header) is 2.
+pos[1] is a number between 0-255.
+This can write 1 byte beyond the end.
+
+   875                          break;
+   876                  case WLAN_EID_QOS_CAPA:
+   877                          sta_ptr->tdls_cap.qos_info = pos[2];
+   878                          break;
+
+regards,
+dan carpenter
