@@ -1,207 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cassarossa.samfundet.no ([193.35.52.29]:49785 "EHLO
-	cassarossa.samfundet.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932379AbaICN4N (ORCPT
+Received: from mail-we0-f179.google.com ([74.125.82.179]:62945 "EHLO
+	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752629AbaIAWif (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Sep 2014 09:56:13 -0400
-In-Reply-To: <20140903133328.GC18933@sesse.net>
-References: <20140903133328.GC18933@sesse.net>
-From: "Steinar H. Gunderson" <sgunderson@bigfoot.com>
-Date: Wed, 3 Sep 2014 06:48:37 -0700
-Subject: [PATCH v6 2/2] mac80211: support DTPC IE (from Cisco Client
- eXtensions)
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-Message-Id: <E1XPB2h-0008WO-MS@pannekake.samfundet.no> (sfid-20140903_155617_247529_E6B6D8C2)
+	Mon, 1 Sep 2014 18:38:35 -0400
+Date: Mon, 1 Sep 2014 23:42:24 +0100
+From: "Carlos R. Mafra" <crmafra@gmail.com>
+To: LKML <linux-kernel@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: [3.17-rc3] Warning in ieee80211_can_queue_work
+Message-ID: <20140901224224.GA3885@linux-g29b.site> (sfid-20140902_003854_621471_B85A6397)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Linux already supports 802.11h, where the access point can tell the
-client to reduce its transmission power. However, 802.11h is only
-defined for 5 GHz, where the need for this is much smaller than on
-2.4 GHz.
+I am using the kernel 3.17-rc3 which I compiled today and
+I get the warning below right before suspending to RAM:
 
-Cisco has their own solution, called DTPC (Dynamic Transmit Power
-Control). Cisco APs on a controller sometimes but not always send
-802.11h; they always send DTPC, even on 2.4 GHz. This patch adds support
-for parsing and honoring the DTPC IE in addition to the 802.11h
-element (they do not always contain the same limits, so both must
-be honored); the format is not documented, but very simple.
+[   37.856537] ------------[ cut here ]------------
+[   37.856559] WARNING: CPU: 3 PID: 43 at /home/mafra/linux-2.6/net/mac80211/util.c:716 ieee80211_can_queue_work.isra.38+0x2d/0x40 [mac80211]()
+[   37.856559] queueing ieee80211 work while going to suspend
+[   37.856575] Modules linked in: ctr ccm nls_iso8859_1 nls_cp437 vfat fat arc4 b43 mac80211 snd_hda_codec_hdmi snd_hda_codec_cirrus snd_hda_codec_generic snd_hda_intel snd_hda_controller cfg80211 snd_hda_codec snd_hwdep x86_pkg_temp_thermal snd_pcm crc32c_intel ghash_clmulni_intel uvcvideo rfkill videobuf2_core bcm5974 ssb videobuf2_vmalloc videobuf2_memops snd_timer rtc_cmos
+[   37.856577] CPU: 3 PID: 43 Comm: kworker/3:1 Not tainted 3.17.0-rc3 #44
+[   37.856578] Hardware name: Apple Inc. MacBookPro10,2/Mac-AFD8A9D944EA4843, BIOS MBP102.88Z.0106.B01.1208311637 08/31/2012
+[   37.856583] Workqueue: events led_work_function
+[   37.856586]  0000000000000009 ffff88026409fd18 ffffffff816f6176 ffff88026409fd60
+[   37.856587]  ffff88026409fd50 ffffffff81067343 ffff880263920660 ffff8802639222f0
+[   37.856589]  0000000000000000 0000000000000000 ffff88026f391300 ffff88026409fdb0
+[   37.856589] Call Trace:
+[   37.856594]  [<ffffffff816f6176>] dump_stack+0x4d/0x6f
+[   37.856598]  [<ffffffff81067343>] warn_slowpath_common+0x73/0x90
+[   37.856600]  [<ffffffff810673a7>] warn_slowpath_fmt+0x47/0x50
+[   37.856604]  [<ffffffff81091abc>] ? put_prev_entity+0x2c/0x3b0
+[   37.856606]  [<ffffffff81094957>] ? pick_next_task_fair+0x1f7/0x8a0
+[   37.856615]  [<ffffffffa015a75d>] ieee80211_can_queue_work.isra.38+0x2d/0x40 [mac80211]
+[   37.856622]  [<ffffffffa015a790>] ieee80211_queue_work+0x20/0x40 [mac80211]
+[   37.856630]  [<ffffffffa01e4947>] b43_led_brightness_set+0x27/0x30 [b43]
+[   37.856632]  [<ffffffff815d0d93>] led_work_function+0x113/0x130
+[   37.856634]  [<ffffffff8107bf46>] process_one_work+0x166/0x390
+[   37.856636]  [<ffffffff8107c51b>] worker_thread+0x11b/0x490
+[   37.856638]  [<ffffffff8107c400>] ? rescuer_thread+0x290/0x290
+[   37.856641]  [<ffffffff81080f1d>] kthread+0xcd/0xf0
+[   37.856643]  [<ffffffff81080e50>] ? kthread_create_on_node+0x170/0x170
+[   37.856645]  [<ffffffff816fe62c>] ret_from_fork+0x7c/0xb0
+[   37.856647]  [<ffffffff81080e50>] ? kthread_create_on_node+0x170/0x170
+[   37.856649] ---[ end trace 01a2610015279813 ]---
 
-Tested (on top of wireless.git and on 3.16.1) against a Cisco Aironet
-1142 joined to a Cisco 2504 WLC, by setting various transmit power
-levels for the given access points and observing the results.
-The Wireshark 802.11 dissector agrees with the interpretation of the
-element, except for negative numbers, which seem to never happen
-anyway.
 
-Signed-off-by: Steinar H. Gunderson <sgunderson@bigfoot.com>
----
- include/linux/ieee80211.h  |  3 ++-
- net/mac80211/ieee80211_i.h |  1 +
- net/mac80211/mlme.c        | 60 +++++++++++++++++++++++++++++++++++++---------
- net/mac80211/util.c        | 21 ++++++++++++++++
- 4 files changed, 73 insertions(+), 12 deletions(-)
+The reason for such an early suspend (37 seconds after booting) is
+related to another issue which I hope to describe in another email but
+which is "fixed" by a suspend cycle.
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 63ab3873..d0ec287 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -1806,7 +1806,8 @@ enum ieee80211_eid {
- 	WLAN_EID_DMG_TSPEC = 146,
- 	WLAN_EID_DMG_AT = 147,
- 	WLAN_EID_DMG_CAP = 148,
--	/* 149-150 reserved for Cisco */
-+	/* 149 reserved for Cisco */
-+	WLAN_EID_CISCO_VENDOR_SPECIFIC = 150,
- 	WLAN_EID_DMG_OPERATION = 151,
- 	WLAN_EID_DMG_BSS_PARAM_CHANGE = 152,
- 	WLAN_EID_DMG_BEAM_REFINEMENT = 153,
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index ef7a089..e995556 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1367,6 +1367,7 @@ struct ieee802_11_elems {
- 	const struct ieee80211_wide_bw_chansw_ie *wide_bw_chansw_ie;
- 	const u8 *country_elem;
- 	const u8 *pwr_constr_elem;
-+	const u8 *cisco_dtpc_elem;
- 	const struct ieee80211_timeout_interval_ie *timeout_int;
- 	const u8 *opmode_notif;
- 	const struct ieee80211_sec_chan_offs_ie *sec_chan_offs;
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 918011a..352f50c 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1216,14 +1216,30 @@ ieee80211_find_80211h_pwr_constr(struct ieee80211_sub_if_data *sdata,
- 	return have_chan_pwr;
- }
- 
-+static void ieee80211_find_cisco_dtpc(struct ieee80211_sub_if_data *sdata,
-+				      struct ieee80211_channel *channel,
-+				      const u8 *cisco_dtpc_ie,
-+				      int *pwr_level)
-+{
-+	/* From practical testing, the first data byte of the DTPC element
-+	 * seems to contain the requested dBm level, and the CLI on Cisco
-+	 * APs clearly state the range is -127 to 127 dBm, which indicates
-+	 * a signed byte, although it seemingly never actually goes negative.
-+	 * The other byte seems to always be zero.
-+	 */
-+	*pwr_level = (__s8)cisco_dtpc_ie[4];
-+}
-+
- static u32 ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
- 				       struct ieee80211_channel *channel,
- 				       struct ieee80211_mgmt *mgmt,
- 				       const u8 *country_ie, u8 country_ie_len,
--				       const u8 *pwr_constr_ie)
-+				       const u8 *pwr_constr_ie,
-+				       const u8 *cisco_dtpc_ie)
- {
--	bool has_80211h_pwr = false;
--	int chan_pwr, pwr_reduction_80211h;
-+	bool has_80211h_pwr = false, has_cisco_pwr = false;
-+	int chan_pwr = 0, pwr_reduction_80211h = 0;
-+	int pwr_level_cisco, pwr_level_80211h;
- 	int new_ap_level;
- 
- 	if (country_ie && pwr_constr_ie &&
-@@ -1232,16 +1248,35 @@ static u32 ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
- 		has_80211h_pwr = ieee80211_find_80211h_pwr_constr(
- 			sdata, channel, country_ie, country_ie_len,
- 			pwr_constr_ie, &chan_pwr, &pwr_reduction_80211h);
--		new_ap_level = max_t(int, 0, chan_pwr - pwr_reduction_80211h);
-+		pwr_level_80211h =
-+			max_t(int, 0, chan_pwr - pwr_reduction_80211h);
-+	}
-+
-+	if (cisco_dtpc_ie) {
-+		ieee80211_find_cisco_dtpc(
-+			sdata, channel, cisco_dtpc_ie, &pwr_level_cisco);
-+		has_cisco_pwr = true;
- 	}
- 
--	if (!has_80211h_pwr)
-+	if (!has_80211h_pwr && !has_cisco_pwr)
- 		return 0;
- 
--	sdata_info(sdata,
--		   "Limiting TX power to %d (%d - %d) dBm as advertised by %pM\n",
--		   new_ap_level, chan_pwr, pwr_reduction_80211h,
--		   sdata->u.mgd.bssid);
-+	/* If we have both 802.11h and Cisco DTPC, apply both limits
-+	 * by picking the smallest of the two power levels advertised.
-+	 */
-+	if (has_80211h_pwr &&
-+	    (!has_cisco_pwr || pwr_level_80211h <= pwr_level_cisco)) {
-+		sdata_info(sdata,
-+			   "Limiting TX power to %d (%d - %d) dBm as advertised by %pM\n",
-+			   pwr_level_80211h, chan_pwr, pwr_reduction_80211h,
-+			   sdata->u.mgd.bssid);
-+		new_ap_level = pwr_level_80211h;
-+	} else {  /* has_cisco_pwr is always true here. */
-+		sdata_info(sdata,
-+			   "Limiting TX power to %d dBm as advertised by %pM\n",
-+			   pwr_level_cisco, sdata->u.mgd.bssid);
-+		new_ap_level = pwr_level_cisco;
-+	}
- 
- 	if (sdata->ap_power_level == new_ap_level)
- 		return 0;
-@@ -2910,7 +2945,9 @@ static void ieee80211_rx_mgmt_probe_resp(struct ieee80211_sub_if_data *sdata,
- /*
-  * This is the canonical list of information elements we care about,
-  * the filter code also gives us all changes to the Microsoft OUI
-- * (00:50:F2) vendor IE which is used for WMM which we need to track.
-+ * (00:50:F2) vendor IE which is used for WMM which we need to track,
-+ * as well as the DTPC IE (part of the Cisco OUI) used for signaling
-+ * changes to requested client power.
-  *
-  * We implement beacon filtering in software since that means we can
-  * avoid processing the frame here and in cfg80211, and userspace
-@@ -3218,7 +3255,8 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 	changed |= ieee80211_handle_pwr_constr(sdata, chan, mgmt,
- 					       elems.country_elem,
- 					       elems.country_elem_len,
--					       elems.pwr_constr_elem);
-+					       elems.pwr_constr_elem,
-+					       elems.cisco_dtpc_elem);
- 
- 	ieee80211_bss_info_change_notify(sdata, changed);
- }
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 725af7a..95a9159 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1014,6 +1014,27 @@ u32 ieee802_11_parse_elems_crc(const u8 *start, size_t len, bool action,
- 			}
- 			elems->pwr_constr_elem = pos;
- 			break;
-+		case WLAN_EID_CISCO_VENDOR_SPECIFIC:
-+			/* Lots of different options exist, but we only care
-+			 * about the Dynamic Transmit Power Control element.
-+			 * First check for the Cisco OUI, then for the DTPC
-+			 * tag (0x00).
-+			 */
-+			if (elen < 4) {
-+				elem_parse_failed = true;
-+				break;
-+			}
-+			if (pos[0] != 0x00 || pos[1] != 0x40 ||
-+			    pos[2] != 0x96 || pos[3] != 0x00)
-+				break;
-+			if (elen != 6) {
-+				elem_parse_failed = true;
-+				break;
-+			}
-+			if (calc_crc)
-+				crc = crc32_be(crc, pos - 2, elen + 2);
-+			elems->cisco_dtpc_elem = pos;
-+			break;
- 		case WLAN_EID_TIMEOUT_INTERVAL:
- 			if (elen >= sizeof(struct ieee80211_timeout_interval_ie))
- 				elems->timeout_int = (void *)pos;
--- 
-2.1.0
+The wireless seems to be working fine right now though, using the 'b43'
+module.
 
+I'm not sure if the warning is new in 3.17-rcX since I haven't tested
+the previous releases for a while (sorry), but I can test patches.
+
+The kernel config and dmesg are here:
+
+http://damtp.cam.ac.uk/user/crm66/dmesg-3.17-rc3.txt
+http://damtp.cam.ac.uk/user/crm66/config-3.17-rc2+
