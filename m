@@ -1,73 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f177.google.com ([74.125.82.177]:55300 "EHLO
-	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751625AbaI3M1Z convert rfc822-to-8bit (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:65039 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752483AbaIAHb1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Sep 2014 08:27:25 -0400
-Received: by mail-we0-f177.google.com with SMTP id k48so87538wev.36
-        for <linux-wireless@vger.kernel.org>; Tue, 30 Sep 2014 05:27:23 -0700 (PDT)
+	Mon, 1 Sep 2014 03:31:27 -0400
+From: Avinash Patil <patila@marvell.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
+	<huxm@marvell.com>, <yangyang@marvell.com>, <cluo@marvell.com>,
+	<maithili@marvell.com>, Avinash Patil <patila@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 07/17] mwifiex: minor cleanup in multiport aggregation
+Date: Mon, 1 Sep 2014 18:28:55 +0530
+Message-ID: <1409576345-13717-8-git-send-email-patila@marvell.com> (sfid-20140901_093131_709085_317103B3)
+In-Reply-To: <1409576345-13717-1-git-send-email-patila@marvell.com>
+References: <1409576345-13717-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <5429833C.60003@candelatech.com>
-References: <1411507045-18973-1-git-send-email-greearb@candelatech.com>
-	<1411507045-18973-7-git-send-email-greearb@candelatech.com>
-	<87a95i3kcb.fsf@kamboji.qca.qualcomm.com>
-	<5429833C.60003@candelatech.com>
-Date: Tue, 30 Sep 2014 14:27:23 +0200
-Message-ID: <CA+BoTQ=NG9to+Tv4Ci+Vu_dOGRgGVzxJUyb1bydWCc-EeWc_9g@mail.gmail.com> (sfid-20140930_142731_590327_3A570979)
-Subject: Re: [PATCH v2 07/10] ath10k: add fw-powerup-fail to ethtool stats.
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 29 September 2014 18:05, Ben Greear <greearb@candelatech.com> wrote:
-> On 09/29/2014 01:24 AM, Kalle Valo wrote:
->> greearb@candelatech.com writes:
->>
->>> From: Ben Greear <greearb@candelatech.com>
->>>
->>> This gives user-space a normal-ish way to detect that
->>> firmware has failed to start and that a reboot is
->>> probably required.
->>>
->>> Signed-off-by: Ben Greear <greearb@candelatech.com>
-[...]
->>> -    return 0;
->>> +out:
->>> +    /* If we have failed to power-up, it may take a reboot to
->>> +     * get the NIC back online.
->>> +     * Set flag accordinly so that user-space can know.
->>> +     */
->>> +    ar->fw_powerup_failed = !!ret;
->>> +    return ret;
->>>  }
->>
->> Would it be better to use ATH10K_STATE_WEDGED for this and then just
->> export the state value to user space? Or should we have two different
->> states, like FW_WEDGED and HW_WEDGED?
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-Current WEDGED state is more like ON. It assumes mac80211 will call
-ath10k_stop().
+'mp_data_port_mask' and 'mp_end_port' gives correct information
+even for the chipsets supporting SDIO new mode (32 ports).
+We will get rid of this chip specific handling.
 
-Adding another state just for the sake of handling power up / reset
-issues seems like an overkill to me.
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/sdio.c | 11 ++---------
+ 1 file changed, 2 insertions(+), 9 deletions(-)
 
+diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
+index 993841e..bdab122 100644
+--- a/drivers/net/wireless/mwifiex/sdio.c
++++ b/drivers/net/wireless/mwifiex/sdio.c
+@@ -622,22 +622,15 @@ static int mwifiex_get_wr_port_data(struct mwifiex_adapter *adapter, u32 *port)
+ 
+ 	dev_dbg(adapter->dev, "data: mp_wr_bitmap=0x%08x\n", wr_bitmap);
+ 
+-	if (card->supports_sdio_new_mode &&
+-	    !(wr_bitmap & reg->data_port_mask)) {
++	if (!(wr_bitmap & card->mp_data_port_mask)) {
+ 		adapter->data_sent = true;
+ 		return -EBUSY;
+-	} else if (!card->supports_sdio_new_mode &&
+-		   !(wr_bitmap & card->mp_data_port_mask)) {
+-		return -1;
+ 	}
+ 
+ 	if (card->mp_wr_bitmap & (1 << card->curr_wr_port)) {
+ 		card->mp_wr_bitmap &= (u32) (~(1 << card->curr_wr_port));
+ 		*port = card->curr_wr_port;
+-		if (((card->supports_sdio_new_mode) &&
+-		     (++card->curr_wr_port == card->max_ports)) ||
+-		    ((!card->supports_sdio_new_mode) &&
+-		     (++card->curr_wr_port == card->mp_end_port)))
++		if (++card->curr_wr_port == card->mp_end_port)
+ 			card->curr_wr_port = reg->start_wr_port;
+ 	} else {
+ 		adapter->data_sent = true;
+-- 
+1.8.1.4
 
-> I didn't want to mess with the state machine.  This counter
-> is just a clue to users that things might be badly wrong.  Some systems
-> might recover with another hard reset, some will hang the entire
-> system hard, and some will just stick in this state unable to
-> recover.  Some of my systems exhibit this last behaviour, so at
-> least with this patch I can warn the user that they need to
-> reboot to regain wifi functionality.
-
-If power up fails the error should propagate to `ifconfig wlanX up`
-(or whatever calling drv_start) eventually so I don't see the point in
-having this counter.
-
-
-Michał
