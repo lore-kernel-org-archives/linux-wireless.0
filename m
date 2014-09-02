@@ -1,80 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:42315 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755842AbaIIJii (ORCPT
+Received: from mail-pd0-f179.google.com ([209.85.192.179]:42846 "EHLO
+	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751503AbaIBIGa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Sep 2014 05:38:38 -0400
-Date: Tue, 9 Sep 2014 12:38:02 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: herself@thefumon.com
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net
-Subject: re: ath5k: added debugfs file for dumping eeprom
-Message-ID: <20140909093802.GA10439@mwanda> (sfid-20140909_113842_152783_6581AC06)
+	Tue, 2 Sep 2014 04:06:30 -0400
+Received: by mail-pd0-f179.google.com with SMTP id z10so7945554pdj.24
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Sep 2014 01:06:30 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1409644512.1808.2.camel@jlt4.sipsolutions.net>
+References: <CAD3NH5X1AYR5p8AyRyO0DFkkJUtuc_78=s6vEi-nS4UxUZfWCg@mail.gmail.com>
+	<1409597534.2703.9.camel@jlt4.sipsolutions.net>
+	<CAD3NH5Wimu9muPeL-zFrw=u1G3Q+8749cj0SYUmeQuLF6LKibQ@mail.gmail.com>
+	<1409644512.1808.2.camel@jlt4.sipsolutions.net>
+Date: Tue, 2 Sep 2014 10:06:30 +0200
+Message-ID: <CAD3NH5XEfHU7KMWwrmZdZz9LKP_86b4EFogpHrnC+AhREHjOPw@mail.gmail.com> (sfid-20140902_100636_169988_F6C9C2C7)
+Subject: Re: wmediumd performance penalty
+From: Dani Camps <danicamps81@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Jade Bilkey,
+Hi,
 
-The patch db906eb2101b: "ath5k: added debugfs file for dumping
-eeprom" from Aug 30, 2014, leads to the following static checker
-warning:
+OK, then the results I am getting are indeed surprising. To test
+bandwidth I am using an iperf UDP transfer of 100Mbps and around 30
+Mbps is all it gets (without wmediumd).
 
-	drivers/net/wireless/ath/ath5k/debug.c:942 open_file_eeprom()
-	error: buffer overflow 'buf' 2048 <= 4095
+I will further test only mac80211_hwsim (without wmediumd), which I
+believe can be used to set up topologies as well with the group
+feature as described here:
+https://github.com/cozybit/open80211s/wiki/HwsimTestTemplate
 
-drivers/net/wireless/ath/ath5k/debug.c
-   905  static int open_file_eeprom(struct inode *inode, struct file *file)
-   906  {
-   907          struct eeprom_private *ep;
-   908          struct ath5k_hw *ah = inode->i_private;
-   909          bool res;
-   910          int i, ret;
-   911          u32 eesize;
-   912          u16 val, *buf;
-                          ^^^
-buf is type u16.
+Best Regards
 
-   913  
-   914          /* Get eeprom size */
-   915  
-   916          res = ath5k_hw_nvram_read(ah, AR5K_EEPROM_SIZE_UPPER, &val);
-   917          if (!res)
-   918                  return -EACCES;
-   919  
-   920          if (val == 0) {
-   921                  eesize = AR5K_EEPROM_INFO_MAX + AR5K_EEPROM_INFO_BASE;
-   922          } else {
-   923                  eesize = (val & AR5K_EEPROM_SIZE_UPPER_MASK) <<
-   924                          AR5K_EEPROM_SIZE_ENDLOC_SHIFT;
-   925                  ath5k_hw_nvram_read(ah, AR5K_EEPROM_SIZE_LOWER, &val);
-   926                  eesize = eesize | val;
-   927          }
-   928  
-   929          if (eesize > 4096)
-   930                  return -EINVAL;
-   931  
-   932          /* Create buffer and read in eeprom */
-   933  
-   934          buf = vmalloc(eesize);
-                              ^^^^^^
-eesize is in bytes.
+Daniel
 
-   935          if (!buf) {
-   936                  ret = -ENOMEM;
-   937                  goto err;
-   938          }
-   939  
-   940          for (i = 0; i < eesize; ++i) {
-   941                  AR5K_EEPROM_READ(i, val);
-   942                  buf[i] = val;
 
-We are writing u16 but the for loop limit is in terms of bytes so this
-loop will corrupt memory past the end of the buffer.
 
-   943          }
-   944  
-
-regards,
-dan carpenter
+On Tue, Sep 2, 2014 at 9:55 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Tue, 2014-09-02 at 09:31 +0200, Dani Camps wrote:
+>> Hi,
+>>
+>> I am running on a virtual machine with Ubuntu. Does mac80211_hwsim not
+>> schedule the packet reception time to the other radio(s) according to
+>> the PHY rate in the packet in order to simulate transmission time over
+>> the air ?
+>
+> No, it schedules it immediately.
+>
+> johannes
+>
