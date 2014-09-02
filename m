@@ -1,70 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay1.mentorg.com ([192.94.38.131]:56230 "EHLO
-	relay1.mentorg.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751056AbaI3HmP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Sep 2014 03:42:15 -0400
-From: "Sharma, Sanjeev" <Sanjeev_Sharma@mentor.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"dsd@gentoo.org" <dsd@gentoo.org>,
-	"kune@deine-taler.de" <kune@deine-taler.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: RE: [PATCH v2] zd1211rw: replace ZD_ASSERT with
- lockdep_assert_held()
-Date: Tue, 30 Sep 2014 07:42:11 +0000
-Message-ID: <FDC088D3B5555644AE135ED28A7ABDE950E5F3DF@EU-MBX-04.mgc.mentorg.com> (sfid-20140930_094236_363744_7D5C5749)
-References: <1410418407.1825.0.camel@jlt4.sipsolutions.net>
- <1410430179-19944-1-git-send-email-sanjeev_sharma@mentor.com>
- <1410430345.22863.0.camel@jlt4.sipsolutions.net>
- <FDC088D3B5555644AE135ED28A7ABDE94DF5256D@EU-MBX-02.mgc.mentorg.com>
- <CAGRGNgWOkzbu7sUxOqpgK_rzw1Xzny4aVFYOO6Rqd09-CpfvJA@mail.gmail.com>
-In-Reply-To: <CAGRGNgWOkzbu7sUxOqpgK_rzw1Xzny4aVFYOO6Rqd09-CpfvJA@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from s3.sipsolutions.net ([5.9.151.49]:56312 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754624AbaIBQAw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Sep 2014 12:00:52 -0400
+Message-ID: <1409673647.1808.25.camel@jlt4.sipsolutions.net> (sfid-20140902_180119_039636_B914A86F)
+Subject: Re: truesize for pages shared between SKBs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eric Dumazet <eric.dumazet@gmail.com>
+Cc: netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Ido Yariv <ido@wizery.com>,
+	Emmanuel Grumbach <egrumbach@gmail.com>
+Date: Tue, 02 Sep 2014 18:00:47 +0200
+In-Reply-To: <1409673113.3173.114.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20140902_175158_801970_DEB54693)
+References: <1409660440.1808.17.camel@jlt4.sipsolutions.net>
+	 <1409673113.3173.114.camel@edumazet-glaptop2.roam.corp.google.com>
+	 (sfid-20140902_175158_801970_DEB54693)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-LS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEp1bGlhbiBDYWxhYnkgW21haWx0bzpq
-dWxpYW4uY2FsYWJ5QGdtYWlsLmNvbV0gDQpTZW50OiBNb25kYXksIFNlcHRlbWJlciAxNSwgMjAx
-NCAxMTozMiBBTQ0KVG86IFNoYXJtYSwgU2FuamVldg0KQ2M6IEpvaGFubmVzIEJlcmc7IGRzZEBn
-ZW50b28ub3JnOyBrdW5lQGRlaW5lLXRhbGVyLmRlOyBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5l
-bC5vcmc7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IG5ldGRldkB2Z2VyLmtlcm5lbC5v
-cmcNClN1YmplY3Q6IFJlOiBbUEFUQ0ggdjJdIHpkMTIxMXJ3OiByZXBsYWNlIFpEX0FTU0VSVCB3
-aXRoIGxvY2tkZXBfYXNzZXJ0X2hlbGQoKQ0KDQpIaSBTYW5qZWV2LA0KDQpPbiBUaHUsIFNlcCAx
-MSwgMjAxNCBhdCA4OjM2IFBNLCBTaGFybWEsIFNhbmplZXYgPFNhbmplZXZfU2hhcm1hQG1lbnRv
-ci5jb20+IHdyb3RlOg0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBKb2hh
-bm5lcyBCZXJnIFttYWlsdG86am9oYW5uZXNAc2lwc29sdXRpb25zLm5ldF0NCj4gU2VudDogVGh1
-cnNkYXksIFNlcHRlbWJlciAxMSwgMjAxNCAzOjQyIFBNDQo+IFRvOiBTaGFybWEsIFNhbmplZXYN
-Cj4gQ2M6IGRzZEBnZW50b28ub3JnOyBrdW5lQGRlaW5lLXRhbGVyLmRlOyANCj4gbGludXgtd2ly
-ZWxlc3NAdmdlci5rZXJuZWwub3JnOyBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnOyANCj4g
-bmV0ZGV2QHZnZXIua2VybmVsLm9yZw0KPiBTdWJqZWN0OiBSZTogW1BBVENIIHYyXSB6ZDEyMTFy
-dzogcmVwbGFjZSBaRF9BU1NFUlQgd2l0aCANCj4gbG9ja2RlcF9hc3NlcnRfaGVsZCgpDQo+DQo+
-IE9uIFRodSwgMjAxNC0wOS0xMSBhdCAxNTozOSArMDUzMCwgU2FuamVldiBTaGFybWEgd3JvdGU6
-DQo+PiBvbiBzb21lIGFyY2hpdGVjdHVyZSBzcGluX2lzX2xvY2tlZCgpIGFsd2F5cyByZXR1cm4g
-ZmFsc2UgaW4gDQo+PiB1bmlwcm9jZXNzb3IgY29uZmlndXJhdGlvbiBhbmQgdGhlcmVmb3JlIGl0
-IHdvdWxkIGJlIGFkdmlzZSB0byANCj4+IHJlcGxhY2Ugd2l0aCBsb2NrZGVwX2Fzc2VydF9oZWxk
-KCkuDQo+Pg0KPj4gU2lnbmVkLW9mZi1ieTogU2FuamVldiBTaGFybWEgPFNhbmplZXZfU2hhcm1h
-QG1lbnRvci5jb20+DQo+PiAtLS0NCj4+IENoYW5nZXMgaW4gdjI6DQo+PiAgIC0gY29ycmVjdGVk
-IHRoZSB0eXBvDQo+DQo+PiBOb3cgaXQgY29tcGlsZXMsIGJ1dCB5b3UgZ290IHRoZSBsb2dpYyB3
-cm9uZy4NCj4NCj4+ICsrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3pkMTIxMXJ3L3pkX21hYy5j
-DQo+PiBAQCAtMjM1LDcgKzIzNSw3IEBAIHZvaWQgemRfbWFjX2NsZWFyKHN0cnVjdCB6ZF9tYWMg
-Km1hYykgIHsNCj4+ICAgICAgIGZsdXNoX3dvcmtxdWV1ZSh6ZF93b3JrcXVldWUpOw0KPj4gICAg
-ICAgemRfY2hpcF9jbGVhcigmbWFjLT5jaGlwKTsNCj4+IC0gICAgIFpEX0FTU0VSVCghc3Bpbl9p
-c19sb2NrZWQoJm1hYy0+bG9jaykpOw0KPj4gKyAgICAgbG9ja2RlcF9hc3NlcnRfaGVsZCgmbWFj
-LT5sb2NrKTsNCj4+ICAgICAgIFpEX01FTUNMRUFSKG1hYywgc2l6ZW9mKHN0cnVjdCB6ZF9tYWMp
-KTsgIH0NCj4NCj4+TG9vayBjbG9zZWx5IGF0IHRoaXMgYWdhaW4uDQo+DQo+IEkgZGlkbid0IHVu
-ZGVyc3RhbmQgd2hlcmUgSSAgcHV0IHdyb25nIGxvZ2ljICA/DQoNCkkgZmluZCBpdCBoZWxwcyB0
-byBzcGVsbCBvdXQgd2hhdCBjb2RlIGlzIGRvaW5nIGluIHdvcmRzLg0KDQpFLmcuIHRoZSBsaW5l
-IHlvdSdyZSByZW1vdmluZyBpczoNClpEX0FTU0VSVCghc3Bpbl9pc19sb2NrZWQoJm1hYy0+bG9j
-aykpOw0KDQpTbywgd2UnbGwgYXNzZXJ0IHdoZW4gc3Bpbl9pc19sb2NrZWQoJm1hYy0+bG9jaykg
-aXMgZmFsc2UsIGkuZS4gd2hlbg0KbWFjLT5sb2NrIGlzIG5vdCBzcGluIGxvY2tlZC4NCg0KVGhp
-cyBpc24ndCB0aGUgc2FtZSBhcyB3aGF0IHlvdSdyZSByZXBsYWNpbmcgaXQgd2l0aC4NCg0KIEkg
-IGZlZWwgbG9naWMgaXMgYWJzb2x1dGVseSBjb3JyZWN0IGFuZCBpZiB5b3UgZXhwYW5kIGl0IHdp
-bGwgbG9va3MgbGlrZSAuLg0KDQorI2RlZmluZSBsb2NrZGVwX2Fzc2VydF9oZWxkKGwpCWRvIHsJ
-XCANCisJV0FSTl9PTihkZWJ1Z19sb2NrcyAmJiAhbG9ja2RlcF9pc19oZWxkKGwpKTsJXCANCisJ
-fSB3aGlsZSAoMCkNCg0KUGxlYXNlIHJlZmVyIGh0dHA6Ly9sa21sLml1LmVkdS9oeXBlcm1haWwv
-bGludXgva2VybmVsLzEyMDMuMi8wMDM2OS5odG1sIGFuZCBhbHNvIHNlZSBpbmNsdWRlL2xpbnV4
-L2xvY2tkZXAuaCBmb3IgbW9yZSBkZXRhaWwuDQoNClRoYW5rcw0KU2FuamVldiBTaGFybWENCg==
+On Tue, 2014-09-02 at 08:51 -0700, Eric Dumazet wrote:
+
+> > In our driver, we have 4k receive buffers, but usually ~1500 byte
+> > packets.
+> 
+> Which driver exactly is that ?
+
+iwlwifi/iwlmvm, of course :)
+
+> Can you elaborate on 'they share the page' ?
+> 
+> If a 4K page is really split into 2 2KB subpages, then yes, truesize can
+> be 2KB + skb->head + sizeof(struct sk_buff)
+
+What do you mean by "split"?
+
+There could be any number of packets (though usually two in the
+interesting case) in the page, and we call skb_add_rx_frag() for both
+packets, pointing to the same page, with different offsets.
+
+> Some drivers do that (Intel IGBVF for example)
+
+It seems to split into two unconditionally, which is interesting.
+
+> If a single 4KB page can be used by a single 1500 frame, then its not
+> shared ;)
+
+Right, obviously :)
+
+> > How do other drivers handle this? Should the truesize maybe be aware of
+> > this kind of sharing? Should we just lie about it and risk that the
+> > truesize is accounted erroneously if some but not all of the packets are
+> > freed?
+> 
+> Lies are not worth crashing hosts under memory pressure.
+> 
+> skb->truesize is really how many bytes are consumed by an skb. This
+> serves in TCP stack to trigger collapses when a socket reaches its
+> limits.
+
+Right - the question is more what "consumed" means in this case. Should
+it be correct at the time of SKB creation (in which case we should split
+by the number of packets created from the page) or should it be correct
+for the worst case (all but one packet are freed quickly, one remains
+stuck on some socket with the full 4k page allocated to it) ...
+
+Or maybe we should make it even more complex and check the page sharing
+in conjunction with GRO...
+
+> Your performance is better when you lie, because for the same
+> sk->sk_rcvbuf value (typically tcp_rmem[2]), TCP window can be bigger,
+> and allows TCP sender to send more packets (bigger cwnd)
+> 
+> Workaround : make tcp_rmem[2] larger, so that we still have an
+> appropriate memory limit per socket, acting for OOM prevention, and
+> allowing better performance for large BDP flows.
+> 
+> Current value is 6MB, which is already quite big IMO for well behaving
+> drivers.
+> 
+> Real fix would be to make your skb as slim as possible of course.
+> It helps even if GRO or TCP coalescing can reduce the memory
+> requirements for bulk flows.
+
+Sure, it's always a trade-off though. If we want to *actually* make it
+smaller we'd have to copy the data, which doesn't buy us much either.
+The hardware is limited in the RX buffer handling, and there's actually
+a chance we might receive close to 4k in a single frame with A-MSDU.
+
+If you wanted to use the medium more efficiently you'd set the MTU
+higher, for better page utilisation to a little under 2000 (a perfectly
+valid value for 802.11). Nobody really does that though :-)
+
+johannes
+
