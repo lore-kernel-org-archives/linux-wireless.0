@@ -1,70 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews09.kpnxchange.com ([213.75.39.14]:65269 "EHLO
-	cpsmtpb-ews09.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756859AbaIELdr (ORCPT
+Received: from mail-pd0-f182.google.com ([209.85.192.182]:32876 "EHLO
+	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754125AbaIBPv4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Sep 2014 07:33:47 -0400
-Message-ID: <1409916824.7832.20.camel@x220> (sfid-20140905_133410_956670_BC410A44)
-Subject: Re: [PATCH 09/28] Remove ATHEROS_AR231X
-From: Paul Bolle <pebolle@tiscali.nl>
-To: Sergey Ryazanov <ryazanov.s.a@gmail.com>
-Cc: Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Oleksij Rempel <linux@rempel-privat.de>,
-	Richard Weinberger <richard@nod.at>,
-	Jonathan Bither <jonbither@gmail.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	ath5k-devel@venema.h4ckr.net, open@hauke-m.de, list@hauke-m.de,
-	antonynpavlov@gmail.com, openwrt-devel@lists.openwrt.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Fri, 05 Sep 2014 13:33:44 +0200
-In-Reply-To: <CAHNKnsRipRHicKOUW4dCutD1-sUG6qPnP2QuOveH_t1MFX9XgQ@mail.gmail.com>
-References: <1391971686-9517-1-git-send-email-richard@nod.at>
-	 <1391971686-9517-10-git-send-email-richard@nod.at>
-	 <52F7D480.1050106@hauke-m.de> <52F7DF21.70207@nod.at>
-	 <CAHNKnsS7Mv4ZhBWZa53go9L9nZimJ7_FG5HFJ9C3kkGMAEz-mA@mail.gmail.com>
-	 <52F8C373.9060108@rempel-privat.de>
-	 <CAHNKnsQF5Hdf3JT91moPraRQzn4kMpdD2NSiJ7b30wQhS1W4MA@mail.gmail.com>
-	 <CAGVrzcYnECx5Q=i+m6qZn29y4JALDpw5SWoUNP-S6HgPR3_ygQ@mail.gmail.com>
-	 <CAHNKnsRACSo=DfOyiHxqV3acv_wfZmz4tMnYAW0wo4OCibwdfA@mail.gmail.com>
-	 <CAHNKnsRQp7WLSJNAXEYPTd=qs1DquOfNgKtHES-Utvcy1=FEgQ@mail.gmail.com>
-	 <20140213201421.GJ22203@tuxdriver.com> <1397581703.8212.5.camel@x220>
-	 <CAHNKnsQQ42-XnXrubHAy4PF3H2ynbGDdSMP7MvDS_1aRozYF=A@mail.gmail.com>
-	 <1403087119.1984.93.camel@x220>
-	 <CAHNKnsSfaT7xC5_wv=TrGLEQ2pjC91Q1XG891_n64OuR0fA9Jg@mail.gmail.com>
-	 <1403091974.1984.102.camel@x220> <1409911856.7832.9.camel@x220>
-	 <CAHNKnsRipRHicKOUW4dCutD1-sUG6qPnP2QuOveH_t1MFX9XgQ@mail.gmail.com>
+	Tue, 2 Sep 2014 11:51:56 -0400
+Message-ID: <1409673113.3173.114.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20140902_175204_708530_999716F9)
+Subject: Re: truesize for pages shared between SKBs
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Ido Yariv <ido@wizery.com>,
+	Emmanuel Grumbach <egrumbach@gmail.com>
+Date: Tue, 02 Sep 2014 08:51:53 -0700
+In-Reply-To: <1409660440.1808.17.camel@jlt4.sipsolutions.net>
+References: <1409660440.1808.17.camel@jlt4.sipsolutions.net>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Sergey,
-
-On Fri, 2014-09-05 at 15:12 +0400, Sergey Ryazanov wrote:
-> 2014-09-05 14:10 GMT+04:00, Paul Bolle <pebolle@tiscali.nl>:
-> > On Wed, 2014-06-18 at 13:46 +0200, Paul Bolle wrote:
-> >> Having this conversation every rc1 is getting a bit silly. Could Jiri
-> >> e.a. perhaps set some specific deadline for ATHEROS_AR231X to be
-> >> submitted?
-> >
-> > I waited until rc3. Have you seen any activity on this front? If not,
-> > should I resend the patch that removes the code in mainline that depends
-> > on ATHEROS_AR231X (ie, AHB bus support)?
-> >
-> Recent activity always could be found in [1]. Now I finish another one
-> round of cleanups and have a plan to fix several things (you can
-> always find something that you really want to improve). But if you
-> insist I could immediately switch to "send upstream" mode. And seems
-> that this would be better approach.
+On Tue, 2014-09-02 at 14:20 +0200, Johannes Berg wrote:
+> Hi,
 > 
-> 1. https://dev.openwrt.org/log/trunk/target/linux/atheros
+> In our driver, we have 4k receive buffers, but usually ~1500 byte
+> packets.
 
-And where can the related PULL requests or patch submissions be found?
+Which driver exactly is that ?
+
+> 
+> How do other drivers handle this? We currently set up the truesize of
+> each SKB to be its size plus the 4k page size, but we see performance
+> improvements when we lie and pretend the truesize is just 4k/(# of
+> packets in the page), which is correct as long as the packets are all
+> pending in the stack since they share the page.
+
+Can you elaborate on 'they share the page' ?
+
+If a 4K page is really split into 2 2KB subpages, then yes, truesize can
+be 2KB + skb->head + sizeof(struct sk_buff)
+
+Some drivers do that (Intel IGBVF for example)
+
+If a single 4KB page can be used by a single 1500 frame, then its not
+shared ;)
+
+> 
+> How do other drivers handle this? Should the truesize maybe be aware of
+> this kind of sharing? Should we just lie about it and risk that the
+> truesize is accounted erroneously if some but not all of the packets are
+> freed?
+
+Lies are not worth crashing hosts under memory pressure.
+
+skb->truesize is really how many bytes are consumed by an skb. This
+serves in TCP stack to trigger collapses when a socket reaches its
+limits.
+
+Your performance is better when you lie, because for the same
+sk->sk_rcvbuf value (typically tcp_rmem[2]), TCP window can be bigger,
+and allows TCP sender to send more packets (bigger cwnd)
+
+Workaround : make tcp_rmem[2] larger, so that we still have an
+appropriate memory limit per socket, acting for OOM prevention, and
+allowing better performance for large BDP flows.
+
+Current value is 6MB, which is already quite big IMO for well behaving
+drivers.
+
+Real fix would be to make your skb as slim as possible of course.
+It helps even if GRO or TCP coalescing can reduce the memory
+requirements for bulk flows.
 
 
-Paul Bolle
 
