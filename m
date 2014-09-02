@@ -1,86 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:7701 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750770AbaIJNfH (ORCPT
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:49966 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755692AbaIBWOL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Sep 2014 09:35:07 -0400
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH 00/22] wil6210 patches
-Date: Wed, 10 Sep 2014 16:34:29 +0300
-Message-ID: <1410356091-19219-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140910_153513_467622_435F1FF3)
+	Tue, 2 Sep 2014 18:14:11 -0400
+Received: by mail-wg0-f52.google.com with SMTP id m15so7484557wgh.11
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Sep 2014 15:14:10 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH V2] bcma: get info about flash type SoC booted from
+Date: Wed,  3 Sep 2014 00:14:02 +0200
+Message-Id: <1409696042-5397-1-git-send-email-zajec5@gmail.com> (sfid-20140903_001418_681362_C854946B)
+In-Reply-To: <1409149404-26856-1-git-send-email-zajec5@gmail.com>
+References: <1409149404-26856-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Really big item is firmware download. It is still
-experimental, and there is no firmware ready for
-public release yet; but we are getting close.
+There is an ongoing work on cleaning MIPS's nvram support so it could be
+re-used on other platforms (bcm53xx to say precisely).
+This will require a bit of extra logic in bcma this patch implements.
 
-Another item worth mentioning is provisioning for
-platform specific code.
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+After some extra discussion it seems my initial idea was correct. It is
+not possible on bcm47xx to use anything like a platform device/driver to
+handle NVRAM.
 
-The rest is bug fixes and small improvements
+V2: We don't use info about boot_dev anywhere else, so don't store it.
+    Move the code to the bcma_bus_early_register as we need NVRAM early.
+---
+ drivers/bcma/main.c            | 64 ++++++++++++++++++++++++++++++++++++++++++
+ include/linux/bcma/bcma_regs.h |  5 ++++
+ 2 files changed, 69 insertions(+)
 
-Dedy Lansky (6):
-  wil6210: fix for memory corruption while insmod
-  wil6210: fix for memory corruption upon rmmod
-  wil6210: fix race condition of disconnect while BACK event
-  wil6210: modify confusing printout
-  wil6210: fix race condition between BACK event and Rx data
-  wil6210: introduce separate completion for WMI
-
-Vladimir Kondratiev (16):
-  wil6210: firmware download
-  wil6210: debug prints for vring de-allocation
-  wil6210: print more information when connecting
-  wil6210: some more debug for the WMI mechanism
-  wil6210: coding style fixes
-  wil6210: platform specific module
-  wil6210: add more debug printouts
-  wil6210: fix usage of print_hex_dump_debug
-  wil6210: send connect request IEs to FW also for non-secure connection
-  wil6210: add change_beacon() driver callback
-  wil6210: enlarge TX/RX buffer length
-  wil6210: specify max. IE length
-  wil6210: fix typo in comment
-  wil6210: rename [en|dis]able irq to [un]mask
-  wil6210: fix for oops while stopping interface
-  wil6210: fix PTR_ERR() usage after initialization to constant
-
- drivers/net/wireless/ath/wil6210/Kconfig           |   9 +
- drivers/net/wireless/ath/wil6210/Makefile          |   3 +
- drivers/net/wireless/ath/wil6210/cfg80211.c        | 126 ++++--
- drivers/net/wireless/ath/wil6210/debugfs.c         |  60 ++-
- drivers/net/wireless/ath/wil6210/fw.c              |  45 ++
- drivers/net/wireless/ath/wil6210/fw.h              | 149 +++++++
- drivers/net/wireless/ath/wil6210/fw_inc.c          | 495 +++++++++++++++++++++
- drivers/net/wireless/ath/wil6210/interrupt.c       |  31 +-
- drivers/net/wireless/ath/wil6210/main.c            | 185 +++++---
- drivers/net/wireless/ath/wil6210/netdev.c          |  17 +-
- drivers/net/wireless/ath/wil6210/pcie_bus.c        |  39 +-
- drivers/net/wireless/ath/wil6210/rx_reorder.c      |  13 +-
- drivers/net/wireless/ath/wil6210/txrx.c            |  66 ++-
- drivers/net/wireless/ath/wil6210/txrx.h            |   9 +-
- drivers/net/wireless/ath/wil6210/wil6210.h         |  43 +-
- drivers/net/wireless/ath/wil6210/wil_platform.c    |  49 ++
- drivers/net/wireless/ath/wil6210/wil_platform.h    |  34 ++
- .../net/wireless/ath/wil6210/wil_platform_msm.c    | 257 +++++++++++
- .../net/wireless/ath/wil6210/wil_platform_msm.h    |  24 +
- drivers/net/wireless/ath/wil6210/wmi.c             |  40 +-
- drivers/net/wireless/ath/wil6210/wmi.h             |  18 +-
- 21 files changed, 1540 insertions(+), 172 deletions(-)
- create mode 100644 drivers/net/wireless/ath/wil6210/fw.c
- create mode 100644 drivers/net/wireless/ath/wil6210/fw.h
- create mode 100644 drivers/net/wireless/ath/wil6210/fw_inc.c
- create mode 100644 drivers/net/wireless/ath/wil6210/wil_platform.c
- create mode 100644 drivers/net/wireless/ath/wil6210/wil_platform.h
- create mode 100644 drivers/net/wireless/ath/wil6210/wil_platform_msm.c
- create mode 100644 drivers/net/wireless/ath/wil6210/wil_platform_msm.h
-
+diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
+index 9f6b0cb..70cec2b 100644
+--- a/drivers/bcma/main.c
++++ b/drivers/bcma/main.c
+@@ -14,6 +14,14 @@
+ MODULE_DESCRIPTION("Broadcom's specific AMBA driver");
+ MODULE_LICENSE("GPL");
+ 
++enum bcma_boot_dev {
++	BCMA_BOOT_DEV_UNK = 0,
++	BCMA_BOOT_DEV_ROM,
++	BCMA_BOOT_DEV_PARALLEL,
++	BCMA_BOOT_DEV_SERIAL,
++	BCMA_BOOT_DEV_NAND,
++};
++
+ /* contains the number the next bus should get. */
+ static unsigned int bcma_bus_next_num = 0;
+ 
+@@ -110,6 +118,45 @@ bool bcma_wait_value(struct bcma_device *core, u16 reg, u32 mask, u32 value,
+ 	return false;
+ }
+ 
++static enum bcma_boot_dev bcma_boot_dev(struct bcma_bus *bus)
++{
++	struct bcma_drv_cc *cc = &bus->drv_cc;
++	u8 cc_rev = cc->core->id.rev;
++
++	if (cc_rev == 42) {
++		struct bcma_device *core;
++
++		core = bcma_find_core(bus, BCMA_CORE_NS_ROM);
++		if (core) {
++			switch (bcma_aread32(core, BCMA_IOST) &
++				BCMA_NS_ROM_IOST_BOOT_DEV_MASK) {
++			case BCMA_NS_ROM_IOST_BOOT_DEV_NOR:
++				return BCMA_BOOT_DEV_SERIAL;
++			case BCMA_NS_ROM_IOST_BOOT_DEV_NAND:
++				return BCMA_BOOT_DEV_NAND;
++			case BCMA_NS_ROM_IOST_BOOT_DEV_ROM:
++			default:
++				return BCMA_BOOT_DEV_ROM;
++			}
++		}
++	} else {
++		if (cc_rev == 38) {
++			if (cc->status & BCMA_CC_CHIPST_5357_NAND_BOOT)
++				return BCMA_BOOT_DEV_NAND;
++			else if (cc->status & BIT(5))
++				return BCMA_BOOT_DEV_ROM;
++		}
++
++		if ((cc->capabilities & BCMA_CC_CAP_FLASHT) ==
++		    BCMA_CC_FLASHT_PARA)
++			return BCMA_BOOT_DEV_PARALLEL;
++		else
++			return BCMA_BOOT_DEV_SERIAL;
++	}
++
++	return BCMA_BOOT_DEV_SERIAL;
++}
++
+ static void bcma_release_core_dev(struct device *dev)
+ {
+ 	struct bcma_device *core = container_of(dev, struct bcma_device, dev);
+@@ -372,6 +419,23 @@ int __init bcma_bus_early_register(struct bcma_bus *bus,
+ 		bcma_core_mips_early_init(&bus->drv_mips);
+ 	}
+ 
++	/* Determine flash type this SoC boots from */
++	if (bus->hosttype == BCMA_HOSTTYPE_SOC) {
++		enum bcma_boot_dev boot_dev = bcma_boot_dev(bus);
++
++		switch (boot_dev) {
++		case BCMA_BOOT_DEV_PARALLEL:
++		case BCMA_BOOT_DEV_SERIAL:
++			/* TODO: Init NVRAM using BCMA_SOC_FLASH2 window */
++			break;
++		case BCMA_BOOT_DEV_NAND:
++			/* TODO: Init NVRAM using BCMA_SOC_FLASH1 window */
++			break;
++		default:
++			break;
++		}
++	}
++
+ 	bcma_info(bus, "Early bus registered\n");
+ 
+ 	return 0;
+diff --git a/include/linux/bcma/bcma_regs.h b/include/linux/bcma/bcma_regs.h
+index 917dcd7..e64ae7b 100644
+--- a/include/linux/bcma/bcma_regs.h
++++ b/include/linux/bcma/bcma_regs.h
+@@ -39,6 +39,11 @@
+ #define  BCMA_RESET_CTL_RESET		0x0001
+ #define BCMA_RESET_ST			0x0804
+ 
++#define BCMA_NS_ROM_IOST_BOOT_DEV_MASK	0x0003
++#define BCMA_NS_ROM_IOST_BOOT_DEV_NOR	0x0000
++#define BCMA_NS_ROM_IOST_BOOT_DEV_NAND	0x0001
++#define BCMA_NS_ROM_IOST_BOOT_DEV_ROM	0x0002
++
+ /* BCMA PCI config space registers. */
+ #define BCMA_PCI_PMCSR			0x44
+ #define  BCMA_PCI_PE			0x100
 -- 
-1.9.1
+1.8.4.5
 
