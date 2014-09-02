@@ -1,37 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:62438 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752525AbaIDKEo (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:45821 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752442AbaIBBIf convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Sep 2014 06:04:44 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Matteo Croce <matteo@openwrt.org>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: ATH10K_DEBUGFS depends on DEBUG_FS
-References: <CAFnufp1Rg2JOLM4d6g_=uF+Nrydt0Wy_4DK85bnqNHkthD9zQw@mail.gmail.com>
-Date: Thu, 4 Sep 2014 13:04:38 +0300
-In-Reply-To: <CAFnufp1Rg2JOLM4d6g_=uF+Nrydt0Wy_4DK85bnqNHkthD9zQw@mail.gmail.com>
-	(Matteo Croce's message of "Thu, 4 Sep 2014 10:50:39 +0200")
-Message-ID: <87iol3k8g9.fsf@kamboji.qca.qualcomm.com> (sfid-20140904_120510_543351_C9B3A83D)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 1 Sep 2014 21:08:35 -0400
+Date: Mon, 01 Sep 2014 18:08:34 -0700 (PDT)
+Message-Id: <20140901.180834.2149952137973916395.davem@davemloft.net> (sfid-20140902_030857_531729_72918022)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2014-08-28
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20140828181713.GL13758@tuxdriver.com>
+References: <20140828181713.GL13758@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Matteo Croce <matteo@openwrt.org> writes:
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Thu, 28 Aug 2014 14:17:14 -0400
 
-> enable ath10k debugfs only when debugfs is enabled,
-> fixes an invalid pointer on module insert
->
-> --- a/drivers/net/wireless/ath/ath10k/Kconfig
-> +++ b/drivers/net/wireless/ath/ath10k/Kconfig
+> Please pull this batch of fixes intended for the 3.17 stream.
+> 
+> For the Bluetooth/6LowPAN/802.15.4 bits, Johan says:
+> 
+> 'It contains a connection reference counting fix for LE where a
+> connection might stay up even though it should get disconnected.
+> 
+> The other 802.15.4 6LoWPAN related patches were sent to the bluetooth
+> tree by Alexander Aring and described as follows by him:
+> 
+> "
+> these patches contains patches for the bluetooth branch.
+> 
+> This series includes memory leak fixes and an errno value fix.
+> Also there are two patches for sending and receiving 1280 6LoWPAN
+> packets, which makes the IEEE 802.15.4 6LoWPAN stack more RFC
+> compliant.
+> "'
+> 
+> Along with that...
+> 
+> Alexey Khoroshilov fixes a use-after-free bug on at76c50x-usb.
+> 
+> Hauke Mehrtens adds a PCI ID to bcma.
+> 
+> Himangi Saraogi fixes a silly "A || A" test in rtlwifi.
+> 
+> Larry Finger adds a device ID to rtl8192cu.
+> 
+> Maks Naumov fixes a strncmp argument in ath9k.
+> 
+> Álvaro Fernández Rojas adds a PCI ID to ssb.
+> 
+> Please let me know if there are problems!
 
-This is missing Signed-off-by, so I cannot take this. Please check
-Documentation/SubmittingPatches and please resend.
-
-The safest way to submit a patch is to commit with 'git commit -s' and
-then submit the commit with 'git send-email'. But first do a trial run
-by submitting it to yourself.
-
--- 
-Kalle Valo
+Pulled, thanks a lot John.
