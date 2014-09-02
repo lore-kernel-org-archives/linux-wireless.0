@@ -1,113 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:59730 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756194AbaIZXY1 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:4943 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750863AbaIBHT3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Sep 2014 19:24:27 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v2 4/4] hwsim:  support creating wiphy w/out creating wlanX.
-Date: Fri, 26 Sep 2014 16:24:16 -0700
-Message-Id: <1411773856-25042-4-git-send-email-greearb@candelatech.com> (sfid-20140927_012440_871377_8AAD11F5)
-In-Reply-To: <1411773856-25042-1-git-send-email-greearb@candelatech.com>
-References: <1411773856-25042-1-git-send-email-greearb@candelatech.com>
+	Tue, 2 Sep 2014 03:19:29 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: kill tasklets after free_irq
+References: <1409214280-6492-1-git-send-email-michal.kazior@tieto.com>
+Date: Tue, 2 Sep 2014 10:19:15 +0300
+In-Reply-To: <1409214280-6492-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Thu, 28 Aug 2014 10:24:40 +0200")
+Message-ID: <87sikao5fw.fsf@kamboji.qca.qualcomm.com> (sfid-20140902_091932_198992_882CAA10)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Good for automated testing, where user can create wlan
-interfaces with specified names.
+> Commit 5c771e7454d148af35e8b4297d00f880de79ea49
+> introduced a regression. On some systems spurious
+> interrupts could schedule a tasklet while tearing
+> down leading to, e.g.:
+>
+>  BUG: unable to handle kernel paging request at fe589030
+>  IP: [<c1316fb0>] ioread32+0x30/0x40
+>  ...
+>  Call Trace:
+>   [<fe576c1b>] ath10k_pci_tasklet+0x1b/0x60 [ath10k_pci]
+>   [<c1053fbe>] tasklet_action+0x9e/0xb0
+>   [<c10534f1>] __do_softirq+0xf1/0x3f0
+>   [<c1053400>] ? ftrace_raw_event_irq_handler_entry+0xa0/0xa0
+>   [<c1004999>] do_softirq_own_stack+0x29/0x40
+>   <IRQ>
+>   [<c1053a76>] irq_exit+0x86/0xb0
+>  ...
+>   [<c132d522>] do_pci_disable_device+0x52/0x60
+>   [<c132d57f>] pci_disable_device+0x4f/0xb0
+>   [<c132a961>] ? __pci_set_master+0x51/0x80
+>   [<fe5740b3>] ath10k_pci_release+0x33/0x40 [ath10k_pci]
+>   [<fe575d4b>] ath10k_pci_remove+0x7b/0x90 [ath10k_pci]
+>
+> Reported-by: Kalle Valo <kvalo@qca.qualcomm.com>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
+Thanks, applied. I also added a "Tested-by: Kalle" line.
 
-v2:  New to the series, more help with automation.
-
- drivers/net/wireless/mac80211_hwsim.c | 15 ++++++++++++---
- drivers/net/wireless/mac80211_hwsim.h |  2 ++
- 2 files changed, 14 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index e78c149..c803dd6 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -2018,7 +2018,8 @@ static struct ieee80211_ops mac80211_hwsim_mchan_ops;
- static int mac80211_hwsim_create_radio(int channels, const char *reg_alpha2,
- 				       const struct ieee80211_regdomain *regd,
- 				       bool reg_strict, bool p2p_device,
--				       bool use_chanctx, char *hwname)
-+				       bool use_chanctx, char *hwname,
-+				       bool no_vdev)
- {
- 	int err;
- 	u8 addr[ETH_ALEN];
-@@ -2223,6 +2224,9 @@ static int mac80211_hwsim_create_radio(int channels, const char *reg_alpha2,
- 		schedule_timeout_interruptible(1);
- 	}
- 
-+	if (no_vdev)
-+		hw->flags |= IEEE80211_HW_NO_AUTO_VDEV;
-+
- 	err = ieee80211_register_hw(hw);
- 	if (err < 0) {
- 		printk(KERN_DEBUG "mac80211_hwsim: ieee80211_register_hw failed (%d)\n",
-@@ -2517,11 +2521,15 @@ static int hwsim_create_radio_nl(struct sk_buff *msg, struct genl_info *info)
- 	bool reg_strict = info->attrs[HWSIM_ATTR_REG_STRICT_REG];
- 	bool p2p_device = info->attrs[HWSIM_ATTR_SUPPORT_P2P_DEVICE];
- 	bool use_chanctx;
-+	bool no_vdev = false;
- 	char *hwname = NULL;
- 
- 	if (info->attrs[HWSIM_ATTR_CHANNELS])
- 		chans = nla_get_u32(info->attrs[HWSIM_ATTR_CHANNELS]);
- 
-+	if (info->attrs[HWSIM_ATTR_NO_VDEV])
-+		no_vdev = true;
-+
- 	if (info->attrs[HWSIM_ATTR_RADIO_NAME])
- 		hwname = nla_data(info->attrs[HWSIM_ATTR_RADIO_NAME]);
- 
-@@ -2542,7 +2550,8 @@ static int hwsim_create_radio_nl(struct sk_buff *msg, struct genl_info *info)
- 	}
- 
- 	return mac80211_hwsim_create_radio(chans, alpha2, regd, reg_strict,
--					   p2p_device, use_chanctx, hwname);
-+					   p2p_device, use_chanctx, hwname,
-+					   no_vdev);
- }
- 
- static int hwsim_destroy_radio_nl(struct sk_buff *msg, struct genl_info *info)
-@@ -2774,7 +2783,7 @@ static int __init init_mac80211_hwsim(void)
- 		err = mac80211_hwsim_create_radio(channels, reg_alpha2,
- 						  regd, reg_strict,
- 						  support_p2p_device,
--						  channels > 1, NULL);
-+						  channels > 1, NULL, false);
- 		if (err < 0)
- 			goto out_free_radios;
- 	}
-diff --git a/drivers/net/wireless/mac80211_hwsim.h b/drivers/net/wireless/mac80211_hwsim.h
-index 37c040b..6efd9f3 100644
---- a/drivers/net/wireless/mac80211_hwsim.h
-+++ b/drivers/net/wireless/mac80211_hwsim.h
-@@ -112,6 +112,7 @@ enum {
-  *	command to force use of channel contexts even when only a
-  *	single channel is supported
-  * @HWSIM_ATTR_RADIO_NAME: Name of radio, ie phy666
-+ * @HWSIM_ATTR_NO_VDEV:  Do not create vdev (wlanX) when creating radio.
-  * @__HWSIM_ATTR_MAX: enum limit
-  */
- 
-@@ -134,6 +135,7 @@ enum {
- 	HWSIM_ATTR_SUPPORT_P2P_DEVICE,
- 	HWSIM_ATTR_USE_CHANCTX,
- 	HWSIM_ATTR_RADIO_NAME,
-+	HWSIM_ATTR_NO_VDEV,
- 	__HWSIM_ATTR_MAX,
- };
- #define HWSIM_ATTR_MAX (__HWSIM_ATTR_MAX - 1)
 -- 
-1.7.11.7
-
+Kalle Valo
