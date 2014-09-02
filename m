@@ -1,74 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yk0-f175.google.com ([209.85.160.175]:54521 "EHLO
-	mail-yk0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751232AbaIEMCb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Sep 2014 08:02:31 -0400
-MIME-Version: 1.0
-In-Reply-To: <1409916824.7832.20.camel@x220>
-References: <1391971686-9517-1-git-send-email-richard@nod.at>
- <1391971686-9517-10-git-send-email-richard@nod.at> <52F7D480.1050106@hauke-m.de>
- <52F7DF21.70207@nod.at> <CAHNKnsS7Mv4ZhBWZa53go9L9nZimJ7_FG5HFJ9C3kkGMAEz-mA@mail.gmail.com>
- <52F8C373.9060108@rempel-privat.de> <CAHNKnsQF5Hdf3JT91moPraRQzn4kMpdD2NSiJ7b30wQhS1W4MA@mail.gmail.com>
- <CAGVrzcYnECx5Q=i+m6qZn29y4JALDpw5SWoUNP-S6HgPR3_ygQ@mail.gmail.com>
- <CAHNKnsRACSo=DfOyiHxqV3acv_wfZmz4tMnYAW0wo4OCibwdfA@mail.gmail.com>
- <CAHNKnsRQp7WLSJNAXEYPTd=qs1DquOfNgKtHES-Utvcy1=FEgQ@mail.gmail.com>
- <20140213201421.GJ22203@tuxdriver.com> <1397581703.8212.5.camel@x220>
- <CAHNKnsQQ42-XnXrubHAy4PF3H2ynbGDdSMP7MvDS_1aRozYF=A@mail.gmail.com>
- <1403087119.1984.93.camel@x220> <CAHNKnsSfaT7xC5_wv=TrGLEQ2pjC91Q1XG891_n64OuR0fA9Jg@mail.gmail.com>
- <1403091974.1984.102.camel@x220> <1409911856.7832.9.camel@x220>
- <CAHNKnsRipRHicKOUW4dCutD1-sUG6qPnP2QuOveH_t1MFX9XgQ@mail.gmail.com> <1409916824.7832.20.camel@x220>
-From: Sergey Ryazanov <ryazanov.s.a@gmail.com>
-Date: Fri, 5 Sep 2014 16:02:10 +0400
-Message-ID: <CAHNKnsQ1gt=DRBTd9Q9yos1idqmXMepEPvhm8a7unP-whzNAgg@mail.gmail.com> (sfid-20140905_140254_497644_5CD3ED89)
-Subject: Re: [PATCH 09/28] Remove ATHEROS_AR231X
-To: Paul Bolle <pebolle@tiscali.nl>
-Cc: Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Oleksij Rempel <linux@rempel-privat.de>,
-	Richard Weinberger <richard@nod.at>,
-	Jonathan Bither <jonbither@gmail.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	ath5k-devel@venema.h4ckr.net, open@hauke-m.de,
-	"list@hauke-m.de:NETWORKING DRIVERS" <list@hauke-m.de>,
-	"antonynpavlov@gmail.com" <antonynpavlov@gmail.com>,
-	OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"list@hauke-m.de:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
-	open list <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from s3.sipsolutions.net ([5.9.151.49]:54107 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751442AbaIBHzV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Sep 2014 03:55:21 -0400
+Message-ID: <1409644512.1808.2.camel@jlt4.sipsolutions.net> (sfid-20140902_095528_487875_DEE22277)
+Subject: Re: wmediumd performance penalty
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dani Camps <danicamps81@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 02 Sep 2014 09:55:12 +0200
+In-Reply-To: <CAD3NH5Wimu9muPeL-zFrw=u1G3Q+8749cj0SYUmeQuLF6LKibQ@mail.gmail.com> (sfid-20140902_093201_597643_76A01DA7)
+References: <CAD3NH5X1AYR5p8AyRyO0DFkkJUtuc_78=s6vEi-nS4UxUZfWCg@mail.gmail.com>
+	 <1409597534.2703.9.camel@jlt4.sipsolutions.net>
+	 <CAD3NH5Wimu9muPeL-zFrw=u1G3Q+8749cj0SYUmeQuLF6LKibQ@mail.gmail.com>
+	 (sfid-20140902_093201_597643_76A01DA7)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2014-09-05 15:33 GMT+04:00 Paul Bolle <pebolle@tiscali.nl>:
-> Hi Sergey,
->
-> On Fri, 2014-09-05 at 15:12 +0400, Sergey Ryazanov wrote:
->> 2014-09-05 14:10 GMT+04:00, Paul Bolle <pebolle@tiscali.nl>:
->> > On Wed, 2014-06-18 at 13:46 +0200, Paul Bolle wrote:
->> >> Having this conversation every rc1 is getting a bit silly. Could Jiri
->> >> e.a. perhaps set some specific deadline for ATHEROS_AR231X to be
->> >> submitted?
->> >
->> > I waited until rc3. Have you seen any activity on this front? If not,
->> > should I resend the patch that removes the code in mainline that depends
->> > on ATHEROS_AR231X (ie, AHB bus support)?
->> >
->> Recent activity always could be found in [1]. Now I finish another one
->> round of cleanups and have a plan to fix several things (you can
->> always find something that you really want to improve). But if you
->> insist I could immediately switch to "send upstream" mode. And seems
->> that this would be better approach.
->>
->> 1. https://dev.openwrt.org/log/trunk/target/linux/atheros
->
-> And where can the related PULL requests or patch submissions be found?
->
-I have not sent patches yet, since I thought that it would be easier
-to cleanup them in openwrt tree and then send them upstream.
+On Tue, 2014-09-02 at 09:31 +0200, Dani Camps wrote:
+> Hi,
+> 
+> I am running on a virtual machine with Ubuntu. Does mac80211_hwsim not
+> schedule the packet reception time to the other radio(s) according to
+> the PHY rate in the packet in order to simulate transmission time over
+> the air ?
 
--- 
-BR,
-Sergey
+No, it schedules it immediately.
+
+johannes
+
