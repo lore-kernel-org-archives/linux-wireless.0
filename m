@@ -1,31 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:56461 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751131AbaIJLXX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Sep 2014 07:23:23 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Matteo Croce <matteo@openwrt.org>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: ATH10K_DEBUGFS depends on DEBUG_FS
-References: <1409835069-2246-1-git-send-email-matteo@openwrt.org>
-Date: Wed, 10 Sep 2014 14:23:17 +0300
-In-Reply-To: <1409835069-2246-1-git-send-email-matteo@openwrt.org> (Matteo
-	Croce's message of "Thu, 4 Sep 2014 14:51:09 +0200")
-Message-ID: <87zje77m8q.fsf@kamboji.qca.qualcomm.com> (sfid-20140910_132343_032483_25454CBA)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from s3.sipsolutions.net ([5.9.151.49]:54494 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750722AbaIBJgQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Sep 2014 05:36:16 -0400
+Message-ID: <1409650573.1808.11.camel@jlt4.sipsolutions.net> (sfid-20140902_113625_196991_3F7F6C5F)
+Subject: Re: [RFC] net: ipv4: drop unicast encapsulated in L2 multicast
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Hannes Frederic Sowa <hannes@stressinduktion.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Date: Tue, 02 Sep 2014 11:36:13 +0200
+In-Reply-To: <1409133238.26515.13.camel@localhost>
+References: <1408641747-22199-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20140821_192515_304437_37E734D5) <1408642331.4388.2.camel@jlt4.sipsolutions.net>
+	 <1409125114.11976.14.camel@localhost>
+	 <1409130313.2505.3.camel@jlt4.sipsolutions.net>
+	 <1409133238.26515.13.camel@localhost>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Matteo Croce <matteo@openwrt.org> writes:
+On Wed, 2014-08-27 at 11:53 +0200, Hannes Frederic Sowa wrote:
 
-> ATH10K_DEBUGFS must depend on DEBUG_FS, otherwise
-> ath10k will generate an invalid pointer on module load
->
-> Signed-off-by: Matteo Croce <matteo@openwrt.org>
+> > I don't know if that's really useful? OTOH, there surely must have been
+> > a reason for this to be in the IPv4 RFC, so maybe for that same reason
+> > it should also be in the IPv6 RFC?
+> 
+> Either it is an oversight, but RFC6085 3) tries to at least clarify the
+> multicast destination with LL unicast address. So there must have been
+> people trying to enfore a relationship between LL address and IPv6 one.
 
-Thanks, applied.
+That seems to allow a multicast IPv6 frame in a unicast LL address,
+which is a different situation but still ...
 
--- 
-Kalle Valo
+> I think it would be OK to drop it by default in case we don't break any
+> other assumptions in the stack (e.g. CLUSTERIP).
+
+Fair enough.
+
+> > The question now is, in the absence of such a latter required check (and
+> > indeed, in the case of CLUSTERIP), how we implement such a check.
+> > Perhaps a sysctl is needed after all?
+> 
+> Yeah, unfortunate situation.
+> 
+> One could add those IP addresses as broadcast addresses (/32) to the
+> routing table, so the brd_input jump would be taken.
+> 
+> But this would still break users of CLUSTERIP until they install those
+> routes. :(
+
+I'm not even sure I understand this part :)
+
+Any suggestions?
+
+As long as IPv6 doesn't mandate it in the RFCs I'm not really sure we
+should just drop it, even if we think it won't cause any problems?
+
+CLUSTERIP seems like a special configuration, but I'm not sure it can be
+detected and automatically allowed?
+
+johannes
+
