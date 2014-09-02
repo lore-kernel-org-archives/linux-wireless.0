@@ -1,39 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:50532 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:54150 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757432AbaIRVZj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Sep 2014 17:25:39 -0400
-Message-ID: <1411075535.2034.5.camel@jlt4.sipsolutions.net> (sfid-20140918_232546_066149_8F28AF6F)
-Subject: Re: [PATCH net-next] Allow to set net namespace for wireless device
- via RTM_LINK
+	id S1751231AbaIBIDQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Sep 2014 04:03:16 -0400
+Message-ID: <1409644993.1808.4.camel@jlt4.sipsolutions.net> (sfid-20140902_100322_409164_2BA26C68)
+Subject: Re: [Patch]mac80211: Add support for mesh proxy path dump
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Vadim Kochan <vadim4j@gmail.com>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Date: Thu, 18 Sep 2014 23:25:35 +0200
-In-Reply-To: <1410467723-2550-1-git-send-email-vadim4j@gmail.com> (sfid-20140911_224347_007930_B9E673A0)
-References: <1410467723-2550-1-git-send-email-vadim4j@gmail.com>
-	 (sfid-20140911_224347_007930_B9E673A0)
+To: Henning Rogge <hrogge@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+Date: Tue, 02 Sep 2014 10:03:13 +0200
+In-Reply-To: <2937689.hWkxdbjQ3v@rogge-hp-probook-6470b> (sfid-20140901_132615_830692_B0FE7837)
+References: <2937689.hWkxdbjQ3v@rogge-hp-probook-6470b>
+	 (sfid-20140901_132615_830692_B0FE7837)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-09-11 at 23:35 +0300, Vadim Kochan wrote:
-> Added new netdev_ops callback for setting namespace in specific
-> for this device way
+On Mon, 2014-09-01 at 13:26 +0200, Henning Rogge wrote:
+> The following patch adds NL80211_CMD_GET_MPP as a new nl80211 command that
+> allows to query the content of the 'mesh proxy path' table of mac80211s via
+> 'get' or 'dump'  operation.
 
-> +++ b/include/linux/netdevice.h
-> @@ -997,6 +997,8 @@ typedef u16 (*select_queue_fallback_t)(struct net_device *dev,
->   *	Callback to use for xmit over the accelerated station. This
->   *	is used in place of ndo_start_xmit on accelerated net
->   *	devices.
-> + * int (*ndo_set_netns)(struct net_device *dev, struct net *net);
-> + *      Callback to set net namespace in specific way for this device.
+Is this really something that should be a generic nl80211 operation,
+rather than say debugfs?
 
-For the record, I don't consider it appropriate to set the net namespace
-on one netdev and end up with multiple netdevs switching namespaces ...
-
-As a result, I don't think this should done.
+Could this be useful to other devices implementing the 11s, or is it
+more of a mac80211 implementation detail?
 
 johannes
 
