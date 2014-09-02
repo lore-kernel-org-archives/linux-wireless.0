@@ -1,99 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:58415 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755821AbaIKTaT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Sep 2014 15:30:19 -0400
-Date: Thu, 11 Sep 2014 15:21:46 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Sergey Ryazanov <ryazanov.s.a@gmail.com>
-Cc: Jiri Slaby <jirislaby@gmail.com>, Paul Bolle <pebolle@tiscali.nl>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	Oleksij Rempel <linux@rempel-privat.de>,
-	Richard Weinberger <richard@nod.at>,
-	Jonathan Bither <jonbither@gmail.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	ath5k-devel@venema.h4ckr.net, open@hauke-m.de,
-	"list@hauke-m.de:NETWORKING DRIVERS" <list@hauke-m.de>,
-	"antonynpavlov@gmail.com" <antonynpavlov@gmail.com>,
-	OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"list@hauke-m.de:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
-	open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 09/28] Remove ATHEROS_AR231X
-Message-ID: <20140911192146.GC22872@tuxdriver.com> (sfid-20140911_213043_298896_095EFA98)
-References: <CAHNKnsSfaT7xC5_wv=TrGLEQ2pjC91Q1XG891_n64OuR0fA9Jg@mail.gmail.com>
- <1403091974.1984.102.camel@x220>
- <1409911856.7832.9.camel@x220>
- <CAHNKnsRipRHicKOUW4dCutD1-sUG6qPnP2QuOveH_t1MFX9XgQ@mail.gmail.com>
- <1409916824.7832.20.camel@x220>
- <CAHNKnsQ1gt=DRBTd9Q9yos1idqmXMepEPvhm8a7unP-whzNAgg@mail.gmail.com>
- <20140909182734.GJ29412@tuxdriver.com>
- <CAHNKnsQ8G3ZFHshq7wOqex1J6DbVD5uHVAyvs+aDC2Znk5zWww@mail.gmail.com>
- <541037D2.7060007@gmail.com>
- <CAHNKnsTtqz10c=vV-f10awLanYZzom3kJ1cO5xgTGs-t3O9NYg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAHNKnsTtqz10c=vV-f10awLanYZzom3kJ1cO5xgTGs-t3O9NYg@mail.gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:55230 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752045AbaIBMUu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Sep 2014 08:20:50 -0400
+Message-ID: <1409660440.1808.17.camel@jlt4.sipsolutions.net> (sfid-20140902_142055_352612_D153360F)
+Subject: truesize for pages shared between SKBs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Ido Yariv <ido@wizery.com>, Emmanuel Grumbach <egrumbach@gmail.com>
+Date: Tue, 02 Sep 2014 14:20:40 +0200
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 10, 2014 at 04:19:21PM +0400, Sergey Ryazanov wrote:
-> 2014-09-10 15:36 GMT+04:00, Jiri Slaby <jirislaby@gmail.com>:
-> > On 09/10/2014, 12:33 PM, Sergey Ryazanov wrote:
-> >> 2014-09-09 22:27 GMT+04:00, John W. Linville <linville@tuxdriver.com>:
-> >>> On Fri, Sep 05, 2014 at 04:02:10PM +0400, Sergey Ryazanov wrote:
-> >>>> 2014-09-05 15:33 GMT+04:00 Paul Bolle <pebolle@tiscali.nl>:
-> >>>>> Hi Sergey,
-> >>>>>
-> >>>>> On Fri, 2014-09-05 at 15:12 +0400, Sergey Ryazanov wrote:
-> >>>>>> 2014-09-05 14:10 GMT+04:00, Paul Bolle <pebolle@tiscali.nl>:
-> >>>>>>> On Wed, 2014-06-18 at 13:46 +0200, Paul Bolle wrote:
-> >>>>>>>> Having this conversation every rc1 is getting a bit silly. Could
-> >>>>>>>> Jiri
-> >>>>>>>> e.a. perhaps set some specific deadline for ATHEROS_AR231X to be
-> >>>>>>>> submitted?
-> >>>>>>>
-> >>>>>>> I waited until rc3. Have you seen any activity on this front? If
-> >>>>>>> not,
-> >>>>>>> should I resend the patch that removes the code in mainline that
-> >>>>>>> depends
-> >>>>>>> on ATHEROS_AR231X (ie, AHB bus support)?
-> >>>>>>>
-> >>>>>> Recent activity always could be found in [1]. Now I finish another
-> >>>>>> one
-> >>>>>> round of cleanups and have a plan to fix several things (you can
-> >>>>>> always find something that you really want to improve). But if you
-> >>>>>> insist I could immediately switch to "send upstream" mode. And seems
-> >>>>>> that this would be better approach.
-> >>>>>>
-> >>>>>> 1. https://dev.openwrt.org/log/trunk/target/linux/atheros
-> >>>>>
-> >>>>> And where can the related PULL requests or patch submissions be found?
-> >>>>>
-> >>>> I have not sent patches yet, since I thought that it would be easier
-> >>>> to cleanup them in openwrt tree and then send them upstream.
-> >>>
-> >>> That excuse has worn a bit thin.  Perhaps Paul should repost his
-> >>> removal and you can add a revert to the start of your patch series?
-> >>>
-> >> As for me, I do not like such flapping
-> >
-> > Agreed in case what you have is in a good enough shape. You (and also
-> > others) can still clean up the code in upstream too. So, if it is
-> > mergeable, send it for upstream inclusion now, otherwise I am all for
-> > John to apply the Paul's patch.
-> 
-> Two days is the last deadline :)
-> 
-> > The unused code has been a way too long
-> > in the tree now.
-> 
-> Code actively used in owrt firmware and its forks.
+Hi,
 
-Is this code coming or not?  When can I expect to see it posted?
+In our driver, we have 4k receive buffers, but usually ~1500 byte
+packets.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+How do other drivers handle this? We currently set up the truesize of
+each SKB to be its size plus the 4k page size, but we see performance
+improvements when we lie and pretend the truesize is just 4k/(# of
+packets in the page), which is correct as long as the packets are all
+pending in the stack since they share the page.
+
+How do other drivers handle this? Should the truesize maybe be aware of
+this kind of sharing? Should we just lie about it and risk that the
+truesize is accounted erroneously if some but not all of the packets are
+freed?
+
+Thanks,
+johannes
+
