@@ -1,59 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f41.google.com ([74.125.82.41]:51594 "EHLO
-	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754599AbaIHQ4m (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:37065 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753995AbaIBPaU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Sep 2014 12:56:42 -0400
-Received: by mail-wg0-f41.google.com with SMTP id k14so1052663wgh.24
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Sep 2014 09:56:41 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eyal Shapira <eyal@wizery.com>,
-	Eyal Shapira <eyalx.shapira@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 12/12] iwlwifi: mvm: fix an overflow in iwl_mvm_get_signal_strength
-Date: Mon,  8 Sep 2014 19:56:17 +0300
-Message-Id: <1410195377-10075-12-git-send-email-egrumbach@gmail.com> (sfid-20140908_185646_758307_6AB47AEA)
-In-Reply-To: <540DDF37.5030801@gmail.com>
-References: <540DDF37.5030801@gmail.com>
+	Tue, 2 Sep 2014 11:30:20 -0400
+Date: Tue, 2 Sep 2014 11:29:40 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Michael Greger <mgreger@display-solution.com>
+Cc: linux-wireless@vger.kernel.org, ilw@linux.intel.com,
+	sgruszka@redhat.com
+Subject: Re: Intel 4965AGN - Android Implementation for Boundary SabreLite
+ mini PCIe, Android 4.3
+Message-ID: <20140902152939.GD5742@tuxdriver.com> (sfid-20140902_173024_220417_EDAC2909)
+References: <F653787480BF5A439D4259B266FA81686A89D2@sbs2003.DisplaySolution.local>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <F653787480BF5A439D4259B266FA81686A89D2@sbs2003.DisplaySolution.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+Can you even still buy those cards?
 
-The idea here is to translate a value of 0 received from
-the firmware to the lowest rssi figure. As rx_status->chain_signal
-is a signed byte the lowest possible value is -128 and not -256.
--256 was causing 0 to get stored in the signed byte.
+Anyway, that hardware should be covered by iwlegacy (not iwlagn).
+The firmware is packaged by a number of distros if you can't find
+it elsewhere...
 
-Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/rx.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Hth!
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/rx.c b/drivers/net/wireless/iwlwifi/mvm/rx.c
-index 4b98987..bf5cd8c 100644
---- a/drivers/net/wireless/iwlwifi/mvm/rx.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/rx.c
-@@ -149,13 +149,13 @@ static void iwl_mvm_get_signal_strength(struct iwl_mvm *mvm,
- 	    le32_to_cpu(phy_info->non_cfg_phy[IWL_RX_INFO_ENERGY_ANT_ABC_IDX]);
- 	energy_a = (val & IWL_RX_INFO_ENERGY_ANT_A_MSK) >>
- 						IWL_RX_INFO_ENERGY_ANT_A_POS;
--	energy_a = energy_a ? -energy_a : -256;
-+	energy_a = energy_a ? -energy_a : S8_MIN;
- 	energy_b = (val & IWL_RX_INFO_ENERGY_ANT_B_MSK) >>
- 						IWL_RX_INFO_ENERGY_ANT_B_POS;
--	energy_b = energy_b ? -energy_b : -256;
-+	energy_b = energy_b ? -energy_b : S8_MIN;
- 	energy_c = (val & IWL_RX_INFO_ENERGY_ANT_C_MSK) >>
- 						IWL_RX_INFO_ENERGY_ANT_C_POS;
--	energy_c = energy_c ? -energy_c : -256;
-+	energy_c = energy_c ? -energy_c : S8_MIN;
- 	max_energy = max(energy_a, energy_b);
- 	max_energy = max(max_energy, energy_c);
- 
+John
+
+On Tue, Sep 02, 2014 at 09:52:31AM +0200, Michael Greger wrote:
+> Dear Sir or Madam,
+> 
+> my name is Michael from Gilching near Munich in Germany. We are using the sabreLite for Digital Signage purposes and want to use the Intel 4965AGN miniPCIe module on the SabreLite. The Sabre Lite is an Android board with the Freescale i.MX6q (Arm) processor. 
+> My intention is to get the WIFI module running on my board. I found the article "How to enable PCIe WiFi into i.MX6 Android Release" , but this helps not much.
+> -	First thing is that I need the file iwlwifi4965-2.ucode file, appropriate for my Android 4.3, kernel 3.0.35 system.
+> -	Then, what module do I need in the kernel, iwlagn or iwl4965 or both?
+> 
+> 
+> Do you have any working code for the 4965AGN under an  iMX6 system under Android 4.3?
+> 
+> Many thanks and best regards,
+> Michael
+> 
+> 
+> Mit freundlichen Grüßen
+> Michael Greger
+> ____________________________________________________
+>  
+> 
+>  
+> Michael Greger
+> Dipl. Ing. (FH) 
+> Entwicklung
+> 
+> Display Solution AG
+> Talhofstr. 32
+> 82205 Gilching
+> Deutschland
+> 
+> Tel:  +49 (0) 81 05 / 7 34 03 -33
+> Fax: +49 (0) 81 05 / 7 34 03 -79
+> E-Mail: mgreger@display-solution.com    
+> Web: www.display-solution.com 
+> Handelsregister: Augsburg HRB 22144
+> Vorstandsvorsitzender: Norbert Feuchtgruber
+> Vorstand: Günther Hirschberger, Norbert Erhart, René Auer
+> Aufsichtratsvorsitzende: Gabriele Erhart
+> 
+> 
+> Diese Nachricht ist vertraulich und nur für den Adressaten bestimmt. 
+> Sollten Sie irrtümlich diese Nachricht erhalten haben, bitte ich um Ihre 
+> Mitteilung per E-Mail oder unter oben angegebener Telefonnummer
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
 -- 
-1.9.1
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
