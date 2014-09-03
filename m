@@ -1,46 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:49555 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752584AbaI2P67 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Sep 2014 11:58:59 -0400
-Message-ID: <542981C1.7020000@candelatech.com> (sfid-20140929_175902_974347_8AAEFED0)
-Date: Mon, 29 Sep 2014 08:58:57 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: Michal Kazior <michal.kazior@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH] ath10k: request firmware flush in ath10k_flush.
-References: <1411151304-31544-1-git-send-email-greearb@candelatech.com> <CA+BoTQm1rZO+yBbYxihpgEvR1cGZWS4Pr0AP+KMODcG4jpd_jQ@mail.gmail.com> <5421818A.9040501@candelatech.com> <CA+BoTQkZaGSkC9mhE8UF0He0RZWmPghDukdE1A5qiO1UNAZj5Q@mail.gmail.com> <871tqu3dgu.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <871tqu3dgu.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga14.intel.com ([192.55.52.115]:65370 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932298AbaICMcn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Sep 2014 08:32:43 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Liad Kaufman <liad.kaufman@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 03/10] mac80211: fix description comment of ieee80211_subif_start_xmit
+Date: Wed,  3 Sep 2014 15:24:59 +0300
+Message-Id: <1409747106-30717-4-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140903_143247_909596_6BFFFD87)
+In-Reply-To: <1409747106-30717-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1409747106-30717-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/29/2014 03:53 AM, Kalle Valo wrote:
+From: Liad Kaufman <liad.kaufman@intel.com>
 
->> Thanks. I think ath10k should do this instead of having CT-specific
->> flush eventually.
-> 
-> I agree. We should not be forking functionality unless absolutely
-> necessary.
+The function description claimed that on error the skb isn't
+freed even though it is, and stated return values that are
+different than what really happens in the code.
 
-Ok, this patch is easy to carry in my own tree.
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ net/mac80211/tx.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-But, for things upstream firmware just cannot support,
-like tx-rate-status and rx-software-crypt, how do you
-want it flagged in the driver?  Can I get the CT firmware
-flag in for that, or does it have to be some other way?
-
-If you just will not accept any such patch, let me know so
-I can quite bothering you about it.
-
-Thanks,
-Ben
-
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 6269a3e..56ae886 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1786,9 +1786,8 @@ static void ieee80211_tx_latency_start_msrmnt(struct ieee80211_local *local,
+  * @skb: packet to be sent
+  * @dev: incoming interface
+  *
+- * Returns: 0 on success (and frees skb in this case) or 1 on failure (skb will
+- * not be freed, and caller is responsible for either retrying later or freeing
+- * skb).
++ * Returns: NETDEV_TX_OK both on success and on failure. On failure skb will
++ *	be freed.
+  *
+  * This function takes in an Ethernet header and encapsulates it with suitable
+  * IEEE 802.11 header based on which interface the packet is coming in. The
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.9.1
 
