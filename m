@@ -1,70 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f52.google.com ([209.85.192.52]:44050 "EHLO
-	mail-qg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753112AbaIKTPE (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:58754 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754464AbaICDJY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Sep 2014 15:15:04 -0400
-Received: by mail-qg0-f52.google.com with SMTP id i50so7046902qgf.11
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Sep 2014 12:15:01 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <5FF020A1CFFEEC49BD1E09530C4FF5951819DB12F1@SC-VEXCH1.marvell.com>
-References: <CAAfyv35k1mgQh6FcWaaMciAo8Vkp055k=5xF7zu+yrHmrQbbLA@mail.gmail.com>
-	<5FF020A1CFFEEC49BD1E09530C4FF5951819DB12F1@SC-VEXCH1.marvell.com>
-Date: Thu, 11 Sep 2014 21:14:58 +0200
-Message-ID: <CAAfyv34tVPRYZG9xqGDMZ3TznoghcjLMa032vStSFucGn46eoQ@mail.gmail.com> (sfid-20140911_211509_221274_2A56F13A)
-Subject: Re: mwifiex_usb_submit_rx_urb: dev_alloc_skb failed when conected to 5GHz
-From: Belisko Marek <marek.belisko@gmail.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Avinash Patil <patila@marvell.com>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 2 Sep 2014 23:09:24 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH v2 5/6] ath9k: Fix offchannel duration calculation
+Date: Wed,  3 Sep 2014 08:39:24 +0530
+Message-Id: <1409713765-9358-6-git-send-email-sujith@msujith.org> (sfid-20140903_050950_579541_76AEC232)
+In-Reply-To: <1409713765-9358-1-git-send-email-sujith@msujith.org>
+References: <1409713765-9358-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear Amitkumar Karwar,
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-On Thu, Sep 11, 2014 at 5:09 PM, Amitkumar Karwar <akarwar@marvell.com> wrote:
-> Hi BR,
->
->>
->> I'm using 3.9 mainline mwifiex driver for wireless usb card. Doing some
->> throughput testing (with iperf) in 5GHz I got following failures:
->> [ 221.521799] usb 1-1: mwifiex_usb_submit_rx_urb: dev_alloc_skb failed
->
-> This is skb allocation failure returned by kernel. 4k buffer is always allocated for Rx packets. This issue doesn't seem to be specific to 5Ghz.
-OK. But I cannot reproduce this issue when connected to 2.4GHz (same
-steps as described below).
->.
->>
->> I checked which which size fails to allocate and it's 4096 bytes. I was
->> looking to changes in never kernel releases but I cannot find anything
->> obvious. When connected to 2.4GHz I cannot reproduce issue though. I'm
->> using FW version mwifiex 1.0 (14.68.29.p26).
->>
->
-> Could you please provide the platform details?
-> How often the problem occurs during throughput testing? Are there any specific steps?
-I can reproduce problem 100% by running iperf as server on board where
-wifi is connected to  (iperf -s -u -w1M -i1)
-and connecting with iperf client from other PC (iperf -c IPADDR -u -b 100m).
-Then immediately I can see allocation failures. If you need more info
-please let me know. Thanks.
->
-> Regards,
-> Amitkumar Karwar
+Currently, different units are used for handling
+sc->offchannel.duration. In scan mode, it contains jiffies and in RoC
+mode, milliseconds is used. This causes confusion since in
+ath_chanctx_switch(), TU_TO_USEC is used to determine the offchannel
+duration, resulting in incorrect values. Fix this by using jiffies in
+both modes.
 
-BR,
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/channel.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-marek
-
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index 047a76f..7a6ca44 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -601,7 +601,7 @@ static void ath_chanctx_switch(struct ath_softc *sc, struct ath_chanctx *ctx,
+ 
+ 	if (sc->next_chan == &sc->offchannel.chan) {
+ 		sc->sched.offchannel_duration =
+-			TU_TO_USEC(sc->offchannel.duration) +
++			jiffies_to_usecs(sc->offchannel.duration) +
+ 			sc->sched.channel_switch_time;
+ 
+ 		if (chandef) {
+@@ -688,7 +688,8 @@ void ath_offchannel_next(struct ath_softc *sc)
+ 	} else if (sc->offchannel.roc_vif) {
+ 		vif = sc->offchannel.roc_vif;
+ 		sc->offchannel.chan.txpower = vif->bss_conf.txpower;
+-		sc->offchannel.duration = sc->offchannel.roc_duration;
++		sc->offchannel.duration =
++			msecs_to_jiffies(sc->offchannel.roc_duration);
+ 		sc->offchannel.state = ATH_OFFCHANNEL_ROC_START;
+ 		ath_chanctx_offchan_switch(sc, sc->offchannel.roc_chan);
+ 	} else {
+@@ -959,8 +960,8 @@ static void ath_offchannel_channel_change(struct ath_softc *sc)
+ 			break;
+ 
+ 		sc->offchannel.state = ATH_OFFCHANNEL_ROC_WAIT;
+-		mod_timer(&sc->offchannel.timer, jiffies +
+-			  msecs_to_jiffies(sc->offchannel.duration));
++		mod_timer(&sc->offchannel.timer,
++			  jiffies + sc->offchannel.duration);
+ 		ieee80211_ready_on_channel(sc->hw);
+ 		break;
+ 	case ATH_OFFCHANNEL_ROC_DONE:
 -- 
-as simple and primitive as possible
--------------------------------------------------
-Marek Belisko - OPEN-NANDRA
-Freelance Developer
+2.1.0
 
-Ruska Nova Ves 219 | Presov, 08005 Slovak Republic
-Tel: +421 915 052 184
-skype: marekwhite
-twitter: #opennandra
-web: http://open-nandra.com
