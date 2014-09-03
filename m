@@ -1,62 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay3-d.mail.gandi.net ([217.70.183.195]:52506 "EHLO
-	relay3-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751075AbaIKQmU (ORCPT
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:65353 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753991AbaICT4x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Sep 2014 12:42:20 -0400
-Message-ID: <1410453721.32328.15.camel@hadess.net> (sfid-20140911_184223_432251_A0F629F3)
-Subject: Re: Realtek GPIO chipset, for Baytrail?
-From: Bastien Nocera <hadess@hadess.net>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Loic Poulain <loic.poulain@intel.com>,
-	linux-wireless@vger.kernel.org
-Date: Thu, 11 Sep 2014 18:42:01 +0200
-In-Reply-To: <5F46C78F-1749-480F-B90C-702509D963AD@holtmann.org>
-References: <1410256608.4077.7.camel@hadess.net>
-	 <F79C10A5-18F8-4165-BFC5-FDAD35BE46BE@holtmann.org>
-	 <5411C2BE.6090702@intel.com> <1410451261.32328.11.camel@hadess.net>
-	 <5F46C78F-1749-480F-B90C-702509D963AD@holtmann.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 3 Sep 2014 15:56:53 -0400
+Received: by mail-wg0-f49.google.com with SMTP id y10so9028579wgg.20
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Sep 2014 12:56:52 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Luciano Coelho <luciano.coelho@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 16/36] iwlwifi: mvm: add function to update only ps
+Date: Wed,  3 Sep 2014 22:56:04 +0300
+Message-Id: <1409774184-24665-16-git-send-email-egrumbach@gmail.com> (sfid-20140903_215658_209506_A2B14CEC)
+In-Reply-To: <540771E5.6080908@gmail.com>
+References: <540771E5.6080908@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-09-11 at 09:37 -0700, Marcel Holtmann wrote:
-> Hi Bastien,
-> 
-> >> Your device is a child of 80860F0A (UART) which is driven by the 8250_dw 
-> >> driver.
-> >> OBDA8723 is the BT part of the realtek 8723 WiFi/BT combo chip.
-> >> acpi_platform should create a platform device from the ACPI desc.
-> > 
-> > That does show up already in udev, so I should be fine.
-> > 
-> >> Then, you can add the OBDA8723 acpi id to the rfkill-gpio platform 
-> >> driver (net/rfkill) which
-> >> seems to handle correctly the basic power management of this chip.
-> > 
-> > OK. Something like that should do:
-> > http://paste.fedoraproject.org/132832/14104505
-> > 
-> >> You need to use hciattach to attach the chip to the BT stack (with 
-> >> H5/3-wire proto).
-> > 
-> > Will that be required to enable Bluetooth at every boot?
-> > 
-> > After inserting the above module, I ran:
-> > hciattach -n ttyS0 3wire
-> > 
-> > But no Bluetooth adapters showed up in hciconfig. The rfkill device did
-> > show up in rfkill list though.
-> 
-> my bet is that you need to start with the correct default speed, load
-> some firmware and do more settings and then switch to the faster
-> speed. There is an effort ongoing for the USB version of Realtek
-> Bluetooth, but even that one has not yet completed.
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-I have a firmware and a config file from the Windows driver, but I doubt
-I'd be able to make great headway without more info.
+Add a new iwl_mvm_power_update_ps() function that allows only ps to be
+updated according to changes in the vifs.  This allows us to disable
+ps only without affecting the pm values of the vifs (and to avoid
+sending unnecessary MAC_PM_POWER_TABLE commands to the firmware).
 
-That's Larry's driver for the USB variant:
-https://github.com/lwfinger/rtl8723au_bt
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/mvm.h   |  1 +
+ drivers/net/wireless/iwlwifi/mvm/power.c | 52 ++++++++++++++++++++++++--------
+ 2 files changed, 41 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index 08cb26d..108ef16 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -983,6 +983,7 @@ int rs_pretty_print_rate(char *buf, const u32 rate);
+ /* power management */
+ int iwl_mvm_power_update_device(struct iwl_mvm *mvm);
+ int iwl_mvm_power_update_mac(struct iwl_mvm *mvm);
++int iwl_mvm_power_update_ps(struct iwl_mvm *mvm);
+ int iwl_mvm_power_mac_dbgfs_read(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 				 char *buf, int bufsz);
+ 
+diff --git a/drivers/net/wireless/iwlwifi/mvm/power.c b/drivers/net/wireless/iwlwifi/mvm/power.c
+index 42aaf57..18f887aa 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/power.c
++++ b/drivers/net/wireless/iwlwifi/mvm/power.c
+@@ -857,13 +857,50 @@ static int iwl_mvm_power_set_ps(struct iwl_mvm *mvm,
+ 	return 0;
+ }
+ 
+-int iwl_mvm_power_update_mac(struct iwl_mvm *mvm)
++static int iwl_mvm_power_set_ba(struct iwl_mvm *mvm,
++				struct iwl_power_vifs *vifs)
+ {
+ 	struct iwl_mvm_vif *mvmvif;
++	bool ba_enable;
++
++	if (!vifs->bf_vif)
++		return 0;
++
++	mvmvif = iwl_mvm_vif_from_mac80211(vifs->bf_vif);
++
++	ba_enable = !(!mvmvif->pm_enabled || mvm->ps_disabled ||
++		      !vifs->bf_vif->bss_conf.ps ||
++		      iwl_mvm_vif_low_latency(mvmvif));
++
++	return iwl_mvm_update_beacon_abort(mvm, vifs->bf_vif, ba_enable);
++}
++
++int iwl_mvm_power_update_ps(struct iwl_mvm *mvm)
++{
++	struct iwl_power_vifs vifs = {
++		.mvm = mvm,
++	};
++	int ret;
++
++	lockdep_assert_held(&mvm->mutex);
++
++	/* get vifs info */
++	ieee80211_iterate_active_interfaces_atomic(mvm->hw,
++					IEEE80211_IFACE_ITER_NORMAL,
++					iwl_mvm_power_get_vifs_iterator, &vifs);
++
++	ret = iwl_mvm_power_set_ps(mvm, &vifs);
++	if (ret)
++		return ret;
++
++	return iwl_mvm_power_set_ba(mvm, &vifs);
++}
++
++int iwl_mvm_power_update_mac(struct iwl_mvm *mvm)
++{
+ 	struct iwl_power_vifs vifs = {
+ 		.mvm = mvm,
+ 	};
+-	bool ba_enable;
+ 	int ret;
+ 
+ 	lockdep_assert_held(&mvm->mutex);
+@@ -891,16 +928,7 @@ int iwl_mvm_power_update_mac(struct iwl_mvm *mvm)
+ 			return ret;
+ 	}
+ 
+-	if (!vifs.bf_vif)
+-		return 0;
+-
+-	mvmvif = iwl_mvm_vif_from_mac80211(vifs.bf_vif);
+-
+-	ba_enable = !(!mvmvif->pm_enabled || mvm->ps_disabled ||
+-		      !vifs.bf_vif->bss_conf.ps ||
+-		      iwl_mvm_vif_low_latency(mvmvif));
+-
+-	return iwl_mvm_update_beacon_abort(mvm, vifs.bf_vif, ba_enable);
++	return iwl_mvm_power_set_ba(mvm, &vifs);
+ }
+ 
+ int iwl_mvm_update_d0i3_power_mode(struct iwl_mvm *mvm,
+-- 
+1.9.1
 
