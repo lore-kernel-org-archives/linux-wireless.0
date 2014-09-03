@@ -1,38 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f53.google.com ([209.85.215.53]:46256 "EHLO
-	mail-la0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754003AbaIBNnQ (ORCPT
+Received: from mail-ob0-f181.google.com ([209.85.214.181]:43358 "EHLO
+	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932390AbaICNeO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Sep 2014 09:43:16 -0400
-Received: by mail-la0-f53.google.com with SMTP id s18so7710251lam.40
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Sep 2014 06:43:15 -0700 (PDT)
+	Wed, 3 Sep 2014 09:34:14 -0400
+Received: by mail-ob0-f181.google.com with SMTP id vb8so6054632obc.40
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Sep 2014 06:34:13 -0700 (PDT)
 MIME-Version: 1.0
-Date: Tue, 2 Sep 2014 16:43:14 +0300
-Message-ID: <CANUX_P1udm36NoF-dbOARa671VthuYfrEEz2ODSmkCgDzcRe8g@mail.gmail.com> (sfid-20140902_154338_518122_F3CBE3CA)
-Subject: [ANN] new experimental firmware for 7260 / 3160 / 7265 - Core7
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1409744533.911.1.camel@jlt4.sipsolutions.net>
+References: <CAFnufp09nXuaobS_u7Bh5JcLGgpkPfMbqMfG0HVJYd_mLVR49A@mail.gmail.com>
+ <1409744533.911.1.camel@jlt4.sipsolutions.net>
+From: Matteo Croce <matteo@openwrt.org>
+Date: Wed, 3 Sep 2014 15:33:33 +0200
+Message-ID: <CAFnufp2pb4k3amoZoQ3bc5PSXXVzORZDAF2TZoZjmBfGPUKT2Q@mail.gmail.com> (sfid-20140903_153527_623684_D7A8C513)
+Subject: Re: [PATCH] mac80211: Format connected time
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We made a new firmware available. This is a new code base, new
-features (I haven't checked the log) and bug fixes.
-It is experimental because it is still under validation cycle and
-fixes are introduced on a daily basis.
-I just thought that a few people would want to get their hands on an
-early version of it.
+Sorry, gmail wrapped the line with the C function.
+Here is a fixed patch
 
-The firmware is here:
-https://git.kernel.org/cgit/linux/kernel/git/egrumbach/linux-firmware.git/log/?h=Core7
+Format connected_time in the form hh:mm:ss
 
-Note that the filename is now iwlwifi-XXXX-10.ucode. You'll need
-https://git.kernel.org/cgit/linux/kernel/git/iwlwifi/iwlwifi-fixes.git/commit/?id=d88c8958dc13b4e4eb7fc57e3f06dc1c4abc7b1f
-to actually load this firmware.
+Signed-off-by: Matteo Croce <matteo@openwrt.org>
 
-Feedback will be appreciated.
-
-Thanks and enjoy!
-
-Emmanuel Grumbach
-egrumbach@gmail.com
+--- a/net/mac80211/debugfs_sta.c
++++ b/net/mac80211/debugfs_sta.c
+@@ -130,7 +130,7 @@
+  result.tm_year -= 70;
+  result.tm_mday -= 1;
+  res = scnprintf(buf, sizeof(buf),
+- "years  - %ld\nmonths - %d\ndays   - %d\nclock  - %d:%d:%d\n\n",
++ "years  - %ld\nmonths - %d\ndays   - %d\nclock  - %02d:%02d:%02d\n\n",
+  result.tm_year, result.tm_mon, result.tm_mday,
+  result.tm_hour, result.tm_min, result.tm_sec);
+  return simple_read_from_buffer(userbuf, count, ppos, buf, res);
