@@ -1,199 +1,166 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:39059 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752521AbaIAHbz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Sep 2014 03:31:55 -0400
-From: Avinash Patil <patila@marvell.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
-	<huxm@marvell.com>, <yangyang@marvell.com>, <cluo@marvell.com>,
-	<maithili@marvell.com>, Avinash Patil <patila@marvell.com>
-Subject: [PATCH 09/17] mwifiex: rename macro and variables related to API revision
-Date: Mon, 1 Sep 2014 18:28:57 +0530
-Message-ID: <1409576345-13717-10-git-send-email-patila@marvell.com> (sfid-20140901_093158_045747_2491606B)
-In-Reply-To: <1409576345-13717-1-git-send-email-patila@marvell.com>
-References: <1409576345-13717-1-git-send-email-patila@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga14.intel.com ([192.55.52.115]:65211 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932373AbaICMcs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Sep 2014 08:32:48 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 07/10] cfg80211: avoid duplicate entries on regdomain intersection
+Date: Wed,  3 Sep 2014 15:25:03 +0300
+Message-Id: <1409747106-30717-8-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140903_150113_490400_A7AE05B1)
+In-Reply-To: <1409747106-30717-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1409747106-30717-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+From: Eliad Peller <eliad@wizery.com>
 
-We will remove 'fw' prefix from these variable and macro
-names and make them generic.
+The regdom intersection code simply tries intersecting
+each rule of the source with each rule of the target.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
+Since the resulting intersections are not observed
+as a whole, this can result in multiple overlapping/duplicate
+entries.
+
+Make the rule addition a bit more smarter, by looking
+for rules that can be contained within other rules,
+and adding only extended ones.
+
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/mwifiex/cmdevt.c      | 18 +++++++++---------
- drivers/net/wireless/mwifiex/fw.h          |  8 ++++----
- drivers/net/wireless/mwifiex/init.c        |  4 ++--
- drivers/net/wireless/mwifiex/main.h        |  2 +-
- drivers/net/wireless/mwifiex/sta_cmd.c     |  2 +-
- drivers/net/wireless/mwifiex/sta_cmdresp.c |  2 +-
- drivers/net/wireless/mwifiex/sta_ioctl.c   |  4 ++--
- 7 files changed, 20 insertions(+), 20 deletions(-)
+ net/wireless/reg.c | 81 ++++++++++++++++++++++++++++++++++++++++--------------
+ 1 file changed, 60 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
-index 0c21239..720e519 100644
---- a/drivers/net/wireless/mwifiex/cmdevt.c
-+++ b/drivers/net/wireless/mwifiex/cmdevt.c
-@@ -1470,7 +1470,7 @@ int mwifiex_ret_get_hw_spec(struct mwifiex_private *priv,
- 	struct host_cmd_ds_get_hw_spec *hw_spec = &resp->params.hw_spec;
- 	struct mwifiex_adapter *adapter = priv->adapter;
- 	struct mwifiex_ie_types_header *tlv;
--	struct hw_spec_fw_api_rev *api_rev;
-+	struct hw_spec_api_rev *api_rev;
- 	u16 resp_size, api_id;
- 	int i, left_len, parsed_len = 0;
- 
-@@ -1538,23 +1538,23 @@ int mwifiex_ret_get_hw_spec(struct mwifiex_private *priv,
- 		while (left_len > sizeof(struct mwifiex_ie_types_header)) {
- 			tlv = (void *)&hw_spec->tlvs + parsed_len;
- 			switch (le16_to_cpu(tlv->type)) {
--			case TLV_TYPE_FW_API_REV:
--				api_rev = (struct hw_spec_fw_api_rev *)tlv;
-+			case TLV_TYPE_API_REV:
-+				api_rev = (struct hw_spec_api_rev *)tlv;
- 				api_id = le16_to_cpu(api_rev->api_id);
- 				switch (api_id) {
- 				case KEY_API_VER_ID:
--					adapter->fw_key_api_major_ver =
-+					adapter->key_api_major_ver =
- 							api_rev->major_ver;
--					adapter->fw_key_api_minor_ver =
-+					adapter->key_api_minor_ver =
- 							api_rev->minor_ver;
- 					dev_dbg(adapter->dev,
--						"fw_key_api v%d.%d\n",
--						adapter->fw_key_api_major_ver,
--						adapter->fw_key_api_minor_ver);
-+						"key_api v%d.%d\n",
-+						adapter->key_api_major_ver,
-+						adapter->key_api_minor_ver);
- 					break;
- 				default:
- 					dev_warn(adapter->dev,
--						 "Unknown FW api_id: %d\n",
-+						 "Unknown api_id: %d\n",
- 						 api_id);
- 					break;
- 				}
-diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
-index 49da2d5..adc47f3 100644
---- a/drivers/net/wireless/mwifiex/fw.h
-+++ b/drivers/net/wireless/mwifiex/fw.h
-@@ -83,7 +83,7 @@ enum KEY_TYPE_ID {
- #define WPA_PN_SIZE		8
- #define KEY_PARAMS_FIXED_LEN	10
- #define KEY_INDEX_MASK		0xf
--#define FW_KEY_API_VER_MAJOR_V2	2
-+#define KEY_API_VER_MAJOR_V2	2
- 
- #define KEY_MCAST	BIT(0)
- #define KEY_UNICAST	BIT(1)
-@@ -170,7 +170,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
- #define TLV_TYPE_COALESCE_RULE      (PROPRIETARY_TLV_BASE_ID + 154)
- #define TLV_TYPE_KEY_PARAM_V2       (PROPRIETARY_TLV_BASE_ID + 156)
- #define TLV_TYPE_TDLS_IDLE_TIMEOUT  (PROPRIETARY_TLV_BASE_ID + 194)
--#define TLV_TYPE_FW_API_REV         (PROPRIETARY_TLV_BASE_ID + 199)
-+#define TLV_TYPE_API_REV	    (PROPRIETARY_TLV_BASE_ID + 199)
- 
- #define MWIFIEX_TX_DATA_BUF_SIZE_2K        2048
- 
-@@ -844,11 +844,11 @@ struct host_cmd_ds_802_11_ps_mode_enh {
- 	} params;
- } __packed;
- 
--enum FW_API_VER_ID {
-+enum API_VER_ID {
- 	KEY_API_VER_ID = 1,
- };
- 
--struct hw_spec_fw_api_rev {
-+struct hw_spec_api_rev {
- 	struct mwifiex_ie_types_header header;
- 	__le16 api_id;
- 	u8 major_ver;
-diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
-index 269a277..80bda80 100644
---- a/drivers/net/wireless/mwifiex/init.c
-+++ b/drivers/net/wireless/mwifiex/init.c
-@@ -282,8 +282,8 @@ static void mwifiex_init_adapter(struct mwifiex_adapter *adapter)
- 	adapter->max_mgmt_ie_index = MAX_MGMT_IE_INDEX;
- 	adapter->empty_tx_q_cnt = 0;
- 	adapter->ext_scan = true;
--	adapter->fw_key_api_major_ver = 0;
--	adapter->fw_key_api_minor_ver = 0;
-+	adapter->key_api_major_ver = 0;
-+	adapter->key_api_minor_ver = 0;
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 8bfc9b1..b725a31 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -799,6 +799,57 @@ static int reg_rules_intersect(const struct ieee80211_regdomain *rd1,
+ 	return 0;
  }
  
- /*
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index a2733b1..5439963 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -833,7 +833,7 @@ struct mwifiex_adapter {
- 	struct semaphore *card_sem;
- 	bool ext_scan;
- 	u8 fw_api_ver;
--	u8 fw_key_api_major_ver, fw_key_api_minor_ver;
-+	u8 key_api_major_ver, key_api_minor_ver;
- 	struct work_struct iface_work;
- 	unsigned long iface_work_flags;
- 	struct memory_type_mapping *mem_type_mapping_tbl;
-diff --git a/drivers/net/wireless/mwifiex/sta_cmd.c b/drivers/net/wireless/mwifiex/sta_cmd.c
-index 733de92..225f749 100644
---- a/drivers/net/wireless/mwifiex/sta_cmd.c
-+++ b/drivers/net/wireless/mwifiex/sta_cmd.c
-@@ -965,7 +965,7 @@ mwifiex_cmd_802_11_key_material(struct mwifiex_private *priv,
- 				u16 cmd_action, u32 cmd_oid,
- 				struct mwifiex_ds_encrypt_key *enc_key)
++/* check whether old rule contains new rule */
++static bool rule_contains(struct ieee80211_reg_rule *r1,
++			  struct ieee80211_reg_rule *r2)
++{
++	/* for simplicity, currently consider only same flags */
++	if (r1->flags != r2->flags)
++		return false;
++
++	/* verify r1 is more restrictive */
++	if ((r1->power_rule.max_antenna_gain >
++	     r2->power_rule.max_antenna_gain) ||
++	    r1->power_rule.max_eirp > r2->power_rule.max_eirp)
++		return false;
++
++	/* make sure r2's range is contained within r1 */
++	if (r1->freq_range.start_freq_khz > r2->freq_range.start_freq_khz ||
++	    r1->freq_range.end_freq_khz < r2->freq_range.end_freq_khz)
++		return false;
++
++	/* and finally verify that r1.max_bw >= r2.max_bw */
++	if (r1->freq_range.max_bandwidth_khz <
++	    r2->freq_range.max_bandwidth_khz)
++		return false;
++
++	return true;
++}
++
++/* add or extend current rules. do nothing if rule is already contained */
++static void add_rule(struct ieee80211_reg_rule *rule,
++		     struct ieee80211_reg_rule *reg_rules, u32 *n_rules)
++{
++	struct ieee80211_reg_rule *tmp_rule;
++	int i;
++
++	for (i = 0; i < *n_rules; i++) {
++		tmp_rule = &reg_rules[i];
++		/* rule is already contained - do nothing */
++		if (rule_contains(tmp_rule, rule))
++			return;
++
++		/* extend rule if possible */
++		if (rule_contains(rule, tmp_rule)) {
++			memcpy(tmp_rule, rule, sizeof(*rule));
++			return;
++		}
++	}
++
++	memcpy(&reg_rules[*n_rules], rule, sizeof(*rule));
++	(*n_rules)++;
++}
++
+ /**
+  * regdom_intersect - do the intersection between two regulatory domains
+  * @rd1: first regulatory domain
+@@ -818,12 +869,10 @@ regdom_intersect(const struct ieee80211_regdomain *rd1,
  {
--	if (priv->adapter->fw_key_api_major_ver == FW_KEY_API_VER_MAJOR_V2)
-+	if (priv->adapter->key_api_major_ver == KEY_API_VER_MAJOR_V2)
- 		return mwifiex_cmd_802_11_key_material_v2(priv, cmd,
- 							  cmd_action, cmd_oid,
- 							  enc_key);
-diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-index 08b78ba..62866b0 100644
---- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
-+++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-@@ -637,7 +637,7 @@ static int mwifiex_ret_802_11_key_material_v2(struct mwifiex_private *priv,
- static int mwifiex_ret_802_11_key_material(struct mwifiex_private *priv,
- 					   struct host_cmd_ds_command *resp)
- {
--	if (priv->adapter->fw_key_api_major_ver == FW_KEY_API_VER_MAJOR_V2)
-+	if (priv->adapter->key_api_major_ver == KEY_API_VER_MAJOR_V2)
- 		return mwifiex_ret_802_11_key_material_v2(priv, resp);
- 	else
- 		return mwifiex_ret_802_11_key_material_v1(priv, resp);
-diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
-index 0b998fd..92f3eb8 100644
---- a/drivers/net/wireless/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
-@@ -880,7 +880,7 @@ static int mwifiex_sec_ioctl_set_wep_key(struct mwifiex_private *priv,
- 			return -1;
+ 	int r, size_of_regd;
+ 	unsigned int x, y;
+-	unsigned int num_rules = 0, rule_idx = 0;
++	unsigned int num_rules = 0;
+ 	const struct ieee80211_reg_rule *rule1, *rule2;
+-	struct ieee80211_reg_rule *intersected_rule;
++	struct ieee80211_reg_rule intersected_rule;
+ 	struct ieee80211_regdomain *rd;
+-	/* This is just a dummy holder to help us count */
+-	struct ieee80211_reg_rule dummy_rule;
+ 
+ 	if (!rd1 || !rd2)
+ 		return NULL;
+@@ -841,7 +890,7 @@ regdom_intersect(const struct ieee80211_regdomain *rd1,
+ 		for (y = 0; y < rd2->n_reg_rules; y++) {
+ 			rule2 = &rd2->reg_rules[y];
+ 			if (!reg_rules_intersect(rd1, rd2, rule1, rule2,
+-						 &dummy_rule))
++						 &intersected_rule))
+ 				num_rules++;
  		}
+ 	}
+@@ -856,34 +905,24 @@ regdom_intersect(const struct ieee80211_regdomain *rd1,
+ 	if (!rd)
+ 		return NULL;
  
--		if (adapter->fw_key_api_major_ver == FW_KEY_API_VER_MAJOR_V2) {
-+		if (adapter->key_api_major_ver == KEY_API_VER_MAJOR_V2) {
- 			memcpy(encrypt_key->key_material,
- 			       wep_key->key_material, wep_key->key_length);
- 			encrypt_key->key_len = wep_key->key_length;
-@@ -906,7 +906,7 @@ static int mwifiex_sec_ioctl_set_wep_key(struct mwifiex_private *priv,
- 			memset(&priv->wep_key[index], 0,
- 			       sizeof(struct mwifiex_wep_key));
+-	for (x = 0; x < rd1->n_reg_rules && rule_idx < num_rules; x++) {
++	for (x = 0; x < rd1->n_reg_rules; x++) {
+ 		rule1 = &rd1->reg_rules[x];
+-		for (y = 0; y < rd2->n_reg_rules && rule_idx < num_rules; y++) {
++		for (y = 0; y < rd2->n_reg_rules; y++) {
+ 			rule2 = &rd2->reg_rules[y];
+-			/*
+-			 * This time around instead of using the stack lets
+-			 * write to the target rule directly saving ourselves
+-			 * a memcpy()
+-			 */
+-			intersected_rule = &rd->reg_rules[rule_idx];
+ 			r = reg_rules_intersect(rd1, rd2, rule1, rule2,
+-						intersected_rule);
++						&intersected_rule);
+ 			/*
+ 			 * No need to memset here the intersected rule here as
+ 			 * we're not using the stack anymore
+ 			 */
+ 			if (r)
+ 				continue;
+-			rule_idx++;
+-		}
+-	}
  
--		if (adapter->fw_key_api_major_ver == FW_KEY_API_VER_MAJOR_V2)
-+		if (adapter->key_api_major_ver == KEY_API_VER_MAJOR_V2)
- 			enc_key = encrypt_key;
- 		else
- 			enc_key = NULL;
+-	if (rule_idx != num_rules) {
+-		kfree(rd);
+-		return NULL;
++			add_rule(&intersected_rule, rd->reg_rules,
++				 &rd->n_reg_rules);
++		}
+ 	}
+ 
+-	rd->n_reg_rules = num_rules;
+ 	rd->alpha2[0] = '9';
+ 	rd->alpha2[1] = '8';
+ 	rd->dfs_region = reg_intersect_dfs_region(rd1->dfs_region,
 -- 
-1.8.1.4
+1.9.1
 
