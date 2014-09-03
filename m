@@ -1,111 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hauke-m.de ([5.39.93.123]:57354 "EHLO hauke-m.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753944AbaIPV4d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Sep 2014 17:56:33 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Cc: zajec5@gmail.com, arend@broadcom.com,
-	linux-arm-kernel@lists.infradead.org, arnd@arndb.de,
-	devicetree@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v2 2/2] bcma: get IRQ numbers from dt
-Date: Tue, 16 Sep 2014 23:56:22 +0200
-Message-Id: <1410904582-6519-2-git-send-email-hauke@hauke-m.de> (sfid-20140916_235639_561381_754CB008)
-In-Reply-To: <1410904582-6519-1-git-send-email-hauke@hauke-m.de>
-References: <1410904582-6519-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-wg0-f42.google.com ([74.125.82.42]:53042 "EHLO
+	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753992AbaICT4f (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Sep 2014 15:56:35 -0400
+Received: by mail-wg0-f42.google.com with SMTP id b13so8930789wgh.1
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Sep 2014 12:56:34 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eliad Peller <eliad@wizery.com>,
+	Eliad Peller <eliadx.peller@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 04/36] iwlwifi: mvm: add use_ps-poll debugfs power option
+Date: Wed,  3 Sep 2014 22:55:52 +0300
+Message-Id: <1409774184-24665-4-git-send-email-egrumbach@gmail.com> (sfid-20140903_215639_919376_660FDC36)
+In-Reply-To: <540771E5.6080908@gmail.com>
+References: <540771E5.6080908@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It is not possible to auto detect the irq numbers used by the cores on
-an arm SoC. If bcma was registered with device tree it will search for
-some device tree nodes with the irq number and add it to the core
-configuration.
+From: Eliad Peller <eliad@wizery.com>
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+By default, when uapsd is not used, the ucode uses
+null data packet to exit power-save and get then
+pending frames.
+
+However, some tests require the explicit usage of ps-poll.
+Allow setting use_ps_poll power option (through debugfs)
+to configure the ucode to use ps-poll instead.
+
+The ucode configuration is done by setting the advanced-pm
+flag while setting all the ACs to non-upasd mode.
+
+Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/bcma/main.c | 49 ++++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 48 insertions(+), 1 deletion(-)
+ drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c | 8 ++++++++
+ drivers/net/wireless/iwlwifi/mvm/mvm.h         | 2 ++
+ drivers/net/wireless/iwlwifi/mvm/power.c       | 9 ++++++++-
+ 3 files changed, 18 insertions(+), 1 deletion(-)
 
-This is based on wireless-testing and should go into that tree.
-
-changes since:
-RFC:
- - add #ifdef CONFIG_OF
-
-diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-index e5d578c..b8731ee 100644
---- a/drivers/bcma/main.c
-+++ b/drivers/bcma/main.c
-@@ -10,6 +10,8 @@
- #include <linux/platform_device.h>
- #include <linux/bcma/bcma.h>
- #include <linux/slab.h>
-+#include <linux/of_irq.h>
-+#include <linux/of_address.h>
- 
- MODULE_DESCRIPTION("Broadcom's specific AMBA driver");
- MODULE_LICENSE("GPL");
-@@ -131,6 +133,45 @@ static bool bcma_is_core_needed_early(u16 core_id)
- 	return false;
+diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c b/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c
+index 2e90ff7..5f5a94b 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c
++++ b/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c
+@@ -119,6 +119,10 @@ static void iwl_dbgfs_update_pm(struct iwl_mvm *mvm,
+ 		IWL_DEBUG_POWER(mvm, "uapsd_misbehaving_enable=%d\n", val);
+ 		dbgfs_pm->uapsd_misbehaving = val;
+ 		break;
++	case MVM_DEBUGFS_PM_USE_PS_POLL:
++		IWL_DEBUG_POWER(mvm, "use_ps_poll=%d\n", val);
++		dbgfs_pm->use_ps_poll = val;
++		break;
+ 	}
  }
  
-+#ifdef CONFIG_OF
-+static struct device_node *bcma_of_find_child_device(struct platform_device *parent,
-+						     struct bcma_device *core)
-+{
-+	struct device_node *node;
-+	u64 size;
-+	const __be32 *reg;
-+
-+	if (!parent || !parent->dev.of_node)
-+		return NULL;
-+
-+	for_each_child_of_node(parent->dev.of_node, node) {
-+		reg = of_get_address(node, 0, &size, NULL);
-+		if (!reg)
-+			continue;
-+		if (be32_to_cpup(reg) == core->addr)
-+			return node;
+@@ -169,6 +173,10 @@ static ssize_t iwl_dbgfs_pm_params_write(struct ieee80211_vif *vif, char *buf,
+ 		if (sscanf(buf + 18, "%d", &val) != 1)
+ 			return -EINVAL;
+ 		param = MVM_DEBUGFS_PM_UAPSD_MISBEHAVING;
++	} else if (!strncmp("use_ps_poll=", buf, 12)) {
++		if (sscanf(buf + 12, "%d", &val) != 1)
++			return -EINVAL;
++		param = MVM_DEBUGFS_PM_USE_PS_POLL;
+ 	} else {
+ 		return -EINVAL;
+ 	}
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index 771cf46..83a00ab 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -203,6 +203,7 @@ enum iwl_dbgfs_pm_mask {
+ 	MVM_DEBUGFS_PM_LPRX_RSSI_THRESHOLD = BIT(7),
+ 	MVM_DEBUGFS_PM_SNOOZE_ENABLE = BIT(8),
+ 	MVM_DEBUGFS_PM_UAPSD_MISBEHAVING = BIT(9),
++	MVM_DEBUGFS_PM_USE_PS_POLL = BIT(10),
+ };
+ 
+ struct iwl_dbgfs_pm {
+@@ -215,6 +216,7 @@ struct iwl_dbgfs_pm {
+ 	u32 lprx_rssi_threshold;
+ 	bool snooze_ena;
+ 	bool uapsd_misbehaving;
++	bool use_ps_poll;
+ 	int mask;
+ };
+ 
+diff --git a/drivers/net/wireless/iwlwifi/mvm/power.c b/drivers/net/wireless/iwlwifi/mvm/power.c
+index 2b2d108..8cbe7ea 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/power.c
++++ b/drivers/net/wireless/iwlwifi/mvm/power.c
+@@ -198,8 +198,15 @@ static void iwl_mvm_power_configure_uapsd(struct iwl_mvm *mvm,
+ 		}
+ 	}
+ 
+-	if (!(cmd->flags & cpu_to_le16(POWER_FLAGS_ADVANCE_PM_ENA_MSK)))
++	if (!(cmd->flags & cpu_to_le16(POWER_FLAGS_ADVANCE_PM_ENA_MSK))) {
++#ifdef CONFIG_IWLWIFI_DEBUGFS
++		/* set advanced pm flag with no uapsd ACs to enable ps-poll */
++		if (mvmvif->dbgfs_pm.use_ps_poll)
++			cmd->flags |=
++				cpu_to_le16(POWER_FLAGS_ADVANCE_PM_ENA_MSK);
++#endif
+ 		return;
 +	}
-+	return NULL;
-+}
-+
-+static void bcma_of_fill_device(struct platform_device *parent,
-+				struct bcma_device *core)
-+{
-+	struct device_node *node;
-+
-+	node = bcma_of_find_child_device(parent, core);
-+	if (!node)
-+		return;
-+	core->dev.of_node = node;
-+	core->irq = irq_of_parse_and_map(node, 0);
-+}
-+#else
-+static void bcma_of_fill_device(struct platform_device *parent,
-+				struct bcma_device *core)
-+{
-+}
-+#endif /* CONFIG_OF */
-+
- static void bcma_register_core(struct bcma_bus *bus, struct bcma_device *core)
- {
- 	int err;
-@@ -147,7 +188,13 @@ static void bcma_register_core(struct bcma_bus *bus, struct bcma_device *core)
- 		break;
- 	case BCMA_HOSTTYPE_SOC:
- 		core->dev.dma_mask = &core->dev.coherent_dma_mask;
--		core->dma_dev = &core->dev;
-+		if (bus->host_pdev) {
-+			core->dma_dev = &bus->host_pdev->dev;
-+			core->dev.parent = &bus->host_pdev->dev;
-+			bcma_of_fill_device(bus->host_pdev, core);
-+		} else {
-+			core->dma_dev = &core->dev;
-+		}
- 		break;
- 	case BCMA_HOSTTYPE_SDIO:
- 		break;
+ 
+ 	cmd->flags |= cpu_to_le16(POWER_FLAGS_UAPSD_MISBEHAVING_ENA_MSK);
+ 
 -- 
 1.9.1
 
