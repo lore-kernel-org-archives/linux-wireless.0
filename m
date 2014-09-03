@@ -1,65 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:47804 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754501AbaIDRpM (ORCPT
+Received: from mail-we0-f171.google.com ([74.125.82.171]:48130 "EHLO
+	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756056AbaICT5E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Sep 2014 13:45:12 -0400
-Date: Thu, 4 Sep 2014 13:38:34 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>,
-	Ralf Baechle <ralf@linux-mips.org>
-Subject: Re: [PATCH 2/2] bcma: use separated function to initialize bus on SoC
-Message-ID: <20140904173833.GG3467@tuxdriver.com> (sfid-20140904_194535_344342_1BC45862)
-References: <1409605867-30051-1-git-send-email-zajec5@gmail.com>
- <1409605867-30051-2-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1409605867-30051-2-git-send-email-zajec5@gmail.com>
+	Wed, 3 Sep 2014 15:57:04 -0400
+Received: by mail-we0-f171.google.com with SMTP id u56so9223008wes.2
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Sep 2014 12:57:03 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 23/36] iwlwifi: don't export tracepoints unnecessarily
+Date: Wed,  3 Sep 2014 22:56:11 +0300
+Message-Id: <1409774184-24665-23-git-send-email-egrumbach@gmail.com> (sfid-20140903_215803_298114_C3E7ADD1)
+In-Reply-To: <540771E5.6080908@gmail.com>
+References: <540771E5.6080908@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 01, 2014 at 11:11:07PM +0200, Rafał Miłecki wrote:
-> This is required to split SoC bus init into two phases. The later one
-> (which includes scanning) should be called when kalloc is available.
-> 
-> Cc: Ralf Baechle <ralf@linux-mips.org>
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-> ---
-> John: please note this patch touches arch/mips/bcm47xx/setup.c
-> 
-> This patches is a first step of simplifying MIPS booting process on
-> Broadcom SoCs. My research described in:
-> > Booting bcm47xx (bcma & stuff), sharing code with bcm53xx
-> e-mail thread explained how we could get rid of all these early scanning
-> tricks. The main idea is to postpone bus initialization a bit and use
-> all standard calls then. So far we were doing it so early we had to
-> avoid kalloc.
-> ---
->  arch/mips/bcm47xx/setup.c     |  4 ++++
->  drivers/bcma/host_soc.c       | 11 +++++++++--
->  include/linux/bcma/bcma_soc.h |  1 +
->  3 files changed, 14 insertions(+), 2 deletions(-)
-> 
-> diff --git a/arch/mips/bcm47xx/setup.c b/arch/mips/bcm47xx/setup.c
-> index 2b63e7e..fff6ed4 100644
-> --- a/arch/mips/bcm47xx/setup.c
-> +++ b/arch/mips/bcm47xx/setup.c
-> @@ -202,6 +202,10 @@ static void __init bcm47xx_register_bcma(void)
->  
->  	err = bcma_host_soc_register(&bcm47xx_bus.bcma);
->  	if (err)
-> +		panic("Failed to register BCMA bus (err %d)", err);
-> +
-> +	err = bcma_host_soc_init(&bcm47xx_bus.bcma);
-> +	if (err)
->  		panic("Failed to initialize BCMA bus (err %d)", err);
->  
->  	bcm47xx_fill_bcma_boardinfo(&bcm47xx_bus.bcma.bus.boardinfo, NULL);
+From: Johannes Berg <johannes.berg@intel.com>
 
-This hunk looks wrong.  Is it missing indentation?  Or should a line
-be removed at the top?
+The tracepoints that are only used in code linked with iwlwifi.ko,
+as are the tracepoints, don't need to be exported, so don't.
 
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-devtrace.c | 7 -------
+ 1 file changed, 7 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-devtrace.c b/drivers/net/wireless/iwlwifi/iwl-devtrace.c
+index 23e7351..90987d6 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-devtrace.c
++++ b/drivers/net/wireless/iwlwifi/iwl-devtrace.c
+@@ -36,15 +36,8 @@
+ EXPORT_TRACEPOINT_SYMBOL(iwlwifi_dev_iowrite8);
+ EXPORT_TRACEPOINT_SYMBOL(iwlwifi_dev_ioread32);
+ EXPORT_TRACEPOINT_SYMBOL(iwlwifi_dev_iowrite32);
+-EXPORT_TRACEPOINT_SYMBOL(iwlwifi_dev_rx);
+-EXPORT_TRACEPOINT_SYMBOL(iwlwifi_dev_tx);
+ EXPORT_TRACEPOINT_SYMBOL(iwlwifi_dev_ucode_event);
+ EXPORT_TRACEPOINT_SYMBOL(iwlwifi_dev_ucode_error);
+ EXPORT_TRACEPOINT_SYMBOL(iwlwifi_dev_ucode_cont_event);
+ EXPORT_TRACEPOINT_SYMBOL(iwlwifi_dev_ucode_wrap_event);
+-EXPORT_TRACEPOINT_SYMBOL(iwlwifi_info);
+-EXPORT_TRACEPOINT_SYMBOL(iwlwifi_warn);
+-EXPORT_TRACEPOINT_SYMBOL(iwlwifi_crit);
+-EXPORT_TRACEPOINT_SYMBOL(iwlwifi_err);
+-EXPORT_TRACEPOINT_SYMBOL(iwlwifi_dbg);
+ #endif
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.9.1
+
