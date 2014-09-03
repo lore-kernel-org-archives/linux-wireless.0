@@ -1,103 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:36782 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751197AbaIOFNT (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:42137 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751115AbaICDJP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Sep 2014 01:13:19 -0400
-Received: by mail-wg0-f42.google.com with SMTP id x12so3250063wgg.25
-        for <linux-wireless@vger.kernel.org>; Sun, 14 Sep 2014 22:13:18 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eyal Shapira <eyal@wizery.com>,
-	Eyal Shapira <eyalx.shapira@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 09/28] iwlwifi: mvm: rs: don't zero tx stats after idle
-Date: Mon, 15 Sep 2014 08:12:41 +0300
-Message-Id: <1410757980-2138-9-git-send-email-egrumbach@gmail.com> (sfid-20140915_073116_470424_66B66B17)
-In-Reply-To: <5416742C.3070804@gmail.com>
-References: <5416742C.3070804@gmail.com>
+	Tue, 2 Sep 2014 23:09:15 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH v2 1/6] ath9k: Fix beacon configuration for channel contexts
+Date: Wed,  3 Sep 2014 08:39:20 +0530
+Message-Id: <1409713765-9358-2-git-send-email-sujith@msujith.org> (sfid-20140903_050936_509129_71AD1EB3)
+In-Reply-To: <1409713765-9358-1-git-send-email-sujith@msujith.org>
+References: <1409713765-9358-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Move the tx stats to the persistent area of lq_sta to
-avoid them being zeroed out every time rs reinitializes
-which happens after tx idle for 5 secs for example.
-The automatic zeroing out made them difficult to use.
+In channel context mode, when a new context is added,
+mac80211 issues a bss_info_changed() notfication when
+preparing the connection for the new interface/context.
 
-Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+But, this is done prior to the mgd_prepare_tx() call which
+is where we switch to the new context. Since the current
+context will be different when the earlier bss_info_changed()
+is handled, the beacon information for the VIF is not
+updated, but discarded since the rules for the current context
+disallows it.
+
+In the subsequent association process for the new context/vif,
+this becomes a problem because the beacon parameters are invalid.
+This causes problems with the TSF timer, causing large jumps.
+
+To fix this, check if the beacon info is being updated for a
+different context and if so, allow it without any checks since
+we limit the max. interfaces to two anyway.
+
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/rs.c | 10 ++++++----
- drivers/net/wireless/iwlwifi/mvm/rs.h |  7 ++++---
- 2 files changed, 10 insertions(+), 7 deletions(-)
+ drivers/net/wireless/ath/ath9k/beacon.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
-index 94c5299..f77dfe4 100644
---- a/drivers/net/wireless/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
-@@ -672,8 +672,10 @@ static int rs_collect_tx_data(struct iwl_lq_sta *lq_sta,
- 		return -EINVAL;
- 
- 	if (tbl->column != RS_COLUMN_INVALID) {
--		lq_sta->tx_stats[tbl->column][scale_index].total += attempts;
--		lq_sta->tx_stats[tbl->column][scale_index].success += successes;
-+		struct lq_sta_pers *pers = &lq_sta->pers;
-+
-+		pers->tx_stats[tbl->column][scale_index].total += attempts;
-+		pers->tx_stats[tbl->column][scale_index].success += successes;
- 	}
- 
- 	/* Select window for current tx bit rate */
-@@ -3171,7 +3173,7 @@ static ssize_t rs_sta_dbgfs_drv_tx_stats_read(struct file *file,
- 				 "%s,", column_name[col]);
- 
- 		for (rate = 0; rate < IWL_RATE_COUNT; rate++) {
--			stats = &(lq_sta->tx_stats[col][rate]);
-+			stats = &(lq_sta->pers.tx_stats[col][rate]);
- 			pos += scnprintf(pos, endpos - pos,
- 					 "%llu/%llu,",
- 					 stats->success,
-@@ -3190,7 +3192,7 @@ static ssize_t rs_sta_dbgfs_drv_tx_stats_write(struct file *file,
- 					       size_t count, loff_t *ppos)
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index b2f56d8..83f2f2f 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -514,6 +514,18 @@ static bool ath9k_allow_beacon_config(struct ath_softc *sc,
+ 				      struct ieee80211_vif *vif)
  {
- 	struct iwl_lq_sta *lq_sta = file->private_data;
--	memset(lq_sta->tx_stats, 0, sizeof(lq_sta->tx_stats));
-+	memset(lq_sta->pers.tx_stats, 0, sizeof(lq_sta->pers.tx_stats));
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
++	struct ath_vif *avp = (void *)vif->drv_priv;
++
++	if (ath9k_is_chanctx_enabled()) {
++		/*
++		 * If the VIF is not present in the current channel context,
++		 * then we can't do the usual opmode checks. Allow the
++		 * beacon config for the VIF to be updated in this case and
++		 * return immediately.
++		 */
++		if (sc->cur_chan != avp->chanctx)
++			return true;
++	}
  
- 	return count;
- }
-diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.h b/drivers/net/wireless/iwlwifi/mvm/rs.h
-index 98bb9b7..95c4b96 100644
---- a/drivers/net/wireless/iwlwifi/mvm/rs.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/rs.h
-@@ -333,8 +333,6 @@ struct iwl_lq_sta {
- 	bool ldpc;              /* LDPC Rx is supported by the STA */
- 	enum ieee80211_band band;
- 
--	struct rs_rate_stats tx_stats[RS_COLUMN_COUNT][IWL_RATE_COUNT];
--
- 	/* The following are bitmaps of rates; IWL_RATE_6M_MASK, etc. */
- 	unsigned long active_legacy_rate;
- 	unsigned long active_siso_rate;
-@@ -362,11 +360,14 @@ struct iwl_lq_sta {
- 	int tpc_reduce;
- 
- 	/* persistent fields - initialized only once - keep last! */
--	struct {
-+	struct lq_sta_pers {
- #ifdef CONFIG_MAC80211_DEBUGFS
- 		u32 dbg_fixed_rate;
- 		u8 dbg_fixed_txp_reduction;
- #endif
-+		u8 chains;
-+		s8 chain_signal[IEEE80211_MAX_CHAINS];
-+		struct rs_rate_stats tx_stats[RS_COLUMN_COUNT][IWL_RATE_COUNT];
- 		struct iwl_mvm *drv;
- 	} pers;
- };
+ 	if (sc->sc_ah->opmode == NL80211_IFTYPE_AP) {
+ 		if ((vif->type != NL80211_IFTYPE_AP) ||
 -- 
-1.9.1
+2.1.0
 
