@@ -1,42 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:49317 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756170AbaICOKa (ORCPT
+Received: from mail-wg0-f46.google.com ([74.125.82.46]:37926 "EHLO
+	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753991AbaICT4u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Sep 2014 10:10:30 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21511.8546.157916.710879@gargle.gargle.HOWL> (sfid-20140903_161056_006777_E10BB726)
-Date: Wed, 3 Sep 2014 19:40:42 +0530
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: Robb <rbarr138@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Cannot get ACS to work with hostapd-2.2 "Unknown event 49"
-In-Reply-To: <CA+BoTQnCoZL=GzUh4vJqOQ=-PZ1BwZcUO21spUPB5KF1fUSiRw@mail.gmail.com>
-References: <CAOHJ0jTHtVvJ43y7m-=UqHeMJfNiMYU2Peg9buxXU+wBigwu5g@mail.gmail.com>
-	<CA+BoTQm+x0kD9m3vVv98MwYOXjfgO1noXOnzdbk5o41S+DLewQ@mail.gmail.com>
-	<CAOHJ0jSoSd97vFEMgxC3cC8AnaEGdwbUiBBoeM7UfLJcha0Ujg@mail.gmail.com>
-	<CA+BoTQnCoZL=GzUh4vJqOQ=-PZ1BwZcUO21spUPB5KF1fUSiRw@mail.gmail.com>
+	Wed, 3 Sep 2014 15:56:50 -0400
+Received: by mail-wg0-f46.google.com with SMTP id x13so9014477wgg.17
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Sep 2014 12:56:49 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Luciano Coelho <luciano.coelho@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 14/36] iwlwifi: mvm: re-enable ps when monitor interfaces are removed
+Date: Wed,  3 Sep 2014 22:56:02 +0300
+Message-Id: <1409774184-24665-14-git-send-email-egrumbach@gmail.com> (sfid-20140903_215655_668181_170D1AA5)
+In-Reply-To: <540771E5.6080908@gmail.com>
+References: <540771E5.6080908@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior wrote:
-> On 3 September 2014 15:10, Robb <rbarr138@gmail.com> wrote:
-> You are making an assumption ath9k == ath9k_htc. This is not correct.
-> 
-> I would actually suspect the ath9k_htc *chips* actually are capable of
-> providing the necessary information to create survey dump but the
-> firmware/driver do not support it. Can anyone more familiar with
-> ath9k_htc correct me if I'm wrong?
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-You are correct, the HW MAC for the chips supported by ath9k_htc is mostly the
-same as the ones supported by ath9k. But, driver support for survey dump
-is lacking.
+If a monitor interface is added and then removed, we don't reset the
+mvm->ps_disabled flag, so we never re-enable power saving.  Fix that
+and rearrange the code a bit.
 
-> If the 9271 doesn't support it then I guess it can only be the
-> AR7010+AR9280 or AR7010+AR9287 right? Any way to know which works?
+Additionally, fix a small indentation mistake in the
+iwl_mvm_power_set_pm() function declaration.
 
-ath9k_htc doesn't provide survey dump data for any USB card.
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c |  1 +
+ drivers/net/wireless/iwlwifi/mvm/power.c    | 30 +++++++++++++++--------------
+ 2 files changed, 17 insertions(+), 14 deletions(-)
 
-Sujith
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index de4ae94..531540c 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -776,6 +776,7 @@ static void iwl_mvm_restart_cleanup(struct iwl_mvm *mvm)
+ 	iwl_trans_stop_device(mvm->trans);
+ 
+ 	mvm->scan_status = IWL_MVM_SCAN_NONE;
++	mvm->ps_disabled = false;
+ 
+ 	/* just in case one was running */
+ 	ieee80211_remain_on_channel_expired(mvm->hw);
+diff --git a/drivers/net/wireless/iwlwifi/mvm/power.c b/drivers/net/wireless/iwlwifi/mvm/power.c
+index 8cbe7ea..754f2b3 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/power.c
++++ b/drivers/net/wireless/iwlwifi/mvm/power.c
+@@ -566,9 +566,8 @@ static void iwl_mvm_power_iterator(void *_data, u8 *mac,
+ 	}
+ }
+ 
+-static void
+-iwl_mvm_power_set_pm(struct iwl_mvm *mvm,
+-				    struct iwl_power_vifs *vifs)
++static void iwl_mvm_power_set_pm(struct iwl_mvm *mvm,
++				 struct iwl_power_vifs *vifs)
+ {
+ 	struct iwl_mvm_vif *bss_mvmvif = NULL;
+ 	struct iwl_mvm_vif *p2p_mvmvif = NULL;
+@@ -830,7 +829,7 @@ int iwl_mvm_power_update_mac(struct iwl_mvm *mvm)
+ 	struct iwl_power_vifs vifs = {
+ 		.mvm = mvm,
+ 	};
+-	bool ba_enable;
++	bool ba_enable, disable_ps;
+ 	int ret;
+ 
+ 	lockdep_assert_held(&mvm->mutex);
+@@ -838,16 +837,19 @@ int iwl_mvm_power_update_mac(struct iwl_mvm *mvm)
+ 	iwl_mvm_power_set_pm(mvm, &vifs);
+ 
+ 	/* disable PS if CAM */
+-	if (iwlmvm_mod_params.power_scheme == IWL_POWER_SCHEME_CAM) {
+-		mvm->ps_disabled = true;
+-	} else {
+-	/* don't update device power state unless we add / remove monitor */
+-		if (vifs.monitor_vif) {
+-			if (vifs.monitor_active)
+-				mvm->ps_disabled = true;
+-			ret = iwl_mvm_power_update_device(mvm);
+-			if (ret)
+-				return ret;
++	disable_ps = (iwlmvm_mod_params.power_scheme == IWL_POWER_SCHEME_CAM);
++	/* ...or if there is an active monitor vif */
++	disable_ps |= (vifs.monitor_vif && vifs.monitor_active);
++
++	/* update device power state if it has changed */
++	if (mvm->ps_disabled != disable_ps) {
++		bool old_ps_disabled = mvm->ps_disabled;
++
++		mvm->ps_disabled = disable_ps;
++		ret = iwl_mvm_power_update_device(mvm);
++		if (ret) {
++			mvm->ps_disabled = old_ps_disabled;
++			return ret;
+ 		}
+ 	}
+ 
+-- 
+1.9.1
+
