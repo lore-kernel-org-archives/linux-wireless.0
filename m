@@ -1,54 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:45828 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750882AbaIDPpM (ORCPT
+Received: from mail-wg0-f50.google.com ([74.125.82.50]:65244 "EHLO
+	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755936AbaICT4i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Sep 2014 11:45:12 -0400
-Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
-	(envelope-from <linville@tuxdriver.com>)
-	id 1XPZDh-0000IW-JN
-	for linux-wireless@vger.kernel.org; Thu, 04 Sep 2014 11:45:09 -0400
-Received: from linville-x1.hq.tuxdriver.com (localhost.localdomain [127.0.0.1])
-	by linville-x1.hq.tuxdriver.com (8.14.8/8.14.6) with ESMTP id s84FW35H008758
-	for <linux-wireless@vger.kernel.org>; Thu, 4 Sep 2014 11:32:03 -0400
-Received: (from linville@localhost)
-	by linville-x1.hq.tuxdriver.com (8.14.8/8.14.8/Submit) id s84FW35I008757
-	for linux-wireless@vger.kernel.org; Thu, 4 Sep 2014 11:32:03 -0400
-Date: Thu, 4 Sep 2014 11:32:03 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
+	Wed, 3 Sep 2014 15:56:38 -0400
+Received: by mail-wg0-f50.google.com with SMTP id x12so9011017wgg.33
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Sep 2014 12:56:37 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
 To: linux-wireless@vger.kernel.org
-Subject: Wireless Networking microconference topic approvals (LPC2014)
-Message-ID: <20140904153202.GB3467@tuxdriver.com> (sfid-20140904_174518_535814_D139DF7F)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Cc: Luciano Coelho <luciano.coelho@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 06/36] iwlwifi: mvm: reset the temperature when temperature test is disabled
+Date: Wed,  3 Sep 2014 22:55:54 +0300
+Message-Id: <1409774184-24665-6-git-send-email-egrumbach@gmail.com> (sfid-20140903_215644_381090_40A1F538)
+In-Reply-To: <540771E5.6080908@gmail.com>
+References: <540771E5.6080908@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-All,
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-I have approved the current proposals for the Wireless Networking
-microconference in Duesseldorf.  The current list of topics is
-available here:
+Since we can't read the actual temperature when the firmware is
+running, just set the temperature to 0 when the test is disabled and
+disable CT Kill if it was enabled.
 
-http://www.linuxplumbersconf.org/2014/ocw/events/LPC2014/tracks/339
+Additionally, since we rely on iwl_mvm_tt_handler() to exit CT kill
+when in test mode, call iwl_mvm_exit_ctkill() in that function if the
+temperature is low again.  Also make the iwl_mvm_enter_ctkill() and
+iwl_mvm_exit_ctkill() return if called when not necessary anymore
+(e.g. when iwl_mvm_exit_ctkill() is called when we're not in CT-kill).
 
-We have a 6 hour slot, and 6 topics approved.  I don't think that all
-of the listed topics need an hour each, so we probably can squeeze in
-a couple more topics.  If you have something to propose, then please
-click on the "submit a proposal" link on the page linked above.
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/debugfs.c | 10 ++++++++++
+ drivers/net/wireless/iwlwifi/mvm/tt.c      | 12 ++++++++++++
+ 2 files changed, 22 insertions(+)
 
-For more info on proposing topics for LPC2014, you can also go here:
-
-http://www.linuxplumbersconf.org/2014/how-to-submit-microconference-discussions-topics/
-
-Thanks,
-
-John
-
-P.S.  I was not able to transfer the suggested topics from the wiki
-to actual topic proposals without listing myself as the speaker for
-those proposals.  If you are intending to present a topic, please
-follow the directions above.
+diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
+index f7e4488..83e562b 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/debugfs.c
++++ b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
+@@ -296,7 +296,15 @@ static ssize_t iwl_dbgfs_set_nic_temperature_write(struct iwl_mvm *mvm,
+ 
+ 	mutex_lock(&mvm->mutex);
+ 	if (temperature == IWL_MVM_DEBUG_SET_TEMPERATURE_DISABLE) {
++		if (!mvm->temperature_test)
++			goto out;
++
+ 		mvm->temperature_test = false;
++		/* Since we can't read the temp while awake, just set
++		 * it to zero until we get the next RX stats from the
++		 * firmware.
++		 */
++		mvm->temperature = 0;
+ 	} else {
+ 		mvm->temperature_test = true;
+ 		mvm->temperature = temperature;
+@@ -306,6 +314,8 @@ static ssize_t iwl_dbgfs_set_nic_temperature_write(struct iwl_mvm *mvm,
+ 		       mvm->temperature);
+ 	/* handle the temperature change */
+ 	iwl_mvm_tt_handler(mvm);
++
++out:
+ 	mutex_unlock(&mvm->mutex);
+ 
+ 	return count;
+diff --git a/drivers/net/wireless/iwlwifi/mvm/tt.c b/drivers/net/wireless/iwlwifi/mvm/tt.c
+index 0464599..d31603c 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/tt.c
++++ b/drivers/net/wireless/iwlwifi/mvm/tt.c
+@@ -314,6 +314,9 @@ static void iwl_mvm_enter_ctkill(struct iwl_mvm *mvm)
+ {
+ 	u32 duration = mvm->thermal_throttle.params->ct_kill_duration;
+ 
++	if (test_bit(IWL_MVM_STATUS_HW_CTKILL, &mvm->status))
++		return;
++
+ 	IWL_ERR(mvm, "Enter CT Kill\n");
+ 	iwl_mvm_set_hw_ctkill_state(mvm, true);
+ 	schedule_delayed_work(&mvm->thermal_throttle.ct_kill_exit,
+@@ -322,6 +325,9 @@ static void iwl_mvm_enter_ctkill(struct iwl_mvm *mvm)
+ 
+ static void iwl_mvm_exit_ctkill(struct iwl_mvm *mvm)
+ {
++	if (!test_bit(IWL_MVM_STATUS_HW_CTKILL, &mvm->status))
++		return;
++
+ 	IWL_ERR(mvm, "Exit CT Kill\n");
+ 	iwl_mvm_set_hw_ctkill_state(mvm, false);
+ }
+@@ -444,6 +450,12 @@ void iwl_mvm_tt_handler(struct iwl_mvm *mvm)
+ 		return;
+ 	}
+ 
++	if (params->support_ct_kill &&
++	    temperature <= tt->params->ct_kill_exit) {
++		iwl_mvm_exit_ctkill(mvm);
++		return;
++	}
++
+ 	if (params->support_dynamic_smps) {
+ 		if (!tt->dynamic_smps &&
+ 		    temperature >= params->dynamic_smps_entry) {
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.9.1
+
