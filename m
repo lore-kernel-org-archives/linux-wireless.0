@@ -1,87 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:34473 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754511AbaICTMV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Sep 2014 15:12:21 -0400
-Message-ID: <1409771537.911.28.camel@jlt4.sipsolutions.net> (sfid-20140903_211225_480424_90924BC2)
-Subject: Re: [PATCH v5 2/2] mac80211: support DTPC IE (from Cisco Client
- eXtensions)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Steinar H. Gunderson" <sgunderson@bigfoot.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 03 Sep 2014 21:12:17 +0200
-In-Reply-To: <20140903133328.GC18933@sesse.net> (sfid-20140903_153336_782556_14E19EF4)
-References: <20140830184516.GA31497@sesse.net>
-	 <E1XONJB-0005LB-O8@pannekake.samfundet.no>
-	 <1409745636.911.13.camel@jlt4.sipsolutions.net>
-	 <20140903133328.GC18933@sesse.net> (sfid-20140903_153336_782556_14E19EF4)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wg0-f46.google.com ([74.125.82.46]:34224 "EHLO
+	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753995AbaICT4j (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Sep 2014 15:56:39 -0400
+Received: by mail-wg0-f46.google.com with SMTP id x13so9049426wgg.5
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Sep 2014 12:56:38 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Luciano Coelho <luciano.coelho@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 07/36] iwlwifi: mvm: don't run automatic checks if CT was caused by debugfs
+Date: Wed,  3 Sep 2014 22:55:55 +0300
+Message-Id: <1409774184-24665-7-git-send-email-egrumbach@gmail.com> (sfid-20140903_215646_774984_862591B4)
+In-Reply-To: <540771E5.6080908@gmail.com>
+References: <540771E5.6080908@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-09-03 at 15:33 +0200, Steinar H. Gunderson wrote:
-> On Wed, Sep 03, 2014 at 02:00:36PM +0200, Johannes Berg wrote:
-> > I think for some vendors shipping our stack this might become
-> > problematic. I think it would make sense to have a Kconfig option for
-> > this, probably hidden away under "if EXPERT" and defaulting to yes, to
-> > enable this code, it might be something that interferes with more CCX
-> > implementations maybe?
-> 
-> Are there any CCX implementations for Linux at this time? Could you even do
-> that from just userspace? (I sort of doubt it, but it's never easy to know
-> what illustrious userspace programmers can do :-) )
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-I have no idea :-)
+If we're manually testing the CT kill functionality via debugfs, we
+shouldn't schedule the work to recheck the temperature after the
+ct_kill_duration period has passed.
 
-> I can make a config option, but it seems a bit odd, maybe. Are you thinking
-> there would be problems since this is an undocumented protocol, or because of
-> the possible conflict?
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/tt.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-I'm just thinking it might be a problem for a vendor to ship an
-(obviously incomplete) CCX implementation, even without advertising
-such. Most vendors have some relationship with Cisco at least for other
-drivers, so I'd prefer to avoid any possible conflict. You could argue
-that we shouldn't care upstream, and I'm not really sure where I fall on
-that question - it seems that vendors might then decide to patch it out
-though (which would be easy enough to do as well.)
-
-> >> +static bool ieee80211_find_cisco_dtpc(struct ieee80211_sub_if_data
-> >> *sdata,
-> > The return value is useless here, so it could be void?
-> 
-> It is useless indeed; I kept it this way for symmetry with the other _find_
-> function and because it makes for slightly easier code around (you can set
-> has_cisco_pwr = directly without needing an additional statement to make it
-> true). But I've changed it so it's void.
-> 
-> I could also change it to use a return instead of an output parameter for
-> pwr_level_cisco if you want, but I think it might become a bit confusing to
-> have two so similar functions with different calling style.
-
-Right, that makes sense.
-
-> >> +                       if (pos[0] != 0x00 || pos[1] != 0x40 ||
-> >> +                           pos[2] != 0x96 || pos[3] != 0x00) {
-> >> +                               break;
-> >> +                       }
-> > Please remove those useless braces - maybe run ./scripts/checkpatch.pl?
-> 
-> Removed. But I've already run checkpatch and it didn't complain about this
-> (the patch set is checkpatch-clean).
-
-Hmmm, interesting. I thought it warned about that, oh well. Thanks :)
-
-> I'm in a hotel room in Seattle right now whose Wi-Fi is not Cisco-based,
-> so I can't test the new version as thoroughly as I'd like, but I'll at least
-> give it a boot test and then send an updated patch series as reply to this
-> message.
-
-Great, thanks. Safe travels then :-)
-
-It's getting late here, but I'll take a look tomorrow. Regarding the
-Kconfig question, I'll make up my mind and just do whichever option I
-decide for myself, if that's OK with you?
-
-johannes
+diff --git a/drivers/net/wireless/iwlwifi/mvm/tt.c b/drivers/net/wireless/iwlwifi/mvm/tt.c
+index d31603c..4c22c0a 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/tt.c
++++ b/drivers/net/wireless/iwlwifi/mvm/tt.c
+@@ -319,8 +319,14 @@ static void iwl_mvm_enter_ctkill(struct iwl_mvm *mvm)
+ 
+ 	IWL_ERR(mvm, "Enter CT Kill\n");
+ 	iwl_mvm_set_hw_ctkill_state(mvm, true);
+-	schedule_delayed_work(&mvm->thermal_throttle.ct_kill_exit,
+-			      round_jiffies_relative(duration * HZ));
++
++	/* Don't schedule an exit work if we're in test mode, since
++	 * the temperature will not change unless we manually set it
++	 * again (or disable testing).
++	 */
++	if (!mvm->temperature_test)
++		schedule_delayed_work(&mvm->thermal_throttle.ct_kill_exit,
++				      round_jiffies_relative(duration * HZ));
+ }
+ 
+ static void iwl_mvm_exit_ctkill(struct iwl_mvm *mvm)
+-- 
+1.9.1
 
