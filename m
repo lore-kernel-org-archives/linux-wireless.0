@@ -1,41 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f49.google.com ([74.125.82.49]:62158 "EHLO
-	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750962AbaIDMww (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:31818 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932303AbaICNJ4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Sep 2014 08:52:52 -0400
-Received: by mail-wg0-f49.google.com with SMTP id y10so10027135wgg.8
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Sep 2014 05:52:51 -0700 (PDT)
-From: Matteo Croce <matteo@openwrt.org>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, Matteo Croce <matteo@openwrt.org>
-Subject: [PATCH] ath10k: ATH10K_DEBUGFS depends on DEBUG_FS
-Date: Thu,  4 Sep 2014 14:51:09 +0200
-Message-Id: <1409835069-2246-1-git-send-email-matteo@openwrt.org> (sfid-20140904_145305_478992_16E21543)
+	Wed, 3 Sep 2014 09:09:56 -0400
+Date: Wed, 3 Sep 2014 16:09:50 +0300
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <wireless-regdb@lists.infradead.org>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 01/12] wireless-regdb: Add Anguilla (AI) regulatory rules
+Message-ID: <20140903130950.GA15886@jouni.qca.qualcomm.com> (sfid-20140903_151000_404190_982C0BC1)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ATH10K_DEBUGFS must depend on DEBUG_FS, otherwise
-ath10k will generate an invalid pointer on module load
+Source:
+http://pucanguilla.org/Downloads/January2005-Anguilla%20Table%20of%20Allocations.pdf
 
-Signed-off-by: Matteo Croce <matteo@openwrt.org>
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath10k/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ db.txt | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/Kconfig b/drivers/net/wireless/ath/ath10k/Kconfig
-index 1053bb5..72acb82 100644
---- a/drivers/net/wireless/ath/ath10k/Kconfig
-+++ b/drivers/net/wireless/ath/ath10k/Kconfig
-@@ -24,7 +24,7 @@ config ATH10K_DEBUG
+diff --git a/db.txt b/db.txt
+index 3d15930..8b00c19 100644
+--- a/db.txt
++++ b/db.txt
+@@ -34,6 +34,14 @@ country AF: DFS-ETSI
+ 	(5250 - 5330 @ 80), (20), DFS
+ 	(5490 - 5710 @ 80), (27), DFS
  
- config ATH10K_DEBUGFS
- 	bool "Atheros ath10k debugfs support"
--	depends on ATH10K
-+	depends on ATH10K && DEBUG_FS
- 	select RELAY
- 	---help---
- 	  Enabled debugfs support
++# Source:
++# http://pucanguilla.org/Downloads/January2005-Anguilla%20Table%20of%20Allocations.pdf
++country AI: DFS-ETSI
++	(2402 - 2482 @ 40), (20)
++	(5170 - 5250 @ 80), (20)
++	(5250 - 5330 @ 80), (20), DFS
++	(5490 - 5710 @ 80), (27), DFS
++
+ country AL: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 80), (20.00)
 -- 
-2.1.0
+1.9.1
 
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
