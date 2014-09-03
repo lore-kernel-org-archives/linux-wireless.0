@@ -1,52 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cassarossa.samfundet.no ([193.35.52.29]:57926 "EHLO
+Received: from cassarossa.samfundet.no ([193.35.52.29]:35532 "EHLO
 	cassarossa.samfundet.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751679AbaIPXrt (ORCPT
+	with ESMTP id S932085AbaICNdc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Sep 2014 19:47:49 -0400
-Date: Wed, 17 Sep 2014 01:47:43 +0200
+	Wed, 3 Sep 2014 09:33:32 -0400
+Received: from pannekake.samfundet.no ([2001:67c:29f4::50] ident=unknown)
+	by cassarossa.samfundet.no with esmtps (TLS1.2:DHE_RSA_AES_128_CBC_SHA1:128)
+	(Exim 4.80)
+	(envelope-from <sesse@samfundet.no>)
+	id 1XPAgi-0002OJ-In
+	for linux-wireless@vger.kernel.org; Wed, 03 Sep 2014 15:33:28 +0200
+Received: from sesse by pannekake.samfundet.no with local (Exim 4.80)
+	(envelope-from <sesse@samfundet.no>)
+	id 1XPAgi-0006b1-8l
+	for linux-wireless@vger.kernel.org; Wed, 03 Sep 2014 15:33:28 +0200
+Date: Wed, 3 Sep 2014 15:33:28 +0200
 From: "Steinar H. Gunderson" <sgunderson@bigfoot.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v6 2/2] mac80211: support DTPC IE (from Cisco Client
+To: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v5 2/2] mac80211: support DTPC IE (from Cisco Client
  eXtensions)
-Message-ID: <20140916234647.GA2238@sesse.net> (sfid-20140917_014752_317985_A204746F)
-References: <20140903133328.GC18933@sesse.net>
- <E1XPB2h-0008WO-MS@pannekake.samfundet.no>
- <1410166400.7983.9.camel@jlt4.sipsolutions.net>
+Message-ID: <20140903133328.GC18933@sesse.net> (sfid-20140903_153336_782556_14E19EF4)
+References: <20140830184516.GA31497@sesse.net>
+ <E1XONJB-0005LB-O8@pannekake.samfundet.no>
+ <1409745636.911.13.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1410166400.7983.9.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1409745636.911.13.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 08, 2014 at 10:53:20AM +0200, Johannes Berg wrote:
->> Linux already supports 802.11h, where the access point can tell the
->> client to reduce its transmission power. However, 802.11h is only
->> defined for 5 GHz, where the need for this is much smaller than on
->> 2.4 GHz.
->> 
->> Cisco has their own solution, called DTPC (Dynamic Transmit Power
->> Control). Cisco APs on a controller sometimes but not always send
->> 802.11h; they always send DTPC, even on 2.4 GHz. This patch adds support
->> for parsing and honoring the DTPC IE in addition to the 802.11h
->> element (they do not always contain the same limits, so both must
->> be honored); the format is not documented, but very simple.
->> 
->> Tested (on top of wireless.git and on 3.16.1) against a Cisco Aironet
->> 1142 joined to a Cisco 2504 WLC, by setting various transmit power
->> levels for the given access points and observing the results.
->> The Wireshark 802.11 dissector agrees with the interpretation of the
->> element, except for negative numbers, which seem to never happen
->> anyway.
-> Applied both.
+On Wed, Sep 03, 2014 at 02:00:36PM +0200, Johannes Berg wrote:
+> I think for some vendors shipping our stack this might become
+> problematic. I think it would make sense to have a Kconfig option for
+> this, probably hidden away under "if EXPERT" and defaulting to yes, to
+> enable this code, it might be something that interferes with more CCX
+> implementations maybe?
 
-I found what I believe is an edge case: What happens if the element suddenly
-goes away from one beacon to another? Shouldn't there be a reset of the power
-level and then a new call to __ieee80211_recalc_txpower()?
+Are there any CCX implementations for Linux at this time? Could you even do
+that from just userspace? (I sort of doubt it, but it's never easy to know
+what illustrious userspace programmers can do :-) )
 
-(If so, I believe this bug was already present in the code before my first
-patch, as I understand the existing logic.)
+I can make a config option, but it seems a bit odd, maybe. Are you thinking
+there would be problems since this is an undocumented protocol, or because of
+the possible conflict?
+
+>> +static bool ieee80211_find_cisco_dtpc(struct ieee80211_sub_if_data
+>> *sdata,
+> The return value is useless here, so it could be void?
+
+It is useless indeed; I kept it this way for symmetry with the other _find_
+function and because it makes for slightly easier code around (you can set
+has_cisco_pwr = directly without needing an additional statement to make it
+true). But I've changed it so it's void.
+
+I could also change it to use a return instead of an output parameter for
+pwr_level_cisco if you want, but I think it might become a bit confusing to
+have two so similar functions with different calling style.
+
+>> +                       if (pos[0] != 0x00 || pos[1] != 0x40 ||
+>> +                           pos[2] != 0x96 || pos[3] != 0x00) {
+>> +                               break;
+>> +                       }
+> Please remove those useless braces - maybe run ./scripts/checkpatch.pl?
+
+Removed. But I've already run checkpatch and it didn't complain about this
+(the patch set is checkpatch-clean).
+
+I'm in a hotel room in Seattle right now whose Wi-Fi is not Cisco-based,
+so I can't test the new version as thoroughly as I'd like, but I'll at least
+give it a boot test and then send an updated patch series as reply to this
+message.
 
 /* Steinar */
 -- 
