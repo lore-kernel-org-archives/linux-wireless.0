@@ -1,57 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:38424 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755322AbaIPUAL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Sep 2014 16:00:11 -0400
-Date: Tue, 16 Sep 2014 15:59:11 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH v2] net: rfkill: gpio: Enable module auto-loading for
- ACPI based switches
-Message-ID: <20140916195911.GC3622@tuxdriver.com> (sfid-20140916_220041_437944_E9E8574B)
-References: <1410551368-37316-1-git-send-email-marcel@holtmann.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1410551368-37316-1-git-send-email-marcel@holtmann.org>
+Received: from s3.sipsolutions.net ([5.9.151.49]:32855 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755478AbaICMer (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Sep 2014 08:34:47 -0400
+Message-ID: <1409747676.911.16.camel@jlt4.sipsolutions.net> (sfid-20140903_150113_808968_121B45F2)
+Subject: Re: [Patch]mac80211: Add support for mesh proxy path dump
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Henning Rogge <hrogge@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+Date: Wed, 03 Sep 2014 14:34:36 +0200
+In-Reply-To: <CAGnRvur4g03Ut1fiMybUy=zdA=ponAMQKbd-vc_i1RaQsThJhQ@mail.gmail.com> (sfid-20140903_143300_916190_ADFBF766)
+References: <2937689.hWkxdbjQ3v@rogge-hp-probook-6470b>
+	 <1409745133.911.7.camel@jlt4.sipsolutions.net>
+	 <CAGnRvurXEzkekvYA2bLnObNMpxytH0G1tgXnF5c=90wBCoWmRA@mail.gmail.com>
+	 <1409747141.911.15.camel@jlt4.sipsolutions.net>
+	 <CAGnRvur4g03Ut1fiMybUy=zdA=ponAMQKbd-vc_i1RaQsThJhQ@mail.gmail.com>
+	 (sfid-20140903_143300_916190_ADFBF766)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm merging this to the wireless tree...
+On Wed, 2014-09-03 at 14:32 +0200, Henning Rogge wrote:
 
-On Fri, Sep 12, 2014 at 09:49:28PM +0200, Marcel Holtmann wrote:
-> For the ACPI based switches the MODULE_DEVICE_TABLE is missing to
-> export the entries for module auto-loading.
+> > No need, I just wasn't sure it really needed the same data so figured
+> > I'd ask.
 > 
-> Signed-off-by: Marcel Holtmann <marcel@holtmann.org>
-> ---
-> net/rfkill/rfkill-gpio.c | 1 +
-> 1 file changed, 1 insertion(+)
-> 
-> diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
-> index 02a86a27fd84..5fa54dd78e25 100644
-> --- a/net/rfkill/rfkill-gpio.c
-> +++ b/net/rfkill/rfkill-gpio.c
-> @@ -163,6 +163,7 @@ static const struct acpi_device_id rfkill_acpi_match[] = {
->  	{ "LNV4752", RFKILL_TYPE_GPS },
->  	{ },
-> };
-> +MODULE_DEVICE_TABLE(acpi, rfkill_acpi_match);
-> #endif
-> 
-> static struct platform_driver rfkill_gpio_driver = {
-> -- 
-> 1.9.3
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
+> At the moment I don't use much of the mpath_info field... but I think
+> the mpp operations will always use a subset of the mpath fields, so we
+> can reuse the nl80211 encoding function by reusing the struct. If this
+> changes it would be trivial to switch to a different struct, because
+> its not visible from userspace.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Makes sense I guess. Thanks for the explanation.
+
+johannes
+
