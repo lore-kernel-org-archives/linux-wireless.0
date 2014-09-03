@@ -1,57 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f43.google.com ([209.85.215.43]:49679 "EHLO
-	mail-la0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754119AbaIVWuJ (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:53732 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752994AbaICHzR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Sep 2014 18:50:09 -0400
-From: Emil Goode <emilgoode@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	Daniel Kim <dekim@broadcom.com>
-Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	kernel-janitors@vger.kernel.org, Emil Goode <emilgoode@gmail.com>
-Subject: [PATCH v2] brcmfmac: Fix off by one bug in brcmf_count_20mhz_channels()
-Date: Tue, 23 Sep 2014 00:49:55 +0200
-Message-Id: <1411426195-13467-1-git-send-email-emilgoode@gmail.com> (sfid-20140923_005055_766609_DD445F21)
+	Wed, 3 Sep 2014 03:55:17 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH 0/5] ath9k patches
+Date: Wed,  3 Sep 2014 13:25:24 +0530
+Message-Id: <1409730929-30208-1-git-send-email-sujith@msujith.org> (sfid-20140903_095522_252916_380291C2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In the brcmf_count_20mhz_channels function we are looping through a list
-of channels received from firmware. Since the index of the first channel
-is 0 the condition leads to an off by one bug. This is causing us to hit
-the WARN_ON_ONCE(1) calls in the brcmu_d11n_decchspec function, which is
-how I discovered the bug.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Introduced by:
-commit b48d891676f756d48b4d0ee131e4a7a5d43ca417
-("brcmfmac: rework wiphy structure setup")
+Various fixes for MCC.
 
-Acked-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Emil Goode <emilgoode@gmail.com>
----
-v2: Added Arends "Acked-by" tag.
+Sujith Manoharan (5):
+  ath9k: Fix RX filter calculation
+  ath9k: Fix ath_startrecv()
+  ath9k: Fix COMP_BAR filter
+  ath9k: Fix RX filters in channel contexts
+  ath9k: Fix interface accounting
 
- drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h  |  7 ++++---
+ drivers/net/wireless/ath/ath9k/beacon.c |  2 +-
+ drivers/net/wireless/ath/ath9k/debug.c  |  2 +-
+ drivers/net/wireless/ath/ath9k/main.c   | 20 +++++++++-----------
+ drivers/net/wireless/ath/ath9k/recv.c   | 31 +++++++++++++++++++------------
+ drivers/net/wireless/ath/ath9k/tx99.c   |  2 +-
+ drivers/net/wireless/ath/ath9k/wow.c    |  2 +-
+ 7 files changed, 36 insertions(+), 30 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index 12a60ca..0517687 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -4924,7 +4924,7 @@ static void brcmf_count_20mhz_channels(struct brcmf_cfg80211_info *cfg,
- 	struct brcmu_chan ch;
- 	int i;
- 
--	for (i = 0; i <= total; i++) {
-+	for (i = 0; i < total; i++) {
- 		ch.chspec = (u16)le32_to_cpu(chlist->element[i]);
- 		cfg->d11inf.decchspec(&ch);
- 
 -- 
 2.1.0
 
