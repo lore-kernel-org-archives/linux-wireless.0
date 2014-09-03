@@ -1,39 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.19]:58140 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751666AbaIISI7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Sep 2014 14:08:59 -0400
-From: =?UTF-8?q?Toralf=20F=C3=B6rster?= <toralf.foerster@gmx.de>
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:44424 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756135AbaICT5N (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Sep 2014 15:57:13 -0400
+Received: by mail-wg0-f44.google.com with SMTP id m15so9030484wgh.15
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Sep 2014 12:57:12 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: =?UTF-8?q?Toralf=20F=C3=B6rster?= <toralf.foerster@gmx.de>
-Subject: [PATCH] iwlwifi/iwl-drv.c: fix typo defualt -> default
-Date: Tue,  9 Sep 2014 20:08:53 +0200
-Message-Id: <1410286133-14817-1-git-send-email-toralf.foerster@gmx.de> (sfid-20140909_200905_817760_E7CD7819)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Cc: Luciano Coelho <luciano.coelho@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 29/36] iwlwifi: mvm: set the TX disable bit when doing a chanctx switch
+Date: Wed,  3 Sep 2014 22:56:17 +0300
+Message-Id: <1409774184-24665-29-git-send-email-egrumbach@gmail.com> (sfid-20140903_220114_982285_D4837DAF)
+In-Reply-To: <540771E5.6080908@gmail.com>
+References: <540771E5.6080908@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-trivial, but this is user visible b/c it is in the help text
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-Signed-off-by: Toralf Förster <toralf.foerster@gmx.de>
+During a channel switch we should tell the firmware to disable TX
+temporarily and re-enable it after the switch is done.
+
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-drv.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-drv.c b/drivers/net/wireless/iwlwifi/iwl-drv.c
-index 77e3178..8019939 100644
---- a/drivers/net/wireless/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-drv.c
-@@ -1359,7 +1359,7 @@ MODULE_PARM_DESC(fw_restart, "restart firmware in case of error (default true)")
- module_param_named(antenna_coupling, iwlwifi_mod_params.ant_coupling,
- 		   int, S_IRUGO);
- MODULE_PARM_DESC(antenna_coupling,
--		 "specify antenna coupling in dB (defualt: 0 dB)");
-+		 "specify antenna coupling in dB (default: 0 dB)");
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index cbe9ff0..3bbeedf 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -2748,6 +2748,19 @@ static int __iwl_mvm_assign_vif_chanctx(struct iwl_mvm *mvm,
+ 		iwl_mvm_mac_ctxt_changed(mvm, vif, false);
+ 	}
  
- module_param_named(wd_disable, iwlwifi_mod_params.wd_disable, int, S_IRUGO);
- MODULE_PARM_DESC(wd_disable,
++	if (vif->csa_active && vif->type == NL80211_IFTYPE_STATION) {
++		struct iwl_mvm_sta *mvmsta;
++
++		mvmsta = iwl_mvm_sta_from_staid_protected(mvm,
++							  mvmvif->ap_sta_id);
++
++		if (WARN_ON(!mvmsta))
++			goto out;
++
++		/* TODO: only re-enable after the first beacon */
++		iwl_mvm_sta_modify_disable_tx(mvm, mvmsta, false);
++	}
++
+ 	goto out;
+ 
+ out_remove_binding:
+@@ -2779,6 +2792,7 @@ static void __iwl_mvm_unassign_vif_chanctx(struct iwl_mvm *mvm,
+ {
+ 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
+ 	struct ieee80211_vif *disabled_vif = NULL;
++	struct iwl_mvm_sta *mvmsta;
+ 
+ 	lockdep_assert_held(&mvm->mutex);
+ 
+@@ -2810,6 +2824,12 @@ static void __iwl_mvm_unassign_vif_chanctx(struct iwl_mvm *mvm,
+ 
+ 		disabled_vif = vif;
+ 
++		mvmsta = iwl_mvm_sta_from_staid_protected(mvm,
++							  mvmvif->ap_sta_id);
++
++		if (!WARN_ON(!mvmsta))
++			iwl_mvm_sta_modify_disable_tx(mvm, mvmsta, true);
++
+ 		iwl_mvm_mac_ctxt_changed(mvm, vif, true);
+ 		break;
+ 	default:
 -- 
-2.1.0
+1.9.1
 
