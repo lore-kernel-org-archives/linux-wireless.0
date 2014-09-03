@@ -1,55 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:13048 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752423AbaINHcl (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:42760 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752994AbaICHzT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Sep 2014 03:32:41 -0400
-Message-ID: <54154496.3070809@broadcom.com> (sfid-20140914_093321_708089_29B490B4)
-Date: Sun, 14 Sep 2014 09:32:38 +0200
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Fabian Frederick <fabf@skynet.be>
-CC: <linux-kernel@vger.kernel.org>, <davem@davemloft.net>,
-	<netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-	<brcm80211-dev-list@broadcom.com>
-Subject: Re: [PATCH 0/4 linux-next] drivers/net: use container_of where possible
-References: <1410640709-18295-1-git-send-email-fabf@skynet.be>
-In-Reply-To: <1410640709-18295-1-git-send-email-fabf@skynet.be>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Wed, 3 Sep 2014 03:55:19 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH 1/5] ath9k: Fix RX filter calculation
+Date: Wed,  3 Sep 2014 13:25:25 +0530
+Message-Id: <1409730929-30208-2-git-send-email-sujith@msujith.org> (sfid-20140903_095534_235351_9388B8B9)
+In-Reply-To: <1409730929-30208-1-git-send-email-sujith@msujith.org>
+References: <1409730929-30208-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/13/14 22:38, Fabian Frederick wrote:
-> Small patchset using container_of instead of casting on first structure member address.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Hi Fabian,
+If multiple channel contexts are active, then the opmode
+can be different in each context. Since the RX filter is
+calculated in ath_startrecv() before switching to the
+new opmode, the wrong filters are chosen.
 
-I think you need to split up this series. One for the ethernet drivers 
-and one for the wireless driver. As there is not dependency between the 
-patches they can each go through their own subsystem git tree. Generally 
-I tend to submit patches to the subsystem maintainer and Cc the 
-appropriate mailing lists.
+Fix this by calling ath9k_calculate_summary_state() before
+the RX module is started.
 
-Regarding the patches for brcmsmac, you can add
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Acked-by: Arend van Spriel <arend@broadcom.com>
-
-Regards,
-Arend
-
-> Fabian Frederick (4):
->    net: fec: use container_of to resolve bufdesc_ex from bufdesc
->    bna: use container_of to resolve bufdesc_ex from bufdesc
->    brcm80211: use container_of to resolve brcms_phy from brcms_phy_pub
->    brcm80211: use container_of to resolve dma_info from dma_pub
->
->   drivers/net/ethernet/brocade/bna/bna_enet.c        |   9 +-
->   drivers/net/ethernet/brocade/bna/bna_tx_rx.c       |   4 +-
->   drivers/net/ethernet/freescale/fec_main.c          |   4 +-
->   drivers/net/wireless/brcm80211/brcmsmac/dma.c      |  38 +++----
->   .../net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c  | 122 ++++++++++-----------
->   .../net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c  |   6 +-
->   .../net/wireless/brcm80211/brcmsmac/phy/phy_n.c    |   8 +-
->   7 files changed, 97 insertions(+), 94 deletions(-)
->
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 2333776..5d9f4d7 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -224,6 +224,8 @@ static bool ath_complete_reset(struct ath_softc *sc, bool start)
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	unsigned long flags;
+ 
++	ath9k_calculate_summary_state(sc, sc->cur_chan);
++
+ 	if (ath_startrecv(sc) != 0) {
+ 		ath_err(common, "Unable to restart recv logic\n");
+ 		return false;
+@@ -233,7 +235,6 @@ static bool ath_complete_reset(struct ath_softc *sc, bool start)
+ 			       sc->cur_chan->txpower, &sc->curtxpow);
+ 
+ 	clear_bit(ATH_OP_HW_RESET, &common->op_flags);
+-	ath9k_calculate_summary_state(sc, sc->cur_chan);
+ 
+ 	if (!sc->cur_chan->offchannel && start) {
+ 		/* restore per chanctx TSF timer */
+-- 
+2.1.0
 
