@@ -1,120 +1,373 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:30693 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754017AbaIVR2z (ORCPT
+Received: from mail-we0-f172.google.com ([74.125.82.172]:47214 "EHLO
+	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753991AbaICT5H (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Sep 2014 13:28:55 -0400
-Message-ID: <54205C54.2000309@broadcom.com> (sfid-20140922_192857_979457_F1513989)
-Date: Mon, 22 Sep 2014 19:28:52 +0200
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Bruno De Paoli <bruno.depaoli@bluetreesystems.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: WL1271 SDIO timeouts after device reset
-References: <2781c4a7695f4e358ca736d4d424249c@AM3PR02MB0568.eurprd02.prod.outlook.com>
-In-Reply-To: <2781c4a7695f4e358ca736d4d424249c@AM3PR02MB0568.eurprd02.prod.outlook.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Wed, 3 Sep 2014 15:57:07 -0400
+Received: by mail-we0-f172.google.com with SMTP id q59so9134150wes.17
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Sep 2014 12:57:06 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 25/36] iwlwifi: trans: allow skipping scheduler hardware config
+Date: Wed,  3 Sep 2014 22:56:13 +0300
+Message-Id: <1409774184-24665-25-git-send-email-egrumbach@gmail.com> (sfid-20140903_220114_044272_A0A3B1B8)
+In-Reply-To: <540771E5.6080908@gmail.com>
+References: <540771E5.6080908@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/22/14 17:19, Bruno De Paoli wrote:
-> Hi,
->
-> We have a custom iMX53 based platform running Android Gingerbread, Linux kernel 2.6.35 with a TiWi-BLE Wlan/Bluetooth device using the SDIO interface for WLAN. This uses a TI WL1271 WLAN device. We are using a Freescale BSP and the Wl12xx NLCP driver from the TI website.
-> I'm using a specific function for power on/off operations as opposed to using a fixed voltage regulator. This sets and clears the WL_EN signal on the device.
->
-> I get the following problem when I try and bring up the interface, either through the Android GUI or manually (as shown below) - I get timeouts on the SDIO interface.
+From: Johannes Berg <johannes.berg@intel.com>
 
-I think the problem is that the MMC stack is totally unaware of what is 
-happening when you toggle the WL_EN line. So unless the device reset 
-results in card detect interrupt, you are lost.
+In a later patch, the hardware configuration will be moved to
+firmware. Prepare for this by allowing hardware configuration
+in the transport to be skipped by not passing a configuration
+on enable and passing configure_scd=false on disable.
 
-Regards,
-Arend
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/dvm/tx.c        |  6 +-
+ drivers/net/wireless/iwlwifi/iwl-trans.h     | 47 +++++++++----
+ drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c  |  8 ++-
+ drivers/net/wireless/iwlwifi/mvm/sta.c       |  4 +-
+ drivers/net/wireless/iwlwifi/mvm/tx.c        |  2 +-
+ drivers/net/wireless/iwlwifi/pcie/internal.h |  3 +-
+ drivers/net/wireless/iwlwifi/pcie/tx.c       | 99 ++++++++++++++++------------
+ 7 files changed, 104 insertions(+), 65 deletions(-)
 
-> # insmod /system/etc/wifi/wl12xx_sdio.ko
-> wl1271_init
-> wl12xx: loaded
-> # ifconfig wlan0 up
->
-> ------------[ cut here ]------------
-> WARNING: at /home/wlan/compat-wireless/drivers/net/wireless/wl12xx/sdio.c:126 wl12xx_sdio_raw_write+0xac/0xe8 [wl12xx_sdio]()
-> Modules linked in: wl12xx_sdio wl12xx mac80211 cfg80211 compat
-> [<8003e578>] (unwind_backtrace+0x0/0xf0) from [<80068e78>] (warn_slowpath_common+0x4c/0x64)
-> [<80068e78>] (warn_slowpath_common+0x4c/0x64) from [<80068ea8>] (warn_slowpath_null+0x18/0x1c)
-> [<80068ea8>] (warn_slowpath_null+0x18/0x1c) from [<7f0e0264>] (wl12xx_sdio_raw_write+0xac/0xe8 [wl12xx_sdio])
-> [<7f0e0264>] (wl12xx_sdio_raw_write+0xac/0xe8 [wl12xx_sdio]) from [<7f0aecb4>] (wl1271_set_partition+0xe8/0x3dc [wl12xx])
-> [<7f0aecb4>] (wl1271_set_partition+0xe8/0x3dc [wl12xx]) from [<7f0a678c>] (wl12xx_set_power_on+0x70/0x138 [wl12xx])
-> [<7f0a678c>] (wl12xx_set_power_on+0x70/0x138 [wl12xx]) from [<7f0a999c>] (wl12xx_chip_wakeup+0x10/0x2b8 [wl12xx])
-> [<7f0a999c>] (wl12xx_chip_wakeup+0x10/0x2b8 [wl12xx]) from [<7f0a9f5c>] (wl1271_op_add_interface+0x318/0x574 [wl12xx])
-> [<7f0a9f5c>] (wl1271_op_add_interface+0x318/0x574 [wl12xx]) from [<7f0581c8>] (ieee80211_do_open+0x2e0/0x6c0 [mac80211])
-> [<7f0581c8>] (ieee80211_do_open+0x2e0/0x6c0 [mac80211]) from [<80371bb8>] (__dev_open+0xa0/0xf0)
-> [<80371bb8>] (__dev_open+0xa0/0xf0) from [<8036f4f8>] (__dev_change_flags+0x8c/0x110)
-> [<8036f4f8>] (__dev_change_flags+0x8c/0x110) from [<80371ae4>] (dev_change_flags+0x10/0x44)
-> [<80371ae4>] (dev_change_flags+0x10/0x44) from [<803c793c>] (devinet_ioctl+0x3ac/0x77c)
-> [<803c793c>] (devinet_ioctl+0x3ac/0x77c) from [<80361058>] (sock_ioctl+0x1f4/0x244)
-> [<80361058>] (sock_ioctl+0x1f4/0x244) from [<800da3f0>] (vfs_ioctl+0x2c/0xac)
-> [<800da3f0>] (vfs_ioctl+0x2c/0xac) from [<800daaa4>] (do_vfs_ioctl+0x540/0x5a0)
-> [<800daaa4>] (do_vfs_ioctl+0x540/0x5a0) from [<800dab50>] (sys_ioctl+0x4c/0x6c)
-> [<800dab50>] (sys_ioctl+0x4c/0x6c) from [<80039f80>] (ret_fast_syscall+0x0/0x30)
-> ---[ end trace d11e244f1c07d7cf ]---
-> wl1271_sdio mmc1:0001:2: sdio write failed (-110)
-> ------------[ cut here ]------------
-> WARNING: at /home/wlan/compat-wireless/drivers/net/wireless/wl12xx/sdio.c:126 wl12xx_sdio_raw_write+0xac/0xe8 [wl12xx_sdio]()
-> Modules linked in: wl12xx_sdio wl12xx mac80211 cfg80211 compat
-> [<8003e578>] (unwind_backtrace+0x0/0xf0) from [<80068e78>] (warn_slowpath_common+0x4c/0x64)
-> [<80068e78>] (warn_slowpath_common+0x4c/0x64) from [<80068ea8>] (warn_slowpath_null+0x18/0x1c)
-> [<80068ea8>] (warn_slowpath_null+0x18/0x1c) from [<7f0e0264>] (wl12xx_sdio_raw_write+0xac/0xe8 [wl12xx_sdio])
-> [<7f0e0264>] (wl12xx_sdio_raw_write+0xac/0xe8 [wl12xx_sdio]) from [<7f0aecb4>] (wl1271_set_partition+0xe8/0x3dc [wl12xx])
-> [<7f0aecb4>] (wl1271_set_partition+0xe8/0x3dc [wl12xx]) from [<7f0a678c>] (wl12xx_set_power_on+0x70/0x138 [wl12xx])
-> [<7f0a678c>] (wl12xx_set_power_on+0x70/0x138 [wl12xx]) from [<7f0a999c>] (wl12xx_chip_wakeup+0x10/0x2b8 [wl12xx])
-> [<7f0a999c>] (wl12xx_chip_wakeup+0x10/0x2b8 [wl12xx]) from [<7f0a9f5c>] (wl1271_op_add_interface+0x318/0x574 [wl12xx])
-> [<7f0a9f5c>] (wl1271_op_add_interface+0x318/0x574 [wl12xx]) from [<7f0581c8>] (ieee80211_do_open+0x2e0/0x6c0 [mac80211])
-> [<7f0581c8>] (ieee80211_do_open+0x2e0/0x6c0 [mac80211]) from [<80371bb8>] (__dev_open+0xa0/0xf0)
-> [<80371bb8>] (__dev_open+0xa0/0xf0) from [<8036f4f8>] (__dev_change_flags+0x8c/0x110)
-> [<8036f4f8>] (__dev_change_flags+0x8c/0x110) from [<80371ae4>] (dev_change_flags+0x10/0x44)
-> [<80371ae4>] (dev_change_flags+0x10/0x44) from [<803c793c>] (devinet_ioctl+0x3ac/0x77c)
-> [<803c793c>] (devinet_ioctl+0x3ac/0x77c) from [<80361058>] (sock_ioctl+0x1f4/0x244)
-> [<80361058>] (sock_ioctl+0x1f4/0x244) from [<800da3f0>] (vfs_ioctl+0x2c/0xac)
-> [<800da3f0>] (vfs_ioctl+0x2c/0xac) from [<800daaa4>] (do_vfs_ioctl+0x540/0x5a0)
-> [<800daaa4>] (do_vfs_ioctl+0x540/0x5a0) from [<800dab50>] (sys_ioctl+0x4c/0x6c)
-> [<800dab50>] (sys_ioctl+0x4c/0x6c) from [<80039f80>] (ret_fast_syscall+0x0/0x30)
-> ---[ end trace d11e244f1c07d7d0 ]---
-> wl1271_sdio mmc1:0001:2: sdio write failed (-110)
-> ------------[ cut here ]------------
-> WARNING: at /home/wlan/compat-wireless/drivers/net/wireless/wl12xx/sdio.c:126 wl12xx_sdio_raw_write+0xac/0xe8 [wl12xx_sdio]()
-> Modules linked in: wl12xx_sdio wl12xx mac80211 cfg80211 compat
-> [<8003e578>] (unwind_backtrace+0x0/0xf0) from [<80068e78>] (warn_slowpath_common+0x4c/0x64)
-> [<80068e78>] (warn_slowpath_common+0x4c/0x64) from [<80068ea8>] (warn_slowpath_null+0x18/0x1c)
-> [<80068ea8>] (warn_slowpath_null+0x18/0x1c) from [<7f0e0264>] (wl12xx_sdio_raw_write+0xac/0xe8 [wl12xx_sdio])
-> [<7f0e0264>] (wl12xx_sdio_raw_write+0xac/0xe8 [wl12xx_sdio]) from [<7f0aecb4>] (wl1271_set_partition+0xe8/0x3dc [wl12xx])
-> [<7f0aecb4>] (wl1271_set_partition+0xe8/0x3dc [wl12xx]) from [<7f0a678c>] (wl12xx_set_power_on+0x70/0x138 [wl12xx])
-> [<7f0a678c>] (wl12xx_set_power_on+0x70/0x138 [wl12xx]) from [<7f0a999c>] (wl12xx_chip_wakeup+0x10/0x2b8 [wl12xx])
-> [<7f0a999c>] (wl12xx_chip_wakeup+0x10/0x2b8 [wl12xx]) from [<7f0a9f5c>] (wl1271_op_add_interface+0x318/0x574 [wl12xx])
-> [<7f0a9f5c>] (wl1271_op_add_interface+0x318/0x574 [wl12xx]) from [<7f0581c8>] (ieee80211_do_open+0x2e0/0x6c0 [mac80211])
-> [<7f0581c8>] (ieee80211_do_open+0x2e0/0x6c0 [mac80211]) from [<80371bb8>] (__dev_open+0xa0/0xf0)
-> [<80371bb8>] (__dev_open+0xa0/0xf0) from [<8036f4f8>] (__dev_change_flags+0x8c/0x110)
-> [<8036f4f8>] (__dev_change_flags+0x8c/0x110) from [<80371ae4>] (dev_change_flags+0x10/0x44)
-> [<80371ae4>] (dev_change_flags+0x10/0x44) from [<803c793c>] (devinet_ioctl+0x3ac/0x77c)
-> [<803c793c>] (devinet_ioctl+0x3ac/0x77c) from [<80361058>] (sock_ioctl+0x1f4/0x244)
-> [<80361058>] (sock_ioctl+0x1f4/0x244) from [<800da3f0>] (vfs_ioctl+0x2c/0xac)
-> [<800da3f0>] (vfs_ioctl+0x2c/0xac) from [<800daaa4>] (do_vfs_ioctl+0x540/0x5a0)
-> [<800daaa4>] (do_vfs_ioctl+0x540/0x5a0) from [<800dab50>] (sys_ioctl+0x4c/0x6c)
-> [<800dab50>] (sys_ioctl+0x4c/0x6c) from [<80039f80>] (ret_fast_syscall+0x0/0x30)
-> ---[ end trace d11e244f1c07d7d1 ]---
-> wl1271_sdio mmc1:0001:2: sdio write failed (-110)
-> wl12xx: ERROR firmware boot failed despite 3 retries
-> error: SIOCSIFFLAGS (Invalid argument)
->
-> I removed the manipulation of the WL_EN signal in the power control function and the WL_EN was simply set at the beginning. The interface came up correctly the first time. When the WL_EN power manipulation is put back we get the problem shown above. It looks like this is caused by a second reset of the device due to WL_EN toggling that occurs when the interface is enabled/disabled. It appears that after this reset the WL1271 device is not in a correct state, the WL_EN signal is low (off) or the SDIO interface not in the correct state. I've verified that the WL_EN signal is high (on) when the interface is turned on so I don't think this is the issue.
->
-> Can anyone suggest what could be happening due to the second reset or a way to debug the problem further?
->
-> Thanks,
-> Bruno
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/net/wireless/iwlwifi/dvm/tx.c b/drivers/net/wireless/iwlwifi/dvm/tx.c
+index 3255a17..d1ce3ce 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/tx.c
++++ b/drivers/net/wireless/iwlwifi/dvm/tx.c
+@@ -580,7 +580,7 @@ turn_off:
+ 		 * time, or we hadn't time to drain the AC queues.
+ 		 */
+ 		if (agg_state == IWL_AGG_ON)
+-			iwl_trans_txq_disable(priv->trans, txq_id);
++			iwl_trans_txq_disable(priv->trans, txq_id, true);
+ 		else
+ 			IWL_DEBUG_TX_QUEUES(priv, "Don't disable tx agg: %d\n",
+ 					    agg_state);
+@@ -686,7 +686,7 @@ int iwlagn_tx_agg_flush(struct iwl_priv *priv, struct ieee80211_vif *vif,
+ 		 * time, or we hadn't time to drain the AC queues.
+ 		 */
+ 		if (agg_state == IWL_AGG_ON)
+-			iwl_trans_txq_disable(priv->trans, txq_id);
++			iwl_trans_txq_disable(priv->trans, txq_id, true);
+ 		else
+ 			IWL_DEBUG_TX_QUEUES(priv, "Don't disable tx agg: %d\n",
+ 					    agg_state);
+@@ -781,7 +781,7 @@ static void iwlagn_check_ratid_empty(struct iwl_priv *priv, int sta_id, u8 tid)
+ 				"Can continue DELBA flow ssn = next_recl = %d\n",
+ 				tid_data->next_reclaimed);
+ 			iwl_trans_txq_disable(priv->trans,
+-					      tid_data->agg.txq_id);
++					      tid_data->agg.txq_id, true);
+ 			iwlagn_dealloc_agg_txq(priv, tid_data->agg.txq_id);
+ 			tid_data->agg.state = IWL_AGG_OFF;
+ 			ieee80211_stop_tx_ba_cb_irqsafe(vif, addr, tid);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
+index c198dde..dd3aefc 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
+@@ -444,7 +444,9 @@ struct iwl_trans_txq_scd_cfg {
+  *	Must be atomic
+  * @txq_enable: setup a queue. To setup an AC queue, use the
+  *	iwl_trans_ac_txq_enable wrapper. fw_alive must have been called before
+- *	this one. The op_mode must not configure the HCMD queue. May sleep.
++ *	this one. The op_mode must not configure the HCMD queue. The scheduler
++ *	configuration may be %NULL, in which case the hardware will not be
++ *	configured. May sleep.
+  * @txq_disable: de-configure a Tx queue to send AMPDUs
+  *	Must be atomic
+  * @wait_tx_queue_empty: wait until tx queues are empty. May sleep.
+@@ -501,7 +503,8 @@ struct iwl_trans_ops {
+ 
+ 	void (*txq_enable)(struct iwl_trans *trans, int queue, u16 ssn,
+ 			   const struct iwl_trans_txq_scd_cfg *cfg);
+-	void (*txq_disable)(struct iwl_trans *trans, int queue);
++	void (*txq_disable)(struct iwl_trans *trans, int queue,
++			    bool configure_scd);
+ 
+ 	int (*dbgfs_register)(struct iwl_trans *trans, struct dentry* dir);
+ 	int (*wait_tx_queue_empty)(struct iwl_trans *trans, u32 txq_bm);
+@@ -773,9 +776,22 @@ static inline void iwl_trans_reclaim(struct iwl_trans *trans, int queue,
+ 	trans->ops->reclaim(trans, queue, ssn, skbs);
+ }
+ 
+-static inline void iwl_trans_txq_disable(struct iwl_trans *trans, int queue)
++static inline void iwl_trans_txq_disable(struct iwl_trans *trans, int queue,
++					 bool configure_scd)
+ {
+-	trans->ops->txq_disable(trans, queue);
++	trans->ops->txq_disable(trans, queue, configure_scd);
++}
++
++static inline void
++iwl_trans_txq_enable_cfg(struct iwl_trans *trans, int queue, u16 ssn,
++			 const struct iwl_trans_txq_scd_cfg *cfg)
++{
++	might_sleep();
++
++	if (unlikely((trans->state != IWL_TRANS_FW_ALIVE)))
++		IWL_ERR(trans, "%s bad state = %d\n", __func__, trans->state);
++
++	trans->ops->txq_enable(trans, queue, ssn, cfg);
+ }
+ 
+ static inline void iwl_trans_txq_enable(struct iwl_trans *trans, int queue,
+@@ -789,19 +805,26 @@ static inline void iwl_trans_txq_enable(struct iwl_trans *trans, int queue,
+ 		.frame_limit = frame_limit,
+ 	};
+ 
+-	might_sleep();
+-
+-	if (unlikely((trans->state != IWL_TRANS_FW_ALIVE)))
+-		IWL_ERR(trans, "%s bad state = %d\n", __func__, trans->state);
+-
+-	trans->ops->txq_enable(trans, queue, ssn, &cfg);
++	iwl_trans_txq_enable_cfg(trans, queue, ssn, &cfg);
+ }
+ 
+ static inline void iwl_trans_ac_txq_enable(struct iwl_trans *trans, int queue,
+ 					   int fifo)
+ {
+-	iwl_trans_txq_enable(trans, queue, fifo, -1,
+-			     IWL_MAX_TID_COUNT, IWL_FRAME_LIMIT, 0);
++	struct iwl_trans_txq_scd_cfg cfg = {
++		.fifo = fifo,
++		.sta_id = -1,
++		.tid = IWL_MAX_TID_COUNT,
++		.frame_limit = IWL_FRAME_LIMIT,
++	};
++
++	iwl_trans_txq_enable_cfg(trans, queue, 0, &cfg);
++}
++
++static inline void
++iwl_trans_txq_enable_no_scd(struct iwl_trans *trans, int queue, u16 ssn)
++{
++	iwl_trans_txq_enable_cfg(trans, queue, ssn, NULL);
+ }
+ 
+ static inline int iwl_trans_wait_tx_queue_empty(struct iwl_trans *trans,
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
+index 0e523e2..0816204 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
+@@ -452,14 +452,16 @@ void iwl_mvm_mac_ctxt_release(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ 
+ 	switch (vif->type) {
+ 	case NL80211_IFTYPE_P2P_DEVICE:
+-		iwl_trans_txq_disable(mvm->trans, IWL_MVM_OFFCHANNEL_QUEUE);
++		iwl_trans_txq_disable(mvm->trans, IWL_MVM_OFFCHANNEL_QUEUE,
++				      true);
+ 		break;
+ 	case NL80211_IFTYPE_AP:
+-		iwl_trans_txq_disable(mvm->trans, vif->cab_queue);
++		iwl_trans_txq_disable(mvm->trans, vif->cab_queue, true);
+ 		/* fall through */
+ 	default:
+ 		for (ac = 0; ac < IEEE80211_NUM_ACS; ac++)
+-			iwl_trans_txq_disable(mvm->trans, vif->hw_queue[ac]);
++			iwl_trans_txq_disable(mvm->trans, vif->hw_queue[ac],
++					      true);
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/iwlwifi/mvm/sta.c b/drivers/net/wireless/iwlwifi/mvm/sta.c
+index 7635488..863a536 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/iwlwifi/mvm/sta.c
+@@ -910,7 +910,7 @@ int iwl_mvm_sta_tx_agg_stop(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 		}
+ 
+ 		tid_data->ssn = 0xffff;
+-		iwl_trans_txq_disable(mvm->trans, txq_id);
++		iwl_trans_txq_disable(mvm->trans, txq_id, true);
+ 		/* fall through */
+ 	case IWL_AGG_STARTING:
+ 	case IWL_EMPTYING_HW_QUEUE_ADDBA:
+@@ -965,7 +965,7 @@ int iwl_mvm_sta_tx_agg_flush(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 		if (iwl_mvm_flush_tx_path(mvm, BIT(txq_id), true))
+ 			IWL_ERR(mvm, "Couldn't flush the AGG queue\n");
+ 
+-		iwl_trans_txq_disable(mvm->trans, tid_data->txq_id);
++		iwl_trans_txq_disable(mvm->trans, tid_data->txq_id, true);
+ 	}
+ 
+ 	mvm->queue_to_mac80211[tid_data->txq_id] =
+diff --git a/drivers/net/wireless/iwlwifi/mvm/tx.c b/drivers/net/wireless/iwlwifi/mvm/tx.c
+index dbc8707..748b169 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/iwlwifi/mvm/tx.c
+@@ -482,7 +482,7 @@ static void iwl_mvm_check_ratid_empty(struct iwl_mvm *mvm,
+ 		IWL_DEBUG_TX_QUEUES(mvm,
+ 				    "Can continue DELBA flow ssn = next_recl = %d\n",
+ 				    tid_data->next_reclaimed);
+-		iwl_trans_txq_disable(mvm->trans, tid_data->txq_id);
++		iwl_trans_txq_disable(mvm->trans, tid_data->txq_id, true);
+ 		tid_data->state = IWL_AGG_OFF;
+ 		/*
+ 		 * we can't hold the mutex - but since we are after a sequence
+diff --git a/drivers/net/wireless/iwlwifi/pcie/internal.h b/drivers/net/wireless/iwlwifi/pcie/internal.h
+index 5760405..163aac5 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/internal.h
++++ b/drivers/net/wireless/iwlwifi/pcie/internal.h
+@@ -366,7 +366,8 @@ int iwl_pcie_tx_stop(struct iwl_trans *trans);
+ void iwl_pcie_tx_free(struct iwl_trans *trans);
+ void iwl_trans_pcie_txq_enable(struct iwl_trans *trans, int queue, u16 ssn,
+ 			       const struct iwl_trans_txq_scd_cfg *cfg);
+-void iwl_trans_pcie_txq_disable(struct iwl_trans *trans, int queue);
++void iwl_trans_pcie_txq_disable(struct iwl_trans *trans, int queue,
++				bool configure_scd);
+ int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
+ 		      struct iwl_device_cmd *dev_cmd, int txq_id);
+ void iwl_pcie_txq_check_wrptrs(struct iwl_trans *trans);
+diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c b/drivers/net/wireless/iwlwifi/pcie/tx.c
+index 5c95386..eb39e58 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
+@@ -1070,37 +1070,41 @@ void iwl_trans_pcie_txq_enable(struct iwl_trans *trans, int txq_id, u16 ssn,
+ 			       const struct iwl_trans_txq_scd_cfg *cfg)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+-	u8 frame_limit = cfg->frame_limit;
++	int fifo = -1;
+ 
+ 	if (test_and_set_bit(txq_id, trans_pcie->queue_used))
+ 		WARN_ONCE(1, "queue %d already used - expect issues", txq_id);
+ 
+-	/* Stop this Tx queue before configuring it */
+-	iwl_scd_txq_set_inactive(trans, txq_id);
++	if (cfg) {
++		fifo = cfg->fifo;
+ 
+-	/* Set this queue as a chain-building queue unless it is CMD queue */
+-	if (txq_id != trans_pcie->cmd_queue)
+-		iwl_scd_txq_set_chain(trans, txq_id);
++		/* Stop this Tx queue before configuring it */
++		iwl_scd_txq_set_inactive(trans, txq_id);
+ 
+-	/* If this queue is mapped to a certain station: it is an AGG queue */
+-	if (cfg->sta_id >= 0) {
+-		u16 ra_tid = BUILD_RAxTID(cfg->sta_id, cfg->tid);
++		/* Set this queue as a chain-building queue unless it is CMD */
++		if (txq_id != trans_pcie->cmd_queue)
++			iwl_scd_txq_set_chain(trans, txq_id);
+ 
+-		/* Map receiver-address / traffic-ID to this queue */
+-		iwl_pcie_txq_set_ratid_map(trans, ra_tid, txq_id);
++		/* If this queue is mapped to a certain station: it is an AGG */
++		if (cfg->sta_id >= 0) {
++			u16 ra_tid = BUILD_RAxTID(cfg->sta_id, cfg->tid);
+ 
+-		/* enable aggregations for the queue */
+-		iwl_scd_txq_enable_agg(trans, txq_id);
+-		trans_pcie->txq[txq_id].ampdu = true;
+-	} else {
+-		/*
+-		 * disable aggregations for the queue, this will also make the
+-		 * ra_tid mapping configuration irrelevant since it is now a
+-		 * non-AGG queue.
+-		 */
+-		iwl_scd_txq_disable_agg(trans, txq_id);
++			/* Map receiver-address / traffic-ID to this queue */
++			iwl_pcie_txq_set_ratid_map(trans, ra_tid, txq_id);
++
++			/* enable aggregations for the queue */
++			iwl_scd_txq_enable_agg(trans, txq_id);
++			trans_pcie->txq[txq_id].ampdu = true;
++		} else {
++			/*
++			 * disable aggregations for the queue, this will also
++			 * make the ra_tid mapping configuration irrelevant
++			 * since it is now a non-AGG queue.
++			 */
++			iwl_scd_txq_disable_agg(trans, txq_id);
+ 
+-		ssn = trans_pcie->txq[txq_id].q.read_ptr;
++			ssn = trans_pcie->txq[txq_id].q.read_ptr;
++		}
+ 	}
+ 
+ 	/* Place first TFD at index corresponding to start sequence number.
+@@ -1108,32 +1112,39 @@ void iwl_trans_pcie_txq_enable(struct iwl_trans *trans, int txq_id, u16 ssn,
+ 	trans_pcie->txq[txq_id].q.read_ptr = (ssn & 0xff);
+ 	trans_pcie->txq[txq_id].q.write_ptr = (ssn & 0xff);
+ 
+-	iwl_write_direct32(trans, HBUS_TARG_WRPTR,
+-			   (ssn & 0xff) | (txq_id << 8));
+-	iwl_write_prph(trans, SCD_QUEUE_RDPTR(txq_id), ssn);
++	if (cfg) {
++		u8 frame_limit = cfg->frame_limit;
++
++		iwl_write_direct32(trans, HBUS_TARG_WRPTR,
++				   (ssn & 0xff) | (txq_id << 8));
++		iwl_write_prph(trans, SCD_QUEUE_RDPTR(txq_id), ssn);
+ 
+-	/* Set up Tx window size and frame limit for this queue */
+-	iwl_trans_write_mem32(trans, trans_pcie->scd_base_addr +
+-			SCD_CONTEXT_QUEUE_OFFSET(txq_id), 0);
+-	iwl_trans_write_mem32(trans, trans_pcie->scd_base_addr +
++		/* Set up Tx window size and frame limit for this queue */
++		iwl_trans_write_mem32(trans, trans_pcie->scd_base_addr +
++				SCD_CONTEXT_QUEUE_OFFSET(txq_id), 0);
++		iwl_trans_write_mem32(trans,
++			trans_pcie->scd_base_addr +
+ 			SCD_CONTEXT_QUEUE_OFFSET(txq_id) + sizeof(u32),
+ 			((frame_limit << SCD_QUEUE_CTX_REG2_WIN_SIZE_POS) &
+-				SCD_QUEUE_CTX_REG2_WIN_SIZE_MSK) |
++					SCD_QUEUE_CTX_REG2_WIN_SIZE_MSK) |
+ 			((frame_limit << SCD_QUEUE_CTX_REG2_FRAME_LIMIT_POS) &
+-				SCD_QUEUE_CTX_REG2_FRAME_LIMIT_MSK));
+-
+-	/* Set up Status area in SRAM, map to Tx DMA/FIFO, activate the queue */
+-	iwl_write_prph(trans, SCD_QUEUE_STATUS_BITS(txq_id),
+-		       (1 << SCD_QUEUE_STTS_REG_POS_ACTIVE) |
+-		       (cfg->fifo << SCD_QUEUE_STTS_REG_POS_TXF) |
+-		       (1 << SCD_QUEUE_STTS_REG_POS_WSL) |
+-		       SCD_QUEUE_STTS_REG_MSK);
++					SCD_QUEUE_CTX_REG2_FRAME_LIMIT_MSK));
++
++		/* Set up status area in SRAM, map to Tx DMA/FIFO, activate */
++		iwl_write_prph(trans, SCD_QUEUE_STATUS_BITS(txq_id),
++			       (1 << SCD_QUEUE_STTS_REG_POS_ACTIVE) |
++			       (cfg->fifo << SCD_QUEUE_STTS_REG_POS_TXF) |
++			       (1 << SCD_QUEUE_STTS_REG_POS_WSL) |
++			       SCD_QUEUE_STTS_REG_MSK);
++	}
++
+ 	trans_pcie->txq[txq_id].active = true;
+ 	IWL_DEBUG_TX_QUEUES(trans, "Activate queue %d on FIFO %d WrPtr: %d\n",
+-			    txq_id, cfg->fifo, ssn & 0xff);
++			    txq_id, fifo, ssn & 0xff);
+ }
+ 
+-void iwl_trans_pcie_txq_disable(struct iwl_trans *trans, int txq_id)
++void iwl_trans_pcie_txq_disable(struct iwl_trans *trans, int txq_id,
++				bool configure_scd)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	u32 stts_addr = trans_pcie->scd_base_addr +
+@@ -1152,10 +1163,12 @@ void iwl_trans_pcie_txq_disable(struct iwl_trans *trans, int txq_id)
+ 		return;
+ 	}
+ 
+-	iwl_scd_txq_set_inactive(trans, txq_id);
++	if (configure_scd) {
++		iwl_scd_txq_set_inactive(trans, txq_id);
+ 
+-	iwl_trans_write_mem(trans, stts_addr, (void *)zero_val,
+-			    ARRAY_SIZE(zero_val));
++		iwl_trans_write_mem(trans, stts_addr, (void *)zero_val,
++				    ARRAY_SIZE(zero_val));
++	}
+ 
+ 	iwl_pcie_txq_unmap(trans, txq_id);
+ 	trans_pcie->txq[txq_id].ampdu = false;
+-- 
+1.9.1
 
