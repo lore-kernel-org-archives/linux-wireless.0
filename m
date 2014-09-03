@@ -1,48 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail1.bemta8.messagelabs.com ([216.82.243.193]:31048 "EHLO
-	mail1.bemta8.messagelabs.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753195AbaIZH1k (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:61879 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753991AbaICT5K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Sep 2014 03:27:40 -0400
-Message-ID: <542514D4.5000905@netcommwireless.com> (sfid-20140926_092743_948948_A5418F0A)
-Date: Fri, 26 Sep 2014 17:25:08 +1000
-From: Sourav <sourav.chakraborty@netcommwireless.com>
-MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: occasional drops of packets and then recovery
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Wed, 3 Sep 2014 15:57:10 -0400
+Received: by mail-wg0-f44.google.com with SMTP id m15so9030417wgh.15
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Sep 2014 12:57:09 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Avri Altman <avri.altman@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 27/36] iwlwifi: trans: configure the scheduler enable register
+Date: Wed,  3 Sep 2014 22:56:15 +0300
+Message-Id: <1409774184-24665-27-git-send-email-egrumbach@gmail.com> (sfid-20140903_215752_506570_FBA1791B)
+In-Reply-To: <540771E5.6080908@gmail.com>
+References: <540771E5.6080908@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
-We are using Ralink chip RT3072L (using rt2800usb drivers rt2800usb.c), 
-mac80211, and hostapd in our routers.
-root:~# lsmod
-Module                  Size  Used by    Tainted: P
-rt2800usb              15371  0
-rt2800lib              74214  1 rt2800usb
-rt2x00usb               9718  1 rt2800usb
-rt2x00lib              39328  3 rt2800usb,rt2800lib,rt2x00usb
-mac80211              266596  3 rt2800lib,rt2x00usb,rt2x00lib
-cfg80211              214073  2 rt2x00lib,mac80211
-compat                 17406  4 rt2800usb,rt2x00lib,mac80211,cfg80211
+From: Avri Altman <avri.altman@intel.com>
 
-when I run iperf server on a PC connected over WiFi to the router, and 
-send UDP packets to it from another PC connected to the router via 
-ethernet,I see occasional drops of packets and then recovery......this 
-phenomena is not seen using TCP packets or if the direction of packets 
-are reversed(i.e sending packets from WiFi client(running iperf client) 
-to ethernet client(running iperf server). I have analysed and found that 
-during the stall phase, the router is not sending packets on the wlan0 
-interface(so it seems that the driver stops sending packets to wlan0 and 
-after sometime recovers from this situation).
-Can you suggest a root cause for this behaviour?
+Currently the firmware is handling this, but that is wrong as it then
+needs to assume a certain command queue, therefore this should be in
+the driver; add it here so it can be removed from the firmware in the
+future.
 
+Signed-off-by: Avri Altman <avri.altman@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-prph.h | 1 +
+ drivers/net/wireless/iwlwifi/iwl-scd.h  | 6 ++++++
+ drivers/net/wireless/iwlwifi/pcie/tx.c  | 8 ++++++++
+ 3 files changed, 15 insertions(+)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-prph.h b/drivers/net/wireless/iwlwifi/iwl-prph.h
+index 47033a3..9e15273 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-prph.h
++++ b/drivers/net/wireless/iwlwifi/iwl-prph.h
+@@ -281,6 +281,7 @@
+ #define SCD_CHAINEXT_EN		(SCD_BASE + 0x244)
+ #define SCD_AGGR_SEL		(SCD_BASE + 0x248)
+ #define SCD_INTERRUPT_MASK	(SCD_BASE + 0x108)
++#define SCD_EN_CTRL		(SCD_BASE + 0x254)
+ 
+ static inline unsigned int SCD_QUEUE_WRPTR(unsigned int chnl)
+ {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scd.h b/drivers/net/wireless/iwlwifi/iwl-scd.h
+index 5f099d4..6c622b2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scd.h
++++ b/drivers/net/wireless/iwlwifi/iwl-scd.h
+@@ -109,4 +109,10 @@ static inline void iwl_scd_deactivate_fifos(struct iwl_trans *trans)
+ {
+ 	iwl_write_prph(trans, SCD_TXFACT, 0);
+ }
++
++static inline void iwl_scd_enable_set_active(struct iwl_trans *trans,
++					     u32 value)
++{
++	iwl_write_prph(trans, SCD_EN_CTRL, value);
++}
+ #endif
+diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c b/drivers/net/wireless/iwlwifi/pcie/tx.c
+index a24c1df..9fdfed8 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
+@@ -1078,6 +1078,10 @@ void iwl_trans_pcie_txq_enable(struct iwl_trans *trans, int txq_id, u16 ssn,
+ 	if (cfg) {
+ 		fifo = cfg->fifo;
+ 
++		/* Disable the scheduler prior configuring the cmd queue */
++		if (txq_id == trans_pcie->cmd_queue)
++			iwl_scd_enable_set_active(trans, 0);
++
+ 		/* Stop this Tx queue before configuring it */
+ 		iwl_scd_txq_set_inactive(trans, txq_id);
+ 
+@@ -1135,6 +1139,10 @@ void iwl_trans_pcie_txq_enable(struct iwl_trans *trans, int txq_id, u16 ssn,
+ 			       (cfg->fifo << SCD_QUEUE_STTS_REG_POS_TXF) |
+ 			       (1 << SCD_QUEUE_STTS_REG_POS_WSL) |
+ 			       SCD_QUEUE_STTS_REG_MSK);
++
++		/* enable the scheduler for this queue (only) */
++		if (txq_id == trans_pcie->cmd_queue)
++			iwl_scd_enable_set_active(trans, BIT(txq_id));
+ 	}
+ 
+ 	trans_pcie->txq[txq_id].active = true;
 -- 
-Warm Regards,
-Sourav
+1.9.1
 
-
-______________________________________________________________________
-This communication contains information which may be confidential or privileged. The information is intended solely for the use of the individual or entity named above.  If you are not the intended recipient, be aware that any disclosure, copying, distribution or use of the contents of this information is prohibited.  If you have received this communication in error, please notify me by telephone immediately.
-______________________________________________________________________
