@@ -1,75 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:11283 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752521AbaIAHcK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Sep 2014 03:32:10 -0400
-From: Avinash Patil <patila@marvell.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
-	<huxm@marvell.com>, <yangyang@marvell.com>, <cluo@marvell.com>,
-	<maithili@marvell.com>, Avinash Patil <patila@marvell.com>
-Subject: [PATCH 15/17] mwifiex: remove redundant variable report_scan_result
-Date: Mon, 1 Sep 2014 18:29:03 +0530
-Message-ID: <1409576345-13717-16-git-send-email-patila@marvell.com> (sfid-20140901_093215_051507_46B6593C)
-In-Reply-To: <1409576345-13717-1-git-send-email-patila@marvell.com>
-References: <1409576345-13717-1-git-send-email-patila@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:60296 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752419AbaICJlI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Sep 2014 05:41:08 -0400
+Message-ID: <1409737255.1932.5.camel@jlt4.sipsolutions.net> (sfid-20140903_114119_326300_1A0184DC)
+Subject: Re: [RFC] net: ipv4: drop unicast encapsulated in L2 multicast
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stephen Hemminger <stephen@networkplumber.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Date: Wed, 03 Sep 2014 11:40:55 +0200
+In-Reply-To: <20140902141620.2da1f6aa@urahara> (sfid-20140902_231626_427316_AF0944A4)
+References: <1408641747-22199-1-git-send-email-johannes@sipsolutions.net>
+	 <20140902141620.2da1f6aa@urahara> (sfid-20140902_231626_427316_AF0944A4)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+On Tue, 2014-09-02 at 14:16 -0700, Stephen Hemminger wrote:
+> On Thu, 21 Aug 2014 19:22:27 +0200
+> Johannes Berg <johannes@sipsolutions.net> wrote:
+> 
+> > +	/* RFC 1122 3.3.6:
+> > +	 *
+> > +	 *   When a host sends a datagram to a link-layer broadcast address,
+> > +	 *   the IP destination address MUST be a legal IP broadcast or IP
+> > +	 *   multicast address.
+> > +	 *
+> > +	 *   A host SHOULD silently discard a datagram that is received via
+> > +	 *   a link-layer broadcast (see Section 2.4) but does not specify
+> > +	 *   an IP multicast or broadcast destination address.
+> > +	 *
+> > +	 * We also do this for link-layer multicast.
+> > +	 */
+> > +	if ((skb->pkt_type == PACKET_BROADCAST ||
+> > +	     skb->pkt_type == PACKET_MULTICAST) &&
+> > +	    res.type != RTN_BROADCAST)
+> > +		goto e_inval;
+> > +
+> 
+> I think you need to all multicast packet but not broadcast.
+> The RFC does not specify that you should drop link-layer multicast to a unicast
+> address. There are several clustering products use that.
 
-This variable is never used, get rid of it.
+Alright - I feared we'd not be able to do this. Based on a strict
+reading of the RFC, you're right. I'm not sure what thinking and
+rationale went into this sentence in the RFC, depending on that it would
+have made sense to me to also apply it for broadcast (which is really
+just a special form of multicast, in a sense, no?)
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Avinash Patil <patila@marvell.com>
----
- drivers/net/wireless/mwifiex/main.h        | 1 -
- drivers/net/wireless/mwifiex/scan.c        | 3 ---
- drivers/net/wireless/mwifiex/sta_cmdresp.c | 2 --
- 3 files changed, 6 deletions(-)
+In any case, for wireless we do need broadcast as well, for obvious
+reasons. Therefore, I think with all the discussion here and about IPv6
+etc. we're getting to the point where we should think about
+disentangling RFC 1122 checks (which may very well be correct and needed
+in their own right) and the hole-196 mitigation for wireless.
 
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 18c327c..4e8e881 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -548,7 +548,6 @@ struct mwifiex_private {
- 	u8 nick_name[16];
- 	u16 current_key_index;
- 	struct semaphore async_sem;
--	u8 report_scan_result;
- 	struct cfg80211_scan_request *scan_request;
- 	u8 cfg_bssid[6];
- 	struct wps wps;
-diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
-index 7c85f61..7b07da2 100644
---- a/drivers/net/wireless/mwifiex/scan.c
-+++ b/drivers/net/wireless/mwifiex/scan.c
-@@ -1778,9 +1778,6 @@ static void mwifiex_check_next_scan_command(struct mwifiex_private *priv)
- 		if (!adapter->ext_scan)
- 			mwifiex_complete_scan(priv);
- 
--		if (priv->report_scan_result)
--			priv->report_scan_result = false;
--
- 		if (priv->scan_request) {
- 			dev_dbg(adapter->dev, "info: notifying scan done\n");
- 			cfg80211_scan_done(priv->scan_request, 0);
-diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-index 62866b0..4aad446 100644
---- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
-+++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-@@ -85,8 +85,6 @@ mwifiex_process_cmdresp_error(struct mwifiex_private *priv,
- 		spin_lock_irqsave(&adapter->mwifiex_cmd_lock, flags);
- 		adapter->scan_processing = false;
- 		spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, flags);
--		if (priv->report_scan_result)
--			priv->report_scan_result = false;
- 		break;
- 
- 	case HostCmd_CMD_MAC_CONTROL:
--- 
-1.8.1.4
+Our original attempt is documented here:
+http://patchwork.ozlabs.org/patch/293133/
+
+and there seemed to be consensus back then that we should do it in the
+wireless stack. I can live with that, even if I don't very much like the
+idea of dissecting IP protocols there and having to do a route lookup
+etc. In any case, if that's what we want to do, I'll probably need some
+help on how to do the route lookups etc. Any takers? :)
+
+johannes
 
