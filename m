@@ -1,41 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:58662 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751403AbaI2GyE (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:57499 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753897AbaICDJS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Sep 2014 02:54:04 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Sujith Manoharan <sujith@msujith.org>
-CC: John Linville <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>, <ath9k-devel@qca.qualcomm.com>
-Subject: Re: [PATCH v2] ath: Add support for tracing
-References: <1411804665-6954-1-git-send-email-sujith@msujith.org>
-	<87vbo72bb7.fsf@kamboji.qca.qualcomm.com>
-	<21544.64579.558712.465388@gargle.gargle.HOWL>
-Date: Mon, 29 Sep 2014 09:53:57 +0300
-In-Reply-To: <21544.64579.558712.465388@gargle.gargle.HOWL> (Sujith
-	Manoharan's message of "Mon, 29 Sep 2014 11:59:23 +0530")
-Message-ID: <87r3yu3oje.fsf@kamboji.qca.qualcomm.com> (sfid-20140929_085410_853040_FF6BA87C)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 2 Sep 2014 23:09:18 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH v2 4/6] ath9k: Fix NoA start time calculation
+Date: Wed,  3 Sep 2014 08:39:23 +0530
+Message-Id: <1409713765-9358-5-git-send-email-sujith@msujith.org> (sfid-20140903_050937_105172_6ED0E618)
+In-Reply-To: <1409713765-9358-1-git-send-email-sujith@msujith.org>
+References: <1409713765-9358-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sujith Manoharan <sujith@msujith.org> writes:
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-> Kalle Valo wrote:
->> Why add it to ath.ko module? What drivers are going to use this?
->
-> The debug code for ath9k is in ath.ko.
+The start time field in the NoA attribute needs to be
+updated based on the TSF timer when an absence notification
+is sent by the P2P GO. When two channel contexts are active,
+continuous, cyclic NoA is announced by setting the count value to 255,
+but the start time is updated only once, for one beacon and
+the same value is sent in all subsequent beacons, even
+though the timestamp keeps moving.
 
-You mean ath_printk() & friends? But that doesn't require tracing code
-to be in ath.ko as well, right? If I understood correctly, trace.c could
-be under ath9k directory and the kconfig option could be
-ATH9K_TRACEPOINTS.
+Fix this by removing the check for 'periodic_noa_duration'
+and assign the interface's start_time/duration values directly
+when there is more than one active context.
 
-I think it's just misleading and confusing for the user to call it
-"Atheros wireless tracing" when it only affects ath9k. It's easier to
-understand if each driver has it's own "tracing" kconfig option.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/channel.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index 409f912..047a76f 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -377,13 +377,13 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 		    tsf_time - avp->periodic_noa_start > BIT(30))
+ 			avp->periodic_noa_duration = 0;
+ 
+-		if (ctx->active && !avp->periodic_noa_duration) {
++		if (ctx->active) {
+ 			avp->periodic_noa_start = tsf_time;
+ 			avp->periodic_noa_duration =
+ 				TU_TO_USEC(cur_conf->beacon_interval) / 2 -
+ 				sc->sched.channel_switch_time;
+ 			noa_changed = true;
+-		} else if (!ctx->active && avp->periodic_noa_duration) {
++		} else if (!ctx->active) {
+ 			avp->periodic_noa_duration = 0;
+ 			noa_changed = true;
+ 		}
 -- 
-Kalle Valo
+2.1.0
+
