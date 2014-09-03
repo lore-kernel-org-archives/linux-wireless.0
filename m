@@ -1,30 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:48658 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751056AbaI3Ik0 (ORCPT
+Received: from exprod7og107.obsmtp.com ([64.18.2.167]:35986 "HELO
+	exprod7og107.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751112AbaICCG7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Sep 2014 04:40:26 -0400
-From: Sujith Manoharan <sujith@msujith.org>
+	Tue, 2 Sep 2014 22:06:59 -0400
+Received: by mail-pd0-f171.google.com with SMTP id y13so9935873pdi.30
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Sep 2014 19:06:59 -0700 (PDT)
+Message-ID: <540675F2.1030308@miraclelinux.com> (sfid-20140903_040704_968178_B6552A53)
+Date: Wed, 03 Sep 2014 10:59:14 +0900
+From: YOSHIFUJI Hideaki <hideaki.yoshifuji@miraclelinux.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21546.27787.196092.518463@gargle.gargle.HOWL> (sfid-20140930_104037_949004_1137C83D)
-Date: Tue, 30 Sep 2014 14:10:43 +0530
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: [PATCH 1/3] Revert "ath9k_hw: reduce ANI firstep range for older
- chips"
-In-Reply-To: <542A6A2A.4070506@openwrt.org>
-References: <1412016342-21227-1-git-send-email-nbd@openwrt.org>
-	<21546.1381.6346.449656@gargle.gargle.HOWL>
-	<542A6A2A.4070506@openwrt.org>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Hannes Frederic Sowa <hannes@stressinduktion.org>
+CC: hideaki.yoshifuji@miraclelinux.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, YOSHIFUJI Hideaki <yoshfuji@linux-ipv6.org>
+Subject: Re: [RFC] net: ipv4: drop unicast encapsulated in L2 multicast
+References: <1408641747-22199-1-git-send-email-johannes@sipsolutions.net>	 (sfid-20140821_192515_304437_37E734D5) <1408642331.4388.2.camel@jlt4.sipsolutions.net>	 <1409125114.11976.14.camel@localhost>	 <1409130313.2505.3.camel@jlt4.sipsolutions.net>	 <1409133238.26515.13.camel@localhost> <1409650573.1808.11.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1409650573.1808.11.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau wrote:
-> For pre-AR9003, most devices used with OpenWrt actually use exactly the
-> same chips as PC-OEM cards.
+Johannes Berg wrote:
+> As long as IPv6 doesn't mandate it in the RFCs I'm not really sure we
+> should just drop it, even if we think it won't cause any problems?
+>
+> CLUSTERIP seems like a special configuration, but I'm not sure it can be
+> detected and automatically allowed?
 
-Yes, that is true. We split the SoC/PC-OEM chip lines in AR9003.
-Sorry for the noise. ;)
+Please do not "drop" L2 multicast/broadcast for L3 unicast and
+vice versa, unless it is explicitly specified by RFC.
 
-Sujith
+Upper-layer needs to cope eith situation of seeing packets with
+"incorrect" L2 header anyway (e.g., in promiscous mode).
+I do not see much advantage to drop them here.
+
+-- 
+Hideaki Yoshifuji <hideaki.yoshifuji@miraclelinux.com>
+Technical Division, MIRACLE LINUX CORPORATION
