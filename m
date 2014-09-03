@@ -1,48 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f179.google.com ([74.125.82.179]:40581 "EHLO
-	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752741AbaI2AhI (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:53897 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754251AbaICDJX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Sep 2014 20:37:08 -0400
-Received: by mail-we0-f179.google.com with SMTP id u56so4160169wes.38
-        for <linux-wireless@vger.kernel.org>; Sun, 28 Sep 2014 17:37:06 -0700 (PDT)
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@gmail.com>,
-	Karl Beldan <karl.beldan@rivierawaves.com>,
-	Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-Subject: [PATCH] mac80211: minstrel_ht: fix MCS_GROUP_RATES usage
-Date: Mon, 29 Sep 2014 02:36:30 +0200
-Message-Id: <1411950990-24365-1-git-send-email-karl.beldan@gmail.com> (sfid-20140929_023720_954101_B6FE5031)
+	Tue, 2 Sep 2014 23:09:23 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH v2 6/6] ath9k: Add CTWindow support
+Date: Wed,  3 Sep 2014 08:39:25 +0530
+Message-Id: <1409713765-9358-7-git-send-email-sujith@msujith.org> (sfid-20140903_050951_183941_EB4D699C)
+In-Reply-To: <1409713765-9358-1-git-send-email-sujith@msujith.org>
+References: <1409713765-9358-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Karl Beldan <karl.beldan@rivierawaves.com>
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Commit 4441e8e9 ("mac80211: improve minstrel_ht rate sorting by
-throughput & probability") replaced the constant 8 with MCS_GROUP_RATES
-when getting the number of streams of an HT MCS. See commit 7a5e3fa2
-("mac80211: minstrel_ht: replace some occurences of MCS_GROUP_RATES").
+Since CTWindow can be used for improving discoverability,
+fill this field in the NoA Attribute properly.
 
-Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- net/mac80211/rc80211_minstrel_ht.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h   |  2 ++
+ drivers/net/wireless/ath/ath9k/channel.c | 26 ++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/init.c    |  5 +++--
+ 3 files changed, 31 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index df90ce2..17ef54a 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -135,7 +135,7 @@ minstrel_ht_update_rates(struct minstrel_priv *mp, struct minstrel_ht_sta *mi);
- static int
- minstrel_ht_get_group_idx(struct ieee80211_tx_rate *rate)
- {
--	return GROUP_IDX((rate->idx / MCS_GROUP_RATES) + 1,
-+	return GROUP_IDX((rate->idx / 8) + 1,
- 			 !!(rate->flags & IEEE80211_TX_RC_SHORT_GI),
- 			 !!(rate->flags & IEEE80211_TX_RC_40_MHZ_WIDTH));
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index c690601..b4ac51e 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -572,6 +572,8 @@ void ath9k_release_buffered_frames(struct ieee80211_hw *hw,
+ /* VIFs */
+ /********/
+ 
++#define P2P_DEFAULT_CTWIN 10
++
+ struct ath_vif {
+ 	struct list_head list;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index 7a6ca44..e73d305 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -1166,6 +1166,30 @@ static void ath9k_update_p2p_ps(struct ath_softc *sc, struct ieee80211_vif *vif)
+ 	ath9k_update_p2p_ps_timer(sc, avp);
  }
+ 
++static u8 ath9k_get_ctwin(struct ath_softc *sc, struct ath_vif *avp)
++{
++	struct ath_beacon_config *cur_conf = &sc->cur_chan->beacon;
++	u8 switch_time, ctwin;
++
++	/*
++	 * Channel switch in multi-channel mode is deferred
++	 * by a quarter beacon interval when handling
++	 * ATH_CHANCTX_EVENT_BEACON_PREPARE, so the P2P-GO
++	 * interface is guaranteed to be discoverable
++	 * for that duration after a TBTT.
++	 */
++	switch_time = cur_conf->beacon_interval / 4;
++
++	ctwin = avp->vif->bss_conf.p2p_noa_attr.oppps_ctwindow;
++	if (ctwin && (ctwin < switch_time))
++		return ctwin;
++
++	if (switch_time < P2P_DEFAULT_CTWIN)
++		return 0;
++
++	return P2P_DEFAULT_CTWIN;
++}
++
+ void ath9k_beacon_add_noa(struct ath_softc *sc, struct ath_vif *avp,
+ 			  struct sk_buff *skb)
+ {
+@@ -1198,6 +1222,8 @@ void ath9k_beacon_add_noa(struct ath_softc *sc, struct ath_vif *avp,
+ 	memset(noa, 0, noa_len);
+ 
+ 	noa->index = avp->noa_index;
++	noa->oppps_ctwindow = ath9k_get_ctwin(sc, avp);
++
+ 	if (avp->periodic_noa_duration) {
+ 		u32 interval = TU_TO_USEC(sc->cur_chan->beacon.beacon_interval);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index ca10a8b..1950c04 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -763,8 +763,9 @@ static void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 	if (AR_SREV_9160_10_OR_LATER(sc->sc_ah) || ath9k_modparam_nohwcrypt)
+ 		hw->flags |= IEEE80211_HW_MFP_CAPABLE;
+ 
+-	hw->wiphy->features |= (NL80211_FEATURE_ACTIVE_MONITOR |
+-				NL80211_FEATURE_AP_MODE_CHAN_WIDTH_CHANGE);
++	hw->wiphy->features |= NL80211_FEATURE_ACTIVE_MONITOR |
++			       NL80211_FEATURE_AP_MODE_CHAN_WIDTH_CHANGE |
++			       NL80211_FEATURE_P2P_GO_CTWIN;
+ 
+ 	if (!config_enabled(CONFIG_ATH9K_TX99)) {
+ 		hw->wiphy->interface_modes =
 -- 
-2.0.1
+2.1.0
 
