@@ -1,33 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:54150 "EHLO sipsolutions.net"
+Received: from mga14.intel.com ([192.55.52.115]:9685 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751231AbaIBIDQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Sep 2014 04:03:16 -0400
-Message-ID: <1409644993.1808.4.camel@jlt4.sipsolutions.net> (sfid-20140902_100322_409164_2BA26C68)
-Subject: Re: [Patch]mac80211: Add support for mesh proxy path dump
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Henning Rogge <hrogge@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-Date: Tue, 02 Sep 2014 10:03:13 +0200
-In-Reply-To: <2937689.hWkxdbjQ3v@rogge-hp-probook-6470b> (sfid-20140901_132615_830692_B0FE7837)
-References: <2937689.hWkxdbjQ3v@rogge-hp-probook-6470b>
-	 (sfid-20140901_132615_830692_B0FE7837)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S932420AbaICMcu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Sep 2014 08:32:50 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>,
+	Eliad Peller <eliadx.peller@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 09/10] mac80211: adjust roc duration when combining ROCs
+Date: Wed,  3 Sep 2014 15:25:05 +0300
+Message-Id: <1409747106-30717-10-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140903_143254_257515_CD7B6B74)
+In-Reply-To: <1409747106-30717-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1409747106-30717-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-09-01 at 13:26 +0200, Henning Rogge wrote:
-> The following patch adds NL80211_CMD_GET_MPP as a new nl80211 command that
-> allows to query the content of the 'mesh proxy path' table of mac80211s via
-> 'get' or 'dump'  operation.
+From: Eliad Peller <eliad@wizery.com>
 
-Is this really something that should be a generic nl80211 operation,
-rather than say debugfs?
+The new duration (remaining duration after the current
+ROC ends) was calculated but not used, making the
+optimization worthless.
 
-Could this be useful to other devices implementing the 11s, or is it
-more of a mac80211 implementation detail?
+Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
+Reviewed-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ net/mac80211/cfg.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-johannes
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 6cd0a59e..edeab09 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2503,6 +2503,7 @@ static int ieee80211_start_roc_work(struct ieee80211_local *local,
+ 
+ 				if (new_dur > 0) {
+ 					/* add right after tmp */
++					roc->duration = new_dur;
+ 					list_add(&roc->list, &tmp->list);
+ 				} else {
+ 					list_add_tail(&roc->list,
+-- 
+1.9.1
 
