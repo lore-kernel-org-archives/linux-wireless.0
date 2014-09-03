@@ -1,107 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:47649 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932196AbaIWQ5t (ORCPT
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:64779 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932108AbaICT5X (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Sep 2014 12:57:49 -0400
-Message-ID: <5421A68C.8090508@candelatech.com> (sfid-20140923_185753_644442_4DB37506)
-Date: Tue, 23 Sep 2014 09:57:48 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH 2/2] ath10k: apply chainmask settings to vdev on creation.
-References: <1411419245-25799-1-git-send-email-greearb@candelatech.com> <1411419245-25799-2-git-send-email-greearb@candelatech.com> <CA+BoTQ=NtS3hOD+gVZ2whx+K2xsKrZUWBPUa=gfKxaNFcoTHEw@mail.gmail.com>
-In-Reply-To: <CA+BoTQ=NtS3hOD+gVZ2whx+K2xsKrZUWBPUa=gfKxaNFcoTHEw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 3 Sep 2014 15:57:23 -0400
+Received: by mail-wg0-f49.google.com with SMTP id y10so9029234wgg.20
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Sep 2014 12:57:22 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 36/36] iwlwifi: mvm: clean up AUX station handling
+Date: Wed,  3 Sep 2014 22:56:24 +0300
+Message-Id: <1409774184-24665-36-git-send-email-egrumbach@gmail.com> (sfid-20140903_220114_846722_C9F1A397)
+In-Reply-To: <540771E5.6080908@gmail.com>
+References: <540771E5.6080908@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/23/2014 01:53 AM, Michal Kazior wrote:
-> On 22 September 2014 22:54,  <greearb@candelatech.com> wrote:
->> From: Ben Greear <greearb@candelatech.com>
->>
->> It appears it takes more than just setting the
->> hardware's chainmask to make things work well.  Without
->> this patch, a vdev would only use 1x1 rates when chainmask
->> was set to 0x3.
->>
->> Setting the 'nss' (number of spatial streams) on the vdev
->> helps the firmware's rate-control algorithm work properly.
->>
->> Tested on CT firmware, but probably this works (and
->> is required) on normal firmware.
->>
->> Signed-off-by: Ben Greear <greearb@candelatech.com>
->> ---
->>  drivers/net/wireless/ath/ath10k/mac.c | 24 ++++++++++++++++++++++++
->>  1 file changed, 24 insertions(+)
->>
->> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
->> index 4dc5a40..855c71c 100644
->> --- a/drivers/net/wireless/ath/ath10k/mac.c
->> +++ b/drivers/net/wireless/ath/ath10k/mac.c
->> @@ -2767,6 +2767,17 @@ static int ath10k_config(struct ieee80211_hw *hw, u32 changed)
->>         return ret;
->>  }
->>
->> +static u32 get_nss_from_chainmask(u16 chain_mask)
->> +{
->> +       if ((chain_mask & 0x15) == 0x15)
->> +               return 4;
->> +       else if ((chain_mask & 0x7) == 0x7)
->> +               return 3;
->> +       else if ((chain_mask & 0x3) == 0x3)
->> +               return 2;
->> +       return 1;
->> +}
-> 
-> So a chainmask of `BIT(0) | BIT(2) = 0x5` is nss=1?
+From: Johannes Berg <johannes.berg@intel.com>
 
-That is how the firmware treats it.
+The auxiliary station is being handled using the internal
+station helper functions, clean that up and make the helpers
+static.
 
-> Why not just use `hweight16()` kernel macro? Or do we want to forbid
-> odd chainmasks (in which case additional checks need to be added as
-> well)?
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c |  2 +-
+ drivers/net/wireless/iwlwifi/mvm/sta.c      | 15 ++++++++++++---
+ drivers/net/wireless/iwlwifi/mvm/sta.h      |  5 +----
+ 3 files changed, 14 insertions(+), 8 deletions(-)
 
-Even after looking at the hweight16 code I don't know what it is supposed
-to do.  I think open-coding is plenty adequate.
-
-Maybe the driver should only allow a chainmask of 1, 3, 7, (and eventually 15 when 4x4 exists),
-but maybe also that can just be on the user to get it right.  It is possible that there
-is some use for having a different chainmask, but it would require someone with good knowledge
-of the hardware to answer that I think.
-
->> +       if (ar->cfg_tx_chainmask) {
->> +               u16 nss = get_nss_from_chainmask(ar->cfg_tx_chainmask);
->> +               vdev_param = ar->wmi.vdev_param->nss;
->> +               ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param,
->> +                                               nss);
->> +               if (ret) {
->> +                       ath10k_warn(ar, "failed to set vdev %i chainmask 0x%x, nss %i: %d\n",
->> +                                   arvif->vdev_id, ar->cfg_tx_chainmask, nss,
->> +                                   ret);
->> +                       goto err_vdev_delete;
->> +               }
->> +       }
->> +
-> 
-> If this is required won't setting up peer nss (after association) be
-> necessary as well?
-> 
-> Shouldn't the vdev nss param be set in __ath10k_set_antenna() as well?
-> What about peer nss (assuming it's necessary to update it) in that
-> case?
-
-Did the second patch address all of this?  I may have missed more cases,
-but at least with the second patch it seems to work for me reliably.
-
-Thanks,
-Ben
-
-
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 78ed6bc..8d1d4b4 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -886,7 +886,7 @@ static void iwl_mvm_mac_stop(struct ieee80211_hw *hw)
+ 	/* async_handlers_list is empty and will stay empty: HW is stopped */
+ 
+ 	/* the fw is stopped, the aux sta is dead: clean up driver state */
+-	iwl_mvm_dealloc_int_sta(mvm, &mvm->aux_sta);
++	iwl_mvm_del_aux_sta(mvm);
+ 
+ 	mutex_unlock(&mvm->mutex);
+ 
+diff --git a/drivers/net/wireless/iwlwifi/mvm/sta.c b/drivers/net/wireless/iwlwifi/mvm/sta.c
+index ef61979..dd9f3a4 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/iwlwifi/mvm/sta.c
+@@ -464,8 +464,9 @@ int iwl_mvm_rm_sta_id(struct iwl_mvm *mvm,
+ 	return ret;
+ }
+ 
+-int iwl_mvm_allocate_int_sta(struct iwl_mvm *mvm, struct iwl_mvm_int_sta *sta,
+-			     u32 qmask, enum nl80211_iftype iftype)
++static int iwl_mvm_allocate_int_sta(struct iwl_mvm *mvm,
++				    struct iwl_mvm_int_sta *sta,
++				    u32 qmask, enum nl80211_iftype iftype)
+ {
+ 	if (!test_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status)) {
+ 		sta->sta_id = iwl_mvm_find_free_sta_id(mvm, iftype);
+@@ -480,7 +481,8 @@ int iwl_mvm_allocate_int_sta(struct iwl_mvm *mvm, struct iwl_mvm_int_sta *sta,
+ 	return 0;
+ }
+ 
+-void iwl_mvm_dealloc_int_sta(struct iwl_mvm *mvm, struct iwl_mvm_int_sta *sta)
++static void iwl_mvm_dealloc_int_sta(struct iwl_mvm *mvm,
++				    struct iwl_mvm_int_sta *sta)
+ {
+ 	RCU_INIT_POINTER(mvm->fw_id_to_mac_id[sta->sta_id], NULL);
+ 	memset(sta, 0, sizeof(struct iwl_mvm_int_sta));
+@@ -550,6 +552,13 @@ int iwl_mvm_add_aux_sta(struct iwl_mvm *mvm)
+ 	return ret;
+ }
+ 
++void iwl_mvm_del_aux_sta(struct iwl_mvm *mvm)
++{
++	lockdep_assert_held(&mvm->mutex);
++
++	iwl_mvm_dealloc_int_sta(mvm, &mvm->aux_sta);
++}
++
+ /*
+  * Send the add station command for the vif's broadcast station.
+  * Assumes that the station was already allocated.
+diff --git a/drivers/net/wireless/iwlwifi/mvm/sta.h b/drivers/net/wireless/iwlwifi/mvm/sta.h
+index 15984fe..aeb3a7f 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/sta.h
++++ b/drivers/net/wireless/iwlwifi/mvm/sta.h
+@@ -389,10 +389,7 @@ int iwl_mvm_sta_tx_agg_flush(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 			    struct ieee80211_sta *sta, u16 tid);
+ 
+ int iwl_mvm_add_aux_sta(struct iwl_mvm *mvm);
+-int iwl_mvm_allocate_int_sta(struct iwl_mvm *mvm, struct iwl_mvm_int_sta *sta,
+-			     u32 qmask, enum nl80211_iftype iftype);
+-void iwl_mvm_dealloc_int_sta(struct iwl_mvm *mvm,
+-			     struct iwl_mvm_int_sta *sta);
++void iwl_mvm_del_aux_sta(struct iwl_mvm *mvm);
+ 
+ int iwl_mvm_alloc_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
+ int iwl_mvm_send_add_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.9.1
 
