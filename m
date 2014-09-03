@@ -1,200 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:43221 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751156AbaI0H5F (ORCPT
+Received: from cassarossa.samfundet.no ([193.35.52.29]:33570 "EHLO
+	cassarossa.samfundet.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932377AbaICN4M (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Sep 2014 03:57:05 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH v2] ath: Add support for tracing
-Date: Sat, 27 Sep 2014 13:27:45 +0530
-Message-Id: <1411804665-6954-1-git-send-email-sujith@msujith.org> (sfid-20140927_095720_386979_7857923B)
+	Wed, 3 Sep 2014 09:56:12 -0400
+In-Reply-To: <20140903133328.GC18933@sesse.net>
+References: <20140903133328.GC18933@sesse.net>
+From: "Steinar H. Gunderson" <sgunderson@bigfoot.com>
+Date: Wed, 3 Sep 2014 06:22:10 -0700
+Subject: [PATCH v6 1/2] mac80211: split 802.11h parsing from transmit power
+ policy
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org
+Message-Id: <E1XPB2d-0008Vu-Ne@pannekake.samfundet.no> (sfid-20140903_155616_338831_1765EFAB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Decouple the logic of parsing the 802.11d and 802.11h IEs from the
+part of deciding what to do about the data (messaging, clamping to
+0 dBm, doing the actual setting). This paves the way for the next
+patch, which introduces more data sources for transmit power limitation.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Steinar H. Gunderson <sgunderson@bigfoot.com>
 ---
- drivers/net/wireless/ath/Kconfig  |  8 +++++
- drivers/net/wireless/ath/Makefile |  4 +++
- drivers/net/wireless/ath/ath.h    |  1 +
- drivers/net/wireless/ath/main.c   |  3 ++
- drivers/net/wireless/ath/trace.c  | 20 +++++++++++
- drivers/net/wireless/ath/trace.h  | 71 +++++++++++++++++++++++++++++++++++++++
- 6 files changed, 107 insertions(+)
- create mode 100644 drivers/net/wireless/ath/trace.c
- create mode 100644 drivers/net/wireless/ath/trace.h
+ net/mac80211/mlme.c | 60 ++++++++++++++++++++++++++++++++++++-----------------
+ 1 file changed, 41 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/Kconfig b/drivers/net/wireless/ath/Kconfig
-index c63d115..ce78260 100644
---- a/drivers/net/wireless/ath/Kconfig
-+++ b/drivers/net/wireless/ath/Kconfig
-@@ -25,6 +25,14 @@ config ATH_DEBUG
- 	  Say Y, if you want to debug atheros wireless drivers.
- 	  Right now only ath9k makes use of this.
- 
-+config ATH_TRACEPOINTS
-+       bool "Atheros wireless tracing"
-+       depends on ATH_DEBUG
-+       depends on EVENT_TRACING
-+       ---help---
-+         This option enables tracepoints for atheros wireless drivers.
-+	 Currently, ath9k makes use of this facility.
-+
- config ATH_REG_DYNAMIC_USER_REG_HINTS
- 	bool "Atheros dynamic user regulatory hints"
- 	depends on CFG80211_CERTIFICATION_ONUS
-diff --git a/drivers/net/wireless/ath/Makefile b/drivers/net/wireless/ath/Makefile
-index 7d023b0..89f8d59 100644
---- a/drivers/net/wireless/ath/Makefile
-+++ b/drivers/net/wireless/ath/Makefile
-@@ -17,4 +17,8 @@ ath-objs :=	main.o \
- 		dfs_pri_detector.o
- 
- ath-$(CONFIG_ATH_DEBUG) += debug.o
-+ath-$(CONFIG_ATH_TRACEPOINTS) += trace.o
-+
- ccflags-y += -D__CHECK_ENDIAN__
-+
-+CFLAGS_trace.o := -I$(src)
-diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
-index a3b6e27..e5ba6fa 100644
---- a/drivers/net/wireless/ath/ath.h
-+++ b/drivers/net/wireless/ath/ath.h
-@@ -268,6 +268,7 @@ enum ATH_DEBUG {
- };
- 
- #define ATH_DBG_DEFAULT (ATH_DBG_FATAL)
-+#define ATH_DBG_MAX_LEN 512
- 
- #ifdef CONFIG_ATH_DEBUG
- 
-diff --git a/drivers/net/wireless/ath/main.c b/drivers/net/wireless/ath/main.c
-index 8b0ac14..83f47af 100644
---- a/drivers/net/wireless/ath/main.c
-+++ b/drivers/net/wireless/ath/main.c
-@@ -20,6 +20,7 @@
- #include <linux/module.h>
- 
- #include "ath.h"
-+#include "trace.h"
- 
- MODULE_AUTHOR("Atheros Communications");
- MODULE_DESCRIPTION("Shared library for Atheros wireless LAN cards.");
-@@ -84,6 +85,8 @@ void ath_printk(const char *level, const struct ath_common* common,
- 	else
- 		printk("%sath: %pV", level, &vaf);
- 
-+	trace_ath_log(common->hw->wiphy, &vaf);
-+
- 	va_end(args);
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index b82a12a..918011a 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1157,19 +1157,21 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 			  TU_TO_EXP_TIME(csa_ie.count * cbss->beacon_interval));
  }
- EXPORT_SYMBOL(ath_printk);
-diff --git a/drivers/net/wireless/ath/trace.c b/drivers/net/wireless/ath/trace.c
-new file mode 100644
-index 0000000..18fb3a0
---- /dev/null
-+++ b/drivers/net/wireless/ath/trace.c
-@@ -0,0 +1,20 @@
-+/*
-+ * Copyright (c) 2014 Qualcomm Atheros, Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
+ 
+-static u32 ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
+-				       struct ieee80211_channel *channel,
+-				       const u8 *country_ie, u8 country_ie_len,
+-				       const u8 *pwr_constr_elem)
++static bool
++ieee80211_find_80211h_pwr_constr(struct ieee80211_sub_if_data *sdata,
++				 struct ieee80211_channel *channel,
++				 const u8 *country_ie, u8 country_ie_len,
++				 const u8 *pwr_constr_elem,
++				 int *chan_pwr, int *pwr_reduction)
+ {
+ 	struct ieee80211_country_ie_triplet *triplet;
+ 	int chan = ieee80211_frequency_to_channel(channel->center_freq);
+-	int i, chan_pwr, chan_increment, new_ap_level;
++	int i, chan_increment;
+ 	bool have_chan_pwr = false;
+ 
+ 	/* Invalid IE */
+ 	if (country_ie_len % 2 || country_ie_len < IEEE80211_COUNTRY_IE_MIN_LEN)
+-		return 0;
++		return false;
+ 
+ 	triplet = (void *)(country_ie + 3);
+ 	country_ie_len -= 3;
+@@ -1197,7 +1199,7 @@ static u32 ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
+ 		for (i = 0; i < triplet->chans.num_channels; i++) {
+ 			if (first_channel + i * chan_increment == chan) {
+ 				have_chan_pwr = true;
+-				chan_pwr = triplet->chans.max_power;
++				*chan_pwr = triplet->chans.max_power;
+ 				break;
+ 			}
+ 		}
+@@ -1209,18 +1211,41 @@ static u32 ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
+ 		country_ie_len -= 3;
+ 	}
+ 
+-	if (!have_chan_pwr)
+-		return 0;
++	if (have_chan_pwr)
++		*pwr_reduction = *pwr_constr_elem;
++	return have_chan_pwr;
++}
 +
-+#include <linux/module.h>
++static u32 ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
++				       struct ieee80211_channel *channel,
++				       struct ieee80211_mgmt *mgmt,
++				       const u8 *country_ie, u8 country_ie_len,
++				       const u8 *pwr_constr_ie)
++{
++	bool has_80211h_pwr = false;
++	int chan_pwr, pwr_reduction_80211h;
++	int new_ap_level;
+ 
+-	new_ap_level = max_t(int, 0, chan_pwr - *pwr_constr_elem);
++	if (country_ie && pwr_constr_ie &&
++	    mgmt->u.probe_resp.capab_info &
++		cpu_to_le16(WLAN_CAPABILITY_SPECTRUM_MGMT)) {
++		has_80211h_pwr = ieee80211_find_80211h_pwr_constr(
++			sdata, channel, country_ie, country_ie_len,
++			pwr_constr_ie, &chan_pwr, &pwr_reduction_80211h);
++		new_ap_level = max_t(int, 0, chan_pwr - pwr_reduction_80211h);
++	}
+ 
+-	if (sdata->ap_power_level == new_ap_level)
++	if (!has_80211h_pwr)
+ 		return 0;
+ 
+ 	sdata_info(sdata,
+ 		   "Limiting TX power to %d (%d - %d) dBm as advertised by %pM\n",
+-		   new_ap_level, chan_pwr, *pwr_constr_elem,
++		   new_ap_level, chan_pwr, pwr_reduction_80211h,
+ 		   sdata->u.mgd.bssid);
 +
-+#define CREATE_TRACE_POINTS
-+#include "trace.h"
-diff --git a/drivers/net/wireless/ath/trace.h b/drivers/net/wireless/ath/trace.h
-new file mode 100644
-index 0000000..ba71164
---- /dev/null
-+++ b/drivers/net/wireless/ath/trace.h
-@@ -0,0 +1,71 @@
-+/*
-+ * Copyright (c) 2014 Qualcomm Atheros, Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
++	if (sdata->ap_power_level == new_ap_level)
++		return 0;
 +
-+#if !defined(_TRACE_H) || defined(TRACE_HEADER_MULTI_READ)
-+#define _TRACE_H
-+
-+#include <linux/tracepoint.h>
-+#include "ath.h"
-+
-+#undef TRACE_SYSTEM
-+#define TRACE_SYSTEM ath
-+
-+#if !defined(CONFIG_ATH_TRACEPOINTS)
-+
-+#undef TRACE_EVENT
-+#define TRACE_EVENT(name, proto, ...) static inline void trace_ ## name(proto) {}
-+
-+#endif /* CONFIG_ATH_TRACEPOINTS */
-+
-+TRACE_EVENT(ath_log,
-+
-+	    TP_PROTO(struct wiphy *wiphy,
-+		     struct va_format *vaf),
-+
-+	    TP_ARGS(wiphy, vaf),
-+
-+	    TP_STRUCT__entry(
-+		    __string(device, wiphy_name(wiphy))
-+		    __string(driver, KBUILD_MODNAME)
-+		    __dynamic_array(char, msg, ATH_DBG_MAX_LEN)
-+	    ),
-+
-+	    TP_fast_assign(
-+		    __assign_str(device, wiphy_name(wiphy));
-+		    __assign_str(driver, KBUILD_MODNAME);
-+		    WARN_ON_ONCE(vsnprintf(__get_dynamic_array(msg),
-+					   ATH_DBG_MAX_LEN,
-+					   vaf->fmt,
-+					   *vaf->va) >= ATH_DBG_MAX_LEN);
-+	    ),
-+
-+	    TP_printk(
-+		    "%s %s %s",
-+		    __get_str(driver),
-+		    __get_str(device),
-+		    __get_str(msg)
-+	    )
-+);
-+
-+#endif /* _TRACE_H || TRACE_HEADER_MULTI_READ */
-+
-+#undef TRACE_INCLUDE_PATH
-+#define TRACE_INCLUDE_PATH .
-+#undef TRACE_INCLUDE_FILE
-+#define TRACE_INCLUDE_FILE trace
-+
-+/* This part must be outside protection */
-+#include <trace/define_trace.h>
+ 	sdata->ap_power_level = new_ap_level;
+ 	if (__ieee80211_recalc_txpower(sdata))
+ 		return BSS_CHANGED_TXPOWER;
+@@ -3190,13 +3215,10 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 					    rx_status->band, true);
+ 	mutex_unlock(&local->sta_mtx);
+ 
+-	if (elems.country_elem && elems.pwr_constr_elem &&
+-	    mgmt->u.probe_resp.capab_info &
+-				cpu_to_le16(WLAN_CAPABILITY_SPECTRUM_MGMT))
+-		changed |= ieee80211_handle_pwr_constr(sdata, chan,
+-						       elems.country_elem,
+-						       elems.country_elem_len,
+-						       elems.pwr_constr_elem);
++	changed |= ieee80211_handle_pwr_constr(sdata, chan, mgmt,
++					       elems.country_elem,
++					       elems.country_elem_len,
++					       elems.pwr_constr_elem);
+ 
+ 	ieee80211_bss_info_change_notify(sdata, changed);
+ }
 -- 
-2.1.1
+2.1.0
 
