@@ -1,52 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f50.google.com ([209.85.215.50]:36476 "EHLO
-	mail-la0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751180AbaIJE6O (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:44498 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932333AbaICNOh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Sep 2014 00:58:14 -0400
-Received: by mail-la0-f50.google.com with SMTP id ty20so5592671lab.23
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Sep 2014 21:58:13 -0700 (PDT)
+	Wed, 3 Sep 2014 09:14:37 -0400
+Date: Wed, 3 Sep 2014 16:14:29 +0300
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <wireless-regdb@lists.infradead.org>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 07/12] wireless-regdb: Add Saint Pierre and Miquelon (PM)
+ regulatory rules
+Message-ID: <20140903131429.GA16183@jouni.qca.qualcomm.com> (sfid-20140903_151440_131677_97528F78)
 MIME-Version: 1.0
-In-Reply-To: <85725D0A-E038-44CF-9894-BDA93231FA62@holtmann.org>
-References: <1410268021-9529-1-git-send-email-emmanuel.grumbach@intel.com>
-	<85725D0A-E038-44CF-9894-BDA93231FA62@holtmann.org>
-Date: Wed, 10 Sep 2014 07:58:13 +0300
-Message-ID: <CANUX_P2sVqw=e8ZG5NnMme+TfsjXB36ymMUDUkzp90nB4cPdnw@mail.gmail.com> (sfid-20140910_065821_567058_ACC8F5B6)
-Subject: Re: [PATCH] cfg802111/nl80211: Add device motion indication API
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Avraham Stern <avraham.stern@intel.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->
-> if we have WiFi chips that have these kind of information, then shouldn't it be better exposed via a generic subsystem for motion events. Having this exposed over nl80211 seems a bit too limited.
->
-> I am thinking that either an input event or maybe via hwmon or IIO. Since at the end of the day such an event should be considered just a sensor. It doesn't matter which piece of hardware is doing the sensing or who it is doing for.
->
-> We are also not exposing RFKILL switches over nl80211. We have a dedicated RFKILL subsystem where all kinds of switches can integrate into.
->
+French Jurisdiction, follows ETSI rules per R&TTE Directive.
 
-I can't sayI totally disagree, but the point here I guess is that the
-precision is very limited - WiFi based after all - and hence, I don't
-think we really want to expose a real motion detection device to the
-whole system. This is not a gyro or anything of this kind. The commit
-message gives example of use cases where the flows that are triggered
-by this kind of notifications. The user aren't aware of these flows.
-The frequency of the scan isn't something the user is aware of but
-more a WiFi system parameter. So basically, I don't think we can
-really talk about a real sensor, but more of a heuristic that will
-likely help WiFi to behave better. Might there be other components
-interested in this heuristic with its level of (im)precision, good
-question.
-Maybe adding this to the description of the command would help?
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+---
+ db.txt | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/db.txt b/db.txt
+index 7f842f3..7e34611 100644
+--- a/db.txt
++++ b/db.txt
+@@ -769,6 +769,12 @@ country PL: DFS-ETSI
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
++country PM: DFS-ETSI
++	(2402 - 2482 @ 40), (20)
++	(5170 - 5250 @ 80), (20)
++	(5250 - 5330 @ 80), (20), DFS
++	(5490 - 5710 @ 80), (27), DFS
++
+ country PT: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 80), (20)
+-- 
+1.9.1
+
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
