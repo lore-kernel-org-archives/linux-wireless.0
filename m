@@ -1,53 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:12146 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751130AbaIVT4d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Sep 2014 15:56:33 -0400
-Date: Mon, 22 Sep 2014 21:55:54 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Linux NFC <linux-nfc@lists.01.org>,
-	Linux Wireless <linux-wireless@vger.kernel.org>
-Subject: [GIT] [3.17] NFC fixes
-Message-ID: <20140922195553.GC4235@zurbaran> (sfid-20140922_215636_850950_A41DA7B3)
+Received: from mail-qc0-f176.google.com ([209.85.216.176]:39742 "EHLO
+	mail-qc0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932373AbaICMdA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Sep 2014 08:33:00 -0400
+Received: by mail-qc0-f176.google.com with SMTP id m20so8343625qcx.7
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Sep 2014 05:32:59 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1409747141.911.15.camel@jlt4.sipsolutions.net>
+References: <2937689.hWkxdbjQ3v@rogge-hp-probook-6470b> <1409745133.911.7.camel@jlt4.sipsolutions.net>
+ <CAGnRvurXEzkekvYA2bLnObNMpxytH0G1tgXnF5c=90wBCoWmRA@mail.gmail.com> <1409747141.911.15.camel@jlt4.sipsolutions.net>
+From: Henning Rogge <hrogge@gmail.com>
+Date: Wed, 3 Sep 2014 14:32:39 +0200
+Message-ID: <CAGnRvur4g03Ut1fiMybUy=zdA=ponAMQKbd-vc_i1RaQsThJhQ@mail.gmail.com> (sfid-20140903_150113_679102_1E0415CD)
+Subject: Re: [Patch]mac80211: Add support for mesh proxy path dump
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On Wed, Sep 3, 2014 at 2:25 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>> First patch to define the two new cfg80211_ops and the necessary
+>> nl80211/tracing helper functions, second patch that implements
+>> get_mpp() and dump_mpp() functions?
+>
+> Right. That way you have one patch that defines the API etc., and
+> another that implements it, and it's easier to review and document the
+> APIs in the right places etc.
+>
+> I don't always insist on this, but it's a pretty big patch so I'd prefer
+> it this way (and it also should be almost trivial to split)
 
-Hopefully not too late for a handful of NFC fixes:
+Yes, should be easy. I will come back to the list with a "v2" set of patches.
 
-- 2 potential build failures for ST21NFCA and ST21NFCB, triggered by a
-  depmod dependenyc cycle.
-- One potential buffer overflow in the microread driver.
+>> mpath and mpp use the same storage object (struct mesh_path), so I
+>> reused the mpath_info struct. As far as I can see its just a "transfer
+>> object" between for cfg80211 that temporarily stores data from the
+>> cfg80211_ops for nl80211 messages.
+>
+> Indeed, it is.
+>
+>> Shall I create a new struct for the two new cfg80211_ops?
+>
+> No need, I just wasn't sure it really needed the same data so figured
+> I'd ask.
 
-The following changes since commit 1bd3fa7b8c9b2936c16c6e6452f9cc991c405872:
+At the moment I don't use much of the mpath_info field... but I think
+the mpp operations will always use a subset of the mpath fields, so we
+can reuse the nl80211 encoding function by reusing the struct. If this
+changes it would be trivial to switch to a different struct, because
+its not visible from userspace.
 
-  Merge branch 'for-john' of git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes (2014-09-04 13:12:02 -0400)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-fixes.git tags/nfc-fixes-3.17-1
-
-for you to fetch changes up to 300c627fbc52aa5b2117ca267907ab8d7b990ead:
-
-  NFC: st21nfca: Fix potential depmod dependency cycle (2014-09-07 23:45:53 +0200)
-
-----------------------------------------------------------------
-Christophe Ricard (2):
-      NFC: st21nfcb: Fix depmod dependency cycle
-      NFC: st21nfca: Fix potential depmod dependency cycle
-
-Dan Carpenter (1):
-      NFC: microread: Potential overflows in microread_target_discovered()
-
- drivers/nfc/microread/microread.c | 16 ++++++++++++----
- drivers/nfc/st21nfca/Makefile     |  5 +++--
- drivers/nfc/st21nfcb/Makefile     |  5 +++--
- 3 files changed, 18 insertions(+), 8 deletions(-)
-
--- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+Henning
