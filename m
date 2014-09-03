@@ -1,67 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:38279 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751547AbaI2Jr0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Sep 2014 05:47:26 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 1/2] ath10k: add firmware crash counters
-References: <20140929094214.12889.97523.stgit@potku.adurom.net>
-Date: Mon, 29 Sep 2014 12:47:01 +0300
-In-Reply-To: <20140929094214.12889.97523.stgit@potku.adurom.net> (Kalle Valo's
-	message of "Mon, 29 Sep 2014 12:42:15 +0300")
-Message-ID: <8761g63giy.fsf@kamboji.qca.qualcomm.com> (sfid-20140929_114729_010005_63838C97)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from s3.sipsolutions.net ([5.9.151.49]:60911 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755817AbaICL4s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Sep 2014 07:56:48 -0400
+Message-ID: <1409745400.911.10.camel@jlt4.sipsolutions.net> (sfid-20140903_135651_447300_82CD4D2D)
+Subject: Re: [PATCH v5 1/2] mac80211: split 802.11h parsing from transmit
+ power policy
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Steinar H. Gunderson" <sgunderson@bigfoot.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 03 Sep 2014 13:56:40 +0200
+In-Reply-To: <E1XONJ6-0005Kl-Nz@pannekake.samfundet.no> (sfid-20140901_104956_330419_87FE5F12)
+References: <20140830184516.GA31497@sesse.net>
+	 <E1XONJ6-0005Kl-Nz@pannekake.samfundet.no>
+	 (sfid-20140901_104956_330419_87FE5F12)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
+On Fri, 2014-08-29 at 19:27 +0200, Steinar H. Gunderson wrote:
 
-> From: Ben Greear <greearb@candelatech.com>
->
-> kvalo: split into it's own patch, add debugfs file and add locking
->
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+> ieee80211_find_80211h_pwr_constr
 
-Oh, I forgot to add a commit log. I'm planning to add something like
-this:
+Please format the code like this:
 
-----------------------------------------------------------------------
-Add three counters related to firmware crashes or resets.
+static bool
+ieee80211_find_80211h_pwr_constr(struct ieee80211_sub_if_data *sdata, 
+                                 struct ieee80211_channel *channel,
+                                 const u8 *country_ie, u8
+country_ie_len,
+                                 const u8 *pwr_constr_elem,
+                                 int *chan_pwr, int *pwr_reduction)
 
-Usage:
+Do we need the pwr_reduction? Couldn't we just return it? We don't
+handle 0/negative anyway, do we?
 
-# cat /sys/kernel/debug/ieee80211/phy0/ath10k/fw_reset_stats 
-fw_crash_counter                2
-fw_warm_reset_counter           43
-fw_cold_reset_counter           0
-#
+> -static u32 ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
 
-----------------------------------------------------------------------
+> +static bool ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
 
-Also I forgot to add the cover letter, here's the changelog for both
-patches:
+I think you meant to keep u32 here? Otherwise return values from the
+function simply get converted to 0/1 which doesn't seem right.
 
-v2:
-
-* remove unneeded ifdef from debug.c
-
-* rebase on top of Michal's "ath10k: fix fw stats processing",
-  dropping patch "ath10k: add helper method to grab debug stats"
-  because it was not needed anymore
-
-* remove ifdef from ath10k_ops with "#define foo NULL" hack
-
-* hold mutex when reading pdev_stats in ath10k_debug_get_et_stats()
-
-* move fw reset stats to struct ath10k::stats and add locking
-
-* add fw_reset_stats debugfs file
+johannes
 
 
--- 
-Kalle Valo
