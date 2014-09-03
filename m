@@ -1,43 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 8bytes.org ([81.169.241.247]:58942 "EHLO theia.8bytes.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751100AbaILQRz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Sep 2014 12:17:55 -0400
-Date: Fri, 12 Sep 2014 18:17:52 +0200
-From: Joerg Roedel <joro@8bytes.org>
-To: Jason Newton <nevion@gmail.com>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	iommu <iommu@lists.linux-foundation.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: ath9k and AMD IOMMU alias breakage on 3.16?
-Message-ID: <20140912161752.GV28786@8bytes.org> (sfid-20140912_181802_393136_666B1C00)
-References: <CAGou9MhCmRajqfh91rxbBUr9PBvJxo7U=g9p4Onp0pJk4BwBnA@mail.gmail.com>
- <1409976104.2982.56.camel@ul30vt.home>
- <CAGou9Mg+5GhUUECM4qurF6UzhLMARgeCtbL020U9y0Vs7aFGoA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAGou9Mg+5GhUUECM4qurF6UzhLMARgeCtbL020U9y0Vs7aFGoA@mail.gmail.com>
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:42161 "EHLO
+	out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932185AbaICMBZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Sep 2014 08:01:25 -0400
+Received: from compute4.internal (compute4.nyi.internal [10.202.2.44])
+	by gateway2.nyi.internal (Postfix) with ESMTP id 9B64220954
+	for <linux-wireless@vger.kernel.org>; Wed,  3 Sep 2014 08:01:24 -0400 (EDT)
+Message-ID: <1409745682.14224.10.camel@localhost> (sfid-20140903_140206_928331_0D90E001)
+Subject: Re: [RFC] net: ipv4: drop unicast encapsulated in L2 multicast
+From: Hannes Frederic Sowa <hannes@stressinduktion.org>
+To: David Miller <davem@davemloft.net>
+Cc: hideaki.yoshifuji@miraclelinux.com, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	yoshfuji@linux-ipv6.org
+Date: Wed, 03 Sep 2014 14:01:22 +0200
+In-Reply-To: <20140902.150326.1420682815750767731.davem@davemloft.net>
+References: <1409133238.26515.13.camel@localhost>
+	 <1409650573.1808.11.camel@jlt4.sipsolutions.net>
+	 <540675F2.1030308@miraclelinux.com>
+	 <20140902.150326.1420682815750767731.davem@davemloft.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Jason,
+On Di, 2014-09-02 at 15:03 -0700, David Miller wrote:
+> From: YOSHIFUJI Hideaki <hideaki.yoshifuji@miraclelinux.com>
+> Date: Wed, 03 Sep 2014 10:59:14 +0900
+> 
+> > Upper-layer needs to cope eith situation of seeing packets with
+> > "incorrect" L2 header anyway (e.g., in promiscous mode).
+> > I do not see much advantage to drop them here.
+> 
+> It's required to prevent wireless nodes from using the shared wireless
+> group keys (used for multicast transmission) to inject unicast frames.
+> 
+> The RFCs really do specify this at least on the ipv4 side.
 
-On Fri, Sep 05, 2014 at 10:28:01PM -0700, Jason Newton wrote:
-> [    0.021820] AMD-Vi: device: 00:00.2 cap: 0040 seg: 0 flags: b8 info 0000
-> [    0.021827] AMD-Vi:        mmio-addr: 00000000feb80000
-> [    0.021844] AMD-Vi:   DEV_SELECT_RANGE_START	 devid: 00:01.0 flags: 00
-> [    0.021848] AMD-Vi:   DEV_RANGE_END		 devid: ff:1f.6
-> [    0.022730] AMD-Vi:   DEV_ALIAS_RANGE		 devid: 02:00.0 flags: 00 devid_to: 00:14.4
-> [    0.022735] AMD-Vi:   DEV_RANGE_END		 devid: 02:1f.7
-> [    0.022745] AMD-Vi:   DEV_SPECIAL(HPET[0])		devid: 00:14.0
-> [    0.022749] AMD-Vi:   DEV_SPECIAL(IOAPIC[5])		devid: 00:14.0
-> [    0.022753] AMD-Vi:   DEV_SPECIAL(IOAPIC[6])		devid: 00:00.0
+I have to agree with YOSHIFUJI Hideaki here. I looked at a lot of RFCs
+and haven't found anything were it states to use L2 address type for
+checks in L3 ipv6 addresses. For IPv4 addresses the situation is clear
+though...
 
-It is just a test, as I don't know how the hardware is actually wired in
-your system, but can you try to boot with 'ivrs_ioapic[6]=00:00.1' on
-the kernel command line and report if it makes any difference?
+There was an RFC update (6085) which specifically allows one to send
+ipv6 multicast frames with unicast L2 addresses. In the dicussion that
+lead to this RFC it was stated that checking L2 and L3 addresses seems
+to be a layering violation, but I can just use this as a hint.
 
-Thanks,
+Bye,
+Hannes
 
-	Joerg
 
