@@ -1,82 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f182.google.com ([209.85.212.182]:41861 "EHLO
-	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759496AbaIPAN0 (ORCPT
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:60400 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755992AbaICT4t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Sep 2014 20:13:26 -0400
-Received: by mail-wi0-f182.google.com with SMTP id e4so5274590wiv.9
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Sep 2014 17:13:25 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCHv2 09/10] ath9k: enable dynack using set_coverage_class codepath
-Date: Tue, 16 Sep 2014 02:13:15 +0200
-Message-Id: <1410826396-15544-10-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140916_021334_898994_A7ECA941)
-In-Reply-To: <1410826396-15544-1-git-send-email-lorenzo.bianconi83@gmail.com>
-References: <1410826396-15544-1-git-send-email-lorenzo.bianconi83@gmail.com>
+	Wed, 3 Sep 2014 15:56:49 -0400
+Received: by mail-wi0-f180.google.com with SMTP id ex7so10545550wid.1
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Sep 2014 12:56:48 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eliad Peller <eliad@wizery.com>,
+	Eliad Peller <eliadx.peller@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 13/36] iwlwifi: mvm: clear d0i3 state on recovery
+Date: Wed,  3 Sep 2014 22:56:01 +0300
+Message-Id: <1409774184-24665-13-git-send-email-egrumbach@gmail.com> (sfid-20140903_220114_736728_64FDD833)
+In-Reply-To: <540771E5.6080908@gmail.com>
+References: <540771E5.6080908@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Enable ACK timeout estimation algorithm if set_coverage_class routine has been
-called with negative coverage_class parameter. Dynack is automatically disabled
-setting valid value for coverage class
+From: Eliad Peller <eliad@wizery.com>
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+If recovery happened after mvm entered d0i3 (e.g.
+due to sysassert when releasing the bus), the
+mvm->state wasn't cleared properly, causing the
+ongoing recovery to fail (due to iwl_mvm_ref_sync
+failure).
+
+This in turn fails the ongoing recovery, and triggers
+a reprobe, which terminates any ongoing wifi activity.
+
+Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
+Reviewed-by: Gregory Greenman <gregory.greenman@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/main.c | 33 +++++++++++++++++++++++++++++----
- 1 file changed, 29 insertions(+), 4 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 6083359..6969aba 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1876,6 +1876,20 @@ static int ath9k_get_survey(struct ieee80211_hw *hw, int idx,
- 	return 0;
- }
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 83c2ce6..de4ae94 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -803,6 +803,9 @@ static void iwl_mvm_restart_cleanup(struct iwl_mvm *mvm)
+ 	 * ucode_down ref until reconfig is complete */
+ 	iwl_mvm_unref_all_except(mvm, IWL_MVM_REF_UCODE_DOWN);
  
-+static void ath9k_enable_dynack(struct ath_softc *sc)
-+{
-+#ifdef CONFIG_ATH9K_DYNACK
-+	u32 rfilt;
-+	struct ath_hw *ah = sc->sc_ah;
++	/* clear any stale d0i3 state */
++	clear_bit(IWL_MVM_STATUS_IN_D0I3, &mvm->status);
 +
-+	ath_dynack_reset(ah);
-+
-+	ah->dynack.enabled = true;
-+	rfilt = ath_calcrxfilter(sc);
-+	ath9k_hw_setrxfilter(ah, rfilt);
-+#endif
-+}
-+
- static void ath9k_set_coverage_class(struct ieee80211_hw *hw,
- 				     s16 coverage_class)
- {
-@@ -1886,11 +1900,22 @@ static void ath9k_set_coverage_class(struct ieee80211_hw *hw,
- 		return;
- 
- 	mutex_lock(&sc->mutex);
--	ah->coverage_class = coverage_class;
- 
--	ath9k_ps_wakeup(sc);
--	ath9k_hw_init_global_settings(ah);
--	ath9k_ps_restore(sc);
-+	if (coverage_class >= 0) {
-+		ah->coverage_class = coverage_class;
-+		if (ah->dynack.enabled) {
-+			u32 rfilt;
-+
-+			ah->dynack.enabled = false;
-+			rfilt = ath_calcrxfilter(sc);
-+			ath9k_hw_setrxfilter(ah, rfilt);
-+		}
-+		ath9k_ps_wakeup(sc);
-+		ath9k_hw_init_global_settings(ah);
-+		ath9k_ps_restore(sc);
-+	} else if (!ah->dynack.enabled) {
-+		ath9k_enable_dynack(sc);
-+	}
- 
- 	mutex_unlock(&sc->mutex);
+ 	mvm->vif_count = 0;
+ 	mvm->rx_ba_sessions = 0;
  }
 -- 
 1.9.1
