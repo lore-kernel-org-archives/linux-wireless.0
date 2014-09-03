@@ -1,68 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay6-d.mail.gandi.net ([217.70.183.198]:49245 "EHLO
-	relay6-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751344AbaIJLZV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Sep 2014 07:25:21 -0400
-Message-ID: <1410348304.4077.29.camel@hadess.net> (sfid-20140910_132524_421093_5BC80550)
-Subject: Re: Realtek GPIO chipset, for Baytrail?
-From: Bastien Nocera <hadess@hadess.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 10 Sep 2014 13:25:04 +0200
-In-Reply-To: <54102635.2040403@broadcom.com>
-References: <1410256608.4077.7.camel@hadess.net>
-		 <540F54B1.8040409@lwfinger.net> <1410292835.4077.21.camel@hadess.net>
-		 <540F61FE.2050404@lwfinger.net>
-		 <7234781D-5B78-404A-B945-D090938777C7@hadess.net>
-		 <D08A763F-AD50-449D-98C6-B82866F49480@holtmann.org>
-		 <54100FF7.5060904@broadcom.com> <1410342645.4077.28.camel@hadess.net>
-	 <54102635.2040403@broadcom.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:34171 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754691AbaICR5N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Sep 2014 13:57:13 -0400
+Message-ID: <1409767024.911.17.camel@jlt4.sipsolutions.net> (sfid-20140903_195723_980893_A2B10FF6)
+Subject: Re: [PATCH] mac80211: Format connected time
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Matteo Croce <matteo@openwrt.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 03 Sep 2014 19:57:04 +0200
+In-Reply-To: <CAFnufp2pb4k3amoZoQ3bc5PSXXVzORZDAF2TZoZjmBfGPUKT2Q@mail.gmail.com> (sfid-20140903_153414_619333_B175E1BC)
+References: <CAFnufp09nXuaobS_u7Bh5JcLGgpkPfMbqMfG0HVJYd_mLVR49A@mail.gmail.com>
+	 <1409744533.911.1.camel@jlt4.sipsolutions.net>
+	 <CAFnufp2pb4k3amoZoQ3bc5PSXXVzORZDAF2TZoZjmBfGPUKT2Q@mail.gmail.com>
+	 (sfid-20140903_153414_619333_B175E1BC)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-09-10 at 12:21 +0200, Arend van Spriel wrote:
-> On 09/10/14 11:50, Bastien Nocera wrote:
-> > On Wed, 2014-09-10 at 10:46 +0200, Arend van Spriel wrote:
-> >> On 09/10/14 01:10, Marcel Holtmann wrote:
-> >>> Hi Bastien,
-> >>>
-> >>>>>>> What specific Baytrail tablet do you have?
-> >>>>>>
-> >>>>>> The Onda v975w. It came with Windows 8.1 32-bit.
-> >>>>>>
-> >>>>>> I guess that the device is probably a PCI one, but the enumeration is
-> >>>>>> done through ACPI instead of "normal" PCI.
-> >>>>>
-> >>>>> In http://www.onda-tablet.com/onda-v975w-quad-core-win-8-tablet-9-7-inch-retina-screen-ram-2gb-wifi-32gb.html, someone is specifically looking for an RTL8723BS driver.
-> >>>>
-> >>>> That's helpful.
-> >>>>
-> >>>>> I will see if my contact at Realtek knows who has worked on drivers for this device, and if it would be possible to use rtl8723be if we were to supply an SDIO frontend.
-> >>>>
-> >>>> I'm not sure why the device doesn't show up in the sysfs tree, but maybe it needs a driver bound to it to show up.
-> >>>
-> >>> I just booted up my Baytrail based Minnowboard Max in ACPI enumeration and then the SDIO host controller is enumerated via ACPI. This is compared to PCI enumeration where the SDIO controller shows up in lspci.
-> >>>
-> >>> So can you try to install sdhci-acpi and see if that starts showing SDIO devices. If the SDIO host controllers loads, then it start SDIO enumeration and you would see the cards.
-> >>
-> >> You may need to look in /sys/bus/mmc/devices/ instead of sdio.
-> >
-> > Indeed. That did the trick.
-> >
-> > mmc0:0001 is the builtin storage, mmc1:0001:1 however is an unbound
-> > device with vendor 0x024c and device 0xb723 (modalias:
-> > sdio:c07v024CdB723). More interestingly class is 0x07, which udev
-> > interprets as "WLAN interface".
-> 
-> Now you have to find and load the right driver.
+On Wed, 2014-09-03 at 15:33 +0200, Matteo Croce wrote:
+> Sorry, gmail wrapped the line with the C function.
+> Here is a fixed patch
 
-Right. I'll have to defer to Larry's inquiry about this with Realtek, to
-check whether it's the same interface as the PCI RTL8723be.
+Nope, didn't work either :)
 
-Cheers
+I think I'll just commit the fix myself ...
+
+johannes
 
