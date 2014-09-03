@@ -1,73 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:51031 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753907AbaIHQ4b (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:59253 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753853AbaICDJQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Sep 2014 12:56:31 -0400
-Received: by mail-wi0-f169.google.com with SMTP id n3so2993397wiv.2
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Sep 2014 09:56:30 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 04/12] iwlwifi: mvm: fix endianity issues with Smart Fifo commands
-Date: Mon,  8 Sep 2014 19:56:09 +0300
-Message-Id: <1410195377-10075-4-git-send-email-egrumbach@gmail.com> (sfid-20140908_185634_317137_3F5B97DF)
-In-Reply-To: <540DDF37.5030801@gmail.com>
-References: <540DDF37.5030801@gmail.com>
+	Tue, 2 Sep 2014 23:09:16 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH v2 2/6] ath9k: Fix beacons for managed mode
+Date: Wed,  3 Sep 2014 08:39:21 +0530
+Message-Id: <1409713765-9358-3-git-send-email-sujith@msujith.org> (sfid-20140903_050935_893515_8FCB9F5B)
+In-Reply-To: <1409713765-9358-1-git-send-email-sujith@msujith.org>
+References: <1409713765-9358-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-This code was broken on big endian systems. Sparse didn't
-catch the bug since the firmware command was not tagged as
-little endian.
-Fix the bug for big endian systems and tag the field in the
-firmware command to prevent such issues in the future.
+If the current opmode is managed, the ATH_OP_BEACONS flag
+needs to be set only when there is a primary station interface
+and it is associated/active.
 
-Cc: stable@vger.kernel.org [3.14+]
-Fixes: 1f3b0ff8ec ("iwlwifi: mvm: Add Smart FIFO support")
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/fw-api.h | 4 ++--
- drivers/net/wireless/iwlwifi/mvm/sf.c     | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath9k/main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/iwlwifi/mvm/fw-api.h
-index 95f5b32..9a922f3 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw-api.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw-api.h
-@@ -1563,14 +1563,14 @@ enum iwl_sf_scenario {
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index d9be831..0b3d4d8 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1067,8 +1067,8 @@ void ath9k_calculate_summary_state(struct ath_softc *sc,
+ 	if (ah->opmode == NL80211_IFTYPE_STATION) {
+ 		bool changed = (iter_data.primary_sta != ctx->primary_sta);
  
- /**
-  * Smart Fifo configuration command.
-- * @state: smart fifo state, types listed in iwl_sf_sate.
-+ * @state: smart fifo state, types listed in enum %iwl_sf_sate.
-  * @watermark: Minimum allowed availabe free space in RXF for transient state.
-  * @long_delay_timeouts: aging and idle timer values for each scenario
-  * in long delay state.
-  * @full_on_timeouts: timer values for each scenario in full on state.
-  */
- struct iwl_sf_cfg_cmd {
--	enum iwl_sf_state state;
-+	__le32 state;
- 	__le32 watermark[SF_TRANSIENT_STATES_NUMBER];
- 	__le32 long_delay_timeouts[SF_NUM_SCENARIO][SF_NUM_TIMEOUT_TYPES];
- 	__le32 full_on_timeouts[SF_NUM_SCENARIO][SF_NUM_TIMEOUT_TYPES];
-diff --git a/drivers/net/wireless/iwlwifi/mvm/sf.c b/drivers/net/wireless/iwlwifi/mvm/sf.c
-index 7edfd15..e843b67 100644
---- a/drivers/net/wireless/iwlwifi/mvm/sf.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/sf.c
-@@ -172,7 +172,7 @@ static int iwl_mvm_sf_config(struct iwl_mvm *mvm, u8 sta_id,
- 			     enum iwl_sf_state new_state)
- {
- 	struct iwl_sf_cfg_cmd sf_cmd = {
--		.state = new_state,
-+		.state = cpu_to_le32(new_state),
- 	};
- 	struct ieee80211_sta *sta;
- 	int ret = 0;
+-		iter_data.beacons = true;
+ 		if (iter_data.primary_sta) {
++			iter_data.beacons = true;
+ 			ath9k_set_assoc_state(sc, iter_data.primary_sta,
+ 					      changed);
+ 			if (!ctx->primary_sta ||
 -- 
-1.9.1
+2.1.0
 
