@@ -1,153 +1,207 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:42356 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750937AbaICIfn (ORCPT
+Received: from cassarossa.samfundet.no ([193.35.52.29]:49785 "EHLO
+	cassarossa.samfundet.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932379AbaICN4N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Sep 2014 04:35:43 -0400
-Received: by mail-wi0-f174.google.com with SMTP id d1so416637wiv.7
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Sep 2014 01:35:41 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH V3] bcma: get info about flash type SoC booted from
-Date: Wed,  3 Sep 2014 10:35:13 +0200
-Message-Id: <1409733313-11104-1-git-send-email-zajec5@gmail.com> (sfid-20140903_103549_529325_C53454A3)
-In-Reply-To: <1409696042-5397-1-git-send-email-zajec5@gmail.com>
-References: <1409696042-5397-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Wed, 3 Sep 2014 09:56:13 -0400
+In-Reply-To: <20140903133328.GC18933@sesse.net>
+References: <20140903133328.GC18933@sesse.net>
+From: "Steinar H. Gunderson" <sgunderson@bigfoot.com>
+Date: Wed, 3 Sep 2014 06:48:37 -0700
+Subject: [PATCH v6 2/2] mac80211: support DTPC IE (from Cisco Client
+ eXtensions)
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org
+Message-Id: <E1XPB2h-0008WO-MS@pannekake.samfundet.no> (sfid-20140903_155617_247529_E6B6D8C2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is an ongoing work on cleaning MIPS's nvram support so it could be
-re-used on other platforms (bcm53xx to say precisely).
-This will require a bit of extra logic in bcma this patch implements.
+Linux already supports 802.11h, where the access point can tell the
+client to reduce its transmission power. However, 802.11h is only
+defined for 5 GHz, where the need for this is much smaller than on
+2.4 GHz.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Cisco has their own solution, called DTPC (Dynamic Transmit Power
+Control). Cisco APs on a controller sometimes but not always send
+802.11h; they always send DTPC, even on 2.4 GHz. This patch adds support
+for parsing and honoring the DTPC IE in addition to the 802.11h
+element (they do not always contain the same limits, so both must
+be honored); the format is not documented, but very simple.
+
+Tested (on top of wireless.git and on 3.16.1) against a Cisco Aironet
+1142 joined to a Cisco 2504 WLC, by setting various transmit power
+levels for the given access points and observing the results.
+The Wireshark 802.11 dissector agrees with the interpretation of the
+element, except for negative numbers, which seem to never happen
+anyway.
+
+Signed-off-by: Steinar H. Gunderson <sgunderson@bigfoot.com>
 ---
-After some extra discussion it seems my initial idea was correct. It is
-not possible on bcm47xx to use anything like a platform device/driver to
-handle NVRAM.
+ include/linux/ieee80211.h  |  3 ++-
+ net/mac80211/ieee80211_i.h |  1 +
+ net/mac80211/mlme.c        | 60 +++++++++++++++++++++++++++++++++++++---------
+ net/mac80211/util.c        | 21 ++++++++++++++++
+ 4 files changed, 73 insertions(+), 12 deletions(-)
 
-V2: We don't use info about boot_dev anywhere else, so don't store it.
-    Move the code to the bcma_bus_early_register as we need NVRAM early.
-V3: Move this code to the driver_mips.c, it won't be needed on other
-    hosts / archs.
----
- drivers/bcma/driver_mips.c     | 62 ++++++++++++++++++++++++++++++++++++++++++
- include/linux/bcma/bcma_regs.h |  5 ++++
- 2 files changed, 67 insertions(+)
-
-diff --git a/drivers/bcma/driver_mips.c b/drivers/bcma/driver_mips.c
-index 11115bb..004d6aa 100644
---- a/drivers/bcma/driver_mips.c
-+++ b/drivers/bcma/driver_mips.c
-@@ -21,6 +21,14 @@
- #include <linux/serial_reg.h>
- #include <linux/time.h>
- 
-+enum bcma_boot_dev {
-+	BCMA_BOOT_DEV_UNK = 0,
-+	BCMA_BOOT_DEV_ROM,
-+	BCMA_BOOT_DEV_PARALLEL,
-+	BCMA_BOOT_DEV_SERIAL,
-+	BCMA_BOOT_DEV_NAND,
-+};
-+
- static const char * const part_probes[] = { "bcm47xxpart", NULL };
- 
- static struct physmap_flash_data bcma_pflash_data = {
-@@ -229,11 +237,51 @@ u32 bcma_cpu_clock(struct bcma_drv_mips *mcore)
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 63ab3873..d0ec287 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -1806,7 +1806,8 @@ enum ieee80211_eid {
+ 	WLAN_EID_DMG_TSPEC = 146,
+ 	WLAN_EID_DMG_AT = 147,
+ 	WLAN_EID_DMG_CAP = 148,
+-	/* 149-150 reserved for Cisco */
++	/* 149 reserved for Cisco */
++	WLAN_EID_CISCO_VENDOR_SPECIFIC = 150,
+ 	WLAN_EID_DMG_OPERATION = 151,
+ 	WLAN_EID_DMG_BSS_PARAM_CHANGE = 152,
+ 	WLAN_EID_DMG_BEAM_REFINEMENT = 153,
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index ef7a089..e995556 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1367,6 +1367,7 @@ struct ieee802_11_elems {
+ 	const struct ieee80211_wide_bw_chansw_ie *wide_bw_chansw_ie;
+ 	const u8 *country_elem;
+ 	const u8 *pwr_constr_elem;
++	const u8 *cisco_dtpc_elem;
+ 	const struct ieee80211_timeout_interval_ie *timeout_int;
+ 	const u8 *opmode_notif;
+ 	const struct ieee80211_sec_chan_offs_ie *sec_chan_offs;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 918011a..352f50c 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1216,14 +1216,30 @@ ieee80211_find_80211h_pwr_constr(struct ieee80211_sub_if_data *sdata,
+ 	return have_chan_pwr;
  }
- EXPORT_SYMBOL(bcma_cpu_clock);
  
-+static enum bcma_boot_dev bcma_boot_dev(struct bcma_bus *bus)
++static void ieee80211_find_cisco_dtpc(struct ieee80211_sub_if_data *sdata,
++				      struct ieee80211_channel *channel,
++				      const u8 *cisco_dtpc_ie,
++				      int *pwr_level)
 +{
-+	struct bcma_drv_cc *cc = &bus->drv_cc;
-+	u8 cc_rev = cc->core->id.rev;
-+
-+	if (cc_rev == 42) {
-+		struct bcma_device *core;
-+
-+		core = bcma_find_core(bus, BCMA_CORE_NS_ROM);
-+		if (core) {
-+			switch (bcma_aread32(core, BCMA_IOST) &
-+				BCMA_NS_ROM_IOST_BOOT_DEV_MASK) {
-+			case BCMA_NS_ROM_IOST_BOOT_DEV_NOR:
-+				return BCMA_BOOT_DEV_SERIAL;
-+			case BCMA_NS_ROM_IOST_BOOT_DEV_NAND:
-+				return BCMA_BOOT_DEV_NAND;
-+			case BCMA_NS_ROM_IOST_BOOT_DEV_ROM:
-+			default:
-+				return BCMA_BOOT_DEV_ROM;
-+			}
-+		}
-+	} else {
-+		if (cc_rev == 38) {
-+			if (cc->status & BCMA_CC_CHIPST_5357_NAND_BOOT)
-+				return BCMA_BOOT_DEV_NAND;
-+			else if (cc->status & BIT(5))
-+				return BCMA_BOOT_DEV_ROM;
-+		}
-+
-+		if ((cc->capabilities & BCMA_CC_CAP_FLASHT) ==
-+		    BCMA_CC_FLASHT_PARA)
-+			return BCMA_BOOT_DEV_PARALLEL;
-+		else
-+			return BCMA_BOOT_DEV_SERIAL;
-+	}
-+
-+	return BCMA_BOOT_DEV_SERIAL;
++	/* From practical testing, the first data byte of the DTPC element
++	 * seems to contain the requested dBm level, and the CLI on Cisco
++	 * APs clearly state the range is -127 to 127 dBm, which indicates
++	 * a signed byte, although it seemingly never actually goes negative.
++	 * The other byte seems to always be zero.
++	 */
++	*pwr_level = (__s8)cisco_dtpc_ie[4];
 +}
 +
- static void bcma_core_mips_flash_detect(struct bcma_drv_mips *mcore)
+ static u32 ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
+ 				       struct ieee80211_channel *channel,
+ 				       struct ieee80211_mgmt *mgmt,
+ 				       const u8 *country_ie, u8 country_ie_len,
+-				       const u8 *pwr_constr_ie)
++				       const u8 *pwr_constr_ie,
++				       const u8 *cisco_dtpc_ie)
  {
- 	struct bcma_bus *bus = mcore->core->bus;
- 	struct bcma_drv_cc *cc = &bus->drv_cc;
- 	struct bcma_pflash *pflash = &cc->pflash;
-+	enum bcma_boot_dev boot_dev;
+-	bool has_80211h_pwr = false;
+-	int chan_pwr, pwr_reduction_80211h;
++	bool has_80211h_pwr = false, has_cisco_pwr = false;
++	int chan_pwr = 0, pwr_reduction_80211h = 0;
++	int pwr_level_cisco, pwr_level_80211h;
+ 	int new_ap_level;
  
- 	switch (cc->capabilities & BCMA_CC_CAP_FLASHT) {
- 	case BCMA_CC_FLASHT_STSER:
-@@ -269,6 +317,20 @@ static void bcma_core_mips_flash_detect(struct bcma_drv_mips *mcore)
- 			bcma_nflash_init(cc);
- 		}
- 	}
-+
-+	/* Determine flash type this SoC boots from */
-+	boot_dev = bcma_boot_dev(bus);
-+	switch (boot_dev) {
-+	case BCMA_BOOT_DEV_PARALLEL:
-+	case BCMA_BOOT_DEV_SERIAL:
-+		/* TODO: Init NVRAM using BCMA_SOC_FLASH2 window */
-+		break;
-+	case BCMA_BOOT_DEV_NAND:
-+		/* TODO: Init NVRAM using BCMA_SOC_FLASH1 window */
-+		break;
-+	default:
-+		break;
+ 	if (country_ie && pwr_constr_ie &&
+@@ -1232,16 +1248,35 @@ static u32 ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
+ 		has_80211h_pwr = ieee80211_find_80211h_pwr_constr(
+ 			sdata, channel, country_ie, country_ie_len,
+ 			pwr_constr_ie, &chan_pwr, &pwr_reduction_80211h);
+-		new_ap_level = max_t(int, 0, chan_pwr - pwr_reduction_80211h);
++		pwr_level_80211h =
++			max_t(int, 0, chan_pwr - pwr_reduction_80211h);
 +	}
- }
- 
- void bcma_core_mips_early_init(struct bcma_drv_mips *mcore)
-diff --git a/include/linux/bcma/bcma_regs.h b/include/linux/bcma/bcma_regs.h
-index 917dcd7..e64ae7b 100644
---- a/include/linux/bcma/bcma_regs.h
-+++ b/include/linux/bcma/bcma_regs.h
-@@ -39,6 +39,11 @@
- #define  BCMA_RESET_CTL_RESET		0x0001
- #define BCMA_RESET_ST			0x0804
- 
-+#define BCMA_NS_ROM_IOST_BOOT_DEV_MASK	0x0003
-+#define BCMA_NS_ROM_IOST_BOOT_DEV_NOR	0x0000
-+#define BCMA_NS_ROM_IOST_BOOT_DEV_NAND	0x0001
-+#define BCMA_NS_ROM_IOST_BOOT_DEV_ROM	0x0002
 +
- /* BCMA PCI config space registers. */
- #define BCMA_PCI_PMCSR			0x44
- #define  BCMA_PCI_PE			0x100
++	if (cisco_dtpc_ie) {
++		ieee80211_find_cisco_dtpc(
++			sdata, channel, cisco_dtpc_ie, &pwr_level_cisco);
++		has_cisco_pwr = true;
+ 	}
+ 
+-	if (!has_80211h_pwr)
++	if (!has_80211h_pwr && !has_cisco_pwr)
+ 		return 0;
+ 
+-	sdata_info(sdata,
+-		   "Limiting TX power to %d (%d - %d) dBm as advertised by %pM\n",
+-		   new_ap_level, chan_pwr, pwr_reduction_80211h,
+-		   sdata->u.mgd.bssid);
++	/* If we have both 802.11h and Cisco DTPC, apply both limits
++	 * by picking the smallest of the two power levels advertised.
++	 */
++	if (has_80211h_pwr &&
++	    (!has_cisco_pwr || pwr_level_80211h <= pwr_level_cisco)) {
++		sdata_info(sdata,
++			   "Limiting TX power to %d (%d - %d) dBm as advertised by %pM\n",
++			   pwr_level_80211h, chan_pwr, pwr_reduction_80211h,
++			   sdata->u.mgd.bssid);
++		new_ap_level = pwr_level_80211h;
++	} else {  /* has_cisco_pwr is always true here. */
++		sdata_info(sdata,
++			   "Limiting TX power to %d dBm as advertised by %pM\n",
++			   pwr_level_cisco, sdata->u.mgd.bssid);
++		new_ap_level = pwr_level_cisco;
++	}
+ 
+ 	if (sdata->ap_power_level == new_ap_level)
+ 		return 0;
+@@ -2910,7 +2945,9 @@ static void ieee80211_rx_mgmt_probe_resp(struct ieee80211_sub_if_data *sdata,
+ /*
+  * This is the canonical list of information elements we care about,
+  * the filter code also gives us all changes to the Microsoft OUI
+- * (00:50:F2) vendor IE which is used for WMM which we need to track.
++ * (00:50:F2) vendor IE which is used for WMM which we need to track,
++ * as well as the DTPC IE (part of the Cisco OUI) used for signaling
++ * changes to requested client power.
+  *
+  * We implement beacon filtering in software since that means we can
+  * avoid processing the frame here and in cfg80211, and userspace
+@@ -3218,7 +3255,8 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 	changed |= ieee80211_handle_pwr_constr(sdata, chan, mgmt,
+ 					       elems.country_elem,
+ 					       elems.country_elem_len,
+-					       elems.pwr_constr_elem);
++					       elems.pwr_constr_elem,
++					       elems.cisco_dtpc_elem);
+ 
+ 	ieee80211_bss_info_change_notify(sdata, changed);
+ }
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 725af7a..95a9159 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1014,6 +1014,27 @@ u32 ieee802_11_parse_elems_crc(const u8 *start, size_t len, bool action,
+ 			}
+ 			elems->pwr_constr_elem = pos;
+ 			break;
++		case WLAN_EID_CISCO_VENDOR_SPECIFIC:
++			/* Lots of different options exist, but we only care
++			 * about the Dynamic Transmit Power Control element.
++			 * First check for the Cisco OUI, then for the DTPC
++			 * tag (0x00).
++			 */
++			if (elen < 4) {
++				elem_parse_failed = true;
++				break;
++			}
++			if (pos[0] != 0x00 || pos[1] != 0x40 ||
++			    pos[2] != 0x96 || pos[3] != 0x00)
++				break;
++			if (elen != 6) {
++				elem_parse_failed = true;
++				break;
++			}
++			if (calc_crc)
++				crc = crc32_be(crc, pos - 2, elen + 2);
++			elems->cisco_dtpc_elem = pos;
++			break;
+ 		case WLAN_EID_TIMEOUT_INTERVAL:
+ 			if (elen >= sizeof(struct ieee80211_timeout_interval_ie))
+ 				elems->timeout_int = (void *)pos;
 -- 
-1.8.4.5
+2.1.0
 
