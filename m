@@ -1,60 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f178.google.com ([209.85.220.178]:42013 "EHLO
-	mail-vc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753266AbaIZGPu convert rfc822-to-8bit (ORCPT
+Received: from mail-we0-f180.google.com ([74.125.82.180]:53341 "EHLO
+	mail-we0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755992AbaICT5J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Sep 2014 02:15:50 -0400
-Received: by mail-vc0-f178.google.com with SMTP id lf12so6506084vcb.37
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Sep 2014 23:15:49 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <542448C0.9040505@Informatik.TU-Cottbus.DE>
-References: <542448C0.9040505@Informatik.TU-Cottbus.DE>
-Date: Fri, 26 Sep 2014 08:15:49 +0200
-Message-ID: <CA+BoTQnTqjp0-CqptLEm=Zm2T9zYUvsfiF9Op7c2NhrQS5ahMg@mail.gmail.com> (sfid-20140926_081554_425788_67A72224)
-Subject: Re: Question about debugging mac80211 without printk
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Pink <pink@informatik.tu-cottbus.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 3 Sep 2014 15:57:09 -0400
+Received: by mail-we0-f180.google.com with SMTP id w61so9156944wes.11
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Sep 2014 12:57:08 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 26/36] iwlwifi: trans: make aggregation explicit for TX queue handling
+Date: Wed,  3 Sep 2014 22:56:14 +0300
+Message-Id: <1409774184-24665-26-git-send-email-egrumbach@gmail.com> (sfid-20140903_220113_492760_88378CDC)
+In-Reply-To: <540771E5.6080908@gmail.com>
+References: <540771E5.6080908@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 25 September 2014 18:54, Pink <pink@informatik.tu-cottbus.de> wrote:
-> Hi,
->
-> actually if have the following problem, if have a lot of debug messages
-> using printk inside the mac layer but if there is a
-> critical bug in the source code of the mac80211 module
-> the system goes into kernel panic state during execution. Unfortunately so
-> far i now, it isn't possible
-> after a system restart to identify the rough position of the bug looking for
-> the debug msg's written before the bug has occured in
-> dmesg or syslog because the messages were not saved in follow of the crash.
->
-> Now i thought user mode linux (uml) is maybe a potential solution to
-> identify the bug, if the kernel running the mac layer
-> is executed as virtual machine in uml. But i didn't found any kind of
-> description how to forward the physical wireless card except using TAP/TUN
-> device to the vm so
-> that the kernel inside the vm can run its mac layer directly on the card.
->
-> Now my question what tools are you use for the development and testing of
-> the ath wireless driver
-> as well as the complete wireless stack including mac80211. Is it user mode
-> linux or something else?
-> If user mode linux is used, is there any howto available to forward the
-> atheros card to the vm.
+From: Johannes Berg <johannes.berg@intel.com>
 
-You can try using KVM and pass through devices to a virtual machine.
-Passing USB through has no extra requirements albeit from my
-experience some USB controllers and USB devices have some issues
-sometimes. PCI pass-through requires VT-d or AMD-v to be supported on
-both CPU and motherboard.
+Currently a valid sta_id is assumed to mean that the queue is
+meant to also be aggregated, but that assumption will not be
+true in the future, so don't make it in the lower level but
+only in the inline wrapper.
 
-I actually use this kind of setup (I'm using QEMU) myself. I can
-attach gdb, emulate serial console, pass-through rootfs via 9p and
-just boot a kernel in the VM omitting bootloader which is really
-convenient. If it crashes I can get pretty much all info I need.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-trans.h | 3 +++
+ drivers/net/wireless/iwlwifi/pcie/tx.c   | 3 +--
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
+index dd3aefc..7e8dc3a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
+@@ -405,6 +405,7 @@ struct iwl_trans_txq_scd_cfg {
+ 	u8 fifo;
+ 	s8 sta_id;
+ 	u8 tid;
++	bool aggregate;
+ 	int frame_limit;
+ };
+ 
+@@ -803,6 +804,7 @@ static inline void iwl_trans_txq_enable(struct iwl_trans *trans, int queue,
+ 		.sta_id = sta_id,
+ 		.tid = tid,
+ 		.frame_limit = frame_limit,
++		.aggregate = sta_id >= 0,
+ 	};
+ 
+ 	iwl_trans_txq_enable_cfg(trans, queue, ssn, &cfg);
+@@ -816,6 +818,7 @@ static inline void iwl_trans_ac_txq_enable(struct iwl_trans *trans, int queue,
+ 		.sta_id = -1,
+ 		.tid = IWL_MAX_TID_COUNT,
+ 		.frame_limit = IWL_FRAME_LIMIT,
++		.aggregate = false,
+ 	};
+ 
+ 	iwl_trans_txq_enable_cfg(trans, queue, 0, &cfg);
+diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c b/drivers/net/wireless/iwlwifi/pcie/tx.c
+index eb39e58..a24c1df 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
+@@ -1085,8 +1085,7 @@ void iwl_trans_pcie_txq_enable(struct iwl_trans *trans, int txq_id, u16 ssn,
+ 		if (txq_id != trans_pcie->cmd_queue)
+ 			iwl_scd_txq_set_chain(trans, txq_id);
+ 
+-		/* If this queue is mapped to a certain station: it is an AGG */
+-		if (cfg->sta_id >= 0) {
++		if (cfg->aggregate) {
+ 			u16 ra_tid = BUILD_RAxTID(cfg->sta_id, cfg->tid);
+ 
+ 			/* Map receiver-address / traffic-ID to this queue */
+-- 
+1.9.1
 
-Michał
