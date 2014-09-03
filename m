@@ -1,72 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.9]:49867 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751226AbaIBHwg convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Sep 2014 03:52:36 -0400
-Received: from frontend01.mail.m-online.net (unknown [192.168.8.182])
-	by mail-out.m-online.net (Postfix) with ESMTP id 3hnL9H4zd3z3hhw6
-	for <linux-wireless@vger.kernel.org>; Tue,  2 Sep 2014 09:52:35 +0200 (CEST)
-Received: from mail.display-solution.com (mail.display-solution.com [82.135.126.210])
-	by mail.mnet-online.de (Postfix) with ESMTP id 3hnL9H2wfhzvjMx
-	for <linux-wireless@vger.kernel.org>; Tue,  2 Sep 2014 09:52:35 +0200 (CEST)
-Received: from sbs2003.DisplaySolution.local by company.mail
-	(MDaemon Standard v9.5.4)
-	with ESMTP id md50000388822.msg
-	for <linux-wireless@vger.kernel.org>; Tue, 02 Sep 2014 09:53:33 +0200
-Subject: Intel 4965AGN - Android Implementation for Boundary SabreLite mini PCIe, Android 4.3
-Date: Tue, 2 Sep 2014 09:52:31 +0200
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Message-ID: <F653787480BF5A439D4259B266FA81686A89D2@sbs2003.DisplaySolution.local> (sfid-20140902_095240_073725_48423A77)
-From: "Michael Greger" <mgreger@display-solution.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: <ilw@linux.intel.com>, <sgruszka@redhat.com>
+Received: from mga14.intel.com ([192.55.52.115]:65370 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932067AbaICMcm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Sep 2014 08:32:42 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 00/10] various mac80211 / cfg80211 patches 
+Date: Wed,  3 Sep 2014 15:24:56 +0300
+Message-Id: <1409747106-30717-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140903_143247_308737_2268BBC7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear Sir or Madam,
+Hi Johannes,
 
-my name is Michael from Gilching near Munich in Germany. We are using the sabreLite for Digital Signage purposes and want to use the Intel 4965AGN miniPCIe module on the SabreLite. The Sabre Lite is an Android board with the Freescale i.MX6q (Arm) processor. 
-My intention is to get the WIFI module running on my board. I found the article "How to enable PCIe WiFi into i.MX6 Android Release" , but this helps not much.
--	First thing is that I need the file iwlwifi4965-2.ucode file, appropriate for my Android 4.3, kernel 3.0.35 system.
--	Then, what module do I need in the kernel, iwlagn or iwl4965 or both?
+here are a few patches from our internal tree. You have already seen
+most of them.
 
+Assaf Krauss (3):
+  nl80211: Allow declaring RRM-related features
+  nl80211: Add flag attribute for RRM connections
+  mac80211: Add RRM support to assoc request
 
-Do you have any working code for the 4965AGN under an  iMX6 system under Android 4.3?
+Eliad Peller (3):
+  cfg80211: avoid duplicate entries on regdomain intersection
+  mac80211: adjust roc duration when combining ROCs
+  mac80211: combine roc with the "next roc" if possible
 
-Many thanks and best regards,
-Michael
+Emmanuel Grumbach (1):
+  mac80211: use bss_conf->dtim_period instead of conf.ps_dtim_period
 
+Johannes Berg (2):
+  mac80211: add Intel Mobile Communications copyright
+  cfg80211: add Intel Mobile Communications copyright
 
-Mit freundlichen Grüßen
-Michael Greger
-____________________________________________________
- 
+Liad Kaufman (1):
+  mac80211: fix description comment of ieee80211_subif_start_xmit
 
- 
-Michael Greger
-Dipl. Ing. (FH) 
-Entwicklung
+ include/linux/ieee80211.h    |  1 +
+ include/net/cfg80211.h       |  3 ++
+ include/net/mac80211.h       |  1 +
+ include/uapi/linux/nl80211.h | 27 +++++++++++++++
+ net/mac80211/cfg.c           | 77 ++++++++++++++++++++++++++++-------------
+ net/mac80211/debugfs.c       |  1 +
+ net/mac80211/debugfs_sta.c   |  1 +
+ net/mac80211/ibss.c          |  1 +
+ net/mac80211/ieee80211_i.h   |  2 ++
+ net/mac80211/iface.c         |  1 +
+ net/mac80211/key.c           |  1 +
+ net/mac80211/main.c          |  1 +
+ net/mac80211/mlme.c          | 16 +++++++--
+ net/mac80211/rx.c            |  1 +
+ net/mac80211/scan.c          |  1 +
+ net/mac80211/sta_info.c      |  3 +-
+ net/mac80211/sta_info.h      |  1 +
+ net/mac80211/status.c        |  1 +
+ net/mac80211/tdls.c          |  1 +
+ net/mac80211/tx.c            |  6 ++--
+ net/mac80211/util.c          |  1 +
+ net/mac80211/wme.c           |  1 +
+ net/wireless/chan.c          |  1 +
+ net/wireless/core.c          |  1 +
+ net/wireless/nl80211.c       | 18 ++++++++++
+ net/wireless/reg.c           | 82 ++++++++++++++++++++++++++++++++------------
+ net/wireless/scan.c          |  1 +
+ net/wireless/util.c          |  1 +
+ 28 files changed, 202 insertions(+), 51 deletions(-)
 
-Display Solution AG
-Talhofstr. 32
-82205 Gilching
-Deutschland
-
-Tel:  +49 (0) 81 05 / 7 34 03 -33
-Fax: +49 (0) 81 05 / 7 34 03 -79
-E-Mail: mgreger@display-solution.com    
-Web: www.display-solution.com 
-Handelsregister: Augsburg HRB 22144
-Vorstandsvorsitzender: Norbert Feuchtgruber
-Vorstand: Günther Hirschberger, Norbert Erhart, René Auer
-Aufsichtratsvorsitzende: Gabriele Erhart
-
-
-Diese Nachricht ist vertraulich und nur für den Adressaten bestimmt. 
-Sollten Sie irrtümlich diese Nachricht erhalten haben, bitte ich um Ihre 
-Mitteilung per E-Mail oder unter oben angegebener Telefonnummer
-
+-- 
+1.9.1
 
