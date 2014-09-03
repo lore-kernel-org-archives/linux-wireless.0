@@ -1,48 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:29803 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751102AbaIKHFI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Sep 2014 03:05:08 -0400
-From: "Coelho, Luciano" <luciano.coelho@intel.com>
-To: "dan.carpenter@oracle.com" <dan.carpenter@oracle.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
-Subject: Re: iwlwifi: mvm: set the TX disable bit when doing a chanctx switch
-Date: Thu, 11 Sep 2014 07:04:42 +0000
-Message-ID: <1410419081.14130.14.camel@dubbel> (sfid-20140911_090512_855531_71833468)
-References: <20140909094035.GA10599@mwanda>
-In-Reply-To: <20140909094035.GA10599@mwanda>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mail-we0-f181.google.com ([74.125.82.181]:32781 "EHLO
+	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753995AbaICT4n (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Sep 2014 15:56:43 -0400
+Received: by mail-we0-f181.google.com with SMTP id x48so9039534wes.26
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Sep 2014 12:56:41 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eran Harary <eran.harary@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 09/36] iwlwifi: mvm: fix the dump_umac_error_log
+Date: Wed,  3 Sep 2014 22:55:57 +0300
+Message-Id: <1409774184-24665-9-git-send-email-egrumbach@gmail.com> (sfid-20140903_215647_578441_DC9508B2)
+In-Reply-To: <540771E5.6080908@gmail.com>
+References: <540771E5.6080908@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgRGFuLA0KDQpTb3JyeSBmb3IgdGhlIGxhdGUgcmVwbHkuDQoNCk9uIFR1ZSwgMjAxNC0wOS0w
-OSBhdCAxMjo0MCArMDMwMCwgRGFuIENhcnBlbnRlciB3cm90ZToNCj4gSGVsbG8gTHVjaWFubyBD
-b2VsaG8sDQo+IA0KPiBUaGUgcGF0Y2ggMGNlMDRjZTc5N2Y4OiAiaXdsd2lmaTogbXZtOiBzZXQg
-dGhlIFRYIGRpc2FibGUgYml0IHdoZW4NCj4gZG9pbmcgYSBjaGFuY3R4IHN3aXRjaCIgZnJvbSBN
-YXkgOCwgMjAxNCwgbGVhZHMgdG8gdGhlIGZvbGxvd2luZw0KPiBzdGF0aWMgY2hlY2tlciB3YXJu
-aW5nOg0KPiANCj4gCWRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvbXZtL21hYzgwMjExLmM6
-Mjc2OCBfX2l3bF9tdm1fYXNzaWduX3ZpZl9jaGFuY3R4KCkNCj4gCXdhcm46IG1pc3NpbmcgZXJy
-b3IgY29kZSBoZXJlPyAnaXdsX212bV9zdGFfZnJvbV9zdGFpZF9wcm90ZWN0ZWQoKScgZmFpbGVk
-LiAncmV0JyA9ICcwJw0KPiANCj4gZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9tdm0vbWFj
-ODAyMTEuYw0KPiAgIDI3NjEgICAgICAgICAgaWYgKHZpZi0+Y3NhX2FjdGl2ZSAmJiB2aWYtPnR5
-cGUgPT0gTkw4MDIxMV9JRlRZUEVfU1RBVElPTikgew0KPiAgIDI3NjIgICAgICAgICAgICAgICAg
-ICBzdHJ1Y3QgaXdsX212bV9zdGEgKm12bXN0YTsNCj4gICAyNzYzICANCj4gICAyNzY0ICAgICAg
-ICAgICAgICAgICAgbXZtc3RhID0gaXdsX212bV9zdGFfZnJvbV9zdGFpZF9wcm90ZWN0ZWQobXZt
-LA0KPiAgIDI3NjUgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICBtdm12aWYtPmFwX3N0YV9pZCk7DQo+ICAgMjc2NiAgDQo+ICAgMjc2NyAg
-ICAgICAgICAgICAgICAgIGlmIChXQVJOX09OKCFtdm1zdGEpKQ0KPiAgIDI3NjggICAgICAgICAg
-ICAgICAgICAgICAgICAgIGdvdG8gb3V0Ow0KPiANCj4gRGlkIHlvdSB3YW50IHRvIHNldCBhbiBl
-cnJvciBjb2RlIGhlcmU/ICBJIGRvbid0IGtub3cgdGhlIGNvZGUgd2VsbA0KPiBlbm91Z2ggdG8g
-c2F5Lg0KDQpHb29kIGNhdGNoIQ0KDQpUaGlzIGdldHMgZml4ZWQgaW4gYW5vdGhlciBwYXRjaCBJ
-IGltcGxlbWVudGVkICh0aGF0IEVtbWFudWVsIGlzDQpwcm9iYWJseSBnb2luZyB0byBzZW5kIG91
-dCBzb29uKSB3aGVyZSBJIG1vdmUgdGhlIGNvZGUgdG8gYW5vdGhlcg0KZnVuY3Rpb24uDQoNClNp
-bmNlIHRoaXMgc2hvdWxkIG5vdCByZWFsbHkgaGFwcGVuIGluIG5vcm1hbCBjYXNlcywgYW5kIHNp
-bmNlIHRoaXMgd2lsbA0KYmUgZml4ZWQgdmVyeSBzb29uIGFueXdheSwgd2UgY291bGQgcHJvYmFi
-bHkgbGVhdmUgdGhpcyBwYXRjaCBhcyBpdCBpcy4NCg0KVGhlIHBhdGNoIHRoYXQgZml4ZXMgdGhp
-cyBpcyBjYWxsZWQgIml3bHdpZmk6IG12bTogZmluYWxpemUgb24NCnBvc3Rfc3dpdGNoIGluc3Rl
-YWQgb2YgdW5hc3NpZ24iIGFuZCB5b3Ugc2hvdWxkIHNlZSBpdCBjb21pbmcgc29vbiB0byBhDQp0
-aGVhdGVyIG5lYXIgeW91LiA7KQ0KDQpUaGFua3MgZm9yIHJ1bm5pbmcgeW91ciBjb29sIHNjcmlw
-dHMhIDopDQoNCi0tDQpDaGVlcnMsDQpMdWNhLg0K
+From: Eran Harary <eran.harary@intel.com>
+
+1. the base_address limitation was wrong, address can be bigger than
+0x80C000
+2. the ucode data_struct changed.
+
+Signed-off-by: Eran Harary <eran.harary@intel.com>
+Reviewed-by: Liad Kaufman <liad.kaufman@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/utils.c | 21 +++++++++++++++------
+ 1 file changed, 15 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/utils.c b/drivers/net/wireless/iwlwifi/mvm/utils.c
+index ac249da..20fdca4 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/utils.c
++++ b/drivers/net/wireless/iwlwifi/mvm/utils.c
+@@ -387,15 +387,19 @@ struct iwl_error_event_table {
+ struct iwl_umac_error_event_table {
+ 	u32 valid;		/* (nonzero) valid, (0) log is empty */
+ 	u32 error_id;		/* type of error */
+-	u32 pc;			/* program counter */
+ 	u32 blink1;		/* branch link */
+ 	u32 blink2;		/* branch link */
+ 	u32 ilink1;		/* interrupt link */
+ 	u32 ilink2;		/* interrupt link */
+ 	u32 data1;		/* error-specific data */
+ 	u32 data2;		/* error-specific data */
+-	u32 line;		/* source code line of error */
+-	u32 umac_ver;		/* umac version */
++	u32 data3;		/* error-specific data */
++	u32 umac_fw_ver;	/* UMAC version */
++	u32 umac_fw_api_ver;	/* UMAC FW API ver */
++	u32 frame_pointer;	/* core register 27*/
++	u32 stack_pointer;	/* core register 28 */
++	u32 cmd_header;	/* latest host cmd sent to UMAC */
++	u32 nic_isr_pref;	/* ISR status register */
+ } __packed;
+ 
+ #define ERROR_START_OFFSET  (1 * sizeof(u32))
+@@ -409,7 +413,7 @@ static void iwl_mvm_dump_umac_error_log(struct iwl_mvm *mvm)
+ 
+ 	base = mvm->umac_error_event_table;
+ 
+-	if (base < 0x800000 || base >= 0x80C000) {
++	if (base < 0x800000) {
+ 		IWL_ERR(mvm,
+ 			"Not valid error log pointer 0x%08X for %s uCode\n",
+ 			base,
+@@ -428,14 +432,19 @@ static void iwl_mvm_dump_umac_error_log(struct iwl_mvm *mvm)
+ 
+ 	IWL_ERR(mvm, "0x%08X | %-28s\n", table.error_id,
+ 		desc_lookup(table.error_id));
+-	IWL_ERR(mvm, "0x%08X | umac uPc\n", table.pc);
+ 	IWL_ERR(mvm, "0x%08X | umac branchlink1\n", table.blink1);
+ 	IWL_ERR(mvm, "0x%08X | umac branchlink2\n", table.blink2);
+ 	IWL_ERR(mvm, "0x%08X | umac interruptlink1\n", table.ilink1);
+ 	IWL_ERR(mvm, "0x%08X | umac interruptlink2\n", table.ilink2);
+ 	IWL_ERR(mvm, "0x%08X | umac data1\n", table.data1);
+ 	IWL_ERR(mvm, "0x%08X | umac data2\n", table.data2);
+-	IWL_ERR(mvm, "0x%08X | umac version\n", table.umac_ver);
++	IWL_ERR(mvm, "0x%08X | umac data3\n", table.data3);
++	IWL_ERR(mvm, "0x%08X | umac version\n", table.umac_fw_ver);
++	IWL_ERR(mvm, "0x%08X | umac api version\n", table.umac_fw_api_ver);
++	IWL_ERR(mvm, "0x%08X | frame pointer\n", table.frame_pointer);
++	IWL_ERR(mvm, "0x%08X | stack pointer\n", table.stack_pointer);
++	IWL_ERR(mvm, "0x%08X | last host cmd\n", table.cmd_header);
++	IWL_ERR(mvm, "0x%08X | isr status reg\n", table.nic_isr_pref);
+ }
+ 
+ void iwl_mvm_dump_nic_error_log(struct iwl_mvm *mvm)
+-- 
+1.9.1
+
