@@ -1,45 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from isrv.corpit.ru ([86.62.121.231]:40221 "EHLO isrv.corpit.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754405AbaIWKEf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Sep 2014 06:04:35 -0400
-Message-ID: <542145B1.4030202@msgid.tls.msk.ru> (sfid-20140923_120443_794428_67DFF280)
-Date: Tue, 23 Sep 2014 14:04:33 +0400
-From: Michael Tokarev <mjt@tls.msk.ru>
-MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
-CC: brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: BCM4313 & brcmsmac & 3.12: only semi-working?
-References: <52BDE9DC.5040206@msgid.tls.msk.ru> <52BE9CF9.7030305@broadcom.com> <52BEC2F6.7010505@msgid.tls.msk.ru> <52D4FC8B.6090301@msgid.tls.msk.ru> <52F925A9.1030707@msgid.tls.msk.ru> <53526124.6050407@msgid.tls.msk.ru> <53FC1789.6020407@msgid.tls.msk.ru> <53FCA001.6090404@broadcom.com> <53FCB2A3.1050605@msgid.tls.msk.ru> <53FCFE1A.3060508@broadcom.com> <53FDACD1.8090805@msgid.tls.msk.ru> <53FDF8EB.4050905@broadcom.com> <54169D4F.2090607@broadcom.com> <541EEF17.7020806@msgid.tls.msk.ru>
-In-Reply-To: <541EEF17.7020806@msgid.tls.msk.ru>
-Content-Type: text/plain; charset=UTF-8
+Received: from s72.web-hosting.com ([198.187.29.22]:45845 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753707AbaICDJQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Sep 2014 23:09:16 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH v2 3/6] ath9k: Fix panic when adding an AP interface
+Date: Wed,  3 Sep 2014 08:39:22 +0530
+Message-Id: <1409713765-9358-4-git-send-email-sujith@msujith.org> (sfid-20140903_050937_696839_845A12C2)
+In-Reply-To: <1409713765-9358-1-git-send-email-sujith@msujith.org>
+References: <1409713765-9358-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-21.09.2014 19:30, Michael Tokarev wrote:
-> Namely, after resume, the card does not work. ARP works, ping and
-> DNS sometimes/somewhat work, inital TCP connection establisment
-> works, but eg http download does not work, it stalls almost
-> immediately.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-It does not work at all anymore again.  Not only after resume but also
-after could power up, it stalls right at start of wget for example.
+If a station interface is already assigned to a context
+and is active and a second interface of type AP is added,
+then beaconing on the new interface has to be begin only
+after the BSS_CHANGED_BEACON_ENABLED flag is sent by mac80211
+to the driver.
 
-> http://www.corpit.ru/mjt/tmp/brcmsmac-4313-trace-20140921.dat.gz -- this
-> is a trace collected after resuming from suspend-to-disk
+But, since we issue ATH_CHANCTX_EVENT_ENABLE_MULTICHANNEL as soon
+as a new channel context is added, a switch occurs almost immediately
+before BSS_CHANGED_BEACON_ENABLED is received. When a HW reset
+is done for the new context, beacons are enabled for the
+interface since "enable_beacon" in the BSS config maintained
+in mac80211 is true - but the driver hasn't been notified yet.
+This causes a panic, since the beacon interval is zero for this
+interface and ath9k_cmn_beacon_config_ap() doesn't have a safety check.
 
-And here -- http://www.corpit.ru/mjt/tmp/brcmsmac-4313-trace-20140923.dat.gz
-is another trace, after insmod brcmutils & brcmsmac, starting trace-cmd record
-(with network-manager running in the background), and running a wget on
-http://ip-add-ress-of-the-access-point/somefile (which immediately stalls,
-showing minimal progress once in a while only).
+Fix this panic by checking if the beacon params has been cached
+for this context and use the "enable_beacon" flag maintained
+locally in the driver. Also, recalculate the summary data
+after the beacon params have been cached when BSS_CHANGED_BEACON_ENABLED
+is received.
 
-Hopefully this will help to find the problem.  And for the record, I'm
-_again_ without the wifi network.  But unlike of the previous situation,
-I can at least buy some other, better supported wifi adapter now, because
-this laptop does not have a bios lock (is 6235ANHMW any good?)
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-Thanks,
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 0b3d4d8..2333776 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -916,8 +916,6 @@ static void ath9k_vif_iter(struct ath9k_vif_iter_data *iter_data,
+ 	switch (vif->type) {
+ 	case NL80211_IFTYPE_AP:
+ 		iter_data->naps++;
+-		if (vif->bss_conf.enable_beacon)
+-			iter_data->beacons = true;
+ 		break;
+ 	case NL80211_IFTYPE_STATION:
+ 		iter_data->nstations++;
+@@ -1021,6 +1019,7 @@ void ath9k_calculate_summary_state(struct ath_softc *sc,
+ 	struct ath_hw *ah = sc->sc_ah;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	struct ath9k_vif_iter_data iter_data;
++	struct ath_beacon_config *cur_conf;
+ 
+ 	ath_chanctx_check_active(sc, ctx);
+ 
+@@ -1037,8 +1036,11 @@ void ath9k_calculate_summary_state(struct ath_softc *sc,
+ 	ath_hw_setbssidmask(common);
+ 
+ 	if (iter_data.naps > 0) {
++		cur_conf = &ctx->beacon;
+ 		ath9k_hw_set_tsfadjust(ah, true);
+ 		ah->opmode = NL80211_IFTYPE_AP;
++		if (cur_conf->enable_beacon)
++			iter_data.beacons = true;
+ 	} else {
+ 		ath9k_hw_set_tsfadjust(ah, false);
+ 
+@@ -1695,9 +1697,9 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
+ 	if ((changed & BSS_CHANGED_BEACON_ENABLED) ||
+ 	    (changed & BSS_CHANGED_BEACON_INT) ||
+ 	    (changed & BSS_CHANGED_BEACON_INFO)) {
++		ath9k_beacon_config(sc, vif, changed);
+ 		if (changed & BSS_CHANGED_BEACON_ENABLED)
+ 			ath9k_calculate_summary_state(sc, avp->chanctx);
+-		ath9k_beacon_config(sc, vif, changed);
+ 	}
+ 
+ 	if ((avp->chanctx == sc->cur_chan) &&
+-- 
+2.1.0
 
-/mjt
