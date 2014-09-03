@@ -1,93 +1,227 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hauke-m.de ([5.39.93.123]:37820 "EHLO hauke-m.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750821AbaIXVTS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Sep 2014 17:19:18 -0400
-Message-ID: <54233550.60600@hauke-m.de> (sfid-20140924_231922_872934_DD652756)
-Date: Wed, 24 Sep 2014 23:19:12 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>
-CC: linux-arm-kernel@lists.infradead.org, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
-	zajec5@gmail.com, varkabhadram@gmail.com, arend@broadcom.com
-Subject: Re: [PATCH v4 1/2] bcma: register bcma as device tree driver
-References: <1411339108-22307-1-git-send-email-hauke@hauke-m.de> <4345256.UGZH9SeRYG@wuerfel> <5421EE62.2080701@hauke-m.de> <3856565.LYF1mvpGOq@wuerfel>
-In-Reply-To: <3856565.LYF1mvpGOq@wuerfel>
-Content-Type: text/plain; charset=windows-1252
+Received: from mail-we0-f172.google.com ([74.125.82.172]:40963 "EHLO
+	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932108AbaICT5V (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Sep 2014 15:57:21 -0400
+Received: by mail-we0-f172.google.com with SMTP id q59so9213047wes.3
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Sep 2014 12:57:19 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 34/36] iwlwifi: mvm: use iwl_mvm_mac_get_queues_mask() more
+Date: Wed,  3 Sep 2014 22:56:22 +0300
+Message-Id: <1409774184-24665-34-git-send-email-egrumbach@gmail.com> (sfid-20140903_220114_370258_3CF5BEC0)
+In-Reply-To: <540771E5.6080908@gmail.com>
+References: <540771E5.6080908@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/24/2014 11:48 AM, Arnd Bergmann wrote:
-> On Wednesday 24 September 2014 00:04:18 Hauke Mehrtens wrote:
->> I assume this should then look somehow like this:
->>
->> axi@18000000 {
->>         compatible = "brcm,bus-axi";
->>         reg = <0x18000000 0x1000>;
->>         ranges = <0x00000000 0x18000000 0x00100000>;
->>         #address-cells = <1>;
->>         #size-cells = <1>;
->>
->>         #interrupt-cells = <1>;
->>         interrupt-map = <
->>                 /* ChipCommon */
->>                 0x00000000 0 &gic  GIC_SPI 85 IRQ_TYPE_LEVEL_HIGH
->>
->>                 /* PCIe Controller 0 */
->>                 0x00012000 0 &gic GIC_SPI 126 IRQ_TYPE_LEVEL_HIGH
->>                 0x00012000 1 &gic GIC_SPI 127 IRQ_TYPE_LEVEL_HIGH
->>                 0x00012000 2 &gic GIC_SPI 128 IRQ_TYPE_LEVEL_HIGH
->>                 0x00012000 3 &gic GIC_SPI 129 IRQ_TYPE_LEVEL_HIGH
->>                 0x00012000 4 &gic GIC_SPI 130 IRQ_TYPE_LEVEL_HIGH
->>                 0x00012000 5 &gic GIC_SPI 131 IRQ_TYPE_LEVEL_HIGH
->>
->>                 /* USB 2.0 Controller */
->>                 0x00021000 0 &gic GIC_SPI 79 IRQ_TYPE_LEVEL_HIGH
->>                 >;
->>         };
-> 
-> Right, although I would add a few more '<', '>' and ',' for readability,
-> separating each line with a comma.
-> 
-> You are also missing an 'interrupt-map-mask' property that lists which
-> bits of the address are significant.
-> 
-> Are the interrupt numbers you have in the example (0, 0, 1, 2, ... 5, 0)
-> the actual numbers that are present in the hw registers?
+From: Johannes Berg <johannes.berg@intel.com>
 
-Some cores do have more than one IRQ. The NAND core uses 8 IRQs and the
-PCIe controller uses 5 (the vendor code just uses the last one which
-gets triggered always). How can I handle this cases where one device has
-more than one IRQ? There is no hardware register these IRQ get mapped
-to. As far as I know the driver just knows that this device needs more
-IRQs. Should I just add a special device node entry for such devices?
+There are a few places that can call the function
+iwl_mvm_mac_get_queues_mask() instead of open-coding the
+equivalent, so do that. This requires changing it to return
+the multicast queue as part of the bitmap, which broke GO
+mode because including it in the broadcast station queues
+seems to confuse the firmware, so work around that.
 
->> How does the mapping of these interrupts to the devices work?
-> 
-> The same way that of_irq_parse_and_map_pci() works (the second half of it).
-> It's a very similar situation: you have a discoverable bus on which the
-> interrupts are listed in a different domain from which they are supposed to
-> be on the parent. The trick is to make up your own address property
-> and of_phandle_args on the stack and fill that with the data from
-> the hw bus scan, so you can get into the middle of the normal DT
-> irq code that gets them from device nodes.
+Also, the API defines that the CAB queue shouldn't be
+included in the TFD queue mask, adjust the comment
+accordingly (not a bug).
 
-Thanks for the description, that worked for me.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/fw-api.h   |  3 --
+ drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c | 62 ++++++++++++++---------------
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 18 +++++----
+ 3 files changed, 40 insertions(+), 43 deletions(-)
 
->> Do I have to add a device tree entry for every device after all?
-> 
-> No, unless you want to add other properties in the node, such as
-> a MAC address, but then you still only need some of the devices.
-> 
->> Do you have some example code where this is handled in code, I could not
->> find the code doing this for PCI.
-> 
-> drivers/of/of_pci_irq.c, though the hard part is done in drivers/of/irq.c,
-> which parses the interrupt-map and interrupt-map-mask properties.
+diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/iwlwifi/mvm/fw-api.h
+index 94342db..9c975f9 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/fw-api.h
++++ b/drivers/net/wireless/iwlwifi/mvm/fw-api.h
+@@ -75,9 +75,6 @@
+ #include "fw-api-coex.h"
+ #include "fw-api-scan.h"
+ 
+-/* maximal number of Tx queues in any platform */
+-#define IWL_MVM_MAX_QUEUES	20
+-
+ /* Tx queue numbers */
+ enum {
+ 	IWL_MVM_OFFCHANNEL_QUEUE = 8,
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
+index 115bb36..9cbb192 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
+@@ -83,7 +83,7 @@ struct iwl_mvm_mac_iface_iterator_data {
+ 	struct ieee80211_vif *vif;
+ 	unsigned long available_mac_ids[BITS_TO_LONGS(NUM_MAC_INDEX_DRIVER)];
+ 	unsigned long available_tsf_ids[BITS_TO_LONGS(NUM_TSF_IDS)];
+-	unsigned long used_hw_queues[BITS_TO_LONGS(IWL_MVM_MAX_QUEUES)];
++	u32 used_hw_queues;
+ 	enum iwl_tsf_id preferred_tsf;
+ 	bool found_vif;
+ };
+@@ -194,12 +194,31 @@ static void iwl_mvm_mac_tsf_id_iter(void *_data, u8 *mac,
+ 		data->preferred_tsf = NUM_TSF_IDS;
+ }
+ 
++/*
++ * Get the mask of the queues used by the vif
++ */
++u32 iwl_mvm_mac_get_queues_mask(struct iwl_mvm *mvm,
++				struct ieee80211_vif *vif)
++{
++	u32 qmask = 0, ac;
++
++	if (vif->type == NL80211_IFTYPE_P2P_DEVICE)
++		return BIT(IWL_MVM_OFFCHANNEL_QUEUE);
++
++	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++)
++		qmask |= BIT(vif->hw_queue[ac]);
++
++	if (vif->type == NL80211_IFTYPE_AP)
++		qmask |= BIT(vif->cab_queue);
++
++	return qmask;
++}
++
+ static void iwl_mvm_mac_iface_iterator(void *_data, u8 *mac,
+ 				       struct ieee80211_vif *vif)
+ {
+ 	struct iwl_mvm_mac_iface_iterator_data *data = _data;
+ 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
+-	u32 ac;
+ 
+ 	/* Iterator may already find the interface being added -- skip it */
+ 	if (vif == data->vif) {
+@@ -208,12 +227,7 @@ static void iwl_mvm_mac_iface_iterator(void *_data, u8 *mac,
+ 	}
+ 
+ 	/* Mark the queues used by the vif */
+-	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++)
+-		if (vif->hw_queue[ac] != IEEE80211_INVAL_HW_QUEUE)
+-			__set_bit(vif->hw_queue[ac], data->used_hw_queues);
+-
+-	if (vif->cab_queue != IEEE80211_INVAL_HW_QUEUE)
+-		__set_bit(vif->cab_queue, data->used_hw_queues);
++	data->used_hw_queues |= iwl_mvm_mac_get_queues_mask(data->mvm, vif);
+ 
+ 	/* Mark MAC IDs as used by clearing the available bit, and
+ 	 * (below) mark TSFs as used if their existing use is not
+@@ -227,24 +241,6 @@ static void iwl_mvm_mac_iface_iterator(void *_data, u8 *mac,
+ 	iwl_mvm_mac_tsf_id_iter(_data, mac, vif);
+ }
+ 
+-/*
+- * Get the mask of the queus used by the vif
+- */
+-u32 iwl_mvm_mac_get_queues_mask(struct iwl_mvm *mvm,
+-				struct ieee80211_vif *vif)
+-{
+-	u32 qmask = 0, ac;
+-
+-	if (vif->type == NL80211_IFTYPE_P2P_DEVICE)
+-		return BIT(IWL_MVM_OFFCHANNEL_QUEUE);
+-
+-	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++)
+-		if (vif->hw_queue[ac] != IEEE80211_INVAL_HW_QUEUE)
+-			qmask |= BIT(vif->hw_queue[ac]);
+-
+-	return qmask;
+-}
+-
+ void iwl_mvm_mac_ctxt_recalc_tsf_id(struct iwl_mvm *mvm,
+ 				    struct ieee80211_vif *vif)
+ {
+@@ -279,15 +275,15 @@ static int iwl_mvm_mac_ctxt_allocate_resources(struct iwl_mvm *mvm,
+ 		.available_tsf_ids = { (1 << NUM_TSF_IDS) - 1 },
+ 		/* no preference yet */
+ 		.preferred_tsf = NUM_TSF_IDS,
+-		.used_hw_queues = {
++		.used_hw_queues =
+ 			BIT(IWL_MVM_OFFCHANNEL_QUEUE) |
+ 			BIT(mvm->aux_queue) |
+-			BIT(IWL_MVM_CMD_QUEUE)
+-		},
++			BIT(IWL_MVM_CMD_QUEUE),
+ 		.found_vif = false,
+ 	};
+ 	u32 ac;
+ 	int ret, i;
++	unsigned long used_hw_queues;
+ 
+ 	/*
+ 	 * Allocate a MAC ID and a TSF for this MAC, along with the queues
+@@ -370,9 +366,11 @@ static int iwl_mvm_mac_ctxt_allocate_resources(struct iwl_mvm *mvm,
+ 		return 0;
+ 	}
+ 
++	used_hw_queues = data.used_hw_queues;
++
+ 	/* Find available queues, and allocate them to the ACs */
+ 	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++) {
+-		u8 queue = find_first_zero_bit(data.used_hw_queues,
++		u8 queue = find_first_zero_bit(&used_hw_queues,
+ 					       mvm->first_agg_queue);
+ 
+ 		if (queue >= mvm->first_agg_queue) {
+@@ -381,13 +379,13 @@ static int iwl_mvm_mac_ctxt_allocate_resources(struct iwl_mvm *mvm,
+ 			goto exit_fail;
+ 		}
+ 
+-		__set_bit(queue, data.used_hw_queues);
++		__set_bit(queue, &used_hw_queues);
+ 		vif->hw_queue[ac] = queue;
+ 	}
+ 
+ 	/* Allocate the CAB queue for softAP and GO interfaces */
+ 	if (vif->type == NL80211_IFTYPE_AP) {
+-		u8 queue = find_first_zero_bit(data.used_hw_queues,
++		u8 queue = find_first_zero_bit(&used_hw_queues,
+ 					       mvm->first_agg_queue);
+ 
+ 		if (queue >= mvm->first_agg_queue) {
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index ea79f1a..ac2b11a 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -972,6 +972,15 @@ static int iwl_mvm_mac_add_interface(struct ieee80211_hw *hw,
+ 	if (vif->type == NL80211_IFTYPE_AP ||
+ 	    vif->type == NL80211_IFTYPE_ADHOC) {
+ 		u32 qmask = iwl_mvm_mac_get_queues_mask(mvm, vif);
++
++		/*
++		 * The firmware defines the TFD queue mask to only be relevant
++		 * for *unicast* queues, so the multicast (CAB) queue should
++		 * be excluded.
++		 */
++		if (vif->type == NL80211_IFTYPE_AP)
++			qmask &= ~BIT(vif->cab_queue);
++
+ 		ret = iwl_mvm_allocate_int_sta(mvm, &mvmvif->bcast_sta,
+ 					       qmask,
+ 					       ieee80211_vif_type_p2p(vif));
+@@ -1063,14 +1072,7 @@ static int iwl_mvm_mac_add_interface(struct ieee80211_hw *hw,
+ static void iwl_mvm_prepare_mac_removal(struct iwl_mvm *mvm,
+ 					struct ieee80211_vif *vif)
+ {
+-	u32 tfd_msk = 0, ac;
+-
+-	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++)
+-		if (vif->hw_queue[ac] != IEEE80211_INVAL_HW_QUEUE)
+-			tfd_msk |= BIT(vif->hw_queue[ac]);
+-
+-	if (vif->cab_queue != IEEE80211_INVAL_HW_QUEUE)
+-		tfd_msk |= BIT(vif->cab_queue);
++	u32 tfd_msk = iwl_mvm_mac_get_queues_mask(mvm, vif);
+ 
+ 	if (tfd_msk) {
+ 		mutex_lock(&mvm->mutex);
+-- 
+1.9.1
 
-
-I will split this patch into two patches, one just adding the bcma
-registration and an additional RFC patch adding the IRQ stuff.
-
-Hauke
