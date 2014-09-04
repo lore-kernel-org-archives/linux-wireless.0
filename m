@@ -1,46 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:44072 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751330AbaI2GZH (ORCPT
+Received: from relay5-d.mail.gandi.net ([217.70.183.197]:52127 "EHLO
+	relay5-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755358AbaIDWjn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Sep 2014 02:25:07 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Sujith Manoharan <sujith@msujith.org>
-CC: John Linville <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>, <ath9k-devel@qca.qualcomm.com>
-Subject: Re: [PATCH v2] ath: Add support for tracing
-References: <1411804665-6954-1-git-send-email-sujith@msujith.org>
-Date: Mon, 29 Sep 2014 09:25:00 +0300
-In-Reply-To: <1411804665-6954-1-git-send-email-sujith@msujith.org> (Sujith
-	Manoharan's message of "Sat, 27 Sep 2014 13:27:45 +0530")
-Message-ID: <87vbo72bb7.fsf@kamboji.qca.qualcomm.com> (sfid-20140929_082512_828365_765FCA79)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 4 Sep 2014 18:39:43 -0400
+Received: from mfilter20-d.gandi.net (mfilter20-d.gandi.net [217.70.178.148])
+	by relay5-d.mail.gandi.net (Postfix) with ESMTP id B09B741C054
+	for <linux-wireless@vger.kernel.org>; Fri,  5 Sep 2014 00:39:40 +0200 (CEST)
+Received: from relay5-d.mail.gandi.net ([217.70.183.197])
+	by mfilter20-d.gandi.net (mfilter20-d.gandi.net [10.0.15.180]) (amavisd-new, port 10024)
+	with ESMTP id EiUdcSgcHvUF for <linux-wireless@vger.kernel.org>;
+	Fri,  5 Sep 2014 00:39:39 +0200 (CEST)
+Received: from nuvo (mon69-7-83-155-44-161.fbx.proxad.net [83.155.44.161])
+	(Authenticated sender: hadess@hadess.net)
+	by relay5-d.mail.gandi.net (Postfix) with ESMTPSA id 4C5D641C05A
+	for <linux-wireless@vger.kernel.org>; Fri,  5 Sep 2014 00:39:39 +0200 (CEST)
+Message-ID: <1409870378.19259.9.camel@hadess.net> (sfid-20140905_003947_779284_B3660241)
+Subject: Broadcom Wi-Fi/Bluetooth on GPIO? (Baytrail tablet)
+From: Bastien Nocera <hadess@hadess.net>
+To: linux-wireless@vger.kernel.org
+Date: Fri, 05 Sep 2014 00:39:38 +0200
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sujith Manoharan <sujith@msujith.org> writes:
+Heya,
 
-> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
->
-> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/Kconfig  |  8 +++++
->  drivers/net/wireless/ath/Makefile |  4 +++
->  drivers/net/wireless/ath/ath.h    |  1 +
->  drivers/net/wireless/ath/main.c   |  3 ++
->  drivers/net/wireless/ath/trace.c  | 20 +++++++++++
->  drivers/net/wireless/ath/trace.h  | 71 +++++++++++++++++++++++++++++++++++++++
+On this tablet, based on a Baytrail SoC, I found reference of this
+Broadcom device in the DSDT, and I believe it could be the
+Bluetooth/Wi-Fi chipset (this one[1]?):
+---8<---
+Device (BRC3)
+{
+    Name (_ADR, One)  // _ADR: Address
+    Name (_DEP, Package (0x01)  // _DEP: Dependencies
+    {
+        GPO2
+    })
+    Name (_HID, "BCM4321")  // _HID: Hardware ID 
+    Name (_CID, "BCM43241")  // _CID: Compatible ID
+    Name (GMOD, ResourceTemplate ()
+    {
+        GpioIo (Exclusive, PullDefault, 0x0000, 0x0000,
+IoRestrictionOutputOnly,
+            "\\_SB.GPO2", 0x00, ResourceConsumer, ,
+            )
+            {   // Pin list 
+                0x0014
+            }
+    })
+---8<---
 
-Why add it to ath.ko module? What drivers are going to use this?
+Am I correct in thinking that it's a Broadcom chipset? What would it
+take to get this supported in the kernel? I'm currently stuck on a
+slightly older kernel (3.16.0) due to Intel graphics driver problems,
+but I couldn't find anything directly related to this in the current
+linus tree.
 
-Because all ath* drivers are different, I suspect there is not that much
-to share between drivers and that's why it would be better to have the
-trace points per driver.
+Cheers
 
-And I just checked that currently we have trace points for ath10k,
-ath5k, ath6kl and wil6210. IMHO adding more trace points to ath.ko just
-makes this confusing.
+[1]:
+http://www.broadcom.com/products/Wireless-LAN/802.11-Wireless-LAN-Solutions/BCM43241
 
--- 
-Kalle Valo
