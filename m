@@ -1,174 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f52.google.com ([74.125.82.52]:39903 "EHLO
-	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753113AbaIYKoh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Sep 2014 06:44:37 -0400
-Received: by mail-wg0-f52.google.com with SMTP id n12so5860984wgh.11
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Sep 2014 03:44:35 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 3/4] ath10k: request fw_stats once on open
-Date: Thu, 25 Sep 2014 12:33:49 +0200
-Message-Id: <1411641230-18785-4-git-send-email-michal.kazior@tieto.com> (sfid-20140925_124441_678235_D953DD42)
-In-Reply-To: <1411641230-18785-1-git-send-email-michal.kazior@tieto.com>
-References: <1411641230-18785-1-git-send-email-michal.kazior@tieto.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:38573 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750996AbaIDKX6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Sep 2014 06:23:58 -0400
+Message-ID: <1409826220.16449.6.camel@jlt4.sipsolutions.net> (sfid-20140904_122407_429195_E846A46A)
+Subject: Re: [PATCH 09/12] wireless-regdb: Add Saint Lucia (LC) regulatory
+ rules
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <jouni@qca.qualcomm.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
+Date: Thu, 04 Sep 2014 12:23:40 +0200
+In-Reply-To: <20140904101727.GA3498@jouni.qca.qualcomm.com>
+References: <20140903131518.GA16219@jouni.qca.qualcomm.com>
+	 <1409817831.16449.5.camel@jlt4.sipsolutions.net>
+	 <20140904101727.GA3498@jouni.qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stats were requested and processed for each read
-call. This caused inconsistent readings.
+On Thu, 2014-09-04 at 13:17 +0300, Jouni Malinen wrote:
+> On Thu, Sep 04, 2014 at 10:03:51AM +0200, Johannes Berg wrote:
+> > On Wed, 2014-09-03 at 16:15 +0300, Jouni Malinen wrote:
+> > > Source:
+> > > http://www.ntrc.org.lc/operational_structures.htm
+> > 
+> > Out of curiosity, I clicked the URL, but it seems empty/dead? :)
+> 
+> Hmm.. It looks like all of www.ntrc.org.lc is in somewhat strange state
+> at the moment. If I remember correctly, I did test this link earlier
+> myself and it worked, so that may be a temporary issue (it returns a
+> somewhat interesting javascript design to display ads or domain parking
+> info, etc., and that does clearly work either; anyway, not something
+> that one would hope to see from a regulatory commission website). I'd
+> hope that this gets resolved eventually, but if desired, I can remove
+> that source link as well based on its current state.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/debug.c | 110 +++++++++++++++++++++++---------
- 1 file changed, 79 insertions(+), 31 deletions(-)
+Yes, indeed, it does seem to be messed up completely. I think leaving
+the link is fine - for now at least archive.org has a copy so knowing
+where it was is still useful.
 
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index 97b5c16..1ab0f10 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -260,38 +260,35 @@ unlock:
- 	spin_unlock_bh(&ar->data_lock);
- }
- 
--static ssize_t ath10k_fw_stats_read(struct file *file, char __user *user_buf,
--				    size_t count, loff_t *ppos)
-+static int ath10k_fw_stats_request(struct ath10k *ar)
- {
--	struct ath10k *ar = file->private_data;
--	struct ath10k_fw_stats *fw_stats;
--	char *buf = NULL;
--	unsigned int len = 0, buf_len = 8000;
--	ssize_t ret_cnt = 0;
--	long left;
--	int i;
- 	int ret;
- 
--	fw_stats = &ar->debug.fw_stats;
--
--	mutex_lock(&ar->conf_mutex);
--
--	if (ar->state != ATH10K_STATE_ON)
--		goto exit;
--
--	buf = kzalloc(buf_len, GFP_KERNEL);
--	if (!buf)
--		goto exit;
-+	lockdep_assert_held(&ar->conf_mutex);
- 
- 	ret = ath10k_wmi_request_stats(ar, WMI_REQUEST_PEER_STAT);
- 	if (ret) {
--		ath10k_warn(ar, "could not request stats (%d)\n", ret);
--		goto exit;
-+		ath10k_warn(ar, "failed to fw stat request command: %d\n", ret);
-+		return ret;
- 	}
- 
--	left = wait_for_completion_timeout(&ar->debug.fw_stats_complete, 1*HZ);
--	if (left <= 0)
--		goto exit;
-+	ret = wait_for_completion_timeout(&ar->debug.fw_stats_complete, 1*HZ);
-+	if (ret <= 0)
-+		return -ETIMEDOUT;
-+
-+	return 0;
-+}
-+
-+/* FIXME: How to calculate the buffer size sanely? */
-+#define ATH10K_FW_STATS_BUF_SIZE (1024*1024)
-+
-+static void ath10k_fw_stats_fill(struct ath10k *ar,
-+				 struct ath10k_fw_stats *fw_stats,
-+				 char *buf)
-+{
-+	unsigned int len = 0;
-+	unsigned int buf_len = ATH10K_FW_STATS_BUF_SIZE;
-+	int i;
- 
- 	spin_lock_bh(&ar->data_lock);
- 	len += scnprintf(buf + len, buf_len - len, "\n");
-@@ -436,20 +433,71 @@ static ssize_t ath10k_fw_stats_read(struct file *file, char __user *user_buf,
- 	}
- 	spin_unlock_bh(&ar->data_lock);
- 
--	if (len > buf_len)
--		len = buf_len;
-+	if (len >= buf_len)
-+		buf[len - 1] = 0;
-+	else
-+		buf[len] = 0;
-+}
- 
--	ret_cnt = simple_read_from_buffer(user_buf, count, ppos, buf, len);
-+static int ath10k_fw_stats_open(struct inode *inode, struct file *file)
-+{
-+	struct ath10k *ar = inode->i_private;
-+	void *buf = NULL;
-+	int ret;
-+
-+	mutex_lock(&ar->conf_mutex);
-+
-+	if (ar->state != ATH10K_STATE_ON) {
-+		ret = -ENETDOWN;
-+		goto err_unlock;
-+	}
-+
-+	buf = vmalloc(ATH10K_FW_STATS_BUF_SIZE);
-+	if (!buf) {
-+		ret = -ENOMEM;
-+		goto err_unlock;
-+	}
-+
-+	ret = ath10k_fw_stats_request(ar);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to request fw stats: %d\n", ret);
-+		goto err_free;
-+	}
-+
-+	ath10k_fw_stats_fill(ar, &ar->debug.fw_stats, buf);
-+	file->private_data = buf;
- 
--exit:
- 	mutex_unlock(&ar->conf_mutex);
--	kfree(buf);
--	return ret_cnt;
-+	return 0;
-+
-+err_free:
-+	vfree(buf);
-+
-+err_unlock:
-+	mutex_unlock(&ar->conf_mutex);
-+	return ret;
-+}
-+
-+static int ath10k_fw_stats_release(struct inode *inode, struct file *file)
-+{
-+	vfree(file->private_data);
-+
-+	return 0;
-+}
-+
-+static ssize_t ath10k_fw_stats_read(struct file *file, char __user *user_buf,
-+				    size_t count, loff_t *ppos)
-+{
-+	const char *buf = file->private_data;
-+	unsigned int len = strlen(buf);
-+
-+	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
- }
- 
- static const struct file_operations fops_fw_stats = {
-+	.open = ath10k_fw_stats_open,
-+	.release = ath10k_fw_stats_release,
- 	.read = ath10k_fw_stats_read,
--	.open = simple_open,
- 	.owner = THIS_MODULE,
- 	.llseek = default_llseek,
- };
--- 
-1.8.5.3
+johannes
 
