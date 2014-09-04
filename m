@@ -1,61 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:52590 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756003AbaIZTfa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Sep 2014 15:35:30 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: emmanuel.grumbach@intel.com, michal.kazior@tieto.com,
-	linux-wireless@vger.kernel.org
-Date: Fri, 26 Sep 2014 22:34:59 +0300
-Message-Id: <1411760105-18614-2-git-send-email-luca@coelho.fi> (sfid-20140926_213549_412908_C6A0A843)
-In-Reply-To: <1411760105-18614-1-git-send-email-luca@coelho.fi>
-References: <1411760105-18614-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH 1/7] nl80211: sanity check the channel switch counter value
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:55497 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755813AbaIDWTJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Sep 2014 18:19:09 -0400
+Received: by mail-wi0-f180.google.com with SMTP id ex7so1989984wid.7
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Sep 2014 15:19:07 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 2/2] bcma: register NAND and QSPI cores early
+Date: Fri,  5 Sep 2014 00:18:49 +0200
+Message-Id: <1409869129-15674-2-git-send-email-zajec5@gmail.com> (sfid-20140905_001913_847489_B0E2FFF4)
+In-Reply-To: <1409869129-15674-1-git-send-email-zajec5@gmail.com>
+References: <1409869129-15674-1-git-send-email-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+On Northstar (ARM arch) we will use MTD subsystem to access NVRAM and
+SPROM. To get access to flash device we need to register these cores
+first.
 
-The nl80211 channel switch count attribute
-(NL80211_ATTR_CH_SWITCH_COUNT) is specified as u32, but the
-specification uses u8 for the counter.  To make sure strange things
-don't happen without informing the user, sanity check the value and
-return -EINVAL if it doesn't fit in u8.
-
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- net/wireless/nl80211.c | 10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
+ drivers/bcma/main.c | 21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 4cce3e1..9e29053 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -5927,6 +5927,7 @@ static int nl80211_channel_switch(struct sk_buff *skb, struct genl_info *info)
- 	int err;
- 	bool need_new_beacon = false;
- 	int len, i;
-+	u32 cs_count;
+diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
+index 9a86352..297a2d4 100644
+--- a/drivers/bcma/main.c
++++ b/drivers/bcma/main.c
+@@ -120,6 +120,17 @@ static void bcma_release_core_dev(struct device *dev)
+ 	kfree(core);
+ }
  
- 	if (!rdev->ops->channel_switch ||
- 	    !(rdev->wiphy.flags & WIPHY_FLAG_HAS_CHANNEL_SWITCH))
-@@ -5963,7 +5964,14 @@ static int nl80211_channel_switch(struct sk_buff *skb, struct genl_info *info)
- 	if (need_new_beacon && !info->attrs[NL80211_ATTR_CSA_IES])
- 		return -EINVAL;
- 
--	params.count = nla_get_u32(info->attrs[NL80211_ATTR_CH_SWITCH_COUNT]);
-+	/* Even though the attribute is u32, the specification says
-+	 * u8, so let's make sure we don't overflow.
-+	 */
-+	cs_count = nla_get_u32(info->attrs[NL80211_ATTR_CH_SWITCH_COUNT]);
-+	if (cs_count > 255)
-+		return -EINVAL;
++static bool bcma_is_core_needed_early(u16 core_id)
++{
++	switch (core_id) {
++	case BCMA_CORE_NS_NAND:
++	case BCMA_CORE_NS_QSPI:
++		return true;
++	}
 +
-+	params.count = cs_count;
++	return false;
++}
++
+ static void bcma_register_core(struct bcma_bus *bus, struct bcma_device *core)
+ {
+ 	int err;
+@@ -170,6 +181,10 @@ static int bcma_register_devices(struct bcma_bus *bus)
+ 			continue;
+ 		}
  
- 	if (!need_new_beacon)
- 		goto skip_beacons;
++		/* Early cores were already registered */
++		if (bcma_is_core_needed_early(core->id.id))
++			continue;
++
+ 		/* Only first GMAC core on BCM4706 is connected and working */
+ 		if (core->id.id == BCMA_CORE_4706_MAC_GBIT &&
+ 		    core->core_unit > 0)
+@@ -252,6 +267,12 @@ int bcma_bus_register(struct bcma_bus *bus)
+ 		bcma_core_chipcommon_early_init(&bus->drv_cc);
+ 	}
+ 
++	/* Cores providing flash access go before SPROM init */
++	list_for_each_entry(core, &bus->cores, list) {
++		if (bcma_is_core_needed_early(core->id.id))
++			bcma_register_core(bus, core);
++	}
++
+ 	/* Try to get SPROM */
+ 	err = bcma_sprom_get(bus);
+ 	if (err == -ENOENT) {
 -- 
-2.1.0
+1.8.4.5
 
