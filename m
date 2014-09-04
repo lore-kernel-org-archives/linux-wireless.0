@@ -1,47 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f41.google.com ([209.85.215.41]:60479 "EHLO
-	mail-la0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932314AbaIENG4 (ORCPT
+Received: from mail-oi0-f43.google.com ([209.85.218.43]:55464 "EHLO
+	mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753711AbaIDVEJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Sep 2014 09:06:56 -0400
-Received: by mail-la0-f41.google.com with SMTP id s18so2813409lam.28
-        for <linux-wireless@vger.kernel.org>; Fri, 05 Sep 2014 06:06:53 -0700 (PDT)
-From: Henning Rogge <hrogge@gmail.com>
-To: "linux-wireless @ vger . kernel . org"
-	<linux-wireless@vger.kernel.org>
-Cc: Henning Rogge <henning.rogge@fkie.fraunhofer.de>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-Subject: [PATCH v3 0/2] cfg80211: Add export of mesh proxy path table
-Date: Fri,  5 Sep 2014 15:06:42 +0200
-Message-Id: <1409922404-8217-1-git-send-email-henning.rogge@fkie.fraunhofer.de> (sfid-20140905_150701_607006_12A3D8FB)
+	Thu, 4 Sep 2014 17:04:09 -0400
+Received: by mail-oi0-f43.google.com with SMTP id i138so7967oig.16
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Sep 2014 14:04:08 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	troy_tan@realsil.com.cn
+Subject: [PATCH 0/7 V3.18] Patches to upgrade driver btcoexist for latest (062814) Realtek code
+Date: Thu,  4 Sep 2014 16:03:39 -0500
+Message-Id: <1409864626-16373-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20140904_230412_983818_196E98F4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The following patch series adds and implements two new cfg80211_ops that
-allow to query the content of the mac80211s mesh proxy path table via
-netlink.
+This set of patches fixes bugs in the Realtek drivers and adds the support
+code for devices RTL8192EE and RTL8821AE. An earlier version of this code
+resides in staging and will be removed when these patches, and the
+corresponding drivers, reach net-next.
 
-v2 changes:
-* split the original patch into separate cfg80211 and mac80211 part
+All this code is intended for the 3.18 stream.
 
-v3 change:
-* change of commit messages, added signoff
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: troy_tan@realsil.com.cn
 
-Henning Rogge (2):
-  cfg80211: add ops to query mesh proxy path table
-  mac80211: implement cfg80211_ops to query mesh proxy path table
+Larry Finger (7):
+  rtlwifi: btcoexist: Modify btcoexist for changes in the V062814
+    Realtek version = part 1
+  rtlwifi: btcoexist: Modify rtl_btc for changes in latest Realtek code
+  rtlwifi: btcoexist: Modify driver for V062814 Realtek driver
+  rtlwifi: btcoexist: Modify driver to support BT coexistence in
+    rtl8723be
+  rtlwifi: btcoexist: Add BT coexistence routines for driver rtl8821ae
+  rtlwifi: btcoexist: Add second part of BT coexistence routines for
+    rtl8821ae
+  rtlwifi: btcoexist: Update remaining old parts of the driver
 
- include/net/cfg80211.h       |  7 ++++
- include/uapi/linux/nl80211.h |  6 +++
- net/mac80211/cfg.c           | 53 ++++++++++++++++++++++++
- net/mac80211/mesh.h          |  3 ++
- net/mac80211/mesh_pathtbl.c  | 31 ++++++++++++++
- net/wireless/nl80211.c       | 99 ++++++++++++++++++++++++++++++++++++++++++++
- net/wireless/rdev-ops.h      | 27 +++++++++++-
- net/wireless/trace.h         | 45 ++++++++++++++++++++
- 8 files changed, 270 insertions(+), 1 deletion(-)
+ .../net/wireless/rtlwifi/btcoexist/halbt_precomp.h |    6 +
+ .../wireless/rtlwifi/btcoexist/halbtc8192e2ant.c   | 3888 +++++++++++++++++++
+ .../wireless/rtlwifi/btcoexist/halbtc8192e2ant.h   |  185 +
+ .../wireless/rtlwifi/btcoexist/halbtc8723b1ant.c   | 3211 ++++++++++++++++
+ .../wireless/rtlwifi/btcoexist/halbtc8723b1ant.h   |  184 +
+ .../wireless/rtlwifi/btcoexist/halbtc8723b2ant.c   |  447 ++-
+ .../wireless/rtlwifi/btcoexist/halbtc8723b2ant.h   |   31 +-
+ .../wireless/rtlwifi/btcoexist/halbtc8821a1ant.c   | 3010 +++++++++++++++
+ .../wireless/rtlwifi/btcoexist/halbtc8821a1ant.h   |  188 +
+ .../wireless/rtlwifi/btcoexist/halbtc8821a2ant.c   | 3914 ++++++++++++++++++++
+ .../wireless/rtlwifi/btcoexist/halbtc8821a2ant.h   |  205 +
+ .../net/wireless/rtlwifi/btcoexist/halbtcoutsrc.c  |   47 +-
+ .../net/wireless/rtlwifi/btcoexist/halbtcoutsrc.h  |  118 +-
+ drivers/net/wireless/rtlwifi/btcoexist/rtl_btc.c   |   27 +-
+ drivers/net/wireless/rtlwifi/btcoexist/rtl_btc.h   |    6 +-
+ drivers/net/wireless/rtlwifi/rtl8723ae/hal_btc.c   |    4 +-
+ drivers/net/wireless/rtlwifi/wifi.h                |   15 +-
+ 17 files changed, 15165 insertions(+), 321 deletions(-)
+ create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/halbtc8192e2ant.c
+ create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/halbtc8192e2ant.h
+ create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/halbtc8723b1ant.c
+ create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/halbtc8723b1ant.h
+ create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/halbtc8821a1ant.c
+ create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/halbtc8821a1ant.h
+ create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/halbtc8821a2ant.c
+ create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/halbtc8821a2ant.h
 
 -- 
-1.9.1
+1.8.4.5
 
