@@ -1,55 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44079 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753822AbaIOTAL (ORCPT
+Received: from mail-yk0-f173.google.com ([209.85.160.173]:46125 "EHLO
+	mail-yk0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755219AbaIDU6u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Sep 2014 15:00:11 -0400
-Date: Mon, 15 Sep 2014 14:56:59 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: bluetooth-next 2014-09-14
-Message-ID: <20140915185659.GD3891@tuxdriver.com> (sfid-20140915_210019_278708_62FB85B3)
-References: <20140914041912.GA1623@t440s.P-661HNU-F1>
- <20140914042427.GA1926@t440s.P-661HNU-F1>
+	Thu, 4 Sep 2014 16:58:50 -0400
+Received: by mail-yk0-f173.google.com with SMTP id 20so6400466yks.4
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Sep 2014 13:58:49 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140914042427.GA1926@t440s.P-661HNU-F1>
+In-Reply-To: <5408B698.6050606@candelatech.com>
+References: <5408B698.6050606@candelatech.com>
+From: Sergey Ryazanov <ryazanov.s.a@gmail.com>
+Date: Fri, 5 Sep 2014 00:58:29 +0400
+Message-ID: <CAHNKnsSLmWOeH7i-K1yFESgSU23FwfUv8oTZF-HkW53+8Yn_qg@mail.gmail.com> (sfid-20140904_225901_226734_E6684972)
+Subject: Re: I cannot disable RTS/CTS on ath9k.
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Sep 14, 2014 at 07:24:27AM +0300, Johan Hedberg wrote:
-> Hi John,
-> 
-> On Sun, Sep 14, 2014, Johan Hedberg wrote:
-> > Here are some more patches intended for 3.18. Most of them are cleanups
-> > or fixes for SMP. The only exception is a fix for BR/EDR L2CAP fixed
-> > channels which should now work better together with the L2CAP
-> > information request procedure.
-> > 
-> > Let me know if there are any issues pulling. Thanks.
-> > 
-> > Johan
-> > 
-> > ---
-> > The following changes since commit 39e90c77637b3892a39f2908aea57539e961c50e:
-> > 
-> >   Bluetooth: 6lowpan: Route packets that are not meant to peer via correct device (2014-09-09 15:51:47 +0200)
-> > 
-> > are available in the git repository at:
-> > 
-> >   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next.git master
-> 
-> This was supposed to be a reference to the for-upstream branch instead
-> of master. Both point to the same commit at this moment but it'd be more
-> convenient if you pull from for-upstream so that the master branch can
-> continue living on without waiting for the pull to happen. Sorry for the
-> extra hassle.
-> 
-> Johan
+2014-09-04 22:59 GMT+04:00 Ben Greear <greearb@candelatech.com>:
+> My setup is thus:
+>
+> ath9k station
+> ath10k AP (RTS not enabled)
+> ath9k monitor (on separate machine)
+>
+> I tried enabling (value 1024) and and also disabling RTS on the station.
+>
+> The station was forced to reconnect after setting the RTS value on
+> the phy.
+>
+> But, we sniff RTS being sent by station regardless of the ath9k settings.
+>
+> I verified RTS configured as requested using 'iw phy phy0 info' and looking
+> for RTS.
+>
+> Is there something else that might cause RTS to be sent even when station
+> is not configured for RTS?
+>
+Rate control module can do this. About a year ago there was a
+discussion of this feature of minstrel.
 
-Pulling now...
+> Thanks,
+> Ben
+>
+> --
+> Ben Greear <greearb@candelatech.com>
+> Candela Technologies Inc  http://www.candelatech.com
 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+BR,
+Sergey
