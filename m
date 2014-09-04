@@ -1,44 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:42059 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757458AbaISSFB (ORCPT
+Received: from www.natecarlson.com ([74.117.236.15]:53647 "EHLO
+	plesk.technicality.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750803AbaIDPDH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Sep 2014 14:05:01 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: ath10k@lists.infradead.org, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 2/3] ath10k:  support CT firmware flag.
-Date: Fri, 19 Sep 2014 11:04:49 -0700
-Message-Id: <1411149890-12618-2-git-send-email-greearb@candelatech.com> (sfid-20140919_200508_768616_637C749F)
-In-Reply-To: <1411149890-12618-1-git-send-email-greearb@candelatech.com>
-References: <1411149890-12618-1-git-send-email-greearb@candelatech.com>
+	Thu, 4 Sep 2014 11:03:07 -0400
+Date: Thu, 4 Sep 2014 10:02:53 -0500 (CDT)
+From: Nate Carlson <linux-wireless@natecarlson.com>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [ANN] new experimental firmware for 7260 / 3160 / 7265 - Core7
+In-Reply-To: <CANUX_P2ZqEo4pcVxcB1GHzaG8Fc3NqgBdr3Se8aGq+DXZPMLqQ@mail.gmail.com>
+Message-ID: <alpine.DEB.2.02.1409040956540.25615@admin.chi.technicality.org> (sfid-20140904_170327_632847_CE234FCB)
+References: <CANUX_P1udm36NoF-dbOARa671VthuYfrEEz2ODSmkCgDzcRe8g@mail.gmail.com> <alpine.DEB.2.02.1409031720280.17274@admin.chi.technicality.org> <CANUX_P2ZqEo4pcVxcB1GHzaG8Fc3NqgBdr3Se8aGq+DXZPMLqQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+[responding to both messages at once here]
 
-Add placeholder so CT firmware can more easily co-exist with upstream
-kernel.
+On Thu, 4 Sep 2014, Emmanuel Grumbach wrote:
+> If you want, you can apply this:
+<..>
+> You'll need the firmware attached, and load the driver with 
+> fw_monitor=1. Then, when the error you mentioned will occur, it will 
+> crash the firmware on purpose so that we can get the logs. You'll see 
+> lots of junk in dmesg.
+>
+> Once this happened, you can take the data from 
+> /sys/kernel/debug/iwlwifi/0000\:01\:00.0/iwlmvm/fw_error_dump. This will 
+> weigh around 4MB depending on the available memory in your system, this 
+> is the data I need to give to the firmware team.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- drivers/net/wireless/ath/ath10k/core.h | 3 +++
- 1 file changed, 3 insertions(+)
+I will give this a try later on -- I'm testing this on my real laptop, and 
+am in the middle of a project, so can't reboot at the moment (I love Linux 
+- if a driver pukes, just reload it and reconnect, no need to reboot!)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 20c5e40..3f14858 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -361,6 +361,9 @@ enum ath10k_fw_features {
- 	 */
- 	ATH10K_FW_FEATURE_WMI_10_2 = 4,
- 
-+	/* Firmware from Candela Technologies, enables more VIFs, etc */
-+	ATH10K_FW_FEATURE_WMI_10X_CT = 5,
-+
- 	/* keep last */
- 	ATH10K_FW_FEATURE_COUNT,
- };
--- 
-1.7.11.7
+> I just saw something weird...
+>
+> The Q 16 is still working while we flush:
+<...>
+> can you please re-run with trace-cmd -e iwlwifi -iwlwifi_msg -e
+> mac80211 and send the trace.dat output.
 
+Sure! I'm new to this; did a bit of RTFM'ing, and I'm guessing that the 
+command should actually be:
+
+trace-cmd record -e iwlwifi -e iwlwifi_msg -e mac80211
+
+..and that I should wait until the issue occurs again with this running, 
+and then hit ctrl-c, gpg-encrypt the trace.dat and send it to you?  (Or 
+should I open a bugzilla and attach the encrypted file there?)
+
+If any of that's incorrect, let me know.
+
+The issue did already happen again today - unfortunately I hadn't gotten 
+to firing up the trace-cmd yet.. so hopefully it'll happen again.  :)
+
+Thanks!
+
+-Nate
