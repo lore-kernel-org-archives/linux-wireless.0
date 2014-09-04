@@ -1,60 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:60803 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755286AbaICLnq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Sep 2014 07:43:46 -0400
-Message-ID: <1409744618.911.2.camel@jlt4.sipsolutions.net> (sfid-20140903_134349_850041_6C92963D)
-Subject: Re: [PATCHv4 1/2] cfg80211: enable dynack through nl80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>
-Date: Wed, 03 Sep 2014 13:43:38 +0200
-In-Reply-To: <CAA2SeNKcF37iC0e+n8nrtabT8qwYE9tqD3RCGsSeiBmyxJjhjQ@mail.gmail.com> (sfid-20140829_224608_546052_1439D439)
-References: <1406556148-3924-1-git-send-email-lorenzo.bianconi83@gmail.com>
-	 <1406556148-3924-2-git-send-email-lorenzo.bianconi83@gmail.com>
-	 <1407770081.9844.12.camel@jlt4.sipsolutions.net>
-	 <CAA2SeNLg3mktDY0u4=ksHr4QvXewx4koeGkCAW8upqrS6gMg0g@mail.gmail.com>
-	 <1409310171.4577.13.camel@jlt4.sipsolutions.net>
-	 <CAA2SeNKcF37iC0e+n8nrtabT8qwYE9tqD3RCGsSeiBmyxJjhjQ@mail.gmail.com>
-	 (sfid-20140829_224608_546052_1439D439)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ie0-f181.google.com ([209.85.223.181]:45552 "EHLO
+	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754174AbaIDSEs convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Sep 2014 14:04:48 -0400
+Received: by mail-ie0-f181.google.com with SMTP id rp18so11738985iec.26
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Sep 2014 11:04:47 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20140904173833.GG3467@tuxdriver.com>
+References: <1409605867-30051-1-git-send-email-zajec5@gmail.com>
+	<1409605867-30051-2-git-send-email-zajec5@gmail.com>
+	<20140904173833.GG3467@tuxdriver.com>
+Date: Thu, 4 Sep 2014 20:04:47 +0200
+Message-ID: <CACna6ryHXMbzsS_Knf_5WqtanyAyXTETHAw2Mm8h8y2bNsZ-_A@mail.gmail.com> (sfid-20140904_200451_743304_BA220900)
+Subject: Re: [PATCH 2/2] bcma: use separated function to initialize bus on SoC
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	Ralf Baechle <ralf@linux-mips.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-08-29 at 22:46 +0200, Lorenzo Bianconi wrote:
-> > Hi,
-> >
-> > Sorry for the delay.
-> >
-> >> dynack is disable by default at bootstrap and it is automatically
-> >> disabled as soon as you set coverage_class (coverage_class >= 0) after
-> >> dynack has been enabled (coverage_class = -1). E.g:
-> >>
-> >> - iw phy phy0 set distance auto (to enable dynack)
-> >>
-> >> - iw phy phy0 set distance x (to set coverage class and disable dynack)
-> >>
-> >>
-> >> This logic is implemented in dynack code. Is it fine for you?
-> >
-> > Ok, I guess that's reasonable. The default coverage class is 0 I guess?
-> 
-> Yes, dynack is disabled at bootstrap and default coverage class is 0
-> 
-> >
-> >> Anyway documentation should be clearer on that stuff. :)
-> >
-> > Please extend it then? :)
-> >
-> 
-> I will send a new patchset with more comments on that stuff :)
+On 4 September 2014 19:38, John W. Linville <linville@tuxdriver.com> wrote:
+> On Mon, Sep 01, 2014 at 11:11:07PM +0200, Rafał Miłecki wrote:
+>> This is required to split SoC bus init into two phases. The later one
+>> (which includes scanning) should be called when kalloc is available.
+>>
+>> Cc: Ralf Baechle <ralf@linux-mips.org>
+>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+>> ---
+>> John: please note this patch touches arch/mips/bcm47xx/setup.c
+>>
+>> This patches is a first step of simplifying MIPS booting process on
+>> Broadcom SoCs. My research described in:
+>> > Booting bcm47xx (bcma & stuff), sharing code with bcm53xx
+>> e-mail thread explained how we could get rid of all these early scanning
+>> tricks. The main idea is to postpone bus initialization a bit and use
+>> all standard calls then. So far we were doing it so early we had to
+>> avoid kalloc.
+>> ---
+>>  arch/mips/bcm47xx/setup.c     |  4 ++++
+>>  drivers/bcma/host_soc.c       | 11 +++++++++--
+>>  include/linux/bcma/bcma_soc.h |  1 +
+>>  3 files changed, 14 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/arch/mips/bcm47xx/setup.c b/arch/mips/bcm47xx/setup.c
+>> index 2b63e7e..fff6ed4 100644
+>> --- a/arch/mips/bcm47xx/setup.c
+>> +++ b/arch/mips/bcm47xx/setup.c
+>> @@ -202,6 +202,10 @@ static void __init bcm47xx_register_bcma(void)
+>>
+>>       err = bcma_host_soc_register(&bcm47xx_bus.bcma);
+>>       if (err)
+>> +             panic("Failed to register BCMA bus (err %d)", err);
+>> +
+>> +     err = bcma_host_soc_init(&bcm47xx_bus.bcma);
+>> +     if (err)
+>>               panic("Failed to initialize BCMA bus (err %d)", err);
+>>
+>>       bcm47xx_fill_bcma_boardinfo(&bcm47xx_bus.bcma.bus.boardinfo, NULL);
+>
+> This hunk looks wrong.  Is it missing indentation?  Or should a line
+> be removed at the top?
 
-Please also include a better commit message actually explaining the
-feature :)
+I've just downloaded & applied this patchset on top of wireless-next
+successfully... Did you merge something extra from net-next maybe?
 
-johannes
-
+-- 
+Rafał
