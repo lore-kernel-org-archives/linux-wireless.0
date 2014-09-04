@@ -1,60 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:58196 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751593AbaIXOhV (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:47596 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751645AbaIDRaO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Sep 2014 10:37:21 -0400
-Message-ID: <5422D71F.7080809@candelatech.com> (sfid-20140924_163726_428778_E0517514)
-Date: Wed, 24 Sep 2014 07:37:19 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Thu, 4 Sep 2014 13:30:14 -0400
+Date: Thu, 4 Sep 2014 13:24:50 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Sujith Manoharan <sujith@msujith.org>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: Re: [PATCH 0/5] ath9k patches
+Message-ID: <20140904172450.GF3467@tuxdriver.com> (sfid-20140904_193018_658311_9EC66733)
+References: <1409730929-30208-1-git-send-email-sujith@msujith.org>
 MIME-Version: 1.0
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH v2 03/10] ath10k: support ethtool stats.
-References: <1411507045-18973-1-git-send-email-greearb@candelatech.com>	<1411507045-18973-3-git-send-email-greearb@candelatech.com> <CA+BoTQkK=6NfPN9e-3qN2Qaq2RLVdEwrp5x03_T=E2ZLcBeiaA@mail.gmail.com>
-In-Reply-To: <CA+BoTQkK=6NfPN9e-3qN2Qaq2RLVdEwrp5x03_T=E2ZLcBeiaA@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1409730929-30208-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+I am having a lot of trouble determining which of your series are
+intended as fixes for the current release (3.17) or updates for the
+next release (3.18).  In this series, several seem like fixes but
+"ath9k: Fix ath_startrecv" seems like a cleanup.
 
+Would you like to reorganize your patch submissions as fixes
+vs. features?  Or do you want them all to be merged as features
+for 3.18?
 
-On 09/24/2014 12:44 AM, Michal Kazior wrote:
-> On 23 September 2014 23:17,  <greearb@candelatech.com> wrote:
-> [...]
->> +void ath10k_get_et_stats(struct ieee80211_hw *hw,
->> +                        struct ieee80211_vif *vif,
->> +                        struct ethtool_stats *stats, u64 *data)
->> +{
->> +       struct ath10k *ar = hw->priv;
->> +       int i = 0;
->> +       struct ath10k_target_stats *fw_stats;
->> +
->> +       fw_stats = &ar->debug.target_stats;
->> +
->> +       mutex_lock(&ar->conf_mutex);
->> +
->> +       if (ar->state == ATH10K_STATE_ON)
->> +               ath10k_refresh_peer_stats(ar);
->> +
->> +       mutex_unlock(&ar->conf_mutex);
->
-> Just for correctness sake - it's probably a good idea to
-> mutex_unlock() at the end (i.e. after spin_unlock_bh()) to make sure
-> the stats are for this particular request. With your patch there's a
-> very slight chance that, e.g. fw_stats debug file is being read at the
-> same time and it updates fw stats between the above mutex_unlock() and
-> following spin_lock_bh().
+John
 
-That makes no difference at all to the user though, and it is one less
-set of nested locks to worry about.
-
-I'd prefer to leave it as is.
-
-Thanks,
-Ben
+On Wed, Sep 03, 2014 at 01:25:24PM +0530, Sujith Manoharan wrote:
+> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+> 
+> Various fixes for MCC.
+> 
+> Sujith Manoharan (5):
+>   ath9k: Fix RX filter calculation
+>   ath9k: Fix ath_startrecv()
+>   ath9k: Fix COMP_BAR filter
+>   ath9k: Fix RX filters in channel contexts
+>   ath9k: Fix interface accounting
+> 
+>  drivers/net/wireless/ath/ath9k/ath9k.h  |  7 ++++---
+>  drivers/net/wireless/ath/ath9k/beacon.c |  2 +-
+>  drivers/net/wireless/ath/ath9k/debug.c  |  2 +-
+>  drivers/net/wireless/ath/ath9k/main.c   | 20 +++++++++-----------
+>  drivers/net/wireless/ath/ath9k/recv.c   | 31 +++++++++++++++++++------------
+>  drivers/net/wireless/ath/ath9k/tx99.c   |  2 +-
+>  drivers/net/wireless/ath/ath9k/wow.c    |  2 +-
+>  7 files changed, 36 insertions(+), 30 deletions(-)
+> 
+> -- 
+> 2.1.0
+> 
+> 
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
