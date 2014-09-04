@@ -1,74 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:59729 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756192AbaIZXY1 (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:21494 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752993AbaIDKRe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Sep 2014 19:24:27 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v2 3/4] wireless:  support creating wiphy w/out creating wlanX.
-Date: Fri, 26 Sep 2014 16:24:15 -0700
-Message-Id: <1411773856-25042-3-git-send-email-greearb@candelatech.com> (sfid-20140927_012439_719932_AF1F8F08)
-In-Reply-To: <1411773856-25042-1-git-send-email-greearb@candelatech.com>
-References: <1411773856-25042-1-git-send-email-greearb@candelatech.com>
+	Thu, 4 Sep 2014 06:17:34 -0400
+Date: Thu, 4 Sep 2014 13:17:27 +0300
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	<wireless-regdb@lists.infradead.org>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 09/12] wireless-regdb: Add Saint Lucia (LC) regulatory
+ rules
+Message-ID: <20140904101727.GA3498@jouni.qca.qualcomm.com> (sfid-20140904_121803_014476_B17DEE51)
+References: <20140903131518.GA16219@jouni.qca.qualcomm.com>
+ <1409817831.16449.5.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1409817831.16449.5.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On Thu, Sep 04, 2014 at 10:03:51AM +0200, Johannes Berg wrote:
+> On Wed, 2014-09-03 at 16:15 +0300, Jouni Malinen wrote:
+> > Source:
+> > http://www.ntrc.org.lc/operational_structures.htm
+> 
+> Out of curiosity, I clicked the URL, but it seems empty/dead? :)
 
-This will be helpful when using the mac80211_hwsim
-wiphys and automated testing.  Let user create the
-wlan devs as needed, and named as expected.
+Hmm.. It looks like all of www.ntrc.org.lc is in somewhat strange state
+at the moment. If I remember correctly, I did test this link earlier
+myself and it worked, so that may be a temporary issue (it returns a
+somewhat interesting javascript design to display ads or domain parking
+info, etc., and that does clearly work either; anyway, not something
+that one would hope to see from a regulatory commission website). I'd
+hope that this gets resolved eventually, but if desired, I can remove
+that source link as well based on its current state.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-
-v2:  New to the series, more help with automation.
-
- include/net/mac80211.h | 7 ++++++-
- net/mac80211/main.c    | 3 ++-
- 2 files changed, 8 insertions(+), 2 deletions(-)
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 0ad1f47..5c3dade2 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1576,6 +1576,10 @@ struct ieee80211_tx_control {
-  *	a virtual monitor interface when monitor interfaces are the only
-  *	active interfaces.
-  *
-+ * @IEEE80211_HW_NO_AUTO_VDEV: The driver would like for no wlanX to
-+ *	be created.  It is expected user-space will create vdevs as
-+ *      desired (and thus have them named as desired).
-+ *
-  * @IEEE80211_HW_QUEUE_CONTROL: The driver wants to control per-interface
-  *	queue mapping in order to use different queues (not just one per AC)
-  *	for different virtual interfaces. See the doc section on HW queue
-@@ -1622,7 +1626,8 @@ enum ieee80211_hw_flags {
- 	IEEE80211_HW_SUPPORTS_DYNAMIC_PS		= 1<<12,
- 	IEEE80211_HW_MFP_CAPABLE			= 1<<13,
- 	IEEE80211_HW_WANT_MONITOR_VIF			= 1<<14,
--	/* free slots */
-+	IEEE80211_HW_NO_AUTO_VDEV			= 1<<15,
-+	/* free slot */
- 	IEEE80211_HW_SUPPORTS_UAPSD			= 1<<17,
- 	IEEE80211_HW_REPORTS_TX_ACK_STATUS		= 1<<18,
- 	IEEE80211_HW_CONNECTION_MONITOR			= 1<<19,
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 0de7c93..8106770 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -1019,7 +1019,8 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 	}
- 
- 	/* add one default STA interface if supported */
--	if (local->hw.wiphy->interface_modes & BIT(NL80211_IFTYPE_STATION)) {
-+	if (local->hw.wiphy->interface_modes & BIT(NL80211_IFTYPE_STATION) &&
-+	    !(hw->flags & IEEE80211_HW_NO_AUTO_VDEV)) {
- 		result = ieee80211_if_add(local, "wlan%d", NULL,
- 					  NL80211_IFTYPE_STATION, NULL);
- 		if (result)
 -- 
-1.7.11.7
-
+Jouni Malinen                                            PGP id EFC895FA
