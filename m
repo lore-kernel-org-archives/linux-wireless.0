@@ -1,64 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f169.google.com ([209.85.216.169]:54208 "EHLO
-	mail-qc0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752028AbaIKNQB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Sep 2014 09:16:01 -0400
-Received: by mail-qc0-f169.google.com with SMTP id r5so2060460qcx.0
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Sep 2014 06:15:59 -0700 (PDT)
-MIME-Version: 1.0
-Date: Thu, 11 Sep 2014 18:45:58 +0530
-Message-ID: <CABH6M7J1JaKxOfQmC0+hSSBYU+3nBVKKC91TwYixFJyBfDy79g@mail.gmail.com> (sfid-20140911_151614_272497_D7A6D2B9)
-Subject: Mesh support on iwlwifi driver
-From: Ashish Gupta <ashmew2@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mga14.intel.com ([192.55.52.115]:60284 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753875AbaIDSGu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Sep 2014 14:06:50 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH] mac80211: clean up ieee80211_i.h
+Date: Thu,  4 Sep 2014 21:04:36 +0300
+Message-Id: <1409853877-12312-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140904_200653_209059_2D76F736)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+Not sure how the declaration of ieee80211_tdls_peer_del_work
+landed after the double inclusion protection end.
 
-I am trying to run a mesh using open80211s (which is now a part of the
-linux kernel) but if I list the capabilities of my card(driver) using iw
-list, I get this (only relevant part):
+Change-Id: I465fd6f00bb13bd598fe394e59b01ca842f19266
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ net/mac80211/ieee80211_i.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Supported interface modes:
-         * IBSS
-         * managed
-         * AP
-         * AP/VLAN
-         * monitor
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index c8482e0..95469c4 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1950,6 +1950,7 @@ int ieee80211_tdls_mgmt(struct wiphy *wiphy, struct net_device *dev,
+ 			size_t extra_ies_len);
+ int ieee80211_tdls_oper(struct wiphy *wiphy, struct net_device *dev,
+ 			const u8 *peer, enum nl80211_tdls_operation oper);
++void ieee80211_tdls_peer_del_work(struct work_struct *wk);
+ 
+ extern const struct ethtool_ops ieee80211_ethtool_ops;
+ 
+@@ -1960,4 +1961,3 @@ extern const struct ethtool_ops ieee80211_ethtool_ops;
+ #endif
+ 
+ #endif /* IEEE80211_I_H */
+-void ieee80211_tdls_peer_del_work(struct work_struct *wk);
+-- 
+1.8.1.msysgit.1
 
-"Mesh" is missing from this list, but having it here is crucial for
-running the mesh, which otherwise errors with out an "Unsupported
-operation error" when trying to set the network card to Mesh mode.
-
-I would be grateful if you could point me to the right direction for
-getting mesh support onto iwlwifi. I'm willing to write a patch for this
-driver.
-
-The only relevant discussion I have found about this is :
-http://permalink.gmane.org/gmane.linux.kernel.wireless.general/52880
-
-But it seems an old thread and maybe things have changed over time.
-
-Also, there seems to be a patch that someone wrote :
-http://markmail.org/thread/jzm672fnv7zy7u6p
-
-I am not sure about the status of that patch.
-
-I really want to get the mesh running on my Intel Centrino N 1030 network
-card at the earliest. I have done some reading up on developing network
-drivers and also have the latest source code of the linux kernel tree for
-looking at driver sources.
-
-http://wireless.kernel.org/en/users/Drivers/iwlwifi is the most complete
-guide I have found on the subject, but it does not seem to talk about mesh
-much.
-
-What can I do to get mesh support onto iwlwifi?
-
-Thanks a lot.
-
-Regards,
-Ashish Gupta
