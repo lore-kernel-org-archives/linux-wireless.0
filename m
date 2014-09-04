@@ -1,43 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 8bytes.org ([81.169.241.247]:49159 "EHLO theia.8bytes.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753172AbaIHKcG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Sep 2014 06:32:06 -0400
-Date: Mon, 8 Sep 2014 12:32:03 +0200
-From: Joerg Roedel <joro@8bytes.org>
-To: Jason Newton <nevion@gmail.com>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	iommu <iommu@lists.linux-foundation.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: ath9k and AMD IOMMU alias breakage on 3.16?
-Message-ID: <20140908103203.GQ28786@8bytes.org> (sfid-20140908_123210_492700_0F3FB2B4)
-References: <CAGou9MhCmRajqfh91rxbBUr9PBvJxo7U=g9p4Onp0pJk4BwBnA@mail.gmail.com>
- <1409976104.2982.56.camel@ul30vt.home>
+Received: from s72.web-hosting.com ([198.187.29.22]:44137 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755300AbaIDIYP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Sep 2014 04:24:15 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+Message-ID: <21512.8630.788755.200058@gargle.gargle.HOWL> (sfid-20140904_102420_984428_EF7BBB20)
+Date: Thu, 4 Sep 2014 13:54:22 +0530
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1409976104.2982.56.camel@ul30vt.home>
+To: Robb <rbarr138@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: Re: Cannot get ACS to work with hostapd-2.2 "Unknown event 49"
+In-Reply-To: <CAOHJ0jRhDN9n56BnyCwgSxdeKhDRYzg6ua9Z_N+pBOTRF20KpQ@mail.gmail.com>
+References: <CAOHJ0jTHtVvJ43y7m-=UqHeMJfNiMYU2Peg9buxXU+wBigwu5g@mail.gmail.com>
+	<CA+BoTQm+x0kD9m3vVv98MwYOXjfgO1noXOnzdbk5o41S+DLewQ@mail.gmail.com>
+	<CAOHJ0jSoSd97vFEMgxC3cC8AnaEGdwbUiBBoeM7UfLJcha0Ujg@mail.gmail.com>
+	<CA+BoTQnCoZL=GzUh4vJqOQ=-PZ1BwZcUO21spUPB5KF1fUSiRw@mail.gmail.com>
+	<21511.8546.157916.710879@gargle.gargle.HOWL>
+	<CAOHJ0jRhDN9n56BnyCwgSxdeKhDRYzg6ua9Z_N+pBOTRF20KpQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 05, 2014 at 10:01:44PM -0600, Alex Williamson wrote:
-> On Fri, 2014-09-05 at 20:00 -0700, Jason Newton wrote:
-> > Hi,
-> > 
-> > I have an AR9462 connected over minipcie, it came with the ASRock
-> > FM2A88x-itx motherboard and I'm using an AMD A10-7850K cpu with it.  When I
-> > have IOMMU enabled, and this is desirable for opencl related things, the
-> > AR9462 malfunctions with these two errors occurring:
-> > 
-> > AMD-Vi: Event logged [INVALID_DEVICE_REQUEST device=00:00.1
-> > address=0x000000fdf8080020 flags=0x0a00]
+Robb wrote:
+> Again, is this attributed to ath9k_htc devices physically not having
+> the ability,
 
-This means that the device 00:00.1 is sending to the interrupt/EOI
-address-range while interrupt remapping is enabled. You can boot with
-intremap=off on the kernel command line to work around this problem.
+No, the HW is capable of providing this information.
 
-This looks either like another PCI aliasing issue or a 00:00.1 hidden
-device is sending interrupt requests (which it is not allowed to do).
+> I am trying to determine if it can be done and if so, whether to start in
+> driver or firmware?
 
+Probably both. :-)
 
-	Joerg
-
+Sujith
