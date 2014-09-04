@@ -1,91 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:50675 "EHLO
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:45828 "EHLO
 	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751047AbaIISaM (ORCPT
+	with ESMTP id S1750882AbaIDPpM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Sep 2014 14:30:12 -0400
-Date: Tue, 9 Sep 2014 14:25:04 -0400
+	Thu, 4 Sep 2014 11:45:12 -0400
+Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
+	(envelope-from <linville@tuxdriver.com>)
+	id 1XPZDh-0000IW-JN
+	for linux-wireless@vger.kernel.org; Thu, 04 Sep 2014 11:45:09 -0400
+Received: from linville-x1.hq.tuxdriver.com (localhost.localdomain [127.0.0.1])
+	by linville-x1.hq.tuxdriver.com (8.14.8/8.14.6) with ESMTP id s84FW35H008758
+	for <linux-wireless@vger.kernel.org>; Thu, 4 Sep 2014 11:32:03 -0400
+Received: (from linville@localhost)
+	by linville-x1.hq.tuxdriver.com (8.14.8/8.14.8/Submit) id s84FW35I008757
+	for linux-wireless@vger.kernel.org; Thu, 4 Sep 2014 11:32:03 -0400
+Date: Thu, 4 Sep 2014 11:32:03 -0400
 From: "John W. Linville" <linville@tuxdriver.com>
-To: Avinash Patil <patila@marvell.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Xinming Hu <huxm@marvell.com>,
-	Marc Yang <yangyang@marvell.com>, Cathy Luo <cluo@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>
-Subject: Re: [PATCH 00/17] mwifiex updates for 3.17
-Message-ID: <20140909182504.GI29412@tuxdriver.com> (sfid-20140909_203018_332431_34014806)
-References: <1409576345-13717-1-git-send-email-patila@marvell.com>
- <CBACCFA0AEB13A41977475BCF3E896FC47819A10B6@SC-VEXCH2.marvell.com>
+To: linux-wireless@vger.kernel.org
+Subject: Wireless Networking microconference topic approvals (LPC2014)
+Message-ID: <20140904153202.GB3467@tuxdriver.com> (sfid-20140904_174518_535814_D139DF7F)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CBACCFA0AEB13A41977475BCF3E896FC47819A10B6@SC-VEXCH2.marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-OK.
+All,
 
-On Tue, Sep 09, 2014 at 10:10:01AM -0700, Avinash Patil wrote:
-> Hi John,
-> 
-> Please drop this series. I will send v2.
-> 
-> Thanks,
-> Avinash.
-> 
-> -----Original Message-----
-> From: Avinash Patil [mailto:patila@marvell.com] 
-> Sent: Monday, September 01, 2014 6:29 PM
-> To: linville@tuxdriver.com
-> Cc: linux-wireless@vger.kernel.org; Amitkumar Karwar; Xinming Hu; Marc Yang; Cathy Luo; Maithili Hinge; Avinash Patil
-> Subject: [PATCH 00/17] mwifiex updates for 3.17
-> 
-> This patch series brings in scan enhancement including scan channel gap, support for parsing FW API version from HW_SPEC command response, support for processing RX in work queue and few trivial fixes for SDIO multiport aggregation.
-> 
-> Amitkumar Karwar (7):
->   mwifiex: fix a bug in Tx multiport aggregation
->   mwifiex: minor cleanup in multiport aggregation
->   mwifiex: fix left_len calculation issue
->   mwifiex: rename macro and variables related to API revision
->   mwifiex: use firmware API revision from GET_HW_SPEC response
->   mwifiex: remove redundant variable report_scan_result
->   mwifiex: remove low priority scan handling
-> 
-> Avinash Patil (9):
->   mwifiex: fix probable memory corruption while processing TDLS frame
->   mwifiex: avoid processing RX packets with invalid length
->   mwifiex: rework internal scan for association
->   mwifiex: support for event done interrupt
->   mwifiex: set passive scan type for scan requests with no ssid
->   mwifiex: bring in scan channel gap feature
->   mwifiex: remove restriction of single channel scan when connected
->   mwifiex: process TX even when scan is ongoing
->   mwifiex: add rx workqueue support
-> 
-> Xinming Hu (1):
->   mwifiex: fix 5G association failure after leaving 2.4G IBSS
-> 
->  drivers/net/wireless/mwifiex/11n_rxreorder.c |  14 ++
->  drivers/net/wireless/mwifiex/cfg80211.c      |  13 +-
->  drivers/net/wireless/mwifiex/cmdevt.c        |  28 ++--
->  drivers/net/wireless/mwifiex/fw.h            |  17 ++-
->  drivers/net/wireless/mwifiex/init.c          |  25 +++-
->  drivers/net/wireless/mwifiex/main.c          | 194 +++++++++++++--------------
->  drivers/net/wireless/mwifiex/main.h          |  49 +++++--
->  drivers/net/wireless/mwifiex/pcie.c          |  37 ++++-
->  drivers/net/wireless/mwifiex/pcie.h          |   5 +-
->  drivers/net/wireless/mwifiex/scan.c          | 112 ++++++++++------
->  drivers/net/wireless/mwifiex/sdio.c          |  28 ++--
->  drivers/net/wireless/mwifiex/sta_cmd.c       |   2 +-
->  drivers/net/wireless/mwifiex/sta_cmdresp.c   |   4 +-
->  drivers/net/wireless/mwifiex/sta_ioctl.c     |  13 +-
->  drivers/net/wireless/mwifiex/tdls.c          |   4 +-
->  15 files changed, 339 insertions(+), 206 deletions(-)
-> 
-> --
-> 1.8.1.4
-> 
-> 
+I have approved the current proposals for the Wireless Networking
+microconference in Duesseldorf.  The current list of topics is
+available here:
 
+http://www.linuxplumbersconf.org/2014/ocw/events/LPC2014/tracks/339
+
+We have a 6 hour slot, and 6 topics approved.  I don't think that all
+of the listed topics need an hour each, so we probably can squeeze in
+a couple more topics.  If you have something to propose, then please
+click on the "submit a proposal" link on the page linked above.
+
+For more info on proposing topics for LPC2014, you can also go here:
+
+http://www.linuxplumbersconf.org/2014/how-to-submit-microconference-discussions-topics/
+
+Thanks,
+
+John
+
+P.S.  I was not able to transfer the suggested topics from the wiki
+to actual topic proposals without listing myself as the speaker for
+those proposals.  If you are intending to present a topic, please
+follow the directions above.
 -- 
 John W. Linville		Someday the world will need a hero, and you
 linville@tuxdriver.com			might be all we have.  Be ready.
