@@ -1,169 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f50.google.com ([74.125.82.50]:60970 "EHLO
-	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754653AbaIQMSm (ORCPT
+Received: from mail-lb0-f175.google.com ([209.85.217.175]:63716 "EHLO
+	mail-lb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752614AbaIDKqz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Sep 2014 08:18:42 -0400
-Received: by mail-wg0-f50.google.com with SMTP id x13so1277752wgg.21
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Sep 2014 05:18:41 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAAfyv36KrG5SjsJjPqaXp4SuE2hnG-EsXpTE-WrhM8zOdye2-g@mail.gmail.com>
-References: <CAAfyv35k1mgQh6FcWaaMciAo8Vkp055k=5xF7zu+yrHmrQbbLA@mail.gmail.com>
-	<5FF020A1CFFEEC49BD1E09530C4FF5951819DB12F1@SC-VEXCH1.marvell.com>
-	<CAAfyv35j-77AURB4fHcecbEvyGS6U+1APNRFCf3FDAd_rrWnJw@mail.gmail.com>
-	<5FF020A1CFFEEC49BD1E09530C4FF5951821351855@SC-VEXCH1.marvell.com>
-	<CAAfyv36KrG5SjsJjPqaXp4SuE2hnG-EsXpTE-WrhM8zOdye2-g@mail.gmail.com>
-Date: Wed, 17 Sep 2014 14:18:40 +0200
-Message-ID: <CAAfyv359EgdcYqa_HTzsw17HYw0NHU6gq8wmhgexbyLZ=OrQPw@mail.gmail.com> (sfid-20140917_141848_957144_BF4B1398)
-Subject: Re: mwifiex_usb_submit_rx_urb: dev_alloc_skb failed when conected to 5GHz
-From: Belisko Marek <marek.belisko@gmail.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Avinash Patil <patila@marvell.com>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 4 Sep 2014 06:46:55 -0400
+Received: by mail-lb0-f175.google.com with SMTP id u10so11073843lbd.20
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Sep 2014 03:46:53 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v3] ath10k: fix debugfs_create_dir() checking
+Date: Thu,  4 Sep 2014 12:36:45 +0200
+Message-Id: <1409827005-3777-1-git-send-email-michal.kazior@tieto.com> (sfid-20140904_124700_157076_4321BBEE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+The function may return an -ENODEV if debugfs is
+disabled in kernel. This should originally be
+guarded by ath10k's Kconfig but it still makes
+sense to check for the non-NULL errno return
+value.
 
-I was too fast when hitting Send :)
+Either this or a Kconfig patch prevents from a
+kernel oops due to invalid pointer dereference:
 
-On Wed, Sep 17, 2014 at 2:07 PM, Belisko Marek <marek.belisko@gmail.com> wrote:
-> Dear Amitkumar Karwar,
->
-> On Wed, Sep 17, 2014 at 12:52 PM, Amitkumar Karwar <akarwar@marvell.com> wrote:
->> Hi BR,
->>
->>> Dear Amitkumar Karwar,
->>>
->>> some additional info.
->>>
->>> On Thu, Sep 11, 2014 at 5:09 PM, Amitkumar Karwar <akarwar@marvell.com>
->>> wrote:
->>> > Hi BR,
->>> >
->>> >>
->>> >> I'm using 3.9 mainline mwifiex driver for wireless usb card. Doing
->>> >> some throughput testing (with iperf) in 5GHz I got following
->>> failures:
->>> >> [ 221.521799] usb 1-1: mwifiex_usb_submit_rx_urb: dev_alloc_skb
->>> >> failed
->>> >
->>> > This is skb allocation failure returned by kernel. 4k buffer is
->>> always allocated for Rx packets. This issue doesn't seem to be specific
->>> to 5Ghz.
->>> Yes you're right. I can reproduce issue also with 2.4GHz (doing iperf
->>> testing as mentioned in other email) by pinging device with card.
->>> >
->>> >>
->>> >> I checked which which size fails to allocate and it's 4096 bytes. I
->>> >> was looking to changes in never kernel releases but I cannot find
->>> >> anything obvious. When connected to 2.4GHz I cannot reproduce issue
->>> >> though. I'm using FW version mwifiex 1.0 (14.68.29.p26).
->>> >>
->>> >
->>> > Could you please provide the platform details?
->>> > How often the problem occurs during throughput testing? Are there any
->>> specific steps?
->>> One more observation is that when problem occurred complete system is
->>> unresponsive (console is almost completely dead).
->>
->> Thanks for the more information.
->> Skb alloc failure should be gracefully handled. We will look into this issue.
-> OK. Thanks. Can you please
-Can you please ping me when you will have some patch so I can test it
-also on my device.
->>
->>> I can workaround issue by decreasing iperf bandwidth to ~40m. I think
->>> in this situation we're running out of memory by exhaustive skb
->>> allocations.
->>
->> Actually 6 4K size buffers are being allocated for Rx and Tx data during traffic.
->> Probably your platform runs out of memory after these allocations.
-> This could be the issue. I'm running some apps when performing
-> throughput test and this could lead
-> to out of memory. When I stop all apps and perform the test it behave
-> better (I cannot reproduce issue) except of
-> fact that whole system is unresponsive for ~ 10 secs as was already mentioned.
-This is not fully true. I run loop iperf test (-t 600) and it will
-fail after 4 minutes with (there was around 190MB free memory):
+ BUG: unable to handle kernel NULL pointer dereference at 000000000000001d
+ IP: [<ffffffff810d4423>] relay_open_buf.part.9+0x1a3/0x2d0
+ PGD 0
+ Oops: 0000 [#1] SMP
+ Modules linked in: ath10k_pci ath10k_core ath
+ CPU: 1 PID: 6 Comm: kworker/u8:0 Tainted: G        W      3.17.0-rc2-wl-ath+ #448
+ Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Bochs 01/01/2011
+ Workqueue: ath10k_wq ath10k_core_register_work [ath10k_core]
+ task: ffff88001e94abc0 ti: ffff88001e988000 task.ti: ffff88001e988000
+ RIP: 0010:[<ffffffff810d4423>]  [<ffffffff810d4423>] relay_open_buf.part.9+0x1a3/0x2d0
+ RSP: 0018:ffff88001e98bd40  EFLAGS: 00010286
+ RAX: ffffffffffffffed RBX: ffffc90000a01000 RCX: 0000000000001473
+ RDX: 0000000000000000 RSI: ffffffffffffffed RDI: ffff88001d4b1d00
+ RBP: ffff88001e98bd80 R08: 0000000000014860 R09: ffff88001fc94860
+ R10: ffffea0000752c40 R11: ffff88001e801700 R12: 0000000000000040
+ R13: 0000000000000200 R14: ffff88001d5b8800 R15: ffff88001d4b1e00
+ FS:  0000000000000000(0000) GS:ffff88001fc80000(0000) knlGS:0000000000000000
+ CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+ CR2: 000000000000001d CR3: 000000001d4bd000 CR4: 00000000000006e0
+ Stack:
+  000000001e98bda8 0000000000000040 ffff88001d5b8800 ffff88001d5b8800
+  0000000000000000 0000000000000000 ffffffff81c96690 ffffffffa0025997
+  ffff88001e98bdc8 ffffffff810d47bf 0000000000000000 ffffffffffffffed
+ Call Trace:
+  [<ffffffff810d47bf>] relay_open+0x17f/0x2c0
+  [<ffffffffa001ea0f>] ath10k_spectral_create+0x2f/0x40 [ath10k_core]
+  [<ffffffffa0012ff8>] ath10k_core_register_work+0x318/0x520 [ath10k_core]
+  [<ffffffff810619d9>] process_one_work+0x169/0x390
+  [<ffffffff810626a9>] worker_thread+0x119/0x490
+  [<ffffffff81062590>] ? rescuer_thread+0x2b0/0x2b0
+  [<ffffffff81066efd>] kthread+0xcd/0xf0
+  [<ffffffff81066e30>] ? kthread_create_on_node+0x170/0x170
+  [<ffffffff8179137c>] ret_from_fork+0x7c/0xb0
+  [<ffffffff81066e30>] ? kthread_create_on_node+0x170/0x170
+ Code: 00 85 c0 74 2e 8b 55 c4 48 8b 7d d0 4c 89 fe e8 d4 fd ff ff 48 85 c0 0f 84 12 01 00 00 49 89 87 98 00 00 00 49 8b 97 d0 00 00 00 <48> 8b 40 30 48 89 50 50 8b 45 c4 be 01 00 00 00 4c 89 ff 41 89
+ RIP  [<ffffffff810d4423>] relay_open_buf.part.9+0x1a3/0x2d0
+  RSP <ffff88001e98bd40>
+ CR2: 000000000000001d
+ ---[ end trace 2eafd3e96c41b8e2 ]---
 
-[  875.249551] usb 1-1: mwifiex_usb_submit_rx_urb: dev_alloc_skb failed
-[  875.256645] usb 1-1: mwifiex_usb_submit_rx_urb: dev_alloc_skb failed
-[  875.263694] usb 1-1: mwifiex_usb_submit_rx_urb: dev_alloc_skb failed
-[  875.270940] usb 1-1: mwifiex_usb_submit_rx_urb: dev_alloc_skb failed
-[  875.277993] usb 1-1: mwifiex_usb_submit_rx_urb: dev_alloc_skb failed
-[  875.285068] usb 1-1: mwifiex_usb_submit_rx_urb: dev_alloc_skb failed
-[  3]  0.0- 1.0 sec  81.8 KBytes    670 Kbits/sec  0.034 ms    0/   57 (0%)
-[  3]  1.0- 2.0 sec  0.00 Bytes  0.00 bits/sec  0.034 ms    0/    0 (nan%)
-[  3]  2.0- 3.0 sec  0.00 Bytes  0.00 bits/sec  0.034 ms    0/    0 (nan%)
-[  3]  3.0- 4.0 sec  0.00 Bytes  0.00 bits/sec  0.034 ms    0/    0 (nan%)
-[  3]  4.0- 5.0 sec  0.00 Bytes  0.00 bits/sec  0.034 ms    0/    0 (nan%)
-[  3]  5.0- 6.0 sec  0.00 Bytes  0.00 bits/sec  0.034 ms    0/    0 (nan%)
-[  3]  6.0- 7.0 sec  0.00 Bytes  0.00 bits/sec  0.034 ms    0/    0 (nan%)
-[  3]  7.0- 8.0 sec  0.00 Bytes  0.00 bits/sec  0.034 ms    0/    0 (nan%)
-[  3]  8.0- 9.0 sec  0.00 Bytes  0.00 bits/sec  0.034 ms    0/    0 (nan%)
-[  3]  9.0-10.0 sec  0.00 Bytes  0.00 bits/sec  0.034 ms    0/    0 (nan%)
-[  3] 10.0-11.0 sec  0.00 Bytes  0.00 bits/sec  0.034 ms    0/    0 (nan%)
-[  3] 11.0-12.0 sec  0.00 Bytes  0.00 bits/sec  0.034 ms    0/    0 (nan%)
-[  3] 12.0-13.0 sec  0.00 Bytes  0.00 bits/sec  0.034 ms    0/    0 (nan%)
-[  3] 13.0-14.0 sec  0.00 Bytes  0.00 bits/sec  0.034 ms    0/    0 (nan%)
-[  3] 14.0-15.0 sec  81.8 KBytes    670 Kbits/sec  24.506 ms   60/  117 (51%)
+Note: Without a Kconfig patch ath10k with
+ATH10K_DEBUGFS && !DEBUG_FS will fail and refuse
+to register to mac80211.
+
+Reported-by: Matteo Croce <matteo@openwrt.org>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+
+Notes:
+    v2:
+     * fix commit subject (sorry for the noise!)
+    
+    v3:
+     * remove Kconfig patch (I accidentally amended something I shouldn't have,
+       sorry for the noise again! I guess I need a break..)
+
+@Kalle:
+
+ - this patch prevents kernel oops but ath10k will
+   fail to load
+
+ - Matteo's patch prevents kernel oops and ath10k
+   will load fine
+
+Since mine is just an extra precaution feel free
+to drop all but the first paragraph of my commit
+message if you want to.
 
 
-[ 1019.644302] usb 1-1: mwifiex_cmd_timeout_func: Timeout cmd id
-(1410955919.418091) = 0x6, act = 0x3
-[ 1019.653826] usb 1-1: num_data_h2c_failure = 0
-[ 1019.658409] usb 1-1: num_cmd_h2c_failure = 0
-[ 1019.662907] usb 1-1: num_cmd_timeout = 1
-[ 1019.667072] usb 1-1: num_tx_timeout = 0
-[ 1019.671117] usb 1-1: last_cmd_index = 4
-[ 1019.675186] usb 1-1: last_cmd_id: 28 00 28 00 28 00 5b 00 06 00
-[ 1019.681426] usb 1-1: last_cmd_act: 13 01 13 01 13 01 01 00 03 00
-[ 1019.687778] usb 1-1: last_cmd_resp_index = 3
-[ 1019.692281] usb 1-1: last_cmd_resp_id: 28 80 28 80 28 80 5b 80 28 80
-[ 1019.698997] usb 1-1: last_event_index = 2
-[ 1019.703223] usb 1-1: last_event: 17 00 33 00 08 00 33 00 08 00
-[ 1019.709389] usb 1-1: data_sent=0 cmd_sent=0
-[ 1019.713820] usb 1-1: ps_mode=1 ps_state=0
-[ 1019.718211] usb 1-1: cmd timeout
+ drivers/net/wireless/ath/ath10k/debug.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
->>
->> Could you please try changing this number(MWIFIEX_TX_DATA_URB/MWIFIEX_RX_DATA_URB macros) to 3?
-I tried but it doesn't help (also sometimes I see odd driver crashes -
-NULL pointer access)
->>
->> Regards,
->> Amitkumar Karwar
->
-> Best Regards,
->
-> marekb
->
-> --
-> as simple and primitive as possible
-> -------------------------------------------------
-> Marek Belisko - OPEN-NANDRA
-> Freelance Developer
->
-> Ruska Nova Ves 219 | Presov, 08005 Slovak Republic
-> Tel: +421 915 052 184
-> skype: marekwhite
-> twitter: #opennandra
-> web: http://open-nandra.com
-
-Best Regards,
-
-marek
-
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index d922ef4..ed192a5 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -1142,8 +1142,12 @@ int ath10k_debug_create(struct ath10k *ar)
+ 
+ 	ar->debug.debugfs_phy = debugfs_create_dir("ath10k",
+ 						   ar->hw->wiphy->debugfsdir);
+-	if (!ar->debug.debugfs_phy) {
+-		ret = -ENOMEM;
++	if (IS_ERR_OR_NULL(ar->debug.debugfs_phy)) {
++		if (IS_ERR(ar->debug.debugfs_phy))
++			ret = PTR_ERR(ar->debug.debugfs_phy);
++		else
++			ret = -ENOMEM;
++
+ 		goto err_free_fw_crash_data;
+ 	}
+ 
 -- 
-as simple and primitive as possible
--------------------------------------------------
-Marek Belisko - OPEN-NANDRA
-Freelance Developer
+1.8.5.3
 
-Ruska Nova Ves 219 | Presov, 08005 Slovak Republic
-Tel: +421 915 052 184
-skype: marekwhite
-twitter: #opennandra
-web: http://open-nandra.com
