@@ -1,63 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:4645 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751912AbaIMPNV (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:42488 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750709AbaIEEUj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Sep 2014 11:13:21 -0400
-Message-ID: <54145F0E.8000506@broadcom.com> (sfid-20140913_171326_116221_B9B466AD)
-Date: Sat, 13 Sep 2014 17:13:18 +0200
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Hauke Mehrtens <hauke@hauke-m.de>
-CC: <linux-wireless@vger.kernel.org>, <zajec5@gmail.com>,
-	<devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>, <arnd@arndb.de>
-Subject: Re: [PATCH 1/2] bcma: register bcma as device tree driver
-References: <1410615446-7639-1-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1410615446-7639-1-git-send-email-hauke@hauke-m.de>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Fri, 5 Sep 2014 00:20:39 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH 1/3] ath9k: Use a subroutine to assign HW queues
+Date: Fri,  5 Sep 2014 09:50:55 +0530
+Message-Id: <1409890857-6276-2-git-send-email-sujith@msujith.org> (sfid-20140905_062045_647664_895F7384)
+In-Reply-To: <1409890857-6276-1-git-send-email-sujith@msujith.org>
+References: <1409890857-6276-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/13/14 15:37, Hauke Mehrtens wrote:
-> This driver is used by the bcm53xx ARM SoC code. Now it is possible to
-> give the address of the chipcommon core in device tree and bcma will
-> search for all the other cores.
->
-> Signed-off-by: Hauke Mehrtens<hauke@hauke-m.de>
-> ---
->   Documentation/devicetree/bindings/bus/bcma.txt | 41 +++++++++++++
->   drivers/bcma/bcma_private.h                    | 16 +++++
->   drivers/bcma/host_soc.c                        | 82 ++++++++++++++++++++++++++
->   drivers/bcma/main.c                            | 10 ++++
->   include/linux/bcma/bcma.h                      |  2 +
->   5 files changed, 151 insertions(+)
->   create mode 100644 Documentation/devicetree/bindings/bus/bcma.txt
->
-> This is based on wireless-testing and should go into that tree.
->
-> changes since:
-> RFC:
->   - reworded the irq description
->   - improved the example
->   - hocked into bcma_modeinit() and bcma_modexit()
->
-> diff --git a/Documentation/devicetree/bindings/bus/bcma.txt b/Documentation/devicetree/bindings/bus/bcma.txt
-> new file mode 100644
-> index 0000000..17e095f
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/bus/bcma.txt
-> @@ -0,0 +1,41 @@
-> +Broadcom AIX SoC bcma bus driver
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Hi Hauke,
+Reduces code duplication.
 
-First of all a typo used all over the place: AIX should be AXI.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/init.c |  2 +-
+ drivers/net/wireless/ath/ath9k/main.c | 33 +++++++++++++++++----------------
+ 2 files changed, 18 insertions(+), 17 deletions(-)
 
-The backplane in Broadcom SoC is ARM AXI with additional plugin option 
-to make it discoverable. Indeed the IRQ info is not included, but I see 
-no reason for specifying the register space for the cores in device-tree 
-as that is discoverable by bcma.
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 1950c04..156a944 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -811,7 +811,7 @@ static void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 	/* allow 4 queues per channel context +
+ 	 * 1 cab queue + 1 offchannel tx queue
+ 	 */
+-	hw->queues = 10;
++	hw->queues = ATH9K_NUM_TX_QUEUES;
+ 	/* last queue for offchannel */
+ 	hw->offchannel_tx_hw_queue = hw->queues - 1;
+ 	hw->max_rates = 4;
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index cdf1e7d..1bc2369 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1104,6 +1104,20 @@ void ath9k_calculate_summary_state(struct ath_softc *sc,
+ 	ath9k_ps_restore(sc);
+ }
+ 
++static void ath9k_assign_hw_queues(struct ieee80211_hw *hw,
++				   struct ieee80211_vif *vif)
++{
++	int i;
++
++	for (i = 0; i < IEEE80211_NUM_ACS; i++)
++		vif->hw_queue[i] = i;
++
++	if (vif->type == NL80211_IFTYPE_AP)
++		vif->cab_queue = hw->queues - 2;
++	else
++		vif->cab_queue = IEEE80211_INVAL_HW_QUEUE;
++}
++
+ static int ath9k_add_interface(struct ieee80211_hw *hw,
+ 			       struct ieee80211_vif *vif)
+ {
+@@ -1112,7 +1126,6 @@ static int ath9k_add_interface(struct ieee80211_hw *hw,
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	struct ath_vif *avp = (void *)vif->drv_priv;
+ 	struct ath_node *an = &avp->mcast_node;
+-	int i;
+ 
+ 	mutex_lock(&sc->mutex);
+ 
+@@ -1135,12 +1148,8 @@ static int ath9k_add_interface(struct ieee80211_hw *hw,
+ 		avp->chanctx = sc->cur_chan;
+ 		list_add_tail(&avp->list, &avp->chanctx->vifs);
+ 	}
+-	for (i = 0; i < IEEE80211_NUM_ACS; i++)
+-		vif->hw_queue[i] = i;
+-	if (vif->type == NL80211_IFTYPE_AP)
+-		vif->cab_queue = hw->queues - 2;
+-	else
+-		vif->cab_queue = IEEE80211_INVAL_HW_QUEUE;
++
++	ath9k_assign_hw_queues(hw, vif);
+ 
+ 	an->sc = sc;
+ 	an->sta = NULL;
+@@ -1160,7 +1169,6 @@ static int ath9k_change_interface(struct ieee80211_hw *hw,
+ 	struct ath_softc *sc = hw->priv;
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	struct ath_vif *avp = (void *)vif->drv_priv;
+-	int i;
+ 
+ 	mutex_lock(&sc->mutex);
+ 
+@@ -1180,14 +1188,7 @@ static int ath9k_change_interface(struct ieee80211_hw *hw,
+ 	if (ath9k_uses_beacons(vif->type))
+ 		ath9k_beacon_assign_slot(sc, vif);
+ 
+-	for (i = 0; i < IEEE80211_NUM_ACS; i++)
+-		vif->hw_queue[i] = i;
+-
+-	if (vif->type == NL80211_IFTYPE_AP)
+-		vif->cab_queue = hw->queues - 2;
+-	else
+-		vif->cab_queue = IEEE80211_INVAL_HW_QUEUE;
+-
++	ath9k_assign_hw_queues(hw, vif);
+ 	ath9k_calculate_summary_state(sc, avp->chanctx);
+ 
+ 	mutex_unlock(&sc->mutex);
+-- 
+2.1.0
 
-Regards,
-Arend
