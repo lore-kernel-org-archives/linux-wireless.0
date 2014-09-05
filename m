@@ -1,171 +1,225 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sto15.st-oneline.net ([195.225.241.75]:58468 "EHLO
-	sto15.st-oneline.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752583AbaIGRkS (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:51127 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750712AbaIEQeN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Sep 2014 13:40:18 -0400
-Received: from [192.168.100.9] (pD9E50316.dip0.t-ipconnect.de [217.229.3.22])
-	(authenticated bits=0)
-	by sto15.st-oneline.net  with ESMTP id s87HWQPe028256
-	for <linux-wireless@vger.kernel.org>; Sun, 7 Sep 2014 19:32:28 +0200
-Message-ID: <540C96A8.3020708@czekalla.com> (sfid-20140907_194025_553488_B611C291)
-Date: Sun, 07 Sep 2014 19:32:24 +0200
-From: "Dr. Ralf Czekalla" <ralf@czekalla.com>
-MIME-Version: 1.0
+	Fri, 5 Sep 2014 12:34:13 -0400
+From: greearb@candelatech.com
 To: linux-wireless@vger.kernel.org
-Subject: Fwd: [opensuse-kernel] rtl8187se - serious regressions since merge
- out of staging into 818x
-References: <540C8E35.10908@czekalla.com>
-In-Reply-To: <540C8E35.10908@czekalla.com>
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Cc: ath10k@lists.infradead.org, Ben Greear <greearb@candelatech.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>
+Subject: [PATCH 1/2] ath10k: save firmware stacks upon firmware crash
+Date: Fri,  5 Sep 2014 09:34:08 -0700
+Message-Id: <1409934849-23078-1-git-send-email-greearb@candelatech.com> (sfid-20140905_183416_977063_07C5922E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Guys,
+From: Ben Greear <greearb@candelatech.com>
 
-I have several serious regressions since the rtl8187se staging driver
-was merged into the generic rtl818x_pci driver with kernel 3.15.
+Should help debug firmware crashes, and give users a way
+to provide some useful debug reports to firmware developers.
 
-With my Netbook for travels I have now...
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
 
-1. Wireless transfer rate dropped seriously from about 2.5 MByte/s
-crushed down to 700 kByte/s in Linux kernels 3.15 and 3.16!
+This is a merge/rework of previously posted stack-dump patches.
+This is on top of the debug-log dumping patch and the
+firmware crash-by-assert patch.  It has been tested.
 
-2. Signal rate always says 15% even if I'm right next to the WLAN
-router! No possibility any more to determine which WLAN router is the
-strongest (most nearby) in hotels. Weaker WLANs in neighborhood seems
-not to be shown also because of this weakness.
+ drivers/net/wireless/ath/ath10k/core.h  |  4 +++
+ drivers/net/wireless/ath/ath10k/debug.c | 29 +++++++++++++++++-
+ drivers/net/wireless/ath/ath10k/hw.h    |  1 +
+ drivers/net/wireless/ath/ath10k/pci.c   | 54 ++++++++++++++++++++++++++++++++-
+ 4 files changed, 86 insertions(+), 2 deletions(-)
 
-3. The device can not be switched off any more by keyboard or plasma-nm
-and is always switched on - security risk!
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index fc39995..0ca52e0 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -303,6 +303,10 @@ struct ath10k_fw_crash_data {
+ 	uuid_le uuid;
+ 	struct timespec timestamp;
+ 	__le32 registers[REG_DUMP_COUNT_QCA988X];
++	__le32 stack_buf[ATH10K_FW_STACK_SIZE / sizeof(__le32)];
++	__le32 exc_stack_buf[ATH10K_FW_STACK_SIZE / sizeof(__le32)];
++	__le32 stack_addr;
++	__le32 exc_stack_addr;
+ };
+ 
+ struct ath10k_debug {
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index 229573e..5c11966 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -33,10 +33,15 @@
+  * enum ath10k_fw_crash_dump_type - types of data in the dump file
+  * @ATH10K_FW_CRASH_DUMP_REGDUMP: Register crash dump in binary format
+  * @ATH10K_FW_ERROR_DUMP_DBGLOG:  Recent firmware debug log entries
++ * @ATH10K_FW_CRASH_DUMP_STACK:   Stack memory contents.
++ * @ATH10K_FW_CRASH_DUMP_EXC_STACK:   Exception stack memory contents.
+  */
+ enum ath10k_fw_crash_dump_type {
+ 	ATH10K_FW_CRASH_DUMP_REGISTERS = 0,
+ 	ATH10K_FW_CRASH_DUMP_DBGLOG = 1,
++	ATH10K_FW_CRASH_DUMP_STACK = 2,
++	ATH10K_FW_CRASH_DUMP_EXC_STACK = 3,
++
+ 	ATH10K_FW_CRASH_DUMP_MAX,
+ };
+ 
+@@ -100,8 +105,11 @@ struct ath10k_dump_file_data {
+ 	/* VERMAGIC_STRING */
+ 	char kernel_ver[64];
+ 
++	__le32 stack_addr;
++	__le32 exc_stack_addr;
++
+ 	/* room for growth w/out changing binary format */
+-	u8 unused[128];
++	u8 unused[120];
+ 
+ 	/* struct ath10k_tlv_dump_data + more */
+ 	u8 data[0];
+@@ -774,6 +782,8 @@ static struct ath10k_dump_file_data *ath10k_build_dump_file(struct ath10k *ar)
+ 	len = hdr_len;
+ 	len += sizeof(*dump_tlv) + sizeof(crash_data->registers);
+ 	len += sizeof(*dump_tlv) + sizeof(ar->debug.dbglog_entry_data);
++	len += sizeof(*dump_tlv) + sizeof(crash_data->stack_buf);
++	len += sizeof(*dump_tlv) + sizeof(crash_data->exc_stack_buf);
+ 
+ 	sofar += hdr_len;
+ 
+@@ -813,6 +823,8 @@ static struct ath10k_dump_file_data *ath10k_build_dump_file(struct ath10k *ar)
+ 	dump_data->ht_cap_info = cpu_to_le32(ar->ht_cap_info);
+ 	dump_data->vht_cap_info = cpu_to_le32(ar->vht_cap_info);
+ 	dump_data->num_rf_chains = cpu_to_le32(ar->num_rf_chains);
++	dump_data->stack_addr = cpu_to_le32(crash_data->stack_addr);
++	dump_data->exc_stack_addr = cpu_to_le32(crash_data->exc_stack_addr);
+ 
+ 	strlcpy(dump_data->fw_ver, ar->hw->wiphy->fw_version,
+ 		sizeof(dump_data->fw_ver));
+@@ -845,7 +857,22 @@ static struct ath10k_dump_file_data *ath10k_build_dump_file(struct ath10k *ar)
+ 		cpu_to_le32(ar->debug.dbglog_entry_data.head_idx);
+ 	dbglog_storage->tail_idx =
+ 		cpu_to_le32(ar->debug.dbglog_entry_data.tail_idx);
++	sofar += sizeof(*dump_tlv) + tmp;
+ 
++	/* Gather firmware stack dump */
++	tmp = sizeof(crash_data->stack_buf);
++	dump_tlv = (struct ath10k_tlv_dump_data *)(buf + sofar);
++	dump_tlv->type = cpu_to_le32(ATH10K_FW_CRASH_DUMP_STACK);
++	dump_tlv->tlv_len = cpu_to_le32(tmp);
++	memcpy(dump_tlv->tlv_data, crash_data->stack_buf, tmp);
++	sofar += sizeof(*dump_tlv) + tmp;
++
++	/* Gather firmware exception stack dump */
++	tmp = sizeof(crash_data->exc_stack_buf);
++	dump_tlv = (struct ath10k_tlv_dump_data *)(buf + sofar);
++	dump_tlv->type = cpu_to_le32(ATH10K_FW_CRASH_DUMP_EXC_STACK);
++	dump_tlv->tlv_len = cpu_to_le32(tmp);
++	memcpy(dump_tlv->tlv_data, crash_data->exc_stack_buf, tmp);
+ 	sofar += sizeof(*dump_tlv) + tmp;
+ 
+ 	ar->debug.fw_crash_data->crashed_since_read = false;
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 28fedba..c7ec412 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -40,6 +40,7 @@
+ #define ATH10K_FIRMWARE_MAGIC               "QCA-ATH10K"
+ 
+ #define REG_DUMP_COUNT_QCA988X 60
++#define ATH10K_FW_STACK_SIZE 4096
+ 
+ struct ath10k_fw_ie {
+ 	__le32 id;
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 09990f0..71d01fd 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -604,6 +604,22 @@ static int ath10k_pci_diag_read32(struct ath10k *ar, u32 address, u32 *value)
+ 	return ret;
+ }
+ 
++static int __ath10k_pci_diag_read_hi_addr(struct ath10k *ar, __le32 *dest,
++					  u32 src)
++{
++	u32 host_addr;
++	int ret;
++
++	host_addr = host_interest_item_address(src);
++
++	ret = ath10k_pci_diag_read32(ar, host_addr, dest);
++	if (ret != 0) {
++		ath10k_warn(ar, "failed to get memcpy hi address for firmware address %d: %d\n",
++			    src, ret);
++	}
++	return ret;
++}
++
+ static int __ath10k_pci_diag_read_hi(struct ath10k *ar, void *dest,
+ 				     u32 src, u32 len)
+ {
+@@ -630,7 +646,10 @@ static int __ath10k_pci_diag_read_hi(struct ath10k *ar, void *dest,
+ }
+ 
+ #define ath10k_pci_diag_read_hi(ar, dest, src, len)		\
+-	__ath10k_pci_diag_read_hi(ar, dest, HI_ITEM(src), len);
++	__ath10k_pci_diag_read_hi(ar, dest, HI_ITEM(src), len)
++
++#define ath10k_pci_diag_read_hi_addr(ar, dest, src)		\
++	__ath10k_pci_diag_read_hi_addr(ar, dest, HI_ITEM(src))
+ 
+ static int ath10k_pci_diag_write_mem(struct ath10k *ar, u32 address,
+ 				     const void *data, int nbytes)
+@@ -944,6 +963,37 @@ static u16 ath10k_pci_hif_get_free_queue_number(struct ath10k *ar, u8 pipe)
+ 	return ath10k_ce_num_free_src_entries(ar_pci->pipe_info[pipe].ce_hdl);
+ }
+ 
++/* Save the main firmware stack */
++static void ath10k_pci_dump_stack(struct ath10k *ar,
++				  struct ath10k_fw_crash_data *crash_data)
++{
++	if (!crash_data)
++		return;
++
++	lockdep_assert_held(&ar->data_lock);
++	BUILD_BUG_ON(ATH10K_FW_STACK_SIZE % 4);
++
++	ath10k_pci_diag_read_hi(ar, crash_data->stack_buf,
++				hi_stack, ATH10K_FW_STACK_SIZE);
++	ath10k_pci_diag_read_hi_addr(ar, &crash_data->stack_addr, hi_stack);
++}
++
++/* Save the exception firmware stack */
++static void ath10k_pci_dump_exc_stack(struct ath10k *ar,
++				      struct ath10k_fw_crash_data *crash_data)
++{
++	if (!crash_data)
++		return;
++
++	lockdep_assert_held(&ar->data_lock);
++
++	ath10k_pci_diag_read_hi(ar, crash_data->exc_stack_buf,
++				hi_err_stack, ATH10K_FW_STACK_SIZE);
++
++	ath10k_pci_diag_read_hi_addr(ar, &crash_data->exc_stack_addr,
++				     hi_err_stack);
++}
++
+ static void ath10k_pci_dump_registers(struct ath10k *ar,
+ 				      struct ath10k_fw_crash_data *crash_data)
+ {
+@@ -1092,6 +1142,8 @@ static void ath10k_pci_fw_crashed_dump(struct ath10k *ar)
+ 	ath10k_print_driver_info(ar);
+ 	ath10k_pci_dump_registers(ar, crash_data);
+ 	ath10k_pci_dump_dbglog(ar);
++	ath10k_pci_dump_stack(ar, crash_data);
++	ath10k_pci_dump_exc_stack(ar, crash_data);
+ 	if (crash_data)
+ 		crash_data->crashed_since_read = true;
+ 
+-- 
+1.7.11.7
 
-
-I'm now forced to go back to 3.14 - and the staging driver for rtl8187se 
-- where I only can find an early 3.14.4 on my private local copy of OBS 
-stable kernels.
-There, with 3.14, everything is back to normal!
-
-I like to test the newest kernels but this seriously prevents me.
-
-BTW, I'm not the only one facing these problems:
-http://www.pclinuxos.com/forum/index.php?topic=127276.0
-
-Here some data:
-
-:~ # iwlist wlan0 scan
-wlan0     Scan completed :
-           Cell 01 - Address: BC:xx:xx:xx:xx:3D
-                     Channel:3
-                     Frequency:2.422 GHz (Channel 3)
-                     Quality=15/100  Signal level=15/100
-                     Encryption key:on
-                     ESSID:"xxxxxxxxxxxxxxxx"
-                     Bit Rates:1 Mb/s; 2 Mb/s; 5.5 Mb/s; 11 Mb/s; 6 Mb/s
-                               9 Mb/s; 12 Mb/s; 18 Mb/s
-                     Bit Rates:24 Mb/s; 36 Mb/s; 48 Mb/s; 54 Mb/s
-                     Mode:Master
-                     Extra:tsf=000011886cd93c9c
-                     Extra: Last beacon: 6ms ago
-                     IE: IEEE 802.11i/WPA2 Version 1
-                         Group Cipher : CCMP
-                         Pairwise Ciphers (1) : CCMP
-                         Authentication Suites (1) : PSK
-
-:~ # lspci -vvv
-05:00.0 Network controller: Realtek Semiconductor Co., Ltd. RTL8187SE
-Wireless LAN Controller (rev 22)
-         Subsystem: Realtek Semiconductor Co., Ltd. RTL8187SE Wireless
-LAN Controller
-         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
-ParErr- Stepping- SERR- FastB2B- DisINTx-
-         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
-<TAbort- <MAbort- >SERR- <PERR- INTx-
-         Latency: 0, Cache Line Size: 64 bytes
-         Interrupt: pin A routed to IRQ 18
-         Region 0: I/O ports at e800 [size=256]
-         Region 1: Memory at febfc000 (32-bit, non-prefetchable) [size=16K]
-         Capabilities: [40] Power Management version 3
-                 Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=375mA
-PME(D0+,D1+,D2+,D3hot+,D3cold-)
-                 Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME+
-         Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
-                 Address: 0000000000000000  Data: 0000
-         Capabilities: [70] Express (v1) Legacy Endpoint, MSI 00
-                 DevCap: MaxPayload 256 bytes, PhantFunc 0, Latency L0s
-<128ns, L1 <2us
-                         ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
-                 DevCtl: Report errors: Correctable- Non-Fatal- Fatal-
-Unsupported-
-                         RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop-
-                         MaxPayload 128 bytes, MaxReadReq 512 bytes
-                 DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq-
-AuxPwr- TransPend-
-                 LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1,
-Latency L0 <512ns, L1 <64us
-                         ClockPM+ Surprise- LLActRep- BwNot-
-                 LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain-
-CommClk+
-                         ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-                 LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+
-DLActive- BWMgmt- ABWMgmt-
-         Capabilities: [100 v1] Advanced Error Reporting
-                 UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt-
-UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                 UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt-
-UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                 UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt-
-UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
-                 CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout-
-NonFatalErr+
-                 CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout-
-NonFatalErr+
-                 AERCap: First Error Pointer: 00, GenCap+ CGenEn-
-ChkCap+ ChkEn-
-         Capabilities: [140 v1] Virtual Channel
-                 Caps:   LPEVC=0 RefClk=100ns PATEntryBits=1
-                 Arb:    Fixed- WRR32- WRR64- WRR128-
-                 Ctrl:   ArbSelect=Fixed
-                 Status: InProgress-
-                 VC0:    Caps:   PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
-                         Arb:    Fixed- WRR32- WRR64- WRR128- TWRR128-
-WRR256-
-                         Ctrl:   Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
-                         Status: NegoPending- InProgress-
-         Capabilities: [160 v1] Device Serial Number 00-00-xx-xx-xx-xx-10-00
-         Kernel driver in use: rtl818x_pci
-         Kernel modules: rtl818x_pci
-
-
-:~ # iwconfig
-eth0      no wireless extensions.
-
-lo        no wireless extensions.
-
-wlan0     IEEE 802.11bg  ESSID:"xxxxxxxxxxxx"
-           Mode:Managed  Frequency:2.422 GHz  Access Point: 
-xx:xx:xx:xx:xx:3D
-           Bit Rate=11 Mb/s   Tx-Power=20 dBm
-           Retry short limit:7   RTS thr:off   Fragment thr:off
-           Encryption key:off
-           Power Management:off
-           Link Quality=15/100  Signal level=15/100
-           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-           Tx excessive retries:430  Invalid misc:486   Missed beacon:0
-
-
-
-:~ # ifconfig
-wlan0     Link encap:Ethernet  HWaddr 00:xx:xx:xx:xx:AD
-           inet addr:xx.xx.xx.1  Bcast:xx.xx.xx.255  Mask:255.255.255.0
-           inet6 addr: xxxx::xxx:xxxx:xxxx:xxxx/64 Scope:Link
-           UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
-           RX packets:3321100 errors:0 dropped:0 overruns:0 frame:0
-           TX packets:1946015 errors:0 dropped:0 overruns:0 carrier:0
-           collisions:0 txqueuelen:1000
-           RX bytes:4926099909 (4697.8 Mb)  TX bytes:182336218 (173.8 Mb)
-
-
-
-
-Best regards
-Ralf
