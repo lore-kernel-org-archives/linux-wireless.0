@@ -1,112 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:34894 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751693AbaIUTWe (ORCPT
+Received: from mail-yh0-f54.google.com ([209.85.213.54]:47659 "EHLO
+	mail-yh0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756622AbaIELMz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Sep 2014 15:22:34 -0400
-Received: by mail-wi0-f179.google.com with SMTP id d1so1852376wiv.0
-        for <linux-wireless@vger.kernel.org>; Sun, 21 Sep 2014 12:22:33 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Luciano Coelho <luciano.coelho@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 06/17] iwlwifi: mvm: add debugfs entry to read the current temperature
-Date: Sun, 21 Sep 2014 22:22:07 +0300
-Message-Id: <1411327338-23099-6-git-send-email-egrumbach@gmail.com> (sfid-20140921_212242_093156_0778F8B9)
-In-Reply-To: <541F23D2.90600@gmail.com>
-References: <541F23D2.90600@gmail.com>
+	Fri, 5 Sep 2014 07:12:55 -0400
+MIME-Version: 1.0
+In-Reply-To: <1409911856.7832.9.camel@x220>
+References: <1391971686-9517-1-git-send-email-richard@nod.at>
+	<1391971686-9517-10-git-send-email-richard@nod.at>
+	<52F7D480.1050106@hauke-m.de>
+	<52F7DF21.70207@nod.at>
+	<CAHNKnsS7Mv4ZhBWZa53go9L9nZimJ7_FG5HFJ9C3kkGMAEz-mA@mail.gmail.com>
+	<52F8C373.9060108@rempel-privat.de>
+	<CAHNKnsQF5Hdf3JT91moPraRQzn4kMpdD2NSiJ7b30wQhS1W4MA@mail.gmail.com>
+	<CAGVrzcYnECx5Q=i+m6qZn29y4JALDpw5SWoUNP-S6HgPR3_ygQ@mail.gmail.com>
+	<CAHNKnsRACSo=DfOyiHxqV3acv_wfZmz4tMnYAW0wo4OCibwdfA@mail.gmail.com>
+	<CAHNKnsRQp7WLSJNAXEYPTd=qs1DquOfNgKtHES-Utvcy1=FEgQ@mail.gmail.com>
+	<20140213201421.GJ22203@tuxdriver.com>
+	<1397581703.8212.5.camel@x220>
+	<CAHNKnsQQ42-XnXrubHAy4PF3H2ynbGDdSMP7MvDS_1aRozYF=A@mail.gmail.com>
+	<1403087119.1984.93.camel@x220>
+	<CAHNKnsSfaT7xC5_wv=TrGLEQ2pjC91Q1XG891_n64OuR0fA9Jg@mail.gmail.com>
+	<1403091974.1984.102.camel@x220>
+	<1409911856.7832.9.camel@x220>
+Date: Fri, 5 Sep 2014 15:12:55 +0400
+Message-ID: <CAHNKnsRipRHicKOUW4dCutD1-sUG6qPnP2QuOveH_t1MFX9XgQ@mail.gmail.com> (sfid-20140905_131320_598973_901CCE77)
+Subject: Re: [PATCH 09/28] Remove ATHEROS_AR231X
+From: Sergey Ryazanov <ryazanov.s.a@gmail.com>
+To: Paul Bolle <pebolle@tiscali.nl>
+Cc: Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Oleksij Rempel <linux@rempel-privat.de>,
+	Richard Weinberger <richard@nod.at>,
+	Jonathan Bither <jonbither@gmail.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	ath5k-devel@venema.h4ckr.net, open@hauke-m.de, list@hauke-m.de,
+	antonynpavlov@gmail.com, openwrt-devel@lists.openwrt.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+Hello Paul,
 
-When read, this new debugfs entry requests the current temperature
-from the firmware and outputs it.
+2014-09-05 14:10 GMT+04:00, Paul Bolle <pebolle@tiscali.nl>:
+> Jiri, Nick, Luis, John,
+>
+> On Wed, 2014-06-18 at 13:46 +0200, Paul Bolle wrote:
+>> Having this conversation every rc1 is getting a bit silly. Could Jiri
+>> e.a. perhaps set some specific deadline for ATHEROS_AR231X to be
+>> submitted?
+>
+> I waited until rc3. Have you seen any activity on this front? If not,
+> should I resend the patch that removes the code in mainline that depends
+> on ATHEROS_AR231X (ie, AHB bus support)?
+>
+Recent activity always could be found in [1]. Now I finish another one
+round of cleanups and have a plan to fix several things (you can
+always find something that you really want to improve). But if you
+insist I could immediately switch to "send upstream" mode. And seems
+that this would be better approach.
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/debugfs.c | 25 +++++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/mvm/mvm.h     |  1 +
- drivers/net/wireless/iwlwifi/mvm/tt.c      |  2 +-
- 3 files changed, 27 insertions(+), 1 deletion(-)
+1. https://dev.openwrt.org/log/trunk/target/linux/atheros
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-index 95eb9a5..50527a9 100644
---- a/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-@@ -326,6 +326,29 @@ out:
- 	return count;
- }
- 
-+static ssize_t iwl_dbgfs_nic_temp_read(struct file *file,
-+				       char __user *user_buf,
-+				       size_t count, loff_t *ppos)
-+{
-+	struct iwl_mvm *mvm = file->private_data;
-+	char buf[16];
-+	int pos, temp;
-+
-+	if (!mvm->ucode_loaded)
-+		return -EIO;
-+
-+	mutex_lock(&mvm->mutex);
-+	temp = iwl_mvm_get_temp(mvm);
-+	mutex_unlock(&mvm->mutex);
-+
-+	if (temp < 0)
-+		return temp;
-+
-+	pos = scnprintf(buf , sizeof(buf), "%d\n", temp);
-+
-+	return simple_read_from_buffer(user_buf, count, ppos, buf, pos);
-+}
-+
- static ssize_t iwl_dbgfs_stations_read(struct file *file, char __user *user_buf,
- 				       size_t count, loff_t *ppos)
- {
-@@ -1378,6 +1401,7 @@ MVM_DEBUGFS_WRITE_FILE_OPS(tx_flush, 16);
- MVM_DEBUGFS_WRITE_FILE_OPS(sta_drain, 8);
- MVM_DEBUGFS_READ_WRITE_FILE_OPS(sram, 64);
- MVM_DEBUGFS_READ_WRITE_FILE_OPS(set_nic_temperature, 64);
-+MVM_DEBUGFS_READ_FILE_OPS(nic_temp);
- MVM_DEBUGFS_READ_FILE_OPS(stations);
- MVM_DEBUGFS_READ_FILE_OPS(bt_notif);
- MVM_DEBUGFS_READ_FILE_OPS(bt_cmd);
-@@ -1420,6 +1444,7 @@ int iwl_mvm_dbgfs_register(struct iwl_mvm *mvm, struct dentry *dbgfs_dir)
- 	MVM_DEBUGFS_ADD_FILE(sram, mvm->debugfs_dir, S_IWUSR | S_IRUSR);
- 	MVM_DEBUGFS_ADD_FILE(set_nic_temperature, mvm->debugfs_dir,
- 			     S_IWUSR | S_IRUSR);
-+	MVM_DEBUGFS_ADD_FILE(nic_temp, dbgfs_dir, S_IRUSR);
- 	MVM_DEBUGFS_ADD_FILE(stations, dbgfs_dir, S_IRUSR);
- 	MVM_DEBUGFS_ADD_FILE(fw_error_dump, dbgfs_dir, S_IRUSR);
- 	MVM_DEBUGFS_ADD_FILE(bt_notif, dbgfs_dir, S_IRUSR);
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index 8eacebb..c913d5e 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -1188,6 +1188,7 @@ void iwl_mvm_tt_handler(struct iwl_mvm *mvm);
- void iwl_mvm_tt_initialize(struct iwl_mvm *mvm, u32 min_backoff);
- void iwl_mvm_tt_exit(struct iwl_mvm *mvm);
- void iwl_mvm_set_hw_ctkill_state(struct iwl_mvm *mvm, bool state);
-+int iwl_mvm_get_temp(struct iwl_mvm *mvm);
- 
- /* smart fifo */
- int iwl_mvm_sf_update(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
-diff --git a/drivers/net/wireless/iwlwifi/mvm/tt.c b/drivers/net/wireless/iwlwifi/mvm/tt.c
-index c750ca7..acca44a 100644
---- a/drivers/net/wireless/iwlwifi/mvm/tt.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/tt.c
-@@ -135,7 +135,7 @@ static int iwl_mvm_get_temp_cmd(struct iwl_mvm *mvm)
- 				    sizeof(cmd), &cmd);
- }
- 
--static int iwl_mvm_get_temp(struct iwl_mvm *mvm)
-+int iwl_mvm_get_temp(struct iwl_mvm *mvm)
- {
- 	struct iwl_notification_wait wait_temp_notif;
- 	static const u8 temp_notif[] = { DTS_MEASUREMENT_NOTIFICATION };
 -- 
-1.9.1
-
+BR,
+Sergey
