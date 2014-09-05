@@ -1,46 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:34569 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753140AbaIDREz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Sep 2014 13:04:55 -0400
-Date: Thu, 4 Sep 2014 19:04:51 +0200
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [wireless-regdb] [PATCH 09/12] wireless-regdb: Add Saint Lucia
-	(LC) regulatory rules
-Message-ID: <20140904170451.GX3347@wotan.suse.de> (sfid-20140904_190507_734423_BD9C16F5)
-References: <20140903131518.GA16219@jouni.qca.qualcomm.com> <1409817831.16449.5.camel@jlt4.sipsolutions.net> <20140904101727.GA3498@jouni.qca.qualcomm.com> <1409826220.16449.6.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1409826220.16449.6.camel@jlt4.sipsolutions.net>
+Received: from s72.web-hosting.com ([198.187.29.22]:35915 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755297AbaIECdS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Sep 2014 22:33:18 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH v3 08/11] ath9k: Fix ath_startrecv()
+Date: Fri,  5 Sep 2014 08:03:16 +0530
+Message-Id: <1409884399-32289-9-git-send-email-sujith@msujith.org> (sfid-20140905_043327_780630_D2108A86)
+In-Reply-To: <1409884399-32289-1-git-send-email-sujith@msujith.org>
+References: <1409884399-32289-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 04, 2014 at 12:23:40PM +0200, Johannes Berg wrote:
-> On Thu, 2014-09-04 at 13:17 +0300, Jouni Malinen wrote:
-> > On Thu, Sep 04, 2014 at 10:03:51AM +0200, Johannes Berg wrote:
-> > > On Wed, 2014-09-03 at 16:15 +0300, Jouni Malinen wrote:
-> > > > Source:
-> > > > http://www.ntrc.org.lc/operational_structures.htm
-> > > 
-> > > Out of curiosity, I clicked the URL, but it seems empty/dead? :)
-> > 
-> > Hmm.. It looks like all of www.ntrc.org.lc is in somewhat strange state
-> > at the moment. If I remember correctly, I did test this link earlier
-> > myself and it worked, so that may be a temporary issue (it returns a
-> > somewhat interesting javascript design to display ads or domain parking
-> > info, etc., and that does clearly work either; anyway, not something
-> > that one would hope to see from a regulatory commission website). I'd
-> > hope that this gets resolved eventually, but if desired, I can remove
-> > that source link as well based on its current state.
-> 
-> Yes, indeed, it does seem to be messed up completely. I think leaving
-> the link is fine - for now at least archive.org has a copy so knowing
-> where it was is still useful.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Did Putin invade?
+Since ath_startrecv() doesn't return an error value,
+cleanup the callsites.
 
-  Luis
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h | 2 +-
+ drivers/net/wireless/ath/ath9k/main.c  | 8 +-------
+ drivers/net/wireless/ath/ath9k/recv.c  | 6 ++----
+ 3 files changed, 4 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index b4ac51e..12cdabb 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -527,7 +527,7 @@ static inline void ath_chanctx_check_active(struct ath_softc *sc,
+ #endif /* CONFIG_ATH9K_CHANNEL_CONTEXT */
+ 
+ int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan);
+-int ath_startrecv(struct ath_softc *sc);
++void ath_startrecv(struct ath_softc *sc);
+ bool ath_stoprecv(struct ath_softc *sc);
+ u32 ath_calcrxfilter(struct ath_softc *sc);
+ int ath_rx_init(struct ath_softc *sc, int nbufs);
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 5d9f4d7..18e5e91 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -225,15 +225,9 @@ static bool ath_complete_reset(struct ath_softc *sc, bool start)
+ 	unsigned long flags;
+ 
+ 	ath9k_calculate_summary_state(sc, sc->cur_chan);
+-
+-	if (ath_startrecv(sc) != 0) {
+-		ath_err(common, "Unable to restart recv logic\n");
+-		return false;
+-	}
+-
++	ath_startrecv(sc);
+ 	ath9k_cmn_update_txpow(ah, sc->curtxpow,
+ 			       sc->cur_chan->txpower, &sc->curtxpow);
+-
+ 	clear_bit(ATH_OP_HW_RESET, &common->op_flags);
+ 
+ 	if (!sc->cur_chan->offchannel && start) {
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 2aaf233..04b02b5 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -433,14 +433,14 @@ u32 ath_calcrxfilter(struct ath_softc *sc)
+ 
+ }
+ 
+-int ath_startrecv(struct ath_softc *sc)
++void ath_startrecv(struct ath_softc *sc)
+ {
+ 	struct ath_hw *ah = sc->sc_ah;
+ 	struct ath_rxbuf *bf, *tbf;
+ 
+ 	if (ah->caps.hw_caps & ATH9K_HW_CAP_EDMA) {
+ 		ath_edma_start_recv(sc);
+-		return 0;
++		return;
+ 	}
+ 
+ 	if (list_empty(&sc->rx.rxbuf))
+@@ -463,8 +463,6 @@ int ath_startrecv(struct ath_softc *sc)
+ start_recv:
+ 	ath_opmode_init(sc);
+ 	ath9k_hw_startpcureceive(ah, sc->cur_chan->offchannel);
+-
+-	return 0;
+ }
+ 
+ static void ath_flushrecv(struct ath_softc *sc)
+-- 
+2.1.0
+
