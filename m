@@ -1,104 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:33944 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750850AbaIJNgD (ORCPT
+Received: from mail-yk0-f175.google.com ([209.85.160.175]:54521 "EHLO
+	mail-yk0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751232AbaIEMCb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Sep 2014 09:36:03 -0400
-Cc: Dedy Lansky <qca_dlansky@qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>,
-	"Vladimir Kondratiev" <qca_vkondrat@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-Subject: [PATCH 17/22] wil6210: introduce separate completion for WMI
-Date: Wed, 10 Sep 2014 16:34:46 +0300
-Message-ID: <1410356091-19219-18-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140910_153608_433649_F2CF0B71)
-In-Reply-To: <1410356091-19219-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1410356091-19219-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Fri, 5 Sep 2014 08:02:31 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1409916824.7832.20.camel@x220>
+References: <1391971686-9517-1-git-send-email-richard@nod.at>
+ <1391971686-9517-10-git-send-email-richard@nod.at> <52F7D480.1050106@hauke-m.de>
+ <52F7DF21.70207@nod.at> <CAHNKnsS7Mv4ZhBWZa53go9L9nZimJ7_FG5HFJ9C3kkGMAEz-mA@mail.gmail.com>
+ <52F8C373.9060108@rempel-privat.de> <CAHNKnsQF5Hdf3JT91moPraRQzn4kMpdD2NSiJ7b30wQhS1W4MA@mail.gmail.com>
+ <CAGVrzcYnECx5Q=i+m6qZn29y4JALDpw5SWoUNP-S6HgPR3_ygQ@mail.gmail.com>
+ <CAHNKnsRACSo=DfOyiHxqV3acv_wfZmz4tMnYAW0wo4OCibwdfA@mail.gmail.com>
+ <CAHNKnsRQp7WLSJNAXEYPTd=qs1DquOfNgKtHES-Utvcy1=FEgQ@mail.gmail.com>
+ <20140213201421.GJ22203@tuxdriver.com> <1397581703.8212.5.camel@x220>
+ <CAHNKnsQQ42-XnXrubHAy4PF3H2ynbGDdSMP7MvDS_1aRozYF=A@mail.gmail.com>
+ <1403087119.1984.93.camel@x220> <CAHNKnsSfaT7xC5_wv=TrGLEQ2pjC91Q1XG891_n64OuR0fA9Jg@mail.gmail.com>
+ <1403091974.1984.102.camel@x220> <1409911856.7832.9.camel@x220>
+ <CAHNKnsRipRHicKOUW4dCutD1-sUG6qPnP2QuOveH_t1MFX9XgQ@mail.gmail.com> <1409916824.7832.20.camel@x220>
+From: Sergey Ryazanov <ryazanov.s.a@gmail.com>
+Date: Fri, 5 Sep 2014 16:02:10 +0400
+Message-ID: <CAHNKnsQ1gt=DRBTd9Q9yos1idqmXMepEPvhm8a7unP-whzNAgg@mail.gmail.com> (sfid-20140905_140254_497644_5CD3ED89)
+Subject: Re: [PATCH 09/28] Remove ATHEROS_AR231X
+To: Paul Bolle <pebolle@tiscali.nl>
+Cc: Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Oleksij Rempel <linux@rempel-privat.de>,
+	Richard Weinberger <richard@nod.at>,
+	Jonathan Bither <jonbither@gmail.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	ath5k-devel@venema.h4ckr.net, open@hauke-m.de,
+	"list@hauke-m.de:NETWORKING DRIVERS" <list@hauke-m.de>,
+	"antonynpavlov@gmail.com" <antonynpavlov@gmail.com>,
+	OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"list@hauke-m.de:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
+	open list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
+2014-09-05 15:33 GMT+04:00 Paul Bolle <pebolle@tiscali.nl>:
+> Hi Sergey,
+>
+> On Fri, 2014-09-05 at 15:12 +0400, Sergey Ryazanov wrote:
+>> 2014-09-05 14:10 GMT+04:00, Paul Bolle <pebolle@tiscali.nl>:
+>> > On Wed, 2014-06-18 at 13:46 +0200, Paul Bolle wrote:
+>> >> Having this conversation every rc1 is getting a bit silly. Could Jiri
+>> >> e.a. perhaps set some specific deadline for ATHEROS_AR231X to be
+>> >> submitted?
+>> >
+>> > I waited until rc3. Have you seen any activity on this front? If not,
+>> > should I resend the patch that removes the code in mainline that depends
+>> > on ATHEROS_AR231X (ie, AHB bus support)?
+>> >
+>> Recent activity always could be found in [1]. Now I finish another one
+>> round of cleanups and have a plan to fix several things (you can
+>> always find something that you really want to improve). But if you
+>> insist I could immediately switch to "send upstream" mode. And seems
+>> that this would be better approach.
+>>
+>> 1. https://dev.openwrt.org/log/trunk/target/linux/atheros
+>
+> And where can the related PULL requests or patch submissions be found?
+>
+I have not sent patches yet, since I thought that it would be easier
+to cleanup them in openwrt tree and then send them upstream.
 
-re-use of wmi_ready for both FW ready event and for wmi_call was causing
-false "FW not ready" indication in case wmi_call() was invoked while reset
-took place.
-add wmi_call completion variable instead of re-using wmi_ready.
-
-Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/main.c    | 2 ++
- drivers/net/wireless/ath/wil6210/wil6210.h | 1 +
- drivers/net/wireless/ath/wil6210/wmi.c     | 8 ++++----
- 3 files changed, 7 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index d2f2c1e..0857853 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -286,6 +286,7 @@ int wil_priv_init(struct wil6210_priv *wil)
- 	mutex_init(&wil->wmi_mutex);
- 
- 	init_completion(&wil->wmi_ready);
-+	init_completion(&wil->wmi_call);
- 
- 	wil->pending_connect_cid = -1;
- 	setup_timer(&wil->connect_timer, wil_connect_timer_fn, (ulong)wil);
-@@ -536,6 +537,7 @@ int wil_reset(struct wil6210_priv *wil)
- 	/* init after reset */
- 	wil->pending_connect_cid = -1;
- 	reinit_completion(&wil->wmi_ready);
-+	reinit_completion(&wil->wmi_call);
- 
- 	wil6210_enable_irq(wil);
- 
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index 1b11934..f8f9988 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -399,6 +399,7 @@ struct wil6210_priv {
- 	struct mutex wmi_mutex;
- 	struct wil6210_mbox_ctl mbox_ctl;
- 	struct completion wmi_ready;
-+	struct completion wmi_call;
- 	u16 wmi_seq;
- 	u16 reply_id; /**< wait for this WMI event */
- 	void *reply_buf;
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index 789c316..bd781c7 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -300,7 +300,7 @@ static void wmi_evt_fw_ready(struct wil6210_priv *wil, int id, void *d,
- 	wil_dbg_wmi(wil, "WMI: got FW ready event\n");
- 
- 	set_bit(wil_status_fwready, &wil->status);
--	/* reuse wmi_ready for the firmware ready indication */
-+	/* let the reset sequence continue */
- 	complete(&wil->wmi_ready);
- }
- 
-@@ -764,8 +764,8 @@ int wmi_call(struct wil6210_priv *wil, u16 cmdid, void *buf, u16 len,
- 	wil->reply_id = reply_id;
- 	wil->reply_buf = reply;
- 	wil->reply_size = reply_size;
--	remain = wait_for_completion_timeout(&wil->wmi_ready,
--			msecs_to_jiffies(to_msec));
-+	remain = wait_for_completion_timeout(&wil->wmi_call,
-+					     msecs_to_jiffies(to_msec));
- 	if (0 == remain) {
- 		wil_err(wil, "wmi_call(0x%04x->0x%04x) timeout %d msec\n",
- 			cmdid, reply_id, to_msec);
-@@ -1160,7 +1160,7 @@ static void wmi_event_handle(struct wil6210_priv *wil,
- 						     len - sizeof(*wmi));
- 			}
- 			wil_dbg_wmi(wil, "Complete WMI 0x%04x\n", id);
--			complete(&wil->wmi_ready);
-+			complete(&wil->wmi_call);
- 			return;
- 		}
- 		/* unsolicited event */
 -- 
-1.9.1
-
+BR,
+Sergey
