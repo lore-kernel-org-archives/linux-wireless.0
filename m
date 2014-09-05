@@ -1,105 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:33599 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751734AbaIITSc (ORCPT
+Received: from mail-ig0-f175.google.com ([209.85.213.175]:60980 "EHLO
+	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932083AbaIENEN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Sep 2014 15:18:32 -0400
-Received: by mail-wi0-f178.google.com with SMTP id hi2so1780277wib.17
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Sep 2014 12:18:31 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
+	Fri, 5 Sep 2014 09:04:13 -0400
+Received: by mail-ig0-f175.google.com with SMTP id uq10so1032849igb.8
+        for <linux-wireless@vger.kernel.org>; Fri, 05 Sep 2014 06:04:12 -0700 (PDT)
+Date: Fri, 5 Sep 2014 09:03:25 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Dani Camps <danicamps81@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
 	linux-wireless@vger.kernel.org
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 4/4] b43: HT-PHY: Complete radio init (add missing entries)
-Date: Tue,  9 Sep 2014 21:17:09 +0200
-Message-Id: <1410290229-7033-4-git-send-email-zajec5@gmail.com> (sfid-20140909_211848_110674_D9C78A2C)
-In-Reply-To: <1410290229-7033-1-git-send-email-zajec5@gmail.com>
-References: <1410290229-7033-1-git-send-email-zajec5@gmail.com>
+Subject: Re: wmediumd performance penalty
+Message-ID: <20140905130325.GA26808@localhost> (sfid-20140905_150417_019868_A86E99BE)
+References: <CAD3NH5X1AYR5p8AyRyO0DFkkJUtuc_78=s6vEi-nS4UxUZfWCg@mail.gmail.com>
+ <1409597534.2703.9.camel@jlt4.sipsolutions.net>
+ <CAD3NH5Wimu9muPeL-zFrw=u1G3Q+8749cj0SYUmeQuLF6LKibQ@mail.gmail.com>
+ <1409644512.1808.2.camel@jlt4.sipsolutions.net>
+ <CAD3NH5XEfHU7KMWwrmZdZz9LKP_86b4EFogpHrnC+AhREHjOPw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAD3NH5XEfHU7KMWwrmZdZz9LKP_86b4EFogpHrnC+AhREHjOPw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/phy_ht.c     |  3 +--
- drivers/net/wireless/b43/radio_2059.c | 27 +++++++++++++++++++++++++++
- drivers/net/wireless/b43/radio_2059.h |  2 ++
- 3 files changed, 30 insertions(+), 2 deletions(-)
+On Tue, Sep 02, 2014 at 10:06:30AM +0200, Dani Camps wrote:
+> Hi,
+> 
+> OK, then the results I am getting are indeed surprising. To test
+> bandwidth I am using an iperf UDP transfer of 100Mbps and around 30
+> Mbps is all it gets (without wmediumd).
+> 
+> I will further test only mac80211_hwsim (without wmediumd), which I
+> believe can be used to set up topologies as well with the group
+> feature as described here:
+> https://github.com/cozybit/open80211s/wiki/HwsimTestTemplate
 
-diff --git a/drivers/net/wireless/b43/phy_ht.c b/drivers/net/wireless/b43/phy_ht.c
-index d346053..de52d48 100644
---- a/drivers/net/wireless/b43/phy_ht.c
-+++ b/drivers/net/wireless/b43/phy_ht.c
-@@ -160,8 +160,7 @@ static void b43_radio_2059_init(struct b43_wldev *dev)
- 	/* Prepare (reset?) radio */
- 	b43_radio_2059_init_pre(dev);
- 
--	b43_radio_write(dev, R2059_ALL | 0x51, 0x0070);
--	b43_radio_write(dev, R2059_ALL | 0x5a, 0x0003);
-+	r2059_upload_inittabs(dev);
- 
- 	for (i = 0; i < ARRAY_SIZE(routing); i++)
- 		b43_radio_set(dev, routing[i] | 0x146, 0x3);
-diff --git a/drivers/net/wireless/b43/radio_2059.c b/drivers/net/wireless/b43/radio_2059.c
-index 38e31d8..b2a53b2 100644
---- a/drivers/net/wireless/b43/radio_2059.c
-+++ b/drivers/net/wireless/b43/radio_2059.c
-@@ -25,6 +25,13 @@
- #include "b43.h"
- #include "radio_2059.h"
- 
-+/* Extracted from MMIO dump of 6.30.223.141 */
-+static u16 r2059_phy_rev1_init[][2] = {
-+	{ 0x051, 0x70 }, { 0x05a, 0x03 }, { 0x079, 0x01 }, { 0x082, 0x70 },
-+	{ 0x083, 0x00 }, { 0x084, 0x70 }, { 0x09a, 0x7f }, { 0x0b6, 0x10 },
-+	{ 0x188, 0x05 },
-+};
-+
- #define RADIOREGS(r00, r01, r02, r03, r04, r05, r06, r07, r08, r09, \
- 		  r10, r11, r12, r13, r14, r15, r16, r17, r18, r19, \
- 		  r20) \
-@@ -139,6 +146,26 @@ static const struct b43_phy_ht_channeltab_e_radio2059 b43_phy_ht_channeltab_radi
-   },
- };
- 
-+void r2059_upload_inittabs(struct b43_wldev *dev)
-+{
-+	struct b43_phy *phy = &dev->phy;
-+	u16 *table = NULL;
-+	u16 size, i;
-+
-+	switch (phy->rev) {
-+	case 1:
-+		table = r2059_phy_rev1_init[0];
-+		size = ARRAY_SIZE(r2059_phy_rev1_init);
-+		break;
-+	default:
-+		B43_WARN_ON(1);
-+		return;
-+	}
-+
-+	for (i = 0; i < size; i++, table += 2)
-+		b43_radio_write(dev, R2059_ALL | table[0], table[1]);
-+}
-+
- const struct b43_phy_ht_channeltab_e_radio2059
- *b43_phy_ht_get_channeltab_e_r2059(struct b43_wldev *dev, u16 freq)
- {
-diff --git a/drivers/net/wireless/b43/radio_2059.h b/drivers/net/wireless/b43/radio_2059.h
-index 9d828d5..9e22fb6 100644
---- a/drivers/net/wireless/b43/radio_2059.h
-+++ b/drivers/net/wireless/b43/radio_2059.h
-@@ -52,6 +52,8 @@ struct b43_phy_ht_channeltab_e_radio2059 {
- 	struct b43_phy_ht_channeltab_e_phy phy_regs;
- };
- 
-+void r2059_upload_inittabs(struct b43_wldev *dev);
-+
- const struct b43_phy_ht_channeltab_e_radio2059
- *b43_phy_ht_get_channeltab_e_r2059(struct b43_wldev *dev, u16 freq);
- 
+Indeed you can.
+
+For what it's worth, although I can't speak for wmediumd at the moment,
+in the precursor to it that I wrote, I got about 25 Mbps achieved with
+a phy rate of 54 Mbps when simulating the physical layer, which I think
+is pretty close to real world overhead in non-agg case.  With plain old
+mac80211_hwsim you can get several Gbps.
+
 -- 
-1.8.4.5
-
+Bob Copeland %% www.bobcopeland.com
