@@ -1,44 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:55904 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:43440 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753776AbaIKKJp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Sep 2014 06:09:45 -0400
-Message-ID: <1410430180.1825.10.camel@jlt4.sipsolutions.net> (sfid-20140911_120948_117448_7AC5BEF3)
-Subject: Re: [PATCH v2 2/2] mac80211: improve minstrel_ht rate sorting by
- throughput & probability
+	id S1750765AbaIEGeJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Sep 2014 02:34:09 -0400
+Message-ID: <1409898836.1940.1.camel@jlt4.sipsolutions.net> (sfid-20140905_083413_930922_C31144C2)
+Subject: Re: Anyone working on making iw able to specify MAC address at
+ station creation time?
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	nbd@nbd.name, ikstream86@gmail.com
-Date: Thu, 11 Sep 2014 12:09:40 +0200
-In-Reply-To: <1410297734-21187-3-git-send-email-thomas@net.t-labs.tu-berlin.de>
-References: <1410297734-21187-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
-	 <1410297734-21187-3-git-send-email-thomas@net.t-labs.tu-berlin.de>
+To: Ben Greear <greearb@candelatech.com>,
+	Marcel Holtmann <marcel@holtmann.org>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Fri, 05 Sep 2014 08:33:56 +0200
+In-Reply-To: <5408A6BD.6090304@candelatech.com> (sfid-20140904_195201_728073_99DA3C67)
+References: <5408A6BD.6090304@candelatech.com>
+	 (sfid-20140904_195201_728073_99DA3C67)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-09-09 at 23:22 +0200, Thomas Huehn wrote:
-> This patch improves the way minstrel_ht sorts rates according to throughput
-> and success probability. 3 FOR-loops across the entire rate and mcs group set
-> in function minstrel_ht_update_stats() which where used to determine the
-> fastest, second fastest and most robust rate are reduced to 2 FOR-loop.
+On Thu, 2014-09-04 at 10:51 -0700, Ben Greear wrote:
+> I'm having issues with udev renaming newly created stations when I have
+> udev rules for wlanX, when wlanX is not already existing.
 > 
-> The sorted list of rates according throughput is extended to the best four
-> rates as we need them in upcoming joint rate and power control. The sorting
-> is done via the new function minstrel_ht_sort_best_tp_rates(). The annotation
-> of those 4 best throughput rates in the debugfs file rc-stats is changes to:
-> "A,B,C,D", where A is the fastest rate and C the 4th fastest.
+> I think specifying MAC on station creation time would solve my problems,
+> but haven't looked closely yet.
 > 
-> ---
-> v2: fix coding style issues, thx the Felix Fietkau
+> My version of 'iw' doesn't support setting the MAC on creation, from
+> what I can tel.
 > 
-> Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-> Tested-by: Stefan Venz <ikstream86@gmail.com>
+> Curious if anyone else is working on this?
 
-The S-o-b etc. should be *before* the --- cutoff ... I'll fix it
-manually this time.
+I think Marcel mentioned wanting this before. There's even an attribute
+in nl80211 already, but it can only be used for P2P_DEVICE I believe, so
+a feature flag or so would be needed to be able to know whether or not
+this would be expected to take any effect (kernels before those future
+changes would ignore the attribute for non-P2P-DEVICE I believe)
+
+Haven't looked at the code right now, this is all I know.
 
 johannes
 
