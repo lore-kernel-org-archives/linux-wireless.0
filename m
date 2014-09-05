@@ -1,49 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f45.google.com ([74.125.82.45]:41887 "EHLO
-	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751197AbaIOFNQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Sep 2014 01:13:16 -0400
-Received: by mail-wg0-f45.google.com with SMTP id z12so3236802wgg.4
-        for <linux-wireless@vger.kernel.org>; Sun, 14 Sep 2014 22:13:15 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Luciano Coelho <luciano.coelho@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 07/28] iwlwifi: mvm: fail temp test enabling if the ucode is not loaded
-Date: Mon, 15 Sep 2014 08:12:39 +0300
-Message-Id: <1410757980-2138-7-git-send-email-egrumbach@gmail.com> (sfid-20140915_071321_053132_48329682)
-In-Reply-To: <5416742C.3070804@gmail.com>
-References: <5416742C.3070804@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:44381 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756061AbaIEJ4d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Sep 2014 05:56:33 -0400
+Message-ID: <1409910985.1940.6.camel@jlt4.sipsolutions.net> (sfid-20140905_115658_853247_F4F935B6)
+Subject: Re: [RFC v2] device coredump: add new device coredump class
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jonas Gorski <jogo@openwrt.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Luciano Coelho <luca@coelho.fi>, Kalle Valo <kvalo@adurom.com>,
+	dri-devel@lists.freedesktop.org,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Fri, 05 Sep 2014 11:56:25 +0200
+In-Reply-To: <CAOiHx=nGHGEHSLABnR9NL9ZEXYJN_TvJnyGud8mxseL2089fwg@mail.gmail.com>
+References: <1409907054-17596-1-git-send-email-johannes@sipsolutions.net>
+	 <CAOiHx=nGHGEHSLABnR9NL9ZEXYJN_TvJnyGud8mxseL2089fwg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+On Fri, 2014-09-05 at 11:40 +0200, Jonas Gorski wrote:
+> On Fri, Sep 5, 2014 at 10:50 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > From: Johannes Berg <johannes.berg@intel.com>
+> 
+> Can't you just send from the correct address? ;p
 
-If the ucode is not loaded, don't allow the temperature test to be
-started, but allow it to be changed or stopped if already running.
+Not easily :)
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/debugfs.c | 3 +++
- 1 file changed, 3 insertions(+)
+> How about the following to avoid negative options:
+> 
+> config DEV_COREDUMP
+>        bool "Enable device coredump" if EXPERT
+>        default y if WANT_DEV_COREDUMP
+>        help
+>          Enable the device coredump mechanism for drivers wanting to
+>          use it. Disabling allows for more sensitive systems or systems that
+>          don't want to ever access the information to not have the code,
+>          nor keep any data.
+> 
+>          If unsure, say Y.
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-index d98ee10..85eb847 100644
---- a/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-@@ -288,6 +288,9 @@ static ssize_t iwl_dbgfs_set_nic_temperature_write(struct iwl_mvm *mvm,
- {
- 	int temperature;
- 
-+	if (!mvm->ucode_loaded && !mvm->temperature_test)
-+		return -EIO;
-+
- 	if (kstrtoint(buf, 10, &temperature))
- 		return -EINVAL;
- 	/* not a legal temperature */
--- 
-1.9.1
+Yeah, that seems reasonable. I guess I did the negative option because I
+was thinking about the negative case ("I really don't want this!!!
+111!!") :)
+
+johannes
 
