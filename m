@@ -1,69 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:49682 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754443AbaI2QHG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Sep 2014 12:07:06 -0400
-Message-ID: <542983AA.9040200@candelatech.com> (sfid-20140929_180719_889735_D7A529EC)
-Date: Mon, 29 Sep 2014 09:07:06 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: Michal Kazior <michal.kazior@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH v2 03/10] ath10k: support ethtool stats.
-References: <1411507045-18973-1-git-send-email-greearb@candelatech.com> <1411507045-18973-3-git-send-email-greearb@candelatech.com> <CA+BoTQkK=6NfPN9e-3qN2Qaq2RLVdEwrp5x03_T=E2ZLcBeiaA@mail.gmail.com> <5422D71F.7080809@candelatech.com> <87eguu3ki1.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87eguu3ki1.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from s3.sipsolutions.net ([5.9.151.49]:44785 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756950AbaIELbc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Sep 2014 07:31:32 -0400
+Message-ID: <1409916684.1940.8.camel@jlt4.sipsolutions.net> (sfid-20140905_133151_905927_75A03AAF)
+Subject: Re: [PATCHv5 0/2] configure dynack through mac80211/cfg80211 stack
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>
+Date: Fri, 05 Sep 2014 13:31:24 +0200
+In-Reply-To: <1409867861-3911-1-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140904_235745_382608_527F8DE1)
+References: <1409867861-3911-1-git-send-email-lorenzo.bianconi83@gmail.com>
+	 (sfid-20140904_235745_382608_527F8DE1)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/29/2014 01:21 AM, Kalle Valo wrote:
-> Ben Greear <greearb@candelatech.com> writes:
-> 
->> On 09/24/2014 12:44 AM, Michal Kazior wrote:
->>> On 23 September 2014 23:17,  <greearb@candelatech.com> wrote:
->>> [...]
->>>> +void ath10k_get_et_stats(struct ieee80211_hw *hw,
->>>> +                        struct ieee80211_vif *vif,
->>>> +                        struct ethtool_stats *stats, u64 *data)
->>>> +{
->>>> +       struct ath10k *ar = hw->priv;
->>>> +       int i = 0;
->>>> +       struct ath10k_target_stats *fw_stats;
->>>> +
->>>> +       fw_stats = &ar->debug.target_stats;
->>>> +
->>>> +       mutex_lock(&ar->conf_mutex);
->>>> +
->>>> +       if (ar->state == ATH10K_STATE_ON)
->>>> +               ath10k_refresh_peer_stats(ar);
->>>> +
->>>> +       mutex_unlock(&ar->conf_mutex);
->>>
->>> Just for correctness sake - it's probably a good idea to
->>> mutex_unlock() at the end (i.e. after spin_unlock_bh()) to make sure
->>> the stats are for this particular request. With your patch there's a
->>> very slight chance that, e.g. fw_stats debug file is being read at the
->>> same time and it updates fw stats between the above mutex_unlock() and
->>> following spin_lock_bh().
->>
->> That makes no difference at all to the user though, and it is one less
->> set of nested locks to worry about.
-> 
-> I still do not want to have known races, especially when it's so easy to
-> fix. The ethtool patches patches conflict with Michal's fw_stats fixes.
-> Let me take the ethtool patches so that I can rebase them, fix this race
-> and do some other small changes as well. I'll send v2 soon.
+On Thu, 2014-09-04 at 23:57 +0200, Lorenzo Bianconi wrote:
+> Enable ACK timeout estimation algorithm (dynack) using mac80211
+> set_coverage_class API. Dynack is activated passing -1 as coverage class
+> to lower drivers and it is automatically disabled setting valid value for
+> coverage class. Currently dynack is supported just by ath9k.
+> Fix set_coverage_class signature for p54, ath9k, ath9k_htc and ath5k drivers.
 
-Your v2 patches are fine with me.
+Applied.
 
-Thanks,
-Ben
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+johannes
 
