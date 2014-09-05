@@ -1,138 +1,303 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:37745 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755273AbaICHzS (ORCPT
+Received: from mail-la0-f43.google.com ([209.85.215.43]:62260 "EHLO
+	mail-la0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932083AbaIENG4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Sep 2014 03:55:18 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH 4/5] ath9k: Fix RX filters in channel contexts
-Date: Wed,  3 Sep 2014 13:25:28 +0530
-Message-Id: <1409730929-30208-5-git-send-email-sujith@msujith.org> (sfid-20140903_095528_275589_181476C7)
-In-Reply-To: <1409730929-30208-1-git-send-email-sujith@msujith.org>
-References: <1409730929-30208-1-git-send-email-sujith@msujith.org>
+	Fri, 5 Sep 2014 09:06:56 -0400
+Received: by mail-la0-f43.google.com with SMTP id gi9so2782886lab.30
+        for <linux-wireless@vger.kernel.org>; Fri, 05 Sep 2014 06:06:54 -0700 (PDT)
+From: Henning Rogge <hrogge@gmail.com>
+To: "linux-wireless @ vger . kernel . org"
+	<linux-wireless@vger.kernel.org>
+Cc: Henning Rogge <henning.rogge@fkie.fraunhofer.de>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+Subject: [PATCH v3 1/2] cfg80211: add ops to query mesh proxy path table
+Date: Fri,  5 Sep 2014 15:06:43 +0200
+Message-Id: <1409922404-8217-2-git-send-email-henning.rogge@fkie.fraunhofer.de> (sfid-20140905_150659_984364_1EAB4F9D)
+In-Reply-To: <1409922404-8217-1-git-send-email-henning.rogge@fkie.fraunhofer.de>
+References: <1409922404-8217-1-git-send-email-henning.rogge@fkie.fraunhofer.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Add two new cfg80211 operations for querying the content of the the mac80211s proxy path table
 
-Maintain the RX filter on a per-channel-context
-basis and not globally. Not doing so was resulting
-in incorrect filter calculation.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Henning Rogge <henning.rogge@fkie.fraunhofer.de>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |  3 ++-
- drivers/net/wireless/ath/ath9k/main.c  |  5 ++++-
- drivers/net/wireless/ath/ath9k/recv.c  | 21 +++++++++++++++------
- 3 files changed, 21 insertions(+), 8 deletions(-)
+ include/net/cfg80211.h       |  7 ++++
+ include/uapi/linux/nl80211.h |  6 +++
+ net/wireless/nl80211.c       | 99 ++++++++++++++++++++++++++++++++++++++++++++
+ net/wireless/rdev-ops.h      | 27 +++++++++++-
+ net/wireless/trace.h         | 45 ++++++++++++++++++++
+ 5 files changed, 183 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 12cdabb..4f3da18 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -314,7 +314,6 @@ struct ath_rx {
- 	bool discard_next;
- 	u32 *rxlink;
- 	u32 num_pkts;
--	unsigned int rxfilter;
- 	struct list_head rxbuf;
- 	struct ath_descdma rxdma;
- 	struct ath_rx_edma rx_edma[ATH9K_RX_QUEUE_MAX];
-@@ -350,6 +349,8 @@ struct ath_chanctx {
- 	bool active;
- 	bool assigned;
- 	bool switch_after_beacon;
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 0a080c4..cda05f4 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -2139,6 +2139,8 @@ struct cfg80211_qos_map {
+  * @change_mpath: change a given mesh path
+  * @get_mpath: get a mesh path for the given parameters
+  * @dump_mpath: dump mesh path callback -- resume dump at index @idx
++ * @get_mpp: get a mesh proxy path for the given parameters
++ * @dump_mpp: dump mesh proxy path callback -- resume dump at index @idx
+  * @join_mesh: join the mesh network with the specified parameters
+  *	(invoked with the wireless_dev mutex held)
+  * @leave_mesh: leave the current mesh network
+@@ -2378,6 +2380,11 @@ struct cfg80211_ops {
+ 	int	(*dump_mpath)(struct wiphy *wiphy, struct net_device *dev,
+ 			      int idx, u8 *dst, u8 *next_hop,
+ 			      struct mpath_info *pinfo);
++	int	(*get_mpp)(struct wiphy *wiphy, struct net_device *dev,
++			   u8 *dst, u8 *mpp, struct mpath_info *pinfo);
++	int	(*dump_mpp)(struct wiphy *wiphy, struct net_device *dev,
++			    int idx, u8 *dst, u8 *mpp,
++			    struct mpath_info *pinfo);
+ 	int	(*get_mesh_config)(struct wiphy *wiphy,
+ 				struct net_device *dev,
+ 				struct mesh_config *conf);
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index f1db15b..80cff48 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -722,6 +722,10 @@
+  *	QoS mapping is relevant for IP packets, it is only valid during an
+  *	association. This is cleared on disassociation and AP restart.
+  *
++ * @NL80211_CMD_GET_MPP: Get mesh path attributes for mesh proxy path to
++ *	destination %NL80211_ATTR_MAC on the interface identified by
++ *	%NL80211_ATTR_IFINDEX.
++ *
+  * @NL80211_CMD_MAX: highest used command number
+  * @__NL80211_CMD_AFTER_LAST: internal use
+  */
+@@ -893,6 +897,8 @@ enum nl80211_commands {
+ 
+ 	NL80211_CMD_SET_QOS_MAP,
+ 
++	NL80211_CMD_GET_MPP,
 +
-+	unsigned int rxfilter;
- };
+ 	/* add new commands above here */
  
- enum ath_chanctx_event {
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 18e5e91..a202859 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1427,7 +1427,10 @@ static void ath9k_configure_filter(struct ieee80211_hw *hw,
- 	changed_flags &= SUPPORTED_FILTERS;
- 	*total_flags &= SUPPORTED_FILTERS;
+ 	/* used to define NL80211_CMD_MAX below */
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index df7b133..1e33f2f 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -4581,6 +4581,96 @@ static int nl80211_del_mpath(struct sk_buff *skb, struct genl_info *info)
+ 	return rdev_del_mpath(rdev, dev, dst);
+ }
  
--	sc->rx.rxfilter = *total_flags;
-+	spin_lock_bh(&sc->chan_lock);
-+	sc->cur_chan->rxfilter = *total_flags;
-+	spin_unlock_bh(&sc->chan_lock);
++static int nl80211_get_mpp(struct sk_buff *skb, struct genl_info *info)
++{
++	struct cfg80211_registered_device *rdev = info->user_ptr[0];
++	int err;
++	struct net_device *dev = info->user_ptr[1];
++	struct mpath_info pinfo;
++	struct sk_buff *msg;
++	u8 *dst = NULL;
++	u8 mpp[ETH_ALEN];
 +
- 	ath9k_ps_wakeup(sc);
- 	rfilt = ath_calcrxfilter(sc);
- 	ath9k_hw_setrxfilter(sc->sc_ah, rfilt);
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 63fbc3e..68e56d6 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -387,7 +387,9 @@ u32 ath_calcrxfilter(struct ath_softc *sc)
- 	if (sc->hw->conf.radar_enabled)
- 		rfilt |= ATH9K_RX_FILTER_PHYRADAR | ATH9K_RX_FILTER_PHYERR;
- 
--	if (sc->rx.rxfilter & FIF_PROBE_REQ)
-+	spin_lock_bh(&sc->chan_lock);
++	memset(&pinfo, 0, sizeof(pinfo));
 +
-+	if (sc->cur_chan->rxfilter & FIF_PROBE_REQ)
- 		rfilt |= ATH9K_RX_FILTER_PROBEREQ;
- 
- 	/*
-@@ -398,24 +400,24 @@ u32 ath_calcrxfilter(struct ath_softc *sc)
- 	if (sc->sc_ah->is_monitoring)
- 		rfilt |= ATH9K_RX_FILTER_PROM;
- 
--	if (sc->rx.rxfilter & FIF_CONTROL)
-+	if (sc->cur_chan->rxfilter & FIF_CONTROL)
- 		rfilt |= ATH9K_RX_FILTER_CONTROL;
- 
- 	if ((sc->sc_ah->opmode == NL80211_IFTYPE_STATION) &&
- 	    (sc->nvifs <= 1) &&
--	    !(sc->rx.rxfilter & FIF_BCN_PRBRESP_PROMISC))
-+	    !(sc->cur_chan->rxfilter & FIF_BCN_PRBRESP_PROMISC))
- 		rfilt |= ATH9K_RX_FILTER_MYBEACON;
- 	else
- 		rfilt |= ATH9K_RX_FILTER_BEACON;
- 
- 	if ((sc->sc_ah->opmode == NL80211_IFTYPE_AP) ||
--	    (sc->rx.rxfilter & FIF_PSPOLL))
-+	    (sc->cur_chan->rxfilter & FIF_PSPOLL))
- 		rfilt |= ATH9K_RX_FILTER_PSPOLL;
- 
- 	if (sc->cur_chandef.width != NL80211_CHAN_WIDTH_20_NOHT)
- 		rfilt |= ATH9K_RX_FILTER_COMP_BAR;
- 
--	if (sc->nvifs > 1 || (sc->rx.rxfilter & FIF_OTHER_BSS)) {
-+	if (sc->nvifs > 1 || (sc->cur_chan->rxfilter & FIF_OTHER_BSS)) {
- 		/* This is needed for older chips */
- 		if (sc->sc_ah->hw_version.macVersion <= AR_SREV_VERSION_9160)
- 			rfilt |= ATH9K_RX_FILTER_PROM;
-@@ -429,6 +431,8 @@ u32 ath_calcrxfilter(struct ath_softc *sc)
- 	    test_bit(ATH_OP_SCANNING, &common->op_flags))
- 		rfilt |= ATH9K_RX_FILTER_BEACON;
- 
-+	spin_unlock_bh(&sc->chan_lock);
++	if (!info->attrs[NL80211_ATTR_MAC])
++		return -EINVAL;
 +
- 	return rfilt;
++	dst = nla_data(info->attrs[NL80211_ATTR_MAC]);
++
++	if (!rdev->ops->get_mpp)
++		return -EOPNOTSUPP;
++
++	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_MESH_POINT)
++		return -EOPNOTSUPP;
++
++	err = rdev_get_mpp(rdev, dev, dst, mpp, &pinfo);
++	if (err)
++		return err;
++
++	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
++	if (!msg)
++		return -ENOMEM;
++
++	if (nl80211_send_mpath(msg, info->snd_portid, info->snd_seq, 0,
++			       dev, dst, mpp, &pinfo) < 0) {
++		nlmsg_free(msg);
++		return -ENOBUFS;
++	}
++
++	return genlmsg_reply(msg, info);
++}
++
++static int nl80211_dump_mpp(struct sk_buff *skb,
++			    struct netlink_callback *cb)
++{
++	struct mpath_info pinfo;
++	struct cfg80211_registered_device *rdev;
++	struct wireless_dev *wdev;
++	u8 dst[ETH_ALEN];
++	u8 mpp[ETH_ALEN];
++	int path_idx = cb->args[2];
++	int err;
++
++	err = nl80211_prepare_wdev_dump(skb, cb, &rdev, &wdev);
++	if (err)
++		return err;
++
++	if (!rdev->ops->dump_mpp) {
++		err = -EOPNOTSUPP;
++		goto out_err;
++	}
++
++	if (wdev->iftype != NL80211_IFTYPE_MESH_POINT) {
++		err = -EOPNOTSUPP;
++		goto out_err;
++	}
++
++	while (1) {
++		err = rdev_dump_mpp(rdev, wdev->netdev, path_idx, dst,
++				    mpp, &pinfo);
++		if (err == -ENOENT)
++			break;
++		if (err)
++			goto out_err;
++
++		if (nl80211_send_mpath(skb, NETLINK_CB(cb->skb).portid,
++				       cb->nlh->nlmsg_seq, NLM_F_MULTI,
++				       wdev->netdev, dst, mpp,
++				       &pinfo) < 0)
++			goto out;
++
++		path_idx++;
++	}
++
++ out:
++	cb->args[2] = path_idx;
++	err = skb->len;
++ out_err:
++	nl80211_finish_wdev_dump(rdev);
++	return err;
++}
++
+ static int nl80211_set_bss(struct sk_buff *skb, struct genl_info *info)
+ {
+ 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+@@ -9603,6 +9693,15 @@ static const struct genl_ops nl80211_ops[] = {
+ 				  NL80211_FLAG_NEED_RTNL,
+ 	},
+ 	{
++		.cmd = NL80211_CMD_GET_MPP,
++		.doit = nl80211_get_mpp,
++		.dumpit = nl80211_dump_mpp,
++		.policy = nl80211_policy,
++		.flags = GENL_ADMIN_PERM,
++		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
++				  NL80211_FLAG_NEED_RTNL,
++	},
++	{
+ 		.cmd = NL80211_CMD_SET_MPATH,
+ 		.doit = nl80211_set_mpath,
+ 		.policy = nl80211_policy,
+diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
+index 56c2240..e5560d5 100644
+--- a/net/wireless/rdev-ops.h
++++ b/net/wireless/rdev-ops.h
+@@ -263,6 +263,18 @@ static inline int rdev_get_mpath(struct cfg80211_registered_device *rdev,
  
  }
-@@ -865,8 +869,13 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
- 	 * everything but the rate is checked here, the rate check is done
- 	 * separately to avoid doing two lookups for a rate for each frame.
- 	 */
--	if (!ath9k_cmn_rx_accept(common, hdr, rx_status, rx_stats, decrypt_error, sc->rx.rxfilter))
-+	spin_lock_bh(&sc->chan_lock);
-+	if (!ath9k_cmn_rx_accept(common, hdr, rx_status, rx_stats, decrypt_error,
-+				 sc->cur_chan->rxfilter)) {
-+		spin_unlock_bh(&sc->chan_lock);
- 		return -EINVAL;
-+	}
-+	spin_unlock_bh(&sc->chan_lock);
  
- 	if (ath_is_mybeacon(common, hdr)) {
- 		RX_STAT_INC(rx_beacons);
++static inline int rdev_get_mpp(struct cfg80211_registered_device *rdev,
++			       struct net_device *dev, u8 *dst, u8 *mpp,
++			       struct mpath_info *pinfo)
++{
++	int ret;
++
++	trace_rdev_get_mpp(&rdev->wiphy, dev, dst, mpp);
++	ret = rdev->ops->get_mpp(&rdev->wiphy, dev, dst, mpp, pinfo);
++	trace_rdev_return_int_mpath_info(&rdev->wiphy, ret, pinfo);
++	return ret;
++}
++
+ static inline int rdev_dump_mpath(struct cfg80211_registered_device *rdev,
+ 				  struct net_device *dev, int idx, u8 *dst,
+ 				  u8 *next_hop, struct mpath_info *pinfo)
+@@ -271,7 +283,20 @@ static inline int rdev_dump_mpath(struct cfg80211_registered_device *rdev,
+ 	int ret;
+ 	trace_rdev_dump_mpath(&rdev->wiphy, dev, idx, dst, next_hop);
+ 	ret = rdev->ops->dump_mpath(&rdev->wiphy, dev, idx, dst, next_hop,
+-				     pinfo);
++				    pinfo);
++	trace_rdev_return_int_mpath_info(&rdev->wiphy, ret, pinfo);
++	return ret;
++}
++
++static inline int rdev_dump_mpp(struct cfg80211_registered_device *rdev,
++				struct net_device *dev, int idx, u8 *dst,
++				u8 *mpp, struct mpath_info *pinfo)
++
++{
++	int ret;
++
++	trace_rdev_dump_mpp(&rdev->wiphy, dev, idx, dst, mpp);
++	ret = rdev->ops->dump_mpp(&rdev->wiphy, dev, idx, dst, mpp, pinfo);
+ 	trace_rdev_return_int_mpath_info(&rdev->wiphy, ret, pinfo);
+ 	return ret;
+ }
+diff --git a/net/wireless/trace.h b/net/wireless/trace.h
+index 0c524cd..57ab727 100644
+--- a/net/wireless/trace.h
++++ b/net/wireless/trace.h
+@@ -801,6 +801,51 @@ TRACE_EVENT(rdev_dump_mpath,
+ 		  MAC_PR_ARG(next_hop))
+ );
+ 
++TRACE_EVENT(rdev_get_mpp,
++	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
++		 u8 *dst, u8 *mpp),
++	TP_ARGS(wiphy, netdev, dst, mpp),
++	TP_STRUCT__entry(
++		WIPHY_ENTRY
++		NETDEV_ENTRY
++		MAC_ENTRY(dst)
++		MAC_ENTRY(mpp)
++	),
++	TP_fast_assign(
++		WIPHY_ASSIGN;
++		NETDEV_ASSIGN;
++		MAC_ASSIGN(dst, dst);
++		MAC_ASSIGN(mpp, mpp);
++	),
++	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", destination: " MAC_PR_FMT
++		  ", mpp: " MAC_PR_FMT, WIPHY_PR_ARG, NETDEV_PR_ARG,
++		  MAC_PR_ARG(dst), MAC_PR_ARG(mpp))
++);
++
++TRACE_EVENT(rdev_dump_mpp,
++	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev, int idx,
++		 u8 *dst, u8 *mpp),
++	TP_ARGS(wiphy, netdev, idx, mpp, dst),
++	TP_STRUCT__entry(
++		WIPHY_ENTRY
++		NETDEV_ENTRY
++		MAC_ENTRY(dst)
++		MAC_ENTRY(mpp)
++		__field(int, idx)
++	),
++	TP_fast_assign(
++		WIPHY_ASSIGN;
++		NETDEV_ASSIGN;
++		MAC_ASSIGN(dst, dst);
++		MAC_ASSIGN(mpp, mpp);
++		__entry->idx = idx;
++	),
++	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", index: %d, destination: "
++		  MAC_PR_FMT ", mpp: " MAC_PR_FMT,
++		  WIPHY_PR_ARG, NETDEV_PR_ARG, __entry->idx, MAC_PR_ARG(dst),
++		  MAC_PR_ARG(mpp))
++);
++
+ TRACE_EVENT(rdev_return_int_mpath_info,
+ 	TP_PROTO(struct wiphy *wiphy, int ret, struct mpath_info *pinfo),
+ 	TP_ARGS(wiphy, ret, pinfo),
 -- 
-2.1.0
+1.9.1
 
