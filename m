@@ -1,108 +1,185 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:46864 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756014AbaIKPWY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Sep 2014 11:22:24 -0400
-Message-ID: <5411BDEF.7070105@intel.com> (sfid-20140911_172235_237743_B4F85AA4)
-Date: Thu, 11 Sep 2014 08:21:19 -0700
-From: Alexander Duyck <alexander.h.duyck@intel.com>
+Received: from mail-lb0-f179.google.com ([209.85.217.179]:41776 "EHLO
+	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932065AbaIELop (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Sep 2014 07:44:45 -0400
+Received: by mail-lb0-f179.google.com with SMTP id p9so784423lbv.24
+        for <linux-wireless@vger.kernel.org>; Fri, 05 Sep 2014 04:44:43 -0700 (PDT)
+From: Henning Rogge <hrogge@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+Subject: [PATCH v2 2/2] Implement get_mpp and dump_mpp cfg80211_ops to export  the content of the 802.11s mesh proxy path table to userspace.
+Date: Fri, 05 Sep 2014 13:44:40 +0200
+Message-ID: <1420374.Xr0mcMrsU7@rogge-hp-probook-6470b> (sfid-20140905_134447_595779_8B54FEB6)
+In-Reply-To: <2453987.UPN20YN3D3@rogge-hp-probook-6470b>
+References: <2453987.UPN20YN3D3@rogge-hp-probook-6470b>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	davem@davemloft.net, eric.dumazet@gmail.com, linville@tuxdriver.com
-Subject: Re: [PATCH net-next 2/2] mac80211: Resolve sk_refcnt/sk_wmem_alloc
- issue in wifi ack path
-References: <20140910215837.23225.39149.stgit@ahduyck-bv4.jf.intel.com>	 <20140910220536.23225.92956.stgit@ahduyck-bv4.jf.intel.com> <1410419198.1825.5.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1410419198.1825.5.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/11/2014 12:06 AM, Johannes Berg wrote:
-> On Wed, 2014-09-10 at 18:05 -0400, Alexander Duyck wrote:
->> There is a possible issue with the use, or lack thereof of sk_refcnt and
->> sk_wmem_alloc in the wifi ack status functionality.
->>
->> Specifically if a socket were to request acknowledgements, and the socket
->> were to have sk_refcnt drop to 0 resulting in it waiting on sk_wmem_alloc
->> to reach 0 it would be possible to have sock_queue_err_skb orphan the last
->> buffer, resulting in __sk_free being called on the socket.  After this the
->> buffer is enqueued on sk_error_queue, however the queue has already been
->> flushed resulting in at least a memory leak, if not a data corruption.
-> 
-> Oh. Thanks :-)
-> 
->> +	/* take a reference to prevent skb_orphan() from freeing the socket */
->> +	sock_hold(sk);
->> +
->>  	err = sock_queue_err_skb(sk, skb);
->>  	if (err)
->>  		kfree_skb(skb);
->> +
->> +	sock_put(sk);
->>  }
->>  EXPORT_SYMBOL_GPL(skb_complete_wifi_ack);
-> 
-> Here I'm not sure it matters *for this function*? Wouldn't it be freed
-> then in sock_put(), which has the same net effect on this function
-> overall? It doesn't use it after sock_queue_err_skb().
+From: "Henning Rogge" <henning.rogge <at> fkie.fraunhofer.de>
 
-The significant piece is that we are calling sock_put *after*.  So if we
-are dropping the last reference the buffer is already in the
-sk_error_queue and will be purged when __sk_free is called.
+This patch implements the get_mpp and dump_mpp cfg80211_ops for the default
+mac80211s implementation.
 
-> Seems like maybe this should be in sock_queue_err_skb() itself, since it
-> does the orphaning first and then looks at the socket. Or the
-> documentation for that function should state that it has to be held, but
-> there are plenty of callers?
+---
+ net/mac80211/cfg.c          | 53 +++++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/mesh.h         |  3 +++
+ net/mac80211/mesh_pathtbl.c | 31 ++++++++++++++++++++++++++
+ 3 files changed, 87 insertions(+)
 
-The problem is there are a number of cases where the sock_hold/put are
-not needed.  For example, if we were to clone the skb and immediately
-send the clone up the sk_error_queue then we don't need it.  We only
-need it if there is a risk that orphaning the buffer sent could
-potentially result in the destructor calling __sk_free.
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 927b4ea..2b85eed 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1511,6 +1511,57 @@ static int ieee80211_dump_mpath(struct wiphy *wiphy, struct net_device *dev,
+ 	return 0;
+ }
+ 
++static void mpp_set_pinfo(struct mesh_path *mpath, u8 *mpp,
++			  struct mpath_info *pinfo)
++{
++	memset(pinfo, 0, sizeof(*pinfo));
++	memcpy(mpp, mpath->mpp, ETH_ALEN);
++
++	pinfo->generation = mpp_paths_generation;
++}
++
++static int ieee80211_get_mpp(struct wiphy *wiphy, struct net_device *dev,
++			     u8 *dst, u8 *mpp, struct mpath_info *pinfo)
++
++{
++	struct ieee80211_sub_if_data *sdata;
++	struct mesh_path *mpath;
++
++	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++
++	rcu_read_lock();
++	mpath = mpp_path_lookup(sdata, dst);
++	if (!mpath) {
++		rcu_read_unlock();
++		return -ENOENT;
++	}
++	memcpy(dst, mpath->dst, ETH_ALEN);
++	mpp_set_pinfo(mpath, mpp, pinfo);
++	rcu_read_unlock();
++	return 0;
++}
++
++static int ieee80211_dump_mpp(struct wiphy *wiphy, struct net_device *dev,
++			      int idx, u8 *dst, u8 *mpp,
++			      struct mpath_info *pinfo)
++{
++	struct ieee80211_sub_if_data *sdata;
++	struct mesh_path *mpath;
++
++	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++
++	rcu_read_lock();
++	mpath = mpp_path_lookup_by_idx(sdata, idx);
++	if (!mpath) {
++		rcu_read_unlock();
++		return -ENOENT;
++	}
++	memcpy(dst, mpath->dst, ETH_ALEN);
++	mpp_set_pinfo(mpath, mpp, pinfo);
++	rcu_read_unlock();
++	return 0;
++}
++
+ static int ieee80211_get_mesh_config(struct wiphy *wiphy,
+ 				struct net_device *dev,
+ 				struct mesh_config *conf)
+@@ -3507,6 +3558,8 @@ const struct cfg80211_ops mac80211_config_ops = {
+ 	.change_mpath = ieee80211_change_mpath,
+ 	.get_mpath = ieee80211_get_mpath,
+ 	.dump_mpath = ieee80211_dump_mpath,
++	.get_mpp = ieee80211_get_mpp,
++	.dump_mpp = ieee80211_dump_mpp,
+ 	.update_mesh_config = ieee80211_update_mesh_config,
+ 	.get_mesh_config = ieee80211_get_mesh_config,
+ 	.join_mesh = ieee80211_join_mesh,
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index f39a19f..50c8473 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -270,6 +270,8 @@ int mpp_path_add(struct ieee80211_sub_if_data *sdata,
+ 		 const u8 *dst, const u8 *mpp);
+ struct mesh_path *
+ mesh_path_lookup_by_idx(struct ieee80211_sub_if_data *sdata, int idx);
++struct mesh_path *
++mpp_path_lookup_by_idx(struct ieee80211_sub_if_data *sdata, int idx);
+ void mesh_path_fix_nexthop(struct mesh_path *mpath, struct sta_info *next_hop);
+ void mesh_path_expire(struct ieee80211_sub_if_data *sdata);
+ void mesh_rx_path_sel_frame(struct ieee80211_sub_if_data *sdata,
+@@ -317,6 +319,7 @@ void mesh_path_tx_root_frame(struct ieee80211_sub_if_data *sdata);
+ 
+ bool mesh_action_is_path_sel(struct ieee80211_mgmt *mgmt);
+ extern int mesh_paths_generation;
++extern int mpp_paths_generation;
+ 
+ #ifdef CONFIG_MAC80211_MESH
+ static inline
+diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+index cf032a8..8630963 100644
+--- a/net/mac80211/mesh_pathtbl.c
++++ b/net/mac80211/mesh_pathtbl.c
+@@ -44,6 +44,7 @@ static struct mesh_table __rcu *mesh_paths;
+ static struct mesh_table __rcu *mpp_paths; /* Store paths for MPP&MAP */
+ 
+ int mesh_paths_generation;
++int mpp_paths_generation;
+ 
+ /* This lock will have the grow table function as writer and add / delete nodes
+  * as readers. RCU provides sufficient protection only when reading the table
+@@ -410,6 +411,33 @@ mesh_path_lookup_by_idx(struct ieee80211_sub_if_data *sdata, int idx)
+ }
+ 
+ /**
++ * mpp_path_lookup_by_idx - look up a path in the proxy path table by its index
++ * @idx: index
++ * @sdata: local subif, or NULL for all entries
++ *
++ * Returns: pointer to the proxy path structure, or NULL if not found.
++ *
++ * Locking: must be called within a read rcu section.
++ */
++struct mesh_path *
++mpp_path_lookup_by_idx(struct ieee80211_sub_if_data *sdata, int idx)
++{
++	struct mesh_table *tbl = rcu_dereference(mpp_paths);
++	struct mpath_node *node;
++	int i;
++	int j = 0;
++
++	for_each_mesh_entry(tbl, node, i) {
++		if (sdata && node->mpath->sdata != sdata)
++			continue;
++		if (j++ == idx)
++			return node->mpath;
++	}
++
++	return NULL;
++}
++
++/**
+  * mesh_path_add_gate - add the given mpath to a mesh gate to our path table
+  * @mpath: gate path to add to table
+  */
+@@ -691,6 +719,9 @@ int mpp_path_add(struct ieee80211_sub_if_data *sdata,
+ 
+ 	spin_unlock(&tbl->hashwlock[hash_idx]);
+ 	read_unlock_bh(&pathtbl_resize_lock);
++
++	mpp_paths_generation++;
++
+ 	if (grow) {
+ 		set_bit(MESH_WORK_GROW_MPP_TABLE,  &ifmsh->wrkq_flags);
+ 		ieee80211_queue_work(&local->hw, &sdata->work);
+-- 
+1.9.1
 
->>  			spin_lock_irqsave(&local->ack_status_lock, flags);
->> -			id = idr_alloc(&local->ack_status_frames, orig_skb,
->> +			id = idr_alloc(&local->ack_status_frames, ack_skb,
->>  				       1, 0x10000, GFP_ATOMIC);
->>  			spin_unlock_irqrestore(&local->ack_status_lock, flags);
->>  
->>  			if (id >= 0) {
->>  				info_id = id;
->>  				info_flags |= IEEE80211_TX_CTL_REQ_TX_STATUS;
->> -			} else if (skb_shared(skb)) {
->> -				kfree_skb(orig_skb);
->>  			} else {
->> -				kfree_skb(skb);
->> -				skb = orig_skb;
->> +				kfree_skb(ack_skb);
->>  			}
-> 
-> So you're removing this part, but can't we really not reuse the clone_sk
-> copy? The difference is that it's charged, but that's fine for the
-> purposes here, no? Or am I misunderstanding that?
-> 
-> johannes
 
-The copy being held cannot really be used for transmit.  The problem is
-that it is holding the wrong kind of reference.
-
-The problem lies in the order things are released.  The sock_put
-function will dec_and_test sk_refcnt, once it reaches 0 it will do a
-dec_and_test on sk_wmem_alloc to see if it should call __sk_free.  Until
-that reaches 0 sk_wmem_alloc cannot reach 0.  Once either of these drops
-to 0 we cannot bring the value back up from there.  So if I were to
-transmit the clone then it could let the sk_refcnt drop to 0 in which
-case any calls to sock_hold are invalid.
-
-I would need to somehow hold the reference based on sk_wmem_alloc if we
-want to transmit the clone.  Many of the hardware timestamping drivers
-seem to just clone the original skb, queue that clone onto the
-sk_error_queue, and then free the original after completing the call.  I
-suppose we could change it to something like that, but you are still
-looking at possibly 2 clones in that case anyway.
-
-Thanks,
-
-Alex
