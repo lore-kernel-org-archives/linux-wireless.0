@@ -1,111 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hauke-m.de ([5.39.93.123]:54174 "EHLO hauke-m.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751623AbaIMNhj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Sep 2014 09:37:39 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linux-wireless@vger.kernel.org
-Cc: zajec5@gmail.com, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, arnd@arndb.de,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/2] bcma: get IRQ numbers from dt
-Date: Sat, 13 Sep 2014 15:37:26 +0200
-Message-Id: <1410615446-7639-2-git-send-email-hauke@hauke-m.de> (sfid-20140913_153754_325224_28117CFD)
-In-Reply-To: <1410615446-7639-1-git-send-email-hauke@hauke-m.de>
-References: <1410615446-7639-1-git-send-email-hauke@hauke-m.de>
+Received: from s72.web-hosting.com ([198.187.29.22]:39510 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751011AbaIEEUn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Sep 2014 00:20:43 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH 3/3] ath9k: Fix MCC scanning
+Date: Fri,  5 Sep 2014 09:50:57 +0530
+Message-Id: <1409890857-6276-4-git-send-email-sujith@msujith.org> (sfid-20140905_062048_680920_6D3B3D72)
+In-Reply-To: <1409890857-6276-1-git-send-email-sujith@msujith.org>
+References: <1409890857-6276-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It is not possible to auto detect the irq numbers used by the cores on
-an arm SoC. If bcma was registered with device tree it will search for
-some device tree nodes with the irq number and add it to the core
-configuration.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Scanning is curently broken when two channel contexts
+are active. For example in a P2P-GO/STA setup, the
+offchannel timer allows HZ / 10 to elapse before initiating
+a switch to the next scan channel from the current operating
+channel, which in this case would be the P2P-GO context.
+
+But, the channel context timer might decide to switch
+to the STA context when an SWBA comes early and a beacon
+is sent out. Since pending offchannel requests are processed
+in EVENT_BEACON_PREPARE, this causes inconsistent scanning.
+
+Fix this by making sure that a context switch happens
+before processing the pending offchannel request. This
+also makes sure that active channel contexts will always
+have higher priority than offchannel operations and the
+scan sequence looks like this:
+
+p2p-go, sta, p2p-go, offchannel, p2p-go, sta, p2p-go, offchannel,.....
+
+The oper-channel is p2p-go, so the STA context has to
+switch to p2p-go again before switching offchannel.
+
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/bcma/main.c | 49 ++++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 48 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h   | 1 +
+ drivers/net/wireless/ath/ath9k/channel.c | 4 +++-
+ 2 files changed, 4 insertions(+), 1 deletion(-)
 
-This is based on wireless-testing and should go into that tree.
-
-changes since:
-RFC:
- - add #ifdef CONFIG_OF
-
-diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-index e5d578c..b8731ee 100644
---- a/drivers/bcma/main.c
-+++ b/drivers/bcma/main.c
-@@ -10,6 +10,8 @@
- #include <linux/platform_device.h>
- #include <linux/bcma/bcma.h>
- #include <linux/slab.h>
-+#include <linux/of_irq.h>
-+#include <linux/of_address.h>
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 46a1d2e..0c071b0 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -378,6 +378,7 @@ enum ath_chanctx_state {
+ struct ath_chanctx_sched {
+ 	bool beacon_pending;
+ 	bool offchannel_pending;
++	bool wait_switch;
+ 	enum ath_chanctx_state state;
+ 	u8 beacon_miss;
  
- MODULE_DESCRIPTION("Broadcom's specific AMBA driver");
- MODULE_LICENSE("GPL");
-@@ -131,6 +133,45 @@ static bool bcma_is_core_needed_early(u16 core_id)
- 	return false;
- }
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index a31f526..522894b 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -333,7 +333,7 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 			break;
+ 		}
  
-+#ifdef CONFIG_OF
-+static struct device_node *bcma_of_find_child_device(struct platform_device *parent,
-+						     struct bcma_device *core)
-+{
-+	struct device_node *node;
-+	u64 size;
-+	const __be32 *reg;
-+
-+	if (!parent || !parent->dev.of_node)
-+		return NULL;
-+
-+	for_each_child_of_node(parent->dev.of_node, node) {
-+		reg = of_get_address(node, 0, &size, NULL);
-+		if (!reg)
-+			continue;
-+		if (be32_to_cpup(reg) == core->addr)
-+			return node;
-+	}
-+	return NULL;
-+}
-+
-+static void bcma_of_fill_device(struct platform_device *parent,
-+				struct bcma_device *core)
-+{
-+	struct device_node *node;
-+
-+	node = bcma_of_find_child_device(parent, core);
-+	if (!node)
-+		return;
-+	core->dev.of_node = node;
-+	core->irq = irq_of_parse_and_map(node, 0);
-+}
-+#else
-+static void bcma_of_fill_device(struct platform_device *parent,
-+				struct bcma_device *core)
-+{
-+}
-+#endif /* CONFIG_OF */
-+
- static void bcma_register_core(struct bcma_bus *bus, struct bcma_device *core)
- {
- 	int err;
-@@ -147,7 +188,13 @@ static void bcma_register_core(struct bcma_bus *bus, struct bcma_device *core)
- 		break;
- 	case BCMA_HOSTTYPE_SOC:
- 		core->dev.dma_mask = &core->dev.coherent_dma_mask;
--		core->dma_dev = &core->dev;
-+		if (bus->host_pdev) {
-+			core->dma_dev = &bus->host_pdev->dev;
-+			core->dev.parent = &bus->host_pdev->dev;
-+			bcma_of_fill_device(bus->host_pdev, core);
-+		} else {
-+			core->dma_dev = &core->dev;
-+		}
- 		break;
- 	case BCMA_HOSTTYPE_SDIO:
- 		break;
+-		if (sc->sched.offchannel_pending) {
++		if (sc->sched.offchannel_pending && !sc->sched.wait_switch) {
+ 			sc->sched.offchannel_pending = false;
+ 			sc->next_chan = &sc->offchannel.chan;
+ 			sc->sched.state = ATH_CHANCTX_STATE_WAIT_FOR_BEACON;
+@@ -490,6 +490,7 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 			"Move chanctx state to WAIT_FOR_TIMER (event SWITCH)\n");
+ 
+ 		sc->sched.state = ATH_CHANCTX_STATE_WAIT_FOR_TIMER;
++		sc->sched.wait_switch = false;
+ 
+ 		tsf_time = TU_TO_USEC(cur_conf->beacon_interval) / 2;
+ 		if (sc->sched.beacon_miss >= 2) {
+@@ -588,6 +589,7 @@ static void ath_chanctx_switch(struct ath_softc *sc, struct ath_chanctx *ctx,
+ 	if (test_bit(ATH_OP_MULTI_CHANNEL, &common->op_flags) &&
+ 	    (sc->cur_chan != ctx) && (ctx == &sc->offchannel.chan)) {
+ 		sc->sched.offchannel_pending = true;
++		sc->sched.wait_switch = true;
+ 		if (chandef)
+ 			ctx->chandef = *chandef;
+ 		spin_unlock_bh(&sc->chan_lock);
 -- 
-1.9.1
+2.1.0
 
