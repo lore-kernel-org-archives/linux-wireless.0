@@ -1,76 +1,163 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f169.google.com ([209.85.214.169]:33717 "EHLO
-	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751742AbaIWNoX (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:57920 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755617AbaIECdZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Sep 2014 09:44:23 -0400
-Received: by mail-ob0-f169.google.com with SMTP id uy5so2231287obc.0
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Sep 2014 06:44:23 -0700 (PDT)
-Date: Tue, 23 Sep 2014 08:44:19 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Michael Tokarev <mjt@tls.msk.ru>, brcm80211-dev-list@broadcom.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: BCM4313 & brcmsmac & 3.12: only semi-working?
-Message-ID: <20140923134419.GA19016@ubuntu-hedt> (sfid-20140923_154431_534795_213A76CF)
-References: <53FC1789.6020407@msgid.tls.msk.ru>
- <53FCA001.6090404@broadcom.com>
- <53FCB2A3.1050605@msgid.tls.msk.ru>
- <53FCFE1A.3060508@broadcom.com>
- <53FDACD1.8090805@msgid.tls.msk.ru>
- <53FDF8EB.4050905@broadcom.com>
- <54169D4F.2090607@broadcom.com>
- <541EEF17.7020806@msgid.tls.msk.ru>
- <542145B1.4030202@msgid.tls.msk.ru>
- <54216BF1.3060500@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <54216BF1.3060500@broadcom.com>
+	Thu, 4 Sep 2014 22:33:25 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH v3 11/11] ath9k: Fix interface accounting
+Date: Fri,  5 Sep 2014 08:03:19 +0530
+Message-Id: <1409884399-32289-12-git-send-email-sujith@msujith.org> (sfid-20140905_043333_046881_5880B8A6)
+In-Reply-To: <1409884399-32289-1-git-send-email-sujith@msujith.org>
+References: <1409884399-32289-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 23, 2014 at 02:47:45PM +0200, Arend van Spriel wrote:
-> On 09/23/14 12:04, Michael Tokarev wrote:
-> >21.09.2014 19:30, Michael Tokarev wrote:
-> >>Namely, after resume, the card does not work. ARP works, ping and
-> >>DNS sometimes/somewhat work, inital TCP connection establisment
-> >>works, but eg http download does not work, it stalls almost
-> >>immediately.
-> >
-> >It does not work at all anymore again.  Not only after resume but also
-> >after could power up, it stalls right at start of wget for example.
-> >
-> >>http://www.corpit.ru/mjt/tmp/brcmsmac-4313-trace-20140921.dat.gz -- this
-> >>is a trace collected after resuming from suspend-to-disk
-> >
-> >And here -- http://www.corpit.ru/mjt/tmp/brcmsmac-4313-trace-20140923.dat.gz
-> >is another trace, after insmod brcmutils&  brcmsmac, starting trace-cmd record
-> >(with network-manager running in the background), and running a wget on
-> >http://ip-add-ress-of-the-access-point/somefile (which immediately stalls,
-> >showing minimal progress once in a while only).
-> 
-> Well. This log and the one from a few days ago only show me
-> interrupt status changes, which does not tell me a lot. I do see
-> that the hardware signals transmit completions, but it is far less
-> informative then I hoped it would be. Maybe I am missing some debug
-> configuration here?
-> 
-> Seth, would you know?
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Well, there are a few different trace events defined for brcmsmac. This
-would enable the full set:
+Currently, the interface count is maintained globally,
+but this causes problems in RX filter calculation.
+Make the interface count a per-channel-context variable
+to fix this.
 
- $ trace-cmd record -e brcmsmac -e brcmsmac_tx -e brcmsmac_msg
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h  | 2 +-
+ drivers/net/wireless/ath/ath9k/beacon.c | 2 +-
+ drivers/net/wireless/ath/ath9k/debug.c  | 2 +-
+ drivers/net/wireless/ath/ath9k/main.c   | 6 +++---
+ drivers/net/wireless/ath/ath9k/recv.c   | 4 ++--
+ drivers/net/wireless/ath/ath9k/tx99.c   | 2 +-
+ drivers/net/wireless/ath/ath9k/wow.c    | 2 +-
+ 7 files changed, 10 insertions(+), 10 deletions(-)
 
-It's been quite some time since I used them, but I think brcmsmac_tx is
-quite noisy so you may only want to enable that if you already suspect a
-tx problem. I always find it useful to enable the mac80211 and
-mac80211_msg events too when debugging wireless, and I often enable
-cfg80211 events as well (none of these are especially verbose).
-
-Of course all of this depends on having the right config options
-selected. Looks like the relevant options are CONFIG_BRCM_TRACING and
-CONFIG_MAC80211_MESSAGE_TRACING.
-
-Seth
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 4f3da18..46a1d2e 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -350,6 +350,7 @@ struct ath_chanctx {
+ 	bool assigned;
+ 	bool switch_after_beacon;
+ 
++	short nvifs;
+ 	unsigned int rxfilter;
+ };
+ 
+@@ -963,7 +964,6 @@ struct ath_softc {
+ 	bool ps_enabled;
+ 	bool ps_idle;
+ 	short nbcnvifs;
+-	short nvifs;
+ 	unsigned long ps_usecount;
+ 
+ 	struct ath_rx rx;
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index 83f2f2f..a6af855 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -183,7 +183,7 @@ static struct ath_buf *ath9k_beacon_generate(struct ieee80211_hw *hw,
+ 	spin_unlock_bh(&cabq->axq_lock);
+ 
+ 	if (skb && cabq_depth) {
+-		if (sc->nvifs > 1) {
++		if (sc->cur_chan->nvifs > 1) {
+ 			ath_dbg(common, BEACON,
+ 				"Flushing previous cabq traffic\n");
+ 			ath_draintxq(sc, cabq);
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index d227936..5d8b5ea 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -838,7 +838,7 @@ static ssize_t read_file_misc(struct file *file, char __user *user_buf,
+ 			iter_data.nmeshes, iter_data.nwds);
+ 		len += scnprintf(buf + len, sizeof(buf) - len,
+ 			" ADHOC: %i TOTAL: %hi BEACON-VIF: %hi\n",
+-			iter_data.nadhocs, sc->nvifs, sc->nbcnvifs);
++			iter_data.nadhocs, sc->cur_chan->nvifs, sc->nbcnvifs);
+ 	}
+ 
+ 	if (len > sizeof(buf))
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index a202859..cdf1e7d 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1117,7 +1117,7 @@ static int ath9k_add_interface(struct ieee80211_hw *hw,
+ 	mutex_lock(&sc->mutex);
+ 
+ 	if (config_enabled(CONFIG_ATH9K_TX99)) {
+-		if (sc->nvifs >= 1) {
++		if (sc->cur_chan->nvifs >= 1) {
+ 			mutex_unlock(&sc->mutex);
+ 			return -EOPNOTSUPP;
+ 		}
+@@ -1125,7 +1125,7 @@ static int ath9k_add_interface(struct ieee80211_hw *hw,
+ 	}
+ 
+ 	ath_dbg(common, CONFIG, "Attach a VIF of type: %d\n", vif->type);
+-	sc->nvifs++;
++	sc->cur_chan->nvifs++;
+ 
+ 	if (ath9k_uses_beacons(vif->type))
+ 		ath9k_beacon_assign_slot(sc, vif);
+@@ -1207,7 +1207,7 @@ static void ath9k_remove_interface(struct ieee80211_hw *hw,
+ 
+ 	ath9k_p2p_remove_vif(sc, vif);
+ 
+-	sc->nvifs--;
++	sc->cur_chan->nvifs--;
+ 	sc->tx99_vif = NULL;
+ 	if (!ath9k_is_chanctx_enabled())
+ 		list_del(&avp->list);
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 68e56d6..957a877 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -404,7 +404,7 @@ u32 ath_calcrxfilter(struct ath_softc *sc)
+ 		rfilt |= ATH9K_RX_FILTER_CONTROL;
+ 
+ 	if ((sc->sc_ah->opmode == NL80211_IFTYPE_STATION) &&
+-	    (sc->nvifs <= 1) &&
++	    (sc->cur_chan->nvifs <= 1) &&
+ 	    !(sc->cur_chan->rxfilter & FIF_BCN_PRBRESP_PROMISC))
+ 		rfilt |= ATH9K_RX_FILTER_MYBEACON;
+ 	else
+@@ -417,7 +417,7 @@ u32 ath_calcrxfilter(struct ath_softc *sc)
+ 	if (sc->cur_chandef.width != NL80211_CHAN_WIDTH_20_NOHT)
+ 		rfilt |= ATH9K_RX_FILTER_COMP_BAR;
+ 
+-	if (sc->nvifs > 1 || (sc->cur_chan->rxfilter & FIF_OTHER_BSS)) {
++	if (sc->cur_chan->nvifs > 1 || (sc->cur_chan->rxfilter & FIF_OTHER_BSS)) {
+ 		/* This is needed for older chips */
+ 		if (sc->sc_ah->hw_version.macVersion <= AR_SREV_VERSION_9160)
+ 			rfilt |= ATH9K_RX_FILTER_PROM;
+diff --git a/drivers/net/wireless/ath/ath9k/tx99.c b/drivers/net/wireless/ath/ath9k/tx99.c
+index 2397292..8a69d08 100644
+--- a/drivers/net/wireless/ath/ath9k/tx99.c
++++ b/drivers/net/wireless/ath/ath9k/tx99.c
+@@ -174,7 +174,7 @@ static ssize_t write_file_tx99(struct file *file, const char __user *user_buf,
+ 	ssize_t len;
+ 	int r;
+ 
+-	if (sc->nvifs > 1)
++	if (sc->cur_chan->nvifs > 1)
+ 		return -EOPNOTSUPP;
+ 
+ 	len = min(count, sizeof(buf) - 1);
+diff --git a/drivers/net/wireless/ath/ath9k/wow.c b/drivers/net/wireless/ath/ath9k/wow.c
+index 33531d9..5f30e58 100644
+--- a/drivers/net/wireless/ath/ath9k/wow.c
++++ b/drivers/net/wireless/ath/ath9k/wow.c
+@@ -232,7 +232,7 @@ int ath9k_suspend(struct ieee80211_hw *hw,
+ 		goto fail_wow;
+ 	}
+ 
+-	if (sc->nvifs > 1) {
++	if (sc->cur_chan->nvifs > 1) {
+ 		ath_dbg(common, WOW, "WoW for multivif is not yet supported\n");
+ 		ret = 1;
+ 		goto fail_wow;
+-- 
+2.1.0
 
