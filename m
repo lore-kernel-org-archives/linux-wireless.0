@@ -1,45 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:55646 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755185AbaIZOmw (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:59725 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753818AbaIEB36 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Sep 2014 10:42:52 -0400
-Message-ID: <54257B69.3070607@broadcom.com> (sfid-20140926_164300_210064_2D648B03)
-Date: Fri, 26 Sep 2014 16:42:49 +0200
-From: Arend van Spriel <arend@broadcom.com>
+	Thu, 4 Sep 2014 21:29:58 -0400
+From: Sujith Manoharan <sujith@msujith.org>
 MIME-Version: 1.0
-To: Michael Tokarev <mjt@tls.msk.ru>
-CC: Seth Forshee <seth.forshee@canonical.com>,
-	<brcm80211-dev-list@broadcom.com>,
-	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
-Subject: Re: BCM4313 & brcmsmac & 3.12: only semi-working?
-References: <53FDACD1.8090805@msgid.tls.msk.ru> <53FDF8EB.4050905@broadcom.com> <54169D4F.2090607@broadcom.com> <541EEF17.7020806@msgid.tls.msk.ru> <542145B1.4030202@msgid.tls.msk.ru> <54216BF1.3060500@broadcom.com> <20140923134419.GA19016@ubuntu-hedt> <54217AA5.2060803@broadcom.com> <542182BE.2000606@msgid.tls.msk.ru> <542183A6.4070207@msgid.tls.msk.ru> <20140923143124.GC19016@ubuntu-hedt> <54219984.2080601@msgid.tls.msk.ru> <5421AF5C.6000106@broadcom.com> <5421B78E.4050908@msgid.tls.msk.ru> <5422C6E0.3080002@broadcom.com> <8d3f6516-9578-406c-9444-6fe1ba982ea6@email.android.com> <54257779.8010903@msgid.tls.msk.ru>
-In-Reply-To: <54257779.8010903@msgid.tls.msk.ru>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <21513.4640.105293.655789@gargle.gargle.HOWL> (sfid-20140905_033001_551429_064E06EF)
+Date: Fri, 5 Sep 2014 07:00:08 +0530
+To: Ben Greear <greearb@candelatech.com>
+Cc: Sergey Ryazanov <ryazanov.s.a@gmail.com>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel\@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>
+Subject: Re: I cannot disable RTS/CTS on ath9k.
+In-Reply-To: <5408D509.7010000@candelatech.com>
+References: <5408B698.6050606@candelatech.com>
+	<CAHNKnsSLmWOeH7i-K1yFESgSU23FwfUv8oTZF-HkW53+8Yn_qg@mail.gmail.com>
+	<5408D509.7010000@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/26/14 16:26, Michael Tokarev wrote:
-> Okay, so finally, today, without any updates from your side,
-> I opened up the laptop again and inserted a newly bought
-> Intel 6235ANHMW card instead of this creaky brcm4313.  This
-> card works right out of the box - plug it in and set up,
-> both wifi and bluetooth (I had numerous probs with bluetooth
-> too with brcm card), and it works on both 2.4GHz and 5GHz
-> bands.  Connection is very good and stable, I wasn't able
-> to trigger a single glitch no matter how hard I tried.
+Ben Greear wrote:
+> Thanks, that must be this thread:
+> 
+> http://comments.gmane.org/gmane.linux.kernel.wireless.general/84459
+> 
+> I think that explains much of my confusion.  I too would like a way to
+> really disable RTS for testing.  On a mostly quiet channel, sending UDP
+> frames one way, I still see lots of RTS/CTS, which must mean there are
+> lots of retries (assuming Minstel-HT is cause of this).
 
-Good for you.
+The confusion arises from the command usage.
 
-> My only sorry is a lot of wasted time, efforts and money -
-> all that have much better value than trying to deal with
-> non-working drivers.  And my only wish is so vendors stop
-> using non-working parts in their hardware.. But oh well.
+It should be "iw phy phyname set rts <rts threshold|no rts threshold>",
+or something similar, because "rts off" actually removes the threshold,
+it doesn't disable RTS/CTS.
 
-Being bold here, but would you be willing to send that non-working part 
-of hardware to me. I seem to have 4313 cards over here that just work 
-and it would help greatly investigating the issue. I guess you do not 
-care that much anymore, but might be others do (myself included).
-
-Regards,
-Arend
+Sujith
