@@ -1,60 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:42630 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753274AbaI2KxN (ORCPT
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:57614 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756192AbaIEIGS convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Sep 2014 06:53:13 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: Ben Greear <greearb@candelatech.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH] ath10k: request firmware flush in ath10k_flush.
-References: <1411151304-31544-1-git-send-email-greearb@candelatech.com>
-	<CA+BoTQm1rZO+yBbYxihpgEvR1cGZWS4Pr0AP+KMODcG4jpd_jQ@mail.gmail.com>
-	<5421818A.9040501@candelatech.com>
-	<CA+BoTQkZaGSkC9mhE8UF0He0RZWmPghDukdE1A5qiO1UNAZj5Q@mail.gmail.com>
-Date: Mon, 29 Sep 2014 13:53:05 +0300
-In-Reply-To: <CA+BoTQkZaGSkC9mhE8UF0He0RZWmPghDukdE1A5qiO1UNAZj5Q@mail.gmail.com>
-	(Michal Kazior's message of "Wed, 24 Sep 2014 08:50:38 +0200")
-Message-ID: <871tqu3dgu.fsf@kamboji.qca.qualcomm.com> (sfid-20140929_125317_822194_63FA9B0B)
+	Fri, 5 Sep 2014 04:06:18 -0400
+Received: by mail-ie0-f178.google.com with SMTP id tp5so594500ieb.9
+        for <linux-wireless@vger.kernel.org>; Fri, 05 Sep 2014 01:06:17 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1409870378.19259.9.camel@hadess.net>
+References: <1409870378.19259.9.camel@hadess.net>
+Date: Fri, 5 Sep 2014 10:06:17 +0200
+Message-ID: <CACna6rxj7wJjWrvcLsTzFPKJP+g-an1qOwJSXZNCp99uKnhF8Q@mail.gmail.com> (sfid-20140905_100625_845739_9673923A)
+Subject: Re: Broadcom Wi-Fi/Bluetooth on GPIO? (Baytrail tablet)
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Bastien Nocera <hadess@hadess.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	brcm80211 development <brcm80211-dev-list@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
-
-> On 23 September 2014 16:19, Ben Greear <greearb@candelatech.com> wrote:
->> On 09/23/2014 02:16 AM, Michal Kazior wrote:
->>> On 19 September 2014 20:28,  <greearb@candelatech.com> wrote:
->>> [...]
->>>>
->>>> +       /* If we are CT firmware, ask it to flush all tids on all peers
->>>> on
->>>> +        * all vdevs.  Normal firmware will just crash if you do this.
->>>> +        */
->>>> +       if (test_bit(ATH10K_FW_FEATURE_WMI_10X_CT, ar->fw_features))
->>>> +               ath10k_wmi_peer_flush(ar, 0xFFFFFFFF, peer_addr,
->>>> 0xFFFFFFFF);
->>>
->>> I recall you've explained this some time ago, but can you refresh my
->>> memory, please? Is this any different from iterating over all peers
->>> and flushing each? Or does your firmware do so extra magic that is
->>> impossible to do with normal firmware commands?
->>
->> My firmware does that iteration internally.
->>
->> You could probably do that in the driver, but it would be a lot
->> of messages (for all vdevs, all peers, all tids)...
->> I was not sure if there were limits to the number
->> of commands you should attempt during the flush...
+On 5 September 2014 00:39, Bastien Nocera <hadess@hadess.net> wrote:
+> On this tablet, based on a Baytrail SoC, I found reference of this
+> Broadcom device in the DSDT, and I believe it could be the
+> Bluetooth/Wi-Fi chipset (this one[1]?):
+> ---8<---
+> Device (BRC3)
+> {
+>     Name (_ADR, One)  // _ADR: Address
+>     Name (_DEP, Package (0x01)  // _DEP: Dependencies
+>     {
+>         GPO2
+>     })
+>     Name (_HID, "BCM4321")  // _HID: Hardware ID
+>     Name (_CID, "BCM43241")  // _CID: Compatible ID
+>     Name (GMOD, ResourceTemplate ()
+>     {
+>         GpioIo (Exclusive, PullDefault, 0x0000, 0x0000,
+> IoRestrictionOutputOnly,
+>             "\\_SB.GPO2", 0x00, ResourceConsumer, ,
+>             )
+>             {   // Pin list
+>                 0x0014
+>             }
+>     })
+> ---8<---
 >
-> Thanks. I think ath10k should do this instead of having CT-specific
-> flush eventually.
+> Am I correct in thinking that it's a Broadcom chipset? What would it
+> take to get this supported in the kernel? I'm currently stuck on a
+> slightly older kernel (3.16.0) due to Intel graphics driver problems,
+> but I couldn't find anything directly related to this in the current
+> linus tree.
 
-I agree. We should not be forking functionality unless absolutely
-necessary.
+Most of wireless devices in phones/tables/etc. are full MAC devices.
+Broadcom wireless chipset names are a bit tricky. For example chipset
+0x4322 can be found in soft MAC devices as well as in full MAC ones.
+However in case of Full MAC 0x4322 chipset Broadcom used marketing
+name BCM43231.
+
+So I think (it's just a guess) your device is a chipset identifying
+itself as 0x4321 in a Full MAC device with marketing name BCM43241.
+
+It seems that brcmfmac already supports BCM43241 as SDIO device. So
+unless your tables uses some different (unsupported) chip revision, it
+should be just a matter of interface to support your WiFi.
+
+I'm adding brcm80211 ML, they should be able to help a bit more.
+
+[0] http://wireless.kernel.org/en/users/Drivers/brcm80211
 
 -- 
-Kalle Valo
+Rafał
