@@ -1,79 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:36262 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753004AbaILHqX (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:40565 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755297AbaIECdM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Sep 2014 03:46:23 -0400
-Received: by mail-ie0-f171.google.com with SMTP id y20so422794ier.30
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Sep 2014 00:46:22 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <54125652.7060205@netcommwireless.com>
-References: <540FA8D9.2070803@netcommwireless.com>
-	<54100F0E.8030204@broadcom.com>
-	<CAGXE3d9FRLOPQ1pO6WFWy4FF67PGbo5ztfhLELydq3k410731w@mail.gmail.com>
-	<54125652.7060205@netcommwireless.com>
-Date: Fri, 12 Sep 2014 09:46:22 +0200
-Message-ID: <CAGXE3d_QE0zCAgbLaa+93JNM-GhRMvHENqW1zXy_txeV1mKwSg@mail.gmail.com> (sfid-20140912_094632_457699_B65DB276)
-Subject: Re: Not reaching optimum speeds with IEEE 802.11n
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Sourav <sourav.chakraborty@netcommwireless.com>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 4 Sep 2014 22:33:12 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH v3 04/11] ath9k: Fix NoA start time calculation
+Date: Fri,  5 Sep 2014 08:03:12 +0530
+Message-Id: <1409884399-32289-5-git-send-email-sujith@msujith.org> (sfid-20140905_043320_162674_4F8DE825)
+In-Reply-To: <1409884399-32289-1-git-send-email-sujith@msujith.org>
+References: <1409884399-32289-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 12, 2014 at 4:11 AM, Sourav
-<sourav.chakraborty@netcommwireless.com> wrote:
-> On 11/09/14 00:14, Helmut Schaa wrote:
->>
->> On Wed, Sep 10, 2014 at 10:42 AM, Arend van Spriel <arend@broadcom.com>
->> wrote:
->>>
->>> On 09/10/14 03:26, Sourav wrote:
->>>>
->>>> We are using Ralink chip Rt3072L (using rt2800usb drivers rt2800usb.c),
->>
->> The Ralink USB hardware is quite bad in reporting TX status and as
->> such minstrel_ht cannot do proper rate selection.
->> If you watch the rc stats at
->>
->> /sys/kernel/debug/ieee80211/phy0/netdev\:wlan0-0/stations/xx:xx:xx:xx:xx:xx/rc_stats
->> you might see a lot of rate selection "hopping".
->>
->> Regards.
->> Helmut
->
-> please take a look at the attachments.... the first one shows the rc_stats
-> and iperf stats side by side on the router(iperf is running in client mode
-> in the router).....the second attachment is from a laptop which is running
-> iperf in server mode.
->
-> I don't see a lot of rate "hopping" in the rc_stats file, (T,t and P) rates
-> are pretty much stable.... yet there is a big difference between those rates
-> and the throughput using iperf......
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Indeed, rc_stats looks acceptable.
+The start time field in the NoA attribute needs to be
+updated based on the TSF timer when an absence notification
+is sent by the P2P GO. When two channel contexts are active,
+continuous, cyclic NoA is announced by setting the count value to 255,
+but the start time is updated only once, for one beacon and
+the same value is sent in all subsequent beacons, even
+though the timestamp keeps moving.
 
-> when you say "Ralink USB hardware is quite bad in reporting TX status", do
-> you mean that the HW reports less tx rate to minstrel_ht and so its rate
-> calculation is screwed up?
+Fix this by removing the check for 'periodic_noa_duration'
+and assign the interface's start_time/duration values directly
+when there is more than one active context.
 
-The HW sometimes does not report the status of transmitted frames correctly.
-The TX status register is a FIFO of 16 (or similar) elements and if
-the driver is
-not reading it "fast enough" the FIFO will overflow :( at least that
-was the point
-when I was looking at the ralink hardware last time. Not sure if something
-changed recently.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/channel.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-> Can you please let me know the section of code inside Rc_80211_minstrel_ht.c
-> (or somewhere else) which deals with getting the tx rate from ralink HW?
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index 409f912..047a76f 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -377,13 +377,13 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 		    tsf_time - avp->periodic_noa_start > BIT(30))
+ 			avp->periodic_noa_duration = 0;
+ 
+-		if (ctx->active && !avp->periodic_noa_duration) {
++		if (ctx->active) {
+ 			avp->periodic_noa_start = tsf_time;
+ 			avp->periodic_noa_duration =
+ 				TU_TO_USEC(cur_conf->beacon_interval) / 2 -
+ 				sc->sched.channel_switch_time;
+ 			noa_changed = true;
+-		} else if (!ctx->active && avp->periodic_noa_duration) {
++		} else if (!ctx->active) {
+ 			avp->periodic_noa_duration = 0;
+ 			noa_changed = true;
+ 		}
+-- 
+2.1.0
 
-There is no special code in minstrel(_ht) in regard to rt2x00.
-
-Are you able able to get some statistics on the receiver side (your
-windows machine)
-regarding TX rates and AMPDU lengths?
-
-Helmut
