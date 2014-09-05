@@ -1,34 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:5446 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750722AbaIBHSX (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:48036 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752570AbaIEAsU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Sep 2014 03:18:23 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: fix num_legacy_stations tracking
-References: <1409212779-5212-1-git-send-email-michal.kazior@tieto.com>
-Date: Tue, 2 Sep 2014 10:17:45 +0300
-In-Reply-To: <1409212779-5212-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Thu, 28 Aug 2014 09:59:39 +0200")
-Message-ID: <87wq9mo5ie.fsf@kamboji.qca.qualcomm.com> (sfid-20140902_091825_777857_BB50D7FB)
+	Thu, 4 Sep 2014 20:48:20 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+Message-ID: <21513.2124.913221.799816@gargle.gargle.HOWL> (sfid-20140905_024824_012761_C82D3E59)
+Date: Fri, 5 Sep 2014 06:18:12 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: <linux-wireless@vger.kernel.org>, <ath9k-devel@qca.qualcomm.com>
+Subject: Re: [PATCH 0/5] ath9k patches
+In-Reply-To: <20140904172450.GF3467@tuxdriver.com>
+References: <1409730929-30208-1-git-send-email-sujith@msujith.org>
+	<20140904172450.GF3467@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+John W. Linville wrote:
+> I am having a lot of trouble determining which of your series are
+> intended as fixes for the current release (3.17) or updates for the
+> next release (3.18).  In this series, several seem like fixes but
+> "ath9k: Fix ath_startrecv" seems like a cleanup.
+> 
+> Would you like to reorganize your patch submissions as fixes
+> vs. features?  Or do you want them all to be merged as features
+> for 3.18?
 
-> If a station was reassociated, i.e. due to change
-> of supported rates update via sta_rc_update() the
-> num_legacy_stations would be (incorrectly) bumped
-> up leading to unbalanced usage of the var. This in
-> turn could lock rtscts protection up as enabled.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+All these patches are meant for 3.18. I usually mark immediate
+fixes as stable candidates.
 
-Thanks, applied.
+I'll be more explicit about this in future.
 
--- 
-Kalle Valo
+thanks,
+Sujith
