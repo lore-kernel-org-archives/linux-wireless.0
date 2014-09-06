@@ -1,45 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:44761 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755502AbaICT5G (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Sep 2014 15:57:06 -0400
-Received: by mail-wi0-f177.google.com with SMTP id cc10so10515750wib.16
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Sep 2014 12:57:05 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eran Harary <eran.harary@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 24/36] iwlwifi: mvm: fix comment typo
-Date: Wed,  3 Sep 2014 22:56:12 +0300
-Message-Id: <1409774184-24665-24-git-send-email-egrumbach@gmail.com> (sfid-20140903_215757_877722_8F6C5A7E)
-In-Reply-To: <540771E5.6080908@gmail.com>
-References: <540771E5.6080908@gmail.com>
+Received: from s87.loopia.se ([194.9.94.111]:38001 "EHLO s87.loopia.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750804AbaIFDnM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Sep 2014 23:43:12 -0400
+From: Hans Wennborg <hans@hanshq.net>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Hans Wennborg <hans@hanshq.net>
+Subject: [PATCH 1/1] iwl4965: fix %d confusingly prefixed with 0x in format string
+Date: Fri,  5 Sep 2014 20:41:48 -0700
+Message-Id: <1409974908-8035-1-git-send-email-hans@hanshq.net> (sfid-20140906_054346_016979_8FC77063)
+In-Reply-To: <20140825201801.GH1966@tuxdriver.com>
+References: <20140825201801.GH1966@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eran Harary <eran.harary@intel.com>
-
-Signed-off-by: Eran Harary <eran.harary@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Hans Wennborg <hans@hanshq.net>
 ---
- drivers/net/wireless/iwlwifi/mvm/ops.c | 2 +-
+ drivers/net/wireless/iwlegacy/4965-mac.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
-index e3be34f..166d17c 100644
---- a/drivers/net/wireless/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
-@@ -495,7 +495,7 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
- 		goto out_free;
- 
- 	/*
--	 * Even if nvm exists in the nvm_file driver should read agin the nvm
-+	 * Even if nvm exists in the nvm_file driver should read again the nvm
- 	 * from the nic because there might be entries that exist in the OTP
- 	 * and not in the file.
- 	 * for nics with no_power_up_nic_in_init: rely completley on nvm_file
+diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
+index 3dcbe2c..cf7996f 100644
+--- a/drivers/net/wireless/iwlegacy/4965-mac.c
++++ b/drivers/net/wireless/iwlegacy/4965-mac.c
+@@ -4633,7 +4633,7 @@ il4965_store_tx_power(struct device *d, struct device_attribute *attr,
+ 	else {
+ 		ret = il_set_tx_power(il, val, false);
+ 		if (ret)
+-			IL_ERR("failed setting tx power (0x%d).\n", ret);
++			IL_ERR("failed setting tx power (0x%08x).\n", ret);
+ 		else
+ 			ret = count;
+ 	}
 -- 
-1.9.1
+2.1.0.rc2.206.gedb03e5
 
