@@ -1,78 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:38997 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757154AbaIRBv2 (ORCPT
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:57984 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751347AbaIFRDo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Sep 2014 21:51:28 -0400
-Message-ID: <541A3A8D.9010908@oracle.com> (sfid-20140918_035145_377431_98EC0D8F)
-Date: Wed, 17 Sep 2014 21:51:09 -0400
-From: Sasha Levin <sasha.levin@oracle.com>
+	Sat, 6 Sep 2014 13:03:44 -0400
+Received: by mail-ie0-f177.google.com with SMTP id at20so3231473iec.36
+        for <linux-wireless@vger.kernel.org>; Sat, 06 Sep 2014 10:03:43 -0700 (PDT)
+Date: Sat, 6 Sep 2014 13:00:48 -0400
+From: Jade Bilkey <herself@thefumon.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
+Subject: [PATCH v2] ath5k: added debugfs file for dumping eeprom
+Message-ID: <20140906170048.GA32300@apiculture.lan> (sfid-20140906_190348_178190_B2989FE1)
 MIME-Version: 1.0
-To: Kees Cook <keescook@chromium.org>, linux-kernel@vger.kernel.org
-CC: Ming Lei <ming.lei@canonical.com>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	James Morris <james.l.morris@oracle.com>,
-	David Howells <dhowells@redhat.com>, linux-doc@vger.kernel.org,
-	linux-security-module@vger.kernel.org, linux-firmware@kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Dave Jones <davej@redhat.com>
-Subject: Re: [PATCH 2/7] test: add firmware_class loader test
-References: <1405373897-31671-1-git-send-email-keescook@chromium.org> <1405373897-31671-3-git-send-email-keescook@chromium.org>
-In-Reply-To: <1405373897-31671-3-git-send-email-keescook@chromium.org>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/14/2014 05:38 PM, Kees Cook wrote:
-> This provides a simple interface to trigger the firmware_class loader
-> to test built-in, filesystem, and user helper modes. Additionally adds
-> tests via the new interface to the selftests tree.
-> 
-> Signed-off-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: Jade Bilkey <herself@thefumon.com>
+---
 
-Hi folks,
+v2: vmalloc not included in some configs
+   Switched to using kmalloc
 
-While fuzzing with trinity inside a KVM tools guest running the latest -next
-kernel, I've stumbled on the following spew:
+ drivers/net/wireless/ath/ath5k/debug.c | 96 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 96 insertions(+)
 
-[  413.999779] misc test_firmware: Falling back to user helper
-[  414.003728] WARNING: CPU: 25 PID: 9860 at lib/kobject.c:209 kobject_add_internal+0x3a3/0x450()
-[  414.006815] kobject: (ffff8807b4ef5dc8): attempted to be registered with empty name!
-[  414.009482] Modules linked in:
-[  414.010818] CPU: 25 PID: 9860 Comm: trinity-c662 Tainted: G        W      3.17.0-rc5-next-20140917-sasha-00041-gd01267b #1198
-[  414.014626]  0000000000000009 ffff880236547a68 ffffffff9d56d655 0000000000000000
-[  414.017585]  ffff880236547ab8 ffff880236547aa8 ffffffff9a15f3d1 00000000001e3540
-[  414.020733]  ffff8807b4ef5dc8 00000000ffffffea ffff88043d114108 ffff8807b4ef5db8
-[  414.023345] Call Trace:
-[  414.024254] dump_stack (lib/dump_stack.c:52)
-[  414.026232] warn_slowpath_common (kernel/panic.c:432)
-[  414.028355] warn_slowpath_fmt (kernel/panic.c:446)
-[  414.030366] ? __raw_spin_lock_init (kernel/locking/spinlock_debug.c:24)
-[  414.032369] kobject_add_internal (lib/kobject.c:211 (discriminator 1))
-[  414.034313] ? __dynamic_pr_debug (lib/dynamic_debug.c:561)
-[  414.036254] kobject_add (lib/kobject.c:403)
-[  414.038017] ? device_private_init (drivers/base/core.c:929)
-[  414.040340] ? klist_init (lib/klist.c:90)
-[  414.044729] device_add (drivers/base/core.c:1010)
-[  414.049854] ? dev_set_name (drivers/base/core.c:876)
-[  414.060790] _request_firmware (drivers/base/firmware_class.c:892 drivers/base/firmware_class.c:957 drivers/base/firmware_class.c:1139)
-[  414.062814] request_firmware (drivers/base/firmware_class.c:1189)
-[  414.064796] trigger_request_store (lib/test_firmware.c:68)
-[  414.066774] dev_attr_store (drivers/base/core.c:138)
-[  414.068531] sysfs_kf_write (fs/sysfs/file.c:115)
-[  414.070826] kernfs_fop_write (fs/kernfs/file.c:308)
-[  414.074648] ? kernfs_vma_page_mkwrite (fs/kernfs/file.c:267)
-[  414.076864] do_loop_readv_writev (fs/read_write.c:710)
-[  414.078947] ? kernfs_vma_page_mkwrite (fs/kernfs/file.c:267)
-[  414.081269] do_readv_writev (fs/read_write.c:842)
-[  414.083281] ? preempt_count_sub (kernel/sched/core.c:2634)
-[  414.085380] ? mutex_lock_nested (./arch/x86/include/asm/preempt.h:98 kernel/locking/mutex.c:599 kernel/locking/mutex.c:616)
-[  414.087401] ? __fdget_pos (fs/file.c:714)
-[  414.089286] vfs_writev (fs/read_write.c:881)
-[  414.091243] SyS_writev (fs/read_write.c:914 fs/read_write.c:905)
-[  414.093053] tracesys_phase2 (arch/x86/kernel/entry_64.S:529)
+diff --git a/drivers/net/wireless/ath/ath5k/debug.c b/drivers/net/wireless/ath/ath5k/debug.c
+index b8d031a..ca3cd06 100644
+--- a/drivers/net/wireless/ath/ath5k/debug.c
++++ b/drivers/net/wireless/ath/ath5k/debug.c
+@@ -894,6 +894,100 @@ static const struct file_operations fops_queue = {
+ 	.llseek = default_llseek,
+ };
+ 
++/* debugfs: eeprom */
++
++struct eeprom_private {
++	u16 *buf;
++	int len;
++};
++
++static int open_file_eeprom(struct inode *inode, struct file *file)
++{
++	struct eeprom_private *ep;
++	struct ath5k_hw *ah = inode->i_private;
++	bool res;
++	int i, ret;
++	u32 eesize;
++	u16 val, *buf;
++
++	/* Get eeprom size */
++
++	res = ath5k_hw_nvram_read(ah, AR5K_EEPROM_SIZE_UPPER, &val);
++	if (!res)
++		return -EACCES;
++
++	if (val == 0) {
++		eesize = AR5K_EEPROM_INFO_MAX + AR5K_EEPROM_INFO_BASE;
++	} else {
++		eesize = (val & AR5K_EEPROM_SIZE_UPPER_MASK) <<
++			AR5K_EEPROM_SIZE_ENDLOC_SHIFT;
++		ath5k_hw_nvram_read(ah, AR5K_EEPROM_SIZE_LOWER, &val);
++		eesize = eesize | val;
++	}
++
++	if (eesize > 4096)
++		return -EINVAL;
++
++	/* Create buffer and read in eeprom */
++
++	buf = kmalloc(eesize, GFP_KERNEL);
++	if (!buf) {
++		ret = -ENOMEM;
++		goto err;
++	}
++
++	for (i = 0; i < eesize; ++i) {
++		AR5K_EEPROM_READ(i, val);
++		buf[i] = val;
++	}
++
++	/* Create private struct and assign to file */
++
++	ep = kmalloc(sizeof(*ep), GFP_KERNEL);
++	if (!ep) {
++		ret = -ENOMEM;
++		goto freebuf;
++	}
++
++	ep->buf = buf;
++	ep->len = i;
++
++	file->private_data = (void *)ep;
++
++	return 0;
++
++freebuf:
++	kfree(buf);
++err:
++	return ret;
++
++}
++
++static ssize_t read_file_eeprom(struct file *file, char __user *user_buf,
++				   size_t count, loff_t *ppos)
++{
++	struct eeprom_private *ep = file->private_data;
++
++	return simple_read_from_buffer(user_buf, count, ppos, ep->buf, ep->len);
++}
++
++static int release_file_eeprom(struct inode *inode, struct file *file)
++{
++	struct eeprom_private *ep = file->private_data;
++
++	kfree(ep->buf);
++	kfree(ep);
++
++	return 0;
++}
++
++static const struct file_operations fops_eeprom = {
++	.open = open_file_eeprom,
++	.read = read_file_eeprom,
++	.release = release_file_eeprom,
++	.owner = THIS_MODULE,
++};
++
+ 
+ void
+ ath5k_debug_init_device(struct ath5k_hw *ah)
+@@ -921,6 +1015,8 @@ ath5k_debug_init_device(struct ath5k_hw *ah)
+ 
+ 	debugfs_create_file("misc", S_IRUSR, phydir, ah, &fops_misc);
+ 
++	debugfs_create_file("eeprom", S_IRUSR, phydir, ah, &fops_eeprom);
++
+ 	debugfs_create_file("frameerrors", S_IWUSR | S_IRUSR, phydir, ah,
+ 			    &fops_frameerrors);
+ 
+-- 
+2.1.0
 
-
-Thanks,
-Sasha
