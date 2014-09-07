@@ -1,76 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:63691 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752329AbaIAHbL (ORCPT
+Received: from mail-pd0-f178.google.com ([209.85.192.178]:62605 "EHLO
+	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750822AbaIGHnB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Sep 2014 03:31:11 -0400
-From: Avinash Patil <patila@marvell.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
-	<huxm@marvell.com>, <yangyang@marvell.com>, <cluo@marvell.com>,
-	<maithili@marvell.com>, Avinash Patil <patila@marvell.com>
-Subject: [PATCH 04/17] mwifiex: support for event done interrupt
-Date: Mon, 1 Sep 2014 18:28:52 +0530
-Message-ID: <1409576345-13717-5-git-send-email-patila@marvell.com> (sfid-20140901_093115_567093_861CB5DE)
-In-Reply-To: <1409576345-13717-1-git-send-email-patila@marvell.com>
-References: <1409576345-13717-1-git-send-email-patila@marvell.com>
+	Sun, 7 Sep 2014 03:43:01 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1409907054-17596-1-git-send-email-johannes@sipsolutions.net>
+References: <1409907054-17596-1-git-send-email-johannes@sipsolutions.net>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Sun, 7 Sep 2014 10:42:45 +0300
+Message-ID: <CA+XVXfeA=sakSDwgYqziJ2cyLTximvcWKvj8JiZf9ic1efK+wQ@mail.gmail.com> (sfid-20140907_094335_047480_DFB20613)
+Subject: Re: [RFC v2] device coredump: add new device coredump class
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-kernel@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Luciano Coelho <luca@coelho.fi>, Kalle Valo <kvalo@adurom.com>,
+	dri-devel@lists.freedesktop.org,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds support for writing CPU event interrupt done back
-to device.
-Patch also increases interrupt buffer ring size from 4 to 8.
+On Fri, Sep 5, 2014 at 11:50 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> Many devices run firmware and/or complex hardware, and most of that
+> can have bugs. When it misbehaves, however, it is often much harder
+> to debug than software running on the host.
+>
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
----
- drivers/net/wireless/mwifiex/pcie.c | 7 +++++++
- drivers/net/wireless/mwifiex/pcie.h | 5 +++--
- 2 files changed, 10 insertions(+), 2 deletions(-)
+Very nice concept IMO :)
 
-diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
-index 27c2bf8..2ada1b7 100644
---- a/drivers/net/wireless/mwifiex/pcie.c
-+++ b/drivers/net/wireless/mwifiex/pcie.c
-@@ -1726,6 +1726,13 @@ static int mwifiex_pcie_process_event_ready(struct mwifiex_adapter *adapter)
- 		   buffer is released. This is just to make things simpler,
- 		   we need to find a better method of managing these buffers.
- 		*/
-+	} else {
-+		if (mwifiex_write_reg(adapter, PCIE_CPU_INT_EVENT,
-+				      CPU_INTR_EVENT_DONE)) {
-+			dev_warn(adapter->dev,
-+				 "Write register failed\n");
-+			return -1;
-+		}
- 	}
- 
- 	return 0;
-diff --git a/drivers/net/wireless/mwifiex/pcie.h b/drivers/net/wireless/mwifiex/pcie.h
-index a1a8fd3..200e8b0 100644
---- a/drivers/net/wireless/mwifiex/pcie.h
-+++ b/drivers/net/wireless/mwifiex/pcie.h
-@@ -40,8 +40,8 @@
- #define MWIFIEX_TXBD_MASK			0x3F
- #define MWIFIEX_RXBD_MASK			0x3F
- 
--#define MWIFIEX_MAX_EVT_BD			0x04
--#define MWIFIEX_EVTBD_MASK			0x07
-+#define MWIFIEX_MAX_EVT_BD			0x08
-+#define MWIFIEX_EVTBD_MASK			0x0f
- 
- /* PCIE INTERNAL REGISTERS */
- #define PCIE_SCRATCH_0_REG				0xC10
-@@ -69,6 +69,7 @@
- #define CPU_INTR_DOOR_BELL				BIT(1)
- #define CPU_INTR_SLEEP_CFM_DONE			BIT(2)
- #define CPU_INTR_RESET					BIT(3)
-+#define CPU_INTR_EVENT_DONE				BIT(5)
- 
- #define HOST_INTR_DNLD_DONE				BIT(0)
- #define HOST_INTR_UPLD_RDY				BIT(1)
--- 
-1.8.1.4
+[....]
+> +void dev_coredumpm(struct device *dev, struct module *owner,
+> +                  const void *data, size_t datalen, gfp_t gfp,
+> +                  ssize_t (*read)(char *buffer, loff_t offset, size_t count,
+> +                                  const void *data, size_t datalen),
+> +                  void (*free)(const void *data))
+> +{
+> +       static atomic_t devcd_count = ATOMIC_INIT(0);
+> +       struct devcd_entry *devcd;
+> +       struct device *existing;
+> +
+> +       existing = class_find_device(&devcd_class, NULL, dev,
+> +                                    devcd_match_failing);
+> +       if (existing) {
+> +               put_device(existing);
+> +               return;
+> +       }
+> +
+> +       if (!try_module_get(owner))
+> +               return;
+> +
+> +       devcd = kzalloc(sizeof(*devcd), gfp);
+> +       if (!devcd)
+> +               goto put_module;
+> +
+> +       devcd->owner = owner;
+> +       devcd->data = data;
+> +       devcd->datalen = datalen;
+> +       devcd->read = read;
+> +       devcd->free = free;
+> +       devcd->failing_dev = get_device(dev);
+> +
+> +       device_initialize(&devcd->devcd_dev);
+> +
+> +       dev_set_name(&devcd->devcd_dev, "devcd%d",
+> +                    atomic_inc_return(&devcd_count));
+> +       devcd->devcd_dev.class = &devcd_class;
+> +
+> +       if (device_add(&devcd->devcd_dev))
+> +               goto put_device;
+> +
+> +       if (sysfs_create_link(&devcd->devcd_dev.kobj, &dev->kobj,
+> +                             "failing_device"))
+> +               /* nothing - symlink will be missing */;
+> +
+> +       if (sysfs_create_link(&dev->kobj, &devcd->devcd_dev.kobj,
+> +                             "dev_coredump"))
+> +               /* nothing - symlink will be missing */;
 
+Aren't you confusing the compiler here and above, doing the
+INIT_DELAYED_WORK only when link creation failed? I would have thought
+some braces are necessary..
+
+> +
+> +       INIT_DELAYED_WORK(&devcd->del_wk, devcd_del);
+> +       schedule_delayed_work(&devcd->del_wk, DEVCD_TIMEOUT);
+> +
+> +       return;
+> + put_device:
+> +       put_device(&devcd->devcd_dev);
+> + put_module:
+> +       module_put(owner);
+> +}
+> +EXPORT_SYMBOL(dev_coredumpm);
