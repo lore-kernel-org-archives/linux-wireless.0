@@ -1,192 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:42061 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757178AbaISSFD (ORCPT
+Received: from mail-we0-f180.google.com ([74.125.82.180]:64835 "EHLO
+	mail-we0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752583AbaIGRc0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Sep 2014 14:05:03 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: ath10k@lists.infradead.org, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 3/3] ath10k: support 32+ stations.
-Date: Fri, 19 Sep 2014 11:04:50 -0700
-Message-Id: <1411149890-12618-3-git-send-email-greearb@candelatech.com> (sfid-20140919_200511_131860_C777A455)
-In-Reply-To: <1411149890-12618-1-git-send-email-greearb@candelatech.com>
-References: <1411149890-12618-1-git-send-email-greearb@candelatech.com>
+	Sun, 7 Sep 2014 13:32:26 -0400
+Received: by mail-we0-f180.google.com with SMTP id t60so165131wes.39
+        for <linux-wireless@vger.kernel.org>; Sun, 07 Sep 2014 10:32:24 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCHv3 1/2] iw: update nl80211.h
+Date: Sun,  7 Sep 2014 19:32:19 +0200
+Message-Id: <1410111140-4340-2-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140907_193237_526948_2EB29AB2)
+In-Reply-To: <1410111140-4340-1-git-send-email-lorenzo.bianconi83@gmail.com>
+References: <1410111140-4340-1-git-send-email-lorenzo.bianconi83@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Sync nl80211_attrs enumeration and nl80211_feature_flags enumeration with
+mac80211-next tree. This change is necessary to add support to dynack
+configuration.
 
-Support up to 32 stations when using CT firmware.
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/core.c |  4 +++-
- drivers/net/wireless/ath/ath10k/hw.h   |  6 +++++
- drivers/net/wireless/ath/ath10k/mac.c  | 42 ++++++++++++++++++++++++++++++++--
- drivers/net/wireless/ath/ath10k/wmi.c  | 25 ++++++++++++++++----
- 4 files changed, 69 insertions(+), 8 deletions(-)
+ nl80211.h | 32 ++++++++++++++++++++++++++++++++
+ 1 file changed, 32 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 37e3166..507f31a 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -845,7 +845,9 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode)
- 	if (status)
- 		goto err_hif_stop;
+diff --git a/nl80211.h b/nl80211.h
+index be9519b..8951c31 100644
+--- a/nl80211.h
++++ b/nl80211.h
+@@ -1591,6 +1591,20 @@ enum nl80211_commands {
+  *	creation then the new interface will be owned by the netlink socket
+  *	that created it and will be destroyed when the socket is closed
+  *
++ * @NL80211_ATTR_TDLS_INITIATOR: flag attribute indicating the current end is
++ *	the TDLS link initiator.
++ *
++ * @NL80211_ATTR_USE_RRM: flag for indicating whether the current connection
++ *	shall support Radio Resource Measurements (11k). This attribute can be
++ *	used with %NL80211_CMD_ASSOCIATE and %NL80211_CMD_CONNECT requests.
++ *	User space applications are expected to use this flag only if the
++ *	underlying device supports these minimal RRM features:
++ *		%NL80211_FEATURE_DS_PARAM_SET_IE_IN_PROBES,
++ *		%NL80211_FEATURE_QUIET,
++ *	If this flag is used, driver must add the Power Capabilities IE to the
++ *	association request. In addition, it must also set the RRM capability
++ *	flag in the association request's Capability Info field.
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -1931,6 +1945,10 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_CSA_C_OFFSETS_TX,
+ 	NL80211_ATTR_MAX_CSA_COUNTERS,
  
--	if (test_bit(ATH10K_FW_FEATURE_WMI_10X, ar->fw_features))
-+	if (test_bit(ATH10K_FW_FEATURE_WMI_10X_CT, ar->fw_features))
-+		ar->free_vdev_map = (1LL << TARGET_10X_NUM_VDEVS_CT) - 1;
-+	else if (test_bit(ATH10K_FW_FEATURE_WMI_10X, ar->fw_features))
- 		ar->free_vdev_map = (1LL << TARGET_10X_NUM_VDEVS) - 1;
- 	else
- 		ar->free_vdev_map = (1LL << TARGET_NUM_VDEVS) - 1;
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 3cf5702..9583555 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -122,6 +122,12 @@ enum ath10k_mcast2ucast_mode {
- #define TARGET_10X_AST_SKID_LIMIT		16
- #define TARGET_10X_NUM_PEERS			(128 + (TARGET_10X_NUM_VDEVS))
- #define TARGET_10X_NUM_PEERS_MAX		128
++	NL80211_ATTR_TDLS_INITIATOR,
 +
-+/* Over-rides for Candela Technologies firmware */
-+#define TARGET_10X_NUM_VDEVS_CT			32
-+#define TARGET_10X_NUM_PEERS_CT			(32 + (TARGET_10X_NUM_VDEVS_CT))
-+#define TARGET_10X_AST_SKID_LIMIT_CT		(TARGET_10X_NUM_PEERS_CT * TARGET_10X_NUM_PEER_AST)
++	NL80211_ATTR_USE_RRM,
 +
- #define TARGET_10X_NUM_OFFLOAD_PEERS		0
- #define TARGET_10X_NUM_OFFLOAD_REORDER_BUFS	0
- #define TARGET_10X_NUM_PEER_KEYS		2
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index e1ddac4..b517f71 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3497,7 +3497,9 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
- 		/*
- 		 * New station addition.
- 		 */
--		if (test_bit(ATH10K_FW_FEATURE_WMI_10X, ar->fw_features))
-+		if (test_bit(ATH10K_FW_FEATURE_WMI_10X_CT, ar->fw_features))
-+			max_num_peers = TARGET_10X_NUM_PEERS_CT - 1;
-+		else if (test_bit(ATH10K_FW_FEATURE_WMI_10X, ar->fw_features))
- 			max_num_peers = TARGET_10X_NUM_PEERS_MAX - 1;
- 		else
- 			max_num_peers = TARGET_NUM_PEERS;
-@@ -4601,6 +4603,22 @@ static const struct ieee80211_iface_limit ath10k_10x_if_limits[] = {
- 	},
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -3951,6 +3969,16 @@ enum nl80211_ap_sme_features {
+  * @NL80211_FEATURE_AP_MODE_CHAN_WIDTH_CHANGE: This driver supports dynamic
+  *	channel bandwidth change (e.g., HT 20 <-> 40 MHz channel) during the
+  *	lifetime of a BSS.
++ * @NL80211_FEATURE_DS_PARAM_SET_IE_IN_PROBES: This device adds a DS Parameter
++ *	Set IE to probe requests.
++ * @NL80211_FEATURE_WFA_TPC_IE_IN_PROBES: This device adds a WFA TPC Report IE
++ *	to probe requests.
++ * @NL80211_FEATURE_QUIET: This device, in client mode, supports Quiet Period
++ *	requests sent to it by an AP.
++ * @NL80211_FEATURE_TX_POWER_INSERTION: This device is capable of inserting the
++ *	current tx power value into the TPC Report IE in the spectrum
++ *	management TPC Report action frame, and in the Radio Measurement Link
++ *	Measurement Report action frame.
+  */
+ enum nl80211_feature_flags {
+ 	NL80211_FEATURE_SK_TX_STATUS			= 1 << 0,
+@@ -3972,6 +4000,10 @@ enum nl80211_feature_flags {
+ 	NL80211_FEATURE_USERSPACE_MPM			= 1 << 16,
+ 	NL80211_FEATURE_ACTIVE_MONITOR			= 1 << 17,
+ 	NL80211_FEATURE_AP_MODE_CHAN_WIDTH_CHANGE	= 1 << 18,
++	NL80211_FEATURE_DS_PARAM_SET_IE_IN_PROBES	= 1 << 19,
++	NL80211_FEATURE_WFA_TPC_IE_IN_PROBES		= 1 << 20,
++	NL80211_FEATURE_QUIET				= 1 << 21,
++	NL80211_FEATURE_TX_POWER_INSERTION		= 1 << 22,
  };
  
-+static const struct ieee80211_iface_limit ath10k_10x_ct_if_limits[] = {
-+	{
-+	.max	= TARGET_10X_NUM_VDEVS_CT,
-+	.types	= BIT(NL80211_IFTYPE_STATION)
-+		| BIT(NL80211_IFTYPE_P2P_CLIENT)
-+	},
-+	{
-+	.max	= 3,
-+	.types	= BIT(NL80211_IFTYPE_P2P_GO)
-+	},
-+	{
-+	.max	= 7,
-+	.types	= BIT(NL80211_IFTYPE_AP)
-+	},
-+};
-+
- static const struct ieee80211_iface_combination ath10k_if_comb[] = {
- 	{
- 		.limits = ath10k_if_limits,
-@@ -4627,6 +4645,22 @@ static const struct ieee80211_iface_combination ath10k_10x_if_comb[] = {
- 	},
- };
- 
-+static const struct ieee80211_iface_combination ath10k_10x_ct_if_comb[] = {
-+	{
-+		.limits = ath10k_10x_ct_if_limits,
-+		.n_limits = ARRAY_SIZE(ath10k_10x_ct_if_limits),
-+		.max_interfaces = TARGET_10X_NUM_VDEVS_CT,
-+		.num_different_channels = 1,
-+		.beacon_int_infra_match = true,
-+#ifdef CONFIG_ATH10K_DFS_CERTIFIED
-+		.radar_detect_widths =	BIT(NL80211_CHAN_WIDTH_20_NOHT) |
-+					BIT(NL80211_CHAN_WIDTH_20) |
-+					BIT(NL80211_CHAN_WIDTH_40) |
-+					BIT(NL80211_CHAN_WIDTH_80),
-+#endif
-+	},
-+};
-+
- static struct ieee80211_sta_vht_cap ath10k_create_vht_cap(struct ath10k *ar)
- {
- 	struct ieee80211_sta_vht_cap vht_cap = {0};
-@@ -4863,7 +4897,11 @@ int ath10k_mac_register(struct ath10k *ar)
- 	 */
- 	ar->hw->queues = 4;
- 
--	if (test_bit(ATH10K_FW_FEATURE_WMI_10X, ar->fw_features)) {
-+	if (test_bit(ATH10K_FW_FEATURE_WMI_10X_CT, ar->fw_features)) {
-+		ar->hw->wiphy->iface_combinations = ath10k_10x_ct_if_comb;
-+		ar->hw->wiphy->n_iface_combinations =
-+			ARRAY_SIZE(ath10k_10x_ct_if_comb);
-+	} else if (test_bit(ATH10K_FW_FEATURE_WMI_10X, ar->fw_features)) {
- 		ar->hw->wiphy->iface_combinations = ath10k_10x_if_comb;
- 		ar->hw->wiphy->n_iface_combinations =
- 			ARRAY_SIZE(ath10k_10x_if_comb);
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 2c42bd5..76abdd7 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -2245,6 +2245,13 @@ static void ath10k_wmi_10x_service_ready_event_rx(struct ath10k *ar,
- 	int ret;
- 	struct wmi_service_ready_event_10x *ev = (void *)skb->data;
- 	DECLARE_BITMAP(svc_bmap, WMI_SERVICE_MAX) = {};
-+	int my_num_peers = TARGET_10X_NUM_PEERS;
-+	int my_num_vdevs = TARGET_10X_NUM_VDEVS;
-+
-+	if (test_bit(ATH10K_FW_FEATURE_WMI_10X_CT, ar->fw_features)) {
-+		my_num_peers = TARGET_10X_NUM_PEERS_CT;
-+		my_num_vdevs = TARGET_10X_NUM_VDEVS_CT;
-+	}
- 
- 	if (skb->len < sizeof(*ev)) {
- 		ath10k_warn(ar, "Service ready event was %d B but expected %zu B. Wrong firmware version?\n",
-@@ -2309,9 +2316,9 @@ static void ath10k_wmi_10x_service_ready_event_rx(struct ath10k *ar,
- 			 * peers, 1 extra for self peer on target */
- 			/* this needs to be tied, host and target
- 			 * can get out of sync */
--			num_units = TARGET_10X_NUM_PEERS + 1;
-+			num_units = my_num_peers + 1;
- 		else if (num_unit_info & NUM_UNITS_IS_NUM_VDEVS)
--			num_units = TARGET_10X_NUM_VDEVS + 1;
-+			num_units = my_num_vdevs + 1;
- 
- 		ath10k_dbg(ar, ATH10K_DBG_WMI,
- 			   "wmi mem_req_id %d num_units %d num_unit_info %d unit size %d actual units %d\n",
-@@ -3057,12 +3064,20 @@ static int ath10k_wmi_10x_cmd_init(struct ath10k *ar)
- 	struct wmi_resource_config_10x config = {};
- 	u32 len, val;
- 	int i;
-+	u32 skid_limit;
- 
--	config.num_vdevs = __cpu_to_le32(TARGET_10X_NUM_VDEVS);
--	config.num_peers = __cpu_to_le32(TARGET_10X_NUM_PEERS);
-+	if (test_bit(ATH10K_FW_FEATURE_WMI_10X_CT, ar->fw_features)) {
-+		config.num_vdevs = __cpu_to_le32(TARGET_10X_NUM_VDEVS_CT);
-+		config.num_peers = __cpu_to_le32(TARGET_10X_NUM_PEERS_CT);
-+		skid_limit = TARGET_10X_AST_SKID_LIMIT_CT;
-+	} else {
-+		config.num_vdevs = __cpu_to_le32(TARGET_10X_NUM_VDEVS);
-+		config.num_peers = __cpu_to_le32(TARGET_10X_NUM_PEERS);
-+		skid_limit = TARGET_10X_AST_SKID_LIMIT;
-+	}
-+	config.ast_skid_limit = __cpu_to_le32(skid_limit);
- 	config.num_peer_keys = __cpu_to_le32(TARGET_10X_NUM_PEER_KEYS);
- 	config.num_tids = __cpu_to_le32(TARGET_10X_NUM_TIDS);
--	config.ast_skid_limit = __cpu_to_le32(TARGET_10X_AST_SKID_LIMIT);
- 	config.tx_chain_mask = __cpu_to_le32(TARGET_10X_TX_CHAIN_MASK);
- 	config.rx_chain_mask = __cpu_to_le32(TARGET_10X_RX_CHAIN_MASK);
- 	config.rx_timeout_pri_vo = __cpu_to_le32(TARGET_10X_RX_TIMEOUT_LO_PRI);
+ /**
 -- 
-1.7.11.7
+1.9.1
 
