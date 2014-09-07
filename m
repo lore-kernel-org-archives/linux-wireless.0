@@ -1,32 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:44785 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756950AbaIELbc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Sep 2014 07:31:32 -0400
-Message-ID: <1409916684.1940.8.camel@jlt4.sipsolutions.net> (sfid-20140905_133151_905927_75A03AAF)
-Subject: Re: [PATCHv5 0/2] configure dynack through mac80211/cfg80211 stack
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>
-Date: Fri, 05 Sep 2014 13:31:24 +0200
-In-Reply-To: <1409867861-3911-1-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140904_235745_382608_527F8DE1)
-References: <1409867861-3911-1-git-send-email-lorenzo.bianconi83@gmail.com>
-	 (sfid-20140904_235745_382608_527F8DE1)
-Content-Type: text/plain; charset="UTF-8"
+Received: from shards.monkeyblade.net ([149.20.54.216]:56493 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752329AbaIGXLd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 7 Sep 2014 19:11:33 -0400
+Date: Sun, 07 Sep 2014 16:11:33 -0700 (PDT)
+Message-Id: <20140907.161133.1026363467035732296.davem@davemloft.net> (sfid-20140908_011154_178304_ACB5DB7B)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2014-09-05
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20140905150453.GB3454@tuxdriver.com>
+References: <20140905150453.GB3454@tuxdriver.com>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-09-04 at 23:57 +0200, Lorenzo Bianconi wrote:
-> Enable ACK timeout estimation algorithm (dynack) using mac80211
-> set_coverage_class API. Dynack is activated passing -1 as coverage class
-> to lower drivers and it is automatically disabled setting valid value for
-> coverage class. Currently dynack is supported just by ath9k.
-> Fix set_coverage_class signature for p54, ath9k, ath9k_htc and ath5k drivers.
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Fri, 5 Sep 2014 11:04:53 -0400
 
-Applied.
+> Please pull this batch of fixes intended for the 3.17 stream...
+> 
+> For the mac80211 bits, Johannes says:
+> 
+> "Here are a few fixes for mac80211. One has been discussed for a while
+> and adds a terminating NUL-byte to the alpha2 sent to userspace, which
+> shouldn't be necessary but since many places treat it as a string we
+> couldn't move to just sending two bytes.
+> 
+> In addition to that, we have two VLAN fixes from Felix, a mesh fix, a
+> fix for the recently introduced RX aggregation offload, a revert for
+> a broken patch (that luckily didn't really cause any harm) and a small
+> fix for alignment in debugfs."
+> 
+> For the iwlwifi bits, Emmanuel says:
+> 
+> "I revert a patch that disabled CTS to self in dvm because users
+> reported issues. The revert is CCed to stable since the offending
+> patch was sent to stable too. I also bump the firmware API versions
+> since a new firmware is coming up. On top of that, Marcel fixes a
+> bug I introduced while fixing a bug in our Kconfig file."
+> 
+> Please let me know if there are problems!
 
-johannes
-
+Pulled, thanks John.
