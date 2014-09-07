@@ -1,94 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:51800 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752564AbaIITaL (ORCPT
+Received: from mail-we0-f178.google.com ([74.125.82.178]:65262 "EHLO
+	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752542AbaIGRcZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Sep 2014 15:30:11 -0400
-Date: Tue, 9 Sep 2014 15:16:12 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: bluetooth-next 2014-09-09
-Message-ID: <20140909191612.GM29412@tuxdriver.com> (sfid-20140909_213039_678879_819D70C4)
-References: <20140909155449.GA7412@t440s>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140909155449.GA7412@t440s>
+	Sun, 7 Sep 2014 13:32:25 -0400
+Received: by mail-we0-f178.google.com with SMTP id q58so2149431wes.37
+        for <linux-wireless@vger.kernel.org>; Sun, 07 Sep 2014 10:32:24 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCHv3 0/2] add auto parameter to set distance command
+Date: Sun,  7 Sep 2014 19:32:18 +0200
+Message-Id: <1410111140-4340-1-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140907_193235_591509_E97E3CB3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 09, 2014 at 08:54:49AM -0700, Johan Hedberg wrote:
-> Hi John,
-> 
-> This set of patches is intended for 3.18. Most of the patches are LE SMP
-> (Security Manager Protocol) fixes/improvements, but there are also some
-> 6lowpan fixes as well as a fix for the btusb HCI driver.
-> 
-> Please let me know if there are any issues pulling. Thanks.
-> 
-> Johan
-> 
-> ---
-> The following changes since commit 61a3d4f9d52c00b2016bc27fc66b10a194043f76:
-> 
->   Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless (2014-09-08 11:14:56 -0400)
-> 
-> are available in the git repository at:
-> 
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next.git for-upstream
-> 
-> for you to fetch changes up to 39e90c77637b3892a39f2908aea57539e961c50e:
-> 
->   Bluetooth: 6lowpan: Route packets that are not meant to peer via correct device (2014-09-09 15:51:47 +0200)
-> 
-> ----------------------------------------------------------------
-> Behan Webster (1):
->       Bluetooth: LLVMLinux: Remove VLAIS from bluetooth/amp.c
-> 
-> Champion Chen (1):
->       Bluetooth: Fix issue with USB suspend in btusb driver
-> 
-> Johan Hedberg (31):
->       Bluetooth: Fix incorrect LE CoC PDU length restriction based on HCI MTU
->       Bluetooth: Remove unnecessary l2cap_chan_unlock before l2cap_chan_add
->       Bluetooth: Fix hci_conn reference counting for fixed channels
->       Bluetooth: Set addr_type only when it's needed
->       Bluetooth: Optimize connection parameter lookup for LE connections
->       Bluetooth: Improve *_get() functions to return the object type
->       Bluetooth: Fix using hci_conn_get() for hci_conn pointers
->       Bluetooth: Refactor connection parameter freeing into its own function
->       Bluetooth: Use zero timeout for immediate scheduling
->       Bluetooth: Fix hci_conn reference counting with hci_chan
->       Bluetooth: Set disc_timeout to 0 when calling hci_chan_del
->       Bluetooth: Ignore incoming data after initiating disconnection
->       Bluetooth: Remove hci_conn_hold/drop from hci_chan
->       Bluetooth: Set discon_timeout to 0 in l2cap_conn_del
->       Bluetooth: Use hci_disconnect for immediate disconnection from SMP
->       Bluetooth: Remove unused l2cap_conn_shutdown API
->       Bluetooth: Fix SMP error and response to be mutually exclusive
->       Bluetooth: Update hci_disconnect() to return an error value
->       Bluetooth: Use hci_disconnect() for mgmt_disconnect_device()
->       Bluetooth: Move clock offset reading into hci_disconnect()
->       Bluetooth: Add clarifying comment for LE CoC result value
->       Bluetooth: Remove unnecessary checks after canceling SMP security timer
->       Bluetooth: Don't take any action in smp_resume_cb if not encrypted
->       Bluetooth: Move identity address update behind a workqueue
->       Bluetooth: Remove unnecessary deferred work for SMP key distribution
->       Bluetooth: Fix locking of the SMP context
->       Bluetooth: Add define for key distribution mask
->       Bluetooth: Fix calling smp_distribute_keys() when still waiting for keys
->       Bluetooth: Add strict checks for allowed SMP PDUs
->       Bluetooth: Fix dereferencing conn variable before NULL check
->       Bluetooth: Fix mgmt pairing failure when authentication fails
-> 
-> Jukka Rissanen (3):
->       Bluetooth: 6lowpan: Increase the connection timeout value
->       Bluetooth: 6lowpan: Set the peer IPv6 address correctly
->       Bluetooth: 6lowpan: Route packets that are not meant to peer via correct device
+Add auto parameter to set distance command in order to enable ACK timeout
+estimation algorithm (dynack). Currently dynack is supported just by ath9k
 
-Pulling now...
+This patch is based on "configure dynack through mac80211/cfg80211 stack"
+patchset sent on linux-wireless
+
+Changes since v2:
+- define NL80211_FEATURE_ACKTO_ESTIMATION to report driver dynack capability
+- rebase on top of mac80211-next tree
+
+Changes since v1:
+- add dynack info to info command
+
+Lorenzo Bianconi (2):
+  iw: update nl80211.h
+  iw: add auto parameter to set distance command
+
+ info.c    |  2 ++
+ nl80211.h | 44 ++++++++++++++++++++++++++++++++++++++++++++
+ phy.c     | 43 +++++++++++++++++++++++++------------------
+ 3 files changed, 71 insertions(+), 18 deletions(-)
 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.9.1
+
