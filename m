@@ -1,138 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f172.google.com ([74.125.82.172]:40075 "EHLO
-	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755502AbaICT5B (ORCPT
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:56946 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754040AbaIHQyY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Sep 2014 15:57:01 -0400
-Received: by mail-we0-f172.google.com with SMTP id q59so9212640wes.3
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Sep 2014 12:57:00 -0700 (PDT)
+	Mon, 8 Sep 2014 12:54:24 -0400
+Received: by mail-wi0-f173.google.com with SMTP id cc10so3027197wib.6
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Sep 2014 09:54:22 -0700 (PDT)
+Message-ID: <540DDF37.5030801@gmail.com> (sfid-20140908_185427_696959_0DDEA5A3)
+Date: Mon, 08 Sep 2014 19:54:15 +0300
 From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: David Spinadel <david.spinadel@intel.com>,
+MIME-Version: 1.0
+To: John Linville <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
 	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 21/36] iwlwifi: mvm: enable passive fragmented scan changes
-Date: Wed,  3 Sep 2014 22:56:09 +0300
-Message-Id: <1409774184-24665-21-git-send-email-egrumbach@gmail.com> (sfid-20140903_220113_772010_7E083219)
-In-Reply-To: <540771E5.6080908@gmail.com>
-References: <540771E5.6080908@gmail.com>
+Subject: pull request: iwlwifi 2014-09-08
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="EkJ6OMaCnfEHe2OC7m9LecQuOas4usu5j"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Spinadel <david.spinadel@intel.com>
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--EkJ6OMaCnfEHe2OC7m9LecQuOas4usu5j
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Enable fragmented scan that was diabled due to a FW bug.
-New fixed FWs use a TLV bit to advertise fragmented scan support.
+Hi John,
 
-Signed-off-by: David Spinadel <david.spinadel@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-fw.h   |  3 +++
- drivers/net/wireless/iwlwifi/mvm/scan.c | 48 ++++++++++++++++++++++++++-------
- 2 files changed, 42 insertions(+), 9 deletions(-)
+I think I have caught up completely now - and because I had quite a bit t=
+o cover this pull request is rather big for an -rc5. Sorry about that.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-fw.h b/drivers/net/wireless/iwlwifi/iwl-fw.h
-index 1bb5193..99e0ec4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-fw.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-fw.h
-@@ -125,6 +125,8 @@ enum iwl_ucode_tlv_flag {
-  * @IWL_UCODE_TLV_API_CSA_FLOW: ucode can do unbind-bind flow for CSA.
-  * @IWL_UCODE_TLV_API_DISABLE_STA_TX: ucode supports tx_disable bit.
-  * @IWL_UCODE_TLV_API_LMAC_SCAN: This ucode uses LMAC unified scan API.
-+ * @IWL_UCODE_TLV_API_FRAGMENTED_SCAN: This ucode supports active dwell time
-+ *	longer than the passive one, which is essential for fragmented scan.
-  */
- enum iwl_ucode_tlv_api {
- 	IWL_UCODE_TLV_API_WOWLAN_CONFIG_TID	= BIT(0),
-@@ -133,6 +135,7 @@ enum iwl_ucode_tlv_api {
- 	IWL_UCODE_TLV_API_CSA_FLOW		= BIT(4),
- 	IWL_UCODE_TLV_API_DISABLE_STA_TX	= BIT(5),
- 	IWL_UCODE_TLV_API_LMAC_SCAN		= BIT(6),
-+	IWL_UCODE_TLV_API_FRAGMENTED_SCAN	= BIT(8),
- };
- 
- /**
-diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
-index 004b1f5..d01954d 100644
---- a/drivers/net/wireless/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
-@@ -279,6 +279,7 @@ static void iwl_mvm_scan_calc_params(struct iwl_mvm *mvm,
- {
- 	bool global_bound = false;
- 	enum ieee80211_band band;
-+	u8 frag_passive_dwell = 0;
- 
- 	ieee80211_iterate_active_interfaces_atomic(mvm->hw,
- 					    IEEE80211_IFACE_ITER_NORMAL,
-@@ -288,12 +289,36 @@ static void iwl_mvm_scan_calc_params(struct iwl_mvm *mvm,
- 	if (!global_bound)
- 		goto not_bound;
- 
--	params->suspend_time = 100;
--	params->max_out_time = 600;
-+	params->suspend_time = 30;
-+	params->max_out_time = 170;
- 
- 	if (iwl_mvm_low_latency(mvm)) {
--		params->suspend_time = 250;
--		params->max_out_time = 250;
-+		if (mvm->fw->ucode_capa.api[0] &
-+		    IWL_UCODE_TLV_API_FRAGMENTED_SCAN) {
-+			params->suspend_time = 105;
-+			params->max_out_time = 70;
-+			frag_passive_dwell = 20;
-+		} else {
-+			params->suspend_time = 120;
-+			params->max_out_time = 120;
-+		}
-+	}
-+
-+	if (frag_passive_dwell && (mvm->fw->ucode_capa.api[0] &
-+				   IWL_UCODE_TLV_API_FRAGMENTED_SCAN)) {
-+		/*
-+		 * P2P device scan should not be fragmented to avoid negative
-+		 * impact on P2P device discovery. Configure max_out_time to be
-+		 * equal to dwell time on passive channel. Take a longest
-+		 * possible value, one that corresponds to 2GHz band
-+		 */
-+		if (vif->type == NL80211_IFTYPE_P2P_DEVICE) {
-+			u32 passive_dwell =
-+				iwl_mvm_get_passive_dwell(IEEE80211_BAND_2GHZ);
-+			params->max_out_time = passive_dwell;
-+		} else {
-+			params->passive_fragmented = true;
-+		}
- 	}
- 
- 	if (flags & NL80211_SCAN_FLAG_LOW_PRIORITY)
-@@ -302,7 +327,11 @@ static void iwl_mvm_scan_calc_params(struct iwl_mvm *mvm,
- not_bound:
- 
- 	for (band = IEEE80211_BAND_2GHZ; band < IEEE80211_NUM_BANDS; band++) {
--		params->dwell[band].passive = iwl_mvm_get_passive_dwell(band);
-+		if (params->passive_fragmented)
-+			params->dwell[band].passive = frag_passive_dwell;
-+		else
-+			params->dwell[band].passive =
-+				iwl_mvm_get_passive_dwell(band);
- 		params->dwell[band].active = iwl_mvm_get_active_dwell(band,
- 								      n_ssids);
- 	}
-@@ -1100,10 +1129,11 @@ iwl_mvm_build_generic_unified_scan_cmd(struct iwl_mvm *mvm,
- 				       struct iwl_mvm_scan_params *params)
- {
- 	memset(cmd, 0, ksize(cmd));
--	cmd->active_dwell = (u8)params->dwell[IEEE80211_BAND_2GHZ].active;
--	cmd->passive_dwell = (u8)params->dwell[IEEE80211_BAND_2GHZ].passive;
--	/* TODO: Use params; now fragmented isn't used. */
--	cmd->fragmented_dwell = 0;
-+	cmd->active_dwell = params->dwell[IEEE80211_BAND_2GHZ].active;
-+	cmd->passive_dwell = params->dwell[IEEE80211_BAND_2GHZ].passive;
-+	if (params->passive_fragmented)
-+		cmd->fragmented_dwell =
-+				params->dwell[IEEE80211_BAND_2GHZ].passive;
- 	cmd->rx_chain_select = iwl_mvm_scan_rx_chain(mvm);
- 	cmd->max_out_time = cpu_to_le32(params->max_out_time);
- 	cmd->suspend_time = cpu_to_le32(params->suspend_time);
--- 
-1.9.1
+I re-enable scheduled scan on firmware that contain the fix for the bug t=
+hat Linus reported.
+A few trivial fixes: endianity issues, the same DTIM period fix that I di=
+d in mac80211.
+Eyal fixes a few issues we identified with EAPOL, we now send them just a=
+s if they were management frames, this solves interrop issues.
+Johannes has another set of trivial fixes, while Luca fixes the way we co=
+nfigure the filters in the firmware. Last but not least, a new device is =
+added by Oren.
 
+The following changes since commit d88c8958dc13b4e4eb7fc57e3f06dc1c4abc7b=
+1f:
+
+  iwlwifi: bump firmware API version to 10 for 7000 and 8000 (2014-09-01 =
+09:50:14 +0300)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git=
+ for-john
+
+for you to fetch changes up to 2cddddc56a1179aa71b460ad616176c237d4a243:
+
+  iwlwifi: mvm: fix an overflow in iwl_mvm_get_signal_strength (2014-09-0=
+8 19:47:22 +0300)
+
+----------------------------------------------------------------
+Eliad Peller (1):
+      iwlwifi: increase DEFAULT_MAX_TX_POWER
+
+Emmanuel Grumbach (4):
+      iwlwifi: mvm: enable scheduled scan on newest firmware
+      iwlwifi: mvm: fix endianity issues with Smart Fifo commands
+      iwlwiwi: mvm: use bss_conf->dtim_period instead of conf.ps_dtim_per=
+iod
+      iwlwifi: dvm: disable power save by default
+
+Eyal Shapira (2):
+      iwlwifi: mvm: treat EAPOLs like mgmt frames wrt rate
+      iwlwifi: mvm: fix an overflow in iwl_mvm_get_signal_strength
+
+Johannes Berg (3):
+      iwlwifi: mvm: BT Coex - remove shadowing variable
+      iwlwifi: mvm: correctly handle PM/QoS changes from mac80211
+      iwlwifi: mvm: BT Coex - always initialize smps_mode
+
+Luciano Coelho (1):
+      iwlwifi: mvm: set MAC_FILTER_IN_BEACON correctly for STA/P2P client=
+
+
+Oren Givon (1):
+      iwlwifi: add PCI IDs and add then new 3165 series
+
+ drivers/net/wireless/iwlwifi/dvm/power.c       |  2 +-
+ drivers/net/wireless/iwlwifi/iwl-7000.c        | 16 ++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-config.h      |  3 +++
+ drivers/net/wireless/iwlwifi/iwl-nvm-parse.c   |  4 +---
+ drivers/net/wireless/iwlwifi/mvm/coex.c        |  9 +++------
+ drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c |  3 +--
+ drivers/net/wireless/iwlwifi/mvm/fw-api.h      |  4 ++--
+ drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c    | 10 +++++-----
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c    | 25 ++++++++++++++------=
+-----
+ drivers/net/wireless/iwlwifi/mvm/power.c       |  5 ++---
+ drivers/net/wireless/iwlwifi/mvm/rx.c          |  6 +++---
+ drivers/net/wireless/iwlwifi/mvm/sf.c          |  2 +-
+ drivers/net/wireless/iwlwifi/mvm/tx.c          |  8 ++++++--
+ drivers/net/wireless/iwlwifi/pcie/drv.c        |  7 +++++++
+ 14 files changed, 65 insertions(+), 39 deletions(-)
+
+
+--EkJ6OMaCnfEHe2OC7m9LecQuOas4usu5j
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUDd88AAoJEC0Llv5uNjIBib0P/0OAf5YAPslOdSs/T+iTmL3R
+gNaZmZk/Y2sAV0FUTqwoa1GWFFWEbEqAK5lbuYVWsuyNZXKh6xRzOfNDInMdQOoa
+JozHG65a5Tf4uuT+9oDCX8x4x/JvtTEHgXF/mrdVD9KTbQVk7EaRD+lnjSs6r91t
+z1UpO4gywcFboJlL+OM3pRD/ywr/ayXtKiOW4CMxBtarw8zevC0Qvtvj+0G5luwD
+pboWxXP/nT8UCrCa18koTKgcBUUOuGHx2/tQ+fbb+7249sEWkGo83+e6OUj+3kYW
+eb/zJ3cWCHplYR63rl6ev23uS+ttsvB7oVtJ9vTWkGXdbOuahNt8j9lRVlLPPwma
+b1y+UMX79gUxQfPFjjRZelZXDLu4vsV4369c4dJKpSbgcWmD0f+GXdENeVquDKOy
+VV3J5UtpcWNaWJLdfVDfgVsiZAkpyebFpy/p8rjRFXvfKo16k1GMKTBMLubUSRuj
+QbBcbabpgavLCx5sqO/1v42jfsEgNoWOS6ReBkYnwQ4DSq4MiJOZjvJTo5nDPLf6
+zv16etUYr5Frywfny1MeJx3xsnrZEogIXYAj0bBSaL12kZM6qXlP3fTCUWSkHjNc
+yCpZFk/zO+RZI8oZQszp0mJAtvlD4HESVYXtA7RQ62oZMYrSfO73kPWWpBRnMKo9
+6UvOQbKgzuODE4AoHW+2
+=Oxzk
+-----END PGP SIGNATURE-----
+
+--EkJ6OMaCnfEHe2OC7m9LecQuOas4usu5j--
