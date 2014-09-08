@@ -1,44 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from isrv.corpit.ru ([86.62.121.231]:57566 "EHLO isrv.corpit.ru"
+Received: from s3.sipsolutions.net ([5.9.151.49]:40003 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752876AbaIXOve (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Sep 2014 10:51:34 -0400
-In-Reply-To: <5422C6E0.3080002@broadcom.com>
-References: <53FDACD1.8090805@msgid.tls.msk.ru> <53FDF8EB.4050905@broadcom.com> <54169D4F.2090607@broadcom.com> <541EEF17.7020806@msgid.tls.msk.ru> <542145B1.4030202@msgid.tls.msk.ru> <54216BF1.3060500@broadcom.com> <20140923134419.GA19016@ubuntu-hedt> <54217AA5.2060803@broadcom.com> <542182BE.2000606@msgid.tls.msk.ru> <542183A6.4070207@msgid.tls.msk.ru> <20140923143124.GC19016@ubuntu-hedt> <54219984.2080601@msgid.tls.msk.ru> <5421AF5C.6000106@broadcom.com> <5421B78E.4050908@msgid.tls.msk.ru> <5422C6E0.3080002@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8
-Subject: Re: BCM4313 & brcmsmac & 3.12: only semi-working?
-From: Michael Tokarev <mjt@tls.msk.ru>
-Date: Wed, 24 Sep 2014 18:51:23 +0400
-To: Arend van Spriel <arend@broadcom.com>
-CC: Seth Forshee <seth.forshee@canonical.com>,
-	brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Message-ID: <8d3f6516-9578-406c-9444-6fe1ba982ea6@email.android.com> (sfid-20140924_165143_178212_FFAE7402)
+	id S1751891AbaIHOvo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Sep 2014 10:51:44 -0400
+Message-ID: <1410187894.7983.15.camel@jlt4.sipsolutions.net> (sfid-20140908_165202_201645_9230E2FF)
+Subject: pull-request: mac80211 2014-09-08
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 08 Sep 2014 16:51:34 +0200
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi John,
 
->I looked at the log. I see download commence because the packets 
->received of 1562 bytes length. So within one second I see little over 
->200 packets so approx. 3Mbps which is not impressive but I don't know 
->what can be expected.
+One more for mac80211, hopefully that should be it. If anyone thinks I
+missed anything please holler. I'll have one more for mac80211-next
+later this week.
 
-When it works it goes 50+ Mbps. I always tested at the same place and the signal there is good. D/load speed is 11Mb/sec steady. When it works. Today after powercycle it worked fine at 11 megabytes per second, I transferred several gigs of data.
+Note I'm going to be on vacation soon (EOW) until early October, so if
+anything super urgent shows up I'd appreciate if you could merge it for
+me.
 
-> Indeed after that it stalls and we only seem to 
->receive small packets of 179 bytes that seem to end up in 
->cfg80211_mgmt_rx. It could be that the hardware is somehow bogged and 
->can not receive at higher modulations as management frames are 
->transmitted at lower rates. The hardware will drop packets that are 
->having FCS (aka. checksum) errors. The brcmsmac is missing some code to
->
->read fcs error count from hardware, but I will get back to you with a 
->patch that we can use to confirm this.
+Thanks,
+johannes
 
-I see. Today I ordered an intel wifi  card (which also works at 5MHz) and will swap bcm4313 with it. Since the notebook has to be disassembled for this (it doesn't have separate window for wifi card), and the procedure is rather complex I don't want to do it more times than necessary... ;)
 
-Thanks! 
+The following changes since commit 14b058bbce9279ee432f0944ca14df69f4a0d170:
 
-/mjt from android phone
+  mac80211: fix agg_status debugfs file alignment (2014-08-26 11:13:37 +0200)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-john-2014-09-08
+
+for you to fetch changes up to 785e21a89d77923852869f83ebd2689ec4d5ce54:
+
+  mac80211: use bss_conf->dtim_period instead of conf.ps_dtim_period (2014-09-05 13:41:08 +0200)
+
+----------------------------------------------------------------
+Two more fixes for mac80211 - one of them addresses a long-standing
+issue that we only found when using vendor events more frequently;
+the other addresses some bad information being reported in userspace
+that people were starting to actually look at.
+
+----------------------------------------------------------------
+Emmanuel Grumbach (1):
+      mac80211: use bss_conf->dtim_period instead of conf.ps_dtim_period
+
+Johannes Berg (1):
+      nl80211: clear skb cb before passing to netlink
+
+ net/mac80211/sta_info.c | 2 +-
+ net/wireless/nl80211.c  | 6 ++++++
+ 2 files changed, 7 insertions(+), 1 deletion(-)
+
+
