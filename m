@@ -1,47 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:52022 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750999AbaIOFNL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Sep 2014 01:13:11 -0400
-Received: by mail-we0-f174.google.com with SMTP id t60so3275767wes.5
-        for <linux-wireless@vger.kernel.org>; Sun, 14 Sep 2014 22:13:10 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eyal Shapira <eyal@wizery.com>,
-	Eyal Shapira <eyalx.shapira@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 04/28] iwlwifi: enable LDPC in 8000 chip family
-Date: Mon, 15 Sep 2014 08:12:36 +0300
-Message-Id: <1410757980-2138-4-git-send-email-egrumbach@gmail.com> (sfid-20140915_073116_361993_DB4EB373)
-In-Reply-To: <5416742C.3070804@gmail.com>
-References: <5416742C.3070804@gmail.com>
+Received: from arrakis.dune.hu ([78.24.191.176]:44221 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753922AbaIHQac (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Sep 2014 12:30:32 -0400
+Message-ID: <540DD99D.3060705@openwrt.org> (sfid-20140908_183036_544180_B61853E3)
+Date: Mon, 08 Sep 2014 18:30:21 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>,
+	linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	ikstream86@gmail.com
+Subject: Re: [PATCH 1/2] mac80211: Unify rate statistic variables between
+ Minstrel & Minstrel_HT
+References: <1408716333-18492-1-git-send-email-thomas@net.t-labs.tu-berlin.de> <1408716333-18492-2-git-send-email-thomas@net.t-labs.tu-berlin.de>
+In-Reply-To: <1408716333-18492-2-git-send-email-thomas@net.t-labs.tu-berlin.de>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
-
-This chip family supports LDPC so enable it.
-
-Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-8000.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-8000.c b/drivers/net/wireless/iwlwifi/iwl-8000.c
-index c1ef165..db67631 100644
---- a/drivers/net/wireless/iwlwifi/iwl-8000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-8000.c
-@@ -103,6 +103,7 @@ static const struct iwl_base_params iwl8000_base_params = {
- };
- 
- static const struct iwl_ht_params iwl8000_ht_params = {
-+	.ldpc = true,
- 	.ht40_bands = BIT(IEEE80211_BAND_2GHZ) | BIT(IEEE80211_BAND_5GHZ),
- };
- 
--- 
-1.9.1
-
+On 2014-08-22 16:05, Thomas Huehn wrote:
+> Minstrel and Mintrel_HT use individual structs to keep track of rate
+> statistics. Unify those variables in struct minstrel_rate_stats and
+> move it to rc80211_minstrel.h for common usage. This is a clean-up
+> patch to prepare Minstrel and Minstrel_HT codebase for upcoming TPC.
+> 
+> Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+Acked-by: Felix Fietkau <nbd@openwrt.org>
