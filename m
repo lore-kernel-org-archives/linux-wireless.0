@@ -1,51 +1,154 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:40854 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751246AbaIJNpm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Sep 2014 09:45:42 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH 3/5] ath9k: Clear offchannel duration properly
-Date: Wed, 10 Sep 2014 19:15:58 +0530
-Message-Id: <1410356760-10901-4-git-send-email-sujith@msujith.org> (sfid-20140910_154546_341094_62C2B4DA)
-In-Reply-To: <1410356760-10901-1-git-send-email-sujith@msujith.org>
-References: <1410356760-10901-1-git-send-email-sujith@msujith.org>
+Received: from arrakis.dune.hu ([78.24.191.176]:44196 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753267AbaIHQaA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Sep 2014 12:30:00 -0400
+Message-ID: <540DD981.1040403@openwrt.org> (sfid-20140908_183007_398861_263B97F5)
+Date: Mon, 08 Sep 2014 18:29:53 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>,
+	linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	ikstream86@gmail.com
+Subject: Re: [PATCH 2/2] mac80211: improve minstrel_ht rate sorting by throughput
+ & probability
+References: <1408716333-18492-1-git-send-email-thomas@net.t-labs.tu-berlin.de> <1408716333-18492-3-git-send-email-thomas@net.t-labs.tu-berlin.de>
+In-Reply-To: <1408716333-18492-3-git-send-email-thomas@net.t-labs.tu-berlin.de>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On 2014-08-22 16:05, Thomas Huehn wrote:
+> This patch improves the way minstrel_ht sorts rates according to throughput
+> and success probability. 3 FOR-loops across the entire rate and mcs group set
+> in function minstrel_ht_update_stats() which where used to determine the
+> fastest, second fastest and most robust rate are reduced to 2 FOR-loops.
+> 
+> The sorted list of rates according throughput is extended to the best four
+> rates as we need them in upcoming joint rate and power control. The sorting
+> is done via the new function minstrel_ht_sort_best_tp_rates(). The annotation
+> of those 4 best throughput rates in the debugfs file rc-stats is changes to:
+> "A,B,C,D", where A is the fastest rate and D the 4th fastest.
+> 
+> Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+> Tested-by: Stefan Venz <ikstream86@gmail.com>
+> ---
+>  net/mac80211/rc80211_minstrel_ht.c         | 215 ++++++++++++++++-------------
+>  net/mac80211/rc80211_minstrel_ht.h         |  17 +--
+>  net/mac80211/rc80211_minstrel_ht_debugfs.c |   8 +-
+>  3 files changed, 128 insertions(+), 112 deletions(-)
+> 
+> diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+> index 85c1e74..7f03c01 100644
+> --- a/net/mac80211/rc80211_minstrel_ht.c
+> +++ b/net/mac80211/rc80211_minstrel_ht.c
+> @@ -228,8 +227,47 @@ minstrel_ht_calc_tp(struct minstrel_ht_sta *mi, int group, int rate)
+>  	nsecs += minstrel_mcs_groups[group].duration[rate];
+>  
+>  	/* prob is scaled - see MINSTREL_FRAC above */
+> -	tp = 1000000 * ((prob * 1000) / nsecs);
+> -	mr->cur_tp = MINSTREL_TRUNC(tp);
+> +	mr->cur_tp = 1000000 * ((prob * 1000) / nsecs);
+> +}
+> +
+> +/*
+> + * Find & sort topmost throughput rates
+> + *
+> + * If multiple rates provide equal throughput the sorting is based on their
+> + * current success probability. Higher success probability is preferred among
+> + * MCS groups, CCK rates do not provide aggregation and are therefore at last.
+> + */
+> +static inline void
+You should drop the 'inline'
 
-Clearing the offchannel duration value in the
-scheduler unconditionally breaks NoA when
-multiple contexts are active and an offchannel
-request is deferred, for example, in a scan run.
+> +minstrel_ht_sort_best_tp_rates(struct minstrel_ht_sta *mi, unsigned int index,
+> +			       unsigned int *tp_list)
+> +{
+> +	int j = MAX_THR_RATES;
+> +	unsigned int cur_group, cur_idx, cur_thr, cur_prob;
+> +	unsigned int tmp_group, tmp_idx;
+> +
+> +	cur_group = index / MCS_GROUP_RATES;
+> +	cur_idx = index % MCS_GROUP_RATES;
+> +	cur_thr = mi->groups[cur_group].rates[cur_idx].cur_tp;
+> +	cur_prob = mi->groups[cur_group].rates[cur_idx].probability;
+> +	tmp_group = tp_list[j - 1] / MCS_GROUP_RATES;
+> +	tmp_idx = tp_list[j - 1] % MCS_GROUP_RATES;
+> +
+> +
+> +	while (j > 0 && (cur_thr > mi->groups[tmp_group].rates[tmp_idx].cur_tp ||
+> +	       (cur_thr == mi->groups[tmp_group].rates[tmp_idx].cur_tp &&
+> +	       cur_prob > mi->groups[tmp_group].rates[tmp_idx].probability &&
+> +	       cur_group != MINSTREL_CCK_GROUP))) {
+Missing one whitespace in indentation in the above two lines
+> +			j--;
+> +			tmp_group = tp_list[j - 1] / MCS_GROUP_RATES;
+> +			tmp_idx = tp_list[j - 1] % MCS_GROUP_RATES;
+One tab too many.
+I think it would probably make the code more readable if you just do
+while (j > 0) { ... } and move the other checks inside the block.
+	
 
-Fix this by clearing the duration only if there
-is no pending offchannel request.
+> +	}
+> +
+> +	if (j < MAX_THR_RATES - 1) {
+> +		memmove(&tp_list[j + 1], &tp_list[j], (sizeof(*tp_list) *
+> +		       (MAX_THR_RATES - (j + 1))));
+> +	}
+> +	if (j < MAX_THR_RATES)
+> +		tp_list[j] = index;
+>  }
+>  
+>  /*
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/channel.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+> @@ -274,24 +312,17 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
+>  
+>  		mi->sample_count++;
+>  
+> +		/* (re)Initialize group rate indexes */
+> +		for(j = 0; j < MAX_THR_RATES; j++){
+> +			tmp_group_tp_rate[j] = group;
+> +		}
+You can drop the {} here.
 
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index ab3d29d..09ff8a6 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -1065,7 +1065,10 @@ void ath_chanctx_set_next(struct ath_softc *sc, bool force)
- 	sc->cur_chan = sc->next_chan;
- 	sc->cur_chan->stopped = false;
- 	sc->next_chan = NULL;
--	sc->sched.offchannel_duration = 0;
-+
-+	if (!sc->sched.offchannel_pending)
-+		sc->sched.offchannel_duration = 0;
-+
- 	if (sc->sched.state != ATH_CHANCTX_STATE_FORCE_ACTIVE)
- 		sc->sched.state = ATH_CHANCTX_STATE_IDLE;
- 
--- 
-2.1.0
 
+> @@ -300,82 +331,72 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
+>  [...]
+>  
+> +	/* try to sample all available rates during each interval */
+> +	mi->sample_count *= 8;
+> +
+>  #ifdef CONFIG_MAC80211_DEBUGFS
+>  	/* use fixed index if set */
+>  	if (mp->fixed_rate_idx != -1) {
+> -		mi->max_tp_rate = mp->fixed_rate_idx;
+> -		mi->max_tp_rate2 = mp->fixed_rate_idx;
+> +		for (i = 0; i < 4; i++) {
+> +			mi->max_tp_rate[i] = mp->fixed_rate_idx;
+> +		}
+You can drop the {}
+>  		mi->max_prob_rate = mp->fixed_rate_idx;
+>  	}
+>  #endif
+>  
+> +	/* Reset update timer */
+>  	mi->stats_update = jiffies;
+>  }
+>  
+> @@ -735,8 +756,8 @@ minstrel_get_sample_rate(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
+>  	 * if the link is working perfectly.
+>  	 */
+>  	sample_dur = minstrel_get_duration(sample_idx);
+> -	if (sample_dur >= minstrel_get_duration(mi->max_tp_rate2) &&
+> -	    (mi->max_prob_streams <
+> +	if (sample_dur >= minstrel_get_duration(mi->max_tp_rate[1]) &&
+> +	    (minstrel_mcs_groups[mi->max_tp_rate[0] / MCS_GROUP_RATES].streams <
+Changing the code from checking max_prob_rate streams to max_tp_rate
+streams should be done in a separate change and properly explained.
+
+>  	     minstrel_mcs_groups[sample_group].streams ||
+>  	     sample_dur >= minstrel_get_duration(mi->max_prob_rate))) {
+>  		if (mr->sample_skipped < 20)
+
+- Felix
