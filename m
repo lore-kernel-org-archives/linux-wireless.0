@@ -1,377 +1,373 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:47034 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753712AbaILJLa (ORCPT
+Received: from mail-pd0-f175.google.com ([209.85.192.175]:45151 "EHLO
+	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751430AbaIHGBt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Sep 2014 05:11:30 -0400
-From: Avinash Patil <patila@marvell.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
-	<huxm@marvell.com>, <yangyang@marvell.com>, <cluo@marvell.com>,
-	<maithili@marvell.com>, Avinash Patil <patila@marvell.com>
-Subject: [PATCHv2 15/16] mwifiex: add rx workqueue support
-Date: Fri, 12 Sep 2014 20:08:59 +0530
-Message-ID: <1410532740-3173-16-git-send-email-patila@marvell.com> (sfid-20140912_111324_482547_864E23C8)
-In-Reply-To: <1410532740-3173-1-git-send-email-patila@marvell.com>
-References: <1410532740-3173-1-git-send-email-patila@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 8 Sep 2014 02:01:49 -0400
+Received: by mail-pd0-f175.google.com with SMTP id z10so6065044pdj.34
+        for <linux-wireless@vger.kernel.org>; Sun, 07 Sep 2014 23:01:49 -0700 (PDT)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
+	devel@lists.open80211s.org, Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH] {nl, cfg, mac}80211: Implement hidden mesh ID
+Date: Mon,  8 Sep 2014 14:01:22 +0800
+Message-Id: <1410156082-17313-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20140908_080155_075426_9B3ED65D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds RX work queue support to mwifiex.
-Packets received are queued to internal queue which are then
-processed by scheduling a work item for RX process.
+The hidden mesh ID is use to enhance the security of
+open mesh and possible secured mesh later on by not
+advertising the mesh ID during beacon generation,
+similar to hidden SSID implemented in AP mode.
 
-RX work is enabled only on SMP systems.
+The implementation of hidden mesh ID involves the
+following:
+- The mesh ID is not advertised by the beacon frame if
+the hidden mesh ID is turned on during mesh join
+supporting the NL80211_HIDDEN_SSID_ZERO_LEN.
+- The mesh peering can only happen if the mesh STA does
+the active scanning by sending the probe request frame
+with mesh ID matching the mesh ID configured by another
+mesh STA.
+- The mesh STA with hidden mesh ID support won't reply
+to probe request frame with wildcard mesh ID.
+- Mesh synchronization or mesh neighbour update only
+happens for peer mesh STA with hidden mesh ID support.
+So even if a mesh STA with no hidden mesh ID support
+is successfully peer with another mesh STA with hidden
+mesh ID support, it will be removed once the STA expired
+timeout or plink timeout reached due to inactivity.
 
-Reviewed-by: James Cameron <quozl@laptop.org>
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Marc Yang <yangyang@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
+To turn on the hidden mesh ID support:
+iw mesh0 mesh join o11s hidden on
+
+To do active scanning with specific mesh ID:
+iw mesh0 scan meshid o11s
+
+Tested with ath9k using open mesh setting.
+
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
 ---
- drivers/net/wireless/mwifiex/11n_rxreorder.c | 14 +++++
- drivers/net/wireless/mwifiex/init.c          | 19 ++++++
- drivers/net/wireless/mwifiex/main.c          | 91 ++++++++++++++++++++++++++++
- drivers/net/wireless/mwifiex/main.h          | 14 +++++
- drivers/net/wireless/mwifiex/pcie.c          | 12 +++-
- drivers/net/wireless/mwifiex/sdio.c          | 11 +++-
- 6 files changed, 159 insertions(+), 2 deletions(-)
+ include/net/cfg80211.h    |  2 ++
+ net/mac80211/cfg.c        |  2 ++
+ net/mac80211/mesh.c       | 86 +++++++++++++++++++++++++++++++++++++----------
+ net/mac80211/mesh.h       |  6 ++--
+ net/mac80211/mesh_plink.c | 39 ++++++++++++++-------
+ net/wireless/nl80211.c    |  8 +++++
+ 6 files changed, 109 insertions(+), 34 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/11n_rxreorder.c b/drivers/net/wireless/mwifiex/11n_rxreorder.c
-index 06a2c21..4005707 100644
---- a/drivers/net/wireless/mwifiex/11n_rxreorder.c
-+++ b/drivers/net/wireless/mwifiex/11n_rxreorder.c
-@@ -183,6 +183,15 @@ mwifiex_del_rx_reorder_entry(struct mwifiex_private *priv,
- 	if (!tbl)
- 		return;
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index ab21299..27efae1 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1314,6 +1314,7 @@ struct mesh_config {
+  * @beacon_interval: beacon interval to use
+  * @mcast_rate: multicat rate for Mesh Node [6Mbps is the default for 802.11a]
+  * @basic_rates: basic rates to use when creating the mesh
++ * @hidden_ssid: to hide or not to hide the mesh id in beacon frame
+  *
+  * These parameters are fixed when the mesh is created.
+  */
+@@ -1334,6 +1335,7 @@ struct mesh_setup {
+ 	u16 beacon_interval;
+ 	int mcast_rate[IEEE80211_NUM_BANDS];
+ 	u32 basic_rates;
++	enum nl80211_hidden_ssid hidden_ssid;
+ };
  
-+	spin_lock_irqsave(&priv->adapter->rx_proc_lock, flags);
-+	priv->adapter->rx_locked = true;
-+	if (priv->adapter->rx_processing) {
-+		spin_unlock_irqrestore(&priv->adapter->rx_proc_lock, flags);
-+		flush_workqueue(priv->adapter->rx_workqueue);
-+	} else {
-+		spin_unlock_irqrestore(&priv->adapter->rx_proc_lock, flags);
-+	}
-+
- 	start_win = (tbl->start_win + tbl->win_size) & (MAX_TID_VALUE - 1);
- 	mwifiex_11n_dispatch_pkt_until_start_win(priv, tbl, start_win);
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 4d8989b..f79319f 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1563,6 +1563,8 @@ static int copy_mesh_setup(struct ieee80211_if_mesh *ifmsh,
  
-@@ -194,6 +203,11 @@ mwifiex_del_rx_reorder_entry(struct mwifiex_private *priv,
+ 	sdata->vif.bss_conf.beacon_int = setup->beacon_interval;
+ 	sdata->vif.bss_conf.dtim_period = setup->dtim_period;
++	sdata->vif.bss_conf.hidden_ssid =
++		(setup->hidden_ssid != NL80211_HIDDEN_SSID_NOT_IN_USE);
  
- 	kfree(tbl->rx_reorder_ptr);
- 	kfree(tbl);
-+
-+	spin_lock_irqsave(&priv->adapter->rx_proc_lock, flags);
-+	priv->adapter->rx_locked = false;
-+	spin_unlock_irqrestore(&priv->adapter->rx_proc_lock, flags);
-+
+ 	return 0;
  }
- 
- /*
-diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
-index cd9baad..f7c97cf 100644
---- a/drivers/net/wireless/mwifiex/init.c
-+++ b/drivers/net/wireless/mwifiex/init.c
-@@ -447,8 +447,11 @@ int mwifiex_init_lock_list(struct mwifiex_adapter *adapter)
- 	spin_lock_init(&adapter->cmd_free_q_lock);
- 	spin_lock_init(&adapter->cmd_pending_q_lock);
- 	spin_lock_init(&adapter->scan_pending_q_lock);
-+	spin_lock_init(&adapter->rx_q_lock);
-+	spin_lock_init(&adapter->rx_proc_lock);
- 
- 	skb_queue_head_init(&adapter->usb_rx_data_q);
-+	skb_queue_head_init(&adapter->rx_data_q);
- 
- 	for (i = 0; i < adapter->priv_num; ++i) {
- 		INIT_LIST_HEAD(&adapter->bss_prio_tbl[i].bss_prio_head);
-@@ -614,6 +617,7 @@ mwifiex_shutdown_drv(struct mwifiex_adapter *adapter)
- 	int ret = -EINPROGRESS;
- 	struct mwifiex_private *priv;
- 	s32 i;
-+	unsigned long flags;
- 	struct sk_buff *skb;
- 
- 	/* mwifiex already shutdown */
-@@ -648,6 +652,21 @@ mwifiex_shutdown_drv(struct mwifiex_adapter *adapter)
- 		}
- 	}
- 
-+	spin_lock_irqsave(&adapter->rx_proc_lock, flags);
-+
-+	while ((skb = skb_dequeue(&adapter->rx_data_q))) {
-+		struct mwifiex_rxinfo *rx_info = MWIFIEX_SKB_RXCB(skb);
-+
-+		atomic_dec(&adapter->rx_pending);
-+		priv = adapter->priv[rx_info->bss_num];
-+		if (priv)
-+			priv->stats.rx_dropped++;
-+
-+		dev_kfree_skb_any(skb);
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index e9f99c1..983dcc0 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -60,7 +60,8 @@ static void ieee80211_mesh_housekeeping_timer(unsigned long data)
+  * local mesh configuration, i.e. if both nodes belong to the same mesh network.
+  */
+ bool mesh_matches_local(struct ieee80211_sub_if_data *sdata,
+-			struct ieee802_11_elems *ie)
++			struct ieee802_11_elems *ie,
++			u16 stype)
+ {
+ 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
+ 	u32 basic_rates = 0;
+@@ -76,13 +77,23 @@ bool mesh_matches_local(struct ieee80211_sub_if_data *sdata,
+ 	 *   - MDA enabled
+ 	 * - Power management control on fc
+ 	 */
+-	if (!(ifmsh->mesh_id_len == ie->mesh_id_len &&
+-	     memcmp(ifmsh->mesh_id, ie->mesh_id, ie->mesh_id_len) == 0 &&
+-	     (ifmsh->mesh_pp_id == ie->mesh_config->meshconf_psel) &&
+-	     (ifmsh->mesh_pm_id == ie->mesh_config->meshconf_pmetric) &&
+-	     (ifmsh->mesh_cc_id == ie->mesh_config->meshconf_congest) &&
+-	     (ifmsh->mesh_sp_id == ie->mesh_config->meshconf_synch) &&
+-	     (ifmsh->mesh_auth_id == ie->mesh_config->meshconf_auth)))
++	if (sdata->vif.bss_conf.hidden_ssid
++	    != NL80211_HIDDEN_SSID_NOT_IN_USE &&
++	    stype == IEEE80211_STYPE_BEACON) {
++		if (ie->mesh_id_len != 0)
++			return false;
++	} else {
++		if (!(ifmsh->mesh_id_len == ie->mesh_id_len &&
++		      memcmp(ifmsh->mesh_id, ie->mesh_id,
++			     ie->mesh_id_len) == 0))
++			return false;
 +	}
 +
-+	spin_unlock_irqrestore(&adapter->rx_proc_lock, flags);
-+
- 	spin_lock(&adapter->mwifiex_lock);
++	if (!((ifmsh->mesh_pp_id == ie->mesh_config->meshconf_psel) &&
++	      (ifmsh->mesh_pm_id == ie->mesh_config->meshconf_pmetric) &&
++	      (ifmsh->mesh_cc_id == ie->mesh_config->meshconf_congest) &&
++	      (ifmsh->mesh_sp_id == ie->mesh_config->meshconf_synch) &&
++	      (ifmsh->mesh_auth_id == ie->mesh_config->meshconf_auth)))
+ 		return false;
  
- 	if (adapter->if_ops.data_complete) {
-diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
-index f139386..b522f7c 100644
---- a/drivers/net/wireless/mwifiex/main.c
-+++ b/drivers/net/wireless/mwifiex/main.c
-@@ -126,6 +126,42 @@ static int mwifiex_unregister(struct mwifiex_adapter *adapter)
+ 	ieee80211_sta_get_rates(sdata, ie, ieee80211_get_sdata_band(sdata),
+@@ -292,19 +303,30 @@ int mesh_add_meshconf_ie(struct ieee80211_sub_if_data *sdata,
  	return 0;
  }
  
-+static int mwifiex_process_rx(struct mwifiex_adapter *adapter)
-+{
-+	unsigned long flags;
-+	struct sk_buff *skb;
-+	bool delay_main_work = adapter->delay_main_work;
-+
-+	spin_lock_irqsave(&adapter->rx_proc_lock, flags);
-+	if (adapter->rx_processing || adapter->rx_locked) {
-+		spin_unlock_irqrestore(&adapter->rx_proc_lock, flags);
-+		goto exit_rx_proc;
-+	} else {
-+		adapter->rx_processing = true;
-+		spin_unlock_irqrestore(&adapter->rx_proc_lock, flags);
-+	}
-+
-+	/* Check for Rx data */
-+	while ((skb = skb_dequeue(&adapter->rx_data_q))) {
-+		atomic_dec(&adapter->rx_pending);
-+		if (adapter->delay_main_work &&
-+		    (atomic_dec_return(&adapter->rx_pending) <
-+		     LOW_RX_PENDING)) {
-+			adapter->delay_main_work = false;
-+			queue_work(adapter->rx_workqueue, &adapter->rx_work);
-+		}
-+		mwifiex_handle_rx_packet(adapter, skb);
-+	}
-+	spin_lock_irqsave(&adapter->rx_proc_lock, flags);
-+	adapter->rx_processing = false;
-+	spin_unlock_irqrestore(&adapter->rx_proc_lock, flags);
-+
-+	if (delay_main_work)
-+		queue_work(adapter->workqueue, &adapter->main_work);
-+exit_rx_proc:
-+	return 0;
-+}
-+
- /*
-  * The main process.
-  *
-@@ -163,6 +199,19 @@ process_start:
- 		    (adapter->hw_status == MWIFIEX_HW_STATUS_NOT_READY))
- 			break;
- 
-+		/* If we process interrupts first, it would increase RX pending
-+		 * even further. Avoid this by checking if rx_pending has
-+		 * crossed high threshold and schedule rx work queue
-+		 * and then process interrupts
-+		 */
-+		if (atomic_read(&adapter->rx_pending) >= HIGH_RX_PENDING) {
-+			adapter->delay_main_work = true;
-+			if (!adapter->rx_processing)
-+				queue_work(adapter->rx_workqueue,
-+					   &adapter->rx_work);
-+			break;
-+		}
-+
- 		/* Handle pending interrupt if any */
- 		if (adapter->int_status) {
- 			if (adapter->hs_activated)
-@@ -171,6 +220,9 @@ process_start:
- 				adapter->if_ops.process_int_status(adapter);
- 		}
- 
-+		if (adapter->rx_work_enabled && adapter->data_received)
-+			queue_work(adapter->rx_workqueue, &adapter->rx_work);
-+
- 		/* Need to wake up the card ? */
- 		if ((adapter->ps_state == PS_STATE_SLEEP) &&
- 		    (adapter->pm_wakeup_card_req &&
-@@ -183,6 +235,7 @@ process_start:
- 		}
- 
- 		if (IS_CARD_RX_RCVD(adapter)) {
-+			adapter->data_received = false;
- 			adapter->pm_wakeup_fw_try = false;
- 			if (adapter->ps_state == PS_STATE_SLEEP)
- 				adapter->ps_state = PS_STATE_AWAKE;
-@@ -318,6 +371,12 @@ static void mwifiex_terminate_workqueue(struct mwifiex_adapter *adapter)
- 	flush_workqueue(adapter->workqueue);
- 	destroy_workqueue(adapter->workqueue);
- 	adapter->workqueue = NULL;
-+
-+	if (adapter->rx_workqueue) {
-+		flush_workqueue(adapter->rx_workqueue);
-+		destroy_workqueue(adapter->rx_workqueue);
-+		adapter->rx_workqueue = NULL;
-+	}
- }
- 
- /*
-@@ -732,6 +791,21 @@ int is_command_pending(struct mwifiex_adapter *adapter)
- }
- 
- /*
-+ * This is the RX work queue function.
-+ *
-+ * It handles the RX operations.
-+ */
-+static void mwifiex_rx_work_queue(struct work_struct *work)
-+{
-+	struct mwifiex_adapter *adapter =
-+		container_of(work, struct mwifiex_adapter, rx_work);
-+
-+	if (adapter->surprise_removed)
-+		return;
-+	mwifiex_process_rx(adapter);
-+}
-+
-+/*
-  * This is the main work queue function.
-  *
-  * It handles the main process, which in turn handles the complete
-@@ -787,6 +861,11 @@ mwifiex_add_card(void *card, struct semaphore *sem,
- 	adapter->cmd_wait_q.status = 0;
- 	adapter->scan_wait_q_woken = false;
- 
-+	if (num_possible_cpus() > 1) {
-+		adapter->rx_work_enabled = true;
-+		pr_notice("rx work enabled, cpus %d\n", num_possible_cpus());
-+	}
-+
- 	adapter->workqueue =
- 		alloc_workqueue("MWIFIEX_WORK_QUEUE",
- 				WQ_HIGHPRI | WQ_MEM_RECLAIM | WQ_UNBOUND, 1);
-@@ -794,6 +873,18 @@ mwifiex_add_card(void *card, struct semaphore *sem,
- 		goto err_kmalloc;
- 
- 	INIT_WORK(&adapter->main_work, mwifiex_main_work_queue);
-+
-+	if (adapter->rx_work_enabled) {
-+		adapter->rx_workqueue = alloc_workqueue("MWIFIEX_RX_WORK_QUEUE",
-+							WQ_HIGHPRI |
-+							WQ_MEM_RECLAIM |
-+							WQ_UNBOUND, 1);
-+		if (!adapter->rx_workqueue)
-+			goto err_kmalloc;
-+
-+		INIT_WORK(&adapter->rx_work, mwifiex_rx_work_queue);
-+	}
-+
- 	if (adapter->if_ops.iface_work)
- 		INIT_WORK(&adapter->iface_work, adapter->if_ops.iface_work);
- 
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index e9cd4ab..1a99999 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -58,6 +58,9 @@ enum {
- #define MAX_TX_PENDING      100
- #define LOW_TX_PENDING      80
- 
-+#define HIGH_RX_PENDING     50
-+#define LOW_RX_PENDING      20
-+
- #define MWIFIEX_UPLD_SIZE               (2312)
- 
- #define MAX_EVENT_SIZE                  2048
-@@ -714,6 +717,12 @@ struct mwifiex_adapter {
- 	atomic_t cmd_pending;
- 	struct workqueue_struct *workqueue;
- 	struct work_struct main_work;
-+	struct workqueue_struct *rx_workqueue;
-+	struct work_struct rx_work;
-+	bool rx_work_enabled;
-+	bool rx_processing;
-+	bool delay_main_work;
-+	bool rx_locked;
- 	struct mwifiex_bss_prio_tbl bss_prio_tbl[MWIFIEX_MAX_BSS_NUM];
- 	/* spin lock for init/shutdown */
- 	spinlock_t mwifiex_lock;
-@@ -754,6 +763,10 @@ struct mwifiex_adapter {
- 	struct list_head scan_pending_q;
- 	/* spin lock for scan_pending_q */
- 	spinlock_t scan_pending_q_lock;
-+	/* spin lock for RX queue */
-+	spinlock_t rx_q_lock;
-+	/* spin lock for RX processing routine */
-+	spinlock_t rx_proc_lock;
- 	struct sk_buff_head usb_rx_data_q;
- 	u32 scan_processing;
- 	u16 region_code;
-@@ -831,6 +844,7 @@ struct mwifiex_adapter {
- 	u8 num_mem_types;
- 	u8 curr_mem_idx;
- 	bool scan_chan_gap_enabled;
-+	struct sk_buff_head rx_data_q;
- };
- 
- int mwifiex_init_lock_list(struct mwifiex_adapter *adapter);
-diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
-index 2ada1b7..1504b16 100644
---- a/drivers/net/wireless/mwifiex/pcie.c
-+++ b/drivers/net/wireless/mwifiex/pcie.c
-@@ -1233,6 +1233,7 @@ static int mwifiex_pcie_process_recv_data(struct mwifiex_adapter *adapter)
- 	struct sk_buff *skb_tmp = NULL;
- 	struct mwifiex_pcie_buf_desc *desc;
- 	struct mwifiex_pfu_buf_desc *desc2;
-+	unsigned long flags;
- 
- 	if (!mwifiex_pcie_ok_to_access_hw(adapter))
- 		mwifiex_pm_wakeup_card(adapter);
-@@ -1283,7 +1284,16 @@ static int mwifiex_pcie_process_recv_data(struct mwifiex_adapter *adapter)
- 				"info: RECV DATA: Rd=%#x, Wr=%#x, Len=%d\n",
- 				card->rxbd_rdptr, wrptr, rx_len);
- 			skb_pull(skb_data, INTF_HEADER_LEN);
--			mwifiex_handle_rx_packet(adapter, skb_data);
-+			if (adapter->rx_work_enabled) {
-+				spin_lock_irqsave(&adapter->rx_q_lock, flags);
-+				skb_queue_tail(&adapter->rx_data_q, skb_data);
-+				spin_unlock_irqrestore(&adapter->rx_q_lock,
-+						       flags);
-+				adapter->data_received = true;
-+				atomic_inc(&adapter->rx_pending);
-+			} else {
-+				mwifiex_handle_rx_packet(adapter, skb_data);
-+			}
- 		}
- 
- 		skb_tmp = dev_alloc_skb(MWIFIEX_RX_DATA_BUF_SIZE);
-diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
-index bdab122..ea8fc58 100644
---- a/drivers/net/wireless/mwifiex/sdio.c
-+++ b/drivers/net/wireless/mwifiex/sdio.c
-@@ -1039,6 +1039,7 @@ static int mwifiex_decode_rx_packet(struct mwifiex_adapter *adapter,
- 				    struct sk_buff *skb, u32 upld_typ)
+-int mesh_add_meshid_ie(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb)
++int mesh_add_meshid_ie(struct ieee80211_sub_if_data *sdata,
++		       struct sk_buff *skb, bool beacon)
  {
- 	u8 *cmd_buf;
-+	unsigned long flags;
- 	__le16 *curr_ptr = (__le16 *)skb->data;
- 	u16 pkt_len = le16_to_cpu(*curr_ptr);
+ 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
+ 	u8 *pos;
  
-@@ -1048,7 +1049,15 @@ static int mwifiex_decode_rx_packet(struct mwifiex_adapter *adapter,
- 	switch (upld_typ) {
- 	case MWIFIEX_TYPE_DATA:
- 		dev_dbg(adapter->dev, "info: --- Rx: Data packet ---\n");
--		mwifiex_handle_rx_packet(adapter, skb);
-+		if (adapter->rx_work_enabled) {
-+			spin_lock_irqsave(&adapter->rx_q_lock, flags);
-+			skb_queue_tail(&adapter->rx_data_q, skb);
-+			spin_unlock_irqrestore(&adapter->rx_q_lock, flags);
-+			adapter->data_received = true;
-+			atomic_inc(&adapter->rx_pending);
-+		} else {
-+			mwifiex_handle_rx_packet(adapter, skb);
-+		}
- 		break;
+-	if (skb_tailroom(skb) < 2 + ifmsh->mesh_id_len)
++	if (skb_tailroom(skb) < 2)
+ 		return -ENOMEM;
  
- 	case MWIFIEX_TYPE_CMD:
+-	pos = skb_put(skb, 2 + ifmsh->mesh_id_len);
++	pos = skb_put(skb, 2);
+ 	*pos++ = WLAN_EID_MESH_ID;
+-	*pos++ = ifmsh->mesh_id_len;
+-	if (ifmsh->mesh_id_len)
+-		memcpy(pos, ifmsh->mesh_id, ifmsh->mesh_id_len);
++
++	if (sdata->vif.bss_conf.hidden_ssid
++	    != NL80211_HIDDEN_SSID_NOT_IN_USE && beacon) {
++		*pos++ = 0;
++	} else {
++		if (skb_tailroom(skb) < ifmsh->mesh_id_len)
++			return -ENOMEM;
++
++		*pos++ = ifmsh->mesh_id_len;
++		pos = skb_put(skb, ifmsh->mesh_id_len);
++		if (ifmsh->mesh_id_len)
++			memcpy(pos, ifmsh->mesh_id, ifmsh->mesh_id_len);
++	}
+ 
+ 	return 0;
+ }
+@@ -713,7 +735,7 @@ ieee80211_mesh_build_beacon(struct ieee80211_if_mesh *ifmsh)
+ 	    mesh_add_rsn_ie(sdata, skb) ||
+ 	    mesh_add_ht_cap_ie(sdata, skb) ||
+ 	    mesh_add_ht_oper_ie(sdata, skb) ||
+-	    mesh_add_meshid_ie(sdata, skb) ||
++	    mesh_add_meshid_ie(sdata, skb, true) ||
+ 	    mesh_add_meshconf_ie(sdata, skb) ||
+ 	    mesh_add_awake_window_ie(sdata, skb) ||
+ 	    mesh_add_vendor_ies(sdata, skb))
+@@ -949,6 +971,8 @@ ieee80211_mesh_rx_probe_req(struct ieee80211_sub_if_data *sdata,
+ 	struct beacon_data *bcn;
+ 	struct ieee80211_mgmt *hdr;
+ 	struct ieee802_11_elems elems;
++	enum ieee80211_band band;
++	struct ieee80211_chanctx_conf *chanctx_conf;
+ 	size_t baselen;
+ 	u8 *pos;
+ 
+@@ -968,6 +992,13 @@ ieee80211_mesh_rx_probe_req(struct ieee80211_sub_if_data *sdata,
+ 	    elems.ssid_len != 0)
+ 		return;
+ 
++	/* If hidden ssid, probe request frame with
++	 * broadcast mesh id is not accepted
++	 */
++	if (sdata->vif.bss_conf.hidden_ssid
++	    != NL80211_HIDDEN_SSID_NOT_IN_USE && elems.mesh_id_len == 0)
++		return;
++
+ 	if (elems.mesh_id_len != 0 &&
+ 	    (elems.mesh_id_len != ifmsh->mesh_id_len ||
+ 	     memcmp(elems.mesh_id, ifmsh->mesh_id, ifmsh->mesh_id_len)))
+@@ -986,7 +1017,26 @@ ieee80211_mesh_rx_probe_req(struct ieee80211_sub_if_data *sdata,
+ 
+ 	skb_reserve(presp, local->tx_headroom);
+ 	memcpy(skb_put(presp, bcn->head_len), bcn->head, bcn->head_len);
+-	memcpy(skb_put(presp, bcn->tail_len), bcn->tail, bcn->tail_len);
++
++	if (sdata->vif.bss_conf.hidden_ssid
++	    != NL80211_HIDDEN_SSID_NOT_IN_USE) {
++		rcu_read_lock();
++		chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
++		band = chanctx_conf->def.chan->band;
++		rcu_read_unlock();
++		if (ieee80211_add_ext_srates_ie(sdata, presp, true, band) ||
++		    mesh_add_rsn_ie(sdata, presp) ||
++		    mesh_add_ht_cap_ie(sdata, presp) ||
++		    mesh_add_ht_oper_ie(sdata, presp) ||
++		    mesh_add_meshid_ie(sdata, presp, false) ||
++		    mesh_add_meshconf_ie(sdata, presp) ||
++		    mesh_add_awake_window_ie(sdata, presp) ||
++		    mesh_add_vendor_ies(sdata, presp))
++			goto out;
++	} else {
++		memcpy(skb_put(presp, bcn->tail_len), bcn->tail, bcn->tail_len);
++	}
++
+ 	hdr = (struct ieee80211_mgmt *) presp->data;
+ 	hdr->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
+ 					 IEEE80211_STYPE_PROBE_RESP);
+@@ -1039,8 +1089,8 @@ static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
+ 	if (!channel || channel->flags & IEEE80211_CHAN_DISABLED)
+ 		return;
+ 
+-	if (mesh_matches_local(sdata, &elems))
+-		mesh_neighbour_update(sdata, mgmt->sa, &elems);
++	if (mesh_matches_local(sdata, &elems, stype))
++		mesh_neighbour_update(sdata, mgmt->sa, &elems, stype);
+ 
+ 	if (ifmsh->sync_ops)
+ 		ifmsh->sync_ops->rx_bcn_presp(sdata,
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index f39a19f..4b4b022 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -213,12 +213,12 @@ int ieee80211_new_mesh_header(struct ieee80211_sub_if_data *sdata,
+ int mesh_rmc_check(struct ieee80211_sub_if_data *sdata,
+ 		   const u8 *addr, struct ieee80211s_hdr *mesh_hdr);
+ bool mesh_matches_local(struct ieee80211_sub_if_data *sdata,
+-			struct ieee802_11_elems *ie);
++			struct ieee802_11_elems *ie, u16 stype);
+ void mesh_ids_set_default(struct ieee80211_if_mesh *mesh);
+ int mesh_add_meshconf_ie(struct ieee80211_sub_if_data *sdata,
+ 			 struct sk_buff *skb);
+ int mesh_add_meshid_ie(struct ieee80211_sub_if_data *sdata,
+-		       struct sk_buff *skb);
++		       struct sk_buff *skb, bool beacon);
+ int mesh_add_rsn_ie(struct ieee80211_sub_if_data *sdata,
+ 		    struct sk_buff *skb);
+ int mesh_add_vendor_ies(struct ieee80211_sub_if_data *sdata,
+@@ -283,7 +283,7 @@ int mesh_gate_num(struct ieee80211_sub_if_data *sdata);
+ 
+ /* Mesh plinks */
+ void mesh_neighbour_update(struct ieee80211_sub_if_data *sdata,
+-			   u8 *hw_addr, struct ieee802_11_elems *ie);
++			   u8 *hw_addr, struct ieee802_11_elems *ie, u16 stype);
+ bool mesh_peer_accepts_plinks(struct ieee802_11_elems *ie);
+ u32 mesh_accept_plinks_update(struct ieee80211_sub_if_data *sdata);
+ void mesh_plink_broken(struct sta_info *sta);
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index 8f0887f..19528f0 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -310,12 +310,12 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
+ 		if (ieee80211_add_srates_ie(sdata, skb, true, band) ||
+ 		    ieee80211_add_ext_srates_ie(sdata, skb, true, band) ||
+ 		    mesh_add_rsn_ie(sdata, skb) ||
+-		    mesh_add_meshid_ie(sdata, skb) ||
++		    mesh_add_meshid_ie(sdata, skb, false) ||
+ 		    mesh_add_meshconf_ie(sdata, skb))
+ 			goto free;
+ 	} else {	/* WLAN_SP_MESH_PEERING_CLOSE */
+ 		info->flags |= IEEE80211_TX_CTL_NO_ACK;
+-		if (mesh_add_meshid_ie(sdata, skb))
++		if (mesh_add_meshid_ie(sdata, skb, false))
+ 			goto free;
+ 	}
+ 
+@@ -503,26 +503,38 @@ mesh_sta_info_get(struct ieee80211_sub_if_data *sdata,
+  * @sdata: local meshif
+  * @addr: peer's address
+  * @elems: IEs from beacon or mesh peering frame
++ * @stype: frame type either beacon, probe response or action frame
+  *
+  * Initiates peering if appropriate.
+  */
+ void mesh_neighbour_update(struct ieee80211_sub_if_data *sdata,
+ 			   u8 *hw_addr,
+-			   struct ieee802_11_elems *elems)
++			   struct ieee802_11_elems *elems, u16 stype)
+ {
+ 	struct sta_info *sta;
+ 	u32 changed = 0;
+ 
+-	sta = mesh_sta_info_get(sdata, hw_addr, elems);
+-	if (!sta)
+-		goto out;
++	if (sdata->vif.bss_conf.hidden_ssid
++	    != NL80211_HIDDEN_SSID_NOT_IN_USE &&
++	    stype == IEEE80211_STYPE_BEACON) {
++		rcu_read_lock();
++		sta = sta_info_get(sdata, hw_addr);
++		if (sta)
++			mesh_sta_info_init(sdata, sta, elems, false);
++		else
++			goto out;
++	} else {
++		sta = mesh_sta_info_get(sdata, hw_addr, elems);
++		if (!sta)
++			goto out;
+ 
+-	if (mesh_peer_accepts_plinks(elems) &&
+-	    sta->plink_state == NL80211_PLINK_LISTEN &&
+-	    sdata->u.mesh.accepting_plinks &&
+-	    sdata->u.mesh.mshcfg.auto_open_plinks &&
+-	    rssi_threshold_check(sdata, sta))
+-		changed = mesh_plink_open(sta);
++		if (mesh_peer_accepts_plinks(elems) &&
++		    sta->plink_state == NL80211_PLINK_LISTEN &&
++		    sdata->u.mesh.accepting_plinks &&
++		    sdata->u.mesh.mshcfg.auto_open_plinks &&
++		    rssi_threshold_check(sdata, sta))
++			changed = mesh_plink_open(sta);
++	}
+ 
+ 	ieee80211_mps_frame_release(sta, elems);
+ out:
+@@ -910,7 +922,8 @@ mesh_plink_get_event(struct ieee80211_sub_if_data *sdata,
+ 	bool matches_local;
+ 
+ 	matches_local = (ftype == WLAN_SP_MESH_PEERING_CLOSE ||
+-			 mesh_matches_local(sdata, elems));
++			 mesh_matches_local(sdata, elems,
++					    IEEE80211_STYPE_ACTION));
+ 
+ 	/* deny open request from non-matching peer */
+ 	if (!matches_local && !sta) {
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 3011401..09bf1dd 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -8135,6 +8135,14 @@ static int nl80211_join_mesh(struct sk_buff *skb, struct genl_info *info)
+ 			return -EINVAL;
+ 	}
+ 
++	if (info->attrs[NL80211_ATTR_HIDDEN_SSID]) {
++		setup.hidden_ssid =
++			nla_get_u32(info->attrs[NL80211_ATTR_HIDDEN_SSID]);
++		if (setup.hidden_ssid != NL80211_HIDDEN_SSID_NOT_IN_USE &&
++		    setup.hidden_ssid != NL80211_HIDDEN_SSID_ZERO_LEN)
++			return -EINVAL;
++	}
++
+ 	if (info->attrs[NL80211_ATTR_MESH_SETUP]) {
+ 		/* parse additional setup parameters if given */
+ 		err = nl80211_parse_mesh_setup(info, &setup);
 -- 
-1.8.1.4
+1.9.2
 
