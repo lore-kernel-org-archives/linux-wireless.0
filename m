@@ -1,67 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:59218 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751078AbaIAHaJ (ORCPT
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:36366 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753907AbaIHQ42 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Sep 2014 03:30:09 -0400
-From: Avinash Patil <patila@marvell.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
-	<huxm@marvell.com>, <yangyang@marvell.com>, <cluo@marvell.com>,
-	<maithili@marvell.com>, Avinash Patil <patila@marvell.com>
-Subject: [PATCH 00/17] mwifiex updates for 3.17
-Date: Mon, 1 Sep 2014 18:28:48 +0530
-Message-ID: <1409576345-13717-1-git-send-email-patila@marvell.com> (sfid-20140901_093021_564968_26043116)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 8 Sep 2014 12:56:28 -0400
+Received: by mail-wi0-f181.google.com with SMTP id e4so3042967wiv.14
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Sep 2014 09:56:27 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Luciano Coelho <luciano.coelho@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 03/12] iwlwifi: mvm: set MAC_FILTER_IN_BEACON correctly for STA/P2P client
+Date: Mon,  8 Sep 2014 19:56:08 +0300
+Message-Id: <1410195377-10075-3-git-send-email-egrumbach@gmail.com> (sfid-20140908_185631_674611_6CABC4B5)
+In-Reply-To: <540DDF37.5030801@gmail.com>
+References: <540DDF37.5030801@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series brings in scan enhancement including scan channel gap,
-support for parsing FW API version from HW_SPEC command response,
-support for processing RX in work queue and few trivial fixes for 
-SDIO multiport aggregation.
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-Amitkumar Karwar (7):
-  mwifiex: fix a bug in Tx multiport aggregation
-  mwifiex: minor cleanup in multiport aggregation
-  mwifiex: fix left_len calculation issue
-  mwifiex: rename macro and variables related to API revision
-  mwifiex: use firmware API revision from GET_HW_SPEC response
-  mwifiex: remove redundant variable report_scan_result
-  mwifiex: remove low priority scan handling
+In commit cad3f08c (iwlwifi: mvm: enable MAC_FILTER_IN_BEACON when
+forced_assoc_off is set) the code to set the MAC_FILTER_IN_BEACON flag
+was accidentally moved to the main block of the if statement, while it
+should be in the else block instead.  Move it to the right place.
 
-Avinash Patil (9):
-  mwifiex: fix probable memory corruption while processing TDLS frame
-  mwifiex: avoid processing RX packets with invalid length
-  mwifiex: rework internal scan for association
-  mwifiex: support for event done interrupt
-  mwifiex: set passive scan type for scan requests with no ssid
-  mwifiex: bring in scan channel gap feature
-  mwifiex: remove restriction of single channel scan when connected
-  mwifiex: process TX even when scan is ongoing
-  mwifiex: add rx workqueue support
+Fixes: cad3f08c23de ("iwlwifi: mvm: enable MAC_FILTER_IN_BEACON when forced_assoc_off is set")
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-Xinming Hu (1):
-  mwifiex: fix 5G association failure after leaving 2.4G IBSS
-
- drivers/net/wireless/mwifiex/11n_rxreorder.c |  14 ++
- drivers/net/wireless/mwifiex/cfg80211.c      |  13 +-
- drivers/net/wireless/mwifiex/cmdevt.c        |  28 ++--
- drivers/net/wireless/mwifiex/fw.h            |  17 ++-
- drivers/net/wireless/mwifiex/init.c          |  25 +++-
- drivers/net/wireless/mwifiex/main.c          | 194 +++++++++++++--------------
- drivers/net/wireless/mwifiex/main.h          |  49 +++++--
- drivers/net/wireless/mwifiex/pcie.c          |  37 ++++-
- drivers/net/wireless/mwifiex/pcie.h          |   5 +-
- drivers/net/wireless/mwifiex/scan.c          | 112 ++++++++++------
- drivers/net/wireless/mwifiex/sdio.c          |  28 ++--
- drivers/net/wireless/mwifiex/sta_cmd.c       |   2 +-
- drivers/net/wireless/mwifiex/sta_cmdresp.c   |   4 +-
- drivers/net/wireless/mwifiex/sta_ioctl.c     |  13 +-
- drivers/net/wireless/mwifiex/tdls.c          |   4 +-
- 15 files changed, 339 insertions(+), 206 deletions(-)
-
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
+index 0e523e2..8242e68 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
+@@ -721,11 +721,6 @@ static int iwl_mvm_mac_ctxt_cmd_sta(struct iwl_mvm *mvm,
+ 	    !force_assoc_off) {
+ 		u32 dtim_offs;
+ 
+-		/* Allow beacons to pass through as long as we are not
+-		 * associated, or we do not have dtim period information.
+-		 */
+-		cmd.filter_flags |= cpu_to_le32(MAC_FILTER_IN_BEACON);
+-
+ 		/*
+ 		 * The DTIM count counts down, so when it is N that means N
+ 		 * more beacon intervals happen until the DTIM TBTT. Therefore
+@@ -759,6 +754,11 @@ static int iwl_mvm_mac_ctxt_cmd_sta(struct iwl_mvm *mvm,
+ 		ctxt_sta->is_assoc = cpu_to_le32(1);
+ 	} else {
+ 		ctxt_sta->is_assoc = cpu_to_le32(0);
++
++		/* Allow beacons to pass through as long as we are not
++		 * associated, or we do not have dtim period information.
++		 */
++		cmd.filter_flags |= cpu_to_le32(MAC_FILTER_IN_BEACON);
+ 	}
+ 
+ 	ctxt_sta->bi = cpu_to_le32(vif->bss_conf.beacon_int);
 -- 
-1.8.1.4
+1.9.1
 
