@@ -1,108 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f180.google.com ([209.85.213.180]:48867 "EHLO
-	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752776AbaIHJ7k (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:37277 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753060AbaIHIgq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Sep 2014 05:59:40 -0400
-Received: by mail-ig0-f180.google.com with SMTP id hn18so2426312igb.7
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Sep 2014 02:59:39 -0700 (PDT)
+	Mon, 8 Sep 2014 04:36:46 -0400
+Message-ID: <540D6A9B.5000008@broadcom.com> (sfid-20140908_103708_344558_03F62D2E)
+Date: Mon, 8 Sep 2014 10:36:43 +0200
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <20140905214331.GE17986@wotan.suse.de>
-References: <1398137975-14275-1-git-send-email-mcgrof@do-not-panic.com>
-	<1398137975-14275-3-git-send-email-mcgrof@do-not-panic.com>
-	<CAGXE3d8yq_-EwacqXi2fMHC=KLU-6n=11U2wrYvpfwd++WryCg@mail.gmail.com>
-	<20140905214331.GE17986@wotan.suse.de>
-Date: Mon, 8 Sep 2014 11:59:39 +0200
-Message-ID: <CAGXE3d9pmP9kpO2B44p-tdwy4BLZQcWgfUvcyfkjtWWaBWHsCg@mail.gmail.com> (sfid-20140908_115945_866831_B55B0492)
-Subject: Re: [PATCH 2/2] cfg80211: fix processing world regdomain when non modular
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: "Luis R. Rodriguez" <mcgrof@suse.com>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	lkml20140418@newton.leun.net, Arik Nemtsov <arik@wizery.com>,
-	linux@eikelenboom.it
-Content-Type: text/plain; charset=UTF-8
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-kernel@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Luciano Coelho <luca@coelho.fi>, Kalle Valo <kvalo@adurom.com>,
+	<dri-devel@lists.freedesktop.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC v2] device coredump: add new device coredump class
+References: <1409907054-17596-1-git-send-email-johannes@sipsolutions.net>
+In-Reply-To: <1409907054-17596-1-git-send-email-johannes@sipsolutions.net>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-On Fri, Sep 5, 2014 at 11:43 PM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
-> Yeah this seems to be a corner case of the fact that we deal with
-> locking for the last request only through RCU and we only annotate
-> that the request was processed but don't add checks for when its
-> about to be processed. At least that's what I gather could be
-> the issue here given that if you see __reg_process_hint_driver()
-> we already check for two driver hints matching and and just
-> request the core to copy the existing regulatory domain onto
-> the new device.
+On 09/05/14 10:50, Johannes Berg wrote:
+> From: Johannes Berg<johannes.berg@intel.com>
 >
->         if (lr->initiator == NL80211_REGDOM_SET_BY_DRIVER &&
->             !regdom_changes(driver_request->alpha2))
->                 return REG_REQ_ALREADY_SET;
+> Many devices run firmware and/or complex hardware, and most of that
+> can have bugs. When it misbehaves, however, it is often much harder
+> to debug than software running on the host.
 >
->         return REG_REQ_INTERSECT;
->
-> The intersection would happen otherwise and I think this is caused
-> by a small race here. Can you try the following:
+> Introduce a "device coredump" mechanism to allow dumping internal
+> device/firmware state through a generalized mechanism. As devices
+> are different and information needed can vary accordingly, this
+> doesn't prescribe a file format - it just provides mechanism to
+> get data to be able to capture it in a generalized way (e.g. in
+> distributions.)
 
-Just retried with your patch applied but I can still get an "98"
-intersected regdomain :(
+Although it can be found in the patch it would not hurt to point out 
+where the coredump can be found in sysfs in this patch description.
 
-[    6.190000] ath: EEPROM regdomain: 0x0
-[    6.190000] ath: EEPROM indicates default country code should be
-used
-[    6.190000] ath: doing EEPROM country->regdmn map search
-[    6.190000] ath: country maps to regdmn code: 0x3a
-[    6.190000] ath: Country alpha2 being used: US
-[    6.190000] ath: Regpair used: 0x3a
-[    6.200000] ieee80211 phy0: Selected rate control algorithm 'minstrel_ht'
-[    6.210000] ieee80211 phy0: Atheros AR9340 Rev:0 mem=0xb8100000, irq=47
-[    6.210000] PCI: Enabling device 0000:00:00.0 (0000 -> 0002)
-[    6.210000] ath: EEPROM regdomain: 0x0
-[    6.210000] ath: EEPROM indicates default country code should be used
-[    6.210000] ath: doing EEPROM country->regdmn map search
-[    6.210000] ath: country maps to regdmn code: 0x3a
-[    6.210000] ath: Country alpha2 being used: US
-[    6.210000] ath: Regpair used: 0x3a
-[    6.220000] ieee80211 phy1: Selected rate control algorithm 'minstrel_ht'
-[    6.240000] cfg80211: Calling CRDA for country: US
-[    6.240000] cfg80211: Calling CRDA for country: US
-[    6.240000] cfg80211: Current regulatory domain intersected:
-[    6.240000] cfg80211:  DFS Master region: unset
-[    6.240000] cfg80211:   (start_freq - end_freq @ bandwidth),
-(max_antenna_gain, max_eirp), (dfs_cac_time)
-[    6.240000] cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz),
-(N/A, 2000 mBm), (N/A)
-[    6.240000] cfg80211:   (2457000 KHz - 2472000 KHz @ 15000 KHz),
-(N/A, 2000 mBm), (N/A)
-[    6.240000] cfg80211:   (5170000 KHz - 5250000 KHz @ 80000 KHz),
-(N/A, 1700 mBm), (N/A)
-[    6.240000] cfg80211:   (5250000 KHz - 5330000 KHz @ 80000 KHz),
-(N/A, 2000 mBm), (0 s)
-[    6.240000] cfg80211:   (5735000 KHz - 5835000 KHz @ 80000 KHz),
-(N/A, 2000 mBm), (N/A)
-[    6.240000] cfg80211:   (57240000 KHz - 63720000 KHz @ 2160000
-KHz), (N/A, 0 mBm), (N/A)
-[    6.240000] cfg80211: Calling CRDA for country: US
-[    6.240000] ieee80211 phy1: Atheros AR9300 Rev:3 mem=0xb0000000, irq=40
-[    6.240000] cfg80211: Current regulatory domain intersected:
-[    6.240000] cfg80211:  DFS Master region: unset
-[    6.240000] cfg80211:   (start_freq - end_freq @ bandwidth),
-(max_antenna_gain, max_eirp), (dfs_cac_time)
-[    6.240000] cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz),
-(N/A, 2000 mBm), (N/A)
-[    6.240000] cfg80211:   (2457000 KHz - 2472000 KHz @ 15000 KHz),
-(N/A, 2000 mBm), (N/A)
-[    6.240000] cfg80211:   (5170000 KHz - 5250000 KHz @ 80000 KHz),
-(N/A, 1700 mBm), (N/A)
-[    6.240000] cfg80211:   (5250000 KHz - 5330000 KHz @ 80000 KHz),
-(N/A, 2000 mBm), (0 s)
-[    6.240000] cfg80211:   (5735000 KHz - 5835000 KHz @ 80000 KHz),
-(N/A, 2000 mBm), (N/A)
-[    6.240000] cfg80211:   (57240000 KHz - 63720000 KHz @ 2160000
-KHz), (N/A, 0 mBm), (N/A)
+[...]
 
-I'll try to dive deeper into the regulatory code ...
-Helmut
+> +static struct class devcd_class = {
+> +	.name		= "devcoredump",
+> +	.owner		= THIS_MODULE,
+> +	.dev_release	= devcd_dev_release,
+> +	.dev_groups	= devcd_dev_groups,
+> +};
+
+[...]
+
+> +/**
+> + * dev_coredumpm - create firmware coredump with read/free methods
+> + * @dev: the struct device for the crashed device
+> + * @data: data cookie for the @read/@free functions
+> + * @datalen: length of the data
+> + * @gfp: allocation flags
+> + * @read: function to read from the given buffer
+> + * @free: function to free the given buffer
+> + */
+> +void dev_coredumpm(struct device *dev, struct module *owner,
+> +		   const void *data, size_t datalen, gfp_t gfp,
+> +		   ssize_t (*read)(char *buffer, loff_t offset, size_t count,
+> +				   const void *data, size_t datalen),
+> +		   void (*free)(const void *data))
+> +{
+> +	static atomic_t devcd_count = ATOMIC_INIT(0);
+> +	struct devcd_entry *devcd;
+> +	struct device *existing;
+> +
+> +	existing = class_find_device(&devcd_class, NULL, dev,
+> +				     devcd_match_failing);
+> +	if (existing) {
+> +		put_device(existing);
+> +		return;
+> +	}
+> +
+> +	if (!try_module_get(owner))
+> +		return;
+> +
+> +	devcd = kzalloc(sizeof(*devcd), gfp);
+> +	if (!devcd)
+> +		goto put_module;
+> +
+> +	devcd->owner = owner;
+> +	devcd->data = data;
+> +	devcd->datalen = datalen;
+> +	devcd->read = read;
+> +	devcd->free = free;
+> +	devcd->failing_dev = get_device(dev);
+> +
+> +	device_initialize(&devcd->devcd_dev);
+> +
+> +	dev_set_name(&devcd->devcd_dev, "devcd%d",
+> +		     atomic_inc_return(&devcd_count));
+> +	devcd->devcd_dev.class =&devcd_class;
+> +
+> +	if (device_add(&devcd->devcd_dev))
+> +		goto put_device;
+> +
+> +	if (sysfs_create_link(&devcd->devcd_dev.kobj,&dev->kobj,
+> +			      "failing_device"))
+> +		/* nothing - symlink will be missing */;
+> +
+> +	if (sysfs_create_link(&dev->kobj,&devcd->devcd_dev.kobj,
+> +			      "dev_coredump"))
+> +		/* nothing - symlink will be missing */;
+
+The class is called "devcoredump" so you may want to be consistent here 
+and get rid of the underscore.
+
+Regards,
+Arend
