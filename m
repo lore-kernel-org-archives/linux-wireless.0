@@ -1,92 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:60582 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755157AbaIECdH (ORCPT
+Received: from mail-we0-f170.google.com ([74.125.82.170]:38948 "EHLO
+	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754640AbaIHQ4e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Sep 2014 22:33:07 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH v3 03/11] ath9k: Fix panic when adding an AP interface
-Date: Fri,  5 Sep 2014 08:03:11 +0530
-Message-Id: <1409884399-32289-4-git-send-email-sujith@msujith.org> (sfid-20140905_043314_004091_25417263)
-In-Reply-To: <1409884399-32289-1-git-send-email-sujith@msujith.org>
-References: <1409884399-32289-1-git-send-email-sujith@msujith.org>
+	Mon, 8 Sep 2014 12:56:34 -0400
+Received: by mail-we0-f170.google.com with SMTP id u57so2634611wes.29
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Sep 2014 09:56:33 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 06/12] iwlwifi: mvm: correctly handle PM/QoS changes from mac80211
+Date: Mon,  8 Sep 2014 19:56:11 +0300
+Message-Id: <1410195377-10075-6-git-send-email-egrumbach@gmail.com> (sfid-20140908_185639_410801_D9CF3DAC)
+In-Reply-To: <540DDF37.5030801@gmail.com>
+References: <540DDF37.5030801@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-If a station interface is already assigned to a context
-and is active and a second interface of type AP is added,
-then beaconing on the new interface has to be begin only
-after the BSS_CHANGED_BEACON_ENABLED flag is sent by mac80211
-to the driver.
+When mac80211 requests multiple BSS config changes, as for example
+while associating, we ignore power management and QoS changes and
+only apply them later. Fix that by removing the "else" and making
+the conditions independent.
 
-But, since we issue ATH_CHANCTX_EVENT_ENABLE_MULTICHANNEL as soon
-as a new channel context is added, a switch occurs almost immediately
-before BSS_CHANGED_BEACON_ENABLED is received. When a HW reset
-is done for the new context, beacons are enabled for the
-interface since "enable_beacon" in the BSS config maintained
-in mac80211 is true - but the driver hasn't been notified yet.
-This causes a panic, since the beacon interval is zero for this
-interface and ath9k_cmn_beacon_config_ap() doesn't have a safety check.
+Also move it after (potential) beacon filter enablement to have
+that already enabled when going into power management code.
 
-Fix this panic by checking if the beacon params has been cached
-for this context and use the "enable_beacon" flag maintained
-locally in the driver. Also, recalculate the summary data
-after the beacon params have been cached when BSS_CHANGED_BEACON_ENABLED
-is received.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/main.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 0b3d4d8..2333776 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -916,8 +916,6 @@ static void ath9k_vif_iter(struct ath9k_vif_iter_data *iter_data,
- 	switch (vif->type) {
- 	case NL80211_IFTYPE_AP:
- 		iter_data->naps++;
--		if (vif->bss_conf.enable_beacon)
--			iter_data->beacons = true;
- 		break;
- 	case NL80211_IFTYPE_STATION:
- 		iter_data->nstations++;
-@@ -1021,6 +1019,7 @@ void ath9k_calculate_summary_state(struct ath_softc *sc,
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ath9k_vif_iter_data iter_data;
-+	struct ath_beacon_config *cur_conf;
- 
- 	ath_chanctx_check_active(sc, ctx);
- 
-@@ -1037,8 +1036,11 @@ void ath9k_calculate_summary_state(struct ath_softc *sc,
- 	ath_hw_setbssidmask(common);
- 
- 	if (iter_data.naps > 0) {
-+		cur_conf = &ctx->beacon;
- 		ath9k_hw_set_tsfadjust(ah, true);
- 		ah->opmode = NL80211_IFTYPE_AP;
-+		if (cur_conf->enable_beacon)
-+			iter_data.beacons = true;
- 	} else {
- 		ath9k_hw_set_tsfadjust(ah, false);
- 
-@@ -1695,9 +1697,9 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
- 	if ((changed & BSS_CHANGED_BEACON_ENABLED) ||
- 	    (changed & BSS_CHANGED_BEACON_INT) ||
- 	    (changed & BSS_CHANGED_BEACON_INFO)) {
-+		ath9k_beacon_config(sc, vif, changed);
- 		if (changed & BSS_CHANGED_BEACON_ENABLED)
- 			ath9k_calculate_summary_state(sc, avp->chanctx);
--		ath9k_beacon_config(sc, vif, changed);
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index c4000a1..cdc272d 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -1526,11 +1526,6 @@ static void iwl_mvm_bss_info_changed_station(struct iwl_mvm *mvm,
+ 		 */
+ 		iwl_mvm_remove_time_event(mvm, mvmvif,
+ 					  &mvmvif->time_event_data);
+-	} else if (changes & (BSS_CHANGED_PS | BSS_CHANGED_P2P_PS |
+-			      BSS_CHANGED_QOS)) {
+-		ret = iwl_mvm_power_update_mac(mvm);
+-		if (ret)
+-			IWL_ERR(mvm, "failed to update power mode\n");
  	}
  
- 	if ((avp->chanctx == sc->cur_chan) &&
+ 	if (changes & BSS_CHANGED_BEACON_INFO) {
+@@ -1538,6 +1533,12 @@ static void iwl_mvm_bss_info_changed_station(struct iwl_mvm *mvm,
+ 		WARN_ON(iwl_mvm_enable_beacon_filter(mvm, vif, 0));
+ 	}
+ 
++	if (changes & (BSS_CHANGED_PS | BSS_CHANGED_P2P_PS | BSS_CHANGED_QOS)) {
++		ret = iwl_mvm_power_update_mac(mvm);
++		if (ret)
++			IWL_ERR(mvm, "failed to update power mode\n");
++	}
++
+ 	if (changes & BSS_CHANGED_TXPOWER) {
+ 		IWL_DEBUG_CALIB(mvm, "Changing TX Power to %d\n",
+ 				bss_conf->txpower);
 -- 
-2.1.0
+1.9.1
 
