@@ -1,137 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:58601 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756067AbaIZX0O convert rfc822-to-8bit (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:56823 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753922AbaIHQa0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Sep 2014 19:26:14 -0400
-Received: by mail-pa0-f45.google.com with SMTP id rd3so4400715pab.32
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Sep 2014 16:26:13 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAGG-pUQiiQYEire+Q8B=XVB4u6=JdCsvGyBKD8=W=83q=K7o9Q@mail.gmail.com>
-References: <CA+MoWDqGZoStq1cEM8Woe-yxQObGF0W+mzb5vNMjztz_Gz_TxQ@mail.gmail.com>
- <CAB=NE6XeXmZWRXL=hXyPzoWF-3aZBdOqEUGdMErQp_syN23d0g@mail.gmail.com>
- <CAGG-pUTQtORfEiDB3mNO=fccQkj6h1NULTXW4QoWY36NzuXCBA@mail.gmail.com>
- <CAB=NE6X-CSWtvKxFR+DHXg1b0cWJ9K0Tb2eTD5P0=jPHLFkxGQ@mail.gmail.com>
- <CAGG-pURp9exrFcieP=0xiJZD-NmQqn0c7Ty_E-brM7GnVX63Ww@mail.gmail.com>
- <CAGG-pUQMG+XxGss7BT_Gjo2u9y=6uLwXE+q18JewDCVKh4Q8vg@mail.gmail.com> <CAGG-pUQiiQYEire+Q8B=XVB4u6=JdCsvGyBKD8=W=83q=K7o9Q@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Fri, 26 Sep 2014 16:25:53 -0700
-Message-ID: <CAB=NE6X2xcJe9BnyaXmgK2jOXLMPpO2r+HSXX88VpKgKK8xKiQ@mail.gmail.com> (sfid-20140927_012617_769369_800D564F)
-Subject: Re: ar9271 wifi usb
-To: =?UTF-8?Q?Geyslan_Greg=C3=B3rio_Bem?= <geyslan@gmail.com>
-Cc: Peter Senna Tschudin <peter.senna@gmail.com>,
-	John Linville <linville@tuxdriver.com>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k-devel <ath9k-devel@qca.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 8 Sep 2014 12:30:26 -0400
+Received: by mail-we0-f174.google.com with SMTP id t60so1385781wes.19
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Sep 2014 09:30:24 -0700 (PDT)
+Message-ID: <1410193824.10388.24.camel@umadbro> (sfid-20140908_183028_805767_E04AFCC8)
+Subject: 802.11p rate control
+From: Rostislav Lisovy <lisovy@gmail.com>
+To: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Cc: burak.simsek@volkswagen.de, s.sander@nordsys.de,
+	sojkam1@fel.cvut.cz, jan-niklas.meier@volkswagen.de,
+	emmanuel.thierry@yogoko.fr, thierry.ernst@yogoko.fr,
+	oyunaash@gmail.com, laszlo.virag@commsignia.com
+Date: Mon, 08 Sep 2014 18:30:24 +0200
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 12, 2014 at 6:00 PM, Geyslan Gregório Bem <geyslan@gmail.com> wrote:
-> Hi John and Sujith,
->
-> Peter and Luis are CC.
->
-> I'm having issues with my ath9k as you can see below. My card is constantly
-> connecting and disconnecting from my SSID before it could get some IP
-> (DHCP).
->
-> I saw that you have patched something in the next tree. These recent patches
-> are correlated with the looping in the my card connection?
->
-> http://git.kernel.org/cgit/linux/kernel/git/linville/wireless-next.git/log/
+Dear 802.11 experts;
+Short introduction before the actual question:
+Some of you have probably noticed my effort of bringing the 802.11p
+support for the mainline Linux kernel. (Side note: I know that "802.11p"
+is already part of the IEEE 802.11-2012 but calling it ".11p" makes it
+easier to determine what am I actually talking about).
+My main focus is on the ITS-G5 (ETSI EN 302 663 [1], ETSI TS 102 687
+[2]), European car-to-x communication standard based on 802.11p. For
+those who are further interested, my work might be found at
+https://github.com/CTU-IIG/802.11p-linux/tree/its-g5_devel 
 
-you landed on a merge commit, surprised that git won't unfold that for
-you for a bisect.. Anyway so next step is to bisect on the merge
-commit. To do that I'm sure there are several ways. I've Cc'd the
-ath9k-devel team which from what I hear is back together.
+Back to the main purpose of this email. I am still unsure how to
+implement the rate-control handling for the 802.11p. The indisputable
+fact is that the mandatory rates each 802.11p compliant device has to
+support are 3, 6, 12 Mbit/s (IEEE 802.11-2012 18.1.1) since we are using
+the OFDM 10MHz channels (other OFDM datarates might be used as well).
+The decision which datarate to use for TX should be done by some kind of
+algorithm, probably running in the kernel. The question is how to do so
+in a clean way.
 
-Here's one way to unfold your merge commit:
+The possible obstacles are:
+* 802.11p will be used mainly for two independent C2X protocol stacks --
+one is the European ETSI ITS-G5, the other one is the US WAVE (IEEE
+1609). I assume that these two protocol stack implementations will
+differ mainly in the user-space while the kernel part will be the same.
+* ITS-G5 already speaks about the "default datarate" for different
+channels ([1] 4.3, Table 2) -- i.e. 6 Mbit/s for channel no. 180; 12
+Mbit/s for channel no. 178. This should be probably defined when
+"joining the network" on a fixed channel.
 
-git checkout -b merge-commit 88daf80dcca19ff995cc263592426f734a9702f3
+The possible (first implementation) solution might be either to
+implement some "dummy" rate control algorithm that will set a fixed
+datarate only once (during "ocb join" command) or to use the Minstrel
+while limiting the allowed datarate to be the lowest one; i.e.
+    mand_rates = ieee80211_mandatory_rates(sband, scan_width);
+    sta->sta.supp_rates[band] =
+        find_first_bit(&mand_rates, sizeof(u32));
 
-If you do git log you will see commit
-010d3c3989706d800ae72253773fa6537cc9f74c is right before it. To unfold
-I do:
+If I am not mistaken, it is not possible to live without an in-kernel
+rate_control algorithm?
+One interesting idea I got from one colleague is to implement the
+algorithm logic in the user-space -- kernel would contain just a thin
+shell controlled from the user-space (via netlink?). This is probably
+not as insane as it may sound since the purpose of the rate-control
+algorithm for 802.11p (at least for ITS-G5) is not to "maximize the
+immediate throughput" but more like "shared medium congestion control",
+which may require much slower frequency of a control loop.
 
-git rebase -i 010d3c3989706d800ae72253773fa6537cc9f74c
+I will appreciate your comments. 
 
-Then just exit without changes (on vi, :wq)
+Best regards;
+Rostislav Lisovy
 
-If you do git log you will see tons of patches have now been folded
-in. Since you know 010d3c3989706d800ae72253773fa6537cc9f74c was the
-last commit before the merge of the wireless stuff you can use it as
-the last good commit and use something other than the merge commit for
-the bad commit, for instance try
-b9f381791cb486cd927177d8157ded63c0829e04.
+[1] http://www.etsi.org/deliver/etsi_en/302600_302699/302663/01.02.01_60/en_302663v010201p.pdf
+[2] http://www.etsi.org/deliver/etsi_ts/102600_102699/102687/01.01.01_60/ts_102687v010101p.pdf
 
->From now on please engage with the public mailing list and ath9k-devel folks.
 
-  Luis
-
-> 2014-09-01 17:39 GMT-03:00 Geyslan Gregório Bem <geyslan@gmail.com>:
->>
->> Hi guys,
->>
->> I finally did the git bisect procedure. Tell me the next step.
->>
->> uzumaki@hb ~/linux $ git bisect bad
->> 88daf80dcca19ff995cc263592426f734a9702f3 is the first bad commit
->>
->> uzumaki@hb ~/linux $ git bisect log
->> git bisect start
->> # good: [455c6fdbd219161bd09b1165f11699d6d73de11c] Linux 3.14
->> git bisect good 455c6fdbd219161bd09b1165f11699d6d73de11c
->> # bad: [1860e379875dfe7271c649058aeddffe5afd9d0d] Linux 3.15
->> git bisect bad 1860e379875dfe7271c649058aeddffe5afd9d0d
->> # bad: [74a475acea49459721ae4b062d3da68c74259009] SubmittingPatches: add
->> style recommendation to use imperative descriptions
->> git bisect bad 74a475acea49459721ae4b062d3da68c74259009
->> # good: [c12e69c6aaf785fd307d05cb6f36ca0e7577ead7] Merge tag
->> 'staging-3.15-rc1' of
->> git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/staging
->> git bisect good c12e69c6aaf785fd307d05cb6f36ca0e7577ead7
->> # bad: [0fc31966035d7a540c011b6c967ce8eae1db121b] Merge branch 'for-davem'
->> of git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next
->> git bisect bad 0fc31966035d7a540c011b6c967ce8eae1db121b
->> # good: [67b3bd4e65f0854aca70e0134d59b1daede49504] brcmfmac: fallback to
->> mimo_bw_cap for older firmwares
->> git bisect good 67b3bd4e65f0854aca70e0134d59b1daede49504
->> # bad: [389400428953bb002b173fa07d16d7a6f120843f] Merge tag
->> 'rxrpc-devel-20140304' of
->> git://git.kernel.org/pub/scm/linux/kernel/git/dhowells/linux-fs
->> git bisect bad 389400428953bb002b173fa07d16d7a6f120843f
->> # good: [3b7d636b50fb38e4e0f1113ba7bff8dcd19d140f] bonding: remove
->> bond->lock from bond_arp_rcv
->> git bisect good 3b7d636b50fb38e4e0f1113ba7bff8dcd19d140f
->> # bad: [ca324099fb2feff62cd0d3e8ef007e2c2dc8b6a7] ixgbe: don't use magic
->> size number to assign ptp_caps.name
->> git bisect bad ca324099fb2feff62cd0d3e8ef007e2c2dc8b6a7
->> # bad: [1f5a7407e4307bfaa465fbaece985a72e4bc4752] Merge branch 'master' of
->> git://git.kernel.org/pub/scm/linux/kernel/git/klassert/ipsec-next
->> git bisect bad 1f5a7407e4307bfaa465fbaece985a72e4bc4752
->> # good: [86c1a045640d3f34ca1ab2f3e8b102670d21f93a] tcp: use zero-window
->> when free_space is low
->> git bisect good 86c1a045640d3f34ca1ab2f3e8b102670d21f93a
->> # bad: [6c5ef6209d28bd2e75484e5cad070c898a7f5154] i40e: tighten up ring
->> enable/disable flow
->> git bisect bad 6c5ef6209d28bd2e75484e5cad070c898a7f5154
->> # bad: [dbbd81119b7ac7bb383413c9e955f21abd15bf2b] i40evf: get rid of
->> pci_using_dac
->> git bisect bad dbbd81119b7ac7bb383413c9e955f21abd15bf2b
->> # bad: [61cc776fc1f51616ab22a898a2ea01e2cf0be567] Merge branch 'for-davem'
->> of git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next
->> git bisect bad 61cc776fc1f51616ab22a898a2ea01e2cf0be567
->> # good: [010d3c3989706d800ae72253773fa6537cc9f74c] bonding: fix
->> bond_arp_rcv() race of curr_active_slave
->> git bisect good 010d3c3989706d800ae72253773fa6537cc9f74c
->> # bad: [88daf80dcca19ff995cc263592426f734a9702f3] Merge branch 'master' of
->> git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next into
->> for-davem
->> git bisect bad 88daf80dcca19ff995cc263592426f734a9702f3
->> # first bad commit: [88daf80dcca19ff995cc263592426f734a9702f3] Merge
->> branch 'master' of
->> git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next into
->> for-davem
->>
