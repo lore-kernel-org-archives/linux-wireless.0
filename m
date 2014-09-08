@@ -1,50 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:57872 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752000AbaIRQLu (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:1617 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753058AbaIHJAh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Sep 2014 12:11:50 -0400
-Message-ID: <541B0445.7040707@candelatech.com> (sfid-20140918_181153_531147_5E05C777)
-Date: Thu, 18 Sep 2014 09:11:49 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 8 Sep 2014 05:00:37 -0400
+Message-ID: <540D7033.5010104@broadcom.com> (sfid-20140908_110040_840836_DB0BC9A3)
+Date: Mon, 8 Sep 2014 11:00:35 +0200
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/9] ath10k: fix tx/rx chainmask init
-References: <1411046487-19544-1-git-send-email-michal.kazior@tieto.com> <1411046487-19544-2-git-send-email-michal.kazior@tieto.com>
-In-Reply-To: <1411046487-19544-2-git-send-email-michal.kazior@tieto.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Bastien Nocera <hadess@hadess.net>
+CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	brcm80211 development <brcm80211-dev-list@broadcom.com>
+Subject: Re: Broadcom Wi-Fi/Bluetooth on GPIO? (Baytrail tablet)
+References: <1409870378.19259.9.camel@hadess.net> <CACna6rxj7wJjWrvcLsTzFPKJP+g-an1qOwJSXZNCp99uKnhF8Q@mail.gmail.com>
+In-Reply-To: <CACna6rxj7wJjWrvcLsTzFPKJP+g-an1qOwJSXZNCp99uKnhF8Q@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/18/2014 06:21 AM, Michal Kazior wrote:
-> Firmware reports the number of RF chains so use
-> that for initialization of supp_{tx,rx}_chainmask
-> instead of using a macro for 3x3 chips.
-> 
-> This should make tx/rx chainmask reports correct
-> for chips other than 3x3.
+On 09/05/14 10:06, Rafał Miłecki wrote:
+> On 5 September 2014 00:39, Bastien Nocera<hadess@hadess.net>  wrote:
+>> On this tablet, based on a Baytrail SoC, I found reference of this
+>> Broadcom device in the DSDT, and I believe it could be the
+>> Bluetooth/Wi-Fi chipset (this one[1]?):
+>> ---8<---
+>> Device (BRC3)
+>> {
+>>      Name (_ADR, One)  // _ADR: Address
+>>      Name (_DEP, Package (0x01)  // _DEP: Dependencies
+>>      {
+>>          GPO2
+>>      })
+>>      Name (_HID, "BCM4321")  // _HID: Hardware ID
+>>      Name (_CID, "BCM43241")  // _CID: Compatible ID
+>>      Name (GMOD, ResourceTemplate ()
+>>      {
+>>          GpioIo (Exclusive, PullDefault, 0x0000, 0x0000,
+>> IoRestrictionOutputOnly,
+>>              "\\_SB.GPO2", 0x00, ResourceConsumer, ,
+>>              )
+>>              {   // Pin list
+>>                  0x0014
+>>              }
+>>      })
+>> ---8<---
+>>
+>> Am I correct in thinking that it's a Broadcom chipset? What would it
+>> take to get this supported in the kernel? I'm currently stuck on a
+>> slightly older kernel (3.16.0) due to Intel graphics driver problems,
+>> but I couldn't find anything directly related to this in the current
+>> linus tree.
+>
+> Most of wireless devices in phones/tables/etc. are full MAC devices.
+> Broadcom wireless chipset names are a bit tricky. For example chipset
+> 0x4322 can be found in soft MAC devices as well as in full MAC ones.
+> However in case of Full MAC 0x4322 chipset Broadcom used marketing
+> name BCM43231.
+>
+> So I think (it's just a guess) your device is a chipset identifying
+> itself as 0x4321 in a Full MAC device with marketing name BCM43241.
+>
+> It seems that brcmfmac already supports BCM43241 as SDIO device. So
+> unless your tables uses some different (unsupported) chip revision, it
+> should be just a matter of interface to support your WiFi.
 
-> diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-> index 2c42bd5..772cca5 100644
-> --- a/drivers/net/wireless/ath/ath10k/wmi.c
-> +++ b/drivers/net/wireless/ath/ath10k/wmi.c
-> @@ -2198,6 +2198,9 @@ static void ath10k_wmi_service_ready_event_rx(struct ath10k *ar,
->  		ar->num_rf_chains = WMI_MAX_SPATIAL_STREAM;
->  	}
->  
-> +	ar->supp_tx_chainmask = (1 << ar->num_rf_chains) - 1;
-> +	ar->supp_rx_chainmask = (1 << ar->num_rf_chains) - 1;
+Correct. I suspect the tablet has 43241. So you can try brcmfmac driver. 
+When you load it with 'debug=0x1416' you will probably get more from the 
+kernel log regarding the chip revision. You need to have firmware in 
+/lib/firmware/brcm. Which one depends on the chip id and/or revision.
 
-Are there are no chips that support a different number
-of tx and rx chains?
-
-
-Thanks,
-Ben
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Regards,
+Arend
