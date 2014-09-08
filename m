@@ -1,57 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.131]:49182 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752372AbaIAU6G convert rfc822-to-8bit (ORCPT
+Received: from mail-ig0-f182.google.com ([209.85.213.182]:44293 "EHLO
+	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753163AbaIHNDJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Sep 2014 16:58:06 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Jonas Gorski <jogo@openwrt.org>
-Cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Booting bcm47xx (bcma & stuff), sharing code with bcm53xx
-Date: Mon, 01 Sep 2014 22:57:46 +0200
-Message-ID: <7233866.BdZFBc3HWf@wuerfel> (sfid-20140901_225830_902497_AC2B3E05)
-In-Reply-To: <CAOiHx==sRquiqrQW6T0S+UsOz5H8V1Wt7x1RD=SVo6=gu7M1Vg@mail.gmail.com>
-References: <CACna6rzRf7qf0YAFWqp4VgwR76-N8HO12eSz_H5NW9LpjBArdw@mail.gmail.com> <4072992.6HB7sP7z87@wuerfel> <CAOiHx==sRquiqrQW6T0S+UsOz5H8V1Wt7x1RD=SVo6=gu7M1Vg@mail.gmail.com>
+	Mon, 8 Sep 2014 09:03:09 -0400
+Received: by mail-ig0-f182.google.com with SMTP id a13so2643868igq.9
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Sep 2014 06:03:08 -0700 (PDT)
+Date: Mon, 8 Sep 2014 09:02:15 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Dani Camps <danicamps81@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: wmediumd performance penalty
+Message-ID: <20140908130215.GA30071@localhost> (sfid-20140908_150313_344592_4A9A8621)
+References: <CAD3NH5X1AYR5p8AyRyO0DFkkJUtuc_78=s6vEi-nS4UxUZfWCg@mail.gmail.com>
+ <1409597534.2703.9.camel@jlt4.sipsolutions.net>
+ <CAD3NH5Wimu9muPeL-zFrw=u1G3Q+8749cj0SYUmeQuLF6LKibQ@mail.gmail.com>
+ <1409644512.1808.2.camel@jlt4.sipsolutions.net>
+ <CAD3NH5XEfHU7KMWwrmZdZz9LKP_86b4EFogpHrnC+AhREHjOPw@mail.gmail.com>
+ <20140905130325.GA26808@localhost>
+ <20140905141039.GB26808@localhost>
+ <CAD3NH5UEPKw58ObsW+8dpLRFMHTEq91TSd6RAkV3H8E76Ooamw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAD3NH5UEPKw58ObsW+8dpLRFMHTEq91TSd6RAkV3H8E76Ooamw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 01 September 2014 22:45:25 Jonas Gorski wrote:
-> On Mon, Sep 1, 2014 at 4:57 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> > On Monday 01 September 2014 09:48:48 Rafał Miłecki wrote:
-> >> On 31 August 2014 11:20, Rafał Miłecki <zajec5@gmail.com> wrote:
-> >> So I think we'll need to change our vision of flash access in
-> >> bcm74xx_nvram driver. I guess we will have to:
-> >> 1) Register NAND core early
-> >> 2) Initialize NAND driver
-> >> 3) Use mtd/nand API in bcm47xx_nvram
-> >
-> > This would mean it's available really late. Is that a problem?
+On Sat, Sep 06, 2014 at 10:17:34AM +0200, Dani Camps wrote:
+> Hi Bob,
 > 
-> That's probably mostly fine (for MIPS), except for two places:
-> a) the kernel command line is stored in nvram, and used for finding
-> out the correct console tty.
+> Our use case is that we have some research code implemented on mac80211,
+> and we want to test it over a virtual testbed with wmediumd before going on
+> real hw. Being able to have realistic radio capacities would help us in our
+> testing.
 
-Is this also the case on ARM? According to the documented boot protocol,
-ARM systems are supposed to pass the command line either through the
-ATAGS interface or through a DT, and we have code to move it from
-the former into the latter one. Of course it wouldn't be the first
-system that ignores the boot protocol, but it has fortunately become
-rather rare these days.
+Ok, I see.  Well, I started poking at wmediumd code a bit this weekend,
+and I have in mind a rewrite that would do what you want, and also do
+it properly unlike my other hack.  I'll let you know when I have something
+working or you can ping me off-list if you want to talk more about it.
 
-> b) on one specific chip, the configured system clock rate needs to be
-> read out from nvram.
-> 
-> Both can be also done through DT, but b) is somewhat important to do
-> right, as it will cause the time running fast/slow if the value is
-> wrong.
-
-Can you have two systems that can use the same DTB with the exception
-of the clock rate? This sounds no different than on any other system
-that has a variable clock input.
-
-	Arnd
+-- 
+Bob Copeland %% www.bobcopeland.com
