@@ -1,61 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:49887 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751040AbaIJIuU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Sep 2014 04:50:20 -0400
-Message-ID: <1410339003.2761.2.camel@jlt4.sipsolutions.net> (sfid-20140910_105026_611263_FA6A22FB)
-Subject: Re: 802.11p rate control
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rostislav Lisovy <lisovy@gmail.com>
-Cc: linux-wireless@vger.kernel.org, burak.simsek@volkswagen.de,
-	s.sander@nordsys.de, sojkam1@fel.cvut.cz,
-	jan-niklas.meier@volkswagen.de, emmanuel.thierry@yogoko.fr,
-	thierry.ernst@yogoko.fr, oyunaash@gmail.com,
-	laszlo.virag@commsignia.com
-Date: Wed, 10 Sep 2014 10:50:03 +0200
-In-Reply-To: <1410193824.10388.24.camel@umadbro> (sfid-20140908_183026_729762_39C348F0)
-References: <1410193824.10388.24.camel@umadbro>
-	 (sfid-20140908_183026_729762_39C348F0)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:51031 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753907AbaIHQ4b (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Sep 2014 12:56:31 -0400
+Received: by mail-wi0-f169.google.com with SMTP id n3so2993397wiv.2
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Sep 2014 09:56:30 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 04/12] iwlwifi: mvm: fix endianity issues with Smart Fifo commands
+Date: Mon,  8 Sep 2014 19:56:09 +0300
+Message-Id: <1410195377-10075-4-git-send-email-egrumbach@gmail.com> (sfid-20140908_185634_317137_3F5B97DF)
+In-Reply-To: <540DDF37.5030801@gmail.com>
+References: <540DDF37.5030801@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-09-08 at 18:30 +0200, Rostislav Lisovy wrote:
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-> The possible (first implementation) solution might be either to
-> implement some "dummy" rate control algorithm that will set a fixed
-> datarate only once (during "ocb join" command) or to use the Minstrel
-> while limiting the allowed datarate to be the lowest one; i.e.
->     mand_rates = ieee80211_mandatory_rates(sband, scan_width);
->     sta->sta.supp_rates[band] =
->         find_first_bit(&mand_rates, sizeof(u32));
+This code was broken on big endian systems. Sparse didn't
+catch the bug since the firmware command was not tagged as
+little endian.
+Fix the bug for big endian systems and tag the field in the
+firmware command to prevent such issues in the future.
 
-That's pretty much already done anyway since you'd restrict the
-supported rates to the ones that are, well, supported :)
+Cc: stable@vger.kernel.org [3.14+]
+Fixes: 1f3b0ff8ec ("iwlwifi: mvm: Add Smart FIFO support")
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/fw-api.h | 4 ++--
+ drivers/net/wireless/iwlwifi/mvm/sf.c     | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-So I don't think you need to do anything here except set up the station
-correctly.
-
-
-> If I am not mistaken, it is not possible to live without an in-kernel
-> rate_control algorithm?
-> One interesting idea I got from one colleague is to implement the
-> algorithm logic in the user-space -- kernel would contain just a thin
-> shell controlled from the user-space (via netlink?). This is probably
-> not as insane as it may sound since the purpose of the rate-control
-> algorithm for 802.11p (at least for ITS-G5) is not to "maximize the
-> immediate throughput" but more like "shared medium congestion control",
-> which may require much slower frequency of a control loop.
-
-I'm not really convinced this is feasible, but in any case - are you
-even communicating long enough with a single peer to make rate control
-feasible?
-
-
-Anyway - it seems to me that you're getting ahead of yourself. Shouldn't
-you actually have a functioning datapath before worrying about rate
-control? And for that you'll need station handling in mac80211, etc.
-
-johannes
+diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/iwlwifi/mvm/fw-api.h
+index 95f5b32..9a922f3 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/fw-api.h
++++ b/drivers/net/wireless/iwlwifi/mvm/fw-api.h
+@@ -1563,14 +1563,14 @@ enum iwl_sf_scenario {
+ 
+ /**
+  * Smart Fifo configuration command.
+- * @state: smart fifo state, types listed in iwl_sf_sate.
++ * @state: smart fifo state, types listed in enum %iwl_sf_sate.
+  * @watermark: Minimum allowed availabe free space in RXF for transient state.
+  * @long_delay_timeouts: aging and idle timer values for each scenario
+  * in long delay state.
+  * @full_on_timeouts: timer values for each scenario in full on state.
+  */
+ struct iwl_sf_cfg_cmd {
+-	enum iwl_sf_state state;
++	__le32 state;
+ 	__le32 watermark[SF_TRANSIENT_STATES_NUMBER];
+ 	__le32 long_delay_timeouts[SF_NUM_SCENARIO][SF_NUM_TIMEOUT_TYPES];
+ 	__le32 full_on_timeouts[SF_NUM_SCENARIO][SF_NUM_TIMEOUT_TYPES];
+diff --git a/drivers/net/wireless/iwlwifi/mvm/sf.c b/drivers/net/wireless/iwlwifi/mvm/sf.c
+index 7edfd15..e843b67 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/sf.c
++++ b/drivers/net/wireless/iwlwifi/mvm/sf.c
+@@ -172,7 +172,7 @@ static int iwl_mvm_sf_config(struct iwl_mvm *mvm, u8 sta_id,
+ 			     enum iwl_sf_state new_state)
+ {
+ 	struct iwl_sf_cfg_cmd sf_cmd = {
+-		.state = new_state,
++		.state = cpu_to_le32(new_state),
+ 	};
+ 	struct ieee80211_sta *sta;
+ 	int ret = 0;
+-- 
+1.9.1
 
