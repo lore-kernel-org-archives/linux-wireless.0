@@ -1,50 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:50051 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755257AbaIQPPM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Sep 2014 11:15:12 -0400
-Date: Wed, 17 Sep 2014 11:11:43 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Loic Poulain <loic.poulain@intel.com>
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] net: rfkill: gpio: Fix clock status
-Message-ID: <20140917151142.GA13392@tuxdriver.com> (sfid-20140917_171520_252605_D4325991)
-References: <1410872038-4604-1-git-send-email-loic.poulain@intel.com>
+Received: from 8bytes.org ([81.169.241.247]:49159 "EHLO theia.8bytes.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753172AbaIHKcG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Sep 2014 06:32:06 -0400
+Date: Mon, 8 Sep 2014 12:32:03 +0200
+From: Joerg Roedel <joro@8bytes.org>
+To: Jason Newton <nevion@gmail.com>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+	iommu <iommu@lists.linux-foundation.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: ath9k and AMD IOMMU alias breakage on 3.16?
+Message-ID: <20140908103203.GQ28786@8bytes.org> (sfid-20140908_123210_492700_0F3FB2B4)
+References: <CAGou9MhCmRajqfh91rxbBUr9PBvJxo7U=g9p4Onp0pJk4BwBnA@mail.gmail.com>
+ <1409976104.2982.56.camel@ul30vt.home>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1410872038-4604-1-git-send-email-loic.poulain@intel.com>
+In-Reply-To: <1409976104.2982.56.camel@ul30vt.home>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 16, 2014 at 02:53:58PM +0200, Loic Poulain wrote:
-> Clock is disabled when the device is blocked.
-> So, clock_enabled is the logical negation of "blocked".
-> 
-> Signed-off-by: Loic Poulain <loic.poulain@intel.com>
-> ---
->  net/rfkill/rfkill-gpio.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
-> index 14c98e4..408e51f 100644
-> --- a/net/rfkill/rfkill-gpio.c
-> +++ b/net/rfkill/rfkill-gpio.c
-> @@ -54,7 +54,7 @@ static int rfkill_gpio_set_power(void *data, bool blocked)
->  	if (blocked && !IS_ERR(rfkill->clk) && rfkill->clk_enabled)
->  		clk_disable(rfkill->clk);
->  
-> -	rfkill->clk_enabled = blocked;
-> +	rfkill->clk_enabled = !blocked;
->  
->  	return 0;
->  }
+On Fri, Sep 05, 2014 at 10:01:44PM -0600, Alex Williamson wrote:
+> On Fri, 2014-09-05 at 20:00 -0700, Jason Newton wrote:
+> > Hi,
+> > 
+> > I have an AR9462 connected over minipcie, it came with the ASRock
+> > FM2A88x-itx motherboard and I'm using an AMD A10-7850K cpu with it.  When I
+> > have IOMMU enabled, and this is desirable for opencl related things, the
+> > AR9462 malfunctions with these two errors occurring:
+> > 
+> > AMD-Vi: Event logged [INVALID_DEVICE_REQUEST device=00:00.1
+> > address=0x000000fdf8080020 flags=0x0a00]
 
-This looks like the right fix, but...the code has been that way for
-a long time.  If this patch is correct, how has this gone undetected
-for so long?
+This means that the device 00:00.1 is sending to the interrupt/EOI
+address-range while interrupt remapping is enabled. You can boot with
+intremap=off on the kernel command line to work around this problem.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+This looks either like another PCI aliasing issue or a 00:00.1 hidden
+device is sending interrupt requests (which it is not allowed to do).
+
+
+	Joerg
+
