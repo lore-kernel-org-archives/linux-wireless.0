@@ -1,93 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:48206 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752389AbaIYX7r (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Sep 2014 19:59:47 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 2/2] mac-sim:  support creating radios with specific name.
-Date: Thu, 25 Sep 2014 16:59:44 -0700
-Message-Id: <1411689584-16136-2-git-send-email-greearb@candelatech.com> (sfid-20140926_015951_078853_5A323268)
-In-Reply-To: <1411689584-16136-1-git-send-email-greearb@candelatech.com>
-References: <1411689584-16136-1-git-send-email-greearb@candelatech.com>
+Received: from cantor2.suse.de ([195.135.220.15]:35861 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754886AbaIHW1g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Sep 2014 18:27:36 -0400
+Date: Tue, 9 Sep 2014 00:27:33 +0200
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	lkml20140418@newton.leun.net, Arik Nemtsov <arik@wizery.com>,
+	linux@eikelenboom.it
+Subject: Re: [PATCH 2/2] cfg80211: fix processing world regdomain when non
+	modular
+Message-ID: <20140908222733.GF965@wotan.suse.de> (sfid-20140909_002739_250448_EC4D3F9C)
+References: <1398137975-14275-1-git-send-email-mcgrof@do-not-panic.com> <1398137975-14275-3-git-send-email-mcgrof@do-not-panic.com> <CAGXE3d8yq_-EwacqXi2fMHC=KLU-6n=11U2wrYvpfwd++WryCg@mail.gmail.com> <20140905214331.GE17986@wotan.suse.de> <CAGXE3d9pmP9kpO2B44p-tdwy4BLZQcWgfUvcyfkjtWWaBWHsCg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAGXE3d9pmP9kpO2B44p-tdwy4BLZQcWgfUvcyfkjtWWaBWHsCg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On Mon, Sep 08, 2014 at 11:59:39AM +0200, Helmut Schaa wrote:
+> Hi,
+> 
+> On Fri, Sep 5, 2014 at 11:43 PM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
+> > Yeah this seems to be a corner case of the fact that we deal with
+> > locking for the last request only through RCU and we only annotate
+> > that the request was processed but don't add checks for when its
+> > about to be processed. At least that's what I gather could be
+> > the issue here given that if you see __reg_process_hint_driver()
+> > we already check for two driver hints matching and and just
+> > request the core to copy the existing regulatory domain onto
+> > the new device.
+> >
+> >         if (lr->initiator == NL80211_REGDOM_SET_BY_DRIVER &&
+> >             !regdom_changes(driver_request->alpha2))
+> >                 return REG_REQ_ALREADY_SET;
+> >
+> >         return REG_REQ_INTERSECT;
+> >
+> > The intersection would happen otherwise and I think this is caused
+> > by a small race here. Can you try the following:
+> 
+> Just retried with your patch applied but I can still get an "98"
+> intersected regdomain :(
+> 
+> [    6.190000] ath: EEPROM regdomain: 0x0
+> [    6.190000] ath: EEPROM indicates default country code should be
+> used
+> [    6.190000] ath: doing EEPROM country->regdmn map search
+> [    6.190000] ath: country maps to regdmn code: 0x3a
+> [    6.190000] ath: Country alpha2 being used: US
+> [    6.190000] ath: Regpair used: 0x3a
+> [    6.200000] ieee80211 phy0: Selected rate control algorithm 'minstrel_ht'
+> [    6.210000] ieee80211 phy0: Atheros AR9340 Rev:0 mem=0xb8100000, irq=47
+> [    6.210000] PCI: Enabling device 0000:00:00.0 (0000 -> 0002)
+> [    6.210000] ath: EEPROM regdomain: 0x0
+> [    6.210000] ath: EEPROM indicates default country code should be used
+> [    6.210000] ath: doing EEPROM country->regdmn map search
+> [    6.210000] ath: country maps to regdmn code: 0x3a
+> [    6.210000] ath: Country alpha2 being used: US
+> [    6.210000] ath: Regpair used: 0x3a
+> [    6.220000] ieee80211 phy1: Selected rate control algorithm 'minstrel_ht'
+> [    6.240000] cfg80211: Calling CRDA for country: US
+> [    6.240000] cfg80211: Calling CRDA for country: US
+> [    6.240000] cfg80211: Current regulatory domain intersected:
+> [    6.240000] cfg80211:  DFS Master region: unset
+> [    6.240000] cfg80211:   (start_freq - end_freq @ bandwidth),
+> (max_antenna_gain, max_eirp), (dfs_cac_time)
+> [    6.240000] cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz),
+> (N/A, 2000 mBm), (N/A)
+> [    6.240000] cfg80211:   (2457000 KHz - 2472000 KHz @ 15000 KHz),
+> (N/A, 2000 mBm), (N/A)
+> [    6.240000] cfg80211:   (5170000 KHz - 5250000 KHz @ 80000 KHz),
+> (N/A, 1700 mBm), (N/A)
+> [    6.240000] cfg80211:   (5250000 KHz - 5330000 KHz @ 80000 KHz),
+> (N/A, 2000 mBm), (0 s)
+> [    6.240000] cfg80211:   (5735000 KHz - 5835000 KHz @ 80000 KHz),
+> (N/A, 2000 mBm), (N/A)
+> [    6.240000] cfg80211:   (57240000 KHz - 63720000 KHz @ 2160000
+> KHz), (N/A, 0 mBm), (N/A)
+> [    6.240000] cfg80211: Calling CRDA for country: US
+> [    6.240000] ieee80211 phy1: Atheros AR9300 Rev:3 mem=0xb0000000, irq=40
+> [    6.240000] cfg80211: Current regulatory domain intersected:
+> [    6.240000] cfg80211:  DFS Master region: unset
+> [    6.240000] cfg80211:   (start_freq - end_freq @ bandwidth),
+> (max_antenna_gain, max_eirp), (dfs_cac_time)
+> [    6.240000] cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz),
+> (N/A, 2000 mBm), (N/A)
+> [    6.240000] cfg80211:   (2457000 KHz - 2472000 KHz @ 15000 KHz),
+> (N/A, 2000 mBm), (N/A)
+> [    6.240000] cfg80211:   (5170000 KHz - 5250000 KHz @ 80000 KHz),
+> (N/A, 1700 mBm), (N/A)
+> [    6.240000] cfg80211:   (5250000 KHz - 5330000 KHz @ 80000 KHz),
+> (N/A, 2000 mBm), (0 s)
+> [    6.240000] cfg80211:   (5735000 KHz - 5835000 KHz @ 80000 KHz),
+> (N/A, 2000 mBm), (N/A)
+> [    6.240000] cfg80211:   (57240000 KHz - 63720000 KHz @ 2160000
+> KHz), (N/A, 0 mBm), (N/A)
+> 
+> I'll try to dive deeper into the regulatory code ...
 
-Otherwise, it can be very difficult to know which is which
-if you are trying to do detailed testing.
+OK thanks I appreciate that, it will take me a bit to get back to this
+as this week and the next few weeks will be really busy and I will
+be traveling.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-
-NOTE:  This depends on the earlier patch that added the radio-name
-    attribute.
-
- drivers/net/wireless/mac80211_hwsim.c | 16 +++++++++++++---
- 1 file changed, 13 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index b755920..2b54413 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -2018,7 +2018,7 @@ static struct ieee80211_ops mac80211_hwsim_mchan_ops;
- static int mac80211_hwsim_create_radio(int channels, const char *reg_alpha2,
- 				       const struct ieee80211_regdomain *regd,
- 				       bool reg_strict, bool p2p_device,
--				       bool use_chanctx)
-+				       bool use_chanctx, char* hwname)
- {
- 	int err;
- 	u8 addr[ETH_ALEN];
-@@ -2230,6 +2230,12 @@ static int mac80211_hwsim_create_radio(int channels, const char *reg_alpha2,
- 		goto failed_hw;
- 	}
- 
-+	if (hwname)
-+		/* If this fails, continue on anyway, treat it as request
-+		 * instead of command.
-+		 */
-+		cfg80211_dev_rename_wiphy(hw->wiphy, hwname);
-+
- 	wiphy_debug(hw->wiphy, "hwaddr %pM registered\n", hw->wiphy->perm_addr);
- 
- 	if (reg_alpha2)
-@@ -2508,10 +2514,14 @@ static int hwsim_create_radio_nl(struct sk_buff *msg, struct genl_info *info)
- 	bool reg_strict = info->attrs[HWSIM_ATTR_REG_STRICT_REG];
- 	bool p2p_device = info->attrs[HWSIM_ATTR_SUPPORT_P2P_DEVICE];
- 	bool use_chanctx;
-+	char* hwname = NULL;
- 
- 	if (info->attrs[HWSIM_ATTR_CHANNELS])
- 		chans = nla_get_u32(info->attrs[HWSIM_ATTR_CHANNELS]);
- 
-+	if (info->attrs[HWSIM_ATTR_RADIO_NAME])
-+		hwname = nla_data(info->attrs[HWSIM_ATTR_RADIO_NAME]);
-+
- 	if (info->attrs[HWSIM_ATTR_USE_CHANCTX])
- 		use_chanctx = true;
- 	else
-@@ -2529,7 +2539,7 @@ static int hwsim_create_radio_nl(struct sk_buff *msg, struct genl_info *info)
- 	}
- 
- 	return mac80211_hwsim_create_radio(chans, alpha2, regd, reg_strict,
--					   p2p_device, use_chanctx);
-+					   p2p_device, use_chanctx, hwname);
- }
- 
- static int hwsim_destroy_radio_nl(struct sk_buff *msg, struct genl_info *info)
-@@ -2761,7 +2771,7 @@ static int __init init_mac80211_hwsim(void)
- 		err = mac80211_hwsim_create_radio(channels, reg_alpha2,
- 						  regd, reg_strict,
- 						  support_p2p_device,
--						  channels > 1);
-+						  channels > 1, NULL);
- 		if (err < 0)
- 			goto out_free_radios;
- 	}
--- 
-1.7.11.7
-
+  Luis
