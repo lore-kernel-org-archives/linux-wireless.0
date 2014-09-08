@@ -1,86 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:31592 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751763AbaIJNfg (ORCPT
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:52811 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754599AbaIHQ4j (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Sep 2014 09:35:36 -0400
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>,
-	Dedy Lansky <qca_dlansky@qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-Subject: [PATCH 14/22] wil6210: send connect request IEs to FW also for non-secure connection
-Date: Wed, 10 Sep 2014 16:34:43 +0300
-Message-ID: <1410356091-19219-15-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140910_153541_300122_40F90D6D)
-In-Reply-To: <1410356091-19219-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1410356091-19219-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 8 Sep 2014 12:56:39 -0400
+Received: by mail-wi0-f180.google.com with SMTP id ex7so3061165wid.1
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Sep 2014 09:56:38 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 10/12] iwlwifi: dvm: disable power save by default
+Date: Mon,  8 Sep 2014 19:56:15 +0300
+Message-Id: <1410195377-10075-10-git-send-email-egrumbach@gmail.com> (sfid-20140908_185645_444770_031F38CF)
+In-Reply-To: <540DDF37.5030801@gmail.com>
+References: <540DDF37.5030801@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Driver is sending connect request IEs to FW only for secure connection and
-ignores them for non-secure connection.
-This is fixed by always sending the IEs to FW upon connect request
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+In
+https://bugzilla.kernel.org/show_bug.cgi?id=84031,
+the submitter said that disabling power saving helped,
+do just that.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/wil6210/cfg80211.c | 22 +++++++++++-----------
- drivers/net/wireless/ath/wil6210/wmi.c      |  2 ++
- 2 files changed, 13 insertions(+), 11 deletions(-)
+ drivers/net/wireless/iwlwifi/dvm/power.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index c8c9852..c1ff330 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -379,22 +379,22 @@ static int wil_cfg80211_connect(struct wiphy *wiphy,
- 				sme->ie_len);
- 			goto out;
- 		}
--		/*
--		 * For secure assoc, send:
--		 * (1) WMI_DELETE_CIPHER_KEY_CMD
--		 * (2) WMI_SET_APPIE_CMD
--		 */
-+		/* For secure assoc, send WMI_DELETE_CIPHER_KEY_CMD */
- 		rc = wmi_del_cipher_key(wil, 0, bss->bssid);
- 		if (rc) {
- 			wil_err(wil, "WMI_DELETE_CIPHER_KEY_CMD failed\n");
- 			goto out;
- 		}
--		/* WMI_SET_APPIE_CMD */
--		rc = wmi_set_ie(wil, WMI_FRAME_ASSOC_REQ, sme->ie_len, sme->ie);
--		if (rc) {
--			wil_err(wil, "WMI_SET_APPIE_CMD failed\n");
--			goto out;
--		}
-+	}
-+
-+	/* WMI_SET_APPIE_CMD. ie may contain rsn info as well as other info
-+	 * elements. Send it also in case it's empty, to erase previously set
-+	 * ies in FW.
-+	 */
-+	rc = wmi_set_ie(wil, WMI_FRAME_ASSOC_REQ, sme->ie_len, sme->ie);
-+	if (rc) {
-+		wil_err(wil, "WMI_SET_APPIE_CMD failed\n");
-+		goto out;
- 	}
+diff --git a/drivers/net/wireless/iwlwifi/dvm/power.c b/drivers/net/wireless/iwlwifi/dvm/power.c
+index 760c45c..1513dbc 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/power.c
++++ b/drivers/net/wireless/iwlwifi/dvm/power.c
+@@ -40,7 +40,7 @@
+ #include "commands.h"
+ #include "power.h"
  
- 	/* WMI_CONNECT_CMD */
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index c3682c3a..789c316 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -972,6 +972,8 @@ int wmi_set_ie(struct wil6210_priv *wil, u8 type, u16 ie_len, const void *ie)
+-static bool force_cam;
++static bool force_cam = true;
+ module_param(force_cam, bool, 0644);
+ MODULE_PARM_DESC(force_cam, "force continuously aware mode (no power saving at all)");
  
- 	if (!cmd)
- 		return -ENOMEM;
-+	if (!ie)
-+		ie_len = 0;
- 
- 	cmd->mgmt_frm_type = type;
- 	/* BUG: FW API define ieLen as u8. Will fix FW */
 -- 
 1.9.1
 
