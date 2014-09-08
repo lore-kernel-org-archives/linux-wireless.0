@@ -1,84 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay4-d.mail.gandi.net ([217.70.183.196]:45538 "EHLO
-	relay4-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753366AbaIIJ3M convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Sep 2014 05:29:12 -0400
-Message-ID: <1410254937.4077.5.camel@hadess.net> (sfid-20140909_112915_737249_1AF2C545)
-Subject: Re: Broadcom Wi-Fi/Bluetooth on GPIO? (Baytrail tablet)
-From: Bastien Nocera <hadess@hadess.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	brcm80211 development <brcm80211-dev-list@broadcom.com>
-Date: Tue, 09 Sep 2014 11:28:57 +0200
-In-Reply-To: <540D7033.5010104@broadcom.com>
-References: <1409870378.19259.9.camel@hadess.net>
-	 <CACna6rxj7wJjWrvcLsTzFPKJP+g-an1qOwJSXZNCp99uKnhF8Q@mail.gmail.com>
-	 <540D7033.5010104@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from arrakis.dune.hu ([78.24.191.176]:45612 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754214AbaIHQ4s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Sep 2014 12:56:48 -0400
+Message-ID: <540DDFC8.5050000@openwrt.org> (sfid-20140908_185652_972938_A9380D50)
+Date: Mon, 08 Sep 2014 18:56:40 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Rostislav Lisovy <lisovy@gmail.com>,
+	linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+CC: burak.simsek@volkswagen.de, s.sander@nordsys.de,
+	sojkam1@fel.cvut.cz, jan-niklas.meier@volkswagen.de,
+	emmanuel.thierry@yogoko.fr, thierry.ernst@yogoko.fr,
+	oyunaash@gmail.com, laszlo.virag@commsignia.com
+Subject: Re: 802.11p rate control
+References: <1410193824.10388.24.camel@umadbro>
+In-Reply-To: <1410193824.10388.24.camel@umadbro>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hey Rafał, Arend,
-
-On Mon, 2014-09-08 at 11:00 +0200, Arend van Spriel wrote:
-> On 09/05/14 10:06, Rafał Miłecki wrote:
-> > On 5 September 2014 00:39, Bastien Nocera<hadess@hadess.net>  wrote:
-> >> On this tablet, based on a Baytrail SoC, I found reference of this
-> >> Broadcom device in the DSDT, and I believe it could be the
-> >> Bluetooth/Wi-Fi chipset (this one[1]?):
-> >> ---8<---
-> >> Device (BRC3)
-> >> {
-> >>      Name (_ADR, One)  // _ADR: Address
-> >>      Name (_DEP, Package (0x01)  // _DEP: Dependencies
-> >>      {
-> >>          GPO2
-> >>      })
-> >>      Name (_HID, "BCM4321")  // _HID: Hardware ID
-> >>      Name (_CID, "BCM43241")  // _CID: Compatible ID
-> >>      Name (GMOD, ResourceTemplate ()
-> >>      {
-> >>          GpioIo (Exclusive, PullDefault, 0x0000, 0x0000,
-> >> IoRestrictionOutputOnly,
-> >>              "\\_SB.GPO2", 0x00, ResourceConsumer, ,
-> >>              )
-> >>              {   // Pin list
-> >>                  0x0014
-> >>              }
-> >>      })
-> >> ---8<---
-> >>
-> >> Am I correct in thinking that it's a Broadcom chipset? What would it
-> >> take to get this supported in the kernel? I'm currently stuck on a
-> >> slightly older kernel (3.16.0) due to Intel graphics driver problems,
-> >> but I couldn't find anything directly related to this in the current
-> >> linus tree.
-> >
-> > Most of wireless devices in phones/tables/etc. are full MAC devices.
-> > Broadcom wireless chipset names are a bit tricky. For example chipset
-> > 0x4322 can be found in soft MAC devices as well as in full MAC ones.
-> > However in case of Full MAC 0x4322 chipset Broadcom used marketing
-> > name BCM43231.
-> >
-> > So I think (it's just a guess) your device is a chipset identifying
-> > itself as 0x4321 in a Full MAC device with marketing name BCM43241.
-> >
-> > It seems that brcmfmac already supports BCM43241 as SDIO device. So
-> > unless your tables uses some different (unsupported) chip revision, it
-> > should be just a matter of interface to support your WiFi.
+On 2014-09-08 18:30, Rostislav Lisovy wrote:
+> The possible obstacles are:
+> * 802.11p will be used mainly for two independent C2X protocol stacks --
+> one is the European ETSI ITS-G5, the other one is the US WAVE (IEEE
+> 1609). I assume that these two protocol stack implementations will
+> differ mainly in the user-space while the kernel part will be the same.
+> * ITS-G5 already speaks about the "default datarate" for different
+> channels ([1] 4.3, Table 2) -- i.e. 6 Mbit/s for channel no. 180; 12
+> Mbit/s for channel no. 178. This should be probably defined when
+> "joining the network" on a fixed channel.
 > 
-> Correct. I suspect the tablet has 43241. So you can try brcmfmac driver. 
-> When you load it with 'debug=0x1416' you will probably get more from the 
-> kernel log regarding the chip revision. You need to have firmware in 
-> /lib/firmware/brcm. Which one depends on the chip id and/or revision.
+> The possible (first implementation) solution might be either to
+> implement some "dummy" rate control algorithm that will set a fixed
+> datarate only once (during "ocb join" command) or to use the Minstrel
+> while limiting the allowed datarate to be the lowest one; i.e.
+>     mand_rates = ieee80211_mandatory_rates(sband, scan_width);
+>     sta->sta.supp_rates[band] =
+>         find_first_bit(&mand_rates, sizeof(u32));
+> 
+> If I am not mistaken, it is not possible to live without an in-kernel
+> rate_control algorithm?
+> One interesting idea I got from one colleague is to implement the
+> algorithm logic in the user-space -- kernel would contain just a thin
+> shell controlled from the user-space (via netlink?). This is probably
+> not as insane as it may sound since the purpose of the rate-control
+> algorithm for 802.11p (at least for ITS-G5) is not to "maximize the
+> immediate throughput" but more like "shared medium congestion control",
+> which may require much slower frequency of a control loop.
+I think doing this in userspace is overkill. minstrel should be able to
+handle rate control for 802.11p just fine if you set up the supported
+rates properly.
 
-It turns out that the device, though present in the decompiled ACPI DSDT
-isn't actually present on the system. This tablet actually contains a
-Realtek device (also present in the DSDT). Apologies for the misdirected
-mail.
+By the way, minstrel does not try to "maximize the immediate
+throughput", it tries to maximize the ratio of throughput vs used
+airtime, which should be good for 802.11p as well.
 
-Cheers
-
+- Felix
