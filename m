@@ -1,37 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:48036 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752570AbaIEAsU (ORCPT
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:36877 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753907AbaIHQ4Z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Sep 2014 20:48:20 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-Message-ID: <21513.2124.913221.799816@gargle.gargle.HOWL> (sfid-20140905_024824_012761_C82D3E59)
-Date: Fri, 5 Sep 2014 06:18:12 +0530
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: <linux-wireless@vger.kernel.org>, <ath9k-devel@qca.qualcomm.com>
-Subject: Re: [PATCH 0/5] ath9k patches
-In-Reply-To: <20140904172450.GF3467@tuxdriver.com>
-References: <1409730929-30208-1-git-send-email-sujith@msujith.org>
-	<20140904172450.GF3467@tuxdriver.com>
+	Mon, 8 Sep 2014 12:56:25 -0400
+Received: by mail-wi0-f175.google.com with SMTP id ex7so2880041wid.8
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Sep 2014 09:56:24 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 01/12] iwlwifi: mvm: enable scheduled scan on newest firmware
+Date: Mon,  8 Sep 2014 19:56:06 +0300
+Message-Id: <1410195377-10075-1-git-send-email-egrumbach@gmail.com> (sfid-20140908_185628_507652_E8B57797)
+In-Reply-To: <540DDF37.5030801@gmail.com>
+References: <540DDF37.5030801@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> I am having a lot of trouble determining which of your series are
-> intended as fixes for the current release (3.17) or updates for the
-> next release (3.18).  In this series, several seem like fixes but
-> "ath9k: Fix ath_startrecv" seems like a cleanup.
-> 
-> Would you like to reorganize your patch submissions as fixes
-> vs. features?  Or do you want them all to be merged as features
-> for 3.18?
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-All these patches are meant for 3.18. I usually mark immediate
-fixes as stable candidates.
+Scheduled scan was disabled because of a bug in the firmware.
+The firmware reported support for this feature, but enabling
+it led to assertions.
+The bugs have been fixes in latest firmware versions, so that
+we can re-enable the feature on latest firmwares only.
 
-I'll be more explicit about this in future.
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
 
-thanks,
-Sujith
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 7c87965..c4000a1 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -396,12 +396,14 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
+ 	else
+ 		hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
+ 
+-	/* TODO: enable that only for firmwares that don't crash */
+-	/* hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_SCHED_SCAN; */
+-	hw->wiphy->max_sched_scan_ssids = PROBE_OPTION_MAX;
+-	hw->wiphy->max_match_sets = IWL_SCAN_MAX_PROFILES;
+-	/* we create the 802.11 header and zero length SSID IE. */
+-	hw->wiphy->max_sched_scan_ie_len = SCAN_OFFLOAD_PROBE_REQ_SIZE - 24 - 2;
++	if (IWL_UCODE_API(mvm->fw->ucode_ver) >= 10) {
++		hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_SCHED_SCAN;
++		hw->wiphy->max_sched_scan_ssids = PROBE_OPTION_MAX;
++		hw->wiphy->max_match_sets = IWL_SCAN_MAX_PROFILES;
++		/* we create the 802.11 header and zero length SSID IE. */
++		hw->wiphy->max_sched_scan_ie_len =
++			SCAN_OFFLOAD_PROBE_REQ_SIZE - 24 - 2;
++	}
+ 
+ 	hw->wiphy->features |= NL80211_FEATURE_P2P_GO_CTWIN |
+ 			       NL80211_FEATURE_LOW_PRIORITY_SCAN |
+-- 
+1.9.1
+
