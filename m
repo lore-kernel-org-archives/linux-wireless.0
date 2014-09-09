@@ -1,253 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:38654 "EHLO
-	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751547AbaI2JmZ (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:50684 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751047AbaIISaP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Sep 2014 05:42:25 -0400
-Subject: [PATCH v2 2/2] ath10k: support ethtool stats
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 29 Sep 2014 12:42:21 +0300
-Message-ID: <20140929094221.12889.84916.stgit@potku.adurom.net> (sfid-20140929_114252_694423_5BB428A4)
-In-Reply-To: <20140929094214.12889.97523.stgit@potku.adurom.net>
-References: <20140929094214.12889.97523.stgit@potku.adurom.net>
+	Tue, 9 Sep 2014 14:30:15 -0400
+Date: Tue, 9 Sep 2014 14:27:34 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Sergey Ryazanov <ryazanov.s.a@gmail.com>
+Cc: Paul Bolle <pebolle@tiscali.nl>, Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Oleksij Rempel <linux@rempel-privat.de>,
+	Richard Weinberger <richard@nod.at>,
+	Jonathan Bither <jonbither@gmail.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	ath5k-devel@venema.h4ckr.net, open@hauke-m.de,
+	"list@hauke-m.de:NETWORKING DRIVERS" <list@hauke-m.de>,
+	"antonynpavlov@gmail.com" <antonynpavlov@gmail.com>,
+	OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"list@hauke-m.de:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
+	open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 09/28] Remove ATHEROS_AR231X
+Message-ID: <20140909182734.GJ29412@tuxdriver.com> (sfid-20140909_203044_047625_8F1D9F96)
+References: <20140213201421.GJ22203@tuxdriver.com>
+ <1397581703.8212.5.camel@x220>
+ <CAHNKnsQQ42-XnXrubHAy4PF3H2ynbGDdSMP7MvDS_1aRozYF=A@mail.gmail.com>
+ <1403087119.1984.93.camel@x220>
+ <CAHNKnsSfaT7xC5_wv=TrGLEQ2pjC91Q1XG891_n64OuR0fA9Jg@mail.gmail.com>
+ <1403091974.1984.102.camel@x220>
+ <1409911856.7832.9.camel@x220>
+ <CAHNKnsRipRHicKOUW4dCutD1-sUG6qPnP2QuOveH_t1MFX9XgQ@mail.gmail.com>
+ <1409916824.7832.20.camel@x220>
+ <CAHNKnsQ1gt=DRBTd9Q9yos1idqmXMepEPvhm8a7unP-whzNAgg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAHNKnsQ1gt=DRBTd9Q9yos1idqmXMepEPvhm8a7unP-whzNAgg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On Fri, Sep 05, 2014 at 04:02:10PM +0400, Sergey Ryazanov wrote:
+> 2014-09-05 15:33 GMT+04:00 Paul Bolle <pebolle@tiscali.nl>:
+> > Hi Sergey,
+> >
+> > On Fri, 2014-09-05 at 15:12 +0400, Sergey Ryazanov wrote:
+> >> 2014-09-05 14:10 GMT+04:00, Paul Bolle <pebolle@tiscali.nl>:
+> >> > On Wed, 2014-06-18 at 13:46 +0200, Paul Bolle wrote:
+> >> >> Having this conversation every rc1 is getting a bit silly. Could Jiri
+> >> >> e.a. perhaps set some specific deadline for ATHEROS_AR231X to be
+> >> >> submitted?
+> >> >
+> >> > I waited until rc3. Have you seen any activity on this front? If not,
+> >> > should I resend the patch that removes the code in mainline that depends
+> >> > on ATHEROS_AR231X (ie, AHB bus support)?
+> >> >
+> >> Recent activity always could be found in [1]. Now I finish another one
+> >> round of cleanups and have a plan to fix several things (you can
+> >> always find something that you really want to improve). But if you
+> >> insist I could immediately switch to "send upstream" mode. And seems
+> >> that this would be better approach.
+> >>
+> >> 1. https://dev.openwrt.org/log/trunk/target/linux/atheros
+> >
+> > And where can the related PULL requests or patch submissions be found?
+> >
+> I have not sent patches yet, since I thought that it would be easier
+> to cleanup them in openwrt tree and then send them upstream.
 
-Add support for reading firmware stats through the ethtool
-API.  This may be easier for applications to manipulate
-compared to parsing a text based debugfs file.
+That excuse has worn a bit thin.  Perhaps Paul should repost his
+removal and you can add a revert to the start of your patch series?
 
-kvalo: remove unneeded ifdefs, call ath10k_debug_fw_stats_request() and added
-simple error handling
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/debug.c |  160 +++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/debug.h |   13 +++
- drivers/net/wireless/ath/ath10k/mac.c   |    3 +
- 3 files changed, 176 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index 8d3db1c3f4a8..2bb894f31337 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -1130,6 +1130,166 @@ exit:
- 	return ret;
- }
- 
-+/* TODO:  Would be nice to always support ethtool stats, would need to
-+ * move the stats storage out of ath10k_debug, or always have ath10k_debug
-+ * struct available..
-+ */
-+
-+/* This generally cooresponds to the debugfs fw_stats file */
-+static const char ath10k_gstrings_stats[][ETH_GSTRING_LEN] = {
-+	"tx_pkts_nic",
-+	"tx_bytes_nic",
-+	"rx_pkts_nic",
-+	"rx_bytes_nic",
-+	"d_noise_floor",
-+	"d_cycle_count",
-+	"d_phy_error",
-+	"d_rts_bad",
-+	"d_rts_good",
-+	"d_tx_power", /* in .5 dbM I think */
-+	"d_rx_crc_err", /* fcs_bad */
-+	"d_no_beacon",
-+	"d_tx_mpdus_queued",
-+	"d_tx_msdu_queued",
-+	"d_tx_msdu_dropped",
-+	"d_local_enqued",
-+	"d_local_freed",
-+	"d_tx_ppdu_hw_queued",
-+	"d_tx_ppdu_reaped",
-+	"d_tx_fifo_underrun",
-+	"d_tx_ppdu_abort",
-+	"d_tx_mpdu_requed",
-+	"d_tx_excessive_retries",
-+	"d_tx_hw_rate",
-+	"d_tx_dropped_sw_retries",
-+	"d_tx_illegal_rate",
-+	"d_tx_continuous_xretries",
-+	"d_tx_timeout",
-+	"d_tx_mpdu_txop_limit",
-+	"d_pdev_resets",
-+	"d_rx_mid_ppdu_route_change",
-+	"d_rx_status",
-+	"d_rx_extra_frags_ring0",
-+	"d_rx_extra_frags_ring1",
-+	"d_rx_extra_frags_ring2",
-+	"d_rx_extra_frags_ring3",
-+	"d_rx_msdu_htt",
-+	"d_rx_mpdu_htt",
-+	"d_rx_msdu_stack",
-+	"d_rx_mpdu_stack",
-+	"d_rx_phy_err",
-+	"d_rx_phy_err_drops",
-+	"d_rx_mpdu_errors", /* FCS, MIC, ENC */
-+	"d_fw_crash_count",
-+	"d_fw_warm_reset_count",
-+	"d_fw_cold_reset_count",
-+};
-+
-+#define ATH10K_SSTATS_LEN ARRAY_SIZE(ath10k_gstrings_stats)
-+
-+void ath10k_debug_get_et_strings(struct ieee80211_hw *hw,
-+				 struct ieee80211_vif *vif,
-+				 u32 sset, u8 *data)
-+{
-+	if (sset == ETH_SS_STATS)
-+		memcpy(data, *ath10k_gstrings_stats,
-+		       sizeof(ath10k_gstrings_stats));
-+}
-+
-+int ath10k_debug_get_et_sset_count(struct ieee80211_hw *hw,
-+				   struct ieee80211_vif *vif, int sset)
-+{
-+	if (sset == ETH_SS_STATS)
-+		return ATH10K_SSTATS_LEN;
-+
-+	return 0;
-+}
-+
-+void ath10k_debug_get_et_stats(struct ieee80211_hw *hw,
-+			       struct ieee80211_vif *vif,
-+			       struct ethtool_stats *stats, u64 *data)
-+{
-+	struct ath10k *ar = hw->priv;
-+	static const struct ath10k_fw_stats_pdev zero_stats = {};
-+	const struct ath10k_fw_stats_pdev *pdev_stats;
-+	int i = 0, ret;
-+
-+	mutex_lock(&ar->conf_mutex);
-+
-+	if (ar->state == ATH10K_STATE_ON) {
-+		ret = ath10k_debug_fw_stats_request(ar);
-+		if (ret) {
-+			/* just print a warning and try to use older results */
-+			ath10k_warn(ar,
-+				    "failed to get fw stats for ethtool: %d\n",
-+				    ret);
-+		}
-+	}
-+
-+	pdev_stats = list_first_entry_or_null(&ar->debug.fw_stats.pdevs,
-+					      struct ath10k_fw_stats_pdev,
-+					      list);
-+	if (!pdev_stats) {
-+		/* no results available so just return zeroes */
-+		pdev_stats = &zero_stats;
-+	}
-+
-+	spin_lock_bh(&ar->data_lock);
-+
-+	data[i++] = pdev_stats->hw_reaped; /* ppdu reaped */
-+	data[i++] = 0; /* tx bytes */
-+	data[i++] = pdev_stats->htt_mpdus;
-+	data[i++] = 0; /* rx bytes */
-+	data[i++] = pdev_stats->ch_noise_floor;
-+	data[i++] = pdev_stats->cycle_count;
-+	data[i++] = pdev_stats->phy_err_count;
-+	data[i++] = pdev_stats->rts_bad;
-+	data[i++] = pdev_stats->rts_good;
-+	data[i++] = pdev_stats->chan_tx_power;
-+	data[i++] = pdev_stats->fcs_bad;
-+	data[i++] = pdev_stats->no_beacons;
-+	data[i++] = pdev_stats->mpdu_enqued;
-+	data[i++] = pdev_stats->msdu_enqued;
-+	data[i++] = pdev_stats->wmm_drop;
-+	data[i++] = pdev_stats->local_enqued;
-+	data[i++] = pdev_stats->local_freed;
-+	data[i++] = pdev_stats->hw_queued;
-+	data[i++] = pdev_stats->hw_reaped;
-+	data[i++] = pdev_stats->underrun;
-+	data[i++] = pdev_stats->tx_abort;
-+	data[i++] = pdev_stats->mpdus_requed;
-+	data[i++] = pdev_stats->tx_ko;
-+	data[i++] = pdev_stats->data_rc;
-+	data[i++] = pdev_stats->sw_retry_failure;
-+	data[i++] = pdev_stats->illgl_rate_phy_err;
-+	data[i++] = pdev_stats->pdev_cont_xretry;
-+	data[i++] = pdev_stats->pdev_tx_timeout;
-+	data[i++] = pdev_stats->txop_ovf;
-+	data[i++] = pdev_stats->pdev_resets;
-+	data[i++] = pdev_stats->mid_ppdu_route_change;
-+	data[i++] = pdev_stats->status_rcvd;
-+	data[i++] = pdev_stats->r0_frags;
-+	data[i++] = pdev_stats->r1_frags;
-+	data[i++] = pdev_stats->r2_frags;
-+	data[i++] = pdev_stats->r3_frags;
-+	data[i++] = pdev_stats->htt_msdus;
-+	data[i++] = pdev_stats->htt_mpdus;
-+	data[i++] = pdev_stats->loc_msdus;
-+	data[i++] = pdev_stats->loc_mpdus;
-+	data[i++] = pdev_stats->phy_errs;
-+	data[i++] = pdev_stats->phy_err_drop;
-+	data[i++] = pdev_stats->mpdu_errs;
-+	data[i++] = ar->stats.fw_crash_counter;
-+	data[i++] = ar->stats.fw_warm_reset_counter;
-+	data[i++] = ar->stats.fw_cold_reset_counter;
-+
-+	spin_unlock_bh(&ar->data_lock);
-+
-+	mutex_unlock(&ar->conf_mutex);
-+
-+	WARN_ON(i != ATH10K_SSTATS_LEN);
-+}
-+
- static const struct file_operations fops_fw_dbglog = {
- 	.read = ath10k_read_fw_dbglog,
- 	.write = ath10k_write_fw_dbglog,
-diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
-index efbcd29fe9a1..d6a565d2bb74 100644
---- a/drivers/net/wireless/ath/ath10k/debug.h
-+++ b/drivers/net/wireless/ath/ath10k/debug.h
-@@ -63,6 +63,15 @@ void ath10k_debug_dbglog_add(struct ath10k *ar, u8 *buffer, int len);
- 
- #define ATH10K_DFS_STAT_INC(ar, c) (ar->debug.dfs_stats.c++)
- 
-+void ath10k_debug_get_et_strings(struct ieee80211_hw *hw,
-+				 struct ieee80211_vif *vif,
-+				 u32 sset, u8 *data);
-+int ath10k_debug_get_et_sset_count(struct ieee80211_hw *hw,
-+				   struct ieee80211_vif *vif, int sset);
-+void ath10k_debug_get_et_stats(struct ieee80211_hw *hw,
-+			       struct ieee80211_vif *vif,
-+			       struct ethtool_stats *stats, u64 *data);
-+
- #else
- static inline int ath10k_debug_start(struct ath10k *ar)
- {
-@@ -115,6 +124,10 @@ ath10k_debug_get_new_fw_crash_data(struct ath10k *ar)
- 
- #define ATH10K_DFS_STAT_INC(ar, c) do { } while (0)
- 
-+#define ath10k_debug_get_et_strings NULL
-+#define ath10k_debug_get_et_sset_count NULL
-+#define ath10k_debug_get_et_stats NULL
-+
- #endif /* CONFIG_ATH10K_DEBUGFS */
- 
- #ifdef CONFIG_ATH10K_DEBUG
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index a99d91947edc..4d1aef4b8cd4 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -4505,6 +4505,9 @@ static const struct ieee80211_ops ath10k_ops = {
- 	.sta_rc_update			= ath10k_sta_rc_update,
- 	.get_tsf			= ath10k_get_tsf,
- 	.ampdu_action			= ath10k_ampdu_action,
-+	.get_et_sset_count		= ath10k_debug_get_et_sset_count,
-+	.get_et_stats			= ath10k_debug_get_et_stats,
-+	.get_et_strings			= ath10k_debug_get_et_strings,
- 
- 	CFG80211_TESTMODE_CMD(ath10k_tm_cmd)
- 
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
