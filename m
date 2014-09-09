@@ -1,96 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44093 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751694AbaI3NU6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Sep 2014 09:20:58 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH] cfg80211: allow to configure dynamic PS timeout
-Date: Tue, 30 Sep 2014 15:18:34 +0200
-Message-Id: <1412083114-8426-1-git-send-email-sgruszka@redhat.com> (sfid-20140930_152101_719454_65A25C5D)
+Received: from userp1040.oracle.com ([156.151.31.81]:42315 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755842AbaIIJii (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Sep 2014 05:38:38 -0400
+Date: Tue, 9 Sep 2014 12:38:02 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: herself@thefumon.com
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net
+Subject: re: ath5k: added debugfs file for dumping eeprom
+Message-ID: <20140909093802.GA10439@mwanda> (sfid-20140909_113842_152783_6581AC06)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dynamic power save timeout value is suppose to be configurable via
-wext, but due to iwconfig bug is not possible to set it using that tool.
+Hello Jade Bilkey,
 
-Allow to configure PS timeout via nl80211 - add NL80211_ATTR_PS_TIMEOUT
-attribute which become timeout stated in ms.
+The patch db906eb2101b: "ath5k: added debugfs file for dumping
+eeprom" from Aug 30, 2014, leads to the following static checker
+warning:
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- include/uapi/linux/nl80211.h |  2 ++
- net/wireless/nl80211.c       | 21 +++++++++++++++++----
- 2 files changed, 19 insertions(+), 4 deletions(-)
+	drivers/net/wireless/ath/ath5k/debug.c:942 open_file_eeprom()
+	error: buffer overflow 'buf' 2048 <= 4095
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 4b28dc0..600d47b 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1990,6 +1990,8 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_SMPS_MODE,
- 
-+	NL80211_ATTR_PS_TIMEOUT,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index cb9f5a4..39ee3c7 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -7991,7 +7991,7 @@ static int nl80211_set_power_save(struct sk_buff *skb, struct genl_info *info)
- 	struct net_device *dev = info->user_ptr[1];
- 	u8 ps_state;
- 	bool state;
--	int err;
-+	int err, ps_timeout;
- 
- 	if (!info->attrs[NL80211_ATTR_PS_STATE])
- 		return -EINVAL;
-@@ -8003,17 +8003,27 @@ static int nl80211_set_power_save(struct sk_buff *skb, struct genl_info *info)
- 
- 	wdev = dev->ieee80211_ptr;
- 
-+	if (info->attrs[NL80211_ATTR_PS_TIMEOUT]) {
-+		ps_timeout = nla_get_s32(info->attrs[NL80211_ATTR_PS_TIMEOUT]);
-+		if (ps_timeout <= 0 && ps_timeout != -1)
-+			return -EINVAL;
-+	} else {
-+		ps_timeout = wdev->ps_timeout;
-+	}
-+
- 	if (!rdev->ops->set_power_mgmt)
- 		return -EOPNOTSUPP;
- 
- 	state = (ps_state == NL80211_PS_ENABLED) ? true : false;
- 
--	if (state == wdev->ps)
-+	if (state == wdev->ps && ps_timeout == wdev->ps_timeout)
- 		return 0;
- 
--	err = rdev_set_power_mgmt(rdev, dev, state, wdev->ps_timeout);
--	if (!err)
-+	err = rdev_set_power_mgmt(rdev, dev, state, ps_timeout);
-+	if (!err) {
- 		wdev->ps = state;
-+		wdev->ps_timeout = ps_timeout;
-+	}
- 	return err;
- }
- 
-@@ -8051,6 +8061,9 @@ static int nl80211_get_power_save(struct sk_buff *skb, struct genl_info *info)
- 	if (nla_put_u32(msg, NL80211_ATTR_PS_STATE, ps_state))
- 		goto nla_put_failure;
- 
-+	if (nla_put_s32(msg, NL80211_ATTR_PS_TIMEOUT, wdev->ps_timeout))
-+		goto nla_put_failure;
-+
- 	genlmsg_end(msg, hdr);
- 	return genlmsg_reply(msg, info);
- 
--- 
-1.8.3.1
+drivers/net/wireless/ath/ath5k/debug.c
+   905  static int open_file_eeprom(struct inode *inode, struct file *file)
+   906  {
+   907          struct eeprom_private *ep;
+   908          struct ath5k_hw *ah = inode->i_private;
+   909          bool res;
+   910          int i, ret;
+   911          u32 eesize;
+   912          u16 val, *buf;
+                          ^^^
+buf is type u16.
 
+   913  
+   914          /* Get eeprom size */
+   915  
+   916          res = ath5k_hw_nvram_read(ah, AR5K_EEPROM_SIZE_UPPER, &val);
+   917          if (!res)
+   918                  return -EACCES;
+   919  
+   920          if (val == 0) {
+   921                  eesize = AR5K_EEPROM_INFO_MAX + AR5K_EEPROM_INFO_BASE;
+   922          } else {
+   923                  eesize = (val & AR5K_EEPROM_SIZE_UPPER_MASK) <<
+   924                          AR5K_EEPROM_SIZE_ENDLOC_SHIFT;
+   925                  ath5k_hw_nvram_read(ah, AR5K_EEPROM_SIZE_LOWER, &val);
+   926                  eesize = eesize | val;
+   927          }
+   928  
+   929          if (eesize > 4096)
+   930                  return -EINVAL;
+   931  
+   932          /* Create buffer and read in eeprom */
+   933  
+   934          buf = vmalloc(eesize);
+                              ^^^^^^
+eesize is in bytes.
+
+   935          if (!buf) {
+   936                  ret = -ENOMEM;
+   937                  goto err;
+   938          }
+   939  
+   940          for (i = 0; i < eesize; ++i) {
+   941                  AR5K_EEPROM_READ(i, val);
+   942                  buf[i] = val;
+
+We are writing u16 but the for loop limit is in terms of bytes so this
+loop will corrupt memory past the end of the buffer.
+
+   943          }
+   944  
+
+regards,
+dan carpenter
