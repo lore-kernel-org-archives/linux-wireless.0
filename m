@@ -1,47 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:47768 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750767AbaIXEhV (ORCPT
+Received: from mo4-p00-ob.smtp.rzone.de ([81.169.146.217]:51643 "EHLO
+	mo4-p00-ob.smtp.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751155AbaIIUQK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Sep 2014 00:37:21 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@qca.qualcomm.com
-Subject: [RFC 3/4] ath9k: Fix force_channel usage for offchannel frames
-Date: Wed, 24 Sep 2014 10:07:31 +0530
-Message-Id: <1411533452-22921-4-git-send-email-sujith@msujith.org> (sfid-20140924_063727_488334_04126D0E)
-In-Reply-To: <1411533452-22921-1-git-send-email-sujith@msujith.org>
-References: <1411533452-22921-1-git-send-email-sujith@msujith.org>
+	Tue, 9 Sep 2014 16:16:10 -0400
+Message-ID: <540F5FF6.1050102@hartkopp.net> (sfid-20140909_221622_233415_69B1BCB6)
+Date: Tue, 09 Sep 2014 22:15:50 +0200
+From: Oliver Hartkopp <socketcan@hartkopp.net>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: iwlwifi no authentication with AP - Re: pull request: wireless-next
+ 2014-09-08
+References: <20140908191630.GB29412@tuxdriver.com> <540F5927.7000306@hartkopp.net> <20140909195232.GO29412@tuxdriver.com>
+In-Reply-To: <20140909195232.GO29412@tuxdriver.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On 09.09.2014 21:52, John W. Linville wrote:
 
-Since RoC is done before frames marked with
-IEEE80211_TX_CTL_TX_OFFCHAN are received by the driver,
-setting force_channel is useless. We will be in
-the required offchannel, so incoming frames can
-be transmitted immediately.
+> 
+> Hopefully the Intel guys are listening.  As a hunch, what sort of
+> encryption are you using?
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/xmit.c | 3 ---
- 1 file changed, 3 deletions(-)
+They are :-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 00931b6..4d00f59 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -2211,9 +2211,6 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	if (vif)
- 		avp = (void *)vif->drv_priv;
- 
--	if (info->flags & IEEE80211_TX_CTL_TX_OFFCHAN)
--		txctl->force_channel = true;
--
- 	ret = ath_tx_prepare(hw, skb, txctl);
- 	if (ret)
- 	    return ret;
--- 
-2.1.0
+I'm using WPA2.
 
+Regards,
+Oliver
