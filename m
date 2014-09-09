@@ -1,59 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:35152 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751551AbaIWMrs (ORCPT
+Received: from mail-lb0-f176.google.com ([209.85.217.176]:42873 "EHLO
+	mail-lb0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751520AbaIIUCM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Sep 2014 08:47:48 -0400
-Message-ID: <54216BF1.3060500@broadcom.com> (sfid-20140923_144756_832169_A7E69971)
-Date: Tue, 23 Sep 2014 14:47:45 +0200
-From: Arend van Spriel <arend@broadcom.com>
+	Tue, 9 Sep 2014 16:02:12 -0400
 MIME-Version: 1.0
-To: Michael Tokarev <mjt@tls.msk.ru>
-CC: <brcm80211-dev-list@broadcom.com>,
-	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-	Seth Forshee <seth.forshee@canonical.com>
-Subject: Re: BCM4313 & brcmsmac & 3.12: only semi-working?
-References: <52BDE9DC.5040206@msgid.tls.msk.ru> <52BE9CF9.7030305@broadcom.com> <52BEC2F6.7010505@msgid.tls.msk.ru> <52D4FC8B.6090301@msgid.tls.msk.ru> <52F925A9.1030707@msgid.tls.msk.ru> <53526124.6050407@msgid.tls.msk.ru> <53FC1789.6020407@msgid.tls.msk.ru> <53FCA001.6090404@broadcom.com> <53FCB2A3.1050605@msgid.tls.msk.ru> <53FCFE1A.3060508@broadcom.com> <53FDACD1.8090805@msgid.tls.msk.ru> <53FDF8EB.4050905@broadcom.com> <54169D4F.2090607@broadcom.com> <541EEF17.7020806@msgid.tls.msk.ru> <542145B1.4030202@msgid.tls.msk.ru>
-In-Reply-To: <542145B1.4030202@msgid.tls.msk.ru>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+In-Reply-To: <540F5927.7000306@hartkopp.net>
+References: <20140908191630.GB29412@tuxdriver.com>
+	<540F5927.7000306@hartkopp.net>
+Date: Tue, 9 Sep 2014 23:02:11 +0300
+Message-ID: <CANUX_P3n0v1SzfbYuaAsE4TY7Hz_wo2Fb9SmHVNyFOC9hDhwdg@mail.gmail.com> (sfid-20140909_220223_632371_F51C8CE7)
+Subject: Re: iwlwifi no authentication with AP - Re: pull request:
+ wireless-next 2014-09-08
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Oliver Hartkopp <socketcan@hartkopp.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/23/14 12:04, Michael Tokarev wrote:
-> 21.09.2014 19:30, Michael Tokarev wrote:
->> Namely, after resume, the card does not work. ARP works, ping and
->> DNS sometimes/somewhat work, inital TCP connection establisment
->> works, but eg http download does not work, it stalls almost
->> immediately.
+On Tue, Sep 9, 2014 at 10:46 PM, Oliver Hartkopp <socketcan@hartkopp.net> wrote:
+> Hello John, all,
 >
-> It does not work at all anymore again.  Not only after resume but also
-> after could power up, it stalls right at start of wget for example.
+> on my i7 Laptop with iwlwifi the latest net-next does not connect to my access point:
+
+Are you sure this wasn't the case before?
+Can you bisect?
+
 >
->> http://www.corpit.ru/mjt/tmp/brcmsmac-4313-trace-20140921.dat.gz -- this
->> is a trace collected after resuming from suspend-to-disk
+> [   10.305284] iwlwifi 0000:02:00.0: L1 Enabled; Disabling L0S
+> [   10.312179] iwlwifi 0000:02:00.0: Radio type=0x1-0x3-0x1
+> [   10.524936] iwlwifi 0000:02:00.0: L1 Enabled; Disabling L0S
+> [   10.531762] iwlwifi 0000:02:00.0: Radio type=0x1-0x3-0x1
+> [   10.614189] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+> [   17.097238] wlan0: authenticate with 84:c9:b2:d5:87:80
+> [   17.130120] wlan0: send auth to 84:c9:b2:d5:87:80 (try 1/3)
+> [   17.922281] wlan0: send auth to 84:c9:b2:d5:87:80 (try 2/3)
+> [   18.935272] wlan0: send auth to 84:c9:b2:d5:87:80 (try 3/3)
+> [   19.936236] wlan0: authentication with 84:c9:b2:d5:87:80 timed out
+> [   21.962337] iwlwifi 0000:02:00.0: fail to flush all tx fifo queues Q 0
+> [   21.962348] iwlwifi 0000:02:00.0: Current SW read_ptr 0 write_ptr 3
+> [   21.962413] iwl data: 00000000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> [   21.962455] iwlwifi 0000:02:00.0: FH TRBs(0) = 0x00000000
+> [   21.962491] iwlwifi 0000:02:00.0: FH TRBs(1) = 0x00000000
+> [   21.962528] iwlwifi 0000:02:00.0: FH TRBs(2) = 0x00000000
+> [   21.962564] iwlwifi 0000:02:00.0: FH TRBs(3) = 0x00000000
+> [   21.962600] iwlwifi 0000:02:00.0: FH TRBs(4) = 0x00000000
+> [   21.962636] iwlwifi 0000:02:00.0: FH TRBs(5) = 0x00000000
+> [   21.962673] iwlwifi 0000:02:00.0: FH TRBs(6) = 0x00000000
+> [   21.962709] iwlwifi 0000:02:00.0: FH TRBs(7) = 0x0070402f
+> [   21.962790] iwlwifi 0000:02:00.0: Q 0 is active and mapped to fifo 3 ra_tid 0x0000 [0,3]
+> [   21.962869] iwlwifi 0000:02:00.0: Q 1 is active and mapped to fifo 2 ra_tid 0x0000 [0,0]
+> [   21.962949] iwlwifi 0000:02:00.0: Q 2 is active and mapped to fifo 1 ra_tid 0x0000 [0,0]
+> [   21.963030] iwlwifi 0000:02:00.0: Q 3 is active and mapped to fifo 0 ra_tid 0x0000 [0,0]
+> [   21.963109] iwlwifi 0000:02:00.0: Q 4 is active and mapped to fifo 7 ra_tid 0x0000 [48,48]
+> [   21.963189] iwlwifi 0000:02:00.0: Q 5 is inactive and mapped to fifo 0 ra_tid 0x0000 [0,0]
+> [   21.963270] iwlwifi 0000:02:00.0: Q 6 is inactive and mapped to fifo 0 ra_tid 0x0000 [0,0]
+> [   21.963350] iwlwifi 0000:02:00.0: Q 7 is inactive and mapped to fifo 0 ra_tid 0x0000 [0,0]
+> [   21.963428] iwlwifi 0000:02:00.0: Q 8 is inactive and mapped to fifo 0 ra_tid 0x0000 [0,0]
+> [   21.963508] iwlwifi 0000:02:00.0: Q 9 is inactive and mapped to fifo 0 ra_tid 0x0000 [0,0]
+> [   21.963588] iwlwifi 0000:02:00.0: Q 10 is inactive and mapped to fifo 0 ra_tid 0x0000 [0,0]
+> [   21.963669] iwlwifi 0000:02:00.0: Q 11 is inactive and mapped to fifo 0 ra_tid 0x0000 [0,0]
+> [   21.963750] iwlwifi 0000:02:00.0: Q 12 is inactive and mapped to fifo 0 ra_tid 0x0000 [0,0]
+> [   21.963829] iwlwifi 0000:02:00.0: Q 13 is inactive and mapped to fifo 0 ra_tid 0x0000 [0,0]
+> [   21.963909] iwlwifi 0000:02:00.0: Q 14 is inactive and mapped to fifo 0 ra_tid 0x0000 [0,0]
+> [   21.963988] iwlwifi 0000:02:00.0: Q 15 is inactive and mapped to fifo 0 ra_tid 0x0000 [0,0]
+> [   21.964069] iwlwifi 0000:02:00.0: Q 16 is inactive and mapped to fifo 0 ra_tid 0x0000 [0,0]
+> [   21.964149] iwlwifi 0000:02:00.0: Q 17 is inactive and mapped to fifo 0 ra_tid 0x0000 [0,0]
+> [   21.964228] iwlwifi 0000:02:00.0: Q 18 is inactive and mapped to fifo 0 ra_tid 0x0000 [0,0]
+> [   21.964308] iwlwifi 0000:02:00.0: Q 19 is inactive and mapped to fifo 0 ra_tid 0x0000 [0,0]
+> [   22.116816] wlan0: authenticate with xx:xx:xx:xx:xx:xx
+> [   22.155887] wlan0: send auth to xx:xx:xx:xx:xx:xx (try 1/3)
 >
-> And here -- http://www.corpit.ru/mjt/tmp/brcmsmac-4313-trace-20140923.dat.gz
-> is another trace, after insmod brcmutils&  brcmsmac, starting trace-cmd record
-> (with network-manager running in the background), and running a wget on
-> http://ip-add-ress-of-the-access-point/somefile (which immediately stalls,
-> showing minimal progress once in a while only).
-
-Well. This log and the one from a few days ago only show me interrupt 
-status changes, which does not tell me a lot. I do see that the hardware 
-signals transmit completions, but it is far less informative then I 
-hoped it would be. Maybe I am missing some debug configuration here?
-
-Seth, would you know?
-
-Regards,
-Arend
-
-> Hopefully this will help to find the problem.  And for the record, I'm
-> _again_ without the wifi network.  But unlike of the previous situation,
-> I can at least buy some other, better supported wifi adapter now, because
-> this laptop does not have a bios lock (is 6235ANHMW any good?)
+> (..)
 >
-> Thanks,
+> and again and again ...
 >
-> /mjt
-
+> Mainly this is the changing stuff in the following dmesg output:
+>
+> [   21.962348] iwlwifi 0000:02:00.0: Current SW read_ptr 0 write_ptr 3
+> [   26.951325] iwlwifi 0000:02:00.0: Current SW read_ptr 0 write_ptr 6
+> [   34.979316] iwlwifi 0000:02:00.0: Current SW read_ptr 0 write_ptr 9
+> [   39.964287] iwlwifi 0000:02:00.0: Current SW read_ptr 0 write_ptr 12
+> [   47.984243] iwlwifi 0000:02:00.0: Current SW read_ptr 0 write_ptr 15
+> [   55.984240] iwlwifi 0000:02:00.0: Current SW read_ptr 0 write_ptr 18
+> [   60.981221] iwlwifi 0000:02:00.0: Current SW read_ptr 0 write_ptr 21
+> [   73.878064] iwlwifi 0000:02:00.0: Current SW read_ptr 0 write_ptr 24
+> [   86.342476] iwlwifi 0000:02:00.0: Current SW read_ptr 0 write_ptr 27
+> [   98.770854] iwlwifi 0000:02:00.0: Current SW read_ptr 0 write_ptr 30
+> [  111.287320] iwlwifi 0000:02:00.0: Current SW read_ptr 0 write_ptr 33
+> [  121.045034] iwlwifi 0000:02:00.0: Current SW read_ptr 0 write_ptr 36
+>
+> 02:00.0 Network controller: Intel Corporation Centrino Advanced-N 6200 (rev 35)
+>
+> Any idea?
+>
+> Regards,
+> Oliver
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
