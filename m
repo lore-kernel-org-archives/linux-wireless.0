@@ -1,45 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:49686 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932149AbaIKUoX (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:28140 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932279AbaIIK25 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Sep 2014 16:44:23 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Ben Greear <greearb@candelatech.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] ath10k: support firmware crash-by-assert
-References: <20140910155928.30418.45160.stgit@potku.adurom.net>
-Date: Thu, 11 Sep 2014 23:44:00 +0300
-In-Reply-To: <20140910155928.30418.45160.stgit@potku.adurom.net> (Kalle Valo's
-	message of "Wed, 10 Sep 2014 18:59:28 +0300")
-Message-ID: <87vbot28hb.fsf@kamboji.qca.qualcomm.com> (sfid-20140911_224426_919576_31645FC4)
+	Tue, 9 Sep 2014 06:28:57 -0400
+Message-ID: <540ED666.9070101@broadcom.com> (sfid-20140909_122913_241496_524E5374)
+Date: Tue, 9 Sep 2014 12:28:54 +0200
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: chandrika parimoo <chandrika3437@gmail.com>
+CC: <brcm80211-dev-list@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Mesh Support in brcmsmac
+References: <CACHGq=AYtyCh2s_h_UtBtnH4TdHuw+gHeXhKjT2kVQSLcBSrow@mail.gmail.com>
+In-Reply-To: <CACHGq=AYtyCh2s_h_UtBtnH4TdHuw+gHeXhKjT2kVQSLcBSrow@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
++ linux-wireless
 
-> From: Ben Greear <greearb@candelatech.com>
+On 09/09/14 12:22, chandrika parimoo wrote:
+> Hello,
 >
-> 10.1 firmware does not have an official way to
-> cause assert on purpose, but it can be done with
-> carefully crafted WMI command.  This is a different
-> kind of crash from the 'hard' crash, which is
-> a bad memory dereference.
->
-> Different crashes decode in different manners, so
-> this will help the crash-report testing as well as
-> offer better ways to test firmware failure and
-> recovery.
->
-> kvalo: move the wmi command creation to debug.c, modify
-> the info print
->
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+> I have broadcom bcm4313 card and am using brcmsmac driver which does not
+> have mesh support currently.
+> I wanted to know if there is a workaround for it?
 
-Thanks Ben, applied.
+No workaround. I am not familiar with wireless mesh networking. I 
+suppose there are people on the linux-wireless mailing list who know 
+what is needed from a mac80211 driver (like brcmsmac) to enable mesh 
+networking.
 
--- 
-Kalle Valo
+Regards,
+Arend
+
+> Thanks,
+> Chandrika
+
