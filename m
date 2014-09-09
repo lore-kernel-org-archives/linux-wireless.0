@@ -1,54 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:37063 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750791AbaIJHSY (ORCPT
+Received: from relay3-d.mail.gandi.net ([217.70.183.195]:34867 "EHLO
+	relay3-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756034AbaIIJ5E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Sep 2014 03:18:24 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [RFC 1/5] ath9k: Assign offchannel duration properly
-Date: Wed, 10 Sep 2014 12:48:44 +0530
-Message-Id: <1410333528-28022-2-git-send-email-sujith@msujith.org> (sfid-20140910_091828_777322_7BDBEB1B)
-In-Reply-To: <1410333528-28022-1-git-send-email-sujith@msujith.org>
-References: <1410333528-28022-1-git-send-email-sujith@msujith.org>
+	Tue, 9 Sep 2014 05:57:04 -0400
+Received: from mfilter18-d.gandi.net (mfilter18-d.gandi.net [217.70.178.146])
+	by relay3-d.mail.gandi.net (Postfix) with ESMTP id 5CC41A80B4
+	for <linux-wireless@vger.kernel.org>; Tue,  9 Sep 2014 11:56:59 +0200 (CEST)
+Received: from relay3-d.mail.gandi.net ([217.70.183.195])
+	by mfilter18-d.gandi.net (mfilter18-d.gandi.net [10.0.15.180]) (amavisd-new, port 10024)
+	with ESMTP id BCFkv37ch7Cv for <linux-wireless@vger.kernel.org>;
+	Tue,  9 Sep 2014 11:56:58 +0200 (CEST)
+Received: from nuvo (mon69-7-83-155-44-161.fbx.proxad.net [83.155.44.161])
+	(Authenticated sender: hadess@hadess.net)
+	by relay3-d.mail.gandi.net (Postfix) with ESMTPSA id A93CBA80AF
+	for <linux-wireless@vger.kernel.org>; Tue,  9 Sep 2014 11:56:57 +0200 (CEST)
+Message-ID: <1410256608.4077.7.camel@hadess.net> (sfid-20140909_115708_323926_84318F9B)
+Subject: Realtek GPIO chipset, for Baytrail?
+From: Bastien Nocera <hadess@hadess.net>
+To: linux-wireless@vger.kernel.org
+Date: Tue, 09 Sep 2014 11:56:48 +0200
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Hey,
 
-In multi-channel mode, an offchannel request will
-be deferred if both contexts are active. The duration
-of the offchannel operation is calculated but is
-not stored in the scheduler state. Fix this.
+I have a tablet that seems to be using Realtek chips to do wireless
+communications (hopefully, this time I won't be wrong[1]).
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/channel.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+The device, under the gpio class in /sys, shows with a modalias of
+"acpi:OBDA8723:" (that's on "O", not "0"). This seems to correspond to a
+Realtek chipset (Larry tells me it matches the PCI ID of 0bda:8723 for
+the RTL8723AE chipset).
 
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index 522894b..ae575cb 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -588,10 +588,15 @@ static void ath_chanctx_switch(struct ath_softc *sc, struct ath_chanctx *ctx,
- 
- 	if (test_bit(ATH_OP_MULTI_CHANNEL, &common->op_flags) &&
- 	    (sc->cur_chan != ctx) && (ctx == &sc->offchannel.chan)) {
--		sc->sched.offchannel_pending = true;
--		sc->sched.wait_switch = true;
- 		if (chandef)
- 			ctx->chandef = *chandef;
-+
-+		sc->sched.offchannel_pending = true;
-+		sc->sched.wait_switch = true;
-+		sc->sched.offchannel_duration =
-+			jiffies_to_usecs(sc->offchannel.duration) +
-+			sc->sched.channel_switch_time;
-+
- 		spin_unlock_bh(&sc->chan_lock);
- 		ath_dbg(common, CHAN_CTX,
- 			"Set offchannel_pending to true\n");
--- 
-2.1.0
+It shows up under:
+/sys/devices/platform/80860F0A:00/subsystem/devices
+
+Does anyone have details on how this chipset is actually hooked up? Can
+a portion of the existing RTL8723AE driver code be reused?
+
+Cheers
+
+[1]:
+http://thread.gmane.org/gmane.linux.kernel.wireless.general/127591/focus=127703
 
