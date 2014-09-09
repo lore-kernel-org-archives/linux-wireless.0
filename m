@@ -1,138 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cassarossa.samfundet.no ([193.35.52.29]:47332 "EHLO
-	cassarossa.samfundet.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751405AbaIAItw (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:51274 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752328AbaIITAJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Sep 2014 04:49:52 -0400
-In-Reply-To: <20140830184516.GA31497@sesse.net>
-References: <20140830184516.GA31497@sesse.net>
-From: "Steinar H. Gunderson" <sgunderson@bigfoot.com>
-Date: Fri, 29 Aug 2014 19:27:53 +0200
-Subject: [PATCH v5 1/2] mac80211: split 802.11h parsing from transmit power
- policy
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-Message-Id: <E1XONJ6-0005Kl-Nz@pannekake.samfundet.no> (sfid-20140901_104956_330419_87FE5F12)
+	Tue, 9 Sep 2014 15:00:09 -0400
+Date: Tue, 9 Sep 2014 14:46:04 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: pull-request: mac80211 2014-09-08
+Message-ID: <20140909184604.GK29412@tuxdriver.com> (sfid-20140909_210017_151631_F4F4D929)
+References: <1410187894.7983.15.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1410187894.7983.15.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Decouple the logic of parsing the 802.11d and 802.11h IEs from the
-part of deciding what to do about the data (messaging, clamping to
-0 dBm, doing the actual setting). This paves the way for the next
-patch, which introduces more data sources for transmit power limitation.
+On Mon, Sep 08, 2014 at 04:51:34PM +0200, Johannes Berg wrote:
+> Hi John,
+> 
+> One more for mac80211, hopefully that should be it. If anyone thinks I
+> missed anything please holler. I'll have one more for mac80211-next
+> later this week.
+> 
+> Note I'm going to be on vacation soon (EOW) until early October, so if
+> anything super urgent shows up I'd appreciate if you could merge it for
+> me.
+> 
+> Thanks,
+> johannes
+> 
+> 
+> The following changes since commit 14b058bbce9279ee432f0944ca14df69f4a0d170:
+> 
+>   mac80211: fix agg_status debugfs file alignment (2014-08-26 11:13:37 +0200)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-john-2014-09-08
+> 
+> for you to fetch changes up to 785e21a89d77923852869f83ebd2689ec4d5ce54:
+> 
+>   mac80211: use bss_conf->dtim_period instead of conf.ps_dtim_period (2014-09-05 13:41:08 +0200)
+> 
+> ----------------------------------------------------------------
+> Two more fixes for mac80211 - one of them addresses a long-standing
+> issue that we only found when using vendor events more frequently;
+> the other addresses some bad information being reported in userspace
+> that people were starting to actually look at.
+> 
+> ----------------------------------------------------------------
+> Emmanuel Grumbach (1):
+>       mac80211: use bss_conf->dtim_period instead of conf.ps_dtim_period
+> 
+> Johannes Berg (1):
+>       nl80211: clear skb cb before passing to netlink
 
-Signed-off-by: Steinar H. Gunderson <sgunderson@bigfoot.com>
----
- net/mac80211/mlme.c |   61 +++++++++++++++++++++++++++++++++++----------------
- 1 file changed, 42 insertions(+), 19 deletions(-)
+Pulling now...
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index b82a12a..524c7cc 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1157,19 +1157,22 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 			  TU_TO_EXP_TIME(csa_ie.count * cbss->beacon_interval));
- }
- 
--static u32 ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
--				       struct ieee80211_channel *channel,
--				       const u8 *country_ie, u8 country_ie_len,
--				       const u8 *pwr_constr_elem)
-+static bool ieee80211_find_80211h_pwr_constr(
-+	struct ieee80211_sub_if_data *sdata,
-+	struct ieee80211_channel *channel,
-+	const u8 *country_ie, u8 country_ie_len,
-+	const u8 *pwr_constr_elem,
-+	int *chan_pwr,
-+	int *pwr_reduction)
- {
- 	struct ieee80211_country_ie_triplet *triplet;
- 	int chan = ieee80211_frequency_to_channel(channel->center_freq);
--	int i, chan_pwr, chan_increment, new_ap_level;
-+	int i, chan_increment;
- 	bool have_chan_pwr = false;
- 
- 	/* Invalid IE */
- 	if (country_ie_len % 2 || country_ie_len < IEEE80211_COUNTRY_IE_MIN_LEN)
--		return 0;
-+		return false;
- 
- 	triplet = (void *)(country_ie + 3);
- 	country_ie_len -= 3;
-@@ -1197,7 +1200,7 @@ static u32 ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
- 		for (i = 0; i < triplet->chans.num_channels; i++) {
- 			if (first_channel + i * chan_increment == chan) {
- 				have_chan_pwr = true;
--				chan_pwr = triplet->chans.max_power;
-+				*chan_pwr = triplet->chans.max_power;
- 				break;
- 			}
- 		}
-@@ -1209,18 +1212,41 @@ static u32 ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
- 		country_ie_len -= 3;
- 	}
- 
--	if (!have_chan_pwr)
--		return 0;
-+	if (have_chan_pwr)
-+		*pwr_reduction = *pwr_constr_elem;
-+	return have_chan_pwr;
-+}
- 
--	new_ap_level = max_t(int, 0, chan_pwr - *pwr_constr_elem);
-+static bool ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
-+					struct ieee80211_channel *channel,
-+					struct ieee80211_mgmt *mgmt,
-+					const u8 *country_ie, u8 country_ie_len,
-+					const u8 *pwr_constr_ie)
-+{
-+	bool has_80211h_pwr = false;
-+	int chan_pwr, pwr_reduction_80211h;
-+	int new_ap_level;
- 
--	if (sdata->ap_power_level == new_ap_level)
-+	if (country_ie && pwr_constr_ie &&
-+	    mgmt->u.probe_resp.capab_info &
-+		cpu_to_le16(WLAN_CAPABILITY_SPECTRUM_MGMT)) {
-+		has_80211h_pwr = ieee80211_find_80211h_pwr_constr(
-+			sdata, channel, country_ie, country_ie_len,
-+			pwr_constr_ie, &chan_pwr, &pwr_reduction_80211h);
-+		new_ap_level = max_t(int, 0, chan_pwr - pwr_reduction_80211h);
-+	}
-+
-+	if (!has_80211h_pwr)
- 		return 0;
- 
- 	sdata_info(sdata,
- 		   "Limiting TX power to %d (%d - %d) dBm as advertised by %pM\n",
--		   new_ap_level, chan_pwr, *pwr_constr_elem,
-+		   new_ap_level, chan_pwr, pwr_reduction_80211h,
- 		   sdata->u.mgd.bssid);
-+
-+	if (sdata->ap_power_level == new_ap_level)
-+		return 0;
-+
- 	sdata->ap_power_level = new_ap_level;
- 	if (__ieee80211_recalc_txpower(sdata))
- 		return BSS_CHANGED_TXPOWER;
-@@ -3190,13 +3216,10 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 					    rx_status->band, true);
- 	mutex_unlock(&local->sta_mtx);
- 
--	if (elems.country_elem && elems.pwr_constr_elem &&
--	    mgmt->u.probe_resp.capab_info &
--				cpu_to_le16(WLAN_CAPABILITY_SPECTRUM_MGMT))
--		changed |= ieee80211_handle_pwr_constr(sdata, chan,
--						       elems.country_elem,
--						       elems.country_elem_len,
--						       elems.pwr_constr_elem);
-+	changed |= ieee80211_handle_pwr_constr(sdata, chan, mgmt,
-+					       elems.country_elem,
-+					       elems.country_elem_len,
-+					       elems.pwr_constr_elem);
- 
- 	ieee80211_bss_info_change_notify(sdata, changed);
- }
 -- 
-1.7.10.4
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
