@@ -1,70 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:10209 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751042AbaIKPki (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Sep 2014 11:40:38 -0400
-Message-ID: <5411C2BE.6090702@intel.com> (sfid-20140911_174046_316020_F14C8884)
-Date: Thu, 11 Sep 2014 17:41:50 +0200
-From: Loic Poulain <loic.poulain@intel.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:52325 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752007AbaIIUAJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Sep 2014 16:00:09 -0400
+Date: Tue, 9 Sep 2014 15:52:32 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Oliver Hartkopp <socketcan@hartkopp.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: iwlwifi no authentication with AP - Re: pull request:
+ wireless-next 2014-09-08
+Message-ID: <20140909195232.GO29412@tuxdriver.com> (sfid-20140909_220023_310976_095C3281)
+References: <20140908191630.GB29412@tuxdriver.com>
+ <540F5927.7000306@hartkopp.net>
 MIME-Version: 1.0
-To: Bastien Nocera <hadess@hadess.net>
-CC: Marcel Holtmann <marcel@holtmann.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Realtek GPIO chipset, for Baytrail?
-References: <1410256608.4077.7.camel@hadess.net> <F79C10A5-18F8-4165-BFC5-FDAD35BE46BE@holtmann.org>
-In-Reply-To: <F79C10A5-18F8-4165-BFC5-FDAD35BE46BE@holtmann.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <540F5927.7000306@hartkopp.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Bastien,
+On Tue, Sep 09, 2014 at 09:46:47PM +0200, Oliver Hartkopp wrote:
+> Hello John, all,
+> 
+> on my i7 Laptop with iwlwifi the latest net-next does not connect to my access point:
+> 
+> [   10.305284] iwlwifi 0000:02:00.0: L1 Enabled; Disabling L0S
+> [   10.312179] iwlwifi 0000:02:00.0: Radio type=0x1-0x3-0x1
+> [   10.524936] iwlwifi 0000:02:00.0: L1 Enabled; Disabling L0S
+> [   10.531762] iwlwifi 0000:02:00.0: Radio type=0x1-0x3-0x1
+> [   10.614189] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+> [   17.097238] wlan0: authenticate with 84:c9:b2:d5:87:80
+> [   17.130120] wlan0: send auth to 84:c9:b2:d5:87:80 (try 1/3)
+> [   17.922281] wlan0: send auth to 84:c9:b2:d5:87:80 (try 2/3)
+> [   18.935272] wlan0: send auth to 84:c9:b2:d5:87:80 (try 3/3)
+> [   19.936236] wlan0: authentication with 84:c9:b2:d5:87:80 timed out
+> [   21.962337] iwlwifi 0000:02:00.0: fail to flush all tx fifo queues Q 0
+> [   21.962348] iwlwifi 0000:02:00.0: Current SW read_ptr 0 write_ptr 3
+> [   21.962413] iwl data: 00000000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> [   21.962455] iwlwifi 0000:02:00.0: FH TRBs(0) = 0x00000000
+> [   21.962491] iwlwifi 0000:02:00.0: FH TRBs(1) = 0x00000000
+> [   21.962528] iwlwifi 0000:02:00.0: FH TRBs(2) = 0x00000000
+> [   21.962564] iwlwifi 0000:02:00.0: FH TRBs(3) = 0x00000000
+> [   21.962600] iwlwifi 0000:02:00.0: FH TRBs(4) = 0x00000000
+> [   21.962636] iwlwifi 0000:02:00.0: FH TRBs(5) = 0x00000000
+> [   21.962673] iwlwifi 0000:02:00.0: FH TRBs(6) = 0x00000000
+> [   21.962709] iwlwifi 0000:02:00.0: FH TRBs(7) = 0x0070402f
+> [   21.962790] iwlwifi 0000:02:00.0: Q 0 is active and mapped to fifo 3 ra_tid 0x0000 [0,3]
+> [   21.962869] iwlwifi 0000:02:00.0: Q 1 is active and mapped to fifo 2 ra_tid 0x0000 [0,0]
+> [   21.962949] iwlwifi 0000:02:00.0: Q 2 is active and mapped to fifo 1 ra_tid 0x0000 [0,0]
+> [   21.963030] iwlwifi 0000:02:00.0: Q 3 is active and mapped to fifo 0 ra_tid 0x0000 [0,0]
+> [   21.963109] iwlwifi 0000:02:00.0: Q 4 is active and mapped to fifo 7 ra_tid 0x0000 [48,48]
+> [   21.963189] iwlwifi 0000:02:00.0: Q 5 is inactive and mapped to fifo 0 ra_tid 0x0000 [0,0]
+> [   21.963270] iwlwifi 0000:02:00.0: Q 6 is inactive and mapped to fifo 0 ra_tid 0x0000 [0,0]
+> [   21.963350] iwlwifi 0000:02:00.0: Q 7 is inactive and mapped to fifo 0 ra_tid 0x0000 [0,0]
+> [   21.963428] iwlwifi 0000:02:00.0: Q 8 is inactive and mapped to fifo 0 ra_tid 0x0000 [0,0]
+> [   21.963508] iwlwifi 0000:02:00.0: Q 9 is inactive and mapped to fifo 0 ra_tid 0x0000 [0,0]
+> [   21.963588] iwlwifi 0000:02:00.0: Q 10 is inactive and mapped to fifo 0 ra_tid 0x0000 [0,0]
+> [   21.963669] iwlwifi 0000:02:00.0: Q 11 is inactive and mapped to fifo 0 ra_tid 0x0000 [0,0]
+> [   21.963750] iwlwifi 0000:02:00.0: Q 12 is inactive and mapped to fifo 0 ra_tid 0x0000 [0,0]
+> [   21.963829] iwlwifi 0000:02:00.0: Q 13 is inactive and mapped to fifo 0 ra_tid 0x0000 [0,0]
+> [   21.963909] iwlwifi 0000:02:00.0: Q 14 is inactive and mapped to fifo 0 ra_tid 0x0000 [0,0]
+> [   21.963988] iwlwifi 0000:02:00.0: Q 15 is inactive and mapped to fifo 0 ra_tid 0x0000 [0,0]
+> [   21.964069] iwlwifi 0000:02:00.0: Q 16 is inactive and mapped to fifo 0 ra_tid 0x0000 [0,0]
+> [   21.964149] iwlwifi 0000:02:00.0: Q 17 is inactive and mapped to fifo 0 ra_tid 0x0000 [0,0]
+> [   21.964228] iwlwifi 0000:02:00.0: Q 18 is inactive and mapped to fifo 0 ra_tid 0x0000 [0,0]
+> [   21.964308] iwlwifi 0000:02:00.0: Q 19 is inactive and mapped to fifo 0 ra_tid 0x0000 [0,0]
+> [   22.116816] wlan0: authenticate with xx:xx:xx:xx:xx:xx
+> [   22.155887] wlan0: send auth to xx:xx:xx:xx:xx:xx (try 1/3)
+> 
+> (..)
+> 
+> and again and again ...
+> 
+> Mainly this is the changing stuff in the following dmesg output:
+> 
+> [   21.962348] iwlwifi 0000:02:00.0: Current SW read_ptr 0 write_ptr 3
+> [   26.951325] iwlwifi 0000:02:00.0: Current SW read_ptr 0 write_ptr 6
+> [   34.979316] iwlwifi 0000:02:00.0: Current SW read_ptr 0 write_ptr 9
+> [   39.964287] iwlwifi 0000:02:00.0: Current SW read_ptr 0 write_ptr 12
+> [   47.984243] iwlwifi 0000:02:00.0: Current SW read_ptr 0 write_ptr 15
+> [   55.984240] iwlwifi 0000:02:00.0: Current SW read_ptr 0 write_ptr 18
+> [   60.981221] iwlwifi 0000:02:00.0: Current SW read_ptr 0 write_ptr 21
+> [   73.878064] iwlwifi 0000:02:00.0: Current SW read_ptr 0 write_ptr 24
+> [   86.342476] iwlwifi 0000:02:00.0: Current SW read_ptr 0 write_ptr 27
+> [   98.770854] iwlwifi 0000:02:00.0: Current SW read_ptr 0 write_ptr 30
+> [  111.287320] iwlwifi 0000:02:00.0: Current SW read_ptr 0 write_ptr 33
+> [  121.045034] iwlwifi 0000:02:00.0: Current SW read_ptr 0 write_ptr 36
+> 
+> 02:00.0 Network controller: Intel Corporation Centrino Advanced-N 6200 (rev 35)
+> 
+> Any idea?
+> 
+> Regards,
+> Oliver
 
-Your device is a child of 80860F0A (UART) which is driven by the 8250_dw 
-driver.
-OBDA8723 is the BT part of the realtek 8723 WiFi/BT combo chip.
-acpi_platform should create a platform device from the ACPI desc.
-Then, you can add the OBDA8723 acpi id to the rfkill-gpio platform 
-driver (net/rfkill) which
-seems to handle correctly the basic power management of this chip.
+Hopefully the Intel guys are listening.  As a hunch, what sort of
+encryption are you using?
 
-You need to use hciattach to attach the chip to the BT stack (with 
-H5/3-wire proto).
-
-Regards,
-Loic
-
-On 11/09/2014 17:06, Marcel Holtmann wrote:
-> Hi Bastien,
->
->> I have a tablet that seems to be using Realtek chips to do wireless
->> communications (hopefully, this time I won't be wrong[1]).
->>
->> The device, under the gpio class in /sys, shows with a modalias of
->> "acpi:OBDA8723:" (that's on "O", not "0"). This seems to correspond to a
->> Realtek chipset (Larry tells me it matches the PCI ID of 0bda:8723 for
->> the RTL8723AE chipset).
->>
->> It shows up under:
->> /sys/devices/platform/80860F0A:00/subsystem/devices
->>
->> Does anyone have details on how this chipset is actually hooked up? Can
->> a portion of the existing RTL8723AE driver code be reused?
-> so after a little bit of digging, this seems to be the UART device for the Bluetooth chip. Can you try using 8250_dw.ko driver and see if it binds to it and you get a new serial port.
->
-> If I am correct then you have to run H:5 UART transport protocol to enable Bluetooth for this device.
->
-> Please double check that this ACPI tables really wrongly declare this as a Broadcom chip. This seems to be a firmware bug then. Unfortunately I think that for Broadcom you run H:4 UART transport protocol and for Realtek you have to run H:5 UART transport protocol. So no idea how to nicely differentiate these.
->
-> Regards
->
-> Marcel
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+John
 -- 
-Intel Open Source Technology Center
-http://oss.intel.com/
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
