@@ -1,115 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hauke-m.de ([5.39.93.123]:33839 "EHLO hauke-m.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751537AbaIUWii (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Sep 2014 18:38:38 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Cc: zajec5@gmail.com, arend@broadcom.com,
-	linux-arm-kernel@lists.infradead.org, arnd@arndb.de,
-	devicetree@vger.kernel.org, varkabhadram@gmail.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v4 2/2] bcma: get IRQ numbers from dt
-Date: Mon, 22 Sep 2014 00:38:28 +0200
-Message-Id: <1411339108-22307-2-git-send-email-hauke@hauke-m.de> (sfid-20140922_003845_176324_DF58CEF0)
-In-Reply-To: <1411339108-22307-1-git-send-email-hauke@hauke-m.de>
-References: <1411339108-22307-1-git-send-email-hauke@hauke-m.de>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:51800 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752564AbaIITaL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Sep 2014 15:30:11 -0400
+Date: Tue, 9 Sep 2014 15:16:12 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: bluetooth-next 2014-09-09
+Message-ID: <20140909191612.GM29412@tuxdriver.com> (sfid-20140909_213039_678879_819D70C4)
+References: <20140909155449.GA7412@t440s>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140909155449.GA7412@t440s>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It is not possible to auto detect the irq numbers used by the cores on
-an arm SoC. If bcma was registered with device tree it will search for
-some device tree nodes with the irq number and add it to the core
-configuration.
+On Tue, Sep 09, 2014 at 08:54:49AM -0700, Johan Hedberg wrote:
+> Hi John,
+> 
+> This set of patches is intended for 3.18. Most of the patches are LE SMP
+> (Security Manager Protocol) fixes/improvements, but there are also some
+> 6lowpan fixes as well as a fix for the btusb HCI driver.
+> 
+> Please let me know if there are any issues pulling. Thanks.
+> 
+> Johan
+> 
+> ---
+> The following changes since commit 61a3d4f9d52c00b2016bc27fc66b10a194043f76:
+> 
+>   Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless (2014-09-08 11:14:56 -0400)
+> 
+> are available in the git repository at:
+> 
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next.git for-upstream
+> 
+> for you to fetch changes up to 39e90c77637b3892a39f2908aea57539e961c50e:
+> 
+>   Bluetooth: 6lowpan: Route packets that are not meant to peer via correct device (2014-09-09 15:51:47 +0200)
+> 
+> ----------------------------------------------------------------
+> Behan Webster (1):
+>       Bluetooth: LLVMLinux: Remove VLAIS from bluetooth/amp.c
+> 
+> Champion Chen (1):
+>       Bluetooth: Fix issue with USB suspend in btusb driver
+> 
+> Johan Hedberg (31):
+>       Bluetooth: Fix incorrect LE CoC PDU length restriction based on HCI MTU
+>       Bluetooth: Remove unnecessary l2cap_chan_unlock before l2cap_chan_add
+>       Bluetooth: Fix hci_conn reference counting for fixed channels
+>       Bluetooth: Set addr_type only when it's needed
+>       Bluetooth: Optimize connection parameter lookup for LE connections
+>       Bluetooth: Improve *_get() functions to return the object type
+>       Bluetooth: Fix using hci_conn_get() for hci_conn pointers
+>       Bluetooth: Refactor connection parameter freeing into its own function
+>       Bluetooth: Use zero timeout for immediate scheduling
+>       Bluetooth: Fix hci_conn reference counting with hci_chan
+>       Bluetooth: Set disc_timeout to 0 when calling hci_chan_del
+>       Bluetooth: Ignore incoming data after initiating disconnection
+>       Bluetooth: Remove hci_conn_hold/drop from hci_chan
+>       Bluetooth: Set discon_timeout to 0 in l2cap_conn_del
+>       Bluetooth: Use hci_disconnect for immediate disconnection from SMP
+>       Bluetooth: Remove unused l2cap_conn_shutdown API
+>       Bluetooth: Fix SMP error and response to be mutually exclusive
+>       Bluetooth: Update hci_disconnect() to return an error value
+>       Bluetooth: Use hci_disconnect() for mgmt_disconnect_device()
+>       Bluetooth: Move clock offset reading into hci_disconnect()
+>       Bluetooth: Add clarifying comment for LE CoC result value
+>       Bluetooth: Remove unnecessary checks after canceling SMP security timer
+>       Bluetooth: Don't take any action in smp_resume_cb if not encrypted
+>       Bluetooth: Move identity address update behind a workqueue
+>       Bluetooth: Remove unnecessary deferred work for SMP key distribution
+>       Bluetooth: Fix locking of the SMP context
+>       Bluetooth: Add define for key distribution mask
+>       Bluetooth: Fix calling smp_distribute_keys() when still waiting for keys
+>       Bluetooth: Add strict checks for allowed SMP PDUs
+>       Bluetooth: Fix dereferencing conn variable before NULL check
+>       Bluetooth: Fix mgmt pairing failure when authentication fails
+> 
+> Jukka Rissanen (3):
+>       Bluetooth: 6lowpan: Increase the connection timeout value
+>       Bluetooth: 6lowpan: Set the peer IPv6 address correctly
+>       Bluetooth: 6lowpan: Route packets that are not meant to peer via correct device
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/bcma/main.c | 49 ++++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 48 insertions(+), 1 deletion(-)
+Pulling now...
 
-This is based on wireless-testing and should go into that tree.
-
-changes since:
-v2:
- - use of_translate_address() to support ranges
-
-RFC:
- - add #ifdef CONFIG_OF
-
-diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-index 19ef685..5e7a3d4 100644
---- a/drivers/bcma/main.c
-+++ b/drivers/bcma/main.c
-@@ -10,6 +10,8 @@
- #include <linux/platform_device.h>
- #include <linux/bcma/bcma.h>
- #include <linux/slab.h>
-+#include <linux/of_irq.h>
-+#include <linux/of_address.h>
- 
- MODULE_DESCRIPTION("Broadcom's specific AMBA driver");
- MODULE_LICENSE("GPL");
-@@ -131,6 +133,45 @@ static bool bcma_is_core_needed_early(u16 core_id)
- 	return false;
- }
- 
-+#ifdef CONFIG_OF
-+static struct device_node *bcma_of_find_child_device(struct platform_device *parent,
-+						     struct bcma_device *core)
-+{
-+	struct device_node *node;
-+	u64 size;
-+	const __be32 *reg;
-+
-+	if (!parent || !parent->dev.of_node)
-+		return NULL;
-+
-+	for_each_child_of_node(parent->dev.of_node, node) {
-+		reg = of_get_address(node, 0, &size, NULL);
-+		if (!reg)
-+			continue;
-+		if (of_translate_address(node, reg) == core->addr)
-+			return node;
-+	}
-+	return NULL;
-+}
-+
-+static void bcma_of_fill_device(struct platform_device *parent,
-+				struct bcma_device *core)
-+{
-+	struct device_node *node;
-+
-+	node = bcma_of_find_child_device(parent, core);
-+	if (!node)
-+		return;
-+	core->dev.of_node = node;
-+	core->irq = irq_of_parse_and_map(node, 0);
-+}
-+#else
-+static void bcma_of_fill_device(struct platform_device *parent,
-+				struct bcma_device *core)
-+{
-+}
-+#endif /* CONFIG_OF */
-+
- static void bcma_register_core(struct bcma_bus *bus, struct bcma_device *core)
- {
- 	int err;
-@@ -147,7 +188,13 @@ static void bcma_register_core(struct bcma_bus *bus, struct bcma_device *core)
- 		break;
- 	case BCMA_HOSTTYPE_SOC:
- 		core->dev.dma_mask = &core->dev.coherent_dma_mask;
--		core->dma_dev = &core->dev;
-+		if (bus->host_pdev) {
-+			core->dma_dev = &bus->host_pdev->dev;
-+			core->dev.parent = &bus->host_pdev->dev;
-+			bcma_of_fill_device(bus->host_pdev, core);
-+		} else {
-+			core->dma_dev = &core->dev;
-+		}
- 		break;
- 	case BCMA_HOSTTYPE_SDIO:
- 		break;
 -- 
-1.9.1
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
