@@ -1,59 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:33888 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751832AbaI3Roz (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:41145 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750978AbaIIXJw convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Sep 2014 13:44:55 -0400
-Message-ID: <542AEC16.5050003@candelatech.com> (sfid-20140930_194458_901923_662B237C)
-Date: Tue, 30 Sep 2014 10:44:54 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Marcel Holtmann <marcel@holtmann.org>,
+	Tue, 9 Sep 2014 19:09:52 -0400
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
+Subject: Re: Realtek GPIO chipset, for Baytrail?
+From: Marcel Holtmann <marcel@holtmann.org>
+In-Reply-To: <7234781D-5B78-404A-B945-D090938777C7@hadess.net>
+Date: Tue, 9 Sep 2014 16:10:15 -0700
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Anyone working on making iw able to specify MAC address at station
- creation time?
-References: <5408A6BD.6090304@candelatech.com>  (sfid-20140904_195201_728073_99DA3C67) <1409898836.1940.1.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1409898836.1940.1.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Message-Id: <D08A763F-AD50-449D-98C6-B82866F49480@holtmann.org> (sfid-20140910_010955_461216_047AD4AF)
+References: <1410256608.4077.7.camel@hadess.net> <540F54B1.8040409@lwfinger.net> <1410292835.4077.21.camel@hadess.net> <540F61FE.2050404@lwfinger.net> <7234781D-5B78-404A-B945-D090938777C7@hadess.net>
+To: Bastien Nocera <hadess@hadess.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/04/2014 11:33 PM, Johannes Berg wrote:
-> On Thu, 2014-09-04 at 10:51 -0700, Ben Greear wrote:
->> I'm having issues with udev renaming newly created stations when I have
->> udev rules for wlanX, when wlanX is not already existing.
->>
->> I think specifying MAC on station creation time would solve my problems,
->> but haven't looked closely yet.
->>
->> My version of 'iw' doesn't support setting the MAC on creation, from
->> what I can tel.
->>
->> Curious if anyone else is working on this?
+Hi Bastien,
+
+>>>> What specific Baytrail tablet do you have?
+>>> 
+>>> The Onda v975w. It came with Windows 8.1 32-bit.
+>>> 
+>>> I guess that the device is probably a PCI one, but the enumeration is
+>>> done through ACPI instead of "normal" PCI.
+>> 
+>> In http://www.onda-tablet.com/onda-v975w-quad-core-win-8-tablet-9-7-inch-retina-screen-ram-2gb-wifi-32gb.html, someone is specifically looking for an RTL8723BS driver.
 > 
-> I think Marcel mentioned wanting this before. There's even an attribute
-> in nl80211 already, but it can only be used for P2P_DEVICE I believe, so
-> a feature flag or so would be needed to be able to know whether or not
-> this would be expected to take any effect (kernels before those future
-> changes would ignore the attribute for non-P2P-DEVICE I believe)
-
->From what I can tell, cfg80211 does parse the macaddr for p2p-device,
-but I don't see it used in mac80211/iface.c ieee80211_if_add.
-
-Am I missing something?
-
-Thanks,
-Ben
-
+> That's helpful.
 > 
-> Haven't looked at the code right now, this is all I know.
+>> I will see if my contact at Realtek knows who has worked on drivers for this device, and if it would be possible to use rtl8723be if we were to supply an SDIO frontend.
 > 
-> johannes
-> 
+> I'm not sure why the device doesn't show up in the sysfs tree, but maybe it needs a driver bound to it to show up.
 
+I just booted up my Baytrail based Minnowboard Max in ACPI enumeration and then the SDIO host controller is enumerated via ACPI. This is compared to PCI enumeration where the SDIO controller shows up in lspci.
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+So can you try to install sdhci-acpi and see if that starts showing SDIO devices. If the SDIO host controllers loads, then it start SDIO enumeration and you would see the cards.
+
+Regards
+
+Marcel
 
