@@ -1,283 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:38402 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754457AbaIINKl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Sep 2014 09:10:41 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Avraham Stern <avraham.stern@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH] cfg802111/nl80211: Add device motion indication API
-Date: Tue,  9 Sep 2014 16:07:01 +0300
-Message-Id: <1410268021-9529-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140909_151045_177003_179942B1)
+Received: from mail-la0-f44.google.com ([209.85.215.44]:39833 "EHLO
+	mail-la0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751268AbaIJIYE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Sep 2014 04:24:04 -0400
+MIME-Version: 1.0
+In-Reply-To: <540FDB3C.6060301@hartkopp.net>
+References: <20140908191630.GB29412@tuxdriver.com>
+	<540F5927.7000306@hartkopp.net>
+	<CANUX_P3n0v1SzfbYuaAsE4TY7Hz_wo2Fb9SmHVNyFOC9hDhwdg@mail.gmail.com>
+	<540F61D0.9000704@hartkopp.net>
+	<CAMw6YJLeO1JZeY6hNe-TXOS56b-otk+htt5VPPor+9iYCQz53Q@mail.gmail.com>
+	<540FDB3C.6060301@hartkopp.net>
+Date: Wed, 10 Sep 2014 11:24:01 +0300
+Message-ID: <CANUX_P3kOetqEneHgqoCDN4c85SQYD-G=mQj_o1c_TvKmE5psA@mail.gmail.com> (sfid-20140910_102415_100118_7D073ABC)
+Subject: Re: iwlwifi no authentication with AP - Re: pull request:
+ wireless-next 2014-09-08
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Oliver Hartkopp <socketcan@hartkopp.net>
+Cc: Vadim Kochan <vadim4j@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Content-Type: multipart/mixed; boundary=001a11c2b81638b10c0502b1c6d3
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avraham Stern <avraham.stern@intel.com>
+--001a11c2b81638b10c0502b1c6d3
+Content-Type: text/plain; charset=UTF-8
 
-Add API to notify user-space when the device is in motion
-and the motion type.
-This information can be used to react to the changing environment when
-the device is on the move, or avoid some unnecessary activities when
-the device is not moving. For example, longer scan intervals when the
-device is not moving and there are probably no new AP's, shorter scan
-intervals while the device is moving slowly and the environment is
-constantly changing, and not scanning at all when the device is moving
-fast and it is very unlikely to be able to connect to anything.
+On Wed, Sep 10, 2014 at 8:01 AM, Oliver Hartkopp <socketcan@hartkopp.net> wrote:
+> On 10.09.2014 00:07, Vadim Kochan wrote:
+>> I have the same issue with iwlwifi.
+>
+> I tried an old zd1211 wireless USB stick to check if this problem is 80211
+> related. But the USB stick works fine (I'm using it right now).
+> So its definitely looks like an iwlwifi issue.
+>
+>> iwlwifi 0000:02:00.0: fail to flush all tx fifo queues Q 0
+>
+> Wasn't there any change in the iwlwifi tx path recently??
 
-Signed-off-by: Avraham Stern <avraham.stern@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- include/net/cfg80211.h       | 14 ++++++++
- include/uapi/linux/nl80211.h | 39 ++++++++++++++++++++++
- net/wireless/core.h          |  2 ++
- net/wireless/nl80211.c       | 78 ++++++++++++++++++++++++++++++++++++++++++++
- net/wireless/trace.h         | 14 ++++++++
- 5 files changed, 147 insertions(+)
+Can you please try the patch attached? It works for me.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index b960c4d..6210822 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -4914,6 +4914,20 @@ void cfg80211_shutdown_all_interfaces(struct wiphy *wiphy);
- /* ethtool helper */
- void cfg80211_get_drvinfo(struct net_device *dev, struct ethtool_drvinfo *info);
- 
-+/*
-+ * cfg80211_device_motion_notify - notify device motion type
-+ *
-+ * @wiphy: the wiphy
-+ * @type: the motion type as specified in &enum nl80211_device_motion_type.
-+ * @gfp: allocation flags
-+ *
-+ * This function is used to report to userspace the type of motion the device
-+ * is currently in.
-+ */
-+void cfg80211_device_motion_notify(struct wiphy *wiphy,
-+				   enum nl80211_device_motion_type type,
-+				   gfp_t gfp);
-+
- /* Logging, debugging and troubleshooting/diagnostic helpers. */
- 
- /* wiphy_printk helpers, similar to dev_printk */
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 8270024..fae01c7 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -733,6 +733,19 @@
-  *	QoS mapping is relevant for IP packets, it is only valid during an
-  *	association. This is cleared on disassociation and AP restart.
-  *
-+ * @NL80211_CMD_DEVICE_MOTION_NOTIFY: Device motion notification. This command
-+ *	is used as an event to indicate the motion type the device is currently
-+ *	in. This command can also be used by userspace to get the current
-+ *	motion type. The motion type is specified by the
-+ *	%NL80211_ATTR_DEVICE_MOTION_TYPE. This information can be used to react
-+ *	to the changing environment when the device is on the move, or avoid
-+ *	some unnecessary activities when the device is not moving. For example,
-+ *	longer scan intervals when the device is not moving and neighbor AP's
-+ *	probably stay the same, shorter scan intervals while the device is
-+ *	moving slowly and the environment is changing constantly, and not
-+ *	scanning at all when the device is moving fast and it is very unlikely
-+ *	to be able to connect to anything.
-+ *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-  */
-@@ -906,6 +919,8 @@ enum nl80211_commands {
- 
- 	NL80211_CMD_CH_SWITCH_STARTED_NOTIFY,
- 
-+	NL80211_CMD_DEVICE_MOTION_NOTIFY,
-+
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-@@ -1620,6 +1635,9 @@ enum nl80211_commands {
-  *	association request. In addition, it must also set the RRM capability
-  *	flag in the association request's Capability Info field.
-  *
-+ * @NL80211_ATTR_DEVICE_MOTION_TYPE: The type of motion the device is currently
-+ *	in. As specified in &enum nl80211_device_motion_type.
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -1964,6 +1982,8 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_USE_RRM,
- 
-+	NL80211_ATTR_DEVICE_MOTION_TYPE,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -4223,4 +4243,23 @@ enum nl80211_tdls_peer_capability {
- 	NL80211_TDLS_PEER_WMM = 1<<2,
- };
- 
-+/**
-+ * enum nl80211_device_motion_type - device motion types
-+ * @NL80211_DEVICE_MOTION_TYPE_UNKNOWN: The device motion type is not known
-+ *	or has not been set yet.
-+ * @NL80211_DEVICE_MOTION_TYPE_NOT_MOVING: The device is not moving. This
-+ *	includes cases in which the device is moving but its immediate
-+ *	environment is moving as well, e.g. while on board a train.
-+ * @NL80211_DEVICE_MOTION_TYPE_MOVING_SLOWLY: The device is moving slowly enough
-+ *	to keep track of the changing environment.
-+ * @NL80211_DEVICE_MOTION_TYPE_MOVING_FAST: The device is moving fast which
-+ *	makes it hard to keep track of the changing environment.
-+ */
-+enum nl80211_device_motion_type {
-+	NL80211_DEVICE_MOTION_TYPE_UNKNOWN,
-+	NL80211_DEVICE_MOTION_TYPE_NOT_MOVING,
-+	NL80211_DEVICE_MOTION_TYPE_MOVING_SLOWLY,
-+	NL80211_DEVICE_MOTION_TYPE_MOVING_FAST,
-+};
-+
- #endif /* __LINUX_NL80211_H */
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 21d4b1d..a00be85 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -84,6 +84,8 @@ struct cfg80211_registered_device {
- 	struct list_head destroy_list;
- 	struct work_struct destroy_work;
- 
-+	enum nl80211_device_motion_type motion_type;
-+
- 	/* must be last because of the way we do wiphy_priv(),
- 	 * and it should at least be aligned to NETDEV_ALIGN */
- 	struct wiphy wiphy __aligned(NETDEV_ALIGN);
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 03b5b5e..c7c014c 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -9451,6 +9451,48 @@ static int nl80211_set_qos_map(struct sk_buff *skb,
- 	return ret;
- }
- 
-+static int nl80211_send_motion(struct sk_buff *msg, u32 portid, u32 seq,
-+			       int flags,
-+			       struct cfg80211_registered_device *rdev)
-+{
-+	void *hdr;
-+
-+	hdr = nl80211hdr_put(msg, portid, seq, flags,
-+			     NL80211_CMD_DEVICE_MOTION_NOTIFY);
-+	if (!hdr)
-+		return -ENOBUFS;
-+
-+	if (nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx) ||
-+	    nla_put_u32(msg, NL80211_ATTR_DEVICE_MOTION_TYPE,
-+			rdev->motion_type))
-+		goto nla_put_failure;
-+
-+	return genlmsg_end(msg, hdr);
-+
-+ nla_put_failure:
-+	genlmsg_cancel(msg, hdr);
-+	return -ENOBUFS;
-+}
-+
-+static int nl80211_device_motion_notify(struct sk_buff *skb,
-+					struct genl_info *info)
-+{
-+	struct sk_buff *msg;
-+	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-+
-+	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
-+	if (!msg)
-+		return -ENOMEM;
-+
-+	if (nl80211_send_motion(msg, genl_info_snd_portid(info), info->snd_seq,
-+				0, rdev) < 0) {
-+		nlmsg_free(msg);
-+		return -ENOBUFS;
-+	}
-+
-+	return genlmsg_reply(msg, info);
-+}
-+
- #define NL80211_FLAG_NEED_WIPHY		0x01
- #define NL80211_FLAG_NEED_NETDEV	0x02
- #define NL80211_FLAG_NEED_RTNL		0x04
-@@ -10197,6 +10239,14 @@ static __genl_const struct genl_ops nl80211_ops[] = {
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-+	{
-+		.cmd = NL80211_CMD_DEVICE_MOTION_NOTIFY,
-+		.doit = nl80211_device_motion_notify,
-+		.policy = nl80211_policy,
-+		.flags = GENL_ADMIN_PERM,
-+		.internal_flags = NL80211_FLAG_NEED_WIPHY |
-+				  NL80211_FLAG_NEED_RTNL,
-+	},
- };
- 
- /* notification functions */
-@@ -12004,6 +12054,34 @@ void cfg80211_crit_proto_stopped(struct wireless_dev *wdev, gfp_t gfp)
- }
- EXPORT_SYMBOL(cfg80211_crit_proto_stopped);
- 
-+void cfg80211_device_motion_notify(struct wiphy *wiphy,
-+				   enum nl80211_device_motion_type type,
-+				   gfp_t gfp)
-+{
-+	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
-+	struct sk_buff *msg;
-+
-+	trace_cfg80211_device_motion_notify(wiphy, type);
-+
-+	if (rdev->motion_type == type)
-+		return;
-+
-+	rdev->motion_type = type;
-+
-+	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, gfp);
-+	if (!msg)
-+		return;
-+
-+	if (nl80211_send_motion(msg, 0, 0, 0, rdev) < 0) {
-+		nlmsg_free(msg);
-+		return;
-+	}
-+
-+	genlmsg_multicast_netns(&nl80211_fam, wiphy_net(wiphy), msg, 0,
-+				NL80211_MCGRP_SCAN, gfp);
-+}
-+EXPORT_SYMBOL(cfg80211_device_motion_notify);
-+
- void nl80211_send_ap_stopped(struct wireless_dev *wdev)
- {
- 	struct wiphy *wiphy = wdev->wiphy;
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index 0f0901e..e39a950 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -2627,6 +2627,20 @@ TRACE_EVENT(cfg80211_stop_iface,
- 		  WIPHY_PR_ARG, WDEV_PR_ARG)
- );
- 
-+TRACE_EVENT(cfg80211_device_motion_notify,
-+	TP_PROTO(struct wiphy *wiphy, enum nl80211_device_motion_type type),
-+	TP_ARGS(wiphy, type),
-+	TP_STRUCT__entry(
-+		WIPHY_ENTRY
-+		__field(enum nl80211_device_motion_type, type)
-+	),
-+	TP_fast_assign(
-+		WIPHY_ASSIGN;
-+		__entry->type = type;
-+	),
-+	TP_printk(WIPHY_PR_FMT ", type: %d", WIPHY_PR_ARG, __entry->type)
-+);
-+
- #endif /* !__RDEV_OPS_TRACE || TRACE_HEADER_MULTI_READ */
- 
- #undef TRACE_INCLUDE_PATH
--- 
-1.9.1
+>
+> Regards,
+> Oliver
+>
+>>
 
+--001a11c2b81638b10c0502b1c6d3
+Content-Type: text/x-patch; charset=US-ASCII;
+	name="0001-iwlwifi-trans-don-t-configure-the-set_active-in-SCD-.patch"
+Content-Disposition: attachment;
+	filename="0001-iwlwifi-trans-don-t-configure-the-set_active-in-SCD-.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_hzwebk6x0
+
+RnJvbSA0MmJmY2Y5M2UxOGNiODUwZDBiNWY1ZTBhNGI5OWEyMzllMGU1N2FiIE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBFbW1hbnVlbCBHcnVtYmFjaCA8ZW1tYW51ZWwuZ3J1bWJhY2hA
+aW50ZWwuY29tPgpEYXRlOiBXZWQsIDEwIFNlcCAyMDE0IDExOjE2OjQxICswMzAwClN1YmplY3Q6
+IFtQQVRDSF0gaXdsd2lmaTogdHJhbnM6IGRvbid0IGNvbmZpZ3VyZSB0aGUgc2V0X2FjdGl2ZSBp
+biBTQ0QgZm9yIGR2bQoKVGhpcyBjb25maWd1cmF0aW9uIGlzIG5vdCBuZWVkZWQgZm9yIGR2bSwg
+YW5kIGl0IGFjdHVhbGx5CmJyb2tlIGl0LgoKU2lnbmVkLW9mZi1ieTogRW1tYW51ZWwgR3J1bWJh
+Y2ggPGVtbWFudWVsLmdydW1iYWNoQGludGVsLmNvbT4KLS0tCiBkcml2ZXJzL25ldC93aXJlbGVz
+cy9pd2x3aWZpL2l3bC10cmFucy5oICAgICB8IDIgKysKIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3
+bHdpZmkvbXZtL29wcy5jICAgICAgIHwgMSArCiBkcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZp
+L3BjaWUvaW50ZXJuYWwuaCB8IDIgKysKIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvcGNp
+ZS90cmFucy5jICAgIHwgMSArCiBkcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL3BjaWUvdHgu
+YyAgICAgICB8IDYgKysrKy0tCiA1IGZpbGVzIGNoYW5nZWQsIDEwIGluc2VydGlvbnMoKyksIDIg
+ZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9p
+d2wtdHJhbnMuaCBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvaXdsLXRyYW5zLmgKaW5k
+ZXggMzYyNzViNC4uYzg3YjQ1MiAxMDA2NDQKLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXds
+d2lmaS9pd2wtdHJhbnMuaAorKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3bC10
+cmFucy5oCkBAIC0zODIsNiArMzgyLDcgQEAgZW51bSBpd2xfdHJhbnNfc3RhdHVzIHsKICAqCWlm
+IHVuc2V0IDRrIHdpbGwgYmUgdGhlIFJYIGJ1ZmZlciBzaXplCiAgKiBAYmNfdGFibGVfZHdvcmQ6
+IHNldCB0byB0cnVlIGlmIHRoZSBCQyB0YWJsZSBleHBlY3RzIHRoZSBieXRlIGNvdW50IHRvIGJl
+CiAgKglpbiBEV09SRCAoYXMgb3Bwb3NlZCB0byBieXRlcykKKyAqIEBzY2Rfc2V0X2FjdGl2ZTog
+c2hvdWxkIHRoZSB0cmFuc3BvcnQgY29uZmlndXJlIHRoZSBTQ0QgZm9yIEhDTUQgcXVldWUKICAq
+IEBxdWV1ZV93YXRjaGRvZ190aW1lb3V0OiB0aW1lIChpbiBtcykgYWZ0ZXIgd2hpY2ggcXVldWVz
+CiAgKglhcmUgY29uc2lkZXJlZCBzdHVjayBhbmQgd2lsbCB0cmlnZ2VyIGRldmljZSByZXN0YXJ0
+CiAgKiBAY29tbWFuZF9uYW1lczogYXJyYXkgb2YgY29tbWFuZCBuYW1lcywgbXVzdCBiZSAyNTYg
+ZW50cmllcwpAQCAtMzk3LDYgKzM5OCw3IEBAIHN0cnVjdCBpd2xfdHJhbnNfY29uZmlnIHsKIAog
+CWJvb2wgcnhfYnVmX3NpemVfOGs7CiAJYm9vbCBiY190YWJsZV9kd29yZDsKKwlib29sIHNjZF9z
+ZXRfYWN0aXZlOwogCXVuc2lnbmVkIGludCBxdWV1ZV93YXRjaGRvZ190aW1lb3V0OwogCWNvbnN0
+IGNoYXIgKmNvbnN0ICpjb21tYW5kX25hbWVzOwogfTsKZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0
+L3dpcmVsZXNzL2l3bHdpZmkvbXZtL29wcy5jIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lm
+aS9tdm0vb3BzLmMKaW5kZXggNzdiMGI0OC4uZWQ4MjU0NyAxMDA2NDQKLS0tIGEvZHJpdmVycy9u
+ZXQvd2lyZWxlc3MvaXdsd2lmaS9tdm0vb3BzLmMKKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3Mv
+aXdsd2lmaS9tdm0vb3BzLmMKQEAgLTUwNCw2ICs1MDQsNyBAQCBpd2xfb3BfbW9kZV9tdm1fc3Rh
+cnQoc3RydWN0IGl3bF90cmFucyAqdHJhbnMsIGNvbnN0IHN0cnVjdCBpd2xfY2ZnICpjZmcsCiAK
+IAl0cmFuc19jZmcuY21kX3F1ZXVlID0gSVdMX01WTV9DTURfUVVFVUU7CiAJdHJhbnNfY2ZnLmNt
+ZF9maWZvID0gSVdMX01WTV9UWF9GSUZPX0NNRDsKKwl0cmFuc19jZmcuc2NkX3NldF9hY3RpdmUg
+PSB0cnVlOwogCiAJc25wcmludGYobXZtLT5ody0+d2lwaHktPmZ3X3ZlcnNpb24sCiAJCSBzaXpl
+b2YobXZtLT5ody0+d2lwaHktPmZ3X3ZlcnNpb24pLApkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQv
+d2lyZWxlc3MvaXdsd2lmaS9wY2llL2ludGVybmFsLmggYi9kcml2ZXJzL25ldC93aXJlbGVzcy9p
+d2x3aWZpL3BjaWUvaW50ZXJuYWwuaAppbmRleCA1YmNhOWE2Li5lNjEyOWFmIDEwMDY0NAotLS0g
+YS9kcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL3BjaWUvaW50ZXJuYWwuaAorKysgYi9kcml2
+ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL3BjaWUvaW50ZXJuYWwuaApAQCAtMjU3LDYgKzI1Nyw3
+IEBAIGl3bF9wY2llX2dldF9zY3JhdGNoYnVmX2RtYShzdHJ1Y3QgaXdsX3R4cSAqdHhxLCBpbnQg
+aWR4KQogICogQGNtZF9xdWV1ZSAtIGNvbW1hbmQgcXVldWUgbnVtYmVyCiAgKiBAcnhfYnVmX3Np
+emVfOGs6IDgga0IgUlggYnVmZmVyIHNpemUKICAqIEBiY190YWJsZV9kd29yZDogdHJ1ZSBpZiB0
+aGUgQkMgdGFibGUgZXhwZWN0cyBEV09SRCAoYXMgb3Bwb3NlZCB0byBieXRlcykKKyAqIEBzY2Rf
+c2V0X2FjdGl2ZTogc2hvdWxkIHRoZSB0cmFuc3BvcnQgY29uZmlndXJlIHRoZSBTQ0QgZm9yIEhD
+TUQgcXVldWUKICAqIEByeF9wYWdlX29yZGVyOiBwYWdlIG9yZGVyIGZvciByZWNlaXZlIGJ1ZmZl
+ciBzaXplCiAgKiBAd2RfdGltZW91dDogcXVldWUgd2F0Y2hkb2cgdGltZW91dCAoamlmZmllcykK
+ICAqIEByZWdfbG9jazogcHJvdGVjdCBodyByZWdpc3RlciBhY2Nlc3MKQEAgLTMwNiw2ICszMDcs
+NyBAQCBzdHJ1Y3QgaXdsX3RyYW5zX3BjaWUgewogCiAJYm9vbCByeF9idWZfc2l6ZV84azsKIAli
+b29sIGJjX3RhYmxlX2R3b3JkOworCWJvb2wgc2NkX3NldF9hY3RpdmU7CiAJdTMyIHJ4X3BhZ2Vf
+b3JkZXI7CiAKIAljb25zdCBjaGFyICpjb25zdCAqY29tbWFuZF9uYW1lczsKZGlmZiAtLWdpdCBh
+L2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvcGNpZS90cmFucy5jIGIvZHJpdmVycy9uZXQv
+d2lyZWxlc3MvaXdsd2lmaS9wY2llL3RyYW5zLmMKaW5kZXggMGY0YTRjMS4uYTIxNTYyNCAxMDA2
+NDQKLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9wY2llL3RyYW5zLmMKKysrIGIv
+ZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9wY2llL3RyYW5zLmMKQEAgLTExNzcsNiArMTE3
+Nyw3IEBAIHN0YXRpYyB2b2lkIGl3bF90cmFuc19wY2llX2NvbmZpZ3VyZShzdHJ1Y3QgaXdsX3Ry
+YW5zICp0cmFucywKIAogCXRyYW5zX3BjaWUtPmNvbW1hbmRfbmFtZXMgPSB0cmFuc19jZmctPmNv
+bW1hbmRfbmFtZXM7CiAJdHJhbnNfcGNpZS0+YmNfdGFibGVfZHdvcmQgPSB0cmFuc19jZmctPmJj
+X3RhYmxlX2R3b3JkOworCXRyYW5zX3BjaWUtPnNjZF9zZXRfYWN0aXZlID0gdHJhbnNfY2ZnLT5z
+Y2Rfc2V0X2FjdGl2ZTsKIAogCS8qIEluaXRpYWxpemUgTkFQSSBoZXJlIC0gaXQgc2hvdWxkIGJl
+IGJlZm9yZSByZWdpc3RlcmluZyB0byBtYWM4MDIxMQogCSAqIGluIHRoZSBvcG1vZGUgYnV0IGFm
+dGVyIHRoZSBIVyBzdHJ1Y3QgaXMgYWxsb2NhdGVkLgpkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQv
+d2lyZWxlc3MvaXdsd2lmaS9wY2llL3R4LmMgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZp
+L3BjaWUvdHguYwppbmRleCBmNGRmOTUxLi5kNjlmMmU5IDEwMDY0NAotLS0gYS9kcml2ZXJzL25l
+dC93aXJlbGVzcy9pd2x3aWZpL3BjaWUvdHguYworKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9p
+d2x3aWZpL3BjaWUvdHguYwpAQCAtMTA4NSw3ICsxMDg1LDggQEAgdm9pZCBpd2xfdHJhbnNfcGNp
+ZV90eHFfZW5hYmxlKHN0cnVjdCBpd2xfdHJhbnMgKnRyYW5zLCBpbnQgdHhxX2lkLCB1MTYgc3Nu
+LAogCQlmaWZvID0gY2ZnLT5maWZvOwogCiAJCS8qIERpc2FibGUgdGhlIHNjaGVkdWxlciBwcmlv
+ciBjb25maWd1cmluZyB0aGUgY21kIHF1ZXVlICovCi0JCWlmICh0eHFfaWQgPT0gdHJhbnNfcGNp
+ZS0+Y21kX3F1ZXVlKQorCQlpZiAodHhxX2lkID09IHRyYW5zX3BjaWUtPmNtZF9xdWV1ZSAmJgor
+CQkgICAgdHJhbnNfcGNpZS0+c2NkX3NldF9hY3RpdmUpCiAJCQlpd2xfc2NkX2VuYWJsZV9zZXRf
+YWN0aXZlKHRyYW5zLCAwKTsKIAogCQkvKiBTdG9wIHRoaXMgVHggcXVldWUgYmVmb3JlIGNvbmZp
+Z3VyaW5nIGl0ICovCkBAIC0xMTQ3LDcgKzExNDgsOCBAQCB2b2lkIGl3bF90cmFuc19wY2llX3R4
+cV9lbmFibGUoc3RydWN0IGl3bF90cmFucyAqdHJhbnMsIGludCB0eHFfaWQsIHUxNiBzc24sCiAJ
+CQkgICAgICAgU0NEX1FVRVVFX1NUVFNfUkVHX01TSyk7CiAKIAkJLyogZW5hYmxlIHRoZSBzY2hl
+ZHVsZXIgZm9yIHRoaXMgcXVldWUgKG9ubHkpICovCi0JCWlmICh0eHFfaWQgPT0gdHJhbnNfcGNp
+ZS0+Y21kX3F1ZXVlKQorCQlpZiAodHhxX2lkID09IHRyYW5zX3BjaWUtPmNtZF9xdWV1ZSAmJgor
+CQkgICAgdHJhbnNfcGNpZS0+c2NkX3NldF9hY3RpdmUpCiAJCQlpd2xfc2NkX2VuYWJsZV9zZXRf
+YWN0aXZlKHRyYW5zLCBCSVQodHhxX2lkKSk7CiAJfQogCi0tIAoxLjkuMQoK
+--001a11c2b81638b10c0502b1c6d3--
