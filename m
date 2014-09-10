@@ -1,156 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:44312 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755566AbaIKUvi (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:38423 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751494AbaIJHSb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Sep 2014 16:51:38 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH for-3.17 2/3] brcmfmac: conditionally compile firmware protocol source code
-Date: Thu, 11 Sep 2014 22:51:31 +0200
-Message-ID: <1410468692-20852-3-git-send-email-arend@broadcom.com> (sfid-20140911_225143_527111_C3DD5F46)
-In-Reply-To: <1410468692-20852-1-git-send-email-arend@broadcom.com>
-References: <1410468692-20852-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 10 Sep 2014 03:18:31 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [RFC 5/5] ath9k: Fix beacon miss handling
+Date: Wed, 10 Sep 2014 12:48:48 +0530
+Message-Id: <1410333528-28022-6-git-send-email-sujith@msujith.org> (sfid-20140910_091834_715591_7FCF87D9)
+In-Reply-To: <1410333528-28022-1-git-send-email-sujith@msujith.org>
+References: <1410333528-28022-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The host-interface can select which protocol implementation it
-needs. Selecting PCIe will include the msgbuf protocol and selecting
-USB and/or SDIO will include the bcdc protocol. The PCIe kconfig
-option assures the dependencies for msgbuf are met, ie. HAS_DMA.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Reported-by: Geert Uytterhoeven <geert@linux-m68k.org>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+The NoA duration for a GO is half the beacon interval
+and a concurrent context like a STA can be active only
+for that duration, before switching back to the GO's
+operating channel.
+
+Currently, when multiple beacons are missed, the dwell
+time for the STA context is extended to improve the
+chances of receiving a beacon. But the NoA is not updated
+and this will cause problems since the GO is offline
+for a period that is longer than the advertised duration.
+
+Fix this by ensuring that the NoA is updated first before
+extending the time slot for the STA context. Also make
+sure that non-periodic NoA is used for a one-time, longer
+absence period.
+
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/brcm80211/Kconfig           | 10 ++++++++++
- drivers/net/wireless/brcm80211/brcmfmac/Makefile | 10 ++++++----
- drivers/net/wireless/brcm80211/brcmfmac/bcdc.h   |  7 +++++--
- drivers/net/wireless/brcm80211/brcmfmac/msgbuf.h | 11 +++++++++--
- 4 files changed, 30 insertions(+), 8 deletions(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h   |  1 +
+ drivers/net/wireless/ath/ath9k/channel.c | 44 +++++++++++++++++++++++---------
+ 2 files changed, 33 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/Kconfig b/drivers/net/wireless/brcm80211/Kconfig
-index b8e2561..fe3dc12 100644
---- a/drivers/net/wireless/brcm80211/Kconfig
-+++ b/drivers/net/wireless/brcm80211/Kconfig
-@@ -27,10 +27,17 @@ config BRCMFMAC
- 	  one of the bus interface support. If you choose to build a module,
- 	  it'll be called brcmfmac.ko.
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 305db1a..660c151 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -380,6 +380,7 @@ struct ath_chanctx_sched {
+ 	bool offchannel_pending;
+ 	bool wait_switch;
+ 	bool force_noa_update;
++	bool extend_absence;
+ 	enum ath_chanctx_state state;
+ 	u8 beacon_miss;
  
-+config BRCMFMAC_PROTO_BCDC
-+	bool
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index a42fd85..a1b3282 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -371,13 +371,6 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 		sc->sched.switch_start_time = tsf_time;
+ 		sc->cur_chan->last_beacon = sc->sched.next_tbtt;
+ 
+-		/* If at least two consecutive beacons were missed on the STA
+-		 * chanctx, stay on the STA channel for one extra beacon period,
+-		 * to resync the timer properly.
+-		 */
+-		if (ctx->active && sc->sched.beacon_miss >= 2)
+-			sc->sched.offchannel_duration = 3 * beacon_int / 2;
+-
+ 		/*
+ 		 * If an offchannel switch is scheduled to happen after
+ 		 * a beacon transmission, update the NoA with one-shot
+@@ -405,6 +398,26 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 			break;
+ 		}
+ 
 +
-+config BRCMFMAC_PROTO_MSGBUF
-+	bool
++		/*
++		 * Clear the extend_absence flag if it had been
++		 * set during the previous beacon transmission,
++		 * since we need to revert to the normal NoA
++		 * schedule.
++		 */
++		if (ctx->active && sc->sched.extend_absence) {
++			avp->noa_duration = 0;
++			sc->sched.extend_absence = false;
++		}
 +
- config BRCMFMAC_SDIO
- 	bool "SDIO bus interface support for FullMAC driver"
- 	depends on (MMC = y || MMC = BRCMFMAC)
- 	depends on BRCMFMAC
-+	select BRCMFMAC_PROTO_BCDC
- 	select FW_LOADER
- 	default y
- 	---help---
-@@ -42,6 +49,7 @@ config BRCMFMAC_USB
- 	bool "USB bus interface support for FullMAC driver"
- 	depends on (USB = y || USB = BRCMFMAC)
- 	depends on BRCMFMAC
-+	select BRCMFMAC_PROTO_BCDC
- 	select FW_LOADER
- 	---help---
- 	  This option enables the USB bus interface support for Broadcom
-@@ -52,6 +60,8 @@ config BRCMFMAC_PCIE
- 	bool "PCIE bus interface support for FullMAC driver"
- 	depends on BRCMFMAC
- 	depends on PCI
-+	depends on HAS_DMA
-+	select BRCMFMAC_PROTO_MSGBUF
- 	select FW_LOADER
- 	---help---
- 	  This option enables the PCIE bus interface support for Broadcom
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/Makefile b/drivers/net/wireless/brcm80211/brcmfmac/Makefile
-index c35adf4..90a977f 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/Makefile
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/Makefile
-@@ -30,16 +30,18 @@ brcmfmac-objs += \
- 		fwsignal.o \
- 		p2p.o \
- 		proto.o \
--		bcdc.o \
--		commonring.o \
--		flowring.o \
--		msgbuf.o \
- 		dhd_common.o \
- 		dhd_linux.o \
- 		firmware.o \
- 		feature.o \
- 		btcoex.o \
- 		vendor.o
-+brcmfmac-$(CONFIG_BRCMFMAC_PROTO_BCDC) += \
-+		bcdc.o
-+brcmfmac-$(CONFIG_BRCMFMAC_PROTO_MSGBUF) += \
-+		commonring.o \
-+		flowring.o \
-+		msgbuf.o
- brcmfmac-$(CONFIG_BRCMFMAC_SDIO) += \
- 		dhd_sdio.o \
- 		bcmsdh.o
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcdc.h b/drivers/net/wireless/brcm80211/brcmfmac/bcdc.h
-index 17e8c03..6003179 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bcdc.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bcdc.h
-@@ -16,9 +16,12 @@
- #ifndef BRCMFMAC_BCDC_H
- #define BRCMFMAC_BCDC_H
++		/* If at least two consecutive beacons were missed on the STA
++		 * chanctx, stay on the STA channel for one extra beacon period,
++		 * to resync the timer properly.
++		 */
++		if (ctx->active && sc->sched.beacon_miss >= 2) {
++			avp->noa_duration = 0;
++			sc->sched.extend_absence = true;
++		}
+ 		/* Prevent wrap-around issues */
+ 		if (avp->noa_duration && tsf_time - avp->noa_start > BIT(30))
+ 			avp->noa_duration = 0;
+@@ -418,11 +431,17 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 		    (!avp->noa_duration || sc->sched.force_noa_update)) {
+ 			avp->noa_index++;
+ 			avp->noa_start = tsf_time;
+-			avp->noa_duration =
+-				TU_TO_USEC(cur_conf->beacon_interval) / 2 +
+-				sc->sched.channel_switch_time;
  
--
-+#ifdef CONFIG_BRCMFMAC_PROTO_BCDC
- int brcmf_proto_bcdc_attach(struct brcmf_pub *drvr);
- void brcmf_proto_bcdc_detach(struct brcmf_pub *drvr);
--
-+#else
-+static inline int brcmf_proto_bcdc_attach(struct brcmf_pub *drvr) { return 0; }
-+static inline void brcmf_proto_bcdc_detach(struct brcmf_pub *drvr) {}
-+#endif
+-			if (test_bit(ATH_OP_SCANNING, &common->op_flags))
++			if (sc->sched.extend_absence)
++				avp->noa_duration = (3 * beacon_int / 2) +
++					sc->sched.channel_switch_time;
++			else
++				avp->noa_duration =
++					TU_TO_USEC(cur_conf->beacon_interval) / 2 +
++					sc->sched.channel_switch_time;
++
++			if (test_bit(ATH_OP_SCANNING, &common->op_flags) ||
++			    sc->sched.extend_absence)
+ 				avp->periodic_noa = false;
+ 			else
+ 				avp->periodic_noa = true;
+@@ -520,7 +539,8 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 		sc->sched.wait_switch = false;
  
- #endif /* BRCMFMAC_BCDC_H */
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.h b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.h
-index f901ae5..77a51b8 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.h
-@@ -15,6 +15,7 @@
- #ifndef BRCMFMAC_MSGBUF_H
- #define BRCMFMAC_MSGBUF_H
- 
-+#ifdef CONFIG_BRCMFMAC_PROTO_MSGBUF
- 
- #define BRCMF_H2D_MSGRING_CONTROL_SUBMIT_MAX_ITEM	20
- #define BRCMF_H2D_MSGRING_RXPOST_SUBMIT_MAX_ITEM	256
-@@ -32,9 +33,15 @@
- 
- 
- int brcmf_proto_msgbuf_rx_trigger(struct device *dev);
-+void brcmf_msgbuf_delete_flowring(struct brcmf_pub *drvr, u8 flowid);
- int brcmf_proto_msgbuf_attach(struct brcmf_pub *drvr);
- void brcmf_proto_msgbuf_detach(struct brcmf_pub *drvr);
--void brcmf_msgbuf_delete_flowring(struct brcmf_pub *drvr, u8 flowid);
--
-+#else
-+static inline int brcmf_proto_msgbuf_attach(struct brcmf_pub *drvr)
-+{
-+	return 0;
-+}
-+static inline void brcmf_proto_msgbuf_detach(struct brcmf_pub *drvr) {}
-+#endif
- 
- #endif /* BRCMFMAC_MSGBUF_H */
+ 		tsf_time = TU_TO_USEC(cur_conf->beacon_interval) / 2;
+-		if (sc->sched.beacon_miss >= 2) {
++
++		if (sc->sched.extend_absence) {
+ 			sc->sched.beacon_miss = 0;
+ 			tsf_time *= 3;
+ 		}
 -- 
-1.9.1
+2.1.0
 
