@@ -1,97 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:34079 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750951AbaI1IYQ (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:31592 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751763AbaIJNfg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Sep 2014 04:24:16 -0400
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	linux-arm-kernel@lists.infradead.org, arnd@arndb.de,
-	devicetree@vger.kernel.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH V2] bcma: use device from DT (brcm,bus-gpio) for SoC GPIO chip
-Date: Sun, 28 Sep 2014 10:24:01 +0200
-Message-Id: <1411892641-5662-1-git-send-email-zajec5@gmail.com> (sfid-20140928_102434_675219_13F7A4AF)
-In-Reply-To: <1411741733-13888-1-git-send-email-zajec5@gmail.com>
-References: <1411741733-13888-1-git-send-email-zajec5@gmail.com>
+	Wed, 10 Sep 2014 09:35:36 -0400
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>,
+	Dedy Lansky <qca_dlansky@qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+Subject: [PATCH 14/22] wil6210: send connect request IEs to FW also for non-secure connection
+Date: Wed, 10 Sep 2014 16:34:43 +0300
+Message-ID: <1410356091-19219-15-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140910_153541_300122_40F90D6D)
+In-Reply-To: <1410356091-19219-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1410356091-19219-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This will allow us to define GPIO-attached devices (LEDs, buttons) in
-the the device tree.
+Driver is sending connect request IEs to FW only for secure connection and
+ignores them for non-secure connection.
+This is fixed by always sending the IEs to FW upon connect request
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
-This is based on top of
-[PATCH v6] bcma: register bcma as device tree driver
-that I hope will reach wireless-next git tree.
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 22 +++++++++++-----------
+ drivers/net/wireless/ath/wil6210/wmi.c      |  2 ++
+ 2 files changed, 13 insertions(+), 11 deletions(-)
 
-V2: Describe axi chilren and make gpio a child of chipcommon core.
----
- Documentation/devicetree/bindings/bus/bcma.txt | 24 ++++++++++++++++++++++++
- drivers/bcma/driver_gpio.c                     |  5 +++++
- 2 files changed, 29 insertions(+)
-
-diff --git a/Documentation/devicetree/bindings/bus/bcma.txt b/Documentation/devicetree/bindings/bus/bcma.txt
-index e9070c1..26ef4b7 100644
---- a/Documentation/devicetree/bindings/bus/bcma.txt
-+++ b/Documentation/devicetree/bindings/bus/bcma.txt
-@@ -9,6 +9,22 @@ Required properties:
- The cores on the AXI bus are automatically detected by bcma with the
- memory ranges they are using and they get registered afterwards.
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index c8c9852..c1ff330 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -379,22 +379,22 @@ static int wil_cfg80211_connect(struct wiphy *wiphy,
+ 				sme->ie_len);
+ 			goto out;
+ 		}
+-		/*
+-		 * For secure assoc, send:
+-		 * (1) WMI_DELETE_CIPHER_KEY_CMD
+-		 * (2) WMI_SET_APPIE_CMD
+-		 */
++		/* For secure assoc, send WMI_DELETE_CIPHER_KEY_CMD */
+ 		rc = wmi_del_cipher_key(wil, 0, bss->bssid);
+ 		if (rc) {
+ 			wil_err(wil, "WMI_DELETE_CIPHER_KEY_CMD failed\n");
+ 			goto out;
+ 		}
+-		/* WMI_SET_APPIE_CMD */
+-		rc = wmi_set_ie(wil, WMI_FRAME_ASSOC_REQ, sme->ie_len, sme->ie);
+-		if (rc) {
+-			wil_err(wil, "WMI_SET_APPIE_CMD failed\n");
+-			goto out;
+-		}
++	}
++
++	/* WMI_SET_APPIE_CMD. ie may contain rsn info as well as other info
++	 * elements. Send it also in case it's empty, to erase previously set
++	 * ies in FW.
++	 */
++	rc = wmi_set_ie(wil, WMI_FRAME_ASSOC_REQ, sme->ie_len, sme->ie);
++	if (rc) {
++		wil_err(wil, "WMI_SET_APPIE_CMD failed\n");
++		goto out;
+ 	}
  
-+The top-level axi bus may contain children representing attached cores
-+(devices). This is needed since some hardware details can't be auto
-+detected (e.g. IRQ numbers).
-+
-+There is also one special core called ChipCommon that may contain some
-+extra sub-devices. This is because some devices (e.g. GPIO chip) are
-+not standalone cores and can be access using ChipCommon regs only.
-+Possible ChipCommon children:
-+
-+- gpio: GPIO chip on the SoC
-+
-+  Required properties:
-+  - compatible: "brcm,bus-gpio"
-+  - gpio-controller : makes the node a GPIO controller
-+  - #gpio-cells : size of the GPIO specifier, must be 2
-+
- Example:
+ 	/* WMI_CONNECT_CMD */
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index c3682c3a..789c316 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -972,6 +972,8 @@ int wmi_set_ie(struct wil6210_priv *wil, u8 type, u16 ie_len, const void *ie)
  
- 	axi@18000000 {
-@@ -17,4 +33,12 @@ Example:
- 		ranges = <0x00000000 0x18000000 0x00100000>;
- 		#address-cells = <1>;
- 		#size-cells = <1>;
-+
-+		chipcommon@0 {
-+			gpio@0 {
-+				compatible = "brcm,bus-gpio";
-+				gpio-controller;
-+				#gpio-cells = <2>;
-+			};
-+		};
- 	};
-diff --git a/drivers/bcma/driver_gpio.c b/drivers/bcma/driver_gpio.c
-index 8ea497c..7ae39a8 100644
---- a/drivers/bcma/driver_gpio.c
-+++ b/drivers/bcma/driver_gpio.c
-@@ -218,6 +218,11 @@ int bcma_gpio_init(struct bcma_drv_cc *cc)
- #if IS_BUILTIN(CONFIG_BCM47XX)
- 	chip->to_irq		= bcma_gpio_to_irq;
- #endif
-+#if IS_BUILTIN(CONFIG_OF)
-+	if (cc->core->bus->hosttype == BCMA_HOSTTYPE_SOC)
-+		chip->of_node	= of_find_compatible_node(NULL, NULL,
-+							  "brcm,bus-gpio");
-+#endif
- 	switch (cc->core->bus->chipinfo.id) {
- 	case BCMA_CHIP_ID_BCM5357:
- 	case BCMA_CHIP_ID_BCM53572:
+ 	if (!cmd)
+ 		return -ENOMEM;
++	if (!ie)
++		ie_len = 0;
+ 
+ 	cmd->mgmt_frm_type = type;
+ 	/* BUG: FW API define ieLen as u8. Will fix FW */
 -- 
-1.8.4.5
+1.9.1
 
