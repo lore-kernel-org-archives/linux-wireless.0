@@ -1,80 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:46116 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756196AbaIWO6g (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:4713 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751489AbaIJNf2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Sep 2014 10:58:36 -0400
-Message-ID: <54218A9A.7090305@candelatech.com> (sfid-20140923_165855_175775_2C295C08)
-Date: Tue, 23 Sep 2014 07:58:34 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Wed, 10 Sep 2014 09:35:28 -0400
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: [PATCH 10/22] wil6210: fix usage of print_hex_dump_debug
+Date: Wed, 10 Sep 2014 16:34:39 +0300
+Message-ID: <1410356091-19219-11-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140910_153533_409590_90DEEBFF)
+In-Reply-To: <1410356091-19219-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1410356091-19219-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Subject: Re: [PATCH 3/3] ath10k: support 32+ stations.
-References: <1411149890-12618-1-git-send-email-greearb@candelatech.com> <1411149890-12618-3-git-send-email-greearb@candelatech.com> <874mvyebmt.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <874mvyebmt.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+When CONFIG_DYNAMIC_DEBUG is not defined, print_hex_dump_debug
+is mapped directly to print_hex_dump which might cause
+printout to exist all the time
 
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/wil6210.h | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-On 09/23/2014 05:59 AM, Kalle Valo wrote:
-> greearb@candelatech.com writes:
->
->> From: Ben Greear <greearb@candelatech.com>
->>
->> Support up to 32 stations when using CT firmware.
->>
->> Signed-off-by: Ben Greear <greearb@candelatech.com>
->
-> [...]
->
->> -	if (test_bit(ATH10K_FW_FEATURE_WMI_10X, ar->fw_features))
->> +	if (test_bit(ATH10K_FW_FEATURE_WMI_10X_CT, ar->fw_features))
->> +		ar->free_vdev_map = (1LL << TARGET_10X_NUM_VDEVS_CT) - 1;
->> +	else if (test_bit(ATH10K_FW_FEATURE_WMI_10X, ar->fw_features))
->>   		ar->free_vdev_map = (1LL << TARGET_10X_NUM_VDEVS) - 1;
->>   	else
->>   		ar->free_vdev_map = (1LL << TARGET_NUM_VDEVS) - 1;
->
-> [...]
->
->> +/* Over-rides for Candela Technologies firmware */
->> +#define TARGET_10X_NUM_VDEVS_CT			32
->> +#define TARGET_10X_NUM_PEERS_CT			(32 + (TARGET_10X_NUM_VDEVS_CT))
->> +#define TARGET_10X_AST_SKID_LIMIT_CT		(TARGET_10X_NUM_PEERS_CT * TARGET_10X_NUM_PEER_AST)
->
-> [...]
->
->> +		if (test_bit(ATH10K_FW_FEATURE_WMI_10X_CT, ar->fw_features))
->> +			max_num_peers = TARGET_10X_NUM_PEERS_CT - 1;
->
-> Like I said before, this hardcoding of values using feature bits is not
-> going to work in the long run. It's better that these values come
-> directly from FW IEs as integers, that gives us a lot more flexibility
-> between firmware versions.
->
-> That's why I'll drop patches 2 and 3.
-
-Please suggest the name and definition of the IE(s) that you want for
-this feature so I don't have to guess.
-
-I also have a pending patch that supports tx status when using CT
-firmware.  How would you prefer this feature be communicated to
-the driver?  IE flag?
-
-Please also understand, it will be a bad idea to force the number of
-stations based on IE, but we could note upper limits and let module
-parameters tune the actual stations?
-
-Note that my patch above, for instance, decreases number of peers, but
-increases vdevs.  That works well for my purposes, but others may
-want more peers and less vdevs.
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index d2e710e..e51531b 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -468,6 +468,7 @@ int wil_info(struct wil6210_priv *wil, const char *fmt, ...);
+ #define wil_dbg_wmi(wil, fmt, arg...) wil_dbg(wil, "DBG[ WMI]" fmt, ##arg)
+ #define wil_dbg_misc(wil, fmt, arg...) wil_dbg(wil, "DBG[MISC]" fmt, ##arg)
+ 
++#if defined(CONFIG_DYNAMIC_DEBUG)
+ #define wil_hex_dump_txrx(prefix_str, prefix_type, rowsize,	\
+ 			  groupsize, buf, len, ascii)		\
+ 			  print_hex_dump_debug("DBG[TXRX]" prefix_str,\
+@@ -479,6 +480,12 @@ int wil_info(struct wil6210_priv *wil, const char *fmt, ...);
+ 			 print_hex_dump_debug("DBG[ WMI]" prefix_str,\
+ 					prefix_type, rowsize,	\
+ 					groupsize, buf, len, ascii)
++#else
++#define wil_hex_dump_txrx(prefix_str, prefix_type, rowsize,	\
++			  groupsize, buf, len, ascii)
++#define wil_hex_dump_wmi(prefix_str, prefix_type, rowsize,	\
++			 groupsize, buf, len, ascii)
++#endif
+ 
+ void wil_memcpy_fromio_32(void *dst, const volatile void __iomem *src,
+ 			  size_t count);
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.9.1
+
