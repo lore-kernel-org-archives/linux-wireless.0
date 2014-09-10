@@ -1,78 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:37294 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751790AbaIWNuc (ORCPT
+Received: from mo4-p00-ob.smtp.rzone.de ([81.169.146.219]:49336 "EHLO
+	mo4-p00-ob.smtp.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751765AbaIJJXf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Sep 2014 09:50:32 -0400
-Message-ID: <54217AA5.2060803@broadcom.com> (sfid-20140923_155043_191515_D628E3D2)
-Date: Tue, 23 Sep 2014 15:50:29 +0200
-From: Arend van Spriel <arend@broadcom.com>
+	Wed, 10 Sep 2014 05:23:35 -0400
+Message-ID: <54101888.8080601@hartkopp.net> (sfid-20140910_112345_918396_609C36E5)
+Date: Wed, 10 Sep 2014 11:23:20 +0200
+From: Oliver Hartkopp <socketcan@hartkopp.net>
 MIME-Version: 1.0
-To: Seth Forshee <seth.forshee@canonical.com>
-CC: Michael Tokarev <mjt@tls.msk.ru>,
-	<brcm80211-dev-list@broadcom.com>,
-	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
-Subject: Re: BCM4313 & brcmsmac & 3.12: only semi-working?
-References: <53FC1789.6020407@msgid.tls.msk.ru> <53FCA001.6090404@broadcom.com> <53FCB2A3.1050605@msgid.tls.msk.ru> <53FCFE1A.3060508@broadcom.com> <53FDACD1.8090805@msgid.tls.msk.ru> <53FDF8EB.4050905@broadcom.com> <54169D4F.2090607@broadcom.com> <541EEF17.7020806@msgid.tls.msk.ru> <542145B1.4030202@msgid.tls.msk.ru> <54216BF1.3060500@broadcom.com> <20140923134419.GA19016@ubuntu-hedt>
-In-Reply-To: <20140923134419.GA19016@ubuntu-hedt>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+To: Vadim Kochan <vadim4j@gmail.com>,
+	Emmanuel Grumbach <egrumbach@gmail.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Subject: Re: iwlwifi no authentication with AP - Re: pull request: wireless-next
+ 2014-09-08
+References: <20140908191630.GB29412@tuxdriver.com>	<540F5927.7000306@hartkopp.net>	<CANUX_P3n0v1SzfbYuaAsE4TY7Hz_wo2Fb9SmHVNyFOC9hDhwdg@mail.gmail.com>	<540F61D0.9000704@hartkopp.net>	<CAMw6YJLeO1JZeY6hNe-TXOS56b-otk+htt5VPPor+9iYCQz53Q@mail.gmail.com>	<540FDB3C.6060301@hartkopp.net>	<CANUX_P3kOetqEneHgqoCDN4c85SQYD-G=mQj_o1c_TvKmE5psA@mail.gmail.com> <CAMw6YJKgVVnDrn1X7atemC1r9kwvsr3PQDs4qx5KDeeNy-P3VA@mail.gmail.com>
+In-Reply-To: <CAMw6YJKgVVnDrn1X7atemC1r9kwvsr3PQDs4qx5KDeeNy-P3VA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/23/14 15:44, Seth Forshee wrote:
-> On Tue, Sep 23, 2014 at 02:47:45PM +0200, Arend van Spriel wrote:
->> On 09/23/14 12:04, Michael Tokarev wrote:
->>> 21.09.2014 19:30, Michael Tokarev wrote:
->>>> Namely, after resume, the card does not work. ARP works, ping and
->>>> DNS sometimes/somewhat work, inital TCP connection establisment
->>>> works, but eg http download does not work, it stalls almost
->>>> immediately.
+Hi all,
+
+yes for me too.
+
+Although I only could test it here with my mobile hotspot which only supports
+WEP ... but before that hotspot was not working too.
+
+I'll check with my WPA2 setup again when I'm back home (if it's still needed).
+
+So far feel free to add my
+
+Reported-by: Oliver Hartkopp <socketcan@hartkopp.net>
+Tested-by: Oliver Hartkopp <socketcan@hartkopp.net>
+
+Many thanks for your quick reaction!
+
+Best regards,
+Oliver
+
+On 10.09.2014 11:16, Vadim Kochan wrote:
+> Hi,
+> 
+> Your patch works for me.
+> 
+> On Wed, Sep 10, 2014 at 11:24 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+>> On Wed, Sep 10, 2014 at 8:01 AM, Oliver Hartkopp <socketcan@hartkopp.net> wrote:
+>>> On 10.09.2014 00:07, Vadim Kochan wrote:
+>>>> I have the same issue with iwlwifi.
 >>>
->>> It does not work at all anymore again.  Not only after resume but also
->>> after could power up, it stalls right at start of wget for example.
+>>> I tried an old zd1211 wireless USB stick to check if this problem is 80211
+>>> related. But the USB stick works fine (I'm using it right now).
+>>> So its definitely looks like an iwlwifi issue.
 >>>
->>>> http://www.corpit.ru/mjt/tmp/brcmsmac-4313-trace-20140921.dat.gz -- this
->>>> is a trace collected after resuming from suspend-to-disk
+>>>> iwlwifi 0000:02:00.0: fail to flush all tx fifo queues Q 0
 >>>
->>> And here -- http://www.corpit.ru/mjt/tmp/brcmsmac-4313-trace-20140923.dat.gz
->>> is another trace, after insmod brcmutils&   brcmsmac, starting trace-cmd record
->>> (with network-manager running in the background), and running a wget on
->>> http://ip-add-ress-of-the-access-point/somefile (which immediately stalls,
->>> showing minimal progress once in a while only).
+>>> Wasn't there any change in the iwlwifi tx path recently??
 >>
->> Well. This log and the one from a few days ago only show me
->> interrupt status changes, which does not tell me a lot. I do see
->> that the hardware signals transmit completions, but it is far less
->> informative then I hoped it would be. Maybe I am missing some debug
->> configuration here?
+>> Can you please try the patch attached? It works for me.
 >>
->> Seth, would you know?
->
-> Well, there are a few different trace events defined for brcmsmac. This
-> would enable the full set:
->
->   $ trace-cmd record -e brcmsmac -e brcmsmac_tx -e brcmsmac_msg
->
-> It's been quite some time since I used them, but I think brcmsmac_tx is
-> quite noisy so you may only want to enable that if you already suspect a
-> tx problem. I always find it useful to enable the mac80211 and
-> mac80211_msg events too when debugging wireless, and I often enable
-> cfg80211 events as well (none of these are especially verbose).
-
-Ah, I read back the email from Sep 21 and it says:
-
-trace-cmd record brcmsmac:* &
-
-I am surprised the capture contains something as -e is missing. Good to 
-know there are different tracers for the driver.
-
-Regards,
-Arend
-
-> Of course all of this depends on having the right config options
-> selected. Looks like the relevant options are CONFIG_BRCM_TRACING and
-> CONFIG_MAC80211_MESSAGE_TRACING.
->
-> Seth
->
-
+>>>
+>>> Regards,
+>>> Oliver
+>>>
+>>>>
