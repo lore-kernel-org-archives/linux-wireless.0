@@ -1,127 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:56946 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754040AbaIHQyY (ORCPT
+Received: from mail-oi0-f53.google.com ([209.85.218.53]:62857 "EHLO
+	mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751215AbaIJNpv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Sep 2014 12:54:24 -0400
-Received: by mail-wi0-f173.google.com with SMTP id cc10so3027197wib.6
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Sep 2014 09:54:22 -0700 (PDT)
-Message-ID: <540DDF37.5030801@gmail.com> (sfid-20140908_185427_696959_0DDEA5A3)
-Date: Mon, 08 Sep 2014 19:54:15 +0300
-From: Emmanuel Grumbach <egrumbach@gmail.com>
+	Wed, 10 Sep 2014 09:45:51 -0400
+Received: by mail-oi0-f53.google.com with SMTP id x69so7108050oia.12
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Sep 2014 06:45:51 -0700 (PDT)
+Message-ID: <5410560D.8030300@lwfinger.net> (sfid-20140910_154554_737256_11519DCE)
+Date: Wed, 10 Sep 2014 08:45:49 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: John Linville <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: pull request: iwlwifi 2014-09-08
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="EkJ6OMaCnfEHe2OC7m9LecQuOas4usu5j"
+To: Arend van Spriel <arend@broadcom.com>,
+	Bastien Nocera <hadess@hadess.net>
+CC: Marcel Holtmann <marcel@holtmann.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Realtek GPIO chipset, for Baytrail?
+References: <1410256608.4077.7.camel@hadess.net>	 <540F54B1.8040409@lwfinger.net> <1410292835.4077.21.camel@hadess.net>	 <540F61FE.2050404@lwfinger.net>	 <7234781D-5B78-404A-B945-D090938777C7@hadess.net>	 <D08A763F-AD50-449D-98C6-B82866F49480@holtmann.org>	 <54100FF7.5060904@broadcom.com> <1410342645.4077.28.camel@hadess.net> <54102635.2040403@broadcom.com>
+In-Reply-To: <54102635.2040403@broadcom.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---EkJ6OMaCnfEHe2OC7m9LecQuOas4usu5j
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+On 09/10/2014 05:21 AM, Arend van Spriel wrote:
+> On 09/10/14 11:50, Bastien Nocera wrote:
+>>
+>> Indeed. That did the trick.
+>>
+>> mmc0:0001 is the builtin storage, mmc1:0001:1 however is an unbound
+>> device with vendor 0x024c and device 0xb723 (modalias:
+>> sdio:c07v024CdB723). More interestingly class is 0x07, which udev
+>> interprets as "WLAN interface".
+>
+> Now you have to find and load the right driver.
 
-Hi John,
+In response to a question from me, my contact at Realtek sent me such a driver 
+last night. I have forwarded it to Bastien and he should be in business soon.
 
-I think I have caught up completely now - and because I had quite a bit t=
-o cover this pull request is rather big for an -rc5. Sorry about that.
-
-I re-enable scheduled scan on firmware that contain the fix for the bug t=
-hat Linus reported.
-A few trivial fixes: endianity issues, the same DTIM period fix that I di=
-d in mac80211.
-Eyal fixes a few issues we identified with EAPOL, we now send them just a=
-s if they were management frames, this solves interrop issues.
-Johannes has another set of trivial fixes, while Luca fixes the way we co=
-nfigure the filters in the firmware. Last but not least, a new device is =
-added by Oren.
-
-The following changes since commit d88c8958dc13b4e4eb7fc57e3f06dc1c4abc7b=
-1f:
-
-  iwlwifi: bump firmware API version to 10 for 7000 and 8000 (2014-09-01 =
-09:50:14 +0300)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git=
- for-john
-
-for you to fetch changes up to 2cddddc56a1179aa71b460ad616176c237d4a243:
-
-  iwlwifi: mvm: fix an overflow in iwl_mvm_get_signal_strength (2014-09-0=
-8 19:47:22 +0300)
-
-----------------------------------------------------------------
-Eliad Peller (1):
-      iwlwifi: increase DEFAULT_MAX_TX_POWER
-
-Emmanuel Grumbach (4):
-      iwlwifi: mvm: enable scheduled scan on newest firmware
-      iwlwifi: mvm: fix endianity issues with Smart Fifo commands
-      iwlwiwi: mvm: use bss_conf->dtim_period instead of conf.ps_dtim_per=
-iod
-      iwlwifi: dvm: disable power save by default
-
-Eyal Shapira (2):
-      iwlwifi: mvm: treat EAPOLs like mgmt frames wrt rate
-      iwlwifi: mvm: fix an overflow in iwl_mvm_get_signal_strength
-
-Johannes Berg (3):
-      iwlwifi: mvm: BT Coex - remove shadowing variable
-      iwlwifi: mvm: correctly handle PM/QoS changes from mac80211
-      iwlwifi: mvm: BT Coex - always initialize smps_mode
-
-Luciano Coelho (1):
-      iwlwifi: mvm: set MAC_FILTER_IN_BEACON correctly for STA/P2P client=
+Larry
 
 
-Oren Givon (1):
-      iwlwifi: add PCI IDs and add then new 3165 series
-
- drivers/net/wireless/iwlwifi/dvm/power.c       |  2 +-
- drivers/net/wireless/iwlwifi/iwl-7000.c        | 16 ++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-config.h      |  3 +++
- drivers/net/wireless/iwlwifi/iwl-nvm-parse.c   |  4 +---
- drivers/net/wireless/iwlwifi/mvm/coex.c        |  9 +++------
- drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c |  3 +--
- drivers/net/wireless/iwlwifi/mvm/fw-api.h      |  4 ++--
- drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c    | 10 +++++-----
- drivers/net/wireless/iwlwifi/mvm/mac80211.c    | 25 ++++++++++++++------=
------
- drivers/net/wireless/iwlwifi/mvm/power.c       |  5 ++---
- drivers/net/wireless/iwlwifi/mvm/rx.c          |  6 +++---
- drivers/net/wireless/iwlwifi/mvm/sf.c          |  2 +-
- drivers/net/wireless/iwlwifi/mvm/tx.c          |  8 ++++++--
- drivers/net/wireless/iwlwifi/pcie/drv.c        |  7 +++++++
- 14 files changed, 65 insertions(+), 39 deletions(-)
-
-
---EkJ6OMaCnfEHe2OC7m9LecQuOas4usu5j
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJUDd88AAoJEC0Llv5uNjIBib0P/0OAf5YAPslOdSs/T+iTmL3R
-gNaZmZk/Y2sAV0FUTqwoa1GWFFWEbEqAK5lbuYVWsuyNZXKh6xRzOfNDInMdQOoa
-JozHG65a5Tf4uuT+9oDCX8x4x/JvtTEHgXF/mrdVD9KTbQVk7EaRD+lnjSs6r91t
-z1UpO4gywcFboJlL+OM3pRD/ywr/ayXtKiOW4CMxBtarw8zevC0Qvtvj+0G5luwD
-pboWxXP/nT8UCrCa18koTKgcBUUOuGHx2/tQ+fbb+7249sEWkGo83+e6OUj+3kYW
-eb/zJ3cWCHplYR63rl6ev23uS+ttsvB7oVtJ9vTWkGXdbOuahNt8j9lRVlLPPwma
-b1y+UMX79gUxQfPFjjRZelZXDLu4vsV4369c4dJKpSbgcWmD0f+GXdENeVquDKOy
-VV3J5UtpcWNaWJLdfVDfgVsiZAkpyebFpy/p8rjRFXvfKo16k1GMKTBMLubUSRuj
-QbBcbabpgavLCx5sqO/1v42jfsEgNoWOS6ReBkYnwQ4DSq4MiJOZjvJTo5nDPLf6
-zv16etUYr5Frywfny1MeJx3xsnrZEogIXYAj0bBSaL12kZM6qXlP3fTCUWSkHjNc
-yCpZFk/zO+RZI8oZQszp0mJAtvlD4HESVYXtA7RQ62oZMYrSfO73kPWWpBRnMKo9
-6UvOQbKgzuODE4AoHW+2
-=Oxzk
------END PGP SIGNATURE-----
-
---EkJ6OMaCnfEHe2OC7m9LecQuOas4usu5j--
