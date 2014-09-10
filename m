@@ -1,168 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:52586 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755985AbaIZTf3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Sep 2014 15:35:29 -0400
-From: Luca Coelho <luca@coelho.fi>
+Received: from mga11.intel.com ([192.55.52.93]:51059 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752447AbaIJTbs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Sep 2014 15:31:48 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 To: johannes@sipsolutions.net
-Cc: emmanuel.grumbach@intel.com, michal.kazior@tieto.com,
-	linux-wireless@vger.kernel.org
-Date: Fri, 26 Sep 2014 22:35:04 +0300
-Message-Id: <1411760105-18614-7-git-send-email-luca@coelho.fi> (sfid-20140926_213544_108048_82023F17)
-In-Reply-To: <1411760105-18614-1-git-send-email-luca@coelho.fi>
-References: <1411760105-18614-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH 6/7] mac80211: wait for the first beacon on the new channel after CSA
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH] cfg80211: don't put kek/kck/replay counter on the stack
+Date: Wed, 10 Sep 2014 22:28:06 +0300
+Message-Id: <1410377286-20914-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140910_213154_747933_DF62A538)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Instead of immediately reopening the queues (in case of block_tx),
-calling the post_channel_switch operation and sending the
-notification, wait for the first beacon on the new channel.  This
-makes sure that we don't lose packets if the AP/GO is not on the new
-channel yet.
+There's no need to put the values on the stack, just pass a
+pointer to the data in the nl80211 message. This reduces stack
+usage and avoids potential issues with putting sensitive data
+on the stack.
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- net/mac80211/ieee80211_i.h |  2 ++
- net/mac80211/iface.c       |  2 ++
- net/mac80211/mlme.c        | 42 ++++++++++++++++++++++++++++++------------
- 3 files changed, 34 insertions(+), 12 deletions(-)
+ include/net/cfg80211.h | 10 ++++------
+ net/wireless/nl80211.c | 10 +++-------
+ 2 files changed, 7 insertions(+), 13 deletions(-)
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index a9cc491..78d6121 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -434,6 +434,8 @@ struct ieee80211_if_managed {
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 825ffd0..fd24cac 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1980,14 +1980,12 @@ struct cfg80211_wowlan_wakeup {
  
- 	unsigned int flags;
+ /**
+  * struct cfg80211_gtk_rekey_data - rekey data
+- * @kek: key encryption key
+- * @kck: key confirmation key
+- * @replay_ctr: replay counter
++ * @kek: key encryption key (NL80211_KEK_LEN bytes)
++ * @kck: key confirmation key (NL80211_KCK_LEN bytes)
++ * @replay_ctr: replay counter (NL80211_REPLAY_CTR_LEN bytes)
+  */
+ struct cfg80211_gtk_rekey_data {
+-	u8 kek[NL80211_KEK_LEN];
+-	u8 kck[NL80211_KCK_LEN];
+-	u8 replay_ctr[NL80211_REPLAY_CTR_LEN];
++	const u8 *kek, *kck, *replay_ctr;
+ };
  
-+	bool csa_waiting_bcn;
-+
- 	bool beacon_crc_valid;
- 	u32 beacon_crc;
+ /**
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 75e81be..5c6e54b 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -8959,13 +8959,9 @@ static int nl80211_set_rekey_data(struct sk_buff *skb, struct genl_info *info)
+ 	if (nla_len(tb[NL80211_REKEY_DATA_KCK]) != NL80211_KCK_LEN)
+ 		return -ERANGE;
  
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index af23722..e469b33 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -842,6 +842,8 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 	sdata_lock(sdata);
- 	mutex_lock(&local->mtx);
- 	sdata->vif.csa_active = false;
-+	if (sdata->vif.type == NL80211_IFTYPE_STATION)
-+		sdata->u.mgd.csa_waiting_bcn = false;
- 	if (sdata->csa_block_tx) {
- 		ieee80211_wake_vif_queues(local, sdata,
- 					  IEEE80211_QUEUE_STOP_REASON_CSA);
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 2e29cc3..d996126 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1001,31 +1001,43 @@ static void ieee80211_chswitch_work(struct work_struct *work)
- 	/* XXX: shouldn't really modify cfg80211-owned data! */
- 	ifmgd->associated->channel = sdata->csa_chandef.chan;
+-	memcpy(rekey_data.kek, nla_data(tb[NL80211_REKEY_DATA_KEK]),
+-	       NL80211_KEK_LEN);
+-	memcpy(rekey_data.kck, nla_data(tb[NL80211_REKEY_DATA_KCK]),
+-	       NL80211_KCK_LEN);
+-	memcpy(rekey_data.replay_ctr,
+-	       nla_data(tb[NL80211_REKEY_DATA_REPLAY_CTR]),
+-	       NL80211_REPLAY_CTR_LEN);
++	rekey_data.kek = nla_data(tb[NL80211_REKEY_DATA_KEK]);
++	rekey_data.kck = nla_data(tb[NL80211_REKEY_DATA_KCK]);
++	rekey_data.replay_ctr = nla_data(tb[NL80211_REKEY_DATA_REPLAY_CTR]);
  
--	sdata->vif.csa_active = false;
-+	ifmgd->csa_waiting_bcn = true;
-+
-+	ieee80211_sta_reset_beacon_monitor(sdata);
-+	ieee80211_sta_reset_conn_monitor(sdata);
-+
-+out:
-+	mutex_unlock(&local->chanctx_mtx);
-+	mutex_unlock(&local->mtx);
-+	sdata_unlock(sdata);
-+}
-+
-+static void ieee80211_chswitch_post_beacon(struct ieee80211_sub_if_data *sdata)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
-+	int ret;
-+
-+	sdata_assert_lock(sdata);
- 
--	/* XXX: wait for a beacon first? */
- 	if (sdata->csa_block_tx) {
- 		ieee80211_wake_vif_queues(local, sdata,
- 					  IEEE80211_QUEUE_STOP_REASON_CSA);
- 		sdata->csa_block_tx = false;
- 	}
- 
-+	sdata->vif.csa_active = false;
-+	ifmgd->csa_waiting_bcn = false;
-+
- 	ret = drv_post_channel_switch(sdata);
- 	if (ret) {
- 		sdata_info(sdata,
- 			   "driver post channel switch failed, disconnecting\n");
- 		ieee80211_queue_work(&local->hw,
- 				     &ifmgd->csa_connection_drop_work);
--		goto out;
-+		return;
- 	}
- 
--	ieee80211_sta_reset_beacon_monitor(sdata);
--	ieee80211_sta_reset_conn_monitor(sdata);
--
--out:
--	mutex_unlock(&local->chanctx_mtx);
--	mutex_unlock(&local->mtx);
--	sdata_unlock(sdata);
- }
- 
- void ieee80211_chswitch_done(struct ieee80211_vif *vif, bool success)
-@@ -1943,6 +1955,7 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_vif_release_channel(sdata);
- 
- 	sdata->vif.csa_active = false;
-+	ifmgd->csa_waiting_bcn = false;
- 	if (sdata->csa_block_tx) {
- 		ieee80211_wake_vif_queues(local, sdata,
- 					  IEEE80211_QUEUE_STOP_REASON_CSA);
-@@ -2191,6 +2204,7 @@ static void __ieee80211_disconnect(struct ieee80211_sub_if_data *sdata)
- 			       true, frame_buf);
- 	mutex_lock(&local->mtx);
- 	sdata->vif.csa_active = false;
-+	ifmgd->csa_waiting_bcn = false;
- 	if (sdata->csa_block_tx) {
- 		ieee80211_wake_vif_queues(local, sdata,
- 					  IEEE80211_QUEUE_STOP_REASON_CSA);
-@@ -3215,6 +3229,9 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 		}
- 	}
- 
-+	if (ifmgd->csa_waiting_bcn)
-+		ieee80211_chswitch_post_beacon(sdata);
-+
- 	if (ncrc == ifmgd->beacon_crc && ifmgd->beacon_crc_valid)
- 		return;
- 	ifmgd->beacon_crc = ncrc;
-@@ -3687,11 +3704,12 @@ static void ieee80211_sta_bcn_mon_timer(unsigned long data)
- 	struct ieee80211_sub_if_data *sdata =
- 		(struct ieee80211_sub_if_data *) data;
- 	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
- 
- 	if (local->quiescing)
- 		return;
- 
--	if (sdata->vif.csa_active)
-+	if (sdata->vif.csa_active && !ifmgd->csa_waiting_bcn)
- 		return;
- 
- 	sdata->u.mgd.connection_loss = false;
-@@ -3709,7 +3727,7 @@ static void ieee80211_sta_conn_mon_timer(unsigned long data)
- 	if (local->quiescing)
- 		return;
- 
--	if (sdata->vif.csa_active)
-+	if (sdata->vif.csa_active && !ifmgd->csa_waiting_bcn)
- 		return;
- 
- 	ieee80211_queue_work(&local->hw, &ifmgd->monitor_work);
+ 	wdev_lock(wdev);
+ 	if (!wdev->current_bss) {
 -- 
-2.1.0
+1.9.1
 
