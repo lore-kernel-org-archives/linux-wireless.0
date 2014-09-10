@@ -1,56 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:53120 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753716AbaIPBtE (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:36991 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750925AbaIJQeY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Sep 2014 21:49:04 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH] ath9k: Fix build error
-Date: Tue, 16 Sep 2014 07:19:27 +0530
-Message-Id: <1410832167-14829-1-git-send-email-sujith@msujith.org> (sfid-20140916_034908_799507_507F0F21)
+	Wed, 10 Sep 2014 12:34:24 -0400
+Message-ID: <54107D90.7080907@candelatech.com> (sfid-20140910_183427_132859_CA82022E)
+Date: Wed, 10 Sep 2014 09:34:24 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: Kalle Valo <kvalo@qca.qualcomm.com>, ath10k@lists.infradead.org
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] ath10k: support firmware crash-by-assert
+References: <20140910155928.30418.45160.stgit@potku.adurom.net>
+In-Reply-To: <20140910155928.30418.45160.stgit@potku.adurom.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On 09/10/2014 08:59 AM, Kalle Valo wrote:
+> From: Ben Greear <greearb@candelatech.com>
+>
+> 10.1 firmware does not have an official way to
+> cause assert on purpose, but it can be done with
+> carefully crafted WMI command.  This is a different
+> kind of crash from the 'hard' crash, which is
+> a bad memory dereference.
+>
+> Different crashes decode in different manners, so
+> this will help the crash-report testing as well as
+> offer better ways to test firmware failure and
+> recovery.
+>
+> kvalo: move the wmi command creation to debug.c, modify
+> the info print
 
-This happens when CONFIG_ATH9K_CHANNEL_CONTEXT is
-not enabled.
+This looks fine to me.  I have not tested this version.
 
-../drivers/net/wireless/ath/ath9k/recv.c: In function ‘ath_rx_ps_beacon’:
-../drivers/net/wireless/ath/ath9k/recv.c:553:27: error: ‘struct ath_softc’ has no member named ‘offchannel’
-    if (sc->cur_chan == &sc->offchannel.chan)
-                           ^
-../scripts/Makefile.build:257: recipe for target 'drivers/net/wireless/ath/ath9k/recv.o' failed
-make[10]: *** [drivers/net/wireless/ath/ath9k/recv.o] Error 1
-../scripts/Makefile.build:404: recipe for target 'drivers/net/wireless/ath/ath9k' failed
-make[9]: *** [drivers/net/wireless/ath/ath9k] Error 2
+Thanks,
+Ben
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/recv.c | 2 ++
- 1 file changed, 2 insertions(+)
+>
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+> ---
+>   drivers/net/wireless/ath/ath10k/debug.c |   28 +++++++++++++++++++++++++++-
+>   1 file changed, 27 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+> index f948a4d8ee59..c5d01058c2a3 100644
+> --- a/drivers/net/wireless/ath/ath10k/debug.c
+> +++ b/drivers/net/wireless/ath/ath10k/debug.c
+> @@ -565,6 +565,26 @@ static const struct file_operations fops_fw_stats = {
+>   	.llseek = default_llseek,
+>   };
+>
+> +/* This is a clean assert crash in firmware. */
+> +static int ath10k_debug_fw_assert(struct ath10k *ar)
+> +{
+> +	struct wmi_vdev_install_key_cmd *cmd;
+> +	struct sk_buff *skb;
+> +
+> +	skb = ath10k_wmi_alloc_skb(ar, sizeof(*cmd) + 16);
+> +	if (!skb)
+> +		return -ENOMEM;
+> +
+> +	cmd = (struct wmi_vdev_install_key_cmd *)skb->data;
+> +	memset(cmd, 0, sizeof(*cmd));
+> +
+> +	/* big enough number so that firmware asserts */
+> +	cmd->vdev_id = __cpu_to_le32(0x7ffe);
+> +
+> +	return ath10k_wmi_cmd_send(ar, skb,
+> +				   ar->wmi.cmd->vdev_install_key_cmdid);
+> +}
+> +
+>   static ssize_t ath10k_read_simulate_fw_crash(struct file *file,
+>   					     char __user *user_buf,
+>   					     size_t count, loff_t *ppos)
+> @@ -574,7 +594,10 @@ static ssize_t ath10k_read_simulate_fw_crash(struct file *file,
+>   			   " WMI_FORCE_FW_HANG_ASSERT to firmware if FW"
+>   			   " supports that command.\n `hard` - this will send"
+>   			   " to firmware command with illegal parameters"
+> -			   " causing firmware crash.\n";
+> +			   " causing firmware crash.\n"
+> +			   "`assert` - this will send special illegal parameter"
+> +			   " to firmware to cause assert failure"
+> +			   " and crash.\n";
+>
+>   	return simple_read_from_buffer(user_buf, count, ppos, buf, strlen(buf));
+>   }
+> @@ -623,6 +646,9 @@ static ssize_t ath10k_write_simulate_fw_crash(struct file *file,
+>   		 */
+>   		ret = ath10k_wmi_vdev_set_param(ar, 0x7fff,
+>   					ar->wmi.vdev_param->rts_threshold, 0);
+> +	} else if (!strcmp(buf, "assert")) {
+> +		ath10k_info(ar, "simulating firmware assert crash\n");
+> +		ret = ath10k_debug_fw_assert(ar);
+>   	} else {
+>   		ret = -EINVAL;
+>   		goto exit;
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 0b53b74..51a9852 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -549,10 +549,12 @@ static void ath_rx_ps_beacon(struct ath_softc *sc, struct sk_buff *skb)
- 		ath_dbg(common, PS,
- 			"Reconfigure beacon timers based on synchronized timestamp\n");
- 
-+#ifdef CONFIG_ATH9K_CHANNEL_CONTEXT
- 		if (ath9k_is_chanctx_enabled()) {
- 			if (sc->cur_chan == &sc->offchannel.chan)
- 				skip_beacon = true;
- 		}
-+#endif
- 
- 		if (!skip_beacon &&
- 		    !(WARN_ON_ONCE(sc->cur_chan->beacon.beacon_interval == 0)))
+
 -- 
-2.1.0
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
