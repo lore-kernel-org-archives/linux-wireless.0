@@ -1,54 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:24743 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932149AbaIWRf1 (ORCPT
+Received: from mo4-p00-ob.smtp.rzone.de ([81.169.146.217]:21157 "EHLO
+	mo4-p00-ob.smtp.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750765AbaIJFCB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Sep 2014 13:35:27 -0400
-Message-ID: <5421AF5C.6000106@broadcom.com> (sfid-20140923_193535_796152_89494D6A)
-Date: Tue, 23 Sep 2014 19:35:24 +0200
-From: Arend van Spriel <arend@broadcom.com>
+	Wed, 10 Sep 2014 01:02:01 -0400
+Message-ID: <540FDB3C.6060301@hartkopp.net> (sfid-20140910_070211_284184_31F7C24A)
+Date: Wed, 10 Sep 2014 07:01:48 +0200
+From: Oliver Hartkopp <socketcan@hartkopp.net>
 MIME-Version: 1.0
-To: Michael Tokarev <mjt@tls.msk.ru>
-CC: Seth Forshee <seth.forshee@canonical.com>,
-	<brcm80211-dev-list@broadcom.com>,
-	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
-Subject: Re: BCM4313 & brcmsmac & 3.12: only semi-working?
-References: <53FDACD1.8090805@msgid.tls.msk.ru> <53FDF8EB.4050905@broadcom.com> <54169D4F.2090607@broadcom.com> <541EEF17.7020806@msgid.tls.msk.ru> <542145B1.4030202@msgid.tls.msk.ru> <54216BF1.3060500@broadcom.com> <20140923134419.GA19016@ubuntu-hedt> <54217AA5.2060803@broadcom.com> <542182BE.2000606@msgid.tls.msk.ru> <542183A6.4070207@msgid.tls.msk.ru> <20140923143124.GC19016@ubuntu-hedt> <54219984.2080601@msgid.tls.msk.ru>
-In-Reply-To: <54219984.2080601@msgid.tls.msk.ru>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+To: Vadim Kochan <vadim4j@gmail.com>
+CC: Emmanuel Grumbach <egrumbach@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Subject: Re: iwlwifi no authentication with AP - Re: pull request: wireless-next
+ 2014-09-08
+References: <20140908191630.GB29412@tuxdriver.com>	<540F5927.7000306@hartkopp.net>	<CANUX_P3n0v1SzfbYuaAsE4TY7Hz_wo2Fb9SmHVNyFOC9hDhwdg@mail.gmail.com>	<540F61D0.9000704@hartkopp.net> <CAMw6YJLeO1JZeY6hNe-TXOS56b-otk+htt5VPPor+9iYCQz53Q@mail.gmail.com>
+In-Reply-To: <CAMw6YJLeO1JZeY6hNe-TXOS56b-otk+htt5VPPor+9iYCQz53Q@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/23/14 18:02, Michael Tokarev wrote:
-> 23.09.2014 18:31, Seth Forshee пишет:
->> On Tue, Sep 23, 2014 at 06:28:54PM +0400, Michael Tokarev wrote:
->>> 23.09.2014 18:25, Michael Tokarev wrote:
->>>> 23.09.2014 17:50, Arend van Spriel wrote:
->>>>> On 09/23/14 15:44, Seth Forshee wrote:
->>> []
->>>>>> It's been quite some time since I used them, but I think brcmsmac_tx is
->>>>>> quite noisy so you may only want to enable that if you already suspect a
->>>>>> tx problem. I always find it useful to enable the mac80211 and
->>>>>> mac80211_msg events too when debugging wireless, and I often enable
->>>>>> cfg80211 events as well (none of these are especially verbose).
->>>
->>> mac80211_msg does not exist, it looks like.  fwiw.
->>
->> Did you check your kernel's config? You need to have
->> CONFIG_MAC80211_MESSAGE_TRACING enabled.
->
-> Oh. Indeed.  While I enabled it, I recompiled only drivers/net/wireless,
-> but not net/.  Rebuilt, another trace is here --
->
->   http://www.corpit.ru/mjt/tmp/brcmsmac-4313-trace-201409233.dat.gz
->
-> Thanks,
+On 10.09.2014 00:07, Vadim Kochan wrote:
+> I have the same issue with iwlwifi.
 
-Just to confirm. With this trace you also get a stall during wget?
+I tried an old zd1211 wireless USB stick to check if this problem is 80211
+related. But the USB stick works fine (I'm using it right now).
+So its definitely looks like an iwlwifi issue.
+
+> iwlwifi 0000:02:00.0: fail to flush all tx fifo queues Q 0
+
+Wasn't there any change in the iwlwifi tx path recently??
 
 Regards,
-Arend
+Oliver
 
-> /mjt
->
-
+> 
+> On Tue, Sep 9, 2014 at 11:23 PM, Oliver Hartkopp <socketcan@hartkopp.net> wrote:
+>> On 09.09.2014 22:02, Emmanuel Grumbach wrote:
+>>> On Tue, Sep 9, 2014 at 10:46 PM, Oliver Hartkopp <socketcan@hartkopp.net> wrote:
+>>>> Hello John, all,
+>>>>
+>>>> on my i7 Laptop with iwlwifi the latest net-next does not connect to my access point:
+>>>
+>>> Are you sure this wasn't the case before?
+>>
+>> Indeed I moved to net-next right today - as I also had the LED lockdep splat
+>> on 3.17-rcX with X < 4.
+>>
+>> So it can be that this issue was already introduced at the beginning of this
+>> net-next cycle. Don't know, sorry. The latest 3.17-rc4 from Linus' tree works
+>> fine. I'm running a Debian unstable here (in both cases).
+>>
+>>> Can you bisect?
+>>
+>> Not really. I'm running the kernel on my bare machine - and I just wanted to
+>> go to bed right now ...
+>>
+>> So I will be able to test patches tomorrow morning again.
+>>
+>> Tnx for your fast feedback,
+>> Oliver
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe netdev" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
