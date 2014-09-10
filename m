@@ -1,98 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:56312 "EHLO sipsolutions.net"
+Received: from purkki.adurom.net ([80.68.90.206]:46666 "EHLO purkki.adurom.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754624AbaIBQAw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Sep 2014 12:00:52 -0400
-Message-ID: <1409673647.1808.25.camel@jlt4.sipsolutions.net> (sfid-20140902_180119_039636_B914A86F)
-Subject: Re: truesize for pages shared between SKBs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eric Dumazet <eric.dumazet@gmail.com>
-Cc: netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Ido Yariv <ido@wizery.com>,
-	Emmanuel Grumbach <egrumbach@gmail.com>
-Date: Tue, 02 Sep 2014 18:00:47 +0200
-In-Reply-To: <1409673113.3173.114.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20140902_175158_801970_DEB54693)
-References: <1409660440.1808.17.camel@jlt4.sipsolutions.net>
-	 <1409673113.3173.114.camel@edumazet-glaptop2.roam.corp.google.com>
-	 (sfid-20140902_175158_801970_DEB54693)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1750809AbaIJGCF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Sep 2014 02:02:05 -0400
+From: Kalle Valo <kvalo@adurom.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	Avraham Stern <avraham.stern@intel.com>
+Subject: Re: [PATCH] cfg802111/nl80211: Add device motion indication API
+References: <1410268021-9529-1-git-send-email-emmanuel.grumbach@intel.com>
+	<85725D0A-E038-44CF-9894-BDA93231FA62@holtmann.org>
+Date: Wed, 10 Sep 2014 09:02:01 +0300
+In-Reply-To: <85725D0A-E038-44CF-9894-BDA93231FA62@holtmann.org> (Marcel
+	Holtmann's message of "Tue, 9 Sep 2014 19:15:47 -0700")
+Message-ID: <877g1c8146.fsf@purkki.adurom.net> (sfid-20140910_080209_884500_14D6057D)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-09-02 at 08:51 -0700, Eric Dumazet wrote:
+Marcel Holtmann <marcel@holtmann.org> writes:
 
-> > In our driver, we have 4k receive buffers, but usually ~1500 byte
-> > packets.
-> 
-> Which driver exactly is that ?
+> Hi Emmanuel,
+>
+>> Add API to notify user-space when the device is in motion
+>> and the motion type.
+>> This information can be used to react to the changing environment when
+>> the device is on the move, or avoid some unnecessary activities when
+>> the device is not moving. For example, longer scan intervals when the
+>> device is not moving and there are probably no new AP's, shorter scan
+>> intervals while the device is moving slowly and the environment is
+>> constantly changing, and not scanning at all when the device is moving
+>> fast and it is very unlikely to be able to connect to anything.
+>
+> if we have WiFi chips that have these kind of information, then
+> shouldn't it be better exposed via a generic subsystem for motion
+> events. Having this exposed over nl80211 seems a bit too limited.
 
-iwlwifi/iwlmvm, of course :)
+I agree. Just because the functionality is in a wifi chip we should not
+use nl80211 to expose the information.
 
-> Can you elaborate on 'they share the page' ?
-> 
-> If a 4K page is really split into 2 2KB subpages, then yes, truesize can
-> be 2KB + skb->head + sizeof(struct sk_buff)
+And doesn't this mean that a user space application making decisions
+would have to listen two interfaces now, nl80211 and the real gyro based
+interface (whatever that is, if there is even one now)? That doesn't
+sound like a good idea.
 
-What do you mean by "split"?
-
-There could be any number of packets (though usually two in the
-interesting case) in the page, and we call skb_add_rx_frag() for both
-packets, pointing to the same page, with different offsets.
-
-> Some drivers do that (Intel IGBVF for example)
-
-It seems to split into two unconditionally, which is interesting.
-
-> If a single 4KB page can be used by a single 1500 frame, then its not
-> shared ;)
-
-Right, obviously :)
-
-> > How do other drivers handle this? Should the truesize maybe be aware of
-> > this kind of sharing? Should we just lie about it and risk that the
-> > truesize is accounted erroneously if some but not all of the packets are
-> > freed?
-> 
-> Lies are not worth crashing hosts under memory pressure.
-> 
-> skb->truesize is really how many bytes are consumed by an skb. This
-> serves in TCP stack to trigger collapses when a socket reaches its
-> limits.
-
-Right - the question is more what "consumed" means in this case. Should
-it be correct at the time of SKB creation (in which case we should split
-by the number of packets created from the page) or should it be correct
-for the worst case (all but one packet are freed quickly, one remains
-stuck on some socket with the full 4k page allocated to it) ...
-
-Or maybe we should make it even more complex and check the page sharing
-in conjunction with GRO...
-
-> Your performance is better when you lie, because for the same
-> sk->sk_rcvbuf value (typically tcp_rmem[2]), TCP window can be bigger,
-> and allows TCP sender to send more packets (bigger cwnd)
-> 
-> Workaround : make tcp_rmem[2] larger, so that we still have an
-> appropriate memory limit per socket, acting for OOM prevention, and
-> allowing better performance for large BDP flows.
-> 
-> Current value is 6MB, which is already quite big IMO for well behaving
-> drivers.
-> 
-> Real fix would be to make your skb as slim as possible of course.
-> It helps even if GRO or TCP coalescing can reduce the memory
-> requirements for bulk flows.
-
-Sure, it's always a trade-off though. If we want to *actually* make it
-smaller we'd have to copy the data, which doesn't buy us much either.
-The hardware is limited in the RX buffer handling, and there's actually
-a chance we might receive close to 4k in a single frame with A-MSDU.
-
-If you wanted to use the medium more efficiently you'd set the MTU
-higher, for better page utilisation to a little under 2000 (a perfectly
-valid value for 802.11). Nobody really does that though :-)
-
-johannes
-
+-- 
+Kalle Valo
