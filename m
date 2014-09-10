@@ -1,71 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f43.google.com ([209.85.218.43]:55464 "EHLO
-	mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753711AbaIDVEJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Sep 2014 17:04:09 -0400
-Received: by mail-oi0-f43.google.com with SMTP id i138so7967oig.16
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Sep 2014 14:04:08 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
+Received: from mga11.intel.com ([192.55.52.93]:33056 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752304AbaIJKnk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Sep 2014 06:43:40 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	troy_tan@realsil.com.cn
-Subject: [PATCH 0/7 V3.18] Patches to upgrade driver btcoexist for latest (062814) Realtek code
-Date: Thu,  4 Sep 2014 16:03:39 -0500
-Message-Id: <1409864626-16373-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20140904_230412_983818_196E98F4)
+	Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 4/4] cfg80211: clear rekey data on stack
+Date: Wed, 10 Sep 2014 13:39:57 +0300
+Message-Id: <1410345597-28565-4-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140910_124344_062207_339C2732)
+In-Reply-To: <1410345597-28565-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1410345597-28565-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This set of patches fixes bugs in the Realtek drivers and adds the support
-code for devices RTL8192EE and RTL8821AE. An earlier version of this code
-resides in staging and will be removed when these patches, and the
-corresponding drivers, reach net-next.
+From: Johannes Berg <johannes.berg@intel.com>
 
-All this code is intended for the 3.18 stream.
+Clear the rekey data on the stack to avoid leaving it there
+in case another place might leak some stack bytes.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: troy_tan@realsil.com.cn
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ net/wireless/nl80211.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Larry Finger (7):
-  rtlwifi: btcoexist: Modify btcoexist for changes in the V062814
-    Realtek version = part 1
-  rtlwifi: btcoexist: Modify rtl_btc for changes in latest Realtek code
-  rtlwifi: btcoexist: Modify driver for V062814 Realtek driver
-  rtlwifi: btcoexist: Modify driver to support BT coexistence in
-    rtl8723be
-  rtlwifi: btcoexist: Add BT coexistence routines for driver rtl8821ae
-  rtlwifi: btcoexist: Add second part of BT coexistence routines for
-    rtl8821ae
-  rtlwifi: btcoexist: Update remaining old parts of the driver
-
- .../net/wireless/rtlwifi/btcoexist/halbt_precomp.h |    6 +
- .../wireless/rtlwifi/btcoexist/halbtc8192e2ant.c   | 3888 +++++++++++++++++++
- .../wireless/rtlwifi/btcoexist/halbtc8192e2ant.h   |  185 +
- .../wireless/rtlwifi/btcoexist/halbtc8723b1ant.c   | 3211 ++++++++++++++++
- .../wireless/rtlwifi/btcoexist/halbtc8723b1ant.h   |  184 +
- .../wireless/rtlwifi/btcoexist/halbtc8723b2ant.c   |  447 ++-
- .../wireless/rtlwifi/btcoexist/halbtc8723b2ant.h   |   31 +-
- .../wireless/rtlwifi/btcoexist/halbtc8821a1ant.c   | 3010 +++++++++++++++
- .../wireless/rtlwifi/btcoexist/halbtc8821a1ant.h   |  188 +
- .../wireless/rtlwifi/btcoexist/halbtc8821a2ant.c   | 3914 ++++++++++++++++++++
- .../wireless/rtlwifi/btcoexist/halbtc8821a2ant.h   |  205 +
- .../net/wireless/rtlwifi/btcoexist/halbtcoutsrc.c  |   47 +-
- .../net/wireless/rtlwifi/btcoexist/halbtcoutsrc.h  |  118 +-
- drivers/net/wireless/rtlwifi/btcoexist/rtl_btc.c   |   27 +-
- drivers/net/wireless/rtlwifi/btcoexist/rtl_btc.h   |    6 +-
- drivers/net/wireless/rtlwifi/rtl8723ae/hal_btc.c   |    4 +-
- drivers/net/wireless/rtlwifi/wifi.h                |   15 +-
- 17 files changed, 15165 insertions(+), 321 deletions(-)
- create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/halbtc8192e2ant.c
- create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/halbtc8192e2ant.h
- create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/halbtc8723b1ant.c
- create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/halbtc8723b1ant.h
- create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/halbtc8821a1ant.c
- create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/halbtc8821a1ant.h
- create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/halbtc8821a2ant.c
- create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/halbtc8821a2ant.h
-
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index f4194af..51eb526 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -9062,6 +9062,7 @@ static int nl80211_set_rekey_data(struct sk_buff *skb, struct genl_info *info)
+ 	err = rdev_set_rekey_data(rdev, dev, &rekey_data);
+  out:
+ 	wdev_unlock(wdev);
++	memset(&rekey_data, 0, sizeof(rekey_data));
+ 	return err;
+ }
+ 
 -- 
-1.8.4.5
+1.9.1
 
