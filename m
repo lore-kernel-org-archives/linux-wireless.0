@@ -1,220 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:52592 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1030188AbaIZTfa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Sep 2014 15:35:30 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: emmanuel.grumbach@intel.com, michal.kazior@tieto.com,
-	linux-wireless@vger.kernel.org
-Date: Fri, 26 Sep 2014 22:35:02 +0300
-Message-Id: <1411760105-18614-5-git-send-email-luca@coelho.fi> (sfid-20140926_213552_254858_7B4936B8)
-In-Reply-To: <1411760105-18614-1-git-send-email-luca@coelho.fi>
-References: <1411760105-18614-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH 4/7] mac80211: add pre_channel_switch driver operation
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:52593 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751298AbaIJIm5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Sep 2014 04:42:57 -0400
+Message-ID: <54100F0E.8030204@broadcom.com> (sfid-20140910_104302_258584_68D58E4D)
+Date: Wed, 10 Sep 2014 10:42:54 +0200
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Sourav <sourav.chakraborty@netcommwireless.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: Not reaching optimum speeds with IEEE 802.11n
+References: <540FA8D9.2070803@netcommwireless.com>
+In-Reply-To: <540FA8D9.2070803@netcommwireless.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+On 09/10/14 03:26, Sourav wrote:
+> Hi All,
+> We are using Ralink chip Rt3072L (using rt2800usb drivers rt2800usb.c),
+> mac80211, and hostapd in our routers.
+> root:~# lsmod
+> Module Size Used by Tainted: P
+> rt2800usb 15371 0
+> rt2800lib 74214 1 rt2800usb
+> rt2x00usb 9718 1 rt2800usb
+> rt2x00lib 39328 3 rt2800usb,rt2800lib,rt2x00usb
+> mac80211 266596 3 rt2800lib,rt2x00usb,rt2x00lib
+> cfg80211 214073 2 rt2x00lib,mac80211
+> compat 17406 4 rt2800usb,rt2x00lib,mac80211,cfg80211
+>
+> When we are measuring performance using iperf, we see ~20Mbps, using
+> Channel 11 of 2.4GHZ, using 802.11n. The following is the iperf stats
+> with iperf client running on the router and iperf server running on a
+> laptop with IEEE802.11n adapter.
+>
+> root:~# iperf -c 192.168.1.194 -p 5001 -i1 -fk -w146k -t100
+> ------------------------------------------------------------
+> Client connecting to 192.168.1.194, TCP port 5001
+> TCP window size: 292 KByte (WARNING: requested 146 KByte)
+> ------------------------------------------------------------
+> [ 3] local 192.168.1.1 port 42520 connected with 192.168.1.194 port 5001
+> [ ID] Interval Transfer Bandwidth
+> [ 3] 0.0- 1.0 sec 1560 KBytes 12780 Kbits/sec
+> [ ID] Interval Transfer Bandwidth
+> [ 3] 1.0- 2.0 sec 2672 KBytes 21889 Kbits/sec
+> [ ID] Interval Transfer Bandwidth
+> [ 3] 2.0- 3.0 sec 2800 KBytes 22938 Kbits/sec
+> [ ID] Interval Transfer Bandwidth
+> [ 3] 3.0- 4.0 sec 2624 KBytes 21496 Kbits/sec
+> [ ID] Interval Transfer Bandwidth
+> [ 3] 4.0- 5.0 sec 2712 KBytes 22217 Kbits/sec
+> [ ID] Interval Transfer Bandwidth
+> [ 3] 5.0- 6.0 sec 2664 KBytes 21823 Kbits/sec
+> [ ID] Interval Transfer Bandwidth
+> [ 3] 6.0- 7.0 sec 2424 KBytes 19857 Kbits/sec
+> [ ID] Interval Transfer Bandwidth
+> [ 3] 7.0- 8.0 sec 2424 KBytes 19857 Kbits/sec
+> [ ID] Interval Transfer Bandwidth
+> [ 3] 8.0- 9.0 sec 2592 KBytes 21234 Kbits/sec
+> [ ID] Interval Transfer Bandwidth
+> [ 3] 9.0-10.0 sec 2752 KBytes 22544 Kbits/sec
+> [ ID] Interval Transfer Bandwidth
+> [ 3] 10.0-11.0 sec 3024 KBytes 24773 Kbits/sec
+> [ ID] Interval Transfer Bandwidth
+> [ 3] 11.0-12.0 sec 2568 KBytes 21037 Kbits/sec
+> [ ID] Interval Transfer Bandwidth
+> [ 3] 12.0-13.0 sec 2832 KBytes 23200 Kbits/sec
+> [ ID] Interval Transfer Bandwidth
+> [ 3] 13.0-14.0 sec 2624 KBytes 21496 Kbits/sec
+>
+> We are expecting speeds of upto 300Mbps(as per 802.11n specs), though
+> those speeds are achievable using channel bonding over 5GHZ?
 
-Some drivers may need to prepare for a channel switch also when it is
-initiated from the remote side (eg. station, P2P client).  To make
-this possible, add a generic callback that can be called for all
-interface types.
+First of all, the speeds in the 802.11n specs are phy rates. This rate 
+is what is used for individual frames. So you are comparing apples and 
+beans (not in the fruit department) by looking at TCP throughput. You 
+will need to determine the actual phy rate during the test using iw. 
+This depends on condition in the environment. 300Mbps requires two 
+streams (2x2) and 40MHz bandwidth.
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
----
- include/net/mac80211.h    |  7 +++++++
- net/mac80211/cfg.c        | 11 +++++++++++
- net/mac80211/driver-ops.h | 18 ++++++++++++++++++
- net/mac80211/mlme.c       | 25 +++++++++++++++++--------
- net/mac80211/trace.h      | 33 +++++++++++++++++++++++++++++++++
- 5 files changed, 86 insertions(+), 8 deletions(-)
+Regards,
+Arend
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index ec0a5b0..19e4159 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2832,6 +2832,10 @@ enum ieee80211_roc_type {
-  *	transmitted and then call ieee80211_csa_finish().
-  *	If the CSA count starts as zero or 1, this function will not be called,
-  *	since there won't be any time to beacon before the switch anyway.
-+ * @pre_channel_switch: This is an optional callback that is called
-+ *	before a channel switch procedure is started (ie. when a STA
-+ *	gets a CSA or an userspace initiated channel-switch), allowing
-+ *	the driver to prepare for the channel switch.
-  *
-  * @join_ibss: Join an IBSS (on an IBSS interface); this is called after all
-  *	information in bss_conf is set up and the beacon can be retrieved. A
-@@ -3038,6 +3042,9 @@ struct ieee80211_ops {
- 	void (*channel_switch_beacon)(struct ieee80211_hw *hw,
- 				      struct ieee80211_vif *vif,
- 				      struct cfg80211_chan_def *chandef);
-+	int (*pre_channel_switch)(struct ieee80211_hw *hw,
-+				  struct ieee80211_vif *vif,
-+				  struct ieee80211_channel_switch *ch_switch);
- 
- 	int (*join_ibss)(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
- 	void (*leave_ibss)(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index fb6a150..2caa7f0 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3053,6 +3053,7 @@ __ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_channel_switch ch_switch;
- 	struct ieee80211_chanctx_conf *conf;
- 	struct ieee80211_chanctx *chanctx;
- 	int err, changed = 0;
-@@ -3088,6 +3089,10 @@ __ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- 		goto out;
- 	}
- 
-+	err = drv_pre_channel_switch(sdata, &ch_switch);
-+	if (err)
-+		goto out;
-+
- 	err = ieee80211_vif_reserve_chanctx(sdata, &params->chandef,
- 					    chanctx->mode,
- 					    params->radar_required);
-@@ -3101,6 +3106,12 @@ __ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- 		goto out;
- 	}
- 
-+	ch_switch.timestamp = 0;
-+	ch_switch.device_timestamp = 0;
-+	ch_switch.block_tx = params->block_tx;
-+	ch_switch.chandef = params->chandef;
-+	ch_switch.count = params->count;
-+
- 	err = ieee80211_set_csa_beacon(sdata, params, &changed);
- 	if (err) {
- 		ieee80211_vif_unreserve_chanctx(sdata);
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index 196d48c..5522672 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -1196,6 +1196,24 @@ drv_channel_switch_beacon(struct ieee80211_sub_if_data *sdata,
- 	}
- }
- 
-+static inline int
-+drv_pre_channel_switch(struct ieee80211_sub_if_data *sdata,
-+		       struct ieee80211_channel_switch *ch_switch)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	int ret = 0;
-+
-+	if (!check_sdata_in_driver(sdata))
-+		return -EIO;
-+
-+	trace_drv_pre_channel_switch(local, sdata, ch_switch);
-+	if (local->ops->pre_channel_switch)
-+		ret = local->ops->pre_channel_switch(&local->hw, &sdata->vif,
-+						     ch_switch);
-+	trace_drv_return_int(local, ret);
-+	return ret;
-+}
-+
- static inline int drv_join_ibss(struct ieee80211_local *local,
- 				struct ieee80211_sub_if_data *sdata)
- {
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index cb4d074..c5fa20f 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1057,6 +1057,7 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_chanctx *chanctx;
- 	enum ieee80211_band current_band;
- 	struct ieee80211_csa_ie csa_ie;
-+	struct ieee80211_channel_switch ch_switch;
- 	int res;
- 
- 	sdata_assert_lock(sdata);
-@@ -1128,6 +1129,22 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 		}
- 	}
- 
-+	ch_switch.timestamp = timestamp;
-+	ch_switch.device_timestamp = device_timestamp;
-+	ch_switch.block_tx = csa_ie.mode;
-+	ch_switch.chandef = csa_ie.chandef;
-+	ch_switch.count = csa_ie.count;
-+
-+	if (drv_pre_channel_switch(sdata, &ch_switch)) {
-+		sdata_info(sdata,
-+			   "preparing for channel switch failed, disconnecting\n");
-+		ieee80211_queue_work(&local->hw,
-+				     &ifmgd->csa_connection_drop_work);
-+		mutex_unlock(&local->chanctx_mtx);
-+		mutex_unlock(&local->mtx);
-+		return;
-+	}
-+
- 	res = ieee80211_vif_reserve_chanctx(sdata, &csa_ie.chandef,
- 					    chanctx->mode, false);
- 	if (res) {
-@@ -1153,14 +1170,6 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 
- 	if (local->ops->channel_switch) {
- 		/* use driver's channel switch callback */
--		struct ieee80211_channel_switch ch_switch = {
--			.timestamp = timestamp,
--			.device_timestamp = device_timestamp,
--			.block_tx = csa_ie.mode,
--			.chandef = csa_ie.chandef,
--			.count = csa_ie.count,
--		};
--
- 		drv_channel_switch(local, &ch_switch);
- 		return;
- 	}
-diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
-index 853c440..30476d2 100644
---- a/net/mac80211/trace.h
-+++ b/net/mac80211/trace.h
-@@ -2108,6 +2108,39 @@ TRACE_EVENT(drv_channel_switch_beacon,
- 	)
- );
- 
-+TRACE_EVENT(drv_pre_channel_switch,
-+	TP_PROTO(struct ieee80211_local *local,
-+		 struct ieee80211_sub_if_data *sdata,
-+		 struct ieee80211_channel_switch *ch_switch),
-+
-+	TP_ARGS(local, sdata, ch_switch),
-+
-+	TP_STRUCT__entry(
-+		LOCAL_ENTRY
-+		VIF_ENTRY
-+		CHANDEF_ENTRY
-+		__field(u64, timestamp)
-+		__field(bool, block_tx)
-+		__field(u8, count)
-+	),
-+
-+	TP_fast_assign(
-+		LOCAL_ASSIGN;
-+		VIF_ASSIGN;
-+		CHANDEF_ASSIGN(&ch_switch->chandef)
-+		__entry->timestamp = ch_switch->timestamp;
-+		__entry->block_tx = ch_switch->block_tx;
-+		__entry->count = ch_switch->count;
-+	),
-+
-+	TP_printk(
-+		LOCAL_PR_FMT VIF_PR_FMT " prepare channel switch to "
-+		CHANDEF_PR_FMT  " count:%d block_tx:%d timestamp:%llu",
-+		LOCAL_PR_ARG, VIF_PR_ARG, CHANDEF_PR_ARG, __entry->count,
-+		__entry->block_tx, __entry->timestamp
-+	)
-+);
-+
- 
- #ifdef CONFIG_MAC80211_MESSAGE_TRACING
- #undef TRACE_SYSTEM
--- 
-2.1.0
+> However at 2.4GHZ also we believe the speeds we are seeing are far too
+> low....what are the maximum achievable speeds that we can expect in our
+> setup and how to achieve them.....are there
+> any performance tuning techniques that we can use....please reply asap
+> as this is very urgent.
+>
 
