@@ -1,44 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:39855 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751550AbaIJHSg (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:3806 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751040AbaIJIrI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Sep 2014 03:18:36 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [RFC 4/5] ath9k: Fix channel switch time duration
-Date: Wed, 10 Sep 2014 12:48:47 +0530
-Message-Id: <1410333528-28022-5-git-send-email-sujith@msujith.org> (sfid-20140910_091838_385991_02CE6745)
-In-Reply-To: <1410333528-28022-1-git-send-email-sujith@msujith.org>
-References: <1410333528-28022-1-git-send-email-sujith@msujith.org>
+	Wed, 10 Sep 2014 04:47:08 -0400
+Message-ID: <54100FF7.5060904@broadcom.com> (sfid-20140910_104715_425020_9F895AC7)
+Date: Wed, 10 Sep 2014 10:46:47 +0200
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Bastien Nocera <hadess@hadess.net>
+CC: Marcel Holtmann <marcel@holtmann.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Realtek GPIO chipset, for Baytrail?
+References: <1410256608.4077.7.camel@hadess.net> <540F54B1.8040409@lwfinger.net> <1410292835.4077.21.camel@hadess.net> <540F61FE.2050404@lwfinger.net> <7234781D-5B78-404A-B945-D090938777C7@hadess.net> <D08A763F-AD50-449D-98C6-B82866F49480@holtmann.org>
+In-Reply-To: <D08A763F-AD50-449D-98C6-B82866F49480@holtmann.org>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On 09/10/14 01:10, Marcel Holtmann wrote:
+> Hi Bastien,
+>
+>>>>> What specific Baytrail tablet do you have?
+>>>>
+>>>> The Onda v975w. It came with Windows 8.1 32-bit.
+>>>>
+>>>> I guess that the device is probably a PCI one, but the enumeration is
+>>>> done through ACPI instead of "normal" PCI.
+>>>
+>>> In http://www.onda-tablet.com/onda-v975w-quad-core-win-8-tablet-9-7-inch-retina-screen-ram-2gb-wifi-32gb.html, someone is specifically looking for an RTL8723BS driver.
+>>
+>> That's helpful.
+>>
+>>> I will see if my contact at Realtek knows who has worked on drivers for this device, and if it would be possible to use rtl8723be if we were to supply an SDIO frontend.
+>>
+>> I'm not sure why the device doesn't show up in the sysfs tree, but maybe it needs a driver bound to it to show up.
+>
+> I just booted up my Baytrail based Minnowboard Max in ACPI enumeration and then the SDIO host controller is enumerated via ACPI. This is compared to PCI enumeration where the SDIO controller shows up in lspci.
+>
+> So can you try to install sdhci-acpi and see if that starts showing SDIO devices. If the SDIO host controllers loads, then it start SDIO enumeration and you would see the cards.
 
-Since the NoA duration is the maximum time the GO interface
-can be offline, it needs to include the time take to
-switch channels in the HW.
+You may need to look in /sys/bus/mmc/devices/ instead of sdio.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/channel.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Gr. AvS
 
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index 09ff8a6..a42fd85 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -419,7 +419,7 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
- 			avp->noa_index++;
- 			avp->noa_start = tsf_time;
- 			avp->noa_duration =
--				TU_TO_USEC(cur_conf->beacon_interval) / 2 -
-+				TU_TO_USEC(cur_conf->beacon_interval) / 2 +
- 				sc->sched.channel_switch_time;
- 
- 			if (test_bit(ATH_OP_SCANNING, &common->op_flags))
--- 
-2.1.0
+> Regards
+>
+> Marcel
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
