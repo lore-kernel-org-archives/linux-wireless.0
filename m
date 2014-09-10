@@ -1,64 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:51274 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752328AbaIITAJ (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:37063 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750791AbaIJHSY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Sep 2014 15:00:09 -0400
-Date: Tue, 9 Sep 2014 14:46:04 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: pull-request: mac80211 2014-09-08
-Message-ID: <20140909184604.GK29412@tuxdriver.com> (sfid-20140909_210017_151631_F4F4D929)
-References: <1410187894.7983.15.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1410187894.7983.15.camel@jlt4.sipsolutions.net>
+	Wed, 10 Sep 2014 03:18:24 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [RFC 1/5] ath9k: Assign offchannel duration properly
+Date: Wed, 10 Sep 2014 12:48:44 +0530
+Message-Id: <1410333528-28022-2-git-send-email-sujith@msujith.org> (sfid-20140910_091828_777322_7BDBEB1B)
+In-Reply-To: <1410333528-28022-1-git-send-email-sujith@msujith.org>
+References: <1410333528-28022-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 08, 2014 at 04:51:34PM +0200, Johannes Berg wrote:
-> Hi John,
-> 
-> One more for mac80211, hopefully that should be it. If anyone thinks I
-> missed anything please holler. I'll have one more for mac80211-next
-> later this week.
-> 
-> Note I'm going to be on vacation soon (EOW) until early October, so if
-> anything super urgent shows up I'd appreciate if you could merge it for
-> me.
-> 
-> Thanks,
-> johannes
-> 
-> 
-> The following changes since commit 14b058bbce9279ee432f0944ca14df69f4a0d170:
-> 
->   mac80211: fix agg_status debugfs file alignment (2014-08-26 11:13:37 +0200)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-john-2014-09-08
-> 
-> for you to fetch changes up to 785e21a89d77923852869f83ebd2689ec4d5ce54:
-> 
->   mac80211: use bss_conf->dtim_period instead of conf.ps_dtim_period (2014-09-05 13:41:08 +0200)
-> 
-> ----------------------------------------------------------------
-> Two more fixes for mac80211 - one of them addresses a long-standing
-> issue that we only found when using vendor events more frequently;
-> the other addresses some bad information being reported in userspace
-> that people were starting to actually look at.
-> 
-> ----------------------------------------------------------------
-> Emmanuel Grumbach (1):
->       mac80211: use bss_conf->dtim_period instead of conf.ps_dtim_period
-> 
-> Johannes Berg (1):
->       nl80211: clear skb cb before passing to netlink
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Pulling now...
+In multi-channel mode, an offchannel request will
+be deferred if both contexts are active. The duration
+of the offchannel operation is calculated but is
+not stored in the scheduler state. Fix this.
 
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/channel.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index 522894b..ae575cb 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -588,10 +588,15 @@ static void ath_chanctx_switch(struct ath_softc *sc, struct ath_chanctx *ctx,
+ 
+ 	if (test_bit(ATH_OP_MULTI_CHANNEL, &common->op_flags) &&
+ 	    (sc->cur_chan != ctx) && (ctx == &sc->offchannel.chan)) {
+-		sc->sched.offchannel_pending = true;
+-		sc->sched.wait_switch = true;
+ 		if (chandef)
+ 			ctx->chandef = *chandef;
++
++		sc->sched.offchannel_pending = true;
++		sc->sched.wait_switch = true;
++		sc->sched.offchannel_duration =
++			jiffies_to_usecs(sc->offchannel.duration) +
++			sc->sched.channel_switch_time;
++
+ 		spin_unlock_bh(&sc->chan_lock);
+ 		ath_dbg(common, CHAN_CTX,
+ 			"Set offchannel_pending to true\n");
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+2.1.0
+
