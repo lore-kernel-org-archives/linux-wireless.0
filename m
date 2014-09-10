@@ -1,43 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:41185 "EHLO
+Received: from s72.web-hosting.com ([198.187.29.22]:40456 "EHLO
 	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751866AbaIKO03 (ORCPT
+	with ESMTP id S1751246AbaIJNpo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Sep 2014 10:26:29 -0400
+	Wed, 10 Sep 2014 09:45:44 -0400
 From: Sujith Manoharan <sujith@msujith.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21521.45335.848659.125183@gargle.gargle.HOWL> (sfid-20140911_162634_077301_C4D42F82)
-Date: Thu, 11 Sep 2014 19:56:31 +0530
-To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>, <ath9k-devel@qca.qualcomm.com>,
-	<stable@vger.kernel.org>
-Subject: Re: [PATCH] Revert "ath9k: Calculate sleep duration"
-In-Reply-To: <20140911141338.GA21543@qca.qualcomm.com>
-References: <1410442548-15782-1-git-send-email-sujith@msujith.org>
-	<20140911141338.GA21543@qca.qualcomm.com>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH 4/5] ath9k: Fix channel switch time duration
+Date: Wed, 10 Sep 2014 19:15:59 +0530
+Message-Id: <1410356760-10901-5-git-send-email-sujith@msujith.org> (sfid-20140910_154550_441466_FB7C825D)
+In-Reply-To: <1410356760-10901-1-git-send-email-sujith@msujith.org>
+References: <1410356760-10901-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rajkumar Manoharan wrote:
-> Some of the IOE customer using ath9k with power save enabled. IIRC the
-> expectation is that when the station is idle, it should wakeup on DTIM
-> beacon not for every beacons. Are you seeing frequest bmiss events on
-> higher beacon interval?
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-I don't think ath9k has ever been tested with longer sleep durations
-based on dtim period. We have always programmed the hardware to wake up
-for every beacon interval, using the TIM_TIMER interrupt. And since the
-TIM bit needs to be checked for every beacon, the sleep duration has
-to be the beacon interval.
+Since the NoA duration is the maximum time the GO interface
+can be offline, it needs to include the time take to
+switch channels in the HW.
 
-Also, the bmiss threshold needs to be adjusted based on the sleep
-duration. We are hardcoding it currently in the driver using
-ATH_DEFAULT_BMISS_LIMIT. This will break, too.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/channel.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Using dtim for PS needs more testing before it can be used,
-so we can have the original behavior for now.
-
-Sujith
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index 09ff8a6..a42fd85 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -419,7 +419,7 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 			avp->noa_index++;
+ 			avp->noa_start = tsf_time;
+ 			avp->noa_duration =
+-				TU_TO_USEC(cur_conf->beacon_interval) / 2 -
++				TU_TO_USEC(cur_conf->beacon_interval) / 2 +
+ 				sc->sched.channel_switch_time;
+ 
+ 			if (test_bit(ATH_OP_SCANNING, &common->op_flags))
+-- 
+2.1.0
 
