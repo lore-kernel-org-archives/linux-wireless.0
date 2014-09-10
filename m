@@ -1,95 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:60951 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751209AbaIXRph (ORCPT
+Received: from mail-la0-f50.google.com ([209.85.215.50]:36476 "EHLO
+	mail-la0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751180AbaIJE6O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Sep 2014 13:45:37 -0400
-Received: from [192.168.100.236] (firewall.candelatech.com [70.89.124.249])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mail2.candelatech.com (Postfix) with ESMTPSA id 031A8409E87
-	for <linux-wireless@vger.kernel.org>; Wed, 24 Sep 2014 10:45:36 -0700 (PDT)
-Message-ID: <54230340.8090604@candelatech.com> (sfid-20140924_194540_684579_52868058)
-Date: Wed, 24 Sep 2014 10:45:36 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Wed, 10 Sep 2014 00:58:14 -0400
+Received: by mail-la0-f50.google.com with SMTP id ty20so5592671lab.23
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Sep 2014 21:58:13 -0700 (PDT)
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: What does it take to enable channel 100?
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <85725D0A-E038-44CF-9894-BDA93231FA62@holtmann.org>
+References: <1410268021-9529-1-git-send-email-emmanuel.grumbach@intel.com>
+	<85725D0A-E038-44CF-9894-BDA93231FA62@holtmann.org>
+Date: Wed, 10 Sep 2014 07:58:13 +0300
+Message-ID: <CANUX_P2sVqw=e8ZG5NnMme+TfsjXB36ymMUDUkzp90nB4cPdnw@mail.gmail.com> (sfid-20140910_065821_567058_ACC8F5B6)
+Subject: Re: [PATCH] cfg802111/nl80211: Add device motion indication API
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Avraham Stern <avraham.stern@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-My system should be doing DFS properly, but channel 100 (5500 Mhz) and nearby are still not
-enabled.  What extra do I need to do?
+>
+> if we have WiFi chips that have these kind of information, then shouldn't it be better exposed via a generic subsystem for motion events. Having this exposed over nl80211 seems a bit too limited.
+>
+> I am thinking that either an input event or maybe via hwmon or IIO. Since at the end of the day such an event should be considered just a sensor. It doesn't matter which piece of hardware is doing the sensing or who it is doing for.
+>
+> We are also not exposing RFKILL switches over nl80211. We have a dedicated RFKILL subsystem where all kinds of switches can integrate into.
+>
 
-I have some hacks to enable DFS-FCC, which fixes at least some of the DFS
-problems in upstream kernels, and regulatory.bin is only a few months old.
+I can't sayI totally disagree, but the point here I guess is that the
+precision is very limited - WiFi based after all - and hence, I don't
+think we really want to expose a real motion detection device to the
+whole system. This is not a gyro or anything of this kind. The commit
+message gives example of use cases where the flows that are triggered
+by this kind of notifications. The user aren't aware of these flows.
+The frequency of the scan isn't something the user is aware of but
+more a WiFi system parameter. So basically, I don't think we can
+really talk about a real sensor, but more of a heuristic that will
+likely help WiFi to behave better. Might there be other components
+interested in this heuristic with its level of (im)precision, good
+question.
+Maybe adding this to the description of the command would help?
 
-[root@ath10k-2220 wifi]# iw reg get
-country US: DFS-FCC
-	(2402 - 2472 @ 40), (N/A, 30)
-	(5170 - 5250 @ 80), (N/A, 17)
-	(5250 - 5330 @ 80), (N/A, 23), DFS
-	(5735 - 5835 @ 80), (N/A, 30)
-	(57240 - 63720 @ 2160), (N/A, 40)
-
-Sep 24 09:19:35 localhost kernel: cfg80211: set-regdom, lr->initiator: 0 domain: 00
-Sep 24 09:19:35 localhost kernel: cfg80211: Regulatory domain (set-regdom): 00  DFS: unset
-Sep 24 09:19:35 localhost kernel: cfg80211:   (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp), (dfs_cac_time)
-Sep 24 09:19:35 localhost kernel: cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz), (N/A, 2000 mBm), (N/A)
-Sep 24 09:19:35 localhost kernel: cfg80211:   (2457000 KHz - 2482000 KHz @ 40000 KHz), (N/A, 2000 mBm), (N/A)
-Sep 24 09:19:35 localhost kernel: cfg80211:   (2474000 KHz - 2494000 KHz @ 20000 KHz), (N/A, 2000 mBm), (N/A)
-Sep 24 09:19:35 localhost kernel: cfg80211:   (5170000 KHz - 5250000 KHz @ 160000 KHz), (N/A, 2000 mBm), (N/A)
-Sep 24 09:19:35 localhost kernel: cfg80211:   (5250000 KHz - 5330000 KHz @ 160000 KHz), (N/A, 2000 mBm), (0 s)
-Sep 24 09:19:35 localhost kernel: cfg80211:   (5490000 KHz - 5730000 KHz @ 160000 KHz), (N/A, 2000 mBm), (0 s)
-Sep 24 09:19:35 localhost kernel: cfg80211:   (5735000 KHz - 5835000 KHz @ 80000 KHz), (N/A, 2000 mBm), (N/A)
-Sep 24 09:19:35 localhost kernel: cfg80211:   (57240000 KHz - 63720000 KHz @ 2160000 KHz), (N/A, 0 mBm), (N/A)
-Sep 24 09:19:35 localhost kernel: cfg80211: Done with reg domain
-Sep 24 09:19:35 localhost kernel:
-Sep 24 09:19:35 localhost kernel: cfg80211: World regulatory domain updated:
-Sep 24 09:19:35 localhost kernel: cfg80211:  DFS Master region: unset
-Sep 24 09:19:35 localhost kernel: cfg80211:   (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp), (dfs_cac_time)
-Sep 24 09:19:35 localhost kernel: cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz), (N/A, 2000 mBm), (N/A)
-Sep 24 09:19:35 localhost kernel: cfg80211:   (2457000 KHz - 2482000 KHz @ 40000 KHz), (N/A, 2000 mBm), (N/A)
-Sep 24 09:19:35 localhost kernel: cfg80211:   (2474000 KHz - 2494000 KHz @ 20000 KHz), (N/A, 2000 mBm), (N/A)
-Sep 24 09:19:35 localhost kernel: cfg80211:   (5170000 KHz - 5250000 KHz @ 160000 KHz), (N/A, 2000 mBm), (N/A)
-Sep 24 09:19:35 localhost kernel: cfg80211:   (5250000 KHz - 5330000 KHz @ 160000 KHz), (N/A, 2000 mBm), (0 s)
-Sep 24 09:19:35 localhost kernel: cfg80211:   (5490000 KHz - 5730000 KHz @ 160000 KHz), (N/A, 2000 mBm), (0 s)
-Sep 24 09:19:35 localhost kernel: cfg80211:   (5735000 KHz - 5835000 KHz @ 80000 KHz), (N/A, 2000 mBm), (N/A)
-Sep 24 09:19:35 localhost kernel: cfg80211:   (57240000 KHz - 63720000 KHz @ 2160000 KHz), (N/A, 0 mBm), (N/A)
-
-....
-
-Sep 24 09:19:36 localhost kernel: cfg80211: Calling CRDA for country: US
-Sep 24 09:19:36 localhost kernel: cfg80211: set-regdom, lr->initiator: 2 domain: US
-Sep 24 09:19:36 localhost kernel: cfg80211: Forcing US to DFS-FCC (was: unset).
-Sep 24 09:19:36 localhost kernel: cfg80211: Regulatory domain (set-regdom): US  DFS: FCC
-Sep 24 09:19:36 localhost kernel: cfg80211:   (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp), (dfs_cac_time)
-Sep 24 09:19:36 localhost kernel: cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz), (N/A, 3000 mBm), (N/A)
-Sep 24 09:19:36 localhost kernel: cfg80211:   (5170000 KHz - 5250000 KHz @ 80000 KHz), (N/A, 1700 mBm), (N/A)
-Sep 24 09:19:36 localhost kernel: cfg80211:   (5250000 KHz - 5330000 KHz @ 80000 KHz), (N/A, 2300 mBm), (0 s)
-Sep 24 09:19:36 localhost kernel: cfg80211:   (5735000 KHz - 5835000 KHz @ 80000 KHz), (N/A, 3000 mBm), (N/A)
-Sep 24 09:19:36 localhost kernel: cfg80211:   (57240000 KHz - 63720000 KHz @ 2160000 KHz), (N/A, 4000 mBm), (N/A)
-Sep 24 09:19:36 localhost kernel: cfg80211: Done with reg domain
-Sep 24 09:19:36 localhost kernel:
-Sep 24 09:19:36 localhost kernel: cfg80211: set-rd-driver, no intersect requested.
-Sep 24 09:19:36 localhost kernel: cfg80211: Setting DFS Master region in update_regulatory, was: unset, new: FCC  lr: ffff880037913000  regdom: ffff8800c72a6300
-Sep 24 09:19:36 localhost kernel: cfg80211: Regulatory domain changed to country: US
-Sep 24 09:19:36 localhost kernel: cfg80211:  DFS Master region: FCC
-Sep 24 09:19:36 localhost kernel: cfg80211:   (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp), (dfs_cac_time)
-Sep 24 09:19:36 localhost kernel: cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz), (N/A, 3000 mBm), (N/A)
-Sep 24 09:19:36 localhost kernel: cfg80211:   (5170000 KHz - 5250000 KHz @ 80000 KHz), (N/A, 1700 mBm), (N/A)
-Sep 24 09:19:36 localhost kernel: cfg80211:   (5250000 KHz - 5330000 KHz @ 80000 KHz), (N/A, 2300 mBm), (0 s)
-Sep 24 09:19:36 localhost kernel: cfg80211:   (5735000 KHz - 5835000 KHz @ 80000 KHz), (N/A, 3000 mBm), (N/A)
-Sep 24 09:19:36 localhost kernel: cfg80211:   (57240000 KHz - 63720000 KHz @ 2160000 KHz), (N/A, 4000 mBm), (N/A)
-Sep 24 09:19:37 localhost kernel: cfg80211: Setting DFS Master region in update_regulatory, was: FCC, new: FCC  lr: ffff880037913000  regdom: ffff8800c72a6300
-Sep 24 09:19:37 localhost kernel: cfg80211: Setting DFS Master region in update_regulatory, was: unset, new: FCC  lr: ffff8802208ba280  regdom: ffff8800c72a6300
-
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
