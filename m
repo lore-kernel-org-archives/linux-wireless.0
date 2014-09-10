@@ -1,53 +1,153 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:22012 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750818AbaIWJ36 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Sep 2014 05:29:58 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: workaround fw beaconing bug
-References: <1411023358-5703-1-git-send-email-michal.kazior@tieto.com>
-Date: Tue, 23 Sep 2014 12:29:46 +0300
-In-Reply-To: <1411023358-5703-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Thu, 18 Sep 2014 08:55:58 +0200")
-Message-ID: <87y4taelbp.fsf@kamboji.qca.qualcomm.com> (sfid-20140923_113001_376270_1C0570E1)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mga11.intel.com ([192.55.52.93]:33056 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751222AbaIJKnf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Sep 2014 06:43:35 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 1/4] cfg80211: clear connect keys when freeing them
+Date: Wed, 10 Sep 2014 13:39:54 +0300
+Message-Id: <1410345597-28565-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140910_124338_902642_EE0008B6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> Some firmware revisions don't wait for beacon tx
-> completion before sending another SWBA event. This
-> could lead to hardware using old (freed) beacon
-> data in some cases, e.g. tx credit starvation
-> combined with missed TBTT. This is very very rare.
->
-> On non-IOMMU-enabled hosts this could be a
-> possible security issue because hw could beacon
-> some random data on the air.  On IOMMU-enabled
-> hosts DMAR faults would occur in most cases and
-> target device would crash.
->
-> Since there are no beacon tx completions (implicit
-> nor explicit) propagated to host the only
-> workaround for this is to allocate a DMA-coherent
-> buffer for a lifetime of a vif and use it for all
-> beacon tx commands. Worst case for this approach
-> is some beacons may become corrupted, e.g. garbled
-> IEs or out-of-date TIM bitmap.
->
-> Keep the original beacon-related code as-is in
-> case future firmware revisions solve this problem
-> so that the old path can be easily re-enabled with
-> a fw_feature flag.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+When freeing the connect keys, clear the memory to avoid
+having the key material stick around in memory "forever".
 
-Thanks, applied.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ net/wireless/ibss.c     | 4 ++--
+ net/wireless/nl80211.c  | 8 ++++----
+ net/wireless/sme.c      | 6 +++---
+ net/wireless/util.c     | 2 +-
+ net/wireless/wext-sme.c | 2 +-
+ 5 files changed, 11 insertions(+), 11 deletions(-)
 
+diff --git a/net/wireless/ibss.c b/net/wireless/ibss.c
+index 7b87843..49a70c9 100644
+--- a/net/wireless/ibss.c
++++ b/net/wireless/ibss.c
+@@ -115,7 +115,7 @@ static int __cfg80211_join_ibss(struct cfg80211_registered_device *rdev,
+ 	}
+ 
+ 	if (WARN_ON(wdev->connect_keys))
+-		kfree(wdev->connect_keys);
++		kzfree(wdev->connect_keys);
+ 	wdev->connect_keys = connkeys;
+ 
+ 	wdev->ibss_fixed = params->channel_fixed;
+@@ -161,7 +161,7 @@ static void __cfg80211_clear_ibss(struct net_device *dev, bool nowext)
+ 
+ 	ASSERT_WDEV_LOCK(wdev);
+ 
+-	kfree(wdev->connect_keys);
++	kzfree(wdev->connect_keys);
+ 	wdev->connect_keys = NULL;
+ 
+ 	rdev_set_qos_map(rdev, dev, NULL);
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index f87e335..f4194af 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -6938,7 +6938,7 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
+ 
+ 	err = cfg80211_join_ibss(rdev, dev, &ibss, connkeys);
+ 	if (err)
+-		kfree(connkeys);
++		kzfree(connkeys);
+ 	return err;
+ }
+ 
+@@ -7310,7 +7310,7 @@ static int nl80211_connect(struct sk_buff *skb, struct genl_info *info)
+ 
+ 	if (info->attrs[NL80211_ATTR_HT_CAPABILITY]) {
+ 		if (!info->attrs[NL80211_ATTR_HT_CAPABILITY_MASK]) {
+-			kfree(connkeys);
++			kzfree(connkeys);
+ 			return -EINVAL;
+ 		}
+ 		memcpy(&connect.ht_capa,
+@@ -7328,7 +7328,7 @@ static int nl80211_connect(struct sk_buff *skb, struct genl_info *info)
+ 
+ 	if (info->attrs[NL80211_ATTR_VHT_CAPABILITY]) {
+ 		if (!info->attrs[NL80211_ATTR_VHT_CAPABILITY_MASK]) {
+-			kfree(connkeys);
++			kzfree(connkeys);
+ 			return -EINVAL;
+ 		}
+ 		memcpy(&connect.vht_capa,
+@@ -7348,7 +7348,7 @@ static int nl80211_connect(struct sk_buff *skb, struct genl_info *info)
+ 	err = cfg80211_connect(rdev, dev, &connect, connkeys, NULL);
+ 	wdev_unlock(dev->ieee80211_ptr);
+ 	if (err)
+-		kfree(connkeys);
++		kzfree(connkeys);
+ 	return err;
+ }
+ 
+diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+index 7fb5063..f365a0c 100644
+--- a/net/wireless/sme.c
++++ b/net/wireless/sme.c
+@@ -641,7 +641,7 @@ void __cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
+ 	}
+ 
+ 	if (status != WLAN_STATUS_SUCCESS) {
+-		kfree(wdev->connect_keys);
++		kzfree(wdev->connect_keys);
+ 		wdev->connect_keys = NULL;
+ 		wdev->ssid_len = 0;
+ 		if (bss) {
+@@ -918,7 +918,7 @@ int cfg80211_connect(struct cfg80211_registered_device *rdev,
+ 	ASSERT_WDEV_LOCK(wdev);
+ 
+ 	if (WARN_ON(wdev->connect_keys)) {
+-		kfree(wdev->connect_keys);
++		kzfree(wdev->connect_keys);
+ 		wdev->connect_keys = NULL;
+ 	}
+ 
+@@ -978,7 +978,7 @@ int cfg80211_disconnect(struct cfg80211_registered_device *rdev,
+ 
+ 	ASSERT_WDEV_LOCK(wdev);
+ 
+-	kfree(wdev->connect_keys);
++	kzfree(wdev->connect_keys);
+ 	wdev->connect_keys = NULL;
+ 
+ 	if (wdev->conn)
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index a8b2816..5e233a5 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -797,7 +797,7 @@ void cfg80211_upload_connect_keys(struct wireless_dev *wdev)
+ 				netdev_err(dev, "failed to set mgtdef %d\n", i);
+ 	}
+ 
+-	kfree(wdev->connect_keys);
++	kzfree(wdev->connect_keys);
+ 	wdev->connect_keys = NULL;
+ }
+ 
+diff --git a/net/wireless/wext-sme.c b/net/wireless/wext-sme.c
+index c7e5c8e..368611c 100644
+--- a/net/wireless/wext-sme.c
++++ b/net/wireless/wext-sme.c
+@@ -57,7 +57,7 @@ int cfg80211_mgd_wext_connect(struct cfg80211_registered_device *rdev,
+ 	err = cfg80211_connect(rdev, wdev->netdev,
+ 			       &wdev->wext.connect, ck, prev_bssid);
+ 	if (err)
+-		kfree(ck);
++		kzfree(ck);
+ 
+ 	return err;
+ }
 -- 
-Kalle Valo
+1.9.1
+
