@@ -1,73 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:60768 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751566AbaIJOW7 (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:50132 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751721AbaIJNpt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Sep 2014 10:22:59 -0400
-Message-ID: <54105EBF.1020506@broadcom.com> (sfid-20140910_162306_758050_EB3831C9)
-Date: Wed, 10 Sep 2014 16:22:55 +0200
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Peer, Ilan" <ilan.peer@intel.com>
-CC: Jouni Malinen <j@w1.fi>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	brcm80211 development <brcm80211-dev-list@broadcom.com>,
-	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>
-Subject: Re: P2P_DEVICE support in Android KitKat
-References: <540FFDFD.2070302@broadcom.com> <20140910111040.GA5269@w1.fi> <CB3B3D4774441E42AA3EA0E1BA8230A03487FB54@HASMSX106.ger.corp.intel.com>
-In-Reply-To: <CB3B3D4774441E42AA3EA0E1BA8230A03487FB54@HASMSX106.ger.corp.intel.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Wed, 10 Sep 2014 09:45:49 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH 5/5] ath9k: Fix beacon miss handling
+Date: Wed, 10 Sep 2014 19:16:00 +0530
+Message-Id: <1410356760-10901-6-git-send-email-sujith@msujith.org> (sfid-20140910_154552_665203_A66E6239)
+In-Reply-To: <1410356760-10901-1-git-send-email-sujith@msujith.org>
+References: <1410356760-10901-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/10/14 16:00, Peer, Ilan wrote:
-> Hi Arend,
->
-> We've encountered this issue in the past, and resolved it by passing the wpa_supplicant a P2P specific configuration file using the -m option. Try using -m but do not populate it with any network blocks that are not P2P groups.
->
-> Hope this helps,
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Thanks, Ilan
+The NoA duration for a GO is half the beacon interval
+and a concurrent context like a STA can be active only
+for that duration, before switching back to the GO's
+operating channel.
 
-Got the hint from brcm colleague as well.
+Currently, when multiple beacons are missed, the dwell
+time for the STA context is extended to improve the
+chances of receiving a beacon. But the NoA is not updated
+and this will cause problems since the GO is offline
+for a period that is longer than the advertised duration.
 
-Regards,
-Arend
+Fix this by ensuring that the NoA is updated first before
+extending the time slot for the STA context. Also make
+sure that non-periodic NoA is used for a one-time, longer
+absence period.
 
-> Ilan.
->
->> -----Original Message-----
->> From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
->> owner@vger.kernel.org] On Behalf Of Jouni Malinen
->> Sent: Wednesday, September 10, 2014 14:11
->> To: Arend van Spriel
->> Cc: linux-wireless@vger.kernel.org; brcm80211 development;
->> hostap@lists.shmoo.com
->> Subject: Re: P2P_DEVICE support in Android KitKat
->>
->> On Wed, Sep 10, 2014 at 09:30:05AM +0200, Arend van Spriel wrote:
->>> I am running some tests on a haswell target with Android KitKat
->>> (3.10.20 kernel). In this configuration our brcmfmac driver is used
->>> with driver param 'p2p_device=1'. So we end up with wlan0 and
->>> p2p-dev-wlan0 interfaces (can blame myself for that). The
->>> configuration has a network configured, but I did not expect
->>> wpa_supplicant to start association using the p2p device interface.
->>> The wlan0 interface is already connected to the AP. How can I fix this
->>> to assure p2p-dev-wlan0 is only used for p2p management scenarios.
->>
->> Hmm.. Can you please show the wpa_supplicant command line that is used
->> here and describe how that network block gets configured for the
->> p2p-dev-wlan0 "interface"? I would have expected that there would never
->> be a configuration with an enabled network block being passed for the P2P
->> management interface.. Internally, wpa_supplicant should not add such for
->> P2P groups, but I don't think there is any filtering on configuration if
->> something is externally trying to make wpa_supplicant use that management
->> interface for a station mode connection.
->>
->> --
->> Jouni Malinen                                            PGP id EFC895FA
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in the
->> body of a message to majordomo@vger.kernel.org More majordomo info at
->> http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h   |  1 +
+ drivers/net/wireless/ath/ath9k/channel.c | 44 +++++++++++++++++++++++---------
+ 2 files changed, 33 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 305db1a..660c151 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -380,6 +380,7 @@ struct ath_chanctx_sched {
+ 	bool offchannel_pending;
+ 	bool wait_switch;
+ 	bool force_noa_update;
++	bool extend_absence;
+ 	enum ath_chanctx_state state;
+ 	u8 beacon_miss;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index a42fd85..a1b3282 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -371,13 +371,6 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 		sc->sched.switch_start_time = tsf_time;
+ 		sc->cur_chan->last_beacon = sc->sched.next_tbtt;
+ 
+-		/* If at least two consecutive beacons were missed on the STA
+-		 * chanctx, stay on the STA channel for one extra beacon period,
+-		 * to resync the timer properly.
+-		 */
+-		if (ctx->active && sc->sched.beacon_miss >= 2)
+-			sc->sched.offchannel_duration = 3 * beacon_int / 2;
+-
+ 		/*
+ 		 * If an offchannel switch is scheduled to happen after
+ 		 * a beacon transmission, update the NoA with one-shot
+@@ -405,6 +398,26 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 			break;
+ 		}
+ 
++
++		/*
++		 * Clear the extend_absence flag if it had been
++		 * set during the previous beacon transmission,
++		 * since we need to revert to the normal NoA
++		 * schedule.
++		 */
++		if (ctx->active && sc->sched.extend_absence) {
++			avp->noa_duration = 0;
++			sc->sched.extend_absence = false;
++		}
++
++		/* If at least two consecutive beacons were missed on the STA
++		 * chanctx, stay on the STA channel for one extra beacon period,
++		 * to resync the timer properly.
++		 */
++		if (ctx->active && sc->sched.beacon_miss >= 2) {
++			avp->noa_duration = 0;
++			sc->sched.extend_absence = true;
++		}
+ 		/* Prevent wrap-around issues */
+ 		if (avp->noa_duration && tsf_time - avp->noa_start > BIT(30))
+ 			avp->noa_duration = 0;
+@@ -418,11 +431,17 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 		    (!avp->noa_duration || sc->sched.force_noa_update)) {
+ 			avp->noa_index++;
+ 			avp->noa_start = tsf_time;
+-			avp->noa_duration =
+-				TU_TO_USEC(cur_conf->beacon_interval) / 2 +
+-				sc->sched.channel_switch_time;
+ 
+-			if (test_bit(ATH_OP_SCANNING, &common->op_flags))
++			if (sc->sched.extend_absence)
++				avp->noa_duration = (3 * beacon_int / 2) +
++					sc->sched.channel_switch_time;
++			else
++				avp->noa_duration =
++					TU_TO_USEC(cur_conf->beacon_interval) / 2 +
++					sc->sched.channel_switch_time;
++
++			if (test_bit(ATH_OP_SCANNING, &common->op_flags) ||
++			    sc->sched.extend_absence)
+ 				avp->periodic_noa = false;
+ 			else
+ 				avp->periodic_noa = true;
+@@ -520,7 +539,8 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 		sc->sched.wait_switch = false;
+ 
+ 		tsf_time = TU_TO_USEC(cur_conf->beacon_interval) / 2;
+-		if (sc->sched.beacon_miss >= 2) {
++
++		if (sc->sched.extend_absence) {
+ 			sc->sched.beacon_miss = 0;
+ 			tsf_time *= 3;
+ 		}
+-- 
+2.1.0
 
