@@ -1,50 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f177.google.com ([209.85.220.177]:54965 "EHLO
-	mail-vc0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751418AbaIZLOg convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Sep 2014 07:14:36 -0400
-Received: by mail-vc0-f177.google.com with SMTP id hq11so417464vcb.36
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Sep 2014 04:14:35 -0700 (PDT)
+Received: from mga14.intel.com ([192.55.52.115]:33094 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751865AbaIJUPA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Sep 2014 16:15:00 -0400
+Subject: [PATCH net-next] mac80211: Check correct skb for shared states
+ before freeing original
+To: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+From: Alexander Duyck <alexander.h.duyck@intel.com>
+Cc: davem@davemloft.net, linville@tuxdriver.com
+Date: Wed, 10 Sep 2014 16:06:23 -0400
+Message-ID: <20140910200442.15961.84466.stgit@ahduyck-bv4.jf.intel.com> (sfid-20140910_221517_589456_8B140F20)
 MIME-Version: 1.0
-In-Reply-To: <871tqy63p9.fsf@kamboji.qca.qualcomm.com>
-References: <1411641230-18785-1-git-send-email-michal.kazior@tieto.com>
-	<871tqy63p9.fsf@kamboji.qca.qualcomm.com>
-Date: Fri, 26 Sep 2014 13:14:35 +0200
-Message-ID: <CA+BoTQmJ-HprccxTO3UrX+NkhOMVt2i2X7p4k0b5bs6TVrKrpw@mail.gmail.com> (sfid-20140926_131440_018209_7AE1717C)
-Subject: Re: [PATCH 0/4] ath10k: fix/cleanup fw stats
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 26 September 2014 13:06, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Michal Kazior <michal.kazior@tieto.com> writes:
->> Hi,
->>
->> This cleans up and fixes fw stats aggregation.
->>
->>
->> Michal Kazior (4):
->>   ath10k: split wmi stats parsing
->>   ath10k: rename fw_stats related stuff
->>   ath10k: request fw_stats once on open
->>   ath10k: fix fw stats processing
->
-> I didn't review these yet but I saw new warnings:
->
-> drivers/net/wireless/ath/ath10k/debug.c: In function 'ath10k_fw_stats_fill':
-> drivers/net/wireless/ath/ath10k/debug.c:540:5: warning: format '%lu' expects argument of type 'long unsigned int', but argument 5 has type 'size_t' [-Wformat]
+The code for cloning the skb for an acknowledgement was checking to see if
+the cloned skb was shared and if it was it was then freeing the original
+skb.  Since a clone should never really be shared I suspect that the
+intention was to avoid freeing the clone if the original was shared.  As
+such I am updating the code so that if the original is shared we free the
+original and use the clone.  This avoids unnecessary work in the next
+section where we would be cloning the skb if the original is shared.
 
-Oh, I didn't see this one. I guess it should be %zu.
+Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
+---
+ net/mac80211/tx.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 925c39f..e527cd3 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2087,7 +2087,7 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 			if (id >= 0) {
+ 				info_id = id;
+ 				info_flags |= IEEE80211_TX_CTL_REQ_TX_STATUS;
+-			} else if (skb_shared(skb)) {
++			} else if (skb_shared(orig_skb)) {
+ 				kfree_skb(orig_skb);
+ 			} else {
+ 				kfree_skb(skb);
 
-> drivers/net/wireless/ath/ath10k/wmi.c:1513: WARNING: else is not generally useful after a break or return
-
-I'm aware of this one but the code looks nicer with the `else` to me though.
-
-
-Michał
