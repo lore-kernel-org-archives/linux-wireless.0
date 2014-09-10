@@ -1,76 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:35955 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754468AbaIPStQ convert rfc822-to-8bit (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:60768 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751566AbaIJOW7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Sep 2014 14:49:16 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Peter Wu <peter@lekensteyn.nl>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Intel Linux Wireless <ilw@linux.intel.com>
-CC: "Berg, Johannes" <johannes.berg@intel.com>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>,
-	"Givon, Oren" <oren.givon@intel.com>
-Subject: RE: [PATCH] iwlwifi: add 4c70 subdevice ID for 7260 series
-Date: Tue, 16 Sep 2014 18:48:03 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB31B522BD4@hasmsx107.ger.corp.intel.com> (sfid-20140916_204919_934354_232615FA)
-References: <1410889186-28991-1-git-send-email-peter@lekensteyn.nl>
-In-Reply-To: <1410889186-28991-1-git-send-email-peter@lekensteyn.nl>
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 10 Sep 2014 10:22:59 -0400
+Message-ID: <54105EBF.1020506@broadcom.com> (sfid-20140910_162306_758050_EB3831C9)
+Date: Wed, 10 Sep 2014 16:22:55 +0200
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
+To: "Peer, Ilan" <ilan.peer@intel.com>
+CC: Jouni Malinen <j@w1.fi>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	brcm80211 development <brcm80211-dev-list@broadcom.com>,
+	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>
+Subject: Re: P2P_DEVICE support in Android KitKat
+References: <540FFDFD.2070302@broadcom.com> <20140910111040.GA5269@w1.fi> <CB3B3D4774441E42AA3EA0E1BA8230A03487FB54@HASMSX106.ger.corp.intel.com>
+In-Reply-To: <CB3B3D4774441E42AA3EA0E1BA8230A03487FB54@HASMSX106.ger.corp.intel.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> 
-> This card appears in an Asus TP300LA laptop (from Chris Mens). lspci
-> output:
-> 
->     02:00.0 Network controller [0280]: Intel Corporation Wireless 7260
-> [8086:08b1] (rev cb)
->         Subsystem: Intel Corporation Device [8086:4c70]
-> 
-> Verified against v3.10.54 and v3.17-rc5-13-g2324067.
-> 
-> Cc: <stable@vger.kernel.org> # 3.10+
-> Tested-by: Peter Wu <peter@lekensteyn.nl>
-> Signed-off-by: Peter Wu <peter@lekensteyn.nl>
+On 09/10/14 16:00, Peer, Ilan wrote:
+> Hi Arend,
+>
+> We've encountered this issue in the past, and resolved it by passing the wpa_supplicant a P2P specific configuration file using the -m option. Try using -m but do not populate it with any network blocks that are not P2P groups.
+>
+> Hope this helps,
 
-Thanks for this. We will check the ID you requested.
-We will also check for other IDs we might have missed.
+Thanks, Ilan
 
+Got the hint from brcm colleague as well.
 
-> ---
-> Hi,
-> 
-> Without patch the iwlwifi/iwldvm driver does not accept the 7260 AC card in
-> an Asus TP300LA laptop of a friend. Another report can be found on
-> <https://answers.launchpad.net/ubuntu/+source/gnome-
-> nettool/+question/254548>.
-> 
-> By the way, initially I tried to write '8086 08b1 8086 4c70' (and also just the
-> first two words) to /sys/bus/pci/drivers/iwlwifi/new_id, and '0000:02:00.0' to
-> /sys/bus/pci/drivers/iwlwifi/bind, but I got EINVAL and ENODEV respectively.
-> Why did this not work?
-> 
-> Kind regards,
-> Peter
-> ---
->  drivers/net/wireless/iwlwifi/pcie/drv.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/pcie/drv.c
-> b/drivers/net/wireless/iwlwifi/pcie/drv.c
-> index f0e722c..eb83c89f 100644
-> --- a/drivers/net/wireless/iwlwifi/pcie/drv.c
-> +++ b/drivers/net/wireless/iwlwifi/pcie/drv.c
-> @@ -297,6 +297,7 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
->  	{IWL_PCI_DEVICE(0x08B1, 0x4560, iwl7260_2n_cfg)},
->  	{IWL_PCI_DEVICE(0x08B2, 0x4370, iwl7260_2ac_cfg)},
->  	{IWL_PCI_DEVICE(0x08B2, 0x4360, iwl7260_2n_cfg)},
-> +	{IWL_PCI_DEVICE(0x08B1, 0x4c70, iwl7260_2ac_cfg)},
->  	{IWL_PCI_DEVICE(0x08B1, 0x5070, iwl7260_2ac_cfg)},
->  	{IWL_PCI_DEVICE(0x08B1, 0x5072, iwl7260_2ac_cfg)},
->  	{IWL_PCI_DEVICE(0x08B1, 0x5170, iwl7260_2ac_cfg)},
-> --
-> 2.1.0
+Regards,
+Arend
+
+> Ilan.
+>
+>> -----Original Message-----
+>> From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
+>> owner@vger.kernel.org] On Behalf Of Jouni Malinen
+>> Sent: Wednesday, September 10, 2014 14:11
+>> To: Arend van Spriel
+>> Cc: linux-wireless@vger.kernel.org; brcm80211 development;
+>> hostap@lists.shmoo.com
+>> Subject: Re: P2P_DEVICE support in Android KitKat
+>>
+>> On Wed, Sep 10, 2014 at 09:30:05AM +0200, Arend van Spriel wrote:
+>>> I am running some tests on a haswell target with Android KitKat
+>>> (3.10.20 kernel). In this configuration our brcmfmac driver is used
+>>> with driver param 'p2p_device=1'. So we end up with wlan0 and
+>>> p2p-dev-wlan0 interfaces (can blame myself for that). The
+>>> configuration has a network configured, but I did not expect
+>>> wpa_supplicant to start association using the p2p device interface.
+>>> The wlan0 interface is already connected to the AP. How can I fix this
+>>> to assure p2p-dev-wlan0 is only used for p2p management scenarios.
+>>
+>> Hmm.. Can you please show the wpa_supplicant command line that is used
+>> here and describe how that network block gets configured for the
+>> p2p-dev-wlan0 "interface"? I would have expected that there would never
+>> be a configuration with an enabled network block being passed for the P2P
+>> management interface.. Internally, wpa_supplicant should not add such for
+>> P2P groups, but I don't think there is any filtering on configuration if
+>> something is externally trying to make wpa_supplicant use that management
+>> interface for a station mode connection.
+>>
+>> --
+>> Jouni Malinen                                            PGP id EFC895FA
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in the
+>> body of a message to majordomo@vger.kernel.org More majordomo info at
+>> http://vger.kernel.org/majordomo-info.html
 
