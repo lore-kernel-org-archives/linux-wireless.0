@@ -1,48 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f175.google.com ([209.85.213.175]:60980 "EHLO
-	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932083AbaIENEN (ORCPT
+Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:57344 "EHLO
+	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750770AbaIJP7b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Sep 2014 09:04:13 -0400
-Received: by mail-ig0-f175.google.com with SMTP id uq10so1032849igb.8
-        for <linux-wireless@vger.kernel.org>; Fri, 05 Sep 2014 06:04:12 -0700 (PDT)
-Date: Fri, 5 Sep 2014 09:03:25 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Dani Camps <danicamps81@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: wmediumd performance penalty
-Message-ID: <20140905130325.GA26808@localhost> (sfid-20140905_150417_019868_A86E99BE)
-References: <CAD3NH5X1AYR5p8AyRyO0DFkkJUtuc_78=s6vEi-nS4UxUZfWCg@mail.gmail.com>
- <1409597534.2703.9.camel@jlt4.sipsolutions.net>
- <CAD3NH5Wimu9muPeL-zFrw=u1G3Q+8749cj0SYUmeQuLF6LKibQ@mail.gmail.com>
- <1409644512.1808.2.camel@jlt4.sipsolutions.net>
- <CAD3NH5XEfHU7KMWwrmZdZz9LKP_86b4EFogpHrnC+AhREHjOPw@mail.gmail.com>
+	Wed, 10 Sep 2014 11:59:31 -0400
+Subject: [PATCH v2] ath10k: support firmware crash-by-assert
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 10 Sep 2014 18:59:28 +0300
+Message-ID: <20140910155928.30418.45160.stgit@potku.adurom.net> (sfid-20140910_175934_851291_3F760653)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAD3NH5XEfHU7KMWwrmZdZz9LKP_86b4EFogpHrnC+AhREHjOPw@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 02, 2014 at 10:06:30AM +0200, Dani Camps wrote:
-> Hi,
-> 
-> OK, then the results I am getting are indeed surprising. To test
-> bandwidth I am using an iperf UDP transfer of 100Mbps and around 30
-> Mbps is all it gets (without wmediumd).
-> 
-> I will further test only mac80211_hwsim (without wmediumd), which I
-> believe can be used to set up topologies as well with the group
-> feature as described here:
-> https://github.com/cozybit/open80211s/wiki/HwsimTestTemplate
+From: Ben Greear <greearb@candelatech.com>
 
-Indeed you can.
+10.1 firmware does not have an official way to
+cause assert on purpose, but it can be done with
+carefully crafted WMI command.  This is a different
+kind of crash from the 'hard' crash, which is
+a bad memory dereference.
 
-For what it's worth, although I can't speak for wmediumd at the moment,
-in the precursor to it that I wrote, I got about 25 Mbps achieved with
-a phy rate of 54 Mbps when simulating the physical layer, which I think
-is pretty close to real world overhead in non-agg case.  With plain old
-mac80211_hwsim you can get several Gbps.
+Different crashes decode in different manners, so
+this will help the crash-report testing as well as
+offer better ways to test firmware failure and
+recovery.
 
--- 
-Bob Copeland %% www.bobcopeland.com
+kvalo: move the wmi command creation to debug.c, modify
+the info print
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/debug.c |   28 +++++++++++++++++++++++++++-
+ 1 file changed, 27 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index f948a4d8ee59..c5d01058c2a3 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -565,6 +565,26 @@ static const struct file_operations fops_fw_stats = {
+ 	.llseek = default_llseek,
+ };
+ 
++/* This is a clean assert crash in firmware. */
++static int ath10k_debug_fw_assert(struct ath10k *ar)
++{
++	struct wmi_vdev_install_key_cmd *cmd;
++	struct sk_buff *skb;
++
++	skb = ath10k_wmi_alloc_skb(ar, sizeof(*cmd) + 16);
++	if (!skb)
++		return -ENOMEM;
++
++	cmd = (struct wmi_vdev_install_key_cmd *)skb->data;
++	memset(cmd, 0, sizeof(*cmd));
++
++	/* big enough number so that firmware asserts */
++	cmd->vdev_id = __cpu_to_le32(0x7ffe);
++
++	return ath10k_wmi_cmd_send(ar, skb,
++				   ar->wmi.cmd->vdev_install_key_cmdid);
++}
++
+ static ssize_t ath10k_read_simulate_fw_crash(struct file *file,
+ 					     char __user *user_buf,
+ 					     size_t count, loff_t *ppos)
+@@ -574,7 +594,10 @@ static ssize_t ath10k_read_simulate_fw_crash(struct file *file,
+ 			   " WMI_FORCE_FW_HANG_ASSERT to firmware if FW"
+ 			   " supports that command.\n `hard` - this will send"
+ 			   " to firmware command with illegal parameters"
+-			   " causing firmware crash.\n";
++			   " causing firmware crash.\n"
++			   "`assert` - this will send special illegal parameter"
++			   " to firmware to cause assert failure"
++			   " and crash.\n";
+ 
+ 	return simple_read_from_buffer(user_buf, count, ppos, buf, strlen(buf));
+ }
+@@ -623,6 +646,9 @@ static ssize_t ath10k_write_simulate_fw_crash(struct file *file,
+ 		 */
+ 		ret = ath10k_wmi_vdev_set_param(ar, 0x7fff,
+ 					ar->wmi.vdev_param->rts_threshold, 0);
++	} else if (!strcmp(buf, "assert")) {
++		ath10k_info(ar, "simulating firmware assert crash\n");
++		ret = ath10k_debug_fw_assert(ar);
+ 	} else {
+ 		ret = -EINVAL;
+ 		goto exit;
+
