@@ -1,196 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:46001
-	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753403AbaI3JEC (ORCPT
+Received: from host1.ip6-networks.net ([95.130.10.56]:57480 "EHLO
+	host1.ip6-networks.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751361AbaIJJ1T convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Sep 2014 05:04:02 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lorenzo.bianconi83@gmail.com
-Subject: [PATCH] ath9k: fix getting tx duration for dynack
-Date: Tue, 30 Sep 2014 11:03:53 +0200
-Message-Id: <1412067833-90150-1-git-send-email-nbd@openwrt.org> (sfid-20140930_110435_664249_13ADCF01)
+	Wed, 10 Sep 2014 05:27:19 -0400
+Subject: Re: 802.11p rate control
+Mime-Version: 1.0 (Apple Message framework v1085)
+Content-Type: text/plain; charset=iso-8859-1
+From: Emmanuel Thierry <ml@sekil.fr>
+In-Reply-To: <1410339003.2761.2.camel@jlt4.sipsolutions.net>
+Date: Wed, 10 Sep 2014 11:19:46 +0200
+Cc: Rostislav Lisovy <lisovy@gmail.com>,
+	linux-wireless@vger.kernel.org, burak.simsek@volkswagen.de,
+	s.sander@nordsys.de, sojkam1@fel.cvut.cz,
+	jan-niklas.meier@volkswagen.de, thierry.ernst@yogoko.fr,
+	oyunaash@gmail.com, laszlo.virag@commsignia.com
+Message-Id: <AD4CAB87-0EF1-4915-A576-82C359159416@sekil.fr> (sfid-20140910_112723_667532_65A02915)
+References: <1410193824.10388.24.camel@umadbro> (sfid-20140908_183026_729762_39C348F0) <1410339003.2761.2.camel@jlt4.sipsolutions.net>
+To: Johannes Berg <johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On AR9003, tx control and tx status are in separate descriptor rings.
-Tx duration is extracted from the tx control descriptor data, which
-ar9003_hw_proc_txdesc cannot access.
 
-Fix getting the duration by adding a separate callback for it.
+Le 10 sept. 2014 à 10:50, Johannes Berg a écrit :
 
-Acked-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ar9002_mac.c | 26 +++++++++++++++++++-------
- drivers/net/wireless/ath/ath9k/ar9003_mac.c | 28 +++++++++++++++++++---------
- drivers/net/wireless/ath/ath9k/dynack.c     |  2 +-
- drivers/net/wireless/ath/ath9k/hw-ops.h     |  6 ++++++
- drivers/net/wireless/ath/ath9k/hw.h         |  1 +
- drivers/net/wireless/ath/ath9k/mac.h        |  2 +-
- 6 files changed, 47 insertions(+), 18 deletions(-)
+> On Mon, 2014-09-08 at 18:30 +0200, Rostislav Lisovy wrote:
+> 
+>> If I am not mistaken, it is not possible to live without an in-kernel
+>> rate_control algorithm?
+>> One interesting idea I got from one colleague is to implement the
+>> algorithm logic in the user-space -- kernel would contain just a thin
+>> shell controlled from the user-space (via netlink?). This is probably
+>> not as insane as it may sound since the purpose of the rate-control
+>> algorithm for 802.11p (at least for ITS-G5) is not to "maximize the
+>> immediate throughput" but more like "shared medium congestion control",
+>> which may require much slower frequency of a control loop.
+> 
+> I'm not really convinced this is feasible, but in any case - are you
+> even communicating long enough with a single peer to make rate control
+> feasible?
+> 
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_mac.c b/drivers/net/wireless/ath/ath9k/ar9002_mac.c
-index 669cb37..2a93519 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_mac.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_mac.c
-@@ -381,16 +381,27 @@ static int ar9002_hw_proc_txdesc(struct ath_hw *ah, void *ds,
- 	ts->evm1 = ads->AR_TxEVM1;
- 	ts->evm2 = ads->AR_TxEVM2;
- 
--	status = ACCESS_ONCE(ads->ds_ctl4);
--	ts->duration[0] = MS(status, AR_PacketDur0);
--	ts->duration[1] = MS(status, AR_PacketDur1);
--	status = ACCESS_ONCE(ads->ds_ctl5);
--	ts->duration[2] = MS(status, AR_PacketDur2);
--	ts->duration[3] = MS(status, AR_PacketDur3);
--
- 	return 0;
- }
- 
-+static int ar9002_hw_get_duration(struct ath_hw *ah, const void *ds, int index)
-+{
-+	struct ar5416_desc *ads = AR5416DESC(ds);
-+
-+	switch (index) {
-+	case 0:
-+		return MS(ACCESS_ONCE(ads->ds_ctl4), AR_PacketDur0);
-+	case 1:
-+		return MS(ACCESS_ONCE(ads->ds_ctl4), AR_PacketDur1);
-+	case 2:
-+		return MS(ACCESS_ONCE(ads->ds_ctl5), AR_PacketDur2);
-+	case 3:
-+		return MS(ACCESS_ONCE(ads->ds_ctl5), AR_PacketDur3);
-+	default:
-+		return -1;
-+	}
-+}
-+
- void ath9k_hw_setuprxdesc(struct ath_hw *ah, struct ath_desc *ds,
- 			  u32 size, u32 flags)
- {
-@@ -413,4 +424,5 @@ void ar9002_hw_attach_mac_ops(struct ath_hw *ah)
- 	ops->get_isr = ar9002_hw_get_isr;
- 	ops->set_txdesc = ar9002_set_txdesc;
- 	ops->proc_txdesc = ar9002_hw_proc_txdesc;
-+	ops->get_duration = ar9002_hw_get_duration;
- }
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-index e5f7c11..057b165 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-@@ -355,11 +355,9 @@ static int ar9003_hw_proc_txdesc(struct ath_hw *ah, void *ds,
- 				 struct ath_tx_status *ts)
- {
- 	struct ar9003_txs *ads;
--	struct ar9003_txc *adc;
- 	u32 status;
- 
- 	ads = &ah->ts_ring[ah->ts_tail];
--	adc = (struct ar9003_txc *)ads;
- 
- 	status = ACCESS_ONCE(ads->status8);
- 	if ((status & AR_TxDone) == 0)
-@@ -428,18 +426,29 @@ static int ar9003_hw_proc_txdesc(struct ath_hw *ah, void *ds,
- 	ts->ts_rssi_ext1 = MS(status, AR_TxRSSIAnt11);
- 	ts->ts_rssi_ext2 = MS(status, AR_TxRSSIAnt12);
- 
--	status = ACCESS_ONCE(adc->ctl15);
--	ts->duration[0] = MS(status, AR_PacketDur0);
--	ts->duration[1] = MS(status, AR_PacketDur1);
--	status = ACCESS_ONCE(adc->ctl16);
--	ts->duration[2] = MS(status, AR_PacketDur2);
--	ts->duration[3] = MS(status, AR_PacketDur3);
--
- 	memset(ads, 0, sizeof(*ads));
- 
- 	return 0;
- }
- 
-+static int ar9003_hw_get_duration(struct ath_hw *ah, const void *ds, int index)
-+{
-+	const struct ar9003_txc *adc = ds;
-+
-+	switch (index) {
-+	case 0:
-+		return MS(ACCESS_ONCE(adc->ctl15), AR_PacketDur0);
-+	case 1:
-+		return MS(ACCESS_ONCE(adc->ctl15), AR_PacketDur1);
-+	case 2:
-+		return MS(ACCESS_ONCE(adc->ctl16), AR_PacketDur2);
-+	case 3:
-+		return MS(ACCESS_ONCE(adc->ctl16), AR_PacketDur3);
-+	default:
-+		return 0;
-+	}
-+}
-+
- void ar9003_hw_attach_mac_ops(struct ath_hw *hw)
- {
- 	struct ath_hw_ops *ops = ath9k_hw_ops(hw);
-@@ -449,6 +458,7 @@ void ar9003_hw_attach_mac_ops(struct ath_hw *hw)
- 	ops->get_isr = ar9003_hw_get_isr;
- 	ops->set_txdesc = ar9003_set_txdesc;
- 	ops->proc_txdesc = ar9003_hw_proc_txdesc;
-+	ops->get_duration = ar9003_hw_get_duration;
- }
- 
- void ath9k_hw_set_rx_bufsize(struct ath_hw *ah, u16 buf_size)
-diff --git a/drivers/net/wireless/ath/ath9k/dynack.c b/drivers/net/wireless/ath/ath9k/dynack.c
-index 6ae8e0b..22b3cc4 100644
---- a/drivers/net/wireless/ath/ath9k/dynack.c
-+++ b/drivers/net/wireless/ath/ath9k/dynack.c
-@@ -202,7 +202,7 @@ void ath_dynack_sample_tx_ts(struct ath_hw *ah, struct sk_buff *skb,
- 	ridx = ts->ts_rateindex;
- 
- 	da->st_rbf.ts[da->st_rbf.t_rb].tstamp = ts->ts_tstamp;
--	da->st_rbf.ts[da->st_rbf.t_rb].dur = ts->duration[ts->ts_rateindex];
-+	da->st_rbf.ts[da->st_rbf.t_rb].dur = ts->duration;
- 	ether_addr_copy(da->st_rbf.addr[da->st_rbf.t_rb].h_dest, hdr->addr1);
- 	ether_addr_copy(da->st_rbf.addr[da->st_rbf.t_rb].h_src, hdr->addr2);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/hw-ops.h b/drivers/net/wireless/ath/ath9k/hw-ops.h
-index a47ea84..8e85efe 100644
---- a/drivers/net/wireless/ath/ath9k/hw-ops.h
-+++ b/drivers/net/wireless/ath/ath9k/hw-ops.h
-@@ -67,6 +67,12 @@ static inline int ath9k_hw_txprocdesc(struct ath_hw *ah, void *ds,
- 	return ath9k_hw_ops(ah)->proc_txdesc(ah, ds, ts);
- }
- 
-+static inline int ath9k_hw_get_duration(struct ath_hw *ah, const void *ds,
-+					int index)
-+{
-+	return ath9k_hw_ops(ah)->get_duration(ah, ds, index);
-+}
-+
- static inline void ath9k_hw_antdiv_comb_conf_get(struct ath_hw *ah,
- 		struct ath_hw_antcomb_conf *antconf)
- {
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index b9eef33..975074f 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -691,6 +691,7 @@ struct ath_hw_ops {
- 			   struct ath_tx_info *i);
- 	int (*proc_txdesc)(struct ath_hw *ah, void *ds,
- 			   struct ath_tx_status *ts);
-+	int (*get_duration)(struct ath_hw *ah, const void *ds, int index);
- 	void (*antdiv_comb_conf_get)(struct ath_hw *ah,
- 			struct ath_hw_antcomb_conf *antconf);
- 	void (*antdiv_comb_conf_set)(struct ath_hw *ah,
-diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
-index cd05a77..aa69cea 100644
---- a/drivers/net/wireless/ath/ath9k/mac.h
-+++ b/drivers/net/wireless/ath/ath9k/mac.h
-@@ -121,7 +121,7 @@ struct ath_tx_status {
- 	u32 evm0;
- 	u32 evm1;
- 	u32 evm2;
--	u32 duration[4];
-+	u32 duration;
- };
- 
- struct ath_rx_status {
--- 
-2.0.4
+The way i understand the problem, and as far as it is feasible, the rate-control wouldn't be done on the basis of a single peer-to-peer communication but globally according to the congestion of the shared media.
+
+Most of messages on such link would be multicast or broadcast, in the typical use case where a vehicle/roadside station announces an accident or another danger to neighboring listeners. As a consequence, the main purpose of rate adaptation in this case would not be to ensure the delivery to a particular target, but the delivery to most available targets.
+
+
+> 
+> Anyway - it seems to me that you're getting ahead of yourself. Shouldn't
+> you actually have a functioning datapath before worrying about rate
+> control? And for that you'll need station handling in mac80211, etc.
+> 
+
+I don't know what is the exact status of the patchset in linux wireless. However we performed tests on the complete patchset published on github and didn't see major problems in terms of packet delivery.
+
+Best regards.
+Emmanuel Thierry
 
