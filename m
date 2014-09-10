@@ -1,68 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f177.google.com ([74.125.82.177]:36446 "EHLO
-	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754352AbaIWIdm (ORCPT
+Received: from relay4-d.mail.gandi.net ([217.70.183.196]:57705 "EHLO
+	relay4-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750879AbaIJJtW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Sep 2014 04:33:42 -0400
-Received: by mail-we0-f177.google.com with SMTP id t60so4103866wes.8
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Sep 2014 01:33:41 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 2/3] ath10k: dump hex bytes with dev string prefix
-Date: Tue, 23 Sep 2014 10:22:53 +0200
-Message-Id: <1411460574-5424-3-git-send-email-michal.kazior@tieto.com> (sfid-20140923_103354_133910_0A25841A)
-In-Reply-To: <1411460574-5424-1-git-send-email-michal.kazior@tieto.com>
-References: <1411460574-5424-1-git-send-email-michal.kazior@tieto.com>
+	Wed, 10 Sep 2014 05:49:22 -0400
+Message-ID: <1410342515.4077.27.camel@hadess.net> (sfid-20140910_114929_343951_902C7B6F)
+Subject: Re: Realtek GPIO chipset, for Baytrail?
+From: Bastien Nocera <hadess@hadess.net>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Wed, 10 Sep 2014 11:48:35 +0200
+In-Reply-To: <D08A763F-AD50-449D-98C6-B82866F49480@holtmann.org>
+References: <1410256608.4077.7.camel@hadess.net>
+	 <540F54B1.8040409@lwfinger.net> <1410292835.4077.21.camel@hadess.net>
+	 <540F61FE.2050404@lwfinger.net>
+	 <7234781D-5B78-404A-B945-D090938777C7@hadess.net>
+	 <D08A763F-AD50-449D-98C6-B82866F49480@holtmann.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This makes it easier to debug hex dumps on systems
-with more than a single ath10k device.
+On Tue, 2014-09-09 at 16:10 -0700, Marcel Holtmann wrote:
+> Hi Bastien,
+> 
+> >>>> What specific Baytrail tablet do you have?
+> >>> 
+> >>> The Onda v975w. It came with Windows 8.1 32-bit.
+> >>> 
+> >>> I guess that the device is probably a PCI one, but the enumeration is
+> >>> done through ACPI instead of "normal" PCI.
+> >> 
+> >> In http://www.onda-tablet.com/onda-v975w-quad-core-win-8-tablet-9-7-inch-retina-screen-ram-2gb-wifi-32gb.html, someone is specifically looking for an RTL8723BS driver.
+> > 
+> > That's helpful.
+> > 
+> >> I will see if my contact at Realtek knows who has worked on drivers for this device, and if it would be possible to use rtl8723be if we were to supply an SDIO frontend.
+> > 
+> > I'm not sure why the device doesn't show up in the sysfs tree, but maybe it needs a driver bound to it to show up.
+> 
+> I just booted up my Baytrail based Minnowboard Max in ACPI enumeration
+> and then the SDIO host controller is enumerated via ACPI. This is
+> compared to PCI enumeration where the SDIO controller shows up in
+> lspci.
+> 
+> So can you try to install sdhci-acpi and see if that starts showing
+> SDIO devices. If the SDIO host controllers loads, then it start SDIO
+> enumeration and you would see the cards.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
-
-Notes:
-    v2:
-     * merge 2 scnprintfs into 1 [Kalle]
-
- drivers/net/wireless/ath/ath10k/debug.c | 17 ++++++++++++++++-
- 1 file changed, 16 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index f1e5916..1110f0f 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -1264,11 +1264,26 @@ void ath10k_dbg_dump(struct ath10k *ar,
- 		     const char *msg, const char *prefix,
- 		     const void *buf, size_t len)
- {
-+	char linebuf[256];
-+	unsigned int linebuflen;
-+	const void *ptr;
-+
- 	if (ath10k_debug_mask & mask) {
- 		if (msg)
- 			ath10k_dbg(ar, mask, "%s\n", msg);
- 
--		print_hex_dump_bytes(prefix, DUMP_PREFIX_OFFSET, buf, len);
-+		for (ptr = buf; (ptr - buf) < len; ptr += 16) {
-+			linebuflen = 0;
-+			linebuflen += scnprintf(linebuf + linebuflen,
-+						sizeof(linebuf) - linebuflen,
-+						"%s%08x: ",
-+						(prefix ? prefix : ""),
-+						(unsigned int)(ptr - buf));
-+			hex_dump_to_buffer(ptr, len - (ptr - buf), 16, 1,
-+					   linebuf + linebuflen,
-+					   sizeof(linebuf) - linebuflen, true);
-+			dev_printk(KERN_DEBUG, ar->dev, "%s\n", linebuf);
-+		}
- 	}
- 
- 	/* tracing code doesn't like null strings :/ */
--- 
-1.8.5.3
+That was already loaded (thankfully, as it's a dependency of mmc_core,
+which drives the builtin storage).
 
