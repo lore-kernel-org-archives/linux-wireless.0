@@ -1,47 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:52811 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754599AbaIHQ4j (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Sep 2014 12:56:39 -0400
-Received: by mail-wi0-f180.google.com with SMTP id ex7so3061165wid.1
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Sep 2014 09:56:38 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 10/12] iwlwifi: dvm: disable power save by default
-Date: Mon,  8 Sep 2014 19:56:15 +0300
-Message-Id: <1410195377-10075-10-git-send-email-egrumbach@gmail.com> (sfid-20140908_185645_444770_031F38CF)
-In-Reply-To: <540DDF37.5030801@gmail.com>
-References: <540DDF37.5030801@gmail.com>
+Received: from mga11.intel.com ([192.55.52.93]:33056 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751222AbaIJKni (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Sep 2014 06:43:38 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 3/4] cfg80211: clear wext keys when freeing and removing them
+Date: Wed, 10 Sep 2014 13:39:56 +0300
+Message-Id: <1410345597-28565-3-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140910_124342_150312_5952662F)
+In-Reply-To: <1410345597-28565-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1410345597-28565-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-In
-https://bugzilla.kernel.org/show_bug.cgi?id=84031,
-the submitter said that disabling power saving helped,
-do just that.
+When freeing the keys stored for wireless extensions, clear the memory
+to avoid having the key material stick around in memory "forever".
+Similarly, when userspace overwrites a key, actually clear it instead
+of just setting the key length to zero.
 
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/iwlwifi/dvm/power.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ net/wireless/core.c        | 2 +-
+ net/wireless/wext-compat.c | 2 ++
+ 2 files changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/dvm/power.c b/drivers/net/wireless/iwlwifi/dvm/power.c
-index 760c45c..1513dbc 100644
---- a/drivers/net/wireless/iwlwifi/dvm/power.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/power.c
-@@ -40,7 +40,7 @@
- #include "commands.h"
- #include "power.h"
- 
--static bool force_cam;
-+static bool force_cam = true;
- module_param(force_cam, bool, 0644);
- MODULE_PARM_DESC(force_cam, "force continuously aware mode (no power saving at all)");
- 
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 6030ecc..052870f 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -1036,7 +1036,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 			rdev->devlist_generation++;
+ 			cfg80211_mlme_purge_registrations(wdev);
+ #ifdef CPTCFG_CFG80211_WEXT
+-			kfree(wdev->wext.keys);
++			kzfree(wdev->wext.keys);
+ #endif
+ 		}
+ 		/*
+diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
+index 11120bb..f067e64 100644
+--- a/net/wireless/wext-compat.c
++++ b/net/wireless/wext-compat.c
+@@ -496,6 +496,8 @@ static int __cfg80211_set_encryption(struct cfg80211_registered_device *rdev,
+ 			err = 0;
+ 		if (!err) {
+ 			if (!addr) {
++				memset(wext->wext.keys->params[idx].data, 0,
++				       sizeof(wext->wext.keys->params[idx].data));
+ 				wdev->wext.keys->params[idx].key_len = 0;
+ 				wdev->wext.keys->params[idx].cipher = 0;
+ 			}
 -- 
 1.9.1
 
