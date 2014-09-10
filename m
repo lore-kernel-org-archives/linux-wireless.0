@@ -1,68 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:17713 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752237AbaILJK3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Sep 2014 05:10:29 -0400
-From: Avinash Patil <patila@marvell.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
-	<huxm@marvell.com>, <yangyang@marvell.com>, <cluo@marvell.com>,
-	<maithili@marvell.com>, Avinash Patil <patila@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>
-Subject: [PATCHv2 07/16] mwifiex: fix a bug in Tx multiport aggregation
-Date: Fri, 12 Sep 2014 20:08:51 +0530
-Message-ID: <1410532740-3173-8-git-send-email-patila@marvell.com> (sfid-20140912_111112_607120_049F00EC)
-In-Reply-To: <1410532740-3173-1-git-send-email-patila@marvell.com>
-References: <1410532740-3173-1-git-send-email-patila@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:49887 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751040AbaIJIuU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Sep 2014 04:50:20 -0400
+Message-ID: <1410339003.2761.2.camel@jlt4.sipsolutions.net> (sfid-20140910_105026_611263_FA6A22FB)
+Subject: Re: 802.11p rate control
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rostislav Lisovy <lisovy@gmail.com>
+Cc: linux-wireless@vger.kernel.org, burak.simsek@volkswagen.de,
+	s.sander@nordsys.de, sojkam1@fel.cvut.cz,
+	jan-niklas.meier@volkswagen.de, emmanuel.thierry@yogoko.fr,
+	thierry.ernst@yogoko.fr, oyunaash@gmail.com,
+	laszlo.virag@commsignia.com
+Date: Wed, 10 Sep 2014 10:50:03 +0200
+In-Reply-To: <1410193824.10388.24.camel@umadbro> (sfid-20140908_183026_729762_39C348F0)
+References: <1410193824.10388.24.camel@umadbro>
+	 (sfid-20140908_183026_729762_39C348F0)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+On Mon, 2014-09-08 at 18:30 +0200, Rostislav Lisovy wrote:
 
-When aggregation port limit is reached, we stop aggregation and
-the data is sent to firmware. It is observed that one less packet
-than the port limit is aggregated in this case. ex. 15 instead of
-16.
-The reason is we have redundant port limit checks before current
-packet is added to aggregation buffer.
+> The possible (first implementation) solution might be either to
+> implement some "dummy" rate control algorithm that will set a fixed
+> datarate only once (during "ocb join" command) or to use the Minstrel
+> while limiting the allowed datarate to be the lowest one; i.e.
+>     mand_rates = ieee80211_mandatory_rates(sband, scan_width);
+>     sta->sta.supp_rates[band] =
+>         find_first_bit(&mand_rates, sizeof(u32));
 
-The issue is fixed by removing these checks. We already have
-necessary check in precopy current buffer handling.
+That's pretty much already done anyway since you'd restrict the
+supported rates to the ones that are, well, supported :)
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/sdio.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+So I don't think you need to do anything here except set up the station
+correctly.
 
-diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
-index 1770fa3..993841e 100644
---- a/drivers/net/wireless/mwifiex/sdio.c
-+++ b/drivers/net/wireless/mwifiex/sdio.c
-@@ -1527,8 +1527,7 @@ static int mwifiex_host_to_card_mp_aggr(struct mwifiex_adapter *adapter,
- 			__func__);
- 
- 		if (MP_TX_AGGR_IN_PROGRESS(card)) {
--			if (!mp_tx_aggr_port_limit_reached(card) &&
--			    MP_TX_AGGR_BUF_HAS_ROOM(card, pkt_len)) {
-+			if (MP_TX_AGGR_BUF_HAS_ROOM(card, pkt_len)) {
- 				f_precopy_cur_buf = 1;
- 
- 				if (!(card->mp_wr_bitmap &
-@@ -1540,8 +1539,7 @@ static int mwifiex_host_to_card_mp_aggr(struct mwifiex_adapter *adapter,
- 				/* No room in Aggr buf, send it */
- 				f_send_aggr_buf = 1;
- 
--				if (mp_tx_aggr_port_limit_reached(card) ||
--				    !(card->mp_wr_bitmap &
-+				if (!(card->mp_wr_bitmap &
- 				      (1 << card->curr_wr_port)))
- 					f_send_cur_buf = 1;
- 				else
--- 
-1.8.1.4
+
+> If I am not mistaken, it is not possible to live without an in-kernel
+> rate_control algorithm?
+> One interesting idea I got from one colleague is to implement the
+> algorithm logic in the user-space -- kernel would contain just a thin
+> shell controlled from the user-space (via netlink?). This is probably
+> not as insane as it may sound since the purpose of the rate-control
+> algorithm for 802.11p (at least for ITS-G5) is not to "maximize the
+> immediate throughput" but more like "shared medium congestion control",
+> which may require much slower frequency of a control loop.
+
+I'm not really convinced this is feasible, but in any case - are you
+even communicating long enough with a single peer to make rate control
+feasible?
+
+
+Anyway - it seems to me that you're getting ahead of yourself. Shouldn't
+you actually have a functioning datapath before worrying about rate
+control? And for that you'll need station handling in mac80211, etc.
+
+johannes
 
