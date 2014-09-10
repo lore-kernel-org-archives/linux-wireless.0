@@ -1,67 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cassarossa.samfundet.no ([193.35.52.29]:47790 "EHLO
-	cassarossa.samfundet.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932536AbaICNVp (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:57334 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751884AbaIJOPL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Sep 2014 09:21:45 -0400
-Received: from pannekake.samfundet.no ([2001:67c:29f4::50] ident=unknown)
-	by cassarossa.samfundet.no with esmtps (TLS1.2:DHE_RSA_AES_128_CBC_SHA1:128)
-	(Exim 4.80)
-	(envelope-from <sesse@samfundet.no>)
-	id 1XPAVK-0001FC-60
-	for linux-wireless@vger.kernel.org; Wed, 03 Sep 2014 15:21:42 +0200
-Received: from sesse by pannekake.samfundet.no with local (Exim 4.80)
-	(envelope-from <sesse@samfundet.no>)
-	id 1XPAVJ-0005a4-Ua
-	for linux-wireless@vger.kernel.org; Wed, 03 Sep 2014 15:21:41 +0200
-Date: Wed, 3 Sep 2014 15:21:41 +0200
-From: "Steinar H. Gunderson" <sgunderson@bigfoot.com>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v5 1/2] mac80211: split 802.11h parsing from transmit
- power policy
-Message-ID: <20140903132141.GB18933@sesse.net> (sfid-20140903_152148_848656_4FFE7BD1)
-References: <20140830184516.GA31497@sesse.net>
- <E1XONJ6-0005Kl-Nz@pannekake.samfundet.no>
- <1409745400.911.10.camel@jlt4.sipsolutions.net>
+	Wed, 10 Sep 2014 10:15:11 -0400
+Message-ID: <54105CE9.1030004@broadcom.com> (sfid-20140910_161517_737272_CF696A85)
+Date: Wed, 10 Sep 2014 16:15:05 +0200
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1409745400.911.10.camel@jlt4.sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	brcm80211 development <brcm80211-dev-list@broadcom.com>,
+	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>
+Subject: Re: P2P_DEVICE support in Android KitKat
+References: <540FFDFD.2070302@broadcom.com> <20140910111040.GA5269@w1.fi>
+In-Reply-To: <20140910111040.GA5269@w1.fi>
+Content-Type: multipart/mixed;
+	boundary="------------070100010106090507000807"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks for reviewing. I'll send out a new patch series as soon as I'm
-through all of your comments.
+--------------070100010106090507000807
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Wed, Sep 03, 2014 at 01:56:40PM +0200, Johannes Berg wrote:
-> Please format the code like this:
-> 
-> static bool
-> ieee80211_find_80211h_pwr_constr(struct ieee80211_sub_if_data *sdata, 
->                                  struct ieee80211_channel *channel,
->                                  const u8 *country_ie, u8
-> country_ie_len,
->                                  const u8 *pwr_constr_elem,
->                                  int *chan_pwr, int *pwr_reduction)
+On 09/10/14 13:10, Jouni Malinen wrote:
+> On Wed, Sep 10, 2014 at 09:30:05AM +0200, Arend van Spriel wrote:
+>> I am running some tests on a haswell target with Android KitKat
+>> (3.10.20 kernel). In this configuration our brcmfmac driver is used
+>> with driver param 'p2p_device=1'. So we end up with wlan0 and
+>> p2p-dev-wlan0 interfaces (can blame myself for that). The
+>> configuration has a network configured, but I did not expect
+>> wpa_supplicant to start association using the p2p device interface.
+>> The wlan0 interface is already connected to the AP. How can I fix
+>> this to assure p2p-dev-wlan0 is only used for p2p management
+>> scenarios.
+>
+> Hmm.. Can you please show the wpa_supplicant command line that is used
+> here and describe how that network block gets configured for the
+> p2p-dev-wlan0 "interface"? I would have expected that there would never
+> be a configuration with an enabled network block being passed for the
+> P2P management interface.. Internally, wpa_supplicant should not add
+> such for P2P groups, but I don't think there is any filtering on
+> configuration if something is externally trying to make wpa_supplicant
+> use that management interface for a station mode connection.
 
-Done.
+Hi Jouni,
 
-> Do we need the pwr_reduction? Couldn't we just return it? We don't
-> handle 0/negative anyway, do we?
+Jithu informed me about the '-m' command line option so digging in git 
+revision history I found the commit from Ilan which kind of describes 
+what I am seeing
 
-We could do the calculation directly in ieee80211_find_80211h_pwr_constr;
-however, then we couldn't message the calculation in the printk (it currently
-says e.g. 0 (17 - 23) dBm). I don't know if that is important or not, but I
-opted to let it stay as-is.
+c16a759 wpa_supplicant: Add a configuration file for the P2P_DEVICE 
+parameters
 
->> -static u32 ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
-> 
->> +static bool ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
-> 
-> I think you meant to keep u32 here? Otherwise return values from the
-> function simply get converted to 0/1 which doesn't seem right.
+Here is p2p_supplicant service instantiating the wpa_supplicant.
 
-You're right; this function is supposed to return a bitmask. Fixed.
+service p2p_supplicant /system/bin/wpa_supplicant -Dnl80211 -iwlan0 \
+   -g@android:wpa_wlan0 -c/data/misc/wifi/p2p_supplicant.conf -dt
 
-/* Steinar */
--- 
-Homepage: http://www.sesse.net/
+The p2p_supplicant.conf has update_config=1 set which is also mentioned 
+in the commit message. Without -m option p2p-dev-wlan0 is created using 
+the same config file as for wlan0 so some filtering would be required 
+(or use -m).
+
+Regards,
+Arend
+
+--------------070100010106090507000807
+Content-Type: text/plain; name="p2p_supplicant.conf"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="p2p_supplicant.conf"
+
+ctrl_interface=/data/misc/wifi/sockets
+update_config=1
+driver_param=use_p2p_group_interface=1p2p_device=1
+eapol_version=1
+ap_scan=1
+fast_reauth=1
+device_name=BRIX-t1
+device_type=10-0050F204-1
+config_methods=keypad display push_button
+
+
+--------------070100010106090507000807--
