@@ -1,73 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:65370 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932067AbaICMcm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Sep 2014 08:32:42 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 00/10] various mac80211 / cfg80211 patches 
-Date: Wed,  3 Sep 2014 15:24:56 +0300
-Message-Id: <1409747106-30717-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140903_143247_308737_2268BBC7)
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:35310 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751005AbaIJLgy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Sep 2014 07:36:54 -0400
+Message-ID: <541037D2.7060007@gmail.com> (sfid-20140910_133658_893010_0D895D82)
+Date: Wed, 10 Sep 2014 13:36:50 +0200
+From: Jiri Slaby <jirislaby@gmail.com>
+MIME-Version: 1.0
+To: Sergey Ryazanov <ryazanov.s.a@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+CC: Paul Bolle <pebolle@tiscali.nl>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Oleksij Rempel <linux@rempel-privat.de>,
+	Richard Weinberger <richard@nod.at>,
+	Jonathan Bither <jonbither@gmail.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	ath5k-devel@venema.h4ckr.net, open@hauke-m.de,
+	"list@hauke-m.de:NETWORKING DRIVERS" <list@hauke-m.de>,
+	"antonynpavlov@gmail.com" <antonynpavlov@gmail.com>,
+	OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"list@hauke-m.de:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
+	open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 09/28] Remove ATHEROS_AR231X
+References: <20140213201421.GJ22203@tuxdriver.com>	<1397581703.8212.5.camel@x220>	<CAHNKnsQQ42-XnXrubHAy4PF3H2ynbGDdSMP7MvDS_1aRozYF=A@mail.gmail.com>	<1403087119.1984.93.camel@x220>	<CAHNKnsSfaT7xC5_wv=TrGLEQ2pjC91Q1XG891_n64OuR0fA9Jg@mail.gmail.com>	<1403091974.1984.102.camel@x220>	<1409911856.7832.9.camel@x220>	<CAHNKnsRipRHicKOUW4dCutD1-sUG6qPnP2QuOveH_t1MFX9XgQ@mail.gmail.com>	<1409916824.7832.20.camel@x220>	<CAHNKnsQ1gt=DRBTd9Q9yos1idqmXMepEPvhm8a7unP-whzNAgg@mail.gmail.com>	<20140909182734.GJ29412@tuxdriver.com> <CAHNKnsQ8G3ZFHshq7wOqex1J6DbVD5uHVAyvs+aDC2Znk5zWww@mail.gmail.com>
+In-Reply-To: <CAHNKnsQ8G3ZFHshq7wOqex1J6DbVD5uHVAyvs+aDC2Znk5zWww@mail.gmail.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+On 09/10/2014, 12:33 PM, Sergey Ryazanov wrote:
+> 2014-09-09 22:27 GMT+04:00, John W. Linville <linville@tuxdriver.com>:
+>> On Fri, Sep 05, 2014 at 04:02:10PM +0400, Sergey Ryazanov wrote:
+>>> 2014-09-05 15:33 GMT+04:00 Paul Bolle <pebolle@tiscali.nl>:
+>>>> Hi Sergey,
+>>>>
+>>>> On Fri, 2014-09-05 at 15:12 +0400, Sergey Ryazanov wrote:
+>>>>> 2014-09-05 14:10 GMT+04:00, Paul Bolle <pebolle@tiscali.nl>:
+>>>>>> On Wed, 2014-06-18 at 13:46 +0200, Paul Bolle wrote:
+>>>>>>> Having this conversation every rc1 is getting a bit silly. Could
+>>>>>>> Jiri
+>>>>>>> e.a. perhaps set some specific deadline for ATHEROS_AR231X to be
+>>>>>>> submitted?
+>>>>>>
+>>>>>> I waited until rc3. Have you seen any activity on this front? If
+>>>>>> not,
+>>>>>> should I resend the patch that removes the code in mainline that
+>>>>>> depends
+>>>>>> on ATHEROS_AR231X (ie, AHB bus support)?
+>>>>>>
+>>>>> Recent activity always could be found in [1]. Now I finish another one
+>>>>> round of cleanups and have a plan to fix several things (you can
+>>>>> always find something that you really want to improve). But if you
+>>>>> insist I could immediately switch to "send upstream" mode. And seems
+>>>>> that this would be better approach.
+>>>>>
+>>>>> 1. https://dev.openwrt.org/log/trunk/target/linux/atheros
+>>>>
+>>>> And where can the related PULL requests or patch submissions be found?
+>>>>
+>>> I have not sent patches yet, since I thought that it would be easier
+>>> to cleanup them in openwrt tree and then send them upstream.
+>>
+>> That excuse has worn a bit thin.  Perhaps Paul should repost his
+>> removal and you can add a revert to the start of your patch series?
+>>
+> As for me, I do not like such flapping
 
-here are a few patches from our internal tree. You have already seen
-most of them.
+Agreed in case what you have is in a good enough shape. You (and also
+others) can still clean up the code in upstream too. So, if it is
+mergeable, send it for upstream inclusion now, otherwise I am all for
+John to apply the Paul's patch. The unused code has been a way too long
+in the tree now.
 
-Assaf Krauss (3):
-  nl80211: Allow declaring RRM-related features
-  nl80211: Add flag attribute for RRM connections
-  mac80211: Add RRM support to assoc request
-
-Eliad Peller (3):
-  cfg80211: avoid duplicate entries on regdomain intersection
-  mac80211: adjust roc duration when combining ROCs
-  mac80211: combine roc with the "next roc" if possible
-
-Emmanuel Grumbach (1):
-  mac80211: use bss_conf->dtim_period instead of conf.ps_dtim_period
-
-Johannes Berg (2):
-  mac80211: add Intel Mobile Communications copyright
-  cfg80211: add Intel Mobile Communications copyright
-
-Liad Kaufman (1):
-  mac80211: fix description comment of ieee80211_subif_start_xmit
-
- include/linux/ieee80211.h    |  1 +
- include/net/cfg80211.h       |  3 ++
- include/net/mac80211.h       |  1 +
- include/uapi/linux/nl80211.h | 27 +++++++++++++++
- net/mac80211/cfg.c           | 77 ++++++++++++++++++++++++++++-------------
- net/mac80211/debugfs.c       |  1 +
- net/mac80211/debugfs_sta.c   |  1 +
- net/mac80211/ibss.c          |  1 +
- net/mac80211/ieee80211_i.h   |  2 ++
- net/mac80211/iface.c         |  1 +
- net/mac80211/key.c           |  1 +
- net/mac80211/main.c          |  1 +
- net/mac80211/mlme.c          | 16 +++++++--
- net/mac80211/rx.c            |  1 +
- net/mac80211/scan.c          |  1 +
- net/mac80211/sta_info.c      |  3 +-
- net/mac80211/sta_info.h      |  1 +
- net/mac80211/status.c        |  1 +
- net/mac80211/tdls.c          |  1 +
- net/mac80211/tx.c            |  6 ++--
- net/mac80211/util.c          |  1 +
- net/mac80211/wme.c           |  1 +
- net/wireless/chan.c          |  1 +
- net/wireless/core.c          |  1 +
- net/wireless/nl80211.c       | 18 ++++++++++
- net/wireless/reg.c           | 82 ++++++++++++++++++++++++++++++++------------
- net/wireless/scan.c          |  1 +
- net/wireless/util.c          |  1 +
- 28 files changed, 202 insertions(+), 51 deletions(-)
-
+thanks,
 -- 
-1.9.1
-
+js
