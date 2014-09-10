@@ -1,32 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:23523 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752300AbaIASyH (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:56611 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751494AbaIJHS2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Sep 2014 14:54:07 -0400
-Date: Mon, 1 Sep 2014 21:53:36 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Avinash Patil <patila@marvell.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: mwifiex: parse TDLS action frames during RX
-Message-ID: <20140901185336.GD6549@mwanda> (sfid-20140901_205410_568791_4A56ABBA)
-References: <20140828132352.GD24477@mwanda>
- <CBACCFA0AEB13A41977475BCF3E896FC4781147CC8@SC-VEXCH2.marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CBACCFA0AEB13A41977475BCF3E896FC4781147CC8@SC-VEXCH2.marvell.com>
+	Wed, 10 Sep 2014 03:18:28 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [RFC 3/5] ath9k: Clear offchannel duration properly
+Date: Wed, 10 Sep 2014 12:48:46 +0530
+Message-Id: <1410333528-28022-4-git-send-email-sujith@msujith.org> (sfid-20140910_091831_282383_4E99E4E0)
+In-Reply-To: <1410333528-28022-1-git-send-email-sujith@msujith.org>
+References: <1410333528-28022-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 01, 2014 at 12:33:36AM -0700, Avinash Patil wrote:
-> Hi Dan,
-> 
-> Thanks for reporting static checker warning.
-> Patch has been submitted which ensures we do not copy beyond end.
-> 
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Great!  Thanks!  Do you have a link to the patch?
+Clearing the offchannel duration value in the
+scheduler unconditionally breaks NoA when
+multiple contexts are active and an offchannel
+request is deferred, for example, in a scan run.
 
-regards,
-dan carpenter
+Fix this by clearing the duration only if there
+is no pending offchannel request.
+
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/channel.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index ab3d29d..09ff8a6 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -1065,7 +1065,10 @@ void ath_chanctx_set_next(struct ath_softc *sc, bool force)
+ 	sc->cur_chan = sc->next_chan;
+ 	sc->cur_chan->stopped = false;
+ 	sc->next_chan = NULL;
+-	sc->sched.offchannel_duration = 0;
++
++	if (!sc->sched.offchannel_pending)
++		sc->sched.offchannel_duration = 0;
++
+ 	if (sc->sched.state != ATH_CHANCTX_STATE_FORCE_ACTIVE)
+ 		sc->sched.state = ATH_CHANCTX_STATE_IDLE;
+ 
+-- 
+2.1.0
 
