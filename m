@@ -1,182 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f54.google.com ([209.85.215.54]:33953 "EHLO
-	mail-la0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932083AbaIENG6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Sep 2014 09:06:58 -0400
-Received: by mail-la0-f54.google.com with SMTP id b17so14010403lan.27
-        for <linux-wireless@vger.kernel.org>; Fri, 05 Sep 2014 06:06:56 -0700 (PDT)
-From: Henning Rogge <hrogge@gmail.com>
-To: "linux-wireless @ vger . kernel . org"
-	<linux-wireless@vger.kernel.org>
-Cc: Henning Rogge <henning.rogge@fkie.fraunhofer.de>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-Subject: [PATCH v3 2/2] mac80211: implement cfg80211_ops to query mesh proxy path table
-Date: Fri,  5 Sep 2014 15:06:44 +0200
-Message-Id: <1409922404-8217-3-git-send-email-henning.rogge@fkie.fraunhofer.de> (sfid-20140905_150703_865907_D41C8486)
-In-Reply-To: <1409922404-8217-1-git-send-email-henning.rogge@fkie.fraunhofer.de>
-References: <1409922404-8217-1-git-send-email-henning.rogge@fkie.fraunhofer.de>
+Received: from mga01.intel.com ([192.55.52.88]:9459 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751166AbaIJWOI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Sep 2014 18:14:08 -0400
+Subject: [PATCH net-next v2 1/2] skb: Add documentation for skb_clone_sk
+To: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+From: Alexander Duyck <alexander.h.duyck@intel.com>
+Cc: johannes@sipsolutions.net, davem@davemloft.net,
+	eric.dumazet@gmail.com, linville@tuxdriver.com
+Date: Wed, 10 Sep 2014 18:05:26 -0400
+Message-ID: <20140910220448.23225.39224.stgit@ahduyck-bv4.jf.intel.com> (sfid-20140911_001412_225480_F7E5D232)
+In-Reply-To: <20140910215837.23225.39149.stgit@ahduyck-bv4.jf.intel.com>
+References: <20140910215837.23225.39149.stgit@ahduyck-bv4.jf.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Implement get_mpp and dump_mpp cfg80211_ops to export the content of the 802.11s mesh proxy path table to userspace.
+This change adds some documentation to the call skb_clone_sk.  This is
+meant to help clarify the purpose of the function for other developers.
 
-Signed-off-by: Henning Rogge <henning.rogge@fkie.fraunhofer.de>
+Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
 ---
- net/mac80211/cfg.c          | 53 +++++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/mesh.h         |  3 +++
- net/mac80211/mesh_pathtbl.c | 31 ++++++++++++++++++++++++++
- 3 files changed, 87 insertions(+)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 927b4ea..2b85eed 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1511,6 +1511,57 @@ static int ieee80211_dump_mpath(struct wiphy *wiphy, struct net_device *dev,
- 	return 0;
+v2: Updated comments to specifically call out need for sock_hold/sock_put
+
+ net/core/skbuff.c |   13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/net/core/skbuff.c b/net/core/skbuff.c
+index a18dfb0..c9da77a 100644
+--- a/net/core/skbuff.c
++++ b/net/core/skbuff.c
+@@ -3511,6 +3511,19 @@ struct sk_buff *sock_dequeue_err_skb(struct sock *sk)
  }
+ EXPORT_SYMBOL(sock_dequeue_err_skb);
  
-+static void mpp_set_pinfo(struct mesh_path *mpath, u8 *mpp,
-+			  struct mpath_info *pinfo)
-+{
-+	memset(pinfo, 0, sizeof(*pinfo));
-+	memcpy(mpp, mpath->mpp, ETH_ALEN);
-+
-+	pinfo->generation = mpp_paths_generation;
-+}
-+
-+static int ieee80211_get_mpp(struct wiphy *wiphy, struct net_device *dev,
-+			     u8 *dst, u8 *mpp, struct mpath_info *pinfo)
-+
-+{
-+	struct ieee80211_sub_if_data *sdata;
-+	struct mesh_path *mpath;
-+
-+	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+
-+	rcu_read_lock();
-+	mpath = mpp_path_lookup(sdata, dst);
-+	if (!mpath) {
-+		rcu_read_unlock();
-+		return -ENOENT;
-+	}
-+	memcpy(dst, mpath->dst, ETH_ALEN);
-+	mpp_set_pinfo(mpath, mpp, pinfo);
-+	rcu_read_unlock();
-+	return 0;
-+}
-+
-+static int ieee80211_dump_mpp(struct wiphy *wiphy, struct net_device *dev,
-+			      int idx, u8 *dst, u8 *mpp,
-+			      struct mpath_info *pinfo)
-+{
-+	struct ieee80211_sub_if_data *sdata;
-+	struct mesh_path *mpath;
-+
-+	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+
-+	rcu_read_lock();
-+	mpath = mpp_path_lookup_by_idx(sdata, idx);
-+	if (!mpath) {
-+		rcu_read_unlock();
-+		return -ENOENT;
-+	}
-+	memcpy(dst, mpath->dst, ETH_ALEN);
-+	mpp_set_pinfo(mpath, mpp, pinfo);
-+	rcu_read_unlock();
-+	return 0;
-+}
-+
- static int ieee80211_get_mesh_config(struct wiphy *wiphy,
- 				struct net_device *dev,
- 				struct mesh_config *conf)
-@@ -3507,6 +3558,8 @@ const struct cfg80211_ops mac80211_config_ops = {
- 	.change_mpath = ieee80211_change_mpath,
- 	.get_mpath = ieee80211_get_mpath,
- 	.dump_mpath = ieee80211_dump_mpath,
-+	.get_mpp = ieee80211_get_mpp,
-+	.dump_mpp = ieee80211_dump_mpp,
- 	.update_mesh_config = ieee80211_update_mesh_config,
- 	.get_mesh_config = ieee80211_get_mesh_config,
- 	.join_mesh = ieee80211_join_mesh,
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index f39a19f..50c8473 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -270,6 +270,8 @@ int mpp_path_add(struct ieee80211_sub_if_data *sdata,
- 		 const u8 *dst, const u8 *mpp);
- struct mesh_path *
- mesh_path_lookup_by_idx(struct ieee80211_sub_if_data *sdata, int idx);
-+struct mesh_path *
-+mpp_path_lookup_by_idx(struct ieee80211_sub_if_data *sdata, int idx);
- void mesh_path_fix_nexthop(struct mesh_path *mpath, struct sta_info *next_hop);
- void mesh_path_expire(struct ieee80211_sub_if_data *sdata);
- void mesh_rx_path_sel_frame(struct ieee80211_sub_if_data *sdata,
-@@ -317,6 +319,7 @@ void mesh_path_tx_root_frame(struct ieee80211_sub_if_data *sdata);
- 
- bool mesh_action_is_path_sel(struct ieee80211_mgmt *mgmt);
- extern int mesh_paths_generation;
-+extern int mpp_paths_generation;
- 
- #ifdef CONFIG_MAC80211_MESH
- static inline
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index cf032a8..8630963 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -44,6 +44,7 @@ static struct mesh_table __rcu *mesh_paths;
- static struct mesh_table __rcu *mpp_paths; /* Store paths for MPP&MAP */
- 
- int mesh_paths_generation;
-+int mpp_paths_generation;
- 
- /* This lock will have the grow table function as writer and add / delete nodes
-  * as readers. RCU provides sufficient protection only when reading the table
-@@ -410,6 +411,33 @@ mesh_path_lookup_by_idx(struct ieee80211_sub_if_data *sdata, int idx)
- }
- 
- /**
-+ * mpp_path_lookup_by_idx - look up a path in the proxy path table by its index
-+ * @idx: index
-+ * @sdata: local subif, or NULL for all entries
-+ *
-+ * Returns: pointer to the proxy path structure, or NULL if not found.
-+ *
-+ * Locking: must be called within a read rcu section.
-+ */
-+struct mesh_path *
-+mpp_path_lookup_by_idx(struct ieee80211_sub_if_data *sdata, int idx)
-+{
-+	struct mesh_table *tbl = rcu_dereference(mpp_paths);
-+	struct mpath_node *node;
-+	int i;
-+	int j = 0;
-+
-+	for_each_mesh_entry(tbl, node, i) {
-+		if (sdata && node->mpath->sdata != sdata)
-+			continue;
-+		if (j++ == idx)
-+			return node->mpath;
-+	}
-+
-+	return NULL;
-+}
-+
 +/**
-  * mesh_path_add_gate - add the given mpath to a mesh gate to our path table
-  * @mpath: gate path to add to table
-  */
-@@ -691,6 +719,9 @@ int mpp_path_add(struct ieee80211_sub_if_data *sdata,
- 
- 	spin_unlock(&tbl->hashwlock[hash_idx]);
- 	read_unlock_bh(&pathtbl_resize_lock);
-+
-+	mpp_paths_generation++;
-+
- 	if (grow) {
- 		set_bit(MESH_WORK_GROW_MPP_TABLE,  &ifmsh->wrkq_flags);
- 		ieee80211_queue_work(&local->hw, &sdata->work);
--- 
-1.9.1
++ * skb_clone_sk - create clone of skb, and take reference to socket
++ * @skb: the skb to clone
++ *
++ * This function creates a clone of a buffer that holds a reference on
++ * sk_refcnt.  Buffers created via this function are meant to be
++ * returned using sock_queue_err_skb, or free via kfree_skb.
++ *
++ * When passing buffers allocated with this function to sock_queue_err_skb
++ * it is necessary to wrap the call with sock_hold/sock_put in order to
++ * prevent the socket from being released prior to being enqueued on
++ * the sk_error_queue.
++ */
+ struct sk_buff *skb_clone_sk(struct sk_buff *skb)
+ {
+ 	struct sock *sk = skb->sk;
 
