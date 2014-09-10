@@ -1,73 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:47423 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752237AbaILJK0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Sep 2014 05:10:26 -0400
-From: Avinash Patil <patila@marvell.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
-	<huxm@marvell.com>, <yangyang@marvell.com>, <cluo@marvell.com>,
-	<maithili@marvell.com>, Avinash Patil <patila@marvell.com>
-Subject: [PATCHv2 06/16] mwifiex: fix 5G association failure after leaving 2.4G IBSS
-Date: Fri, 12 Sep 2014 20:08:50 +0530
-Message-ID: <1410532740-3173-7-git-send-email-patila@marvell.com> (sfid-20140912_111030_669819_9DE8E5A6)
-In-Reply-To: <1410532740-3173-1-git-send-email-patila@marvell.com>
-References: <1410532740-3173-1-git-send-email-patila@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga09.intel.com ([134.134.136.24]:63279 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751817AbaIJLLS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Sep 2014 07:11:18 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 2/3] mac80211: set smps_mode according to ap params
+Date: Wed, 10 Sep 2014 14:07:35 +0300
+Message-Id: <1410347256-9324-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140910_131123_328859_06299966)
+In-Reply-To: <1410347256-9324-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1410347256-9324-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+From: Eliad Peller <eliad@wizery.com>
 
-When assocaiting to an AP , mwifiex set supported data rates
-based on target AP's capability. For 5G AP(11a mode), a/n/ac mode
-would possibly be set.
-However, for some chips which dont support 11AC mode current config_bands
-will be used instead.
+Take the requested smps mode from the ap params
+(instead of always starting with SMPS_OFF)
 
-For example, if we join an IBSS in 11b mode ,adapter->config_bands
-will be set to 1(11b mode). Then we leave IBSS ,and try to connect
-5G a/n mode AP. At this time , only 11b mode data rates will be
-supported in assoc request , which result in assoc failure with
-reason code 18: Association denied due to requesting station not
-supporting all rates.
-
-This patch fix such a cornel case, by adding additional check for
-current chip's 11ac capability.
-
-Reported-by: Andreas Fenkart <afenkart@gmail.com>
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Marc Yang <yangyang@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/mwifiex/sta_ioctl.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ net/mac80211/cfg.c | 15 +++++++++++++--
+ 1 file changed, 13 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
-index b95a29b..92f3eb8 100644
---- a/drivers/net/wireless/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
-@@ -287,10 +287,13 @@ int mwifiex_bss_start(struct mwifiex_private *priv, struct cfg80211_bss *bss,
- 			return -1;
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 101ae6c..fb6a150 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -683,8 +683,19 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 	if (old)
+ 		return -EALREADY;
  
- 		if (mwifiex_band_to_radio_type(bss_desc->bss_band) ==
--						HostCmd_SCAN_RADIO_TYPE_BG)
-+						HostCmd_SCAN_RADIO_TYPE_BG) {
- 			config_bands = BAND_B | BAND_G | BAND_GN;
--		else
--			config_bands = BAND_A | BAND_AN | BAND_AAC;
-+		} else {
-+			config_bands = BAND_A | BAND_AN;
-+			if (adapter->fw_bands & BAND_AAC)
-+				config_bands |= BAND_AAC;
-+		}
+-	/* TODO: make hostapd tell us what it wants */
+-	sdata->smps_mode = IEEE80211_SMPS_OFF;
++	switch (params->smps_mode) {
++	case NL80211_SMPS_OFF:
++		sdata->smps_mode = IEEE80211_SMPS_OFF;
++		break;
++	case NL80211_SMPS_STATIC:
++		sdata->smps_mode = IEEE80211_SMPS_STATIC;
++		break;
++	case NL80211_SMPS_DYNAMIC:
++		sdata->smps_mode = IEEE80211_SMPS_DYNAMIC;
++		break;
++	default:
++		return -EINVAL;
++	}
+ 	sdata->needed_rx_chains = sdata->local->rx_chains;
  
- 		if (!((config_bands | adapter->fw_bands) & ~adapter->fw_bands))
- 			adapter->config_bands = config_bands;
+ 	mutex_lock(&local->mtx);
 -- 
-1.8.1.4
+1.9.1
 
