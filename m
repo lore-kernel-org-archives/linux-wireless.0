@@ -1,102 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:16192 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751807AbaIJNft (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Sep 2014 09:35:49 -0400
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH 20/22] wil6210: rename [en|dis]able irq to [un]mask
-Date: Wed, 10 Sep 2014 16:34:49 +0300
-Message-ID: <1410356091-19219-21-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140910_153553_708408_597E8E27)
-In-Reply-To: <1410356091-19219-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1410356091-19219-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+Received: from mga01.intel.com ([192.55.52.88]:37041 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752225AbaIJVBy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Sep 2014 17:01:54 -0400
+Message-ID: <5410BC17.8050207@intel.com> (sfid-20140910_230202_271850_39DFB017)
+Date: Wed, 10 Sep 2014 14:01:11 -0700
+From: Alexander Duyck <alexander.h.duyck@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	davem@davemloft.net, linville@tuxdriver.com,
+	Eric Dumazet <eric.dumazet@gmail.com>
+Subject: Re: [PATCH net-next] mac80211: Check correct skb for shared states
+ before freeing original
+References: <20140910200442.15961.84466.stgit@ahduyck-bv4.jf.intel.com>	 (sfid-20140910_221517_589456_8B140F20) <1410381187.2761.10.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1410381187.2761.10.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To better reflect real action performed, rename:
-s/wil6210_disable_irq/wil_mask_irq/
-s/wil6210_enable_irq/wil_unmask_irq/
+On 09/10/2014 01:33 PM, Johannes Berg wrote:
+> On Wed, 2014-09-10 at 16:06 -0400, Alexander Duyck wrote:
+>> The code for cloning the skb for an acknowledgement was checking to see if
+>> the cloned skb was shared and if it was it was then freeing the original
+>> skb.  Since a clone should never really be shared I suspect that the
+>> intention was to avoid freeing the clone if the original was shared.  As
+>> such I am updating the code so that if the original is shared we free the
+>> original and use the clone.  This avoids unnecessary work in the next
+>> section where we would be cloning the skb if the original is shared.
+> 
+> Thanks, yeah, I admit that this is clearly fishy.
+> 
+>> @@ -2087,7 +2087,7 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
+>>  			if (id >= 0) {
+>>  				info_id = id;
+>>  				info_flags |= IEEE80211_TX_CTL_REQ_TX_STATUS;
+> 
+> Luckily, we practically always go into this path.
+> 
+>> -			} else if (skb_shared(skb)) {
+>> +			} else if (skb_shared(orig_skb)) {
+>>  				kfree_skb(orig_skb);
+>>  			} else {
+>>  				kfree_skb(skb);
+> 
+> We have a clone already so we could just remove the whole "else if" I
+> think, but I'm guessing my intent was to keep it accounted to the socket
+> where possible rather than freeing the original in all cases.
+> 
+> So yeah, I think this makes sense. Maybe we should add a comment to the
+> if though to explain this?
+> 
+> johannes
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/interrupt.c | 6 +++---
- drivers/net/wireless/ath/wil6210/main.c      | 4 ++--
- drivers/net/wireless/ath/wil6210/wil6210.h   | 4 ++--
- 3 files changed, 7 insertions(+), 7 deletions(-)
+Actually I think we may need to take a different approach.  The reason I
+was in this code was to take a look at a possible refcount issue.
 
-diff --git a/drivers/net/wireless/ath/wil6210/interrupt.c b/drivers/net/wireless/ath/wil6210/interrupt.c
-index 7d319d9..d265e7c 100644
---- a/drivers/net/wireless/ath/wil6210/interrupt.c
-+++ b/drivers/net/wireless/ath/wil6210/interrupt.c
-@@ -135,7 +135,7 @@ static void wil6210_unmask_irq_pseudo(struct wil6210_priv *wil)
- 		  HOSTADDR(RGF_DMA_PSEUDO_CAUSE_MASK_SW));
- }
- 
--void wil6210_disable_irq(struct wil6210_priv *wil)
-+void wil_mask_irq(struct wil6210_priv *wil)
- {
- 	wil_dbg_irq(wil, "%s()\n", __func__);
- 
-@@ -145,7 +145,7 @@ void wil6210_disable_irq(struct wil6210_priv *wil)
- 	wil6210_mask_irq_pseudo(wil);
- }
- 
--void wil6210_enable_irq(struct wil6210_priv *wil)
-+void wil_unmask_irq(struct wil6210_priv *wil)
- {
- 	wil_dbg_irq(wil, "%s()\n", __func__);
- 
-@@ -546,7 +546,7 @@ void wil6210_fini_irq(struct wil6210_priv *wil, int irq)
- {
- 	wil_dbg_misc(wil, "%s()\n", __func__);
- 
--	wil6210_disable_irq(wil);
-+	wil_mask_irq(wil);
- 	free_irq(irq, wil);
- 	if (wil->n_msi == 3) {
- 		free_irq(irq + 1, wil);
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 0857853..8443d82 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -496,7 +496,7 @@ int wil_reset(struct wil6210_priv *wil)
- 		wil->scan_request = NULL;
- 	}
- 
--	wil6210_disable_irq(wil);
-+	wil_mask_irq(wil);
- 
- 	wmi_event_flush(wil);
- 
-@@ -539,7 +539,7 @@ int wil_reset(struct wil6210_priv *wil)
- 	reinit_completion(&wil->wmi_ready);
- 	reinit_completion(&wil->wmi_call);
- 
--	wil6210_enable_irq(wil);
-+	wil_unmask_irq(wil);
- 
- 	/* we just started MAC, wait for FW ready */
- 	rc = wil_wait_for_fw_ready(wil);
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index f8f9988..a540781 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -532,8 +532,8 @@ int wmi_disconnect_sta(struct wil6210_priv *wil, const u8 *mac, u16 reason);
- void wil6210_clear_irq(struct wil6210_priv *wil);
- int wil6210_init_irq(struct wil6210_priv *wil, int irq);
- void wil6210_fini_irq(struct wil6210_priv *wil, int irq);
--void wil6210_disable_irq(struct wil6210_priv *wil);
--void wil6210_enable_irq(struct wil6210_priv *wil);
-+void wil_mask_irq(struct wil6210_priv *wil);
-+void wil_unmask_irq(struct wil6210_priv *wil);
- int wil_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 			 struct cfg80211_mgmt_tx_params *params,
- 			 u64 *cookie);
--- 
-1.9.1
+I'll be submitting another patch in a few minutes and will probably be
+dropping some of this code anyway.
 
+Thanks,
+
+Alex
