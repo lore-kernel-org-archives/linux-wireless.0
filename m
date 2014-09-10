@@ -1,95 +1,174 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:59520 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751300AbaIKKtd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Sep 2014 06:49:33 -0400
-Message-ID: <1410432565.23822.11.camel@dubbel> (sfid-20140911_124936_358088_A44B7821)
-From: Luca Coelho <luca@coelho.fi>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Berg, Johannes" <johannes@sipsolutions.net>
-Date: Thu, 11 Sep 2014 13:49:25 +0300
-In-Reply-To: <CA+BoTQ=dqQz1epo=-odvVQjOx0K-yLNtivufE5BKBK9+QV2wGQ@mail.gmail.com>
-References: <1410418181.14130.7.camel@dubbel>
-	 <CA+BoTQ=dqQz1epo=-odvVQjOx0K-yLNtivufE5BKBK9+QV2wGQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: CSA broken with !use_chanctx drivers?
+Received: from mga09.intel.com ([134.134.136.24]:63279 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751338AbaIJLLR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Sep 2014 07:11:17 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 1/3] cfg80211: allow requesting SMPS mode on ap start
+Date: Wed, 10 Sep 2014 14:07:34 +0300
+Message-Id: <1410347256-9324-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140910_131120_293424_C0247857)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-09-11 at 11:28 +0200, Michal Kazior wrote:
-> On 11 September 2014 08:49, Luca Coelho <luca@coelho.fi> wrote:
-> > Hi Michal,
-> >
-> > Johannes and I were checking the channel switch code (namely to see if
-> > implementing the drv_channel_switch op was fine in our case) and we saw
-> > that CSA with non-chanctx drivers seems to be broken.
-> >
-> > In commit 4c3ebc56 (mac80211: use chanctx reservation for STA CSA) we
-> > lost this piece of code:
-> >
-> > diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-> > index eccc849..931330b 100644
-> > --- a/net/mac80211/mlme.c
-> > +++ b/net/mac80211/mlme.c
-> > @@ -940,52 +940,70 @@ static void ieee80211_chswitch_work(struct work_struct *work)
-> > [...]
-> > -       if (!local->use_chanctx) {
-> > -               local->_oper_chandef = sdata->csa_chandef;
-> > -               /* Call "hw_config" only if doing sw channel switch.
-> > -                * Otherwise update the channel directly
-> > -                */
-> > -               if (!local->ops->channel_switch)
-> > -                       ieee80211_hw_config(local, 0);
-> > -               else
-> > -                       local->hw.conf.chandef = local->_oper_chandef;
-> > -       }
-> > -
-> >
-> > It seems that we're not updating the chandef in non-chanctx drivers.  Or
-> > are we missing something?
-> 
-> Hmm.. ieee80211_hw_config() is called in
-> ieee80211_chsw_switch_hwconf() now. The special treatment of
-> drv_channel_switch() drivers is gone though - can that be a big
-> problem?
+From: Eliad Peller <eliad@wizery.com>
 
-Ah, I see now.  The only difference is that now you do both things (i.e.
-call hw_config() and set hw.conf.chandef) regardless of whether
-drv_channel_switch() is implemented.
+Add feature bits to indicate device support for
+static-smps and dynamic-smps modes.
 
+Add a new NL80211_ATTR_SMPS_MODE attribue to allow
+configuring the smps mode to be used by the ap
+(e.g. configuring to ap to dynamic smps mode will
+reduce power consumption while having minor effect
+on throughput)
 
-> From what I've tested just now it seems iwldvm (3.17-rc2, fw
-> 18.168.6.1) calls ieee80211_chswitch_done() almost immediately most of
-> the time. This obviously ends up with beacon loss with larger CS
-> count. With small CS count it works though. This doesn't seem to be
-> related to the missing hw_confg().
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+WARNING: this will probably conflict with other patches I have sent earlier
+This is based on your current mac80211-next.
+---
+ include/net/cfg80211.h       |  2 ++
+ include/uapi/linux/nl80211.h | 33 +++++++++++++++++++++++++++++++++
+ net/wireless/nl80211.c       | 24 ++++++++++++++++++++++++
+ 3 files changed, 59 insertions(+)
 
-The hw_config() call is not really missing, right? We're actually now
-calling it even for drivers that implement drv_channel_switch()
-(previously we wouldn't).
-
-I don't know why iwldvm is finalizing the channel switch almost
-immediately... It doesn't make much sense, because all the traffic until
-the switch will be lost.  Unless the CSA is marked as "quiet", because
-then nobody should be transmitting and it doesn't really matter when you
-switched.
-
-Anyway, I don't think the problem is that we call hw_config() now,
-because that is done *after* chswitch_done() is called.
-
-
-> Now that I think it's probably a good idea to make multi-vif CSA
-> mutually exlusive with drv_channel_switch() based STA CSA..
-
-In the iwlmvm driver, we have to do the actual context switch when we
-decide to, not exactly at TBTT count=0 as mac80211 does with "software
-channel switch".  The way I solved this (will be upstreamed soon, I
-believe) is that I implement a dummy drv_channel_switch().  I only do
-this to prevent mac80211 from starting its own timer, allowing me to
-call ieee80211_chswitch_done() when I need to.
-
---
-Luca.
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 0d17ec9..d2aa555 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -664,6 +664,7 @@ struct cfg80211_acl_data {
+  * @crypto: crypto settings
+  * @privacy: the BSS uses privacy
+  * @auth_type: Authentication type (algorithm)
++ * @smps_mode: SMPS mode
+  * @inactivity_timeout: time in seconds to determine station's inactivity.
+  * @p2p_ctwindow: P2P CT Window
+  * @p2p_opp_ps: P2P opportunistic PS
+@@ -682,6 +683,7 @@ struct cfg80211_ap_settings {
+ 	struct cfg80211_crypto_settings crypto;
+ 	bool privacy;
+ 	enum nl80211_auth_type auth_type;
++	enum nl80211_smps_mode smps_mode;
+ 	int inactivity_timeout;
+ 	u8 p2p_ctwindow;
+ 	bool p2p_opp_ps;
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 29c4399..cca29f7 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1611,6 +1611,9 @@ enum nl80211_commands {
+  *	drivers to indicate dynack capability. Dynack is automatically disabled
+  *	setting valid value for coverage class.
+  *
++ * @NL80211_ATTR_SMPS_MODE: SMPS mode to use (ap mode). see
++ *	&enum nl80211_smps_mode.
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -1957,6 +1960,8 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_WIPHY_DYN_ACK,
+ 
++	NL80211_ATTR_SMPS_MODE,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -4002,6 +4007,13 @@ enum nl80211_ap_sme_features {
+  * @NL80211_FEATURE_ACKTO_ESTIMATION: This driver supports dynamic ACK timeout
+  *	estimation (dynack). %NL80211_ATTR_WIPHY_DYN_ACK flag attribute is used
+  *	to enable dynack.
++ * @NL80211_FEATURE_STATIC_SMPS: Device supports static spatial
++ *	multiplexing powersave, ie. can turn off all but one chain
++ *	even on HT connections that should be using more chains.
++ * @NL80211_FEATURE_DYNAMIC_SMPS: Device supports dynamic spatial
++ *	multiplexing powersave, ie. can turn off all but one chain
++ *	and then wake the rest up as required after, for example,
++ *	rts/cts handshake.
+  */
+ enum nl80211_feature_flags {
+ 	NL80211_FEATURE_SK_TX_STATUS			= 1 << 0,
+@@ -4028,6 +4040,8 @@ enum nl80211_feature_flags {
+ 	NL80211_FEATURE_QUIET				= 1 << 21,
+ 	NL80211_FEATURE_TX_POWER_INSERTION		= 1 << 22,
+ 	NL80211_FEATURE_ACKTO_ESTIMATION		= 1 << 23,
++	NL80211_FEATURE_STATIC_SMPS			= 1 << 24,
++	NL80211_FEATURE_DYNAMIC_SMPS			= 1 << 25,
+ };
+ 
+ /**
+@@ -4102,6 +4116,25 @@ enum nl80211_acl_policy {
+ };
+ 
+ /**
++ * enum nl80211_smps_mode - SMPS mode
++ *
++ * Requested SMPS mode (for AP mode)
++ *
++ * @NL80211_SMPS_OFF: SMPS off (use all antennas).
++ * @NL80211_SMPS_STATIC: static SMPS (use a single antenna)
++ * @NL80211_SMPS_DYNAMIC: dynamic smps (start with a single antenna and
++ *	turn on other antennas after CTS/RTS).
++ */
++enum nl80211_smps_mode {
++	NL80211_SMPS_OFF,
++	NL80211_SMPS_STATIC,
++	NL80211_SMPS_DYNAMIC,
++
++	__NL80211_SMPS_AFTER_LAST,
++	NL80211_SMPS_MAX = __NL80211_SMPS_AFTER_LAST - 1
++};
++
++/**
+  * enum nl80211_radar_event - type of radar event for DFS operation
+  *
+  * Type of event to be used with NL80211_ATTR_RADAR_EVENT to inform userspace
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index cf178d2..00ccfb2 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -391,6 +391,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
+ 	[NL80211_ATTR_IFACE_SOCKET_OWNER] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_CSA_C_OFFSETS_TX] = { .type = NLA_BINARY },
+ 	[NL80211_ATTR_USE_RRM] = { .type = NLA_FLAG },
++	[NL80211_ATTR_SMPS_MODE] = { .type = NLA_U8 },
+ };
+ 
+ /* policy for the key attributes */
+@@ -3339,6 +3340,29 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
+ 			return PTR_ERR(params.acl);
+ 	}
+ 
++	if (info->attrs[NL80211_ATTR_SMPS_MODE]) {
++		params.smps_mode =
++			nla_get_u8(info->attrs[NL80211_ATTR_SMPS_MODE]);
++		switch (params.smps_mode) {
++		case NL80211_SMPS_OFF:
++			break;
++		case NL80211_SMPS_STATIC:
++			if (!(rdev->wiphy.features &
++			      NL80211_FEATURE_STATIC_SMPS))
++				return -EINVAL;
++			break;
++		case NL80211_SMPS_DYNAMIC:
++			if (!(rdev->wiphy.features &
++			      NL80211_FEATURE_DYNAMIC_SMPS))
++				return -EINVAL;
++			break;
++		default:
++			return -EINVAL;
++		}
++	} else {
++		params.smps_mode = NL80211_SMPS_OFF;
++	}
++
+ 	wdev_lock(wdev);
+ 	err = rdev_start_ap(rdev, dev, &params);
+ 	if (!err) {
+-- 
+1.9.1
 
