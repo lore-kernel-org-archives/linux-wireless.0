@@ -1,104 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:44852 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751092AbaIJME2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Sep 2014 08:04:28 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH] cfg80211: clear nl80211 messages carrying keys after processing
-Date: Wed, 10 Sep 2014 15:00:16 +0300
-Message-Id: <1410350416-16339-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140910_140431_323449_C99071F4)
+Received: from relay6-d.mail.gandi.net ([217.70.183.198]:49245 "EHLO
+	relay6-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751344AbaIJLZV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Sep 2014 07:25:21 -0400
+Message-ID: <1410348304.4077.29.camel@hadess.net> (sfid-20140910_132524_421093_5BC80550)
+Subject: Re: Realtek GPIO chipset, for Baytrail?
+From: Bastien Nocera <hadess@hadess.net>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Wed, 10 Sep 2014 13:25:04 +0200
+In-Reply-To: <54102635.2040403@broadcom.com>
+References: <1410256608.4077.7.camel@hadess.net>
+		 <540F54B1.8040409@lwfinger.net> <1410292835.4077.21.camel@hadess.net>
+		 <540F61FE.2050404@lwfinger.net>
+		 <7234781D-5B78-404A-B945-D090938777C7@hadess.net>
+		 <D08A763F-AD50-449D-98C6-B82866F49480@holtmann.org>
+		 <54100FF7.5060904@broadcom.com> <1410342645.4077.28.camel@hadess.net>
+	 <54102635.2040403@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Wed, 2014-09-10 at 12:21 +0200, Arend van Spriel wrote:
+> On 09/10/14 11:50, Bastien Nocera wrote:
+> > On Wed, 2014-09-10 at 10:46 +0200, Arend van Spriel wrote:
+> >> On 09/10/14 01:10, Marcel Holtmann wrote:
+> >>> Hi Bastien,
+> >>>
+> >>>>>>> What specific Baytrail tablet do you have?
+> >>>>>>
+> >>>>>> The Onda v975w. It came with Windows 8.1 32-bit.
+> >>>>>>
+> >>>>>> I guess that the device is probably a PCI one, but the enumeration is
+> >>>>>> done through ACPI instead of "normal" PCI.
+> >>>>>
+> >>>>> In http://www.onda-tablet.com/onda-v975w-quad-core-win-8-tablet-9-7-inch-retina-screen-ram-2gb-wifi-32gb.html, someone is specifically looking for an RTL8723BS driver.
+> >>>>
+> >>>> That's helpful.
+> >>>>
+> >>>>> I will see if my contact at Realtek knows who has worked on drivers for this device, and if it would be possible to use rtl8723be if we were to supply an SDIO frontend.
+> >>>>
+> >>>> I'm not sure why the device doesn't show up in the sysfs tree, but maybe it needs a driver bound to it to show up.
+> >>>
+> >>> I just booted up my Baytrail based Minnowboard Max in ACPI enumeration and then the SDIO host controller is enumerated via ACPI. This is compared to PCI enumeration where the SDIO controller shows up in lspci.
+> >>>
+> >>> So can you try to install sdhci-acpi and see if that starts showing SDIO devices. If the SDIO host controllers loads, then it start SDIO enumeration and you would see the cards.
+> >>
+> >> You may need to look in /sys/bus/mmc/devices/ instead of sdio.
+> >
+> > Indeed. That did the trick.
+> >
+> > mmc0:0001 is the builtin storage, mmc1:0001:1 however is an unbound
+> > device with vendor 0x024c and device 0xb723 (modalias:
+> > sdio:c07v024CdB723). More interestingly class is 0x07, which udev
+> > interprets as "WLAN interface".
+> 
+> Now you have to find and load the right driver.
 
-Clear any nl80211 messages that might contain keys after
-processing them to avoid leaving their data in memory
-"forever" after they've been freed.
+Right. I'll have to defer to Larry's inquiry about this with Realtek, to
+check whether it's the same interface as the PCI RTL8723be.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- net/wireless/nl80211.c | 25 +++++++++++++++++++++----
- 1 file changed, 21 insertions(+), 4 deletions(-)
-
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 51eb526..1dea517 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -9587,6 +9587,7 @@ static int nl80211_del_tx_ts(struct sk_buff *skb, struct genl_info *info)
- /* If a netdev is associated, it must be UP, P2P must be started */
- #define NL80211_FLAG_NEED_WDEV_UP	(NL80211_FLAG_NEED_WDEV |\
- 					 NL80211_FLAG_CHECK_NETDEV_UP)
-+#define NL80211_FLAG_CLEAR_SKB		0x20
- 
- static int nl80211_pre_doit(__genl_const struct genl_ops *ops, struct sk_buff *skb,
- 			    struct genl_info *info)
-@@ -9676,8 +9677,20 @@ static void nl80211_post_doit(__genl_const struct genl_ops *ops, struct sk_buff
- 			dev_put(info->user_ptr[1]);
- 		}
- 	}
-+
- 	if (ops->internal_flags & NL80211_FLAG_NEED_RTNL)
- 		rtnl_unlock();
-+
-+	/* If needed, clear the netlink message payload from the SKB
-+	 * as it might contain key data that shouldn't stick around on
-+	 * the heap after the SKB is freed. The netlink message header
-+	 * is still needed for further processing, so leave it intact.
-+	 */
-+	if (ops->internal_flags & NL80211_FLAG_CLEAR_SKB) {
-+		struct nlmsghdr *nlh = nlmsg_hdr(skb);
-+
-+		memset(nlmsg_data(nlh), 0, nlmsg_len(nlh));
-+	}
- }
- 
- static __genl_const struct genl_ops nl80211_ops[] = {
-@@ -9745,7 +9758,8 @@ static __genl_const struct genl_ops nl80211_ops[] = {
- 		.policy = nl80211_policy,
- 		.flags = GENL_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
--				  NL80211_FLAG_NEED_RTNL,
-+				  NL80211_FLAG_NEED_RTNL |
-+				  NL80211_FLAG_CLEAR_SKB,
- 	},
- 	{
- 		.cmd = NL80211_CMD_NEW_KEY,
-@@ -9753,7 +9767,8 @@ static __genl_const struct genl_ops nl80211_ops[] = {
- 		.policy = nl80211_policy,
- 		.flags = GENL_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
--				  NL80211_FLAG_NEED_RTNL,
-+				  NL80211_FLAG_NEED_RTNL |
-+				  NL80211_FLAG_CLEAR_SKB,
- 	},
- 	{
- 		.cmd = NL80211_CMD_DEL_KEY,
-@@ -9931,7 +9946,8 @@ static __genl_const struct genl_ops nl80211_ops[] = {
- 		.policy = nl80211_policy,
- 		.flags = GENL_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
--				  NL80211_FLAG_NEED_RTNL,
-+				  NL80211_FLAG_NEED_RTNL |
-+				  NL80211_FLAG_CLEAR_SKB,
- 	},
- 	{
- 		.cmd = NL80211_CMD_ASSOCIATE,
-@@ -10165,7 +10181,8 @@ static __genl_const struct genl_ops nl80211_ops[] = {
- 		.policy = nl80211_policy,
- 		.flags = GENL_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
--				  NL80211_FLAG_NEED_RTNL,
-+				  NL80211_FLAG_NEED_RTNL |
-+				  NL80211_FLAG_CLEAR_SKB,
- 	},
- 	{
- 		.cmd = NL80211_CMD_TDLS_MGMT,
--- 
-1.9.1
+Cheers
 
