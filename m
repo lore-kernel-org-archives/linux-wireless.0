@@ -1,102 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f177.google.com ([74.125.82.177]:54050 "EHLO
-	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753991AbaICT4r (ORCPT
+Received: from mo4-p00-ob.smtp.rzone.de ([81.169.146.220]:10349 "EHLO
+	mo4-p00-ob.smtp.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751141AbaIJQbb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Sep 2014 15:56:47 -0400
-Received: by mail-we0-f177.google.com with SMTP id u56so9013141wes.8
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Sep 2014 12:56:46 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eyal Shapira <eyal@wizery.com>,
-	Eyal Shapira <eyalx.shapira@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 12/36] iwlwifi: mvm: disable tx aggregation on low latency vifs
-Date: Wed,  3 Sep 2014 22:56:00 +0300
-Message-Id: <1409774184-24665-12-git-send-email-egrumbach@gmail.com> (sfid-20140903_215652_144509_83E70C7A)
-In-Reply-To: <540771E5.6080908@gmail.com>
-References: <540771E5.6080908@gmail.com>
+	Wed, 10 Sep 2014 12:31:31 -0400
+Message-ID: <54107CD6.5040109@hartkopp.net> (sfid-20140910_183138_610948_B68F4D79)
+Date: Wed, 10 Sep 2014 18:31:18 +0200
+From: Oliver Hartkopp <socketcan@hartkopp.net>
+MIME-Version: 1.0
+To: Vadim Kochan <vadim4j@gmail.com>,
+	Emmanuel Grumbach <egrumbach@gmail.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Subject: Re: iwlwifi no authentication with AP - Re: pull request: wireless-next
+ 2014-09-08
+References: <20140908191630.GB29412@tuxdriver.com>	<540F5927.7000306@hartkopp.net>	<CANUX_P3n0v1SzfbYuaAsE4TY7Hz_wo2Fb9SmHVNyFOC9hDhwdg@mail.gmail.com>	<540F61D0.9000704@hartkopp.net>	<CAMw6YJLeO1JZeY6hNe-TXOS56b-otk+htt5VPPor+9iYCQz53Q@mail.gmail.com>	<540FDB3C.6060301@hartkopp.net>	<CANUX_P3kOetqEneHgqoCDN4c85SQYD-G=mQj_o1c_TvKmE5psA@mail.gmail.com> <CAMw6YJKgVVnDrn1X7atemC1r9kwvsr3PQDs4qx5KDeeNy-P3VA@mail.gmail.com> <54101888.8080601@hartkopp.net>
+In-Reply-To: <54101888.8080601@hartkopp.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+On 10.09.2014 11:23, Oliver Hartkopp wrote:
+> Hi all,
+> 
+> yes for me too.
+> 
+> Although I only could test it here with my mobile hotspot which only supports
+> WEP ... but before that hotspot was not working too.
+> 
+> I'll check with my WPA2 setup again when I'm back home (if it's still needed).
+> 
 
-Aggregations hit latency so disable it by default on
-low latency vifs for now. Enable control over this behavior and
-allow control over the max frames in an AMPDU in low latency
-vifs via debugfs.
+Just fyi - it also works @home with WPA2.
+Tnx, Oliver
 
-Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/debugfs.c | 4 ++++
- drivers/net/wireless/iwlwifi/mvm/mvm.h     | 2 ++
- drivers/net/wireless/iwlwifi/mvm/ops.c     | 1 +
- drivers/net/wireless/iwlwifi/mvm/rs.c      | 8 +++++++-
- 4 files changed, 14 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-index 1fcbc23..f85d4f4 100644
---- a/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-@@ -1447,6 +1447,10 @@ int iwl_mvm_dbgfs_register(struct iwl_mvm *mvm, struct dentry *dbgfs_dir)
- 		goto err;
- #endif
- 
-+	if (!debugfs_create_u8("low_latency_agg_frame_limit", S_IRUSR | S_IWUSR,
-+			       mvm->debugfs_dir,
-+			       &mvm->low_latency_agg_frame_limit))
-+		goto err;
- 	if (!debugfs_create_u8("ps_disabled", S_IRUSR,
- 			       mvm->debugfs_dir, &mvm->ps_disabled))
- 		goto err;
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index d6b00b9..08cb26d 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -727,6 +727,8 @@ struct iwl_mvm {
- 
- 	/* system time of last beacon (for AP/GO interface) */
- 	u32 ap_last_beacon_gp2;
-+
-+	u8 low_latency_agg_frame_limit;
- };
- 
- /* Extract MVM priv from op_mode and _hw */
-diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
-index 610dbcb..e3be34f 100644
---- a/drivers/net/wireless/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
-@@ -415,6 +415,7 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
- 		mvm->first_agg_queue = 12;
- 	}
- 	mvm->sf_state = SF_UNINIT;
-+	mvm->low_latency_agg_frame_limit = 1;
- 
- 	mutex_init(&mvm->mutex);
- 	mutex_init(&mvm->d0i3_suspend_mutex);
-diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
-index b7a1efc..940e0d0 100644
---- a/drivers/net/wireless/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
-@@ -2855,9 +2855,15 @@ static void rs_fill_lq_cmd(struct iwl_mvm *mvm,
- 	 * Tx Fifo so that it can start a transaction in the same TxOP. This
- 	 * basically allows the firmware to send bursts.
- 	 */
--	if (iwl_mvm_vif_low_latency(mvmvif))
-+	if (iwl_mvm_vif_low_latency(mvmvif)) {
- 		lq_cmd->agg_frame_cnt_limit--;
- 
-+		if (mvm->low_latency_agg_frame_limit)
-+			lq_cmd->agg_frame_cnt_limit =
-+				min(lq_cmd->agg_frame_cnt_limit,
-+				    mvm->low_latency_agg_frame_limit);
-+	}
-+
- 	if (mvmsta->vif->p2p)
- 		lq_cmd->flags |= LQ_FLAG_USE_RTS_MSK;
- 
--- 
-1.9.1
-
+> So far feel free to add my
+> 
+> Reported-by: Oliver Hartkopp <socketcan@hartkopp.net>
+> Tested-by: Oliver Hartkopp <socketcan@hartkopp.net>
+> 
+> Many thanks for your quick reaction!
+> 
+> Best regards,
+> Oliver
+> 
+> On 10.09.2014 11:16, Vadim Kochan wrote:
+>> Hi,
+>>
+>> Your patch works for me.
+>>
+>> On Wed, Sep 10, 2014 at 11:24 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+>>> On Wed, Sep 10, 2014 at 8:01 AM, Oliver Hartkopp <socketcan@hartkopp.net> wrote:
+>>>> On 10.09.2014 00:07, Vadim Kochan wrote:
+>>>>> I have the same issue with iwlwifi.
+>>>>
+>>>> I tried an old zd1211 wireless USB stick to check if this problem is 80211
+>>>> related. But the USB stick works fine (I'm using it right now).
+>>>> So its definitely looks like an iwlwifi issue.
+>>>>
+>>>>> iwlwifi 0000:02:00.0: fail to flush all tx fifo queues Q 0
+>>>>
+>>>> Wasn't there any change in the iwlwifi tx path recently??
+>>>
+>>> Can you please try the patch attached? It works for me.
+>>>
+>>>>
+>>>> Regards,
+>>>> Oliver
+>>>>
+>>>>>
+> --
+> To unsubscribe from this list: send the line "unsubscribe netdev" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
