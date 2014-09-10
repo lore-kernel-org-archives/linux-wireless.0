@@ -1,70 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f178.google.com ([74.125.82.178]:36584 "EHLO
-	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753907AbaIHQ4d (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:33944 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751614AbaIJNgE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Sep 2014 12:56:33 -0400
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eliad Peller <eliad@wizery.com>, <stable@vger.kernel.org>,
-	Eliad Peller <eliadx.peller@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 05/12] iwlwifi: increase DEFAULT_MAX_TX_POWER
-Date: Mon,  8 Sep 2014 19:56:10 +0300
-Message-Id: <1410195377-10075-5-git-send-email-egrumbach@gmail.com> (sfid-20140908_185636_701004_14453491)
-In-Reply-To: <540DDF37.5030801@gmail.com>
-References: <540DDF37.5030801@gmail.com>
+	Wed, 10 Sep 2014 09:36:04 -0400
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: [PATCH 22/22] wil6210: fix PTR_ERR() usage after initialization to constant
+Date: Wed, 10 Sep 2014 16:34:51 +0300
+Message-ID: <1410356091-19219-23-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140910_153610_513157_F8F89262)
+In-Reply-To: <1410356091-19219-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1410356091-19219-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+Reported by coccinelle:
 
-The chip is able to transmit up to 22dBm, so set
-the constant appropriately.
+tree:   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next.git master
+head:   6a5d088a923854569e20eac4f3f569926d5911ec
+commit: b7cde47009640b88cb3629ee7078a43bc2642459 [18/80] wil6210: convert debugfs to the table mode
 
-CC: <stable@vger.kernel.org> [3.13+]
-Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+coccinelle warnings: (new ones prefixed by >>)
+
+>> drivers/net/wireless/ath/wil6210/debugfs.c:327:17-24: ERROR: PTR_ERR applied after initialization to constant on line 304
+
+vim +327 drivers/net/wireless/ath/wil6210/debugfs.c
+
+   298                                          struct dentry *dbg, void *base,
+   299                                          const struct dbg_off * const tbl)
+   300  {
+   301          int i;
+   302
+   303          for (i = 0; tbl[i].name; i++) {
+
+ > 304                  struct dentry *f = NULL;
+   305
+   306                  switch (tbl[i].type) {
+   307                  case doff_u32:
+   308                          f = debugfs_create_u32(tbl[i].name, tbl[i].mode, dbg,
+   309                                                 base + tbl[i].off);
+   310                          break;
+   311                  case doff_x32:
+   312                          f = debugfs_create_x32(tbl[i].name, tbl[i].mode, dbg,
+   313                                                 base + tbl[i].off);
+   314                          break;
+   315                  case doff_ulong:
+   316                          f = wil_debugfs_create_ulong(tbl[i].name, tbl[i].mode,
+   317                                                       dbg, base + tbl[i].off);
+   318                          break;
+   319                  case doff_io32:
+   320                          f = wil_debugfs_create_iomem_x32(tbl[i].name,
+   321                                                           tbl[i].mode, dbg,
+   322                                                           base + tbl[i].off);
+   323                          break;
+   324                  }
+   325                  if (IS_ERR_OR_NULL(f))
+   326                          wil_err(wil, "Create file \"%s\": err %ld\n",
+
+ > 327                                  tbl[i].name, PTR_ERR(f));
+   328          }
+   329  }
+   330
+
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-config.h    | 2 ++
- drivers/net/wireless/iwlwifi/iwl-nvm-parse.c | 4 +---
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/wil6210/debugfs.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-config.h b/drivers/net/wireless/iwlwifi/iwl-config.h
-index 8da596d..942c99b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-config.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-config.h
-@@ -120,6 +120,8 @@ enum iwl_led_mode {
- #define IWL_LONG_WD_TIMEOUT	10000
- #define IWL_MAX_WD_TIMEOUT	120000
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index 21dc437..eb2204e 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -308,7 +308,7 @@ static void wil6210_debugfs_init_offset(struct wil6210_priv *wil,
+ 	int i;
  
-+#define IWL_DEFAULT_MAX_TX_POWER 22
-+
- /* Antenna presence definitions */
- #define	ANT_NONE	0x0
- #define	ANT_A		BIT(0)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-index 018af29..354255f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-@@ -146,8 +146,6 @@ static const u8 iwl_nvm_channels_family_8000[] = {
- #define LAST_2GHZ_HT_PLUS		9
- #define LAST_5GHZ_HT			161
+ 	for (i = 0; tbl[i].name; i++) {
+-		struct dentry *f = NULL;
++		struct dentry *f;
  
--#define DEFAULT_MAX_TX_POWER 16
--
- /* rate data (static) */
- static struct ieee80211_rate iwl_cfg80211_rates[] = {
- 	{ .bitrate = 1 * 10, .hw_value = 0, .hw_value_short = 0, },
-@@ -295,7 +293,7 @@ static int iwl_init_channel_map(struct device *dev, const struct iwl_cfg *cfg,
- 		 * Default value - highest tx power value.  max_power
- 		 * is not used in mvm, and is used for backwards compatibility
- 		 */
--		channel->max_power = DEFAULT_MAX_TX_POWER;
-+		channel->max_power = IWL_DEFAULT_MAX_TX_POWER;
- 		is_5ghz = channel->band == IEEE80211_BAND_5GHZ;
- 		IWL_DEBUG_EEPROM(dev,
- 				 "Ch. %d [%sGHz] %s%s%s%s%s%s%s(0x%02x %ddBm): Ad-Hoc %ssupported\n",
+ 		switch (tbl[i].type) {
+ 		case doff_u32:
+@@ -328,6 +328,8 @@ static void wil6210_debugfs_init_offset(struct wil6210_priv *wil,
+ 							 tbl[i].mode, dbg,
+ 							 base + tbl[i].off);
+ 			break;
++		default:
++			f = ERR_PTR(-EINVAL);
+ 		}
+ 		if (IS_ERR_OR_NULL(f))
+ 			wil_err(wil, "Create file \"%s\": err %ld\n",
 -- 
 1.9.1
 
