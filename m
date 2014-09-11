@@ -1,56 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:33639 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752965AbaI3Iot (ORCPT
+Received: from relay1.mentorg.com ([192.94.38.131]:57542 "EHLO
+	relay1.mentorg.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752186AbaIKECy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Sep 2014 04:44:49 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH] ath9k: Check early for HW reset
-Date: Tue, 30 Sep 2014 14:15:23 +0530
-Message-Id: <1412066723-6628-1-git-send-email-sujith@msujith.org> (sfid-20140930_104501_562291_6CEDED8E)
+	Thu, 11 Sep 2014 00:02:54 -0400
+From: "Sharma, Sanjeev" <Sanjeev_Sharma@mentor.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "dsd@gentoo.org" <dsd@gentoo.org>,
+	"kune@deine-taler.de" <kune@deine-taler.de>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH] zd1211rw: replace ZD_ASSERT with lockdep_assert_held()
+Date: Thu, 11 Sep 2014 04:02:49 +0000
+Message-ID: <FDC088D3B5555644AE135ED28A7ABDE94DF4D490@EU-MBX-02.mgc.mentorg.com> (sfid-20140911_060320_595202_42F462F4)
+References: <1407827133-29493-1-git-send-email-sanjeev_sharma@mentor.com>
+	 <FDC088D3B5555644AE135ED28A7ABDE94DF2FDC2@EU-MBX-02.mgc.mentorg.com>
+	 (sfid-20140819_083957_833442_DEE44B0A)
+ <1408707084.4349.0.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1408707084.4349.0.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-
-chan_lock is not required for checking if
-we are in the middle of a HW reset, so do it
-early. This also removes the small window
-where the lock is dropped and reacquired.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/xmit.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index aae70a1..7193a00 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1839,15 +1839,17 @@ void ath_txq_schedule(struct ath_softc *sc, struct ath_txq *txq)
- 	if (txq->mac80211_qnum < 0)
- 		return;
- 
-+	if (test_bit(ATH_OP_HW_RESET, &common->op_flags))
-+		return;
-+
- 	spin_lock_bh(&sc->chan_lock);
- 	ac_list = &sc->cur_chan->acq[txq->mac80211_qnum];
--	spin_unlock_bh(&sc->chan_lock);
- 
--	if (test_bit(ATH_OP_HW_RESET, &common->op_flags) ||
--	    list_empty(ac_list))
-+	if (list_empty(ac_list)) {
-+		spin_unlock_bh(&sc->chan_lock);
- 		return;
-+	}
- 
--	spin_lock_bh(&sc->chan_lock);
- 	rcu_read_lock();
- 
- 	last_ac = list_entry(ac_list->prev, struct ath_atx_ac, list);
--- 
-2.1.1
-
+LS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEpvaGFubmVzIEJlcmcgW21haWx0bzpq
+b2hhbm5lc0BzaXBzb2x1dGlvbnMubmV0XSANClNlbnQ6IEZyaWRheSwgQXVndXN0IDIyLCAyMDE0
+IDU6MDEgUE0NClRvOiBTaGFybWEsIFNhbmplZXYNCkNjOiBkc2RAZ2VudG9vLm9yZzsga3VuZUBk
+ZWluZS10YWxlci5kZTsgbGludmlsbGVAdHV4ZHJpdmVyLmNvbTsgbGludXgtd2lyZWxlc3NAdmdl
+ci5rZXJuZWwub3JnOyBuZXRkZXZAdmdlci5rZXJuZWwub3JnOyBsaW51eC1rZXJuZWxAdmdlci5r
+ZXJuZWwub3JnDQpTdWJqZWN0OiBSZTogW1BBVENIXSB6ZDEyMTFydzogcmVwbGFjZSBaRF9BU1NF
+UlQgd2l0aCBsb2NrZGVwX2Fzc2VydF9oZWxkKCkNCg0KT24gVHVlLCAyMDE0LTA4LTE5IGF0IDA2
+OjM5ICswMDAwLCBTaGFybWEsIFNhbmplZXYgd3JvdGU6DQo+IFBpbmcgZm9yIHJldmlldyB0aGUg
+cGF0Y2guDQoNCj4gTWFrZSBzdXJlIGl0IGNvbXBpbGVzIC4uLg0KDQpBbnkgdXBkYXRlIG9uIHRo
+aXMgcGF0Y2ggPw0KDQpSZWdhcmRzDQpTYW5qZWV2IFNoYXJtYQ0KDQo=
