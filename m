@@ -1,64 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:37041 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752225AbaIJVBy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Sep 2014 17:01:54 -0400
-Message-ID: <5410BC17.8050207@intel.com> (sfid-20140910_230202_271850_39DFB017)
-Date: Wed, 10 Sep 2014 14:01:11 -0700
-From: Alexander Duyck <alexander.h.duyck@intel.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	davem@davemloft.net, linville@tuxdriver.com,
-	Eric Dumazet <eric.dumazet@gmail.com>
-Subject: Re: [PATCH net-next] mac80211: Check correct skb for shared states
- before freeing original
-References: <20140910200442.15961.84466.stgit@ahduyck-bv4.jf.intel.com>	 (sfid-20140910_221517_589456_8B140F20) <1410381187.2761.10.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1410381187.2761.10.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Received: from senator.holtmann.net ([87.106.208.187]:36522 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751146AbaIKQgg convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Sep 2014 12:36:36 -0400
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
+Subject: Re: Realtek GPIO chipset, for Baytrail?
+From: Marcel Holtmann <marcel@holtmann.org>
+In-Reply-To: <1410451261.32328.11.camel@hadess.net>
+Date: Thu, 11 Sep 2014 09:37:14 -0700
+Cc: Loic Poulain <loic.poulain@intel.com>,
+	linux-wireless@vger.kernel.org
+Message-Id: <5F46C78F-1749-480F-B90C-702509D963AD@holtmann.org> (sfid-20140911_183641_222030_73819191)
+References: <1410256608.4077.7.camel@hadess.net> <F79C10A5-18F8-4165-BFC5-FDAD35BE46BE@holtmann.org> <5411C2BE.6090702@intel.com> <1410451261.32328.11.camel@hadess.net>
+To: Bastien Nocera <hadess@hadess.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/10/2014 01:33 PM, Johannes Berg wrote:
-> On Wed, 2014-09-10 at 16:06 -0400, Alexander Duyck wrote:
->> The code for cloning the skb for an acknowledgement was checking to see if
->> the cloned skb was shared and if it was it was then freeing the original
->> skb.  Since a clone should never really be shared I suspect that the
->> intention was to avoid freeing the clone if the original was shared.  As
->> such I am updating the code so that if the original is shared we free the
->> original and use the clone.  This avoids unnecessary work in the next
->> section where we would be cloning the skb if the original is shared.
-> 
-> Thanks, yeah, I admit that this is clearly fishy.
-> 
->> @@ -2087,7 +2087,7 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
->>  			if (id >= 0) {
->>  				info_id = id;
->>  				info_flags |= IEEE80211_TX_CTL_REQ_TX_STATUS;
-> 
-> Luckily, we practically always go into this path.
-> 
->> -			} else if (skb_shared(skb)) {
->> +			} else if (skb_shared(orig_skb)) {
->>  				kfree_skb(orig_skb);
->>  			} else {
->>  				kfree_skb(skb);
-> 
-> We have a clone already so we could just remove the whole "else if" I
-> think, but I'm guessing my intent was to keep it accounted to the socket
-> where possible rather than freeing the original in all cases.
-> 
-> So yeah, I think this makes sense. Maybe we should add a comment to the
-> if though to explain this?
-> 
-> johannes
+Hi Bastien,
 
-Actually I think we may need to take a different approach.  The reason I
-was in this code was to take a look at a possible refcount issue.
+>> Your device is a child of 80860F0A (UART) which is driven by the 8250_dw 
+>> driver.
+>> OBDA8723 is the BT part of the realtek 8723 WiFi/BT combo chip.
+>> acpi_platform should create a platform device from the ACPI desc.
+> 
+> That does show up already in udev, so I should be fine.
+> 
+>> Then, you can add the OBDA8723 acpi id to the rfkill-gpio platform 
+>> driver (net/rfkill) which
+>> seems to handle correctly the basic power management of this chip.
+> 
+> OK. Something like that should do:
+> http://paste.fedoraproject.org/132832/14104505
+> 
+>> You need to use hciattach to attach the chip to the BT stack (with 
+>> H5/3-wire proto).
+> 
+> Will that be required to enable Bluetooth at every boot?
+> 
+> After inserting the above module, I ran:
+> hciattach -n ttyS0 3wire
+> 
+> But no Bluetooth adapters showed up in hciconfig. The rfkill device did
+> show up in rfkill list though.
 
-I'll be submitting another patch in a few minutes and will probably be
-dropping some of this code anyway.
+my bet is that you need to start with the correct default speed, load some firmware and do more settings and then switch to the faster speed. There is an effort ongoing for the USB version of Realtek Bluetooth, but even that one has not yet completed.
 
-Thanks,
+Regards
 
-Alex
+Marcel
+
