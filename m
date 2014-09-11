@@ -1,40 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:56176 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752244AbaIKKmb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Sep 2014 06:42:31 -0400
-Message-ID: <1410432139.22863.10.camel@jlt4.sipsolutions.net> (sfid-20140911_124302_618464_5F930B47)
-Subject: Re: [PATCH v2] zd1211rw: replace ZD_ASSERT with
- lockdep_assert_held()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Sharma, Sanjeev" <Sanjeev_Sharma@mentor.com>
-Cc: "dsd@gentoo.org" <dsd@gentoo.org>,
-	"kune@deine-taler.de" <kune@deine-taler.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Date: Thu, 11 Sep 2014 12:42:19 +0200
-In-Reply-To: <FDC088D3B5555644AE135ED28A7ABDE94DF5256D@EU-MBX-02.mgc.mentorg.com>
-References: <1410418407.1825.0.camel@jlt4.sipsolutions.net>
-	 <1410430179-19944-1-git-send-email-sanjeev_sharma@mentor.com>
-	 (sfid-20140911_121019_335368_163BEA7C) <1410430345.22863.0.camel@jlt4.sipsolutions.net>
-	 <FDC088D3B5555644AE135ED28A7ABDE94DF5256D@EU-MBX-02.mgc.mentorg.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-qa0-f47.google.com ([209.85.216.47]:45581 "EHLO
+	mail-qa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751117AbaIKKni (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Sep 2014 06:43:38 -0400
+Received: by mail-qa0-f47.google.com with SMTP id dc16so55910qab.20
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Sep 2014 03:43:37 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1410430692.22863.2.camel@jlt4.sipsolutions.net>
+References: <1409922404-8217-1-git-send-email-henning.rogge@fkie.fraunhofer.de>
+ <1409922404-8217-2-git-send-email-henning.rogge@fkie.fraunhofer.de> <1410430692.22863.2.camel@jlt4.sipsolutions.net>
+From: Henning Rogge <hrogge@gmail.com>
+Date: Thu, 11 Sep 2014 12:43:17 +0200
+Message-ID: <CAGnRvuovr_POseervRNz3hRU3DSJ+pe5iYrL=4xc5BnjsQEDKA@mail.gmail.com> (sfid-20140911_124342_313130_E43EB1E4)
+Subject: Re: [PATCH v3 1/2] cfg80211: add ops to query mesh proxy path table
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Henning Rogge <henning.rogge@fkie.fraunhofer.de>,
+	Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-09-11 at 10:36 +0000, Sharma, Sanjeev wrote:
+On Thu, Sep 11, 2014 at 12:18 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Fri, 2014-09-05 at 15:06 +0200, Henning Rogge wrote:
+>> Add two new cfg80211 operations for querying the content of the the mac80211s proxy path table
+>
+> Please use shorter line lengths,
 
-> > -	ZD_ASSERT(!spin_is_locked(&mac->lock));
-> > +	lockdep_assert_held(&mac->lock);
+"git send-email" does not wrap the commit messages (first time to send
+a patch like this for me)?
 
-> >Look closely at this again.
-> 
-> I didn't understand where I  put wrong logic  ?
+> and formulate it in a generic way - this shouldn't be mac80211 specific.
 
-Ok, that's fine. But please send a new patch only when you've understood
-the logic.
+I will try...
 
-johannes
-
+Henning Rogge
