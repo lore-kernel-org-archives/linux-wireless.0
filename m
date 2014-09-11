@@ -1,62 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:42539 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751574AbaIXEh0 (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:44312 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757397AbaIKUvi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Sep 2014 00:37:26 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@qca.qualcomm.com
-Subject: [RFC 4/4] ath9k: Fix offchannel queuing
-Date: Wed, 24 Sep 2014 10:07:32 +0530
-Message-Id: <1411533452-22921-5-git-send-email-sujith@msujith.org> (sfid-20140924_063728_898990_9B0E3F9D)
-In-Reply-To: <1411533452-22921-1-git-send-email-sujith@msujith.org>
-References: <1411533452-22921-1-git-send-email-sujith@msujith.org>
+	Thu, 11 Sep 2014 16:51:38 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH for-3.17 3/3] brcmfmac: obtain ifp through wdev structure
+Date: Thu, 11 Sep 2014 22:51:32 +0200
+Message-ID: <1410468692-20852-4-git-send-email-arend@broadcom.com> (sfid-20140911_225145_692542_6A5742AF)
+In-Reply-To: <1410468692-20852-1-git-send-email-arend@broadcom.com>
+References: <1410468692-20852-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+For P2P_DEVICE interface the function brcmf_cfg80211_update_proto_addr_mode()
+resulted in a crash, because it assumed wdev->netdev would be valid. The
+ifp should be obtained through the driver vif structure which contains the
+wireless_dev.
 
-Clearing IEEE80211_TX_CTL_PS_RESPONSE in a frame
-that is not in the current context doesn't seem right.
-Instead make sure that we don't add such frames
-to the UAPSD queue by using a local variable.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/ath/ath9k/xmit.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 4d00f59..3e3a41c 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -2205,7 +2205,7 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	struct ath_txq *txq = txctl->txq;
- 	struct ath_atx_tid *tid = NULL;
- 	struct ath_buf *bf;
--	bool queue;
-+	bool queue, skip_uapsd;
- 	int q, ret;
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index 2e134a6..f3a9804 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -497,8 +497,11 @@ brcmf_configure_arp_offload(struct brcmf_if *ifp, bool enable)
+ static void
+ brcmf_cfg80211_update_proto_addr_mode(struct wireless_dev *wdev)
+ {
+-	struct net_device *ndev = wdev->netdev;
+-	struct brcmf_if *ifp = netdev_priv(ndev);
++	struct brcmf_cfg80211_vif *vif;
++	struct brcmf_if *ifp;
++
++	vif = container_of(wdev, struct brcmf_cfg80211_vif, wdev);
++	ifp = vif->ifp;
  
- 	if (vif)
-@@ -2243,14 +2243,14 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	     sc->cur_chan->stopped) && !txctl->force_channel) {
- 		if (!txctl->an)
- 			txctl->an = &avp->mcast_node;
--		info->flags &= ~IEEE80211_TX_CTL_PS_RESPONSE;
- 		queue = true;
-+		skip_uapsd = true;
- 	}
- 
- 	if (txctl->an && queue)
- 		tid = ath_get_skb_tid(sc, txctl->an, skb);
- 
--	if (info->flags & IEEE80211_TX_CTL_PS_RESPONSE) {
-+	if (!skip_uapsd && (info->flags & IEEE80211_TX_CTL_PS_RESPONSE)) {
- 		ath_txq_unlock(sc, txq);
- 		txq = sc->tx.uapsdq;
- 		ath_txq_lock(sc, txq);
+ 	if ((wdev->iftype == NL80211_IFTYPE_ADHOC) ||
+ 	    (wdev->iftype == NL80211_IFTYPE_AP) ||
 -- 
-2.1.0
+1.9.1
 
