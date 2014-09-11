@@ -1,56 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.perfora.net ([74.208.4.197]:60928 "EHLO mout.perfora.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:55251 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751000AbaIACXM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 Aug 2014 22:23:12 -0400
-From: Jim Rees <rees@umich.edu>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] Revert "iwlwifi: dvm: don't enable CTS to self"
-Date: Sun, 31 Aug 2014 22:22:27 -0400
-Message-Id: <1409538147-1564-1-git-send-email-rees@umich.edu> (sfid-20140901_042315_997053_0F423CC3)
+	id S1751266AbaIKGxk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Sep 2014 02:53:40 -0400
+Message-ID: <1410418407.1825.0.camel@jlt4.sipsolutions.net> (sfid-20140911_085401_276287_318F4F89)
+Subject: Re: [PATCH] zd1211rw: replace ZD_ASSERT with lockdep_assert_held()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Sharma, Sanjeev" <Sanjeev_Sharma@mentor.com>
+Cc: "dsd@gentoo.org" <dsd@gentoo.org>,
+	"kune@deine-taler.de" <kune@deine-taler.de>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Date: Thu, 11 Sep 2014 08:53:27 +0200
+In-Reply-To: <FDC088D3B5555644AE135ED28A7ABDE94DF4D490@EU-MBX-02.mgc.mentorg.com>
+References: <1407827133-29493-1-git-send-email-sanjeev_sharma@mentor.com>
+	 <FDC088D3B5555644AE135ED28A7ABDE94DF2FDC2@EU-MBX-02.mgc.mentorg.com>
+	 (sfid-20140819_083957_833442_DEE44B0A) <1408707084.4349.0.camel@jlt4.sipsolutions.net>
+	 <FDC088D3B5555644AE135ED28A7ABDE94DF4D490@EU-MBX-02.mgc.mentorg.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Without this revert, my Thinkpad x220 with iwlwifi Ultimate-N 6300 AGN gets
-35% packet drop rate.
+On Thu, 2014-09-11 at 04:02 +0000, Sharma, Sanjeev wrote:
+> -----Original Message-----
+> From: Johannes Berg [mailto:johannes@sipsolutions.net] 
+> Sent: Friday, August 22, 2014 5:01 PM
+> To: Sharma, Sanjeev
+> Cc: dsd@gentoo.org; kune@deine-taler.de; linville@tuxdriver.com; linux-wireless@vger.kernel.org; netdev@vger.kernel.org; linux-kernel@vger.kernel.org
+> Subject: Re: [PATCH] zd1211rw: replace ZD_ASSERT with lockdep_assert_held()
+> 
+> On Tue, 2014-08-19 at 06:39 +0000, Sharma, Sanjeev wrote:
+> > Ping for review the patch.
+> 
+> > Make sure it compiles ...
+> 
+> Any update on this patch ?
 
-This reverts commit 43d826ca5979927131685cc2092c7ce862cb91cd.
+I don't know, do you have any update for us?
 
-Signed-off-by: Jim Rees <rees@umich.edu>
----
- drivers/net/wireless/iwlwifi/dvm/rxon.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+Since your patch hasn't changed, it still cannot be compiled (when
+lockdep is enabled). Make sure you test your patch before you submit it
+again please.
 
-diff --git a/drivers/net/wireless/iwlwifi/dvm/rxon.c b/drivers/net/wireless/iwlwifi/dvm/rxon.c
-index 6dc5dd3..ed50de6 100644
---- a/drivers/net/wireless/iwlwifi/dvm/rxon.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/rxon.c
-@@ -1068,6 +1068,13 @@ int iwlagn_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
- 	/* recalculate basic rates */
- 	iwl_calc_basic_rates(priv, ctx);
- 
-+	/*
-+	 * force CTS-to-self frames protection if RTS-CTS is not preferred
-+	 * one aggregation protection method
-+	 */
-+	if (!priv->hw_params.use_rts_for_aggregation)
-+		ctx->staging.flags |= RXON_FLG_SELF_CTS_EN;
-+
- 	if ((ctx->vif && ctx->vif->bss_conf.use_short_slot) ||
- 	    !(ctx->staging.flags & RXON_FLG_BAND_24G_MSK))
- 		ctx->staging.flags |= RXON_FLG_SHORT_SLOT_MSK;
-@@ -1473,6 +1480,11 @@ void iwlagn_bss_info_changed(struct ieee80211_hw *hw,
- 	else
- 		ctx->staging.flags &= ~RXON_FLG_TGG_PROTECT_MSK;
- 
-+	if (bss_conf->use_cts_prot)
-+		ctx->staging.flags |= RXON_FLG_SELF_CTS_EN;
-+	else
-+		ctx->staging.flags &= ~RXON_FLG_SELF_CTS_EN;
-+
- 	memcpy(ctx->staging.bssid_addr, bss_conf->bssid, ETH_ALEN);
- 
- 	if (vif->type == NL80211_IFTYPE_AP ||
--- 
-2.1.0
+johannes
 
