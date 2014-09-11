@@ -1,68 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:44159 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755257AbaIECdM (ORCPT
+Received: from relay6-d.mail.gandi.net ([217.70.183.198]:60821 "EHLO
+	relay6-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750970AbaIKRHv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Sep 2014 22:33:12 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH v3 05/11] ath9k: Fix offchannel duration calculation
-Date: Fri,  5 Sep 2014 08:03:13 +0530
-Message-Id: <1409884399-32289-6-git-send-email-sujith@msujith.org> (sfid-20140905_043318_084211_16F6AD0F)
-In-Reply-To: <1409884399-32289-1-git-send-email-sujith@msujith.org>
-References: <1409884399-32289-1-git-send-email-sujith@msujith.org>
+	Thu, 11 Sep 2014 13:07:51 -0400
+Message-ID: <1410455253.32328.16.camel@hadess.net> (sfid-20140911_190754_828244_982DC9F9)
+Subject: Re: Realtek GPIO chipset, for Baytrail?
+From: Bastien Nocera <hadess@hadess.net>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Loic Poulain <loic.poulain@intel.com>,
+	linux-wireless@vger.kernel.org
+Date: Thu, 11 Sep 2014 19:07:33 +0200
+In-Reply-To: <82CCC358-4838-4C3F-BE0B-9AB765389960@holtmann.org>
+References: <1410256608.4077.7.camel@hadess.net>
+	 <F79C10A5-18F8-4165-BFC5-FDAD35BE46BE@holtmann.org>
+	 <5411C2BE.6090702@intel.com> <1410451261.32328.11.camel@hadess.net>
+	 <5F46C78F-1749-480F-B90C-702509D963AD@holtmann.org>
+	 <1410453721.32328.15.camel@hadess.net>
+	 <82CCC358-4838-4C3F-BE0B-9AB765389960@holtmann.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Thu, 2014-09-11 at 10:06 -0700, Marcel Holtmann wrote:
+> Hi Bastien,
+> 
+> >>>> Your device is a child of 80860F0A (UART) which is driven by the 8250_dw 
+> >>>> driver.
+> >>>> OBDA8723 is the BT part of the realtek 8723 WiFi/BT combo chip.
+> >>>> acpi_platform should create a platform device from the ACPI desc.
+> >>> 
+> >>> That does show up already in udev, so I should be fine.
+> >>> 
+> >>>> Then, you can add the OBDA8723 acpi id to the rfkill-gpio platform 
+> >>>> driver (net/rfkill) which
+> >>>> seems to handle correctly the basic power management of this chip.
+> >>> 
+> >>> OK. Something like that should do:
+> >>> http://paste.fedoraproject.org/132832/14104505
+> >>> 
+> >>>> You need to use hciattach to attach the chip to the BT stack (with 
+> >>>> H5/3-wire proto).
+> >>> 
+> >>> Will that be required to enable Bluetooth at every boot?
+> >>> 
+> >>> After inserting the above module, I ran:
+> >>> hciattach -n ttyS0 3wire
+> >>> 
+> >>> But no Bluetooth adapters showed up in hciconfig. The rfkill device did
+> >>> show up in rfkill list though.
+> >> 
+> >> my bet is that you need to start with the correct default speed, load
+> >> some firmware and do more settings and then switch to the faster
+> >> speed. There is an effort ongoing for the USB version of Realtek
+> >> Bluetooth, but even that one has not yet completed.
+> > 
+> > I have a firmware and a config file from the Windows driver, but I doubt
+> > I'd be able to make great headway without more info.
+> 
+> in theory this is straight forward, but since this is H:5 it needs extra work to make this nice and clean. So far no H:5 hardware required extra settings. This will be the first one. That is mainly because H:5 is not that popular.
+> 
+> If you can have the basic attachment done with btattach and bring it up in raw only mode, then you could use HCI User Channel to poke with it. We have easy code in src/shared/hci.c that allows you to use the HCI User Channel.
+> 
+> And you want a 3.17 kernel for toying with this of course since I only recently added the extra flags to hci_uart.ko driver to allow bringing the device up in raw only mode or in unconfigured mode.
 
-Currently, different units are used for handling
-sc->offchannel.duration. In scan mode, it contains jiffies and in RoC
-mode, milliseconds is used. This causes confusion since in
-ath_chanctx_switch(), TU_TO_USEC is used to determine the offchannel
-duration, resulting in incorrect values. Fix this by using jiffies in
-both modes.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/channel.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index 047a76f..7a6ca44 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -601,7 +601,7 @@ static void ath_chanctx_switch(struct ath_softc *sc, struct ath_chanctx *ctx,
- 
- 	if (sc->next_chan == &sc->offchannel.chan) {
- 		sc->sched.offchannel_duration =
--			TU_TO_USEC(sc->offchannel.duration) +
-+			jiffies_to_usecs(sc->offchannel.duration) +
- 			sc->sched.channel_switch_time;
- 
- 		if (chandef) {
-@@ -688,7 +688,8 @@ void ath_offchannel_next(struct ath_softc *sc)
- 	} else if (sc->offchannel.roc_vif) {
- 		vif = sc->offchannel.roc_vif;
- 		sc->offchannel.chan.txpower = vif->bss_conf.txpower;
--		sc->offchannel.duration = sc->offchannel.roc_duration;
-+		sc->offchannel.duration =
-+			msecs_to_jiffies(sc->offchannel.roc_duration);
- 		sc->offchannel.state = ATH_OFFCHANNEL_ROC_START;
- 		ath_chanctx_offchan_switch(sc, sc->offchannel.roc_chan);
- 	} else {
-@@ -959,8 +960,8 @@ static void ath_offchannel_channel_change(struct ath_softc *sc)
- 			break;
- 
- 		sc->offchannel.state = ATH_OFFCHANNEL_ROC_WAIT;
--		mod_timer(&sc->offchannel.timer, jiffies +
--			  msecs_to_jiffies(sc->offchannel.duration));
-+		mod_timer(&sc->offchannel.timer,
-+			  jiffies + sc->offchannel.duration);
- 		ieee80211_ready_on_channel(sc->hw);
- 		break;
- 	case ATH_OFFCHANNEL_ROC_DONE:
--- 
-2.1.0
+This will have to wait a little then, as 3.17 kernel don't boot on this
+device yet:
+https://bugzilla.kernel.org/show_bug.cgi?id=84241
 
