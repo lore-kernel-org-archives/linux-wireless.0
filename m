@@ -1,62 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:25207 "EHLO mga11.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:55950 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752162AbaIWLiY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Sep 2014 07:38:24 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "bjorn@mork.no" <bjorn@mork.no>
-CC: Emmanuel Grumbach <egrumbach@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Kaufman, Liad" <liad.kaufman@intel.com>
-Subject: RE: [PATCH 13/17] iwlwifi: 8000: fix fw name to account for revision
-Date: Tue, 23 Sep 2014 11:38:18 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB31B526977@hasmsx107.ger.corp.intel.com> (sfid-20140923_133827_611047_B8CB7EAE)
-References: <541F23D2.90600@gmail.com>
-	<1411327338-23099-13-git-send-email-egrumbach@gmail.com>
-	<87ppeoc4s0.fsf@nemi.mork.no>
-	<0BA3FCBA62E2DC44AF3030971E174FB31B5261F1@hasmsx107.ger.corp.intel.com>
- <87d2amd24t.fsf@nemi.mork.no>
-In-Reply-To: <87d2amd24t.fsf@nemi.mork.no>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	id S1752695AbaIKKSR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Sep 2014 06:18:17 -0400
+Message-ID: <1410430692.22863.2.camel@jlt4.sipsolutions.net> (sfid-20140911_121820_227074_6D9A3C0A)
+Subject: Re: [PATCH v3 1/2] cfg80211: add ops to query mesh proxy path table
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Henning Rogge <hrogge@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Henning Rogge <henning.rogge@fkie.fraunhofer.de>,
+	Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+Date: Thu, 11 Sep 2014 12:18:12 +0200
+In-Reply-To: <1409922404-8217-2-git-send-email-henning.rogge@fkie.fraunhofer.de> (sfid-20140905_150655_262901_B377489F)
+References: <1409922404-8217-1-git-send-email-henning.rogge@fkie.fraunhofer.de>
+	 <1409922404-8217-2-git-send-email-henning.rogge@fkie.fraunhofer.de>
+	 (sfid-20140905_150655_262901_B377489F)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiAiR3J1bWJhY2gsIEVtbWFudWVsIiA8ZW1tYW51ZWwuZ3J1bWJhY2hAaW50ZWwuY29tPiB3cml0
-ZXM6DQo+ID4+IEVtbWFudWVsIEdydW1iYWNoIDxlZ3J1bWJhY2hAZ21haWwuY29tPiB3cml0ZXM6
-DQo+ID4+DQo+ID4+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkv
-aXdsLTgwMDAuYw0KPiA+PiA+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtODAw
-MC5jDQo+ID4+ID4gaW5kZXggNGFlOGJhNi4uZTQzNTE0OCAxMDA2NDQNCj4gPj4gPiAtLS0gYS9k
-cml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3bC04MDAwLmMNCj4gPj4gPiArKysgYi9kcml2
-ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3bC04MDAwLmMNCj4gPj4gPiBAQCAtODEsNyArODEs
-NyBAQA0KPiA+PiA+ICAjZGVmaW5lIElXTDgwMDBfTlZNX1ZFUlNJT04JCTB4MGExZA0KPiA+PiA+
-ICAjZGVmaW5lIElXTDgwMDBfVFhfUE9XRVJfVkVSU0lPTgkweGZmZmYgLyogbWVhbmluZ2xlc3Mg
-Ki8NCj4gPj4gPg0KPiA+PiA+IC0jZGVmaW5lIElXTDgwMDBfRldfUFJFICJpd2x3aWZpLTgwMDAt
-Ig0KPiA+PiA+ICsjZGVmaW5lIElXTDgwMDBfRldfUFJFICJpd2x3aWZpLTgwMDAiDQo+ID4+ID4g
-ICNkZWZpbmUgSVdMODAwMF9NT0RVTEVfRklSTVdBUkUoYXBpKSBJV0w4MDAwX0ZXX1BSRQ0KPiA+
-PiBfX3N0cmluZ2lmeShhcGkpICIudWNvZGUiDQo+ID4+DQo+ID4+IElzbid0IHRoaXMgZ29pbmcg
-dG8gY3JlYXRlIGEgbWlzbGVhZGluZyBNT0RVTEVfRklSTVdBUkUgZW50cnksDQo+ID4+IG1hdGNo
-aW5nIG5laXRoZXIgb2YgdGhlIGZpcm13YXJlIHZhcmlhbnRzPw0KPiA+Pg0KPiA+Pg0KPiA+IFll
-cyBwcm9iYWJseSAtIE9UT0gsIHRoaXMgZGV2aWNlIGlzIGZhciBmcm9tIGJlaW5nIG9uIHRoZSBz
-aGVsdmVzLiBCeSB0aGUNCj4gdGltZSBpdCB3aWxsIGhpdCB0aGUgc2hlbHZlcywgd2Ugd2lsbCBo
-YXZlIHJlbW92ZWQgYWxsIHRoZSBoYWNrcyBmb3IgdGhlIGVhcmx5DQo+IHN0ZXBzIG9mIHRoZSBo
-YXJkd2FyZS4NCj4gPiBJZGVhcyB0byBtYWtlIGl0IGJldHRlcj8NCj4gDQo+IE5vdCBleGFjdGx5
-IGVsZWdhbnQsIGJ1dCBJIHdvdWxkIGp1c3QgaGF2ZSBkdXBsaWNhdGVkIHRoZSBtYWNyb3MgZm9y
-IGVhY2gNCj4gbmV3IGhhcmR3YXJlIHJldmlzaW9uLiAgRS5nOg0KPiANCj4gI2RlZmluZSBJV0w4
-MDAwX01PRFVMRV9GSVJNV0FSRShhcGkpIElXTDgwMDBfRldfUFJFICItIg0KPiBfX3N0cmluZ2lm
-eShhcGkpICIudWNvZGUiDQo+ICNkZWZpbmUgSVdMODAwMEJfTU9EVUxFX0ZJUk1XQVJFKGFwaSkg
-SVdMODAwMF9GV19QUkUgIkItIg0KPiBfX3N0cmluZ2lmeShhcGkpICIudWNvZGUiDQo+IE1PRFVM
-RV9GSVJNV0FSRShJV0w4MDAwX01PRFVMRV9GSVJNV0FSRShJV0w4MDAwX1VDT0RFX0FQSQ0KPiBf
-T0spKTsNCj4gTU9EVUxFX0ZJUk1XQVJFKElXTDgwMDBCX01PRFVMRV9GSVJNV0FSRShJV0w4MDAw
-X1VDT0RFX0FQDQo+IElfT0spKTsNCj4gDQo+IE9yIG1heWJlIG1ha2UgdGhlIHJldmlzaW9uIHBh
-cnQgb2YgdGhlIG1hY3JvIG9yIHNvbWV0aGluZy4NCj4gDQo+IA0KPiA+IEdvb2QgdG8ga25vdyB0
-aGF0IHNvbWVvbmUgaXMgYWN0dWFsbHkgbG9va2luZyBhdCB0aGUgcGF0Y2hlcyBJIHRha2UNCj4g
-PiBjYXJlIHRvIHNlbmQgOikNCj4gDQo+IEFsd2F5cyBsb29raW5nIGZvciBuZXcgZ29vZGllcyB0
-byB0cnkgb3V0IDotKSAgVGhlIHRlbXBlcmF0dXJlIHNlbnNvcg0KPiByZWFkb3V0IHdhcyBvbmUg
-dGhpcyB0aW1lLiAgQWx0aG91Z2ggSSB3b3VsZCBoYXZlIHByZWZlcnJlZCBpdCBhcyBhIHByb3Bl
-cg0KPiBod21vbiBkZXZpY2UgaW5zdGVhZCBvZiBhIGRlYnVnZnMgZmlsZS4gIEhhcyB0aGlzIGJl
-ZW4gZGlzY3Vzc2VkPw0KPiANCg0KTm90IHJlYWxseSAtIHNpbmNlIEkgZG9uJ3QgdGhpbmsgdGhh
-dCB0aGlzIGlzIHdvcnRoIGl0Lg0KVGhlIFdpRmkgZGV2aWNlIGhlYXRzIHVwIHdoZW4gd2UgVHgs
-IGFuZCBJIHRoaW5rIGl0J2QgYmUgd29ydGggbWFraW5nIHRoaXMgZGF0YSBwdWJsaWMgaW4gdGhl
-IHN5c3RlbS4gVGhlIHRlbXBlcmF0dXJlIHNlbnNvciBpcyBtb3N0bHkgdG8gYXZvaWQgYnVybmlu
-ZyB0aGluZ3Mgb3V0IDopDQo=
+On Fri, 2014-09-05 at 15:06 +0200, Henning Rogge wrote:
+> Add two new cfg80211 operations for querying the content of the the mac80211s proxy path table
+
+Please use shorter line lengths, and formulate it in a generic way -
+this shouldn't be mac80211 specific.
+
+johannes
+
