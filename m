@@ -1,81 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:41320 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752334AbaIAHst convert rfc822-to-8bit (ORCPT
+Received: from relay1.mentorg.com ([192.94.38.131]:45928 "EHLO
+	relay1.mentorg.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751863AbaIKKgp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Sep 2014 03:48:49 -0400
-Received: by mail-ie0-f171.google.com with SMTP id rp18so5717595iec.2
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Sep 2014 00:48:48 -0700 (PDT)
+	Thu, 11 Sep 2014 06:36:45 -0400
+From: "Sharma, Sanjeev" <Sanjeev_Sharma@mentor.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "dsd@gentoo.org" <dsd@gentoo.org>,
+	"kune@deine-taler.de" <kune@deine-taler.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Subject: RE: [PATCH v2] zd1211rw: replace ZD_ASSERT with
+ lockdep_assert_held()
+Date: Thu, 11 Sep 2014 10:36:42 +0000
+Message-ID: <FDC088D3B5555644AE135ED28A7ABDE94DF5256D@EU-MBX-02.mgc.mentorg.com> (sfid-20140911_123705_835937_D005E45D)
+References: <1410418407.1825.0.camel@jlt4.sipsolutions.net>
+	 <1410430179-19944-1-git-send-email-sanjeev_sharma@mentor.com>
+	 (sfid-20140911_121019_335368_163BEA7C)
+ <1410430345.22863.0.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1410430345.22863.0.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <CACna6rwmNtS1JSi=VHXWHu6mOM72Y8sBrr5EqCRbpYUHFrMnCg@mail.gmail.com>
-References: <CACna6rzRf7qf0YAFWqp4VgwR76-N8HO12eSz_H5NW9LpjBArdw@mail.gmail.com>
-	<53FF9D9B.30106@hauke-m.de>
-	<CACna6rzaXHww2UXoP4Fi-zA3uNve4NQ48DeChF8zoBS-_-mtyw@mail.gmail.com>
-	<5882203.GXbhhcHqjK@wuerfel>
-	<CACna6rwmNtS1JSi=VHXWHu6mOM72Y8sBrr5EqCRbpYUHFrMnCg@mail.gmail.com>
-Date: Mon, 1 Sep 2014 09:48:48 +0200
-Message-ID: <CACna6rwMovK133ZoFYsLcsnH39umU7=UAoyG6jmgM8ZVq0AYRA@mail.gmail.com> (sfid-20140901_094902_888997_4C13DDEF)
-Subject: Re: Booting bcm47xx (bcma & stuff), sharing code with bcm53xx
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 31 August 2014 11:20, Rafał Miłecki <zajec5@gmail.com> wrote:
-> On 29 August 2014 22:04, Arnd Bergmann <arnd@arndb.de> wrote:
->> You mentioned that the 'boot_device' variable in your code snippet
->> comes from a hardware register that can be accessed easily, right?
->> A possible way to handle it would then be to have two DT entries
->> like
->>
->>         nvram@1c000000 {
->>                 compatible = "bcm,bcm4710-nvram";
->>                 reg = <0x1c000000 0x1000000>;
->>                 bcm,boot-device = BCMA_BOOT_DEV_NAND;
->>         };
->>
->>         nvram@1c000000 {
->>                 compatible = "bcm,bcm4710-nvram";
->>                 reg = <0x1e000000 0x1000000>;
->>                 bcm,boot-device = BCMA_BOOT_DEV_SERIAL;
->>         };
->
-> This sounds like a nice consensus for me! Actually it seems to be
-> similar to what we already do for other hardware parts.
->
-> E.g. in bcm4708.dtsi Hauke put registers location of 4 Ethernet cores
-> (gmac@0, gmac@1, gmac@2, gmac@3). I believe this board is ready for 4
-> Ethernet cores so DT matches hardware capabilities. Then most vendors
-> use/activate only one (maybe up to 2?) Ethernet cores. It's up to the
-> driver to detect if core is activated/used.
->
-> AFAIU having two flash mappings (as suggested above) would follow this
-> logic. It would match hardware capabilities. And then it would be up
-> to driver to detect which one mapping is really in use for this
-> particular board.
->
-> Does it make sense?
-
-I've just realized something. When Broadcom's code reads NVRAM content
-it uses "hndnand_checkbadb" to skip bad blocks. It seems NVRAM doesn't
-lay in 100% reliable flash sectors.
-
-Above function comes from shared/ which (the directory) provides tons
-of low level stuff without using any kernel API. OFC it won't be
-acceptable for us to implement low level NAND stuff in the nvram
-driver (this would mean duplicating NAND driver code). It seems we
-won't be able to use NAND flash mapping to the memory (this magic
-0x1c000000) at all...
-
-So I think we'll need to change our vision of flash access in
-bcm74xx_nvram driver. I guess we will have to:
-1) Register NAND core early
-2) Initialize NAND driver
-3) Use mtd/nand API in bcm47xx_nvram
-
--- 
-Rafał
+LS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEpvaGFubmVzIEJlcmcgW21haWx0bzpq
+b2hhbm5lc0BzaXBzb2x1dGlvbnMubmV0XSANClNlbnQ6IFRodXJzZGF5LCBTZXB0ZW1iZXIgMTEs
+IDIwMTQgMzo0MiBQTQ0KVG86IFNoYXJtYSwgU2FuamVldg0KQ2M6IGRzZEBnZW50b28ub3JnOyBr
+dW5lQGRlaW5lLXRhbGVyLmRlOyBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4
+LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IG5ldGRldkB2Z2VyLmtlcm5lbC5vcmcNClN1YmplY3Q6
+IFJlOiBbUEFUQ0ggdjJdIHpkMTIxMXJ3OiByZXBsYWNlIFpEX0FTU0VSVCB3aXRoIGxvY2tkZXBf
+YXNzZXJ0X2hlbGQoKQ0KDQpPbiBUaHUsIDIwMTQtMDktMTEgYXQgMTU6MzkgKzA1MzAsIFNhbmpl
+ZXYgU2hhcm1hIHdyb3RlOg0KPiBvbiBzb21lIGFyY2hpdGVjdHVyZSBzcGluX2lzX2xvY2tlZCgp
+IGFsd2F5cyByZXR1cm4gZmFsc2UgaW4gDQo+IHVuaXByb2Nlc3NvciBjb25maWd1cmF0aW9uIGFu
+ZCB0aGVyZWZvcmUgaXQgd291bGQgYmUgYWR2aXNlIHRvIHJlcGxhY2UgDQo+IHdpdGggbG9ja2Rl
+cF9hc3NlcnRfaGVsZCgpLg0KPiANCj4gU2lnbmVkLW9mZi1ieTogU2FuamVldiBTaGFybWEgPFNh
+bmplZXZfU2hhcm1hQG1lbnRvci5jb20+DQo+IC0tLQ0KPiBDaGFuZ2VzIGluIHYyOg0KPiAgIC0g
+Y29ycmVjdGVkIHRoZSB0eXBvDQoNCj4gTm93IGl0IGNvbXBpbGVzLCBidXQgeW91IGdvdCB0aGUg
+bG9naWMgd3JvbmcuDQoNCj4gKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvemQxMjExcncvemRf
+bWFjLmMNCj4gQEAgLTIzNSw3ICsyMzUsNyBAQCB2b2lkIHpkX21hY19jbGVhcihzdHJ1Y3QgemRf
+bWFjICptYWMpICB7DQo+ICAJZmx1c2hfd29ya3F1ZXVlKHpkX3dvcmtxdWV1ZSk7DQo+ICAJemRf
+Y2hpcF9jbGVhcigmbWFjLT5jaGlwKTsNCj4gLQlaRF9BU1NFUlQoIXNwaW5faXNfbG9ja2VkKCZt
+YWMtPmxvY2spKTsNCj4gKwlsb2NrZGVwX2Fzc2VydF9oZWxkKCZtYWMtPmxvY2spOw0KPiAgCVpE
+X01FTUNMRUFSKG1hYywgc2l6ZW9mKHN0cnVjdCB6ZF9tYWMpKTsgIH0NCg0KPkxvb2sgY2xvc2Vs
+eSBhdCB0aGlzIGFnYWluLg0KDQpJIGRpZG4ndCB1bmRlcnN0YW5kIHdoZXJlIEkgIHB1dCB3cm9u
+ZyBsb2dpYyAgPw0KDQpSZWdhcmRzDQpTYW5qZWV2IFNoYXJtYQ0KDQo=
