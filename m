@@ -1,152 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:56327 "EHLO
-	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756096AbaIWOcj (ORCPT
+Received: from relay3-d.mail.gandi.net ([217.70.183.195]:52506 "EHLO
+	relay3-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751075AbaIKQmU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Sep 2014 10:32:39 -0400
-Subject: [PATCH v2 3/3] ath10k: add cal_data debugfs file
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 23 Sep 2014 17:32:34 +0300
-Message-ID: <20140923143234.23585.2139.stgit@potku.adurom.net> (sfid-20140923_163242_673906_B9B750C2)
-In-Reply-To: <20140923143219.23585.34114.stgit@potku.adurom.net>
-References: <20140923143219.23585.34114.stgit@potku.adurom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Thu, 11 Sep 2014 12:42:20 -0400
+Message-ID: <1410453721.32328.15.camel@hadess.net> (sfid-20140911_184223_432251_A0F629F3)
+Subject: Re: Realtek GPIO chipset, for Baytrail?
+From: Bastien Nocera <hadess@hadess.net>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Loic Poulain <loic.poulain@intel.com>,
+	linux-wireless@vger.kernel.org
+Date: Thu, 11 Sep 2014 18:42:01 +0200
+In-Reply-To: <5F46C78F-1749-480F-B90C-702509D963AD@holtmann.org>
+References: <1410256608.4077.7.camel@hadess.net>
+	 <F79C10A5-18F8-4165-BFC5-FDAD35BE46BE@holtmann.org>
+	 <5411C2BE.6090702@intel.com> <1410451261.32328.11.camel@hadess.net>
+	 <5F46C78F-1749-480F-B90C-702509D963AD@holtmann.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Provide calibration data used by the firmware to user space via a debugfs file.
-This makes it easier to debug calibration related problems.
+On Thu, 2014-09-11 at 09:37 -0700, Marcel Holtmann wrote:
+> Hi Bastien,
+> 
+> >> Your device is a child of 80860F0A (UART) which is driven by the 8250_dw 
+> >> driver.
+> >> OBDA8723 is the BT part of the realtek 8723 WiFi/BT combo chip.
+> >> acpi_platform should create a platform device from the ACPI desc.
+> > 
+> > That does show up already in udev, so I should be fine.
+> > 
+> >> Then, you can add the OBDA8723 acpi id to the rfkill-gpio platform 
+> >> driver (net/rfkill) which
+> >> seems to handle correctly the basic power management of this chip.
+> > 
+> > OK. Something like that should do:
+> > http://paste.fedoraproject.org/132832/14104505
+> > 
+> >> You need to use hciattach to attach the chip to the BT stack (with 
+> >> H5/3-wire proto).
+> > 
+> > Will that be required to enable Bluetooth at every boot?
+> > 
+> > After inserting the above module, I ran:
+> > hciattach -n ttyS0 3wire
+> > 
+> > But no Bluetooth adapters showed up in hciconfig. The rfkill device did
+> > show up in rfkill list though.
+> 
+> my bet is that you need to start with the correct default speed, load
+> some firmware and do more settings and then switch to the faster
+> speed. There is an effort ongoing for the USB version of Realtek
+> Bluetooth, but even that one has not yet completed.
 
-Example:
+I have a firmware and a config file from the Windows driver, but I doubt
+I'd be able to make great headway without more info.
 
-sudo cp /sys/kernel/debug/ieee80211/phy0/ath10k/cal_data 1.cal
-
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/debug.c |   81 +++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/hw.h    |    2 +
- 2 files changed, 83 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index 101c6f9cf2a8..426341480262 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -23,6 +23,7 @@
- 
- #include "core.h"
- #include "debug.h"
-+#include "hif.h"
- 
- /* ms */
- #define ATH10K_DEBUG_HTT_STATS_INTERVAL 1000
-@@ -1037,6 +1038,83 @@ static const struct file_operations fops_fw_dbglog = {
- 	.llseek = default_llseek,
- };
- 
-+static int ath10k_cal_data_open(struct inode *inode, struct file *file)
-+{
-+	struct ath10k *ar = inode->i_private;
-+	void *buf;
-+	u32 hi_addr;
-+	__le32 addr;
-+	int ret;
-+
-+	mutex_lock(&ar->conf_mutex);
-+
-+	if (ar->state != ATH10K_STATE_ON &&
-+	    ar->state != ATH10K_STATE_UTF) {
-+		ret = -ENETDOWN;
-+		goto err;
-+	}
-+
-+	buf = vmalloc(QCA988X_CAL_DATA_LEN);
-+	if (!buf) {
-+		ret = -ENOMEM;
-+		goto err;
-+	}
-+
-+	hi_addr = host_interest_item_address(HI_ITEM(hi_board_data));
-+
-+	ret = ath10k_hif_diag_read(ar, hi_addr, &addr, sizeof(addr));
-+	if (ret) {
-+		ath10k_warn(ar, "failed to read hi_board_data address: %d\n", ret);
-+		goto err_vfree;
-+	}
-+
-+	ret = ath10k_hif_diag_read(ar, le32_to_cpu(addr), buf,
-+				   QCA988X_CAL_DATA_LEN);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to read calibration data: %d\n", ret);
-+		goto err_vfree;
-+	}
-+
-+	file->private_data = buf;
-+
-+	mutex_unlock(&ar->conf_mutex);
-+
-+	return 0;
-+
-+err_vfree:
-+	vfree(buf);
-+
-+err:
-+	mutex_unlock(&ar->conf_mutex);
-+
-+	return ret;
-+}
-+
-+static ssize_t ath10k_cal_data_read(struct file *file, char __user *user_buf,
-+				    size_t count, loff_t *ppos)
-+{
-+	void *buf = file->private_data;
-+
-+	return simple_read_from_buffer(user_buf, count, ppos,
-+				       buf, QCA988X_CAL_DATA_LEN);
-+}
-+
-+static int ath10k_cal_data_release(struct inode *inode,
-+				   struct file *file)
-+{
-+	vfree(file->private_data);
-+
-+	return 0;
-+}
-+
-+static const struct file_operations fops_cal_data = {
-+	.open = ath10k_cal_data_open,
-+	.read = ath10k_cal_data_read,
-+	.release = ath10k_cal_data_release,
-+	.owner = THIS_MODULE,
-+	.llseek = default_llseek,
-+};
-+
- int ath10k_debug_start(struct ath10k *ar)
- {
- 	int ret;
-@@ -1210,6 +1288,9 @@ int ath10k_debug_register(struct ath10k *ar)
- 	debugfs_create_file("fw_dbglog", S_IRUSR, ar->debug.debugfs_phy,
- 			    ar, &fops_fw_dbglog);
- 
-+	debugfs_create_file("cal_data", S_IRUSR, ar->debug.debugfs_phy,
-+			    ar, &fops_cal_data);
-+
- 	if (config_enabled(CONFIG_ATH10K_DFS_CERTIFIED)) {
- 		debugfs_create_file("dfs_simulate_radar", S_IWUSR,
- 				    ar->debug.debugfs_phy, ar,
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 3cf5702c1e7e..006a9cbc60b2 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -43,6 +43,8 @@
- 
- #define REG_DUMP_COUNT_QCA988X 60
- 
-+#define QCA988X_CAL_DATA_LEN		2116
-+
- struct ath10k_fw_ie {
- 	__le32 id;
- 	__le32 len;
+That's Larry's driver for the USB variant:
+https://github.com/lwfinger/rtl8723au_bt
 
