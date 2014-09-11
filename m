@@ -1,79 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:56989 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752714AbaIKOap (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Sep 2014 10:30:45 -0400
-From: Rostislav Lisovy <lisovy@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
-	jan-niklas.meier@volkswagen.de, burak.simsek@volkswagen.de,
-	Emmanuel Thierry <emmanuel.thierry@yogoko.fr>,
-	laszlo.virag@commsignia.com, lisovy@gmail.com,
-	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
-Subject: [PATCH 0/4] 802.11p OCB mode
-Date: Thu, 11 Sep 2014 16:30:18 +0200
-Message-Id: <1410445822-6559-1-git-send-email-rostislav.lisovy@fel.cvut.cz> (sfid-20140911_163256_137659_620C87B5)
+Received: from mga11.intel.com ([192.55.52.93]:46864 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756014AbaIKPWY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Sep 2014 11:22:24 -0400
+Message-ID: <5411BDEF.7070105@intel.com> (sfid-20140911_172235_237743_B4F85AA4)
+Date: Thu, 11 Sep 2014 08:21:19 -0700
+From: Alexander Duyck <alexander.h.duyck@intel.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	davem@davemloft.net, eric.dumazet@gmail.com, linville@tuxdriver.com
+Subject: Re: [PATCH net-next 2/2] mac80211: Resolve sk_refcnt/sk_wmem_alloc
+ issue in wifi ack path
+References: <20140910215837.23225.39149.stgit@ahduyck-bv4.jf.intel.com>	 <20140910220536.23225.92956.stgit@ahduyck-bv4.jf.intel.com> <1410419198.1825.5.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1410419198.1825.5.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The IEEE 802.11p amendment (already part of IEEE 802.11-2012)
-specifies usage of 5 and 10 MHz wide channels in 5.9GHz band for
-vehicular environment. All the 802.11p compliant devices should
-be set to the newly added operation mode -- OCB (Outside the
-Context of a BSS). No authentication/association is necessary to
-communicate. The only parameter to be configured is the channel
-(central frequency and bandwidth) to communicate on. The channel
-has to be known a priori. It is set during the 'ocb join'
-operation (sent via netlink message from user-space).
+On 09/11/2014 12:06 AM, Johannes Berg wrote:
+> On Wed, 2014-09-10 at 18:05 -0400, Alexander Duyck wrote:
+>> There is a possible issue with the use, or lack thereof of sk_refcnt and
+>> sk_wmem_alloc in the wifi ack status functionality.
+>>
+>> Specifically if a socket were to request acknowledgements, and the socket
+>> were to have sk_refcnt drop to 0 resulting in it waiting on sk_wmem_alloc
+>> to reach 0 it would be possible to have sock_queue_err_skb orphan the last
+>> buffer, resulting in __sk_free being called on the socket.  After this the
+>> buffer is enqueued on sk_error_queue, however the queue has already been
+>> flushed resulting in at least a memory leak, if not a data corruption.
+> 
+> Oh. Thanks :-)
+> 
+>> +	/* take a reference to prevent skb_orphan() from freeing the socket */
+>> +	sock_hold(sk);
+>> +
+>>  	err = sock_queue_err_skb(sk, skb);
+>>  	if (err)
+>>  		kfree_skb(skb);
+>> +
+>> +	sock_put(sk);
+>>  }
+>>  EXPORT_SYMBOL_GPL(skb_complete_wifi_ack);
+> 
+> Here I'm not sure it matters *for this function*? Wouldn't it be freed
+> then in sock_put(), which has the same net effect on this function
+> overall? It doesn't use it after sock_queue_err_skb().
 
-This patchset adds the OCB mode, OCB join and leave handling
-(nl80211, cfg80211, mac80211), 802.11p EDCA parameters
-modification, RX and TX path (for unicast/broadcast messages).
+The significant piece is that we are calling sock_put *after*.  So if we
+are dropping the last reference the buffer is already in the
+sk_error_queue and will be purged when __sk_free is called.
 
-What aspects are ignored for now:
-* Rate control -- We limit the supported datarates to the .11a
-  mandatory rates and use the Minstrel as usual
-* Actually restricting the OCB mode to the 5.9 GHz band
+> Seems like maybe this should be in sock_queue_err_skb() itself, since it
+> does the orphaning first and then looks at the socket. Or the
+> documentation for that function should state that it has to be held, but
+> there are plenty of callers?
 
-Tested with the ath9k card with slightly modified driver.
-User-space configuration utilities are not part of this patch.
+The problem is there are a number of cases where the sock_hold/put are
+not needed.  For example, if we were to clone the skb and immediately
+send the clone up the sk_error_queue then we don't need it.  We only
+need it if there is a risk that orphaning the buffer sent could
+potentially result in the destructor calling __sk_free.
 
-Rostislav Lisovy (4):
-  mac80211: OCB mode + join and leave handling
-  mac80211: Use different EDCA config for OCB
-  cfg80211: Join and Leave handling for OCB mode
-  nl80211: Join and Leave handling for OCB mode
+>>  			spin_lock_irqsave(&local->ack_status_lock, flags);
+>> -			id = idr_alloc(&local->ack_status_frames, orig_skb,
+>> +			id = idr_alloc(&local->ack_status_frames, ack_skb,
+>>  				       1, 0x10000, GFP_ATOMIC);
+>>  			spin_unlock_irqrestore(&local->ack_status_lock, flags);
+>>  
+>>  			if (id >= 0) {
+>>  				info_id = id;
+>>  				info_flags |= IEEE80211_TX_CTL_REQ_TX_STATUS;
+>> -			} else if (skb_shared(skb)) {
+>> -				kfree_skb(orig_skb);
+>>  			} else {
+>> -				kfree_skb(skb);
+>> -				skb = orig_skb;
+>> +				kfree_skb(ack_skb);
+>>  			}
+> 
+> So you're removing this part, but can't we really not reuse the clone_sk
+> copy? The difference is that it's charged, but that's fine for the
+> purposes here, no? Or am I misunderstanding that?
+> 
+> johannes
 
- include/net/cfg80211.h       |  11 ++
- include/net/mac80211.h       |   2 +
- include/uapi/linux/nl80211.h |  11 ++
- net/mac80211/Kconfig         |  11 ++
- net/mac80211/Makefile        |   3 +-
- net/mac80211/cfg.c           |  14 +++
- net/mac80211/chan.c          |   1 +
- net/mac80211/debug.h         |  10 ++
- net/mac80211/driver-ops.h    |   3 +-
- net/mac80211/ieee80211_i.h   |  20 ++++
- net/mac80211/iface.c         |  20 ++++
- net/mac80211/ocb.c           | 236 +++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/rx.c            |  33 ++++++
- net/mac80211/tx.c            |  15 +++
- net/mac80211/util.c          |  31 +++++-
- net/mac80211/wme.c           |   4 +
- net/wireless/Makefile        |   2 +-
- net/wireless/chan.c          |   8 ++
- net/wireless/core.h          |  10 ++
- net/wireless/nl80211.c       |  47 +++++++++
- net/wireless/ocb.c           |  88 ++++++++++++++++
- net/wireless/rdev-ops.h      |  21 ++++
- net/wireless/trace.h         |  21 ++++
- net/wireless/util.c          |   5 +-
- 24 files changed, 618 insertions(+), 9 deletions(-)
- create mode 100644 net/mac80211/ocb.c
- create mode 100644 net/wireless/ocb.c
+The copy being held cannot really be used for transmit.  The problem is
+that it is holding the wrong kind of reference.
 
--- 
-2.0.0.rc4
+The problem lies in the order things are released.  The sock_put
+function will dec_and_test sk_refcnt, once it reaches 0 it will do a
+dec_and_test on sk_wmem_alloc to see if it should call __sk_free.  Until
+that reaches 0 sk_wmem_alloc cannot reach 0.  Once either of these drops
+to 0 we cannot bring the value back up from there.  So if I were to
+transmit the clone then it could let the sk_refcnt drop to 0 in which
+case any calls to sock_hold are invalid.
 
+I would need to somehow hold the reference based on sk_wmem_alloc if we
+want to transmit the clone.  Many of the hardware timestamping drivers
+seem to just clone the original skb, queue that clone onto the
+sk_error_queue, and then free the original after completing the call.  I
+suppose we could change it to something like that, but you are still
+looking at possibly 2 clones in that case anyway.
+
+Thanks,
+
+Alex
