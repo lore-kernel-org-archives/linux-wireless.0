@@ -1,49 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:47366 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932418AbaICNRF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Sep 2014 09:17:05 -0400
-Date: Wed, 3 Sep 2014 16:17:00 +0300
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <wireless-regdb@lists.infradead.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 12/12] wireless-regdb: Add Wallis and Futuna (WF) regulatory
- rules
-Message-ID: <20140903131700.GA16284@jouni.qca.qualcomm.com> (sfid-20140903_151716_965814_89A877BF)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from s3.sipsolutions.net ([5.9.151.49]:55879 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752392AbaIKKCc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Sep 2014 06:02:32 -0400
+Message-ID: <1410429749.1825.6.camel@jlt4.sipsolutions.net> (sfid-20140911_120236_051306_2E5E5856)
+Subject: Re: [PATCH 1/4] cfg80211: clear connect keys when freeing them
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 11 Sep 2014 12:02:29 +0200
+In-Reply-To: <1410345597-28565-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1410345597-28565-1-git-send-email-emmanuel.grumbach@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-French Jurisdiction, follows ETSI rules per R&TTE Directive.
+On Wed, 2014-09-10 at 13:39 +0300, Emmanuel Grumbach wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> When freeing the connect keys, clear the memory to avoid
+> having the key material stick around in memory "forever".
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
----
- db.txt | 6 ++++++
- 1 file changed, 6 insertions(+)
+Applied, except for patch 4 which is actually pointless.
 
-diff --git a/db.txt b/db.txt
-index fab91f2..757040b 100644
---- a/db.txt
-+++ b/db.txt
-@@ -1034,6 +1034,12 @@ country VU: DFS-FCC
- 	(5490 - 5730 @ 80), (24), DFS
- 	(5735 - 5835 @ 80), (30)
- 
-+country WF: DFS-ETSI
-+	(2402 - 2482 @ 40), (20)
-+	(5170 - 5250 @ 80), (20)
-+	(5250 - 5330 @ 80), (20), DFS
-+	(5490 - 5710 @ 80), (27), DFS
-+
- country YE:
- 	(2402 - 2482 @ 40), (20)
- 
--- 
-1.9.1
+johannes
 
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
