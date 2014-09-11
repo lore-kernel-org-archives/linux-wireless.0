@@ -1,59 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:47596 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751645AbaIDRaO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Sep 2014 13:30:14 -0400
-Date: Thu, 4 Sep 2014 13:24:50 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Sujith Manoharan <sujith@msujith.org>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: Re: [PATCH 0/5] ath9k patches
-Message-ID: <20140904172450.GF3467@tuxdriver.com> (sfid-20140904_193018_658311_9EC66733)
-References: <1409730929-30208-1-git-send-email-sujith@msujith.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1409730929-30208-1-git-send-email-sujith@msujith.org>
+Received: from s3.sipsolutions.net ([5.9.151.49]:55292 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751013AbaIKHGm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Sep 2014 03:06:42 -0400
+Message-ID: <1410419198.1825.5.camel@jlt4.sipsolutions.net> (sfid-20140911_090650_329900_7831E721)
+Subject: Re: [PATCH net-next 2/2] mac80211: Resolve sk_refcnt/sk_wmem_alloc
+ issue in wifi ack path
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alexander Duyck <alexander.h.duyck@intel.com>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	davem@davemloft.net, eric.dumazet@gmail.com, linville@tuxdriver.com
+Date: Thu, 11 Sep 2014 09:06:38 +0200
+In-Reply-To: <20140910220536.23225.92956.stgit@ahduyck-bv4.jf.intel.com>
+References: <20140910215837.23225.39149.stgit@ahduyck-bv4.jf.intel.com>
+	 <20140910220536.23225.92956.stgit@ahduyck-bv4.jf.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I am having a lot of trouble determining which of your series are
-intended as fixes for the current release (3.17) or updates for the
-next release (3.18).  In this series, several seem like fixes but
-"ath9k: Fix ath_startrecv" seems like a cleanup.
+On Wed, 2014-09-10 at 18:05 -0400, Alexander Duyck wrote:
+> There is a possible issue with the use, or lack thereof of sk_refcnt and
+> sk_wmem_alloc in the wifi ack status functionality.
+> 
+> Specifically if a socket were to request acknowledgements, and the socket
+> were to have sk_refcnt drop to 0 resulting in it waiting on sk_wmem_alloc
+> to reach 0 it would be possible to have sock_queue_err_skb orphan the last
+> buffer, resulting in __sk_free being called on the socket.  After this the
+> buffer is enqueued on sk_error_queue, however the queue has already been
+> flushed resulting in at least a memory leak, if not a data corruption.
 
-Would you like to reorganize your patch submissions as fixes
-vs. features?  Or do you want them all to be merged as features
-for 3.18?
+Oh. Thanks :-)
 
-John
+> +	/* take a reference to prevent skb_orphan() from freeing the socket */
+> +	sock_hold(sk);
+> +
+>  	err = sock_queue_err_skb(sk, skb);
+>  	if (err)
+>  		kfree_skb(skb);
+> +
+> +	sock_put(sk);
+>  }
+>  EXPORT_SYMBOL_GPL(skb_complete_wifi_ack);
 
-On Wed, Sep 03, 2014 at 01:25:24PM +0530, Sujith Manoharan wrote:
-> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-> 
-> Various fixes for MCC.
-> 
-> Sujith Manoharan (5):
->   ath9k: Fix RX filter calculation
->   ath9k: Fix ath_startrecv()
->   ath9k: Fix COMP_BAR filter
->   ath9k: Fix RX filters in channel contexts
->   ath9k: Fix interface accounting
-> 
->  drivers/net/wireless/ath/ath9k/ath9k.h  |  7 ++++---
->  drivers/net/wireless/ath/ath9k/beacon.c |  2 +-
->  drivers/net/wireless/ath/ath9k/debug.c  |  2 +-
->  drivers/net/wireless/ath/ath9k/main.c   | 20 +++++++++-----------
->  drivers/net/wireless/ath/ath9k/recv.c   | 31 +++++++++++++++++++------------
->  drivers/net/wireless/ath/ath9k/tx99.c   |  2 +-
->  drivers/net/wireless/ath/ath9k/wow.c    |  2 +-
->  7 files changed, 36 insertions(+), 30 deletions(-)
-> 
-> -- 
-> 2.1.0
-> 
-> 
+Here I'm not sure it matters *for this function*? Wouldn't it be freed
+then in sock_put(), which has the same net effect on this function
+overall? It doesn't use it after sock_queue_err_skb().
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Seems like maybe this should be in sock_queue_err_skb() itself, since it
+does the orphaning first and then looks at the socket. Or the
+documentation for that function should state that it has to be held, but
+there are plenty of callers?
+
+>  			spin_lock_irqsave(&local->ack_status_lock, flags);
+> -			id = idr_alloc(&local->ack_status_frames, orig_skb,
+> +			id = idr_alloc(&local->ack_status_frames, ack_skb,
+>  				       1, 0x10000, GFP_ATOMIC);
+>  			spin_unlock_irqrestore(&local->ack_status_lock, flags);
+>  
+>  			if (id >= 0) {
+>  				info_id = id;
+>  				info_flags |= IEEE80211_TX_CTL_REQ_TX_STATUS;
+> -			} else if (skb_shared(skb)) {
+> -				kfree_skb(orig_skb);
+>  			} else {
+> -				kfree_skb(skb);
+> -				skb = orig_skb;
+> +				kfree_skb(ack_skb);
+>  			}
+
+So you're removing this part, but can't we really not reuse the clone_sk
+copy? The difference is that it's charged, but that's fine for the
+purposes here, no? Or am I misunderstanding that?
+
+johannes
+
