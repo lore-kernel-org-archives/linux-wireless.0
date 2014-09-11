@@ -1,125 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f48.google.com ([209.85.220.48]:53020 "EHLO
-	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757154AbaIRDaM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Sep 2014 23:30:12 -0400
-From: Masanari Iida <standby24x7@gmail.com>
-To: trivial@kernel.org, linux-kernel@vger.kernel.org,
-	Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, davem@davemloft.net,
-	Masanari Iida <standby24x7@gmail.com>
-Subject: [PATCH] [trivial] wireless:rtlwifi: Fix typo in rtl wifi drivers
-Date: Thu, 18 Sep 2014 12:29:52 +0900
-Message-Id: <1411010992-9999-1-git-send-email-standby24x7@gmail.com> (sfid-20140918_053038_552128_F2E1CBD8)
+Received: from mga09.intel.com ([134.134.136.24]:29803 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751102AbaIKHFI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Sep 2014 03:05:08 -0400
+From: "Coelho, Luciano" <luciano.coelho@intel.com>
+To: "dan.carpenter@oracle.com" <dan.carpenter@oracle.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
+Subject: Re: iwlwifi: mvm: set the TX disable bit when doing a chanctx switch
+Date: Thu, 11 Sep 2014 07:04:42 +0000
+Message-ID: <1410419081.14130.14.camel@dubbel> (sfid-20140911_090512_855531_71833468)
+References: <20140909094035.GA10599@mwanda>
+In-Reply-To: <20140909094035.GA10599@mwanda>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fix spelling typo "sleeped" in printk, found in
-multiple rtlwifi drivers.
-
-Signed-off-by: Masanari Iida <standby24x7@gmail.com>
----
- drivers/net/wireless/rtlwifi/rtl8188ee/phy.c | 2 +-
- drivers/net/wireless/rtlwifi/rtl8192ce/phy.c | 2 +-
- drivers/net/wireless/rtlwifi/rtl8192cu/phy.c | 2 +-
- drivers/net/wireless/rtlwifi/rtl8192de/phy.c | 2 +-
- drivers/net/wireless/rtlwifi/rtl8192se/phy.c | 2 +-
- drivers/net/wireless/rtlwifi/rtl8723ae/phy.c | 2 +-
- drivers/net/wireless/rtlwifi/rtl8723be/phy.c | 2 +-
- 7 files changed, 7 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/phy.c b/drivers/net/wireless/rtlwifi/rtl8188ee/phy.c
-index 1cd6c16..3d689e8 100644
---- a/drivers/net/wireless/rtlwifi/rtl8188ee/phy.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8188ee/phy.c
-@@ -2019,7 +2019,7 @@ static bool _rtl88ee_phy_set_rf_power_state(struct ieee80211_hw *hw,
- 					  RT_RF_OFF_LEVL_HALT_NIC);
- 		} else {
- 			RT_TRACE(rtlpriv, COMP_RF, DBG_DMESG,
--				 "Set ERFON sleeped:%d ms\n",
-+				 "Set ERFON slept:%d ms\n",
- 				 jiffies_to_msecs(jiffies - ppsc->
- 						  last_sleep_jiffies));
- 			ppsc->last_awake_jiffies = jiffies;
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c b/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c
-index 98b2230..ac3ffa2 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c
-@@ -480,7 +480,7 @@ static bool _rtl92ce_phy_set_rf_power_state(struct ieee80211_hw *hw,
- 						  RT_RF_OFF_LEVL_HALT_NIC);
- 			} else {
- 				RT_TRACE(rtlpriv, COMP_RF, DBG_DMESG,
--					 "Set ERFON sleeped:%d ms\n",
-+					 "Set ERFON slept:%d ms\n",
- 					 jiffies_to_msecs(jiffies -
- 							  ppsc->
- 							  last_sleep_jiffies));
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/phy.c b/drivers/net/wireless/rtlwifi/rtl8192cu/phy.c
-index 9831ff1..519d6e5 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/phy.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/phy.c
-@@ -437,7 +437,7 @@ static bool _rtl92cu_phy_set_rf_power_state(struct ieee80211_hw *hw,
- 					  RT_RF_OFF_LEVL_HALT_NIC);
- 		} else {
- 			RT_TRACE(rtlpriv, COMP_RF, DBG_DMESG,
--				 "Set ERFON sleeped:%d ms\n",
-+				 "Set ERFON slept:%d ms\n",
- 				 jiffies_to_msecs(jiffies -
- 						  ppsc->last_sleep_jiffies));
- 			ppsc->last_awake_jiffies = jiffies;
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/phy.c b/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
-index 592125a..7c02247 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
-@@ -3121,7 +3121,7 @@ bool rtl92d_phy_set_rf_power_state(struct ieee80211_hw *hw,
- 					  RT_RF_OFF_LEVL_HALT_NIC);
- 		} else {
- 			RT_TRACE(rtlpriv, COMP_POWER, DBG_DMESG,
--				 "awake, sleeped:%d ms state_inap:%x\n",
-+				 "awake, slept:%d ms state_inap:%x\n",
- 				 jiffies_to_msecs(jiffies -
- 						  ppsc->last_sleep_jiffies),
- 				 rtlpriv->psc.state_inap);
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/phy.c b/drivers/net/wireless/rtlwifi/rtl8192se/phy.c
-index 77c5b5f..6853ace 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192se/phy.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192se/phy.c
-@@ -565,7 +565,7 @@ bool rtl92s_phy_set_rf_power_state(struct ieee80211_hw *hw,
- 						  RT_RF_OFF_LEVL_HALT_NIC);
- 			} else {
- 				RT_TRACE(rtlpriv, COMP_POWER, DBG_DMESG,
--					 "awake, sleeped:%d ms state_inap:%x\n",
-+					 "awake, slept:%d ms state_inap:%x\n",
- 					 jiffies_to_msecs(jiffies -
- 							  ppsc->
- 							  last_sleep_jiffies),
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/phy.c b/drivers/net/wireless/rtlwifi/rtl8723ae/phy.c
-index 3ea78af..95f9902 100644
---- a/drivers/net/wireless/rtlwifi/rtl8723ae/phy.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8723ae/phy.c
-@@ -1486,7 +1486,7 @@ static bool _rtl8723ae_phy_set_rf_power_state(struct ieee80211_hw *hw,
- 					  RT_RF_OFF_LEVL_HALT_NIC);
- 		} else {
- 			RT_TRACE(rtlpriv, COMP_RF, DBG_DMESG,
--				 "Set ERFON sleeped:%d ms\n",
-+				 "Set ERFON slept:%d ms\n",
- 				 jiffies_to_msecs(jiffies -
- 				 ppsc->last_sleep_jiffies));
- 			ppsc->last_awake_jiffies = jiffies;
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/phy.c b/drivers/net/wireless/rtlwifi/rtl8723be/phy.c
-index 1575ef9..b49968e 100644
---- a/drivers/net/wireless/rtlwifi/rtl8723be/phy.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8723be/phy.c
-@@ -2041,7 +2041,7 @@ static bool _rtl8723be_phy_set_rf_power_state(struct ieee80211_hw *hw,
- 						  RT_RF_OFF_LEVL_HALT_NIC);
- 		} else {
- 			RT_TRACE(rtlpriv, COMP_RF, DBG_DMESG,
--				 "Set ERFON sleeped:%d ms\n",
-+				 "Set ERFON slept:%d ms\n",
- 				  jiffies_to_msecs(jiffies -
- 						   ppsc->last_sleep_jiffies));
- 			ppsc->last_awake_jiffies = jiffies;
--- 
-2.1.0.238.gce1d3a9
-
+SGkgRGFuLA0KDQpTb3JyeSBmb3IgdGhlIGxhdGUgcmVwbHkuDQoNCk9uIFR1ZSwgMjAxNC0wOS0w
+OSBhdCAxMjo0MCArMDMwMCwgRGFuIENhcnBlbnRlciB3cm90ZToNCj4gSGVsbG8gTHVjaWFubyBD
+b2VsaG8sDQo+IA0KPiBUaGUgcGF0Y2ggMGNlMDRjZTc5N2Y4OiAiaXdsd2lmaTogbXZtOiBzZXQg
+dGhlIFRYIGRpc2FibGUgYml0IHdoZW4NCj4gZG9pbmcgYSBjaGFuY3R4IHN3aXRjaCIgZnJvbSBN
+YXkgOCwgMjAxNCwgbGVhZHMgdG8gdGhlIGZvbGxvd2luZw0KPiBzdGF0aWMgY2hlY2tlciB3YXJu
+aW5nOg0KPiANCj4gCWRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvbXZtL21hYzgwMjExLmM6
+Mjc2OCBfX2l3bF9tdm1fYXNzaWduX3ZpZl9jaGFuY3R4KCkNCj4gCXdhcm46IG1pc3NpbmcgZXJy
+b3IgY29kZSBoZXJlPyAnaXdsX212bV9zdGFfZnJvbV9zdGFpZF9wcm90ZWN0ZWQoKScgZmFpbGVk
+LiAncmV0JyA9ICcwJw0KPiANCj4gZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9tdm0vbWFj
+ODAyMTEuYw0KPiAgIDI3NjEgICAgICAgICAgaWYgKHZpZi0+Y3NhX2FjdGl2ZSAmJiB2aWYtPnR5
+cGUgPT0gTkw4MDIxMV9JRlRZUEVfU1RBVElPTikgew0KPiAgIDI3NjIgICAgICAgICAgICAgICAg
+ICBzdHJ1Y3QgaXdsX212bV9zdGEgKm12bXN0YTsNCj4gICAyNzYzICANCj4gICAyNzY0ICAgICAg
+ICAgICAgICAgICAgbXZtc3RhID0gaXdsX212bV9zdGFfZnJvbV9zdGFpZF9wcm90ZWN0ZWQobXZt
+LA0KPiAgIDI3NjUgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICBtdm12aWYtPmFwX3N0YV9pZCk7DQo+ICAgMjc2NiAgDQo+ICAgMjc2NyAg
+ICAgICAgICAgICAgICAgIGlmIChXQVJOX09OKCFtdm1zdGEpKQ0KPiAgIDI3NjggICAgICAgICAg
+ICAgICAgICAgICAgICAgIGdvdG8gb3V0Ow0KPiANCj4gRGlkIHlvdSB3YW50IHRvIHNldCBhbiBl
+cnJvciBjb2RlIGhlcmU/ICBJIGRvbid0IGtub3cgdGhlIGNvZGUgd2VsbA0KPiBlbm91Z2ggdG8g
+c2F5Lg0KDQpHb29kIGNhdGNoIQ0KDQpUaGlzIGdldHMgZml4ZWQgaW4gYW5vdGhlciBwYXRjaCBJ
+IGltcGxlbWVudGVkICh0aGF0IEVtbWFudWVsIGlzDQpwcm9iYWJseSBnb2luZyB0byBzZW5kIG91
+dCBzb29uKSB3aGVyZSBJIG1vdmUgdGhlIGNvZGUgdG8gYW5vdGhlcg0KZnVuY3Rpb24uDQoNClNp
+bmNlIHRoaXMgc2hvdWxkIG5vdCByZWFsbHkgaGFwcGVuIGluIG5vcm1hbCBjYXNlcywgYW5kIHNp
+bmNlIHRoaXMgd2lsbA0KYmUgZml4ZWQgdmVyeSBzb29uIGFueXdheSwgd2UgY291bGQgcHJvYmFi
+bHkgbGVhdmUgdGhpcyBwYXRjaCBhcyBpdCBpcy4NCg0KVGhlIHBhdGNoIHRoYXQgZml4ZXMgdGhp
+cyBpcyBjYWxsZWQgIml3bHdpZmk6IG12bTogZmluYWxpemUgb24NCnBvc3Rfc3dpdGNoIGluc3Rl
+YWQgb2YgdW5hc3NpZ24iIGFuZCB5b3Ugc2hvdWxkIHNlZSBpdCBjb21pbmcgc29vbiB0byBhDQp0
+aGVhdGVyIG5lYXIgeW91LiA7KQ0KDQpUaGFua3MgZm9yIHJ1bm5pbmcgeW91ciBjb29sIHNjcmlw
+dHMhIDopDQoNCi0tDQpDaGVlcnMsDQpMdWNhLg0K
