@@ -1,78 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:49962 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750774AbaIYF4q (ORCPT
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:59905 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752714AbaIKOat (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Sep 2014 01:56:46 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-arm-kernel@lists.infradead.org, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
-	zajec5@gmail.com, varkabhadram@gmail.com, arend@broadcom.com
-Subject: Re: [PATCH v4 1/2] bcma: register bcma as device tree driver
-Date: Thu, 25 Sep 2014 07:55:56 +0200
-Message-ID: <3098264.dzR8BlVP6B@wuerfel> (sfid-20140925_075657_693362_B299031C)
-In-Reply-To: <54233550.60600@hauke-m.de>
-References: <1411339108-22307-1-git-send-email-hauke@hauke-m.de> <3856565.LYF1mvpGOq@wuerfel> <54233550.60600@hauke-m.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 11 Sep 2014 10:30:49 -0400
+From: Rostislav Lisovy <lisovy@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
+	jan-niklas.meier@volkswagen.de, burak.simsek@volkswagen.de,
+	Emmanuel Thierry <emmanuel.thierry@yogoko.fr>,
+	laszlo.virag@commsignia.com, lisovy@gmail.com,
+	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+Subject: [PATCH 4/4] nl80211: Join and Leave handling for OCB mode
+Date: Thu, 11 Sep 2014 16:30:22 +0200
+Message-Id: <1410445822-6559-5-git-send-email-rostislav.lisovy@fel.cvut.cz> (sfid-20140911_163114_326462_5C9982F0)
+In-Reply-To: <1410445822-6559-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
+References: <1410445822-6559-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 24 September 2014 23:19:12 Hauke Mehrtens wrote:
-> On 09/24/2014 11:48 AM, Arnd Bergmann wrote:
-> > On Wednesday 24 September 2014 00:04:18 Hauke Mehrtens wrote:
-> >> I assume this should then look somehow like this:
-> >>
-> >> axi@18000000 {
-> >>         compatible = "brcm,bus-axi";
-> >>         reg = <0x18000000 0x1000>;
-> >>         ranges = <0x00000000 0x18000000 0x00100000>;
-> >>         #address-cells = <1>;
-> >>         #size-cells = <1>;
-> >>
-> >>         #interrupt-cells = <1>;
-> >>         interrupt-map = <
-> >>                 /* ChipCommon */
-> >>                 0x00000000 0 &gic  GIC_SPI 85 IRQ_TYPE_LEVEL_HIGH
-> >>
-> >>                 /* PCIe Controller 0 */
-> >>                 0x00012000 0 &gic GIC_SPI 126 IRQ_TYPE_LEVEL_HIGH
-> >>                 0x00012000 1 &gic GIC_SPI 127 IRQ_TYPE_LEVEL_HIGH
-> >>                 0x00012000 2 &gic GIC_SPI 128 IRQ_TYPE_LEVEL_HIGH
-> >>                 0x00012000 3 &gic GIC_SPI 129 IRQ_TYPE_LEVEL_HIGH
-> >>                 0x00012000 4 &gic GIC_SPI 130 IRQ_TYPE_LEVEL_HIGH
-> >>                 0x00012000 5 &gic GIC_SPI 131 IRQ_TYPE_LEVEL_HIGH
-> >>
-> >>                 /* USB 2.0 Controller */
-> >>                 0x00021000 0 &gic GIC_SPI 79 IRQ_TYPE_LEVEL_HIGH
-> >>                 >;
-> >>         };
-> > 
-> > Right, although I would add a few more '<', '>' and ',' for readability,
-> > separating each line with a comma.
-> > 
-> > You are also missing an 'interrupt-map-mask' property that lists which
-> > bits of the address are significant.
-> > 
-> > Are the interrupt numbers you have in the example (0, 0, 1, 2, ... 5, 0)
-> > the actual numbers that are present in the hw registers?
-> 
-> Some cores do have more than one IRQ. The NAND core uses 8 IRQs and the
-> PCIe controller uses 5 (the vendor code just uses the last one which
-> gets triggered always). How can I handle this cases where one device has
-> more than one IRQ? There is no hardware register these IRQ get mapped
-> to. As far as I know the driver just knows that this device needs more
-> IRQs. Should I just add a special device node entry for such devices?
+Signed-off-by: Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+---
+ include/uapi/linux/nl80211.h |  8 ++++++++
+ net/wireless/nl80211.c       | 47 ++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 55 insertions(+)
 
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index cdf9ba4..4b39455 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -544,6 +544,11 @@
+  * @NL80211_CMD_LEAVE_MESH: Leave the mesh network -- no special arguments, the
+  *	network is determined by the network interface.
+  *
++ * @NL80211_CMD_JOIN_OCB: Join the OCB network. The center frequency and
++ *	bandwidth of a channel must be given.
++ * @NL80211_CMD_LEAVE_OCB: Leave the OCB network -- no special arguments, the
++ *	network is determined by the network interface.
++ *
+  * @NL80211_CMD_UNPROT_DEAUTHENTICATE: Unprotected deauthentication frame
+  *	notification. This event is used to indicate that an unprotected
+  *	deauthentication frame was dropped when MFP is in use.
+@@ -833,6 +838,9 @@ enum nl80211_commands {
+ 	NL80211_CMD_JOIN_MESH,
+ 	NL80211_CMD_LEAVE_MESH,
+ 
++	NL80211_CMD_JOIN_OCB,
++	NL80211_CMD_LEAVE_OCB,
++
+ 	NL80211_CMD_UNPROT_DEAUTHENTICATE,
+ 	NL80211_CMD_UNPROT_DISASSOCIATE,
+ 
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index cf178d2..bfbb54d 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1876,6 +1876,7 @@ static bool nl80211_can_set_dev_channel(struct wireless_dev *wdev)
+ 	 * operation to set the monitor channel if possible.
+ 	 */
+ 	return !wdev ||
++		wdev->iftype == NL80211_IFTYPE_OCB ||
+ 		wdev->iftype == NL80211_IFTYPE_AP ||
+ 		wdev->iftype == NL80211_IFTYPE_MESH_POINT ||
+ 		wdev->iftype == NL80211_IFTYPE_MONITOR ||
+@@ -2307,6 +2308,8 @@ static int nl80211_send_chandef(struct sk_buff *msg,
+ 			chandef->chan->center_freq))
+ 		return -ENOBUFS;
+ 	switch (chandef->width) {
++	case NL80211_CHAN_WIDTH_5:
++	case NL80211_CHAN_WIDTH_10:
+ 	case NL80211_CHAN_WIDTH_20_NOHT:
+ 	case NL80211_CHAN_WIDTH_20:
+ 	case NL80211_CHAN_WIDTH_40:
+@@ -8118,6 +8121,34 @@ static int nl80211_set_cqm(struct sk_buff *skb, struct genl_info *info)
+ 	return -EINVAL;
+ }
+ 
++static int nl80211_join_ocb(struct sk_buff *skb, struct genl_info *info)
++{
++	struct cfg80211_registered_device *rdev = info->user_ptr[0];
++	struct net_device *dev = info->user_ptr[1];
++	struct ocb_setup setup;
++	int err;
++
++	/* start with default */
++	memset(&setup, 0x0, sizeof(setup));
++
++	if (!info->attrs[NL80211_ATTR_WIPHY_FREQ])
++		return -EINVAL;
++
++	err = nl80211_parse_chandef(rdev, info, &setup.chandef);
++	if (err)
++		return err;
++
++	return cfg80211_join_ocb(rdev, dev, &setup);
++}
++
++static int nl80211_leave_ocb(struct sk_buff *skb, struct genl_info *info)
++{
++	struct cfg80211_registered_device *rdev = info->user_ptr[0];
++	struct net_device *dev = info->user_ptr[1];
++
++	return cfg80211_leave_ocb(rdev, dev);
++}
++
+ static int nl80211_join_mesh(struct sk_buff *skb, struct genl_info *info)
+ {
+ 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+@@ -9952,6 +9983,22 @@ static const struct genl_ops nl80211_ops[] = {
+ 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
+ 				  NL80211_FLAG_NEED_RTNL,
+ 	},
++	{
++		.cmd = NL80211_CMD_JOIN_OCB,
++		.doit = nl80211_join_ocb,
++		.policy = nl80211_policy,
++		.flags = GENL_ADMIN_PERM,
++		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
++				  NL80211_FLAG_NEED_RTNL,
++	},
++	{
++		.cmd = NL80211_CMD_LEAVE_OCB,
++		.doit = nl80211_leave_ocb,
++		.policy = nl80211_policy,
++		.flags = GENL_ADMIN_PERM,
++		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
++				  NL80211_FLAG_NEED_RTNL,
++	},
+ #ifdef CONFIG_PM
+ 	{
+ 		.cmd = NL80211_CMD_GET_WOWLAN,
+-- 
+2.0.0.rc4
 
-You create your own local irq domain (in the DT sense, not the Linux sense)
-by using #interrrupt-cells = <1> or more, and then use whatever input data
-you have available.
-
-Ideally there would be registers that you can use to look up a token
-you use (like the BCMA_MIPS_MIPS74K_INTMASK), if you don't have them
-here, just use the local index, and pass that down to bcma_core_irq(),
-from where you put it into the of_phandle_args.
-
-	Arnd
