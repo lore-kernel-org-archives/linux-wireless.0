@@ -1,56 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:16132 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751051AbaIJNf2 (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:45920 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751646AbaIKKj6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Sep 2014 09:35:28 -0400
-Cc: Dedy Lansky <qca_dlansky@qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>,
-	"Vladimir Kondratiev" <qca_vkondrat@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-Subject: [PATCH 08/22] wil6210: fix for memory corruption while insmod
-Date: Wed, 10 Sep 2014 16:34:37 +0300
-Message-ID: <1410356091-19219-9-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140910_153536_777385_E46CA60A)
-In-Reply-To: <1410356091-19219-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1410356091-19219-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Thu, 11 Sep 2014 06:39:58 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v4 2/2] ath10k: add testmode
+References: <20140910152136.12610.18499.stgit@potku.adurom.net>
+	<20140910152329.12610.41409.stgit@potku.adurom.net>
+	<CA+BoTQkBiKPzHBfTA2xpmgbUbutSj5Z6w6gP7EO6aotacM5_cA@mail.gmail.com>
+Date: Thu, 11 Sep 2014 13:39:41 +0300
+In-Reply-To: <CA+BoTQkBiKPzHBfTA2xpmgbUbutSj5Z6w6gP7EO6aotacM5_cA@mail.gmail.com>
+	(Michal Kazior's message of "Thu, 11 Sep 2014 11:47:34 +0200")
+Message-ID: <87ppf230gi.fsf@kamboji.qca.qualcomm.com> (sfid-20140911_124002_234959_7611B7A4)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-After setting interrupt handler, driver enabled interrupts.
-This caused stale (old) HW interrupts to fire before driver is
-fully initialized.
-The fix is to enable interrupts only when driver is fully initialized
-and after FW/HW reset (to prevent any stale interrupts)
+> On 10 September 2014 17:23, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> [...]
+>
+> Just a small nitpick:
+>
+>> +static int ath10k_tm_cmd_utf_stop(struct ath10k *ar, struct nlattr *tb[])
+>> +{
+>> +       int ret;
+>> +
+>> +       ath10k_dbg(ar, ATH10K_DBG_TESTMODE, "testmode cmd utf stop\n");
+>> +
+>> +       mutex_lock(&ar->conf_mutex);
+>> +
+>> +       if (ar->state != ATH10K_STATE_UTF) {
+>> +               ret = -ENETDOWN;
+>> +               goto out;
+>> +       }
+>> +
+>> +       __ath10k_tm_cmd_utf_stop(ar);
+>> +
+>> +       ar->state = ATH10K_STATE_OFF; // <-- this
+>
+> I would move it to __ath10k_tm_cmd_utf_stop() itself so that the state
+> is reset in ath10k_testmode_destroy() as well.
 
-Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/interrupt.c | 7 +------
- 1 file changed, 1 insertion(+), 6 deletions(-)
+Ok. It doesn't make any difference on the functionality, but I'll change
+it anyway. I folded this patch to the commit:
 
-diff --git a/drivers/net/wireless/ath/wil6210/interrupt.c b/drivers/net/wireless/ath/wil6210/interrupt.c
-index 331d0dc..58ddcc9 100644
---- a/drivers/net/wireless/ath/wil6210/interrupt.c
-+++ b/drivers/net/wireless/ath/wil6210/interrupt.c
-@@ -538,12 +538,7 @@ int wil6210_init_irq(struct wil6210_priv *wil, int irq)
- 					  wil6210_thread_irq,
- 					  wil->n_msi ? 0 : IRQF_SHARED,
- 					  WIL_NAME, wil);
--	if (rc)
--		return rc;
--
--	wil6210_enable_irq(wil);
--
--	return 0;
-+	return rc;
+diff --git a/drivers/net/wireless/ath/ath10k/testmode.c b/drivers/net/wireless/ath/ath10k/testmode.c
+index 9d77d72042ff..483db9cb8c96 100644
+--- a/drivers/net/wireless/ath/ath10k/testmode.c
++++ b/drivers/net/wireless/ath/ath10k/testmode.c
+@@ -253,6 +253,8 @@ static void __ath10k_tm_cmd_utf_stop(struct ath10k *ar)
+ 
+        release_firmware(ar->testmode.utf);
+        ar->testmode.utf = NULL;
++
++       ar->state = ATH10K_STATE_OFF;
  }
  
- void wil6210_fini_irq(struct wil6210_priv *wil, int irq)
--- 
-1.9.1
+ static int ath10k_tm_cmd_utf_stop(struct ath10k *ar, struct nlattr *tb[])
+@@ -270,7 +272,6 @@ static int ath10k_tm_cmd_utf_stop(struct ath10k *ar, struct nlattr *tb[])
+ 
+        __ath10k_tm_cmd_utf_stop(ar);
+ 
+-       ar->state = ATH10K_STATE_OFF;
+        ret = 0;
+ 
+        ath10k_info(ar, "UTF firmware stopped\n");
 
+-- 
+Kalle Valo
