@@ -1,41 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.131]:49157 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756176AbaIZWDw convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Sep 2014 18:03:52 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>,
-	devicetree@vger.kernel.org
-Subject: Re: [PATCH] bcma: use device from DT (brcm,bus-gpio) for SoC GPIO chip
-Date: Sat, 27 Sep 2014 00:03:18 +0200
-Message-ID: <2539898.4te2VKk57a@wuerfel> (sfid-20140927_000356_443854_CDE68FA0)
-In-Reply-To: <1411741733-13888-1-git-send-email-zajec5@gmail.com>
-References: <1411741733-13888-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from s3.sipsolutions.net ([5.9.151.49]:55985 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753404AbaIKKZJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Sep 2014 06:25:09 -0400
+Message-ID: <1410431106.22863.8.camel@jlt4.sipsolutions.net> (sfid-20140911_122519_625119_1BDFBF60)
+Subject: Re: [PATCH] cfg80211/mac80211: add wmm info to assoc event
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>,
+	Eliad Peller <eliadx.peller@intel.com>
+Date: Thu, 11 Sep 2014 12:25:06 +0200
+In-Reply-To: <1410271785-10088-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1410271785-10088-1-git-send-email-emmanuel.grumbach@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 26 September 2014 16:28:53 Rafał Miłecki wrote:
-> +The top-level axi bus may contain following children:
-> +
-> +- gpio: GPIO chip on the SoC
-> +
-> +  Required properties:
-> +  - compatible: "brcm,bus-gpio"
-> +  - gpio-controller : makes the node a GPIO controller
-> +  - #gpio-cells : size of the GPIO specifier, must be 2
-> +
+On Tue, 2014-09-09 at 17:09 +0300, Emmanuel Grumbach wrote:
+> From: Eliad Peller <eliad@wizery.com>
 > 
+> Userspace might need to know what queues are configured
+> for uapsd (e.g. for setting proper default values in tspecs).
+> 
+> Add this bitmap to the association event (inside wmm
+> nested attribute)
+> 
+> Add additional parameter to cfg80211_rx_assoc_resp,
+> and update its callers.
 
-I wonder if it would be better to avoid the subnode here and just
-make the parent itself the gpio controller.
+Applied.
 
-Is the gpio controller part of the bus itself in reality, or is it
-a device that gets probed on the bus?
+johannes
 
-	Arnd
