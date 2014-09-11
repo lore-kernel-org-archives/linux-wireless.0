@@ -1,57 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:37569 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750818AbaIWJEW convert rfc822-to-8bit (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:47299 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751778AbaIKVu6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Sep 2014 05:04:22 -0400
-Received: by mail-wg0-f42.google.com with SMTP id a1so3842303wgh.13
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Sep 2014 02:04:21 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1411149890-12618-1-git-send-email-greearb@candelatech.com>
-References: <1411149890-12618-1-git-send-email-greearb@candelatech.com>
-Date: Tue, 23 Sep 2014 11:04:21 +0200
-Message-ID: <CA+BoTQmMuwz54ExCCBvScfUAzSHmGhGvDi-Xb268eAfsNyUxfQ@mail.gmail.com> (sfid-20140923_110427_159341_EACE5E3D)
-Subject: Re: [PATCH 1/3] ath10k: use 64-bit vdev map.
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 11 Sep 2014 17:50:58 -0400
+Received: by mail-wi0-f174.google.com with SMTP id n3so1736110wiv.7
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Sep 2014 14:50:56 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] ath9k: fix radar parameters initialization
+Date: Thu, 11 Sep 2014 23:50:54 +0200
+Message-Id: <1410472254-15600-1-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140911_235101_743365_8470CE24)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 19 September 2014 20:04,  <greearb@candelatech.com> wrote:
-> From: Ben Greear <greearb@candelatech.com>
->
-> This can allow more than 32 stations to be supported
-> without over-running the bitmap.
->
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> ---
->  drivers/net/wireless/ath/ath10k/core.c |  4 ++--
->  drivers/net/wireless/ath/ath10k/core.h |  2 +-
->  drivers/net/wireless/ath/ath10k/mac.c  | 21 ++++++++++++---------
->  3 files changed, 15 insertions(+), 12 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-> index cee18c8..37e3166 100644
-[...]
-> @@ -2772,9 +2772,12 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
->                 ret = -EBUSY;
->                 goto err;
->         }
-> -       bit = ffs(ar->free_vdev_map);
-> +       bit = __ffs64(ar->free_vdev_map);
->
-> -       arvif->vdev_id = bit - 1;
-> +       ath10k_warn(ar, "Creating vdev id: %i  map: %llu\n",
-> +                   bit, ar->free_vdev_map);
+Move ath9k_hw_set_radar_params() in ath9k_hw_reset() in order to avoid
+AR_PHY_RADAR registers are overwritten after hw reset
 
-Shouldn't this be a ath10k_dbg()? It probably makes sense to print the
-map as hex instead of a decimal too. Prints should be lower case and
-debug needs a prefix, i.e.
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+---
+ drivers/net/wireless/ath/ath9k/channel.c | 2 --
+ drivers/net/wireless/ath/ath9k/hw.c      | 5 +++++
+ 2 files changed, 5 insertions(+), 2 deletions(-)
 
- "mac create vdev %i map %llx"
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index a1b3282..d2a0f12 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -83,8 +83,6 @@ static int ath_set_channel(struct ath_softc *sc)
+ 	if (hw->conf.radar_enabled) {
+ 		u32 rxfilter;
+ 
+-		/* set HW specific DFS configuration */
+-		ath9k_hw_set_radar_params(ah);
+ 		rxfilter = ath9k_hw_getrxfilter(ah);
+ 		rxfilter |= ATH9K_RX_FILTER_PHYRADAR |
+ 				ATH9K_RX_FILTER_PHYERR;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 69bbea1..ef5f5a6 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1954,6 +1954,11 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	if (AR_SREV_9565(ah) && common->bt_ant_diversity)
+ 		REG_SET_BIT(ah, AR_BTCOEX_WL_LNADIV, AR_BTCOEX_WL_LNADIV_FORCE_ON);
+ 
++	if (ah->hw->conf.radar_enabled) {
++		/* set HW specific DFS configuration */
++		ath9k_hw_set_radar_params(ah);
++	}
++
+ 	return 0;
+ }
+ EXPORT_SYMBOL(ath9k_hw_reset);
+-- 
+1.9.1
 
-
-Michał
