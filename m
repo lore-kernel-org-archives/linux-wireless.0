@@ -1,69 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f181.google.com ([209.85.217.181]:64473 "EHLO
-	mail-lb0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754061AbaIAQvV (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:36092 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751762AbaIKLi2 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Sep 2014 12:51:21 -0400
+	Thu, 11 Sep 2014 07:38:28 -0400
+Received: by mail-wi0-f174.google.com with SMTP id n3so751877wiv.1
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Sep 2014 04:38:27 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <54046CA1.4040108@broadcom.com>
-References: <1409329464-768-1-git-send-email-geert@linux-m68k.org>
-	<54042CA1.6010904@broadcom.com>
-	<CAMuHMdV2hV_r_OASkv+U-AGVov18qFOrAVm-nDHHPHXZ6fcxxg@mail.gmail.com>
-	<54046CA1.4040108@broadcom.com>
-Date: Mon, 1 Sep 2014 18:51:19 +0200
-Message-ID: <CAMuHMdWEbyXmNyPW1Mubv+idYuqsqbVVKuGyML5=vJ+58iTZig@mail.gmail.com> (sfid-20140901_185140_409373_EBC1F6DF)
-Subject: Re: [PATCH] brcmfmac: BRCMFMAC should depend on HAS_DMA
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Brett Rudley <brudley@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	brcm80211-dev-list@broadcom.com,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <1410432565.23822.11.camel@dubbel>
+References: <1410418181.14130.7.camel@dubbel>
+	<CA+BoTQ=dqQz1epo=-odvVQjOx0K-yLNtivufE5BKBK9+QV2wGQ@mail.gmail.com>
+	<1410432565.23822.11.camel@dubbel>
+Date: Thu, 11 Sep 2014 13:38:26 +0200
+Message-ID: <CA+BoTQkLmX=u9AxcTpyo4pgE=2TEKo+E4qeJc4-PpODk76xJuw@mail.gmail.com> (sfid-20140911_133831_498929_243447A9)
+Subject: Re: CSA broken with !use_chanctx drivers?
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Berg, Johannes" <johannes@sipsolutions.net>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
+On 11 September 2014 12:49, Luca Coelho <luca@coelho.fi> wrote:
+> On Thu, 2014-09-11 at 11:28 +0200, Michal Kazior wrote:
+>> On 11 September 2014 08:49, Luca Coelho <luca@coelho.fi> wrote:
+[...]
+>> > It seems that we're not updating the chandef in non-chanctx drivers.  Or
+>> > are we missing something?
+[...]
+>> From what I've tested just now it seems iwldvm (3.17-rc2, fw
+>> 18.168.6.1) calls ieee80211_chswitch_done() almost immediately most of
+>> the time. This obviously ends up with beacon loss with larger CS
+>> count. With small CS count it works though. This doesn't seem to be
+>> related to the missing hw_confg().
+>
+> The hw_config() call is not really missing, right? We're actually now
+> calling it even for drivers that implement drv_channel_switch()
+> (previously we wouldn't).
 
-On Mon, Sep 1, 2014 at 2:54 PM, Arend van Spriel <arend@broadcom.com> wrote:
-> On 09/01/14 10:44, Geert Uytterhoeven wrote:
->> On Mon, Sep 1, 2014 at 10:21 AM, Arend van Spriel<arend@broadcom.com>
->> wrote:
->>>>
->>>>    config BRCMFMAC
->>>>          tristate "Broadcom IEEE802.11n embedded FullMAC WLAN driver"
->>>> -       depends on CFG80211
->>>> +       depends on CFG80211A&&   HAS_DMA
->>>
->>> Not sure what happened here, but CFG80211 kconfig option did was not
->>> renamed
->>> as far as I know. Anyway, I would like to propose a different solution.
->>> Will get back to you when I have it ready.
+I've had a brain fart.. You're right. I meant "This doesn't seem to be
+related to the fact we call hw_config() now".
 
-> I added Kconfig options for the proto layer which are selected by the host
-> interface selection. So the HAS_DMA dependency is checked for BRCMFMAC_PCIE.
 
-Thanks!
+> I don't know why iwldvm is finalizing the channel switch almost
+> immediately... It doesn't make much sense, because all the traffic until
+> the switch will be lost.  Unless the CSA is marked as "quiet", because
+> then nobody should be transmitting and it doesn't really matter when you
+> switched.
 
-> I am wondering whether GENERIC_IO should also be checked.
+It wasn't quiet. Just a simple "hostapd_cli chan_switch 50 5200".
+Maybe it doesn't like ath10k being the AP? Or maybe there's something
+wrong with tsf/timestamp on either side?
 
-Probably not. Let's see if anyone complains ;-)
 
-> Can you verify the patch below works with your configuration?
+> Anyway, I don't think the problem is that we call hw_config() now,
+> because that is done *after* chswitch_done() is called.
 
-Yes, it compiles and links fine now (after applying it manually due to
-whitespace mess-up).
+Yep. If the CS is small or the chswitch_done() is called in a timely
+fashion iwldvm doesn't seem to be bothered by the extra hw_config()
+call.
 
-Gr{oetje,eeting}s,
 
-                        Geert
+>> Now that I think it's probably a good idea to make multi-vif CSA
+>> mutually exlusive with drv_channel_switch() based STA CSA..
+>
+> In the iwlmvm driver, we have to do the actual context switch when we
+> decide to, not exactly at TBTT count=0 as mac80211 does with "software
+> channel switch".  The way I solved this (will be upstreamed soon, I
+> believe) is that I implement a dummy drv_channel_switch().  I only do
+> this to prevent mac80211 from starting its own timer, allowing me to
+> call ieee80211_chswitch_done() when I need to.
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+Oh.. ok.
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+
+Michał
