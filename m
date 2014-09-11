@@ -1,80 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:39215 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750858AbaIOFNI (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:58415 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755821AbaIKTaT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Sep 2014 01:13:08 -0400
-Received: by mail-wi0-f177.google.com with SMTP id em10so3450964wid.10
-        for <linux-wireless@vger.kernel.org>; Sun, 14 Sep 2014 22:13:07 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Oren Givon <oren.givon@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 02/28] iwlwifi: add and edit 8000 series PCI IDs
-Date: Mon, 15 Sep 2014 08:12:34 +0300
-Message-Id: <1410757980-2138-2-git-send-email-egrumbach@gmail.com> (sfid-20140915_071314_523284_F32DF2ED)
-In-Reply-To: <5416742C.3070804@gmail.com>
-References: <5416742C.3070804@gmail.com>
+	Thu, 11 Sep 2014 15:30:19 -0400
+Date: Thu, 11 Sep 2014 15:21:46 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Sergey Ryazanov <ryazanov.s.a@gmail.com>
+Cc: Jiri Slaby <jirislaby@gmail.com>, Paul Bolle <pebolle@tiscali.nl>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Oleksij Rempel <linux@rempel-privat.de>,
+	Richard Weinberger <richard@nod.at>,
+	Jonathan Bither <jonbither@gmail.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	ath5k-devel@venema.h4ckr.net, open@hauke-m.de,
+	"list@hauke-m.de:NETWORKING DRIVERS" <list@hauke-m.de>,
+	"antonynpavlov@gmail.com" <antonynpavlov@gmail.com>,
+	OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"list@hauke-m.de:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
+	open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 09/28] Remove ATHEROS_AR231X
+Message-ID: <20140911192146.GC22872@tuxdriver.com> (sfid-20140911_213043_298896_095EFA98)
+References: <CAHNKnsSfaT7xC5_wv=TrGLEQ2pjC91Q1XG891_n64OuR0fA9Jg@mail.gmail.com>
+ <1403091974.1984.102.camel@x220>
+ <1409911856.7832.9.camel@x220>
+ <CAHNKnsRipRHicKOUW4dCutD1-sUG6qPnP2QuOveH_t1MFX9XgQ@mail.gmail.com>
+ <1409916824.7832.20.camel@x220>
+ <CAHNKnsQ1gt=DRBTd9Q9yos1idqmXMepEPvhm8a7unP-whzNAgg@mail.gmail.com>
+ <20140909182734.GJ29412@tuxdriver.com>
+ <CAHNKnsQ8G3ZFHshq7wOqex1J6DbVD5uHVAyvs+aDC2Znk5zWww@mail.gmail.com>
+ <541037D2.7060007@gmail.com>
+ <CAHNKnsTtqz10c=vV-f10awLanYZzom3kJ1cO5xgTGs-t3O9NYg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAHNKnsTtqz10c=vV-f10awLanYZzom3kJ1cO5xgTGs-t3O9NYg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Oren Givon <oren.givon@intel.com>
+On Wed, Sep 10, 2014 at 04:19:21PM +0400, Sergey Ryazanov wrote:
+> 2014-09-10 15:36 GMT+04:00, Jiri Slaby <jirislaby@gmail.com>:
+> > On 09/10/2014, 12:33 PM, Sergey Ryazanov wrote:
+> >> 2014-09-09 22:27 GMT+04:00, John W. Linville <linville@tuxdriver.com>:
+> >>> On Fri, Sep 05, 2014 at 04:02:10PM +0400, Sergey Ryazanov wrote:
+> >>>> 2014-09-05 15:33 GMT+04:00 Paul Bolle <pebolle@tiscali.nl>:
+> >>>>> Hi Sergey,
+> >>>>>
+> >>>>> On Fri, 2014-09-05 at 15:12 +0400, Sergey Ryazanov wrote:
+> >>>>>> 2014-09-05 14:10 GMT+04:00, Paul Bolle <pebolle@tiscali.nl>:
+> >>>>>>> On Wed, 2014-06-18 at 13:46 +0200, Paul Bolle wrote:
+> >>>>>>>> Having this conversation every rc1 is getting a bit silly. Could
+> >>>>>>>> Jiri
+> >>>>>>>> e.a. perhaps set some specific deadline for ATHEROS_AR231X to be
+> >>>>>>>> submitted?
+> >>>>>>>
+> >>>>>>> I waited until rc3. Have you seen any activity on this front? If
+> >>>>>>> not,
+> >>>>>>> should I resend the patch that removes the code in mainline that
+> >>>>>>> depends
+> >>>>>>> on ATHEROS_AR231X (ie, AHB bus support)?
+> >>>>>>>
+> >>>>>> Recent activity always could be found in [1]. Now I finish another
+> >>>>>> one
+> >>>>>> round of cleanups and have a plan to fix several things (you can
+> >>>>>> always find something that you really want to improve). But if you
+> >>>>>> insist I could immediately switch to "send upstream" mode. And seems
+> >>>>>> that this would be better approach.
+> >>>>>>
+> >>>>>> 1. https://dev.openwrt.org/log/trunk/target/linux/atheros
+> >>>>>
+> >>>>> And where can the related PULL requests or patch submissions be found?
+> >>>>>
+> >>>> I have not sent patches yet, since I thought that it would be easier
+> >>>> to cleanup them in openwrt tree and then send them upstream.
+> >>>
+> >>> That excuse has worn a bit thin.  Perhaps Paul should repost his
+> >>> removal and you can add a revert to the start of your patch series?
+> >>>
+> >> As for me, I do not like such flapping
+> >
+> > Agreed in case what you have is in a good enough shape. You (and also
+> > others) can still clean up the code in upstream too. So, if it is
+> > mergeable, send it for upstream inclusion now, otherwise I am all for
+> > John to apply the Paul's patch.
+> 
+> Two days is the last deadline :)
+> 
+> > The unused code has been a way too long
+> > in the tree now.
+> 
+> Code actively used in owrt firmware and its forks.
 
-Edit some 8000 series PCI IDs and add configuration to
-Dual Band Wireless N 8260 devices.
+Is this code coming or not?  When can I expect to see it posted?
 
-Signed-off-by: Oren Givon <oren.givon@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-8000.c   | 9 +++++++++
- drivers/net/wireless/iwlwifi/iwl-config.h | 1 +
- drivers/net/wireless/iwlwifi/pcie/drv.c   | 1 +
- 3 files changed, 11 insertions(+)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-8000.c b/drivers/net/wireless/iwlwifi/iwl-8000.c
-index 23a67bf..3c576ee 100644
---- a/drivers/net/wireless/iwlwifi/iwl-8000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-8000.c
-@@ -117,6 +117,15 @@ static const struct iwl_ht_params iwl8000_ht_params = {
- 	.led_mode = IWL_LED_RF_STATE,				\
- 	.nvm_hw_section_num = NVM_HW_SECTION_NUM_FAMILY_8000
- 
-+const struct iwl_cfg iwl8260_2n_cfg = {
-+	.name = "Intel(R) Dual Band Wireless N 8260",
-+	.fw_name_pre = IWL8000_FW_PRE,
-+	IWL_DEVICE_8000,
-+	.ht_params = &iwl8000_ht_params,
-+	.nvm_ver = IWL8000_NVM_VERSION,
-+	.nvm_calib_ver = IWL8000_TX_POWER_VERSION,
-+};
-+
- const struct iwl_cfg iwl8260_2ac_cfg = {
- 	.name = "Intel(R) Dual Band Wireless AC 8260",
- 	.fw_name_pre = IWL8000_FW_PRE,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-config.h b/drivers/net/wireless/iwlwifi/iwl-config.h
-index 07c0f1f..1b9c77d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-config.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-config.h
-@@ -343,6 +343,7 @@ extern const struct iwl_cfg iwl3165_2ac_cfg;
- extern const struct iwl_cfg iwl7265_2ac_cfg;
- extern const struct iwl_cfg iwl7265_2n_cfg;
- extern const struct iwl_cfg iwl7265_n_cfg;
-+extern const struct iwl_cfg iwl8260_2n_cfg;
- extern const struct iwl_cfg iwl8260_2ac_cfg;
- extern const struct iwl_cfg iwl8260_2ac_sdio_cfg;
- #endif /* CONFIG_IWLMVM */
-diff --git a/drivers/net/wireless/iwlwifi/pcie/drv.c b/drivers/net/wireless/iwlwifi/pcie/drv.c
-index b9d5049..ca68c3c 100644
---- a/drivers/net/wireless/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/drv.c
-@@ -405,6 +405,7 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- 
- /* 8000 Series */
- 	{IWL_PCI_DEVICE(0x24F3, 0x0010, iwl8260_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x24F3, 0x0004, iwl8260_2n_cfg)},
- 	{IWL_PCI_DEVICE(0x24F4, 0x0030, iwl8260_2ac_cfg)},
- #endif /* CONFIG_IWLMVM */
- 
 -- 
-1.9.1
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
