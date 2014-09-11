@@ -1,207 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cassarossa.samfundet.no ([193.35.52.29]:39021 "EHLO
-	cassarossa.samfundet.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751968AbaIAItz (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:44312 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755566AbaIKUvi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Sep 2014 04:49:55 -0400
-In-Reply-To: <20140830184516.GA31497@sesse.net>
-References: <20140830184516.GA31497@sesse.net>
-From: "Steinar H. Gunderson" <sgunderson@bigfoot.com>
-Date: Fri, 29 Aug 2014 19:38:02 +0200
-Subject: [PATCH v5 2/2] mac80211: support DTPC IE (from Cisco Client
- eXtensions)
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-Message-Id: <E1XONJB-0005LB-O8@pannekake.samfundet.no> (sfid-20140901_104958_685196_AC8D7017)
+	Thu, 11 Sep 2014 16:51:38 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH for-3.17 2/3] brcmfmac: conditionally compile firmware protocol source code
+Date: Thu, 11 Sep 2014 22:51:31 +0200
+Message-ID: <1410468692-20852-3-git-send-email-arend@broadcom.com> (sfid-20140911_225143_527111_C3DD5F46)
+In-Reply-To: <1410468692-20852-1-git-send-email-arend@broadcom.com>
+References: <1410468692-20852-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Linux already supports 802.11h, where the access point can tell the
-client to reduce its transmission power. However, 802.11h is only
-defined for 5 GHz, where the need for this is much smaller than on
-2.4 GHz.
+The host-interface can select which protocol implementation it
+needs. Selecting PCIe will include the msgbuf protocol and selecting
+USB and/or SDIO will include the bcdc protocol. The PCIe kconfig
+option assures the dependencies for msgbuf are met, ie. HAS_DMA.
 
-Cisco has their own solution, called DTPC (Dynamic Transmit Power
-Control). Cisco APs on a controller sometimes but not always send
-802.11h; they always send DTPC, even on 2.4 GHz. This patch adds support
-for parsing and honoring the DTPC IE in addition to the 802.11h
-element (they do not always contain the same limits, so both must
-be honored); the format is not documented, but very simple.
-
-Tested (on top of wireless.git and on 3.16.1) against a Cisco Aironet
-1142 joined to a Cisco 2504 WLC, by setting various transmit power
-levels for the given access points and observing the results.
-The Wireshark 802.11 dissector agrees with the interpretation of the
-element, except for negative numbers, which seem to never happen
-anyway.
-
-Signed-off-by: Steinar H. Gunderson <sgunderson@bigfoot.com>
+Reported-by: Geert Uytterhoeven <geert@linux-m68k.org>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- include/linux/ieee80211.h  |    3 ++-
- net/mac80211/ieee80211_i.h |    1 +
- net/mac80211/mlme.c        |   59 +++++++++++++++++++++++++++++++++++---------
- net/mac80211/util.c        |   22 +++++++++++++++++
- 4 files changed, 73 insertions(+), 12 deletions(-)
+ drivers/net/wireless/brcm80211/Kconfig           | 10 ++++++++++
+ drivers/net/wireless/brcm80211/brcmfmac/Makefile | 10 ++++++----
+ drivers/net/wireless/brcm80211/brcmfmac/bcdc.h   |  7 +++++--
+ drivers/net/wireless/brcm80211/brcmfmac/msgbuf.h | 11 +++++++++--
+ 4 files changed, 30 insertions(+), 8 deletions(-)
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 63ab3873..d0ec287 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -1806,7 +1806,8 @@ enum ieee80211_eid {
- 	WLAN_EID_DMG_TSPEC = 146,
- 	WLAN_EID_DMG_AT = 147,
- 	WLAN_EID_DMG_CAP = 148,
--	/* 149-150 reserved for Cisco */
-+	/* 149 reserved for Cisco */
-+	WLAN_EID_CISCO_VENDOR_SPECIFIC = 150,
- 	WLAN_EID_DMG_OPERATION = 151,
- 	WLAN_EID_DMG_BSS_PARAM_CHANGE = 152,
- 	WLAN_EID_DMG_BEAM_REFINEMENT = 153,
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index ef7a089..e995556 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1367,6 +1367,7 @@ struct ieee802_11_elems {
- 	const struct ieee80211_wide_bw_chansw_ie *wide_bw_chansw_ie;
- 	const u8 *country_elem;
- 	const u8 *pwr_constr_elem;
-+	const u8 *cisco_dtpc_elem;
- 	const struct ieee80211_timeout_interval_ie *timeout_int;
- 	const u8 *opmode_notif;
- 	const struct ieee80211_sec_chan_offs_ie *sec_chan_offs;
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 524c7cc..49d743b 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1217,14 +1217,31 @@ static bool ieee80211_find_80211h_pwr_constr(
- 	return have_chan_pwr;
- }
+diff --git a/drivers/net/wireless/brcm80211/Kconfig b/drivers/net/wireless/brcm80211/Kconfig
+index b8e2561..fe3dc12 100644
+--- a/drivers/net/wireless/brcm80211/Kconfig
++++ b/drivers/net/wireless/brcm80211/Kconfig
+@@ -27,10 +27,17 @@ config BRCMFMAC
+ 	  one of the bus interface support. If you choose to build a module,
+ 	  it'll be called brcmfmac.ko.
  
-+static bool ieee80211_find_cisco_dtpc(struct ieee80211_sub_if_data *sdata,
-+				      struct ieee80211_channel *channel,
-+				      const u8 *cisco_dtpc_ie,
-+				      int *pwr_level)
++config BRCMFMAC_PROTO_BCDC
++	bool
++
++config BRCMFMAC_PROTO_MSGBUF
++	bool
++
+ config BRCMFMAC_SDIO
+ 	bool "SDIO bus interface support for FullMAC driver"
+ 	depends on (MMC = y || MMC = BRCMFMAC)
+ 	depends on BRCMFMAC
++	select BRCMFMAC_PROTO_BCDC
+ 	select FW_LOADER
+ 	default y
+ 	---help---
+@@ -42,6 +49,7 @@ config BRCMFMAC_USB
+ 	bool "USB bus interface support for FullMAC driver"
+ 	depends on (USB = y || USB = BRCMFMAC)
+ 	depends on BRCMFMAC
++	select BRCMFMAC_PROTO_BCDC
+ 	select FW_LOADER
+ 	---help---
+ 	  This option enables the USB bus interface support for Broadcom
+@@ -52,6 +60,8 @@ config BRCMFMAC_PCIE
+ 	bool "PCIE bus interface support for FullMAC driver"
+ 	depends on BRCMFMAC
+ 	depends on PCI
++	depends on HAS_DMA
++	select BRCMFMAC_PROTO_MSGBUF
+ 	select FW_LOADER
+ 	---help---
+ 	  This option enables the PCIE bus interface support for Broadcom
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/Makefile b/drivers/net/wireless/brcm80211/brcmfmac/Makefile
+index c35adf4..90a977f 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/Makefile
++++ b/drivers/net/wireless/brcm80211/brcmfmac/Makefile
+@@ -30,16 +30,18 @@ brcmfmac-objs += \
+ 		fwsignal.o \
+ 		p2p.o \
+ 		proto.o \
+-		bcdc.o \
+-		commonring.o \
+-		flowring.o \
+-		msgbuf.o \
+ 		dhd_common.o \
+ 		dhd_linux.o \
+ 		firmware.o \
+ 		feature.o \
+ 		btcoex.o \
+ 		vendor.o
++brcmfmac-$(CONFIG_BRCMFMAC_PROTO_BCDC) += \
++		bcdc.o
++brcmfmac-$(CONFIG_BRCMFMAC_PROTO_MSGBUF) += \
++		commonring.o \
++		flowring.o \
++		msgbuf.o
+ brcmfmac-$(CONFIG_BRCMFMAC_SDIO) += \
+ 		dhd_sdio.o \
+ 		bcmsdh.o
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcdc.h b/drivers/net/wireless/brcm80211/brcmfmac/bcdc.h
+index 17e8c03..6003179 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcdc.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcdc.h
+@@ -16,9 +16,12 @@
+ #ifndef BRCMFMAC_BCDC_H
+ #define BRCMFMAC_BCDC_H
+ 
+-
++#ifdef CONFIG_BRCMFMAC_PROTO_BCDC
+ int brcmf_proto_bcdc_attach(struct brcmf_pub *drvr);
+ void brcmf_proto_bcdc_detach(struct brcmf_pub *drvr);
+-
++#else
++static inline int brcmf_proto_bcdc_attach(struct brcmf_pub *drvr) { return 0; }
++static inline void brcmf_proto_bcdc_detach(struct brcmf_pub *drvr) {}
++#endif
+ 
+ #endif /* BRCMFMAC_BCDC_H */
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.h b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.h
+index f901ae5..77a51b8 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.h
+@@ -15,6 +15,7 @@
+ #ifndef BRCMFMAC_MSGBUF_H
+ #define BRCMFMAC_MSGBUF_H
+ 
++#ifdef CONFIG_BRCMFMAC_PROTO_MSGBUF
+ 
+ #define BRCMF_H2D_MSGRING_CONTROL_SUBMIT_MAX_ITEM	20
+ #define BRCMF_H2D_MSGRING_RXPOST_SUBMIT_MAX_ITEM	256
+@@ -32,9 +33,15 @@
+ 
+ 
+ int brcmf_proto_msgbuf_rx_trigger(struct device *dev);
++void brcmf_msgbuf_delete_flowring(struct brcmf_pub *drvr, u8 flowid);
+ int brcmf_proto_msgbuf_attach(struct brcmf_pub *drvr);
+ void brcmf_proto_msgbuf_detach(struct brcmf_pub *drvr);
+-void brcmf_msgbuf_delete_flowring(struct brcmf_pub *drvr, u8 flowid);
+-
++#else
++static inline int brcmf_proto_msgbuf_attach(struct brcmf_pub *drvr)
 +{
-+	/* From practical testing, the first data byte of the DTPC element
-+	 * seems to contain the requested dBm level, and the CLI on Cisco
-+	 * APs clearly state the range is -127 to 127 dBm, which indicates
-+	 * a signed byte, although it seemingly never actually goes negative.
-+	 * The other byte seems to always be zero.
-+	 */
-+	*pwr_level = (__s8)cisco_dtpc_ie[4];
-+	return true;
++	return 0;
 +}
-+
- static bool ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
- 					struct ieee80211_channel *channel,
- 					struct ieee80211_mgmt *mgmt,
- 					const u8 *country_ie, u8 country_ie_len,
--					const u8 *pwr_constr_ie)
-+					const u8 *pwr_constr_ie,
-+					const u8 *cisco_dtpc_ie)
- {
--	bool has_80211h_pwr = false;
--	int chan_pwr, pwr_reduction_80211h;
-+	bool has_80211h_pwr = false, has_cisco_pwr = false;
-+	int chan_pwr = 0, pwr_reduction_80211h = 0;
-+	int pwr_level_cisco, pwr_level_80211h;
- 	int new_ap_level;
++static inline void brcmf_proto_msgbuf_detach(struct brcmf_pub *drvr) {}
++#endif
  
- 	if (country_ie && pwr_constr_ie &&
-@@ -1233,16 +1250,33 @@ static bool ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
- 		has_80211h_pwr = ieee80211_find_80211h_pwr_constr(
- 			sdata, channel, country_ie, country_ie_len,
- 			pwr_constr_ie, &chan_pwr, &pwr_reduction_80211h);
--		new_ap_level = max_t(int, 0, chan_pwr - pwr_reduction_80211h);
-+		pwr_level_80211h =
-+			max_t(int, 0, chan_pwr - pwr_reduction_80211h);
- 	}
- 
--	if (!has_80211h_pwr)
-+	if (cisco_dtpc_ie)
-+		has_cisco_pwr = ieee80211_find_cisco_dtpc(
-+			sdata, channel, cisco_dtpc_ie, &pwr_level_cisco);
-+
-+	if (!has_80211h_pwr && !has_cisco_pwr)
- 		return 0;
- 
--	sdata_info(sdata,
--		   "Limiting TX power to %d (%d - %d) dBm as advertised by %pM\n",
--		   new_ap_level, chan_pwr, pwr_reduction_80211h,
--		   sdata->u.mgd.bssid);
-+	/* If we have both 802.11h and Cisco DTPC, apply both limits
-+	 * by picking the smallest of the two power levels advertised.
-+	 */
-+	if (has_80211h_pwr &&
-+	    (!has_cisco_pwr || pwr_level_80211h <= pwr_level_cisco)) {
-+		sdata_info(sdata,
-+			   "Limiting TX power to %d (%d - %d) dBm as advertised by %pM\n",
-+			   pwr_level_80211h, chan_pwr, pwr_reduction_80211h,
-+			   sdata->u.mgd.bssid);
-+		new_ap_level = pwr_level_80211h;
-+	} else {  /* has_cisco_pwr is always true here. */
-+		sdata_info(sdata,
-+			   "Limiting TX power to %d dBm as advertised by %pM\n",
-+			   pwr_level_cisco, sdata->u.mgd.bssid);
-+		new_ap_level = pwr_level_cisco;
-+	}
- 
- 	if (sdata->ap_power_level == new_ap_level)
- 		return 0;
-@@ -2911,7 +2945,9 @@ static void ieee80211_rx_mgmt_probe_resp(struct ieee80211_sub_if_data *sdata,
- /*
-  * This is the canonical list of information elements we care about,
-  * the filter code also gives us all changes to the Microsoft OUI
-- * (00:50:F2) vendor IE which is used for WMM which we need to track.
-+ * (00:50:F2) vendor IE which is used for WMM which we need to track,
-+ * as well as the DTPC IE (part of the Cisco OUI) used for signaling
-+ * changes to requested client power.
-  *
-  * We implement beacon filtering in software since that means we can
-  * avoid processing the frame here and in cfg80211, and userspace
-@@ -3219,7 +3255,8 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 	changed |= ieee80211_handle_pwr_constr(sdata, chan, mgmt,
- 					       elems.country_elem,
- 					       elems.country_elem_len,
--					       elems.pwr_constr_elem);
-+					       elems.pwr_constr_elem,
-+					       elems.cisco_dtpc_elem);
- 
- 	ieee80211_bss_info_change_notify(sdata, changed);
- }
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 725af7a..e393dfa 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1014,6 +1014,28 @@ u32 ieee802_11_parse_elems_crc(const u8 *start, size_t len, bool action,
- 			}
- 			elems->pwr_constr_elem = pos;
- 			break;
-+		case WLAN_EID_CISCO_VENDOR_SPECIFIC:
-+			/* Lots of different options exist, but we only care
-+			 * about the Dynamic Transmit Power Control element.
-+			 * First check for the Cisco OUI, then for the DTPC
-+			 * tag (0x00).
-+			 */
-+			if (elen < 4) {
-+				elem_parse_failed = true;
-+				break;
-+			}
-+			if (pos[0] != 0x00 || pos[1] != 0x40 ||
-+			    pos[2] != 0x96 || pos[3] != 0x00) {
-+				break;
-+			}
-+			if (elen != 6) {
-+				elem_parse_failed = true;
-+				break;
-+			}
-+			if (calc_crc)
-+				crc = crc32_be(crc, pos - 2, elen + 2);
-+			elems->cisco_dtpc_elem = pos;
-+			break;
- 		case WLAN_EID_TIMEOUT_INTERVAL:
- 			if (elen >= sizeof(struct ieee80211_timeout_interval_ie))
- 				elems->timeout_int = (void *)pos;
+ #endif /* BRCMFMAC_MSGBUF_H */
 -- 
-1.7.10.4
+1.9.1
 
