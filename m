@@ -1,116 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.131]:57125 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751237AbaIYLeo (ORCPT
+Received: from mail-qc0-f173.google.com ([209.85.216.173]:53958 "EHLO
+	mail-qc0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751013AbaIKNl2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Sep 2014 07:34:44 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Hauke Mehrtens <hauke@hauke-m.de>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
-	zajec5@gmail.com, varkabhadram@gmail.com, arend@broadcom.com
-Subject: Re: [PATCH v5 2/2] bcma: get IRQ numbers from dt
-Date: Thu, 25 Sep 2014 13:34:04 +0200
-Message-ID: <2791240.uYg7Zkz6J1@wuerfel> (sfid-20140925_133449_039758_37413F88)
-In-Reply-To: <1411597048-25470-2-git-send-email-hauke@hauke-m.de>
-References: <1411597048-25470-1-git-send-email-hauke@hauke-m.de> <1411597048-25470-2-git-send-email-hauke@hauke-m.de>
+	Thu, 11 Sep 2014 09:41:28 -0400
+Received: by mail-qc0-f173.google.com with SMTP id w7so21038175qcr.18
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Sep 2014 06:41:27 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1410281416.2770593.165489213.019D33E6@webmail.messagingengine.com>
+References: <CACHGq=AYtyCh2s_h_UtBtnH4TdHuw+gHeXhKjT2kVQSLcBSrow@mail.gmail.com>
+	<540ED666.9070101@broadcom.com>
+	<20140909132623.GD29412@tuxdriver.com>
+	<1410281416.2770593.165489213.019D33E6@webmail.messagingengine.com>
+Date: Thu, 11 Sep 2014 19:11:27 +0530
+Message-ID: <CACHGq=CQXKfwEYHH5ZnB8vkCfLc6dng4+G=4Aa8ApgLy_52pnA@mail.gmail.com> (sfid-20140911_154131_501260_6729C2E3)
+Subject: Re: Mesh Support in brcmsmac
+From: chandrika parimoo <chandrika3437@gmail.com>
+To: Thomas Pedersen <thomas@noack.us>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 25 September 2014 00:17:28 Hauke Mehrtens wrote:
-> It is not possible to auto detect the irq numbers used by the cores on
-> an arm SoC. If bcma was registered with device tree it will search for
-> some device tree nodes with the irq number and add it to the core
-> configuration.
-> 
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Is there any work already done or is being done to get the mesh
+support on brcmsmac  driver (I can see that b43 and b43legacy already
+has mesh support)?
+Since b43 has no support for BCM4313 chipsets so using b43 is not an
+option in my case. Also, will making changes to  brcmsmac be
+sufficient or will there be a requirement for firmware changes to
+achieve mesh support?
 
-Some more explanation for how this can be improved according to my earlier
-reply:
-
->  
-> @@ -17,4 +21,24 @@ Example:
->  		ranges = <0x00000000 0x18000000 0x00100000>;
->  		#address-cells = <1>;
->  		#size-cells = <1>;
-> +
-> +		#interrupt-cells = <0>;
-
-	<1>
-
-> +		interrupt-map-mask = <0x000fffff>;
-> +		interrupt-map =
-> +			/* Ethernet Controller 0 */
-> +			<0x00024000 &gic GIC_SPI 147 IRQ_TYPE_LEVEL_HIGH>,
-> +
-> +			/* Ethernet Controller 1 */
-> +			<0x00025000 &gic GIC_SPI 148 IRQ_TYPE_LEVEL_HIGH>;
-
-Add 0 here after the address for the first interrupt of a device,
-or a consecutive number for additional interrupts.
-
-But check first if the register that is used on MIPS to access the
-interrupts has any function. If it does, put the bit position in here
-instead.
-
-> +		pcie@12000 {
-> +			interrupt-parent = <&gic>;
-> +			reg = <0x00012000 0x1000>;
-> +			interrupts = <GIC_SPI 131 IRQ_TYPE_LEVEL_HIGH>,
-> +				     <GIC_SPI 126 IRQ_TYPE_LEVEL_HIGH>,
-> +				     <GIC_SPI 127 IRQ_TYPE_LEVEL_HIGH>,
-> +				     <GIC_SPI 128 IRQ_TYPE_LEVEL_HIGH>,
-> +				     <GIC_SPI 129 IRQ_TYPE_LEVEL_HIGH>,
-> +				     <GIC_SPI 130 IRQ_TYPE_LEVEL_HIGH>;
-> +		};
-
-so this can go away.
-
-> +static int bcma_of_irq_parse(struct platform_device *parent,
-> +			     struct bcma_device *core,
-> +			     struct of_phandle_args *out_irq)
-> +{
-> +	__be32 laddr[1];
-> +	int rc;
-> +
-> +	if (core->dev.of_node) {
-> +		rc = of_irq_parse_one(core->dev.of_node, 0, out_irq);
-> +		if (!rc)
-> +			return rc;
-> +	}
-> +
-> +	out_irq->np = parent->dev.of_node;
-> +	out_irq->args_count = 0;
-> +
-> +	laddr[0] = cpu_to_be32(core->addr);
-> +	return of_irq_parse_raw(laddr, out_irq);
-> +}
-
-You probably don't need a separate function here, just move the code into
-bcma_of_get_irq.
-
-> +static int bcma_of_get_irq(struct platform_device *parent,
-> +			   struct bcma_device *core)
-
-Make this function take the interrupt number as an argument
-
-> +
->  static void bcma_of_fill_device(struct platform_device *parent,
->  				struct bcma_device *core)
->  {
-> @@ -161,6 +201,8 @@ static void bcma_of_fill_device(struct platform_device *parent,
->  	node = bcma_of_find_child_device(parent, core);
->  	if (node)
->  		core->dev.of_node = node;
-> +
-> +	core->irq = bcma_of_get_irq(parent, core);
->  }
-
-It's probably a good idea to still put the first interrupt number in here,
-but drivers should not rely on the interrupt numbers being consecutive.
-If a driver needs more than one irq, it should call bcma_of_get_irq() or
-another API function that calls it internally and that also works on MIPS.
-
-	Arnd
+On Tue, Sep 9, 2014 at 10:20 PM, Thomas Pedersen <thomas@noack.us> wrote:
+> On Tue, Sep 9, 2014, at 06:26 AM, John W. Linville wrote:
+>> On Tue, Sep 09, 2014 at 12:28:54PM +0200, Arend van Spriel wrote:
+>> > + linux-wireless
+>> >
+>> > On 09/09/14 12:22, chandrika parimoo wrote:
+>> > >Hello,
+>> > >
+>> > >I have broadcom bcm4313 card and am using brcmsmac driver which does not
+>> > >have mesh support currently.
+>> > >I wanted to know if there is a workaround for it?
+>> >
+>> > No workaround. I am not familiar with wireless mesh networking. I suppose
+>> > there are people on the linux-wireless mailing list who know what is needed
+>> > from a mac80211 driver (like brcmsmac) to enable mesh networking.
+>>
+>> The main things is the beacons, no?
+>
+> Yeah mainly beacons, but also 4addr frames and FIF_OTHER_BSS filter.
+>
+> --
+> thomas
