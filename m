@@ -1,95 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:59728 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756189AbaIZXY1 (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:4067 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753667AbaILJKc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Sep 2014 19:24:27 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v2 2/4] mac-sim:  support creating radios with specific name.
-Date: Fri, 26 Sep 2014 16:24:14 -0700
-Message-Id: <1411773856-25042-2-git-send-email-greearb@candelatech.com> (sfid-20140927_012440_298974_FDF8FB4C)
-In-Reply-To: <1411773856-25042-1-git-send-email-greearb@candelatech.com>
-References: <1411773856-25042-1-git-send-email-greearb@candelatech.com>
+	Fri, 12 Sep 2014 05:10:32 -0400
+From: Avinash Patil <patila@marvell.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
+	<huxm@marvell.com>, <yangyang@marvell.com>, <cluo@marvell.com>,
+	<maithili@marvell.com>, Avinash Patil <patila@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>
+Subject: [PATCHv2 08/16] mwifiex: minor cleanup in multiport aggregation
+Date: Fri, 12 Sep 2014 20:08:52 +0530
+Message-ID: <1410532740-3173-9-git-send-email-patila@marvell.com> (sfid-20140912_111050_820959_23D7D769)
+In-Reply-To: <1410532740-3173-1-git-send-email-patila@marvell.com>
+References: <1410532740-3173-1-git-send-email-patila@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-Otherwise, it can be very difficult to know which is which
-if you are trying to do detailed testing.
+'mp_data_port_mask' and 'mp_end_port' gives correct information
+even for the chipsets supporting SDIO new mode (32 ports).
+We will get rid of this chip specific handling.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
+ drivers/net/wireless/mwifiex/sdio.c | 11 ++---------
+ 1 file changed, 2 insertions(+), 9 deletions(-)
 
-v2:  Add rtnl lock around rename logic.
-
- drivers/net/wireless/mac80211_hwsim.c | 19 ++++++++++++++++---
- 1 file changed, 16 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index b755920..e78c149 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -2018,7 +2018,7 @@ static struct ieee80211_ops mac80211_hwsim_mchan_ops;
- static int mac80211_hwsim_create_radio(int channels, const char *reg_alpha2,
- 				       const struct ieee80211_regdomain *regd,
- 				       bool reg_strict, bool p2p_device,
--				       bool use_chanctx)
-+				       bool use_chanctx, char *hwname)
- {
- 	int err;
- 	u8 addr[ETH_ALEN];
-@@ -2230,6 +2230,15 @@ static int mac80211_hwsim_create_radio(int channels, const char *reg_alpha2,
- 		goto failed_hw;
+diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
+index 993841e..bdab122 100644
+--- a/drivers/net/wireless/mwifiex/sdio.c
++++ b/drivers/net/wireless/mwifiex/sdio.c
+@@ -622,22 +622,15 @@ static int mwifiex_get_wr_port_data(struct mwifiex_adapter *adapter, u32 *port)
+ 
+ 	dev_dbg(adapter->dev, "data: mp_wr_bitmap=0x%08x\n", wr_bitmap);
+ 
+-	if (card->supports_sdio_new_mode &&
+-	    !(wr_bitmap & reg->data_port_mask)) {
++	if (!(wr_bitmap & card->mp_data_port_mask)) {
+ 		adapter->data_sent = true;
+ 		return -EBUSY;
+-	} else if (!card->supports_sdio_new_mode &&
+-		   !(wr_bitmap & card->mp_data_port_mask)) {
+-		return -1;
  	}
  
-+	if (hwname) {
-+		/* If this fails, continue on anyway, treat it as request
-+		 * instead of command.
-+		 */
-+		rtnl_lock();
-+		cfg80211_dev_rename_wiphy(hw->wiphy, hwname);
-+		rtnl_unlock();
-+	}
-+
- 	wiphy_debug(hw->wiphy, "hwaddr %pM registered\n", hw->wiphy->perm_addr);
- 
- 	if (reg_alpha2)
-@@ -2508,10 +2517,14 @@ static int hwsim_create_radio_nl(struct sk_buff *msg, struct genl_info *info)
- 	bool reg_strict = info->attrs[HWSIM_ATTR_REG_STRICT_REG];
- 	bool p2p_device = info->attrs[HWSIM_ATTR_SUPPORT_P2P_DEVICE];
- 	bool use_chanctx;
-+	char *hwname = NULL;
- 
- 	if (info->attrs[HWSIM_ATTR_CHANNELS])
- 		chans = nla_get_u32(info->attrs[HWSIM_ATTR_CHANNELS]);
- 
-+	if (info->attrs[HWSIM_ATTR_RADIO_NAME])
-+		hwname = nla_data(info->attrs[HWSIM_ATTR_RADIO_NAME]);
-+
- 	if (info->attrs[HWSIM_ATTR_USE_CHANCTX])
- 		use_chanctx = true;
- 	else
-@@ -2529,7 +2542,7 @@ static int hwsim_create_radio_nl(struct sk_buff *msg, struct genl_info *info)
- 	}
- 
- 	return mac80211_hwsim_create_radio(chans, alpha2, regd, reg_strict,
--					   p2p_device, use_chanctx);
-+					   p2p_device, use_chanctx, hwname);
- }
- 
- static int hwsim_destroy_radio_nl(struct sk_buff *msg, struct genl_info *info)
-@@ -2761,7 +2774,7 @@ static int __init init_mac80211_hwsim(void)
- 		err = mac80211_hwsim_create_radio(channels, reg_alpha2,
- 						  regd, reg_strict,
- 						  support_p2p_device,
--						  channels > 1);
-+						  channels > 1, NULL);
- 		if (err < 0)
- 			goto out_free_radios;
- 	}
+ 	if (card->mp_wr_bitmap & (1 << card->curr_wr_port)) {
+ 		card->mp_wr_bitmap &= (u32) (~(1 << card->curr_wr_port));
+ 		*port = card->curr_wr_port;
+-		if (((card->supports_sdio_new_mode) &&
+-		     (++card->curr_wr_port == card->max_ports)) ||
+-		    ((!card->supports_sdio_new_mode) &&
+-		     (++card->curr_wr_port == card->mp_end_port)))
++		if (++card->curr_wr_port == card->mp_end_port)
+ 			card->curr_wr_port = reg->start_wr_port;
+ 	} else {
+ 		adapter->data_sent = true;
 -- 
-1.7.11.7
+1.8.1.4
 
