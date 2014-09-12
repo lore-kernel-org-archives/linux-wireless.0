@@ -1,104 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:16132 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751282AbaIJNf2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Sep 2014 09:35:28 -0400
-Cc: Dedy Lansky <qca_dlansky@qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>,
-	"Vladimir Kondratiev" <qca_vkondrat@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-Subject: [PATCH 09/22] wil6210: fix for memory corruption upon rmmod
-Date: Wed, 10 Sep 2014 16:34:38 +0300
-Message-ID: <1410356091-19219-10-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140910_153559_304685_FAAC615E)
-In-Reply-To: <1410356091-19219-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1410356091-19219-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+Received: from mout.gmx.net ([212.227.17.20]:49578 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751306AbaILGSj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Sep 2014 02:18:39 -0400
+Message-ID: <54129018.70209@rempel-privat.de> (sfid-20140912_081843_807990_90DC0E66)
+Date: Fri, 12 Sep 2014 08:18:00 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
+	Sujith Manoharan <sujith@msujith.org>
+CC: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	stable@vger.kernel.org
+Subject: Re: [PATCH] Revert "ath9k: Calculate sleep duration"
+References: <1410442548-15782-1-git-send-email-sujith@msujith.org> <20140911141338.GA21543@qca.qualcomm.com> <21521.45335.848659.125183@gargle.gargle.HOWL> <20140912060936.GA20575@qca.qualcomm.com>
+In-Reply-To: <20140912060936.GA20575@qca.qualcomm.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="ANnbxd9swKNa72shd2eSk2xpJmEXJ6J1S"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--ANnbxd9swKNa72shd2eSk2xpJmEXJ6J1S
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Driver disabled PCI master before making sure HW is idle.
-This caused memory corruption in case HW access system memory after
-PCI master got disabled.
-The fix is to change uninit sequence. Make sure FW/HW is idle before
-disabling PCI
+Am 12.09.2014 um 08:09 schrieb Rajkumar Manoharan:
+> On Thu, Sep 11, 2014 at 07:56:31PM +0530, Sujith Manoharan wrote:
+>> Rajkumar Manoharan wrote:
+>>> Some of the IOE customer using ath9k with power save enabled. IIRC th=
+e
+>>> expectation is that when the station is idle, it should wakeup on DTI=
+M
+>>> beacon not for every beacons. Are you seeing frequest bmiss events on=
 
-Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/main.c     | 26 +++++++++++++++++++++++++-
- drivers/net/wireless/ath/wil6210/pcie_bus.c |  2 +-
- 2 files changed, 26 insertions(+), 2 deletions(-)
+>>> higher beacon interval?
+>>
+>> I don't think ath9k has ever been tested with longer sleep durations
+>> based on dtim period. We have always programmed the hardware to wake u=
+p
+>> for every beacon interval, using the TIM_TIMER interrupt. And since th=
+e
+>> TIM bit needs to be checked for every beacon, the sleep duration has
+>> to be the beacon interval.
+>>
+>> Also, the bmiss threshold needs to be adjusted based on the sleep
+>> duration. We are hardcoding it currently in the driver using
+>> ATH_DEFAULT_BMISS_LIMIT. This will break, too.
+>>
+>> Using dtim for PS needs more testing before it can be used,
+>> so we can have the original behavior for now.
+>>
+> Sounds clear.
+>=20
+> Acked-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 696be3e..22e9b8a 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -20,6 +20,10 @@
- 
- #include "wil6210.h"
- #include "txrx.h"
-+#include "wmi.h"
-+
-+#define WAIT_FOR_DISCONNECT_TIMEOUT_MS 2000
-+#define WAIT_FOR_DISCONNECT_INTERVAL_MS 10
- 
- static bool no_fw_recovery;
- module_param(no_fw_recovery, bool, S_IRUGO | S_IWUSR);
-@@ -631,6 +635,9 @@ int wil_up(struct wil6210_priv *wil)
- 
- static int __wil_down(struct wil6210_priv *wil)
- {
-+	int iter = WAIT_FOR_DISCONNECT_TIMEOUT_MS /
-+			WAIT_FOR_DISCONNECT_INTERVAL_MS;
-+
- 	WARN_ON(!mutex_is_locked(&wil->mutex));
- 
- 	if (wil->platform_ops.bus_request)
-@@ -648,7 +655,24 @@ static int __wil_down(struct wil6210_priv *wil)
- 		wil->scan_request = NULL;
- 	}
- 
--	wil6210_disconnect(wil, NULL);
-+	if (test_bit(wil_status_fwconnected, &wil->status) ||
-+	    test_bit(wil_status_fwconnecting, &wil->status))
-+		wmi_send(wil, WMI_DISCONNECT_CMDID, NULL, 0);
-+
-+	/* make sure wil is idle (not connected) */
-+	mutex_unlock(&wil->mutex);
-+	while (iter--) {
-+		int idle = !test_bit(wil_status_fwconnected, &wil->status) &&
-+			   !test_bit(wil_status_fwconnecting, &wil->status);
-+		if (idle)
-+			break;
-+		msleep(WAIT_FOR_DISCONNECT_INTERVAL_MS);
-+	}
-+	mutex_lock(&wil->mutex);
-+
-+	if (!iter)
-+		wil_err(wil, "timeout waiting for idle FW/HW\n");
-+
- 	wil_rx_fini(wil);
- 
- 	return 0;
-diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-index d2a1ca2..264c0f0 100644
---- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
-+++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-@@ -233,8 +233,8 @@ static void wil_pcie_remove(struct pci_dev *pdev)
- 	wil_dbg_misc(wil, "%s()\n", __func__);
- 
- 	wil6210_debugfs_remove(wil);
--	wil_if_pcie_disable(wil);
- 	wil_if_remove(wil);
-+	wil_if_pcie_disable(wil);
- 	if (wil->platform_ops.uninit)
- 		wil->platform_ops.uninit(wil->platform_handle);
- 	wil_if_free(wil);
--- 
-1.9.1
+Just bisected that this patch caused kernel panic on ath9k_htc.
+One more reason for revert ;)
 
+--=20
+Regards,
+Oleksij
+
+
+--ANnbxd9swKNa72shd2eSk2xpJmEXJ6J1S
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iF4EAREIAAYFAlQSkBwACgkQHwImuRkmbWlrWwD/WNC1Q7JA6jRGiEt3x0QLWQLx
+0lGJkCSdP9I7bhubJ4cBAIo4wUrdGybyjF4IIh5psGxrDAfLAvpRsP22IpMa/dFs
+=NowH
+-----END PGP SIGNATURE-----
+
+--ANnbxd9swKNa72shd2eSk2xpJmEXJ6J1S--
