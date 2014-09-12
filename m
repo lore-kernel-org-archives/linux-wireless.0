@@ -1,57 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f46.google.com ([74.125.82.46]:34224 "EHLO
-	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753995AbaICT4j (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Sep 2014 15:56:39 -0400
-Received: by mail-wg0-f46.google.com with SMTP id x13so9049426wgg.5
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Sep 2014 12:56:38 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Luciano Coelho <luciano.coelho@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 07/36] iwlwifi: mvm: don't run automatic checks if CT was caused by debugfs
-Date: Wed,  3 Sep 2014 22:55:55 +0300
-Message-Id: <1409774184-24665-7-git-send-email-egrumbach@gmail.com> (sfid-20140903_215646_774984_862591B4)
-In-Reply-To: <540771E5.6080908@gmail.com>
-References: <540771E5.6080908@gmail.com>
+Received: from bar.sig21.net ([80.81.252.164]:34095 "EHLO bar.sig21.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751774AbaILUhT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Sep 2014 16:37:19 -0400
+Date: Fri, 12 Sep 2014 22:36:51 +0200
+From: Johannes Stezenbach <js@sig21.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Oleksij Rempel <linux@rempel-privat.de>,
+	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Subject: [PATCH] ath9k_htc: fix random decryption failure
+Message-ID: <20140912203651.GA10815@sig21.net> (sfid-20140912_223722_701200_1346A2AA)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+In v3.15 the driver stopped to accept network packets after successful
+authentification, which could be worked around by passing the
+nohwcrypt=1 module parameter.  This was not reproducible by
+everyone, and showed random behaviour in some tests.
+It was caused by an uninitialized variable introduced
+in 4ed1a8d4a257 ("ath9k_htc: use ath9k_cmn_rx_accept") and
+used in 341b29b9cd2f ("ath9k_htc: use ath9k_cmn_rx_skb_postprocess").
 
-If we're manually testing the CT kill functionality via debugfs, we
-shouldn't schedule the work to recheck the temperature after the
-ct_kill_duration period has passed.
+Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=78581
+Fixes: 341b29b9cd2f ("ath9k_htc: use ath9k_cmn_rx_skb_postprocess")
+Signed-off-by: Johannes Stezenbach <js@sig21.net>
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/tt.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/mvm/tt.c b/drivers/net/wireless/iwlwifi/mvm/tt.c
-index d31603c..4c22c0a 100644
---- a/drivers/net/wireless/iwlwifi/mvm/tt.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/tt.c
-@@ -319,8 +319,14 @@ static void iwl_mvm_enter_ctkill(struct iwl_mvm *mvm)
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+index bb86eb2..f0484b1 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+@@ -978,7 +978,7 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
+ 	struct ath_hw *ah = common->ah;
+ 	struct ath_htc_rx_status *rxstatus;
+ 	struct ath_rx_status rx_stats;
+-	bool decrypt_error;
++	bool decrypt_error = false;
  
- 	IWL_ERR(mvm, "Enter CT Kill\n");
- 	iwl_mvm_set_hw_ctkill_state(mvm, true);
--	schedule_delayed_work(&mvm->thermal_throttle.ct_kill_exit,
--			      round_jiffies_relative(duration * HZ));
-+
-+	/* Don't schedule an exit work if we're in test mode, since
-+	 * the temperature will not change unless we manually set it
-+	 * again (or disable testing).
-+	 */
-+	if (!mvm->temperature_test)
-+		schedule_delayed_work(&mvm->thermal_throttle.ct_kill_exit,
-+				      round_jiffies_relative(duration * HZ));
- }
- 
- static void iwl_mvm_exit_ctkill(struct iwl_mvm *mvm)
--- 
-1.9.1
-
+ 	if (skb->len < HTC_RX_FRAME_HEADER_SIZE) {
+ 		ath_err(common, "Corrupted RX frame, dropping (len: %d)\n",
