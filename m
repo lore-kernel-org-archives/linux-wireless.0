@@ -1,61 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 12.mo3.mail-out.ovh.net ([188.165.41.191]:39864 "EHLO
-	mo3.mail-out.ovh.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751228AbaIXW12 (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:55475 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750827AbaILJKC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Sep 2014 18:27:28 -0400
-Received: from mail638.ha.ovh.net (gw6.ovh.net [213.251.189.206])
-	by mo3.mail-out.ovh.net (Postfix) with SMTP id D7C5AFF960D
-	for <linux-wireless@vger.kernel.org>; Wed, 24 Sep 2014 20:49:37 +0200 (CEST)
-Message-ID: <5423123C.5000607@ventoso.org> (sfid-20140925_002731_760117_058F8C5F)
-Date: Wed, 24 Sep 2014 20:49:32 +0200
-From: Luca Olivetti <luca@ventoso.org>
+	Fri, 12 Sep 2014 05:10:02 -0400
+From: Avinash Patil <patila@marvell.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
+	<huxm@marvell.com>, <yangyang@marvell.com>, <cluo@marvell.com>,
+	<maithili@marvell.com>, Avinash Patil <patila@marvell.com>
+Subject: [PATCHv2 00/16] mwifiex updates for 3.18 
+Date: Fri, 12 Sep 2014 20:08:44 +0530
+Message-ID: <1410532740-3173-1-git-send-email-patila@marvell.com> (sfid-20140912_111009_005968_4D777A1D)
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Mediatek MT7601U big endian fixes
-References: <5422FD0B.3060806@ventoso.org> <20140924175135.GB31690@tuxdriver.com>
-In-Reply-To: <20140924175135.GB31690@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-El 24/09/14 19:51, John W. Linville ha escrit:
+This patchset brings in channel scan gap & RX work queue support to
+mwifiex. With channel scan gap in, we remove low priority scan
+handling feature.
 
->> Do you know if is there somebody (at ralink/mediatek or elsewhere)
->> working on integrating this chipset in the in-kernel driver?
->>
->> Bye
->> -- 
->> Luca
-> 
-> I don't know of anyone from Ralink/MediaTek or otherwise working
-> on that.  I sent some emails to MediaTek on this issue recently,
-> but I made the mistake of including someone from the community who
-> actively undermind my attempts to reach-out to MediaTek...
+Patset also includes trivial fixes for SDIO multiport aggregation,
+one fix for A band association.
 
-Oh, that's bad. It's not that the driver doesn't work (it does, once
-patched), but it doesn't integrate nicely (i.e. no mac80211 support).
+Amitkumar Karwar (4):
+  mwifiex: fix a bug in Tx multiport aggregation
+  mwifiex: minor cleanup in multiport aggregation
+  mwifiex: remove redundant variable report_scan_result
+  mwifiex: remove low priority scan handling
 
-> If you (or anyone else) want to work on integrating device support
-> from that driver with the in-kernel drivers then I encourage you to
-> do so. 
+Avinash Patil (11):
+  mwifiex: set fw api info for backword compatibility
+  mwifiex: fix probable memory corruption while processing TDLS frame
+  mwifiex: avoid processing RX packets with invalid length
+  mwifiex: rework internal scan for association
+  mwifiex: support for event done interrupt
+  mwifiex: set passive scan type for scan requests with no ssid
+  mwifiex: bring in scan channel gap feature
+  mwifiex: remove restriction of single channel scan when connected
+  mwifiex: process TX even when scan is ongoing
+  mwifiex: add rx workqueue support
+  mwifiex: modify TX/RX window sizes for AP interface
 
-Unfortunately, I'm not the right person for the job :-(
-That's why I asked.
+Xinming Hu (1):
+  mwifiex: fix 5G association failure after leaving 2.4G IBSS
 
-> If you happen to have better contacts with MediaTek than I
-> have, then please feel free to reach out to them and/or to put them
-> in contact with me.
+ drivers/net/wireless/mwifiex/11n_rxreorder.c |  14 ++
+ drivers/net/wireless/mwifiex/cfg80211.c      |  14 +-
+ drivers/net/wireless/mwifiex/cmdevt.c        |   4 +
+ drivers/net/wireless/mwifiex/decl.h          |   4 +-
+ drivers/net/wireless/mwifiex/fw.h            |  10 +-
+ drivers/net/wireless/mwifiex/init.c          |  21 ++-
+ drivers/net/wireless/mwifiex/main.c          | 191 +++++++++++++--------------
+ drivers/net/wireless/mwifiex/main.h          |  48 +++++--
+ drivers/net/wireless/mwifiex/pcie.c          |  37 +++++-
+ drivers/net/wireless/mwifiex/pcie.h          |   5 +-
+ drivers/net/wireless/mwifiex/scan.c          | 108 ++++++++++-----
+ drivers/net/wireless/mwifiex/sdio.c          |  28 ++--
+ drivers/net/wireless/mwifiex/sta_cmdresp.c   |   2 -
+ drivers/net/wireless/mwifiex/sta_ioctl.c     |   9 +-
+ drivers/net/wireless/mwifiex/tdls.c          |   4 +-
+ 15 files changed, 317 insertions(+), 182 deletions(-)
 
-I don't know anybody at Mediatek, I just contacted them about the issue
-through their web form. I didn't think I could fix it by myself. In
-fact, I still don't understand why it's necessary to  byte swap
-structures that are already defined differently for big endian/little
-endian, see the point above about me not being the right person for the
-job ;-)
-
-
-Bye
 -- 
-Luca
+1.8.1.4
+
