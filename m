@@ -1,67 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from isrv.corpit.ru ([86.62.121.231]:56443 "EHLO isrv.corpit.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752126AbaIWOZF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Sep 2014 10:25:05 -0400
-Message-ID: <542182BE.2000606@msgid.tls.msk.ru> (sfid-20140923_162518_418506_F05C8DD9)
-Date: Tue, 23 Sep 2014 18:25:02 +0400
-From: Michael Tokarev <mjt@tls.msk.ru>
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:46917 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752368AbaILQhg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Sep 2014 12:37:36 -0400
+Received: by mail-wi0-f170.google.com with SMTP id em10so1077005wid.5
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Sep 2014 09:37:34 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH] b43: Implement PHY PLL reset
+Date: Fri, 12 Sep 2014 18:37:26 +0200
+Message-Id: <1410539846-12806-1-git-send-email-zajec5@gmail.com> (sfid-20140912_183746_335894_60C934CE)
 MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>,
-	Seth Forshee <seth.forshee@canonical.com>
-CC: brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: BCM4313 & brcmsmac & 3.12: only semi-working?
-References: <53FC1789.6020407@msgid.tls.msk.ru> <53FCA001.6090404@broadcom.com> <53FCB2A3.1050605@msgid.tls.msk.ru> <53FCFE1A.3060508@broadcom.com> <53FDACD1.8090805@msgid.tls.msk.ru> <53FDF8EB.4050905@broadcom.com> <54169D4F.2090607@broadcom.com> <541EEF17.7020806@msgid.tls.msk.ru> <542145B1.4030202@msgid.tls.msk.ru> <54216BF1.3060500@broadcom.com> <20140923134419.GA19016@ubuntu-hedt> <54217AA5.2060803@broadcom.com>
-In-Reply-To: <54217AA5.2060803@broadcom.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-23.09.2014 17:50, Arend van Spriel wrote:
-> On 09/23/14 15:44, Seth Forshee wrote:
-[]
->> Well, there are a few different trace events defined for brcmsmac. This
->> would enable the full set:
->>
->>   $ trace-cmd record -e brcmsmac -e brcmsmac_tx -e brcmsmac_msg
->>
->> It's been quite some time since I used them, but I think brcmsmac_tx is
->> quite noisy so you may only want to enable that if you already suspect a
->> tx problem. I always find it useful to enable the mac80211 and
->> mac80211_msg events too when debugging wireless, and I often enable
->> cfg80211 events as well (none of these are especially verbose).
-> 
-> Ah, I read back the email from Sep 21 and it says:
-> 
-> trace-cmd record brcmsmac:* &
-> 
-> I am surprised the capture contains something as -e is missing. Good to know there are different tracers for the driver.
-> 
->> Of course all of this depends on having the right config options
->> selected. Looks like the relevant options are CONFIG_BRCM_TRACING and
->> CONFIG_MAC80211_MESSAGE_TRACING.
+We should reset PLL after changing MAC frequency.
 
-So, what should I enable?  I guess there's a suspection of tx path
-problem (since according to tcpdump, the other side sends packets
-our way, but our side does not receive them), so -e brcmsmac_tx
-shold be okay to enable (and should be easy to filter out if
-needed, too, I guess).  And using -e, now too, like this:
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/b43/main.c   | 30 ++++++++++++++++++++++++++++++
+ drivers/net/wireless/b43/main.h   |  2 ++
+ drivers/net/wireless/b43/phy_ht.c |  2 +-
+ drivers/net/wireless/b43/phy_n.c  |  2 +-
+ 4 files changed, 34 insertions(+), 2 deletions(-)
 
- trace-cmd record -e brcmsmac -e brcmsmac_tx -e brcmsmac_msg -e mac80211 -e mac80211 -e cfg80211
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index 165dbc3..3adc13f 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -1204,6 +1204,36 @@ void b43_power_saving_ctl_bits(struct b43_wldev *dev, unsigned int ps_flags)
+ 	}
+ }
+ 
++/* http://bcm-v4.sipsolutions.net/802.11/PHY/BmacCorePllReset */
++void b43_wireless_core_phy_pll_reset(struct b43_wldev *dev)
++{
++	struct bcma_drv_cc *bcma_cc __maybe_unused;
++	struct ssb_chipcommon *ssb_cc __maybe_unused;
++
++	switch (dev->dev->bus_type) {
++#ifdef CONFIG_B43_BCMA
++	case B43_BUS_BCMA:
++		bcma_cc = &dev->dev->bdev->bus->drv_cc;
++
++		bcma_cc_write32(bcma_cc, BCMA_CC_CHIPCTL_ADDR, 0);
++		bcma_cc_mask32(bcma_cc, BCMA_CC_CHIPCTL_DATA, ~0x4);
++		bcma_cc_set32(bcma_cc, BCMA_CC_CHIPCTL_DATA, 0x4);
++		bcma_cc_mask32(bcma_cc, BCMA_CC_CHIPCTL_DATA, ~0x4);
++		break;
++#endif
++#ifdef CONFIG_B43_SSB
++	case B43_BUS_SSB:
++		ssb_cc = &dev->dev->sdev->bus->chipco;
++
++		chipco_write32(ssb_cc, SSB_CHIPCO_CHIPCTL_ADDR, 0);
++		chipco_mask32(ssb_cc, SSB_CHIPCO_CHIPCTL_DATA, ~0x4);
++		chipco_set32(ssb_cc, SSB_CHIPCO_CHIPCTL_DATA, 0x4);
++		chipco_mask32(ssb_cc, SSB_CHIPCO_CHIPCTL_DATA, ~0x4);
++		break;
++#endif
++	}
++}
++
+ #ifdef CONFIG_B43_BCMA
+ static void b43_bcma_phy_reset(struct b43_wldev *dev)
+ {
+diff --git a/drivers/net/wireless/b43/main.h b/drivers/net/wireless/b43/main.h
+index 9f22e4b..c46430c 100644
+--- a/drivers/net/wireless/b43/main.h
++++ b/drivers/net/wireless/b43/main.h
+@@ -96,6 +96,8 @@ void b43_controller_restart(struct b43_wldev *dev, const char *reason);
+ #define B43_PS_ASLEEP	(1 << 3)	/* Force device asleep */
+ void b43_power_saving_ctl_bits(struct b43_wldev *dev, unsigned int ps_flags);
+ 
++void b43_wireless_core_phy_pll_reset(struct b43_wldev *dev);
++
+ void b43_mac_suspend(struct b43_wldev *dev);
+ void b43_mac_enable(struct b43_wldev *dev);
+ void b43_mac_phy_clock_set(struct b43_wldev *dev, bool on);
+diff --git a/drivers/net/wireless/b43/phy_ht.c b/drivers/net/wireless/b43/phy_ht.c
+index 6a0140a..bd68945 100644
+--- a/drivers/net/wireless/b43/phy_ht.c
++++ b/drivers/net/wireless/b43/phy_ht.c
+@@ -762,7 +762,7 @@ static void b43_phy_ht_spur_avoid(struct b43_wldev *dev,
+ 
+ 	b43_mac_switch_freq(dev, spuravoid);
+ 
+-	/* TODO: reset PLL */
++	b43_wireless_core_phy_pll_reset(dev);
+ 
+ 	if (spuravoid)
+ 		b43_phy_set(dev, B43_PHY_HT_BBCFG, B43_PHY_HT_BBCFG_RSTRX);
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index cf625d8..9f0bcf3 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -6369,7 +6369,7 @@ static void b43_nphy_channel_setup(struct b43_wldev *dev,
+ 		b43_mac_switch_freq(dev, spuravoid);
+ 
+ 		if (dev->phy.rev == 3 || dev->phy.rev == 4)
+-			; /* TODO: reset PLL */
++			b43_wireless_core_phy_pll_reset(dev);
+ 
+ 		if (spuravoid)
+ 			b43_phy_set(dev, B43_NPHY_BBCFG, B43_NPHY_BBCFG_RSTRX);
+-- 
+1.8.4.5
 
-http://www.corpit.ru/mjt/tmp/brcmsmac-4313-trace-201409232.dat.gz is
-the result from the following:
-
- modprobe brcmsmac (networkmanager is running)
- trace-cmd as above &
- wget http://ip-add-ress/random-file -O /dev/null
-
-I waited for wget to stall (it d'loaded 240Kb) and hit
-Ctrl+C.
-
-The trace file isn't really that huge.
-
-Thank you!
-
-/mjt
