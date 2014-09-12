@@ -1,53 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f169.google.com ([209.85.214.169]:42020 "EHLO
-	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751001AbaIZM6Y (ORCPT
+Received: from mout.kundenserver.de ([212.227.17.10]:52281 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751220AbaILHsN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Sep 2014 08:58:24 -0400
-Received: by mail-ob0-f169.google.com with SMTP id uy5so7296320obc.0
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Sep 2014 05:58:24 -0700 (PDT)
-Date: Fri, 26 Sep 2014 07:58:12 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Keno =?utf-8?Q?Br=C3=BCggemann?= <post@kenobrueggemann.de>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Ubuntu 14.04 and the =?utf-8?Q?Intel?=
- =?utf-8?B?wq4gQ2VudHJpbm/Crg==?= Advanced-N 6200
-Message-ID: <20140926125812.GA138943@ubuntu-hedt> (sfid-20140926_145827_801556_069C90C7)
-References: <542470A1.5070406@kenobrueggemann.de>
+	Fri, 12 Sep 2014 03:48:13 -0400
+From: Bernhard Schiffner <bernhard@schiffner-limbach.de>
+To: andrea.merello@gmail.com
+Cc: ralf@czekalla.com, Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: Rtl8187se regression [was: rtl8187se - serious regressions since merge out of staging into 818x]
+Date: Fri, 12 Sep 2014 09:47:38 +0200
+Message-ID: <1472277.xX1dghvxoC@bs8> (sfid-20140912_094816_953072_D6D83A5E)
+In-Reply-To: <CAN8YU5NOApnft04+N3rSQF3j9d9N47-A6m4n-1-2KNHq+1EYKA@mail.gmail.com>
+References: <CAN8YU5NOApnft04+N3rSQF3j9d9N47-A6m4n-1-2KNHq+1EYKA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <542470A1.5070406@kenobrueggemann.de>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 25, 2014 at 09:44:33PM +0200, Keno Brüggemann wrote:
-> Hello,
-> 
-> i switched from an Intel® Centrino® Wireless-N 1000
-> to the Intel® Centrino® Advanced-N 6200 Wireless Card Adapter.
-> 
-> My System. Dell xps l701x, ubuntu 14.04
-> 
-> The Problem is, this Adpater won't work under Ubuntu 14.04. I've
-> installed both versions of this Firmware.
-> Nothing. Seems to be dead.
-> Under Windows 7 the Card works well.
-> 
-> Can i try something else to get it work?
-> Please help.
+Hi Anrea, Larry,
 
-It certainly ought to work, there are plenty of people using Intel 6200
-hardware with Ubuntu 14.04.
+I used the new driver (still without the latest patches) only in hotels slow 
+DSL/Wireless environment and there I noted no regression.
 
-A few pieces of information would be useful to start - the output of
-'lspci -nn', dmesg, and whether or not the iwlwifi and iwldvm modules
-are loaded (i.e. are they listed in the output from lsmod).
+Because of the problems I'am going now to a special site, where I have a local 
+networks (LAN/WLAN), good internet connection and root access to Linux 
+machines.
+This should be a good thing to do real testing.
 
-Or you might just want to file a bug against Ubuntu by running
-'ubuntu-bug linux' while on a wired connection. This will automatically
-attach all the information I just asked for to the bug report. You can
-subscribe me to the bug and I'll help you out there.
+1.) Andrea, can you resend me the latest patches (perhaps against 3.16) 
+please?
+(only to confirm that we are in "synchronous" mode.)
 
-Thanks,
-Seth
+2.) Andrea, Larry, John are you interested to have root access to my laptop 
+using the rtl8187se?
+(Perhaps it can stay there over the weekend too.)
+
+3.) My test for maximal troughput is to run a connection /dev/zero -> nc ->|-> 
+nc -> /dev/null.
+Any other ideas?
+
+4.) I think to have this setup ready about 11:30 UTC.
+
+I'am open to any suggestion from your side.
+
+
+Bernhard
+
+Am Freitag, 12. September 2014, 02:18:03 schrieb Andrea Merello:
+> My aplogies for this quick and a bit messy reply: I m from mobile.
+> 
+> @Xose
+> Thank you for forwarding me that. I wasn t aware of it.
+> 
+> (BTW a couple of other people reported a similar issue)
+> 
+> @Ralf
+> The driver still have some not implemented features, including signal
+> strenght measure, furthermore some fixes that might improve performances
+> should be on the way for 3.17.
+> 
+> @Larry, Bernhard
+> I think those fixes was basically the same of some RFT patch I sent you
+> some time ago..
+> Have you had any occasion to test those patches?
+> 
+> @Ralf, all..
+> I must say that I never been able to reproduce any severe performance
+> regression here, for this reason I'm asking people who reports this to make
+> some testing for me if possible..
+> 
+> Here you can find  a similar report and my answer where I asked for the
+> tests:
+> https://bugzilla.kernel.org/show_bug.cgi?id=83631
+> 
+> If you could do some of those test for me, that would be great.
+> 
 
