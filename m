@@ -1,169 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:49970 "EHLO
-	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752517AbaINJm5 (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:17713 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752237AbaILJK3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Sep 2014 05:42:57 -0400
-Subject: [PATCH 04/10] ath10k: fix missing a blank line after declarations
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Sun, 14 Sep 2014 12:50:17 +0300
-Message-ID: <20140914095017.9063.87892.stgit@x230> (sfid-20140914_114300_029767_7703E76B)
-In-Reply-To: <20140914094728.9063.32593.stgit@x230>
-References: <20140914094728.9063.32593.stgit@x230>
+	Fri, 12 Sep 2014 05:10:29 -0400
+From: Avinash Patil <patila@marvell.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
+	<huxm@marvell.com>, <yangyang@marvell.com>, <cluo@marvell.com>,
+	<maithili@marvell.com>, Avinash Patil <patila@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>
+Subject: [PATCHv2 07/16] mwifiex: fix a bug in Tx multiport aggregation
+Date: Fri, 12 Sep 2014 20:08:51 +0530
+Message-ID: <1410532740-3173-8-git-send-email-patila@marvell.com> (sfid-20140912_111112_607120_049F00EC)
+In-Reply-To: <1410532740-3173-1-git-send-email-patila@marvell.com>
+References: <1410532740-3173-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixes checkpatch warnings:
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-WARNING: Missing a blank line after declarations
+When aggregation port limit is reached, we stop aggregation and
+the data is sent to firmware. It is observed that one less packet
+than the port limit is aggregated in this case. ex. 15 instead of
+16.
+The reason is we have redundant port limit checks before current
+packet is added to aggregation buffer.
 
-Please note that some of the cases I fixed by moving the variable declarations
-to the beginning of the function, which is the preferred style in ath10k.
+The issue is fixed by removing these checks. We already have
+necessary check in precopy current buffer handling.
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/ath/ath10k/htt_rx.c |   10 +++++++---
- drivers/net/wireless/ath/ath10k/mac.c    |    6 ++----
- drivers/net/wireless/ath/ath10k/wmi.c    |    8 ++++++--
- 3 files changed, 15 insertions(+), 9 deletions(-)
+ drivers/net/wireless/mwifiex/sdio.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 1e69db52e465..26196ed947bc 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -222,6 +222,7 @@ static void ath10k_htt_rx_msdu_buff_replenish(struct ath10k_htt *htt)
- static void ath10k_htt_rx_ring_refill_retry(unsigned long arg)
- {
- 	struct ath10k_htt *htt = (struct ath10k_htt *)arg;
-+
- 	ath10k_htt_rx_msdu_buff_replenish(htt);
- }
+diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
+index 1770fa3..993841e 100644
+--- a/drivers/net/wireless/mwifiex/sdio.c
++++ b/drivers/net/wireless/mwifiex/sdio.c
+@@ -1527,8 +1527,7 @@ static int mwifiex_host_to_card_mp_aggr(struct mwifiex_adapter *adapter,
+ 			__func__);
  
-@@ -313,7 +314,7 @@ static int ath10k_htt_rx_amsdu_pop(struct ath10k_htt *htt,
- {
- 	struct ath10k *ar = htt->ar;
- 	int msdu_len, msdu_chaining = 0;
--	struct sk_buff *msdu;
-+	struct sk_buff *msdu, *next;
- 	struct htt_rx_desc *rx_desc;
+ 		if (MP_TX_AGGR_IN_PROGRESS(card)) {
+-			if (!mp_tx_aggr_port_limit_reached(card) &&
+-			    MP_TX_AGGR_BUF_HAS_ROOM(card, pkt_len)) {
++			if (MP_TX_AGGR_BUF_HAS_ROOM(card, pkt_len)) {
+ 				f_precopy_cur_buf = 1;
  
- 	lockdep_assert_held(&htt->rx_ring.lock);
-@@ -450,7 +451,7 @@ static int ath10k_htt_rx_amsdu_pop(struct ath10k_htt *htt,
- 			msdu->next = NULL;
- 			break;
- 		} else {
--			struct sk_buff *next = ath10k_htt_rx_netbuf_pop(htt);
-+			next = ath10k_htt_rx_netbuf_pop(htt);
- 			msdu->next = next;
- 			msdu = next;
- 		}
-@@ -479,6 +480,7 @@ static int ath10k_htt_rx_amsdu_pop(struct ath10k_htt *htt,
- static void ath10k_htt_rx_replenish_task(unsigned long ptr)
- {
- 	struct ath10k_htt *htt = (struct ath10k_htt *)ptr;
-+
- 	ath10k_htt_rx_msdu_buff_replenish(htt);
- }
+ 				if (!(card->mp_wr_bitmap &
+@@ -1540,8 +1539,7 @@ static int mwifiex_host_to_card_mp_aggr(struct mwifiex_adapter *adapter,
+ 				/* No room in Aggr buf, send it */
+ 				f_send_aggr_buf = 1;
  
-@@ -636,8 +638,10 @@ static struct ieee80211_hdr *ath10k_htt_rx_skb_get_hdr(struct sk_buff *skb)
- /* This function only applies for first msdu in an msdu chain */
- static bool ath10k_htt_rx_hdr_is_amsdu(struct ieee80211_hdr *hdr)
- {
-+	u8 *qc;
-+
- 	if (ieee80211_is_data_qos(hdr->frame_control)) {
--		u8 *qc = ieee80211_get_qos_ctl(hdr);
-+		qc = ieee80211_get_qos_ctl(hdr);
- 		if (qc[0] & 0x80)
- 			return true;
- 	}
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 75b30adfd367..c1cf6ff319e8 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -1157,6 +1157,7 @@ static void ath10k_peer_assoc_h_ht(struct ath10k *ar,
- {
- 	const struct ieee80211_sta_ht_cap *ht_cap = &sta->ht_cap;
- 	int i, n;
-+	u32 stbc;
- 
- 	lockdep_assert_held(&ar->conf_mutex);
- 
-@@ -1193,7 +1194,6 @@ static void ath10k_peer_assoc_h_ht(struct ath10k *ar,
- 	}
- 
- 	if (ht_cap->cap & IEEE80211_HT_CAP_RX_STBC) {
--		u32 stbc;
- 		stbc = ht_cap->cap & IEEE80211_HT_CAP_RX_STBC;
- 		stbc = stbc >> IEEE80211_HT_CAP_RX_STBC_SHIFT;
- 		stbc = stbc << WMI_RC_RX_STBC_FLAG_S;
-@@ -3011,7 +3011,7 @@ static void ath10k_bss_info_changed(struct ieee80211_hw *hw,
- 	struct ath10k *ar = hw->priv;
- 	struct ath10k_vif *arvif = ath10k_vif_to_arvif(vif);
- 	int ret = 0;
--	u32 vdev_param, pdev_param;
-+	u32 vdev_param, pdev_param, slottime, preamble;
- 
- 	mutex_lock(&ar->conf_mutex);
- 
-@@ -3132,7 +3132,6 @@ static void ath10k_bss_info_changed(struct ieee80211_hw *hw,
- 	}
- 
- 	if (changed & BSS_CHANGED_ERP_SLOT) {
--		u32 slottime;
- 		if (info->use_short_slot)
- 			slottime = WMI_VDEV_SLOT_TIME_SHORT; /* 9us */
- 
-@@ -3151,7 +3150,6 @@ static void ath10k_bss_info_changed(struct ieee80211_hw *hw,
- 	}
- 
- 	if (changed & BSS_CHANGED_ERP_PREAMBLE) {
--		u32 preamble;
- 		if (info->use_short_preamble)
- 			preamble = WMI_VDEV_PREAMBLE_SHORT;
- 		else
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index ed438edb9763..6b9f38b8b827 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -612,6 +612,7 @@ static struct wmi_cmd_map wmi_10_2_cmd_map = {
- int ath10k_wmi_wait_for_service_ready(struct ath10k *ar)
- {
- 	int ret;
-+
- 	ret = wait_for_completion_timeout(&ar->wmi.service_ready,
- 					  WMI_SERVICE_READY_TIMEOUT_HZ);
- 	return ret;
-@@ -620,6 +621,7 @@ int ath10k_wmi_wait_for_service_ready(struct ath10k *ar)
- int ath10k_wmi_wait_for_unified_ready(struct ath10k *ar)
- {
- 	int ret;
-+
- 	ret = wait_for_completion_timeout(&ar->wmi.unified_ready,
- 					  WMI_UNIFIED_READY_TIMEOUT_HZ);
- 	return ret;
-@@ -1384,6 +1386,8 @@ static void ath10k_wmi_update_tim(struct ath10k *ar,
- 	struct ieee80211_tim_ie *tim;
- 	u8 *ies, *ie;
- 	u8 ie_len, pvm_len;
-+	__le32 t;
-+	u32 v;
- 
- 	/* if next SWBA has no tim_changed the tim_bitmap is garbage.
- 	 * we must copy the bitmap upon change and reuse it later */
-@@ -1394,8 +1398,8 @@ static void ath10k_wmi_update_tim(struct ath10k *ar,
- 			     sizeof(bcn_info->tim_info.tim_bitmap));
- 
- 		for (i = 0; i < sizeof(arvif->u.ap.tim_bitmap); i++) {
--			__le32 t = bcn_info->tim_info.tim_bitmap[i / 4];
--			u32 v = __le32_to_cpu(t);
-+			t = bcn_info->tim_info.tim_bitmap[i / 4];
-+			v = __le32_to_cpu(t);
- 			arvif->u.ap.tim_bitmap[i] = (v >> ((i % 4) * 8)) & 0xFF;
- 		}
- 
+-				if (mp_tx_aggr_port_limit_reached(card) ||
+-				    !(card->mp_wr_bitmap &
++				if (!(card->mp_wr_bitmap &
+ 				      (1 << card->curr_wr_port)))
+ 					f_send_cur_buf = 1;
+ 				else
+-- 
+1.8.1.4
 
