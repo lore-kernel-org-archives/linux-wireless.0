@@ -1,30 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:44867 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757071AbaIELmF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Sep 2014 07:42:05 -0400
-Message-ID: <1409917321.1940.15.camel@jlt4.sipsolutions.net> (sfid-20140905_134210_354467_131E8630)
-Subject: Re: [PATCH 08/10] mac80211: use bss_conf->dtim_period instead of
- conf.ps_dtim_period
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 05 Sep 2014 13:42:01 +0200
-In-Reply-To: <1409747106-30717-9-git-send-email-emmanuel.grumbach@intel.com>
-References: <1409747106-30717-1-git-send-email-emmanuel.grumbach@intel.com>
-	 <1409747106-30717-9-git-send-email-emmanuel.grumbach@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:9841 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750827AbaILJKG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Sep 2014 05:10:06 -0400
+From: Avinash Patil <patila@marvell.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
+	<huxm@marvell.com>, <yangyang@marvell.com>, <cluo@marvell.com>,
+	<maithili@marvell.com>, Avinash Patil <patila@marvell.com>
+Subject: [PATCHv2 01/16] mwifiex: set fw api info for backword compatibility
+Date: Fri, 12 Sep 2014 20:08:45 +0530
+Message-ID: <1410532740-3173-2-git-send-email-patila@marvell.com> (sfid-20140912_111012_464580_AE198623)
+In-Reply-To: <1410532740-3173-1-git-send-email-patila@marvell.com>
+References: <1410532740-3173-1-git-send-email-patila@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-09-03 at 15:25 +0300, Emmanuel Grumbach wrote:
-> sta_set_sinfo is obviously takes data for specific station.
-> This specific station is attached to a specific virtual
-> interface. Hence we should use the dtim_period from this
-> virtual interface rather than the system wide dtim_period.
+If we dont set FW API info here, for older FW releases where FW API
+is not available in GET_HW_SPEC, API version would remain 0.
+This may cause issues with 11ac if older FW is used with newer driver.
 
-I'll apply this to mac80211.git
+Signed-off-by: Avinash Patil <patila@marvell.com>
+---
+ drivers/net/wireless/mwifiex/cmdevt.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-johannes
+diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
+index 985f6c2..fcc70ae 100644
+--- a/drivers/net/wireless/mwifiex/cmdevt.c
++++ b/drivers/net/wireless/mwifiex/cmdevt.c
+@@ -1508,6 +1508,7 @@ int mwifiex_ret_get_hw_spec(struct mwifiex_private *priv,
+ 	}
+ 
+ 	adapter->fw_release_number = le32_to_cpu(hw_spec->fw_release_number);
++	adapter->fw_api_ver = (adapter->fw_release_number >> 16) & 0xff;
+ 	adapter->number_of_antenna = le16_to_cpu(hw_spec->number_of_antenna);
+ 
+ 	if (le32_to_cpu(hw_spec->dot_11ac_dev_cap)) {
+-- 
+1.8.1.4
 
