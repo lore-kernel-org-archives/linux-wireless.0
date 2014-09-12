@@ -1,51 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:52816 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750742AbaIXLQn (ORCPT
+Received: from mail-ob0-f175.google.com ([209.85.214.175]:36071 "EHLO
+	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751215AbaILACT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Sep 2014 07:16:43 -0400
-Subject: [PATCH v3 0/3] ath10k: export calibration data to user space
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 24 Sep 2014 14:16:39 +0300
-Message-ID: <20140924111416.6539.95299.stgit@potku.adurom.net> (sfid-20140924_131654_364821_B46B38B5)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Thu, 11 Sep 2014 20:02:19 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org, Kees Cook <keescook@chromium.org>
+Subject: [PATCH] rtlwifi: btcoexist: avoid format string in printk
+Date: Thu, 11 Sep 2014 19:02:10 -0500
+Message-Id: <1410480130-11957-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20140912_020228_627155_7864758E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Here's a small patchset exporting firmware calibration data to user space. This
-makes it easier to debug various calibration data related problems.
+Recent changes to this driver inadvertently reverted the change made by Kees
+Cook in commit 6437f51ec3.
 
-Please comment.
-
-v3:
-
-* patch 1: fix comment style (Michal)
-
-* patch 3: use ath10k_debug_ prefix (Michal)
-
-v2:
-
-* never unmask the diagnostic window copy engine pipe in
-  ath10k_ce_enable_interrupts()
-
-* add locking for diag_read_mem()/diag_write_mem()
-
+Reported-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Kees Cook <keescook@chromium.org>
 ---
+ drivers/net/wireless/rtlwifi/btcoexist/halbtcoutsrc.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Kalle Valo (3):
-      ath10k: don't enable interrupts for the diagnostic window
-      ath10k: add diag_read() to hif ops
-      ath10k: add cal_data debugfs file
-
-
- drivers/net/wireless/ath/ath10k/ce.c    |   27 ++++++----
- drivers/net/wireless/ath/ath10k/ce.h    |   13 +++++
- drivers/net/wireless/ath/ath10k/debug.c |   82 +++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/hif.h   |   10 ++++
- drivers/net/wireless/ath/ath10k/hw.h    |    2 +
- drivers/net/wireless/ath/ath10k/pci.c   |   51 ++++++++++++-------
- 6 files changed, 155 insertions(+), 30 deletions(-)
+diff --git a/drivers/net/wireless/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/rtlwifi/btcoexist/halbtcoutsrc.h
+index 0d185e6..3cd2175 100644
+--- a/drivers/net/wireless/rtlwifi/btcoexist/halbtcoutsrc.h
++++ b/drivers/net/wireless/rtlwifi/btcoexist/halbtcoutsrc.h
+@@ -117,7 +117,7 @@ extern u32 btc_dbg_type[];
+ #define		WIFI_P2P_GC_CONNECTED			BIT4
+ 
+ #define	CL_SPRINTF	snprintf
+-#define	CL_PRINTF	printk
++#define	CL_PRINTF(buf)	printk("%s", buf)
+ 
+ #define	BTC_PRINT(dbgtype, dbgflag, printstr, ...)		\
+ 	do {							\
+-- 
+1.8.4.5
 
