@@ -1,466 +1,437 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews07.kpnxchange.com ([213.75.39.10]:53355 "EHLO
-	cpsmtpb-ews07.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751361AbaIJIxp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Sep 2014 04:53:45 -0400
-Message-ID: <1410339221.11097.10.camel@x220> (sfid-20140910_105406_322221_82410528)
-Subject: [PATCH] [RESEND] ath5k: Remove AHB bus support
-From: Paul Bolle <pebolle@tiscali.nl>
-To: Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: Sergey Ryazanov <ryazanov.s.a@gmail.com>,
-	Oleksij Rempel <linux@rempel-privat.de>,
-	Richard Weinberger <richard@nod.at>,
-	Jonathan Bither <jonbither@gmail.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	ath5k-devel@venema.h4ckr.net, open@hauke-m.de, list@hauke-m.de,
-	antonynpavlov@gmail.com, openwrt-devel@lists.openwrt.org,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Wed, 10 Sep 2014 10:53:41 +0200
-In-Reply-To: <20140909182734.GJ29412@tuxdriver.com>
-References: <20140213201421.GJ22203@tuxdriver.com>
-	 <1397581703.8212.5.camel@x220>
-	 <CAHNKnsQQ42-XnXrubHAy4PF3H2ynbGDdSMP7MvDS_1aRozYF=A@mail.gmail.com>
-	 <1403087119.1984.93.camel@x220>
-	 <CAHNKnsSfaT7xC5_wv=TrGLEQ2pjC91Q1XG891_n64OuR0fA9Jg@mail.gmail.com>
-	 <1403091974.1984.102.camel@x220> <1409911856.7832.9.camel@x220>
-	 <CAHNKnsRipRHicKOUW4dCutD1-sUG6qPnP2QuOveH_t1MFX9XgQ@mail.gmail.com>
-	 <1409916824.7832.20.camel@x220>
-	 <CAHNKnsQ1gt=DRBTd9Q9yos1idqmXMepEPvhm8a7unP-whzNAgg@mail.gmail.com>
-	 <20140909182734.GJ29412@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from s3.sipsolutions.net ([5.9.151.49]:35516 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752229AbaILHCI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Sep 2014 03:02:08 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-kernel@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Luciano Coelho <luca@coelho.fi>, Kalle Valo <kvalo@adurom.com>,
+	dri-devel@lists.freedesktop.org, linux-wireless@vger.kernel.org
+Subject: [PATCH] device coredump: add new device coredump class
+Date: Fri, 12 Sep 2014 09:01:56 +0200
+Message-Id: <1410505316-4807-1-git-send-email-johannes@sipsolutions.net> (sfid-20140912_090228_395976_C890B51F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-AHB bus support was added in v2.6.38, through commit a0b907ee2a71
-("ath5k: Add AHB bus support."). That code can only be build if the
-Kconfig symbol ATHEROS_AR231X is set. But that symbol has never been
-added to the tree. So AHB bus support has always been dead code.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Let's remove all code that depends on ATHEROS_AR231X. If that symbol
-ever gets added to the tree the AHB bus support can be re-added too.
+Many devices run firmware and/or complex hardware, and most of that
+can have bugs. When it misbehaves, however, it is often much harder
+to debug than software running on the host.
 
-Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
+Introduce a "device coredump" mechanism to allow dumping internal
+device/firmware state through a generalized mechanism. As devices
+are different and information needed can vary accordingly, this
+doesn't prescribe a file format - it just provides mechanism to
+get data to be able to capture it in a generalized way (e.g. in
+distributions.)
+
+The dumped data will be readable in sysfs in the virtual device's
+data file under /sys/class/devcoredump/devcd*/. Writing to it will
+free the data and remove the device, as does a 5-minute timeout.
+
+Note that generalized capturing of such data may result in privacy
+issues, so users generally need to be involved. In order to allow
+certain users/system integrators/... to disable the feature at all,
+introduce a Kconfig option to override the drivers that would like
+to have the feature.
+
+For now, this provides two ways of dumping data:
+ 1) with a vmalloc'ed area, that is then given to the subsystem
+    and freed after retrieval or timeout
+ 2) with a generalized reader/free function method
+
+We could/should add more options, e.g. a list of pages, since the
+vmalloc area is very limited on some architectures.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
-First sent in https://lkml.org/lkml/2013/5/13/303 . Updated on top of
-next-20140909.
+ MAINTAINERS                 |   7 ++
+ drivers/base/Kconfig        |  21 ++++
+ drivers/base/Makefile       |   1 +
+ drivers/base/devcoredump.c  | 265 ++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/devcoredump.h |  35 ++++++
+ 5 files changed, 329 insertions(+)
+ create mode 100644 drivers/base/devcoredump.c
+ create mode 100644 include/linux/devcoredump.h
 
-Build tested only (no access to this hardware).
-
- drivers/net/wireless/ath/ath5k/Kconfig  |  14 +-
- drivers/net/wireless/ath/ath5k/Makefile |   1 -
- drivers/net/wireless/ath/ath5k/ahb.c    | 234 --------------------------------
- drivers/net/wireless/ath/ath5k/ath5k.h  |  28 ----
- drivers/net/wireless/ath/ath5k/base.c   |  14 --
- drivers/net/wireless/ath/ath5k/led.c    |   6 -
- 6 files changed, 3 insertions(+), 294 deletions(-)
- delete mode 100644 drivers/net/wireless/ath/ath5k/ahb.c
-
-diff --git a/drivers/net/wireless/ath/ath5k/Kconfig b/drivers/net/wireless/ath/ath5k/Kconfig
-index c9f81a388f15..93caf8e68901 100644
---- a/drivers/net/wireless/ath/ath5k/Kconfig
-+++ b/drivers/net/wireless/ath/ath5k/Kconfig
-@@ -1,13 +1,12 @@
- config ATH5K
- 	tristate "Atheros 5xxx wireless cards support"
--	depends on (PCI || ATHEROS_AR231X) && MAC80211
-+	depends on PCI && MAC80211
- 	select ATH_COMMON
- 	select MAC80211_LEDS
- 	select LEDS_CLASS
- 	select NEW_LEDS
- 	select AVERAGE
--	select ATH5K_AHB if (ATHEROS_AR231X && !PCI)
--	select ATH5K_PCI if (!ATHEROS_AR231X && PCI)
-+	select ATH5K_PCI
- 	---help---
- 	  This module adds support for wireless adapters based on
- 	  Atheros 5xxx chipset.
-@@ -52,16 +51,9 @@ config ATH5K_TRACER
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 2f85f55c8fb8..8e31d053fb14 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -2847,6 +2847,13 @@ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/balbi/usb.git
+ S:	Maintained
+ F:	drivers/usb/dwc3/
  
- 	  If unsure, say N.
++DEVICE COREDUMP (DEV_COREDUMP)
++M:	Johannes Berg <johannes@sipsolutions.net>
++L:	linux-kernel@vger.kernel.org
++S:	Maintained
++F:	drivers/base/devcoredump.c
++F:	include/linux/devcoredump.h
++
+ DEVICE FREQUENCY (DEVFREQ)
+ M:	MyungJoo Ham <myungjoo.ham@samsung.com>
+ M:	Kyungmin Park <kyungmin.park@samsung.com>
+diff --git a/drivers/base/Kconfig b/drivers/base/Kconfig
+index 4e7f0ff83ae7..134f763d90fd 100644
+--- a/drivers/base/Kconfig
++++ b/drivers/base/Kconfig
+@@ -165,6 +165,27 @@ config FW_LOADER_USER_HELPER_FALLBACK
  
--config ATH5K_AHB
--	bool "Atheros 5xxx AHB bus support"
--	depends on (ATHEROS_AR231X && !PCI)
--	---help---
--	  This adds support for WiSoC type chipsets of the 5xxx Atheros
--	  family.
--
- config ATH5K_PCI
- 	bool "Atheros 5xxx PCI bus support"
--	depends on (!ATHEROS_AR231X && PCI)
-+	depends on PCI
- 	---help---
- 	  This adds support for PCI type chipsets of the 5xxx Atheros
- 	  family.
-diff --git a/drivers/net/wireless/ath/ath5k/Makefile b/drivers/net/wireless/ath/ath5k/Makefile
-index 1b3a34f7f224..51e2d8668041 100644
---- a/drivers/net/wireless/ath/ath5k/Makefile
-+++ b/drivers/net/wireless/ath/ath5k/Makefile
-@@ -17,6 +17,5 @@ ath5k-y				+= ani.o
- ath5k-y				+= sysfs.o
- ath5k-y				+= mac80211-ops.o
- ath5k-$(CONFIG_ATH5K_DEBUG)	+= debug.o
--ath5k-$(CONFIG_ATH5K_AHB)	+= ahb.o
- ath5k-$(CONFIG_ATH5K_PCI)	+= pci.o
- obj-$(CONFIG_ATH5K)		+= ath5k.o
-diff --git a/drivers/net/wireless/ath/ath5k/ahb.c b/drivers/net/wireless/ath/ath5k/ahb.c
-deleted file mode 100644
-index 79bffe165cab..000000000000
---- a/drivers/net/wireless/ath/ath5k/ahb.c
-+++ /dev/null
-@@ -1,234 +0,0 @@
--/*
-- * Copyright (c) 2008-2009 Atheros Communications Inc.
-- * Copyright (c) 2009 Gabor Juhos <juhosg@openwrt.org>
-- * Copyright (c) 2009 Imre Kaloz <kaloz@openwrt.org>
-- *
-- * Permission to use, copy, modify, and/or distribute this software for any
-- * purpose with or without fee is hereby granted, provided that the above
-- * copyright notice and this permission notice appear in all copies.
-- *
-- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-- * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-- * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-- * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-- */
--
--#include <linux/nl80211.h>
--#include <linux/platform_device.h>
--#include <linux/etherdevice.h>
--#include <linux/export.h>
--#include <ar231x_platform.h>
--#include "ath5k.h"
--#include "debug.h"
--#include "base.h"
--#include "reg.h"
--
--/* return bus cachesize in 4B word units */
--static void ath5k_ahb_read_cachesize(struct ath_common *common, int *csz)
--{
--	*csz = L1_CACHE_BYTES >> 2;
--}
--
--static bool
--ath5k_ahb_eeprom_read(struct ath_common *common, u32 off, u16 *data)
--{
--	struct ath5k_hw *ah = common->priv;
--	struct platform_device *pdev = to_platform_device(ah->dev);
--	struct ar231x_board_config *bcfg = dev_get_platdata(&pdev->dev);
--	u16 *eeprom, *eeprom_end;
--
--	eeprom = (u16 *) bcfg->radio;
--	eeprom_end = ((void *) bcfg->config) + BOARD_CONFIG_BUFSZ;
--
--	eeprom += off;
--	if (eeprom > eeprom_end)
--		return false;
--
--	*data = *eeprom;
--	return true;
--}
--
--int ath5k_hw_read_srev(struct ath5k_hw *ah)
--{
--	struct platform_device *pdev = to_platform_device(ah->dev);
--	struct ar231x_board_config *bcfg = dev_get_platdata(&pdev->dev);
--	ah->ah_mac_srev = bcfg->devid;
--	return 0;
--}
--
--static int ath5k_ahb_eeprom_read_mac(struct ath5k_hw *ah, u8 *mac)
--{
--	struct platform_device *pdev = to_platform_device(ah->dev);
--	struct ar231x_board_config *bcfg = dev_get_platdata(&pdev->dev);
--	u8 *cfg_mac;
--
--	if (to_platform_device(ah->dev)->id == 0)
--		cfg_mac = bcfg->config->wlan0_mac;
--	else
--		cfg_mac = bcfg->config->wlan1_mac;
--
--	memcpy(mac, cfg_mac, ETH_ALEN);
--	return 0;
--}
--
--static const struct ath_bus_ops ath_ahb_bus_ops = {
--	.ath_bus_type = ATH_AHB,
--	.read_cachesize = ath5k_ahb_read_cachesize,
--	.eeprom_read = ath5k_ahb_eeprom_read,
--	.eeprom_read_mac = ath5k_ahb_eeprom_read_mac,
--};
--
--/*Initialization*/
--static int ath_ahb_probe(struct platform_device *pdev)
--{
--	struct ar231x_board_config *bcfg = dev_get_platdata(&pdev->dev);
--	struct ath5k_hw *ah;
--	struct ieee80211_hw *hw;
--	struct resource *res;
--	void __iomem *mem;
--	int irq;
--	int ret = 0;
--	u32 reg;
--
--	if (!dev_get_platdata(&pdev->dev)) {
--		dev_err(&pdev->dev, "no platform data specified\n");
--		ret = -EINVAL;
--		goto err_out;
--	}
--
--	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
--	if (res == NULL) {
--		dev_err(&pdev->dev, "no memory resource found\n");
--		ret = -ENXIO;
--		goto err_out;
--	}
--
--	mem = ioremap_nocache(res->start, resource_size(res));
--	if (mem == NULL) {
--		dev_err(&pdev->dev, "ioremap failed\n");
--		ret = -ENOMEM;
--		goto err_out;
--	}
--
--	res = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
--	if (res == NULL) {
--		dev_err(&pdev->dev, "no IRQ resource found\n");
--		ret = -ENXIO;
--		goto err_iounmap;
--	}
--
--	irq = res->start;
--
--	hw = ieee80211_alloc_hw(sizeof(struct ath5k_hw), &ath5k_hw_ops);
--	if (hw == NULL) {
--		dev_err(&pdev->dev, "no memory for ieee80211_hw\n");
--		ret = -ENOMEM;
--		goto err_iounmap;
--	}
--
--	ah = hw->priv;
--	ah->hw = hw;
--	ah->dev = &pdev->dev;
--	ah->iobase = mem;
--	ah->irq = irq;
--	ah->devid = bcfg->devid;
--
--	if (bcfg->devid >= AR5K_SREV_AR2315_R6) {
--		/* Enable WMAC AHB arbitration */
--		reg = ioread32((void __iomem *) AR5K_AR2315_AHB_ARB_CTL);
--		reg |= AR5K_AR2315_AHB_ARB_CTL_WLAN;
--		iowrite32(reg, (void __iomem *) AR5K_AR2315_AHB_ARB_CTL);
--
--		/* Enable global WMAC swapping */
--		reg = ioread32((void __iomem *) AR5K_AR2315_BYTESWAP);
--		reg |= AR5K_AR2315_BYTESWAP_WMAC;
--		iowrite32(reg, (void __iomem *) AR5K_AR2315_BYTESWAP);
--	} else {
--		/* Enable WMAC DMA access (assuming 5312 or 231x*/
--		/* TODO: check other platforms */
--		reg = ioread32((void __iomem *) AR5K_AR5312_ENABLE);
--		if (to_platform_device(ah->dev)->id == 0)
--			reg |= AR5K_AR5312_ENABLE_WLAN0;
--		else
--			reg |= AR5K_AR5312_ENABLE_WLAN1;
--		iowrite32(reg, (void __iomem *) AR5K_AR5312_ENABLE);
--
--		/*
--		 * On a dual-band AR5312, the multiband radio is only
--		 * used as pass-through. Disable 2 GHz support in the
--		 * driver for it
--		 */
--		if (to_platform_device(ah->dev)->id == 0 &&
--		    (bcfg->config->flags & (BD_WLAN0 | BD_WLAN1)) ==
--		     (BD_WLAN1 | BD_WLAN0))
--			ah->ah_capabilities.cap_needs_2GHz_ovr = true;
--		else
--			ah->ah_capabilities.cap_needs_2GHz_ovr = false;
--	}
--
--	ret = ath5k_init_ah(ah, &ath_ahb_bus_ops);
--	if (ret != 0) {
--		dev_err(&pdev->dev, "failed to attach device, err=%d\n", ret);
--		ret = -ENODEV;
--		goto err_free_hw;
--	}
--
--	platform_set_drvdata(pdev, hw);
--
--	return 0;
--
-- err_free_hw:
--	ieee80211_free_hw(hw);
-- err_iounmap:
--        iounmap(mem);
-- err_out:
--	return ret;
--}
--
--static int ath_ahb_remove(struct platform_device *pdev)
--{
--	struct ar231x_board_config *bcfg = dev_get_platdata(&pdev->dev);
--	struct ieee80211_hw *hw = platform_get_drvdata(pdev);
--	struct ath5k_hw *ah;
--	u32 reg;
--
--	if (!hw)
--		return 0;
--
--	ah = hw->priv;
--
--	if (bcfg->devid >= AR5K_SREV_AR2315_R6) {
--		/* Disable WMAC AHB arbitration */
--		reg = ioread32((void __iomem *) AR5K_AR2315_AHB_ARB_CTL);
--		reg &= ~AR5K_AR2315_AHB_ARB_CTL_WLAN;
--		iowrite32(reg, (void __iomem *) AR5K_AR2315_AHB_ARB_CTL);
--	} else {
--		/*Stop DMA access */
--		reg = ioread32((void __iomem *) AR5K_AR5312_ENABLE);
--		if (to_platform_device(ah->dev)->id == 0)
--			reg &= ~AR5K_AR5312_ENABLE_WLAN0;
--		else
--			reg &= ~AR5K_AR5312_ENABLE_WLAN1;
--		iowrite32(reg, (void __iomem *) AR5K_AR5312_ENABLE);
--	}
--
--	ath5k_deinit_ah(ah);
--	iounmap(ah->iobase);
--	ieee80211_free_hw(hw);
--
--	return 0;
--}
--
--static struct platform_driver ath_ahb_driver = {
--	.probe      = ath_ahb_probe,
--	.remove     = ath_ahb_remove,
--	.driver		= {
--		.name	= "ar231x-wmac",
--		.owner	= THIS_MODULE,
--	},
--};
--
--module_platform_driver(ath_ahb_driver);
-diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
-index 85316bb3f8c6..ed2468220216 100644
---- a/drivers/net/wireless/ath/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath/ath5k/ath5k.h
-@@ -1647,32 +1647,6 @@ static inline struct ath_regulatory *ath5k_hw_regulatory(struct ath5k_hw *ah)
- 	return &(ath5k_hw_common(ah)->regulatory);
- }
+ 	  If you are unsure about this, say N here.
  
--#ifdef CONFIG_ATHEROS_AR231X
--#define AR5K_AR2315_PCI_BASE	((void __iomem *)0xb0100000)
--
--static inline void __iomem *ath5k_ahb_reg(struct ath5k_hw *ah, u16 reg)
--{
--	/* On AR2315 and AR2317 the PCI clock domain registers
--	 * are outside of the WMAC register space */
--	if (unlikely((reg >= 0x4000) && (reg < 0x5000) &&
--	    (ah->ah_mac_srev >= AR5K_SREV_AR2315_R6)))
--		return AR5K_AR2315_PCI_BASE + reg;
--
--	return ah->iobase + reg;
--}
--
--static inline u32 ath5k_hw_reg_read(struct ath5k_hw *ah, u16 reg)
--{
--	return ioread32(ath5k_ahb_reg(ah, reg));
--}
--
--static inline void ath5k_hw_reg_write(struct ath5k_hw *ah, u32 val, u16 reg)
--{
--	iowrite32(val, ath5k_ahb_reg(ah, reg));
--}
--
--#else
--
- static inline u32 ath5k_hw_reg_read(struct ath5k_hw *ah, u16 reg)
- {
- 	return ioread32(ah->iobase + reg);
-@@ -1683,8 +1657,6 @@ static inline void ath5k_hw_reg_write(struct ath5k_hw *ah, u32 val, u16 reg)
- 	iowrite32(val, ah->iobase + reg);
- }
++config WANT_DEV_COREDUMP
++	bool
++	help
++	  Drivers should "select" this option if they desire to use the
++	  device coredump mechanism.
++
++config DISABLE_DEV_COREDUMP
++	bool "Disable device coredump" if EXPERT
++	help
++	  Disable the device coredump mechanism despite drivers wanting to
++	  use it; this allows for more sensitive systems or systems that
++	  don't want to ever access the information to not have the code,
++	  nor keep any data.
++
++	  If unsure, say N.
++
++config DEV_COREDUMP
++	bool
++	default y if WANT_DEV_COREDUMP
++	depends on !DISABLE_DEV_COREDUMP
++
+ config DEBUG_DRIVER
+ 	bool "Driver Core verbose debug messages"
+ 	depends on DEBUG_KERNEL
+diff --git a/drivers/base/Makefile b/drivers/base/Makefile
+index 4aab26ec0292..6922cd6850a2 100644
+--- a/drivers/base/Makefile
++++ b/drivers/base/Makefile
+@@ -21,6 +21,7 @@ obj-$(CONFIG_SYS_HYPERVISOR) += hypervisor.o
+ obj-$(CONFIG_REGMAP)	+= regmap/
+ obj-$(CONFIG_SOC_BUS) += soc.o
+ obj-$(CONFIG_PINCTRL) += pinctrl.o
++obj-$(CONFIG_DEV_COREDUMP) += devcoredump.o
  
--#endif
--
- static inline enum ath_bus_type ath5k_get_bus_type(struct ath5k_hw *ah)
- {
- 	return ath5k_hw_common(ah)->bus_ops->ath_bus_type;
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 59a87247aac4..a4a09bb8f2f3 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -99,15 +99,6 @@ static int ath5k_reset(struct ath5k_hw *ah, struct ieee80211_channel *chan,
+ ccflags-$(CONFIG_DEBUG_DRIVER) := -DDEBUG
  
- /* Known SREVs */
- static const struct ath5k_srev_name srev_names[] = {
--#ifdef CONFIG_ATHEROS_AR231X
--	{ "5312",	AR5K_VERSION_MAC,	AR5K_SREV_AR5312_R2 },
--	{ "5312",	AR5K_VERSION_MAC,	AR5K_SREV_AR5312_R7 },
--	{ "2313",	AR5K_VERSION_MAC,	AR5K_SREV_AR2313_R8 },
--	{ "2315",	AR5K_VERSION_MAC,	AR5K_SREV_AR2315_R6 },
--	{ "2315",	AR5K_VERSION_MAC,	AR5K_SREV_AR2315_R7 },
--	{ "2317",	AR5K_VERSION_MAC,	AR5K_SREV_AR2317_R1 },
--	{ "2317",	AR5K_VERSION_MAC,	AR5K_SREV_AR2317_R2 },
--#else
- 	{ "5210",	AR5K_VERSION_MAC,	AR5K_SREV_AR5210 },
- 	{ "5311",	AR5K_VERSION_MAC,	AR5K_SREV_AR5311 },
- 	{ "5311A",	AR5K_VERSION_MAC,	AR5K_SREV_AR5311A },
-@@ -126,7 +117,6 @@ static const struct ath5k_srev_name srev_names[] = {
- 	{ "5418",	AR5K_VERSION_MAC,	AR5K_SREV_AR5418 },
- 	{ "2425",	AR5K_VERSION_MAC,	AR5K_SREV_AR2425 },
- 	{ "2417",	AR5K_VERSION_MAC,	AR5K_SREV_AR2417 },
--#endif
- 	{ "xxxxx",	AR5K_VERSION_MAC,	AR5K_SREV_UNKNOWN },
- 	{ "5110",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_5110 },
- 	{ "5111",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_5111 },
-@@ -142,10 +132,6 @@ static const struct ath5k_srev_name srev_names[] = {
- 	{ "5413",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_5413 },
- 	{ "5424",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_5424 },
- 	{ "5133",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_5133 },
--#ifdef CONFIG_ATHEROS_AR231X
--	{ "2316",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_2316 },
--	{ "2317",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_2317 },
--#endif
- 	{ "xxxxx",	AR5K_VERSION_RAD,	AR5K_SREV_UNKNOWN },
- };
- 
-diff --git a/drivers/net/wireless/ath/ath5k/led.c b/drivers/net/wireless/ath/ath5k/led.c
-index 2062d1190556..0beb7e7d6075 100644
---- a/drivers/net/wireless/ath/ath5k/led.c
-+++ b/drivers/net/wireless/ath/ath5k/led.c
-@@ -163,20 +163,14 @@ int ath5k_init_leds(struct ath5k_hw *ah)
- {
- 	int ret = 0;
- 	struct ieee80211_hw *hw = ah->hw;
--#ifndef CONFIG_ATHEROS_AR231X
- 	struct pci_dev *pdev = ah->pdev;
--#endif
- 	char name[ATH5K_LED_MAX_NAME_LEN + 1];
- 	const struct pci_device_id *match;
- 
- 	if (!ah->pdev)
- 		return 0;
- 
--#ifdef CONFIG_ATHEROS_AR231X
--	match = NULL;
--#else
- 	match = pci_match_id(&ath5k_led_devices[0], pdev);
--#endif
- 	if (match) {
- 		__set_bit(ATH_STAT_LEDSOFT, ah->status);
- 		ah->led_pin = ATH_PIN(match->driver_data);
+diff --git a/drivers/base/devcoredump.c b/drivers/base/devcoredump.c
+new file mode 100644
+index 000000000000..96614b04544c
+--- /dev/null
++++ b/drivers/base/devcoredump.c
+@@ -0,0 +1,265 @@
++/*
++ * This file is provided under the GPLv2 license.
++ *
++ * GPL LICENSE SUMMARY
++ *
++ * Copyright(c) 2014 Intel Mobile Communications GmbH
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ *
++ * The full GNU General Public License is included in this distribution
++ * in the file called COPYING.
++ *
++ * Contact Information:
++ *  Intel Linux Wireless <ilw@linux.intel.com>
++ * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
++ *
++ * Author: Johannes Berg <johannes@sipsolutions.net>
++ */
++#include <linux/module.h>
++#include <linux/device.h>
++#include <linux/devcoredump.h>
++#include <linux/list.h>
++#include <linux/slab.h>
++#include <linux/fs.h>
++#include <linux/workqueue.h>
++
++/* if data isn't read by userspace after 5 minutes then delete it */
++#define DEVCD_TIMEOUT	(HZ * 60 * 5)
++
++struct devcd_entry {
++	struct device devcd_dev;
++	const void *data;
++	size_t datalen;
++	struct module *owner;
++	ssize_t (*read)(char *buffer, loff_t offset, size_t count,
++			const void *data, size_t datalen);
++	void (*free)(const void *data);
++	struct delayed_work del_wk;
++	struct device *failing_dev;
++};
++
++static struct devcd_entry *dev_to_devcd(struct device *dev)
++{
++	return container_of(dev, struct devcd_entry, devcd_dev);
++}
++
++static void devcd_dev_release(struct device *dev)
++{
++	struct devcd_entry *devcd = dev_to_devcd(dev);
++
++	devcd->free(devcd->data);
++	module_put(devcd->owner);
++
++	/*
++	 * this seems racy, but I don't see a notifier or such on
++	 * a struct device to know when it goes away?
++	 */
++	if (devcd->failing_dev->kobj.sd)
++		sysfs_delete_link(&devcd->failing_dev->kobj, &dev->kobj,
++				  "devcoredump");
++
++	put_device(devcd->failing_dev);
++	kfree(devcd);
++}
++
++static void devcd_del(struct work_struct *wk)
++{
++	struct devcd_entry *devcd;
++
++	devcd = container_of(wk, struct devcd_entry, del_wk.work);
++
++	device_del(&devcd->devcd_dev);
++	put_device(&devcd->devcd_dev);
++}
++
++static ssize_t devcd_data_read(struct file *filp, struct kobject *kobj,
++			       struct bin_attribute *bin_attr,
++			       char *buffer, loff_t offset, size_t count)
++{
++	struct device *dev = kobj_to_dev(kobj);
++	struct devcd_entry *devcd = dev_to_devcd(dev);
++
++	return devcd->read(buffer, offset, count, devcd->data, devcd->datalen);
++}
++
++static ssize_t devcd_data_write(struct file *filp, struct kobject *kobj,
++				struct bin_attribute *bin_attr,
++				char *buffer, loff_t offset, size_t count)
++{
++	struct device *dev = kobj_to_dev(kobj);
++	struct devcd_entry *devcd = dev_to_devcd(dev);
++
++	mod_delayed_work(system_wq, &devcd->del_wk, 0);
++
++	return count;
++}
++
++static struct bin_attribute devcd_attr_data = {
++	.attr = { .name = "data", .mode = S_IRUSR | S_IWUSR, },
++	.size = 0,
++	.read = devcd_data_read,
++	.write = devcd_data_write,
++};
++
++static struct bin_attribute *devcd_dev_bin_attrs[] = {
++	&devcd_attr_data, NULL,
++};
++
++static const struct attribute_group devcd_dev_group = {
++	.bin_attrs = devcd_dev_bin_attrs,
++};
++
++static const struct attribute_group *devcd_dev_groups[] = {
++	&devcd_dev_group, NULL,
++};
++
++static struct class devcd_class = {
++	.name		= "devcoredump",
++	.owner		= THIS_MODULE,
++	.dev_release	= devcd_dev_release,
++	.dev_groups	= devcd_dev_groups,
++};
++
++static ssize_t devcd_readv(char *buffer, loff_t offset, size_t count,
++			   const void *data, size_t datalen)
++{
++	if (offset > datalen)
++		return -EINVAL;
++
++	if (offset + count > datalen)
++		count = datalen - offset;
++
++	if (count)
++		memcpy(buffer, ((u8 *)data) + offset, count);
++
++	return count;
++}
++
++/**
++ * dev_coredumpv - create device coredump with vmalloc data
++ * @dev: the struct device for the crashed device
++ * @data: vmalloc data containing the device coredump
++ * @datalen: length of the data
++ * @gfp: allocation flags
++ *
++ * This function takes ownership of the vmalloc'ed data and will free
++ * it when it is no longer used. See dev_coredumpm() for more information.
++ */
++void dev_coredumpv(struct device *dev, const void *data, size_t datalen,
++		   gfp_t gfp)
++{
++	dev_coredumpm(dev, NULL, data, datalen, gfp, devcd_readv, vfree);
++}
++EXPORT_SYMBOL_GPL(dev_coredumpv);
++
++static int devcd_match_failing(struct device *dev, const void *failing)
++{
++	struct devcd_entry *devcd = dev_to_devcd(dev);
++
++	return devcd->failing_dev == failing;
++}
++
++/**
++ * dev_coredumpm - create device coredump with read/free methods
++ * @dev: the struct device for the crashed device
++ * @owner: the module that contains the read/free functions, use %THIS_MODULE
++ * @data: data cookie for the @read/@free functions
++ * @datalen: length of the data
++ * @gfp: allocation flags
++ * @read: function to read from the given buffer
++ * @free: function to free the given buffer
++ *
++ * Creates a new device coredump for the given device. If a previous one hasn't
++ * been read yet, the new coredump is discarded. The data lifetime is determined
++ * by the device coredump framework and when it is no longer needed the @free
++ * function will be called to free the data.
++ */
++void dev_coredumpm(struct device *dev, struct module *owner,
++		   const void *data, size_t datalen, gfp_t gfp,
++		   ssize_t (*read)(char *buffer, loff_t offset, size_t count,
++				   const void *data, size_t datalen),
++		   void (*free)(const void *data))
++{
++	static atomic_t devcd_count = ATOMIC_INIT(0);
++	struct devcd_entry *devcd;
++	struct device *existing;
++
++	existing = class_find_device(&devcd_class, NULL, dev,
++				     devcd_match_failing);
++	if (existing) {
++		put_device(existing);
++		goto free;
++	}
++
++	if (!try_module_get(owner))
++		goto free;
++
++	devcd = kzalloc(sizeof(*devcd), gfp);
++	if (!devcd)
++		goto put_module;
++
++	devcd->owner = owner;
++	devcd->data = data;
++	devcd->datalen = datalen;
++	devcd->read = read;
++	devcd->free = free;
++	devcd->failing_dev = get_device(dev);
++
++	device_initialize(&devcd->devcd_dev);
++
++	dev_set_name(&devcd->devcd_dev, "devcd%d",
++		     atomic_inc_return(&devcd_count));
++	devcd->devcd_dev.class = &devcd_class;
++
++	if (device_add(&devcd->devcd_dev))
++		goto put_device;
++
++	if (sysfs_create_link(&devcd->devcd_dev.kobj, &dev->kobj,
++			      "failing_device"))
++		/* nothing - symlink will be missing */;
++
++	if (sysfs_create_link(&dev->kobj, &devcd->devcd_dev.kobj,
++			      "devcoredump"))
++		/* nothing - symlink will be missing */;
++
++	INIT_DELAYED_WORK(&devcd->del_wk, devcd_del);
++	schedule_delayed_work(&devcd->del_wk, DEVCD_TIMEOUT);
++
++	return;
++ put_device:
++	put_device(&devcd->devcd_dev);
++ put_module:
++	module_put(owner);
++ free:
++	free(data);
++}
++EXPORT_SYMBOL_GPL(dev_coredumpm);
++
++static int __init devcoredump_init(void)
++{
++	return class_register(&devcd_class);
++}
++__initcall(devcoredump_init);
++
++static int devcd_free(struct device *dev, void *data)
++{
++	struct devcd_entry *devcd = dev_to_devcd(dev);
++
++	flush_delayed_work(&devcd->del_wk);
++	return 0;
++}
++
++static void __exit devcoredump_exit(void)
++{
++	class_for_each_device(&devcd_class, NULL, NULL, devcd_free);
++	class_unregister(&devcd_class);
++}
++__exitcall(devcoredump_exit);
+diff --git a/include/linux/devcoredump.h b/include/linux/devcoredump.h
+new file mode 100644
+index 000000000000..c0a360e99f64
+--- /dev/null
++++ b/include/linux/devcoredump.h
+@@ -0,0 +1,35 @@
++#ifndef __DEVCOREDUMP_H
++#define __DEVCOREDUMP_H
++
++#include <linux/device.h>
++#include <linux/module.h>
++#include <linux/vmalloc.h>
++
++#ifdef CONFIG_DEV_COREDUMP
++void dev_coredumpv(struct device *dev, const void *data, size_t datalen,
++		   gfp_t gfp);
++
++void dev_coredumpm(struct device *dev, struct module *owner,
++		   const void *data, size_t datalen, gfp_t gfp,
++		   ssize_t (*read)(char *buffer, loff_t offset, size_t count,
++				   const void *data, size_t datalen),
++		   void (*free)(const void *data));
++#else
++static inline void dev_coredumpv(struct device *dev, const void *data,
++				 size_t datalen, gfp_t gfp)
++{
++	vfree(data);
++}
++
++static inline void
++dev_coredumpm(struct device *dev, struct module *owner,
++	      const void *data, size_t datalen, gfp_t gfp,
++	      ssize_t (*read)(char *buffer, loff_t offset, size_t count,
++			      const void *data, size_t datalen),
++	      void (*free)(const void *data))
++{
++	free(data);
++}
++#endif /* CONFIG_DEV_COREDUMP */
++
++#endif /* __DEVCOREDUMP_H */
 -- 
-1.9.3
-
+2.1.0
 
