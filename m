@@ -1,72 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f177.google.com ([74.125.82.177]:61906 "EHLO
-	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753196AbaIOFNb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Sep 2014 01:13:31 -0400
-Received: by mail-we0-f177.google.com with SMTP id u57so3338900wes.22
-        for <linux-wireless@vger.kernel.org>; Sun, 14 Sep 2014 22:13:30 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 18/28] iwlwifi: mvm: update d0i3 debugfs
-Date: Mon, 15 Sep 2014 08:12:50 +0300
-Message-Id: <1410757980-2138-18-git-send-email-egrumbach@gmail.com> (sfid-20140915_073114_776624_8E71F953)
-In-Reply-To: <5416742C.3070804@gmail.com>
-References: <5416742C.3070804@gmail.com>
+Received: from mga11.intel.com ([192.55.52.93]:44048 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752436AbaILHYN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Sep 2014 03:24:13 -0400
+Message-ID: <1410506650.7023.29.camel@linux.intel.com> (sfid-20140912_092416_922907_31C20951)
+Subject: Re: [PATCH] hostap: proc: substitute loops by %*phN
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: g@tuxdriver.com, Jouni Malinen <j@w1.fi>,
+	linux-wireless@vger.kernel.org
+Date: Fri, 12 Sep 2014 10:24:10 +0300
+In-Reply-To: <20140911192721.GD22872@tuxdriver.com>
+References: <1409927416-27101-1-git-send-email-andriy.shevchenko@linux.intel.com>
+	 <20140911192721.GD22872@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Thu, 2014-09-11 at 15:27 -0400, John W. Linville wrote:
+> Applying: hostap: proc: substitute loops by %*phN
+> error: patch failed: drivers/net/wireless/hostap/hostap_proc.c:184
+> error: drivers/net/wireless/hostap/hostap_proc.c: patch does not apply
 
-A lot of the newer d0i3 ref additions weren't added to the
-debugfs file, fix that and add a comment to remember to do
-it in the future.
+Hmm... Originally it was applied on top of linux-next (few days ago).
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/debugfs.c | 12 ++++++++++++
- drivers/net/wireless/iwlwifi/mvm/mvm.h     |  2 ++
- 2 files changed, 14 insertions(+)
+Just checking with current origin/master. Applied correctly.
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-index 85eb847..95eb9a5 100644
---- a/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-@@ -1259,6 +1259,18 @@ static ssize_t iwl_dbgfs_d0i3_refs_read(struct file *file,
- 	PRINT_MVM_REF(IWL_MVM_REF_P2P_CLIENT);
- 	PRINT_MVM_REF(IWL_MVM_REF_AP_IBSS);
- 	PRINT_MVM_REF(IWL_MVM_REF_USER);
-+	PRINT_MVM_REF(IWL_MVM_REF_TX);
-+	PRINT_MVM_REF(IWL_MVM_REF_TX_AGG);
-+	PRINT_MVM_REF(IWL_MVM_REF_ADD_IF);
-+	PRINT_MVM_REF(IWL_MVM_REF_START_AP);
-+	PRINT_MVM_REF(IWL_MVM_REF_BSS_CHANGED);
-+	PRINT_MVM_REF(IWL_MVM_REF_PREPARE_TX);
-+	PRINT_MVM_REF(IWL_MVM_REF_PROTECT_TDLS);
-+	PRINT_MVM_REF(IWL_MVM_REF_CHECK_CTKILL);
-+	PRINT_MVM_REF(IWL_MVM_REF_PRPH_READ);
-+	PRINT_MVM_REF(IWL_MVM_REF_PRPH_WRITE);
-+	PRINT_MVM_REF(IWL_MVM_REF_NMI);
-+	PRINT_MVM_REF(IWL_MVM_REF_TM_CMD);
- 	PRINT_MVM_REF(IWL_MVM_REF_EXIT_WORK);
- 
- 	return simple_read_from_buffer(user_buf, count, ppos, buf, pos);
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index f05b7d7..4b1db9a 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -274,6 +274,8 @@ enum iwl_mvm_ref_type {
- 	IWL_MVM_REF_TM_CMD,
- 	IWL_MVM_REF_EXIT_WORK,
- 
-+	/* update debugfs.c when changing this */
-+
- 	IWL_MVM_REF_COUNT,
- };
- 
+Moreover, took recent wireless-next. No issues.
+Which tree you are trying?
+
+> 
+> On Fri, Sep 05, 2014 at 05:30:16PM +0300, Andy Shevchenko wrote:
+> > For dumping small buffers we may use %*phN specifier instead of custom
+> > approach..
+> > 
+> > Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> > ---
+> >  drivers/net/wireless/hostap/hostap_proc.c | 6 ++----
+> >  1 file changed, 2 insertions(+), 4 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/hostap/hostap_proc.c b/drivers/net/wireless/hostap/hostap_proc.c
+> > index 16a06b6..4e2a7dd9 100644
+> > --- a/drivers/net/wireless/hostap/hostap_proc.c
+> > +++ b/drivers/net/wireless/hostap/hostap_proc.c
+> > @@ -184,11 +184,9 @@ static int prism2_bss_list_proc_show(struct seq_file *m, void *v)
+> >  	seq_printf(m, "%*pE", bss->ssid_len, bss->ssid);
+> >  
+> >  	seq_putc(m, '\t');
+> > -	for (i = 0; i < bss->ssid_len; i++)
+> > -		seq_printf(m, "%02x", bss->ssid[i]);
+> > +	seq_printf(m, "%*phN", (int)bss->ssid_len, bss->ssid);
+> >  	seq_putc(m, '\t');
+> > -	for (i = 0; i < bss->wpa_ie_len; i++)
+> > -		seq_printf(m, "%02x", bss->wpa_ie[i]);
+> > +	seq_printf(m, "%*phN", (int)bss->wpa_ie_len, bss->wpa_ie);
+> >  	seq_putc(m, '\n');
+> >  	return 0;
+> >  }
+> > -- 
+> > 2.1.0
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> 
+
+
 -- 
-1.9.1
+Andy Shevchenko <andriy.shevchenko@intel.com>
+Intel Finland Oy
 
