@@ -1,220 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:54755 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753857AbaILJKo (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:51666 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751185AbaILIY4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Sep 2014 05:10:44 -0400
-From: Avinash Patil <patila@marvell.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
-	<huxm@marvell.com>, <yangyang@marvell.com>, <cluo@marvell.com>,
-	<maithili@marvell.com>, Avinash Patil <patila@marvell.com>
-Subject: [PATCHv2 10/16] mwifiex: bring in scan channel gap feature
-Date: Fri, 12 Sep 2014 20:08:54 +0530
-Message-ID: <1410532740-3173-11-git-send-email-patila@marvell.com> (sfid-20140912_111054_228846_60182049)
-In-Reply-To: <1410532740-3173-1-git-send-email-patila@marvell.com>
-References: <1410532740-3173-1-git-send-email-patila@marvell.com>
+	Fri, 12 Sep 2014 04:24:56 -0400
+Received: by mail-wg0-f44.google.com with SMTP id y10so344834wgg.27
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Sep 2014 01:24:54 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 1/2] b43: HT-PHY: Implement band switching
+Date: Fri, 12 Sep 2014 10:24:10 +0200
+Message-Id: <1410510251-5645-1-git-send-email-zajec5@gmail.com> (sfid-20140912_102503_163974_ED8BCFC9)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With scan channel gap when any station/AP is active, FW comes back
-to connected channel for any pending data transfter after scanning each
-channel.
-We set scan channel gap TLV to FW in scan command when any of the
-interface is active. This enables scan channel gap in FW.
-Also when scan channel gap is enabled, we would scan maximum channels
-allowed by FW.
+It works pretty much the same way as in N-PHY.
 
-Scan channel gap is supported only on FW with V15 FW API.
-
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Marc Yang <yangyang@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/net/wireless/mwifiex/cfg80211.c |  5 +++++
- drivers/net/wireless/mwifiex/cmdevt.c   |  3 +++
- drivers/net/wireless/mwifiex/fw.h       | 10 +++++++++-
- drivers/net/wireless/mwifiex/init.c     |  1 +
- drivers/net/wireless/mwifiex/main.h     | 23 +++++++++++++++++++++++
- drivers/net/wireless/mwifiex/scan.c     | 17 +++++++++++++++++
- 6 files changed, 58 insertions(+), 1 deletion(-)
+ drivers/net/wireless/b43/b43.h    |  5 +++++
+ drivers/net/wireless/b43/phy_ht.c | 38 ++++++++++++++++++++++++++++++++------
+ drivers/net/wireless/b43/phy_ht.h |  3 +++
+ 3 files changed, 40 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 320512f..50cc0db 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -1990,6 +1990,11 @@ mwifiex_cfg80211_scan(struct wiphy *wiphy,
- 		user_scan_cfg->chan_list[i].scan_time = 0;
- 	}
+diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
+index 95a9433..a980595 100644
+--- a/drivers/net/wireless/b43/b43.h
++++ b/drivers/net/wireless/b43/b43.h
+@@ -476,6 +476,11 @@ enum {
+ #define B43_MACCMD_CCA			0x00000008	/* Clear channel assessment */
+ #define B43_MACCMD_BGNOISE		0x00000010	/* Background noise */
  
-+	if (priv->adapter->scan_chan_gap_enabled &&
-+	    mwifiex_is_any_intf_active(priv))
-+		user_scan_cfg->scan_chan_gap =
-+					      priv->adapter->scan_chan_gap_time;
++/* B43_MMIO_PSM_PHY_HDR bits */
++#define B43_PSM_HDR_MAC_PHY_RESET	0x00000001
++#define B43_PSM_HDR_MAC_PHY_CLOCK_EN	0x00000002
++#define B43_PSM_HDR_MAC_PHY_FORCE_CLK	0x00000004
 +
- 	ret = mwifiex_scan_networks(priv, user_scan_cfg);
- 	kfree(user_scan_cfg);
- 	if (ret) {
-diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
-index fcc70ae..8559720 100644
---- a/drivers/net/wireless/mwifiex/cmdevt.c
-+++ b/drivers/net/wireless/mwifiex/cmdevt.c
-@@ -1613,5 +1613,8 @@ int mwifiex_ret_get_hw_spec(struct mwifiex_private *priv,
- 		adapter->if_ops.update_mp_end_port(adapter,
- 					le16_to_cpu(hw_spec->mp_end_port));
- 
-+	if (adapter->fw_api_ver == MWIFIEX_FW_V15)
-+		adapter->scan_chan_gap_enabled = true;
-+
- 	return 0;
- }
-diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
-index 6a703ea..1eb6173 100644
---- a/drivers/net/wireless/mwifiex/fw.h
-+++ b/drivers/net/wireless/mwifiex/fw.h
-@@ -170,7 +170,8 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
- #define TLV_TYPE_COALESCE_RULE      (PROPRIETARY_TLV_BASE_ID + 154)
- #define TLV_TYPE_KEY_PARAM_V2       (PROPRIETARY_TLV_BASE_ID + 156)
- #define TLV_TYPE_TDLS_IDLE_TIMEOUT  (PROPRIETARY_TLV_BASE_ID + 194)
--#define TLV_TYPE_API_REV	    (PROPRIETARY_TLV_BASE_ID + 199)
-+#define TLV_TYPE_SCAN_CHANNEL_GAP   (PROPRIETARY_TLV_BASE_ID + 197)
-+#define TLV_TYPE_API_REV            (PROPRIETARY_TLV_BASE_ID + 199)
- 
- #define MWIFIEX_TX_DATA_BUF_SIZE_2K        2048
- 
-@@ -653,6 +654,12 @@ struct mwifiex_ie_types_num_probes {
- 	__le16 num_probes;
- } __packed;
- 
-+struct mwifiex_ie_types_scan_chan_gap {
-+	struct mwifiex_ie_types_header header;
-+	/* time gap in TUs to be used between two consecutive channels scan */
-+	__le16 chan_gap;
-+} __packed;
-+
- struct mwifiex_ie_types_wildcard_ssid_params {
- 	struct mwifiex_ie_types_header header;
- 	u8 max_ssid_length;
-@@ -1249,6 +1256,7 @@ struct mwifiex_user_scan_cfg {
- 	u8 num_ssids;
- 	/* Variable number (fixed maximum) of channels to scan up */
- 	struct mwifiex_user_scan_chan chan_list[MWIFIEX_USER_SCAN_CHAN_MAX];
-+	u16 scan_chan_gap;
- } __packed;
- 
- struct ie_body {
-diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
-index 80bda80..d99c6f6 100644
---- a/drivers/net/wireless/mwifiex/init.c
-+++ b/drivers/net/wireless/mwifiex/init.c
-@@ -212,6 +212,7 @@ static void mwifiex_init_adapter(struct mwifiex_adapter *adapter)
- 	adapter->specific_scan_time = MWIFIEX_SPECIFIC_SCAN_CHAN_TIME;
- 	adapter->active_scan_time = MWIFIEX_ACTIVE_SCAN_CHAN_TIME;
- 	adapter->passive_scan_time = MWIFIEX_PASSIVE_SCAN_CHAN_TIME;
-+	adapter->scan_chan_gap_time = MWIFIEX_DEF_SCAN_CHAN_GAP_TIME;
- 
- 	adapter->scan_probes = 1;
- 
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 5439963..c3d097c 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -84,6 +84,7 @@ enum {
- #define MWIFIEX_PASSIVE_SCAN_CHAN_TIME	110
- #define MWIFIEX_ACTIVE_SCAN_CHAN_TIME	30
- #define MWIFIEX_SPECIFIC_SCAN_CHAN_TIME	30
-+#define MWIFIEX_DEF_SCAN_CHAN_GAP_TIME  50
- 
- #define SCAN_RSSI(RSSI)					(0x100 - ((u8)(RSSI)))
- 
-@@ -770,6 +771,7 @@ struct mwifiex_adapter {
- 	u16 specific_scan_time;
- 	u16 active_scan_time;
- 	u16 passive_scan_time;
-+	u16 scan_chan_gap_time;
- 	u8 fw_bands;
- 	u8 adhoc_start_band;
- 	u8 config_bands;
-@@ -839,6 +841,7 @@ struct mwifiex_adapter {
- 	struct memory_type_mapping *mem_type_mapping_tbl;
- 	u8 num_mem_types;
- 	u8 curr_mem_idx;
-+	bool scan_chan_gap_enabled;
- };
- 
- int mwifiex_init_lock_list(struct mwifiex_adapter *adapter);
-@@ -1139,6 +1142,25 @@ mwifiex_11h_get_csa_closed_channel(struct mwifiex_private *priv)
- 	return priv->csa_chan;
+ /* See BCMA_CLKCTLST_EXTRESREQ and BCMA_CLKCTLST_EXTRESST */
+ #define B43_BCMA_CLKCTLST_80211_PLL_REQ	0x00000100
+ #define B43_BCMA_CLKCTLST_PHY_PLL_REQ	0x00000200
+diff --git a/drivers/net/wireless/b43/phy_ht.c b/drivers/net/wireless/b43/phy_ht.c
+index a379602..6a0140a 100644
+--- a/drivers/net/wireless/b43/phy_ht.c
++++ b/drivers/net/wireless/b43/phy_ht.c
+@@ -321,6 +321,26 @@ static void b43_phy_ht_bphy_init(struct b43_wldev *dev)
+ 	b43_phy_write(dev, B43_PHY_N_BMODE(0x38), 0x668);
  }
  
-+static inline u8 mwifiex_is_any_intf_active(struct mwifiex_private *priv)
++static void b43_phy_ht_bphy_reset(struct b43_wldev *dev, bool reset)
 +{
-+	struct mwifiex_private *priv_num;
-+	int i;
++	u16 tmp;
 +
-+	for (i = 0; i < priv->adapter->priv_num; i++) {
-+		priv_num = priv->adapter->priv[i];
-+		if (priv_num) {
-+			if ((GET_BSS_ROLE(priv_num) == MWIFIEX_BSS_ROLE_UAP &&
-+			     priv_num->bss_started) ||
-+			    (GET_BSS_ROLE(priv_num) == MWIFIEX_BSS_ROLE_STA &&
-+			     priv_num->media_connected))
-+				return 1;
-+		}
-+	}
++	tmp = b43_read16(dev, B43_MMIO_PSM_PHY_HDR);
++	b43_write16(dev, B43_MMIO_PSM_PHY_HDR,
++		    tmp | B43_PSM_HDR_MAC_PHY_FORCE_CLK);
 +
-+	return 0;
++	/* Put BPHY in or take it out of the reset */
++	if (reset)
++		b43_phy_set(dev, B43_PHY_B_BBCFG,
++			    B43_PHY_B_BBCFG_RSTCCA | B43_PHY_B_BBCFG_RSTRX);
++	else
++		b43_phy_mask(dev, B43_PHY_B_BBCFG,
++			     (u16)~(B43_PHY_B_BBCFG_RSTCCA |
++				    B43_PHY_B_BBCFG_RSTRX));
++
++	b43_write16(dev, B43_MMIO_PSM_PHY_HDR, tmp);
 +}
 +
- int mwifiex_init_shutdown_fw(struct mwifiex_private *priv,
- 			     u32 func_init_shutdown);
- int mwifiex_add_card(void *, struct semaphore *, struct mwifiex_if_ops *, u8);
-@@ -1274,6 +1296,7 @@ void mwifiex_disable_all_tdls_links(struct mwifiex_private *priv);
- bool mwifiex_is_bss_in_11ac_mode(struct mwifiex_private *priv);
- u8 mwifiex_get_center_freq_index(struct mwifiex_private *priv, u8 band,
- 				 u32 pri_chan, u8 chan_bw);
-+int mwifiex_init_channel_scan_gap(struct mwifiex_adapter *adapter);
- 
- #ifdef CONFIG_DEBUG_FS
- void mwifiex_debugfs_init(void);
-diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
-index bec48cc..6fd69af 100644
---- a/drivers/net/wireless/mwifiex/scan.c
-+++ b/drivers/net/wireless/mwifiex/scan.c
-@@ -799,6 +799,7 @@ mwifiex_config_scan(struct mwifiex_private *priv,
+ /**************************************************
+  * Samples
+  **************************************************/
+@@ -757,13 +777,19 @@ static void b43_phy_ht_channel_setup(struct b43_wldev *dev,
+ 				const struct b43_phy_ht_channeltab_e_phy *e,
+ 				struct ieee80211_channel *new_channel)
  {
- 	struct mwifiex_adapter *adapter = priv->adapter;
- 	struct mwifiex_ie_types_num_probes *num_probes_tlv;
-+	struct mwifiex_ie_types_scan_chan_gap *chan_gap_tlv;
- 	struct mwifiex_ie_types_wildcard_ssid_params *wildcard_ssid_tlv;
- 	struct mwifiex_ie_types_bssid_list *bssid_tlv;
- 	u8 *tlv_pos;
-@@ -939,6 +940,22 @@ mwifiex_config_scan(struct mwifiex_private *priv,
- 	else
- 		*max_chan_per_scan = MWIFIEX_DEF_CHANNELS_PER_SCAN_CMD;
+-	bool old_band_5ghz;
++	if (new_channel->band == IEEE80211_BAND_5GHZ) {
++		/* Switch to 2 GHz for a moment to access B-PHY regs */
++		b43_phy_mask(dev, B43_PHY_HT_BANDCTL, ~B43_PHY_HT_BANDCTL_5GHZ);
++
++		b43_phy_ht_bphy_reset(dev, true);
++
++		/* Switch to 5 GHz */
++		b43_phy_set(dev, B43_PHY_HT_BANDCTL, B43_PHY_HT_BANDCTL_5GHZ);
++	} else {
++		/* Switch to 2 GHz */
++		b43_phy_mask(dev, B43_PHY_HT_BANDCTL, ~B43_PHY_HT_BANDCTL_5GHZ);
  
-+	if (user_scan_in->scan_chan_gap) {
-+		*max_chan_per_scan = MWIFIEX_MAX_CHANNELS_PER_SPECIFIC_SCAN;
-+		dev_dbg(adapter->dev, "info: scan: channel gap = %d\n",
-+			user_scan_in->scan_chan_gap);
-+
-+		chan_gap_tlv = (void *)tlv_pos;
-+		chan_gap_tlv->header.type =
-+					 cpu_to_le16(TLV_TYPE_SCAN_CHANNEL_GAP);
-+		chan_gap_tlv->header.len =
-+			cpu_to_le16(sizeof(chan_gap_tlv->chan_gap));
-+		chan_gap_tlv->chan_gap =
-+				     cpu_to_le16((user_scan_in->scan_chan_gap));
-+
-+		tlv_pos += sizeof(struct mwifiex_ie_types_scan_chan_gap);
-+	}
-+
- 	/* If the input config or adapter has the number of Probes set,
- 	   add tlv */
- 	if (num_probes) {
+-	old_band_5ghz = b43_phy_read(dev, B43_PHY_HT_BANDCTL) & 0; /* FIXME */
+-	if (new_channel->band == IEEE80211_BAND_5GHZ && !old_band_5ghz) {
+-		/* TODO */
+-	} else if (new_channel->band == IEEE80211_BAND_2GHZ && old_band_5ghz) {
+-		/* TODO */
++		b43_phy_ht_bphy_reset(dev, false);
+ 	}
+ 
+ 	b43_phy_write(dev, B43_PHY_HT_BW1, e->bw1);
+diff --git a/drivers/net/wireless/b43/phy_ht.h b/drivers/net/wireless/b43/phy_ht.h
+index 67b208e..c086f56 100644
+--- a/drivers/net/wireless/b43/phy_ht.h
++++ b/drivers/net/wireless/b43/phy_ht.h
+@@ -106,6 +106,9 @@
+ #define  B43_PHY_HT_TXPCTL_TARG_PWR2_C3_SHIFT	0
+ #define B43_PHY_HT_TX_PCTL_STATUS_C3		B43_PHY_EXTG(0x169)
+ 
++#define B43_PHY_B_BBCFG				B43_PHY_N_BMODE(0x001)
++#define  B43_PHY_B_BBCFG_RSTCCA			0x4000 /* Reset CCA */
++#define  B43_PHY_B_BBCFG_RSTRX			0x8000 /* Reset RX */
+ #define B43_PHY_HT_TEST				B43_PHY_N_BMODE(0x00A)
+ 
+ 
 -- 
-1.8.1.4
+1.8.4.5
 
