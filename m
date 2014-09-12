@@ -1,148 +1,220 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f182.google.com ([209.85.214.182]:39387 "EHLO
-	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753711AbaIDVEL (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:54755 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753857AbaILJKo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Sep 2014 17:04:11 -0400
-Received: by mail-ob0-f182.google.com with SMTP id va2so8067126obc.27
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Sep 2014 14:04:10 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	troy_tan@realsil.com.cn
-Subject: [PATCH 2/7 V3.18] rtlwifi: btcoexist: Modify rtl_btc for changes in latest Realtek code
-Date: Thu,  4 Sep 2014 16:03:41 -0500
-Message-Id: <1409864626-16373-3-git-send-email-Larry.Finger@lwfinger.net> (sfid-20140904_230415_404103_76D5FBFC)
-In-Reply-To: <1409864626-16373-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1409864626-16373-1-git-send-email-Larry.Finger@lwfinger.net>
+	Fri, 12 Sep 2014 05:10:44 -0400
+From: Avinash Patil <patila@marvell.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
+	<huxm@marvell.com>, <yangyang@marvell.com>, <cluo@marvell.com>,
+	<maithili@marvell.com>, Avinash Patil <patila@marvell.com>
+Subject: [PATCHv2 10/16] mwifiex: bring in scan channel gap feature
+Date: Fri, 12 Sep 2014 20:08:54 +0530
+Message-ID: <1410532740-3173-11-git-send-email-patila@marvell.com> (sfid-20140912_111054_228846_60182049)
+In-Reply-To: <1410532740-3173-1-git-send-email-patila@marvell.com>
+References: <1410532740-3173-1-git-send-email-patila@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: troy_tan@realsil.com.cn
----
- drivers/net/wireless/rtlwifi/btcoexist/rtl_btc.c | 21 +++++++++++++++++----
- drivers/net/wireless/rtlwifi/btcoexist/rtl_btc.h |  2 ++
- drivers/net/wireless/rtlwifi/wifi.h              |  3 +++
- 3 files changed, 22 insertions(+), 4 deletions(-)
+With scan channel gap when any station/AP is active, FW comes back
+to connected channel for any pending data transfter after scanning each
+channel.
+We set scan channel gap TLV to FW in scan command when any of the
+interface is active. This enables scan channel gap in FW.
+Also when scan channel gap is enabled, we would scan maximum channels
+allowed by FW.
 
-diff --git a/drivers/net/wireless/rtlwifi/btcoexist/rtl_btc.c b/drivers/net/wireless/rtlwifi/btcoexist/rtl_btc.c
-index 0ab94fe..826b1a6 100644
---- a/drivers/net/wireless/rtlwifi/btcoexist/rtl_btc.c
-+++ b/drivers/net/wireless/rtlwifi/btcoexist/rtl_btc.c
-@@ -22,19 +22,19 @@
-  * Larry Finger <Larry.Finger@lwfinger.net>
-  *
-  *****************************************************************************/
--
- #include "../wifi.h"
--#include "rtl_btc.h"
--#include "halbt_precomp.h"
--
- #include <linux/vmalloc.h>
- #include <linux/module.h>
+Scan channel gap is supported only on FW with V15 FW API.
+
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Marc Yang <yangyang@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+---
+ drivers/net/wireless/mwifiex/cfg80211.c |  5 +++++
+ drivers/net/wireless/mwifiex/cmdevt.c   |  3 +++
+ drivers/net/wireless/mwifiex/fw.h       | 10 +++++++++-
+ drivers/net/wireless/mwifiex/init.c     |  1 +
+ drivers/net/wireless/mwifiex/main.h     | 23 +++++++++++++++++++++++
+ drivers/net/wireless/mwifiex/scan.c     | 17 +++++++++++++++++
+ 6 files changed, 58 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 320512f..50cc0db 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -1990,6 +1990,11 @@ mwifiex_cfg80211_scan(struct wiphy *wiphy,
+ 		user_scan_cfg->chan_list[i].scan_time = 0;
+ 	}
  
-+#include "rtl_btc.h"
-+#include "halbt_precomp.h"
++	if (priv->adapter->scan_chan_gap_enabled &&
++	    mwifiex_is_any_intf_active(priv))
++		user_scan_cfg->scan_chan_gap =
++					      priv->adapter->scan_chan_gap_time;
 +
- static struct rtl_btc_ops rtl_btc_operation = {
- 	.btc_init_variables = rtl_btc_init_variables,
- 	.btc_init_hal_vars = rtl_btc_init_hal_vars,
- 	.btc_init_hw_config = rtl_btc_init_hw_config,
- 	.btc_ips_notify = rtl_btc_ips_notify,
-+	.btc_lps_notify = rtl_btc_lps_notify,
- 	.btc_scan_notify = rtl_btc_scan_notify,
- 	.btc_connect_notify = rtl_btc_connect_notify,
- 	.btc_mediastatus_notify = rtl_btc_mediastatus_notify,
-@@ -44,6 +44,7 @@ static struct rtl_btc_ops rtl_btc_operation = {
- 	.btc_is_limited_dig = rtl_btc_is_limited_dig,
- 	.btc_is_disable_edca_turbo = rtl_btc_is_disable_edca_turbo,
- 	.btc_is_bt_disabled = rtl_btc_is_bt_disabled,
-+	.btc_special_packet_notify = rtl_btc_special_packet_notify,
+ 	ret = mwifiex_scan_networks(priv, user_scan_cfg);
+ 	kfree(user_scan_cfg);
+ 	if (ret) {
+diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
+index fcc70ae..8559720 100644
+--- a/drivers/net/wireless/mwifiex/cmdevt.c
++++ b/drivers/net/wireless/mwifiex/cmdevt.c
+@@ -1613,5 +1613,8 @@ int mwifiex_ret_get_hw_spec(struct mwifiex_private *priv,
+ 		adapter->if_ops.update_mp_end_port(adapter,
+ 					le16_to_cpu(hw_spec->mp_end_port));
+ 
++	if (adapter->fw_api_ver == MWIFIEX_FW_V15)
++		adapter->scan_chan_gap_enabled = true;
++
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index 6a703ea..1eb6173 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -170,7 +170,8 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
+ #define TLV_TYPE_COALESCE_RULE      (PROPRIETARY_TLV_BASE_ID + 154)
+ #define TLV_TYPE_KEY_PARAM_V2       (PROPRIETARY_TLV_BASE_ID + 156)
+ #define TLV_TYPE_TDLS_IDLE_TIMEOUT  (PROPRIETARY_TLV_BASE_ID + 194)
+-#define TLV_TYPE_API_REV	    (PROPRIETARY_TLV_BASE_ID + 199)
++#define TLV_TYPE_SCAN_CHANNEL_GAP   (PROPRIETARY_TLV_BASE_ID + 197)
++#define TLV_TYPE_API_REV            (PROPRIETARY_TLV_BASE_ID + 199)
+ 
+ #define MWIFIEX_TX_DATA_BUF_SIZE_2K        2048
+ 
+@@ -653,6 +654,12 @@ struct mwifiex_ie_types_num_probes {
+ 	__le16 num_probes;
+ } __packed;
+ 
++struct mwifiex_ie_types_scan_chan_gap {
++	struct mwifiex_ie_types_header header;
++	/* time gap in TUs to be used between two consecutive channels scan */
++	__le16 chan_gap;
++} __packed;
++
+ struct mwifiex_ie_types_wildcard_ssid_params {
+ 	struct mwifiex_ie_types_header header;
+ 	u8 max_ssid_length;
+@@ -1249,6 +1256,7 @@ struct mwifiex_user_scan_cfg {
+ 	u8 num_ssids;
+ 	/* Variable number (fixed maximum) of channels to scan up */
+ 	struct mwifiex_user_scan_chan chan_list[MWIFIEX_USER_SCAN_CHAN_MAX];
++	u16 scan_chan_gap;
+ } __packed;
+ 
+ struct ie_body {
+diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
+index 80bda80..d99c6f6 100644
+--- a/drivers/net/wireless/mwifiex/init.c
++++ b/drivers/net/wireless/mwifiex/init.c
+@@ -212,6 +212,7 @@ static void mwifiex_init_adapter(struct mwifiex_adapter *adapter)
+ 	adapter->specific_scan_time = MWIFIEX_SPECIFIC_SCAN_CHAN_TIME;
+ 	adapter->active_scan_time = MWIFIEX_ACTIVE_SCAN_CHAN_TIME;
+ 	adapter->passive_scan_time = MWIFIEX_PASSIVE_SCAN_CHAN_TIME;
++	adapter->scan_chan_gap_time = MWIFIEX_DEF_SCAN_CHAN_GAP_TIME;
+ 
+ 	adapter->scan_probes = 1;
+ 
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 5439963..c3d097c 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -84,6 +84,7 @@ enum {
+ #define MWIFIEX_PASSIVE_SCAN_CHAN_TIME	110
+ #define MWIFIEX_ACTIVE_SCAN_CHAN_TIME	30
+ #define MWIFIEX_SPECIFIC_SCAN_CHAN_TIME	30
++#define MWIFIEX_DEF_SCAN_CHAN_GAP_TIME  50
+ 
+ #define SCAN_RSSI(RSSI)					(0x100 - ((u8)(RSSI)))
+ 
+@@ -770,6 +771,7 @@ struct mwifiex_adapter {
+ 	u16 specific_scan_time;
+ 	u16 active_scan_time;
+ 	u16 passive_scan_time;
++	u16 scan_chan_gap_time;
+ 	u8 fw_bands;
+ 	u8 adhoc_start_band;
+ 	u8 config_bands;
+@@ -839,6 +841,7 @@ struct mwifiex_adapter {
+ 	struct memory_type_mapping *mem_type_mapping_tbl;
+ 	u8 num_mem_types;
+ 	u8 curr_mem_idx;
++	bool scan_chan_gap_enabled;
  };
  
- void rtl_btc_init_variables(struct rtl_priv *rtlpriv)
-@@ -85,6 +86,11 @@ void rtl_btc_ips_notify(struct rtl_priv *rtlpriv, u8 type)
- 	exhalbtc_ips_notify(&gl_bt_coexist, type);
+ int mwifiex_init_lock_list(struct mwifiex_adapter *adapter);
+@@ -1139,6 +1142,25 @@ mwifiex_11h_get_csa_closed_channel(struct mwifiex_private *priv)
+ 	return priv->csa_chan;
  }
  
-+void rtl_btc_lps_notify(struct rtl_priv *rtlpriv, u8 type)
++static inline u8 mwifiex_is_any_intf_active(struct mwifiex_private *priv)
 +{
-+	exhalbtc_lps_notify(&gl_bt_coexist, type);
++	struct mwifiex_private *priv_num;
++	int i;
++
++	for (i = 0; i < priv->adapter->priv_num; i++) {
++		priv_num = priv->adapter->priv[i];
++		if (priv_num) {
++			if ((GET_BSS_ROLE(priv_num) == MWIFIEX_BSS_ROLE_UAP &&
++			     priv_num->bss_started) ||
++			    (GET_BSS_ROLE(priv_num) == MWIFIEX_BSS_ROLE_STA &&
++			     priv_num->media_connected))
++				return 1;
++		}
++	}
++
++	return 0;
 +}
 +
- void rtl_btc_scan_notify(struct rtl_priv *rtlpriv, u8 scantype)
- {
- 	exhalbtc_scan_notify(&gl_bt_coexist, scantype);
-@@ -103,6 +109,7 @@ void rtl_btc_mediastatus_notify(struct rtl_priv *rtlpriv,
+ int mwifiex_init_shutdown_fw(struct mwifiex_private *priv,
+ 			     u32 func_init_shutdown);
+ int mwifiex_add_card(void *, struct semaphore *, struct mwifiex_if_ops *, u8);
+@@ -1274,6 +1296,7 @@ void mwifiex_disable_all_tdls_links(struct mwifiex_private *priv);
+ bool mwifiex_is_bss_in_11ac_mode(struct mwifiex_private *priv);
+ u8 mwifiex_get_center_freq_index(struct mwifiex_private *priv, u8 band,
+ 				 u32 pri_chan, u8 chan_bw);
++int mwifiex_init_channel_scan_gap(struct mwifiex_adapter *adapter);
  
- void rtl_btc_periodical(struct rtl_priv *rtlpriv)
+ #ifdef CONFIG_DEBUG_FS
+ void mwifiex_debugfs_init(void);
+diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
+index bec48cc..6fd69af 100644
+--- a/drivers/net/wireless/mwifiex/scan.c
++++ b/drivers/net/wireless/mwifiex/scan.c
+@@ -799,6 +799,7 @@ mwifiex_config_scan(struct mwifiex_private *priv,
  {
-+	/*rtl_bt_dm_monitor();*/
- 	exhalbtc_periodical(&gl_bt_coexist);
- }
- 
-@@ -150,12 +157,18 @@ bool rtl_btc_is_disable_edca_turbo(struct rtl_priv *rtlpriv)
- 
- bool rtl_btc_is_bt_disabled(struct rtl_priv *rtlpriv)
- {
-+	/* It seems 'bt_disabled' is never be initialized or set. */
- 	if (gl_bt_coexist.bt_info.bt_disabled)
- 		return true;
+ 	struct mwifiex_adapter *adapter = priv->adapter;
+ 	struct mwifiex_ie_types_num_probes *num_probes_tlv;
++	struct mwifiex_ie_types_scan_chan_gap *chan_gap_tlv;
+ 	struct mwifiex_ie_types_wildcard_ssid_params *wildcard_ssid_tlv;
+ 	struct mwifiex_ie_types_bssid_list *bssid_tlv;
+ 	u8 *tlv_pos;
+@@ -939,6 +940,22 @@ mwifiex_config_scan(struct mwifiex_private *priv,
  	else
- 		return false;
- }
+ 		*max_chan_per_scan = MWIFIEX_DEF_CHANNELS_PER_SCAN_CMD;
  
-+void rtl_btc_special_packet_notify(struct rtl_priv *rtlpriv, u8 pkt_type)
-+{
-+	return exhalbtc_special_packet_notify(&gl_bt_coexist, pkt_type);
-+}
++	if (user_scan_in->scan_chan_gap) {
++		*max_chan_per_scan = MWIFIEX_MAX_CHANNELS_PER_SPECIFIC_SCAN;
++		dev_dbg(adapter->dev, "info: scan: channel gap = %d\n",
++			user_scan_in->scan_chan_gap);
 +
- struct rtl_btc_ops *rtl_btc_get_ops_pointer(void)
- {
- 	return &rtl_btc_operation;
-diff --git a/drivers/net/wireless/rtlwifi/btcoexist/rtl_btc.h b/drivers/net/wireless/rtlwifi/btcoexist/rtl_btc.h
-index 805b22c..d5218ce 100644
---- a/drivers/net/wireless/rtlwifi/btcoexist/rtl_btc.h
-+++ b/drivers/net/wireless/rtlwifi/btcoexist/rtl_btc.h
-@@ -31,6 +31,7 @@ void rtl_btc_init_variables(struct rtl_priv *rtlpriv);
- void rtl_btc_init_hal_vars(struct rtl_priv *rtlpriv);
- void rtl_btc_init_hw_config(struct rtl_priv *rtlpriv);
- void rtl_btc_ips_notify(struct rtl_priv *rtlpriv, u8 type);
-+void rtl_btc_lps_notify(struct rtl_priv *rtlpriv, u8 type);
- void rtl_btc_scan_notify(struct rtl_priv *rtlpriv, u8 scantype);
- void rtl_btc_connect_notify(struct rtl_priv *rtlpriv, u8 action);
- void rtl_btc_mediastatus_notify(struct rtl_priv *rtlpriv,
-@@ -41,6 +42,7 @@ void rtl_btc_btinfo_notify(struct rtl_priv *rtlpriv, u8 *tmpbuf, u8 length);
- bool rtl_btc_is_limited_dig(struct rtl_priv *rtlpriv);
- bool rtl_btc_is_disable_edca_turbo(struct rtl_priv *rtlpriv);
- bool rtl_btc_is_bt_disabled(struct rtl_priv *rtlpriv);
-+void rtl_btc_special_packet_notify(struct rtl_priv *rtlpriv, u8 pkt_type);
- 
- struct rtl_btc_ops *rtl_btc_get_ops_pointer(void);
- 
-diff --git a/drivers/net/wireless/rtlwifi/wifi.h b/drivers/net/wireless/rtlwifi/wifi.h
-index 407a793..e44e2df 100644
---- a/drivers/net/wireless/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/rtlwifi/wifi.h
-@@ -2312,6 +2312,7 @@ struct rtl_btc_ops {
- 	void (*btc_init_hal_vars) (struct rtl_priv *rtlpriv);
- 	void (*btc_init_hw_config) (struct rtl_priv *rtlpriv);
- 	void (*btc_ips_notify) (struct rtl_priv *rtlpriv, u8 type);
-+	void (*btc_lps_notify)(struct rtl_priv *rtlpriv, u8 type);
- 	void (*btc_scan_notify) (struct rtl_priv *rtlpriv, u8 scantype);
- 	void (*btc_connect_notify) (struct rtl_priv *rtlpriv, u8 action);
- 	void (*btc_mediastatus_notify) (struct rtl_priv *rtlpriv,
-@@ -2323,6 +2324,8 @@ struct rtl_btc_ops {
- 	bool (*btc_is_limited_dig) (struct rtl_priv *rtlpriv);
- 	bool (*btc_is_disable_edca_turbo) (struct rtl_priv *rtlpriv);
- 	bool (*btc_is_bt_disabled) (struct rtl_priv *rtlpriv);
-+	void (*btc_special_packet_notify)(struct rtl_priv *rtlpriv,
-+					  u8 pkt_type);
- };
- 
- struct proxim {
++		chan_gap_tlv = (void *)tlv_pos;
++		chan_gap_tlv->header.type =
++					 cpu_to_le16(TLV_TYPE_SCAN_CHANNEL_GAP);
++		chan_gap_tlv->header.len =
++			cpu_to_le16(sizeof(chan_gap_tlv->chan_gap));
++		chan_gap_tlv->chan_gap =
++				     cpu_to_le16((user_scan_in->scan_chan_gap));
++
++		tlv_pos += sizeof(struct mwifiex_ie_types_scan_chan_gap);
++	}
++
+ 	/* If the input config or adapter has the number of Probes set,
+ 	   add tlv */
+ 	if (num_probes) {
 -- 
-1.8.4.5
+1.8.1.4
 
