@@ -1,127 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:56729 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750744AbaIXGRp (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:46386 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752237AbaILJKP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Sep 2014 02:17:45 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH 2/5] ath9k: Fix p2p address management
-Date: Wed, 24 Sep 2014 11:48:13 +0530
-Message-Id: <1411539496-30595-3-git-send-email-sujith@msujith.org> (sfid-20140924_081754_615381_0487E71F)
-In-Reply-To: <1411539496-30595-1-git-send-email-sujith@msujith.org>
-References: <1411539496-30595-1-git-send-email-sujith@msujith.org>
+	Fri, 12 Sep 2014 05:10:15 -0400
+From: Avinash Patil <patila@marvell.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
+	<huxm@marvell.com>, <yangyang@marvell.com>, <cluo@marvell.com>,
+	<maithili@marvell.com>, Avinash Patil <patila@marvell.com>
+Subject: [PATCHv2 04/16] mwifiex: rework internal scan for association
+Date: Fri, 12 Sep 2014 20:08:48 +0530
+Message-ID: <1410532740-3173-5-git-send-email-patila@marvell.com> (sfid-20140912_111024_069740_EFAA69AD)
+In-Reply-To: <1410532740-3173-1-git-send-email-patila@marvell.com>
+References: <1410532740-3173-1-git-send-email-patila@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+There was an issue with internal scan during association wherein
+we would complete internal scan on first scan command response.
+This would cause association failure if AP is not found in first scan
+response e.g. APs from A band.
+This patch fixes this issue by completing internal scan only when all
+scan commands from scan pending queue and command pending queue are
+sent to FW and response to last scan command is received.
 
-When multiple channel contexts are enabled, a p2p interface
-that is assigned to a context will have an address that
-is different from the device mac address, which is used
-by wpa_s as the p2p device ID.
-
-Certain frames like provision requests use the device address
-and these get dropped since ath9k_calculate_summary_state()
-iterates over only the active interfaces in a context and the
-device address is not used.
-
-Fix this by adding the device mac address to the bssid mask.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Tested-by: Xinmin Hu <huxm@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Marc Yang <yangyang@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |  1 +
- drivers/net/wireless/ath/ath9k/main.c  | 36 ++++++++++++++++++++++++++++++++++
- 2 files changed, 37 insertions(+)
+ drivers/net/wireless/mwifiex/scan.c | 27 ++++++++++++++++++++++++++-
+ 1 file changed, 26 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index d2a1ee1..37a5ccf 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -354,6 +354,7 @@ struct ath_chanctx {
- 	bool switch_after_beacon;
+diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
+index dee717a..bec48cc 100644
+--- a/drivers/net/wireless/mwifiex/scan.c
++++ b/drivers/net/wireless/mwifiex/scan.c
+@@ -1970,9 +1970,34 @@ int mwifiex_cmd_802_11_scan_ext(struct mwifiex_private *priv,
+ /* This function handles the command response of extended scan */
+ int mwifiex_ret_802_11_scan_ext(struct mwifiex_private *priv)
+ {
++	struct mwifiex_adapter *adapter = priv->adapter;
++	struct host_cmd_ds_command *cmd_ptr;
++	struct cmd_ctrl_node *cmd_node;
++	unsigned long cmd_flags, scan_flags;
++	bool complete_scan = false;
++
+ 	dev_dbg(priv->adapter->dev, "info: EXT scan returns successfully\n");
  
- 	short nvifs;
-+	short nvifs_assigned;
- 	unsigned int rxfilter;
- };
- 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 6738c4d..ae7c6ee 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -940,6 +940,34 @@ static void ath9k_vif_iter(struct ath9k_vif_iter_data *iter_data,
- 	}
- }
- 
-+static void ath9k_update_bssid_mask(struct ath_softc *sc,
-+				    struct ath_chanctx *ctx,
-+				    struct ath9k_vif_iter_data *iter_data)
-+{
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+	struct ath_vif *avp;
-+	int i;
-+
-+	if (!ath9k_is_chanctx_enabled())
-+		return;
-+
-+	list_for_each_entry(avp, &ctx->vifs, list) {
-+		if (ctx->nvifs_assigned != 1)
-+			continue;
-+
-+		if (!avp->vif->p2p || !iter_data->has_hw_macaddr)
-+			continue;
-+
-+		ether_addr_copy(common->curbssid, avp->bssid);
-+
-+		/* perm_addr will be used as the p2p device address. */
-+		for (i = 0; i < ETH_ALEN; i++)
-+			iter_data->mask[i] &=
-+				~(iter_data->hw_macaddr[i] ^
-+				  sc->hw->wiphy->perm_addr[i]);
+-	mwifiex_complete_scan(priv);
++	spin_lock_irqsave(&adapter->cmd_pending_q_lock, cmd_flags);
++	spin_lock_irqsave(&adapter->scan_pending_q_lock, scan_flags);
++	if (list_empty(&adapter->scan_pending_q)) {
++		complete_scan = true;
++		list_for_each_entry(cmd_node, &adapter->cmd_pending_q, list) {
++			cmd_ptr = (void *)cmd_node->cmd_skb->data;
++			if (le16_to_cpu(cmd_ptr->command) ==
++			    HostCmd_CMD_802_11_SCAN_EXT) {
++				dev_dbg(priv->adapter->dev,
++					"Scan pending in command pending list");
++				complete_scan = false;
++				break;
++			}
++		}
 +	}
-+}
++	spin_unlock_irqrestore(&adapter->scan_pending_q_lock, scan_flags);
++	spin_unlock_irqrestore(&adapter->cmd_pending_q_lock, cmd_flags);
 +
- /* Called with sc->mutex held. */
- void ath9k_calculate_iter_data(struct ath_softc *sc,
- 			       struct ath_chanctx *ctx,
-@@ -958,6 +986,8 @@ void ath9k_calculate_iter_data(struct ath_softc *sc,
++	if (complete_scan)
++		mwifiex_complete_scan(priv);
  
- 	list_for_each_entry(avp, &ctx->vifs, list)
- 		ath9k_vif_iter(iter_data, avp->vif->addr, avp->vif);
-+
-+	ath9k_update_bssid_mask(sc, ctx, iter_data);
+ 	return 0;
  }
- 
- static void ath9k_set_assoc_state(struct ath_softc *sc,
-@@ -1122,6 +1152,10 @@ void ath9k_calculate_summary_state(struct ath_softc *sc,
- 	else
- 		clear_bit(ATH_OP_PRIM_STA_VIF, &common->op_flags);
- 
-+	ath_dbg(common, CONFIG,
-+		"macaddr: %pM, bssid: %pM, bssidmask: %pM\n",
-+		common->macaddr, common->curbssid, common->bssidmask);
-+
- 	ath9k_ps_restore(sc);
- }
- 
-@@ -2356,6 +2390,7 @@ static int ath9k_assign_vif_chanctx(struct ieee80211_hw *hw,
- 		conf->def.chan->center_freq);
- 
- 	avp->chanctx = ctx;
-+	ctx->nvifs_assigned++;
- 	list_add_tail(&avp->list, &ctx->vifs);
- 	ath9k_calculate_summary_state(sc, ctx);
- 	for (i = 0; i < IEEE80211_NUM_ACS; i++)
-@@ -2384,6 +2419,7 @@ static void ath9k_unassign_vif_chanctx(struct ieee80211_hw *hw,
- 		conf->def.chan->center_freq);
- 
- 	avp->chanctx = NULL;
-+	ctx->nvifs_assigned--;
- 	list_del(&avp->list);
- 	ath9k_calculate_summary_state(sc, ctx);
- 	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++)
 -- 
-2.1.0
+1.8.1.4
 
