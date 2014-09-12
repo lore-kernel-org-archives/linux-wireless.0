@@ -1,42 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:52285 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754507AbaIKUvi (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:7794 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753930AbaILJLh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Sep 2014 16:51:38 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH for-3.17 0/3] brcmfmac: regression fixes
-Date: Thu, 11 Sep 2014 22:51:29 +0200
-Message-ID: <1410468692-20852-1-git-send-email-arend@broadcom.com> (sfid-20140911_225141_606794_E6B4CB25)
+	Fri, 12 Sep 2014 05:11:37 -0400
+From: Avinash Patil <patila@marvell.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
+	<huxm@marvell.com>, <yangyang@marvell.com>, <cluo@marvell.com>,
+	<maithili@marvell.com>, Avinash Patil <patila@marvell.com>
+Subject: [PATCHv2 16/16] mwifiex: modify TX/RX window sizes for AP interface
+Date: Fri, 12 Sep 2014 20:09:00 +0530
+Message-ID: <1410532740-3173-17-git-send-email-patila@marvell.com> (sfid-20140912_111148_781128_9E31DB32)
+In-Reply-To: <1410532740-3173-1-git-send-email-patila@marvell.com>
+References: <1410532740-3173-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series contains fixes regression made by new functionality
-in the driver. The Kconfig fix was reported. The other two changes
-were found during internal testing.
+This patch sets uAP BA window sizes to 64.
 
-This series is intended for v3.17 kernel and applies to the master
-branch of the wireless repository.
+Signed-off-by: Avinash Patil <patila@marvell.com>
+---
+ drivers/net/wireless/mwifiex/decl.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Arend van Spriel (2):
-  brcmfmac: conditionally compile firmware protocol source code
-  brcmfmac: obtain ifp through wdev structure
-
-Hante Meuleman (1):
-  brcmfmac: Fix memory leak and missing assignment.
-
- drivers/net/wireless/brcm80211/Kconfig                | 10 ++++++++++
- drivers/net/wireless/brcm80211/brcmfmac/Makefile      | 10 ++++++----
- drivers/net/wireless/brcm80211/brcmfmac/bcdc.h        |  7 +++++--
- drivers/net/wireless/brcm80211/brcmfmac/msgbuf.h      | 11 +++++++++--
- drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c |  9 +++++++--
- 5 files changed, 37 insertions(+), 10 deletions(-)
-
+diff --git a/drivers/net/wireless/mwifiex/decl.h b/drivers/net/wireless/mwifiex/decl.h
+index 0e03fe3..e0d00a7 100644
+--- a/drivers/net/wireless/mwifiex/decl.h
++++ b/drivers/net/wireless/mwifiex/decl.h
+@@ -48,8 +48,8 @@
+ #define MWIFIEX_UAP_AMPDU_DEF_RXWINSIZE        16
+ #define MWIFIEX_11AC_STA_AMPDU_DEF_TXWINSIZE   64
+ #define MWIFIEX_11AC_STA_AMPDU_DEF_RXWINSIZE   64
+-#define MWIFIEX_11AC_UAP_AMPDU_DEF_TXWINSIZE   48
+-#define MWIFIEX_11AC_UAP_AMPDU_DEF_RXWINSIZE   32
++#define MWIFIEX_11AC_UAP_AMPDU_DEF_TXWINSIZE   64
++#define MWIFIEX_11AC_UAP_AMPDU_DEF_RXWINSIZE   64
+ 
+ #define MWIFIEX_DEFAULT_BLOCK_ACK_TIMEOUT  0xffff
+ 
 -- 
-1.9.1
+1.8.1.4
 
