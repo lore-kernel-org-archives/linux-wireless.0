@@ -1,35 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f176.google.com ([209.85.192.176]:53634 "EHLO
-	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751255AbaI0ISy convert rfc822-to-8bit (ORCPT
+Received: from mail-la0-f48.google.com ([209.85.215.48]:45290 "EHLO
+	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752269AbaILG7V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Sep 2014 04:18:54 -0400
-Received: by mail-pd0-f176.google.com with SMTP id fp1so1288795pdb.21
-        for <linux-wireless@vger.kernel.org>; Sat, 27 Sep 2014 01:18:53 -0700 (PDT)
-References: <509C5E93-4D6C-4CCE-A4F6-BA1CEC80AB98@gmail.com> <CAA2SeNKdOBTPnkz2y=WUFqa1sSUmxeMwDCHaT50TwL0O0uJfgQ@mail.gmail.com> <00852C2A-209F-48A8-9F46-2F2520CEF7EE@gmail.com> <1411742131.27290.1.camel@dcbw.local>
-In-Reply-To: <1411742131.27290.1.camel@dcbw.local>
-Mime-Version: 1.0 (1.0)
-Content-Type: text/plain;
-	charset=utf-8
-Message-Id: <450E9BCC-651A-4ECF-8185-FCF5E7FD32A9@gmail.com> (sfid-20140927_101900_285186_AE060751)
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-From: jammy <benxuelan0402@gmail.com>
-Subject: Re: how can we fast roaming between multi-aps
-Date: Sat, 27 Sep 2014 16:18:45 +0800
-To: Dan Williams <dcbw@redhat.com>
+	Fri, 12 Sep 2014 02:59:21 -0400
+Received: by mail-la0-f48.google.com with SMTP id ty20so352219lab.35
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Sep 2014 23:59:19 -0700 (PDT)
+From: Henning Rogge <hrogge@gmail.com>
+To: "linux-wireless @ vger . kernel . org"
+	<linux-wireless@vger.kernel.org>
+Cc: Henning Rogge <henning.rogge@fkie.fraunhofer.de>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+Subject: [PATCH v4 0/2] cfg80211: Add export of mesh proxy path table
+Date: Fri, 12 Sep 2014 08:58:48 +0200
+Message-Id: <1410505130-7271-1-git-send-email-henning.rogge@fkie.fraunhofer.de> (sfid-20140912_085924_459234_7DC40AD1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi DAN，
-1，Are all the SSIDs the same?
-A：yes，SSIDs are same.
-2，What kind of authentication?  WPA Enterprise/802.1x?  What EAP methods?
-A：there are no authentication，and no EAP methods
-3，Is pre-authentication enabled on the network and in the client?
-A：how to enable pre-authentication？My linux kernel is build by OpenWRT.
-4，Is background scanning enabled in wpa_supplicant, and if so what is the interval?
-A：How to enable the background scanning in wpa_supplicant？
+The following patch series adds and implements two new cfg80211_ops that
+allow to query the content of the mac80211s mesh proxy path table via
+netlink.
 
-thanks.
-from jammy's iPhone
+v2 changes:
+* split the original patch into separate cfg80211 and mac80211 part
+
+v3 change:
+* change of commit messages, added signoff
+
+v4 change:
+* another change of commit messages
+
+Henning Rogge (2):
+  cfg80211: add ops to query mesh proxy path table
+  mac80211: implement cfg80211_ops to query mesh proxy path table
+
+ include/net/cfg80211.h       |  7 ++++
+ include/uapi/linux/nl80211.h |  6 +++
+ net/mac80211/cfg.c           | 53 ++++++++++++++++++++++++
+ net/mac80211/mesh.h          |  3 ++
+ net/mac80211/mesh_pathtbl.c  | 31 ++++++++++++++
+ net/wireless/nl80211.c       | 99 ++++++++++++++++++++++++++++++++++++++++++++
+ net/wireless/rdev-ops.h      | 27 +++++++++++-
+ net/wireless/trace.h         | 45 ++++++++++++++++++++
+ 8 files changed, 270 insertions(+), 1 deletion(-)
+
+-- 
+1.9.1
+
