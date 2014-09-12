@@ -1,106 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f49.google.com ([74.125.82.49]:64779 "EHLO
-	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932108AbaICT5X (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:47423 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752237AbaILJK0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Sep 2014 15:57:23 -0400
-Received: by mail-wg0-f49.google.com with SMTP id y10so9029234wgg.20
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Sep 2014 12:57:22 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 36/36] iwlwifi: mvm: clean up AUX station handling
-Date: Wed,  3 Sep 2014 22:56:24 +0300
-Message-Id: <1409774184-24665-36-git-send-email-egrumbach@gmail.com> (sfid-20140903_220114_846722_C9F1A397)
-In-Reply-To: <540771E5.6080908@gmail.com>
-References: <540771E5.6080908@gmail.com>
+	Fri, 12 Sep 2014 05:10:26 -0400
+From: Avinash Patil <patila@marvell.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
+	<huxm@marvell.com>, <yangyang@marvell.com>, <cluo@marvell.com>,
+	<maithili@marvell.com>, Avinash Patil <patila@marvell.com>
+Subject: [PATCHv2 06/16] mwifiex: fix 5G association failure after leaving 2.4G IBSS
+Date: Fri, 12 Sep 2014 20:08:50 +0530
+Message-ID: <1410532740-3173-7-git-send-email-patila@marvell.com> (sfid-20140912_111030_669819_9DE8E5A6)
+In-Reply-To: <1410532740-3173-1-git-send-email-patila@marvell.com>
+References: <1410532740-3173-1-git-send-email-patila@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Xinming Hu <huxm@marvell.com>
 
-The auxiliary station is being handled using the internal
-station helper functions, clean that up and make the helpers
-static.
+When assocaiting to an AP , mwifiex set supported data rates
+based on target AP's capability. For 5G AP(11a mode), a/n/ac mode
+would possibly be set.
+However, for some chips which dont support 11AC mode current config_bands
+will be used instead.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+For example, if we join an IBSS in 11b mode ,adapter->config_bands
+will be set to 1(11b mode). Then we leave IBSS ,and try to connect
+5G a/n mode AP. At this time , only 11b mode data rates will be
+supported in assoc request , which result in assoc failure with
+reason code 18: Association denied due to requesting station not
+supporting all rates.
+
+This patch fix such a cornel case, by adding additional check for
+current chip's 11ac capability.
+
+Reported-by: Andreas Fenkart <afenkart@gmail.com>
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Marc Yang <yangyang@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/mac80211.c |  2 +-
- drivers/net/wireless/iwlwifi/mvm/sta.c      | 15 ++++++++++++---
- drivers/net/wireless/iwlwifi/mvm/sta.h      |  5 +----
- 3 files changed, 14 insertions(+), 8 deletions(-)
+ drivers/net/wireless/mwifiex/sta_ioctl.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index 78ed6bc..8d1d4b4 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -886,7 +886,7 @@ static void iwl_mvm_mac_stop(struct ieee80211_hw *hw)
- 	/* async_handlers_list is empty and will stay empty: HW is stopped */
+diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
+index b95a29b..92f3eb8 100644
+--- a/drivers/net/wireless/mwifiex/sta_ioctl.c
++++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
+@@ -287,10 +287,13 @@ int mwifiex_bss_start(struct mwifiex_private *priv, struct cfg80211_bss *bss,
+ 			return -1;
  
- 	/* the fw is stopped, the aux sta is dead: clean up driver state */
--	iwl_mvm_dealloc_int_sta(mvm, &mvm->aux_sta);
-+	iwl_mvm_del_aux_sta(mvm);
+ 		if (mwifiex_band_to_radio_type(bss_desc->bss_band) ==
+-						HostCmd_SCAN_RADIO_TYPE_BG)
++						HostCmd_SCAN_RADIO_TYPE_BG) {
+ 			config_bands = BAND_B | BAND_G | BAND_GN;
+-		else
+-			config_bands = BAND_A | BAND_AN | BAND_AAC;
++		} else {
++			config_bands = BAND_A | BAND_AN;
++			if (adapter->fw_bands & BAND_AAC)
++				config_bands |= BAND_AAC;
++		}
  
- 	mutex_unlock(&mvm->mutex);
- 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/sta.c b/drivers/net/wireless/iwlwifi/mvm/sta.c
-index ef61979..dd9f3a4 100644
---- a/drivers/net/wireless/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/sta.c
-@@ -464,8 +464,9 @@ int iwl_mvm_rm_sta_id(struct iwl_mvm *mvm,
- 	return ret;
- }
- 
--int iwl_mvm_allocate_int_sta(struct iwl_mvm *mvm, struct iwl_mvm_int_sta *sta,
--			     u32 qmask, enum nl80211_iftype iftype)
-+static int iwl_mvm_allocate_int_sta(struct iwl_mvm *mvm,
-+				    struct iwl_mvm_int_sta *sta,
-+				    u32 qmask, enum nl80211_iftype iftype)
- {
- 	if (!test_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status)) {
- 		sta->sta_id = iwl_mvm_find_free_sta_id(mvm, iftype);
-@@ -480,7 +481,8 @@ int iwl_mvm_allocate_int_sta(struct iwl_mvm *mvm, struct iwl_mvm_int_sta *sta,
- 	return 0;
- }
- 
--void iwl_mvm_dealloc_int_sta(struct iwl_mvm *mvm, struct iwl_mvm_int_sta *sta)
-+static void iwl_mvm_dealloc_int_sta(struct iwl_mvm *mvm,
-+				    struct iwl_mvm_int_sta *sta)
- {
- 	RCU_INIT_POINTER(mvm->fw_id_to_mac_id[sta->sta_id], NULL);
- 	memset(sta, 0, sizeof(struct iwl_mvm_int_sta));
-@@ -550,6 +552,13 @@ int iwl_mvm_add_aux_sta(struct iwl_mvm *mvm)
- 	return ret;
- }
- 
-+void iwl_mvm_del_aux_sta(struct iwl_mvm *mvm)
-+{
-+	lockdep_assert_held(&mvm->mutex);
-+
-+	iwl_mvm_dealloc_int_sta(mvm, &mvm->aux_sta);
-+}
-+
- /*
-  * Send the add station command for the vif's broadcast station.
-  * Assumes that the station was already allocated.
-diff --git a/drivers/net/wireless/iwlwifi/mvm/sta.h b/drivers/net/wireless/iwlwifi/mvm/sta.h
-index 15984fe..aeb3a7f 100644
---- a/drivers/net/wireless/iwlwifi/mvm/sta.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/sta.h
-@@ -389,10 +389,7 @@ int iwl_mvm_sta_tx_agg_flush(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 			    struct ieee80211_sta *sta, u16 tid);
- 
- int iwl_mvm_add_aux_sta(struct iwl_mvm *mvm);
--int iwl_mvm_allocate_int_sta(struct iwl_mvm *mvm, struct iwl_mvm_int_sta *sta,
--			     u32 qmask, enum nl80211_iftype iftype);
--void iwl_mvm_dealloc_int_sta(struct iwl_mvm *mvm,
--			     struct iwl_mvm_int_sta *sta);
-+void iwl_mvm_del_aux_sta(struct iwl_mvm *mvm);
- 
- int iwl_mvm_alloc_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
- int iwl_mvm_send_add_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
+ 		if (!((config_bands | adapter->fw_bands) & ~adapter->fw_bands))
+ 			adapter->config_bands = config_bands;
 -- 
-1.9.1
+1.8.1.4
 
