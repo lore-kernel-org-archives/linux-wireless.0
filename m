@@ -1,51 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:26536 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932374AbaICNKm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Sep 2014 09:10:42 -0400
-Date: Wed, 3 Sep 2014 16:10:17 +0300
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <wireless-regdb@lists.infradead.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 02/12] wireless-regdb: Add Dominica (DM) regulatory rules
-Message-ID: <20140903131017.GA15904@jouni.qca.qualcomm.com> (sfid-20140903_151045_481725_409E99B5)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from hauke-m.de ([5.39.93.123]:54174 "EHLO hauke-m.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751623AbaIMNhj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 13 Sep 2014 09:37:39 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linux-wireless@vger.kernel.org
+Cc: zajec5@gmail.com, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, arnd@arndb.de,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 2/2] bcma: get IRQ numbers from dt
+Date: Sat, 13 Sep 2014 15:37:26 +0200
+Message-Id: <1410615446-7639-2-git-send-email-hauke@hauke-m.de> (sfid-20140913_153754_325224_28117CFD)
+In-Reply-To: <1410615446-7639-1-git-send-email-hauke@hauke-m.de>
+References: <1410615446-7639-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Source:
-http://www.ntrcdom.org/index.php?option=com_content&view=category&layout=blog&id=10&Itemid=55
+It is not possible to auto detect the irq numbers used by the cores on
+an arm SoC. If bcma was registered with device tree it will search for
+some device tree nodes with the irq number and add it to the core
+configuration.
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- db.txt | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ drivers/bcma/main.c | 49 ++++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 48 insertions(+), 1 deletion(-)
 
-diff --git a/db.txt b/db.txt
-index 8b00c19..1327e60 100644
---- a/db.txt
-+++ b/db.txt
-@@ -292,6 +292,14 @@ country DK: DFS-ETSI
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+This is based on wireless-testing and should go into that tree.
+
+changes since:
+RFC:
+ - add #ifdef CONFIG_OF
+
+diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
+index e5d578c..b8731ee 100644
+--- a/drivers/bcma/main.c
++++ b/drivers/bcma/main.c
+@@ -10,6 +10,8 @@
+ #include <linux/platform_device.h>
+ #include <linux/bcma/bcma.h>
+ #include <linux/slab.h>
++#include <linux/of_irq.h>
++#include <linux/of_address.h>
  
-+# Source:
-+# http://www.ntrcdom.org/index.php?option=com_content&view=category&layout=blog&id=10&Itemid=55
-+country DM: DFS-FCC
-+	(2402 - 2472 @ 40), (30)
-+	(5170 - 5250 @ 80), (17)
-+	(5250 - 5330 @ 80), (23), DFS
-+	(5735 - 5835 @ 80), (30)
+ MODULE_DESCRIPTION("Broadcom's specific AMBA driver");
+ MODULE_LICENSE("GPL");
+@@ -131,6 +133,45 @@ static bool bcma_is_core_needed_early(u16 core_id)
+ 	return false;
+ }
+ 
++#ifdef CONFIG_OF
++static struct device_node *bcma_of_find_child_device(struct platform_device *parent,
++						     struct bcma_device *core)
++{
++	struct device_node *node;
++	u64 size;
++	const __be32 *reg;
 +
- country DO: DFS-FCC
- 	(2402 - 2472 @ 40), (30)
- 	(5170 - 5250 @ 80), (17)
++	if (!parent || !parent->dev.of_node)
++		return NULL;
++
++	for_each_child_of_node(parent->dev.of_node, node) {
++		reg = of_get_address(node, 0, &size, NULL);
++		if (!reg)
++			continue;
++		if (be32_to_cpup(reg) == core->addr)
++			return node;
++	}
++	return NULL;
++}
++
++static void bcma_of_fill_device(struct platform_device *parent,
++				struct bcma_device *core)
++{
++	struct device_node *node;
++
++	node = bcma_of_find_child_device(parent, core);
++	if (!node)
++		return;
++	core->dev.of_node = node;
++	core->irq = irq_of_parse_and_map(node, 0);
++}
++#else
++static void bcma_of_fill_device(struct platform_device *parent,
++				struct bcma_device *core)
++{
++}
++#endif /* CONFIG_OF */
++
+ static void bcma_register_core(struct bcma_bus *bus, struct bcma_device *core)
+ {
+ 	int err;
+@@ -147,7 +188,13 @@ static void bcma_register_core(struct bcma_bus *bus, struct bcma_device *core)
+ 		break;
+ 	case BCMA_HOSTTYPE_SOC:
+ 		core->dev.dma_mask = &core->dev.coherent_dma_mask;
+-		core->dma_dev = &core->dev;
++		if (bus->host_pdev) {
++			core->dma_dev = &bus->host_pdev->dev;
++			core->dev.parent = &bus->host_pdev->dev;
++			bcma_of_fill_device(bus->host_pdev, core);
++		} else {
++			core->dma_dev = &core->dev;
++		}
+ 		break;
+ 	case BCMA_HOSTTYPE_SDIO:
+ 		break;
 -- 
 1.9.1
 
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
