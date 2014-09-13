@@ -1,49 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:44604 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932272AbaICNYp convert rfc822-to-8bit (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:4645 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751912AbaIMPNV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Sep 2014 09:24:45 -0400
-Received: by mail-wi0-f180.google.com with SMTP id ex7so9800089wid.7
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Sep 2014 06:24:44 -0700 (PDT)
+	Sat, 13 Sep 2014 11:13:21 -0400
+Message-ID: <54145F0E.8000506@broadcom.com> (sfid-20140913_171326_116221_B9B466AD)
+Date: Sat, 13 Sep 2014 17:13:18 +0200
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <CAOHJ0jSoSd97vFEMgxC3cC8AnaEGdwbUiBBoeM7UfLJcha0Ujg@mail.gmail.com>
-References: <CAOHJ0jTHtVvJ43y7m-=UqHeMJfNiMYU2Peg9buxXU+wBigwu5g@mail.gmail.com>
-	<CA+BoTQm+x0kD9m3vVv98MwYOXjfgO1noXOnzdbk5o41S+DLewQ@mail.gmail.com>
-	<CAOHJ0jSoSd97vFEMgxC3cC8AnaEGdwbUiBBoeM7UfLJcha0Ujg@mail.gmail.com>
-Date: Wed, 3 Sep 2014 15:24:44 +0200
-Message-ID: <CA+BoTQnCoZL=GzUh4vJqOQ=-PZ1BwZcUO21spUPB5KF1fUSiRw@mail.gmail.com> (sfid-20140903_152449_358906_701720D9)
-Subject: Re: Cannot get ACS to work with hostapd-2.2 "Unknown event 49"
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Robb <rbarr138@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Hauke Mehrtens <hauke@hauke-m.de>
+CC: <linux-wireless@vger.kernel.org>, <zajec5@gmail.com>,
+	<devicetree@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>, <arnd@arndb.de>
+Subject: Re: [PATCH 1/2] bcma: register bcma as device tree driver
+References: <1410615446-7639-1-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1410615446-7639-1-git-send-email-hauke@hauke-m.de>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 3 September 2014 15:10, Robb <rbarr138@gmail.com> wrote:
->> The problem is ath9k_htc driver doesn't support dumping survey data.
->> It doesn't implement .get_survey which implies current ACS
->> implementation in hostapd will not work.
+On 09/13/14 15:37, Hauke Mehrtens wrote:
+> This driver is used by the bcm53xx ARM SoC code. Now it is possible to
+> give the address of the chipcommon core in device tree and bcma will
+> search for all the other cores.
 >
-> I see, driver support != chipset support.  According to
-> http://wireless.kernel.org/en/users/Documentation/acs#Hostapd_setup
-> the driver does support it, but it is correct that it does not say all
-> chipsets supported by that driver support ACS.
+> Signed-off-by: Hauke Mehrtens<hauke@hauke-m.de>
+> ---
+>   Documentation/devicetree/bindings/bus/bcma.txt | 41 +++++++++++++
+>   drivers/bcma/bcma_private.h                    | 16 +++++
+>   drivers/bcma/host_soc.c                        | 82 ++++++++++++++++++++++++++
+>   drivers/bcma/main.c                            | 10 ++++
+>   include/linux/bcma/bcma.h                      |  2 +
+>   5 files changed, 151 insertions(+)
+>   create mode 100644 Documentation/devicetree/bindings/bus/bcma.txt
+>
+> This is based on wireless-testing and should go into that tree.
+>
+> changes since:
+> RFC:
+>   - reworded the irq description
+>   - improved the example
+>   - hocked into bcma_modeinit() and bcma_modexit()
+>
+> diff --git a/Documentation/devicetree/bindings/bus/bcma.txt b/Documentation/devicetree/bindings/bus/bcma.txt
+> new file mode 100644
+> index 0000000..17e095f
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/bus/bcma.txt
+> @@ -0,0 +1,41 @@
+> +Broadcom AIX SoC bcma bus driver
 
-You are making an assumption ath9k == ath9k_htc. This is not correct.
+Hi Hauke,
 
-I would actually suspect the ath9k_htc *chips* actually are capable of
-providing the necessary information to create survey dump but the
-firmware/driver do not support it. Can anyone more familiar with
-ath9k_htc correct me if I'm wrong?
+First of all a typo used all over the place: AIX should be AXI.
 
+The backplane in Broadcom SoC is ARM AXI with additional plugin option 
+to make it discoverable. Indeed the IRQ info is not included, but I see 
+no reason for specifying the register space for the cores in device-tree 
+as that is discoverable by bcma.
 
-> If the 9271 doesn't support it then I guess it can only be the
-> AR7010+AR9280 or AR7010+AR9287 right? Any way to know which works?
-
-Neither will work as either is handled by the ath9k_htc driver which
-in turn does not support survey data.
-
-
-Michał
+Regards,
+Arend
