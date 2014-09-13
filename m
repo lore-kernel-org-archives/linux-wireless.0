@@ -1,187 +1,642 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.server14.configcenter.info ([91.203.108.132]:39627 "EHLO
-	server14.configcenter.info" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754216AbaIZIhq (ORCPT
+Received: from mailrelay011.isp.belgacom.be ([195.238.6.178]:37053 "EHLO
+	mailrelay011.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752368AbaIMUjk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Sep 2014 04:37:46 -0400
-Message-ID: <542525D3.8000209@kenobrueggemann.de> (sfid-20140926_103756_413452_B7CB22D9)
-Date: Fri, 26 Sep 2014 10:37:39 +0200
-From: =?UTF-8?B?S2VubyBCcsO8Z2dlbWFubg==?= <post@kenobrueggemann.de>
-MIME-Version: 1.0
-To: Matt Chen <mattsled@gmail.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Ubuntu 14.04 and the Intel(R) Centrino(R) Advanced-N 6200
-References: <CALx5=V8fqQe03Ygi3JpOk7tS5x1Mz6LY6A4VQFYaJ_C_mH=vQQ@mail.gmail.com>
-In-Reply-To: <CALx5=V8fqQe03Ygi3JpOk7tS5x1Mz6LY6A4VQFYaJ_C_mH=vQQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+	Sat, 13 Sep 2014 16:39:40 -0400
+From: Fabian Frederick <fabf@skynet.be>
+To: linux-kernel@vger.kernel.org
+Cc: davem@davemloft.net, Fabian Frederick <fabf@skynet.be>,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	netdev@vger.kernel.org
+Subject: [PATCH 3/4 linux-next] brcm80211: use container_of to resolve brcms_phy from brcms_phy_pub
+Date: Sat, 13 Sep 2014 22:38:28 +0200
+Message-Id: <1410640709-18295-4-git-send-email-fabf@skynet.be> (sfid-20140913_224042_429800_EB126B3B)
+In-Reply-To: <1410640709-18295-1-git-send-email-fabf@skynet.be>
+References: <1410640709-18295-1-git-send-email-fabf@skynet.be>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+Use container_of instead of casting first structure member.
 
-yes of course.
+Compiled but untested.
 
-I greped all iwl . Do you need more Data?
+Signed-off-by: Fabian Frederick <fabf@skynet.be>
+---
+ .../net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c  | 122 ++++++++++-----------
+ .../net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c  |   6 +-
+ .../net/wireless/brcm80211/brcmsmac/phy/phy_n.c    |   8 +-
+ 3 files changed, 68 insertions(+), 68 deletions(-)
 
-
-
-dmesg | grep "iwl"
-[    4.189028] iwlwifi: unknown parameter 'probe_wait_ms' ignored
-[    4.189741] iwlwifi 0000:04:00.0: can't disable ASPM; OS doesn't have 
-ASPM control
-[    4.189871] iwlwifi 0000:04:00.0: irq 57 for MSI/MSI-X
-[    4.195539] iwlwifi 0000:04:00.0: Direct firmware load failed with 
-error -2
-[    4.195547] iwlwifi 0000:04:00.0: Falling back to user helper
-[    4.203413] iwlwifi 0000:04:00.0: Direct firmware load failed with 
-error -2
-[    4.203423] iwlwifi 0000:04:00.0: Falling back to user helper
-[    4.221397] iwlwifi 0000:04:00.0: loaded firmware version 9.221.4.1 
-build 25532 op_mode iwldvm
-[    4.243713] iwlwifi 0000:04:00.0: CONFIG_IWLWIFI_DEBUG disabled
-[    4.243717] iwlwifi 0000:04:00.0: CONFIG_IWLWIFI_DEBUGFS enabled
-[    4.243719] iwlwifi 0000:04:00.0: CONFIG_IWLWIFI_DEVICE_TRACING enabled
-[    4.243722] iwlwifi 0000:04:00.0: Detected Intel(R) Centrino(R) 
-Advanced-N 6200 AGN, REV=0x74
-[    4.243822] iwlwifi 0000:04:00.0: L1 Enabled; Disabling L0S
-[    4.250415] iwlwifi 0000:04:00.0: RF_KILL bit toggled to disable radio.
-[    4.278285] ieee80211 phy0: Selected rate control algorithm 'iwl-agn-rs'
-[   27.709050] iwlwifi 0000:04:00.0: RF_KILL bit toggled to enable radio.
-[   31.893286] iwlwifi 0000:04:00.0: L1 Enabled; Disabling L0S
-[   31.900037] iwlwifi 0000:04:00.0: Radio type=0x1-0x3-0x1
-[   31.933542] iwlwifi 0000:04:00.0: Microcode SW error detected. 
-Restarting 0x82000000.
-[   31.933546] iwlwifi 0000:04:00.0: CSR values:
-[   31.933548] iwlwifi 0000:04:00.0: (2nd byte of CSR_INT_COALESCING is 
-CSR_INT_PERIODIC_REG)
-[   31.933555] iwlwifi 0000:04:00.0:        CSR_HW_IF_CONFIG_REG: 0X0048d704
-[   31.933562] iwlwifi 0000:04:00.0:          CSR_INT_COALESCING: 0X00000040
-[   31.933569] iwlwifi 0000:04:00.0:                     CSR_INT: 0X80000000
-[   31.933576] iwlwifi 0000:04:00.0:                CSR_INT_MASK: 0X00000000
-[   31.933582] iwlwifi 0000:04:00.0:           CSR_FH_INT_STATUS: 0X40010000
-[   31.933589] iwlwifi 0000:04:00.0:                 CSR_GPIO_IN: 0X0000000f
-[   31.933596] iwlwifi 0000:04:00.0:                   CSR_RESET: 0X00000000
-[   31.933606] iwlwifi 0000:04:00.0:                CSR_GP_CNTRL: 0X080403c5
-[   31.933612] iwlwifi 0000:04:00.0:                  CSR_HW_REV: 0X00000074
-[   31.933619] iwlwifi 0000:04:00.0:              CSR_EEPROM_REG: 0X00000000
-[   31.933626] iwlwifi 0000:04:00.0:               CSR_EEPROM_GP: 0X90000004
-[   31.933632] iwlwifi 0000:04:00.0:              CSR_OTP_GP_REG: 0X00020000
-[   31.933639] iwlwifi 0000:04:00.0:                 CSR_GIO_REG: 0X00080046
-[   31.933646] iwlwifi 0000:04:00.0:            CSR_GP_UCODE_REG: 0X00000000
-[   31.933652] iwlwifi 0000:04:00.0:           CSR_GP_DRIVER_REG: 0X00000002
-[   31.933659] iwlwifi 0000:04:00.0:           CSR_UCODE_DRV_GP1: 0X00000000
-[   31.933666] iwlwifi 0000:04:00.0:           CSR_UCODE_DRV_GP2: 0X00000000
-[   31.933672] iwlwifi 0000:04:00.0:                 CSR_LED_REG: 0X00000018
-[   31.933679] iwlwifi 0000:04:00.0:        CSR_DRAM_INT_TBL_REG: 0X00000000
-[   31.933686] iwlwifi 0000:04:00.0:        CSR_GIO_CHICKEN_BITS: 0X27800200
-[   31.933693] iwlwifi 0000:04:00.0:             CSR_ANA_PLL_CFG: 0X00000000
-[   31.933699] iwlwifi 0000:04:00.0:           CSR_HW_REV_WA_REG: 0X0001001a
-[   31.933706] iwlwifi 0000:04:00.0:        CSR_DBG_HPET_MEM_REG: 0Xffff0000
-[   31.933708] iwlwifi 0000:04:00.0: FH register values:
-[   31.933741] iwlwifi 0000:04:00.0: FH_RSCSR_CHNL0_STTS_WPTR_REG: 
-0X2303fd00
-[   31.933769] iwlwifi 0000:04:00.0: FH_RSCSR_CHNL0_RBDCB_BASE_REG: 
-0X02302d90
-[   31.933785] iwlwifi 0000:04:00.0: FH_RSCSR_CHNL0_WPTR: 0X000000f8
-[   31.933801] iwlwifi 0000:04:00.0: FH_MEM_RCSR_CHNL0_CONFIG_REG: 
-0X80801114
-[   31.933818] iwlwifi 0000:04:00.0: FH_MEM_RSSR_SHARED_CTRL_REG: 0X000000fc
-[   31.933848] iwlwifi 0000:04:00.0: FH_MEM_RSSR_RX_STATUS_REG: 0X07030000
-[   31.933882] iwlwifi 0000:04:00.0: FH_MEM_RSSR_RX_ENABLE_ERR_IRQ2DRV: 
-0X00000000
-[   31.933914] iwlwifi 0000:04:00.0: FH_TSSR_TX_STATUS_REG: 0X07ff0001
-[   31.933947] iwlwifi 0000:04:00.0: FH_TSSR_TX_ERROR_REG: 0X00000000
-[   31.933949] iwlwifi 0000:04:00.0: Loaded firmware version: 9.221.4.1 
-build 25532
-[   31.933951] iwlwifi 0000:04:00.0: Not valid error log pointer 
-0x00000000 for Init uCode
-[   31.933954] iwlwifi 0000:04:00.0: Invalid event log pointer 
-0x00000000 for Init uCode
-[   31.934607] iwlwifi 0000:04:00.0: Failed to run INIT ucode: -5
-[   31.934705] iwlwifi 0000:04:00.0: Unable to initialize device.
-[   43.466183] iwlwifi 0000:04:00.0: RF_KILL bit toggled to disable radio.
-[ 1447.468326] iwlwifi 0000:04:00.0: RF_KILL bit toggled to enable radio.
-[ 1447.470363] iwlwifi 0000:04:00.0: L1 Enabled; Disabling L0S
-[ 1447.477185] iwlwifi 0000:04:00.0: Radio type=0x1-0x3-0x1
-[ 1447.511612] iwlwifi 0000:04:00.0: Microcode SW error detected. 
-Restarting 0x82000000.
-[ 1447.511622] iwlwifi 0000:04:00.0: CSR values:
-[ 1447.511629] iwlwifi 0000:04:00.0: (2nd byte of CSR_INT_COALESCING is 
-CSR_INT_PERIODIC_REG)
-[ 1447.511643] iwlwifi 0000:04:00.0:        CSR_HW_IF_CONFIG_REG: 0X0048d704
-[ 1447.511656] iwlwifi 0000:04:00.0:          CSR_INT_COALESCING: 0X00000040
-[ 1447.511675] iwlwifi 0000:04:00.0:                     CSR_INT: 0X80000000
-[ 1447.511687] iwlwifi 0000:04:00.0:                CSR_INT_MASK: 0X00000000
-[ 1447.511702] iwlwifi 0000:04:00.0:           CSR_FH_INT_STATUS: 0X40010000
-[ 1447.511712] iwlwifi 0000:04:00.0:                 CSR_GPIO_IN: 0X0000000f
-[ 1447.511723] iwlwifi 0000:04:00.0:                   CSR_RESET: 0X00000000
-[ 1447.511733] iwlwifi 0000:04:00.0:                CSR_GP_CNTRL: 0X080403c5
-[ 1447.511748] iwlwifi 0000:04:00.0:                  CSR_HW_REV: 0X00000074
-[ 1447.511758] iwlwifi 0000:04:00.0:              CSR_EEPROM_REG: 0X00000000
-[ 1447.511768] iwlwifi 0000:04:00.0:               CSR_EEPROM_GP: 0X90000004
-[ 1447.511779] iwlwifi 0000:04:00.0:              CSR_OTP_GP_REG: 0X00020000
-[ 1447.511791] iwlwifi 0000:04:00.0:                 CSR_GIO_REG: 0X00080046
-[ 1447.511799] iwlwifi 0000:04:00.0:            CSR_GP_UCODE_REG: 0X00000000
-[ 1447.511806] iwlwifi 0000:04:00.0:           CSR_GP_DRIVER_REG: 0X00000002
-[ 1447.511814] iwlwifi 0000:04:00.0:           CSR_UCODE_DRV_GP1: 0X00000000
-[ 1447.511821] iwlwifi 0000:04:00.0:           CSR_UCODE_DRV_GP2: 0X00000000
-[ 1447.511828] iwlwifi 0000:04:00.0:                 CSR_LED_REG: 0X00000018
-[ 1447.511836] iwlwifi 0000:04:00.0:        CSR_DRAM_INT_TBL_REG: 0X00000000
-[ 1447.511843] iwlwifi 0000:04:00.0:        CSR_GIO_CHICKEN_BITS: 0X27800200
-[ 1447.511858] iwlwifi 0000:04:00.0:             CSR_ANA_PLL_CFG: 0X00000000
-[ 1447.511865] iwlwifi 0000:04:00.0:           CSR_HW_REV_WA_REG: 0X0001001a
-[ 1447.511872] iwlwifi 0000:04:00.0:        CSR_DBG_HPET_MEM_REG: 0Xffff0000
-[ 1447.511875] iwlwifi 0000:04:00.0: FH register values:
-[ 1447.511909] iwlwifi 0000:04:00.0: FH_RSCSR_CHNL0_STTS_WPTR_REG: 
-0X2303fd00
-[ 1447.511946] iwlwifi 0000:04:00.0: FH_RSCSR_CHNL0_RBDCB_BASE_REG: 
-0X02302d90
-[ 1447.511982] iwlwifi 0000:04:00.0: FH_RSCSR_CHNL0_WPTR: 0X000000f8
-[ 1447.512025] iwlwifi 0000:04:00.0: FH_MEM_RCSR_CHNL0_CONFIG_REG: 
-0X80801114
-[ 1447.512061] iwlwifi 0000:04:00.0: FH_MEM_RSSR_SHARED_CTRL_REG: 0X000000fc
-[ 1447.512095] iwlwifi 0000:04:00.0: FH_MEM_RSSR_RX_STATUS_REG: 0X07030000
-[ 1447.512129] iwlwifi 0000:04:00.0: FH_MEM_RSSR_RX_ENABLE_ERR_IRQ2DRV: 
-0X00000000
-[ 1447.512166] iwlwifi 0000:04:00.0: FH_TSSR_TX_STATUS_REG: 0X07ff0001
-[ 1447.512199] iwlwifi 0000:04:00.0: FH_TSSR_TX_ERROR_REG: 0X00000000
-[ 1447.512202] iwlwifi 0000:04:00.0: Loaded firmware version: 9.221.4.1 
-build 25532
-[ 1447.512205] iwlwifi 0000:04:00.0: Not valid error log pointer 
-0x00000000 for Init uCode
-[ 1447.512208] iwlwifi 0000:04:00.0: Invalid event log pointer 
-0x00000000 for Init uCode
-[ 1447.512959] iwlwifi 0000:04:00.0: Failed to run INIT ucode: -5
-[ 1447.513065] iwlwifi 0000:04:00.0: Unable to initialize device.
-
-Grüße
-Keno Brüggemann
-
-Am 26.09.2014 um 10:29 schrieb Matt Chen:
-> Are you able to provide the /var/log/syslog or dmesg command result here ?
->
-> 2014-09-26 3:44 GMT+08:00 Keno Brüggemann <post@kenobrueggemann.de>:
->> Hello,
->>
->> i switched from an Intel® Centrino® Wireless-N 1000
->> to the Intel® Centrino® Advanced-N 6200 Wireless Card Adapter.
->>
->> My System. Dell xps l701x, ubuntu 14.04
->>
->> The Problem is, this Adpater won't work under Ubuntu 14.04. I've installed
->> both versions of this Firmware.
->> Nothing. Seems to be dead.
->> Under Windows 7 the Card works well.
->>
->> Can i try something else to get it work?
->> Please help.
->>
->> --
->> Greetings
->> Keno Brüggemann
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c
+index 57ecc05..941b1e4 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c
+@@ -128,19 +128,19 @@ static const u8 ofdm_rate_lookup[] = {
+ 
+ void wlc_phyreg_enter(struct brcms_phy_pub *pih)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) pih;
++	struct brcms_phy *pi = container_of(pih, struct brcms_phy, pubpi_ro);
+ 	wlapi_bmac_ucode_wake_override_phyreg_set(pi->sh->physhim);
+ }
+ 
+ void wlc_phyreg_exit(struct brcms_phy_pub *pih)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) pih;
++	struct brcms_phy *pi = container_of(pih, struct brcms_phy, pubpi_ro);
+ 	wlapi_bmac_ucode_wake_override_phyreg_clear(pi->sh->physhim);
+ }
+ 
+ void wlc_radioreg_enter(struct brcms_phy_pub *pih)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) pih;
++	struct brcms_phy *pi = container_of(pih, struct brcms_phy, pubpi_ro);
+ 	wlapi_bmac_mctrl(pi->sh->physhim, MCTL_LOCK_RADIO, MCTL_LOCK_RADIO);
+ 
+ 	udelay(10);
+@@ -148,7 +148,7 @@ void wlc_radioreg_enter(struct brcms_phy_pub *pih)
+ 
+ void wlc_radioreg_exit(struct brcms_phy_pub *pih)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) pih;
++	struct brcms_phy *pi = container_of(pih, struct brcms_phy, pubpi_ro);
+ 
+ 	(void)bcma_read16(pi->d11core, D11REGOFFS(phyversion));
+ 	pi->phy_wreg = 0;
+@@ -586,7 +586,7 @@ err:
+ 
+ void wlc_phy_detach(struct brcms_phy_pub *pih)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) pih;
++	struct brcms_phy *pi = container_of(pih, struct brcms_phy, pubpi_ro);
+ 
+ 	if (pih) {
+ 		if (--pi->refcnt)
+@@ -613,7 +613,7 @@ bool
+ wlc_phy_get_phyversion(struct brcms_phy_pub *pih, u16 *phytype, u16 *phyrev,
+ 		       u16 *radioid, u16 *radiover)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) pih;
++	struct brcms_phy *pi = container_of(pih, struct brcms_phy, pubpi_ro);
+ 	*phytype = (u16) pi->pubpi.phy_type;
+ 	*phyrev = (u16) pi->pubpi.phy_rev;
+ 	*radioid = pi->pubpi.radioid;
+@@ -624,19 +624,19 @@ wlc_phy_get_phyversion(struct brcms_phy_pub *pih, u16 *phytype, u16 *phyrev,
+ 
+ bool wlc_phy_get_encore(struct brcms_phy_pub *pih)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) pih;
++	struct brcms_phy *pi = container_of(pih, struct brcms_phy, pubpi_ro);
+ 	return pi->pubpi.abgphy_encore;
+ }
+ 
+ u32 wlc_phy_get_coreflags(struct brcms_phy_pub *pih)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) pih;
++	struct brcms_phy *pi = container_of(pih, struct brcms_phy, pubpi_ro);
+ 	return pi->pubpi.coreflags;
+ }
+ 
+ void wlc_phy_anacore(struct brcms_phy_pub *pih, bool on)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) pih;
++	struct brcms_phy *pi = container_of(pih, struct brcms_phy, pubpi_ro);
+ 
+ 	if (ISNPHY(pi)) {
+ 		if (on) {
+@@ -673,7 +673,7 @@ void wlc_phy_anacore(struct brcms_phy_pub *pih, bool on)
+ 
+ u32 wlc_phy_clk_bwbits(struct brcms_phy_pub *pih)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) pih;
++	struct brcms_phy *pi = container_of(pih, struct brcms_phy, pubpi_ro);
+ 
+ 	u32 phy_bw_clkbits = 0;
+ 
+@@ -698,14 +698,14 @@ u32 wlc_phy_clk_bwbits(struct brcms_phy_pub *pih)
+ 
+ void wlc_phy_por_inform(struct brcms_phy_pub *ppi)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) ppi;
++	struct brcms_phy *pi = container_of(ppi, struct brcms_phy, pubpi_ro);
+ 
+ 	pi->phy_init_por = true;
+ }
+ 
+ void wlc_phy_edcrs_lock(struct brcms_phy_pub *pih, bool lock)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) pih;
++	struct brcms_phy *pi = container_of(pih, struct brcms_phy, pubpi_ro);
+ 
+ 	pi->edcrs_threshold_lock = lock;
+ 
+@@ -717,14 +717,14 @@ void wlc_phy_edcrs_lock(struct brcms_phy_pub *pih, bool lock)
+ 
+ void wlc_phy_initcal_enable(struct brcms_phy_pub *pih, bool initcal)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) pih;
++	struct brcms_phy *pi = container_of(pih, struct brcms_phy, pubpi_ro);
+ 
+ 	pi->do_initcal = initcal;
+ }
+ 
+ void wlc_phy_hw_clk_state_upd(struct brcms_phy_pub *pih, bool newstate)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) pih;
++	struct brcms_phy *pi = container_of(pih, struct brcms_phy, pubpi_ro);
+ 
+ 	if (!pi || !pi->sh)
+ 		return;
+@@ -734,7 +734,7 @@ void wlc_phy_hw_clk_state_upd(struct brcms_phy_pub *pih, bool newstate)
+ 
+ void wlc_phy_hw_state_upd(struct brcms_phy_pub *pih, bool newstate)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) pih;
++	struct brcms_phy *pi = container_of(pih, struct brcms_phy, pubpi_ro);
+ 
+ 	if (!pi || !pi->sh)
+ 		return;
+@@ -746,7 +746,7 @@ void wlc_phy_init(struct brcms_phy_pub *pih, u16 chanspec)
+ {
+ 	u32 mc;
+ 	void (*phy_init)(struct brcms_phy *) = NULL;
+-	struct brcms_phy *pi = (struct brcms_phy *) pih;
++	struct brcms_phy *pi = container_of(pih, struct brcms_phy, pubpi_ro);
+ 
+ 	if (pi->init_in_progress)
+ 		return;
+@@ -798,7 +798,7 @@ void wlc_phy_init(struct brcms_phy_pub *pih, u16 chanspec)
+ 
+ void wlc_phy_cal_init(struct brcms_phy_pub *pih)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) pih;
++	struct brcms_phy *pi = container_of(pih, struct brcms_phy, pubpi_ro);
+ 	void (*cal_init)(struct brcms_phy *) = NULL;
+ 
+ 	if (WARN((bcma_read32(pi->d11core, D11REGOFFS(maccontrol)) &
+@@ -816,7 +816,7 @@ void wlc_phy_cal_init(struct brcms_phy_pub *pih)
+ 
+ int wlc_phy_down(struct brcms_phy_pub *pih)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) pih;
++	struct brcms_phy *pi = container_of(pih, struct brcms_phy, pubpi_ro);
+ 	int callbacks = 0;
+ 
+ 	if (pi->phycal_timer
+@@ -1070,7 +1070,7 @@ void wlc_phy_do_dummy_tx(struct brcms_phy *pi, bool ofdm, bool pa_on)
+ 
+ void wlc_phy_hold_upd(struct brcms_phy_pub *pih, u32 id, bool set)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) pih;
++	struct brcms_phy *pi = container_of(pih, struct brcms_phy, pubpi_ro);
+ 
+ 	if (set)
+ 		mboolset(pi->measure_hold, id);
+@@ -1082,7 +1082,7 @@ void wlc_phy_hold_upd(struct brcms_phy_pub *pih, u32 id, bool set)
+ 
+ void wlc_phy_mute_upd(struct brcms_phy_pub *pih, bool mute, u32 flags)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) pih;
++	struct brcms_phy *pi = container_of(pih, struct brcms_phy, pubpi_ro);
+ 
+ 	if (mute)
+ 		mboolset(pi->measure_hold, PHY_HOLD_FOR_MUTE);
+@@ -1096,7 +1096,7 @@ void wlc_phy_mute_upd(struct brcms_phy_pub *pih, bool mute, u32 flags)
+ 
+ void wlc_phy_clear_tssi(struct brcms_phy_pub *pih)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) pih;
++	struct brcms_phy *pi = container_of(pih, struct brcms_phy, pubpi_ro);
+ 
+ 	if (ISNPHY(pi)) {
+ 		return;
+@@ -1115,7 +1115,7 @@ static bool wlc_phy_cal_txpower_recalc_sw(struct brcms_phy *pi)
+ 
+ void wlc_phy_switch_radio(struct brcms_phy_pub *pih, bool on)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) pih;
++	struct brcms_phy *pi = container_of(pih, struct brcms_phy, pubpi_ro);
+ 	(void)bcma_read32(pi->d11core, D11REGOFFS(maccontrol));
+ 
+ 	if (ISNPHY(pi)) {
+@@ -1149,35 +1149,35 @@ void wlc_phy_switch_radio(struct brcms_phy_pub *pih, bool on)
+ 
+ u16 wlc_phy_bw_state_get(struct brcms_phy_pub *ppi)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) ppi;
++	struct brcms_phy *pi = container_of(ppi, struct brcms_phy, pubpi_ro);
+ 
+ 	return pi->bw;
+ }
+ 
+ void wlc_phy_bw_state_set(struct brcms_phy_pub *ppi, u16 bw)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) ppi;
++	struct brcms_phy *pi = container_of(ppi, struct brcms_phy, pubpi_ro);
+ 
+ 	pi->bw = bw;
+ }
+ 
+ void wlc_phy_chanspec_radio_set(struct brcms_phy_pub *ppi, u16 newch)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) ppi;
++	struct brcms_phy *pi = container_of(ppi, struct brcms_phy, pubpi_ro);
+ 	pi->radio_chanspec = newch;
+ 
+ }
+ 
+ u16 wlc_phy_chanspec_get(struct brcms_phy_pub *ppi)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) ppi;
++	struct brcms_phy *pi = container_of(ppi, struct brcms_phy, pubpi_ro);
+ 
+ 	return pi->radio_chanspec;
+ }
+ 
+ void wlc_phy_chanspec_set(struct brcms_phy_pub *ppi, u16 chanspec)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) ppi;
++	struct brcms_phy *pi = container_of(ppi, struct brcms_phy, pubpi_ro);
+ 	u16 m_cur_channel;
+ 	void (*chanspec_set)(struct brcms_phy *, u16) = NULL;
+ 	m_cur_channel = CHSPEC_CHANNEL(chanspec);
+@@ -1226,7 +1226,7 @@ int wlc_phy_chanspec_bandrange_get(struct brcms_phy *pi, u16 chanspec)
+ void wlc_phy_chanspec_ch14_widefilter_set(struct brcms_phy_pub *ppi,
+ 					  bool wide_filter)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) ppi;
++	struct brcms_phy *pi = container_of(ppi, struct brcms_phy, pubpi_ro);
+ 
+ 	pi->channel_14_wide_filter = wide_filter;
+ 
+@@ -1246,7 +1246,7 @@ void
+ wlc_phy_chanspec_band_validch(struct brcms_phy_pub *ppi, uint band,
+ 			      struct brcms_chanvec *channels)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) ppi;
++	struct brcms_phy *pi = container_of(ppi, struct brcms_phy, pubpi_ro);
+ 	uint i;
+ 	uint channel;
+ 
+@@ -1267,7 +1267,7 @@ wlc_phy_chanspec_band_validch(struct brcms_phy_pub *ppi, uint band,
+ 
+ u16 wlc_phy_chanspec_band_firstch(struct brcms_phy_pub *ppi, uint band)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) ppi;
++	struct brcms_phy *pi = container_of(ppi, struct brcms_phy, pubpi_ro);
+ 	uint i;
+ 	uint channel;
+ 	u16 chspec;
+@@ -1311,7 +1311,7 @@ u16 wlc_phy_chanspec_band_firstch(struct brcms_phy_pub *ppi, uint band)
+ 
+ int wlc_phy_txpower_get(struct brcms_phy_pub *ppi, uint *qdbm, bool *override)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) ppi;
++	struct brcms_phy *pi = container_of(ppi, struct brcms_phy, pubpi_ro);
+ 
+ 	*qdbm = pi->tx_user_target[0];
+ 	if (override != NULL)
+@@ -1323,7 +1323,7 @@ void wlc_phy_txpower_target_set(struct brcms_phy_pub *ppi,
+ 				struct txpwr_limits *txpwr)
+ {
+ 	bool mac_enabled = false;
+-	struct brcms_phy *pi = (struct brcms_phy *) ppi;
++	struct brcms_phy *pi = container_of(ppi, struct brcms_phy, pubpi_ro);
+ 
+ 	memcpy(&pi->tx_user_target[TXP_FIRST_CCK],
+ 	       &txpwr->cck[0], BRCMS_NUM_RATES_CCK);
+@@ -1371,7 +1371,7 @@ void wlc_phy_txpower_target_set(struct brcms_phy_pub *ppi,
+ 
+ int wlc_phy_txpower_set(struct brcms_phy_pub *ppi, uint qdbm, bool override)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) ppi;
++	struct brcms_phy *pi = container_of(ppi, struct brcms_phy, pubpi_ro);
+ 	int i;
+ 
+ 	if (qdbm > 127)
+@@ -1407,7 +1407,7 @@ void
+ wlc_phy_txpower_sromlimit(struct brcms_phy_pub *ppi, uint channel, u8 *min_pwr,
+ 			  u8 *max_pwr, int txp_rate_idx)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) ppi;
++	struct brcms_phy *pi = container_of(ppi, struct brcms_phy, pubpi_ro);
+ 	uint i;
+ 
+ 	*min_pwr = pi->min_txpower * BRCMS_TXPWR_DB_FACTOR;
+@@ -1456,7 +1456,7 @@ void
+ wlc_phy_txpower_sromlimit_max_get(struct brcms_phy_pub *ppi, uint chan,
+ 				  u8 *max_txpwr, u8 *min_txpwr)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) ppi;
++	struct brcms_phy *pi = container_of(ppi, struct brcms_phy, pubpi_ro);
+ 	u8 tx_pwr_max = 0;
+ 	u8 tx_pwr_min = 255;
+ 	u8 max_num_rate;
+@@ -1493,14 +1493,14 @@ wlc_phy_txpower_boardlimit_band(struct brcms_phy_pub *ppi, uint bandunit,
+ 
+ u8 wlc_phy_txpower_get_target_min(struct brcms_phy_pub *ppi)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) ppi;
++	struct brcms_phy *pi = container_of(ppi, struct brcms_phy, pubpi_ro);
+ 
+ 	return pi->tx_power_min;
+ }
+ 
+ u8 wlc_phy_txpower_get_target_max(struct brcms_phy_pub *ppi)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) ppi;
++	struct brcms_phy *pi = container_of(ppi, struct brcms_phy, pubpi_ro);
+ 
+ 	return pi->tx_power_max;
+ }
+@@ -1812,21 +1812,21 @@ wlc_phy_txpower_reg_limit_calc(struct brcms_phy *pi, struct txpwr_limits *txpwr,
+ 
+ void wlc_phy_txpwr_percent_set(struct brcms_phy_pub *ppi, u8 txpwr_percent)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) ppi;
++	struct brcms_phy *pi = container_of(ppi, struct brcms_phy, pubpi_ro);
+ 
+ 	pi->txpwr_percent = txpwr_percent;
+ }
+ 
+ void wlc_phy_machwcap_set(struct brcms_phy_pub *ppi, u32 machwcap)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) ppi;
++	struct brcms_phy *pi = container_of(ppi, struct brcms_phy, pubpi_ro);
+ 
+ 	pi->sh->machwcap = machwcap;
+ }
+ 
+ void wlc_phy_runbist_config(struct brcms_phy_pub *ppi, bool start_end)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) ppi;
++	struct brcms_phy *pi = container_of(ppi, struct brcms_phy, pubpi_ro);
+ 	u16 rxc;
+ 	rxc = 0;
+ 
+@@ -1857,7 +1857,7 @@ void
+ wlc_phy_txpower_limit_set(struct brcms_phy_pub *ppi, struct txpwr_limits *txpwr,
+ 			  u16 chanspec)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) ppi;
++	struct brcms_phy *pi = container_of(ppi, struct brcms_phy, pubpi_ro);
+ 
+ 	wlc_phy_txpower_reg_limit_calc(pi, txpwr, chanspec);
+ 
+@@ -1881,14 +1881,14 @@ wlc_phy_txpower_limit_set(struct brcms_phy_pub *ppi, struct txpwr_limits *txpwr,
+ 
+ void wlc_phy_ofdm_rateset_war(struct brcms_phy_pub *pih, bool war)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) pih;
++	struct brcms_phy *pi = container_of(pih, struct brcms_phy, pubpi_ro);
+ 
+ 	pi->ofdm_rateset_war = war;
+ }
+ 
+ void wlc_phy_bf_preempt_enable(struct brcms_phy_pub *pih, bool bf_preempt)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) pih;
++	struct brcms_phy *pi = container_of(pih, struct brcms_phy, pubpi_ro);
+ 
+ 	pi->bf_preempt_4306 = bf_preempt;
+ }
+@@ -1945,7 +1945,7 @@ void wlc_phy_txpower_update_shm(struct brcms_phy *pi)
+ 
+ bool wlc_phy_txpower_hw_ctrl_get(struct brcms_phy_pub *ppi)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) ppi;
++	struct brcms_phy *pi = container_of(ppi, struct brcms_phy, pubpi_ro);
+ 
+ 	if (ISNPHY(pi))
+ 		return pi->nphy_txpwrctrl;
+@@ -1955,7 +1955,7 @@ bool wlc_phy_txpower_hw_ctrl_get(struct brcms_phy_pub *ppi)
+ 
+ void wlc_phy_txpower_hw_ctrl_set(struct brcms_phy_pub *ppi, bool hwpwrctrl)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) ppi;
++	struct brcms_phy *pi = container_of(ppi, struct brcms_phy, pubpi_ro);
+ 	bool suspend;
+ 
+ 	if (!pi->hwpwrctrl_capable)
+@@ -2038,7 +2038,7 @@ void
+ wlc_phy_txpower_get_current(struct brcms_phy_pub *ppi, struct tx_power *power,
+ 			    uint channel)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) ppi;
++	struct brcms_phy *pi = container_of(ppi, struct brcms_phy, pubpi_ro);
+ 	uint rate, num_rates;
+ 	u8 min_pwr, max_pwr;
+ 
+@@ -2136,21 +2136,21 @@ wlc_phy_txpower_get_current(struct brcms_phy_pub *ppi, struct tx_power *power,
+ 
+ void wlc_phy_antsel_type_set(struct brcms_phy_pub *ppi, u8 antsel_type)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) ppi;
++	struct brcms_phy *pi = container_of(ppi, struct brcms_phy, pubpi_ro);
+ 
+ 	pi->antsel_type = antsel_type;
+ }
+ 
+ bool wlc_phy_test_ison(struct brcms_phy_pub *ppi)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) ppi;
++	struct brcms_phy *pi = container_of(ppi, struct brcms_phy, pubpi_ro);
+ 
+ 	return pi->phytest_on;
+ }
+ 
+ void wlc_phy_ant_rxdiv_set(struct brcms_phy_pub *ppi, u8 val)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) ppi;
++	struct brcms_phy *pi = container_of(ppi, struct brcms_phy, pubpi_ro);
+ 	bool suspend;
+ 
+ 	pi->sh->rx_antdiv = val;
+@@ -2283,7 +2283,7 @@ static s8 wlc_phy_noise_read_shmem(struct brcms_phy *pi)
+ 
+ void wlc_phy_noise_sample_intr(struct brcms_phy_pub *pih)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) pih;
++	struct brcms_phy *pi = container_of(pih, struct brcms_phy, pubpi_ro);
+ 	u16 jssi_aux;
+ 	u8 channel = 0;
+ 	s8 noise_dbm = PHY_NOISE_FIXED_VAL_NPHY;
+@@ -2339,7 +2339,7 @@ void wlc_phy_noise_sample_intr(struct brcms_phy_pub *pih)
+ static void
+ wlc_phy_noise_sample_request(struct brcms_phy_pub *pih, u8 reason, u8 ch)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) pih;
++	struct brcms_phy *pi = container_of(pih, struct brcms_phy, pubpi_ro);
+ 	s8 noise_dbm = PHY_NOISE_FIXED_VAL_NPHY;
+ 	bool sampling_in_progress = (pi->phynoise_state != 0);
+ 	bool wait_for_intr = true;
+@@ -2531,7 +2531,7 @@ int wlc_phy_rssi_compute(struct brcms_phy_pub *pih,
+ {
+ 	int rssi = rxh->PhyRxStatus_1 & PRXS1_JSSI_MASK;
+ 	uint radioid = pih->radioid;
+-	struct brcms_phy *pi = (struct brcms_phy *) pih;
++	struct brcms_phy *pi = container_of(pih, struct brcms_phy, pubpi_ro);
+ 
+ 	if ((pi->sh->corerev >= 11)
+ 	    && !(rxh->RxStatus2 & RXS_PHYRXST_VALID)) {
+@@ -2591,7 +2591,7 @@ void wlc_phy_set_deaf(struct brcms_phy_pub *ppi, bool user_flag)
+ 
+ void wlc_phy_watchdog(struct brcms_phy_pub *pih)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) pih;
++	struct brcms_phy *pi = container_of(pih, struct brcms_phy, pubpi_ro);
+ 	bool delay_phy_cal = false;
+ 	pi->sh->now++;
+ 
+@@ -2651,7 +2651,7 @@ void wlc_phy_watchdog(struct brcms_phy_pub *pih)
+ 
+ void wlc_phy_BSSinit(struct brcms_phy_pub *pih, bool bonlyap, int rssi)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) pih;
++	struct brcms_phy *pi = container_of(pih, struct brcms_phy, pubpi_ro);
+ 	uint i;
+ 	uint k;
+ 
+@@ -2711,7 +2711,7 @@ void wlc_phy_cal_perical(struct brcms_phy_pub *pih, u8 reason)
+ 	s16 nphy_currtemp = 0;
+ 	s16 delta_temp = 0;
+ 	bool do_periodic_cal = true;
+-	struct brcms_phy *pi = (struct brcms_phy *) pih;
++	struct brcms_phy *pi = container_of(pih, struct brcms_phy, pubpi_ro);
+ 
+ 	if (!ISNPHY(pi))
+ 		return;
+@@ -2804,7 +2804,7 @@ u8 wlc_phy_nbits(s32 value)
+ 
+ void wlc_phy_stf_chain_init(struct brcms_phy_pub *pih, u8 txchain, u8 rxchain)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) pih;
++	struct brcms_phy *pi = container_of(pih, struct brcms_phy, pubpi_ro);
+ 
+ 	pi->sh->hw_phytxchain = txchain;
+ 	pi->sh->hw_phyrxchain = rxchain;
+@@ -2815,7 +2815,7 @@ void wlc_phy_stf_chain_init(struct brcms_phy_pub *pih, u8 txchain, u8 rxchain)
+ 
+ void wlc_phy_stf_chain_set(struct brcms_phy_pub *pih, u8 txchain, u8 rxchain)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) pih;
++	struct brcms_phy *pi = container_of(pih, struct brcms_phy, pubpi_ro);
+ 
+ 	pi->sh->phytxchain = txchain;
+ 
+@@ -2827,7 +2827,7 @@ void wlc_phy_stf_chain_set(struct brcms_phy_pub *pih, u8 txchain, u8 rxchain)
+ 
+ void wlc_phy_stf_chain_get(struct brcms_phy_pub *pih, u8 *txchain, u8 *rxchain)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) pih;
++	struct brcms_phy *pi = container_of(pih, struct brcms_phy, pubpi_ro);
+ 
+ 	*txchain = pi->sh->phytxchain;
+ 	*rxchain = pi->sh->phyrxchain;
+@@ -2837,7 +2837,7 @@ u8 wlc_phy_stf_chain_active_get(struct brcms_phy_pub *pih)
+ {
+ 	s16 nphy_currtemp;
+ 	u8 active_bitmap;
+-	struct brcms_phy *pi = (struct brcms_phy *) pih;
++	struct brcms_phy *pi = container_of(pih, struct brcms_phy, pubpi_ro);
+ 
+ 	active_bitmap = (pi->phy_txcore_heatedup) ? 0x31 : 0x33;
+ 
+@@ -2867,7 +2867,7 @@ u8 wlc_phy_stf_chain_active_get(struct brcms_phy_pub *pih)
+ 
+ s8 wlc_phy_stf_ssmode_get(struct brcms_phy_pub *pih, u16 chanspec)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) pih;
++	struct brcms_phy *pi = container_of(pih, struct brcms_phy, pubpi_ro);
+ 	u8 siso_mcs_id, cdd_mcs_id;
+ 
+ 	siso_mcs_id =
+@@ -2944,7 +2944,7 @@ s8 wlc_phy_upd_rssi_offset(struct brcms_phy *pi, s8 rssi, u16 chanspec)
+ 
+ bool wlc_phy_txpower_ipa_ison(struct brcms_phy_pub *ppi)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) ppi;
++	struct brcms_phy *pi = container_of(ppi, struct brcms_phy, pubpi_ro);
+ 
+ 	if (ISNPHY(pi))
+ 		return wlc_phy_n_txpower_ipa_ison(pi);
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
+index b2d6d6d..5f13662 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
+@@ -2865,7 +2865,7 @@ static void wlc_lcnphy_idle_tssi_est(struct brcms_phy_pub *ppi)
+ {
+ 	bool suspend, tx_gain_override_old;
+ 	struct lcnphy_txgains old_gains;
+-	struct brcms_phy *pi = (struct brcms_phy *) ppi;
++	struct brcms_phy *pi = container_of(ppi, struct brcms_phy, pubpi_ro);
+ 	u16 idleTssi, idleTssi0_2C, idleTssi0_OB, idleTssi0_regvalue_OB,
+ 	    idleTssi0_regvalue_2C;
+ 	u16 SAVE_txpwrctrl = wlc_lcnphy_get_tx_pwr_ctrl(pi);
+@@ -3084,7 +3084,7 @@ static void wlc_lcnphy_tx_pwr_ctrl_init(struct brcms_phy_pub *ppi)
+ 	s32 a1, b0, b1;
+ 	s32 tssi, pwr, maxtargetpwr, mintargetpwr;
+ 	bool suspend;
+-	struct brcms_phy *pi = (struct brcms_phy *) ppi;
++	struct brcms_phy *pi = container_of(ppi, struct brcms_phy, pubpi_ro);
+ 
+ 	suspend = (0 == (bcma_read32(pi->d11core, D11REGOFFS(maccontrol)) &
+ 			 MCTL_EN_MAC));
+@@ -4348,7 +4348,7 @@ void wlc_lcnphy_tx_power_adjustment(struct brcms_phy_pub *ppi)
+ {
+ 	s8 index;
+ 	u16 index2;
+-	struct brcms_phy *pi = (struct brcms_phy *) ppi;
++	struct brcms_phy *pi = container_of(ppi, struct brcms_phy, pubpi_ro);
+ 	struct brcms_phy_lcnphy *pi_lcn = pi->u.pi_lcnphy;
+ 	u16 SAVE_txpwrctrl = wlc_lcnphy_get_tx_pwr_ctrl(pi);
+ 	if (wlc_lcnphy_tempsense_based_pwr_ctrl_enabled(pi) &&
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c
+index 93869e8..084f18f 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c
+@@ -14121,7 +14121,7 @@ static u8 ant_sw_ctrl_tbl_rev8_2057v7_core1[] = {
+ 
+ bool wlc_phy_bist_check_phy(struct brcms_phy_pub *pih)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) pih;
++	struct brcms_phy *pi = container_of(pih, struct brcms_phy, pubpi_ro);
+ 	u32 phybist0, phybist1, phybist2, phybist3, phybist4;
+ 
+ 	if (NREV_GE(pi->pubpi.phy_rev, 16))
+@@ -19734,7 +19734,7 @@ void wlc_phy_rxcore_setstate_nphy(struct brcms_phy_pub *pih, u8 rxcore_bitmask)
+ 	u16 regval;
+ 	u16 tbl_buf[16];
+ 	uint i;
+-	struct brcms_phy *pi = (struct brcms_phy *) pih;
++	struct brcms_phy *pi = container_of(pih, struct brcms_phy, pubpi_ro);
+ 	u16 tbl_opcode;
+ 	bool suspend;
+ 
+@@ -19812,7 +19812,7 @@ void wlc_phy_rxcore_setstate_nphy(struct brcms_phy_pub *pih, u8 rxcore_bitmask)
+ u8 wlc_phy_rxcore_getstate_nphy(struct brcms_phy_pub *pih)
+ {
+ 	u16 regval, rxen_bits;
+-	struct brcms_phy *pi = (struct brcms_phy *) pih;
++	struct brcms_phy *pi = container_of(pih, struct brcms_phy, pubpi_ro);
+ 
+ 	regval = read_phy_reg(pi, 0xa2);
+ 	rxen_bits = (regval >> 4) & 0xf;
+@@ -21342,7 +21342,7 @@ void wlc_phy_chanspec_set_nphy(struct brcms_phy *pi, u16 chanspec)
+ 
+ void wlc_phy_antsel_init(struct brcms_phy_pub *ppi, bool lut_init)
+ {
+-	struct brcms_phy *pi = (struct brcms_phy *) ppi;
++	struct brcms_phy *pi = container_of(ppi, struct brcms_phy, pubpi_ro);
+ 	u16 mask = 0xfc00;
+ 	u32 mc = 0;
+ 
+-- 
+1.8.4.5
 
