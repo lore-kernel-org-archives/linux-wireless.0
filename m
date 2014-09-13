@@ -1,163 +1,260 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f178.google.com ([74.125.82.178]:46747 "EHLO
-	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755552AbaIRNcL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Sep 2014 09:32:11 -0400
-Received: by mail-we0-f178.google.com with SMTP id q58so932516wes.37
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Sep 2014 06:32:10 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 3/9] ath10k: deduplicate wmi_channel code
-Date: Thu, 18 Sep 2014 15:21:21 +0200
-Message-Id: <1411046487-19544-4-git-send-email-michal.kazior@tieto.com> (sfid-20140918_153218_621586_071383E5)
-In-Reply-To: <1411046487-19544-1-git-send-email-michal.kazior@tieto.com>
-References: <1411046487-19544-1-git-send-email-michal.kazior@tieto.com>
+Received: from hauke-m.de ([5.39.93.123]:54169 "EHLO hauke-m.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751590AbaIMNhk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 13 Sep 2014 09:37:40 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linux-wireless@vger.kernel.org
+Cc: zajec5@gmail.com, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, arnd@arndb.de,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 1/2] bcma: register bcma as device tree driver
+Date: Sat, 13 Sep 2014 15:37:25 +0200
+Message-Id: <1410615446-7639-1-git-send-email-hauke@hauke-m.de> (sfid-20140913_153753_706080_455A0CAC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The structure is being set up in 2 places.
-Deduplicate the code by creating a helper.
+This driver is used by the bcm53xx ARM SoC code. Now it is possible to
+give the address of the chipcommon core in device tree and bcma will
+search for all the other cores.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/net/wireless/ath/ath10k/mac.c |  1 +
- drivers/net/wireless/ath/ath10k/wmi.c | 77 ++++++++++++++++-------------------
- 2 files changed, 37 insertions(+), 41 deletions(-)
+ Documentation/devicetree/bindings/bus/bcma.txt | 41 +++++++++++++
+ drivers/bcma/bcma_private.h                    | 16 +++++
+ drivers/bcma/host_soc.c                        | 82 ++++++++++++++++++++++++++
+ drivers/bcma/main.c                            | 10 ++++
+ include/linux/bcma/bcma.h                      |  2 +
+ 5 files changed, 151 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/bus/bcma.txt
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index c738827..f0d11e2 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -1729,6 +1729,7 @@ static int ath10k_update_channel_list(struct ath10k *ar)
- 			ch->passive = passive;
+This is based on wireless-testing and should go into that tree.
+
+changes since:
+RFC:
+ - reworded the irq description
+ - improved the example
+ - hocked into bcma_modeinit() and bcma_modexit()
+
+diff --git a/Documentation/devicetree/bindings/bus/bcma.txt b/Documentation/devicetree/bindings/bus/bcma.txt
+new file mode 100644
+index 0000000..17e095f
+--- /dev/null
++++ b/Documentation/devicetree/bindings/bus/bcma.txt
+@@ -0,0 +1,41 @@
++Broadcom AIX SoC bcma bus driver
++
++
++Required properties:
++
++- compatible : brcm,bus-aix
++
++- reg : iomem address range of chipcommon core
++
++The cores on the AIX bus are auto detected by bcma. bcma automatically 
++detects the cores and the memory ranges they are using and they get 
++registered afterwards. Automatic detection of the IRQ number is not 
++possible on BCM47xx/BCM53xx ARM and MIPS SoCs. To assign IRQ number to 
++the cores, provide them manually through device tree. The IRQ number 
++and the device tree child entry will get assigned to the core with the 
++matching reg address.
++
++Example:
++
++	aix@18000000 {
++		compatible = "brcm,bus-aix";
++		reg = <0x18000000 0x1000>;
++		ranges = <0x00000000 0x18000000 0x00100000>;
++		#address-cells = <1>;
++		#size-cells = <1>;
++
++		ethernet@18024000 {
++			reg = <0x18024000 0x1000>;
++			interrupts = <GIC_SPI 147 IRQ_TYPE_LEVEL_HIGH>;
++		};
++
++		ethernet@18025000 {
++			reg = <0x18025000 0x1000>;
++			interrupts = <GIC_SPI 148 IRQ_TYPE_LEVEL_HIGH>;
++		};
++
++		pcie@18012000 {
++			reg = <0x18012000 0x1000>;
++			interrupts = <GIC_SPI 131 IRQ_TYPE_LEVEL_HIGH>;
++		};
++	};
+diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
+index b40be43..b8728f0 100644
+--- a/drivers/bcma/bcma_private.h
++++ b/drivers/bcma/bcma_private.h
+@@ -88,6 +88,22 @@ extern int __init bcma_host_pci_init(void);
+ extern void __exit bcma_host_pci_exit(void);
+ #endif /* CONFIG_BCMA_HOST_PCI */
  
- 			ch->freq = channel->center_freq;
-+			ch->band_center_freq1 = channel->center_freq;
- 			ch->min_power = 0;
- 			ch->max_power = channel->max_power * 2;
- 			ch->max_reg_power = channel->max_reg_power * 2;
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 89e63d5..78fc5aaf 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -609,6 +609,40 @@ static struct wmi_cmd_map wmi_10_2_cmd_map = {
- 	.gpio_output_cmdid = WMI_10_2_GPIO_OUTPUT_CMDID,
- };
- 
-+static void
-+ath10k_wmi_put_wmi_channel(struct wmi_channel *ch,
-+			   const struct wmi_channel_arg *arg)
++#ifdef CONFIG_BCMA_HOST_SOC
++/* host_pci.c */
++#ifdef CONFIG_OF
++extern int __init bcma_host_soc_register_driver(void);
++extern void __exit bcma_host_soc_unregister_driver(void);
++#else
++static inline int __init bcma_host_soc_register_driver(void)
 +{
-+	u32 flags = 0;
++	return 0;
++}
++static inline void __exit bcma_host_soc_unregister_driver(void)
++{
++}
++#endif /* CONFIG_OF */
++#endif /* CONFIG_BCMA_HOST_SOC */
 +
-+	memset(ch, 0, sizeof(*ch));
+ /* driver_pci.c */
+ u32 bcma_pcie_read(struct bcma_drv_pci *pc, u32 address);
+ 
+diff --git a/drivers/bcma/host_soc.c b/drivers/bcma/host_soc.c
+index 718e054..dd170d0 100644
+--- a/drivers/bcma/host_soc.c
++++ b/drivers/bcma/host_soc.c
+@@ -7,6 +7,9 @@
+ 
+ #include "bcma_private.h"
+ #include "scan.h"
++#include <linux/slab.h>
++#include <linux/module.h>
++#include <linux/of_address.h>
+ #include <linux/bcma/bcma.h>
+ #include <linux/bcma/bcma_soc.h>
+ 
+@@ -176,6 +179,7 @@ int __init bcma_host_soc_register(struct bcma_soc *soc)
+ 	/* Host specific */
+ 	bus->hosttype = BCMA_HOSTTYPE_SOC;
+ 	bus->ops = &bcma_host_soc_ops;
++	bus->host_pdev = NULL;
+ 
+ 	/* Initialize struct, detect chip */
+ 	bcma_init_bus(bus);
+@@ -195,3 +199,81 @@ int __init bcma_host_soc_init(struct bcma_soc *soc)
+ 
+ 	return err;
+ }
 +
-+	if (arg->passive)
-+		flags |= WMI_CHAN_FLAG_PASSIVE;
-+	if (arg->allow_ibss)
-+		flags |= WMI_CHAN_FLAG_ADHOC_ALLOWED;
-+	if (arg->allow_ht)
-+		flags |= WMI_CHAN_FLAG_ALLOW_HT;
-+	if (arg->allow_vht)
-+		flags |= WMI_CHAN_FLAG_ALLOW_VHT;
-+	if (arg->ht40plus)
-+		flags |= WMI_CHAN_FLAG_HT40_PLUS;
-+	if (arg->chan_radar)
-+		flags |= WMI_CHAN_FLAG_DFS;
++#ifdef CONFIG_OF
++static int bcma_host_soc_probe(struct platform_device *pdev)
++{
++	struct device *dev = &pdev->dev;
++	struct device_node *np = dev->of_node;
++	struct bcma_bus *bus;
++	int err;
 +
-+	ch->mhz = __cpu_to_le32(arg->freq);
-+	ch->band_center_freq1 = __cpu_to_le32(arg->band_center_freq1);
-+	ch->band_center_freq2 = 0;
-+	ch->min_power = arg->min_power;
-+	ch->max_power = arg->max_power;
-+	ch->reg_power = arg->max_reg_power;
-+	ch->antenna_max = arg->max_antenna_gain;
++	/* Alloc */
++	bus = devm_kzalloc(dev, sizeof(*bus), GFP_KERNEL);
++	if (!bus)
++		return -ENOMEM;
 +
-+	/* mode & flags share storage */
-+	ch->mode = arg->mode;
-+	ch->flags |= __cpu_to_le32(flags);
++	/* Map MMIO */
++	bus->mmio = of_iomap(np, 0);
++	if (!bus->mmio)
++		return -ENOMEM;
++
++	/* Host specific */
++	bus->hosttype = BCMA_HOSTTYPE_SOC;
++	bus->ops = &bcma_host_soc_ops;
++	bus->host_pdev = pdev;
++
++	/* Initialize struct, detect chip */
++	bcma_init_bus(bus);
++
++	/* Register */
++	err = bcma_bus_register(bus);
++	if (err)
++		goto err_unmap_mmio;
++
++	platform_set_drvdata(pdev, bus);
++
++	return err;
++
++err_unmap_mmio:
++	iounmap(bus->mmio);
++	return err;
 +}
 +
- int ath10k_wmi_wait_for_service_ready(struct ath10k *ar)
- {
- 	int ret;
-@@ -3502,7 +3536,6 @@ ath10k_wmi_vdev_start_restart(struct ath10k *ar,
- 	struct sk_buff *skb;
- 	const char *cmdname;
- 	u32 flags = 0;
--	u32 ch_flags = 0;
++static int bcma_host_soc_remove(struct platform_device *pdev)
++{
++	struct bcma_bus *bus = platform_get_drvdata(pdev);
++
++	bcma_bus_unregister(bus);
++	iounmap(bus->mmio);
++	platform_set_drvdata(pdev, NULL);
++
++	return 0;
++}
++
++static const struct of_device_id bcma_host_soc_of_match[] = {
++	{ .compatible = "brcm,bus-aix", },
++	{},
++};
++MODULE_DEVICE_TABLE(of, bcma_host_soc_of_match);
++
++static struct platform_driver bcma_host_soc_driver = {
++	.driver = {
++		.name = "bcma-host-soc",
++		.owner = THIS_MODULE,
++		.of_match_table = bcma_host_soc_of_match,
++	},
++	.probe		= bcma_host_soc_probe,
++	.remove		= bcma_host_soc_remove,
++};
++
++int __init bcma_host_soc_register_driver(void)
++{
++	return platform_driver_register(&bcma_host_soc_driver);
++}
++
++void __exit bcma_host_soc_unregister_driver(void)
++{
++	platform_driver_unregister(&bcma_host_soc_driver);
++}
++#endif /* CONFIG_OF */
+diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
+index c421403..e5d578c 100644
+--- a/drivers/bcma/main.c
++++ b/drivers/bcma/main.c
+@@ -528,6 +528,13 @@ static int __init bcma_modinit(void)
+ 	if (err)
+ 		return err;
  
- 	if (cmd_id != ar->wmi.cmd->vdev_start_request_cmdid &&
- 	    cmd_id != ar->wmi.cmd->vdev_restart_request_cmdid)
-@@ -3529,8 +3562,6 @@ ath10k_wmi_vdev_start_restart(struct ath10k *ar,
- 		flags |= WMI_VDEV_START_HIDDEN_SSID;
- 	if (arg->pmf_enabled)
- 		flags |= WMI_VDEV_START_PMF_ENABLED;
--	if (arg->channel.chan_radar)
--		ch_flags |= WMI_CHAN_FLAG_DFS;
++#ifdef CONFIG_BCMA_HOST_SOC
++	err = bcma_host_soc_register_driver();
++	if (err) {
++		pr_err("SoC host initialization failed\n");
++		err = 0;
++	}
++#endif
+ #ifdef CONFIG_BCMA_HOST_PCI
+ 	err = bcma_host_pci_init();
+ 	if (err) {
+@@ -545,6 +552,9 @@ static void __exit bcma_modexit(void)
+ #ifdef CONFIG_BCMA_HOST_PCI
+ 	bcma_host_pci_exit();
+ #endif
++#ifdef CONFIG_BCMA_HOST_SOC
++	bcma_host_soc_unregister_driver();
++#endif
+ 	bus_unregister(&bcma_bus_type);
+ }
+ module_exit(bcma_modexit)
+diff --git a/include/linux/bcma/bcma.h b/include/linux/bcma/bcma.h
+index 6345979..729f48e 100644
+--- a/include/linux/bcma/bcma.h
++++ b/include/linux/bcma/bcma.h
+@@ -323,6 +323,8 @@ struct bcma_bus {
+ 		struct pci_dev *host_pci;
+ 		/* Pointer to the SDIO device (only for BCMA_HOSTTYPE_SDIO) */
+ 		struct sdio_func *host_sdio;
++		/* Pointer to platform device (only for BCMA_HOSTTYPE_SOC) */
++		struct platform_device *host_pdev;
+ 	};
  
- 	cmd = (struct wmi_vdev_start_request_cmd *)skb->data;
- 	cmd->vdev_id         = __cpu_to_le32(arg->vdev_id);
-@@ -3546,18 +3577,7 @@ ath10k_wmi_vdev_start_restart(struct ath10k *ar,
- 		memcpy(cmd->ssid.ssid, arg->ssid, arg->ssid_len);
- 	}
- 
--	cmd->chan.mhz = __cpu_to_le32(arg->channel.freq);
--
--	cmd->chan.band_center_freq1 =
--		__cpu_to_le32(arg->channel.band_center_freq1);
--
--	cmd->chan.mode = arg->channel.mode;
--	cmd->chan.flags |= __cpu_to_le32(ch_flags);
--	cmd->chan.min_power = arg->channel.min_power;
--	cmd->chan.max_power = arg->channel.max_power;
--	cmd->chan.reg_power = arg->channel.max_reg_power;
--	cmd->chan.reg_classid = arg->channel.reg_class_id;
--	cmd->chan.antenna_max = arg->channel.max_antenna_gain;
-+	ath10k_wmi_put_wmi_channel(&cmd->chan, &arg->channel);
- 
- 	ath10k_dbg(ar, ATH10K_DBG_WMI,
- 		   "wmi vdev %s id 0x%x flags: 0x%0X, freq %d, mode %d, ch_flags: 0x%0X, max_power: %d\n",
-@@ -3938,35 +3958,10 @@ int ath10k_wmi_scan_chan_list(struct ath10k *ar,
- 	cmd->num_scan_chans = __cpu_to_le32(arg->n_channels);
- 
- 	for (i = 0; i < arg->n_channels; i++) {
--		u32 flags = 0;
--
- 		ch = &arg->channels[i];
- 		ci = &cmd->chan_info[i];
- 
--		if (ch->passive)
--			flags |= WMI_CHAN_FLAG_PASSIVE;
--		if (ch->allow_ibss)
--			flags |= WMI_CHAN_FLAG_ADHOC_ALLOWED;
--		if (ch->allow_ht)
--			flags |= WMI_CHAN_FLAG_ALLOW_HT;
--		if (ch->allow_vht)
--			flags |= WMI_CHAN_FLAG_ALLOW_VHT;
--		if (ch->ht40plus)
--			flags |= WMI_CHAN_FLAG_HT40_PLUS;
--		if (ch->chan_radar)
--			flags |= WMI_CHAN_FLAG_DFS;
--
--		ci->mhz               = __cpu_to_le32(ch->freq);
--		ci->band_center_freq1 = __cpu_to_le32(ch->freq);
--		ci->band_center_freq2 = 0;
--		ci->min_power         = ch->min_power;
--		ci->max_power         = ch->max_power;
--		ci->reg_power         = ch->max_reg_power;
--		ci->antenna_max       = ch->max_antenna_gain;
--
--		/* mode & flags share storage */
--		ci->mode              = ch->mode;
--		ci->flags            |= __cpu_to_le32(flags);
-+		ath10k_wmi_put_wmi_channel(ci, ch);
- 	}
- 
- 	return ath10k_wmi_cmd_send(ar, skb, ar->wmi.cmd->scan_chan_list_cmdid);
+ 	struct bcma_chipinfo chipinfo;
 -- 
-1.8.5.3
+1.9.1
 
