@@ -1,45 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:9841 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750827AbaILJKG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Sep 2014 05:10:06 -0400
-From: Avinash Patil <patila@marvell.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
-	<huxm@marvell.com>, <yangyang@marvell.com>, <cluo@marvell.com>,
-	<maithili@marvell.com>, Avinash Patil <patila@marvell.com>
-Subject: [PATCHv2 01/16] mwifiex: set fw api info for backword compatibility
-Date: Fri, 12 Sep 2014 20:08:45 +0530
-Message-ID: <1410532740-3173-2-git-send-email-patila@marvell.com> (sfid-20140912_111012_464580_AE198623)
-In-Reply-To: <1410532740-3173-1-git-send-email-patila@marvell.com>
-References: <1410532740-3173-1-git-send-email-patila@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from hauke-m.de ([5.39.93.123]:55087 "EHLO hauke-m.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752843AbaINVJX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 14 Sep 2014 17:09:23 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Cc: zajec5@gmail.com, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 3/5] b43: add missing rate
+Date: Sun, 14 Sep 2014 23:09:10 +0200
+Message-Id: <1410728952-25779-3-git-send-email-hauke@hauke-m.de> (sfid-20140914_230930_100671_B11EC7A8)
+In-Reply-To: <1410728952-25779-1-git-send-email-hauke@hauke-m.de>
+References: <1410728952-25779-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If we dont set FW API info here, for older FW releases where FW API
-is not available in GET_HW_SPEC, API version would remain 0.
-This may cause issues with 11ac if older FW is used with newer driver.
+The OFDM reate 9MB was not set here
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/net/wireless/mwifiex/cmdevt.c | 1 +
+ drivers/net/wireless/b43/main.c | 1 +
  1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
-index 985f6c2..fcc70ae 100644
---- a/drivers/net/wireless/mwifiex/cmdevt.c
-+++ b/drivers/net/wireless/mwifiex/cmdevt.c
-@@ -1508,6 +1508,7 @@ int mwifiex_ret_get_hw_spec(struct mwifiex_private *priv,
- 	}
- 
- 	adapter->fw_release_number = le32_to_cpu(hw_spec->fw_release_number);
-+	adapter->fw_api_ver = (adapter->fw_release_number >> 16) & 0xff;
- 	adapter->number_of_antenna = le16_to_cpu(hw_spec->number_of_antenna);
- 
- 	if (le32_to_cpu(hw_spec->dot_11ac_dev_cap)) {
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index 2d7716e..96edbd2 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -3121,6 +3121,7 @@ static void b43_rate_memory_init(struct b43_wldev *dev)
+ 	case B43_PHYTYPE_HT:
+ 	case B43_PHYTYPE_LCN:
+ 		b43_rate_memory_write(dev, B43_OFDM_RATE_6MB, 1);
++		b43_rate_memory_write(dev, B43_OFDM_RATE_9MB, 1);
+ 		b43_rate_memory_write(dev, B43_OFDM_RATE_12MB, 1);
+ 		b43_rate_memory_write(dev, B43_OFDM_RATE_18MB, 1);
+ 		b43_rate_memory_write(dev, B43_OFDM_RATE_24MB, 1);
 -- 
-1.8.1.4
+1.9.1
 
