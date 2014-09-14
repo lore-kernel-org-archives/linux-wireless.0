@@ -1,64 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:39766 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932401AbaIWPAP (ORCPT
+Received: from mail-lb0-f172.google.com ([209.85.217.172]:61312 "EHLO
+	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751524AbaINEYh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Sep 2014 11:00:15 -0400
-Date: Tue, 23 Sep 2014 10:46:27 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: Joe Perches <joe@perches.com>,
-	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	wil6210 <wil6210@qca.qualcomm.com>, ath6kl@lists.infradead.org
-Subject: Re: [PATCH] ath: change logging functions to return void
-Message-ID: <20140923144627.GG23806@tuxdriver.com> (sfid-20140923_170141_518181_C2CF1310)
-References: <1411407334.2952.46.camel@joe-AO725>
- <874mvzj7bu.fsf@kamboji.qca.qualcomm.com>
+	Sun, 14 Sep 2014 00:24:37 -0400
+Date: Sun, 14 Sep 2014 07:24:27 +0300
+From: Johan Hedberg <johan.hedberg@gmail.com>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: pull request: bluetooth-next 2014-09-14
+Message-ID: <20140914042427.GA1926@t440s.P-661HNU-F1> (sfid-20140914_062454_499177_107DCF69)
+References: <20140914041912.GA1623@t440s.P-661HNU-F1>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <874mvzj7bu.fsf@kamboji.qca.qualcomm.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="BOKacYhQ+x31HxR3"
+In-Reply-To: <20140914041912.GA1623@t440s.P-661HNU-F1>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 23, 2014 at 07:20:53AM +0300, Kalle Valo wrote:
-> Joe Perches <joe@perches.com> writes:
-> 
-> > The return values are not used by callers of these functions
-> > so change the functions to return void.
-> >
-> > Other miscellanea:
-> >
-> > o add __printf verification to wil6210 logging functions
-> >   No format/argument mismatches found
-> >
-> > Signed-off-by: Joe Perches <joe@perches.com>
-> > ---
-> > This change is associated to a desire to eventually
-> > change printk to return void.
-> >
-> >  drivers/net/wireless/ath/ath10k/debug.c    | 18 +++++-------------
-> >  drivers/net/wireless/ath/ath10k/debug.h    |  6 +++---
-> >  drivers/net/wireless/ath/ath6kl/common.h   |  2 +-
-> >  drivers/net/wireless/ath/ath6kl/debug.c    | 28 ++++++++--------------------
-> >  drivers/net/wireless/ath/ath6kl/debug.h    | 13 ++++++-------
-> 
-> For ath6kl and ath10k:
-> 
-> Acked-by: Kalle Valo <kvalo@qca.qualcomm.com>
-> 
-> >  drivers/net/wireless/ath/wil6210/debug.c   | 14 ++++----------
-> >  drivers/net/wireless/ath/wil6210/wil6210.h |  7 +++++--
-> >  7 files changed, 32 insertions(+), 56 deletions(-)
-> 
-> John, as this patch also contains a wil6210 change how do you want to
-> handle this?
 
-I had presumed that you would merge it through the ath tree, so I
-deleted it...
+--BOKacYhQ+x31HxR3
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Hi John,
+
+On Sun, Sep 14, 2014, Johan Hedberg wrote:
+> Here are some more patches intended for 3.18. Most of them are cleanups
+> or fixes for SMP. The only exception is a fix for BR/EDR L2CAP fixed
+> channels which should now work better together with the L2CAP
+> information request procedure.
+>=20
+> Let me know if there are any issues pulling. Thanks.
+>=20
+> Johan
+>=20
+> ---
+> The following changes since commit 39e90c77637b3892a39f2908aea57539e961c5=
+0e:
+>=20
+>   Bluetooth: 6lowpan: Route packets that are not meant to peer via correc=
+t device (2014-09-09 15:51:47 +0200)
+>=20
+> are available in the git repository at:
+>=20
+>   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next.=
+git master
+
+This was supposed to be a reference to the for-upstream branch instead
+of master. Both point to the same commit at this moment but it'd be more
+convenient if you pull from for-upstream so that the master branch can
+continue living on without waiting for the pull to happen. Sorry for the
+extra hassle.
+
+Johan
+
+--BOKacYhQ+x31HxR3
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUFRh7AAoJECQj9vv5qNQSzywP/3WE/WVtytzT+kURz02i/d+/
+xe8bFszWhbaLk2Aoiqv634UCaq2MiP9vhd1aPXl0eHI5dbV6/k1OMPmrszBzbJ7v
+qs3gbnbRfrGuW0udrQJTqt/WMXH0JmkGcL48i4V0fjf271e37aJAcvo/Rq67i+/o
+9LdaV1gLXfSs2bqtVUKvsXlBdF4HBNcUnPURjtWFDkytT7z4heci/7KdYpKcNDYk
+saksJbgalJ7wy3E/Uz3pkufMNTnxrmDJOLxRihZ3JDzRTPCNtkTyKOPvkjhl7nJp
+mA12NMOjC+V2vrJ9euFLnX17lJqwPZUkij51B4H/h0VaAwWdQHNM5OLhvsWqTDRa
+MBELzAWWGN4HHEn8JCQpHy8tCZKrOd33KmzTzY4u7kTc5zjK2Z+BQfP1PkXMxUFc
+ZupfUxMKj5HzV3t4qsMAy+e7Qj36HcYl93p6Aabb/27k8mS+6m3V1dFJ3Qal6aFb
+dY1nAzOx3CWO+xiuwZGCVObPl7s5LDgAeTVl3MBCodC9Z9oXbWdCmosIZrQuD8uQ
+QqQp+tvKjSSUF81s73gR73YIwmQpN/SVUaeUBOyySEUPIyki4Xp8DJvARnCj83PE
+svEUOySIzvak6Sz5H9XqZNUaTocmEP5i0qjTmngC5VNal0Bo4kxGfteBcTpA+mnH
+uHcMMTA5ONV1gYVg9NYn
+=hNjp
+-----END PGP SIGNATURE-----
+
+--BOKacYhQ+x31HxR3--
