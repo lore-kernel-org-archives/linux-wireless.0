@@ -1,80 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:35310 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751005AbaIJLgy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Sep 2014 07:36:54 -0400
-Message-ID: <541037D2.7060007@gmail.com> (sfid-20140910_133658_893010_0D895D82)
-Date: Wed, 10 Sep 2014 13:36:50 +0200
-From: Jiri Slaby <jirislaby@gmail.com>
-MIME-Version: 1.0
-To: Sergey Ryazanov <ryazanov.s.a@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-CC: Paul Bolle <pebolle@tiscali.nl>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	Oleksij Rempel <linux@rempel-privat.de>,
-	Richard Weinberger <richard@nod.at>,
-	Jonathan Bither <jonbither@gmail.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	ath5k-devel@venema.h4ckr.net, open@hauke-m.de,
-	"list@hauke-m.de:NETWORKING DRIVERS" <list@hauke-m.de>,
-	"antonynpavlov@gmail.com" <antonynpavlov@gmail.com>,
-	OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"list@hauke-m.de:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
-	open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 09/28] Remove ATHEROS_AR231X
-References: <20140213201421.GJ22203@tuxdriver.com>	<1397581703.8212.5.camel@x220>	<CAHNKnsQQ42-XnXrubHAy4PF3H2ynbGDdSMP7MvDS_1aRozYF=A@mail.gmail.com>	<1403087119.1984.93.camel@x220>	<CAHNKnsSfaT7xC5_wv=TrGLEQ2pjC91Q1XG891_n64OuR0fA9Jg@mail.gmail.com>	<1403091974.1984.102.camel@x220>	<1409911856.7832.9.camel@x220>	<CAHNKnsRipRHicKOUW4dCutD1-sUG6qPnP2QuOveH_t1MFX9XgQ@mail.gmail.com>	<1409916824.7832.20.camel@x220>	<CAHNKnsQ1gt=DRBTd9Q9yos1idqmXMepEPvhm8a7unP-whzNAgg@mail.gmail.com>	<20140909182734.GJ29412@tuxdriver.com> <CAHNKnsQ8G3ZFHshq7wOqex1J6DbVD5uHVAyvs+aDC2Znk5zWww@mail.gmail.com>
-In-Reply-To: <CAHNKnsQ8G3ZFHshq7wOqex1J6DbVD5uHVAyvs+aDC2Znk5zWww@mail.gmail.com>
-Content-Type: text/plain; charset=windows-1252
+Received: from hauke-m.de ([5.39.93.123]:55080 "EHLO hauke-m.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752838AbaINVJW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 14 Sep 2014 17:09:22 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Cc: zajec5@gmail.com, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 1/5] b43: tell the ucode the mac capabilities
+Date: Sun, 14 Sep 2014 23:09:08 +0200
+Message-Id: <1410728952-25779-1-git-send-email-hauke@hauke-m.de> (sfid-20140914_230926_249520_72976149)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/10/2014, 12:33 PM, Sergey Ryazanov wrote:
-> 2014-09-09 22:27 GMT+04:00, John W. Linville <linville@tuxdriver.com>:
->> On Fri, Sep 05, 2014 at 04:02:10PM +0400, Sergey Ryazanov wrote:
->>> 2014-09-05 15:33 GMT+04:00 Paul Bolle <pebolle@tiscali.nl>:
->>>> Hi Sergey,
->>>>
->>>> On Fri, 2014-09-05 at 15:12 +0400, Sergey Ryazanov wrote:
->>>>> 2014-09-05 14:10 GMT+04:00, Paul Bolle <pebolle@tiscali.nl>:
->>>>>> On Wed, 2014-06-18 at 13:46 +0200, Paul Bolle wrote:
->>>>>>> Having this conversation every rc1 is getting a bit silly. Could
->>>>>>> Jiri
->>>>>>> e.a. perhaps set some specific deadline for ATHEROS_AR231X to be
->>>>>>> submitted?
->>>>>>
->>>>>> I waited until rc3. Have you seen any activity on this front? If
->>>>>> not,
->>>>>> should I resend the patch that removes the code in mainline that
->>>>>> depends
->>>>>> on ATHEROS_AR231X (ie, AHB bus support)?
->>>>>>
->>>>> Recent activity always could be found in [1]. Now I finish another one
->>>>> round of cleanups and have a plan to fix several things (you can
->>>>> always find something that you really want to improve). But if you
->>>>> insist I could immediately switch to "send upstream" mode. And seems
->>>>> that this would be better approach.
->>>>>
->>>>> 1. https://dev.openwrt.org/log/trunk/target/linux/atheros
->>>>
->>>> And where can the related PULL requests or patch submissions be found?
->>>>
->>> I have not sent patches yet, since I thought that it would be easier
->>> to cleanup them in openwrt tree and then send them upstream.
->>
->> That excuse has worn a bit thin.  Perhaps Paul should repost his
->> removal and you can add a revert to the start of your patch series?
->>
-> As for me, I do not like such flapping
+This is based on code form brcmsmac.
 
-Agreed in case what you have is in a good enough shape. You (and also
-others) can still clean up the code in upstream too. So, if it is
-mergeable, send it for upstream inclusion now, otherwise I am all for
-John to apply the Paul's patch. The unused code has been a way too long
-in the tree now.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/net/wireless/b43/b43.h  |  3 +++
+ drivers/net/wireless/b43/main.c | 10 ++++++++++
+ 2 files changed, 13 insertions(+)
 
-thanks,
+diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
+index 95a9433..018ed5f 100644
+--- a/drivers/net/wireless/b43/b43.h
++++ b/drivers/net/wireless/b43/b43.h
+@@ -45,6 +45,7 @@
+ #define B43_MMIO_RAM_DATA		0x134
+ #define B43_MMIO_PS_STATUS		0x140
+ #define B43_MMIO_RADIO_HWENABLED_HI	0x158
++#define B43_MMIO_MAC_HW_CAP		0x15C	/* MAC capabilities (corerev >= 13) */
+ #define B43_MMIO_SHM_CONTROL		0x160
+ #define B43_MMIO_SHM_DATA		0x164
+ #define B43_MMIO_SHM_DATA_UNALIGNED	0x166
+@@ -253,6 +254,8 @@ enum {
+ #define B43_SHM_SH_CHAN			0x00A0	/* Current channel (low 8bit only) */
+ #define  B43_SHM_SH_CHAN_5GHZ		0x0100	/* Bit set, if 5 Ghz channel */
+ #define  B43_SHM_SH_CHAN_40MHZ		0x0200	/* Bit set, if 40 Mhz channel width */
++#define B43_SHM_SH_MACHW_L		0x00C0	/* Location where the ucode expects the MAC capabilities */
++#define B43_SHM_SH_MACHW_H		0x00C2	/* Location where the ucode expects the MAC capabilities */
+ #define B43_SHM_SH_HOSTF5		0x00D4	/* Hostflags 5 for ucode options */
+ #define B43_SHM_SH_BCMCFIFOID		0x0108	/* Last posted cookie to the bcast/mcast FIFO */
+ /* TSSI information */
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index 165dbc3..f22a801 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -4827,6 +4827,16 @@ static int b43_wireless_core_init(struct b43_wldev *dev)
+ 	hf &= ~B43_HF_SKCFPUP;
+ 	b43_hf_write(dev, hf);
+ 
++	/* tell the ucode MAC capabilities */
++	if (dev->dev->core_rev >= 13) {
++		u32 mac_hw_cap = b43_read32(dev, B43_MMIO_MAC_HW_CAP);
++
++		b43_shm_write16(dev, B43_SHM_SHARED, B43_SHM_SH_MACHW_L,
++				mac_hw_cap & 0xffff);
++		b43_shm_write16(dev, B43_SHM_SHARED, B43_SHM_SH_MACHW_H,
++				(mac_hw_cap >> 16) & 0xffff);
++	}
++
+ 	b43_set_retry_limits(dev, B43_DEFAULT_SHORT_RETRY_LIMIT,
+ 			     B43_DEFAULT_LONG_RETRY_LIMIT);
+ 	b43_shm_write16(dev, B43_SHM_SHARED, B43_SHM_SH_SFFBLIM, 3);
 -- 
-js
+1.9.1
+
