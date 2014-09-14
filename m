@@ -1,46 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:46411 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755604AbaIECdY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Sep 2014 22:33:24 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH v3 09/11] ath9k: Fix COMP_BAR filter
-Date: Fri,  5 Sep 2014 08:03:17 +0530
-Message-Id: <1409884399-32289-10-git-send-email-sujith@msujith.org> (sfid-20140905_043328_446666_3FBB2DD2)
-In-Reply-To: <1409884399-32289-1-git-send-email-sujith@msujith.org>
-References: <1409884399-32289-1-git-send-email-sujith@msujith.org>
+Received: from purkki.adurom.net ([80.68.90.206]:50716 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752533AbaINSIk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 14 Sep 2014 14:08:40 -0400
+From: Kalle Valo <kvalo@adurom.com>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: Oliver Hartkopp <socketcan@hartkopp.net>,
+	Vadim Kochan <vadim4j@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"netdev\@vger.kernel.org" <netdev@vger.kernel.org>
+Subject: Re: iwlwifi no authentication with AP - Re: pull request: wireless-next 2014-09-08
+References: <20140908191630.GB29412@tuxdriver.com>
+	<540F5927.7000306@hartkopp.net>
+	<CANUX_P3n0v1SzfbYuaAsE4TY7Hz_wo2Fb9SmHVNyFOC9hDhwdg@mail.gmail.com>
+	<540F61D0.9000704@hartkopp.net>
+	<CAMw6YJLeO1JZeY6hNe-TXOS56b-otk+htt5VPPor+9iYCQz53Q@mail.gmail.com>
+	<540FDB3C.6060301@hartkopp.net>
+	<CANUX_P3kOetqEneHgqoCDN4c85SQYD-G=mQj_o1c_TvKmE5psA@mail.gmail.com>
+Date: Sun, 14 Sep 2014 21:08:36 +0300
+In-Reply-To: <CANUX_P3kOetqEneHgqoCDN4c85SQYD-G=mQj_o1c_TvKmE5psA@mail.gmail.com>
+	(Emmanuel Grumbach's message of "Wed, 10 Sep 2014 11:24:01 +0300")
+Message-ID: <877g162hy3.fsf@purkki.adurom.net> (sfid-20140914_200849_264950_04CBEB1E)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Emmanuel Grumbach <egrumbach@gmail.com> writes:
 
-ATH9K_RX_FILTER_COMP_BAR is used to receive BAR
-completion frames and is set if the current channel
-is HT. When channel contexts are enabled, instead of using
-the mac80211 helpers, check if the current channel
-definition is HT.
+> On Wed, Sep 10, 2014 at 8:01 AM, Oliver Hartkopp <socketcan@hartkopp.net> wrote:
+>> On 10.09.2014 00:07, Vadim Kochan wrote:
+>>> I have the same issue with iwlwifi.
+>>
+>> I tried an old zd1211 wireless USB stick to check if this problem is 80211
+>> related. But the USB stick works fine (I'm using it right now).
+>> So its definitely looks like an iwlwifi issue.
+>>
+>>> iwlwifi 0000:02:00.0: fail to flush all tx fifo queues Q 0
+>>
+>> Wasn't there any change in the iwlwifi tx path recently??
+>
+> Can you please try the patch attached? It works for me.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/recv.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Upgraded to latest wireless-testing and iwldvm was broken. This patch
+fixed it for me as well.
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 04b02b5..63fbc3e 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -412,7 +412,7 @@ u32 ath_calcrxfilter(struct ath_softc *sc)
- 	    (sc->rx.rxfilter & FIF_PSPOLL))
- 		rfilt |= ATH9K_RX_FILTER_PSPOLL;
- 
--	if (conf_is_ht(&sc->hw->conf))
-+	if (sc->cur_chandef.width != NL80211_CHAN_WIDTH_20_NOHT)
- 		rfilt |= ATH9K_RX_FILTER_COMP_BAR;
- 
- 	if (sc->nvifs > 1 || (sc->rx.rxfilter & FIF_OTHER_BSS)) {
+Could we have the fix in the wireless tree ASAP? Not really fun to find
+out that the driver is completely broken.
+
 -- 
-2.1.0
-
+Kalle Valo
