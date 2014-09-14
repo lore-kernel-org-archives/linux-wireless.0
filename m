@@ -1,66 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f180.google.com ([209.85.192.180]:64782 "EHLO
-	mail-pd0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755123AbaITPkO (ORCPT
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:32774 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752416AbaINJmf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Sep 2014 11:40:14 -0400
-Message-ID: <541D9FD8.4000404@gmail.com> (sfid-20140920_174020_285689_27CD9522)
-Date: Sat, 20 Sep 2014 21:10:08 +0530
-From: Varka Bhadram <varkabhadram@gmail.com>
+	Sun, 14 Sep 2014 05:42:35 -0400
+Subject: [PATCH 00/10] ath10k: checkpatch fixes from v3.17
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Sun, 14 Sep 2014 12:49:55 +0300
+Message-ID: <20140914094728.9063.32593.stgit@x230> (sfid-20140914_114238_793411_D4CFFCCD)
 MIME-Version: 1.0
-To: Hauke Mehrtens <hauke@hauke-m.de>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-CC: zajec5@gmail.com, arend@broadcom.com,
-	linux-arm-kernel@lists.infradead.org, arnd@arndb.de,
-	devicetree@vger.kernel.org
-Subject: Re: [PATCH v3 1/2] bcma: register bcma as device tree driver
-References: <1411218125-32670-1-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1411218125-32670-1-git-send-email-hauke@hauke-m.de>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 20 September 2014 06:32 PM, Hauke Mehrtens wrote:
-> This driver is used by the bcm53xx ARM SoC code. Now it is possible to
-> give the address of the chipcommon core in device tree and bcma will
-> search for all the other cores.
+Hi,
 
-(...)
+some fixes to recently added checkpatch warnings. Please review.
 
-> +
-> +static const struct of_device_id bcma_host_soc_of_match[] = {
-> +	{ .compatible = "brcm,bus-axi", },
-> +	{},
-> +};
-> +MODULE_DEVICE_TABLE(of, bcma_host_soc_of_match);
-> +
-> +static struct platform_driver bcma_host_soc_driver = {
-> +	.driver = {
-> +		.name = "bcma-host-soc",
-> +		.owner = THIS_MODULE,
+Kalle
 
-This field updated automatically...
+---
 
-> +		.of_match_table = bcma_host_soc_of_match,
-> +	},
-> +	.probe		= bcma_host_soc_probe,
-> +	.remove		= bcma_host_soc_remove,
-> +};
-> +
-> +int __init bcma_host_soc_register_driver(void)
-> +{
-> +	return platform_driver_register(&bcma_host_soc_driver);
-> +}
-> +
-> +void __exit bcma_host_soc_unregister_driver(void)
-> +{
-> +	platform_driver_unregister(&bcma_host_soc_driver);
-> +}
-> +#endif /* CONFIG_OF */
+Kalle Valo (10):
+      ath10k: fix parenthesis alignment warning in ath10k_htt_rx_alloc()
+      ath10k: fix checkpatch warnings about parenthesis alignment
+      ath10k: fix use of multiple blank lines
+      ath10k: fix missing a blank line after declarations
+      ath10k: fix space after a cast style errors
+      ath10k: don't use return on void functions
+      ath10k: else is not generally useful after a break or return
+      ath10k: miscellaneous checkpatch fixes
+      ath10k: reformat help text in ath10k_read_simulate_fw_crash()
+      ath10k: use ether_addr_copy()
 
-Why dont you use module_platform_driver(...)...?
 
--- 
-Regards,
-Varka Bhadram.
-
+ drivers/net/wireless/ath/ath10k/bmi.h       |    1 
+ drivers/net/wireless/ath/ath10k/ce.c        |    2 -
+ drivers/net/wireless/ath/ath10k/ce.h        |   13 ++---
+ drivers/net/wireless/ath/ath10k/debug.c     |   33 ++++++--------
+ drivers/net/wireless/ath/ath10k/hif.h       |    1 
+ drivers/net/wireless/ath/ath10k/htc.c       |   10 +---
+ drivers/net/wireless/ath/ath10k/htc.h       |    1 
+ drivers/net/wireless/ath/ath10k/htt.c       |    2 -
+ drivers/net/wireless/ath/ath10k/htt.h       |    3 -
+ drivers/net/wireless/ath/ath10k/htt_rx.c    |   52 +++++++++++----------
+ drivers/net/wireless/ath/ath10k/htt_tx.c    |    2 -
+ drivers/net/wireless/ath/ath10k/mac.c       |   45 ++++++++----------
+ drivers/net/wireless/ath/ath10k/pci.c       |   37 ++++++++-------
+ drivers/net/wireless/ath/ath10k/rx_desc.h   |    1 
+ drivers/net/wireless/ath/ath10k/targaddrs.h |    1 
+ drivers/net/wireless/ath/ath10k/txrx.c      |    2 -
+ drivers/net/wireless/ath/ath10k/wmi.c       |   66 ++++++++++++++-------------
+ drivers/net/wireless/ath/ath10k/wmi.h       |   17 ++-----
+ 18 files changed, 132 insertions(+), 157 deletions(-)
