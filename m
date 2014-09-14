@@ -1,84 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:64867 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753458AbaIZO3W (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:13048 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752423AbaINHcl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Sep 2014 10:29:22 -0400
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	linux-arm-kernel@lists.infradead.org, arnd@arndb.de,
-	devicetree@vger.kernel.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] bcma: use device from DT (brcm,bus-gpio) for SoC GPIO chip
-Date: Fri, 26 Sep 2014 16:28:53 +0200
-Message-Id: <1411741733-13888-1-git-send-email-zajec5@gmail.com> (sfid-20140926_162930_251606_551D71B5)
+	Sun, 14 Sep 2014 03:32:41 -0400
+Message-ID: <54154496.3070809@broadcom.com> (sfid-20140914_093321_708089_29B490B4)
+Date: Sun, 14 Sep 2014 09:32:38 +0200
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: Fabian Frederick <fabf@skynet.be>
+CC: <linux-kernel@vger.kernel.org>, <davem@davemloft.net>,
+	<netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+	<brcm80211-dev-list@broadcom.com>
+Subject: Re: [PATCH 0/4 linux-next] drivers/net: use container_of where possible
+References: <1410640709-18295-1-git-send-email-fabf@skynet.be>
+In-Reply-To: <1410640709-18295-1-git-send-email-fabf@skynet.be>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This will allow us to define GPIO-attached devices (LEDs, buttons) in
-the the device tree.
+On 09/13/14 22:38, Fabian Frederick wrote:
+> Small patchset using container_of instead of casting on first structure member address.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
-This is based on top of
-[PATCH v6] bcma: register bcma as device tree driver
-that I hope will reach wireless-next git tree.
----
- Documentation/devicetree/bindings/bus/bcma.txt | 15 +++++++++++++++
- drivers/bcma/driver_gpio.c                     |  5 +++++
- 2 files changed, 20 insertions(+)
+Hi Fabian,
 
-diff --git a/Documentation/devicetree/bindings/bus/bcma.txt b/Documentation/devicetree/bindings/bus/bcma.txt
-index e9070c1..f1b381e 100644
---- a/Documentation/devicetree/bindings/bus/bcma.txt
-+++ b/Documentation/devicetree/bindings/bus/bcma.txt
-@@ -6,6 +6,15 @@ Required properties:
- 
- - reg : iomem address range of chipcommon core
- 
-+The top-level axi bus may contain following children:
-+
-+- gpio: GPIO chip on the SoC
-+
-+  Required properties:
-+  - compatible: "brcm,bus-gpio"
-+  - gpio-controller : makes the node a GPIO controller
-+  - #gpio-cells : size of the GPIO specifier, must be 2
-+
- The cores on the AXI bus are automatically detected by bcma with the
- memory ranges they are using and they get registered afterwards.
- 
-@@ -17,4 +26,10 @@ Example:
- 		ranges = <0x00000000 0x18000000 0x00100000>;
- 		#address-cells = <1>;
- 		#size-cells = <1>;
-+
-+		gpio@0 {
-+			compatible = "brcm,bus-gpio";
-+			gpio-controller;
-+			#gpio-cells = <2>;
-+		};
- 	};
-diff --git a/drivers/bcma/driver_gpio.c b/drivers/bcma/driver_gpio.c
-index 8ea497c..7ae39a8 100644
---- a/drivers/bcma/driver_gpio.c
-+++ b/drivers/bcma/driver_gpio.c
-@@ -218,6 +218,11 @@ int bcma_gpio_init(struct bcma_drv_cc *cc)
- #if IS_BUILTIN(CONFIG_BCM47XX)
- 	chip->to_irq		= bcma_gpio_to_irq;
- #endif
-+#if IS_BUILTIN(CONFIG_OF)
-+	if (cc->core->bus->hosttype == BCMA_HOSTTYPE_SOC)
-+		chip->of_node	= of_find_compatible_node(NULL, NULL,
-+							  "brcm,bus-gpio");
-+#endif
- 	switch (cc->core->bus->chipinfo.id) {
- 	case BCMA_CHIP_ID_BCM5357:
- 	case BCMA_CHIP_ID_BCM53572:
--- 
-1.8.4.5
+I think you need to split up this series. One for the ethernet drivers 
+and one for the wireless driver. As there is not dependency between the 
+patches they can each go through their own subsystem git tree. Generally 
+I tend to submit patches to the subsystem maintainer and Cc the 
+appropriate mailing lists.
+
+Regarding the patches for brcmsmac, you can add
+
+Acked-by: Arend van Spriel <arend@broadcom.com>
+
+Regards,
+Arend
+
+> Fabian Frederick (4):
+>    net: fec: use container_of to resolve bufdesc_ex from bufdesc
+>    bna: use container_of to resolve bufdesc_ex from bufdesc
+>    brcm80211: use container_of to resolve brcms_phy from brcms_phy_pub
+>    brcm80211: use container_of to resolve dma_info from dma_pub
+>
+>   drivers/net/ethernet/brocade/bna/bna_enet.c        |   9 +-
+>   drivers/net/ethernet/brocade/bna/bna_tx_rx.c       |   4 +-
+>   drivers/net/ethernet/freescale/fec_main.c          |   4 +-
+>   drivers/net/wireless/brcm80211/brcmsmac/dma.c      |  38 +++----
+>   .../net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c  | 122 ++++++++++-----------
+>   .../net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c  |   6 +-
+>   .../net/wireless/brcm80211/brcmsmac/phy/phy_n.c    |   8 +-
+>   7 files changed, 97 insertions(+), 94 deletions(-)
+>
 
