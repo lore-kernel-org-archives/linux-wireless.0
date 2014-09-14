@@ -1,31 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:55953 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753776AbaIKKS2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Sep 2014 06:18:28 -0400
-Message-ID: <1410430705.22863.3.camel@jlt4.sipsolutions.net> (sfid-20140911_121830_688421_E908CCC5)
-Subject: Re: [PATCH v3 2/2] mac80211: implement cfg80211_ops to query mesh
- proxy path table
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Henning Rogge <hrogge@gmail.com>
-Cc: "linux-wireless @ vger . kernel . org"
-	<linux-wireless@vger.kernel.org>,
-	Henning Rogge <henning.rogge@fkie.fraunhofer.de>,
-	Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-Date: Thu, 11 Sep 2014 12:18:25 +0200
-In-Reply-To: <1409922404-8217-3-git-send-email-henning.rogge@fkie.fraunhofer.de> (sfid-20140905_150657_745026_6A9E7166)
-References: <1409922404-8217-1-git-send-email-henning.rogge@fkie.fraunhofer.de>
-	 <1409922404-8217-3-git-send-email-henning.rogge@fkie.fraunhofer.de>
-	 (sfid-20140905_150657_745026_6A9E7166)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:33896 "EHLO
+	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752367AbaINJnH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 14 Sep 2014 05:43:07 -0400
+Subject: [PATCH 06/10] ath10k: don't use return on void functions
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Sun, 14 Sep 2014 12:50:28 +0300
+Message-ID: <20140914095028.9063.64532.stgit@x230> (sfid-20140914_114311_134543_21BEFED6)
+In-Reply-To: <20140914094728.9063.32593.stgit@x230>
+References: <20140914094728.9063.32593.stgit@x230>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-09-05 at 15:06 +0200, Henning Rogge wrote:
-> Implement get_mpp and dump_mpp cfg80211_ops to export the content of the 802.11s mesh proxy path table to userspace.
+Fixes a checkpatch warning:
 
-line is also too long.
+WARNING: void function return statements are not generally useful
 
-johannes
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/htt_tx.c |    1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index 1ab64631ba1b..bd87a35201d8 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -154,7 +154,6 @@ void ath10k_htt_tx_free(struct ath10k_htt *htt)
+ 	kfree(htt->pending_tx);
+ 	kfree(htt->used_msdu_ids);
+ 	dma_pool_destroy(htt->tx_pool);
+-	return;
+ }
+ 
+ void ath10k_htt_htc_tx_complete(struct ath10k *ar, struct sk_buff *skb)
 
