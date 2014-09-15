@@ -1,69 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:62727 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751688AbaIWNzn (ORCPT
+Received: from mail-we0-f182.google.com ([74.125.82.182]:34916 "EHLO
+	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752131AbaIOFLN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Sep 2014 09:55:43 -0400
-Message-ID: <54217BDC.5060308@broadcom.com> (sfid-20140923_155547_239136_F4597037)
-Date: Tue, 23 Sep 2014 15:55:40 +0200
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Greg KH <gregkh@linuxfoundation.org>
-CC: <stable@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH for-3.12] brcmfmac: handle IF event for P2P_DEVICE interface
-References: <1411465946-27161-1-git-send-email-arend@broadcom.com> <20140923132207.GB11359@kroah.com> <542178D2.90804@broadcom.com> <20140923135129.GA12636@kroah.com>
-In-Reply-To: <20140923135129.GA12636@kroah.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Mon, 15 Sep 2014 01:11:13 -0400
+Received: by mail-we0-f182.google.com with SMTP id k48so3322296wev.27
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Sep 2014 22:11:12 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 04/12] iwlwifi: mvm: fix endianity issues with Smart Fifo commands
+Date: Mon, 15 Sep 2014 08:10:40 +0300
+Message-Id: <1410757848-1827-4-git-send-email-egrumbach@gmail.com> (sfid-20140915_071115_832375_E26EAB14)
+In-Reply-To: <5416742C.3070804@gmail.com>
+References: <5416742C.3070804@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/23/14 15:51, Greg KH wrote:
-> On Tue, Sep 23, 2014 at 03:42:42PM +0200, Arend van Spriel wrote:
->> On 09/23/14 15:22, Greg KH wrote:
->>> On Tue, Sep 23, 2014 at 11:52:26AM +0200, Arend van Spriel wrote:
->>>> upstream: 87c4790330810fe5caf0172d9320cf24ef19cebe
->>>
->>> That commit id doesn't match anything in Linus's tree :(
->>>
->>
->> Hmmm, that is weird:
->>
->> [arend@lb-bun-235 ~/scm/brcm80211-next]
->> $ git remote show torvalds
->> * remote torvalds
->>    Fetch URL:
->> git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
->>    Push  URL:
->> git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
->>    HEAD branch: master
->>    Remote branch:
->>      master tracked
->> [arend@lb-bun-235 ~/scm/brcm80211-next]
->> $ git log torvalds/master --oneline -8 -- drivers/net/wireless/brcm80211
->> *87c4790 brcmfmac: handle IF event for P2P_DEVICE interface*
->> 8f2b459 brcmfmac: obtain ifp through wdev structure
->> f1d5603 brcmfmac: conditionally compile firmware protocol source code
->> fac7d2a brcmfmac: Fix memory leak and missing assignment.
->> 2d116b88 brcmfmac: fix memory leakage in msgbuf
->> ebcc2f5 brcmfmac: fix curly brace mistake in brcmf_pcie_handle_mb_data()
->> aef4f5b Merge tag 'master-2014-07-31' of
->> git://git.kernel.org/pub/scm/linux/kern
->> 70b7d94 brcmfmac: Add TDLS support to msgbuf.
->
-> Ah, it just went in, sorry for the noise.
->
-> But it _just_ went in, why are you emailing this?  We have to wait for a
-> -rc release to come out with the patch before being able to add it to
-> the tree.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Noted. Did not find that nitty gritty detail in stable_kernel_rules.txt, 
-but I just might create a patch for that if I can beat my writers block ;-)
+This code was broken on big endian systems. Sparse didn't
+catch the bug since the firmware command was not tagged as
+little endian.
+Fix the bug for big endian systems and tag the field in the
+firmware command to prevent such issues in the future.
 
-Gr. AvS
+Cc: stable@vger.kernel.org [3.14+]
+Fixes: 1f3b0ff8ec ("iwlwifi: mvm: Add Smart FIFO support")
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/fw-api.h | 4 ++--
+ drivers/net/wireless/iwlwifi/mvm/sf.c     | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-> thanks,
->
-> greg k-h
+diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/iwlwifi/mvm/fw-api.h
+index 95f5b32..9a922f3 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/fw-api.h
++++ b/drivers/net/wireless/iwlwifi/mvm/fw-api.h
+@@ -1563,14 +1563,14 @@ enum iwl_sf_scenario {
+ 
+ /**
+  * Smart Fifo configuration command.
+- * @state: smart fifo state, types listed in iwl_sf_sate.
++ * @state: smart fifo state, types listed in enum %iwl_sf_sate.
+  * @watermark: Minimum allowed availabe free space in RXF for transient state.
+  * @long_delay_timeouts: aging and idle timer values for each scenario
+  * in long delay state.
+  * @full_on_timeouts: timer values for each scenario in full on state.
+  */
+ struct iwl_sf_cfg_cmd {
+-	enum iwl_sf_state state;
++	__le32 state;
+ 	__le32 watermark[SF_TRANSIENT_STATES_NUMBER];
+ 	__le32 long_delay_timeouts[SF_NUM_SCENARIO][SF_NUM_TIMEOUT_TYPES];
+ 	__le32 full_on_timeouts[SF_NUM_SCENARIO][SF_NUM_TIMEOUT_TYPES];
+diff --git a/drivers/net/wireless/iwlwifi/mvm/sf.c b/drivers/net/wireless/iwlwifi/mvm/sf.c
+index 7edfd15..e843b67 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/sf.c
++++ b/drivers/net/wireless/iwlwifi/mvm/sf.c
+@@ -172,7 +172,7 @@ static int iwl_mvm_sf_config(struct iwl_mvm *mvm, u8 sta_id,
+ 			     enum iwl_sf_state new_state)
+ {
+ 	struct iwl_sf_cfg_cmd sf_cmd = {
+-		.state = new_state,
++		.state = cpu_to_le32(new_state),
+ 	};
+ 	struct ieee80211_sta *sta;
+ 	int ret = 0;
+-- 
+1.9.1
 
