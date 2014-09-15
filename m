@@ -1,94 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f52.google.com ([74.125.82.52]:42214 "EHLO
-	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756036AbaIRNcQ (ORCPT
+Received: from mail-we0-f169.google.com ([74.125.82.169]:45152 "EHLO
+	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753196AbaIOFNi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Sep 2014 09:32:16 -0400
-Received: by mail-wg0-f52.google.com with SMTP id x13so896378wgg.35
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Sep 2014 06:32:14 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 8/9] ath10k: unify wmi event function names
-Date: Thu, 18 Sep 2014 15:21:26 +0200
-Message-Id: <1411046487-19544-9-git-send-email-michal.kazior@tieto.com> (sfid-20140918_153221_778338_F98DDA1D)
-In-Reply-To: <1411046487-19544-1-git-send-email-michal.kazior@tieto.com>
-References: <1411046487-19544-1-git-send-email-michal.kazior@tieto.com>
+	Mon, 15 Sep 2014 01:13:38 -0400
+Received: by mail-we0-f169.google.com with SMTP id w61so3397730wes.0
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Sep 2014 22:13:37 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 23/28] iwlwifi: mvm: update QoS parameters when they change
+Date: Mon, 15 Sep 2014 08:12:55 +0300
+Message-Id: <1410757980-2138-23-git-send-email-egrumbach@gmail.com> (sfid-20140915_073115_333086_05F6EA16)
+In-Reply-To: <5416742C.3070804@gmail.com>
+References: <5416742C.3070804@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Make all wmi event functions match the same naming
-style, i.e. ath10k_wmi_event_<name>.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+The QoS parameters can change during the lifetime of the BSS,
+and more importantly hostapd only sets up the correct ones
+after having started the AP/GO. Resend the MAC context when
+the parameters change, with the updated parameters.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/wmi.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 592e3af..6819255 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -2266,8 +2266,8 @@ static int ath10k_wmi_10x_pull_svc_rdy_ev(struct sk_buff *skb,
- 	return 0;
- }
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index e4d62f2..56901f8 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -1739,7 +1739,7 @@ iwl_mvm_bss_info_changed_ap_ibss(struct iwl_mvm *mvm,
+ 		return;
  
--static void ath10k_wmi_service_ready_event_rx(struct ath10k *ar,
--					      struct sk_buff *skb)
-+static void ath10k_wmi_event_service_ready(struct ath10k *ar,
-+					   struct sk_buff *skb)
- {
- 	struct wmi_svc_rdy_ev_arg arg = {};
- 	u32 num_units, req_id, unit_size, num_mem_reqs, num_unit_info, i;
-@@ -2380,7 +2380,7 @@ static void ath10k_wmi_service_ready_event_rx(struct ath10k *ar,
- 	complete(&ar->wmi.service_ready);
- }
+ 	if (changes & (BSS_CHANGED_ERP_CTS_PROT | BSS_CHANGED_HT |
+-		       BSS_CHANGED_BANDWIDTH) &&
++		       BSS_CHANGED_BANDWIDTH | BSS_CHANGED_QOS) &&
+ 	    iwl_mvm_mac_ctxt_changed(mvm, vif, false, NULL))
+ 		IWL_ERR(mvm, "failed to update MAC %pM\n", vif->addr);
  
--static int ath10k_wmi_ready_event_rx(struct ath10k *ar, struct sk_buff *skb)
-+static int ath10k_wmi_event_ready(struct ath10k *ar, struct sk_buff *skb)
- {
- 	struct wmi_ready_event *ev = (struct wmi_ready_event *)skb->data;
- 
-@@ -2503,10 +2503,10 @@ static void ath10k_wmi_main_process_rx(struct ath10k *ar, struct sk_buff *skb)
- 		ath10k_wmi_event_vdev_install_key_complete(ar, skb);
- 		break;
- 	case WMI_SERVICE_READY_EVENTID:
--		ath10k_wmi_service_ready_event_rx(ar, skb);
-+		ath10k_wmi_event_service_ready(ar, skb);
- 		break;
- 	case WMI_READY_EVENTID:
--		ath10k_wmi_ready_event_rx(ar, skb);
-+		ath10k_wmi_event_ready(ar, skb);
- 		break;
- 	default:
- 		ath10k_warn(ar, "Unknown eventid: %d\n", id);
-@@ -2623,10 +2623,10 @@ static void ath10k_wmi_10x_process_rx(struct ath10k *ar, struct sk_buff *skb)
- 		ath10k_wmi_event_vdev_resume_req(ar, skb);
- 		break;
- 	case WMI_10X_SERVICE_READY_EVENTID:
--		ath10k_wmi_service_ready_event_rx(ar, skb);
-+		ath10k_wmi_event_service_ready(ar, skb);
- 		break;
- 	case WMI_10X_READY_EVENTID:
--		ath10k_wmi_ready_event_rx(ar, skb);
-+		ath10k_wmi_event_ready(ar, skb);
- 		break;
- 	case WMI_10X_PDEV_UTF_EVENTID:
- 		/* ignore utf events */
-@@ -2734,10 +2734,10 @@ static void ath10k_wmi_10_2_process_rx(struct ath10k *ar, struct sk_buff *skb)
- 		ath10k_wmi_event_vdev_resume_req(ar, skb);
- 		break;
- 	case WMI_10_2_SERVICE_READY_EVENTID:
--		ath10k_wmi_service_ready_event_rx(ar, skb);
-+		ath10k_wmi_event_service_ready(ar, skb);
- 		break;
- 	case WMI_10_2_READY_EVENTID:
--		ath10k_wmi_ready_event_rx(ar, skb);
-+		ath10k_wmi_event_ready(ar, skb);
- 		break;
- 	case WMI_10_2_RTT_KEEPALIVE_EVENTID:
- 	case WMI_10_2_GPIO_INPUT_EVENTID:
 -- 
-1.8.5.3
+1.9.1
 
