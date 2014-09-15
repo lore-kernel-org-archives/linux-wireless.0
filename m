@@ -1,30 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:55950 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752695AbaIKKSR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Sep 2014 06:18:17 -0400
-Message-ID: <1410430692.22863.2.camel@jlt4.sipsolutions.net> (sfid-20140911_121820_227074_6D9A3C0A)
-Subject: Re: [PATCH v3 1/2] cfg80211: add ops to query mesh proxy path table
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Henning Rogge <hrogge@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Henning Rogge <henning.rogge@fkie.fraunhofer.de>,
-	Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-Date: Thu, 11 Sep 2014 12:18:12 +0200
-In-Reply-To: <1409922404-8217-2-git-send-email-henning.rogge@fkie.fraunhofer.de> (sfid-20140905_150655_262901_B377489F)
-References: <1409922404-8217-1-git-send-email-henning.rogge@fkie.fraunhofer.de>
-	 <1409922404-8217-2-git-send-email-henning.rogge@fkie.fraunhofer.de>
-	 (sfid-20140905_150655_262901_B377489F)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:60020 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752206AbaIOFNR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Sep 2014 01:13:17 -0400
+Received: by mail-wi0-f179.google.com with SMTP id q5so1364692wiv.12
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Sep 2014 22:13:16 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Max Stepanov <Max.Stepanov@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 08/28] iwlwifi: mvm: add MVM_FW_MCAST_FILTER_PASS_ALL option
+Date: Mon, 15 Sep 2014 08:12:40 +0300
+Message-Id: <1410757980-2138-8-git-send-email-egrumbach@gmail.com> (sfid-20140915_071324_856548_9D712695)
+In-Reply-To: <5416742C.3070804@gmail.com>
+References: <5416742C.3070804@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-09-05 at 15:06 +0200, Henning Rogge wrote:
-> Add two new cfg80211 operations for querying the content of the the mac80211s proxy path table
+From: Max Stepanov <Max.Stepanov@intel.com>
 
-Please use shorter line lengths, and formulate it in a generic way -
-this shouldn't be mac80211 specific.
+Add MVM_FW_MCAST_FILTER_PASS_ALL option to iwl-dbg-cfg.ini configuration file
+to enable/disable FW multicast filtering.
 
-johannes
+Signed-off-by: Max Stepanov <Max.Stepanov@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/constants.h |  1 +
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c  | 11 ++++++-----
+ 2 files changed, 7 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/constants.h b/drivers/net/wireless/iwlwifi/mvm/constants.h
+index dd00e8f..cb48656 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/constants.h
++++ b/drivers/net/wireless/iwlwifi/mvm/constants.h
+@@ -86,5 +86,6 @@
+ #define IWL_MVM_BT_COEX_SYNC2SCO		1
+ #define IWL_MVM_BT_COEX_CORUNNING		1
+ #define IWL_MVM_BT_COEX_MPLUT			1
++#define IWL_MVM_FW_MCAST_FILTER_PASS_ALL	0
+ 
+ #endif /* __MVM_CONSTANTS_H */
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index bcfb03c..089d7b3 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -1200,14 +1200,15 @@ static u64 iwl_mvm_prepare_multicast(struct ieee80211_hw *hw,
+ 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
+ 	struct iwl_mcast_filter_cmd *cmd;
+ 	struct netdev_hw_addr *addr;
+-	int addr_count = netdev_hw_addr_list_count(mc_list);
+-	bool pass_all = false;
++	int addr_count;
++	bool pass_all;
+ 	int len;
+ 
+-	if (addr_count > MAX_MCAST_FILTERING_ADDRESSES) {
+-		pass_all = true;
++	addr_count = netdev_hw_addr_list_count(mc_list);
++	pass_all = addr_count > MAX_MCAST_FILTERING_ADDRESSES ||
++		   IWL_MVM_FW_MCAST_FILTER_PASS_ALL;
++	if (pass_all)
+ 		addr_count = 0;
+-	}
+ 
+ 	len = roundup(sizeof(*cmd) + addr_count * ETH_ALEN, 4);
+ 	cmd = kzalloc(len, GFP_ATOMIC);
+-- 
+1.9.1
 
