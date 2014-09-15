@@ -1,330 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0024.hostedemail.com ([216.40.44.24]:35396 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753592AbaIVRfm (ORCPT
+Received: from mail-we0-f176.google.com ([74.125.82.176]:62027 "EHLO
+	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752387AbaIOFLX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Sep 2014 13:35:42 -0400
-Message-ID: <1411407334.2952.46.camel@joe-AO725> (sfid-20140922_193604_646389_1E975399)
-Subject: [PATCH] ath: change logging functions to return void
-From: Joe Perches <joe@perches.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	wil6210 <wil6210@qca.qualcomm.com>
-Date: Mon, 22 Sep 2014 10:35:34 -0700
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Mon, 15 Sep 2014 01:11:23 -0400
+Received: by mail-we0-f176.google.com with SMTP id q58so3334300wes.7
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Sep 2014 22:11:22 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Oren Givon <oren.givon@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 11/12] iwlwifi: add PCI IDs and add then new 3165 series
+Date: Mon, 15 Sep 2014 08:10:47 +0300
+Message-Id: <1410757848-1827-11-git-send-email-egrumbach@gmail.com> (sfid-20140915_071134_805388_E07443CA)
+In-Reply-To: <5416742C.3070804@gmail.com>
+References: <5416742C.3070804@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The return values are not used by callers of these functions
-so change the functions to return void.
+From: Oren Givon <oren.givon@intel.com>
 
-Other miscellanea:
+This change does the following:
+1) Add a new 7265 series PCI ID
+2) Add two new 3160 series PCI IDs
+3) Add the new 3165 series PCI IDs and configurations
 
-o add __printf verification to wil6210 logging functions
-  No format/argument mismatches found
-
-Signed-off-by: Joe Perches <joe@perches.com>
+Signed-off-by: Oren Givon <oren.givon@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
-This change is associated to a desire to eventually
-change printk to return void.
+ drivers/net/wireless/iwlwifi/iwl-7000.c   | 16 ++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-config.h |  1 +
+ drivers/net/wireless/iwlwifi/pcie/drv.c   |  7 +++++++
+ 3 files changed, 24 insertions(+)
 
- drivers/net/wireless/ath/ath10k/debug.c    | 18 +++++-------------
- drivers/net/wireless/ath/ath10k/debug.h    |  6 +++---
- drivers/net/wireless/ath/ath6kl/common.h   |  2 +-
- drivers/net/wireless/ath/ath6kl/debug.c    | 28 ++++++++--------------------
- drivers/net/wireless/ath/ath6kl/debug.h    | 13 ++++++-------
- drivers/net/wireless/ath/wil6210/debug.c   | 14 ++++----------
- drivers/net/wireless/ath/wil6210/wil6210.h |  7 +++++--
- 7 files changed, 32 insertions(+), 56 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index f3f0a80..29eb2aa 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -106,21 +106,18 @@ struct ath10k_dump_file_data {
- 	u8 data[0];
- } __packed;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-7000.c b/drivers/net/wireless/iwlwifi/iwl-7000.c
+index d67a37a..d53adc2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-7000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-7000.c
+@@ -83,6 +83,8 @@
+ #define IWL7260_TX_POWER_VERSION	0xffff /* meaningless */
+ #define IWL3160_NVM_VERSION		0x709
+ #define IWL3160_TX_POWER_VERSION	0xffff /* meaningless */
++#define IWL3165_NVM_VERSION		0x709
++#define IWL3165_TX_POWER_VERSION	0xffff /* meaningless */
+ #define IWL7265_NVM_VERSION		0x0a1d
+ #define IWL7265_TX_POWER_VERSION	0xffff /* meaningless */
  
--int ath10k_info(struct ath10k *ar, const char *fmt, ...)
-+void ath10k_info(struct ath10k *ar, const char *fmt, ...)
- {
- 	struct va_format vaf = {
- 		.fmt = fmt,
- 	};
- 	va_list args;
--	int ret;
+@@ -92,6 +94,9 @@
+ #define IWL3160_FW_PRE "iwlwifi-3160-"
+ #define IWL3160_MODULE_FIRMWARE(api) IWL3160_FW_PRE __stringify(api) ".ucode"
  
- 	va_start(args, fmt);
- 	vaf.va = &args;
--	ret = dev_info(ar->dev, "%pV", &vaf);
-+	dev_info(ar->dev, "%pV", &vaf);
- 	trace_ath10k_log_info(&vaf);
- 	va_end(args);
--
--	return ret;
- }
- EXPORT_SYMBOL(ath10k_info);
++#define IWL3165_FW_PRE "iwlwifi-3165-"
++#define IWL3165_MODULE_FIRMWARE(api) IWL3165_FW_PRE __stringify(api) ".ucode"
++
+ #define IWL7265_FW_PRE "iwlwifi-7265-"
+ #define IWL7265_MODULE_FIRMWARE(api) IWL7265_FW_PRE __stringify(api) ".ucode"
  
-@@ -142,25 +139,22 @@ void ath10k_print_driver_info(struct ath10k *ar)
- }
- EXPORT_SYMBOL(ath10k_print_driver_info);
- 
--int ath10k_err(struct ath10k *ar, const char *fmt, ...)
-+void ath10k_err(struct ath10k *ar, const char *fmt, ...)
- {
- 	struct va_format vaf = {
- 		.fmt = fmt,
- 	};
- 	va_list args;
--	int ret;
- 
- 	va_start(args, fmt);
- 	vaf.va = &args;
--	ret = dev_err(ar->dev, "%pV", &vaf);
-+	dev_err(ar->dev, "%pV", &vaf);
- 	trace_ath10k_log_err(&vaf);
- 	va_end(args);
--
--	return ret;
- }
- EXPORT_SYMBOL(ath10k_err);
- 
--int ath10k_warn(struct ath10k *ar, const char *fmt, ...)
-+void ath10k_warn(struct ath10k *ar, const char *fmt, ...)
- {
- 	struct va_format vaf = {
- 		.fmt = fmt,
-@@ -173,8 +167,6 @@ int ath10k_warn(struct ath10k *ar, const char *fmt, ...)
- 	trace_ath10k_log_warn(&vaf);
- 
- 	va_end(args);
--
--	return 0;
- }
- EXPORT_SYMBOL(ath10k_warn);
- 
-diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
-index 5674653..a4d35e4 100644
---- a/drivers/net/wireless/ath/ath10k/debug.h
-+++ b/drivers/net/wireless/ath/ath10k/debug.h
-@@ -39,9 +39,9 @@ enum ath10k_debug_mask {
- 
- extern unsigned int ath10k_debug_mask;
- 
--__printf(2, 3) int ath10k_info(struct ath10k *ar, const char *fmt, ...);
--__printf(2, 3) int ath10k_err(struct ath10k *ar, const char *fmt, ...);
--__printf(2, 3) int ath10k_warn(struct ath10k *ar, const char *fmt, ...);
-+__printf(2, 3) void ath10k_info(struct ath10k *ar, const char *fmt, ...);
-+__printf(2, 3) void ath10k_err(struct ath10k *ar, const char *fmt, ...);
-+__printf(2, 3) void ath10k_warn(struct ath10k *ar, const char *fmt, ...);
- void ath10k_print_driver_info(struct ath10k *ar);
- 
- #ifdef CONFIG_ATH10K_DEBUGFS
-diff --git a/drivers/net/wireless/ath/ath6kl/common.h b/drivers/net/wireless/ath/ath6kl/common.h
-index 05debf7..4f82e86 100644
---- a/drivers/net/wireless/ath/ath6kl/common.h
-+++ b/drivers/net/wireless/ath/ath6kl/common.h
-@@ -22,7 +22,7 @@
- 
- #define ATH6KL_MAX_IE			256
- 
--__printf(2, 3) int ath6kl_printk(const char *level, const char *fmt, ...);
-+__printf(2, 3) void ath6kl_printk(const char *level, const char *fmt, ...);
- 
- /*
-  * Reflects the version of binary interface exposed by ATH6KL target
-diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
-index 55c4064..81ba48d 100644
---- a/drivers/net/wireless/ath/ath6kl/debug.c
-+++ b/drivers/net/wireless/ath/ath6kl/debug.c
-@@ -37,76 +37,64 @@ struct ath6kl_fwlog_slot {
- 
- #define ATH6KL_FWLOG_VALID_MASK 0x1ffff
- 
--int ath6kl_printk(const char *level, const char *fmt, ...)
-+void ath6kl_printk(const char *level, const char *fmt, ...)
- {
- 	struct va_format vaf;
- 	va_list args;
--	int rtn;
- 
- 	va_start(args, fmt);
- 
- 	vaf.fmt = fmt;
- 	vaf.va = &args;
- 
--	rtn = printk("%sath6kl: %pV", level, &vaf);
-+	printk("%sath6kl: %pV", level, &vaf);
- 
- 	va_end(args);
--
--	return rtn;
- }
- EXPORT_SYMBOL(ath6kl_printk);
- 
--int ath6kl_info(const char *fmt, ...)
-+void ath6kl_info(const char *fmt, ...)
- {
- 	struct va_format vaf = {
- 		.fmt = fmt,
- 	};
- 	va_list args;
--	int ret;
- 
- 	va_start(args, fmt);
- 	vaf.va = &args;
--	ret = ath6kl_printk(KERN_INFO, "%pV", &vaf);
-+	ath6kl_printk(KERN_INFO, "%pV", &vaf);
- 	trace_ath6kl_log_info(&vaf);
- 	va_end(args);
--
--	return ret;
- }
- EXPORT_SYMBOL(ath6kl_info);
- 
--int ath6kl_err(const char *fmt, ...)
-+void ath6kl_err(const char *fmt, ...)
- {
- 	struct va_format vaf = {
- 		.fmt = fmt,
- 	};
- 	va_list args;
--	int ret;
- 
- 	va_start(args, fmt);
- 	vaf.va = &args;
--	ret = ath6kl_printk(KERN_ERR, "%pV", &vaf);
-+	ath6kl_printk(KERN_ERR, "%pV", &vaf);
- 	trace_ath6kl_log_err(&vaf);
- 	va_end(args);
--
--	return ret;
- }
- EXPORT_SYMBOL(ath6kl_err);
- 
--int ath6kl_warn(const char *fmt, ...)
-+void ath6kl_warn(const char *fmt, ...)
- {
- 	struct va_format vaf = {
- 		.fmt = fmt,
- 	};
- 	va_list args;
--	int ret;
- 
- 	va_start(args, fmt);
- 	vaf.va = &args;
--	ret = ath6kl_printk(KERN_WARNING, "%pV", &vaf);
-+	ath6kl_printk(KERN_WARNING, "%pV", &vaf);
- 	trace_ath6kl_log_warn(&vaf);
- 	va_end(args);
--
--	return ret;
- }
- EXPORT_SYMBOL(ath6kl_warn);
- 
-diff --git a/drivers/net/wireless/ath/ath6kl/debug.h b/drivers/net/wireless/ath/ath6kl/debug.h
-index e194c10d..19106ed 100644
---- a/drivers/net/wireless/ath/ath6kl/debug.h
-+++ b/drivers/net/wireless/ath/ath6kl/debug.h
-@@ -50,10 +50,10 @@ enum ATH6K_DEBUG_MASK {
+@@ -213,6 +218,16 @@ static const struct iwl_pwr_tx_backoff iwl7265_pwr_tx_backoffs[] = {
+ 	{0},
  };
  
- extern unsigned int debug_mask;
--__printf(2, 3) int ath6kl_printk(const char *level, const char *fmt, ...);
--__printf(1, 2) int ath6kl_info(const char *fmt, ...);
--__printf(1, 2) int ath6kl_err(const char *fmt, ...);
--__printf(1, 2) int ath6kl_warn(const char *fmt, ...);
-+__printf(2, 3) void ath6kl_printk(const char *level, const char *fmt, ...);
-+__printf(1, 2) void ath6kl_info(const char *fmt, ...);
-+__printf(1, 2) void ath6kl_err(const char *fmt, ...);
-+__printf(1, 2) void ath6kl_warn(const char *fmt, ...);
++const struct iwl_cfg iwl3165_2ac_cfg = {
++	.name = "Intel(R) Dual Band Wireless AC 3165",
++	.fw_name_pre = IWL3165_FW_PRE,
++	IWL_DEVICE_7000,
++	.ht_params = &iwl7000_ht_params,
++	.nvm_ver = IWL3165_NVM_VERSION,
++	.nvm_calib_ver = IWL3165_TX_POWER_VERSION,
++	.pwr_tx_backoffs = iwl7265_pwr_tx_backoffs,
++};
++
+ const struct iwl_cfg iwl7265_2ac_cfg = {
+ 	.name = "Intel(R) Dual Band Wireless AC 7265",
+ 	.fw_name_pre = IWL7265_FW_PRE,
+@@ -245,4 +260,5 @@ const struct iwl_cfg iwl7265_n_cfg = {
  
- enum ath6kl_war {
- 	ATH6KL_WAR_INVALID_RATE,
-@@ -81,10 +81,9 @@ int ath6kl_debug_init_fs(struct ath6kl *ar);
- void ath6kl_debug_cleanup(struct ath6kl *ar);
+ MODULE_FIRMWARE(IWL7260_MODULE_FIRMWARE(IWL7260_UCODE_API_OK));
+ MODULE_FIRMWARE(IWL3160_MODULE_FIRMWARE(IWL3160_UCODE_API_OK));
++MODULE_FIRMWARE(IWL3165_MODULE_FIRMWARE(IWL3160_UCODE_API_OK));
+ MODULE_FIRMWARE(IWL7265_MODULE_FIRMWARE(IWL7260_UCODE_API_OK));
+diff --git a/drivers/net/wireless/iwlwifi/iwl-config.h b/drivers/net/wireless/iwlwifi/iwl-config.h
+index 942c99b..3d7cc37 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-config.h
++++ b/drivers/net/wireless/iwlwifi/iwl-config.h
+@@ -337,6 +337,7 @@ extern const struct iwl_cfg iwl7260_n_cfg;
+ extern const struct iwl_cfg iwl3160_2ac_cfg;
+ extern const struct iwl_cfg iwl3160_2n_cfg;
+ extern const struct iwl_cfg iwl3160_n_cfg;
++extern const struct iwl_cfg iwl3165_2ac_cfg;
+ extern const struct iwl_cfg iwl7265_2ac_cfg;
+ extern const struct iwl_cfg iwl7265_2n_cfg;
+ extern const struct iwl_cfg iwl7265_n_cfg;
+diff --git a/drivers/net/wireless/iwlwifi/pcie/drv.c b/drivers/net/wireless/iwlwifi/pcie/drv.c
+index 98950e4..8bb8305 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/iwlwifi/pcie/drv.c
+@@ -352,11 +352,17 @@ static DEFINE_PCI_DEVICE_TABLE(iwl_hw_card_ids) = {
+ 	{IWL_PCI_DEVICE(0x08B3, 0x8060, iwl3160_2n_cfg)},
+ 	{IWL_PCI_DEVICE(0x08B3, 0x8062, iwl3160_n_cfg)},
+ 	{IWL_PCI_DEVICE(0x08B4, 0x8270, iwl3160_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x08B4, 0x8370, iwl3160_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x08B4, 0x8272, iwl3160_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x08B3, 0x8470, iwl3160_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x08B3, 0x8570, iwl3160_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x08B3, 0x1070, iwl3160_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x08B3, 0x1170, iwl3160_2ac_cfg)},
  
- #else
--static inline int ath6kl_dbg(enum ATH6K_DEBUG_MASK dbg_mask,
--			     const char *fmt, ...)
-+static inline void ath6kl_dbg(enum ATH6K_DEBUG_MASK dbg_mask,
-+			      const char *fmt, ...)
- {
--	return 0;
- }
- 
- static inline void ath6kl_dbg_dump(enum ATH6K_DEBUG_MASK mask,
-diff --git a/drivers/net/wireless/ath/wil6210/debug.c b/drivers/net/wireless/ath/wil6210/debug.c
-index 9eeabf4..7a925ac 100644
---- a/drivers/net/wireless/ath/wil6210/debug.c
-+++ b/drivers/net/wireless/ath/wil6210/debug.c
-@@ -17,40 +17,34 @@
- #include "wil6210.h"
- #include "trace.h"
- 
--int wil_err(struct wil6210_priv *wil, const char *fmt, ...)
-+void wil_err(struct wil6210_priv *wil, const char *fmt, ...)
- {
- 	struct net_device *ndev = wil_to_ndev(wil);
- 	struct va_format vaf = {
- 		.fmt = fmt,
- 	};
- 	va_list args;
--	int ret;
- 
- 	va_start(args, fmt);
- 	vaf.va = &args;
--	ret = netdev_err(ndev, "%pV", &vaf);
-+	netdev_err(ndev, "%pV", &vaf);
- 	trace_wil6210_log_err(&vaf);
- 	va_end(args);
--
--	return ret;
- }
- 
--int wil_info(struct wil6210_priv *wil, const char *fmt, ...)
-+void wil_info(struct wil6210_priv *wil, const char *fmt, ...)
- {
- 	struct net_device *ndev = wil_to_ndev(wil);
- 	struct va_format vaf = {
- 		.fmt = fmt,
- 	};
- 	va_list args;
--	int ret;
- 
- 	va_start(args, fmt);
- 	vaf.va = &args;
--	ret = netdev_info(ndev, "%pV", &vaf);
-+	netdev_info(ndev, "%pV", &vaf);
- 	trace_wil6210_log_info(&vaf);
- 	va_end(args);
--
--	return ret;
- }
- 
- int wil_dbg_trace(struct wil6210_priv *wil, const char *fmt, ...)
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index 133eeb8..d13fa53 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -451,9 +451,12 @@ struct wil6210_priv {
- #define ndev_to_wil(n) (wdev_to_wil(n->ieee80211_ptr))
- #define wil_to_pcie_dev(i) (&i->pdev->dev)
- 
-+__printf(2, 3)
- int wil_dbg_trace(struct wil6210_priv *wil, const char *fmt, ...);
--int wil_err(struct wil6210_priv *wil, const char *fmt, ...);
--int wil_info(struct wil6210_priv *wil, const char *fmt, ...);
-+__printf(2, 3)
-+void wil_err(struct wil6210_priv *wil, const char *fmt, ...);
-+__printf(2, 3)
-+void wil_info(struct wil6210_priv *wil, const char *fmt, ...);
- #define wil_dbg(wil, fmt, arg...) do { \
- 	netdev_dbg(wil_to_ndev(wil), fmt, ##arg); \
- 	wil_dbg_trace(wil, fmt, ##arg); \
-
++/* 3165 Series */
++	{IWL_PCI_DEVICE(0x3165, 0x4010, iwl3165_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x3165, 0x4210, iwl3165_2ac_cfg)},
++
+ /* 7265 Series */
+ 	{IWL_PCI_DEVICE(0x095A, 0x5010, iwl7265_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x095A, 0x5110, iwl7265_2ac_cfg)},
+@@ -378,6 +384,7 @@ static DEFINE_PCI_DEVICE_TABLE(iwl_hw_card_ids) = {
+ 	{IWL_PCI_DEVICE(0x095B, 0x5202, iwl7265_n_cfg)},
+ 	{IWL_PCI_DEVICE(0x095A, 0x9010, iwl7265_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x095A, 0x9012, iwl7265_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x095A, 0x900A, iwl7265_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x095A, 0x9110, iwl7265_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x095A, 0x9112, iwl7265_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x095A, 0x9210, iwl7265_2ac_cfg)},
+-- 
+1.9.1
 
