@@ -1,61 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:61604 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753907AbaIHQ4g (ORCPT
+Received: from mail-we0-f177.google.com ([74.125.82.177]:61906 "EHLO
+	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753196AbaIOFNb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Sep 2014 12:56:36 -0400
+	Mon, 15 Sep 2014 01:13:31 -0400
+Received: by mail-we0-f177.google.com with SMTP id u57so3338900wes.22
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Sep 2014 22:13:30 -0700 (PDT)
 From: Emmanuel Grumbach <egrumbach@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: Eyal Shapira <eyal@wizery.com>, <stable@vger.kernel.org>,
-	Eyal Shapira <eyalx.shapira@intel.com>,
+Cc: Johannes Berg <johannes.berg@intel.com>,
 	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 07/12] iwlwifi: mvm: treat EAPOLs like mgmt frames wrt rate
-Date: Mon,  8 Sep 2014 19:56:12 +0300
-Message-Id: <1410195377-10075-7-git-send-email-egrumbach@gmail.com> (sfid-20140908_185642_729677_3DFEECD3)
-In-Reply-To: <540DDF37.5030801@gmail.com>
-References: <540DDF37.5030801@gmail.com>
+Subject: [PATCH 18/28] iwlwifi: mvm: update d0i3 debugfs
+Date: Mon, 15 Sep 2014 08:12:50 +0300
+Message-Id: <1410757980-2138-18-git-send-email-egrumbach@gmail.com> (sfid-20140915_073114_776624_8E71F953)
+In-Reply-To: <5416742C.3070804@gmail.com>
+References: <5416742C.3070804@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Using the LQ table which is initially set according to
-the rssi could lead to EAPOLs being sent in high legacy
-rates like 54mbps.
-It's better to avoid sending EAPOLs in high rates as it reduces
-the chances of a successful 4-Way handshake.
-Avoid this and treat them like other mgmt frames which would
-initially get sent at the basic rate.
+A lot of the newer d0i3 ref additions weren't added to the
+debugfs file, fix that and add a comment to remember to do
+it in the future.
 
-Cc: <stable@vger.kernel.org> [3.13+]
-Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/tx.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/debugfs.c | 12 ++++++++++++
+ drivers/net/wireless/iwlwifi/mvm/mvm.h     |  2 ++
+ 2 files changed, 14 insertions(+)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/tx.c b/drivers/net/wireless/iwlwifi/mvm/tx.c
-index dbc8707..9ee410b 100644
---- a/drivers/net/wireless/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/tx.c
-@@ -168,10 +168,14 @@ static void iwl_mvm_set_tx_cmd_rate(struct iwl_mvm *mvm,
+diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
+index 85eb847..95eb9a5 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/debugfs.c
++++ b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
+@@ -1259,6 +1259,18 @@ static ssize_t iwl_dbgfs_d0i3_refs_read(struct file *file,
+ 	PRINT_MVM_REF(IWL_MVM_REF_P2P_CLIENT);
+ 	PRINT_MVM_REF(IWL_MVM_REF_AP_IBSS);
+ 	PRINT_MVM_REF(IWL_MVM_REF_USER);
++	PRINT_MVM_REF(IWL_MVM_REF_TX);
++	PRINT_MVM_REF(IWL_MVM_REF_TX_AGG);
++	PRINT_MVM_REF(IWL_MVM_REF_ADD_IF);
++	PRINT_MVM_REF(IWL_MVM_REF_START_AP);
++	PRINT_MVM_REF(IWL_MVM_REF_BSS_CHANGED);
++	PRINT_MVM_REF(IWL_MVM_REF_PREPARE_TX);
++	PRINT_MVM_REF(IWL_MVM_REF_PROTECT_TDLS);
++	PRINT_MVM_REF(IWL_MVM_REF_CHECK_CTKILL);
++	PRINT_MVM_REF(IWL_MVM_REF_PRPH_READ);
++	PRINT_MVM_REF(IWL_MVM_REF_PRPH_WRITE);
++	PRINT_MVM_REF(IWL_MVM_REF_NMI);
++	PRINT_MVM_REF(IWL_MVM_REF_TM_CMD);
+ 	PRINT_MVM_REF(IWL_MVM_REF_EXIT_WORK);
  
- 	/*
- 	 * for data packets, rate info comes from the table inside the fw. This
--	 * table is controlled by LINK_QUALITY commands
-+	 * table is controlled by LINK_QUALITY commands. Exclude ctrl port
-+	 * frames like EAPOLs which should be treated as mgmt frames. This
-+	 * avoids them being sent initially in high rates which increases the
-+	 * chances for completion of the 4-Way handshake.
- 	 */
+ 	return simple_read_from_buffer(user_buf, count, ppos, buf, pos);
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index f05b7d7..4b1db9a 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -274,6 +274,8 @@ enum iwl_mvm_ref_type {
+ 	IWL_MVM_REF_TM_CMD,
+ 	IWL_MVM_REF_EXIT_WORK,
  
--	if (ieee80211_is_data(fc) && sta) {
-+	if (ieee80211_is_data(fc) && sta &&
-+	    !(info->control.flags & IEEE80211_TX_CTRL_PORT_CTRL_PROTO)) {
- 		tx_cmd->initial_rate_index = 0;
- 		tx_cmd->tx_flags |= cpu_to_le32(TX_CMD_FLG_STA_RATE);
- 		return;
++	/* update debugfs.c when changing this */
++
+ 	IWL_MVM_REF_COUNT,
+ };
+ 
 -- 
 1.9.1
 
