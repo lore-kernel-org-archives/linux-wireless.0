@@ -1,40 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from exprod7og107.obsmtp.com ([64.18.2.167]:35986 "HELO
-	exprod7og107.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751112AbaICCG7 (ORCPT
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:47018 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752579AbaIOFLW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Sep 2014 22:06:59 -0400
-Received: by mail-pd0-f171.google.com with SMTP id y13so9935873pdi.30
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Sep 2014 19:06:59 -0700 (PDT)
-Message-ID: <540675F2.1030308@miraclelinux.com> (sfid-20140903_040704_968178_B6552A53)
-Date: Wed, 03 Sep 2014 10:59:14 +0900
-From: YOSHIFUJI Hideaki <hideaki.yoshifuji@miraclelinux.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Hannes Frederic Sowa <hannes@stressinduktion.org>
-CC: hideaki.yoshifuji@miraclelinux.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, YOSHIFUJI Hideaki <yoshfuji@linux-ipv6.org>
-Subject: Re: [RFC] net: ipv4: drop unicast encapsulated in L2 multicast
-References: <1408641747-22199-1-git-send-email-johannes@sipsolutions.net>	 (sfid-20140821_192515_304437_37E734D5) <1408642331.4388.2.camel@jlt4.sipsolutions.net>	 <1409125114.11976.14.camel@localhost>	 <1409130313.2505.3.camel@jlt4.sipsolutions.net>	 <1409133238.26515.13.camel@localhost> <1409650573.1808.11.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1409650573.1808.11.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+	Mon, 15 Sep 2014 01:11:22 -0400
+Received: by mail-wi0-f175.google.com with SMTP id cc10so3440242wib.2
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Sep 2014 22:11:20 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 10/12] iwlwifi: dvm: disable power save by default
+Date: Mon, 15 Sep 2014 08:10:46 +0300
+Message-Id: <1410757848-1827-10-git-send-email-egrumbach@gmail.com> (sfid-20140915_071134_168749_11E1C336)
+In-Reply-To: <5416742C.3070804@gmail.com>
+References: <5416742C.3070804@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> As long as IPv6 doesn't mandate it in the RFCs I'm not really sure we
-> should just drop it, even if we think it won't cause any problems?
->
-> CLUSTERIP seems like a special configuration, but I'm not sure it can be
-> detected and automatically allowed?
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Please do not "drop" L2 multicast/broadcast for L3 unicast and
-vice versa, unless it is explicitly specified by RFC.
+In
+https://bugzilla.kernel.org/show_bug.cgi?id=84031,
+the submitter said that disabling power saving helped,
+do just that.
 
-Upper-layer needs to cope eith situation of seeing packets with
-"incorrect" L2 header anyway (e.g., in promiscous mode).
-I do not see much advantage to drop them here.
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/dvm/power.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/dvm/power.c b/drivers/net/wireless/iwlwifi/dvm/power.c
+index 760c45c..1513dbc 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/power.c
++++ b/drivers/net/wireless/iwlwifi/dvm/power.c
+@@ -40,7 +40,7 @@
+ #include "commands.h"
+ #include "power.h"
+ 
+-static bool force_cam;
++static bool force_cam = true;
+ module_param(force_cam, bool, 0644);
+ MODULE_PARM_DESC(force_cam, "force continuously aware mode (no power saving at all)");
+ 
 -- 
-Hideaki Yoshifuji <hideaki.yoshifuji@miraclelinux.com>
-Technical Division, MIRACLE LINUX CORPORATION
+1.9.1
+
