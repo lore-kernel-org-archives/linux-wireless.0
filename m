@@ -1,68 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:60296 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752419AbaICJlI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Sep 2014 05:41:08 -0400
-Message-ID: <1409737255.1932.5.camel@jlt4.sipsolutions.net> (sfid-20140903_114119_326300_1A0184DC)
-Subject: Re: [RFC] net: ipv4: drop unicast encapsulated in L2 multicast
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stephen Hemminger <stephen@networkplumber.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Wed, 03 Sep 2014 11:40:55 +0200
-In-Reply-To: <20140902141620.2da1f6aa@urahara> (sfid-20140902_231626_427316_AF0944A4)
-References: <1408641747-22199-1-git-send-email-johannes@sipsolutions.net>
-	 <20140902141620.2da1f6aa@urahara> (sfid-20140902_231626_427316_AF0944A4)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:33600 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752451AbaIOKsa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Sep 2014 06:48:30 -0400
+Received: by mail-wi0-f171.google.com with SMTP id bs8so3893673wib.16
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Sep 2014 03:48:25 -0700 (PDT)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH v2 2/2] iw: add vendor send command
+Date: Mon, 15 Sep 2014 12:47:58 +0200
+Message-Id: <1410778078-25244-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140915_124833_903884_15EC7721)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-09-02 at 14:16 -0700, Stephen Hemminger wrote:
-> On Thu, 21 Aug 2014 19:22:27 +0200
-> Johannes Berg <johannes@sipsolutions.net> wrote:
-> 
-> > +	/* RFC 1122 3.3.6:
-> > +	 *
-> > +	 *   When a host sends a datagram to a link-layer broadcast address,
-> > +	 *   the IP destination address MUST be a legal IP broadcast or IP
-> > +	 *   multicast address.
-> > +	 *
-> > +	 *   A host SHOULD silently discard a datagram that is received via
-> > +	 *   a link-layer broadcast (see Section 2.4) but does not specify
-> > +	 *   an IP multicast or broadcast destination address.
-> > +	 *
-> > +	 * We also do this for link-layer multicast.
-> > +	 */
-> > +	if ((skb->pkt_type == PACKET_BROADCAST ||
-> > +	     skb->pkt_type == PACKET_MULTICAST) &&
-> > +	    res.type != RTN_BROADCAST)
-> > +		goto e_inval;
-> > +
-> 
-> I think you need to all multicast packet but not broadcast.
-> The RFC does not specify that you should drop link-layer multicast to a unicast
-> address. There are several clustering products use that.
+This allow to send vendor data to the driver.
+This command required OUI and SUBCMD parameters.
 
-Alright - I feared we'd not be able to do this. Based on a strict
-reading of the RFC, you're right. I'm not sure what thinking and
-rationale went into this sentence in the RFC, depending on that it would
-have made sense to me to also apply it for broadcast (which is really
-just a special form of multicast, in a sense, no?)
+Also optional DATA parameter could be used:
 
-In any case, for wireless we do need broadcast as well, for obvious
-reasons. Therefore, I think with all the discussion here and about IPv6
-etc. we're getting to the point where we should think about
-disentangling RFC 1122 checks (which may very well be correct and needed
-in their own right) and the hole-196 mitigation for wireless.
+cat data.bin | iw wlan0 send oui subcmd -
+iw wlan0 send oui subcmd file.bin
+iw wlan0 vendor send oui subcmd 0x00 0x00 0x00 0x1f
+echo EOF | iw wlan0 vendor send oui subcmd -
 
-Our original attempt is documented here:
-http://patchwork.ozlabs.org/patch/293133/
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+---
+ Makefile |  2 +-
+ vendor.c | 95 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 96 insertions(+), 1 deletion(-)
+ create mode 100644 vendor.c
 
-and there seemed to be consensus back then that we should do it in the
-wireless stack. I can live with that, even if I don't very much like the
-idea of dissecting IP protocols there and having to do a route lookup
-etc. In any case, if that's what we want to do, I'll probably need some
-help on how to do the route lookups etc. Any takers? :)
-
-johannes
+diff --git a/Makefile b/Makefile
+index f042e30..802f87a 100644
+--- a/Makefile
++++ b/Makefile
+@@ -16,7 +16,7 @@ OBJS = iw.o genl.o event.o info.o phy.o \
+ 	interface.o ibss.o station.o survey.o util.o \
+ 	mesh.o mpath.o scan.o reg.o version.o \
+ 	reason.o status.o connect.o link.o offch.o ps.o cqm.o \
+-	bitrate.o wowlan.o coalesce.o roc.o p2p.o
++	bitrate.o wowlan.o coalesce.o roc.o p2p.o vendor.o
+ OBJS += sections.o
+ 
+ OBJS-$(HWSIM) += hwsim.o
+diff --git a/vendor.c b/vendor.c
+new file mode 100644
+index 0000000..f32c00b
+--- /dev/null
++++ b/vendor.c
+@@ -0,0 +1,95 @@
++#include <net/if.h>
++#include <errno.h>
++#include <string.h>
++
++#include <netlink/genl/genl.h>
++#include <netlink/genl/family.h>
++#include <netlink/genl/ctrl.h>
++#include <netlink/msg.h>
++#include <netlink/attr.h>
++
++#include "nl80211.h"
++#include "iw.h"
++
++SECTION(vendor);
++
++static int read_file(FILE *file, char *buf, size_t size)
++{
++	int data, count = 0;
++
++	while ((data = fgetc(file)) != EOF) {
++		if (count >= size)
++			return -EINVAL;
++		buf[count] = data;
++		count++;
++	}
++
++	return count;
++}
++
++static int read_hex(int argc, char **argv, char *buf, size_t size)
++{
++	int i, res;
++	unsigned int data;
++
++	if (argc > size)
++		return -EINVAL;
++
++	for (i = 0; i < argc; i++) {
++		res = sscanf(argv[i], "0x%x", &data);
++		if (res != 1 || data > 0xff)
++			return -EINVAL;
++		buf[i] = data;
++	}
++
++	return argc;
++}
++
++static int handle_vendor(struct nl80211_state *state, struct nl_cb *cb,
++			 struct nl_msg *msg, int argc, char **argv,
++			 enum id_input id)
++{
++	unsigned int oui;
++	unsigned int subcmd;
++	char buf[2048] = {};
++	int res, count = 0;
++	FILE *file = NULL;
++
++	if (argc < 3)
++		return -EINVAL;
++
++	res = sscanf(argv[0], "0x%x", &oui);
++	if (res != 1)
++		return -EINVAL;
++
++	res = sscanf(argv[1], "0x%x", &subcmd);
++	if (res != 1)
++		return -EINVAL;
++
++	if (!strcmp(argv[2], "-"))
++		file = stdin;
++	else
++		file = fopen(argv[2], "r");
++
++	NLA_PUT_U32(msg, NL80211_ATTR_VENDOR_ID, oui);
++	NLA_PUT_U32(msg, NL80211_ATTR_VENDOR_SUBCMD, subcmd);
++
++	if (file) {
++		count = read_file(file, buf, sizeof(buf));
++		fclose(file);
++	} else
++		count = read_hex(argc - 2, &argv[2], buf, sizeof(buf));
++
++	if (count < 0)
++		return -EINVAL;
++
++	if (count > 0)
++		NLA_PUT(msg, NL80211_ATTR_VENDOR_DATA, count, buf);
++
++	return 0;
++
++nla_put_failure:
++	return -ENOBUFS;
++}
++
++COMMAND(vendor, send, "<oui> <subcmd> <filename|-|hex data>", NL80211_CMD_VENDOR, 0, CIB_NETDEV, handle_vendor, "");
+-- 
+1.9.1
 
