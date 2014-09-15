@@ -1,75 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:48344 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753631AbaIDSPO (ORCPT
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:40405 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752404AbaIOFLR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Sep 2014 14:15:14 -0400
-Date: Thu, 4 Sep 2014 14:07:20 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Ralf Baechle <ralf@linux-mips.org>
-Subject: Re: [PATCH 2/2] bcma: use separated function to initialize bus on SoC
-Message-ID: <20140904180720.GJ3467@tuxdriver.com> (sfid-20140904_201521_101617_26DC4840)
-References: <1409605867-30051-1-git-send-email-zajec5@gmail.com>
- <1409605867-30051-2-git-send-email-zajec5@gmail.com>
- <20140904173833.GG3467@tuxdriver.com>
- <CACna6ryHXMbzsS_Knf_5WqtanyAyXTETHAw2Mm8h8y2bNsZ-_A@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CACna6ryHXMbzsS_Knf_5WqtanyAyXTETHAw2Mm8h8y2bNsZ-_A@mail.gmail.com>
+	Mon, 15 Sep 2014 01:11:17 -0400
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eyal Shapira <eyal@wizery.com>, <stable@vger.kernel.org>,
+	Eyal Shapira <eyalx.shapira@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 07/12] iwlwifi: mvm: treat EAPOLs like mgmt frames wrt rate
+Date: Mon, 15 Sep 2014 08:10:43 +0300
+Message-Id: <1410757848-1827-7-git-send-email-egrumbach@gmail.com> (sfid-20140915_071146_528501_A040827F)
+In-Reply-To: <5416742C.3070804@gmail.com>
+References: <5416742C.3070804@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 04, 2014 at 08:04:47PM +0200, Rafał Miłecki wrote:
-> On 4 September 2014 19:38, John W. Linville <linville@tuxdriver.com> wrote:
-> > On Mon, Sep 01, 2014 at 11:11:07PM +0200, Rafał Miłecki wrote:
-> >> This is required to split SoC bus init into two phases. The later one
-> >> (which includes scanning) should be called when kalloc is available.
-> >>
-> >> Cc: Ralf Baechle <ralf@linux-mips.org>
-> >> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-> >> ---
-> >> John: please note this patch touches arch/mips/bcm47xx/setup.c
-> >>
-> >> This patches is a first step of simplifying MIPS booting process on
-> >> Broadcom SoCs. My research described in:
-> >> > Booting bcm47xx (bcma & stuff), sharing code with bcm53xx
-> >> e-mail thread explained how we could get rid of all these early scanning
-> >> tricks. The main idea is to postpone bus initialization a bit and use
-> >> all standard calls then. So far we were doing it so early we had to
-> >> avoid kalloc.
-> >> ---
-> >>  arch/mips/bcm47xx/setup.c     |  4 ++++
-> >>  drivers/bcma/host_soc.c       | 11 +++++++++--
-> >>  include/linux/bcma/bcma_soc.h |  1 +
-> >>  3 files changed, 14 insertions(+), 2 deletions(-)
-> >>
-> >> diff --git a/arch/mips/bcm47xx/setup.c b/arch/mips/bcm47xx/setup.c
-> >> index 2b63e7e..fff6ed4 100644
-> >> --- a/arch/mips/bcm47xx/setup.c
-> >> +++ b/arch/mips/bcm47xx/setup.c
-> >> @@ -202,6 +202,10 @@ static void __init bcm47xx_register_bcma(void)
-> >>
-> >>       err = bcma_host_soc_register(&bcm47xx_bus.bcma);
-> >>       if (err)
-> >> +             panic("Failed to register BCMA bus (err %d)", err);
-> >> +
-> >> +     err = bcma_host_soc_init(&bcm47xx_bus.bcma);
-> >> +     if (err)
-> >>               panic("Failed to initialize BCMA bus (err %d)", err);
-> >>
-> >>       bcm47xx_fill_bcma_boardinfo(&bcm47xx_bus.bcma.bus.boardinfo, NULL);
-> >
-> > This hunk looks wrong.  Is it missing indentation?  Or should a line
-> > be removed at the top?
-> 
-> I've just downloaded & applied this patchset on top of wireless-next
-> successfully... Did you merge something extra from net-next maybe?
+From: Eyal Shapira <eyal@wizery.com>
 
-I'm looking at the patch itself.  But I think I misread it...
+Using the LQ table which is initially set according to
+the rssi could lead to EAPOLs being sent in high legacy
+rates like 54mbps.
+It's better to avoid sending EAPOLs in high rates as it reduces
+the chances of a successful 4-Way handshake.
+Avoid this and treat them like other mgmt frames which would
+initially get sent at the basic rate.
 
+Cc: <stable@vger.kernel.org> [3.13+]
+Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/tx.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/tx.c b/drivers/net/wireless/iwlwifi/mvm/tx.c
+index dbc8707..9ee410b 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/iwlwifi/mvm/tx.c
+@@ -168,10 +168,14 @@ static void iwl_mvm_set_tx_cmd_rate(struct iwl_mvm *mvm,
+ 
+ 	/*
+ 	 * for data packets, rate info comes from the table inside the fw. This
+-	 * table is controlled by LINK_QUALITY commands
++	 * table is controlled by LINK_QUALITY commands. Exclude ctrl port
++	 * frames like EAPOLs which should be treated as mgmt frames. This
++	 * avoids them being sent initially in high rates which increases the
++	 * chances for completion of the 4-Way handshake.
+ 	 */
+ 
+-	if (ieee80211_is_data(fc) && sta) {
++	if (ieee80211_is_data(fc) && sta &&
++	    !(info->control.flags & IEEE80211_TX_CTRL_PORT_CTRL_PROTO)) {
+ 		tx_cmd->initial_rate_index = 0;
+ 		tx_cmd->tx_flags |= cpu_to_le32(TX_CMD_FLG_STA_RATE);
+ 		return;
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.9.1
+
