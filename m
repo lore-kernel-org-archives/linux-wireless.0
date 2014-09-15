@@ -1,63 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:18617 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750945AbaI3FUs (ORCPT
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:37569 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754187AbaIOTi3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Sep 2014 01:20:48 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Sujith Manoharan <sujith@msujith.org>
-CC: John Linville <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>, <ath9k-devel@qca.qualcomm.com>
-Subject: Re: [PATCH v2] ath: Add support for tracing
-References: <1411804665-6954-1-git-send-email-sujith@msujith.org>
-	<87vbo72bb7.fsf@kamboji.qca.qualcomm.com>
-	<21544.64579.558712.465388@gargle.gargle.HOWL>
-	<87r3yu3oje.fsf@kamboji.qca.qualcomm.com>
-	<21545.4248.512297.913983@gargle.gargle.HOWL>
-Date: Tue, 30 Sep 2014 08:20:41 +0300
-In-Reply-To: <21545.4248.512297.913983@gargle.gargle.HOWL> (Sujith Manoharan's
-	message of "Mon, 29 Sep 2014 13:26:08 +0530")
-Message-ID: <87k34ly992.fsf@kamboji.qca.qualcomm.com> (sfid-20140930_072053_258996_915AA7DC)
+	Mon, 15 Sep 2014 15:38:29 -0400
+Received: by mail-wi0-f173.google.com with SMTP id em10so4873842wid.0
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Sep 2014 12:38:22 -0700 (PDT)
+Received: from [192.168.1.100] (85-250-104-189.bb.netvision.net.il. [85.250.104.189])
+        by mx.google.com with ESMTPSA id i6sm12719488wib.7.2014.09.15.12.38.20
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 15 Sep 2014 12:38:20 -0700 (PDT)
+Message-ID: <5417402C.2070705@gmail.com> (sfid-20140915_213835_788014_7273FE6A)
+Date: Mon, 15 Sep 2014 22:38:20 +0300
+From: Emmanuel Grumbach <egrumbach@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: git request-pull gets confused?
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sujith Manoharan <sujith@msujith.org> writes:
+Hi,
 
-> Kalle Valo wrote:
->> You mean ath_printk() & friends? But that doesn't require tracing code
->> to be in ath.ko as well, right? If I understood correctly, trace.c could
->> be under ath9k directory and the kconfig option could be
->> ATH9K_TRACEPOINTS.
->> 
->> I think it's just misleading and confusing for the user to call it
->> "Atheros wireless tracing" when it only affects ath9k. It's easier to
->> understand if each driver has it's own "tracing" kconfig option.
->
-> We have CONFIG_ATH_DEBUG, which is used by ath9k and ath9k_htc.
-> I think it is okay to have CONFIG_ATH_TRACEPOINTS, which can be
-> used by ath9k/ath9k_htc too.
 
-In my opinion that just creates even a bigger mess.
+I have patches that rely on mac80211-next. Until now, I would wait for John to pull them from mac80211-next into wireless-next,
+then I'd merge wireless-next into my tree. On top of that I'd apply the new patches.
 
-> The original motive of ath.ko was to have a common module with
-> debugging facilities that can be shared by Atheros drivers. But,
-> each driver has ended up reinventing things.
+"git request-pull wireless-next/master iwlwifi-next HEAD" didn't get confused in this case, it would show my patches only and not the
+patches in wireless-next obviously.
 
-The current debug printing code in ath10k is something like 100 lines, I
-don't see the point of trying to make that common with all ath* drivers.
+This time, I did something slightly different. I merged Johannes's tag - the one he sent to John. So that I got content from mac80211-next
+before it made it to wireless-next, and on top of that I applied my new patches. I thought I could wait for John to pull from Johannes and
+then, I'd just have to fetch wireless-next and let do git request-pull do its magic... But...
 
-In my opinion ath.ko should only have code which used at least two
-different drivers (and I consider ath9k.ko and ath9k_htc.ko as one
-driver). So the right thing here would be to actually move all debugging
-code from ath.ko to ath9k, as it's the only user anyway.
+"git request-pull wireless-next/master iwlwifi-next HEAD" lists my merge patch:
+Emmanuel Grumbach (1):
+      Merge tag 'mac80211-next-for-john-2014-09-12' into HEAD
 
-> Since it is mentioned in the help text that ath9k is the only driver
-> making use of ATH_DEBUG/ATH_TRACEPOINTS, I don't think it is
-> confusing.
+which is perfectly fine. I can see no mac80211 patches in the patch list, but...
 
-To me it is. But it's a mess already so I guess I'm worrying nothing.
+[snip]
+ include/linux/ieee80211.h                             |  73 ++++++++++++++++++++++++++++++++++-
+ include/net/cfg80211.h                                |  69 +++++++++++++++++++++++++++------
+ include/net/mac80211.h                                |  34 ++++++++--------
+ include/uapi/linux/nl80211.h                          | 116 ++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ net/mac80211/agg-rx.c                                 |   5 ++-
+ net/mac80211/cfg.c                                    | 114 ++++++++++++++++++++++++++++++++++++------------------
+ net/mac80211/chan.c                                   | 191 +++++++++++++++++++++++++++++++++++++++++++++---------------------------------------------
+ net/mac80211/debugfs.c                                |   6 +--
+[snip]
 
--- 
-Kalle Valo
+
+It seems that the baseline taken by git request-pull to list the files I change is wrong:
+The following changes since commit f991e17ba2584e2be66476cc468f19769efd55cc:
+
+  iwlwifi: mvm: align CSA GO NOA time event naming with the firmware (2014-09-14 22:02:24 +0300)
+
+I'd expect git request-pull to notice that Johannes's tag that I pulled is already in wireless-next and that I am not really changing these files?
+
+$ git --version
+git version 1.9.1
+
+
+Thoughts?
