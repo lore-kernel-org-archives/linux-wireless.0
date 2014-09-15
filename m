@@ -1,45 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:41145 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750978AbaIIXJw convert rfc822-to-8bit (ORCPT
+Received: from mail-wg0-f41.google.com ([74.125.82.41]:41362 "EHLO
+	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751924AbaIOFNO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Sep 2014 19:09:52 -0400
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
-Subject: Re: Realtek GPIO chipset, for Baytrail?
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <7234781D-5B78-404A-B945-D090938777C7@hadess.net>
-Date: Tue, 9 Sep 2014 16:10:15 -0700
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Message-Id: <D08A763F-AD50-449D-98C6-B82866F49480@holtmann.org> (sfid-20140910_010955_461216_047AD4AF)
-References: <1410256608.4077.7.camel@hadess.net> <540F54B1.8040409@lwfinger.net> <1410292835.4077.21.camel@hadess.net> <540F61FE.2050404@lwfinger.net> <7234781D-5B78-404A-B945-D090938777C7@hadess.net>
-To: Bastien Nocera <hadess@hadess.net>
+	Mon, 15 Sep 2014 01:13:14 -0400
+Received: by mail-wg0-f41.google.com with SMTP id k14so3233560wgh.0
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Sep 2014 22:13:13 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Luciano Coelho <luciano.coelho@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 06/28] iwlwifi: mvm: reset ucode_loaded flag when mac80211 stop is called
+Date: Mon, 15 Sep 2014 08:12:38 +0300
+Message-Id: <1410757980-2138-6-git-send-email-egrumbach@gmail.com> (sfid-20140915_073113_674946_882E4DEC)
+In-Reply-To: <5416742C.3070804@gmail.com>
+References: <5416742C.3070804@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Bastien,
+From: Luciano Coelho <luciano.coelho@intel.com>
 
->>>> What specific Baytrail tablet do you have?
->>> 
->>> The Onda v975w. It came with Windows 8.1 32-bit.
->>> 
->>> I guess that the device is probably a PCI one, but the enumeration is
->>> done through ACPI instead of "normal" PCI.
->> 
->> In http://www.onda-tablet.com/onda-v975w-quad-core-win-8-tablet-9-7-inch-retina-screen-ram-2gb-wifi-32gb.html, someone is specifically looking for an RTL8723BS driver.
-> 
-> That's helpful.
-> 
->> I will see if my contact at Realtek knows who has worked on drivers for this device, and if it would be possible to use rtl8723be if we were to supply an SDIO frontend.
-> 
-> I'm not sure why the device doesn't show up in the sysfs tree, but maybe it needs a driver bound to it to show up.
+We rely on the value of the mvm->ucode_loaded flag to decide whether
+or not we can perform certain operations (e.g. access to some debugfs
+entries), so we need to reset it when the mac80211 stop operation is
+called and the hardware is shutdown.
 
-I just booted up my Baytrail based Minnowboard Max in ACPI enumeration and then the SDIO host controller is enumerated via ACPI. This is compared to PCI enumeration where the SDIO controller shows up in lspci.
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-So can you try to install sdhci-acpi and see if that starts showing SDIO devices. If the SDIO host controllers loads, then it start SDIO enumeration and you would see the cards.
-
-Regards
-
-Marcel
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 069bb8e..bcfb03c 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -890,6 +890,8 @@ static void iwl_mvm_mac_stop(struct ieee80211_hw *hw)
+ 	/* the fw is stopped, the aux sta is dead: clean up driver state */
+ 	iwl_mvm_del_aux_sta(mvm);
+ 
++	mvm->ucode_loaded = false;
++
+ 	mutex_unlock(&mvm->mutex);
+ 
+ 	/*
+-- 
+1.9.1
 
