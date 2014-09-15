@@ -1,39 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hauke-m.de ([5.39.93.123]:55084 "EHLO hauke-m.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752840AbaINVJX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Sep 2014 17:09:23 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Cc: zajec5@gmail.com, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/5] b43: tell ucode the phy type and version
-Date: Sun, 14 Sep 2014 23:09:09 +0200
-Message-Id: <1410728952-25779-2-git-send-email-hauke@hauke-m.de> (sfid-20140914_230931_443795_8679E836)
-In-Reply-To: <1410728952-25779-1-git-send-email-hauke@hauke-m.de>
-References: <1410728952-25779-1-git-send-email-hauke@hauke-m.de>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:44079 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753822AbaIOTAL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Sep 2014 15:00:11 -0400
+Date: Mon, 15 Sep 2014 14:56:59 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: bluetooth-next 2014-09-14
+Message-ID: <20140915185659.GD3891@tuxdriver.com> (sfid-20140915_210019_278708_62FB85B3)
+References: <20140914041912.GA1623@t440s.P-661HNU-F1>
+ <20140914042427.GA1926@t440s.P-661HNU-F1>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140914042427.GA1926@t440s.P-661HNU-F1>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/net/wireless/b43/main.c | 4 ++++
- 1 file changed, 4 insertions(+)
+On Sun, Sep 14, 2014 at 07:24:27AM +0300, Johan Hedberg wrote:
+> Hi John,
+> 
+> On Sun, Sep 14, 2014, Johan Hedberg wrote:
+> > Here are some more patches intended for 3.18. Most of them are cleanups
+> > or fixes for SMP. The only exception is a fix for BR/EDR L2CAP fixed
+> > channels which should now work better together with the L2CAP
+> > information request procedure.
+> > 
+> > Let me know if there are any issues pulling. Thanks.
+> > 
+> > Johan
+> > 
+> > ---
+> > The following changes since commit 39e90c77637b3892a39f2908aea57539e961c50e:
+> > 
+> >   Bluetooth: 6lowpan: Route packets that are not meant to peer via correct device (2014-09-09 15:51:47 +0200)
+> > 
+> > are available in the git repository at:
+> > 
+> >   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next.git master
+> 
+> This was supposed to be a reference to the for-upstream branch instead
+> of master. Both point to the same commit at this moment but it'd be more
+> convenient if you pull from for-upstream so that the master branch can
+> continue living on without waiting for the pull to happen. Sorry for the
+> extra hassle.
+> 
+> Johan
 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index f22a801..2d7716e 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -4859,6 +4859,10 @@ static int b43_wireless_core_init(struct b43_wldev *dev)
- 	/* Maximum Contention Window */
- 	b43_shm_write16(dev, B43_SHM_SCRATCH, B43_SHM_SC_MAXCONT, 0x3FF);
- 
-+	/* write phytype and phyvers */
-+	b43_shm_write16(dev, B43_SHM_SHARED, B43_SHM_SH_PHYTYPE, phy->type);
-+	b43_shm_write16(dev, B43_SHM_SHARED, B43_SHM_SH_PHYVER, phy->rev);
-+
- 	if (b43_bus_host_is_pcmcia(dev->dev) ||
- 	    b43_bus_host_is_sdio(dev->dev)) {
- 		dev->__using_pio_transfers = true;
+Pulling now...
+
 -- 
-1.9.1
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
