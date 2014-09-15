@@ -1,34 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:33948 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751447AbaICFDh (ORCPT
+Received: from mail-we0-f171.google.com ([74.125.82.171]:55539 "EHLO
+	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752039AbaIOFK4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Sep 2014 01:03:37 -0400
-Date: Tue, 02 Sep 2014 15:03:26 -0700 (PDT)
-Message-Id: <20140902.150326.1420682815750767731.davem@davemloft.net> (sfid-20140903_070345_892473_02D849D2)
-To: hideaki.yoshifuji@miraclelinux.com
-Cc: johannes@sipsolutions.net, hannes@stressinduktion.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	yoshfuji@linux-ipv6.org
-Subject: Re: [RFC] net: ipv4: drop unicast encapsulated in L2 multicast
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <540675F2.1030308@miraclelinux.com>
-References: <1409133238.26515.13.camel@localhost>
-	<1409650573.1808.11.camel@jlt4.sipsolutions.net>
-	<540675F2.1030308@miraclelinux.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Mon, 15 Sep 2014 01:10:56 -0400
+Received: by mail-we0-f171.google.com with SMTP id p10so3324453wes.30
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Sep 2014 22:10:54 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 02/12] iwlwifi: mvm: BT Coex - remove shadowing variable
+Date: Mon, 15 Sep 2014 08:10:38 +0300
+Message-Id: <1410757848-1827-2-git-send-email-egrumbach@gmail.com> (sfid-20140915_071058_940433_213A8BCC)
+In-Reply-To: <5416742C.3070804@gmail.com>
+References: <5416742C.3070804@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: YOSHIFUJI Hideaki <hideaki.yoshifuji@miraclelinux.com>
-Date: Wed, 03 Sep 2014 10:59:14 +0900
+From: Johannes Berg <johannes.berg@intel.com>
 
-> Upper-layer needs to cope eith situation of seeing packets with
-> "incorrect" L2 header anyway (e.g., in promiscous mode).
-> I do not see much advantage to drop them here.
+The variable 'u32 mode' exists twice, the latter shadowing
+the former - remove the latter since there's no need for
+two variables.
 
-It's required to prevent wireless nodes from using the shared wireless
-group keys (used for multicast transmission) to inject unicast frames.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/coex.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-The RFCs really do specify this at least on the ipv4 side.
+diff --git a/drivers/net/wireless/iwlwifi/mvm/coex.c b/drivers/net/wireless/iwlwifi/mvm/coex.c
+index 2291bbc..75178f3 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/coex.c
++++ b/drivers/net/wireless/iwlwifi/mvm/coex.c
+@@ -585,8 +585,6 @@ int iwl_send_bt_init_conf(struct iwl_mvm *mvm)
+ 	lockdep_assert_held(&mvm->mutex);
+ 
+ 	if (unlikely(mvm->bt_force_ant_mode != BT_FORCE_ANT_DIS)) {
+-		u32 mode;
+-
+ 		switch (mvm->bt_force_ant_mode) {
+ 		case BT_FORCE_ANT_BT:
+ 			mode = BT_COEX_BT;
+-- 
+1.9.1
+
