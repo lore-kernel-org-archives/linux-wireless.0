@@ -1,37 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:44137 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755300AbaIDIYP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Sep 2014 04:24:15 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-Message-ID: <21512.8630.788755.200058@gargle.gargle.HOWL> (sfid-20140904_102420_984428_EF7BBB20)
-Date: Thu, 4 Sep 2014 13:54:22 +0530
-MIME-Version: 1.0
+Received: from plane.gmane.org ([80.91.229.3]:45962 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753227AbaIOIPH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Sep 2014 04:15:07 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1XTRRB-00042F-1G
+	for linux-wireless@vger.kernel.org; Mon, 15 Sep 2014 10:15:05 +0200
+Received: from cantest1.felk.cvut.cz ([147.32.86.75])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Sep 2014 10:15:05 +0200
+Received: from lisovy by cantest1.felk.cvut.cz with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Sep 2014 10:15:05 +0200
+To: linux-wireless@vger.kernel.org
+From: Rostislav Lisovy <lisovy@gmail.com>
+Subject: Re: Set channel (freq) and bandwidth (BW) using iw command
+Date: Mon, 15 Sep 2014 08:09:07 +0000 (UTC)
+Message-ID: <loom.20140915T100541-360@post.gmane.org> (sfid-20140915_101515_571807_BBF08CC5)
+References: <013176138105415386E2ECF0674E546E@mwnl.snu.ac.kr>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-To: Robb <rbarr138@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: Re: Cannot get ACS to work with hostapd-2.2 "Unknown event 49"
-In-Reply-To: <CAOHJ0jRhDN9n56BnyCwgSxdeKhDRYzg6ua9Z_N+pBOTRF20KpQ@mail.gmail.com>
-References: <CAOHJ0jTHtVvJ43y7m-=UqHeMJfNiMYU2Peg9buxXU+wBigwu5g@mail.gmail.com>
-	<CA+BoTQm+x0kD9m3vVv98MwYOXjfgO1noXOnzdbk5o41S+DLewQ@mail.gmail.com>
-	<CAOHJ0jSoSd97vFEMgxC3cC8AnaEGdwbUiBBoeM7UfLJcha0Ujg@mail.gmail.com>
-	<CA+BoTQnCoZL=GzUh4vJqOQ=-PZ1BwZcUO21spUPB5KF1fUSiRw@mail.gmail.com>
-	<21511.8546.157916.710879@gargle.gargle.HOWL>
-	<CAOHJ0jRhDN9n56BnyCwgSxdeKhDRYzg6ua9Z_N+pBOTRF20KpQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Robb wrote:
-> Again, is this attributed to ath9k_htc devices physically not having
-> the ability,
+Hello Okhwan;
 
-No, the HW is capable of providing this information.
+Okhwan Lee <ohlee@...> writes:
+> $ modprobe ath10k_pci
+> $ iw wlan0 set channel 36 HT20
+> command failed: Device or resource busy (-16)
+> $ iw wlan0 set freq 5180 40 5190
+> command failed: Device or resource busy (-16)
+> $ iw wlan0 set freq 5180 80 5210
+> command failed: Device or resource busy (-16)
 
-> I am trying to determine if it can be done and if so, whether to start in
-> driver or firmware?
+I think that the first step to make this work is that
+the interface has to be "up". Another think to consider is
+which interface modes do allow manual channel setting.
 
-Probably both. :-)
+This works for me:
+ip link set wlan0 down
+iw dev wlan0 set type monitor
+ip link set wlan0 up
+iw dev wlan0 set freq 5825
 
-Sujith
+Best regards;
+Rostislav
+
+
