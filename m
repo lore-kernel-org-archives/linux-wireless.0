@@ -1,71 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f172.google.com ([209.85.217.172]:43012 "EHLO
-	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754119AbaIVWit (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:52022 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750999AbaIOFNL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Sep 2014 18:38:49 -0400
-Date: Tue, 23 Sep 2014 00:38:32 +0200
-From: Emil Goode <emilgoode@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Brett Rudley <brudley@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	Daniel Kim <dekim@broadcom.com>,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	kernel-janitors@vger.kernel.org
-Subject: Re: [PATCH] brcmfmac: Fix off by one bug in
- brcmf_count_20mhz_channels()
-Message-ID: <20140922223832.GA10356@lianli> (sfid-20140923_003916_858529_9C9637D9)
-References: <1411253932-27973-1-git-send-email-emilgoode@gmail.com>
- <541FF0C4.9020805@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <541FF0C4.9020805@broadcom.com>
+	Mon, 15 Sep 2014 01:13:11 -0400
+Received: by mail-we0-f174.google.com with SMTP id t60so3275767wes.5
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Sep 2014 22:13:10 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eyal Shapira <eyal@wizery.com>,
+	Eyal Shapira <eyalx.shapira@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 04/28] iwlwifi: enable LDPC in 8000 chip family
+Date: Mon, 15 Sep 2014 08:12:36 +0300
+Message-Id: <1410757980-2138-4-git-send-email-egrumbach@gmail.com> (sfid-20140915_073116_361993_DB4EB373)
+In-Reply-To: <5416742C.3070804@gmail.com>
+References: <5416742C.3070804@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Arend,
+From: Eyal Shapira <eyal@wizery.com>
 
-Ok I will resend with your ack.
+This chip family supports LDPC so enable it.
 
-Best regards,
+Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-8000.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Emil
+diff --git a/drivers/net/wireless/iwlwifi/iwl-8000.c b/drivers/net/wireless/iwlwifi/iwl-8000.c
+index c1ef165..db67631 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-8000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-8000.c
+@@ -103,6 +103,7 @@ static const struct iwl_base_params iwl8000_base_params = {
+ };
+ 
+ static const struct iwl_ht_params iwl8000_ht_params = {
++	.ldpc = true,
+ 	.ht40_bands = BIT(IEEE80211_BAND_2GHZ) | BIT(IEEE80211_BAND_5GHZ),
+ };
+ 
+-- 
+1.9.1
 
-On Mon, Sep 22, 2014 at 11:49:56AM +0200, Arend van Spriel wrote:
-> On 09/21/14 00:58, Emil Goode wrote:
-> >In the brcmf_count_20mhz_channels function we are looping through a list
-> >of channels received from firmware. Since the index of the first channel
-> >is 0 the condition leads to an off by one bug. This is causing us to hit
-> >the WARN_ON_ONCE(1) calls in the brcmu_d11n_decchspec function, which is
-> >how I discovered the bug.
-> >
-> >Introduced by:
-> >commit b48d891676f756d48b4d0ee131e4a7a5d43ca417
-> >("brcmfmac: rework wiphy structure setup")
-> 
-> My bad :-(. You can add:
-> 
-> Acked-by: Arend van Spriel <arend@broadcom.com>
-> >Signed-off-by: Emil Goode<emilgoode@gmail.com>
-> >---
-> >  drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> >
-> >diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-> >index 02fe706..93b5dd9 100644
-> >--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-> >+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-> >@@ -4918,7 +4918,7 @@ static void brcmf_count_20mhz_channels(struct brcmf_cfg80211_info *cfg,
-> >  	struct brcmu_chan ch;
-> >  	int i;
-> >
-> >-	for (i = 0; i<= total; i++) {
-> >+	for (i = 0; i<  total; i++) {
-> >  		ch.chspec = (u16)le32_to_cpu(chlist->element[i]);
-> >  		cfg->d11inf.decchspec(&ch);
-> >
-> 
