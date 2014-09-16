@@ -1,60 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:5689 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752521AbaIAHcB (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:53316 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757847AbaIPANY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Sep 2014 03:32:01 -0400
-From: Avinash Patil <patila@marvell.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
-	<huxm@marvell.com>, <yangyang@marvell.com>, <cluo@marvell.com>,
-	<maithili@marvell.com>, Avinash Patil <patila@marvell.com>
-Subject: [PATCH 14/17] mwifiex: process TX even when scan is ongoing
-Date: Mon, 1 Sep 2014 18:29:02 +0530
-Message-ID: <1409576345-13717-15-git-send-email-patila@marvell.com> (sfid-20140901_093206_423239_E19EC6C4)
-In-Reply-To: <1409576345-13717-1-git-send-email-patila@marvell.com>
-References: <1409576345-13717-1-git-send-email-patila@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 15 Sep 2014 20:13:24 -0400
+Received: by mail-wi0-f172.google.com with SMTP id e4so5291200wiv.5
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Sep 2014 17:13:23 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCHv2 06/10] ath9k: add sampling methods for (tx|rx) timestamp
+Date: Tue, 16 Sep 2014 02:13:12 +0200
+Message-Id: <1410826396-15544-7-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140916_021331_125539_66972095)
+In-Reply-To: <1410826396-15544-1-git-send-email-lorenzo.bianconi83@gmail.com>
+References: <1410826396-15544-1-git-send-email-lorenzo.bianconi83@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With channel scan gap, FW comes back to connected channel after each
-single channel scan. So we can safely transfer data to FW during scan.
-FW would send this data once on connected channel.
+Add sampling methods for ACK RX timestamp in ath_rx_tasklet() and for TX frame
+timestamp in ath_tx_complete_aggr() and in ath_tx_process_buffer(). These
+samples will be used in dynack processing for ACK timeout estimation
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Marc Yang <yangyang@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
 ---
- drivers/net/wireless/mwifiex/main.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath9k/recv.c | 5 +++++
+ drivers/net/wireless/ath/ath9k/xmit.c | 5 +++++
+ 2 files changed, 10 insertions(+)
 
-diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
-index dfa37ea..1f1b7d7 100644
---- a/drivers/net/wireless/mwifiex/main.c
-+++ b/drivers/net/wireless/mwifiex/main.c
-@@ -284,8 +284,7 @@ process_start:
- 			    adapter->tx_lock_flag)
- 				break;
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 0b53b74..66c5fe8 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -1007,6 +1007,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 	unsigned long flags;
+ 	dma_addr_t new_buf_addr;
+ 	unsigned int budget = 512;
++	struct ieee80211_hdr *hdr;
  
--			if ((adapter->scan_processing &&
--			     !adapter->scan_delay_cnt) || adapter->data_sent ||
-+			if (adapter->data_sent ||
- 			    mwifiex_wmm_lists_empty(adapter)) {
- 				if (adapter->cmd_sent || adapter->curr_cmd ||
- 				    (!is_command_pending(adapter)))
-@@ -339,8 +338,7 @@ process_start:
+ 	if (edma)
+ 		dma_type = DMA_BIDIRECTIONAL;
+@@ -1136,6 +1137,10 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 		ath9k_apply_ampdu_details(sc, &rs, rxs);
+ 		ath_debug_rate_stats(sc, &rs, skb);
+ 
++		hdr = (struct ieee80211_hdr *)skb->data;
++		if (ieee80211_is_ack(hdr->frame_control))
++			ath_dynack_sample_ack_ts(sc->sc_ah, skb, rs.rs_tstamp);
++
+ 		ieee80211_rx(hw, skb);
+ 
+ requeue_drop_frag:
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 2819866..93ad31b 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -587,6 +587,10 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 				memcpy(tx_info->control.rates, rates, sizeof(rates));
+ 				ath_tx_rc_status(sc, bf, ts, nframes, nbad, txok);
+ 				rc_update = false;
++				if (bf == bf->bf_lastbf)
++					ath_dynack_sample_tx_ts(sc->sc_ah,
++								bf->bf_mpdu,
++								ts);
  			}
- 		}
  
--		if ((!adapter->scan_processing || adapter->scan_delay_cnt) &&
--		    !adapter->data_sent && !mwifiex_wmm_lists_empty(adapter)) {
-+		if (!adapter->data_sent && !mwifiex_wmm_lists_empty(adapter)) {
- 			mwifiex_wmm_process_tx(adapter);
- 			if (adapter->hs_activated) {
- 				adapter->is_hs_configured = false;
+ 			ath_tx_complete_buf(sc, bf, txq, &bf_head, ts,
+@@ -687,6 +691,7 @@ static void ath_tx_process_buffer(struct ath_softc *sc, struct ath_txq *txq,
+ 			memcpy(info->control.rates, bf->rates,
+ 			       sizeof(info->control.rates));
+ 			ath_tx_rc_status(sc, bf, ts, 1, txok ? 0 : 1, txok);
++			ath_dynack_sample_tx_ts(sc->sc_ah, bf->bf_mpdu, ts);
+ 		}
+ 		ath_tx_complete_buf(sc, bf, txq, bf_head, ts, txok);
+ 	} else
 -- 
-1.8.1.4
+1.9.1
 
