@@ -1,75 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from isrv.corpit.ru ([86.62.121.231]:34872 "EHLO isrv.corpit.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753823AbaIZPVA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Sep 2014 11:21:00 -0400
-Message-ID: <54258459.8020803@msgid.tls.msk.ru> (sfid-20140926_172112_854103_99718307)
-Date: Fri, 26 Sep 2014 19:20:57 +0400
-From: Michael Tokarev <mjt@tls.msk.ru>
-MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
-CC: Seth Forshee <seth.forshee@canonical.com>,
-	brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: BCM4313 & brcmsmac & 3.12: only semi-working?
-References: <53FDACD1.8090805@msgid.tls.msk.ru> <53FDF8EB.4050905@broadcom.com> <54169D4F.2090607@broadcom.com> <541EEF17.7020806@msgid.tls.msk.ru> <542145B1.4030202@msgid.tls.msk.ru> <54216BF1.3060500@broadcom.com> <20140923134419.GA19016@ubuntu-hedt> <54217AA5.2060803@broadcom.com> <542182BE.2000606@msgid.tls.msk.ru> <542183A6.4070207@msgid.tls.msk.ru> <20140923143124.GC19016@ubuntu-hedt> <54219984.2080601@msgid.tls.msk.ru> <5421AF5C.6000106@broadcom.com> <5421B78E.4050908@msgid.tls.msk.ru> <5422C6E0.3080002@broadcom.com> <8d3f6516-9578-406c-9444-6fe1ba982ea6@email.android.com> <54257779.8010903@msgid.tls.msk.ru> <54257B69.3070607@broadcom.com>
-In-Reply-To: <54257B69.3070607@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:45545 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756090AbaIPAN0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Sep 2014 20:13:26 -0400
+Received: by mail-wi0-f174.google.com with SMTP id n3so5300079wiv.1
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Sep 2014 17:13:24 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCHv2 08/10] ath9k: add debugfs support for dynack
+Date: Tue, 16 Sep 2014 02:13:14 +0200
+Message-Id: <1410826396-15544-9-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140916_021337_269339_C58C48B4)
+In-Reply-To: <1410826396-15544-1-git-send-email-lorenzo.bianconi83@gmail.com>
+References: <1410826396-15544-1-git-send-email-lorenzo.bianconi83@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-26.09.2014 18:42, Arend van Spriel wrote:
+Add ack_to entry to debugfs in order to dump current ACK timeout value
 
-> Being bold here, but would you be willing to send that non-working part of hardware to me. I seem to have 4313 cards over here that just work and it would help greatly investigating the issue. I guess you do not care that much anymore, but might be others do (myself included).
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+---
+ drivers/net/wireless/ath/ath9k/debug.c | 28 ++++++++++++++++++++++++++++
+ 1 file changed, 28 insertions(+)
 
-Please note that this is 2nd card of the same model which I
-come across in different laptops (one lenovo which I bought
-last December, and later in a HP Envy which I borrowed from
-my friend because my lenovo didn't work anymore).  Both shows
-exactly the same sympthoms, on several different WiFi networks.
-The sympthoms are rehashed here several times -- sporaric stalls
-of different frequence of occurences, which can be cured by
-re-loading the driver.
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index 5d8b5ea..46f20a3 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -1169,6 +1169,29 @@ static const struct file_operations fops_btcoex = {
+ };
+ #endif
+ 
++#ifdef CONFIG_ATH9K_DYNACK
++static ssize_t read_file_ackto(struct file *file, char __user *user_buf,
++			       size_t count, loff_t *ppos)
++{
++	struct ath_softc *sc = file->private_data;
++	struct ath_hw *ah = sc->sc_ah;
++	char buf[32];
++	unsigned int len;
++
++	len = sprintf(buf, "%u %c\n", ah->dynack.ackto,
++		      (ah->dynack.enabled) ? 'A' : 'S');
++
++	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
++}
++
++static const struct file_operations fops_ackto = {
++	.read = read_file_ackto,
++	.open = simple_open,
++	.owner = THIS_MODULE,
++	.llseek = default_llseek,
++};
++#endif
++
+ /* Ethtool support for get-stats */
+ 
+ #define AMKSTR(nm) #nm "_BE", #nm "_BK", #nm "_VI", #nm "_VO"
+@@ -1374,5 +1397,10 @@ int ath9k_init_debug(struct ath_hw *ah)
+ 			    &fops_btcoex);
+ #endif
+ 
++#ifdef CONFIG_ATH9K_DYNACK
++	debugfs_create_file("ack_to", S_IRUSR | S_IWUSR, sc->debug.debugfs_phy,
++			    sc, &fops_ackto);
++#endif
++
+ 	return 0;
+ }
+-- 
+1.9.1
 
-I can send it your way, -- guess it will be quite a bit costly,
-but I don't have any use for it anyway (short of throwing it
-away), and since I already spent significantly more money due
-to all this (whole thinkpad plus ssds and several wifi adaptors),
-this additional cost is just a small noize.  But since that's
-2nd card in a row, maybe there's something else in there, the
-prob is not in the card?
-
-I mentioned several times that here, both of these cards worked
-for long periods of time and for many gigabytes transfers (I
-used wget in a loop overnight), -- and worked very well.  Just
-that these "working periods" changes into "non-working periods"
-without any clear cause, sporadically.  And these working
-periods can be rather long, too.
-
-Maybe this is some uninitialized field somewhere, I dunno -
-at least that'd explain the "mystery" and inability to reproduce
-any of the two kinds of "periods".  Ofcourse it's rather difficult
-to debug, but it might not be card-specific.
-
-I also noticed that quite often it does not work after rebooing
-the laptop from windows.  But not always. I thought maybe win
-switches it into some mode which linux driver fails to notice,
-but no, the fact that it sometimes works after windows tells
-me that I'm not right.
-
-And note please that the closed-source wl driver always worked
-with both of these cards, at least when I was able to compile
-it (the prob is always the same - no support for more recent
-kernels; and I don't really like to use recent kernels (I myself
-currently stay with 3.10.x stable line), but both laptops actually
-requires recent kernels to work properly (either because of
-great energy saving support in latest intel cpus, or because of
-support of gpu in latest intel celerons) -- that's why I really
-prefer in-kernel driver).
-
-That to say - the fact that wl always works may tell that the
-hw is fine and the prob is elsewhere.
-
-Thanks,
-
-/mjt
