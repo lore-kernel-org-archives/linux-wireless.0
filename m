@@ -1,51 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:57765 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750825AbaIEEUl (ORCPT
+Received: from mail-wi0-f182.google.com ([209.85.212.182]:41861 "EHLO
+	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759496AbaIPAN0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Sep 2014 00:20:41 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH 2/3] ath9k: Fix offchannel operation
-Date: Fri,  5 Sep 2014 09:50:56 +0530
-Message-Id: <1409890857-6276-3-git-send-email-sujith@msujith.org> (sfid-20140905_062046_953269_18826F57)
-In-Reply-To: <1409890857-6276-1-git-send-email-sujith@msujith.org>
-References: <1409890857-6276-1-git-send-email-sujith@msujith.org>
+	Mon, 15 Sep 2014 20:13:26 -0400
+Received: by mail-wi0-f182.google.com with SMTP id e4so5274590wiv.9
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Sep 2014 17:13:25 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCHv2 09/10] ath9k: enable dynack using set_coverage_class codepath
+Date: Tue, 16 Sep 2014 02:13:15 +0200
+Message-Id: <1410826396-15544-10-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140916_021334_898994_A7ECA941)
+In-Reply-To: <1410826396-15544-1-git-send-email-lorenzo.bianconi83@gmail.com>
+References: <1410826396-15544-1-git-send-email-lorenzo.bianconi83@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Enable ACK timeout estimation algorithm if set_coverage_class routine has been
+called with negative coverage_class parameter. Dynack is automatically disabled
+setting valid value for coverage class
 
-When multiple channel contexts are active, an offchannel
-request will not be handled immediately, but will be
-queued to be handled later. But, currently, the channel definition
-is not copied to the local offchannel state. This
-breaks operation like scanning when MCC is active.
-
-Fix this by storing the offchannel parameters properly.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/channel.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/net/wireless/ath/ath9k/main.c | 33 +++++++++++++++++++++++++++++----
+ 1 file changed, 29 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index e73d305..a31f526 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -588,7 +588,11 @@ static void ath_chanctx_switch(struct ath_softc *sc, struct ath_chanctx *ctx,
- 	if (test_bit(ATH_OP_MULTI_CHANNEL, &common->op_flags) &&
- 	    (sc->cur_chan != ctx) && (ctx == &sc->offchannel.chan)) {
- 		sc->sched.offchannel_pending = true;
-+		if (chandef)
-+			ctx->chandef = *chandef;
- 		spin_unlock_bh(&sc->chan_lock);
-+		ath_dbg(common, CHAN_CTX,
-+			"Set offchannel_pending to true\n");
- 		return;
- 	}
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 6083359..6969aba 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1876,6 +1876,20 @@ static int ath9k_get_survey(struct ieee80211_hw *hw, int idx,
+ 	return 0;
+ }
  
++static void ath9k_enable_dynack(struct ath_softc *sc)
++{
++#ifdef CONFIG_ATH9K_DYNACK
++	u32 rfilt;
++	struct ath_hw *ah = sc->sc_ah;
++
++	ath_dynack_reset(ah);
++
++	ah->dynack.enabled = true;
++	rfilt = ath_calcrxfilter(sc);
++	ath9k_hw_setrxfilter(ah, rfilt);
++#endif
++}
++
+ static void ath9k_set_coverage_class(struct ieee80211_hw *hw,
+ 				     s16 coverage_class)
+ {
+@@ -1886,11 +1900,22 @@ static void ath9k_set_coverage_class(struct ieee80211_hw *hw,
+ 		return;
+ 
+ 	mutex_lock(&sc->mutex);
+-	ah->coverage_class = coverage_class;
+ 
+-	ath9k_ps_wakeup(sc);
+-	ath9k_hw_init_global_settings(ah);
+-	ath9k_ps_restore(sc);
++	if (coverage_class >= 0) {
++		ah->coverage_class = coverage_class;
++		if (ah->dynack.enabled) {
++			u32 rfilt;
++
++			ah->dynack.enabled = false;
++			rfilt = ath_calcrxfilter(sc);
++			ath9k_hw_setrxfilter(ah, rfilt);
++		}
++		ath9k_ps_wakeup(sc);
++		ath9k_hw_init_global_settings(ah);
++		ath9k_ps_restore(sc);
++	} else if (!ah->dynack.enabled) {
++		ath9k_enable_dynack(sc);
++	}
+ 
+ 	mutex_unlock(&sc->mutex);
+ }
 -- 
-2.1.0
+1.9.1
 
