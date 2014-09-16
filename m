@@ -1,63 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:41958 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751070AbaIVMHr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Sep 2014 08:07:47 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH 2/3] ath10k: dump hex bytes with dev string prefix
-References: <1411046721-20510-1-git-send-email-michal.kazior@tieto.com>
-	<1411046721-20510-3-git-send-email-michal.kazior@tieto.com>
-	<877g0wlyga.fsf@kamboji.qca.qualcomm.com>
-	<CA+BoTQm1_X992b_fMokcpuuqooQFThHpQoAEe4cjzOu7P3CV1A@mail.gmail.com>
-Date: Mon, 22 Sep 2014 15:07:35 +0300
-In-Reply-To: <CA+BoTQm1_X992b_fMokcpuuqooQFThHpQoAEe4cjzOu7P3CV1A@mail.gmail.com>
-	(Michal Kazior's message of "Mon, 22 Sep 2014 14:03:48 +0200")
-Message-ID: <8738bjn9iw.fsf@kamboji.qca.qualcomm.com> (sfid-20140922_140750_528607_F29FC735)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mga11.intel.com ([192.55.52.93]:14628 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753365AbaIPMwd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Sep 2014 08:52:33 -0400
+From: Loic Poulain <loic.poulain@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Loic Poulain <loic.poulain@intel.com>
+Subject: [PATCH] net: rfkill: gpio: Fix clock status
+Date: Tue, 16 Sep 2014 14:53:58 +0200
+Message-Id: <1410872038-4604-1-git-send-email-loic.poulain@intel.com> (sfid-20140916_145237_027446_AC82936F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+Clock is disabled when the device is blocked.
+So, clock_enabled is the logical negation of "blocked".
 
-> On 22 September 2014 12:52, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->> Michal Kazior <michal.kazior@tieto.com> writes:
->>
->>> -             print_hex_dump_bytes(prefix, DUMP_PREFIX_OFFSET, buf, len);
->>> +             for (ptr = buf; (ptr - buf) < len; ptr += 16) {
->>> +                     linebuflen = 0;
->>> +                     if (prefix)
->>> +                             linebuflen += scnprintf(linebuf + linebuflen,
->>> +                                                     sizeof(linebuf) -
->>> +                                                     linebuflen,
->>> +                                                     "%s", prefix);
->>> +                     linebuflen += scnprintf(linebuf + linebuflen,
->>> +                                             sizeof(linebuf) - linebuflen,
->>> +                                             "%08x: ",
->>> +                                             (unsigned int)(ptr - buf));
->>> +                     hex_dump_to_buffer(ptr, len - (ptr - buf), 16, 1,
->>> +                                        linebuf + linebuflen,
->>> +                                        sizeof(linebuf) - linebuflen, true);
->>> +                     dev_printk(KERN_DEBUG, ar->dev, "%s\n", linebuf);
->>> +             }
->>
->> Would it be possible to simplify this to one scnprintf()? Something
->> like:
->>
->> linebuflen += scnprintf(linebuf + linebuflen,
->>                         sizeof(linebuf) - linebuflen,
->>                         "%s%08x: ",
->>                         prefix ? prefix : "",
->>                         (unsigned int)(ptr - buf));
->
-> It should be fine. You want me to re-send it?
+Signed-off-by: Loic Poulain <loic.poulain@intel.com>
+---
+ net/rfkill/rfkill-gpio.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Yes, that would be good. I don't feel comfortable editing patches with
-logic changes like this.
-
+diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
+index 14c98e4..408e51f 100644
+--- a/net/rfkill/rfkill-gpio.c
++++ b/net/rfkill/rfkill-gpio.c
+@@ -54,7 +54,7 @@ static int rfkill_gpio_set_power(void *data, bool blocked)
+ 	if (blocked && !IS_ERR(rfkill->clk) && rfkill->clk_enabled)
+ 		clk_disable(rfkill->clk);
+ 
+-	rfkill->clk_enabled = blocked;
++	rfkill->clk_enabled = !blocked;
+ 
+ 	return 0;
+ }
 -- 
-Kalle Valo
+1.8.3.2
+
