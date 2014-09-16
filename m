@@ -1,61 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:40405 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752404AbaIOFLR (ORCPT
+Received: from mail-wg0-f51.google.com ([74.125.82.51]:36089 "EHLO
+	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759498AbaIPAN1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Sep 2014 01:11:17 -0400
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eyal Shapira <eyal@wizery.com>, <stable@vger.kernel.org>,
-	Eyal Shapira <eyalx.shapira@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 07/12] iwlwifi: mvm: treat EAPOLs like mgmt frames wrt rate
-Date: Mon, 15 Sep 2014 08:10:43 +0300
-Message-Id: <1410757848-1827-7-git-send-email-egrumbach@gmail.com> (sfid-20140915_071146_528501_A040827F)
-In-Reply-To: <5416742C.3070804@gmail.com>
-References: <5416742C.3070804@gmail.com>
+	Mon, 15 Sep 2014 20:13:27 -0400
+Received: by mail-wg0-f51.google.com with SMTP id k14so4718615wgh.22
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Sep 2014 17:13:26 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCHv2 10/10] ath9k: initialize ath_node linked list
+Date: Tue, 16 Sep 2014 02:13:16 +0200
+Message-Id: <1410826396-15544-11-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140916_021335_508461_EA75E892)
+In-Reply-To: <1410826396-15544-1-git-send-email-lorenzo.bianconi83@gmail.com>
+References: <1410826396-15544-1-git-send-email-lorenzo.bianconi83@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+Initialize neighbor linked list used by dynack to compute ACK timeout
+as the maximum STA ACK timeout
 
-Using the LQ table which is initially set according to
-the rssi could lead to EAPOLs being sent in high legacy
-rates like 54mbps.
-It's better to avoid sending EAPOLs in high rates as it reduces
-the chances of a successful 4-Way handshake.
-Avoid this and treat them like other mgmt frames which would
-initially get sent at the basic rate.
-
-Cc: <stable@vger.kernel.org> [3.13+]
-Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/tx.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/main.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/tx.c b/drivers/net/wireless/iwlwifi/mvm/tx.c
-index dbc8707..9ee410b 100644
---- a/drivers/net/wireless/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/tx.c
-@@ -168,10 +168,14 @@ static void iwl_mvm_set_tx_cmd_rate(struct iwl_mvm *mvm,
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 6969aba..3e485f7 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -345,12 +345,16 @@ static void ath_node_attach(struct ath_softc *sc, struct ieee80211_sta *sta,
+ 	memset(&an->key_idx, 0, sizeof(an->key_idx));
  
- 	/*
- 	 * for data packets, rate info comes from the table inside the fw. This
--	 * table is controlled by LINK_QUALITY commands
-+	 * table is controlled by LINK_QUALITY commands. Exclude ctrl port
-+	 * frames like EAPOLs which should be treated as mgmt frames. This
-+	 * avoids them being sent initially in high rates which increases the
-+	 * chances for completion of the 4-Way handshake.
- 	 */
+ 	ath_tx_node_init(sc, an);
++
++	ath_dynack_node_init(sc->sc_ah, an);
+ }
  
--	if (ieee80211_is_data(fc) && sta) {
-+	if (ieee80211_is_data(fc) && sta &&
-+	    !(info->control.flags & IEEE80211_TX_CTRL_PORT_CTRL_PROTO)) {
- 		tx_cmd->initial_rate_index = 0;
- 		tx_cmd->tx_flags |= cpu_to_le32(TX_CMD_FLG_STA_RATE);
- 		return;
+ static void ath_node_detach(struct ath_softc *sc, struct ieee80211_sta *sta)
+ {
+ 	struct ath_node *an = (struct ath_node *)sta->drv_priv;
+ 	ath_tx_node_cleanup(sc, an);
++
++	ath_dynack_node_deinit(sc->sc_ah, an);
+ }
+ 
+ void ath9k_tasklet(unsigned long data)
 -- 
 1.9.1
 
