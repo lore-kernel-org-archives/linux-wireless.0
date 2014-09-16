@@ -1,78 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f53.google.com ([209.85.216.53]:46037 "EHLO
-	mail-qa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750928AbaIOGCZ (ORCPT
+Received: from mail-wg0-f51.google.com ([74.125.82.51]:50050 "EHLO
+	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757847AbaIPANU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Sep 2014 02:02:25 -0400
-MIME-Version: 1.0
-In-Reply-To: <FDC088D3B5555644AE135ED28A7ABDE94DF5256D@EU-MBX-02.mgc.mentorg.com>
-References: <1410418407.1825.0.camel@jlt4.sipsolutions.net>
- <1410430179-19944-1-git-send-email-sanjeev_sharma@mentor.com>
- <1410430345.22863.0.camel@jlt4.sipsolutions.net> <FDC088D3B5555644AE135ED28A7ABDE94DF5256D@EU-MBX-02.mgc.mentorg.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Mon, 15 Sep 2014 16:02:04 +1000
-Message-ID: <CAGRGNgWOkzbu7sUxOqpgK_rzw1Xzny4aVFYOO6Rqd09-CpfvJA@mail.gmail.com> (sfid-20140915_080251_005364_D96B9D1F)
-Subject: Re: [PATCH v2] zd1211rw: replace ZD_ASSERT with lockdep_assert_held()
-To: "Sharma, Sanjeev" <Sanjeev_Sharma@mentor.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"dsd@gentoo.org" <dsd@gentoo.org>,
-	"kune@deine-taler.de" <kune@deine-taler.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 15 Sep 2014 20:13:20 -0400
+Received: by mail-wg0-f51.google.com with SMTP id k14so4720797wgh.10
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Sep 2014 17:13:19 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCHv2 01/10] ath9k: export methods related to ACK timeout estimation
+Date: Tue, 16 Sep 2014 02:13:07 +0200
+Message-Id: <1410826396-15544-2-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140916_021326_428195_E1DBB492)
+In-Reply-To: <1410826396-15544-1-git-send-email-lorenzo.bianconi83@gmail.com>
+References: <1410826396-15544-1-git-send-email-lorenzo.bianconi83@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Sanjeev,
+Remove static keyword and export ath9k_hw_setslottime(),
+ath9k_hw_set_ack_timeout() and ath9k_hw_set_cts_timeout() in hw.h.
+These methods will be used in ACK timeout estimation algorithm (dynack)
 
-On Thu, Sep 11, 2014 at 8:36 PM, Sharma, Sanjeev
-<Sanjeev_Sharma@mentor.com> wrote:
-> -----Original Message-----
-> From: Johannes Berg [mailto:johannes@sipsolutions.net]
-> Sent: Thursday, September 11, 2014 3:42 PM
-> To: Sharma, Sanjeev
-> Cc: dsd@gentoo.org; kune@deine-taler.de; linux-wireless@vger.kernel.org; linux-kernel@vger.kernel.org; netdev@vger.kernel.org
-> Subject: Re: [PATCH v2] zd1211rw: replace ZD_ASSERT with lockdep_assert_held()
->
-> On Thu, 2014-09-11 at 15:39 +0530, Sanjeev Sharma wrote:
->> on some architecture spin_is_locked() always return false in
->> uniprocessor configuration and therefore it would be advise to replace
->> with lockdep_assert_held().
->>
->> Signed-off-by: Sanjeev Sharma <Sanjeev_Sharma@mentor.com>
->> ---
->> Changes in v2:
->>   - corrected the typo
->
->> Now it compiles, but you got the logic wrong.
->
->> +++ b/drivers/net/wireless/zd1211rw/zd_mac.c
->> @@ -235,7 +235,7 @@ void zd_mac_clear(struct zd_mac *mac)  {
->>       flush_workqueue(zd_workqueue);
->>       zd_chip_clear(&mac->chip);
->> -     ZD_ASSERT(!spin_is_locked(&mac->lock));
->> +     lockdep_assert_held(&mac->lock);
->>       ZD_MEMCLEAR(mac, sizeof(struct zd_mac));  }
->
->>Look closely at this again.
->
-> I didn't understand where I  put wrong logic  ?
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c | 6 +++---
+ drivers/net/wireless/ath/ath9k/hw.h | 4 ++++
+ 2 files changed, 7 insertions(+), 3 deletions(-)
 
-I find it helps to spell out what code is doing in words.
-
-E.g. the line you're removing is:
-ZD_ASSERT(!spin_is_locked(&mac->lock));
-
-So, we'll assert when spin_is_locked(&mac->lock) is false, i.e. when
-mac->lock is not spin locked.
-
-This isn't the same as what you're replacing it with.
-
-Thanks,
-
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index ef5f5a6..ce395e2 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -935,21 +935,21 @@ static void ath9k_hw_set_sifs_time(struct ath_hw *ah, u32 us)
+ 	REG_WRITE(ah, AR_D_GBL_IFS_SIFS, val);
+ }
+ 
+-static void ath9k_hw_setslottime(struct ath_hw *ah, u32 us)
++void ath9k_hw_setslottime(struct ath_hw *ah, u32 us)
+ {
+ 	u32 val = ath9k_hw_mac_to_clks(ah, us);
+ 	val = min(val, (u32) 0xFFFF);
+ 	REG_WRITE(ah, AR_D_GBL_IFS_SLOT, val);
+ }
+ 
+-static void ath9k_hw_set_ack_timeout(struct ath_hw *ah, u32 us)
++void ath9k_hw_set_ack_timeout(struct ath_hw *ah, u32 us)
+ {
+ 	u32 val = ath9k_hw_mac_to_clks(ah, us);
+ 	val = min(val, (u32) MS(0xFFFFFFFF, AR_TIME_OUT_ACK));
+ 	REG_RMW_FIELD(ah, AR_TIME_OUT, AR_TIME_OUT_ACK, val);
+ }
+ 
+-static void ath9k_hw_set_cts_timeout(struct ath_hw *ah, u32 us)
++void ath9k_hw_set_cts_timeout(struct ath_hw *ah, u32 us)
+ {
+ 	u32 val = ath9k_hw_mac_to_clks(ah, us);
+ 	val = min(val, (u32) MS(0xFFFFFFFF, AR_TIME_OUT_CTS));
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 51b4ebe..f36d971 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -1080,6 +1080,10 @@ void ar9002_hw_load_ani_reg(struct ath_hw *ah, struct ath9k_channel *chan);
+ void ath9k_ani_reset(struct ath_hw *ah, bool is_scanning);
+ void ath9k_hw_ani_monitor(struct ath_hw *ah, struct ath9k_channel *chan);
+ 
++void ath9k_hw_set_ack_timeout(struct ath_hw *ah, u32 us);
++void ath9k_hw_set_cts_timeout(struct ath_hw *ah, u32 us);
++void ath9k_hw_setslottime(struct ath_hw *ah, u32 us);
++
+ #ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
+ static inline bool ath9k_hw_btcoex_is_enabled(struct ath_hw *ah)
+ {
 -- 
-Julian Calaby
+1.9.1
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
