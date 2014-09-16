@@ -1,45 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout3.freenet.de ([195.4.92.93]:39545 "EHLO mout3.freenet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751808AbaIJPU4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Sep 2014 11:20:56 -0400
-Message-ID: <54106BB0.1090105@maya.org> (sfid-20140910_172101_703756_E36F9E32)
-Date: Wed, 10 Sep 2014 17:18:08 +0200
-From: Andreas Hartmann <andihartmann@freenet.de>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:38424 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755322AbaIPUAL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Sep 2014 16:00:11 -0400
+Date: Tue, 16 Sep 2014 15:59:11 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH v2] net: rfkill: gpio: Enable module auto-loading for
+ ACPI based switches
+Message-ID: <20140916195911.GC3622@tuxdriver.com> (sfid-20140916_220041_437944_E9E8574B)
+References: <1410551368-37316-1-git-send-email-marcel@holtmann.org>
 MIME-Version: 1.0
-To: Helmut Schaa <helmut.schaa@googlemail.com>,
-	Arend van Spriel <arend@broadcom.com>
-CC: Sourav <sourav.chakraborty@netcommwireless.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Not reaching optimum speeds with IEEE 802.11n
-References: <540FA8D9.2070803@netcommwireless.com>	<54100F0E.8030204@broadcom.com> <CAGXE3d9FRLOPQ1pO6WFWy4FF67PGbo5ztfhLELydq3k410731w@mail.gmail.com>
-In-Reply-To: <CAGXE3d9FRLOPQ1pO6WFWy4FF67PGbo5ztfhLELydq3k410731w@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1410551368-37316-1-git-send-email-marcel@holtmann.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Helmut!
+I'm merging this to the wireless tree...
 
-Helmut Schaa wrote:
-> On Wed, Sep 10, 2014 at 10:42 AM, Arend van Spriel <arend@broadcom.com> wrote:
->> On 09/10/14 03:26, Sourav wrote:
->>> We are using Ralink chip Rt3072L (using rt2800usb drivers rt2800usb.c),
+On Fri, Sep 12, 2014 at 09:49:28PM +0200, Marcel Holtmann wrote:
+> For the ACPI based switches the MODULE_DEVICE_TABLE is missing to
+> export the entries for module auto-loading.
 > 
-> The Ralink USB hardware is quite bad in reporting TX status and as
-> such minstrel_ht cannot do proper rate selection.
+> Signed-off-by: Marcel Holtmann <marcel@holtmann.org>
+> ---
+> net/rfkill/rfkill-gpio.c | 1 +
+> 1 file changed, 1 insertion(+)
+> 
+> diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
+> index 02a86a27fd84..5fa54dd78e25 100644
+> --- a/net/rfkill/rfkill-gpio.c
+> +++ b/net/rfkill/rfkill-gpio.c
+> @@ -163,6 +163,7 @@ static const struct acpi_device_id rfkill_acpi_match[] = {
+>  	{ "LNV4752", RFKILL_TYPE_GPS },
+>  	{ },
+> };
+> +MODULE_DEVICE_TABLE(acpi, rfkill_acpi_match);
+> #endif
+> 
+> static struct platform_driver rfkill_gpio_driver = {
+> -- 
+> 1.9.3
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
 
-Rate control of the vendor driver seems to work just fine (or at least
-better as minstrel_ht).
-
-Iow: minstrel_ht doesn't meet the requirements of ralink chipsets :-).
-
-But this is not the only problem of rt2800usb. As long as a driver has
-the ability to damage a device [1], there is something more basically
-broken!
-
-
-[1] http://thread.gmane.org/gmane.linux.kernel.wireless.general/126856
-
-
-Regards,
-Andreas
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
