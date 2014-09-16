@@ -1,133 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f169.google.com ([209.85.192.169]:57105 "EHLO
-	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754450AbaIWBPB (ORCPT
+Received: from cpsmtpb-ews06.kpnxchange.com ([213.75.39.9]:53423 "EHLO
+	cpsmtpb-ews06.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755145AbaIPU1D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Sep 2014 21:15:01 -0400
-Received: by mail-pd0-f169.google.com with SMTP id fp1so1387324pdb.14
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Sep 2014 18:15:00 -0700 (PDT)
-From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, devel@lists.open80211s.org,
-	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>,
-	Ashok Nagarajan <ashok.dragon@gmail.com>
-Subject: [PATCH v4 1/2] iw: Allow user to provide freq during mesh join
-Date: Tue, 23 Sep 2014 09:14:48 +0800
-Message-Id: <1411434889-1456-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20140923_031744_462518_2E9379DF)
+	Tue, 16 Sep 2014 16:27:03 -0400
+Message-ID: <1410899219.31130.81.camel@x220> (sfid-20140916_222728_693198_3B5B4F7B)
+Subject: Re: [PATCH 09/28] Remove ATHEROS_AR231X
+From: Paul Bolle <pebolle@tiscali.nl>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Sergey Ryazanov <ryazanov.s.a@gmail.com>,
+	Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Oleksij Rempel <linux@rempel-privat.de>,
+	Richard Weinberger <richard@nod.at>,
+	Jonathan Bither <jonbither@gmail.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	ath5k-devel@venema.h4ckr.net, open@hauke-m.de,
+	"list@hauke-m.de:NETWORKING DRIVERS" <list@hauke-m.de>,
+	"antonynpavlov@gmail.com" <antonynpavlov@gmail.com>,
+	OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"list@hauke-m.de:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
+	open list <linux-kernel@vger.kernel.org>
+Date: Tue, 16 Sep 2014 22:26:59 +0200
+In-Reply-To: <20140915184546.GB3891@tuxdriver.com>
+References: <1403091974.1984.102.camel@x220> <1409911856.7832.9.camel@x220>
+	 <CAHNKnsRipRHicKOUW4dCutD1-sUG6qPnP2QuOveH_t1MFX9XgQ@mail.gmail.com>
+	 <1409916824.7832.20.camel@x220>
+	 <CAHNKnsQ1gt=DRBTd9Q9yos1idqmXMepEPvhm8a7unP-whzNAgg@mail.gmail.com>
+	 <20140909182734.GJ29412@tuxdriver.com>
+	 <CAHNKnsQ8G3ZFHshq7wOqex1J6DbVD5uHVAyvs+aDC2Znk5zWww@mail.gmail.com>
+	 <541037D2.7060007@gmail.com>
+	 <CAHNKnsTtqz10c=vV-f10awLanYZzom3kJ1cO5xgTGs-t3O9NYg@mail.gmail.com>
+	 <20140911192146.GC22872@tuxdriver.com>
+	 <20140915184546.GB3891@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Allow user to configure frequency and channel type during
-mesh join command.
+On Mon, 2014-09-15 at 14:45 -0400, John W. Linville wrote:
+> FYI -- Sergey posted a series to linux-mips on 14 September 2014 that
+> touches the symbol in question.  For whatever reason, it is posted
+> there as RFC.
 
-Signed-off-by: Ashok Nagarajan <ashok.dragon@gmail.com>
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Thanks for passing that on.
 
-v2: use chandef similar to IBSS (Johannes)
-v4: make the mesh join command more self-explanatory (Bob Copeland)
----
- mesh.c | 70 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 67 insertions(+), 3 deletions(-)
+> Does this satisfy the interested parties??
 
-diff --git a/mesh.c b/mesh.c
-index ca065bf..570b4d3 100644
---- a/mesh.c
-+++ b/mesh.c
-@@ -438,8 +438,32 @@ static int join_mesh(struct nl80211_state *state, struct nl_cb *cb,
- {
- 	struct nlattr *container;
- 	float rate;
--	int bintval, dtim_period;
-+	int bintval, dtim_period, i;
- 	char *end;
-+	unsigned long freq = 0;
-+	static const struct {
-+		const char *name;
-+		unsigned int width;
-+		int freq1_diff;
-+		int chantype; /* for older kernel */
-+	} *chanmode_selected = NULL, chanmode[] = {
-+		{ .name = "HT20",
-+		  .width = NL80211_CHAN_WIDTH_20,
-+		  .freq1_diff = 0,
-+		  .chantype = NL80211_CHAN_HT20 },
-+		{ .name = "HT40+",
-+		  .width = NL80211_CHAN_WIDTH_40,
-+		  .freq1_diff = 10,
-+		  .chantype = NL80211_CHAN_HT40PLUS },
-+		{ .name = "HT40-",
-+		  .width = NL80211_CHAN_WIDTH_40,
-+		  .freq1_diff = -10,
-+		  .chantype = NL80211_CHAN_HT40MINUS },
-+		{ .name = "NOHT",
-+		  .width = NL80211_CHAN_WIDTH_20_NOHT,
-+		  .freq1_diff = 0,
-+		  .chantype = NL80211_CHAN_NO_HT },
-+	};
- 
- 	if (argc < 1)
- 		return 1;
-@@ -448,6 +472,44 @@ static int join_mesh(struct nl80211_state *state, struct nl_cb *cb,
- 	argc--;
- 	argv++;
- 
-+	/* freq */
-+	if (argc > 1 && strcmp(argv[0], "freq") == 0) {
-+		argv++;
-+		argc--;
-+
-+		freq = strtoul(argv[0], &end, 10);
-+		if (*end != '\0')
-+			return 1;
-+		NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_FREQ, freq);
-+
-+		argv++;
-+		argc--;
-+	}
-+
-+	/* channel type */
-+	if (argc) {
-+		for (i = 0; i < ARRAY_SIZE(chanmode); i++) {
-+			if (strcasecmp(chanmode[i].name, argv[0]) == 0) {
-+				chanmode_selected = &chanmode[i];
-+				break;
-+			}
-+		}
-+
-+		if (chanmode_selected) {
-+			NLA_PUT_U32(msg, NL80211_ATTR_CHANNEL_WIDTH,
-+				    chanmode_selected->width);
-+			NLA_PUT_U32(msg, NL80211_ATTR_CENTER_FREQ1,
-+				    freq + chanmode_selected->freq1_diff);
-+			if (chanmode_selected->chantype != -1)
-+				NLA_PUT_U32(msg,
-+					    NL80211_ATTR_WIPHY_CHANNEL_TYPE,
-+					    chanmode_selected->chantype);
-+
-+			argv++;
-+			argc--;
-+		}
-+	}
-+
- 	if (argc > 1 && strcmp(argv[0], "mcast-rate") == 0) {
- 		argv++;
- 		argc--;
-@@ -513,11 +575,13 @@ static int join_mesh(struct nl80211_state *state, struct nl_cb *cb,
-  nla_put_failure:
- 	return -ENOBUFS;
- }
--COMMAND(mesh, join, "<mesh ID> [mcast-rate <rate in Mbps>]"
-+COMMAND(mesh, join, "<mesh ID> [freq <freq in MHz> <HT20|HT40+|HT40-|NOHT>]"
-+	" [mcast-rate <rate in Mbps>]"
- 	" [beacon-interval <time in TUs>] [dtim-period <value>]"
- 	" [vendor_sync on|off] [<param>=<value>]*",
- 	NL80211_CMD_JOIN_MESH, 0, CIB_NETDEV, join_mesh,
--	"Join a mesh with the given mesh ID with mcast-rate and mesh parameters.");
-+	"Join a mesh with the given mesh ID with frequency, mcast-rate, "
-+	"and mesh parameters.");
- 
- static int leave_mesh(struct nl80211_state *state, struct nl_cb *cb,
- 		      struct nl_msg *msg, int argc, char **argv,
--- 
-1.9.2
+In case I qualify as an interested party: resolving this by, in short,
+making AHB support actually buildable is of course the preferable
+solution. 
+
+Whether or not we should drop my patch while waiting for that series to
+land in linux-next is not my call. But if it hasn't landed by, say,
+about the time v3.18-rc3 is released I might raise this issue again.
+
+I must say that I'm a bit puzzled why people have resisted this rather
+small cleanup for years. How did having unbuildable AHB support in
+mainline benefit anyone? Couldn't the revert of this cleanup also be
+handled out of tree? Note that the revert is only "6 files changed, 3
+insertions(+), 294 deletions(-)", while the series is "39 files changed,
+3911 insertions(+), 10 deletions(-)".
+
+
+Paul Bolle
 
