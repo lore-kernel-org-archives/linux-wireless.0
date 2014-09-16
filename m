@@ -1,36 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:1521 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751042AbaIKPJS (ORCPT
+Received: from cassarossa.samfundet.no ([193.35.52.29]:57926 "EHLO
+	cassarossa.samfundet.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751679AbaIPXrt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Sep 2014 11:09:18 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Belisko Marek <marek.belisko@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: Avinash Patil <patila@marvell.com>
-Date: Thu, 11 Sep 2014 08:09:11 -0700
-Subject: RE: mwifiex_usb_submit_rx_urb: dev_alloc_skb failed when conected
- to 5GHz
-Message-ID: <5FF020A1CFFEEC49BD1E09530C4FF5951819DB12F1@SC-VEXCH1.marvell.com> (sfid-20140911_170922_526390_7A1CB2CE)
-References: <CAAfyv35k1mgQh6FcWaaMciAo8Vkp055k=5xF7zu+yrHmrQbbLA@mail.gmail.com>
-In-Reply-To: <CAAfyv35k1mgQh6FcWaaMciAo8Vkp055k=5xF7zu+yrHmrQbbLA@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+	Tue, 16 Sep 2014 19:47:49 -0400
+Date: Wed, 17 Sep 2014 01:47:43 +0200
+From: "Steinar H. Gunderson" <sgunderson@bigfoot.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v6 2/2] mac80211: support DTPC IE (from Cisco Client
+ eXtensions)
+Message-ID: <20140916234647.GA2238@sesse.net> (sfid-20140917_014752_317985_A204746F)
+References: <20140903133328.GC18933@sesse.net>
+ <E1XPB2h-0008WO-MS@pannekake.samfundet.no>
+ <1410166400.7983.9.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1410166400.7983.9.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgQlIsDQoNCj4gDQo+IEknbSB1c2luZyAzLjkgbWFpbmxpbmUgbXdpZmlleCBkcml2ZXIgZm9y
-IHdpcmVsZXNzIHVzYiBjYXJkLiBEb2luZyBzb21lDQo+IHRocm91Z2hwdXQgdGVzdGluZyAod2l0
-aCBpcGVyZikgaW4gNUdIeiBJIGdvdCBmb2xsb3dpbmcgZmFpbHVyZXM6DQo+IFsgMjIxLjUyMTc5
-OV0gdXNiIDEtMTogbXdpZmlleF91c2Jfc3VibWl0X3J4X3VyYjogZGV2X2FsbG9jX3NrYiBmYWls
-ZWQNCg0KVGhpcyBpcyBza2IgYWxsb2NhdGlvbiBmYWlsdXJlIHJldHVybmVkIGJ5IGtlcm5lbC4g
-NGsgYnVmZmVyIGlzIGFsd2F5cyBhbGxvY2F0ZWQgZm9yIFJ4IHBhY2tldHMuIFRoaXMgaXNzdWUg
-ZG9lc24ndCBzZWVtIHRvIGJlIHNwZWNpZmljIHRvIDVHaHouIA0KDQo+IA0KPiBJIGNoZWNrZWQg
-d2hpY2ggd2hpY2ggc2l6ZSBmYWlscyB0byBhbGxvY2F0ZSBhbmQgaXQncyA0MDk2IGJ5dGVzLiBJ
-IHdhcw0KPiBsb29raW5nIHRvIGNoYW5nZXMgaW4gbmV2ZXIga2VybmVsIHJlbGVhc2VzIGJ1dCBJ
-IGNhbm5vdCBmaW5kIGFueXRoaW5nDQo+IG9idmlvdXMuIFdoZW4gY29ubmVjdGVkIHRvIDIuNEdI
-eiBJIGNhbm5vdCByZXByb2R1Y2UgaXNzdWUgdGhvdWdoLiBJJ20NCj4gdXNpbmcgRlcgdmVyc2lv
-biBtd2lmaWV4IDEuMCAoMTQuNjguMjkucDI2KS4NCj4gDQoNCkNvdWxkIHlvdSBwbGVhc2UgcHJv
-dmlkZSB0aGUgcGxhdGZvcm0gZGV0YWlscz8NCkhvdyBvZnRlbiB0aGUgcHJvYmxlbSBvY2N1cnMg
-ZHVyaW5nIHRocm91Z2hwdXQgdGVzdGluZz8gQXJlIHRoZXJlIGFueSBzcGVjaWZpYyBzdGVwcz8N
-Cg0KUmVnYXJkcywNCkFtaXRrdW1hciBLYXJ3YXINCg==
+On Mon, Sep 08, 2014 at 10:53:20AM +0200, Johannes Berg wrote:
+>> Linux already supports 802.11h, where the access point can tell the
+>> client to reduce its transmission power. However, 802.11h is only
+>> defined for 5 GHz, where the need for this is much smaller than on
+>> 2.4 GHz.
+>> 
+>> Cisco has their own solution, called DTPC (Dynamic Transmit Power
+>> Control). Cisco APs on a controller sometimes but not always send
+>> 802.11h; they always send DTPC, even on 2.4 GHz. This patch adds support
+>> for parsing and honoring the DTPC IE in addition to the 802.11h
+>> element (they do not always contain the same limits, so both must
+>> be honored); the format is not documented, but very simple.
+>> 
+>> Tested (on top of wireless.git and on 3.16.1) against a Cisco Aironet
+>> 1142 joined to a Cisco 2504 WLC, by setting various transmit power
+>> levels for the given access points and observing the results.
+>> The Wireshark 802.11 dissector agrees with the interpretation of the
+>> element, except for negative numbers, which seem to never happen
+>> anyway.
+> Applied both.
+
+I found what I believe is an edge case: What happens if the element suddenly
+goes away from one beacon to another? Shouldn't there be a reset of the power
+level and then a new call to __ieee80211_recalc_txpower()?
+
+(If so, I believe this bug was already present in the code before my first
+patch, as I understand the existing logic.)
+
+/* Steinar */
+-- 
+Homepage: http://www.sesse.net/
