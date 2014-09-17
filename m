@@ -1,87 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:61458 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751078AbaIAHQ1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Sep 2014 03:16:27 -0400
-Message-ID: <1409555763.30155.39.camel@linux.intel.com> (sfid-20140901_091653_875448_F235DA26)
-Subject: Re: [PATCH v3 07/11] wireless: hostap: proc: print properly escaped
- SSID
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Joe Perches <joe@perches.com>
-Date: Mon, 01 Sep 2014 10:16:03 +0300
-In-Reply-To: <1408527772-27224-8-git-send-email-andriy.shevchenko@linux.intel.com>
-References: <1408527772-27224-1-git-send-email-andriy.shevchenko@linux.intel.com>
-	 <1408527772-27224-8-git-send-email-andriy.shevchenko@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from s72.web-hosting.com ([198.187.29.22]:50077 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750829AbaIQEdK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Sep 2014 00:33:10 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] mac80211: Call mgd_prepare_tx before deauthentication
+Date: Wed, 17 Sep 2014 10:03:42 +0530
+Message-Id: <1410928422-25587-1-git-send-email-sujith@msujith.org> (sfid-20140917_063314_454329_F65824C3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-08-20 at 12:42 +0300, Andy Shevchenko wrote:
-> Instead of substituting non-printable characters by '_' let's print SSID
-> properly escaped by using recently added %*pE specifier.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Here is kbuild robot fixup.
+With drivers that support multi-channel concurrency,
+make sure that the correct context is in use before
+sending a deauth frame. The driver could be in a different
+context, in which case the frame could be dropped.
 
->From f88ff364a1b117d3c86186206eeaa54ff906147a Mon Sep 17 00:00:00 2001
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Date: Mon, 1 Sep 2014 10:13:28 +0300
-Subject: [PATCH] wireless: hostap: kbuild robot fixup
-
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/hostap/hostap_proc.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ net/mac80211/mlme.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/hostap/hostap_proc.c
-b/drivers/net/wireless/hostap/hostap_proc.c
-index 16a06b6..5b1a510 100644
---- a/drivers/net/wireless/hostap/hostap_proc.c
-+++ b/drivers/net/wireless/hostap/hostap_proc.c
-@@ -181,7 +181,7 @@ static int prism2_bss_list_proc_show(struct seq_file
-*m, void *v)
- 		   bss->bssid, bss->last_update,
- 		   bss->count, bss->capab_info);
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 2de8870..43332ce 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -4606,6 +4606,7 @@ int ieee80211_mgd_deauth(struct ieee80211_sub_if_data *sdata,
+ 			   req->bssid, req->reason_code,
+ 			   ieee80211_get_reason_code_string(req->reason_code));
  
--	seq_printf(m, "%*pE", bss->ssid_len, bss->ssid);
-+	seq_printf(m, "%*pE", (int)bss->ssid_len, bss->ssid);
- 
- 	seq_putc(m, '\t');
- 	for (i = 0; i < bss->ssid_len; i++)
++		drv_mgd_prepare_tx(sdata->local, sdata);
+ 		ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH,
+ 				       req->reason_code, tx, frame_buf);
+ 		cfg80211_tx_mlme_mgmt(sdata->dev, frame_buf,
 -- 
 2.1.0
-
-
-> 
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> ---
->  drivers/net/wireless/hostap/hostap_proc.c | 4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/hostap/hostap_proc.c b/drivers/net/wireless/hostap/hostap_proc.c
-> index 4e5c0f8..16a06b6 100644
-> --- a/drivers/net/wireless/hostap/hostap_proc.c
-> +++ b/drivers/net/wireless/hostap/hostap_proc.c
-> @@ -181,9 +181,7 @@ static int prism2_bss_list_proc_show(struct seq_file *m, void *v)
->  		   bss->bssid, bss->last_update,
->  		   bss->count, bss->capab_info);
->  
-> -	for (i = 0; i < bss->ssid_len; i++)
-> -		seq_putc(m,bss->ssid[i] >= 32 && bss->ssid[i] < 127 ?
-> -			   bss->ssid[i] : '_');
-> +	seq_printf(m, "%*pE", bss->ssid_len, bss->ssid);
->  
->  	seq_putc(m, '\t');
->  	for (i = 0; i < bss->ssid_len; i++)
-
-
--- 
-Andy Shevchenko <andriy.shevchenko@intel.com>
-Intel Finland Oy
 
