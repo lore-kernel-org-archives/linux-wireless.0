@@ -1,80 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:38491 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753000AbaIVUyO (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:54481 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751938AbaIQJ5O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Sep 2014 16:54:14 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: ath10k@lists.infradead.org, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 2/2] ath10k: apply chainmask settings to vdev on creation.
-Date: Mon, 22 Sep 2014 13:54:05 -0700
-Message-Id: <1411419245-25799-2-git-send-email-greearb@candelatech.com> (sfid-20140922_225416_612208_8F1CA153)
-In-Reply-To: <1411419245-25799-1-git-send-email-greearb@candelatech.com>
-References: <1411419245-25799-1-git-send-email-greearb@candelatech.com>
+	Wed, 17 Sep 2014 05:57:14 -0400
+Received: by mail-wi0-f174.google.com with SMTP id n3so876897wiv.1
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Sep 2014 02:57:12 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <5FF020A1CFFEEC49BD1E09530C4FF5951819DB12F1@SC-VEXCH1.marvell.com>
+References: <CAAfyv35k1mgQh6FcWaaMciAo8Vkp055k=5xF7zu+yrHmrQbbLA@mail.gmail.com>
+	<5FF020A1CFFEEC49BD1E09530C4FF5951819DB12F1@SC-VEXCH1.marvell.com>
+Date: Wed, 17 Sep 2014 11:57:12 +0200
+Message-ID: <CAAfyv35j-77AURB4fHcecbEvyGS6U+1APNRFCf3FDAd_rrWnJw@mail.gmail.com> (sfid-20140917_115722_821158_37E9D09A)
+Subject: Re: mwifiex_usb_submit_rx_urb: dev_alloc_skb failed when conected to 5GHz
+From: Belisko Marek <marek.belisko@gmail.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Avinash Patil <patila@marvell.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Dear Amitkumar Karwar,
 
-It appears it takes more than just setting the
-hardware's chainmask to make things work well.  Without
-this patch, a vdev would only use 1x1 rates when chainmask
-was set to 0x3.
+some additional info.
 
-Setting the 'nss' (number of spatial streams) on the vdev
-helps the firmware's rate-control algorithm work properly.
+On Thu, Sep 11, 2014 at 5:09 PM, Amitkumar Karwar <akarwar@marvell.com> wrote:
+> Hi BR,
+>
+>>
+>> I'm using 3.9 mainline mwifiex driver for wireless usb card. Doing some
+>> throughput testing (with iperf) in 5GHz I got following failures:
+>> [ 221.521799] usb 1-1: mwifiex_usb_submit_rx_urb: dev_alloc_skb failed
+>
+> This is skb allocation failure returned by kernel. 4k buffer is always allocated for Rx packets. This issue doesn't seem to be specific to 5Ghz.
+Yes you're right. I can reproduce issue also with 2.4GHz (doing iperf
+testing as mentioned in other email) by pinging device with card.
+>
+>>
+>> I checked which which size fails to allocate and it's 4096 bytes. I was
+>> looking to changes in never kernel releases but I cannot find anything
+>> obvious. When connected to 2.4GHz I cannot reproduce issue though. I'm
+>> using FW version mwifiex 1.0 (14.68.29.p26).
+>>
+>
+> Could you please provide the platform details?
+> How often the problem occurs during throughput testing? Are there any specific steps?
+One more observation is that when problem occurred complete system is
+unresponsive (console is almost completely dead).
+I can workaround issue by decreasing iperf bandwidth to ~40m. I think
+in this situation we're running out of memory by exhaustive skb
+allocations.
+>
+> Regards,
+> Amitkumar Karwar
 
-Tested on CT firmware, but probably this works (and
-is required) on normal firmware.
+BR,
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
+marek
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 4dc5a40..855c71c 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2767,6 +2767,17 @@ static int ath10k_config(struct ieee80211_hw *hw, u32 changed)
- 	return ret;
- }
- 
-+static u32 get_nss_from_chainmask(u16 chain_mask)
-+{
-+	if ((chain_mask & 0x15) == 0x15)
-+		return 4;
-+	else if ((chain_mask & 0x7) == 0x7)
-+		return 3;
-+	else if ((chain_mask & 0x3) == 0x3)
-+		return 2;
-+	return 1;
-+}
-+
- /*
-  * TODO:
-  * Figure out how to handle WMI_VDEV_SUBTYPE_P2P_DEVICE,
-@@ -2868,6 +2879,19 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
- 		goto err_vdev_delete;
- 	}
- 
-+	if (ar->cfg_tx_chainmask) {
-+		u16 nss = get_nss_from_chainmask(ar->cfg_tx_chainmask);
-+		vdev_param = ar->wmi.vdev_param->nss;
-+		ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param,
-+						nss);
-+		if (ret) {
-+			ath10k_warn(ar, "failed to set vdev %i chainmask 0x%x, nss %i: %d\n",
-+				    arvif->vdev_id, ar->cfg_tx_chainmask, nss,
-+				    ret);
-+			goto err_vdev_delete;
-+		}
-+	}
-+
- 	if (arvif->vdev_type == WMI_VDEV_TYPE_AP) {
- 		ret = ath10k_peer_create(ar, arvif->vdev_id, vif->addr);
- 		if (ret) {
 -- 
-1.7.11.7
+as simple and primitive as possible
+-------------------------------------------------
+Marek Belisko - OPEN-NANDRA
+Freelance Developer
 
+Ruska Nova Ves 219 | Presov, 08005 Slovak Republic
+Tel: +421 915 052 184
+skype: marekwhite
+twitter: #opennandra
+web: http://open-nandra.com
