@@ -1,114 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:46917 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752368AbaILQhg (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:3235 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754558AbaIQMCE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Sep 2014 12:37:36 -0400
-Received: by mail-wi0-f170.google.com with SMTP id em10so1077005wid.5
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Sep 2014 09:37:34 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] b43: Implement PHY PLL reset
-Date: Fri, 12 Sep 2014 18:37:26 +0200
-Message-Id: <1410539846-12806-1-git-send-email-zajec5@gmail.com> (sfid-20140912_183746_335894_60C934CE)
+	Wed, 17 Sep 2014 08:02:04 -0400
+From: Avinash Patil <patila@marvell.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
+	<huxm@marvell.com>, <yangyang@marvell.com>, <cluo@marvell.com>,
+	<maithili@marvell.com>, Avinash Patil <patila@marvell.com>
+Subject: [PATCH] mwifiex: ensure user_scan_in not NULL while setting scan channel gap
+Date: Wed, 17 Sep 2014 23:01:26 +0530
+Message-ID: <1410975086-8044-1-git-send-email-patila@marvell.com> (sfid-20140917_140208_518210_84680660)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We should reset PLL after changing MAC frequency.
+Check for scan channel gap only when user_scan_in is not NULL.
+user_scan_in is NULL for internal scans and if we check scan channel gap
+at this place, it may result into crash.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
 ---
- drivers/net/wireless/b43/main.c   | 30 ++++++++++++++++++++++++++++++
- drivers/net/wireless/b43/main.h   |  2 ++
- drivers/net/wireless/b43/phy_ht.c |  2 +-
- drivers/net/wireless/b43/phy_n.c  |  2 +-
- 4 files changed, 34 insertions(+), 2 deletions(-)
+ drivers/net/wireless/mwifiex/scan.c | 33 +++++++++++++++++----------------
+ 1 file changed, 17 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 165dbc3..3adc13f 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -1204,6 +1204,36 @@ void b43_power_saving_ctl_bits(struct b43_wldev *dev, unsigned int ps_flags)
- 	}
- }
- 
-+/* http://bcm-v4.sipsolutions.net/802.11/PHY/BmacCorePllReset */
-+void b43_wireless_core_phy_pll_reset(struct b43_wldev *dev)
-+{
-+	struct bcma_drv_cc *bcma_cc __maybe_unused;
-+	struct ssb_chipcommon *ssb_cc __maybe_unused;
+diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
+index 67f9cdb..a868552 100644
+--- a/drivers/net/wireless/mwifiex/scan.c
++++ b/drivers/net/wireless/mwifiex/scan.c
+@@ -926,6 +926,23 @@ mwifiex_config_scan(struct mwifiex_private *priv,
+ 		if ((i && ssid_filter) ||
+ 		    !is_zero_ether_addr(scan_cfg_out->specific_bssid))
+ 			*filtered_scan = true;
 +
-+	switch (dev->dev->bus_type) {
-+#ifdef CONFIG_B43_BCMA
-+	case B43_BUS_BCMA:
-+		bcma_cc = &dev->dev->bdev->bus->drv_cc;
++		if (user_scan_in->scan_chan_gap) {
++			dev_dbg(adapter->dev, "info: scan: channel gap = %d\n",
++				user_scan_in->scan_chan_gap);
++			*max_chan_per_scan =
++					MWIFIEX_MAX_CHANNELS_PER_SPECIFIC_SCAN;
 +
-+		bcma_cc_write32(bcma_cc, BCMA_CC_CHIPCTL_ADDR, 0);
-+		bcma_cc_mask32(bcma_cc, BCMA_CC_CHIPCTL_DATA, ~0x4);
-+		bcma_cc_set32(bcma_cc, BCMA_CC_CHIPCTL_DATA, 0x4);
-+		bcma_cc_mask32(bcma_cc, BCMA_CC_CHIPCTL_DATA, ~0x4);
-+		break;
-+#endif
-+#ifdef CONFIG_B43_SSB
-+	case B43_BUS_SSB:
-+		ssb_cc = &dev->dev->sdev->bus->chipco;
-+
-+		chipco_write32(ssb_cc, SSB_CHIPCO_CHIPCTL_ADDR, 0);
-+		chipco_mask32(ssb_cc, SSB_CHIPCO_CHIPCTL_DATA, ~0x4);
-+		chipco_set32(ssb_cc, SSB_CHIPCO_CHIPCTL_DATA, 0x4);
-+		chipco_mask32(ssb_cc, SSB_CHIPCO_CHIPCTL_DATA, ~0x4);
-+		break;
-+#endif
-+	}
-+}
-+
- #ifdef CONFIG_B43_BCMA
- static void b43_bcma_phy_reset(struct b43_wldev *dev)
- {
-diff --git a/drivers/net/wireless/b43/main.h b/drivers/net/wireless/b43/main.h
-index 9f22e4b..c46430c 100644
---- a/drivers/net/wireless/b43/main.h
-+++ b/drivers/net/wireless/b43/main.h
-@@ -96,6 +96,8 @@ void b43_controller_restart(struct b43_wldev *dev, const char *reason);
- #define B43_PS_ASLEEP	(1 << 3)	/* Force device asleep */
- void b43_power_saving_ctl_bits(struct b43_wldev *dev, unsigned int ps_flags);
++			chan_gap_tlv = (void *)tlv_pos;
++			chan_gap_tlv->header.type =
++					 cpu_to_le16(TLV_TYPE_SCAN_CHANNEL_GAP);
++			chan_gap_tlv->header.len =
++				    cpu_to_le16(sizeof(chan_gap_tlv->chan_gap));
++			chan_gap_tlv->chan_gap =
++				     cpu_to_le16((user_scan_in->scan_chan_gap));
++			tlv_pos +=
++				  sizeof(struct mwifiex_ie_types_scan_chan_gap);
++		}
+ 	} else {
+ 		scan_cfg_out->bss_mode = (u8) adapter->scan_mode;
+ 		num_probes = adapter->scan_probes;
+@@ -940,22 +957,6 @@ mwifiex_config_scan(struct mwifiex_private *priv,
+ 	else
+ 		*max_chan_per_scan = MWIFIEX_DEF_CHANNELS_PER_SCAN_CMD;
  
-+void b43_wireless_core_phy_pll_reset(struct b43_wldev *dev);
-+
- void b43_mac_suspend(struct b43_wldev *dev);
- void b43_mac_enable(struct b43_wldev *dev);
- void b43_mac_phy_clock_set(struct b43_wldev *dev, bool on);
-diff --git a/drivers/net/wireless/b43/phy_ht.c b/drivers/net/wireless/b43/phy_ht.c
-index 6a0140a..bd68945 100644
---- a/drivers/net/wireless/b43/phy_ht.c
-+++ b/drivers/net/wireless/b43/phy_ht.c
-@@ -762,7 +762,7 @@ static void b43_phy_ht_spur_avoid(struct b43_wldev *dev,
- 
- 	b43_mac_switch_freq(dev, spuravoid);
- 
--	/* TODO: reset PLL */
-+	b43_wireless_core_phy_pll_reset(dev);
- 
- 	if (spuravoid)
- 		b43_phy_set(dev, B43_PHY_HT_BBCFG, B43_PHY_HT_BBCFG_RSTRX);
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index cf625d8..9f0bcf3 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -6369,7 +6369,7 @@ static void b43_nphy_channel_setup(struct b43_wldev *dev,
- 		b43_mac_switch_freq(dev, spuravoid);
- 
- 		if (dev->phy.rev == 3 || dev->phy.rev == 4)
--			; /* TODO: reset PLL */
-+			b43_wireless_core_phy_pll_reset(dev);
- 
- 		if (spuravoid)
- 			b43_phy_set(dev, B43_NPHY_BBCFG, B43_NPHY_BBCFG_RSTRX);
+-	if (user_scan_in->scan_chan_gap) {
+-		*max_chan_per_scan = MWIFIEX_MAX_CHANNELS_PER_SPECIFIC_SCAN;
+-		dev_dbg(adapter->dev, "info: scan: channel gap = %d\n",
+-			user_scan_in->scan_chan_gap);
+-
+-		chan_gap_tlv = (void *)tlv_pos;
+-		chan_gap_tlv->header.type =
+-					 cpu_to_le16(TLV_TYPE_SCAN_CHANNEL_GAP);
+-		chan_gap_tlv->header.len =
+-			cpu_to_le16(sizeof(chan_gap_tlv->chan_gap));
+-		chan_gap_tlv->chan_gap =
+-				     cpu_to_le16((user_scan_in->scan_chan_gap));
+-
+-		tlv_pos += sizeof(struct mwifiex_ie_types_scan_chan_gap);
+-	}
+-
+ 	/* If the input config or adapter has the number of Probes set,
+ 	   add tlv */
+ 	if (num_probes) {
 -- 
-1.8.4.5
+1.8.1.4
 
