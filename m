@@ -1,64 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f43.google.com ([74.125.82.43]:53720 "EHLO
-	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758886AbaIPANX (ORCPT
+Received: from mail-we0-f178.google.com ([74.125.82.178]:54120 "EHLO
+	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756219AbaIQVvI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Sep 2014 20:13:23 -0400
-Received: by mail-wg0-f43.google.com with SMTP id x12so4605810wgg.26
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Sep 2014 17:13:21 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCHv2 04/10] ath9k: add config for (en|dis)abling ACK timeout estimation
-Date: Tue, 16 Sep 2014 02:13:10 +0200
-Message-Id: <1410826396-15544-5-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140916_021341_661378_83412B1F)
-In-Reply-To: <1410826396-15544-1-git-send-email-lorenzo.bianconi83@gmail.com>
-References: <1410826396-15544-1-git-send-email-lorenzo.bianconi83@gmail.com>
+	Wed, 17 Sep 2014 17:51:08 -0400
+Received: by mail-we0-f178.google.com with SMTP id q58so2115412wes.37
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Sep 2014 14:51:07 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH] bcma: print chip ID in a more user-friendly form
+Date: Wed, 17 Sep 2014 23:50:55 +0200
+Message-Id: <1410990655-2884-1-git-send-email-zajec5@gmail.com> (sfid-20140917_235115_343244_753F2EA7)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add ACK timeout estimation algorithm to ath9k Makefile and Kconfig
+Some chip IDs are easier to read/understand when printed in a decimal
+form. For example on my bcm53xx arch router this patch replaces:
+Found chip with id 0xCF12, rev 0x00 and package 0x02
+with a:
+Found chip with id 53010, rev 0x00 and package 0x02
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/Kconfig  | 9 +++++++++
- drivers/net/wireless/ath/ath9k/Makefile | 3 +++
- 2 files changed, 12 insertions(+)
+ drivers/bcma/scan.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/Kconfig b/drivers/net/wireless/ath/ath9k/Kconfig
-index b8f570e..896e632 100644
---- a/drivers/net/wireless/ath/ath9k/Kconfig
-+++ b/drivers/net/wireless/ath/ath9k/Kconfig
-@@ -92,6 +92,15 @@ config ATH9K_DFS_CERTIFIED
- 	  developed. At this point enabling this option won't do anything
- 	  except increase code size.
+diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
+index b3a403c..14b5656 100644
+--- a/drivers/bcma/scan.c
++++ b/drivers/bcma/scan.c
+@@ -439,6 +439,7 @@ void bcma_init_bus(struct bcma_bus *bus)
+ {
+ 	s32 tmp;
+ 	struct bcma_chipinfo *chipinfo = &(bus->chipinfo);
++	char chip_id[8];
  
-+config ATH9K_DYNACK
-+	bool "Atheros ath9k ACK timeout estimation algorithm (EXPERIMENTAL)"
-+	depends on ATH9K
-+	default n
-+	---help---
-+	  This option enables ath9k dynamic ACK timeout estimation algorithm
-+	  based on ACK frame RX timestamp, TX frame timestamp and frame
-+	  duration
+ 	INIT_LIST_HEAD(&bus->cores);
+ 	bus->nr_cores = 0;
+@@ -449,8 +450,11 @@ void bcma_init_bus(struct bcma_bus *bus)
+ 	chipinfo->id = (tmp & BCMA_CC_ID_ID) >> BCMA_CC_ID_ID_SHIFT;
+ 	chipinfo->rev = (tmp & BCMA_CC_ID_REV) >> BCMA_CC_ID_REV_SHIFT;
+ 	chipinfo->pkg = (tmp & BCMA_CC_ID_PKG) >> BCMA_CC_ID_PKG_SHIFT;
+-	bcma_info(bus, "Found chip with id 0x%04X, rev 0x%02X and package 0x%02X\n",
+-		  chipinfo->id, chipinfo->rev, chipinfo->pkg);
 +
- config ATH9K_TX99
- 	bool "Atheros ath9k TX99 testing support"
- 	depends on ATH9K_DEBUGFS && CFG80211_CERTIFICATION_ONUS
-diff --git a/drivers/net/wireless/ath/ath9k/Makefile b/drivers/net/wireless/ath/ath9k/Makefile
-index 6b4020a..73704c1 100644
---- a/drivers/net/wireless/ath/ath9k/Makefile
-+++ b/drivers/net/wireless/ath/ath9k/Makefile
-@@ -49,6 +49,9 @@ ath9k_hw-$(CONFIG_ATH9K_WOW) += ar9003_wow.o
++	snprintf(chip_id, ARRAY_SIZE(chip_id),
++		 (chipinfo->id > 0x9999) ? "%d" : "0x%04X", chipinfo->id);
++	bcma_info(bus, "Found chip with id %s, rev 0x%02X and package 0x%02X\n",
++		  chip_id, chipinfo->rev, chipinfo->pkg);
+ }
  
- ath9k_hw-$(CONFIG_ATH9K_BTCOEX_SUPPORT) += btcoex.o \
- 					   ar9003_mci.o
-+
-+ath9k_hw-$(CONFIG_ATH9K_DYNACK) += dynack.o
-+
- obj-$(CONFIG_ATH9K_HW) += ath9k_hw.o
- 
- obj-$(CONFIG_ATH9K_COMMON) += ath9k_common.o
+ int bcma_bus_scan(struct bcma_bus *bus)
 -- 
-1.9.1
+1.8.4.5
 
