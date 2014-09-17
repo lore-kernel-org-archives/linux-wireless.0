@@ -1,148 +1,169 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:52587 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755996AbaIZTf3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Sep 2014 15:35:29 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: emmanuel.grumbach@intel.com, michal.kazior@tieto.com,
-	linux-wireless@vger.kernel.org
-Date: Fri, 26 Sep 2014 22:35:03 +0300
-Message-Id: <1411760105-18614-6-git-send-email-luca@coelho.fi> (sfid-20140926_213541_922260_D1FDC3D8)
-In-Reply-To: <1411760105-18614-1-git-send-email-luca@coelho.fi>
-References: <1411760105-18614-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH 5/7] mac80211: add post_channel_switch driver operation
+Received: from mail-wg0-f50.google.com ([74.125.82.50]:60970 "EHLO
+	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754653AbaIQMSm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Sep 2014 08:18:42 -0400
+Received: by mail-wg0-f50.google.com with SMTP id x13so1277752wgg.21
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Sep 2014 05:18:41 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAAfyv36KrG5SjsJjPqaXp4SuE2hnG-EsXpTE-WrhM8zOdye2-g@mail.gmail.com>
+References: <CAAfyv35k1mgQh6FcWaaMciAo8Vkp055k=5xF7zu+yrHmrQbbLA@mail.gmail.com>
+	<5FF020A1CFFEEC49BD1E09530C4FF5951819DB12F1@SC-VEXCH1.marvell.com>
+	<CAAfyv35j-77AURB4fHcecbEvyGS6U+1APNRFCf3FDAd_rrWnJw@mail.gmail.com>
+	<5FF020A1CFFEEC49BD1E09530C4FF5951821351855@SC-VEXCH1.marvell.com>
+	<CAAfyv36KrG5SjsJjPqaXp4SuE2hnG-EsXpTE-WrhM8zOdye2-g@mail.gmail.com>
+Date: Wed, 17 Sep 2014 14:18:40 +0200
+Message-ID: <CAAfyv359EgdcYqa_HTzsw17HYw0NHU6gq8wmhgexbyLZ=OrQPw@mail.gmail.com> (sfid-20140917_141848_957144_BF4B1398)
+Subject: Re: mwifiex_usb_submit_rx_urb: dev_alloc_skb failed when conected to 5GHz
+From: Belisko Marek <marek.belisko@gmail.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Avinash Patil <patila@marvell.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+Hi,
 
-As a counterpart to the pre_channel_switch operation, add a
-post_channel_switch operation.  This allows the drivers to go back to
-a normal configuration after the channel switch is completed.
+I was too fast when hitting Send :)
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
----
- include/net/mac80211.h    |  6 ++++++
- net/mac80211/cfg.c        |  7 ++++++-
- net/mac80211/driver-ops.h | 16 ++++++++++++++++
- net/mac80211/mlme.c       |  9 +++++++++
- net/mac80211/trace.h      |  6 ++++++
- 5 files changed, 43 insertions(+), 1 deletion(-)
+On Wed, Sep 17, 2014 at 2:07 PM, Belisko Marek <marek.belisko@gmail.com> wrote:
+> Dear Amitkumar Karwar,
+>
+> On Wed, Sep 17, 2014 at 12:52 PM, Amitkumar Karwar <akarwar@marvell.com> wrote:
+>> Hi BR,
+>>
+>>> Dear Amitkumar Karwar,
+>>>
+>>> some additional info.
+>>>
+>>> On Thu, Sep 11, 2014 at 5:09 PM, Amitkumar Karwar <akarwar@marvell.com>
+>>> wrote:
+>>> > Hi BR,
+>>> >
+>>> >>
+>>> >> I'm using 3.9 mainline mwifiex driver for wireless usb card. Doing
+>>> >> some throughput testing (with iperf) in 5GHz I got following
+>>> failures:
+>>> >> [ 221.521799] usb 1-1: mwifiex_usb_submit_rx_urb: dev_alloc_skb
+>>> >> failed
+>>> >
+>>> > This is skb allocation failure returned by kernel. 4k buffer is
+>>> always allocated for Rx packets. This issue doesn't seem to be specific
+>>> to 5Ghz.
+>>> Yes you're right. I can reproduce issue also with 2.4GHz (doing iperf
+>>> testing as mentioned in other email) by pinging device with card.
+>>> >
+>>> >>
+>>> >> I checked which which size fails to allocate and it's 4096 bytes. I
+>>> >> was looking to changes in never kernel releases but I cannot find
+>>> >> anything obvious. When connected to 2.4GHz I cannot reproduce issue
+>>> >> though. I'm using FW version mwifiex 1.0 (14.68.29.p26).
+>>> >>
+>>> >
+>>> > Could you please provide the platform details?
+>>> > How often the problem occurs during throughput testing? Are there any
+>>> specific steps?
+>>> One more observation is that when problem occurred complete system is
+>>> unresponsive (console is almost completely dead).
+>>
+>> Thanks for the more information.
+>> Skb alloc failure should be gracefully handled. We will look into this issue.
+> OK. Thanks. Can you please
+Can you please ping me when you will have some patch so I can test it
+also on my device.
+>>
+>>> I can workaround issue by decreasing iperf bandwidth to ~40m. I think
+>>> in this situation we're running out of memory by exhaustive skb
+>>> allocations.
+>>
+>> Actually 6 4K size buffers are being allocated for Rx and Tx data during traffic.
+>> Probably your platform runs out of memory after these allocations.
+> This could be the issue. I'm running some apps when performing
+> throughput test and this could lead
+> to out of memory. When I stop all apps and perform the test it behave
+> better (I cannot reproduce issue) except of
+> fact that whole system is unresponsive for ~ 10 secs as was already mentioned.
+This is not fully true. I run loop iperf test (-t 600) and it will
+fail after 4 minutes with (there was around 190MB free memory):
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 19e4159..7861ed8 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2836,6 +2836,9 @@ enum ieee80211_roc_type {
-  *	before a channel switch procedure is started (ie. when a STA
-  *	gets a CSA or an userspace initiated channel-switch), allowing
-  *	the driver to prepare for the channel switch.
-+ * @post_channel_switch: This is an optional callback that is called
-+ *	after a channel switch procedure is completed, allowing the
-+ *	driver to go back to a normal configuration.
-  *
-  * @join_ibss: Join an IBSS (on an IBSS interface); this is called after all
-  *	information in bss_conf is set up and the beacon can be retrieved. A
-@@ -3046,6 +3049,9 @@ struct ieee80211_ops {
- 				  struct ieee80211_vif *vif,
- 				  struct ieee80211_channel_switch *ch_switch);
- 
-+	int (*post_channel_switch)(struct ieee80211_hw *hw,
-+				   struct ieee80211_vif *vif);
-+
- 	int (*join_ibss)(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
- 	void (*leave_ibss)(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
- 	u32 (*get_expected_throughput)(struct ieee80211_sta *sta);
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 2caa7f0..ce81ff2 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2868,7 +2868,6 @@ static int __ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
- 		return err;
- 
- 	ieee80211_bss_info_change_notify(sdata, changed);
--	cfg80211_ch_switch_notify(sdata->dev, &sdata->csa_chandef);
- 
- 	if (sdata->csa_block_tx) {
- 		ieee80211_wake_vif_queues(local, sdata,
-@@ -2876,6 +2875,12 @@ static int __ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
- 		sdata->csa_block_tx = false;
- 	}
- 
-+	err = drv_post_channel_switch(sdata);
-+	if (err)
-+		return err;
-+
-+	cfg80211_ch_switch_notify(sdata->dev, &sdata->csa_chandef);
-+
- 	return 0;
- }
- 
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index 5522672..0a60906 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -1214,6 +1214,22 @@ drv_pre_channel_switch(struct ieee80211_sub_if_data *sdata,
- 	return ret;
- }
- 
-+static inline int
-+drv_post_channel_switch(struct ieee80211_sub_if_data *sdata)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	int ret = 0;
-+
-+	if (!check_sdata_in_driver(sdata))
-+		return -EIO;
-+
-+	trace_drv_post_channel_switch(local, sdata);
-+	if (local->ops->post_channel_switch)
-+		ret = local->ops->post_channel_switch(&local->hw, &sdata->vif);
-+	trace_drv_return_int(local, ret);
-+	return ret;
-+}
-+
- static inline int drv_join_ibss(struct ieee80211_local *local,
- 				struct ieee80211_sub_if_data *sdata)
- {
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index c5fa20f..2e29cc3 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1010,6 +1010,15 @@ static void ieee80211_chswitch_work(struct work_struct *work)
- 		sdata->csa_block_tx = false;
- 	}
- 
-+	ret = drv_post_channel_switch(sdata);
-+	if (ret) {
-+		sdata_info(sdata,
-+			   "driver post channel switch failed, disconnecting\n");
-+		ieee80211_queue_work(&local->hw,
-+				     &ifmgd->csa_connection_drop_work);
-+		goto out;
-+	}
-+
- 	ieee80211_sta_reset_beacon_monitor(sdata);
- 	ieee80211_sta_reset_conn_monitor(sdata);
- 
-diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
-index 30476d2..ca0e12d 100644
---- a/net/mac80211/trace.h
-+++ b/net/mac80211/trace.h
-@@ -2141,6 +2141,12 @@ TRACE_EVENT(drv_pre_channel_switch,
- 	)
- );
- 
-+DEFINE_EVENT(local_sdata_evt, drv_post_channel_switch,
-+	     TP_PROTO(struct ieee80211_local *local,
-+		      struct ieee80211_sub_if_data *sdata),
-+	     TP_ARGS(local, sdata)
-+);
-+
- 
- #ifdef CONFIG_MAC80211_MESSAGE_TRACING
- #undef TRACE_SYSTEM
+[  875.249551] usb 1-1: mwifiex_usb_submit_rx_urb: dev_alloc_skb failed
+[  875.256645] usb 1-1: mwifiex_usb_submit_rx_urb: dev_alloc_skb failed
+[  875.263694] usb 1-1: mwifiex_usb_submit_rx_urb: dev_alloc_skb failed
+[  875.270940] usb 1-1: mwifiex_usb_submit_rx_urb: dev_alloc_skb failed
+[  875.277993] usb 1-1: mwifiex_usb_submit_rx_urb: dev_alloc_skb failed
+[  875.285068] usb 1-1: mwifiex_usb_submit_rx_urb: dev_alloc_skb failed
+[  3]  0.0- 1.0 sec  81.8 KBytes    670 Kbits/sec  0.034 ms    0/   57 (0%)
+[  3]  1.0- 2.0 sec  0.00 Bytes  0.00 bits/sec  0.034 ms    0/    0 (nan%)
+[  3]  2.0- 3.0 sec  0.00 Bytes  0.00 bits/sec  0.034 ms    0/    0 (nan%)
+[  3]  3.0- 4.0 sec  0.00 Bytes  0.00 bits/sec  0.034 ms    0/    0 (nan%)
+[  3]  4.0- 5.0 sec  0.00 Bytes  0.00 bits/sec  0.034 ms    0/    0 (nan%)
+[  3]  5.0- 6.0 sec  0.00 Bytes  0.00 bits/sec  0.034 ms    0/    0 (nan%)
+[  3]  6.0- 7.0 sec  0.00 Bytes  0.00 bits/sec  0.034 ms    0/    0 (nan%)
+[  3]  7.0- 8.0 sec  0.00 Bytes  0.00 bits/sec  0.034 ms    0/    0 (nan%)
+[  3]  8.0- 9.0 sec  0.00 Bytes  0.00 bits/sec  0.034 ms    0/    0 (nan%)
+[  3]  9.0-10.0 sec  0.00 Bytes  0.00 bits/sec  0.034 ms    0/    0 (nan%)
+[  3] 10.0-11.0 sec  0.00 Bytes  0.00 bits/sec  0.034 ms    0/    0 (nan%)
+[  3] 11.0-12.0 sec  0.00 Bytes  0.00 bits/sec  0.034 ms    0/    0 (nan%)
+[  3] 12.0-13.0 sec  0.00 Bytes  0.00 bits/sec  0.034 ms    0/    0 (nan%)
+[  3] 13.0-14.0 sec  0.00 Bytes  0.00 bits/sec  0.034 ms    0/    0 (nan%)
+[  3] 14.0-15.0 sec  81.8 KBytes    670 Kbits/sec  24.506 ms   60/  117 (51%)
+
+
+[ 1019.644302] usb 1-1: mwifiex_cmd_timeout_func: Timeout cmd id
+(1410955919.418091) = 0x6, act = 0x3
+[ 1019.653826] usb 1-1: num_data_h2c_failure = 0
+[ 1019.658409] usb 1-1: num_cmd_h2c_failure = 0
+[ 1019.662907] usb 1-1: num_cmd_timeout = 1
+[ 1019.667072] usb 1-1: num_tx_timeout = 0
+[ 1019.671117] usb 1-1: last_cmd_index = 4
+[ 1019.675186] usb 1-1: last_cmd_id: 28 00 28 00 28 00 5b 00 06 00
+[ 1019.681426] usb 1-1: last_cmd_act: 13 01 13 01 13 01 01 00 03 00
+[ 1019.687778] usb 1-1: last_cmd_resp_index = 3
+[ 1019.692281] usb 1-1: last_cmd_resp_id: 28 80 28 80 28 80 5b 80 28 80
+[ 1019.698997] usb 1-1: last_event_index = 2
+[ 1019.703223] usb 1-1: last_event: 17 00 33 00 08 00 33 00 08 00
+[ 1019.709389] usb 1-1: data_sent=0 cmd_sent=0
+[ 1019.713820] usb 1-1: ps_mode=1 ps_state=0
+[ 1019.718211] usb 1-1: cmd timeout
+
+>>
+>> Could you please try changing this number(MWIFIEX_TX_DATA_URB/MWIFIEX_RX_DATA_URB macros) to 3?
+I tried but it doesn't help (also sometimes I see odd driver crashes -
+NULL pointer access)
+>>
+>> Regards,
+>> Amitkumar Karwar
+>
+> Best Regards,
+>
+> marekb
+>
+> --
+> as simple and primitive as possible
+> -------------------------------------------------
+> Marek Belisko - OPEN-NANDRA
+> Freelance Developer
+>
+> Ruska Nova Ves 219 | Presov, 08005 Slovak Republic
+> Tel: +421 915 052 184
+> skype: marekwhite
+> twitter: #opennandra
+> web: http://open-nandra.com
+
+Best Regards,
+
+marek
+
 -- 
-2.1.0
+as simple and primitive as possible
+-------------------------------------------------
+Marek Belisko - OPEN-NANDRA
+Freelance Developer
 
+Ruska Nova Ves 219 | Presov, 08005 Slovak Republic
+Tel: +421 915 052 184
+skype: marekwhite
+twitter: #opennandra
+web: http://open-nandra.com
