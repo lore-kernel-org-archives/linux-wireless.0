@@ -1,92 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:65211 "EHLO mga14.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:56220 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932363AbaICMcr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Sep 2014 08:32:47 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Assaf Krauss <assaf.krauss@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 06/10] mac80211: Add RRM support to assoc request
-Date: Wed,  3 Sep 2014 15:25:02 +0300
-Message-Id: <1409747106-30717-7-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140903_143251_203946_1531DA0A)
-In-Reply-To: <1409747106-30717-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1409747106-30717-1-git-send-email-emmanuel.grumbach@intel.com>
+	id S1751287AbaIQGFL convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Sep 2014 02:05:11 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Sujith Manoharan <sujith@msujith.org>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH] mac80211: Call mgd_prepare_tx before deauthentication
+Date: Wed, 17 Sep 2014 06:04:19 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB31B52311D@hasmsx107.ger.corp.intel.com> (sfid-20140917_080516_470824_732D928A)
+References: <1410928422-25587-1-git-send-email-sujith@msujith.org>
+	<21529.5141.845629.86918@gargle.gargle.HOWL>
+	<0BA3FCBA62E2DC44AF3030971E174FB31B523034@hasmsx107.ger.corp.intel.com>
+	<21529.8110.26388.664223@gargle.gargle.HOWL>
+	<0BA3FCBA62E2DC44AF3030971E174FB31B5230C9@hasmsx107.ger.corp.intel.com>
+ <21529.9155.323515.987489@gargle.gargle.HOWL>
+In-Reply-To: <21529.9155.323515.987489@gargle.gargle.HOWL>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Assaf Krauss <assaf.krauss@intel.com>
+> 
+> Grumbach, Emmanuel wrote:
+> > I see - we also had this problem and because of this, we implemented
+> > the flush callback that allows to wait until all the queues are empty.
+> > So mac80211 will send the deauth, flush and only then it'd remove the
+> > VIF. This should allow the frame to make it to the air.  Note that API
+> > explicitly states that mgd_prepare_tx is before assoc only.
+> 
+> flush() doesn't force a context switch, no ?
 
-In case of a RRM-supporting connection, in the association request
-frame: set the RRM capability flag, and add the required IEs.
+No it doesn't.
 
-Signed-off-by: Assaf Krauss <assaf.krauss@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- net/mac80211/ieee80211_i.h |  1 +
- net/mac80211/mlme.c        | 15 ++++++++++++---
- 2 files changed, 13 insertions(+), 3 deletions(-)
+> 
+> For example, consider a P2P-GO in freq 2412 and STA in 5180 and both are
+> active.
+> The current context is GO (2412) and at this time if a local deauth for the STA
+> comes from userspace, mac80211 sends a deauth frame to the driver and
+> calls flush(), but the context in the driver is still in channel 2412, so how will
+> this work ?
+> 
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index a0b89da..42a4c5c 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -355,6 +355,7 @@ enum ieee80211_sta_flags {
- 	IEEE80211_STA_DISABLE_80P80MHZ	= BIT(12),
- 	IEEE80211_STA_DISABLE_160MHZ	= BIT(13),
- 	IEEE80211_STA_DISABLE_WMM	= BIT(14),
-+	IEEE80211_STA_ENABLE_RRM	= BIT(15),
- };
- 
- struct ieee80211_mgd_auth_data {
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 2b38968..5dbd4bc 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -664,6 +664,9 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
- 	    (local->hw.flags & IEEE80211_HW_SPECTRUM_MGMT))
- 		capab |= WLAN_CAPABILITY_SPECTRUM_MGMT;
- 
-+	if (ifmgd->flags & IEEE80211_STA_ENABLE_RRM)
-+		capab |= WLAN_CAPABILITY_RADIO_MEASURE;
-+
- 	mgmt = (struct ieee80211_mgmt *) skb_put(skb, 24);
- 	memset(mgmt, 0, 24);
- 	memcpy(mgmt->da, assoc_data->bss->bssid, ETH_ALEN);
-@@ -729,16 +732,17 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
- 		}
- 	}
- 
--	if (capab & WLAN_CAPABILITY_SPECTRUM_MGMT) {
--		/* 1. power capabilities */
-+	if (capab & WLAN_CAPABILITY_SPECTRUM_MGMT ||
-+	    capab & WLAN_CAPABILITY_RADIO_MEASURE) {
- 		pos = skb_put(skb, 4);
- 		*pos++ = WLAN_EID_PWR_CAPABILITY;
- 		*pos++ = 2;
- 		*pos++ = 0; /* min tx power */
- 		 /* max tx power */
- 		*pos++ = ieee80211_chandef_max_power(&chanctx_conf->def);
-+	}
- 
--		/* 2. supported channels */
-+	if (capab & WLAN_CAPABILITY_SPECTRUM_MGMT) {
- 		/* TODO: get this in reg domain format */
- 		pos = skb_put(skb, 2 * sband->n_channels + 2);
- 		*pos++ = WLAN_EID_SUPPORTED_CHANNELS;
-@@ -4397,6 +4401,11 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
- 		ifmgd->flags &= ~IEEE80211_STA_MFP_ENABLED;
- 	}
- 
-+	if (req->flags & ASSOC_REQ_USE_RRM)
-+		ifmgd->flags |= IEEE80211_STA_ENABLE_RRM;
-+	else
-+		ifmgd->flags &= ~IEEE80211_STA_ENABLE_RRM;
-+
- 	if (req->crypto.control_port)
- 		ifmgd->flags |= IEEE80211_STA_CONTROL_PORT;
- 	else
--- 
-1.9.1
+It can wait until a context switch will occur in ath9k - you should switch from time
+to time anyway to avoid starvation, and this is not under the radar of mac80211.
 
