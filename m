@@ -1,64 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f175.google.com ([74.125.82.175]:41589 "EHLO
-	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753992AbaICT4d (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:49499 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753944AbaIQJP2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Sep 2014 15:56:33 -0400
-Received: by mail-we0-f175.google.com with SMTP id k48so9043243wev.6
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Sep 2014 12:56:32 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 03/36] iwlwifi: mvm: use dynamic SMPS for P2P Client
-Date: Wed,  3 Sep 2014 22:55:51 +0300
-Message-Id: <1409774184-24665-3-git-send-email-egrumbach@gmail.com> (sfid-20140903_215637_751528_B75534BC)
-In-Reply-To: <540771E5.6080908@gmail.com>
-References: <540771E5.6080908@gmail.com>
+	Wed, 17 Sep 2014 05:15:28 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH v3.18] ath9k: Cache BSS information
+Date: Wed, 17 Sep 2014 14:45:56 +0530
+Message-Id: <1410945356-24848-1-git-send-email-sujith@msujith.org> (sfid-20140917_111543_677457_3AD89002)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-This allows to force the GO to use protection and enhances
-the reliability of the link.
+Using the BSS information stored in mac80211 directly
+is racy in certain conditions. For example, in a MCC
+setup, if the scheduler is switching channels when
+a local deauth is issued, calculation of the opmode/bssid
+etc. is incorrect. To avoid this, store the bss params
+in the driver and use it.
 
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 6 +++++-
- drivers/net/wireless/iwlwifi/mvm/mvm.h      | 1 +
- 2 files changed, 6 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h   |  5 +++++
+ drivers/net/wireless/ath/ath9k/channel.c |  6 +++---
+ drivers/net/wireless/ath/ath9k/main.c    | 13 +++++++++----
+ 3 files changed, 17 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index 7c87965..83c2ce6 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -1481,8 +1481,12 @@ static void iwl_mvm_bss_info_changed_station(struct iwl_mvm *mvm,
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 8cd116e..d2a1ee1 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -585,6 +585,11 @@ void ath9k_release_buffered_frames(struct ieee80211_hw *hw,
+ struct ath_vif {
+ 	struct list_head list;
  
- 			iwl_mvm_sf_update(mvm, vif, false);
- 			iwl_mvm_power_vif_assoc(mvm, vif);
--			if (vif->p2p)
-+			if (vif->p2p) {
- 				iwl_mvm_ref(mvm, IWL_MVM_REF_P2P_CLIENT);
-+				iwl_mvm_update_smps(mvm, vif,
-+						    IWL_MVM_SMPS_REQ_PROT,
-+						    IEEE80211_SMPS_DYNAMIC);
-+			}
- 		} else if (mvmvif->ap_sta_id != IWL_MVM_STATION_COUNT) {
- 			/*
- 			 * If update fails - SF might be running in associated
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index 802d29e..771cf46 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -253,6 +253,7 @@ struct iwl_dbgfs_bf {
- enum iwl_mvm_smps_type_request {
- 	IWL_MVM_SMPS_REQ_BT_COEX,
- 	IWL_MVM_SMPS_REQ_TT,
-+	IWL_MVM_SMPS_REQ_PROT,
- 	NUM_IWL_MVM_SMPS_REQ,
- };
++	/* BSS info */
++	u8 bssid[ETH_ALEN];
++	u16 aid;
++	bool assoc;
++
+ 	struct ieee80211_vif *vif;
+ 	struct ath_node mcast_node;
+ 	int av_bslot;
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index 77c99eb5..b93f83c 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -211,7 +211,7 @@ void ath_chanctx_check_active(struct ath_softc *sc, struct ath_chanctx *ctx)
+ 		switch (vif->type) {
+ 		case NL80211_IFTYPE_P2P_CLIENT:
+ 		case NL80211_IFTYPE_STATION:
+-			if (vif->bss_conf.assoc)
++			if (avp->assoc)
+ 				active = true;
+ 			break;
+ 		default:
+@@ -917,7 +917,7 @@ ath_chanctx_send_vif_ps_frame(struct ath_softc *sc, struct ath_vif *avp,
  
+ 	switch (vif->type) {
+ 	case NL80211_IFTYPE_STATION:
+-		if (!vif->bss_conf.assoc)
++		if (!avp->assoc)
+ 			return false;
+ 
+ 		skb = ieee80211_nullfunc_get(sc->hw, vif);
+@@ -1339,7 +1339,7 @@ void ath9k_p2p_ps_timer(void *priv)
+ 	rcu_read_lock();
+ 
+ 	vif = avp->vif;
+-	sta = ieee80211_find_sta(vif, vif->bss_conf.bssid);
++	sta = ieee80211_find_sta(vif, avp->bssid);
+ 	if (!sta)
+ 		goto out;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 3e485f7..78fc539 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -898,6 +898,7 @@ static bool ath9k_uses_beacons(int type)
+ static void ath9k_vif_iter(struct ath9k_vif_iter_data *iter_data,
+ 			   u8 *mac, struct ieee80211_vif *vif)
+ {
++	struct ath_vif *avp = (struct ath_vif *)vif->drv_priv;
+ 	int i;
+ 
+ 	if (iter_data->has_hw_macaddr) {
+@@ -918,7 +919,7 @@ static void ath9k_vif_iter(struct ath9k_vif_iter_data *iter_data,
+ 		break;
+ 	case NL80211_IFTYPE_STATION:
+ 		iter_data->nstations++;
+-		if (vif->bss_conf.assoc && !iter_data->primary_sta)
++		if (avp->assoc && !iter_data->primary_sta)
+ 			iter_data->primary_sta = vif;
+ 		break;
+ 	case NL80211_IFTYPE_ADHOC:
+@@ -963,13 +964,13 @@ static void ath9k_set_assoc_state(struct ath_softc *sc,
+ 				  struct ieee80211_vif *vif, bool changed)
+ {
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+-	struct ieee80211_bss_conf *bss_conf = &vif->bss_conf;
++	struct ath_vif *avp = (struct ath_vif *)vif->drv_priv;
+ 	unsigned long flags;
+ 
+ 	set_bit(ATH_OP_PRIM_STA_VIF, &common->op_flags);
+ 
+-	ether_addr_copy(common->curbssid, bss_conf->bssid);
+-	common->curaid = bss_conf->aid;
++	ether_addr_copy(common->curbssid, avp->bssid);
++	common->curaid = avp->aid;
+ 	ath9k_hw_write_associd(sc->sc_ah);
+ 
+ 	if (changed) {
+@@ -1698,6 +1699,10 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
+ 		ath_dbg(common, CONFIG, "BSSID %pM Changed ASSOC %d\n",
+ 			bss_conf->bssid, bss_conf->assoc);
+ 
++		ether_addr_copy(avp->bssid, bss_conf->bssid);
++		avp->aid = bss_conf->aid;
++		avp->assoc = bss_conf->assoc;
++
+ 		ath9k_calculate_summary_state(sc, avp->chanctx);
+ 
+ 		if (ath9k_is_chanctx_enabled()) {
 -- 
-1.9.1
+2.1.0
 
