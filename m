@@ -1,80 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:44424 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756135AbaICT5N (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:43004 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757282AbaIRDEp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Sep 2014 15:57:13 -0400
-Received: by mail-wg0-f44.google.com with SMTP id m15so9030484wgh.15
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Sep 2014 12:57:12 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Luciano Coelho <luciano.coelho@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 29/36] iwlwifi: mvm: set the TX disable bit when doing a chanctx switch
-Date: Wed,  3 Sep 2014 22:56:17 +0300
-Message-Id: <1409774184-24665-29-git-send-email-egrumbach@gmail.com> (sfid-20140903_220114_982285_D4837DAF)
-In-Reply-To: <540771E5.6080908@gmail.com>
-References: <540771E5.6080908@gmail.com>
+	Wed, 17 Sep 2014 23:04:45 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <21530.19430.782437.984290@gargle.gargle.HOWL> (sfid-20140918_050448_669426_D81F094E)
+Date: Thu, 18 Sep 2014 08:35:10 +0530
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mac80211: Call mgd_prepare_tx before deauthentication
+In-Reply-To: <CANUX_P3hdFeCPmqHCdP8JKwqvUUnjgp3SNy1GQDrQd0bG+WKng@mail.gmail.com>
+References: <1410928422-25587-1-git-send-email-sujith@msujith.org>
+	<21529.5141.845629.86918@gargle.gargle.HOWL>
+	<0BA3FCBA62E2DC44AF3030971E174FB31B523034@hasmsx107.ger.corp.intel.com>
+	<21529.8110.26388.664223@gargle.gargle.HOWL>
+	<0BA3FCBA62E2DC44AF3030971E174FB31B5230C9@hasmsx107.ger.corp.intel.com>
+	<21529.9155.323515.987489@gargle.gargle.HOWL>
+	<0BA3FCBA62E2DC44AF3030971E174FB31B52311D@hasmsx107.ger.corp.intel.com>
+	<21529.10109.308613.563543@gargle.gargle.HOWL>
+	<CANUX_P3hdFeCPmqHCdP8JKwqvUUnjgp3SNy1GQDrQd0bG+WKng@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+Emmanuel Grumbach wrote:
+> mac80211 will not wait until the context switch happen specifically,
+> but if you can wait
+> in the driver in the flush() callback until the deauth is being sent -
+> whatever you need to
+> happen to have that done, context switch, TX queues to move etc... -
+> then you should be good?
+> IIRC, mac80211 sends the deauth to the driver and then calls flush() -
+> only then, it'll remove the
+> contexts.
+> 
+> So I guess that we agree - the solution for you I guess is to wait
+> until you have context switch
+> in the flush() callback.
 
-During a channel switch we should tell the firmware to disable TX
-temporarily and re-enable it after the switch is done.
+I don't think trying to switch channel contexts in the flush() callback
+is a good idea. We would be changing the meaning of the callback if
+we do that. Moreover flush() is called from many other places too, like the
+PS code.
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
+It seems appropriate to instruct a driver to make the necessary
+preparations before sending a deauth frame. Do you see any problems
+if mgd_prepare_tx() is called before initiating deauth ?
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index cbe9ff0..3bbeedf 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -2748,6 +2748,19 @@ static int __iwl_mvm_assign_vif_chanctx(struct iwl_mvm *mvm,
- 		iwl_mvm_mac_ctxt_changed(mvm, vif, false);
- 	}
- 
-+	if (vif->csa_active && vif->type == NL80211_IFTYPE_STATION) {
-+		struct iwl_mvm_sta *mvmsta;
-+
-+		mvmsta = iwl_mvm_sta_from_staid_protected(mvm,
-+							  mvmvif->ap_sta_id);
-+
-+		if (WARN_ON(!mvmsta))
-+			goto out;
-+
-+		/* TODO: only re-enable after the first beacon */
-+		iwl_mvm_sta_modify_disable_tx(mvm, mvmsta, false);
-+	}
-+
- 	goto out;
- 
- out_remove_binding:
-@@ -2779,6 +2792,7 @@ static void __iwl_mvm_unassign_vif_chanctx(struct iwl_mvm *mvm,
- {
- 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
- 	struct ieee80211_vif *disabled_vif = NULL;
-+	struct iwl_mvm_sta *mvmsta;
- 
- 	lockdep_assert_held(&mvm->mutex);
- 
-@@ -2810,6 +2824,12 @@ static void __iwl_mvm_unassign_vif_chanctx(struct iwl_mvm *mvm,
- 
- 		disabled_vif = vif;
- 
-+		mvmsta = iwl_mvm_sta_from_staid_protected(mvm,
-+							  mvmvif->ap_sta_id);
-+
-+		if (!WARN_ON(!mvmsta))
-+			iwl_mvm_sta_modify_disable_tx(mvm, mvmsta, true);
-+
- 		iwl_mvm_mac_ctxt_changed(mvm, vif, true);
- 		break;
- 	default:
--- 
-1.9.1
+Sujith
 
