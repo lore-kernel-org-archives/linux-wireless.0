@@ -1,180 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f182.google.com ([209.85.217.182]:51691 "EHLO
-	mail-lb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752366AbaILG7v (ORCPT
+Received: from mail-we0-f169.google.com ([74.125.82.169]:51248 "EHLO
+	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751339AbaIRSrt convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Sep 2014 02:59:51 -0400
-Received: by mail-lb0-f182.google.com with SMTP id v6so328473lbi.41
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Sep 2014 23:59:50 -0700 (PDT)
-From: Henning Rogge <hrogge@gmail.com>
-To: "linux-wireless @ vger . kernel . org"
-	<linux-wireless@vger.kernel.org>
-Cc: Henning Rogge <henning.rogge@fkie.fraunhofer.de>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-Subject: [PATCH v2] Add mpp get/dump commands
-Date: Fri, 12 Sep 2014 08:59:43 +0200
-Message-Id: <1410505183-7325-1-git-send-email-henning.rogge@fkie.fraunhofer.de> (sfid-20140912_085954_234881_EF2D53F7)
+	Thu, 18 Sep 2014 14:47:49 -0400
+Received: by mail-we0-f169.google.com with SMTP id w61so1401599wes.14
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Sep 2014 11:47:48 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <773DB8A82AB6A046AE0195C68612A319018C1FBC@sbs2003.acksys.local>
+References: <773DB8A82AB6A046AE0195C68612A319018C1FBC@sbs2003.acksys.local>
+Date: Thu, 18 Sep 2014 20:47:48 +0200
+Message-ID: <CAA2SeNLXDTWO95pFeHbpwLFeqjJPkv4Qa27DR0DQ7schGA_aAA@mail.gmail.com> (sfid-20140918_204753_100677_4FEA1DD8)
+Subject: Re: [PATCHv2 00/10] add support for ACK timeout estimation in ath9k driver
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: Cedric Debarge <cedric.debarge@acksys.fr>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add the "mpp get" and "mpp dump" command to query to mac80211s mesh
-proxy path table through nl80211.
+> On Tue, Sept 16, 2014 at 02:13:25AM +0200, Lorenzo Bianconi wrote:
+>
+> Hi,
+>
 
-Signed-off-by: Henning Rogge <henning.rogge@fkie.fraunhofer.de>
----
- Makefile  |  2 +-
- mpp.c     | 84 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- nl80211.h | 11 +++++++++
- 3 files changed, 96 insertions(+), 1 deletion(-)
- create mode 100644 mpp.c
+Hi,
 
-diff --git a/Makefile b/Makefile
-index f042e30..c05b2c4 100644
---- a/Makefile
-+++ b/Makefile
-@@ -14,7 +14,7 @@ CFLAGS += -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs -fno-strict-aliasing
- 
- OBJS = iw.o genl.o event.o info.o phy.o \
- 	interface.o ibss.o station.o survey.o util.o \
--	mesh.o mpath.o scan.o reg.o version.o \
-+	mesh.o mpath.o mpp.o scan.o reg.o version.o \
- 	reason.o status.o connect.o link.o offch.o ps.o cqm.o \
- 	bitrate.o wowlan.o coalesce.o roc.o p2p.o
- OBJS += sections.o
-diff --git a/mpp.c b/mpp.c
-new file mode 100644
-index 0000000..2d20d6b
---- /dev/null
-+++ b/mpp.c
-@@ -0,0 +1,84 @@
-+#include <net/if.h>
-+#include <errno.h>
-+#include <string.h>
-+
-+#include <netlink/genl/genl.h>
-+#include <netlink/genl/family.h>
-+#include <netlink/genl/ctrl.h>
-+#include <netlink/msg.h>
-+#include <netlink/attr.h>
-+
-+#include "nl80211.h"
-+#include "iw.h"
-+
-+SECTION(mpp);
-+
-+static int print_mpp_handler(struct nl_msg *msg, void *arg)
-+{
-+	struct nlattr *tb[NL80211_ATTR_MAX + 1];
-+	struct genlmsghdr *gnlh = nlmsg_data(nlmsg_hdr(msg));
-+	char dst[20], next_hop[20], dev[20];
-+
-+	nla_parse(tb, NL80211_ATTR_MAX, genlmsg_attrdata(gnlh, 0),
-+		  genlmsg_attrlen(gnlh, 0), NULL);
-+
-+	/*
-+	 * TODO: validate the interface and mac address!
-+	 * Otherwise, there's a race condition as soon as
-+	 * the kernel starts sending mpath notifications.
-+	 */
-+
-+	mac_addr_n2a(dst, nla_data(tb[NL80211_ATTR_MAC]));
-+	mac_addr_n2a(next_hop, nla_data(tb[NL80211_ATTR_MPATH_NEXT_HOP]));
-+	if_indextoname(nla_get_u32(tb[NL80211_ATTR_IFINDEX]), dev);
-+	printf("%s %s %s\n", dst, next_hop, dev);
-+
-+	return NL_SKIP;
-+}
-+
-+static int handle_mpp_get(struct nl80211_state *state,
-+			  struct nl_cb *cb,
-+			  struct nl_msg *msg,
-+			  int argc, char **argv,
-+			  enum id_input id)
-+{
-+	unsigned char dst[ETH_ALEN];
-+
-+	if (argc < 1)
-+		return 1;
-+
-+	if (mac_addr_a2n(dst, argv[0])) {
-+		fprintf(stderr, "invalid mac address\n");
-+		return 2;
-+	}
-+	argc--;
-+	argv++;
-+
-+	if (argc)
-+		return 1;
-+
-+	NLA_PUT(msg, NL80211_ATTR_MAC, ETH_ALEN, dst);
-+
-+	nl_cb_set(cb, NL_CB_VALID, NL_CB_CUSTOM, print_mpp_handler, NULL);
-+
-+	return 0;
-+ nla_put_failure:
-+	return -ENOBUFS;
-+}
-+COMMAND(mpp, get, "<MAC address>",
-+	NL80211_CMD_GET_MPP, 0, CIB_NETDEV, handle_mpp_get,
-+	"Get information on mesh proxy path to the given node.");
-+
-+static int handle_mpp_dump(struct nl80211_state *state,
-+			     struct nl_cb *cb,
-+			     struct nl_msg *msg,
-+			     int argc, char **argv,
-+			     enum id_input id)
-+{
-+	printf("DEST ADDR         PROXY NODE        IFACE\n");
-+	nl_cb_set(cb, NL_CB_VALID, NL_CB_CUSTOM, print_mpp_handler, NULL);
-+	return 0;
-+}
-+COMMAND(mpp, dump, NULL,
-+	NL80211_CMD_GET_MPP, NLM_F_DUMP, CIB_NETDEV, handle_mpp_dump,
-+	"List known mesh proxy paths.");
-diff --git a/nl80211.h b/nl80211.h
-index be9519b..80cff48 100644
---- a/nl80211.h
-+++ b/nl80211.h
-@@ -722,6 +722,10 @@
-  *	QoS mapping is relevant for IP packets, it is only valid during an
-  *	association. This is cleared on disassociation and AP restart.
-  *
-+ * @NL80211_CMD_GET_MPP: Get mesh path attributes for mesh proxy path to
-+ *	destination %NL80211_ATTR_MAC on the interface identified by
-+ *	%NL80211_ATTR_IFINDEX.
-+ *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-  */
-@@ -893,6 +897,8 @@ enum nl80211_commands {
- 
- 	NL80211_CMD_SET_QOS_MAP,
- 
-+	NL80211_CMD_GET_MPP,
-+
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-@@ -1591,6 +1597,9 @@ enum nl80211_commands {
-  *	creation then the new interface will be owned by the netlink socket
-  *	that created it and will be destroyed when the socket is closed
-  *
-+ * @NL80211_ATTR_TDLS_INITIATOR: flag attribute indicating the current end is
-+ *	the TDLS link initiator.
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -1931,6 +1940,8 @@ enum nl80211_attrs {
- 	NL80211_ATTR_CSA_C_OFFSETS_TX,
- 	NL80211_ATTR_MAX_CSA_COUNTERS,
- 
-+	NL80211_ATTR_TDLS_INITIATOR,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
+>> This patchset adds support for estimation of the ACK timeout (dynack) in ath9k driver. Ath9k dynack computes the > ACK timeout based on ACK frame RX timestamp, TX frame timestamp and frame duration.
+>>
+>> Ath9k dynack has been tested in indoor environment using AR9223/AR9280 chipset (running 3.17.0-rc5 kernel), on
+>> 9Km PtoP link using AR9280 chipset (running OpenWRT trunk, compat-wireless-2014-05-22) and on an AP using AR9280 > chipset (running OpenWRT trunk, compat-wireless-2014-05-22) serving 35 STA with links up to 8Km
+>
+> During your indoor tests, did you managed to get precise enough timestamps to compute a significant ACK to (despite of short distances and multipaths)?
+>
+
+Dynack tx/rx timestamps are snapshots of PCU's timestamps (expressed
+in TSF value).
+
+> Previous tests have shown impressive bandwith gains (10% on a 9Km P2P link). Did you also get improvements in indoor environment?
+>
+
+In indoor environment I got the same performance obtained with a
+static ACK timeout since LER was roughly 0%. Anyway I guess dynack
+should be enabled just on outdoor "long" links (like ones tested by
+Philippe) since that environment is really sensitive to ACK timeout.
+
+> Thanks,
+>
+> Cédric DEBARGE
+
+Regards,
+Lorenzo
+
 -- 
-1.9.1
-
+UNIX is Sexy: who | grep -i blonde | talk; cd ~; wine; talk; touch;
+unzip; touch; strip; gasp; finger; gasp; mount; fsck; more; yes; gasp;
+umount; make clean; sleep
