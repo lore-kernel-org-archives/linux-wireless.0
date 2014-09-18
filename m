@@ -1,34 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:54468 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753102AbaI2Wqm (ORCPT
+Received: from mail-we0-f182.google.com ([74.125.82.182]:42442 "EHLO
+	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755764AbaIRNf5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Sep 2014 18:46:42 -0400
-Received: from [192.168.100.236] (firewall.candelatech.com [70.89.124.249])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mail2.candelatech.com (Postfix) with ESMTPSA id BD71940A69D
-	for <linux-wireless@vger.kernel.org>; Mon, 29 Sep 2014 15:46:41 -0700 (PDT)
-Message-ID: <5429E151.1010706@candelatech.com> (sfid-20140930_004645_459678_B9B04F51)
-Date: Mon, 29 Sep 2014 15:46:41 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Proper way to use mac80211_hwsim.h in user-space tool?
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 18 Sep 2014 09:35:57 -0400
+Received: by mail-we0-f182.google.com with SMTP id q59so473294wes.27
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Sep 2014 06:35:56 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 1/3] ath10k: print wmi version info
+Date: Thu, 18 Sep 2014 15:25:19 +0200
+Message-Id: <1411046721-20510-2-git-send-email-michal.kazior@tieto.com> (sfid-20140918_153601_525130_28F622D6)
+In-Reply-To: <1411046721-20510-1-git-send-email-michal.kazior@tieto.com>
+References: <1411046721-20510-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As far as I can tell, the .h file is not installed anywhere
-in a normal OS.
+HTT version is already printed so print WMI
+version as well for consistency.
 
-What is the proper method to get this file sanitized and put
-into a more common location?
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/debug.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index 3756feb..f1e5916 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -126,14 +126,18 @@ EXPORT_SYMBOL(ath10k_info);
+ 
+ void ath10k_print_driver_info(struct ath10k *ar)
+ {
+-	ath10k_info(ar, "%s (0x%08x, 0x%08x) fw %s api %d htt %d.%d\n",
++	ath10k_info(ar, "%s (0x%08x, 0x%08x) fw %s api %d htt %d.%d wmi %d.%d.%d.%d\n",
+ 		    ar->hw_params.name,
+ 		    ar->target_version,
+ 		    ar->chip_id,
+ 		    ar->hw->wiphy->fw_version,
+ 		    ar->fw_api,
+ 		    ar->htt.target_version_major,
+-		    ar->htt.target_version_minor);
++		    ar->htt.target_version_minor,
++		    ar->fw_version_major,
++		    ar->fw_version_minor,
++		    ar->fw_version_release,
++		    ar->fw_version_build);
+ 	ath10k_info(ar, "debug %d debugfs %d tracing %d dfs %d testmode %d\n",
+ 		    config_enabled(CONFIG_ATH10K_DEBUG),
+ 		    config_enabled(CONFIG_ATH10K_DEBUGFS),
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.8.5.3
 
