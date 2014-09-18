@@ -1,46 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:55721 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751268AbaILGH7 (ORCPT
+Received: from smtp-out05.msg.oleane.net ([62.161.7.3]:41406 "EHLO
+	smtp-out05.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752969AbaIRMr3 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Sep 2014 02:07:59 -0400
-Date: Fri, 12 Sep 2014 11:39:38 +0530
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: Sujith Manoharan <sujith@msujith.org>
-CC: John Linville <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>, <ath9k-devel@qca.qualcomm.com>,
-	<stable@vger.kernel.org>
-Subject: Re: [PATCH] Revert "ath9k: Calculate sleep duration"
-Message-ID: <20140912060936.GA20575@qca.qualcomm.com> (sfid-20140912_080803_728370_BC9C72C6)
-References: <1410442548-15782-1-git-send-email-sujith@msujith.org>
- <20140911141338.GA21543@qca.qualcomm.com>
- <21521.45335.848659.125183@gargle.gargle.HOWL>
+	Thu, 18 Sep 2014 08:47:29 -0400
+Received: from smtp29.msg.oleane.net (smtp29.mail.priv [172.17.20.151])
+	by smtp-out05.msg.oleane.net with ESMTP id s8IAKN4K030419
+	for <linux-wireless@vger.kernel.org>; Thu, 18 Sep 2014 12:20:23 +0200
+Subject: RE: [PATCHv2 00/10] add support for ACK timeout estimation in ath9k driver
+Date: Thu, 18 Sep 2014 11:59:48 +0200
+Message-ID: <773DB8A82AB6A046AE0195C68612A319018C1FBC@sbs2003.acksys.local> (sfid-20140918_144733_639490_033CA229)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <21521.45335.848659.125183@gargle.gargle.HOWL>
+Content-Type: text/plain;
+	charset="iso-8859-1"
+From: "Cedric Debarge" <cedric.debarge@acksys.fr>
+To: <lorenzo.bianconi83@gmail.com>
+Cc: <linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 11, 2014 at 07:56:31PM +0530, Sujith Manoharan wrote:
-> Rajkumar Manoharan wrote:
-> > Some of the IOE customer using ath9k with power save enabled. IIRC the
-> > expectation is that when the station is idle, it should wakeup on DTIM
-> > beacon not for every beacons. Are you seeing frequest bmiss events on
-> > higher beacon interval?
-> 
-> I don't think ath9k has ever been tested with longer sleep durations
-> based on dtim period. We have always programmed the hardware to wake up
-> for every beacon interval, using the TIM_TIMER interrupt. And since the
-> TIM bit needs to be checked for every beacon, the sleep duration has
-> to be the beacon interval.
-> 
-> Also, the bmiss threshold needs to be adjusted based on the sleep
-> duration. We are hardcoding it currently in the driver using
-> ATH_DEFAULT_BMISS_LIMIT. This will break, too.
-> 
-> Using dtim for PS needs more testing before it can be used,
-> so we can have the original behavior for now.
-> 
-Sounds clear.
+On Tue, Sept 16, 2014 at 02:13:25AM +0200, Lorenzo Bianconi wrote:
 
-Acked-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Hi,
+
+> This patchset adds support for estimation of the ACK timeout (dynack) in ath9k driver. Ath9k dynack computes the > ACK timeout based on ACK frame RX timestamp, TX frame timestamp and frame duration.
+> 
+> Ath9k dynack has been tested in indoor environment using AR9223/AR9280 chipset (running 3.17.0-rc5 kernel), on
+> 9Km PtoP link using AR9280 chipset (running OpenWRT trunk, compat-wireless-2014-05-22) and on an AP using AR9280 > chipset (running OpenWRT trunk, compat-wireless-2014-05-22) serving 35 STA with links up to 8Km
+
+During your indoor tests, did you managed to get precise enough timestamps to compute a significant ACK to (despite of short distances and multipaths)?
+
+Previous tests have shown impressive bandwith gains (10% on a 9Km P2P link). Did you also get improvements in indoor environment?
+ 
+Thanks,
+
+Cédric DEBARGE
