@@ -1,42 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:47258 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753407AbaIVLBn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Sep 2014 07:01:43 -0400
-Received: by mail-ie0-f174.google.com with SMTP id rd18so1832867iec.19
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Sep 2014 04:01:42 -0700 (PDT)
-Date: Mon, 22 Sep 2014 07:00:16 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>, devel@lists.open80211s.org
-Cc: linux-wireless@vger.kernel.org,
-	Ashok Nagarajan <ashok.dragon@gmail.com>,
-	johannes@sipsolutions.net
-Subject: Re: [PATCH v3 1/2] iw: Allow user to provide freq during mesh join
-Message-ID: <20140922110016.GA302@localhost> (sfid-20140922_130146_755155_AE3A7C68)
-References: <1411195244-9130-1-git-send-email-yeohchunyeow@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1411195244-9130-1-git-send-email-yeohchunyeow@gmail.com>
+Received: from mail.neratec.com ([46.140.151.2]:20461 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751111AbaIRGkM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Sep 2014 02:40:12 -0400
+From: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Subject: [PATCH] ath9k: Fix NULL pointer dereference on early irq
+Date: Thu, 18 Sep 2014 08:30:41 +0200
+Message-Id: <1411021841-12683-1-git-send-email-Wojciech.Dubowik@neratec.com> (sfid-20140918_084027_868413_EC038BD0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Sep 20, 2014 at 02:40:43PM +0800, Chun-Yeow Yeoh via Devel wrote:
-> +	/* freq */
-> +	if (argc > 1 && strcmp(argv[0], "freq") == 0) {
-> +		argv++;
-> +		argc--;
+The ah struct might not have been initialized when
+interrupt comes so check for it.
 
-[snip]
+Signed-off-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> -COMMAND(mesh, join, "<mesh ID> [mcast-rate <rate in Mbps>]"
-> +COMMAND(mesh, join, "<mesh ID> [freq in MHz] [HT20|HT40+|HT40-|NOHT]"
-
-Should this be something like:
-
-> +COMMAND(mesh, join, "<mesh ID> [freq <freq in MHz> <HT20|HT40+|HT40-|NOHT>]"
-
-...so we know to specify the 'freq' keyword?
-
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 3e485f7..fbf23ac 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -504,7 +504,7 @@ irqreturn_t ath_isr(int irq, void *dev)
+ 	 * touch anything. Note this can happen early
+ 	 * on if the IRQ is shared.
+ 	 */
+-	if (test_bit(ATH_OP_INVALID, &common->op_flags))
++	if (!ah || test_bit(ATH_OP_INVALID, &common->op_flags))
+ 		return IRQ_NONE;
+ 
+ 	/* shared irq, not for us */
 -- 
-Bob Copeland %% www.bobcopeland.com
+1.9.1
+
