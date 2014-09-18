@@ -1,62 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lekensteyn.nl ([178.21.112.251]:48083 "EHLO lekensteyn.nl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754730AbaIPSYy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Sep 2014 14:24:54 -0400
-From: Peter Wu <peter@lekensteyn.nl>
-To: linux-wireless@vger.kernel.org,
-	Intel Linux Wireless <ilw@linux.intel.com>
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	<stable@vger.kernel.org>
-Subject: [PATCH] iwlwifi: add 4c70 subdevice ID for 7260 series
-Date: Tue, 16 Sep 2014 19:39:46 +0200
-Message-Id: <1410889186-28991-1-git-send-email-peter@lekensteyn.nl> (sfid-20140916_202458_505409_473C1DBB)
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:35851 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751280AbaIRNPR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Sep 2014 09:15:17 -0400
+Date: Thu, 18 Sep 2014 09:13:25 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Vadim Kochan <vadim4j@gmail.com>
+Cc: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Emmanuel Grumbach <egrumbach@gmail.com>,
+	Oliver Hartkopp <socketcan@hartkopp.net>,
+	johannes@sipsolutions.net
+Subject: Re: Comments regarding patch about setting netns for wireless devices
+Message-ID: <20140918131324.GA20197@tuxdriver.com> (sfid-20140918_151528_105651_8BE106E7)
+References: <CAMw6YJ+uhthY83_cBHE20FgqFWdvT5M12AbfgVC7qbyHegh78Q@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAMw6YJ+uhthY83_cBHE20FgqFWdvT5M12AbfgVC7qbyHegh78Q@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This card appears in an Asus TP300LA laptop (from Chris Mens). lspci
-output:
+On Thu, Sep 18, 2014 at 11:05:11AM +0300, Vadim Kochan wrote:
+> Hi All,
+> 
+> I'd like to get some feedback about the patch:
+>     https://patchwork.kernel.org/patch/4890451/
+> 
+> The idea is that currently Linux wireless device is allowed to change
+> the network namespace only by nl80211 API, so RTM_LINK API does
+> not work. So I think that it should be possible to change netns
+> through the RTM_LINK too as generic way to change netns,
+> thats why I tried to solve this in the patch.
+> 
+> Thanks,
 
-    02:00.0 Network controller [0280]: Intel Corporation Wireless 7260
-[8086:08b1] (rev cb)
-        Subsystem: Intel Corporation Device [8086:4c70]
+I think Johannes is vacationing right now.  I'm sure he will comment
+when he returns.
 
-Verified against v3.10.54 and v3.17-rc5-13-g2324067.
-
-Cc: <stable@vger.kernel.org> # 3.10+
-Tested-by: Peter Wu <peter@lekensteyn.nl>
-Signed-off-by: Peter Wu <peter@lekensteyn.nl>
----
-Hi,
-
-Without patch the iwlwifi/iwldvm driver does not accept the 7260 AC card in an
-Asus TP300LA laptop of a friend. Another report can be found on
-<https://answers.launchpad.net/ubuntu/+source/gnome-nettool/+question/254548>.
-
-By the way, initially I tried to write '8086 08b1 8086 4c70' (and also just the
-first two words) to /sys/bus/pci/drivers/iwlwifi/new_id, and '0000:02:00.0' to
-/sys/bus/pci/drivers/iwlwifi/bind, but I got EINVAL and ENODEV respectively.
-Why did this not work?
-
-Kind regards,
-Peter
----
- drivers/net/wireless/iwlwifi/pcie/drv.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/net/wireless/iwlwifi/pcie/drv.c b/drivers/net/wireless/iwlwifi/pcie/drv.c
-index f0e722c..eb83c89f 100644
---- a/drivers/net/wireless/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/drv.c
-@@ -297,6 +297,7 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- 	{IWL_PCI_DEVICE(0x08B1, 0x4560, iwl7260_2n_cfg)},
- 	{IWL_PCI_DEVICE(0x08B2, 0x4370, iwl7260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x08B2, 0x4360, iwl7260_2n_cfg)},
-+	{IWL_PCI_DEVICE(0x08B1, 0x4c70, iwl7260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x08B1, 0x5070, iwl7260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x08B1, 0x5072, iwl7260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x08B1, 0x5170, iwl7260_2ac_cfg)},
+John
 -- 
-2.1.0
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
