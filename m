@@ -1,50 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:51216 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750765AbaIJF2T convert rfc822-to-8bit (ORCPT
+Received: from userp1040.oracle.com ([156.151.31.81]:38997 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757154AbaIRBv2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Sep 2014 01:28:19 -0400
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
-Subject: Re: [PATCH] cfg802111/nl80211: Add device motion indication API
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <CANUX_P2sVqw=e8ZG5NnMme+TfsjXB36ymMUDUkzp90nB4cPdnw@mail.gmail.com>
-Date: Tue, 9 Sep 2014 22:28:55 -0700
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
+	Wed, 17 Sep 2014 21:51:28 -0400
+Message-ID: <541A3A8D.9010908@oracle.com> (sfid-20140918_035145_377431_98EC0D8F)
+Date: Wed, 17 Sep 2014 21:51:09 -0400
+From: Sasha Levin <sasha.levin@oracle.com>
+MIME-Version: 1.0
+To: Kees Cook <keescook@chromium.org>, linux-kernel@vger.kernel.org
+CC: Ming Lei <ming.lei@canonical.com>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	James Morris <james.l.morris@oracle.com>,
+	David Howells <dhowells@redhat.com>, linux-doc@vger.kernel.org,
+	linux-security-module@vger.kernel.org, linux-firmware@kernel.org,
 	linux-wireless <linux-wireless@vger.kernel.org>,
-	Avraham Stern <avraham.stern@intel.com>
-Message-Id: <2422DF2C-E036-4AAB-A710-6A9B215B6E21@holtmann.org> (sfid-20140910_072822_783234_19FB5939)
-References: <1410268021-9529-1-git-send-email-emmanuel.grumbach@intel.com> <85725D0A-E038-44CF-9894-BDA93231FA62@holtmann.org> <CANUX_P2sVqw=e8ZG5NnMme+TfsjXB36ymMUDUkzp90nB4cPdnw@mail.gmail.com>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
+	Dave Jones <davej@redhat.com>
+Subject: Re: [PATCH 2/7] test: add firmware_class loader test
+References: <1405373897-31671-1-git-send-email-keescook@chromium.org> <1405373897-31671-3-git-send-email-keescook@chromium.org>
+In-Reply-To: <1405373897-31671-3-git-send-email-keescook@chromium.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Emmanuel,
-
->> if we have WiFi chips that have these kind of information, then shouldn't it be better exposed via a generic subsystem for motion events. Having this exposed over nl80211 seems a bit too limited.
->> 
->> I am thinking that either an input event or maybe via hwmon or IIO. Since at the end of the day such an event should be considered just a sensor. It doesn't matter which piece of hardware is doing the sensing or who it is doing for.
->> 
->> We are also not exposing RFKILL switches over nl80211. We have a dedicated RFKILL subsystem where all kinds of switches can integrate into.
->> 
+On 07/14/2014 05:38 PM, Kees Cook wrote:
+> This provides a simple interface to trigger the firmware_class loader
+> to test built-in, filesystem, and user helper modes. Additionally adds
+> tests via the new interface to the selftests tree.
 > 
-> I can't sayI totally disagree, but the point here I guess is that the
-> precision is very limited - WiFi based after all - and hence, I don't
-> think we really want to expose a real motion detection device to the
-> whole system. This is not a gyro or anything of this kind. The commit
-> message gives example of use cases where the flows that are triggered
-> by this kind of notifications. The user aren't aware of these flows.
-> The frequency of the scan isn't something the user is aware of but
-> more a WiFi system parameter. So basically, I don't think we can
-> really talk about a real sensor, but more of a heuristic that will
-> likely help WiFi to behave better. Might there be other components
-> interested in this heuristic with its level of (im)precision, good
-> question.
+> Signed-off-by: Kees Cook <keescook@chromium.org>
 
-even if the precision is limited, I think exposing this in a generic way (maybe just an input event) is a lot cleaner. So what if you want to have Bluetooth LE background scanning also use this to adjust the scan intervals. Or when to spin up the GPS to get a more precise location. There might be other subsystems that can benefit from these notifications and it makes no sense for them to talk nl80211.
+Hi folks,
 
-Regards
+While fuzzing with trinity inside a KVM tools guest running the latest -next
+kernel, I've stumbled on the following spew:
 
-Marcel
+[  413.999779] misc test_firmware: Falling back to user helper
+[  414.003728] WARNING: CPU: 25 PID: 9860 at lib/kobject.c:209 kobject_add_internal+0x3a3/0x450()
+[  414.006815] kobject: (ffff8807b4ef5dc8): attempted to be registered with empty name!
+[  414.009482] Modules linked in:
+[  414.010818] CPU: 25 PID: 9860 Comm: trinity-c662 Tainted: G        W      3.17.0-rc5-next-20140917-sasha-00041-gd01267b #1198
+[  414.014626]  0000000000000009 ffff880236547a68 ffffffff9d56d655 0000000000000000
+[  414.017585]  ffff880236547ab8 ffff880236547aa8 ffffffff9a15f3d1 00000000001e3540
+[  414.020733]  ffff8807b4ef5dc8 00000000ffffffea ffff88043d114108 ffff8807b4ef5db8
+[  414.023345] Call Trace:
+[  414.024254] dump_stack (lib/dump_stack.c:52)
+[  414.026232] warn_slowpath_common (kernel/panic.c:432)
+[  414.028355] warn_slowpath_fmt (kernel/panic.c:446)
+[  414.030366] ? __raw_spin_lock_init (kernel/locking/spinlock_debug.c:24)
+[  414.032369] kobject_add_internal (lib/kobject.c:211 (discriminator 1))
+[  414.034313] ? __dynamic_pr_debug (lib/dynamic_debug.c:561)
+[  414.036254] kobject_add (lib/kobject.c:403)
+[  414.038017] ? device_private_init (drivers/base/core.c:929)
+[  414.040340] ? klist_init (lib/klist.c:90)
+[  414.044729] device_add (drivers/base/core.c:1010)
+[  414.049854] ? dev_set_name (drivers/base/core.c:876)
+[  414.060790] _request_firmware (drivers/base/firmware_class.c:892 drivers/base/firmware_class.c:957 drivers/base/firmware_class.c:1139)
+[  414.062814] request_firmware (drivers/base/firmware_class.c:1189)
+[  414.064796] trigger_request_store (lib/test_firmware.c:68)
+[  414.066774] dev_attr_store (drivers/base/core.c:138)
+[  414.068531] sysfs_kf_write (fs/sysfs/file.c:115)
+[  414.070826] kernfs_fop_write (fs/kernfs/file.c:308)
+[  414.074648] ? kernfs_vma_page_mkwrite (fs/kernfs/file.c:267)
+[  414.076864] do_loop_readv_writev (fs/read_write.c:710)
+[  414.078947] ? kernfs_vma_page_mkwrite (fs/kernfs/file.c:267)
+[  414.081269] do_readv_writev (fs/read_write.c:842)
+[  414.083281] ? preempt_count_sub (kernel/sched/core.c:2634)
+[  414.085380] ? mutex_lock_nested (./arch/x86/include/asm/preempt.h:98 kernel/locking/mutex.c:599 kernel/locking/mutex.c:616)
+[  414.087401] ? __fdget_pos (fs/file.c:714)
+[  414.089286] vfs_writev (fs/read_write.c:881)
+[  414.091243] SyS_writev (fs/read_write.c:914 fs/read_write.c:905)
+[  414.093053] tracesys_phase2 (arch/x86/kernel/entry_64.S:529)
 
+
+Thanks,
+Sasha
