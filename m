@@ -1,145 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f177.google.com ([209.85.223.177]:57984 "EHLO
-	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751347AbaIFRDo (ORCPT
+Received: from mail-we0-f175.google.com ([74.125.82.175]:65494 "EHLO
+	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751280AbaIRNf6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Sep 2014 13:03:44 -0400
-Received: by mail-ie0-f177.google.com with SMTP id at20so3231473iec.36
-        for <linux-wireless@vger.kernel.org>; Sat, 06 Sep 2014 10:03:43 -0700 (PDT)
-Date: Sat, 6 Sep 2014 13:00:48 -0400
-From: Jade Bilkey <herself@thefumon.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
-Subject: [PATCH v2] ath5k: added debugfs file for dumping eeprom
-Message-ID: <20140906170048.GA32300@apiculture.lan> (sfid-20140906_190348_178190_B2989FE1)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Thu, 18 Sep 2014 09:35:58 -0400
+Received: by mail-we0-f175.google.com with SMTP id w61so929576wes.20
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Sep 2014 06:35:56 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 2/3] ath10k: dump hex bytes with dev string prefix
+Date: Thu, 18 Sep 2014 15:25:20 +0200
+Message-Id: <1411046721-20510-3-git-send-email-michal.kazior@tieto.com> (sfid-20140918_153604_269575_F5008B36)
+In-Reply-To: <1411046721-20510-1-git-send-email-michal.kazior@tieto.com>
+References: <1411046721-20510-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Jade Bilkey <herself@thefumon.com>
+This makes it easier to debug hex dumps on systems
+with more than a single ath10k device.
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
+ drivers/net/wireless/ath/ath10k/debug.c | 21 ++++++++++++++++++++-
+ 1 file changed, 20 insertions(+), 1 deletion(-)
 
-v2: vmalloc not included in some configs
-   Switched to using kmalloc
-
- drivers/net/wireless/ath/ath5k/debug.c | 96 ++++++++++++++++++++++++++++++++++
- 1 file changed, 96 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath5k/debug.c b/drivers/net/wireless/ath/ath5k/debug.c
-index b8d031a..ca3cd06 100644
---- a/drivers/net/wireless/ath/ath5k/debug.c
-+++ b/drivers/net/wireless/ath/ath5k/debug.c
-@@ -894,6 +894,100 @@ static const struct file_operations fops_queue = {
- 	.llseek = default_llseek,
- };
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index f1e5916..9f8dddc 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -1264,11 +1264,30 @@ void ath10k_dbg_dump(struct ath10k *ar,
+ 		     const char *msg, const char *prefix,
+ 		     const void *buf, size_t len)
+ {
++	char linebuf[256];
++	unsigned int linebuflen;
++	const void *ptr;
++
+ 	if (ath10k_debug_mask & mask) {
+ 		if (msg)
+ 			ath10k_dbg(ar, mask, "%s\n", msg);
  
-+/* debugfs: eeprom */
-+
-+struct eeprom_private {
-+	u16 *buf;
-+	int len;
-+};
-+
-+static int open_file_eeprom(struct inode *inode, struct file *file)
-+{
-+	struct eeprom_private *ep;
-+	struct ath5k_hw *ah = inode->i_private;
-+	bool res;
-+	int i, ret;
-+	u32 eesize;
-+	u16 val, *buf;
-+
-+	/* Get eeprom size */
-+
-+	res = ath5k_hw_nvram_read(ah, AR5K_EEPROM_SIZE_UPPER, &val);
-+	if (!res)
-+		return -EACCES;
-+
-+	if (val == 0) {
-+		eesize = AR5K_EEPROM_INFO_MAX + AR5K_EEPROM_INFO_BASE;
-+	} else {
-+		eesize = (val & AR5K_EEPROM_SIZE_UPPER_MASK) <<
-+			AR5K_EEPROM_SIZE_ENDLOC_SHIFT;
-+		ath5k_hw_nvram_read(ah, AR5K_EEPROM_SIZE_LOWER, &val);
-+		eesize = eesize | val;
-+	}
-+
-+	if (eesize > 4096)
-+		return -EINVAL;
-+
-+	/* Create buffer and read in eeprom */
-+
-+	buf = kmalloc(eesize, GFP_KERNEL);
-+	if (!buf) {
-+		ret = -ENOMEM;
-+		goto err;
-+	}
-+
-+	for (i = 0; i < eesize; ++i) {
-+		AR5K_EEPROM_READ(i, val);
-+		buf[i] = val;
-+	}
-+
-+	/* Create private struct and assign to file */
-+
-+	ep = kmalloc(sizeof(*ep), GFP_KERNEL);
-+	if (!ep) {
-+		ret = -ENOMEM;
-+		goto freebuf;
-+	}
-+
-+	ep->buf = buf;
-+	ep->len = i;
-+
-+	file->private_data = (void *)ep;
-+
-+	return 0;
-+
-+freebuf:
-+	kfree(buf);
-+err:
-+	return ret;
-+
-+}
-+
-+static ssize_t read_file_eeprom(struct file *file, char __user *user_buf,
-+				   size_t count, loff_t *ppos)
-+{
-+	struct eeprom_private *ep = file->private_data;
-+
-+	return simple_read_from_buffer(user_buf, count, ppos, ep->buf, ep->len);
-+}
-+
-+static int release_file_eeprom(struct inode *inode, struct file *file)
-+{
-+	struct eeprom_private *ep = file->private_data;
-+
-+	kfree(ep->buf);
-+	kfree(ep);
-+
-+	return 0;
-+}
-+
-+static const struct file_operations fops_eeprom = {
-+	.open = open_file_eeprom,
-+	.read = read_file_eeprom,
-+	.release = release_file_eeprom,
-+	.owner = THIS_MODULE,
-+};
-+
+-		print_hex_dump_bytes(prefix, DUMP_PREFIX_OFFSET, buf, len);
++		for (ptr = buf; (ptr - buf) < len; ptr += 16) {
++			linebuflen = 0;
++			if (prefix)
++				linebuflen += scnprintf(linebuf + linebuflen,
++							sizeof(linebuf) -
++							linebuflen,
++							"%s", prefix);
++			linebuflen += scnprintf(linebuf + linebuflen,
++						sizeof(linebuf) - linebuflen,
++						"%08x: ",
++						(unsigned int)(ptr - buf));
++			hex_dump_to_buffer(ptr, len - (ptr - buf), 16, 1,
++					   linebuf + linebuflen,
++					   sizeof(linebuf) - linebuflen, true);
++			dev_printk(KERN_DEBUG, ar->dev, "%s\n", linebuf);
++		}
+ 	}
  
- void
- ath5k_debug_init_device(struct ath5k_hw *ah)
-@@ -921,6 +1015,8 @@ ath5k_debug_init_device(struct ath5k_hw *ah)
- 
- 	debugfs_create_file("misc", S_IRUSR, phydir, ah, &fops_misc);
- 
-+	debugfs_create_file("eeprom", S_IRUSR, phydir, ah, &fops_eeprom);
-+
- 	debugfs_create_file("frameerrors", S_IWUSR | S_IRUSR, phydir, ah,
- 			    &fops_frameerrors);
- 
+ 	/* tracing code doesn't like null strings :/ */
 -- 
-2.1.0
+1.8.5.3
 
