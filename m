@@ -1,39 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:36330 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750988AbaI3GBg (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:42059 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757458AbaISSFB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Sep 2014 02:01:36 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21546.18274.830284.274616@gargle.gargle.HOWL> (sfid-20140930_080140_131648_9F4180D2)
-Date: Tue, 30 Sep 2014 11:32:10 +0530
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>, <ath9k-devel@qca.qualcomm.com>
-Subject: Re: [PATCH v2] ath: Add support for tracing
-In-Reply-To: <87k34ly992.fsf@kamboji.qca.qualcomm.com>
-References: <1411804665-6954-1-git-send-email-sujith@msujith.org>
-	<87vbo72bb7.fsf@kamboji.qca.qualcomm.com>
-	<21544.64579.558712.465388@gargle.gargle.HOWL>
-	<87r3yu3oje.fsf@kamboji.qca.qualcomm.com>
-	<21545.4248.512297.913983@gargle.gargle.HOWL>
-	<87k34ly992.fsf@kamboji.qca.qualcomm.com>
+	Fri, 19 Sep 2014 14:05:01 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: ath10k@lists.infradead.org, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 2/3] ath10k:  support CT firmware flag.
+Date: Fri, 19 Sep 2014 11:04:49 -0700
+Message-Id: <1411149890-12618-2-git-send-email-greearb@candelatech.com> (sfid-20140919_200508_768616_637C749F)
+In-Reply-To: <1411149890-12618-1-git-send-email-greearb@candelatech.com>
+References: <1411149890-12618-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo wrote:
-> The current debug printing code in ath10k is something like 100 lines, I
-> don't see the point of trying to make that common with all ath* drivers.
-> 
-> In my opinion ath.ko should only have code which used at least two
-> different drivers (and I consider ath9k.ko and ath9k_htc.ko as one
-> driver). So the right thing here would be to actually move all debugging
-> code from ath.ko to ath9k, as it's the only user anyway.
+From: Ben Greear <greearb@candelatech.com>
 
-I don't think anyone is interested in moving debug code from ath.ko
-to ath9k.ko at this point. There is no benefit and it is just code
-churn.
+Add placeholder so CT firmware can more easily co-exist with upstream
+kernel.
 
-Sujith
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ drivers/net/wireless/ath/ath10k/core.h | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 20c5e40..3f14858 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -361,6 +361,9 @@ enum ath10k_fw_features {
+ 	 */
+ 	ATH10K_FW_FEATURE_WMI_10_2 = 4,
+ 
++	/* Firmware from Candela Technologies, enables more VIFs, etc */
++	ATH10K_FW_FEATURE_WMI_10X_CT = 5,
++
+ 	/* keep last */
+ 	ATH10K_FW_FEATURE_COUNT,
+ };
+-- 
+1.7.11.7
+
