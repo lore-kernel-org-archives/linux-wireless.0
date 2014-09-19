@@ -1,105 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:53897 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754251AbaICDJX (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:58999 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757686AbaISUeD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Sep 2014 23:09:23 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH v2 6/6] ath9k: Add CTWindow support
-Date: Wed,  3 Sep 2014 08:39:25 +0530
-Message-Id: <1409713765-9358-7-git-send-email-sujith@msujith.org> (sfid-20140903_050951_183941_EB4D699C)
-In-Reply-To: <1409713765-9358-1-git-send-email-sujith@msujith.org>
-References: <1409713765-9358-1-git-send-email-sujith@msujith.org>
+	Fri, 19 Sep 2014 16:34:03 -0400
+Date: Fri, 19 Sep 2014 16:33:59 -0400 (EDT)
+Message-Id: <20140919.163359.1720346114199249960.davem@davemloft.net> (sfid-20140919_223428_838955_A5CD4FDC)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2014-09-17
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20140917152300.GB13392@tuxdriver.com>
+References: <20140917152300.GB13392@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 17 Sep 2014 11:23:01 -0400
 
-Since CTWindow can be used for improving discoverability,
-fill this field in the NoA Attribute properly.
+> Please pull this batch of fixes intended for the 3.17 stream...
+> 
+> Arend van Spriel sends a trio of minor brcmfmac fixes, including a
+> fix for a Kconfig/build issue, a fix for a crash (null reference),
+> and a regression fix related to event handling on a P2P interface.
+> 
+> Hante Meuleman follows-up with a brcmfmac fix for a memory leak.
+> 
+> Johannes Stezenbach brings an ath9k_htc fix for a regression related
+> to hardware decryption offload.
+> 
+> Marcel Holtmann delivers a one-liner to properly mark a device ID
+> table in rfkill-gpio.
+> 
+> Please let me know if there are problems!
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h   |  2 ++
- drivers/net/wireless/ath/ath9k/channel.c | 26 ++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/init.c    |  5 +++--
- 3 files changed, 31 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index c690601..b4ac51e 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -572,6 +572,8 @@ void ath9k_release_buffered_frames(struct ieee80211_hw *hw,
- /* VIFs */
- /********/
- 
-+#define P2P_DEFAULT_CTWIN 10
-+
- struct ath_vif {
- 	struct list_head list;
- 
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index 7a6ca44..e73d305 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -1166,6 +1166,30 @@ static void ath9k_update_p2p_ps(struct ath_softc *sc, struct ieee80211_vif *vif)
- 	ath9k_update_p2p_ps_timer(sc, avp);
- }
- 
-+static u8 ath9k_get_ctwin(struct ath_softc *sc, struct ath_vif *avp)
-+{
-+	struct ath_beacon_config *cur_conf = &sc->cur_chan->beacon;
-+	u8 switch_time, ctwin;
-+
-+	/*
-+	 * Channel switch in multi-channel mode is deferred
-+	 * by a quarter beacon interval when handling
-+	 * ATH_CHANCTX_EVENT_BEACON_PREPARE, so the P2P-GO
-+	 * interface is guaranteed to be discoverable
-+	 * for that duration after a TBTT.
-+	 */
-+	switch_time = cur_conf->beacon_interval / 4;
-+
-+	ctwin = avp->vif->bss_conf.p2p_noa_attr.oppps_ctwindow;
-+	if (ctwin && (ctwin < switch_time))
-+		return ctwin;
-+
-+	if (switch_time < P2P_DEFAULT_CTWIN)
-+		return 0;
-+
-+	return P2P_DEFAULT_CTWIN;
-+}
-+
- void ath9k_beacon_add_noa(struct ath_softc *sc, struct ath_vif *avp,
- 			  struct sk_buff *skb)
- {
-@@ -1198,6 +1222,8 @@ void ath9k_beacon_add_noa(struct ath_softc *sc, struct ath_vif *avp,
- 	memset(noa, 0, noa_len);
- 
- 	noa->index = avp->noa_index;
-+	noa->oppps_ctwindow = ath9k_get_ctwin(sc, avp);
-+
- 	if (avp->periodic_noa_duration) {
- 		u32 interval = TU_TO_USEC(sc->cur_chan->beacon.beacon_interval);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index ca10a8b..1950c04 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -763,8 +763,9 @@ static void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 	if (AR_SREV_9160_10_OR_LATER(sc->sc_ah) || ath9k_modparam_nohwcrypt)
- 		hw->flags |= IEEE80211_HW_MFP_CAPABLE;
- 
--	hw->wiphy->features |= (NL80211_FEATURE_ACTIVE_MONITOR |
--				NL80211_FEATURE_AP_MODE_CHAN_WIDTH_CHANGE);
-+	hw->wiphy->features |= NL80211_FEATURE_ACTIVE_MONITOR |
-+			       NL80211_FEATURE_AP_MODE_CHAN_WIDTH_CHANGE |
-+			       NL80211_FEATURE_P2P_GO_CTWIN;
- 
- 	if (!config_enabled(CONFIG_ATH9K_TX99)) {
- 		hw->wiphy->interface_modes =
--- 
-2.1.0
-
+Pulled, thanks John.
