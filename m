@@ -1,132 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:53437 "EHLO
-	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751111AbaITGlD (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:42476 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757817AbaISS22 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Sep 2014 02:41:03 -0400
-Received: by mail-pa0-f54.google.com with SMTP id fb1so1460799pad.27
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Sep 2014 23:41:02 -0700 (PDT)
-From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+	Fri, 19 Sep 2014 14:28:28 -0400
+From: greearb@candelatech.com
 To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, devel@lists.open80211s.org,
-	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>,
-	Ashok Nagarajan <ashok.dragon@gmail.com>
-Subject: [PATCH v3 1/2] iw: Allow user to provide freq during mesh join
-Date: Sat, 20 Sep 2014 14:40:43 +0800
-Message-Id: <1411195244-9130-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20140920_084108_301951_C33ABF85)
+Cc: ath10k@lists.infradead.org, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] ath10k: request firmware flush in ath10k_flush.
+Date: Fri, 19 Sep 2014 11:28:24 -0700
+Message-Id: <1411151304-31544-1-git-send-email-greearb@candelatech.com> (sfid-20140919_202834_805564_047F3C2A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Allow user to configure frequency and channel type during
-mesh join command.
+From: Ben Greear <greearb@candelatech.com>
 
-Signed-off-by: Ashok Nagarajan <ashok.dragon@gmail.com>
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+CT firmware now supports flushing all tids for all
+peers for all vdevs.  This appears to help the ath10k_flush
+logic work faster and not cause timeouts.
 
-v2: use chandef similar to IBSS (Johannes)
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- mesh.c | 70 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 67 insertions(+), 3 deletions(-)
 
-diff --git a/mesh.c b/mesh.c
-index ca065bf..69c54cc 100644
---- a/mesh.c
-+++ b/mesh.c
-@@ -438,8 +438,32 @@ static int join_mesh(struct nl80211_state *state, struct nl_cb *cb,
- {
- 	struct nlattr *container;
- 	float rate;
--	int bintval, dtim_period;
-+	int bintval, dtim_period, i;
- 	char *end;
-+	unsigned long freq = 0;
-+	static const struct {
-+		const char *name;
-+		unsigned int width;
-+		int freq1_diff;
-+		int chantype; /* for older kernel */
-+	} *chanmode_selected = NULL, chanmode[] = {
-+		{ .name = "HT20",
-+		  .width = NL80211_CHAN_WIDTH_20,
-+		  .freq1_diff = 0,
-+		  .chantype = NL80211_CHAN_HT20 },
-+		{ .name = "HT40+",
-+		  .width = NL80211_CHAN_WIDTH_40,
-+		  .freq1_diff = 10,
-+		  .chantype = NL80211_CHAN_HT40PLUS },
-+		{ .name = "HT40-",
-+		  .width = NL80211_CHAN_WIDTH_40,
-+		  .freq1_diff = -10,
-+		  .chantype = NL80211_CHAN_HT40MINUS },
-+		{ .name = "NOHT",
-+		  .width = NL80211_CHAN_WIDTH_20_NOHT,
-+		  .freq1_diff = 0,
-+		  .chantype = NL80211_CHAN_NO_HT },
-+	};
+This requires the previously-sent patch that enables the
+ATH10K_FW_FEATURE_WMI_10X_CT feature bit.  This patch provide
+a nice improvement in stability and flush performance in my
+testing scenarios.
+
+ drivers/net/wireless/ath/ath10k/mac.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index af24f6c..6014856 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3830,6 +3830,7 @@ static void ath10k_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 	struct ath10k *ar = hw->priv;
+ 	bool skip;
+ 	int ret;
++	u8 peer_addr[ETH_ALEN] = {0};
  
- 	if (argc < 1)
- 		return 1;
-@@ -448,6 +472,44 @@ static int join_mesh(struct nl80211_state *state, struct nl_cb *cb,
- 	argc--;
- 	argv++;
+ 	/* mac80211 doesn't care if we really xmit queued frames or not
+ 	 * we'll collect those frames either way if we stop/delete vdevs */
+@@ -3841,6 +3842,12 @@ static void ath10k_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 	if (ar->state == ATH10K_STATE_WEDGED)
+ 		goto skip;
  
-+	/* freq */
-+	if (argc > 1 && strcmp(argv[0], "freq") == 0) {
-+		argv++;
-+		argc--;
++	/* If we are CT firmware, ask it to flush all tids on all peers on
++	 * all vdevs.  Normal firmware will just crash if you do this.
++	 */
++	if (test_bit(ATH10K_FW_FEATURE_WMI_10X_CT, ar->fw_features))
++		ath10k_wmi_peer_flush(ar, 0xFFFFFFFF, peer_addr, 0xFFFFFFFF);
 +
-+		freq = strtoul(argv[0], &end, 10);
-+		if (*end != '\0')
-+			return 1;
-+		NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_FREQ, freq);
-+
-+		argv++;
-+		argc--;
-+	}
-+
-+	/* channel type */
-+	if (argc) {
-+		for (i = 0; i < ARRAY_SIZE(chanmode); i++) {
-+			if (strcasecmp(chanmode[i].name, argv[0]) == 0) {
-+				chanmode_selected = &chanmode[i];
-+				break;
-+			}
-+		}
-+
-+		if (chanmode_selected) {
-+			NLA_PUT_U32(msg, NL80211_ATTR_CHANNEL_WIDTH,
-+				    chanmode_selected->width);
-+			NLA_PUT_U32(msg, NL80211_ATTR_CENTER_FREQ1,
-+				    freq + chanmode_selected->freq1_diff);
-+			if (chanmode_selected->chantype != -1)
-+				NLA_PUT_U32(msg,
-+					    NL80211_ATTR_WIPHY_CHANNEL_TYPE,
-+					    chanmode_selected->chantype);
-+
-+			argv++;
-+			argc--;
-+		}
-+	}
-+
- 	if (argc > 1 && strcmp(argv[0], "mcast-rate") == 0) {
- 		argv++;
- 		argc--;
-@@ -513,11 +575,13 @@ static int join_mesh(struct nl80211_state *state, struct nl_cb *cb,
-  nla_put_failure:
- 	return -ENOBUFS;
- }
--COMMAND(mesh, join, "<mesh ID> [mcast-rate <rate in Mbps>]"
-+COMMAND(mesh, join, "<mesh ID> [freq in MHz] [HT20|HT40+|HT40-|NOHT]"
-+	" [mcast-rate <rate in Mbps>]"
- 	" [beacon-interval <time in TUs>] [dtim-period <value>]"
- 	" [vendor_sync on|off] [<param>=<value>]*",
- 	NL80211_CMD_JOIN_MESH, 0, CIB_NETDEV, join_mesh,
--	"Join a mesh with the given mesh ID with mcast-rate and mesh parameters.");
-+	"Join a mesh with the given mesh ID with frequency, mcast-rate, "
-+	"and mesh parameters.");
+ 	ret = wait_event_timeout(ar->htt.empty_tx_wq, ({
+ 			bool empty;
  
- static int leave_mesh(struct nl80211_state *state, struct nl_cb *cb,
- 		      struct nl_msg *msg, int argc, char **argv,
 -- 
-1.9.2
+1.7.11.7
 
