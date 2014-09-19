@@ -1,72 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f181.google.com ([209.85.223.181]:45552 "EHLO
-	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754174AbaIDSEs convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Sep 2014 14:04:48 -0400
-Received: by mail-ie0-f181.google.com with SMTP id rp18so11738985iec.26
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Sep 2014 11:04:47 -0700 (PDT)
+Received: from arrakis.dune.hu ([78.24.191.176]:36195 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751125AbaISIQv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Sep 2014 04:16:51 -0400
+Message-ID: <541BE66F.9040307@openwrt.org> (sfid-20140919_101657_645916_09A001BE)
+Date: Fri, 19 Sep 2014 10:16:47 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <20140904173833.GG3467@tuxdriver.com>
-References: <1409605867-30051-1-git-send-email-zajec5@gmail.com>
-	<1409605867-30051-2-git-send-email-zajec5@gmail.com>
-	<20140904173833.GG3467@tuxdriver.com>
-Date: Thu, 4 Sep 2014 20:04:47 +0200
-Message-ID: <CACna6ryHXMbzsS_Knf_5WqtanyAyXTETHAw2Mm8h8y2bNsZ-_A@mail.gmail.com> (sfid-20140904_200451_743304_BA220900)
-Subject: Re: [PATCH 2/2] bcma: use separated function to initialize bus on SoC
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Ralf Baechle <ralf@linux-mips.org>
-Content-Type: text/plain; charset=UTF-8
+To: Sujith Manoharan <sujith@msujith.org>,
+	John Linville <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: Re: [PATCH] ath9k: Fix p2p address management
+References: <1411111842-24503-1-git-send-email-sujith@msujith.org>
+In-Reply-To: <1411111842-24503-1-git-send-email-sujith@msujith.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4 September 2014 19:38, John W. Linville <linville@tuxdriver.com> wrote:
-> On Mon, Sep 01, 2014 at 11:11:07PM +0200, Rafał Miłecki wrote:
->> This is required to split SoC bus init into two phases. The later one
->> (which includes scanning) should be called when kalloc is available.
->>
->> Cc: Ralf Baechle <ralf@linux-mips.org>
->> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
->> ---
->> John: please note this patch touches arch/mips/bcm47xx/setup.c
->>
->> This patches is a first step of simplifying MIPS booting process on
->> Broadcom SoCs. My research described in:
->> > Booting bcm47xx (bcma & stuff), sharing code with bcm53xx
->> e-mail thread explained how we could get rid of all these early scanning
->> tricks. The main idea is to postpone bus initialization a bit and use
->> all standard calls then. So far we were doing it so early we had to
->> avoid kalloc.
->> ---
->>  arch/mips/bcm47xx/setup.c     |  4 ++++
->>  drivers/bcma/host_soc.c       | 11 +++++++++--
->>  include/linux/bcma/bcma_soc.h |  1 +
->>  3 files changed, 14 insertions(+), 2 deletions(-)
->>
->> diff --git a/arch/mips/bcm47xx/setup.c b/arch/mips/bcm47xx/setup.c
->> index 2b63e7e..fff6ed4 100644
->> --- a/arch/mips/bcm47xx/setup.c
->> +++ b/arch/mips/bcm47xx/setup.c
->> @@ -202,6 +202,10 @@ static void __init bcm47xx_register_bcma(void)
->>
->>       err = bcma_host_soc_register(&bcm47xx_bus.bcma);
->>       if (err)
->> +             panic("Failed to register BCMA bus (err %d)", err);
->> +
->> +     err = bcma_host_soc_init(&bcm47xx_bus.bcma);
->> +     if (err)
->>               panic("Failed to initialize BCMA bus (err %d)", err);
->>
->>       bcm47xx_fill_bcma_boardinfo(&bcm47xx_bus.bcma.bus.boardinfo, NULL);
->
-> This hunk looks wrong.  Is it missing indentation?  Or should a line
-> be removed at the top?
+On 2014-09-19 09:30, Sujith Manoharan wrote:
+> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+> 
+> When multiple channel contexts are enabled, a p2p interface
+> that is assigned to a context will have an address that
+> is different from the device mac address, which is used
+> by wpa_s as the p2p device ID.
+> 
+> Certain frames like provision requests use the device address
+> and these get dropped since ath9k_calculate_summary_state()
+> iterates over only the active interfaces in a context and the
+> device address is not used.
+> 
+> Fix this by adding the device mac address to the bssid mask.
+> 
+> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/ath9k.h |  1 +
+>  drivers/net/wireless/ath/ath9k/main.c  | 36 ++++++++++++++++++++++++++++++++++
+>  2 files changed, 37 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+> index 78fc539..32f9db9 100644
+> --- a/drivers/net/wireless/ath/ath9k/main.c
+> +++ b/drivers/net/wireless/ath/ath9k/main.c
+> @@ -940,6 +940,34 @@ static void ath9k_vif_iter(struct ath9k_vif_iter_data *iter_data,
+>  	}
+>  }
+>  
+> +static void ath9k_update_bssid_mask(struct ath_softc *sc,
+> +				    struct ath_chanctx *ctx,
+> +				    struct ath9k_vif_iter_data *iter_data)
+> +{
+> +	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+> +	struct ath_vif *avp;
+> +	int i;
+> +
+> +	if (!ath9k_is_chanctx_enabled())
+> +		return;
+> +
+> +	list_for_each_entry(avp, &ctx->vifs, list) {
+> +		if (ctx->nvifs_assigned != 1)
+> +			continue;
+> +
+> +		if (!avp->vif->p2p || !iter_data->has_hw_macaddr)
+> +			continue;
+> +
+> +		ether_addr_copy(common->curbssid, avp->bssid);
+> +
+> +		/* perm_addr will be used as the p2p device address. */
+> +		for (i = 0; i < ETH_ALEN; i++)
+> +			iter_data->mask[i] &=
+> +				~(iter_data->hw_macaddr[i] ^
+> +				  sc->hw->wiphy->perm_addr[i]);
+> +	}
+> +}
+Wouldn't it make more sense to put this into ath9k_vif_iter()
 
-I've just downloaded & applied this patchset on top of wireless-next
-successfully... Did you merge something extra from net-next maybe?
-
--- 
-Rafał
+- Felix
