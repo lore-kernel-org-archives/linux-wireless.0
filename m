@@ -1,68 +1,269 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mo4-p00-ob.smtp.rzone.de ([81.169.146.217]:21157 "EHLO
-	mo4-p00-ob.smtp.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750765AbaIJFCB (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:42275 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757810AbaISSR4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Sep 2014 01:02:01 -0400
-Message-ID: <540FDB3C.6060301@hartkopp.net> (sfid-20140910_070211_284184_31F7C24A)
-Date: Wed, 10 Sep 2014 07:01:48 +0200
-From: Oliver Hartkopp <socketcan@hartkopp.net>
-MIME-Version: 1.0
-To: Vadim Kochan <vadim4j@gmail.com>
-CC: Emmanuel Grumbach <egrumbach@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: Re: iwlwifi no authentication with AP - Re: pull request: wireless-next
- 2014-09-08
-References: <20140908191630.GB29412@tuxdriver.com>	<540F5927.7000306@hartkopp.net>	<CANUX_P3n0v1SzfbYuaAsE4TY7Hz_wo2Fb9SmHVNyFOC9hDhwdg@mail.gmail.com>	<540F61D0.9000704@hartkopp.net> <CAMw6YJLeO1JZeY6hNe-TXOS56b-otk+htt5VPPor+9iYCQz53Q@mail.gmail.com>
-In-Reply-To: <CAMw6YJLeO1JZeY6hNe-TXOS56b-otk+htt5VPPor+9iYCQz53Q@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+	Fri, 19 Sep 2014 14:17:56 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: ath10k@lists.infradead.org, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 2/2] ath10k: support ethtool stats.
+Date: Fri, 19 Sep 2014 11:17:39 -0700
+Message-Id: <1411150659-10998-2-git-send-email-greearb@candelatech.com> (sfid-20140919_201800_266173_3BBAB1F4)
+In-Reply-To: <1411150659-10998-1-git-send-email-greearb@candelatech.com>
+References: <1411150659-10998-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10.09.2014 00:07, Vadim Kochan wrote:
-> I have the same issue with iwlwifi.
+From: Ben Greear <greearb@candelatech.com>
 
-I tried an old zd1211 wireless USB stick to check if this problem is 80211
-related. But the USB stick works fine (I'm using it right now).
-So its definitely looks like an iwlwifi issue.
+Add support for reading firmware stats through the ethtool
+API.  This may be easier for applications to manipulate
+compared to parsing a text based debugfs file.
 
-> iwlwifi 0000:02:00.0: fail to flush all tx fifo queues Q 0
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ drivers/net/wireless/ath/ath10k/core.h  |   4 +
+ drivers/net/wireless/ath/ath10k/debug.c | 143 ++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/debug.h |   9 ++
+ drivers/net/wireless/ath/ath10k/mac.c   |   5 ++
+ drivers/net/wireless/ath/ath10k/pci.c   |   4 +
+ 5 files changed, 165 insertions(+)
 
-Wasn't there any change in the iwlwifi tx path recently??
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 3f14858..3c8d904 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -544,6 +544,10 @@ struct ath10k {
+ 
+ 	struct dfs_pattern_detector *dfs_detector;
+ 
++	u32 fw_crash_counter;
++	u32 fw_warm_reset_counter;
++	u32 fw_cold_reset_counter;
++
+ #ifdef CONFIG_ATH10K_DEBUGFS
+ 	struct ath10k_debug debug;
+ #endif
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index e223ba9..e3cda06 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -1037,6 +1037,149 @@ exit:
+ 	return ret;
+ }
+ 
++#ifdef CONFIG_ATH10K_DEBUGFS
++/* TODO:  Would be nice to always support ethtool stats, would need to
++ * move the stats storage out of ath10k_debug, or always have ath10k_debug
++ * struct available..
++ */
++
++/* This generally cooresponds to the debugfs fw_stats file */
++static const char ath10k_gstrings_stats[][ETH_GSTRING_LEN] = {
++	"tx_pkts_nic",
++	"tx_bytes_nic",
++	"rx_pkts_nic",
++	"rx_bytes_nic",
++	"d_noise_floor",
++	"d_cycle_count",
++	"d_phy_error",
++	"d_rts_bad",
++	"d_rts_good",
++	"d_tx_power", /* in .5 dbM I think */
++	"d_rx_crc_err", /* fcs_bad */
++	"d_no_beacon",
++	"d_tx_mpdus_queued",
++	"d_tx_msdu_queued",
++	"d_tx_msdu_dropped",
++	"d_local_enqued",
++	"d_local_freed",
++	"d_tx_ppdu_hw_queued",
++	"d_tx_ppdu_reaped",
++	"d_tx_fifo_underrun",
++	"d_tx_ppdu_abort",
++	"d_tx_mpdu_requed",
++	"d_tx_excessive_retries",
++	"d_tx_hw_rate",
++	"d_tx_dropped_sw_retries",
++	"d_tx_illegal_rate",
++	"d_tx_continuous_xretries",
++	"d_tx_timeout",
++	"d_tx_mpdu_txop_limit",
++	"d_pdev_resets",
++	"d_rx_mid_ppdu_route_change",
++	"d_rx_status",
++	"d_rx_extra_frags_ring0",
++	"d_rx_extra_frags_ring1",
++	"d_rx_extra_frags_ring2",
++	"d_rx_extra_frags_ring3",
++	"d_rx_msdu_htt",
++	"d_rx_mpdu_htt",
++	"d_rx_msdu_stack",
++	"d_rx_mpdu_stack",
++	"d_rx_phy_err",
++	"d_rx_phy_err_drops",
++	"d_rx_mpdu_errors", /* FCS, MIC, ENC */
++	"d_fw_crash_count",
++	"d_fw_warm_reset_count",
++	"d_fw_cold_reset_count",
++};
++#define ATH10K_SSTATS_LEN ARRAY_SIZE(ath10k_gstrings_stats)
++
++void ath10k_get_et_strings(struct ieee80211_hw *hw,
++			   struct ieee80211_vif *vif,
++			   u32 sset, u8 *data)
++{
++	if (sset == ETH_SS_STATS)
++		memcpy(data, *ath10k_gstrings_stats,
++		       sizeof(ath10k_gstrings_stats));
++}
++
++int ath10k_get_et_sset_count(struct ieee80211_hw *hw,
++			     struct ieee80211_vif *vif, int sset)
++{
++	if (sset == ETH_SS_STATS)
++		return ATH10K_SSTATS_LEN;
++	return 0;
++}
++
++void ath10k_get_et_stats(struct ieee80211_hw *hw,
++			 struct ieee80211_vif *vif,
++			 struct ethtool_stats *stats, u64 *data)
++{
++	struct ath10k *ar = hw->priv;
++	int i = 0;
++	struct ath10k_target_stats *fw_stats;
++
++	fw_stats = &ar->debug.target_stats;
++
++	mutex_lock(&ar->conf_mutex);
++
++	if (ar->state == ATH10K_STATE_ON)
++		ath10k_refresh_peer_stats(ar);
++
++	data[i++] = fw_stats->hw_reaped; /* ppdu reaped */
++	data[i++] = 0; /* tx bytes */
++	data[i++] = fw_stats->htt_mpdus;
++	data[i++] = 0; /* rx bytes */
++	data[i++] = fw_stats->ch_noise_floor;
++	data[i++] = fw_stats->cycle_count;
++	data[i++] = fw_stats->phy_err_count;
++	data[i++] = fw_stats->rts_bad;
++	data[i++] = fw_stats->rts_good;
++	data[i++] = fw_stats->chan_tx_power;
++	data[i++] = fw_stats->fcs_bad;
++	data[i++] = fw_stats->no_beacons;
++	data[i++] = fw_stats->mpdu_enqued;
++	data[i++] = fw_stats->msdu_enqued;
++	data[i++] = fw_stats->wmm_drop;
++	data[i++] = fw_stats->local_enqued;
++	data[i++] = fw_stats->local_freed;
++	data[i++] = fw_stats->hw_queued;
++	data[i++] = fw_stats->hw_reaped;
++	data[i++] = fw_stats->underrun;
++	data[i++] = fw_stats->tx_abort;
++	data[i++] = fw_stats->mpdus_requed;
++	data[i++] = fw_stats->tx_ko;
++	data[i++] = fw_stats->data_rc;
++	data[i++] = fw_stats->sw_retry_failure;
++	data[i++] = fw_stats->illgl_rate_phy_err;
++	data[i++] = fw_stats->pdev_cont_xretry;
++	data[i++] = fw_stats->pdev_tx_timeout;
++	data[i++] = fw_stats->txop_ovf;
++	data[i++] = fw_stats->pdev_resets;
++	data[i++] = fw_stats->mid_ppdu_route_change;
++	data[i++] = fw_stats->status_rcvd;
++	data[i++] = fw_stats->r0_frags;
++	data[i++] = fw_stats->r1_frags;
++	data[i++] = fw_stats->r2_frags;
++	data[i++] = fw_stats->r3_frags;
++	data[i++] = fw_stats->htt_msdus;
++	data[i++] = fw_stats->htt_mpdus;
++	data[i++] = fw_stats->loc_msdus;
++	data[i++] = fw_stats->loc_mpdus;
++	data[i++] = fw_stats->phy_errs;
++	data[i++] = fw_stats->phy_err_drop;
++	data[i++] = fw_stats->mpdu_errs;
++	data[i++] = ar->fw_crash_counter;
++	data[i++] = ar->fw_warm_reset_counter;
++	data[i++] = ar->fw_cold_reset_counter;
++
++	mutex_unlock(&ar->conf_mutex);
++
++	WARN_ON(i != ATH10K_SSTATS_LEN);
++}
++
++#endif
++
+ static const struct file_operations fops_fw_dbglog = {
+ 	.read = ath10k_read_fw_dbglog,
+ 	.write = ath10k_write_fw_dbglog,
+diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
+index 91b217e..e44e6fc 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.h
++++ b/drivers/net/wireless/ath/ath10k/debug.h
+@@ -64,6 +64,15 @@ void ath10k_debug_dbglog_add(struct ath10k *ar, u8 *buffer, int len);
+ 
+ #define ATH10K_DFS_STAT_INC(ar, c) (ar->debug.dfs_stats.c++)
+ 
++void ath10k_get_et_strings(struct ieee80211_hw *hw,
++			   struct ieee80211_vif *vif,
++			   u32 sset, u8 *data);
++int ath10k_get_et_sset_count(struct ieee80211_hw *hw,
++			     struct ieee80211_vif *vif, int sset);
++void ath10k_get_et_stats(struct ieee80211_hw *hw,
++			 struct ieee80211_vif *vif,
++			 struct ethtool_stats *stats, u64 *data);
++
+ #else
+ static inline int ath10k_debug_start(struct ath10k *ar)
+ {
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index b517f71..af24f6c 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -4468,6 +4468,11 @@ static const struct ieee80211_ops ath10k_ops = {
+ 	.suspend			= ath10k_suspend,
+ 	.resume				= ath10k_resume,
+ #endif
++#ifdef CONFIG_ATH10K_DEBUGFS
++	.get_et_sset_count  = ath10k_get_et_sset_count,
++	.get_et_stats       = ath10k_get_et_stats,
++	.get_et_strings     = ath10k_get_et_strings,
++#endif
+ };
+ 
+ #define RATETAB_ENT(_rate, _rateid, _flags) { \
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 59e0ea8..38f7386 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -986,6 +986,8 @@ static void ath10k_pci_fw_crashed_dump(struct ath10k *ar)
+ 
+ 	spin_lock_bh(&ar->data_lock);
+ 
++	ar->fw_crash_counter++;
++
+ 	crash_data = ath10k_debug_get_new_fw_crash_data(ar);
+ 
+ 	if (crash_data)
+@@ -1671,6 +1673,7 @@ static int ath10k_pci_warm_reset(struct ath10k *ar)
+ 	u32 val;
+ 
+ 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot warm reset\n");
++	ar->fw_warm_reset_counter++;
+ 
+ 	/* debug */
+ 	val = ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS +
+@@ -2286,6 +2289,7 @@ static int ath10k_pci_cold_reset(struct ath10k *ar)
+ 	u32 val;
+ 
+ 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot cold reset\n");
++	ar->fw_cold_reset_counter++;
+ 
+ 	/* Put Target, including PCIe, into RESET. */
+ 	val = ath10k_pci_reg_read32(ar, SOC_GLOBAL_RESET_ADDRESS);
+-- 
+1.7.11.7
 
-Regards,
-Oliver
-
-> 
-> On Tue, Sep 9, 2014 at 11:23 PM, Oliver Hartkopp <socketcan@hartkopp.net> wrote:
->> On 09.09.2014 22:02, Emmanuel Grumbach wrote:
->>> On Tue, Sep 9, 2014 at 10:46 PM, Oliver Hartkopp <socketcan@hartkopp.net> wrote:
->>>> Hello John, all,
->>>>
->>>> on my i7 Laptop with iwlwifi the latest net-next does not connect to my access point:
->>>
->>> Are you sure this wasn't the case before?
->>
->> Indeed I moved to net-next right today - as I also had the LED lockdep splat
->> on 3.17-rcX with X < 4.
->>
->> So it can be that this issue was already introduced at the beginning of this
->> net-next cycle. Don't know, sorry. The latest 3.17-rc4 from Linus' tree works
->> fine. I'm running a Debian unstable here (in both cases).
->>
->>> Can you bisect?
->>
->> Not really. I'm running the kernel on my bare machine - and I just wanted to
->> go to bed right now ...
->>
->> So I will be able to test patches tomorrow morning again.
->>
->> Tnx for your fast feedback,
->> Oliver
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe netdev" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
