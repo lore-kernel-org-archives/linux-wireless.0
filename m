@@ -1,56 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f54.google.com ([209.85.215.54]:45746 "EHLO
-	mail-la0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756075AbaIQTBt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Sep 2014 15:01:49 -0400
-Received: by mail-la0-f54.google.com with SMTP id ge10so2505618lab.13
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Sep 2014 12:01:47 -0700 (PDT)
+Received: from hauke-m.de ([5.39.93.123]:33101 "EHLO hauke-m.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751030AbaITPnm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 20 Sep 2014 11:43:42 -0400
+Message-ID: <541DA0AB.70307@hauke-m.de> (sfid-20140920_174345_548776_42416DFC)
+Date: Sat, 20 Sep 2014 17:43:39 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-In-Reply-To: <21529.10109.308613.563543@gargle.gargle.HOWL>
-References: <1410928422-25587-1-git-send-email-sujith@msujith.org>
-	<21529.5141.845629.86918@gargle.gargle.HOWL>
-	<0BA3FCBA62E2DC44AF3030971E174FB31B523034@hasmsx107.ger.corp.intel.com>
-	<21529.8110.26388.664223@gargle.gargle.HOWL>
-	<0BA3FCBA62E2DC44AF3030971E174FB31B5230C9@hasmsx107.ger.corp.intel.com>
-	<21529.9155.323515.987489@gargle.gargle.HOWL>
-	<0BA3FCBA62E2DC44AF3030971E174FB31B52311D@hasmsx107.ger.corp.intel.com>
-	<21529.10109.308613.563543@gargle.gargle.HOWL>
-Date: Wed, 17 Sep 2014 22:01:47 +0300
-Message-ID: <CANUX_P3hdFeCPmqHCdP8JKwqvUUnjgp3SNy1GQDrQd0bG+WKng@mail.gmail.com> (sfid-20140917_210210_587479_C51C132B)
-Subject: Re: [PATCH] mac80211: Call mgd_prepare_tx before deauthentication
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Sujith Manoharan <sujith@msujith.org>
-Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Varka Bhadram <varkabhadram@gmail.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+CC: zajec5@gmail.com, arend@broadcom.com,
+	linux-arm-kernel@lists.infradead.org, arnd@arndb.de,
+	devicetree@vger.kernel.org
+Subject: Re: [PATCH v3 1/2] bcma: register bcma as device tree driver
+References: <1411218125-32670-1-git-send-email-hauke@hauke-m.de> <541D9FD8.4000404@gmail.com>
+In-Reply-To: <541D9FD8.4000404@gmail.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 17, 2014 at 9:17 AM, Sujith Manoharan <sujith@msujith.org> wrote:
-> Grumbach, Emmanuel wrote:
->> It can wait until a context switch will occur in ath9k - you should switch
->> from time to time anyway to avoid starvation, and this is not under the radar
->> of mac80211.
->
-> But mac80211 doesn't wait for a switch to happen. It removes the BSS and station
-> info immediately after sending the deauth frame to the driver and the driver doesn't
-> get a chance to process the pending frames for the other context. I think
-> this race could be avoided by making sure the driver switches to the
-> required context before sending deauth.
->
+On 09/20/2014 05:40 PM, Varka Bhadram wrote:
+> On Saturday 20 September 2014 06:32 PM, Hauke Mehrtens wrote:
+>> This driver is used by the bcm53xx ARM SoC code. Now it is possible to
+>> give the address of the chipcommon core in device tree and bcma will
+>> search for all the other cores.
+> 
+> (...)
+> 
+>> +
+>> +static const struct of_device_id bcma_host_soc_of_match[] = {
+>> +    { .compatible = "brcm,bus-axi", },
+>> +    {},
+>> +};
+>> +MODULE_DEVICE_TABLE(of, bcma_host_soc_of_match);
+>> +
+>> +static struct platform_driver bcma_host_soc_driver = {
+>> +    .driver = {
+>> +        .name = "bcma-host-soc",
+>> +        .owner = THIS_MODULE,
+> 
+> This field updated automatically...
 
-mac80211 will not wait until the context switch happen specifically,
-but if you can wait
-in the driver in the flush() callback until the deauth is being sent -
-whatever you need to
-happen to have that done, context switch, TX queues to move etc... -
-then you should be good?
-IIRC, mac80211 sends the deauth to the driver and then calls flush() -
-only then, it'll remove the
-contexts.
+Ok, I will remove this line.
 
-So I guess that we agree - the solution for you I guess is to wait
-until you have context switch
-in the flush() callback.
+>> +        .of_match_table = bcma_host_soc_of_match,
+>> +    },
+>> +    .probe        = bcma_host_soc_probe,
+>> +    .remove        = bcma_host_soc_remove,
+>> +};
+>> +
+>> +int __init bcma_host_soc_register_driver(void)
+>> +{
+>> +    return platform_driver_register(&bcma_host_soc_driver);
+>> +}
+>> +
+>> +void __exit bcma_host_soc_unregister_driver(void)
+>> +{
+>> +    platform_driver_unregister(&bcma_host_soc_driver);
+>> +}
+>> +#endif /* CONFIG_OF */
+> 
+> Why dont you use module_platform_driver(...)...?
+
+module_platform_driver() does not work, because we can only have one
+module_init() method in a module and main.c already has one. This driver
+can also be registered as an PCI device.
+
+Hauke
