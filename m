@@ -1,73 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:65211 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932320AbaICMcp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Sep 2014 08:32:45 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Assaf Krauss <assaf.krauss@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 04/10] nl80211: Allow declaring RRM-related features
-Date: Wed,  3 Sep 2014 15:25:00 +0300
-Message-Id: <1409747106-30717-5-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140903_143252_912264_7DBDEEEF)
-In-Reply-To: <1409747106-30717-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1409747106-30717-1-git-send-email-emmanuel.grumbach@intel.com>
+Received: from mail-we0-f182.google.com ([74.125.82.182]:40952 "EHLO
+	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750713AbaITBTS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Sep 2014 21:19:18 -0400
+Received: by mail-we0-f182.google.com with SMTP id q59so517309wes.27
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Sep 2014 18:19:16 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1411093476-15685-2-git-send-email-yeohchunyeow@gmail.com>
+References: <1411093476-15685-1-git-send-email-yeohchunyeow@gmail.com>
+	<1411093476-15685-2-git-send-email-yeohchunyeow@gmail.com>
+Date: Fri, 19 Sep 2014 18:19:16 -0700
+Message-ID: <CANrMYP4+atK9g+cfU5VYKjAuT31COVSXAkqTswZn0E2QEv5JDA@mail.gmail.com> (sfid-20140920_031922_637469_88F16DE8)
+Subject: Re: [PATCH v2 2/2] iw: Allow basic rates to be configured when
+ joining mesh
+From: Colleen T <colleen@cozybit.com>
+To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>, devel@lists.open80211s.org
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Ashok Nagarajan <ashok.dragon@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Assaf Krauss <assaf.krauss@intel.com>
+On Thu, Sep 18, 2014 at 7:24 PM, Chun-Yeow Yeoh via Devel
+<devel@lists.open80211s.org> wrote:
+> This patch adds option to configure basic rates during mesh join.
+>
+> Signed-off-by: Ashok Nagarajan <ashok.dragon@gmail.com>
+> Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+>
+> v2: minor change for upstream
+> ---
+>  mesh.c | 40 ++++++++++++++++++++++++++++++++++------
+>  1 file changed, 34 insertions(+), 6 deletions(-)
+>
+> diff --git a/mesh.c b/mesh.c
+> index 69c54cc..b21a302 100644
+> --- a/mesh.c
+> +++ b/mesh.c
+> @@ -438,8 +438,9 @@ static int join_mesh(struct nl80211_state *state, struct nl_cb *cb,
+>  {
+>         struct nlattr *container;
+>         float rate;
+> -       int bintval, dtim_period, i;
+> -       char *end;
+> +       unsigned char rates[NL80211_MAX_SUPP_RATES];
+> +       int bintval, dtim_period, i, n_rates = 0;
+> +       char *end, *value = NULL, *sptr = NULL;
+>         unsigned long freq = 0;
+>         static const struct {
+>                 const char *name;
+> @@ -510,6 +511,32 @@ static int join_mesh(struct nl80211_state *state, struct nl_cb *cb,
+>                 }
+>         }
+>
+> +       /* basic rates */
+> +       if (argc > 1 && strcmp(argv[0], "basic-rates") == 0) {
+> +               argv++;
+> +               argc--;
+> +
+> +               value = strtok_r(argv[0], ",", &sptr);
+> +
+> +               while (value && n_rates < NL80211_MAX_SUPP_RATES) {
+> +                       rate = strtod(value, &end);
+> +                       rates[n_rates] = rate * 2;
+> +
+> +                       /* filter out suspicious values  */
+> +                       if (*end != '\0' || !rates[n_rates] ||
+> +                           rate*2 != rates[n_rates])
+> +                               return 1;
+> +
+> +                       n_rates++;
+> +                       value = strtok_r(NULL, ",", &sptr);
+> +               }
+> +
+> +               NLA_PUT(msg, NL80211_ATTR_BSS_BASIC_RATES, n_rates, rates);
+> +               argv++;
+> +               argc--;
+> +       }
+> +
+> +       /* multicast rate */
+>         if (argc > 1 && strcmp(argv[0], "mcast-rate") == 0) {
+>                 argv++;
+>                 argc--;
+> @@ -575,13 +602,14 @@ static int join_mesh(struct nl80211_state *state, struct nl_cb *cb,
+>   nla_put_failure:
+>         return -ENOBUFS;
+>  }
+> -COMMAND(mesh, join, "<mesh ID> [freq in MHz] [HT20|HT40+|HT40-|NOHT]"
+> -       " [mcast-rate <rate in Mbps>]"
+> +COMMAND(mesh, join, "<mesh ID> [freq in MHz [HT20|HT40+|HT40-|NOHT]"
+> +       " [basic-rates <rate in Mbps,rate2,...>]], [mcast-rate <rate in Mbps>]"
+>         " [beacon-interval <time in TUs>] [dtim-period <value>]"
+>         " [vendor_sync on|off] [<param>=<value>]*",
+>         NL80211_CMD_JOIN_MESH, 0, CIB_NETDEV, join_mesh,
+> -       "Join a mesh with the given mesh ID with frequency, mcast-rate, "
+> -       "and mesh parameters.");
+> +       "Join a mesh with the given mesh ID with frequency, basic-rates,\n"
+> +       "mcast-rate and mesh parameters. basic-rates are be applied only if\n"
+> +       "frequency is provided.");
 
-Radio Resource Measurement (RRM) is a bundle of features which will
-require the entire stack to participate.
-In this patch, the driver is given the opportunity to advertise the
-device's support for these RRM-related features, using feature flags:
-1. Support for Quiet IEs.
-2. Support for adding DS Parameter Set IE to probe requests.
-3. Support for adding WFA TPC Report IE to probe requests.
-4. Support for inserting tx power value to tx-ed packets at a fixed
-   offset. This is used in action frames, such as RRM's Link
-   Measurement Report, where the actual tx power should be reported
-   in the frame.
+I think you have a typo here.  Remove "be"?
 
-Signed-off-by: Assaf Krauss <assaf.krauss@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- include/uapi/linux/nl80211.h | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+>  static int leave_mesh(struct nl80211_state *state, struct nl_cb *cb,
+>                       struct nl_msg *msg, int argc, char **argv,
+> --
+> 1.9.2
+>
+> _______________________________________________
+> Devel mailing list
+> Devel@lists.open80211s.org
+> http://lists.open80211s.org/cgi-bin/mailman/listinfo/devel
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index f1db15b..375225f 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -3956,6 +3956,16 @@ enum nl80211_ap_sme_features {
-  * @NL80211_FEATURE_AP_MODE_CHAN_WIDTH_CHANGE: This driver supports dynamic
-  *	channel bandwidth change (e.g., HT 20 <-> 40 MHz channel) during the
-  *	lifetime of a BSS.
-+ * @NL80211_FEATURE_DS_PARAM_SET_IE_IN_PROBES: This device adds a DS Parameter
-+ *	Set IE to probe requests.
-+ * @NL80211_FEATURE_WFA_TPC_IE_IN_PROBES: This device adds a WFA TPC Report IE
-+ *	to probe requests.
-+ * @NL80211_FEATURE_QUIET: This device, in client mode, supports Quiet Period
-+ *	requests sent to it by an AP.
-+ * @NL80211_FEATURE_TX_POWER_INSERTION: This device is capable of inserting the
-+ *	current tx power value into the TPC Report IE in the spectrum
-+ *	management TPC Report action frame, and in the Radio Measurement Link
-+ *	Measurement Report action frame.
-  */
- enum nl80211_feature_flags {
- 	NL80211_FEATURE_SK_TX_STATUS			= 1 << 0,
-@@ -3977,6 +3987,10 @@ enum nl80211_feature_flags {
- 	NL80211_FEATURE_USERSPACE_MPM			= 1 << 16,
- 	NL80211_FEATURE_ACTIVE_MONITOR			= 1 << 17,
- 	NL80211_FEATURE_AP_MODE_CHAN_WIDTH_CHANGE	= 1 << 18,
-+	NL80211_FEATURE_DS_PARAM_SET_IE_IN_PROBES	= 1 << 19,
-+	NL80211_FEATURE_WFA_TPC_IE_IN_PROBES		= 1 << 20,
-+	NL80211_FEATURE_QUIET				= 1 << 21,
-+	NL80211_FEATURE_TX_POWER_INSERTION		= 1 << 22,
- };
- 
- /**
--- 
-1.9.1
-
+- Colleen
