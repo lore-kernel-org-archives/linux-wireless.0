@@ -1,40 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:58999 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757686AbaISUeD (ORCPT
+Received: from mail-ie0-f170.google.com ([209.85.223.170]:48026 "EHLO
+	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756515AbaITNUg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Sep 2014 16:34:03 -0400
-Date: Fri, 19 Sep 2014 16:33:59 -0400 (EDT)
-Message-Id: <20140919.163359.1720346114199249960.davem@davemloft.net> (sfid-20140919_223428_838955_A5CD4FDC)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless 2014-09-17
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20140917152300.GB13392@tuxdriver.com>
-References: <20140917152300.GB13392@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Sat, 20 Sep 2014 09:20:36 -0400
+MIME-Version: 1.0
+In-Reply-To: <1411218125-32670-1-git-send-email-hauke@hauke-m.de>
+References: <1411218125-32670-1-git-send-email-hauke@hauke-m.de>
+Date: Sat, 20 Sep 2014 15:20:35 +0200
+Message-ID: <CACna6rwozvugsSQDf_JQ=rj_PDNghvXc=JmvRAJeWp4gFdfuVg@mail.gmail.com> (sfid-20140920_152045_474264_EBB7AE44)
+Subject: Re: [PATCH v3 1/2] bcma: register bcma as device tree driver
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: John Linville <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Arend Van Spriel <arend@broadcom.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Arnd Bergmann <arnd@arndb.de>, devicetree@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 17 Sep 2014 11:23:01 -0400
+On 20 September 2014 15:02, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> This driver is used by the bcm53xx ARM SoC code. Now it is possible to
+> give the address of the chipcommon core in device tree and bcma will
+> search for all the other cores.
 
-> Please pull this batch of fixes intended for the 3.17 stream...
-> 
-> Arend van Spriel sends a trio of minor brcmfmac fixes, including a
-> fix for a Kconfig/build issue, a fix for a crash (null reference),
-> and a regression fix related to event handling on a P2P interface.
-> 
-> Hante Meuleman follows-up with a brcmfmac fix for a memory leak.
-> 
-> Johannes Stezenbach brings an ath9k_htc fix for a regression related
-> to hardware decryption offload.
-> 
-> Marcel Holtmann delivers a one-liner to properly mark a device ID
-> table in rfkill-gpio.
-> 
-> Please let me know if there are problems!
-
-Pulled, thanks John.
+Looks fine, thanks!
