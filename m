@@ -1,40 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:48902 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751952AbaIASwT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Sep 2014 14:52:19 -0400
-Message-ID: <1409597534.2703.9.camel@jlt4.sipsolutions.net> (sfid-20140901_205222_034567_5042807B)
-Subject: Re: wmediumd performance penalty
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dani Camps <danicamps81@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 01 Sep 2014 20:52:14 +0200
-In-Reply-To: <CAD3NH5X1AYR5p8AyRyO0DFkkJUtuc_78=s6vEi-nS4UxUZfWCg@mail.gmail.com> (sfid-20140901_173813_368381_480D49AD)
-References: <CAD3NH5X1AYR5p8AyRyO0DFkkJUtuc_78=s6vEi-nS4UxUZfWCg@mail.gmail.com>
-	 (sfid-20140901_173813_368381_480D49AD)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:61039 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752897AbaITPyI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 20 Sep 2014 11:54:08 -0400
+Message-ID: <541DA30A.6030100@gmail.com> (sfid-20140920_175413_124569_8F5609B9)
+Date: Sat, 20 Sep 2014 21:23:46 +0530
+From: Varka Bhadram <varkabhadram@gmail.com>
+MIME-Version: 1.0
+To: Hauke Mehrtens <hauke@hauke-m.de>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+CC: zajec5@gmail.com, arend@broadcom.com,
+	linux-arm-kernel@lists.infradead.org, arnd@arndb.de,
+	devicetree@vger.kernel.org
+Subject: Re: [PATCH v3 1/2] bcma: register bcma as device tree driver
+References: <1411218125-32670-1-git-send-email-hauke@hauke-m.de> <541D9FD8.4000404@gmail.com> <541DA0AB.70307@hauke-m.de>
+In-Reply-To: <541DA0AB.70307@hauke-m.de>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-09-01 at 17:38 +0200, Dani Camps wrote:
-> Dear all,
-> 
-> I am testing a simple 1-hop mesh network over wmediumd. The PHY rate I
-> have configured is 54 Mbps, and there is no loss, however the max
-> throughput I get is around 14 Mbps. Without wmediumd I get around 30
-> Mbps, which seems reasonable given the 54 PHY rate. As I noted above
-> there is no loss probability configured in wmediumd.
-> 
-> My impression is that the performance drop is due to the overhead of
-> switching between kernel and user space in wmediumd, however it
-> surprises me that the penalty is so high.
-> 
-> Has anyone had a similar experience? Could there be a way to overcome
-> this bottleneck?
 
-What kind of system are you running on? The virtual PHY rate isn't taken
-into account at all, so you should see far higher performance.
+On Saturday 20 September 2014 09:13 PM, Hauke Mehrtens wrote:
+> On 09/20/2014 05:40 PM, Varka Bhadram wrote:
+>> On Saturday 20 September 2014 06:32 PM, Hauke Mehrtens wrote:
+>>> This driver is used by the bcm53xx ARM SoC code. Now it is possible to
+>>> give the address of the chipcommon core in device tree and bcma will
+>>> search for all the other cores.
+>> (...)
+>>
+>>> +
+>>> +static const struct of_device_id bcma_host_soc_of_match[] = {
+>>> +    { .compatible = "brcm,bus-axi", },
+>>> +    {},
+>>> +};
+>>> +MODULE_DEVICE_TABLE(of, bcma_host_soc_of_match);
+>>> +
+>>> +static struct platform_driver bcma_host_soc_driver = {
+>>> +    .driver = {
+>>> +        .name = "bcma-host-soc",
+>>> +        .owner = THIS_MODULE,
+>> This field updated automatically...
+> Ok, I will remove this line.
+>
+>>> +        .of_match_table = bcma_host_soc_of_match,
+>>> +    },
+>>> +    .probe        = bcma_host_soc_probe,
+>>> +    .remove        = bcma_host_soc_remove,
+>>> +};
+>>> +
+>>> +int __init bcma_host_soc_register_driver(void)
+>>> +{
+>>> +    return platform_driver_register(&bcma_host_soc_driver);
+>>> +}
+>>> +
+>>> +void __exit bcma_host_soc_unregister_driver(void)
+>>> +{
+>>> +    platform_driver_unregister(&bcma_host_soc_driver);
+>>> +}
+>>> +#endif /* CONFIG_OF */
+>> Why dont you use module_platform_driver(...)...?
+> module_platform_driver() does not work, because we can only have one
+> module_init() method in a module and main.c already has one. This driver
+> can also be registered as an PCI device.
 
-johannes
+Ok.. thanks
+
+
+-- 
+-Varka Bhadram
 
