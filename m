@@ -1,31 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:54091 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754291AbaIXASj (ORCPT
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:53437 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751111AbaITGlD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Sep 2014 20:18:39 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-Message-ID: <21538.3575.430682.821603@gargle.gargle.HOWL> (sfid-20140924_021842_109414_79F24FA8)
-Date: Wed, 24 Sep 2014 05:49:03 +0530
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: How are ht-caps changes propagated after ieee80211_register_hw?
-In-Reply-To: <5421FF7F.2080109@candelatech.com>
-References: <5421FF7F.2080109@candelatech.com>
+	Sat, 20 Sep 2014 02:41:03 -0400
+Received: by mail-pa0-f54.google.com with SMTP id fb1so1460799pad.27
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Sep 2014 23:41:02 -0700 (PDT)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, devel@lists.open80211s.org,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>,
+	Ashok Nagarajan <ashok.dragon@gmail.com>
+Subject: [PATCH v3 1/2] iw: Allow user to provide freq during mesh join
+Date: Sat, 20 Sep 2014 14:40:43 +0800
+Message-Id: <1411195244-9130-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20140920_084108_301951_C33ABF85)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Greear wrote:
-> In ath9k, when you set the chainmask to 2x2 on a 3x3 NIC,
-> the ht-caps appear as 2-streams in station association requests.
-> 
-> But, in ath10k, they still appear as 3x3.  I don't see any obvious way
-> that ath9k notifies the mac80211 stack that it changed the
-> ht-caps, but it must be working somehow.
+Allow user to configure frequency and channel type during
+mesh join command.
 
-In ath9k, we re-register the new HT parameters with mac80211
-when set_antenna() is called.
+Signed-off-by: Ashok Nagarajan <ashok.dragon@gmail.com>
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
 
-Sujith
+v2: use chandef similar to IBSS (Johannes)
+---
+ mesh.c | 70 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 67 insertions(+), 3 deletions(-)
+
+diff --git a/mesh.c b/mesh.c
+index ca065bf..69c54cc 100644
+--- a/mesh.c
++++ b/mesh.c
+@@ -438,8 +438,32 @@ static int join_mesh(struct nl80211_state *state, struct nl_cb *cb,
+ {
+ 	struct nlattr *container;
+ 	float rate;
+-	int bintval, dtim_period;
++	int bintval, dtim_period, i;
+ 	char *end;
++	unsigned long freq = 0;
++	static const struct {
++		const char *name;
++		unsigned int width;
++		int freq1_diff;
++		int chantype; /* for older kernel */
++	} *chanmode_selected = NULL, chanmode[] = {
++		{ .name = "HT20",
++		  .width = NL80211_CHAN_WIDTH_20,
++		  .freq1_diff = 0,
++		  .chantype = NL80211_CHAN_HT20 },
++		{ .name = "HT40+",
++		  .width = NL80211_CHAN_WIDTH_40,
++		  .freq1_diff = 10,
++		  .chantype = NL80211_CHAN_HT40PLUS },
++		{ .name = "HT40-",
++		  .width = NL80211_CHAN_WIDTH_40,
++		  .freq1_diff = -10,
++		  .chantype = NL80211_CHAN_HT40MINUS },
++		{ .name = "NOHT",
++		  .width = NL80211_CHAN_WIDTH_20_NOHT,
++		  .freq1_diff = 0,
++		  .chantype = NL80211_CHAN_NO_HT },
++	};
+ 
+ 	if (argc < 1)
+ 		return 1;
+@@ -448,6 +472,44 @@ static int join_mesh(struct nl80211_state *state, struct nl_cb *cb,
+ 	argc--;
+ 	argv++;
+ 
++	/* freq */
++	if (argc > 1 && strcmp(argv[0], "freq") == 0) {
++		argv++;
++		argc--;
++
++		freq = strtoul(argv[0], &end, 10);
++		if (*end != '\0')
++			return 1;
++		NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_FREQ, freq);
++
++		argv++;
++		argc--;
++	}
++
++	/* channel type */
++	if (argc) {
++		for (i = 0; i < ARRAY_SIZE(chanmode); i++) {
++			if (strcasecmp(chanmode[i].name, argv[0]) == 0) {
++				chanmode_selected = &chanmode[i];
++				break;
++			}
++		}
++
++		if (chanmode_selected) {
++			NLA_PUT_U32(msg, NL80211_ATTR_CHANNEL_WIDTH,
++				    chanmode_selected->width);
++			NLA_PUT_U32(msg, NL80211_ATTR_CENTER_FREQ1,
++				    freq + chanmode_selected->freq1_diff);
++			if (chanmode_selected->chantype != -1)
++				NLA_PUT_U32(msg,
++					    NL80211_ATTR_WIPHY_CHANNEL_TYPE,
++					    chanmode_selected->chantype);
++
++			argv++;
++			argc--;
++		}
++	}
++
+ 	if (argc > 1 && strcmp(argv[0], "mcast-rate") == 0) {
+ 		argv++;
+ 		argc--;
+@@ -513,11 +575,13 @@ static int join_mesh(struct nl80211_state *state, struct nl_cb *cb,
+  nla_put_failure:
+ 	return -ENOBUFS;
+ }
+-COMMAND(mesh, join, "<mesh ID> [mcast-rate <rate in Mbps>]"
++COMMAND(mesh, join, "<mesh ID> [freq in MHz] [HT20|HT40+|HT40-|NOHT]"
++	" [mcast-rate <rate in Mbps>]"
+ 	" [beacon-interval <time in TUs>] [dtim-period <value>]"
+ 	" [vendor_sync on|off] [<param>=<value>]*",
+ 	NL80211_CMD_JOIN_MESH, 0, CIB_NETDEV, join_mesh,
+-	"Join a mesh with the given mesh ID with mcast-rate and mesh parameters.");
++	"Join a mesh with the given mesh ID with frequency, mcast-rate, "
++	"and mesh parameters.");
+ 
+ static int leave_mesh(struct nl80211_state *state, struct nl_cb *cb,
+ 		      struct nl_msg *msg, int argc, char **argv,
+-- 
+1.9.2
+
