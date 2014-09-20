@@ -1,71 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay6-d.mail.gandi.net ([217.70.183.198]:60821 "EHLO
-	relay6-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750970AbaIKRHv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Sep 2014 13:07:51 -0400
-Message-ID: <1410455253.32328.16.camel@hadess.net> (sfid-20140911_190754_828244_982DC9F9)
-Subject: Re: Realtek GPIO chipset, for Baytrail?
-From: Bastien Nocera <hadess@hadess.net>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Loic Poulain <loic.poulain@intel.com>,
-	linux-wireless@vger.kernel.org
-Date: Thu, 11 Sep 2014 19:07:33 +0200
-In-Reply-To: <82CCC358-4838-4C3F-BE0B-9AB765389960@holtmann.org>
-References: <1410256608.4077.7.camel@hadess.net>
-	 <F79C10A5-18F8-4165-BFC5-FDAD35BE46BE@holtmann.org>
-	 <5411C2BE.6090702@intel.com> <1410451261.32328.11.camel@hadess.net>
-	 <5F46C78F-1749-480F-B90C-702509D963AD@holtmann.org>
-	 <1410453721.32328.15.camel@hadess.net>
-	 <82CCC358-4838-4C3F-BE0B-9AB765389960@holtmann.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from hauke-m.de ([5.39.93.123]:33023 "EHLO hauke-m.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755133AbaITNCP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 20 Sep 2014 09:02:15 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Cc: zajec5@gmail.com, arend@broadcom.com,
+	linux-arm-kernel@lists.infradead.org, arnd@arndb.de,
+	devicetree@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH v3 2/2] bcma: get IRQ numbers from dt
+Date: Sat, 20 Sep 2014 15:02:05 +0200
+Message-Id: <1411218125-32670-2-git-send-email-hauke@hauke-m.de> (sfid-20140920_150222_575492_0C1AE97C)
+In-Reply-To: <1411218125-32670-1-git-send-email-hauke@hauke-m.de>
+References: <1411218125-32670-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-09-11 at 10:06 -0700, Marcel Holtmann wrote:
-> Hi Bastien,
-> 
-> >>>> Your device is a child of 80860F0A (UART) which is driven by the 8250_dw 
-> >>>> driver.
-> >>>> OBDA8723 is the BT part of the realtek 8723 WiFi/BT combo chip.
-> >>>> acpi_platform should create a platform device from the ACPI desc.
-> >>> 
-> >>> That does show up already in udev, so I should be fine.
-> >>> 
-> >>>> Then, you can add the OBDA8723 acpi id to the rfkill-gpio platform 
-> >>>> driver (net/rfkill) which
-> >>>> seems to handle correctly the basic power management of this chip.
-> >>> 
-> >>> OK. Something like that should do:
-> >>> http://paste.fedoraproject.org/132832/14104505
-> >>> 
-> >>>> You need to use hciattach to attach the chip to the BT stack (with 
-> >>>> H5/3-wire proto).
-> >>> 
-> >>> Will that be required to enable Bluetooth at every boot?
-> >>> 
-> >>> After inserting the above module, I ran:
-> >>> hciattach -n ttyS0 3wire
-> >>> 
-> >>> But no Bluetooth adapters showed up in hciconfig. The rfkill device did
-> >>> show up in rfkill list though.
-> >> 
-> >> my bet is that you need to start with the correct default speed, load
-> >> some firmware and do more settings and then switch to the faster
-> >> speed. There is an effort ongoing for the USB version of Realtek
-> >> Bluetooth, but even that one has not yet completed.
-> > 
-> > I have a firmware and a config file from the Windows driver, but I doubt
-> > I'd be able to make great headway without more info.
-> 
-> in theory this is straight forward, but since this is H:5 it needs extra work to make this nice and clean. So far no H:5 hardware required extra settings. This will be the first one. That is mainly because H:5 is not that popular.
-> 
-> If you can have the basic attachment done with btattach and bring it up in raw only mode, then you could use HCI User Channel to poke with it. We have easy code in src/shared/hci.c that allows you to use the HCI User Channel.
-> 
-> And you want a 3.17 kernel for toying with this of course since I only recently added the extra flags to hci_uart.ko driver to allow bringing the device up in raw only mode or in unconfigured mode.
+It is not possible to auto detect the irq numbers used by the cores on
+an arm SoC. If bcma was registered with device tree it will search for
+some device tree nodes with the irq number and add it to the core
+configuration.
 
-This will have to wait a little then, as 3.17 kernel don't boot on this
-device yet:
-https://bugzilla.kernel.org/show_bug.cgi?id=84241
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/bcma/main.c | 49 ++++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 48 insertions(+), 1 deletion(-)
+
+
+This is based on wireless-testing and should go into that tree.
+
+changes since:
+v2:
+ - use of_translate_address() to support ranges
+
+RFC:
+ - add #ifdef CONFIG_OF
+ 
+diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
+index 19ef685..5e7a3d4 100644
+--- a/drivers/bcma/main.c
++++ b/drivers/bcma/main.c
+@@ -10,6 +10,8 @@
+ #include <linux/platform_device.h>
+ #include <linux/bcma/bcma.h>
+ #include <linux/slab.h>
++#include <linux/of_irq.h>
++#include <linux/of_address.h>
+ 
+ MODULE_DESCRIPTION("Broadcom's specific AMBA driver");
+ MODULE_LICENSE("GPL");
+@@ -131,6 +133,45 @@ static bool bcma_is_core_needed_early(u16 core_id)
+ 	return false;
+ }
+ 
++#ifdef CONFIG_OF
++static struct device_node *bcma_of_find_child_device(struct platform_device *parent,
++						     struct bcma_device *core)
++{
++	struct device_node *node;
++	u64 size;
++	const __be32 *reg;
++
++	if (!parent || !parent->dev.of_node)
++		return NULL;
++
++	for_each_child_of_node(parent->dev.of_node, node) {
++		reg = of_get_address(node, 0, &size, NULL);
++		if (!reg)
++			continue;
++		if (of_translate_address(node, reg) == core->addr)
++			return node;
++	}
++	return NULL;
++}
++
++static void bcma_of_fill_device(struct platform_device *parent,
++				struct bcma_device *core)
++{
++	struct device_node *node;
++
++	node = bcma_of_find_child_device(parent, core);
++	if (!node)
++		return;
++	core->dev.of_node = node;
++	core->irq = irq_of_parse_and_map(node, 0);
++}
++#else
++static void bcma_of_fill_device(struct platform_device *parent,
++				struct bcma_device *core)
++{
++}
++#endif /* CONFIG_OF */
++
+ static void bcma_register_core(struct bcma_bus *bus, struct bcma_device *core)
+ {
+ 	int err;
+@@ -147,7 +188,13 @@ static void bcma_register_core(struct bcma_bus *bus, struct bcma_device *core)
+ 		break;
+ 	case BCMA_HOSTTYPE_SOC:
+ 		core->dev.dma_mask = &core->dev.coherent_dma_mask;
+-		core->dma_dev = &core->dev;
++		if (bus->host_pdev) {
++			core->dma_dev = &bus->host_pdev->dev;
++			core->dev.parent = &bus->host_pdev->dev;
++			bcma_of_fill_device(bus->host_pdev, core);
++		} else {
++			core->dma_dev = &core->dev;
++		}
+ 		break;
+ 	case BCMA_HOSTTYPE_SDIO:
+ 		break;
+-- 
+1.9.1
 
