@@ -1,56 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f173.google.com ([209.85.216.173]:53958 "EHLO
-	mail-qc0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751013AbaIKNl2 (ORCPT
+Received: from mail-lb0-f178.google.com ([209.85.217.178]:58126 "EHLO
+	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750834AbaITW7H (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Sep 2014 09:41:28 -0400
-Received: by mail-qc0-f173.google.com with SMTP id w7so21038175qcr.18
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Sep 2014 06:41:27 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1410281416.2770593.165489213.019D33E6@webmail.messagingengine.com>
-References: <CACHGq=AYtyCh2s_h_UtBtnH4TdHuw+gHeXhKjT2kVQSLcBSrow@mail.gmail.com>
-	<540ED666.9070101@broadcom.com>
-	<20140909132623.GD29412@tuxdriver.com>
-	<1410281416.2770593.165489213.019D33E6@webmail.messagingengine.com>
-Date: Thu, 11 Sep 2014 19:11:27 +0530
-Message-ID: <CACHGq=CQXKfwEYHH5ZnB8vkCfLc6dng4+G=4Aa8ApgLy_52pnA@mail.gmail.com> (sfid-20140911_154131_501260_6729C2E3)
-Subject: Re: Mesh Support in brcmsmac
-From: chandrika parimoo <chandrika3437@gmail.com>
-To: Thomas Pedersen <thomas@noack.us>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Sat, 20 Sep 2014 18:59:07 -0400
+From: Emil Goode <emilgoode@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	Daniel Kim <dekim@broadcom.com>
+Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	kernel-janitors@vger.kernel.org, Emil Goode <emilgoode@gmail.com>
+Subject: [PATCH] brcmfmac: Fix off by one bug in brcmf_count_20mhz_channels()
+Date: Sun, 21 Sep 2014 00:58:52 +0200
+Message-Id: <1411253932-27973-1-git-send-email-emilgoode@gmail.com> (sfid-20140921_005947_862661_5DBAD621)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Is there any work already done or is being done to get the mesh
-support on brcmsmac  driver (I can see that b43 and b43legacy already
-has mesh support)?
-Since b43 has no support for BCM4313 chipsets so using b43 is not an
-option in my case. Also, will making changes to  brcmsmac be
-sufficient or will there be a requirement for firmware changes to
-achieve mesh support?
+In the brcmf_count_20mhz_channels function we are looping through a list
+of channels received from firmware. Since the index of the first channel
+is 0 the condition leads to an off by one bug. This is causing us to hit
+the WARN_ON_ONCE(1) calls in the brcmu_d11n_decchspec function, which is
+how I discovered the bug.
 
-On Tue, Sep 9, 2014 at 10:20 PM, Thomas Pedersen <thomas@noack.us> wrote:
-> On Tue, Sep 9, 2014, at 06:26 AM, John W. Linville wrote:
->> On Tue, Sep 09, 2014 at 12:28:54PM +0200, Arend van Spriel wrote:
->> > + linux-wireless
->> >
->> > On 09/09/14 12:22, chandrika parimoo wrote:
->> > >Hello,
->> > >
->> > >I have broadcom bcm4313 card and am using brcmsmac driver which does not
->> > >have mesh support currently.
->> > >I wanted to know if there is a workaround for it?
->> >
->> > No workaround. I am not familiar with wireless mesh networking. I suppose
->> > there are people on the linux-wireless mailing list who know what is needed
->> > from a mac80211 driver (like brcmsmac) to enable mesh networking.
->>
->> The main things is the beacons, no?
->
-> Yeah mainly beacons, but also 4addr frames and FIF_OTHER_BSS filter.
->
-> --
-> thomas
+Introduced by:
+commit b48d891676f756d48b4d0ee131e4a7a5d43ca417
+("brcmfmac: rework wiphy structure setup")
+
+Signed-off-by: Emil Goode <emilgoode@gmail.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index 02fe706..93b5dd9 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -4918,7 +4918,7 @@ static void brcmf_count_20mhz_channels(struct brcmf_cfg80211_info *cfg,
+ 	struct brcmu_chan ch;
+ 	int i;
+ 
+-	for (i = 0; i <= total; i++) {
++	for (i = 0; i < total; i++) {
+ 		ch.chspec = (u16)le32_to_cpu(chlist->element[i]);
+ 		cfg->d11inf.decchspec(&ch);
+ 
+-- 
+2.1.0
+
