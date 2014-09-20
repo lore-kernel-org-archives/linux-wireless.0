@@ -1,75 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:64056 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753930AbaILJLn (ORCPT
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:38944 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757015AbaITS0J convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Sep 2014 05:11:43 -0400
-From: Avinash Patil <patila@marvell.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
-	<huxm@marvell.com>, <yangyang@marvell.com>, <cluo@marvell.com>,
-	<maithili@marvell.com>, Avinash Patil <patila@marvell.com>
-Subject: [PATCHv2 13/16] mwifiex: remove redundant variable report_scan_result
-Date: Fri, 12 Sep 2014 20:08:57 +0530
-Message-ID: <1410532740-3173-14-git-send-email-patila@marvell.com> (sfid-20140912_111152_759543_2994D25B)
-In-Reply-To: <1410532740-3173-1-git-send-email-patila@marvell.com>
-References: <1410532740-3173-1-git-send-email-patila@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sat, 20 Sep 2014 14:26:09 -0400
+Received: by mail-pa0-f51.google.com with SMTP id eu11so351101pac.10
+        for <linux-wireless@vger.kernel.org>; Sat, 20 Sep 2014 11:26:08 -0700 (PDT)
+Received: from [192.168.43.64] ([221.7.7.153])
+        by mx.google.com with ESMTPSA id ix8sm5167677pac.32.2014.09.20.11.26.07
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1 cipher=ECDHE-RSA-RC4-SHA bits=128/128);
+        Sat, 20 Sep 2014 11:26:07 -0700 (PDT)
+Subject: =?utf-8?Q?compile_Failed_in_openwrt_for_[PATCH]_=E2=80=9Cadd_sup?=
+ =?utf-8?Q?port_for_ack_timeout_estimation_in_ath9k_driver_?=
+ =?utf-8?Q?=E2=80=9D?=
+From: jammy <benxuelan0402@gmail.com>
+Content-Type: text/plain;
+	charset=utf-8
+Message-Id: <509C5E93-4D6C-4CCE-A4F6-BA1CEC80AB98@gmail.com> (sfid-20140920_202612_640943_B7997908)
+Date: Sun, 21 Sep 2014 02:26:02 +0800
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Mime-Version: 1.0 (1.0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+Hi, all，
+I have read the http://www.spinics.net/lists/linux-wireless/msg124980.html for patching the ath9k driver in compat-wireless-2014-05-22 in openwrt trunk, but when I patch, for example, “the [PATCH 01/10] ath9k: export methods related to ack timeout estimation”, it failed. 
 
-This variable is never used, get rid of it.
+the command window showed that：
+ patching file drivers/net/wireless/ath/ath9k/hw.h
+Hunk #1 FAILED at 1080.
+1 out of 1 hunk FAILED -- saving rejects to file drivers/net/wireless/ath/ath9k/hw.h.rej.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Avinash Patil <patila@marvell.com>
----
- drivers/net/wireless/mwifiex/main.h        | 1 -
- drivers/net/wireless/mwifiex/scan.c        | 3 ---
- drivers/net/wireless/mwifiex/sta_cmdresp.c | 2 --
- 3 files changed, 6 deletions(-)
+i have checked the hw.h file, but I can not see anything wrong, how should i do further?
 
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index c3d097c..651fd8c 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -548,7 +548,6 @@ struct mwifiex_private {
- 	u8 nick_name[16];
- 	u16 current_key_index;
- 	struct semaphore async_sem;
--	u8 report_scan_result;
- 	struct cfg80211_scan_request *scan_request;
- 	u8 cfg_bssid[6];
- 	struct wps wps;
-diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
-index 7c85f61..7b07da2 100644
---- a/drivers/net/wireless/mwifiex/scan.c
-+++ b/drivers/net/wireless/mwifiex/scan.c
-@@ -1778,9 +1778,6 @@ static void mwifiex_check_next_scan_command(struct mwifiex_private *priv)
- 		if (!adapter->ext_scan)
- 			mwifiex_complete_scan(priv);
- 
--		if (priv->report_scan_result)
--			priv->report_scan_result = false;
--
- 		if (priv->scan_request) {
- 			dev_dbg(adapter->dev, "info: notifying scan done\n");
- 			cfg80211_scan_done(priv->scan_request, 0);
-diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-index 62866b0..4aad446 100644
---- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
-+++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-@@ -85,8 +85,6 @@ mwifiex_process_cmdresp_error(struct mwifiex_private *priv,
- 		spin_lock_irqsave(&adapter->mwifiex_cmd_lock, flags);
- 		adapter->scan_processing = false;
- 		spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, flags);
--		if (priv->report_scan_result)
--			priv->report_scan_result = false;
- 		break;
- 
- 	case HostCmd_CMD_MAC_CONTROL:
--- 
-1.8.1.4
+another question is，if I patch them manualy，I can not see the dnyack choice in the menuconfig，what should I do then？
 
+I am waiting for your suggestions.
+
+from jammy's iPhone
