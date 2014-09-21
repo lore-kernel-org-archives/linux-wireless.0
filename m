@@ -1,58 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:41617 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751012AbaIXN2I (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Sep 2014 09:28:08 -0400
-Message-ID: <5422C6E0.3080002@broadcom.com> (sfid-20140924_152812_560556_F2B784F4)
-Date: Wed, 24 Sep 2014 15:28:00 +0200
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Michael Tokarev <mjt@tls.msk.ru>
-CC: Seth Forshee <seth.forshee@canonical.com>,
-	<brcm80211-dev-list@broadcom.com>,
-	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
-Subject: Re: BCM4313 & brcmsmac & 3.12: only semi-working?
-References: <53FDACD1.8090805@msgid.tls.msk.ru> <53FDF8EB.4050905@broadcom.com> <54169D4F.2090607@broadcom.com> <541EEF17.7020806@msgid.tls.msk.ru> <542145B1.4030202@msgid.tls.msk.ru> <54216BF1.3060500@broadcom.com> <20140923134419.GA19016@ubuntu-hedt> <54217AA5.2060803@broadcom.com> <542182BE.2000606@msgid.tls.msk.ru> <542183A6.4070207@msgid.tls.msk.ru> <20140923143124.GC19016@ubuntu-hedt> <54219984.2080601@msgid.tls.msk.ru> <5421AF5C.6000106@broadcom.com> <5421B78E.4050908@msgid.tls.msk.ru>
-In-Reply-To: <5421B78E.4050908@msgid.tls.msk.ru>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Received: from hauke-m.de ([5.39.93.123]:33839 "EHLO hauke-m.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751537AbaIUWii (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Sep 2014 18:38:38 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Cc: zajec5@gmail.com, arend@broadcom.com,
+	linux-arm-kernel@lists.infradead.org, arnd@arndb.de,
+	devicetree@vger.kernel.org, varkabhadram@gmail.com,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH v4 2/2] bcma: get IRQ numbers from dt
+Date: Mon, 22 Sep 2014 00:38:28 +0200
+Message-Id: <1411339108-22307-2-git-send-email-hauke@hauke-m.de> (sfid-20140922_003845_176324_DF58CEF0)
+In-Reply-To: <1411339108-22307-1-git-send-email-hauke@hauke-m.de>
+References: <1411339108-22307-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/23/14 20:10, Michael Tokarev wrote:
-> 23.09.2014 21:35, Arend van Spriel wrote:
->> On 09/23/14 18:02, Michael Tokarev wrote:
->
->>> Oh. Indeed.  While I enabled it, I recompiled only drivers/net/wireless,
->>> but not net/.  Rebuilt, another trace is here --
->>>
->>>    http://www.corpit.ru/mjt/tmp/brcmsmac-4313-trace-201409233.dat.gz
->>>
->>> Thanks,
->>
->> Just to confirm. With this trace you also get a stall during wget?
->
-> Yes.  Initially it started d/loading but some time later the d/load speed
-> reduced to 0.  It is possible to wait further, and after some more time
-> it will receive some more bytes/kilobytes/packets and stall again.  Overall
-> progress is nearing zero.
+It is not possible to auto detect the irq numbers used by the cores on
+an arm SoC. If bcma was registered with device tree it will search for
+some device tree nodes with the irq number and add it to the core
+configuration.
 
-I looked at the log. I see download commence because the packets 
-received of 1562 bytes length. So within one second I see little over 
-200 packets so approx. 3Mbps which is not impressive but I don't know 
-what can be expected. Indeed after that it stalls and we only seem to 
-receive small packets of 179 bytes that seem to end up in 
-cfg80211_mgmt_rx. It could be that the hardware is somehow bogged and 
-can not receive at higher modulations as management frames are 
-transmitted at lower rates. The hardware will drop packets that are 
-having FCS (aka. checksum) errors. The brcmsmac is missing some code to 
-read fcs error count from hardware, but I will get back to you with a 
-patch that we can use to confirm this.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/bcma/main.c | 49 ++++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 48 insertions(+), 1 deletion(-)
 
-Regards,
-Arend
+This is based on wireless-testing and should go into that tree.
 
-> Thanks,
->
-> /mjt
+changes since:
+v2:
+ - use of_translate_address() to support ranges
+
+RFC:
+ - add #ifdef CONFIG_OF
+
+diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
+index 19ef685..5e7a3d4 100644
+--- a/drivers/bcma/main.c
++++ b/drivers/bcma/main.c
+@@ -10,6 +10,8 @@
+ #include <linux/platform_device.h>
+ #include <linux/bcma/bcma.h>
+ #include <linux/slab.h>
++#include <linux/of_irq.h>
++#include <linux/of_address.h>
+ 
+ MODULE_DESCRIPTION("Broadcom's specific AMBA driver");
+ MODULE_LICENSE("GPL");
+@@ -131,6 +133,45 @@ static bool bcma_is_core_needed_early(u16 core_id)
+ 	return false;
+ }
+ 
++#ifdef CONFIG_OF
++static struct device_node *bcma_of_find_child_device(struct platform_device *parent,
++						     struct bcma_device *core)
++{
++	struct device_node *node;
++	u64 size;
++	const __be32 *reg;
++
++	if (!parent || !parent->dev.of_node)
++		return NULL;
++
++	for_each_child_of_node(parent->dev.of_node, node) {
++		reg = of_get_address(node, 0, &size, NULL);
++		if (!reg)
++			continue;
++		if (of_translate_address(node, reg) == core->addr)
++			return node;
++	}
++	return NULL;
++}
++
++static void bcma_of_fill_device(struct platform_device *parent,
++				struct bcma_device *core)
++{
++	struct device_node *node;
++
++	node = bcma_of_find_child_device(parent, core);
++	if (!node)
++		return;
++	core->dev.of_node = node;
++	core->irq = irq_of_parse_and_map(node, 0);
++}
++#else
++static void bcma_of_fill_device(struct platform_device *parent,
++				struct bcma_device *core)
++{
++}
++#endif /* CONFIG_OF */
++
+ static void bcma_register_core(struct bcma_bus *bus, struct bcma_device *core)
+ {
+ 	int err;
+@@ -147,7 +188,13 @@ static void bcma_register_core(struct bcma_bus *bus, struct bcma_device *core)
+ 		break;
+ 	case BCMA_HOSTTYPE_SOC:
+ 		core->dev.dma_mask = &core->dev.coherent_dma_mask;
+-		core->dma_dev = &core->dev;
++		if (bus->host_pdev) {
++			core->dma_dev = &bus->host_pdev->dev;
++			core->dev.parent = &bus->host_pdev->dev;
++			bcma_of_fill_device(bus->host_pdev, core);
++		} else {
++			core->dma_dev = &core->dev;
++		}
+ 		break;
+ 	case BCMA_HOSTTYPE_SDIO:
+ 		break;
+-- 
+1.9.1
 
