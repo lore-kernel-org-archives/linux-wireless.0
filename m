@@ -1,145 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:26323 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932320AbaICMcu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Sep 2014 08:32:50 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>,
-	Eliad Peller <eliadx.peller@intel.com>,
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:43532 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751565AbaIUTW3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Sep 2014 15:22:29 -0400
+Received: by mail-wi0-f175.google.com with SMTP id r20so1819677wiv.14
+        for <linux-wireless@vger.kernel.org>; Sun, 21 Sep 2014 12:22:27 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
 	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 10/10] mac80211: combine roc with the "next roc" if possible
-Date: Wed,  3 Sep 2014 15:25:06 +0300
-Message-Id: <1409747106-30717-11-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140903_143259_333098_876CDFE8)
-In-Reply-To: <1409747106-30717-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1409747106-30717-1-git-send-email-emmanuel.grumbach@intel.com>
+Subject: [PATCH 02/17] iwlwifi: mvm: Update TX power in TPC reports
+Date: Sun, 21 Sep 2014 22:22:03 +0300
+Message-Id: <1411327338-23099-2-git-send-email-egrumbach@gmail.com> (sfid-20140921_212232_905034_8120DC88)
+In-Reply-To: <541F23D2.90600@gmail.com>
+References: <541F23D2.90600@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
 
-If the remaining time in the current roc is not long
-enough, mac80211 adds the new roc right after it
-(if they have similar params).
+Introduce new tx command flag (TX_CMD_FLG_WRITE_TX_POWER) which requests the
+fw to update the tx power value at some constant offset.
+Set this flag when transmitting either TPC report or Link measurement report
+action frames.
+In addition, introduce new tlv which indicates whether the fw supports power
+insertion (IWL_UCODE_TLV_CAPA_TXPOWER_INSERTION_SUPPORT) and publish the
+corresponding nl80211 feature.
 
-However, in case of multiple rocs, the "next roc"
-is not considered, resulting in multiple rocs,
-each one with its own duration.
-
-Refactor the code a bit and consider the next roc,
-so a single max roc will be used instead of
-multiple rocs (which might last much longer).
-
-Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
-Reviewed-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- net/mac80211/cfg.c | 77 +++++++++++++++++++++++++++++++++++++-----------------
- 1 file changed, 53 insertions(+), 24 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-fw.h        | 4 ++++
+ drivers/net/wireless/iwlwifi/mvm/fw-api-tx.h | 2 ++
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c  | 4 ++++
+ drivers/net/wireless/iwlwifi/mvm/tx.c        | 5 +++++
+ 4 files changed, 15 insertions(+)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index edeab09..8eea032 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2359,6 +2359,58 @@ static int ieee80211_set_bitrate_mask(struct wiphy *wiphy,
- 	return 0;
- }
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fw.h b/drivers/net/wireless/iwlwifi/iwl-fw.h
+index 62c46eb..6ab40bc 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fw.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fw.h
+@@ -145,9 +145,13 @@ enum iwl_ucode_tlv_api {
+ /**
+  * enum iwl_ucode_tlv_capa - ucode capabilities
+  * @IWL_UCODE_TLV_CAPA_D0I3_SUPPORT: supports D0i3
++ * @IWL_UCODE_TLV_CAPA_TXPOWER_INSERTION_SUPPORT: supports insertion of current
++ *	tx power value into TPC Report action frame and Link Measurement Report
++ *	action frame
+  */
+ enum iwl_ucode_tlv_capa {
+ 	IWL_UCODE_TLV_CAPA_D0I3_SUPPORT		= BIT(0),
++	IWL_UCODE_TLV_CAPA_TXPOWER_INSERTION_SUPPORT = BIT(8),
+ };
  
-+static bool ieee80211_coalesce_started_roc(struct ieee80211_local *local,
-+					   struct ieee80211_roc_work *new_roc,
-+					   struct ieee80211_roc_work *cur_roc)
-+{
-+	unsigned long j = jiffies;
-+	unsigned long cur_roc_end = cur_roc->hw_start_time +
-+				    msecs_to_jiffies(cur_roc->duration);
-+	struct ieee80211_roc_work *next_roc;
-+	int new_dur;
-+
-+	if (WARN_ON(!cur_roc->started || !cur_roc->hw_begun))
-+		return false;
-+
-+	if (time_after(j + IEEE80211_ROC_MIN_LEFT, cur_roc_end))
-+		return false;
-+
-+	ieee80211_handle_roc_started(new_roc);
-+
-+	new_dur = new_roc->duration - jiffies_to_msecs(cur_roc_end - j);
-+
-+	/* cur_roc is long enough - add new_roc to the dependents list. */
-+	if (new_dur <= 0) {
-+		list_add_tail(&new_roc->list, &cur_roc->dependents);
-+		return true;
-+	}
-+
-+	new_roc->duration = new_dur;
-+
-+	/*
-+	 * if cur_roc was already coalesced before, we might
-+	 * want to extend the next roc instead of adding
-+	 * a new one.
-+	 */
-+	next_roc = list_entry(cur_roc->list.next,
-+			      struct ieee80211_roc_work, list);
-+	if (&next_roc->list != &local->roc_list &&
-+	    next_roc->chan == new_roc->chan &&
-+	    next_roc->sdata == new_roc->sdata &&
-+	    !WARN_ON(next_roc->started)) {
-+		list_add_tail(&new_roc->list, &next_roc->dependents);
-+		next_roc->duration = max(next_roc->duration,
-+					 new_roc->duration);
-+		next_roc->type = max(next_roc->type, new_roc->type);
-+		return true;
-+	}
-+
-+	/* add right after cur_roc */
-+	list_add(&new_roc->list, &cur_roc->list);
-+
-+	return true;
-+}
-+
- static int ieee80211_start_roc_work(struct ieee80211_local *local,
- 				    struct ieee80211_sub_if_data *sdata,
- 				    struct ieee80211_channel *channel,
-@@ -2464,8 +2516,6 @@ static int ieee80211_start_roc_work(struct ieee80211_local *local,
+ /* The default calibrate table size if not specified by firmware file */
+diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api-tx.h b/drivers/net/wireless/iwlwifi/mvm/fw-api-tx.h
+index d6073f6..5bca1f8 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/fw-api-tx.h
++++ b/drivers/net/wireless/iwlwifi/mvm/fw-api-tx.h
+@@ -66,6 +66,7 @@
+ /**
+  * enum iwl_tx_flags - bitmasks for tx_flags in TX command
+  * @TX_CMD_FLG_PROT_REQUIRE: use RTS or CTS-to-self to protect the frame
++ * @TX_CMD_FLG_WRITE_TX_POWER: update current tx power value in the mgmt frame
+  * @TX_CMD_FLG_ACK: expect ACK from receiving station
+  * @TX_CMD_FLG_STA_RATE: use RS table with initial index from the TX command.
+  *	Otherwise, use rate_n_flags from the TX command
+@@ -97,6 +98,7 @@
+  */
+ enum iwl_tx_flags {
+ 	TX_CMD_FLG_PROT_REQUIRE		= BIT(0),
++	TX_CMD_FLG_WRITE_TX_POWER	= BIT(1),
+ 	TX_CMD_FLG_ACK			= BIT(3),
+ 	TX_CMD_FLG_STA_RATE		= BIT(4),
+ 	TX_CMD_FLG_BAR			= BIT(6),
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 5f5a893..ba029f6 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -412,6 +412,10 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
+ 			       NL80211_FEATURE_DYNAMIC_SMPS |
+ 			       NL80211_FEATURE_STATIC_SMPS;
  
- 		/* If it has already started, it's more difficult ... */
- 		if (local->ops->remain_on_channel) {
--			unsigned long j = jiffies;
--
- 			/*
- 			 * In the offloaded ROC case, if it hasn't begun, add
- 			 * this new one to the dependent list to be handled
-@@ -2488,29 +2538,8 @@ static int ieee80211_start_roc_work(struct ieee80211_local *local,
- 				break;
- 			}
++	if (mvm->fw->ucode_capa.capa[0] &
++	    IWL_UCODE_TLV_CAPA_TXPOWER_INSERTION_SUPPORT)
++		hw->wiphy->features |= NL80211_FEATURE_TX_POWER_INSERTION;
++
+ 	mvm->rts_threshold = IEEE80211_MAX_RTS_THRESHOLD;
  
--			if (time_before(j + IEEE80211_ROC_MIN_LEFT,
--					tmp->hw_start_time +
--					msecs_to_jiffies(tmp->duration))) {
--				int new_dur;
--
--				ieee80211_handle_roc_started(roc);
--
--				new_dur = roc->duration -
--					  jiffies_to_msecs(tmp->hw_start_time +
--							   msecs_to_jiffies(
--								tmp->duration) -
--							   j);
--
--				if (new_dur > 0) {
--					/* add right after tmp */
--					roc->duration = new_dur;
--					list_add(&roc->list, &tmp->list);
--				} else {
--					list_add_tail(&roc->list,
--						      &tmp->dependents);
--				}
-+			if (ieee80211_coalesce_started_roc(local, roc, tmp))
- 				queued = true;
--			}
- 		} else if (del_timer_sync(&tmp->work.timer)) {
- 			unsigned long new_end;
+ 	/* currently FW API supports only one optional cipher scheme */
+diff --git a/drivers/net/wireless/iwlwifi/mvm/tx.c b/drivers/net/wireless/iwlwifi/mvm/tx.c
+index c67296e..d84f3ca 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/iwlwifi/mvm/tx.c
+@@ -133,6 +133,11 @@ static void iwl_mvm_set_tx_cmd(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 	    !is_multicast_ether_addr(ieee80211_get_DA(hdr)))
+ 		tx_flags |= TX_CMD_FLG_PROT_REQUIRE;
  
++	if ((mvm->fw->ucode_capa.capa[0] &
++	     IWL_UCODE_TLV_CAPA_TXPOWER_INSERTION_SUPPORT) &&
++	    ieee80211_action_contains_tpc(skb))
++		tx_flags |= TX_CMD_FLG_WRITE_TX_POWER;
++
+ 	tx_cmd->tx_flags = cpu_to_le32(tx_flags);
+ 	/* Total # bytes to be transmitted */
+ 	tx_cmd->len = cpu_to_le16((u16)skb->len);
 -- 
 1.9.1
 
