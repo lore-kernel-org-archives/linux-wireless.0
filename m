@@ -1,117 +1,308 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:57106 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751925AbaI3KGO (ORCPT
+Received: from mail-wg0-f51.google.com ([74.125.82.51]:36016 "EHLO
+	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751826AbaIUTWi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Sep 2014 06:06:14 -0400
-Message-ID: <542A8092.9090602@broadcom.com> (sfid-20140930_120626_467174_516EDA3F)
-Date: Tue, 30 Sep 2014 12:06:10 +0200
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Maximilian Engelhardt <maxi@daemonizer.de>
-CC: Michael Tokarev <mjt@tls.msk.ru>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	<brcm80211-dev-list@broadcom.com>,
-	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
-Subject: Re: BCM4313 & brcmsmac & 3.12: only semi-working?
-References: <53FDACD1.8090805@msgid.tls.msk.ru> <54258459.8020803@msgid.tls.msk.ru> <54296223.6090702@broadcom.com> <2326963.udog5tteBt@eisbaer>
-In-Reply-To: <2326963.udog5tteBt@eisbaer>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Sun, 21 Sep 2014 15:22:38 -0400
+Received: by mail-wg0-f51.google.com with SMTP id m15so1785220wgh.10
+        for <linux-wireless@vger.kernel.org>; Sun, 21 Sep 2014 12:22:37 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eyal Shapira <eyal@wizery.com>,
+	Eyal Shapira <eyalx.shapira@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 08/17] iwlwifi: mvm: choose an initial tx rate based on rssi conditions
+Date: Sun, 21 Sep 2014 22:22:09 +0300
+Message-Id: <1411327338-23099-8-git-send-email-egrumbach@gmail.com> (sfid-20140921_213113_787790_8115DCE7)
+In-Reply-To: <541F23D2.90600@gmail.com>
+References: <541F23D2.90600@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/29/14 21:40, Maximilian Engelhardt wrote:
-> On Monday 29 September 2014 15:44:03 Arend van Spriel wrote:
->> On 09/26/14 17:20, Michael Tokarev wrote:
->>> I can send it your way, -- guess it will be quite a bit costly,
->>> but I don't have any use for it anyway (short of throwing it
->>> away), and since I already spent significantly more money due
->>> to all this (whole thinkpad plus ssds and several wifi adaptors),
->>> this additional cost is just a small noize.  But since that's
->>> 2nd card in a row, maybe there's something else in there, the
->>> prob is not in the card?
->>
->> Could be. Maybe some BIOS issue. Can you make some hi-res pictures of
->> the card and email them to me? If it is identical to what I already have
->> over here there is not much sense in sending it.
->>
->> Regards,
->> Arend
->
-> Hi Arend,
->
-> I just saw this thread on linux-wireless and wanted to answer as it might be
-> of interest to you.
->
-> I also own a BCM4313 wireless network card. About a year ago I reported some
-> problems with reception strength which were then fixed after some time,
-> debugging and testing passed. At that time I also did some throughput testing,
-> but only had a 802.11g access-point to test. The results were not ideal, but
-> also not too bad. So at that time I thought the issues were all more or less
-> fixed and mostly fine. I also don't use wireless very much, so as long as things
-> do work somehow acceptable I probably don't notice any problems immediately.
-> So it comes that only about some month ago I noticed that the throughput I
-> measured with my 11g access-point (about half the rate than with an atheros
-> card on the same ap) is about the same on a 11n access-point where it should
-> be much faster. I didn't experience any stalls, but that may also be that I
-> didn't use the card enough to really notice them.
->
-> I always wanted to report a bug because of the low throughout, but never got
-> to it because of lack of time. I didn't want to provide a report saying just
-> it doesn't work or it's slow without any data about it and a description how
-> to reproduce it, as I think without this information a bug report is mostly
-> useless.
->
-> I also had a look at the kernel changelog of the brcmsm driver and notices
-> there was little to no activity lately. Because of this I also wasn't sure if
-> there is still someone interesting in fixing bugs for this device.
->
-> As I was annoyed by the bad support for this card I decided it would be more
-> easy and much less time consuming to simply buy another card than trying to
-> get this fixed. So I bought a BCM43228 card, because it also supports 5 GHz.
-> Only after it arrived I noticed that it was only supported by the 3.17+ kernel
-> (not so much of a problem) and that it only seems to work in 802.11g mode
-> (only slow speeds and no 5 GHz). At least I could use it in full 11g speeds,
-> so it was a improvement.
->
-> So I still don't have a card that does simply work. As I hope the missing
-> support for my BCM43228 will hopefully be added some time in the future it
-> probably would still be worth fixing the BCM4313 card as other users will also
-> benefit from it.
->
-> A friend of mine also has the same laptop than me and the same (or at least
-> very similar) wireless card. He has told me he has also problem with stalls
-> like Michael reported (if I remember the history of the thread correctly).
->
-> So I'm not really sure where I should go from here. I can try to provide some
-> debugging information as time permits, but I don't know how much time I will
-> have for this in the future. Of course ideally I want to use the BCM43228 card
-> with full support, as it can work on 5 GHz.
->
-> Currently the BCM43228 card is plugged into my laptop, but I want to avoid
-> swapping the cards more that very few times because the antenna connectors are
-> only designed for very few (un)plug cycles.
->
-> If it's of any information, my card is labeled BCM-BCM94313HMGB on the
-> sticker, the laptop where it was originally is a ThinkPad Edge E135.
+From: Eyal Shapira <eyal@wizery.com>
 
-Thanks for taking time to chime in. This chipset is a pain in the....
-The label info does help. You have a 4313 with internal PA for which 
-support was added later. The card that Michael has seems to have an 
-external PA. The initial iPA support patch broke things for everyone 
-with external PA so it was reverted. In the second round it was better, 
-but it seems Michael still had issues. As he mentioned BT issues and his 
-card shares the external PA between WLAN and BT I believe that there is 
-a BT-coex issue.
+Improve the initial tx rate and antenna selection to be based on
+the rssi of the last rx. This avoids starting at the lowest legacy
+rate always and requiring more tx traffic to "climb" up the rates.
+Since this option might cause trouble in certain setups, allow to
+disable it by default.
 
-What is causing your 4313 to seemingly do 11g rates is hard to tell 
-without any debug info. I have that card over here, but in my cabled 
-setup it is doing 72Mbps, ie. 11n rate. I can run a rate-vs-range test 
-to see if there is an issue.
+Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/constants.h |   1 +
+ drivers/net/wireless/iwlwifi/mvm/mvm.h       |   3 +
+ drivers/net/wireless/iwlwifi/mvm/rs.c        | 131 ++++++++++++++++++++++-----
+ drivers/net/wireless/iwlwifi/mvm/rx.c        |  41 +++++----
+ 4 files changed, 136 insertions(+), 40 deletions(-)
 
-Thanks again and
-Regards,
-Arend
-
-
+diff --git a/drivers/net/wireless/iwlwifi/mvm/constants.h b/drivers/net/wireless/iwlwifi/mvm/constants.h
+index a355788..f47f458 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/constants.h
++++ b/drivers/net/wireless/iwlwifi/mvm/constants.h
+@@ -94,5 +94,6 @@
+ #define IWL_MVM_BT_COEX_MPLUT			1
+ #define IWL_MVM_FW_MCAST_FILTER_PASS_ALL	0
+ #define IWL_MVM_QUOTA_THRESHOLD			8
++#define IWL_MVM_RS_RSSI_BASED_INIT_RATE         0
+ 
+ #endif /* __MVM_CONSTANTS_H */
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index c913d5e..7d0194b 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -989,6 +989,9 @@ void iwl_mvm_update_frame_stats(struct iwl_mvm *mvm,
+ 				struct iwl_mvm_frame_stats *stats,
+ 				u32 rate, bool agg);
+ int rs_pretty_print_rate(char *buf, const u32 rate);
++void rs_update_last_rssi(struct iwl_mvm *mvm,
++			 struct iwl_lq_sta *lq_sta,
++			 struct ieee80211_rx_status *rx_status);
+ 
+ /* power management */
+ int iwl_mvm_power_update_device(struct iwl_mvm *mvm);
+diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
+index f77dfe4..d179a8e 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
+@@ -2288,6 +2288,110 @@ out:
+ 	lq_sta->last_txrate_idx = index;
+ }
+ 
++struct rs_init_rate_info {
++	s8 rssi;
++	u8 rate_idx;
++};
++
++static const struct rs_init_rate_info rs_init_rates_24ghz[] = {
++	{ -60, IWL_RATE_54M_INDEX },
++	{ -64, IWL_RATE_48M_INDEX },
++	{ -68, IWL_RATE_36M_INDEX },
++	{ -80, IWL_RATE_24M_INDEX },
++	{ -84, IWL_RATE_18M_INDEX },
++	{ -85, IWL_RATE_12M_INDEX },
++	{ -86, IWL_RATE_11M_INDEX },
++	{ -88, IWL_RATE_5M_INDEX  },
++	{ -90, IWL_RATE_2M_INDEX  },
++	{ S8_MIN, IWL_RATE_1M_INDEX },
++};
++
++static const struct rs_init_rate_info rs_init_rates_5ghz[] = {
++	{ -60, IWL_RATE_54M_INDEX },
++	{ -64, IWL_RATE_48M_INDEX },
++	{ -72, IWL_RATE_36M_INDEX },
++	{ -80, IWL_RATE_24M_INDEX },
++	{ -84, IWL_RATE_18M_INDEX },
++	{ -85, IWL_RATE_12M_INDEX },
++	{ -87, IWL_RATE_9M_INDEX  },
++	{ S8_MIN, IWL_RATE_6M_INDEX },
++};
++
++/* Choose an initial legacy rate and antenna to use based on the RSSI
++ * of last Rx
++ */
++static void rs_get_initial_rate(struct iwl_mvm *mvm,
++				struct iwl_lq_sta *lq_sta,
++				enum ieee80211_band band,
++				struct rs_rate *rate)
++{
++	int i, nentries;
++	s8 best_rssi = S8_MIN;
++	u8 best_ant = ANT_NONE;
++	u8 valid_tx_ant = mvm->fw->valid_tx_ant;
++	const struct rs_init_rate_info *initial_rates;
++
++	for (i = 0; i < ARRAY_SIZE(lq_sta->pers.chain_signal); i++) {
++		if (!(lq_sta->pers.chains & BIT(i)))
++			continue;
++
++		if (lq_sta->pers.chain_signal[i] > best_rssi) {
++			best_rssi = lq_sta->pers.chain_signal[i];
++			best_ant = BIT(i);
++		}
++	}
++
++	IWL_DEBUG_RATE(mvm, "Best ANT: %s Best RSSI: %d\n",
++		       rs_pretty_ant(best_ant), best_rssi);
++
++	if (best_ant != ANT_A && best_ant != ANT_B)
++		rate->ant = first_antenna(valid_tx_ant);
++	else
++		rate->ant = best_ant;
++
++	rate->sgi = false;
++	rate->ldpc = false;
++	rate->bw = RATE_MCS_CHAN_WIDTH_20;
++
++	rate->index = find_first_bit(&lq_sta->active_legacy_rate,
++				     BITS_PER_LONG);
++
++	if (band == IEEE80211_BAND_5GHZ) {
++		rate->type = LQ_LEGACY_A;
++		initial_rates = rs_init_rates_5ghz;
++		nentries = ARRAY_SIZE(rs_init_rates_5ghz);
++	} else {
++		rate->type = LQ_LEGACY_G;
++		initial_rates = rs_init_rates_24ghz;
++		nentries = ARRAY_SIZE(rs_init_rates_24ghz);
++	}
++
++	if (IWL_MVM_RS_RSSI_BASED_INIT_RATE) {
++		for (i = 0; i < nentries; i++) {
++			int rate_idx = initial_rates[i].rate_idx;
++			if ((best_rssi >= initial_rates[i].rssi) &&
++			    (BIT(rate_idx) & lq_sta->active_legacy_rate)) {
++				rate->index = rate_idx;
++				break;
++			}
++		}
++	}
++
++	IWL_DEBUG_RATE(mvm, "rate_idx %d ANT %s\n", rate->index,
++		       rs_pretty_ant(rate->ant));
++}
++
++/* Save info about RSSI of last Rx */
++void rs_update_last_rssi(struct iwl_mvm *mvm,
++			 struct iwl_lq_sta *lq_sta,
++			 struct ieee80211_rx_status *rx_status)
++{
++	lq_sta->pers.chains = rx_status->chains;
++	lq_sta->pers.chain_signal[0] = rx_status->chain_signal[0];
++	lq_sta->pers.chain_signal[1] = rx_status->chain_signal[1];
++	lq_sta->pers.chain_signal[2] = rx_status->chain_signal[2];
++}
++
+ /**
+  * rs_initialize_lq - Initialize a station's hardware rate table
+  *
+@@ -2310,17 +2414,11 @@ static void rs_initialize_lq(struct iwl_mvm *mvm,
+ {
+ 	struct iwl_scale_tbl_info *tbl;
+ 	struct rs_rate *rate;
+-	int i;
+ 	u8 active_tbl = 0;
+-	u8 valid_tx_ant;
+ 
+ 	if (!sta || !lq_sta)
+ 		return;
+ 
+-	i = lq_sta->last_txrate_idx;
+-
+-	valid_tx_ant = mvm->fw->valid_tx_ant;
+-
+ 	if (!lq_sta->search_better_tbl)
+ 		active_tbl = lq_sta->active_tbl;
+ 	else
+@@ -2329,18 +2427,8 @@ static void rs_initialize_lq(struct iwl_mvm *mvm,
+ 	tbl = &(lq_sta->lq_info[active_tbl]);
+ 	rate = &tbl->rate;
+ 
+-	if ((i < 0) || (i >= IWL_RATE_COUNT))
+-		i = 0;
+-
+-	rate->index = i;
+-	rate->ant = first_antenna(valid_tx_ant);
+-	rate->sgi = false;
+-	rate->ldpc = false;
+-	rate->bw = RATE_MCS_CHAN_WIDTH_20;
+-	if (band == IEEE80211_BAND_5GHZ)
+-		rate->type = LQ_LEGACY_A;
+-	else
+-		rate->type = LQ_LEGACY_G;
++	rs_get_initial_rate(mvm, lq_sta, band, rate);
++	lq_sta->last_txrate_idx = rate->index;
+ 
+ 	WARN_ON_ONCE(rate->ant != ANT_A && rate->ant != ANT_B);
+ 	if (rate->ant == ANT_A)
+@@ -2397,6 +2485,8 @@ static void *rs_alloc_sta(void *mvm_rate, struct ieee80211_sta *sta,
+ 	lq_sta->pers.dbg_fixed_rate = 0;
+ 	lq_sta->pers.dbg_fixed_txp_reduction = TPC_INVALID;
+ #endif
++	lq_sta->pers.chains = 0;
++	memset(lq_sta->pers.chain_signal, 0, sizeof(lq_sta->pers.chain_signal));
+ 
+ 	return &sta_priv->lq_sta;
+ }
+@@ -2630,11 +2720,6 @@ void iwl_mvm_rs_rate_init(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+ 
+ 	/* as default allow aggregation for all tids */
+ 	lq_sta->tx_agg_tid_en = IWL_AGG_ALL_TID;
+-
+-	/* Set last_txrate_idx to lowest rate */
+-	lq_sta->last_txrate_idx = rate_lowest_index(sband, sta);
+-	if (sband->band == IEEE80211_BAND_5GHZ)
+-		lq_sta->last_txrate_idx += IWL_FIRST_OFDM_RATE;
+ 	lq_sta->is_agg = 0;
+ #ifdef CONFIG_IWLWIFI_DEBUGFS
+ 	iwl_mvm_reset_frame_stats(mvm, &mvm->drv_rx_stats);
+diff --git a/drivers/net/wireless/iwlwifi/mvm/rx.c b/drivers/net/wireless/iwlwifi/mvm/rx.c
+index a6cb84e..3cf40f3 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/rx.c
++++ b/drivers/net/wireless/iwlwifi/mvm/rx.c
+@@ -246,6 +246,7 @@ int iwl_mvm_rx_rx_mpdu(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb,
+ 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+ 	struct iwl_rx_phy_info *phy_info;
+ 	struct iwl_rx_mpdu_res_start *rx_res;
++	struct ieee80211_sta *sta;
+ 	u32 len;
+ 	u32 ampdu_status;
+ 	u32 rate_n_flags;
+@@ -261,23 +262,6 @@ int iwl_mvm_rx_rx_mpdu(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb,
+ 	memset(&rx_status, 0, sizeof(rx_status));
+ 
+ 	/*
+-	 * We have tx blocked stations (with CS bit). If we heard frames from
+-	 * a blocked station on a new channel we can TX to it again.
+-	 */
+-	if (unlikely(mvm->csa_tx_block_bcn_timeout)) {
+-		struct ieee80211_sta *sta;
+-
+-		rcu_read_lock();
+-
+-		sta = ieee80211_find_sta(
+-			rcu_dereference(mvm->csa_tx_blocked_vif), hdr->addr2);
+-		if (sta)
+-			iwl_mvm_sta_modify_disable_tx_ap(mvm, sta, false);
+-
+-		rcu_read_unlock();
+-	}
+-
+-	/*
+ 	 * drop the packet if it has failed being decrypted by HW
+ 	 */
+ 	if (iwl_mvm_set_mac80211_rx_flag(mvm, hdr, &rx_status, rx_pkt_status)) {
+@@ -325,6 +309,29 @@ int iwl_mvm_rx_rx_mpdu(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb,
+ 	IWL_DEBUG_STATS_LIMIT(mvm, "Rssi %d, TSF %llu\n", rx_status.signal,
+ 			      (unsigned long long)rx_status.mactime);
+ 
++	rcu_read_lock();
++	/*
++	 * We have tx blocked stations (with CS bit). If we heard frames from
++	 * a blocked station on a new channel we can TX to it again.
++	 */
++	if (unlikely(mvm->csa_tx_block_bcn_timeout)) {
++		sta = ieee80211_find_sta(
++			rcu_dereference(mvm->csa_tx_blocked_vif), hdr->addr2);
++		if (sta)
++			iwl_mvm_sta_modify_disable_tx_ap(mvm, sta, false);
++	}
++
++	/* This is fine since we don't support multiple AP interfaces */
++	sta = ieee80211_find_sta_by_ifaddr(mvm->hw, hdr->addr2, NULL);
++	if (sta) {
++		struct iwl_mvm_sta *mvmsta;
++		mvmsta = iwl_mvm_sta_from_mac80211(sta);
++		rs_update_last_rssi(mvm, &mvmsta->lq_sta,
++				    &rx_status);
++	}
++
++	rcu_read_unlock();
++
+ 	/* set the preamble flag if appropriate */
+ 	if (phy_info->phy_flags & cpu_to_le16(RX_RES_PHY_FLAGS_SHORT_PREAMBLE))
+ 		rx_status.flag |= RX_FLAG_SHORTPRE;
+-- 
+1.9.1
 
