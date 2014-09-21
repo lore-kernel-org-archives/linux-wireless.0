@@ -1,49 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:46270 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753181AbaIOFNa (ORCPT
+Received: from mail-we0-f179.google.com ([74.125.82.179]:60345 "EHLO
+	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751539AbaIUTW1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Sep 2014 01:13:30 -0400
-Received: by mail-wg0-f47.google.com with SMTP id y10so3272337wgg.30
-        for <linux-wireless@vger.kernel.org>; Sun, 14 Sep 2014 22:13:29 -0700 (PDT)
+	Sun, 21 Sep 2014 15:22:27 -0400
+Received: by mail-we0-f179.google.com with SMTP id u56so1908392wes.38
+        for <linux-wireless@vger.kernel.org>; Sun, 21 Sep 2014 12:22:26 -0700 (PDT)
 From: Emmanuel Grumbach <egrumbach@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: Avri Altman <avri.altman@intel.com>,
+Cc: Ido Yariv <ido@wizery.com>, Ido Yariv <idox.yariv@intel.com>,
 	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 17/28] iwlwifi: mvm: remove unused static inline function
-Date: Mon, 15 Sep 2014 08:12:49 +0300
-Message-Id: <1410757980-2138-17-git-send-email-egrumbach@gmail.com> (sfid-20140915_073114_441316_A58606E5)
-In-Reply-To: <5416742C.3070804@gmail.com>
-References: <5416742C.3070804@gmail.com>
+Subject: [PATCH 01/17] iwlwifi: mvm: support cloned tx skbs
+Date: Sun, 21 Sep 2014 22:22:02 +0300
+Message-Id: <1411327338-23099-1-git-send-email-egrumbach@gmail.com> (sfid-20140921_212230_462213_D60F05CC)
+In-Reply-To: <541F23D2.90600@gmail.com>
+References: <541F23D2.90600@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avri Altman <avri.altman@intel.com>
+From: Ido Yariv <ido@wizery.com>
 
-Signed-off-by: Avri Altman <avri.altman@intel.com>
+Since tx skbs are not modified by the driver, let mac80211 know the
+driver can handle cloned skbs.
+
+Signed-off-by: Ido Yariv <idox.yariv@intel.com>
 Reviewed-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-trans.h | 6 ------
- 1 file changed, 6 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
-index eb31648..9eb8524 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
-@@ -828,12 +828,6 @@ static inline void iwl_trans_ac_txq_enable(struct iwl_trans *trans, int queue,
- 	iwl_trans_txq_enable_cfg(trans, queue, 0, &cfg);
- }
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 4c21210..5f5a893 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -303,7 +303,8 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
+ 		    IEEE80211_HW_AMPDU_AGGREGATION |
+ 		    IEEE80211_HW_TIMING_BEACON_ONLY |
+ 		    IEEE80211_HW_CONNECTION_MONITOR |
+-		    IEEE80211_HW_CHANCTX_STA_CSA;
++		    IEEE80211_HW_CHANCTX_STA_CSA |
++		    IEEE80211_HW_SUPPORTS_CLONED_SKBS;
  
--static inline void
--iwl_trans_txq_enable_no_scd(struct iwl_trans *trans, int queue, u16 ssn)
--{
--	iwl_trans_txq_enable_cfg(trans, queue, ssn, NULL);
--}
--
- static inline int iwl_trans_wait_tx_queue_empty(struct iwl_trans *trans,
- 						u32 txq_bm)
- {
+ 	hw->queues = mvm->first_agg_queue;
+ 	hw->offchannel_tx_hw_queue = IWL_MVM_OFFCHANNEL_QUEUE;
 -- 
 1.9.1
 
