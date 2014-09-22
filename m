@@ -1,76 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f177.google.com ([209.85.217.177]:46312 "EHLO
-	mail-lb0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752733AbaINTcI (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:38484 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753000AbaIVUyJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Sep 2014 15:32:08 -0400
-Received: by mail-lb0-f177.google.com with SMTP id l4so3367300lbv.22
-        for <linux-wireless@vger.kernel.org>; Sun, 14 Sep 2014 12:32:07 -0700 (PDT)
-From: Sergey Ryazanov <ryazanov.s.a@gmail.com>
-To: Ralf Baechle <ralf@linux-mips.org>
-Cc: Linux MIPS <linux-mips@linux-mips.org>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
-Subject: [RFC 17/18] ath5k: update dependency
-Date: Sun, 14 Sep 2014 23:33:32 +0400
-Message-Id: <1410723213-22440-18-git-send-email-ryazanov.s.a@gmail.com> (sfid-20140914_213218_220258_336659B6)
-In-Reply-To: <1410723213-22440-1-git-send-email-ryazanov.s.a@gmail.com>
-References: <1410723213-22440-1-git-send-email-ryazanov.s.a@gmail.com>
+	Mon, 22 Sep 2014 16:54:09 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: ath10k@lists.infradead.org, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 1/2] ath10k:  make firmware text debug messages more verbose.
+Date: Mon, 22 Sep 2014 13:54:04 -0700
+Message-Id: <1411419245-25799-1-git-send-email-greearb@candelatech.com> (sfid-20140922_225413_548048_F145ECC0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rename the ATHEROS_AR231X config symbol to AR231X.
+From: Ben Greear <greearb@candelatech.com>
 
-Signed-off-by: Sergey Ryazanov <ryazanov.s.a@gmail.com>
-Cc: Jiri Slaby <jirislaby@gmail.com>
-Cc: Nick Kossifidis <mickflemm@gmail.com>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: ath5k-devel@lists.ath5k.org
+There are not many of these messages producted by the
+firmware, but they are generally fairly useful, so print
+them at info level.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/ath/ath5k/Kconfig | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/net/wireless/ath/ath10k/wmi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath5k/Kconfig b/drivers/net/wireless/ath/ath5k/Kconfig
-index c9f81a3..027c11c 100644
---- a/drivers/net/wireless/ath/ath5k/Kconfig
-+++ b/drivers/net/wireless/ath/ath5k/Kconfig
-@@ -1,13 +1,13 @@
- config ATH5K
- 	tristate "Atheros 5xxx wireless cards support"
--	depends on (PCI || ATHEROS_AR231X) && MAC80211
-+	depends on (PCI || AR231X) && MAC80211
- 	select ATH_COMMON
- 	select MAC80211_LEDS
- 	select LEDS_CLASS
- 	select NEW_LEDS
- 	select AVERAGE
--	select ATH5K_AHB if (ATHEROS_AR231X && !PCI)
--	select ATH5K_PCI if (!ATHEROS_AR231X && PCI)
-+	select ATH5K_AHB if (AR231X && !PCI)
-+	select ATH5K_PCI if (!AR231X && PCI)
- 	---help---
- 	  This module adds support for wireless adapters based on
- 	  Atheros 5xxx chipset.
-@@ -54,14 +54,14 @@ config ATH5K_TRACER
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index cd60940..6be62ac 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -2050,7 +2050,7 @@ static void ath10k_wmi_event_debug_print(struct ath10k *ar,
+ 	/* the last byte is always reserved for the null character */
+ 	buf[i] = '\0';
  
- config ATH5K_AHB
- 	bool "Atheros 5xxx AHB bus support"
--	depends on (ATHEROS_AR231X && !PCI)
-+	depends on (AR231X && !PCI)
- 	---help---
- 	  This adds support for WiSoC type chipsets of the 5xxx Atheros
- 	  family.
+-	ath10k_dbg(ar, ATH10K_DBG_WMI, "wmi event debug print '%s'\n", buf);
++	ath10k_info(ar, "wmi event debug print '%s'\n", buf);
+ }
  
- config ATH5K_PCI
- 	bool "Atheros 5xxx PCI bus support"
--	depends on (!ATHEROS_AR231X && PCI)
-+	depends on (!AR231X && PCI)
- 	---help---
- 	  This adds support for PCI type chipsets of the 5xxx Atheros
- 	  family.
+ static void ath10k_wmi_event_pdev_qvit(struct ath10k *ar, struct sk_buff *skb)
 -- 
-1.8.1.5
+1.7.11.7
 
