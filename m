@@ -1,440 +1,835 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:49992 "EHLO
-	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751499AbaIIVWU (ORCPT
+Received: from mail-oi0-f52.google.com ([209.85.218.52]:54028 "EHLO
+	mail-oi0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754208AbaIVOkB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Sep 2014 17:22:20 -0400
-From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+	Mon, 22 Sep 2014 10:40:01 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	nbd@nbd.name, thomas@net.t-labs.tu-berlin.de, ikstream86@gmail.com
-Subject: [PATCH v2 1/2] mac80211: Unify rate statistic variables between Minstrel & Minstrel_HT
-Date: Tue,  9 Sep 2014 23:22:13 +0200
-Message-Id: <1410297734-21187-2-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20140909_232227_165967_4AE3EC7A)
-In-Reply-To: <1410297734-21187-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
-References: <1410297734-21187-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+Cc: linux-wireless@vger.kernel.org, troy_tan@realsil.com.cn,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH 06/11 NEXT] rtlwifi: Modify cam.{c,h} and efuse.{c,h} for new drivers
+Date: Mon, 22 Sep 2014 09:39:22 -0500
+Message-Id: <1411396767-20611-7-git-send-email-Larry.Finger@lwfinger.net> (sfid-20140922_164118_229308_0B7F176E)
+In-Reply-To: <1411396767-20611-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1411396767-20611-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Minstrel and Mintrel_HT used there own structs to keep track of rate
-statistics. Unify those variables in struct minstrel_rate_states and
-move it to rc80211_minstrel.h for common usage. This is a clean-up
-patch to prepare Minstrel and Minstrel_HT codebase for upcoming TPC.
-
-Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- net/mac80211/rc80211_minstrel.c         | 98 +++++++++++++++++----------------
- net/mac80211/rc80211_minstrel.h         | 43 ++++++++-------
- net/mac80211/rc80211_minstrel_debugfs.c | 19 ++++---
- net/mac80211/rc80211_minstrel_ht.h      | 22 --------
- 4 files changed, 85 insertions(+), 97 deletions(-)
+ drivers/net/wireless/rtlwifi/cam.c   |  61 +++++-----
+ drivers/net/wireless/rtlwifi/cam.h   |  10 +-
+ drivers/net/wireless/rtlwifi/efuse.c | 224 ++++++++++++++++++-----------------
+ drivers/net/wireless/rtlwifi/efuse.h |  17 ++-
+ 4 files changed, 156 insertions(+), 156 deletions(-)
 
-diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
-index 1c1469c..2baa7ed 100644
---- a/net/mac80211/rc80211_minstrel.c
-+++ b/net/mac80211/rc80211_minstrel.c
-@@ -75,7 +75,7 @@ minstrel_sort_best_tp_rates(struct minstrel_sta_info *mi, int i, u8 *tp_list)
+diff --git a/drivers/net/wireless/rtlwifi/cam.c b/drivers/net/wireless/rtlwifi/cam.c
+index 0276153..8fe8b4c 100644
+--- a/drivers/net/wireless/rtlwifi/cam.c
++++ b/drivers/net/wireless/rtlwifi/cam.c
+@@ -11,10 +11,6 @@
+  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+  * more details.
+  *
+- * You should have received a copy of the GNU General Public License along with
+- * this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
+- *
+  * The full GNU General Public License is included in this distribution in the
+  * file called LICENSE.
+  *
+@@ -26,10 +22,9 @@
+  * Larry Finger <Larry.Finger@lwfinger.net>
+  *
+  *****************************************************************************/
+-
+-#include <linux/export.h>
+ #include "wifi.h"
+ #include "cam.h"
++#include <linux/export.h>
+ 
+ void rtl_cam_reset_sec_info(struct ieee80211_hw *hw)
  {
- 	int j = MAX_THR_RATES;
+@@ -52,8 +47,8 @@ static void rtl_cam_program_entry(struct ieee80211_hw *hw, u32 entry_no,
+ 	u32 target_content = 0;
+ 	u8 entry_i;
  
--	while (j > 0 && mi->r[i].cur_tp > mi->r[tp_list[j - 1]].cur_tp)
-+	while (j > 0 && mi->r[i].stats.cur_tp > mi->r[tp_list[j - 1]].stats.cur_tp)
- 		j--;
- 	if (j < MAX_THR_RATES - 1)
- 		memmove(&tp_list[j + 1], &tp_list[j], MAX_THR_RATES - (j + 1));
-@@ -92,7 +92,7 @@ minstrel_set_rate(struct minstrel_sta_info *mi, struct ieee80211_sta_rates *rate
- 	ratetbl->rate[offset].idx = r->rix;
- 	ratetbl->rate[offset].count = r->adjusted_retry_count;
- 	ratetbl->rate[offset].count_cts = r->retry_count_cts;
--	ratetbl->rate[offset].count_rts = r->retry_count_rtscts;
-+	ratetbl->rate[offset].count_rts = r->stats.retry_count_rtscts;
- }
+-	RT_TRACE(rtlpriv, COMP_SEC, DBG_LOUD, "key_cont_128: %6phC\n",
+-		 key_cont_128);
++	RT_PRINT_DATA(rtlpriv, COMP_SEC, DBG_DMESG, "Key content :",
++		      key_cont_128, 16);
  
- static void
-@@ -140,44 +140,46 @@ minstrel_update_stats(struct minstrel_priv *mp, struct minstrel_sta_info *mi)
+ 	for (entry_i = 0; entry_i < CAM_CONTENT_COUNT; entry_i++) {
+ 		target_command = entry_i + CAM_CONTENT_COUNT * entry_no;
+@@ -68,11 +63,13 @@ static void rtl_cam_program_entry(struct ieee80211_hw *hw, u32 entry_no,
+ 			rtl_write_dword(rtlpriv, rtlpriv->cfg->maps[RWCAM],
+ 					target_command);
  
- 	for (i = 0; i < mi->n_rates; i++) {
- 		struct minstrel_rate *mr = &mi->r[i];
-+		struct minstrel_rate_stats *mrs = &mi->r[i].stats;
+-			RT_TRACE(rtlpriv, COMP_SEC, DBG_LOUD, "WRITE %x: %x\n",
++			RT_TRACE(rtlpriv, COMP_SEC, DBG_LOUD,
++				 "WRITE %x: %x\n",
+ 				 rtlpriv->cfg->maps[WCAMI], target_content);
+ 			RT_TRACE(rtlpriv, COMP_SEC, DBG_LOUD,
+ 				 "The Key ID is %d\n", entry_no);
+-			RT_TRACE(rtlpriv, COMP_SEC, DBG_LOUD, "WRITE %x: %x\n",
++			RT_TRACE(rtlpriv, COMP_SEC, DBG_LOUD,
++				 "WRITE %x: %x\n",
+ 				 rtlpriv->cfg->maps[RWCAM], target_command);
  
- 		usecs = mr->perfect_tx_time;
- 		if (!usecs)
- 			usecs = 1000000;
+ 		} else if (entry_i == 1) {
+@@ -87,10 +84,10 @@ static void rtl_cam_program_entry(struct ieee80211_hw *hw, u32 entry_no,
+ 			rtl_write_dword(rtlpriv, rtlpriv->cfg->maps[RWCAM],
+ 					target_command);
  
--		if (unlikely(mr->attempts > 0)) {
--			mr->sample_skipped = 0;
--			mr->cur_prob = MINSTREL_FRAC(mr->success, mr->attempts);
--			mr->succ_hist += mr->success;
--			mr->att_hist += mr->attempts;
--			mr->probability = minstrel_ewma(mr->probability,
--							mr->cur_prob,
--							EWMA_LEVEL);
-+		if (unlikely(mrs->attempts > 0)) {
-+			mrs->sample_skipped = 0;
-+			mrs->cur_prob = MINSTREL_FRAC(mrs->success,
-+						      mrs->attempts);
-+			mrs->succ_hist += mrs->success;
-+			mrs->att_hist += mrs->attempts;
-+			mrs->probability = minstrel_ewma(mrs->probability,
-+							 mrs->cur_prob,
-+							 EWMA_LEVEL);
- 		} else
--			mr->sample_skipped++;
-+			mrs->sample_skipped++;
+-			RT_TRACE(rtlpriv, COMP_SEC, DBG_LOUD, "WRITE A4: %x\n",
+-				 target_content);
+-			RT_TRACE(rtlpriv, COMP_SEC, DBG_LOUD, "WRITE A0: %x\n",
+-				 target_command);
++			RT_TRACE(rtlpriv, COMP_SEC, DBG_LOUD,
++				 "WRITE A4: %x\n", target_content);
++			RT_TRACE(rtlpriv, COMP_SEC, DBG_LOUD,
++				 "WRITE A0: %x\n", target_command);
  
--		mr->last_success = mr->success;
--		mr->last_attempts = mr->attempts;
--		mr->success = 0;
--		mr->attempts = 0;
-+		mrs->last_success = mrs->success;
-+		mrs->last_attempts = mrs->attempts;
-+		mrs->success = 0;
-+		mrs->attempts = 0;
- 
- 		/* Update throughput per rate, reset thr. below 10% success */
--		if (mr->probability < MINSTREL_FRAC(10, 100))
--			mr->cur_tp = 0;
-+		if (mrs->probability < MINSTREL_FRAC(10, 100))
-+			mrs->cur_tp = 0;
- 		else
--			mr->cur_tp = mr->probability * (1000000 / usecs);
-+			mrs->cur_tp = mrs->probability * (1000000 / usecs);
- 
- 		/* Sample less often below the 10% chance of success.
- 		 * Sample less often above the 95% chance of success. */
--		if (mr->probability > MINSTREL_FRAC(95, 100) ||
--		    mr->probability < MINSTREL_FRAC(10, 100)) {
--			mr->adjusted_retry_count = mr->retry_count >> 1;
-+		if (mrs->probability > MINSTREL_FRAC(95, 100) ||
-+		    mrs->probability < MINSTREL_FRAC(10, 100)) {
-+			mr->adjusted_retry_count = mrs->retry_count >> 1;
- 			if (mr->adjusted_retry_count > 2)
- 				mr->adjusted_retry_count = 2;
- 			mr->sample_limit = 4;
  		} else {
- 			mr->sample_limit = -1;
--			mr->adjusted_retry_count = mr->retry_count;
-+			mr->adjusted_retry_count = mrs->retry_count;
- 		}
- 		if (!mr->adjusted_retry_count)
- 			mr->adjusted_retry_count = 2;
-@@ -190,11 +192,11 @@ minstrel_update_stats(struct minstrel_priv *mp, struct minstrel_sta_info *mi)
- 		 * choose the maximum throughput rate as max_prob_rate
- 		 * (2) if all success probabilities < 95%, the rate with
- 		 * highest success probability is choosen as max_prob_rate */
--		if (mr->probability >= MINSTREL_FRAC(95, 100)) {
--			if (mr->cur_tp >= mi->r[tmp_prob_rate].cur_tp)
-+		if (mrs->probability >= MINSTREL_FRAC(95, 100)) {
-+			if (mrs->cur_tp >= mi->r[tmp_prob_rate].stats.cur_tp)
- 				tmp_prob_rate = i;
- 		} else {
--			if (mr->probability >= mi->r[tmp_prob_rate].probability)
-+			if (mrs->probability >= mi->r[tmp_prob_rate].stats.probability)
- 				tmp_prob_rate = i;
+ 
+@@ -107,15 +104,15 @@ static void rtl_cam_program_entry(struct ieee80211_hw *hw, u32 entry_no,
+ 					target_command);
+ 			udelay(100);
+ 
+-			RT_TRACE(rtlpriv, COMP_SEC, DBG_LOUD, "WRITE A4: %x\n",
+-				 target_content);
+-			RT_TRACE(rtlpriv, COMP_SEC, DBG_LOUD, "WRITE A0: %x\n",
+-				 target_command);
++			RT_TRACE(rtlpriv, COMP_SEC, DBG_LOUD,
++				 "WRITE A4: %x\n", target_content);
++			RT_TRACE(rtlpriv, COMP_SEC, DBG_LOUD,
++				 "WRITE A0: %x\n", target_command);
  		}
  	}
-@@ -240,14 +242,14 @@ minstrel_tx_status(void *priv, struct ieee80211_supported_band *sband,
- 		if (ndx < 0)
- 			continue;
  
--		mi->r[ndx].attempts += ar[i].count;
-+		mi->r[ndx].stats.attempts += ar[i].count;
- 
- 		if ((i != IEEE80211_TX_MAX_RATES - 1) && (ar[i + 1].idx < 0))
--			mi->r[ndx].success += success;
-+			mi->r[ndx].stats.success += success;
- 	}
- 
- 	if ((info->flags & IEEE80211_TX_CTL_RATE_CTRL_PROBE) && (i >= 0))
--		mi->sample_count++;
-+		mi->sample_packets++;
- 
- 	if (mi->sample_deferred > 0)
- 		mi->sample_deferred--;
-@@ -265,7 +267,7 @@ minstrel_get_retry_count(struct minstrel_rate *mr,
- 	unsigned int retry = mr->adjusted_retry_count;
- 
- 	if (info->control.use_rts)
--		retry = max(2U, min(mr->retry_count_rtscts, retry));
-+		retry = max(2U, min(mr->stats.retry_count_rtscts, retry));
- 	else if (info->control.use_cts_prot)
- 		retry = max(2U, min(mr->retry_count_cts, retry));
- 	return retry;
-@@ -317,15 +319,15 @@ minstrel_get_rate(void *priv, struct ieee80211_sta *sta,
- 		sampling_ratio = mp->lookaround_rate;
- 
- 	/* increase sum packet counter */
--	mi->packet_count++;
-+	mi->total_packets++;
- 
- #ifdef CONFIG_MAC80211_DEBUGFS
- 	if (mp->fixed_rate_idx != -1)
- 		return;
- #endif
- 
--	delta = (mi->packet_count * sampling_ratio / 100) -
--			(mi->sample_count + mi->sample_deferred / 2);
-+	delta = (mi->total_packets * sampling_ratio / 100) -
-+			(mi->sample_packets + mi->sample_deferred / 2);
- 
- 	/* delta < 0: no sampling required */
- 	prev_sample = mi->prev_sample;
-@@ -333,10 +335,10 @@ minstrel_get_rate(void *priv, struct ieee80211_sta *sta,
- 	if (delta < 0 || (!mrr_capable && prev_sample))
- 		return;
- 
--	if (mi->packet_count >= 10000) {
-+	if (mi->total_packets >= 10000) {
- 		mi->sample_deferred = 0;
--		mi->sample_count = 0;
--		mi->packet_count = 0;
-+		mi->sample_packets = 0;
-+		mi->total_packets = 0;
- 	} else if (delta > mi->n_rates * 2) {
- 		/* With multi-rate retry, not every planned sample
- 		 * attempt actually gets used, due to the way the retry
-@@ -347,7 +349,7 @@ minstrel_get_rate(void *priv, struct ieee80211_sta *sta,
- 		 * starts getting worse, minstrel would start bursting
- 		 * out lots of sampling frames, which would result
- 		 * in a large throughput loss. */
--		mi->sample_count += (delta - mi->n_rates * 2);
-+		mi->sample_packets += (delta - mi->n_rates * 2);
- 	}
- 
- 	/* get next random rate sample */
-@@ -361,7 +363,7 @@ minstrel_get_rate(void *priv, struct ieee80211_sta *sta,
- 	 */
- 	if (mrr_capable &&
- 	    msr->perfect_tx_time > mr->perfect_tx_time &&
--	    msr->sample_skipped < 20) {
-+	    msr->stats.sample_skipped < 20) {
- 		/* Only use IEEE80211_TX_CTL_RATE_CTRL_PROBE to mark
- 		 * packets that have the sampling rate deferred to the
- 		 * second MRR stage. Increase the sample counter only
-@@ -375,7 +377,7 @@ minstrel_get_rate(void *priv, struct ieee80211_sta *sta,
- 		if (!msr->sample_limit != 0)
- 			return;
- 
--		mi->sample_count++;
-+		mi->sample_packets++;
- 		if (msr->sample_limit > 0)
- 			msr->sample_limit--;
- 	}
-@@ -384,7 +386,7 @@ minstrel_get_rate(void *priv, struct ieee80211_sta *sta,
- 	 * has a probability of >95%, we shouldn't be attempting
- 	 * to use it, as this only wastes precious airtime */
- 	if (!mrr_capable &&
--	   (mi->r[ndx].probability > MINSTREL_FRAC(95, 100)))
-+	   (mi->r[ndx].stats.probability > MINSTREL_FRAC(95, 100)))
- 		return;
- 
- 	mi->prev_sample = true;
-@@ -459,6 +461,7 @@ minstrel_rate_init(void *priv, struct ieee80211_supported_band *sband,
- 
- 	for (i = 0; i < sband->n_bitrates; i++) {
- 		struct minstrel_rate *mr = &mi->r[n];
-+		struct minstrel_rate_stats *mrs = &mi->r[n].stats;
- 		unsigned int tx_time = 0, tx_time_cts = 0, tx_time_rtscts = 0;
- 		unsigned int tx_time_single;
- 		unsigned int cw = mp->cw_min;
-@@ -471,6 +474,7 @@ minstrel_rate_init(void *priv, struct ieee80211_supported_band *sband,
- 
- 		n++;
- 		memset(mr, 0, sizeof(*mr));
-+		memset(mrs, 0, sizeof(*mrs));
- 
- 		mr->rix = i;
- 		shift = ieee80211_chandef_get_shift(chandef);
-@@ -482,9 +486,9 @@ minstrel_rate_init(void *priv, struct ieee80211_supported_band *sband,
- 		/* calculate maximum number of retransmissions before
- 		 * fallback (based on maximum segment size) */
- 		mr->sample_limit = -1;
--		mr->retry_count = 1;
-+		mrs->retry_count = 1;
- 		mr->retry_count_cts = 1;
--		mr->retry_count_rtscts = 1;
-+		mrs->retry_count_rtscts = 1;
- 		tx_time = mr->perfect_tx_time + mi->sp_ack_dur;
- 		do {
- 			/* add one retransmission */
-@@ -501,13 +505,13 @@ minstrel_rate_init(void *priv, struct ieee80211_supported_band *sband,
- 				(mr->retry_count_cts < mp->max_retry))
- 				mr->retry_count_cts++;
- 			if ((tx_time_rtscts < mp->segment_size) &&
--				(mr->retry_count_rtscts < mp->max_retry))
--				mr->retry_count_rtscts++;
-+				(mrs->retry_count_rtscts < mp->max_retry))
-+				mrs->retry_count_rtscts++;
- 		} while ((tx_time < mp->segment_size) &&
--				(++mr->retry_count < mp->max_retry));
--		mr->adjusted_retry_count = mr->retry_count;
-+				(++mr->stats.retry_count < mp->max_retry));
-+		mr->adjusted_retry_count = mrs->retry_count;
- 		if (!(sband->bitrates[i].flags & IEEE80211_RATE_ERP_G))
--			mr->retry_count_cts = mr->retry_count;
-+			mr->retry_count_cts = mrs->retry_count;
- 	}
- 
- 	for (i = n; i < sband->n_bitrates; i++) {
-@@ -665,7 +669,7 @@ static u32 minstrel_get_expected_throughput(void *priv_sta)
- 	/* convert pkt per sec in kbps (1200 is the average pkt size used for
- 	 * computing cur_tp
- 	 */
--	return MINSTREL_TRUNC(mi->r[idx].cur_tp) * 1200 * 8 / 1024;
-+	return MINSTREL_TRUNC(mi->r[idx].stats.cur_tp) * 1200 * 8 / 1024;
+-	RT_TRACE(rtlpriv, COMP_SEC, DBG_LOUD, "after set key, usconfig:%x\n",
+-		 us_config);
++	RT_TRACE(rtlpriv, COMP_SEC, DBG_LOUD,
++		 "after set key, usconfig:%x\n", us_config);
  }
  
- const struct rate_control_ops mac80211_minstrel = {
-diff --git a/net/mac80211/rc80211_minstrel.h b/net/mac80211/rc80211_minstrel.h
-index 046d1bd..97eca86 100644
---- a/net/mac80211/rc80211_minstrel.h
-+++ b/net/mac80211/rc80211_minstrel.h
-@@ -31,6 +31,27 @@ minstrel_ewma(int old, int new, int weight)
- 	return (new * (EWMA_DIV - weight) + old * weight) / EWMA_DIV;
+ u8 rtl_cam_add_one_entry(struct ieee80211_hw *hw, u8 *mac_addr,
+@@ -125,27 +122,26 @@ u8 rtl_cam_add_one_entry(struct ieee80211_hw *hw, u8 *mac_addr,
+ 	u32 us_config;
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 
+-	RT_TRACE(rtlpriv, COMP_SEC, DBG_LOUD,
++	RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG,
+ 		 "EntryNo:%x, ulKeyId=%x, ulEncAlg=%x, ulUseDK=%x MacAddr %pM\n",
+ 		 ul_entry_idx, ul_key_id, ul_enc_alg,
+ 		 ul_default_key, mac_addr);
+ 
+ 	if (ul_key_id == TOTAL_CAM_ENTRY) {
+ 		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
+-			 "<=== ulKeyId exceed!\n");
++			 "ulKeyId exceed!\n");
+ 		return 0;
+ 	}
+ 
+-	if (ul_default_key == 1) {
++	if (ul_default_key == 1)
+ 		us_config = CFG_VALID | ((u16) (ul_enc_alg) << 2);
+-	} else {
++	else
+ 		us_config = CFG_VALID | ((ul_enc_alg) << 2) | ul_key_id;
+-	}
+ 
+ 	rtl_cam_program_entry(hw, ul_entry_idx, mac_addr,
+-			      key_content, us_config);
++			      (u8 *)key_content, us_config);
+ 
+-	RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG, "<===\n");
++	RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG, "end\n");
+ 
+ 	return 1;
+ 
+@@ -289,7 +285,8 @@ u8 rtl_cam_get_free_entry(struct ieee80211_hw *hw, u8 *sta_addr)
+ 	u8 i, *addr;
+ 
+ 	if (NULL == sta_addr) {
+-		RT_TRACE(rtlpriv, COMP_SEC, DBG_EMERG, "sta_addr is NULL\n");
++		RT_TRACE(rtlpriv, COMP_SEC, DBG_EMERG,
++			 "sta_addr is NULL.\n");
+ 		return TOTAL_CAM_ENTRY;
+ 	}
+ 	/* Does STA already exist? */
+@@ -322,7 +319,9 @@ void rtl_cam_del_entry(struct ieee80211_hw *hw, u8 *sta_addr)
+ 	u8 i, *addr;
+ 
+ 	if (NULL == sta_addr) {
+-		RT_TRACE(rtlpriv, COMP_SEC, DBG_EMERG, "sta_addr is NULL\n");
++		RT_TRACE(rtlpriv, COMP_SEC, DBG_EMERG,
++			 "sta_addr is NULL.\n");
++		return;
+ 	}
+ 
+ 	if (is_zero_ether_addr(sta_addr)) {
+@@ -339,8 +338,8 @@ void rtl_cam_del_entry(struct ieee80211_hw *hw, u8 *sta_addr)
+ 			/* Remove from HW Security CAM */
+ 			eth_zero_addr(rtlpriv->sec.hwsec_cam_sta_addr[i]);
+ 			rtlpriv->sec.hwsec_cam_bitmap &= ~(BIT(0) << i);
+-			RT_TRACE(rtlpriv, COMP_SEC, DBG_LOUD,
+-				 "del CAM entry %d\n", i);
++			RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG,
++				 "&&&&&&&&&del entry %d\n", i);
+ 		}
+ 	}
+ 	return;
+diff --git a/drivers/net/wireless/rtlwifi/cam.h b/drivers/net/wireless/rtlwifi/cam.h
+index 0105e6c..3550808 100644
+--- a/drivers/net/wireless/rtlwifi/cam.h
++++ b/drivers/net/wireless/rtlwifi/cam.h
+@@ -11,10 +11,6 @@
+  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+  * more details.
+  *
+- * You should have received a copy of the GNU General Public License along with
+- * this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
+- *
+  * The full GNU General Public License is included in this distribution in the
+  * file called LICENSE.
+  *
+@@ -36,15 +32,15 @@
+ #define CFG_VALID					BIT(15)
+ 
+ #define PAIRWISE_KEYIDX					0
+-#define CAM_PAIRWISE_KEY_POSITION		4
++#define CAM_PAIRWISE_KEY_POSITION			4
+ 
+ #define	CAM_CONFIG_USEDK				1
+ #define	CAM_CONFIG_NO_USEDK				0
+ 
+ void rtl_cam_reset_all_entry(struct ieee80211_hw *hw);
+ u8 rtl_cam_add_one_entry(struct ieee80211_hw *hw, u8 *mac_addr,
+-			 u32 ul_key_id, u32 ul_entry_idx, u32 ul_enc_alg,
+-			 u32 ul_default_key, u8 *key_content);
++				u32 ul_key_id, u32 ul_entry_idx, u32 ul_enc_alg,
++				u32 ul_default_key, u8 *key_content);
+ int rtl_cam_delete_one_entry(struct ieee80211_hw *hw, u8 *mac_addr,
+ 			     u32 ul_key_id);
+ void rtl_cam_mark_invalid(struct ieee80211_hw *hw, u8 uc_index);
+diff --git a/drivers/net/wireless/rtlwifi/efuse.c b/drivers/net/wireless/rtlwifi/efuse.c
+index 2ffc729..118293b 100644
+--- a/drivers/net/wireless/rtlwifi/efuse.c
++++ b/drivers/net/wireless/rtlwifi/efuse.c
+@@ -11,10 +11,6 @@
+  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+  * more details.
+  *
+- * You should have received a copy of the GNU General Public License along with
+- * tmis program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
+- *
+  * Tme full GNU General Public License is included in this distribution in the
+  * file called LICENSE.
+  *
+@@ -26,10 +22,9 @@
+  * Larry Finger <Larry.Finger@lwfinger.net>
+  *
+  *****************************************************************************/
+-
+-#include <linux/export.h>
+ #include "wifi.h"
+ #include "efuse.h"
++#include <linux/export.h>
+ 
+ static const u8 MAX_PGPKT_SIZE = 9;
+ static const u8 PGPKT_DATA_SIZE = 8;
+@@ -63,21 +58,19 @@ static void efuse_shadow_write_2byte(struct ieee80211_hw *hw, u16 offset,
+ 				     u16 value);
+ static void efuse_shadow_write_4byte(struct ieee80211_hw *hw, u16 offset,
+ 				     u32 value);
+-static int efuse_one_byte_read(struct ieee80211_hw *hw, u16 addr,
+-					u8 *data);
+ static int efuse_one_byte_write(struct ieee80211_hw *hw, u16 addr,
+-					u8 data);
++				u8 data);
+ static void efuse_read_all_map(struct ieee80211_hw *hw, u8 *efuse);
+ static int efuse_pg_packet_read(struct ieee80211_hw *hw, u8 offset,
+-					u8 *data);
++				u8 *data);
+ static int efuse_pg_packet_write(struct ieee80211_hw *hw, u8 offset,
+ 				 u8 word_en, u8 *data);
+ static void efuse_word_enable_data_read(u8 word_en, u8 *sourdata,
+ 					u8 *targetdata);
+-static u8 efuse_word_enable_data_write(struct ieee80211_hw *hw,
+-				       u16 efuse_addr, u8 word_en, u8 *data);
++static u8 enable_efuse_data_write(struct ieee80211_hw *hw,
++				  u16 efuse_addr, u8 word_en, u8 *data);
+ static void efuse_power_switch(struct ieee80211_hw *hw, u8 write,
+-					u8 pwrstate);
++			       u8 pwrstate);
+ static u16 efuse_get_current_size(struct ieee80211_hw *hw);
+ static u8 efuse_calculate_word_cnts(u8 word_en);
+ 
+@@ -413,8 +406,7 @@ bool efuse_shadow_update_chk(struct ieee80211_hw *hw)
+ 	efuse_used = rtlefuse->efuse_usedbytes;
+ 
+ 	if ((totalbytes + efuse_used) >=
+-	    (EFUSE_MAX_SIZE -
+-	     rtlpriv->cfg->maps[EFUSE_OOB_PROTECT_BYTES_LEN]))
++	    (EFUSE_MAX_SIZE - rtlpriv->cfg->maps[EFUSE_OOB_PROTECT_BYTES_LEN]))
+ 		result = false;
+ 
+ 	RT_TRACE(rtlpriv, COMP_EFUSE, DBG_LOUD,
+@@ -428,13 +420,14 @@ void efuse_shadow_read(struct ieee80211_hw *hw, u8 type,
+ 		       u16 offset, u32 *value)
+ {
+ 	if (type == 1)
+-		efuse_shadow_read_1byte(hw, offset, (u8 *) value);
++		efuse_shadow_read_1byte(hw, offset, (u8 *)value);
+ 	else if (type == 2)
+-		efuse_shadow_read_2byte(hw, offset, (u16 *) value);
++		efuse_shadow_read_2byte(hw, offset, (u16 *)value);
+ 	else if (type == 4)
+ 		efuse_shadow_read_4byte(hw, offset, value);
+ 
+ }
++EXPORT_SYMBOL(efuse_shadow_read);
+ 
+ void efuse_shadow_write(struct ieee80211_hw *hw, u8 type, u16 offset,
+ 				u32 value)
+@@ -456,7 +449,7 @@ bool efuse_shadow_update(struct ieee80211_hw *hw)
+ 	u8 word_en = 0x0F;
+ 	u8 first_pg = false;
+ 
+-	RT_TRACE(rtlpriv, COMP_EFUSE, DBG_LOUD, "--->\n");
++	RT_TRACE(rtlpriv, COMP_EFUSE, DBG_LOUD, "\n");
+ 
+ 	if (!efuse_shadow_update_chk(hw)) {
+ 		efuse_read_all_map(hw, &rtlefuse->efuse_map[EFUSE_INIT_MAP][0]);
+@@ -465,7 +458,7 @@ bool efuse_shadow_update(struct ieee80211_hw *hw)
+ 		       rtlpriv->cfg->maps[EFUSE_HWSET_MAX_SIZE]);
+ 
+ 		RT_TRACE(rtlpriv, COMP_EFUSE, DBG_LOUD,
+-			 "<---efuse out of capacity!!\n");
++			 "efuse out of capacity!!\n");
+ 		return false;
+ 	}
+ 	efuse_power_switch(hw, true, true);
+@@ -477,7 +470,6 @@ bool efuse_shadow_update(struct ieee80211_hw *hw)
+ 
+ 		for (i = 0; i < 8; i++) {
+ 			if (first_pg) {
+-
+ 				word_en &= ~(BIT(i / 2));
+ 
+ 				rtlefuse->efuse_map[EFUSE_INIT_MAP][base + i] =
+@@ -500,7 +492,7 @@ bool efuse_shadow_update(struct ieee80211_hw *hw)
+ 			       &rtlefuse->efuse_map[EFUSE_MODIFY_MAP][base],
+ 			       8);
+ 			RT_PRINT_DATA(rtlpriv, COMP_INIT, DBG_LOUD,
+-				      "U-efuse", tmpdata, 8);
++				      "U-efuse\n", tmpdata, 8);
+ 
+ 			if (!efuse_pg_packet_write(hw, (u8) offset, word_en,
+ 						   tmpdata)) {
+@@ -519,7 +511,7 @@ bool efuse_shadow_update(struct ieee80211_hw *hw)
+ 	       &rtlefuse->efuse_map[EFUSE_INIT_MAP][0],
+ 	       rtlpriv->cfg->maps[EFUSE_HWSET_MAX_SIZE]);
+ 
+-	RT_TRACE(rtlpriv, COMP_EFUSE, DBG_LOUD, "<---\n");
++	RT_TRACE(rtlpriv, COMP_EFUSE, DBG_LOUD, "\n");
+ 	return true;
  }
  
-+struct minstrel_rate_stats {
-+	/* current / last sampling period attempts/success counters */
-+	unsigned int attempts, last_attempts;
-+	unsigned int success, last_success;
-+
-+	/* total attempts/success counters */
-+	u64 att_hist, succ_hist;
-+
-+	/* current throughput */
-+	unsigned int cur_tp;
-+
-+	/* packet delivery probabilities */
-+	unsigned int cur_prob, probability;
-+
-+	/* maximum retry counts */
-+	unsigned int retry_count;
-+	unsigned int retry_count_rtscts;
-+
-+	u8 sample_skipped;
-+	bool retry_updated;
-+};
+@@ -529,14 +521,14 @@ void rtl_efuse_shadow_map_update(struct ieee80211_hw *hw)
+ 	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
  
- struct minstrel_rate {
- 	int bitrate;
-@@ -40,26 +61,10 @@ struct minstrel_rate {
- 	unsigned int ack_time;
+ 	if (rtlefuse->autoload_failflag)
+-		memset(&rtlefuse->efuse_map[EFUSE_INIT_MAP][0], 0xFF,
+-			rtlpriv->cfg->maps[EFUSE_HWSET_MAX_SIZE]);
++		memset((&rtlefuse->efuse_map[EFUSE_INIT_MAP][0]),
++		       0xFF, rtlpriv->cfg->maps[EFUSE_HWSET_MAX_SIZE]);
+ 	else
+ 		efuse_read_all_map(hw, &rtlefuse->efuse_map[EFUSE_INIT_MAP][0]);
  
- 	int sample_limit;
--	unsigned int retry_count;
- 	unsigned int retry_count_cts;
--	unsigned int retry_count_rtscts;
- 	unsigned int adjusted_retry_count;
+ 	memcpy(&rtlefuse->efuse_map[EFUSE_MODIFY_MAP][0],
+-	       &rtlefuse->efuse_map[EFUSE_INIT_MAP][0],
+-	       rtlpriv->cfg->maps[EFUSE_HWSET_MAX_SIZE]);
++			&rtlefuse->efuse_map[EFUSE_INIT_MAP][0],
++			rtlpriv->cfg->maps[EFUSE_HWSET_MAX_SIZE]);
  
--	u32 success;
--	u32 attempts;
--	u32 last_attempts;
--	u32 last_success;
--	u8 sample_skipped;
--
--	/* parts per thousand */
--	u32 cur_prob;
--	u32 probability;
--
--	/* per-rate throughput */
--	u32 cur_tp;
--
--	u64 succ_hist;
--	u64 att_hist;
-+	struct minstrel_rate_stats stats;
- };
+ }
+ EXPORT_SYMBOL(rtl_efuse_shadow_map_update);
+@@ -619,7 +611,7 @@ static void efuse_shadow_write_4byte(struct ieee80211_hw *hw,
  
- struct minstrel_sta_info {
-@@ -73,8 +78,8 @@ struct minstrel_sta_info {
+ }
  
- 	u8 max_tp_rate[MAX_THR_RATES];
- 	u8 max_prob_rate;
--	unsigned int packet_count;
--	unsigned int sample_count;
-+	unsigned int total_packets;
-+	unsigned int sample_packets;
- 	int sample_deferred;
- 
- 	unsigned int sample_row;
-diff --git a/net/mac80211/rc80211_minstrel_debugfs.c b/net/mac80211/rc80211_minstrel_debugfs.c
-index fd0b9ca..edde723 100644
---- a/net/mac80211/rc80211_minstrel_debugfs.c
-+++ b/net/mac80211/rc80211_minstrel_debugfs.c
-@@ -72,6 +72,7 @@ minstrel_stats_open(struct inode *inode, struct file *file)
- 			"this succ/attempt   success    attempts\n");
- 	for (i = 0; i < mi->n_rates; i++) {
- 		struct minstrel_rate *mr = &mi->r[i];
-+		struct minstrel_rate_stats *mrs = &mi->r[i].stats;
- 
- 		*(p++) = (i == mi->max_tp_rate[0]) ? 'A' : ' ';
- 		*(p++) = (i == mi->max_tp_rate[1]) ? 'B' : ' ';
-@@ -81,24 +82,24 @@ minstrel_stats_open(struct inode *inode, struct file *file)
- 		p += sprintf(p, "%3u%s", mr->bitrate / 2,
- 				(mr->bitrate & 1 ? ".5" : "  "));
- 
--		tp = MINSTREL_TRUNC(mr->cur_tp / 10);
--		prob = MINSTREL_TRUNC(mr->cur_prob * 1000);
--		eprob = MINSTREL_TRUNC(mr->probability * 1000);
-+		tp = MINSTREL_TRUNC(mrs->cur_tp / 10);
-+		prob = MINSTREL_TRUNC(mrs->cur_prob * 1000);
-+		eprob = MINSTREL_TRUNC(mrs->probability * 1000);
- 
- 		p += sprintf(p, "  %6u.%1u   %6u.%1u   %6u.%1u        "
- 				"   %3u(%3u)  %8llu    %8llu\n",
- 				tp / 10, tp % 10,
- 				eprob / 10, eprob % 10,
- 				prob / 10, prob % 10,
--				mr->last_success,
--				mr->last_attempts,
--				(unsigned long long)mr->succ_hist,
--				(unsigned long long)mr->att_hist);
-+				mrs->last_success,
-+				mrs->last_attempts,
-+				(unsigned long long)mrs->succ_hist,
-+				(unsigned long long)mrs->att_hist);
+-static int efuse_one_byte_read(struct ieee80211_hw *hw, u16 addr, u8 *data)
++int efuse_one_byte_read(struct ieee80211_hw *hw, u16 addr, u8 *data)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	u8 tmpidx = 0;
+@@ -650,14 +642,15 @@ static int efuse_one_byte_read(struct ieee80211_hw *hw, u16 addr, u8 *data)
  	}
- 	p += sprintf(p, "\nTotal packet count::    ideal %d      "
- 			"lookaround %d\n\n",
--			mi->packet_count - mi->sample_count,
--			mi->sample_count);
-+			mi->total_packets - mi->sample_packets,
-+			mi->sample_packets);
- 	ms->len = p - ms->buf;
+ 	return result;
+ }
++EXPORT_SYMBOL(efuse_one_byte_read);
  
- 	return 0;
-diff --git a/net/mac80211/rc80211_minstrel_ht.h b/net/mac80211/rc80211_minstrel_ht.h
-index d655586..5fee938 100644
---- a/net/mac80211/rc80211_minstrel_ht.h
-+++ b/net/mac80211/rc80211_minstrel_ht.h
-@@ -26,28 +26,6 @@ struct mcs_group {
+ static int efuse_one_byte_write(struct ieee80211_hw *hw, u16 addr, u8 data)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	u8 tmpidx = 0;
  
- extern const struct mcs_group minstrel_mcs_groups[];
+-	RT_TRACE(rtlpriv, COMP_EFUSE, DBG_LOUD, "Addr = %x Data=%x\n",
+-		 addr, data);
++	RT_TRACE(rtlpriv, COMP_EFUSE, DBG_LOUD,
++		 "Addr = %x Data=%x\n", addr, data);
  
--struct minstrel_rate_stats {
--	/* current / last sampling period attempts/success counters */
--	unsigned int attempts, last_attempts;
--	unsigned int success, last_success;
+ 	rtl_write_byte(rtlpriv,
+ 		       rtlpriv->cfg->maps[EFUSE_CTRL] + 1, (u8) (addr & 0xff));
+@@ -677,11 +670,10 @@ static int efuse_one_byte_write(struct ieee80211_hw *hw, u16 addr, u8 data)
+ 
+ 	if (tmpidx < 100)
+ 		return true;
 -
--	/* total attempts/success counters */
--	u64 att_hist, succ_hist;
+ 	return false;
+ }
+ 
+-static void efuse_read_all_map(struct ieee80211_hw *hw, u8 * efuse)
++static void efuse_read_all_map(struct ieee80211_hw *hw, u8 *efuse)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	efuse_power_switch(hw, false, true);
+@@ -706,14 +698,14 @@ static void efuse_read_data_case1(struct ieee80211_hw *hw, u16 *efuse_addr,
+ 	if (hoffset == offset) {
+ 		for (tmpidx = 0; tmpidx < word_cnts * 2; tmpidx++) {
+ 			if (efuse_one_byte_read(hw, *efuse_addr + 1 + tmpidx,
+-			    &efuse_data)) {
++						&efuse_data)) {
+ 				tmpdata[tmpidx] = efuse_data;
+ 				if (efuse_data != 0xff)
+-					dataempty = true;
++					dataempty = false;
+ 			}
+ 		}
+ 
+-		if (dataempty) {
++		if (!dataempty) {
+ 			*readstate = PG_STATE_DATA;
+ 		} else {
+ 			*efuse_addr = *efuse_addr + (word_cnts * 2) + 1;
+@@ -729,7 +721,9 @@ static void efuse_read_data_case1(struct ieee80211_hw *hw, u16 *efuse_addr,
+ static int efuse_pg_packet_read(struct ieee80211_hw *hw, u8 offset, u8 *data)
+ {
+ 	u8 readstate = PG_STATE_HEADER;
++
+ 	bool continual = true;
++
+ 	u8 efuse_data, word_cnts = 0;
+ 	u16 efuse_addr = 0;
+ 	u8 tmpdata[8];
+@@ -747,9 +741,8 @@ static int efuse_pg_packet_read(struct ieee80211_hw *hw, u8 offset, u8 *data)
+ 			if (efuse_one_byte_read(hw, efuse_addr, &efuse_data)
+ 			    && (efuse_data != 0xFF))
+ 				efuse_read_data_case1(hw, &efuse_addr,
+-						      efuse_data,
+-						      offset, tmpdata,
+-						      &readstate);
++						      efuse_data, offset,
++						      tmpdata, &readstate);
+ 			else
+ 				continual = false;
+ 		} else if (readstate & PG_STATE_DATA) {
+@@ -771,13 +764,14 @@ static int efuse_pg_packet_read(struct ieee80211_hw *hw, u8 offset, u8 *data)
+ }
+ 
+ static void efuse_write_data_case1(struct ieee80211_hw *hw, u16 *efuse_addr,
+-			u8 efuse_data, u8 offset, int *continual,
+-			u8 *write_state, struct pgpkt_struct *target_pkt,
+-			int *repeat_times, int *result, u8 word_en)
++				   u8 efuse_data, u8 offset,
++				   int *continual, u8 *write_state,
++				   struct pgpkt_struct *target_pkt,
++				   int *repeat_times, int *result, u8 word_en)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct pgpkt_struct tmp_pkt;
+-	bool dataempty = true;
++	int dataempty = true;
+ 	u8 originaldata[8 * sizeof(u8)];
+ 	u8 badworden = 0x0F;
+ 	u8 match_word_en, tmp_word_en;
+@@ -794,9 +788,10 @@ static void efuse_write_data_case1(struct ieee80211_hw *hw, u16 *efuse_addr,
+ 		*write_state = PG_STATE_HEADER;
+ 	} else {
+ 		for (tmpindex = 0; tmpindex < (tmp_word_cnts * 2); tmpindex++) {
+-			u16 address = *efuse_addr + 1 + tmpindex;
+-			if (efuse_one_byte_read(hw, address,
+-			     &efuse_data) && (efuse_data != 0xFF))
++			if (efuse_one_byte_read(hw,
++						(*efuse_addr + 1 + tmpindex),
++						&efuse_data) &&
++			    (efuse_data != 0xFF))
+ 				dataempty = false;
+ 		}
+ 
+@@ -806,33 +801,34 @@ static void efuse_write_data_case1(struct ieee80211_hw *hw, u16 *efuse_addr,
+ 		} else {
+ 			match_word_en = 0x0F;
+ 			if (!((target_pkt->word_en & BIT(0)) |
+-			     (tmp_pkt.word_en & BIT(0))))
++			    (tmp_pkt.word_en & BIT(0))))
+ 				match_word_en &= (~BIT(0));
+ 
+ 			if (!((target_pkt->word_en & BIT(1)) |
+-			     (tmp_pkt.word_en & BIT(1))))
++			    (tmp_pkt.word_en & BIT(1))))
+ 				match_word_en &= (~BIT(1));
+ 
+ 			if (!((target_pkt->word_en & BIT(2)) |
+-			     (tmp_pkt.word_en & BIT(2))))
++			    (tmp_pkt.word_en & BIT(2))))
+ 				match_word_en &= (~BIT(2));
+ 
+ 			if (!((target_pkt->word_en & BIT(3)) |
+-			     (tmp_pkt.word_en & BIT(3))))
++			    (tmp_pkt.word_en & BIT(3))))
+ 				match_word_en &= (~BIT(3));
+ 
+ 			if ((match_word_en & 0x0F) != 0x0F) {
+-				badworden = efuse_word_enable_data_write(
+-							    hw, *efuse_addr + 1,
+-							    tmp_pkt.word_en,
+-							    target_pkt->data);
++				badworden =
++				  enable_efuse_data_write(hw,
++							  *efuse_addr + 1,
++							  tmp_pkt.word_en,
++							  target_pkt->data);
+ 
+-				if (0x0F != (badworden & 0x0F)) {
++				if (0x0F != (badworden & 0x0F))	{
+ 					u8 reorg_offset = offset;
+ 					u8 reorg_worden = badworden;
+ 					efuse_pg_packet_write(hw, reorg_offset,
+-							       reorg_worden,
+-							       originaldata);
++							      reorg_worden,
++							      originaldata);
+ 				}
+ 
+ 				tmp_word_en = 0x0F;
+@@ -845,11 +841,11 @@ static void efuse_write_data_case1(struct ieee80211_hw *hw, u16 *efuse_addr,
+ 					tmp_word_en &= (~BIT(1));
+ 
+ 				if ((target_pkt->word_en & BIT(2)) ^
+-				     (match_word_en & BIT(2)))
++				    (match_word_en & BIT(2)))
+ 					tmp_word_en &= (~BIT(2));
+ 
+ 				if ((target_pkt->word_en & BIT(3)) ^
+-				     (match_word_en & BIT(3)))
++				    (match_word_en & BIT(3)))
+ 					tmp_word_en &= (~BIT(3));
+ 
+ 				if ((tmp_word_en & 0x0F) != 0x0F) {
+@@ -873,7 +869,7 @@ static void efuse_write_data_case1(struct ieee80211_hw *hw, u16 *efuse_addr,
+ 			}
+ 		}
+ 	}
+-	RTPRINT(rtlpriv, FEEPROM, EFUSE_PG,  "efuse PG_STATE_HEADER-1\n");
++	RTPRINT(rtlpriv, FEEPROM, EFUSE_PG, "efuse PG_STATE_HEADER-1\n");
+ }
+ 
+ static void efuse_write_data_case2(struct ieee80211_hw *hw, u16 *efuse_addr,
+@@ -908,12 +904,13 @@ static void efuse_write_data_case2(struct ieee80211_hw *hw, u16 *efuse_addr,
+ 
+ 		tmp_word_cnts = efuse_calculate_word_cnts(tmp_pkt.word_en);
+ 
+-		memset(originaldata, 0xff, 8 * sizeof(u8));
++		memset(originaldata, 0xff,  8 * sizeof(u8));
+ 
+ 		if (efuse_pg_packet_read(hw, tmp_pkt.offset, originaldata)) {
+-			badworden = efuse_word_enable_data_write(hw,
+-				    *efuse_addr + 1, tmp_pkt.word_en,
+-				    originaldata);
++			badworden = enable_efuse_data_write(hw,
++							    *efuse_addr + 1,
++							    tmp_pkt.word_en,
++							    originaldata);
+ 
+ 			if (0x0F != (badworden & 0x0F)) {
+ 				u8 reorg_offset = tmp_pkt.offset;
+@@ -923,8 +920,8 @@ static void efuse_write_data_case2(struct ieee80211_hw *hw, u16 *efuse_addr,
+ 						      originaldata);
+ 				*efuse_addr = efuse_get_current_size(hw);
+ 			} else {
+-				*efuse_addr = *efuse_addr + (tmp_word_cnts * 2)
+-					      + 1;
++				*efuse_addr = *efuse_addr +
++					      (tmp_word_cnts * 2) + 1;
+ 			}
+ 		} else {
+ 			*efuse_addr = *efuse_addr + (tmp_word_cnts * 2) + 1;
+@@ -948,7 +945,7 @@ static int efuse_pg_packet_write(struct ieee80211_hw *hw,
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct pgpkt_struct target_pkt;
+ 	u8 write_state = PG_STATE_HEADER;
+-	int continual = true, result = true;
++	int continual = true, dataempty = true, result = true;
+ 	u16 efuse_addr = 0;
+ 	u8 efuse_data;
+ 	u8 target_word_cnts = 0;
+@@ -956,7 +953,7 @@ static int efuse_pg_packet_write(struct ieee80211_hw *hw,
+ 	static int repeat_times;
+ 
+ 	if (efuse_get_current_size(hw) >= (EFUSE_MAX_SIZE -
+-	    rtlpriv->cfg->maps[EFUSE_OOB_PROTECT_BYTES_LEN])) {
++		rtlpriv->cfg->maps[EFUSE_OOB_PROTECT_BYTES_LEN])) {
+ 		RTPRINT(rtlpriv, FEEPROM, EFUSE_PG,
+ 			"efuse_pg_packet_write error\n");
+ 		return false;
+@@ -965,17 +962,18 @@ static int efuse_pg_packet_write(struct ieee80211_hw *hw,
+ 	target_pkt.offset = offset;
+ 	target_pkt.word_en = word_en;
+ 
+-	memset(target_pkt.data, 0xFF, 8 * sizeof(u8));
++	memset(target_pkt.data, 0xFF,  8 * sizeof(u8));
+ 
+ 	efuse_word_enable_data_read(word_en, data, target_pkt.data);
+ 	target_word_cnts = efuse_calculate_word_cnts(target_pkt.word_en);
+ 
+-	RTPRINT(rtlpriv, FEEPROM, EFUSE_PG,  "efuse Power ON\n");
++	RTPRINT(rtlpriv, FEEPROM, EFUSE_PG, "efuse Power ON\n");
+ 
+ 	while (continual && (efuse_addr < (EFUSE_MAX_SIZE -
+-	       rtlpriv->cfg->maps[EFUSE_OOB_PROTECT_BYTES_LEN]))) {
++		rtlpriv->cfg->maps[EFUSE_OOB_PROTECT_BYTES_LEN]))) {
+ 
+ 		if (write_state == PG_STATE_HEADER) {
++			dataempty = true;
+ 			badworden = 0x0F;
+ 			RTPRINT(rtlpriv, FEEPROM, EFUSE_PG,
+ 				"efuse PG_STATE_HEADER\n");
+@@ -985,7 +983,8 @@ static int efuse_pg_packet_write(struct ieee80211_hw *hw,
+ 				efuse_write_data_case1(hw, &efuse_addr,
+ 						       efuse_data, offset,
+ 						       &continual,
+-						       &write_state, &target_pkt,
++						       &write_state,
++						       &target_pkt,
+ 						       &repeat_times, &result,
+ 						       word_en);
+ 			else
+@@ -999,15 +998,17 @@ static int efuse_pg_packet_write(struct ieee80211_hw *hw,
+ 		} else if (write_state == PG_STATE_DATA) {
+ 			RTPRINT(rtlpriv, FEEPROM, EFUSE_PG,
+ 				"efuse PG_STATE_DATA\n");
++			badworden = 0x0f;
+ 			badworden =
+-			    efuse_word_enable_data_write(hw, efuse_addr + 1,
+-							 target_pkt.word_en,
+-							 target_pkt.data);
++			    enable_efuse_data_write(hw, efuse_addr + 1,
++						    target_pkt.word_en,
++						    target_pkt.data);
+ 
+ 			if ((badworden & 0x0F) == 0x0F) {
+ 				continual = false;
+ 			} else {
+-				efuse_addr += (2 * target_word_cnts) + 1;
++				efuse_addr =
++				    efuse_addr + (2 * target_word_cnts) + 1;
+ 
+ 				target_pkt.offset = offset;
+ 				target_pkt.word_en = badworden;
+@@ -1027,7 +1028,7 @@ static int efuse_pg_packet_write(struct ieee80211_hw *hw,
+ 	}
+ 
+ 	if (efuse_addr >= (EFUSE_MAX_SIZE -
+-	    rtlpriv->cfg->maps[EFUSE_OOB_PROTECT_BYTES_LEN])) {
++		rtlpriv->cfg->maps[EFUSE_OOB_PROTECT_BYTES_LEN])) {
+ 		RT_TRACE(rtlpriv, COMP_EFUSE, DBG_LOUD,
+ 			 "efuse_addr(%#x) Out of size!!\n", efuse_addr);
+ 	}
+@@ -1035,8 +1036,8 @@ static int efuse_pg_packet_write(struct ieee80211_hw *hw,
+ 	return true;
+ }
+ 
+-static void efuse_word_enable_data_read(u8 word_en,
+-					u8 *sourdata, u8 *targetdata)
++static void efuse_word_enable_data_read(u8 word_en, u8 *sourdata,
++					u8 *targetdata)
+ {
+ 	if (!(word_en & BIT(0))) {
+ 		targetdata[0] = sourdata[0];
+@@ -1059,8 +1060,8 @@ static void efuse_word_enable_data_read(u8 word_en,
+ 	}
+ }
+ 
+-static u8 efuse_word_enable_data_write(struct ieee80211_hw *hw,
+-				       u16 efuse_addr, u8 word_en, u8 *data)
++static u8 enable_efuse_data_write(struct ieee80211_hw *hw,
++				  u16 efuse_addr, u8 word_en, u8 *data)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	u16 tmpaddr;
+@@ -1069,8 +1070,8 @@ static u8 efuse_word_enable_data_write(struct ieee80211_hw *hw,
+ 	u8 tmpdata[8];
+ 
+ 	memset(tmpdata, 0xff, PGPKT_DATA_SIZE);
+-	RT_TRACE(rtlpriv, COMP_EFUSE, DBG_LOUD, "word_en = %x efuse_addr=%x\n",
+-		 word_en, efuse_addr);
++	RT_TRACE(rtlpriv, COMP_EFUSE, DBG_LOUD,
++		 "word_en = %x efuse_addr=%x\n", word_en, efuse_addr);
+ 
+ 	if (!(word_en & BIT(0))) {
+ 		tmpaddr = start_addr;
+@@ -1127,19 +1128,22 @@ static void efuse_power_switch(struct ieee80211_hw *hw, u8 write, u8 pwrstate)
+ 	u16 tmpV16;
+ 
+ 	if (pwrstate && (rtlhal->hw_type != HARDWARE_TYPE_RTL8192SE)) {
+-		if (rtlhal->hw_type == HARDWARE_TYPE_RTL8188EE)
+-			rtl_write_byte(rtlpriv, rtlpriv->cfg->maps[EFUSE_ACCESS],
+-				       0x69);
+ 
+-		tmpV16 = rtl_read_word(rtlpriv,
+-				       rtlpriv->cfg->maps[SYS_ISO_CTRL]);
+-		if (!(tmpV16 & rtlpriv->cfg->maps[EFUSE_PWC_EV12V])) {
+-			tmpV16 |= rtlpriv->cfg->maps[EFUSE_PWC_EV12V];
+-			rtl_write_word(rtlpriv,
+-				       rtlpriv->cfg->maps[SYS_ISO_CTRL],
+-				       tmpV16);
++		if (rtlhal->hw_type != HARDWARE_TYPE_RTL8192CE &&
++		    rtlhal->hw_type != HARDWARE_TYPE_RTL8192DE) {
++			rtl_write_byte(rtlpriv,
++				       rtlpriv->cfg->maps[EFUSE_ACCESS], 0x69);
++		} else {
++			tmpV16 =
++			  rtl_read_word(rtlpriv,
++					rtlpriv->cfg->maps[SYS_ISO_CTRL]);
++			if (!(tmpV16 & rtlpriv->cfg->maps[EFUSE_PWC_EV12V])) {
++				tmpV16 |= rtlpriv->cfg->maps[EFUSE_PWC_EV12V];
++				rtl_write_word(rtlpriv,
++					       rtlpriv->cfg->maps[SYS_ISO_CTRL],
++					       tmpV16);
++			}
+ 		}
 -
--	/* current throughput */
--	unsigned int cur_tp;
+ 		tmpV16 = rtl_read_word(rtlpriv,
+ 				       rtlpriv->cfg->maps[SYS_FUNC_EN]);
+ 		if (!(tmpV16 & rtlpriv->cfg->maps[EFUSE_FEN_ELDR])) {
+@@ -1164,7 +1168,10 @@ static void efuse_power_switch(struct ieee80211_hw *hw, u8 write, u8 pwrstate)
+ 						rtlpriv->cfg->maps[EFUSE_TEST] +
+ 						3);
+ 
+-			if (rtlhal->hw_type != HARDWARE_TYPE_RTL8192SE) {
++			if (rtlhal->hw_type == HARDWARE_TYPE_RTL8812AE) {
++				tempval &= ~(BIT(3) | BIT(4) | BIT(5) | BIT(6));
++				tempval |= (VOLTAGE_V25 << 3);
++			} else if (rtlhal->hw_type != HARDWARE_TYPE_RTL8192SE) {
+ 				tempval &= 0x0F;
+ 				tempval |= (VOLTAGE_V25 << 4);
+ 			}
+@@ -1176,11 +1183,11 @@ static void efuse_power_switch(struct ieee80211_hw *hw, u8 write, u8 pwrstate)
+ 
+ 		if (rtlhal->hw_type == HARDWARE_TYPE_RTL8192SE) {
+ 			rtl_write_byte(rtlpriv, rtlpriv->cfg->maps[EFUSE_CLK],
+-						0x03);
++				       0x03);
+ 		}
 -
--	/* packet delivery probabilities */
--	unsigned int cur_prob, probability;
+ 	} else {
+-		if (rtlhal->hw_type == HARDWARE_TYPE_RTL8188EE)
++		if (rtlhal->hw_type != HARDWARE_TYPE_RTL8192CE &&
++		    rtlhal->hw_type != HARDWARE_TYPE_RTL8192DE)
+ 			rtl_write_byte(rtlpriv,
+ 				       rtlpriv->cfg->maps[EFUSE_ACCESS], 0);
+ 
+@@ -1195,27 +1202,28 @@ static void efuse_power_switch(struct ieee80211_hw *hw, u8 write, u8 pwrstate)
+ 
+ 		if (rtlhal->hw_type == HARDWARE_TYPE_RTL8192SE) {
+ 			rtl_write_byte(rtlpriv, rtlpriv->cfg->maps[EFUSE_CLK],
+-						0x02);
++				       0x02);
+ 		}
 -
--	/* maximum retry counts */
--	unsigned int retry_count;
--	unsigned int retry_count_rtscts;
+ 	}
 -
--	bool retry_updated;
--	u8 sample_skipped;
--};
+ }
+ 
+ static u16 efuse_get_current_size(struct ieee80211_hw *hw)
+ {
++	int continual = true;
+ 	u16 efuse_addr = 0;
+-	u8 hworden;
++	u8 hoffset, hworden;
+ 	u8 efuse_data, word_cnts;
+ 
+-	while (efuse_one_byte_read(hw, efuse_addr, &efuse_data) &&
+-	       efuse_addr < EFUSE_MAX_SIZE) {
+-		if (efuse_data == 0xFF)
+-			break;
 -
- struct minstrel_mcs_group_data {
- 	u8 index;
- 	u8 column;
+-		hworden = efuse_data & 0x0F;
+-		word_cnts = efuse_calculate_word_cnts(hworden);
+-		efuse_addr = efuse_addr + (word_cnts * 2) + 1;
++	while (continual && efuse_one_byte_read(hw, efuse_addr, &efuse_data) &&
++	       (efuse_addr < EFUSE_MAX_SIZE)) {
++		if (efuse_data != 0xFF) {
++			hoffset = (efuse_data >> 4) & 0x0F;
++			hworden = efuse_data & 0x0F;
++			word_cnts = efuse_calculate_word_cnts(hworden);
++			efuse_addr = efuse_addr + (word_cnts * 2) + 1;
++		} else {
++			continual = false;
++		}
+ 	}
+ 
+ 	return efuse_addr;
+diff --git a/drivers/net/wireless/rtlwifi/efuse.h b/drivers/net/wireless/rtlwifi/efuse.h
+index 1663b3a..fdab824 100644
+--- a/drivers/net/wireless/rtlwifi/efuse.h
++++ b/drivers/net/wireless/rtlwifi/efuse.h
+@@ -11,10 +11,6 @@
+  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+  * more details.
+  *
+- * You should have received a copy of the GNU General Public License along with
+- * this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
+- *
+  * The full GNU General Public License is included in this distribution in the
+  * file called LICENSE.
+  *
+@@ -32,7 +28,6 @@
+ 
+ #define EFUSE_IC_ID_OFFSET		506
+ 
+-#define EFUSE_MAP_LEN			128
+ #define EFUSE_MAX_WORD_UNIT		4
+ 
+ #define EFUSE_INIT_MAP			0
+@@ -107,12 +102,14 @@ struct efuse_priv {
+ void read_efuse_byte(struct ieee80211_hw *hw, u16 _offset, u8 *pbuf);
+ void efuse_initialize(struct ieee80211_hw *hw);
+ u8 efuse_read_1byte(struct ieee80211_hw *hw, u16 address);
++int efuse_one_byte_read(struct ieee80211_hw *hw, u16 addr, u8 *data);
+ void efuse_write_1byte(struct ieee80211_hw *hw, u16 address, u8 value);
+-void read_efuse(struct ieee80211_hw *hw, u16 _offset, u16 _size_byte, u8 *pbuf);
+-void efuse_shadow_read(struct ieee80211_hw *hw, u8 type, u16 offset,
+-		       u32 *value);
+-void efuse_shadow_write(struct ieee80211_hw *hw, u8 type, u16 offset,
+-			u32 value);
++void read_efuse(struct ieee80211_hw *hw, u16 _offset,
++		u16 _size_byte, u8 *pbuf);
++void efuse_shadow_read(struct ieee80211_hw *hw, u8 type,
++		       u16 offset, u32 *value);
++void efuse_shadow_write(struct ieee80211_hw *hw, u8 type,
++			u16 offset, u32 value);
+ bool efuse_shadow_update(struct ieee80211_hw *hw);
+ bool efuse_shadow_update_chk(struct ieee80211_hw *hw);
+ void rtl_efuse_shadow_map_update(struct ieee80211_hw *hw);
 -- 
-2.1.0
+1.8.4.5
 
