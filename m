@@ -1,38 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:44427 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755198AbaIDXDr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Sep 2014 19:03:47 -0400
-Date: Fri, 5 Sep 2014 01:03:12 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Eric Lapuyade <eric.lapuyade@linux.intel.com>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-	linux-wireless@vger.kernel.org, linux-nfc@ml01.01.org,
-	kernel-janitors@vger.kernel.org, Kees Cook <keescook@chromium.org>
-Subject: Re: [patch -RESEND] NFC: potential overflows in
- microread_target_discovered()
-Message-ID: <20140904230312.GA6702@zurbaran> (sfid-20140905_010400_425880_FB7ECA04)
-References: <20140901172729.GA6549@mwanda>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140901172729.GA6549@mwanda>
+Received: from mail-ob0-f178.google.com ([209.85.214.178]:54016 "EHLO
+	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754020AbaIVOj4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Sep 2014 10:39:56 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, troy_tan@realsil.com.cn,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH 02/11 NEXT] rtlwifi: Remove extra workqueue for enter/leave power state
+Date: Mon, 22 Sep 2014 09:39:18 -0500
+Message-Id: <1411396767-20611-3-git-send-email-Larry.Finger@lwfinger.net> (sfid-20140922_164050_628593_9006C95D)
+In-Reply-To: <1411396767-20611-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1411396767-20611-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dan,
+When the rtlwifi family of drivers was converted to use a workqueue when
+entering or leaving power save mode (commits a269913c52, a5ffbe0a19,
+41affd5286, b9116b9a2b, and 6539306b2c), the code began scheduling work from
+the callback routine of a different workqueue with a resulting increase in
+overhead.
 
-On Mon, Sep 01, 2014 at 08:27:29PM +0300, Dan Carpenter wrote:
-> Smatch says that skb->data is untrusted so we need to check to make sure
-> that the memcpy() doesn't overflow.
-Applied to nfc-fixes, thanks.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/rtlwifi/base.c | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
 
-Cheers,
-Samuel.
-
+diff --git a/drivers/net/wireless/rtlwifi/base.c b/drivers/net/wireless/rtlwifi/base.c
+index 93bb384..3b599b6 100644
+--- a/drivers/net/wireless/rtlwifi/base.c
++++ b/drivers/net/wireless/rtlwifi/base.c
+@@ -1401,12 +1401,9 @@ void rtl_watchdog_wq_callback(void *data)
+ 		if (((rtlpriv->link_info.num_rx_inperiod +
+ 		      rtlpriv->link_info.num_tx_inperiod) > 8) ||
+ 		    (rtlpriv->link_info.num_rx_inperiod > 2))
+-			rtlpriv->enter_ps = true;
++			rtl_lps_enter(hw);
+ 		else
+-			rtlpriv->enter_ps = false;
+-
+-		/* LeisurePS only work in infra mode. */
+-		schedule_work(&rtlpriv->works.lps_change_work);
++			rtl_lps_leave(hw);
+ 	}
+ 
+ 	rtlpriv->link_info.num_rx_inperiod = 0;
 -- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+1.8.4.5
+
