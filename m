@@ -1,129 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:39754 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752367AbaINJnS (ORCPT
+Received: from mail-lb0-f170.google.com ([209.85.217.170]:53167 "EHLO
+	mail-lb0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751027AbaIVFtH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Sep 2014 05:43:18 -0400
-Subject: [PATCH 08/10] ath10k: miscellaneous checkpatch fixes
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Sun, 14 Sep 2014 12:50:39 +0300
-Message-ID: <20140914095038.9063.72668.stgit@x230> (sfid-20140914_114321_202127_90AB825A)
-In-Reply-To: <20140914094728.9063.32593.stgit@x230>
-References: <20140914094728.9063.32593.stgit@x230>
+	Mon, 22 Sep 2014 01:49:07 -0400
+Date: Mon, 22 Sep 2014 08:48:56 +0300
+From: Johan Hedberg <johan.hedberg@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: bluetooth-next 2014-09-22
+Message-ID: <20140922054856.GA15688@t440s.P-661HNU-F1> (sfid-20140922_074927_594823_0F9A9C8B)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="WIyZ46R2i8wDzkSu"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixes checkpatch warnings:
 
-ath10k/htc.c:49: WARNING: Possible unnecessary 'out of memory' message
-ath10k/htc.c:810: WARNING: Possible unnecessary 'out of memory' message
-ath10k/htt.h:1034: CHECK: Please use a blank line after function/struct/union/enum declarations
-ath10k/htt_rx.c:135: CHECK: Unnecessary parentheses around htt->rx_ring.alloc_idx.vaddr
-ath10k/htt_rx.c:173: CHECK: Unnecessary parentheses around htt->rx_ring.alloc_idx.vaddr
-ath10k/pci.c:633: WARNING: macros should not use a trailing semicolon
-ath10k/wmi.c:3594: WARNING: quoted string split across lines
+--WIyZ46R2i8wDzkSu
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Hi John,
+
+Here are some more patches for 3.18. They include various fixes to the
+btusb HCI driver, a fix for LE SMP, as well as adding Jukka to the
+MAINTAINERS file for generic 6LoWPAN (as requested by Alexander Aring).
+
+I've held on to this pull request a bit since we were waiting for a SCO
+related fix to get sorted out first. However, since the merge window is
+getting closer I decided not to wait for it. If we do get the fix sorted
+out there'll probably be a second small pull request later this week.
+
+Let me know if there are any issues pulling. Thanks.
+
+Johan
+
 ---
- drivers/net/wireless/ath/ath10k/htc.c    |    8 ++------
- drivers/net/wireless/ath/ath10k/htt.h    |    1 +
- drivers/net/wireless/ath/ath10k/htt_rx.c |    4 ++--
- drivers/net/wireless/ath/ath10k/pci.c    |    2 +-
- drivers/net/wireless/ath/ath10k/wmi.c    |    4 ++--
- 5 files changed, 8 insertions(+), 11 deletions(-)
+The following changes since commit 9a783a139c32a905825ee0aa9597f485ea461f76:
 
-diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
-index b7ee24b19f59..676bd4ed969b 100644
---- a/drivers/net/wireless/ath/ath10k/htc.c
-+++ b/drivers/net/wireless/ath/ath10k/htc.c
-@@ -45,10 +45,8 @@ static struct sk_buff *ath10k_htc_build_tx_ctrl_skb(void *ar)
- 	struct ath10k_skb_cb *skb_cb;
- 
- 	skb = dev_alloc_skb(ATH10K_HTC_CONTROL_BUFFER_SIZE);
--	if (!skb) {
--		ath10k_warn(ar, "Unable to allocate ctrl skb\n");
-+	if (!skb)
- 		return NULL;
--	}
- 
- 	skb_reserve(skb, 20); /* FIXME: why 20 bytes? */
- 	WARN_ONCE((unsigned long)skb->data & 3, "unaligned skb");
-@@ -806,10 +804,8 @@ struct sk_buff *ath10k_htc_alloc_skb(struct ath10k *ar, int size)
- 	struct sk_buff *skb;
- 
- 	skb = dev_alloc_skb(size + sizeof(struct ath10k_htc_hdr));
--	if (!skb) {
--		ath10k_warn(ar, "could not allocate HTC tx skb\n");
-+	if (!skb)
- 		return NULL;
--	}
- 
- 	skb_reserve(skb, sizeof(struct ath10k_htc_hdr));
- 
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index e20472672efe..3b44217a6c19 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -1031,6 +1031,7 @@ static inline struct htt_stats_conf_item *htt_stats_conf_next_item(
- {
- 	return (void *)item + sizeof(*item) + roundup(item->length, 4);
- }
-+
- /*
-  * host -> target FRAG DESCRIPTOR/MSDU_EXT DESC bank
-  *
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 18117b9a1e9a..92b56e43d2d8 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -132,7 +132,7 @@ static int __ath10k_htt_rx_ring_fill_n(struct ath10k_htt *htt, int num)
- 	dma_addr_t paddr;
- 	int ret = 0, idx;
- 
--	idx = __le32_to_cpu(*(htt->rx_ring.alloc_idx.vaddr));
-+	idx = __le32_to_cpu(*htt->rx_ring.alloc_idx.vaddr);
- 	while (num > 0) {
- 		skb = dev_alloc_skb(HTT_RX_BUF_SIZE + HTT_RX_DESC_ALIGN);
- 		if (!skb) {
-@@ -170,7 +170,7 @@ static int __ath10k_htt_rx_ring_fill_n(struct ath10k_htt *htt, int num)
- 	}
- 
- fail:
--	*(htt->rx_ring.alloc_idx.vaddr) = __cpu_to_le32(idx);
-+	*htt->rx_ring.alloc_idx.vaddr = __cpu_to_le32(idx);
- 	return ret;
- }
- 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index abd0a681d56c..59e0ea83be50 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -631,7 +631,7 @@ static int __ath10k_pci_diag_read_hi(struct ath10k *ar, void *dest,
- }
- 
- #define ath10k_pci_diag_read_hi(ar, dest, src, len)		\
--	__ath10k_pci_diag_read_hi(ar, dest, HI_ITEM(src), len);
-+	__ath10k_pci_diag_read_hi(ar, dest, HI_ITEM(src), len)
- 
- static int ath10k_pci_diag_write_mem(struct ath10k *ar, u32 address,
- 				     const void *data, int nbytes)
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 6b9f38b8b827..c71376218ee5 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -3590,8 +3590,8 @@ ath10k_wmi_vdev_start_restart(struct ath10k *ar,
- 	cmd->chan.antenna_max = arg->channel.max_antenna_gain;
- 
- 	ath10k_dbg(ar, ATH10K_DBG_WMI,
--		   "wmi vdev %s id 0x%x flags: 0x%0X, freq %d, mode %d, "
--		   "ch_flags: 0x%0X, max_power: %d\n", cmdname, arg->vdev_id,
-+		   "wmi vdev %s id 0x%x flags: 0x%0X, freq %d, mode %d, ch_flags: 0x%0X, max_power: %d\n",
-+		   cmdname, arg->vdev_id,
- 		   flags, arg->channel.freq, arg->channel.mode,
- 		   cmd->chan.flags, arg->channel.max_power);
- 
+  Bluetooth: Fix re-setting RPA as expired when deferring update (2014-09-12 18:34:25 +0200)
 
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next.git for-upstream
+
+for you to fetch changes up to 5eb596f55cacc2389554a8d7572d90d5e9d4269d:
+
+  Bluetooth: Fix setting correct security level when initiating SMP (2014-09-18 17:39:37 +0200)
+
+----------------------------------------------------------------
+Johan Hedberg (2):
+      Bluetooth: btusb: Use GFP_KERNEL in btusb_send_frame()
+      Bluetooth: Fix setting correct security level when initiating SMP
+
+Jukka Rissanen (1):
+      MAINTAINERS: add maintainer for generic 6LoWPAN
+
+Marcel Holtmann (7):
+      Bluetooth: btusb: Separate TX URB allocation and submission
+      Bluetooth: Add BUILD_BUG_ON check for SKB control buffer size
+      Bluetooth: Provide HCI command opcode information to driver
+      Bluetooth: btusb: Fix old coding style issues
+      Bluetooth: btusb: Split fragement receiption into separate functions
+      Bluetooth: btusb: Implement driver internal packet reassembly
+      Bluetooth: Remove exported hci_recv_fragment function
+
+ MAINTAINERS                       |   1 +
+ drivers/bluetooth/btusb.c         | 511 +++++++++++++++++++++++++---------
+ include/net/bluetooth/bluetooth.h |   1 +
+ include/net/bluetooth/hci_core.h  |   1 -
+ net/bluetooth/af_bluetooth.c      |   3 +
+ net/bluetooth/hci_core.c          |  21 +-
+ net/bluetooth/smp.c               |   5 +-
+ 7 files changed, 385 insertions(+), 158 deletions(-)
+
+
+--WIyZ46R2i8wDzkSu
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUH7hIAAoJECQj9vv5qNQSA0AP/0XdUG9WvH2n9arYXopMOIY3
+3xD0xwP7EpH6j2f9QigDZvTBrxlE1wehKn8lhKYWbRosQFNodQK8N0LX3vcYR8mb
+TTM4vb8pAYvkOv6oyvJNCsi9gpaZMz9M1OfGIinH4yy2iSoEQi3G4mzvqtnWPtbA
+dB2rirb3XcZkgkQxiCfDQz/mjdyig1U6npaVwcKbZIdRTPuRVbJzcK4ghjztHgWg
+j2FHvMZCdyrTzqMn9NwAOb4r/E9qABuu3CbiUZTv6Gxv8SrHFh/6EUVP2RcG14rq
+Yqlr8EtqI1PNL4JpNq8IgVNLGQWm3cUilZnkoZOnfp0t/W16NMCZiXZN1UWbw6gR
+5nImAxu57wYLXwxrjA5y3W2of5l5XsI2TaZkeCbzMncA5bKcTW1lFQlfXpu15H8R
+yKmn9FU8kHMqlD1B5H7Sn+BiqmxJwh0HuSyftMVl8AHsDnMwSYVN1UX4y/cJ2XL2
+2haqBoTWFArT2D5ussl3n+UQmJOB1Vw71E97tEYbuBNEWnHANuhQRuGrxg3Q8a1i
+3ki1WHvWtFwucHDJwC8JSfPNtvgmvQos6AdNarEP7Gkt2vkV3N0XaFsWC50MQXF0
++l9aB30mORONtZeN681RsyCCnueNOWDqdki2g7YFoyxNMunVkWtCAAJJ4cdF9Fnl
+hK9KwaUsc5rjVBOK4fjS
+=L3A7
+-----END PGP SIGNATURE-----
+
+--WIyZ46R2i8wDzkSu--
