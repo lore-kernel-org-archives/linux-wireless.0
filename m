@@ -1,344 +1,330 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:30507 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753872AbaILJKp (ORCPT
+Received: from smtprelay0024.hostedemail.com ([216.40.44.24]:35396 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753592AbaIVRfm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Sep 2014 05:10:45 -0400
-From: Avinash Patil <patila@marvell.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
-	<huxm@marvell.com>, <yangyang@marvell.com>, <cluo@marvell.com>,
-	<maithili@marvell.com>, Avinash Patil <patila@marvell.com>
-Subject: [PATCHv2 14/16] mwifiex: remove low priority scan handling
-Date: Fri, 12 Sep 2014 20:08:58 +0530
-Message-ID: <1410532740-3173-15-git-send-email-patila@marvell.com> (sfid-20140912_111100_037783_56165F78)
-In-Reply-To: <1410532740-3173-1-git-send-email-patila@marvell.com>
-References: <1410532740-3173-1-git-send-email-patila@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 22 Sep 2014 13:35:42 -0400
+Message-ID: <1411407334.2952.46.camel@joe-AO725> (sfid-20140922_193604_646389_1E975399)
+Subject: [PATCH] ath: change logging functions to return void
+From: Joe Perches <joe@perches.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	wil6210 <wil6210@qca.qualcomm.com>
+Date: Mon, 22 Sep 2014 10:35:34 -0700
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+The return values are not used by callers of these functions
+so change the functions to return void.
 
-We have a logic in driver to delay or abort low priority scan
-to serve Tx traffic effectively. With scan channel
-gap support added, firmware now allows driver to send Tx data while
-scan operation is in progress. Hence low priority scan handling
-in driver is not required now. This patch removes related code.
+Other miscellanea:
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
+o add __printf verification to wil6210 logging functions
+  No format/argument mismatches found
+
+Signed-off-by: Joe Perches <joe@perches.com>
 ---
- drivers/net/wireless/mwifiex/cfg80211.c |  8 ---
- drivers/net/wireless/mwifiex/init.c     |  1 -
- drivers/net/wireless/mwifiex/main.c     | 96 +--------------------------------
- drivers/net/wireless/mwifiex/main.h     | 10 ----
- drivers/net/wireless/mwifiex/scan.c     | 59 ++++++++++----------
- 5 files changed, 30 insertions(+), 144 deletions(-)
+This change is associated to a desire to eventually
+change printk to return void.
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 50cc0db..1fd35be 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -1935,13 +1935,6 @@ mwifiex_cfg80211_scan(struct wiphy *wiphy,
+ drivers/net/wireless/ath/ath10k/debug.c    | 18 +++++-------------
+ drivers/net/wireless/ath/ath10k/debug.h    |  6 +++---
+ drivers/net/wireless/ath/ath6kl/common.h   |  2 +-
+ drivers/net/wireless/ath/ath6kl/debug.c    | 28 ++++++++--------------------
+ drivers/net/wireless/ath/ath6kl/debug.h    | 13 ++++++-------
+ drivers/net/wireless/ath/wil6210/debug.c   | 14 ++++----------
+ drivers/net/wireless/ath/wil6210/wil6210.h |  7 +++++--
+ 7 files changed, 32 insertions(+), 56 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index f3f0a80..29eb2aa 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -106,21 +106,18 @@ struct ath10k_dump_file_data {
+ 	u8 data[0];
+ } __packed;
  
- 	wiphy_dbg(wiphy, "info: received scan request on %s\n", dev->name);
- 
--	if ((request->flags & NL80211_SCAN_FLAG_LOW_PRIORITY) &&
--	    atomic_read(&priv->wmm.tx_pkts_queued) >=
--	    MWIFIEX_MIN_TX_PENDING_TO_CANCEL_SCAN) {
--		dev_dbg(priv->adapter->dev, "scan rejected due to traffic\n");
--		return -EBUSY;
--	}
--
- 	/* Block scan request if scan operation or scan cleanup when interface
- 	 * is disabled is in process
- 	 */
-@@ -2919,7 +2912,6 @@ int mwifiex_register_cfg80211(struct mwifiex_adapter *adapter)
- 
- 	wiphy->features |= NL80211_FEATURE_HT_IBSS |
- 			   NL80211_FEATURE_INACTIVITY_TIMER |
--			   NL80211_FEATURE_LOW_PRIORITY_SCAN |
- 			   NL80211_FEATURE_NEED_OBSS_SCAN;
- 
- 	/* Reserve space for mwifiex specific private data for BSS */
-diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
-index d99c6f6..cd9baad 100644
---- a/drivers/net/wireless/mwifiex/init.c
-+++ b/drivers/net/wireless/mwifiex/init.c
-@@ -281,7 +281,6 @@ static void mwifiex_init_adapter(struct mwifiex_adapter *adapter)
- 	memset(&adapter->arp_filter, 0, sizeof(adapter->arp_filter));
- 	adapter->arp_filter_size = 0;
- 	adapter->max_mgmt_ie_index = MAX_MGMT_IE_INDEX;
--	adapter->empty_tx_q_cnt = 0;
- 	adapter->ext_scan = true;
- 	adapter->key_api_major_ver = 0;
- 	adapter->key_api_minor_ver = 0;
-diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
-index d6d2342..f139386 100644
---- a/drivers/net/wireless/mwifiex/main.c
-+++ b/drivers/net/wireless/mwifiex/main.c
-@@ -28,91 +28,6 @@ const char driver_version[] = "mwifiex " VERSION " (%s) ";
- static char *cal_data_cfg;
- module_param(cal_data_cfg, charp, 0);
- 
--static void scan_delay_timer_fn(unsigned long data)
--{
--	struct mwifiex_private *priv = (struct mwifiex_private *)data;
--	struct mwifiex_adapter *adapter = priv->adapter;
--	struct cmd_ctrl_node *cmd_node, *tmp_node;
--	spinlock_t *scan_q_lock = &adapter->scan_pending_q_lock;
--	unsigned long flags;
--
--	if (adapter->surprise_removed)
--		return;
--
--	if (adapter->scan_delay_cnt == MWIFIEX_MAX_SCAN_DELAY_CNT ||
--	    !adapter->scan_processing) {
--		/*
--		 * Abort scan operation by cancelling all pending scan
--		 * commands
--		 */
--		spin_lock_irqsave(scan_q_lock, flags);
--		list_for_each_entry_safe(cmd_node, tmp_node,
--					 &adapter->scan_pending_q, list) {
--			list_del(&cmd_node->list);
--			mwifiex_insert_cmd_to_free_q(adapter, cmd_node);
--		}
--		spin_unlock_irqrestore(scan_q_lock, flags);
--
--		spin_lock_irqsave(&adapter->mwifiex_cmd_lock, flags);
--		adapter->scan_processing = false;
--		adapter->scan_delay_cnt = 0;
--		adapter->empty_tx_q_cnt = 0;
--		spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, flags);
--
--		if (priv->scan_request) {
--			dev_dbg(adapter->dev, "info: aborting scan\n");
--			cfg80211_scan_done(priv->scan_request, 1);
--			priv->scan_request = NULL;
--		} else {
--			priv->scan_aborting = false;
--			dev_dbg(adapter->dev, "info: scan already aborted\n");
--		}
--		goto done;
--	}
--
--	if (!atomic_read(&priv->adapter->is_tx_received)) {
--		adapter->empty_tx_q_cnt++;
--		if (adapter->empty_tx_q_cnt == MWIFIEX_MAX_EMPTY_TX_Q_CNT) {
--			/*
--			 * No Tx traffic for 200msec. Get scan command from
--			 * scan pending queue and put to cmd pending queue to
--			 * resume scan operation
--			 */
--			adapter->scan_delay_cnt = 0;
--			adapter->empty_tx_q_cnt = 0;
--			spin_lock_irqsave(scan_q_lock, flags);
--
--			if (list_empty(&adapter->scan_pending_q)) {
--				spin_unlock_irqrestore(scan_q_lock, flags);
--				goto done;
--			}
--
--			cmd_node = list_first_entry(&adapter->scan_pending_q,
--						    struct cmd_ctrl_node, list);
--			list_del(&cmd_node->list);
--			spin_unlock_irqrestore(scan_q_lock, flags);
--
--			mwifiex_insert_cmd_to_pending_q(adapter, cmd_node,
--							true);
--			queue_work(adapter->workqueue, &adapter->main_work);
--			goto done;
--		}
--	} else {
--		adapter->empty_tx_q_cnt = 0;
--	}
--
--	/* Delay scan operation further by 20msec */
--	mod_timer(&priv->scan_delay_timer, jiffies +
--		  msecs_to_jiffies(MWIFIEX_SCAN_DELAY_MSEC));
--	adapter->scan_delay_cnt++;
--
--done:
--	if (atomic_read(&priv->adapter->is_tx_received))
--		atomic_set(&priv->adapter->is_tx_received, false);
--
--	return;
--}
--
- /*
-  * This function registers the device and performs all the necessary
-  * initializations.
-@@ -160,10 +75,6 @@ static int mwifiex_register(void *card, struct mwifiex_if_ops *if_ops,
- 
- 		adapter->priv[i]->adapter = adapter;
- 		adapter->priv_num++;
--
--		setup_timer(&adapter->priv[i]->scan_delay_timer,
--			    scan_delay_timer_fn,
--			    (unsigned long)adapter->priv[i]);
- 	}
- 	mwifiex_init_lock_list(adapter);
- 
-@@ -207,7 +118,6 @@ static int mwifiex_unregister(struct mwifiex_adapter *adapter)
- 	for (i = 0; i < adapter->priv_num; i++) {
- 		if (adapter->priv[i]) {
- 			mwifiex_free_curr_bcn(adapter->priv[i]);
--			del_timer_sync(&adapter->priv[i]->scan_delay_timer);
- 			kfree(adapter->priv[i]);
- 		}
- 	}
-@@ -285,7 +195,6 @@ process_start:
- 				break;
- 
- 			if ((!adapter->scan_chan_gap_enabled &&
--			     !adapter->scan_delay_cnt &&
- 			     adapter->scan_processing) || adapter->data_sent ||
- 			    mwifiex_wmm_lists_empty(adapter)) {
- 				if (adapter->cmd_sent || adapter->curr_cmd ||
-@@ -341,7 +250,7 @@ process_start:
- 		}
- 
- 		if ((adapter->scan_chan_gap_enabled ||
--		     (!adapter->scan_processing || adapter->scan_delay_cnt)) &&
-+		     !adapter->scan_processing) &&
- 		    !adapter->data_sent && !mwifiex_wmm_lists_empty(adapter)) {
- 			mwifiex_wmm_process_tx(adapter);
- 			if (adapter->hs_activated) {
-@@ -600,9 +509,6 @@ int mwifiex_queue_tx_pkt(struct mwifiex_private *priv, struct sk_buff *skb)
- 	atomic_inc(&priv->adapter->tx_pending);
- 	mwifiex_wmm_add_buf_txqueue(priv, skb);
- 
--	if (priv->adapter->scan_delay_cnt)
--		atomic_set(&priv->adapter->is_tx_received, true);
--
- 	queue_work(priv->adapter->workqueue, &priv->adapter->main_work);
- 
- 	return 0;
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 651fd8c..e9cd4ab 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -90,12 +90,6 @@ enum {
- 
- #define MWIFIEX_MAX_TOTAL_SCAN_TIME	(MWIFIEX_TIMER_10S - MWIFIEX_TIMER_1S)
- 
--#define MWIFIEX_MAX_SCAN_DELAY_CNT			50
--#define MWIFIEX_MAX_EMPTY_TX_Q_CNT			10
--#define MWIFIEX_SCAN_DELAY_MSEC				20
--
--#define MWIFIEX_MIN_TX_PENDING_TO_CANCEL_SCAN		2
--
- #define RSN_GTK_OUI_OFFSET				2
- 
- #define MWIFIEX_OUI_NOT_PRESENT			0
-@@ -561,7 +555,6 @@ struct mwifiex_private {
- 	u16 proberesp_idx;
- 	u16 assocresp_idx;
- 	u16 rsn_idx;
--	struct timer_list scan_delay_timer;
- 	u8 ap_11n_enabled;
- 	u8 ap_11ac_enabled;
- 	u32 mgmt_frame_mask;
-@@ -816,8 +809,6 @@ struct mwifiex_adapter {
- 	spinlock_t queue_lock;		/* lock for tx queues */
- 	u8 country_code[IEEE80211_COUNTRY_STRING_LEN];
- 	u16 max_mgmt_ie_index;
--	u8 scan_delay_cnt;
--	u8 empty_tx_q_cnt;
- 	const struct firmware *cal_data;
- 	struct device_node *dt_node;
- 
-@@ -829,7 +820,6 @@ struct mwifiex_adapter {
- 	u32 usr_dot_11ac_dev_cap_a;
- 	u32 usr_dot_11ac_mcs_support;
- 
--	atomic_t is_tx_received;
- 	atomic_t pending_bridged_pkts;
- 	struct semaphore *card_sem;
- 	bool ext_scan;
-diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
-index 7b07da2..67f9cdb 100644
---- a/drivers/net/wireless/mwifiex/scan.c
-+++ b/drivers/net/wireless/mwifiex/scan.c
-@@ -1765,7 +1765,7 @@ static void mwifiex_complete_scan(struct mwifiex_private *priv)
- static void mwifiex_check_next_scan_command(struct mwifiex_private *priv)
+-int ath10k_info(struct ath10k *ar, const char *fmt, ...)
++void ath10k_info(struct ath10k *ar, const char *fmt, ...)
  {
- 	struct mwifiex_adapter *adapter = priv->adapter;
--	struct cmd_ctrl_node *cmd_node;
-+	struct cmd_ctrl_node *cmd_node, *tmp_node;
- 	unsigned long flags;
+ 	struct va_format vaf = {
+ 		.fmt = fmt,
+ 	};
+ 	va_list args;
+-	int ret;
  
- 	spin_lock_irqsave(&adapter->scan_pending_q_lock, flags);
-@@ -1786,37 +1786,36 @@ static void mwifiex_check_next_scan_command(struct mwifiex_private *priv)
- 			priv->scan_aborting = false;
- 			dev_dbg(adapter->dev, "info: scan already aborted\n");
- 		}
--	} else {
--		if ((priv->scan_aborting && !priv->scan_request) ||
--		    priv->scan_block) {
--			spin_unlock_irqrestore(&adapter->scan_pending_q_lock,
--					       flags);
--			adapter->scan_delay_cnt = MWIFIEX_MAX_SCAN_DELAY_CNT;
--			mod_timer(&priv->scan_delay_timer, jiffies);
--			dev_dbg(priv->adapter->dev,
--				"info: %s: triggerring scan abort\n", __func__);
--		} else if (!mwifiex_wmm_lists_empty(adapter) &&
--			   (priv->scan_request && (priv->scan_request->flags &
--					    NL80211_SCAN_FLAG_LOW_PRIORITY))) {
--			spin_unlock_irqrestore(&adapter->scan_pending_q_lock,
--					       flags);
--			adapter->scan_delay_cnt = 1;
--			mod_timer(&priv->scan_delay_timer, jiffies +
--				  msecs_to_jiffies(MWIFIEX_SCAN_DELAY_MSEC));
--			dev_dbg(priv->adapter->dev,
--				"info: %s: deferring scan\n", __func__);
--		} else {
--			/* Get scan command from scan_pending_q and put to
--			 * cmd_pending_q
--			 */
--			cmd_node = list_first_entry(&adapter->scan_pending_q,
--						    struct cmd_ctrl_node, list);
-+	} else if ((priv->scan_aborting && !priv->scan_request) ||
-+		   priv->scan_block) {
-+		list_for_each_entry_safe(cmd_node, tmp_node,
-+					 &adapter->scan_pending_q, list) {
- 			list_del(&cmd_node->list);
--			spin_unlock_irqrestore(&adapter->scan_pending_q_lock,
--					       flags);
--			mwifiex_insert_cmd_to_pending_q(adapter, cmd_node,
--							true);
-+			mwifiex_insert_cmd_to_free_q(adapter, cmd_node);
-+		}
-+		spin_unlock_irqrestore(&adapter->scan_pending_q_lock, flags);
-+
-+		spin_lock_irqsave(&adapter->mwifiex_cmd_lock, flags);
-+		adapter->scan_processing = false;
-+		spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, flags);
-+
-+		if (priv->scan_request) {
-+			dev_dbg(adapter->dev, "info: aborting scan\n");
-+			cfg80211_scan_done(priv->scan_request, 1);
-+			priv->scan_request = NULL;
-+		} else {
-+			priv->scan_aborting = false;
-+			dev_dbg(adapter->dev, "info: scan already aborted\n");
- 		}
-+	} else {
-+		/* Get scan command from scan_pending_q and put to
-+		 * cmd_pending_q
-+		 */
-+		cmd_node = list_first_entry(&adapter->scan_pending_q,
-+					    struct cmd_ctrl_node, list);
-+		list_del(&cmd_node->list);
-+		spin_unlock_irqrestore(&adapter->scan_pending_q_lock, flags);
-+		mwifiex_insert_cmd_to_pending_q(adapter, cmd_node, true);
- 	}
+ 	va_start(args, fmt);
+ 	vaf.va = &args;
+-	ret = dev_info(ar->dev, "%pV", &vaf);
++	dev_info(ar->dev, "%pV", &vaf);
+ 	trace_ath10k_log_info(&vaf);
+ 	va_end(args);
+-
+-	return ret;
+ }
+ EXPORT_SYMBOL(ath10k_info);
  
- 	return;
--- 
-1.8.1.4
+@@ -142,25 +139,22 @@ void ath10k_print_driver_info(struct ath10k *ar)
+ }
+ EXPORT_SYMBOL(ath10k_print_driver_info);
+ 
+-int ath10k_err(struct ath10k *ar, const char *fmt, ...)
++void ath10k_err(struct ath10k *ar, const char *fmt, ...)
+ {
+ 	struct va_format vaf = {
+ 		.fmt = fmt,
+ 	};
+ 	va_list args;
+-	int ret;
+ 
+ 	va_start(args, fmt);
+ 	vaf.va = &args;
+-	ret = dev_err(ar->dev, "%pV", &vaf);
++	dev_err(ar->dev, "%pV", &vaf);
+ 	trace_ath10k_log_err(&vaf);
+ 	va_end(args);
+-
+-	return ret;
+ }
+ EXPORT_SYMBOL(ath10k_err);
+ 
+-int ath10k_warn(struct ath10k *ar, const char *fmt, ...)
++void ath10k_warn(struct ath10k *ar, const char *fmt, ...)
+ {
+ 	struct va_format vaf = {
+ 		.fmt = fmt,
+@@ -173,8 +167,6 @@ int ath10k_warn(struct ath10k *ar, const char *fmt, ...)
+ 	trace_ath10k_log_warn(&vaf);
+ 
+ 	va_end(args);
+-
+-	return 0;
+ }
+ EXPORT_SYMBOL(ath10k_warn);
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
+index 5674653..a4d35e4 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.h
++++ b/drivers/net/wireless/ath/ath10k/debug.h
+@@ -39,9 +39,9 @@ enum ath10k_debug_mask {
+ 
+ extern unsigned int ath10k_debug_mask;
+ 
+-__printf(2, 3) int ath10k_info(struct ath10k *ar, const char *fmt, ...);
+-__printf(2, 3) int ath10k_err(struct ath10k *ar, const char *fmt, ...);
+-__printf(2, 3) int ath10k_warn(struct ath10k *ar, const char *fmt, ...);
++__printf(2, 3) void ath10k_info(struct ath10k *ar, const char *fmt, ...);
++__printf(2, 3) void ath10k_err(struct ath10k *ar, const char *fmt, ...);
++__printf(2, 3) void ath10k_warn(struct ath10k *ar, const char *fmt, ...);
+ void ath10k_print_driver_info(struct ath10k *ar);
+ 
+ #ifdef CONFIG_ATH10K_DEBUGFS
+diff --git a/drivers/net/wireless/ath/ath6kl/common.h b/drivers/net/wireless/ath/ath6kl/common.h
+index 05debf7..4f82e86 100644
+--- a/drivers/net/wireless/ath/ath6kl/common.h
++++ b/drivers/net/wireless/ath/ath6kl/common.h
+@@ -22,7 +22,7 @@
+ 
+ #define ATH6KL_MAX_IE			256
+ 
+-__printf(2, 3) int ath6kl_printk(const char *level, const char *fmt, ...);
++__printf(2, 3) void ath6kl_printk(const char *level, const char *fmt, ...);
+ 
+ /*
+  * Reflects the version of binary interface exposed by ATH6KL target
+diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
+index 55c4064..81ba48d 100644
+--- a/drivers/net/wireless/ath/ath6kl/debug.c
++++ b/drivers/net/wireless/ath/ath6kl/debug.c
+@@ -37,76 +37,64 @@ struct ath6kl_fwlog_slot {
+ 
+ #define ATH6KL_FWLOG_VALID_MASK 0x1ffff
+ 
+-int ath6kl_printk(const char *level, const char *fmt, ...)
++void ath6kl_printk(const char *level, const char *fmt, ...)
+ {
+ 	struct va_format vaf;
+ 	va_list args;
+-	int rtn;
+ 
+ 	va_start(args, fmt);
+ 
+ 	vaf.fmt = fmt;
+ 	vaf.va = &args;
+ 
+-	rtn = printk("%sath6kl: %pV", level, &vaf);
++	printk("%sath6kl: %pV", level, &vaf);
+ 
+ 	va_end(args);
+-
+-	return rtn;
+ }
+ EXPORT_SYMBOL(ath6kl_printk);
+ 
+-int ath6kl_info(const char *fmt, ...)
++void ath6kl_info(const char *fmt, ...)
+ {
+ 	struct va_format vaf = {
+ 		.fmt = fmt,
+ 	};
+ 	va_list args;
+-	int ret;
+ 
+ 	va_start(args, fmt);
+ 	vaf.va = &args;
+-	ret = ath6kl_printk(KERN_INFO, "%pV", &vaf);
++	ath6kl_printk(KERN_INFO, "%pV", &vaf);
+ 	trace_ath6kl_log_info(&vaf);
+ 	va_end(args);
+-
+-	return ret;
+ }
+ EXPORT_SYMBOL(ath6kl_info);
+ 
+-int ath6kl_err(const char *fmt, ...)
++void ath6kl_err(const char *fmt, ...)
+ {
+ 	struct va_format vaf = {
+ 		.fmt = fmt,
+ 	};
+ 	va_list args;
+-	int ret;
+ 
+ 	va_start(args, fmt);
+ 	vaf.va = &args;
+-	ret = ath6kl_printk(KERN_ERR, "%pV", &vaf);
++	ath6kl_printk(KERN_ERR, "%pV", &vaf);
+ 	trace_ath6kl_log_err(&vaf);
+ 	va_end(args);
+-
+-	return ret;
+ }
+ EXPORT_SYMBOL(ath6kl_err);
+ 
+-int ath6kl_warn(const char *fmt, ...)
++void ath6kl_warn(const char *fmt, ...)
+ {
+ 	struct va_format vaf = {
+ 		.fmt = fmt,
+ 	};
+ 	va_list args;
+-	int ret;
+ 
+ 	va_start(args, fmt);
+ 	vaf.va = &args;
+-	ret = ath6kl_printk(KERN_WARNING, "%pV", &vaf);
++	ath6kl_printk(KERN_WARNING, "%pV", &vaf);
+ 	trace_ath6kl_log_warn(&vaf);
+ 	va_end(args);
+-
+-	return ret;
+ }
+ EXPORT_SYMBOL(ath6kl_warn);
+ 
+diff --git a/drivers/net/wireless/ath/ath6kl/debug.h b/drivers/net/wireless/ath/ath6kl/debug.h
+index e194c10d..19106ed 100644
+--- a/drivers/net/wireless/ath/ath6kl/debug.h
++++ b/drivers/net/wireless/ath/ath6kl/debug.h
+@@ -50,10 +50,10 @@ enum ATH6K_DEBUG_MASK {
+ };
+ 
+ extern unsigned int debug_mask;
+-__printf(2, 3) int ath6kl_printk(const char *level, const char *fmt, ...);
+-__printf(1, 2) int ath6kl_info(const char *fmt, ...);
+-__printf(1, 2) int ath6kl_err(const char *fmt, ...);
+-__printf(1, 2) int ath6kl_warn(const char *fmt, ...);
++__printf(2, 3) void ath6kl_printk(const char *level, const char *fmt, ...);
++__printf(1, 2) void ath6kl_info(const char *fmt, ...);
++__printf(1, 2) void ath6kl_err(const char *fmt, ...);
++__printf(1, 2) void ath6kl_warn(const char *fmt, ...);
+ 
+ enum ath6kl_war {
+ 	ATH6KL_WAR_INVALID_RATE,
+@@ -81,10 +81,9 @@ int ath6kl_debug_init_fs(struct ath6kl *ar);
+ void ath6kl_debug_cleanup(struct ath6kl *ar);
+ 
+ #else
+-static inline int ath6kl_dbg(enum ATH6K_DEBUG_MASK dbg_mask,
+-			     const char *fmt, ...)
++static inline void ath6kl_dbg(enum ATH6K_DEBUG_MASK dbg_mask,
++			      const char *fmt, ...)
+ {
+-	return 0;
+ }
+ 
+ static inline void ath6kl_dbg_dump(enum ATH6K_DEBUG_MASK mask,
+diff --git a/drivers/net/wireless/ath/wil6210/debug.c b/drivers/net/wireless/ath/wil6210/debug.c
+index 9eeabf4..7a925ac 100644
+--- a/drivers/net/wireless/ath/wil6210/debug.c
++++ b/drivers/net/wireless/ath/wil6210/debug.c
+@@ -17,40 +17,34 @@
+ #include "wil6210.h"
+ #include "trace.h"
+ 
+-int wil_err(struct wil6210_priv *wil, const char *fmt, ...)
++void wil_err(struct wil6210_priv *wil, const char *fmt, ...)
+ {
+ 	struct net_device *ndev = wil_to_ndev(wil);
+ 	struct va_format vaf = {
+ 		.fmt = fmt,
+ 	};
+ 	va_list args;
+-	int ret;
+ 
+ 	va_start(args, fmt);
+ 	vaf.va = &args;
+-	ret = netdev_err(ndev, "%pV", &vaf);
++	netdev_err(ndev, "%pV", &vaf);
+ 	trace_wil6210_log_err(&vaf);
+ 	va_end(args);
+-
+-	return ret;
+ }
+ 
+-int wil_info(struct wil6210_priv *wil, const char *fmt, ...)
++void wil_info(struct wil6210_priv *wil, const char *fmt, ...)
+ {
+ 	struct net_device *ndev = wil_to_ndev(wil);
+ 	struct va_format vaf = {
+ 		.fmt = fmt,
+ 	};
+ 	va_list args;
+-	int ret;
+ 
+ 	va_start(args, fmt);
+ 	vaf.va = &args;
+-	ret = netdev_info(ndev, "%pV", &vaf);
++	netdev_info(ndev, "%pV", &vaf);
+ 	trace_wil6210_log_info(&vaf);
+ 	va_end(args);
+-
+-	return ret;
+ }
+ 
+ int wil_dbg_trace(struct wil6210_priv *wil, const char *fmt, ...)
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 133eeb8..d13fa53 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -451,9 +451,12 @@ struct wil6210_priv {
+ #define ndev_to_wil(n) (wdev_to_wil(n->ieee80211_ptr))
+ #define wil_to_pcie_dev(i) (&i->pdev->dev)
+ 
++__printf(2, 3)
+ int wil_dbg_trace(struct wil6210_priv *wil, const char *fmt, ...);
+-int wil_err(struct wil6210_priv *wil, const char *fmt, ...);
+-int wil_info(struct wil6210_priv *wil, const char *fmt, ...);
++__printf(2, 3)
++void wil_err(struct wil6210_priv *wil, const char *fmt, ...);
++__printf(2, 3)
++void wil_info(struct wil6210_priv *wil, const char *fmt, ...);
+ #define wil_dbg(wil, fmt, arg...) do { \
+ 	netdev_dbg(wil_to_ndev(wil), fmt, ##arg); \
+ 	wil_dbg_trace(wil, fmt, ##arg); \
+
 
