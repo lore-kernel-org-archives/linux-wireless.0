@@ -1,104 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:56336 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750911AbaI2KpJ (ORCPT
+Received: from mail-la0-f43.google.com ([209.85.215.43]:49679 "EHLO
+	mail-la0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754119AbaIVWuJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Sep 2014 06:45:09 -0400
-From: Avinash Patil <patila@marvell.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <cluo@marvell.com>,
-	<huxm@marvell.com>, <yangyang@marvell.com>, <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCHv1 RESEND 3/3] mwifiex: remove unnecessary rx_q lock
-Date: Mon, 29 Sep 2014 21:44:15 +0530
-Message-ID: <1412007255-4625-3-git-send-email-patila@marvell.com> (sfid-20140929_124514_004042_7CE20873)
-In-Reply-To: <1412007255-4625-1-git-send-email-patila@marvell.com>
-References: <1412007255-4625-1-git-send-email-patila@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 22 Sep 2014 18:50:09 -0400
+From: Emil Goode <emilgoode@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	Daniel Kim <dekim@broadcom.com>
+Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	kernel-janitors@vger.kernel.org, Emil Goode <emilgoode@gmail.com>
+Subject: [PATCH v2] brcmfmac: Fix off by one bug in brcmf_count_20mhz_channels()
+Date: Tue, 23 Sep 2014 00:49:55 +0200
+Message-Id: <1411426195-13467-1-git-send-email-emilgoode@gmail.com> (sfid-20140923_005055_766609_DD445F21)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SKB lists have their own lock. So this lock is not needed.
+In the brcmf_count_20mhz_channels function we are looping through a list
+of channels received from firmware. Since the index of the first channel
+is 0 the condition leads to an off by one bug. This is causing us to hit
+the WARN_ON_ONCE(1) calls in the brcmu_d11n_decchspec function, which is
+how I discovered the bug.
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
+Introduced by:
+commit b48d891676f756d48b4d0ee131e4a7a5d43ca417
+("brcmfmac: rework wiphy structure setup")
+
+Acked-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Emil Goode <emilgoode@gmail.com>
 ---
- drivers/net/wireless/mwifiex/init.c | 1 -
- drivers/net/wireless/mwifiex/main.h | 2 --
- drivers/net/wireless/mwifiex/pcie.c | 4 ----
- drivers/net/wireless/mwifiex/sdio.c | 3 ---
- 4 files changed, 10 deletions(-)
+v2: Added Arends "Acked-by" tag.
 
-diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
-index f7c97cf..580aa45 100644
---- a/drivers/net/wireless/mwifiex/init.c
-+++ b/drivers/net/wireless/mwifiex/init.c
-@@ -447,7 +447,6 @@ int mwifiex_init_lock_list(struct mwifiex_adapter *adapter)
- 	spin_lock_init(&adapter->cmd_free_q_lock);
- 	spin_lock_init(&adapter->cmd_pending_q_lock);
- 	spin_lock_init(&adapter->scan_pending_q_lock);
--	spin_lock_init(&adapter->rx_q_lock);
- 	spin_lock_init(&adapter->rx_proc_lock);
+ drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index 12a60ca..0517687 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -4924,7 +4924,7 @@ static void brcmf_count_20mhz_channels(struct brcmf_cfg80211_info *cfg,
+ 	struct brcmu_chan ch;
+ 	int i;
  
- 	skb_queue_head_init(&adapter->usb_rx_data_q);
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 022486e..e263574 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -764,8 +764,6 @@ struct mwifiex_adapter {
- 	struct list_head scan_pending_q;
- 	/* spin lock for scan_pending_q */
- 	spinlock_t scan_pending_q_lock;
--	/* spin lock for RX queue */
--	spinlock_t rx_q_lock;
- 	/* spin lock for RX processing routine */
- 	spinlock_t rx_proc_lock;
- 	struct sk_buff_head usb_rx_data_q;
-diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
-index 74c0db9..c3a20f9 100644
---- a/drivers/net/wireless/mwifiex/pcie.c
-+++ b/drivers/net/wireless/mwifiex/pcie.c
-@@ -1237,7 +1237,6 @@ static int mwifiex_pcie_process_recv_data(struct mwifiex_adapter *adapter)
- 	struct sk_buff *skb_tmp = NULL;
- 	struct mwifiex_pcie_buf_desc *desc;
- 	struct mwifiex_pfu_buf_desc *desc2;
--	unsigned long flags;
+-	for (i = 0; i <= total; i++) {
++	for (i = 0; i < total; i++) {
+ 		ch.chspec = (u16)le32_to_cpu(chlist->element[i]);
+ 		cfg->d11inf.decchspec(&ch);
  
- 	if (!mwifiex_pcie_ok_to_access_hw(adapter))
- 		mwifiex_pm_wakeup_card(adapter);
-@@ -1289,10 +1288,7 @@ static int mwifiex_pcie_process_recv_data(struct mwifiex_adapter *adapter)
- 				card->rxbd_rdptr, wrptr, rx_len);
- 			skb_pull(skb_data, INTF_HEADER_LEN);
- 			if (adapter->rx_work_enabled) {
--				spin_lock_irqsave(&adapter->rx_q_lock, flags);
- 				skb_queue_tail(&adapter->rx_data_q, skb_data);
--				spin_unlock_irqrestore(&adapter->rx_q_lock,
--						       flags);
- 				adapter->data_received = true;
- 				atomic_inc(&adapter->rx_pending);
- 			} else {
-diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
-index ea8fc58..db9e4e3 100644
---- a/drivers/net/wireless/mwifiex/sdio.c
-+++ b/drivers/net/wireless/mwifiex/sdio.c
-@@ -1039,7 +1039,6 @@ static int mwifiex_decode_rx_packet(struct mwifiex_adapter *adapter,
- 				    struct sk_buff *skb, u32 upld_typ)
- {
- 	u8 *cmd_buf;
--	unsigned long flags;
- 	__le16 *curr_ptr = (__le16 *)skb->data;
- 	u16 pkt_len = le16_to_cpu(*curr_ptr);
- 
-@@ -1050,9 +1049,7 @@ static int mwifiex_decode_rx_packet(struct mwifiex_adapter *adapter,
- 	case MWIFIEX_TYPE_DATA:
- 		dev_dbg(adapter->dev, "info: --- Rx: Data packet ---\n");
- 		if (adapter->rx_work_enabled) {
--			spin_lock_irqsave(&adapter->rx_q_lock, flags);
- 			skb_queue_tail(&adapter->rx_data_q, skb);
--			spin_unlock_irqrestore(&adapter->rx_q_lock, flags);
- 			adapter->data_received = true;
- 			atomic_inc(&adapter->rx_pending);
- 		} else {
 -- 
-1.8.1.4
+2.1.0
 
