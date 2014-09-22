@@ -1,34 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:56571 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751762AbaIKLhg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Sep 2014 07:37:36 -0400
-Message-ID: <1410435452.22863.12.camel@jlt4.sipsolutions.net> (sfid-20140911_133739_908136_7A0D398F)
-Subject: Re: [PATCH 1/3] cfg80211: allow requesting SMPS mode on ap start
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>
-Date: Thu, 11 Sep 2014 13:37:32 +0200
-In-Reply-To: <1410347256-9324-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1410347256-9324-1-git-send-email-emmanuel.grumbach@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:47258 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753407AbaIVLBn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Sep 2014 07:01:43 -0400
+Received: by mail-ie0-f174.google.com with SMTP id rd18so1832867iec.19
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Sep 2014 04:01:42 -0700 (PDT)
+Date: Mon, 22 Sep 2014 07:00:16 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>, devel@lists.open80211s.org
+Cc: linux-wireless@vger.kernel.org,
+	Ashok Nagarajan <ashok.dragon@gmail.com>,
+	johannes@sipsolutions.net
+Subject: Re: [PATCH v3 1/2] iw: Allow user to provide freq during mesh join
+Message-ID: <20140922110016.GA302@localhost> (sfid-20140922_130146_755155_AE3A7C68)
+References: <1411195244-9130-1-git-send-email-yeohchunyeow@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1411195244-9130-1-git-send-email-yeohchunyeow@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-09-10 at 14:07 +0300, Emmanuel Grumbach wrote:
-> From: Eliad Peller <eliad@wizery.com>
-> 
-> Add feature bits to indicate device support for
-> static-smps and dynamic-smps modes.
-> 
-> Add a new NL80211_ATTR_SMPS_MODE attribue to allow
-> configuring the smps mode to be used by the ap
-> (e.g. configuring to ap to dynamic smps mode will
-> reduce power consumption while having minor effect
-> on throughput)
+On Sat, Sep 20, 2014 at 02:40:43PM +0800, Chun-Yeow Yeoh via Devel wrote:
+> +	/* freq */
+> +	if (argc > 1 && strcmp(argv[0], "freq") == 0) {
+> +		argv++;
+> +		argc--;
 
-Applied all three.
+[snip]
 
-johannes
+> -COMMAND(mesh, join, "<mesh ID> [mcast-rate <rate in Mbps>]"
+> +COMMAND(mesh, join, "<mesh ID> [freq in MHz] [HT20|HT40+|HT40-|NOHT]"
 
+Should this be something like:
+
+> +COMMAND(mesh, join, "<mesh ID> [freq <freq in MHz> <HT20|HT40+|HT40-|NOHT>]"
+
+...so we know to specify the 'freq' keyword?
+
+-- 
+Bob Copeland %% www.bobcopeland.com
