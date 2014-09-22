@@ -1,35 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f169.google.com ([209.85.216.169]:63920 "EHLO
-	mail-qc0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754707AbaIZNcc (ORCPT
+Received: from canardo.mork.no ([148.122.252.1]:54189 "EHLO canardo.mork.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753274AbaIVKpp convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Sep 2014 09:32:32 -0400
+	Mon, 22 Sep 2014 06:45:45 -0400
+From: =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Liad Kaufman <liad.kaufman@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: Re: [PATCH 13/17] iwlwifi: 8000: fix fw name to account for revision
+References: <541F23D2.90600@gmail.com>
+	<1411327338-23099-13-git-send-email-egrumbach@gmail.com>
+Date: Mon, 22 Sep 2014 12:45:35 +0200
+In-Reply-To: <1411327338-23099-13-git-send-email-egrumbach@gmail.com>
+	(Emmanuel Grumbach's message of "Sun, 21 Sep 2014 22:22:14 +0300")
+Message-ID: <87ppeoc4s0.fsf@nemi.mork.no> (sfid-20140922_124549_432125_F4EE642E)
 MIME-Version: 1.0
-In-Reply-To: <20140926122207.GA27809@redhat.com>
-References: <5424566B.6000206@gmail.com>
-	<20140926122207.GA27809@redhat.com>
-Date: Fri, 26 Sep 2014 09:32:18 -0400
-Message-ID: <CAAxn8J=gKVdNt3+Ayx-XdEki7V8sg-M7C=kK7sGADBO3L-PTQw@mail.gmail.com> (sfid-20140926_153250_682530_FCFD71C7)
-Subject: Re: FIXMEs in rt2800lib.c
-From: Nicholas Krause <yocto6@gmail.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Ivo Van Doorn <IvDoorn@gmail.com>, helmut.schaa@googlemail.com,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	netdev@vger.kernel.org,
-	"julia.lawall@lip6.fr oneukum@suse.de" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 26, 2014 at 8:22 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> On Thu, Sep 25, 2014 at 01:52:43PM -0400, nick wrote:
->> I seem to be hitting to fix mes in the file I listed in the subject. Would someone tell me if it's Ok to remove
->> the lines that over write certain registers.
->
-> No, as long you prove that they are not needed.
->
-> Stanislaw
-Sure Stanislw,
-I will remove the lines as needed and send it a patch.
-Nick
+Emmanuel Grumbach <egrumbach@gmail.com> writes:
+
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-8000.c b/drivers/net/wireless/iwlwifi/iwl-8000.c
+> index 4ae8ba6..e435148 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-8000.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-8000.c
+> @@ -81,7 +81,7 @@
+>  #define IWL8000_NVM_VERSION		0x0a1d
+>  #define IWL8000_TX_POWER_VERSION	0xffff /* meaningless */
+>  
+> -#define IWL8000_FW_PRE "iwlwifi-8000-"
+> +#define IWL8000_FW_PRE "iwlwifi-8000"
+>  #define IWL8000_MODULE_FIRMWARE(api) IWL8000_FW_PRE __stringify(api) ".ucode"
+
+Isn't this going to create a misleading MODULE_FIRMWARE entry, matching
+neither of the firmware variants?
+
+
+Bjørn
