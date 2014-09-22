@@ -1,69 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:41327 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751499AbaIJNfp (ORCPT
+Received: from mout.kundenserver.de ([212.227.17.10]:57818 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751073AbaIVH1N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Sep 2014 09:35:45 -0400
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH 18/22] wil6210: specify max. IE length
-Date: Wed, 10 Sep 2014 16:34:47 +0300
-Message-ID: <1410356091-19219-19-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140910_153551_139631_2FEA46F4)
-In-Reply-To: <1410356091-19219-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1410356091-19219-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Mon, 22 Sep 2014 03:27:13 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Hauke Mehrtens <hauke@hauke-m.de>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
+	zajec5@gmail.com, varkabhadram@gmail.com, arend@broadcom.com
+Subject: Re: [PATCH v4 1/2] bcma: register bcma as device tree driver
+Date: Mon, 22 Sep 2014 09:26:51 +0200
+Message-ID: <4345256.UGZH9SeRYG@wuerfel> (sfid-20140922_092718_680042_143C97FC)
+In-Reply-To: <1411339108-22307-1-git-send-email-hauke@hauke-m.de>
+References: <1411339108-22307-1-git-send-email-hauke@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Expose firmware limit for the max_scan_ie_len;
-also do actually set IE's for the probe request
+On Monday 22 September 2014 00:38:27 Hauke Mehrtens wrote:
+> +
+> +- reg : iomem address range of chipcommon core
+> +
+> +The cores on the AXI bus are automatically detected by bcma with the
+> +memory ranges they are using and they get registered afterwards.
+> +Automatic detection of the IRQ number is not reliable on
+> +BCM47xx/BCM53xx ARM SoCs. To assign IRQ numbers to the cores, provide
+> +them manually through device tree. The IRQ number and the device tree
+> +child entry will get assigned to the core with the matching reg address.
+> +
+> +Example:
+> +
+> +       axi@18000000 {
+> +               compatible = "brcm,bus-axi";
+> +               reg = <0x18000000 0x1000>;
+> +               ranges = <0x00000000 0x18000000 0x00100000>;
+> +               #address-cells = <1>;
+> +               #size-cells = <1>;
+> +
+> +               pcie@12000 {
+> +                       reg = <0x00012000 0x1000>;
+> +                       interrupts = <GIC_SPI 131 IRQ_TYPE_LEVEL_HIGH>;
+> +               };
+> +
+> +               ethernet@24000 {
+> +                       reg = <0x00024000 0x1000>;
+> +                       interrupts = <GIC_SPI 147 IRQ_TYPE_LEVEL_HIGH>;
+> +               };
+> +
+> +               ethernet@25000 {
+> +                       reg = <0x00025000 0x1000>;
+> +                       interrupts = <GIC_SPI 148 IRQ_TYPE_LEVEL_HIGH>;
+> +               };
+> +       };
+> 
 
-max_scan_ie_len used to be 0, this blocks scan requests with non-zero IE's
+While reading through this new version, I had a new idea about how
+this could be handled better for any machines that have a unique
+number in the interrupt field: If you do the same thing as PCI
+and add an interrupt-map property [1], you can translate that
+number into a real interrupt specifier for the child nodes.
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/cfg80211.c | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+This can work even if every device lists the local interrupt
+as '0', since you can have device-specific lookup entries if you
+use the correct interrupt-map-mask property.
 
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index 61eaf20..6119ecb 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -309,9 +309,23 @@ static int wil_cfg80211_scan(struct wiphy *wiphy,
- 			     request->channels[i]->center_freq);
- 	}
- 
-+	if (request->ie_len)
-+		print_hex_dump_bytes("Scan IE ", DUMP_PREFIX_OFFSET,
-+				     request->ie, request->ie_len);
-+	else
-+		wil_dbg_misc(wil, "Scan has no IE's\n");
-+
-+	rc = wmi_set_ie(wil, WMI_FRAME_PROBE_REQ, request->ie_len,
-+			request->ie);
-+	if (rc) {
-+		wil_err(wil, "Aborting scan, set_ie failed: %d\n", rc);
-+		goto out;
-+	}
-+
- 	rc = wmi_send(wil, WMI_START_SCAN_CMDID, &cmd, sizeof(cmd.cmd) +
- 			cmd.cmd.num_channels * sizeof(cmd.cmd.channel_list[0]));
- 
-+out:
- 	if (rc) {
- 		del_timer_sync(&wil->scan_timer);
- 		wil->scan_request = NULL;
-@@ -813,6 +827,7 @@ static void wil_wiphy_init(struct wiphy *wiphy)
- {
- 	/* TODO: set real value */
- 	wiphy->max_scan_ssids = 10;
-+	wiphy->max_scan_ie_len = WMI_MAX_IE_LEN;
- 	wiphy->max_num_pmkids = 0 /* TODO: */;
- 	wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
- 				 BIT(NL80211_IFTYPE_AP) |
--- 
-1.9.1
+	Arnd
 
+[1] http://www.openfirmware.org/1275/practice/imap/imap0_9d.pdf
