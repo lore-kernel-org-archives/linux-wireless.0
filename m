@@ -1,60 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yh0-f43.google.com ([209.85.213.43]:54247 "EHLO
-	mail-yh0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752202AbaINBZy (ORCPT
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:53358 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754176AbaIVU2V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Sep 2014 21:25:54 -0400
-Received: by mail-yh0-f43.google.com with SMTP id v1so1368488yhn.30
-        for <linux-wireless@vger.kernel.org>; Sat, 13 Sep 2014 18:25:53 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAGLDHr5+SD3ENh81pB7pqMxSMm2J5TOWgjMpW+XiycvtEd776A@mail.gmail.com>
-References: <CAGLDHr5+SD3ENh81pB7pqMxSMm2J5TOWgjMpW+XiycvtEd776A@mail.gmail.com>
-Date: Sat, 13 Sep 2014 21:25:53 -0400
-Message-ID: <CAGLDHr7uCtjfJR-d5RR80SbS5Es_c0PZG-od=sor4F+FARXLkA@mail.gmail.com> (sfid-20140914_032606_462437_C07A6C0C)
-Subject: Fwd: N 6235 Input/Output Error
-From: "roberto.waissman Waissman" <roberto.waissman@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Mon, 22 Sep 2014 16:28:21 -0400
+Received: by mail-wi0-f180.google.com with SMTP id q5so3829282wiv.1
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Sep 2014 13:28:20 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 1/2] staging: vt6655: pr_err remove string to net device name
+Date: Mon, 22 Sep 2014 21:27:46 +0100
+Message-Id: <1411417667-9191-1-git-send-email-tvboxspy@gmail.com> (sfid-20140922_222825_230201_4A403A79)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Just print driver name with dev_err removing the string formatting.
 
-On an Intel Galileo board:
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/device_main.c | 34 +++++++++++++++-------------------
+ 1 file changed, 15 insertions(+), 19 deletions(-)
 
-dmesg | grep iw
-[   25.039649] iwlwifi 0000:01:00.0: enabling device (0000 -> 0002)
-[   25.045845] iwlwifi 0000:01:00.0: enabling bus mastering
-[   25.046710] iwlwifi 0000:01:00.0: irq 45 for MSI/MSI-X
-[   25.125172] iwlwifi 0000:01:00.0: loaded firmware version 18.168.6.1
-[   25.353607] iwlwifi 0000:01:00.0: CONFIG_IWLWIFI_DEBUG disabled
-[   25.359583] iwlwifi 0000:01:00.0: CONFIG_IWLWIFI_DEBUGFS disabled
-[   25.365824] iwlwifi 0000:01:00.0: CONFIG_IWLWIFI_DEVICE_TRACING disabled
-[   25.372648] iwlwifi 0000:01:00.0: CONFIG_IWLWIFI_DEVICE_TESTMODE disabled
-[   25.379491] iwlwifi 0000:01:00.0: CONFIG_IWLWIFI_P2P enabled
-[   25.385271] iwlwifi 0000:01:00.0: Detected Intel(R) Centrino(R)
-Advanced-N 6235 AGN, REV=0xB0
-[   25.407241] iwlwifi 0000:01:00.0: L1 Disabled; Enabling L0S
-[   25.640854] ieee80211 phy0: Selected rate control algorithm 'iwl-agn-rs'
+diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
+index aaeb371..1a1440f 100644
+--- a/drivers/staging/vt6655/device_main.c
++++ b/drivers/staging/vt6655/device_main.c
+@@ -1043,8 +1043,7 @@ static bool device_init_rings(struct vnt_private *pDevice)
+ 					 pDevice->sOpts.nTxDescs[1] * sizeof(STxDesc),
+ 					 &pDevice->pool_dma);
+ 	if (vir_pool == NULL) {
+-		pr_err("%s : allocate desc dma memory failed\n",
+-		       pDevice->dev->name);
++		dev_err(&pDevice->pcid->dev, "allocate desc dma memory failed\n");
+ 		return false;
+ 	}
+ 
+@@ -1063,8 +1062,8 @@ static bool device_init_rings(struct vnt_private *pDevice)
+ 						  CB_MAX_BUF_SIZE,
+ 						  &pDevice->tx_bufs_dma0);
+ 	if (pDevice->tx0_bufs == NULL) {
+-		pr_err("%s: allocate buf dma memory failed\n",
+-		       pDevice->dev->name);
++		dev_err(&pDevice->pcid->dev, "allocate buf dma memory failed\n");
++
+ 		pci_free_consistent(pDevice->pcid,
+ 				    pDevice->sOpts.nRxDescs0 * sizeof(SRxDesc) +
+ 				    pDevice->sOpts.nRxDescs1 * sizeof(SRxDesc) +
+@@ -1141,10 +1140,9 @@ static void device_init_rd0_ring(struct vnt_private *pDevice)
+ 		pDesc = &(pDevice->aRD0Ring[i]);
+ 		pDesc->pRDInfo = alloc_rd_info();
+ 		ASSERT(pDesc->pRDInfo);
+-		if (!device_alloc_rx_buf(pDevice, pDesc)) {
+-			pr_err("%s: can not alloc rx bufs\n",
+-			       pDevice->dev->name);
+-		}
++		if (!device_alloc_rx_buf(pDevice, pDesc))
++			dev_err(&pDevice->pcid->dev, "can not alloc rx bufs\n");
++
+ 		pDesc->next = &(pDevice->aRD0Ring[(i+1) % pDevice->sOpts.nRxDescs0]);
+ 		pDesc->pRDInfo->curr_desc = cpu_to_le32(curr);
+ 		pDesc->next_desc = cpu_to_le32(curr + sizeof(SRxDesc));
+@@ -1166,10 +1164,9 @@ static void device_init_rd1_ring(struct vnt_private *pDevice)
+ 		pDesc = &(pDevice->aRD1Ring[i]);
+ 		pDesc->pRDInfo = alloc_rd_info();
+ 		ASSERT(pDesc->pRDInfo);
+-		if (!device_alloc_rx_buf(pDevice, pDesc)) {
+-			pr_err("%s: can not alloc rx bufs\n",
+-			       pDevice->dev->name);
+-		}
++		if (!device_alloc_rx_buf(pDevice, pDesc))
++			dev_err(&pDevice->pcid->dev, "can not alloc rx bufs\n");
++
+ 		pDesc->next = &(pDevice->aRD1Ring[(i+1) % pDevice->sOpts.nRxDescs1]);
+ 		pDesc->pRDInfo->curr_desc = cpu_to_le32(curr);
+ 		pDesc->next_desc = cpu_to_le32(curr + sizeof(SRxDesc));
+@@ -1188,10 +1185,8 @@ static void device_init_defrag_cb(struct vnt_private *pDevice)
+ 	/* Init the fragment ctl entries */
+ 	for (i = 0; i < CB_MAX_RX_FRAG; i++) {
+ 		pDeF = &(pDevice->sRxDFCB[i]);
+-		if (!device_alloc_frag_buf(pDevice, pDeF)) {
+-			pr_err("%s: can not alloc frag bufs\n",
+-			       pDevice->dev->name);
+-		}
++		if (!device_alloc_frag_buf(pDevice, pDeF))
++			dev_err(&pDevice->pcid->dev, "can not alloc frag bufs\n");
+ 	}
+ 	pDevice->cbDFCB = CB_MAX_RX_FRAG;
+ 	pDevice->cbFreeDFCB = pDevice->cbDFCB;
+@@ -1348,8 +1343,8 @@ static int device_rx_srv(struct vnt_private *pDevice, unsigned int uIdx)
+ 			break;
+ 		if (device_receive_frame(pDevice, pRD)) {
+ 			if (!device_alloc_rx_buf(pDevice, pRD)) {
+-				pr_err("%s: can not allocate rx buf\n",
+-				       pDevice->dev->name);
++				dev_err(&pDevice->pcid->dev,
++					"can not allocate rx buf\n");
+ 				break;
+ 			}
+ 		}
+@@ -1525,7 +1520,8 @@ static int device_tx_srv(struct vnt_private *pDevice, unsigned int uIdx)
+ static void device_error(struct vnt_private *pDevice, unsigned short status)
+ {
+ 	if (status & ISR_FETALERR) {
+-		pr_err("%s: Hardware fatal error\n", pDevice->dev->name);
++		dev_err(&pDevice->pcid->dev, "Hardware fatal error\n");
++
+ 		netif_stop_queue(pDevice->dev);
+ 		del_timer(&pDevice->sTimerCommand);
+ 		del_timer(&(pDevice->pMgmt->sTimerSecondCallback));
+-- 
+1.9.1
 
- ifup wlan0
-Successfully initialized wpa_supplicant
-Could not set interface wlan0 flags (UP): Input/output error
-WEXT: Could not set interface 'wlan0' UP
-wlan0: Failed to initialize driver interface
-ifconfig: SIOCSIFFLAGS: Input/output error
-
-(again dmesg | grep iw)
-.
-.
-[  111.160538] iwlwifi 0000:01:00.0: L1 Disabled; Enabling L0S
-[  111.173522] iwlwifi 0000:01:00.0: Radio type=0x2-0x1-0x0
-[  111.366428] iwlwifi 0000:01:00.0: Microcode SW error detected.
-Restarting 0x2000000.
-[  111.374316] iwlwifi 0000:01:00.0: CSR values:
-.
-.
-
-
-Thank you for your help,
-Roberto.
