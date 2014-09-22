@@ -1,128 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:29858 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751898AbaI2KYG convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Sep 2014 06:24:06 -0400
-From: Avinash Patil <patila@marvell.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Xinming Hu <huxm@marvell.com>,
-	Marc Yang <yangyang@marvell.com>, Cathy Luo <cluo@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>
-Date: Mon, 29 Sep 2014 03:23:01 -0700
-Subject: RE: [PATCH 3/3] mwifiex: remove unnecessary rx_q lock
-Message-ID: <CBACCFA0AEB13A41977475BCF3E896FC666FA7DAF0@SC-VEXCH2.marvell.com> (sfid-20140929_122416_027599_BDA16892)
-References: <1411645602-18980-1-git-send-email-patila@marvell.com>
- <1411645602-18980-3-git-send-email-patila@marvell.com>,<20140926173227.GD22967@tuxdriver.com>
-In-Reply-To: <20140926173227.GD22967@tuxdriver.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:23260 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750914AbaIVJql (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Sep 2014 05:46:41 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 6/9] ath10k: deduplicate wmi service ready logic
+References: <1411046487-19544-1-git-send-email-michal.kazior@tieto.com>
+	<1411046487-19544-7-git-send-email-michal.kazior@tieto.com>
+	<87a95wngzt.fsf@kamboji.qca.qualcomm.com>
+	<CA+BoTQmsVqvGgu_fUqKGqhEKXV7E_w0KdcH_GFoPhAvyjtVdDA@mail.gmail.com>
+Date: Mon, 22 Sep 2014 12:46:35 +0300
+In-Reply-To: <CA+BoTQmsVqvGgu_fUqKGqhEKXV7E_w0KdcH_GFoPhAvyjtVdDA@mail.gmail.com>
+	(Michal Kazior's message of "Fri, 19 Sep 2014 10:43:25 +0200")
+Message-ID: <87oau8m1hg.fsf@kamboji.qca.qualcomm.com> (sfid-20140922_114647_931103_E41EFE9E)
 MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Yes;  I have sent 2/3 as well; maybe there was some issue. I will resend V1.
+> On 19 September 2014 10:37, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>> Michal Kazior <michal.kazior@tieto.com> writes:
+>>
+>>> +     if (test_bit(ATH10K_FW_FEATURE_WMI_10X, ar->fw_features)) {
+>>> +             ret = ath10k_wmi_10x_pull_svc_rdy_ev(skb, &arg);
+>>> +             wmi_10x_svc_map(arg.service_map, svc_bmap);
+>>> +     } else {
+>>> +             ret = ath10k_wmi_pull_svc_rdy_ev(skb, &arg);
+>>> +             wmi_main_svc_map(arg.service_map, svc_bmap);
+>>> +     }
+>>
+>> For consistency shouldn't the latter be
+>> ath10k_wmi_main_pull_svc_rdy_ev()?
+>
+> Good point. Makes sense. I'll add the _main to the function name.
+>
+>
+>>> --- a/drivers/net/wireless/ath/ath10k/wmi.h
+>>> +++ b/drivers/net/wireless/ath/ath10k/wmi.h
+>>> @@ -1394,6 +1394,7 @@ struct wlan_host_mem_req {
+>>>   * wmi_service_ready_event,e.g., 11ac pass some of the
+>>>   * device capability to the host.
+>>>   */
+>>> +
+>>>  struct wmi_service_ready_event {
+>>>       __le32 sw_version;
+>>>       __le32 sw_version_1;
+>>
+>> Isn't this unneeded change?
+>
+> Good catch. I'll fix that.
 
-Thanks,
-Avinash.
-________________________________________
-From: John W. Linville [linville@tuxdriver.com]
-Sent: Friday, September 26, 2014 11:02 PM
-To: Avinash Patil
-Cc: linux-wireless@vger.kernel.org; Amitkumar Karwar; Xinming Hu; Marc Yang; Cathy Luo; Maithili Hinge
-Subject: Re: [PATCH 3/3] mwifiex: remove unnecessary rx_q lock
+Like discussed in IRC, you don't need to resent the whole patchset just
+because of this. I have now folded the patch below onto your patch in
+ath-next-test, please review:
 
-I only got 1/3 and 3/3 -- was there a 2/3 posted?
+https://github.com/kvalo/ath/commit/1d13ab4a3bdfd342ed8fbead859de398b379435c
 
-On Thu, Sep 25, 2014 at 05:16:42PM +0530, Avinash Patil wrote:
-> SKB lists have their own lock. So this lock is not needed.
->
-> Signed-off-by: Avinash Patil <patila@marvell.com>
-> ---
->  drivers/net/wireless/mwifiex/init.c | 1 -
->  drivers/net/wireless/mwifiex/main.h | 2 --
->  drivers/net/wireless/mwifiex/pcie.c | 4 ----
->  drivers/net/wireless/mwifiex/sdio.c | 3 ---
->  4 files changed, 10 deletions(-)
->
-> diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
-> index f7c97cf..580aa45 100644
-> --- a/drivers/net/wireless/mwifiex/init.c
-> +++ b/drivers/net/wireless/mwifiex/init.c
-> @@ -447,7 +447,6 @@ int mwifiex_init_lock_list(struct mwifiex_adapter *adapter)
->       spin_lock_init(&adapter->cmd_free_q_lock);
->       spin_lock_init(&adapter->cmd_pending_q_lock);
->       spin_lock_init(&adapter->scan_pending_q_lock);
-> -     spin_lock_init(&adapter->rx_q_lock);
->       spin_lock_init(&adapter->rx_proc_lock);
->
->       skb_queue_head_init(&adapter->usb_rx_data_q);
-> diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-> index 1a99999..b5dc78b 100644
-> --- a/drivers/net/wireless/mwifiex/main.h
-> +++ b/drivers/net/wireless/mwifiex/main.h
-> @@ -763,8 +763,6 @@ struct mwifiex_adapter {
->       struct list_head scan_pending_q;
->       /* spin lock for scan_pending_q */
->       spinlock_t scan_pending_q_lock;
-> -     /* spin lock for RX queue */
-> -     spinlock_t rx_q_lock;
->       /* spin lock for RX processing routine */
->       spinlock_t rx_proc_lock;
->       struct sk_buff_head usb_rx_data_q;
-> diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
-> index 1504b16..7e8d9b0 100644
-> --- a/drivers/net/wireless/mwifiex/pcie.c
-> +++ b/drivers/net/wireless/mwifiex/pcie.c
-> @@ -1233,7 +1233,6 @@ static int mwifiex_pcie_process_recv_data(struct mwifiex_adapter *adapter)
->       struct sk_buff *skb_tmp = NULL;
->       struct mwifiex_pcie_buf_desc *desc;
->       struct mwifiex_pfu_buf_desc *desc2;
-> -     unsigned long flags;
->
->       if (!mwifiex_pcie_ok_to_access_hw(adapter))
->               mwifiex_pm_wakeup_card(adapter);
-> @@ -1285,10 +1284,7 @@ static int mwifiex_pcie_process_recv_data(struct mwifiex_adapter *adapter)
->                               card->rxbd_rdptr, wrptr, rx_len);
->                       skb_pull(skb_data, INTF_HEADER_LEN);
->                       if (adapter->rx_work_enabled) {
-> -                             spin_lock_irqsave(&adapter->rx_q_lock, flags);
->                               skb_queue_tail(&adapter->rx_data_q, skb_data);
-> -                             spin_unlock_irqrestore(&adapter->rx_q_lock,
-> -                                                    flags);
->                               adapter->data_received = true;
->                               atomic_inc(&adapter->rx_pending);
->                       } else {
-> diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
-> index ea8fc58..db9e4e3 100644
-> --- a/drivers/net/wireless/mwifiex/sdio.c
-> +++ b/drivers/net/wireless/mwifiex/sdio.c
-> @@ -1039,7 +1039,6 @@ static int mwifiex_decode_rx_packet(struct mwifiex_adapter *adapter,
->                                   struct sk_buff *skb, u32 upld_typ)
->  {
->       u8 *cmd_buf;
-> -     unsigned long flags;
->       __le16 *curr_ptr = (__le16 *)skb->data;
->       u16 pkt_len = le16_to_cpu(*curr_ptr);
->
-> @@ -1050,9 +1049,7 @@ static int mwifiex_decode_rx_packet(struct mwifiex_adapter *adapter,
->       case MWIFIEX_TYPE_DATA:
->               dev_dbg(adapter->dev, "info: --- Rx: Data packet ---\n");
->               if (adapter->rx_work_enabled) {
-> -                     spin_lock_irqsave(&adapter->rx_q_lock, flags);
->                       skb_queue_tail(&adapter->rx_data_q, skb);
-> -                     spin_unlock_irqrestore(&adapter->rx_q_lock, flags);
->                       adapter->data_received = true;
->                       atomic_inc(&adapter->rx_pending);
->               } else {
-> --
-> 1.8.1.4
->
->
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 37a520150358..a7c11b292bf4 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -2205,8 +2205,8 @@ static int ath10k_wmi_alloc_host_mem(struct ath10k *ar, u32 req_id,
+ 	return 0;
+ }
+ 
+-static int ath10k_wmi_pull_svc_rdy_ev(struct sk_buff *skb,
+-				      struct wmi_svc_rdy_ev_arg *arg)
++static int ath10k_wmi_main_pull_svc_rdy_ev(struct sk_buff *skb,
++					   struct wmi_svc_rdy_ev_arg *arg)
+ {
+ 	struct wmi_service_ready_event *ev;
+ 	size_t i, n;
+@@ -2286,7 +2286,7 @@ static void ath10k_wmi_service_ready_event_rx(struct ath10k *ar,
+ 		ret = ath10k_wmi_10x_pull_svc_rdy_ev(skb, &arg);
+ 		wmi_10x_svc_map(arg.service_map, svc_bmap);
+ 	} else {
+-		ret = ath10k_wmi_pull_svc_rdy_ev(skb, &arg);
++		ret = ath10k_wmi_main_pull_svc_rdy_ev(skb, &arg);
+ 		wmi_main_svc_map(arg.service_map, svc_bmap);
+ 	}
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index ebdf15454f27..ca31cdbac557 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -1394,7 +1394,6 @@ struct wlan_host_mem_req {
+  * wmi_service_ready_event,e.g., 11ac pass some of the
+  * device capability to the host.
+  */
+-
+ struct wmi_service_ready_event {
+ 	__le32 sw_version;
+ 	__le32 sw_version_1;
 
---
-John W. Linville                Someday the world will need a hero, and you
-linville@tuxdriver.com                  might be all we have.  Be ready.
+
+-- 
+Kalle Valo
