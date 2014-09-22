@@ -1,70 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:55569
-	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751702AbaI0VA1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Sep 2014 17:00:27 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
-Subject: [PATCH 2/2] ath9k_hw: disable hardware ad-hoc flag on ar934x rev 3
-Date: Sat, 27 Sep 2014 22:49:44 +0200
-Message-Id: <1411850984-65861-2-git-send-email-nbd@openwrt.org> (sfid-20140927_230031_424226_3F5B7959)
-In-Reply-To: <1411850984-65861-1-git-send-email-nbd@openwrt.org>
-References: <1411850984-65861-1-git-send-email-nbd@openwrt.org>
+Received: from mga11.intel.com ([192.55.52.93]:12146 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751130AbaIVT4d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Sep 2014 15:56:33 -0400
+Date: Mon, 22 Sep 2014 21:55:54 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Linux NFC <linux-nfc@lists.01.org>,
+	Linux Wireless <linux-wireless@vger.kernel.org>
+Subject: [GIT] [3.17] NFC fixes
+Message-ID: <20140922195553.GC4235@zurbaran> (sfid-20140922_215636_850950_A41DA7B3)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On AR934x rev 3, settin the ad-hoc flag completely messes up hardware
-state - beacons get stuck, almost no packets make it out, hardware is
-constantly reset.
+Hi John,
 
-When leaving out that flag and setting up the hw like in AP mode, TSF
-timers won't be automatically synced, but at least the rest works.
+Hopefully not too late for a handful of NFC fixes:
 
-AR934x rev 2 and older are not affected by this bug
+- 2 potential build failures for ST21NFCA and ST21NFCB, triggered by a
+  depmod dependenyc cycle.
+- One potential buffer overflow in the microread driver.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/hw.c  | 9 ++++++---
- drivers/net/wireless/ath/ath9k/reg.h | 4 ++++
- 2 files changed, 10 insertions(+), 3 deletions(-)
+The following changes since commit 1bd3fa7b8c9b2936c16c6e6452f9cc991c405872:
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index cf0128e..88654e3 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1189,9 +1189,12 @@ static void ath9k_hw_set_operating_mode(struct ath_hw *ah, int opmode)
- 
- 	switch (opmode) {
- 	case NL80211_IFTYPE_ADHOC:
--		set |= AR_STA_ID1_ADHOC;
--		REG_SET_BIT(ah, AR_CFG, AR_CFG_AP_ADHOC_INDICATION);
--		break;
-+		if (!AR_SREV_9340_13(ah)) {
-+			set |= AR_STA_ID1_ADHOC;
-+			REG_SET_BIT(ah, AR_CFG, AR_CFG_AP_ADHOC_INDICATION);
-+			break;
-+		}
-+		/* fall through */
- 	case NL80211_IFTYPE_MESH_POINT:
- 	case NL80211_IFTYPE_AP:
- 		set |= AR_STA_ID1_STA_AP;
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index a149970..95fdf93 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -903,6 +903,10 @@
- #define AR_SREV_9340(_ah) \
- 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9340))
- 
-+#define AR_SREV_9340_13(_ah) \
-+	(AR_SREV_9340((_ah)) && \
-+	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9340_13))
-+
- #define AR_SREV_9340_13_OR_LATER(_ah) \
- 	(AR_SREV_9340((_ah)) && \
- 	 ((_ah)->hw_version.macRev >= AR_SREV_REVISION_9340_13))
+  Merge branch 'for-john' of git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes (2014-09-04 13:12:02 -0400)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-fixes.git tags/nfc-fixes-3.17-1
+
+for you to fetch changes up to 300c627fbc52aa5b2117ca267907ab8d7b990ead:
+
+  NFC: st21nfca: Fix potential depmod dependency cycle (2014-09-07 23:45:53 +0200)
+
+----------------------------------------------------------------
+Christophe Ricard (2):
+      NFC: st21nfcb: Fix depmod dependency cycle
+      NFC: st21nfca: Fix potential depmod dependency cycle
+
+Dan Carpenter (1):
+      NFC: microread: Potential overflows in microread_target_discovered()
+
+ drivers/nfc/microread/microread.c | 16 ++++++++++++----
+ drivers/nfc/st21nfca/Makefile     |  5 +++--
+ drivers/nfc/st21nfcb/Makefile     |  5 +++--
+ 3 files changed, 18 insertions(+), 8 deletions(-)
+
 -- 
-2.0.4
-
+Intel Open Source Technology Centre
+http://oss.intel.com/
