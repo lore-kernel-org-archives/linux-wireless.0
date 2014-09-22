@@ -1,59 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:45821 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752442AbaIBBIf convert rfc822-to-8bit (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:38491 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753000AbaIVUyO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Sep 2014 21:08:35 -0400
-Date: Mon, 01 Sep 2014 18:08:34 -0700 (PDT)
-Message-Id: <20140901.180834.2149952137973916395.davem@davemloft.net> (sfid-20140902_030857_531729_72918022)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless 2014-08-28
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20140828181713.GL13758@tuxdriver.com>
-References: <20140828181713.GL13758@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=iso-8859-1
+	Mon, 22 Sep 2014 16:54:14 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: ath10k@lists.infradead.org, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 2/2] ath10k: apply chainmask settings to vdev on creation.
+Date: Mon, 22 Sep 2014 13:54:05 -0700
+Message-Id: <1411419245-25799-2-git-send-email-greearb@candelatech.com> (sfid-20140922_225416_612208_8F1CA153)
+In-Reply-To: <1411419245-25799-1-git-send-email-greearb@candelatech.com>
+References: <1411419245-25799-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Thu, 28 Aug 2014 14:17:14 -0400
+From: Ben Greear <greearb@candelatech.com>
 
-> Please pull this batch of fixes intended for the 3.17 stream.
-> 
-> For the Bluetooth/6LowPAN/802.15.4 bits, Johan says:
-> 
-> 'It contains a connection reference counting fix for LE where a
-> connection might stay up even though it should get disconnected.
-> 
-> The other 802.15.4 6LoWPAN related patches were sent to the bluetooth
-> tree by Alexander Aring and described as follows by him:
-> 
-> "
-> these patches contains patches for the bluetooth branch.
-> 
-> This series includes memory leak fixes and an errno value fix.
-> Also there are two patches for sending and receiving 1280 6LoWPAN
-> packets, which makes the IEEE 802.15.4 6LoWPAN stack more RFC
-> compliant.
-> "'
-> 
-> Along with that...
-> 
-> Alexey Khoroshilov fixes a use-after-free bug on at76c50x-usb.
-> 
-> Hauke Mehrtens adds a PCI ID to bcma.
-> 
-> Himangi Saraogi fixes a silly "A || A" test in rtlwifi.
-> 
-> Larry Finger adds a device ID to rtl8192cu.
-> 
-> Maks Naumov fixes a strncmp argument in ath9k.
-> 
-> Álvaro Fernández Rojas adds a PCI ID to ssb.
-> 
-> Please let me know if there are problems!
+It appears it takes more than just setting the
+hardware's chainmask to make things work well.  Without
+this patch, a vdev would only use 1x1 rates when chainmask
+was set to 0x3.
 
-Pulled, thanks a lot John.
+Setting the 'nss' (number of spatial streams) on the vdev
+helps the firmware's rate-control algorithm work properly.
+
+Tested on CT firmware, but probably this works (and
+is required) on normal firmware.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 24 ++++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 4dc5a40..855c71c 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -2767,6 +2767,17 @@ static int ath10k_config(struct ieee80211_hw *hw, u32 changed)
+ 	return ret;
+ }
+ 
++static u32 get_nss_from_chainmask(u16 chain_mask)
++{
++	if ((chain_mask & 0x15) == 0x15)
++		return 4;
++	else if ((chain_mask & 0x7) == 0x7)
++		return 3;
++	else if ((chain_mask & 0x3) == 0x3)
++		return 2;
++	return 1;
++}
++
+ /*
+  * TODO:
+  * Figure out how to handle WMI_VDEV_SUBTYPE_P2P_DEVICE,
+@@ -2868,6 +2879,19 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
+ 		goto err_vdev_delete;
+ 	}
+ 
++	if (ar->cfg_tx_chainmask) {
++		u16 nss = get_nss_from_chainmask(ar->cfg_tx_chainmask);
++		vdev_param = ar->wmi.vdev_param->nss;
++		ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param,
++						nss);
++		if (ret) {
++			ath10k_warn(ar, "failed to set vdev %i chainmask 0x%x, nss %i: %d\n",
++				    arvif->vdev_id, ar->cfg_tx_chainmask, nss,
++				    ret);
++			goto err_vdev_delete;
++		}
++	}
++
+ 	if (arvif->vdev_type == WMI_VDEV_TYPE_AP) {
+ 		ret = ath10k_peer_create(ar, arvif->vdev_id, vif->addr);
+ 		if (ret) {
+-- 
+1.7.11.7
+
