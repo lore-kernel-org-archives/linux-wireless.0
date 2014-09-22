@@ -1,136 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f173.google.com ([209.85.214.173]:52309 "EHLO
-	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752266AbaIIUYc (ORCPT
+Received: from sonata.ens-lyon.org ([140.77.166.138]:33698 "EHLO
+	sonata.ens-lyon.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752536AbaIVHpq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Sep 2014 16:24:32 -0400
-Received: by mail-ob0-f173.google.com with SMTP id uy5so12607950obc.18
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Sep 2014 13:24:32 -0700 (PDT)
-Message-ID: <540F61FE.2050404@lwfinger.net> (sfid-20140909_222456_101972_4EA58ED0)
-Date: Tue, 09 Sep 2014 15:24:30 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 22 Sep 2014 03:45:46 -0400
+Date: Mon, 22 Sep 2014 09:37:26 +0200
+From: Samuel Thibault <samuel.thibault@ens-lyon.org>
+To: Kari Suvanto <kari.tj.suvanto@gmail.com>
+Cc: "Hugh Dickins <hughd@google.com>Sabrina Dubroca" <sd@queasysnail.net>,
+	Valdis.Kletnieks@vt.edu, Vincent Donnefort <vdonnefort@gmail.com>,
+	Bryan Wu <cooloney@gmail.com>, linux-leds@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: 3.17-rc1: leds blink workqueue causes sleeping BUGs
+Message-ID: <20140922073726.GQ3349@type.wlan.youpi.perso.aquilenet.fr> (sfid-20140922_094602_946869_9354522C)
+References: <541FD018.107@gmail.com>
 MIME-Version: 1.0
-To: Bastien Nocera <hadess@hadess.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Realtek GPIO chipset, for Baytrail?
-References: <1410256608.4077.7.camel@hadess.net>	 <540F54B1.8040409@lwfinger.net> <1410292835.4077.21.camel@hadess.net>
-In-Reply-To: <1410292835.4077.21.camel@hadess.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <541FD018.107@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/09/2014 03:00 PM, Bastien Nocera wrote:
-> On Tue, 2014-09-09 at 14:27 -0500, Larry Finger wrote:
->> On 09/09/2014 04:56 AM, Bastien Nocera wrote:
->>> Hey,
->>>
->>> I have a tablet that seems to be using Realtek chips to do wireless
->>> communications (hopefully, this time I won't be wrong[1]).
->>>
->>> The device, under the gpio class in /sys, shows with a modalias of
->>> "acpi:OBDA8723:" (that's on "O", not "0"). This seems to correspond to a
->>> Realtek chipset (Larry tells me it matches the PCI ID of 0bda:8723 for
->>> the RTL8723AE chipset).
->>>
->>> It shows up under:
->>> /sys/devices/platform/80860F0A:00/subsystem/devices
->>>
->>> Does anyone have details on how this chipset is actually hooked up? Can
->>> a portion of the existing RTL8723AE driver code be reused?
->>
->> Bastien,
->>
->>   From the previous response, it seems unlikely that GPIO is used to control the
->> device. That is what I expected. Working at that primitive level would be
->> extremely difficult timing.
->
-> Right.
->
->> I assume that you have checked both 'lspci' and 'lsusb' for any mention of the
->> wireless device.
->
-> No mentions at all in there.
->
->>   I am not aware of a similar utility to scan an SDIO bus, but
->> perhaps someone on this list will know.
->
-> They would show up under /sys/bus/sdio/devices/ and there's nothing in
-> there except the SD card reader.
->
->>   In addition, a full listing of 'lspci
->> -nnv' will give a clue regarding what adapters are on the device.
->
-> Here it is, I doubt that's much help.
->
-> 00:00.0 Host bridge [0600]: Intel Corporation Atom Processor Z36xxx/Z37xxx Series SoC Transaction Register [8086:0f00] (rev 0d)
->          Subsystem: Intel Corporation Device [8086:0f31]
->          Flags: bus master, fast devsel, latency 0
->          Kernel driver in use: iosf_mbi_pci
->          Kernel modules: iosf_mbi
->
-> 00:02.0 VGA compatible controller [0300]: Intel Corporation Atom Processor Z36xxx/Z37xxx Series Graphics & Display [8086:0f31] (rev 0d) (prog-if 00 [VGA controller])
->          Subsystem: Intel Corporation Atom Processor Z36xxx/Z37xxx Series Graphics & Display [8086:0f31]
->          Flags: bus master, fast devsel, latency 0, IRQ 106
->          Memory at a0000000 (32-bit, non-prefetchable) [size=4M]
->          Memory at 80000000 (32-bit, prefetchable) [size=512M]
->          I/O ports at 1000 [size=8]
->          Expansion ROM at <unassigned> [disabled]
->          Capabilities: <access denied>
->          Kernel driver in use: i915
->          Kernel modules: i915
->
-> 00:14.0 USB controller [0c03]: Intel Corporation Atom Processor Z36xxx/Z37xxx Series USB xHCI [8086:0f35] (rev 0d) (prog-if 30 [XHCI])
->          Subsystem: Intel Corporation Atom Processor Z36xxx/Z37xxx Series USB xHCI [8086:0f35]
->          Flags: bus master, medium devsel, latency 0, IRQ 104
->          Memory at a0800000 (64-bit, non-prefetchable) [size=64K]
->          Capabilities: <access denied>
->          Kernel driver in use: xhci_hcd
->
-> 00:1a.0 Encryption controller [1080]: Intel Corporation Atom Processor Z36xxx/Z37xxx Series Trusted Execution Engine [8086:0f18] (rev 0d)
->          Subsystem: Intel Corporation Atom Processor Z36xxx/Z37xxx Series Trusted Execution Engine [8086:0f18]
->          Flags: bus master, fast devsel, latency 0, IRQ 107
->          Memory at a0700000 (32-bit, non-prefetchable) [size=1M]
->          Memory at a0600000 (32-bit, non-prefetchable) [size=1M]
->          Capabilities: <access denied>
->          Kernel driver in use: mei_txe
->          Kernel modules: mei_txe
->
-> 00:1f.0 ISA bridge [0601]: Intel Corporation Atom Processor Z36xxx/Z37xxx Series Power Control Unit [8086:0f1c] (rev 0d)
->          Subsystem: Intel Corporation Atom Processor Z36xxx/Z37xxx Series Power Control Unit [8086:0f1c]
->          Flags: bus master, medium devsel, latency 0
->          Capabilities: <access denied>
->          Kernel driver in use: pmc_atom
->          Kernel modules: lpc_ich
->
->
->> If the device were used with SDIO, then it would be known as the RTL8723AS. I
->> could not find that chip, but there is an RTL8723BS with a 32-bit driver for
->> Windows 8.1.
->
-> That sounds like it could be that one then. This is the only info I
-> have, the (very generic) driver set for Windows (which seems to have
-> support for every variant) and the DSDT:
-> https://bugzilla.kernel.org/attachment.cgi?id=149331
->
-> The Bluetooth device has a firmware named "rtl8723b_config.bin"
->
->> What specific Baytrail tablet do you have?
->
-> The Onda v975w. It came with Windows 8.1 32-bit.
->
-> I guess that the device is probably a PCI one, but the enumeration is
-> done through ACPI instead of "normal" PCI.
+Kari Suvanto, le Mon 22 Sep 2014 10:30:32 +0300, a écrit :
+> >Ew. I'll have a look.
+> 
+> Any update on this one?
 
-In 
-http://www.onda-tablet.com/onda-v975w-quad-core-win-8-tablet-9-7-inch-retina-screen-ram-2gb-wifi-32gb.html, 
-someone is specifically looking for an RTL8723BS driver.
+I have already sent it, yes, on Tue, 26 Aug 2014 11:17:25 +0200, here it
+is again.
 
-I will see if my contact at Realtek knows who has worked on drivers for this 
-device, and if it would be possible to use rtl8723be if we were to supply an 
-SDIO frontend.
+Samuel
 
-If I were to find code, do you have the possibility to build drivers for the device?
+Subject: [PATCHv2][input-led] Defer input led work to workqueue
 
-Larry
+When the kbd changes its led state (e.g. caps lock), this triggers
+(led_trigger_event) the kbd-capsl trigger, which is by default
+used by the vt::capsl LED, which triggers (led_trigger_event) the
+vt-capsl trigger. These two nested led_trigger_event calls take a
+trig->leddev_list_lock lock and thus lockdep complains.
 
+Actually the user can make the vt::capsl LED use its own vt-capsl
+trigger and thus build a loop.  This produces an immediate oops.
+
+This changeset defers the second led_trigger_event call into a
+workqueue, which avoids the nested locking altogether.  This does
+not prevent the user from shooting himself in the foot by creating a
+vt::capsl <-> vt-capsl loop, but the only consequence is the workqueue
+threads eating some CPU until the user breaks the loop, which is not too
+bad.
+
+Signed-off-by: Samuel Thibault <samuel.thibault@ens-lyon.org>
+
+---
+
+Difference with v1: uses schedule_work instead of its own workqueue.
+
+--- a/drivers/input/leds.c
++++ b/drivers/input/leds.c
+@@ -100,13 +100,24 @@ static unsigned long vt_led_registered[B
+ /* Number of input devices having each LED */
+ static int vt_led_references[LED_CNT];
+ 
++static int vt_led_state[LED_CNT];
++static struct work_struct vt_led_work[LED_CNT];
++
++static void vt_led_cb(struct work_struct *work)
++{
++	int led = work - vt_led_work;
++
++	led_trigger_event(&vt_led_triggers[led], vt_led_state[led]);
++}
++
+ /* VT LED state change, tell the VT trigger.  */
+ static void vt_led_set(struct led_classdev *cdev,
+ 			  enum led_brightness brightness)
+ {
+ 	int led = cdev - vt_leds;
+ 
+-	led_trigger_event(&vt_led_triggers[led], !!brightness);
++	vt_led_state[led] = !!brightness;
++	schedule_work(&vt_led_work[led]);
+ }
+ 
+ /* LED state change for some keyboard, notify that keyboard.  */
+@@ -244,6 +255,22 @@ void input_led_disconnect(struct input_d
+ 	mutex_unlock(&vt_led_registered_lock);
+ }
+ 
++static int __init input_led_init(void)
++{
++	unsigned i;
++
++	for (i = 0; i < LED_CNT; i++)
++		INIT_WORK(&vt_led_work[i], vt_led_cb);
++
++	return 0;
++}
++
++static void __exit input_led_exit(void)
++{
++}
++
+ MODULE_LICENSE("GPL");
+ MODULE_DESCRIPTION("User LED support for input layer");
+ MODULE_AUTHOR("Samuel Thibault <samuel.thibault@ens-lyon.org>");
++module_init(input_led_init);
++module_exit(input_led_exit);
 
