@@ -1,95 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f46.google.com ([209.85.218.46]:63335 "EHLO
-	mail-oi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750833AbaILQwE (ORCPT
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:36321 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753925AbaIVOjz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Sep 2014 12:52:04 -0400
-Received: by mail-oi0-f46.google.com with SMTP id g201so696521oib.33
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Sep 2014 09:52:04 -0700 (PDT)
-Message-ID: <541324B2.7040200@lwfinger.net> (sfid-20140912_185211_018127_DA86BC32)
-Date: Fri, 12 Sep 2014 11:52:02 -0500
+	Mon, 22 Sep 2014 10:39:55 -0400
 From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: andrea.merello@gmail.com,
-	Bernhard Schiffner <bernhard@schiffner-limbach.de>
-CC: ralf@czekalla.com, Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: Rtl8187se regression [was: rtl8187se - serious regressions since
- merge out of staging into 818x]
-References: <CAN8YU5NOApnft04+N3rSQF3j9d9N47-A6m4n-1-2KNHq+1EYKA@mail.gmail.com> <1472277.xX1dghvxoC@bs8> <CAN8YU5OHAmYp-7Ojti3aSeGWJr=dU0Xb=Du_w_QqPUezno_=DQ@mail.gmail.com>
-In-Reply-To: <CAN8YU5OHAmYp-7Ojti3aSeGWJr=dU0Xb=Du_w_QqPUezno_=DQ@mail.gmail.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, troy_tan@realsil.com.cn,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH 01/11 NEXT] rtlwifi: btcoexist: Fix Smatch warning
+Date: Mon, 22 Sep 2014 09:39:17 -0500
+Message-Id: <1411396767-20611-2-git-send-email-Larry.Finger@lwfinger.net> (sfid-20140922_164435_302065_50594493)
+In-Reply-To: <1411396767-20611-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1411396767-20611-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/12/2014 11:29 AM, Andrea Merello wrote:
->> Because of the problems I'am going now to a special site, where I have a local
->> networks (LAN/WLAN), good internet connection and root access to Linux
->> machines.
->> This should be a good thing to do real testing.
->
-> Excellent!
-> Thank you Bernhard!
->
->> 1.) Andrea, can you resend me the latest patches (perhaps against 3.16)
->> please?
->> (only to confirm that we are in "synchronous" mode.)
->
-> Sure, I attach a cumulative patch, including all the changes I think
-> may matter (signal strength fix not included)
->
->> 2.) Andrea, Larry, John are you interested to have root access to my laptop
->> using the rtl8187se?
->> (Perhaps it can stay there over the weekend too.)
->
-> Thank you for offering this :)
-> In case it turns out that you actually face performance regressions,
-> then it might help me to make some experiments using your machine.
->
-> I will do a register dump and I will try to tune some parameters in
-> the driver. This should NOT crash the machine, but if it is vital for
-> you that the machine remains alive, then maybe I will avoid at least
-> certain experiments..
->
-> Possibly tomorrow afternoon (Italian time) I will have some spare time
-> to work on this.
->
->> 3.) My test for maximal troughput is to run a connection /dev/zero -> nc ->|->
->> nc -> /dev/null.
->> Any other ideas?
->
-> Usually I use two Linux hosts (the DUT and my production system) and I
-> use "iperf" program on both
-> On the production system (the iperf server) I run
-> iperf -s -u -b30M
-> On the DUT I run
-> iperf -c 192.168.1.2 -r -u -b30M
->
-> This will cause an UDP data exchange and will perform both downstream
-> and upstream throughput measurements.
-> I usually do this (at least) two times, and I discard results from the
-> first run, because rate selection algorithm might eventually need a
-> bit settle to a "good" rate.
->
->> 4.) I think to have this setup ready about 11:30 UTC.
->
-> I was at my workplace, I really couldn't do quicker than this..
-> Sorry.. I hope we are still in time...
->
->> I'am open to any suggestion from your side.
->
-> Tests that may also help are:
-> - test performance regression when you are both close to the AP and
-> enough far from it that performances significantly drops.
-> - check if the rtl818x_pci driver and the old driver settles at
-> (about) the same rates..
+The capability for 802.11ac will soon be added to these drivers. Once
+that is done, a bitmask will be too large for the data storage.
 
-Hi,
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/rtlwifi/btcoexist/halbtcoutsrc.c | 2 +-
+ drivers/net/wireless/rtlwifi/btcoexist/halbtcoutsrc.h | 2 +-
+ drivers/net/wireless/rtlwifi/wifi.h                   | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
 
-I currently have a deadline to get some changes in rtlwifi into kernel 3.16, 
-thus I have no time for testing the RTL8187SE. I do know that the whole issue of 
-signal strength reporting for these chips is a problem.
-
-Larry
+diff --git a/drivers/net/wireless/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/rtlwifi/btcoexist/halbtcoutsrc.c
+index fcf7459..b2791c8 100644
+--- a/drivers/net/wireless/rtlwifi/btcoexist/halbtcoutsrc.c
++++ b/drivers/net/wireless/rtlwifi/btcoexist/halbtcoutsrc.c
+@@ -505,7 +505,7 @@ static void halbtc_write_1byte(void *bt_context, u32 reg_addr, u32 data)
+ }
+ 
+ static void halbtc_bitmask_write_1byte(void *bt_context, u32 reg_addr,
+-				       u8 bit_mask, u8 data)
++				       u32 bit_mask, u8 data)
+ {
+ 	struct btc_coexist *btcoexist = (struct btc_coexist *)bt_context;
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
+diff --git a/drivers/net/wireless/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/rtlwifi/btcoexist/halbtcoutsrc.h
+index 1345545..0a903ea 100644
+--- a/drivers/net/wireless/rtlwifi/btcoexist/halbtcoutsrc.h
++++ b/drivers/net/wireless/rtlwifi/btcoexist/halbtcoutsrc.h
+@@ -359,7 +359,7 @@ typedef u32 (*bfp_btc_r4)(void *btc_context, u32 reg_addr);
+ typedef void (*bfp_btc_w1)(void *btc_context, u32 reg_addr, u32 data);
+ 
+ typedef void (*bfp_btc_w1_bit_mak)(void *btc_context, u32 reg_addr,
+-				   u8 bit_mask, u8 data1b);
++				   u32 bit_mask, u8 data1b);
+ 
+ typedef void (*bfp_btc_w2)(void *btc_context, u32 reg_addr, u16 data);
+ 
+diff --git a/drivers/net/wireless/rtlwifi/wifi.h b/drivers/net/wireless/rtlwifi/wifi.h
+index 541b077..a943a24 100644
+--- a/drivers/net/wireless/rtlwifi/wifi.h
++++ b/drivers/net/wireless/rtlwifi/wifi.h
+@@ -1267,7 +1267,7 @@ struct rtl_mac {
+ 	u8 sgi_40;
+ 	u8 sgi_20;
+ 	u8 bw_40;
+-	u8 mode;		/* wireless mode */
++	u16 mode;		/* wireless mode */
+ 	u8 slot_time;
+ 	u8 short_preamble;
+ 	u8 use_cts_protect;
+-- 
+1.8.4.5
 
