@@ -1,62 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:46149 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756261AbaIWPA6 (ORCPT
+Received: from mail-lb0-f172.google.com ([209.85.217.172]:43012 "EHLO
+	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754119AbaIVWit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Sep 2014 11:00:58 -0400
-Message-ID: <54218B29.40806@candelatech.com> (sfid-20140923_170114_922533_C9C7853C)
-Date: Tue, 23 Sep 2014 08:00:57 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 22 Sep 2014 18:38:49 -0400
+Date: Tue, 23 Sep 2014 00:38:32 +0200
+From: Emil Goode <emilgoode@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Brett Rudley <brudley@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	Daniel Kim <dekim@broadcom.com>,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH] brcmfmac: Fix off by one bug in
+ brcmf_count_20mhz_channels()
+Message-ID: <20140922223832.GA10356@lianli> (sfid-20140923_003916_858529_9C9637D9)
+References: <1411253932-27973-1-git-send-email-emilgoode@gmail.com>
+ <541FF0C4.9020805@broadcom.com>
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Subject: Re: [PATCH 1/2] ath10k:  make firmware text debug messages more verbose.
-References: <1411419245-25799-1-git-send-email-greearb@candelatech.com> <87zjdqcwef.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87zjdqcwef.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <541FF0C4.9020805@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hello Arend,
 
+Ok I will resend with your ack.
 
-On 09/23/2014 06:13 AM, Kalle Valo wrote:
-> greearb@candelatech.com writes:
->
->> From: Ben Greear <greearb@candelatech.com>
->>
->> There are not many of these messages producted by the
->> firmware, but they are generally fairly useful, so print
->> them at info level.
->>
->> Signed-off-by: Ben Greear <greearb@candelatech.com>
->> ---
->>   drivers/net/wireless/ath/ath10k/wmi.c | 2 +-
->>   1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
->> index cd60940..6be62ac 100644
->> --- a/drivers/net/wireless/ath/ath10k/wmi.c
->> +++ b/drivers/net/wireless/ath/ath10k/wmi.c
->> @@ -2050,7 +2050,7 @@ static void ath10k_wmi_event_debug_print(struct ath10k *ar,
->>   	/* the last byte is always reserved for the null character */
->>   	buf[i] = '\0';
->>
->> -	ath10k_dbg(ar, ATH10K_DBG_WMI, "wmi event debug print '%s'\n", buf);
->> +	ath10k_info(ar, "wmi event debug print '%s'\n", buf);
->
-> This does not bring any extra value to normal users, it's only useful to
-> firmware engineers. That's why it needs to stay as a debug message.
-> Maybe we should add a new debug level just for these events, would that
-> help?
+Best regards,
 
-It will help users trying to tune the maximum resource combinations (vdevs + peers + tx-descriptors + skid-len, etc)
-because my firmware prints out remaining RAM/IRAM after booting up.
+Emil
 
-But, a separate debug flag would be fine.
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+On Mon, Sep 22, 2014 at 11:49:56AM +0200, Arend van Spriel wrote:
+> On 09/21/14 00:58, Emil Goode wrote:
+> >In the brcmf_count_20mhz_channels function we are looping through a list
+> >of channels received from firmware. Since the index of the first channel
+> >is 0 the condition leads to an off by one bug. This is causing us to hit
+> >the WARN_ON_ONCE(1) calls in the brcmu_d11n_decchspec function, which is
+> >how I discovered the bug.
+> >
+> >Introduced by:
+> >commit b48d891676f756d48b4d0ee131e4a7a5d43ca417
+> >("brcmfmac: rework wiphy structure setup")
+> 
+> My bad :-(. You can add:
+> 
+> Acked-by: Arend van Spriel <arend@broadcom.com>
+> >Signed-off-by: Emil Goode<emilgoode@gmail.com>
+> >---
+> >  drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> >
+> >diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+> >index 02fe706..93b5dd9 100644
+> >--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+> >+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+> >@@ -4918,7 +4918,7 @@ static void brcmf_count_20mhz_channels(struct brcmf_cfg80211_info *cfg,
+> >  	struct brcmu_chan ch;
+> >  	int i;
+> >
+> >-	for (i = 0; i<= total; i++) {
+> >+	for (i = 0; i<  total; i++) {
+> >  		ch.chspec = (u16)le32_to_cpu(chlist->element[i]);
+> >  		cfg->d11inf.decchspec(&ch);
+> >
+> 
