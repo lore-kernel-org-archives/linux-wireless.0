@@ -1,49 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:56253
-	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753249AbaI2Sps (ORCPT
+Received: from mail-oi0-f50.google.com ([209.85.218.50]:37096 "EHLO
+	mail-oi0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753925AbaIVOju (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Sep 2014 14:45:48 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
-Subject: [PATCH 2/3] ath9k_hw: reduce ANI spur immunity setting on HT40 extension channel
-Date: Mon, 29 Sep 2014 20:45:41 +0200
-Message-Id: <1412016342-21227-2-git-send-email-nbd@openwrt.org> (sfid-20140929_204553_005920_8B7D24A6)
-In-Reply-To: <1412016342-21227-1-git-send-email-nbd@openwrt.org>
-References: <1412016342-21227-1-git-send-email-nbd@openwrt.org>
+	Mon, 22 Sep 2014 10:39:50 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, troy_tan@realsil.com.cn,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH 00/11 NEXT] Modify rtlwifi, rtl_pci, rtl8188ee, and rtl8821ae for merge with Realtek code repo
+Date: Mon, 22 Sep 2014 09:39:16 -0500
+Message-Id: <1411396767-20611-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20140922_164004_056930_13DCC43C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The cycpwr_thr1 value needs to be lower on the extension channel than on
-the control channel, similar to how the register settings are programmed
-in the initvals.
+These patches accomplish the following:
 
-Also drop the unnecessary check for HT40 - this register can always be
-written. This patch has been reported to improve HT40 stability and
-throughput in some environments.
+1. Update existing drivers to the level of the latest Realtek drivers from 06/28/2014
+2. Move the updated rtl8821ae driver into the regular wireless tree. Removal of
+   the staging version will be sent to GregKH once these patches are in place.
+3. Make all this code match what is found in the Realtek code repo. Because of
+   this, there is considerable churning of the code; however, the same is true
+   for the Realtek repo. Once the two code bases are the same, incorporation
+   of the Realtek updates and bug fixes will be a lot easier. In fact, if all
+   goes well, I hope that Realtek can handle it without my interventikon.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/net/wireless/ath/ath9k/ar5008_phy.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-index 3b3e910..b72d0be 100644
---- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-@@ -1042,9 +1042,8 @@ static bool ar5008_hw_ani_control_new(struct ath_hw *ah,
- 		REG_RMW_FIELD(ah, AR_PHY_TIMING5,
- 			      AR_PHY_TIMING5_CYCPWR_THR1, value);
- 
--		if (IS_CHAN_HT40(ah->curchan))
--			REG_RMW_FIELD(ah, AR_PHY_EXT_CCA,
--				      AR_PHY_EXT_TIMING5_CYCPWR_THR1, value);
-+		REG_RMW_FIELD(ah, AR_PHY_EXT_CCA,
-+				  AR_PHY_EXT_TIMING5_CYCPWR_THR1, value - 1);
- 
- 		if (level != aniState->spurImmunityLevel) {
- 			ath_dbg(common, ANI,
--- 
-2.0.4
+Larry Finger (11):
+  rtlwifi: Remove extra workqueue for enter/leave power state
+  rtlwifi: rtl_pci: Start modification for new drivers
+  rtlwifi: Modify core.c for new drivers
+  rtlwifi: Modify base.{c,h} for new drivers
+  rtlwifi: Modify cam.{c,h} and efuse.{c,h} for new drivers
+  rtlwifi: Update power-save routines for 062814 driver
+  rtlwifi: Finish modifying core routines for new drivers
+  rtlwifi: rtl8188ee: Update driver to match Realtek release of 06282014
+  rtlwifi: rtl8821ae: Move driver from staging to regular tree
+  rtlwifi: Fix problems with building an allyesconfig
+  rtlwifi: Fix Sparse warnings
 
