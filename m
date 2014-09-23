@@ -1,63 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:58413 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755767AbaIKTaL (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:51133 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932414AbaIWVSJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Sep 2014 15:30:11 -0400
-Date: Thu, 11 Sep 2014 15:27:21 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	g@tuxdriver.com
-Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] hostap: proc: substitute loops by %*phN
-Message-ID: <20140911192721.GD22872@tuxdriver.com> (sfid-20140911_213016_372865_13CC5E61)
-References: <1409927416-27101-1-git-send-email-andriy.shevchenko@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1409927416-27101-1-git-send-email-andriy.shevchenko@linux.intel.com>
+	Tue, 23 Sep 2014 17:18:09 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: ath10k@lists.infradead.org, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v2 02/10] ath10k: add helper method to grab debug stats.
+Date: Tue, 23 Sep 2014 14:17:17 -0700
+Message-Id: <1411507045-18973-2-git-send-email-greearb@candelatech.com> (sfid-20140923_231823_535357_A777D616)
+In-Reply-To: <1411507045-18973-1-git-send-email-greearb@candelatech.com>
+References: <1411507045-18973-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Applying: hostap: proc: substitute loops by %*phN
-error: patch failed: drivers/net/wireless/hostap/hostap_proc.c:184
-error: drivers/net/wireless/hostap/hostap_proc.c: patch does not apply
+From: Ben Greear <greearb@candelatech.com>
 
-On Fri, Sep 05, 2014 at 05:30:16PM +0300, Andy Shevchenko wrote:
-> For dumping small buffers we may use %*phN specifier instead of custom
-> approach..
-> 
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> ---
->  drivers/net/wireless/hostap/hostap_proc.c | 6 ++----
->  1 file changed, 2 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/hostap/hostap_proc.c b/drivers/net/wireless/hostap/hostap_proc.c
-> index 16a06b6..4e2a7dd9 100644
-> --- a/drivers/net/wireless/hostap/hostap_proc.c
-> +++ b/drivers/net/wireless/hostap/hostap_proc.c
-> @@ -184,11 +184,9 @@ static int prism2_bss_list_proc_show(struct seq_file *m, void *v)
->  	seq_printf(m, "%*pE", bss->ssid_len, bss->ssid);
->  
->  	seq_putc(m, '\t');
-> -	for (i = 0; i < bss->ssid_len; i++)
-> -		seq_printf(m, "%02x", bss->ssid[i]);
-> +	seq_printf(m, "%*phN", (int)bss->ssid_len, bss->ssid);
->  	seq_putc(m, '\t');
-> -	for (i = 0; i < bss->wpa_ie_len; i++)
-> -		seq_printf(m, "%02x", bss->wpa_ie[i]);
-> +	seq_printf(m, "%*phN", (int)bss->wpa_ie_len, bss->wpa_ie);
->  	seq_putc(m, '\n');
->  	return 0;
->  }
-> -- 
-> 2.1.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+It can be nice to update the firmware's stats while
+debugging other bits of the driver, so add helper method
+to do this.
 
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+
+v2:  No changes.
+
+ drivers/net/wireless/ath/ath10k/debug.c | 26 +++++++++++++++++---------
+ drivers/net/wireless/ath/ath10k/debug.h |  3 +++
+ 2 files changed, 20 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index 101c6f9..c2c02ce 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -371,6 +371,21 @@ void ath10k_debug_read_target_stats(struct ath10k *ar,
+ 	complete(&ar->debug.event_stats_compl);
+ }
+ 
++int ath10k_refresh_peer_stats(struct ath10k *ar)
++{
++	int ret = ath10k_wmi_request_stats(ar, WMI_REQUEST_PEER_STAT);
++	if (ret) {
++		ath10k_warn(ar, "could not request stats (%d)\n", ret);
++		return ret;
++	}
++
++	ret = wait_for_completion_timeout(&ar->debug.event_stats_compl, 1*HZ);
++	if (ret <= 0)
++		return ret;
++
++	return 0;
++}
++
+ static ssize_t ath10k_read_fw_stats(struct file *file, char __user *user_buf,
+ 				    size_t count, loff_t *ppos)
+ {
+@@ -379,7 +394,6 @@ static ssize_t ath10k_read_fw_stats(struct file *file, char __user *user_buf,
+ 	char *buf = NULL;
+ 	unsigned int len = 0, buf_len = 8000;
+ 	ssize_t ret_cnt = 0;
+-	long left;
+ 	int i;
+ 	int ret;
+ 
+@@ -394,14 +408,8 @@ static ssize_t ath10k_read_fw_stats(struct file *file, char __user *user_buf,
+ 	if (!buf)
+ 		goto exit;
+ 
+-	ret = ath10k_wmi_request_stats(ar, WMI_REQUEST_PEER_STAT);
+-	if (ret) {
+-		ath10k_warn(ar, "could not request stats (%d)\n", ret);
+-		goto exit;
+-	}
+-
+-	left = wait_for_completion_timeout(&ar->debug.event_stats_compl, 1*HZ);
+-	if (left <= 0)
++	ret = ath10k_refresh_peer_stats(ar);
++	if (ret)
+ 		goto exit;
+ 
+ 	spin_lock_bh(&ar->data_lock);
+diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
+index d6276fe..ba6d280 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.h
++++ b/drivers/net/wireless/ath/ath10k/debug.h
+@@ -142,4 +142,7 @@ static inline void ath10k_dbg_dump(struct ath10k *ar,
+ {
+ }
+ #endif /* CONFIG_ATH10K_DEBUG */
++
++int ath10k_refresh_peer_stats(struct ath10k *ar);
++
+ #endif /* _DEBUG_H_ */
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.11.7
+
