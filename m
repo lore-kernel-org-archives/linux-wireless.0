@@ -1,46 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from isrv.corpit.ru ([86.62.121.231]:38496 "EHLO isrv.corpit.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751429AbaIWQCP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Sep 2014 12:02:15 -0400
-Message-ID: <54219984.2080601@msgid.tls.msk.ru> (sfid-20140923_180224_159233_4E75C4CE)
-Date: Tue, 23 Sep 2014 20:02:12 +0400
-From: Michael Tokarev <mjt@tls.msk.ru>
+Received: from mail-wg0-f46.google.com ([74.125.82.46]:35694 "EHLO
+	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751533AbaIWJMY convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Sep 2014 05:12:24 -0400
+Received: by mail-wg0-f46.google.com with SMTP id a1so3942844wgh.17
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Sep 2014 02:12:23 -0700 (PDT)
 MIME-Version: 1.0
-To: Seth Forshee <seth.forshee@canonical.com>
-CC: Arend van Spriel <arend@broadcom.com>,
-	brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: BCM4313 & brcmsmac & 3.12: only semi-working?
-References: <53FDACD1.8090805@msgid.tls.msk.ru> <53FDF8EB.4050905@broadcom.com> <54169D4F.2090607@broadcom.com> <541EEF17.7020806@msgid.tls.msk.ru> <542145B1.4030202@msgid.tls.msk.ru> <54216BF1.3060500@broadcom.com> <20140923134419.GA19016@ubuntu-hedt> <54217AA5.2060803@broadcom.com> <542182BE.2000606@msgid.tls.msk.ru> <542183A6.4070207@msgid.tls.msk.ru> <20140923143124.GC19016@ubuntu-hedt>
-In-Reply-To: <20140923143124.GC19016@ubuntu-hedt>
+In-Reply-To: <1411150659-10998-2-git-send-email-greearb@candelatech.com>
+References: <1411150659-10998-1-git-send-email-greearb@candelatech.com>
+	<1411150659-10998-2-git-send-email-greearb@candelatech.com>
+Date: Tue, 23 Sep 2014 11:12:23 +0200
+Message-ID: <CA+BoTQkxQK82rtQZXi1tyn5g=AsGQGDyKf1bF7jpuDPFq1Okbw@mail.gmail.com> (sfid-20140923_111229_001077_DDFCFEA9)
+Subject: Re: [PATCH 2/2] ath10k: support ethtool stats.
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-23.09.2014 18:31, Seth Forshee пишет:
-> On Tue, Sep 23, 2014 at 06:28:54PM +0400, Michael Tokarev wrote:
->> 23.09.2014 18:25, Michael Tokarev wrote:
->>> 23.09.2014 17:50, Arend van Spriel wrote:
->>>> On 09/23/14 15:44, Seth Forshee wrote:
->> []
->>>>> It's been quite some time since I used them, but I think brcmsmac_tx is
->>>>> quite noisy so you may only want to enable that if you already suspect a
->>>>> tx problem. I always find it useful to enable the mac80211 and
->>>>> mac80211_msg events too when debugging wireless, and I often enable
->>>>> cfg80211 events as well (none of these are especially verbose).
->>
->> mac80211_msg does not exist, it looks like.  fwiw.
-> 
-> Did you check your kernel's config? You need to have
-> CONFIG_MAC80211_MESSAGE_TRACING enabled.
+On 19 September 2014 20:17,  <greearb@candelatech.com> wrote:
+> From: Ben Greear <greearb@candelatech.com>
+>
+> Add support for reading firmware stats through the ethtool
+> API.  This may be easier for applications to manipulate
+> compared to parsing a text based debugfs file.
 
-Oh. Indeed.  While I enabled it, I recompiled only drivers/net/wireless,
-but not net/.  Rebuilt, another trace is here --
+You also seem to be adding fw crash and reset countes. It's probably
+worth including this in the commit log.
 
- http://www.corpit.ru/mjt/tmp/brcmsmac-4313-trace-201409233.dat.gz
 
-Thanks,
+> +#ifdef CONFIG_ATH10K_DEBUGFS
+> +/* TODO:  Would be nice to always support ethtool stats, would need to
+> + * move the stats storage out of ath10k_debug, or always have ath10k_debug
+> + * struct available..
+> + */
 
-/mjt
+I was actually wondering about moving ath10k_target_stats out of debug
+while doing some cleanups. Your patch can actually justify this kind
+of move.
 
+
+[...]
+> +       data[i++] = fw_stats->hw_reaped; /* ppdu reaped */
+> +       data[i++] = 0; /* tx bytes */
+> +       data[i++] = fw_stats->htt_mpdus;
+> +       data[i++] = 0; /* rx bytes */
+> +       data[i++] = fw_stats->ch_noise_floor;
+> +       data[i++] = fw_stats->cycle_count;
+> +       data[i++] = fw_stats->phy_err_count;
+> +       data[i++] = fw_stats->rts_bad;
+> +       data[i++] = fw_stats->rts_good;
+> +       data[i++] = fw_stats->chan_tx_power;
+> +       data[i++] = fw_stats->fcs_bad;
+> +       data[i++] = fw_stats->no_beacons;
+> +       data[i++] = fw_stats->mpdu_enqued;
+> +       data[i++] = fw_stats->msdu_enqued;
+> +       data[i++] = fw_stats->wmm_drop;
+> +       data[i++] = fw_stats->local_enqued;
+> +       data[i++] = fw_stats->local_freed;
+> +       data[i++] = fw_stats->hw_queued;
+> +       data[i++] = fw_stats->hw_reaped;
+> +       data[i++] = fw_stats->underrun;
+> +       data[i++] = fw_stats->tx_abort;
+> +       data[i++] = fw_stats->mpdus_requed;
+> +       data[i++] = fw_stats->tx_ko;
+> +       data[i++] = fw_stats->data_rc;
+> +       data[i++] = fw_stats->sw_retry_failure;
+> +       data[i++] = fw_stats->illgl_rate_phy_err;
+> +       data[i++] = fw_stats->pdev_cont_xretry;
+> +       data[i++] = fw_stats->pdev_tx_timeout;
+> +       data[i++] = fw_stats->txop_ovf;
+> +       data[i++] = fw_stats->pdev_resets;
+> +       data[i++] = fw_stats->mid_ppdu_route_change;
+> +       data[i++] = fw_stats->status_rcvd;
+> +       data[i++] = fw_stats->r0_frags;
+> +       data[i++] = fw_stats->r1_frags;
+> +       data[i++] = fw_stats->r2_frags;
+> +       data[i++] = fw_stats->r3_frags;
+> +       data[i++] = fw_stats->htt_msdus;
+> +       data[i++] = fw_stats->htt_mpdus;
+> +       data[i++] = fw_stats->loc_msdus;
+> +       data[i++] = fw_stats->loc_mpdus;
+> +       data[i++] = fw_stats->phy_errs;
+> +       data[i++] = fw_stats->phy_err_drop;
+> +       data[i++] = fw_stats->mpdu_errs;
+> +       data[i++] = ar->fw_crash_counter;
+> +       data[i++] = ar->fw_warm_reset_counter;
+> +       data[i++] = ar->fw_cold_reset_counter;
+
+fw_stats should be protected by ar->data_lock. See
+ath10k_read_fw_stats(). You could in theory report inconsistent stats.
+
+
+> --- a/drivers/net/wireless/ath/ath10k/pci.c
+> +++ b/drivers/net/wireless/ath/ath10k/pci.c
+> @@ -986,6 +986,8 @@ static void ath10k_pci_fw_crashed_dump(struct ath10k *ar)
+>
+>         spin_lock_bh(&ar->data_lock);
+>
+> +       ar->fw_crash_counter++;
+> +
+>         crash_data = ath10k_debug_get_new_fw_crash_data(ar);
+>
+>         if (crash_data)
+> @@ -1671,6 +1673,7 @@ static int ath10k_pci_warm_reset(struct ath10k *ar)
+>         u32 val;
+>
+>         ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot warm reset\n");
+> +       ar->fw_warm_reset_counter++;
+>
+>         /* debug */
+>         val = ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS +
+> @@ -2286,6 +2289,7 @@ static int ath10k_pci_cold_reset(struct ath10k *ar)
+>         u32 val;
+>
+>         ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot cold reset\n");
+> +       ar->fw_cold_reset_counter++;
+>
+>         /* Put Target, including PCIe, into RESET. */
+>         val = ath10k_pci_reg_read32(ar, SOC_GLOBAL_RESET_ADDRESS);
+
+Unprotected? I guess it's not terribly wrong since this is the only
+place it updates the values.
+
+
+Michał
