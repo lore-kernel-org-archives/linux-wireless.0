@@ -1,39 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f180.google.com ([74.125.82.180]:37022 "EHLO
-	mail-we0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752792AbaIYKod (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:37294 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751790AbaIWNuc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Sep 2014 06:44:33 -0400
-Received: by mail-we0-f180.google.com with SMTP id q59so595425wes.11
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Sep 2014 03:44:32 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 0/4] ath10k: fix/cleanup fw stats
-Date: Thu, 25 Sep 2014 12:33:46 +0200
-Message-Id: <1411641230-18785-1-git-send-email-michal.kazior@tieto.com> (sfid-20140925_124438_229807_1063D7FB)
+	Tue, 23 Sep 2014 09:50:32 -0400
+Message-ID: <54217AA5.2060803@broadcom.com> (sfid-20140923_155043_191515_D628E3D2)
+Date: Tue, 23 Sep 2014 15:50:29 +0200
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Seth Forshee <seth.forshee@canonical.com>
+CC: Michael Tokarev <mjt@tls.msk.ru>,
+	<brcm80211-dev-list@broadcom.com>,
+	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
+Subject: Re: BCM4313 & brcmsmac & 3.12: only semi-working?
+References: <53FC1789.6020407@msgid.tls.msk.ru> <53FCA001.6090404@broadcom.com> <53FCB2A3.1050605@msgid.tls.msk.ru> <53FCFE1A.3060508@broadcom.com> <53FDACD1.8090805@msgid.tls.msk.ru> <53FDF8EB.4050905@broadcom.com> <54169D4F.2090607@broadcom.com> <541EEF17.7020806@msgid.tls.msk.ru> <542145B1.4030202@msgid.tls.msk.ru> <54216BF1.3060500@broadcom.com> <20140923134419.GA19016@ubuntu-hedt>
+In-Reply-To: <20140923134419.GA19016@ubuntu-hedt>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On 09/23/14 15:44, Seth Forshee wrote:
+> On Tue, Sep 23, 2014 at 02:47:45PM +0200, Arend van Spriel wrote:
+>> On 09/23/14 12:04, Michael Tokarev wrote:
+>>> 21.09.2014 19:30, Michael Tokarev wrote:
+>>>> Namely, after resume, the card does not work. ARP works, ping and
+>>>> DNS sometimes/somewhat work, inital TCP connection establisment
+>>>> works, but eg http download does not work, it stalls almost
+>>>> immediately.
+>>>
+>>> It does not work at all anymore again.  Not only after resume but also
+>>> after could power up, it stalls right at start of wget for example.
+>>>
+>>>> http://www.corpit.ru/mjt/tmp/brcmsmac-4313-trace-20140921.dat.gz -- this
+>>>> is a trace collected after resuming from suspend-to-disk
+>>>
+>>> And here -- http://www.corpit.ru/mjt/tmp/brcmsmac-4313-trace-20140923.dat.gz
+>>> is another trace, after insmod brcmutils&   brcmsmac, starting trace-cmd record
+>>> (with network-manager running in the background), and running a wget on
+>>> http://ip-add-ress-of-the-access-point/somefile (which immediately stalls,
+>>> showing minimal progress once in a while only).
+>>
+>> Well. This log and the one from a few days ago only show me
+>> interrupt status changes, which does not tell me a lot. I do see
+>> that the hardware signals transmit completions, but it is far less
+>> informative then I hoped it would be. Maybe I am missing some debug
+>> configuration here?
+>>
+>> Seth, would you know?
+>
+> Well, there are a few different trace events defined for brcmsmac. This
+> would enable the full set:
+>
+>   $ trace-cmd record -e brcmsmac -e brcmsmac_tx -e brcmsmac_msg
+>
+> It's been quite some time since I used them, but I think brcmsmac_tx is
+> quite noisy so you may only want to enable that if you already suspect a
+> tx problem. I always find it useful to enable the mac80211 and
+> mac80211_msg events too when debugging wireless, and I often enable
+> cfg80211 events as well (none of these are especially verbose).
 
-This cleans up and fixes fw stats aggregation.
+Ah, I read back the email from Sep 21 and it says:
 
+trace-cmd record brcmsmac:* &
 
-Michal Kazior (4):
-  ath10k: split wmi stats parsing
-  ath10k: rename fw_stats related stuff
-  ath10k: request fw_stats once on open
-  ath10k: fix fw stats processing
+I am surprised the capture contains something as -e is missing. Good to 
+know there are different tracers for the driver.
 
- drivers/net/wireless/ath/ath10k/core.h  |  26 +-
- drivers/net/wireless/ath/ath10k/debug.c | 476 ++++++++++++++++++--------------
- drivers/net/wireless/ath/ath10k/debug.h |   7 +-
- drivers/net/wireless/ath/ath10k/wmi.c   | 190 ++++++++++++-
- drivers/net/wireless/ath/ath10k/wmi.h   |  24 +-
- 5 files changed, 483 insertions(+), 240 deletions(-)
+Regards,
+Arend
 
--- 
-1.8.5.3
+> Of course all of this depends on having the right config options
+> selected. Looks like the relevant options are CONFIG_BRCM_TRACING and
+> CONFIG_MAC80211_MESSAGE_TRACING.
+>
+> Seth
+>
 
