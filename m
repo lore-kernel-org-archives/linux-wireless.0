@@ -1,77 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:51878 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750877AbaIYIPJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Sep 2014 04:15:09 -0400
-Date: Thu, 25 Sep 2014 13:16:08 +0530
-From: Vinod Koul <vinod.koul@intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: linux-kernel@vger.kernel.org, subhransu.s.prusty@intel.com,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Alexandre Courbot <acourbot@nvidia.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Andy Gross <agross@codeaurora.org>,
-	Baruch Siach <baruch@tkos.co.il>,
-	Ben Skeggs <bskeggs@redhat.com>,
-	Bjorn Andersson <bjorn.andersson@sonymobile.com>,
-	"Chew, Chiau Ee" <chiau.ee.chew@intel.com>,
-	Chris Ball <chris@printf.net>,
-	Dan Carpenter <dan.carpenter@oracle.com>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Dave Airlie <airlied@redhat.com>,
-	David Herrmann <dh.herrmann@gmail.com>,
-	dmaengine@vger.kernel.org, dri-devel@lists.freedesktop.org,
-	"Du, Wenkai" <wenkai.du@intel.com>,
-	Grant Grundler <grundler@chromium.org>,
-	Ilia Mirkin <imirkin@alum.mit.edu>,
-	intel-gfx@lists.freedesktop.org,
-	"Ivan T. Ivanov" <iivanov@mm-sol.com>,
-	Jaehoon Chung <jh80.chung@samsung.com>,
-	Jani Nikula <jani.nikula@intel.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
-	Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>,
-	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
-	linux-fbdev@vger.kernel.org, linux-i2c@vger.kernel.org,
-	linux-mmc@vger.kernel.org, linux-nfc@ml01.01.org,
-	linux-omap@vger.kernel.org, linux-pm@vger.kernel.org,
-	linux-serial@vger.kernel.org, linux-spi@vger.kernel.org,
-	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Marcin Wojtas <mw@semihalf.com>,
-	Mika Westerberg <mika.westerberg@linux.jf.intel.com>,
-	patches@opensource.wolfsonmicro.com,
-	Pramod Gurav <pramod.gurav@smartplayin.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Rob Clark <robdclark@gmail.com>,
-	Romain Baeriswyl <Romain.Baeriswyl@abilis.com>,
-	Russell King <rmk+kernel@arm.linux.org.uk>,
-	Seungwon Jeon <tgih.jun@samsung.com>,
-	Shinya Kuribayashi <skuribay@pobox.com>,
-	Thierry Reding <treding@nvidia.com>,
-	Tim Kryger <tim.kryger@linaro.org>,
-	Tomi Valkeinen <tomi.valkeinen@ti.com>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	Wolfram Sang <wsa@the-dreams.de>
-Subject: Re: [PATCH 00/27] add pm_runtime_last_busy_and_autosuspend() helper
-Message-ID: <20140925074607.GV24663@intel.com> (sfid-20140925_101527_299866_18F8CF52)
-References: <1411575342-31048-1-git-send-email-vinod.koul@intel.com>
- <6374313.I12loOK9hA@vostro.rjw.lan>
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:62727 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751688AbaIWNzn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Sep 2014 09:55:43 -0400
+Message-ID: <54217BDC.5060308@broadcom.com> (sfid-20140923_155547_239136_F4597037)
+Date: Tue, 23 Sep 2014 15:55:40 +0200
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <6374313.I12loOK9hA@vostro.rjw.lan>
+To: Greg KH <gregkh@linuxfoundation.org>
+CC: <stable@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH for-3.12] brcmfmac: handle IF event for P2P_DEVICE interface
+References: <1411465946-27161-1-git-send-email-arend@broadcom.com> <20140923132207.GB11359@kroah.com> <542178D2.90804@broadcom.com> <20140923135129.GA12636@kroah.com>
+In-Reply-To: <20140923135129.GA12636@kroah.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 24, 2014 at 10:28:07PM +0200, Rafael J. Wysocki wrote:
-> 
-> OK, I guess this is as good as it gets.
-> 
-> What tree would you like it go through?
+On 09/23/14 15:51, Greg KH wrote:
+> On Tue, Sep 23, 2014 at 03:42:42PM +0200, Arend van Spriel wrote:
+>> On 09/23/14 15:22, Greg KH wrote:
+>>> On Tue, Sep 23, 2014 at 11:52:26AM +0200, Arend van Spriel wrote:
+>>>> upstream: 87c4790330810fe5caf0172d9320cf24ef19cebe
+>>>
+>>> That commit id doesn't match anything in Linus's tree :(
+>>>
+>>
+>> Hmmm, that is weird:
+>>
+>> [arend@lb-bun-235 ~/scm/brcm80211-next]
+>> $ git remote show torvalds
+>> * remote torvalds
+>>    Fetch URL:
+>> git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+>>    Push  URL:
+>> git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+>>    HEAD branch: master
+>>    Remote branch:
+>>      master tracked
+>> [arend@lb-bun-235 ~/scm/brcm80211-next]
+>> $ git log torvalds/master --oneline -8 -- drivers/net/wireless/brcm80211
+>> *87c4790 brcmfmac: handle IF event for P2P_DEVICE interface*
+>> 8f2b459 brcmfmac: obtain ifp through wdev structure
+>> f1d5603 brcmfmac: conditionally compile firmware protocol source code
+>> fac7d2a brcmfmac: Fix memory leak and missing assignment.
+>> 2d116b88 brcmfmac: fix memory leakage in msgbuf
+>> ebcc2f5 brcmfmac: fix curly brace mistake in brcmf_pcie_handle_mb_data()
+>> aef4f5b Merge tag 'master-2014-07-31' of
+>> git://git.kernel.org/pub/scm/linux/kern
+>> 70b7d94 brcmfmac: Add TDLS support to msgbuf.
+>
+> Ah, it just went in, sorry for the noise.
+>
+> But it _just_ went in, why are you emailing this?  We have to wait for a
+> -rc release to come out with the patch before being able to add it to
+> the tree.
 
-Since rest of the patches are dependent upon 1st patch which should go thru
-your tree, we should merge this thru your tree
+Noted. Did not find that nitty gritty detail in stable_kernel_rules.txt, 
+but I just might create a patch for that if I can beat my writers block ;-)
 
-Thanks
--- 
-~Vinod
+Gr. AvS
+
+> thanks,
+>
+> greg k-h
 
