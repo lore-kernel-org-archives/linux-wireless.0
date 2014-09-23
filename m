@@ -1,115 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hauke-m.de ([5.39.93.123]:33023 "EHLO hauke-m.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755133AbaITNCP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Sep 2014 09:02:15 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Cc: zajec5@gmail.com, arend@broadcom.com,
-	linux-arm-kernel@lists.infradead.org, arnd@arndb.de,
-	devicetree@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v3 2/2] bcma: get IRQ numbers from dt
-Date: Sat, 20 Sep 2014 15:02:05 +0200
-Message-Id: <1411218125-32670-2-git-send-email-hauke@hauke-m.de> (sfid-20140920_150222_575492_0C1AE97C)
-In-Reply-To: <1411218125-32670-1-git-send-email-hauke@hauke-m.de>
-References: <1411218125-32670-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:45364 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753133AbaIWNmp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Sep 2014 09:42:45 -0400
+Message-ID: <542178D2.90804@broadcom.com> (sfid-20140923_154248_952679_3A7C3F71)
+Date: Tue, 23 Sep 2014 15:42:42 +0200
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Greg KH <gregkh@linuxfoundation.org>
+CC: <stable@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH for-3.12] brcmfmac: handle IF event for P2P_DEVICE interface
+References: <1411465946-27161-1-git-send-email-arend@broadcom.com> <20140923132207.GB11359@kroah.com>
+In-Reply-To: <20140923132207.GB11359@kroah.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It is not possible to auto detect the irq numbers used by the cores on
-an arm SoC. If bcma was registered with device tree it will search for
-some device tree nodes with the irq number and add it to the core
-configuration.
+On 09/23/14 15:22, Greg KH wrote:
+> On Tue, Sep 23, 2014 at 11:52:26AM +0200, Arend van Spriel wrote:
+>> upstream: 87c4790330810fe5caf0172d9320cf24ef19cebe
+>
+> That commit id doesn't match anything in Linus's tree :(
+>
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/bcma/main.c | 49 ++++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 48 insertions(+), 1 deletion(-)
+Hmmm, that is weird:
 
-
-This is based on wireless-testing and should go into that tree.
-
-changes since:
-v2:
- - use of_translate_address() to support ranges
-
-RFC:
- - add #ifdef CONFIG_OF
- 
-diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-index 19ef685..5e7a3d4 100644
---- a/drivers/bcma/main.c
-+++ b/drivers/bcma/main.c
-@@ -10,6 +10,8 @@
- #include <linux/platform_device.h>
- #include <linux/bcma/bcma.h>
- #include <linux/slab.h>
-+#include <linux/of_irq.h>
-+#include <linux/of_address.h>
- 
- MODULE_DESCRIPTION("Broadcom's specific AMBA driver");
- MODULE_LICENSE("GPL");
-@@ -131,6 +133,45 @@ static bool bcma_is_core_needed_early(u16 core_id)
- 	return false;
- }
- 
-+#ifdef CONFIG_OF
-+static struct device_node *bcma_of_find_child_device(struct platform_device *parent,
-+						     struct bcma_device *core)
-+{
-+	struct device_node *node;
-+	u64 size;
-+	const __be32 *reg;
-+
-+	if (!parent || !parent->dev.of_node)
-+		return NULL;
-+
-+	for_each_child_of_node(parent->dev.of_node, node) {
-+		reg = of_get_address(node, 0, &size, NULL);
-+		if (!reg)
-+			continue;
-+		if (of_translate_address(node, reg) == core->addr)
-+			return node;
-+	}
-+	return NULL;
-+}
-+
-+static void bcma_of_fill_device(struct platform_device *parent,
-+				struct bcma_device *core)
-+{
-+	struct device_node *node;
-+
-+	node = bcma_of_find_child_device(parent, core);
-+	if (!node)
-+		return;
-+	core->dev.of_node = node;
-+	core->irq = irq_of_parse_and_map(node, 0);
-+}
-+#else
-+static void bcma_of_fill_device(struct platform_device *parent,
-+				struct bcma_device *core)
-+{
-+}
-+#endif /* CONFIG_OF */
-+
- static void bcma_register_core(struct bcma_bus *bus, struct bcma_device *core)
- {
- 	int err;
-@@ -147,7 +188,13 @@ static void bcma_register_core(struct bcma_bus *bus, struct bcma_device *core)
- 		break;
- 	case BCMA_HOSTTYPE_SOC:
- 		core->dev.dma_mask = &core->dev.coherent_dma_mask;
--		core->dma_dev = &core->dev;
-+		if (bus->host_pdev) {
-+			core->dma_dev = &bus->host_pdev->dev;
-+			core->dev.parent = &bus->host_pdev->dev;
-+			bcma_of_fill_device(bus->host_pdev, core);
-+		} else {
-+			core->dma_dev = &core->dev;
-+		}
- 		break;
- 	case BCMA_HOSTTYPE_SDIO:
- 		break;
--- 
-1.9.1
-
+[arend@lb-bun-235 ~/scm/brcm80211-next]
+$ git remote show torvalds
+* remote torvalds
+   Fetch URL: 
+git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+   Push  URL: 
+git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+   HEAD branch: master
+   Remote branch:
+     master tracked
+[arend@lb-bun-235 ~/scm/brcm80211-next]
+$ git log torvalds/master --oneline -8 -- drivers/net/wireless/brcm80211
+*87c4790 brcmfmac: handle IF event for P2P_DEVICE interface*
+8f2b459 brcmfmac: obtain ifp through wdev structure
+f1d5603 brcmfmac: conditionally compile firmware protocol source code
+fac7d2a brcmfmac: Fix memory leak and missing assignment.
+2d116b88 brcmfmac: fix memory leakage in msgbuf
+ebcc2f5 brcmfmac: fix curly brace mistake in brcmf_pcie_handle_mb_data()
+aef4f5b Merge tag 'master-2014-07-31' of 
+git://git.kernel.org/pub/scm/linux/kern
+70b7d94 brcmfmac: Add TDLS support to msgbuf.
