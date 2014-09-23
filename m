@@ -1,48 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay1.mentorg.com ([192.94.38.131]:45928 "EHLO
-	relay1.mentorg.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751863AbaIKKgp (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:20528 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754978AbaIWJdR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Sep 2014 06:36:45 -0400
-From: "Sharma, Sanjeev" <Sanjeev_Sharma@mentor.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "dsd@gentoo.org" <dsd@gentoo.org>,
-	"kune@deine-taler.de" <kune@deine-taler.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: RE: [PATCH v2] zd1211rw: replace ZD_ASSERT with
- lockdep_assert_held()
-Date: Thu, 11 Sep 2014 10:36:42 +0000
-Message-ID: <FDC088D3B5555644AE135ED28A7ABDE94DF5256D@EU-MBX-02.mgc.mentorg.com> (sfid-20140911_123705_835937_D005E45D)
-References: <1410418407.1825.0.camel@jlt4.sipsolutions.net>
-	 <1410430179-19944-1-git-send-email-sanjeev_sharma@mentor.com>
-	 (sfid-20140911_121019_335368_163BEA7C)
- <1410430345.22863.0.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1410430345.22863.0.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+	Tue, 23 Sep 2014 05:33:17 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 0/9] ath10k: mostly cleanups
+References: <1411046487-19544-1-git-send-email-michal.kazior@tieto.com>
+Date: Tue, 23 Sep 2014 12:33:04 +0300
+In-Reply-To: <1411046487-19544-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Thu, 18 Sep 2014 15:21:18 +0200")
+Message-ID: <87tx3yel67.fsf@kamboji.qca.qualcomm.com> (sfid-20140923_113327_325774_CFA6C494)
 MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-LS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEpvaGFubmVzIEJlcmcgW21haWx0bzpq
-b2hhbm5lc0BzaXBzb2x1dGlvbnMubmV0XSANClNlbnQ6IFRodXJzZGF5LCBTZXB0ZW1iZXIgMTEs
-IDIwMTQgMzo0MiBQTQ0KVG86IFNoYXJtYSwgU2FuamVldg0KQ2M6IGRzZEBnZW50b28ub3JnOyBr
-dW5lQGRlaW5lLXRhbGVyLmRlOyBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4
-LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IG5ldGRldkB2Z2VyLmtlcm5lbC5vcmcNClN1YmplY3Q6
-IFJlOiBbUEFUQ0ggdjJdIHpkMTIxMXJ3OiByZXBsYWNlIFpEX0FTU0VSVCB3aXRoIGxvY2tkZXBf
-YXNzZXJ0X2hlbGQoKQ0KDQpPbiBUaHUsIDIwMTQtMDktMTEgYXQgMTU6MzkgKzA1MzAsIFNhbmpl
-ZXYgU2hhcm1hIHdyb3RlOg0KPiBvbiBzb21lIGFyY2hpdGVjdHVyZSBzcGluX2lzX2xvY2tlZCgp
-IGFsd2F5cyByZXR1cm4gZmFsc2UgaW4gDQo+IHVuaXByb2Nlc3NvciBjb25maWd1cmF0aW9uIGFu
-ZCB0aGVyZWZvcmUgaXQgd291bGQgYmUgYWR2aXNlIHRvIHJlcGxhY2UgDQo+IHdpdGggbG9ja2Rl
-cF9hc3NlcnRfaGVsZCgpLg0KPiANCj4gU2lnbmVkLW9mZi1ieTogU2FuamVldiBTaGFybWEgPFNh
-bmplZXZfU2hhcm1hQG1lbnRvci5jb20+DQo+IC0tLQ0KPiBDaGFuZ2VzIGluIHYyOg0KPiAgIC0g
-Y29ycmVjdGVkIHRoZSB0eXBvDQoNCj4gTm93IGl0IGNvbXBpbGVzLCBidXQgeW91IGdvdCB0aGUg
-bG9naWMgd3JvbmcuDQoNCj4gKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvemQxMjExcncvemRf
-bWFjLmMNCj4gQEAgLTIzNSw3ICsyMzUsNyBAQCB2b2lkIHpkX21hY19jbGVhcihzdHJ1Y3QgemRf
-bWFjICptYWMpICB7DQo+ICAJZmx1c2hfd29ya3F1ZXVlKHpkX3dvcmtxdWV1ZSk7DQo+ICAJemRf
-Y2hpcF9jbGVhcigmbWFjLT5jaGlwKTsNCj4gLQlaRF9BU1NFUlQoIXNwaW5faXNfbG9ja2VkKCZt
-YWMtPmxvY2spKTsNCj4gKwlsb2NrZGVwX2Fzc2VydF9oZWxkKCZtYWMtPmxvY2spOw0KPiAgCVpE
-X01FTUNMRUFSKG1hYywgc2l6ZW9mKHN0cnVjdCB6ZF9tYWMpKTsgIH0NCg0KPkxvb2sgY2xvc2Vs
-eSBhdCB0aGlzIGFnYWluLg0KDQpJIGRpZG4ndCB1bmRlcnN0YW5kIHdoZXJlIEkgIHB1dCB3cm9u
-ZyBsb2dpYyAgPw0KDQpSZWdhcmRzDQpTYW5qZWV2IFNoYXJtYQ0KDQo=
+Michal Kazior <michal.kazior@tieto.com> writes:
+
+> Here's a bunch of clean up patches for WMI and a
+> single fix. I'm including the fix in this patchset
+> because one of the clean up patches depends on it.
+>
+>
+> Michal Kazior (9):
+>   ath10k: fix tx/rx chainmask init
+>   ath10k: remove unused pdev_set_channel command
+>   ath10k: deduplicate wmi_channel code
+>   ath10k: deduplicate host mem chunk code
+>   ath10k: relocate wmi attach/deatch functions
+>   ath10k: deduplicate wmi service ready logic
+>   ath10k: clean up phyerr code
+>   ath10k: unify wmi event function names
+>   ath10k: re-work scan start command building
+
+Thanks, all nine patches applied.
+
+-- 
+Kalle Valo
