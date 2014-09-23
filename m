@@ -1,74 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:51142 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932570AbaIWVSK (ORCPT
+Received: from mail-we0-f177.google.com ([74.125.82.177]:36446 "EHLO
+	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754352AbaIWIdm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Sep 2014 17:18:10 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: ath10k@lists.infradead.org, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v2 06/10] ath10k: use configured nss instead of max nss.
-Date: Tue, 23 Sep 2014 14:17:21 -0700
-Message-Id: <1411507045-18973-6-git-send-email-greearb@candelatech.com> (sfid-20140923_231820_253503_20DD9F8E)
-In-Reply-To: <1411507045-18973-1-git-send-email-greearb@candelatech.com>
-References: <1411507045-18973-1-git-send-email-greearb@candelatech.com>
+	Tue, 23 Sep 2014 04:33:42 -0400
+Received: by mail-we0-f177.google.com with SMTP id t60so4103866wes.8
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Sep 2014 01:33:41 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 2/3] ath10k: dump hex bytes with dev string prefix
+Date: Tue, 23 Sep 2014 10:22:53 +0200
+Message-Id: <1411460574-5424-3-git-send-email-michal.kazior@tieto.com> (sfid-20140923_103354_133910_0A25841A)
+In-Reply-To: <1411460574-5424-1-git-send-email-michal.kazior@tieto.com>
+References: <1411460574-5424-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+This makes it easier to debug hex dumps on systems
+with more than a single ath10k device.
 
-When re-associating a station, the nss was set back to
-maximum value even if user had configured small number
-of tx chains.  So, pay attention to user's config in
-this case as well.
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
 
-v2:  No changes from v1.
+Notes:
+    v2:
+     * merge 2 scnprintfs into 1 [Kalle]
 
- drivers/net/wireless/ath/ath10k/mac.c | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath10k/debug.c | 17 ++++++++++++++++-
+ 1 file changed, 16 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index e75607d..34ec992 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -4114,6 +4114,10 @@ ath10k_default_bitrate_mask(struct ath10k *ar,
- 	u32 legacy = 0x00ff;
- 	u8 ht = 0xff, i;
- 	u16 vht = 0x3ff;
-+	u16 nrf = ar->num_rf_chains;
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index f1e5916..1110f0f 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -1264,11 +1264,26 @@ void ath10k_dbg_dump(struct ath10k *ar,
+ 		     const char *msg, const char *prefix,
+ 		     const void *buf, size_t len)
+ {
++	char linebuf[256];
++	unsigned int linebuflen;
++	const void *ptr;
 +
-+	if (ar->cfg_tx_chainmask)
-+		nrf = get_nss_from_chainmask(ar->cfg_tx_chainmask);
+ 	if (ath10k_debug_mask & mask) {
+ 		if (msg)
+ 			ath10k_dbg(ar, mask, "%s\n", msg);
  
- 	switch (band) {
- 	case IEEE80211_BAND_2GHZ:
-@@ -4129,11 +4133,11 @@ ath10k_default_bitrate_mask(struct ath10k *ar,
- 	if (mask->control[band].legacy != legacy)
- 		return false;
+-		print_hex_dump_bytes(prefix, DUMP_PREFIX_OFFSET, buf, len);
++		for (ptr = buf; (ptr - buf) < len; ptr += 16) {
++			linebuflen = 0;
++			linebuflen += scnprintf(linebuf + linebuflen,
++						sizeof(linebuf) - linebuflen,
++						"%s%08x: ",
++						(prefix ? prefix : ""),
++						(unsigned int)(ptr - buf));
++			hex_dump_to_buffer(ptr, len - (ptr - buf), 16, 1,
++					   linebuf + linebuflen,
++					   sizeof(linebuf) - linebuflen, true);
++			dev_printk(KERN_DEBUG, ar->dev, "%s\n", linebuf);
++		}
+ 	}
  
--	for (i = 0; i < ar->num_rf_chains; i++)
-+	for (i = 0; i < nrf; i++)
- 		if (mask->control[band].ht_mcs[i] != ht)
- 			return false;
- 
--	for (i = 0; i < ar->num_rf_chains; i++)
-+	for (i = 0; i < nrf; i++)
- 		if (mask->control[band].vht_mcs[i] != vht)
- 			return false;
- 
-@@ -4384,6 +4388,9 @@ static int ath10k_set_bitrate_mask(struct ieee80211_hw *hw,
- 	u8 fixed_nss = ar->num_rf_chains;
- 	u8 force_sgi;
- 
-+	if (ar->cfg_tx_chainmask)
-+		fixed_nss = get_nss_from_chainmask(ar->cfg_tx_chainmask);
-+
- 	force_sgi = mask->control[band].gi;
- 	if (force_sgi == NL80211_TXRATE_FORCE_LGI)
- 		return -EINVAL;
+ 	/* tracing code doesn't like null strings :/ */
 -- 
-1.7.11.7
+1.8.5.3
 
