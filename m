@@ -1,183 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:60533 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751973AbaILG7Y (ORCPT
+Received: from mail-ob0-f169.google.com ([209.85.214.169]:33717 "EHLO
+	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751742AbaIWNoX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Sep 2014 02:59:24 -0400
-Received: by mail-la0-f46.google.com with SMTP id el20so350729lab.33
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Sep 2014 23:59:23 -0700 (PDT)
-From: Henning Rogge <hrogge@gmail.com>
-To: "linux-wireless @ vger . kernel . org"
-	<linux-wireless@vger.kernel.org>
-Cc: Henning Rogge <henning.rogge@fkie.fraunhofer.de>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-Subject: [PATCH v4 2/2] mac80211: implement cfg80211_ops to query mesh proxy path table
-Date: Fri, 12 Sep 2014 08:58:50 +0200
-Message-Id: <1410505130-7271-3-git-send-email-henning.rogge@fkie.fraunhofer.de> (sfid-20140912_085928_300697_B7DCF615)
-In-Reply-To: <1410505130-7271-1-git-send-email-henning.rogge@fkie.fraunhofer.de>
-References: <1410505130-7271-1-git-send-email-henning.rogge@fkie.fraunhofer.de>
+	Tue, 23 Sep 2014 09:44:23 -0400
+Received: by mail-ob0-f169.google.com with SMTP id uy5so2231287obc.0
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Sep 2014 06:44:23 -0700 (PDT)
+Date: Tue, 23 Sep 2014 08:44:19 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Michael Tokarev <mjt@tls.msk.ru>, brcm80211-dev-list@broadcom.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: BCM4313 & brcmsmac & 3.12: only semi-working?
+Message-ID: <20140923134419.GA19016@ubuntu-hedt> (sfid-20140923_154431_534795_213A76CF)
+References: <53FC1789.6020407@msgid.tls.msk.ru>
+ <53FCA001.6090404@broadcom.com>
+ <53FCB2A3.1050605@msgid.tls.msk.ru>
+ <53FCFE1A.3060508@broadcom.com>
+ <53FDACD1.8090805@msgid.tls.msk.ru>
+ <53FDF8EB.4050905@broadcom.com>
+ <54169D4F.2090607@broadcom.com>
+ <541EEF17.7020806@msgid.tls.msk.ru>
+ <542145B1.4030202@msgid.tls.msk.ru>
+ <54216BF1.3060500@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <54216BF1.3060500@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Implement get_mpp and dump_mpp cfg80211_ops to export the content of the
-802.11s mesh proxy path table to userspace.
+On Tue, Sep 23, 2014 at 02:47:45PM +0200, Arend van Spriel wrote:
+> On 09/23/14 12:04, Michael Tokarev wrote:
+> >21.09.2014 19:30, Michael Tokarev wrote:
+> >>Namely, after resume, the card does not work. ARP works, ping and
+> >>DNS sometimes/somewhat work, inital TCP connection establisment
+> >>works, but eg http download does not work, it stalls almost
+> >>immediately.
+> >
+> >It does not work at all anymore again.  Not only after resume but also
+> >after could power up, it stalls right at start of wget for example.
+> >
+> >>http://www.corpit.ru/mjt/tmp/brcmsmac-4313-trace-20140921.dat.gz -- this
+> >>is a trace collected after resuming from suspend-to-disk
+> >
+> >And here -- http://www.corpit.ru/mjt/tmp/brcmsmac-4313-trace-20140923.dat.gz
+> >is another trace, after insmod brcmutils&  brcmsmac, starting trace-cmd record
+> >(with network-manager running in the background), and running a wget on
+> >http://ip-add-ress-of-the-access-point/somefile (which immediately stalls,
+> >showing minimal progress once in a while only).
+> 
+> Well. This log and the one from a few days ago only show me
+> interrupt status changes, which does not tell me a lot. I do see
+> that the hardware signals transmit completions, but it is far less
+> informative then I hoped it would be. Maybe I am missing some debug
+> configuration here?
+> 
+> Seth, would you know?
 
-Signed-off-by: Henning Rogge <henning.rogge@fkie.fraunhofer.de>
----
- net/mac80211/cfg.c          | 53 +++++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/mesh.h         |  3 +++
- net/mac80211/mesh_pathtbl.c | 31 ++++++++++++++++++++++++++
- 3 files changed, 87 insertions(+)
+Well, there are a few different trace events defined for brcmsmac. This
+would enable the full set:
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 4d8989b..2538a2f 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1504,6 +1504,57 @@ static int ieee80211_dump_mpath(struct wiphy *wiphy, struct net_device *dev,
- 	return 0;
- }
- 
-+static void mpp_set_pinfo(struct mesh_path *mpath, u8 *mpp,
-+			  struct mpath_info *pinfo)
-+{
-+	memset(pinfo, 0, sizeof(*pinfo));
-+	memcpy(mpp, mpath->mpp, ETH_ALEN);
-+
-+	pinfo->generation = mpp_paths_generation;
-+}
-+
-+static int ieee80211_get_mpp(struct wiphy *wiphy, struct net_device *dev,
-+			     u8 *dst, u8 *mpp, struct mpath_info *pinfo)
-+
-+{
-+	struct ieee80211_sub_if_data *sdata;
-+	struct mesh_path *mpath;
-+
-+	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+
-+	rcu_read_lock();
-+	mpath = mpp_path_lookup(sdata, dst);
-+	if (!mpath) {
-+		rcu_read_unlock();
-+		return -ENOENT;
-+	}
-+	memcpy(dst, mpath->dst, ETH_ALEN);
-+	mpp_set_pinfo(mpath, mpp, pinfo);
-+	rcu_read_unlock();
-+	return 0;
-+}
-+
-+static int ieee80211_dump_mpp(struct wiphy *wiphy, struct net_device *dev,
-+			      int idx, u8 *dst, u8 *mpp,
-+			      struct mpath_info *pinfo)
-+{
-+	struct ieee80211_sub_if_data *sdata;
-+	struct mesh_path *mpath;
-+
-+	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+
-+	rcu_read_lock();
-+	mpath = mpp_path_lookup_by_idx(sdata, idx);
-+	if (!mpath) {
-+		rcu_read_unlock();
-+		return -ENOENT;
-+	}
-+	memcpy(dst, mpath->dst, ETH_ALEN);
-+	mpp_set_pinfo(mpath, mpp, pinfo);
-+	rcu_read_unlock();
-+	return 0;
-+}
-+
- static int ieee80211_get_mesh_config(struct wiphy *wiphy,
- 				struct net_device *dev,
- 				struct mesh_config *conf)
-@@ -3500,6 +3551,8 @@ const struct cfg80211_ops mac80211_config_ops = {
- 	.change_mpath = ieee80211_change_mpath,
- 	.get_mpath = ieee80211_get_mpath,
- 	.dump_mpath = ieee80211_dump_mpath,
-+	.get_mpp = ieee80211_get_mpp,
-+	.dump_mpp = ieee80211_dump_mpp,
- 	.update_mesh_config = ieee80211_update_mesh_config,
- 	.get_mesh_config = ieee80211_get_mesh_config,
- 	.join_mesh = ieee80211_join_mesh,
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index f39a19f..50c8473 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -270,6 +270,8 @@ int mpp_path_add(struct ieee80211_sub_if_data *sdata,
- 		 const u8 *dst, const u8 *mpp);
- struct mesh_path *
- mesh_path_lookup_by_idx(struct ieee80211_sub_if_data *sdata, int idx);
-+struct mesh_path *
-+mpp_path_lookup_by_idx(struct ieee80211_sub_if_data *sdata, int idx);
- void mesh_path_fix_nexthop(struct mesh_path *mpath, struct sta_info *next_hop);
- void mesh_path_expire(struct ieee80211_sub_if_data *sdata);
- void mesh_rx_path_sel_frame(struct ieee80211_sub_if_data *sdata,
-@@ -317,6 +319,7 @@ void mesh_path_tx_root_frame(struct ieee80211_sub_if_data *sdata);
- 
- bool mesh_action_is_path_sel(struct ieee80211_mgmt *mgmt);
- extern int mesh_paths_generation;
-+extern int mpp_paths_generation;
- 
- #ifdef CONFIG_MAC80211_MESH
- static inline
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index a6699dc..b890e22 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -44,6 +44,7 @@ static struct mesh_table __rcu *mesh_paths;
- static struct mesh_table __rcu *mpp_paths; /* Store paths for MPP&MAP */
- 
- int mesh_paths_generation;
-+int mpp_paths_generation;
- 
- /* This lock will have the grow table function as writer and add / delete nodes
-  * as readers. RCU provides sufficient protection only when reading the table
-@@ -410,6 +411,33 @@ mesh_path_lookup_by_idx(struct ieee80211_sub_if_data *sdata, int idx)
- }
- 
- /**
-+ * mpp_path_lookup_by_idx - look up a path in the proxy path table by its index
-+ * @idx: index
-+ * @sdata: local subif, or NULL for all entries
-+ *
-+ * Returns: pointer to the proxy path structure, or NULL if not found.
-+ *
-+ * Locking: must be called within a read rcu section.
-+ */
-+struct mesh_path *
-+mpp_path_lookup_by_idx(struct ieee80211_sub_if_data *sdata, int idx)
-+{
-+	struct mesh_table *tbl = rcu_dereference(mpp_paths);
-+	struct mpath_node *node;
-+	int i;
-+	int j = 0;
-+
-+	for_each_mesh_entry(tbl, node, i) {
-+		if (sdata && node->mpath->sdata != sdata)
-+			continue;
-+		if (j++ == idx)
-+			return node->mpath;
-+	}
-+
-+	return NULL;
-+}
-+
-+/**
-  * mesh_path_add_gate - add the given mpath to a mesh gate to our path table
-  * @mpath: gate path to add to table
-  */
-@@ -691,6 +719,9 @@ int mpp_path_add(struct ieee80211_sub_if_data *sdata,
- 
- 	spin_unlock(&tbl->hashwlock[hash_idx]);
- 	read_unlock_bh(&pathtbl_resize_lock);
-+
-+	mpp_paths_generation++;
-+
- 	if (grow) {
- 		set_bit(MESH_WORK_GROW_MPP_TABLE,  &ifmsh->wrkq_flags);
- 		ieee80211_queue_work(&local->hw, &sdata->work);
--- 
-1.9.1
+ $ trace-cmd record -e brcmsmac -e brcmsmac_tx -e brcmsmac_msg
+
+It's been quite some time since I used them, but I think brcmsmac_tx is
+quite noisy so you may only want to enable that if you already suspect a
+tx problem. I always find it useful to enable the mac80211 and
+mac80211_msg events too when debugging wireless, and I often enable
+cfg80211 events as well (none of these are especially verbose).
+
+Of course all of this depends on having the right config options
+selected. Looks like the relevant options are CONFIG_BRCM_TRACING and
+CONFIG_MAC80211_MESSAGE_TRACING.
+
+Seth
 
