@@ -1,54 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:3699 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751830AbaI3OFV (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:3638 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755894AbaIWMyz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Sep 2014 10:05:21 -0400
-Message-ID: <542AB893.9090201@broadcom.com> (sfid-20140930_160527_245481_91DF6F84)
-Date: Tue, 30 Sep 2014 16:05:07 +0200
-From: Arend van Spriel <arend@broadcom.com>
+	Tue, 23 Sep 2014 08:54:55 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <greearb@candelatech.com>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: Re: [PATCH 1/3] ath10k:  use 64-bit vdev map.
+References: <1411149890-12618-1-git-send-email-greearb@candelatech.com>
+Date: Tue, 23 Sep 2014 15:54:31 +0300
+In-Reply-To: <1411149890-12618-1-git-send-email-greearb@candelatech.com>
+	(greearb@candelatech.com's message of "Fri, 19 Sep 2014 11:04:48
+	-0700")
+Message-ID: <878ulaebug.fsf@kamboji.qca.qualcomm.com> (sfid-20140923_145459_277474_4A046049)
 MIME-Version: 1.0
-To: Stanislaw Gruszka <sgruszka@redhat.com>,
-	<linux-wireless@vger.kernel.org>
-CC: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] cfg80211: allow to configure dynamic PS timeout
-References: <1412083114-8426-1-git-send-email-sgruszka@redhat.com> <542AB859.5080008@broadcom.com>
-In-Reply-To: <542AB859.5080008@broadcom.com>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 30-09-14 16:04, Arend van Spriel wrote:
-> On 30-09-14 15:18, Stanislaw Gruszka wrote:
->> Dynamic power save timeout value is suppose to be configurable via
->> wext, but due to iwconfig bug is not possible to set it using that tool.
->>
->> Allow to configure PS timeout via nl80211 - add NL80211_ATTR_PS_TIMEOUT
->> attribute which become timeout stated in ms.
->>
->> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
->> ---
->>  include/uapi/linux/nl80211.h |  2 ++
->>  net/wireless/nl80211.c       | 21 +++++++++++++++++----
->>  2 files changed, 19 insertions(+), 4 deletions(-)
->>
->> diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
->> index 4b28dc0..600d47b 100644
->> --- a/include/uapi/linux/nl80211.h
->> +++ b/include/uapi/linux/nl80211.h
->> @@ -1990,6 +1990,8 @@ enum nl80211_attrs {
->>  
->>  	NL80211_ATTR_SMPS_MODE,
->>  
->> +	NL80211_ATTR_PS_TIMEOUT,
->> +
-> 
-> Isn't there some doxygen comment where this new attribute should be
-> described?
+greearb@candelatech.com writes:
 
-Uuuhmm, I mean kerneldoc, of course!
+> From: Ben Greear <greearb@candelatech.com>
+>
+> This can allow more than 32 stations to be supported
+> without over-running the bitmap.
+>
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
 
-> Regards,
-> Arend
-> 
+[...]
 
+> -	ar->monitor_vdev_id = bit - 1;
+> +	ar->monitor_vdev_id = bit;
+
+[...]
+
+> -	arvif->vdev_id = bit - 1;
+> +	ath10k_warn(ar, "Creating vdev id: %i  map: %llu\n",
+> +		    bit, ar->free_vdev_map);
+> +
+> +	arvif->vdev_id = bit;
+
+Why remove the "- 1"? Are you sure that's not going to break any
+assumptions somewhere?
+
+-- 
+Kalle Valo
