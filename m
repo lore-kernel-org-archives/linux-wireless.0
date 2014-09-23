@@ -1,58 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:47299 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751778AbaIKVu6 (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:47560 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756205AbaIWQsN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Sep 2014 17:50:58 -0400
-Received: by mail-wi0-f174.google.com with SMTP id n3so1736110wiv.7
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Sep 2014 14:50:56 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] ath9k: fix radar parameters initialization
-Date: Thu, 11 Sep 2014 23:50:54 +0200
-Message-Id: <1410472254-15600-1-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140911_235101_743365_8470CE24)
+	Tue, 23 Sep 2014 12:48:13 -0400
+Message-ID: <5421A44C.8080307@candelatech.com> (sfid-20140923_184828_237567_36B64067)
+Date: Tue, 23 Sep 2014 09:48:12 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH] ath10k: use configured nss instead of max nss.
+References: <1411426820-4047-1-git-send-email-greearb@candelatech.com> <CA+BoTQn9sECMNZsxQpB4i3wHPxfVL+LXq9=2GBd-opH6+9TD=A@mail.gmail.com>
+In-Reply-To: <CA+BoTQn9sECMNZsxQpB4i3wHPxfVL+LXq9=2GBd-opH6+9TD=A@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move ath9k_hw_set_radar_params() in ath9k_hw_reset() in order to avoid
-AR_PHY_RADAR registers are overwritten after hw reset
+On 09/23/2014 01:59 AM, Michal Kazior wrote:
+> On 23 September 2014 01:00,  <greearb@candelatech.com> wrote:
+>> From: Ben Greear <greearb@candelatech.com>
+>>
+>> When re-associating a station, the nss was set back to
+>> maximum value even if user had configured small number
+>> of tx chains.  So, pay attention to user's config in
+>> this case as well.
+>>
+>> Signed-off-by: Ben Greear <greearb@candelatech.com>
+>> ---
+>>  drivers/net/wireless/ath/ath10k/mac.c | 11 +++++++++--
+>>  1 file changed, 9 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+>> index 855c71c..c5d31cc 100644
+>> --- a/drivers/net/wireless/ath/ath10k/mac.c
+>> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+>> @@ -4086,6 +4086,10 @@ ath10k_default_bitrate_mask(struct ath10k *ar,
+>>         u32 legacy = 0x00ff;
+>>         u8 ht = 0xff, i;
+>>         u16 vht = 0x3ff;
+>> +       u16 nrf = ar->num_rf_chains;
+>> +
+>> +       if (ar->cfg_tx_chainmask)
+>> +               nrf = get_nss_from_chainmask(ar->cfg_tx_chainmask);
+> 
+> Oh, so you do update the peer nss value here.
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
----
- drivers/net/wireless/ath/ath9k/channel.c | 2 --
- drivers/net/wireless/ath/ath9k/hw.c      | 5 +++++
- 2 files changed, 5 insertions(+), 2 deletions(-)
+Yeah, I found this was needed in further testing yesterday...
 
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index a1b3282..d2a0f12 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -83,8 +83,6 @@ static int ath_set_channel(struct ath_softc *sc)
- 	if (hw->conf.radar_enabled) {
- 		u32 rxfilter;
- 
--		/* set HW specific DFS configuration */
--		ath9k_hw_set_radar_params(ah);
- 		rxfilter = ath9k_hw_getrxfilter(ah);
- 		rxfilter |= ATH9K_RX_FILTER_PHYRADAR |
- 				ATH9K_RX_FILTER_PHYERR;
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 69bbea1..ef5f5a6 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1954,6 +1954,11 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 	if (AR_SREV_9565(ah) && common->bt_ant_diversity)
- 		REG_SET_BIT(ah, AR_BTCOEX_WL_LNADIV, AR_BTCOEX_WL_LNADIV_FORCE_ON);
- 
-+	if (ah->hw->conf.radar_enabled) {
-+		/* set HW specific DFS configuration */
-+		ath9k_hw_set_radar_params(ah);
-+	}
-+
- 	return 0;
- }
- EXPORT_SYMBOL(ath9k_hw_reset);
+> I think it might be a good idea to convey the limitation of tx/rx
+> chainmask to the user: you can't change the tx/rx chainmask on the fly
+> easily (while connected/have associated stations). Or do you plan to
+> schedule peer reassoc in __ath10k_set_antenna() in a follow up
+> patch(es) later?
+
+My user-space tools assume you have to re-connect (requested from user-space)
+after changing the chainmask.  I was under the impression that this
+is how ath9k works, though I could be wrong.
+
+I would rather keep this requirement in user-space...
+
+I am not sure where to document this...just a comment in the code?
+
+Thanks,
+Ben
+
+
 -- 
-1.9.1
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
