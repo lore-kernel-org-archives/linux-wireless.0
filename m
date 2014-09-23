@@ -1,70 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:37109 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752131AbaIOFLO (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:13311 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751868AbaIWNYP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Sep 2014 01:11:14 -0400
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eliad Peller <eliad@wizery.com>, <stable@vger.kernel.org>,
-	Eliad Peller <eliadx.peller@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 05/12] iwlwifi: increase DEFAULT_MAX_TX_POWER
-Date: Mon, 15 Sep 2014 08:10:41 +0300
-Message-Id: <1410757848-1827-5-git-send-email-egrumbach@gmail.com> (sfid-20140915_071118_563459_11D7B60A)
-In-Reply-To: <5416742C.3070804@gmail.com>
-References: <5416742C.3070804@gmail.com>
+	Tue, 23 Sep 2014 09:24:15 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <greearb@candelatech.com>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: Re: [PATCH 1/2] ath10k: save firmware stacks upon firmware crash
+References: <1409934849-23078-1-git-send-email-greearb@candelatech.com>
+Date: Tue, 23 Sep 2014 16:23:57 +0300
+In-Reply-To: <1409934849-23078-1-git-send-email-greearb@candelatech.com>
+	(greearb@candelatech.com's message of "Fri, 5 Sep 2014 09:34:08
+	-0700")
+Message-ID: <87vboecvwy.fsf@kamboji.qca.qualcomm.com> (sfid-20140923_152418_194150_FCAEAFEA)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+greearb@candelatech.com writes:
 
-The chip is able to transmit up to 22dBm, so set
-the constant appropriately.
+> From: Ben Greear <greearb@candelatech.com>
+>
+> Should help debug firmware crashes, and give users a way
+> to provide some useful debug reports to firmware developers.
+>
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-CC: <stable@vger.kernel.org> [3.13+]
-Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-config.h    | 2 ++
- drivers/net/wireless/iwlwifi/iwl-nvm-parse.c | 4 +---
- 2 files changed, 3 insertions(+), 3 deletions(-)
+Like we talked on IRC, I think it's better to take a dump of the whole
+DRAM and find all the info during postprocessing in user space. I just
+consider it too much work to investigate firmware internals from ath10k
+as the internals can change between firmware versions. In user space
+that's a lot easier to manage.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-config.h b/drivers/net/wireless/iwlwifi/iwl-config.h
-index 8da596d..942c99b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-config.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-config.h
-@@ -120,6 +120,8 @@ enum iwl_led_mode {
- #define IWL_LONG_WD_TIMEOUT	10000
- #define IWL_MAX_WD_TIMEOUT	120000
- 
-+#define IWL_DEFAULT_MAX_TX_POWER 22
-+
- /* Antenna presence definitions */
- #define	ANT_NONE	0x0
- #define	ANT_A		BIT(0)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-index 018af29..354255f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-@@ -146,8 +146,6 @@ static const u8 iwl_nvm_channels_family_8000[] = {
- #define LAST_2GHZ_HT_PLUS		9
- #define LAST_5GHZ_HT			161
- 
--#define DEFAULT_MAX_TX_POWER 16
--
- /* rate data (static) */
- static struct ieee80211_rate iwl_cfg80211_rates[] = {
- 	{ .bitrate = 1 * 10, .hw_value = 0, .hw_value_short = 0, },
-@@ -295,7 +293,7 @@ static int iwl_init_channel_map(struct device *dev, const struct iwl_cfg *cfg,
- 		 * Default value - highest tx power value.  max_power
- 		 * is not used in mvm, and is used for backwards compatibility
- 		 */
--		channel->max_power = DEFAULT_MAX_TX_POWER;
-+		channel->max_power = IWL_DEFAULT_MAX_TX_POWER;
- 		is_5ghz = channel->band == IEEE80211_BAND_5GHZ;
- 		IWL_DEBUG_EEPROM(dev,
- 				 "Ch. %d [%sGHz] %s%s%s%s%s%s%s(0x%02x %ddBm): Ad-Hoc %ssupported\n",
+Of course downside is the increased memory usage, but if that becomes a
+problem there are ways to solve that. For example, adding a module
+parameter with bitmask for individually enabling enum
+ath10k_fw_crash_dump_type is first which comes to my mind.
+
+I have patches ready for the DRAM thing, but I have some issues which I
+found during testing. I'll post the patches soon as I have solved the
+issues, but don't know how long that will take.
+
 -- 
-1.9.1
-
+Kalle Valo
