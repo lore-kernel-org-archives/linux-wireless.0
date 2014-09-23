@@ -1,28 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:47401 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751500AbaIAMHr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Sep 2014 08:07:47 -0400
-Message-ID: <1409573258.2703.0.camel@jlt4.sipsolutions.net> (sfid-20140901_140810_158321_2C9C5CA4)
-Subject: Re: [PATCH 2/2] nl80211.c: Fixed the wdev_id being used
- uninitialized.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Shakil A Khan <shakilk1729@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, davem@davemloft.net, linville@tuxdriver.com
-Date: Mon, 01 Sep 2014 14:07:38 +0200
-In-Reply-To: <1409572467-50908-1-git-send-email-shakilk1729@gmail.com> (sfid-20140901_135440_786712_355C815A)
-References: <1409572467-50908-1-git-send-email-shakilk1729@gmail.com>
-	 (sfid-20140901_135440_786712_355C815A)
-Content-Type: text/plain
-Mime-Version: 1.0
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:24153 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754196AbaIWOic (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Sep 2014 10:38:32 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 1/3] ath10k: don't enable interrupts for the diagnostic window
+In-Reply-To: <20140923143219.23585.34114.stgit@potku.adurom.net> (Kalle Valo's
+	message of "Tue, 23 Sep 2014 17:32:19 +0300")
+References: <20140923143219.23585.34114.stgit@potku.adurom.net>
+Date: Tue, 23 Sep 2014 17:38:27 +0300
+Message-ID: <87d2amcsgs.fsf@kamboji.qca.qualcomm.com> (sfid-20140923_163835_533876_1C37F7BE)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi,
 
-> +	u64 wdev_id = 0;
+I forgot add --edit-cover to stg. So here's the cover letter :)
 
-it's not used uninitialized, NACK.
+ath10k: export calibration data to user space
 
-johannes
+here's a small patchset exporting firmware calibration data to user space. This
+makes it easier to debug various calibration data related problems.
 
+Please comment.
+
+v2:
+
+* never unmask the diagnostic window copy engine pipe in
+  ath10k_ce_enable_interrupts()
+
+* add locking for diag_read_mem()/diag_write_mem()
+
+-- 
+Kalle Valo
