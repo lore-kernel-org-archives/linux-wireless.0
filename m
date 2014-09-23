@@ -1,66 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:34809 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752144AbaIOFK5 (ORCPT
+Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:56295 "EHLO
+	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751785AbaIWOcX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Sep 2014 01:10:57 -0400
-Received: by mail-wi0-f172.google.com with SMTP id e4so3437919wiv.17
-        for <linux-wireless@vger.kernel.org>; Sun, 14 Sep 2014 22:10:56 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Luciano Coelho <luciano.coelho@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 03/12] iwlwifi: mvm: set MAC_FILTER_IN_BEACON correctly for STA/P2P client
-Date: Mon, 15 Sep 2014 08:10:39 +0300
-Message-Id: <1410757848-1827-3-git-send-email-egrumbach@gmail.com> (sfid-20140915_071101_200771_68A80237)
-In-Reply-To: <5416742C.3070804@gmail.com>
-References: <5416742C.3070804@gmail.com>
+	Tue, 23 Sep 2014 10:32:23 -0400
+Subject: [PATCH v2 1/3] ath10k: don't enable interrupts for the diagnostic
+ window
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 23 Sep 2014 17:32:19 +0300
+Message-ID: <20140923143219.23585.34114.stgit@potku.adurom.net> (sfid-20140923_163230_325708_090B855A)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+The diagnostic window (CE7) uses polling and is not initiliased to retrieve
+interrupts so disable interrupts altogether for CE7. Otherwise ath10k crashes
+when using the diagnostic window while the firmware is running due to NULL
+dereference and polling reads timeout.
 
-In commit cad3f08c (iwlwifi: mvm: enable MAC_FILTER_IN_BEACON when
-forced_assoc_off is set) the code to set the MAC_FILTER_IN_BEACON flag
-was accidentally moved to the main block of the if statement, while it
-should be in the else block instead.  Move it to the right place.
-
-Fixes: cad3f08c23de ("iwlwifi: mvm: enable MAC_FILTER_IN_BEACON when forced_assoc_off is set")
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/net/wireless/ath/ath10k/ce.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-index 0e523e2..8242e68 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-@@ -721,11 +721,6 @@ static int iwl_mvm_mac_ctxt_cmd_sta(struct iwl_mvm *mvm,
- 	    !force_assoc_off) {
- 		u32 dtim_offs;
+diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
+index 101cadb6e4ba..03b3a2c441fe 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.c
++++ b/drivers/net/wireless/ath/ath10k/ce.c
+@@ -817,7 +817,9 @@ void ath10k_ce_enable_interrupts(struct ath10k *ar)
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+ 	int ce_id;
  
--		/* Allow beacons to pass through as long as we are not
--		 * associated, or we do not have dtim period information.
--		 */
--		cmd.filter_flags |= cpu_to_le32(MAC_FILTER_IN_BEACON);
--
- 		/*
- 		 * The DTIM count counts down, so when it is N that means N
- 		 * more beacon intervals happen until the DTIM TBTT. Therefore
-@@ -759,6 +754,11 @@ static int iwl_mvm_mac_ctxt_cmd_sta(struct iwl_mvm *mvm,
- 		ctxt_sta->is_assoc = cpu_to_le32(1);
- 	} else {
- 		ctxt_sta->is_assoc = cpu_to_le32(0);
-+
-+		/* Allow beacons to pass through as long as we are not
-+		 * associated, or we do not have dtim period information.
-+		 */
-+		cmd.filter_flags |= cpu_to_le32(MAC_FILTER_IN_BEACON);
- 	}
+-	for (ce_id = 0; ce_id < CE_COUNT; ce_id++)
++	/* Skip the last copy engine, CE7 the diagnostic window, as that
++	 * uses polling and isn't initialized for interrupts. */
++	for (ce_id = 0; ce_id < CE_COUNT - 1; ce_id++)
+ 		ath10k_ce_per_engine_handler_adjust(&ar_pci->ce_states[ce_id]);
+ }
  
- 	ctxt_sta->bi = cpu_to_le32(vif->bss_conf.beacon_int);
--- 
-1.9.1
 
