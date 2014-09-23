@@ -1,50 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:28321 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750854AbaI1HLt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Sep 2014 03:11:49 -0400
-Date: Sun, 28 Sep 2014 09:09:24 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Nicholas Krause <yocto6@gmail.com>
-Cc: IvDoorn@gmail.com, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	linux-kernel@vger.kernel.org
-Subject: Re: [rt2x00-users] [PATCH] wireless: Remove unnessary write over of
- register 11 in rt2800lib.c
-Message-ID: <20140928070923.GA2087@redhat.com> (sfid-20140928_091226_159851_A19CC4C7)
-References: <1411852301-26857-1-git-send-email-yocto6@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1411852301-26857-1-git-send-email-yocto6@gmail.com>
+Received: from mail-pd0-f169.google.com ([209.85.192.169]:57105 "EHLO
+	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754450AbaIWBPB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Sep 2014 21:15:01 -0400
+Received: by mail-pd0-f169.google.com with SMTP id fp1so1387324pdb.14
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Sep 2014 18:15:00 -0700 (PDT)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, devel@lists.open80211s.org,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>,
+	Ashok Nagarajan <ashok.dragon@gmail.com>
+Subject: [PATCH v4 1/2] iw: Allow user to provide freq during mesh join
+Date: Tue, 23 Sep 2014 09:14:48 +0800
+Message-Id: <1411434889-1456-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20140923_031744_462518_2E9379DF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Sep 27, 2014 at 05:11:41PM -0400, Nicholas Krause wrote:
-> This removes the unnecessary  overwrite of register 11 in the function,
-> rt2800_config_channel as we are already writing a correct value to the
-> register with rt2800_rfcsr_write(rt2x00dev,11.rfcsr).
-What make you sure that overwrite is unnecessary ?
+Allow user to configure frequency and channel type during
+mesh join command.
 
-> 
-> Signed-off-by: Nicholas Krause <yocto6@gmail.com>
-> ---
->  drivers/net/wireless/rt2x00/rt2800lib.c | 2 --
->  1 file changed, 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index 893c9d5..fb0ae38 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -2787,8 +2787,6 @@ static void rt2800_config_channel_rf55xx(struct rt2x00_dev *rt2x00dev,
->  
->  	if (rf->channel <= 14) {
->  		rt2800_rfcsr_write(rt2x00dev, 10, 0x90);
-> -		/* FIXME: RF11 owerwrite ? */
-> -		rt2800_rfcsr_write(rt2x00dev, 11, 0x4A);
-We need a prove that remove is correct, i.e. some reference to 
-vendor code or spec that current writing register twice with
-different values is wrong.
+Signed-off-by: Ashok Nagarajan <ashok.dragon@gmail.com>
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
 
-NACK for the patch.
+v2: use chandef similar to IBSS (Johannes)
+v4: make the mesh join command more self-explanatory (Bob Copeland)
+---
+ mesh.c | 70 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 67 insertions(+), 3 deletions(-)
 
-Stanislaw
+diff --git a/mesh.c b/mesh.c
+index ca065bf..570b4d3 100644
+--- a/mesh.c
++++ b/mesh.c
+@@ -438,8 +438,32 @@ static int join_mesh(struct nl80211_state *state, struct nl_cb *cb,
+ {
+ 	struct nlattr *container;
+ 	float rate;
+-	int bintval, dtim_period;
++	int bintval, dtim_period, i;
+ 	char *end;
++	unsigned long freq = 0;
++	static const struct {
++		const char *name;
++		unsigned int width;
++		int freq1_diff;
++		int chantype; /* for older kernel */
++	} *chanmode_selected = NULL, chanmode[] = {
++		{ .name = "HT20",
++		  .width = NL80211_CHAN_WIDTH_20,
++		  .freq1_diff = 0,
++		  .chantype = NL80211_CHAN_HT20 },
++		{ .name = "HT40+",
++		  .width = NL80211_CHAN_WIDTH_40,
++		  .freq1_diff = 10,
++		  .chantype = NL80211_CHAN_HT40PLUS },
++		{ .name = "HT40-",
++		  .width = NL80211_CHAN_WIDTH_40,
++		  .freq1_diff = -10,
++		  .chantype = NL80211_CHAN_HT40MINUS },
++		{ .name = "NOHT",
++		  .width = NL80211_CHAN_WIDTH_20_NOHT,
++		  .freq1_diff = 0,
++		  .chantype = NL80211_CHAN_NO_HT },
++	};
+ 
+ 	if (argc < 1)
+ 		return 1;
+@@ -448,6 +472,44 @@ static int join_mesh(struct nl80211_state *state, struct nl_cb *cb,
+ 	argc--;
+ 	argv++;
+ 
++	/* freq */
++	if (argc > 1 && strcmp(argv[0], "freq") == 0) {
++		argv++;
++		argc--;
++
++		freq = strtoul(argv[0], &end, 10);
++		if (*end != '\0')
++			return 1;
++		NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_FREQ, freq);
++
++		argv++;
++		argc--;
++	}
++
++	/* channel type */
++	if (argc) {
++		for (i = 0; i < ARRAY_SIZE(chanmode); i++) {
++			if (strcasecmp(chanmode[i].name, argv[0]) == 0) {
++				chanmode_selected = &chanmode[i];
++				break;
++			}
++		}
++
++		if (chanmode_selected) {
++			NLA_PUT_U32(msg, NL80211_ATTR_CHANNEL_WIDTH,
++				    chanmode_selected->width);
++			NLA_PUT_U32(msg, NL80211_ATTR_CENTER_FREQ1,
++				    freq + chanmode_selected->freq1_diff);
++			if (chanmode_selected->chantype != -1)
++				NLA_PUT_U32(msg,
++					    NL80211_ATTR_WIPHY_CHANNEL_TYPE,
++					    chanmode_selected->chantype);
++
++			argv++;
++			argc--;
++		}
++	}
++
+ 	if (argc > 1 && strcmp(argv[0], "mcast-rate") == 0) {
+ 		argv++;
+ 		argc--;
+@@ -513,11 +575,13 @@ static int join_mesh(struct nl80211_state *state, struct nl_cb *cb,
+  nla_put_failure:
+ 	return -ENOBUFS;
+ }
+-COMMAND(mesh, join, "<mesh ID> [mcast-rate <rate in Mbps>]"
++COMMAND(mesh, join, "<mesh ID> [freq <freq in MHz> <HT20|HT40+|HT40-|NOHT>]"
++	" [mcast-rate <rate in Mbps>]"
+ 	" [beacon-interval <time in TUs>] [dtim-period <value>]"
+ 	" [vendor_sync on|off] [<param>=<value>]*",
+ 	NL80211_CMD_JOIN_MESH, 0, CIB_NETDEV, join_mesh,
+-	"Join a mesh with the given mesh ID with mcast-rate and mesh parameters.");
++	"Join a mesh with the given mesh ID with frequency, mcast-rate, "
++	"and mesh parameters.");
+ 
+ static int leave_mesh(struct nl80211_state *state, struct nl_cb *cb,
+ 		      struct nl_msg *msg, int argc, char **argv,
+-- 
+1.9.2
+
