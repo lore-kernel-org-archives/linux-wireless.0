@@ -1,99 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:36459 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751533AbaIWIxn convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Sep 2014 04:53:43 -0400
-Received: by mail-wi0-f174.google.com with SMTP id fb4so4391154wid.7
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Sep 2014 01:53:42 -0700 (PDT)
+Received: from mail.jelmoni.net ([78.47.55.82]:49962 "EHLO mail.jelmoni.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932126AbaIWWwk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Sep 2014 18:52:40 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by mail.jelmoni.net (Postfix) with ESMTP id C367B6183A
+	for <linux-wireless@vger.kernel.org>; Wed, 24 Sep 2014 00:44:38 +0200 (CEST)
+Received: from mail.jelmoni.net ([78.47.55.82])
+	by localhost (mail.jelmoni.net [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id tUr9ci9BMC4B for <linux-wireless@vger.kernel.org>;
+	Wed, 24 Sep 2014 00:44:38 +0200 (CEST)
+Received: from laptop-bmeier.swiss-wireless (host41.186-108-120.telecom.net.ar [186.108.120.41])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	(Authenticated sender: genauth@swiss-wireless.com.ar)
+	by mail.jelmoni.net (Postfix) with ESMTPSA id D634C61742
+	for <linux-wireless@vger.kernel.org>; Wed, 24 Sep 2014 00:44:37 +0200 (CEST)
+Message-ID: <5421F7D0.8040105@swiss-wireless.com.ar> (sfid-20140924_005253_636975_61C2F310)
+Date: Tue, 23 Sep 2014 19:44:32 -0300
+From: Beat Meier <mbe_ml@swiss-wireless.com.ar>
 MIME-Version: 1.0
-In-Reply-To: <1411419245-25799-2-git-send-email-greearb@candelatech.com>
-References: <1411419245-25799-1-git-send-email-greearb@candelatech.com>
-	<1411419245-25799-2-git-send-email-greearb@candelatech.com>
-Date: Tue, 23 Sep 2014 10:53:42 +0200
-Message-ID: <CA+BoTQ=NtS3hOD+gVZ2whx+K2xsKrZUWBPUa=gfKxaNFcoTHEw@mail.gmail.com> (sfid-20140923_105348_336995_3FBB3B9A)
-Subject: Re: [PATCH 2/2] ath10k: apply chainmask settings to vdev on creation.
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+To: "linux-wireless@vger.kernel.org >> Linux Wireless List"
+	<linux-wireless@vger.kernel.org>
+Subject: iw dev X survey dump output very different for ath5k and ath9k cards
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 22 September 2014 22:54,  <greearb@candelatech.com> wrote:
-> From: Ben Greear <greearb@candelatech.com>
->
-> It appears it takes more than just setting the
-> hardware's chainmask to make things work well.  Without
-> this patch, a vdev would only use 1x1 rates when chainmask
-> was set to 0x3.
->
-> Setting the 'nss' (number of spatial streams) on the vdev
-> helps the firmware's rate-control algorithm work properly.
->
-> Tested on CT firmware, but probably this works (and
-> is required) on normal firmware.
->
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> ---
->  drivers/net/wireless/ath/ath10k/mac.c | 24 ++++++++++++++++++++++++
->  1 file changed, 24 insertions(+)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-> index 4dc5a40..855c71c 100644
-> --- a/drivers/net/wireless/ath/ath10k/mac.c
-> +++ b/drivers/net/wireless/ath/ath10k/mac.c
-> @@ -2767,6 +2767,17 @@ static int ath10k_config(struct ieee80211_hw *hw, u32 changed)
->         return ret;
->  }
->
-> +static u32 get_nss_from_chainmask(u16 chain_mask)
-> +{
-> +       if ((chain_mask & 0x15) == 0x15)
-> +               return 4;
-> +       else if ((chain_mask & 0x7) == 0x7)
-> +               return 3;
-> +       else if ((chain_mask & 0x3) == 0x3)
-> +               return 2;
-> +       return 1;
-> +}
+Hello
 
-So a chainmask of `BIT(0) | BIT(2) = 0x5` is nss=1?
+I'm having "trouble" with output of iw (Debian Wheezy, Voyage-0.9.2)
+iw version: 3.4-1
+libiw30 version: 30~pre9-8
 
-Why not just use `hweight16()` kernel macro? Or do we want to forbid
-odd chainmasks (in which case additional checks need to be added as
-well)?
+The output of iw dev X survey dump is very different for the
+WLM54AGP23 card (ath5k) and WLM200NX (ath9k).
+Is there any reason for ath9k to print the whole stuff?
+Is there any other possibility to get frequency on ap mode?
+
+Where is this handled?
+
+Greetings
+
+Beat
 
 
-> +
->  /*
->   * TODO:
->   * Figure out how to handle WMI_VDEV_SUBTYPE_P2P_DEVICE,
-> @@ -2868,6 +2879,19 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
->                 goto err_vdev_delete;
->         }
->
-> +       if (ar->cfg_tx_chainmask) {
-> +               u16 nss = get_nss_from_chainmask(ar->cfg_tx_chainmask);
-> +               vdev_param = ar->wmi.vdev_param->nss;
-> +               ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param,
-> +                                               nss);
-> +               if (ret) {
-> +                       ath10k_warn(ar, "failed to set vdev %i chainmask 0x%x, nss %i: %d\n",
-> +                                   arvif->vdev_id, ar->cfg_tx_chainmask, nss,
-> +                                   ret);
-> +                       goto err_vdev_delete;
-> +               }
-> +       }
-> +
+#########
+Output of WLM WLM54AGP23
 
-If this is required won't setting up peer nss (after association) be
-necessary as well?
+# iw dev ath1 survey dump
+Survey data from ath1
+        frequency:                      5825 MHz
+        noise:                          -107 dBm
+        channel active time:            375099 ms
+        channel busy time:              292088 ms
+        channel receive time:           285473 ms
+        channel transmit time:          171443 ms
 
-Shouldn't the vdev nss param be set in __ath10k_set_antenna() as well?
-What about peer nss (assuming it's necessary to update it) in that
-case?
+#########
 
+Output of WLM200NX
 
-Michał
+# iw dev ath1 survey dump
+Survey data from ath1
+        frequency:                      2412 MHz
+        noise:                          -95 dBm
+        channel active time:            428 ms
+        channel busy time:              25 ms
+        channel receive time:           17 ms
+        channel transmit time:          0 ms
+Survey data from ath1
+        frequency:                      2417 MHz
+Survey data from ath1
+        frequency:                      2422 MHz
+Survey data from ath1
+        frequency:                      2427 MHz
+Survey data from ath1
+        frequency:                      2432 MHz
+Survey data from ath1
+        frequency:                      2437 MHz
+Survey data from ath1
+        frequency:                      2442 MHz
+Survey data from ath1
+        frequency:                      2447 MHz
+Survey data from ath1
+        frequency:                      2452 MHz
+Survey data from ath1
+        frequency:                      2457 MHz
+Survey data from ath1
+        frequency:                      2462 MHz
+Survey data from ath1
+        frequency:                      2467 MHz
+Survey data from ath1
+        frequency:                      2472 MHz
+Survey data from ath1
+        frequency:                      2484 MHz
+Survey data from ath1
+        frequency:                      5180 MHz
+Survey data from ath1
+        frequency:                      5200 MHz [in use]
+        noise:                          -95 dBm
+        channel active time:            1302308 ms
+        channel busy time:              1856 ms
+        channel receive time:           2 ms
+        channel transmit time:          1460 ms
+Survey data from ath1
+        frequency:                      5220 MHz
+Survey data from ath1
+        frequency:                      5240 MHz
+Survey data from ath1
+        frequency:                      5260 MHz
+Survey data from ath1
+        frequency:                      5280 MHz
+Survey data from ath1
+        frequency:                      5300 MHz
+Survey data from ath1
+        frequency:                      5320 MHz
+Survey data from ath1
+        frequency:                      5500 MHz
+Survey data from ath1
+        frequency:                      5520 MHz
+Survey data from ath1
+        frequency:                      5540 MHz
+Survey data from ath1
+        frequency:                      5560 MHz
+Survey data from ath1
+        frequency:                      5580 MHz
+Survey data from ath1
+        frequency:                      5600 MHz
+Survey data from ath1
+        frequency:                      5620 MHz
+Survey data from ath1
+        frequency:                      5640 MHz
+Survey data from ath1
+        frequency:                      5660 MHz
+Survey data from ath1
+        frequency:                      5680 MHz
+Survey data from ath1
+        frequency:                      5700 MHz
+Survey data from ath1
+        frequency:                      5745 MHz
+Survey data from ath1
+        frequency:                      5765 MHz
+Survey data from ath1
+        frequency:                      5785 MHz
+Survey data from ath1
+        frequency:                      5805 MHz
+Survey data from ath1
+        frequency:                      5825 MHz
+
