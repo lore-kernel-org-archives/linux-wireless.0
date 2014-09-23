@@ -1,152 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:33600 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752451AbaIOKsa (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:23321 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754298AbaIWJdK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Sep 2014 06:48:30 -0400
-Received: by mail-wi0-f171.google.com with SMTP id bs8so3893673wib.16
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Sep 2014 03:48:25 -0700 (PDT)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH v2 2/2] iw: add vendor send command
-Date: Mon, 15 Sep 2014 12:47:58 +0200
-Message-Id: <1410778078-25244-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140915_124833_903884_15EC7721)
+	Tue, 23 Sep 2014 05:33:10 -0400
+Message-ID: <54213E50.4020207@broadcom.com> (sfid-20140923_113333_113433_CE2DD502)
+Date: Tue, 23 Sep 2014 11:33:04 +0200
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Emil Goode <emilgoode@gmail.com>
+CC: Brett Rudley <brudley@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	Daniel Kim <dekim@broadcom.com>,
+	<linux-wireless@vger.kernel.org>,
+	<brcm80211-dev-list@broadcom.com>, <netdev@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <kernel-janitors@vger.kernel.org>
+Subject: Re: [PATCH] brcmfmac: Fix off by one bug in brcmf_count_20mhz_channels()
+References: <1411253932-27973-1-git-send-email-emilgoode@gmail.com> <541FF25B.9000404@broadcom.com> <20140922230833.GB10356@lianli>
+In-Reply-To: <20140922230833.GB10356@lianli>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This allow to send vendor data to the driver.
-This command required OUI and SUBCMD parameters.
+On 09/23/14 01:08, Emil Goode wrote:
+> Hello Arend,
+>
+> Sorry for the late reply. I have attached a kernel log with brcmfmac
+> debugging enabled (without my patch applied).
+>
+> Let me know if I can provide any other useful information.
 
-Also optional DATA parameter could be used:
+No problem, Emil
 
-cat data.bin | iw wlan0 send oui subcmd -
-iw wlan0 send oui subcmd file.bin
-iw wlan0 vendor send oui subcmd 0x00 0x00 0x00 0x1f
-echo EOF | iw wlan0 vendor send oui subcmd -
+I was wondering what was returned on "chanspecs" query. So 17 channel 
+configs which is expected.
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
----
- Makefile |  2 +-
- vendor.c | 95 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 96 insertions(+), 1 deletion(-)
- create mode 100644 vendor.c
+Regards,
+Arend
 
-diff --git a/Makefile b/Makefile
-index f042e30..802f87a 100644
---- a/Makefile
-+++ b/Makefile
-@@ -16,7 +16,7 @@ OBJS = iw.o genl.o event.o info.o phy.o \
- 	interface.o ibss.o station.o survey.o util.o \
- 	mesh.o mpath.o scan.o reg.o version.o \
- 	reason.o status.o connect.o link.o offch.o ps.o cqm.o \
--	bitrate.o wowlan.o coalesce.o roc.o p2p.o
-+	bitrate.o wowlan.o coalesce.o roc.o p2p.o vendor.o
- OBJS += sections.o
- 
- OBJS-$(HWSIM) += hwsim.o
-diff --git a/vendor.c b/vendor.c
-new file mode 100644
-index 0000000..f32c00b
---- /dev/null
-+++ b/vendor.c
-@@ -0,0 +1,95 @@
-+#include <net/if.h>
-+#include <errno.h>
-+#include <string.h>
-+
-+#include <netlink/genl/genl.h>
-+#include <netlink/genl/family.h>
-+#include <netlink/genl/ctrl.h>
-+#include <netlink/msg.h>
-+#include <netlink/attr.h>
-+
-+#include "nl80211.h"
-+#include "iw.h"
-+
-+SECTION(vendor);
-+
-+static int read_file(FILE *file, char *buf, size_t size)
-+{
-+	int data, count = 0;
-+
-+	while ((data = fgetc(file)) != EOF) {
-+		if (count >= size)
-+			return -EINVAL;
-+		buf[count] = data;
-+		count++;
-+	}
-+
-+	return count;
-+}
-+
-+static int read_hex(int argc, char **argv, char *buf, size_t size)
-+{
-+	int i, res;
-+	unsigned int data;
-+
-+	if (argc > size)
-+		return -EINVAL;
-+
-+	for (i = 0; i < argc; i++) {
-+		res = sscanf(argv[i], "0x%x", &data);
-+		if (res != 1 || data > 0xff)
-+			return -EINVAL;
-+		buf[i] = data;
-+	}
-+
-+	return argc;
-+}
-+
-+static int handle_vendor(struct nl80211_state *state, struct nl_cb *cb,
-+			 struct nl_msg *msg, int argc, char **argv,
-+			 enum id_input id)
-+{
-+	unsigned int oui;
-+	unsigned int subcmd;
-+	char buf[2048] = {};
-+	int res, count = 0;
-+	FILE *file = NULL;
-+
-+	if (argc < 3)
-+		return -EINVAL;
-+
-+	res = sscanf(argv[0], "0x%x", &oui);
-+	if (res != 1)
-+		return -EINVAL;
-+
-+	res = sscanf(argv[1], "0x%x", &subcmd);
-+	if (res != 1)
-+		return -EINVAL;
-+
-+	if (!strcmp(argv[2], "-"))
-+		file = stdin;
-+	else
-+		file = fopen(argv[2], "r");
-+
-+	NLA_PUT_U32(msg, NL80211_ATTR_VENDOR_ID, oui);
-+	NLA_PUT_U32(msg, NL80211_ATTR_VENDOR_SUBCMD, subcmd);
-+
-+	if (file) {
-+		count = read_file(file, buf, sizeof(buf));
-+		fclose(file);
-+	} else
-+		count = read_hex(argc - 2, &argv[2], buf, sizeof(buf));
-+
-+	if (count < 0)
-+		return -EINVAL;
-+
-+	if (count > 0)
-+		NLA_PUT(msg, NL80211_ATTR_VENDOR_DATA, count, buf);
-+
-+	return 0;
-+
-+nla_put_failure:
-+	return -ENOBUFS;
-+}
-+
-+COMMAND(vendor, send, "<oui> <subcmd> <filename|-|hex data>", NL80211_CMD_VENDOR, 0, CIB_NETDEV, handle_vendor, "");
--- 
-1.9.1
+> Best regards,
+>
+> Emil
+>
+> On Mon, Sep 22, 2014 at 11:56:43AM +0200, Arend van Spriel wrote:
+>> On 09/21/14 00:58, Emil Goode wrote:
+>>> In the brcmf_count_20mhz_channels function we are looping through a list
+>>> of channels received from firmware. Since the index of the first channel
+>>> is 0 the condition leads to an off by one bug. This is causing us to hit
+>>> the WARN_ON_ONCE(1) calls in the brcmu_d11n_decchspec function, which is
+>>> how I discovered the bug.
+>>
+>> The fix is fine. Would like to know what exactly is going wrong. Can you
+>> provide a kernel log with brcmfmac debugging enabled, ie. insmod brcmfmac.ko
+>> debug=0x1416
+>>
+>> Regards,
+>> Arend
+>>
+>>> Introduced by:
+>>> commit b48d891676f756d48b4d0ee131e4a7a5d43ca417
+>>> ("brcmfmac: rework wiphy structure setup")
+>>>
+>>> Signed-off-by: Emil Goode<emilgoode@gmail.com>
+>>> ---
+>>>   drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c | 2 +-
+>>>   1 file changed, 1 insertion(+), 1 deletion(-)
+>>>
+>>> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+>>> index 02fe706..93b5dd9 100644
+>>> --- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+>>> +++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+>>> @@ -4918,7 +4918,7 @@ static void brcmf_count_20mhz_channels(struct brcmf_cfg80211_info *cfg,
+>>>   	struct brcmu_chan ch;
+>>>   	int i;
+>>>
+>>> -	for (i = 0; i<= total; i++) {
+>>> +	for (i = 0; i<   total; i++) {
+>>>   		ch.chspec = (u16)le32_to_cpu(chlist->element[i]);
+>>>   		cfg->d11inf.decchspec(&ch);
+>>>
+>>
 
