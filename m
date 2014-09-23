@@ -1,42 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:38484 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753000AbaIVUyJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Sep 2014 16:54:09 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: ath10k@lists.infradead.org, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 1/2] ath10k:  make firmware text debug messages more verbose.
-Date: Mon, 22 Sep 2014 13:54:04 -0700
-Message-Id: <1411419245-25799-1-git-send-email-greearb@candelatech.com> (sfid-20140922_225413_548048_F145ECC0)
+Received: from mga11.intel.com ([192.55.52.93]:25207 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752162AbaIWLiY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Sep 2014 07:38:24 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "bjorn@mork.no" <bjorn@mork.no>
+CC: Emmanuel Grumbach <egrumbach@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Kaufman, Liad" <liad.kaufman@intel.com>
+Subject: RE: [PATCH 13/17] iwlwifi: 8000: fix fw name to account for revision
+Date: Tue, 23 Sep 2014 11:38:18 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB31B526977@hasmsx107.ger.corp.intel.com> (sfid-20140923_133827_611047_B8CB7EAE)
+References: <541F23D2.90600@gmail.com>
+	<1411327338-23099-13-git-send-email-egrumbach@gmail.com>
+	<87ppeoc4s0.fsf@nemi.mork.no>
+	<0BA3FCBA62E2DC44AF3030971E174FB31B5261F1@hasmsx107.ger.corp.intel.com>
+ <87d2amd24t.fsf@nemi.mork.no>
+In-Reply-To: <87d2amd24t.fsf@nemi.mork.no>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
-
-There are not many of these messages producted by the
-firmware, but they are generally fairly useful, so print
-them at info level.
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- drivers/net/wireless/ath/ath10k/wmi.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index cd60940..6be62ac 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -2050,7 +2050,7 @@ static void ath10k_wmi_event_debug_print(struct ath10k *ar,
- 	/* the last byte is always reserved for the null character */
- 	buf[i] = '\0';
- 
--	ath10k_dbg(ar, ATH10K_DBG_WMI, "wmi event debug print '%s'\n", buf);
-+	ath10k_info(ar, "wmi event debug print '%s'\n", buf);
- }
- 
- static void ath10k_wmi_event_pdev_qvit(struct ath10k *ar, struct sk_buff *skb)
--- 
-1.7.11.7
-
+PiAiR3J1bWJhY2gsIEVtbWFudWVsIiA8ZW1tYW51ZWwuZ3J1bWJhY2hAaW50ZWwuY29tPiB3cml0
+ZXM6DQo+ID4+IEVtbWFudWVsIEdydW1iYWNoIDxlZ3J1bWJhY2hAZ21haWwuY29tPiB3cml0ZXM6
+DQo+ID4+DQo+ID4+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkv
+aXdsLTgwMDAuYw0KPiA+PiA+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtODAw
+MC5jDQo+ID4+ID4gaW5kZXggNGFlOGJhNi4uZTQzNTE0OCAxMDA2NDQNCj4gPj4gPiAtLS0gYS9k
+cml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3bC04MDAwLmMNCj4gPj4gPiArKysgYi9kcml2
+ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3bC04MDAwLmMNCj4gPj4gPiBAQCAtODEsNyArODEs
+NyBAQA0KPiA+PiA+ICAjZGVmaW5lIElXTDgwMDBfTlZNX1ZFUlNJT04JCTB4MGExZA0KPiA+PiA+
+ICAjZGVmaW5lIElXTDgwMDBfVFhfUE9XRVJfVkVSU0lPTgkweGZmZmYgLyogbWVhbmluZ2xlc3Mg
+Ki8NCj4gPj4gPg0KPiA+PiA+IC0jZGVmaW5lIElXTDgwMDBfRldfUFJFICJpd2x3aWZpLTgwMDAt
+Ig0KPiA+PiA+ICsjZGVmaW5lIElXTDgwMDBfRldfUFJFICJpd2x3aWZpLTgwMDAiDQo+ID4+ID4g
+ICNkZWZpbmUgSVdMODAwMF9NT0RVTEVfRklSTVdBUkUoYXBpKSBJV0w4MDAwX0ZXX1BSRQ0KPiA+
+PiBfX3N0cmluZ2lmeShhcGkpICIudWNvZGUiDQo+ID4+DQo+ID4+IElzbid0IHRoaXMgZ29pbmcg
+dG8gY3JlYXRlIGEgbWlzbGVhZGluZyBNT0RVTEVfRklSTVdBUkUgZW50cnksDQo+ID4+IG1hdGNo
+aW5nIG5laXRoZXIgb2YgdGhlIGZpcm13YXJlIHZhcmlhbnRzPw0KPiA+Pg0KPiA+Pg0KPiA+IFll
+cyBwcm9iYWJseSAtIE9UT0gsIHRoaXMgZGV2aWNlIGlzIGZhciBmcm9tIGJlaW5nIG9uIHRoZSBz
+aGVsdmVzLiBCeSB0aGUNCj4gdGltZSBpdCB3aWxsIGhpdCB0aGUgc2hlbHZlcywgd2Ugd2lsbCBo
+YXZlIHJlbW92ZWQgYWxsIHRoZSBoYWNrcyBmb3IgdGhlIGVhcmx5DQo+IHN0ZXBzIG9mIHRoZSBo
+YXJkd2FyZS4NCj4gPiBJZGVhcyB0byBtYWtlIGl0IGJldHRlcj8NCj4gDQo+IE5vdCBleGFjdGx5
+IGVsZWdhbnQsIGJ1dCBJIHdvdWxkIGp1c3QgaGF2ZSBkdXBsaWNhdGVkIHRoZSBtYWNyb3MgZm9y
+IGVhY2gNCj4gbmV3IGhhcmR3YXJlIHJldmlzaW9uLiAgRS5nOg0KPiANCj4gI2RlZmluZSBJV0w4
+MDAwX01PRFVMRV9GSVJNV0FSRShhcGkpIElXTDgwMDBfRldfUFJFICItIg0KPiBfX3N0cmluZ2lm
+eShhcGkpICIudWNvZGUiDQo+ICNkZWZpbmUgSVdMODAwMEJfTU9EVUxFX0ZJUk1XQVJFKGFwaSkg
+SVdMODAwMF9GV19QUkUgIkItIg0KPiBfX3N0cmluZ2lmeShhcGkpICIudWNvZGUiDQo+IE1PRFVM
+RV9GSVJNV0FSRShJV0w4MDAwX01PRFVMRV9GSVJNV0FSRShJV0w4MDAwX1VDT0RFX0FQSQ0KPiBf
+T0spKTsNCj4gTU9EVUxFX0ZJUk1XQVJFKElXTDgwMDBCX01PRFVMRV9GSVJNV0FSRShJV0w4MDAw
+X1VDT0RFX0FQDQo+IElfT0spKTsNCj4gDQo+IE9yIG1heWJlIG1ha2UgdGhlIHJldmlzaW9uIHBh
+cnQgb2YgdGhlIG1hY3JvIG9yIHNvbWV0aGluZy4NCj4gDQo+IA0KPiA+IEdvb2QgdG8ga25vdyB0
+aGF0IHNvbWVvbmUgaXMgYWN0dWFsbHkgbG9va2luZyBhdCB0aGUgcGF0Y2hlcyBJIHRha2UNCj4g
+PiBjYXJlIHRvIHNlbmQgOikNCj4gDQo+IEFsd2F5cyBsb29raW5nIGZvciBuZXcgZ29vZGllcyB0
+byB0cnkgb3V0IDotKSAgVGhlIHRlbXBlcmF0dXJlIHNlbnNvcg0KPiByZWFkb3V0IHdhcyBvbmUg
+dGhpcyB0aW1lLiAgQWx0aG91Z2ggSSB3b3VsZCBoYXZlIHByZWZlcnJlZCBpdCBhcyBhIHByb3Bl
+cg0KPiBod21vbiBkZXZpY2UgaW5zdGVhZCBvZiBhIGRlYnVnZnMgZmlsZS4gIEhhcyB0aGlzIGJl
+ZW4gZGlzY3Vzc2VkPw0KPiANCg0KTm90IHJlYWxseSAtIHNpbmNlIEkgZG9uJ3QgdGhpbmsgdGhh
+dCB0aGlzIGlzIHdvcnRoIGl0Lg0KVGhlIFdpRmkgZGV2aWNlIGhlYXRzIHVwIHdoZW4gd2UgVHgs
+IGFuZCBJIHRoaW5rIGl0J2QgYmUgd29ydGggbWFraW5nIHRoaXMgZGF0YSBwdWJsaWMgaW4gdGhl
+IHN5c3RlbS4gVGhlIHRlbXBlcmF0dXJlIHNlbnNvciBpcyBtb3N0bHkgdG8gYXZvaWQgYnVybmlu
+ZyB0aGluZ3Mgb3V0IDopDQo=
