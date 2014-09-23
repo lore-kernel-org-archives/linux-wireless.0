@@ -1,83 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:24727 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755198AbaIWJwe (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:54071 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754186AbaIWIdl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Sep 2014 05:52:34 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: <stable@vger.kernel.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH for-3.12] brcmfmac: handle IF event for P2P_DEVICE interface
-Date: Tue, 23 Sep 2014 11:52:26 +0200
-Message-ID: <1411465946-27161-1-git-send-email-arend@broadcom.com> (sfid-20140923_115240_212930_7346430D)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 23 Sep 2014 04:33:41 -0400
+Received: by mail-wi0-f172.google.com with SMTP id em10so4353059wid.17
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Sep 2014 01:33:39 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 1/3] ath10k: print wmi version info
+Date: Tue, 23 Sep 2014 10:22:52 +0200
+Message-Id: <1411460574-5424-2-git-send-email-michal.kazior@tieto.com> (sfid-20140923_103353_556017_5E5FBE97)
+In-Reply-To: <1411460574-5424-1-git-send-email-michal.kazior@tieto.com>
+References: <1411460574-5424-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-upstream: 87c4790330810fe5caf0172d9320cf24ef19cebe
+HTT version is already printed so print WMI
+version as well for consistency.
 
-The firmware notifies about interface changes through the IF event
-which has a NO_IF flag that means host can ignore the event. This
-behaviour was introduced in the driver by:
-
-  commit 2ee8382fc6c763c76396a6aaff77a27089eed3aa
-  Author: Arend van Spriel <arend@broadcom.com>
-  Date:   Sat Aug 10 12:27:24 2013 +0200
-
-      brcmfmac: ignore IF event if firmware indicates it
-
-It turns out that the IF event for the P2P_DEVICE also has this
-flag set, but the event should not be ignored in this scenario.
-The mentioned commit caused a regression in 3.12 kernel in creation
-of the P2P_DEVICE interface.
-
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/fweh.c | 12 +++++++++---
- 1 file changed, 9 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath10k/debug.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fweh.c b/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
-index fad77dd..3f9cb89 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
-@@ -185,7 +185,13 @@ static void brcmf_fweh_handle_if_event(struct brcmf_pub *drvr,
- 		  ifevent->action, ifevent->ifidx, ifevent->bssidx,
- 		  ifevent->flags, ifevent->role);
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index 3756feb..f1e5916 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -126,14 +126,18 @@ EXPORT_SYMBOL(ath10k_info);
  
--	if (ifevent->flags & BRCMF_E_IF_FLAG_NOIF) {
-+	/* The P2P Device interface event must not be ignored
-+	 * contrary to what firmware tells us. The only way to
-+	 * distinguish the P2P Device is by looking at the ifidx
-+	 * and bssidx received.
-+	 */
-+	if (!(ifevent->ifidx == 0 && ifevent->bssidx == 1) &&
-+	    (ifevent->flags & BRCMF_E_IF_FLAG_NOIF)) {
- 		brcmf_dbg(EVENT, "event can be ignored\n");
- 		return;
- 	}
-@@ -210,12 +216,12 @@ static void brcmf_fweh_handle_if_event(struct brcmf_pub *drvr,
- 				return;
- 	}
- 
--	if (ifevent->action == BRCMF_E_IF_CHANGE)
-+	if (ifp && ifevent->action == BRCMF_E_IF_CHANGE)
- 		brcmf_fws_reset_interface(ifp);
- 
- 	err = brcmf_fweh_call_event_handler(ifp, emsg->event_code, emsg, data);
- 
--	if (ifevent->action == BRCMF_E_IF_DEL) {
-+	if (ifp && ifevent->action == BRCMF_E_IF_DEL) {
- 		brcmf_fws_del_interface(ifp);
- 		brcmf_del_if(drvr, ifevent->bssidx);
- 	}
+ void ath10k_print_driver_info(struct ath10k *ar)
+ {
+-	ath10k_info(ar, "%s (0x%08x, 0x%08x) fw %s api %d htt %d.%d\n",
++	ath10k_info(ar, "%s (0x%08x, 0x%08x) fw %s api %d htt %d.%d wmi %d.%d.%d.%d\n",
+ 		    ar->hw_params.name,
+ 		    ar->target_version,
+ 		    ar->chip_id,
+ 		    ar->hw->wiphy->fw_version,
+ 		    ar->fw_api,
+ 		    ar->htt.target_version_major,
+-		    ar->htt.target_version_minor);
++		    ar->htt.target_version_minor,
++		    ar->fw_version_major,
++		    ar->fw_version_minor,
++		    ar->fw_version_release,
++		    ar->fw_version_build);
+ 	ath10k_info(ar, "debug %d debugfs %d tracing %d dfs %d testmode %d\n",
+ 		    config_enabled(CONFIG_ATH10K_DEBUG),
+ 		    config_enabled(CONFIG_ATH10K_DEBUGFS),
 -- 
-1.9.1
+1.8.5.3
 
