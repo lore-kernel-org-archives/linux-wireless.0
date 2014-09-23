@@ -1,66 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:51528 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752315AbaIOFNU (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:47649 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932196AbaIWQ5t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Sep 2014 01:13:20 -0400
-Received: by mail-wi0-f181.google.com with SMTP id bs8so3438866wib.8
-        for <linux-wireless@vger.kernel.org>; Sun, 14 Sep 2014 22:13:19 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 10/28] iwlwifi: mvm: disable aggregation queues in station DB in FW
-Date: Mon, 15 Sep 2014 08:12:42 +0300
-Message-Id: <1410757980-2138-10-git-send-email-egrumbach@gmail.com> (sfid-20140915_073114_324832_FB8D7B4C)
-In-Reply-To: <5416742C.3070804@gmail.com>
-References: <5416742C.3070804@gmail.com>
+	Tue, 23 Sep 2014 12:57:49 -0400
+Message-ID: <5421A68C.8090508@candelatech.com> (sfid-20140923_185753_644442_4DB37506)
+Date: Tue, 23 Sep 2014 09:57:48 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH 2/2] ath10k: apply chainmask settings to vdev on creation.
+References: <1411419245-25799-1-git-send-email-greearb@candelatech.com> <1411419245-25799-2-git-send-email-greearb@candelatech.com> <CA+BoTQ=NtS3hOD+gVZ2whx+K2xsKrZUWBPUa=gfKxaNFcoTHEw@mail.gmail.com>
+In-Reply-To: <CA+BoTQ=NtS3hOD+gVZ2whx+K2xsKrZUWBPUa=gfKxaNFcoTHEw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 09/23/2014 01:53 AM, Michal Kazior wrote:
+> On 22 September 2014 22:54,  <greearb@candelatech.com> wrote:
+>> From: Ben Greear <greearb@candelatech.com>
+>>
+>> It appears it takes more than just setting the
+>> hardware's chainmask to make things work well.  Without
+>> this patch, a vdev would only use 1x1 rates when chainmask
+>> was set to 0x3.
+>>
+>> Setting the 'nss' (number of spatial streams) on the vdev
+>> helps the firmware's rate-control algorithm work properly.
+>>
+>> Tested on CT firmware, but probably this works (and
+>> is required) on normal firmware.
+>>
+>> Signed-off-by: Ben Greear <greearb@candelatech.com>
+>> ---
+>>  drivers/net/wireless/ath/ath10k/mac.c | 24 ++++++++++++++++++++++++
+>>  1 file changed, 24 insertions(+)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+>> index 4dc5a40..855c71c 100644
+>> --- a/drivers/net/wireless/ath/ath10k/mac.c
+>> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+>> @@ -2767,6 +2767,17 @@ static int ath10k_config(struct ieee80211_hw *hw, u32 changed)
+>>         return ret;
+>>  }
+>>
+>> +static u32 get_nss_from_chainmask(u16 chain_mask)
+>> +{
+>> +       if ((chain_mask & 0x15) == 0x15)
+>> +               return 4;
+>> +       else if ((chain_mask & 0x7) == 0x7)
+>> +               return 3;
+>> +       else if ((chain_mask & 0x3) == 0x3)
+>> +               return 2;
+>> +       return 1;
+>> +}
+> 
+> So a chainmask of `BIT(0) | BIT(2) = 0x5` is nss=1?
 
-When disabling aggregation, disable the queues in the station
-DB in the firmware, otherwise we leave the tfd_queue_mask in
-a wrong state after an aggregation session has been torn down.
+That is how the firmware treats it.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/sta.c | 12 +++++++++++-
- 1 file changed, 11 insertions(+), 1 deletion(-)
+> Why not just use `hweight16()` kernel macro? Or do we want to forbid
+> odd chainmasks (in which case additional checks need to be added as
+> well)?
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/sta.c b/drivers/net/wireless/iwlwifi/mvm/sta.c
-index dd9f3a4..666f16b 100644
---- a/drivers/net/wireless/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/sta.c
-@@ -948,8 +948,16 @@ int iwl_mvm_sta_tx_agg_stop(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 		}
- 
- 		tid_data->ssn = 0xffff;
-+		tid_data->state = IWL_AGG_OFF;
-+		mvm->queue_to_mac80211[txq_id] = IWL_INVALID_MAC80211_QUEUE;
-+		spin_unlock_bh(&mvmsta->lock);
-+
-+		ieee80211_stop_tx_ba_cb_irqsafe(vif, sta->addr, tid);
-+
-+		iwl_mvm_sta_tx_agg(mvm, sta, tid, txq_id, false);
-+
- 		iwl_trans_txq_disable(mvm->trans, txq_id, true);
--		/* fall through */
-+		return 0;
- 	case IWL_AGG_STARTING:
- 	case IWL_EMPTYING_HW_QUEUE_ADDBA:
- 		/*
-@@ -1003,6 +1011,8 @@ int iwl_mvm_sta_tx_agg_flush(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 		if (iwl_mvm_flush_tx_path(mvm, BIT(txq_id), true))
- 			IWL_ERR(mvm, "Couldn't flush the AGG queue\n");
- 
-+		iwl_mvm_sta_tx_agg(mvm, sta, tid, txq_id, false);
-+
- 		iwl_trans_txq_disable(mvm->trans, tid_data->txq_id, true);
- 	}
- 
+Even after looking at the hweight16 code I don't know what it is supposed
+to do.  I think open-coding is plenty adequate.
+
+Maybe the driver should only allow a chainmask of 1, 3, 7, (and eventually 15 when 4x4 exists),
+but maybe also that can just be on the user to get it right.  It is possible that there
+is some use for having a different chainmask, but it would require someone with good knowledge
+of the hardware to answer that I think.
+
+>> +       if (ar->cfg_tx_chainmask) {
+>> +               u16 nss = get_nss_from_chainmask(ar->cfg_tx_chainmask);
+>> +               vdev_param = ar->wmi.vdev_param->nss;
+>> +               ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param,
+>> +                                               nss);
+>> +               if (ret) {
+>> +                       ath10k_warn(ar, "failed to set vdev %i chainmask 0x%x, nss %i: %d\n",
+>> +                                   arvif->vdev_id, ar->cfg_tx_chainmask, nss,
+>> +                                   ret);
+>> +                       goto err_vdev_delete;
+>> +               }
+>> +       }
+>> +
+> 
+> If this is required won't setting up peer nss (after association) be
+> necessary as well?
+> 
+> Shouldn't the vdev nss param be set in __ath10k_set_antenna() as well?
+> What about peer nss (assuming it's necessary to update it) in that
+> case?
+
+Did the second patch address all of this?  I may have missed more cases,
+but at least with the second patch it seems to work for me reliably.
+
+Thanks,
+Ben
+
+
 -- 
-1.9.1
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
