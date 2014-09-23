@@ -1,41 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:21494 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752993AbaIDKRe (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:51137 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932567AbaIWVSJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Sep 2014 06:17:34 -0400
-Date: Thu, 4 Sep 2014 13:17:27 +0300
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	<wireless-regdb@lists.infradead.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 09/12] wireless-regdb: Add Saint Lucia (LC) regulatory
- rules
-Message-ID: <20140904101727.GA3498@jouni.qca.qualcomm.com> (sfid-20140904_121803_014476_B17DEE51)
-References: <20140903131518.GA16219@jouni.qca.qualcomm.com>
- <1409817831.16449.5.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1409817831.16449.5.camel@jlt4.sipsolutions.net>
+	Tue, 23 Sep 2014 17:18:09 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: ath10k@lists.infradead.org, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v2 04/10] ath10k: make firmware text debug messages more verbose.
+Date: Tue, 23 Sep 2014 14:17:19 -0700
+Message-Id: <1411507045-18973-4-git-send-email-greearb@candelatech.com> (sfid-20140923_231827_675422_1E130404)
+In-Reply-To: <1411507045-18973-1-git-send-email-greearb@candelatech.com>
+References: <1411507045-18973-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 04, 2014 at 10:03:51AM +0200, Johannes Berg wrote:
-> On Wed, 2014-09-03 at 16:15 +0300, Jouni Malinen wrote:
-> > Source:
-> > http://www.ntrc.org.lc/operational_structures.htm
-> 
-> Out of curiosity, I clicked the URL, but it seems empty/dead? :)
+From: Ben Greear <greearb@candelatech.com>
 
-Hmm.. It looks like all of www.ntrc.org.lc is in somewhat strange state
-at the moment. If I remember correctly, I did test this link earlier
-myself and it worked, so that may be a temporary issue (it returns a
-somewhat interesting javascript design to display ads or domain parking
-info, etc., and that does clearly work either; anyway, not something
-that one would hope to see from a regulatory commission website). I'd
-hope that this gets resolved eventually, but if desired, I can remove
-that source link as well based on its current state.
+There are not many of these messages producted by the
+firmware, but they are generally fairly useful, so print
+them at info level.
 
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+
+v2:  Add and use a new debug-msg flag, change message
+     preamble slightly.
+
+ drivers/net/wireless/ath/ath10k/debug.h | 1 +
+ drivers/net/wireless/ath/ath10k/wmi.c   | 2 +-
+ 2 files changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
+index 39032e9..8c3b898 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.h
++++ b/drivers/net/wireless/ath/ath10k/debug.h
+@@ -35,6 +35,7 @@ enum ath10k_debug_mask {
+ 	ATH10K_DBG_BMI		= 0x00000400,
+ 	ATH10K_DBG_REGULATORY	= 0x00000800,
+ 	ATH10K_DBG_TESTMODE	= 0x00001000,
++	ATH10K_DBG_FW_MSG	= 0x00002000,
+ 	ATH10K_DBG_ANY		= 0xffffffff,
+ };
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index bfc1fb3..f1515c0 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -2070,7 +2070,7 @@ static void ath10k_wmi_event_debug_print(struct ath10k *ar,
+ 	/* the last byte is always reserved for the null character */
+ 	buf[i] = '\0';
+ 
+-	ath10k_dbg(ar, ATH10K_DBG_WMI, "wmi event debug print '%s'\n", buf);
++	ath10k_dbg(ar, ATH10K_DBG_FW_MSG, "wmi firmware message '%s'\n", buf);
+ }
+ 
+ static void ath10k_wmi_event_pdev_qvit(struct ath10k *ar, struct sk_buff *skb)
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.7.11.7
+
