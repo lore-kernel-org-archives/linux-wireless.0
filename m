@@ -1,231 +1,189 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:62071 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753350AbaICTyV (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:55716 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751638AbaIWMxK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Sep 2014 15:54:21 -0400
-Received: by mail-wi0-f179.google.com with SMTP id q5so10531846wiv.6
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Sep 2014 12:54:20 -0700 (PDT)
-Message-ID: <540771E5.6080908@gmail.com> (sfid-20140903_215425_751322_81C55DA9)
-Date: Wed, 03 Sep 2014 22:54:13 +0300
-From: Emmanuel Grumbach <egrumbach@gmail.com>
+	Tue, 23 Sep 2014 08:53:10 -0400
+Message-ID: <54216D33.1000404@broadcom.com> (sfid-20140923_145314_012384_7FE216A7)
+Date: Tue, 23 Sep 2014 14:53:07 +0200
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-To: John Linville <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: pull request: iwlwifi-next 2014-09-03
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="po4EOUQv6p49BHpFCgmRF1VUbalLg3ihr"
+To: Marc & Karen Vincent <karmavin@aol.com>
+CC: <seth.forshee@canonical.com>, <linux-wireless@vger.kernel.org>,
+	<brcm80211-dev-list@broadcom.com>
+Subject: Re: BCM4313 14e4:4727 was working fine, now failing - Ubuntu Linux
+References: <8D19F0C0D277DCC-10DC-23F3@webmail-vm064.sysops.aol.com>
+In-Reply-To: <8D19F0C0D277DCC-10DC-23F3@webmail-vm064.sysops.aol.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---po4EOUQv6p49BHpFCgmRF1VUbalLg3ihr
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+On 09/15/14 16:54, Marc & Karen Vincent wrote:
+> HelloSeth and Arend,
+>
+> Thanks for getting back to me so quickly.
+>
+> I hope that this gives some pointers -
+>
+>     * dmesg output attached as requested. The lines 30.649061 and
+>       30.649285 (ref brcms) appear as error messages on the screen
+>       during the boot process. The line 23.809659 seems to confirm the
+>       presence of the brcms and bcma modules
+>     *  From a check back through the system logs Linux updated on Friday
+>       12th after which the wireless failed, it was with the same
+>       3.13.0.xx that the Ubuntu 14.04 LTS upgrade installed on Saturday 13th
+>     *  From the logs of the Saturday 13th upgrade the previous version
+>       of Linux appears to have been 3.2.0.68.81 and wireless had
+>       definitely worked without modifications prior to this. Also, no
+>       attempt was made to fix the wireless BEFORE the LTS Ubuntu upgrade
+>       (wired), which incidentally was from 12.04 LTS and was problem free
+>     * Purging of bcmwl-kernel-source package was recommended on the
+>       majority of the Ubuntu forum solutions to ensure unwanted modules
+>       were not present and conflicting. I am not aware of it being active
+>     * This is the link for the contents of the package linux firmware
+>       nonfree which should provide the information re the drivers that
+>       are being installed through it
+>       http://packages.ubuntu.com/trusty/kernel/linux-firmware-nonfree
+>     * This is the link to the 'module to use/blacklist' answer which
+>       seemed to summarise what everyone was saying
+>       https://help.ubuntu.com/community/WifiDocs/Driver/bcm43xx#Known_Issues
+>
+> I have taken copies of the log files for the system updates completed in
+> the week prior to, and including, the LTS Ubuntu upgrade. As you can
+> imagine these are big so if you need any details from them perhaps you
+> would like to give me a filter so you only get the bits you need.
+>
+> Many thanks for looking into this. Hopefully it will be obvious to you
+> what changed!
 
-Hi John,
+ From your dotted list above I can only conclude that is worked with 
+3.2.x and started failing with 3.13.x. I think I also asked for debugfs 
+information. Can you run the following command and provide output to me:
 
-This is a pull request for 3.18.
+$ cat /sys/kernel/debug/brcmsmac/*/hardware
 
-We have a new big thing coming up which is called Dynamic Queue Allocatio=
-n (or DQA).
-This is a completely new way to work with the Tx queues and it requires m=
-ajor refactoring.
-This is being done by Johannes and Avri.
-Besides this, Johannes disables U-APSD by default because of APs that wou=
-ld disable A-MPDU if the association supports U-ASPD.
-Luca contributed to the power area which he was cleaning up on the way wh=
-ile working on CSA.
-A few more random things here and there.
+Regards,
+Arend
 
-Please pull. I have checked that it doesn't conflict with iwlwifi-fixes.g=
-it, but let me know
-if you have other issues.
-Thanks!
+> Karen
+>
+>
+> -----Original Message-----
+> From: Seth Forshee <seth.forshee@canonical.com>
+> To: Arend van Spriel <arend@broadcom.com>; Karen Vincent <KarMaVin@aol.com>
+> CC: brcm80211-dev-list <brcm80211-dev-list@broadcom.com>; linux-wireless
+> <linux-wireless@vger.kernel.org>
+> Sent: Mon, 15 Sep 2014 12:41
+> Subject: Re: BCM4313 14e4:4727 was working fine, now failing - Ubuntu Linux
+>
+> On Mon, Sep 15, 2014 at 10:15:57AM+0200, Arend van Spriel wrote:
+>>  +  linux-wireless, Seth
+>>
+>>  On 14-09-14 16:36, Karen Vincent wrote:
+>>  >  Hello,
+>>  >
+>>  >  I am trying to fix a wireless connectivity problem on a Lenovo G585 which
+> has
+>>  >  BCM4313 14e4:4727 (rev 01) running on Ubuntu 14.04
+>>  >
+>>  >  This was working fine, then following a Linux headers upgrade last week it
+>>  >  started to play up (connection failing or repeatedly dropping)
+>>
+>>  Hi Karen,
+>>
+>>  I assume the upgrade involved a kernel upgrade and not just the headers.
+>>  It would be very interesting to know the package versions before and
+>>  after this particular upgrade. I added Seth as he may know whether the
+>>  packaging software in Ubuntu keeps any log with that info.
+>
+> There's both /var/log/dpkg.log* and /var/log/apt/* which contain some
+> history of what packages were upgraded and when. I know that
+> /var/log/apt/* shows both the old and new package versions for any given
+> upgrade, so you might start there.
+>
+> The subsequent upgrade to a newer release will probably make it harder
+> to find, but everything there should include dates and times when the
+> packages were upgraded which ought to help. Hopefully the relevant data
+> hasn't rotated out of the logs yet.
+>
+>>  >  As a LTS Ubuntu upgrade was due anyway I decided to complete this first and
+> then
+>>  >  see if this resolved the wireless issues. Ubuntu 14.04 successfully
+> installed
+>>  >  (using ethernet wired connection) but the wireless problem remains
+>>
+>>  Would you happen to know the kernel version before the upgrade as this
+>>  surely looks like a regression.
+>>
+>>  >  Having checked the various online forums I have
+>>  >  * run the various updates including -pciids
+>>  >  * purged bcmwl-kernel-source
+>>
+>>  Are you aware that this was actually used?
+>>
+>>  >  * installed linux-firmware-nonfree
+>>
+>>  Uhm, what is this package?
+>
+> I don't know the exact details, but I think it basically includes device
+> firmware which are distributible in some fashion but also have some
+> limitations on distribution/redistribution. The firmware which brcmsmac
+> uses is included in the linux-firmware package though and not that one.
+>
+>>  >  * blacklisted the b43 and wl modules (the latter giving"modprobe: FATAL:
+> Module
+>>  >  wl not found"  although given I was trying to blacklist it anyway I figured
+> this
+>>  >  did not matter)
+>>  >  * checked the module requirement for BCM4313 14e4:4727 = bcma, which is
+> showing
+>>  >  on the module list
+>>  >
+>>  >  As bcma is the recognised and non-blacklisted module I am puzzled to know
+> why
+>>  >  the wireless card still will not connect. And yes, I did reboot after each
+> step!
+>>
+>>  Could you send me a kernel log from system start, ie. run 'dmesg' on the
+>>  terminal.
+>>
+>>  >  A check on the forums and your website suggests 3 possibilities:
+>>  >  * there is a missing dependency for bcma, perhaps something that is present
+> in
+>>  >  brcms? One of the forum 'solutions' suggests this
+>>  >  * there is a firmware update that I need to ensure is on my system, although
+> a
+>>  >  look at the lists on your website has nothing for :4727
+>>  >  * BCM4313 14e4:4727 is simply not going to work on the updated Linux headers
+> -
+>>  >  mine is currently 3.13.0 - 35 - generic, on a 32-bit system - your page
+>>  >  http://wireless.kernel.org/en/users/Drivers/brcm80211#Supported_Chips  hints
+> that
+>>  >  not all 4313 chips will function
+>>  >
+>>  >  I do not know if this 'bug' - for which there seems to be much evidence on
+> the
+>>  >  forums as a dependency conflict - is still live, is going to be fixed or is
+> a
+>>  >  'wait and see' issue, but any assistance in pointing me in the right
+> direction
+>>  >  would be useful.
+>>  >
+>>  >  I am a private user trying to keep the family laptops going rather than a
+>>  >  professional technician but I can work through logical processes and have no
+>
+>>  >  problems using terminal commands etc
+>>
+>>  We will make an effort. The bcm4313 keeps nagging as there are many
+>>  variations of that card being used and brcmsmac may be missing some
+>>  essential piece for it.
+>>
+>>  Regards,
+>>  Arend
+>>
+>>  >  Even if it is just a 'sorry, unlucky to have this combo, cannot help' it
+> would
+>>  >  save me a lot of time trying to get it sorted!
+>>
+>
 
-The following changes since commit 433ab34d26e29d0f036c3f514a09ae96f973d8=
-c5:
-
-  Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net (2014-08-=
-22 14:33:18 -0700)
-
-are available in the git repository at:
-
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git =
-for-john
-
-for you to fetch changes up to 712b24adc105518f7cbbb6f9f353efea48954bb9:
-
-  iwlwifi: mvm: clean up AUX station handling (2014-09-03 22:49:13 +0300)=
-
-
-----------------------------------------------------------------
-Avri Altman (2):
-      iwlwifi: consolidate hw scheduler configuration code
-      iwlwifi: trans: configure the scheduler enable register
-
-David Spinadel (1):
-      iwlwifi: mvm: enable passive fragmented scan changes
-
-Eliad Peller (2):
-      iwlwifi: mvm: add use_ps-poll debugfs power option
-      iwlwifi: mvm: clear d0i3 state on recovery
-
-Emmanuel Grumbach (3):
-      iwlwifi: mvm: reduce the AMPDU size in low latency mode
-      iwlwifi: mvm: use dynamic SMPS for P2P Client
-      iwlwifi: mvm: force protection for P2P
-
-Eran Harary (2):
-      iwlwifi: mvm: fix the dump_umac_error_log
-      iwlwifi: mvm: fix comment typo
-
-Eyal Shapira (1):
-      iwlwifi: mvm: disable tx aggregation on low latency vifs
-
-Johannes Berg (14):
-      iwlwifi: make U-APSD default configurable at compile time
-      iwlwifi: trans: refactor txq_enable arguments
-      iwlwifi: mvm: add some debugging to quota allocation
-      iwlwifi: don't export tracepoints unnecessarily
-      iwlwifi: trans: allow skipping scheduler hardware config
-      iwlwifi: trans: make aggregation explicit for TX queue handling
-      iwlwifi: add Intel Mobile Communications copyright
-      iwlwifi: mvm: correct firmware disassoc command sequence
-      iwlwifi: mvm: clean up FIFO definitions
-      iwlwifi: mvm: clarify stop_count, remove transport_stopped
-      iwlwifi: mvm: use tdls indication from mac80211
-      iwlwifi: mvm: use iwl_mvm_mac_get_queues_mask() more
-      iwlwifi: mvm: clean up broadcast station handling
-      iwlwifi: mvm: clean up AUX station handling
-
-Liad Kaufman (1):
-      iwlwifi: mvm: wait for TE notif when protecting TDLS session
-
-Luciano Coelho (8):
-      iwlwifi: mvm: reset the temperature when temperature test is disabl=
-ed
-      iwlwifi: mvm: don't run automatic checks if CT was caused by debugf=
-s
-      iwlwifi: mvm: add debugfs entry for ps_disabled
-      iwlwifi: mvm: re-enable ps when monitor interfaces are removed
-      iwlwifi: mvm: refactor iwl_mvm_power_set_pm() to spin the ps part o=
-ff
-      iwlwifi: mvm: add function to update only ps
-      iwlwifi: mvm: add option that allows a vif to disable PS
-      iwlwifi: mvm: set the TX disable bit when doing a chanctx switch
-
-Matti Gottlieb (2):
-      iwlwifi: mvm: Add set NIC temperature debug option
-      iwlwifi: mvm: Add marker command 0xcb
-
- drivers/net/wireless/iwlwifi/Kconfig             |  10 ++++++++++
- drivers/net/wireless/iwlwifi/dvm/tx.c            |   6 +++---
- drivers/net/wireless/iwlwifi/iwl-7000.c          |   2 ++
- drivers/net/wireless/iwlwifi/iwl-8000.c          |   2 ++
- drivers/net/wireless/iwlwifi/iwl-csr.h           |   2 ++
- drivers/net/wireless/iwlwifi/iwl-debug.h         |   2 ++
- drivers/net/wireless/iwlwifi/iwl-devtrace.c      |   7 -------
- drivers/net/wireless/iwlwifi/iwl-drv.c           |  10 +++++++++-
- drivers/net/wireless/iwlwifi/iwl-drv.h           |   2 ++
- drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h |   2 ++
- drivers/net/wireless/iwlwifi/iwl-fw-file.h       |   2 ++
- drivers/net/wireless/iwlwifi/iwl-fw.h            |   5 +++++
- drivers/net/wireless/iwlwifi/iwl-nvm-parse.c     |   2 ++
- drivers/net/wireless/iwlwifi/iwl-op-mode.h       |   2 ++
- drivers/net/wireless/iwlwifi/iwl-prph.h          |   3 +++
- drivers/net/wireless/iwlwifi/iwl-scd.h           | 118 +++++++++++++++++=
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++=
-+++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-trans.h         |  67 +++++++++++++++++=
-+++++++++++++++++++++++++++++++++-------------
- drivers/net/wireless/iwlwifi/mvm/coex.c          |   2 ++
- drivers/net/wireless/iwlwifi/mvm/coex_legacy.c   |   2 ++
- drivers/net/wireless/iwlwifi/mvm/constants.h     |   2 ++
- drivers/net/wireless/iwlwifi/mvm/d3.c            |   4 +++-
- drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c   |  10 ++++++++++
- drivers/net/wireless/iwlwifi/mvm/debugfs.c       |  76 +++++++++++++++++=
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/mvm/debugfs.h       |   2 ++
- drivers/net/wireless/iwlwifi/mvm/fw-api-coex.h   |   2 ++
- drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h     |   2 ++
- drivers/net/wireless/iwlwifi/mvm/fw-api-power.h  |   2 ++
- drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h   |   2 ++
- drivers/net/wireless/iwlwifi/mvm/fw-api-sta.h    |   2 ++
- drivers/net/wireless/iwlwifi/mvm/fw-api.h        |  48 +++++++++++++++++=
-+++++++++++++++++++++++++----
- drivers/net/wireless/iwlwifi/mvm/fw.c            |   6 ++++--
- drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c      | 106 +++++++++++++++++=
-++++++++++++++++++++++++++++++++++++-------------------------------------=
-----------
- drivers/net/wireless/iwlwifi/mvm/mac80211.c      | 104 +++++++++++++++++=
-++++++++++++++++++++++++++++++++++++++++++++++++++++---------------------=
---------
- drivers/net/wireless/iwlwifi/mvm/mvm.h           |  41 +++++++++++++++++=
-++++++++++------------
- drivers/net/wireless/iwlwifi/mvm/nvm.c           |   2 ++
- drivers/net/wireless/iwlwifi/mvm/offloading.c    |   2 ++
- drivers/net/wireless/iwlwifi/mvm/ops.c           |  16 ++++++++--------
- drivers/net/wireless/iwlwifi/mvm/phy-ctxt.c      |   2 ++
- drivers/net/wireless/iwlwifi/mvm/power.c         | 148 +++++++++++++++++=
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++=
-+++++++++++++++++---------------------------------
- drivers/net/wireless/iwlwifi/mvm/quota.c         |  14 ++++++++++++++
- drivers/net/wireless/iwlwifi/mvm/rs.c            |  66 +++++++++++++++++=
-++++++++++++++++++++++++++++-----------------
- drivers/net/wireless/iwlwifi/mvm/rx.c            |  21 +++++++++++++++++=
-+++
- drivers/net/wireless/iwlwifi/mvm/scan.c          |  50 +++++++++++++++++=
-+++++++++++++++++++++---------
- drivers/net/wireless/iwlwifi/mvm/sf.c            |   2 ++
- drivers/net/wireless/iwlwifi/mvm/sta.c           |  94 +++++++++++++++++=
-+++++++++++++++++++++++++++++++++++++++++++++---------------------------
- drivers/net/wireless/iwlwifi/mvm/sta.h           |  22 ++++++++++-------=
-----
- drivers/net/wireless/iwlwifi/mvm/testmode.h      |   2 ++
- drivers/net/wireless/iwlwifi/mvm/time-event.c    |  61 +++++++++++++++++=
-+++++++++++++++++++++++++++++++++++++++--
- drivers/net/wireless/iwlwifi/mvm/time-event.h    |   8 ++++++--
- drivers/net/wireless/iwlwifi/mvm/tt.c            |  24 +++++++++++++++++=
-++++--
- drivers/net/wireless/iwlwifi/mvm/tx.c            |   4 +++-
- drivers/net/wireless/iwlwifi/mvm/utils.c         |  23 ++++++++++++++++-=
------
- drivers/net/wireless/iwlwifi/pcie/drv.c          |   2 ++
- drivers/net/wireless/iwlwifi/pcie/internal.h     |   8 +++++---
- drivers/net/wireless/iwlwifi/pcie/rx.c           |   1 +
- drivers/net/wireless/iwlwifi/pcie/trans.c        |   2 ++
- drivers/net/wireless/iwlwifi/pcie/tx.c           | 137 +++++++++++++++++=
-++++++++++++++++++++++++++++++++++++++++++++++++-------------------------=
----------------------------------------
- 57 files changed, 1053 insertions(+), 315 deletions(-)
- create mode 100644 drivers/net/wireless/iwlwifi/iwl-scd.h
-
-
---po4EOUQv6p49BHpFCgmRF1VUbalLg3ihr
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJUB3HqAAoJEC0Llv5uNjIBwucP/A7H73TxlbLyA+FPbDctMjlW
-r6XmyaNipx03AgWGTiCx/iq6Q4tQ8ya4QMMWTN3VPqCmcapo1sQMdKZcLs0TwCue
-wVm+eGNz/Xziz+SQSJz0q3rLsauCrOQU2cAmsDfkd7pM2NnjA9uTjqxO3Tz8uxvz
-L8+syWpaFGdNgLF+2/pDWx0n5PemEBsVuqE6z7BhCYJlD/UFbJDDbFBfk2qoHG4C
-UQB85xzG2B/GboHBVQJzFCEnLrv2X7QWxQ8KNGSJTY/P8KXkDOyD77G00LGqcKo5
-S4DssmlV3bLAIDCyw0WlxHBnw9FWt0d8+GHjRrAyQJht21YyBa+xNcYg65xHfVWF
-LcInHRki8YwlPpqGvdbkaKXxlduWtY/tdXMxCwJ2u7Z+6gcTYNY8WOpbtzhEywTO
-+XSaFRECirf7V3wRRCWCZiBeRP660Aig6g+zQMfnsEcX1fYWI0tcdQKNmPUAZaiX
-hBpEIb1Czjc2mTcKqll3N5NGNXXSYQnV8P4GyoEn3Ju4mewpgj7EyPk9x4oj2Ypt
-eZcs9ZmOGQq8gEZwvx61+P9u6hr2GYhNnmuVnONi92tVhtJUFgCWxP5LkQkezsAP
-bHoIeeB8XyHnXGkDD4XG6g6I5DEqH8Bz/MtxXEyG7lW6H6EgeUgoYV559/m24dLt
-h4JUaFaJAozMLvwhmK4l
-=n6Hi
------END PGP SIGNATURE-----
-
---po4EOUQv6p49BHpFCgmRF1VUbalLg3ihr--
