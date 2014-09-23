@@ -1,79 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:41087 "EHLO arrakis.dune.hu"
+Received: from canardo.mork.no ([148.122.252.1]:49800 "EHLO canardo.mork.no"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751972AbaI2LqY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Sep 2014 07:46:24 -0400
-Message-ID: <54294687.1030307@openwrt.org> (sfid-20140929_134627_658113_AF27F8D6)
-Date: Mon, 29 Sep 2014 13:46:15 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+	id S1755282AbaIWLJr convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Sep 2014 07:09:47 -0400
+From: =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
+To: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Kaufman\, Liad" <liad.kaufman@intel.com>
+Subject: Re: [PATCH 13/17] iwlwifi: 8000: fix fw name to account for revision
+References: <541F23D2.90600@gmail.com>
+	<1411327338-23099-13-git-send-email-egrumbach@gmail.com>
+	<87ppeoc4s0.fsf@nemi.mork.no>
+	<0BA3FCBA62E2DC44AF3030971E174FB31B5261F1@hasmsx107.ger.corp.intel.com>
+Date: Tue, 23 Sep 2014 13:09:38 +0200
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB31B5261F1@hasmsx107.ger.corp.intel.com>
+	(Emmanuel Grumbach's message of "Mon, 22 Sep 2014 17:28:31 +0000")
+Message-ID: <87d2amd24t.fsf@nemi.mork.no> (sfid-20140923_130951_285097_48DB77A9)
 MIME-Version: 1.0
-To: Karl Beldan <karl.beldan@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@rivierawaves.com>
-Subject: Re: [PATCH] mac80211: minstrel_ht: add basic support for VHT rates
- <= 80MHz@NSS2
-References: <1411951124-24490-1-git-send-email-karl.beldan@gmail.com>
-In-Reply-To: <1411951124-24490-1-git-send-email-karl.beldan@gmail.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2014-09-29 02:38, Karl Beldan wrote:
-> From: Karl Beldan <karl.beldan@rivierawaves.com>
-> 
-> When the new CONFIG_MAC80211_RC_MINSTREL_VHT is not set, there is no
-> behavioral change including in sampling and MCS_GROUP_RATES remains 8.
-> When it is, MCS_GROUP_RATES is 10 and we restrict to VHT rates for stats
-> readability (though it is possible to use both HT and VHT (unset
-> vht_only)).
-> ---
->  net/mac80211/Kconfig                       |   7 +
->  net/mac80211/rc80211_minstrel_ht.c         | 263 +++++++++++++++++++++++------
->  net/mac80211/rc80211_minstrel_ht.h         |  33 +++-
->  net/mac80211/rc80211_minstrel_ht_debugfs.c |  30 ++--
->  4 files changed, 261 insertions(+), 72 deletions(-)
-> 
-> diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
-> index aeb6a48..39095a9 100644
-> --- a/net/mac80211/Kconfig
-> +++ b/net/mac80211/Kconfig
-> @@ -33,6 +33,13 @@ config MAC80211_RC_MINSTREL_HT
->  	---help---
->  	  This option enables the 'minstrel_ht' TX rate control algorithm
->  
-> +config MAC80211_RC_MINSTREL_VHT
-> +	bool "Minstrel 802.11vht support" if EXPERT
-This should be VHT or 802.11ac instead of 802.11vht
+"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
+>> Emmanuel Grumbach <egrumbach@gmail.com> writes:
+>> 
+>> > diff --git a/drivers/net/wireless/iwlwifi/iwl-8000.c
+>> > b/drivers/net/wireless/iwlwifi/iwl-8000.c
+>> > index 4ae8ba6..e435148 100644
+>> > --- a/drivers/net/wireless/iwlwifi/iwl-8000.c
+>> > +++ b/drivers/net/wireless/iwlwifi/iwl-8000.c
+>> > @@ -81,7 +81,7 @@
+>> >  #define IWL8000_NVM_VERSION		0x0a1d
+>> >  #define IWL8000_TX_POWER_VERSION	0xffff /* meaningless */
+>> >
+>> > -#define IWL8000_FW_PRE "iwlwifi-8000-"
+>> > +#define IWL8000_FW_PRE "iwlwifi-8000"
+>> >  #define IWL8000_MODULE_FIRMWARE(api) IWL8000_FW_PRE
+>> __stringify(api) ".ucode"
+>> 
+>> Isn't this going to create a misleading MODULE_FIRMWARE entry, matching
+>> neither of the firmware variants?
+>> 
+>>
+> Yes probably - OTOH, this device is far from being on the shelves. By the time it will hit the shelves, we will have removed all the hacks for the early steps of the hardware.
+> Ideas to make it better?
 
-> +	depends on MAC80211_RC_MINSTREL_HT
-> +	default n
-> +	---help---
-> +	  This option enables vht in the 'minstrel_ht' TX rate control algorithm
-> +
->  choice
->  	prompt "Default rate control algorithm"
->  	depends on MAC80211_HAS_RC
-> diff --git a/net/mac80211/rc80211_minstrel_ht.h b/net/mac80211/rc80211_minstrel_ht.h
-> index 01570e0..7856062 100644
-> --- a/net/mac80211/rc80211_minstrel_ht.h
-> +++ b/net/mac80211/rc80211_minstrel_ht.h
-> @@ -13,10 +13,33 @@
->   * The number of streams can be changed to 2 to reduce code
->   * size and memory footprint.
->   */
-> -#define MINSTREL_MAX_STREAMS	3
-> -#define MINSTREL_STREAM_GROUPS	4
-> +#ifdef CONFIG_MAC80211_RC_MINSTREL_VHT
-> +#define MINSTREL_VHT_MAX_STREAMS	2
-> +#else
-> +#define MINSTREL_VHT_MAX_STREAMS	0
-> +#endif
-> +#define MINSTREL_VHT_STREAM_GROUPS	6 /* BW(=3) * SGI(=2) */
-> +
-> +#define MINSTREL_HT_MAX_STREAMS		3
-> +#define MINSTREL_HT_STREAM_GROUPS	4 /* BW(=2) * SGI(=2) */
-I think we should get rid of MINSTREL_*_MAX_STREAMS instead of expanding
-its use to VHT.
+Not exactly elegant, but I would just have duplicated the macros for
+each new hardware revision.  E.g:
 
-- Felix
+#define IWL8000_MODULE_FIRMWARE(api) IWL8000_FW_PRE "-" __stringify(api) ".ucode"
+#define IWL8000B_MODULE_FIRMWARE(api) IWL8000_FW_PRE "B-" __stringify(api) ".ucode"
+MODULE_FIRMWARE(IWL8000_MODULE_FIRMWARE(IWL8000_UCODE_API_OK));
+MODULE_FIRMWARE(IWL8000B_MODULE_FIRMWARE(IWL8000_UCODE_API_OK));
+
+Or maybe make the revision part of the macro or something.
+
+
+> Good to know that someone is actually looking at the patches I take care to send :)
+
+Always looking for new goodies to try out :-)  The temperature sensor
+readout was one this time.  Although I would have preferred it as a
+proper hwmon device instead of a debugfs file.  Has this been discussed?
+
+
+
+
+Bjørn
