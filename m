@@ -1,51 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f51.google.com ([74.125.82.51]:36089 "EHLO
-	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759498AbaIPAN1 (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:6608 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751785AbaIWOFl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Sep 2014 20:13:27 -0400
-Received: by mail-wg0-f51.google.com with SMTP id k14so4718615wgh.22
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Sep 2014 17:13:26 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCHv2 10/10] ath9k: initialize ath_node linked list
-Date: Tue, 16 Sep 2014 02:13:16 +0200
-Message-Id: <1410826396-15544-11-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140916_021335_508461_EA75E892)
-In-Reply-To: <1410826396-15544-1-git-send-email-lorenzo.bianconi83@gmail.com>
-References: <1410826396-15544-1-git-send-email-lorenzo.bianconi83@gmail.com>
+	Tue, 23 Sep 2014 10:05:41 -0400
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: Joe Perches <joe@perches.com>
+CC: Kalle Valo <kvalo@qca.qualcomm.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	<ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+	<netdev@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	wil6210 <wil6210@qca.qualcomm.com>
+Subject: Re: [PATCH] ath: change logging functions to return void
+Date: Tue, 23 Sep 2014 17:05:34 +0300
+Message-ID: <27145768.oo3Xk8YHvr@lx-wigig-72> (sfid-20140923_160605_224800_C3E0F14E)
+In-Reply-To: <1411407334.2952.46.camel@joe-AO725>
+References: <1411407334.2952.46.camel@joe-AO725>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Initialize neighbor linked list used by dynack to compute ACK timeout
-as the maximum STA ACK timeout
+On Monday, September 22, 2014 10:35:34 AM Joe Perches wrote:
+> Other miscellanea:
+> 
+> o add __printf verification to wil6210 logging functions
+>   No format/argument mismatches found
+> 
+> Signed-off-by: Joe Perches <joe@perches.com>
+> 
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
----
- drivers/net/wireless/ath/ath9k/main.c | 4 ++++
- 1 file changed, 4 insertions(+)
+For wil6210:
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 6969aba..3e485f7 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -345,12 +345,16 @@ static void ath_node_attach(struct ath_softc *sc, struct ieee80211_sta *sta,
- 	memset(&an->key_idx, 0, sizeof(an->key_idx));
- 
- 	ath_tx_node_init(sc, an);
-+
-+	ath_dynack_node_init(sc->sc_ah, an);
- }
- 
- static void ath_node_detach(struct ath_softc *sc, struct ieee80211_sta *sta)
- {
- 	struct ath_node *an = (struct ath_node *)sta->drv_priv;
- 	ath_tx_node_cleanup(sc, an);
-+
-+	ath_dynack_node_deinit(sc->sc_ah, an);
- }
- 
- void ath9k_tasklet(unsigned long data)
--- 
-1.9.1
+Acked-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+
 
