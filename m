@@ -1,374 +1,282 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from violet.fr.zoreil.com ([92.243.8.30]:49861 "EHLO
-	violet.fr.zoreil.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751613AbaI0TuG (ORCPT
+Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:36852 "EHLO
+	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756096AbaIWOcc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Sep 2014 15:50:06 -0400
-Date: Sat, 27 Sep 2014 21:49:39 +0200
-From: Francois Romieu <romieu@fr.zoreil.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	troy_tan@realsil.com.cn, netdev@vger.kernel.org
-Subject: Re: [PATCH 9/11 V2 NEXT] rtlwifi: rtl8188ee: Update driver to match
- Realtek release of 06282014
-Message-ID: <20140927194939.GA28553@electric-eye.fr.zoreil.com> (sfid-20140927_215018_983073_8738D2C6)
-References: <1411836726-12699-1-git-send-email-Larry.Finger@lwfinger.net>
- <1411836726-12699-2-git-send-email-Larry.Finger@lwfinger.net>
+	Tue, 23 Sep 2014 10:32:32 -0400
+Subject: [PATCH v2 2/3] ath10k: add diag_read() to hif ops
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 23 Sep 2014 17:32:26 +0300
+Message-ID: <20140923143226.23585.50550.stgit@potku.adurom.net> (sfid-20140923_163235_809455_2AD6BBFE)
+In-Reply-To: <20140923143219.23585.34114.stgit@potku.adurom.net>
+References: <20140923143219.23585.34114.stgit@potku.adurom.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1411836726-12699-2-git-send-email-Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+diag_read() is used for reading from firmware memory via the diagnose window.
+First user will be cal_data debugfs file.
 
-Larry Finger <Larry.Finger@lwfinger.net> :
-[...]
-> diff --git a/drivers/net/wireless/rtlwifi/core.c b/drivers/net/wireless/rtlwifi/core.c
-> index 40738e3..d30f416 100644
-> --- a/drivers/net/wireless/rtlwifi/core.c
-> +++ b/drivers/net/wireless/rtlwifi/core.c
-> @@ -28,6 +28,7 @@
->  #include "cam.h"
->  #include "base.h"
->  #include "ps.h"
-> +#include "pwrseqcmd.h"
->  
->  #include "btcoexist/rtl_btc.h"
->  #include <linux/firmware.h>
-> @@ -1700,3 +1701,100 @@ const struct ieee80211_ops rtl_ops = {
->  };
->  EXPORT_SYMBOL_GPL(rtl_ops);
->  
-> +/*	Description:
-> + *		This routine deals with the Power Configuration CMD
-> + *		 parsing for RTL8723/RTL8188E Series IC.
-> + *	Assumption:
-> + *		We should follow specific format that was released from HW SD.
+To serialise diagnostic window access and make it safe to use while firmware is
+running take ce_lock both in ath10k_pci_diag_write_mem() and
+ath10k_pci_diag_read_mem(). Because of that all the CE calls had to be changed
+to _nolock variants.
 
-"released" is a bit misleading if it does not mean "publicly released".
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/ce.c  |   22 +++++++-------
+ drivers/net/wireless/ath/ath10k/ce.h  |   13 ++++++++
+ drivers/net/wireless/ath/ath10k/hif.h |   10 ++++++
+ drivers/net/wireless/ath/ath10k/pci.c |   51 +++++++++++++++++++++------------
+ 4 files changed, 67 insertions(+), 29 deletions(-)
 
-> + */
-> +bool rtl_hal_pwrseqcmdparsing(struct rtl_priv *rtlpriv, u8 cut_version,
-> +			      u8 faversion, u8 interface_type,
-> +			      struct wlan_pwr_cfg pwrcfgcmd[])
-> +{
-> +	struct wlan_pwr_cfg cfg_cmd = {0};
-> +	bool polling_bit = false;
-> +	u32 ary_idx = 0;
+diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
+index 03b3a2c441fe..2f895bead693 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.c
++++ b/drivers/net/wireless/ath/ath10k/ce.c
+@@ -443,12 +443,12 @@ int ath10k_ce_rx_post_buf(struct ath10k_ce_pipe *pipe, void *ctx, u32 paddr)
+  * Guts of ath10k_ce_completed_recv_next.
+  * The caller takes responsibility for any necessary locking.
+  */
+-static int ath10k_ce_completed_recv_next_nolock(struct ath10k_ce_pipe *ce_state,
+-						void **per_transfer_contextp,
+-						u32 *bufferp,
+-						unsigned int *nbytesp,
+-						unsigned int *transfer_idp,
+-						unsigned int *flagsp)
++int ath10k_ce_completed_recv_next_nolock(struct ath10k_ce_pipe *ce_state,
++					 void **per_transfer_contextp,
++					 u32 *bufferp,
++					 unsigned int *nbytesp,
++					 unsigned int *transfer_idp,
++					 unsigned int *flagsp)
+ {
+ 	struct ath10k_ce_ring *dest_ring = ce_state->dest_ring;
+ 	unsigned int nentries_mask = dest_ring->nentries_mask;
+@@ -576,11 +576,11 @@ int ath10k_ce_revoke_recv_next(struct ath10k_ce_pipe *ce_state,
+  * Guts of ath10k_ce_completed_send_next.
+  * The caller takes responsibility for any necessary locking.
+  */
+-static int ath10k_ce_completed_send_next_nolock(struct ath10k_ce_pipe *ce_state,
+-						void **per_transfer_contextp,
+-						u32 *bufferp,
+-						unsigned int *nbytesp,
+-						unsigned int *transfer_idp)
++int ath10k_ce_completed_send_next_nolock(struct ath10k_ce_pipe *ce_state,
++					 void **per_transfer_contextp,
++					 u32 *bufferp,
++					 unsigned int *nbytesp,
++					 unsigned int *transfer_idp)
+ {
+ 	struct ath10k_ce_ring *src_ring = ce_state->src_ring;
+ 	u32 ctrl_addr = ce_state->ctrl_addr;
+diff --git a/drivers/net/wireless/ath/ath10k/ce.h b/drivers/net/wireless/ath/ath10k/ce.h
+index 329b7340fa72..608262ab964e 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.h
++++ b/drivers/net/wireless/ath/ath10k/ce.h
+@@ -192,6 +192,12 @@ int ath10k_ce_completed_send_next(struct ath10k_ce_pipe *ce_state,
+ 				  unsigned int *nbytesp,
+ 				  unsigned int *transfer_idp);
+ 
++int ath10k_ce_completed_send_next_nolock(struct ath10k_ce_pipe *ce_state,
++					 void **per_transfer_contextp,
++					 u32 *bufferp,
++					 unsigned int *nbytesp,
++					 unsigned int *transfer_idp);
++
+ /*==================CE Engine Initialization=======================*/
+ 
+ int ath10k_ce_init_pipe(struct ath10k *ar, unsigned int ce_id,
+@@ -213,6 +219,13 @@ int ath10k_ce_revoke_recv_next(struct ath10k_ce_pipe *ce_state,
+ 			       void **per_transfer_contextp,
+ 			       u32 *bufferp);
+ 
++int ath10k_ce_completed_recv_next_nolock(struct ath10k_ce_pipe *ce_state,
++					 void **per_transfer_contextp,
++					 u32 *bufferp,
++					 unsigned int *nbytesp,
++					 unsigned int *transfer_idp,
++					 unsigned int *flagsp);
++
+ /*
+  * Support clean shutdown by allowing the caller to cancel
+  * pending sends.  Target DMA must be stopped before using
+diff --git a/drivers/net/wireless/ath/ath10k/hif.h b/drivers/net/wireless/ath/ath10k/hif.h
+index 62323fea27e1..30301f5b6051 100644
+--- a/drivers/net/wireless/ath/ath10k/hif.h
++++ b/drivers/net/wireless/ath/ath10k/hif.h
+@@ -43,6 +43,10 @@ struct ath10k_hif_ops {
+ 	int (*tx_sg)(struct ath10k *ar, u8 pipe_id,
+ 		     struct ath10k_hif_sg_item *items, int n_items);
+ 
++	/* read firmware memory through the diagnose interface */
++	int (*diag_read)(struct ath10k *ar, u32 address, void *buf,
++			 size_t buf_len);
++
+ 	/*
+ 	 * API to handle HIF-specific BMI message exchanges, this API is
+ 	 * synchronous and only allowed to be called from a context that
+@@ -98,6 +102,12 @@ static inline int ath10k_hif_tx_sg(struct ath10k *ar, u8 pipe_id,
+ 	return ar->hif.ops->tx_sg(ar, pipe_id, items, n_items);
+ }
+ 
++static inline int ath10k_hif_diag_read(struct ath10k *ar, u32 address, void *buf,
++				       size_t buf_len)
++{
++	return ar->hif.ops->diag_read(ar, address, buf, buf_len);
++}
++
+ static inline int ath10k_hif_exchange_bmi_msg(struct ath10k *ar,
+ 					      void *request, u32 request_len,
+ 					      void *response, u32 *response_len)
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 59e0ea83be50..0784b48b04ce 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -485,6 +485,8 @@ static int ath10k_pci_diag_read_mem(struct ath10k *ar, u32 address, void *data,
+ 	void *data_buf = NULL;
+ 	int i;
+ 
++	spin_lock_bh(&ar_pci->ce_lock);
++
+ 	ce_diag = ar_pci->ce_diag;
+ 
+ 	/*
+@@ -511,7 +513,7 @@ static int ath10k_pci_diag_read_mem(struct ath10k *ar, u32 address, void *data,
+ 		nbytes = min_t(unsigned int, remaining_bytes,
+ 			       DIAG_TRANSFER_LIMIT);
+ 
+-		ret = ath10k_ce_rx_post_buf(ce_diag, NULL, ce_data);
++		ret = __ath10k_ce_rx_post_buf(ce_diag, NULL, ce_data);
+ 		if (ret != 0)
+ 			goto done;
+ 
+@@ -527,15 +529,15 @@ static int ath10k_pci_diag_read_mem(struct ath10k *ar, u32 address, void *data,
+ 		address = TARG_CPU_SPACE_TO_CE_SPACE(ar, ar_pci->mem,
+ 						     address);
+ 
+-		ret = ath10k_ce_send(ce_diag, NULL, (u32)address, nbytes, 0,
+-				     0);
++		ret = ath10k_ce_send_nolock(ce_diag, NULL, (u32)address, nbytes, 0,
++					    0);
+ 		if (ret)
+ 			goto done;
+ 
+ 		i = 0;
+-		while (ath10k_ce_completed_send_next(ce_diag, NULL, &buf,
+-						     &completed_nbytes,
+-						     &id) != 0) {
++		while (ath10k_ce_completed_send_next_nolock(ce_diag, NULL, &buf,
++							    &completed_nbytes,
++							    &id) != 0) {
+ 			mdelay(1);
+ 			if (i++ > DIAG_ACCESS_CE_TIMEOUT_MS) {
+ 				ret = -EBUSY;
+@@ -554,9 +556,9 @@ static int ath10k_pci_diag_read_mem(struct ath10k *ar, u32 address, void *data,
+ 		}
+ 
+ 		i = 0;
+-		while (ath10k_ce_completed_recv_next(ce_diag, NULL, &buf,
+-						     &completed_nbytes,
+-						     &id, &flags) != 0) {
++		while (ath10k_ce_completed_recv_next_nolock(ce_diag, NULL, &buf,
++							    &completed_nbytes,
++							    &id, &flags) != 0) {
+ 			mdelay(1);
+ 
+ 			if (i++ > DIAG_ACCESS_CE_TIMEOUT_MS) {
+@@ -591,6 +593,8 @@ done:
+ 		dma_free_coherent(ar->dev, orig_nbytes, data_buf,
+ 				  ce_data_base);
+ 
++	spin_unlock_bh(&ar_pci->ce_lock);
++
+ 	return ret;
+ }
+ 
+@@ -648,6 +652,8 @@ static int ath10k_pci_diag_write_mem(struct ath10k *ar, u32 address,
+ 	dma_addr_t ce_data_base = 0;
+ 	int i;
+ 
++	spin_lock_bh(&ar_pci->ce_lock);
++
+ 	ce_diag = ar_pci->ce_diag;
+ 
+ 	/*
+@@ -688,7 +694,7 @@ static int ath10k_pci_diag_write_mem(struct ath10k *ar, u32 address,
+ 		nbytes = min_t(int, remaining_bytes, DIAG_TRANSFER_LIMIT);
+ 
+ 		/* Set up to receive directly into Target(!) address */
+-		ret = ath10k_ce_rx_post_buf(ce_diag, NULL, address);
++		ret = __ath10k_ce_rx_post_buf(ce_diag, NULL, address);
+ 		if (ret != 0)
+ 			goto done;
+ 
+@@ -696,15 +702,15 @@ static int ath10k_pci_diag_write_mem(struct ath10k *ar, u32 address,
+ 		 * Request CE to send caller-supplied data that
+ 		 * was copied to bounce buffer to Target(!) address.
+ 		 */
+-		ret = ath10k_ce_send(ce_diag, NULL, (u32)ce_data,
+-				     nbytes, 0, 0);
++		ret = ath10k_ce_send_nolock(ce_diag, NULL, (u32)ce_data,
++					    nbytes, 0, 0);
+ 		if (ret != 0)
+ 			goto done;
+ 
+ 		i = 0;
+-		while (ath10k_ce_completed_send_next(ce_diag, NULL, &buf,
+-						     &completed_nbytes,
+-						     &id) != 0) {
++		while (ath10k_ce_completed_send_next_nolock(ce_diag, NULL, &buf,
++							    &completed_nbytes,
++							    &id) != 0) {
+ 			mdelay(1);
+ 
+ 			if (i++ > DIAG_ACCESS_CE_TIMEOUT_MS) {
+@@ -724,9 +730,9 @@ static int ath10k_pci_diag_write_mem(struct ath10k *ar, u32 address,
+ 		}
+ 
+ 		i = 0;
+-		while (ath10k_ce_completed_recv_next(ce_diag, NULL, &buf,
+-						     &completed_nbytes,
+-						     &id, &flags) != 0) {
++		while (ath10k_ce_completed_recv_next_nolock(ce_diag, NULL, &buf,
++							    &completed_nbytes,
++							    &id, &flags) != 0) {
+ 			mdelay(1);
+ 
+ 			if (i++ > DIAG_ACCESS_CE_TIMEOUT_MS) {
+@@ -760,6 +766,8 @@ done:
+ 		ath10k_warn(ar, "failed to write diag value at 0x%x: %d\n",
+ 			    address, ret);
+ 
++	spin_unlock_bh(&ar_pci->ce_lock);
++
+ 	return ret;
+ }
+ 
+@@ -936,6 +944,12 @@ err:
+ 	return err;
+ }
+ 
++static int ath10k_pci_hif_diag_read(struct ath10k *ar, u32 address, void *buf,
++				    size_t buf_len)
++{
++	return ath10k_pci_diag_read_mem(ar, address, buf, buf_len);
++}
++
+ static u16 ath10k_pci_hif_get_free_queue_number(struct ath10k *ar, u8 pipe)
+ {
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+@@ -1921,6 +1935,7 @@ static int ath10k_pci_hif_resume(struct ath10k *ar)
+ 
+ static const struct ath10k_hif_ops ath10k_pci_hif_ops = {
+ 	.tx_sg			= ath10k_pci_hif_tx_sg,
++	.diag_read		= ath10k_pci_hif_diag_read,
+ 	.exchange_bmi_msg	= ath10k_pci_hif_exchange_bmi_msg,
+ 	.start			= ath10k_pci_hif_start,
+ 	.stop			= ath10k_pci_hif_stop,
 
-	u32 i;
-
-> +	u8 value = 0;
-> +	u32 offset = 0;
-
-Useless init.
-
-> +	u32 polling_count = 0;
-
-Wrong scope.
-
-> +	u32 max_polling_cnt = 5000;
-
-Inverted xmas tree for declaration.
-
-> +
-> +	do {
-
-	while (1) {
-
-> +		cfg_cmd = pwrcfgcmd[ary_idx];
-> +		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
-> +			 "rtl_hal_pwrseqcmdparsing(): offset(%#x),cut_msk(%#x), famsk(%#x), interface_msk(%#x), base(%#x), cmd(%#x), msk(%#x), value(%#x)\n",
-                                                                ^^^ missing space
-
-> +			 GET_PWR_CFG_OFFSET(cfg_cmd),
-> +					    GET_PWR_CFG_CUT_MASK(cfg_cmd),
-> +			 GET_PWR_CFG_FAB_MASK(cfg_cmd),
-> +					      GET_PWR_CFG_INTF_MASK(cfg_cmd),
-> +			 GET_PWR_CFG_BASE(cfg_cmd), GET_PWR_CFG_CMD(cfg_cmd),
-> +			 GET_PWR_CFG_MASK(cfg_cmd), GET_PWR_CFG_VALUE(cfg_cmd));
-> +
-> +		if ((GET_PWR_CFG_FAB_MASK(cfg_cmd)&faversion) &&
-> +		    (GET_PWR_CFG_CUT_MASK(cfg_cmd)&cut_version) &&
-                                                 ^^^ missing spaces
-
-> +		    (GET_PWR_CFG_INTF_MASK(cfg_cmd)&interface_type)) {
-> +			switch (GET_PWR_CFG_CMD(cfg_cmd)) {
-> +			case PWR_CMD_READ:
-> +				RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
-> +					"rtl_hal_pwrseqcmdparsing(): PWR_CMD_READ\n");
-
-It should line up after the parenthesis.
-
-> +				break;
-> +			case PWR_CMD_WRITE:
-> +				RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
-> +					"rtl_hal_pwrseqcmdparsing(): PWR_CMD_WRITE\n");
-> +				offset = GET_PWR_CFG_OFFSET(cfg_cmd);
-> +
-> +				/*Read the value from system register*/
-> +				value = rtl_read_byte(rtlpriv, offset);
-> +				value &= (~(GET_PWR_CFG_MASK(cfg_cmd)));
-
-Excess parenthsis.
-
-> +				value |= (GET_PWR_CFG_VALUE(cfg_cmd) &
-> +					  GET_PWR_CFG_MASK(cfg_cmd));
-
-Excess parenthsis.
-
-> +
-> +				/*Write the value back to sytem register*/
-> +				rtl_write_byte(rtlpriv, offset, value);
-> +				break;
-> +			case PWR_CMD_POLLING:
-> +				RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
-> +					"rtl_hal_pwrseqcmdparsing(): PWR_CMD_POLLING\n");
-
-It should line up after the parenthesis.
-
-> +				polling_bit = false;
-> +				offset = GET_PWR_CFG_OFFSET(cfg_cmd);
-> +
-> +				do {
-> +					value = rtl_read_byte(rtlpriv, offset);
-> +
-> +					value &= GET_PWR_CFG_MASK(cfg_cmd);
-> +					if (value ==
-> +					    (GET_PWR_CFG_VALUE(cfg_cmd) &
-> +					     GET_PWR_CFG_MASK(cfg_cmd)))
-> +						polling_bit = true;
-> +					else
-> +						udelay(10);
-> +
-> +					if (polling_count++ > max_polling_cnt)
-> +						return false;
-> +				} while (!polling_bit);
-
-Simple "for" loop in disguise.
-
-An helper function may help.
-
-Imnsho the whole do { more, more, more } while (1) concept is broken.
-
-[...]
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/def.h b/drivers/net/wireless/rtlwifi/rtl8188ee/def.h
-> index c764fff..d9ea9d0 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8188ee/def.h
-> +++ b/drivers/net/wireless/rtlwifi/rtl8188ee/def.h
-[...]
-> @@ -225,44 +218,37 @@ enum power_polocy_config {
->  };
->  
->  enum interface_select_pci {
-> -	INTF_SEL1_MINICARD,
-> -	INTF_SEL0_PCIE,
-> -	INTF_SEL2_RSV,
-> -	INTF_SEL3_RSV,
-> +	INTF_SEL1_MINICARD = 0,
-> +	INTF_SEL0_PCIE = 1,
-> +	INTF_SEL2_RSV = 2,
-> +	INTF_SEL3_RSV = 3,
-
-Please use tabs to line things up.
-
-[...]
-> +	HAL_FW_C2H_CMD_READ_MACREG = 0,
-> +	HAL_FW_C2H_CMD_READ_BBREG = 1,
-> +	HAL_FW_C2H_CMD_READ_RFREG = 2,
-> +	HAL_FW_C2H_CMD_READ_EEPROM = 3,
-> +	HAL_FW_C2H_CMD_READ_EFUSE = 4,
-
-See above.
-
-[...]
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/dm.c b/drivers/net/wireless/rtlwifi/rtl8188ee/dm.c
-> index f8daa61..2aa34d9 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8188ee/dm.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8188ee/dm.c
-[...]
-> -			rtl_set_bbreg(hw, ROFDM0_XATXIQIMBAL, MASKDWORD,
-> -				      value32);
-> +			rtl_set_bbreg(hw, ROFDM0_XATXIQIMBALANCE,
-> +				      MASKDWORD, value32);
-
-It lacks of consistency, see the *NICE* marker below.
-
->  			value32 = (ele_c & 0x000003C0) >> 6;
-> -			rtl_set_bbreg(hw, ROFDM0_XCTXAFE, MASKH4BITS, value32);
-> +			rtl_set_bbreg(hw, ROFDM0_XCTXAFE, MASKH4BITS,
-> +				      value32);
-
-?
-
->  			value32 = ((iqk_result_x * ele_d) >> 7) & 0x01;
-> -			rtl_set_bbreg(hw, ROFDM0_ECCATHRES, BIT(24), value32);
-> +			rtl_set_bbreg(hw, ROFDM0_ECCATHRESHOLD, BIT(24),
-> +				      value32);
->  			break;
->  		case RF90_PATH_B:
->  			value32 = (ele_d << 22)|((ele_c & 0x3F)<<16) | ele_a;
-> -			rtl_set_bbreg(hw, ROFDM0_XBTXIQIMBAL,
-> -				      MASKDWORD, value32);
-> +			rtl_set_bbreg(hw, ROFDM0_XBTXIQIMBALANCE, MASKDWORD,
-> +				      value32);
-
-*NICE*
-
-[...]
-> @@ -210,16 +209,20 @@ static void rtl88e_set_iqk_matrix(struct ieee80211_hw *hw,
->  	} else {
->  		switch (rfpath) {
->  		case RF90_PATH_A:
-> -			rtl_set_bbreg(hw, ROFDM0_XATXIQIMBAL, MASKDWORD,
-> -				      ofdmswing_table[ofdm_index]);
-> -			rtl_set_bbreg(hw, ROFDM0_XCTXAFE, MASKH4BITS, 0x00);
-> -			rtl_set_bbreg(hw, ROFDM0_ECCATHRES, BIT(24), 0x00);
-> +			rtl_set_bbreg(hw, ROFDM0_XATXIQIMBALANCE,
-> +				      MASKDWORD, ofdmswing_table[ofdm_index]);
-> +			rtl_set_bbreg(hw, ROFDM0_XCTXAFE,
-> +				      MASKH4BITS, 0x00);
-
-			rtl_set_bbreg(hw, ROFDM0_XCTXAFE, MASKH4BITS, 0x00);
-
-> +			rtl_set_bbreg(hw, ROFDM0_ECCATHRESHOLD,
-> +				      BIT(24), 0x00);
-
-			rtl_set_bbreg(hw, ROFDM0_ECCATHRESHOLD, BIT(24), 0x00);
-
->  			break;
->  		case RF90_PATH_B:
-> -			rtl_set_bbreg(hw, ROFDM0_XBTXIQIMBAL, MASKDWORD,
-> -				      ofdmswing_table[ofdm_index]);
-> -			rtl_set_bbreg(hw, ROFDM0_XDTXAFE, MASKH4BITS, 0x00);
-> -			rtl_set_bbreg(hw, ROFDM0_ECCATHRES, BIT(28), 0x00);
-> +			rtl_set_bbreg(hw, ROFDM0_XBTXIQIMBALANCE,
-> +				      MASKDWORD, ofdmswing_table[ofdm_index]);
-> +			rtl_set_bbreg(hw, ROFDM0_XDTXAFE,
-> +				      MASKH4BITS, 0x00);
-
-			rtl_set_bbreg(hw, ROFDM0_XDTXAFE, MASKH4BITS, 0x00);
-
-> +			rtl_set_bbreg(hw, ROFDM0_ECCATHRESHOLD,
-> +				      BIT(28), 0x00);
-
-			rtl_set_bbreg(hw, ROFDM0_ECCATHRESHOLD, BIT(28), 0x00);
-
-[...]
-> @@ -263,46 +266,75 @@ void rtl88e_dm_txpower_track_adjust(struct ieee80211_hw *hw,
->  			 (pwr_val << 24);
->  }
->  
-> -
-> -static void rtl88e_chk_tx_track(struct ieee80211_hw *hw,
-> -				enum pwr_track_control_method method,
-> -				u8 rfpath, u8 index)
-> +static void dm_tx_pwr_track_set_pwr(struct ieee80211_hw *hw,
-> +				    enum pwr_track_control_method method,
-> +				    u8 rfpath, u8 channel_mapped_index)
->  {
->  	struct rtl_priv *rtlpriv = rtl_priv(hw);
-> -	struct rtl_phy *rtlphy = &(rtlpriv->phy);
-> +	struct rtl_phy *rtlphy = &rtlpriv->phy;
->  	struct rtl_dm *rtldm = rtl_dm(rtl_priv(hw));
-> -	int jj = rtldm->swing_idx_cck;
-> -	int i;
->  
->  	if (method == TXAGC) {
-> -		if (rtldm->swing_flag_ofdm == true ||
-> -		    rtldm->swing_flag_cck == true) {
-> -			u8 chan = rtlphy->current_channel;
-> -			rtl88e_phy_set_txpower_level(hw, chan);
-> +		if (rtldm->swing_flag_ofdm ||
-> +		    rtldm->swing_flag_cck) {
-
-Single line.
-
-> +			rtl88e_phy_set_txpower_level(hw,
-> +						     rtlphy->current_channel);
->  			rtldm->swing_flag_ofdm = false;
->  			rtldm->swing_flag_cck = false;
->  		}
->  	} else if (method == BBSWING) {
->  		if (!rtldm->cck_inch14) {
-> -			for (i = 0; i < 8; i++)
-> -				rtl_write_byte(rtlpriv, 0xa22 + i,
-> -					       cck_tbl_ch1_13[jj][i]);
-> +			rtl_write_byte(rtlpriv, 0xa22,
-> +				       cck_tbl_ch1_13[rtldm->swing_idx_cck][0]);
-> +			rtl_write_byte(rtlpriv, 0xa23,
-> +				       cck_tbl_ch1_13[rtldm->swing_idx_cck][1]);
-> +			rtl_write_byte(rtlpriv, 0xa24,
-> +				       cck_tbl_ch1_13[rtldm->swing_idx_cck][2]);
-> +			rtl_write_byte(rtlpriv, 0xa25,
-> +				       cck_tbl_ch1_13[rtldm->swing_idx_cck][3]);
-> +			rtl_write_byte(rtlpriv, 0xa26,
-> +				       cck_tbl_ch1_13[rtldm->swing_idx_cck][4]);
-> +			rtl_write_byte(rtlpriv, 0xa27,
-> +				       cck_tbl_ch1_13[rtldm->swing_idx_cck][5]);
-> +			rtl_write_byte(rtlpriv, 0xa28,
-> +				       cck_tbl_ch1_13[rtldm->swing_idx_cck][6]);
-> +			rtl_write_byte(rtlpriv, 0xa29,
-> +				       cck_tbl_ch1_13[rtldm->swing_idx_cck][7]);
-
-?
-
-I hope someone got the "-R" flag of patch wrong.
-
->  		} else {
-> -			for (i = 0; i < 8; i++)
-> -				rtl_write_byte(rtlpriv, 0xa22 + i,
-> -					       cck_tbl_ch14[jj][i]);
-> +			rtl_write_byte(rtlpriv, 0xa22,
-> +				       cck_tbl_ch14[rtldm->swing_idx_cck][0]);
-> +			rtl_write_byte(rtlpriv, 0xa23,
-> +				       cck_tbl_ch14[rtldm->swing_idx_cck][1]);
-> +			rtl_write_byte(rtlpriv, 0xa24,
-> +				       cck_tbl_ch14[rtldm->swing_idx_cck][2]);
-> +			rtl_write_byte(rtlpriv, 0xa25,
-> +				       cck_tbl_ch14[rtldm->swing_idx_cck][3]);
-> +			rtl_write_byte(rtlpriv, 0xa26,
-> +				       cck_tbl_ch14[rtldm->swing_idx_cck][4]);
-> +			rtl_write_byte(rtlpriv, 0xa27,
-> +				       cck_tbl_ch14[rtldm->swing_idx_cck][5]);
-> +			rtl_write_byte(rtlpriv, 0xa28,
-> +				       cck_tbl_ch14[rtldm->swing_idx_cck][6]);
-> +			rtl_write_byte(rtlpriv, 0xa29,
-> +				       cck_tbl_ch14[rtldm->swing_idx_cck][7]);
-
-Sic.
-
->  		}
->  
->  		if (rfpath == RF90_PATH_A) {
-> -			long x = rtlphy->iqk_matrix[index].value[0][0];
-> -			long y = rtlphy->iqk_matrix[index].value[0][1];
-> -			u8 indx = rtldm->swing_idx_ofdm[rfpath];
-> -			rtl88e_set_iqk_matrix(hw, indx, rfpath, x, y);
-> +			rtl88e_set_iqk_matrix(hw, rtldm->swing_idx_ofdm[rfpath],
-> +					      rfpath, rtlphy->iqk_matrix
-> +					      [channel_mapped_index].
-> +					      value[0][0],
-> +					      rtlphy->iqk_matrix
-> +					      [channel_mapped_index].
-> +					      value[0][1]);
->  		} else if (rfpath == RF90_PATH_B) {
-> -			u8 indx = rtldm->swing_idx_ofdm[rfpath];
-> -			long x = rtlphy->iqk_matrix[indx].value[0][4];
-> -			long y = rtlphy->iqk_matrix[indx].value[0][5];
-> -			rtl88e_set_iqk_matrix(hw, indx, rfpath, x, y);
-> +			rtl88e_set_iqk_matrix(hw, rtldm->swing_idx_ofdm[rfpath],
-> +					      rfpath, rtlphy->iqk_matrix
-> +					      [channel_mapped_index].
-> +					      value[0][4],
-> +					      rtlphy->iqk_matrix
-> +					      [channel_mapped_index].
-> +					      value[0][5]);
-
-:o(
-
-I stop here. I don't enjoy playing the bad cop and this patch is feeding crap
-into the kernel.
-
--- 
-Ueimor
