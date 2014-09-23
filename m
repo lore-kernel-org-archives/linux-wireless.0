@@ -1,50 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f48.google.com ([209.85.215.48]:45290 "EHLO
-	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752269AbaILG7V (ORCPT
+Received: from fm1nodo5.polito.it ([130.192.180.13]:34380 "EHLO
+	fm1nodo5.polito.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754625AbaIWKik (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Sep 2014 02:59:21 -0400
-Received: by mail-la0-f48.google.com with SMTP id ty20so352219lab.35
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Sep 2014 23:59:19 -0700 (PDT)
-From: Henning Rogge <hrogge@gmail.com>
-To: "linux-wireless @ vger . kernel . org"
-	<linux-wireless@vger.kernel.org>
-Cc: Henning Rogge <henning.rogge@fkie.fraunhofer.de>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-Subject: [PATCH v4 0/2] cfg80211: Add export of mesh proxy path table
-Date: Fri, 12 Sep 2014 08:58:48 +0200
-Message-Id: <1410505130-7271-1-git-send-email-henning.rogge@fkie.fraunhofer.de> (sfid-20140912_085924_459234_7DC40AD1)
+	Tue, 23 Sep 2014 06:38:40 -0400
+Message-ID: <1411467050.11571.47.camel@MacGyver> (sfid-20140923_123843_478090_31C704AE)
+Subject: Re: [PATCH] mac80211: minstrel_ht should not override user supplied
+ rts setting
+From: Guido Gavilanes <gavilanes@ismb.it>
+Reply-To: gavilanes@ismb.it
+To: linux-wireless@vger.kernel.org
+Cc: nbd@openwrt.org, simon.wunderlich@s2003.tu-chemnitz.de,
+	lindner_marek@yahoo.de
+Date: Tue, 23 Sep 2014 12:10:50 +0200
+In-Reply-To: <1339408392-19425-10-git-send-email-johannes@sipsolutions.net>
+References: <1339408392-19425-1-git-send-email-johannes@sipsolutions.net>
+	 <1339408392-19425-10-git-send-email-johannes@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The following patch series adds and implements two new cfg80211_ops that
-allow to query the content of the mac80211s mesh proxy path table via
-netlink.
+I write here since I am currently performing experiments in which I need
+specifically to disable RTS frames. Intuitively, I tried to set 
+iw phyXX set rts off
+but btained counter-intuitive results, since RTS effectively dissappear
+only for low traffic demands from upper layers (around 1Mbps  with 3
+nodes). Testing with 3 Mbps make the RTS appeared despite the RTS
+setting.
+Is there a way to set minstrel_ht not to use RTS (no matter the clever
+or not it is) ?
+I have searched a bit on the archive but this seems the only
+conversation that deals with that.
 
-v2 changes:
-* split the original patch into separate cfg80211 and mac80211 part
+Thank you very much for any information!
+Gui
 
-v3 change:
-* change of commit messages, added signoff
 
-v4 change:
-* another change of commit messages
+On 2012-01-28 11:14 PM, Simon Wunderlich wrote:
+> I agree to Marek here - if I want to disable RTS (for whatever
+reason), I type
+> 
+> iw phy0 set rts off
+> 
+> I would expect to see no RTS frames coming from my WiFi card at all.
+If the
+> rate control algorithm (whether ath9k or minstrel_ht) wants to be
+clever, it should
+> still respect this decision. The oven in my kitchen also has a
+temperature regulator,
+> but if I turn it off I also don't want my oven to be too clever and
+burn down the house. ;)
+> 
+> I know, apples and oranges, but I hope this makes this point
+understandable. I also
+> had quite a debugging night to find the reason for these "wild rts"
+frames.
+> 
+> Can't we add something two states, like:
+>  * "RTS really off" and
+>  * "RTS usually off, but rc's may still use it" ?
+If you send a patch for that, I'm ok with it. The default should be RTS
+off, but rc may still use it.
 
-Henning Rogge (2):
-  cfg80211: add ops to query mesh proxy path table
-  mac80211: implement cfg80211_ops to query mesh proxy path table
-
- include/net/cfg80211.h       |  7 ++++
- include/uapi/linux/nl80211.h |  6 +++
- net/mac80211/cfg.c           | 53 ++++++++++++++++++++++++
- net/mac80211/mesh.h          |  3 ++
- net/mac80211/mesh_pathtbl.c  | 31 ++++++++++++++
- net/wireless/nl80211.c       | 99 ++++++++++++++++++++++++++++++++++++++++++++
- net/wireless/rdev-ops.h      | 27 +++++++++++-
- net/wireless/trace.h         | 45 ++++++++++++++++++++
- 8 files changed, 270 insertions(+), 1 deletion(-)
-
--- 
-1.9.1
+- Feli
+--
+To unsubscribe from this list: send the line "unsubscribe
+linux-wireless" in
+the body of a message to majordomo@...
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
