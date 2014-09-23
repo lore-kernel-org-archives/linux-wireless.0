@@ -1,59 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from host1.ip6-networks.net ([95.130.10.56]:57480 "EHLO
-	host1.ip6-networks.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751361AbaIJJ1T convert rfc822-to-8bit (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:46116 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756196AbaIWO6g (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Sep 2014 05:27:19 -0400
-Subject: Re: 802.11p rate control
-Mime-Version: 1.0 (Apple Message framework v1085)
-Content-Type: text/plain; charset=iso-8859-1
-From: Emmanuel Thierry <ml@sekil.fr>
-In-Reply-To: <1410339003.2761.2.camel@jlt4.sipsolutions.net>
-Date: Wed, 10 Sep 2014 11:19:46 +0200
-Cc: Rostislav Lisovy <lisovy@gmail.com>,
-	linux-wireless@vger.kernel.org, burak.simsek@volkswagen.de,
-	s.sander@nordsys.de, sojkam1@fel.cvut.cz,
-	jan-niklas.meier@volkswagen.de, thierry.ernst@yogoko.fr,
-	oyunaash@gmail.com, laszlo.virag@commsignia.com
-Message-Id: <AD4CAB87-0EF1-4915-A576-82C359159416@sekil.fr> (sfid-20140910_112723_667532_65A02915)
-References: <1410193824.10388.24.camel@umadbro> (sfid-20140908_183026_729762_39C348F0) <1410339003.2761.2.camel@jlt4.sipsolutions.net>
-To: Johannes Berg <johannes@sipsolutions.net>
+	Tue, 23 Sep 2014 10:58:36 -0400
+Message-ID: <54218A9A.7090305@candelatech.com> (sfid-20140923_165855_175775_2C295C08)
+Date: Tue, 23 Sep 2014 07:58:34 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Subject: Re: [PATCH 3/3] ath10k: support 32+ stations.
+References: <1411149890-12618-1-git-send-email-greearb@candelatech.com> <1411149890-12618-3-git-send-email-greearb@candelatech.com> <874mvyebmt.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <874mvyebmt.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-Le 10 sept. 2014 à 10:50, Johannes Berg a écrit :
 
-> On Mon, 2014-09-08 at 18:30 +0200, Rostislav Lisovy wrote:
-> 
->> If I am not mistaken, it is not possible to live without an in-kernel
->> rate_control algorithm?
->> One interesting idea I got from one colleague is to implement the
->> algorithm logic in the user-space -- kernel would contain just a thin
->> shell controlled from the user-space (via netlink?). This is probably
->> not as insane as it may sound since the purpose of the rate-control
->> algorithm for 802.11p (at least for ITS-G5) is not to "maximize the
->> immediate throughput" but more like "shared medium congestion control",
->> which may require much slower frequency of a control loop.
-> 
-> I'm not really convinced this is feasible, but in any case - are you
-> even communicating long enough with a single peer to make rate control
-> feasible?
-> 
+On 09/23/2014 05:59 AM, Kalle Valo wrote:
+> greearb@candelatech.com writes:
+>
+>> From: Ben Greear <greearb@candelatech.com>
+>>
+>> Support up to 32 stations when using CT firmware.
+>>
+>> Signed-off-by: Ben Greear <greearb@candelatech.com>
+>
+> [...]
+>
+>> -	if (test_bit(ATH10K_FW_FEATURE_WMI_10X, ar->fw_features))
+>> +	if (test_bit(ATH10K_FW_FEATURE_WMI_10X_CT, ar->fw_features))
+>> +		ar->free_vdev_map = (1LL << TARGET_10X_NUM_VDEVS_CT) - 1;
+>> +	else if (test_bit(ATH10K_FW_FEATURE_WMI_10X, ar->fw_features))
+>>   		ar->free_vdev_map = (1LL << TARGET_10X_NUM_VDEVS) - 1;
+>>   	else
+>>   		ar->free_vdev_map = (1LL << TARGET_NUM_VDEVS) - 1;
+>
+> [...]
+>
+>> +/* Over-rides for Candela Technologies firmware */
+>> +#define TARGET_10X_NUM_VDEVS_CT			32
+>> +#define TARGET_10X_NUM_PEERS_CT			(32 + (TARGET_10X_NUM_VDEVS_CT))
+>> +#define TARGET_10X_AST_SKID_LIMIT_CT		(TARGET_10X_NUM_PEERS_CT * TARGET_10X_NUM_PEER_AST)
+>
+> [...]
+>
+>> +		if (test_bit(ATH10K_FW_FEATURE_WMI_10X_CT, ar->fw_features))
+>> +			max_num_peers = TARGET_10X_NUM_PEERS_CT - 1;
+>
+> Like I said before, this hardcoding of values using feature bits is not
+> going to work in the long run. It's better that these values come
+> directly from FW IEs as integers, that gives us a lot more flexibility
+> between firmware versions.
+>
+> That's why I'll drop patches 2 and 3.
 
-The way i understand the problem, and as far as it is feasible, the rate-control wouldn't be done on the basis of a single peer-to-peer communication but globally according to the congestion of the shared media.
+Please suggest the name and definition of the IE(s) that you want for
+this feature so I don't have to guess.
 
-Most of messages on such link would be multicast or broadcast, in the typical use case where a vehicle/roadside station announces an accident or another danger to neighboring listeners. As a consequence, the main purpose of rate adaptation in this case would not be to ensure the delivery to a particular target, but the delivery to most available targets.
+I also have a pending patch that supports tx status when using CT
+firmware.  How would you prefer this feature be communicated to
+the driver?  IE flag?
 
+Please also understand, it will be a bad idea to force the number of
+stations based on IE, but we could note upper limits and let module
+parameters tune the actual stations?
 
-> 
-> Anyway - it seems to me that you're getting ahead of yourself. Shouldn't
-> you actually have a functioning datapath before worrying about rate
-> control? And for that you'll need station handling in mac80211, etc.
-> 
+Note that my patch above, for instance, decreases number of peers, but
+increases vdevs.  That works well for my purposes, but others may
+want more peers and less vdevs.
 
-I don't know what is the exact status of the patchset in linux wireless. However we performed tests on the complete patchset published on github and didn't see major problems in terms of packet delivery.
+Thanks,
+Ben
 
-Best regards.
-Emmanuel Thierry
-
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
