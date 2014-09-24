@@ -1,55 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:54211 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756950AbaIEM1Q (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:39153 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751693AbaIXLBE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Sep 2014 08:27:16 -0400
-Received: by mail-we0-f174.google.com with SMTP id w61so249378wes.5
-        for <linux-wireless@vger.kernel.org>; Fri, 05 Sep 2014 05:27:15 -0700 (PDT)
+	Wed, 24 Sep 2014 07:01:04 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH v2 3/3] ath10k: add cal_data debugfs file
+References: <20140923143219.23585.34114.stgit@potku.adurom.net>
+	<20140923143234.23585.2139.stgit@potku.adurom.net>
+	<CA+BoTQ=O8j1x-71SCLq9ZiXBU28Ax9M7tyfbvB=mjsWUwgPSjw@mail.gmail.com>
+Date: Wed, 24 Sep 2014 14:00:37 +0300
+In-Reply-To: <CA+BoTQ=O8j1x-71SCLq9ZiXBU28Ax9M7tyfbvB=mjsWUwgPSjw@mail.gmail.com>
+	(Michal Kazior's message of "Wed, 24 Sep 2014 09:00:39 +0200")
+Message-ID: <87egv18eqy.fsf@kamboji.qca.qualcomm.com> (sfid-20140924_130110_074123_61B5D47E)
 MIME-Version: 1.0
-In-Reply-To: <1409918136.14663.1.camel@jlt4.sipsolutions.net>
-References: <1409867861-3911-1-git-send-email-lorenzo.bianconi83@gmail.com>
-	<1409916684.1940.8.camel@jlt4.sipsolutions.net>
-	<1409918136.14663.1.camel@jlt4.sipsolutions.net>
-Date: Fri, 5 Sep 2014 14:27:14 +0200
-Message-ID: <CAA2SeN+E9NfRmc8uFSL5NkJf3C6N=axh=rtNT2=h3k0KPs6aKQ@mail.gmail.com> (sfid-20140905_142720_128171_95D2A534)
-Subject: Re: [PATCHv5 0/2] configure dynack through mac80211/cfg80211 stack
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It sounds good. I will apply iw patchset on top of it.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Regards,
-Lorenzo
-
-2014-09-05 13:55 GMT+02:00 Johannes Berg <johannes@sipsolutions.net>:
-> On Fri, 2014-09-05 at 13:31 +0200, Johannes Berg wrote:
->> On Thu, 2014-09-04 at 23:57 +0200, Lorenzo Bianconi wrote:
->> > Enable ACK timeout estimation algorithm (dynack) using mac80211
->> > set_coverage_class API. Dynack is activated passing -1 as coverage class
->> > to lower drivers and it is automatically disabled setting valid value for
->> > coverage class. Currently dynack is supported just by ath9k.
->> > Fix set_coverage_class signature for p54, ath9k, ath9k_htc and ath5k drivers.
->>
->> Applied.
+> On 23 September 2014 16:32, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> [...]
+>> diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+>> index 101c6f9cf2a8..426341480262 100644
+>> --- a/drivers/net/wireless/ath/ath10k/debug.c
+>> +++ b/drivers/net/wireless/ath/ath10k/debug.c
+> [...]
+>> +static int ath10k_cal_data_open(struct inode *inode, struct file *file)
 >
-> Forgot to say - I renumbered the nl80211 feature bit and attribute as it
-> was conflicting with Emmanuel's patches (and it was easier to resolve
-> this way around)
->
-> johannes
->
+> Shouldn't functions in debug.c have ath10k_debug_ prefix? I'm aware
+> other fops stuff doesn't include the _debug word as well so this is
+> somewhat consistent with the current code but is this okay in the
+> grand scheme of things? Just wondering.
 
+IMHO we should use ath10k_debug_ with fops functions as well, I just
+haven't been that picky about that.
 
+I'll change this as well and send v3. Thanks for review!
 
 -- 
-UNIX is Sexy: who | grep -i blonde | talk; cd ~; wine; talk; touch;
-unzip; touch; strip; gasp; finger; gasp; mount; fsck; more; yes; gasp;
-umount; make clean; sleep
+Kalle Valo
