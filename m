@@ -1,121 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:64125 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752015AbaIAVLP (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:52264 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751325AbaIXGRu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Sep 2014 17:11:15 -0400
-Received: by mail-wi0-f179.google.com with SMTP id q5so6751693wiv.12
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Sep 2014 14:11:14 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 1/2] bcma: move bus struct setup into early part of host specific code
-Date: Mon,  1 Sep 2014 23:11:06 +0200
-Message-Id: <1409605867-30051-1-git-send-email-zajec5@gmail.com> (sfid-20140901_231125_095742_296D4EFA)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Wed, 24 Sep 2014 02:17:50 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH 3/5] ath9k: Fix queue management
+Date: Wed, 24 Sep 2014 11:48:14 +0530
+Message-Id: <1411539496-30595-4-git-send-email-sujith@msujith.org> (sfid-20140924_081755_698956_FF3B5D52)
+In-Reply-To: <1411539496-30595-1-git-send-email-sujith@msujith.org>
+References: <1411539496-30595-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This change is important for SoC host. In future we will want to know
-chip ID (needed for early MIPS boot) before doing cores scanning.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Since we use IEEE80211_HW_QUEUE_CONTROL now, the
+CAB/Offchannel queues are registered as the last
+two queues. There is no need to check and reassign
+the queues in the TX start()/done() routines.
+
+CAB frames will not reach the tx() callback since
+we set IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING and
+pull the buffered frames during beacon transmission.
+We also don't have a special HW queue for handling
+off-channel frames.
+
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/bcma/host_pci.c   | 3 +++
- drivers/bcma/host_soc.c   | 3 +++
- drivers/bcma/main.c       | 2 --
- drivers/bcma/scan.c       | 7 -------
- include/linux/bcma/bcma.h | 1 -
- 5 files changed, 6 insertions(+), 10 deletions(-)
+ drivers/net/wireless/ath/ath9k/xmit.c | 10 +++-------
+ 1 file changed, 3 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/bcma/host_pci.c b/drivers/bcma/host_pci.c
-index 294a7dd..3251d52 100644
---- a/drivers/bcma/host_pci.c
-+++ b/drivers/bcma/host_pci.c
-@@ -208,6 +208,9 @@ static int bcma_host_pci_probe(struct pci_dev *dev,
- 	bus->boardinfo.vendor = bus->host_pci->subsystem_vendor;
- 	bus->boardinfo.type = bus->host_pci->subsystem_device;
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 93ad31b..2c8327f 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -158,7 +158,6 @@ static void ath_txq_skb_done(struct ath_softc *sc, struct ath_txq *txq,
+ {
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct ath_frame_info *fi = get_frame_info(skb);
+-	int hw_queue;
+ 	int q = fi->txq;
  
-+	/* Initialize struct, detect chip */
-+	bcma_init_bus(bus);
-+
- 	/* Register */
- 	err = bcma_bus_register(bus);
- 	if (err)
-diff --git a/drivers/bcma/host_soc.c b/drivers/bcma/host_soc.c
-index 1edd7e0..379e0d4e 100644
---- a/drivers/bcma/host_soc.c
-+++ b/drivers/bcma/host_soc.c
-@@ -178,6 +178,9 @@ int __init bcma_host_soc_register(struct bcma_soc *soc)
- 	bus->hosttype = BCMA_HOSTTYPE_SOC;
- 	bus->ops = &bcma_host_soc_ops;
+ 	if (q < 0)
+@@ -168,10 +167,9 @@ static void ath_txq_skb_done(struct ath_softc *sc, struct ath_txq *txq,
+ 	if (WARN_ON(--txq->pending_frames < 0))
+ 		txq->pending_frames = 0;
  
-+	/* Initialize struct, detect chip */
-+	bcma_init_bus(bus);
-+
- 	/* Register */
- 	err = bcma_bus_early_register(bus, &soc->core_cc, &soc->core_mips);
- 	if (err)
-diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-index 0ff8d58..9f6b0cb 100644
---- a/drivers/bcma/main.c
-+++ b/drivers/bcma/main.c
-@@ -334,8 +334,6 @@ int __init bcma_bus_early_register(struct bcma_bus *bus,
- 	struct bcma_device *core;
- 	struct bcma_device_id match;
- 
--	bcma_init_bus(bus);
--
- 	match.manuf = BCMA_MANUF_BCM;
- 	match.id = bcma_cc_core_id(bus);
- 	match.class = BCMA_CL_SIM;
-diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
-index e9bd772..e2b9903 100644
---- a/drivers/bcma/scan.c
-+++ b/drivers/bcma/scan.c
-@@ -438,9 +438,6 @@ void bcma_init_bus(struct bcma_bus *bus)
- 	s32 tmp;
- 	struct bcma_chipinfo *chipinfo = &(bus->chipinfo);
- 
--	if (bus->init_done)
--		return;
--
- 	INIT_LIST_HEAD(&bus->cores);
- 	bus->nr_cores = 0;
- 
-@@ -452,8 +449,6 @@ void bcma_init_bus(struct bcma_bus *bus)
- 	chipinfo->pkg = (tmp & BCMA_CC_ID_PKG) >> BCMA_CC_ID_PKG_SHIFT;
- 	bcma_info(bus, "Found chip with id 0x%04X, rev 0x%02X and package 0x%02X\n",
- 		  chipinfo->id, chipinfo->rev, chipinfo->pkg);
--
--	bus->init_done = true;
+-	hw_queue = (info->hw_queue >= sc->hw->queues - 2) ? q : info->hw_queue;
+ 	if (txq->stopped &&
+ 	    txq->pending_frames < sc->tx.txq_max_pending[q]) {
+-		ieee80211_wake_queue(sc->hw, hw_queue);
++		ieee80211_wake_queue(sc->hw, info->hw_queue);
+ 		txq->stopped = false;
+ 	}
  }
+@@ -2208,8 +2206,7 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 	struct ath_atx_tid *tid = NULL;
+ 	struct ath_buf *bf;
+ 	bool queue;
+-	int q, hw_queue;
+-	int ret;
++	int q, ret;
  
- int bcma_bus_scan(struct bcma_bus *bus)
-@@ -463,8 +458,6 @@ int bcma_bus_scan(struct bcma_bus *bus)
+ 	if (vif)
+ 		avp = (void *)vif->drv_priv;
+@@ -2228,14 +2225,13 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 	 */
  
- 	int err, core_num = 0;
+ 	q = skb_get_queue_mapping(skb);
+-	hw_queue = (info->hw_queue >= sc->hw->queues - 2) ? q : info->hw_queue;
  
--	bcma_init_bus(bus);
--
- 	erombase = bcma_scan_read32(bus, 0, BCMA_CC_EROM);
- 	if (bus->hosttype == BCMA_HOSTTYPE_SOC) {
- 		eromptr = ioremap_nocache(erombase, BCMA_CORE_SIZE);
-diff --git a/include/linux/bcma/bcma.h b/include/linux/bcma/bcma.h
-index 0272e49..c1ba87d 100644
---- a/include/linux/bcma/bcma.h
-+++ b/include/linux/bcma/bcma.h
-@@ -332,7 +332,6 @@ struct bcma_bus {
- 	struct bcma_device *mapped_core;
- 	struct list_head cores;
- 	u8 nr_cores;
--	u8 init_done:1;
- 	u8 num;
- 
- 	struct bcma_drv_cc drv_cc;
+ 	ath_txq_lock(sc, txq);
+ 	if (txq == sc->tx.txq_map[q]) {
+ 		fi->txq = q;
+ 		if (++txq->pending_frames > sc->tx.txq_max_pending[q] &&
+ 		    !txq->stopped) {
+-			ieee80211_stop_queue(sc->hw, hw_queue);
++			ieee80211_stop_queue(sc->hw, info->hw_queue);
+ 			txq->stopped = true;
+ 		}
+ 	}
 -- 
-1.8.4.5
+2.1.0
 
