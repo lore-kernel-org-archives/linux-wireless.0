@@ -1,40 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f181.google.com ([209.85.214.181]:43358 "EHLO
-	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932390AbaICNeO (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:58630 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750802AbaIXEhS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Sep 2014 09:34:14 -0400
-Received: by mail-ob0-f181.google.com with SMTP id vb8so6054632obc.40
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Sep 2014 06:34:13 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1409744533.911.1.camel@jlt4.sipsolutions.net>
-References: <CAFnufp09nXuaobS_u7Bh5JcLGgpkPfMbqMfG0HVJYd_mLVR49A@mail.gmail.com>
- <1409744533.911.1.camel@jlt4.sipsolutions.net>
-From: Matteo Croce <matteo@openwrt.org>
-Date: Wed, 3 Sep 2014 15:33:33 +0200
-Message-ID: <CAFnufp2pb4k3amoZoQ3bc5PSXXVzORZDAF2TZoZjmBfGPUKT2Q@mail.gmail.com> (sfid-20140903_153527_623684_D7A8C513)
-Subject: Re: [PATCH] mac80211: Format connected time
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Wed, 24 Sep 2014 00:37:18 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@qca.qualcomm.com
+Subject: [RFC 2/4] ath9k: Use normal queues for offchannel frames
+Date: Wed, 24 Sep 2014 10:07:30 +0530
+Message-Id: <1411533452-22921-3-git-send-email-sujith@msujith.org> (sfid-20140924_063725_449303_BB67AA56)
+In-Reply-To: <1411533452-22921-1-git-send-email-sujith@msujith.org>
+References: <1411533452-22921-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sorry, gmail wrapped the line with the C function.
-Here is a fixed patch
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Format connected_time in the form hh:mm:ss
+There is no reason why frames marked with
+IEEE80211_TX_CTL_TX_OFFCHAN have to be sent using
+the UAPSD queue. Since mac80211 makes sure that
+RoC is done before pushing an offchannel frame
+to the driver, we can use the normal TX queues
+for transmission.
 
-Signed-off-by: Matteo Croce <matteo@openwrt.org>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/xmit.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
---- a/net/mac80211/debugfs_sta.c
-+++ b/net/mac80211/debugfs_sta.c
-@@ -130,7 +130,7 @@
-  result.tm_year -= 70;
-  result.tm_mday -= 1;
-  res = scnprintf(buf, sizeof(buf),
-- "years  - %ld\nmonths - %d\ndays   - %d\nclock  - %d:%d:%d\n\n",
-+ "years  - %ld\nmonths - %d\ndays   - %d\nclock  - %02d:%02d:%02d\n\n",
-  result.tm_year, result.tm_mon, result.tm_mday,
-  result.tm_hour, result.tm_min, result.tm_sec);
-  return simple_read_from_buffer(userbuf, count, ppos, buf, res);
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 2c8327f..00931b6 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -2253,8 +2253,7 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 	if (txctl->an && queue)
+ 		tid = ath_get_skb_tid(sc, txctl->an, skb);
+ 
+-	if (info->flags & (IEEE80211_TX_CTL_PS_RESPONSE |
+-			   IEEE80211_TX_CTL_TX_OFFCHAN)) {
++	if (info->flags & IEEE80211_TX_CTL_PS_RESPONSE) {
+ 		ath_txq_unlock(sc, txq);
+ 		txq = sc->tx.uapsdq;
+ 		ath_txq_lock(sc, txq);
+-- 
+2.1.0
+
