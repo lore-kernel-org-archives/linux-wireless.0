@@ -1,303 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f43.google.com ([209.85.215.43]:62260 "EHLO
-	mail-la0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932083AbaIENG4 (ORCPT
+Received: from mail-we0-f170.google.com ([74.125.82.170]:50735 "EHLO
+	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751122AbaIXHJP convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Sep 2014 09:06:56 -0400
-Received: by mail-la0-f43.google.com with SMTP id gi9so2782886lab.30
-        for <linux-wireless@vger.kernel.org>; Fri, 05 Sep 2014 06:06:54 -0700 (PDT)
-From: Henning Rogge <hrogge@gmail.com>
-To: "linux-wireless @ vger . kernel . org"
-	<linux-wireless@vger.kernel.org>
-Cc: Henning Rogge <henning.rogge@fkie.fraunhofer.de>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-Subject: [PATCH v3 1/2] cfg80211: add ops to query mesh proxy path table
-Date: Fri,  5 Sep 2014 15:06:43 +0200
-Message-Id: <1409922404-8217-2-git-send-email-henning.rogge@fkie.fraunhofer.de> (sfid-20140905_150659_984364_1EAB4F9D)
-In-Reply-To: <1409922404-8217-1-git-send-email-henning.rogge@fkie.fraunhofer.de>
-References: <1409922404-8217-1-git-send-email-henning.rogge@fkie.fraunhofer.de>
+	Wed, 24 Sep 2014 03:09:15 -0400
+Received: by mail-we0-f170.google.com with SMTP id x48so4238594wes.29
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Sep 2014 00:09:13 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <5421A44C.8080307@candelatech.com>
+References: <1411426820-4047-1-git-send-email-greearb@candelatech.com>
+	<CA+BoTQn9sECMNZsxQpB4i3wHPxfVL+LXq9=2GBd-opH6+9TD=A@mail.gmail.com>
+	<5421A44C.8080307@candelatech.com>
+Date: Wed, 24 Sep 2014 09:09:13 +0200
+Message-ID: <CA+BoTQ=mry3tPD-LK+gFD2bC6RU0KvY6LC9=FOAGTLi_1rzUog@mail.gmail.com> (sfid-20140924_090920_807483_F1278F73)
+Subject: Re: [PATCH] ath10k: use configured nss instead of max nss.
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add two new cfg80211 operations for querying the content of the the mac80211s proxy path table
+On 23 September 2014 18:48, Ben Greear <greearb@candelatech.com> wrote:
+> On 09/23/2014 01:59 AM, Michal Kazior wrote:
+>> On 23 September 2014 01:00,  <greearb@candelatech.com> wrote:
+>>> From: Ben Greear <greearb@candelatech.com>
+[...]
+>>> @@ -4086,6 +4086,10 @@ ath10k_default_bitrate_mask(struct ath10k *ar,
+>>>         u32 legacy = 0x00ff;
+>>>         u8 ht = 0xff, i;
+>>>         u16 vht = 0x3ff;
+>>> +       u16 nrf = ar->num_rf_chains;
+>>> +
+>>> +       if (ar->cfg_tx_chainmask)
+>>> +               nrf = get_nss_from_chainmask(ar->cfg_tx_chainmask);
+[...]
+>> I think it might be a good idea to convey the limitation of tx/rx
+>> chainmask to the user: you can't change the tx/rx chainmask on the fly
+>> easily (while connected/have associated stations). Or do you plan to
+>> schedule peer reassoc in __ath10k_set_antenna() in a follow up
+>> patch(es) later?
+>
+> My user-space tools assume you have to re-connect (requested from user-space)
+> after changing the chainmask.  I was under the impression that this
+> is how ath9k works, though I could be wrong.
 
-Signed-off-by: Henning Rogge <henning.rogge@fkie.fraunhofer.de>
----
- include/net/cfg80211.h       |  7 ++++
- include/uapi/linux/nl80211.h |  6 +++
- net/wireless/nl80211.c       | 99 ++++++++++++++++++++++++++++++++++++++++++++
- net/wireless/rdev-ops.h      | 27 +++++++++++-
- net/wireless/trace.h         | 45 ++++++++++++++++++++
- 5 files changed, 183 insertions(+), 1 deletion(-)
+ath9k doesn't have firmware and it doesn't have a blackbox rate
+control so maybe it doesn't need to worry about this as much as ath10k
+needs to.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 0a080c4..cda05f4 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2139,6 +2139,8 @@ struct cfg80211_qos_map {
-  * @change_mpath: change a given mesh path
-  * @get_mpath: get a mesh path for the given parameters
-  * @dump_mpath: dump mesh path callback -- resume dump at index @idx
-+ * @get_mpp: get a mesh proxy path for the given parameters
-+ * @dump_mpp: dump mesh proxy path callback -- resume dump at index @idx
-  * @join_mesh: join the mesh network with the specified parameters
-  *	(invoked with the wireless_dev mutex held)
-  * @leave_mesh: leave the current mesh network
-@@ -2378,6 +2380,11 @@ struct cfg80211_ops {
- 	int	(*dump_mpath)(struct wiphy *wiphy, struct net_device *dev,
- 			      int idx, u8 *dst, u8 *next_hop,
- 			      struct mpath_info *pinfo);
-+	int	(*get_mpp)(struct wiphy *wiphy, struct net_device *dev,
-+			   u8 *dst, u8 *mpp, struct mpath_info *pinfo);
-+	int	(*dump_mpp)(struct wiphy *wiphy, struct net_device *dev,
-+			    int idx, u8 *dst, u8 *mpp,
-+			    struct mpath_info *pinfo);
- 	int	(*get_mesh_config)(struct wiphy *wiphy,
- 				struct net_device *dev,
- 				struct mesh_config *conf);
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index f1db15b..80cff48 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -722,6 +722,10 @@
-  *	QoS mapping is relevant for IP packets, it is only valid during an
-  *	association. This is cleared on disassociation and AP restart.
-  *
-+ * @NL80211_CMD_GET_MPP: Get mesh path attributes for mesh proxy path to
-+ *	destination %NL80211_ATTR_MAC on the interface identified by
-+ *	%NL80211_ATTR_IFINDEX.
-+ *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-  */
-@@ -893,6 +897,8 @@ enum nl80211_commands {
- 
- 	NL80211_CMD_SET_QOS_MAP,
- 
-+	NL80211_CMD_GET_MPP,
-+
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index df7b133..1e33f2f 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -4581,6 +4581,96 @@ static int nl80211_del_mpath(struct sk_buff *skb, struct genl_info *info)
- 	return rdev_del_mpath(rdev, dev, dst);
- }
- 
-+static int nl80211_get_mpp(struct sk_buff *skb, struct genl_info *info)
-+{
-+	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-+	int err;
-+	struct net_device *dev = info->user_ptr[1];
-+	struct mpath_info pinfo;
-+	struct sk_buff *msg;
-+	u8 *dst = NULL;
-+	u8 mpp[ETH_ALEN];
-+
-+	memset(&pinfo, 0, sizeof(pinfo));
-+
-+	if (!info->attrs[NL80211_ATTR_MAC])
-+		return -EINVAL;
-+
-+	dst = nla_data(info->attrs[NL80211_ATTR_MAC]);
-+
-+	if (!rdev->ops->get_mpp)
-+		return -EOPNOTSUPP;
-+
-+	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_MESH_POINT)
-+		return -EOPNOTSUPP;
-+
-+	err = rdev_get_mpp(rdev, dev, dst, mpp, &pinfo);
-+	if (err)
-+		return err;
-+
-+	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
-+	if (!msg)
-+		return -ENOMEM;
-+
-+	if (nl80211_send_mpath(msg, info->snd_portid, info->snd_seq, 0,
-+			       dev, dst, mpp, &pinfo) < 0) {
-+		nlmsg_free(msg);
-+		return -ENOBUFS;
-+	}
-+
-+	return genlmsg_reply(msg, info);
-+}
-+
-+static int nl80211_dump_mpp(struct sk_buff *skb,
-+			    struct netlink_callback *cb)
-+{
-+	struct mpath_info pinfo;
-+	struct cfg80211_registered_device *rdev;
-+	struct wireless_dev *wdev;
-+	u8 dst[ETH_ALEN];
-+	u8 mpp[ETH_ALEN];
-+	int path_idx = cb->args[2];
-+	int err;
-+
-+	err = nl80211_prepare_wdev_dump(skb, cb, &rdev, &wdev);
-+	if (err)
-+		return err;
-+
-+	if (!rdev->ops->dump_mpp) {
-+		err = -EOPNOTSUPP;
-+		goto out_err;
-+	}
-+
-+	if (wdev->iftype != NL80211_IFTYPE_MESH_POINT) {
-+		err = -EOPNOTSUPP;
-+		goto out_err;
-+	}
-+
-+	while (1) {
-+		err = rdev_dump_mpp(rdev, wdev->netdev, path_idx, dst,
-+				    mpp, &pinfo);
-+		if (err == -ENOENT)
-+			break;
-+		if (err)
-+			goto out_err;
-+
-+		if (nl80211_send_mpath(skb, NETLINK_CB(cb->skb).portid,
-+				       cb->nlh->nlmsg_seq, NLM_F_MULTI,
-+				       wdev->netdev, dst, mpp,
-+				       &pinfo) < 0)
-+			goto out;
-+
-+		path_idx++;
-+	}
-+
-+ out:
-+	cb->args[2] = path_idx;
-+	err = skb->len;
-+ out_err:
-+	nl80211_finish_wdev_dump(rdev);
-+	return err;
-+}
-+
- static int nl80211_set_bss(struct sk_buff *skb, struct genl_info *info)
- {
- 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-@@ -9603,6 +9693,15 @@ static const struct genl_ops nl80211_ops[] = {
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
- 	{
-+		.cmd = NL80211_CMD_GET_MPP,
-+		.doit = nl80211_get_mpp,
-+		.dumpit = nl80211_dump_mpp,
-+		.policy = nl80211_policy,
-+		.flags = GENL_ADMIN_PERM,
-+		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
-+				  NL80211_FLAG_NEED_RTNL,
-+	},
-+	{
- 		.cmd = NL80211_CMD_SET_MPATH,
- 		.doit = nl80211_set_mpath,
- 		.policy = nl80211_policy,
-diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
-index 56c2240..e5560d5 100644
---- a/net/wireless/rdev-ops.h
-+++ b/net/wireless/rdev-ops.h
-@@ -263,6 +263,18 @@ static inline int rdev_get_mpath(struct cfg80211_registered_device *rdev,
- 
- }
- 
-+static inline int rdev_get_mpp(struct cfg80211_registered_device *rdev,
-+			       struct net_device *dev, u8 *dst, u8 *mpp,
-+			       struct mpath_info *pinfo)
-+{
-+	int ret;
-+
-+	trace_rdev_get_mpp(&rdev->wiphy, dev, dst, mpp);
-+	ret = rdev->ops->get_mpp(&rdev->wiphy, dev, dst, mpp, pinfo);
-+	trace_rdev_return_int_mpath_info(&rdev->wiphy, ret, pinfo);
-+	return ret;
-+}
-+
- static inline int rdev_dump_mpath(struct cfg80211_registered_device *rdev,
- 				  struct net_device *dev, int idx, u8 *dst,
- 				  u8 *next_hop, struct mpath_info *pinfo)
-@@ -271,7 +283,20 @@ static inline int rdev_dump_mpath(struct cfg80211_registered_device *rdev,
- 	int ret;
- 	trace_rdev_dump_mpath(&rdev->wiphy, dev, idx, dst, next_hop);
- 	ret = rdev->ops->dump_mpath(&rdev->wiphy, dev, idx, dst, next_hop,
--				     pinfo);
-+				    pinfo);
-+	trace_rdev_return_int_mpath_info(&rdev->wiphy, ret, pinfo);
-+	return ret;
-+}
-+
-+static inline int rdev_dump_mpp(struct cfg80211_registered_device *rdev,
-+				struct net_device *dev, int idx, u8 *dst,
-+				u8 *mpp, struct mpath_info *pinfo)
-+
-+{
-+	int ret;
-+
-+	trace_rdev_dump_mpp(&rdev->wiphy, dev, idx, dst, mpp);
-+	ret = rdev->ops->dump_mpp(&rdev->wiphy, dev, idx, dst, mpp, pinfo);
- 	trace_rdev_return_int_mpath_info(&rdev->wiphy, ret, pinfo);
- 	return ret;
- }
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index 0c524cd..57ab727 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -801,6 +801,51 @@ TRACE_EVENT(rdev_dump_mpath,
- 		  MAC_PR_ARG(next_hop))
- );
- 
-+TRACE_EVENT(rdev_get_mpp,
-+	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
-+		 u8 *dst, u8 *mpp),
-+	TP_ARGS(wiphy, netdev, dst, mpp),
-+	TP_STRUCT__entry(
-+		WIPHY_ENTRY
-+		NETDEV_ENTRY
-+		MAC_ENTRY(dst)
-+		MAC_ENTRY(mpp)
-+	),
-+	TP_fast_assign(
-+		WIPHY_ASSIGN;
-+		NETDEV_ASSIGN;
-+		MAC_ASSIGN(dst, dst);
-+		MAC_ASSIGN(mpp, mpp);
-+	),
-+	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", destination: " MAC_PR_FMT
-+		  ", mpp: " MAC_PR_FMT, WIPHY_PR_ARG, NETDEV_PR_ARG,
-+		  MAC_PR_ARG(dst), MAC_PR_ARG(mpp))
-+);
-+
-+TRACE_EVENT(rdev_dump_mpp,
-+	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev, int idx,
-+		 u8 *dst, u8 *mpp),
-+	TP_ARGS(wiphy, netdev, idx, mpp, dst),
-+	TP_STRUCT__entry(
-+		WIPHY_ENTRY
-+		NETDEV_ENTRY
-+		MAC_ENTRY(dst)
-+		MAC_ENTRY(mpp)
-+		__field(int, idx)
-+	),
-+	TP_fast_assign(
-+		WIPHY_ASSIGN;
-+		NETDEV_ASSIGN;
-+		MAC_ASSIGN(dst, dst);
-+		MAC_ASSIGN(mpp, mpp);
-+		__entry->idx = idx;
-+	),
-+	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", index: %d, destination: "
-+		  MAC_PR_FMT ", mpp: " MAC_PR_FMT,
-+		  WIPHY_PR_ARG, NETDEV_PR_ARG, __entry->idx, MAC_PR_ARG(dst),
-+		  MAC_PR_ARG(mpp))
-+);
-+
- TRACE_EVENT(rdev_return_int_mpath_info,
- 	TP_PROTO(struct wiphy *wiphy, int ret, struct mpath_info *pinfo),
- 	TP_ARGS(wiphy, ret, pinfo),
--- 
-1.9.1
+But then this is not something you normally use except some very
+specific use cases so I think it might not be worth the hassle to
+implement full-blown reconfig after chainmask is updated.
 
+
+> I would rather keep this requirement in user-space...
+>
+> I am not sure where to document this...just a comment in the code?
+
+Hmm.. Perhaps in ath10k_set_antenna? Or maybe we should just put it up
+on the wiki?
+
+But it's still probably a good idea to comment the quoted code chunk
+above explaining why nrf is overriden by chainmask (i.e. due to
+firmware rate control issues, right?).
+
+
+Michał
