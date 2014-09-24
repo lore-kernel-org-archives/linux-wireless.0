@@ -1,60 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:37025 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750914AbaIVJuA (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:47775 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752315AbaIXTBc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Sep 2014 05:50:00 -0400
-Message-ID: <541FF0C4.9020805@broadcom.com> (sfid-20140922_115034_865045_C445849E)
-Date: Mon, 22 Sep 2014 11:49:56 +0200
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Emil Goode <emilgoode@gmail.com>
-CC: Brett Rudley <brudley@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	Daniel Kim <dekim@broadcom.com>,
-	<linux-wireless@vger.kernel.org>,
-	<brcm80211-dev-list@broadcom.com>, <netdev@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <kernel-janitors@vger.kernel.org>
-Subject: Re: [PATCH] brcmfmac: Fix off by one bug in brcmf_count_20mhz_channels()
-References: <1411253932-27973-1-git-send-email-emilgoode@gmail.com>
-In-Reply-To: <1411253932-27973-1-git-send-email-emilgoode@gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Wed, 24 Sep 2014 15:01:32 -0400
+Date: Wed, 24 Sep 2014 15:01:29 -0400 (EDT)
+Message-Id: <20140924.150129.1615102185939385229.davem@davemloft.net> (sfid-20140924_210151_967742_A9D8B4F9)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2014-09-23
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20140923150002.GH23806@tuxdriver.com>
+References: <20140923150002.GH23806@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/21/14 00:58, Emil Goode wrote:
-> In the brcmf_count_20mhz_channels function we are looping through a list
-> of channels received from firmware. Since the index of the first channel
-> is 0 the condition leads to an off by one bug. This is causing us to hit
-> the WARN_ON_ONCE(1) calls in the brcmu_d11n_decchspec function, which is
-> how I discovered the bug.
->
-> Introduced by:
-> commit b48d891676f756d48b4d0ee131e4a7a5d43ca417
-> ("brcmfmac: rework wiphy structure setup")
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Tue, 23 Sep 2014 11:00:02 -0400
 
-My bad :-(. You can add:
+> Please consider pulling this one last batch of fixes intended for the 3.17 stream!
+> 
+> For the NFC bits, Samuel says:
+> 
+> "Hopefully not too late for a handful of NFC fixes:
+> 
+> - 2 potential build failures for ST21NFCA and ST21NFCB, triggered by a
+>   depmod dependenyc cycle.
+> - One potential buffer overflow in the microread driver."
+> 
+> On top of that...
+> 
+> Emil Goode provides a fix for a brcmfmac off-by-one regression which
+> was introduced in the 3.17 cycle.
+> 
+> Loic Poulain fixes a polarity mismatch for a variable assignment
+> inside of rfkill-gpio.
+> 
+> Wojciech Dubowik prevents a NULL pointer dereference in ath9k.
+> 
+> Please let me know if there are problems!
 
-Acked-by: Arend van Spriel <arend@broadcom.com>
-> Signed-off-by: Emil Goode<emilgoode@gmail.com>
-> ---
->   drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-> index 02fe706..93b5dd9 100644
-> --- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-> +++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-> @@ -4918,7 +4918,7 @@ static void brcmf_count_20mhz_channels(struct brcmf_cfg80211_info *cfg,
->   	struct brcmu_chan ch;
->   	int i;
->
-> -	for (i = 0; i<= total; i++) {
-> +	for (i = 0; i<  total; i++) {
->   		ch.chspec = (u16)le32_to_cpu(chlist->element[i]);
->   		cfg->d11inf.decchspec(&ch);
->
-
+Pulled, thanks John.
