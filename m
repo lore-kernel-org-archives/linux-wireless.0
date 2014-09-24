@@ -1,79 +1,316 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:56823 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753922AbaIHQa0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Sep 2014 12:30:26 -0400
-Received: by mail-we0-f174.google.com with SMTP id t60so1385781wes.19
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Sep 2014 09:30:24 -0700 (PDT)
-Message-ID: <1410193824.10388.24.camel@umadbro> (sfid-20140908_183028_805767_E04AFCC8)
-Subject: 802.11p rate control
-From: Rostislav Lisovy <lisovy@gmail.com>
-To: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Cc: burak.simsek@volkswagen.de, s.sander@nordsys.de,
-	sojkam1@fel.cvut.cz, jan-niklas.meier@volkswagen.de,
-	emmanuel.thierry@yogoko.fr, thierry.ernst@yogoko.fr,
-	oyunaash@gmail.com, laszlo.virag@commsignia.com
-Date: Mon, 08 Sep 2014 18:30:24 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from hauke-m.de ([5.39.93.123]:37869 "EHLO hauke-m.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751165AbaIXWRg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Sep 2014 18:17:36 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Cc: zajec5@gmail.com, arend@broadcom.com,
+	linux-arm-kernel@lists.infradead.org, arnd@arndb.de,
+	devicetree@vger.kernel.org, varkabhadram@gmail.com,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH v5 1/2] bcma: register bcma as device tree driver
+Date: Thu, 25 Sep 2014 00:17:27 +0200
+Message-Id: <1411597048-25470-1-git-send-email-hauke@hauke-m.de> (sfid-20140925_001740_910395_4EEEC31F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear 802.11 experts;
-Short introduction before the actual question:
-Some of you have probably noticed my effort of bringing the 802.11p
-support for the mainline Linux kernel. (Side note: I know that "802.11p"
-is already part of the IEEE 802.11-2012 but calling it ".11p" makes it
-easier to determine what am I actually talking about).
-My main focus is on the ITS-G5 (ETSI EN 302 663 [1], ETSI TS 102 687
-[2]), European car-to-x communication standard based on 802.11p. For
-those who are further interested, my work might be found at
-https://github.com/CTU-IIG/802.11p-linux/tree/its-g5_devel 
+This driver is used by the bcm53xx ARM SoC code. Now it is possible to
+give the address of the chipcommon core in device tree and bcma will
+search for all the other cores.
 
-Back to the main purpose of this email. I am still unsure how to
-implement the rate-control handling for the 802.11p. The indisputable
-fact is that the mandatory rates each 802.11p compliant device has to
-support are 3, 6, 12 Mbit/s (IEEE 802.11-2012 18.1.1) since we are using
-the OFDM 10MHz channels (other OFDM datarates might be used as well).
-The decision which datarate to use for TX should be done by some kind of
-algorithm, probably running in the kernel. The question is how to do so
-in a clean way.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ Documentation/devicetree/bindings/bus/bcma.txt | 20 +++++++
+ drivers/bcma/bcma_private.h                    | 14 +++++
+ drivers/bcma/host_soc.c                        | 81 ++++++++++++++++++++++++++
+ drivers/bcma/main.c                            | 52 ++++++++++++++++-
+ include/linux/bcma/bcma.h                      |  2 +
+ 5 files changed, 168 insertions(+), 1 deletion(-)
+ create mode 100644 Documentation/devicetree/bindings/bus/bcma.txt
 
-The possible obstacles are:
-* 802.11p will be used mainly for two independent C2X protocol stacks --
-one is the European ETSI ITS-G5, the other one is the US WAVE (IEEE
-1609). I assume that these two protocol stack implementations will
-differ mainly in the user-space while the kernel part will be the same.
-* ITS-G5 already speaks about the "default datarate" for different
-channels ([1] 4.3, Table 2) -- i.e. 6 Mbit/s for channel no. 180; 12
-Mbit/s for channel no. 178. This should be probably defined when
-"joining the network" on a fixed channel.
+This is based on wireless-testing and should go into that tree.
 
-The possible (first implementation) solution might be either to
-implement some "dummy" rate control algorithm that will set a fixed
-datarate only once (during "ocb join" command) or to use the Minstrel
-while limiting the allowed datarate to be the lowest one; i.e.
-    mand_rates = ieee80211_mandatory_rates(sband, scan_width);
-    sta->sta.supp_rates[band] =
-        find_first_bit(&mand_rates, sizeof(u32));
+changes since:
+v4:
+ - move the code adding the device tree to the child driver into this patch
+ - remove all references to irq from this patch
 
-If I am not mistaken, it is not possible to live without an in-kernel
-rate_control algorithm?
-One interesting idea I got from one colleague is to implement the
-algorithm logic in the user-space -- kernel would contain just a thin
-shell controlled from the user-space (via netlink?). This is probably
-not as insane as it may sound since the purpose of the rate-control
-algorithm for 802.11p (at least for ITS-G5) is not to "maximize the
-immediate throughput" but more like "shared medium congestion control",
-which may require much slower frequency of a control loop.
+v3:
+ - remove .owner = THIS_MODULE,
 
-I will appreciate your comments. 
+v2:
+ - fix description
+ - use ranges dt in the example
+ - always define a empty implementation of 
+   bcma_host_soc_{un}register_driver() when it is build and remove some ifdefs
 
-Best regards;
-Rostislav Lisovy
+v1:
+ - renamed aix to axi
 
-[1] http://www.etsi.org/deliver/etsi_en/302600_302699/302663/01.02.01_60/en_302663v010201p.pdf
-[2] http://www.etsi.org/deliver/etsi_ts/102600_102699/102687/01.01.01_60/ts_102687v010101p.pdf
+RFC:
+ - reworded the irq description
+ - improved the example
+ - hocked into bcma_modeinit() and bcma_modexit()
 
+diff --git a/Documentation/devicetree/bindings/bus/bcma.txt b/Documentation/devicetree/bindings/bus/bcma.txt
+new file mode 100644
+index 0000000..e9070c1
+--- /dev/null
++++ b/Documentation/devicetree/bindings/bus/bcma.txt
+@@ -0,0 +1,20 @@
++Driver for ARM AXI Bus with Broadcom Plugins (bcma)
++
++Required properties:
++
++- compatible : brcm,bus-axi
++
++- reg : iomem address range of chipcommon core
++
++The cores on the AXI bus are automatically detected by bcma with the
++memory ranges they are using and they get registered afterwards.
++
++Example:
++
++	axi@18000000 {
++		compatible = "brcm,bus-axi";
++		reg = <0x18000000 0x1000>;
++		ranges = <0x00000000 0x18000000 0x00100000>;
++		#address-cells = <1>;
++		#size-cells = <1>;
++	};
+diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
+index b40be43..b6412b2 100644
+--- a/drivers/bcma/bcma_private.h
++++ b/drivers/bcma/bcma_private.h
+@@ -88,6 +88,20 @@ extern int __init bcma_host_pci_init(void);
+ extern void __exit bcma_host_pci_exit(void);
+ #endif /* CONFIG_BCMA_HOST_PCI */
+ 
++/* host_soc.c */
++#if defined(CONFIG_BCMA_HOST_SOC) && defined(CONFIG_OF)
++extern int __init bcma_host_soc_register_driver(void);
++extern void __exit bcma_host_soc_unregister_driver(void);
++#else
++static inline int __init bcma_host_soc_register_driver(void)
++{
++	return 0;
++}
++static inline void __exit bcma_host_soc_unregister_driver(void)
++{
++}
++#endif /* CONFIG_BCMA_HOST_SOC && CONFIG_OF */
++
+ /* driver_pci.c */
+ u32 bcma_pcie_read(struct bcma_drv_pci *pc, u32 address);
+ 
+diff --git a/drivers/bcma/host_soc.c b/drivers/bcma/host_soc.c
+index 718e054..335cbcf 100644
+--- a/drivers/bcma/host_soc.c
++++ b/drivers/bcma/host_soc.c
+@@ -7,6 +7,9 @@
+ 
+ #include "bcma_private.h"
+ #include "scan.h"
++#include <linux/slab.h>
++#include <linux/module.h>
++#include <linux/of_address.h>
+ #include <linux/bcma/bcma.h>
+ #include <linux/bcma/bcma_soc.h>
+ 
+@@ -176,6 +179,7 @@ int __init bcma_host_soc_register(struct bcma_soc *soc)
+ 	/* Host specific */
+ 	bus->hosttype = BCMA_HOSTTYPE_SOC;
+ 	bus->ops = &bcma_host_soc_ops;
++	bus->host_pdev = NULL;
+ 
+ 	/* Initialize struct, detect chip */
+ 	bcma_init_bus(bus);
+@@ -195,3 +199,80 @@ int __init bcma_host_soc_init(struct bcma_soc *soc)
+ 
+ 	return err;
+ }
++
++#ifdef CONFIG_OF
++static int bcma_host_soc_probe(struct platform_device *pdev)
++{
++	struct device *dev = &pdev->dev;
++	struct device_node *np = dev->of_node;
++	struct bcma_bus *bus;
++	int err;
++
++	/* Alloc */
++	bus = devm_kzalloc(dev, sizeof(*bus), GFP_KERNEL);
++	if (!bus)
++		return -ENOMEM;
++
++	/* Map MMIO */
++	bus->mmio = of_iomap(np, 0);
++	if (!bus->mmio)
++		return -ENOMEM;
++
++	/* Host specific */
++	bus->hosttype = BCMA_HOSTTYPE_SOC;
++	bus->ops = &bcma_host_soc_ops;
++	bus->host_pdev = pdev;
++
++	/* Initialize struct, detect chip */
++	bcma_init_bus(bus);
++
++	/* Register */
++	err = bcma_bus_register(bus);
++	if (err)
++		goto err_unmap_mmio;
++
++	platform_set_drvdata(pdev, bus);
++
++	return err;
++
++err_unmap_mmio:
++	iounmap(bus->mmio);
++	return err;
++}
++
++static int bcma_host_soc_remove(struct platform_device *pdev)
++{
++	struct bcma_bus *bus = platform_get_drvdata(pdev);
++
++	bcma_bus_unregister(bus);
++	iounmap(bus->mmio);
++	platform_set_drvdata(pdev, NULL);
++
++	return 0;
++}
++
++static const struct of_device_id bcma_host_soc_of_match[] = {
++	{ .compatible = "brcm,bus-axi", },
++	{},
++};
++MODULE_DEVICE_TABLE(of, bcma_host_soc_of_match);
++
++static struct platform_driver bcma_host_soc_driver = {
++	.driver = {
++		.name = "bcma-host-soc",
++		.of_match_table = bcma_host_soc_of_match,
++	},
++	.probe		= bcma_host_soc_probe,
++	.remove		= bcma_host_soc_remove,
++};
++
++int __init bcma_host_soc_register_driver(void)
++{
++	return platform_driver_register(&bcma_host_soc_driver);
++}
++
++void __exit bcma_host_soc_unregister_driver(void)
++{
++	platform_driver_unregister(&bcma_host_soc_driver);
++}
++#endif /* CONFIG_OF */
+diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
+index c421403..d1656c2 100644
+--- a/drivers/bcma/main.c
++++ b/drivers/bcma/main.c
+@@ -10,6 +10,7 @@
+ #include <linux/platform_device.h>
+ #include <linux/bcma/bcma.h>
+ #include <linux/slab.h>
++#include <linux/of_address.h>
+ 
+ MODULE_DESCRIPTION("Broadcom's specific AMBA driver");
+ MODULE_LICENSE("GPL");
+@@ -131,6 +132,43 @@ static bool bcma_is_core_needed_early(u16 core_id)
+ 	return false;
+ }
+ 
++#ifdef CONFIG_OF
++static struct device_node *bcma_of_find_child_device(struct platform_device *parent,
++						     struct bcma_device *core)
++{
++	struct device_node *node;
++	u64 size;
++	const __be32 *reg;
++
++	if (!parent || !parent->dev.of_node)
++		return NULL;
++
++	for_each_child_of_node(parent->dev.of_node, node) {
++		reg = of_get_address(node, 0, &size, NULL);
++		if (!reg)
++			continue;
++		if (of_translate_address(node, reg) == core->addr)
++			return node;
++	}
++	return NULL;
++}
++
++static void bcma_of_fill_device(struct platform_device *parent,
++				struct bcma_device *core)
++{
++	struct device_node *node;
++
++	node = bcma_of_find_child_device(parent, core);
++	if (node)
++		core->dev.of_node = node;
++}
++#else
++static void bcma_of_fill_device(struct platform_device *parent,
++				struct bcma_device *core)
++{
++}
++#endif /* CONFIG_OF */
++
+ static void bcma_register_core(struct bcma_bus *bus, struct bcma_device *core)
+ {
+ 	int err;
+@@ -147,7 +185,13 @@ static void bcma_register_core(struct bcma_bus *bus, struct bcma_device *core)
+ 		break;
+ 	case BCMA_HOSTTYPE_SOC:
+ 		core->dev.dma_mask = &core->dev.coherent_dma_mask;
+-		core->dma_dev = &core->dev;
++		if (bus->host_pdev) {
++			core->dma_dev = &bus->host_pdev->dev;
++			core->dev.parent = &bus->host_pdev->dev;
++			bcma_of_fill_device(bus->host_pdev, core);
++		} else {
++			core->dma_dev = &core->dev;
++		}
+ 		break;
+ 	case BCMA_HOSTTYPE_SDIO:
+ 		break;
+@@ -528,6 +572,11 @@ static int __init bcma_modinit(void)
+ 	if (err)
+ 		return err;
+ 
++	err = bcma_host_soc_register_driver();
++	if (err) {
++		pr_err("SoC host initialization failed\n");
++		err = 0;
++	}
+ #ifdef CONFIG_BCMA_HOST_PCI
+ 	err = bcma_host_pci_init();
+ 	if (err) {
+@@ -545,6 +594,7 @@ static void __exit bcma_modexit(void)
+ #ifdef CONFIG_BCMA_HOST_PCI
+ 	bcma_host_pci_exit();
+ #endif
++	bcma_host_soc_unregister_driver();
+ 	bus_unregister(&bcma_bus_type);
+ }
+ module_exit(bcma_modexit)
+diff --git a/include/linux/bcma/bcma.h b/include/linux/bcma/bcma.h
+index 6345979..729f48e 100644
+--- a/include/linux/bcma/bcma.h
++++ b/include/linux/bcma/bcma.h
+@@ -323,6 +323,8 @@ struct bcma_bus {
+ 		struct pci_dev *host_pci;
+ 		/* Pointer to the SDIO device (only for BCMA_HOSTTYPE_SDIO) */
+ 		struct sdio_func *host_sdio;
++		/* Pointer to platform device (only for BCMA_HOSTTYPE_SOC) */
++		struct platform_device *host_pdev;
+ 	};
+ 
+ 	struct bcma_chipinfo chipinfo;
+-- 
+1.9.1
 
