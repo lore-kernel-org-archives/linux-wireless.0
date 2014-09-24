@@ -1,33 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hauke-m.de ([5.39.93.123]:48583 "EHLO hauke-m.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752010AbaIGTZ3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Sep 2014 15:25:29 -0400
-Message-ID: <540CB124.1080406@hauke-m.de> (sfid-20140907_212534_520688_5D498A1C)
-Date: Sun, 07 Sep 2014 21:25:24 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from 6.mo68.mail-out.ovh.net ([46.105.63.100]:48934 "EHLO
+	mo68.mail-out.ovh.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751753AbaIXRhs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Sep 2014 13:37:48 -0400
+Received: from mail440.ha.ovh.net (b9.ovh.net [213.186.33.59])
+	by mo68.mail-out.ovh.net (Postfix) with SMTP id 0BB07FFBB18
+	for <linux-wireless@vger.kernel.org>; Wed, 24 Sep 2014 19:19:09 +0200 (CEST)
+Received: from po57.wetron.local (83.pool85-58-156.dynamic.orange.es [85.58.156.83])
+	by ventoso.org (Postfix) with ESMTPSA id 2149244C5B
+	for <linux-wireless@vger.kernel.org>; Wed, 24 Sep 2014 19:19:08 +0200 (CEST)
+Message-ID: <5422FD0B.3060806@ventoso.org> (sfid-20140924_193752_339482_4676C729)
+Date: Wed, 24 Sep 2014 19:19:07 +0200
+From: Luca Olivetti <luca@ventoso.org>
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH 1/2] bcma: move code for core registration into separate
- function
-References: <1409869129-15674-1-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1409869129-15674-1-git-send-email-zajec5@gmail.com>
-Content-Type: text/plain; charset=utf-8
+To: linux-wireless@vger.kernel.org
+Subject: Mediatek MT7601U big endian fixes
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/05/2014 12:18 AM, Rafał Miłecki wrote:
-> This cleans code a bit and will us to register cores in other places as
-> well. The only difference with this patch is using "core_index" for
-> setting device name.
-> 
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-Acked-by: Hauke Mehrtens <hauke@hauke-m.de>
+Hello,
 
-> ---
->  drivers/bcma/main.c | 67 ++++++++++++++++++++++++++++-------------------------
->  1 file changed, 36 insertions(+), 31 deletions(-)
-> 
+apart from the general brokenness of the vendor supplied driver (see
+http://www.spinics.net/lists/linux-wireless/msg126291.html and
+http://www.arnelborja.com/compiling-rt2870-wifi-driver-in-fedora/), it
+doesn't work in big endian mode.
 
+Without this patch:
+
+https://code.google.com/p/mt7601-openwrt/source/browse/patches/007-big-endian-fix.patch
+
+it doesn't even compile, and this one
+
+https://code.google.com/p/mt7601-openwrt/source/browse/patches/008-more-big-endiand-fixes.patch
+
+makes it functional.
+
+Before finding the fix myself I contacted mediatek support with no reply
+so far.
+
+Do you know if is there somebody (at ralink/mediatek or elsewhere)
+working on integrating this chipset in the in-kernel driver?
+
+Bye
+-- 
+Luca
