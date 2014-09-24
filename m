@@ -1,92 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:55638 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751462AbaIGJhL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Sep 2014 05:37:11 -0400
-Message-ID: <1410082623.2650.9.camel@jlt4.sipsolutions.net> (sfid-20140907_113722_838575_CE74970F)
-Subject: Re: [RFC v2] device coredump: add new device coredump class
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-kernel@vger.kernel.org,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Luciano Coelho <luca@coelho.fi>, Kalle Valo <kvalo@adurom.com>,
-	dri-devel@lists.freedesktop.org, linux-wireless@vger.kernel.org
-Date: Sun, 07 Sep 2014 11:37:03 +0200
-In-Reply-To: <20140905221314.GA1533@kroah.com>
-References: <1409907054-17596-1-git-send-email-johannes@sipsolutions.net>
-	 <20140905221314.GA1533@kroah.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail2.candelatech.com ([208.74.158.173]:59554 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751960AbaIXQNI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Sep 2014 12:13:08 -0400
+Message-ID: <5422ED94.60402@candelatech.com> (sfid-20140924_181313_102956_1D3F27B5)
+Date: Wed, 24 Sep 2014 09:13:08 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH] ath10k: request firmware flush in ath10k_flush.
+References: <1411151304-31544-1-git-send-email-greearb@candelatech.com> <CA+BoTQm1rZO+yBbYxihpgEvR1cGZWS4Pr0AP+KMODcG4jpd_jQ@mail.gmail.com> <5421818A.9040501@candelatech.com> <CA+BoTQkZaGSkC9mhE8UF0He0RZWmPghDukdE1A5qiO1UNAZj5Q@mail.gmail.com>
+In-Reply-To: <CA+BoTQkZaGSkC9mhE8UF0He0RZWmPghDukdE1A5qiO1UNAZj5Q@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-09-05 at 15:13 -0700, Greg Kroah-Hartman wrote:
-
-> > +MODULE_AUTHOR("Johannes Berg <johannes@sipsolutions.net>");
-> > +MODULE_DESCRIPTION("Device Coredump support");
-> > +MODULE_LICENSE("GPL");
+On 09/23/2014 11:50 PM, Michal Kazior wrote:
+> On 23 September 2014 16:19, Ben Greear <greearb@candelatech.com> wrote:
+>> On 09/23/2014 02:16 AM, Michal Kazior wrote:
+>>> On 19 September 2014 20:28,  <greearb@candelatech.com> wrote:
+>>> [...]
+>>>>
+>>>> +       /* If we are CT firmware, ask it to flush all tids on all peers
+>>>> on
+>>>> +        * all vdevs.  Normal firmware will just crash if you do this.
+>>>> +        */
+>>>> +       if (test_bit(ATH10K_FW_FEATURE_WMI_10X_CT, ar->fw_features))
+>>>> +               ath10k_wmi_peer_flush(ar, 0xFFFFFFFF, peer_addr,
+>>>> 0xFFFFFFFF);
+>>>
+>>> I recall you've explained this some time ago, but can you refresh my
+>>> memory, please? Is this any different from iterating over all peers
+>>> and flushing each? Or does your firmware do so extra magic that is
+>>> impossible to do with normal firmware commands?
+>>
+>> My firmware does that iteration internally.
+>>
+>> You could probably do that in the driver, but it would be a lot
+>> of messages (for all vdevs, all peers, all tids)...
+>> I was not sure if there were limits to the number
+>> of commands you should attempt during the flush...
 > 
-> As you only allow Y or N as build options, it's not really a "module" :)
+> Thanks. I think ath10k should do this instead of having CT-specific
+> flush eventually.
 
-Umm, yeah. I went back and forth on whether this should be allowed to be
-modular, but then decided it wasn't big enough to be worth it.
+Yes, though I would still like the optimization enabled if my
+firmware is running...
 
-> > +	/*
-> > +	 * this seems racy, but I don't see a notifier or such on
-> > +	 * a struct device to know when it goes away?
-> > +	 */
-> > +	if (devcd->failing_dev->kobj.sd)
-> > +		sysfs_delete_link(&devcd->failing_dev->kobj, &dev->kobj,
-> > +				  "dev_coredump");
-> 
-> What is this link?  It should "just go away" if this:
-> 
-> > +	put_device(devcd->failing_dev);
-> 
-> was the last put_device() call on the failing_dev, right?  So you
-> shouldn't need to make this call to sysfs_delete_link().
+> I recall I actually did per-peer flushing in RFC patches a long time
+> ago but I didn't pursue getting them merged. I think Denton uses these
+> patches in his setup. They don't flush vdev self-peers though (do you
+> do that internally?).
 
-Oh, thanks, I'll try that. I did something slightly different first and
-ended up with dead symlinks, but in that case I think I was actually
-removing the bus/class of the device while the device was still alive or
-something - that was a big mess.
+I think I do.  Let me check, and send you some details privately.
 
-> > +void dev_coredumpm(struct device *dev, struct module *owner,
-> > +		   const void *data, size_t datalen, gfp_t gfp,
-> > +		   ssize_t (*read)(char *buffer, loff_t offset, size_t count,
-> > +				   const void *data, size_t datalen),
-> > +		   void (*free)(const void *data))
-> > +{
-> > +	static atomic_t devcd_count = ATOMIC_INIT(0);
-> > +	struct devcd_entry *devcd;
-> > +	struct device *existing;
-> > +
-> > +	existing = class_find_device(&devcd_class, NULL, dev,
-> > +				     devcd_match_failing);
-> > +	if (existing) {
-> > +		put_device(existing);
-> > +		return;
-> > +	}
-> 
-> I thought multiple dumps per "device" would throw away the older ones?
-> It's fine if you don't, but you might want to document this behavior in
-> the kerneldoc for the function.
+Thanks,
+Ben
 
-I ... umm ... Yeah. I need to free the new one here. I actually wanted
-to keep the first one because it seems likely that the driver would
-attempt some sort of recovery and then if it happens to crash the device
-again it's probably not very helpful to see the last crash.
 
-But I definitely need to free the new one and document the behaviour.
-Maybe if somebody needs something else we can make it configurable, but
-for now I think all potential users have indicated that they'd prefer
-keeping the first dump.
-
-> Other than those very minor things, looks good to me, want to resend it
-> cleaned up and without the "RFC" in the Subject?
-
-Tomorrow :)
-
-johannes
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
