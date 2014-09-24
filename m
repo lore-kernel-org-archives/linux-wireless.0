@@ -1,51 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:59483 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753290AbaI3RAM (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:52766 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751680AbaIXA01 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Sep 2014 13:00:12 -0400
-Date: Tue, 30 Sep 2014 12:56:26 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Mark Brown <broonie@kernel.org>
-Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linaro-kernel@lists.linaro.org
-Subject: Re: [PATCH] hostap: proc: Remove unused variable
-Message-ID: <20140930165626.GD11919@tuxdriver.com> (sfid-20140930_190042_449640_B109E5D4)
-References: <1410909415-11661-1-git-send-email-broonie@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1410909415-11661-1-git-send-email-broonie@kernel.org>
+	Tue, 23 Sep 2014 20:26:27 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: ath10k@lists.infradead.org, Ben Greear <greearb@candelatech.com>
+Subject: [RFC 2/2] ath10k: re-config ht_caps when chainmask is modified.
+Date: Tue, 23 Sep 2014 17:26:23 -0700
+Message-Id: <1411518383-32634-2-git-send-email-greearb@candelatech.com> (sfid-20140924_022630_805054_1C407C6D)
+In-Reply-To: <1411518383-32634-1-git-send-email-greearb@candelatech.com>
+References: <1411518383-32634-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 16, 2014 at 04:16:55PM -0700, Mark Brown wrote:
-> Since "hostap: proc: substitute loops by %*phN" (62c5afb8e388) the
-> variable i has been unused in prism2_bss_list_proc_show() so remove it.
-> 
-> Signed-off-by: Mark Brown <broonie@kernel.org>
-> ---
->  drivers/net/wireless/hostap/hostap_proc.c | 1 -
->  1 file changed, 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/hostap/hostap_proc.c b/drivers/net/wireless/hostap/hostap_proc.c
-> index 3a23a6d..dd84557 100644
-> --- a/drivers/net/wireless/hostap/hostap_proc.c
-> +++ b/drivers/net/wireless/hostap/hostap_proc.c
-> @@ -168,7 +168,6 @@ static int prism2_bss_list_proc_show(struct seq_file *m, void *v)
->  	local_info_t *local = m->private;
->  	struct list_head *ptr = v;
->  	struct hostap_bss_info *bss;
-> -	int i;
->  
->  	if (ptr == &local->bss_list) {
->  		seq_printf(m, "#BSSID\tlast_update\tcount\tcapab_info\tSSID(txt)\t"
-> -- 
-> 2.1.0
+From: Ben Greear <greearb@candelatech.com>
 
-What tree are you using?  In wireless-next, I still see a loop in
-that function using i as an index variable.
+This lets the mac80211 stack use the proper ht-caps when
+negotiating with the peer.  Note that all vdevs are guaranteed
+to be down when antenna changes, so we can set the ht_caps
+without worrying about messing up existing stations.
 
-John
+This patch also moves the get_nss_from_chainmask up in
+the file.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 57 ++++++++++++++++++++++++-----------
+ 1 file changed, 40 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index dbef84a..8bd47ea 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -2408,18 +2408,34 @@ void ath10k_halt(struct ath10k *ar)
+ 	spin_unlock_bh(&ar->data_lock);
+ }
+ 
+-static struct ieee80211_sta_vht_cap ath10k_create_vht_cap(struct ath10k *ar)
++static u32 get_nss_from_chainmask(u16 chain_mask)
++{
++	if ((chain_mask & 0x15) == 0x15)
++		return 4;
++	else if ((chain_mask & 0x7) == 0x7)
++		return 3;
++	else if ((chain_mask & 0x3) == 0x3)
++		return 2;
++	return 1;
++}
++
++static struct ieee80211_sta_vht_cap ath10k_create_vht_cap(struct ath10k *ar,
++							  bool use_cfg_chains)
+ {
+ 	struct ieee80211_sta_vht_cap vht_cap = {0};
+ 	u16 mcs_map;
+ 	int i;
++	int nrf = ar->num_rf_chains;
++
++	if (use_cfg_chains && ar->cfg_tx_chainmask)
++		nrf = get_nss_from_chainmask(ar->cfg_tx_chainmask);
+ 
+ 	vht_cap.vht_supported = 1;
+ 	vht_cap.cap = ar->vht_cap_info;
+ 
+ 	mcs_map = 0;
+ 	for (i = 0; i < 8; i++) {
+-		if (i < ar->num_rf_chains)
++		if (i < nrf)
+ 			mcs_map |= IEEE80211_VHT_MCS_SUPPORT_0_9 << (i*2);
+ 		else
+ 			mcs_map |= IEEE80211_VHT_MCS_NOT_SUPPORTED << (i*2);
+@@ -2431,10 +2447,15 @@ static struct ieee80211_sta_vht_cap ath10k_create_vht_cap(struct ath10k *ar)
+ 	return vht_cap;
+ }
+ 
+-static struct ieee80211_sta_ht_cap ath10k_get_ht_cap(struct ath10k *ar)
++static struct ieee80211_sta_ht_cap ath10k_get_ht_cap(struct ath10k *ar,
++						     bool use_cfg_chains)
+ {
+ 	int i;
+ 	struct ieee80211_sta_ht_cap ht_cap = {0};
++	int nrf = ar->num_rf_chains;
++
++	if (use_cfg_chains && ar->cfg_tx_chainmask)
++		nrf = get_nss_from_chainmask(ar->cfg_tx_chainmask);
+ 
+ 	if (!(ar->ht_cap_info & WMI_HT_CAP_ENABLED))
+ 		return ht_cap;
+@@ -2486,7 +2507,7 @@ static struct ieee80211_sta_ht_cap ath10k_get_ht_cap(struct ath10k *ar)
+ 	if (ar->vht_cap_info & WMI_VHT_CAP_MAX_MPDU_LEN_MASK)
+ 		ht_cap.cap |= IEEE80211_HT_CAP_MAX_AMSDU;
+ 
+-	for (i = 0; i < ar->num_rf_chains; i++)
++	for (i = 0; i < nrf; i++)
+ 		ht_cap.mcs.rx_mask[i] = 0xFF;
+ 
+ 	ht_cap.mcs.tx_params |= IEEE80211_HT_MCS_TX_DEFINED;
+@@ -2528,6 +2549,8 @@ static void ath10k_check_chain_mask(struct ath10k *ar, u32 cm, const char* dbg)
+ static int __ath10k_set_antenna(struct ath10k *ar, u32 tx_ant, u32 rx_ant)
+ {
+ 	int ret;
++	struct ieee80211_sta_vht_cap vht_cap;
++	struct ieee80211_sta_ht_cap ht_cap;
+ 
+ 	lockdep_assert_held(&ar->conf_mutex);
+ 
+@@ -2537,6 +2560,17 @@ static int __ath10k_set_antenna(struct ath10k *ar, u32 tx_ant, u32 rx_ant)
+ 	ar->cfg_tx_chainmask = tx_ant;
+ 	ar->cfg_rx_chainmask = rx_ant;
+ 
++	ht_cap = ath10k_get_ht_cap(ar, true);
++	vht_cap = ath10k_create_vht_cap(ar, true);
++
++	if (ar->phy_capability & WHAL_WLAN_11G_CAPABILITY)
++		ar->mac.sbands[IEEE80211_BAND_2GHZ].ht_cap = ht_cap;
++
++	if (ar->phy_capability & WHAL_WLAN_11A_CAPABILITY) {
++		ar->mac.sbands[IEEE80211_BAND_5GHZ].ht_cap = ht_cap;
++		ar->mac.sbands[IEEE80211_BAND_5GHZ].vht_cap = vht_cap;
++	}
++
+ 	if ((ar->state != ATH10K_STATE_ON) &&
+ 	    (ar->state != ATH10K_STATE_RESTARTED))
+ 		return 0;
+@@ -2859,17 +2893,6 @@ static int ath10k_config(struct ieee80211_hw *hw, u32 changed)
+ 	return ret;
+ }
+ 
+-static u32 get_nss_from_chainmask(u16 chain_mask)
+-{
+-	if ((chain_mask & 0x15) == 0x15)
+-		return 4;
+-	else if ((chain_mask & 0x7) == 0x7)
+-		return 3;
+-	else if ((chain_mask & 0x3) == 0x3)
+-		return 2;
+-	return 1;
+-}
+-
+ /*
+  * TODO:
+  * Figure out how to handle WMI_VDEV_SUBTYPE_P2P_DEVICE,
+@@ -4864,8 +4887,8 @@ int ath10k_mac_register(struct ath10k *ar)
+ 
+ 	SET_IEEE80211_DEV(ar->hw, ar->dev);
+ 
+-	ht_cap = ath10k_get_ht_cap(ar);
+-	vht_cap = ath10k_create_vht_cap(ar);
++	ht_cap = ath10k_get_ht_cap(ar, false);
++	vht_cap = ath10k_create_vht_cap(ar, false);
+ 
+ 	if (ar->phy_capability & WHAL_WLAN_11G_CAPABILITY) {
+ 		channels = kmemdup(ath10k_2ghz_channels,
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.11.7
+
