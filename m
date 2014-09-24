@@ -1,29 +1,222 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f44.google.com ([209.85.216.44]:61389 "EHLO
-	mail-qa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750827AbaIKKbM (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:52761 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751680AbaIXA0Z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Sep 2014 06:31:12 -0400
-Received: by mail-qa0-f44.google.com with SMTP id w8so748399qac.3
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Sep 2014 03:31:12 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1410430770.22863.5.camel@jlt4.sipsolutions.net>
-References: <1576867.1mLXgWJdDk@rogge-hp-probook-6470b> <1410430770.22863.5.camel@jlt4.sipsolutions.net>
-From: Henning Rogge <hrogge@gmail.com>
-Date: Thu, 11 Sep 2014 12:30:51 +0200
-Message-ID: <CAGnRvupv2HJOqpJYa0VLddKU1qDj3V6F3OKFy=m8F26_Q-a=mA@mail.gmail.com> (sfid-20140911_123122_069154_1B280B3C)
-Subject: Re: iw: Add support for mesh proxy path dump
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 23 Sep 2014 20:26:25 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: ath10k@lists.infradead.org, Ben Greear <greearb@candelatech.com>
+Subject: [RFC 1/2] ath10k: move create-ht-cap methods above set-antenna.
+Date: Tue, 23 Sep 2014 17:26:22 -0700
+Message-Id: <1411518383-32634-1-git-send-email-greearb@candelatech.com> (sfid-20140924_022629_594782_18AFF1E6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 11, 2014 at 12:19 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> This patch is line-wrapped.
+From: Ben Greear <greearb@candelatech.com>
 
-Let me try to resend the patch with git send-email...
+We will need to use these in set-antenna, so move them
+so that we do not have to define the method signatures.
 
-Henning Rogge
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+
+This appears to work, but needs more testing before it should
+be applied.  I'll do that testing tomorrow.
+
+ drivers/net/wireless/ath/ath10k/mac.c | 172 +++++++++++++++++-----------------
+ 1 file changed, 86 insertions(+), 86 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index bde3a2f..dbef84a 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -2408,6 +2408,92 @@ void ath10k_halt(struct ath10k *ar)
+ 	spin_unlock_bh(&ar->data_lock);
+ }
+ 
++static struct ieee80211_sta_vht_cap ath10k_create_vht_cap(struct ath10k *ar)
++{
++	struct ieee80211_sta_vht_cap vht_cap = {0};
++	u16 mcs_map;
++	int i;
++
++	vht_cap.vht_supported = 1;
++	vht_cap.cap = ar->vht_cap_info;
++
++	mcs_map = 0;
++	for (i = 0; i < 8; i++) {
++		if (i < ar->num_rf_chains)
++			mcs_map |= IEEE80211_VHT_MCS_SUPPORT_0_9 << (i*2);
++		else
++			mcs_map |= IEEE80211_VHT_MCS_NOT_SUPPORTED << (i*2);
++	}
++
++	vht_cap.vht_mcs.rx_mcs_map = cpu_to_le16(mcs_map);
++	vht_cap.vht_mcs.tx_mcs_map = cpu_to_le16(mcs_map);
++
++	return vht_cap;
++}
++
++static struct ieee80211_sta_ht_cap ath10k_get_ht_cap(struct ath10k *ar)
++{
++	int i;
++	struct ieee80211_sta_ht_cap ht_cap = {0};
++
++	if (!(ar->ht_cap_info & WMI_HT_CAP_ENABLED))
++		return ht_cap;
++
++	ht_cap.ht_supported = 1;
++	ht_cap.ampdu_factor = IEEE80211_HT_MAX_AMPDU_64K;
++	ht_cap.ampdu_density = IEEE80211_HT_MPDU_DENSITY_8;
++	ht_cap.cap |= IEEE80211_HT_CAP_SUP_WIDTH_20_40;
++	ht_cap.cap |= IEEE80211_HT_CAP_DSSSCCK40;
++	ht_cap.cap |= WLAN_HT_CAP_SM_PS_STATIC << IEEE80211_HT_CAP_SM_PS_SHIFT;
++
++	if (ar->ht_cap_info & WMI_HT_CAP_HT20_SGI)
++		ht_cap.cap |= IEEE80211_HT_CAP_SGI_20;
++
++	if (ar->ht_cap_info & WMI_HT_CAP_HT40_SGI)
++		ht_cap.cap |= IEEE80211_HT_CAP_SGI_40;
++
++	if (ar->ht_cap_info & WMI_HT_CAP_DYNAMIC_SMPS) {
++		u32 smps;
++
++		smps   = WLAN_HT_CAP_SM_PS_DYNAMIC;
++		smps <<= IEEE80211_HT_CAP_SM_PS_SHIFT;
++
++		ht_cap.cap |= smps;
++	}
++
++	if (ar->ht_cap_info & WMI_HT_CAP_TX_STBC)
++		ht_cap.cap |= IEEE80211_HT_CAP_TX_STBC;
++
++	if (ar->ht_cap_info & WMI_HT_CAP_RX_STBC) {
++		u32 stbc;
++
++		stbc   = ar->ht_cap_info;
++		stbc  &= WMI_HT_CAP_RX_STBC;
++		stbc >>= WMI_HT_CAP_RX_STBC_MASK_SHIFT;
++		stbc <<= IEEE80211_HT_CAP_RX_STBC_SHIFT;
++		stbc  &= IEEE80211_HT_CAP_RX_STBC;
++
++		ht_cap.cap |= stbc;
++	}
++
++	if (ar->ht_cap_info & WMI_HT_CAP_LDPC)
++		ht_cap.cap |= IEEE80211_HT_CAP_LDPC_CODING;
++
++	if (ar->ht_cap_info & WMI_HT_CAP_L_SIG_TXOP_PROT)
++		ht_cap.cap |= IEEE80211_HT_CAP_LSIG_TXOP_PROT;
++
++	/* max AMSDU is implicitly taken from vht_cap_info */
++	if (ar->vht_cap_info & WMI_VHT_CAP_MAX_MPDU_LEN_MASK)
++		ht_cap.cap |= IEEE80211_HT_CAP_MAX_AMSDU;
++
++	for (i = 0; i < ar->num_rf_chains; i++)
++		ht_cap.mcs.rx_mask[i] = 0xFF;
++
++	ht_cap.mcs.tx_params |= IEEE80211_HT_MCS_TX_DEFINED;
++
++	return ht_cap;
++}
++
+ static int ath10k_get_antenna(struct ieee80211_hw *hw, u32 *tx_ant, u32 *rx_ant)
+ {
+ 	struct ath10k *ar = hw->priv;
+@@ -4735,92 +4821,6 @@ static const struct ieee80211_iface_combination ath10k_10x_if_comb[] = {
+ 	},
+ };
+ 
+-static struct ieee80211_sta_vht_cap ath10k_create_vht_cap(struct ath10k *ar)
+-{
+-	struct ieee80211_sta_vht_cap vht_cap = {0};
+-	u16 mcs_map;
+-	int i;
+-
+-	vht_cap.vht_supported = 1;
+-	vht_cap.cap = ar->vht_cap_info;
+-
+-	mcs_map = 0;
+-	for (i = 0; i < 8; i++) {
+-		if (i < ar->num_rf_chains)
+-			mcs_map |= IEEE80211_VHT_MCS_SUPPORT_0_9 << (i*2);
+-		else
+-			mcs_map |= IEEE80211_VHT_MCS_NOT_SUPPORTED << (i*2);
+-	}
+-
+-	vht_cap.vht_mcs.rx_mcs_map = cpu_to_le16(mcs_map);
+-	vht_cap.vht_mcs.tx_mcs_map = cpu_to_le16(mcs_map);
+-
+-	return vht_cap;
+-}
+-
+-static struct ieee80211_sta_ht_cap ath10k_get_ht_cap(struct ath10k *ar)
+-{
+-	int i;
+-	struct ieee80211_sta_ht_cap ht_cap = {0};
+-
+-	if (!(ar->ht_cap_info & WMI_HT_CAP_ENABLED))
+-		return ht_cap;
+-
+-	ht_cap.ht_supported = 1;
+-	ht_cap.ampdu_factor = IEEE80211_HT_MAX_AMPDU_64K;
+-	ht_cap.ampdu_density = IEEE80211_HT_MPDU_DENSITY_8;
+-	ht_cap.cap |= IEEE80211_HT_CAP_SUP_WIDTH_20_40;
+-	ht_cap.cap |= IEEE80211_HT_CAP_DSSSCCK40;
+-	ht_cap.cap |= WLAN_HT_CAP_SM_PS_STATIC << IEEE80211_HT_CAP_SM_PS_SHIFT;
+-
+-	if (ar->ht_cap_info & WMI_HT_CAP_HT20_SGI)
+-		ht_cap.cap |= IEEE80211_HT_CAP_SGI_20;
+-
+-	if (ar->ht_cap_info & WMI_HT_CAP_HT40_SGI)
+-		ht_cap.cap |= IEEE80211_HT_CAP_SGI_40;
+-
+-	if (ar->ht_cap_info & WMI_HT_CAP_DYNAMIC_SMPS) {
+-		u32 smps;
+-
+-		smps   = WLAN_HT_CAP_SM_PS_DYNAMIC;
+-		smps <<= IEEE80211_HT_CAP_SM_PS_SHIFT;
+-
+-		ht_cap.cap |= smps;
+-	}
+-
+-	if (ar->ht_cap_info & WMI_HT_CAP_TX_STBC)
+-		ht_cap.cap |= IEEE80211_HT_CAP_TX_STBC;
+-
+-	if (ar->ht_cap_info & WMI_HT_CAP_RX_STBC) {
+-		u32 stbc;
+-
+-		stbc   = ar->ht_cap_info;
+-		stbc  &= WMI_HT_CAP_RX_STBC;
+-		stbc >>= WMI_HT_CAP_RX_STBC_MASK_SHIFT;
+-		stbc <<= IEEE80211_HT_CAP_RX_STBC_SHIFT;
+-		stbc  &= IEEE80211_HT_CAP_RX_STBC;
+-
+-		ht_cap.cap |= stbc;
+-	}
+-
+-	if (ar->ht_cap_info & WMI_HT_CAP_LDPC)
+-		ht_cap.cap |= IEEE80211_HT_CAP_LDPC_CODING;
+-
+-	if (ar->ht_cap_info & WMI_HT_CAP_L_SIG_TXOP_PROT)
+-		ht_cap.cap |= IEEE80211_HT_CAP_LSIG_TXOP_PROT;
+-
+-	/* max AMSDU is implicitly taken from vht_cap_info */
+-	if (ar->vht_cap_info & WMI_VHT_CAP_MAX_MPDU_LEN_MASK)
+-		ht_cap.cap |= IEEE80211_HT_CAP_MAX_AMSDU;
+-
+-	for (i = 0; i < ar->num_rf_chains; i++)
+-		ht_cap.mcs.rx_mask[i] = 0xFF;
+-
+-	ht_cap.mcs.tx_params |= IEEE80211_HT_MCS_TX_DEFINED;
+-
+-	return ht_cap;
+-}
+-
+ static void ath10k_get_arvif_iter(void *data, u8 *mac,
+ 				  struct ieee80211_vif *vif)
+ {
+-- 
+1.7.11.7
+
