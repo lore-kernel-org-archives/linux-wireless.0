@@ -1,133 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:38423 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751494AbaIJHSb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Sep 2014 03:18:31 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [RFC 5/5] ath9k: Fix beacon miss handling
-Date: Wed, 10 Sep 2014 12:48:48 +0530
-Message-Id: <1410333528-28022-6-git-send-email-sujith@msujith.org> (sfid-20140910_091834_715591_7FCF87D9)
-In-Reply-To: <1410333528-28022-1-git-send-email-sujith@msujith.org>
-References: <1410333528-28022-1-git-send-email-sujith@msujith.org>
+Received: from mga11.intel.com ([192.55.52.93]:49627 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751969AbaIXQrV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Sep 2014 12:47:21 -0400
+From: Vinod Koul <vinod.koul@intel.com>
+To: linux-kernel@vger.kernel.org
+Cc: subhransu.s.prusty@intel.com, vinod.koul@intel.com,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	linux-wireless@vger.kernel.org, linux-nfc@lists.01.org
+Subject: [PATCH 19/27] NFC: trf7970a: use pm_runtime_last_busy_and_autosuspend helper
+Date: Wed, 24 Sep 2014 21:45:09 +0530
+Message-Id: <1411575342-31048-20-git-send-email-vinod.koul@intel.com> (sfid-20140924_185219_814386_1FC55703)
+In-Reply-To: <1411575342-31048-1-git-send-email-vinod.koul@intel.com>
+References: <1411575342-31048-1-git-send-email-vinod.koul@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Use the new pm_runtime_last_busy_and_autosuspend helper instead of open
+coding the same code
 
-The NoA duration for a GO is half the beacon interval
-and a concurrent context like a STA can be active only
-for that duration, before switching back to the GO's
-operating channel.
-
-Currently, when multiple beacons are missed, the dwell
-time for the STA context is extended to improve the
-chances of receiving a beacon. But the NoA is not updated
-and this will cause problems since the GO is offline
-for a period that is longer than the advertised duration.
-
-Fix this by ensuring that the NoA is updated first before
-extending the time slot for the STA context. Also make
-sure that non-periodic NoA is used for a one-time, longer
-absence period.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Vinod Koul <vinod.koul@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h   |  1 +
- drivers/net/wireless/ath/ath9k/channel.c | 44 +++++++++++++++++++++++---------
- 2 files changed, 33 insertions(+), 12 deletions(-)
+ drivers/nfc/trf7970a.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 305db1a..660c151 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -380,6 +380,7 @@ struct ath_chanctx_sched {
- 	bool offchannel_pending;
- 	bool wait_switch;
- 	bool force_noa_update;
-+	bool extend_absence;
- 	enum ath_chanctx_state state;
- 	u8 beacon_miss;
+diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
+index 3b78b03..d22ca2f 100644
+--- a/drivers/nfc/trf7970a.c
++++ b/drivers/nfc/trf7970a.c
+@@ -801,8 +801,7 @@ static void trf7970a_switch_rf_off(struct trf7970a *trf)
+ 	trf->aborting = false;
+ 	trf->state = TRF7970A_ST_OFF;
  
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index a42fd85..a1b3282 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -371,13 +371,6 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
- 		sc->sched.switch_start_time = tsf_time;
- 		sc->cur_chan->last_beacon = sc->sched.next_tbtt;
+-	pm_runtime_mark_last_busy(trf->dev);
+-	pm_runtime_put_autosuspend(trf->dev);
++	pm_runtime_last_busy_and_autosuspend(trf->dev);
+ }
  
--		/* If at least two consecutive beacons were missed on the STA
--		 * chanctx, stay on the STA channel for one extra beacon period,
--		 * to resync the timer properly.
--		 */
--		if (ctx->active && sc->sched.beacon_miss >= 2)
--			sc->sched.offchannel_duration = 3 * beacon_int / 2;
--
- 		/*
- 		 * If an offchannel switch is scheduled to happen after
- 		 * a beacon transmission, update the NoA with one-shot
-@@ -405,6 +398,26 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
- 			break;
- 		}
- 
-+
-+		/*
-+		 * Clear the extend_absence flag if it had been
-+		 * set during the previous beacon transmission,
-+		 * since we need to revert to the normal NoA
-+		 * schedule.
-+		 */
-+		if (ctx->active && sc->sched.extend_absence) {
-+			avp->noa_duration = 0;
-+			sc->sched.extend_absence = false;
-+		}
-+
-+		/* If at least two consecutive beacons were missed on the STA
-+		 * chanctx, stay on the STA channel for one extra beacon period,
-+		 * to resync the timer properly.
-+		 */
-+		if (ctx->active && sc->sched.beacon_miss >= 2) {
-+			avp->noa_duration = 0;
-+			sc->sched.extend_absence = true;
-+		}
- 		/* Prevent wrap-around issues */
- 		if (avp->noa_duration && tsf_time - avp->noa_start > BIT(30))
- 			avp->noa_duration = 0;
-@@ -418,11 +431,17 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
- 		    (!avp->noa_duration || sc->sched.force_noa_update)) {
- 			avp->noa_index++;
- 			avp->noa_start = tsf_time;
--			avp->noa_duration =
--				TU_TO_USEC(cur_conf->beacon_interval) / 2 +
--				sc->sched.channel_switch_time;
- 
--			if (test_bit(ATH_OP_SCANNING, &common->op_flags))
-+			if (sc->sched.extend_absence)
-+				avp->noa_duration = (3 * beacon_int / 2) +
-+					sc->sched.channel_switch_time;
-+			else
-+				avp->noa_duration =
-+					TU_TO_USEC(cur_conf->beacon_interval) / 2 +
-+					sc->sched.channel_switch_time;
-+
-+			if (test_bit(ATH_OP_SCANNING, &common->op_flags) ||
-+			    sc->sched.extend_absence)
- 				avp->periodic_noa = false;
- 			else
- 				avp->periodic_noa = true;
-@@ -520,7 +539,8 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
- 		sc->sched.wait_switch = false;
- 
- 		tsf_time = TU_TO_USEC(cur_conf->beacon_interval) / 2;
--		if (sc->sched.beacon_miss >= 2) {
-+
-+		if (sc->sched.extend_absence) {
- 			sc->sched.beacon_miss = 0;
- 			tsf_time *= 3;
- 		}
+ static void trf7970a_switch_rf_on(struct trf7970a *trf)
 -- 
-2.1.0
+1.7.0.4
 
