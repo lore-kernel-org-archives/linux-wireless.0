@@ -1,48 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:56493 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752329AbaIGXLd (ORCPT
+Received: from mout.kundenserver.de ([212.227.17.13]:63222 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753219AbaIXJsz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Sep 2014 19:11:33 -0400
-Date: Sun, 07 Sep 2014 16:11:33 -0700 (PDT)
-Message-Id: <20140907.161133.1026363467035732296.davem@davemloft.net> (sfid-20140908_011154_178304_ACB5DB7B)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless 2014-09-05
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20140905150453.GB3454@tuxdriver.com>
-References: <20140905150453.GB3454@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 24 Sep 2014 05:48:55 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-arm-kernel@lists.infradead.org, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
+	zajec5@gmail.com, varkabhadram@gmail.com, arend@broadcom.com
+Subject: Re: [PATCH v4 1/2] bcma: register bcma as device tree driver
+Date: Wed, 24 Sep 2014 11:48:18 +0200
+Message-ID: <3856565.LYF1mvpGOq@wuerfel> (sfid-20140924_114902_098356_765F6C97)
+In-Reply-To: <5421EE62.2080701@hauke-m.de>
+References: <1411339108-22307-1-git-send-email-hauke@hauke-m.de> <4345256.UGZH9SeRYG@wuerfel> <5421EE62.2080701@hauke-m.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Fri, 5 Sep 2014 11:04:53 -0400
+On Wednesday 24 September 2014 00:04:18 Hauke Mehrtens wrote:
+> I assume this should then look somehow like this:
+> 
+> axi@18000000 {
+>         compatible = "brcm,bus-axi";
+>         reg = <0x18000000 0x1000>;
+>         ranges = <0x00000000 0x18000000 0x00100000>;
+>         #address-cells = <1>;
+>         #size-cells = <1>;
+> 
+>         #interrupt-cells = <1>;
+>         interrupt-map = <
+>                 /* ChipCommon */
+>                 0x00000000 0 &gic  GIC_SPI 85 IRQ_TYPE_LEVEL_HIGH
+> 
+>                 /* PCIe Controller 0 */
+>                 0x00012000 0 &gic GIC_SPI 126 IRQ_TYPE_LEVEL_HIGH
+>                 0x00012000 1 &gic GIC_SPI 127 IRQ_TYPE_LEVEL_HIGH
+>                 0x00012000 2 &gic GIC_SPI 128 IRQ_TYPE_LEVEL_HIGH
+>                 0x00012000 3 &gic GIC_SPI 129 IRQ_TYPE_LEVEL_HIGH
+>                 0x00012000 4 &gic GIC_SPI 130 IRQ_TYPE_LEVEL_HIGH
+>                 0x00012000 5 &gic GIC_SPI 131 IRQ_TYPE_LEVEL_HIGH
+> 
+>                 /* USB 2.0 Controller */
+>                 0x00021000 0 &gic GIC_SPI 79 IRQ_TYPE_LEVEL_HIGH
+>                 >;
+>         };
 
-> Please pull this batch of fixes intended for the 3.17 stream...
-> 
-> For the mac80211 bits, Johannes says:
-> 
-> "Here are a few fixes for mac80211. One has been discussed for a while
-> and adds a terminating NUL-byte to the alpha2 sent to userspace, which
-> shouldn't be necessary but since many places treat it as a string we
-> couldn't move to just sending two bytes.
-> 
-> In addition to that, we have two VLAN fixes from Felix, a mesh fix, a
-> fix for the recently introduced RX aggregation offload, a revert for
-> a broken patch (that luckily didn't really cause any harm) and a small
-> fix for alignment in debugfs."
-> 
-> For the iwlwifi bits, Emmanuel says:
-> 
-> "I revert a patch that disabled CTS to self in dvm because users
-> reported issues. The revert is CCed to stable since the offending
-> patch was sent to stable too. I also bump the firmware API versions
-> since a new firmware is coming up. On top of that, Marcel fixes a
-> bug I introduced while fixing a bug in our Kconfig file."
-> 
-> Please let me know if there are problems!
+Right, although I would add a few more '<', '>' and ',' for readability,
+separating each line with a comma.
 
-Pulled, thanks John.
+You are also missing an 'interrupt-map-mask' property that lists which
+bits of the address are significant.
+
+Are the interrupt numbers you have in the example (0, 0, 1, 2, ... 5, 0)
+the actual numbers that are present in the hw registers?
+
+> How does the mapping of these interrupts to the devices work?
+
+The same way that of_irq_parse_and_map_pci() works (the second half of it).
+It's a very similar situation: you have a discoverable bus on which the
+interrupts are listed in a different domain from which they are supposed to
+be on the parent. The trick is to make up your own address property
+and of_phandle_args on the stack and fill that with the data from
+the hw bus scan, so you can get into the middle of the normal DT
+irq code that gets them from device nodes.
+
+> Do I have to add a device tree entry for every device after all?
+
+No, unless you want to add other properties in the node, such as
+a MAC address, but then you still only need some of the devices.
+
+> Do you have some example code where this is handled in code, I could not
+> find the code doing this for PCI.
+
+drivers/of/of_pci_irq.c, though the hard part is done in drivers/of/irq.c,
+which parses the interrupt-map and interrupt-map-mask properties.
+
+	Arnd
