@@ -1,282 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:36852 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756096AbaIWOcc (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:56729 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750744AbaIXGRp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Sep 2014 10:32:32 -0400
-Subject: [PATCH v2 2/3] ath10k: add diag_read() to hif ops
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 23 Sep 2014 17:32:26 +0300
-Message-ID: <20140923143226.23585.50550.stgit@potku.adurom.net> (sfid-20140923_163235_809455_2AD6BBFE)
-In-Reply-To: <20140923143219.23585.34114.stgit@potku.adurom.net>
-References: <20140923143219.23585.34114.stgit@potku.adurom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Wed, 24 Sep 2014 02:17:45 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH 2/5] ath9k: Fix p2p address management
+Date: Wed, 24 Sep 2014 11:48:13 +0530
+Message-Id: <1411539496-30595-3-git-send-email-sujith@msujith.org> (sfid-20140924_081754_615381_0487E71F)
+In-Reply-To: <1411539496-30595-1-git-send-email-sujith@msujith.org>
+References: <1411539496-30595-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-diag_read() is used for reading from firmware memory via the diagnose window.
-First user will be cal_data debugfs file.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-To serialise diagnostic window access and make it safe to use while firmware is
-running take ce_lock both in ath10k_pci_diag_write_mem() and
-ath10k_pci_diag_read_mem(). Because of that all the CE calls had to be changed
-to _nolock variants.
+When multiple channel contexts are enabled, a p2p interface
+that is assigned to a context will have an address that
+is different from the device mac address, which is used
+by wpa_s as the p2p device ID.
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Certain frames like provision requests use the device address
+and these get dropped since ath9k_calculate_summary_state()
+iterates over only the active interfaces in a context and the
+device address is not used.
+
+Fix this by adding the device mac address to the bssid mask.
+
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath10k/ce.c  |   22 +++++++-------
- drivers/net/wireless/ath/ath10k/ce.h  |   13 ++++++++
- drivers/net/wireless/ath/ath10k/hif.h |   10 ++++++
- drivers/net/wireless/ath/ath10k/pci.c |   51 +++++++++++++++++++++------------
- 4 files changed, 67 insertions(+), 29 deletions(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h |  1 +
+ drivers/net/wireless/ath/ath9k/main.c  | 36 ++++++++++++++++++++++++++++++++++
+ 2 files changed, 37 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
-index 03b3a2c441fe..2f895bead693 100644
---- a/drivers/net/wireless/ath/ath10k/ce.c
-+++ b/drivers/net/wireless/ath/ath10k/ce.c
-@@ -443,12 +443,12 @@ int ath10k_ce_rx_post_buf(struct ath10k_ce_pipe *pipe, void *ctx, u32 paddr)
-  * Guts of ath10k_ce_completed_recv_next.
-  * The caller takes responsibility for any necessary locking.
-  */
--static int ath10k_ce_completed_recv_next_nolock(struct ath10k_ce_pipe *ce_state,
--						void **per_transfer_contextp,
--						u32 *bufferp,
--						unsigned int *nbytesp,
--						unsigned int *transfer_idp,
--						unsigned int *flagsp)
-+int ath10k_ce_completed_recv_next_nolock(struct ath10k_ce_pipe *ce_state,
-+					 void **per_transfer_contextp,
-+					 u32 *bufferp,
-+					 unsigned int *nbytesp,
-+					 unsigned int *transfer_idp,
-+					 unsigned int *flagsp)
- {
- 	struct ath10k_ce_ring *dest_ring = ce_state->dest_ring;
- 	unsigned int nentries_mask = dest_ring->nentries_mask;
-@@ -576,11 +576,11 @@ int ath10k_ce_revoke_recv_next(struct ath10k_ce_pipe *ce_state,
-  * Guts of ath10k_ce_completed_send_next.
-  * The caller takes responsibility for any necessary locking.
-  */
--static int ath10k_ce_completed_send_next_nolock(struct ath10k_ce_pipe *ce_state,
--						void **per_transfer_contextp,
--						u32 *bufferp,
--						unsigned int *nbytesp,
--						unsigned int *transfer_idp)
-+int ath10k_ce_completed_send_next_nolock(struct ath10k_ce_pipe *ce_state,
-+					 void **per_transfer_contextp,
-+					 u32 *bufferp,
-+					 unsigned int *nbytesp,
-+					 unsigned int *transfer_idp)
- {
- 	struct ath10k_ce_ring *src_ring = ce_state->src_ring;
- 	u32 ctrl_addr = ce_state->ctrl_addr;
-diff --git a/drivers/net/wireless/ath/ath10k/ce.h b/drivers/net/wireless/ath/ath10k/ce.h
-index 329b7340fa72..608262ab964e 100644
---- a/drivers/net/wireless/ath/ath10k/ce.h
-+++ b/drivers/net/wireless/ath/ath10k/ce.h
-@@ -192,6 +192,12 @@ int ath10k_ce_completed_send_next(struct ath10k_ce_pipe *ce_state,
- 				  unsigned int *nbytesp,
- 				  unsigned int *transfer_idp);
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index d2a1ee1..37a5ccf 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -354,6 +354,7 @@ struct ath_chanctx {
+ 	bool switch_after_beacon;
  
-+int ath10k_ce_completed_send_next_nolock(struct ath10k_ce_pipe *ce_state,
-+					 void **per_transfer_contextp,
-+					 u32 *bufferp,
-+					 unsigned int *nbytesp,
-+					 unsigned int *transfer_idp);
-+
- /*==================CE Engine Initialization=======================*/
+ 	short nvifs;
++	short nvifs_assigned;
+ 	unsigned int rxfilter;
+ };
  
- int ath10k_ce_init_pipe(struct ath10k *ar, unsigned int ce_id,
-@@ -213,6 +219,13 @@ int ath10k_ce_revoke_recv_next(struct ath10k_ce_pipe *ce_state,
- 			       void **per_transfer_contextp,
- 			       u32 *bufferp);
- 
-+int ath10k_ce_completed_recv_next_nolock(struct ath10k_ce_pipe *ce_state,
-+					 void **per_transfer_contextp,
-+					 u32 *bufferp,
-+					 unsigned int *nbytesp,
-+					 unsigned int *transfer_idp,
-+					 unsigned int *flagsp);
-+
- /*
-  * Support clean shutdown by allowing the caller to cancel
-  * pending sends.  Target DMA must be stopped before using
-diff --git a/drivers/net/wireless/ath/ath10k/hif.h b/drivers/net/wireless/ath/ath10k/hif.h
-index 62323fea27e1..30301f5b6051 100644
---- a/drivers/net/wireless/ath/ath10k/hif.h
-+++ b/drivers/net/wireless/ath/ath10k/hif.h
-@@ -43,6 +43,10 @@ struct ath10k_hif_ops {
- 	int (*tx_sg)(struct ath10k *ar, u8 pipe_id,
- 		     struct ath10k_hif_sg_item *items, int n_items);
- 
-+	/* read firmware memory through the diagnose interface */
-+	int (*diag_read)(struct ath10k *ar, u32 address, void *buf,
-+			 size_t buf_len);
-+
- 	/*
- 	 * API to handle HIF-specific BMI message exchanges, this API is
- 	 * synchronous and only allowed to be called from a context that
-@@ -98,6 +102,12 @@ static inline int ath10k_hif_tx_sg(struct ath10k *ar, u8 pipe_id,
- 	return ar->hif.ops->tx_sg(ar, pipe_id, items, n_items);
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 6738c4d..ae7c6ee 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -940,6 +940,34 @@ static void ath9k_vif_iter(struct ath9k_vif_iter_data *iter_data,
+ 	}
  }
  
-+static inline int ath10k_hif_diag_read(struct ath10k *ar, u32 address, void *buf,
-+				       size_t buf_len)
++static void ath9k_update_bssid_mask(struct ath_softc *sc,
++				    struct ath_chanctx *ctx,
++				    struct ath9k_vif_iter_data *iter_data)
 +{
-+	return ar->hif.ops->diag_read(ar, address, buf, buf_len);
++	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
++	struct ath_vif *avp;
++	int i;
++
++	if (!ath9k_is_chanctx_enabled())
++		return;
++
++	list_for_each_entry(avp, &ctx->vifs, list) {
++		if (ctx->nvifs_assigned != 1)
++			continue;
++
++		if (!avp->vif->p2p || !iter_data->has_hw_macaddr)
++			continue;
++
++		ether_addr_copy(common->curbssid, avp->bssid);
++
++		/* perm_addr will be used as the p2p device address. */
++		for (i = 0; i < ETH_ALEN; i++)
++			iter_data->mask[i] &=
++				~(iter_data->hw_macaddr[i] ^
++				  sc->hw->wiphy->perm_addr[i]);
++	}
 +}
 +
- static inline int ath10k_hif_exchange_bmi_msg(struct ath10k *ar,
- 					      void *request, u32 request_len,
- 					      void *response, u32 *response_len)
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 59e0ea83be50..0784b48b04ce 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -485,6 +485,8 @@ static int ath10k_pci_diag_read_mem(struct ath10k *ar, u32 address, void *data,
- 	void *data_buf = NULL;
- 	int i;
+ /* Called with sc->mutex held. */
+ void ath9k_calculate_iter_data(struct ath_softc *sc,
+ 			       struct ath_chanctx *ctx,
+@@ -958,6 +986,8 @@ void ath9k_calculate_iter_data(struct ath_softc *sc,
  
-+	spin_lock_bh(&ar_pci->ce_lock);
+ 	list_for_each_entry(avp, &ctx->vifs, list)
+ 		ath9k_vif_iter(iter_data, avp->vif->addr, avp->vif);
 +
- 	ce_diag = ar_pci->ce_diag;
- 
- 	/*
-@@ -511,7 +513,7 @@ static int ath10k_pci_diag_read_mem(struct ath10k *ar, u32 address, void *data,
- 		nbytes = min_t(unsigned int, remaining_bytes,
- 			       DIAG_TRANSFER_LIMIT);
- 
--		ret = ath10k_ce_rx_post_buf(ce_diag, NULL, ce_data);
-+		ret = __ath10k_ce_rx_post_buf(ce_diag, NULL, ce_data);
- 		if (ret != 0)
- 			goto done;
- 
-@@ -527,15 +529,15 @@ static int ath10k_pci_diag_read_mem(struct ath10k *ar, u32 address, void *data,
- 		address = TARG_CPU_SPACE_TO_CE_SPACE(ar, ar_pci->mem,
- 						     address);
- 
--		ret = ath10k_ce_send(ce_diag, NULL, (u32)address, nbytes, 0,
--				     0);
-+		ret = ath10k_ce_send_nolock(ce_diag, NULL, (u32)address, nbytes, 0,
-+					    0);
- 		if (ret)
- 			goto done;
- 
- 		i = 0;
--		while (ath10k_ce_completed_send_next(ce_diag, NULL, &buf,
--						     &completed_nbytes,
--						     &id) != 0) {
-+		while (ath10k_ce_completed_send_next_nolock(ce_diag, NULL, &buf,
-+							    &completed_nbytes,
-+							    &id) != 0) {
- 			mdelay(1);
- 			if (i++ > DIAG_ACCESS_CE_TIMEOUT_MS) {
- 				ret = -EBUSY;
-@@ -554,9 +556,9 @@ static int ath10k_pci_diag_read_mem(struct ath10k *ar, u32 address, void *data,
- 		}
- 
- 		i = 0;
--		while (ath10k_ce_completed_recv_next(ce_diag, NULL, &buf,
--						     &completed_nbytes,
--						     &id, &flags) != 0) {
-+		while (ath10k_ce_completed_recv_next_nolock(ce_diag, NULL, &buf,
-+							    &completed_nbytes,
-+							    &id, &flags) != 0) {
- 			mdelay(1);
- 
- 			if (i++ > DIAG_ACCESS_CE_TIMEOUT_MS) {
-@@ -591,6 +593,8 @@ done:
- 		dma_free_coherent(ar->dev, orig_nbytes, data_buf,
- 				  ce_data_base);
- 
-+	spin_unlock_bh(&ar_pci->ce_lock);
-+
- 	return ret;
++	ath9k_update_bssid_mask(sc, ctx, iter_data);
  }
  
-@@ -648,6 +652,8 @@ static int ath10k_pci_diag_write_mem(struct ath10k *ar, u32 address,
- 	dma_addr_t ce_data_base = 0;
- 	int i;
+ static void ath9k_set_assoc_state(struct ath_softc *sc,
+@@ -1122,6 +1152,10 @@ void ath9k_calculate_summary_state(struct ath_softc *sc,
+ 	else
+ 		clear_bit(ATH_OP_PRIM_STA_VIF, &common->op_flags);
  
-+	spin_lock_bh(&ar_pci->ce_lock);
++	ath_dbg(common, CONFIG,
++		"macaddr: %pM, bssid: %pM, bssidmask: %pM\n",
++		common->macaddr, common->curbssid, common->bssidmask);
 +
- 	ce_diag = ar_pci->ce_diag;
- 
- 	/*
-@@ -688,7 +694,7 @@ static int ath10k_pci_diag_write_mem(struct ath10k *ar, u32 address,
- 		nbytes = min_t(int, remaining_bytes, DIAG_TRANSFER_LIMIT);
- 
- 		/* Set up to receive directly into Target(!) address */
--		ret = ath10k_ce_rx_post_buf(ce_diag, NULL, address);
-+		ret = __ath10k_ce_rx_post_buf(ce_diag, NULL, address);
- 		if (ret != 0)
- 			goto done;
- 
-@@ -696,15 +702,15 @@ static int ath10k_pci_diag_write_mem(struct ath10k *ar, u32 address,
- 		 * Request CE to send caller-supplied data that
- 		 * was copied to bounce buffer to Target(!) address.
- 		 */
--		ret = ath10k_ce_send(ce_diag, NULL, (u32)ce_data,
--				     nbytes, 0, 0);
-+		ret = ath10k_ce_send_nolock(ce_diag, NULL, (u32)ce_data,
-+					    nbytes, 0, 0);
- 		if (ret != 0)
- 			goto done;
- 
- 		i = 0;
--		while (ath10k_ce_completed_send_next(ce_diag, NULL, &buf,
--						     &completed_nbytes,
--						     &id) != 0) {
-+		while (ath10k_ce_completed_send_next_nolock(ce_diag, NULL, &buf,
-+							    &completed_nbytes,
-+							    &id) != 0) {
- 			mdelay(1);
- 
- 			if (i++ > DIAG_ACCESS_CE_TIMEOUT_MS) {
-@@ -724,9 +730,9 @@ static int ath10k_pci_diag_write_mem(struct ath10k *ar, u32 address,
- 		}
- 
- 		i = 0;
--		while (ath10k_ce_completed_recv_next(ce_diag, NULL, &buf,
--						     &completed_nbytes,
--						     &id, &flags) != 0) {
-+		while (ath10k_ce_completed_recv_next_nolock(ce_diag, NULL, &buf,
-+							    &completed_nbytes,
-+							    &id, &flags) != 0) {
- 			mdelay(1);
- 
- 			if (i++ > DIAG_ACCESS_CE_TIMEOUT_MS) {
-@@ -760,6 +766,8 @@ done:
- 		ath10k_warn(ar, "failed to write diag value at 0x%x: %d\n",
- 			    address, ret);
- 
-+	spin_unlock_bh(&ar_pci->ce_lock);
-+
- 	return ret;
+ 	ath9k_ps_restore(sc);
  }
  
-@@ -936,6 +944,12 @@ err:
- 	return err;
- }
+@@ -2356,6 +2390,7 @@ static int ath9k_assign_vif_chanctx(struct ieee80211_hw *hw,
+ 		conf->def.chan->center_freq);
  
-+static int ath10k_pci_hif_diag_read(struct ath10k *ar, u32 address, void *buf,
-+				    size_t buf_len)
-+{
-+	return ath10k_pci_diag_read_mem(ar, address, buf, buf_len);
-+}
-+
- static u16 ath10k_pci_hif_get_free_queue_number(struct ath10k *ar, u8 pipe)
- {
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
-@@ -1921,6 +1935,7 @@ static int ath10k_pci_hif_resume(struct ath10k *ar)
+ 	avp->chanctx = ctx;
++	ctx->nvifs_assigned++;
+ 	list_add_tail(&avp->list, &ctx->vifs);
+ 	ath9k_calculate_summary_state(sc, ctx);
+ 	for (i = 0; i < IEEE80211_NUM_ACS; i++)
+@@ -2384,6 +2419,7 @@ static void ath9k_unassign_vif_chanctx(struct ieee80211_hw *hw,
+ 		conf->def.chan->center_freq);
  
- static const struct ath10k_hif_ops ath10k_pci_hif_ops = {
- 	.tx_sg			= ath10k_pci_hif_tx_sg,
-+	.diag_read		= ath10k_pci_hif_diag_read,
- 	.exchange_bmi_msg	= ath10k_pci_hif_exchange_bmi_msg,
- 	.start			= ath10k_pci_hif_start,
- 	.stop			= ath10k_pci_hif_stop,
+ 	avp->chanctx = NULL;
++	ctx->nvifs_assigned--;
+ 	list_del(&avp->list);
+ 	ath9k_calculate_summary_state(sc, ctx);
+ 	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++)
+-- 
+2.1.0
 
