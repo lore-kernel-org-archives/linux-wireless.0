@@ -1,88 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:57625 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750818AbaI3K3E convert rfc822-to-8bit (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:35962 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751182AbaIXGRr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Sep 2014 06:29:04 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Hauke Mehrtens <hauke@hauke-m.de>, devicetree@vger.kernel.org
-Subject: Re: [PATCH V2] bcma: use device from DT (brcm, bus-gpio) for SoC GPIO chip
-Date: Tue, 30 Sep 2014 12:28:21 +0200
-Message-ID: <9255570.ha3Ad1aI6v@wuerfel> (sfid-20140930_122909_610243_44F1AC7A)
-In-Reply-To: <CACna6ry-mmc8QD-bYUNGLfTh07TcUepjZdPYqKyxLc3HbMPung@mail.gmail.com>
-References: <1411741733-13888-1-git-send-email-zajec5@gmail.com> <7035315.8m6ICWZ25d@wuerfel> <CACna6ry-mmc8QD-bYUNGLfTh07TcUepjZdPYqKyxLc3HbMPung@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Wed, 24 Sep 2014 02:17:47 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH 5/5] ath9k: Fix offchannel queuing
+Date: Wed, 24 Sep 2014 11:48:16 +0530
+Message-Id: <1411539496-30595-6-git-send-email-sujith@msujith.org> (sfid-20140924_081757_146319_D12907DE)
+In-Reply-To: <1411539496-30595-1-git-send-email-sujith@msujith.org>
+References: <1411539496-30595-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 30 September 2014 11:56:20 Rafał Miłecki wrote:
-> On 30 September 2014 11:37, Arnd Bergmann <arnd@arndb.de> wrote:
-> > On Sunday 28 September 2014 10:24:01 Rafał Miłecki wrote:
-> >> @@ -17,4 +33,12 @@ Example:
-> >>               ranges = <0x00000000 0x18000000 0x00100000>;
-> >>               #address-cells = <1>;
-> >>               #size-cells = <1>;
-> >> +
-> >> +             chipcommon@0 {
-> >> +                     gpio@0 {
-> >> +                             compatible = "brcm,bus-gpio";
-> >> +                             gpio-controller;
-> >> +                             #gpio-cells = <2>;
-> >> +                     };
-> >> +             };
-> >
-> > I think you should list the 'reg' property of the chipcommon area
-> > and make that match the unit address, rather than using '0', mostly
-> > for consistency.
-> 
-> Do you mean this chipcommon@0? We propose this foo@offset syntax since
-> V1 which was posted 1,5 month ago, it's nothing new.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Is 'chipcommon' at the start of the 0x18000000 range? If so, that's
-great, but it would still be good to have the 'reg' property in there
-explicitly.
+Clearing IEEE80211_TX_CTL_PS_RESPONSE in a frame
+that is not in the current context doesn't seem right.
+Instead make sure that we don't add such frames
+to the UAPSD queue by using a local variable.
 
-> >> @@ -218,6 +218,11 @@ int bcma_gpio_init(struct bcma_drv_cc *cc)
-> >>  #if IS_BUILTIN(CONFIG_BCM47XX)
-> >>       chip->to_irq            = bcma_gpio_to_irq;
-> >>  #endif
-> >> +#if IS_BUILTIN(CONFIG_OF)
-> >> +     if (cc->core->bus->hosttype == BCMA_HOSTTYPE_SOC)
-> >> +             chip->of_node   = of_find_compatible_node(NULL, NULL,
-> >> +                                                       "brcm,bus-gpio");
-> >> +#endif
-> >
-> > Just commenting on the general style here, I think you can skip this
-> > step entirely, as mentioned above.
-> >
-> > You should use C syntax here:
-> >
-> >         if (IS_BUILTIN(CONFIG_OF) && cc->core->bus->hosttype == BCMA_HOSTTYPE_SOC))
-> >                 chip->of_node = of_find_compatible_node(NULL, NULL, "brcm,bus-gpio");
-> 
-> OK
-> 
-> 
-> > If CONFIG_OF is not set, of_find_compatible_node() is turned into an inline
-> > function that returns NULL, so you probably don't even need that.
-> 
-> But I need to have of_node defined. Please check out "struct gpio_chip".
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/xmit.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-I see. This is something we might want to change, but you don't need to
-bother with it now, so just leave this part as it is.
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 00931b6..aae70a1 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -2205,7 +2205,7 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 	struct ath_txq *txq = txctl->txq;
+ 	struct ath_atx_tid *tid = NULL;
+ 	struct ath_buf *bf;
+-	bool queue;
++	bool queue, skip_uapsd = false;
+ 	int q, ret;
+ 
+ 	if (vif)
+@@ -2246,14 +2246,14 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 	     sc->cur_chan->stopped) && !txctl->force_channel) {
+ 		if (!txctl->an)
+ 			txctl->an = &avp->mcast_node;
+-		info->flags &= ~IEEE80211_TX_CTL_PS_RESPONSE;
+ 		queue = true;
++		skip_uapsd = true;
+ 	}
+ 
+ 	if (txctl->an && queue)
+ 		tid = ath_get_skb_tid(sc, txctl->an, skb);
+ 
+-	if (info->flags & IEEE80211_TX_CTL_PS_RESPONSE) {
++	if (!skip_uapsd && (info->flags & IEEE80211_TX_CTL_PS_RESPONSE)) {
+ 		ath_txq_unlock(sc, txq);
+ 		txq = sc->tx.uapsdq;
+ 		ath_txq_lock(sc, txq);
+-- 
+2.1.0
 
-> > Finally, of_find_compatible_node() is a really slow operation, and "brcm,bus-gpio"
-> > is a much too generic name. If you need to look for something that is a child
-> > node, use something based on for_each_available_child_of_node().
-> 
-> Will see what I can do.
-
-ok, thanks.
-
-	Arnd
