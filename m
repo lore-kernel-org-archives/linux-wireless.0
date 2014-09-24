@@ -1,49 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:51984 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752483AbaIAHbk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Sep 2014 03:31:40 -0400
-From: Avinash Patil <patila@marvell.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
-	<huxm@marvell.com>, <yangyang@marvell.com>, <cluo@marvell.com>,
-	<maithili@marvell.com>, Avinash Patil <patila@marvell.com>
-Subject: [PATCH 11/17] mwifiex: set passive scan type for scan requests with no ssid
-Date: Mon, 1 Sep 2014 18:28:59 +0530
-Message-ID: <1409576345-13717-12-git-send-email-patila@marvell.com> (sfid-20140901_093143_604019_607114B6)
-In-Reply-To: <1409576345-13717-1-git-send-email-patila@marvell.com>
-References: <1409576345-13717-1-git-send-email-patila@marvell.com>
+Received: from mx1.redhat.com ([209.132.183.28]:35047 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752661AbaIXJ1S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Sep 2014 05:27:18 -0400
+Date: Wed, 24 Sep 2014 11:24:54 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: users@rt2x00.serialmonkey.com
+Subject: [PATCH] rt2800: correct BBP1_TX_POWER_CTRL mask
+Message-ID: <20140924092454.GB1802@redhat.com> (sfid-20140924_112727_439761_C225E5C6)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It was observed that station would sent probe request even when
-scan type has been set as passive during iw scan.
-This was happening because driver sets passive scan type only
-when channel has IEEE80211_CHAN_NO_IR flag set.
-Along with this, add condition to check if no ssids are specified in
-scan request so as to mark such scan request passive.
+Two bits control TX power on BBP_R1 register. Correct the mask,
+otherwise we clear additional bit on BBP_R1 register, what can have
+unknown, possible negative effect.
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
+Cc: stable@vger.kernel.org
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/mwifiex/cfg80211.c | 2 +-
+ drivers/net/wireless/rt2x00/rt2800.h | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index e2e6bf1..320512f 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -1980,7 +1980,7 @@ mwifiex_cfg80211_scan(struct wiphy *wiphy,
- 		user_scan_cfg->chan_list[i].chan_number = chan->hw_value;
- 		user_scan_cfg->chan_list[i].radio_type = chan->band;
+diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
+index b7434df..ebd5625 100644
+--- a/drivers/net/wireless/rt2x00/rt2800.h
++++ b/drivers/net/wireless/rt2x00/rt2800.h
+@@ -2041,7 +2041,7 @@ struct mac_iveiv_entry {
+  * 2 - drop tx power by 12dBm,
+  * 3 - increase tx power by 6dBm
+  */
+-#define BBP1_TX_POWER_CTRL		FIELD8(0x07)
++#define BBP1_TX_POWER_CTRL		FIELD8(0x03)
+ #define BBP1_TX_ANTENNA			FIELD8(0x18)
  
--		if (chan->flags & IEEE80211_CHAN_NO_IR)
-+		if ((chan->flags & IEEE80211_CHAN_NO_IR) || !request->n_ssids)
- 			user_scan_cfg->chan_list[i].scan_type =
- 						MWIFIEX_SCAN_TYPE_PASSIVE;
- 		else
+ /*
 -- 
-1.8.1.4
+1.8.3.1
 
