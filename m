@@ -1,67 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:4067 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753667AbaILJKc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Sep 2014 05:10:32 -0400
-From: Avinash Patil <patila@marvell.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
-	<huxm@marvell.com>, <yangyang@marvell.com>, <cluo@marvell.com>,
-	<maithili@marvell.com>, Avinash Patil <patila@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>
-Subject: [PATCHv2 08/16] mwifiex: minor cleanup in multiport aggregation
-Date: Fri, 12 Sep 2014 20:08:52 +0530
-Message-ID: <1410532740-3173-9-git-send-email-patila@marvell.com> (sfid-20140912_111050_820959_23D7D769)
-In-Reply-To: <1410532740-3173-1-git-send-email-patila@marvell.com>
-References: <1410532740-3173-1-git-send-email-patila@marvell.com>
+Received: from hauke-m.de ([5.39.93.123]:37820 "EHLO hauke-m.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750821AbaIXVTS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Sep 2014 17:19:18 -0400
+Message-ID: <54233550.60600@hauke-m.de> (sfid-20140924_231922_872934_DD652756)
+Date: Wed, 24 Sep 2014 23:19:12 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Arnd Bergmann <arnd@arndb.de>
+CC: linux-arm-kernel@lists.infradead.org, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
+	zajec5@gmail.com, varkabhadram@gmail.com, arend@broadcom.com
+Subject: Re: [PATCH v4 1/2] bcma: register bcma as device tree driver
+References: <1411339108-22307-1-git-send-email-hauke@hauke-m.de> <4345256.UGZH9SeRYG@wuerfel> <5421EE62.2080701@hauke-m.de> <3856565.LYF1mvpGOq@wuerfel>
+In-Reply-To: <3856565.LYF1mvpGOq@wuerfel>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+On 09/24/2014 11:48 AM, Arnd Bergmann wrote:
+> On Wednesday 24 September 2014 00:04:18 Hauke Mehrtens wrote:
+>> I assume this should then look somehow like this:
+>>
+>> axi@18000000 {
+>>         compatible = "brcm,bus-axi";
+>>         reg = <0x18000000 0x1000>;
+>>         ranges = <0x00000000 0x18000000 0x00100000>;
+>>         #address-cells = <1>;
+>>         #size-cells = <1>;
+>>
+>>         #interrupt-cells = <1>;
+>>         interrupt-map = <
+>>                 /* ChipCommon */
+>>                 0x00000000 0 &gic  GIC_SPI 85 IRQ_TYPE_LEVEL_HIGH
+>>
+>>                 /* PCIe Controller 0 */
+>>                 0x00012000 0 &gic GIC_SPI 126 IRQ_TYPE_LEVEL_HIGH
+>>                 0x00012000 1 &gic GIC_SPI 127 IRQ_TYPE_LEVEL_HIGH
+>>                 0x00012000 2 &gic GIC_SPI 128 IRQ_TYPE_LEVEL_HIGH
+>>                 0x00012000 3 &gic GIC_SPI 129 IRQ_TYPE_LEVEL_HIGH
+>>                 0x00012000 4 &gic GIC_SPI 130 IRQ_TYPE_LEVEL_HIGH
+>>                 0x00012000 5 &gic GIC_SPI 131 IRQ_TYPE_LEVEL_HIGH
+>>
+>>                 /* USB 2.0 Controller */
+>>                 0x00021000 0 &gic GIC_SPI 79 IRQ_TYPE_LEVEL_HIGH
+>>                 >;
+>>         };
+> 
+> Right, although I would add a few more '<', '>' and ',' for readability,
+> separating each line with a comma.
+> 
+> You are also missing an 'interrupt-map-mask' property that lists which
+> bits of the address are significant.
+> 
+> Are the interrupt numbers you have in the example (0, 0, 1, 2, ... 5, 0)
+> the actual numbers that are present in the hw registers?
 
-'mp_data_port_mask' and 'mp_end_port' gives correct information
-even for the chipsets supporting SDIO new mode (32 ports).
-We will get rid of this chip specific handling.
+Some cores do have more than one IRQ. The NAND core uses 8 IRQs and the
+PCIe controller uses 5 (the vendor code just uses the last one which
+gets triggered always). How can I handle this cases where one device has
+more than one IRQ? There is no hardware register these IRQ get mapped
+to. As far as I know the driver just knows that this device needs more
+IRQs. Should I just add a special device node entry for such devices?
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/sdio.c | 11 ++---------
- 1 file changed, 2 insertions(+), 9 deletions(-)
+>> How does the mapping of these interrupts to the devices work?
+> 
+> The same way that of_irq_parse_and_map_pci() works (the second half of it).
+> It's a very similar situation: you have a discoverable bus on which the
+> interrupts are listed in a different domain from which they are supposed to
+> be on the parent. The trick is to make up your own address property
+> and of_phandle_args on the stack and fill that with the data from
+> the hw bus scan, so you can get into the middle of the normal DT
+> irq code that gets them from device nodes.
 
-diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
-index 993841e..bdab122 100644
---- a/drivers/net/wireless/mwifiex/sdio.c
-+++ b/drivers/net/wireless/mwifiex/sdio.c
-@@ -622,22 +622,15 @@ static int mwifiex_get_wr_port_data(struct mwifiex_adapter *adapter, u32 *port)
- 
- 	dev_dbg(adapter->dev, "data: mp_wr_bitmap=0x%08x\n", wr_bitmap);
- 
--	if (card->supports_sdio_new_mode &&
--	    !(wr_bitmap & reg->data_port_mask)) {
-+	if (!(wr_bitmap & card->mp_data_port_mask)) {
- 		adapter->data_sent = true;
- 		return -EBUSY;
--	} else if (!card->supports_sdio_new_mode &&
--		   !(wr_bitmap & card->mp_data_port_mask)) {
--		return -1;
- 	}
- 
- 	if (card->mp_wr_bitmap & (1 << card->curr_wr_port)) {
- 		card->mp_wr_bitmap &= (u32) (~(1 << card->curr_wr_port));
- 		*port = card->curr_wr_port;
--		if (((card->supports_sdio_new_mode) &&
--		     (++card->curr_wr_port == card->max_ports)) ||
--		    ((!card->supports_sdio_new_mode) &&
--		     (++card->curr_wr_port == card->mp_end_port)))
-+		if (++card->curr_wr_port == card->mp_end_port)
- 			card->curr_wr_port = reg->start_wr_port;
- 	} else {
- 		adapter->data_sent = true;
--- 
-1.8.1.4
+Thanks for the description, that worked for me.
 
+>> Do I have to add a device tree entry for every device after all?
+> 
+> No, unless you want to add other properties in the node, such as
+> a MAC address, but then you still only need some of the devices.
+> 
+>> Do you have some example code where this is handled in code, I could not
+>> find the code doing this for PCI.
+> 
+> drivers/of/of_pci_irq.c, though the hard part is done in drivers/of/irq.c,
+> which parses the interrupt-map and interrupt-map-mask properties.
+
+
+I will split this patch into two patches, one just adding the bcma
+registration and an additional RFC patch adding the IRQ stuff.
+
+Hauke
