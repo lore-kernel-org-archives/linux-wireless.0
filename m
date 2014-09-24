@@ -1,42 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:50077 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750829AbaIQEdK (ORCPT
+Received: from mail-we0-f179.google.com ([74.125.82.179]:47994 "EHLO
+	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750717AbaIXHAk convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Sep 2014 00:33:10 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211: Call mgd_prepare_tx before deauthentication
-Date: Wed, 17 Sep 2014 10:03:42 +0530
-Message-Id: <1410928422-25587-1-git-send-email-sujith@msujith.org> (sfid-20140917_063314_454329_F65824C3)
+	Wed, 24 Sep 2014 03:00:40 -0400
+Received: by mail-we0-f179.google.com with SMTP id u56so5641603wes.38
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Sep 2014 00:00:39 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20140923143234.23585.2139.stgit@potku.adurom.net>
+References: <20140923143219.23585.34114.stgit@potku.adurom.net>
+	<20140923143234.23585.2139.stgit@potku.adurom.net>
+Date: Wed, 24 Sep 2014 09:00:39 +0200
+Message-ID: <CA+BoTQ=O8j1x-71SCLq9ZiXBU28Ax9M7tyfbvB=mjsWUwgPSjw@mail.gmail.com> (sfid-20140924_090043_354328_DF0E5414)
+Subject: Re: [PATCH v2 3/3] ath10k: add cal_data debugfs file
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On 23 September 2014 16:32, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+[...]
+> diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+> index 101c6f9cf2a8..426341480262 100644
+> --- a/drivers/net/wireless/ath/ath10k/debug.c
+> +++ b/drivers/net/wireless/ath/ath10k/debug.c
+[...]
+> +static int ath10k_cal_data_open(struct inode *inode, struct file *file)
 
-With drivers that support multi-channel concurrency,
-make sure that the correct context is in use before
-sending a deauth frame. The driver could be in a different
-context, in which case the frame could be dropped.
+Shouldn't functions in debug.c have ath10k_debug_ prefix? I'm aware
+other fops stuff doesn't include the _debug word as well so this is
+somewhat consistent with the current code but is this okay in the
+grand scheme of things? Just wondering.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- net/mac80211/mlme.c | 1 +
- 1 file changed, 1 insertion(+)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 2de8870..43332ce 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -4606,6 +4606,7 @@ int ieee80211_mgd_deauth(struct ieee80211_sub_if_data *sdata,
- 			   req->bssid, req->reason_code,
- 			   ieee80211_get_reason_code_string(req->reason_code));
- 
-+		drv_mgd_prepare_tx(sdata->local, sdata);
- 		ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH,
- 				       req->reason_code, tx, frame_buf);
- 		cfg80211_tx_mlme_mgmt(sdata->dev, frame_buf,
--- 
-2.1.0
-
+Michał
