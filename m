@@ -1,132 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f172.google.com ([209.85.192.172]:45320 "EHLO
-	mail-pd0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750895AbaISCYw (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:55379 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750793AbaIYGR7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Sep 2014 22:24:52 -0400
-Received: by mail-pd0-f172.google.com with SMTP id v10so2665591pde.31
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Sep 2014 19:24:51 -0700 (PDT)
-From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, devel@lists.open80211s.org,
-	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>,
-	Ashok Nagarajan <ashok.dragon@gmail.com>
-Subject: [PATCH v2 1/2] iw: Allow user to provide freq during mesh join
-Date: Fri, 19 Sep 2014 10:24:35 +0800
-Message-Id: <1411093476-15685-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20140919_042456_644339_D0AB075F)
+	Thu, 25 Sep 2014 02:17:59 -0400
+From: Avinash Patil <patila@marvell.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
+	<huxm@marvell.com>, <yangyang@marvell.com>, <cluo@marvell.com>,
+	<maithili@marvell.com>, Avinash Patil <patila@marvell.com>,
+	Kevin Gan <ganhy@marvell.com>
+Subject: [PATCH 1/3] mwifiex: fix soft lockup during iperf UDP RX
+Date: Thu, 25 Sep 2014 17:16:40 +0530
+Message-ID: <1411645602-18980-1-git-send-email-patila@marvell.com> (sfid-20140925_081802_626620_5FAC74D2)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Allow user to configure frequency and channel type during
-mesh join command.
+A soft lockup was observed on ARM multicore platform while UDP
+RX iperf was running on station.
 
-Signed-off-by: Ashok Nagarajan <ashok.dragon@gmail.com>
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Reason for this is delay_main_task was not taken into consideration while
+jumping to process_start. Now if delay_main_task is true, we would exit
+mwifiex_main_process instead of going to process_start again.
+This ensure other process is scheduled on this CPU and soft lockup is avoided.
 
-v2: use chandef similar to IBSS
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Kevin Gan <ganhy@marvell.com>
+Signed-off-by: Marc Yang <yangyang@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
 ---
- mesh.c | 70 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 67 insertions(+), 3 deletions(-)
+ drivers/net/wireless/mwifiex/main.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/mesh.c b/mesh.c
-index ca065bf..69c54cc 100644
---- a/mesh.c
-+++ b/mesh.c
-@@ -438,8 +438,32 @@ static int join_mesh(struct nl80211_state *state, struct nl_cb *cb,
- {
- 	struct nlattr *container;
- 	float rate;
--	int bintval, dtim_period;
-+	int bintval, dtim_period, i;
- 	char *end;
-+	unsigned long freq = 0;
-+	static const struct {
-+		const char *name;
-+		unsigned int width;
-+		int freq1_diff;
-+		int chantype; /* for older kernel */
-+	} *chanmode_selected = NULL, chanmode[] = {
-+		{ .name = "HT20",
-+		  .width = NL80211_CHAN_WIDTH_20,
-+		  .freq1_diff = 0,
-+		  .chantype = NL80211_CHAN_HT20 },
-+		{ .name = "HT40+",
-+		  .width = NL80211_CHAN_WIDTH_40,
-+		  .freq1_diff = 10,
-+		  .chantype = NL80211_CHAN_HT40PLUS },
-+		{ .name = "HT40-",
-+		  .width = NL80211_CHAN_WIDTH_40,
-+		  .freq1_diff = -10,
-+		  .chantype = NL80211_CHAN_HT40MINUS },
-+		{ .name = "NOHT",
-+		  .width = NL80211_CHAN_WIDTH_20_NOHT,
-+		  .freq1_diff = 0,
-+		  .chantype = NL80211_CHAN_NO_HT },
-+	};
+diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
+index b522f7c..be52189 100644
+--- a/drivers/net/wireless/mwifiex/main.c
++++ b/drivers/net/wireless/mwifiex/main.c
+@@ -330,7 +330,8 @@ process_start:
+ 	} while (true);
  
- 	if (argc < 1)
- 		return 1;
-@@ -448,6 +472,44 @@ static int join_mesh(struct nl80211_state *state, struct nl_cb *cb,
- 	argc--;
- 	argv++;
- 
-+	/* freq */
-+	if (argc > 1 && strcmp(argv[0], "freq") == 0) {
-+		argv++;
-+		argc--;
-+
-+		freq = strtoul(argv[0], &end, 10);
-+		if (*end != '\0')
-+			return 1;
-+		NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_FREQ, freq);
-+
-+		argv++;
-+		argc--;
-+	}
-+
-+	/* channel type */
-+	if (argc) {
-+		for (i = 0; i < ARRAY_SIZE(chanmode); i++) {
-+			if (strcasecmp(chanmode[i].name, argv[0]) == 0) {
-+				chanmode_selected = &chanmode[i];
-+				break;
-+			}
-+		}
-+
-+		if (chanmode_selected) {
-+			NLA_PUT_U32(msg, NL80211_ATTR_CHANNEL_WIDTH,
-+				    chanmode_selected->width);
-+			NLA_PUT_U32(msg, NL80211_ATTR_CENTER_FREQ1,
-+				    freq + chanmode_selected->freq1_diff);
-+			if (chanmode_selected->chantype != -1)
-+				NLA_PUT_U32(msg,
-+					    NL80211_ATTR_WIPHY_CHANNEL_TYPE,
-+					    chanmode_selected->chantype);
-+
-+			argv++;
-+			argc--;
-+		}
-+	}
-+
- 	if (argc > 1 && strcmp(argv[0], "mcast-rate") == 0) {
- 		argv++;
- 		argc--;
-@@ -513,11 +575,13 @@ static int join_mesh(struct nl80211_state *state, struct nl_cb *cb,
-  nla_put_failure:
- 	return -ENOBUFS;
- }
--COMMAND(mesh, join, "<mesh ID> [mcast-rate <rate in Mbps>]"
-+COMMAND(mesh, join, "<mesh ID> [freq in MHz] [HT20|HT40+|HT40-|NOHT]"
-+	" [mcast-rate <rate in Mbps>]"
- 	" [beacon-interval <time in TUs>] [dtim-period <value>]"
- 	" [vendor_sync on|off] [<param>=<value>]*",
- 	NL80211_CMD_JOIN_MESH, 0, CIB_NETDEV, join_mesh,
--	"Join a mesh with the given mesh ID with mcast-rate and mesh parameters.");
-+	"Join a mesh with the given mesh ID with frequency, mcast-rate, "
-+	"and mesh parameters.");
- 
- static int leave_mesh(struct nl80211_state *state, struct nl_cb *cb,
- 		      struct nl_msg *msg, int argc, char **argv,
+ 	spin_lock_irqsave(&adapter->main_proc_lock, flags);
+-	if ((adapter->int_status) || IS_CARD_RX_RCVD(adapter)) {
++	if (!adapter->delay_main_work &&
++	    (adapter->int_status || IS_CARD_RX_RCVD(adapter))) {
+ 		spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
+ 		goto process_start;
+ 	}
 -- 
-1.9.2
+1.8.1.4
 
