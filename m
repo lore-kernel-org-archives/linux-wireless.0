@@ -1,63 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:40146 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755241AbaIZRpL (ORCPT
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:55270 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750804AbaIYGQF convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Sep 2014 13:45:11 -0400
-Date: Fri, 26 Sep 2014 13:38:19 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: Linux NFC <linux-nfc@ml01.01.org>,
-	Linux Wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [GIT] [3.18] NFC update
-Message-ID: <20140926173818.GG22967@tuxdriver.com> (sfid-20140926_194533_888280_2EC8E5B5)
-References: <20140924003423.GF4235@zurbaran>
+	Thu, 25 Sep 2014 02:16:05 -0400
+Received: by mail-wi0-f180.google.com with SMTP id q5so8668682wiv.7
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Sep 2014 23:16:03 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140924003423.GF4235@zurbaran>
+In-Reply-To: <5422ECAA.6050600@candelatech.com>
+References: <1411426820-4047-1-git-send-email-greearb@candelatech.com>
+	<CA+BoTQn9sECMNZsxQpB4i3wHPxfVL+LXq9=2GBd-opH6+9TD=A@mail.gmail.com>
+	<5421A44C.8080307@candelatech.com>
+	<CA+BoTQ=mry3tPD-LK+gFD2bC6RU0KvY6LC9=FOAGTLi_1rzUog@mail.gmail.com>
+	<5422ECAA.6050600@candelatech.com>
+Date: Thu, 25 Sep 2014 08:16:03 +0200
+Message-ID: <CA+BoTQnLbJ7cnyUo-o6Ebx9pAxGyAHv8W8eKE8BEd7Kh8f+uTw@mail.gmail.com> (sfid-20140925_081610_149739_EEC3BA8B)
+Subject: Re: [PATCH] ath10k: use configured nss instead of max nss.
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 24, 2014 at 02:34:23AM +0200, Samuel Ortiz wrote:
-> Hi John,
-> 
-> This is the NFC pull request for 3.18.
-> 
-> We've had major updates for TI and ST Microelectronics drivers, and a
-> few NCI related changes.
-> 
-> For TI's trf7970a driver:
-> 
-> - Target mode support for trf7970a
-> - Suspend/resume support for trf7970a
-> - DT properties additions to handle different quirks
-> - A bunch of fixes for smartphone IOP related issues
-> 
-> For ST Microelectronics' ST21NFCA and ST21NFCB drivers:
-> 
-> - ISO15693 support for st21nfcb
-> - checkpatch and sparse related warning fixes
-> - Code cleanups and a few minor fixes
-> 
-> Finally, Marvell added ISO15693 support to the NCI stack, together with a
-> couple of NCI fixes.
-> 
-> Thanks in advance for pulling those in.
-> 
-> The following changes since commit 6a5d088a923854569e20eac4f3f569926d5911ec:
-> 
->   carl9170: tx: Replace rcu_assign_pointer() with RCU_INIT_POINTER() (2014-08-28 14:50:13 -0400)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-next.git tags/nfc-next-3.18-1
-> 
-> for you to fetch changes up to 094e93592433312548dd5e43d7b24b152f658063:
-> 
->   NFC: st21nfca: Fix potential double kfree_skb error (2014-09-24 02:02:24 +0200)
+On 24 September 2014 18:09, Ben Greear <greearb@candelatech.com> wrote:
+> On 09/24/2014 12:09 AM, Michal Kazior wrote:
+>> On 23 September 2014 18:48, Ben Greear <greearb@candelatech.com> wrote:
+>>> On 09/23/2014 01:59 AM, Michal Kazior wrote:
+>>>> On 23 September 2014 01:00,  <greearb@candelatech.com> wrote:
+>>>>> From: Ben Greear <greearb@candelatech.com>
+>> [...]
+>>>>> @@ -4086,6 +4086,10 @@ ath10k_default_bitrate_mask(struct ath10k *ar,
+>>>>>         u32 legacy = 0x00ff;
+>>>>>         u8 ht = 0xff, i;
+>>>>>         u16 vht = 0x3ff;
+>>>>> +       u16 nrf = ar->num_rf_chains;
+>>>>> +
+>>>>> +       if (ar->cfg_tx_chainmask)
+>>>>> +               nrf = get_nss_from_chainmask(ar->cfg_tx_chainmask);
+>> [...]
+>>>> I think it might be a good idea to convey the limitation of tx/rx
+>>>> chainmask to the user: you can't change the tx/rx chainmask on the fly
+>>>> easily (while connected/have associated stations). Or do you plan to
+>>>> schedule peer reassoc in __ath10k_set_antenna() in a follow up
+>>>> patch(es) later?
+[...]
+> See this in net/mac80211/cfg.c:
+>
+> static int ieee80211_set_antenna(struct wiphy *wiphy, u32 tx_ant, u32 rx_ant)
+> {
+>         struct ieee80211_local *local = wiphy_priv(wiphy);
+>
+>         if (local->started)
+>                 return -EOPNOTSUPP;
 
-Pulling now, but I don't plan to push it back out until Dave pulls my earlier batch...
+Ah, thanks! So my argument is invalid :)
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+
+>> But it's still probably a good idea to comment the quoted code chunk
+>> above explaining why nrf is overriden by chainmask (i.e. due to
+>> firmware rate control issues, right?).
+>
+> I am not certain it is a bug in the firmware.  The driver should not configure
+> nss incorrectly as it was doing previous to my recent patches.
+
+Since firmware does rate control it just seems redundant for the
+driver to update both chainmask and nss (the first implies the other).
+But maybe that's just me.
+
+
+Michał
