@@ -1,140 +1,454 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f44.google.com ([209.85.215.44]:39833 "EHLO
-	mail-la0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751268AbaIJIYE (ORCPT
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:37492 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752885AbaIYKof (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Sep 2014 04:24:04 -0400
-MIME-Version: 1.0
-In-Reply-To: <540FDB3C.6060301@hartkopp.net>
-References: <20140908191630.GB29412@tuxdriver.com>
-	<540F5927.7000306@hartkopp.net>
-	<CANUX_P3n0v1SzfbYuaAsE4TY7Hz_wo2Fb9SmHVNyFOC9hDhwdg@mail.gmail.com>
-	<540F61D0.9000704@hartkopp.net>
-	<CAMw6YJLeO1JZeY6hNe-TXOS56b-otk+htt5VPPor+9iYCQz53Q@mail.gmail.com>
-	<540FDB3C.6060301@hartkopp.net>
-Date: Wed, 10 Sep 2014 11:24:01 +0300
-Message-ID: <CANUX_P3kOetqEneHgqoCDN4c85SQYD-G=mQj_o1c_TvKmE5psA@mail.gmail.com> (sfid-20140910_102415_100118_7D073ABC)
-Subject: Re: iwlwifi no authentication with AP - Re: pull request:
- wireless-next 2014-09-08
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Oliver Hartkopp <socketcan@hartkopp.net>
-Cc: Vadim Kochan <vadim4j@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Content-Type: multipart/mixed; boundary=001a11c2b81638b10c0502b1c6d3
+	Thu, 25 Sep 2014 06:44:35 -0400
+Received: by mail-wg0-f49.google.com with SMTP id x12so7624835wgg.8
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Sep 2014 03:44:33 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 1/4] ath10k: split wmi stats parsing
+Date: Thu, 25 Sep 2014 12:33:47 +0200
+Message-Id: <1411641230-18785-2-git-send-email-michal.kazior@tieto.com> (sfid-20140925_124439_206548_9381EE16)
+In-Reply-To: <1411641230-18785-1-git-send-email-michal.kazior@tieto.com>
+References: <1411641230-18785-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---001a11c2b81638b10c0502b1c6d3
-Content-Type: text/plain; charset=UTF-8
+The parsing function was rather complex. Simplify
+by splitting it up into firmware branch specific
+implementations.
 
-On Wed, Sep 10, 2014 at 8:01 AM, Oliver Hartkopp <socketcan@hartkopp.net> wrote:
-> On 10.09.2014 00:07, Vadim Kochan wrote:
->> I have the same issue with iwlwifi.
->
-> I tried an old zd1211 wireless USB stick to check if this problem is 80211
-> related. But the USB stick works fine (I'm using it right now).
-> So its definitely looks like an iwlwifi issue.
->
->> iwlwifi 0000:02:00.0: fail to flush all tx fifo queues Q 0
->
-> Wasn't there any change in the iwlwifi tx path recently??
+While at it move the parsing code into wmi.c where
+it belongs.
 
-Can you please try the patch attached? It works for me.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/debug.c | 127 ++----------------------
+ drivers/net/wireless/ath/ath10k/debug.h |   5 +-
+ drivers/net/wireless/ath/ath10k/wmi.c   | 165 +++++++++++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath10k/wmi.h   |  24 ++---
+ 4 files changed, 180 insertions(+), 141 deletions(-)
 
->
-> Regards,
-> Oliver
->
->>
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index 101c6f9..0afd1aa 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -242,133 +242,22 @@ static const struct file_operations fops_wmi_services = {
+ 	.llseek = default_llseek,
+ };
+ 
+-void ath10k_debug_read_target_stats(struct ath10k *ar,
+-				    struct wmi_stats_event *ev)
++void ath10k_debug_read_target_stats(struct ath10k *ar, struct sk_buff *skb)
+ {
+-	u8 *tmp = ev->data;
+-	struct ath10k_target_stats *stats;
+-	int num_pdev_stats, num_vdev_stats, num_peer_stats;
+-	struct wmi_pdev_stats_10x *ps;
+-	int i;
++	int ret;
+ 
+ 	spin_lock_bh(&ar->data_lock);
+ 
+-	stats = &ar->debug.target_stats;
+-
+-	num_pdev_stats = __le32_to_cpu(ev->num_pdev_stats); /* 0 or 1 */
+-	num_vdev_stats = __le32_to_cpu(ev->num_vdev_stats); /* 0 or max vdevs */
+-	num_peer_stats = __le32_to_cpu(ev->num_peer_stats); /* 0 or max peers */
+-
+-	if (num_pdev_stats) {
+-		ps = (struct wmi_pdev_stats_10x *)tmp;
+-
+-		stats->ch_noise_floor = __le32_to_cpu(ps->chan_nf);
+-		stats->tx_frame_count = __le32_to_cpu(ps->tx_frame_count);
+-		stats->rx_frame_count = __le32_to_cpu(ps->rx_frame_count);
+-		stats->rx_clear_count = __le32_to_cpu(ps->rx_clear_count);
+-		stats->cycle_count = __le32_to_cpu(ps->cycle_count);
+-		stats->phy_err_count = __le32_to_cpu(ps->phy_err_count);
+-		stats->chan_tx_power = __le32_to_cpu(ps->chan_tx_pwr);
+-
+-		stats->comp_queued = __le32_to_cpu(ps->wal.tx.comp_queued);
+-		stats->comp_delivered =
+-			__le32_to_cpu(ps->wal.tx.comp_delivered);
+-		stats->msdu_enqued = __le32_to_cpu(ps->wal.tx.msdu_enqued);
+-		stats->mpdu_enqued = __le32_to_cpu(ps->wal.tx.mpdu_enqued);
+-		stats->wmm_drop = __le32_to_cpu(ps->wal.tx.wmm_drop);
+-		stats->local_enqued = __le32_to_cpu(ps->wal.tx.local_enqued);
+-		stats->local_freed = __le32_to_cpu(ps->wal.tx.local_freed);
+-		stats->hw_queued = __le32_to_cpu(ps->wal.tx.hw_queued);
+-		stats->hw_reaped = __le32_to_cpu(ps->wal.tx.hw_reaped);
+-		stats->underrun = __le32_to_cpu(ps->wal.tx.underrun);
+-		stats->tx_abort = __le32_to_cpu(ps->wal.tx.tx_abort);
+-		stats->mpdus_requed = __le32_to_cpu(ps->wal.tx.mpdus_requed);
+-		stats->tx_ko = __le32_to_cpu(ps->wal.tx.tx_ko);
+-		stats->data_rc = __le32_to_cpu(ps->wal.tx.data_rc);
+-		stats->self_triggers = __le32_to_cpu(ps->wal.tx.self_triggers);
+-		stats->sw_retry_failure =
+-			__le32_to_cpu(ps->wal.tx.sw_retry_failure);
+-		stats->illgl_rate_phy_err =
+-			__le32_to_cpu(ps->wal.tx.illgl_rate_phy_err);
+-		stats->pdev_cont_xretry =
+-			__le32_to_cpu(ps->wal.tx.pdev_cont_xretry);
+-		stats->pdev_tx_timeout =
+-			__le32_to_cpu(ps->wal.tx.pdev_tx_timeout);
+-		stats->pdev_resets = __le32_to_cpu(ps->wal.tx.pdev_resets);
+-		stats->phy_underrun = __le32_to_cpu(ps->wal.tx.phy_underrun);
+-		stats->txop_ovf = __le32_to_cpu(ps->wal.tx.txop_ovf);
+-
+-		stats->mid_ppdu_route_change =
+-			__le32_to_cpu(ps->wal.rx.mid_ppdu_route_change);
+-		stats->status_rcvd = __le32_to_cpu(ps->wal.rx.status_rcvd);
+-		stats->r0_frags = __le32_to_cpu(ps->wal.rx.r0_frags);
+-		stats->r1_frags = __le32_to_cpu(ps->wal.rx.r1_frags);
+-		stats->r2_frags = __le32_to_cpu(ps->wal.rx.r2_frags);
+-		stats->r3_frags = __le32_to_cpu(ps->wal.rx.r3_frags);
+-		stats->htt_msdus = __le32_to_cpu(ps->wal.rx.htt_msdus);
+-		stats->htt_mpdus = __le32_to_cpu(ps->wal.rx.htt_mpdus);
+-		stats->loc_msdus = __le32_to_cpu(ps->wal.rx.loc_msdus);
+-		stats->loc_mpdus = __le32_to_cpu(ps->wal.rx.loc_mpdus);
+-		stats->oversize_amsdu =
+-			__le32_to_cpu(ps->wal.rx.oversize_amsdu);
+-		stats->phy_errs = __le32_to_cpu(ps->wal.rx.phy_errs);
+-		stats->phy_err_drop = __le32_to_cpu(ps->wal.rx.phy_err_drop);
+-		stats->mpdu_errs = __le32_to_cpu(ps->wal.rx.mpdu_errs);
+-
+-		if (test_bit(ATH10K_FW_FEATURE_WMI_10X,
+-			     ar->fw_features)) {
+-			stats->ack_rx_bad = __le32_to_cpu(ps->ack_rx_bad);
+-			stats->rts_bad = __le32_to_cpu(ps->rts_bad);
+-			stats->rts_good = __le32_to_cpu(ps->rts_good);
+-			stats->fcs_bad = __le32_to_cpu(ps->fcs_bad);
+-			stats->no_beacons = __le32_to_cpu(ps->no_beacons);
+-			stats->mib_int_count = __le32_to_cpu(ps->mib_int_count);
+-			tmp += sizeof(struct wmi_pdev_stats_10x);
+-		} else {
+-			tmp += sizeof(struct wmi_pdev_stats_old);
+-		}
+-	}
+-
+-	/* 0 or max vdevs */
+-	/* Currently firmware does not support VDEV stats */
+-	if (num_vdev_stats) {
+-		struct wmi_vdev_stats *vdev_stats;
+-
+-		for (i = 0; i < num_vdev_stats; i++) {
+-			vdev_stats = (struct wmi_vdev_stats *)tmp;
+-			tmp += sizeof(struct wmi_vdev_stats);
+-		}
++	ret = ath10k_wmi_pull_fw_stats(ar, skb, &ar->debug.target_stats);
++	if (ret) {
++		ath10k_warn(ar, "failed to pull fw stats: %d\n", ret);
++		goto unlock;
+ 	}
+ 
+-	if (num_peer_stats) {
+-		struct wmi_peer_stats_10x *peer_stats;
+-		struct ath10k_peer_stat *s;
+-
+-		stats->peers = num_peer_stats;
+-
+-		for (i = 0; i < num_peer_stats; i++) {
+-			peer_stats = (struct wmi_peer_stats_10x *)tmp;
+-			s = &stats->peer_stat[i];
+-
+-			memcpy(s->peer_macaddr, &peer_stats->peer_macaddr.addr,
+-			       ETH_ALEN);
+-			s->peer_rssi = __le32_to_cpu(peer_stats->peer_rssi);
+-			s->peer_tx_rate =
+-				__le32_to_cpu(peer_stats->peer_tx_rate);
+-			if (test_bit(ATH10K_FW_FEATURE_WMI_10X,
+-				     ar->fw_features)) {
+-				s->peer_rx_rate =
+-					__le32_to_cpu(peer_stats->peer_rx_rate);
+-				tmp += sizeof(struct wmi_peer_stats_10x);
+-
+-			} else {
+-				tmp += sizeof(struct wmi_peer_stats_old);
+-			}
+-		}
+-	}
++	complete(&ar->debug.event_stats_compl);
+ 
++unlock:
+ 	spin_unlock_bh(&ar->data_lock);
+-	complete(&ar->debug.event_stats_compl);
+ }
+ 
+ static ssize_t ath10k_read_fw_stats(struct file *file, char __user *user_buf,
+diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
+index d6276fe..f7e8131 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.h
++++ b/drivers/net/wireless/ath/ath10k/debug.h
+@@ -55,8 +55,7 @@ void ath10k_debug_unregister(struct ath10k *ar);
+ void ath10k_debug_read_service_map(struct ath10k *ar,
+ 				   const void *service_map,
+ 				   size_t map_size);
+-void ath10k_debug_read_target_stats(struct ath10k *ar,
+-				    struct wmi_stats_event *ev);
++void ath10k_debug_read_target_stats(struct ath10k *ar, struct sk_buff *skb);
+ struct ath10k_fw_crash_data *
+ ath10k_debug_get_new_fw_crash_data(struct ath10k *ar);
+ 
+@@ -99,7 +98,7 @@ static inline void ath10k_debug_read_service_map(struct ath10k *ar,
+ }
+ 
+ static inline void ath10k_debug_read_target_stats(struct ath10k *ar,
+-						  struct wmi_stats_event *ev)
++						  struct sk_buff *skb)
+ {
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index bfc1fb3..8e2d021 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -1329,14 +1329,171 @@ static int ath10k_wmi_event_debug_mesg(struct ath10k *ar, struct sk_buff *skb)
+ 	return 0;
+ }
+ 
++static void ath10k_wmi_pull_pdev_stats(const struct wmi_pdev_stats *src,
++				       struct ath10k_target_stats *dst)
++{
++	const struct wal_dbg_tx_stats *tx = &src->wal.tx;
++	const struct wal_dbg_rx_stats *rx = &src->wal.rx;
++
++	dst->ch_noise_floor = __le32_to_cpu(src->chan_nf);
++	dst->tx_frame_count = __le32_to_cpu(src->tx_frame_count);
++	dst->rx_frame_count = __le32_to_cpu(src->rx_frame_count);
++	dst->rx_clear_count = __le32_to_cpu(src->rx_clear_count);
++	dst->cycle_count = __le32_to_cpu(src->cycle_count);
++	dst->phy_err_count = __le32_to_cpu(src->phy_err_count);
++	dst->chan_tx_power = __le32_to_cpu(src->chan_tx_pwr);
++
++	dst->comp_queued = __le32_to_cpu(tx->comp_queued);
++	dst->comp_delivered = __le32_to_cpu(tx->comp_delivered);
++	dst->msdu_enqued = __le32_to_cpu(tx->msdu_enqued);
++	dst->mpdu_enqued = __le32_to_cpu(tx->mpdu_enqued);
++	dst->wmm_drop = __le32_to_cpu(tx->wmm_drop);
++	dst->local_enqued = __le32_to_cpu(tx->local_enqued);
++	dst->local_freed = __le32_to_cpu(tx->local_freed);
++	dst->hw_queued = __le32_to_cpu(tx->hw_queued);
++	dst->hw_reaped = __le32_to_cpu(tx->hw_reaped);
++	dst->underrun = __le32_to_cpu(tx->underrun);
++	dst->tx_abort = __le32_to_cpu(tx->tx_abort);
++	dst->mpdus_requed = __le32_to_cpu(tx->mpdus_requed);
++	dst->tx_ko = __le32_to_cpu(tx->tx_ko);
++	dst->data_rc = __le32_to_cpu(tx->data_rc);
++	dst->self_triggers = __le32_to_cpu(tx->self_triggers);
++	dst->sw_retry_failure = __le32_to_cpu(tx->sw_retry_failure);
++	dst->illgl_rate_phy_err = __le32_to_cpu(tx->illgl_rate_phy_err);
++	dst->pdev_cont_xretry = __le32_to_cpu(tx->pdev_cont_xretry);
++	dst->pdev_tx_timeout = __le32_to_cpu(tx->pdev_tx_timeout);
++	dst->pdev_resets = __le32_to_cpu(tx->pdev_resets);
++	dst->phy_underrun = __le32_to_cpu(tx->phy_underrun);
++	dst->txop_ovf = __le32_to_cpu(tx->txop_ovf);
++
++	dst->mid_ppdu_route_change = __le32_to_cpu(rx->mid_ppdu_route_change);
++	dst->status_rcvd = __le32_to_cpu(rx->status_rcvd);
++	dst->r0_frags = __le32_to_cpu(rx->r0_frags);
++	dst->r1_frags = __le32_to_cpu(rx->r1_frags);
++	dst->r2_frags = __le32_to_cpu(rx->r2_frags);
++	dst->r3_frags = __le32_to_cpu(rx->r3_frags);
++	dst->htt_msdus = __le32_to_cpu(rx->htt_msdus);
++	dst->htt_mpdus = __le32_to_cpu(rx->htt_mpdus);
++	dst->loc_msdus = __le32_to_cpu(rx->loc_msdus);
++	dst->loc_mpdus = __le32_to_cpu(rx->loc_mpdus);
++	dst->oversize_amsdu = __le32_to_cpu(rx->oversize_amsdu);
++	dst->phy_errs = __le32_to_cpu(rx->phy_errs);
++	dst->phy_err_drop = __le32_to_cpu(rx->phy_err_drop);
++	dst->mpdu_errs = __le32_to_cpu(rx->mpdu_errs);
++}
++
++static void ath10k_wmi_pull_peer_stats(const struct wmi_peer_stats *src,
++				       struct ath10k_peer_stat *dst)
++{
++	ether_addr_copy(dst->peer_macaddr, src->peer_macaddr.addr);
++	dst->peer_rssi = __le32_to_cpu(src->peer_rssi);
++	dst->peer_tx_rate = __le32_to_cpu(src->peer_tx_rate);
++}
++
++static int ath10k_wmi_main_pull_fw_stats(struct ath10k *ar,
++					 struct sk_buff *skb,
++					 struct ath10k_target_stats *stats)
++{
++	const struct wmi_stats_event *ev = (void *)skb->data;
++	u32 num_pdev_stats, num_vdev_stats, num_peer_stats;
++	int i;
++
++	if (!skb_pull(skb, sizeof(*ev)))
++		return -EPROTO;
++
++	num_pdev_stats = __le32_to_cpu(ev->num_pdev_stats);
++	num_vdev_stats = __le32_to_cpu(ev->num_vdev_stats);
++	num_peer_stats = __le32_to_cpu(ev->num_peer_stats);
++
++	if (num_pdev_stats) {
++		const struct wmi_pdev_stats *src;
++
++		src = (void *)skb->data;
++		if (!skb_pull(skb, sizeof(*src)))
++			return -EPROTO;
++
++		ath10k_wmi_pull_pdev_stats(src, stats);
++	}
++
++	/* fw doesn't implement vdev stats */
++
++	for (i = 0; i < num_peer_stats; i++) {
++		const struct wmi_peer_stats *src;
++
++		src = (void *)skb->data;
++		if (!skb_pull(skb, sizeof(*src)))
++			return -EPROTO;
++
++		ath10k_wmi_pull_peer_stats(src, &stats->peer_stat[i]);
++	}
++
++	return 0;
++}
++
++static int ath10k_wmi_10x_pull_fw_stats(struct ath10k *ar,
++					struct sk_buff *skb,
++					struct ath10k_target_stats *stats)
++{
++	const struct wmi_stats_event *ev = (void *)skb->data;
++	u32 num_pdev_stats, num_vdev_stats, num_peer_stats;
++	int i;
++
++	if (!skb_pull(skb, sizeof(*ev)))
++		return -EPROTO;
++
++	num_pdev_stats = __le32_to_cpu(ev->num_pdev_stats);
++	num_vdev_stats = __le32_to_cpu(ev->num_vdev_stats);
++	num_peer_stats = __le32_to_cpu(ev->num_peer_stats);
++
++	if (num_pdev_stats) {
++		const struct wmi_10x_pdev_stats *src;
++
++		src = (void *)skb->data;
++		if (!skb_pull(skb, sizeof(*src)))
++			return -EPROTO;
++
++		ath10k_wmi_pull_pdev_stats(&src->old, stats);
++
++		stats->ack_rx_bad = __le32_to_cpu(src->ack_rx_bad);
++		stats->rts_bad = __le32_to_cpu(src->rts_bad);
++		stats->rts_good = __le32_to_cpu(src->rts_good);
++		stats->fcs_bad = __le32_to_cpu(src->fcs_bad);
++		stats->no_beacons = __le32_to_cpu(src->no_beacons);
++		stats->mib_int_count = __le32_to_cpu(src->mib_int_count);
++	}
++
++	/* fw doesn't implement vdev stats */
++
++	for (i = 0; i < num_peer_stats; i++) {
++		const struct wmi_10x_peer_stats *src;
++
++		src = (void *)skb->data;
++		if (!skb_pull(skb, sizeof(*src)))
++			return -EPROTO;
++
++		ath10k_wmi_pull_peer_stats(&src->old, &stats->peer_stat[i]);
++
++		stats->peer_stat[i].peer_rx_rate =
++				__le32_to_cpu(src->peer_rx_rate);
++	}
++
++	return 0;
++}
++
++int ath10k_wmi_pull_fw_stats(struct ath10k *ar, struct sk_buff *skb,
++			     struct ath10k_target_stats *stats)
++{
++	if (test_bit(ATH10K_FW_FEATURE_WMI_10X, ar->fw_features))
++		return ath10k_wmi_10x_pull_fw_stats(ar, skb, stats);
++	else
++		return ath10k_wmi_main_pull_fw_stats(ar, skb, stats);
++}
++
+ static void ath10k_wmi_event_update_stats(struct ath10k *ar,
+ 					  struct sk_buff *skb)
+ {
+-	struct wmi_stats_event *ev = (struct wmi_stats_event *)skb->data;
+-
+ 	ath10k_dbg(ar, ATH10K_DBG_WMI, "WMI_UPDATE_STATS_EVENTID\n");
+-
+-	ath10k_debug_read_target_stats(ar, ev);
++	ath10k_debug_read_target_stats(ar, skb);
+ }
+ 
+ static void ath10k_wmi_event_vdev_start_resp(struct ath10k *ar,
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 55d8317..4ce8e3c 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -3021,7 +3021,7 @@ struct wmi_stats_event {
+  * PDEV statistics
+  * TODO: add all PDEV stats here
+  */
+-struct wmi_pdev_stats_old {
++struct wmi_pdev_stats {
+ 	__le32 chan_nf;        /* Channel noise floor */
+ 	__le32 tx_frame_count; /* TX frame count */
+ 	__le32 rx_frame_count; /* RX frame count */
+@@ -3032,15 +3032,8 @@ struct wmi_pdev_stats_old {
+ 	struct wal_dbg_stats wal; /* WAL dbg stats */
+ } __packed;
+ 
+-struct wmi_pdev_stats_10x {
+-	__le32 chan_nf;        /* Channel noise floor */
+-	__le32 tx_frame_count; /* TX frame count */
+-	__le32 rx_frame_count; /* RX frame count */
+-	__le32 rx_clear_count; /* rx clear count */
+-	__le32 cycle_count;    /* cycle count */
+-	__le32 phy_err_count;  /* Phy error count */
+-	__le32 chan_tx_pwr;    /* channel tx power */
+-	struct wal_dbg_stats wal; /* WAL dbg stats */
++struct wmi_10x_pdev_stats {
++	struct wmi_pdev_stats old;
+ 	__le32 ack_rx_bad;
+ 	__le32 rts_bad;
+ 	__le32 rts_good;
+@@ -3061,16 +3054,14 @@ struct wmi_vdev_stats {
+  * peer statistics.
+  * TODO: add more stats
+  */
+-struct wmi_peer_stats_old {
++struct wmi_peer_stats {
+ 	struct wmi_mac_addr peer_macaddr;
+ 	__le32 peer_rssi;
+ 	__le32 peer_tx_rate;
+ } __packed;
+ 
+-struct wmi_peer_stats_10x {
+-	struct wmi_mac_addr peer_macaddr;
+-	__le32 peer_rssi;
+-	__le32 peer_tx_rate;
++struct wmi_10x_peer_stats {
++	struct wmi_peer_stats old;
+ 	__le32 peer_rx_rate;
+ } __packed;
+ 
+@@ -4582,6 +4573,7 @@ struct wmi_svc_rdy_ev_arg {
+ 
+ struct ath10k;
+ struct ath10k_vif;
++struct ath10k_target_stats;
+ 
+ int ath10k_wmi_attach(struct ath10k *ar);
+ void ath10k_wmi_detach(struct ath10k *ar);
+@@ -4653,5 +4645,7 @@ int ath10k_wmi_force_fw_hang(struct ath10k *ar,
+ 			     enum wmi_force_fw_hang_type type, u32 delay_ms);
+ int ath10k_wmi_mgmt_tx(struct ath10k *ar, struct sk_buff *skb);
+ int ath10k_wmi_dbglog_cfg(struct ath10k *ar, u32 module_enable);
++int ath10k_wmi_pull_fw_stats(struct ath10k *ar, struct sk_buff *skb,
++			     struct ath10k_target_stats *stats);
+ 
+ #endif /* _WMI_H_ */
+-- 
+1.8.5.3
 
---001a11c2b81638b10c0502b1c6d3
-Content-Type: text/x-patch; charset=US-ASCII;
-	name="0001-iwlwifi-trans-don-t-configure-the-set_active-in-SCD-.patch"
-Content-Disposition: attachment;
-	filename="0001-iwlwifi-trans-don-t-configure-the-set_active-in-SCD-.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_hzwebk6x0
-
-RnJvbSA0MmJmY2Y5M2UxOGNiODUwZDBiNWY1ZTBhNGI5OWEyMzllMGU1N2FiIE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBFbW1hbnVlbCBHcnVtYmFjaCA8ZW1tYW51ZWwuZ3J1bWJhY2hA
-aW50ZWwuY29tPgpEYXRlOiBXZWQsIDEwIFNlcCAyMDE0IDExOjE2OjQxICswMzAwClN1YmplY3Q6
-IFtQQVRDSF0gaXdsd2lmaTogdHJhbnM6IGRvbid0IGNvbmZpZ3VyZSB0aGUgc2V0X2FjdGl2ZSBp
-biBTQ0QgZm9yIGR2bQoKVGhpcyBjb25maWd1cmF0aW9uIGlzIG5vdCBuZWVkZWQgZm9yIGR2bSwg
-YW5kIGl0IGFjdHVhbGx5CmJyb2tlIGl0LgoKU2lnbmVkLW9mZi1ieTogRW1tYW51ZWwgR3J1bWJh
-Y2ggPGVtbWFudWVsLmdydW1iYWNoQGludGVsLmNvbT4KLS0tCiBkcml2ZXJzL25ldC93aXJlbGVz
-cy9pd2x3aWZpL2l3bC10cmFucy5oICAgICB8IDIgKysKIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3
-bHdpZmkvbXZtL29wcy5jICAgICAgIHwgMSArCiBkcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZp
-L3BjaWUvaW50ZXJuYWwuaCB8IDIgKysKIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvcGNp
-ZS90cmFucy5jICAgIHwgMSArCiBkcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL3BjaWUvdHgu
-YyAgICAgICB8IDYgKysrKy0tCiA1IGZpbGVzIGNoYW5nZWQsIDEwIGluc2VydGlvbnMoKyksIDIg
-ZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9p
-d2wtdHJhbnMuaCBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvaXdsLXRyYW5zLmgKaW5k
-ZXggMzYyNzViNC4uYzg3YjQ1MiAxMDA2NDQKLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXds
-d2lmaS9pd2wtdHJhbnMuaAorKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3bC10
-cmFucy5oCkBAIC0zODIsNiArMzgyLDcgQEAgZW51bSBpd2xfdHJhbnNfc3RhdHVzIHsKICAqCWlm
-IHVuc2V0IDRrIHdpbGwgYmUgdGhlIFJYIGJ1ZmZlciBzaXplCiAgKiBAYmNfdGFibGVfZHdvcmQ6
-IHNldCB0byB0cnVlIGlmIHRoZSBCQyB0YWJsZSBleHBlY3RzIHRoZSBieXRlIGNvdW50IHRvIGJl
-CiAgKglpbiBEV09SRCAoYXMgb3Bwb3NlZCB0byBieXRlcykKKyAqIEBzY2Rfc2V0X2FjdGl2ZTog
-c2hvdWxkIHRoZSB0cmFuc3BvcnQgY29uZmlndXJlIHRoZSBTQ0QgZm9yIEhDTUQgcXVldWUKICAq
-IEBxdWV1ZV93YXRjaGRvZ190aW1lb3V0OiB0aW1lIChpbiBtcykgYWZ0ZXIgd2hpY2ggcXVldWVz
-CiAgKglhcmUgY29uc2lkZXJlZCBzdHVjayBhbmQgd2lsbCB0cmlnZ2VyIGRldmljZSByZXN0YXJ0
-CiAgKiBAY29tbWFuZF9uYW1lczogYXJyYXkgb2YgY29tbWFuZCBuYW1lcywgbXVzdCBiZSAyNTYg
-ZW50cmllcwpAQCAtMzk3LDYgKzM5OCw3IEBAIHN0cnVjdCBpd2xfdHJhbnNfY29uZmlnIHsKIAog
-CWJvb2wgcnhfYnVmX3NpemVfOGs7CiAJYm9vbCBiY190YWJsZV9kd29yZDsKKwlib29sIHNjZF9z
-ZXRfYWN0aXZlOwogCXVuc2lnbmVkIGludCBxdWV1ZV93YXRjaGRvZ190aW1lb3V0OwogCWNvbnN0
-IGNoYXIgKmNvbnN0ICpjb21tYW5kX25hbWVzOwogfTsKZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0
-L3dpcmVsZXNzL2l3bHdpZmkvbXZtL29wcy5jIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lm
-aS9tdm0vb3BzLmMKaW5kZXggNzdiMGI0OC4uZWQ4MjU0NyAxMDA2NDQKLS0tIGEvZHJpdmVycy9u
-ZXQvd2lyZWxlc3MvaXdsd2lmaS9tdm0vb3BzLmMKKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3Mv
-aXdsd2lmaS9tdm0vb3BzLmMKQEAgLTUwNCw2ICs1MDQsNyBAQCBpd2xfb3BfbW9kZV9tdm1fc3Rh
-cnQoc3RydWN0IGl3bF90cmFucyAqdHJhbnMsIGNvbnN0IHN0cnVjdCBpd2xfY2ZnICpjZmcsCiAK
-IAl0cmFuc19jZmcuY21kX3F1ZXVlID0gSVdMX01WTV9DTURfUVVFVUU7CiAJdHJhbnNfY2ZnLmNt
-ZF9maWZvID0gSVdMX01WTV9UWF9GSUZPX0NNRDsKKwl0cmFuc19jZmcuc2NkX3NldF9hY3RpdmUg
-PSB0cnVlOwogCiAJc25wcmludGYobXZtLT5ody0+d2lwaHktPmZ3X3ZlcnNpb24sCiAJCSBzaXpl
-b2YobXZtLT5ody0+d2lwaHktPmZ3X3ZlcnNpb24pLApkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQv
-d2lyZWxlc3MvaXdsd2lmaS9wY2llL2ludGVybmFsLmggYi9kcml2ZXJzL25ldC93aXJlbGVzcy9p
-d2x3aWZpL3BjaWUvaW50ZXJuYWwuaAppbmRleCA1YmNhOWE2Li5lNjEyOWFmIDEwMDY0NAotLS0g
-YS9kcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL3BjaWUvaW50ZXJuYWwuaAorKysgYi9kcml2
-ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL3BjaWUvaW50ZXJuYWwuaApAQCAtMjU3LDYgKzI1Nyw3
-IEBAIGl3bF9wY2llX2dldF9zY3JhdGNoYnVmX2RtYShzdHJ1Y3QgaXdsX3R4cSAqdHhxLCBpbnQg
-aWR4KQogICogQGNtZF9xdWV1ZSAtIGNvbW1hbmQgcXVldWUgbnVtYmVyCiAgKiBAcnhfYnVmX3Np
-emVfOGs6IDgga0IgUlggYnVmZmVyIHNpemUKICAqIEBiY190YWJsZV9kd29yZDogdHJ1ZSBpZiB0
-aGUgQkMgdGFibGUgZXhwZWN0cyBEV09SRCAoYXMgb3Bwb3NlZCB0byBieXRlcykKKyAqIEBzY2Rf
-c2V0X2FjdGl2ZTogc2hvdWxkIHRoZSB0cmFuc3BvcnQgY29uZmlndXJlIHRoZSBTQ0QgZm9yIEhD
-TUQgcXVldWUKICAqIEByeF9wYWdlX29yZGVyOiBwYWdlIG9yZGVyIGZvciByZWNlaXZlIGJ1ZmZl
-ciBzaXplCiAgKiBAd2RfdGltZW91dDogcXVldWUgd2F0Y2hkb2cgdGltZW91dCAoamlmZmllcykK
-ICAqIEByZWdfbG9jazogcHJvdGVjdCBodyByZWdpc3RlciBhY2Nlc3MKQEAgLTMwNiw2ICszMDcs
-NyBAQCBzdHJ1Y3QgaXdsX3RyYW5zX3BjaWUgewogCiAJYm9vbCByeF9idWZfc2l6ZV84azsKIAli
-b29sIGJjX3RhYmxlX2R3b3JkOworCWJvb2wgc2NkX3NldF9hY3RpdmU7CiAJdTMyIHJ4X3BhZ2Vf
-b3JkZXI7CiAKIAljb25zdCBjaGFyICpjb25zdCAqY29tbWFuZF9uYW1lczsKZGlmZiAtLWdpdCBh
-L2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvcGNpZS90cmFucy5jIGIvZHJpdmVycy9uZXQv
-d2lyZWxlc3MvaXdsd2lmaS9wY2llL3RyYW5zLmMKaW5kZXggMGY0YTRjMS4uYTIxNTYyNCAxMDA2
-NDQKLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9wY2llL3RyYW5zLmMKKysrIGIv
-ZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9wY2llL3RyYW5zLmMKQEAgLTExNzcsNiArMTE3
-Nyw3IEBAIHN0YXRpYyB2b2lkIGl3bF90cmFuc19wY2llX2NvbmZpZ3VyZShzdHJ1Y3QgaXdsX3Ry
-YW5zICp0cmFucywKIAogCXRyYW5zX3BjaWUtPmNvbW1hbmRfbmFtZXMgPSB0cmFuc19jZmctPmNv
-bW1hbmRfbmFtZXM7CiAJdHJhbnNfcGNpZS0+YmNfdGFibGVfZHdvcmQgPSB0cmFuc19jZmctPmJj
-X3RhYmxlX2R3b3JkOworCXRyYW5zX3BjaWUtPnNjZF9zZXRfYWN0aXZlID0gdHJhbnNfY2ZnLT5z
-Y2Rfc2V0X2FjdGl2ZTsKIAogCS8qIEluaXRpYWxpemUgTkFQSSBoZXJlIC0gaXQgc2hvdWxkIGJl
-IGJlZm9yZSByZWdpc3RlcmluZyB0byBtYWM4MDIxMQogCSAqIGluIHRoZSBvcG1vZGUgYnV0IGFm
-dGVyIHRoZSBIVyBzdHJ1Y3QgaXMgYWxsb2NhdGVkLgpkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQv
-d2lyZWxlc3MvaXdsd2lmaS9wY2llL3R4LmMgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZp
-L3BjaWUvdHguYwppbmRleCBmNGRmOTUxLi5kNjlmMmU5IDEwMDY0NAotLS0gYS9kcml2ZXJzL25l
-dC93aXJlbGVzcy9pd2x3aWZpL3BjaWUvdHguYworKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9p
-d2x3aWZpL3BjaWUvdHguYwpAQCAtMTA4NSw3ICsxMDg1LDggQEAgdm9pZCBpd2xfdHJhbnNfcGNp
-ZV90eHFfZW5hYmxlKHN0cnVjdCBpd2xfdHJhbnMgKnRyYW5zLCBpbnQgdHhxX2lkLCB1MTYgc3Nu
-LAogCQlmaWZvID0gY2ZnLT5maWZvOwogCiAJCS8qIERpc2FibGUgdGhlIHNjaGVkdWxlciBwcmlv
-ciBjb25maWd1cmluZyB0aGUgY21kIHF1ZXVlICovCi0JCWlmICh0eHFfaWQgPT0gdHJhbnNfcGNp
-ZS0+Y21kX3F1ZXVlKQorCQlpZiAodHhxX2lkID09IHRyYW5zX3BjaWUtPmNtZF9xdWV1ZSAmJgor
-CQkgICAgdHJhbnNfcGNpZS0+c2NkX3NldF9hY3RpdmUpCiAJCQlpd2xfc2NkX2VuYWJsZV9zZXRf
-YWN0aXZlKHRyYW5zLCAwKTsKIAogCQkvKiBTdG9wIHRoaXMgVHggcXVldWUgYmVmb3JlIGNvbmZp
-Z3VyaW5nIGl0ICovCkBAIC0xMTQ3LDcgKzExNDgsOCBAQCB2b2lkIGl3bF90cmFuc19wY2llX3R4
-cV9lbmFibGUoc3RydWN0IGl3bF90cmFucyAqdHJhbnMsIGludCB0eHFfaWQsIHUxNiBzc24sCiAJ
-CQkgICAgICAgU0NEX1FVRVVFX1NUVFNfUkVHX01TSyk7CiAKIAkJLyogZW5hYmxlIHRoZSBzY2hl
-ZHVsZXIgZm9yIHRoaXMgcXVldWUgKG9ubHkpICovCi0JCWlmICh0eHFfaWQgPT0gdHJhbnNfcGNp
-ZS0+Y21kX3F1ZXVlKQorCQlpZiAodHhxX2lkID09IHRyYW5zX3BjaWUtPmNtZF9xdWV1ZSAmJgor
-CQkgICAgdHJhbnNfcGNpZS0+c2NkX3NldF9hY3RpdmUpCiAJCQlpd2xfc2NkX2VuYWJsZV9zZXRf
-YWN0aXZlKHRyYW5zLCBCSVQodHhxX2lkKSk7CiAJfQogCi0tIAoxLjkuMQoK
---001a11c2b81638b10c0502b1c6d3--
