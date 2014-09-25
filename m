@@ -1,50 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:56727 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753196AbaIOFN3 (ORCPT
+Received: from mail-ie0-f170.google.com ([209.85.223.170]:65009 "EHLO
+	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750774AbaIYFfJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Sep 2014 01:13:29 -0400
-Received: by mail-wi0-f178.google.com with SMTP id ho1so3392350wib.5
-        for <linux-wireless@vger.kernel.org>; Sun, 14 Sep 2014 22:13:28 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: =?UTF-8?q?Toralf=20F=C3=B6rster?= <toralf.foerster@gmx.de>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 16/28] iwlwifi/iwl-drv.c: fix typo defualt -> default
-Date: Mon, 15 Sep 2014 08:12:48 +0300
-Message-Id: <1410757980-2138-16-git-send-email-egrumbach@gmail.com> (sfid-20140915_073115_220463_3629F8B0)
-In-Reply-To: <5416742C.3070804@gmail.com>
-References: <5416742C.3070804@gmail.com>
+	Thu, 25 Sep 2014 01:35:09 -0400
 MIME-Version: 1.0
+In-Reply-To: <1411597048-25470-1-git-send-email-hauke@hauke-m.de>
+References: <1411597048-25470-1-git-send-email-hauke@hauke-m.de>
+Date: Thu, 25 Sep 2014 07:35:08 +0200
+Message-ID: <CACna6rxOt3Ln8uoN7kgSNDPs+ZWAwnBFEh==e8D+8w3zjL-Peg@mail.gmail.com> (sfid-20140925_073515_629216_CDE71F97)
+Subject: Re: [PATCH v5 1/2] bcma: register bcma as device tree driver
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: John Linville <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Arend Van Spriel <arend@broadcom.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Arnd Bergmann <arnd@arndb.de>, devicetree@vger.kernel.org,
+	varkabhadram@gmail.com
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Toralf Förster <toralf.foerster@gmx.de>
+On 25 September 2014 00:17, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> changes since:
+> v4:
+>  - move the code adding the device tree to the child driver into this patch
+>  - remove all references to irq from this patch
 
-trivial, but this is user visible b/c it is in the help text
-
-Signed-off-by: Toralf Förster <toralf.foerster@gmx.de>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-drv.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-drv.c b/drivers/net/wireless/iwlwifi/iwl-drv.c
-index aefd94c..ed673ba 100644
---- a/drivers/net/wireless/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-drv.c
-@@ -1363,7 +1363,7 @@ MODULE_PARM_DESC(fw_restart, "restart firmware in case of error (default true)")
- module_param_named(antenna_coupling, iwlwifi_mod_params.ant_coupling,
- 		   int, S_IRUGO);
- MODULE_PARM_DESC(antenna_coupling,
--		 "specify antenna coupling in dB (defualt: 0 dB)");
-+		 "specify antenna coupling in dB (default: 0 dB)");
- 
- module_param_named(wd_disable, iwlwifi_mod_params.wd_disable, int, S_IRUGO);
- MODULE_PARM_DESC(wd_disable,
--- 
-1.9.1
-
+Makes sense, thanks!
