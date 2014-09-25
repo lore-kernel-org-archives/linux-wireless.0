@@ -1,57 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:43502 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756296AbaIIJks (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:41638 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751600AbaIYNWV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Sep 2014 05:40:48 -0400
-Date: Tue, 9 Sep 2014 12:40:35 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: luciano.coelho@intel.com
-Cc: linux-wireless@vger.kernel.org
-Subject: re: iwlwifi: mvm: set the TX disable bit when doing a chanctx switch
-Message-ID: <20140909094035.GA10599@mwanda> (sfid-20140909_114059_580527_9CC84F37)
+	Thu, 25 Sep 2014 09:22:21 -0400
+Message-ID: <5424170B.2010409@candelatech.com> (sfid-20140925_152224_809654_A93B0F7C)
+Date: Thu, 25 Sep 2014 06:22:19 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH] ath10k: use configured nss instead of max nss.
+References: <1411426820-4047-1-git-send-email-greearb@candelatech.com>	<CA+BoTQn9sECMNZsxQpB4i3wHPxfVL+LXq9=2GBd-opH6+9TD=A@mail.gmail.com>	<5421A44C.8080307@candelatech.com>	<CA+BoTQ=mry3tPD-LK+gFD2bC6RU0KvY6LC9=FOAGTLi_1rzUog@mail.gmail.com>	<5422ECAA.6050600@candelatech.com> <CA+BoTQnLbJ7cnyUo-o6Ebx9pAxGyAHv8W8eKE8BEd7Kh8f+uTw@mail.gmail.com>
+In-Reply-To: <CA+BoTQnLbJ7cnyUo-o6Ebx9pAxGyAHv8W8eKE8BEd7Kh8f+uTw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Luciano Coelho,
 
-The patch 0ce04ce797f8: "iwlwifi: mvm: set the TX disable bit when
-doing a chanctx switch" from May 8, 2014, leads to the following
-static checker warning:
 
-	drivers/net/wireless/iwlwifi/mvm/mac80211.c:2768 __iwl_mvm_assign_vif_chanctx()
-	warn: missing error code here? 'iwl_mvm_sta_from_staid_protected()' failed. 'ret' = '0'
+On 09/24/2014 11:16 PM, Michal Kazior wrote:
+> On 24 September 2014 18:09, Ben Greear <greearb@candelatech.com> wrote:
+>> On 09/24/2014 12:09 AM, Michal Kazior wrote:
+>>> On 23 September 2014 18:48, Ben Greear <greearb@candelatech.com> wrote:
+>>>> On 09/23/2014 01:59 AM, Michal Kazior wrote:
+>>>>> On 23 September 2014 01:00,  <greearb@candelatech.com> wrote:
+>>>>>> From: Ben Greear <greearb@candelatech.com>
+>>> [...]
+>>>>>> @@ -4086,6 +4086,10 @@ ath10k_default_bitrate_mask(struct ath10k *ar,
+>>>>>>          u32 legacy = 0x00ff;
+>>>>>>          u8 ht = 0xff, i;
+>>>>>>          u16 vht = 0x3ff;
+>>>>>> +       u16 nrf = ar->num_rf_chains;
+>>>>>> +
+>>>>>> +       if (ar->cfg_tx_chainmask)
+>>>>>> +               nrf = get_nss_from_chainmask(ar->cfg_tx_chainmask);
+>>> [...]
+>>>>> I think it might be a good idea to convey the limitation of tx/rx
+>>>>> chainmask to the user: you can't change the tx/rx chainmask on the fly
+>>>>> easily (while connected/have associated stations). Or do you plan to
+>>>>> schedule peer reassoc in __ath10k_set_antenna() in a follow up
+>>>>> patch(es) later?
+> [...]
+>> See this in net/mac80211/cfg.c:
+>>
+>> static int ieee80211_set_antenna(struct wiphy *wiphy, u32 tx_ant, u32 rx_ant)
+>> {
+>>          struct ieee80211_local *local = wiphy_priv(wiphy);
+>>
+>>          if (local->started)
+>>                  return -EOPNOTSUPP;
+>
+> Ah, thanks! So my argument is invalid :)
+>
+>
+>>> But it's still probably a good idea to comment the quoted code chunk
+>>> above explaining why nrf is overriden by chainmask (i.e. due to
+>>> firmware rate control issues, right?).
+>>
+>> I am not certain it is a bug in the firmware.  The driver should not configure
+>> nss incorrectly as it was doing previous to my recent patches.
+>
+> Since firmware does rate control it just seems redundant for the
+> driver to update both chainmask and nss (the first implies the other).
+> But maybe that's just me.
 
-drivers/net/wireless/iwlwifi/mvm/mac80211.c
-  2761          if (vif->csa_active && vif->type == NL80211_IFTYPE_STATION) {
-  2762                  struct iwl_mvm_sta *mvmsta;
-  2763  
-  2764                  mvmsta = iwl_mvm_sta_from_staid_protected(mvm,
-  2765                                                            mvmvif->ap_sta_id);
-  2766  
-  2767                  if (WARN_ON(!mvmsta))
-  2768                          goto out;
+nss is really a per-station issue, where the chainmask is a per-radio issue.
 
-Did you want to set an error code here?  I don't know the code well
-enough to say.
+Think of an AP with 2x2 and 3x3 stations connected, for instance.
 
-  2769  
-  2770                  /* TODO: only re-enable after the first beacon */
-  2771                  iwl_mvm_sta_modify_disable_tx(mvm, mvmsta, false);
-  2772          }
-  2773  
-  2774          goto out;
-  2775  
-  2776  out_remove_binding:
-  2777          iwl_mvm_binding_remove_vif(mvm, vif);
-  2778          iwl_mvm_power_update_mac(mvm);
-  2779  out:
-  2780          if (ret)
-  2781                  mvmvif->phy_ctxt = NULL;
-  2782          return ret;
-  2783  }
+Thanks,
+Ben
 
-regards,
-dan carpenter
+>
+>
+> Michał
+>
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
