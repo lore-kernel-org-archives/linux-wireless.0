@@ -1,67 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:59554 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751960AbaIXQNI (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:53480 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751271AbaIYGSa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Sep 2014 12:13:08 -0400
-Message-ID: <5422ED94.60402@candelatech.com> (sfid-20140924_181313_102956_1D3F27B5)
-Date: Wed, 24 Sep 2014 09:13:08 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Thu, 25 Sep 2014 02:18:30 -0400
+From: Avinash Patil <patila@marvell.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
+	<huxm@marvell.com>, <yangyang@marvell.com>, <cluo@marvell.com>,
+	<maithili@marvell.com>, Avinash Patil <patila@marvell.com>
+Subject: [PATCH 3/3] mwifiex: remove unnecessary rx_q lock
+Date: Thu, 25 Sep 2014 17:16:42 +0530
+Message-ID: <1411645602-18980-3-git-send-email-patila@marvell.com> (sfid-20140925_081834_852489_89AD1FF4)
+In-Reply-To: <1411645602-18980-1-git-send-email-patila@marvell.com>
+References: <1411645602-18980-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH] ath10k: request firmware flush in ath10k_flush.
-References: <1411151304-31544-1-git-send-email-greearb@candelatech.com> <CA+BoTQm1rZO+yBbYxihpgEvR1cGZWS4Pr0AP+KMODcG4jpd_jQ@mail.gmail.com> <5421818A.9040501@candelatech.com> <CA+BoTQkZaGSkC9mhE8UF0He0RZWmPghDukdE1A5qiO1UNAZj5Q@mail.gmail.com>
-In-Reply-To: <CA+BoTQkZaGSkC9mhE8UF0He0RZWmPghDukdE1A5qiO1UNAZj5Q@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/23/2014 11:50 PM, Michal Kazior wrote:
-> On 23 September 2014 16:19, Ben Greear <greearb@candelatech.com> wrote:
->> On 09/23/2014 02:16 AM, Michal Kazior wrote:
->>> On 19 September 2014 20:28,  <greearb@candelatech.com> wrote:
->>> [...]
->>>>
->>>> +       /* If we are CT firmware, ask it to flush all tids on all peers
->>>> on
->>>> +        * all vdevs.  Normal firmware will just crash if you do this.
->>>> +        */
->>>> +       if (test_bit(ATH10K_FW_FEATURE_WMI_10X_CT, ar->fw_features))
->>>> +               ath10k_wmi_peer_flush(ar, 0xFFFFFFFF, peer_addr,
->>>> 0xFFFFFFFF);
->>>
->>> I recall you've explained this some time ago, but can you refresh my
->>> memory, please? Is this any different from iterating over all peers
->>> and flushing each? Or does your firmware do so extra magic that is
->>> impossible to do with normal firmware commands?
->>
->> My firmware does that iteration internally.
->>
->> You could probably do that in the driver, but it would be a lot
->> of messages (for all vdevs, all peers, all tids)...
->> I was not sure if there were limits to the number
->> of commands you should attempt during the flush...
-> 
-> Thanks. I think ath10k should do this instead of having CT-specific
-> flush eventually.
+SKB lists have their own lock. So this lock is not needed.
 
-Yes, though I would still like the optimization enabled if my
-firmware is running...
+Signed-off-by: Avinash Patil <patila@marvell.com>
+---
+ drivers/net/wireless/mwifiex/init.c | 1 -
+ drivers/net/wireless/mwifiex/main.h | 2 --
+ drivers/net/wireless/mwifiex/pcie.c | 4 ----
+ drivers/net/wireless/mwifiex/sdio.c | 3 ---
+ 4 files changed, 10 deletions(-)
 
-> I recall I actually did per-peer flushing in RFC patches a long time
-> ago but I didn't pursue getting them merged. I think Denton uses these
-> patches in his setup. They don't flush vdev self-peers though (do you
-> do that internally?).
-
-I think I do.  Let me check, and send you some details privately.
-
-Thanks,
-Ben
-
-
+diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
+index f7c97cf..580aa45 100644
+--- a/drivers/net/wireless/mwifiex/init.c
++++ b/drivers/net/wireless/mwifiex/init.c
+@@ -447,7 +447,6 @@ int mwifiex_init_lock_list(struct mwifiex_adapter *adapter)
+ 	spin_lock_init(&adapter->cmd_free_q_lock);
+ 	spin_lock_init(&adapter->cmd_pending_q_lock);
+ 	spin_lock_init(&adapter->scan_pending_q_lock);
+-	spin_lock_init(&adapter->rx_q_lock);
+ 	spin_lock_init(&adapter->rx_proc_lock);
+ 
+ 	skb_queue_head_init(&adapter->usb_rx_data_q);
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 1a99999..b5dc78b 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -763,8 +763,6 @@ struct mwifiex_adapter {
+ 	struct list_head scan_pending_q;
+ 	/* spin lock for scan_pending_q */
+ 	spinlock_t scan_pending_q_lock;
+-	/* spin lock for RX queue */
+-	spinlock_t rx_q_lock;
+ 	/* spin lock for RX processing routine */
+ 	spinlock_t rx_proc_lock;
+ 	struct sk_buff_head usb_rx_data_q;
+diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
+index 1504b16..7e8d9b0 100644
+--- a/drivers/net/wireless/mwifiex/pcie.c
++++ b/drivers/net/wireless/mwifiex/pcie.c
+@@ -1233,7 +1233,6 @@ static int mwifiex_pcie_process_recv_data(struct mwifiex_adapter *adapter)
+ 	struct sk_buff *skb_tmp = NULL;
+ 	struct mwifiex_pcie_buf_desc *desc;
+ 	struct mwifiex_pfu_buf_desc *desc2;
+-	unsigned long flags;
+ 
+ 	if (!mwifiex_pcie_ok_to_access_hw(adapter))
+ 		mwifiex_pm_wakeup_card(adapter);
+@@ -1285,10 +1284,7 @@ static int mwifiex_pcie_process_recv_data(struct mwifiex_adapter *adapter)
+ 				card->rxbd_rdptr, wrptr, rx_len);
+ 			skb_pull(skb_data, INTF_HEADER_LEN);
+ 			if (adapter->rx_work_enabled) {
+-				spin_lock_irqsave(&adapter->rx_q_lock, flags);
+ 				skb_queue_tail(&adapter->rx_data_q, skb_data);
+-				spin_unlock_irqrestore(&adapter->rx_q_lock,
+-						       flags);
+ 				adapter->data_received = true;
+ 				atomic_inc(&adapter->rx_pending);
+ 			} else {
+diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
+index ea8fc58..db9e4e3 100644
+--- a/drivers/net/wireless/mwifiex/sdio.c
++++ b/drivers/net/wireless/mwifiex/sdio.c
+@@ -1039,7 +1039,6 @@ static int mwifiex_decode_rx_packet(struct mwifiex_adapter *adapter,
+ 				    struct sk_buff *skb, u32 upld_typ)
+ {
+ 	u8 *cmd_buf;
+-	unsigned long flags;
+ 	__le16 *curr_ptr = (__le16 *)skb->data;
+ 	u16 pkt_len = le16_to_cpu(*curr_ptr);
+ 
+@@ -1050,9 +1049,7 @@ static int mwifiex_decode_rx_packet(struct mwifiex_adapter *adapter,
+ 	case MWIFIEX_TYPE_DATA:
+ 		dev_dbg(adapter->dev, "info: --- Rx: Data packet ---\n");
+ 		if (adapter->rx_work_enabled) {
+-			spin_lock_irqsave(&adapter->rx_q_lock, flags);
+ 			skb_queue_tail(&adapter->rx_data_q, skb);
+-			spin_unlock_irqrestore(&adapter->rx_q_lock, flags);
+ 			adapter->data_received = true;
+ 			atomic_inc(&adapter->rx_pending);
+ 		} else {
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.8.1.4
 
