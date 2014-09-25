@@ -1,76 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f182.google.com ([209.85.192.182]:32876 "EHLO
-	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754125AbaIBPv4 (ORCPT
+Received: from mout.kundenserver.de ([212.227.17.10]:49962 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750774AbaIYF4q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Sep 2014 11:51:56 -0400
-Message-ID: <1409673113.3173.114.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20140902_175204_708530_999716F9)
-Subject: Re: truesize for pages shared between SKBs
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Ido Yariv <ido@wizery.com>,
-	Emmanuel Grumbach <egrumbach@gmail.com>
-Date: Tue, 02 Sep 2014 08:51:53 -0700
-In-Reply-To: <1409660440.1808.17.camel@jlt4.sipsolutions.net>
-References: <1409660440.1808.17.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 25 Sep 2014 01:56:46 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-arm-kernel@lists.infradead.org, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
+	zajec5@gmail.com, varkabhadram@gmail.com, arend@broadcom.com
+Subject: Re: [PATCH v4 1/2] bcma: register bcma as device tree driver
+Date: Thu, 25 Sep 2014 07:55:56 +0200
+Message-ID: <3098264.dzR8BlVP6B@wuerfel> (sfid-20140925_075657_693362_B299031C)
+In-Reply-To: <54233550.60600@hauke-m.de>
+References: <1411339108-22307-1-git-send-email-hauke@hauke-m.de> <3856565.LYF1mvpGOq@wuerfel> <54233550.60600@hauke-m.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-09-02 at 14:20 +0200, Johannes Berg wrote:
-> Hi,
+On Wednesday 24 September 2014 23:19:12 Hauke Mehrtens wrote:
+> On 09/24/2014 11:48 AM, Arnd Bergmann wrote:
+> > On Wednesday 24 September 2014 00:04:18 Hauke Mehrtens wrote:
+> >> I assume this should then look somehow like this:
+> >>
+> >> axi@18000000 {
+> >>         compatible = "brcm,bus-axi";
+> >>         reg = <0x18000000 0x1000>;
+> >>         ranges = <0x00000000 0x18000000 0x00100000>;
+> >>         #address-cells = <1>;
+> >>         #size-cells = <1>;
+> >>
+> >>         #interrupt-cells = <1>;
+> >>         interrupt-map = <
+> >>                 /* ChipCommon */
+> >>                 0x00000000 0 &gic  GIC_SPI 85 IRQ_TYPE_LEVEL_HIGH
+> >>
+> >>                 /* PCIe Controller 0 */
+> >>                 0x00012000 0 &gic GIC_SPI 126 IRQ_TYPE_LEVEL_HIGH
+> >>                 0x00012000 1 &gic GIC_SPI 127 IRQ_TYPE_LEVEL_HIGH
+> >>                 0x00012000 2 &gic GIC_SPI 128 IRQ_TYPE_LEVEL_HIGH
+> >>                 0x00012000 3 &gic GIC_SPI 129 IRQ_TYPE_LEVEL_HIGH
+> >>                 0x00012000 4 &gic GIC_SPI 130 IRQ_TYPE_LEVEL_HIGH
+> >>                 0x00012000 5 &gic GIC_SPI 131 IRQ_TYPE_LEVEL_HIGH
+> >>
+> >>                 /* USB 2.0 Controller */
+> >>                 0x00021000 0 &gic GIC_SPI 79 IRQ_TYPE_LEVEL_HIGH
+> >>                 >;
+> >>         };
+> > 
+> > Right, although I would add a few more '<', '>' and ',' for readability,
+> > separating each line with a comma.
+> > 
+> > You are also missing an 'interrupt-map-mask' property that lists which
+> > bits of the address are significant.
+> > 
+> > Are the interrupt numbers you have in the example (0, 0, 1, 2, ... 5, 0)
+> > the actual numbers that are present in the hw registers?
 > 
-> In our driver, we have 4k receive buffers, but usually ~1500 byte
-> packets.
-
-Which driver exactly is that ?
-
-> 
-> How do other drivers handle this? We currently set up the truesize of
-> each SKB to be its size plus the 4k page size, but we see performance
-> improvements when we lie and pretend the truesize is just 4k/(# of
-> packets in the page), which is correct as long as the packets are all
-> pending in the stack since they share the page.
-
-Can you elaborate on 'they share the page' ?
-
-If a 4K page is really split into 2 2KB subpages, then yes, truesize can
-be 2KB + skb->head + sizeof(struct sk_buff)
-
-Some drivers do that (Intel IGBVF for example)
-
-If a single 4KB page can be used by a single 1500 frame, then its not
-shared ;)
-
-> 
-> How do other drivers handle this? Should the truesize maybe be aware of
-> this kind of sharing? Should we just lie about it and risk that the
-> truesize is accounted erroneously if some but not all of the packets are
-> freed?
-
-Lies are not worth crashing hosts under memory pressure.
-
-skb->truesize is really how many bytes are consumed by an skb. This
-serves in TCP stack to trigger collapses when a socket reaches its
-limits.
-
-Your performance is better when you lie, because for the same
-sk->sk_rcvbuf value (typically tcp_rmem[2]), TCP window can be bigger,
-and allows TCP sender to send more packets (bigger cwnd)
-
-Workaround : make tcp_rmem[2] larger, so that we still have an
-appropriate memory limit per socket, acting for OOM prevention, and
-allowing better performance for large BDP flows.
-
-Current value is 6MB, which is already quite big IMO for well behaving
-drivers.
-
-Real fix would be to make your skb as slim as possible of course.
-It helps even if GRO or TCP coalescing can reduce the memory
-requirements for bulk flows.
+> Some cores do have more than one IRQ. The NAND core uses 8 IRQs and the
+> PCIe controller uses 5 (the vendor code just uses the last one which
+> gets triggered always). How can I handle this cases where one device has
+> more than one IRQ? There is no hardware register these IRQ get mapped
+> to. As far as I know the driver just knows that this device needs more
+> IRQs. Should I just add a special device node entry for such devices?
 
 
+You create your own local irq domain (in the DT sense, not the Linux sense)
+by using #interrrupt-cells = <1> or more, and then use whatever input data
+you have available.
 
+Ideally there would be registers that you can use to look up a token
+you use (like the BCMA_MIPS_MIPS74K_INTMASK), if you don't have them
+here, just use the local index, and pass that down to bcma_core_irq(),
+from where you put it into the of_phandle_args.
+
+	Arnd
