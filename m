@@ -1,153 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hauke-m.de ([5.39.93.123]:37876 "EHLO hauke-m.de"
+Received: from mga03.intel.com ([134.134.136.65]:51878 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751232AbaIXWRh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Sep 2014 18:17:37 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Cc: zajec5@gmail.com, arend@broadcom.com,
-	linux-arm-kernel@lists.infradead.org, arnd@arndb.de,
-	devicetree@vger.kernel.org, varkabhadram@gmail.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v5 2/2] bcma: get IRQ numbers from dt
-Date: Thu, 25 Sep 2014 00:17:28 +0200
-Message-Id: <1411597048-25470-2-git-send-email-hauke@hauke-m.de> (sfid-20140925_001741_538252_351F371B)
-In-Reply-To: <1411597048-25470-1-git-send-email-hauke@hauke-m.de>
-References: <1411597048-25470-1-git-send-email-hauke@hauke-m.de>
+	id S1750877AbaIYIPJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Sep 2014 04:15:09 -0400
+Date: Thu, 25 Sep 2014 13:16:08 +0530
+From: Vinod Koul <vinod.koul@intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: linux-kernel@vger.kernel.org, subhransu.s.prusty@intel.com,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Alexandre Courbot <acourbot@nvidia.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Andy Gross <agross@codeaurora.org>,
+	Baruch Siach <baruch@tkos.co.il>,
+	Ben Skeggs <bskeggs@redhat.com>,
+	Bjorn Andersson <bjorn.andersson@sonymobile.com>,
+	"Chew, Chiau Ee" <chiau.ee.chew@intel.com>,
+	Chris Ball <chris@printf.net>,
+	Dan Carpenter <dan.carpenter@oracle.com>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Dave Airlie <airlied@redhat.com>,
+	David Herrmann <dh.herrmann@gmail.com>,
+	dmaengine@vger.kernel.org, dri-devel@lists.freedesktop.org,
+	"Du, Wenkai" <wenkai.du@intel.com>,
+	Grant Grundler <grundler@chromium.org>,
+	Ilia Mirkin <imirkin@alum.mit.edu>,
+	intel-gfx@lists.freedesktop.org,
+	"Ivan T. Ivanov" <iivanov@mm-sol.com>,
+	Jaehoon Chung <jh80.chung@samsung.com>,
+	Jani Nikula <jani.nikula@intel.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
+	Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>,
+	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
+	linux-fbdev@vger.kernel.org, linux-i2c@vger.kernel.org,
+	linux-mmc@vger.kernel.org, linux-nfc@ml01.01.org,
+	linux-omap@vger.kernel.org, linux-pm@vger.kernel.org,
+	linux-serial@vger.kernel.org, linux-spi@vger.kernel.org,
+	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Marcin Wojtas <mw@semihalf.com>,
+	Mika Westerberg <mika.westerberg@linux.jf.intel.com>,
+	patches@opensource.wolfsonmicro.com,
+	Pramod Gurav <pramod.gurav@smartplayin.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Rob Clark <robdclark@gmail.com>,
+	Romain Baeriswyl <Romain.Baeriswyl@abilis.com>,
+	Russell King <rmk+kernel@arm.linux.org.uk>,
+	Seungwon Jeon <tgih.jun@samsung.com>,
+	Shinya Kuribayashi <skuribay@pobox.com>,
+	Thierry Reding <treding@nvidia.com>,
+	Tim Kryger <tim.kryger@linaro.org>,
+	Tomi Valkeinen <tomi.valkeinen@ti.com>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Wolfram Sang <wsa@the-dreams.de>
+Subject: Re: [PATCH 00/27] add pm_runtime_last_busy_and_autosuspend() helper
+Message-ID: <20140925074607.GV24663@intel.com> (sfid-20140925_101527_299866_18F8CF52)
+References: <1411575342-31048-1-git-send-email-vinod.koul@intel.com>
+ <6374313.I12loOK9hA@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <6374313.I12loOK9hA@vostro.rjw.lan>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It is not possible to auto detect the irq numbers used by the cores on
-an arm SoC. If bcma was registered with device tree it will search for
-some device tree nodes with the irq number and add it to the core
-configuration.
+On Wed, Sep 24, 2014 at 10:28:07PM +0200, Rafael J. Wysocki wrote:
+> 
+> OK, I guess this is as good as it gets.
+> 
+> What tree would you like it go through?
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- Documentation/devicetree/bindings/bus/bcma.txt | 24 +++++++++++++++
- drivers/bcma/main.c                            | 42 ++++++++++++++++++++++++++
- 2 files changed, 66 insertions(+)
+Since rest of the patches are dependent upon 1st patch which should go thru
+your tree, we should merge this thru your tree
 
-This is based on wireless-testing and should go into that tree.
-
-changes since:
-v4:
- - make use of interrupt-map
- - only do the irq stuff here
-
-v2:
- - use of_translate_address() to support ranges
-
-RFC:
- - add #ifdef CONFIG_OF
-
-diff --git a/Documentation/devicetree/bindings/bus/bcma.txt b/Documentation/devicetree/bindings/bus/bcma.txt
-index e9070c1..1dc75d3 100644
---- a/Documentation/devicetree/bindings/bus/bcma.txt
-+++ b/Documentation/devicetree/bindings/bus/bcma.txt
-@@ -8,6 +8,10 @@ Required properties:
- 
- The cores on the AXI bus are automatically detected by bcma with the
- memory ranges they are using and they get registered afterwards.
-+Automatic detection of the IRQ number is not reliable on
-+BCM47xx/BCM53xx ARM SoCs. To assign IRQ numbers to the cores, provide
-+them manually through device tree. The IRQ number and the device tree
-+child entry will get assigned to the core with the matching reg address.
- 
- Example:
- 
-@@ -17,4 +21,24 @@ Example:
- 		ranges = <0x00000000 0x18000000 0x00100000>;
- 		#address-cells = <1>;
- 		#size-cells = <1>;
-+
-+		#interrupt-cells = <0>;
-+		interrupt-map-mask = <0x000fffff>;
-+		interrupt-map =
-+			/* Ethernet Controller 0 */
-+			<0x00024000 &gic GIC_SPI 147 IRQ_TYPE_LEVEL_HIGH>,
-+
-+			/* Ethernet Controller 1 */
-+			<0x00025000 &gic GIC_SPI 148 IRQ_TYPE_LEVEL_HIGH>;
-+
-+		pcie@12000 {
-+			interrupt-parent = <&gic>;
-+			reg = <0x00012000 0x1000>;
-+			interrupts = <GIC_SPI 131 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 126 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 127 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 128 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 129 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 130 IRQ_TYPE_LEVEL_HIGH>;
-+		};
- 	};
-diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-index d1656c2..870f01d 100644
---- a/drivers/bcma/main.c
-+++ b/drivers/bcma/main.c
-@@ -11,6 +11,7 @@
- #include <linux/bcma/bcma.h>
- #include <linux/slab.h>
- #include <linux/of_address.h>
-+#include <linux/of_irq.h>
- 
- MODULE_DESCRIPTION("Broadcom's specific AMBA driver");
- MODULE_LICENSE("GPL");
-@@ -153,6 +154,45 @@ static struct device_node *bcma_of_find_child_device(struct platform_device *par
- 	return NULL;
- }
- 
-+static int bcma_of_irq_parse(struct platform_device *parent,
-+			     struct bcma_device *core,
-+			     struct of_phandle_args *out_irq)
-+{
-+	__be32 laddr[1];
-+	int rc;
-+
-+	if (core->dev.of_node) {
-+		rc = of_irq_parse_one(core->dev.of_node, 0, out_irq);
-+		if (!rc)
-+			return rc;
-+	}
-+
-+	out_irq->np = parent->dev.of_node;
-+	out_irq->args_count = 0;
-+
-+	laddr[0] = cpu_to_be32(core->addr);
-+	return of_irq_parse_raw(laddr, out_irq);
-+}
-+
-+static int bcma_of_get_irq(struct platform_device *parent,
-+			   struct bcma_device *core)
-+{
-+	struct of_phandle_args out_irq;
-+	int ret;
-+
-+	if (!parent || !parent->dev.of_node)
-+		return 0;
-+
-+	ret = bcma_of_irq_parse(parent, core, &out_irq);
-+	if (ret) {
-+		bcma_debug(core->bus, "bcma_of_get_irq() failed with rc=%d\n",
-+			   ret);
-+		return 0;
-+	}
-+
-+	return irq_create_of_mapping(&out_irq);
-+}
-+
- static void bcma_of_fill_device(struct platform_device *parent,
- 				struct bcma_device *core)
- {
-@@ -161,6 +201,8 @@ static void bcma_of_fill_device(struct platform_device *parent,
- 	node = bcma_of_find_child_device(parent, core);
- 	if (node)
- 		core->dev.of_node = node;
-+
-+	core->irq = bcma_of_get_irq(parent, core);
- }
- #else
- static void bcma_of_fill_device(struct platform_device *parent,
+Thanks
 -- 
-1.9.1
+~Vinod
 
