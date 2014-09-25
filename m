@@ -1,54 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:53309 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752717AbaIJUdT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Sep 2014 16:33:19 -0400
-Message-ID: <1410381187.2761.10.camel@jlt4.sipsolutions.net> (sfid-20140910_223328_575623_95EEB3A1)
-Subject: Re: [PATCH net-next] mac80211: Check correct skb for shared states
- before freeing original
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alexander Duyck <alexander.h.duyck@intel.com>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	davem@davemloft.net, linville@tuxdriver.com
-Date: Wed, 10 Sep 2014 22:33:07 +0200
-In-Reply-To: <20140910200442.15961.84466.stgit@ahduyck-bv4.jf.intel.com> (sfid-20140910_221517_589456_8B140F20)
-References: <20140910200442.15961.84466.stgit@ahduyck-bv4.jf.intel.com>
-	 (sfid-20140910_221517_589456_8B140F20)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail.server14.configcenter.info ([91.203.108.132]:40483 "EHLO
+	server14.configcenter.info" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750819AbaIYUQX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Sep 2014 16:16:23 -0400
+Received: from [192.168.178.26] (pD9F77A28.dip0.t-ipconnect.de [217.247.122.40])
+	(using TLSv1 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+	(Client did not present a certificate)
+	(Authenticated sender: web22p1)
+	by server14.configcenter.info (Postfix) with ESMTP id E7DBE52E97A
+	for <linux-wireless@vger.kernel.org>; Thu, 25 Sep 2014 21:45:00 +0200 (CEST)
+Message-ID: <542470A1.5070406@kenobrueggemann.de> (sfid-20140925_221626_182279_49B7BC41)
+Date: Thu, 25 Sep 2014 21:44:33 +0200
+From: =?UTF-8?B?S2VubyBCcsO8Z2dlbWFubg==?= <post@kenobrueggemann.de>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: Ubuntu 14.04 and the =?UTF-8?B?SW50ZWzCriBDZW50cmlub8KuIEFkdmFuYw==?=
+ =?UTF-8?B?ZWQtTiA2MjAw?=
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-09-10 at 16:06 -0400, Alexander Duyck wrote:
-> The code for cloning the skb for an acknowledgement was checking to see if
-> the cloned skb was shared and if it was it was then freeing the original
-> skb.  Since a clone should never really be shared I suspect that the
-> intention was to avoid freeing the clone if the original was shared.  As
-> such I am updating the code so that if the original is shared we free the
-> original and use the clone.  This avoids unnecessary work in the next
-> section where we would be cloning the skb if the original is shared.
+Hello,
 
-Thanks, yeah, I admit that this is clearly fishy.
+i switched from an Intel® Centrino® Wireless-N 1000
+to the Intel® Centrino® Advanced-N 6200 Wireless Card Adapter.
 
-> @@ -2087,7 +2087,7 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
->  			if (id >= 0) {
->  				info_id = id;
->  				info_flags |= IEEE80211_TX_CTL_REQ_TX_STATUS;
+My System. Dell xps l701x, ubuntu 14.04
 
-Luckily, we practically always go into this path.
+The Problem is, this Adpater won't work under Ubuntu 14.04. I've 
+installed both versions of this Firmware.
+Nothing. Seems to be dead.
+Under Windows 7 the Card works well.
 
-> -			} else if (skb_shared(skb)) {
-> +			} else if (skb_shared(orig_skb)) {
->  				kfree_skb(orig_skb);
->  			} else {
->  				kfree_skb(skb);
+Can i try something else to get it work?
+Please help.
 
-We have a clone already so we could just remove the whole "else if" I
-think, but I'm guessing my intent was to keep it accounted to the socket
-where possible rather than freeing the original in all cases.
-
-So yeah, I think this makes sense. Maybe we should add a comment to the
-if though to explain this?
-
-johannes
+-- 
+Greetings
+Keno Brüggemann
 
