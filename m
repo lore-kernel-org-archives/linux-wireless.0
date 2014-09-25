@@ -1,65 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay5-d.mail.gandi.net ([217.70.183.197]:52127 "EHLO
-	relay5-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755358AbaIDWjn (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:46789 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751595AbaIYUtT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Sep 2014 18:39:43 -0400
-Received: from mfilter20-d.gandi.net (mfilter20-d.gandi.net [217.70.178.148])
-	by relay5-d.mail.gandi.net (Postfix) with ESMTP id B09B741C054
-	for <linux-wireless@vger.kernel.org>; Fri,  5 Sep 2014 00:39:40 +0200 (CEST)
-Received: from relay5-d.mail.gandi.net ([217.70.183.197])
-	by mfilter20-d.gandi.net (mfilter20-d.gandi.net [10.0.15.180]) (amavisd-new, port 10024)
-	with ESMTP id EiUdcSgcHvUF for <linux-wireless@vger.kernel.org>;
-	Fri,  5 Sep 2014 00:39:39 +0200 (CEST)
-Received: from nuvo (mon69-7-83-155-44-161.fbx.proxad.net [83.155.44.161])
-	(Authenticated sender: hadess@hadess.net)
-	by relay5-d.mail.gandi.net (Postfix) with ESMTPSA id 4C5D641C05A
-	for <linux-wireless@vger.kernel.org>; Fri,  5 Sep 2014 00:39:39 +0200 (CEST)
-Message-ID: <1409870378.19259.9.camel@hadess.net> (sfid-20140905_003947_779284_B3660241)
-Subject: Broadcom Wi-Fi/Bluetooth on GPIO? (Baytrail tablet)
-From: Bastien Nocera <hadess@hadess.net>
-To: linux-wireless@vger.kernel.org
-Date: Fri, 05 Sep 2014 00:39:38 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 25 Sep 2014 16:49:19 -0400
+Received: from [192.168.100.236] (firewall.candelatech.com [70.89.124.249])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mail2.candelatech.com (Postfix) with ESMTPSA id 9A69F40C6EC
+	for <linux-wireless@vger.kernel.org>; Thu, 25 Sep 2014 13:49:18 -0700 (PDT)
+Message-ID: <54247FCD.9060205@candelatech.com> (sfid-20140925_224922_471547_72DCB536)
+Date: Thu, 25 Sep 2014 13:49:17 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Memory leak in mac80211_hwsim?
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Heya,
+While perusing the code in mac80211_hwsim, I notice what I think
+is a memory leak:
 
-On this tablet, based on a Baytrail SoC, I found reference of this
-Broadcom device in the DSDT, and I believe it could be the
-Bluetooth/Wi-Fi chipset (this one[1]?):
----8<---
-Device (BRC3)
+Shouldn't there be an skb_free on the return result of skb_dequeue??
+
+static void mac80211_hwsim_tx_frame_nl(struct ieee80211_hw *hw,
+				       struct sk_buff *my_skb,
+				       int dst_portid)
 {
-    Name (_ADR, One)  // _ADR: Address
-    Name (_DEP, Package (0x01)  // _DEP: Dependencies
-    {
-        GPO2
-    })
-    Name (_HID, "BCM4321")  // _HID: Hardware ID 
-    Name (_CID, "BCM43241")  // _CID: Compatible ID
-    Name (GMOD, ResourceTemplate ()
-    {
-        GpioIo (Exclusive, PullDefault, 0x0000, 0x0000,
-IoRestrictionOutputOnly,
-            "\\_SB.GPO2", 0x00, ResourceConsumer, ,
-            )
-            {   // Pin list 
-                0x0014
-            }
-    })
----8<---
+	struct sk_buff *skb;
+	struct mac80211_hwsim_data *data = hw->priv;
+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) my_skb->data;
+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(my_skb);
+	void *msg_head;
+	unsigned int hwsim_flags = 0;
+	int i;
+	struct hwsim_tx_rate tx_attempts[IEEE80211_TX_MAX_RATES];
 
-Am I correct in thinking that it's a Broadcom chipset? What would it
-take to get this supported in the kernel? I'm currently stuck on a
-slightly older kernel (3.16.0) due to Intel graphics driver problems,
-but I couldn't find anything directly related to this in the current
-linus tree.
+	if (data->ps != PS_DISABLED)
+		hdr->frame_control |= cpu_to_le16(IEEE80211_FCTL_PM);
+	/* If the queue contains MAX_QUEUE skb's drop some */
+	if (skb_queue_len(&data->pending) >= MAX_QUEUE) {
+		/* Droping until WARN_QUEUE level */
+		while (skb_queue_len(&data->pending) >= WARN_QUEUE)
+			skb_dequeue(&data->pending);
+	}
 
-Cheers
 
-[1]:
-http://www.broadcom.com/products/Wireless-LAN/802.11-Wireless-LAN-Solutions/BCM43241
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
