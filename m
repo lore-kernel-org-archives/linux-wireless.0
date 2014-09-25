@@ -1,45 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:59253 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753853AbaICDJQ (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:48206 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752389AbaIYX7r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Sep 2014 23:09:16 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH v2 2/6] ath9k: Fix beacons for managed mode
-Date: Wed,  3 Sep 2014 08:39:21 +0530
-Message-Id: <1409713765-9358-3-git-send-email-sujith@msujith.org> (sfid-20140903_050935_893515_8FCB9F5B)
-In-Reply-To: <1409713765-9358-1-git-send-email-sujith@msujith.org>
-References: <1409713765-9358-1-git-send-email-sujith@msujith.org>
+	Thu, 25 Sep 2014 19:59:47 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 2/2] mac-sim:  support creating radios with specific name.
+Date: Thu, 25 Sep 2014 16:59:44 -0700
+Message-Id: <1411689584-16136-2-git-send-email-greearb@candelatech.com> (sfid-20140926_015951_078853_5A323268)
+In-Reply-To: <1411689584-16136-1-git-send-email-greearb@candelatech.com>
+References: <1411689584-16136-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+From: Ben Greear <greearb@candelatech.com>
 
-If the current opmode is managed, the ATH_OP_BEACONS flag
-needs to be set only when there is a primary station interface
-and it is associated/active.
+Otherwise, it can be very difficult to know which is which
+if you are trying to do detailed testing.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/ath/ath9k/main.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index d9be831..0b3d4d8 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1067,8 +1067,8 @@ void ath9k_calculate_summary_state(struct ath_softc *sc,
- 	if (ah->opmode == NL80211_IFTYPE_STATION) {
- 		bool changed = (iter_data.primary_sta != ctx->primary_sta);
+NOTE:  This depends on the earlier patch that added the radio-name
+    attribute.
+
+ drivers/net/wireless/mac80211_hwsim.c | 16 +++++++++++++---
+ 1 file changed, 13 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index b755920..2b54413 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -2018,7 +2018,7 @@ static struct ieee80211_ops mac80211_hwsim_mchan_ops;
+ static int mac80211_hwsim_create_radio(int channels, const char *reg_alpha2,
+ 				       const struct ieee80211_regdomain *regd,
+ 				       bool reg_strict, bool p2p_device,
+-				       bool use_chanctx)
++				       bool use_chanctx, char* hwname)
+ {
+ 	int err;
+ 	u8 addr[ETH_ALEN];
+@@ -2230,6 +2230,12 @@ static int mac80211_hwsim_create_radio(int channels, const char *reg_alpha2,
+ 		goto failed_hw;
+ 	}
  
--		iter_data.beacons = true;
- 		if (iter_data.primary_sta) {
-+			iter_data.beacons = true;
- 			ath9k_set_assoc_state(sc, iter_data.primary_sta,
- 					      changed);
- 			if (!ctx->primary_sta ||
++	if (hwname)
++		/* If this fails, continue on anyway, treat it as request
++		 * instead of command.
++		 */
++		cfg80211_dev_rename_wiphy(hw->wiphy, hwname);
++
+ 	wiphy_debug(hw->wiphy, "hwaddr %pM registered\n", hw->wiphy->perm_addr);
+ 
+ 	if (reg_alpha2)
+@@ -2508,10 +2514,14 @@ static int hwsim_create_radio_nl(struct sk_buff *msg, struct genl_info *info)
+ 	bool reg_strict = info->attrs[HWSIM_ATTR_REG_STRICT_REG];
+ 	bool p2p_device = info->attrs[HWSIM_ATTR_SUPPORT_P2P_DEVICE];
+ 	bool use_chanctx;
++	char* hwname = NULL;
+ 
+ 	if (info->attrs[HWSIM_ATTR_CHANNELS])
+ 		chans = nla_get_u32(info->attrs[HWSIM_ATTR_CHANNELS]);
+ 
++	if (info->attrs[HWSIM_ATTR_RADIO_NAME])
++		hwname = nla_data(info->attrs[HWSIM_ATTR_RADIO_NAME]);
++
+ 	if (info->attrs[HWSIM_ATTR_USE_CHANCTX])
+ 		use_chanctx = true;
+ 	else
+@@ -2529,7 +2539,7 @@ static int hwsim_create_radio_nl(struct sk_buff *msg, struct genl_info *info)
+ 	}
+ 
+ 	return mac80211_hwsim_create_radio(chans, alpha2, regd, reg_strict,
+-					   p2p_device, use_chanctx);
++					   p2p_device, use_chanctx, hwname);
+ }
+ 
+ static int hwsim_destroy_radio_nl(struct sk_buff *msg, struct genl_info *info)
+@@ -2761,7 +2771,7 @@ static int __init init_mac80211_hwsim(void)
+ 		err = mac80211_hwsim_create_radio(channels, reg_alpha2,
+ 						  regd, reg_strict,
+ 						  support_p2p_device,
+-						  channels > 1);
++						  channels > 1, NULL);
+ 		if (err < 0)
+ 			goto out_free_radios;
+ 	}
 -- 
-2.1.0
+1.7.11.7
 
