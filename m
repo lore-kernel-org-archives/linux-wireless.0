@@ -1,46 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f182.google.com ([209.85.212.182]:53322 "EHLO
-	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755284AbaIDWJd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Sep 2014 18:09:33 -0400
-Received: by mail-wi0-f182.google.com with SMTP id z2so1948246wiv.9
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Sep 2014 15:09:29 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 2/2] staging: vt6656: remove rate_control_algorithm pid
-Date: Thu,  4 Sep 2014 23:08:37 +0100
-Message-Id: <1409868517-4270-2-git-send-email-tvboxspy@gmail.com> (sfid-20140905_000936_256588_BA7150C5)
-In-Reply-To: <1409868517-4270-1-git-send-email-tvboxspy@gmail.com>
-References: <1409868517-4270-1-git-send-email-tvboxspy@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:56211 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751423AbaIYJWp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Sep 2014 05:22:45 -0400
+Date: Thu, 25 Sep 2014 11:20:12 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Plinio Moreno <plinio@isr.tecnico.ulisboa.pt>
+Cc: linux-wireless@vger.kernel.org, ilw@linux.intel.com
+Subject: Re: dmesg output for iwlegacy
+Message-ID: <20140925092011.GB1931@redhat.com> (sfid-20140925_112254_031435_DBEDE697)
+References: <541F66DA.103@isr.tecnico.ulisboa.pt>
+ <541F672E.70708@isr.tecnico.ulisboa.pt>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <541F672E.70708@isr.tecnico.ulisboa.pt>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rate control algorithm pid was removed from wireless tree
+On Mon, Sep 22, 2014 at 01:02:54AM +0100, Plinio Moreno wrote:
+> I have a Debian Wheezy (Kernel 3.2), pae
 
-The device defaults to algorithm 'minstrel_ht'
+3.2 is very old version, check if issue is not fixed already
+on updated kernel.
 
-There has been no problems using this algorithm.
-
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/main_usb.c | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
-index 422fcba..2fbff90 100644
---- a/drivers/staging/vt6656/main_usb.c
-+++ b/drivers/staging/vt6656/main_usb.c
-@@ -993,7 +993,6 @@ vt6656_probe(struct usb_interface *intf, const struct usb_device_id *id)
- 		IEEE80211_HW_SIGNAL_DBM |
- 		IEEE80211_HW_TIMING_BEACON_ONLY;
- 
--	priv->hw->rate_control_algorithm = "pid";
- 	priv->hw->max_signal = 100;
- 
- 	SET_IEEE80211_DEV(priv->hw, &intf->dev);
--- 
-1.9.1
-
+Stanislaw
