@@ -1,46 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:53106 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754740AbaIECdA (ORCPT
+Received: from smtp-out04.msg.oleane.net ([62.161.7.2]:34507 "EHLO
+	smtp-out04.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753361AbaIZImw convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Sep 2014 22:33:00 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH v3 00/11] ath9k patches
-Date: Fri,  5 Sep 2014 08:03:08 +0530
-Message-Id: <1409884399-32289-1-git-send-email-sujith@msujith.org> (sfid-20140905_043308_195828_F7161071)
+	Fri, 26 Sep 2014 04:42:52 -0400
+Received: from smtp04.msg.oleane.net (smtp04.mail.priv [172.17.20.113])
+	by smtp-out04.msg.oleane.net with ESMTP id s8Q8MQch031095
+	for <linux-wireless@vger.kernel.org>; Fri, 26 Sep 2014 10:22:26 +0200
+Received: from acksys.fr ([195.6.104.67]) (authenticated)
+	by smtp04.msg.oleane.net (MTA) with ESMTP id s8Q8239T011175
+	for <linux-wireless@vger.kernel.org>; Fri, 26 Sep 2014 10:02:03 +0200
+Subject: ath9k: DFS pattern detector and ETSI EN 301 893 V1.7.1
+Date: Fri, 26 Sep 2014 10:02:03 +0200
+Message-ID: <773DB8A82AB6A046AE0195C68612A319018C215F@sbs2003.acksys.local> (sfid-20140926_104257_605024_0A1512E0)
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+From: "Cedric VONCKEN" <cedric.voncken@acksys.fr>
+To: <linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+	Hi, 
 
-Pending patches, meant for 3.18.
+	I will test my equipment with the ETSI standard EN 301 893
+1.7.1.
 
-Sujith Manoharan (11):
-  ath9k: Fix beacon configuration for channel contexts
-  ath9k: Fix beacons for managed mode
-  ath9k: Fix panic when adding an AP interface
-  ath9k: Fix NoA start time calculation
-  ath9k: Fix offchannel duration calculation
-  ath9k: Add CTWindow support
-  ath9k: Fix RX filter calculation
-  ath9k: Fix ath_startrecv()
-  ath9k: Fix COMP_BAR filter
-  ath9k: Fix RX filters in channel contexts
-  ath9k: Fix interface accounting
+	I looked the DFS pattern detector set in ath9k driver and the
+"comment specifies" it compliant with the ETSI standard in V1.5.1.
 
- drivers/net/wireless/ath/ath9k/ath9k.h   |  9 +++++---
- drivers/net/wireless/ath/ath9k/beacon.c  | 14 +++++++++++-
- drivers/net/wireless/ath/ath9k/channel.c | 39 +++++++++++++++++++++++++++-----
- drivers/net/wireless/ath/ath9k/debug.c   |  2 +-
- drivers/net/wireless/ath/ath9k/init.c    |  5 ++--
- drivers/net/wireless/ath/ath9k/main.c    | 30 ++++++++++++------------
- drivers/net/wireless/ath/ath9k/recv.c    | 31 +++++++++++++++----------
- drivers/net/wireless/ath/ath9k/tx99.c    |  2 +-
- drivers/net/wireless/ath/ath9k/wow.c     |  2 +-
- 9 files changed, 92 insertions(+), 42 deletions(-)
+	If I correctly understood the ath9k source code and the ETSI EN
+301 893 standard, the table D.3 and D.4 in Annexes D of ETSI standard it
+uses to fill the ETSI_radar_ref_types_v15 structure.
 
--- 
-2.1.0
+	The difference between these tables in EN 301 893 v1.5.1 and EN
+301 893 v1.7.1 is only the minimal pulse width (from 0.8 to 0.5). This
+value is set to 0 in many structure fields.
+
+	Could you confirm the ETSI ath9k pattern detector is compatible
+with the ETSI EN 301 893 v1.7.1 standard?
+
+	If it is right, I will send a patch to precise that in ath9k
+comment.
+
+	Thanks for your help.
+
+Cedric Voncken
 
