@@ -1,96 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:64921 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752053AbaIMQkW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Sep 2014 12:40:22 -0400
-Message-ID: <54147373.1050109@broadcom.com> (sfid-20140913_184026_798392_9A30BA63)
-Date: Sat, 13 Sep 2014 18:40:19 +0200
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Hauke Mehrtens <hauke@hauke-m.de>
-CC: <linux-wireless@vger.kernel.org>, <zajec5@gmail.com>,
-	<devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>, <arnd@arndb.de>
-Subject: Re: [PATCH 1/2] bcma: register bcma as device tree driver
-References: <1410615446-7639-1-git-send-email-hauke@hauke-m.de> <54145F0E.8000506@broadcom.com> <54146A8D.1060704@hauke-m.de>
-In-Reply-To: <54146A8D.1060704@hauke-m.de>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Received: from dedo.coelho.fi ([88.198.205.34]:52600 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1030185AbaIZTfu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Sep 2014 15:35:50 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: emmanuel.grumbach@intel.com, michal.kazior@tieto.com,
+	linux-wireless@vger.kernel.org
+Date: Fri, 26 Sep 2014 22:35:01 +0300
+Message-Id: <1411760105-18614-4-git-send-email-luca@coelho.fi> (sfid-20140926_213554_949101_7E2947B3)
+In-Reply-To: <1411760105-18614-1-git-send-email-luca@coelho.fi>
+References: <1411760105-18614-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH 3/7] mac80211: add extended channel switching capability if the driver supports CSA
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/13/14 18:02, Hauke Mehrtens wrote:
-> On 09/13/2014 05:13 PM, Arend van Spriel wrote:
->> On 09/13/14 15:37, Hauke Mehrtens wrote:
->>> This driver is used by the bcm53xx ARM SoC code. Now it is possible to
->>> give the address of the chipcommon core in device tree and bcma will
->>> search for all the other cores.
->>>
->>> Signed-off-by: Hauke Mehrtens<hauke@hauke-m.de>
->>> ---
->>>    Documentation/devicetree/bindings/bus/bcma.txt | 41 +++++++++++++
->>>    drivers/bcma/bcma_private.h                    | 16 +++++
->>>    drivers/bcma/host_soc.c                        | 82
->>> ++++++++++++++++++++++++++
->>>    drivers/bcma/main.c                            | 10 ++++
->>>    include/linux/bcma/bcma.h                      |  2 +
->>>    5 files changed, 151 insertions(+)
->>>    create mode 100644 Documentation/devicetree/bindings/bus/bcma.txt
->>>
->>> This is based on wireless-testing and should go into that tree.
->>>
->>> changes since:
->>> RFC:
->>>    - reworded the irq description
->>>    - improved the example
->>>    - hocked into bcma_modeinit() and bcma_modexit()
->>>
->>> diff --git a/Documentation/devicetree/bindings/bus/bcma.txt
->>> b/Documentation/devicetree/bindings/bus/bcma.txt
->>> new file mode 100644
->>> index 0000000..17e095f
->>> --- /dev/null
->>> +++ b/Documentation/devicetree/bindings/bus/bcma.txt
->>> @@ -0,0 +1,41 @@
->>> +Broadcom AIX SoC bcma bus driver
->>
->> Hi Hauke,
->>
->> First of all a typo used all over the place: AIX should be AXI.
->
-> I will fix that.
->
->> The backplane in Broadcom SoC is ARM AXI with additional plugin option
->> to make it discoverable. Indeed the IRQ info is not included, but I see
->> no reason for specifying the register space for the cores in device-tree
->> as that is discoverable by bcma.
->
-> I specified the register space to make it possible to connect the device
-> tree entry with the core. After the cores are automatically discovered,
-> bcma searches for entry core found, for an device tree entry with the
-> same address space and uses the irq number from that entry. If there is
-> a core defined in device tree which is not found by bcma it will just be
-> ignored. If a core is not specified in device tree it will get
-> registered, but it will not get an IRQ.
-> This was the most stable way I came up with, I also thought about using
-> the core number, like assign the this IRQ to core number 5, but the core
-> numbers could change when we do changes to bcma.
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-I understand. In the example I noticed the core base address was also 
-used in the entry label, ie. pcie@18002000. However, I am not sure 
-whether that can be obtained by the driver. If it is possible it could 
-be used to match the dt entry to a core and the register info would be 
-redundant.
+The Extended Channel Switching capability bit in the extended
+capabilities element must be set if the driver supports CSA on
+non-beaconing interfaces.
 
-> In the Broadcom vendor code there is a list with the IRQ numbers which
-> get assigned to a specific core type. For example there is a list with 4
-> IRQ numbers which get assigned to the first 4 Ethernet cores. This would
-> also work, but I do not know how to do this in device tree.
+Since this capability needs to be set during driver registration, the
+extended_capabiliities global variable needs to be moved to the local
+structure so that it can be modified.
 
-I am wondering about the IRQ numbers. The SoC would also have a OOB 
-routing core, which controls non-axi signals between the cores. I will 
-ask internally whether the irq signals are controlled by it and can be 
-retrieved from it.
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+---
+ include/linux/ieee80211.h  |  5 +++++
+ net/mac80211/ieee80211_i.h |  3 +++
+ net/mac80211/main.c        | 20 +++++++++++---------
+ 3 files changed, 19 insertions(+), 9 deletions(-)
 
-Regards,
-Arend
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index b1be39c..5fab17b 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -1998,6 +1998,11 @@ enum ieee80211_tdls_actioncode {
+ 	WLAN_TDLS_DISCOVERY_REQUEST = 10,
+ };
+ 
++/* Extended Channel Switching capability to be set in the 1st byte of
++ * the @WLAN_EID_EXT_CAPABILITY information element
++ */
++#define WLAN_EXT_CAPA1_EXT_CHANNEL_SWITCHING	BIT(2)
++
+ /* Interworking capabilities are set in 7th bit of 4th byte of the
+  * @WLAN_EID_EXT_CAPABILITY information element
+  */
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index c2aaec4..a9cc491 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1307,6 +1307,9 @@ struct ieee80211_local {
+ 	/* virtual monitor interface */
+ 	struct ieee80211_sub_if_data __rcu *monitor_sdata;
+ 	struct cfg80211_chan_def monitor_chandef;
++
++	/* extended capabilities provided by mac80211 */
++	u8 ext_capa[8];
+ };
+ 
+ static inline struct ieee80211_sub_if_data *
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 0de7c93..107d1c8 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -478,11 +478,6 @@ static const struct ieee80211_vht_cap mac80211_vht_capa_mod_mask = {
+ 	},
+ };
+ 
+-static const u8 extended_capabilities[] = {
+-	0, 0, 0, 0, 0, 0, 0,
+-	WLAN_EXT_CAPA8_OPMODE_NOTIF,
+-};
+-
+ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
+ 					const struct ieee80211_ops *ops)
+ {
+@@ -539,10 +534,6 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
+ 			WIPHY_FLAG_REPORTS_OBSS |
+ 			WIPHY_FLAG_OFFCHAN_TX;
+ 
+-	wiphy->extended_capabilities = extended_capabilities;
+-	wiphy->extended_capabilities_mask = extended_capabilities;
+-	wiphy->extended_capabilities_len = ARRAY_SIZE(extended_capabilities);
+-
+ 	if (ops->remain_on_channel)
+ 		wiphy->flags |= WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
+ 
+@@ -591,6 +582,13 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
+ 	wiphy->ht_capa_mod_mask = &mac80211_ht_capa_mod_mask;
+ 	wiphy->vht_capa_mod_mask = &mac80211_vht_capa_mod_mask;
+ 
++	local->ext_capa[7] = WLAN_EXT_CAPA8_OPMODE_NOTIF;
++
++	wiphy->extended_capabilities = local->ext_capa;
++	wiphy->extended_capabilities_mask = local->ext_capa;
++	wiphy->extended_capabilities_len =
++		ARRAY_SIZE(local->ext_capa);
++
+ 	INIT_LIST_HEAD(&local->interfaces);
+ 
+ 	__hw_addr_init(&local->mc_list);
+@@ -958,6 +956,10 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 	if (local->hw.wiphy->flags & WIPHY_FLAG_SUPPORTS_TDLS)
+ 		local->hw.wiphy->flags |= WIPHY_FLAG_TDLS_EXTERNAL_SETUP;
+ 
++	/* mac80211 supports eCSA, if the driver supports STA CSA at all */
++	if (local->hw.flags & IEEE80211_HW_CHANCTX_STA_CSA)
++		local->ext_capa[0] |= WLAN_EXT_CAPA1_EXT_CHANNEL_SWITCHING;
++
+ 	local->hw.wiphy->max_num_csa_counters = IEEE80211_MAX_CSA_COUNTERS_NUM;
+ 
+ 	result = wiphy_register(local->hw.wiphy);
+-- 
+2.1.0
+
