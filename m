@@ -1,65 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:55570
-	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752561AbaI0VA3 (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:55646 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755185AbaIZOmw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Sep 2014 17:00:29 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
-Subject: [PATCH 1/2] ath9k: use ah->get_mac_revision for all SoC devices if available
-Date: Sat, 27 Sep 2014 22:49:43 +0200
-Message-Id: <1411850984-65861-1-git-send-email-nbd@openwrt.org> (sfid-20140927_230032_850235_CE3E1882)
+	Fri, 26 Sep 2014 10:42:52 -0400
+Message-ID: <54257B69.3070607@broadcom.com> (sfid-20140926_164300_210064_2D648B03)
+Date: Fri, 26 Sep 2014 16:42:49 +0200
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Michael Tokarev <mjt@tls.msk.ru>
+CC: Seth Forshee <seth.forshee@canonical.com>,
+	<brcm80211-dev-list@broadcom.com>,
+	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
+Subject: Re: BCM4313 & brcmsmac & 3.12: only semi-working?
+References: <53FDACD1.8090805@msgid.tls.msk.ru> <53FDF8EB.4050905@broadcom.com> <54169D4F.2090607@broadcom.com> <541EEF17.7020806@msgid.tls.msk.ru> <542145B1.4030202@msgid.tls.msk.ru> <54216BF1.3060500@broadcom.com> <20140923134419.GA19016@ubuntu-hedt> <54217AA5.2060803@broadcom.com> <542182BE.2000606@msgid.tls.msk.ru> <542183A6.4070207@msgid.tls.msk.ru> <20140923143124.GC19016@ubuntu-hedt> <54219984.2080601@msgid.tls.msk.ru> <5421AF5C.6000106@broadcom.com> <5421B78E.4050908@msgid.tls.msk.ru> <5422C6E0.3080002@broadcom.com> <8d3f6516-9578-406c-9444-6fe1ba982ea6@email.android.com> <54257779.8010903@msgid.tls.msk.ru>
+In-Reply-To: <54257779.8010903@msgid.tls.msk.ru>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It is needed for AR934x as well
+On 09/26/14 16:26, Michael Tokarev wrote:
+> Okay, so finally, today, without any updates from your side,
+> I opened up the laptop again and inserted a newly bought
+> Intel 6235ANHMW card instead of this creaky brcm4313.  This
+> card works right out of the box - plug it in and set up,
+> both wifi and bluetooth (I had numerous probs with bluetooth
+> too with brcm card), and it works on both 2.4GHz and 5GHz
+> bands.  Connection is very good and stable, I wasn't able
+> to trigger a single glitch no matter how hard I tried.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/hw.c | 11 ++++-------
- 1 file changed, 4 insertions(+), 7 deletions(-)
+Good for you.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 3aed729..cf0128e 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -222,31 +222,28 @@ static void ath9k_hw_read_revisions(struct ath_hw *ah)
- {
- 	u32 val;
- 
-+	if (ah->get_mac_revision)
-+		ah->hw_version.macRev = ah->get_mac_revision();
-+
- 	switch (ah->hw_version.devid) {
- 	case AR5416_AR9100_DEVID:
- 		ah->hw_version.macVersion = AR_SREV_VERSION_9100;
- 		break;
- 	case AR9300_DEVID_AR9330:
- 		ah->hw_version.macVersion = AR_SREV_VERSION_9330;
--		if (ah->get_mac_revision) {
--			ah->hw_version.macRev = ah->get_mac_revision();
--		} else {
-+		if (!ah->get_mac_revision) {
- 			val = REG_READ(ah, AR_SREV);
- 			ah->hw_version.macRev = MS(val, AR_SREV_REVISION2);
- 		}
- 		return;
- 	case AR9300_DEVID_AR9340:
- 		ah->hw_version.macVersion = AR_SREV_VERSION_9340;
--		val = REG_READ(ah, AR_SREV);
--		ah->hw_version.macRev = MS(val, AR_SREV_REVISION2);
- 		return;
- 	case AR9300_DEVID_QCA955X:
- 		ah->hw_version.macVersion = AR_SREV_VERSION_9550;
- 		return;
- 	case AR9300_DEVID_AR953X:
- 		ah->hw_version.macVersion = AR_SREV_VERSION_9531;
--		if (ah->get_mac_revision)
--			ah->hw_version.macRev = ah->get_mac_revision();
- 		return;
- 	}
- 
--- 
-2.0.4
+> My only sorry is a lot of wasted time, efforts and money -
+> all that have much better value than trying to deal with
+> non-working drivers.  And my only wish is so vendors stop
+> using non-working parts in their hardware.. But oh well.
 
+Being bold here, but would you be willing to send that non-working part 
+of hardware to me. I seem to have 4313 cards over here that just work 
+and it would help greatly investigating the issue. I guess you do not 
+care that much anymore, but might be others do (myself included).
+
+Regards,
+Arend
