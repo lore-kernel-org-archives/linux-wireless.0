@@ -1,44 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:43392 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759493AbaIPANY (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:16531 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755829AbaIZKhV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Sep 2014 20:13:24 -0400
-Received: by mail-wg0-f47.google.com with SMTP id y10so4607318wgg.6
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Sep 2014 17:13:23 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCHv2 07/10] ath9k: enable control frame reception
-Date: Tue, 16 Sep 2014 02:13:13 +0200
-Message-Id: <1410826396-15544-8-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140916_021339_402512_4AAE62DE)
-In-Reply-To: <1410826396-15544-1-git-send-email-lorenzo.bianconi83@gmail.com>
-References: <1410826396-15544-1-git-send-email-lorenzo.bianconi83@gmail.com>
+	Fri, 26 Sep 2014 06:37:21 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v3 0/3] ath10k: export calibration data to user space
+References: <20140924111416.6539.95299.stgit@potku.adurom.net>
+Date: Fri, 26 Sep 2014 13:36:34 +0300
+In-Reply-To: <20140924111416.6539.95299.stgit@potku.adurom.net> (Kalle Valo's
+	message of "Wed, 24 Sep 2014 14:16:39 +0300")
+Message-ID: <8761ga653h.fsf@kamboji.qca.qualcomm.com> (sfid-20140926_123730_913625_681D5EA8)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Set control frame bit in rx filter if dynack processing has been activated
-in order to enable ACK frame reception
+Kalle Valo <kvalo@qca.qualcomm.com> writes:
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
----
- drivers/net/wireless/ath/ath9k/recv.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+> Here's a small patchset exporting firmware calibration data to user space. This
+> makes it easier to debug various calibration data related problems.
+>
+> Please comment.
+>
+> v3:
+>
+> * patch 1: fix comment style (Michal)
+>
+> * patch 3: use ath10k_debug_ prefix (Michal)
+>
+> v2:
+>
+> * never unmask the diagnostic window copy engine pipe in
+>   ath10k_ce_enable_interrupts()
+>
+> * add locking for diag_read_mem()/diag_write_mem()
+>
+> ---
+>
+> Kalle Valo (3):
+>       ath10k: don't enable interrupts for the diagnostic window
+>       ath10k: add diag_read() to hif ops
+>       ath10k: add cal_data debugfs file
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 66c5fe8..42108f0 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -400,7 +400,8 @@ u32 ath_calcrxfilter(struct ath_softc *sc)
- 	if (sc->sc_ah->is_monitoring)
- 		rfilt |= ATH9K_RX_FILTER_PROM;
- 
--	if (sc->cur_chan->rxfilter & FIF_CONTROL)
-+	if ((sc->cur_chan->rxfilter & FIF_CONTROL) ||
-+	    sc->sc_ah->dynack.enabled)
- 		rfilt |= ATH9K_RX_FILTER_CONTROL;
- 
- 	if ((sc->sc_ah->opmode == NL80211_IFTYPE_STATION) &&
+All three patches applied.
+
 -- 
-1.9.1
-
+Kalle Valo
