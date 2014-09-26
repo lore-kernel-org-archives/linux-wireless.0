@@ -1,101 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail1.bemta7.messagelabs.com ([216.82.254.111]:49210 "EHLO
-	mail1.bemta7.messagelabs.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752976AbaIRIzH (ORCPT
+Received: from mail-pd0-f176.google.com ([209.85.192.176]:59826 "EHLO
+	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753314AbaIZDXR convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Sep 2014 04:55:07 -0400
-Message-ID: <541A9D6D.8050903@netcommwireless.com> (sfid-20140918_105513_649386_E4BD85E6)
-Date: Thu, 18 Sep 2014 18:53:01 +1000
-From: Sourav <sourav.chakraborty@netcommwireless.com>
-MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Not reaching optimum speeds with IEEE 802.11n
-References: <540FA8D9.2070803@netcommwireless.com> <54100F0E.8030204@broadcom.com> <CAGXE3d9FRLOPQ1pO6WFWy4FF67PGbo5ztfhLELydq3k410731w@mail.gmail.com> <54125652.7060205@netcommwireless.com> <CAGXE3d_QE0zCAgbLaa+93JNM-GhRMvHENqW1zXy_txeV1mKwSg@mail.gmail.com> <5412A831.3050804@netcommwireless.com>
-In-Reply-To: <5412A831.3050804@netcommwireless.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+	Thu, 25 Sep 2014 23:23:17 -0400
+Received: by mail-pd0-f176.google.com with SMTP id z10so10551778pdj.35
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Sep 2014 20:23:17 -0700 (PDT)
+References: <509C5E93-4D6C-4CCE-A4F6-BA1CEC80AB98@gmail.com> <CAA2SeNKdOBTPnkz2y=WUFqa1sSUmxeMwDCHaT50TwL0O0uJfgQ@mail.gmail.com>
+Mime-Version: 1.0 (1.0)
+In-Reply-To: <CAA2SeNKdOBTPnkz2y=WUFqa1sSUmxeMwDCHaT50TwL0O0uJfgQ@mail.gmail.com>
+Content-Type: text/plain;
+	charset=utf-8
+Message-Id: <00852C2A-209F-48A8-9F46-2F2520CEF7EE@gmail.com> (sfid-20140926_052320_639344_07FAE82E)
+Cc: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+From: jammy <benxuelan0402@gmail.com>
+Subject: how can we fast roaming between multi-aps
+Date: Fri, 26 Sep 2014 11:22:48 +0800
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
-Is there a parameter in hostapd.conf or elsewhere to enable/disable MPDU 
-and MSDU aggregation? Please reply as this is very urgent.
+Hi all，
 
-Thanks in advance,
-Sourav
-On 12/09/14 18:00, Sourav wrote:
-> On 12/09/14 17:46, Helmut Schaa wrote:
->> On Fri, Sep 12, 2014 at 4:11 AM, Sourav
->> <sourav.chakraborty@netcommwireless.com> wrote:
->>> On 11/09/14 00:14, Helmut Schaa wrote:
->>>> On Wed, Sep 10, 2014 at 10:42 AM, Arend van Spriel 
->>>> <arend@broadcom.com>
->>>> wrote:
->>>>> On 09/10/14 03:26, Sourav wrote:
->>>>>> We are using Ralink chip Rt3072L (using rt2800usb drivers 
->>>>>> rt2800usb.c),
->>>> The Ralink USB hardware is quite bad in reporting TX status and as
->>>> such minstrel_ht cannot do proper rate selection.
->>>> If you watch the rc stats at
->>>>
->>>> /sys/kernel/debug/ieee80211/phy0/netdev\:wlan0-0/stations/xx:xx:xx:xx:xx:xx/rc_stats 
->>>>
->>>> you might see a lot of rate selection "hopping".
->>>>
->>>> Regards.
->>>> Helmut
->>> please take a look at the attachments.... the first one shows the 
->>> rc_stats
->>> and iperf stats side by side on the router(iperf is running in 
->>> client mode
->>> in the router).....the second attachment is from a laptop which is 
->>> running
->>> iperf in server mode.
->>>
->>> I don't see a lot of rate "hopping" in the rc_stats file, (T,t and 
->>> P) rates
->>> are pretty much stable.... yet there is a big difference between 
->>> those rates
->>> and the throughput using iperf......
->> Indeed, rc_stats looks acceptable.
->>
->>> when you say "Ralink USB hardware is quite bad in reporting TX 
->>> status", do
->>> you mean that the HW reports less tx rate to minstrel_ht and so its 
->>> rate
->>> calculation is screwed up?
->> The HW sometimes does not report the status of transmitted frames 
->> correctly.
->> The TX status register is a FIFO of 16 (or similar) elements and if
->> the driver is
->> not reading it "fast enough" the FIFO will overflow :( at least that
->> was the point
->> when I was looking at the ralink hardware last time. Not sure if 
->> something
->> changed recently.
-> How did you detect this? I can see no error messages in 
-> syslog....hence I am thinking that the HW is processing packets 
-> properly....though I may be wrong here.
->>> Can you please let me know the section of code inside 
->>> Rc_80211_minstrel_ht.c
->>> (or somewhere else) which deals with getting the tx rate from ralink 
->>> HW?
->> There is no special code in minstrel(_ht) in regard to rt2x00.
->>
->> Are you able able to get some statistics on the receiver side (your
->> windows machine)
->> regarding TX rates and AMPDU lengths?
-> the 2nd attachment had logs from the windows machine.....it is also 
-> showing similar rates as on the router
->> Helmut
->
->
+I have build a multi-aps network，and there are wifi clients roaming in the network. Now I use the standard ath9k driver，and I found that the time of handoff is as long as 3 to 4 seconds，it is too long to process the Voip service and so on. 
+I think the problem can be solved by modify the driver，anyone has tried it？
 
+Any help will be appreciated.
 
--- 
-Warm Regards,
-Sourav
+Waiting for your reply.
 
+from jammy's iPhone
 
-______________________________________________________________________
-This communication contains information which may be confidential or privileged. The information is intended solely for the use of the individual or entity named above.  If you are not the intended recipient, be aware that any disclosure, copying, distribution or use of the contents of this information is prohibited.  If you have received this communication in error, please notify me by telephone immediately.
-______________________________________________________________________
+在 2014年9月22日，20:59，Lorenzo Bianconi <lorenzo.bianconi83@gmail.com> 写道：
+
+>> Hi, all，
+> 
+> Hi,
+> 
+>> I have read the http://www.spinics.net/lists/linux-wireless/msg124980.html for patching the ath9k driver in compat-wireless-2014-05-22 in openwrt trunk, but when I patch, for example, “the [PATCH 01/10] ath9k: export methods related to ack timeout estimation”, it failed.
+> 
+> please use latest dynack patchset:
+> http://www.spinics.net/lists/linux-wireless/msg127038.html
+> 
+>> the command window showed that：
+>> patching file drivers/net/wireless/ath/ath9k/hw.h
+>> Hunk #1 FAILED at 1080.
+>> 1 out of 1 hunk FAILED -- saving rejects to file drivers/net/wireless/ath/ath9k/hw.h.rej.
+>> 
+>> i have checked the hw.h file, but I can not see anything wrong, how should i do further?
+> 
+> You should port dynack on compat-wireless-2014-05-22. E.g:
+> 
+> --- a/drivers/net/wireless/ath/ath9k/hw.h
+> +++ b/drivers/net/wireless/ath/ath9k/hw.h
+> @@ -1080,6 +1080,10 @@ void ar9002_hw_load_ani_reg(struct ath_hw *ah,
+> struct ath9k_channel *chan);
+> void ath9k_ani_reset(struct ath_hw *ah, bool is_scanning);
+> void ath9k_hw_ani_monitor(struct ath_hw *ah, struct ath9k_channel *chan);
+> 
+> +void ath9k_hw_set_ack_timeout(struct ath_hw *ah, u32 us);
+> +void ath9k_hw_set_cts_timeout(struct ath_hw *ah, u32 us);
+> +void ath9k_hw_setslottime(struct ath_hw *ah, u32 us);
+> +
+> #ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
+> static inline bool ath9k_hw_btcoex_is_enabled(struct ath_hw *ah)
+> {
+> 
+> this chunk will fail since OpenWRT uses CPTCFG_ATH9K_BTCOEX_SUPPORT
+> insted of CONFIG_ATH9K_BTCOEX_SUPPORT
+> 
+>> another question is，if I patch them manualy，I can not see the dnyack choice in the menuconfig，what should I do then？
+> 
+> You should add dynack to OpenWRT mac80211 package Makefile
+> 
+>> I am waiting for your suggestions.
+>> 
+>> from jammy's iPhone--
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> Regards,
+> Lorenzo
+> 
+> -- 
+> UNIX is Sexy: who | grep -i blonde | talk; cd ~; wine; talk; touch;
+> unzip; touch; strip; gasp; finger; gasp; mount; fsck; more; yes; gasp;
+> umount; make clean; sleep
