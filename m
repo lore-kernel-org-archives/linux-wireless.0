@@ -1,50 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f173.google.com ([74.125.82.173]:38967 "EHLO
-	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751820AbaIUTWm (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:40146 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755241AbaIZRpL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Sep 2014 15:22:42 -0400
-Received: by mail-we0-f173.google.com with SMTP id x48so477130wes.18
-        for <linux-wireless@vger.kernel.org>; Sun, 21 Sep 2014 12:22:40 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eyal Shapira <eyal@wizery.com>,
-	Eyal Shapira <eyalx.shapira@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 10/17] iwlwifi: mvm: limit aggregation size in low latency to 6
-Date: Sun, 21 Sep 2014 22:22:11 +0300
-Message-Id: <1411327338-23099-10-git-send-email-egrumbach@gmail.com> (sfid-20140921_212302_306666_3249031A)
-In-Reply-To: <541F23D2.90600@gmail.com>
-References: <541F23D2.90600@gmail.com>
+	Fri, 26 Sep 2014 13:45:11 -0400
+Date: Fri, 26 Sep 2014 13:38:19 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: Linux NFC <linux-nfc@ml01.01.org>,
+	Linux Wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [GIT] [3.18] NFC update
+Message-ID: <20140926173818.GG22967@tuxdriver.com> (sfid-20140926_194533_888280_2EC8E5B5)
+References: <20140924003423.GF4235@zurbaran>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140924003423.GF4235@zurbaran>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+On Wed, Sep 24, 2014 at 02:34:23AM +0200, Samuel Ortiz wrote:
+> Hi John,
+> 
+> This is the NFC pull request for 3.18.
+> 
+> We've had major updates for TI and ST Microelectronics drivers, and a
+> few NCI related changes.
+> 
+> For TI's trf7970a driver:
+> 
+> - Target mode support for trf7970a
+> - Suspend/resume support for trf7970a
+> - DT properties additions to handle different quirks
+> - A bunch of fixes for smartphone IOP related issues
+> 
+> For ST Microelectronics' ST21NFCA and ST21NFCB drivers:
+> 
+> - ISO15693 support for st21nfcb
+> - checkpatch and sparse related warning fixes
+> - Code cleanups and a few minor fixes
+> 
+> Finally, Marvell added ISO15693 support to the NCI stack, together with a
+> couple of NCI fixes.
+> 
+> Thanks in advance for pulling those in.
+> 
+> The following changes since commit 6a5d088a923854569e20eac4f3f569926d5911ec:
+> 
+>   carl9170: tx: Replace rcu_assign_pointer() with RCU_INIT_POINTER() (2014-08-28 14:50:13 -0400)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-next.git tags/nfc-next-3.18-1
+> 
+> for you to fetch changes up to 094e93592433312548dd5e43d7b24b152f658063:
+> 
+>   NFC: st21nfca: Fix potential double kfree_skb error (2014-09-24 02:02:24 +0200)
 
-This is a tradeoff between enabling better throughput for
-bursty traffic and low latency. The number 6 was found to be
-a good tradeoff for the Miracast use case which is the
-major use case for low latency.
+Pulling now, but I don't plan to push it back out until Dave pulls my earlier batch...
 
-Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/ops.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
-index 9bf9de7..15aa298 100644
---- a/drivers/net/wireless/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
-@@ -422,7 +422,7 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
- 		mvm->first_agg_queue = 12;
- 	}
- 	mvm->sf_state = SF_UNINIT;
--	mvm->low_latency_agg_frame_limit = 1;
-+	mvm->low_latency_agg_frame_limit = 6;
- 
- 	mutex_init(&mvm->mutex);
- 	mutex_init(&mvm->d0i3_suspend_mutex);
 -- 
-1.9.1
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
