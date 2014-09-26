@@ -1,171 +1,172 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:47081 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751649AbaIYVWZ (ORCPT
+Received: from mail-oi0-f52.google.com ([209.85.218.52]:59270 "EHLO
+	mail-oi0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755964AbaIZVki (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Sep 2014 17:22:25 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 2/3] mac-hwsim:  add ethtool stats support.
-Date: Thu, 25 Sep 2014 14:22:19 -0700
-Message-Id: <1411680140-20208-2-git-send-email-greearb@candelatech.com> (sfid-20140925_232229_629577_D0F1A28C)
-In-Reply-To: <1411680140-20208-1-git-send-email-greearb@candelatech.com>
-References: <1411680140-20208-1-git-send-email-greearb@candelatech.com>
+	Fri, 26 Sep 2014 17:40:38 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, troy_tan@realsil.com.cn,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH 0/7 NEXT] More updates for the rtlwifi-family of drivers
+Date: Fri, 26 Sep 2014 16:40:21 -0500
+Message-Id: <1411767628-7965-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20140926_234052_641568_05370565)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+This set of patches, which is intended for the 3.18 stream, converts more of the
+drivers to the 06/28/14 Realtek version, moves the driver for the RTL8192EE from
+staging to the regular wireless tree, and fixes some bugs found in the parts that
+have already been submitted.
 
-This gives a view into packet activity at the virtual radio
-level.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- drivers/net/wireless/mac80211_hwsim.c | 75 ++++++++++++++++++++++++++++++++++-
- 1 file changed, 74 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index a74227d..ae90438 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -447,6 +447,14 @@ struct mac80211_hwsim_data {
- 	s64 bcn_delta;
- 	/* absolute beacon transmission time. Used to cover up "tx" delay. */
- 	u64 abs_bcn_ts;
-+
-+	/* Stats */
-+	u64 tx_pkts;
-+	u64 rx_pkts;
-+	u64 tx_bytes;
-+	u64 rx_bytes;
-+	u64 tx_dropped;
-+	u64 tx_failed;
- };
- 
- 
-@@ -861,8 +869,10 @@ static void mac80211_hwsim_tx_frame_nl(struct ieee80211_hw *hw,
- 	/* If the queue contains MAX_QUEUE skb's drop some */
- 	if (skb_queue_len(&data->pending) >= MAX_QUEUE) {
- 		/* Droping until WARN_QUEUE level */
--		while (skb_queue_len(&data->pending) >= WARN_QUEUE)
-+		while (skb_queue_len(&data->pending) >= WARN_QUEUE) {
- 			ieee80211_free_txskb(hw, skb_dequeue(&data->pending));
-+			data->tx_dropped++;
-+		}
- 	}
- 
- 	skb = genlmsg_new(GENLMSG_DEFAULT_SIZE, GFP_ATOMIC);
-@@ -917,11 +927,14 @@ static void mac80211_hwsim_tx_frame_nl(struct ieee80211_hw *hw,
- 
- 	/* Enqueue the packet */
- 	skb_queue_tail(&data->pending, my_skb);
-+	data->tx_pkts++;
-+	data->tx_bytes += my_skb->len;
- 	return;
- 
- nla_put_failure:
- 	printk(KERN_DEBUG "mac80211_hwsim: error occurred in %s\n", __func__);
- 	ieee80211_free_txskb(hw, my_skb);
-+	data->tx_failed++;
- }
- 
- static bool hwsim_chans_compat(struct ieee80211_channel *c1,
-@@ -1067,6 +1080,8 @@ static bool mac80211_hwsim_tx_frame_no_nl(struct ieee80211_hw *hw,
- 		rx_status.mactime = now + data2->tsf_offset;
- 
- 		memcpy(IEEE80211_SKB_RXCB(nskb), &rx_status, sizeof(rx_status));
-+		data2->rx_pkts++;
-+		data2->rx_bytes += nskb->len;
- 		ieee80211_rx_irqsafe(data2->hw, nskb);
- 	}
- 	spin_unlock(&hwsim_radio_lock);
-@@ -1134,6 +1149,8 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw,
- 		return mac80211_hwsim_tx_frame_nl(hw, skb, _portid);
- 
- 	/* NO wmediumd detected, perfect medium simulation */
-+	data->tx_pkts++;
-+	data->tx_bytes += skb->len;
- 	ack = mac80211_hwsim_tx_frame_no_nl(hw, skb, channel);
- 
- 	if (ack && skb->len >= 16) {
-@@ -1917,6 +1934,57 @@ static void mac80211_hwsim_unassign_vif_chanctx(struct ieee80211_hw *hw,
- 	hwsim_check_chanctx_magic(ctx);
- }
- 
-+static const char mac80211_hwsim_gstrings_stats[][ETH_GSTRING_LEN] = {
-+	"tx_pkts_nic",
-+	"tx_bytes_nic",
-+	"rx_pkts_nic",
-+	"rx_bytes_nic",
-+	"d_tx_dropped",
-+	"d_tx_failed",
-+	"d_ps_mode",
-+	"d_group",
-+	"d_tx_power",
-+};
-+
-+#define MAC80211_HWSIM_SSTATS_LEN ARRAY_SIZE(mac80211_hwsim_gstrings_stats)
-+
-+void mac80211_hwsim_get_et_strings(struct ieee80211_hw *hw,
-+				   struct ieee80211_vif *vif,
-+				   u32 sset, u8 *data)
-+{
-+	if (sset == ETH_SS_STATS)
-+		memcpy(data, *mac80211_hwsim_gstrings_stats,
-+		       sizeof(mac80211_hwsim_gstrings_stats));
-+}
-+
-+int mac80211_hwsim_get_et_sset_count(struct ieee80211_hw *hw,
-+				     struct ieee80211_vif *vif, int sset)
-+{
-+	if (sset == ETH_SS_STATS)
-+		return MAC80211_HWSIM_SSTATS_LEN;
-+	return 0;
-+}
-+
-+void mac80211_hwsim_get_et_stats(struct ieee80211_hw *hw,
-+				 struct ieee80211_vif *vif,
-+				 struct ethtool_stats *stats, u64 *data)
-+{
-+	struct mac80211_hwsim_data *ar = hw->priv;
-+	int i = 0;
-+
-+	data[i++] = ar->tx_pkts;
-+	data[i++] = ar->tx_bytes;
-+	data[i++] = ar->rx_pkts;
-+	data[i++] = ar->rx_bytes;
-+	data[i++] = ar->tx_dropped;
-+	data[i++] = ar->tx_failed;
-+	data[i++] = ar->ps;
-+	data[i++] = ar->group;
-+	data[i++] = ar->power_level;
-+
-+	WARN_ON(i != MAC80211_HWSIM_SSTATS_LEN);
-+}
-+
- static const struct ieee80211_ops mac80211_hwsim_ops = {
- 	.tx = mac80211_hwsim_tx,
- 	.start = mac80211_hwsim_start,
-@@ -1940,6 +2008,9 @@ static const struct ieee80211_ops mac80211_hwsim_ops = {
- 	.flush = mac80211_hwsim_flush,
- 	.get_tsf = mac80211_hwsim_get_tsf,
- 	.set_tsf = mac80211_hwsim_set_tsf,
-+	.get_et_sset_count = mac80211_hwsim_get_et_sset_count,
-+	.get_et_stats = mac80211_hwsim_get_et_stats,
-+	.get_et_strings = mac80211_hwsim_get_et_strings,
- };
- 
- static struct ieee80211_ops mac80211_hwsim_mchan_ops;
-@@ -2387,6 +2458,8 @@ static int hwsim_cloned_frame_received_nl(struct sk_buff *skb_2,
- 	rx_status.signal = nla_get_u32(info->attrs[HWSIM_ATTR_SIGNAL]);
- 
- 	memcpy(IEEE80211_SKB_RXCB(skb), &rx_status, sizeof(rx_status));
-+	data2->rx_pkts++;
-+	data2->rx_bytes += skb->len;
- 	ieee80211_rx_irqsafe(data2->hw, skb);
- 
- 	return 0;
+Larry Finger (7):
+  rtlwifi: rtl8188ee: rtl8821ae: Fix a queue locking problem
+  rtlwifi: rtl8192ee: Move driver from staging to the regular tree
+  rtlwifi: rtl8723ae: Update driver to match 06/28/14 Realtek version
+  rtlwifi: rtl8723be: Update driver to match Realtek release of 06/28/14
+  rtlwifi: rtl8192ce: rtl8192common: Update for latest version of
+    Realtek drivers
+  rtlwifi: rtl8188ee: rtl8192com: rtl8192cu: rtl8192ee: rtl8723ae:
+    rtl87323be: rtl8821ae: Use common cmd_send_packet
+  rtlwifi: rtl8188ee: rtl8723ae: rtl8821ae: Initialize some variables
+
+ drivers/net/wireless/rtlwifi/Kconfig               |   14 +-
+ drivers/net/wireless/rtlwifi/Makefile              |    1 +
+ drivers/net/wireless/rtlwifi/core.c                |   31 +
+ drivers/net/wireless/rtlwifi/core.h                |    1 +
+ drivers/net/wireless/rtlwifi/efuse.c               |    4 +-
+ drivers/net/wireless/rtlwifi/pci.c                 |   24 +-
+ drivers/net/wireless/rtlwifi/rtl8188ee/fw.c        |   38 +-
+ drivers/net/wireless/rtlwifi/rtl8188ee/hw.c        |    3 +
+ drivers/net/wireless/rtlwifi/rtl8188ee/sw.c        |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c  |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c  |  447 ++-
+ drivers/net/wireless/rtlwifi/rtl8192c/fw_common.h  |   40 +-
+ drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c |  815 ++---
+ drivers/net/wireless/rtlwifi/rtl8192c/phy_common.h |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8192ce/def.h       |   15 -
+ drivers/net/wireless/rtlwifi/rtl8192ce/dm.h        |   64 -
+ drivers/net/wireless/rtlwifi/rtl8192ce/hw.c        |   16 +-
+ drivers/net/wireless/rtlwifi/rtl8192ce/hw.h        |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8192ce/phy.c       |    3 +
+ drivers/net/wireless/rtlwifi/rtl8192ce/phy.h       |  107 -
+ drivers/net/wireless/rtlwifi/rtl8192ce/sw.c        |    5 +-
+ drivers/net/wireless/rtlwifi/rtl8192ce/trx.c       |    4 +-
+ drivers/net/wireless/rtlwifi/rtl8192cu/def.h       |    3 -
+ drivers/net/wireless/rtlwifi/rtl8192cu/hw.c        |   17 +-
+ drivers/net/wireless/rtlwifi/rtl8192cu/mac.c       |    3 +-
+ drivers/net/wireless/rtlwifi/rtl8192cu/phy.c       |    3 +
+ drivers/net/wireless/rtlwifi/rtl8192cu/sw.c        |    4 +-
+ drivers/net/wireless/rtlwifi/rtl8192cu/trx.c       |    1 +
+ drivers/net/wireless/rtlwifi/rtl8192de/fw.h        |   12 -
+ drivers/net/wireless/rtlwifi/rtl8192de/trx.c       |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8192ee/Makefile    |   20 +
+ drivers/net/wireless/rtlwifi/rtl8192ee/def.h       |  101 +
+ drivers/net/wireless/rtlwifi/rtl8192ee/dm.c        | 1263 ++++++++
+ drivers/net/wireless/rtlwifi/rtl8192ee/dm.h        |  267 ++
+ drivers/net/wireless/rtlwifi/rtl8192ee/fw.c        |  906 ++++++
+ drivers/net/wireless/rtlwifi/rtl8192ee/fw.h        |  208 ++
+ drivers/net/wireless/rtlwifi/rtl8192ee/hw.c        | 2569 ++++++++++++++++
+ drivers/net/wireless/rtlwifi/rtl8192ee/hw.h        |   62 +
+ drivers/net/wireless/rtlwifi/rtl8192ee/led.c       |  145 +
+ drivers/net/wireless/rtlwifi/rtl8192ee/led.h       |   34 +
+ drivers/net/wireless/rtlwifi/rtl8192ee/phy.c       | 3219 ++++++++++++++++++++
+ drivers/net/wireless/rtlwifi/rtl8192ee/phy.h       |  153 +
+ drivers/net/wireless/rtlwifi/rtl8192ee/pwrseq.c    |  112 +
+ drivers/net/wireless/rtlwifi/rtl8192ee/pwrseq.h    |  340 +++
+ drivers/net/wireless/rtlwifi/rtl8192ee/reg.h       | 2231 ++++++++++++++
+ drivers/net/wireless/rtlwifi/rtl8192ee/rf.c        |  152 +
+ drivers/net/wireless/rtlwifi/rtl8192ee/rf.h        |   36 +
+ drivers/net/wireless/rtlwifi/rtl8192ee/sw.c        |  399 +++
+ drivers/net/wireless/rtlwifi/rtl8192ee/sw.h        |   33 +
+ drivers/net/wireless/rtlwifi/rtl8192ee/table.c     |  882 ++++++
+ drivers/net/wireless/rtlwifi/rtl8192ee/table.h     |   45 +
+ drivers/net/wireless/rtlwifi/rtl8192ee/trx.c       | 1300 ++++++++
+ drivers/net/wireless/rtlwifi/rtl8192ee/trx.h       |  860 ++++++
+ drivers/net/wireless/rtlwifi/rtl8192se/fw.h        |    1 -
+ drivers/net/wireless/rtlwifi/rtl8723ae/btc.h       |    7 +-
+ drivers/net/wireless/rtlwifi/rtl8723ae/def.h       |  197 +-
+ drivers/net/wireless/rtlwifi/rtl8723ae/dm.c        |  422 ++-
+ drivers/net/wireless/rtlwifi/rtl8723ae/dm.h        |   50 +-
+ drivers/net/wireless/rtlwifi/rtl8723ae/fw.c        |  255 +-
+ drivers/net/wireless/rtlwifi/rtl8723ae/fw.h        |   54 +-
+ .../wireless/rtlwifi/rtl8723ae/hal_bt_coexist.c    |  414 ++-
+ .../wireless/rtlwifi/rtl8723ae/hal_bt_coexist.h    |   38 +-
+ drivers/net/wireless/rtlwifi/rtl8723ae/hal_btc.c   | 1232 ++++----
+ drivers/net/wireless/rtlwifi/rtl8723ae/hal_btc.h   |   66 +-
+ drivers/net/wireless/rtlwifi/rtl8723ae/hw.c        | 1512 ++++-----
+ drivers/net/wireless/rtlwifi/rtl8723ae/hw.h        |   66 +-
+ drivers/net/wireless/rtlwifi/rtl8723ae/led.c       |   54 +-
+ drivers/net/wireless/rtlwifi/rtl8723ae/led.h       |   13 +-
+ drivers/net/wireless/rtlwifi/rtl8723ae/phy.c       |  884 +++---
+ drivers/net/wireless/rtlwifi/rtl8723ae/phy.h       |   67 +-
+ drivers/net/wireless/rtlwifi/rtl8723ae/pwrseq.c    |   91 +-
+ drivers/net/wireless/rtlwifi/rtl8723ae/pwrseq.h    |  543 ++--
+ drivers/net/wireless/rtlwifi/rtl8723ae/reg.h       | 2718 +++++++++--------
+ drivers/net/wireless/rtlwifi/rtl8723ae/rf.c        |  261 +-
+ drivers/net/wireless/rtlwifi/rtl8723ae/rf.h        |   18 +-
+ drivers/net/wireless/rtlwifi/rtl8723ae/sw.c        |  222 +-
+ drivers/net/wireless/rtlwifi/rtl8723ae/sw.h        |   12 +-
+ drivers/net/wireless/rtlwifi/rtl8723ae/table.c     |    8 +-
+ drivers/net/wireless/rtlwifi/rtl8723ae/table.h     |    8 +-
+ drivers/net/wireless/rtlwifi/rtl8723ae/trx.c       |  460 ++-
+ drivers/net/wireless/rtlwifi/rtl8723ae/trx.h       |  325 +-
+ drivers/net/wireless/rtlwifi/rtl8723be/def.h       |  178 +-
+ drivers/net/wireless/rtlwifi/rtl8723be/dm.c        |  243 +-
+ drivers/net/wireless/rtlwifi/rtl8723be/dm.h        |   30 +-
+ drivers/net/wireless/rtlwifi/rtl8723be/fw.c        |  194 +-
+ drivers/net/wireless/rtlwifi/rtl8723be/fw.h        |  200 +-
+ drivers/net/wireless/rtlwifi/rtl8723be/hw.c        | 1319 ++++----
+ drivers/net/wireless/rtlwifi/rtl8723be/hw.h        |    1 +
+ drivers/net/wireless/rtlwifi/rtl8723be/led.c       |    6 +-
+ drivers/net/wireless/rtlwifi/rtl8723be/phy.c       | 1783 +++++++----
+ drivers/net/wireless/rtlwifi/rtl8723be/phy.h       |  110 +-
+ drivers/net/wireless/rtlwifi/rtl8723be/pwrseq.h    |  131 +-
+ drivers/net/wireless/rtlwifi/rtl8723be/reg.h       | 1135 +++----
+ drivers/net/wireless/rtlwifi/rtl8723be/rf.c        |  144 +-
+ drivers/net/wireless/rtlwifi/rtl8723be/sw.c        |   42 +-
+ drivers/net/wireless/rtlwifi/rtl8723be/table.c     | 1053 +++----
+ drivers/net/wireless/rtlwifi/rtl8723be/table.h     |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8723be/trx.c       |  307 +-
+ drivers/net/wireless/rtlwifi/rtl8723be/trx.h       |   34 +-
+ .../net/wireless/rtlwifi/rtl8723com/dm_common.c    |   14 +-
+ .../net/wireless/rtlwifi/rtl8723com/fw_common.c    |   90 +-
+ .../net/wireless/rtlwifi/rtl8723com/fw_common.h    |   59 +-
+ .../net/wireless/rtlwifi/rtl8723com/phy_common.c   |   57 +-
+ drivers/net/wireless/rtlwifi/rtl8821ae/fw.c        |   40 +-
+ drivers/net/wireless/rtlwifi/rtl8821ae/hw.c        |    3 +
+ drivers/net/wireless/rtlwifi/rtl8821ae/sw.c        |    2 +-
+ drivers/net/wireless/rtlwifi/usb.c                 |    4 +-
+ drivers/net/wireless/rtlwifi/wifi.h                |   28 +-
+ 108 files changed, 25156 insertions(+), 9073 deletions(-)
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192ee/Makefile
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192ee/def.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192ee/dm.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192ee/dm.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192ee/fw.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192ee/fw.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192ee/hw.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192ee/hw.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192ee/led.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192ee/led.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192ee/phy.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192ee/phy.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192ee/pwrseq.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192ee/pwrseq.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192ee/reg.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192ee/rf.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192ee/rf.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192ee/sw.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192ee/sw.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192ee/table.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192ee/table.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192ee/trx.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192ee/trx.h
+
 -- 
-1.7.11.7
+1.8.4.5
 
