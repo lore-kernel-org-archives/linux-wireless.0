@@ -1,42 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:50446 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750997AbaHSJTr (ORCPT
+Received: from mout.kundenserver.de ([212.227.126.131]:49157 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756176AbaIZWDw convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Aug 2014 05:19:47 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH 2/3] ath9k: Handle failure to allocate HW timer
-Date: Tue, 19 Aug 2014 14:03:32 +0530
-Message-Id: <1408437213-3363-2-git-send-email-sujith@msujith.org> (sfid-20140819_111950_235176_CA0EF8B8)
-In-Reply-To: <1408437213-3363-1-git-send-email-sujith@msujith.org>
-References: <1408437213-3363-1-git-send-email-sujith@msujith.org>
+	Fri, 26 Sep 2014 18:03:52 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>,
+	devicetree@vger.kernel.org
+Subject: Re: [PATCH] bcma: use device from DT (brcm,bus-gpio) for SoC GPIO chip
+Date: Sat, 27 Sep 2014 00:03:18 +0200
+Message-ID: <2539898.4te2VKk57a@wuerfel> (sfid-20140927_000356_443854_CDE68FA0)
+In-Reply-To: <1411741733-13888-1-git-send-email-zajec5@gmail.com>
+References: <1411741733-13888-1-git-send-email-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Friday 26 September 2014 16:28:53 Rafał Miłecki wrote:
+> +The top-level axi bus may contain following children:
+> +
+> +- gpio: GPIO chip on the SoC
+> +
+> +  Required properties:
+> +  - compatible: "brcm,bus-gpio"
+> +  - gpio-controller : makes the node a GPIO controller
+> +  - #gpio-cells : size of the GPIO specifier, must be 2
+> +
+> 
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/init.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+I wonder if it would be better to avoid the subnode here and just
+make the parent itself the gpio controller.
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 76771f3..4219e7b 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -601,7 +601,9 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
- 		goto err_btcoex;
- 
- 	sc->p2p_ps_timer = ath_gen_timer_alloc(sc->sc_ah, ath9k_p2p_ps_timer,
--		NULL, sc, AR_FIRST_NDP_TIMER);
-+					       NULL, sc, AR_FIRST_NDP_TIMER);
-+	if (!sc->p2p_ps_timer)
-+		goto err_btcoex;
- 
- 	ath9k_cmn_init_crypto(sc->sc_ah);
- 	ath9k_init_misc(sc);
--- 
-2.0.4
+Is the gpio controller part of the bus itself in reality, or is it
+a device that gets probed on the bus?
 
+	Arnd
