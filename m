@@ -1,126 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f43.google.com ([74.125.82.43]:59848 "EHLO
-	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754677AbaIHQ4l (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:59728 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756189AbaIZXY1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Sep 2014 12:56:41 -0400
-Received: by mail-wg0-f43.google.com with SMTP id x12so2549176wgg.26
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Sep 2014 09:56:40 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
+	Fri, 26 Sep 2014 19:24:27 -0400
+From: greearb@candelatech.com
 To: linux-wireless@vger.kernel.org
-Cc: Oren Givon <oren.givon@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 11/12] iwlwifi: add PCI IDs and add then new 3165 series
-Date: Mon,  8 Sep 2014 19:56:16 +0300
-Message-Id: <1410195377-10075-11-git-send-email-egrumbach@gmail.com> (sfid-20140908_185648_093244_3779475B)
-In-Reply-To: <540DDF37.5030801@gmail.com>
-References: <540DDF37.5030801@gmail.com>
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v2 2/4] mac-sim:  support creating radios with specific name.
+Date: Fri, 26 Sep 2014 16:24:14 -0700
+Message-Id: <1411773856-25042-2-git-send-email-greearb@candelatech.com> (sfid-20140927_012440_298974_FDF8FB4C)
+In-Reply-To: <1411773856-25042-1-git-send-email-greearb@candelatech.com>
+References: <1411773856-25042-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Oren Givon <oren.givon@intel.com>
+From: Ben Greear <greearb@candelatech.com>
 
-This change does the following:
-1) Add a new 7265 series PCI ID
-2) Add two new 3160 series PCI IDs
-3) Add the new 3165 series PCI IDs and configurations
+Otherwise, it can be very difficult to know which is which
+if you are trying to do detailed testing.
 
-Signed-off-by: Oren Givon <oren.givon@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-7000.c   | 16 ++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-config.h |  1 +
- drivers/net/wireless/iwlwifi/pcie/drv.c   |  7 +++++++
- 3 files changed, 24 insertions(+)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-7000.c b/drivers/net/wireless/iwlwifi/iwl-7000.c
-index d67a37a..d53adc2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-7000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-7000.c
-@@ -83,6 +83,8 @@
- #define IWL7260_TX_POWER_VERSION	0xffff /* meaningless */
- #define IWL3160_NVM_VERSION		0x709
- #define IWL3160_TX_POWER_VERSION	0xffff /* meaningless */
-+#define IWL3165_NVM_VERSION		0x709
-+#define IWL3165_TX_POWER_VERSION	0xffff /* meaningless */
- #define IWL7265_NVM_VERSION		0x0a1d
- #define IWL7265_TX_POWER_VERSION	0xffff /* meaningless */
+v2:  Add rtnl lock around rename logic.
+
+ drivers/net/wireless/mac80211_hwsim.c | 19 ++++++++++++++++---
+ 1 file changed, 16 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index b755920..e78c149 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -2018,7 +2018,7 @@ static struct ieee80211_ops mac80211_hwsim_mchan_ops;
+ static int mac80211_hwsim_create_radio(int channels, const char *reg_alpha2,
+ 				       const struct ieee80211_regdomain *regd,
+ 				       bool reg_strict, bool p2p_device,
+-				       bool use_chanctx)
++				       bool use_chanctx, char *hwname)
+ {
+ 	int err;
+ 	u8 addr[ETH_ALEN];
+@@ -2230,6 +2230,15 @@ static int mac80211_hwsim_create_radio(int channels, const char *reg_alpha2,
+ 		goto failed_hw;
+ 	}
  
-@@ -92,6 +94,9 @@
- #define IWL3160_FW_PRE "iwlwifi-3160-"
- #define IWL3160_MODULE_FIRMWARE(api) IWL3160_FW_PRE __stringify(api) ".ucode"
- 
-+#define IWL3165_FW_PRE "iwlwifi-3165-"
-+#define IWL3165_MODULE_FIRMWARE(api) IWL3165_FW_PRE __stringify(api) ".ucode"
++	if (hwname) {
++		/* If this fails, continue on anyway, treat it as request
++		 * instead of command.
++		 */
++		rtnl_lock();
++		cfg80211_dev_rename_wiphy(hw->wiphy, hwname);
++		rtnl_unlock();
++	}
 +
- #define IWL7265_FW_PRE "iwlwifi-7265-"
- #define IWL7265_MODULE_FIRMWARE(api) IWL7265_FW_PRE __stringify(api) ".ucode"
+ 	wiphy_debug(hw->wiphy, "hwaddr %pM registered\n", hw->wiphy->perm_addr);
  
-@@ -213,6 +218,16 @@ static const struct iwl_pwr_tx_backoff iwl7265_pwr_tx_backoffs[] = {
- 	{0},
- };
+ 	if (reg_alpha2)
+@@ -2508,10 +2517,14 @@ static int hwsim_create_radio_nl(struct sk_buff *msg, struct genl_info *info)
+ 	bool reg_strict = info->attrs[HWSIM_ATTR_REG_STRICT_REG];
+ 	bool p2p_device = info->attrs[HWSIM_ATTR_SUPPORT_P2P_DEVICE];
+ 	bool use_chanctx;
++	char *hwname = NULL;
  
-+const struct iwl_cfg iwl3165_2ac_cfg = {
-+	.name = "Intel(R) Dual Band Wireless AC 3165",
-+	.fw_name_pre = IWL3165_FW_PRE,
-+	IWL_DEVICE_7000,
-+	.ht_params = &iwl7000_ht_params,
-+	.nvm_ver = IWL3165_NVM_VERSION,
-+	.nvm_calib_ver = IWL3165_TX_POWER_VERSION,
-+	.pwr_tx_backoffs = iwl7265_pwr_tx_backoffs,
-+};
+ 	if (info->attrs[HWSIM_ATTR_CHANNELS])
+ 		chans = nla_get_u32(info->attrs[HWSIM_ATTR_CHANNELS]);
+ 
++	if (info->attrs[HWSIM_ATTR_RADIO_NAME])
++		hwname = nla_data(info->attrs[HWSIM_ATTR_RADIO_NAME]);
 +
- const struct iwl_cfg iwl7265_2ac_cfg = {
- 	.name = "Intel(R) Dual Band Wireless AC 7265",
- 	.fw_name_pre = IWL7265_FW_PRE,
-@@ -245,4 +260,5 @@ const struct iwl_cfg iwl7265_n_cfg = {
+ 	if (info->attrs[HWSIM_ATTR_USE_CHANCTX])
+ 		use_chanctx = true;
+ 	else
+@@ -2529,7 +2542,7 @@ static int hwsim_create_radio_nl(struct sk_buff *msg, struct genl_info *info)
+ 	}
  
- MODULE_FIRMWARE(IWL7260_MODULE_FIRMWARE(IWL7260_UCODE_API_OK));
- MODULE_FIRMWARE(IWL3160_MODULE_FIRMWARE(IWL3160_UCODE_API_OK));
-+MODULE_FIRMWARE(IWL3165_MODULE_FIRMWARE(IWL3160_UCODE_API_OK));
- MODULE_FIRMWARE(IWL7265_MODULE_FIRMWARE(IWL7260_UCODE_API_OK));
-diff --git a/drivers/net/wireless/iwlwifi/iwl-config.h b/drivers/net/wireless/iwlwifi/iwl-config.h
-index 942c99b..3d7cc37 100644
---- a/drivers/net/wireless/iwlwifi/iwl-config.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-config.h
-@@ -337,6 +337,7 @@ extern const struct iwl_cfg iwl7260_n_cfg;
- extern const struct iwl_cfg iwl3160_2ac_cfg;
- extern const struct iwl_cfg iwl3160_2n_cfg;
- extern const struct iwl_cfg iwl3160_n_cfg;
-+extern const struct iwl_cfg iwl3165_2ac_cfg;
- extern const struct iwl_cfg iwl7265_2ac_cfg;
- extern const struct iwl_cfg iwl7265_2n_cfg;
- extern const struct iwl_cfg iwl7265_n_cfg;
-diff --git a/drivers/net/wireless/iwlwifi/pcie/drv.c b/drivers/net/wireless/iwlwifi/pcie/drv.c
-index 98950e4..8bb8305 100644
---- a/drivers/net/wireless/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/drv.c
-@@ -352,11 +352,17 @@ static DEFINE_PCI_DEVICE_TABLE(iwl_hw_card_ids) = {
- 	{IWL_PCI_DEVICE(0x08B3, 0x8060, iwl3160_2n_cfg)},
- 	{IWL_PCI_DEVICE(0x08B3, 0x8062, iwl3160_n_cfg)},
- 	{IWL_PCI_DEVICE(0x08B4, 0x8270, iwl3160_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x08B4, 0x8370, iwl3160_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x08B4, 0x8272, iwl3160_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x08B3, 0x8470, iwl3160_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x08B3, 0x8570, iwl3160_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x08B3, 0x1070, iwl3160_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x08B3, 0x1170, iwl3160_2ac_cfg)},
+ 	return mac80211_hwsim_create_radio(chans, alpha2, regd, reg_strict,
+-					   p2p_device, use_chanctx);
++					   p2p_device, use_chanctx, hwname);
+ }
  
-+/* 3165 Series */
-+	{IWL_PCI_DEVICE(0x3165, 0x4010, iwl3165_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x3165, 0x4210, iwl3165_2ac_cfg)},
-+
- /* 7265 Series */
- 	{IWL_PCI_DEVICE(0x095A, 0x5010, iwl7265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x095A, 0x5110, iwl7265_2ac_cfg)},
-@@ -378,6 +384,7 @@ static DEFINE_PCI_DEVICE_TABLE(iwl_hw_card_ids) = {
- 	{IWL_PCI_DEVICE(0x095B, 0x5202, iwl7265_n_cfg)},
- 	{IWL_PCI_DEVICE(0x095A, 0x9010, iwl7265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x095A, 0x9012, iwl7265_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x095A, 0x900A, iwl7265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x095A, 0x9110, iwl7265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x095A, 0x9112, iwl7265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x095A, 0x9210, iwl7265_2ac_cfg)},
+ static int hwsim_destroy_radio_nl(struct sk_buff *msg, struct genl_info *info)
+@@ -2761,7 +2774,7 @@ static int __init init_mac80211_hwsim(void)
+ 		err = mac80211_hwsim_create_radio(channels, reg_alpha2,
+ 						  regd, reg_strict,
+ 						  support_p2p_device,
+-						  channels > 1);
++						  channels > 1, NULL);
+ 		if (err < 0)
+ 			goto out_free_radios;
+ 	}
 -- 
-1.9.1
+1.7.11.7
 
