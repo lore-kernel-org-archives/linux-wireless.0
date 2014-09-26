@@ -1,69 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews06.kpnxchange.com ([213.75.39.9]:53423 "EHLO
-	cpsmtpb-ews06.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755145AbaIPU1D (ORCPT
+Received: from mail-pd0-f182.google.com ([209.85.192.182]:46501 "EHLO
+	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752386AbaIZChU convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Sep 2014 16:27:03 -0400
-Message-ID: <1410899219.31130.81.camel@x220> (sfid-20140916_222728_693198_3B5B4F7B)
-Subject: Re: [PATCH 09/28] Remove ATHEROS_AR231X
-From: Paul Bolle <pebolle@tiscali.nl>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Sergey Ryazanov <ryazanov.s.a@gmail.com>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	Oleksij Rempel <linux@rempel-privat.de>,
-	Richard Weinberger <richard@nod.at>,
-	Jonathan Bither <jonbither@gmail.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	ath5k-devel@venema.h4ckr.net, open@hauke-m.de,
-	"list@hauke-m.de:NETWORKING DRIVERS" <list@hauke-m.de>,
-	"antonynpavlov@gmail.com" <antonynpavlov@gmail.com>,
-	OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"list@hauke-m.de:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
-	open list <linux-kernel@vger.kernel.org>
-Date: Tue, 16 Sep 2014 22:26:59 +0200
-In-Reply-To: <20140915184546.GB3891@tuxdriver.com>
-References: <1403091974.1984.102.camel@x220> <1409911856.7832.9.camel@x220>
-	 <CAHNKnsRipRHicKOUW4dCutD1-sUG6qPnP2QuOveH_t1MFX9XgQ@mail.gmail.com>
-	 <1409916824.7832.20.camel@x220>
-	 <CAHNKnsQ1gt=DRBTd9Q9yos1idqmXMepEPvhm8a7unP-whzNAgg@mail.gmail.com>
-	 <20140909182734.GJ29412@tuxdriver.com>
-	 <CAHNKnsQ8G3ZFHshq7wOqex1J6DbVD5uHVAyvs+aDC2Znk5zWww@mail.gmail.com>
-	 <541037D2.7060007@gmail.com>
-	 <CAHNKnsTtqz10c=vV-f10awLanYZzom3kJ1cO5xgTGs-t3O9NYg@mail.gmail.com>
-	 <20140911192146.GC22872@tuxdriver.com>
-	 <20140915184546.GB3891@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 25 Sep 2014 22:37:20 -0400
+Received: by mail-pd0-f182.google.com with SMTP id y10so79249pdj.27
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Sep 2014 19:37:20 -0700 (PDT)
+References: <509C5E93-4D6C-4CCE-A4F6-BA1CEC80AB98@gmail.com> <CAA2SeNKdOBTPnkz2y=WUFqa1sSUmxeMwDCHaT50TwL0O0uJfgQ@mail.gmail.com>
+Mime-Version: 1.0 (1.0)
+In-Reply-To: <CAA2SeNKdOBTPnkz2y=WUFqa1sSUmxeMwDCHaT50TwL0O0uJfgQ@mail.gmail.com>
+Content-Type: text/plain;
+	charset=utf-8
+Message-Id: <F5E61B49-0425-4E92-ABAB-BD0374646F3E@gmail.com> (sfid-20140926_043724_501667_56EC07BC)
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: jammy <benxuelan0402@gmail.com>
+Subject: =?utf-8?Q?Re:_compile_Failed_in_openwrt_for_[PATCH]_=E2=80=9Cadd?=
+ =?utf-8?Q?_support_for_ack_timeout_estimation_in_ath9k_driver_?=
+ =?utf-8?Q?=E2=80=9D?=
+Date: Fri, 26 Sep 2014 10:37:12 +0800
+To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-09-15 at 14:45 -0400, John W. Linville wrote:
-> FYI -- Sergey posted a series to linux-mips on 14 September 2014 that
-> touches the symbol in question.  For whatever reason, it is posted
-> there as RFC.
+Hi Lorenzo，
 
-Thanks for passing that on.
+I see，I will try it later，thank you very much～
 
-> Does this satisfy the interested parties??
+from jammy's iPhone
 
-In case I qualify as an interested party: resolving this by, in short,
-making AHB support actually buildable is of course the preferable
-solution. 
+在 2014年9月22日，20:59，Lorenzo Bianconi <lorenzo.bianconi83@gmail.com> 写道：
 
-Whether or not we should drop my patch while waiting for that series to
-land in linux-next is not my call. But if it hasn't landed by, say,
-about the time v3.18-rc3 is released I might raise this issue again.
-
-I must say that I'm a bit puzzled why people have resisted this rather
-small cleanup for years. How did having unbuildable AHB support in
-mainline benefit anyone? Couldn't the revert of this cleanup also be
-handled out of tree? Note that the revert is only "6 files changed, 3
-insertions(+), 294 deletions(-)", while the series is "39 files changed,
-3911 insertions(+), 10 deletions(-)".
-
-
-Paul Bolle
-
+>> Hi, all，
+> 
+> Hi,
+> 
+>> I have read the http://www.spinics.net/lists/linux-wireless/msg124980.html for patching the ath9k driver in compat-wireless-2014-05-22 in openwrt trunk, but when I patch, for example, “the [PATCH 01/10] ath9k: export methods related to ack timeout estimation”, it failed.
+> 
+> please use latest dynack patchset:
+> http://www.spinics.net/lists/linux-wireless/msg127038.html
+> 
+>> the command window showed that：
+>> patching file drivers/net/wireless/ath/ath9k/hw.h
+>> Hunk #1 FAILED at 1080.
+>> 1 out of 1 hunk FAILED -- saving rejects to file drivers/net/wireless/ath/ath9k/hw.h.rej.
+>> 
+>> i have checked the hw.h file, but I can not see anything wrong, how should i do further?
+> 
+> You should port dynack on compat-wireless-2014-05-22. E.g:
+> 
+> --- a/drivers/net/wireless/ath/ath9k/hw.h
+> +++ b/drivers/net/wireless/ath/ath9k/hw.h
+> @@ -1080,6 +1080,10 @@ void ar9002_hw_load_ani_reg(struct ath_hw *ah,
+> struct ath9k_channel *chan);
+> void ath9k_ani_reset(struct ath_hw *ah, bool is_scanning);
+> void ath9k_hw_ani_monitor(struct ath_hw *ah, struct ath9k_channel *chan);
+> 
+> +void ath9k_hw_set_ack_timeout(struct ath_hw *ah, u32 us);
+> +void ath9k_hw_set_cts_timeout(struct ath_hw *ah, u32 us);
+> +void ath9k_hw_setslottime(struct ath_hw *ah, u32 us);
+> +
+> #ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
+> static inline bool ath9k_hw_btcoex_is_enabled(struct ath_hw *ah)
+> {
+> 
+> this chunk will fail since OpenWRT uses CPTCFG_ATH9K_BTCOEX_SUPPORT
+> insted of CONFIG_ATH9K_BTCOEX_SUPPORT
+> 
+>> another question is，if I patch them manualy，I can not see the dnyack choice in the menuconfig，what should I do then？
+> 
+> You should add dynack to OpenWRT mac80211 package Makefile
+> 
+>> I am waiting for your suggestions.
+>> 
+>> from jammy's iPhone--
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> Regards,
+> Lorenzo
+> 
+> -- 
+> UNIX is Sexy: who | grep -i blonde | talk; cd ~; wine; talk; touch;
+> unzip; touch; strip; gasp; finger; gasp; mount; fsck; more; yes; gasp;
+> umount; make clean; sleep
