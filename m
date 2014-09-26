@@ -1,101 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f170.google.com ([209.85.217.170]:53167 "EHLO
-	mail-lb0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751027AbaIVFtH (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:59730 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756194AbaIZXY1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Sep 2014 01:49:07 -0400
-Date: Mon, 22 Sep 2014 08:48:56 +0300
-From: Johan Hedberg <johan.hedberg@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: bluetooth-next 2014-09-22
-Message-ID: <20140922054856.GA15688@t440s.P-661HNU-F1> (sfid-20140922_074927_594823_0F9A9C8B)
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="WIyZ46R2i8wDzkSu"
+	Fri, 26 Sep 2014 19:24:27 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v2 4/4] hwsim:  support creating wiphy w/out creating wlanX.
+Date: Fri, 26 Sep 2014 16:24:16 -0700
+Message-Id: <1411773856-25042-4-git-send-email-greearb@candelatech.com> (sfid-20140927_012440_871377_8AAD11F5)
+In-Reply-To: <1411773856-25042-1-git-send-email-greearb@candelatech.com>
+References: <1411773856-25042-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Ben Greear <greearb@candelatech.com>
 
---WIyZ46R2i8wDzkSu
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Good for automated testing, where user can create wlan
+interfaces with specified names.
 
-Hi John,
-
-Here are some more patches for 3.18. They include various fixes to the
-btusb HCI driver, a fix for LE SMP, as well as adding Jukka to the
-MAINTAINERS file for generic 6LoWPAN (as requested by Alexander Aring).
-
-I've held on to this pull request a bit since we were waiting for a SCO
-related fix to get sorted out first. However, since the merge window is
-getting closer I decided not to wait for it. If we do get the fix sorted
-out there'll probably be a second small pull request later this week.
-
-Let me know if there are any issues pulling. Thanks.
-
-Johan
-
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
-The following changes since commit 9a783a139c32a905825ee0aa9597f485ea461f76:
 
-  Bluetooth: Fix re-setting RPA as expired when deferring update (2014-09-12 18:34:25 +0200)
+v2:  New to the series, more help with automation.
 
-are available in the git repository at:
+ drivers/net/wireless/mac80211_hwsim.c | 15 ++++++++++++---
+ drivers/net/wireless/mac80211_hwsim.h |  2 ++
+ 2 files changed, 14 insertions(+), 3 deletions(-)
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next.git for-upstream
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index e78c149..c803dd6 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -2018,7 +2018,8 @@ static struct ieee80211_ops mac80211_hwsim_mchan_ops;
+ static int mac80211_hwsim_create_radio(int channels, const char *reg_alpha2,
+ 				       const struct ieee80211_regdomain *regd,
+ 				       bool reg_strict, bool p2p_device,
+-				       bool use_chanctx, char *hwname)
++				       bool use_chanctx, char *hwname,
++				       bool no_vdev)
+ {
+ 	int err;
+ 	u8 addr[ETH_ALEN];
+@@ -2223,6 +2224,9 @@ static int mac80211_hwsim_create_radio(int channels, const char *reg_alpha2,
+ 		schedule_timeout_interruptible(1);
+ 	}
+ 
++	if (no_vdev)
++		hw->flags |= IEEE80211_HW_NO_AUTO_VDEV;
++
+ 	err = ieee80211_register_hw(hw);
+ 	if (err < 0) {
+ 		printk(KERN_DEBUG "mac80211_hwsim: ieee80211_register_hw failed (%d)\n",
+@@ -2517,11 +2521,15 @@ static int hwsim_create_radio_nl(struct sk_buff *msg, struct genl_info *info)
+ 	bool reg_strict = info->attrs[HWSIM_ATTR_REG_STRICT_REG];
+ 	bool p2p_device = info->attrs[HWSIM_ATTR_SUPPORT_P2P_DEVICE];
+ 	bool use_chanctx;
++	bool no_vdev = false;
+ 	char *hwname = NULL;
+ 
+ 	if (info->attrs[HWSIM_ATTR_CHANNELS])
+ 		chans = nla_get_u32(info->attrs[HWSIM_ATTR_CHANNELS]);
+ 
++	if (info->attrs[HWSIM_ATTR_NO_VDEV])
++		no_vdev = true;
++
+ 	if (info->attrs[HWSIM_ATTR_RADIO_NAME])
+ 		hwname = nla_data(info->attrs[HWSIM_ATTR_RADIO_NAME]);
+ 
+@@ -2542,7 +2550,8 @@ static int hwsim_create_radio_nl(struct sk_buff *msg, struct genl_info *info)
+ 	}
+ 
+ 	return mac80211_hwsim_create_radio(chans, alpha2, regd, reg_strict,
+-					   p2p_device, use_chanctx, hwname);
++					   p2p_device, use_chanctx, hwname,
++					   no_vdev);
+ }
+ 
+ static int hwsim_destroy_radio_nl(struct sk_buff *msg, struct genl_info *info)
+@@ -2774,7 +2783,7 @@ static int __init init_mac80211_hwsim(void)
+ 		err = mac80211_hwsim_create_radio(channels, reg_alpha2,
+ 						  regd, reg_strict,
+ 						  support_p2p_device,
+-						  channels > 1, NULL);
++						  channels > 1, NULL, false);
+ 		if (err < 0)
+ 			goto out_free_radios;
+ 	}
+diff --git a/drivers/net/wireless/mac80211_hwsim.h b/drivers/net/wireless/mac80211_hwsim.h
+index 37c040b..6efd9f3 100644
+--- a/drivers/net/wireless/mac80211_hwsim.h
++++ b/drivers/net/wireless/mac80211_hwsim.h
+@@ -112,6 +112,7 @@ enum {
+  *	command to force use of channel contexts even when only a
+  *	single channel is supported
+  * @HWSIM_ATTR_RADIO_NAME: Name of radio, ie phy666
++ * @HWSIM_ATTR_NO_VDEV:  Do not create vdev (wlanX) when creating radio.
+  * @__HWSIM_ATTR_MAX: enum limit
+  */
+ 
+@@ -134,6 +135,7 @@ enum {
+ 	HWSIM_ATTR_SUPPORT_P2P_DEVICE,
+ 	HWSIM_ATTR_USE_CHANCTX,
+ 	HWSIM_ATTR_RADIO_NAME,
++	HWSIM_ATTR_NO_VDEV,
+ 	__HWSIM_ATTR_MAX,
+ };
+ #define HWSIM_ATTR_MAX (__HWSIM_ATTR_MAX - 1)
+-- 
+1.7.11.7
 
-for you to fetch changes up to 5eb596f55cacc2389554a8d7572d90d5e9d4269d:
-
-  Bluetooth: Fix setting correct security level when initiating SMP (2014-09-18 17:39:37 +0200)
-
-----------------------------------------------------------------
-Johan Hedberg (2):
-      Bluetooth: btusb: Use GFP_KERNEL in btusb_send_frame()
-      Bluetooth: Fix setting correct security level when initiating SMP
-
-Jukka Rissanen (1):
-      MAINTAINERS: add maintainer for generic 6LoWPAN
-
-Marcel Holtmann (7):
-      Bluetooth: btusb: Separate TX URB allocation and submission
-      Bluetooth: Add BUILD_BUG_ON check for SKB control buffer size
-      Bluetooth: Provide HCI command opcode information to driver
-      Bluetooth: btusb: Fix old coding style issues
-      Bluetooth: btusb: Split fragement receiption into separate functions
-      Bluetooth: btusb: Implement driver internal packet reassembly
-      Bluetooth: Remove exported hci_recv_fragment function
-
- MAINTAINERS                       |   1 +
- drivers/bluetooth/btusb.c         | 511 +++++++++++++++++++++++++---------
- include/net/bluetooth/bluetooth.h |   1 +
- include/net/bluetooth/hci_core.h  |   1 -
- net/bluetooth/af_bluetooth.c      |   3 +
- net/bluetooth/hci_core.c          |  21 +-
- net/bluetooth/smp.c               |   5 +-
- 7 files changed, 385 insertions(+), 158 deletions(-)
-
-
---WIyZ46R2i8wDzkSu
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJUH7hIAAoJECQj9vv5qNQSA0AP/0XdUG9WvH2n9arYXopMOIY3
-3xD0xwP7EpH6j2f9QigDZvTBrxlE1wehKn8lhKYWbRosQFNodQK8N0LX3vcYR8mb
-TTM4vb8pAYvkOv6oyvJNCsi9gpaZMz9M1OfGIinH4yy2iSoEQi3G4mzvqtnWPtbA
-dB2rirb3XcZkgkQxiCfDQz/mjdyig1U6npaVwcKbZIdRTPuRVbJzcK4ghjztHgWg
-j2FHvMZCdyrTzqMn9NwAOb4r/E9qABuu3CbiUZTv6Gxv8SrHFh/6EUVP2RcG14rq
-Yqlr8EtqI1PNL4JpNq8IgVNLGQWm3cUilZnkoZOnfp0t/W16NMCZiXZN1UWbw6gR
-5nImAxu57wYLXwxrjA5y3W2of5l5XsI2TaZkeCbzMncA5bKcTW1lFQlfXpu15H8R
-yKmn9FU8kHMqlD1B5H7Sn+BiqmxJwh0HuSyftMVl8AHsDnMwSYVN1UX4y/cJ2XL2
-2haqBoTWFArT2D5ussl3n+UQmJOB1Vw71E97tEYbuBNEWnHANuhQRuGrxg3Q8a1i
-3ki1WHvWtFwucHDJwC8JSfPNtvgmvQos6AdNarEP7Gkt2vkV3N0XaFsWC50MQXF0
-+l9aB30mORONtZeN681RsyCCnueNOWDqdki2g7YFoyxNMunVkWtCAAJJ4cdF9Fnl
-hK9KwaUsc5rjVBOK4fjS
-=L3A7
------END PGP SIGNATURE-----
-
---WIyZ46R2i8wDzkSu--
