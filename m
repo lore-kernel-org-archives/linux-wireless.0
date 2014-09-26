@@ -1,42 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f177.google.com ([209.85.223.177]:44861 "EHLO
-	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751923AbaI0VLr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Sep 2014 17:11:47 -0400
-From: Nicholas Krause <yocto6@gmail.com>
-To: IvDoorn@gmail.com
-Cc: helmut.schaa@googlemail.com, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] wireless: Remove unnessary write over of register 11 in rt2800lib.c
-Date: Sat, 27 Sep 2014 17:11:41 -0400
-Message-Id: <1411852301-26857-1-git-send-email-yocto6@gmail.com> (sfid-20140927_231228_145794_5871A1B6)
+Received: from mx1.redhat.com ([209.132.183.28]:45996 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753803AbaIZMZF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Sep 2014 08:25:05 -0400
+Date: Fri, 26 Sep 2014 14:22:08 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: nick <yocto6@gmail.com>
+Cc: IvDoorn@gmail.com, helmut.schaa@googlemail.com,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	users@rt2x00.serialmonkey.com, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: FIXMEs in rt2800lib.c
+Message-ID: <20140926122207.GA27809@redhat.com> (sfid-20140926_142543_274327_742E66E1)
+References: <5424566B.6000206@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5424566B.6000206@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This removes the unnecessary  overwrite of register 11 in the function,
-rt2800_config_channel as we are already writing a correct value to the
-register with rt2800_rfcsr_write(rt2x00dev,11.rfcsr).
+On Thu, Sep 25, 2014 at 01:52:43PM -0400, nick wrote:
+> I seem to be hitting to fix mes in the file I listed in the subject. Would someone tell me if it's Ok to remove
+> the lines that over write certain registers.
 
-Signed-off-by: Nicholas Krause <yocto6@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800lib.c | 2 --
- 1 file changed, 2 deletions(-)
+No, as long you prove that they are not needed.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 893c9d5..fb0ae38 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -2787,8 +2787,6 @@ static void rt2800_config_channel_rf55xx(struct rt2x00_dev *rt2x00dev,
- 
- 	if (rf->channel <= 14) {
- 		rt2800_rfcsr_write(rt2x00dev, 10, 0x90);
--		/* FIXME: RF11 owerwrite ? */
--		rt2800_rfcsr_write(rt2x00dev, 11, 0x4A);
- 		rt2800_rfcsr_write(rt2x00dev, 12, 0x52);
- 		rt2800_rfcsr_write(rt2x00dev, 13, 0x42);
- 		rt2800_rfcsr_write(rt2x00dev, 22, 0x40);
--- 
-1.9.1
-
+Stanislaw
