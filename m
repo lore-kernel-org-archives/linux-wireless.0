@@ -1,49 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:55251 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751266AbaIKGxk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Sep 2014 02:53:40 -0400
-Message-ID: <1410418407.1825.0.camel@jlt4.sipsolutions.net> (sfid-20140911_085401_276287_318F4F89)
-Subject: Re: [PATCH] zd1211rw: replace ZD_ASSERT with lockdep_assert_held()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Sharma, Sanjeev" <Sanjeev_Sharma@mentor.com>
-Cc: "dsd@gentoo.org" <dsd@gentoo.org>,
-	"kune@deine-taler.de" <kune@deine-taler.de>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Date: Thu, 11 Sep 2014 08:53:27 +0200
-In-Reply-To: <FDC088D3B5555644AE135ED28A7ABDE94DF4D490@EU-MBX-02.mgc.mentorg.com>
-References: <1407827133-29493-1-git-send-email-sanjeev_sharma@mentor.com>
-	 <FDC088D3B5555644AE135ED28A7ABDE94DF2FDC2@EU-MBX-02.mgc.mentorg.com>
-	 (sfid-20140819_083957_833442_DEE44B0A) <1408707084.4349.0.camel@jlt4.sipsolutions.net>
-	 <FDC088D3B5555644AE135ED28A7ABDE94DF4D490@EU-MBX-02.mgc.mentorg.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:64867 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753458AbaIZO3W (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Sep 2014 10:29:22 -0400
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	linux-arm-kernel@lists.infradead.org, arnd@arndb.de,
+	devicetree@vger.kernel.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH] bcma: use device from DT (brcm,bus-gpio) for SoC GPIO chip
+Date: Fri, 26 Sep 2014 16:28:53 +0200
+Message-Id: <1411741733-13888-1-git-send-email-zajec5@gmail.com> (sfid-20140926_162930_251606_551D71B5)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-09-11 at 04:02 +0000, Sharma, Sanjeev wrote:
-> -----Original Message-----
-> From: Johannes Berg [mailto:johannes@sipsolutions.net] 
-> Sent: Friday, August 22, 2014 5:01 PM
-> To: Sharma, Sanjeev
-> Cc: dsd@gentoo.org; kune@deine-taler.de; linville@tuxdriver.com; linux-wireless@vger.kernel.org; netdev@vger.kernel.org; linux-kernel@vger.kernel.org
-> Subject: Re: [PATCH] zd1211rw: replace ZD_ASSERT with lockdep_assert_held()
-> 
-> On Tue, 2014-08-19 at 06:39 +0000, Sharma, Sanjeev wrote:
-> > Ping for review the patch.
-> 
-> > Make sure it compiles ...
-> 
-> Any update on this patch ?
+This will allow us to define GPIO-attached devices (LEDs, buttons) in
+the the device tree.
 
-I don't know, do you have any update for us?
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+This is based on top of
+[PATCH v6] bcma: register bcma as device tree driver
+that I hope will reach wireless-next git tree.
+---
+ Documentation/devicetree/bindings/bus/bcma.txt | 15 +++++++++++++++
+ drivers/bcma/driver_gpio.c                     |  5 +++++
+ 2 files changed, 20 insertions(+)
 
-Since your patch hasn't changed, it still cannot be compiled (when
-lockdep is enabled). Make sure you test your patch before you submit it
-again please.
-
-johannes
+diff --git a/Documentation/devicetree/bindings/bus/bcma.txt b/Documentation/devicetree/bindings/bus/bcma.txt
+index e9070c1..f1b381e 100644
+--- a/Documentation/devicetree/bindings/bus/bcma.txt
++++ b/Documentation/devicetree/bindings/bus/bcma.txt
+@@ -6,6 +6,15 @@ Required properties:
+ 
+ - reg : iomem address range of chipcommon core
+ 
++The top-level axi bus may contain following children:
++
++- gpio: GPIO chip on the SoC
++
++  Required properties:
++  - compatible: "brcm,bus-gpio"
++  - gpio-controller : makes the node a GPIO controller
++  - #gpio-cells : size of the GPIO specifier, must be 2
++
+ The cores on the AXI bus are automatically detected by bcma with the
+ memory ranges they are using and they get registered afterwards.
+ 
+@@ -17,4 +26,10 @@ Example:
+ 		ranges = <0x00000000 0x18000000 0x00100000>;
+ 		#address-cells = <1>;
+ 		#size-cells = <1>;
++
++		gpio@0 {
++			compatible = "brcm,bus-gpio";
++			gpio-controller;
++			#gpio-cells = <2>;
++		};
+ 	};
+diff --git a/drivers/bcma/driver_gpio.c b/drivers/bcma/driver_gpio.c
+index 8ea497c..7ae39a8 100644
+--- a/drivers/bcma/driver_gpio.c
++++ b/drivers/bcma/driver_gpio.c
+@@ -218,6 +218,11 @@ int bcma_gpio_init(struct bcma_drv_cc *cc)
+ #if IS_BUILTIN(CONFIG_BCM47XX)
+ 	chip->to_irq		= bcma_gpio_to_irq;
+ #endif
++#if IS_BUILTIN(CONFIG_OF)
++	if (cc->core->bus->hosttype == BCMA_HOSTTYPE_SOC)
++		chip->of_node	= of_find_compatible_node(NULL, NULL,
++							  "brcm,bus-gpio");
++#endif
+ 	switch (cc->core->bus->chipinfo.id) {
+ 	case BCMA_CHIP_ID_BCM5357:
+ 	case BCMA_CHIP_ID_BCM53572:
+-- 
+1.8.4.5
 
