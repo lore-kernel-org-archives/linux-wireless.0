@@ -1,133 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:50132 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751721AbaIJNpt (ORCPT
+Received: from mail-vc0-f178.google.com ([209.85.220.178]:42013 "EHLO
+	mail-vc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753266AbaIZGPu convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Sep 2014 09:45:49 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH 5/5] ath9k: Fix beacon miss handling
-Date: Wed, 10 Sep 2014 19:16:00 +0530
-Message-Id: <1410356760-10901-6-git-send-email-sujith@msujith.org> (sfid-20140910_154552_665203_A66E6239)
-In-Reply-To: <1410356760-10901-1-git-send-email-sujith@msujith.org>
-References: <1410356760-10901-1-git-send-email-sujith@msujith.org>
+	Fri, 26 Sep 2014 02:15:50 -0400
+Received: by mail-vc0-f178.google.com with SMTP id lf12so6506084vcb.37
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Sep 2014 23:15:49 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <542448C0.9040505@Informatik.TU-Cottbus.DE>
+References: <542448C0.9040505@Informatik.TU-Cottbus.DE>
+Date: Fri, 26 Sep 2014 08:15:49 +0200
+Message-ID: <CA+BoTQnTqjp0-CqptLEm=Zm2T9zYUvsfiF9Op7c2NhrQS5ahMg@mail.gmail.com> (sfid-20140926_081554_425788_67A72224)
+Subject: Re: Question about debugging mac80211 without printk
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Pink <pink@informatik.tu-cottbus.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On 25 September 2014 18:54, Pink <pink@informatik.tu-cottbus.de> wrote:
+> Hi,
+>
+> actually if have the following problem, if have a lot of debug messages
+> using printk inside the mac layer but if there is a
+> critical bug in the source code of the mac80211 module
+> the system goes into kernel panic state during execution. Unfortunately so
+> far i now, it isn't possible
+> after a system restart to identify the rough position of the bug looking for
+> the debug msg's written before the bug has occured in
+> dmesg or syslog because the messages were not saved in follow of the crash.
+>
+> Now i thought user mode linux (uml) is maybe a potential solution to
+> identify the bug, if the kernel running the mac layer
+> is executed as virtual machine in uml. But i didn't found any kind of
+> description how to forward the physical wireless card except using TAP/TUN
+> device to the vm so
+> that the kernel inside the vm can run its mac layer directly on the card.
+>
+> Now my question what tools are you use for the development and testing of
+> the ath wireless driver
+> as well as the complete wireless stack including mac80211. Is it user mode
+> linux or something else?
+> If user mode linux is used, is there any howto available to forward the
+> atheros card to the vm.
 
-The NoA duration for a GO is half the beacon interval
-and a concurrent context like a STA can be active only
-for that duration, before switching back to the GO's
-operating channel.
+You can try using KVM and pass through devices to a virtual machine.
+Passing USB through has no extra requirements albeit from my
+experience some USB controllers and USB devices have some issues
+sometimes. PCI pass-through requires VT-d or AMD-v to be supported on
+both CPU and motherboard.
 
-Currently, when multiple beacons are missed, the dwell
-time for the STA context is extended to improve the
-chances of receiving a beacon. But the NoA is not updated
-and this will cause problems since the GO is offline
-for a period that is longer than the advertised duration.
+I actually use this kind of setup (I'm using QEMU) myself. I can
+attach gdb, emulate serial console, pass-through rootfs via 9p and
+just boot a kernel in the VM omitting bootloader which is really
+convenient. If it crashes I can get pretty much all info I need.
 
-Fix this by ensuring that the NoA is updated first before
-extending the time slot for the STA context. Also make
-sure that non-periodic NoA is used for a one-time, longer
-absence period.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h   |  1 +
- drivers/net/wireless/ath/ath9k/channel.c | 44 +++++++++++++++++++++++---------
- 2 files changed, 33 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 305db1a..660c151 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -380,6 +380,7 @@ struct ath_chanctx_sched {
- 	bool offchannel_pending;
- 	bool wait_switch;
- 	bool force_noa_update;
-+	bool extend_absence;
- 	enum ath_chanctx_state state;
- 	u8 beacon_miss;
- 
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index a42fd85..a1b3282 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -371,13 +371,6 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
- 		sc->sched.switch_start_time = tsf_time;
- 		sc->cur_chan->last_beacon = sc->sched.next_tbtt;
- 
--		/* If at least two consecutive beacons were missed on the STA
--		 * chanctx, stay on the STA channel for one extra beacon period,
--		 * to resync the timer properly.
--		 */
--		if (ctx->active && sc->sched.beacon_miss >= 2)
--			sc->sched.offchannel_duration = 3 * beacon_int / 2;
--
- 		/*
- 		 * If an offchannel switch is scheduled to happen after
- 		 * a beacon transmission, update the NoA with one-shot
-@@ -405,6 +398,26 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
- 			break;
- 		}
- 
-+
-+		/*
-+		 * Clear the extend_absence flag if it had been
-+		 * set during the previous beacon transmission,
-+		 * since we need to revert to the normal NoA
-+		 * schedule.
-+		 */
-+		if (ctx->active && sc->sched.extend_absence) {
-+			avp->noa_duration = 0;
-+			sc->sched.extend_absence = false;
-+		}
-+
-+		/* If at least two consecutive beacons were missed on the STA
-+		 * chanctx, stay on the STA channel for one extra beacon period,
-+		 * to resync the timer properly.
-+		 */
-+		if (ctx->active && sc->sched.beacon_miss >= 2) {
-+			avp->noa_duration = 0;
-+			sc->sched.extend_absence = true;
-+		}
- 		/* Prevent wrap-around issues */
- 		if (avp->noa_duration && tsf_time - avp->noa_start > BIT(30))
- 			avp->noa_duration = 0;
-@@ -418,11 +431,17 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
- 		    (!avp->noa_duration || sc->sched.force_noa_update)) {
- 			avp->noa_index++;
- 			avp->noa_start = tsf_time;
--			avp->noa_duration =
--				TU_TO_USEC(cur_conf->beacon_interval) / 2 +
--				sc->sched.channel_switch_time;
- 
--			if (test_bit(ATH_OP_SCANNING, &common->op_flags))
-+			if (sc->sched.extend_absence)
-+				avp->noa_duration = (3 * beacon_int / 2) +
-+					sc->sched.channel_switch_time;
-+			else
-+				avp->noa_duration =
-+					TU_TO_USEC(cur_conf->beacon_interval) / 2 +
-+					sc->sched.channel_switch_time;
-+
-+			if (test_bit(ATH_OP_SCANNING, &common->op_flags) ||
-+			    sc->sched.extend_absence)
- 				avp->periodic_noa = false;
- 			else
- 				avp->periodic_noa = true;
-@@ -520,7 +539,8 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
- 		sc->sched.wait_switch = false;
- 
- 		tsf_time = TU_TO_USEC(cur_conf->beacon_interval) / 2;
--		if (sc->sched.beacon_miss >= 2) {
-+
-+		if (sc->sched.extend_absence) {
- 			sc->sched.beacon_miss = 0;
- 			tsf_time *= 3;
- 		}
--- 
-2.1.0
-
+Michał
