@@ -1,61 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f179.google.com ([209.85.217.179]:39427 "EHLO
-	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750840AbaIGITY (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:40145 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754703AbaIZRpL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Sep 2014 04:19:24 -0400
-Received: by mail-lb0-f179.google.com with SMTP id p9so2823864lbv.10
-        for <linux-wireless@vger.kernel.org>; Sun, 07 Sep 2014 01:19:22 -0700 (PDT)
+	Fri, 26 Sep 2014 13:45:11 -0400
+Date: Fri, 26 Sep 2014 13:35:15 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: Re: pull request: iwlwifi-next 2014-09-21
+Message-ID: <20140926173515.GE22967@tuxdriver.com> (sfid-20140926_194517_061371_528DDFC5)
+References: <541F23D2.90600@gmail.com>
+ <541F251C.8080105@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20140902153035.GG15412@merlin.infradead.org>
-References: <54057C59.4020807@gmail.com>
-	<20140902153035.GG15412@merlin.infradead.org>
-Date: Sun, 7 Sep 2014 11:19:22 +0300
-Message-ID: <CANUX_P1gZ22Ge2pLKtb=1-3831yTRC2KmisZ59gzJk=MDw0JYA@mail.gmail.com> (sfid-20140907_101940_044926_77A6EE08)
-Subject: Re: pull request: new firmware for 7260 / 7265 / 3160: 25.222.9.0
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Kyle McMartin <kyle@infradead.org>
-Cc: linux-firmware@kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <541F251C.8080105@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Emmanuel Grumbach
-egrumbach@gmail.com
+On Sun, Sep 21, 2014 at 10:21:00PM +0300, Emmanuel Grumbach wrote:
+> 
+> 
+> On 09/21/2014 10:15 PM, Emmanuel Grumbach wrote:
+> > Hi John,
+> > 
+> > Here is another (last?) pull request for 3.18.
+> > 
+> > I have here a few things that depend on the latest mac80211's changes: RRM, TPC, Quiet Period etc...
+> > Eyal keeps improving our rate control and we have a new device ID. This last patch should probably
+> > have gone to wireless.git, but at that stage, I preferred to send it to -next and CC stable.
+> > 
+> > Let me know if you have issues!
+> > 
+> > The following changes since commit 6bd2bd27baf12fa0f2e6d611509fc0e1bffb0f97:
+> > 
+> >   Merge tag 'mac80211-next-for-john-2014-09-12' of git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next (2014-09-15 14:51:23 -0400)
+> > 
+> > are available in the git repository at:
+> > 
+> > 
+> >   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git master
+> > 
+> > for you to fetch changes up to 908f324b609320a8839211922f8c4946c891d56c:
+> > 
+> I had to edit one commit message - new HEAD: 48849a4150e353656dc5d207f2a56ebd00484ce6
 
+I'm pulling this now, but I don't plan to push it back out until
+after Dave pulls my earlier pull request...
 
-On Tue, Sep 2, 2014 at 6:30 PM, Kyle McMartin <kyle@infradead.org> wrote:
-> On Tue, Sep 02, 2014 at 11:14:17AM +0300, Emmanuel Grumbach wrote:
->> Dear linux-firmware.git maintainers,
->>
->> Intel released a new -9 firmware for its WiFi adpaters for the 7000 family.
->> No new features here, but only bug fixes.
->>
->> The following changes since commit e2844339cb779c00f856c554958e16beca99b462:
->>
->>   iwlwifi: update firmware for 3160 / 7260 / 7265 (2014-05-19 14:45:28 +0300)
->>
->> are available in the git repository at:
->>
->>   git://git.kernel.org/pub/scm/linux/kernel/git/egrumbach/linux-firmware.git master
->>
->> for you to fetch changes up to e302d06fb8cd3ceade38ce484636094b1cd25a23:
->>
->>   iwlwifi: update firmware for 3160 / 7260 / 7265 (2014-09-02 11:06:42 +0300)
->>
->> ----------------------------------------------------------------
->> Emmanuel Grumbach (1):
->>       iwlwifi: update firmware for 3160 / 7260 / 7265
->>
->>  WHENCE               |   6 +++---
->>  iwlwifi-3160-9.ucode | Bin 666792 -> 669156 bytes
->>  iwlwifi-7260-9.ucode | Bin 679380 -> 681464 bytes
->>  iwlwifi-7265-9.ucode | Bin 691960 -> 697012 bytes
->>  4 files changed, 3 insertions(+), 3 deletions(-)
->>
->
-> thanks, i'll get to this today.
-
-I couldn't find the new firmware in linux-firmware.git, am I missing something?
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
