@@ -1,76 +1,198 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:51537 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751119AbaIITPK (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:53827 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751156AbaI0HoH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Sep 2014 15:15:10 -0400
-Date: Tue, 9 Sep 2014 15:01:16 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: Re: pull request: iwlwifi 2014-09-08
-Message-ID: <20140909190115.GL29412@tuxdriver.com> (sfid-20140909_211515_083178_CEA630C9)
-References: <540DDF37.5030801@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <540DDF37.5030801@gmail.com>
+	Sat, 27 Sep 2014 03:44:07 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH] ath: Add support for tracing
+Date: Sat, 27 Sep 2014 13:14:37 +0530
+Message-Id: <1411803877-31889-1-git-send-email-sujith@msujith.org> (sfid-20140927_094421_091881_62E14664)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 08, 2014 at 07:54:15PM +0300, Emmanuel Grumbach wrote:
-> Hi John,
-> 
-> I think I have caught up completely now - and because I had quite a bit to cover this pull request is rather big for an -rc5. Sorry about that.
-> 
-> I re-enable scheduled scan on firmware that contain the fix for the bug that Linus reported.
-> A few trivial fixes: endianity issues, the same DTIM period fix that I did in mac80211.
-> Eyal fixes a few issues we identified with EAPOL, we now send them just as if they were management frames, this solves interrop issues.
-> Johannes has another set of trivial fixes, while Luca fixes the way we configure the filters in the firmware. Last but not least, a new device is added by Oren.
-> 
-> The following changes since commit d88c8958dc13b4e4eb7fc57e3f06dc1c4abc7b1f:
-> 
->   iwlwifi: bump firmware API version to 10 for 7000 and 8000 (2014-09-01 09:50:14 +0300)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git for-john
-> 
-> for you to fetch changes up to 2cddddc56a1179aa71b460ad616176c237d4a243:
-> 
->   iwlwifi: mvm: fix an overflow in iwl_mvm_get_signal_strength (2014-09-08 19:47:22 +0300)
-> 
-> ----------------------------------------------------------------
-> Eliad Peller (1):
->       iwlwifi: increase DEFAULT_MAX_TX_POWER
-> 
-> Emmanuel Grumbach (4):
->       iwlwifi: mvm: enable scheduled scan on newest firmware
->       iwlwifi: mvm: fix endianity issues with Smart Fifo commands
->       iwlwiwi: mvm: use bss_conf->dtim_period instead of conf.ps_dtim_period
->       iwlwifi: dvm: disable power save by default
-> 
-> Eyal Shapira (2):
->       iwlwifi: mvm: treat EAPOLs like mgmt frames wrt rate
->       iwlwifi: mvm: fix an overflow in iwl_mvm_get_signal_strength
-> 
-> Johannes Berg (3):
->       iwlwifi: mvm: BT Coex - remove shadowing variable
->       iwlwifi: mvm: correctly handle PM/QoS changes from mac80211
->       iwlwifi: mvm: BT Coex - always initialize smps_mode
-> 
-> Luciano Coelho (1):
->       iwlwifi: mvm: set MAC_FILTER_IN_BEACON correctly for STA/P2P client
-> 
-> Oren Givon (1):
->       iwlwifi: add PCI IDs and add then new 3165 series
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-I'm pulling this, but some seem a bit questionable.  Please limit
-any further pull requests for 3.17 to fixes for serious bugs only.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/Kconfig  |  8 +++++
+ drivers/net/wireless/ath/Makefile |  2 ++
+ drivers/net/wireless/ath/ath.h    |  1 +
+ drivers/net/wireless/ath/main.c   |  3 ++
+ drivers/net/wireless/ath/trace.c  | 20 +++++++++++
+ drivers/net/wireless/ath/trace.h  | 71 +++++++++++++++++++++++++++++++++++++++
+ 6 files changed, 105 insertions(+)
+ create mode 100644 drivers/net/wireless/ath/trace.c
+ create mode 100644 drivers/net/wireless/ath/trace.h
 
-Thanks,
-
-John
+diff --git a/drivers/net/wireless/ath/Kconfig b/drivers/net/wireless/ath/Kconfig
+index c63d115..ce78260 100644
+--- a/drivers/net/wireless/ath/Kconfig
++++ b/drivers/net/wireless/ath/Kconfig
+@@ -25,6 +25,14 @@ config ATH_DEBUG
+ 	  Say Y, if you want to debug atheros wireless drivers.
+ 	  Right now only ath9k makes use of this.
+ 
++config ATH_TRACEPOINTS
++       bool "Atheros wireless tracing"
++       depends on ATH_DEBUG
++       depends on EVENT_TRACING
++       ---help---
++         This option enables tracepoints for atheros wireless drivers.
++	 Currently, ath9k makes use of this facility.
++
+ config ATH_REG_DYNAMIC_USER_REG_HINTS
+ 	bool "Atheros dynamic user regulatory hints"
+ 	depends on CFG80211_CERTIFICATION_ONUS
+diff --git a/drivers/net/wireless/ath/Makefile b/drivers/net/wireless/ath/Makefile
+index 7d023b0..f574aae 100644
+--- a/drivers/net/wireless/ath/Makefile
++++ b/drivers/net/wireless/ath/Makefile
+@@ -17,4 +17,6 @@ ath-objs :=	main.o \
+ 		dfs_pri_detector.o
+ 
+ ath-$(CONFIG_ATH_DEBUG) += debug.o
++ath-$(CONFIG_ATH_TRACEPOINTS) += trace.o
++
+ ccflags-y += -D__CHECK_ENDIAN__
+diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
+index a3b6e27..e5ba6fa 100644
+--- a/drivers/net/wireless/ath/ath.h
++++ b/drivers/net/wireless/ath/ath.h
+@@ -268,6 +268,7 @@ enum ATH_DEBUG {
+ };
+ 
+ #define ATH_DBG_DEFAULT (ATH_DBG_FATAL)
++#define ATH_DBG_MAX_LEN 512
+ 
+ #ifdef CONFIG_ATH_DEBUG
+ 
+diff --git a/drivers/net/wireless/ath/main.c b/drivers/net/wireless/ath/main.c
+index 8b0ac14..83f47af 100644
+--- a/drivers/net/wireless/ath/main.c
++++ b/drivers/net/wireless/ath/main.c
+@@ -20,6 +20,7 @@
+ #include <linux/module.h>
+ 
+ #include "ath.h"
++#include "trace.h"
+ 
+ MODULE_AUTHOR("Atheros Communications");
+ MODULE_DESCRIPTION("Shared library for Atheros wireless LAN cards.");
+@@ -84,6 +85,8 @@ void ath_printk(const char *level, const struct ath_common* common,
+ 	else
+ 		printk("%sath: %pV", level, &vaf);
+ 
++	trace_ath_log(common->hw->wiphy, &vaf);
++
+ 	va_end(args);
+ }
+ EXPORT_SYMBOL(ath_printk);
+diff --git a/drivers/net/wireless/ath/trace.c b/drivers/net/wireless/ath/trace.c
+new file mode 100644
+index 0000000..18fb3a0
+--- /dev/null
++++ b/drivers/net/wireless/ath/trace.c
+@@ -0,0 +1,20 @@
++/*
++ * Copyright (c) 2014 Qualcomm Atheros, Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#include <linux/module.h>
++
++#define CREATE_TRACE_POINTS
++#include "trace.h"
+diff --git a/drivers/net/wireless/ath/trace.h b/drivers/net/wireless/ath/trace.h
+new file mode 100644
+index 0000000..ba71164
+--- /dev/null
++++ b/drivers/net/wireless/ath/trace.h
+@@ -0,0 +1,71 @@
++/*
++ * Copyright (c) 2014 Qualcomm Atheros, Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#if !defined(_TRACE_H) || defined(TRACE_HEADER_MULTI_READ)
++#define _TRACE_H
++
++#include <linux/tracepoint.h>
++#include "ath.h"
++
++#undef TRACE_SYSTEM
++#define TRACE_SYSTEM ath
++
++#if !defined(CONFIG_ATH_TRACEPOINTS)
++
++#undef TRACE_EVENT
++#define TRACE_EVENT(name, proto, ...) static inline void trace_ ## name(proto) {}
++
++#endif /* CONFIG_ATH_TRACEPOINTS */
++
++TRACE_EVENT(ath_log,
++
++	    TP_PROTO(struct wiphy *wiphy,
++		     struct va_format *vaf),
++
++	    TP_ARGS(wiphy, vaf),
++
++	    TP_STRUCT__entry(
++		    __string(device, wiphy_name(wiphy))
++		    __string(driver, KBUILD_MODNAME)
++		    __dynamic_array(char, msg, ATH_DBG_MAX_LEN)
++	    ),
++
++	    TP_fast_assign(
++		    __assign_str(device, wiphy_name(wiphy));
++		    __assign_str(driver, KBUILD_MODNAME);
++		    WARN_ON_ONCE(vsnprintf(__get_dynamic_array(msg),
++					   ATH_DBG_MAX_LEN,
++					   vaf->fmt,
++					   *vaf->va) >= ATH_DBG_MAX_LEN);
++	    ),
++
++	    TP_printk(
++		    "%s %s %s",
++		    __get_str(driver),
++		    __get_str(device),
++		    __get_str(msg)
++	    )
++);
++
++#endif /* _TRACE_H || TRACE_HEADER_MULTI_READ */
++
++#undef TRACE_INCLUDE_PATH
++#define TRACE_INCLUDE_PATH .
++#undef TRACE_INCLUDE_FILE
++#define TRACE_INCLUDE_FILE trace
++
++/* This part must be outside protection */
++#include <trace/define_trace.h>
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+2.1.1
+
