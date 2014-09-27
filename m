@@ -1,56 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f176.google.com ([209.85.216.176]:39742 "EHLO
-	mail-qc0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932373AbaICMdA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Sep 2014 08:33:00 -0400
-Received: by mail-qc0-f176.google.com with SMTP id m20so8343625qcx.7
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Sep 2014 05:32:59 -0700 (PDT)
+Received: from hauke-m.de ([5.39.93.123]:41659 "EHLO hauke-m.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751156AbaI0Idk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Sep 2014 04:33:40 -0400
+Message-ID: <54267661.5000401@hauke-m.de> (sfid-20140927_103355_820031_5BC7AE7B)
+Date: Sat, 27 Sep 2014 10:33:37 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-In-Reply-To: <1409747141.911.15.camel@jlt4.sipsolutions.net>
-References: <2937689.hWkxdbjQ3v@rogge-hp-probook-6470b> <1409745133.911.7.camel@jlt4.sipsolutions.net>
- <CAGnRvurXEzkekvYA2bLnObNMpxytH0G1tgXnF5c=90wBCoWmRA@mail.gmail.com> <1409747141.911.15.camel@jlt4.sipsolutions.net>
-From: Henning Rogge <hrogge@gmail.com>
-Date: Wed, 3 Sep 2014 14:32:39 +0200
-Message-ID: <CAGnRvur4g03Ut1fiMybUy=zdA=ponAMQKbd-vc_i1RaQsThJhQ@mail.gmail.com> (sfid-20140903_150113_679102_1E0415CD)
-Subject: Re: [Patch]mac80211: Add support for mesh proxy path dump
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>
+CC: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	devicetree@vger.kernel.org
+Subject: Re: [PATCH] bcma: use device from DT (brcm,bus-gpio) for SoC GPIO
+ chip
+References: <1411741733-13888-1-git-send-email-zajec5@gmail.com>	<2539898.4te2VKk57a@wuerfel> <CACna6rwwfJOdnxhmnW7MUuUC1YBPx8bmDbiaSy1+G39hF4p7OA@mail.gmail.com>
+In-Reply-To: <CACna6rwwfJOdnxhmnW7MUuUC1YBPx8bmDbiaSy1+G39hF4p7OA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 3, 2014 at 2:25 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
->> First patch to define the two new cfg80211_ops and the necessary
->> nl80211/tracing helper functions, second patch that implements
->> get_mpp() and dump_mpp() functions?
->
-> Right. That way you have one patch that defines the API etc., and
-> another that implements it, and it's easier to review and document the
-> APIs in the right places etc.
->
-> I don't always insist on this, but it's a pretty big patch so I'd prefer
-> it this way (and it also should be almost trivial to split)
+On 09/27/2014 10:05 AM, Rafał Miłecki wrote:
+> On 27 September 2014 00:03, Arnd Bergmann <arnd@arndb.de> wrote:
+>> On Friday 26 September 2014 16:28:53 Rafał Miłecki wrote:
+>>> +The top-level axi bus may contain following children:
+>>> +
+>>> +- gpio: GPIO chip on the SoC
+>>> +
+>>> +  Required properties:
+>>> +  - compatible: "brcm,bus-gpio"
+>>> +  - gpio-controller : makes the node a GPIO controller
+>>> +  - #gpio-cells : size of the GPIO specifier, must be 2
+>>> +
+>>>
+>>
+>> I wonder if it would be better to avoid the subnode here and just
+>> make the parent itself the gpio controller.
+>>
+>> Is the gpio controller part of the bus itself in reality, or is it
+>> a device that gets probed on the bus?
+> 
+> I'm not sure how to treat this chip.
+> We control GPIOs using ChipCommon regs (and ChipCommon is one of
+> cores/devices on the bus), so you could also consider GPIO chip a
+> sub-device of ChipCommon.
+> I believe every Broadcom bus has a GPIO chip. In the ancient (MIPS)
+> times, even if we didn't have ChipCommon, there was an EXTIF core that
+> used to provide access to the GPIO chip.
+> 
+> What do you think? Should I make it separated device, even it if
+> depends on the SoC and its ChipCommon core (device)?
+> 
+I would make GPIO a subdevive of chipcommon. The chipcommon core has an
+own IRQ which is also used for GPIO.
 
-Yes, should be easy. I will come back to the list with a "v2" set of patches.
-
->> mpath and mpp use the same storage object (struct mesh_path), so I
->> reused the mpath_info struct. As far as I can see its just a "transfer
->> object" between for cfg80211 that temporarily stores data from the
->> cfg80211_ops for nl80211 messages.
->
-> Indeed, it is.
->
->> Shall I create a new struct for the two new cfg80211_ops?
->
-> No need, I just wasn't sure it really needed the same data so figured
-> I'd ask.
-
-At the moment I don't use much of the mpath_info field... but I think
-the mpp operations will always use a subset of the mpath fields, so we
-can reuse the nl80211 encoding function by reusing the struct. If this
-changes it would be trivial to switch to a different struct, because
-its not visible from userspace.
-
-Henning
+Hauke
