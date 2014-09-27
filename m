@@ -1,44 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:35851 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751280AbaIRNPR (ORCPT
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:44861 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751923AbaI0VLr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Sep 2014 09:15:17 -0400
-Date: Thu, 18 Sep 2014 09:13:25 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Vadim Kochan <vadim4j@gmail.com>
-Cc: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Emmanuel Grumbach <egrumbach@gmail.com>,
-	Oliver Hartkopp <socketcan@hartkopp.net>,
-	johannes@sipsolutions.net
-Subject: Re: Comments regarding patch about setting netns for wireless devices
-Message-ID: <20140918131324.GA20197@tuxdriver.com> (sfid-20140918_151528_105651_8BE106E7)
-References: <CAMw6YJ+uhthY83_cBHE20FgqFWdvT5M12AbfgVC7qbyHegh78Q@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAMw6YJ+uhthY83_cBHE20FgqFWdvT5M12AbfgVC7qbyHegh78Q@mail.gmail.com>
+	Sat, 27 Sep 2014 17:11:47 -0400
+From: Nicholas Krause <yocto6@gmail.com>
+To: IvDoorn@gmail.com
+Cc: helmut.schaa@googlemail.com, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] wireless: Remove unnessary write over of register 11 in rt2800lib.c
+Date: Sat, 27 Sep 2014 17:11:41 -0400
+Message-Id: <1411852301-26857-1-git-send-email-yocto6@gmail.com> (sfid-20140927_231228_145794_5871A1B6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 18, 2014 at 11:05:11AM +0300, Vadim Kochan wrote:
-> Hi All,
-> 
-> I'd like to get some feedback about the patch:
->     https://patchwork.kernel.org/patch/4890451/
-> 
-> The idea is that currently Linux wireless device is allowed to change
-> the network namespace only by nl80211 API, so RTM_LINK API does
-> not work. So I think that it should be possible to change netns
-> through the RTM_LINK too as generic way to change netns,
-> thats why I tried to solve this in the patch.
-> 
-> Thanks,
+This removes the unnecessary  overwrite of register 11 in the function,
+rt2800_config_channel as we are already writing a correct value to the
+register with rt2800_rfcsr_write(rt2x00dev,11.rfcsr).
 
-I think Johannes is vacationing right now.  I'm sure he will comment
-when he returns.
+Signed-off-by: Nicholas Krause <yocto6@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-John
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 893c9d5..fb0ae38 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -2787,8 +2787,6 @@ static void rt2800_config_channel_rf55xx(struct rt2x00_dev *rt2x00dev,
+ 
+ 	if (rf->channel <= 14) {
+ 		rt2800_rfcsr_write(rt2x00dev, 10, 0x90);
+-		/* FIXME: RF11 owerwrite ? */
+-		rt2800_rfcsr_write(rt2x00dev, 11, 0x4A);
+ 		rt2800_rfcsr_write(rt2x00dev, 12, 0x52);
+ 		rt2800_rfcsr_write(rt2x00dev, 13, 0x42);
+ 		rt2800_rfcsr_write(rt2x00dev, 22, 0x40);
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.9.1
+
