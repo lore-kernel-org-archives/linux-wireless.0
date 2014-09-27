@@ -1,42 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bar.sig21.net ([80.81.252.164]:34095 "EHLO bar.sig21.net"
+Received: from canardo.mork.no ([148.122.252.1]:40388 "EHLO canardo.mork.no"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751774AbaILUhT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Sep 2014 16:37:19 -0400
-Date: Fri, 12 Sep 2014 22:36:51 +0200
-From: Johannes Stezenbach <js@sig21.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Oleksij Rempel <linux@rempel-privat.de>,
-	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Subject: [PATCH] ath9k_htc: fix random decryption failure
-Message-ID: <20140912203651.GA10815@sig21.net> (sfid-20140912_223722_701200_1346A2AA)
+	id S1751650AbaI0GmK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Sep 2014 02:42:10 -0400
+In-Reply-To: <1411760678.18773.5.camel@dubbel>
+References: <541F23D2.90600@gmail.com> <1411327338-23099-13-git-send-email-egrumbach@gmail.com> <87ppeoc4s0.fsf@nemi.mork.no> <0BA3FCBA62E2DC44AF3030971E174FB31B5261F1@hasmsx107.ger.corp.intel.com> <87d2amd24t.fsf@nemi.mork.no> <0BA3FCBA62E2DC44AF3030971E174FB31B526977@hasmsx107.ger.corp.intel.com> <1411760678.18773.5.camel@dubbel>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+ charset=UTF-8
+Subject: Re: [PATCH 13/17] iwlwifi: 8000: fix fw name to account for revision
+From: =?ISO-8859-1?Q?Bj=F8rn_Mork?= <bjorn@mork.no>
+Date: Sat, 27 Sep 2014 08:41:55 +0200
+To: Luca Coelho <luca@coelho.fi>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+CC: Emmanuel Grumbach <egrumbach@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Kaufman, Liad" <liad.kaufman@intel.com>
+Message-ID: <A66968BA-6B95-4437-8A95-5EBFD6BCF583@mork.no> (sfid-20140927_084213_688218_13D9F0EE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In v3.15 the driver stopped to accept network packets after successful
-authentification, which could be worked around by passing the
-nohwcrypt=1 module parameter.  This was not reproducible by
-everyone, and showed random behaviour in some tests.
-It was caused by an uninitialized variable introduced
-in 4ed1a8d4a257 ("ath9k_htc: use ath9k_cmn_rx_accept") and
-used in 341b29b9cd2f ("ath9k_htc: use ath9k_cmn_rx_skb_postprocess").
 
-Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=78581
-Fixes: 341b29b9cd2f ("ath9k_htc: use ath9k_cmn_rx_skb_postprocess")
-Signed-off-by: Johannes Stezenbach <js@sig21.net>
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-index bb86eb2..f0484b1 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-@@ -978,7 +978,7 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
- 	struct ath_hw *ah = common->ah;
- 	struct ath_htc_rx_status *rxstatus;
- 	struct ath_rx_status rx_stats;
--	bool decrypt_error;
-+	bool decrypt_error = false;
- 
- 	if (skb->len < HTC_RX_FRAME_HEADER_SIZE) {
- 		ath_err(common, "Corrupted RX frame, dropping (len: %d)\n",
+On 26 September 2014 21:44:38 CEST, Luca Coelho <luca@coelho.fi> wrote:
+
+>Yeah, the temperature sensor is used to avoid heating the NIC too much
+>and potentially damaging things.  We do things like throttle down the
+>data flow and, in the most dramatic cases, turn the chip entirely off.
+>
+>The mean reason for the new debugfs entry is for, well, debugging. :)
+>
+>Bjørn, do you have any ideas on how this information could be used in a
+>useful way so that it would be worth the effort of exporting it in a
+>more "official" way?
+
+No, not really. It was just a random thought that this should be made available for monitoring applications.
+
+It sounds like this sensor is similar to the sensors associated with each CPU core. Which have been made available through the coretemp driver although I don't think that was the intention of the hardware designer. But I don't know if exporting it has any practical value.
+
+
+Bjørn
