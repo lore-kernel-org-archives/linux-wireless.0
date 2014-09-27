@@ -1,68 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:58754 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754464AbaICDJY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Sep 2014 23:09:24 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH v2 5/6] ath9k: Fix offchannel duration calculation
-Date: Wed,  3 Sep 2014 08:39:24 +0530
-Message-Id: <1409713765-9358-6-git-send-email-sujith@msujith.org> (sfid-20140903_050950_579541_76AEC232)
-In-Reply-To: <1409713765-9358-1-git-send-email-sujith@msujith.org>
-References: <1409713765-9358-1-git-send-email-sujith@msujith.org>
+Received: from mailsec108.isp.belgacom.be ([195.238.20.104]:34042 "EHLO
+	mailsec108.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751156AbaI0IW0 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Sep 2014 04:22:26 -0400
+Date: Sat, 27 Sep 2014 10:22:24 +0200 (CEST)
+From: Fabian Frederick <fabf@skynet.be>
+Reply-To: Fabian Frederick <fabf@skynet.be>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Arend van Spriel <arend@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	brcm80211-dev-list@broadcom.com, brudley@broadcom.com
+Message-ID: <2023667085.710256.1411806144444.open-xchange@webmail.nmp.skynet.be> (sfid-20140927_102255_742586_6F0D25F6)
+In-Reply-To: <20140926174636.GJ22967@tuxdriver.com>
+References: <1410809448-15982-1-git-send-email-fabf@skynet.be> <20140926174636.GJ22967@tuxdriver.com>
+Subject: Re: [PATCH V2 1/2] brcm80211: use container_of to resolve brcms_phy
+ from brcms_phy_pub
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Currently, different units are used for handling
-sc->offchannel.duration. In scan mode, it contains jiffies and in RoC
-mode, milliseconds is used. This causes confusion since in
-ath_chanctx_switch(), TU_TO_USEC is used to determine the offchannel
-duration, resulting in incorrect values. Fix this by using jiffies in
-both modes.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/channel.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+> On 26 September 2014 at 19:46 "John W. Linville" <linville@tuxdriver.com>
+> wrote:
+>
+>
+> These two patches don't seem to apply on wireless-next, and I don't
+> have time at the moment to fix them up.  Feel free to repost...
 
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index 047a76f..7a6ca44 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -601,7 +601,7 @@ static void ath_chanctx_switch(struct ath_softc *sc, struct ath_chanctx *ctx,
- 
- 	if (sc->next_chan == &sc->offchannel.chan) {
- 		sc->sched.offchannel_duration =
--			TU_TO_USEC(sc->offchannel.duration) +
-+			jiffies_to_usecs(sc->offchannel.duration) +
- 			sc->sched.channel_switch_time;
- 
- 		if (chandef) {
-@@ -688,7 +688,8 @@ void ath_offchannel_next(struct ath_softc *sc)
- 	} else if (sc->offchannel.roc_vif) {
- 		vif = sc->offchannel.roc_vif;
- 		sc->offchannel.chan.txpower = vif->bss_conf.txpower;
--		sc->offchannel.duration = sc->offchannel.roc_duration;
-+		sc->offchannel.duration =
-+			msecs_to_jiffies(sc->offchannel.roc_duration);
- 		sc->offchannel.state = ATH_OFFCHANNEL_ROC_START;
- 		ath_chanctx_offchan_switch(sc, sc->offchannel.roc_chan);
- 	} else {
-@@ -959,8 +960,8 @@ static void ath_offchannel_channel_change(struct ath_softc *sc)
- 			break;
- 
- 		sc->offchannel.state = ATH_OFFCHANNEL_ROC_WAIT;
--		mod_timer(&sc->offchannel.timer, jiffies +
--			  msecs_to_jiffies(sc->offchannel.duration));
-+		mod_timer(&sc->offchannel.timer,
-+			  jiffies + sc->offchannel.duration);
- 		ieee80211_ready_on_channel(sc->hw);
- 		break;
- 	case ATH_OFFCHANNEL_ROC_DONE:
--- 
-2.1.0
+Hello John,
 
+        No problem, you already pushed the 2 same patches from the first (too
+generic) patchset
+
+        First patchset for drivers/net (see patch 3 and 4)
+        http://marc.info/?l=linux-kernel&m=141064073901334&w=2
+       
+        No updates in V2 anyway:
+        ("V2: 2 separate patches for brcm80211")
+
+Wireless-next commits:
+a38a9ef1c064
+("brcm80211: use container_of to resolve dma_info from dma_pub")
+
+d68e9f5d8549
+("brcm80211: use container_of to resolve brcms_phy from brcms_phy_pub")
+
+Regards,
+Fabian
