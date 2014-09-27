@@ -1,38 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s87.loopia.se ([194.9.94.111]:38001 "EHLO s87.loopia.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750804AbaIFDnM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Sep 2014 23:43:12 -0400
-From: Hans Wennborg <hans@hanshq.net>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Hans Wennborg <hans@hanshq.net>
-Subject: [PATCH 1/1] iwl4965: fix %d confusingly prefixed with 0x in format string
-Date: Fri,  5 Sep 2014 20:41:48 -0700
-Message-Id: <1409974908-8035-1-git-send-email-hans@hanshq.net> (sfid-20140906_054346_016979_8FC77063)
-In-Reply-To: <20140825201801.GH1966@tuxdriver.com>
-References: <20140825201801.GH1966@tuxdriver.com>
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:47723 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751156AbaI0IFp convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Sep 2014 04:05:45 -0400
+MIME-Version: 1.0
+In-Reply-To: <2539898.4te2VKk57a@wuerfel>
+References: <1411741733-13888-1-git-send-email-zajec5@gmail.com>
+	<2539898.4te2VKk57a@wuerfel>
+Date: Sat, 27 Sep 2014 10:05:44 +0200
+Message-ID: <CACna6rwwfJOdnxhmnW7MUuUC1YBPx8bmDbiaSy1+G39hF4p7OA@mail.gmail.com> (sfid-20140927_100552_878619_46C2CEBA)
+Subject: Re: [PATCH] bcma: use device from DT (brcm,bus-gpio) for SoC GPIO chip
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Hauke Mehrtens <hauke@hauke-m.de>, devicetree@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Hans Wennborg <hans@hanshq.net>
----
- drivers/net/wireless/iwlegacy/4965-mac.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On 27 September 2014 00:03, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Friday 26 September 2014 16:28:53 Rafał Miłecki wrote:
+>> +The top-level axi bus may contain following children:
+>> +
+>> +- gpio: GPIO chip on the SoC
+>> +
+>> +  Required properties:
+>> +  - compatible: "brcm,bus-gpio"
+>> +  - gpio-controller : makes the node a GPIO controller
+>> +  - #gpio-cells : size of the GPIO specifier, must be 2
+>> +
+>>
+>
+> I wonder if it would be better to avoid the subnode here and just
+> make the parent itself the gpio controller.
+>
+> Is the gpio controller part of the bus itself in reality, or is it
+> a device that gets probed on the bus?
 
-diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
-index 3dcbe2c..cf7996f 100644
---- a/drivers/net/wireless/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/iwlegacy/4965-mac.c
-@@ -4633,7 +4633,7 @@ il4965_store_tx_power(struct device *d, struct device_attribute *attr,
- 	else {
- 		ret = il_set_tx_power(il, val, false);
- 		if (ret)
--			IL_ERR("failed setting tx power (0x%d).\n", ret);
-+			IL_ERR("failed setting tx power (0x%08x).\n", ret);
- 		else
- 			ret = count;
- 	}
+I'm not sure how to treat this chip.
+We control GPIOs using ChipCommon regs (and ChipCommon is one of
+cores/devices on the bus), so you could also consider GPIO chip a
+sub-device of ChipCommon.
+I believe every Broadcom bus has a GPIO chip. In the ancient (MIPS)
+times, even if we didn't have ChipCommon, there was an EXTIF core that
+used to provide access to the GPIO chip.
+
+What do you think? Should I make it separated device, even it if
+depends on the SoC and its ChipCommon core (device)?
+
 -- 
-2.1.0.rc2.206.gedb03e5
-
+Rafał
