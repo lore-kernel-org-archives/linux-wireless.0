@@ -1,89 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f176.google.com ([209.85.192.176]:59826 "EHLO
-	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753314AbaIZDXR convert rfc822-to-8bit (ORCPT
+Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:55570
+	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752561AbaI0VA3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Sep 2014 23:23:17 -0400
-Received: by mail-pd0-f176.google.com with SMTP id z10so10551778pdj.35
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Sep 2014 20:23:17 -0700 (PDT)
-References: <509C5E93-4D6C-4CCE-A4F6-BA1CEC80AB98@gmail.com> <CAA2SeNKdOBTPnkz2y=WUFqa1sSUmxeMwDCHaT50TwL0O0uJfgQ@mail.gmail.com>
-Mime-Version: 1.0 (1.0)
-In-Reply-To: <CAA2SeNKdOBTPnkz2y=WUFqa1sSUmxeMwDCHaT50TwL0O0uJfgQ@mail.gmail.com>
-Content-Type: text/plain;
-	charset=utf-8
-Message-Id: <00852C2A-209F-48A8-9F46-2F2520CEF7EE@gmail.com> (sfid-20140926_052320_639344_07FAE82E)
-Cc: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-From: jammy <benxuelan0402@gmail.com>
-Subject: how can we fast roaming between multi-aps
-Date: Fri, 26 Sep 2014 11:22:48 +0800
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+	Sat, 27 Sep 2014 17:00:29 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
+Subject: [PATCH 1/2] ath9k: use ah->get_mac_revision for all SoC devices if available
+Date: Sat, 27 Sep 2014 22:49:43 +0200
+Message-Id: <1411850984-65861-1-git-send-email-nbd@openwrt.org> (sfid-20140927_230032_850235_CE3E1882)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all，
+It is needed for AR934x as well
 
-I have build a multi-aps network，and there are wifi clients roaming in the network. Now I use the standard ath9k driver，and I found that the time of handoff is as long as 3 to 4 seconds，it is too long to process the Voip service and so on. 
-I think the problem can be solved by modify the driver，anyone has tried it？
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/hw.c | 11 ++++-------
+ 1 file changed, 4 insertions(+), 7 deletions(-)
 
-Any help will be appreciated.
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 3aed729..cf0128e 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -222,31 +222,28 @@ static void ath9k_hw_read_revisions(struct ath_hw *ah)
+ {
+ 	u32 val;
+ 
++	if (ah->get_mac_revision)
++		ah->hw_version.macRev = ah->get_mac_revision();
++
+ 	switch (ah->hw_version.devid) {
+ 	case AR5416_AR9100_DEVID:
+ 		ah->hw_version.macVersion = AR_SREV_VERSION_9100;
+ 		break;
+ 	case AR9300_DEVID_AR9330:
+ 		ah->hw_version.macVersion = AR_SREV_VERSION_9330;
+-		if (ah->get_mac_revision) {
+-			ah->hw_version.macRev = ah->get_mac_revision();
+-		} else {
++		if (!ah->get_mac_revision) {
+ 			val = REG_READ(ah, AR_SREV);
+ 			ah->hw_version.macRev = MS(val, AR_SREV_REVISION2);
+ 		}
+ 		return;
+ 	case AR9300_DEVID_AR9340:
+ 		ah->hw_version.macVersion = AR_SREV_VERSION_9340;
+-		val = REG_READ(ah, AR_SREV);
+-		ah->hw_version.macRev = MS(val, AR_SREV_REVISION2);
+ 		return;
+ 	case AR9300_DEVID_QCA955X:
+ 		ah->hw_version.macVersion = AR_SREV_VERSION_9550;
+ 		return;
+ 	case AR9300_DEVID_AR953X:
+ 		ah->hw_version.macVersion = AR_SREV_VERSION_9531;
+-		if (ah->get_mac_revision)
+-			ah->hw_version.macRev = ah->get_mac_revision();
+ 		return;
+ 	}
+ 
+-- 
+2.0.4
 
-Waiting for your reply.
-
-from jammy's iPhone
-
-在 2014年9月22日，20:59，Lorenzo Bianconi <lorenzo.bianconi83@gmail.com> 写道：
-
->> Hi, all，
-> 
-> Hi,
-> 
->> I have read the http://www.spinics.net/lists/linux-wireless/msg124980.html for patching the ath9k driver in compat-wireless-2014-05-22 in openwrt trunk, but when I patch, for example, “the [PATCH 01/10] ath9k: export methods related to ack timeout estimation”, it failed.
-> 
-> please use latest dynack patchset:
-> http://www.spinics.net/lists/linux-wireless/msg127038.html
-> 
->> the command window showed that：
->> patching file drivers/net/wireless/ath/ath9k/hw.h
->> Hunk #1 FAILED at 1080.
->> 1 out of 1 hunk FAILED -- saving rejects to file drivers/net/wireless/ath/ath9k/hw.h.rej.
->> 
->> i have checked the hw.h file, but I can not see anything wrong, how should i do further?
-> 
-> You should port dynack on compat-wireless-2014-05-22. E.g:
-> 
-> --- a/drivers/net/wireless/ath/ath9k/hw.h
-> +++ b/drivers/net/wireless/ath/ath9k/hw.h
-> @@ -1080,6 +1080,10 @@ void ar9002_hw_load_ani_reg(struct ath_hw *ah,
-> struct ath9k_channel *chan);
-> void ath9k_ani_reset(struct ath_hw *ah, bool is_scanning);
-> void ath9k_hw_ani_monitor(struct ath_hw *ah, struct ath9k_channel *chan);
-> 
-> +void ath9k_hw_set_ack_timeout(struct ath_hw *ah, u32 us);
-> +void ath9k_hw_set_cts_timeout(struct ath_hw *ah, u32 us);
-> +void ath9k_hw_setslottime(struct ath_hw *ah, u32 us);
-> +
-> #ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
-> static inline bool ath9k_hw_btcoex_is_enabled(struct ath_hw *ah)
-> {
-> 
-> this chunk will fail since OpenWRT uses CPTCFG_ATH9K_BTCOEX_SUPPORT
-> insted of CONFIG_ATH9K_BTCOEX_SUPPORT
-> 
->> another question is，if I patch them manualy，I can not see the dnyack choice in the menuconfig，what should I do then？
-> 
-> You should add dynack to OpenWRT mac80211 package Makefile
-> 
->> I am waiting for your suggestions.
->> 
->> from jammy's iPhone--
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> Regards,
-> Lorenzo
-> 
-> -- 
-> UNIX is Sexy: who | grep -i blonde | talk; cd ~; wine; talk; touch;
-> unzip; touch; strip; gasp; finger; gasp; mount; fsck; more; yes; gasp;
-> umount; make clean; sleep
