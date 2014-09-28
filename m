@@ -1,77 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:45920 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751646AbaIKKj6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Sep 2014 06:39:58 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v4 2/2] ath10k: add testmode
-References: <20140910152136.12610.18499.stgit@potku.adurom.net>
-	<20140910152329.12610.41409.stgit@potku.adurom.net>
-	<CA+BoTQkBiKPzHBfTA2xpmgbUbutSj5Z6w6gP7EO6aotacM5_cA@mail.gmail.com>
-Date: Thu, 11 Sep 2014 13:39:41 +0300
-In-Reply-To: <CA+BoTQkBiKPzHBfTA2xpmgbUbutSj5Z6w6gP7EO6aotacM5_cA@mail.gmail.com>
-	(Michal Kazior's message of "Thu, 11 Sep 2014 11:47:34 +0200")
-Message-ID: <87ppf230gi.fsf@kamboji.qca.qualcomm.com> (sfid-20140911_124002_234959_7611B7A4)
+Received: from mx1.redhat.com ([209.132.183.28]:20553 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751404AbaI1Ih7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Sep 2014 04:37:59 -0400
+Date: Sun, 28 Sep 2014 10:35:32 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Denis Kirjanov <kda@linux-powerpc.org>
+Cc: Nicholas Krause <yocto6@gmail.com>, IvDoorn@gmail.com,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	users@rt2x00.serialmonkey.com, linux-kernel@vger.kernel.org
+Subject: Re: [rt2x00-users] [PATCH] wireless: Remove unnessary write over of
+ register 11 in rt2800lib.c
+Message-ID: <20140928083531.GA2013@redhat.com> (sfid-20140928_103856_550443_80A9B3C4)
+References: <1411852301-26857-1-git-send-email-yocto6@gmail.com>
+ <20140928070923.GA2087@redhat.com>
+ <CAOJe8K1nkeVjNpNoUBxuJv-YXj3Wr_oH86yR31U7w3Jq5j7oxw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAOJe8K1nkeVjNpNoUBxuJv-YXj3Wr_oH86yR31U7w3Jq5j7oxw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+On Sun, Sep 28, 2014 at 12:05:30PM +0400, Denis Kirjanov wrote:
+> Or someone with the hardware has to test and check that...
 
-> On 10 September 2014 17:23, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> [...]
->
-> Just a small nitpick:
->
->> +static int ath10k_tm_cmd_utf_stop(struct ath10k *ar, struct nlattr *tb[])
->> +{
->> +       int ret;
->> +
->> +       ath10k_dbg(ar, ATH10K_DBG_TESTMODE, "testmode cmd utf stop\n");
->> +
->> +       mutex_lock(&ar->conf_mutex);
->> +
->> +       if (ar->state != ATH10K_STATE_UTF) {
->> +               ret = -ENETDOWN;
->> +               goto out;
->> +       }
->> +
->> +       __ath10k_tm_cmd_utf_stop(ar);
->> +
->> +       ar->state = ATH10K_STATE_OFF; // <-- this
->
-> I would move it to __ath10k_tm_cmd_utf_stop() itself so that the state
-> is reset in ath10k_testmode_destroy() as well.
+... on all possible combinations of channel, bandwidth, signal strength, modulation type, ...
 
-Ok. It doesn't make any difference on the functionality, but I'll change
-it anyway. I folded this patch to the commit:
+Stanislaw
 
-diff --git a/drivers/net/wireless/ath/ath10k/testmode.c b/drivers/net/wireless/ath/ath10k/testmode.c
-index 9d77d72042ff..483db9cb8c96 100644
---- a/drivers/net/wireless/ath/ath10k/testmode.c
-+++ b/drivers/net/wireless/ath/ath10k/testmode.c
-@@ -253,6 +253,8 @@ static void __ath10k_tm_cmd_utf_stop(struct ath10k *ar)
- 
-        release_firmware(ar->testmode.utf);
-        ar->testmode.utf = NULL;
-+
-+       ar->state = ATH10K_STATE_OFF;
- }
- 
- static int ath10k_tm_cmd_utf_stop(struct ath10k *ar, struct nlattr *tb[])
-@@ -270,7 +272,6 @@ static int ath10k_tm_cmd_utf_stop(struct ath10k *ar, struct nlattr *tb[])
- 
-        __ath10k_tm_cmd_utf_stop(ar);
- 
--       ar->state = ATH10K_STATE_OFF;
-        ret = 0;
- 
-        ath10k_info(ar, "UTF firmware stopped\n");
-
--- 
-Kalle Valo
