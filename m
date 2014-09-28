@@ -1,48 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:44395 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751981AbaIYQz4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Sep 2014 12:55:56 -0400
-Message-ID: <5424491B.4000402@candelatech.com> (sfid-20140925_185558_682270_D4523395)
-Date: Thu, 25 Sep 2014 09:55:55 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from mx1.redhat.com ([209.132.183.28]:28321 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750854AbaI1HLt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Sep 2014 03:11:49 -0400
+Date: Sun, 28 Sep 2014 09:09:24 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Nicholas Krause <yocto6@gmail.com>
+Cc: IvDoorn@gmail.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	linux-kernel@vger.kernel.org
+Subject: Re: [rt2x00-users] [PATCH] wireless: Remove unnessary write over of
+ register 11 in rt2800lib.c
+Message-ID: <20140928070923.GA2087@redhat.com> (sfid-20140928_091226_159851_A19CC4C7)
+References: <1411852301-26857-1-git-send-email-yocto6@gmail.com>
 MIME-Version: 1.0
-To: Pink <pink@Informatik.TU-Cottbus.DE>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Question about debugging mac80211 without printk
-References: <542448C0.9040505@Informatik.TU-Cottbus.DE>
-In-Reply-To: <542448C0.9040505@Informatik.TU-Cottbus.DE>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1411852301-26857-1-git-send-email-yocto6@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/25/2014 09:54 AM, Pink wrote:
-> Hi,
+On Sat, Sep 27, 2014 at 05:11:41PM -0400, Nicholas Krause wrote:
+> This removes the unnecessary  overwrite of register 11 in the function,
+> rt2800_config_channel as we are already writing a correct value to the
+> register with rt2800_rfcsr_write(rt2x00dev,11.rfcsr).
+What make you sure that overwrite is unnecessary ?
+
 > 
-> actually if have the following problem, if have a lot of debug messages using printk inside the mac layer but if there is a
-> critical bug in the source code of the mac80211 module
-> the system goes into kernel panic state during execution. Unfortunately so far i now, it isn't possible
-> after a system restart to identify the rough position of the bug looking for the debug msg's written before the bug has occured in
-> dmesg or syslog because the messages were not saved in follow of the crash.
+> Signed-off-by: Nicholas Krause <yocto6@gmail.com>
+> ---
+>  drivers/net/wireless/rt2x00/rt2800lib.c | 2 --
+>  1 file changed, 2 deletions(-)
 > 
-> Now i thought user mode linux (uml) is maybe a potential solution to identify the bug, if the kernel running the mac layer
-> is executed as virtual machine in uml. But i didn't found any kind of description how to forward the physical wireless card except using TAP/TUN device to the
-> vm so
-> that the kernel inside the vm can run its mac layer directly on the card.
-> 
-> Now my question what tools are you use for the development and testing of the ath wireless driver
-> as well as the complete wireless stack including mac80211. Is it user mode linux or something else?
-> If user mode linux is used, is there any howto available to forward the atheros card to the vm.
+> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> index 893c9d5..fb0ae38 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> @@ -2787,8 +2787,6 @@ static void rt2800_config_channel_rf55xx(struct rt2x00_dev *rt2x00dev,
+>  
+>  	if (rf->channel <= 14) {
+>  		rt2800_rfcsr_write(rt2x00dev, 10, 0x90);
+> -		/* FIXME: RF11 owerwrite ? */
+> -		rt2800_rfcsr_write(rt2x00dev, 11, 0x4A);
+We need a prove that remove is correct, i.e. some reference to 
+vendor code or spec that current writing register twice with
+different values is wrong.
 
-Have you tried using a serial-console?  That is usually adequate for getting
-crash dumps and resolving most issues.
+NACK for the patch.
 
-Thanks,
-Ben
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Stanislaw
