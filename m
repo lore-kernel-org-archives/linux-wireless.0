@@ -1,56 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:46789 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751595AbaIYUtT (ORCPT
+Received: from mail-oi0-f54.google.com ([209.85.218.54]:54648 "EHLO
+	mail-oi0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751199AbaI1IFc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Sep 2014 16:49:19 -0400
-Received: from [192.168.100.236] (firewall.candelatech.com [70.89.124.249])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mail2.candelatech.com (Postfix) with ESMTPSA id 9A69F40C6EC
-	for <linux-wireless@vger.kernel.org>; Thu, 25 Sep 2014 13:49:18 -0700 (PDT)
-Message-ID: <54247FCD.9060205@candelatech.com> (sfid-20140925_224922_471547_72DCB536)
-Date: Thu, 25 Sep 2014 13:49:17 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Sun, 28 Sep 2014 04:05:32 -0400
+Received: by mail-oi0-f54.google.com with SMTP id a3so11500507oib.13
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Sep 2014 01:05:31 -0700 (PDT)
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Memory leak in mac80211_hwsim?
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <20140928070923.GA2087@redhat.com>
+References: <1411852301-26857-1-git-send-email-yocto6@gmail.com>
+	<20140928070923.GA2087@redhat.com>
+Date: Sun, 28 Sep 2014 12:05:30 +0400
+Message-ID: <CAOJe8K1nkeVjNpNoUBxuJv-YXj3Wr_oH86yR31U7w3Jq5j7oxw@mail.gmail.com> (sfid-20140928_100551_946968_240A94F7)
+Subject: Re: [rt2x00-users] [PATCH] wireless: Remove unnessary write over of
+ register 11 in rt2800lib.c
+From: Denis Kirjanov <kda@linux-powerpc.org>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Nicholas Krause <yocto6@gmail.com>, IvDoorn@gmail.com,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	users@rt2x00.serialmonkey.com, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While perusing the code in mac80211_hwsim, I notice what I think
-is a memory leak:
+Or someone with the hardware has to test and check that...
 
-Shouldn't there be an skb_free on the return result of skb_dequeue??
-
-static void mac80211_hwsim_tx_frame_nl(struct ieee80211_hw *hw,
-				       struct sk_buff *my_skb,
-				       int dst_portid)
-{
-	struct sk_buff *skb;
-	struct mac80211_hwsim_data *data = hw->priv;
-	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) my_skb->data;
-	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(my_skb);
-	void *msg_head;
-	unsigned int hwsim_flags = 0;
-	int i;
-	struct hwsim_tx_rate tx_attempts[IEEE80211_TX_MAX_RATES];
-
-	if (data->ps != PS_DISABLED)
-		hdr->frame_control |= cpu_to_le16(IEEE80211_FCTL_PM);
-	/* If the queue contains MAX_QUEUE skb's drop some */
-	if (skb_queue_len(&data->pending) >= MAX_QUEUE) {
-		/* Droping until WARN_QUEUE level */
-		while (skb_queue_len(&data->pending) >= WARN_QUEUE)
-			skb_dequeue(&data->pending);
-	}
-
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+On 9/28/14, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> On Sat, Sep 27, 2014 at 05:11:41PM -0400, Nicholas Krause wrote:
+>> This removes the unnecessary  overwrite of register 11 in the function,
+>> rt2800_config_channel as we are already writing a correct value to the
+>> register with rt2800_rfcsr_write(rt2x00dev,11.rfcsr).
+> What make you sure that overwrite is unnecessary ?
+>
+>>
+>> Signed-off-by: Nicholas Krause <yocto6@gmail.com>
+>> ---
+>>  drivers/net/wireless/rt2x00/rt2800lib.c | 2 --
+>>  1 file changed, 2 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c
+>> b/drivers/net/wireless/rt2x00/rt2800lib.c
+>> index 893c9d5..fb0ae38 100644
+>> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+>> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+>> @@ -2787,8 +2787,6 @@ static void rt2800_config_channel_rf55xx(struct
+>> rt2x00_dev *rt2x00dev,
+>>
+>>  	if (rf->channel <= 14) {
+>>  		rt2800_rfcsr_write(rt2x00dev, 10, 0x90);
+>> -		/* FIXME: RF11 owerwrite ? */
+>> -		rt2800_rfcsr_write(rt2x00dev, 11, 0x4A);
+> We need a prove that remove is correct, i.e. some reference to
+> vendor code or spec that current writing register twice with
+> different values is wrong.
+>
+> NACK for the patch.
+>
+> Stanislaw
+> --
+> To unsubscribe from this list: send the line "unsubscribe netdev" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
