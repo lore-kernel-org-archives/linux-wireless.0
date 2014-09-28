@@ -1,283 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:2790 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751070AbaIVMcH (ORCPT
+Received: from mail-la0-f54.google.com ([209.85.215.54]:48044 "EHLO
+	mail-la0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753898AbaI1Sbd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Sep 2014 08:32:07 -0400
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH] wil6210: ethtool ops
-Date: Mon, 22 Sep 2014 15:31:41 +0300
-Message-ID: <1411389101-4909-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20140922_143212_089025_9C6FC004)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sun, 28 Sep 2014 14:31:33 -0400
+Received: by mail-la0-f54.google.com with SMTP id ty20so4351197lab.27
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Sep 2014 11:31:31 -0700 (PDT)
+From: Sergey Ryazanov <ryazanov.s.a@gmail.com>
+To: Ralf Baechle <ralf@linux-mips.org>
+Cc: Linux MIPS <linux-mips@linux-mips.org>,
+	Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
+Subject: [PATCH 15/16] ath5k: update dependencies
+Date: Sun, 28 Sep 2014 22:33:14 +0400
+Message-Id: <1411929195-23775-16-git-send-email-ryazanov.s.a@gmail.com> (sfid-20140928_203144_891411_C69E453B)
+In-Reply-To: <1411929195-23775-1-git-send-email-ryazanov.s.a@gmail.com>
+References: <1411929195-23775-1-git-send-email-ryazanov.s.a@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Provide ethtool support; with support for interrupt coalescing through
-get_coalesce/set_coalesce.
-Placeholders for begin/complete will be used by runtime PM
-to make sure target is powered up while performing ethtool operations
+- Use config symbol defined in the driver instead of arch specific one for
+  conditional compilation.
+- Rename the ATHEROS_AR231X config symbol to AR231X.
+- Some of AR231x SoCs (e.g. AR2315) have PCI bus support, so remove !PCI
+  dependency, which block AHB support build.
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Sergey Ryazanov <ryazanov.s.a@gmail.com>
+Cc: Jiri Slaby <jirislaby@gmail.com>
+Cc: Nick Kossifidis <mickflemm@gmail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: ath5k-devel@lists.ath5k.org
 ---
- drivers/net/wireless/ath/wil6210/Makefile    |   1 +
- drivers/net/wireless/ath/wil6210/ethtool.c   | 103 +++++++++++++++++++++++++++
- drivers/net/wireless/ath/wil6210/interrupt.c |  12 +---
- drivers/net/wireless/ath/wil6210/main.c      |  26 +++++++
- drivers/net/wireless/ath/wil6210/netdev.c    |   1 +
- drivers/net/wireless/ath/wil6210/wil6210.h   |   7 +-
- 6 files changed, 138 insertions(+), 12 deletions(-)
- create mode 100644 drivers/net/wireless/ath/wil6210/ethtool.c
 
-diff --git a/drivers/net/wireless/ath/wil6210/Makefile b/drivers/net/wireless/ath/wil6210/Makefile
-index a471d74..05f29a6 100644
---- a/drivers/net/wireless/ath/wil6210/Makefile
-+++ b/drivers/net/wireless/ath/wil6210/Makefile
-@@ -14,6 +14,7 @@ wil6210-y += fw.o
- wil6210-$(CONFIG_WIL6210_TRACING) += trace.o
- wil6210-y += wil_platform.o
- wil6210-$(CONFIG_WIL6210_PLATFORM_MSM) += wil_platform_msm.o
-+wil6210-y += ethtool.o
+Changes since RFC:
+  - merge together patches that update ath5k dependencies
+
+ drivers/net/wireless/ath/ath5k/Kconfig | 10 +++++-----
+ drivers/net/wireless/ath/ath5k/ath5k.h |  2 +-
+ drivers/net/wireless/ath/ath5k/base.c  |  4 ++--
+ drivers/net/wireless/ath/ath5k/led.c   |  4 ++--
+ 4 files changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath5k/Kconfig b/drivers/net/wireless/ath/ath5k/Kconfig
+index c9f81a3..2b2a399 100644
+--- a/drivers/net/wireless/ath/ath5k/Kconfig
++++ b/drivers/net/wireless/ath/ath5k/Kconfig
+@@ -1,13 +1,13 @@
+ config ATH5K
+ 	tristate "Atheros 5xxx wireless cards support"
+-	depends on (PCI || ATHEROS_AR231X) && MAC80211
++	depends on (PCI || AR231X) && MAC80211
+ 	select ATH_COMMON
+ 	select MAC80211_LEDS
+ 	select LEDS_CLASS
+ 	select NEW_LEDS
+ 	select AVERAGE
+-	select ATH5K_AHB if (ATHEROS_AR231X && !PCI)
+-	select ATH5K_PCI if (!ATHEROS_AR231X && PCI)
++	select ATH5K_AHB if AR231X
++	select ATH5K_PCI if !AR231X
+ 	---help---
+ 	  This module adds support for wireless adapters based on
+ 	  Atheros 5xxx chipset.
+@@ -54,14 +54,14 @@ config ATH5K_TRACER
  
- # for tracing framework to find trace.h
- CFLAGS_trace.o := -I$(src)
-diff --git a/drivers/net/wireless/ath/wil6210/ethtool.c b/drivers/net/wireless/ath/wil6210/ethtool.c
-new file mode 100644
-index 0000000..d686638
---- /dev/null
-+++ b/drivers/net/wireless/ath/wil6210/ethtool.c
-@@ -0,0 +1,103 @@
-+/*
-+ * Copyright (c) 2014 Qualcomm Atheros, Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#include <linux/etherdevice.h>
-+#include <linux/pci.h>
-+#include <linux/rtnetlink.h>
-+#include <net/cfg80211.h>
-+
-+#include "wil6210.h"
-+
-+static int wil_ethtoolops_begin(struct net_device *ndev)
-+{
-+	struct wil6210_priv *wil = ndev_to_wil(ndev);
-+
-+	mutex_lock(&wil->mutex);
-+
-+	wil_dbg_misc(wil, "%s()\n", __func__);
-+
-+	return 0;
-+}
-+
-+static void wil_ethtoolops_complete(struct net_device *ndev)
-+{
-+	struct wil6210_priv *wil = ndev_to_wil(ndev);
-+
-+	wil_dbg_misc(wil, "%s()\n", __func__);
-+
-+	mutex_unlock(&wil->mutex);
-+}
-+
-+static int wil_ethtoolops_get_coalesce(struct net_device *ndev,
-+				       struct ethtool_coalesce *cp)
-+{
-+	struct wil6210_priv *wil = ndev_to_wil(ndev);
-+	u32 itr_en, itr_val = 0;
-+
-+	wil_dbg_misc(wil, "%s()\n", __func__);
-+
-+	itr_en = ioread32(wil->csr + HOSTADDR(RGF_DMA_ITR_CNT_CRL));
-+	if (itr_en & BIT_DMA_ITR_CNT_CRL_EN)
-+		itr_val = ioread32(wil->csr + HOSTADDR(RGF_DMA_ITR_CNT_TRSH));
-+
-+	cp->rx_coalesce_usecs = itr_val;
-+
-+	return 0;
-+}
-+
-+static int wil_ethtoolops_set_coalesce(struct net_device *ndev,
-+				       struct ethtool_coalesce *cp)
-+{
-+	struct wil6210_priv *wil = ndev_to_wil(ndev);
-+
-+	wil_dbg_misc(wil, "%s(%d usec)\n", __func__, cp->rx_coalesce_usecs);
-+
-+	if (wil->wdev->iftype == NL80211_IFTYPE_MONITOR) {
-+		wil_dbg_misc(wil, "No IRQ coalescing in monitor mode\n");
-+		return -EINVAL;
-+	}
-+
-+	/* only @rx_coalesce_usecs supported, ignore
-+	 * other parameters
-+	 */
-+
-+	if (cp->rx_coalesce_usecs > WIL6210_ITR_TRSH_MAX)
-+		goto out_bad;
-+
-+	wil->itr_trsh = cp->rx_coalesce_usecs;
-+	wil_set_itr_trsh(wil);
-+
-+	return 0;
-+
-+out_bad:
-+	wil_dbg_misc(wil, "Unsupported coalescing params. Raw command:\n");
-+	print_hex_dump_debug("DBG[MISC] coal ", DUMP_PREFIX_OFFSET, 16, 4,
-+			     cp, sizeof(*cp), false);
-+	return -EINVAL;
-+}
-+
-+static const struct ethtool_ops wil_ethtool_ops = {
-+	.begin		= wil_ethtoolops_begin,
-+	.complete	= wil_ethtoolops_complete,
-+	.get_drvinfo	= cfg80211_get_drvinfo,
-+	.get_coalesce	= wil_ethtoolops_get_coalesce,
-+	.set_coalesce	= wil_ethtoolops_set_coalesce,
-+};
-+
-+void wil_set_ethtoolops(struct net_device *ndev)
-+{
-+	ndev->ethtool_ops = &wil_ethtool_ops;
-+}
-diff --git a/drivers/net/wireless/ath/wil6210/interrupt.c b/drivers/net/wireless/ath/wil6210/interrupt.c
-index 7269bac..90f416f 100644
---- a/drivers/net/wireless/ath/wil6210/interrupt.c
-+++ b/drivers/net/wireless/ath/wil6210/interrupt.c
-@@ -157,17 +157,7 @@ void wil_unmask_irq(struct wil6210_priv *wil)
- 		  offsetof(struct RGF_ICR, ICC));
+ config ATH5K_AHB
+ 	bool "Atheros 5xxx AHB bus support"
+-	depends on (ATHEROS_AR231X && !PCI)
++	depends on AR231X
+ 	---help---
+ 	  This adds support for WiSoC type chipsets of the 5xxx Atheros
+ 	  family.
  
- 	/* interrupt moderation parameters */
--	if (wil->wdev->iftype == NL80211_IFTYPE_MONITOR) {
--		/* disable interrupt moderation for monitor
--		 * to get better timestamp precision
--		 */
--		iowrite32(0, wil->csr + HOSTADDR(RGF_DMA_ITR_CNT_CRL));
--	} else {
--		iowrite32(WIL6210_ITR_TRSH,
--			  wil->csr + HOSTADDR(RGF_DMA_ITR_CNT_TRSH));
--		iowrite32(BIT_DMA_ITR_CNT_CRL_EN,
--			  wil->csr + HOSTADDR(RGF_DMA_ITR_CNT_CRL));
--	}
-+	wil_set_itr_trsh(wil);
- 
- 	wil6210_unmask_irq_pseudo(wil);
- 	wil6210_unmask_irq_tx(wil);
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 21667e0..0424763 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -33,6 +33,11 @@ static bool no_fw_load = true;
- module_param(no_fw_load, bool, S_IRUGO | S_IWUSR);
- MODULE_PARM_DESC(no_fw_load, " do not download FW, use one in on-card flash.");
- 
-+static unsigned int itr_trsh = WIL6210_ITR_TRSH_DEFAULT;
-+
-+module_param(itr_trsh, uint, S_IRUGO);
-+MODULE_PARM_DESC(itr_trsh, " Interrupt moderation threshold, usecs.");
-+
- #define RST_DELAY (20) /* msec, for loop in @wil_target_reset */
- #define RST_COUNT (1 + 1000/RST_DELAY) /* round up to be above 1 sec total */
- 
-@@ -309,6 +314,7 @@ int wil_priv_init(struct wil6210_priv *wil)
- 	}
- 
- 	wil->last_fw_recovery = jiffies;
-+	wil->itr_trsh = itr_trsh;
- 
- 	return 0;
- }
-@@ -437,6 +443,26 @@ static int wil_target_reset(struct wil6210_priv *wil)
- 	return 0;
+ config ATH5K_PCI
+ 	bool "Atheros 5xxx PCI bus support"
+-	depends on (!ATHEROS_AR231X && PCI)
++	depends on (!AR231X && PCI)
+ 	---help---
+ 	  This adds support for PCI type chipsets of the 5xxx Atheros
+ 	  family.
+diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+index 85316bb..1ed7a88 100644
+--- a/drivers/net/wireless/ath/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+@@ -1647,7 +1647,7 @@ static inline struct ath_regulatory *ath5k_hw_regulatory(struct ath5k_hw *ah)
+ 	return &(ath5k_hw_common(ah)->regulatory);
  }
  
-+/**
-+ * wil_set_itr_trsh: - apply interrupt coalescing params
-+ */
-+void wil_set_itr_trsh(struct wil6210_priv *wil)
-+{
-+	/* disable, use usec resolution */
-+	W(RGF_DMA_ITR_CNT_CRL, BIT_DMA_ITR_CNT_CRL_EXT_TICK);
-+
-+	/* disable interrupt moderation for monitor
-+	 * to get better timestamp precision
-+	 */
-+	if (wil->wdev->iftype == NL80211_IFTYPE_MONITOR)
-+		return;
-+
-+	wil_info(wil, "set ITR_TRSH = %d usec\n", wil->itr_trsh);
-+	W(RGF_DMA_ITR_CNT_TRSH, wil->itr_trsh);
-+	W(RGF_DMA_ITR_CNT_CRL, BIT_DMA_ITR_CNT_CRL_EN |
-+	  BIT_DMA_ITR_CNT_CRL_EXT_TICK); /* start it */
-+}
-+
- #undef R
- #undef W
- #undef S
-diff --git a/drivers/net/wireless/ath/wil6210/netdev.c b/drivers/net/wireless/ath/wil6210/netdev.c
-index 1c0c77d..c3f0ddf 100644
---- a/drivers/net/wireless/ath/wil6210/netdev.c
-+++ b/drivers/net/wireless/ath/wil6210/netdev.c
-@@ -149,6 +149,7 @@ void *wil_if_alloc(struct device *dev, void __iomem *csr)
- 	}
+-#ifdef CONFIG_ATHEROS_AR231X
++#ifdef CONFIG_ATH5K_AHB
+ #define AR5K_AR2315_PCI_BASE	((void __iomem *)0xb0100000)
  
- 	ndev->netdev_ops = &wil_netdev_ops;
-+	wil_set_ethtoolops(ndev);
- 	ndev->ieee80211_ptr = wdev;
- 	ndev->hw_features = NETIF_F_HW_CSUM | NETIF_F_RXCSUM |
- 			    NETIF_F_SG | NETIF_F_GRO;
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index 133eeb8..00c4f0a 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -52,7 +52,9 @@ static inline u32 WIL_GET_BITS(u32 x, int b0, int b1)
- #define WIL6210_MAX_TX_RINGS	(24) /* HW limit */
- #define WIL6210_MAX_CID		(8) /* HW limit */
- #define WIL6210_NAPI_BUDGET	(16) /* arbitrary */
--#define WIL6210_ITR_TRSH	(10000) /* arbitrary - about 15 IRQs/msec */
-+/* Max supported by wil6210 value for interrupt threshold is 5sec. */
-+#define WIL6210_ITR_TRSH_MAX (5000000)
-+#define WIL6210_ITR_TRSH_DEFAULT	(300) /* usec */
- #define WIL6210_FW_RECOVERY_RETRIES	(5) /* try to recover this many times */
- #define WIL6210_FW_RECOVERY_TO	msecs_to_jiffies(5000)
- #define WIL6210_SCAN_TO		msecs_to_jiffies(10000)
-@@ -393,6 +395,7 @@ struct wil6210_priv {
- 	u32 monitor_flags;
- 	u32 secure_pcp; /* create secure PCP? */
- 	int sinfo_gen;
-+	u32 itr_trsh;
- 	/* cached ISR registers */
- 	u32 isr_misc;
- 	/* mailbox related */
-@@ -502,6 +505,7 @@ void wil_if_remove(struct wil6210_priv *wil);
- int wil_priv_init(struct wil6210_priv *wil);
- void wil_priv_deinit(struct wil6210_priv *wil);
- int wil_reset(struct wil6210_priv *wil);
-+void wil_set_itr_trsh(struct wil6210_priv *wil);
- void wil_fw_error_recovery(struct wil6210_priv *wil);
- void wil_link_on(struct wil6210_priv *wil);
- void wil_link_off(struct wil6210_priv *wil);
-@@ -511,6 +515,7 @@ int wil_down(struct wil6210_priv *wil);
- int __wil_down(struct wil6210_priv *wil);
- void wil_mbox_ring_le2cpus(struct wil6210_mbox_ring *r);
- int wil_find_cid(struct wil6210_priv *wil, const u8 *mac);
-+void wil_set_ethtoolops(struct net_device *ndev);
+ static inline void __iomem *ath5k_ahb_reg(struct ath5k_hw *ah, u16 reg)
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 8ad2550..dd42487 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -99,7 +99,7 @@ static int ath5k_reset(struct ath5k_hw *ah, struct ieee80211_channel *chan,
  
- void __iomem *wmi_buffer(struct wil6210_priv *wil, __le32 ptr);
- void __iomem *wmi_addr(struct wil6210_priv *wil, u32 ptr);
+ /* Known SREVs */
+ static const struct ath5k_srev_name srev_names[] = {
+-#ifdef CONFIG_ATHEROS_AR231X
++#ifdef CONFIG_ATH5K_AHB
+ 	{ "5312",	AR5K_VERSION_MAC,	AR5K_SREV_AR5312_R2 },
+ 	{ "5312",	AR5K_VERSION_MAC,	AR5K_SREV_AR5312_R7 },
+ 	{ "2313",	AR5K_VERSION_MAC,	AR5K_SREV_AR2313_R8 },
+@@ -142,7 +142,7 @@ static const struct ath5k_srev_name srev_names[] = {
+ 	{ "5413",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_5413 },
+ 	{ "5424",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_5424 },
+ 	{ "5133",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_5133 },
+-#ifdef CONFIG_ATHEROS_AR231X
++#ifdef CONFIG_ATH5K_AHB
+ 	{ "2316",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_2316 },
+ 	{ "2317",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_2317 },
+ #endif
+diff --git a/drivers/net/wireless/ath/ath5k/led.c b/drivers/net/wireless/ath/ath5k/led.c
+index 48a6a69b..c730677 100644
+--- a/drivers/net/wireless/ath/ath5k/led.c
++++ b/drivers/net/wireless/ath/ath5k/led.c
+@@ -162,7 +162,7 @@ int ath5k_init_leds(struct ath5k_hw *ah)
+ {
+ 	int ret = 0;
+ 	struct ieee80211_hw *hw = ah->hw;
+-#ifndef CONFIG_ATHEROS_AR231X
++#ifndef CONFIG_ATH5K_AHB
+ 	struct pci_dev *pdev = ah->pdev;
+ #endif
+ 	char name[ATH5K_LED_MAX_NAME_LEN + 1];
+@@ -171,7 +171,7 @@ int ath5k_init_leds(struct ath5k_hw *ah)
+ 	if (!ah->pdev)
+ 		return 0;
+ 
+-#ifdef CONFIG_ATHEROS_AR231X
++#ifdef CONFIG_ATH5K_AHB
+ 	match = NULL;
+ #else
+ 	match = pci_match_id(&ath5k_led_devices[0], pdev);
 -- 
-1.9.1
+1.8.5.5
 
