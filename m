@@ -1,74 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:1617 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753058AbaIHJAh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Sep 2014 05:00:37 -0400
-Message-ID: <540D7033.5010104@broadcom.com> (sfid-20140908_110040_840836_DB0BC9A3)
-Date: Mon, 8 Sep 2014 11:00:35 +0200
-From: Arend van Spriel <arend@broadcom.com>
+Received: from mx1.redhat.com ([209.132.183.28]:22019 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751316AbaI1MFc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Sep 2014 08:05:32 -0400
+Date: Sun, 28 Sep 2014 14:03:06 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: users@rt2x00.serialmonkey.com, Ivo van Doorn <IvDoorn@gmail.com>
+Subject: [PATCH] MAINTAINERS: change rt2x00 maintainer
+Message-ID: <20140928120305.GC2702@redhat.com> (sfid-20140928_140535_980398_1AD60E58)
 MIME-Version: 1.0
-To: Bastien Nocera <hadess@hadess.net>
-CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	brcm80211 development <brcm80211-dev-list@broadcom.com>
-Subject: Re: Broadcom Wi-Fi/Bluetooth on GPIO? (Baytrail tablet)
-References: <1409870378.19259.9.camel@hadess.net> <CACna6rxj7wJjWrvcLsTzFPKJP+g-an1qOwJSXZNCp99uKnhF8Q@mail.gmail.com>
-In-Reply-To: <CACna6rxj7wJjWrvcLsTzFPKJP+g-an1qOwJSXZNCp99uKnhF8Q@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/05/14 10:06, Rafał Miłecki wrote:
-> On 5 September 2014 00:39, Bastien Nocera<hadess@hadess.net>  wrote:
->> On this tablet, based on a Baytrail SoC, I found reference of this
->> Broadcom device in the DSDT, and I believe it could be the
->> Bluetooth/Wi-Fi chipset (this one[1]?):
->> ---8<---
->> Device (BRC3)
->> {
->>      Name (_ADR, One)  // _ADR: Address
->>      Name (_DEP, Package (0x01)  // _DEP: Dependencies
->>      {
->>          GPO2
->>      })
->>      Name (_HID, "BCM4321")  // _HID: Hardware ID
->>      Name (_CID, "BCM43241")  // _CID: Compatible ID
->>      Name (GMOD, ResourceTemplate ()
->>      {
->>          GpioIo (Exclusive, PullDefault, 0x0000, 0x0000,
->> IoRestrictionOutputOnly,
->>              "\\_SB.GPO2", 0x00, ResourceConsumer, ,
->>              )
->>              {   // Pin list
->>                  0x0014
->>              }
->>      })
->> ---8<---
->>
->> Am I correct in thinking that it's a Broadcom chipset? What would it
->> take to get this supported in the kernel? I'm currently stuck on a
->> slightly older kernel (3.16.0) due to Intel graphics driver problems,
->> but I couldn't find anything directly related to this in the current
->> linus tree.
->
-> Most of wireless devices in phones/tables/etc. are full MAC devices.
-> Broadcom wireless chipset names are a bit tricky. For example chipset
-> 0x4322 can be found in soft MAC devices as well as in full MAC ones.
-> However in case of Full MAC 0x4322 chipset Broadcom used marketing
-> name BCM43231.
->
-> So I think (it's just a guess) your device is a chipset identifying
-> itself as 0x4321 in a Full MAC device with marketing name BCM43241.
->
-> It seems that brcmfmac already supports BCM43241 as SDIO device. So
-> unless your tables uses some different (unsupported) chip revision, it
-> should be just a matter of interface to support your WiFi.
+After short chat with Ivo, we decided that I'll take maintenance
+of rt2x00 driver.
 
-Correct. I suspect the tablet has 43241. So you can try brcmfmac driver. 
-When you load it with 'debug=0x1416' you will probably get more from the 
-kernel log regarding the chip revision. You need to have firmware in 
-/lib/firmware/brcm. Which one depends on the chip id and/or revision.
+Thanks for Ivo's great work in the past!
 
-Regards,
-Arend
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ MAINTAINERS | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 79cd603..980f609 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -7492,13 +7492,12 @@ F:	drivers/video/fbdev/aty/aty128fb.c
+ 
+ RALINK RT2X00 WIRELESS LAN DRIVER
+ P:	rt2x00 project
+-M:	Ivo van Doorn <IvDoorn@gmail.com>
++M:	Stanislaw Gruszka <sgruszka@redhat.com>
+ M:	Helmut Schaa <helmut.schaa@googlemail.com>
+ L:	linux-wireless@vger.kernel.org
+ L:	users@rt2x00.serialmonkey.com (moderated for non-subscribers)
+ W:	http://rt2x00.serialmonkey.com/
+ S:	Maintained
+-T:	git git://git.kernel.org/pub/scm/linux/kernel/git/ivd/rt2x00.git
+ F:	drivers/net/wireless/rt2x00/
+ 
+ RAMDISK RAM BLOCK DEVICE DRIVER
+-- 
+1.8.3.1
+
