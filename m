@@ -1,280 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:47904 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932171AbaICMcn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Sep 2014 08:32:43 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 01/10] mac80211: add Intel Mobile Communications copyright
-Date: Wed,  3 Sep 2014 15:24:57 +0300
-Message-Id: <1409747106-30717-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140903_143301_333165_E255EFAD)
-In-Reply-To: <1409747106-30717-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1409747106-30717-1-git-send-email-emmanuel.grumbach@intel.com>
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:56336 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750911AbaI2KpJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Sep 2014 06:45:09 -0400
+From: Avinash Patil <patila@marvell.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <cluo@marvell.com>,
+	<huxm@marvell.com>, <yangyang@marvell.com>, <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCHv1 RESEND 3/3] mwifiex: remove unnecessary rx_q lock
+Date: Mon, 29 Sep 2014 21:44:15 +0530
+Message-ID: <1412007255-4625-3-git-send-email-patila@marvell.com> (sfid-20140929_124514_004042_7CE20873)
+In-Reply-To: <1412007255-4625-1-git-send-email-patila@marvell.com>
+References: <1412007255-4625-1-git-send-email-patila@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+SKB lists have their own lock. So this lock is not needed.
 
-Our legal structure changed at some point (see wikipedia), but
-we forgot to immediately switch over to the new copyright
-notice.
-
-For files that we have modified in the time since the change,
-add the proper copyright notice now.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
 ---
- include/net/mac80211.h     | 1 +
- net/mac80211/cfg.c         | 1 +
- net/mac80211/debugfs.c     | 1 +
- net/mac80211/debugfs_sta.c | 1 +
- net/mac80211/ibss.c        | 1 +
- net/mac80211/ieee80211_i.h | 1 +
- net/mac80211/iface.c       | 1 +
- net/mac80211/key.c         | 1 +
- net/mac80211/main.c        | 1 +
- net/mac80211/mlme.c        | 1 +
- net/mac80211/rx.c          | 1 +
- net/mac80211/scan.c        | 1 +
- net/mac80211/sta_info.c    | 1 +
- net/mac80211/sta_info.h    | 1 +
- net/mac80211/status.c      | 1 +
- net/mac80211/tdls.c        | 1 +
- net/mac80211/tx.c          | 1 +
- net/mac80211/util.c        | 1 +
- net/mac80211/wme.c         | 1 +
- 19 files changed, 19 insertions(+)
+ drivers/net/wireless/mwifiex/init.c | 1 -
+ drivers/net/wireless/mwifiex/main.h | 2 --
+ drivers/net/wireless/mwifiex/pcie.c | 4 ----
+ drivers/net/wireless/mwifiex/sdio.c | 3 ---
+ 4 files changed, 10 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index dae2e24..dee3edd 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -4,6 +4,7 @@
-  * Copyright 2002-2005, Devicescape Software, Inc.
-  * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
-  * Copyright 2007-2010	Johannes Berg <johannes@sipsolutions.net>
-+ * Copyright 2013-2014  Intel Mobile Communications GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 927b4ea..6cd0a59e 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2,6 +2,7 @@
-  * mac80211 configuration hooks for cfg80211
-  *
-  * Copyright 2006-2010	Johannes Berg <johannes@sipsolutions.net>
-+ * Copyright 2013-2014  Intel Mobile Communications GmbH
-  *
-  * This file is GPLv2 as found in COPYING.
-  */
-diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
-index 0e963bc..5746561 100644
---- a/net/mac80211/debugfs.c
-+++ b/net/mac80211/debugfs.c
-@@ -3,6 +3,7 @@
-  * mac80211 debugfs for wireless PHYs
-  *
-  * Copyright 2007	Johannes Berg <johannes@sipsolutions.net>
-+ * Copyright 2013-2014  Intel Mobile Communications GmbH
-  *
-  * GPLv2
-  *
-diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
-index 3db9664..619f00b 100644
---- a/net/mac80211/debugfs_sta.c
-+++ b/net/mac80211/debugfs_sta.c
-@@ -2,6 +2,7 @@
-  * Copyright 2003-2005	Devicescape Software, Inc.
-  * Copyright (c) 2006	Jiri Benc <jbenc@suse.cz>
-  * Copyright 2007	Johannes Berg <johannes@sipsolutions.net>
-+ * Copyright 2013-2014  Intel Mobile Communications GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 9713dc5..5e0da74 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -6,6 +6,7 @@
-  * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
-  * Copyright 2007, Michael Wu <flamingice@sourmilk.net>
-  * Copyright 2009, Johannes Berg <johannes@sipsolutions.net>
-+ * Copyright 2013-2014  Intel Mobile Communications GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index ef7a089..a0b89da 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -3,6 +3,7 @@
-  * Copyright 2005, Devicescape Software, Inc.
-  * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
-  * Copyright 2007-2010	Johannes Berg <johannes@sipsolutions.net>
-+ * Copyright 2013-2014  Intel Mobile Communications GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 01eede7..3dc63aa 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -5,6 +5,7 @@
-  * Copyright 2005-2006, Devicescape Software, Inc.
-  * Copyright (c) 2006 Jiri Benc <jbenc@suse.cz>
-  * Copyright 2008, Johannes Berg <johannes@sipsolutions.net>
-+ * Copyright 2013-2014  Intel Mobile Communications GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-diff --git a/net/mac80211/key.c b/net/mac80211/key.c
-index d808cff..0102b30 100644
---- a/net/mac80211/key.c
-+++ b/net/mac80211/key.c
-@@ -3,6 +3,7 @@
-  * Copyright 2005-2006, Devicescape Software, Inc.
-  * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
-  * Copyright 2007-2008	Johannes Berg <johannes@sipsolutions.net>
-+ * Copyright 2013-2014  Intel Mobile Communications GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index e0ab432..0de7c93 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -2,6 +2,7 @@
-  * Copyright 2002-2005, Instant802 Networks, Inc.
-  * Copyright 2005-2006, Devicescape Software, Inc.
-  * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
-+ * Copyright 2013-2014  Intel Mobile Communications GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 31a8afa..2b38968 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -5,6 +5,7 @@
-  * Copyright 2005, Devicescape Software, Inc.
-  * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
-  * Copyright 2007, Michael Wu <flamingice@sourmilk.net>
-+ * Copyright 2013-2014  Intel Mobile Communications GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index bd2c9b2..0479b70 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -3,6 +3,7 @@
-  * Copyright 2005-2006, Devicescape Software, Inc.
-  * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
-  * Copyright 2007-2010	Johannes Berg <johannes@sipsolutions.net>
-+ * Copyright 2013-2014  Intel Mobile Communications GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index a0a9381..2d18652 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -6,6 +6,7 @@
-  * Copyright 2005, Devicescape Software, Inc.
-  * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
-  * Copyright 2007, Michael Wu <flamingice@sourmilk.net>
-+ * Copyright 2013-2014  Intel Mobile Communications GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index c6ee213..6274cd7 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -1,6 +1,7 @@
- /*
-  * Copyright 2002-2005, Instant802 Networks, Inc.
-  * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
-+ * Copyright 2013-2014  Intel Mobile Communications GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index d411bcc..edd6b88 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -1,5 +1,6 @@
- /*
-  * Copyright 2002-2005, Devicescape Software, Inc.
-+ * Copyright 2013-2014  Intel Mobile Communications GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index aa06dca..2800e1c 100644
---- a/net/mac80211/status.c
-+++ b/net/mac80211/status.c
-@@ -3,6 +3,7 @@
-  * Copyright 2005-2006, Devicescape Software, Inc.
-  * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
-  * Copyright 2008-2010	Johannes Berg <johannes@sipsolutions.net>
-+ * Copyright 2013-2014  Intel Mobile Communications GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
-index 1b21050..32221fa 100644
---- a/net/mac80211/tdls.c
-+++ b/net/mac80211/tdls.c
-@@ -3,6 +3,7 @@
-  *
-  * Copyright 2006-2010	Johannes Berg <johannes@sipsolutions.net>
-  * Copyright 2014, Intel Corporation
-+ * Copyright 2014  Intel Mobile Communications GmbH
-  *
-  * This file is GPLv2 as found in COPYING.
-  */
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 464106c..6269a3e 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -3,6 +3,7 @@
-  * Copyright 2005-2006, Devicescape Software, Inc.
-  * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
-  * Copyright 2007	Johannes Berg <johannes@sipsolutions.net>
-+ * Copyright 2013-2014  Intel Mobile Communications GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 725af7a..b444f27 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -3,6 +3,7 @@
-  * Copyright 2005-2006, Devicescape Software, Inc.
-  * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
-  * Copyright 2007	Johannes Berg <johannes@sipsolutions.net>
-+ * Copyright 2013-2014  Intel Mobile Communications GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
-index d51422c..af48119 100644
---- a/net/mac80211/wme.c
-+++ b/net/mac80211/wme.c
-@@ -1,5 +1,6 @@
- /*
-  * Copyright 2004, Instant802 Networks, Inc.
-+ * Copyright 2013-2014  Intel Mobile Communications GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
+diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
+index f7c97cf..580aa45 100644
+--- a/drivers/net/wireless/mwifiex/init.c
++++ b/drivers/net/wireless/mwifiex/init.c
+@@ -447,7 +447,6 @@ int mwifiex_init_lock_list(struct mwifiex_adapter *adapter)
+ 	spin_lock_init(&adapter->cmd_free_q_lock);
+ 	spin_lock_init(&adapter->cmd_pending_q_lock);
+ 	spin_lock_init(&adapter->scan_pending_q_lock);
+-	spin_lock_init(&adapter->rx_q_lock);
+ 	spin_lock_init(&adapter->rx_proc_lock);
+ 
+ 	skb_queue_head_init(&adapter->usb_rx_data_q);
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 022486e..e263574 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -764,8 +764,6 @@ struct mwifiex_adapter {
+ 	struct list_head scan_pending_q;
+ 	/* spin lock for scan_pending_q */
+ 	spinlock_t scan_pending_q_lock;
+-	/* spin lock for RX queue */
+-	spinlock_t rx_q_lock;
+ 	/* spin lock for RX processing routine */
+ 	spinlock_t rx_proc_lock;
+ 	struct sk_buff_head usb_rx_data_q;
+diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
+index 74c0db9..c3a20f9 100644
+--- a/drivers/net/wireless/mwifiex/pcie.c
++++ b/drivers/net/wireless/mwifiex/pcie.c
+@@ -1237,7 +1237,6 @@ static int mwifiex_pcie_process_recv_data(struct mwifiex_adapter *adapter)
+ 	struct sk_buff *skb_tmp = NULL;
+ 	struct mwifiex_pcie_buf_desc *desc;
+ 	struct mwifiex_pfu_buf_desc *desc2;
+-	unsigned long flags;
+ 
+ 	if (!mwifiex_pcie_ok_to_access_hw(adapter))
+ 		mwifiex_pm_wakeup_card(adapter);
+@@ -1289,10 +1288,7 @@ static int mwifiex_pcie_process_recv_data(struct mwifiex_adapter *adapter)
+ 				card->rxbd_rdptr, wrptr, rx_len);
+ 			skb_pull(skb_data, INTF_HEADER_LEN);
+ 			if (adapter->rx_work_enabled) {
+-				spin_lock_irqsave(&adapter->rx_q_lock, flags);
+ 				skb_queue_tail(&adapter->rx_data_q, skb_data);
+-				spin_unlock_irqrestore(&adapter->rx_q_lock,
+-						       flags);
+ 				adapter->data_received = true;
+ 				atomic_inc(&adapter->rx_pending);
+ 			} else {
+diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
+index ea8fc58..db9e4e3 100644
+--- a/drivers/net/wireless/mwifiex/sdio.c
++++ b/drivers/net/wireless/mwifiex/sdio.c
+@@ -1039,7 +1039,6 @@ static int mwifiex_decode_rx_packet(struct mwifiex_adapter *adapter,
+ 				    struct sk_buff *skb, u32 upld_typ)
+ {
+ 	u8 *cmd_buf;
+-	unsigned long flags;
+ 	__le16 *curr_ptr = (__le16 *)skb->data;
+ 	u16 pkt_len = le16_to_cpu(*curr_ptr);
+ 
+@@ -1050,9 +1049,7 @@ static int mwifiex_decode_rx_packet(struct mwifiex_adapter *adapter,
+ 	case MWIFIEX_TYPE_DATA:
+ 		dev_dbg(adapter->dev, "info: --- Rx: Data packet ---\n");
+ 		if (adapter->rx_work_enabled) {
+-			spin_lock_irqsave(&adapter->rx_q_lock, flags);
+ 			skb_queue_tail(&adapter->rx_data_q, skb);
+-			spin_unlock_irqrestore(&adapter->rx_q_lock, flags);
+ 			adapter->data_received = true;
+ 			atomic_inc(&adapter->rx_pending);
+ 		} else {
 -- 
-1.9.1
+1.8.1.4
 
