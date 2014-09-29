@@ -1,61 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:46911 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753626AbaILJKk (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:49682 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754443AbaI2QHG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Sep 2014 05:10:40 -0400
-From: Avinash Patil <patila@marvell.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
-	<huxm@marvell.com>, <yangyang@marvell.com>, <cluo@marvell.com>,
-	<maithili@marvell.com>, Avinash Patil <patila@marvell.com>
-Subject: [PATCHv2 12/16] mwifiex: process TX even when scan is ongoing
-Date: Fri, 12 Sep 2014 20:08:56 +0530
-Message-ID: <1410532740-3173-13-git-send-email-patila@marvell.com> (sfid-20140912_111105_683288_E05CAD66)
-In-Reply-To: <1410532740-3173-1-git-send-email-patila@marvell.com>
-References: <1410532740-3173-1-git-send-email-patila@marvell.com>
+	Mon, 29 Sep 2014 12:07:06 -0400
+Message-ID: <542983AA.9040200@candelatech.com> (sfid-20140929_180719_889735_D7A529EC)
+Date: Mon, 29 Sep 2014 09:07:06 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: Michal Kazior <michal.kazior@tieto.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH v2 03/10] ath10k: support ethtool stats.
+References: <1411507045-18973-1-git-send-email-greearb@candelatech.com> <1411507045-18973-3-git-send-email-greearb@candelatech.com> <CA+BoTQkK=6NfPN9e-3qN2Qaq2RLVdEwrp5x03_T=E2ZLcBeiaA@mail.gmail.com> <5422D71F.7080809@candelatech.com> <87eguu3ki1.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87eguu3ki1.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With channel scan gap, FW comes back to connected channel after each
-single channel scan. So we can safely transfer data to FW during scan.
-FW would send this data once on connected channel.
+On 09/29/2014 01:21 AM, Kalle Valo wrote:
+> Ben Greear <greearb@candelatech.com> writes:
+> 
+>> On 09/24/2014 12:44 AM, Michal Kazior wrote:
+>>> On 23 September 2014 23:17,  <greearb@candelatech.com> wrote:
+>>> [...]
+>>>> +void ath10k_get_et_stats(struct ieee80211_hw *hw,
+>>>> +                        struct ieee80211_vif *vif,
+>>>> +                        struct ethtool_stats *stats, u64 *data)
+>>>> +{
+>>>> +       struct ath10k *ar = hw->priv;
+>>>> +       int i = 0;
+>>>> +       struct ath10k_target_stats *fw_stats;
+>>>> +
+>>>> +       fw_stats = &ar->debug.target_stats;
+>>>> +
+>>>> +       mutex_lock(&ar->conf_mutex);
+>>>> +
+>>>> +       if (ar->state == ATH10K_STATE_ON)
+>>>> +               ath10k_refresh_peer_stats(ar);
+>>>> +
+>>>> +       mutex_unlock(&ar->conf_mutex);
+>>>
+>>> Just for correctness sake - it's probably a good idea to
+>>> mutex_unlock() at the end (i.e. after spin_unlock_bh()) to make sure
+>>> the stats are for this particular request. With your patch there's a
+>>> very slight chance that, e.g. fw_stats debug file is being read at the
+>>> same time and it updates fw stats between the above mutex_unlock() and
+>>> following spin_lock_bh().
+>>
+>> That makes no difference at all to the user though, and it is one less
+>> set of nested locks to worry about.
+> 
+> I still do not want to have known races, especially when it's so easy to
+> fix. The ethtool patches patches conflict with Michal's fw_stats fixes.
+> Let me take the ethtool patches so that I can rebase them, fix this race
+> and do some other small changes as well. I'll send v2 soon.
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
----
- drivers/net/wireless/mwifiex/main.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+Your v2 patches are fine with me.
 
-diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
-index dfa37ea..d6d2342 100644
---- a/drivers/net/wireless/mwifiex/main.c
-+++ b/drivers/net/wireless/mwifiex/main.c
-@@ -284,8 +284,9 @@ process_start:
- 			    adapter->tx_lock_flag)
- 				break;
- 
--			if ((adapter->scan_processing &&
--			     !adapter->scan_delay_cnt) || adapter->data_sent ||
-+			if ((!adapter->scan_chan_gap_enabled &&
-+			     !adapter->scan_delay_cnt &&
-+			     adapter->scan_processing) || adapter->data_sent ||
- 			    mwifiex_wmm_lists_empty(adapter)) {
- 				if (adapter->cmd_sent || adapter->curr_cmd ||
- 				    (!is_command_pending(adapter)))
-@@ -339,7 +340,8 @@ process_start:
- 			}
- 		}
- 
--		if ((!adapter->scan_processing || adapter->scan_delay_cnt) &&
-+		if ((adapter->scan_chan_gap_enabled ||
-+		     (!adapter->scan_processing || adapter->scan_delay_cnt)) &&
- 		    !adapter->data_sent && !mwifiex_wmm_lists_empty(adapter)) {
- 			mwifiex_wmm_process_tx(adapter);
- 			if (adapter->hs_activated) {
+Thanks,
+Ben
+
+
 -- 
-1.8.1.4
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
