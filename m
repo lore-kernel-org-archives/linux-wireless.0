@@ -1,102 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:32622 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753529AbaIOJRY (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:44072 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751330AbaI2GZH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Sep 2014 05:17:24 -0400
-Date: Mon, 15 Sep 2014 12:17:04 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: marius.kotsbak@gmail.com
-Cc: linux-wireless@vger.kernel.org
-Subject: re: net/usb: Add Samsung Kalmia driver for Samsung GT-B3730
-Message-ID: <20140915091704.GA22730@mwanda> (sfid-20140915_111727_723160_2096E7D2)
+	Mon, 29 Sep 2014 02:25:07 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Sujith Manoharan <sujith@msujith.org>
+CC: John Linville <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>, <ath9k-devel@qca.qualcomm.com>
+Subject: Re: [PATCH v2] ath: Add support for tracing
+References: <1411804665-6954-1-git-send-email-sujith@msujith.org>
+Date: Mon, 29 Sep 2014 09:25:00 +0300
+In-Reply-To: <1411804665-6954-1-git-send-email-sujith@msujith.org> (Sujith
+	Manoharan's message of "Sat, 27 Sep 2014 13:27:45 +0530")
+Message-ID: <87vbo72bb7.fsf@kamboji.qca.qualcomm.com> (sfid-20140929_082512_828365_765FCA79)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I started writing a Smatch check to look for:
+Sujith Manoharan <sujith@msujith.org> writes:
 
-	skb->len - foo
+> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+>
+> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/Kconfig  |  8 +++++
+>  drivers/net/wireless/ath/Makefile |  4 +++
+>  drivers/net/wireless/ath/ath.h    |  1 +
+>  drivers/net/wireless/ath/main.c   |  3 ++
+>  drivers/net/wireless/ath/trace.c  | 20 +++++++++++
+>  drivers/net/wireless/ath/trace.h  | 71 +++++++++++++++++++++++++++++++++++++++
 
-where foo might be more than skb->len.  I don't know this code well
-enough to say what the rules are exactly.  I chose a fairly suspect
-bit of code to use as an example to get some feedback.
+Why add it to ath.ko module? What drivers are going to use this?
 
-Hello Marius B. Kotsbak,
+Because all ath* drivers are different, I suspect there is not that much
+to share between drivers and that's why it would be better to have the
+trace points per driver.
 
-The patch d40261236e8e: "net/usb: Add Samsung Kalmia driver for
-Samsung GT-B3730" from Jun 12, 2011, leads to the following static
-checker warning:
+And I just checked that currently we have trace points for ath10k,
+ath5k, ath6kl and wil6210. IMHO adding more trace points to ath.ko just
+makes this confusing.
 
-	drivers/net/usb/kalmia.c:281 kalmia_rx_fixup()
-	warn: this assumes skb->len is at least 12 bytes
-
-drivers/net/usb/kalmia.c
-   245          /* incomplete header? */
-   246          if (skb->len < KALMIA_HEADER_LENGTH)
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-We verify that it is at least 6.
-
-   247                  return 0;
-   248  
-   249          do {
-
-This is a do while (skb->len) loop.  Shouldn't the check for invalid
-skb->len be inside the loop?
-
-   250                  struct sk_buff *skb2 = NULL;
-   251                  u8 *header_start;
-   252                  u16 usb_packet_length, ether_packet_length;
-   253                  int is_last;
-   254  
-   255                  header_start = skb->data;
-   256  
-   257                  if (unlikely(header_start[0] != 0x57 || header_start[1] != 0x44)) {
-   258                          if (!memcmp(header_start, EXPECTED_UNKNOWN_HEADER_1,
-   259                                  sizeof(EXPECTED_UNKNOWN_HEADER_1)) || !memcmp(
-   260                                  header_start, EXPECTED_UNKNOWN_HEADER_2,
-   261                                  sizeof(EXPECTED_UNKNOWN_HEADER_2))) {
-   262                                  netdev_dbg(dev->net,
-   263                                          "Received expected unknown frame header: %6phC. Package length: %i\n",
-   264                                          header_start,
-   265                                          skb->len - KALMIA_HEADER_LENGTH);
-   266                          }
-   267                          else {
-   268                                  netdev_err(dev->net,
-   269                                          "Received unknown frame header: %6phC. Package length: %i\n",
-   270                                          header_start,
-   271                                          skb->len - KALMIA_HEADER_LENGTH);
-   272                                  return 0;
-   273                          }
-   274                  }
-   275                  else
-   276                          netdev_dbg(dev->net,
-   277                                  "Received header: %6phC. Package length: %i\n",
-   278                                  header_start, skb->len - KALMIA_HEADER_LENGTH);
-   279  
-   280                  /* subtract start header and end header */
-   281                  usb_packet_length = skb->len - (2 * KALMIA_HEADER_LENGTH);
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-We could end up with usb_packet_length is a negative number truncated
-to a largish u16.  Positive obviously.
-
-   282                  ether_packet_length = get_unaligned_le16(&header_start[2]);
-   283                  skb_pull(skb, KALMIA_HEADER_LENGTH);
-   284  
-   285                  /* Some small packets misses end marker */
-   286                  if (usb_packet_length < ether_packet_length) {
-
-This condition is not true because usb_packet_length is largish.
-
-   287                          ether_packet_length = usb_packet_length
-   288                                  + KALMIA_HEADER_LENGTH;
-   289                          is_last = true;
-   290                  }
-   291                  else {
-   292                          netdev_dbg(dev->net, "Correct package length #%i", i
-   293                                  + 1);
-   294  
-
-regards,
-dan carpenter
+-- 
+Kalle Valo
