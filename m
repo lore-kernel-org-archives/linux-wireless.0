@@ -1,100 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yk0-f177.google.com ([209.85.160.177]:45845 "EHLO
-	mail-yk0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750882AbaIJMTW (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:58662 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751403AbaI2GyE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Sep 2014 08:19:22 -0400
+	Mon, 29 Sep 2014 02:54:04 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Sujith Manoharan <sujith@msujith.org>
+CC: John Linville <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>, <ath9k-devel@qca.qualcomm.com>
+Subject: Re: [PATCH v2] ath: Add support for tracing
+References: <1411804665-6954-1-git-send-email-sujith@msujith.org>
+	<87vbo72bb7.fsf@kamboji.qca.qualcomm.com>
+	<21544.64579.558712.465388@gargle.gargle.HOWL>
+Date: Mon, 29 Sep 2014 09:53:57 +0300
+In-Reply-To: <21544.64579.558712.465388@gargle.gargle.HOWL> (Sujith
+	Manoharan's message of "Mon, 29 Sep 2014 11:59:23 +0530")
+Message-ID: <87r3yu3oje.fsf@kamboji.qca.qualcomm.com> (sfid-20140929_085410_853040_FF6BA87C)
 MIME-Version: 1.0
-In-Reply-To: <541037D2.7060007@gmail.com>
-References: <20140213201421.GJ22203@tuxdriver.com>
-	<1397581703.8212.5.camel@x220>
-	<CAHNKnsQQ42-XnXrubHAy4PF3H2ynbGDdSMP7MvDS_1aRozYF=A@mail.gmail.com>
-	<1403087119.1984.93.camel@x220>
-	<CAHNKnsSfaT7xC5_wv=TrGLEQ2pjC91Q1XG891_n64OuR0fA9Jg@mail.gmail.com>
-	<1403091974.1984.102.camel@x220>
-	<1409911856.7832.9.camel@x220>
-	<CAHNKnsRipRHicKOUW4dCutD1-sUG6qPnP2QuOveH_t1MFX9XgQ@mail.gmail.com>
-	<1409916824.7832.20.camel@x220>
-	<CAHNKnsQ1gt=DRBTd9Q9yos1idqmXMepEPvhm8a7unP-whzNAgg@mail.gmail.com>
-	<20140909182734.GJ29412@tuxdriver.com>
-	<CAHNKnsQ8G3ZFHshq7wOqex1J6DbVD5uHVAyvs+aDC2Znk5zWww@mail.gmail.com>
-	<541037D2.7060007@gmail.com>
-Date: Wed, 10 Sep 2014 16:19:21 +0400
-Message-ID: <CAHNKnsTtqz10c=vV-f10awLanYZzom3kJ1cO5xgTGs-t3O9NYg@mail.gmail.com> (sfid-20140910_141943_934809_21BDE9DE)
-Subject: Re: [PATCH 09/28] Remove ATHEROS_AR231X
-From: Sergey Ryazanov <ryazanov.s.a@gmail.com>
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Paul Bolle <pebolle@tiscali.nl>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	Oleksij Rempel <linux@rempel-privat.de>,
-	Richard Weinberger <richard@nod.at>,
-	Jonathan Bither <jonbither@gmail.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	ath5k-devel@venema.h4ckr.net, open@hauke-m.de,
-	"list@hauke-m.de:NETWORKING DRIVERS" <list@hauke-m.de>,
-	"antonynpavlov@gmail.com" <antonynpavlov@gmail.com>,
-	OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"list@hauke-m.de:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
-	open list <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2014-09-10 15:36 GMT+04:00, Jiri Slaby <jirislaby@gmail.com>:
-> On 09/10/2014, 12:33 PM, Sergey Ryazanov wrote:
->> 2014-09-09 22:27 GMT+04:00, John W. Linville <linville@tuxdriver.com>:
->>> On Fri, Sep 05, 2014 at 04:02:10PM +0400, Sergey Ryazanov wrote:
->>>> 2014-09-05 15:33 GMT+04:00 Paul Bolle <pebolle@tiscali.nl>:
->>>>> Hi Sergey,
->>>>>
->>>>> On Fri, 2014-09-05 at 15:12 +0400, Sergey Ryazanov wrote:
->>>>>> 2014-09-05 14:10 GMT+04:00, Paul Bolle <pebolle@tiscali.nl>:
->>>>>>> On Wed, 2014-06-18 at 13:46 +0200, Paul Bolle wrote:
->>>>>>>> Having this conversation every rc1 is getting a bit silly. Could
->>>>>>>> Jiri
->>>>>>>> e.a. perhaps set some specific deadline for ATHEROS_AR231X to be
->>>>>>>> submitted?
->>>>>>>
->>>>>>> I waited until rc3. Have you seen any activity on this front? If
->>>>>>> not,
->>>>>>> should I resend the patch that removes the code in mainline that
->>>>>>> depends
->>>>>>> on ATHEROS_AR231X (ie, AHB bus support)?
->>>>>>>
->>>>>> Recent activity always could be found in [1]. Now I finish another
->>>>>> one
->>>>>> round of cleanups and have a plan to fix several things (you can
->>>>>> always find something that you really want to improve). But if you
->>>>>> insist I could immediately switch to "send upstream" mode. And seems
->>>>>> that this would be better approach.
->>>>>>
->>>>>> 1. https://dev.openwrt.org/log/trunk/target/linux/atheros
->>>>>
->>>>> And where can the related PULL requests or patch submissions be found?
->>>>>
->>>> I have not sent patches yet, since I thought that it would be easier
->>>> to cleanup them in openwrt tree and then send them upstream.
->>>
->>> That excuse has worn a bit thin.  Perhaps Paul should repost his
->>> removal and you can add a revert to the start of your patch series?
->>>
->> As for me, I do not like such flapping
+Sujith Manoharan <sujith@msujith.org> writes:
+
+> Kalle Valo wrote:
+>> Why add it to ath.ko module? What drivers are going to use this?
 >
-> Agreed in case what you have is in a good enough shape. You (and also
-> others) can still clean up the code in upstream too. So, if it is
-> mergeable, send it for upstream inclusion now, otherwise I am all for
-> John to apply the Paul's patch.
+> The debug code for ath9k is in ath.ko.
 
-Two days is the last deadline :)
+You mean ath_printk() & friends? But that doesn't require tracing code
+to be in ath.ko as well, right? If I understood correctly, trace.c could
+be under ath9k directory and the kconfig option could be
+ATH9K_TRACEPOINTS.
 
-> The unused code has been a way too long
-> in the tree now.
-
-Code actively used in owrt firmware and its forks.
+I think it's just misleading and confusing for the user to call it
+"Atheros wireless tracing" when it only affects ath9k. It's easier to
+understand if each driver has it's own "tracing" kconfig option.
 
 -- 
-BR,
-Sergey
+Kalle Valo
