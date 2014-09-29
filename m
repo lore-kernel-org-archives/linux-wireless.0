@@ -1,71 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:57818 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751073AbaIVH1N (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:34621 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751118AbaI2Hzc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Sep 2014 03:27:13 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Hauke Mehrtens <hauke@hauke-m.de>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
-	zajec5@gmail.com, varkabhadram@gmail.com, arend@broadcom.com
-Subject: Re: [PATCH v4 1/2] bcma: register bcma as device tree driver
-Date: Mon, 22 Sep 2014 09:26:51 +0200
-Message-ID: <4345256.UGZH9SeRYG@wuerfel> (sfid-20140922_092718_680042_143C97FC)
-In-Reply-To: <1411339108-22307-1-git-send-email-hauke@hauke-m.de>
-References: <1411339108-22307-1-git-send-email-hauke@hauke-m.de>
+	Mon, 29 Sep 2014 03:55:32 -0400
+From: Sujith Manoharan <sujith@msujith.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <21545.4248.512297.913983@gargle.gargle.HOWL> (sfid-20140929_095539_513131_B805BA78)
+Date: Mon, 29 Sep 2014 13:26:08 +0530
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>, <ath9k-devel@qca.qualcomm.com>
+Subject: Re: [PATCH v2] ath: Add support for tracing
+In-Reply-To: <87r3yu3oje.fsf@kamboji.qca.qualcomm.com>
+References: <1411804665-6954-1-git-send-email-sujith@msujith.org>
+	<87vbo72bb7.fsf@kamboji.qca.qualcomm.com>
+	<21544.64579.558712.465388@gargle.gargle.HOWL>
+	<87r3yu3oje.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 22 September 2014 00:38:27 Hauke Mehrtens wrote:
-> +
-> +- reg : iomem address range of chipcommon core
-> +
-> +The cores on the AXI bus are automatically detected by bcma with the
-> +memory ranges they are using and they get registered afterwards.
-> +Automatic detection of the IRQ number is not reliable on
-> +BCM47xx/BCM53xx ARM SoCs. To assign IRQ numbers to the cores, provide
-> +them manually through device tree. The IRQ number and the device tree
-> +child entry will get assigned to the core with the matching reg address.
-> +
-> +Example:
-> +
-> +       axi@18000000 {
-> +               compatible = "brcm,bus-axi";
-> +               reg = <0x18000000 0x1000>;
-> +               ranges = <0x00000000 0x18000000 0x00100000>;
-> +               #address-cells = <1>;
-> +               #size-cells = <1>;
-> +
-> +               pcie@12000 {
-> +                       reg = <0x00012000 0x1000>;
-> +                       interrupts = <GIC_SPI 131 IRQ_TYPE_LEVEL_HIGH>;
-> +               };
-> +
-> +               ethernet@24000 {
-> +                       reg = <0x00024000 0x1000>;
-> +                       interrupts = <GIC_SPI 147 IRQ_TYPE_LEVEL_HIGH>;
-> +               };
-> +
-> +               ethernet@25000 {
-> +                       reg = <0x00025000 0x1000>;
-> +                       interrupts = <GIC_SPI 148 IRQ_TYPE_LEVEL_HIGH>;
-> +               };
-> +       };
+Kalle Valo wrote:
+> You mean ath_printk() & friends? But that doesn't require tracing code
+> to be in ath.ko as well, right? If I understood correctly, trace.c could
+> be under ath9k directory and the kconfig option could be
+> ATH9K_TRACEPOINTS.
 > 
+> I think it's just misleading and confusing for the user to call it
+> "Atheros wireless tracing" when it only affects ath9k. It's easier to
+> understand if each driver has it's own "tracing" kconfig option.
 
-While reading through this new version, I had a new idea about how
-this could be handled better for any machines that have a unique
-number in the interrupt field: If you do the same thing as PCI
-and add an interrupt-map property [1], you can translate that
-number into a real interrupt specifier for the child nodes.
+We have CONFIG_ATH_DEBUG, which is used by ath9k and ath9k_htc.
+I think it is okay to have CONFIG_ATH_TRACEPOINTS, which can be
+used by ath9k/ath9k_htc too.
 
-This can work even if every device lists the local interrupt
-as '0', since you can have device-specific lookup entries if you
-use the correct interrupt-map-mask property.
+The original motive of ath.ko was to have a common module with
+debugging facilities that can be shared by Atheros drivers. But,
+each driver has ended up reinventing things. Since it is mentioned
+in the help text that ath9k is the only driver making use of
+ATH_DEBUG/ATH_TRACEPOINTS, I don't think it is confusing.
 
-	Arnd
-
-[1] http://www.openfirmware.org/1275/practice/imap/imap0_9d.pdf
+Sujith
