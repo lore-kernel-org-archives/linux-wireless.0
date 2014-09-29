@@ -1,33 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f170.google.com ([209.85.223.170]:40538 "EHLO
-	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754786AbaIQPKb (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:62622 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751601AbaI2Lcf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Sep 2014 11:10:31 -0400
+	Mon, 29 Sep 2014 07:32:35 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 0/4] ath10k: fix/cleanup fw stats
+References: <1411641230-18785-1-git-send-email-michal.kazior@tieto.com>
+Date: Mon, 29 Sep 2014 14:32:23 +0300
+In-Reply-To: <1411641230-18785-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Thu, 25 Sep 2014 12:33:46 +0200")
+Message-ID: <87d2ae1x2w.fsf@kamboji.qca.qualcomm.com> (sfid-20140929_133239_264246_701E4426)
 MIME-Version: 1.0
-In-Reply-To: <1410904582-6519-1-git-send-email-hauke@hauke-m.de>
-References: <1410904582-6519-1-git-send-email-hauke@hauke-m.de>
-Date: Wed, 17 Sep 2014 17:10:31 +0200
-Message-ID: <CACna6rzGa6wiKTrXbtUSGekRNq7gUkC0kyu4RQ_p4fG0Hd+DjQ@mail.gmail.com> (sfid-20140917_171036_031397_BE002F13)
-Subject: Re: [PATCH v2 1/2] bcma: register bcma as device tree driver
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: John Linville <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Arend Van Spriel <arend@broadcom.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Arnd Bergmann <arnd@arndb.de>, devicetree@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 16 September 2014 23:56, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> This driver is used by the bcm53xx ARM SoC code. Now it is possible to
-> give the address of the chipcommon core in device tree and bcma will
-> search for all the other cores.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Did you get any answer from Arend about detecting IRQs?
+> This cleans up and fixes fw stats aggregation.
+>
+>
+> Michal Kazior (4):
+>   ath10k: split wmi stats parsing
+>   ath10k: rename fw_stats related stuff
+>   ath10k: request fw_stats once on open
+>   ath10k: fix fw stats processing
 
-If not:
-Arend: how much time it make take you to get an answer?
+Thanks, applied.
+
+And thank you for fixing this for good, it has been buggy for way too
+long.
+
+-- 
+Kalle Valo
