@@ -1,60 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f51.google.com ([74.125.82.51]:34386 "EHLO
-	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755807AbaIDV5p (ORCPT
+Received: from mail-we0-f179.google.com ([74.125.82.179]:40581 "EHLO
+	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752741AbaI2AhI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Sep 2014 17:57:45 -0400
-Received: by mail-wg0-f51.google.com with SMTP id l18so10824181wgh.22
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Sep 2014 14:57:44 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+	Sun, 28 Sep 2014 20:37:08 -0400
+Received: by mail-we0-f179.google.com with SMTP id u56so4160169wes.38
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Sep 2014 17:37:06 -0700 (PDT)
+From: Karl Beldan <karl.beldan@gmail.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>
-Subject: [PATCHv5 0/2] configure dynack through mac80211/cfg80211 stack
-Date: Thu,  4 Sep 2014 23:57:39 +0200
-Message-Id: <1409867861-3911-1-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20140904_235751_802222_CEDD8DF2)
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@gmail.com>,
+	Karl Beldan <karl.beldan@rivierawaves.com>,
+	Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+Subject: [PATCH] mac80211: minstrel_ht: fix MCS_GROUP_RATES usage
+Date: Mon, 29 Sep 2014 02:36:30 +0200
+Message-Id: <1411950990-24365-1-git-send-email-karl.beldan@gmail.com> (sfid-20140929_023720_954101_B6FE5031)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Enable ACK timeout estimation algorithm (dynack) using mac80211
-set_coverage_class API. Dynack is activated passing -1 as coverage class
-to lower drivers and it is automatically disabled setting valid value for
-coverage class. Currently dynack is supported just by ath9k.
-Fix set_coverage_class signature for p54, ath9k, ath9k_htc and ath5k drivers.
+From: Karl Beldan <karl.beldan@rivierawaves.com>
 
-Changes since v4:
-- improve documentation
+Commit 4441e8e9 ("mac80211: improve minstrel_ht rate sorting by
+throughput & probability") replaced the constant 8 with MCS_GROUP_RATES
+when getting the number of streams of an HT MCS. See commit 7a5e3fa2
+("mac80211: minstrel_ht: replace some occurences of MCS_GROUP_RATES").
 
-Changes since v3:
-- squash driver patches and mac80211 one
+Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
+---
+ net/mac80211/rc80211_minstrel_ht.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Changes since v2:
-- add set_coverage_class signature fix to patchset
-- define NL80211_FEATURE_ACKTO_ESTIMATION to report driver dynack capability
-- reject configuration if both NL80211_ATTR_WIPHY_COVERAGE_CLASS and
-  NL80211_ATTR_WIPHY_DYN_ACK are given
-
-Changes since v1:
-- extend set_coverage_class signature insted of define enable_dynack API
-
-Lorenzo Bianconi (2):
-  cfg80211: enable dynack through nl80211
-  mac80211: extend set_coverage_class signature
-
- drivers/net/wireless/ath/ath5k/mac80211-ops.c |  2 +-
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |  2 +-
- drivers/net/wireless/ath/ath9k/main.c         |  3 ++-
- drivers/net/wireless/p54/main.c               |  3 ++-
- include/net/cfg80211.h                        |  2 ++
- include/net/mac80211.h                        |  6 ++++--
- include/uapi/linux/nl80211.h                  | 12 ++++++++++++
- net/mac80211/cfg.c                            |  9 +++++++--
- net/mac80211/driver-ops.h                     |  2 +-
- net/mac80211/trace.h                          |  4 ++--
- net/wireless/nl80211.c                        | 11 +++++++++++
- 11 files changed, 45 insertions(+), 11 deletions(-)
-
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index df90ce2..17ef54a 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -135,7 +135,7 @@ minstrel_ht_update_rates(struct minstrel_priv *mp, struct minstrel_ht_sta *mi);
+ static int
+ minstrel_ht_get_group_idx(struct ieee80211_tx_rate *rate)
+ {
+-	return GROUP_IDX((rate->idx / MCS_GROUP_RATES) + 1,
++	return GROUP_IDX((rate->idx / 8) + 1,
+ 			 !!(rate->flags & IEEE80211_TX_RC_SHORT_GI),
+ 			 !!(rate->flags & IEEE80211_TX_RC_40_MHZ_WIDTH));
+ }
 -- 
-1.9.1
+2.0.1
 
