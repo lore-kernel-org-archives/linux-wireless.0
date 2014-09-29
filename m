@@ -1,71 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yh0-f54.google.com ([209.85.213.54]:47659 "EHLO
-	mail-yh0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756622AbaIELMz (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:8403 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751601AbaI2KpB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Sep 2014 07:12:55 -0400
+	Mon, 29 Sep 2014 06:45:01 -0400
+From: Avinash Patil <patila@marvell.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <cluo@marvell.com>,
+	<huxm@marvell.com>, <yangyang@marvell.com>, <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Kevin Gan <ganhy@marvell.com>
+Subject: [PATCHv1 RESEND 1/3] mwifiex: fix soft lockup during iperf UDP RX
+Date: Mon, 29 Sep 2014 21:44:13 +0530
+Message-ID: <1412007255-4625-1-git-send-email-patila@marvell.com> (sfid-20140929_124511_605359_66B8E93B)
 MIME-Version: 1.0
-In-Reply-To: <1409911856.7832.9.camel@x220>
-References: <1391971686-9517-1-git-send-email-richard@nod.at>
-	<1391971686-9517-10-git-send-email-richard@nod.at>
-	<52F7D480.1050106@hauke-m.de>
-	<52F7DF21.70207@nod.at>
-	<CAHNKnsS7Mv4ZhBWZa53go9L9nZimJ7_FG5HFJ9C3kkGMAEz-mA@mail.gmail.com>
-	<52F8C373.9060108@rempel-privat.de>
-	<CAHNKnsQF5Hdf3JT91moPraRQzn4kMpdD2NSiJ7b30wQhS1W4MA@mail.gmail.com>
-	<CAGVrzcYnECx5Q=i+m6qZn29y4JALDpw5SWoUNP-S6HgPR3_ygQ@mail.gmail.com>
-	<CAHNKnsRACSo=DfOyiHxqV3acv_wfZmz4tMnYAW0wo4OCibwdfA@mail.gmail.com>
-	<CAHNKnsRQp7WLSJNAXEYPTd=qs1DquOfNgKtHES-Utvcy1=FEgQ@mail.gmail.com>
-	<20140213201421.GJ22203@tuxdriver.com>
-	<1397581703.8212.5.camel@x220>
-	<CAHNKnsQQ42-XnXrubHAy4PF3H2ynbGDdSMP7MvDS_1aRozYF=A@mail.gmail.com>
-	<1403087119.1984.93.camel@x220>
-	<CAHNKnsSfaT7xC5_wv=TrGLEQ2pjC91Q1XG891_n64OuR0fA9Jg@mail.gmail.com>
-	<1403091974.1984.102.camel@x220>
-	<1409911856.7832.9.camel@x220>
-Date: Fri, 5 Sep 2014 15:12:55 +0400
-Message-ID: <CAHNKnsRipRHicKOUW4dCutD1-sUG6qPnP2QuOveH_t1MFX9XgQ@mail.gmail.com> (sfid-20140905_131320_598973_901CCE77)
-Subject: Re: [PATCH 09/28] Remove ATHEROS_AR231X
-From: Sergey Ryazanov <ryazanov.s.a@gmail.com>
-To: Paul Bolle <pebolle@tiscali.nl>
-Cc: Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Oleksij Rempel <linux@rempel-privat.de>,
-	Richard Weinberger <richard@nod.at>,
-	Jonathan Bither <jonbither@gmail.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	ath5k-devel@venema.h4ckr.net, open@hauke-m.de, list@hauke-m.de,
-	antonynpavlov@gmail.com, openwrt-devel@lists.openwrt.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Paul,
+A soft lockup was observed on ARM multicore platform while UDP
+RX iperf was running on station.
 
-2014-09-05 14:10 GMT+04:00, Paul Bolle <pebolle@tiscali.nl>:
-> Jiri, Nick, Luis, John,
->
-> On Wed, 2014-06-18 at 13:46 +0200, Paul Bolle wrote:
->> Having this conversation every rc1 is getting a bit silly. Could Jiri
->> e.a. perhaps set some specific deadline for ATHEROS_AR231X to be
->> submitted?
->
-> I waited until rc3. Have you seen any activity on this front? If not,
-> should I resend the patch that removes the code in mainline that depends
-> on ATHEROS_AR231X (ie, AHB bus support)?
->
-Recent activity always could be found in [1]. Now I finish another one
-round of cleanups and have a plan to fix several things (you can
-always find something that you really want to improve). But if you
-insist I could immediately switch to "send upstream" mode. And seems
-that this would be better approach.
+Reason for this is delay_main_task was not taken into consideration while
+jumping to process_start. Now if delay_main_task is true, we would exit
+mwifiex_main_process instead of going to process_start again.
+This ensure other process is scheduled on this CPU and soft lockup is avoided.
 
-1. https://dev.openwrt.org/log/trunk/target/linux/atheros
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Kevin Gan <ganhy@marvell.com>
+Signed-off-by: Marc Yang <yangyang@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+---
+ drivers/net/wireless/mwifiex/main.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
+index b522f7c..be52189 100644
+--- a/drivers/net/wireless/mwifiex/main.c
++++ b/drivers/net/wireless/mwifiex/main.c
+@@ -330,7 +330,8 @@ process_start:
+ 	} while (true);
+ 
+ 	spin_lock_irqsave(&adapter->main_proc_lock, flags);
+-	if ((adapter->int_status) || IS_CARD_RX_RCVD(adapter)) {
++	if (!adapter->delay_main_work &&
++	    (adapter->int_status || IS_CARD_RX_RCVD(adapter))) {
+ 		spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
+ 		goto process_start;
+ 	}
 -- 
-BR,
-Sergey
+1.8.1.4
+
