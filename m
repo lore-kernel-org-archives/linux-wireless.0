@@ -1,108 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hauke-m.de ([5.39.93.123]:36554 "EHLO hauke-m.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751601AbaIWWEW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Sep 2014 18:04:22 -0400
-Message-ID: <5421EE62.2080701@hauke-m.de> (sfid-20140924_000426_623866_46496B0E)
-Date: Wed, 24 Sep 2014 00:04:18 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:36970 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752538AbaI2NoG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Sep 2014 09:44:06 -0400
+Message-ID: <54296223.6090702@broadcom.com> (sfid-20140929_154417_612928_A7863D71)
+Date: Mon, 29 Sep 2014 15:44:03 +0200
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>, linux-arm-kernel@lists.infradead.org
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	devicetree@vger.kernel.org, zajec5@gmail.com,
-	varkabhadram@gmail.com, arend@broadcom.com
-Subject: Re: [PATCH v4 1/2] bcma: register bcma as device tree driver
-References: <1411339108-22307-1-git-send-email-hauke@hauke-m.de> <4345256.UGZH9SeRYG@wuerfel>
-In-Reply-To: <4345256.UGZH9SeRYG@wuerfel>
-Content-Type: text/plain; charset=windows-1252
+To: Michael Tokarev <mjt@tls.msk.ru>
+CC: Seth Forshee <seth.forshee@canonical.com>,
+	<brcm80211-dev-list@broadcom.com>,
+	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
+Subject: Re: BCM4313 & brcmsmac & 3.12: only semi-working?
+References: <53FDACD1.8090805@msgid.tls.msk.ru> <53FDF8EB.4050905@broadcom.com> <54169D4F.2090607@broadcom.com> <541EEF17.7020806@msgid.tls.msk.ru> <542145B1.4030202@msgid.tls.msk.ru> <54216BF1.3060500@broadcom.com> <20140923134419.GA19016@ubuntu-hedt> <54217AA5.2060803@broadcom.com> <542182BE.2000606@msgid.tls.msk.ru> <542183A6.4070207@msgid.tls.msk.ru> <20140923143124.GC19016@ubuntu-hedt> <54219984.2080601@msgid.tls.msk.ru> <5421AF5C.6000106@broadcom.com> <5421B78E.4050908@msgid.tls.msk.ru> <5422C6E0.3080002@broadcom.com> <8d3f6516-9578-406c-9444-6fe1ba982ea6@email.android.com> <54257779.8010903@msgid.tls.msk.ru> <54257B69.3070607@broadcom.com> <54258459.8020803@msgid.tls.msk.ru>
+In-Reply-To: <54258459.8020803@msgid.tls.msk.ru>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/22/2014 09:26 AM, Arnd Bergmann wrote:
-> On Monday 22 September 2014 00:38:27 Hauke Mehrtens wrote:
->> +
->> +- reg : iomem address range of chipcommon core
->> +
->> +The cores on the AXI bus are automatically detected by bcma with the
->> +memory ranges they are using and they get registered afterwards.
->> +Automatic detection of the IRQ number is not reliable on
->> +BCM47xx/BCM53xx ARM SoCs. To assign IRQ numbers to the cores, provide
->> +them manually through device tree. The IRQ number and the device tree
->> +child entry will get assigned to the core with the matching reg address.
->> +
->> +Example:
->> +
->> +       axi@18000000 {
->> +               compatible = "brcm,bus-axi";
->> +               reg = <0x18000000 0x1000>;
->> +               ranges = <0x00000000 0x18000000 0x00100000>;
->> +               #address-cells = <1>;
->> +               #size-cells = <1>;
->> +
->> +               pcie@12000 {
->> +                       reg = <0x00012000 0x1000>;
->> +                       interrupts = <GIC_SPI 131 IRQ_TYPE_LEVEL_HIGH>;
->> +               };
->> +
->> +               ethernet@24000 {
->> +                       reg = <0x00024000 0x1000>;
->> +                       interrupts = <GIC_SPI 147 IRQ_TYPE_LEVEL_HIGH>;
->> +               };
->> +
->> +               ethernet@25000 {
->> +                       reg = <0x00025000 0x1000>;
->> +                       interrupts = <GIC_SPI 148 IRQ_TYPE_LEVEL_HIGH>;
->> +               };
->> +       };
->>
-> 
-> While reading through this new version, I had a new idea about how
-> this could be handled better for any machines that have a unique
-> number in the interrupt field: If you do the same thing as PCI
-> and add an interrupt-map property [1], you can translate that
-> number into a real interrupt specifier for the child nodes.
-> 
-> This can work even if every device lists the local interrupt
-> as '0', since you can have device-specific lookup entries if you
-> use the correct interrupt-map-mask property.
-> 
-> 	Arnd
-> 
-> [1] http://www.openfirmware.org/1275/practice/imap/imap0_9d.pdf
-> 
+On 09/26/14 17:20, Michael Tokarev wrote:
+> I can send it your way, -- guess it will be quite a bit costly,
+> but I don't have any use for it anyway (short of throwing it
+> away), and since I already spent significantly more money due
+> to all this (whole thinkpad plus ssds and several wifi adaptors),
+> this additional cost is just a small noize.  But since that's
+> 2nd card in a row, maybe there's something else in there, the
+> prob is not in the card?
 
-I assume this should then look somehow like this:
+Could be. Maybe some BIOS issue. Can you make some hi-res pictures of 
+the card and email them to me? If it is identical to what I already have 
+over here there is not much sense in sending it.
 
-axi@18000000 {
-	compatible = "brcm,bus-axi";
-	reg = <0x18000000 0x1000>;
-	ranges = <0x00000000 0x18000000 0x00100000>;
-	#address-cells = <1>;
-	#size-cells = <1>;
+Regards,
+Arend
 
-	#interrupt-cells = <1>;
-	interrupt-map = <
-		/* ChipCommon */
-		0x00000000 0 &gic  GIC_SPI 85 IRQ_TYPE_LEVEL_HIGH
 
-		/* PCIe Controller 0 */
-		0x00012000 0 &gic GIC_SPI 126 IRQ_TYPE_LEVEL_HIGH
-		0x00012000 1 &gic GIC_SPI 127 IRQ_TYPE_LEVEL_HIGH
-		0x00012000 2 &gic GIC_SPI 128 IRQ_TYPE_LEVEL_HIGH
-		0x00012000 3 &gic GIC_SPI 129 IRQ_TYPE_LEVEL_HIGH
-		0x00012000 4 &gic GIC_SPI 130 IRQ_TYPE_LEVEL_HIGH
-		0x00012000 5 &gic GIC_SPI 131 IRQ_TYPE_LEVEL_HIGH
 
-		/* USB 2.0 Controller */
-		0x00021000 0 &gic GIC_SPI 79 IRQ_TYPE_LEVEL_HIGH
-		>;
-	};
-
-How does the mapping of these interrupts to the devices work?
-
-Do I have to add a device tree entry for every device after all?
-
-Do you have some example code where this is handled in code, I could not
-find the code doing this for PCI.
-
-Hauke
