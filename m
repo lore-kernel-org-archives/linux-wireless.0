@@ -1,129 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:52585 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755998AbaIZTf3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Sep 2014 15:35:29 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: emmanuel.grumbach@intel.com, michal.kazior@tieto.com,
-	linux-wireless@vger.kernel.org
-Date: Fri, 26 Sep 2014 22:35:00 +0300
-Message-Id: <1411760105-18614-3-git-send-email-luca@coelho.fi> (sfid-20140926_213539_222786_FFDE5A5C)
-In-Reply-To: <1411760105-18614-1-git-send-email-luca@coelho.fi>
-References: <1411760105-18614-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH 2/7] mac80211: add device_timestamp to the ieee80211_channel_switch struct
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:47090 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752684AbaI2IVe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Sep 2014 04:21:34 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Ben Greear <greearb@candelatech.com>
+CC: Michal Kazior <michal.kazior@tieto.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH v2 03/10] ath10k: support ethtool stats.
+References: <1411507045-18973-1-git-send-email-greearb@candelatech.com>
+	<1411507045-18973-3-git-send-email-greearb@candelatech.com>
+	<CA+BoTQkK=6NfPN9e-3qN2Qaq2RLVdEwrp5x03_T=E2ZLcBeiaA@mail.gmail.com>
+	<5422D71F.7080809@candelatech.com>
+Date: Mon, 29 Sep 2014 11:21:10 +0300
+In-Reply-To: <5422D71F.7080809@candelatech.com> (Ben Greear's message of "Wed,
+	24 Sep 2014 07:37:19 -0700")
+Message-ID: <87eguu3ki1.fsf@kamboji.qca.qualcomm.com> (sfid-20140929_102138_355023_008283BA)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+Ben Greear <greearb@candelatech.com> writes:
 
-Some devices may need the device timestamp in order to synchronize the
-channel switch.  To pass this value back to the driver, add it to the
-channel switch structure and copy the device_timestamp value received
-in the rx info structure into it.
+> On 09/24/2014 12:44 AM, Michal Kazior wrote:
+>> On 23 September 2014 23:17,  <greearb@candelatech.com> wrote:
+>> [...]
+>>> +void ath10k_get_et_stats(struct ieee80211_hw *hw,
+>>> +                        struct ieee80211_vif *vif,
+>>> +                        struct ethtool_stats *stats, u64 *data)
+>>> +{
+>>> +       struct ath10k *ar = hw->priv;
+>>> +       int i = 0;
+>>> +       struct ath10k_target_stats *fw_stats;
+>>> +
+>>> +       fw_stats = &ar->debug.target_stats;
+>>> +
+>>> +       mutex_lock(&ar->conf_mutex);
+>>> +
+>>> +       if (ar->state == ATH10K_STATE_ON)
+>>> +               ath10k_refresh_peer_stats(ar);
+>>> +
+>>> +       mutex_unlock(&ar->conf_mutex);
+>>
+>> Just for correctness sake - it's probably a good idea to
+>> mutex_unlock() at the end (i.e. after spin_unlock_bh()) to make sure
+>> the stats are for this particular request. With your patch there's a
+>> very slight chance that, e.g. fw_stats debug file is being read at the
+>> same time and it updates fw stats between the above mutex_unlock() and
+>> following spin_lock_bh().
+>
+> That makes no difference at all to the user though, and it is one less
+> set of nested locks to worry about.
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
----
- include/net/mac80211.h |  3 +++
- net/mac80211/mlme.c    | 15 ++++++++++-----
- net/mac80211/trace.h   |  2 ++
- 3 files changed, 15 insertions(+), 5 deletions(-)
+I still do not want to have known races, especially when it's so easy to
+fix. The ethtool patches patches conflict with Michal's fw_stats fixes.
+Let me take the ethtool patches so that I can rebase them, fix this race
+and do some other small changes as well. I'll send v2 soon.
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 0ad1f47..ec0a5b0 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1117,6 +1117,8 @@ struct ieee80211_conf {
-  *	Function (TSF) timer when the frame containing the channel switch
-  *	announcement was received. This is simply the rx.mactime parameter
-  *	the driver passed into mac80211.
-+ * @device_timestamp: arbitrary timestamp for the device, this is the
-+ *	rx.device_timestamp parameter the driver passed to mac80211.
-  * @block_tx: Indicates whether transmission must be blocked before the
-  *	scheduled channel switch, as indicated by the AP.
-  * @chandef: the new channel to switch to
-@@ -1124,6 +1126,7 @@ struct ieee80211_conf {
-  */
- struct ieee80211_channel_switch {
- 	u64 timestamp;
-+	u32 device_timestamp;
- 	bool block_tx;
- 	struct cfg80211_chan_def chandef;
- 	u8 count;
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 9d4ccb2..cb4d074 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1046,7 +1046,8 @@ static void ieee80211_chswitch_timer(unsigned long data)
- 
- static void
- ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
--				 u64 timestamp, struct ieee802_11_elems *elems,
-+				 u64 timestamp, u32 device_timestamp,
-+				 struct ieee802_11_elems *elems,
- 				 bool beacon)
- {
- 	struct ieee80211_local *local = sdata->local;
-@@ -1154,6 +1155,7 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 		/* use driver's channel switch callback */
- 		struct ieee80211_channel_switch ch_switch = {
- 			.timestamp = timestamp,
-+			.device_timestamp = device_timestamp,
- 			.block_tx = csa_ie.mode,
- 			.chandef = csa_ie.chandef,
- 			.count = csa_ie.count,
-@@ -3203,6 +3205,7 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_rx_bss_info(sdata, mgmt, len, rx_status, &elems);
- 
- 	ieee80211_sta_process_chanswitch(sdata, rx_status->mactime,
-+					 rx_status->device_timestamp,
- 					 &elems, true);
- 
- 	if (!(ifmgd->flags & IEEE80211_STA_DISABLE_WMM) &&
-@@ -3334,8 +3337,9 @@ void ieee80211_sta_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
- 				break;
- 
- 			ieee80211_sta_process_chanswitch(sdata,
--							 rx_status->mactime,
--							 &elems, false);
-+						 rx_status->mactime,
-+						 rx_status->device_timestamp,
-+						 &elems, false);
- 		} else if (mgmt->u.action.category == WLAN_CATEGORY_PUBLIC) {
- 			ies_len = skb->len -
- 				  offsetof(struct ieee80211_mgmt,
-@@ -3356,8 +3360,9 @@ void ieee80211_sta_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
- 				&mgmt->u.action.u.ext_chan_switch.data;
- 
- 			ieee80211_sta_process_chanswitch(sdata,
--							 rx_status->mactime,
--							 &elems, false);
-+						 rx_status->mactime,
-+						 rx_status->device_timestamp,
-+						 &elems, false);
- 		}
- 		break;
- 	}
-diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
-index 38fae7e..853c440 100644
---- a/net/mac80211/trace.h
-+++ b/net/mac80211/trace.h
-@@ -995,6 +995,7 @@ TRACE_EVENT(drv_channel_switch,
- 		LOCAL_ENTRY
- 		CHANDEF_ENTRY
- 		__field(u64, timestamp)
-+		__field(u32, device_timestamp)
- 		__field(bool, block_tx)
- 		__field(u8, count)
- 	),
-@@ -1003,6 +1004,7 @@ TRACE_EVENT(drv_channel_switch,
- 		LOCAL_ASSIGN;
- 		CHANDEF_ASSIGN(&ch_switch->chandef)
- 		__entry->timestamp = ch_switch->timestamp;
-+		__entry->device_timestamp = ch_switch->device_timestamp;
- 		__entry->block_tx = ch_switch->block_tx;
- 		__entry->count = ch_switch->count;
- 	),
 -- 
-2.1.0
-
+Kalle Valo
