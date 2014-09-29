@@ -1,57 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:63279 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751817AbaIJLLS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Sep 2014 07:11:18 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 2/3] mac80211: set smps_mode according to ap params
-Date: Wed, 10 Sep 2014 14:07:35 +0300
-Message-Id: <1410347256-9324-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140910_131123_328859_06299966)
-In-Reply-To: <1410347256-9324-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1410347256-9324-1-git-send-email-emmanuel.grumbach@intel.com>
+Received: from mail-wg0-f43.google.com ([74.125.82.43]:55495 "EHLO
+	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751042AbaI2HQP convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Sep 2014 03:16:15 -0400
+Received: by mail-wg0-f43.google.com with SMTP id a1so1199120wgh.2
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Sep 2014 00:16:14 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <8761g94hm4.fsf@kamboji.qca.qualcomm.com>
+References: <1411641230-18785-1-git-send-email-michal.kazior@tieto.com>
+	<1411641230-18785-5-git-send-email-michal.kazior@tieto.com>
+	<8761g94hm4.fsf@kamboji.qca.qualcomm.com>
+Date: Mon, 29 Sep 2014 09:16:14 +0200
+Message-ID: <CA+BoTQmC7vec3OW8ZbCvkx761cMtUTT6f+UAVp7dMXj2hNRKUA@mail.gmail.com> (sfid-20140929_091624_895524_C6E8E995)
+Subject: Re: [PATCH 4/4] ath10k: fix fw stats processing
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+On 27 September 2014 10:01, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Michal Kazior <michal.kazior@tieto.com> writes:
+>
+>> If stat data exceeds wmi-htc buffer limits
+>> firmware splits it into many wmi stats update
+>> events which are delivered in a ping-pong fashion
+>> triggered by wmi stats request command.
+>>
+>> Since there's only an implicit start-of-data and
+>> no end-of-data indications the driver has to
+>> perform some trickery to get complete stat data.
+>>
+>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>
+> I folded the patch below in ath-next-next. Please check:
+>
+> https://github.com/kvalo/ath/commit/7071112c5ddaff761cd7d9bb3110c3f3d2f83bb8
+[...]
 
-Take the requested smps mode from the ap params
-(instead of always starting with SMPS_OFF)
+I think you meant:
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- net/mac80211/cfg.c | 15 +++++++++++++--
- 1 file changed, 13 insertions(+), 2 deletions(-)
+  https://github.com/kvalo/ath/commit/5122a60f4fbf5a38e70a14578858b39058ee367a
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 101ae6c..fb6a150 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -683,8 +683,19 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
- 	if (old)
- 		return -EALREADY;
- 
--	/* TODO: make hostapd tell us what it wants */
--	sdata->smps_mode = IEEE80211_SMPS_OFF;
-+	switch (params->smps_mode) {
-+	case NL80211_SMPS_OFF:
-+		sdata->smps_mode = IEEE80211_SMPS_OFF;
-+		break;
-+	case NL80211_SMPS_STATIC:
-+		sdata->smps_mode = IEEE80211_SMPS_STATIC;
-+		break;
-+	case NL80211_SMPS_DYNAMIC:
-+		sdata->smps_mode = IEEE80211_SMPS_DYNAMIC;
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
- 	sdata->needed_rx_chains = sdata->local->rx_chains;
- 
- 	mutex_lock(&local->mtx);
--- 
-1.9.1
+It looks good. Thanks!
 
+
+Michał
