@@ -1,61 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:34558 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754413AbaJHGtR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Oct 2014 02:49:17 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: emmanuel.grumbach@intel.com, michal.kazior@tieto.com,
-	linux-wireless@vger.kernel.org
-Date: Wed,  8 Oct 2014 09:48:34 +0300
-Message-Id: <1412750920-15392-2-git-send-email-luca@coelho.fi> (sfid-20141008_084937_148115_3354BE27)
-In-Reply-To: <1412750920-15392-1-git-send-email-luca@coelho.fi>
-References: <1412750920-15392-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH v2 1/7] nl80211: sanity check the channel switch counter value
+Received: from mezzanine.sirena.org.uk ([106.187.55.193]:55518 "EHLO
+	mezzanine.sirena.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751091AbaI3W5E (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Sep 2014 18:57:04 -0400
+Date: Tue, 30 Sep 2014 23:56:54 +0100
+From: Mark Brown <broonie@kernel.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linaro-kernel@lists.linaro.org
+Message-ID: <20140930225654.GP4273@sirena.org.uk> (sfid-20141001_005709_445177_BD5D7352)
+References: <1410909415-11661-1-git-send-email-broonie@kernel.org>
+ <20140930165626.GD11919@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="OwXh6gFRjCd3qPCM"
+In-Reply-To: <20140930165626.GD11919@tuxdriver.com>
+Subject: Re: [PATCH] hostap: proc: Remove unused variable
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
 
-The nl80211 channel switch count attribute
-(NL80211_ATTR_CH_SWITCH_COUNT) is specified as u32, but the
-specification uses u8 for the counter.  To make sure strange things
-don't happen without informing the user, sanity check the value and
-return -EINVAL if it doesn't fit in u8.
+--OwXh6gFRjCd3qPCM
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
----
- net/wireless/nl80211.c | 10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
+On Tue, Sep 30, 2014 at 12:56:26PM -0400, John W. Linville wrote:
+> On Tue, Sep 16, 2014 at 04:16:55PM -0700, Mark Brown wrote:
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 4cce3e1..9e29053 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -5927,6 +5927,7 @@ static int nl80211_channel_switch(struct sk_buff *skb, struct genl_info *info)
- 	int err;
- 	bool need_new_beacon = false;
- 	int len, i;
-+	u32 cs_count;
- 
- 	if (!rdev->ops->channel_switch ||
- 	    !(rdev->wiphy.flags & WIPHY_FLAG_HAS_CHANNEL_SWITCH))
-@@ -5963,7 +5964,14 @@ static int nl80211_channel_switch(struct sk_buff *skb, struct genl_info *info)
- 	if (need_new_beacon && !info->attrs[NL80211_ATTR_CSA_IES])
- 		return -EINVAL;
- 
--	params.count = nla_get_u32(info->attrs[NL80211_ATTR_CH_SWITCH_COUNT]);
-+	/* Even though the attribute is u32, the specification says
-+	 * u8, so let's make sure we don't overflow.
-+	 */
-+	cs_count = nla_get_u32(info->attrs[NL80211_ATTR_CH_SWITCH_COUNT]);
-+	if (cs_count > 255)
-+		return -EINVAL;
-+
-+	params.count = cs_count;
- 
- 	if (!need_new_beacon)
- 		goto skip_beacons;
--- 
-2.1.1
+> > Since "hostap: proc: substitute loops by %*phN" (62c5afb8e388) the
+> > variable i has been unused in prism2_bss_list_proc_show() so remove it.
 
+> What tree are you using?  In wireless-next, I still see a loop in
+> that function using i as an index variable.
+
+This was in -next for whatever day I sent that.
+
+--OwXh6gFRjCd3qPCM
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQEcBAEBAgAGBQJUKzU1AAoJECTWi3JdVIfQV44H/RGfyC3SpG7H537cvvMztvxw
+2tpeunlU7NaU/wHoJMrTYmGSkb2sNaUoWnqHpIwMimxDhSKT9nDWza4p526SAmVH
+YItabYObmpGIuSpdd3q3DmwLq3lCEPWM9QyiFPv6HoV1eozU1lfA2185AAIRc5u4
+FR108GnKB2NI3lG3oOX4L20CeHbiM5cPiotXRDMtjvjIocuZvcDiOmQywWFkpbtD
+2FMrX4lP9LqnLokkXfRYugQkeDd4h2T8V4RiHW0vZBnZC9mswPdzKxTVDHvoNrFF
+zyzS2nOHsgCQsq0XoIWEtQtmN42kpsGsgH4RczExNyQpe0sbXkEE8iL/CXKTeK8=
+=phRU
+-----END PGP SIGNATURE-----
+
+--OwXh6gFRjCd3qPCM--
