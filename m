@@ -1,80 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.20]:49578 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751306AbaILGSj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Sep 2014 02:18:39 -0400
-Message-ID: <54129018.70209@rempel-privat.de> (sfid-20140912_081843_807990_90DC0E66)
-Date: Fri, 12 Sep 2014 08:18:00 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
-MIME-Version: 1.0
-To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
-	Sujith Manoharan <sujith@msujith.org>
-CC: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-	stable@vger.kernel.org
-Subject: Re: [PATCH] Revert "ath9k: Calculate sleep duration"
-References: <1410442548-15782-1-git-send-email-sujith@msujith.org> <20140911141338.GA21543@qca.qualcomm.com> <21521.45335.848659.125183@gargle.gargle.HOWL> <20140912060936.GA20575@qca.qualcomm.com>
-In-Reply-To: <20140912060936.GA20575@qca.qualcomm.com>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="ANnbxd9swKNa72shd2eSk2xpJmEXJ6J1S"
+Received: from mail-ob0-f171.google.com ([209.85.214.171]:61574 "EHLO
+	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752149AbaI3QSd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Sep 2014 12:18:33 -0400
+Received: by mail-ob0-f171.google.com with SMTP id wp4so2690146obc.2
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Sep 2014 09:18:33 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, troy_tan@realsil.com.cn,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Jim Davis <jim.epost@gmail.com>
+Subject: [PATCH] rtlwifi: Fix randconfig build error with next-20140930
+Date: Tue, 30 Sep 2014 11:18:21 -0500
+Message-Id: <1412093901-11220-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20140930_181837_334877_170179F4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---ANnbxd9swKNa72shd2eSk2xpJmEXJ6J1S
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Configuration randconfig-1412075201 gets an error because driver rtl8821ae
+depends on driver btcoexist, but Kconfig does not select it.
 
-Am 12.09.2014 um 08:09 schrieb Rajkumar Manoharan:
-> On Thu, Sep 11, 2014 at 07:56:31PM +0530, Sujith Manoharan wrote:
->> Rajkumar Manoharan wrote:
->>> Some of the IOE customer using ath9k with power save enabled. IIRC th=
-e
->>> expectation is that when the station is idle, it should wakeup on DTI=
-M
->>> beacon not for every beacons. Are you seeing frequest bmiss events on=
+Reported-by: Jim Davis <jim.epost@gmail.com>
+Cc: Jim Davis <jim.epost@gmail.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
->>> higher beacon interval?
->>
->> I don't think ath9k has ever been tested with longer sleep durations
->> based on dtim period. We have always programmed the hardware to wake u=
-p
->> for every beacon interval, using the TIM_TIMER interrupt. And since th=
-e
->> TIM bit needs to be checked for every beacon, the sleep duration has
->> to be the beacon interval.
->>
->> Also, the bmiss threshold needs to be adjusted based on the sleep
->> duration. We are hardcoding it currently in the driver using
->> ATH_DEFAULT_BMISS_LIMIT. This will break, too.
->>
->> Using dtim for PS needs more testing before it can be used,
->> so we can have the original behavior for now.
->>
-> Sounds clear.
->=20
-> Acked-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+John,
 
-Just bisected that this patch caused kernel panic on ath9k_htc.
-One more reason for revert ;)
+Driver rtl8192ee will get a similar error. I will send the patch for it shortly.
 
---=20
-Regards,
-Oleksij
+Larry
+---
+ drivers/net/wireless/rtlwifi/Kconfig | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/net/wireless/rtlwifi/Kconfig b/drivers/net/wireless/rtlwifi/Kconfig
+index 08fde95..552742e 100644
+--- a/drivers/net/wireless/rtlwifi/Kconfig
++++ b/drivers/net/wireless/rtlwifi/Kconfig
+@@ -97,6 +97,7 @@ config RTL8821AE
+ 	depends on PCI
+ 	select RTLWIFI
+ 	select RTLWIFI_PCI
++	select RTLBTCOEXIST
+ 	---help---
+ 	This is the driver for Realtek RTL8i821AE/RTL8812AE 802.11av PCIe
+ 	wireless network adapters.
+@@ -146,7 +147,7 @@ config RTL8723_COMMON
+ 
+ config RTLBTCOEXIST
+ 	tristate
+-	depends on RTL8723AE || RTL8723BE
++	depends on RTL8723AE || RTL8723BE || RTL8821AE
+ 	default y
+ 
+ endif
+-- 
+1.8.4.5
 
---ANnbxd9swKNa72shd2eSk2xpJmEXJ6J1S
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iF4EAREIAAYFAlQSkBwACgkQHwImuRkmbWlrWwD/WNC1Q7JA6jRGiEt3x0QLWQLx
-0lGJkCSdP9I7bhubJ4cBAIo4wUrdGybyjF4IIh5psGxrDAfLAvpRsP22IpMa/dFs
-=NowH
------END PGP SIGNATURE-----
-
---ANnbxd9swKNa72shd2eSk2xpJmEXJ6J1S--
