@@ -1,74 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:58706 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754863AbaIXPPb (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:18617 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750945AbaI3FUs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Sep 2014 11:15:31 -0400
-Message-ID: <5422E012.1030003@candelatech.com> (sfid-20140924_171559_965827_618029DB)
-Date: Wed, 24 Sep 2014 08:15:30 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Tue, 30 Sep 2014 01:20:48 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Sujith Manoharan <sujith@msujith.org>
+CC: John Linville <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>, <ath9k-devel@qca.qualcomm.com>
+Subject: Re: [PATCH v2] ath: Add support for tracing
+References: <1411804665-6954-1-git-send-email-sujith@msujith.org>
+	<87vbo72bb7.fsf@kamboji.qca.qualcomm.com>
+	<21544.64579.558712.465388@gargle.gargle.HOWL>
+	<87r3yu3oje.fsf@kamboji.qca.qualcomm.com>
+	<21545.4248.512297.913983@gargle.gargle.HOWL>
+Date: Tue, 30 Sep 2014 08:20:41 +0300
+In-Reply-To: <21545.4248.512297.913983@gargle.gargle.HOWL> (Sujith Manoharan's
+	message of "Mon, 29 Sep 2014 13:26:08 +0530")
+Message-ID: <87k34ly992.fsf@kamboji.qca.qualcomm.com> (sfid-20140930_072053_258996_915AA7DC)
 MIME-Version: 1.0
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [RFC 2/2] ath10k: re-config ht_caps when chainmask is modified.
-References: <1411518383-32634-1-git-send-email-greearb@candelatech.com>	<1411518383-32634-2-git-send-email-greearb@candelatech.com>	<CA+BoTQ=fS30xz9KcdBJcioNers6PovOFEeqPCCSFn52HkscXug@mail.gmail.com>	<5422D6CF.10408@candelatech.com> <CA+BoTQk=X2qVJsY64ZH88h29L6+Y5M9K07nLtzo=0ga1bUsXGw@mail.gmail.com>
-In-Reply-To: <CA+BoTQk=X2qVJsY64ZH88h29L6+Y5M9K07nLtzo=0ga1bUsXGw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Sujith Manoharan <sujith@msujith.org> writes:
 
+> Kalle Valo wrote:
+>> You mean ath_printk() & friends? But that doesn't require tracing code
+>> to be in ath.ko as well, right? If I understood correctly, trace.c could
+>> be under ath9k directory and the kconfig option could be
+>> ATH9K_TRACEPOINTS.
+>> 
+>> I think it's just misleading and confusing for the user to call it
+>> "Atheros wireless tracing" when it only affects ath9k. It's easier to
+>> understand if each driver has it's own "tracing" kconfig option.
+>
+> We have CONFIG_ATH_DEBUG, which is used by ath9k and ath9k_htc.
+> I think it is okay to have CONFIG_ATH_TRACEPOINTS, which can be
+> used by ath9k/ath9k_htc too.
 
-On 09/24/2014 08:05 AM, Michal Kazior wrote:
-> On 24 September 2014 16:35, Ben Greear <greearb@candelatech.com> wrote:
->> On 09/24/2014 12:51 AM, Michal Kazior wrote:
->>> On 24 September 2014 02:26,  <greearb@candelatech.com> wrote:
->>> [...]
->>>>
->>>> +static struct ieee80211_sta_vht_cap ath10k_create_vht_cap(struct ath10k
->>>> *ar,
->>>> +                                                         bool
->>>> use_cfg_chains)
->>>>    {
->>>>           struct ieee80211_sta_vht_cap vht_cap = {0};
->>>>           u16 mcs_map;
->>>>           int i;
->>>> +       int nrf = ar->num_rf_chains;
->>>> +
->>>> +       if (use_cfg_chains && ar->cfg_tx_chainmask)
->>>> +               nrf = get_nss_from_chainmask(ar->cfg_tx_chainmask);
->>>
->>>
->>> Is use_cfg_chains really necessary here? Is setting tx/rx chainmask to
->>> 0x0 make any sense at all? Shouldn't we deny it or make it fallback to
->>> the supported tx/rx chainmask values?
->>
->> It would cause the logic to flip back to the defaults, so seems mildly
->> useful.  I'm not sure
->> upper layers would ever let it be < 1 though.
->
-> 0 is a valid argument as far as upper layers are concerned and should
-> be treated as "use all available antennas" (see `iw list` output
-> before ever setting antenna, after setting to, e.g. 1 and then to 0).
->
-> This implies current set_antenna() implementation is actually buggy
-> (pdev param should involve using supp_tx/rx_chainmask). Your
-> assumption in recent patches is also incorrect as antenna mask = 0
-> should imply max nss, not 1.
+In my opinion that just creates even a bigger mess.
 
-I will test, but I think you are mis-understanding the logic in my
-patches.  I should be using the max nss whenever configured value
-is 0.
+> The original motive of ath.ko was to have a common module with
+> debugging facilities that can be shared by Atheros drivers. But,
+> each driver has ended up reinventing things.
 
-Thanks,
-Ben
+The current debug printing code in ath10k is something like 100 lines, I
+don't see the point of trying to make that common with all ath* drivers.
 
->
->
-> Michał
->
+In my opinion ath.ko should only have code which used at least two
+different drivers (and I consider ath9k.ko and ath9k_htc.ko as one
+driver). So the right thing here would be to actually move all debugging
+code from ath.ko to ath9k, as it's the only user anyway.
+
+> Since it is mentioned in the help text that ath9k is the only driver
+> making use of ATH_DEBUG/ATH_TRACEPOINTS, I don't think it is
+> confusing.
+
+To me it is. But it's a mess already so I guess I'm worrying nothing.
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Kalle Valo
