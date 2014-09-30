@@ -1,136 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:25608 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752451AbaIOIDb (ORCPT
+Received: from mout.kundenserver.de ([212.227.17.13]:53392 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750844AbaI3NkX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Sep 2014 04:03:31 -0400
-Message-ID: <54169D4F.2090607@broadcom.com> (sfid-20140915_100353_673530_E205F106)
-Date: Mon, 15 Sep 2014 10:03:27 +0200
-From: Arend van Spriel <arend@broadcom.com>
+	Tue, 30 Sep 2014 09:40:23 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	zajec5@gmail.com, arend@broadcom.com,
+	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+	varkabhadram@gmail.com
+Subject: Re: [PATCH v6] bcma: register bcma as device tree driver
+Date: Tue, 30 Sep 2014 15:40:10 +0200
+Message-ID: <7004113.vCTZUyLSaf@wuerfel> (sfid-20140930_154026_965587_4A19E562)
+In-Reply-To: <1411682959-21557-1-git-send-email-hauke@hauke-m.de>
+References: <1411682959-21557-1-git-send-email-hauke@hauke-m.de>
 MIME-Version: 1.0
-To: Michael Tokarev <mjt@tls.msk.ru>
-CC: <brcm80211-dev-list@broadcom.com>,
-	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
-Subject: Re: BCM4313 & brcmsmac & 3.12: only semi-working?
-References: <52BDE9DC.5040206@msgid.tls.msk.ru> <52BE9CF9.7030305@broadcom.com> <52BEC2F6.7010505@msgid.tls.msk.ru> <52D4FC8B.6090301@msgid.tls.msk.ru> <52F925A9.1030707@msgid.tls.msk.ru> <53526124.6050407@msgid.tls.msk.ru> <53FC1789.6020407@msgid.tls.msk.ru> <53FCA001.6090404@broadcom.com> <53FCB2A3.1050605@msgid.tls.msk.ru> <53FCFE1A.3060508@broadcom.com> <53FDACD1.8090805@msgid.tls.msk.ru> <53FDF8EB.4050905@broadcom.com>
-In-Reply-To: <53FDF8EB.4050905@broadcom.com>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 27-08-14 17:27, Arend van Spriel wrote:
-> On 08/27/14 12:02, Michael Tokarev wrote:
->> 27.08.2014 01:37, Arend van Spriel wrote:
->>> On 08/26/14 18:15, Michael Tokarev wrote:
->> []
->>> Well, sorry about that. I did see the other messages fly by and
->>> noticed you were using the wl driver so assumed you were fine with that.
->>
->> That's past already.  I had several issues with wl driver,
->> and current issue is that even the latest (Aug-2014) version
->> of wl driver doesn't work with current kernel.  So I can't
->> really even compare wl and brcmsmac, -- in kernels<  3.16
->> brcmsmac does not work, but wl can't be compiled for 3.16,
->> and using different kernels for comparison is a bit wrong
->> because there may be differences in other areas.
->>
->>>     Admittedly the brcmsmac got very little attention as all our
->>> resources were put on brcmfmac.
->>
->> That happens. :)
->>
->> []
->>> Ok. Let's put frustration aside and make an effort. So could you make
->>> a trace using trace-cmd utility. The log can get quite big. The
->>> brcmsmac driver needs to be built with CONFIG_BRCM_TRACING enabled.
->>> Please execute the following commands (assuming you use ubuntu with
->>> network-manager):
->>>
->>> $ sudo stop network-manager
->>> $ sudo insmod brcmfmac.ko
->>> $ sudo trace-cmd record -e brcmsmac:*
->>>
->>> In another terminal:
->>>
->>> $ sudo start network-manager
->>>
->>> The trace-cmd must be stopped using ctrl-c.
->>
->> Okay.  This turned out to be not so simple.
->>
->> My initial attempt indicated that brcmsmac in 3.16 does
->> not work at all.  This isn't actually true - subsequent
->> attempts shows that it works.  I was ready to conclude
->> the problem is fixed (after transferring several gigs
->> of data over wifi, with tracing enabled or disabled,
->> after fresh boot or after reboot from wl-enabled kernel,
->> etc - it all worked.
->>
->> Until I hit the same stall as I described initially, the
->> same which happened numerous times with kernel 3.12 ($subj).
->>
->> After several mins of transferring it stalled.  But this
->> time (unlike with 3.12), it continued after about 30 secs.
+On Friday 26 September 2014 00:09:19 Hauke Mehrtens wrote:
+> This driver is used by the bcm53xx ARM SoC code. Now it is possible to
+> give the address of the chipcommon core in device tree and bcma will
+> search for all the other cores.
 > 
-> A kernel log (so no trace) of stalling interface might be useful so if
-> you can provide that and put a marker in there where you believe it
-> stalled that would be great.
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
-Hi Michael,
+I'm basically happy with this patch, so
 
-Did you have any opportunity to create a log file. Got a question from
-someone else who got bad bcm4313 behaviour after a certain upgrade. Did
-you have the same experience?
+Acked-by: Arnd Bergmann <arnd@arndb.de>
 
-Regards,
-Arend
+A few details that I think are worth improving:
 
->> So, while my initial test of 3.16 indicated the prob is still
->> here, at the same (or even worse) state, I can't really
->> reproduce it, at least in a reliable way.  There's something
->> wrong still, but at least current version is significantly
->> more useful than before (in a hope it wont stall at the
->> very wrong moment exactly ;).
->>
->> There's one more difference between brcmsmac and wl -- with
->> wl, I see significantly better speed, -- it is about 5MB/sec,
->> while with brcmsmac it jumps between 2.0..4.5MB/sec (with
->> 58..65Mbps connection rate in both cases).  Here's a typical
->> iwconfig output for brcmsmac version:
->>
->> wlan0     IEEE 802.11bgn  ESSID:"mjt"
->>            Mode:Managed  Frequency:2.412 GHz  Access Point:
->> 64:70:02:29:D9:30
->>            Bit Rate=65 Mb/s   Tx-Power=19 dBm
->>            Retry short limit:7   RTS thr:off   Fragment thr:off
->>            Power Management:off
->>            Link Quality=58/70  Signal level=-61 dBm
->>            Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
->>            Tx excessive retries:56355  Invalid misc:472   Missed beacon:0
->>
->> I'll keep trying/testing various cases, in attempt to
->> understand what's going on.  For now, I can't provide the
->> requested traces (it wont be very useful, I guess).
->>
->> BTW, are there other things not implemented in brcmsmac?
->> I see the module reminds about power management, what
->> does it mean?  Anything else missing?
-> 
-> Well, the wireless twiki has that info [1]. Regarding features the
-> important ones that I know are still not there are 40MHz support, and
-> power-save. The bcm4313 does not support 40MHz. Community contributions
-> added ibss, and ap mode. For P2P and TDLS probably some changes would be
-> needed although most of the legwork is done in mac80211.
-> 
-> Regards,
-> Arend
-> 
-> [1]
-> http://wireless.kernel.org/en/users/Drivers/brcm80211#To_be_done_for_softmac_driver
-> 
-> 
->> Thank you!
->>
->> /mjt
-> 
+> diff --git a/Documentation/devicetree/bindings/bus/bcma.txt b/Documentation/devicetree/bindings/bus/bcma.txt
+> new file mode 100644
+> index 0000000..e9070c1
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/bus/bcma.txt
+> @@ -0,0 +1,20 @@
+> +Driver for ARM AXI Bus with Broadcom Plugins (bcma)
+> +
+> +Required properties:
+> +
+> +- compatible : brcm,bus-axi
+> +
+> +- reg : iomem address range of chipcommon core
+> +
+> +The cores on the AXI bus are automatically detected by bcma with the
+> +memory ranges they are using and they get registered afterwards.
+> +
+> +Example:
+> +
+> +	axi@18000000 {
+> +		compatible = "brcm,bus-axi";
+> +		reg = <0x18000000 0x1000>;
+> +		ranges = <0x00000000 0x18000000 0x00100000>;
+> +		#address-cells = <1>;
+> +		#size-cells = <1>;
+> +	};
 
+I think it would be good to document how you can specify child nodes
+here, and give one node as the example.
+
+> +
+> +#ifdef CONFIG_OF
+> +static int bcma_host_soc_probe(struct platform_device *pdev)
+> +{
+
+We generally try to avoid #ifdef in device drivers, I think it would
+be trivial to avoid this one by moving the contents into a new file.
+
+> +	struct device *dev = &pdev->dev;
+> +	struct device_node *np = dev->of_node;
+> +	struct bcma_bus *bus;
+> +	int err;
+> +
+> +	/* Alloc */
+> +	bus = devm_kzalloc(dev, sizeof(*bus), GFP_KERNEL);
+> +	if (!bus)
+> +		return -ENOMEM;
+> +
+> +	/* Map MMIO */
+> +	bus->mmio = of_iomap(np, 0);
+> +	if (!bus->mmio)
+> +		return -ENOMEM;
+
+this could use devm_ioremap_resource() to avoid the iounmap
+in the failu
+
+> +#ifdef CONFIG_OF
+> +static struct device_node *bcma_of_find_child_device(struct platform_device *parent,
+> +						     struct bcma_device *core)
+> +{
+> +	struct device_node *node;
+> +	u64 size;
+> +	const __be32 *reg;
+> +
+> +	if (!parent || !parent->dev.of_node)
+> +		return NULL;
+> +
+> +	for_each_child_of_node(parent->dev.of_node, node) {
+> +		reg = of_get_address(node, 0, &size, NULL);
+> +		if (!reg)
+> +			continue;
+> +		if (of_translate_address(node, reg) == core->addr)
+> +			return node;
+> +	}
+> +	return NULL;
+> +}
+
+I think this will compile into nothing if CONFIG_OF is disabled, so no
+need for the #ifdef.
+
+> +
+> +static void bcma_of_fill_device(struct platform_device *parent,
+> +				struct bcma_device *core)
+> +{
+> +	struct device_node *node;
+> +
+> +	node = bcma_of_find_child_device(parent, core);
+> +	if (node)
+> +		core->dev.of_node = node;
+> +}
+
+and consequently, this function can be moved into the caller.
+
+	Arnd
