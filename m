@@ -1,72 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f182.google.com ([74.125.82.182]:34204 "EHLO
-	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752533AbaISIn0 convert rfc822-to-8bit (ORCPT
+Received: from mail-we0-f176.google.com ([74.125.82.176]:50850 "EHLO
+	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751028AbaI3K4A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Sep 2014 04:43:26 -0400
-Received: by mail-we0-f182.google.com with SMTP id q59so1658428wes.13
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Sep 2014 01:43:25 -0700 (PDT)
+	Tue, 30 Sep 2014 06:56:00 -0400
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	linux-arm-kernel@lists.infradead.org, arnd@arndb.de,
+	devicetree@vger.kernel.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH V4] bcma: use chipcommon node from DT for SoC GPIO chip
+Date: Tue, 30 Sep 2014 12:55:48 +0200
+Message-Id: <1412074548-14614-1-git-send-email-zajec5@gmail.com> (sfid-20140930_125605_291796_46A5B13A)
+In-Reply-To: <1412072546-3529-1-git-send-email-zajec5@gmail.com>
+References: <1412072546-3529-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <87a95wngzt.fsf@kamboji.qca.qualcomm.com>
-References: <1411046487-19544-1-git-send-email-michal.kazior@tieto.com>
-	<1411046487-19544-7-git-send-email-michal.kazior@tieto.com>
-	<87a95wngzt.fsf@kamboji.qca.qualcomm.com>
-Date: Fri, 19 Sep 2014 10:43:25 +0200
-Message-ID: <CA+BoTQmsVqvGgu_fUqKGqhEKXV7E_w0KdcH_GFoPhAvyjtVdDA@mail.gmail.com> (sfid-20140919_104336_678344_E432061D)
-Subject: Re: [PATCH 6/9] ath10k: deduplicate wmi service ready logic
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 19 September 2014 10:37, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Michal Kazior <michal.kazior@tieto.com> writes:
->
->> The logic responsible for processing the event is
->> no different across different firmware binaries.
->> The difference that needs to be dealt with is the
->> ABI of data structures.
->>
->> The intermediate structure uses __le32 to avoid
->> extra memory allocations to byteswap
->> variable-length substructures (i.e. host mem
->> chunks).
->>
->> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
->
-> [...]
->
->> +     if (test_bit(ATH10K_FW_FEATURE_WMI_10X, ar->fw_features)) {
->> +             ret = ath10k_wmi_10x_pull_svc_rdy_ev(skb, &arg);
->> +             wmi_10x_svc_map(arg.service_map, svc_bmap);
->> +     } else {
->> +             ret = ath10k_wmi_pull_svc_rdy_ev(skb, &arg);
->> +             wmi_main_svc_map(arg.service_map, svc_bmap);
->> +     }
->
-> For consistency shouldn't the latter be
-> ath10k_wmi_main_pull_svc_rdy_ev()?
+This will allow us to define GPIO-attached devices (LEDs, buttons) in
+the the device tree.
 
-Good point. Makes sense. I'll add the _main to the function name.
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+This is based on top of
+[PATCH v6] bcma: register bcma as device tree driver
+that I hope will reach wireless-next git tree.
 
+V2: Describe axi chilren and make gpio a child of chipcommon core.
+V3: Make chipcommon a GPIO controller (avoid extra sub-child)
+    Speed up finding OF node in driver_gpio.c
+V4: Simplify setting of_node in driver_gpio.c
+---
+ Documentation/devicetree/bindings/bus/bcma.txt | 12 ++++++++++++
+ drivers/bcma/driver_gpio.c                     |  4 ++++
+ 2 files changed, 16 insertions(+)
 
->> --- a/drivers/net/wireless/ath/ath10k/wmi.h
->> +++ b/drivers/net/wireless/ath/ath10k/wmi.h
->> @@ -1394,6 +1394,7 @@ struct wlan_host_mem_req {
->>   * wmi_service_ready_event,e.g., 11ac pass some of the
->>   * device capability to the host.
->>   */
->> +
->>  struct wmi_service_ready_event {
->>       __le32 sw_version;
->>       __le32 sw_version_1;
->
-> Isn't this unneeded change?
+diff --git a/Documentation/devicetree/bindings/bus/bcma.txt b/Documentation/devicetree/bindings/bus/bcma.txt
+index e9070c1..62a4834 100644
+--- a/Documentation/devicetree/bindings/bus/bcma.txt
++++ b/Documentation/devicetree/bindings/bus/bcma.txt
+@@ -9,6 +9,11 @@ Required properties:
+ The cores on the AXI bus are automatically detected by bcma with the
+ memory ranges they are using and they get registered afterwards.
+ 
++The top-level axi bus may contain children representing attached cores
++(devices). This is needed since some hardware details can't be auto
++detected (e.g. IRQ numbers). Also some of the cores may be responsible
++for extra things, e.g. ChipCommon providing access to the GPIO chip.
++
+ Example:
+ 
+ 	axi@18000000 {
+@@ -17,4 +22,11 @@ Example:
+ 		ranges = <0x00000000 0x18000000 0x00100000>;
+ 		#address-cells = <1>;
+ 		#size-cells = <1>;
++
++		chipcommon {
++			reg = <0x00000000 0x1000>;
++
++			gpio-controller;
++			#gpio-cells = <2>;
++		};
+ 	};
+diff --git a/drivers/bcma/driver_gpio.c b/drivers/bcma/driver_gpio.c
+index 8ea497c..57ce5fe 100644
+--- a/drivers/bcma/driver_gpio.c
++++ b/drivers/bcma/driver_gpio.c
+@@ -218,6 +218,10 @@ int bcma_gpio_init(struct bcma_drv_cc *cc)
+ #if IS_BUILTIN(CONFIG_BCM47XX)
+ 	chip->to_irq		= bcma_gpio_to_irq;
+ #endif
++#if IS_BUILTIN(CONFIG_OF)
++	if (cc->core->bus->hosttype == BCMA_HOSTTYPE_SOC)
++		chip->of_node	= cc->core->dev.of_node;
++#endif
+ 	switch (cc->core->bus->chipinfo.id) {
+ 	case BCMA_CHIP_ID_BCM5357:
+ 	case BCMA_CHIP_ID_BCM53572:
+-- 
+1.8.4.5
 
-Good catch. I'll fix that.
-
-
-Michał
