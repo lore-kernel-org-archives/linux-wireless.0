@@ -1,61 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f178.google.com ([74.125.82.178]:54120 "EHLO
-	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756219AbaIQVvI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Sep 2014 17:51:08 -0400
-Received: by mail-we0-f178.google.com with SMTP id q58so2115412wes.37
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Sep 2014 14:51:07 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] bcma: print chip ID in a more user-friendly form
-Date: Wed, 17 Sep 2014 23:50:55 +0200
-Message-Id: <1410990655-2884-1-git-send-email-zajec5@gmail.com> (sfid-20140917_235115_343244_753F2EA7)
+Received: from arrakis.dune.hu ([78.24.191.176]:56010 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750988AbaI3Ial (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Sep 2014 04:30:41 -0400
+Message-ID: <542A6A2A.4070506@openwrt.org> (sfid-20140930_103047_323195_C3EC02D5)
+Date: Tue, 30 Sep 2014 10:30:34 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: Sujith Manoharan <sujith@msujith.org>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: [PATCH 1/3] Revert "ath9k_hw: reduce ANI firstep range for older
+ chips"
+References: <1412016342-21227-1-git-send-email-nbd@openwrt.org> <21546.1381.6346.449656@gargle.gargle.HOWL>
+In-Reply-To: <21546.1381.6346.449656@gargle.gargle.HOWL>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some chip IDs are easier to read/understand when printed in a decimal
-form. For example on my bcm53xx arch router this patch replaces:
-Found chip with id 0xCF12, rev 0x00 and package 0x02
-with a:
-Found chip with id 53010, rev 0x00 and package 0x02
+On 2014-09-30 03:20, Sujith Manoharan wrote:
+> Felix Fietkau wrote:
+>> This reverts commit 09efc56345be4146ab9fc87a55c837ed5d6ea1ab
+>> 
+>> I've received reports that this change is decreasing throughput in some
+>> rare conditions on an AR9280 based device
+> 
+> Wasn't the original patch for improving stability ? Won't reverting it
+> reintroduce the earlier situation ?
+The issues that were slightly improved by this patch were fixed in a
+different way later. This change has been tested in OpenWrt for 3 weeks now.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/bcma/scan.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+> If ANI issues/regressions for pre-AR9003 chips are still arising,
+> I wonder what we have gained by the switch and if the new algorithm
+> is a good fit for the older chips.
+After switching to the new algorithm, a large number of users reported a
+very significant increase in stability. Back then, overall stability of
+ath9k was a lot worse than it is now, and a much larger number of users
+were having trouble with it.
 
-diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
-index b3a403c..14b5656 100644
---- a/drivers/bcma/scan.c
-+++ b/drivers/bcma/scan.c
-@@ -439,6 +439,7 @@ void bcma_init_bus(struct bcma_bus *bus)
- {
- 	s32 tmp;
- 	struct bcma_chipinfo *chipinfo = &(bus->chipinfo);
-+	char chip_id[8];
- 
- 	INIT_LIST_HEAD(&bus->cores);
- 	bus->nr_cores = 0;
-@@ -449,8 +450,11 @@ void bcma_init_bus(struct bcma_bus *bus)
- 	chipinfo->id = (tmp & BCMA_CC_ID_ID) >> BCMA_CC_ID_ID_SHIFT;
- 	chipinfo->rev = (tmp & BCMA_CC_ID_REV) >> BCMA_CC_ID_REV_SHIFT;
- 	chipinfo->pkg = (tmp & BCMA_CC_ID_PKG) >> BCMA_CC_ID_PKG_SHIFT;
--	bcma_info(bus, "Found chip with id 0x%04X, rev 0x%02X and package 0x%02X\n",
--		  chipinfo->id, chipinfo->rev, chipinfo->pkg);
-+
-+	snprintf(chip_id, ARRAY_SIZE(chip_id),
-+		 (chipinfo->id > 0x9999) ? "%d" : "0x%04X", chipinfo->id);
-+	bcma_info(bus, "Found chip with id %s, rev 0x%02X and package 0x%02X\n",
-+		  chip_id, chipinfo->rev, chipinfo->pkg);
- }
- 
- int bcma_bus_scan(struct bcma_bus *bus)
--- 
-1.8.4.5
+Additionally, the new algorithm is much easier to understand and tune -
+the old code (especially the one with both algorithms combined) was an
+incomprehensible mess of spaghetti code. I still believe the new
+algorithm is better for pre-AR9003 than the old one, just the callback
+that applies the settings needs a bit more fine tuning.
 
+The ANI issues that I'm finding these days affect a *much* smaller
+number of users, and are less severe than what we've been dealing with
+during the time of the switch.
+
+> At least for SoC chips, people will report it to OpenWrt. For PC-OEM
+> cards, users will just say that the card sucks and move on...
+For pre-AR9003, most devices used with OpenWrt actually use exactly the
+same chips as PC-OEM cards.
+
+- Felix
