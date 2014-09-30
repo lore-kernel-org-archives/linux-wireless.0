@@ -1,44 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:33056 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752304AbaIJKnk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Sep 2014 06:43:40 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 4/4] cfg80211: clear rekey data on stack
-Date: Wed, 10 Sep 2014 13:39:57 +0300
-Message-Id: <1410345597-28565-4-git-send-email-emmanuel.grumbach@intel.com> (sfid-20140910_124344_062207_339C2732)
-In-Reply-To: <1410345597-28565-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1410345597-28565-1-git-send-email-emmanuel.grumbach@intel.com>
+Received: from mout.kundenserver.de ([212.227.126.187]:53867 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752273AbaI3Jhp convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Sep 2014 05:37:45 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>,
+	devicetree@vger.kernel.org
+Subject: Re: [PATCH V2] bcma: use device from DT (brcm, bus-gpio) for SoC GPIO chip
+Date: Tue, 30 Sep 2014 11:37:24 +0200
+Message-ID: <7035315.8m6ICWZ25d@wuerfel> (sfid-20140930_113749_838167_EB9BD7DB)
+In-Reply-To: <1411892641-5662-1-git-send-email-zajec5@gmail.com>
+References: <1411741733-13888-1-git-send-email-zajec5@gmail.com> <1411892641-5662-1-git-send-email-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Sunday 28 September 2014 10:24:01 Rafał Miłecki wrote:
+> This will allow us to define GPIO-attached devices (LEDs, buttons) in
+> the the device tree.
+> 
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> ---
+> This is based on top of
+> [PATCH v6] bcma: register bcma as device tree driver
+> that I hope will reach wireless-next git tree.
+> 
+> V2: Describe axi chilren and make gpio a child of chipcommon core.
+> ---
+>  Documentation/devicetree/bindings/bus/bcma.txt | 24 ++++++++++++++++++++++++
+>  drivers/bcma/driver_gpio.c                     |  5 +++++
+>  2 files changed, 29 insertions(+)
+> 
+> diff --git a/Documentation/devicetree/bindings/bus/bcma.txt b/Documentation/devicetree/bindings/bus/bcma.txt
+> index e9070c1..26ef4b7 100644
+> --- a/Documentation/devicetree/bindings/bus/bcma.txt
+> +++ b/Documentation/devicetree/bindings/bus/bcma.txt
+> @@ -9,6 +9,22 @@ Required properties:
+>  The cores on the AXI bus are automatically detected by bcma with the
+>  memory ranges they are using and they get registered afterwards.
+>  
+> +The top-level axi bus may contain children representing attached cores
+> +(devices). This is needed since some hardware details can't be auto
+> +detected (e.g. IRQ numbers).
+> +
+> +There is also one special core called ChipCommon that may contain some
+> +extra sub-devices. This is because some devices (e.g. GPIO chip) are
+> +not standalone cores and can be access using ChipCommon regs only.
+> +Possible ChipCommon children:
+> +
+> +- gpio: GPIO chip on the SoC
+> +
+> +  Required properties:
+> +  - compatible: "brcm,bus-gpio"
+> +  - gpio-controller : makes the node a GPIO controller
+> +  - #gpio-cells : size of the GPIO specifier, must be 2
+> +
+>  Example:
+>  
+>  	axi@18000000 {
+> @@ -17,4 +33,12 @@ Example:
+>  		ranges = <0x00000000 0x18000000 0x00100000>;
+>  		#address-cells = <1>;
+>  		#size-cells = <1>;
+> +
+> +		chipcommon@0 {
+> +			gpio@0 {
+> +				compatible = "brcm,bus-gpio";
+> +				gpio-controller;
+> +				#gpio-cells = <2>;
+> +			};
+> +		};
 
-Clear the rekey data on the stack to avoid leaving it there
-in case another place might leak some stack bytes.
+I think you should list the 'reg' property of the chipcommon area
+and make that match the unit address, rather than using '0', mostly
+for consistency.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- net/wireless/nl80211.c | 1 +
- 1 file changed, 1 insertion(+)
+Can you have multiple gpio areas in chipcommon? If not, I'd probably
+leave out the extra node and mark the chipcommon device itself as
+a 'gpio-controller'. It can also be other things at the same time,
+e.g. 'interrupt-controller' or provide things like pwms or pinctrl
+if that's what the hardware does. No need to have separate nodes
+for those if it's all the same register set.
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index f4194af..51eb526 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -9062,6 +9062,7 @@ static int nl80211_set_rekey_data(struct sk_buff *skb, struct genl_info *info)
- 	err = rdev_set_rekey_data(rdev, dev, &rekey_data);
-  out:
- 	wdev_unlock(wdev);
-+	memset(&rekey_data, 0, sizeof(rekey_data));
- 	return err;
- }
- 
--- 
-1.9.1
 
+>  	};
+> diff --git a/drivers/bcma/driver_gpio.c b/drivers/bcma/driver_gpio.c
+> index 8ea497c..7ae39a8 100644
+> --- a/drivers/bcma/driver_gpio.c
+> +++ b/drivers/bcma/driver_gpio.c
+> @@ -218,6 +218,11 @@ int bcma_gpio_init(struct bcma_drv_cc *cc)
+>  #if IS_BUILTIN(CONFIG_BCM47XX)
+>  	chip->to_irq		= bcma_gpio_to_irq;
+>  #endif
+> +#if IS_BUILTIN(CONFIG_OF)
+> +	if (cc->core->bus->hosttype == BCMA_HOSTTYPE_SOC)
+> +		chip->of_node	= of_find_compatible_node(NULL, NULL,
+> +							  "brcm,bus-gpio");
+> +#endif
+
+Just commenting on the general style here, I think you can skip this
+step entirely, as mentioned above.
+
+You should use C syntax here:
+
+	if (IS_BUILTIN(CONFIG_OF) && cc->core->bus->hosttype == BCMA_HOSTTYPE_SOC))
+		chip->of_node = of_find_compatible_node(NULL, NULL, "brcm,bus-gpio");
+
+If CONFIG_OF is not set, of_find_compatible_node() is turned into an inline
+function that returns NULL, so you probably don't even need that.
+
+Finally, of_find_compatible_node() is a really slow operation, and "brcm,bus-gpio"
+is a much too generic name. If you need to look for something that is a child
+node, use something based on for_each_available_child_of_node().
+
+
+	Arnd
