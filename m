@@ -1,51 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f51.google.com ([74.125.82.51]:36639 "EHLO
-	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754176AbaIVU2X (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:48658 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751056AbaI3Ik0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Sep 2014 16:28:23 -0400
-Received: by mail-wg0-f51.google.com with SMTP id m15so3322224wgh.22
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Sep 2014 13:28:22 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 2/2] staging: vt6655: device_get_options remove unused variable devname
-Date: Mon, 22 Sep 2014 21:27:47 +0100
-Message-Id: <1411417667-9191-2-git-send-email-tvboxspy@gmail.com> (sfid-20140922_222826_552636_73691D0B)
-In-Reply-To: <1411417667-9191-1-git-send-email-tvboxspy@gmail.com>
-References: <1411417667-9191-1-git-send-email-tvboxspy@gmail.com>
+	Tue, 30 Sep 2014 04:40:26 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <21546.27787.196092.518463@gargle.gargle.HOWL> (sfid-20140930_104037_949004_1137C83D)
+Date: Tue, 30 Sep 2014 14:10:43 +0530
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: [PATCH 1/3] Revert "ath9k_hw: reduce ANI firstep range for older
+ chips"
+In-Reply-To: <542A6A2A.4070506@openwrt.org>
+References: <1412016342-21227-1-git-send-email-nbd@openwrt.org>
+	<21546.1381.6346.449656@gargle.gargle.HOWL>
+	<542A6A2A.4070506@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/device_main.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+Felix Fietkau wrote:
+> For pre-AR9003, most devices used with OpenWrt actually use exactly the
+> same chips as PC-OEM cards.
 
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index 1a1440f..76d5454 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -331,8 +331,7 @@ static void vt6655_remove(struct pci_dev *pcid)
- 	device_free_info(pDevice);
- }
- 
--static void device_get_options(struct vnt_private *pDevice,
--			       char *devname)
-+static void device_get_options(struct vnt_private *pDevice)
- {
- 	POPTIONS pOpts = &(pDevice->sOpts);
- 
-@@ -923,7 +922,7 @@ vt6655_probe(struct pci_dev *pcid, const struct pci_device_id *ent)
- 	MACvInitialize(pDevice->PortOffset);
- 	MACvReadEtherAddress(pDevice->PortOffset, dev->dev_addr);
- 
--	device_get_options(pDevice, dev->name);
-+	device_get_options(pDevice);
- 	device_set_options(pDevice);
- 	//Mask out the options cannot be set to the chip
- 	pDevice->sOpts.flags &= pChip_info->flags;
--- 
-1.9.1
+Yes, that is true. We split the SoC/PC-OEM chip lines in AR9003.
+Sorry for the noise. ;)
 
+Sujith
