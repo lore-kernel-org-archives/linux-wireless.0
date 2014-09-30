@@ -1,552 +1,357 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:9049 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751809AbaI3IXZ (ORCPT
+Received: from mout.kundenserver.de ([212.227.126.130]:57557 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751807AbaI3PtL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Sep 2014 04:23:25 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 6/6] brcmfmac: Add wowl support for PCIE devices.
-Date: Tue, 30 Sep 2014 10:23:18 +0200
-Message-ID: <1412065398-14316-7-git-send-email-arend@broadcom.com> (sfid-20140930_102344_754845_71EE2366)
-In-Reply-To: <1412065398-14316-1-git-send-email-arend@broadcom.com>
-References: <1412065398-14316-1-git-send-email-arend@broadcom.com>
+	Tue, 30 Sep 2014 11:49:11 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	wil6210@qca.qualcomm.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [PATCH] wil6210: remove obsolete msm platform code
+Date: Tue, 30 Sep 2014 17:48:20 +0200
+Message-ID: <3995357.SmO1fZQuHn@wuerfel> (sfid-20140930_174932_691356_2D495E2F)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+The wil6210 driver has a glue layer for the Qualcomm MSM platform
+code, which apparently could never build and is unlikely to
+ever be able to in the future, as the MSM platform is being phased
+out in favor of the new QCOM platform, and the driver relies
+on out-of-tree infrastructure. Trying to build it currently
+results in this error:
 
-Add basic wowl (magic packet and disconnect) support. This patch adds
-this support only for PCIE bus devices. This feature requires FW which
-has support for wowl built in.
+drivers/net/wireless/ath/wil6210/wil_platform_msm.c:19:27: fatal error: linux/msm-bus.h: No such file or directory
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Removing the driver fixes the build and makes it possible to
+build an allmodconfig kernel for MSM.
+
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h  |  11 +++
- drivers/net/wireless/brcm80211/brcmfmac/feature.c  |   2 +
- drivers/net/wireless/brcm80211/brcmfmac/feature.h  |   3 +-
- .../net/wireless/brcm80211/brcmfmac/fwil_types.h   |  56 +++++++++++
- drivers/net/wireless/brcm80211/brcmfmac/pcie.c     |  74 +++++++++++---
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  | 106 ++++++++++++++++-----
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.h  |   4 +
- drivers/net/wireless/brcm80211/include/defs.h      |   5 +-
- 8 files changed, 220 insertions(+), 41 deletions(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
-index 3122b86..80e73a1 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
-@@ -67,6 +67,7 @@ struct brcmf_bus_dcmd {
-  * @txctl: transmit a control request message to dongle.
-  * @rxctl: receive a control response message from dongle.
-  * @gettxq: obtain a reference of bus transmit queue (optional).
-+ * @wowl_config: specify if dongle is configured for wowl when going to suspend
-  *
-  * This structure provides an abstract interface towards the
-  * bus specific driver. For control messages to common driver
-@@ -80,6 +81,7 @@ struct brcmf_bus_ops {
- 	int (*txctl)(struct device *dev, unsigned char *msg, uint len);
- 	int (*rxctl)(struct device *dev, unsigned char *msg, uint len);
- 	struct pktq * (*gettxq)(struct device *dev);
-+	void (*wowl_config)(struct device *dev, bool enabled);
- };
+diff --git a/drivers/net/wireless/ath/wil6210/Kconfig b/drivers/net/wireless/ath/wil6210/Kconfig
+index 481680a3aa55..ce8c0381825e 100644
+--- a/drivers/net/wireless/ath/wil6210/Kconfig
++++ b/drivers/net/wireless/ath/wil6210/Kconfig
+@@ -39,12 +39,3 @@ config WIL6210_TRACING
+ 	  option if you are interested in debugging the driver.
  
- 
-@@ -114,6 +116,7 @@ struct brcmf_bus_msgbuf {
-  * @dstats: dongle-based statistical data.
-  * @dcmd_list: bus/device specific dongle initialization commands.
-  * @chip: device identifier of the dongle chip.
-+ * @wowl_supported: is wowl supported by bus driver.
-  * @chiprev: revision of the dongle chip.
-  */
- struct brcmf_bus {
-@@ -131,6 +134,7 @@ struct brcmf_bus {
- 	u32 chip;
- 	u32 chiprev;
- 	bool always_use_fws_queue;
-+	bool wowl_supported;
- 
- 	struct brcmf_bus_ops *ops;
- 	struct brcmf_bus_msgbuf *msgbuf;
-@@ -177,6 +181,13 @@ struct pktq *brcmf_bus_gettxq(struct brcmf_bus *bus)
- 	return bus->ops->gettxq(bus->dev);
- }
- 
-+static inline
-+void brcmf_bus_wowl_config(struct brcmf_bus *bus, bool enabled)
-+{
-+	if (bus->ops->wowl_config)
-+		bus->ops->wowl_config(bus->dev, enabled);
-+}
-+
- static inline bool brcmf_bus_ready(struct brcmf_bus *bus)
- {
- 	return bus->state == BRCMF_BUS_LOAD || bus->state == BRCMF_BUS_DATA;
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/feature.c b/drivers/net/wireless/brcm80211/brcmfmac/feature.c
-index 50877e3..aed53ac 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/feature.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/feature.c
-@@ -107,6 +107,8 @@ void brcmf_feat_attach(struct brcmf_pub *drvr)
- 	struct brcmf_if *ifp = drvr->iflist[0];
- 
- 	brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_MCHAN, "mchan");
-+	if (drvr->bus_if->wowl_supported)
-+		brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_WOWL, "wowl");
- 
- 	/* set chip related quirks */
- 	switch (drvr->bus_if->chip) {
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/feature.h b/drivers/net/wireless/brcm80211/brcmfmac/feature.h
-index 961d175..b9a796d 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/feature.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/feature.h
-@@ -22,7 +22,8 @@
-  * MCHAN: multi-channel for concurrent P2P.
-  */
- #define BRCMF_FEAT_LIST \
--	BRCMF_FEAT_DEF(MCHAN)
-+	BRCMF_FEAT_DEF(MCHAN) \
-+	BRCMF_FEAT_DEF(WOWL)
- /*
-  * Quirks:
-  *
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwil_types.h b/drivers/net/wireless/brcm80211/brcmfmac/fwil_types.h
-index 2bc68a2..5ff5cd0 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fwil_types.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fwil_types.h
-@@ -53,6 +53,62 @@
- #define BRCMF_OBSS_COEX_OFF		0
- #define BRCMF_OBSS_COEX_ON		1
- 
-+/* WOWL bits */
-+/* Wakeup on Magic packet: */
-+#define WL_WOWL_MAGIC			(1 << 0)
-+/* Wakeup on Netpattern */
-+#define WL_WOWL_NET			(1 << 1)
-+/* Wakeup on loss-of-link due to Disassoc/Deauth: */
-+#define WL_WOWL_DIS			(1 << 2)
-+/* Wakeup on retrograde TSF: */
-+#define WL_WOWL_RETR			(1 << 3)
-+/* Wakeup on loss of beacon: */
-+#define WL_WOWL_BCN			(1 << 4)
-+/* Wakeup after test: */
-+#define WL_WOWL_TST			(1 << 5)
-+/* Wakeup after PTK refresh: */
-+#define WL_WOWL_M1			(1 << 6)
-+/* Wakeup after receipt of EAP-Identity Req: */
-+#define WL_WOWL_EAPID			(1 << 7)
-+/* Wakeind via PME(0) or GPIO(1): */
-+#define WL_WOWL_PME_GPIO		(1 << 8)
-+/* need tkip phase 1 key to be updated by the driver: */
-+#define WL_WOWL_NEEDTKIP1		(1 << 9)
-+/* enable wakeup if GTK fails: */
-+#define WL_WOWL_GTK_FAILURE		(1 << 10)
-+/* support extended magic packets: */
-+#define WL_WOWL_EXTMAGPAT		(1 << 11)
-+/* support ARP/NS/keepalive offloading: */
-+#define WL_WOWL_ARPOFFLOAD		(1 << 12)
-+/* read protocol version for EAPOL frames: */
-+#define WL_WOWL_WPA2			(1 << 13)
-+/* If the bit is set, use key rotaton: */
-+#define WL_WOWL_KEYROT			(1 << 14)
-+/* If the bit is set, frm received was bcast frame: */
-+#define WL_WOWL_BCAST			(1 << 15)
-+/* If the bit is set, scan offload is enabled: */
-+#define WL_WOWL_SCANOL			(1 << 16)
-+/* Wakeup on tcpkeep alive timeout: */
-+#define WL_WOWL_TCPKEEP_TIME		(1 << 17)
-+/* Wakeup on mDNS Conflict Resolution: */
-+#define WL_WOWL_MDNS_CONFLICT		(1 << 18)
-+/* Wakeup on mDNS Service Connect: */
-+#define WL_WOWL_MDNS_SERVICE		(1 << 19)
-+/* tcp keepalive got data: */
-+#define WL_WOWL_TCPKEEP_DATA		(1 << 20)
-+/* Firmware died in wowl mode: */
-+#define WL_WOWL_FW_HALT			(1 << 21)
-+/* Enable detection of radio button changes: */
-+#define WL_WOWL_ENAB_HWRADIO		(1 << 22)
-+/* Offloads detected MIC failure(s): */
-+#define WL_WOWL_MIC_FAIL		(1 << 23)
-+/* Wakeup in Unassociated state (Net/Magic Pattern): */
-+#define WL_WOWL_UNASSOC			(1 << 24)
-+/* Wakeup if received matched secured pattern: */
-+#define WL_WOWL_SECURE			(1 << 25)
-+/* Link Down indication in WoWL mode: */
-+#define WL_WOWL_LINKDOWN		(1 << 31)
-+
- /* join preference types for join_pref iovar */
- enum brcmf_join_pref_types {
- 	BRCMF_JOIN_PREF_RSSI = 1,
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
-index e5101b2..8c0632e 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
-@@ -165,6 +165,8 @@ enum brcmf_pcie_state {
- 
- #define BRCMF_H2D_HOST_D3_INFORM		0x00000001
- #define BRCMF_H2D_HOST_DS_ACK			0x00000002
-+#define BRCMF_H2D_HOST_D0_INFORM_IN_USE		0x00000008
-+#define BRCMF_H2D_HOST_D0_INFORM		0x00000010
- 
- #define BRCMF_PCIE_MBDATA_TIMEOUT		2000
- 
-@@ -243,6 +245,7 @@ struct brcmf_pciedev_info {
- 	wait_queue_head_t mbdata_resp_wait;
- 	bool mbdata_completed;
- 	bool irq_allocated;
-+	bool wowl_enabled;
- };
- 
- struct brcmf_pcie_ringbuf {
-@@ -537,7 +540,7 @@ static int brcmf_pcie_exit_download_state(struct brcmf_pciedev_info *devinfo,
- }
- 
- 
--static void
-+static int
- brcmf_pcie_send_mb_data(struct brcmf_pciedev_info *devinfo, u32 htod_mb_data)
- {
- 	struct brcmf_pcie_shared_info *shared;
-@@ -558,13 +561,15 @@ brcmf_pcie_send_mb_data(struct brcmf_pciedev_info *devinfo, u32 htod_mb_data)
- 		msleep(10);
- 		i++;
- 		if (i > 100)
--			break;
-+			return -EIO;
- 		cur_htod_mb_data = brcmf_pcie_read_tcm32(devinfo, addr);
- 	}
- 
- 	brcmf_pcie_write_tcm32(devinfo, addr, htod_mb_data);
- 	pci_write_config_dword(devinfo->pdev, BRCMF_PCIE_REG_SBMBX, 1);
- 	pci_write_config_dword(devinfo->pdev, BRCMF_PCIE_REG_SBMBX, 1);
-+
-+	return 0;
- }
- 
- 
-@@ -1229,11 +1234,27 @@ static int brcmf_pcie_rx_ctlpkt(struct device *dev, unsigned char *msg,
- }
- 
- 
-+static void brcmf_pcie_wowl_config(struct device *dev, bool enabled)
-+{
-+	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
-+	struct brcmf_pciedev *buspub = bus_if->bus_priv.pcie;
-+	struct brcmf_pciedev_info *devinfo = buspub->devinfo;
-+
-+	brcmf_dbg(PCIE, "Configuring WOWL, enabled=%d\n", enabled);
-+	devinfo->wowl_enabled = enabled;
-+	if (enabled)
-+		device_set_wakeup_enable(&devinfo->pdev->dev, true);
-+	else
-+		device_set_wakeup_enable(&devinfo->pdev->dev, false);
-+}
-+
-+
- static struct brcmf_bus_ops brcmf_pcie_bus_ops = {
- 	.txdata = brcmf_pcie_tx,
- 	.stop = brcmf_pcie_down,
- 	.txctl = brcmf_pcie_tx_ctlpkt,
- 	.rxctl = brcmf_pcie_rx_ctlpkt,
-+	.wowl_config = brcmf_pcie_wowl_config,
- };
- 
- 
-@@ -1668,6 +1689,7 @@ brcmf_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	bus->ops = &brcmf_pcie_bus_ops;
- 	bus->proto_type = BRCMF_PROTO_MSGBUF;
- 	bus->chip = devinfo->coreid;
-+	bus->wowl_supported = pci_pme_capable(pdev, PCI_D3hot);
- 	dev_set_drvdata(&pdev->dev, bus);
- 
- 	ret = brcmf_pcie_get_fwnames(devinfo);
-@@ -1759,36 +1781,62 @@ static int brcmf_pcie_suspend(struct pci_dev *pdev, pm_message_t state)
- 		brcmf_err("Timeout on response for entering D3 substate\n");
- 		return -EIO;
- 	}
--	brcmf_pcie_release_irq(devinfo);
-+	brcmf_pcie_send_mb_data(devinfo, BRCMF_H2D_HOST_D0_INFORM_IN_USE);
- 
- 	err = pci_save_state(pdev);
--	if (err) {
-+	if (err)
- 		brcmf_err("pci_save_state failed, err=%d\n", err);
--		return err;
-+	if ((err) || (!devinfo->wowl_enabled)) {
-+		brcmf_chip_detach(devinfo->ci);
-+		devinfo->ci = NULL;
-+		brcmf_pcie_remove(pdev);
-+		return 0;
- 	}
- 
--	brcmf_chip_detach(devinfo->ci);
--	devinfo->ci = NULL;
+ 	  If unsure, say Y to make it easier to debug problems.
 -
--	brcmf_pcie_remove(pdev);
+-config WIL6210_PLATFORM_MSM
+-	bool "wil6210 MSM platform specific support"
+-	depends on WIL6210
+-	depends on ARCH_MSM
+-	default y
+-	---help---
+-	  Say Y here to enable wil6210 driver support for MSM
+-	  platform specific features
+diff --git a/drivers/net/wireless/ath/wil6210/Makefile b/drivers/net/wireless/ath/wil6210/Makefile
+index a471d74ae409..944f300e2979 100644
+--- a/drivers/net/wireless/ath/wil6210/Makefile
++++ b/drivers/net/wireless/ath/wil6210/Makefile
+@@ -13,7 +13,6 @@ wil6210-y += rx_reorder.o
+ wil6210-y += fw.o
+ wil6210-$(CONFIG_WIL6210_TRACING) += trace.o
+ wil6210-y += wil_platform.o
+-wil6210-$(CONFIG_WIL6210_PLATFORM_MSM) += wil_platform_msm.o
+ 
+ # for tracing framework to find trace.h
+ CFLAGS_trace.o := -I$(src)
+diff --git a/drivers/net/wireless/ath/wil6210/wil_platform_msm.c b/drivers/net/wireless/ath/wil6210/wil_platform_msm.c
+deleted file mode 100644
+index b354a743240d..000000000000
+--- a/drivers/net/wireless/ath/wil6210/wil_platform_msm.c
++++ /dev/null
+@@ -1,257 +0,0 @@
+-/*
+- * Copyright (c) 2014 Qualcomm Atheros, Inc.
+- *
+- * Permission to use, copy, modify, and/or distribute this software for any
+- * purpose with or without fee is hereby granted, provided that the above
+- * copyright notice and this permission notice appear in all copies.
+- *
+- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+- * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+- * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+- * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+- */
 -
- 	return pci_prepare_to_sleep(pdev);
- }
- 
+-#include <linux/of.h>
+-#include <linux/slab.h>
+-#include <linux/msm-bus.h>
 -
- static int brcmf_pcie_resume(struct pci_dev *pdev)
- {
-+	struct brcmf_pciedev_info *devinfo;
-+	struct brcmf_bus *bus;
- 	int err;
- 
--	brcmf_dbg(PCIE, "Enter, pdev=%p\n", pdev);
-+	bus = dev_get_drvdata(&pdev->dev);
-+	brcmf_dbg(PCIE, "Enter, pdev=%p, bus=%p\n", pdev, bus);
- 
- 	err = pci_set_power_state(pdev, PCI_D0);
- 	if (err) {
- 		brcmf_err("pci_set_power_state failed, err=%d\n", err);
--		return err;
-+		goto cleanup;
- 	}
- 	pci_restore_state(pdev);
-+	pci_enable_wake(pdev, PCI_D3hot, false);
-+	pci_enable_wake(pdev, PCI_D3cold, false);
-+
-+	/* Check if device is still up and running, if so we are ready */
-+	if (bus) {
-+		devinfo = bus->bus_priv.pcie->devinfo;
-+		if (brcmf_pcie_read_reg32(devinfo,
-+					  BRCMF_PCIE_PCIE2REG_INTMASK) != 0) {
-+			if (brcmf_pcie_send_mb_data(devinfo,
-+						    BRCMF_H2D_HOST_D0_INFORM))
-+				goto cleanup;
-+			brcmf_dbg(PCIE, "Hot resume, continue....\n");
-+			brcmf_pcie_select_core(devinfo, BCMA_CORE_PCIE2);
-+			brcmf_bus_change_state(bus, BRCMF_BUS_DATA);
-+			brcmf_pcie_intr_enable(devinfo);
-+			return 0;
-+		}
-+	}
- 
-+cleanup:
-+	if (bus) {
-+		devinfo = bus->bus_priv.pcie->devinfo;
-+		brcmf_chip_detach(devinfo->ci);
-+		devinfo->ci = NULL;
-+		brcmf_pcie_remove(pdev);
-+	}
- 	err = brcmf_pcie_probe(pdev, NULL);
- 	if (err)
- 		brcmf_err("probe after resume failed, err=%d\n", err);
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index 6860501..e9e18e1 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -37,6 +37,7 @@
- #include "fwil.h"
- #include "proto.h"
- #include "vendor.h"
-+#include "dhd_bus.h"
- 
- #define BRCMF_SCAN_IE_LEN_MAX		2048
- #define BRCMF_PNO_VERSION		2
-@@ -2777,50 +2778,91 @@ static __always_inline void brcmf_delay(u32 ms)
- 
- static s32 brcmf_cfg80211_resume(struct wiphy *wiphy)
- {
-+	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
-+	struct net_device *ndev = cfg_to_ndev(cfg);
-+	struct brcmf_if *ifp = netdev_priv(ndev);
-+
- 	brcmf_dbg(TRACE, "Enter\n");
- 
-+	if (cfg->wowl_enabled) {
-+		brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_PM,
-+				      cfg->pre_wowl_pmmode);
-+		brcmf_fil_iovar_data_set(ifp, "wowl_pattern", "clr", 4);
-+		brcmf_fil_iovar_int_set(ifp, "wowl_clear", 0);
-+		cfg->wowl_enabled = false;
-+	}
- 	return 0;
- }
- 
-+static void brcmf_configure_wowl(struct brcmf_cfg80211_info *cfg,
-+				 struct brcmf_if *ifp,
-+				 struct cfg80211_wowlan *wowl)
-+{
-+	u32 wowl_config;
-+
-+	brcmf_dbg(TRACE, "Suspend, wowl config.\n");
-+
-+	brcmf_fil_cmd_int_get(ifp, BRCMF_C_GET_PM, &cfg->pre_wowl_pmmode);
-+	brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_PM, PM_MAX);
-+
-+	wowl_config = 0;
-+	if (wowl->disconnect)
-+		wowl_config |= WL_WOWL_DIS | WL_WOWL_BCN | WL_WOWL_RETR;
-+		/* Note: if "wowl" target and not "wowlpf" then wowl_bcn_loss
-+		 * should be configured. This paramater is not supported by
-+		 * wowlpf.
-+		 */
-+	if (wowl->magic_pkt)
-+		wowl_config |= WL_WOWL_MAGIC;
-+	brcmf_fil_iovar_int_set(ifp, "wowl", wowl_config);
-+	brcmf_fil_iovar_int_set(ifp, "wowl_activate", 1);
-+	brcmf_bus_wowl_config(cfg->pub->bus_if, true);
-+	cfg->wowl_enabled = true;
-+}
-+
- static s32 brcmf_cfg80211_suspend(struct wiphy *wiphy,
--				  struct cfg80211_wowlan *wow)
-+				  struct cfg80211_wowlan *wowl)
- {
- 	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
- 	struct net_device *ndev = cfg_to_ndev(cfg);
-+	struct brcmf_if *ifp = netdev_priv(ndev);
- 	struct brcmf_cfg80211_vif *vif;
- 
- 	brcmf_dbg(TRACE, "Enter\n");
- 
--	/*
--	 * if the primary net_device is not READY there is nothing
-+	/* if the primary net_device is not READY there is nothing
- 	 * we can do but pray resume goes smoothly.
- 	 */
--	vif = ((struct brcmf_if *)netdev_priv(ndev))->vif;
--	if (!check_vif_up(vif))
-+	if (!check_vif_up(ifp->vif))
- 		goto exit;
- 
--	list_for_each_entry(vif, &cfg->vif_list, list) {
--		if (!test_bit(BRCMF_VIF_STATUS_READY, &vif->sme_state))
--			continue;
--		/*
--		 * While going to suspend if associated with AP disassociate
--		 * from AP to save power while system is in suspended state
--		 */
--		brcmf_link_down(vif);
+-#include "wil_platform.h"
+-#include "wil_platform_msm.h"
 -
--		/* Make sure WPA_Supplicant receives all the event
--		 * generated due to DISASSOC call to the fw to keep
--		 * the state fw and WPA_Supplicant state consistent
--		 */
--		brcmf_delay(500);
+-/**
+- * struct wil_platform_msm - wil6210 msm platform module info
+- *
+- * @dev: device object
+- * @msm_bus_handle: handle for using msm_bus API
+- * @pdata: bus scale info retrieved from DT
+- */
+-struct wil_platform_msm {
+-	struct device *dev;
+-	uint32_t msm_bus_handle;
+-	struct msm_bus_scale_pdata *pdata;
+-};
+-
+-#define KBTOB(a) (a * 1000ULL)
+-
+-/**
+- * wil_platform_get_pdata() - Generate bus client data from device tree
+- * provided by clients.
+- *
+- * dev: device object
+- * of_node: Device tree node to extract information from
+- *
+- * The function returns a valid pointer to the allocated bus-scale-pdata
+- * if the vectors were correctly read from the client's device node.
+- * Any error in reading or parsing the device node will return NULL
+- * to the caller.
+- */
+-static struct msm_bus_scale_pdata *wil_platform_get_pdata(
+-		struct device *dev,
+-		struct device_node *of_node)
+-{
+-	struct msm_bus_scale_pdata *pdata;
+-	struct msm_bus_paths *usecase;
+-	int i, j, ret, len;
+-	unsigned int num_usecases, num_paths, mem_size;
+-	const uint32_t *vec_arr;
+-	struct msm_bus_vectors *vectors;
+-
+-	/* first read num_usecases and num_paths so we can calculate
+-	 * amount of memory to allocate
+-	 */
+-	ret = of_property_read_u32(of_node, "qcom,msm-bus,num-cases",
+-				   &num_usecases);
+-	if (ret) {
+-		dev_err(dev, "Error: num-usecases not found\n");
+-		return NULL;
 -	}
 -
- 	/* end any scanning */
- 	if (test_bit(BRCMF_SCAN_STATUS_BUSY, &cfg->scan_status))
- 		brcmf_abort_scanning(cfg);
- 
--	/* Turn off watchdog timer */
--	brcmf_set_mpc(netdev_priv(ndev), 1);
-+	if (wowl == NULL) {
-+		brcmf_bus_wowl_config(cfg->pub->bus_if, false);
-+		list_for_each_entry(vif, &cfg->vif_list, list) {
-+			if (!test_bit(BRCMF_VIF_STATUS_READY, &vif->sme_state))
-+				continue;
-+			/* While going to suspend if associated with AP
-+			 * disassociate from AP to save power while system is
-+			 * in suspended state
-+			 */
-+			brcmf_link_down(vif);
-+			/* Make sure WPA_Supplicant receives all the event
-+			 * generated due to DISASSOC call to the fw to keep
-+			 * the state fw and WPA_Supplicant state consistent
-+			 */
-+			brcmf_delay(500);
-+		}
-+		/* Configure MPC */
-+		brcmf_set_mpc(ifp, 1);
-+
-+	} else {
-+		/* Configure WOWL paramaters */
-+		brcmf_configure_wowl(cfg, ifp, wowl);
-+	}
- 
- exit:
- 	brcmf_dbg(TRACE, "Exit\n");
-@@ -5393,6 +5435,21 @@ static void brcmf_wiphy_pno_params(struct wiphy *wiphy)
- 	wiphy->flags |= WIPHY_FLAG_SUPPORTS_SCHED_SCAN;
- }
- 
-+
-+#ifdef CONFIG_PM
-+static const struct wiphy_wowlan_support brcmf_wowlan_support = {
-+	.flags = WIPHY_WOWLAN_MAGIC_PKT | WIPHY_WOWLAN_DISCONNECT,
-+};
-+#endif
-+
-+static void brcmf_wiphy_wowl_params(struct wiphy *wiphy)
-+{
-+#ifdef CONFIG_PM
-+	/* wowl settings */
-+	wiphy->wowlan = &brcmf_wowlan_support;
-+#endif
-+}
-+
- static int brcmf_setup_wiphy(struct wiphy *wiphy, struct brcmf_if *ifp)
- {
- 	struct ieee80211_iface_combination ifc_combo;
-@@ -5430,6 +5487,9 @@ static int brcmf_setup_wiphy(struct wiphy *wiphy, struct brcmf_if *ifp)
- 	wiphy->vendor_commands = brcmf_vendor_cmds;
- 	wiphy->n_vendor_commands = BRCMF_VNDR_CMDS_LAST - 1;
- 
-+	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_WOWL))
-+		brcmf_wiphy_wowl_params(wiphy);
-+
- 	return brcmf_setup_wiphybands(wiphy);
- }
- 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
-index 82f8778..6abf94e 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
-@@ -363,6 +363,8 @@ struct brcmf_cfg80211_vif_event {
-  * @vif_list: linked list of vif instances.
-  * @vif_cnt: number of vif instances.
-  * @vif_event: vif event signalling.
-+ * @wowl_enabled; set during suspend, is wowl used.
-+ * @pre_wowl_pmmode: intermediate storage of pm mode during wowl.
-  */
- struct brcmf_cfg80211_info {
- 	struct wiphy *wiphy;
-@@ -396,6 +398,8 @@ struct brcmf_cfg80211_info {
- 	struct brcmf_cfg80211_vif_event vif_event;
- 	struct completion vif_disabled;
- 	struct brcmu_d11inf d11inf;
-+	bool wowl_enabled;
-+	u32 pre_wowl_pmmode;
- };
- 
- /**
-diff --git a/drivers/net/wireless/brcm80211/include/defs.h b/drivers/net/wireless/brcm80211/include/defs.h
-index fb7cbcf..8d1e85e 100644
---- a/drivers/net/wireless/brcm80211/include/defs.h
-+++ b/drivers/net/wireless/brcm80211/include/defs.h
-@@ -74,10 +74,6 @@
- #define	BRCM_BAND_2G		2	/* 2.4 Ghz */
- #define	BRCM_BAND_ALL		3	/* all bands */
- 
--/* Values for PM */
--#define PM_OFF	0
--#define PM_MAX	1
+-	ret = of_property_read_u32(of_node, "qcom,msm-bus,num-paths",
+-				   &num_paths);
+-	if (ret) {
+-		dev_err(dev, "Error: num_paths not found\n");
+-		return NULL;
+-	}
 -
- /* Debug levels */
- #define BRCM_DL_INFO		0x00000001
- #define BRCM_DL_MAC80211	0x00000002
-@@ -87,6 +83,7 @@
- #define BRCM_DL_DMA		0x00000020
- #define BRCM_DL_HT		0x00000040
- 
-+/* Values for PM */
- #define PM_OFF	0
- #define PM_MAX	1
- #define PM_FAST 2
--- 
-1.9.1
+-	/* pdata memory layout:
+-	 *   msm_bus_scale_pdata
+-	 *   msm_bus_paths[num_usecases]
+-	 *   msm_bus_vectors[num_usecases][num_paths]
+-	 */
+-	mem_size = sizeof(struct msm_bus_scale_pdata) +
+-		   sizeof(struct msm_bus_paths) * num_usecases +
+-		   sizeof(struct msm_bus_vectors) * num_usecases * num_paths;
+-
+-	pdata = kzalloc(mem_size, GFP_KERNEL);
+-	if (!pdata)
+-		return NULL;
+-
+-	ret = of_property_read_string(of_node, "qcom,msm-bus,name",
+-				      &pdata->name);
+-	if (ret) {
+-		dev_err(dev, "Error: Client name not found\n");
+-		goto err;
+-	}
+-
+-	if (of_property_read_bool(of_node, "qcom,msm-bus,active-only")) {
+-		pdata->active_only = 1;
+-	} else {
+-		dev_info(dev, "active_only flag absent.\n");
+-		dev_info(dev, "Using dual context by default\n");
+-	}
+-
+-	pdata->num_usecases = num_usecases;
+-	pdata->usecase = (struct msm_bus_paths *)(pdata + 1);
+-
+-	vec_arr = of_get_property(of_node, "qcom,msm-bus,vectors-KBps", &len);
+-	if (vec_arr == NULL) {
+-		dev_err(dev, "Error: Vector array not found\n");
+-		goto err;
+-	}
+-
+-	if (len != num_usecases * num_paths * sizeof(uint32_t) * 4) {
+-		dev_err(dev, "Error: Length-error on getting vectors\n");
+-		goto err;
+-	}
+-
+-	vectors = (struct msm_bus_vectors *)(pdata->usecase + num_usecases);
+-	for (i = 0; i < num_usecases; i++) {
+-		usecase = &pdata->usecase[i];
+-		usecase->num_paths = num_paths;
+-		usecase->vectors = &vectors[i];
+-
+-		for (j = 0; j < num_paths; j++) {
+-			int index = ((i * num_paths) + j) * 4;
+-
+-			usecase->vectors[j].src = be32_to_cpu(vec_arr[index]);
+-			usecase->vectors[j].dst =
+-				be32_to_cpu(vec_arr[index + 1]);
+-			usecase->vectors[j].ab = (uint64_t)
+-				KBTOB(be32_to_cpu(vec_arr[index + 2]));
+-			usecase->vectors[j].ib = (uint64_t)
+-				KBTOB(be32_to_cpu(vec_arr[index + 3]));
+-		}
+-	}
+-
+-	return pdata;
+-
+-err:
+-	kfree(pdata);
+-
+-	return NULL;
+-}
+-
+-/* wil_platform API (callbacks) */
+-
+-static int wil_platform_bus_request(void *handle,
+-				    uint32_t kbps /* KBytes/Sec */)
+-{
+-	int rc, i;
+-	struct wil_platform_msm *msm = (struct wil_platform_msm *)handle;
+-	int vote = 0; /* vote 0 in case requested kbps cannot be satisfied */
+-	struct msm_bus_paths *usecase;
+-	uint32_t usecase_kbps;
+-	uint32_t min_kbps = ~0;
+-
+-	/* find the lowest usecase that is bigger than requested kbps */
+-	for (i = 0; i < msm->pdata->num_usecases; i++) {
+-		usecase = &msm->pdata->usecase[i];
+-		/* assume we have single path (vectors[0]). If we ever
+-		 * have multiple paths, need to define the behavior */
+-		usecase_kbps = div64_u64(usecase->vectors[0].ib, 1000);
+-		if (usecase_kbps >= kbps && usecase_kbps < min_kbps) {
+-			min_kbps = usecase_kbps;
+-			vote = i;
+-		}
+-	}
+-
+-	rc = msm_bus_scale_client_update_request(msm->msm_bus_handle, vote);
+-	if (rc)
+-		dev_err(msm->dev, "Failed msm_bus voting. kbps=%d vote=%d, rc=%d\n",
+-			kbps, vote, rc);
+-	else
+-		/* TOOD: remove */
+-		dev_info(msm->dev, "msm_bus_scale_client_update_request succeeded. kbps=%d vote=%d\n",
+-			 kbps, vote);
+-
+-	return rc;
+-}
+-
+-static void wil_platform_uninit(void *handle)
+-{
+-	struct wil_platform_msm *msm = (struct wil_platform_msm *)handle;
+-
+-	dev_info(msm->dev, "wil_platform_uninit\n");
+-
+-	if (msm->msm_bus_handle)
+-		msm_bus_scale_unregister_client(msm->msm_bus_handle);
+-
+-	kfree(msm->pdata);
+-	kfree(msm);
+-}
+-
+-static int wil_platform_msm_bus_register(struct wil_platform_msm *msm,
+-					 struct device_node *node)
+-{
+-	msm->pdata = wil_platform_get_pdata(msm->dev, node);
+-	if (!msm->pdata) {
+-		dev_err(msm->dev, "Failed getting DT info\n");
+-		return -EINVAL;
+-	}
+-
+-	msm->msm_bus_handle = msm_bus_scale_register_client(msm->pdata);
+-	if (!msm->msm_bus_handle) {
+-		dev_err(msm->dev, "Failed msm_bus registration\n");
+-		return -EINVAL;
+-	}
+-
+-	dev_info(msm->dev, "msm_bus registration succeeded! handle 0x%x\n",
+-		 msm->msm_bus_handle);
+-
+-	return 0;
+-}
+-
+-/**
+- * wil_platform_msm_init() - wil6210 msm platform module init
+- *
+- * The function must be called before all other functions in this module.
+- * It returns a handle which is used with the rest of the API
+- *
+- */
+-void *wil_platform_msm_init(struct device *dev, struct wil_platform_ops *ops)
+-{
+-	struct device_node *of_node;
+-	struct wil_platform_msm *msm;
+-	int rc;
+-
+-	of_node = of_find_compatible_node(NULL, NULL, "qcom,wil6210");
+-	if (!of_node) {
+-		/* this could mean non-msm platform */
+-		dev_err(dev, "DT node not found\n");
+-		return NULL;
+-	}
+-
+-	msm = kzalloc(sizeof(*msm), GFP_KERNEL);
+-	if (!msm)
+-		return NULL;
+-
+-	msm->dev = dev;
+-
+-	/* register with msm_bus module for scaling requests */
+-	rc = wil_platform_msm_bus_register(msm, of_node);
+-	if (rc)
+-		goto cleanup;
+-
+-	memset(ops, 0, sizeof(*ops));
+-	ops->bus_request = wil_platform_bus_request;
+-	ops->uninit = wil_platform_uninit;
+-
+-	return (void *)msm;
+-
+-cleanup:
+-	kfree(msm);
+-	return NULL;
+-}
+diff --git a/drivers/net/wireless/ath/wil6210/wil_platform_msm.h b/drivers/net/wireless/ath/wil6210/wil_platform_msm.h
+deleted file mode 100644
+index 2f2229edb498..000000000000
+--- a/drivers/net/wireless/ath/wil6210/wil_platform_msm.h
++++ /dev/null
+@@ -1,24 +0,0 @@
+-/*
+- * Copyright (c) 2014 Qualcomm Atheros, Inc.
+- *
+- * Permission to use, copy, modify, and/or distribute this software for any
+- * purpose with or without fee is hereby granted, provided that the above
+- * copyright notice and this permission notice appear in all copies.
+- *
+- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+- * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+- * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+- * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+- */
+-
+-#ifndef __WIL_PLATFORM__MSM_H__
+-#define __WIL_PLATFORM_MSM_H__
+-
+-#include "wil_platform.h"
+-
+-void *wil_platform_msm_init(struct device *dev, struct wil_platform_ops *ops);
+-
+-#endif /* __WIL_PLATFORM__MSM_H__ */
 
