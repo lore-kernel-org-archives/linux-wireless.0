@@ -1,64 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:54494 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750722AbaIBJgQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Sep 2014 05:36:16 -0400
-Message-ID: <1409650573.1808.11.camel@jlt4.sipsolutions.net> (sfid-20140902_113625_196991_3F7F6C5F)
-Subject: Re: [RFC] net: ipv4: drop unicast encapsulated in L2 multicast
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Hannes Frederic Sowa <hannes@stressinduktion.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Tue, 02 Sep 2014 11:36:13 +0200
-In-Reply-To: <1409133238.26515.13.camel@localhost>
-References: <1408641747-22199-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20140821_192515_304437_37E734D5) <1408642331.4388.2.camel@jlt4.sipsolutions.net>
-	 <1409125114.11976.14.camel@localhost>
-	 <1409130313.2505.3.camel@jlt4.sipsolutions.net>
-	 <1409133238.26515.13.camel@localhost>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from s72.web-hosting.com ([198.187.29.22]:33639 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752965AbaI3Iot (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Sep 2014 04:44:49 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH] ath9k: Check early for HW reset
+Date: Tue, 30 Sep 2014 14:15:23 +0530
+Message-Id: <1412066723-6628-1-git-send-email-sujith@msujith.org> (sfid-20140930_104501_562291_6CEDED8E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-08-27 at 11:53 +0200, Hannes Frederic Sowa wrote:
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-> > I don't know if that's really useful? OTOH, there surely must have been
-> > a reason for this to be in the IPv4 RFC, so maybe for that same reason
-> > it should also be in the IPv6 RFC?
-> 
-> Either it is an oversight, but RFC6085 3) tries to at least clarify the
-> multicast destination with LL unicast address. So there must have been
-> people trying to enfore a relationship between LL address and IPv6 one.
+chan_lock is not required for checking if
+we are in the middle of a HW reset, so do it
+early. This also removes the small window
+where the lock is dropped and reacquired.
 
-That seems to allow a multicast IPv6 frame in a unicast LL address,
-which is a different situation but still ...
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/xmit.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-> I think it would be OK to drop it by default in case we don't break any
-> other assumptions in the stack (e.g. CLUSTERIP).
-
-Fair enough.
-
-> > The question now is, in the absence of such a latter required check (and
-> > indeed, in the case of CLUSTERIP), how we implement such a check.
-> > Perhaps a sysctl is needed after all?
-> 
-> Yeah, unfortunate situation.
-> 
-> One could add those IP addresses as broadcast addresses (/32) to the
-> routing table, so the brd_input jump would be taken.
-> 
-> But this would still break users of CLUSTERIP until they install those
-> routes. :(
-
-I'm not even sure I understand this part :)
-
-Any suggestions?
-
-As long as IPv6 doesn't mandate it in the RFCs I'm not really sure we
-should just drop it, even if we think it won't cause any problems?
-
-CLUSTERIP seems like a special configuration, but I'm not sure it can be
-detected and automatically allowed?
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index aae70a1..7193a00 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1839,15 +1839,17 @@ void ath_txq_schedule(struct ath_softc *sc, struct ath_txq *txq)
+ 	if (txq->mac80211_qnum < 0)
+ 		return;
+ 
++	if (test_bit(ATH_OP_HW_RESET, &common->op_flags))
++		return;
++
+ 	spin_lock_bh(&sc->chan_lock);
+ 	ac_list = &sc->cur_chan->acq[txq->mac80211_qnum];
+-	spin_unlock_bh(&sc->chan_lock);
+ 
+-	if (test_bit(ATH_OP_HW_RESET, &common->op_flags) ||
+-	    list_empty(ac_list))
++	if (list_empty(ac_list)) {
++		spin_unlock_bh(&sc->chan_lock);
+ 		return;
++	}
+ 
+-	spin_lock_bh(&sc->chan_lock);
+ 	rcu_read_lock();
+ 
+ 	last_ac = list_entry(ac_list->prev, struct ath_atx_ac, list);
+-- 
+2.1.1
 
