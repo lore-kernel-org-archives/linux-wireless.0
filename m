@@ -1,61 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f178.google.com ([209.85.214.178]:41792 "EHLO
-	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753128AbaIVTlM convert rfc822-to-8bit (ORCPT
+Received: from relay1.mentorg.com ([192.94.38.131]:56230 "EHLO
+	relay1.mentorg.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751056AbaI3HmP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Sep 2014 15:41:12 -0400
-Received: by mail-ob0-f178.google.com with SMTP id va2so4184000obc.37
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Sep 2014 12:41:12 -0700 (PDT)
+	Tue, 30 Sep 2014 03:42:15 -0400
+From: "Sharma, Sanjeev" <Sanjeev_Sharma@mentor.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"dsd@gentoo.org" <dsd@gentoo.org>,
+	"kune@deine-taler.de" <kune@deine-taler.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Subject: RE: [PATCH v2] zd1211rw: replace ZD_ASSERT with
+ lockdep_assert_held()
+Date: Tue, 30 Sep 2014 07:42:11 +0000
+Message-ID: <FDC088D3B5555644AE135ED28A7ABDE950E5F3DF@EU-MBX-04.mgc.mentorg.com> (sfid-20140930_094236_363744_7D5C5749)
+References: <1410418407.1825.0.camel@jlt4.sipsolutions.net>
+ <1410430179-19944-1-git-send-email-sanjeev_sharma@mentor.com>
+ <1410430345.22863.0.camel@jlt4.sipsolutions.net>
+ <FDC088D3B5555644AE135ED28A7ABDE94DF5256D@EU-MBX-02.mgc.mentorg.com>
+ <CAGRGNgWOkzbu7sUxOqpgK_rzw1Xzny4aVFYOO6Rqd09-CpfvJA@mail.gmail.com>
+In-Reply-To: <CAGRGNgWOkzbu7sUxOqpgK_rzw1Xzny4aVFYOO6Rqd09-CpfvJA@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <CAMowtuPU=nnz9wGeJsKJEN1XFK3=6m3ddmW22fuPownr2ZLPGA@mail.gmail.com>
-References: <CAMowtuPU=nnz9wGeJsKJEN1XFK3=6m3ddmW22fuPownr2ZLPGA@mail.gmail.com>
-Date: Mon, 22 Sep 2014 12:41:12 -0700
-Message-ID: <CAA93jw5Aw_edkMPBEUxR3FZ_GFQ8hQ1C+rsK7dURb+n3Kjm1-g@mail.gmail.com> (sfid-20140922_214120_928237_7216DB4C)
-Subject: Re: Dusseldorf: LPC special session on ath10k
-From: Dave Taht <dave.taht@gmail.com>
-To: Kathy Giori <kathy.giori@gmail.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 22, 2014 at 12:26 PM, Kathy Giori <kathy.giori@gmail.com> wrote:
-> Hey there ath10k enthusiasts,
->
-> The afternoon prior to the Linux wireless summit that John Linville
-> and Johannes Berg are hosting:
-> http://www.linuxplumbersconf.org/2014/ocw/events/LPC2014/tracks/339
->
-> we've reserved a conference room to focus on ath10k topics of
-> interest. If you have specific items you'd like to see addressed,
-> please let me (or Kalle Valo) know in advance.
->
-> The mini ath10k summit will be held in the "VIP-SH" sponsor meeting
-> room that is located on the 2nd floor of the CCD. Apparently there
-> will be signage onsite to guide you to the room. We have the room
-> reserved from 1-5pm Wednesday, October 15. And we might want to carry
-> on the conversations into the evening over dinner or whatever -- so
-> let me know if you are interested in that part as well. Hoping to see
-> you there!
-
-I won't be there, but I hope progress is made. Last week I had a chance
-to give a short talk at the ieee plenary, and a longer presentation in front of
-the ieee 802.11 wng meeting in athens, greece, about some of the problems
-we are seeing in the 802.11* world, and some possible solutions.
-
-I don't know if that preso is available outside the ieee reflector, the
-slides are at:
-
-http://snapon.lab.bufferbloat.net/~d/ieee802.11-sept-17-2014/11-14-1265-00-0wng-More-on-Bufferbloat.pdf
-
-Of most relevance are slides 23-34.
-
-I was pleased to see various "latency" requirements get added to the 802.11ax
-documents and testing plans the next day.
-
-
--- 
-Dave Täht
-
-https://www.bufferbloat.net/projects/make-wifi-fast
+LS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEp1bGlhbiBDYWxhYnkgW21haWx0bzpq
+dWxpYW4uY2FsYWJ5QGdtYWlsLmNvbV0gDQpTZW50OiBNb25kYXksIFNlcHRlbWJlciAxNSwgMjAx
+NCAxMTozMiBBTQ0KVG86IFNoYXJtYSwgU2FuamVldg0KQ2M6IEpvaGFubmVzIEJlcmc7IGRzZEBn
+ZW50b28ub3JnOyBrdW5lQGRlaW5lLXRhbGVyLmRlOyBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5l
+bC5vcmc7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IG5ldGRldkB2Z2VyLmtlcm5lbC5v
+cmcNClN1YmplY3Q6IFJlOiBbUEFUQ0ggdjJdIHpkMTIxMXJ3OiByZXBsYWNlIFpEX0FTU0VSVCB3
+aXRoIGxvY2tkZXBfYXNzZXJ0X2hlbGQoKQ0KDQpIaSBTYW5qZWV2LA0KDQpPbiBUaHUsIFNlcCAx
+MSwgMjAxNCBhdCA4OjM2IFBNLCBTaGFybWEsIFNhbmplZXYgPFNhbmplZXZfU2hhcm1hQG1lbnRv
+ci5jb20+IHdyb3RlOg0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBKb2hh
+bm5lcyBCZXJnIFttYWlsdG86am9oYW5uZXNAc2lwc29sdXRpb25zLm5ldF0NCj4gU2VudDogVGh1
+cnNkYXksIFNlcHRlbWJlciAxMSwgMjAxNCAzOjQyIFBNDQo+IFRvOiBTaGFybWEsIFNhbmplZXYN
+Cj4gQ2M6IGRzZEBnZW50b28ub3JnOyBrdW5lQGRlaW5lLXRhbGVyLmRlOyANCj4gbGludXgtd2ly
+ZWxlc3NAdmdlci5rZXJuZWwub3JnOyBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnOyANCj4g
+bmV0ZGV2QHZnZXIua2VybmVsLm9yZw0KPiBTdWJqZWN0OiBSZTogW1BBVENIIHYyXSB6ZDEyMTFy
+dzogcmVwbGFjZSBaRF9BU1NFUlQgd2l0aCANCj4gbG9ja2RlcF9hc3NlcnRfaGVsZCgpDQo+DQo+
+IE9uIFRodSwgMjAxNC0wOS0xMSBhdCAxNTozOSArMDUzMCwgU2FuamVldiBTaGFybWEgd3JvdGU6
+DQo+PiBvbiBzb21lIGFyY2hpdGVjdHVyZSBzcGluX2lzX2xvY2tlZCgpIGFsd2F5cyByZXR1cm4g
+ZmFsc2UgaW4gDQo+PiB1bmlwcm9jZXNzb3IgY29uZmlndXJhdGlvbiBhbmQgdGhlcmVmb3JlIGl0
+IHdvdWxkIGJlIGFkdmlzZSB0byANCj4+IHJlcGxhY2Ugd2l0aCBsb2NrZGVwX2Fzc2VydF9oZWxk
+KCkuDQo+Pg0KPj4gU2lnbmVkLW9mZi1ieTogU2FuamVldiBTaGFybWEgPFNhbmplZXZfU2hhcm1h
+QG1lbnRvci5jb20+DQo+PiAtLS0NCj4+IENoYW5nZXMgaW4gdjI6DQo+PiAgIC0gY29ycmVjdGVk
+IHRoZSB0eXBvDQo+DQo+PiBOb3cgaXQgY29tcGlsZXMsIGJ1dCB5b3UgZ290IHRoZSBsb2dpYyB3
+cm9uZy4NCj4NCj4+ICsrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3pkMTIxMXJ3L3pkX21hYy5j
+DQo+PiBAQCAtMjM1LDcgKzIzNSw3IEBAIHZvaWQgemRfbWFjX2NsZWFyKHN0cnVjdCB6ZF9tYWMg
+Km1hYykgIHsNCj4+ICAgICAgIGZsdXNoX3dvcmtxdWV1ZSh6ZF93b3JrcXVldWUpOw0KPj4gICAg
+ICAgemRfY2hpcF9jbGVhcigmbWFjLT5jaGlwKTsNCj4+IC0gICAgIFpEX0FTU0VSVCghc3Bpbl9p
+c19sb2NrZWQoJm1hYy0+bG9jaykpOw0KPj4gKyAgICAgbG9ja2RlcF9hc3NlcnRfaGVsZCgmbWFj
+LT5sb2NrKTsNCj4+ICAgICAgIFpEX01FTUNMRUFSKG1hYywgc2l6ZW9mKHN0cnVjdCB6ZF9tYWMp
+KTsgIH0NCj4NCj4+TG9vayBjbG9zZWx5IGF0IHRoaXMgYWdhaW4uDQo+DQo+IEkgZGlkbid0IHVu
+ZGVyc3RhbmQgd2hlcmUgSSAgcHV0IHdyb25nIGxvZ2ljICA/DQoNCkkgZmluZCBpdCBoZWxwcyB0
+byBzcGVsbCBvdXQgd2hhdCBjb2RlIGlzIGRvaW5nIGluIHdvcmRzLg0KDQpFLmcuIHRoZSBsaW5l
+IHlvdSdyZSByZW1vdmluZyBpczoNClpEX0FTU0VSVCghc3Bpbl9pc19sb2NrZWQoJm1hYy0+bG9j
+aykpOw0KDQpTbywgd2UnbGwgYXNzZXJ0IHdoZW4gc3Bpbl9pc19sb2NrZWQoJm1hYy0+bG9jaykg
+aXMgZmFsc2UsIGkuZS4gd2hlbg0KbWFjLT5sb2NrIGlzIG5vdCBzcGluIGxvY2tlZC4NCg0KVGhp
+cyBpc24ndCB0aGUgc2FtZSBhcyB3aGF0IHlvdSdyZSByZXBsYWNpbmcgaXQgd2l0aC4NCg0KIEkg
+IGZlZWwgbG9naWMgaXMgYWJzb2x1dGVseSBjb3JyZWN0IGFuZCBpZiB5b3UgZXhwYW5kIGl0IHdp
+bGwgbG9va3MgbGlrZSAuLg0KDQorI2RlZmluZSBsb2NrZGVwX2Fzc2VydF9oZWxkKGwpCWRvIHsJ
+XCANCisJV0FSTl9PTihkZWJ1Z19sb2NrcyAmJiAhbG9ja2RlcF9pc19oZWxkKGwpKTsJXCANCisJ
+fSB3aGlsZSAoMCkNCg0KUGxlYXNlIHJlZmVyIGh0dHA6Ly9sa21sLml1LmVkdS9oeXBlcm1haWwv
+bGludXgva2VybmVsLzEyMDMuMi8wMDM2OS5odG1sIGFuZCBhbHNvIHNlZSBpbmNsdWRlL2xpbnV4
+L2xvY2tkZXAuaCBmb3IgbW9yZSBkZXRhaWwuDQoNClRoYW5rcw0KU2FuamVldiBTaGFybWENCg==
