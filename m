@@ -1,76 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:58320 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753938AbaILJLc (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:33534 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751219AbaI3RQf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Sep 2014 05:11:32 -0400
-From: Avinash Patil <patila@marvell.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
-	<huxm@marvell.com>, <yangyang@marvell.com>, <cluo@marvell.com>,
-	<maithili@marvell.com>, Avinash Patil <patila@marvell.com>
-Subject: [PATCHv2 05/16] mwifiex: support for event done interrupt
-Date: Fri, 12 Sep 2014 20:08:49 +0530
-Message-ID: <1410532740-3173-6-git-send-email-patila@marvell.com> (sfid-20140912_111232_686543_33775041)
-In-Reply-To: <1410532740-3173-1-git-send-email-patila@marvell.com>
-References: <1410532740-3173-1-git-send-email-patila@marvell.com>
+	Tue, 30 Sep 2014 13:16:35 -0400
+Message-ID: <542AE571.40007@candelatech.com> (sfid-20140930_191638_081438_19E44510)
+Date: Tue, 30 Sep 2014 10:16:33 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Marcel Holtmann <marcel@holtmann.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Anyone working on making iw able to specify MAC address at station
+ creation time?
+References: <5408A6BD.6090304@candelatech.com>  (sfid-20140904_195201_728073_99DA3C67) <1409898836.1940.1.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1409898836.1940.1.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds support for writing CPU event interrupt done back
-to device.
-Patch also increases interrupt buffer ring size from 4 to 8.
+On 09/04/2014 11:33 PM, Johannes Berg wrote:
+> On Thu, 2014-09-04 at 10:51 -0700, Ben Greear wrote:
+>> I'm having issues with udev renaming newly created stations when I have
+>> udev rules for wlanX, when wlanX is not already existing.
+>>
+>> I think specifying MAC on station creation time would solve my problems,
+>> but haven't looked closely yet.
+>>
+>> My version of 'iw' doesn't support setting the MAC on creation, from
+>> what I can tel.
+>>
+>> Curious if anyone else is working on this?
+> 
+> I think Marcel mentioned wanting this before. There's even an attribute
+> in nl80211 already, but it can only be used for P2P_DEVICE I believe, so
+> a feature flag or so would be needed to be able to know whether or not
+> this would be expected to take any effect (kernels before those future
+> changes would ignore the attribute for non-P2P-DEVICE I believe)
+> 
+> Haven't looked at the code right now, this is all I know.
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
----
- drivers/net/wireless/mwifiex/pcie.c | 7 +++++++
- drivers/net/wireless/mwifiex/pcie.h | 5 +++--
- 2 files changed, 10 insertions(+), 2 deletions(-)
+In the iw code, it seems that the arguments: mesh_id, 4addr, flags
+cannot be used at the same time?
 
-diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
-index 27c2bf8..2ada1b7 100644
---- a/drivers/net/wireless/mwifiex/pcie.c
-+++ b/drivers/net/wireless/mwifiex/pcie.c
-@@ -1726,6 +1726,13 @@ static int mwifiex_pcie_process_event_ready(struct mwifiex_adapter *adapter)
- 		   buffer is released. This is just to make things simpler,
- 		   we need to find a better method of managing these buffers.
- 		*/
-+	} else {
-+		if (mwifiex_write_reg(adapter, PCIE_CPU_INT_EVENT,
-+				      CPU_INTR_EVENT_DONE)) {
-+			dev_warn(adapter->dev,
-+				 "Write register failed\n");
-+			return -1;
-+		}
- 	}
- 
- 	return 0;
-diff --git a/drivers/net/wireless/mwifiex/pcie.h b/drivers/net/wireless/mwifiex/pcie.h
-index a1a8fd3..200e8b0 100644
---- a/drivers/net/wireless/mwifiex/pcie.h
-+++ b/drivers/net/wireless/mwifiex/pcie.h
-@@ -40,8 +40,8 @@
- #define MWIFIEX_TXBD_MASK			0x3F
- #define MWIFIEX_RXBD_MASK			0x3F
- 
--#define MWIFIEX_MAX_EVT_BD			0x04
--#define MWIFIEX_EVTBD_MASK			0x07
-+#define MWIFIEX_MAX_EVT_BD			0x08
-+#define MWIFIEX_EVTBD_MASK			0x0f
- 
- /* PCIE INTERNAL REGISTERS */
- #define PCIE_SCRATCH_0_REG				0xC10
-@@ -69,6 +69,7 @@
- #define CPU_INTR_DOOR_BELL				BIT(1)
- #define CPU_INTR_SLEEP_CFM_DONE			BIT(2)
- #define CPU_INTR_RESET					BIT(3)
-+#define CPU_INTR_EVENT_DONE				BIT(5)
- 
- #define HOST_INTR_DNLD_DONE				BIT(0)
- #define HOST_INTR_UPLD_RDY				BIT(1)
+I want to add an option pass an optional mac-address as
+well.  It would be easier if I processed args in a loop
+and removed the exclusivity on those 3 above, but if they
+do need to remain exclusive, then I can do that too:
+
+
+static int handle_interface_add(struct nl80211_state *state,
+				struct nl_cb *cb,
+				struct nl_msg *msg,
+				int argc, char **argv,
+				enum id_input id)
+{
+	char *name;
+	char *mesh_id = NULL;
+	enum nl80211_iftype type;
+	int tpset;
+
+	if (argc < 1)
+		return 1;
+
+	name = argv[0];
+	argc--;
+	argv++;
+
+	tpset = get_if_type(&argc, &argv, &type, true);
+	if (tpset)
+		return tpset;
+
+	if (argc) {
+		if (strcmp(argv[0], "mesh_id") == 0) {
+			argc--;
+			argv++;
+
+			if (!argc)
+				return 1;
+			mesh_id = argv[0];
+			argc--;
+			argv++;
+		} else if (strcmp(argv[0], "4addr") == 0) {
+			argc--;
+			argv++;
+			if (parse_4addr_flag(argv[0], msg)) {
+				fprintf(stderr, "4addr error\n");
+				return 2;
+			}
+			argc--;
+			argv++;
+		} else if (strcmp(argv[0], "flags") == 0) {
+			argc--;
+			argv++;
+			if (parse_mntr_flags(&argc, &argv, msg)) {
+				fprintf(stderr, "flags error\n");
+				return 2;
+			}
+		} else {
+			return 1;
+		}
+	}
+
+	if (argc)
+		return 1;
+
+
+Thanks,
+Ben
+
+
 -- 
-1.8.1.4
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
