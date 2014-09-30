@@ -1,103 +1,161 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:56687 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751787AbaIACBK (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:60197 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751788AbaI3RaS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 Aug 2014 22:01:10 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH] ath9k: Add CTWindow support
-Date: Mon,  1 Sep 2014 07:31:20 +0530
-Message-Id: <1409536880-19913-1-git-send-email-sujith@msujith.org> (sfid-20140901_040118_692183_C4F8C349)
+	Tue, 30 Sep 2014 13:30:18 -0400
+Date: Tue, 30 Sep 2014 13:20:45 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Sergey Ryazanov <ryazanov.s.a@gmail.com>
+Cc: Ralf Baechle <ralf@linux-mips.org>,
+	Linux MIPS <linux-mips@linux-mips.org>,
+	Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net
+Subject: Re: [PATCH 15/16] ath5k: update dependencies
+Message-ID: <20140930172044.GE11919@tuxdriver.com> (sfid-20140930_193023_346431_92ADEA81)
+References: <1411929195-23775-1-git-send-email-ryazanov.s.a@gmail.com>
+ <1411929195-23775-16-git-send-email-ryazanov.s.a@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1411929195-23775-16-git-send-email-ryazanov.s.a@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+This patch does not seem to apply to wireless-next.  What tree is it
+based upon?
 
-Since CTWindow can be used for improving discoverability,
-fill this field in the NoA Attribute properly.
+John
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h   |  2 ++
- drivers/net/wireless/ath/ath9k/channel.c | 26 ++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/init.c    |  5 +++--
- 3 files changed, 31 insertions(+), 2 deletions(-)
+On Sun, Sep 28, 2014 at 10:33:14PM +0400, Sergey Ryazanov wrote:
+> - Use config symbol defined in the driver instead of arch specific one for
+>   conditional compilation.
+> - Rename the ATHEROS_AR231X config symbol to AR231X.
+> - Some of AR231x SoCs (e.g. AR2315) have PCI bus support, so remove !PCI
+>   dependency, which block AHB support build.
+> 
+> Signed-off-by: Sergey Ryazanov <ryazanov.s.a@gmail.com>
+> Cc: Jiri Slaby <jirislaby@gmail.com>
+> Cc: Nick Kossifidis <mickflemm@gmail.com>
+> Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+> Cc: linux-wireless@vger.kernel.org
+> Cc: ath5k-devel@lists.ath5k.org
+> ---
+> 
+> Changes since RFC:
+>   - merge together patches that update ath5k dependencies
+> 
+>  drivers/net/wireless/ath/ath5k/Kconfig | 10 +++++-----
+>  drivers/net/wireless/ath/ath5k/ath5k.h |  2 +-
+>  drivers/net/wireless/ath/ath5k/base.c  |  4 ++--
+>  drivers/net/wireless/ath/ath5k/led.c   |  4 ++--
+>  4 files changed, 10 insertions(+), 10 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath5k/Kconfig b/drivers/net/wireless/ath/ath5k/Kconfig
+> index c9f81a3..2b2a399 100644
+> --- a/drivers/net/wireless/ath/ath5k/Kconfig
+> +++ b/drivers/net/wireless/ath/ath5k/Kconfig
+> @@ -1,13 +1,13 @@
+>  config ATH5K
+>  	tristate "Atheros 5xxx wireless cards support"
+> -	depends on (PCI || ATHEROS_AR231X) && MAC80211
+> +	depends on (PCI || AR231X) && MAC80211
+>  	select ATH_COMMON
+>  	select MAC80211_LEDS
+>  	select LEDS_CLASS
+>  	select NEW_LEDS
+>  	select AVERAGE
+> -	select ATH5K_AHB if (ATHEROS_AR231X && !PCI)
+> -	select ATH5K_PCI if (!ATHEROS_AR231X && PCI)
+> +	select ATH5K_AHB if AR231X
+> +	select ATH5K_PCI if !AR231X
+>  	---help---
+>  	  This module adds support for wireless adapters based on
+>  	  Atheros 5xxx chipset.
+> @@ -54,14 +54,14 @@ config ATH5K_TRACER
+>  
+>  config ATH5K_AHB
+>  	bool "Atheros 5xxx AHB bus support"
+> -	depends on (ATHEROS_AR231X && !PCI)
+> +	depends on AR231X
+>  	---help---
+>  	  This adds support for WiSoC type chipsets of the 5xxx Atheros
+>  	  family.
+>  
+>  config ATH5K_PCI
+>  	bool "Atheros 5xxx PCI bus support"
+> -	depends on (!ATHEROS_AR231X && PCI)
+> +	depends on (!AR231X && PCI)
+>  	---help---
+>  	  This adds support for PCI type chipsets of the 5xxx Atheros
+>  	  family.
+> diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+> index 85316bb..1ed7a88 100644
+> --- a/drivers/net/wireless/ath/ath5k/ath5k.h
+> +++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+> @@ -1647,7 +1647,7 @@ static inline struct ath_regulatory *ath5k_hw_regulatory(struct ath5k_hw *ah)
+>  	return &(ath5k_hw_common(ah)->regulatory);
+>  }
+>  
+> -#ifdef CONFIG_ATHEROS_AR231X
+> +#ifdef CONFIG_ATH5K_AHB
+>  #define AR5K_AR2315_PCI_BASE	((void __iomem *)0xb0100000)
+>  
+>  static inline void __iomem *ath5k_ahb_reg(struct ath5k_hw *ah, u16 reg)
+> diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+> index 8ad2550..dd42487 100644
+> --- a/drivers/net/wireless/ath/ath5k/base.c
+> +++ b/drivers/net/wireless/ath/ath5k/base.c
+> @@ -99,7 +99,7 @@ static int ath5k_reset(struct ath5k_hw *ah, struct ieee80211_channel *chan,
+>  
+>  /* Known SREVs */
+>  static const struct ath5k_srev_name srev_names[] = {
+> -#ifdef CONFIG_ATHEROS_AR231X
+> +#ifdef CONFIG_ATH5K_AHB
+>  	{ "5312",	AR5K_VERSION_MAC,	AR5K_SREV_AR5312_R2 },
+>  	{ "5312",	AR5K_VERSION_MAC,	AR5K_SREV_AR5312_R7 },
+>  	{ "2313",	AR5K_VERSION_MAC,	AR5K_SREV_AR2313_R8 },
+> @@ -142,7 +142,7 @@ static const struct ath5k_srev_name srev_names[] = {
+>  	{ "5413",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_5413 },
+>  	{ "5424",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_5424 },
+>  	{ "5133",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_5133 },
+> -#ifdef CONFIG_ATHEROS_AR231X
+> +#ifdef CONFIG_ATH5K_AHB
+>  	{ "2316",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_2316 },
+>  	{ "2317",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_2317 },
+>  #endif
+> diff --git a/drivers/net/wireless/ath/ath5k/led.c b/drivers/net/wireless/ath/ath5k/led.c
+> index 48a6a69b..c730677 100644
+> --- a/drivers/net/wireless/ath/ath5k/led.c
+> +++ b/drivers/net/wireless/ath/ath5k/led.c
+> @@ -162,7 +162,7 @@ int ath5k_init_leds(struct ath5k_hw *ah)
+>  {
+>  	int ret = 0;
+>  	struct ieee80211_hw *hw = ah->hw;
+> -#ifndef CONFIG_ATHEROS_AR231X
+> +#ifndef CONFIG_ATH5K_AHB
+>  	struct pci_dev *pdev = ah->pdev;
+>  #endif
+>  	char name[ATH5K_LED_MAX_NAME_LEN + 1];
+> @@ -171,7 +171,7 @@ int ath5k_init_leds(struct ath5k_hw *ah)
+>  	if (!ah->pdev)
+>  		return 0;
+>  
+> -#ifdef CONFIG_ATHEROS_AR231X
+> +#ifdef CONFIG_ATH5K_AHB
+>  	match = NULL;
+>  #else
+>  	match = pci_match_id(&ath5k_led_devices[0], pdev);
+> -- 
+> 1.8.5.5
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index c690601..b4ac51e 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -572,6 +572,8 @@ void ath9k_release_buffered_frames(struct ieee80211_hw *hw,
- /* VIFs */
- /********/
- 
-+#define P2P_DEFAULT_CTWIN 10
-+
- struct ath_vif {
- 	struct list_head list;
- 
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index 7a6ca44..e73d305 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -1166,6 +1166,30 @@ static void ath9k_update_p2p_ps(struct ath_softc *sc, struct ieee80211_vif *vif)
- 	ath9k_update_p2p_ps_timer(sc, avp);
- }
- 
-+static u8 ath9k_get_ctwin(struct ath_softc *sc, struct ath_vif *avp)
-+{
-+	struct ath_beacon_config *cur_conf = &sc->cur_chan->beacon;
-+	u8 switch_time, ctwin;
-+
-+	/*
-+	 * Channel switch in multi-channel mode is deferred
-+	 * by a quarter beacon interval when handling
-+	 * ATH_CHANCTX_EVENT_BEACON_PREPARE, so the P2P-GO
-+	 * interface is guaranteed to be discoverable
-+	 * for that duration after a TBTT.
-+	 */
-+	switch_time = cur_conf->beacon_interval / 4;
-+
-+	ctwin = avp->vif->bss_conf.p2p_noa_attr.oppps_ctwindow;
-+	if (ctwin && (ctwin < switch_time))
-+		return ctwin;
-+
-+	if (switch_time < P2P_DEFAULT_CTWIN)
-+		return 0;
-+
-+	return P2P_DEFAULT_CTWIN;
-+}
-+
- void ath9k_beacon_add_noa(struct ath_softc *sc, struct ath_vif *avp,
- 			  struct sk_buff *skb)
- {
-@@ -1198,6 +1222,8 @@ void ath9k_beacon_add_noa(struct ath_softc *sc, struct ath_vif *avp,
- 	memset(noa, 0, noa_len);
- 
- 	noa->index = avp->noa_index;
-+	noa->oppps_ctwindow = ath9k_get_ctwin(sc, avp);
-+
- 	if (avp->periodic_noa_duration) {
- 		u32 interval = TU_TO_USEC(sc->cur_chan->beacon.beacon_interval);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index ca10a8b..1950c04 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -763,8 +763,9 @@ static void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 	if (AR_SREV_9160_10_OR_LATER(sc->sc_ah) || ath9k_modparam_nohwcrypt)
- 		hw->flags |= IEEE80211_HW_MFP_CAPABLE;
- 
--	hw->wiphy->features |= (NL80211_FEATURE_ACTIVE_MONITOR |
--				NL80211_FEATURE_AP_MODE_CHAN_WIDTH_CHANGE);
-+	hw->wiphy->features |= NL80211_FEATURE_ACTIVE_MONITOR |
-+			       NL80211_FEATURE_AP_MODE_CHAN_WIDTH_CHANGE |
-+			       NL80211_FEATURE_P2P_GO_CTWIN;
- 
- 	if (!config_enabled(CONFIG_ATH9K_TX99)) {
- 		hw->wiphy->interface_modes =
 -- 
-2.1.0
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
