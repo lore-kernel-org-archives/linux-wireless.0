@@ -1,82 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:34823
-	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751071AbaJYTXj (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:47703 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751759AbaJAXAl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Oct 2014 15:23:39 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, sujith@msujith.org
-Subject: [PATCH v2 06/10] ath9k_hw: do not run NF and periodic calibration at the same time
-Date: Sat, 25 Oct 2014 17:19:31 +0200
-Message-Id: <1414250375-74121-6-git-send-email-nbd@openwrt.org> (sfid-20141025_212341_677851_81E9670C)
-In-Reply-To: <1414250375-74121-1-git-send-email-nbd@openwrt.org>
-References: <1414250375-74121-1-git-send-email-nbd@openwrt.org>
+	Wed, 1 Oct 2014 19:00:41 -0400
+Received: from [192.168.100.236] (firewall.candelatech.com [70.89.124.249])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mail2.candelatech.com (Postfix) with ESMTPSA id 7C11640A69D
+	for <linux-wireless@vger.kernel.org>; Wed,  1 Oct 2014 16:00:40 -0700 (PDT)
+Message-ID: <542C8798.30807@candelatech.com> (sfid-20141002_010044_639075_0C2FC189)
+Date: Wed, 01 Oct 2014 16:00:40 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Setting legacy bit-rates no longer works?
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It can cause inconsistent calibration results or in some cases turn the
-radio deaf.
+I tried this on a 3.17.0-rc7+ kernel, but reported tx-rate stays at 54Mbps
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ar9002_calib.c | 29 +++++++++++++--------------
- 1 file changed, 14 insertions(+), 15 deletions(-)
+iw dev sta1 set bitrates legacy-5 24
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_calib.c b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-index 6bfdebf..07994e3 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-@@ -660,27 +660,26 @@ static void ar9002_hw_olc_temp_compensation(struct ath_hw *ah)
- static int ar9002_hw_calibrate(struct ath_hw *ah, struct ath9k_channel *chan,
- 			       u8 rxchainmask, bool longcal)
- {
--	bool iscaldone = true;
- 	struct ath9k_cal_list *currCal = ah->cal_list_curr;
--	bool nfcal, nfcal_pending = false;
-+	bool nfcal, nfcal_pending = false, percal_pending;
- 	int ret;
- 
- 	nfcal = !!(REG_READ(ah, AR_PHY_AGC_CONTROL) & AR_PHY_AGC_CONTROL_NF);
- 	if (ah->caldata)
- 		nfcal_pending = test_bit(NFCAL_PENDING, &ah->caldata->cal_flags);
- 
--	if (currCal && !nfcal &&
--	    (currCal->calState == CAL_RUNNING ||
--	     currCal->calState == CAL_WAITING)) {
--		iscaldone = ar9002_hw_per_calibration(ah, chan,
--						      rxchainmask, currCal);
--		if (iscaldone) {
--			ah->cal_list_curr = currCal = currCal->calNext;
--
--			if (currCal->calState == CAL_WAITING) {
--				iscaldone = false;
--				ath9k_hw_reset_calibration(ah, currCal);
--			}
-+	percal_pending = (currCal &&
-+			  (currCal->calState == CAL_RUNNING ||
-+			   currCal->calState == CAL_WAITING));
-+
-+	if (percal_pending && !nfcal) {
-+		if (!ar9002_hw_per_calibration(ah, chan, rxchainmask, currCal))
-+			return 0;
-+
-+		ah->cal_list_curr = currCal = currCal->calNext;
-+		if (currCal->calState == CAL_WAITING) {
-+			ath9k_hw_reset_calibration(ah, currCal);
-+			return 0;
- 		}
- 	}
- 
-@@ -710,7 +709,7 @@ static int ar9002_hw_calibrate(struct ath_hw *ah, struct ath9k_channel *chan,
- 		}
- 	}
- 
--	return iscaldone;
-+	return !percal_pending;
- }
- 
- /* Carrier leakage Calibration fix */
+Driver is ath9k, but wpa_supplicant is configured to disable HT.
+
+I'm going to go dig into this, but if someone has any suggestions,
+please let me know.
+
+Thanks,
+Ben
+
 -- 
-2.1.2
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
