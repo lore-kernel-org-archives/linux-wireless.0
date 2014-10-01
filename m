@@ -1,30 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:57056 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752816AbaJTIyY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2014 04:54:24 -0400
-Message-ID: <5444CDBC.8060005@openwrt.org> (sfid-20141020_105427_179695_174DECA1)
-Date: Mon, 20 Oct 2014 10:54:20 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Sujith Manoharan <sujith@msujith.org>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: [PATCH 02/10] ath9k_hw: remove support for UB124 tx gain table
-References: <1413651732-69783-1-git-send-email-nbd@openwrt.org>	<1413651732-69783-2-git-send-email-nbd@openwrt.org> <21572.49314.54699.154333@gargle.gargle.HOWL>
-In-Reply-To: <21572.49314.54699.154333@gargle.gargle.HOWL>
-Content-Type: text/plain; charset=windows-1252
+Received: from s72.web-hosting.com ([198.187.29.22]:58628 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751268AbaJAKHu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Oct 2014 06:07:50 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@qca.qualcomm.com
+Subject: [RFC 0/5] ath9k patches
+Date: Wed,  1 Oct 2014 15:38:28 +0530
+Message-Id: <1412158113-22913-1-git-send-email-sujith@msujith.org> (sfid-20141001_120753_276645_B84F538B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2014-10-20 09:58, Sujith Manoharan wrote:
-> Felix Fietkau wrote:
->> -	else if (AR_SREV_9340(ah))
->> -		INIT_INI_ARRAY(&ah->iniModesTxGain,
->> -			ar9340Modes_ub124_tx_gain_table_1p0);
-> 
-> Shouldn't the array in ar9340_initvals.h also be removed ?
-We can do that later (when we change the qca-swiss-army-knife code).
-As long as it isn't referenced, the compiler will not emit the data into
-object files.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-- Felix
+MCC fixes. Please review.
+
+Sujith Manoharan (5):
+  ath9k: Fix queue handling in flush()
+  ath9k: Pass context to ath9k_chanctx_wake_queues()
+  ath9k: Add ath9k_chanctx_stop_queues()
+  ath9k: Fix queue handling for channel contexts
+  ath9k: Fix flushing in MCC mode
+
+ drivers/net/wireless/ath/ath9k/ath9k.h   | 10 ++++++--
+ drivers/net/wireless/ath/ath9k/channel.c | 41 +++++++++++++++++++++++++++++---
+ drivers/net/wireless/ath/ath9k/main.c    | 12 +---------
+ 3 files changed, 47 insertions(+), 16 deletions(-)
+
+-- 
+2.1.1
+
