@@ -1,109 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:48088 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755262AbaJXPfr (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:44098 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751042AbaJADEe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Oct 2014 11:35:47 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v2] iw: support setting vif MAC during creation
-Date: Fri, 24 Oct 2014 08:35:42 -0700
-Message-Id: <1414164942-23125-1-git-send-email-greearb@candelatech.com> (sfid-20141024_173550_984752_BE7C984B)
+	Tue, 30 Sep 2014 23:04:34 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH 3/5] ath9k: Check pending frames properly
+Date: Wed,  1 Oct 2014 08:34:54 +0530
+Message-Id: <1412132696-22836-4-git-send-email-sujith@msujith.org> (sfid-20141001_050437_291285_DF5185C1)
+In-Reply-To: <1412132696-22836-1-git-send-email-sujith@msujith.org>
+References: <1412132696-22836-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-This saves an extra call to change it later, and will
-also keep udev from potentially messing with a vif
-it should not be messing with.
+There is no need to check if the current
+channel context has active ACs queued up
+if the TX queue is not empty.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
+ drivers/net/wireless/ath/ath9k/main.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-v2:  Removed header changes per request.
-
- info.c      |  2 ++
- interface.c | 20 ++++++++++++++++++--
- 2 files changed, 20 insertions(+), 2 deletions(-)
-
-diff --git a/info.c b/info.c
-index c5917d7..6244218 100644
---- a/info.c
-+++ b/info.c
-@@ -558,6 +558,8 @@ broken_combination:
- 			printf("\tDevice supports scan flush.\n");
- 		if (features & NL80211_FEATURE_AP_SCAN)
- 			printf("\tDevice supports AP scan.\n");
-+		if (features & NL80211_FEATURE_MAC_ON_CREATE)
-+			printf("\tDevice supports configuring vdev MAC-addr on create.\n");
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index ae7c6ee..84c0cd4 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -60,8 +60,10 @@ static bool ath9k_has_pending_frames(struct ath_softc *sc, struct ath_txq *txq)
+ 
+ 	spin_lock_bh(&txq->axq_lock);
+ 
+-	if (txq->axq_depth)
++	if (txq->axq_depth) {
+ 		pending = true;
++		goto out;
++	}
+ 
+ 	if (txq->mac80211_qnum >= 0) {
+ 		struct list_head *list;
+@@ -70,6 +72,7 @@ static bool ath9k_has_pending_frames(struct ath_softc *sc, struct ath_txq *txq)
+ 		if (!list_empty(list))
+ 			pending = true;
  	}
- 
- 	if (tb_msg[NL80211_ATTR_TDLS_SUPPORT])
-diff --git a/interface.c b/interface.c
-index f769752..f8e39b3 100644
---- a/interface.c
-+++ b/interface.c
-@@ -171,6 +171,8 @@ static int handle_interface_add(struct nl80211_state *state,
- 	char *mesh_id = NULL;
- 	enum nl80211_iftype type;
- 	int tpset;
-+	unsigned char mac_addr[ETH_ALEN];
-+	int found_mac = 0;
- 
- 	if (argc < 1)
- 		return 1;
-@@ -183,6 +185,7 @@ static int handle_interface_add(struct nl80211_state *state,
- 	if (tpset)
- 		return tpset;
- 
-+try_another:
- 	if (argc) {
- 		if (strcmp(argv[0], "mesh_id") == 0) {
- 			argc--;
-@@ -193,6 +196,17 @@ static int handle_interface_add(struct nl80211_state *state,
- 			mesh_id = argv[0];
- 			argc--;
- 			argv++;
-+		} else if (strcmp(argv[0], "addr") == 0) {
-+			argc--;
-+			argv++;
-+			if (mac_addr_a2n(mac_addr, argv[0])) {
-+				fprintf(stderr, "Invalid MAC address\n");
-+				return 2;
-+			}
-+			argc--;
-+			argv++;
-+			found_mac = 1;
-+			goto try_another;
- 		} else if (strcmp(argv[0], "4addr") == 0) {
- 			argc--;
- 			argv++;
-@@ -221,19 +235,21 @@ static int handle_interface_add(struct nl80211_state *state,
- 	NLA_PUT_U32(msg, NL80211_ATTR_IFTYPE, type);
- 	if (mesh_id)
- 		NLA_PUT(msg, NL80211_ATTR_MESH_ID, strlen(mesh_id), mesh_id);
-+	if (found_mac)
-+		NLA_PUT(msg, NL80211_ATTR_MAC, ETH_ALEN, mac_addr);
- 
- 	return 0;
-  nla_put_failure:
- 	return -ENOBUFS;
++out:
+ 	spin_unlock_bh(&txq->axq_lock);
+ 	return pending;
  }
--COMMAND(interface, add, "<name> type <type> [mesh_id <meshid>] [4addr on|off] [flags <flag>*]",
-+COMMAND(interface, add, "<name> type <type> [mesh_id <meshid>] [4addr on|off] [flags <flag>*] [addr <mac-addr>]",
- 	NL80211_CMD_NEW_INTERFACE, 0, CIB_PHY, handle_interface_add,
- 	"Add a new virtual interface with the given configuration.\n"
- 	IFACE_TYPES "\n\n"
- 	"The flags are only used for monitor interfaces, valid flags are:\n"
- 	VALID_FLAGS "\n\n"
- 	"The mesh_id is used only for mesh mode.");
--COMMAND(interface, add, "<name> type <type> [mesh_id <meshid>] [4addr on|off] [flags <flag>*]",
-+COMMAND(interface, add, "<name> type <type> [mesh_id <meshid>] [4addr on|off] [flags <flag>*] [addr <mac-addr>]",
- 	NL80211_CMD_NEW_INTERFACE, 0, CIB_NETDEV, handle_interface_add, NULL);
- 
- static int handle_interface_del(struct nl80211_state *state,
 -- 
-1.7.11.7
+2.1.1
 
