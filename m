@@ -1,259 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:49179 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752176AbaJYTuG (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:22647 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750944AbaJAJqU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Oct 2014 15:50:06 -0400
-Received: by mail-wi0-f181.google.com with SMTP id n3so3602255wiv.2
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2014 12:50:04 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 13/31] staging: vt6655: mac80211 conversion: device_tx_srv tx and add report rates
-Date: Sat, 25 Oct 2014 09:20:23 +0100
-Message-Id: <1414225241-5480-14-git-send-email-tvboxspy@gmail.com> (sfid-20141025_215016_105716_CD285863)
-In-Reply-To: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
-References: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
+	Wed, 1 Oct 2014 05:46:20 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id s919jR9P007620
+	for <linux-wireless@vger.kernel.org>; Wed, 1 Oct 2014 02:46:19 -0700
+Received: from sc-owa04.marvell.com ([199.233.58.150])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1pqs52b3py-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Wed, 01 Oct 2014 02:46:19 -0700
+Received: from pe-lt101 (unknown [10.31.130.210])	by maili.marvell.com
+ (Postfix) with ESMTP id 2F77A3F703F	for <linux-wireless@vger.kernel.org>;
+ Wed,  1 Oct 2014 02:46:18 -0700 (PDT)
+Received: from pe-lt101 (pe-lt077 [127.0.0.1])	by pe-lt101 (8.14.4/8.14.4)
+ with ESMTP id s91F6MUK008280	for <linux-wireless@vger.kernel.org>; Wed, 1 Oct
+ 2014 08:06:22 -0700
+Received: (from root@localhost)	by pe-lt101 (8.14.4/8.14.4/Submit) id
+ s91F6Ejv008279	for linux-wireless@vger.kernel.org; Wed, 1 Oct 2014 08:06:14
+ -0700
+From: MK <medhak@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] TEST PATCH
+Date: Wed, 1 Oct 2014 08:06:11 -0700
+Message-ID: <1412175971-8248-1-git-send-email-medhak@marvell.com> (sfid-20141001_114624_179387_CDF28177)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-vnt_int_report_rate reports backs tx rate and is replacment for STAvUpdateTDStatCounter
-and BSSvUpdateNodeTxCounter.
+From: XYZ <xyz.gmail.com>
 
-Replacing existing code.
+Please ignore this patch
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/staging/vt6655/device_main.c | 166 ++++++++++++++++++-----------------
- 1 file changed, 85 insertions(+), 81 deletions(-)
+ net/mac80211/rx.c |   10 ++++++++--
+ 1 files changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index 69c98c2..a888c26 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -1208,19 +1208,84 @@ bool device_alloc_frag_buf(struct vnt_private *pDevice,
- 	return true;
- }
- 
-+static const u8 fallback_rate0[5][5] = {
-+	{RATE_18M, RATE_18M, RATE_12M, RATE_12M, RATE_12M},
-+	{RATE_24M, RATE_24M, RATE_18M, RATE_12M, RATE_12M},
-+	{RATE_36M, RATE_36M, RATE_24M, RATE_18M, RATE_18M},
-+	{RATE_48M, RATE_48M, RATE_36M, RATE_24M, RATE_24M},
-+	{RATE_54M, RATE_54M, RATE_48M, RATE_36M, RATE_36M}
-+};
-+
-+static const u8 fallback_rate1[5][5] = {
-+	{RATE_18M, RATE_18M, RATE_12M, RATE_6M, RATE_6M},
-+	{RATE_24M, RATE_24M, RATE_18M, RATE_6M, RATE_6M},
-+	{RATE_36M, RATE_36M, RATE_24M, RATE_12M, RATE_12M},
-+	{RATE_48M, RATE_48M, RATE_24M, RATE_12M, RATE_12M},
-+	{RATE_54M, RATE_54M, RATE_36M, RATE_18M, RATE_18M}
-+};
-+
-+static int vnt_int_report_rate(struct vnt_private *priv,
-+			       PDEVICE_TD_INFO context, u8 tsr0, u8 tsr1)
-+{
-+	struct vnt_tx_fifo_head *fifo_head;
-+	struct ieee80211_tx_info *info;
-+	struct ieee80211_rate *rate;
-+	u16 fb_option;
-+	u8 tx_retry = (tsr0 & TSR0_NCR);
-+	s8 idx;
-+
-+	if (!context)
-+		return -ENOMEM;
-+
-+	if (!context->skb)
-+		return -EINVAL;
-+
-+	fifo_head = (struct vnt_tx_fifo_head *)context->buf;
-+	fb_option = (le16_to_cpu(fifo_head->fifo_ctl) &
-+			(FIFOCTL_AUTO_FB_0 | FIFOCTL_AUTO_FB_1));
-+
-+	info = IEEE80211_SKB_CB(context->skb);
-+	idx = info->control.rates[0].idx;
-+
-+	if (fb_option && !(tsr1 & TSR1_TERR)) {
-+		u8 tx_rate;
-+		u8 retry = tx_retry;
-+
-+		rate = ieee80211_get_tx_rate(priv->hw, info);
-+		tx_rate = rate->hw_value - RATE_18M;
-+
-+		if (retry > 4)
-+			retry = 4;
-+
-+		if (fb_option & FIFOCTL_AUTO_FB_0)
-+			tx_rate = fallback_rate0[tx_rate][retry];
-+		else if (fb_option & FIFOCTL_AUTO_FB_1)
-+			tx_rate = fallback_rate1[tx_rate][retry];
-+
-+		if (info->band == IEEE80211_BAND_5GHZ)
-+			idx = tx_rate - RATE_6M;
-+		else
-+			idx = tx_rate;
-+	}
-+
-+	ieee80211_tx_info_clear_status(info);
-+
-+	info->status.rates[0].count = tx_retry;
-+
-+	if (!(tsr1 & TSR1_TERR)) {
-+		info->status.rates[0].idx = idx;
-+		info->flags |= IEEE80211_TX_STAT_ACK;
-+	}
-+
-+	return 0;
-+}
-+
- static int device_tx_srv(struct vnt_private *pDevice, unsigned int uIdx)
- {
- 	PSTxDesc                 pTD;
--	bool bFull = false;
- 	int                      works = 0;
- 	unsigned char byTsr0;
- 	unsigned char byTsr1;
--	unsigned int	uFrameSize, uFIFOHeaderSize;
--	PSTxBufHead              pTxBufHead;
--	struct net_device_stats *pStats = &pDevice->dev->stats;
--	struct sk_buff *skb;
--	unsigned int	uNodeIndex;
--	PSMgmtObject             pMgmt = pDevice->pMgmt;
- 
- 	for (pTD = pDevice->apTailTD[uIdx]; pDevice->iTDUsed[uIdx] > 0; pTD = pTD->next) {
- 		if (pTD->m_td0TD0.f1Owner == OWNED_BY_NIC)
-@@ -1234,22 +1299,8 @@ static int device_tx_srv(struct vnt_private *pDevice, unsigned int uIdx)
- 		//Only the status of first TD in the chain is correct
- 		if (pTD->m_td1TD1.byTCR & TCR_STP) {
- 			if ((pTD->pTDInfo->byFlags & TD_FLAGS_NETIF_SKB) != 0) {
--				uFIFOHeaderSize = pTD->pTDInfo->dwHeaderLength;
--				uFrameSize = pTD->pTDInfo->dwReqCount - uFIFOHeaderSize;
--				pTxBufHead = (PSTxBufHead) (pTD->pTDInfo->buf);
--				// Update the statistics based on the Transmit status
--				// now, we DONT check TSR0_CDH
--
--				STAvUpdateTDStatCounter(&pDevice->scStatistic,
--							byTsr0, byTsr1,
--							(unsigned char *)(pTD->pTDInfo->buf + uFIFOHeaderSize),
--							uFrameSize, uIdx);
--
--				BSSvUpdateNodeTxCounter(pDevice,
--							byTsr0, byTsr1,
--							(unsigned char *)(pTD->pTDInfo->buf),
--							uFIFOHeaderSize
--					);
-+
-+				vnt_int_report_rate(pDevice, pTD->pTDInfo, byTsr0, byTsr1);
- 
- 				if (!(byTsr1 & TSR1_TERR)) {
- 					if (byTsr0 != 0) {
-@@ -1257,28 +1308,9 @@ static int device_tx_srv(struct vnt_private *pDevice, unsigned int uIdx)
- 							 (int)uIdx, byTsr1,
- 							 byTsr0);
- 					}
--					if ((pTxBufHead->wFragCtl & FRAGCTL_ENDFRAG) != FRAGCTL_NONFRAG)
--						pDevice->s802_11Counter.TransmittedFragmentCount++;
--
--					pStats->tx_packets++;
--					pStats->tx_bytes += pTD->pTDInfo->skb->len;
- 				} else {
- 					pr_debug(" Tx[%d] dropped & tsr1[%02X] tsr0[%02X]\n",
- 						 (int)uIdx, byTsr1, byTsr0);
--					pStats->tx_errors++;
--					pStats->tx_dropped++;
--				}
--			}
--
--			if ((pTD->pTDInfo->byFlags & TD_FLAGS_PRIV_SKB) != 0) {
--				if (pDevice->bEnableHostapd) {
--					pr_debug("tx call back netif..\n");
--					skb = pTD->pTDInfo->skb;
--					skb->dev = pDevice->apdev;
--					skb_reset_mac_header(skb);
--					skb->pkt_type = PACKET_OTHERHOST;
--					memset(skb->cb, 0, sizeof(skb->cb));
--					netif_rx(skb);
- 				}
- 			}
- 
-@@ -1287,47 +1319,14 @@ static int device_tx_srv(struct vnt_private *pDevice, unsigned int uIdx)
- 					pr_debug(" Tx[%d] fail has error. tsr1[%02X] tsr0[%02X]\n",
- 						 (int)uIdx, byTsr1, byTsr0);
- 				}
--
--
--				if ((pMgmt->eCurrMode == WMAC_MODE_ESS_AP) &&
--				    (pTD->pTDInfo->byFlags & TD_FLAGS_NETIF_SKB)) {
--					unsigned short wAID;
--					unsigned char byMask[8] = {1, 2, 4, 8, 0x10, 0x20, 0x40, 0x80};
--
--					skb = pTD->pTDInfo->skb;
--					if (BSSDBbIsSTAInNodeDB(pMgmt, (unsigned char *)(skb->data), &uNodeIndex)) {
--						if (pMgmt->sNodeDBTable[uNodeIndex].bPSEnable) {
--							skb_queue_tail(&pMgmt->sNodeDBTable[uNodeIndex].sTxPSQueue, skb);
--							pMgmt->sNodeDBTable[uNodeIndex].wEnQueueCnt++;
--							// set tx map
--							wAID = pMgmt->sNodeDBTable[uNodeIndex].wAID;
--							pMgmt->abyPSTxMap[wAID >> 3] |=  byMask[wAID & 7];
--							pTD->pTDInfo->byFlags &= ~(TD_FLAGS_NETIF_SKB);
--							pr_debug("tx_srv:tx fail re-queue sta index= %d, QueCnt= %d\n",
--								 (int)uNodeIndex,
--								 pMgmt->sNodeDBTable[uNodeIndex].wEnQueueCnt);
--							pStats->tx_errors--;
--							pStats->tx_dropped--;
--						}
--					}
--				}
- 			}
- 			device_free_tx_buf(pDevice, pTD);
- 			pDevice->iTDUsed[uIdx]--;
--		}
--	}
--
--	if (uIdx == TYPE_AC0DMA) {
--		// RESERV_AC0DMA reserved for relay
- 
--		if (AVAIL_TD(pDevice, uIdx) < RESERV_AC0DMA) {
--			bFull = true;
--			pr_debug(" AC0DMA is Full = %d\n",
--				 pDevice->iTDUsed[uIdx]);
-+			/* Make sure queue is available */
-+			if (AVAIL_TD(pDevice, uIdx))
-+				ieee80211_wake_queues(pDevice->hw);
- 		}
--		if (netif_queue_stopped(pDevice->dev) && !bFull)
--			netif_wake_queue(pDevice->dev);
--
- 	}
- 
- 	pDevice->apTailTD[uIdx] = pTD;
-@@ -1360,7 +1359,9 @@ static void device_free_tx_buf(struct vnt_private *pDevice, PSTxDesc pDesc)
- 				 PCI_DMA_TODEVICE);
- 	}
- 
--	if ((pTDInfo->byFlags & TD_FLAGS_NETIF_SKB) != 0)
-+	if (pTDInfo->byFlags & TD_FLAGS_NETIF_SKB)
-+		ieee80211_tx_status_irqsafe(pDevice->hw, skb);
-+	else
- 		dev_kfree_skb_irq(skb);
- 
- 	pTDInfo->skb_dma = 0;
-@@ -2065,8 +2066,11 @@ static  irqreturn_t  device_intr(int irq,  void *dev_instance)
- 		}
- 
- 		if (pDevice->dwIsr & ISR_TBTT) {
--			if (pDevice->op_mode != NL80211_IFTYPE_ADHOC) {
--				if ((pDevice->bUpdateBBVGA) && pDevice->bLinkPass && (pDevice->uCurrRSSI != 0)) {
-+			if (pDevice->vif &&
-+			    pDevice->op_mode != NL80211_IFTYPE_ADHOC) {
-+				if (pDevice->bUpdateBBVGA &&
-+				    pDevice->vif->bss_conf.assoc &&
-+				    pDevice->uCurrRSSI) {
- 					long            ldBm;
- 
- 					RFvRSSITodBm(pDevice, (unsigned char) pDevice->uCurrRSSI, &ldBm);
 -- 
-1.9.1
+1.7.3.4
 
