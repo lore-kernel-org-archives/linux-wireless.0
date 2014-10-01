@@ -1,202 +1,166 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:37470 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755952AbaJ2R4v (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:63875 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752415AbaJFFJs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2014 13:56:51 -0400
-Received: by mail-wi0-f173.google.com with SMTP id n3so2427170wiv.12
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2014 10:56:50 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH v2 00/48] staging: vt6655: remove dead code.
-Date: Wed, 29 Oct 2014 17:55:18 +0000
-Message-Id: <1414605366-9335-1-git-send-email-tvboxspy@gmail.com> (sfid-20141029_190045_618373_A08209DD)
+	Mon, 6 Oct 2014 01:09:48 -0400
+From: Avinash Patil <patila@marvell.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <maithili@marvell.com>,
+	<cluo@marvell.com>, <huxm@marvell.com>, <yangyang@marvell.com>,
+	<akarwar@marvell.com>, <frankh@marvell.com>,
+	<nishants@marvell.com>, Avinash Patil <patila@marvell.com>
+Subject: [PATCH 2/2] mwifiex: add support for SD8887 chipset
+Date: Wed, 1 Oct 2014 20:53:09 +0530
+Message-ID: <1412176989-14323-2-git-send-email-patila@marvell.com> (sfid-20141006_070955_416482_217C3EEC)
+In-Reply-To: <1412176989-14323-1-git-send-email-patila@marvell.com>
+References: <1412176989-14323-1-git-send-email-patila@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Following conversion to mac80211 the following patches remove dead code.
+This patch adds SD8887 support to mwifiex.
+SD8887 is Marvell's 1x1 11ac solution.
 
-Changes from v1 corrected the order patches and rebased on staging-testing.
+The corresponding firmware image file is located at:
+"mrvl/sd8887_uapsta.bin"
 
-Malcolm Priestley (48):
-  staging: vt6655: deadcode remove zone file operations and
-    vntconfiguration.dat
-  staging: vt6655: dead code remove zones and channel table elements
-  staging: vt6655: dead code remove net device code
-  staging: vt6655: dead code remove iwctl.c/h
-  staging: vt6655: dead code remove ioctl.c/h
-  staging: vt6655: dead code remove legacy hostap.c/h
-  staging: vt6655: dead code remove wpactl.c/h
-  staging: vt6655: dpc.c/h remove dead functions
-  staging: vt6655: remove dead functions in power.c/h
-  staging: vt6655: dead code remove wmgr.c
-  staging: vt6655: dead code remove wcmd.c
-  staging: vt6655: rxtx remove dead functions
-  staging: vt6655: s_cbFillTxBufHead remove unused parameters
-  staging: vt6655: dead code remove bssdb.c
-  staging: vt6655: dead code datarate.c/h
-  staging: vt6655: dead code remove IEEE11.h.c/h
-  staging: vt6655: card.c/h remove dead functions
-  staging: vt6655: deadcode remove wroute.c/h
-  staging: vt6655: dead code remove wpa/wpa2
-  staging: vt6655: deadcode remove aes_ccmp/rc4/tkip
-  staging: vt6655: dead code remove michael.c/h
-  staging: vt6655: dead code remove vntwifi.c functions
-  staging: vt6655: key.c remove dead functions
-  staging: vt6655: mib remove unused functions and structure members
-  staging: vt6655L remove tether.c functions
-  staging: vt6655: dead code remove tcrc.c/h
-  staging: vt6655: dead code remove 80211mgr.c and functions
-  staging: vt6655: dead code remove wctl.c/h
-  staging: vt6655: channel.c remove dead functions
-  staging: vt6655: move all RATE_* macros to device.h
-  staging: vt6655: dead code remove vntwifi.h
-  staging: vt6655: wmgr.h remove management structures
-  staging: vt6655: dead code remove ndis and pmkid strutures.
-  staging: vt6655: dead remove wcmd.h and typedefs
-  staging: vt6655: dead code remove bssdb.h header
-  staging: vt6655: dead code remove tether.h
-  staging: vt6655: dead code remove 80211mgr.h
-  staging: vt6655: dead code remove iowpa.h
-  staging: vt6655: dead code remove iocmd.h
-  staging: vt6655: dead code remove country.h
-  staging: vt6655: struct vnt_private remove dead members
-  staging: vt6655: device.h remove dead strutures and macros
-  staging: vt6655: dead code remove 80211hdr.h
-  staging: vt6655: remove typedef void *TimerFunction
-  staging: vt6655: Move LIFETIME RES 64us macros to rxtx.h
-  staging: vt6655: move MAKE_BEACON_RESERVED to device.h
-  staging: vt6655: dead code remove wmgr.h
-  staging: vt6655: dead code remove header type.h
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Frank Huang <frankh@marvell.com>
+---
+ drivers/net/wireless/mwifiex/Kconfig |  4 +--
+ drivers/net/wireless/mwifiex/sdio.c  |  5 ++++
+ drivers/net/wireless/mwifiex/sdio.h  | 55 ++++++++++++++++++++++++++++++++++++
+ 3 files changed, 62 insertions(+), 2 deletions(-)
 
- drivers/staging/vt6655/80211hdr.h           |  318 --
- drivers/staging/vt6655/80211mgr.c           | 1019 ------
- drivers/staging/vt6655/80211mgr.h           |  725 -----
- drivers/staging/vt6655/IEEE11h.c            |  141 -
- drivers/staging/vt6655/IEEE11h.h            |   42 -
- drivers/staging/vt6655/Makefile             |   23 +-
- drivers/staging/vt6655/aes_ccmp.c           |  374 ---
- drivers/staging/vt6655/aes_ccmp.h           |   37 -
- drivers/staging/vt6655/baseband.c           |    9 +-
- drivers/staging/vt6655/baseband.h           |    6 +-
- drivers/staging/vt6655/bssdb.c              | 1512 ---------
- drivers/staging/vt6655/bssdb.h              |  325 --
- drivers/staging/vt6655/card.c               |  724 -----
- drivers/staging/vt6655/card.h               |   76 -
- drivers/staging/vt6655/channel.c            |  715 -----
- drivers/staging/vt6655/channel.h            |   22 -
- drivers/staging/vt6655/country.h            |  161 -
- drivers/staging/vt6655/datarate.c           |  410 ---
- drivers/staging/vt6655/datarate.h           |   78 -
- drivers/staging/vt6655/desc.h               |    2 -
- drivers/staging/vt6655/device.h             |  298 +-
- drivers/staging/vt6655/device_cfg.h         |    2 -
- drivers/staging/vt6655/device_main.c        | 1311 +-------
- drivers/staging/vt6655/dpc.c                | 1287 --------
- drivers/staging/vt6655/dpc.h                |    8 -
- drivers/staging/vt6655/hostap.c             |  764 -----
- drivers/staging/vt6655/hostap.h             |   58 -
- drivers/staging/vt6655/iocmd.h              |  386 ---
- drivers/staging/vt6655/ioctl.c              |  582 ----
- drivers/staging/vt6655/ioctl.h              |   36 -
- drivers/staging/vt6655/iowpa.h              |  130 -
- drivers/staging/vt6655/iwctl.c              | 1858 -----------
- drivers/staging/vt6655/iwctl.h              |  206 --
- drivers/staging/vt6655/key.c                |  760 -----
- drivers/staging/vt6655/key.h                |  124 -
- drivers/staging/vt6655/mac.c                |    1 -
- drivers/staging/vt6655/mac.h                |    1 -
- drivers/staging/vt6655/mib.c                |  423 ---
- drivers/staging/vt6655/mib.h                |  261 --
- drivers/staging/vt6655/michael.c            |  148 -
- drivers/staging/vt6655/michael.h            |   52 -
- drivers/staging/vt6655/power.c              |  174 -
- drivers/staging/vt6655/power.h              |   16 -
- drivers/staging/vt6655/rc4.c                |   88 -
- drivers/staging/vt6655/rc4.h                |   47 -
- drivers/staging/vt6655/rf.h                 |    1 -
- drivers/staging/vt6655/rxtx.c               | 1207 +------
- drivers/staging/vt6655/rxtx.h               |   40 +-
- drivers/staging/vt6655/srom.c               |    1 -
- drivers/staging/vt6655/srom.h               |    2 -
- drivers/staging/vt6655/tcrc.c               |  191 --
- drivers/staging/vt6655/tcrc.h               |   50 -
- drivers/staging/vt6655/tether.c             |  105 -
- drivers/staging/vt6655/tether.h             |  192 --
- drivers/staging/vt6655/tkip.c               |  268 --
- drivers/staging/vt6655/tkip.h               |   57 -
- drivers/staging/vt6655/tmacro.h             |    2 -
- drivers/staging/vt6655/ttype.h              |   42 -
- drivers/staging/vt6655/upc.h                |    1 -
- drivers/staging/vt6655/vntconfiguration.dat |    1 -
- drivers/staging/vt6655/vntwifi.c            |  698 ----
- drivers/staging/vt6655/vntwifi.h            |  273 --
- drivers/staging/vt6655/wcmd.c               | 1024 ------
- drivers/staging/vt6655/wcmd.h               |  123 -
- drivers/staging/vt6655/wctl.c               |  233 --
- drivers/staging/vt6655/wctl.h               |  105 -
- drivers/staging/vt6655/wmgr.c               | 4603 ---------------------------
- drivers/staging/vt6655/wmgr.h               |  420 ---
- drivers/staging/vt6655/wpa.c                |  300 --
- drivers/staging/vt6655/wpa.h                |   83 -
- drivers/staging/vt6655/wpa2.c               |  359 ---
- drivers/staging/vt6655/wpa2.h               |   77 -
- drivers/staging/vt6655/wpactl.c             |  893 ------
- drivers/staging/vt6655/wpactl.h             |   64 -
- drivers/staging/vt6655/wroute.c             |  187 --
- drivers/staging/vt6655/wroute.h             |   45 -
- 76 files changed, 42 insertions(+), 27345 deletions(-)
- delete mode 100644 drivers/staging/vt6655/80211hdr.h
- delete mode 100644 drivers/staging/vt6655/80211mgr.c
- delete mode 100644 drivers/staging/vt6655/80211mgr.h
- delete mode 100644 drivers/staging/vt6655/IEEE11h.c
- delete mode 100644 drivers/staging/vt6655/IEEE11h.h
- delete mode 100644 drivers/staging/vt6655/aes_ccmp.c
- delete mode 100644 drivers/staging/vt6655/aes_ccmp.h
- delete mode 100644 drivers/staging/vt6655/bssdb.c
- delete mode 100644 drivers/staging/vt6655/bssdb.h
- delete mode 100644 drivers/staging/vt6655/country.h
- delete mode 100644 drivers/staging/vt6655/datarate.c
- delete mode 100644 drivers/staging/vt6655/datarate.h
- delete mode 100644 drivers/staging/vt6655/hostap.c
- delete mode 100644 drivers/staging/vt6655/hostap.h
- delete mode 100644 drivers/staging/vt6655/iocmd.h
- delete mode 100644 drivers/staging/vt6655/ioctl.c
- delete mode 100644 drivers/staging/vt6655/ioctl.h
- delete mode 100644 drivers/staging/vt6655/iowpa.h
- delete mode 100644 drivers/staging/vt6655/iwctl.c
- delete mode 100644 drivers/staging/vt6655/iwctl.h
- delete mode 100644 drivers/staging/vt6655/michael.c
- delete mode 100644 drivers/staging/vt6655/michael.h
- delete mode 100644 drivers/staging/vt6655/rc4.c
- delete mode 100644 drivers/staging/vt6655/rc4.h
- delete mode 100644 drivers/staging/vt6655/tcrc.c
- delete mode 100644 drivers/staging/vt6655/tcrc.h
- delete mode 100644 drivers/staging/vt6655/tether.c
- delete mode 100644 drivers/staging/vt6655/tether.h
- delete mode 100644 drivers/staging/vt6655/tkip.c
- delete mode 100644 drivers/staging/vt6655/tkip.h
- delete mode 100644 drivers/staging/vt6655/ttype.h
- delete mode 100644 drivers/staging/vt6655/vntconfiguration.dat
- delete mode 100644 drivers/staging/vt6655/vntwifi.c
- delete mode 100644 drivers/staging/vt6655/vntwifi.h
- delete mode 100644 drivers/staging/vt6655/wcmd.c
- delete mode 100644 drivers/staging/vt6655/wcmd.h
- delete mode 100644 drivers/staging/vt6655/wctl.c
- delete mode 100644 drivers/staging/vt6655/wctl.h
- delete mode 100644 drivers/staging/vt6655/wmgr.c
- delete mode 100644 drivers/staging/vt6655/wmgr.h
- delete mode 100644 drivers/staging/vt6655/wpa.c
- delete mode 100644 drivers/staging/vt6655/wpa.h
- delete mode 100644 drivers/staging/vt6655/wpa2.c
- delete mode 100644 drivers/staging/vt6655/wpa2.h
- delete mode 100644 drivers/staging/vt6655/wpactl.c
- delete mode 100644 drivers/staging/vt6655/wpactl.h
- delete mode 100644 drivers/staging/vt6655/wroute.c
- delete mode 100644 drivers/staging/vt6655/wroute.h
-
+diff --git a/drivers/net/wireless/mwifiex/Kconfig b/drivers/net/wireless/mwifiex/Kconfig
+index ecdf345..e70d0df 100644
+--- a/drivers/net/wireless/mwifiex/Kconfig
++++ b/drivers/net/wireless/mwifiex/Kconfig
+@@ -9,12 +9,12 @@ config MWIFIEX
+ 	  mwifiex.
+ 
+ config MWIFIEX_SDIO
+-	tristate "Marvell WiFi-Ex Driver for SD8786/SD8787/SD8797/SD8897"
++	tristate "Marvell WiFi-Ex Driver for SD8786/SD8787/SD8797/SD8887/SD8897"
+ 	depends on MWIFIEX && MMC
+ 	select FW_LOADER
+ 	---help---
+ 	  This adds support for wireless adapters based on Marvell
+-	  8786/8787/8797 chipsets with SDIO interface.
++	  8786/8787/8797/8887/8897 chipsets with SDIO interface.
+ 
+ 	  If you choose to build it as a module, it will be called
+ 	  mwifiex_sdio.
+diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
+index a22e9a9..b25766b 100644
+--- a/drivers/net/wireless/mwifiex/sdio.c
++++ b/drivers/net/wireless/mwifiex/sdio.c
+@@ -279,6 +279,8 @@ static int mwifiex_sdio_suspend(struct device *dev)
+ #define SDIO_DEVICE_ID_MARVELL_8797   (0x9129)
+ /* Device ID for SD8897 */
+ #define SDIO_DEVICE_ID_MARVELL_8897   (0x912d)
++/* Device ID for SD8887 */
++#define SDIO_DEVICE_ID_MARVELL_8887   (0x9135)
+ 
+ /* WLAN IDs */
+ static const struct sdio_device_id mwifiex_ids[] = {
+@@ -290,6 +292,8 @@ static const struct sdio_device_id mwifiex_ids[] = {
+ 		.driver_data = (unsigned long) &mwifiex_sdio_sd8797},
+ 	{SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, SDIO_DEVICE_ID_MARVELL_8897),
+ 		.driver_data = (unsigned long) &mwifiex_sdio_sd8897},
++	{SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, SDIO_DEVICE_ID_MARVELL_8887),
++		.driver_data = (unsigned long)&mwifiex_sdio_sd8887},
+ 	{},
+ };
+ 
+@@ -2233,3 +2237,4 @@ MODULE_FIRMWARE(SD8786_DEFAULT_FW_NAME);
+ MODULE_FIRMWARE(SD8787_DEFAULT_FW_NAME);
+ MODULE_FIRMWARE(SD8797_DEFAULT_FW_NAME);
+ MODULE_FIRMWARE(SD8897_DEFAULT_FW_NAME);
++MODULE_FIRMWARE(SD8887_DEFAULT_FW_NAME);
+diff --git a/drivers/net/wireless/mwifiex/sdio.h b/drivers/net/wireless/mwifiex/sdio.h
+index 5a08ebc..20cd9ad 100644
+--- a/drivers/net/wireless/mwifiex/sdio.h
++++ b/drivers/net/wireless/mwifiex/sdio.h
+@@ -33,6 +33,7 @@
+ #define SD8787_DEFAULT_FW_NAME "mrvl/sd8787_uapsta.bin"
+ #define SD8797_DEFAULT_FW_NAME "mrvl/sd8797_uapsta.bin"
+ #define SD8897_DEFAULT_FW_NAME "mrvl/sd8897_uapsta.bin"
++#define SD8887_DEFAULT_FW_NAME "mrvl/sd8887_uapsta.bin"
+ 
+ #define BLOCK_MODE	1
+ #define BYTE_MODE	0
+@@ -334,6 +335,47 @@ static const struct mwifiex_sdio_card_reg mwifiex_reg_sd8897 = {
+ 	.fw_dump_end = 0xea,
+ };
+ 
++static const struct mwifiex_sdio_card_reg mwifiex_reg_sd8887 = {
++	.start_rd_port = 0,
++	.start_wr_port = 0,
++	.base_0_reg = 0x6C,
++	.base_1_reg = 0x6D,
++	.poll_reg = 0x5C,
++	.host_int_enable = UP_LD_HOST_INT_MASK | DN_LD_HOST_INT_MASK |
++			CMD_PORT_UPLD_INT_MASK | CMD_PORT_DNLD_INT_MASK,
++	.host_int_rsr_reg = 0x4,
++	.host_int_status_reg = 0x0C,
++	.host_int_mask_reg = 0x08,
++	.status_reg_0 = 0x90,
++	.status_reg_1 = 0x91,
++	.sdio_int_mask = 0xff,
++	.data_port_mask = 0xffffffff,
++	.io_port_0_reg = 0xE4,
++	.io_port_1_reg = 0xE5,
++	.io_port_2_reg = 0xE6,
++	.max_mp_regs = 196,
++	.rd_bitmap_l = 0x10,
++	.rd_bitmap_u = 0x11,
++	.rd_bitmap_1l = 0x12,
++	.rd_bitmap_1u = 0x13,
++	.wr_bitmap_l = 0x14,
++	.wr_bitmap_u = 0x15,
++	.wr_bitmap_1l = 0x16,
++	.wr_bitmap_1u = 0x17,
++	.rd_len_p0_l = 0x18,
++	.rd_len_p0_u = 0x19,
++	.card_misc_cfg_reg = 0xd8,
++	.card_cfg_2_1_reg = 0xd9,
++	.cmd_rd_len_0 = 0xc0,
++	.cmd_rd_len_1 = 0xc1,
++	.cmd_rd_len_2 = 0xc2,
++	.cmd_rd_len_3 = 0xc3,
++	.cmd_cfg_0 = 0xc4,
++	.cmd_cfg_1 = 0xc5,
++	.cmd_cfg_2 = 0xc6,
++	.cmd_cfg_3 = 0xc7,
++};
++
+ static const struct mwifiex_sdio_device mwifiex_sdio_sd8786 = {
+ 	.firmware = SD8786_DEFAULT_FW_NAME,
+ 	.reg = &mwifiex_reg_sd87xx,
+@@ -386,6 +428,19 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd8897 = {
+ 	.supports_fw_dump = true,
+ };
+ 
++static const struct mwifiex_sdio_device mwifiex_sdio_sd8887 = {
++	.firmware = SD8887_DEFAULT_FW_NAME,
++	.reg = &mwifiex_reg_sd8887,
++	.max_ports = 32,
++	.mp_agg_pkt_limit = 16,
++	.supports_sdio_new_mode = true,
++	.has_control_mask = false,
++	.tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_4K,
++	.mp_tx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_32K,
++	.mp_rx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_32K,
++	.supports_fw_dump = false,
++};
++
+ /*
+  * .cmdrsp_complete handler
+  */
 -- 
-2.1.0
+1.8.1.4
 
