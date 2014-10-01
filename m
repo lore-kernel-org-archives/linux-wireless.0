@@ -1,129 +1,169 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:37602 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751695AbaJRRNy (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:30963 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751063AbaJAMga (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Oct 2014 13:13:54 -0400
-Received: by mail-wi0-f172.google.com with SMTP id n3so4192213wiv.17
-        for <linux-wireless@vger.kernel.org>; Sat, 18 Oct 2014 10:13:53 -0700 (PDT)
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Karl Beldan <karl.beldan@rivierawaves.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	karl.beldan@gmail.com, Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH v3 1/4] mac80211: minstrel_ht: Increase the range of handled rate indexes
-Date: Sat, 18 Oct 2014 19:13:41 +0200
-Message-Id: <1413652424-14345-2-git-send-email-karl.beldan@gmail.com> (sfid-20141018_191358_987137_D342D711)
-In-Reply-To: <1413652424-14345-1-git-send-email-karl.beldan@gmail.com>
-References: <1413575459-29612-5-git-send-email-karl.beldan@gmail.com>
- <1413652424-14345-1-git-send-email-karl.beldan@gmail.com>
+	Wed, 1 Oct 2014 08:36:30 -0400
+From: Avinash Patil <patila@marvell.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Avinash Patil <patila@marvell.com>,
+	Cathy Luo <cluo@marvell.com>, Frank Huang <frankh@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 2/2] mwifiex: add support for SD8887 chipset
+Date: Wed, 1 Oct 2014 10:55:26 -0700
+Message-ID: <1412186126-5019-2-git-send-email-patila@marvell.com> (sfid-20141001_143633_650732_70E11155)
+In-Reply-To: <1412186126-5019-1-git-send-email-patila@marvell.com>
+References: <1412186126-5019-1-git-send-email-patila@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Karl Beldan <karl.beldan@rivierawaves.com>
+This patch adds SD8887 support to mwifiex.
+SD8887 is Marvell's 1x1 11ac solution.
 
-Since 5935839ad735 ("mac80211: improve minstrel_ht rate sorting by
-throughput & probability"), the rate indexes are manipulated via u8's
-and hence allow for a maximum of 256 mcs_group entries in
-minstrel_mcs_groups.
+The corresponding firmware image file is located at:
+"mrvl/sd8887_uapsta.bin"
 
-ATM, minstrel_ht advertizes support up to 3HTSS@40MHz, consuming:
-8(MCS_GROUP_RATES) * (3(SS)*2(GI)*2(BW)+1(CCK)), i.e. 104 entries.
-
-Support for 3VHTSS@80MHz will require:
-10(MCS_GROUP_RATES) * (3(SS)*2(GI)*2(BW)+1(CCK)) +
-10(MCS_GROUP_RATES) * (3(SS)*2(GI)*3(BW)), i.e. 130 + 180 entries.
-
-This change moves from u8s to u16s where necessary.
-
-Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
-Cc: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Frank Huang <frankh@marvell.com>
+Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 ---
- net/mac80211/rc80211_minstrel_ht.c | 16 ++++++++--------
- net/mac80211/rc80211_minstrel_ht.h |  8 ++++----
- 2 files changed, 12 insertions(+), 12 deletions(-)
+ drivers/net/wireless/mwifiex/Kconfig |  4 +--
+ drivers/net/wireless/mwifiex/sdio.c  |  5 ++++
+ drivers/net/wireless/mwifiex/sdio.h  | 55 ++++++++++++++++++++++++++++++++++++
+ 3 files changed, 62 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index 17ef54a..ccec718 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -240,8 +240,8 @@ minstrel_ht_calc_tp(struct minstrel_ht_sta *mi, int group, int rate)
-  * MCS groups, CCK rates do not provide aggregation and are therefore at last.
+diff --git a/drivers/net/wireless/mwifiex/Kconfig b/drivers/net/wireless/mwifiex/Kconfig
+index ecdf345..e70d0df 100644
+--- a/drivers/net/wireless/mwifiex/Kconfig
++++ b/drivers/net/wireless/mwifiex/Kconfig
+@@ -9,12 +9,12 @@ config MWIFIEX
+ 	  mwifiex.
+ 
+ config MWIFIEX_SDIO
+-	tristate "Marvell WiFi-Ex Driver for SD8786/SD8787/SD8797/SD8897"
++	tristate "Marvell WiFi-Ex Driver for SD8786/SD8787/SD8797/SD8887/SD8897"
+ 	depends on MWIFIEX && MMC
+ 	select FW_LOADER
+ 	---help---
+ 	  This adds support for wireless adapters based on Marvell
+-	  8786/8787/8797 chipsets with SDIO interface.
++	  8786/8787/8797/8887/8897 chipsets with SDIO interface.
+ 
+ 	  If you choose to build it as a module, it will be called
+ 	  mwifiex_sdio.
+diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
+index a22e9a9..b25766b 100644
+--- a/drivers/net/wireless/mwifiex/sdio.c
++++ b/drivers/net/wireless/mwifiex/sdio.c
+@@ -279,6 +279,8 @@ static int mwifiex_sdio_suspend(struct device *dev)
+ #define SDIO_DEVICE_ID_MARVELL_8797   (0x9129)
+ /* Device ID for SD8897 */
+ #define SDIO_DEVICE_ID_MARVELL_8897   (0x912d)
++/* Device ID for SD8887 */
++#define SDIO_DEVICE_ID_MARVELL_8887   (0x9135)
+ 
+ /* WLAN IDs */
+ static const struct sdio_device_id mwifiex_ids[] = {
+@@ -290,6 +292,8 @@ static const struct sdio_device_id mwifiex_ids[] = {
+ 		.driver_data = (unsigned long) &mwifiex_sdio_sd8797},
+ 	{SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, SDIO_DEVICE_ID_MARVELL_8897),
+ 		.driver_data = (unsigned long) &mwifiex_sdio_sd8897},
++	{SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, SDIO_DEVICE_ID_MARVELL_8887),
++		.driver_data = (unsigned long)&mwifiex_sdio_sd8887},
+ 	{},
+ };
+ 
+@@ -2233,3 +2237,4 @@ MODULE_FIRMWARE(SD8786_DEFAULT_FW_NAME);
+ MODULE_FIRMWARE(SD8787_DEFAULT_FW_NAME);
+ MODULE_FIRMWARE(SD8797_DEFAULT_FW_NAME);
+ MODULE_FIRMWARE(SD8897_DEFAULT_FW_NAME);
++MODULE_FIRMWARE(SD8887_DEFAULT_FW_NAME);
+diff --git a/drivers/net/wireless/mwifiex/sdio.h b/drivers/net/wireless/mwifiex/sdio.h
+index 5a08ebc..20cd9ad 100644
+--- a/drivers/net/wireless/mwifiex/sdio.h
++++ b/drivers/net/wireless/mwifiex/sdio.h
+@@ -33,6 +33,7 @@
+ #define SD8787_DEFAULT_FW_NAME "mrvl/sd8787_uapsta.bin"
+ #define SD8797_DEFAULT_FW_NAME "mrvl/sd8797_uapsta.bin"
+ #define SD8897_DEFAULT_FW_NAME "mrvl/sd8897_uapsta.bin"
++#define SD8887_DEFAULT_FW_NAME "mrvl/sd8887_uapsta.bin"
+ 
+ #define BLOCK_MODE	1
+ #define BYTE_MODE	0
+@@ -334,6 +335,47 @@ static const struct mwifiex_sdio_card_reg mwifiex_reg_sd8897 = {
+ 	.fw_dump_end = 0xea,
+ };
+ 
++static const struct mwifiex_sdio_card_reg mwifiex_reg_sd8887 = {
++	.start_rd_port = 0,
++	.start_wr_port = 0,
++	.base_0_reg = 0x6C,
++	.base_1_reg = 0x6D,
++	.poll_reg = 0x5C,
++	.host_int_enable = UP_LD_HOST_INT_MASK | DN_LD_HOST_INT_MASK |
++			CMD_PORT_UPLD_INT_MASK | CMD_PORT_DNLD_INT_MASK,
++	.host_int_rsr_reg = 0x4,
++	.host_int_status_reg = 0x0C,
++	.host_int_mask_reg = 0x08,
++	.status_reg_0 = 0x90,
++	.status_reg_1 = 0x91,
++	.sdio_int_mask = 0xff,
++	.data_port_mask = 0xffffffff,
++	.io_port_0_reg = 0xE4,
++	.io_port_1_reg = 0xE5,
++	.io_port_2_reg = 0xE6,
++	.max_mp_regs = 196,
++	.rd_bitmap_l = 0x10,
++	.rd_bitmap_u = 0x11,
++	.rd_bitmap_1l = 0x12,
++	.rd_bitmap_1u = 0x13,
++	.wr_bitmap_l = 0x14,
++	.wr_bitmap_u = 0x15,
++	.wr_bitmap_1l = 0x16,
++	.wr_bitmap_1u = 0x17,
++	.rd_len_p0_l = 0x18,
++	.rd_len_p0_u = 0x19,
++	.card_misc_cfg_reg = 0xd8,
++	.card_cfg_2_1_reg = 0xd9,
++	.cmd_rd_len_0 = 0xc0,
++	.cmd_rd_len_1 = 0xc1,
++	.cmd_rd_len_2 = 0xc2,
++	.cmd_rd_len_3 = 0xc3,
++	.cmd_cfg_0 = 0xc4,
++	.cmd_cfg_1 = 0xc5,
++	.cmd_cfg_2 = 0xc6,
++	.cmd_cfg_3 = 0xc7,
++};
++
+ static const struct mwifiex_sdio_device mwifiex_sdio_sd8786 = {
+ 	.firmware = SD8786_DEFAULT_FW_NAME,
+ 	.reg = &mwifiex_reg_sd87xx,
+@@ -386,6 +428,19 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd8897 = {
+ 	.supports_fw_dump = true,
+ };
+ 
++static const struct mwifiex_sdio_device mwifiex_sdio_sd8887 = {
++	.firmware = SD8887_DEFAULT_FW_NAME,
++	.reg = &mwifiex_reg_sd8887,
++	.max_ports = 32,
++	.mp_agg_pkt_limit = 16,
++	.supports_sdio_new_mode = true,
++	.has_control_mask = false,
++	.tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_4K,
++	.mp_tx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_32K,
++	.mp_rx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_32K,
++	.supports_fw_dump = false,
++};
++
+ /*
+  * .cmdrsp_complete handler
   */
- static void
--minstrel_ht_sort_best_tp_rates(struct minstrel_ht_sta *mi, u8 index,
--			       u8 *tp_list)
-+minstrel_ht_sort_best_tp_rates(struct minstrel_ht_sta *mi, u16 index,
-+			       u16 *tp_list)
- {
- 	int cur_group, cur_idx, cur_thr, cur_prob;
- 	int tmp_group, tmp_idx, tmp_thr, tmp_prob;
-@@ -278,7 +278,7 @@ minstrel_ht_sort_best_tp_rates(struct minstrel_ht_sta *mi, u8 index,
-  * Find and set the topmost probability rate per sta and per group
-  */
- static void
--minstrel_ht_set_best_prob_rate(struct minstrel_ht_sta *mi, u8 index)
-+minstrel_ht_set_best_prob_rate(struct minstrel_ht_sta *mi, u16 index)
- {
- 	struct minstrel_mcs_group_data *mg;
- 	struct minstrel_rate_stats *mr;
-@@ -321,8 +321,8 @@ minstrel_ht_set_best_prob_rate(struct minstrel_ht_sta *mi, u8 index)
-  */
- static void
- minstrel_ht_assign_best_tp_rates(struct minstrel_ht_sta *mi,
--				 u8 tmp_mcs_tp_rate[MAX_THR_RATES],
--				 u8 tmp_cck_tp_rate[MAX_THR_RATES])
-+				 u16 tmp_mcs_tp_rate[MAX_THR_RATES],
-+				 u16 tmp_cck_tp_rate[MAX_THR_RATES])
- {
- 	unsigned int tmp_group, tmp_idx, tmp_cck_tp, tmp_mcs_tp;
- 	int i;
-@@ -386,8 +386,8 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
- 	struct minstrel_mcs_group_data *mg;
- 	struct minstrel_rate_stats *mr;
- 	int group, i, j;
--	u8 tmp_mcs_tp_rate[MAX_THR_RATES], tmp_group_tp_rate[MAX_THR_RATES];
--	u8 tmp_cck_tp_rate[MAX_THR_RATES], index;
-+	u16 tmp_mcs_tp_rate[MAX_THR_RATES], tmp_group_tp_rate[MAX_THR_RATES];
-+	u16 tmp_cck_tp_rate[MAX_THR_RATES], index;
- 
- 	if (mi->ampdu_packets > 0) {
- 		mi->avg_ampdu_len = minstrel_ewma(mi->avg_ampdu_len,
-@@ -517,7 +517,7 @@ minstrel_next_sample_idx(struct minstrel_ht_sta *mi)
- }
- 
- static void
--minstrel_downgrade_rate(struct minstrel_ht_sta *mi, u8 *idx, bool primary)
-+minstrel_downgrade_rate(struct minstrel_ht_sta *mi, u16 *idx, bool primary)
- {
- 	int group, orig_group;
- 
-diff --git a/net/mac80211/rc80211_minstrel_ht.h b/net/mac80211/rc80211_minstrel_ht.h
-index 01570e0..8b54e89 100644
---- a/net/mac80211/rc80211_minstrel_ht.h
-+++ b/net/mac80211/rc80211_minstrel_ht.h
-@@ -34,8 +34,8 @@ struct minstrel_mcs_group_data {
- 	u8 supported;
- 
- 	/* sorted rate set within a MCS group*/
--	u8 max_group_tp_rate[MAX_THR_RATES];
--	u8 max_group_prob_rate;
-+	u16 max_group_tp_rate[MAX_THR_RATES];
-+	u16 max_group_prob_rate;
- 
- 	/* MCS rate statistics */
- 	struct minstrel_rate_stats rates[MCS_GROUP_RATES];
-@@ -52,8 +52,8 @@ struct minstrel_ht_sta {
- 	unsigned int avg_ampdu_len;
- 
- 	/* overall sorted rate set */
--	u8 max_tp_rate[MAX_THR_RATES];
--	u8 max_prob_rate;
-+	u16 max_tp_rate[MAX_THR_RATES];
-+	u16 max_prob_rate;
- 
- 	/* time of last status update */
- 	unsigned long stats_update;
 -- 
-2.0.1
+1.8.1.4
 
