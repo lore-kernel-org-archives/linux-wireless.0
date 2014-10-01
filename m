@@ -1,919 +1,302 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:51553 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752237AbaJYTjt (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:6272 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751063AbaJAMgT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Oct 2014 15:39:49 -0400
-Received: by mail-wi0-f178.google.com with SMTP id q5so3579476wiv.17
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2014 12:39:47 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 07/48] staging: vt6655: dead code remove legacy hostap.c/h
-Date: Sat, 25 Oct 2014 09:39:45 +0100
-Message-Id: <1414226426-5811-8-git-send-email-tvboxspy@gmail.com> (sfid-20141025_213953_029969_8FE5EE4F)
-In-Reply-To: <1414226426-5811-1-git-send-email-tvboxspy@gmail.com>
-References: <1414226426-5811-1-git-send-email-tvboxspy@gmail.com>
+	Wed, 1 Oct 2014 08:36:19 -0400
+From: Avinash Patil <patila@marvell.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Avinash Patil <patila@marvell.com>,
+	Cathy Luo <cluo@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 1/2] mwifiex: few more register offset entries for sdio card structure
+Date: Wed, 1 Oct 2014 10:55:25 -0700
+Message-ID: <1412186126-5019-1-git-send-email-patila@marvell.com> (sfid-20141001_143624_017899_35B658D9)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hoatap is now supported by mac80211 in nl80211 mode
+This patch adds some more defitions to card specific register structure
+and removes static defines for these registers.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 ---
- drivers/staging/vt6655/Makefile      |   1 -
- drivers/staging/vt6655/device_main.c |   1 -
- drivers/staging/vt6655/dpc.c         |   1 -
- drivers/staging/vt6655/hostap.c      | 764 -----------------------------------
- drivers/staging/vt6655/hostap.h      |  58 ---
- drivers/staging/vt6655/rxtx.c        |   1 -
- 6 files changed, 826 deletions(-)
- delete mode 100644 drivers/staging/vt6655/hostap.c
- delete mode 100644 drivers/staging/vt6655/hostap.h
+ drivers/net/wireless/mwifiex/sdio.c | 39 +++++++++++++-----------
+ drivers/net/wireless/mwifiex/sdio.h | 59 ++++++++++++++++++++++++-------------
+ 2 files changed, 59 insertions(+), 39 deletions(-)
 
-diff --git a/drivers/staging/vt6655/Makefile b/drivers/staging/vt6655/Makefile
-index 6e93499..2d53450 100644
---- a/drivers/staging/vt6655/Makefile
-+++ b/drivers/staging/vt6655/Makefile
-@@ -21,7 +21,6 @@ vt6655_stage-y +=	device_main.o \
- 	rc4.o \
- 	tether.o \
- 	tcrc.o \
--	hostap.o \
- 	wpa.o \
- 	key.o \
- 	tkip.o \
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index facf317..2b5c9ab 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -68,7 +68,6 @@
- #include "rxtx.h"
- #include "wroute.h"
- #include "bssdb.h"
--#include "hostap.h"
- #include "wpactl.h"
- #include "dpc.h"
- #include "datarate.h"
-diff --git a/drivers/staging/vt6655/dpc.c b/drivers/staging/vt6655/dpc.c
-index d91771f..b80d760 100644
---- a/drivers/staging/vt6655/dpc.c
-+++ b/drivers/staging/vt6655/dpc.c
-@@ -50,7 +50,6 @@
- #include "tcrc.h"
- #include "wctl.h"
- #include "wroute.h"
--#include "hostap.h"
- #include "rf.h"
- #include "iowpa.h"
- #include "aes_ccmp.h"
-diff --git a/drivers/staging/vt6655/hostap.c b/drivers/staging/vt6655/hostap.c
-deleted file mode 100644
-index 2db08df..0000000
---- a/drivers/staging/vt6655/hostap.c
-+++ /dev/null
-@@ -1,764 +0,0 @@
--/*
-- * Copyright (c) 1996, 2003 VIA Networking Technologies, Inc.
-- * All rights reserved.
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License as published by
-- * the Free Software Foundation; either version 2 of the License, or
-- * (at your option) any later version.
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License along
-- * with this program; if not, write to the Free Software Foundation, Inc.,
-- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-- *
-- * File: hostap.c
-- *
-- * Purpose: handle hostap deamon ioctl input/out functions
-- *
-- * Author: Lyndon Chen
-- *
-- * Date: Oct. 20, 2003
-- *
-- * Functions:
-- *
-- * Revision History:
-- *
-- */
--
--#include "hostap.h"
--#include "iocmd.h"
--#include "mac.h"
--#include "card.h"
--#include "baseband.h"
--#include "wpactl.h"
--#include "key.h"
--
--#define VIAWGET_HOSTAPD_MAX_BUF_SIZE 1024
--#define HOSTAP_CRYPT_FLAG_SET_TX_KEY BIT0
--#define HOSTAP_CRYPT_ERR_UNKNOWN_ADDR 3
--#define HOSTAP_CRYPT_ERR_KEY_SET_FAILED 5
--
--/*---------------------  Static Definitions -------------------------*/
--
--/*---------------------  Static Classes  ----------------------------*/
--
--/*---------------------  Static Functions  --------------------------*/
--
--/*---------------------  Export Variables  --------------------------*/
--
--/*
-- * Description:
-- *      register net_device (AP) for hostap deamon
-- *
-- * Parameters:
-- *  In:
-- *      pDevice             -
-- *      rtnl_locked         -
-- *  Out:
-- *
-- * Return Value:
-- *
-- */
--
--static int hostap_enable_hostapd(struct vnt_private *pDevice, int rtnl_locked)
--{
--	struct vnt_private *apdev_priv;
--	struct net_device *dev = pDevice->dev;
--	int ret;
--	const struct net_device_ops apdev_netdev_ops = {
--		.ndo_start_xmit         = pDevice->tx_80211,
--	};
--
--	pr_debug("%s: Enabling hostapd mode\n", dev->name);
--
--	pDevice->apdev = alloc_etherdev(sizeof(*apdev_priv));
--	if (pDevice->apdev == NULL)
--		return -ENOMEM;
--
--	apdev_priv = netdev_priv(pDevice->apdev);
--	*apdev_priv = *pDevice;
--	eth_hw_addr_inherit(pDevice->apdev, dev);
--
--	pDevice->apdev->netdev_ops = &apdev_netdev_ops;
--
--	pDevice->apdev->type = ARPHRD_IEEE80211;
--
--	pDevice->apdev->base_addr = dev->base_addr;
--	pDevice->apdev->irq = dev->irq;
--	pDevice->apdev->mem_start = dev->mem_start;
--	pDevice->apdev->mem_end = dev->mem_end;
--	sprintf(pDevice->apdev->name, "%sap", dev->name);
--	if (rtnl_locked)
--		ret = register_netdevice(pDevice->apdev);
--	else
--		ret = register_netdev(pDevice->apdev);
--	if (ret) {
--		pr_debug("%s: register_netdevice(AP) failed!\n",
--			 dev->name);
--		free_netdev(pDevice->apdev);
--		pDevice->apdev = NULL;
--		return -1;
--	}
--
--	pr_debug("%s: Registered netdevice %s for AP management\n",
--		 dev->name, pDevice->apdev->name);
--
--	KeyvInitTable(&pDevice->sKey, pDevice->PortOffset);
--
--	return 0;
--}
--
--/*
-- * Description:
-- *      unregister net_device(AP)
-- *
-- * Parameters:
-- *  In:
-- *      pDevice             -
-- *      rtnl_locked         -
-- *  Out:
-- *
-- * Return Value:
-- *
-- */
--
--static int hostap_disable_hostapd(struct vnt_private *pDevice, int rtnl_locked)
--{
--	pr_debug("%s: disabling hostapd mode\n", pDevice->dev->name);
--
--	if (pDevice->apdev && pDevice->apdev->name && pDevice->apdev->name[0]) {
--		if (rtnl_locked)
--			unregister_netdevice(pDevice->apdev);
--		else
--			unregister_netdev(pDevice->apdev);
--		pr_debug("%s: Netdevice %s unregistered\n",
--			 pDevice->dev->name, pDevice->apdev->name);
--	}
--	if (pDevice->apdev)
--		free_netdev(pDevice->apdev);
--	pDevice->apdev = NULL;
--	pDevice->bEnable8021x = false;
--	pDevice->bEnableHostWEP = false;
--	pDevice->bEncryptionEnable = false;
--
--/* 4.2007-0118-03,<Add> by EinsnLiu */
--/* execute some clear work */
--	pDevice->pMgmt->byCSSPK = KEY_CTL_NONE;
--	pDevice->pMgmt->byCSSGK = KEY_CTL_NONE;
--	KeyvInitTable(&pDevice->sKey, pDevice->PortOffset);
--
--	return 0;
--}
--
--/*
-- * Description:
-- *      Set enable/disable hostapd mode
-- *
-- * Parameters:
-- *  In:
-- *      pDevice             -
-- *      rtnl_locked         -
-- *  Out:
-- *
-- * Return Value:
-- *
-- */
--
--int vt6655_hostap_set_hostapd(struct vnt_private *pDevice,
--			      int val, int rtnl_locked)
--{
--	if (val < 0 || val > 1)
--		return -EINVAL;
--
--	if (pDevice->bEnableHostapd == val)
--		return 0;
--
--	pDevice->bEnableHostapd = val;
--
--	if (val)
--		return hostap_enable_hostapd(pDevice, rtnl_locked);
--	return hostap_disable_hostapd(pDevice, rtnl_locked);
--}
--
--/*
-- * Description:
-- *      remove station function supported for hostap deamon
-- *
-- * Parameters:
-- *  In:
-- *      pDevice   -
-- *      param     -
-- *  Out:
-- *
-- * Return Value:
-- *
-- */
--static int hostap_remove_sta(struct vnt_private *pDevice,
--			     struct viawget_hostapd_param *param)
--{
--	unsigned int uNodeIndex;
--
--	if (BSSDBbIsSTAInNodeDB(pDevice->pMgmt, param->sta_addr, &uNodeIndex))
--		BSSvRemoveOneNode(pDevice, uNodeIndex);
--	else
--		return -ENOENT;
--
--	return 0;
--}
--
--/*
-- * Description:
-- *      add a station from hostap deamon
-- *
-- * Parameters:
-- *  In:
-- *      pDevice   -
-- *      param     -
-- *  Out:
-- *
-- * Return Value:
-- *
-- */
--static int hostap_add_sta(struct vnt_private *pDevice,
--			  struct viawget_hostapd_param *param)
--{
--	PSMgmtObject    pMgmt = pDevice->pMgmt;
--	unsigned int uNodeIndex;
--
--	if (!BSSDBbIsSTAInNodeDB(pMgmt, param->sta_addr, &uNodeIndex))
--		BSSvCreateOneNode(pDevice, &uNodeIndex);
--
--	memcpy(pMgmt->sNodeDBTable[uNodeIndex].abyMACAddr, param->sta_addr, WLAN_ADDR_LEN);
--	pMgmt->sNodeDBTable[uNodeIndex].eNodeState = NODE_ASSOC;
--	pMgmt->sNodeDBTable[uNodeIndex].wCapInfo = param->u.add_sta.capability;
--/* TODO listenInterval */
--	pMgmt->sNodeDBTable[uNodeIndex].bPSEnable = false;
--	pMgmt->sNodeDBTable[uNodeIndex].bySuppRate = param->u.add_sta.tx_supp_rates;
--
--	/* set max tx rate */
--	pMgmt->sNodeDBTable[uNodeIndex].wTxDataRate =
--		pMgmt->sNodeDBTable[uNodeIndex].wMaxSuppRate;
--	/* set max basic rate */
--	pMgmt->sNodeDBTable[uNodeIndex].wMaxBasicRate = RATE_2M;
--	/* Todo: check sta preamble, if ap can't support, set status code */
--	pMgmt->sNodeDBTable[uNodeIndex].bShortPreamble =
--		WLAN_GET_CAP_INFO_SHORTPREAMBLE(pMgmt->sNodeDBTable[uNodeIndex].wCapInfo);
--
--	pMgmt->sNodeDBTable[uNodeIndex].wAID = (unsigned short)param->u.add_sta.aid;
--
--	pMgmt->sNodeDBTable[uNodeIndex].ulLastRxJiffer = jiffies;
--
--	pr_debug("Add STA AID= %d\n", pMgmt->sNodeDBTable[uNodeIndex].wAID);
--	pr_debug("MAC=%pM\n", param->sta_addr);
--	pr_debug("Max Support rate = %d\n",
--		 pMgmt->sNodeDBTable[uNodeIndex].wMaxSuppRate);
--
--	return 0;
--}
--
--/*
-- * Description:
-- *      get station info
-- *
-- * Parameters:
-- *  In:
-- *      pDevice   -
-- *      param     -
-- *  Out:
-- *
-- * Return Value:
-- *
-- */
--
--static int hostap_get_info_sta(struct vnt_private *pDevice,
--			       struct viawget_hostapd_param *param)
--{
--	PSMgmtObject    pMgmt = pDevice->pMgmt;
--	unsigned int uNodeIndex;
--
--	if (BSSDBbIsSTAInNodeDB(pMgmt, param->sta_addr, &uNodeIndex)) {
--		param->u.get_info_sta.inactive_sec =
--			(jiffies - pMgmt->sNodeDBTable[uNodeIndex].ulLastRxJiffer) / HZ;
--	} else {
--		return -ENOENT;
--	}
--
--	return 0;
--}
--
--/*
-- * Description:
-- *      set station flag
-- *
-- * Parameters:
-- *  In:
-- *      pDevice   -
-- *      param     -
-- *  Out:
-- *
-- * Return Value:
-- *
-- */
--static int hostap_set_flags_sta(struct vnt_private *pDevice,
--				struct viawget_hostapd_param *param)
--{
--	PSMgmtObject    pMgmt = pDevice->pMgmt;
--	unsigned int uNodeIndex;
--
--	if (BSSDBbIsSTAInNodeDB(pMgmt, param->sta_addr, &uNodeIndex)) {
--		pMgmt->sNodeDBTable[uNodeIndex].dwFlags |= param->u.set_flags_sta.flags_or;
--		pMgmt->sNodeDBTable[uNodeIndex].dwFlags &= param->u.set_flags_sta.flags_and;
--		pr_debug(" dwFlags = %x\n",
--			 (unsigned int)pMgmt->sNodeDBTable[uNodeIndex].dwFlags);
--	} else {
--		return -ENOENT;
--	}
--
--	return 0;
--}
--
--/*
-- * Description:
-- *      set generic element (wpa ie)
-- *
-- * Parameters:
-- *  In:
-- *      pDevice   -
-- *      param     -
-- *  Out:
-- *
-- * Return Value:
-- *
-- */
--static int hostap_set_generic_element(struct vnt_private *pDevice,
--				      struct viawget_hostapd_param *param)
--{
--	PSMgmtObject    pMgmt = pDevice->pMgmt;
--
--	if (param->u.generic_elem.len > sizeof(pMgmt->abyWPAIE))
--		return -EINVAL;
--
--	memcpy(pMgmt->abyWPAIE,
--	       param->u.generic_elem.data,
--	       param->u.generic_elem.len
--		);
--
--	pMgmt->wWPAIELen = param->u.generic_elem.len;
--
--	pr_debug("pMgmt->wWPAIELen = %d\n", pMgmt->wWPAIELen);
--
--	/* disable wpa */
--	if (pMgmt->wWPAIELen == 0) {
--		pMgmt->eAuthenMode = WMAC_AUTH_OPEN;
--		pr_debug(" No WPAIE, Disable WPA\n");
--	} else  {
--		/* enable wpa */
--		if ((pMgmt->abyWPAIE[0] == WLAN_EID_RSN_WPA) ||
--		    (pMgmt->abyWPAIE[0] == WLAN_EID_RSN)) {
--			pMgmt->eAuthenMode = WMAC_AUTH_WPANONE;
--			pr_debug("Set WPAIE enable WPA\n");
--		} else
--			return -EINVAL;
--	}
--
--	return 0;
--}
--
--/*
-- * Description:
-- *      flush station nodes table.
-- *
-- * Parameters:
-- *  In:
-- *      pDevice   -
-- *  Out:
-- *
-- * Return Value:
-- *
-- */
--
--static void hostap_flush_sta(struct vnt_private *pDevice)
--{
--	/* reserved node index =0 for multicast node. */
--	BSSvClearNodeDBTable(pDevice, 1);
--	pDevice->uAssocCount = 0;
--}
--
--/*
-- * Description:
-- *      set each stations encryption key
-- *
-- * Parameters:
-- *  In:
-- *      pDevice   -
-- *      param     -
-- *  Out:
-- *
-- * Return Value:
-- *
-- */
--static int hostap_set_encryption(struct vnt_private *pDevice,
--				 struct viawget_hostapd_param *param,
--				 int param_len)
--{
--	PSMgmtObject    pMgmt = pDevice->pMgmt;
--	unsigned long dwKeyIndex = 0;
--	unsigned char abyKey[MAX_KEY_LEN];
--	unsigned char abySeq[MAX_KEY_LEN];
--	u64 KeyRSC;
--	unsigned char byKeyDecMode = KEY_CTL_WEP;
--	int     iNodeIndex = -1;
--	int     ii;
--	bool bKeyTableFull = false;
--	unsigned short wKeyCtl = 0;
--
--	param->u.crypt.err = 0;
--
--	if (param->u.crypt.alg > WPA_ALG_CCMP)
--		return -EINVAL;
--
--	if ((param->u.crypt.idx > 3) || (param->u.crypt.key_len > MAX_KEY_LEN)) {
--		param->u.crypt.err = HOSTAP_CRYPT_ERR_KEY_SET_FAILED;
--		pr_debug(" HOSTAP_CRYPT_ERR_KEY_SET_FAILED\n");
--		return -EINVAL;
--	}
--
--	if (is_broadcast_ether_addr(param->sta_addr)) {
--		if (param->u.crypt.idx >= MAX_GROUP_KEY)
--			return -EINVAL;
--		iNodeIndex = 0;
--
--	} else {
--		if (BSSDBbIsSTAInNodeDB(pMgmt, param->sta_addr, &iNodeIndex) == false) {
--			param->u.crypt.err = HOSTAP_CRYPT_ERR_UNKNOWN_ADDR;
--			pr_debug(" HOSTAP_CRYPT_ERR_UNKNOWN_ADDR\n");
--			return -EINVAL;
--		}
--	}
--	pr_debug(" hostap_set_encryption: sta_index %d\n", iNodeIndex);
--	pr_debug(" hostap_set_encryption: alg %d\n", param->u.crypt.alg);
--
--	if (param->u.crypt.alg == WPA_ALG_NONE) {
--		if (pMgmt->sNodeDBTable[iNodeIndex].bOnFly) {
--			if (!KeybRemoveKey(&(pDevice->sKey),
--					  param->sta_addr,
--					  pMgmt->sNodeDBTable[iNodeIndex].dwKeyIndex,
--					  pDevice->PortOffset)) {
--				pr_debug("KeybRemoveKey fail\n");
--			}
--			pMgmt->sNodeDBTable[iNodeIndex].bOnFly = false;
--		}
--		pMgmt->sNodeDBTable[iNodeIndex].byKeyIndex = 0;
--		pMgmt->sNodeDBTable[iNodeIndex].dwKeyIndex = 0;
--		pMgmt->sNodeDBTable[iNodeIndex].uWepKeyLength = 0;
--		pMgmt->sNodeDBTable[iNodeIndex].KeyRSC = 0;
--		pMgmt->sNodeDBTable[iNodeIndex].dwTSC47_16 = 0;
--		pMgmt->sNodeDBTable[iNodeIndex].wTSC15_0 = 0;
--		pMgmt->sNodeDBTable[iNodeIndex].byCipherSuite = 0;
--		memset(&pMgmt->sNodeDBTable[iNodeIndex].abyWepKey[0],
--		       0,
--		       MAX_KEY_LEN
--);
--
--		return 0;
--	}
--
--	memcpy(abyKey, param->u.crypt.key, param->u.crypt.key_len);
--	/* copy to node key tbl */
--	pMgmt->sNodeDBTable[iNodeIndex].byKeyIndex = param->u.crypt.idx;
--	pMgmt->sNodeDBTable[iNodeIndex].uWepKeyLength = param->u.crypt.key_len;
--	memcpy(&pMgmt->sNodeDBTable[iNodeIndex].abyWepKey[0],
--	       param->u.crypt.key,
--	       param->u.crypt.key_len
--);
--
--	dwKeyIndex = (unsigned long)(param->u.crypt.idx);
--	if (param->u.crypt.flags & HOSTAP_CRYPT_FLAG_SET_TX_KEY) {
--		pDevice->byKeyIndex = (unsigned char)dwKeyIndex;
--		pDevice->bTransmitKey = true;
--		dwKeyIndex |= (1 << 31);
--	}
--
--	if (param->u.crypt.alg == WPA_ALG_WEP) {
--		if ((pDevice->bEnable8021x == false) || (iNodeIndex == 0)) {
--			KeybSetDefaultKey(&(pDevice->sKey),
--					  dwKeyIndex & ~(BIT30 | USE_KEYRSC),
--					  param->u.crypt.key_len,
--					  NULL,
--					  abyKey,
--					  KEY_CTL_WEP,
--					  pDevice->PortOffset,
--					  pDevice->byLocalID);
--
--		} else {
--			/* 8021x enable, individual key */
--			dwKeyIndex |= (1 << 30); /* set pairwise key */
--			if (KeybSetKey(&(pDevice->sKey),
--				       &param->sta_addr[0],
--				       dwKeyIndex & ~(USE_KEYRSC),
--				       param->u.crypt.key_len,
--				       (u64 *) &KeyRSC,
--				       (unsigned char *)abyKey,
--				       KEY_CTL_WEP,
--				       pDevice->PortOffset,
--				       pDevice->byLocalID)) {
--				pMgmt->sNodeDBTable[iNodeIndex].bOnFly = true;
--
--			} else {
--				/* Key Table Full */
--				pMgmt->sNodeDBTable[iNodeIndex].bOnFly = false;
--				bKeyTableFull = true;
--			}
--		}
--		pDevice->eEncryptionStatus = Ndis802_11Encryption1Enabled;
--		pDevice->bEncryptionEnable = true;
--		pMgmt->byCSSPK = KEY_CTL_WEP;
--		pMgmt->byCSSGK = KEY_CTL_WEP;
--		pMgmt->sNodeDBTable[iNodeIndex].byCipherSuite = KEY_CTL_WEP;
--		pMgmt->sNodeDBTable[iNodeIndex].dwKeyIndex = dwKeyIndex;
--		return 0;
--	}
--
--	if (param->u.crypt.seq) {
--		memcpy(&abySeq, param->u.crypt.seq, 8);
--		for (ii = 0; ii < 8; ii++)
--			KeyRSC |= (u64)abySeq[ii] << (ii * 8);
--
--		dwKeyIndex |= 1 << 29;
--		pMgmt->sNodeDBTable[iNodeIndex].KeyRSC = KeyRSC;
--	}
--
--	if (param->u.crypt.alg == WPA_ALG_TKIP) {
--		if (param->u.crypt.key_len != MAX_KEY_LEN)
--			return -EINVAL;
--		pDevice->eEncryptionStatus = Ndis802_11Encryption2Enabled;
--		byKeyDecMode = KEY_CTL_TKIP;
--		pMgmt->byCSSPK = KEY_CTL_TKIP;
--		pMgmt->byCSSGK = KEY_CTL_TKIP;
--	}
--
--	if (param->u.crypt.alg == WPA_ALG_CCMP) {
--		if ((param->u.crypt.key_len != AES_KEY_LEN) ||
--		    (pDevice->byLocalID <= REV_ID_VT3253_A1))
--			return -EINVAL;
--		pDevice->eEncryptionStatus = Ndis802_11Encryption3Enabled;
--		byKeyDecMode = KEY_CTL_CCMP;
--		pMgmt->byCSSPK = KEY_CTL_CCMP;
--		pMgmt->byCSSGK = KEY_CTL_CCMP;
--	}
--
--	if (iNodeIndex == 0) {
--		KeybSetDefaultKey(&(pDevice->sKey),
--				  dwKeyIndex,
--				  param->u.crypt.key_len,
--				  (u64 *) &KeyRSC,
--				  abyKey,
--				  byKeyDecMode,
--				  pDevice->PortOffset,
--				  pDevice->byLocalID);
--		pMgmt->sNodeDBTable[iNodeIndex].bOnFly = true;
--
--	} else {
--		dwKeyIndex |= (1 << 30); /* set pairwise key */
--		if (KeybSetKey(&(pDevice->sKey),
--			       &param->sta_addr[0],
--			       dwKeyIndex,
--			       param->u.crypt.key_len,
--			       (u64 *) &KeyRSC,
--			       (unsigned char *)abyKey,
--			       byKeyDecMode,
--			       pDevice->PortOffset,
--			       pDevice->byLocalID)) {
--			pMgmt->sNodeDBTable[iNodeIndex].bOnFly = true;
--
--		} else {
--			/* Key Table Full */
--			pMgmt->sNodeDBTable[iNodeIndex].bOnFly = false;
--			bKeyTableFull = true;
--			pr_debug(" Key Table Full\n");
--		}
--
--	}
--
--	if (bKeyTableFull) {
--		wKeyCtl &= 0x7F00;              /* clear all key control filed */
--		wKeyCtl |= (byKeyDecMode << 4);
--		wKeyCtl |= (byKeyDecMode);
--		wKeyCtl |= 0x0044;              /* use group key for all address */
--		wKeyCtl |= 0x4000;              /* disable KeyTable[MAX_KEY_TABLE-1] on-fly to genernate rx int */
--		MACvSetDefaultKeyCtl(pDevice->PortOffset, wKeyCtl, MAX_KEY_TABLE-1, pDevice->byLocalID);
--	}
--
--	pr_debug(" Set key sta_index= %d\n", iNodeIndex);
--	pr_debug(" tx_index=%d len=%d\n",
--		 param->u.crypt.idx, param->u.crypt.key_len);
--	pr_debug(" key=%x-%x-%x-%x-%x-xxxxx\n",
--		 pMgmt->sNodeDBTable[iNodeIndex].abyWepKey[0],
--		 pMgmt->sNodeDBTable[iNodeIndex].abyWepKey[1],
--		 pMgmt->sNodeDBTable[iNodeIndex].abyWepKey[2],
--		 pMgmt->sNodeDBTable[iNodeIndex].abyWepKey[3],
--		 pMgmt->sNodeDBTable[iNodeIndex].abyWepKey[4]);
--
--	/* set wep key */
--	pDevice->bEncryptionEnable = true;
--	pMgmt->sNodeDBTable[iNodeIndex].byCipherSuite = byKeyDecMode;
--	pMgmt->sNodeDBTable[iNodeIndex].dwKeyIndex = dwKeyIndex;
--	pMgmt->sNodeDBTable[iNodeIndex].dwTSC47_16 = 0;
--	pMgmt->sNodeDBTable[iNodeIndex].wTSC15_0 = 0;
--
--	return 0;
--}
--
--/*
-- * Description:
-- *      get each stations encryption key
-- *
-- * Parameters:
-- *  In:
-- *      pDevice   -
-- *      param     -
-- *  Out:
-- *
-- * Return Value:
-- *
-- */
--static int hostap_get_encryption(struct vnt_private *pDevice,
--				 struct viawget_hostapd_param *param,
--				 int param_len)
--{
--	PSMgmtObject    pMgmt = pDevice->pMgmt;
--	int     ii;
--	int     iNodeIndex = 0;
--
--	param->u.crypt.err = 0;
--
--	if (is_broadcast_ether_addr(param->sta_addr)) {
--		iNodeIndex = 0;
--	} else {
--		if (BSSDBbIsSTAInNodeDB(pMgmt, param->sta_addr, &iNodeIndex) == false) {
--			param->u.crypt.err = HOSTAP_CRYPT_ERR_UNKNOWN_ADDR;
--			pr_debug("hostap_get_encryption: HOSTAP_CRYPT_ERR_UNKNOWN_ADDR\n");
--			return -EINVAL;
--		}
--	}
--	pr_debug("hostap_get_encryption: %d\n", iNodeIndex);
--	memset(param->u.crypt.seq, 0, 8);
--	for (ii = 0; ii < 8; ii++)
--		param->u.crypt.seq[ii] = (unsigned char)pMgmt->sNodeDBTable[iNodeIndex].KeyRSC >> (ii * 8);
--
--	return 0;
--}
--
--/*
-- * Description:
-- *      vt6655_hostap_ioctl main function supported for hostap deamon.
-- *
-- * Parameters:
-- *  In:
-- *      pDevice   -
-- *      iw_point  -
-- *  Out:
-- *
-- * Return Value:
-- *
-- */
--int vt6655_hostap_ioctl(struct vnt_private *pDevice, struct iw_point *p)
--{
--	struct viawget_hostapd_param *param;
--	int ret = 0;
--	int ap_ioctl = 0;
--
--	if (p->length < sizeof(struct viawget_hostapd_param) ||
--	    p->length > VIAWGET_HOSTAPD_MAX_BUF_SIZE || !p->pointer)
--		return -EINVAL;
--
--	param = kmalloc((int)p->length, GFP_KERNEL);
--	if (param == NULL)
--		return -ENOMEM;
--
--	if (copy_from_user(param, p->pointer, p->length)) {
--		ret = -EFAULT;
--		goto out;
--	}
--
--	switch (param->cmd) {
--	case VIAWGET_HOSTAPD_SET_ENCRYPTION:
--		pr_debug("VIAWGET_HOSTAPD_SET_ENCRYPTION\n");
--		spin_lock_irq(&pDevice->lock);
--		ret = hostap_set_encryption(pDevice, param, p->length);
--		spin_unlock_irq(&pDevice->lock);
--		break;
--	case VIAWGET_HOSTAPD_GET_ENCRYPTION:
--		pr_debug("VIAWGET_HOSTAPD_GET_ENCRYPTION\n");
--		spin_lock_irq(&pDevice->lock);
--		ret = hostap_get_encryption(pDevice, param, p->length);
--		spin_unlock_irq(&pDevice->lock);
--		break;
--	case VIAWGET_HOSTAPD_SET_ASSOC_AP_ADDR:
--		pr_debug("VIAWGET_HOSTAPD_SET_ASSOC_AP_ADDR\n");
--		ret = -EOPNOTSUPP;
--		goto out;
--	case VIAWGET_HOSTAPD_FLUSH:
--		pr_debug("VIAWGET_HOSTAPD_FLUSH\n");
--		spin_lock_irq(&pDevice->lock);
--		hostap_flush_sta(pDevice);
--		spin_unlock_irq(&pDevice->lock);
--		break;
--	case VIAWGET_HOSTAPD_ADD_STA:
--		pr_debug("VIAWGET_HOSTAPD_ADD_STA\n");
--		spin_lock_irq(&pDevice->lock);
--		ret = hostap_add_sta(pDevice, param);
--		spin_unlock_irq(&pDevice->lock);
--		break;
--	case VIAWGET_HOSTAPD_REMOVE_STA:
--		pr_debug("VIAWGET_HOSTAPD_REMOVE_STA\n");
--		spin_lock_irq(&pDevice->lock);
--		ret = hostap_remove_sta(pDevice, param);
--		spin_unlock_irq(&pDevice->lock);
--		break;
--	case VIAWGET_HOSTAPD_GET_INFO_STA:
--		pr_debug("VIAWGET_HOSTAPD_GET_INFO_STA\n");
--		ret = hostap_get_info_sta(pDevice, param);
--		ap_ioctl = 1;
--		break;
--	case VIAWGET_HOSTAPD_SET_FLAGS_STA:
--		pr_debug("VIAWGET_HOSTAPD_SET_FLAGS_STA\n");
--		ret = hostap_set_flags_sta(pDevice, param);
--		break;
--	case VIAWGET_HOSTAPD_MLME:
--		pr_debug("VIAWGET_HOSTAPD_MLME\n");
--		ret = -EOPNOTSUPP;
--		goto out;
--	case VIAWGET_HOSTAPD_SET_GENERIC_ELEMENT:
--		pr_debug("VIAWGET_HOSTAPD_SET_GENERIC_ELEMENT\n");
--		ret = hostap_set_generic_element(pDevice, param);
--		break;
--	case VIAWGET_HOSTAPD_SCAN_REQ:
--		pr_debug("VIAWGET_HOSTAPD_SCAN_REQ\n");
--		ret = -EOPNOTSUPP;
--		goto out;
--	case VIAWGET_HOSTAPD_STA_CLEAR_STATS:
--		pr_debug("VIAWGET_HOSTAPD_STA_CLEAR_STATS\n");
--		ret = -EOPNOTSUPP;
--		goto out;
--	default:
--		pr_debug("vt6655_hostap_ioctl: unknown cmd=%d\n",
--			 (int)param->cmd);
--		ret = -EOPNOTSUPP;
--		goto out;
--	}
--
--	if ((ret == 0) && ap_ioctl) {
--		if (copy_to_user(p->pointer, param, p->length))
--			ret = -EFAULT;
--	}
--
--out:
--	kfree(param);
--	return ret;
--}
-diff --git a/drivers/staging/vt6655/hostap.h b/drivers/staging/vt6655/hostap.h
-deleted file mode 100644
-index fc5f9ed..0000000
---- a/drivers/staging/vt6655/hostap.h
-+++ /dev/null
-@@ -1,58 +0,0 @@
--/*
-- * Copyright (c) 1996, 2003 VIA Networking Technologies, Inc.
-- * All rights reserved.
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License as published by
-- * the Free Software Foundation; either version 2 of the License, or
-- * (at your option) any later version.
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License along
-- * with this program; if not, write to the Free Software Foundation, Inc.,
-- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-- *
-- * File: hostap.h
-- *
-- * Purpose:
-- *
-- * Author: Lyndon Chen
-- *
-- * Date: May 21, 2003
-- *
-- */
--
--#ifndef __HOSTAP_H__
--#define __HOSTAP_H__
--
--#include "device.h"
--
--#define WLAN_RATE_1M    BIT0
--#define WLAN_RATE_2M    BIT1
--#define WLAN_RATE_5M5   BIT2
--#define WLAN_RATE_11M   BIT3
--#define WLAN_RATE_6M    BIT4
--#define WLAN_RATE_9M    BIT5
--#define WLAN_RATE_12M   BIT6
--#define WLAN_RATE_18M   BIT7
--#define WLAN_RATE_24M   BIT8
--#define WLAN_RATE_36M   BIT9
--#define WLAN_RATE_48M   BIT10
--#define WLAN_RATE_54M   BIT11
--
--#ifndef ETH_P_PAE
--#define ETH_P_PAE 0x888E /* Port Access Entity (IEEE 802.1X) */
--#endif /* ETH_P_PAE */
--
--#ifndef ARPHRD_IEEE80211
--#define ARPHRD_IEEE80211 801
--#endif
--
--int vt6655_hostap_set_hostapd(struct vnt_private *, int val, int rtnl_locked);
--int vt6655_hostap_ioctl(struct vnt_private *, struct iw_point *p);
--
--#endif /*  __HOSTAP_H__ */
-diff --git a/drivers/staging/vt6655/rxtx.c b/drivers/staging/vt6655/rxtx.c
-index de8f59c..644e0d2 100644
---- a/drivers/staging/vt6655/rxtx.c
-+++ b/drivers/staging/vt6655/rxtx.c
-@@ -60,7 +60,6 @@
- #include "tcrc.h"
- #include "wctl.h"
- #include "wroute.h"
--#include "hostap.h"
- #include "rf.h"
+diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
+index db9e4e3..a22e9a9 100644
+--- a/drivers/net/wireless/mwifiex/sdio.c
++++ b/drivers/net/wireless/mwifiex/sdio.c
+@@ -448,28 +448,31 @@ static int mwifiex_pm_wakeup_card_complete(struct mwifiex_adapter *adapter)
+ static int mwifiex_init_sdio_new_mode(struct mwifiex_adapter *adapter)
+ {
+ 	u8 reg;
++	struct sdio_mmc_card *card = adapter->card;
  
- /*---------------------  Static Definitions -------------------------*/
+ 	adapter->ioport = MEM_PORT;
+ 
+ 	/* enable sdio new mode */
+-	if (mwifiex_read_reg(adapter, CARD_CONFIG_2_1_REG, &reg))
++	if (mwifiex_read_reg(adapter, card->reg->card_cfg_2_1_reg, &reg))
+ 		return -1;
+-	if (mwifiex_write_reg(adapter, CARD_CONFIG_2_1_REG,
++	if (mwifiex_write_reg(adapter, card->reg->card_cfg_2_1_reg,
+ 			      reg | CMD53_NEW_MODE))
+ 		return -1;
+ 
+ 	/* Configure cmd port and enable reading rx length from the register */
+-	if (mwifiex_read_reg(adapter, CMD_CONFIG_0, &reg))
++	if (mwifiex_read_reg(adapter, card->reg->cmd_cfg_0, &reg))
+ 		return -1;
+-	if (mwifiex_write_reg(adapter, CMD_CONFIG_0, reg | CMD_PORT_RD_LEN_EN))
++	if (mwifiex_write_reg(adapter, card->reg->cmd_cfg_0,
++			      reg | CMD_PORT_RD_LEN_EN))
+ 		return -1;
+ 
+ 	/* Enable Dnld/Upld ready auto reset for cmd port after cmd53 is
+ 	 * completed
+ 	 */
+-	if (mwifiex_read_reg(adapter, CMD_CONFIG_1, &reg))
++	if (mwifiex_read_reg(adapter, card->reg->cmd_cfg_1, &reg))
+ 		return -1;
+-	if (mwifiex_write_reg(adapter, CMD_CONFIG_1, reg | CMD_PORT_AUTO_EN))
++	if (mwifiex_write_reg(adapter, card->reg->cmd_cfg_1,
++			      reg | CMD_PORT_AUTO_EN))
+ 		return -1;
+ 
+ 	return 0;
+@@ -496,17 +499,17 @@ static int mwifiex_init_sdio_ioport(struct mwifiex_adapter *adapter)
+ 	}
+ 
+ 	/* Read the IO port */
+-	if (!mwifiex_read_reg(adapter, IO_PORT_0_REG, &reg))
++	if (!mwifiex_read_reg(adapter, card->reg->io_port_0_reg, &reg))
+ 		adapter->ioport |= (reg & 0xff);
+ 	else
+ 		return -1;
+ 
+-	if (!mwifiex_read_reg(adapter, IO_PORT_1_REG, &reg))
++	if (!mwifiex_read_reg(adapter, card->reg->io_port_1_reg, &reg))
+ 		adapter->ioport |= ((reg & 0xff) << 8);
+ 	else
+ 		return -1;
+ 
+-	if (!mwifiex_read_reg(adapter, IO_PORT_2_REG, &reg))
++	if (!mwifiex_read_reg(adapter, card->reg->io_port_2_reg, &reg))
+ 		adapter->ioport |= ((reg & 0xff) << 16);
+ 	else
+ 		return -1;
+@@ -514,8 +517,8 @@ cont:
+ 	pr_debug("info: SDIO FUNC1 IO port: %#x\n", adapter->ioport);
+ 
+ 	/* Set Host interrupt reset to read to clear */
+-	if (!mwifiex_read_reg(adapter, HOST_INT_RSR_REG, &reg))
+-		mwifiex_write_reg(adapter, HOST_INT_RSR_REG,
++	if (!mwifiex_read_reg(adapter, card->reg->host_int_rsr_reg, &reg))
++		mwifiex_write_reg(adapter, card->reg->host_int_rsr_reg,
+ 				  reg | card->reg->sdio_int_mask);
+ 	else
+ 		return -1;
+@@ -708,7 +711,7 @@ static void mwifiex_sdio_disable_host_int(struct mwifiex_adapter *adapter)
+ 	struct sdio_func *func = card->func;
+ 
+ 	sdio_claim_host(func);
+-	mwifiex_write_reg_locked(func, HOST_INT_MASK_REG, 0);
++	mwifiex_write_reg_locked(func, card->reg->host_int_mask_reg, 0);
+ 	sdio_release_irq(func);
+ 	sdio_release_host(func);
+ }
+@@ -729,7 +732,7 @@ static void mwifiex_interrupt_status(struct mwifiex_adapter *adapter)
+ 		return;
+ 	}
+ 
+-	sdio_ireg = card->mp_regs[HOST_INTSTATUS_REG];
++	sdio_ireg = card->mp_regs[card->reg->host_int_status_reg];
+ 	if (sdio_ireg) {
+ 		/*
+ 		 * DN_LD_HOST_INT_STATUS and/or UP_LD_HOST_INT_STATUS
+@@ -794,7 +797,7 @@ static int mwifiex_sdio_enable_host_int(struct mwifiex_adapter *adapter)
+ 	}
+ 
+ 	/* Simply write the mask to the register */
+-	ret = mwifiex_write_reg_locked(func, HOST_INT_MASK_REG,
++	ret = mwifiex_write_reg_locked(func, card->reg->host_int_mask_reg,
+ 				       card->reg->host_int_enable);
+ 	if (ret) {
+ 		dev_err(adapter->dev, "enable host interrupt failed\n");
+@@ -1334,8 +1337,8 @@ static int mwifiex_process_int_status(struct mwifiex_adapter *adapter)
+ 		u32 pkt_type;
+ 
+ 		/* read the len of control packet */
+-		rx_len = card->mp_regs[CMD_RD_LEN_1] << 8;
+-		rx_len |= (u16) card->mp_regs[CMD_RD_LEN_0];
++		rx_len = card->mp_regs[reg->cmd_rd_len_1] << 8;
++		rx_len |= (u16)card->mp_regs[reg->cmd_rd_len_0];
+ 		rx_blocks = DIV_ROUND_UP(rx_len, MWIFIEX_SDIO_BLOCK_SIZE);
+ 		if (rx_len <= INTF_HEADER_LEN ||
+ 		    (rx_blocks * MWIFIEX_SDIO_BLOCK_SIZE) >
+@@ -1823,11 +1826,11 @@ static int mwifiex_init_sdio(struct mwifiex_adapter *adapter)
+ 	sdio_set_drvdata(card->func, card);
+ 
+ 	/*
+-	 * Read the HOST_INT_STATUS_REG for ACK the first interrupt got
++	 * Read the host_int_status_reg for ACK the first interrupt got
+ 	 * from the bootloader. If we don't do this we get a interrupt
+ 	 * as soon as we register the irq.
+ 	 */
+-	mwifiex_read_reg(adapter, HOST_INTSTATUS_REG, &sdio_ireg);
++	mwifiex_read_reg(adapter, card->reg->host_int_status_reg, &sdio_ireg);
+ 
+ 	/* Get SDIO ioport */
+ 	mwifiex_init_sdio_ioport(adapter);
+diff --git a/drivers/net/wireless/mwifiex/sdio.h b/drivers/net/wireless/mwifiex/sdio.h
+index 6b8835e..5a08ebc 100644
+--- a/drivers/net/wireless/mwifiex/sdio.h
++++ b/drivers/net/wireless/mwifiex/sdio.h
+@@ -52,13 +52,9 @@
+ #define HOST_TERM_CMD53			(0x1U << 2)
+ #define REG_PORT			0
+ #define MEM_PORT			0x10000
+-#define CMD_RD_LEN_0			0xB4
+-#define CMD_RD_LEN_1			0xB5
+-#define CARD_CONFIG_2_1_REG             0xCD
++
+ #define CMD53_NEW_MODE			(0x1U << 0)
+-#define CMD_CONFIG_0			0xB8
+ #define CMD_PORT_RD_LEN_EN		(0x1U << 2)
+-#define CMD_CONFIG_1			0xB9
+ #define CMD_PORT_AUTO_EN		(0x1U << 0)
+ #define CMD_PORT_SLCT			0x8000
+ #define UP_LD_CMD_PORT_HOST_INT_STATUS	(0x40U)
+@@ -70,38 +66,23 @@
+ /* Misc. Config Register : Auto Re-enable interrupts */
+ #define AUTO_RE_ENABLE_INT              BIT(4)
+ 
+-/* Host Control Registers */
+-/* Host Control Registers : I/O port 0 */
+-#define IO_PORT_0_REG			0x78
+-/* Host Control Registers : I/O port 1 */
+-#define IO_PORT_1_REG			0x79
+-/* Host Control Registers : I/O port 2 */
+-#define IO_PORT_2_REG			0x7A
+-
+ /* Host Control Registers : Configuration */
+ #define CONFIGURATION_REG		0x00
+ /* Host Control Registers : Host power up */
+ #define HOST_POWER_UP			(0x1U << 1)
+ 
+-/* Host Control Registers : Host interrupt mask */
+-#define HOST_INT_MASK_REG		0x02
+ /* Host Control Registers : Upload host interrupt mask */
+ #define UP_LD_HOST_INT_MASK		(0x1U)
+ /* Host Control Registers : Download host interrupt mask */
+ #define DN_LD_HOST_INT_MASK		(0x2U)
+ 
+-/* Host Control Registers : Host interrupt status */
+-#define HOST_INTSTATUS_REG		0x03
+ /* Host Control Registers : Upload host interrupt status */
+ #define UP_LD_HOST_INT_STATUS		(0x1U)
+ /* Host Control Registers : Download host interrupt status */
+ #define DN_LD_HOST_INT_STATUS		(0x2U)
+ 
+-/* Host Control Registers : Host interrupt RSR */
+-#define HOST_INT_RSR_REG		0x01
+-
+ /* Host Control Registers : Host interrupt status */
+-#define HOST_INT_STATUS_REG		0x28
++#define CARD_INT_STATUS_REG		0x28
+ 
+ /* Card Control Registers : Card I/O ready */
+ #define CARD_IO_READY                   (0x1U << 3)
+@@ -203,10 +184,16 @@ struct mwifiex_sdio_card_reg {
+ 	u8 base_1_reg;
+ 	u8 poll_reg;
+ 	u8 host_int_enable;
++	u8 host_int_rsr_reg;
++	u8 host_int_status_reg;
++	u8 host_int_mask_reg;
+ 	u8 status_reg_0;
+ 	u8 status_reg_1;
+ 	u8 sdio_int_mask;
+ 	u32 data_port_mask;
++	u8 io_port_0_reg;
++	u8 io_port_1_reg;
++	u8 io_port_2_reg;
+ 	u8 max_mp_regs;
+ 	u8 rd_bitmap_l;
+ 	u8 rd_bitmap_u;
+@@ -219,6 +206,15 @@ struct mwifiex_sdio_card_reg {
+ 	u8 rd_len_p0_l;
+ 	u8 rd_len_p0_u;
+ 	u8 card_misc_cfg_reg;
++	u8 card_cfg_2_1_reg;
++	u8 cmd_rd_len_0;
++	u8 cmd_rd_len_1;
++	u8 cmd_rd_len_2;
++	u8 cmd_rd_len_3;
++	u8 cmd_cfg_0;
++	u8 cmd_cfg_1;
++	u8 cmd_cfg_2;
++	u8 cmd_cfg_3;
+ 	u8 fw_dump_ctrl;
+ 	u8 fw_dump_start;
+ 	u8 fw_dump_end;
+@@ -274,10 +270,16 @@ static const struct mwifiex_sdio_card_reg mwifiex_reg_sd87xx = {
+ 	.base_1_reg = 0x0041,
+ 	.poll_reg = 0x30,
+ 	.host_int_enable = UP_LD_HOST_INT_MASK | DN_LD_HOST_INT_MASK,
++	.host_int_rsr_reg = 0x1,
++	.host_int_mask_reg = 0x02,
++	.host_int_status_reg = 0x03,
+ 	.status_reg_0 = 0x60,
+ 	.status_reg_1 = 0x61,
+ 	.sdio_int_mask = 0x3f,
+ 	.data_port_mask = 0x0000fffe,
++	.io_port_0_reg = 0x78,
++	.io_port_1_reg = 0x79,
++	.io_port_2_reg = 0x7A,
+ 	.max_mp_regs = 64,
+ 	.rd_bitmap_l = 0x04,
+ 	.rd_bitmap_u = 0x05,
+@@ -296,10 +298,16 @@ static const struct mwifiex_sdio_card_reg mwifiex_reg_sd8897 = {
+ 	.poll_reg = 0x50,
+ 	.host_int_enable = UP_LD_HOST_INT_MASK | DN_LD_HOST_INT_MASK |
+ 			CMD_PORT_UPLD_INT_MASK | CMD_PORT_DNLD_INT_MASK,
++	.host_int_rsr_reg = 0x1,
++	.host_int_status_reg = 0x03,
++	.host_int_mask_reg = 0x02,
+ 	.status_reg_0 = 0xc0,
+ 	.status_reg_1 = 0xc1,
+ 	.sdio_int_mask = 0xff,
+ 	.data_port_mask = 0xffffffff,
++	.io_port_0_reg = 0xD8,
++	.io_port_1_reg = 0xD9,
++	.io_port_2_reg = 0xDA,
+ 	.max_mp_regs = 184,
+ 	.rd_bitmap_l = 0x04,
+ 	.rd_bitmap_u = 0x05,
+@@ -312,6 +320,15 @@ static const struct mwifiex_sdio_card_reg mwifiex_reg_sd8897 = {
+ 	.rd_len_p0_l = 0x0c,
+ 	.rd_len_p0_u = 0x0d,
+ 	.card_misc_cfg_reg = 0xcc,
++	.card_cfg_2_1_reg = 0xcd,
++	.cmd_rd_len_0 = 0xb4,
++	.cmd_rd_len_1 = 0xb5,
++	.cmd_rd_len_2 = 0xb6,
++	.cmd_rd_len_3 = 0xb7,
++	.cmd_cfg_0 = 0xb8,
++	.cmd_cfg_1 = 0xb9,
++	.cmd_cfg_2 = 0xba,
++	.cmd_cfg_3 = 0xbb,
+ 	.fw_dump_ctrl = 0xe2,
+ 	.fw_dump_start = 0xe3,
+ 	.fw_dump_end = 0xea,
 -- 
-1.9.1
+1.8.1.4
 
