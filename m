@@ -1,60 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:44151 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750857AbaJDOkH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Oct 2014 10:40:07 -0400
-Message-ID: <543006C5.6010807@candelatech.com> (sfid-20141004_164029_072117_B342066E)
-Date: Sat, 04 Oct 2014 07:40:05 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from mx1.redhat.com ([209.132.183.28]:56125 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750782AbaJAJPK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Oct 2014 05:15:10 -0400
+Date: Wed, 1 Oct 2014 11:12:41 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Mark Asselstine <asselsm@gmail.com>
+Cc: helmut.schaa@googlemail.com, users@rt2x00.serialmonkey.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rt2x00: rt2x00queue: avoid using more headroom then
+ driver requested
+Message-ID: <20141001091240.GA2011@redhat.com> (sfid-20141001_111515_953481_65425D97)
+References: <1412135157-13520-1-git-send-email-asselsm@gmail.com>
 MIME-Version: 1.0
-To: "hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Support for bitrate-mask in wpa_supplicant?
-References: <542D87F6.8090306@candelatech.com> <20141004130858.GB2987@w1.fi>
-In-Reply-To: <20141004130858.GB2987@w1.fi>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1412135157-13520-1-git-send-email-asselsm@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Sep 30, 2014 at 11:45:57PM -0400, Mark Asselstine wrote:
+> 'struct ieee80211_hw' contains 'extra_tx_headroom' which it defines as
+> "headroom to reserve in each transmit skb for use by the driver". This
+> value is properly setup during rt2x00lib_probe_hw() to account for all
+> the rt2x00lib's purposes, including DMA alignment and L2 pad if
+> needed. As such under all circumstances the proper amount of headroom
+> is allocated to a skb such that under any usage we would not ever use
+> more headroom then is allotted.
+> 
+> However rt2x00queue_write_tx_frame() uses up the headroom (via calls
+> to skb_push) allotted for L2 padding (with a potential call to
+> rt2x00queue_insert_l2pad()) and uses up the headroom allotted to DMA
+> alignment (with a potential call to rt2x00queue_align_frame()) and
+> then proceeds to use up 'extra_tx_headroom' (in a call to
+> rt2x00queue_write_tx_data())
+> 
+> So the driver has requested just 'extra_tx_headroom' worth of headroom
+> and we have used up 'extra_tx_headroom' + DMA + L2PAD worth. As such
+> it is possible to hit a 'skb_under_panic', where we have used up all
+> the available headroom.
+> 
+> Since extra_tx_headroom was calculated as a function of winfo_size,
+> desc_size, RT2X00_L2PAD_SIZE and RT2X00_ALIGN_SIZE we can simply
+> remove the part for alignment and padding and we will know how much is
+> left to use up (for txdesc) and only use that much. Keeping the
+> driver's use of headroom to what it requested via extra_tx_headroom.
+> 
+> Signed-off-by: Mark Asselstine <asselsm@gmail.com>
+> ---
+>  drivers/net/wireless/rt2x00/rt2x00queue.c | 15 ++++++++++++---
+>  1 file changed, 12 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+> index 8e68f87..2a48bf5 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00queue.c
+> +++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+> @@ -522,6 +522,7 @@ static int rt2x00queue_write_tx_data(struct queue_entry *entry,
+>  				     struct txentry_desc *txdesc)
+>  {
+>  	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
+> +	unsigned int avail_extra_tx_headroom = rt2x00dev->extra_tx_headroom;
+>  
+>  	/*
+>  	 * This should not happen, we already checked the entry
+> @@ -538,10 +539,18 @@ static int rt2x00queue_write_tx_data(struct queue_entry *entry,
+>  	}
+>  
+>  	/*
+> -	 * Add the requested extra tx headroom in front of the skb.
+> +	 * Add room for data at the front of the buffer for txdesc. The space
+> +	 * needed for this was accounted for in extra_tx_headroom, we just
+> +	 * need to remove the amount allocated for padding and alignment
+> +	 * to get what is left for txdesc.
+>  	 */
+> -	skb_push(entry->skb, rt2x00dev->extra_tx_headroom);
+> -	memset(entry->skb->data, 0, rt2x00dev->extra_tx_headroom);
+> +	if (test_bit(REQUIRE_L2PAD, &rt2x00dev->cap_flags))
+> +		avail_extra_tx_headroom -= RT2X00_L2PAD_SIZE;
+> +	else if (test_bit(REQUIRE_DMA, &rt2x00dev->cap_flags))
+> +		avail_extra_tx_headroom -= RT2X00_ALIGN_SIZE;
+> +
+> +	skb_push(entry->skb, avail_extra_tx_headroom);
+> +	memset(entry->skb->data, 0, avail_extra_tx_headroom);
 
+I don't think patch is correct. 
 
-On 10/04/2014 06:08 AM, Jouni Malinen wrote:
-> On Thu, Oct 02, 2014 at 10:14:30AM -0700, Ben Greear wrote:
->>  From what I can tell, wpa_supplicant does not have a way to set
->> the tx-bitrate-mask, except for some code
->> to disable 802.11b rates (which I think will in turn (re)enable all
->> of the other rates that may have previously been disabled.
->>
->> So, would it be worthwhile to add support to supplicant to at
->> least configure the legacy rates using the NL80211_CMD_SET_TX_BITRATE_MASK
->> netlink message?
->
-> Why would wpa_supplicant be involved in that? What kind of use case
-> would benefit from this (vs. setting this through iw, for example)?
+We have rt2x00->extra_tx_headroom and rt2x00->hw->extra_tx_headroom.
+Second value, which we provide as maximum needed headroom to mac80211
+is rt2x00->extra_tx_headrom + RT2X00_L2PAD_SIZE + RT2X00_ALIGN_SIZE.
 
+We really need to reserve rt2x00dev->extra_tx_headroom on TX skb, as
+this is room for metadata needed by H/W and if needed we should reserve
+RT2x00_L2PAD_SIZE and RTX00_ALIGN_SIZE. There should be room for that,
+since we provide bigger rt2x00->hw->extra_tx_headroom to mac80211.
 
-First, if supplicant ever calls the disable_b rates logic method
-(and I'm not certain it does), it would over-write any other rate
-limitations set by iw.
+The only possibility to skb_under_panic I can see, is that we retransmit
+frame and try to align it many times, but alignment should not be needed
+once we aligned frame. Hence I'm not sure how those skb_under_panics can
+happen.
 
-Second, you can only set rates when the netdev is UP, so for a brief
-time, the station can be transmitting at non-desired rates.  For testing
-purposes, I would like to be able to force stations to be in /b mode,
-for instance.  Currently I can fix the transmit rate to be /b rates
-shortly after the netdev comes up, but the peer AP transmits at full /a/g/ rates,
-so my emulation still has issues.  I'm not sure how the AP determines if
-a station is /b or /g, but perhaps it is by receiving frames at /g rates?
-
-If supplicant is doing the setting, it could set the rates right after it
-brings the netdev up, but before it starts sending any packets?
-
-And third, when bringing up lots of stations, it will be more efficient
-for me to not have to call 'iw' for each device after it comes up.
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Thanks
+Stanislaw
