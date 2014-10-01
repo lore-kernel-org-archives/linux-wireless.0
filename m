@@ -1,130 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:39709 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751695AbaJRRN4 (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:43828 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751236AbaJAQnH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Oct 2014 13:13:56 -0400
-Received: by mail-wi0-f181.google.com with SMTP id hi2so3391502wib.8
-        for <linux-wireless@vger.kernel.org>; Sat, 18 Oct 2014 10:13:55 -0700 (PDT)
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Karl Beldan <karl.beldan@rivierawaves.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	karl.beldan@gmail.com, Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH v3 3/4] mac80211: minstrel_ht: include type (cck/ht) in rates flag
-Date: Sat, 18 Oct 2014 19:13:43 +0200
-Message-Id: <1413652424-14345-4-git-send-email-karl.beldan@gmail.com> (sfid-20141018_191402_093789_78835045)
-In-Reply-To: <1413652424-14345-1-git-send-email-karl.beldan@gmail.com>
-References: <1413575459-29612-5-git-send-email-karl.beldan@gmail.com>
- <1413652424-14345-1-git-send-email-karl.beldan@gmail.com>
+	Wed, 1 Oct 2014 12:43:07 -0400
+Message-ID: <542C2F19.4080609@candelatech.com> (sfid-20141001_184312_207055_28FF1D0B)
+Date: Wed, 01 Oct 2014 09:43:05 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Arend van Spriel <arend@broadcom.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] wireless:  support configuring vdev mac addr on create.
+References: <1412102605-3638-1-git-send-email-greearb@candelatech.com> <542BBCD6.4030208@broadcom.com>
+In-Reply-To: <542BBCD6.4030208@broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Karl Beldan <karl.beldan@rivierawaves.com>
+On 10/01/2014 01:35 AM, Arend van Spriel wrote:
+> On 09/30/14 20:43, greearb@candelatech.com wrote:
+>> From: Ben Greear<greearb@candelatech.com>
+>>
+>> This is useful when creating virtual-stations, and probably
+>> APs and other devices as well.  Keeps udev from mucking with
+>> things it shouldn't, since the default MAC is never seen
+>> by udev when specified on the cmd-line during creation.
+>>
+>> Signed-off-by: Ben Greear<greearb@candelatech.com>
+>> ---
+>>   include/net/cfg80211.h       | 6 +++---
+>>   include/uapi/linux/nl80211.h | 3 +++
+>>   net/mac80211/iface.c         | 5 ++++-
+>>   net/mac80211/main.c          | 1 +
+>>   net/wireless/nl80211.c       | 2 +-
+>>   5 files changed, 12 insertions(+), 5 deletions(-)
+>>
+>> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+>> index e1641e6..de9a67f 100644
+>> --- a/include/net/cfg80211.h
+>> +++ b/include/net/cfg80211.h
+>> @@ -319,9 +319,9 @@ struct ieee80211_supported_band {
+>>   /**
+>>    * struct vif_params - describes virtual interface parameters
+>>    * @use_4addr: use 4-address frames
+>> - * @macaddr: address to use for this virtual interface. This will only
+>> - *     be used for non-netdevice interfaces. If this parameter is set
+>> - *     to zero address the driver may determine the address as needed.
+>> + * @macaddr: address to use for this virtual interface.
+>> + *     If this parameter is set to zero address the driver may
+>> + *    determine the address as needed.
+>>    */
+>>   struct vif_params {
+>>          int use_4addr;
+>> diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+>> index 4b28dc0..fd14703 100644
+>> --- a/include/uapi/linux/nl80211.h
+>> +++ b/include/uapi/linux/nl80211.h
+>> @@ -4042,6 +4042,8 @@ enum nl80211_ap_sme_features {
+>>    *    multiplexing powersave, ie. can turn off all but one chain
+>>    *    and then wake the rest up as required after, for example,
+>>    *    rts/cts handshake.
+>> + * @NL80211_FEATURE_MAC_ON_CREATE: Device supports configuring
+>> + *    the vdev's MAC address upon creation.
+>>    */
+>>   enum nl80211_feature_flags {
+>>       NL80211_FEATURE_SK_TX_STATUS            = 1<<  0,
+>> @@ -4070,6 +4072,7 @@ enum nl80211_feature_flags {
+>>       NL80211_FEATURE_ACKTO_ESTIMATION        = 1<<  23,
+>>       NL80211_FEATURE_STATIC_SMPS            = 1<<  24,
+>>       NL80211_FEATURE_DYNAMIC_SMPS            = 1<<  25,
+>> +    NL80211_FEATURE_MAC_ON_CREATE            = 1<<  26,
+> 
+> Hi Ben,
+> 
+> It is unclear to me why this should be ap_sme feature flag. As your description indicates this is a device feature/capability so it seems more appropriate that
+> this would be a wiphy flag.
 
-ATM, we grep cck rates idx with idx / MCS_GROUP_RATES ==
-MINSTREL_CCK_GROUP.
-Matching neither-cck-non-ht rates could be done by replacing '==' with
-'>', however it would be less versatile or explicit.
-This will allow to match VHT rates with IEEE80211_TX_RC_VHT_MCS.
+I think that is just patch getting confused, the actual change is to
+this enum:   nl80211_feature_flags
 
-Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
-Cc: Felix Fietkau <nbd@openwrt.org>
----
- net/mac80211/rc80211_minstrel_ht.c | 28 ++++++++++++++--------------
- 1 file changed, 14 insertions(+), 14 deletions(-)
+>>           ieee80211_assign_perm_addr(local, ndev->perm_addr, type);
+>> -        memcpy(ndev->dev_addr, ndev->perm_addr, ETH_ALEN);
+>> +        if (params&&  !is_zero_ether_addr(params->macaddr))
+> 
+> I would expect checkpatch will complain on these whitespace errors. Also would be better to use is_valid_ether_addr() to assure it is not a multicast/broadcast
+> address.
 
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index a48eb76..e760d3d 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -51,6 +51,7 @@
- 	[GROUP_IDX(_streams, _sgi, _ht40)] = {				\
- 	.streams = _streams,						\
- 	.flags =							\
-+		IEEE80211_TX_RC_MCS |					\
- 		(_sgi ? IEEE80211_TX_RC_SHORT_GI : 0) |			\
- 		(_ht40 ? IEEE80211_TX_RC_40_MHZ_WIDTH : 0),		\
- 	.duration = {							\
-@@ -83,6 +84,7 @@
- #define CCK_GROUP					\
- 	[MINSTREL_CCK_GROUP] = {			\
- 		.streams = 0,				\
-+		.flags = 0,				\
- 		.duration = {				\
- 			CCK_DURATION_LIST(false),	\
- 			CCK_DURATION_LIST(true)		\
-@@ -716,7 +718,7 @@ minstrel_ht_set_rate(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
- 	const struct mcs_group *group = &minstrel_mcs_groups[index / MCS_GROUP_RATES];
- 	struct minstrel_rate_stats *mr;
- 	u8 idx;
--	u16 flags;
-+	u16 flags = group->flags;
- 
- 	mr = minstrel_get_ratestats(mi, index);
- 	if (!mr->retry_updated)
-@@ -732,13 +734,10 @@ minstrel_ht_set_rate(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
- 		ratetbl->rate[offset].count_rts = mr->retry_count_rtscts;
- 	}
- 
--	if (index / MCS_GROUP_RATES == MINSTREL_CCK_GROUP) {
-+	if (index / MCS_GROUP_RATES == MINSTREL_CCK_GROUP)
- 		idx = mp->cck_rates[index % ARRAY_SIZE(mp->cck_rates)];
--		flags = 0;
--	} else {
-+	else
- 		idx = index % MCS_GROUP_RATES + (group->streams - 1) * 8;
--		flags = IEEE80211_TX_RC_MCS | group->flags;
--	}
- 
- 	if (offset > 0) {
- 		ratetbl->rate[offset].count = ratetbl->rate[offset].count_rts;
-@@ -918,13 +917,12 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
- 	if (sample_idx / MCS_GROUP_RATES == MINSTREL_CCK_GROUP) {
- 		int idx = sample_idx % ARRAY_SIZE(mp->cck_rates);
- 		rate->idx = mp->cck_rates[idx];
--		rate->flags = 0;
--		return;
-+	} else {
-+		rate->idx = sample_idx % MCS_GROUP_RATES +
-+			    (sample_group->streams - 1) * 8;
- 	}
- 
--	rate->idx = sample_idx % MCS_GROUP_RATES +
--		    (sample_group->streams - 1) * 8;
--	rate->flags = IEEE80211_TX_RC_MCS | sample_group->flags;
-+	rate->flags = sample_group->flags;
- }
- 
- static void
-@@ -1006,14 +1004,16 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
- 		mi->tx_flags |= IEEE80211_TX_CTL_LDPC;
- 
- 	for (i = 0; i < ARRAY_SIZE(mi->groups); i++) {
-+		u32 gflags = minstrel_mcs_groups[i].flags;
-+
- 		mi->groups[i].supported = 0;
- 		if (i == MINSTREL_CCK_GROUP) {
- 			minstrel_ht_update_cck(mp, mi, sband, sta);
- 			continue;
- 		}
- 
--		if (minstrel_mcs_groups[i].flags & IEEE80211_TX_RC_SHORT_GI) {
--			if (minstrel_mcs_groups[i].flags & IEEE80211_TX_RC_40_MHZ_WIDTH) {
-+		if (gflags & IEEE80211_TX_RC_SHORT_GI) {
-+			if (gflags & IEEE80211_TX_RC_40_MHZ_WIDTH) {
- 				if (!(sta_cap & IEEE80211_HT_CAP_SGI_40))
- 					continue;
- 			} else {
-@@ -1022,7 +1022,7 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
- 			}
- 		}
- 
--		if (minstrel_mcs_groups[i].flags & IEEE80211_TX_RC_40_MHZ_WIDTH &&
-+		if (gflags & IEEE80211_TX_RC_40_MHZ_WIDTH &&
- 		    sta->bandwidth < IEEE80211_STA_RX_BW_40)
- 			continue;
- 
+I do not see that whitespace problem in the patch I posted.
+
+I will change it to is_valid_ether_addr as you suggested.
+
+Thanks,
+Ben
+
+
 -- 
-2.0.1
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
