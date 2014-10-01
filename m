@@ -1,80 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:46045 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751026AbaJ0RpJ (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:44615 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753075AbaJAR5b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Oct 2014 13:45:09 -0400
-Date: Mon, 27 Oct 2014 13:39:45 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: pull-request: mac80211 2014-10-23
-Message-ID: <20141027173945.GD28300@tuxdriver.com> (sfid-20141027_184518_873113_3E85A14A)
-References: <1414089336.1926.10.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1414089336.1926.10.camel@jlt4.sipsolutions.net>
+	Wed, 1 Oct 2014 13:57:31 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v2] wireless:  support configuring vdev mac addr on create.
+Date: Wed,  1 Oct 2014 10:57:27 -0700
+Message-Id: <1412186247-20303-1-git-send-email-greearb@candelatech.com> (sfid-20141001_195738_754589_852C138F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 23, 2014 at 08:35:36PM +0200, Johannes Berg wrote:
-> John,
-> 
-> Please pull the below changes for the current 3.18 preparations. More
-> details below.
-> 
-> Thanks,
-> johannes
-> 
-> ---
-> 
-> The following changes since commit
-> 35a9ad8af0bb0fa3525e6d0d20e32551d226f38e:
-> 
->   Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next (2014-10-08 21:40:54 -0400)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git
-> tags/mac80211-for-john-2014-10-23
-> 
-> for you to fetch changes up to 11b2357d5dbce999803e9055f8c09829a8a87db4:
-> 
->   mac80211: minstrels: fix buffer overflow in HT debugfs rc_stats
-> (2014-10-20 16:37:01 +0200)
-> 
-> ----------------------------------------------------------------
-> Here are a few fixes for the wireless stack: one fixes the
-> RTS rate, one for a debugfs file, one to return the correct
-> channel to userspace, a sanity check for a userspace value
-> and the remaining two are just documentation fixes.
-> 
-> ----------------------------------------------------------------
-> Fabian Frederick (1):
->       net: rfkill: kernel-doc warning fixes
-> 
-> Karl Beldan (2):
->       mac80211: fix typo in starting baserate for rts_cts_rate_idx
->       mac80211: minstrels: fix buffer overflow in HT debugfs rc_stats
-> 
-> Liad Kaufman (1):
->       mac80211: fix warning on htmldocs for last_tdls_pkt_time
-> 
-> Luciano Coelho (2):
->       mac80211: return the vif's chandef in ieee80211_cfg_get_channel()
->       nl80211: sanity check the channel switch counter value
-> 
->  net/mac80211/cfg.c                         |  2 +-
->  net/mac80211/rate.c                        |  2 +-
->  net/mac80211/rc80211_minstrel_debugfs.c    | 12 +++++++-----
->  net/mac80211/rc80211_minstrel_ht_debugfs.c | 13 ++++++++-----
->  net/mac80211/sta_info.h                    |  1 +
->  net/rfkill/core.c                          |  4 ++--
->  net/wireless/nl80211.c                     | 10 +++++++++-
->  7 files changed, 29 insertions(+), 15 deletions(-)
+From: Ben Greear <greearb@candelatech.com>
 
-Pulling now...
+This is useful when creating virtual-stations, and probably
+APs and other devices as well.  Keeps udev from mucking with
+things it shouldn't, since the default MAC is never seen
+by udev when specified on the cmd-line during creation.
 
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+
+v2:  Use is_valid_ether_addr
+
+ include/net/cfg80211.h       | 6 +++---
+ include/uapi/linux/nl80211.h | 3 +++
+ net/mac80211/iface.c         | 5 ++++-
+ net/mac80211/main.c          | 1 +
+ net/wireless/nl80211.c       | 2 +-
+ 5 files changed, 12 insertions(+), 5 deletions(-)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index e1641e6..de9a67f 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -319,9 +319,9 @@ struct ieee80211_supported_band {
+ /**
+  * struct vif_params - describes virtual interface parameters
+  * @use_4addr: use 4-address frames
+- * @macaddr: address to use for this virtual interface. This will only
+- * 	be used for non-netdevice interfaces. If this parameter is set
+- * 	to zero address the driver may determine the address as needed.
++ * @macaddr: address to use for this virtual interface.
++ * 	If this parameter is set to zero address the driver may
++ *	determine the address as needed.
+  */
+ struct vif_params {
+        int use_4addr;
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 4b28dc0..fd14703 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -4042,6 +4042,8 @@ enum nl80211_ap_sme_features {
+  *	multiplexing powersave, ie. can turn off all but one chain
+  *	and then wake the rest up as required after, for example,
+  *	rts/cts handshake.
++ * @NL80211_FEATURE_MAC_ON_CREATE: Device supports configuring
++ *	the vdev's MAC address upon creation.
+  */
+ enum nl80211_feature_flags {
+ 	NL80211_FEATURE_SK_TX_STATUS			= 1 << 0,
+@@ -4070,6 +4072,7 @@ enum nl80211_feature_flags {
+ 	NL80211_FEATURE_ACKTO_ESTIMATION		= 1 << 23,
+ 	NL80211_FEATURE_STATIC_SMPS			= 1 << 24,
+ 	NL80211_FEATURE_DYNAMIC_SMPS			= 1 << 25,
++	NL80211_FEATURE_MAC_ON_CREATE			= 1 << 26,
+ };
+ 
+ /**
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 878bfca..e92783f 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -1715,7 +1715,10 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
+ 		}
+ 
+ 		ieee80211_assign_perm_addr(local, ndev->perm_addr, type);
+-		memcpy(ndev->dev_addr, ndev->perm_addr, ETH_ALEN);
++		if (params && is_valid_ether_addr(params->macaddr))
++			memcpy(ndev->dev_addr, params->macaddr, ETH_ALEN);
++		else
++			memcpy(ndev->dev_addr, ndev->perm_addr, ETH_ALEN);
+ 		SET_NETDEV_DEV(ndev, wiphy_dev(local->hw.wiphy));
+ 
+ 		/* don't use IEEE80211_DEV_TO_SUB_IF -- it checks too much */
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 8106770..eb7bdd1 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -550,6 +550,7 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
+ 			   NL80211_FEATURE_SAE |
+ 			   NL80211_FEATURE_HT_IBSS |
+ 			   NL80211_FEATURE_VIF_TXPOWER |
++			   NL80211_FEATURE_MAC_ON_CREATE |
+ 			   NL80211_FEATURE_USERSPACE_MPM;
+ 
+ 	if (!ops->hw_scan)
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 8a010bd..cf79707 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2605,7 +2605,7 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
+ 	    !(rdev->wiphy.interface_modes & (1 << type)))
+ 		return -EOPNOTSUPP;
+ 
+-	if (type == NL80211_IFTYPE_P2P_DEVICE && info->attrs[NL80211_ATTR_MAC]) {
++	if (info->attrs[NL80211_ATTR_MAC]) {
+ 		nla_memcpy(params.macaddr, info->attrs[NL80211_ATTR_MAC],
+ 			   ETH_ALEN);
+ 		if (!is_valid_ether_addr(params.macaddr))
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.11.7
+
