@@ -1,35 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:39091 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751180AbaJTTkk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2014 15:40:40 -0400
-Message-ID: <1413834035.32358.7.camel@jlt4.sipsolutions.net> (sfid-20141020_214044_306190_FC421E01)
-Subject: Re: [PATCH v5 0/4] add VHT support to minstrel_ht
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Karl Beldan <karl.beldan@gmail.com>
-Cc: Karl Beldan <karl.beldan@rivierawaves.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>
-Date: Mon, 20 Oct 2014 21:40:35 +0200
-In-Reply-To: <1413833597.32358.6.camel@jlt4.sipsolutions.net> (sfid-20141020_213324_765810_90E3409F)
-References: <1413812762-6605-1-git-send-email-karl.beldan@gmail.com>
-	 <1413816546.32358.3.camel@jlt4.sipsolutions.net>
-	 <20141020151302.GB7691@magnum.frso.rivierawaves.com>
-	 <20141020153421.GC7691@magnum.frso.rivierawaves.com>
-	 (sfid-20141020_173424_813444_3F3D6DB2) <1413833597.32358.6.camel@jlt4.sipsolutions.net>
-	 (sfid-20141020_213324_765810_90E3409F)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:41258 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751520AbaJBTAO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Oct 2014 15:00:14 -0400
+Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
+	(envelope-from <linville@tuxdriver.com>)
+	id 1XZlbl-0003HB-8f
+	for linux-wireless@vger.kernel.org; Thu, 02 Oct 2014 15:00:09 -0400
+Received: from linville-x1.hq.tuxdriver.com (localhost.localdomain [127.0.0.1])
+	by linville-x1.hq.tuxdriver.com (8.14.8/8.14.6) with ESMTP id s92IqwqZ032383
+	for <linux-wireless@vger.kernel.org>; Thu, 2 Oct 2014 14:52:59 -0400
+Received: (from linville@localhost)
+	by linville-x1.hq.tuxdriver.com (8.14.8/8.14.8/Submit) id s92Iqwfu032382
+	for linux-wireless@vger.kernel.org; Thu, 2 Oct 2014 14:52:58 -0400
+Date: Thu, 2 Oct 2014 14:52:58 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Subject: new stuff for 3.18 needs to be posted _now_
+Message-ID: <20141002185258.GE12208@tuxdriver.com> (sfid-20141002_210019_067004_D42A4012)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-10-20 at 21:33 +0200, Johannes Berg wrote:
-> On Mon, 2014-10-20 at 17:34 +0200, Karl Beldan wrote:
-> > > Indeed, will resending only 4/4 do ?
-> 
-> Sure.
+You may have noticed that Linus has released 3.17-rc7.  So, the merge
+window for 3.18 is around the corner!
 
-I merged patches 1-3 now.
+For those that need a reminder, the opening of the merge window is
+a _deadline_ for new features.  Once the merge window opens, only
+fixes will be accepted for 3.18.  In fact, any non-fix patches need to
+already be in wireless-next when the merge window opens if you want
+them in 3.18.  That means you need to get them posted _now_, so they
+can be reviewed and I can find time to merge them before the deadline.
 
-johannes
+In fact, at this point I'm can't be sure that I will have enough
+time to merge anything else in time for the window.  Linus has been
+a bit unclear about how this merge window will be handled, so YMMV --
+we may have to play this one by ear...
 
+You have been warned...this means you!
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
