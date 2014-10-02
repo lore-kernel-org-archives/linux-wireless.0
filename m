@@ -1,213 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f50.google.com ([74.125.82.50]:63667 "EHLO
-	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932102AbaJ2R6D (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:9436 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751343AbaJBMFG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2014 13:58:03 -0400
-Received: by mail-wg0-f50.google.com with SMTP id z12so3941194wgg.9
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2014 10:58:02 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH v2 34/48] staging: vt6655: dead remove wcmd.h and typedefs
-Date: Wed, 29 Oct 2014 17:55:52 +0000
-Message-Id: <1414605366-9335-35-git-send-email-tvboxspy@gmail.com> (sfid-20141029_185859_467394_E6B9545B)
-In-Reply-To: <1414605366-9335-1-git-send-email-tvboxspy@gmail.com>
-References: <1414605366-9335-1-git-send-email-tvboxspy@gmail.com>
+	Thu, 2 Oct 2014 08:05:06 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH 2/4] ath10k: add tracing for ath10k_htt_pktlog
+Date: Thu, 2 Oct 2014 17:36:08 +0530
+Message-ID: <1412251570-31096-3-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20141002_140512_389576_A7EE3E4A)
+In-Reply-To: <1412251570-31096-1-git-send-email-rmanohar@qti.qualcomm.com>
+References: <1412251570-31096-1-git-send-email-rmanohar@qti.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-CMD_STATE
-CMD_CODE
-CMD_ITEM
+This is useful for collecting pktlog statistics of tx, rx
+and rate information, so add tracing for the API call.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 ---
- drivers/staging/vt6655/device.h      |  5 --
- drivers/staging/vt6655/device_main.c |  1 -
- drivers/staging/vt6655/power.c       |  1 -
- drivers/staging/vt6655/rxtx.h        |  1 -
- drivers/staging/vt6655/wcmd.h        | 91 ------------------------------------
- drivers/staging/vt6655/wmgr.h        |  1 -
- 6 files changed, 100 deletions(-)
- delete mode 100644 drivers/staging/vt6655/wcmd.h
+ drivers/net/wireless/ath/ath10k/debug.h  |  1 -
+ drivers/net/wireless/ath/ath10k/htt.h    |  2 +-
+ drivers/net/wireless/ath/ath10k/htt_rx.c |  9 +++++++++
+ drivers/net/wireless/ath/ath10k/hw.h     |  9 +++++++++
+ drivers/net/wireless/ath/ath10k/trace.h  | 27 +++++++++++++++++++++++++++
+ 5 files changed, 46 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/vt6655/device.h b/drivers/staging/vt6655/device.h
-index 0725d78..f73239f 100644
---- a/drivers/staging/vt6655/device.h
-+++ b/drivers/staging/vt6655/device.h
-@@ -71,7 +71,6 @@
- #include "80211hdr.h"
- #include "tether.h"
- #include "wmgr.h"
--#include "wcmd.h"
- #include "mib.h"
- #include "srom.h"
- #include "desc.h"
-@@ -498,9 +497,6 @@ struct vnt_private {
- 	unsigned char byCurrentCh;
- 	unsigned int	uScanTime;
+diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
+index 794e6bb..aafdcab 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.h
++++ b/drivers/net/wireless/ath/ath10k/debug.h
+@@ -69,7 +69,6 @@ struct ath10k_fw_crash_data *
+ ath10k_debug_get_new_fw_crash_data(struct ath10k *ar);
  
--	CMD_STATE               eCommandState;
+ void ath10k_debug_dbglog_add(struct ath10k *ar, u8 *buffer, int len);
 -
--	CMD_CODE                eCommand;
- 	bool bBeaconTx;
+ #define ATH10K_DFS_STAT_INC(ar, c) (ar->debug.dfs_stats.c++)
  
- 	bool bStopBeacon;
-@@ -510,7 +506,6 @@ struct vnt_private {
+ #else
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index 3b44217..15c58e8 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -725,7 +725,7 @@ static inline u8 *htt_rx_test_get_chars(struct htt_rx_test *rx_test)
+  */
+ struct htt_pktlog_msg {
+ 	u8 pad[3];
+-	__le32 payload[1 /* or more */];
++	u8 payload[0];
+ } __packed;
  
- 	/* 802.11 counter */
+ struct htt_dbg_stats_rx_reorder_stats {
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 60d40a0..a078451 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -1674,6 +1674,15 @@ void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
+ 	case HTT_T2H_MSG_TYPE_RX_DELBA:
+ 		ath10k_htt_rx_delba(ar, resp);
+ 		break;
++	case HTT_T2H_MSG_TYPE_PKTLOG: {
++		struct ath10k_pktlog_hdr *hdr =
++			(struct ath10k_pktlog_hdr *)resp->pktlog_msg.payload;
++
++		trace_ath10k_htt_pktlog(ar, resp->pktlog_msg.payload,
++					sizeof(*hdr) +
++					__le16_to_cpu(hdr->size));
++		break;
++	}
+ 	case HTT_T2H_MSG_TYPE_RX_FLUSH: {
+ 		/* Ignore this event because mac80211 takes care of Rx
+ 		 * aggregation reordering.
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 006a9cb..4b86ca3 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -80,6 +80,15 @@ enum ath10k_mcast2ucast_mode {
+ 	ATH10K_MCAST2UCAST_ENABLED = 1,
+ };
  
--	CMD_ITEM                eCmdQueue[CMD_Q_SIZE];
- 	unsigned int	uCmdDequeueIdx;
- 	unsigned int	uCmdEnqueueIdx;
- 	unsigned int	cbFreeCmdQueue;
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index d8fd44c..80bbe1d 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -61,7 +61,6 @@
- #include "tether.h"
- #include "wmgr.h"
- #include "power.h"
--#include "wcmd.h"
- #include "iocmd.h"
- #include "rxtx.h"
- #include "bssdb.h"
-diff --git a/drivers/staging/vt6655/power.c b/drivers/staging/vt6655/power.c
-index 040484e..6f83650 100644
---- a/drivers/staging/vt6655/power.c
-+++ b/drivers/staging/vt6655/power.c
-@@ -42,7 +42,6 @@
- #include "device.h"
- #include "wmgr.h"
- #include "power.h"
--#include "wcmd.h"
- #include "card.h"
++struct ath10k_pktlog_hdr {
++	__le16 flags;
++	__le16 missed_cnt;
++	__le16 log_type;
++	__le16 size;
++	__le32 timestamp;
++	u8 payload[0];
++} __packed;
++
+ /* Target specific defines for MAIN firmware */
+ #define TARGET_NUM_VDEVS			8
+ #define TARGET_NUM_PEER_AST			2
+diff --git a/drivers/net/wireless/ath/ath10k/trace.h b/drivers/net/wireless/ath/ath10k/trace.h
+index 574b75a..971ff23 100644
+--- a/drivers/net/wireless/ath/ath10k/trace.h
++++ b/drivers/net/wireless/ath/ath10k/trace.h
+@@ -254,6 +254,33 @@ TRACE_EVENT(ath10k_wmi_dbglog,
+ 	)
+ );
  
- /*---------------------  Static Definitions -------------------------*/
-diff --git a/drivers/staging/vt6655/rxtx.h b/drivers/staging/vt6655/rxtx.h
-index 7b0566c..50d77a0 100644
---- a/drivers/staging/vt6655/rxtx.h
-+++ b/drivers/staging/vt6655/rxtx.h
-@@ -31,7 +31,6 @@
++TRACE_EVENT(ath10k_htt_pktlog,
++	    TP_PROTO(struct ath10k *ar, void *buf, u16 buf_len),
++
++	TP_ARGS(ar, buf, buf_len),
++
++	TP_STRUCT__entry(
++		__string(device, dev_name(ar->dev))
++		__string(driver, dev_driver_string(ar->dev))
++		__field(u16, buf_len)
++		__dynamic_array(u8, pktlog, buf_len)
++	),
++
++	TP_fast_assign(
++		__assign_str(device, dev_name(ar->dev));
++		__assign_str(driver, dev_driver_string(ar->dev));
++		__entry->buf_len = buf_len;
++		memcpy(__get_dynamic_array(pktlog), buf, buf_len);
++	),
++
++	TP_printk(
++		"%s %s size %hu",
++		__get_str(driver),
++		__get_str(device),
++		__entry->buf_len
++	 )
++);
++
+ #endif /* _TRACE_H_ || TRACE_HEADER_MULTI_READ*/
  
- #include "ttype.h"
- #include "device.h"
--#include "wcmd.h"
- 
- /*---------------------  Export Definitions -------------------------*/
- 
-diff --git a/drivers/staging/vt6655/wcmd.h b/drivers/staging/vt6655/wcmd.h
-deleted file mode 100644
-index ae7ddea..0000000
---- a/drivers/staging/vt6655/wcmd.h
-+++ /dev/null
-@@ -1,91 +0,0 @@
--/*
-- * Copyright (c) 1996, 2003 VIA Networking Technologies, Inc.
-- * All rights reserved.
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License as published by
-- * the Free Software Foundation; either version 2 of the License, or
-- * (at your option) any later version.
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License along
-- * with this program; if not, write to the Free Software Foundation, Inc.,
-- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-- *
-- * File: wcmd.h
-- *
-- * Purpose: Handles the management command interface functions
-- *
-- * Author: Lyndon Chen
-- *
-- * Date: May 8, 2002
-- *
-- */
--
--#ifndef __WCMD_H__
--#define __WCMD_H__
--
--#include "ttype.h"
--#include "80211hdr.h"
--#include "80211mgr.h"
--
--#define AUTHENTICATE_TIMEOUT   1000
--#define ASSOCIATE_TIMEOUT      1000
--
--typedef enum tagCMD_CODE {
--	WLAN_CMD_BSSID_SCAN,
--	WLAN_CMD_SSID,
--	WLAN_CMD_DISASSOCIATE,
--	WLAN_CMD_DEAUTH,
--	WLAN_CMD_RX_PSPOLL,
--	WLAN_CMD_RADIO,
--	WLAN_CMD_CHANGE_BBSENSITIVITY,
--	WLAN_CMD_SETPOWER,
--	WLAN_CMD_TBTT_WAKEUP,
--	WLAN_CMD_BECON_SEND,
--	WLAN_CMD_CHANGE_ANTENNA,
--	WLAN_CMD_REMOVE_ALLKEY,
--	WLAN_CMD_MAC_DISPOWERSAVING,
--	WLAN_CMD_11H_CHSW,
--	WLAN_CMD_RUN_AP
--} CMD_CODE, *PCMD_CODE;
--
--#define CMD_Q_SIZE              32
--
--typedef enum tagCMD_STATUS {
--	CMD_STATUS_SUCCESS = 0,
--	CMD_STATUS_FAILURE,
--	CMD_STATUS_RESOURCES,
--	CMD_STATUS_TIMEOUT,
--	CMD_STATUS_PENDING
--} CMD_STATUS, *PCMD_STATUS;
--
--typedef struct tagCMD_ITEM {
--	CMD_CODE eCmd;
--	unsigned char abyCmdDesireSSID[WLAN_IEHDR_LEN + WLAN_SSID_MAXLEN + 1];
--	bool bNeedRadioOFF;
--	unsigned short wDeAuthenReason;
--	bool bRadioCmd;
--	bool bForceSCAN;
--} CMD_ITEM, *PCMD_ITEM;
--
--typedef enum tagCMD_STATE {
--	WLAN_CMD_SCAN_START,
--	WLAN_CMD_SCAN_END,
--	WLAN_CMD_DISASSOCIATE_START,
--	WLAN_CMD_SSID_START,
--	WLAN_AUTHENTICATE_WAIT,
--	WLAN_ASSOCIATE_WAIT,
--	WLAN_DISASSOCIATE_WAIT,
--	WLAN_CMD_TX_PSPACKET_START,
--	WLAN_CMD_AP_MODE_START,
--	WLAN_CMD_RADIO_START,
--	WLAN_CMD_CHECK_BBSENSITIVITY_CHANGE,
--	WLAN_CMD_IDLE
--} CMD_STATE, *PCMD_STATE;
--
--#endif //__WCMD_H__
-diff --git a/drivers/staging/vt6655/wmgr.h b/drivers/staging/vt6655/wmgr.h
-index cc8662e..0e6a6f0 100644
---- a/drivers/staging/vt6655/wmgr.h
-+++ b/drivers/staging/vt6655/wmgr.h
-@@ -37,7 +37,6 @@
- #include "ttype.h"
- #include "80211mgr.h"
- #include "80211hdr.h"
--#include "wcmd.h"
- #include "bssdb.h"
- #include "card.h"
- 
+ /* we don't want to use include/trace/events */
 -- 
-2.1.0
+2.1.1
 
