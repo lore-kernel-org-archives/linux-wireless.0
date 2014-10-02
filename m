@@ -1,61 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:65053 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752706AbaJIOpw (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:46136 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753946AbaJBBDN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2014 10:45:52 -0400
-Received: by mail-wi0-f177.google.com with SMTP id fb4so2035647wid.4
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Oct 2014 07:45:51 -0700 (PDT)
-Date: Thu, 9 Oct 2014 16:45:48 +0200
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@rivierawaves.com>
-Subject: Re: [PATCH] mac80211/trivial: fix typo in starting baserate for
- rts_cts_rate_idx
-Message-ID: <20141009144548.GD20644@magnum.frso.rivierawaves.com> (sfid-20141009_164557_229286_3D756572)
-References: <1412690018-18429-1-git-send-email-karl.beldan@gmail.com>
- <1412845586.1828.27.camel@jlt4.sipsolutions.net>
- <20141009140636.GC20644@magnum.frso.rivierawaves.com>
- <1412864103.1828.48.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1412864103.1828.48.camel@jlt4.sipsolutions.net>
+	Wed, 1 Oct 2014 21:03:13 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH v2 10/10] ath9k: Fix flushing in MCC mode
+Date: Thu,  2 Oct 2014 06:33:20 +0530
+Message-Id: <1412211800-24344-11-git-send-email-sujith@msujith.org> (sfid-20141002_030317_293169_E6FEA1CF)
+In-Reply-To: <1412211800-24344-1-git-send-email-sujith@msujith.org>
+References: <1412211800-24344-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 09, 2014 at 04:15:03PM +0200, Johannes Berg wrote:
-> On Thu, 2014-10-09 at 16:06 +0200, Karl Beldan wrote:
-> > On Thu, Oct 09, 2014 at 11:06:26AM +0200, Johannes Berg wrote:
-> > > On Tue, 2014-10-07 at 15:53 +0200, Karl Beldan wrote:
-> > > > From: Karl Beldan <karl.beldan@rivierawaves.com>
-> > > 
-> > > Is that really trivial? It seems to have some impact on the code, but I
-> > > can't right now say exactly what the impact is. Can you describe it and
-> > > say whether I should add it to mac80211 or mac80211-next? For "trivial"
-> > > I'd probably say mac80211-next, but this might be more important than
-> > > that?
-> > > 
-> > The typo is clearly showing but the faulty behavior clearly demands more
-> > detail indeed.
-> > 
-> > It affects non-(V)HT rates and can lead to selecting an rts_cts rate
-> > that is not a basic rate or way superior to the reference rate (ATM
-> > rates[0] used for the 1st attempt of the protected frame data).
-> > E.g, assuming the drivers register growing (bitrate) sorted
-> > ieee80211_rate tables, having :
-> > - rates[0].idx == d'2 and basic_rates == b'10100
-> > will select rts_cts idx b'10011 & ~d'(BIT(2)-1), i.e. 1, likewise
-> > - rates[0].idx == d'2 and basic_rates == b'10001 
-> > will select rts_cts idx b'10000
-> > The first is not a basic rate and the second is > rates[0].
-> > 
-> > I hope it clarifies things enough.
-> 
-> Well, I'm still not sure which tree I should put it in, I guess?
-> 
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-All I can say is that nor this faulty behavior nor the correspond fix
-are likely to cause a crash (we always tx registered rates).
+When we are attempting to switch to a new
+channel context, the TX queues are flushed, but
+the mac80211 queues are not stopped and traffic
+can still come down to the driver.
+
+This patch fixes it by stopping the queues
+assigned to the current context/vif before
+trying to flush.
+
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/channel.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index bf5ecd8..945c898 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -1044,9 +1044,11 @@ static void ath_offchannel_channel_change(struct ath_softc *sc)
+ void ath_chanctx_set_next(struct ath_softc *sc, bool force)
+ {
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
++	struct ath_chanctx *old_ctx;
+ 	struct timespec ts;
+ 	bool measure_time = false;
+ 	bool send_ps = false;
++	bool queues_stopped = false;
  
-Karl
+ 	spin_lock_bh(&sc->chan_lock);
+ 	if (!sc->next_chan) {
+@@ -1076,6 +1078,10 @@ void ath_chanctx_set_next(struct ath_softc *sc, bool force)
+ 			getrawmonotonic(&ts);
+ 			measure_time = true;
+ 		}
++
++		ath9k_chanctx_stop_queues(sc, sc->cur_chan);
++		queues_stopped = true;
++
+ 		__ath9k_flush(sc->hw, ~0, true);
+ 
+ 		if (ath_chanctx_send_ps_frame(sc, true))
+@@ -1089,6 +1095,7 @@ void ath_chanctx_set_next(struct ath_softc *sc, bool force)
+ 			sc->cur_chan->tsf_val = ath9k_hw_gettsf64(sc->sc_ah);
+ 		}
+ 	}
++	old_ctx = sc->cur_chan;
+ 	sc->cur_chan = sc->next_chan;
+ 	sc->cur_chan->stopped = false;
+ 	sc->next_chan = NULL;
+@@ -1111,7 +1118,16 @@ void ath_chanctx_set_next(struct ath_softc *sc, bool force)
+ 		if (measure_time)
+ 			sc->sched.channel_switch_time =
+ 				ath9k_hw_get_tsf_offset(&ts, NULL);
++		/*
++		 * A reset will ensure that all queues are woken up,
++		 * so there is no need to awaken them again.
++		 */
++		goto out;
+ 	}
++
++	if (queues_stopped)
++		ath9k_chanctx_wake_queues(sc, old_ctx);
++out:
+ 	if (send_ps)
+ 		ath_chanctx_send_ps_frame(sc, false);
+ 
+-- 
+2.1.1
+
