@@ -1,60 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:51951 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750909AbaJXIQN (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:33954 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753386AbaJBBCy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Oct 2014 04:16:13 -0400
-Date: Fri, 24 Oct 2014 11:15:34 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Stanislav Yakovlev <stas.yakovlev@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [patch] ipw2x00: shift wrap bugs setting ->rt_tsf
-Message-ID: <20141024081534.GA11140@mwanda> (sfid-20141024_101621_084506_4460186C)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 1 Oct 2014 21:02:54 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH v2 05/10] ath9k: Remove duplicate code
+Date: Thu,  2 Oct 2014 06:33:15 +0530
+Message-Id: <1412211800-24344-6-git-send-email-sujith@msujith.org> (sfid-20141002_030257_676321_34DF6C61)
+In-Reply-To: <1412211800-24344-1-git-send-email-sujith@msujith.org>
+References: <1412211800-24344-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The ->parent_tsf[] array holds u8 values.  It type promoted to int for
-the shift operation so the "<< 24" shift operation can wrap.  The cast
-needs to be done before the shift instead of after.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+ath9k_has_tx_pending() can be used to
+check if there are pending frames instead
+of having duplicate code.
+
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
-Static checker work.  Untested.
+ drivers/net/wireless/ath/ath9k/main.c | 10 +---------
+ 1 file changed, 1 insertion(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
-index edc3443..7e1f2af 100644
---- a/drivers/net/wireless/ipw2x00/ipw2200.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2200.c
-@@ -7819,10 +7819,10 @@ static void ipw_handle_data_packet_monitor(struct ipw_priv *priv,
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 73a4438..65ca7ac 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2039,16 +2039,8 @@ void __ath9k_flush(struct ieee80211_hw *hw, u32 queues, bool drop)
+ static bool ath9k_tx_frames_pending(struct ieee80211_hw *hw)
+ {
+ 	struct ath_softc *sc = hw->priv;
+-	int i;
+-
+-	for (i = 0; i < ATH9K_NUM_TX_QUEUES; i++) {
+-		if (!ATH_TXQ_SETUP(sc, i))
+-			continue;
  
- 	/* Zero the flags, we'll add to them as we go */
- 	ipw_rt->rt_flags = 0;
--	ipw_rt->rt_tsf = (u64)(frame->parent_tsf[3] << 24 |
--			       frame->parent_tsf[2] << 16 |
--			       frame->parent_tsf[1] << 8  |
--			       frame->parent_tsf[0]);
-+	ipw_rt->rt_tsf = (u64)frame->parent_tsf[3] << 24 |
-+			      frame->parent_tsf[2] << 16 |
-+			      frame->parent_tsf[1] << 8  |
-+			      frame->parent_tsf[0];
+-		if (ath9k_has_pending_frames(sc, &sc->tx.txq[i]))
+-			return true;
+-	}
+-	return false;
++	return ath9k_has_tx_pending(sc);
+ }
  
- 	/* Convert signal to DBM */
- 	ipw_rt->rt_dbmsignal = antsignal;
-@@ -8028,10 +8028,10 @@ static void ipw_handle_promiscuous_rx(struct ipw_priv *priv,
- 
- 	/* Zero the flags, we'll add to them as we go */
- 	ipw_rt->rt_flags = 0;
--	ipw_rt->rt_tsf = (u64)(frame->parent_tsf[3] << 24 |
--			       frame->parent_tsf[2] << 16 |
--			       frame->parent_tsf[1] << 8  |
--			       frame->parent_tsf[0]);
-+	ipw_rt->rt_tsf = (u64)frame->parent_tsf[3] << 24 |
-+			      frame->parent_tsf[2] << 16 |
-+			      frame->parent_tsf[1] << 8  |
-+			      frame->parent_tsf[0];
- 
- 	/* Convert to DBM */
- 	ipw_rt->rt_dbmsignal = signal;
+ static int ath9k_tx_last_beacon(struct ieee80211_hw *hw)
+-- 
+2.1.1
+
