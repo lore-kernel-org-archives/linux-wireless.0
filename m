@@ -1,55 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:44098 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751042AbaJADEe (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:2485 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751176AbaJBMLy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Sep 2014 23:04:34 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH 3/5] ath9k: Check pending frames properly
-Date: Wed,  1 Oct 2014 08:34:54 +0530
-Message-Id: <1412132696-22836-4-git-send-email-sujith@msujith.org> (sfid-20141001_050437_291285_DF5185C1)
-In-Reply-To: <1412132696-22836-1-git-send-email-sujith@msujith.org>
-References: <1412132696-22836-1-git-send-email-sujith@msujith.org>
+	Thu, 2 Oct 2014 08:11:54 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH 3/4] ath10k: add tracing for rx descriptor
+Date: Thu, 2 Oct 2014 17:42:13 +0530
+Message-ID: <1412251934-7011-4-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20141002_141157_446033_E28B2EFA)
+In-Reply-To: <1412251934-7011-1-git-send-email-rmanohar@qti.qualcomm.com>
+References: <1412251934-7011-1-git-send-email-rmanohar@qti.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Upon the reception of frame, the descriptor status are reported
+to user space by tracepoint. This is useful for collecting rx
+statistics for pktlog.
 
-There is no need to check if the current
-channel context has active ACs queued up
-if the TX queue is not empty.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath9k/main.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath10k/debug.c  | 17 +++++++++++++++++
+ drivers/net/wireless/ath/ath10k/debug.h  |  5 +++++
+ drivers/net/wireless/ath/ath10k/htt_rx.c |  2 ++
+ drivers/net/wireless/ath/ath10k/trace.h  | 29 +++++++++++++++++++++++++++++
+ 4 files changed, 53 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index ae7c6ee..84c0cd4 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -60,8 +60,10 @@ static bool ath9k_has_pending_frames(struct ath_softc *sc, struct ath_txq *txq)
- 
- 	spin_lock_bh(&txq->axq_lock);
- 
--	if (txq->axq_depth)
-+	if (txq->axq_depth) {
- 		pending = true;
-+		goto out;
-+	}
- 
- 	if (txq->mac80211_qnum >= 0) {
- 		struct list_head *list;
-@@ -70,6 +72,7 @@ static bool ath9k_has_pending_frames(struct ath_softc *sc, struct ath_txq *txq)
- 		if (!list_empty(list))
- 			pending = true;
- 	}
-+out:
- 	spin_unlock_bh(&txq->axq_lock);
- 	return pending;
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index 48672da..29fa820 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -1439,6 +1439,23 @@ void ath10k_debug_unregister(struct ath10k *ar)
+ 	cancel_delayed_work_sync(&ar->debug.htt_stats_dwork);
  }
+ 
++void ath10k_debug_pktlog_rx(struct ath10k *ar, struct sk_buff *msdu)
++{
++	struct htt_rx_desc *rxd;
++	u32 tsf;
++
++	if (!(ar->debug.pktlog_filter & ATH10K_PKTLOG_RX))
++		return;
++
++	while (msdu) {
++		rxd = (void *)msdu->data - sizeof(*rxd);
++		tsf = __le32_to_cpu(rxd->ppdu_end.tsf_timestamp);
++
++		trace_ath10k_rx_pktlog(ar, tsf, &rxd->attention,
++				       sizeof(*rxd) - sizeof(u32));
++		msdu = msdu->next;
++	}
++}
+ #endif /* CONFIG_ATH10K_DEBUGFS */
+ 
+ #ifdef CONFIG_ATH10K_DEBUG
+diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
+index aafdcab..389387c 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.h
++++ b/drivers/net/wireless/ath/ath10k/debug.h
+@@ -71,6 +71,7 @@ ath10k_debug_get_new_fw_crash_data(struct ath10k *ar);
+ void ath10k_debug_dbglog_add(struct ath10k *ar, u8 *buffer, int len);
+ #define ATH10K_DFS_STAT_INC(ar, c) (ar->debug.dfs_stats.c++)
+ 
++void ath10k_debug_pktlog_rx(struct ath10k *ar, struct sk_buff *msdu);
+ #else
+ static inline int ath10k_debug_start(struct ath10k *ar)
+ {
+@@ -121,6 +122,10 @@ ath10k_debug_get_new_fw_crash_data(struct ath10k *ar)
+ 	return NULL;
+ }
+ 
++static inline void ath10k_debug_pktlog_rx(struct ath10k *ar,
++					  struct sk_buff *msdu)
++{
++}
+ #define ATH10K_DFS_STAT_INC(ar, c) do { } while (0)
+ 
+ #endif /* CONFIG_ATH10K_DEBUGFS */
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index a078451..be24071 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -1295,6 +1295,8 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
+ 				continue;
+ 			}
+ 
++			ath10k_debug_pktlog_rx(ar, msdu_head);
++
+ 			rxd = container_of((void *)msdu_head->data,
+ 					   struct htt_rx_desc,
+ 					   msdu_payload);
+diff --git a/drivers/net/wireless/ath/ath10k/trace.h b/drivers/net/wireless/ath/ath10k/trace.h
+index 971ff23..3dff799 100644
+--- a/drivers/net/wireless/ath/ath10k/trace.h
++++ b/drivers/net/wireless/ath/ath10k/trace.h
+@@ -281,6 +281,35 @@ TRACE_EVENT(ath10k_htt_pktlog,
+ 	 )
+ );
+ 
++TRACE_EVENT(ath10k_rx_pktlog,
++	    TP_PROTO(struct ath10k *ar, u32 tsf, void *rxdesc, u16 len),
++
++	TP_ARGS(ar, tsf, rxdesc, len),
++
++	TP_STRUCT__entry(
++		__string(device, dev_name(ar->dev))
++		__string(driver, dev_driver_string(ar->dev))
++		__field(u32, tsf)
++		__field(u16, len)
++		__dynamic_array(u8, rxdesc, len)
++	),
++
++	TP_fast_assign(
++		__assign_str(device, dev_name(ar->dev));
++		__assign_str(driver, dev_driver_string(ar->dev));
++		__entry->tsf = tsf;
++		__entry->len = len;
++		memcpy(__get_dynamic_array(rxdesc), rxdesc, len);
++	),
++
++	TP_printk(
++		"%s %s %u len %hu",
++		__get_str(driver),
++		__get_str(device),
++		__entry->tsf,
++		__entry->len
++	 )
++);
+ #endif /* _TRACE_H_ || TRACE_HEADER_MULTI_READ*/
+ 
+ /* we don't want to use include/trace/events */
 -- 
 2.1.1
 
