@@ -1,63 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0138.hostedemail.com ([216.40.44.138]:37864 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753787AbaJHOWf (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:17019 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752284AbaJBRGw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Oct 2014 10:22:35 -0400
-Message-ID: <1412778150.3438.30.camel@joe-AO725> (sfid-20141008_162240_672826_241E8E8E)
-Subject: Re: [patch] staging: rtl8723au: incorrect use of ether_addr_copy()
-From: Joe Perches <joe@perches.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	kernel-janitors@vger.kernel.org
-Date: Wed, 08 Oct 2014 07:22:30 -0700
-In-Reply-To: <20141008124631.GC26918@mwanda>
-References: <20141008104014.GA23096@mwanda>
-	 <1412771171.3438.25.camel@joe-AO725> <20141008124631.GC26918@mwanda>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Thu, 2 Oct 2014 13:06:52 -0400
+Date: Thu, 2 Oct 2014 20:06:32 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org,
+	=?utf-8?B?InRyb3lfdGFuQHJlYWxzaWwuY29tLmNuID4+IOiwreadreazoiI=?=
+	<troy_tan@realsil.com.cn>
+Subject: Re: rtlwifi: rtl8192ee: Move driver from staging to the regular tree
+Message-ID: <20141002170632.GJ5865@mwanda> (sfid-20141002_190700_085435_082DA911)
+References: <20141002091041.GA10993@mwanda>
+ <542D8591.5050807@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <542D8591.5050807@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-10-08 at 15:46 +0300, Dan Carpenter wrote:
-> On Wed, Oct 08, 2014 at 05:26:11AM -0700, Joe Perches wrote:
-> > On Wed, 2014-10-08 at 13:40 +0300, Dan Carpenter wrote:
-> > > The return from myid() isn't aligned correctly for ether_addr_copy().
-> > 
-> > Hey Dan.
-> > 
-> > Actual evidence showing ether_addr_copy conversions
-> > may not always be wise.
-> > 
-> > How did you find them?
-> 
-> I was just trying to see how common these kinds of bugs are.  It didn't
-> take long to find, but my impression is that they are rare and I got
-> lucky.  These kinds of bugs are tricky to find and we don't have any
-> tools for it.
+Sounds good.  Thanks, Larry.
 
-As far as I know, that's true too.
-
-Jes, was the mac_addr field in this struct
-ever __aligned(2)?
-
-struct eeprom_priv {
-       u8              bautoload_fail_flag;
-       u8              bloadfile_fail_flag;
-       u8              bloadmac_fail_flag;
-       /* u8           bempty; */
-       /* u8           sys_config; */
-       u8              mac_addr[6];    /* PermanentAddress */
-...
-}
-
-As far as I can tell from git history, it was
-that way at the first check-in.
-
-Dan, did you also look for any other alignment
-defects in uses of any is_<foo>_ether_addr calls?
-
-
+regards,
+dan carpenter
