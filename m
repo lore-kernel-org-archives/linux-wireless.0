@@ -1,68 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f182.google.com ([209.85.212.182]:38052 "EHLO
-	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758974AbaJ3LTF (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:37702 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752149AbaJBMvm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Oct 2014 07:19:05 -0400
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	stable@vger.kernel.org, Stanislaw Gruszka <sgruszka@redhat.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-Subject: [PATCH -stable] wireless: rt2x00: add new rt2800usb devices
-Date: Thu, 30 Oct 2014 12:18:43 +0100
-Message-Id: <1414667923-2331-1-git-send-email-xose.vazquez@gmail.com> (sfid-20141030_121913_795548_26D5870B)
-To: unlisted-recipients:; (no To-header on input)
+	Thu, 2 Oct 2014 08:51:42 -0400
+Date: Thu, 2 Oct 2014 18:23:26 +0530
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/4] ath10k: Add support to configure pktlog filter
+Message-ID: <20141002125324.GA11177@qca.qualcomm.com> (sfid-20141002_145146_223743_C367495B)
+References: <1412251934-7011-1-git-send-email-rmanohar@qti.qualcomm.com>
+ <1412251934-7011-2-git-send-email-rmanohar@qti.qualcomm.com>
+ <CA+BoTQ=QEnDhW_Kb-dCO--67LAFNL37g4JSDuET84FFPLHpz8w@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <CA+BoTQ=QEnDhW_Kb-dCO--67LAFNL37g4JSDuET84FFPLHpz8w@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-0x0b05 0x17e8 RT5372 USB 2.0  bgn 2x2 ASUS USB-N14
-0x0411 0x0253 RT5572 USB 2.0 abgn 2x2 BUFFALO WLP-U2-300D
-0x0df6 0x0078 RT???? Sitecom N300
+On Thu, Oct 02, 2014 at 02:37:13PM +0200, Michal Kazior wrote:
+> On 2 October 2014 14:12, Rajkumar Manoharan <rmanohar@qti.qualcomm.com> wrote:
+> > Add support to configure packet log filters (tx, rx, rate control)
+> > via debugfs. To disable htt pktlog events set the filters to 0.
+> [...]
+> > +static ssize_t ath10k_write_pktlog_filter(struct file *file,
+> > +                                         const char __user *ubuf,
+> > +                                         size_t count, loff_t *ppos)
+> > +{
+> > +       struct ath10k *ar = file->private_data;
+> > +       u32 filter;
+> > +       int ret;
+> > +
+> > +       if (kstrtouint_from_user(ubuf, count, 0, &filter))
+> > +               return -EINVAL;
+> > +
+> > +       mutex_lock(&ar->conf_mutex);
+> > +       if (filter && (filter != ar->debug.pktlog_filter))
+> > +               ret = ath10k_wmi_pdev_pktlog_enable(ar, filter);
+> > +       else
+> > +               ret = ath10k_wmi_pdev_pktlog_disable(ar);
+> 
+> You're not checking if ar->state is ON.
+>
+How about updating pktlog_filter alone and not sending WMI command when
+state != ON. So that in the next drv_start pktlog will be either be
+disabled or enabled based on filter value at debug_start.
 
-Cc: stable@vger.kernel.org
-Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: John W. Linville <linville@tuxdriver.com>
-Cc: users@rt2x00.serialmonkey.com
-Cc: linux-wireless@vger.kernel.org
-Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/rt2x00/rt2800usb.c | 4 ++++
- 1 file changed, 4 insertions(+)
+> Even if I assume the above doesn't crash the driver/system this has
+> strange semantics. On one hand the driver has to be after drv_start
+> (e.g. at least one interface must be up) before it's possible to set
+> it but on the other hand pktlog_filter is retained across
+> drv_stop/start. I'd expect it to be possible to set the pktlog_filter
+> regardless of driver state but maybe that's just me.
+> 
+So pktlog should be disabed at ath10k_debug_stop. isn't it?
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index 832006b..573897b 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -1284,6 +1284,8 @@ static struct usb_device_id rt2800usb_device_table[] = {
- 	/* Arcadyan */
- 	{ USB_DEVICE(0x043e, 0x7a12) },
- 	{ USB_DEVICE(0x043e, 0x7a32) },
-+	/* ASUS */
-+	{ USB_DEVICE(0x0b05, 0x17e8) },
- 	/* Azurewave */
- 	{ USB_DEVICE(0x13d3, 0x3329) },
- 	{ USB_DEVICE(0x13d3, 0x3365) },
-@@ -1320,6 +1322,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
- 	{ USB_DEVICE(0x057c, 0x8501) },
- 	/* Buffalo */
- 	{ USB_DEVICE(0x0411, 0x0241) },
-+	{ USB_DEVICE(0x0411, 0x0253) },
- 	/* D-Link */
- 	{ USB_DEVICE(0x2001, 0x3c1a) },
- 	{ USB_DEVICE(0x2001, 0x3c21) },
-@@ -1410,6 +1413,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
- 	{ USB_DEVICE(0x0df6, 0x0053) },
- 	{ USB_DEVICE(0x0df6, 0x0069) },
- 	{ USB_DEVICE(0x0df6, 0x006f) },
-+	{ USB_DEVICE(0x0df6, 0x0078) },
- 	/* SMC */
- 	{ USB_DEVICE(0x083a, 0xa512) },
- 	{ USB_DEVICE(0x083a, 0xc522) },
--- 
-1.9.3
-
+-Rajkumar
