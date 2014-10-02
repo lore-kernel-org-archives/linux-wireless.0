@@ -1,56 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:24873 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752142AbaJJJes (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:57314 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753670AbaJBBDB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Oct 2014 05:34:48 -0400
-Date: Fri, 10 Oct 2014 15:06:31 +0530
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: fix kernel panic while shutting down AP
-Message-ID: <20141010093629.GA31275@qca.qualcomm.com> (sfid-20141010_113451_917091_F7A94D37)
-References: <1412759786-10567-1-git-send-email-rmanohar@qti.qualcomm.com>
- <CA+BoTQ=K=F5TodrmuaEaJfErFx1=BL-bmPDrAaeMLjjb8c3fJQ@mail.gmail.com>
- <20141008103312.GA25666@qca.qualcomm.com>
- <CA+BoTQmVsyuxjvc_s-BC6ZwRWk3ACG0CvDYHJRnZ7OqY6W1Upw@mail.gmail.com>
- <20141008110842.GC25666@qca.qualcomm.com>
- <CA+BoTQ=BuSrkBxkbsShZM=Zh8uqye5u0HydpfM9roubgi0-4tQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <CA+BoTQ=BuSrkBxkbsShZM=Zh8uqye5u0HydpfM9roubgi0-4tQ@mail.gmail.com>
+	Wed, 1 Oct 2014 21:03:01 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH v2 06/10] ath9k: Fix queue handling in flush()
+Date: Thu,  2 Oct 2014 06:33:16 +0530
+Message-Id: <1412211800-24344-7-git-send-email-sujith@msujith.org> (sfid-20141002_030304_181816_1834C5EC)
+In-Reply-To: <1412211800-24344-1-git-send-email-sujith@msujith.org>
+References: <1412211800-24344-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 08, 2014 at 02:16:18PM +0200, Michal Kazior wrote:
-> On 8 October 2014 13:08, Rajkumar Manoharan <rmanohar@qti.qualcomm.com> wrote:
-> > On Wed, Oct 08, 2014 at 12:50:28PM +0200, Michal Kazior wrote:
-> >> On 8 October 2014 12:33, Rajkumar Manoharan <rmanohar@qti.qualcomm.com> wrote:
-> >> > On Wed, Oct 08, 2014 at 11:45:38AM +0200, Michal Kazior wrote:
-> >> >> On 8 October 2014 11:16, Rajkumar Manoharan <rmanohar@qti.qualcomm.com> wrote:
-> >> >> > The commit "ath10k: workaround fw beaconing bug" is freeing
-> >> >> > DMA-coherent memory in irq context which is hitting BUG ON
-> >> >> > in ARM platforms. Fix this by moving dma_free out of spin
-> >> >> > lock.
-> >> >>
-> >> >> I hardly see how moving the freeing outside the spinlock is a fix.
-> >> >>
-[...]
-> 
-> My thinking was GFP_ given to dma_alloc_coherent could impact
-> behaviour of dma_free_coherent (e.g. different kind of pages is
-> allocated so different kind of freeing will be involved) but I may be
-> wrong.
-> 
-> Can you give it a try, please?
->
-Michal,
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Sorry for the delay.. Good catch. It is working after changing the GFP flag to
-atomic. Will send the updated version and remove the backtrace from
-commit log as well.
+When draining of the TX queues fails, a
+full HW reset is done. ath_reset() makes sure
+that the queues in mac80211 are restarted,
+so there is no need to wake them up again.
 
-Thanks for the review.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c | 5 -----
+ 1 file changed, 5 deletions(-)
 
--Rajkumar
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 65ca7ac..5f908a0 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1999,7 +1999,6 @@ void __ath9k_flush(struct ieee80211_hw *hw, u32 queues, bool drop)
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	int timeout = HZ / 5; /* 200 ms */
+ 	bool drain_txq;
+-	int i;
+ 
+ 	cancel_delayed_work_sync(&sc->tx_complete_work);
+ 
+@@ -2027,10 +2026,6 @@ void __ath9k_flush(struct ieee80211_hw *hw, u32 queues, bool drop)
+ 			ath_reset(sc);
+ 
+ 		ath9k_ps_restore(sc);
+-		for (i = 0; i < IEEE80211_NUM_ACS; i++) {
+-			ieee80211_wake_queue(sc->hw,
+-					     sc->cur_chan->hw_queue_base + i);
+-		}
+ 	}
+ 
+ 	ieee80211_queue_delayed_work(hw, &sc->tx_complete_work, 0);
+-- 
+2.1.1
+
