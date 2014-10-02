@@ -1,37 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:35374 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751918AbaJJPKh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Oct 2014 11:10:37 -0400
-Message-ID: <1412953834.3206.3.camel@jlt4.sipsolutions.net> (sfid-20141010_171040_727045_E76386DE)
-Subject: Re: [PATCH] cfg80211: set the rates mask in connection probes over
- specified freq
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Karl Beldan <karl.beldan@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@rivierawaves.com>
-Date: Fri, 10 Oct 2014 17:10:34 +0200
-In-Reply-To: <20141009204912.GB19745@gobelin> (sfid-20141009_224917_787775_122952DC)
-References: <1412674938-13071-1-git-send-email-karl.beldan@gmail.com>
-	 <1412847177.1828.33.camel@jlt4.sipsolutions.net>
-	 <20141009130035.GB20644@magnum.frso.rivierawaves.com>
-	 <1412861162.1828.45.camel@jlt4.sipsolutions.net>
-	 <20141009162616.GA27065@magnum.frso.rivierawaves.com>
-	 <1412879793.1828.61.camel@jlt4.sipsolutions.net>
-	 <20141009204912.GB19745@gobelin> (sfid-20141009_224917_787775_122952DC)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wg0-f46.google.com ([74.125.82.46]:42286 "EHLO
+	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751343AbaJBL5c (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Oct 2014 07:57:32 -0400
+Received: by mail-wg0-f46.google.com with SMTP id l18so94456wgh.29
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Oct 2014 04:57:31 -0700 (PDT)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH] ath10k: don't create bssid peer for ibss
+Date: Thu,  2 Oct 2014 13:56:40 +0200
+Message-Id: <1412251000-25377-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20141002_135737_069874_2A1C0729)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-10-09 at 22:49 +0200, Karl Beldan wrote:
+It's not really necessary to create bssid peer for
+bssid. Self-address peer is sufficient.
 
-> > Either way - is it worth for 3.18/stable?
-> > 
-> Your call.
+This prevents some firmware revisions from crashing.
 
-I've seen no complaints, and you haven't indicated that you'd like to
-see it in older kernels, so I've applied it to mac80211-next.
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 28 ++++++++++------------------
+ 1 file changed, 10 insertions(+), 18 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index e3d2a9e..1fbbf8c 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -1052,14 +1052,6 @@ static void ath10k_control_ibss(struct ath10k_vif *arvif,
+ 		if (is_zero_ether_addr(arvif->bssid))
+ 			return;
+ 
+-		ret = ath10k_peer_delete(arvif->ar, arvif->vdev_id,
+-					 arvif->bssid);
+-		if (ret) {
+-			ath10k_warn(ar, "failed to delete IBSS BSSID peer %pM for vdev %d: %d\n",
+-				    arvif->bssid, arvif->vdev_id, ret);
+-			return;
+-		}
+-
+ 		memset(arvif->bssid, 0, ETH_ALEN);
+ 
+ 		return;
+@@ -3178,17 +3170,17 @@ static void ath10k_bss_info_changed(struct ieee80211_hw *hw,
+ 	if (changed & BSS_CHANGED_BSSID &&
+ 	    vif->type != NL80211_IFTYPE_AP) {
+ 		if (!is_zero_ether_addr(info->bssid)) {
+-			ath10k_dbg(ar, ATH10K_DBG_MAC,
+-				   "mac vdev %d create peer %pM\n",
+-				   arvif->vdev_id, info->bssid);
+-
+-			ret = ath10k_peer_create(ar, arvif->vdev_id,
+-						 info->bssid);
+-			if (ret)
+-				ath10k_warn(ar, "failed to add peer %pM for vdev %d when changing bssid: %i\n",
+-					    info->bssid, arvif->vdev_id, ret);
+-
+ 			if (vif->type == NL80211_IFTYPE_STATION) {
++				ath10k_dbg(ar, ATH10K_DBG_MAC,
++					   "mac vdev %d create peer %pM\n",
++					   arvif->vdev_id, info->bssid);
++
++				ret = ath10k_peer_create(ar, arvif->vdev_id,
++							 info->bssid);
++				if (ret)
++					ath10k_warn(ar, "failed to add peer %pM for vdev %d when changing bssid: %i\n",
++						    info->bssid, arvif->vdev_id,
++						    ret);
+ 				/*
+ 				 * this is never erased as we it for crypto key
+ 				 * clearing; this is FW requirement
+-- 
+1.9.1
 
