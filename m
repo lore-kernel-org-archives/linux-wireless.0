@@ -1,105 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0.aculab.com ([213.249.233.131]:50321 "HELO mx0.aculab.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1753121AbaJMI5i convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:19839 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751834AbaJBRIm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Oct 2014 04:57:38 -0400
-Received: from mx0.aculab.com ([127.0.0.1])
- by localhost (mx0.aculab.com [127.0.0.1]) (amavisd-new, port 10024) with SMTP
- id 11653-06 for <linux-wireless@vger.kernel.org>;
- Mon, 13 Oct 2014 09:57:36 +0100 (BST)
-From: David Laight <David.Laight@ACULAB.COM>
-To: 'Rickard Strandqvist' <rickard_strandqvist@spectrumdigital.se>,
-	"Brett Rudley" <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-CC: Hante Meuleman <meuleman@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	Daniel Kim <dekim@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH] net: wireless: brcm80211: brcmfmac: dhd_sdio.c:
-  Cleaning up missing null-terminate in conjunction with strncpy
-Date: Mon, 13 Oct 2014 08:55:46 +0000
-Message-ID: <063D6719AE5E284EB5DD2968C1650D6D174C992F@AcuExch.aculab.com> (sfid-20141013_105759_465172_45CD3093)
-References: <1413071551-15372-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-In-Reply-To: <1413071551-15372-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-Content-Type: text/plain; charset="Windows-1252"
+	Thu, 2 Oct 2014 13:08:42 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH v2 2/4] ath10k: add tracing for ath10k_htt_pktlog
+Date: Thu, 2 Oct 2014 22:39:36 +0530
+Message-ID: <1412269778-1045-3-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20141002_190845_966692_851CDBC9)
+In-Reply-To: <1412269778-1045-1-git-send-email-rmanohar@qti.qualcomm.com>
+References: <1412269778-1045-1-git-send-email-rmanohar@qti.qualcomm.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rickard Strandqvist
-> Replacing strncpy with strlcpy to avoid strings that lacks null terminate.
-> And changed from using strncpy to strlcpy to simplify code.
+This is useful for collecting pktlog statistics of tx, rx
+and rate information, so add tracing for the API call.
 
-I think you should return an error if the strings get truncated.
-Silent truncation is going to lead to issues at some point in the future
-(in some places).
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/debug.h  |  1 -
+ drivers/net/wireless/ath/ath10k/htt.h    |  2 +-
+ drivers/net/wireless/ath/ath10k/htt_rx.c |  9 +++++++++
+ drivers/net/wireless/ath/ath10k/hw.h     |  9 +++++++++
+ drivers/net/wireless/ath/ath10k/trace.h  | 27 +++++++++++++++++++++++++++
+ 5 files changed, 46 insertions(+), 2 deletions(-)
 
-> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-> ---
->  drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   25 ++++++++++----------
->  1 file changed, 12 insertions(+), 13 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-> b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-> index f55f625..d20d4e6 100644
-> --- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-> +++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-> @@ -670,7 +670,6 @@ static int brcmf_sdio_get_fwnames(struct brcmf_chip *ci,
->  				  struct brcmf_sdio_dev *sdiodev)
->  {
->  	int i;
-> -	uint fw_len, nv_len;
->  	char end;
-> 
->  	for (i = 0; i < ARRAY_SIZE(brcmf_fwname_data); i++) {
-> @@ -684,25 +683,25 @@ static int brcmf_sdio_get_fwnames(struct brcmf_chip *ci,
->  		return -ENODEV;
->  	}
-> 
-> -	fw_len = sizeof(sdiodev->fw_name) - 1;
-> -	nv_len = sizeof(sdiodev->nvram_name) - 1;
->  	/* check if firmware path is provided by module parameter */
->  	if (brcmf_firmware_path[0] != '\0') {
-> -		strncpy(sdiodev->fw_name, brcmf_firmware_path, fw_len);
-> -		strncpy(sdiodev->nvram_name, brcmf_firmware_path, nv_len);
-> -		fw_len -= strlen(sdiodev->fw_name);
-> -		nv_len -= strlen(sdiodev->nvram_name);
-> +		strlcpy(sdiodev->fw_name, brcmf_firmware_path,
-> +			sizeof(sdiodev->fw_name));
-> +		strlcpy(sdiodev->nvram_name, brcmf_firmware_path,
-> +			sizeof(sdiodev->nvram_name));
-> 
->  		end = brcmf_firmware_path[strlen(brcmf_firmware_path) - 1];
-
-If you are doing a strlen() here, you could use the length for the copy
-and/or use it to avoid the strcat().
-
->  		if (end != '/') {
-> -			strncat(sdiodev->fw_name, "/", fw_len);
-> -			strncat(sdiodev->nvram_name, "/", nv_len);
-> -			fw_len--;
-> -			nv_len--;
-> +			strlcat(sdiodev->fw_name, "/",
-> +				sizeof(sdiodev->fw_name));
-> +			strlcat(sdiodev->nvram_name, "/",
-> +				sizeof(sdiodev->nvram_name));
->  		}
->  	}
-> -	strncat(sdiodev->fw_name, brcmf_fwname_data[i].bin, fw_len);
-> -	strncat(sdiodev->nvram_name, brcmf_fwname_data[i].nv, nv_len);
-> +	strlcat(sdiodev->fw_name, brcmf_fwname_data[i].bin,
-> +		sizeof(sdiodev->fw_name));
-> +	strlcat(sdiodev->nvram_name, brcmf_fwname_data[i].nv,
-> +		sizeof(sdiodev->nvram_name));
-
-I assume something ensures that fw_name[0] == 0 here.
-
-	David
-
-
+diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
+index 794e6bb..aafdcab 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.h
++++ b/drivers/net/wireless/ath/ath10k/debug.h
+@@ -69,7 +69,6 @@ struct ath10k_fw_crash_data *
+ ath10k_debug_get_new_fw_crash_data(struct ath10k *ar);
+ 
+ void ath10k_debug_dbglog_add(struct ath10k *ar, u8 *buffer, int len);
+-
+ #define ATH10K_DFS_STAT_INC(ar, c) (ar->debug.dfs_stats.c++)
+ 
+ #else
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index 3b44217..15c58e8 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -725,7 +725,7 @@ static inline u8 *htt_rx_test_get_chars(struct htt_rx_test *rx_test)
+  */
+ struct htt_pktlog_msg {
+ 	u8 pad[3];
+-	__le32 payload[1 /* or more */];
++	u8 payload[0];
+ } __packed;
+ 
+ struct htt_dbg_stats_rx_reorder_stats {
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 60d40a0..a078451 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -1674,6 +1674,15 @@ void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
+ 	case HTT_T2H_MSG_TYPE_RX_DELBA:
+ 		ath10k_htt_rx_delba(ar, resp);
+ 		break;
++	case HTT_T2H_MSG_TYPE_PKTLOG: {
++		struct ath10k_pktlog_hdr *hdr =
++			(struct ath10k_pktlog_hdr *)resp->pktlog_msg.payload;
++
++		trace_ath10k_htt_pktlog(ar, resp->pktlog_msg.payload,
++					sizeof(*hdr) +
++					__le16_to_cpu(hdr->size));
++		break;
++	}
+ 	case HTT_T2H_MSG_TYPE_RX_FLUSH: {
+ 		/* Ignore this event because mac80211 takes care of Rx
+ 		 * aggregation reordering.
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 006a9cb..4b86ca3 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -80,6 +80,15 @@ enum ath10k_mcast2ucast_mode {
+ 	ATH10K_MCAST2UCAST_ENABLED = 1,
+ };
+ 
++struct ath10k_pktlog_hdr {
++	__le16 flags;
++	__le16 missed_cnt;
++	__le16 log_type;
++	__le16 size;
++	__le32 timestamp;
++	u8 payload[0];
++} __packed;
++
+ /* Target specific defines for MAIN firmware */
+ #define TARGET_NUM_VDEVS			8
+ #define TARGET_NUM_PEER_AST			2
+diff --git a/drivers/net/wireless/ath/ath10k/trace.h b/drivers/net/wireless/ath/ath10k/trace.h
+index 574b75a..971ff23 100644
+--- a/drivers/net/wireless/ath/ath10k/trace.h
++++ b/drivers/net/wireless/ath/ath10k/trace.h
+@@ -254,6 +254,33 @@ TRACE_EVENT(ath10k_wmi_dbglog,
+ 	)
+ );
+ 
++TRACE_EVENT(ath10k_htt_pktlog,
++	    TP_PROTO(struct ath10k *ar, void *buf, u16 buf_len),
++
++	TP_ARGS(ar, buf, buf_len),
++
++	TP_STRUCT__entry(
++		__string(device, dev_name(ar->dev))
++		__string(driver, dev_driver_string(ar->dev))
++		__field(u16, buf_len)
++		__dynamic_array(u8, pktlog, buf_len)
++	),
++
++	TP_fast_assign(
++		__assign_str(device, dev_name(ar->dev));
++		__assign_str(driver, dev_driver_string(ar->dev));
++		__entry->buf_len = buf_len;
++		memcpy(__get_dynamic_array(pktlog), buf, buf_len);
++	),
++
++	TP_printk(
++		"%s %s size %hu",
++		__get_str(driver),
++		__get_str(device),
++		__entry->buf_len
++	 )
++);
++
+ #endif /* _TRACE_H_ || TRACE_HEADER_MULTI_READ*/
+ 
+ /* we don't want to use include/trace/events */
+-- 
+2.1.1
 
