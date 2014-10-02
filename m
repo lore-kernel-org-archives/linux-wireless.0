@@ -1,689 +1,188 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:60030 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751014AbaJYT6I (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:20448 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752369AbaJBMMD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Oct 2014 15:58:08 -0400
-Received: by mail-wi0-f181.google.com with SMTP id n3so3601738wiv.8
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2014 12:58:06 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 37/48] staging: vt6655: dead code remove 80211mgr.h
-Date: Sat, 25 Oct 2014 09:40:15 +0100
-Message-Id: <1414226426-5811-38-git-send-email-tvboxspy@gmail.com> (sfid-20141025_215816_849594_BD0EF7AE)
-In-Reply-To: <1414226426-5811-1-git-send-email-tvboxspy@gmail.com>
-References: <1414226426-5811-1-git-send-email-tvboxspy@gmail.com>
+	Thu, 2 Oct 2014 08:12:03 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH 4/4] ath10k: add tracing for tx msdu pktlog event
+Date: Thu, 2 Oct 2014 17:42:14 +0530
+Message-ID: <1412251934-7011-5-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20141002_141211_647086_A0C22040)
+In-Reply-To: <1412251934-7011-1-git-send-email-rmanohar@qti.qualcomm.com>
+References: <1412251934-7011-1-git-send-email-rmanohar@qti.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/80211mgr.h | 615 --------------------------------------
- drivers/staging/vt6655/device.h   |   1 -
- drivers/staging/vt6655/key.h      |   1 -
- drivers/staging/vt6655/wmgr.h     |   1 -
- 4 files changed, 618 deletions(-)
- delete mode 100644 drivers/staging/vt6655/80211mgr.h
+This is useful for collecting msdu statistics. For every msdu
+entry in the pktlog message, corresponding msdu length is determined.
 
-diff --git a/drivers/staging/vt6655/80211mgr.h b/drivers/staging/vt6655/80211mgr.h
-deleted file mode 100644
-index 94cff3b..0000000
---- a/drivers/staging/vt6655/80211mgr.h
-+++ /dev/null
-@@ -1,615 +0,0 @@
--/*
-- * Copyright (c) 1996, 2003 VIA Networking Technologies, Inc.
-- * All rights reserved.
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License as published by
-- * the Free Software Foundation; either version 2 of the License, or
-- * (at your option) any later version.
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License along
-- * with this program; if not, write to the Free Software Foundation, Inc.,
-- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-- *
-- *
-- * File: 80211mgr.h
-- *
-- * Purpose: 802.11 management frames pre-defines.
-- *
-- *
-- * Author: Lyndon Chen
-- *
-- * Date: May 8, 2002
-- *
-- */
--
--#ifndef __80211MGR_H__
--#define __80211MGR_H__
--
--#include <linux/types.h>
--#include "linux/ieee80211.h"
--
--#include "ttype.h"
--#include "80211hdr.h"
--
--#define WLAN_MIN_ARRAY          1
--
--/* Information Element ID value */
--#define WLAN_EID_FH_PARMS       2
--#define WLAN_EID_DS_PARMS       3
--#define WLAN_EID_CF_PARMS       4
--#define WLAN_EID_IBSS_PARMS     6
--#define WLAN_EID_TPC_REQ        34
--#define WLAN_EID_TPC_REP        35
--#define WLAN_EID_SUPP_CH        36
--#define WLAN_EID_CH_SWITCH      37
--#define WLAN_EID_MEASURE_REQ    38
--#define WLAN_EID_MEASURE_REP    39
--#define WLAN_EID_QUIET          40
--#define WLAN_EID_IBSS_DFS       41
--#define WLAN_EID_ERP            42
--/* reference 802.11i 7.3.2 table 20 */
--#define WLAN_EID_EXTSUPP_RATES  50
--/* reference WiFi WPA spec. */
--#define WLAN_EID_RSN_WPA        221
--
--#define WLAN_EID_ERP_NONERP_PRESENT             0x01
--#define WLAN_EID_ERP_USE_PROTECTION             0x02
--#define WLAN_EID_ERP_BARKER_MODE                0x04
--
--/* Reason Codes */
--#define WLAN_MGMT_REASON_RSVD                       0
--#define WLAN_MGMT_REASON_UNSPEC                     1
--#define WLAN_MGMT_REASON_PRIOR_AUTH_INVALID         2
--#define WLAN_MGMT_REASON_DEAUTH_LEAVING             3
--#define WLAN_MGMT_REASON_DISASSOC_INACTIVE          4
--#define WLAN_MGMT_REASON_DISASSOC_AP_BUSY           5
--#define WLAN_MGMT_REASON_CLASS2_NONAUTH             6
--#define WLAN_MGMT_REASON_CLASS3_NONASSOC            7
--#define WLAN_MGMT_REASON_DISASSOC_STA_HASLEFT       8
--#define WLAN_MGMT_REASON_CANT_ASSOC_NONAUTH         9
--#define WLAN_MGMT_REASON_DISASSOC_PWR_CAP_UNACCEPT      10
--#define WLAN_MGMT_REASON_DISASSOC_SUPP_CH_UNACCEPT      11
--#define WLAN_MGMT_REASON_INVALID_IE                 13
--#define WLAN_MGMT_REASON_MIC_FAILURE                14
--#define WLAN_MGMT_REASON_4WAY_HANDSHAKE_TIMEOUT     15
--#define WLAN_MGMT_REASON_GRPKEY_UPDATE_TIMEOUT      16
--#define WLAN_MGMT_REASON_4WAY_INFO_DIFFERENT        17
--#define WLAN_MGMT_REASON_MULTCAST_CIPHER_INVALID    18
--#define WLAN_MGMT_REASON_UNCAST_CIPHER_INVALID      19
--#define WLAN_MGMT_REASON_AKMP_INVALID               20
--#define WLAN_MGMT_REASON_RSNE_UNSUPPORTED           21
--#define WLAN_MGMT_REASON_RSNE_CAP_INVALID           22
--#define WLAN_MGMT_REASON_80211X_AUTH_FAILED         23
--
--/* Status Codes */
--#define WLAN_MGMT_STATUS_SUCCESS                        0
--#define WLAN_MGMT_STATUS_UNSPEC_FAILURE                 1
--#define WLAN_MGMT_STATUS_CAPS_UNSUPPORTED               10
--#define WLAN_MGMT_STATUS_REASSOC_NO_ASSOC               11
--#define WLAN_MGMT_STATUS_ASSOC_DENIED_UNSPEC            12
--#define WLAN_MGMT_STATUS_UNSUPPORTED_AUTHALG            13
--#define WLAN_MGMT_STATUS_RX_AUTH_NOSEQ                  14
--#define WLAN_MGMT_STATUS_CHALLENGE_FAIL                 15
--#define WLAN_MGMT_STATUS_AUTH_TIMEOUT                   16
--#define WLAN_MGMT_STATUS_ASSOC_DENIED_BUSY              17
--#define WLAN_MGMT_STATUS_ASSOC_DENIED_RATES             18
--#define WLAN_MGMT_STATUS_ASSOC_DENIED_SHORTPREAMBLE     19
--#define WLAN_MGMT_STATUS_ASSOC_DENIED_PBCC              20
--#define WLAN_MGMT_STATUS_ASSOC_DENIED_AGILITY           21
--
--/* reference 802.11h 7.3.1.9 */
--#define WLAN_MGMT_STATUS_ASSOC_REJECT_BCS_SPECTRUM_MNG  22
--#define WLAN_MGMT_STATUS_ASSOC_REJECT_BCS_PWR_CAP       23
--#define WLAN_MGMT_STATUS_ASSOC_REJECT_BCS_SUPP_CH       24
--/* reference 802.11g 7.3.1.9 */
--#define WLAN_MGMT_STATUS_SHORTSLOTTIME_UNSUPPORTED      25
--#define WLAN_MGMT_STATUS_DSSSOFDM_UNSUPPORTED           26
--/* reference 802.11i 3.7.1.9 table 19 */
--#define WLAN_MGMT_STATUS_INVALID_IE                     40
--#define WLAN_MGMT_STATUS_GROUP_CIPHER_INVALID           41
--#define WLAN_MGMT_STATUS_PAIRWISE_CIPHER_INVALID        42
--#define WLAN_MGMT_STATUS_AKMP_INVALID                   43
--#define WLAN_MGMT_STATUS_UNSUPPORT_RSN_IE_VER           44
--#define WLAN_MGMT_STATUS_INVALID_RSN_IE_CAP             45
--#define WLAN_MGMT_STATUS_CIPHER_REJECT                  46
--
--/* Auth Algorithm */
--#define WLAN_AUTH_ALG_OPENSYSTEM                0
--#define WLAN_AUTH_ALG_SHAREDKEY                 1
--
--/* Management Frame Field Offsets */
--/* Note: Not all fields are listed because of variable lengths. */
--/* Note: These offsets are from the start of the frame data */
--
--#define WLAN_BEACON_OFF_TS                  0
--#define WLAN_BEACON_OFF_BCN_INT             8
--#define WLAN_BEACON_OFF_CAPINFO             10
--#define WLAN_BEACON_OFF_SSID                12
--
--#define WLAN_DISASSOC_OFF_REASON            0
--
--#define WLAN_ASSOCREQ_OFF_CAP_INFO          0
--#define WLAN_ASSOCREQ_OFF_LISTEN_INT        2
--#define WLAN_ASSOCREQ_OFF_SSID              4
--
--#define WLAN_ASSOCRESP_OFF_CAP_INFO         0
--#define WLAN_ASSOCRESP_OFF_STATUS           2
--#define WLAN_ASSOCRESP_OFF_AID              4
--#define WLAN_ASSOCRESP_OFF_SUPP_RATES       6
--
--#define WLAN_REASSOCREQ_OFF_CAP_INFO        0
--#define WLAN_REASSOCREQ_OFF_LISTEN_INT      2
--#define WLAN_REASSOCREQ_OFF_CURR_AP         4
--#define WLAN_REASSOCREQ_OFF_SSID            10
--
--#define WLAN_REASSOCRESP_OFF_CAP_INFO       0
--#define WLAN_REASSOCRESP_OFF_STATUS         2
--#define WLAN_REASSOCRESP_OFF_AID            4
--#define WLAN_REASSOCRESP_OFF_SUPP_RATES     6
--
--#define WLAN_PROBEREQ_OFF_SSID              0
--
--#define WLAN_PROBERESP_OFF_TS               0
--#define WLAN_PROBERESP_OFF_BCN_INT          8
--#define WLAN_PROBERESP_OFF_CAP_INFO         10
--#define WLAN_PROBERESP_OFF_SSID             12
--
--#define WLAN_AUTHEN_OFF_AUTH_ALG            0
--#define WLAN_AUTHEN_OFF_AUTH_SEQ            2
--#define WLAN_AUTHEN_OFF_STATUS              4
--#define WLAN_AUTHEN_OFF_CHALLENGE           6
--
--#define WLAN_DEAUTHEN_OFF_REASON            0
--
--/* Cipher Suite Selectors defined in 802.11i */
--#define WLAN_11i_CSS_USE_GROUP              0
--#define WLAN_11i_CSS_WEP40                  1
--#define WLAN_11i_CSS_TKIP                   2
--#define WLAN_11i_CSS_CCMP                   4
--#define WLAN_11i_CSS_WEP104                 5
--#define WLAN_11i_CSS_UNKNOWN                255
--
--/* Authentication and Key Management Suite Selectors defined in 802.11i */
--#define WLAN_11i_AKMSS_802_1X               1
--#define WLAN_11i_AKMSS_PSK                  2
--#define WLAN_11i_AKMSS_UNKNOWN              255
--
--/* Measurement type definitions reference ieee 802.11h Table 20b */
--#define MEASURE_TYPE_BASIC      0
--#define MEASURE_TYPE_CCA        1
--#define MEASURE_TYPE_RPI        2
--
--/* Measurement request mode definitions reference ieee 802.11h Figure 46h */
--#define MEASURE_MODE_ENABLE     0x02
--#define MEASURE_MODE_REQ        0x04
--#define MEASURE_MODE_REP        0x08
--
--/* Measurement report mode definitions reference ieee 802.11h Figure 46m */
--#define MEASURE_MODE_LATE       0x01
--#define MEASURE_MODE_INCAPABLE  0x02
--#define MEASURE_MODE_REFUSED    0x04
--
--/* Information Element Types */
--
--#pragma pack(1)
--typedef struct tagWLAN_IE {
--	unsigned char byElementID;
--	unsigned char len;
--} __attribute__ ((__packed__))
--WLAN_IE, *PWLAN_IE;
--
--/* Service Set Identity (SSID) */
--#pragma pack(1)
--typedef struct tagWLAN_IE_SSID {
--	unsigned char byElementID;
--	unsigned char len;
--	unsigned char abySSID[1];
--} __attribute__ ((__packed__))
--WLAN_IE_SSID, *PWLAN_IE_SSID;
--
--/* Supported Rates */
--#pragma pack(1)
--typedef struct tagWLAN_IE_SUPP_RATES {
--	unsigned char byElementID;
--	unsigned char len;
--	unsigned char abyRates[1];
--} __attribute__ ((__packed__))
--WLAN_IE_SUPP_RATES,  *PWLAN_IE_SUPP_RATES;
--
--/* FH Parameter Set */
--#pragma pack(1)
--typedef struct _WLAN_IE_FH_PARMS {
--	unsigned char byElementID;
--	unsigned char len;
--	unsigned short wDwellTime;
--	unsigned char byHopSet;
--	unsigned char byHopPattern;
--	unsigned char byHopIndex;
--} WLAN_IE_FH_PARMS,  *PWLAN_IE_FH_PARMS;
--
--/* DS Parameter Set */
--#pragma pack(1)
--typedef struct tagWLAN_IE_DS_PARMS {
--	unsigned char byElementID;
--	unsigned char len;
--	unsigned char byCurrChannel;
--} __attribute__ ((__packed__))
--WLAN_IE_DS_PARMS,  *PWLAN_IE_DS_PARMS;
--
--/* CF Parameter Set */
--#pragma pack(1)
--typedef struct tagWLAN_IE_CF_PARMS {
--	unsigned char byElementID;
--	unsigned char len;
--	unsigned char byCFPCount;
--	unsigned char byCFPPeriod;
--	unsigned short wCFPMaxDuration;
--	unsigned short wCFPDurRemaining;
--} __attribute__ ((__packed__))
--WLAN_IE_CF_PARMS,  *PWLAN_IE_CF_PARMS;
--
--/* TIM */
--#pragma pack(1)
--typedef struct tagWLAN_IE_TIM {
--	unsigned char byElementID;
--	unsigned char len;
--	unsigned char byDTIMCount;
--	unsigned char byDTIMPeriod;
--	unsigned char byBitMapCtl;
--	unsigned char byVirtBitMap[1];
--} __attribute__ ((__packed__))
--WLAN_IE_TIM,  *PWLAN_IE_TIM;
--
--/* IBSS Parameter Set */
--#pragma pack(1)
--typedef struct tagWLAN_IE_IBSS_PARMS {
--	unsigned char byElementID;
--	unsigned char len;
--	unsigned short wATIMWindow;
--} __attribute__ ((__packed__))
--WLAN_IE_IBSS_PARMS, *PWLAN_IE_IBSS_PARMS;
--
--/* Challenge Text */
--#pragma pack(1)
--typedef struct tagWLAN_IE_CHALLENGE {
--	unsigned char byElementID;
--	unsigned char len;
--	unsigned char abyChallenge[1];
--} __attribute__ ((__packed__))
--WLAN_IE_CHALLENGE,  *PWLAN_IE_CHALLENGE;
--
--#pragma pack(1)
--typedef struct tagWLAN_IE_RSN_EXT {
--	unsigned char byElementID;
--	unsigned char len;
--	unsigned char abyOUI[4];
--	unsigned short wVersion;
--	unsigned char abyMulticast[4];
--	unsigned short wPKCount;
--	struct {
--		unsigned char abyOUI[4];
--	} PKSList[1]; /* the rest is variable so need to */
--	/* overlay ieauth structure */
--} WLAN_IE_RSN_EXT, *PWLAN_IE_RSN_EXT;
--
--#pragma pack(1)
--typedef struct tagWLAN_IE_RSN_AUTH {
--	unsigned short wAuthCount;
--	struct {
--		unsigned char abyOUI[4];
--	} AuthKSList[1];
--} WLAN_IE_RSN_AUTH, *PWLAN_IE_RSN_AUTH;
--
--/* RSN Identity */
--#pragma pack(1)
--typedef struct tagWLAN_IE_RSN {
--	unsigned char byElementID;
--	unsigned char len;
--	unsigned short wVersion;
--	unsigned char abyRSN[WLAN_MIN_ARRAY];
--} WLAN_IE_RSN, *PWLAN_IE_RSN;
--
--/* ERP */
--#pragma pack(1)
--typedef struct tagWLAN_IE_ERP {
--	unsigned char byElementID;
--	unsigned char len;
--	unsigned char byContext;
--} __attribute__ ((__packed__))
--WLAN_IE_ERP,  *PWLAN_IE_ERP;
--
--#pragma pack(1)
--typedef struct _MEASEURE_REQ {
--	unsigned char byChannel;
--	unsigned char abyStartTime[8];
--	unsigned char abyDuration[2];
--} MEASEURE_REQ, *PMEASEURE_REQ,
--	MEASEURE_REQ_BASIC, *PMEASEURE_REQ_BASIC,
--	MEASEURE_REQ_CCA, *PMEASEURE_REQ_CCA,
--	MEASEURE_REQ_RPI, *PMEASEURE_REQ_RPI;
--
--typedef struct _MEASEURE_REP_BASIC {
--	unsigned char byChannel;
--	unsigned char abyStartTime[8];
--	unsigned char abyDuration[2];
--	unsigned char byMap;
--} MEASEURE_REP_BASIC, *PMEASEURE_REP_BASIC;
--
--typedef struct _MEASEURE_REP_CCA {
--	unsigned char byChannel;
--	unsigned char abyStartTime[8];
--	unsigned char abyDuration[2];
--	unsigned char byCCABusyFraction;
--} MEASEURE_REP_CCA, *PMEASEURE_REP_CCA;
--
--typedef struct _MEASEURE_REP_RPI {
--	unsigned char byChannel;
--	unsigned char abyStartTime[8];
--	unsigned char abyDuration[2];
--	unsigned char abyRPIdensity[8];
--} MEASEURE_REP_RPI, *PMEASEURE_REP_RPI;
--
--typedef union _MEASEURE_REP {
--	MEASEURE_REP_BASIC  sBasic;
--	MEASEURE_REP_CCA    sCCA;
--	MEASEURE_REP_RPI    sRPI;
--} MEASEURE_REP, *PMEASEURE_REP;
--
--typedef struct _WLAN_IE_MEASURE_REQ {
--	unsigned char byElementID;
--	unsigned char len;
--	unsigned char byToken;
--	unsigned char byMode;
--	unsigned char byType;
--	MEASEURE_REQ        sReq;
--} WLAN_IE_MEASURE_REQ, *PWLAN_IE_MEASURE_REQ;
--
--typedef struct _WLAN_IE_MEASURE_REP {
--	unsigned char byElementID;
--	unsigned char len;
--	unsigned char byToken;
--	unsigned char byMode;
--	unsigned char byType;
--	MEASEURE_REP        sRep;
--} WLAN_IE_MEASURE_REP, *PWLAN_IE_MEASURE_REP;
--
--typedef struct _WLAN_IE_CH_SW {
--	unsigned char byElementID;
--	unsigned char len;
--	unsigned char byMode;
--	unsigned char byChannel;
--	unsigned char byCount;
--} WLAN_IE_CH_SW, *PWLAN_IE_CH_SW;
--
--typedef struct _WLAN_IE_QUIET {
--	unsigned char byElementID;
--	unsigned char len;
--	unsigned char byQuietCount;
--	unsigned char byQuietPeriod;
--	unsigned char abyQuietDuration[2];
--	unsigned char abyQuietOffset[2];
--} WLAN_IE_QUIET, *PWLAN_IE_QUIET;
--
--typedef struct _WLAN_IE_COUNTRY {
--	unsigned char byElementID;
--	unsigned char len;
--	unsigned char abyCountryString[3];
--	unsigned char abyCountryInfo[3];
--} WLAN_IE_COUNTRY, *PWLAN_IE_COUNTRY;
--
--typedef struct _WLAN_IE_PW_CONST {
--	unsigned char byElementID;
--	unsigned char len;
--	unsigned char byPower;
--} WLAN_IE_PW_CONST, *PWLAN_IE_PW_CONST;
--
--typedef struct _WLAN_IE_PW_CAP {
--	unsigned char byElementID;
--	unsigned char len;
--	unsigned char byMinPower;
--	unsigned char byMaxPower;
--} WLAN_IE_PW_CAP, *PWLAN_IE_PW_CAP;
--
--typedef struct _WLAN_IE_SUPP_CH {
--	unsigned char byElementID;
--	unsigned char len;
--	unsigned char abyChannelTuple[2];
--} WLAN_IE_SUPP_CH, *PWLAN_IE_SUPP_CH;
--
--typedef struct _WLAN_IE_TPC_REQ {
--	unsigned char byElementID;
--	unsigned char len;
--} WLAN_IE_TPC_REQ, *PWLAN_IE_TPC_REQ;
--
--typedef struct _WLAN_IE_TPC_REP {
--	unsigned char byElementID;
--	unsigned char len;
--	unsigned char byTxPower;
--	unsigned char byLinkMargin;
--} WLAN_IE_TPC_REP, *PWLAN_IE_TPC_REP;
--
--typedef struct _WLAN_IE_IBSS_DFS {
--	unsigned char byElementID;
--	unsigned char len;
--	unsigned char abyDFSOwner[6];
--	unsigned char byDFSRecovery;
--	unsigned char abyChannelMap[2];
--} WLAN_IE_IBSS_DFS, *PWLAN_IE_IBSS_DFS;
--
--#pragma pack()
--
--/* Frame Types */
--/* prototype structure, all mgmt frame types will start with these members */
--typedef struct tagWLAN_FR_MGMT {
--	unsigned int	uType;
--	unsigned int	len;
--	unsigned char *pBuf;
--	PUWLAN_80211HDR       pHdr;
--} WLAN_FR_MGMT,  *PWLAN_FR_MGMT;
--
--/* Beacon frame */
--typedef struct tagWLAN_FR_BEACON {
--	unsigned int	uType;
--	unsigned int	len;
--	unsigned char *pBuf;
--	PUWLAN_80211HDR         pHdr;
--	__le64 *pqwTimestamp;
--	unsigned short *pwBeaconInterval;
--	unsigned short *pwCapInfo;
--	PWLAN_IE_SSID           pSSID;
--	PWLAN_IE_SUPP_RATES     pSuppRates;
--	PWLAN_IE_DS_PARMS       pDSParms;
--	PWLAN_IE_CF_PARMS       pCFParms;
--	PWLAN_IE_TIM            pTIM;
--	PWLAN_IE_IBSS_PARMS     pIBSSParms;
--	PWLAN_IE_RSN            pRSN;
--	PWLAN_IE_RSN_EXT        pRSNWPA;
--	PWLAN_IE_ERP            pERP;
--	PWLAN_IE_SUPP_RATES     pExtSuppRates;
--	PWLAN_IE_COUNTRY        pIE_Country;
--	PWLAN_IE_PW_CONST       pIE_PowerConstraint;
--	PWLAN_IE_CH_SW          pIE_CHSW;
--	PWLAN_IE_IBSS_DFS       pIE_IBSSDFS;
--	PWLAN_IE_QUIET          pIE_Quiet;
--} WLAN_FR_BEACON, *PWLAN_FR_BEACON;
--
--/* IBSS ATIM frame */
--typedef struct tagWLAN_FR_IBSSATIM {
--	unsigned int	uType;
--	unsigned int	len;
--	unsigned char *pBuf;
--	PUWLAN_80211HDR         pHdr;
--} WLAN_FR_IBSSATIM, *PWLAN_FR_IBSSATIM;
--
--/* Disassociation */
--typedef struct tagWLAN_FR_DISASSOC {
--	unsigned int	uType;
--	unsigned int	len;
--	unsigned char *pBuf;
--	PUWLAN_80211HDR         pHdr;
--	unsigned short *pwReason;
--} WLAN_FR_DISASSOC, *PWLAN_FR_DISASSOC;
--
--/* Association Request */
--typedef struct tagWLAN_FR_ASSOCREQ {
--	unsigned int	uType;
--	unsigned int	len;
--	unsigned char *pBuf;
--	PUWLAN_80211HDR         pHdr;
--	unsigned short *pwCapInfo;
--	unsigned short *pwListenInterval;
--	PWLAN_IE_SSID           pSSID;
--	PWLAN_IE_SUPP_RATES     pSuppRates;
--	PWLAN_IE_RSN            pRSN;
--	PWLAN_IE_RSN_EXT        pRSNWPA;
--	PWLAN_IE_SUPP_RATES     pExtSuppRates;
--	PWLAN_IE_PW_CAP         pCurrPowerCap;
--	PWLAN_IE_SUPP_CH        pCurrSuppCh;
--} WLAN_FR_ASSOCREQ, *PWLAN_FR_ASSOCREQ;
--
--/* Association Response */
--typedef struct tagWLAN_FR_ASSOCRESP {
--	unsigned int	uType;
--	unsigned int	len;
--	unsigned char *pBuf;
--	PUWLAN_80211HDR         pHdr;
--	unsigned short *pwCapInfo;
--	unsigned short *pwStatus;
--	unsigned short *pwAid;
--	PWLAN_IE_SUPP_RATES     pSuppRates;
--	PWLAN_IE_SUPP_RATES     pExtSuppRates;
--} WLAN_FR_ASSOCRESP, *PWLAN_FR_ASSOCRESP;
--
--/* Reassociation Request */
--typedef struct tagWLAN_FR_REASSOCREQ {
--	unsigned int	uType;
--	unsigned int	len;
--	unsigned char *pBuf;
--	PUWLAN_80211HDR         pHdr;
--	unsigned short *pwCapInfo;
--	unsigned short *pwListenInterval;
--	PIEEE_ADDR              pAddrCurrAP;
--	PWLAN_IE_SSID           pSSID;
--	PWLAN_IE_SUPP_RATES     pSuppRates;
--	PWLAN_IE_RSN            pRSN;
--	PWLAN_IE_RSN_EXT        pRSNWPA;
--	PWLAN_IE_SUPP_RATES     pExtSuppRates;
--} WLAN_FR_REASSOCREQ, *PWLAN_FR_REASSOCREQ;
--
--/* Reassociation Response */
--typedef struct tagWLAN_FR_REASSOCRESP {
--	unsigned int	uType;
--	unsigned int	len;
--	unsigned char *pBuf;
--	PUWLAN_80211HDR         pHdr;
--	unsigned short *pwCapInfo;
--	unsigned short *pwStatus;
--	unsigned short *pwAid;
--	PWLAN_IE_SUPP_RATES     pSuppRates;
--	PWLAN_IE_SUPP_RATES     pExtSuppRates;
--} WLAN_FR_REASSOCRESP, *PWLAN_FR_REASSOCRESP;
--
--/* Probe Request */
--typedef struct tagWLAN_FR_PROBEREQ {
--	unsigned int	uType;
--	unsigned int	len;
--	unsigned char *pBuf;
--	PUWLAN_80211HDR         pHdr;
--	PWLAN_IE_SSID           pSSID;
--	PWLAN_IE_SUPP_RATES     pSuppRates;
--	PWLAN_IE_SUPP_RATES     pExtSuppRates;
--} WLAN_FR_PROBEREQ, *PWLAN_FR_PROBEREQ;
--
--/* Probe Response */
--typedef struct tagWLAN_FR_PROBERESP {
--	unsigned int	uType;
--	unsigned int	len;
--	unsigned char *pBuf;
--	PUWLAN_80211HDR         pHdr;
--	__le64 *pqwTimestamp;
--	unsigned short *pwBeaconInterval;
--	unsigned short *pwCapInfo;
--	PWLAN_IE_SSID           pSSID;
--	PWLAN_IE_SUPP_RATES     pSuppRates;
--	PWLAN_IE_DS_PARMS       pDSParms;
--	PWLAN_IE_CF_PARMS       pCFParms;
--	PWLAN_IE_IBSS_PARMS     pIBSSParms;
--	PWLAN_IE_RSN            pRSN;
--	PWLAN_IE_RSN_EXT        pRSNWPA;
--	PWLAN_IE_ERP            pERP;
--	PWLAN_IE_SUPP_RATES     pExtSuppRates;
--	PWLAN_IE_COUNTRY        pIE_Country;
--	PWLAN_IE_PW_CONST       pIE_PowerConstraint;
--	PWLAN_IE_CH_SW          pIE_CHSW;
--	PWLAN_IE_IBSS_DFS       pIE_IBSSDFS;
--	PWLAN_IE_QUIET          pIE_Quiet;
--} WLAN_FR_PROBERESP, *PWLAN_FR_PROBERESP;
--
--/* Authentication */
--typedef struct tagWLAN_FR_AUTHEN {
--	unsigned int	uType;
--	unsigned int	len;
--	unsigned char *pBuf;
--	PUWLAN_80211HDR         pHdr;
--	unsigned short *pwAuthAlgorithm;
--	unsigned short *pwAuthSequence;
--	unsigned short *pwStatus;
--	PWLAN_IE_CHALLENGE      pChallenge;
--} WLAN_FR_AUTHEN, *PWLAN_FR_AUTHEN;
--
--/* Deauthenication */
--typedef struct tagWLAN_FR_DEAUTHEN {
--	unsigned int	uType;
--	unsigned int	len;
--	unsigned char *pBuf;
--	PUWLAN_80211HDR         pHdr;
--	unsigned short *pwReason;
--} WLAN_FR_DEAUTHEN, *PWLAN_FR_DEAUTHEN;
--
--#endif/* __80211MGR_H__ */
-diff --git a/drivers/staging/vt6655/device.h b/drivers/staging/vt6655/device.h
-index 48130b5..1d1b0fb 100644
---- a/drivers/staging/vt6655/device.h
-+++ b/drivers/staging/vt6655/device.h
-@@ -648,7 +648,6 @@ struct vnt_private {
- 	unsigned char abyCountryCode[3];
- 	// for 802.11h DFS
- 	unsigned int	uNumOfMeasureEIDs;
--	PWLAN_IE_MEASURE_REQ    pCurrMeasureEID;
- 	bool bMeasureInProgress;
- 	unsigned char byOrgChannel;
- 	unsigned char byOrgRCR;
-diff --git a/drivers/staging/vt6655/key.h b/drivers/staging/vt6655/key.h
-index 53b4606..5615f39 100644
---- a/drivers/staging/vt6655/key.h
-+++ b/drivers/staging/vt6655/key.h
-@@ -33,7 +33,6 @@
- #include <net/mac80211.h>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 48 ++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/hw.h     | 27 ++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/trace.h  | 33 ++++++++++++++++++++++
+ 3 files changed, 108 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index be24071..22ef0f4 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -1569,6 +1569,48 @@ static void ath10k_htt_rx_delba(struct ath10k *ar, struct htt_resp *resp)
+ 	spin_unlock_bh(&ar->data_lock);
+ }
  
- #include "ttype.h"
--#include "80211mgr.h"
++static void ath10k_htt_pktlog_msdu(struct ath10k *ar,
++				   struct ath10k_pktlog_hdr *hdr)
++{
++	struct ath10k_htt *htt = &ar->htt;
++	struct sk_buff *msdu;
++	__le32 num_msdu;
++	__le16 *msdu_id;
++	u16 msdu_len[MAX_PKT_INFO_MSDU_ID], id;
++	u32 i;
++
++	num_msdu = __le32_to_cpu(*((u32 *)hdr->payload)) * 2;
++	if (num_msdu >= MAX_PKT_INFO_MSDU_ID)
++		return;
++
++	msdu_id = (u16 *)&hdr->payload[MSDU_ID_INFO_ID_OFFSET];
++	memset(msdu_len, 0, sizeof(msdu_len));
++
++	spin_lock_bh(&htt->tx_lock);
++	for (i = 0; i < num_msdu; i++) {
++		id = __le16_to_cpu(*msdu_id);
++		if (id >= htt->max_num_pending_tx) {
++			msdu_id++;
++			continue;
++		}
++
++		msdu = htt->pending_tx[id];
++		if (!msdu) {
++			msdu_id++;
++			continue;
++		}
++
++		msdu_len[i] =
++			(hdr->flags & ATH10K_PKTLOG_FLG_TYPE_CLONE_S) ?
++			CLONED_PKT_MSDU_LEN_DEFAULT : (u16)msdu->len;
++		msdu_id++;
++	}
++	spin_unlock_bh(&htt->tx_lock);
++	trace_ath10k_htt_pktlog_msdu(ar, hdr->payload,
++				     sizeof(*hdr) + __le16_to_cpu(hdr->size),
++				     msdu_len, sizeof(msdu_len));
++}
++
+ void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	struct ath10k_htt *htt = &ar->htt;
+@@ -1680,6 +1722,12 @@ void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
+ 		struct ath10k_pktlog_hdr *hdr =
+ 			(struct ath10k_pktlog_hdr *)resp->pktlog_msg.payload;
  
- /*---------------------  Export Definitions -------------------------*/
- #define MAX_GROUP_KEY       4
-diff --git a/drivers/staging/vt6655/wmgr.h b/drivers/staging/vt6655/wmgr.h
-index 9e983f6..44976e0 100644
---- a/drivers/staging/vt6655/wmgr.h
-+++ b/drivers/staging/vt6655/wmgr.h
-@@ -35,7 +35,6 @@
- #define __WMGR_H__
++		if (__le16_to_cpu(hdr->log_type) ==
++				ATH10K_PKTLOG_TYPE_TX_MSDU_ID) {
++			ath10k_htt_pktlog_msdu(ar, hdr);
++			break;
++		}
++
+ 		trace_ath10k_htt_pktlog(ar, resp->pktlog_msg.payload,
+ 					sizeof(*hdr) +
+ 					__le16_to_cpu(hdr->size));
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 4b86ca3..57a4c72 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -80,6 +80,27 @@ enum ath10k_mcast2ucast_mode {
+ 	ATH10K_MCAST2UCAST_ENABLED = 1,
+ };
  
- #include "ttype.h"
--#include "80211mgr.h"
- #include "80211hdr.h"
- #include "card.h"
++/* Types of packet log events */
++enum ath10k_pktlog_type {
++	ATH10K_PKTLOG_TYPE_TX_CTRL = 1,
++	ATH10K_PKTLOG_TYPE_TX_STAT,
++	ATH10K_PKTLOG_TYPE_TX_MSDU_ID,
++	ATH10K_PKTLOG_TYPE_TX_FRM_HDR,
++	ATH10K_PKTLOG_TYPE_RX_STAT,
++	ATH10K_PKTLOG_TYPE_RC_FIND,
++	ATH10K_PKTLOG_TYPE_RC_UPDATE,
++	ATH10K_PKTLOG_TYPE_TX_VIRT_ADDR,
++	ATH10K_PKTLOG_TYPE_DBG_PRINT,
++	ATH10K_PKTLOG_TYPE_MAX,
++};
++
++enum ath10k_pktlog_flag_type {
++	ATH10K_PKTLOG_FLG_TYPE_LOCAL_S = 0,
++	ATH10K_PKTLOG_FLG_TYPE_REMOTE_S,
++	ATH10K_PKTLOG_FLG_TYPE_CLONE_S,
++	ATH10K_PKTLOG_FLG_TYPE_UNKNOWN_S
++};
++
+ struct ath10k_pktlog_hdr {
+ 	__le16 flags;
+ 	__le16 missed_cnt;
+@@ -89,6 +110,12 @@ struct ath10k_pktlog_hdr {
+ 	u8 payload[0];
+ } __packed;
  
++#define MAX_PKT_INFO_MSDU_ID 192
++#define MSDU_ID_INFO_ID_OFFSET  ((MAX_PKT_INFO_MSDU_ID >> 3) + 4)
++#define MSDU_ID_INFO_SIZE ((MAX_PKT_INFO_MSDU_ID >> 3) + 4 + \
++			   (MAX_PKT_INFO_MSDU_ID * 2))
++#define CLONED_PKT_MSDU_LEN_DEFAULT 200
++
+ /* Target specific defines for MAIN firmware */
+ #define TARGET_NUM_VDEVS			8
+ #define TARGET_NUM_PEER_AST			2
+diff --git a/drivers/net/wireless/ath/ath10k/trace.h b/drivers/net/wireless/ath/ath10k/trace.h
+index 3dff799..4f8a20a 100644
+--- a/drivers/net/wireless/ath/ath10k/trace.h
++++ b/drivers/net/wireless/ath/ath10k/trace.h
+@@ -310,6 +310,39 @@ TRACE_EVENT(ath10k_rx_pktlog,
+ 		__entry->len
+ 	 )
+ );
++
++TRACE_EVENT(ath10k_htt_pktlog_msdu,
++	    TP_PROTO(struct ath10k *ar, void *buf, u16 buf_len,
++		     void *msdu, u16 msdu_len),
++
++	TP_ARGS(ar, buf, buf_len, msdu, msdu_len),
++
++	TP_STRUCT__entry(
++		__string(device, dev_name(ar->dev))
++		__string(driver, dev_driver_string(ar->dev))
++		__field(u16, buf_len)
++		__dynamic_array(u8, pktlog, buf_len)
++		__field(u16, msdu_len)
++		__dynamic_array(u8, msdu, msdu_len)
++	),
++
++	TP_fast_assign(
++		__assign_str(device, dev_name(ar->dev));
++		__assign_str(driver, dev_driver_string(ar->dev));
++		__entry->buf_len = buf_len;
++		memcpy(__get_dynamic_array(pktlog), buf, buf_len);
++		__entry->msdu_len = msdu_len;
++		memcpy(__get_dynamic_array(msdu), msdu, msdu_len);
++	),
++
++	TP_printk(
++		"%s %s size %hu msdu size %hu",
++		__get_str(driver),
++		__get_str(device),
++		__entry->buf_len,
++		__entry->msdu_len
++	 )
++);
+ #endif /* _TRACE_H_ || TRACE_HEADER_MULTI_READ*/
+ 
+ /* we don't want to use include/trace/events */
 -- 
-1.9.1
+2.1.1
 
