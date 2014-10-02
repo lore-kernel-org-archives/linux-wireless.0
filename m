@@ -1,48 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:34468 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753481AbaJ1KpL (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:2323 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751953AbaJBMKz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2014 06:45:11 -0400
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <wireless-regdb@lists.infradead.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 13/21] wireless-regdb: Add regulatory rules for Malawi (MW)
-Date: Tue, 28 Oct 2014 12:42:59 +0200
-Message-ID: <1414492987-16118-6-git-send-email-jouni@qca.qualcomm.com> (sfid-20141028_114524_265067_D96CBC7C)
-In-Reply-To: <1414492987-16118-1-git-send-email-jouni@qca.qualcomm.com>
-References: <1414492175-13830-1-git-send-email-jouni@qca.qualcomm.com>
- <1414492987-16118-1-git-send-email-jouni@qca.qualcomm.com>
+	Thu, 2 Oct 2014 08:10:55 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH 0/4] ath10k: Add pktlog support
+Date: Thu, 2 Oct 2014 17:42:10 +0530
+Message-ID: <1412251934-7011-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20141002_141059_614463_AC784529)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Source is QCA's regulatory team's efforts.
+This implements the Packet log feature for ath10k.
+All tx and rx events and rx descriptor details are
+posted to user space by tracepoints.
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
----
- db.txt | 6 ++++++
- 1 file changed, 6 insertions(+)
+Rajkumar Manoharan (4):
+  ath10k: Add support to configure pktlog filter
+  ath10k: add tracing for ath10k_htt_pktlog
+  ath10k: add tracing for rx descriptor
+  ath10k: add tracing for tx msdu pktlog event
 
-diff --git a/db.txt b/db.txt
-index 5869b96..7319579 100644
---- a/db.txt
-+++ b/db.txt
-@@ -793,6 +793,12 @@ country MU: DFS-FCC
- 	(5490 - 5730 @ 160), (24), DFS
- 	(5735 - 5835 @ 80), (30)
- 
-+country MW: DFS-ETSI
-+	(2402 - 2482 @ 40), (20)
-+	(5170 - 5250 @ 80), (20), AUTO-BW
-+	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
-+	(5490 - 5710 @ 160), (27), DFS
-+
- country MY: DFS-FCC
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 80), (17)
+ drivers/net/wireless/ath/ath10k/core.h   |  2 +
+ drivers/net/wireless/ath/ath10k/debug.c  | 80 +++++++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath10k/debug.h  | 15 +++++-
+ drivers/net/wireless/ath/ath10k/htt.h    |  2 +-
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 47 +++++++++++++++++
+ drivers/net/wireless/ath/ath10k/hw.h     | 35 +++++++++++++
+ drivers/net/wireless/ath/ath10k/trace.h  | 89 ++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.c    | 33 ++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.h    |  6 +++
+ 9 files changed, 306 insertions(+), 3 deletions(-)
+
 -- 
-1.9.1
+2.1.1
 
