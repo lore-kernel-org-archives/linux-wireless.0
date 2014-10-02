@@ -1,62 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:24569 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751836AbaJ0Kpd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Oct 2014 06:45:33 -0400
-From: Jukka Rissanen <jukka.rissanen@linux.intel.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/3] mac80211-hwsim: Rename CREATE and DESTROY radio to NEW and DEL radio
-Date: Mon, 27 Oct 2014 12:44:46 +0200
-Message-Id: <1414406688-3827-2-git-send-email-jukka.rissanen@linux.intel.com> (sfid-20141027_114542_004307_3D71781D)
-In-Reply-To: <1414406688-3827-1-git-send-email-jukka.rissanen@linux.intel.com>
-References: <1414406688-3827-1-git-send-email-jukka.rissanen@linux.intel.com>
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:43637 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751510AbaJBRIJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Oct 2014 13:08:09 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH v2 0/4] ath10k: Add pktlog support
+Date: Thu, 2 Oct 2014 22:39:34 +0530
+Message-ID: <1412269778-1045-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20141002_190812_948645_C8138DEE)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Using the name HWSIM_CMD_NEW_RADIO and HWSIM_CMD_DEL_RADIO is more
-fitting on how other pieces of the wireless system work.
+This implements the Packet log feature for ath10k.
+All tx and rx events and rx descriptor details are
+posted to user space by tracepoints.
 
-Signed-off-by: Jukka Rissanen <jukka.rissanen@linux.intel.com>
----
- drivers/net/wireless/mac80211_hwsim.h | 14 +++++++++-----
- 1 file changed, 9 insertions(+), 5 deletions(-)
+v2: Addressed review comments and based on discussion with Michal
+    dropped tx_msdu_id patch and added tx info changes
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.h b/drivers/net/wireless/mac80211_hwsim.h
-index c9d0315..1f4f790 100644
---- a/drivers/net/wireless/mac80211_hwsim.h
-+++ b/drivers/net/wireless/mac80211_hwsim.h
-@@ -65,9 +65,10 @@ enum hwsim_tx_control_flags {
-  * kernel, uses:
-  *	%HWSIM_ATTR_ADDR_TRANSMITTER, %HWSIM_ATTR_FLAGS,
-  *	%HWSIM_ATTR_TX_INFO, %HWSIM_ATTR_SIGNAL, %HWSIM_ATTR_COOKIE
-- * @HWSIM_CMD_CREATE_RADIO: create a new radio with the given parameters,
-- *	returns the radio ID (>= 0) or negative on errors
-- * @HWSIM_CMD_DESTROY_RADIO: destroy a radio
-+ * @HWSIM_CMD_NEW_RADIO: create a new radio with the given parameters,
-+ *	returns the radio ID (>= 0) or negative on errors, if successful
-+ *	then multicast the result
-+ * @HWSIM_CMD_DEL_RADIO: destroy a radio, reply is multicasted
-  * @__HWSIM_CMD_MAX: enum limit
-  */
- enum {
-@@ -75,12 +76,15 @@ enum {
- 	HWSIM_CMD_REGISTER,
- 	HWSIM_CMD_FRAME,
- 	HWSIM_CMD_TX_INFO_FRAME,
--	HWSIM_CMD_CREATE_RADIO,
--	HWSIM_CMD_DESTROY_RADIO,
-+	HWSIM_CMD_NEW_RADIO,
-+	HWSIM_CMD_DEL_RADIO,
- 	__HWSIM_CMD_MAX,
- };
- #define HWSIM_CMD_MAX (_HWSIM_CMD_MAX - 1)
- 
-+#define HWSIM_CMD_CREATE_RADIO   HWSIM_CMD_NEW_RADIO
-+#define HWSIM_CMD_DESTROY_RADIO  HWSIM_CMD_DEL_RADIO
-+
- /**
-  * enum hwsim_attrs - hwsim netlink attributes
-  *
+Rajkumar Manoharan (4):
+  ath10k: Add support to configure pktlog filter
+  ath10k: add tracing for ath10k_htt_pktlog
+  ath10k: add tracing for rx descriptor
+  ath10k: add tracing for tx msdu pktlog event
+
+ drivers/net/wireless/ath/ath10k/core.h   |  2 +
+ drivers/net/wireless/ath/ath10k/debug.c  | 80 +++++++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath10k/debug.h  | 15 +++++-
+ drivers/net/wireless/ath/ath10k/htt.h    |  2 +-
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 47 +++++++++++++++++
+ drivers/net/wireless/ath/ath10k/hw.h     | 35 +++++++++++++
+ drivers/net/wireless/ath/ath10k/trace.h  | 89 ++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.c    | 33 ++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.h    |  6 +++
+ 9 files changed, 306 insertions(+), 3 deletions(-)
+
 -- 
-1.8.3.1
+2.1.1
 
