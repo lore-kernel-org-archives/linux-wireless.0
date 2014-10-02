@@ -1,80 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f54.google.com ([209.85.218.54]:49787 "EHLO
-	mail-oi0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751031AbaJTEwi convert rfc822-to-8bit (ORCPT
+Received: from mout.kundenserver.de ([212.227.17.10]:57366 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751176AbaJBMMA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2014 00:52:38 -0400
-Received: by mail-oi0-f54.google.com with SMTP id v63so3147104oia.27
-        for <linux-wireless@vger.kernel.org>; Sun, 19 Oct 2014 21:52:37 -0700 (PDT)
+	Thu, 2 Oct 2014 08:12:00 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	wil6210@qca.qualcomm.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH] wil6210: remove obsolete msm platform code
+Date: Thu, 02 Oct 2014 14:11:22 +0200
+Message-ID: <3354043.ejE77YinPM@wuerfel> (sfid-20141002_141212_238886_F68A08DE)
+In-Reply-To: <1572828.LhiMXjHRdV@lx-wigig-72>
+References: <3995357.SmO1fZQuHn@wuerfel> <1572828.LhiMXjHRdV@lx-wigig-72>
 MIME-Version: 1.0
-In-Reply-To: <1413751717.2510219.180809145.0E693C29@webmail.messagingengine.com>
-References: <1413463736.1316541.179720977.4FD32021@webmail.messagingengine.com>
-	<1413510814.22769.6.camel@dcbw.local>
-	<1413751717.2510219.180809145.0E693C29@webmail.messagingengine.com>
-Date: Mon, 20 Oct 2014 07:52:37 +0300
-Message-ID: <CANUX_P2RHVRorVABRfWVg39d4D8dj35v3fBpY3=3jvQ1U+mfEA@mail.gmail.com> (sfid-20141020_070305_809867_96B4CBEB)
-Subject: Re: iwlwifi: Reason 7 periodic disconnect
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: =?UTF-8?Q?Lauren=C8=9Biu_Nicola?= <lnicola@dend.ro>
-Cc: Dan Williams <dcbw@redhat.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Oct 19, 2014 at 11:48 PM, Laurențiu Nicola <lnicola@dend.ro> wrote:
-> Hello,
->
-> Sorry for the late reply. I was using just wpa_supplicant. I also tried
-> wicd, but it seems to hang when connecting to a network, but my
-> understanding is that it's just a wpa_supplicant manager. I got this
-> while installing Gentoo, but I also reproduced it on the Fedora 20 Live
-> CD. See https://bpaste.net/show/7d5ad99260a7 for logs, but it doesn't
-> seem to say much more than my original extract.
->
-> What I found out in the meanwhile, however, is that active traffic will
-> prevent the issue from occurring. This happened with the Fedora Live CD,
-> but pinging the AP is also sufficient. I noticed iwconfig reports that
-> the power saving mode is off.
->
-> For what it's worth, I compiled my kernel and iwlwifi module with
-> tracing on, so tell me if I should try that.
+On Thursday 02 October 2014 14:29:06 Vladimir Kondratiev wrote:
+> On Tuesday, September 30, 2014 05:48:20 PM Arnd Bergmann wrote:
+> > The wil6210 driver has a glue layer for the Qualcomm MSM platform
+> > code, which apparently could never build and is unlikely to
+> > ever be able to in the future, as the MSM platform is being phased
+> > out in favor of the new QCOM platform, and the driver relies
+> > on out-of-tree infrastructure. Trying to build it currently
+> > results in this error:
+> > 
+> > drivers/net/wireless/ath/wil6210/wil_platform_msm.c:19:27: fatal error: linux/msm-bus.h: No such file or directory
+> > 
+> > Removing the driver fixes the build and makes it possible to
+> > build an allmodconfig kernel for MSM.
+> > 
+> > Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> > 
+> 
+> We are investigating this, looking for the appropriate solution.
+> Thanks for pointing to this.
 
-Please recompile with MAC80211_MLME_DEBUG, MAC80211_STA_DEBUG and
-reproduce - thanks.
+FWIW, I took a closer look at the actual driver code now. It's
+actually worse than I thought and I don't see any possible way
+out other than removing this driver completely and starting a
+new one, if you want to use it for mach-qcom. I hadn't realized
+before that this is actually new code rather than ancient bitrot
+that suddenly started causing problems.
 
->
-> Laurentiu
->
->
-> On Fri, Oct 17, 2014, at 04:53, Dan Williams wrote:
->> On Thu, 2014-10-16 at 15:48 +0300, Laurențiu Nicola wrote:
->> > Hello,
->> >
->> > I'm using iwlwifi for a Centrino Ultimate-N 6300 on 3.14.4 and 3.17.1.
->> > Connect to my wireless network works, but I get disconnected every 60
->> > seconds or so. The dmesg output looks like
->> > https://bpaste.net/show/1623a8ae5dc6 .
->> >
->> > I had the same issue on the three latest firmware versions:
->> > iwlwifi-6000-ucode-9.176.4.1
->> > iwlwifi-6000-ucode-9.193.4.1
->> > iwlwifi-6000-ucode-9.221.4.1
->> >
->> > The dmesg log actually shows the driver loading the different versions
->> > above.
->> >
->> > It's the first time I try to use wireless on Linux, so I might have made
->> > a dumb mistake.
->>
->> Can you try to get debug output from wpa_supplicant, which is the
->> process that controls WiFi on Linux?  What distro and version do you
->> use, and do you know what WiFi management service is being used?
->> (NetworkManager, conman, plain wpa_supplicant, wicd, something else?)
->>
->> Dan
->>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Some of the worst problems are:
+
+- the driver scans for DT properties that are completely
+  undocumented and have not been reviewed
+
+- if they had been reviewed, the first comment you would have
+  received is that the binding makes no sense: you scan for
+  another node rather than taking the node you already have for
+  the PCI device, then pass data into a random soc-specific
+  driver API that is not part of the upstream kernel.
+
+- as mentioned in the my patch above, the code has never been
+  compiled on a mainline kernel and now breaks builds.
+
+I think the only way forward is to have the platform support for
+whatever chip this is meant for reviewed and merged first and
+then you can write a new glue driver for the interfaces we end
+up putting into the kernel.
+My guess is that with proper interfaces between the platform
+bus driver and the wil driver glue, there would be very little
+left in terms of interface and you can just call a generic
+interface from the PCI driver, passing the 'struct device'
+for the PCI dev in to an exported interface when provided.
+
+	Arnd
