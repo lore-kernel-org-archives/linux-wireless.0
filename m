@@ -1,49 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:42383 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752461AbaJWI17 convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:51825 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750987AbaJBL3N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Oct 2014 04:27:59 -0400
-Received: by mail-wi0-f175.google.com with SMTP id d1so3435164wiv.14
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Oct 2014 01:27:58 -0700 (PDT)
+	Thu, 2 Oct 2014 07:29:13 -0400
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	<wil6210@qca.qualcomm.com>, <netdev@vger.kernel.org>,
+	<linux-wireless@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH] wil6210: remove obsolete msm platform code
+Date: Thu, 2 Oct 2014 14:29:06 +0300
+Message-ID: <1572828.LhiMXjHRdV@lx-wigig-72> (sfid-20141002_132921_043821_8B463A29)
+In-Reply-To: <3995357.SmO1fZQuHn@wuerfel>
+References: <3995357.SmO1fZQuHn@wuerfel>
 MIME-Version: 1.0
-In-Reply-To: <1413807282-27951-5-git-send-email-michal.kazior@tieto.com>
-References: <1413807282-27951-1-git-send-email-michal.kazior@tieto.com>
-	<1413807282-27951-5-git-send-email-michal.kazior@tieto.com>
-Date: Thu, 23 Oct 2014 10:27:57 +0200
-Message-ID: <CA+BoTQ=P2XOaOsaVOj+=fEs=nGfhUCNQvDYx6qb=A=JRCnbQmg@mail.gmail.com> (sfid-20141023_102804_912231_8A476A69)
-Subject: Re: [PATCH v2 4/6] ath10k: make warm reset a bit safer and faster
-From: Michal Kazior <michal.kazior@tieto.com>
-To: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 20 October 2014 14:14, Michal Kazior <michal.kazior@tieto.com> wrote:
-> One of the problems with warm reset I've found is
-> that it must be guaranteed that copy engine
-> registers are not being accessed while being
-> reset. Otherwise in worst case scenario the host
-> may lock up.
->
-> Instead of using sleeps and hoping the device is
-> operational in some arbitrary timeframes use
-> firmware indication register.
->
-> As a side effect this makes driver
-> boot/stop/recovery faster.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-> ---
->
-> Notes:
->     v2:
->      * fix kernel panic on early fw crash due to CE not being fully initialized [Janusz]
+On Tuesday, September 30, 2014 05:48:20 PM Arnd Bergmann wrote:
+> The wil6210 driver has a glue layer for the Qualcomm MSM platform
+> code, which apparently could never build and is unlikely to
+> ever be able to in the future, as the MSM platform is being phased
+> out in favor of the new QCOM platform, and the driver relies
+> on out-of-tree infrastructure. Trying to build it currently
+> results in this error:
+> 
+> drivers/net/wireless/ath/wil6210/wil_platform_msm.c:19:27: fatal error: linux/msm-bus.h: No such file or directory
+> 
+> Removing the driver fixes the build and makes it possible to
+> build an allmodconfig kernel for MSM.
+> 
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> 
 
-Marek reported he sees a memory leak and git bisect blames this patch.
-Please don't apply this patch yet.
+We are investigating this, looking for the appropriate solution.
+Thanks for pointing to this.
 
-
-Michał
+Thanks, Vladimir
