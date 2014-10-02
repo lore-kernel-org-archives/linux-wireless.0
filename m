@@ -1,170 +1,250 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:51579 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751280AbaJHDMc (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:13310 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752200AbaJBRIS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Oct 2014 23:12:32 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH v3 1/4] ath9k: Fix sequence number assignment
-Date: Wed,  8 Oct 2014 08:43:19 +0530
-Message-Id: <1412738002-7636-2-git-send-email-sujith@msujith.org> (sfid-20141008_051235_517871_9F08CC52)
-In-Reply-To: <1412738002-7636-1-git-send-email-sujith@msujith.org>
-References: <1412738002-7636-1-git-send-email-sujith@msujith.org>
+	Thu, 2 Oct 2014 13:08:18 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH v2 1/4] ath10k: Add support to configure pktlog filter
+Date: Thu, 2 Oct 2014 22:39:35 +0530
+Message-ID: <1412269778-1045-2-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20141002_190821_269673_D976802A)
+In-Reply-To: <1412269778-1045-1-git-send-email-rmanohar@qti.qualcomm.com>
+References: <1412269778-1045-1-git-send-email-rmanohar@qti.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Add support to configure packet log filters (tx, rx, rate control)
+via debugfs. To disable htt pktlog events set the filters to 0.
 
-Currently, ath9k uses a global counter for all
-frames that need to be assigned a sequence number.
-QoS-data frames are handled properly since they
-have a per-tid counter. But, beacons and other
-management frames use the same counter even if
-multiple interfaces or contexts are present.
+ex:
 
-Fix this issue by making the counter per-interface
-and using it when mac80211 sets IEEE80211_TX_CTL_ASSIGN_SEQ.
+To enable pktlog for all filters
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+   echo 0x1f > /sys/kernel/debug/ieee80211/phy*/ath10k/pktlog_filter
+
+To disable pktlog
+
+   echo 0 > /sys/kernel/debug/ieee80211/phy*/ath10k/pktlog_filter
+
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h  |  4 +++-
- drivers/net/wireless/ath/ath9k/beacon.c | 12 ++----------
- drivers/net/wireless/ath/ath9k/tx99.c   |  8 +++++++-
- drivers/net/wireless/ath/ath9k/xmit.c   | 34 ++++++++++++++++++++++-----------
- 4 files changed, 35 insertions(+), 23 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.h  |  2 +
+ drivers/net/wireless/ath/ath10k/debug.c | 72 ++++++++++++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath10k/debug.h |  9 +++++
+ drivers/net/wireless/ath/ath10k/wmi.c   | 33 +++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.h   |  6 +++
+ 5 files changed, 121 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index bfa0b15..01a7db0 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -294,7 +294,6 @@ struct ath_tx_control {
-  *  (axq_qnum).
-  */
- struct ath_tx {
--	u16 seq_no;
- 	u32 txqsetup;
- 	spinlock_t txbuflock;
- 	struct list_head txbuf;
-@@ -563,6 +562,7 @@ int ath_tx_init(struct ath_softc *sc, int nbufs);
- int ath_txq_update(struct ath_softc *sc, int qnum,
- 		   struct ath9k_tx_queue_info *q);
- void ath_update_max_aggr_framelen(struct ath_softc *sc, int queue, int txop);
-+void ath_assign_seq(struct ath_common *common, struct sk_buff *skb);
- int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
- 		 struct ath_tx_control *txctl);
- void ath_tx_cabq(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-@@ -592,6 +592,8 @@ void ath9k_release_buffered_frames(struct ieee80211_hw *hw,
- struct ath_vif {
- 	struct list_head list;
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 674e38c..f361226 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -302,7 +302,9 @@ struct ath10k_debug {
+ 	struct ath10k_dfs_stats dfs_stats;
+ 	struct ath_dfs_pool_stats dfs_pool_stats;
  
-+	u16 seq_no;
++	/* protected by conf_mutex */
+ 	u32 fw_dbglog_mask;
++	u32 pktlog_filter;
+ 
+ 	u8 htt_max_amsdu;
+ 	u8 htt_max_ampdu;
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index 680d508..22213f6 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -1195,7 +1195,17 @@ int ath10k_debug_start(struct ath10k *ar)
+ 				    ret);
+ 	}
+ 
+-	return 0;
++	if (ar->debug.pktlog_filter)
++		ret = ath10k_wmi_pdev_pktlog_enable(ar,
++						    ar->debug.pktlog_filter);
++	else
++		ret = ath10k_wmi_pdev_pktlog_disable(ar);
 +
- 	/* BSS info */
- 	u8 bssid[ETH_ALEN];
- 	u16 aid;
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index a6af855..ecb783b 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -144,16 +144,8 @@ static struct ath_buf *ath9k_beacon_generate(struct ieee80211_hw *hw,
- 	mgmt_hdr->u.beacon.timestamp = avp->tsf_adjust;
- 
- 	info = IEEE80211_SKB_CB(skb);
--	if (info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ) {
--		/*
--		 * TODO: make sure the seq# gets assigned properly (vs. other
--		 * TX frames)
--		 */
--		struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
--		sc->tx.seq_no += 0x10;
--		hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
--		hdr->seq_ctrl |= cpu_to_le16(sc->tx.seq_no);
--	}
++	if (ret)
++		ath10k_warn(ar, "failed to send pktlog command: %d filter %x",
++			    ret, ar->debug.pktlog_filter);
 +
-+	ath_assign_seq(common, skb);
- 
- 	if (vif->p2p)
- 		ath9k_beacon_add_noa(sc, avp, skb);
-diff --git a/drivers/net/wireless/ath/ath9k/tx99.c b/drivers/net/wireless/ath/ath9k/tx99.c
-index 8a69d08..40ab65e 100644
---- a/drivers/net/wireless/ath/ath9k/tx99.c
-+++ b/drivers/net/wireless/ath/ath9k/tx99.c
-@@ -54,6 +54,12 @@ static struct sk_buff *ath9k_build_tx99_skb(struct ath_softc *sc)
- 	struct ieee80211_hdr *hdr;
- 	struct ieee80211_tx_info *tx_info;
- 	struct sk_buff *skb;
-+	struct ath_vif *avp;
-+
-+	if (!sc->tx99_vif)
-+		return NULL;
-+
-+	avp = (struct ath_vif *)sc->tx99_vif->drv_priv;
- 
- 	skb = alloc_skb(len, GFP_KERNEL);
- 	if (!skb)
-@@ -71,7 +77,7 @@ static struct sk_buff *ath9k_build_tx99_skb(struct ath_softc *sc)
- 	memcpy(hdr->addr2, hw->wiphy->perm_addr, ETH_ALEN);
- 	memcpy(hdr->addr3, hw->wiphy->perm_addr, ETH_ALEN);
- 
--	hdr->seq_ctrl |= cpu_to_le16(sc->tx.seq_no);
-+	hdr->seq_ctrl |= cpu_to_le16(avp->seq_no);
- 
- 	tx_info = IEEE80211_SKB_CB(skb);
- 	memset(tx_info, 0, sizeof(*tx_info));
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 151ae49..493a183 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -2139,6 +2139,28 @@ static struct ath_buf *ath_tx_setup_buffer(struct ath_softc *sc,
- 	return bf;
++	return ret;
  }
  
-+void ath_assign_seq(struct ath_common *common, struct sk_buff *skb)
+ void ath10k_debug_stop(struct ath10k *ar)
+@@ -1210,6 +1220,8 @@ void ath10k_debug_stop(struct ath10k *ar)
+ 
+ 	ar->debug.htt_max_amsdu = 0;
+ 	ar->debug.htt_max_ampdu = 0;
++
++	ath10k_wmi_pdev_pktlog_disable(ar);
+ }
+ 
+ static ssize_t ath10k_write_simulate_radar(struct file *file,
+@@ -1292,6 +1304,61 @@ static const struct file_operations fops_dfs_stats = {
+ 	.llseek = default_llseek,
+ };
+ 
++static ssize_t ath10k_write_pktlog_filter(struct file *file,
++					  const char __user *ubuf,
++					  size_t count, loff_t *ppos)
 +{
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	struct ieee80211_vif *vif = info->control.vif;
-+	struct ath_vif *avp;
++	struct ath10k *ar = file->private_data;
++	u32 filter;
++	int ret;
 +
-+	if (!(info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ))
-+		return;
++	if (kstrtouint_from_user(ubuf, count, 0, &filter))
++		return -EINVAL;
 +
-+	if (!vif)
-+		return;
++	mutex_lock(&ar->conf_mutex);
 +
-+	avp = (struct ath_vif *)vif->drv_priv;
++	if (ar->state != ATH10K_STATE_ON) {
++		ar->debug.pktlog_filter = filter;
++		mutex_unlock(&ar->conf_mutex);
++		return count;
++	}
 +
-+	if (info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT)
-+		avp->seq_no += 0x10;
++	if (filter && (filter != ar->debug.pktlog_filter))
++		ret = ath10k_wmi_pdev_pktlog_enable(ar, filter);
++	else
++		ret = ath10k_wmi_pdev_pktlog_disable(ar);
 +
-+	hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
-+	hdr->seq_ctrl |= cpu_to_le16(avp->seq_no);
++	ar->debug.pktlog_filter = filter;
++	mutex_unlock(&ar->conf_mutex);
++
++	if (ret)
++		ath10k_warn(ar, "failed to send pktlog command: %d filter %x",
++			    ret, ar->debug.pktlog_filter);
++
++	return count;
 +}
 +
- static int ath_tx_prepare(struct ieee80211_hw *hw, struct sk_buff *skb,
- 			  struct ath_tx_control *txctl)
++static ssize_t ath10k_read_pktlog_filter(struct file *file, char __user *ubuf,
++					 size_t count, loff_t *ppos)
++{
++	char buf[32];
++	struct ath10k *ar = file->private_data;
++	int len = 0;
++
++	mutex_lock(&ar->conf_mutex);
++	len = scnprintf(buf, sizeof(buf) - len, "%08x\n",
++			ar->debug.pktlog_filter);
++	mutex_unlock(&ar->conf_mutex);
++
++	return simple_read_from_buffer(ubuf, count, ppos, buf, len);
++}
++
++static const struct file_operations fops_pktlog_filter = {
++	.read = ath10k_read_pktlog_filter,
++	.write = ath10k_write_pktlog_filter,
++	.open = simple_open
++};
++
+ int ath10k_debug_create(struct ath10k *ar)
  {
-@@ -2162,17 +2184,7 @@ static int ath_tx_prepare(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	if (info->control.hw_key)
- 		frmlen += info->control.hw_key->icv_len;
+ 	ar->debug.fw_crash_data = vzalloc(sizeof(*ar->debug.fw_crash_data));
+@@ -1370,6 +1437,9 @@ int ath10k_debug_register(struct ath10k *ar)
+ 				    &fops_dfs_stats);
+ 	}
  
--	/*
--	 * As a temporary workaround, assign seq# here; this will likely need
--	 * to be cleaned up to work better with Beacon transmission and virtual
--	 * BSSes.
--	 */
--	if (info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ) {
--		if (info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT)
--			sc->tx.seq_no += 0x10;
--		hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
--		hdr->seq_ctrl |= cpu_to_le16(sc->tx.seq_no);
--	}
-+	ath_assign_seq(ath9k_hw_common(sc->sc_ah), skb);
++	debugfs_create_file("pktlog_filter", S_IRUGO | S_IWUSR,
++			    ar->debug.debugfs_phy, ar, &fops_pktlog_filter);
++
+ 	return 0;
+ }
  
- 	if ((vif && vif->type != NL80211_IFTYPE_AP &&
- 	            vif->type != NL80211_IFTYPE_AP_VLAN) ||
+diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
+index efbcd29..794e6bb 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.h
++++ b/drivers/net/wireless/ath/ath10k/debug.h
+@@ -38,6 +38,15 @@ enum ath10k_debug_mask {
+ 	ATH10K_DBG_ANY		= 0xffffffff,
+ };
+ 
++enum ath10k_pktlog_filter {
++	ATH10K_PKTLOG_RX         = 0x000000001,
++	ATH10K_PKTLOG_TX         = 0x000000002,
++	ATH10K_PKTLOG_RCFIND     = 0x000000004,
++	ATH10K_PKTLOG_RCUPDATE   = 0x000000008,
++	ATH10K_PKTLOG_DBG_PRINT  = 0x000000010,
++	ATH10K_PKTLOG_ANY        = 0x00000001f,
++};
++
+ extern unsigned int ath10k_debug_mask;
+ 
+ __printf(2, 3) void ath10k_info(struct ath10k *ar, const char *fmt, ...);
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index f65032f..c145b98 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -4345,6 +4345,39 @@ int ath10k_wmi_dbglog_cfg(struct ath10k *ar, u32 module_enable)
+ 	return ath10k_wmi_cmd_send(ar, skb, ar->wmi.cmd->dbglog_cfg_cmdid);
+ }
+ 
++int ath10k_wmi_pdev_pktlog_enable(struct ath10k *ar, u32 ev_bitmap)
++{
++	struct wmi_pdev_pktlog_enable_cmd *cmd;
++	struct sk_buff *skb;
++
++	skb = ath10k_wmi_alloc_skb(ar, sizeof(*cmd));
++	if (!skb)
++		return -ENOMEM;
++
++	ev_bitmap &= ATH10K_PKTLOG_ANY;
++	ath10k_dbg(ar, ATH10K_DBG_WMI,
++		   "wmi enable pktlog filter:%x\n", ev_bitmap);
++
++	cmd = (struct wmi_pdev_pktlog_enable_cmd *)skb->data;
++	cmd->ev_bitmap = __cpu_to_le32(ev_bitmap);
++	return ath10k_wmi_cmd_send(ar, skb,
++				   ar->wmi.cmd->pdev_pktlog_enable_cmdid);
++}
++
++int ath10k_wmi_pdev_pktlog_disable(struct ath10k *ar)
++{
++	struct sk_buff *skb;
++
++	skb = ath10k_wmi_alloc_skb(ar, 0);
++	if (!skb)
++		return -ENOMEM;
++
++	ath10k_dbg(ar, ATH10K_DBG_WMI, "wmi disable pktlog\n");
++
++	return ath10k_wmi_cmd_send(ar, skb,
++				   ar->wmi.cmd->pdev_pktlog_disable_cmdid);
++}
++
+ int ath10k_wmi_attach(struct ath10k *ar)
+ {
+ 	if (test_bit(ATH10K_FW_FEATURE_WMI_10X, ar->fw_features)) {
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 6243dbe..a38d788 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -2787,6 +2787,10 @@ struct wmi_pdev_set_channel_cmd {
+ 	struct wmi_channel chan;
+ } __packed;
+ 
++struct wmi_pdev_pktlog_enable_cmd {
++	__le32 ev_bitmap;
++} __packed;
++
+ /* Customize the DSCP (bit) to TID (0-7) mapping for QOS */
+ #define WMI_DSCP_MAP_MAX    (64)
+ struct wmi_pdev_set_dscp_tid_map_cmd {
+@@ -4647,5 +4651,7 @@ int ath10k_wmi_mgmt_tx(struct ath10k *ar, struct sk_buff *skb);
+ int ath10k_wmi_dbglog_cfg(struct ath10k *ar, u32 module_enable);
+ int ath10k_wmi_pull_fw_stats(struct ath10k *ar, struct sk_buff *skb,
+ 			     struct ath10k_fw_stats *stats);
++int ath10k_wmi_pdev_pktlog_enable(struct ath10k *ar, u32 ev_list);
++int ath10k_wmi_pdev_pktlog_disable(struct ath10k *ar);
+ 
+ #endif /* _WMI_H_ */
 -- 
-2.1.2
+2.1.1
 
