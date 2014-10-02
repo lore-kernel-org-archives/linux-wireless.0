@@ -1,34 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:58368 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756256AbaJIOgW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2014 10:36:22 -0400
-Message-ID: <1412865379.1828.52.camel@jlt4.sipsolutions.net> (sfid-20141009_163642_047236_9B4ADD91)
-Subject: Re: [PATCH v2] Add mpp get/dump commands
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Henning Rogge <hrogge@gmail.com>
-Cc: "linux-wireless @ vger . kernel . org"
-	<linux-wireless@vger.kernel.org>,
-	Henning Rogge <henning.rogge@fkie.fraunhofer.de>,
-	Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-Date: Thu, 09 Oct 2014 16:36:19 +0200
-In-Reply-To: <1410505183-7325-1-git-send-email-henning.rogge@fkie.fraunhofer.de> (sfid-20140912_085950_762977_39D61318)
-References: <1410505183-7325-1-git-send-email-henning.rogge@fkie.fraunhofer.de>
-	 (sfid-20140912_085950_762977_39D61318)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from s72.web-hosting.com ([198.187.29.22]:39806 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751876AbaJBBCm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Oct 2014 21:02:42 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH v2 00/10] ath9k patches
+Date: Thu,  2 Oct 2014 06:33:10 +0530
+Message-Id: <1412211800-24344-1-git-send-email-sujith@msujith.org> (sfid-20141002_030246_003246_2170E7AC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-09-12 at 08:59 +0200, Henning Rogge wrote:
-> Add the "mpp get" and "mpp dump" command to query to mac80211s mesh
-> proxy path table through nl80211.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Applied.
+Pending MCC fixes, rebased over -rc7.
 
->  nl80211.h | 11 +++++++++
+Sujith Manoharan (10):
+  ath: Add support for tracing
+  ath9k: Print RoC expiration
+  ath9k: Check pending frames properly
+  ath9k: Fix pending frame check
+  ath9k: Remove duplicate code
+  ath9k: Fix queue handling in flush()
+  ath9k: Pass context to ath9k_chanctx_wake_queues()
+  ath9k: Add ath9k_chanctx_stop_queues()
+  ath9k: Fix queue handling for channel contexts
+  ath9k: Fix flushing in MCC mode
 
-Please don't send me nl80211.h updates though.
+ drivers/net/wireless/ath/Kconfig         |  8 ++++
+ drivers/net/wireless/ath/Makefile        |  4 ++
+ drivers/net/wireless/ath/ath.h           |  1 +
+ drivers/net/wireless/ath/ath9k/ath9k.h   | 10 ++++-
+ drivers/net/wireless/ath/ath9k/channel.c | 48 +++++++++++++++++++--
+ drivers/net/wireless/ath/ath9k/main.c    | 30 +++-----------
+ drivers/net/wireless/ath/main.c          |  3 ++
+ drivers/net/wireless/ath/trace.c         | 20 +++++++++
+ drivers/net/wireless/ath/trace.h         | 71 ++++++++++++++++++++++++++++++++
+ 9 files changed, 166 insertions(+), 29 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/trace.c
+ create mode 100644 drivers/net/wireless/ath/trace.h
 
-johannes
+-- 
+2.1.1
 
