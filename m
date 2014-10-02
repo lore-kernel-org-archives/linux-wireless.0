@@ -1,30 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:44039 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934167AbaJ2PmL (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:51652 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753386AbaJBBCw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2014 11:42:11 -0400
-Date: Wed, 29 Oct 2014 17:34:46 +0800
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Paul McQuade <paulmcquad@gmail.com>
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Jes.Sorensen@redhat.com,
-	Larry.Finger@lwfinger.net
-Subject: Re: [PATCH][V2] Staging:rtl8723au: open/closed brace issue
-Message-ID: <20141029093446.GA32663@kroah.com> (sfid-20141029_164409_321812_C609DEE4)
-References: <1414336222-2885-1-git-send-email-paulmcquad@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1414336222-2885-1-git-send-email-paulmcquad@gmail.com>
+	Wed, 1 Oct 2014 21:02:52 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH v2 03/10] ath9k: Check pending frames properly
+Date: Thu,  2 Oct 2014 06:33:13 +0530
+Message-Id: <1412211800-24344-4-git-send-email-sujith@msujith.org> (sfid-20141002_030256_328209_BBACF28B)
+In-Reply-To: <1412211800-24344-1-git-send-email-sujith@msujith.org>
+References: <1412211800-24344-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Oct 26, 2014 at 03:10:22PM +0000, Paul McQuade wrote:
-> ERROR: that open brace { should be on the previous line
-> 
-> Signed-off-by: Paul McQuade <paulmcquad@gmail.com>
-> ---
->  drivers/staging/rtl8723au/core/rtw_ap.c | 130 ++++++++++----------------------
->  1 file changed, 40 insertions(+), 90 deletions(-)
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-This doesn't apply to my tree :(
+There is no need to check if the current
+channel context has active ACs queued up
+if the TX queue is not empty.
+
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index ae7c6ee..84c0cd4 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -60,8 +60,10 @@ static bool ath9k_has_pending_frames(struct ath_softc *sc, struct ath_txq *txq)
+ 
+ 	spin_lock_bh(&txq->axq_lock);
+ 
+-	if (txq->axq_depth)
++	if (txq->axq_depth) {
+ 		pending = true;
++		goto out;
++	}
+ 
+ 	if (txq->mac80211_qnum >= 0) {
+ 		struct list_head *list;
+@@ -70,6 +72,7 @@ static bool ath9k_has_pending_frames(struct ath_softc *sc, struct ath_txq *txq)
+ 		if (!list_empty(list))
+ 			pending = true;
+ 	}
++out:
+ 	spin_unlock_bh(&txq->axq_lock);
+ 	return pending;
+ }
+-- 
+2.1.1
+
