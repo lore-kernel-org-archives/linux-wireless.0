@@ -1,61 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wn1-mbie.dmzglobal.net ([203.144.33.76]:29012 "EHLO
-	wn1-mbie.dmzglobal.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752923AbaJ1BOB convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Oct 2014 21:14:01 -0400
-From: Peter Gent <Peter.Gent@mbie.govt.nz>
-To: "linville@tuxdriver.com" <linville@tuxdriver.com>
-CC: "wireless-regdb@lists.infradead.org"
-	<wireless-regdb@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: wireless-regdb: Update regulatory rules for New Zealand (NZ) on
- 5GHz and 60 GHz [UNCLASSIFIED]
-Date: Tue, 28 Oct 2014 01:04:10 +0000
-Message-ID: <D0D2EC853BFD0147A005CC7FAC0E4A53E39A56A6@AKI2K113.wd.govt.nz> (sfid-20141028_021406_004407_3B0940E3)
-Content-Type: text/plain; charset="iso-8859-1"
+Received: from hauke-m.de ([5.39.93.123]:49448 "EHLO hauke-m.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752642AbaJCOlQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Oct 2014 10:41:16 -0400
+Message-ID: <542EB589.7020909@hauke-m.de> (sfid-20141003_164119_367098_4FE7D1D7)
+Date: Fri, 03 Oct 2014 16:41:13 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH][RFC] bcma: fill core details for every device
+References: <1412246303-18172-1-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1412246303-18172-1-git-send-email-zajec5@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On 10/02/2014 12:38 PM, Rafa≈Ç Mi≈Çecki wrote:
+> We were setting things like dma_dev, IRQ, etc. during core registration
+> only. We need such info for cores handled internally (e.g. ChipCommon)
+> as well.
+> 
+> Signed-off-by: Rafa≈Ç Mi≈Çecki <zajec5@gmail.com>
 
-We wish to note the following changes should be made to the wireless regulatory database to reflect some recent changes to the 60 GHz band here in New Zealand. In additional there are some inaccuracies when compared to our current licencing for the 5 GHz "Wi-Fi" band.
+Acked-by: Hauke Mehrtens <hauke@hauke-m.de>
 
-The updated entry for New Zealand should read:
+I already was preparing a patch doing similar things but this one looks
+better.
 
-5150 MHz  - 5250 MHz  80MHz channels, indoor use only at -7.0 dBW EIRP TPC enabled
-5250 MHz -  5350 MHz  80 MHz channels, indoor use at -7.0 dBW EIRP, outdoor use at 0 dBW EIRP with DFS and TPC enabled* 
-5470 MHz  - 5725 MHz  80 MHz channels, 0 dBW EIRP with DFS and TPC enabled*
-5725 MHz  - 5875 MHz  80 MHz channels, 6.0 dBW EIRP with frequency hopping enabled  
-57000 MHz - 66000 MHz, indoor use only at 13.0 dBW EIRP 
-
-*if TPC is not enabled, than transmit power must be reduced by 3dB
-
-Further information on SRD licencing rules can be found at http://www.rsm.govt.nz/cms/licensees/types-of-licence/general-user-licences/short-range-devices 
-
-Regards
-
-Peter
-
-
-
-
-Peter Gent
-PLANNING ANALYST
-
-Radio Spectrum Management, Infrastructure & Resource Markets Group
-Ministry of Business, Innovation & Employment
-
-peter.gent@mbie.govt.nz | DDI:† +64 4 462 4279† |† Ext 44279† 
-Free Phone: 0508 RSM INFO (776 463) | Website: www.rsm.govt.nz 
-15 Stout Street, PO Box 2847, Wellington, New Zealand
-
-
-
-
-
-newzealand.govt.nz - connecting you to New Zealand central & local government services
-
-Any opinions expressed in this message are not necessarily those of the Ministry of Business, Innovation and Employment. This message and any files transmitted with it are confidential and solely for the use of the intended recipient. If you are not the intended recipient or the person responsible for delivery to the intended recipient, be advised that you have received this message in error and that any use is strictly prohibited. Please contact the sender and delete the message and any attachment from your computer.
+> ---
+>  drivers/bcma/bcma_private.h | 1 +
+>  drivers/bcma/main.c         | 9 ++++++---
+>  drivers/bcma/scan.c         | 1 +
+>  3 files changed, 8 insertions(+), 3 deletions(-)
+> 
 
