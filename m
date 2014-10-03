@@ -1,138 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:9436 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751343AbaJBMFG (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:28401 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755497AbaJCV70 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Oct 2014 08:05:06 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH 2/4] ath10k: add tracing for ath10k_htt_pktlog
-Date: Thu, 2 Oct 2014 17:36:08 +0530
-Message-ID: <1412251570-31096-3-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20141002_140512_389576_A7EE3E4A)
-In-Reply-To: <1412251570-31096-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1412251570-31096-1-git-send-email-rmanohar@qti.qualcomm.com>
+	Fri, 3 Oct 2014 17:59:26 -0400
+From: Kyeyoon Park <kyeyoonp@qca.qualcomm.com>
+To: <johannes@sipsolutions.net>
+CC: <pxu@qca.qualcomm.com>, <cfg80211mac80211@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH] cfg80211: Add support for ACS offloading
+Date: Fri, 3 Oct 2014 14:58:58 -0700
+Message-ID: <1412373538-17690-1-git-send-email-kyeyoonp@qca.qualcomm.com> (sfid-20141003_235933_902247_7896413D)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is useful for collecting pktlog statistics of tx, rx
-and rate information, so add tracing for the API call.
+From: Peng Xu <pxu@qca.qualcomm.com>
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Add support for offloading ACS functionality to the driver. A new
+feature flag NL80211_FEATURE_AP_ACS_OFFLOAD was added to support
+ACS (Automatic Channel Selection) offload functionality. This flag
+allows the driver to advertise its ACS capability.
+
+When hostapd starts with the "channel" configuration set to 0, it will
+check whether the driver has the capability of doing the ACS on its own.
+If the driver has such capability, then the channel selection will be
+done in the driver. The kernel will skip the channel information
+validation since it would initially be NULL when this feature is
+enabled. After the channel is selected by the driver, a channel
+change event will be sent from the driver to the kernel which updates
+the channel information it maintains. This event is in turn sent to
+hostapd and the channel information in hostapd will get updated as well.
+
+Signed-off-by: Peng Xu <pxu@qca.qualcomm.com>
+Signed-off-by: Kyeyoon Park <kyeyoonp@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath10k/debug.h  |  1 -
- drivers/net/wireless/ath/ath10k/htt.h    |  2 +-
- drivers/net/wireless/ath/ath10k/htt_rx.c |  9 +++++++++
- drivers/net/wireless/ath/ath10k/hw.h     |  9 +++++++++
- drivers/net/wireless/ath/ath10k/trace.h  | 27 +++++++++++++++++++++++++++
- 5 files changed, 46 insertions(+), 2 deletions(-)
+ include/uapi/linux/nl80211.h |  3 +++
+ net/wireless/nl80211.c       | 15 +++++++++++----
+ 2 files changed, 14 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
-index 794e6bb..aafdcab 100644
---- a/drivers/net/wireless/ath/ath10k/debug.h
-+++ b/drivers/net/wireless/ath/ath10k/debug.h
-@@ -69,7 +69,6 @@ struct ath10k_fw_crash_data *
- ath10k_debug_get_new_fw_crash_data(struct ath10k *ar);
- 
- void ath10k_debug_dbglog_add(struct ath10k *ar, u8 *buffer, int len);
--
- #define ATH10K_DFS_STAT_INC(ar, c) (ar->debug.dfs_stats.c++)
- 
- #else
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index 3b44217..15c58e8 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -725,7 +725,7 @@ static inline u8 *htt_rx_test_get_chars(struct htt_rx_test *rx_test)
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 4b28dc0..73c0950 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -4042,6 +4042,8 @@ enum nl80211_ap_sme_features {
+  *	multiplexing powersave, ie. can turn off all but one chain
+  *	and then wake the rest up as required after, for example,
+  *	rts/cts handshake.
++ * @NL80211_FEATURE_AP_ACS_OFFLOAD: This driver supports ACS (Automatic Channel
++ *     Selection) during AP starting time.
   */
- struct htt_pktlog_msg {
- 	u8 pad[3];
--	__le32 payload[1 /* or more */];
-+	u8 payload[0];
- } __packed;
- 
- struct htt_dbg_stats_rx_reorder_stats {
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 60d40a0..a078451 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -1674,6 +1674,15 @@ void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
- 	case HTT_T2H_MSG_TYPE_RX_DELBA:
- 		ath10k_htt_rx_delba(ar, resp);
- 		break;
-+	case HTT_T2H_MSG_TYPE_PKTLOG: {
-+		struct ath10k_pktlog_hdr *hdr =
-+			(struct ath10k_pktlog_hdr *)resp->pktlog_msg.payload;
-+
-+		trace_ath10k_htt_pktlog(ar, resp->pktlog_msg.payload,
-+					sizeof(*hdr) +
-+					__le16_to_cpu(hdr->size));
-+		break;
-+	}
- 	case HTT_T2H_MSG_TYPE_RX_FLUSH: {
- 		/* Ignore this event because mac80211 takes care of Rx
- 		 * aggregation reordering.
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 006a9cb..4b86ca3 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -80,6 +80,15 @@ enum ath10k_mcast2ucast_mode {
- 	ATH10K_MCAST2UCAST_ENABLED = 1,
+ enum nl80211_feature_flags {
+ 	NL80211_FEATURE_SK_TX_STATUS			= 1 << 0,
+@@ -4070,6 +4072,7 @@ enum nl80211_feature_flags {
+ 	NL80211_FEATURE_ACKTO_ESTIMATION		= 1 << 23,
+ 	NL80211_FEATURE_STATIC_SMPS			= 1 << 24,
+ 	NL80211_FEATURE_DYNAMIC_SMPS			= 1 << 25,
++	NL80211_FEATURE_AP_ACS_OFFLOAD			= 1 << 26,
  };
  
-+struct ath10k_pktlog_hdr {
-+	__le16 flags;
-+	__le16 missed_cnt;
-+	__le16 log_type;
-+	__le16 size;
-+	__le32 timestamp;
-+	u8 payload[0];
-+} __packed;
-+
- /* Target specific defines for MAIN firmware */
- #define TARGET_NUM_VDEVS			8
- #define TARGET_NUM_PEER_AST			2
-diff --git a/drivers/net/wireless/ath/ath10k/trace.h b/drivers/net/wireless/ath/ath10k/trace.h
-index 574b75a..971ff23 100644
---- a/drivers/net/wireless/ath/ath10k/trace.h
-+++ b/drivers/net/wireless/ath/ath10k/trace.h
-@@ -254,6 +254,33 @@ TRACE_EVENT(ath10k_wmi_dbglog,
- 	)
- );
+ /**
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index cb9f5a4..846860d 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1990,7 +1990,8 @@ static int __nl80211_set_channel(struct cfg80211_registered_device *rdev,
+ 			}
  
-+TRACE_EVENT(ath10k_htt_pktlog,
-+	    TP_PROTO(struct ath10k *ar, void *buf, u16 buf_len),
-+
-+	TP_ARGS(ar, buf, buf_len),
-+
-+	TP_STRUCT__entry(
-+		__string(device, dev_name(ar->dev))
-+		__string(driver, dev_driver_string(ar->dev))
-+		__field(u16, buf_len)
-+		__dynamic_array(u8, pktlog, buf_len)
-+	),
-+
-+	TP_fast_assign(
-+		__assign_str(device, dev_name(ar->dev));
-+		__assign_str(driver, dev_driver_string(ar->dev));
-+		__entry->buf_len = buf_len;
-+		memcpy(__get_dynamic_array(pktlog), buf, buf_len);
-+	),
-+
-+	TP_printk(
-+		"%s %s size %hu",
-+		__get_str(driver),
-+		__get_str(device),
-+		__entry->buf_len
-+	 )
-+);
-+
- #endif /* _TRACE_H_ || TRACE_HEADER_MULTI_READ*/
+ 			/* Only allow dynamic channel width changes */
+-			if (chandef.chan != wdev->preset_chandef.chan) {
++			if ((wdev->preset_chandef.chan != NULL) &&
++			    chandef.chan != wdev->preset_chandef.chan) {
+ 				result = -EBUSY;
+ 				break;
+ 			}
+@@ -3220,6 +3221,7 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
+ 	struct net_device *dev = info->user_ptr[1];
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	struct cfg80211_ap_settings params;
++	bool acs_offload = false;
+ 	int err;
  
- /* we don't want to use include/trace/events */
+ 	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
+@@ -3333,10 +3335,15 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
+ 			return err;
+ 	} else if (wdev->preset_chandef.chan) {
+ 		params.chandef = wdev->preset_chandef;
+-	} else if (!nl80211_get_ap_channel(rdev, &params))
+-		return -EINVAL;
++	} else if (!nl80211_get_ap_channel(rdev, &params)) {
++		if (rdev->wiphy.features & NL80211_FEATURE_AP_ACS_OFFLOAD)
++			acs_offload = true;
++		else
++			return -EINVAL;
++	}
+ 
+-	if (!cfg80211_reg_can_beacon(&rdev->wiphy, &params.chandef,
++	if (!acs_offload &&
++	    !cfg80211_reg_can_beacon(&rdev->wiphy, &params.chandef,
+ 				     wdev->iftype))
+ 		return -EINVAL;
+ 
 -- 
-2.1.1
+1.9.1
 
