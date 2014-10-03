@@ -1,109 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:46068 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754354AbaJHLG5 (ORCPT
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:56294 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752238AbaJCPAf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Oct 2014 07:06:57 -0400
-Date: Wed, 8 Oct 2014 16:38:44 +0530
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: fix kernel panic while shutting down AP
-Message-ID: <20141008110842.GC25666@qca.qualcomm.com> (sfid-20141008_130700_644880_8557A64C)
-References: <1412759786-10567-1-git-send-email-rmanohar@qti.qualcomm.com>
- <CA+BoTQ=K=F5TodrmuaEaJfErFx1=BL-bmPDrAaeMLjjb8c3fJQ@mail.gmail.com>
- <20141008103312.GA25666@qca.qualcomm.com>
- <CA+BoTQmVsyuxjvc_s-BC6ZwRWk3ACG0CvDYHJRnZ7OqY6W1Upw@mail.gmail.com>
+	Fri, 3 Oct 2014 11:00:35 -0400
+Received: by mail-wi0-f178.google.com with SMTP id cc10so2384623wib.11
+        for <linux-wireless@vger.kernel.org>; Fri, 03 Oct 2014 08:00:34 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH] bcma: fill core details for every device
+Date: Fri,  3 Oct 2014 17:00:24 +0200
+Message-Id: <1412348424-11213-1-git-send-email-zajec5@gmail.com> (sfid-20141003_170038_971002_0F7BB722)
+In-Reply-To: <1412246303-18172-1-git-send-email-zajec5@gmail.com>
+References: <1412246303-18172-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <CA+BoTQmVsyuxjvc_s-BC6ZwRWk3ACG0CvDYHJRnZ7OqY6W1Upw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 08, 2014 at 12:50:28PM +0200, Michal Kazior wrote:
-> On 8 October 2014 12:33, Rajkumar Manoharan <rmanohar@qti.qualcomm.com> wrote:
-> > On Wed, Oct 08, 2014 at 11:45:38AM +0200, Michal Kazior wrote:
-> >> On 8 October 2014 11:16, Rajkumar Manoharan <rmanohar@qti.qualcomm.com> wrote:
-> >> > The commit "ath10k: workaround fw beaconing bug" is freeing
-> >> > DMA-coherent memory in irq context which is hitting BUG ON
-> >> > in ARM platforms. Fix this by moving dma_free out of spin
-> >> > lock.
-> >>
-> >> I hardly see how moving the freeing outside the spinlock is a fix.
-> >>
-> >>
-> >> > kernel BUG at mm/vmalloc.c:1512!
-> >> > Internal error: Oops - BUG: 0 [#1] PREEMPT SMP ARM
-> >> > CPU: 0 PID: 722 Comm: hostapd Not tainted 3.14.0 #3
-> >> > task: dd58b840 ti: da6a6000 task.ti: da6a6000
-> >> > PC is at vunmap+0x24/0x34
-> >> > LR is at __arm_dma_free.isra.21+0x12c/0x190
-> >> > [<c02a97d0>] (vunmap) from [<c021f81c>] (__arm_dma_free.isra.21+0x12c/0x190)
-> >> > [<c021f81c>] (__arm_dma_free.isra.21) from [<bf3b2440>]
-> >> >                         (ath10k_mac_vif_beacon_free+0xf4/0x100 [ath10k_core])
-> >> > [<bf3b2440>] (ath10k_mac_vif_beacon_free [ath10k_core]) from [<bf3b2490>]
-> >> >                         (ath10k_remove_interface+0x44/0x1ec [ath10k_core])
-> >> > [<bf3b2490>] (ath10k_remove_interface [ath10k_core]) from [<bf3352e4>]
-> >> >                         (ieee80211_add_virtual_monitor+0x9d8/0x9f0 [mac80211])
-> >> > [<bf3352e4>] (ieee80211_add_virtual_monitor [mac80211]) from [<bf33530c>]
-> >> >                         (ieee80211_stop+0x10/0x18 [mac80211])
-> >> > [<bf33530c>] (ieee80211_stop [mac80211]) from [<c040d144>]
-> >> >                         (__dev_close_many+0x9c/0xcc)
-> >>
-> >>  1. How can even ieee80211_add_virtual_monitor() call
-> >> ath10k_remove_interface()? Upstream ath10k doesn't advertise
-> >> IEEE80211_HW_WANT_MONITOR_VIF. This call trace is either invalid,
-> >> you're not using upstream ath10k and/or have custom patches applied to
-> >> ath10k.
-> >>
-> > This is the backtrace captured on panic and we are getting the same
-> > backtrace consistently. I confirmed that add_virtual_monitor is not
-> > called for ath10k as it is not advertising. ath10k_remove_interface is
-> > called for master mode.
-> >
-> >>  2. How can ieee80211_stop() be called from an interrupt context
-> >> anyway? ieee80211_stop() calls ieee80211_do_stop() which calls
-> >> ieee80211_roc_purge() which tries to get a hold of local->mtx. This
-> >> implies ieee80211_stop() isn't design to be run in an interrupt
-> >> context to begin with so I don't see why ath10k should even care if
-> >> ath10k_remove_interface() is called in an interrupt context at this
-> >> point.
-> >>
-> > in_interrupt is counting soft and hard irqs. ieee80211_stop is not
-> > called from interrupt context. In ath10k, by aquiring spin_lock in
-> > ath10k_mac_vif_beacon_free is increasing soft irq count.
-> >
-> > In ARM arch, __arm_dma_free is calling vunmap which might sleep. So it
-> > can not be called within spin_lock.
-> 
-> Did you try using GFP_ATOMIC in the dma_alloc_coherent instead of
-> moving the spinlock?
->
-Nope. The problem is while freeing dma memory not during allocation.
-dma_free_coherent won't take any GFP_* flags.
-> 
-> >
-> > Similar to dma_alloc_coherent, dma_free_coherent can not be called under
-> > soft irq context.
-> 
-> The call trace points to ath10k_mac_vif_beacon_free() which doesn't
-> use dma_free_coherent() so why are you blaming it for the BUG_ON?
-> 
-I agree the calltrace is a bogus. ath10k_mac_vif_beacon_cleanup is
-calling dma_free_coherent.
+We were setting things like dma_dev, IRQ, etc. during core registration
+only. We need such info for cores handled internally (e.g. ChipCommon)
+as well.
 
-> If anything the offender should be dma_unmap_single() but the thing is
-> beacon_buf is always allocated for AP/IBSS now which means
-> dma_unmap_single() is never called. For non-AP/IBSS both arvif->beacon
-> and arvif->beacon_buf are always NULL so neither
-> dma_alloc/free_coherent nor dma_map/unmap_single are called.
->
-Agree. We need one more check in ath10k_mac_vif_beacon_free. But here
-the problem is dma_free_coherent is being called from soft irq context
-which is not allowed (BUG_ON noted in ARM arch).
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Acked-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+No changes since RFC. Added Hauke's ack.
+---
+ drivers/bcma/bcma_private.h | 1 +
+ drivers/bcma/main.c         | 9 ++++++---
+ drivers/bcma/scan.c         | 1 +
+ 3 files changed, 8 insertions(+), 3 deletions(-)
 
-After moving dma_free_coherent out of spinlock, the kernel
-BUG at mm/vmalloc.c:1512 is never hit.
+diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
+index b6412b2..314ae40 100644
+--- a/drivers/bcma/bcma_private.h
++++ b/drivers/bcma/bcma_private.h
+@@ -24,6 +24,7 @@ struct bcma_bus;
+ /* main.c */
+ bool bcma_wait_value(struct bcma_device *core, u16 reg, u32 mask, u32 value,
+ 		     int timeout);
++void bcma_prepare_core(struct bcma_bus *bus, struct bcma_device *core);
+ int bcma_bus_register(struct bcma_bus *bus);
+ void bcma_bus_unregister(struct bcma_bus *bus);
+ int __init bcma_bus_early_register(struct bcma_bus *bus,
+diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
+index d1656c2..9b229c9 100644
+--- a/drivers/bcma/main.c
++++ b/drivers/bcma/main.c
+@@ -169,10 +169,8 @@ static void bcma_of_fill_device(struct platform_device *parent,
+ }
+ #endif /* CONFIG_OF */
+ 
+-static void bcma_register_core(struct bcma_bus *bus, struct bcma_device *core)
++void bcma_prepare_core(struct bcma_bus *bus, struct bcma_device *core)
+ {
+-	int err;
+-
+ 	core->dev.release = bcma_release_core_dev;
+ 	core->dev.bus = &bcma_bus_type;
+ 	dev_set_name(&core->dev, "bcma%d:%d", bus->num, core->core_index);
+@@ -196,6 +194,11 @@ static void bcma_register_core(struct bcma_bus *bus, struct bcma_device *core)
+ 	case BCMA_HOSTTYPE_SDIO:
+ 		break;
+ 	}
++}
++
++static void bcma_register_core(struct bcma_bus *bus, struct bcma_device *core)
++{
++	int err;
+ 
+ 	err = device_register(&core->dev);
+ 	if (err) {
+diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
+index 14b5656..9175207 100644
+--- a/drivers/bcma/scan.c
++++ b/drivers/bcma/scan.c
+@@ -505,6 +505,7 @@ int bcma_bus_scan(struct bcma_bus *bus)
+ 		bus->nr_cores++;
+ 		other_core = bcma_find_core_reverse(bus, core->id.id);
+ 		core->core_unit = (other_core == NULL) ? 0 : other_core->core_unit + 1;
++		bcma_prepare_core(bus, core);
+ 
+ 		bcma_info(bus, "Core %d found: %s (manuf 0x%03X, id 0x%03X, rev 0x%02X, class 0x%X)\n",
+ 			  core->core_index, bcma_device_name(&core->id),
+-- 
+1.8.4.5
 
--Rajkumar
