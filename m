@@ -1,89 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:34735
-	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752395AbaJYTV2 (ORCPT
+Received: from mail-vc0-f169.google.com ([209.85.220.169]:37775 "EHLO
+	mail-vc0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753741AbaJDBG2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Oct 2014 15:21:28 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, sujith@msujith.org
-Subject: [PATCH v2 04/10] ath9k: clean up debugfs print of reset causes
-Date: Sat, 25 Oct 2014 17:19:29 +0200
-Message-Id: <1414250375-74121-4-git-send-email-nbd@openwrt.org> (sfid-20141025_212132_415528_D8086448)
-In-Reply-To: <1414250375-74121-1-git-send-email-nbd@openwrt.org>
-References: <1414250375-74121-1-git-send-email-nbd@openwrt.org>
+	Fri, 3 Oct 2014 21:06:28 -0400
+Received: by mail-vc0-f169.google.com with SMTP id hy4so1407263vcb.0
+        for <linux-wireless@vger.kernel.org>; Fri, 03 Oct 2014 18:06:27 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1412251000-25377-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1412251000-25377-1-git-send-email-janusz.dziedzic@tieto.com>
+Date: Sat, 4 Oct 2014 09:06:27 +0800
+Message-ID: <CAEFj985Di47A3OUSKn3ycW01Ohmeqs=uL4y_59YL+HyUDWvO0g@mail.gmail.com> (sfid-20141004_030633_513336_C88F2B9C)
+Subject: Re: [PATCH] ath10k: don't create bssid peer for ibss
+From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reduce code duplication
+On Thu, Oct 2, 2014 at 7:56 PM, Janusz Dziedzic
+<janusz.dziedzic@tieto.com> wrote:
+> It's not really necessary to create bssid peer for
+> bssid. Self-address peer is sufficient.
+>
+> This prevents some firmware revisions from crashing.
+>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Which firmware? AFAIK, only firmware version 636 supports adhoc, right?
+
 ---
- drivers/net/wireless/ath/ath9k/debug.c | 48 +++++++++++++++-------------------
- 1 file changed, 21 insertions(+), 27 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index 46f20a3..cf4a98b 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -852,36 +852,30 @@ static ssize_t read_file_reset(struct file *file, char __user *user_buf,
- 			       size_t count, loff_t *ppos)
- {
- 	struct ath_softc *sc = file->private_data;
-+	static const char * const reset_cause[__RESET_TYPE_MAX] = {
-+		[RESET_TYPE_BB_HANG] = "Baseband Hang",
-+		[RESET_TYPE_BB_WATCHDOG] = "Baseband Watchdog",
-+		[RESET_TYPE_FATAL_INT] = "Fatal HW Error",
-+		[RESET_TYPE_TX_ERROR] = "TX HW error",
-+		[RESET_TYPE_TX_GTT] = "Transmit timeout",
-+		[RESET_TYPE_TX_HANG] = "TX Path Hang",
-+		[RESET_TYPE_PLL_HANG] = "PLL RX Hang",
-+		[RESET_TYPE_MAC_HANG] = "MAC Hang",
-+		[RESET_TYPE_BEACON_STUCK] = "Stuck Beacon",
-+		[RESET_TYPE_MCI] = "MCI Reset",
-+	};
- 	char buf[512];
- 	unsigned int len = 0;
-+	int i;
- 
--	len += scnprintf(buf + len, sizeof(buf) - len,
--			 "%17s: %2d\n", "Baseband Hang",
--			 sc->debug.stats.reset[RESET_TYPE_BB_HANG]);
--	len += scnprintf(buf + len, sizeof(buf) - len,
--			 "%17s: %2d\n", "Baseband Watchdog",
--			 sc->debug.stats.reset[RESET_TYPE_BB_WATCHDOG]);
--	len += scnprintf(buf + len, sizeof(buf) - len,
--			 "%17s: %2d\n", "Fatal HW Error",
--			 sc->debug.stats.reset[RESET_TYPE_FATAL_INT]);
--	len += scnprintf(buf + len, sizeof(buf) - len,
--			 "%17s: %2d\n", "TX HW error",
--			 sc->debug.stats.reset[RESET_TYPE_TX_ERROR]);
--	len += scnprintf(buf + len, sizeof(buf) - len,
--			 "%17s: %2d\n", "TX Path Hang",
--			 sc->debug.stats.reset[RESET_TYPE_TX_HANG]);
--	len += scnprintf(buf + len, sizeof(buf) - len,
--			 "%17s: %2d\n", "PLL RX Hang",
--			 sc->debug.stats.reset[RESET_TYPE_PLL_HANG]);
--	len += scnprintf(buf + len, sizeof(buf) - len,
--			 "%17s: %2d\n", "MAC Hang",
--			 sc->debug.stats.reset[RESET_TYPE_MAC_HANG]);
--	len += scnprintf(buf + len, sizeof(buf) - len,
--			 "%17s: %2d\n", "Stuck Beacon",
--			 sc->debug.stats.reset[RESET_TYPE_BEACON_STUCK]);
--	len += scnprintf(buf + len, sizeof(buf) - len,
--			 "%17s: %2d\n", "MCI Reset",
--			 sc->debug.stats.reset[RESET_TYPE_MCI]);
-+	for (i = 0; i < ARRAY_SIZE(reset_cause); i++) {
-+		if (!reset_cause[i])
-+		    continue;
-+
-+		len += scnprintf(buf + len, sizeof(buf) - len,
-+				 "%17s: %2d\n", reset_cause[i],
-+				 sc->debug.stats.reset[i]);
-+	}
- 
- 	if (len > sizeof(buf))
- 		len = sizeof(buf);
--- 
-2.1.2
-
+Chun-Yeow
