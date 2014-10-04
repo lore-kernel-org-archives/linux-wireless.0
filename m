@@ -1,41 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:55843 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756361AbaJXKjB convert rfc822-to-8bit (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:59061 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750823AbaJDHqc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Oct 2014 06:39:01 -0400
-Received: by mail-wi0-f175.google.com with SMTP id d1so811678wiv.8
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Oct 2014 03:39:00 -0700 (PDT)
+	Sat, 4 Oct 2014 03:46:32 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+Message-ID: <21551.42474.535540.368033@gargle.gargle.HOWL> (sfid-20141004_094646_189022_731FC3FC)
+Date: Sat, 4 Oct 2014 13:16:50 +0530
 MIME-Version: 1.0
-In-Reply-To: <1413809925-4352-8-git-send-email-michal.kazior@tieto.com>
-References: <1413809925-4352-1-git-send-email-michal.kazior@tieto.com>
-	<1413809925-4352-8-git-send-email-michal.kazior@tieto.com>
-Date: Fri, 24 Oct 2014 12:39:00 +0200
-Message-ID: <CA+BoTQm93OeqRf8a8xyEp4vDSNYtXvgE62rntYzSq+bsDKgZ2g@mail.gmail.com> (sfid-20141024_123909_728794_58F917A0)
-Subject: Re: [PATCH 7/7] ath10k: implement wmi-tlv backend
-From: Michal Kazior <michal.kazior@tieto.com>
-To: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+To: Ben Greear <greearb@candelatech.com>
+Cc: "ath9k-devel\@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	rmanohar@qti.qualcomm.com
+Subject: Re: 3.17 regression, ath9k: Summarize hw state per channel context
+In-Reply-To: <542F124C.50406@candelatech.com>
+References: <542F124C.50406@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 20 October 2014 14:58, Michal Kazior <michal.kazior@tieto.com> wrote:
-> Latest firmware revision introduced a new WMI ABI
-> called wmi-tlv. It is not a tlv strictly speaking
-> but something that resembles it because it is
-> ordered and may have duplicate id entries.
->
-> This will be used by new hardware eventually.
-[...]
-> +struct wmi_tlv_peer_create_cmd {
-> +       __le32 vdev_id;
-> +       struct wmi_mac_addr peer_addr;
-> +       __le32 peer_type;
-> +};
+Ben Greear wrote:
+> Took a while, but I found the regression that has been bugging me.
+> 
+> This is on stock kernel, with hand-patched fixup from Felix that fixes
+> crash related to minstrel (patch made it upstream later, so that isn't
+> a current problem).
+> 
+> The test case is easily reproducible on my systems.  I'm not sure
+> all the details matter, but this happens to be my test case
+> at the moment:
+> 
+> 32-bit Fedora OS, latest supplicant, etc.  ath9k NIC.
 
-Oops, this is missing __packed.
+Does this happen with latest wireless-testing ?
 
-
-Michał
+Sujith
