@@ -1,132 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:34839 "EHLO
-	out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753015AbaJWHat convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Oct 2014 03:30:49 -0400
-Received: from compute4.internal (compute4.nyi.internal [10.202.2.44])
-	by gateway2.nyi.internal (Postfix) with ESMTP id 5D08B208EC
-	for <linux-wireless@vger.kernel.org>; Thu, 23 Oct 2014 03:30:48 -0400 (EDT)
-Message-Id: <1414049448.32460.182326557.1A0A85A4@webmail.messagingengine.com> (sfid-20141023_093100_044050_0766D8EB)
-From: =?UTF-8?Q?Lauren=C8=9Biu=20Nicola?= <lnicola@dend.ro>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: poma <pomidorabelisima@gmail.com>, Dan Williams <dcbw@redhat.com>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>
+Received: from mail-ob0-f177.google.com ([209.85.214.177]:64168 "EHLO
+	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751642AbaJEQxh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 5 Oct 2014 12:53:37 -0400
+Received: by mail-ob0-f177.google.com with SMTP id uy5so2818262obc.36
+        for <linux-wireless@vger.kernel.org>; Sun, 05 Oct 2014 09:53:37 -0700 (PDT)
+Date: Sun, 5 Oct 2014 11:53:34 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [RFT] iwlwifi: dvm: drop non VO frames when flushing
+Message-ID: <20141005165334.GB5691@ubuntu-mba51> (sfid-20141005_185349_743394_A3EB5B79)
+References: <1412517432-16309-1-git-send-email-emmanuel.grumbach@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-In-Reply-To: <CANUX_P0tGagXsN6XCeb_itQehqD3O9fmqknU6iSMO432NQtATA@mail.gmail.com>
-References: <1413463736.1316541.179720977.4FD32021@webmail.messagingengine.com>
- <1413510814.22769.6.camel@dcbw.local>
- <1413751717.2510219.180809145.0E693C29@webmail.messagingengine.com>
- <CANUX_P2RHVRorVABRfWVg39d4D8dj35v3fBpY3=3jvQ1U+mfEA@mail.gmail.com>
- <1413783023.2710583.180921653.10DFFCEE@webmail.messagingengine.com>
- <CANUX_P0Q7cNeBzQa=2WVZFJXPTLx8F6YQk9bGCf_3uYhc5RcGA@mail.gmail.com>
- <CANUX_P3EqgTX7cPJvQ3fWH1yijekE0G_8TiH2_OCS7nFASGtkA@mail.gmail.com>
- <1413789724.3063896.180943829.3F15F453@webmail.messagingengine.com>
- <CANUX_P1REqkSqN0dtak34OQ_pSGMtPvV3Vj61tW5wb1+n2A7mg@mail.gmail.com>
- <1413833365.2949853.181221645.22D54845@webmail.messagingengine.com>
- <CANUX_P3XzYBp7E=hScmc837TpuCr9VrxEYauG=sGMKfOCpX=qA@mail.gmail.com>
- <54461740.5000903@openwrt.org>
- <1413879792.3500640.181427549.198E9452@webmail.messagingengine.com>
- <54461AEF.7040304@openwrt.org> <54463CE9.3060400@gmail.com>
- <1413921415.3763081.181696749.20A0A495@webmail.messagingengine.com>
- <CANUX_P0LRRczVCSFR7RE5coaYFxwFXyqC90pdm=oVwEiEt-7zw@mail.gmail.com>
- <1414014805.4127522.182191541.14C8B4DF@webmail.messagingengine.com>
- <CANUX_P0tGagXsN6XCeb_itQehqD3O9fmqknU6iSMO432NQtATA@mail.gmail.com>
-Subject: Re: iwlwifi: Reason 7 periodic disconnect
-Date: Thu, 23 Oct 2014 10:30:48 +0300
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1412517432-16309-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I did; the card still gets disconnected and the message doesn't show up
-in dmesg.
+On Sun, Oct 05, 2014 at 04:57:12PM +0300, Emmanuel Grumbach wrote:
+> When mac80211 wants to ensure that a frame is sent, it calls
+> the flush() callback. Until now, iwldvm implemented this by
+> waiting that all the frames are sent (ACKed or timeout).
+> In case of weak signal, this can take a significant amount
+> of time, delaying the next connection (in case of roaming).
+> Many users have reported that the flush would take too long
+> leading to the following error messages to be printed:
+> 
+> iwlwifi 0000:03:00.0: fail to flush all tx fifo queues Q 2
+> iwlwifi 0000:03:00.0: Current SW read_ptr 161 write_ptr 201
+> iwl data: 00000000: 00 00 00 00 00 00 00 00 fe ff 01 00 00 00 00 00
+> [snip]
+> iwlwifi 0000:03:00.0: FH TRBs(0) = 0x00000000
+> [snip]
+> iwlwifi 0000:03:00.0: Q 0 is active and mapped to fifo 3 ra_tid 0x0000 [9,9]
+> [snip]
+> 
+> Instead of waiting for these packets, simply drop them. This
+> significantly improves the responsiveness of the network.
+> Note that all the queues are flushed, but the VO one. This
+> is not typically used by the applications and it likely
+> contains management frames that are useful for connection
+> or roaming.
+> 
+> This bug is tracked here:
+> https://bugzilla.kernel.org/show_bug.cgi?id=56581
+> 
+> But it is duplicated in distributions' trackers.
+> A simple search in Ubuntu's database led to these bugs:
+> 
+> https://bugs.launchpad.net/ubuntu/+source/linux-firmware/+bug/1270808
+> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1305406
+> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1356236
+> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1360597
+> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1361809
+> 
+> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> ---
+> I am trying here to fix an issues that has been affecting many users on dvm.
+> A few users in bugzilla already reported that this patch helped them a lot.
+> I am trying to get more testers :)
 
-Laurentiu
+I'll post test builds to the Ubuntu bugs and see if I can get any
+testing.
 
-On Thu, Oct 23, 2014, at 08:21, Emmanuel Grumbach wrote:
-> On Thu, Oct 23, 2014 at 12:53 AM, Laurențiu Nicola <lnicola@dend.ro>
-> wrote:
-> > Nope. It seems that code doesn't get executed when my issue occurs (or
-> > in my five or ten minutes of uptime). I've seen
-> > `ieee80211_reset_ap_probe` get called by `ieee80211_rx_mgmt_probe_resp`,
-> > but (if I'm not wrong) not on every disconnect.
-> >
-> > And as far as I can tell, force_cam is set to true.
-> 
-> Can you please try with the patch attached and send the logs?
-> I again need MAC80211_MLME_DEBUG.
-> 
-> Thanks.
-> 
-> >
-> > Laurentiu
-> >
-> > On Wed, Oct 22, 2014, at 12:10, Emmanuel Grumbach wrote:
-> >> On Tue, Oct 21, 2014 at 10:56 PM, Laurențiu Nicola <lnicola@dend.ro>
-> >> wrote:
-> >> > Yep! `scb_timeout` is 60 on my router.
-> >> >
-> >> > On Tue, Oct 21, 2014, at 14:00, poma wrote:
-> >> >> On 21.10.2014 10:35, Felix Fietkau wrote:
-> >> >> > On 2014-10-21 10:23, Laurențiu Nicola wrote:
-> >> >> >> It's an ASUS RT-N66U running NEWD-2/K3X from r24160.
-> >> >> > This is a Broadcom based device, so it should behave in the same way as
-> >> >> > other APs/Routers running the Broadcom drivers.
-> >> >> > The driver should only send Reason 7 when receiving a PS-Poll, BlockAck,
-> >> >> > BlockAckReq or Action frame from a station that's not associated, so
-> >> >> > probably it has already kicked out your iwlwifi client earlier. Not sure
-> >> >> > why that doesn't show up in the log though.
-> >> >> >
-> >> >>
-> >> >> Whether this might refer to the Station Control Block Timeout value
-> >> >>
-> >> >> http://www.dd-wrt.com/wiki/index.php/Wl#scb_timeout
-> >> >> ...
-> >> >> scb_timeout
-> >> >>
-> >> >> AP only: inactivity timeout value for authenticated stas
-> >> >>
-> >>
-> >> Actually, mac80211 should be probing the AP every 30 seconds but a
-> >> beacon might abort the probe...
-> >> Can you try something like this:
-> >>
-> >> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-> >> index 75df184..c9db7cf 100644
-> >> --- a/net/mac80211/mlme.c
-> >> +++ b/net/mac80211/mlme.c
-> >> @@ -3295,7 +3295,8 @@ static void ieee80211_rx_mgmt_beacon(struct
-> >> ieee80211_sub_if_data *sdata,
-> >>         if (ifmgd->flags & IEEE80211_STA_CONNECTION_POLL) {
-> >>                 mlme_dbg_ratelimited(sdata,
-> >>                                      "cancelling AP probe due to a
-> >> received beacon\n");
-> >> -               ieee80211_reset_ap_probe(sdata);
-> >> +               pr_err("Not cancelling the probe to make sure the AP
-> >> hears us from time to time\n");
-> >> +               //ieee80211_reset_ap_probe(sdata);
-> >>         }
-> >>
-> >>         /*
-> >>
-> >>
-> >>
-> >> >>
-> >> >> poma
-> >> >>
-> >> >>
-> >> >> --
-> >> >> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
-> >> >> in
-> >> >> the body of a message to majordomo@vger.kernel.org
-> >> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >> --
-> >> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
-> >> in
-> >> the body of a message to majordomo@vger.kernel.org
-> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
-> in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+Seth
+
