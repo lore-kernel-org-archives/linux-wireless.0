@@ -1,40 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:39211 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752668AbaJFNZV (ORCPT
+Received: from cassarossa.samfundet.no ([193.35.52.29]:38081 "EHLO
+	cassarossa.samfundet.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751777AbaJFOyk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Oct 2014 09:25:21 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH 0/4] ath10k: Add tracing for tx and rx frames
-Date: Mon, 6 Oct 2014 18:57:00 +0530
-Message-ID: <1412602024-31706-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20141006_152529_998267_FC463639)
+	Mon, 6 Oct 2014 10:54:40 -0400
+Date: Mon, 6 Oct 2014 16:54:34 +0200
+From: "Steinar H. Gunderson" <sgunderson@bigfoot.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v6 2/2] mac80211: support DTPC IE (from Cisco Client
+ eXtensions)
+Message-ID: <20141006145434.GA35618@sesse.net> (sfid-20141006_165443_577345_74ADB65C)
+References: <20140903133328.GC18933@sesse.net>
+ <E1XPB2h-0008WO-MS@pannekake.samfundet.no>
+ <1410166400.7983.9.camel@jlt4.sipsolutions.net>
+ <20140916234647.GA2238@sesse.net>
+ <1412607134.3098.25.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1412607134.3098.25.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These changes are the extension of pktlog for dumping tx and rx
-frames to user space. I am rebasing Michal's work on top of pktlog.
+On Mon, Oct 06, 2014 at 04:52:14PM +0200, Johannes Berg wrote:
+>> I found what I believe is an edge case: What happens if the element suddenly
+>> goes away from one beacon to another? Shouldn't there be a reset of the power
+>> level and then a new call to __ieee80211_recalc_txpower()?
+>> 
+>> (If so, I believe this bug was already present in the code before my first
+>> patch, as I understand the existing logic.)
+> I'm not sure it's worth worrying about, but if you want to write a patch
+> I'd take it :)
 
--Rajkumar
+It actually happened to me in a real situation, which is why I noticed.
+It seems neither power element is typically sent at all if the value is 0.
+(Well, Aruba seems to do. I haven't found anyone else who does.)
 
-Michal Kazior (3):
-  ath10k: add tracepoint for wmi mgmt tx frames
-  ath10k: add tracepoint for wmi bcn tx
-  ath10k: add htt rx tracepoints
-
-Rajkumar Manoharan (1):
-  ath10k: add tracepoint for htt tx frames
-
- drivers/net/wireless/ath/ath10k/htt_rx.c |  3 +
- drivers/net/wireless/ath/ath10k/htt_tx.c |  3 +-
- drivers/net/wireless/ath/ath10k/trace.h  | 94 ++++++++++++++++++++++++++++++--
- drivers/net/wireless/ath/ath10k/wmi.c    |  2 +
- 4 files changed, 97 insertions(+), 5 deletions(-)
-
+/* Steinar */
 -- 
-2.1.2
-
+Homepage: http://www.sesse.net/
