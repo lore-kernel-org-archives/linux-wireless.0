@@ -1,35 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailservices.uwaterloo.ca ([129.97.128.141]:58185 "EHLO
-	minos.uwaterloo.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752465AbaJXQEO (ORCPT
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:43395 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753022AbaJFSRF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Oct 2014 12:04:14 -0400
-Message-ID: <544A7871.7020005@mailservices.uwaterloo.ca> (sfid-20141024_180417_238480_8F60A841)
-Date: Fri, 24 Oct 2014 12:04:01 -0400
-From: Ali Abedi <a2abedi@uwaterloo.ca>
+	Mon, 6 Oct 2014 14:17:05 -0400
+Received: by mail-wi0-f181.google.com with SMTP id hi2so5517475wib.8
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Oct 2014 11:17:03 -0700 (PDT)
 MIME-Version: 1.0
-To: ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org
-Subject: strange MPDU loss pattern
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <20141002181608.GA24110@mwanda>
+References: <20141002181608.GA24110@mwanda>
+Date: Mon, 6 Oct 2014 11:17:03 -0700
+Message-ID: <CA++WF2PjewCZRu=enHhDs7V6Jj4SEjvPWyYJjWev5bNoCLxuNQ@mail.gmail.com> (sfid-20141006_201709_412546_5647B53B)
+Subject: Re: [PATCH] Check ieee80211softmac_auth_resp kmalloc result
+From: Stanislav Yakovlev <stas.yakovlev@gmail.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+Hello Dan,
 
-We study the effects of 802.11n frame aggregation on throughput. We 
-noticed a
-strange pattern in the MPDU loss within an aggregated frame. It seems 
-that the
-second half of the MPDUs (those with higher sequence numbers) in an 
-aggregated frame
-are more likely to be lost. Is this a known fact or is there any 
-explanation for it?
+> So far as I can see this is harmless because we never use ->ibss_dfs
+> and we should just delete it along with all the related code?
 
-For example if 32 frames are aggregated with sequence numbers 100 to 131.
-Frames with sequence numbers 100-115 are more likely to be received 
-correctly
-than 116-131.
+Yes, you are right. This code is not used by ipw2x00 driver, so it can
+be deleted. Will you send a patch?
 
-
-Best,
-Ali
+Stanislav.
