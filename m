@@ -1,56 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f177.google.com ([209.85.214.177]:55463 "EHLO
-	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754691AbaJUJQe convert rfc822-to-8bit (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:2966 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751407AbaJFLwv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Oct 2014 05:16:34 -0400
-Received: by mail-ob0-f177.google.com with SMTP id uy5so587393obc.36
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Oct 2014 02:16:33 -0700 (PDT)
+	Mon, 6 Oct 2014 07:52:51 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 1/4] ath10k: Add support to configure pktlog filter
+References: <1412269778-1045-1-git-send-email-rmanohar@qti.qualcomm.com>
+	<1412269778-1045-2-git-send-email-rmanohar@qti.qualcomm.com>
+Date: Mon, 6 Oct 2014 14:52:45 +0300
+In-Reply-To: <1412269778-1045-2-git-send-email-rmanohar@qti.qualcomm.com>
+	(Rajkumar Manoharan's message of "Thu, 2 Oct 2014 22:39:35 +0530")
+Message-ID: <877g0dl8j6.fsf@kamboji.qca.qualcomm.com> (sfid-20141006_135255_412154_3D7C3137)
 MIME-Version: 1.0
-In-Reply-To: <CABPxzYKVzjXJQsi4WSwuw5fD5a9cD=ONJiUxdgrahurZk0K9Qg@mail.gmail.com>
-References: <1413463736.1316541.179720977.4FD32021@webmail.messagingengine.com>
-	<1413510814.22769.6.camel@dcbw.local>
-	<1413751717.2510219.180809145.0E693C29@webmail.messagingengine.com>
-	<CANUX_P2RHVRorVABRfWVg39d4D8dj35v3fBpY3=3jvQ1U+mfEA@mail.gmail.com>
-	<1413783023.2710583.180921653.10DFFCEE@webmail.messagingengine.com>
-	<CANUX_P0Q7cNeBzQa=2WVZFJXPTLx8F6YQk9bGCf_3uYhc5RcGA@mail.gmail.com>
-	<CANUX_P3EqgTX7cPJvQ3fWH1yijekE0G_8TiH2_OCS7nFASGtkA@mail.gmail.com>
-	<1413789724.3063896.180943829.3F15F453@webmail.messagingengine.com>
-	<CANUX_P1REqkSqN0dtak34OQ_pSGMtPvV3Vj61tW5wb1+n2A7mg@mail.gmail.com>
-	<1413833365.2949853.181221645.22D54845@webmail.messagingengine.com>
-	<CANUX_P3XzYBp7E=hScmc837TpuCr9VrxEYauG=sGMKfOCpX=qA@mail.gmail.com>
-	<54461740.5000903@openwrt.org>
-	<1413879792.3500640.181427549.198E9452@webmail.messagingengine.com>
-	<54461AEF.7040304@openwrt.org>
-	<CABPxzYKVzjXJQsi4WSwuw5fD5a9cD=ONJiUxdgrahurZk0K9Qg@mail.gmail.com>
-Date: Tue, 21 Oct 2014 12:16:33 +0300
-Message-ID: <CANUX_P29rXx6i=N0RGTA9arExqaANGNtaVV40T9rDY8M42Yo2g@mail.gmail.com> (sfid-20141021_111639_790116_582DC8F9)
-Subject: Re: iwlwifi: Reason 7 periodic disconnect
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Cc: Felix Fietkau <nbd@openwrt.org>,
-	=?UTF-8?Q?Lauren=C8=9Biu_Nicola?= <lnicola@dend.ro>,
-	Dan Williams <dcbw@redhat.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 21, 2014 at 12:05 PM, Krishna Chaitanya
-<chaitanya.mgit@gmail.com> wrote:
-> On Tue, Oct 21, 2014 at 2:05 PM, Felix Fietkau <nbd@openwrt.org> wrote:
->> On 2014-10-21 10:23, Laurențiu Nicola wrote:
->>> It's an ASUS RT-N66U running NEWD-2/K3X from r24160.
->> This is a Broadcom based device, so it should behave in the same way as
->> other APs/Routers running the Broadcom drivers.
->> The driver should only send Reason 7 when receiving a PS-Poll, BlockAck,
->> BlockAckReq or Action frame from a station that's not associated, so
->> probably it has already kicked out your iwlwifi client earlier. Not sure
->> why that doesn't show up in the log though.
->>
-> May be iwlwifi is dozing and did not Rx that frame?
+Rajkumar Manoharan <rmanohar@qti.qualcomm.com> writes:
 
-yep - this is most probably what happens. iwlwifi goes to sleep and it
-get a deauth that it doesn't hear. Then it wakes up with an NDP and
-gets kicked out.
-But shouldn't the deauth be buffered and indicated through the TIM IE?
+> Add support to configure packet log filters (tx, rx, rate control)
+> via debugfs. To disable htt pktlog events set the filters to 0.
+>
+> ex:
+>
+> To enable pktlog for all filters
+>
+>    echo 0x1f > /sys/kernel/debug/ieee80211/phy*/ath10k/pktlog_filter
+>
+> To disable pktlog
+>
+>    echo 0 > /sys/kernel/debug/ieee80211/phy*/ath10k/pktlog_filter
+>
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+
+I did minor changes to the error handling in
+ath10k_write_pktlog_filter() and in ath10k_debug_start(). Diff below and
+full commit here:
+
+https://github.com/kvalo/ath/commit/470c43d83b7ee4147dea38a4f7b986070555a032
+
+Please review my changes.
+
+Kalle
+
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index a5700a2aff8c..fe71494cefa9 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -1396,15 +1396,20 @@ int ath10k_debug_start(struct ath10k *ar)
+ 				    ret);
+ 	}
+ 
+-	if (ar->debug.pktlog_filter)
++	if (ar->debug.pktlog_filter) {
+ 		ret = ath10k_wmi_pdev_pktlog_enable(ar,
+ 						    ar->debug.pktlog_filter);
+-	else
++		if (ret)
++			/* not serious */
++			ath10k_warn(ar,
++				    "failed to enable pktlog filter %x: %d",
++				    ar->debug.pktlog_filter, ret);
++	} else {
+ 		ret = ath10k_wmi_pdev_pktlog_disable(ar);
+-
+-	if (ret)
+-		ath10k_warn(ar, "failed to send pktlog command: %d filter %x",
+-			    ret, ar->debug.pktlog_filter);
++		if (ret)
++			/* not serious */
++			ath10k_warn(ar, "failed to disable pktlog: %d", ret);
++	}
+ 
+ 	return ret;
+ }
+@@ -1520,23 +1525,31 @@ static ssize_t ath10k_write_pktlog_filter(struct file *file,
+ 
+ 	if (ar->state != ATH10K_STATE_ON) {
+ 		ar->debug.pktlog_filter = filter;
+-		mutex_unlock(&ar->conf_mutex);
+-		return count;
++		ret = count;
++		goto out;
+ 	}
+ 
+-	if (filter && (filter != ar->debug.pktlog_filter))
++	if (filter && (filter != ar->debug.pktlog_filter)) {
+ 		ret = ath10k_wmi_pdev_pktlog_enable(ar, filter);
+-	else
++		if (ret) {
++			ath10k_warn(ar, "failed to enable pktlog filter %x: %d",
++				    ar->debug.pktlog_filter, ret);
++			goto out;
++		}
++	} else {
+ 		ret = ath10k_wmi_pdev_pktlog_disable(ar);
++		if (ret) {
++			ath10k_warn(ar, "failed to disable pktlog: %d", ret);
++			goto out;
++		}
++	}
+ 
+ 	ar->debug.pktlog_filter = filter;
+-	mutex_unlock(&ar->conf_mutex);
+-
+-	if (ret)
+-		ath10k_warn(ar, "failed to send pktlog command: %d filter %x",
+-			    ret, ar->debug.pktlog_filter);
++	ret = count;
+ 
+-	return count;
++out:
++	mutex_unlock(&ar->conf_mutex);
++	return ret;
+ }
+ 
+ static ssize_t ath10k_read_pktlog_filter(struct file *file, char __user *ubuf,
