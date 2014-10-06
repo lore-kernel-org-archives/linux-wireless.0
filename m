@@ -1,42 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:21385 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752578AbaJFRCT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Oct 2014 13:02:19 -0400
-Date: Mon, 6 Oct 2014 22:34:01 +0530
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: Re: [PATCH 1/2] ath10k: add tracepoint for htt tx frames
-Message-ID: <20141006170400.GB362@qca.qualcomm.com> (sfid-20141006_190223_212615_1A8EACFB)
-References: <1412614118-17205-1-git-send-email-rmanohar@qti.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1412614118-17205-1-git-send-email-rmanohar@qti.qualcomm.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:41779 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752917AbaJFPAq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Oct 2014 11:00:46 -0400
+Message-ID: <1412607640.3098.33.camel@jlt4.sipsolutions.net> (sfid-20141006_170049_418610_FB9EC8A0)
+Subject: Re: [PATCH v2] cfg80211: allow to configure dynamic PS timeout
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	linux-wireless@vger.kernel.org
+Date: Mon, 06 Oct 2014 17:00:40 +0200
+In-Reply-To: <20141001092710.GB2011@redhat.com>
+References: <1412083114-8426-1-git-send-email-sgruszka@redhat.com>
+	 <542AB859.5080008@broadcom.com> <542AB893.9090201@broadcom.com>
+	 <20141001092710.GB2011@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 06, 2014 at 10:18:37PM +0530, Rajkumar Manoharan wrote:
-> Although frame contents were printed via dbg_dump
-> already it was not possible to easily filter them
-> out for processing.
-> 
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath10k/htt_tx.c |  3 ++-
->  drivers/net/wireless/ath/ath10k/trace.h  | 13 +++++++++----
->  2 files changed, 11 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-> index fdfb171..9621b62 100644
+On Wed, 2014-10-01 at 11:27 +0200, Stanislaw Gruszka wrote:
+> Dynamic power save timeout value is suppose to be configurable via
+> wext, but due to iwconfig bug is not possible to set using that tool.
 
-Oops. I can merge these two patches it seems..
+That's interesting, what's that bug?
 
-Kalle,
+> Allow to configure PS timeout via nl80211 - add NL80211_ATTR_PS_TIMEOUT
+> attribute which become timeout stated in ms.
 
-Please ignore this series.
+Why do you want to be able to set it at all though? I remember having
+this discussion years ago, and we said that it wasn't really useful
+since the user has no idea when and why this should be changed. I'm not
+convinced that changed?
 
--Rajkumar
+We had to keep the wext for compatibility - maybe that can now be
+removed if you say it's broken - but I'm not sure I see much value in
+adding it (and you're doing nothing to convince me otherwise, so far)
+
+johannes
+
