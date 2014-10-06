@@ -1,43 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:33384 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751505AbaJYTKd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Oct 2014 15:10:33 -0400
-Received: by mail-wi0-f181.google.com with SMTP id n3so3558840wiv.8
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2014 12:10:32 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 26/31] staging: vt6655: MACvSetDefaultKeyEntry replace WLAN_WEP104_KEYLEN
-Date: Sat, 25 Oct 2014 09:20:36 +0100
-Message-Id: <1414225241-5480-27-git-send-email-tvboxspy@gmail.com> (sfid-20141025_211036_305194_E9F60DEC)
-In-Reply-To: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
-References: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:41618 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752330AbaJFO1Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Oct 2014 10:27:16 -0400
+Message-ID: <1412605634.3098.18.camel@jlt4.sipsolutions.net> (sfid-20141006_162719_391766_9705A82C)
+Subject: Re: [PATCH v2 1/4] wireless:  expose set-wiphy-name method to other
+ modules.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: greearb@candelatech.com
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 06 Oct 2014 16:27:14 +0200
+In-Reply-To: <1411773856-25042-1-git-send-email-greearb@candelatech.com> (sfid-20140927_012441_483840_20B8643D)
+References: <1411773856-25042-1-git-send-email-greearb@candelatech.com>
+	 (sfid-20140927_012441_483840_20B8643D)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-with WLAN_KEY_LEN_WEP40
+On Fri, 2014-09-26 at 16:24 -0700, greearb@candelatech.com wrote:
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/mac.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> +/*
+> + * Attempt to rename a device.  Acquire RTNL before calling.
+> + */
 
-diff --git a/drivers/staging/vt6655/mac.c b/drivers/staging/vt6655/mac.c
-index e3b0b7f..a347f39 100644
---- a/drivers/staging/vt6655/mac.c
-+++ b/drivers/staging/vt6655/mac.c
-@@ -1526,7 +1526,7 @@ void MACvSetDefaultKeyEntry(void __iomem *dwIoBase, unsigned int uKeyLen,
- 		VNSvOutPortW(dwIoBase + MAC_REG_MISCFFCTL, MISCFFCTL_WRITE);
- 	}
- 	dwData = *pdwKey;
--	if (uKeyLen == WLAN_WEP104_KEYLEN)
-+	if (uKeyLen == WLAN_KEY_LEN_WEP40)
- 		dwData |= 0x80000000;
- 
- 	VNSvOutPortW(dwIoBase + MAC_REG_MISCFFNDEX, wOffset+3);
--- 
-1.9.1
+please add kernel-doc
+
+> +int cfg80211_dev_rename_wiphy(struct wiphy *wiphy, char *newname);
+
+Should also be const char *
+
+And should probably be called cfg80211_rename_wiphy() only? What's the
+dev doing there?
+>  
+> +int cfg80211_dev_rename_wiphy(struct wiphy *wiphy, char *newname)
+> +{
+> +	struct cfg80211_registered_device *rdev;
+> +
+> +	rdev = wiphy_to_rdev(wiphy);
+> +	return cfg80211_dev_rename(rdev, newname);
+
+You could just inlin ethe wiphy_to_rdev() and get rid of the variable.
+
+Anyhow - if the intent is to do this at creation, why do you do it after
+the fact? Couldn't you just specify the name when creating it?
+
+johannes
 
