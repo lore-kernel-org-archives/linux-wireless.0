@@ -1,44 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:46830 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751377AbaJ0SPR (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:3072 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752080AbaJFQaz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Oct 2014 14:15:17 -0400
-Date: Mon, 27 Oct 2014 14:04:37 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Sergey Ryazanov <ryazanov.s.a@gmail.com>
-Cc: Ralf Baechle <ralf@linux-mips.org>,
-	Linux MIPS <linux-mips@linux-mips.org>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net
-Subject: Re: [PATCH v2 11/13] ath5k: revert AHB bus support removing
-Message-ID: <20141027180436.GE28300@tuxdriver.com> (sfid-20141027_191525_435514_8400FA22)
-References: <1413932631-12866-1-git-send-email-ryazanov.s.a@gmail.com>
- <1413932631-12866-12-git-send-email-ryazanov.s.a@gmail.com>
+	Mon, 6 Oct 2014 12:30:55 -0400
+Date: Mon, 6 Oct 2014 19:30:48 +0300
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <wireless-regdb@lists.infradead.org>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH] wireless-regdb: Add Andorra (AD) regulatory rules for 2.4
+ GHz and 5 GHz
+Message-ID: <20141006163048.GA17083@jouni.qca.qualcomm.com> (sfid-20141006_183110_778126_3F105590)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1413932631-12866-12-git-send-email-ryazanov.s.a@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 22, 2014 at 03:03:49AM +0400, Sergey Ryazanov wrote:
-> This reverts commit 093ec3c5337434f40d77c1af06c139da3e5ba6dc.
-> 
-> AHB bus code has been removed, since we did not have support Atheros
-> AR231x SoC, required for building the AHB version of ath5k. Now that
-> support WiSoC chips added we can restore functionality back.
-> 
-> Singed-off-by: Sergey Ryazanov <ryazanov.s.a@gmail.com>
-> Cc: Jiri Slaby <jirislaby@gmail.com>
-> Cc: Nick Kossifidis <mickflemm@gmail.com>
-> Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-> Cc: linux-wireless@vger.kernel.org
-> Cc: ath5k-devel@lists.ath5k.org
+This adds ETSI rules for 2.4 GHz and 5 GHz bands in Andorra to address
+the confusing 60 GHz band only situation.
 
-Acked-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+---
+ db.txt | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/db.txt b/db.txt
+index 4d467d1..8cc62ae 100644
+--- a/db.txt
++++ b/db.txt
+@@ -18,6 +18,10 @@ country 00:
+ 
+ 
+ country AD:
++	(2402 - 2482 @ 40), (20)
++	(5170 - 5250 @ 80), (20)
++	(5250 - 5330 @ 80), (20), DFS
++	(5490 - 5710 @ 80), (27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+-- 
+1.9.1
+
 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Jouni Malinen                                            PGP id EFC895FA
