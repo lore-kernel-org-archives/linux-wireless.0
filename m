@@ -1,172 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52849 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751877AbaJ3Ouw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Oct 2014 10:50:52 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: "Sharma\, Sanjeev" <Sanjeev_Sharma@mentor.com>
-Cc: Joe Perches <joe@perches.com>,
-	"Larry.Finger\@lwfinger.net" <Larry.Finger@lwfinger.net>,
-	"gregkh\@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devel\@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] staging:rtl8723au: core: Fix error reported by checkpatch.
-References: <1414396745-8845-1-git-send-email-sanjeev_sharma@mentor.com>
-	<wrfjioj5aonx.fsf@redhat.com> <1414421554.8884.7.camel@perches.com>
-	<FDC088D3B5555644AE135ED28A7ABDE950E890CD@EU-MBX-02.mgc.mentorg.com>
-Date: Thu, 30 Oct 2014 15:50:40 +0100
-In-Reply-To: <FDC088D3B5555644AE135ED28A7ABDE950E890CD@EU-MBX-02.mgc.mentorg.com>
-	(Sanjeev Sharma's message of "Wed, 29 Oct 2014 06:35:12 +0000")
-Message-ID: <wrfjy4rxzk5b.fsf@redhat.com> (sfid-20141030_155112_605146_8FAC6C98)
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:54203 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751793AbaJFQqu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Oct 2014 12:46:50 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 1/2] ath10k: add tracepoint for htt tx frames
+Date: Mon, 6 Oct 2014 22:18:37 +0530
+Message-ID: <1412614118-17205-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20141006_184653_813523_77F9BE4E)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Sharma, Sanjeev" <Sanjeev_Sharma@mentor.com> writes:
-> -----Original Message-----
-> From: Joe Perches [mailto:joe@perches.com] 
-> Sent: Monday, October 27, 2014 8:23 PM
-> To: Jes Sorensen
-> Cc: Sharma, Sanjeev; Larry.Finger@lwfinger.net;
-> gregkh@linuxfoundation.org; linux-wireless@vger.kernel.org;
-> devel@driverdev.osuosl.org; linux-kernel@vger.kernel.org
-> Subject: Re: [PATCH] staging:rtl8723au: core: Fix error reported by checkpatch.
->
-> On Mon, 2014-10-27 at 09:43 +0100, Jes Sorensen wrote:
->> Sanjeev Sharma <sanjeev_sharma@mentor.com> writes:
->> > This is a patch to the rtw_cmd.c file that fixes Error reported by 
->> > checkpatch.
-> []
->> > diff --git a/drivers/staging/rtl8723au/core/rtw_cmd.c 
->> > b/drivers/staging/rtl8723au/core/rtw_cmd.c
-> []
->> > @@ -957,7 +957,7 @@ static void traffic_status_watchdog(struct rtw_adapter *padapter)
->> >  		/*  check traffic for  powersaving. */
->> >  			if (((pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod +
->> >  			      pmlmepriv->LinkDetectInfo.NumTxOkInPeriod) > 8) ||
->> > -			    pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod >2)
->> > +			    pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod > 2)
->> >  				bEnterPS = false;
->> >  			else
->> >  				bEnterPS = true;
->> 
->> This makes the line longer than 80 characters, that is worse than the 
->> 'problem' you are fixing.
->
-> The code already has dozens of long lines already.
->
-> This is generally a problem because the variable names are pretty long so strict 80 column adherence generally isn't possible.
->
-> A possible way to shorten these relatively long variable name/line lengths is to use a temporary for
->
-> 	pmlmeprv->LinkDetectInfo
->
-> 	struct rt_link_detect *ldi = &pmlmeprv->LinkDetectInfo;
->
-> so:
->
-> I am agree on this approach but Let's wait for Jes opinion on it.
->
-> Sanjeev Sharma
->
->  drivers/staging/rtl8723au/core/rtw_cmd.c | 46 ++++++++++++++++----------------
->  1 file changed, 23 insertions(+), 23 deletions(-)
+Although frame contents were printed via dbg_dump
+already it was not possible to easily filter them
+out for processing.
 
-This is fine with me.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/htt_tx.c |  3 ++-
+ drivers/net/wireless/ath/ath10k/trace.h  | 13 +++++++++----
+ 2 files changed, 11 insertions(+), 5 deletions(-)
 
-Jes
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index fdfb171..9621b62 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -557,7 +557,8 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ 	skb_cb->htt.txbuf->cmd_tx.frags_paddr = __cpu_to_le32(frags_paddr);
+ 	skb_cb->htt.txbuf->cmd_tx.peerid = __cpu_to_le32(HTT_INVALID_PEERID);
+ 
+-	trace_ath10k_htt_tx(ar, msdu_id, msdu->len, vdev_id, tid);
++	trace_ath10k_htt_tx(ar, msdu_id, msdu->len, vdev_id, tid,
++			    msdu->data, msdu->len);
+ 	ath10k_dbg(ar, ATH10K_DBG_HTT,
+ 		   "htt tx flags0 %hhu flags1 %hu len %d id %hu frags_paddr %08x, msdu_paddr %08x vdev %hhu tid %hhu\n",
+ 		   flags0, flags1, msdu->len, msdu_id, frags_paddr,
+diff --git a/drivers/net/wireless/ath/ath10k/trace.h b/drivers/net/wireless/ath/ath10k/trace.h
+index 33b9bf4..dbf7bc9 100644
+--- a/drivers/net/wireless/ath/ath10k/trace.h
++++ b/drivers/net/wireless/ath/ath10k/trace.h
+@@ -313,9 +313,9 @@ TRACE_EVENT(ath10k_htt_rx_desc,
+ 
+ TRACE_EVENT(ath10k_htt_tx,
+ 	    TP_PROTO(struct ath10k *ar, u16 msdu_id, u16 msdu_len,
+-		     u8 vdev_id, u8 tid),
++		     u8 vdev_id, u8 tid, void *data, size_t len),
+ 
+-	TP_ARGS(ar, msdu_id, msdu_len, vdev_id, tid),
++	TP_ARGS(ar, msdu_id, msdu_len, vdev_id, tid, data, len),
+ 
+ 	TP_STRUCT__entry(
+ 		__string(device, dev_name(ar->dev))
+@@ -324,6 +324,8 @@ TRACE_EVENT(ath10k_htt_tx,
+ 		__field(u16, msdu_len)
+ 		__field(u8, vdev_id)
+ 		__field(u8, tid)
++		__field(size_t, len)
++		__dynamic_array(u8, data, len)
+ 	),
+ 
+ 	TP_fast_assign(
+@@ -333,16 +335,19 @@ TRACE_EVENT(ath10k_htt_tx,
+ 		__entry->msdu_len = msdu_len;
+ 		__entry->vdev_id = vdev_id;
+ 		__entry->tid = tid;
++		__entry->len = len;
++		memcpy(__get_dynamic_array(data), data, len);
+ 	),
+ 
+ 	TP_printk(
+-		"%s %s msdu_id %d msdu_len %d vdev_id %d tid %d",
++		"%s %s msdu_id %d msdu_len %d vdev_id %d tid %d len %zu",
+ 		__get_str(driver),
+ 		__get_str(device),
+ 		__entry->msdu_id,
+ 		__entry->msdu_len,
+ 		__entry->vdev_id,
+-		__entry->tid
++		__entry->tid,
++		__entry->len
+ 	 )
+ );
+ 
+-- 
+2.1.2
 
->
-> diff --git a/drivers/staging/rtl8723au/core/rtw_cmd.c b/drivers/staging/rtl8723au/core/rtw_cmd.c
-> index d2d7edf..1b24945 100644
-> --- a/drivers/staging/rtl8723au/core/rtw_cmd.c
-> +++ b/drivers/staging/rtl8723au/core/rtw_cmd.c
-> @@ -922,34 +922,33 @@ static void traffic_status_watchdog(struct rtw_adapter *padapter)
->  	u8 bHigherBusyTxTraffic = false;
->  	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
->  	int BusyThreshold = 100;
-> +	struct rt_link_detect *ldi = &pmlmepriv->LinkDetectInfo;
-> +
->  	/*  */
->  	/*  Determine if our traffic is busy now */
->  	/*  */
->  	if (check_fwstate(pmlmepriv, _FW_LINKED)) {
->  		if (rtl8723a_BT_coexist(padapter))
->  			BusyThreshold = 50;
-> -		else if (pmlmepriv->LinkDetectInfo.bBusyTraffic)
-> +		else if (ldi->bBusyTraffic)
->  			BusyThreshold = 75;
->  		/*  if we raise bBusyTraffic in last watchdog, using
->  		    lower threshold. */
-> -		if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod > BusyThreshold ||
-> -		    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod > BusyThreshold) {
-> +		if (ldi->NumRxOkInPeriod > BusyThreshold ||
-> +		    ldi->NumTxOkInPeriod > BusyThreshold) {
->  			bBusyTraffic = true;
->  
-> -			if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod >
-> -			    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod)
-> +			if (ldi->NumRxOkInPeriod > ldi->NumTxOkInPeriod)
->  				bRxBusyTraffic = true;
->  			else
->  				bTxBusyTraffic = true;
->  		}
->  
->  		/*  Higher Tx/Rx data. */
-> -		if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod > 4000 ||
-> -		    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod > 4000) {
-> +		if (ldi->NumRxOkInPeriod > 4000 ||
-> +		    ldi->NumTxOkInPeriod > 4000) {
->  			bHigherBusyTraffic = true;
-> -
-> -			if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod >
-> -			    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod)
-> +			if (ldi->NumRxOkInPeriod > ldi->NumTxOkInPeriod)
->  				bHigherBusyRxTraffic = true;
->  			else
->  				bHigherBusyTxTraffic = true;
-> @@ -958,9 +957,9 @@ static void traffic_status_watchdog(struct rtw_adapter *padapter)
->  		if (!rtl8723a_BT_coexist(padapter) ||
->  		    !rtl8723a_BT_using_antenna_1(padapter)) {
->  		/*  check traffic for  powersaving. */
-> -			if (((pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod +
-> -			      pmlmepriv->LinkDetectInfo.NumTxOkInPeriod) > 8) ||
-> -			    pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod >2)
-> +			if (((ldi->NumRxUnicastOkInPeriod +
-> +			      ldi->NumTxOkInPeriod) > 8) ||
-> +			    ldi->NumRxUnicastOkInPeriod > 2)
->  				bEnterPS = false;
->  			else
->  				bEnterPS = true;
-> @@ -971,18 +970,19 @@ static void traffic_status_watchdog(struct rtw_adapter *padapter)
->  			else
->  				LPS_Leave23a(padapter);
->  		}
-> -	} else
-> +	} else {
->  		LPS_Leave23a(padapter);
-> +	}
->  
-> -	pmlmepriv->LinkDetectInfo.NumRxOkInPeriod = 0;
-> -	pmlmepriv->LinkDetectInfo.NumTxOkInPeriod = 0;
-> -	pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod = 0;
-> -	pmlmepriv->LinkDetectInfo.bBusyTraffic = bBusyTraffic;
-> -	pmlmepriv->LinkDetectInfo.bTxBusyTraffic = bTxBusyTraffic;
-> -	pmlmepriv->LinkDetectInfo.bRxBusyTraffic = bRxBusyTraffic;
-> -	pmlmepriv->LinkDetectInfo.bHigherBusyTraffic = bHigherBusyTraffic;
-> -	pmlmepriv->LinkDetectInfo.bHigherBusyRxTraffic = bHigherBusyRxTraffic;
-> -	pmlmepriv->LinkDetectInfo.bHigherBusyTxTraffic = bHigherBusyTxTraffic;
-> +	ldi->NumRxOkInPeriod = 0;
-> +	ldi->NumTxOkInPeriod = 0;
-> +	ldi->NumRxUnicastOkInPeriod = 0;
-> +	ldi->bBusyTraffic = bBusyTraffic;
-> +	ldi->bTxBusyTraffic = bTxBusyTraffic;
-> +	ldi->bRxBusyTraffic = bRxBusyTraffic;
-> +	ldi->bHigherBusyTraffic = bHigherBusyTraffic;
-> +	ldi->bHigherBusyRxTraffic = bHigherBusyRxTraffic;
-> +	ldi->bHigherBusyTxTraffic = bHigherBusyTxTraffic;
->  }
->  
->  static void dynamic_chk_wk_hdl(struct rtw_adapter *padapter, u8 *pbuf, int sz)
