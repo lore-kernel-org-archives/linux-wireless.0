@@ -1,46 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:18422 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750998AbaJBSQU (ORCPT
+Received: from mail-oi0-f42.google.com ([209.85.218.42]:56389 "EHLO
+	mail-oi0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752428AbaJFM7c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Oct 2014 14:16:20 -0400
-Date: Thu, 2 Oct 2014 21:16:08 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Stanislav Yakovlev <stas.yakovlev@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: re: [PATCH] Check ieee80211softmac_auth_resp kmalloc result
-Message-ID: <20141002181608.GA24110@mwanda> (sfid-20141002_201624_090521_5F26244A)
+	Mon, 6 Oct 2014 08:59:32 -0400
+Received: by mail-oi0-f42.google.com with SMTP id a141so3510046oig.15
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Oct 2014 05:59:32 -0700 (PDT)
+Date: Mon, 6 Oct 2014 07:59:21 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFT] iwlwifi: dvm: drop non VO frames when flushing
+Message-ID: <20141006125921.GE131459@ubuntu-hedt> (sfid-20141006_145939_712447_6866A7C6)
+References: <1412517432-16309-1-git-send-email-emmanuel.grumbach@intel.com>
+ <20141006123314.GA131459@ubuntu-hedt>
+ <0BA3FCBA62E2DC44AF3030971E174FB31B53CBD4@hasmsx107.ger.corp.intel.com>
+ <20141006124307.GB131459@ubuntu-hedt>
+ <20141006124402.GC131459@ubuntu-hedt>
+ <0BA3FCBA62E2DC44AF3030971E174FB31B53CC1F@hasmsx107.ger.corp.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB31B53CC1F@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Mon, Oct 06, 2014 at 12:47:41PM +0000, Grumbach, Emmanuel wrote:
+> > 
+> > On Mon, Oct 06, 2014 at 07:43:07AM -0500, Seth Forshee wrote:
+> > > On Mon, Oct 06, 2014 at 12:35:46PM +0000, Grumbach, Emmanuel wrote:
+> > > > > Subject: Re: [RFT] iwlwifi: dvm: drop non VO frames when flushing
+> > > > >
+> > > > > On Sun, Oct 05, 2014 at 04:57:12PM +0300, Emmanuel Grumbach wrote:
+> > > > > > +	if (vif)
+> > > > > > +		scd_queues &= ~BIT(vif-
+> > >hw_queue[IEEE80211_AC_VO]);
+> > > > >
+> > > > > I'm backporting this to 3.13, and this part doesn't work unless
+> > > > > 77be2c54c5bd26279abc13807398771d80cda37a is also backported. Is
+> > > > > this critical, or can it be omitted in the backport?
+> > > > >
+> > > >
+> > > > 77be2c54c5bd26279abc13807398771d80cda37a isn't really critical, but it is
+> > a dependency, and it is safe IMO.
+> > > > But I'd wait for a bit more testing :) The patch isn't even in my
+> > > > tree yet :)
+> > >
+> > > My backport is for testing too. Most of our bugs are against Ubuntu
+> > > 14.04, which uses 3.13. Seems better to have them test this change in
+> > > isolation rather than also testing everything which has changed up to
+> > > 3.17.
+> > >
+> > > I agree the patch is safe,
+> > 
+> > Sorry, I was ambiguous here. I mean that
+> > 77be2c54c5bd26279abc13807398771d80cda37a is safe to backport.
+> > 
+> > > but I'd also prefer to have it tested in the form which would
+> > > eventually get applied to the 3.13 extended stable tree. So I take it
+> > > for stable you would advocate applying both patches?
+> 
+> I guess... I can rework the discussed patch (drop non VO ...) to work without
+> 77be2c54c5bd26279abc13807398771d80cda37a, but is it really worth it?
+> I don't see any reason not to backport 77be2c54c5bd26279abc13807398771d80cda37a.
+> IMHO, the easiest is to backport 77be2c54c5bd26279abc13807398771d80cda37a and
+> apply the drop non VO on top of it.
+> 
+> What am I missing?
 
-I've written a new kind of Smatch check that generates this warning:
+Nothing, except that stable kernel rules dictate that only bug fixes
+will be applied. 77be2c54c5 isn't a bug fix. If it's a necessary
+prerequisite then I suspect they'd be accomodating, but if it's not
+necessary then they might request a backport which doesn't require
+77be2c54c5.
 
-	drivers/net/wireless/ipw2x00/libipw_rx.c:1303 libipw_parse_info_param()
-	warn: potentially allocating too little.
+No sense it beating it to death now though. I'll backport both, and if
+the stable trees end up with something different I can ask for
+additional testing. Especially if it involves more than simply dropping
+those two lines.
 
-drivers/net/wireless/ipw2x00/libipw_rx.c
-  1300                  case WLAN_EID_IBSS_DFS:
-  1301                          if (network->ibss_dfs)
-  1302                                  break;
-  1303                          network->ibss_dfs = kmemdup(info_element->data,
-  1304                                                      info_element->len,
+Thanks,
+Seth
 
-The problem is that smatch marks "info_element->len" as untrusted data
-because it comes from skb->data.  "network->ibss_dfs" is a 9 character
-struct.  We're not necessarily allocating enough space for that.
-
-So far as I can see this is harmless because we never use ->ibss_dfs
-and we should just delete it along with all the related code?
-
-  1305                                                      GFP_ATOMIC);
-  1306                          if (!network->ibss_dfs)
-  1307                                  return 1;
-  1308                          network->flags |= NETWORK_HAS_IBSS_DFS;
-  1309                          break;
-
-regards,
-dan carpenter
