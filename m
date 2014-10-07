@@ -1,30 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:57199 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932694AbaJWSmi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Oct 2014 14:42:38 -0400
-Message-ID: <1414089755.29820.1.camel@jlt4.sipsolutions.net> (sfid-20141023_204241_029370_F782E2FD)
-Subject: Re: [PATCH] mac80211: expose TDLS-initiator value to low level
- driver
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: linux-wireless@vger.kernel.org, Arik Nemtsov <arik@wizery.com>,
-	Arik Nemtsov <arikx.nemtsov@intel.com>
-Date: Thu, 23 Oct 2014 20:42:35 +0200
-In-Reply-To: <1413970368-5777-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1413970368-5777-1-git-send-email-emmanuel.grumbach@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:41777 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752368AbaJGOT0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Oct 2014 10:19:26 -0400
+Date: Tue, 7 Oct 2014 10:18:44 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, larry.finger@lwfinger.net
+Subject: Re: pull request: wireless-next 2014-10-03
+Message-ID: <20141007141844.GH25590@tuxdriver.com> (sfid-20141007_161947_369309_06306878)
+References: <20141003180151.GE27414@tuxdriver.com>
+ <20141005.213511.339356320070784471.davem@davemloft.net>
+ <20141005.213853.488066614144870837.davem@davemloft.net>
+ <20141007.004724.187788111776188480.davem@davemloft.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20141007.004724.187788111776188480.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-10-22 at 12:32 +0300, Emmanuel Grumbach wrote:
-> From: Arik Nemtsov <arik@wizery.com>
+On Tue, Oct 07, 2014 at 12:47:24AM -0400, David Miller wrote:
+> From: David Miller <davem@davemloft.net>
+> Date: Sun, 05 Oct 2014 21:38:53 -0400 (EDT)
 > 
-> Some drivers need to know which station is the TDLS link initiator.
-> Expose this value via the mac80211 ieee80211_sta structure.
+> > From: David Miller <davem@davemloft.net>
+> > Date: Sun, 05 Oct 2014 21:35:11 -0400 (EDT)
+> > 
+> >> From: "John W. Linville" <linville@tuxdriver.com>
+> >> Date: Fri, 3 Oct 2014 14:01:52 -0400
+> >> 
+> >>> Please pull tihs batch of updates intended for the 3.18 stream!
+> >> 
+> >> Pulled, thanks for the stellar pull request text, as always.
+> > 
+> > John, what's the deal with the following?  Will it be resolved by the
+> > driver being removed from the staging tree?
+> > 
+> > WARNING: drivers/staging/rtl8192ee/r8192ee: 'rtl_evm_dbm_jaguar' exported twice. Previous export was in drivers/net/wireless/rtlwifi/rtlwifi.ko
+> 
+> John, ping?
 
-Applied.
+Sorry, Dave -- sendmail died on my local machine and I didn't notice
+until now... :-(
 
-johannes
+Anyway...yes, the staging driver should be removed by a patch in
+Greg's queue.
 
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
