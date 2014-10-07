@@ -1,42 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:51825 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750987AbaJBL3N (ORCPT
+Received: from mail-wg0-f47.google.com ([74.125.82.47]:40683 "EHLO
+	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751447AbaJGK1g (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Oct 2014 07:29:13 -0400
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	<wil6210@qca.qualcomm.com>, <netdev@vger.kernel.org>,
-	<linux-wireless@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH] wil6210: remove obsolete msm platform code
-Date: Thu, 2 Oct 2014 14:29:06 +0300
-Message-ID: <1572828.LhiMXjHRdV@lx-wigig-72> (sfid-20141002_132921_043821_8B463A29)
-In-Reply-To: <3995357.SmO1fZQuHn@wuerfel>
-References: <3995357.SmO1fZQuHn@wuerfel>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 7 Oct 2014 06:27:36 -0400
+Received: by mail-wg0-f47.google.com with SMTP id x13so8788151wgg.18
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Oct 2014 03:27:34 -0700 (PDT)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH] ath10k: fix WMI scan command length
+Date: Tue,  7 Oct 2014 12:26:43 +0200
+Message-Id: <1412677603-11748-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20141007_122748_307312_2AC2BAFF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday, September 30, 2014 05:48:20 PM Arnd Bergmann wrote:
-> The wil6210 driver has a glue layer for the Qualcomm MSM platform
-> code, which apparently could never build and is unlikely to
-> ever be able to in the future, as the MSM platform is being phased
-> out in favor of the new QCOM platform, and the driver relies
-> on out-of-tree infrastructure. Trying to build it currently
-> results in this error:
-> 
-> drivers/net/wireless/ath/wil6210/wil_platform_msm.c:19:27: fatal error: linux/msm-bus.h: No such file or directory
-> 
-> Removing the driver fixes the build and makes it possible to
-> build an allmodconfig kernel for MSM.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> 
+Fix WMI scan command length we setup when scan request.
 
-We are investigating this, looking for the appropriate solution.
-Thanks for pointing to this.
+This fix issue with 636 firmware when scan always failed
+with message:
 
-Thanks, Vladimir
+ath10k_pci 0000:02:00.0: wmi start scan
+ath10k_pci 0000:02:00.0: wmi stop scan reqid 1 req_type 0 vdev/scan_id 0
+ath10k_pci 0000:02:00.0: failed to stop wmi scan: -11
+ath10k_pci 0000:02:00.0: failed to stop scan: -11
+ath10k_pci 0000:02:00.0: failed to start hw scan: -110
+
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index f65032f..d878fbe 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -3506,10 +3506,10 @@ int ath10k_wmi_start_scan(struct ath10k *ar,
+ 		return ret;
+ 
+ 	if (test_bit(ATH10K_FW_FEATURE_WMI_10X, ar->fw_features))
+-		len = sizeof(struct wmi_start_scan_cmd) +
++		len = sizeof(struct wmi_10x_start_scan_cmd) +
+ 		      ath10k_wmi_start_scan_tlvs_len(arg);
+ 	else
+-		len = sizeof(struct wmi_10x_start_scan_cmd) +
++		len = sizeof(struct wmi_start_scan_cmd) +
+ 		      ath10k_wmi_start_scan_tlvs_len(arg);
+ 
+ 	skb = ath10k_wmi_alloc_skb(ar, len);
+-- 
+1.9.1
+
