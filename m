@@ -1,60 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37381 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751924AbaJTMpq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2014 08:45:46 -0400
-Message-ID: <1413809136.24269.0.camel@jlt4.sipsolutions.net> (sfid-20141020_144550_004230_EAD09183)
-Subject: Re: [PATCH] cfg80211: Warn once for delayed scan completion
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sujith Manoharan <sujith@msujith.org>
-Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Mon, 20 Oct 2014 14:45:36 +0200
-In-Reply-To: <1413806542.10246.21.camel@jlt4.sipsolutions.net> (sfid-20141020_140243_394048_D76951A8)
-References: <1413385042-17903-1-git-send-email-sujith@msujith.org>
-	 <CANUX_P02O-JSQkVvBCg6L9jf8wPyzPv8O_qsZa+prTJJx+20UA@mail.gmail.com>
-	 <21568.29077.518022.812356@gargle.gargle.HOWL>
-	 <1413797588.10246.3.camel@jlt4.sipsolutions.net>
-	 <21572.55536.308167.684155@gargle.gargle.HOWL>
-	 <1413798712.10246.14.camel@jlt4.sipsolutions.net>
-	 <21572.58249.490532.207564@gargle.gargle.HOWL>
-	 <1413801423.10246.16.camel@jlt4.sipsolutions.net>
-	 <21572.60015.349942.74265@gargle.gargle.HOWL>
-	 <1413806542.10246.21.camel@jlt4.sipsolutions.net>
-	 (sfid-20141020_140243_394048_D76951A8)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:61203 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753807AbaJGOPo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Oct 2014 10:15:44 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 0/4] ath10k: Add pktlog support
+References: <1412269778-1045-1-git-send-email-rmanohar@qti.qualcomm.com>
+Date: Tue, 7 Oct 2014 17:15:20 +0300
+In-Reply-To: <1412269778-1045-1-git-send-email-rmanohar@qti.qualcomm.com>
+	(Rajkumar Manoharan's message of "Thu, 2 Oct 2014 22:39:34 +0530")
+Message-ID: <87sij0hsp3.fsf@kamboji.qca.qualcomm.com> (sfid-20141007_161548_312088_0965755C)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-10-20 at 14:02 +0200, Johannes Berg wrote:
-> On Mon, 2014-10-20 at 16:26 +0530, Sujith Manoharan wrote:
-> 
-> > Here is a trace log showing the issue - cfg80211_scan_done()
-> > is called after NETDEV_DOWN is received in cfg80211_netdev_notifier_call().
-> > 
-> > http://pastebin.com/raw.php?i=AJqFLtZR
-> > 
-> > I've removed entries to show the issue clearly, if
-> > you need the full trace, please let me know.
-> 
-> Ah, so mac80211 is also delaying and not doing the right thing ... need
-> to look at that.
+Rajkumar Manoharan <rmanohar@qti.qualcomm.com> writes:
 
-Maybe we need something like this:
+> This implements the Packet log feature for ath10k.
+> All tx and rx events and rx descriptor details are
+> posted to user space by tracepoints.
+>
+> v2: Addressed review comments and based on discussion with Michal
+>     dropped tx_msdu_id patch and added tx info changes
+>
+> Rajkumar Manoharan (4):
+>   ath10k: Add support to configure pktlog filter
+>   ath10k: add tracing for ath10k_htt_pktlog
+>   ath10k: add tracing for rx descriptor
+>   ath10k: add tracing for tx msdu pktlog event
 
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index af0d094b2f2f..45b74ab1c59d 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -985,7 +985,6 @@ void ieee80211_scan_cancel(struct ieee80211_local *local)
- 			drv_cancel_hw_scan(local,
- 				rcu_dereference_protected(local->scan_sdata,
- 						lockdep_is_held(&local->mtx)));
--		goto out;
- 	}
- 
- 	/*
+Thanks, all four patches applied.
 
-johannes
-
+-- 
+Kalle Valo
