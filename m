@@ -1,48 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:64254 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755859AbaJUQEz (ORCPT
+Received: from mail-oi0-f49.google.com ([209.85.218.49]:49860 "EHLO
+	mail-oi0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753865AbaJGOpd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Oct 2014 12:04:55 -0400
-Received: by mail-wg0-f47.google.com with SMTP id x13so1749016wgg.18
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Oct 2014 09:04:53 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Liad Kaufman <liad.kaufman@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 2/8] iwlwifi: 8000: fix string given to MODULE_FIRMWARE
-Date: Tue, 21 Oct 2014 19:04:33 +0300
-Message-Id: <1413907479-9073-2-git-send-email-egrumbach@gmail.com> (sfid-20141021_180544_191521_2C31CCA5)
-In-Reply-To: <CANUX_P0iZO6AGwcsKO3+xZZcH5ns+vMUimo+BxHNpyBhhURKRw@mail.gmail.com>
-References: <CANUX_P0iZO6AGwcsKO3+xZZcH5ns+vMUimo+BxHNpyBhhURKRw@mail.gmail.com>
+	Tue, 7 Oct 2014 10:45:33 -0400
+Message-ID: <5433FC88.6040909@lwfinger.net> (sfid-20141007_164602_864505_3B973AF0)
+Date: Tue, 07 Oct 2014 09:45:28 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: David Miller <davem@davemloft.net>, linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-next 2014-10-03
+References: <20141003180151.GE27414@tuxdriver.com>	<20141005.213511.339356320070784471.davem@davemloft.net>	<20141005.213853.488066614144870837.davem@davemloft.net> <20141007.004724.187788111776188480.davem@davemloft.net>
+In-Reply-To: <20141007.004724.187788111776188480.davem@davemloft.net>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Liad Kaufman <liad.kaufman@intel.com>
+On 10/06/2014 11:47 PM, David Miller wrote:
+> From: David Miller <davem@davemloft.net>
+> Date: Sun, 05 Oct 2014 21:38:53 -0400 (EDT)
+>
+>> From: David Miller <davem@davemloft.net>
+>> Date: Sun, 05 Oct 2014 21:35:11 -0400 (EDT)
+>>
+>>> From: "John W. Linville" <linville@tuxdriver.com>
+>>> Date: Fri, 3 Oct 2014 14:01:52 -0400
+>>>
+>>>> Please pull tihs batch of updates intended for the 3.18 stream!
+>>>
+>>> Pulled, thanks for the stellar pull request text, as always.
+>>
+>> John, what's the deal with the following?  Will it be resolved by the
+>> driver being removed from the staging tree?
+>>
+>> WARNING: drivers/staging/rtl8192ee/r8192ee: 'rtl_evm_dbm_jaguar' exported twice. Previous export was in drivers/net/wireless/rtlwifi/rtlwifi.ko
+>
+> John, ping?
 
-I changed the string but forgot to update the fix also to
-MODULE_FIRMWARE().
+David,
 
-Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-8000.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Yes, that message will go away once the removal of the staging driver, which was 
+handled by GregKH, gets merged with the changes from John.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-8000.c b/drivers/net/wireless/iwlwifi/iwl-8000.c
-index e435148..d2b7234 100644
---- a/drivers/net/wireless/iwlwifi/iwl-8000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-8000.c
-@@ -82,7 +82,8 @@
- #define IWL8000_TX_POWER_VERSION	0xffff /* meaningless */
- 
- #define IWL8000_FW_PRE "iwlwifi-8000"
--#define IWL8000_MODULE_FIRMWARE(api) IWL8000_FW_PRE __stringify(api) ".ucode"
-+#define IWL8000_MODULE_FIRMWARE(api) \
-+	IWL8000_FW_PRE "-" __stringify(api) ".ucode"
- 
- #define NVM_HW_SECTION_NUM_FAMILY_8000		10
- #define DEFAULT_NVM_FILE_FAMILY_8000		"iwl_nvm_8000.bin"
--- 
-1.9.1
+Larry
+
 
