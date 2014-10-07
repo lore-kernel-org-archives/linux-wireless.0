@@ -1,49 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:34449 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753371AbaJ1KpB (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:41043 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750713AbaJGEr2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2014 06:45:01 -0400
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <wireless-regdb@lists.infradead.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 12/21] wireless-regdb: Add regulatory rules for Mauritius (MU)
-Date: Tue, 28 Oct 2014 12:42:58 +0200
-Message-ID: <1414492987-16118-5-git-send-email-jouni@qca.qualcomm.com> (sfid-20141028_114512_878669_7046D107)
-In-Reply-To: <1414492987-16118-1-git-send-email-jouni@qca.qualcomm.com>
-References: <1414492175-13830-1-git-send-email-jouni@qca.qualcomm.com>
- <1414492987-16118-1-git-send-email-jouni@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 7 Oct 2014 00:47:28 -0400
+Date: Tue, 07 Oct 2014 00:47:24 -0400 (EDT)
+Message-Id: <20141007.004724.187788111776188480.davem@davemloft.net> (sfid-20141007_064752_045018_8EB2DF38)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-next 2014-10-03
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20141005.213853.488066614144870837.davem@davemloft.net>
+References: <20141003180151.GE27414@tuxdriver.com>
+	<20141005.213511.339356320070784471.davem@davemloft.net>
+	<20141005.213853.488066614144870837.davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Source is QCA's regulatory team's efforts.
+From: David Miller <davem@davemloft.net>
+Date: Sun, 05 Oct 2014 21:38:53 -0400 (EDT)
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
----
- db.txt | 7 +++++++
- 1 file changed, 7 insertions(+)
+> From: David Miller <davem@davemloft.net>
+> Date: Sun, 05 Oct 2014 21:35:11 -0400 (EDT)
+> 
+>> From: "John W. Linville" <linville@tuxdriver.com>
+>> Date: Fri, 3 Oct 2014 14:01:52 -0400
+>> 
+>>> Please pull tihs batch of updates intended for the 3.18 stream!
+>> 
+>> Pulled, thanks for the stellar pull request text, as always.
+> 
+> John, what's the deal with the following?  Will it be resolved by the
+> driver being removed from the staging tree?
+> 
+> WARNING: drivers/staging/rtl8192ee/r8192ee: 'rtl_evm_dbm_jaguar' exported twice. Previous export was in drivers/net/wireless/rtlwifi/rtlwifi.ko
 
-diff --git a/db.txt b/db.txt
-index 0a507d6..5869b96 100644
---- a/db.txt
-+++ b/db.txt
-@@ -786,6 +786,13 @@ country MT: DFS-ETSI
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
- 
-+country MU: DFS-FCC
-+	(2402 - 2482 @ 40), (20)
-+	(5170 - 5250 @ 80), (24), AUTO-BW
-+	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
-+	(5490 - 5730 @ 160), (24), DFS
-+	(5735 - 5835 @ 80), (30)
-+
- country MY: DFS-FCC
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 80), (17)
--- 
-1.9.1
-
+John, ping?
