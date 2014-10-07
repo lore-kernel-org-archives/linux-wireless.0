@@ -1,49 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:20363 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751701AbaJ1Kq1 (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:48724 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751277AbaJGEnv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2014 06:46:27 -0400
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <wireless-regdb@lists.infradead.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 20/21] wireless-regdb: Add regulatory rules for U.S. Virgin Islands (VI)
-Date: Tue, 28 Oct 2014 12:43:06 +0200
-Message-ID: <1414492987-16118-13-git-send-email-jouni@qca.qualcomm.com> (sfid-20141028_114631_991412_DEAAFE1F)
-In-Reply-To: <1414492987-16118-1-git-send-email-jouni@qca.qualcomm.com>
-References: <1414492175-13830-1-git-send-email-jouni@qca.qualcomm.com>
- <1414492987-16118-1-git-send-email-jouni@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 7 Oct 2014 00:43:51 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH v2 1/6] ath: Fix smatch warning
+Date: Tue,  7 Oct 2014 10:14:36 +0530
+Message-Id: <1412657081-3202-2-git-send-email-sujith@msujith.org> (sfid-20141007_064403_200928_8CCABDB4)
+In-Reply-To: <1412657081-3202-1-git-send-email-sujith@msujith.org>
+References: <1412657081-3202-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Source is QCA's regulatory team's efforts.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+drivers/net/wireless/ath/main.c:88 ath_printk()
+	 error: we previously assumed 'common->hw' could be null (see line 82)
+
+Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- db.txt | 7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/net/wireless/ath/main.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/db.txt b/db.txt
-index 95a750f..292dbac 100644
---- a/db.txt
-+++ b/db.txt
-@@ -1163,6 +1163,13 @@ country VE: DFS-FCC
- 	(5250 - 5330 @ 80), (23), DFS
- 	(5735 - 5835 @ 80), (30)
+diff --git a/drivers/net/wireless/ath/main.c b/drivers/net/wireless/ath/main.c
+index 83f47af..338d723 100644
+--- a/drivers/net/wireless/ath/main.c
++++ b/drivers/net/wireless/ath/main.c
+@@ -79,13 +79,13 @@ void ath_printk(const char *level, const struct ath_common* common,
+ 	vaf.fmt = fmt;
+ 	vaf.va = &args;
  
-+country VI: DFS-FCC
-+	(2402 - 2472 @ 40), (30)
-+	(5170 - 5250 @ 80), (24), AUTO-BW
-+	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
-+	(5490 - 5730 @ 160), (24), DFS
-+	(5735 - 5835 @ 80), (30)
-+
- country VN: DFS-FCC
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 80), (17)
+-	if (common && common->hw && common->hw->wiphy)
++	if (common && common->hw && common->hw->wiphy) {
+ 		printk("%sath: %s: %pV",
+ 		       level, wiphy_name(common->hw->wiphy), &vaf);
+-	else
++		trace_ath_log(common->hw->wiphy, &vaf);
++	} else {
+ 		printk("%sath: %pV", level, &vaf);
+-
+-	trace_ath_log(common->hw->wiphy, &vaf);
++	}
+ 
+ 	va_end(args);
+ }
 -- 
-1.9.1
+2.1.2
 
