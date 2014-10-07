@@ -1,109 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:51361 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755668AbaJUQFG (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:57586 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752758AbaJGEfl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Oct 2014 12:05:06 -0400
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	<stable@vger.kernel.org>
-Subject: [PATCH 7/8] iwlwifi: dvm: drop non VO frames when flushing
-Date: Tue, 21 Oct 2014 19:04:38 +0300
-Message-Id: <1413907479-9073-7-git-send-email-egrumbach@gmail.com> (sfid-20141021_180531_338103_3534662F)
-In-Reply-To: <CANUX_P0iZO6AGwcsKO3+xZZcH5ns+vMUimo+BxHNpyBhhURKRw@mail.gmail.com>
-References: <CANUX_P0iZO6AGwcsKO3+xZZcH5ns+vMUimo+BxHNpyBhhURKRw@mail.gmail.com>
+	Tue, 7 Oct 2014 00:35:41 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <21555.28109.720719.149443@gargle.gargle.HOWL> (sfid-20141007_063544_354104_C3DD6CB3)
+Date: Tue, 7 Oct 2014 10:06:29 +0530
+To: John Linville <linville@tuxdriver.com>
+Cc: <linux-wireless@vger.kernel.org>, <ath9k-devel@qca.qualcomm.com>
+Subject: Re: [PATCH 6/6] ath9k: Process beacons properly
+In-Reply-To: <1412574579-22532-7-git-send-email-sujith@msujith.org>
+References: <1412574579-22532-1-git-send-email-sujith@msujith.org>
+	<1412574579-22532-7-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Sujith Manoharan wrote:
+> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+> 
+> When the current operating channel context has
+> been marked as ATH_CHANCTX_STATE_FORCE_ACTIVE,
+> do not process beacons that might be received,
+> since we have to wait for the station to become
+> authorized.
+> 
+> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/channel.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+> index 16bed6a..55f2369 100644
+> --- a/drivers/net/wireless/ath/ath9k/channel.c
+> +++ b/drivers/net/wireless/ath/ath9k/channel.c
+> @@ -492,7 +492,8 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
+>  		break;
+>  	case ATH_CHANCTX_EVENT_BEACON_RECEIVED:
+>  		if (!test_bit(ATH_OP_MULTI_CHANNEL, &common->op_flags) ||
+> -		    sc->cur_chan == &sc->offchannel.chan)
+> +		    sc->cur_chan == &sc->offchannel.chan ||
+> +		    sc->sched.state == ATH_CHANCTX_STATE_FORCE_ACTIVE)
+>  			break;
 
-When mac80211 wants to ensure that a frame is sent, it calls
-the flush() callback. Until now, iwldvm implemented this by
-waiting that all the frames are sent (ACKed or timeout).
-In case of weak signal, this can take a significant amount
-of time, delaying the next connection (in case of roaming).
-Many users have reported that the flush would take too long
-leading to the following error messages to be printed:
+The check for FORCE_ACTIVE needs to be done after we set
+beacon_miss/beacon_pending to zero.
 
-iwlwifi 0000:03:00.0: fail to flush all tx fifo queues Q 2
-iwlwifi 0000:03:00.0: Current SW read_ptr 161 write_ptr 201
-iwl data: 00000000: 00 00 00 00 00 00 00 00 fe ff 01 00 00 00 00 00
-[snip]
-iwlwifi 0000:03:00.0: FH TRBs(0) = 0x00000000
-[snip]
-iwlwifi 0000:03:00.0: Q 0 is active and mapped to fifo 3 ra_tid 0x0000 [9,9]
-[snip]
+Also, since we now have a small window where we start receiving
+beacons while waiting for the handshake to complete, we
+end up rearming the timer based on the cached tsf_val of the current
+channel. But, since it will be zero the first time the
+context becomes active, the timeout value is assigned
+spurious values.
 
-Instead of waiting for these packets, simply drop them. This
-significantly improves the responsiveness of the network.
-Note that all the queues are flushed, but the VO one. This
-is not typically used by the applications and it likely
-contains management frames that are useful for connection
-or roaming.
+I'll address both these issues and send a v2.
 
-This bug is tracked here:
-https://bugzilla.kernel.org/show_bug.cgi?id=56581
-
-But it is duplicated in distributions' trackers.
-A simple search in Ubuntu's database led to these bugs:
-
-https://bugs.launchpad.net/ubuntu/+source/linux-firmware/+bug/1270808
-https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1305406
-https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1356236
-https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1360597
-https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1361809
-
-Cc: <stable@vger.kernel.org>
-Depends-on: 77be2c54c5bd ("mac80211: add vif to flush call")
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/dvm/mac80211.c | 24 +++++++++++++-----------
- 1 file changed, 13 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/dvm/mac80211.c b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
-index 2364a3c..cae692f 100644
---- a/drivers/net/wireless/iwlwifi/dvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
-@@ -1095,6 +1095,7 @@ static void iwlagn_mac_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			     u32 queues, bool drop)
- {
- 	struct iwl_priv *priv = IWL_MAC80211_GET_DVM(hw);
-+	u32 scd_queues;
- 
- 	mutex_lock(&priv->mutex);
- 	IWL_DEBUG_MAC80211(priv, "enter\n");
-@@ -1108,18 +1109,19 @@ static void iwlagn_mac_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		goto done;
- 	}
- 
--	/*
--	 * mac80211 will not push any more frames for transmit
--	 * until the flush is completed
--	 */
--	if (drop) {
--		IWL_DEBUG_MAC80211(priv, "send flush command\n");
--		if (iwlagn_txfifo_flush(priv, 0)) {
--			IWL_ERR(priv, "flush request fail\n");
--			goto done;
--		}
-+	scd_queues = BIT(priv->cfg->base_params->num_of_queues) - 1;
-+	scd_queues &= ~(BIT(IWL_IPAN_CMD_QUEUE_NUM) |
-+			BIT(IWL_DEFAULT_CMD_QUEUE_NUM));
-+
-+	if (vif)
-+		scd_queues &= ~BIT(vif->hw_queue[IEEE80211_AC_VO]);
-+
-+	IWL_DEBUG_TX_QUEUES(priv, "Flushing SCD queues: 0x%x\n", scd_queues);
-+	if (iwlagn_txfifo_flush(priv, scd_queues)) {
-+		IWL_ERR(priv, "flush request fail\n");
-+		goto done;
- 	}
--	IWL_DEBUG_MAC80211(priv, "wait transmit/flush all frames\n");
-+	IWL_DEBUG_TX_QUEUES(priv, "wait transmit/flush all frames\n");
- 	iwl_trans_wait_tx_queue_empty(priv->trans, 0xffffffff);
- done:
- 	mutex_unlock(&priv->mutex);
--- 
-1.9.1
-
+Sujith
