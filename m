@@ -1,102 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56125 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750782AbaJAJPK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Oct 2014 05:15:10 -0400
-Date: Wed, 1 Oct 2014 11:12:41 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Mark Asselstine <asselsm@gmail.com>
-Cc: helmut.schaa@googlemail.com, users@rt2x00.serialmonkey.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rt2x00: rt2x00queue: avoid using more headroom then
- driver requested
-Message-ID: <20141001091240.GA2011@redhat.com> (sfid-20141001_111515_953481_65425D97)
-References: <1412135157-13520-1-git-send-email-asselsm@gmail.com>
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:37465 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751795AbaJGO7R (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Oct 2014 10:59:17 -0400
+Received: by mail-wi0-f172.google.com with SMTP id n3so8131623wiv.11
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Oct 2014 07:59:14 -0700 (PDT)
+Message-ID: <5433FFC0.2040704@gmail.com> (sfid-20141007_165920_727922_42062851)
+Date: Tue, 07 Oct 2014 16:59:12 +0200
+From: poma <pomidorabelisima@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1412135157-13520-1-git-send-email-asselsm@gmail.com>
+To: GSS_MTK_WCN_ACS@mediatek.com
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+Subject: Re: [rt2x00-users] MediaTek Inc. MT7601U Wireless Adapter
+References: <53FCC55B.90705@gmail.com> <20140826182849.GE30445@tuxdriver.com> <53FD7BFA.1040304@maya.org> <20140827135550.GD15173@tuxdriver.com> <53FE9920.2040702@gmail.com> <5402B519.1080002@gmail.com> <54034EF1.6040407@maya.org> <5433542F.70206@gmail.com> <20141007135731.GF25590@tuxdriver.com>
+In-Reply-To: <20141007135731.GF25590@tuxdriver.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 30, 2014 at 11:45:57PM -0400, Mark Asselstine wrote:
-> 'struct ieee80211_hw' contains 'extra_tx_headroom' which it defines as
-> "headroom to reserve in each transmit skb for use by the driver". This
-> value is properly setup during rt2x00lib_probe_hw() to account for all
-> the rt2x00lib's purposes, including DMA alignment and L2 pad if
-> needed. As such under all circumstances the proper amount of headroom
-> is allocated to a skb such that under any usage we would not ever use
-> more headroom then is allotted.
+On 07.10.2014 15:57, John W. Linville wrote:
+> You probably shold be sending this to MediaTek.  The driver you are
+> using is not part of the upstream Linux kernel.
 > 
-> However rt2x00queue_write_tx_frame() uses up the headroom (via calls
-> to skb_push) allotted for L2 padding (with a potential call to
-> rt2x00queue_insert_l2pad()) and uses up the headroom allotted to DMA
-> alignment (with a potential call to rt2x00queue_align_frame()) and
-> then proceeds to use up 'extra_tx_headroom' (in a call to
-> rt2x00queue_write_tx_data())
+> John
 > 
-> So the driver has requested just 'extra_tx_headroom' worth of headroom
-> and we have used up 'extra_tx_headroom' + DMA + L2PAD worth. As such
-> it is possible to hit a 'skb_under_panic', where we have used up all
-> the available headroom.
+
+No problemos!
+
+
+> On Tue, Oct 07, 2014 at 04:47:11AM +0200, poma wrote:
+>>
+>> BUG: unable to handle kernel paging request at ffffc9000277c070
+>> IP: [<ffffffff8165272c>] __netdev_watchdog_up+0xc/0x80
+>> PGD 12b01c067 PUD 12b01d067 PMD 1295e8067 PTE 0
+>> Oops: 0000 [#1] SMP 
+>> CPU: 3 PID: 1497 Comm: wpa_supplicant Tainted: G           OE  3.17.0-1.fc21.x86_64 #1
+>> task: ffff88007ec44e80 ti: ffff8800beddc000 task.ti: ffff8800beddc000
+>> RIP: 0010:[<ffffffff8165272c>]  [<ffffffff8165272c>] __netdev_watchdog_up+0xc/0x80
+>> RSP: 0018:ffff8800beddfcd8  EFLAGS: 00010202
+>> RAX: ffffc9000277c000 RBX: ffff8800caa3c000 RCX: ffff8800ca22a948
+>> RDX: 0000000000000000 RSI: 0000000000000005 RDI: ffff8800caa3c000
+>> RBP: ffff8800beddfce8 R08: 0000000000000000 R09: 0000000000000208
+>> R10: 0000000000000400 R11: 0000000000000010 R12: 0000000000000000
+>> R13: ffffc9000277c000 R14: 0000000000000000 R15: 0000000000000001
+>> FS:  00007fce557aa800(0000) GS:ffff88012fcc0000(0000) knlGS:0000000000000000
+>> CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+>> CR2: ffffc9000277c070 CR3: 000000007eeed000 CR4: 00000000000007e0
+>> Stack:
+>>  ffffffff816527e8 ffff8800caa3c000 ffff8800beddfd20 ffffffffa05e4655
+>>  ffffffffa05e4ab0 ffffffffa05e4510 000000005abd5236 ffff8800caa3c000
+>>  0000000000001003 ffff8800beddfd58 ffffffff8163135e ffff8800caa3c000
+>> Call Trace:
+>>  [<ffffffff816527e8>] ? netif_carrier_on+0x48/0x50
+>>  [<ffffffffa05e4655>] MainVirtualIF_open+0x85/0xe0 [mt7601Usta]
+>>  [<ffffffffa05e4ab0>] ? RtmpOSIRQRequest+0x60/0x60 [mt7601Usta]
+>>  [<ffffffffa05e4510>] ? RT28xx_get_ether_stats+0x150/0x150 [mt7601Usta]
+>>  [<ffffffff8163135e>] __dev_open+0xce/0x150
+>>  [<ffffffff8163168d>] __dev_change_flags+0x9d/0x160
+>>  [<ffffffff81631779>] dev_change_flags+0x29/0x70
+>>  [<ffffffff816a5bac>] devinet_ioctl+0x63c/0x710
+>>  [<ffffffff816a6d05>] inet_ioctl+0x65/0x90
+>>  [<ffffffff816105d5>] sock_do_ioctl+0x25/0x50
+>>  [<ffffffff81610b30>] sock_ioctl+0x1f0/0x2c0
+>>  [<ffffffff81220340>] do_vfs_ioctl+0x2d0/0x4b0
+>>  [<ffffffff812205a1>] SyS_ioctl+0x81/0xa0
+>>  [<ffffffff81135a16>] ? __audit_syscall_exit+0x1f6/0x2a0
+>>  [<ffffffff81743469>] system_call_fastpath+0x16/0x1b
+>> Code: 9b 48 a4 ff c6 05 bd 12 6b 00 01 48 8b 45 d8 e9 09 ff ff ff 66 66 2e 0f 1f 84 00 00 00 00 00 66 66 66 66 90 48 8b 87 e8 01 00 00 <48> 83 78 70 00 74 41 55 48 89 e5 53 48 63 87 c0 03 00 00 85 c0 
+>> RIP  [<ffffffff8165272c>] __netdev_watchdog_up+0xc/0x80
+>>  RSP <ffff8800beddfcd8>
+>> CR2: ffffc9000277c070
+>> ---[ end trace 97a7adc75a3f40f8 ]---
+>>
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
 > 
-> Since extra_tx_headroom was calculated as a function of winfo_size,
-> desc_size, RT2X00_L2PAD_SIZE and RT2X00_ALIGN_SIZE we can simply
-> remove the part for alignment and padding and we will know how much is
-> left to use up (for txdesc) and only use that much. Keeping the
-> driver's use of headroom to what it requested via extra_tx_headroom.
-> 
-> Signed-off-by: Mark Asselstine <asselsm@gmail.com>
-> ---
->  drivers/net/wireless/rt2x00/rt2x00queue.c | 15 ++++++++++++---
->  1 file changed, 12 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-> index 8e68f87..2a48bf5 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-> @@ -522,6 +522,7 @@ static int rt2x00queue_write_tx_data(struct queue_entry *entry,
->  				     struct txentry_desc *txdesc)
->  {
->  	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
-> +	unsigned int avail_extra_tx_headroom = rt2x00dev->extra_tx_headroom;
->  
->  	/*
->  	 * This should not happen, we already checked the entry
-> @@ -538,10 +539,18 @@ static int rt2x00queue_write_tx_data(struct queue_entry *entry,
->  	}
->  
->  	/*
-> -	 * Add the requested extra tx headroom in front of the skb.
-> +	 * Add room for data at the front of the buffer for txdesc. The space
-> +	 * needed for this was accounted for in extra_tx_headroom, we just
-> +	 * need to remove the amount allocated for padding and alignment
-> +	 * to get what is left for txdesc.
->  	 */
-> -	skb_push(entry->skb, rt2x00dev->extra_tx_headroom);
-> -	memset(entry->skb->data, 0, rt2x00dev->extra_tx_headroom);
-> +	if (test_bit(REQUIRE_L2PAD, &rt2x00dev->cap_flags))
-> +		avail_extra_tx_headroom -= RT2X00_L2PAD_SIZE;
-> +	else if (test_bit(REQUIRE_DMA, &rt2x00dev->cap_flags))
-> +		avail_extra_tx_headroom -= RT2X00_ALIGN_SIZE;
-> +
-> +	skb_push(entry->skb, avail_extra_tx_headroom);
-> +	memset(entry->skb->data, 0, avail_extra_tx_headroom);
 
-I don't think patch is correct. 
-
-We have rt2x00->extra_tx_headroom and rt2x00->hw->extra_tx_headroom.
-Second value, which we provide as maximum needed headroom to mac80211
-is rt2x00->extra_tx_headrom + RT2X00_L2PAD_SIZE + RT2X00_ALIGN_SIZE.
-
-We really need to reserve rt2x00dev->extra_tx_headroom on TX skb, as
-this is room for metadata needed by H/W and if needed we should reserve
-RT2x00_L2PAD_SIZE and RTX00_ALIGN_SIZE. There should be room for that,
-since we provide bigger rt2x00->hw->extra_tx_headroom to mac80211.
-
-The only possibility to skb_under_panic I can see, is that we retransmit
-frame and try to align it many times, but alignment should not be needed
-once we aligned frame. Hence I'm not sure how those skb_under_panics can
-happen.
-
-Thanks
-Stanislaw
