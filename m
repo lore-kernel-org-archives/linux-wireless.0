@@ -1,65 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:49488 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751357AbaJZOPZ (ORCPT
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:50532 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751094AbaJGMdK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Oct 2014 10:15:25 -0400
-From: Avinash Patil <patila@marvell.com>
-To: QW <qiuyew@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Sun, 26 Oct 2014 07:15:30 -0700
-Subject: RE: p2p doesn't work at 5GHz by using mwifiex driver
-Message-ID: <CBACCFA0AEB13A41977475BCF3E896FC667010ED48@SC-VEXCH2.marvell.com> (sfid-20141026_151529_200008_7CA710CC)
-References: <CAFf6pmS5w5jDr6O_ut7k5P6xbd9q9q1+H4iucihO2E8rq5kGfQ@mail.gmail.com>
-In-Reply-To: <CAFf6pmS5w5jDr6O_ut7k5P6xbd9q9q1+H4iucihO2E8rq5kGfQ@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+	Tue, 7 Oct 2014 08:33:10 -0400
+Received: by mail-wi0-f177.google.com with SMTP id fb4so7701661wid.16
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Oct 2014 05:33:09 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <1412683538.1825.13.camel@jlt4.sipsolutions.net>
+References: <1412083114-8426-1-git-send-email-sgruszka@redhat.com>
+ <542AB859.5080008@broadcom.com> <542AB893.9090201@broadcom.com>
+ <20141001092710.GB2011@redhat.com> <1412607640.3098.33.camel@jlt4.sipsolutions.net>
+ <20141007110356.GA2902@redhat.com> <1412683538.1825.13.camel@jlt4.sipsolutions.net>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Tue, 7 Oct 2014 18:02:49 +0530
+Message-ID: <CABPxzYJ2Qghy87XhfSCdY+vB3CiNn-HpH_8BP=LfafLc37yiZQ@mail.gmail.com> (sfid-20141007_143315_113826_F2FA6A0B)
+Subject: Re: [PATCH v2] cfg80211: allow to configure dynamic PS timeout
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Zdenek Kabelac <zkabelac@redhat.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgUVcsDQoNCkFyZSB5b3UgY29uZmlndXJpbmcgUDJQIGNsaWVudCBvciBQMlAgR08/DQpXZSBy
-ZWNlbnRseSBoYXZlIGZpeGVkIG9uZSBUWCB0aW1lb3V0IGlzc3VlLiBDYW4geW91IHBsZWFzZSBj
-aGVjayBpZiB0aGlzIHBhdGNoIGhlbHBzOg0KDQpodHRwOi8vZ2l0Lmtlcm5lbC5vcmcvY2dpdC9s
-aW51eC9rZXJuZWwvZ2l0L2xpbnZpbGxlL3dpcmVsZXNzLXRlc3RpbmcuZ2l0L2NvbW1pdC9kcml2
-ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4P2lkPWQ3Njc0NGE5MzI0NmVjY2RjYTExMDYwMzdlOGVl
-MjlkZWJmNDgyNzcNCg0KSWYgdGhpcyBwYXRjaCBkb2VzIG5vdCB3b3JrIGZvciB5b3UsIGNvdWxk
-IHlvdSBwbGVhc2Ugc2hhcmUgeW91ciBwMnAgY29uZmlndXJhdGlvbiBmaWxlIGFuZCBzdGVwcz8N
-Cg0KVGhhbmtzLA0KQXZpbmFzaA0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTog
-bGludXgtd2lyZWxlc3Mtb3duZXJAdmdlci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtd2lyZWxl
-c3Mtb3duZXJAdmdlci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgUVcNClNlbnQ6IFN1bmRheSwg
-T2N0b2JlciAyNiwgMjAxNCA1OjMwIFBNDQpUbzogbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwu
-b3JnDQpTdWJqZWN0OiBwMnAgZG9lc24ndCB3b3JrIGF0IDVHSHogYnkgdXNpbmcgbXdpZmlleCBk
-cml2ZXINCg0KSGkgQWxsLA0KDQpJIGhhdmUgYSB3aWZpL0JUIGNvbWJvIG1vZHVsZSB3aXRoIE1h
-cnZlbGwncyBTRDg3ODcgZHVhbCBmcmVxdWVuY3kgKDIuNEdIeiBhbmQgNUdIeikgY2hpcHNldCBv
-biBpdC4NCg0KV2hlbiBJIHRyeSB0byBidWlsZCBhIHAycCBjb25uZWN0aW9uIHdpdGggb3RoZXIg
-NUdoeiBjYXBhYmxlIHdpcmVsZXNzIGRldmljZSAoTmV4dXMgNCksIHRoZSBjb25uZWN0aW9uIHdp
-bGwgbmV2ZXIgYmUgYnVpbHQgYXQgNUdIei4NClNhbWUgbW9kdWxlIEkgaW5zdGFsbCBvbiBhIGxp
-bnV4LXBjIHBsYXRmb3JtIHdpdGgga2VybmVsIHZlcnNpb24NCjMuMTcuMSBoYXMgbm8gcHJvYmxl
-bSB0byBidWlsZCBhIDVHIHAycCBjb25uZWN0aW9uLg0KDQpUaGUgZmlybXdhcmUgSSBhbSB1c2lu
-ZyBpcyBmcm9tIHRoZSBNYXJ2ZWxsIGdpdCByZXBvIGF0IGdpdDovL2dpdC5tYXJ2ZWxsLmNvbS9t
-d2lmaWV4LWZpcm13YXJlLmdpdA0KVXNpbmcgdGhpcyBsYXRlc3QgY29tbWl0Og0KDQpjb21taXQg
-M2Y0NWI4YzRjYzFlYjFkMTAyYmMzNDg2YjE5Njc3MzMyZGQyMTVhYg0KQXV0aG9yOiBBdmluYXNo
-IFBhdGlsIDxwYXRpbGFAbWFydmVsbC5jb20+DQpEYXRlOiAgIEZyaSBTZXAgMTIgMjE6MDU6MTUg
-MjAxNCArMDUzMA0KDQpsaW51eC1maXJtd2FyZTogdXBkYXRlIE1hcnZlbGwgU0Q4Nzg3IGZpcm13
-YXJlIHZlcnNpb24gcDUyDQoNClZlcnNpb24gMTQuNjYuMzUucDUyDQpOb3RlIHRoYXQgdGhpcyB2
-ZXJzaW9uIGRvZXNuJ3Qgc3VwcG9ydCBCVC1BTVAuDQpUaGUgaW1hZ2UgY2FuIGJlIGRvd25sb2Fk
-ZWQgdGhyb3VnaCBlaXRoZXIgV0xBTiBvciBCbHVldG9vdGguDQoNClNpZ25lZC1vZmYtYnk6IEF2
-aW5hc2ggUGF0aWwgPHBhdGlsYUBtYXJ2ZWxsLmNvbT4NClNpZ25lZC1vZmYtYnk6IEZyYW5rIEh1
-YW5nIDxmcmFua2hAbWFydmVsbC5jb20+DQoNCldpdGggaXcgcGh5IHBoeTAgaW5mbywgSSBjYW4g
-c2VlIHRoYXQgNUdIeiBmcmVxdWVuY3kgaXMgbGlzdGVkLiBBbmQgSSBjYW4gYWxzbyB1c2UgdGhp
-cyBtb2R1bGUgdG8gY29ubmVjdCBhIDVHIHdpcmVsZXNzIHJvdXRlciB3aXRob3V0IHByb2JsZW0u
-DQoNClRoZSBtd2lmaWV4IGRyaXZlciBpcyBmcm9tIGtlcm5lbCB2ZXJzaW9uIDMuMTAuNDQsIHdo
-aWNoIGlzIG5vdCBhbGxvd2VkIHRvIGJlIHVwZ3JhZGVkIHRvIHRoZSBsYXRlc3Qga2VybmVsIHZl
-cnNpb24uIEkgY2Fubm90IHVzZSBiYWNrcG9ydHMgZWl0aGVyLCBkdWUgdG8gdGhlIDMuMTAgdmVy
-c2lvbi4NCg0KQmVzaWRlcywgdGhlcmUgaXMgYW4gc2RpbyBlcnJvciBvY2N1cnMgdmVyeSBvZnRl
-biB3aGVuIGEgcDJwIGNvbm5lY3Rpb24gaXMgYmVpbmcgYnVpbHQ6DQoNClsyMDUyNS45ODQxODhd
-IG13aWZpZXhfc2RpbyBtbWMwOjAwMDE6MTogMjAyMjU5OCA6IFR4IHRpbWVvdXQoIzEpLCBic3Nf
-dHlwZS1udW0gPSAyLTANCg0KdGhlbiB0aGUgcDJwIGNvbm5lY3Rpb24gd2lsbCBiZSBmYWlsZWQg
-dG8gYmUgYnVpbHQgd2l0aCB0aGUgZXJyb3I6DQoNCjwzPlAyUC1HUk9VUC1GT1JNQVRJT04tRkFJ
-TFVSRQ0KPDM+UDJQLUdST1VQLVJFTU9WRUQgd2xhbjAgR08gcmVhc29uPUZPUk1BVElPTl9GQUlM
-RUQNCg0KSSBkb24ndCBrbm93IGlmIHRoaXMgaXMgcmVsYXRlZCB0byB0aGUgbm8tNUdIeiBpc3N1
-ZS4NCg0KQW55IGlkZWFzPyBUaGFua3MhDQoNCkNoZWVycywNClFpdXllDQotLQ0KVG8gdW5zdWJz
-Y3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LXdp
-cmVsZXNzIiBpbiB0aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVs
-Lm9yZyBNb3JlIG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9y
-ZG9tby1pbmZvLmh0bWwNCg==
+On Tue, Oct 7, 2014 at 5:35 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>
+> On Tue, 2014-10-07 at 13:03 +0200, Stanislaw Gruszka wrote:
+> > On Mon, Oct 06, 2014 at 05:00:40PM +0200, Johannes Berg wrote:
+> > > On Wed, 2014-10-01 at 11:27 +0200, Stanislaw Gruszka wrote:
+> > > > Dynamic power save timeout value is suppose to be configurable via
+> > > > wext, but due to iwconfig bug is not possible to set using that tool.
+> > >
+> > > That's interesting, what's that bug?
+> >
+> > https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=532713
+> >
+> > Parsing problem. After reading bug report more detailed I found out it
+> > is fixed on pre beta version v30, but it was not released i.e. on Fedora
+> > we use wireless-tools v29.
+>
+> Curious. I have version 30 on Debian, but all of this is *years* old.
+> Hah.
+>
+> > > > Allow to configure PS timeout via nl80211 - add NL80211_ATTR_PS_TIMEOUT
+> > > > attribute which become timeout stated in ms.
+> > >
+> > > Why do you want to be able to set it at all though? I remember having
+> > > this discussion years ago, and we said that it wasn't really useful
+> > > since the user has no idea when and why this should be changed. I'm not
+> > > convinced that changed?
+> > >
+> > > We had to keep the wext for compatibility - maybe that can now be
+> > > removed if you say it's broken - but I'm not sure I see much value in
+> > > adding it (and you're doing nothing to convince me otherwise, so far)
+> >
+> > Zdenek (CCed) reported to me 40% download performance degradation when
+> > PS is used. I think this happen because of delay between packets, but
+> > it is not confirmed yet (I did not provide patches to Zdenek for
+> > testing), hence perhaps problem lies somewere else. I can not reproduce
+> > this issue - I have the same download performance with PS on and off,
+> > I have quite bad performance when set dynamic PS timeout value less
+> > than 20ms, with default 100ms things are fine.
+> >
+> > I assume we can provide that setting to user space, if it allow to
+> > fixup performance with PS ?
+>
+> I'm not convinced - that'll give you a way to have the bug reporter test
+> it, or whatever, but that can also be achieved with debugfs or similar,
+> no?
+>
+> "Regular" users will never even get there, they'll either give up on
+> Linux, the machine, the wifi NIC, or live with the low speeds. They'll
+> never manipulate things here, and this isn't anything that a userspace
+> tool could automatically manipulate either.
+
+iw/iwconfig tools are not only used by regular users but also used by
+developers/
+engineers. We use it heavily for all our wifi testing, and when
+debugging performance
+related issue having a configurable ps timeout is of value. We had to
+hack the kernel
+to change that value (did not had enough time to work on iw/iwconfig).
+
+So IMHO we need to have this configurable either through iw/mac80211 debugfs.
