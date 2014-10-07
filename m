@@ -1,49 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:47665 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757106AbaJ2VWM (ORCPT
+Received: from mail-wg0-f51.google.com ([74.125.82.51]:46331 "EHLO
+	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753489AbaJGNn3 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2014 17:22:12 -0400
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <wireless-regdb@lists.infradead.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/7] wireless-regdb: Add 160 MHz channel bandwidth for Dominican Republic (DO)
-Date: Wed, 29 Oct 2014 23:21:25 +0200
-Message-ID: <1414617690-29786-2-git-send-email-jouni@qca.qualcomm.com> (sfid-20141029_222219_295736_6CF0260C)
-In-Reply-To: <1414617690-29786-1-git-send-email-jouni@qca.qualcomm.com>
-References: <1414617690-29786-1-git-send-email-jouni@qca.qualcomm.com>
+	Tue, 7 Oct 2014 09:43:29 -0400
+Received: by mail-wg0-f51.google.com with SMTP id b13so9343269wgh.22
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Oct 2014 06:43:28 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1412671748.1825.4.camel@jlt4.sipsolutions.net>
+References: <1412232304-7588-1-git-send-email-michal.kazior@tieto.com>
+	<1412671748.1825.4.camel@jlt4.sipsolutions.net>
+Date: Tue, 7 Oct 2014 15:43:27 +0200
+Message-ID: <CA+BoTQmrsA9Sk12ePaSaNqox2YOPjG0yqB2avRcB+a4qFgmz+w@mail.gmail.com> (sfid-20141007_154332_870967_77DD1282)
+Subject: Re: [RFC] mac80211: enable DFS with channel contexts
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This extends regulatory rules for Dominican Republic to allow 160 MHz
-VHT channels to be used in 5.15-5.25 GHz, 5.25-5.35 GHz. Since the rules
-between 5.15-5.25 and 5.25-5.35 GHz ranges are different (e.g., DFS
-requirement), the AUTO-BW flag needs to be used to allow the maximum
-channel bandwidth to be determined automatically based on two rules.
+On 7 October 2014 10:49, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Thu, 2014-10-02 at 08:45 +0200, Michal Kazior wrote:
+>> It is okay to enable DFS for channel contexts
+>> based drivers as long as no combination advertises
+>> radar detection and multi-channel operation at the
+>> same time.
+>
+> Don't we already check the latter in cfg80211?
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
----
- db.txt | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Correct. However ieee80211_radar_detected() takes only ieee80211_hw as
+an argument now. Skipping this check in mac80211 might bite later if
+someone extends cfg80211 later for multi-channel radar detection with
+non-mac80211 driver in mind and forgets about updating mac80211.
 
-diff --git a/db.txt b/db.txt
-index 8d43f45..999bc5f 100644
---- a/db.txt
-+++ b/db.txt
-@@ -337,8 +337,8 @@ country DM: DFS-FCC
- 
- country DO: DFS-FCC
- 	(2402 - 2472 @ 40), (30)
--	(5170 - 5250 @ 80), (17)
--	(5250 - 5330 @ 80), (23), DFS
-+	(5170 - 5250 @ 80), (17), AUTO-BW
-+	(5250 - 5330 @ 80), (23), DFS, AUTO-BW
- 	(5735 - 5835 @ 80), (30)
- 
- country DZ: DFS-JP
--- 
-1.9.1
+Or are you okay with relying on the cfg80211 check alone? If so I'll
+update the patch.
 
+
+Michał
