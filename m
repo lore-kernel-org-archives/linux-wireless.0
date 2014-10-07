@@ -1,94 +1,177 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:44328 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753496AbaJGPMu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Oct 2014 11:12:50 -0400
-Received: by mail-wi0-f178.google.com with SMTP id cc10so8259026wib.5
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Oct 2014 08:12:49 -0700 (PDT)
-Message-ID: <543402EF.8080509@gmail.com> (sfid-20141007_171253_628739_AC64056D)
-Date: Tue, 07 Oct 2014 17:12:47 +0200
-From: poma <pomidorabelisima@gmail.com>
+Received: from mout.gmx.net ([212.227.15.15]:59146 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754076AbaJGQJn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Oct 2014 12:09:43 -0400
+Message-ID: <5434103B.2010701@rempel-privat.de> (sfid-20141007_180947_047019_CC274D33)
+Date: Tue, 07 Oct 2014 18:09:31 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
 MIME-Version: 1.0
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: GSS_MTK_WCN_ACS@mediatek.com,
-	"John W. Linville" <linville@tuxdriver.com>,
-	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-Subject: Re: [rt2x00-users] MediaTek Inc. MT7601U Wireless Adapter
-References: <53FCC55B.90705@gmail.com> <20140826182849.GE30445@tuxdriver.com> <53FD7BFA.1040304@maya.org> <20140827135550.GD15173@tuxdriver.com> <53FE9920.2040702@gmail.com> <5402B519.1080002@gmail.com> <54034EF1.6040407@maya.org> <5433542F.70206@gmail.com> <20141007135731.GF25590@tuxdriver.com> <5433FFC0.2040704@gmail.com>
-In-Reply-To: <5433FFC0.2040704@gmail.com>
-Content-Type: text/plain; charset=windows-1252
+To: Marek Puzyniak <marek.puzyniak@tieto.com>,
+	ath9k-devel@lists.ath9k.org
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [ath9k-devel] [PATCH] ath9k_htc: avoid kernel panic in ath9k_hw_reset
+References: <1412694270-14421-1-git-send-email-marek.puzyniak@tieto.com>
+In-Reply-To: <1412694270-14421-1-git-send-email-marek.puzyniak@tieto.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="wQU1XsuQRJ9oOcSRw0FLt97UMeEhNKJig"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07.10.2014 16:59, poma wrote:
-> On 07.10.2014 15:57, John W. Linville wrote:
->> You probably shold be sending this to MediaTek.  The driver you are
->> using is not part of the upstream Linux kernel.
->>
->> John
->>
-> 
-> No problemos!
-> 
-> 
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--wQU1XsuQRJ9oOcSRw0FLt97UMeEhNKJig
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-BTW, pán Gruszka, when will these devices be supported as a part of the upstream Linux kernel?
+Am 07.10.2014 um 17:04 schrieb Marek Puzyniak:
+> hw pointer of ath_hw is not assigned to proper value
+> in function ath9k_hw_reset what finally causes kernel panic.
+> This can be solved by proper initialization of ath_hw in
+> ath9k_init_priv.
+>=20
+> Signed-off-by: Marek Puzyniak <marek.puzyniak@tieto.com>
+
+Acked-by: Oleksij Rempel <linux@rempel-privat.de>
+
+> ---
+>=20
+> [432866.234088] BUG: unable to handle kernel NULL pointer dereference a=
+t 0000000000000030
+> [432866.234139] IP: [<ffffffffa09cd915>] ath9k_hw_reset+0xe05/0x13e0 [a=
+th9k_hw]
+> [432866.234183] PGD 220dc9067 PUD 220dca067 PMD 0=20
+> [432866.234213] Oops: 0000 [#1] SMP=20
+> [432866.234234] Modules linked in: ath9k_htc ath9k_common ath9k_hw ath =
+btrfs xor raid6_pq ufs qnx4 hfsplus hfs minix ntfs msdos jfs xfs libcrc32=
+c reiserfs ext2 ppdev lp rfcomm bnep binfmt_misc nfsd auth_rpcgss nfs_acl=
+ nfs lockd fscache sunrpc snd_hda_codec_hdmi snd_hda_codec_idt snd_hda_co=
+dec_generic arc4 joydev uvcvideo videobuf2_vmalloc videobuf2_memops video=
+buf2_core v4l2_common iwlmvm videodev iwldvm btusb mac80211 bluetooth snd=
+_hda_intel i915 snd_hda_controller snd_hda_codec snd_hwdep snd_pcm snd_se=
+q iTCO_wdt snd_seq_device iwlwifi parport_pc tpm_tis dell_laptop snd_time=
+r cfg80211 drm_kms_helper snd drm psmouse parport soundcore video iTCO_ve=
+ndor_support dcdbas i2c_algo_bit i2c_i801 lpc_ich dell_wmi pcspkr sparse_=
+keymap serio_raw wmi evbug mac_hid ahci sdhci_pci libahci sdhci e1000e pt=
+p pps_core
+> [432866.234749] CPU: 0 PID: 3131 Comm: NetworkManager Tainted: G       =
+ W      3.17.0-rc6-wl+ #63
+> [432866.234790] Hardware name: Dell Inc. Latitude E6420/0K0DNP, BIOS A0=
+8 10/18/2011
+> [432866.234826] task: ffff88021f1221c0 ti: ffff88021e920000 task.ti: ff=
+ff88021e920000
+> [432866.234862] RIP: 0010:[<ffffffffa09cd915>]  [<ffffffffa09cd915>] at=
+h9k_hw_reset+0xe05/0x13e0 [ath9k_hw]
+> [432866.234913] RSP: 0018:ffff88021e923568  EFLAGS: 00010283
+> [432866.234940] RAX: 0000000000000000 RBX: ffff8801c2904330 RCX: 000000=
+0000000006
+> [432866.234975] RDX: 0000000000000006 RSI: ffff88021f122a18 RDI: ffff88=
+021f1221c0
+> [432866.235010] RBP: ffff88021e9235d8 R08: 0000000000000000 R09: 000000=
+0000000000
+> [432866.235044] R10: 0000000000000000 R11: 0000000000000000 R12: 000000=
+0000000000
+> [432866.235079] R13: 0000000000000000 R14: 0000000000000000 R15: ffff88=
+01c2904000
+> [432866.235114] FS:  00007f8f64f64800(0000) GS:ffff88022dc00000(0000) k=
+nlGS:0000000000000000
+> [432866.235153] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> [432866.235182] CR2: 0000000000000030 CR3: 0000000220c56000 CR4: 000000=
+00000407f0
+> [432866.235216] Stack:
+> [432866.235228]  ffff88021e9235d8 ffffffff81800964 0000000000000000 00f=
+f880120000000
+> [432866.235272]  00000000000183f5 ffff8801c2904040 ffff8801c2904040 fff=
+f88021f7fb818
+> [432866.235315]  ffff88021e9235d8 ffff8801c2a2a620 ffff8801c2904000 fff=
+f8801c2a289a0
+> [432866.235359] Call Trace:
+> [432866.235378]  [<ffffffffa0a41423>] ath9k_htc_start+0xa3/0x280 [ath9k=
+_htc]
+> [432866.235414]  [<ffffffff810a1b7a>] ? mark_held_locks+0x6a/0x90
+> [432866.235458]  [<ffffffffa04815a1>] ieee80211_do_open+0x331/0xdd0 [ma=
+c80211]
+> [432866.235495]  [<ffffffff81749b8e>] ? mutex_unlock+0xe/0x10
+> [432866.235532]  [<ffffffffa04820a1>] ieee80211_open+0x61/0x70 [mac8021=
+1]
+> [432866.235566]  [<ffffffff816384d6>] __dev_open+0xb6/0x130
+> [432866.235594]  [<ffffffff816387ec>] __dev_change_flags+0xac/0x180
+> [432866.235625]  [<ffffffff81638910>] dev_change_flags+0x30/0x70
+> [432866.235657]  [<ffffffff811556e2>] ? get_page_from_freelist+0x822/0x=
+980
+> [432866.235692]  [<ffffffff81646409>] do_setlink+0x349/0x9e0
+> [432866.235721]  [<ffffffff810a1cad>] ? trace_hardirqs_on_caller+0x10d/=
+0x1d0
+> [432866.235755]  [<ffffffff810a1d7d>] ? trace_hardirqs_on+0xd/0x10
+> [432866.235786]  [<ffffffff8164926b>] rtnl_newlink+0x4cb/0x730
+> [432866.235816]  [<ffffffff81648ea3>] ? rtnl_newlink+0x103/0x730
+> [432866.235848]  [<ffffffff81648c00>] rtnetlink_rcv_msg+0xa0/0x240
+> [432866.235879]  [<ffffffff810a1d7d>] ? trace_hardirqs_on+0xd/0x10
+> [432866.235910]  [<ffffffff81644e47>] ? rtnl_lock+0x17/0x20
+> [432866.235939]  [<ffffffff81648b60>] ? __rtnl_unlock+0x20/0x20
+> [432866.235970]  [<ffffffff81664ff1>] netlink_rcv_skb+0xb1/0xc0
+> [432866.236000]  [<ffffffff81644ec5>] rtnetlink_rcv+0x25/0x40
+> [432866.236029]  [<ffffffff816648ad>] netlink_unicast+0x18d/0x200
+> [432866.236060]  [<ffffffff81664c3d>] netlink_sendmsg+0x31d/0x430
+> [432866.236091]  [<ffffffff8161ab3c>] sock_sendmsg+0x9c/0xd0
+> [432866.236121]  [<ffffffff81176aac>] ? might_fault+0x8c/0xa0
+> [432866.236149]  [<ffffffff81176a63>] ? might_fault+0x43/0xa0
+> [432866.236179]  [<ffffffff81629366>] ? verify_iovec+0x56/0xe0
+> [432866.236208]  [<ffffffff8161b5f9>] ___sys_sendmsg+0x389/0x3a0
+> [432866.236239]  [<ffffffff811ddc65>] ? __fget+0x5/0xe0
+> [432866.236266]  [<ffffffff811dddc3>] ? __fdget+0x13/0x20
+> [432866.237561]  [<ffffffff811ddd0a>] ? __fget+0xaa/0xe0
+> [432866.238837]  [<ffffffff811ddc65>] ? __fget+0x5/0xe0
+> [432866.240098]  [<ffffffff811ddd65>] ? __fget_light+0x25/0x70
+> [432866.241357]  [<ffffffff8161c069>] __sys_sendmsg+0x49/0x90
+> [432866.242489]  [<ffffffff8161c0c2>] SyS_sendmsg+0x12/0x20
+> [432866.243308]  [<ffffffff8174c496>] system_call_fastpath+0x1a/0x1f
+> [432866.244029] Code: 00 41 ff 57 10 bf de 46 03 00 e8 07 91 9c e0 e9 6=
+d f4 ff ff 66 90 41 81 bf c8 02 00 00 c0 02 00 00 0f 84 df 03 00 00 49 8b=
+ 47 38 <80> 78 30 00 0f 84 7e fb ff ff f6 43 0a 30 49 8b 87 e0 16 00 00=20
+> [432866.245634] RIP  [<ffffffffa09cd915>] ath9k_hw_reset+0xe05/0x13e0 [=
+ath9k_hw]
+> [432866.246399]  RSP <ffff88021e923568>
+> [432866.247145] CR2: 0000000000000030
+> [432866.252454] ---[ end trace 85181a8c528713c8 ]---
+>=20
+>=20
+>  drivers/net/wireless/ath/ath9k/htc_drv_init.c | 1 +
+>  1 file changed, 1 insertion(+)
+>=20
+> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/ne=
+t/wireless/ath/ath9k/htc_drv_init.c
+> index d779f4f..4014c4b 100644
+> --- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+> @@ -464,6 +464,7 @@ static int ath9k_init_priv(struct ath9k_htc_priv *p=
+riv,
+>  		return -ENOMEM;
+> =20
+>  	ah->dev =3D priv->dev;
+> +	ah->hw =3D priv->hw;
+>  	ah->hw_version.devid =3D devid;
+>  	ah->hw_version.usbdev =3D drv_info;
+>  	ah->ah_flags |=3D AH_USE_EEPROM;
+>=20
 
 
-poma
+--=20
+Regards,
+Oleksij
 
 
->> On Tue, Oct 07, 2014 at 04:47:11AM +0200, poma wrote:
->>>
->>> BUG: unable to handle kernel paging request at ffffc9000277c070
->>> IP: [<ffffffff8165272c>] __netdev_watchdog_up+0xc/0x80
->>> PGD 12b01c067 PUD 12b01d067 PMD 1295e8067 PTE 0
->>> Oops: 0000 [#1] SMP 
->>> CPU: 3 PID: 1497 Comm: wpa_supplicant Tainted: G           OE  3.17.0-1.fc21.x86_64 #1
->>> task: ffff88007ec44e80 ti: ffff8800beddc000 task.ti: ffff8800beddc000
->>> RIP: 0010:[<ffffffff8165272c>]  [<ffffffff8165272c>] __netdev_watchdog_up+0xc/0x80
->>> RSP: 0018:ffff8800beddfcd8  EFLAGS: 00010202
->>> RAX: ffffc9000277c000 RBX: ffff8800caa3c000 RCX: ffff8800ca22a948
->>> RDX: 0000000000000000 RSI: 0000000000000005 RDI: ffff8800caa3c000
->>> RBP: ffff8800beddfce8 R08: 0000000000000000 R09: 0000000000000208
->>> R10: 0000000000000400 R11: 0000000000000010 R12: 0000000000000000
->>> R13: ffffc9000277c000 R14: 0000000000000000 R15: 0000000000000001
->>> FS:  00007fce557aa800(0000) GS:ffff88012fcc0000(0000) knlGS:0000000000000000
->>> CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
->>> CR2: ffffc9000277c070 CR3: 000000007eeed000 CR4: 00000000000007e0
->>> Stack:
->>>  ffffffff816527e8 ffff8800caa3c000 ffff8800beddfd20 ffffffffa05e4655
->>>  ffffffffa05e4ab0 ffffffffa05e4510 000000005abd5236 ffff8800caa3c000
->>>  0000000000001003 ffff8800beddfd58 ffffffff8163135e ffff8800caa3c000
->>> Call Trace:
->>>  [<ffffffff816527e8>] ? netif_carrier_on+0x48/0x50
->>>  [<ffffffffa05e4655>] MainVirtualIF_open+0x85/0xe0 [mt7601Usta]
->>>  [<ffffffffa05e4ab0>] ? RtmpOSIRQRequest+0x60/0x60 [mt7601Usta]
->>>  [<ffffffffa05e4510>] ? RT28xx_get_ether_stats+0x150/0x150 [mt7601Usta]
->>>  [<ffffffff8163135e>] __dev_open+0xce/0x150
->>>  [<ffffffff8163168d>] __dev_change_flags+0x9d/0x160
->>>  [<ffffffff81631779>] dev_change_flags+0x29/0x70
->>>  [<ffffffff816a5bac>] devinet_ioctl+0x63c/0x710
->>>  [<ffffffff816a6d05>] inet_ioctl+0x65/0x90
->>>  [<ffffffff816105d5>] sock_do_ioctl+0x25/0x50
->>>  [<ffffffff81610b30>] sock_ioctl+0x1f0/0x2c0
->>>  [<ffffffff81220340>] do_vfs_ioctl+0x2d0/0x4b0
->>>  [<ffffffff812205a1>] SyS_ioctl+0x81/0xa0
->>>  [<ffffffff81135a16>] ? __audit_syscall_exit+0x1f6/0x2a0
->>>  [<ffffffff81743469>] system_call_fastpath+0x16/0x1b
->>> Code: 9b 48 a4 ff c6 05 bd 12 6b 00 01 48 8b 45 d8 e9 09 ff ff ff 66 66 2e 0f 1f 84 00 00 00 00 00 66 66 66 66 90 48 8b 87 e8 01 00 00 <48> 83 78 70 00 74 41 55 48 89 e5 53 48 63 87 c0 03 00 00 85 c0 
->>> RIP  [<ffffffff8165272c>] __netdev_watchdog_up+0xc/0x80
->>>  RSP <ffff8800beddfcd8>
->>> CR2: ffffc9000277c070
->>> ---[ end trace 97a7adc75a3f40f8 ]---
->>>
->>>
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>
->>
-> 
+--wQU1XsuQRJ9oOcSRw0FLt97UMeEhNKJig
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iF4EAREIAAYFAlQ0ED8ACgkQHwImuRkmbWksowD+Mj9M5wtqj62qQ4j/+D0cdhhU
+ByyEGnSQZSHcBcoHHIIA/iFV+DMr8dKbjZAivOYvo0ttCxgAiBE2+190FW3tRokS
+=5sDu
+-----END PGP SIGNATURE-----
+
+--wQU1XsuQRJ9oOcSRw0FLt97UMeEhNKJig--
