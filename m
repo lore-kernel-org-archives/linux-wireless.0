@@ -1,67 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:48256 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1757357AbaJ1GnI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2014 02:43:08 -0400
-Message-ID: <1414478575.27833.15.camel@coelho.fi> (sfid-20141028_074315_822763_7C054E69)
-From: Luca Coelho <luca@coelho.fi>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Jukka Rissanen <jukka.rissanen@linux.intel.com>,
-	linux-wireless@vger.kernel.org
-Date: Tue, 28 Oct 2014 08:42:55 +0200
-In-Reply-To: <9C544CA4-42D3-4419-9BC7-C42DF2420CA4@holtmann.org>
-References: <1414406688-3827-1-git-send-email-jukka.rissanen@linux.intel.com>
-	 <1414408856.3836.3.camel@jlt4.sipsolutions.net>
-	 <1414409397.2705.198.camel@jrissane-mobl.ger.corp.intel.com>
-	 <1414409485.3836.5.camel@jlt4.sipsolutions.net>
-	 <1414410917.2705.201.camel@jrissane-mobl.ger.corp.intel.com>
-	 <1414411714.3836.7.camel@jlt4.sipsolutions.net>
-	 <1D755566-F088-454B-AEC5-C635FFCB488A@holtmann.org>
-	 <1414431250.27833.9.camel@coelho.fi>
-	 <9C544CA4-42D3-4419-9BC7-C42DF2420CA4@holtmann.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [PATCH 0/3] Add mcast event when hwsim radios are created and
- removed
+Received: from mail-la0-f47.google.com ([209.85.215.47]:36928 "EHLO
+	mail-la0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751223AbaJGGjf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Oct 2014 02:39:35 -0400
+Received: by mail-la0-f47.google.com with SMTP id pv20so5643489lab.6
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Oct 2014 23:39:33 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAEFj985Di47A3OUSKn3ycW01Ohmeqs=uL4y_59YL+HyUDWvO0g@mail.gmail.com>
+References: <1412251000-25377-1-git-send-email-janusz.dziedzic@tieto.com>
+	<CAEFj985Di47A3OUSKn3ycW01Ohmeqs=uL4y_59YL+HyUDWvO0g@mail.gmail.com>
+Date: Tue, 7 Oct 2014 08:39:33 +0200
+Message-ID: <CALhHN=pFM8-Ck62nzNfOkS+bU3Xm_k30_AYrqagP0tY9nuV4pw@mail.gmail.com> (sfid-20141007_083940_256346_B80E9B47)
+Subject: Re: [PATCH] ath10k: don't create bssid peer for ibss
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-10-27 at 16:14 -0700, Marcel Holtmann wrote:
-> Hi Luca,
+On 4 October 2014 03:06, Yeoh Chun-Yeow <yeohchunyeow@gmail.com> wrote:
+> On Thu, Oct 2, 2014 at 7:56 PM, Janusz Dziedzic
+> <janusz.dziedzic@tieto.com> wrote:
+>> It's not really necessary to create bssid peer for
+>> bssid. Self-address peer is sufficient.
+>>
+>> This prevents some firmware revisions from crashing.
+>>
+>
+> Which firmware? AFAIK, only firmware version 636 supports adhoc, right?
+>
+Yes, this is for 636.
 
-Hi Marcel,
-
-
-> >>>>> That's not particularly hard to figure out, for example by looking at
-> >>>>> sysfs.
-> >>>>> 
-> >>>>> Is this really so time-constrained/important/... that you can't do that?
-> >>>> 
-> >>>> It does not seem very practical to dig this information from sysfs as
-> >>>> the same information can be easily get via netlink as this patch shows.
-> >>> 
-> >>> Well, that's a slippery slope. I'd consider it more practical to use
-> >>> existing APIs instead of (gratuitously) inventing new ones. It'll even
-> >>> work on older kernels as an added benefit.
-> >> 
-> >> I see that different. The component that handles the emulation of the new wireless device should be independent from the component driving it. I prefer to have a race free way of obtaining the needed information without having to monitor nl80211 and sysfs for this. Especially with the use cases that we have in mind it has no business with these other interfaces.
-> >> 
-> >> We have been down this route with the bridge interface where people had to dig out information from sysfs and it did not work out nicely. So now everything moves to netlink.
-> > 
-> > Why does hwsim have to be treated differently from any other device?
-> > Unlike bridging, HW emulation doesn't seem to be a real life use case.
-> > 
-> > But I'm probably missing something. ;)
-> 
-> this is the controlling side. The thing that I call emulator. It is the component that creates/destroys the hwsim wiphy. It can also be the one that handles the packet processing similar to wmediumd.
-> 
-> The nl80211/cfg80211 is not treated differently here. This is purely for the MAC80211_HWSIM netlink family side of things. Makes sense?
-
-Ah, okay, I was confused.  Makes total sense to me then, I don't see why
-we shouldn't have this API to provide the needed information totally
-independently from nl80211.
-
---
-Luca.
-
+BR
+Janusz
