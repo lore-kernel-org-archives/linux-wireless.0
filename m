@@ -1,85 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f45.google.com ([74.125.82.45]:35744 "EHLO
-	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751454AbaJJLAQ (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:53522 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751280AbaJGEnv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Oct 2014 07:00:16 -0400
-Received: by mail-wg0-f45.google.com with SMTP id m15so3636974wgh.16
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Oct 2014 04:00:15 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] ath10k: simplify computation of mgmt rx band
-Date: Fri, 10 Oct 2014 12:49:08 +0200
-Message-Id: <1412938148-6659-1-git-send-email-michal.kazior@tieto.com> (sfid-20141010_130021_817822_D4FCE536)
+	Tue, 7 Oct 2014 00:43:51 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH v2 3/6] ath9k: Fix sequence number assignment
+Date: Tue,  7 Oct 2014 10:14:38 +0530
+Message-Id: <1412657081-3202-4-git-send-email-sujith@msujith.org> (sfid-20141007_064355_870635_906BCD20)
+In-Reply-To: <1412657081-3202-1-git-send-email-sujith@msujith.org>
+References: <1412657081-3202-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Using global channel won't work with chanctx. Try
-to determine the channel from the information
-provided in the wmi event itself alone. This
-should be sufficient.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Currently, ath9k uses a global counter for all
+frames that need to be assigned a sequence number.
+QoS-data frames are handled properly since they
+have a per-tid counter. But, beacons and other
+management frames use the same counter even if
+multiple interfaces or contexts are present.
+
+Fix this issue by making the counter per-interface
+and using it when mac80211 sets IEEE80211_TX_CTL_ASSIGN_SEQ.
+
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath10k/wmi.c | 32 ++++++++++++++++----------------
- 1 file changed, 16 insertions(+), 16 deletions(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h  |  4 +++-
+ drivers/net/wireless/ath/ath9k/beacon.c | 12 ++----------
+ drivers/net/wireless/ath/ath9k/xmit.c   | 34 ++++++++++++++++++++++-----------
+ 3 files changed, 28 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 829fccf..ae746ce 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -1114,7 +1114,6 @@ static int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
- 	struct wmi_mgmt_rx_event_v2 *ev_v2;
- 	struct wmi_mgmt_rx_hdr_v1 *ev_hdr;
- 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
--	struct ieee80211_channel *ch;
- 	struct ieee80211_hdr *hdr;
- 	u32 rx_status;
- 	u32 channel;
-@@ -1167,25 +1166,26 @@ static int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
- 	if (rx_status & WMI_RX_STATUS_ERR_MIC)
- 		status->flag |= RX_FLAG_MMIC_ERROR;
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index bfa0b15..01a7db0 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -294,7 +294,6 @@ struct ath_tx_control {
+  *  (axq_qnum).
+  */
+ struct ath_tx {
+-	u16 seq_no;
+ 	u32 txqsetup;
+ 	spinlock_t txbuflock;
+ 	struct list_head txbuf;
+@@ -563,6 +562,7 @@ int ath_tx_init(struct ath_softc *sc, int nbufs);
+ int ath_txq_update(struct ath_softc *sc, int qnum,
+ 		   struct ath9k_tx_queue_info *q);
+ void ath_update_max_aggr_framelen(struct ath_softc *sc, int queue, int txop);
++void ath_assign_seq(struct ath_common *common, struct sk_buff *skb);
+ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 		 struct ath_tx_control *txctl);
+ void ath_tx_cabq(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+@@ -592,6 +592,8 @@ void ath9k_release_buffered_frames(struct ieee80211_hw *hw,
+ struct ath_vif {
+ 	struct list_head list;
  
--	/* HW can Rx CCK rates on 5GHz. In that case phy_mode is set to
-+	/* Hardware can Rx CCK rates on 5GHz. In that case phy_mode is set to
- 	 * MODE_11B. This means phy_mode is not a reliable source for the band
--	 * of mgmt rx. */
--
--	ch = ar->scan_channel;
--	if (!ch)
--		ch = ar->rx_channel;
--
--	if (ch) {
--		status->band = ch->band;
--
--		if (phy_mode == MODE_11B &&
--		    status->band == IEEE80211_BAND_5GHZ)
--			ath10k_dbg(ar, ATH10K_DBG_MGMT, "wmi mgmt rx 11b (CCK) on 5GHz\n");
-+	 * of mgmt rx.
-+	 */
-+	if (channel >= 1 && channel <= 14) {
-+		status->band = IEEE80211_BAND_2GHZ;
-+	} else if (channel >= 36 && channel <= 165) {
-+		status->band = IEEE80211_BAND_5GHZ;
- 	} else {
--		ath10k_warn(ar, "using (unreliable) phy_mode to extract band for mgmt rx\n");
--		status->band = phy_mode_to_band(phy_mode);
-+		/* Shouldn't happen unless list of advertised channels to
-+		 * mac80211 has been changed.
-+		 */
-+		WARN_ON_ONCE(1);
-+		dev_kfree_skb(skb);
-+		return 0;
- 	}
- 
-+	if (phy_mode == MODE_11B && status->band == IEEE80211_BAND_5GHZ)
-+		ath10k_dbg(ar, ATH10K_DBG_MGMT, "wmi mgmt rx 11b (CCK) on 5GHz\n");
++	u16 seq_no;
 +
- 	status->freq = ieee80211_channel_to_frequency(channel, status->band);
- 	status->signal = snr + ATH10K_DEFAULT_NOISE_FLOOR;
- 	status->rate_idx = get_rate_idx(rate, status->band);
+ 	/* BSS info */
+ 	u8 bssid[ETH_ALEN];
+ 	u16 aid;
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index a6af855..ecb783b 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -144,16 +144,8 @@ static struct ath_buf *ath9k_beacon_generate(struct ieee80211_hw *hw,
+ 	mgmt_hdr->u.beacon.timestamp = avp->tsf_adjust;
+ 
+ 	info = IEEE80211_SKB_CB(skb);
+-	if (info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ) {
+-		/*
+-		 * TODO: make sure the seq# gets assigned properly (vs. other
+-		 * TX frames)
+-		 */
+-		struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+-		sc->tx.seq_no += 0x10;
+-		hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
+-		hdr->seq_ctrl |= cpu_to_le16(sc->tx.seq_no);
+-	}
++
++	ath_assign_seq(common, skb);
+ 
+ 	if (vif->p2p)
+ 		ath9k_beacon_add_noa(sc, avp, skb);
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 151ae49..493a183 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -2139,6 +2139,28 @@ static struct ath_buf *ath_tx_setup_buffer(struct ath_softc *sc,
+ 	return bf;
+ }
+ 
++void ath_assign_seq(struct ath_common *common, struct sk_buff *skb)
++{
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	struct ieee80211_vif *vif = info->control.vif;
++	struct ath_vif *avp;
++
++	if (!(info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ))
++		return;
++
++	if (!vif)
++		return;
++
++	avp = (struct ath_vif *)vif->drv_priv;
++
++	if (info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT)
++		avp->seq_no += 0x10;
++
++	hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
++	hdr->seq_ctrl |= cpu_to_le16(avp->seq_no);
++}
++
+ static int ath_tx_prepare(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 			  struct ath_tx_control *txctl)
+ {
+@@ -2162,17 +2184,7 @@ static int ath_tx_prepare(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 	if (info->control.hw_key)
+ 		frmlen += info->control.hw_key->icv_len;
+ 
+-	/*
+-	 * As a temporary workaround, assign seq# here; this will likely need
+-	 * to be cleaned up to work better with Beacon transmission and virtual
+-	 * BSSes.
+-	 */
+-	if (info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ) {
+-		if (info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT)
+-			sc->tx.seq_no += 0x10;
+-		hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
+-		hdr->seq_ctrl |= cpu_to_le16(sc->tx.seq_no);
+-	}
++	ath_assign_seq(ath9k_hw_common(sc->sc_ah), skb);
+ 
+ 	if ((vif && vif->type != NL80211_IFTYPE_AP &&
+ 	            vif->type != NL80211_IFTYPE_AP_VLAN) ||
 -- 
-1.8.5.3
+2.1.2
 
