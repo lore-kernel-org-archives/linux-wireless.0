@@ -1,58 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:34744
-	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752501AbaJYTVa (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:36458 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751745AbaJGEn4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Oct 2014 15:21:30 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, sujith@msujith.org
-Subject: [PATCH v2 10/10] ath9k: use a random MAC address if the EEPROM address is invalid
-Date: Sat, 25 Oct 2014 17:19:35 +0200
-Message-Id: <1414250375-74121-10-git-send-email-nbd@openwrt.org> (sfid-20141025_212134_001707_54BEDDAF)
-In-Reply-To: <1414250375-74121-1-git-send-email-nbd@openwrt.org>
-References: <1414250375-74121-1-git-send-email-nbd@openwrt.org>
+	Tue, 7 Oct 2014 00:43:56 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH v2 6/6] ath9k: Process beacons properly
+Date: Tue,  7 Oct 2014 10:14:41 +0530
+Message-Id: <1412657081-3202-7-git-send-email-sujith@msujith.org> (sfid-20141007_064401_031966_33D90653)
+In-Reply-To: <1412657081-3202-1-git-send-email-sujith@msujith.org>
+References: <1412657081-3202-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Based on OpenWrt patch by Gabor Juhos
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+When the current operating channel context has
+been marked as ATH_CHANCTX_STATE_FORCE_ACTIVE,
+do not process beacons that might be received,
+since we have to wait for the station to become
+authorized.
+
+Also, since the cached TSF value will be zero
+initially do not rearm the timer in this
+case when a beacon is received, since it results
+in spurious values.
+
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath9k/hw.c | 13 +++++++++++--
- 1 file changed, 11 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/channel.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 47f410e..ee9fb52 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -19,6 +19,7 @@
- #include <linux/module.h>
- #include <linux/time.h>
- #include <linux/bitops.h>
-+#include <linux/etherdevice.h>
- #include <asm/unaligned.h>
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index 16bed6a..135f74c 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -495,10 +495,15 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 		    sc->cur_chan == &sc->offchannel.chan)
+ 			break;
  
- #include "hw.h"
-@@ -446,8 +447,16 @@ static int ath9k_hw_init_macaddr(struct ath_hw *ah)
- 		common->macaddr[2 * i] = eeval >> 8;
- 		common->macaddr[2 * i + 1] = eeval & 0xff;
- 	}
--	if (sum == 0 || sum == 0xffff * 3)
--		return -EADDRNOTAVAIL;
-+	if (!is_valid_ether_addr(common->macaddr)) {
-+		ath_err(common,
-+			"eeprom contains invalid mac address: %pM\n",
-+			common->macaddr);
+-		ath_chanctx_adjust_tbtt_delta(sc);
+ 		sc->sched.beacon_pending = false;
+ 		sc->sched.beacon_miss = 0;
+ 
++		if (sc->sched.state == ATH_CHANCTX_STATE_FORCE_ACTIVE ||
++		    !sc->cur_chan->tsf_val)
++			break;
 +
-+		random_ether_addr(common->macaddr);
-+		ath_err(common,
-+			"random mac address will be used: %pM\n",
-+			common->macaddr);
-+	}
- 
- 	return 0;
- }
++		ath_chanctx_adjust_tbtt_delta(sc);
++
+ 		/* TSF time might have been updated by the incoming beacon,
+ 		 * need update the channel switch timer to reflect the change.
+ 		 */
 -- 
 2.1.2
 
