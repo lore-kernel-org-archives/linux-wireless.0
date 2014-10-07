@@ -1,45 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:39149 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756308AbaJXMku (ORCPT
+Received: from mail-wg0-f43.google.com ([74.125.82.43]:43126 "EHLO
+	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753395AbaJGIoo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Oct 2014 08:40:50 -0400
-Received: by mail-wi0-f169.google.com with SMTP id q5so1066266wiv.2
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Oct 2014 05:40:49 -0700 (PDT)
-Date: Fri, 24 Oct 2014 14:40:40 +0200
+	Tue, 7 Oct 2014 04:44:44 -0400
+Received: by mail-wg0-f43.google.com with SMTP id m15so8538054wgh.26
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Oct 2014 01:44:43 -0700 (PDT)
+Date: Tue, 7 Oct 2014 10:44:27 +0200
 From: Karl Beldan <karl.beldan@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@rivierawaves.com>
-Subject: Re: [PATCH] mac80211: minstrel_ht: do not always skip ht rates
- vht_only is true
-Message-ID: <20141024124040.GA5323@magnum.frso.rivierawaves.com> (sfid-20141024_144054_111970_1BEBAB14)
-References: <1414152061.1934.2.camel@jlt4.sipsolutions.net>
- <1414154089-5185-1-git-send-email-karl.beldan@gmail.com>
+To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	johannes@sipsolutions.net, nbd@nbd.name, ikstream86@gmail.com
+Subject: Re: [PATCH v2 2/2] mac80211: improve minstrel_ht rate sorting by
+ throughput & probability
+Message-ID: <20141007084427.GA9964@magnum.frso.rivierawaves.com> (sfid-20141007_104448_742732_CA5D1D65)
+References: <1410297734-21187-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+ <1410297734-21187-3-git-send-email-thomas@net.t-labs.tu-berlin.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1414154089-5185-1-git-send-email-karl.beldan@gmail.com>
+In-Reply-To: <1410297734-21187-3-git-send-email-thomas@net.t-labs.tu-berlin.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 24, 2014 at 02:34:49PM +0200, Karl Beldan wrote:
-> From: Karl Beldan <karl.beldan@rivierawaves.com>
-> 
-> When CONFIG_MAC80211_RC_MINSTREL_VHT is set, the module param
-> minstrel_vht_only tells minstrel_ht whether to allow the mix of ht rates
-> with vht rates.
-> ATM, minstrel_ht skips ht rates when minstrel_vht_only is true, but it does
-> that even if vht is not supported, which makes the sta rates fallback to
-> legacy as no ht rate gets enabled.
-> 
-> Fixes: 9208247d74bc ("mac80211: minstrel_ht: add basic support for VHT rates <= 3SS@80MHz")
-> Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
-> ---
+Hi,
 
-This sneaked in between v4 and v5 when reformatting the code for 80ch.
-v5:
-- fix some checkpatch complaints this, leaves 2 false positives
-  "ERROR: Macros with complex values should be enclosed in parenthesis"
-      in array initialization
- 
+On Tue, Sep 09, 2014 at 11:22:14PM +0200, Thomas Huehn wrote:
+> @@ -260,13 +399,14 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
+>  	mi->sample_slow = 0;
+>  	mi->sample_count = 0;
+>  
+> -	for (group = 0; group < ARRAY_SIZE(minstrel_mcs_groups); group++) {
+> -		bool mg_rates_valid = false;
+> +	/* Initialize global rate indexes */
+> +	for(j = 0; j < MAX_THR_RATES; j++){
+> +		tmp_mcs_tp_rate[j] = 0;
+> +		tmp_cck_tp_rate[j] = 0;
+> +	}
+>  
+
+Pb if a driver doesn't support the first entry it. 
+Maybe using a mi->min_ridx set in minstrel_ht_update_caps would be
+practical.
+
+> @@ -274,24 +414,16 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
+>  
+>  		mi->sample_count++;
+>  
+> +		/* (re)Initialize group rate indexes */
+> +		for(j = 0; j < MAX_THR_RATES; j++)
+> +			tmp_group_tp_rate[j] = group;
+> +
+
+You meant group * MCS_GROUP_RATES, no ?
+And group * MCS_GROUP_RATES + ffs(mg->supported) - 1 would be correct
+but this corner case is not easily triggerable, ATM.
+
+-- 
 Karl
