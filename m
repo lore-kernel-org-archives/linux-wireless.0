@@ -1,107 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f48.google.com ([209.85.216.48]:60727 "EHLO
-	mail-qa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933390AbaJUWfL (ORCPT
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:63645 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751720AbaJGCrO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Oct 2014 18:35:11 -0400
-Received: by mail-qa0-f48.google.com with SMTP id dc16so1603419qab.21
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Oct 2014 15:35:10 -0700 (PDT)
-From: "S. Gilles" <sgilles@terpmail.umd.edu>
-Date: Tue, 21 Oct 2014 18:35:03 -0400
-To: "S. Gilles" <sgilles@terpmail.umd.edu>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	linux-wireless@vger.kernel.org
-Subject: Re: PROBLEM: Boot failure with bad RIP value
-Message-ID: <20141021223503.GE14789@number18> (sfid-20141022_003516_898351_A07AE938)
-References: <20141013234509.GD22088@number18>
- <543C9B66.6050705@lwfinger.net>
- <20141014041313.GF22088@number18>
+	Mon, 6 Oct 2014 22:47:14 -0400
+Received: by mail-wi0-f176.google.com with SMTP id hi2so6431378wib.15
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Oct 2014 19:47:13 -0700 (PDT)
+Message-ID: <5433542F.70206@gmail.com> (sfid-20141007_044721_507611_428921BC)
+Date: Tue, 07 Oct 2014 04:47:11 +0200
+From: poma <pomidorabelisima@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20141014041313.GF22088@number18>
+To: users@rt2x00.serialmonkey.com
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [rt2x00-users] MediaTek Inc. MT7601U Wireless Adapter
+References: <53FCC55B.90705@gmail.com> <20140826182849.GE30445@tuxdriver.com>	<53FD7BFA.1040304@maya.org> <20140827135550.GD15173@tuxdriver.com>	<53FE9920.2040702@gmail.com> <5402B519.1080002@gmail.com> <54034EF1.6040407@maya.org>
+In-Reply-To: <54034EF1.6040407@maya.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 14, 2014 at 12:13:13AM -0400, S. Gilles wrote:
-> On Mon, Oct 13, 2014 at 10:41:26PM -0500, Larry Finger wrote:
-> > On 10/13/2014 06:45 PM, S. Gilles wrote:
-> > > (Sending this to the right people this time, hopefully.)
-> > >
-> > > I have been getting a consistent boot failure with 3.17, which I have
-> > > bisected to
-> > >
-> > > 38506ecefab911785d5e1aa5889f6eeb462e0954 is the first bad commit
-> > > commit 38506ecefab911785d5e1aa5889f6eeb462e0954
-> > > Author: Larry Finger <Larry.Finger@lwfinger.net>
-> > > Date:   Mon Sep 22 09:39:19 2014 -0500
-> > >
-> > >      rtlwifi: rtl_pci: Start modification for new drivers
-> > >
-> > >      Future patches will move the drivers for RTL8192EE and RTL8821AE
-> > >      from staging to the regular wireless tree. Here, the necessary features
-> > >      are added to the PCI driver. Other files are touched due to changes
-> > >      in the various data structs.
-> > >
-> > >      Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> > >      Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> > >
-> > > The end of the trace (hand-retyped, so there may be errors that
-> > > escaped me):
-> > >
-> > > R10: ffffffff825f2d80 R11: 0000000000000000 R12: ffff8800b4f107c0
-> > > R13: ffff8800b4f124b8 R14: 0000000000001000 R15: ffff8800b4c7a000
-> > > FS:  000007fc66c938700(0000) GS:ffff88013e200000(0000) knlGS:0000000000000000
-> > > CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> > > CR2: 0000000000000000 CR3: 00000000b5438000 CR4: 00000000000407f0
-> > > Stack:
-> > >   ffffffffa01e20d6 ffff8800b4f12420 ffff8800b4f107c0 ffff880137d7fcd0
-> > >   ffffffffa01c97b5 ffff8800b4f107c0 ffff8800b4c7a8d0 0000000000000000
-> > >   ffff880137d7fd30 ffffffff81577304 0000000000000000 ffff8800b4c7a8c0
-> > > Call Trace:
-> > >   [<ffffffffa01e20d6>] ? rtl_pci_start+0x2b/0x15f [rtl_pci]
-> > >   [<ffffffffa01c97b5>] rtl_op_start+0x45/0x64 [rtlwifi]
-> > >   [<ffffffff81577304>] ieee80211_do_open+0x152/0xb4b
-> > >   [<ffffffff815b52bc>] ? mutex_unlock+0x9/0xb
-> > >   [<ffffffff81577d4a>] ieee80211_open+0x4d/0x57
-> > >   [<ffffffff8147df7f>] __dev_open+0x8b/0xcb
-> > >   [<ffffffff8147e1e1>] __dev_change_flags+0xa4/0x13a
-> > >   [<ffffffff8147e297>] dev_change_flags+0x20/0x53
-> > >   [<ffffffff814d0204>] devinet_ioctl+0x269/0x568
-> > >   [<ffffffff814d19b4>] inet_ioctl+0x81/0x9e
-> > >   [<ffffffff814654e6>] sock_do_ioctl+0x20/0x3d
-> > >   [<ffffffff81465a56>] sock_ioctl+0x20e/0x21a
-> > >   [<ffffffff81136242>] do_vfs_ioctl+0x39e/0x467
-> > >   [<ffffffff815b7277>] ? sysret_check+0x1b/0x56
-> > >   [<ffffffff810965fe>] ? trace_hardirqs_on_caller+0x16e/0x18a
-> > >   [<ffffffff81136343>] SyS_ioctl+0x38/0x5f
-> > >   [<ffffffff815b7252>] system_call_fastpath+0x16/0x1b
-> > > Code:  Bad RIP value.
-> > > RIP  [<          (null)>]           (null)
-> > >   RSP <ffff880137d7fc90>
-> > > CR2: 0000000000000000
-> > > ---[ end trace 7307d2524c1e640b ]---
-> > >
-> > > This is extremely easy to test (boot) and seems 100% reproducible.
-> > >
-> > > I have submitted Bug 86211 - Boot failure: Bad RIP value for rtl8192ce
-> > > for this issue.
-> > 
-> > I am traveling and it may be a few days before I am able to make a suitable 
-> > test. In the meantime, please post the appropriate stanza for the Realtek device 
-> > from the output of
-> > 
-> > lspci -nn
-> > 
-> > There are several different devices that use driver rtl8192ce, and I need to 
-> > know which one you have so that I can duplicate the problem.
-> 
-> Of course - I definitely should have mentioned that.
-> 
-> $ lspci -nn | grep RTL
-> 03:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd. RTL8188CE 802.11b/g/n WiFi Adapter [10ec:8176] (rev 01)
 
-Ping for this, just to make sure it doesn't fall off the radar.
+BUG: unable to handle kernel paging request at ffffc9000277c070
+IP: [<ffffffff8165272c>] __netdev_watchdog_up+0xc/0x80
+PGD 12b01c067 PUD 12b01d067 PMD 1295e8067 PTE 0
+Oops: 0000 [#1] SMP 
+CPU: 3 PID: 1497 Comm: wpa_supplicant Tainted: G           OE  3.17.0-1.fc21.x86_64 #1
+task: ffff88007ec44e80 ti: ffff8800beddc000 task.ti: ffff8800beddc000
+RIP: 0010:[<ffffffff8165272c>]  [<ffffffff8165272c>] __netdev_watchdog_up+0xc/0x80
+RSP: 0018:ffff8800beddfcd8  EFLAGS: 00010202
+RAX: ffffc9000277c000 RBX: ffff8800caa3c000 RCX: ffff8800ca22a948
+RDX: 0000000000000000 RSI: 0000000000000005 RDI: ffff8800caa3c000
+RBP: ffff8800beddfce8 R08: 0000000000000000 R09: 0000000000000208
+R10: 0000000000000400 R11: 0000000000000010 R12: 0000000000000000
+R13: ffffc9000277c000 R14: 0000000000000000 R15: 0000000000000001
+FS:  00007fce557aa800(0000) GS:ffff88012fcc0000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+CR2: ffffc9000277c070 CR3: 000000007eeed000 CR4: 00000000000007e0
+Stack:
+ ffffffff816527e8 ffff8800caa3c000 ffff8800beddfd20 ffffffffa05e4655
+ ffffffffa05e4ab0 ffffffffa05e4510 000000005abd5236 ffff8800caa3c000
+ 0000000000001003 ffff8800beddfd58 ffffffff8163135e ffff8800caa3c000
+Call Trace:
+ [<ffffffff816527e8>] ? netif_carrier_on+0x48/0x50
+ [<ffffffffa05e4655>] MainVirtualIF_open+0x85/0xe0 [mt7601Usta]
+ [<ffffffffa05e4ab0>] ? RtmpOSIRQRequest+0x60/0x60 [mt7601Usta]
+ [<ffffffffa05e4510>] ? RT28xx_get_ether_stats+0x150/0x150 [mt7601Usta]
+ [<ffffffff8163135e>] __dev_open+0xce/0x150
+ [<ffffffff8163168d>] __dev_change_flags+0x9d/0x160
+ [<ffffffff81631779>] dev_change_flags+0x29/0x70
+ [<ffffffff816a5bac>] devinet_ioctl+0x63c/0x710
+ [<ffffffff816a6d05>] inet_ioctl+0x65/0x90
+ [<ffffffff816105d5>] sock_do_ioctl+0x25/0x50
+ [<ffffffff81610b30>] sock_ioctl+0x1f0/0x2c0
+ [<ffffffff81220340>] do_vfs_ioctl+0x2d0/0x4b0
+ [<ffffffff812205a1>] SyS_ioctl+0x81/0xa0
+ [<ffffffff81135a16>] ? __audit_syscall_exit+0x1f6/0x2a0
+ [<ffffffff81743469>] system_call_fastpath+0x16/0x1b
+Code: 9b 48 a4 ff c6 05 bd 12 6b 00 01 48 8b 45 d8 e9 09 ff ff ff 66 66 2e 0f 1f 84 00 00 00 00 00 66 66 66 66 90 48 8b 87 e8 01 00 00 <48> 83 78 70 00 74 41 55 48 89 e5 53 48 63 87 c0 03 00 00 85 c0 
+RIP  [<ffffffff8165272c>] __netdev_watchdog_up+0xc/0x80
+ RSP <ffff8800beddfcd8>
+CR2: ffffc9000277c070
+---[ end trace 97a7adc75a3f40f8 ]---
 
--- 
-S. Gilles
+
