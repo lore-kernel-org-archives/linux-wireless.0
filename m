@@ -1,93 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:38914 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753199AbaJQCKY (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:10236 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754244AbaJGQTM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Oct 2014 22:10:24 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH v2 13/23] ath9k: Fix address management
-Date: Fri, 17 Oct 2014 07:40:20 +0530
-Message-Id: <1413511830-5536-14-git-send-email-sujith@msujith.org> (sfid-20141017_041320_358112_A4B662F6)
-In-Reply-To: <1413511830-5536-1-git-send-email-sujith@msujith.org>
-References: <1413511830-5536-1-git-send-email-sujith@msujith.org>
+	Tue, 7 Oct 2014 12:19:12 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] ath10k: add tracing for frame transmission
+References: <1412615346-18010-1-git-send-email-rmanohar@qti.qualcomm.com>
+Date: Tue, 7 Oct 2014 19:19:05 +0300
+In-Reply-To: <1412615346-18010-1-git-send-email-rmanohar@qti.qualcomm.com>
+	(Rajkumar Manoharan's message of "Mon, 6 Oct 2014 22:39:06 +0530")
+Message-ID: <87d2a3j1ja.fsf@kamboji.qca.qualcomm.com> (sfid-20141007_181923_968089_6363117D)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Rajkumar Manoharan <rmanohar@qti.qualcomm.com> writes:
 
-Since both the arguments need to satisfy
-the alignment requirements of ether_addr_copy(),
-use memcpy() in cases where there will be no
-big performance benefit and make sure that
-ether_addr_copy() calls use properly aligned
-arguments.
+> Add tracing support to forward management and data frames to
+> user space for packet inspection.
+>
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath.h         | 2 +-
- drivers/net/wireless/ath/ath9k/ath9k.h | 2 +-
- drivers/net/wireless/ath/ath9k/main.c  | 6 +++---
- 3 files changed, 5 insertions(+), 5 deletions(-)
+[...]
 
-diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
-index e5ba6fa..9c56ecb 100644
---- a/drivers/net/wireless/ath/ath.h
-+++ b/drivers/net/wireless/ath/ath.h
-@@ -147,7 +147,7 @@ struct ath_common {
- 	u16 cachelsz;
- 	u16 curaid;
- 	u8 macaddr[ETH_ALEN];
--	u8 curbssid[ETH_ALEN];
-+	u8 curbssid[ETH_ALEN] __aligned(2);
- 	u8 bssidmask[ETH_ALEN];
- 
- 	u32 rx_bufsize;
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index d4b71ed..9e92cb21 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -595,7 +595,7 @@ struct ath_vif {
- 	u16 seq_no;
- 
- 	/* BSS info */
--	u8 bssid[ETH_ALEN];
-+	u8 bssid[ETH_ALEN] __aligned(2);
- 	u16 aid;
- 	bool assoc;
- 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 0545fe6..c291d54 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1057,7 +1057,7 @@ static void ath9k_set_offchannel_state(struct ath_softc *sc)
- 
- 	eth_zero_addr(common->curbssid);
- 	eth_broadcast_addr(common->bssidmask);
--	ether_addr_copy(common->macaddr, vif->addr);
-+	memcpy(common->macaddr, vif->addr, ETH_ALEN);
- 	common->curaid = 0;
- 	ah->opmode = vif->type;
- 	ah->imask &= ~ATH9K_INT_SWBA;
-@@ -1098,7 +1098,7 @@ void ath9k_calculate_summary_state(struct ath_softc *sc,
- 	ath9k_calculate_iter_data(sc, ctx, &iter_data);
- 
- 	if (iter_data.has_hw_macaddr)
--		ether_addr_copy(common->macaddr, iter_data.hw_macaddr);
-+		memcpy(common->macaddr, iter_data.hw_macaddr, ETH_ALEN);
- 
- 	memcpy(common->bssidmask, iter_data.mask, ETH_ALEN);
- 	ath_hw_setbssidmask(common);
-@@ -1785,7 +1785,7 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
- 		ath_dbg(common, CONFIG, "BSSID %pM Changed ASSOC %d\n",
- 			bss_conf->bssid, bss_conf->assoc);
- 
--		ether_addr_copy(avp->bssid, bss_conf->bssid);
-+		memcpy(avp->bssid, bss_conf->bssid, ETH_ALEN);
- 		avp->aid = bss_conf->aid;
- 		avp->assoc = bss_conf->assoc;
- 
+> --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
+> +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+> @@ -291,6 +291,9 @@ static inline struct sk_buff *ath10k_htt_rx_netbuf_pop(struct ath10k_htt *htt)
+>  	htt->rx_ring.sw_rd_idx.msdu_payld = idx;
+>  	htt->rx_ring.fill_cnt--;
+>  
+> +	trace_ath10k_htt_rx_pop_msdu(ar, msdu->data, msdu->len +
+> +				     skb_tailroom(msdu));
+
+Why add skb_tailroom() to the length? I think that deserves a comment.
+
 -- 
-2.1.2
-
+Kalle Valo
