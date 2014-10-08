@@ -1,130 +1,209 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:38564 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753750AbaJ1OAz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2014 10:00:55 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 14/16] brcmfmac: (clean) Rename sdio related files.
-Date: Tue, 28 Oct 2014 14:56:17 +0100
-Message-ID: <1414504579-12562-15-git-send-email-arend@broadcom.com> (sfid-20141028_150110_066577_491B8E63)
-In-Reply-To: <1414504579-12562-1-git-send-email-arend@broadcom.com>
-References: <1414504579-12562-1-git-send-email-arend@broadcom.com>
+Received: from mx1.redhat.com ([209.132.183.28]:12862 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756261AbaJHMTR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Oct 2014 08:19:17 -0400
+Date: Wed, 8 Oct 2014 14:16:37 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: users@rt2x00.serialmonkey.com, Sakari Ailus <sakari.ailus@iki.fi>
+Subject: [PATCH] rt2x00: tune multi-registers I/O timeout
+Message-ID: <20141008121635.GA5186@redhat.com> (sfid-20141008_141931_671873_E08D232A)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+We provide timeout value to rt2x00usb_vendor_request_buff() based on
+number of registers to process. That value is passed down to
+rt2x00usb_vendor_req_buff_lock() and ends in usb_control_msg(). But we
+do not read/write all registers in rt2x00usb_vendor_req_buff_lock() at
+once. We read/write them in chunks of 64 bytes in the loop, hence passed
+timeout value to low level is too big.
 
-Rename sdio_host.h to sdio.h and dhd_sdio.c to sdio.c.
+Patch removes timeout argument from rt2x00usb_vendor_request_buff() and
+use short REGISTER_TIMEOUT in rt2x00usb_vendor_req_buff_lock(). That
+timeout value should be fine for 64 bytes and smaller requests. For
+EEPROM read we introduced new timeout value equal to 2 seconds.
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Patch fixes process uninterruptible sleep stalls for long period, when
+USB bus has problem to satisfy a request and we wait very long time on
+usb_start_wait_urb().
+
+Reported-and-tested-by: Sakari Ailus <sakari.ailus@iki.fi>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/Makefile                | 2 +-
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c                | 2 +-
- drivers/net/wireless/brcm80211/brcmfmac/of.c                    | 2 +-
- drivers/net/wireless/brcm80211/brcmfmac/{dhd_sdio.c => sdio.c}  | 4 ++--
- drivers/net/wireless/brcm80211/brcmfmac/{sdio_host.h => sdio.h} | 6 +++---
- 5 files changed, 8 insertions(+), 8 deletions(-)
- rename drivers/net/wireless/brcm80211/brcmfmac/{dhd_sdio.c => sdio.c} (99%)
- rename drivers/net/wireless/brcm80211/brcmfmac/{sdio_host.h => sdio.h} (99%)
+ drivers/net/wireless/rt2x00/rt2500usb.c | 10 ++++-----
+ drivers/net/wireless/rt2x00/rt2x00usb.c |  4 ++--
+ drivers/net/wireless/rt2x00/rt2x00usb.h | 39 ++++++++++-----------------------
+ 3 files changed, 17 insertions(+), 36 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/Makefile b/drivers/net/wireless/brcm80211/brcmfmac/Makefile
-index 35b680550..40ba46b 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/Makefile
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/Makefile
-@@ -43,7 +43,7 @@ brcmfmac-$(CONFIG_BRCMFMAC_PROTO_MSGBUF) += \
- 		flowring.o \
- 		msgbuf.o
- brcmfmac-$(CONFIG_BRCMFMAC_SDIO) += \
--		dhd_sdio.o \
-+		sdio.o \
- 		bcmsdh.o
- brcmfmac-$(CONFIG_BRCMFMAC_USB) += \
- 		usb.o
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-index 969bdd6..f754ffc 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-@@ -43,7 +43,7 @@
- #include "chip.h"
- #include "bus.h"
- #include "debug.h"
--#include "sdio_host.h"
-+#include "sdio.h"
- #include "of.h"
+diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
+index d849d59..c878e3f 100644
+--- a/drivers/net/wireless/rt2x00/rt2500usb.c
++++ b/drivers/net/wireless/rt2x00/rt2500usb.c
+@@ -62,7 +62,7 @@ static inline void rt2500usb_register_read(struct rt2x00_dev *rt2x00dev,
+ 	__le16 reg;
+ 	rt2x00usb_vendor_request_buff(rt2x00dev, USB_MULTI_READ,
+ 				      USB_VENDOR_REQUEST_IN, offset,
+-				      &reg, sizeof(reg), REGISTER_TIMEOUT);
++				      &reg, sizeof(reg));
+ 	*value = le16_to_cpu(reg);
+ }
  
- #define SDIOH_API_ACCESS_RETRY_LIMIT	2
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/of.c b/drivers/net/wireless/brcm80211/brcmfmac/of.c
-index 875060c..eb3fce82 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/of.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/of.c
-@@ -22,7 +22,7 @@
- 
- #include <defs.h>
- #include "debug.h"
--#include "sdio_host.h"
-+#include "sdio.h"
- 
- void brcmf_of_probe(struct brcmf_sdio_dev *sdiodev)
+@@ -83,8 +83,7 @@ static inline void rt2500usb_register_multiread(struct rt2x00_dev *rt2x00dev,
  {
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-similarity index 99%
-rename from drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-rename to drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-index 224e922..73ac0c3 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-@@ -40,7 +40,7 @@
- #include <brcmu_utils.h>
- #include <brcm_hw_ids.h>
- #include <soc.h>
--#include "sdio_host.h"
-+#include "sdio.h"
- #include "chip.h"
- #include "firmware.h"
+ 	rt2x00usb_vendor_request_buff(rt2x00dev, USB_MULTI_READ,
+ 				      USB_VENDOR_REQUEST_IN, offset,
+-				      value, length,
+-				      REGISTER_TIMEOUT16(length));
++				      value, length);
+ }
  
-@@ -4076,7 +4076,7 @@ struct brcmf_sdio *brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
+ static inline void rt2500usb_register_write(struct rt2x00_dev *rt2x00dev,
+@@ -94,7 +93,7 @@ static inline void rt2500usb_register_write(struct rt2x00_dev *rt2x00dev,
+ 	__le16 reg = cpu_to_le16(value);
+ 	rt2x00usb_vendor_request_buff(rt2x00dev, USB_MULTI_WRITE,
+ 				      USB_VENDOR_REQUEST_OUT, offset,
+-				      &reg, sizeof(reg), REGISTER_TIMEOUT);
++				      &reg, sizeof(reg));
+ }
  
- 	/* platform specific configuration:
- 	 *   alignments must be at least 4 bytes for ADMA
--         */
-+	 */
- 	bus->head_align = ALIGNMENT;
- 	bus->sgentry_align = ALIGNMENT;
- 	if (sdiodev->pdata) {
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h b/drivers/net/wireless/brcm80211/brcmfmac/sdio.h
-similarity index 99%
-rename from drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
-rename to drivers/net/wireless/brcm80211/brcmfmac/sdio.h
-index 262aedf..8eb4262 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio.h
-@@ -14,8 +14,8 @@
-  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ static inline void rt2500usb_register_write_lock(struct rt2x00_dev *rt2x00dev,
+@@ -113,8 +112,7 @@ static inline void rt2500usb_register_multiwrite(struct rt2x00_dev *rt2x00dev,
+ {
+ 	rt2x00usb_vendor_request_buff(rt2x00dev, USB_MULTI_WRITE,
+ 				      USB_VENDOR_REQUEST_OUT, offset,
+-				      value, length,
+-				      REGISTER_TIMEOUT16(length));
++				      value, length);
+ }
+ 
+ static int rt2500usb_regbusy_read(struct rt2x00_dev *rt2x00dev,
+diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
+index 86c43d1..dc85d3e 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00usb.c
++++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
+@@ -116,7 +116,7 @@ EXPORT_SYMBOL_GPL(rt2x00usb_vendor_req_buff_lock);
+ int rt2x00usb_vendor_request_buff(struct rt2x00_dev *rt2x00dev,
+ 				  const u8 request, const u8 requesttype,
+ 				  const u16 offset, void *buffer,
+-				  const u16 buffer_length, const int timeout)
++				  const u16 buffer_length)
+ {
+ 	int status = 0;
+ 	unsigned char *tb;
+@@ -131,7 +131,7 @@ int rt2x00usb_vendor_request_buff(struct rt2x00_dev *rt2x00dev,
+ 		bsize = min_t(u16, CSR_CACHE_SIZE, len);
+ 		status = rt2x00usb_vendor_req_buff_lock(rt2x00dev, request,
+ 							requesttype, off, tb,
+-							bsize, timeout);
++							bsize, REGISTER_TIMEOUT);
+ 
+ 		tb  += bsize;
+ 		len -= bsize;
+diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.h b/drivers/net/wireless/rt2x00/rt2x00usb.h
+index 831b65f..819690e 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00usb.h
++++ b/drivers/net/wireless/rt2x00/rt2x00usb.h
+@@ -33,27 +33,14 @@
+ })
+ 
+ /*
+- * For USB vendor requests we need to pass a timeout
+- * time in ms, for this we use the REGISTER_TIMEOUT,
+- * however when loading firmware a higher value is
+- * required. In that case we use the REGISTER_TIMEOUT_FIRMWARE.
++ * For USB vendor requests we need to pass a timeout time in ms, for this we
++ * use the REGISTER_TIMEOUT, however when loading firmware or read EEPROM
++ * a higher value is required. In that case we use the REGISTER_TIMEOUT_FIRMWARE
++ * and EEPROM_TIMEOUT.
   */
+ #define REGISTER_TIMEOUT		500
+ #define REGISTER_TIMEOUT_FIRMWARE	1000
+-
+-/**
+- * REGISTER_TIMEOUT16 - Determine the timeout for 16bit register access
+- * @__datalen: Data length
+- */
+-#define REGISTER_TIMEOUT16(__datalen)	\
+-	( REGISTER_TIMEOUT * ((__datalen) / sizeof(u16)) )
+-
+-/**
+- * REGISTER_TIMEOUT32 - Determine the timeout for 32bit register access
+- * @__datalen: Data length
+- */
+-#define REGISTER_TIMEOUT32(__datalen)	\
+-	( REGISTER_TIMEOUT * ((__datalen) / sizeof(u32)) )
++#define EEPROM_TIMEOUT			2000
  
--#ifndef	_BRCM_SDH_H_
--#define	_BRCM_SDH_H_
-+#ifndef	BRCMFMAC_SDIO_H
-+#define	BRCMFMAC_SDIO_H
+ /*
+  * Cache size
+@@ -126,7 +113,6 @@ int rt2x00usb_vendor_request(struct rt2x00_dev *rt2x00dev,
+  * @offset: Register offset to perform action on
+  * @buffer: Buffer where information will be read/written to by device
+  * @buffer_length: Size of &buffer
+- * @timeout: Operation timeout
+  *
+  * This function will use a previously with kmalloc allocated cache
+  * to communicate with the device. The contents of the buffer pointer
+@@ -139,7 +125,7 @@ int rt2x00usb_vendor_request(struct rt2x00_dev *rt2x00dev,
+ int rt2x00usb_vendor_request_buff(struct rt2x00_dev *rt2x00dev,
+ 				  const u8 request, const u8 requesttype,
+ 				  const u16 offset, void *buffer,
+-				  const u16 buffer_length, const int timeout);
++				  const u16 buffer_length);
  
- #include <linux/skbuff.h>
- #include <linux/firmware.h>
-@@ -337,4 +337,4 @@ void brcmf_sdio_isr(struct brcmf_sdio *bus);
- void brcmf_sdio_wd_timer(struct brcmf_sdio *bus, uint wdtick);
- void brcmf_sdio_wowl_config(struct device *dev, bool enabled);
+ /**
+  * rt2x00usb_vendor_request_buff - Send register command to device (buffered)
+@@ -197,8 +183,7 @@ static inline int rt2x00usb_eeprom_read(struct rt2x00_dev *rt2x00dev,
+ {
+ 	return rt2x00usb_vendor_request(rt2x00dev, USB_EEPROM_READ,
+ 					USB_VENDOR_REQUEST_IN, 0, 0,
+-					eeprom, length,
+-					REGISTER_TIMEOUT16(length));
++					eeprom, length, EEPROM_TIMEOUT);
+ }
  
--#endif				/* _BRCM_SDH_H_ */
-+#endif /* BRCMFMAC_SDIO_H */
+ /**
+@@ -217,7 +202,7 @@ static inline void rt2x00usb_register_read(struct rt2x00_dev *rt2x00dev,
+ 	__le32 reg;
+ 	rt2x00usb_vendor_request_buff(rt2x00dev, USB_MULTI_READ,
+ 				      USB_VENDOR_REQUEST_IN, offset,
+-				      &reg, sizeof(reg), REGISTER_TIMEOUT);
++				      &reg, sizeof(reg));
+ 	*value = le32_to_cpu(reg);
+ }
+ 
+@@ -257,8 +242,7 @@ static inline void rt2x00usb_register_multiread(struct rt2x00_dev *rt2x00dev,
+ {
+ 	rt2x00usb_vendor_request_buff(rt2x00dev, USB_MULTI_READ,
+ 				      USB_VENDOR_REQUEST_IN, offset,
+-				      value, length,
+-				      REGISTER_TIMEOUT32(length));
++				      value, length);
+ }
+ 
+ /**
+@@ -277,7 +261,7 @@ static inline void rt2x00usb_register_write(struct rt2x00_dev *rt2x00dev,
+ 	__le32 reg = cpu_to_le32(value);
+ 	rt2x00usb_vendor_request_buff(rt2x00dev, USB_MULTI_WRITE,
+ 				      USB_VENDOR_REQUEST_OUT, offset,
+-				      &reg, sizeof(reg), REGISTER_TIMEOUT);
++				      &reg, sizeof(reg));
+ }
+ 
+ /**
+@@ -316,8 +300,7 @@ static inline void rt2x00usb_register_multiwrite(struct rt2x00_dev *rt2x00dev,
+ {
+ 	rt2x00usb_vendor_request_buff(rt2x00dev, USB_MULTI_WRITE,
+ 				      USB_VENDOR_REQUEST_OUT, offset,
+-				      (void *)value, length,
+-				      REGISTER_TIMEOUT32(length));
++				      (void *)value, length);
+ }
+ 
+ /**
 -- 
-1.9.1
+1.8.3.1
 
