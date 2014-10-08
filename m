@@ -1,38 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40615 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756295AbaJaJ7Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Oct 2014 05:59:24 -0400
-Date: Fri, 31 Oct 2014 10:55:26 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Jiri Slaby <jslaby@suse.cz>
-Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	stable@vger.kernel.org, Helmut Schaa <helmut.schaa@googlemail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH -stable] wireless: rt2x00: add new rt2800usb devices
-Message-ID: <20141031095525.GA2214@redhat.com> (sfid-20141031_105927_964969_6D6DCBEA)
-References: <1414667923-2331-1-git-send-email-xose.vazquez@gmail.com>
- <54535ABA.1030109@suse.cz>
+Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:12298 "EHLO
+	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756441AbaJHMu6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Oct 2014 08:50:58 -0400
+Date: Wed, 8 Oct 2014 14:50:50 +0200 (CEST)
+From: Julia Lawall <julia.lawall@lip6.fr>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+cc: Joe Perches <joe@perches.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	kernel-janitors@vger.kernel.org
+Subject: Re: [patch] staging: rtl8723au: incorrect use of ether_addr_copy()
+In-Reply-To: <20141008124631.GC26918@mwanda>
+Message-ID: <alpine.DEB.2.10.1410081449160.2441@hadrien> (sfid-20141008_145104_181315_E2E82C1D)
+References: <20141008104014.GA23096@mwanda> <1412771171.3438.25.camel@joe-AO725> <20141008124631.GC26918@mwanda>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <54535ABA.1030109@suse.cz>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 31, 2014 at 10:47:38AM +0100, Jiri Slaby wrote:
-> On 10/30/2014, 12:18 PM, Xose Vazquez Perez wrote:
-> > 0x0b05 0x17e8 RT5372 USB 2.0  bgn 2x2 ASUS USB-N14
-> > 0x0411 0x0253 RT5572 USB 2.0 abgn 2x2 BUFFALO WLP-U2-300D
-> > 0x0df6 0x0078 RT???? Sitecom N300
-> 
-> (the same as previous)
 
-This is:
 
-committ 6a06e554daef86c4e8d290284927b081fedb249e
-Author: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Date:   Fri Jul 11 21:46:57 2014 +0200
+On Wed, 8 Oct 2014, Dan Carpenter wrote:
 
-    wireless: rt2x00: add new rt2800usb devices
+> On Wed, Oct 08, 2014 at 05:26:11AM -0700, Joe Perches wrote:
+> > On Wed, 2014-10-08 at 13:40 +0300, Dan Carpenter wrote:
+> > > The return from myid() isn't aligned correctly for ether_addr_copy().
+> >
+> > Hey Dan.
+> >
+> > Actual evidence showing ether_addr_copy conversions
+> > may not always be wise.
+> >
+> > How did you find them?
+>
+> I was just trying to see how common these kinds of bugs are.  It didn't
+> take long to find, but my impression is that they are rare and I got
+> lucky.  These kinds of bugs are tricky to find and we don't have any
+> tools for it.
 
+Couldn't you just use your favorite matching tool, collect the file names,
+compile them, run pahole, and process the output in some way?  It doesn't
+give a complete analysis (you don't find all problems), but if you find a
+problem it is a real problem.
+
+julia
