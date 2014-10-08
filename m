@@ -1,85 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:59904 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752033AbaJKXuZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Oct 2014 19:50:25 -0400
-Received: by mail-la0-f46.google.com with SMTP id gi9so5113401lab.33
-        for <linux-wireless@vger.kernel.org>; Sat, 11 Oct 2014 16:50:23 -0700 (PDT)
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-To: Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	Daniel Kim <dekim@broadcom.com>,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] net: wireless: brcm80211: brcmfmac: dhd_sdio.c:  Cleaning up missing null-terminate in conjunction with strncpy
-Date: Sun, 12 Oct 2014 01:52:31 +0200
-Message-Id: <1413071551-15372-1-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20141012_015042_276389_82540309)
+Received: from mga01.intel.com ([192.55.52.88]:53430 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754725AbaJHIdj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Oct 2014 04:33:39 -0400
+From: Loic Poulain <loic.poulain@intel.com>
+To: johannes@sipsolutions.net, heikki.krogerus@linux.intel.com
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Loic Poulain <loic.poulain@intel.com>
+Subject: [PATCH 4/5] net: rfkill: gpio: Add OBDA8723 ACPI ID
+Date: Wed,  8 Oct 2014 10:34:39 +0200
+Message-Id: <1412757280-31367-4-git-send-email-loic.poulain@intel.com> (sfid-20141008_103347_086858_97A75064)
+In-Reply-To: <1412757280-31367-1-git-send-email-loic.poulain@intel.com>
+References: <1412757280-31367-1-git-send-email-loic.poulain@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Replacing strncpy with strlcpy to avoid strings that lacks null terminate.
-And changed from using strncpy to strlcpy to simplify code.
+Add OBDA8723 (rtl8723) ACPI id.
+rtl8723 bluetooth chip has the following interface:
+HOST <---UART---> CONTROLLER
+HOST --- WAKE---> CONTROLLER (gpio res 0)
+HOST ---ENABLE--> CONTROLLER (gpio res 1)
+HOST <---WAKE---- CONTROLLER (gpio res 2)
 
-Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Signed-off-by: Loic Poulain <loic.poulain@intel.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   25 ++++++++++----------
- 1 file changed, 12 insertions(+), 13 deletions(-)
+ net/rfkill/rfkill-gpio.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index f55f625..d20d4e6 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -670,7 +670,6 @@ static int brcmf_sdio_get_fwnames(struct brcmf_chip *ci,
- 				  struct brcmf_sdio_dev *sdiodev)
- {
- 	int i;
--	uint fw_len, nv_len;
- 	char end;
+diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
+index 2f6aad1..28d1cbf 100644
+--- a/net/rfkill/rfkill-gpio.c
++++ b/net/rfkill/rfkill-gpio.c
+@@ -301,11 +301,20 @@ static struct rfkill_gpio_desc acpi_default_gps = {
+ 	.host_wake_idx = -1,
+ };
  
- 	for (i = 0; i < ARRAY_SIZE(brcmf_fwname_data); i++) {
-@@ -684,25 +683,25 @@ static int brcmf_sdio_get_fwnames(struct brcmf_chip *ci,
- 		return -ENODEV;
- 	}
- 
--	fw_len = sizeof(sdiodev->fw_name) - 1;
--	nv_len = sizeof(sdiodev->nvram_name) - 1;
- 	/* check if firmware path is provided by module parameter */
- 	if (brcmf_firmware_path[0] != '\0') {
--		strncpy(sdiodev->fw_name, brcmf_firmware_path, fw_len);
--		strncpy(sdiodev->nvram_name, brcmf_firmware_path, nv_len);
--		fw_len -= strlen(sdiodev->fw_name);
--		nv_len -= strlen(sdiodev->nvram_name);
-+		strlcpy(sdiodev->fw_name, brcmf_firmware_path,
-+			sizeof(sdiodev->fw_name));
-+		strlcpy(sdiodev->nvram_name, brcmf_firmware_path,
-+			sizeof(sdiodev->nvram_name));
- 
- 		end = brcmf_firmware_path[strlen(brcmf_firmware_path) - 1];
- 		if (end != '/') {
--			strncat(sdiodev->fw_name, "/", fw_len);
--			strncat(sdiodev->nvram_name, "/", nv_len);
--			fw_len--;
--			nv_len--;
-+			strlcat(sdiodev->fw_name, "/",
-+				sizeof(sdiodev->fw_name));
-+			strlcat(sdiodev->nvram_name, "/",
-+				sizeof(sdiodev->nvram_name));
- 		}
- 	}
--	strncat(sdiodev->fw_name, brcmf_fwname_data[i].bin, fw_len);
--	strncat(sdiodev->nvram_name, brcmf_fwname_data[i].nv, nv_len);
-+	strlcat(sdiodev->fw_name, brcmf_fwname_data[i].bin,
-+		sizeof(sdiodev->fw_name));
-+	strlcat(sdiodev->nvram_name, brcmf_fwname_data[i].nv,
-+		sizeof(sdiodev->nvram_name));
- 
- 	return 0;
- }
++static struct rfkill_gpio_desc acpi_bluetooth_wake = {
++	.type = RFKILL_TYPE_BLUETOOTH,
++	.reset_idx = -1,
++	.shutdown_idx = 1,
++	.wake_idx = 0,
++	.host_wake_idx = 2,
++};
++
+ static const struct acpi_device_id rfkill_acpi_match[] = {
+ 	{ "BCM2E1A", (kernel_ulong_t)&acpi_default_bluetooth },
+ 	{ "BCM2E39", (kernel_ulong_t)&acpi_default_bluetooth },
+ 	{ "BCM2E3D", (kernel_ulong_t)&acpi_default_bluetooth },
+ 	{ "BCM2E64", (kernel_ulong_t)&acpi_default_bluetooth },
++	{ "OBDA8723", (kernel_ulong_t)&acpi_bluetooth_wake },
+ 	{ "BCM4752", (kernel_ulong_t)&acpi_default_gps },
+ 	{ "LNV4752", (kernel_ulong_t)&acpi_default_gps },
+ 	{ },
 -- 
-1.7.10.4
+1.8.3.2
 
