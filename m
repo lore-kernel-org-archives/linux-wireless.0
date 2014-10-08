@@ -1,70 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:7497 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751514AbaJESbP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Oct 2014 14:31:15 -0400
-Date: Sun, 5 Oct 2014 20:28:41 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Mark Asselstine <asselsm@gmail.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	rt2x00 Users List <users@rt2x00.serialmonkey.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] rt2x00: rt2x00queue: avoid using more headroom then
- driver requested
-Message-ID: <20141005182835.GA8897@redhat.com> (sfid-20141005_203127_831251_1A847C13)
-References: <1412135157-13520-1-git-send-email-asselsm@gmail.com>
- <20141001091240.GA2011@redhat.com>
- <CAPuovEJtuJdRakwRhdUjRwrmkfry62wJqd8p2uJQ7L0rB7DoCA@mail.gmail.com>
- <CAPuovEJssghQv=03sn07AuYVvwULq0kSTn9kch53r+VKccy8xA@mail.gmail.com>
- <20141005131312.GA1827@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20141005131312.GA1827@redhat.com>
+Received: from s72.web-hosting.com ([198.187.29.22]:52163 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753930AbaJHDl5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Oct 2014 23:41:57 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH 2/3] ath9k: Set ATH_OP_HW_RESET before HW reset
+Date: Wed,  8 Oct 2014 09:12:44 +0530
+Message-Id: <1412739765-31679-3-git-send-email-sujith@msujith.org> (sfid-20141008_054208_623786_9820F4CD)
+In-Reply-To: <1412739765-31679-1-git-send-email-sujith@msujith.org>
+References: <1412739765-31679-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Oct 05, 2014 at 03:13:12PM +0200, Stanislaw Gruszka wrote:
-> On Sat, Oct 04, 2014 at 07:38:25PM -0400, Mark Asselstine wrote:
-> > >> The only possibility to skb_under_panic I can see, is that we retransmit
-> > >> frame and try to align it many times, but alignment should not be needed
-> > >> once we aligned frame. Hence I'm not sure how those skb_under_panics can
-> > >> happen.
-> > 
-> > I am still digging through trying to find a cause for this, without a
-> > reproducer I am starting to lose hope on finding the cause.
-> > 
-> > I dug up this old thread
-> > http://rt2x00.serialmonkey.com/pipermail/users_rt2x00.serialmonkey.com/2010-November/002457.html
-> >
-> > I am thinking that the cause is an interaction with 80211mac and the
-> > rt2x00queue not doing enough to ensure we are sending the skb back in
-> > the same state as we get it. Looking at rt2x00lib_txdone() we don't
-> > return headroom that may have been taken for frame alignment and we
-> > don't account for the extra 4-bytes taken for header_align when the
-> > payload_align is larger then the header_align while setting up the
-> > l2pad.
-> 
-> I think we reserve sufficient space, 4 bytes for payload align plus
-> 4 bytes for header align.
-> 
-> > Do you know why rt2x00 doesn't return frame align space back to
-> > the headroom?
-> 
-> For performance reasons I guess.
-> 
-> If we return (payload) aligned skb to mac80211 and mac80211 will
-> retransmit that skb we will not align it again, since it's already
-> aligned. But perhaps we really need to return original tx skb to
-> mac80211, but if so, I would like to know detailed reason why.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-There is some old patch from Helmut, which remove payload alignment and
-movement:
-http://rt2x00.serialmonkey.com/pipermail/users_rt2x00.serialmonkey.com/2011-September/004179.html  
-It seems to be provided by default on OpenWRT and AFICT nobody reported
-skb underflow panic there. Hence possibly it fix the problem, but still
-I would like to know why. However if we apply it, I would relax extra
-TX headroom requirement to 4 bytes, as that maximum what we need with
-the patch.
+When a HW reset is done, the interrupt tasklet is
+disabled before ISRs are disabled in the HW. This
+allows a small window where the HW can still generate
+interrupts. Since the tasklet is disabled and not killed,
+it is not scheduled but deferred for execution at a later
+time.
 
-Stanislaw
+This happens because ATH_OP_HW_RESET is not set when ath_reset()
+is called. When the hw_reset_work workqueue is used, this
+problem doesn't arise because ATH_OP_HW_RESET is set
+and the ISR bails out.
+
+Set ATH_OP_HW_RESET properly in ath_reset() to avoid
+this race - all the ath_reset_internal() callers have
+been converted to use ath_reset() in the previous patch.
+
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index eb6ba9f..dda09ba 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -598,10 +598,17 @@ chip_reset:
+ #undef SCHED_INTR
+ }
+ 
++/*
++ * This function is called when a HW reset cannot be deferred
++ * and has to be immediate.
++ */
+ int ath_reset(struct ath_softc *sc, struct ath9k_channel *hchan)
+ {
++	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	int r;
+ 
++	set_bit(ATH_OP_HW_RESET, &common->op_flags);
++
+ 	ath9k_ps_wakeup(sc);
+ 	r = ath_reset_internal(sc, hchan);
+ 	ath9k_ps_restore(sc);
+@@ -609,6 +616,11 @@ int ath_reset(struct ath_softc *sc, struct ath9k_channel *hchan)
+ 	return r;
+ }
+ 
++/*
++ * When a HW reset can be deferred, it is added to the
++ * hw_reset_work workqueue, but we set ATH_OP_HW_RESET before
++ * queueing.
++ */
+ void ath9k_queue_reset(struct ath_softc *sc, enum ath_reset_type type)
+ {
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+-- 
+2.1.2
 
