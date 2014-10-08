@@ -1,68 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44042 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754515AbaJHNC4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Oct 2014 09:02:56 -0400
-Date: Wed, 8 Oct 2014 15:00:06 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Mark Asselstine <asselsm@gmail.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	rt2x00 Users List <users@rt2x00.serialmonkey.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] rt2x00: rt2x00queue: avoid using more headroom then
- driver requested
-Message-ID: <20141008130006.GB5186@redhat.com> (sfid-20141008_150259_606483_5ECECF69)
-References: <1412135157-13520-1-git-send-email-asselsm@gmail.com>
- <20141001091240.GA2011@redhat.com>
- <CAPuovEJtuJdRakwRhdUjRwrmkfry62wJqd8p2uJQ7L0rB7DoCA@mail.gmail.com>
- <CAPuovEJssghQv=03sn07AuYVvwULq0kSTn9kch53r+VKccy8xA@mail.gmail.com>
- <be003eea-b253-4eb3-bf08-40d5f6dc629d@email.android.com>
- <CAPuovEJXkRYyWXZJD7E6_1EqemfJus7Gtr_5PztT6rDtsrRpdw@mail.gmail.com>
+Received: from smtp.adetelgroup.com ([94.247.26.71]:55859 "EHLO
+	smtp.adetelgroup.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756551AbaJHNrN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Oct 2014 09:47:13 -0400
+Received: from hbg-pa74.hmc-pa.adm (unknown [10.210.21.3])
+	by smtp.adetelgroup.com (Postfix) with ESMTP id 9A94843293
+	for <linux-wireless@vger.kernel.org>; Wed,  8 Oct 2014 15:37:20 +0200 (CEST)
+Date: Wed, 8 Oct 2014 15:37:16 +0200 (CEST)
+From: CHAUMETTE Hubert <hchaumette@adeneo-embedded.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Message-ID: <51562649.4716655.1412775436836.JavaMail.zimbra@adeneo-embedded.com> (sfid-20141008_154721_955441_5D05AB0A)
+In-Reply-To: <873295702.4716275.1412775389466.JavaMail.zimbra@adeneo-embedded.com>
+Subject: wl1271 driver on Linux 3.10 for SabreSD
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAPuovEJXkRYyWXZJD7E6_1EqemfJus7Gtr_5PztT6rDtsrRpdw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 08, 2014 at 07:46:33AM -0400, Mark Asselstine wrote:
-> > If rt2x00 does not remove the alignment from the frame before giving it back
-> > to mac80211 and the same frame comes into rt2x00 again it should be correctly
-> > aligned and no additional header space is required. So this should be fine.
-> 
-> Then I would say this definitely hints at a design flaw in
-> rt2x00queue_insert_l2pad(). Take the following scenario.
-> 
-> * skb's first arrival in rt2x00queue_insert_l2pad(), 3 bytes needed
-> for frame alignment, 2 bytes for l2pad results in 3 bytes of headroom
-> taken.
-Not quite realistic assumption - header length will have to be odd then.
+Hi all,
 
-But if such situation would happen we will have:
+I need to activate the wl12xx driver (from drivers/net/wireless/ti/) on a (Android) Linux 3.10.31 kernel on an i.MX6Q SabreSD board. The wl1271 is to communicate with the board through an SDIO interface (SD2 on the board).
 
-header_align=2, payload_align=3, l2pad=3
+I have built the driver modules (cfg80211 and mac80211; wlcore, wlcore_sdio and wl12xx), and insmod'ed them. They are listed by lsmod :
+wlcore_sdio 3820 0 - Live 0x00000000
+wl12xx 51103 0 - Live 0x00000000
+wlcore 161008 1 wl12xx, Live 0x00000000
+mac80211 253798 2 wl12xx,wlcore, Live 0x00000000
+cfg80211 201451 2 wlcore,mac80211, Live 0x00000000
 
-Since payload_align will be bigger than header_align, header_align will
-be increased to 6.
+dmesg shows only a message from cfg80211 (no errors for other modules, when insmod'ed in the right order) :
+cfg80211: Calling CRDA to update world regulatory domain
 
-Header will be moved by 6 bytes, frame will be moved by 3 bytes,
-between header and frame there will be l2pad equal to 3.
+1) Can I use /sys/modules/{wlcore,wlcore_sdio,wl12xx}/ to test it ?
+2) The board uses the device tree to enumerate platform devices. To correctly activate the driver, do I need to add it to the board DT (and a binding to the driver) ?
+3) The driver is supposed to use a firmware (according to http://wireless.kernel.org/en/users/Drivers/wl12xx), how do I know whether it found it (no kernel log message) (I've put the firmware in /system/etc/firmware/) ?
 
-> * rt2x00lib_txdone() returns 2 bytes of headroom
-Return 3 bytes.
+Thanks in advance.
+Regards,
 
-> * skb's second arrival in rt2x00queue_insert_l2pad(), 0 bytes needed
-> for frame alignment, 2 bytes for l2pad results in 4 bytes of headroom
-> taken.
-Header will be moved by 3 bytes.
-
-> * rt2x00lib_txdone() returns 2 bytes of headroom
-Return 3 bytes.
-
-> Basically as long as any bytes are required for l2pad the headroom
-> will lose 4 bytes again and again, never being returned by
-> rt2x00lib_txdone().
-
-I think that's not true - you made a few mistakes in your scenario,
-but perhaps I'm wrong :-)
-
-Stanislaw
+Hubert
