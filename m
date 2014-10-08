@@ -1,86 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:38753 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750823AbaJCVRC (ORCPT
+Received: from mail-vc0-f179.google.com ([209.85.220.179]:46312 "EHLO
+	mail-vc0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756067AbaJHJpj convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Oct 2014 17:17:02 -0400
-Message-ID: <542F124C.50406@candelatech.com> (sfid-20141003_231706_768880_34E4C3DE)
-Date: Fri, 03 Oct 2014 14:17:00 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Wed, 8 Oct 2014 05:45:39 -0400
+Received: by mail-vc0-f179.google.com with SMTP id im17so6464473vcb.10
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Oct 2014 02:45:38 -0700 (PDT)
 MIME-Version: 1.0
-To: "ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	rmanohar@qti.qualcomm.com
-Subject: 3.17 regression, ath9k: Summarize hw state per channel context
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1412759786-10567-1-git-send-email-rmanohar@qti.qualcomm.com>
+References: <1412759786-10567-1-git-send-email-rmanohar@qti.qualcomm.com>
+Date: Wed, 8 Oct 2014 11:45:38 +0200
+Message-ID: <CA+BoTQ=K=F5TodrmuaEaJfErFx1=BL-bmPDrAaeMLjjb8c3fJQ@mail.gmail.com> (sfid-20141008_114556_080192_54BCDD5C)
+Subject: Re: [PATCH] ath10k: fix kernel panic while shutting down AP
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Took a while, but I found the regression that has been bugging me.
+On 8 October 2014 11:16, Rajkumar Manoharan <rmanohar@qti.qualcomm.com> wrote:
+> The commit "ath10k: workaround fw beaconing bug" is freeing
+> DMA-coherent memory in irq context which is hitting BUG ON
+> in ARM platforms. Fix this by moving dma_free out of spin
+> lock.
 
-This is on stock kernel, with hand-patched fixup from Felix that fixes
-crash related to minstrel (patch made it upstream later, so that isn't
-a current problem).
-
-The test case is easily reproducible on my systems.  I'm not sure
-all the details matter, but this happens to be my test case
-at the moment:
-
-32-bit Fedora OS, latest supplicant, etc.  ath9k NIC.
-
-create wlan0 and sta0-4 (6 total), not sure how much that matters.
-associate all 6 (works fine)
-disconnect 5 of them, leaving sta0 up
-Start trying to bring up the other 5 one at a time.  It will
-fail, with iw events looking like this (in these logs, several
-sta are trying to come up, but symptom is the same with just one)
-
-2014-10-03 14:05:43.751  1.3:  sta2 (phy #0): scan finished: 2462, ""
-2014-10-03 14:05:43.755  1.3:  sta1: new station 00:0e:8e:6f:40:49
-2014-10-03 14:05:43.803  1.1:  vap0 (phy #1): mgmt TX status (cookie f3d5ce40): no ack
-2014-10-03 14:05:43.978  1.1:  vap0 (phy #1): mgmt TX status (cookie f3d5ca80): no ack
-2014-10-03 14:05:44.179  1.1:  vap0 (phy #1): mgmt TX status (cookie f3d5c900): no ack
-2014-10-03 14:05:44.364  1.3:  sta1: del station 00:0e:8e:6f:40:49
-2014-10-03 14:05:44.364  1.3:  sta1 (phy #0): auth: timed out
-2014-10-03 14:05:45.647  1.3:  sta3 (phy #0): scan started
-2014-10-03 14:05:45.659  1.1:  vap0 (phy #1): mgmt TX status (cookie f3d15000): no ack
-2014-10-03 14:05:45.668  1.3:  sta3 (phy #0): scan finished: 2462, "ben-138"
-2014-10-03 14:05:48.811  1.1:  vap0 (phy #1): mgmt TX status (cookie eaec63c0): no ack
-2014-10-03 14:05:49.015  1.1:  vap0 (phy #1): mgmt TX status (cookie ef8cc540): no ack
-2014-10-03 14:05:49.213  1.1:  vap0 (phy #1): mgmt TX status (cookie ef8cc540): no ack
-2014-10-03 14:05:51.901  1.1:  vap0: del station 00:ab:cd:ef:01:01
-2014-10-03 14:07:20.368  1.3:  wlan0 (phy #0): scan started
-
-If I restart all interfaces on the radio, the will come up with no problem,
-until I try to restart one again.
+I hardly see how moving the freeing outside the spinlock is a fix.
 
 
-Bisect points at this patch:
+> kernel BUG at mm/vmalloc.c:1512!
+> Internal error: Oops - BUG: 0 [#1] PREEMPT SMP ARM
+> CPU: 0 PID: 722 Comm: hostapd Not tainted 3.14.0 #3
+> task: dd58b840 ti: da6a6000 task.ti: da6a6000
+> PC is at vunmap+0x24/0x34
+> LR is at __arm_dma_free.isra.21+0x12c/0x190
+> [<c02a97d0>] (vunmap) from [<c021f81c>] (__arm_dma_free.isra.21+0x12c/0x190)
+> [<c021f81c>] (__arm_dma_free.isra.21) from [<bf3b2440>]
+>                         (ath10k_mac_vif_beacon_free+0xf4/0x100 [ath10k_core])
+> [<bf3b2440>] (ath10k_mac_vif_beacon_free [ath10k_core]) from [<bf3b2490>]
+>                         (ath10k_remove_interface+0x44/0x1ec [ath10k_core])
+> [<bf3b2490>] (ath10k_remove_interface [ath10k_core]) from [<bf3352e4>]
+>                         (ieee80211_add_virtual_monitor+0x9d8/0x9f0 [mac80211])
+> [<bf3352e4>] (ieee80211_add_virtual_monitor [mac80211]) from [<bf33530c>]
+>                         (ieee80211_stop+0x10/0x18 [mac80211])
+> [<bf33530c>] (ieee80211_stop [mac80211]) from [<c040d144>]
+>                         (__dev_close_many+0x9c/0xcc)
 
-9a9c4fbc3fcabc0d510600743204f890ebdbb141 is the first bad commit
-commit 9a9c4fbc3fcabc0d510600743204f890ebdbb141
-Author: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Date:   Wed Jun 11 16:18:03 2014 +0530
+ 1. How can even ieee80211_add_virtual_monitor() call
+ath10k_remove_interface()? Upstream ath10k doesn't advertise
+IEEE80211_HW_WANT_MONITOR_VIF. This call trace is either invalid,
+you're not using upstream ath10k and/or have custom patches applied to
+ath10k.
 
-    ath9k: Summarize hw state per channel context
+ 2. How can ieee80211_stop() be called from an interrupt context
+anyway? ieee80211_stop() calls ieee80211_do_stop() which calls
+ieee80211_roc_purge() which tries to get a hold of local->mtx. This
+implies ieee80211_stop() isn't design to be run in an interrupt
+context to begin with so I don't see why ath10k should even care if
+ath10k_remove_interface() is called in an interrupt context at this
+point.
 
-    Group and set hw state (opmode, primary_sta, beacon conf) per
-    channel context instead of whole list of vifs. This would allow
-    each channel context to run in different mode (STA/AP).
 
-    Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-    Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
-:040000 040000 aa6eab9d17a0b3468075ff7c1abfee2ccfcb521e e15af8b46ce047c8b46177e2d4cf74a4590a2181 M	drivers
-
-I will be happy to test patches if anyone has a suggested fix or needs
-debug output...
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Michał
