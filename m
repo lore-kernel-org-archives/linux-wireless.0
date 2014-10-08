@@ -1,98 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:50927 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751062AbaJWQhQ (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:48054 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754354AbaJHLLq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Oct 2014 12:37:16 -0400
-Received: by mail-wi0-f178.google.com with SMTP id q5so1300311wiv.17
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Oct 2014 09:37:15 -0700 (PDT)
+	Wed, 8 Oct 2014 07:11:46 -0400
+Date: Wed, 8 Oct 2014 16:43:00 +0530
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH] ath10k: fix kernel panic while shutting down AP
+Message-ID: <20141008111258.GD25666@qca.qualcomm.com> (sfid-20141008_131149_633633_AD6F8A66)
+References: <1412759786-10567-1-git-send-email-rmanohar@qti.qualcomm.com>
+ <CA+BoTQ=K=F5TodrmuaEaJfErFx1=BL-bmPDrAaeMLjjb8c3fJQ@mail.gmail.com>
+ <20141008103312.GA25666@qca.qualcomm.com>
+ <CA+BoTQmVsyuxjvc_s-BC6ZwRWk3ACG0CvDYHJRnZ7OqY6W1Upw@mail.gmail.com>
+ <20141008110842.GC25666@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <CADxDmp5Jaze5TXRDp8HR+W1Q5fy=ba9rv8LbvtM_RinapXQGCg@mail.gmail.com>
-References: <5447CF6D.3010401@mailservices.uwaterloo.ca>
-	<CAJ-Vmo=y=dwZjBHqbsqP5cPK+jL91W-OyA7=y8tqowgSLJKAwA@mail.gmail.com>
-	<54490E8A.50607@mailservices.uwaterloo.ca>
-	<CADxDmp7gHzvJGXjC14DKf8ngbVTAdWL3twFvbdsYoGCMgvJ8Rg@mail.gmail.com>
-	<CADxDmp5Jaze5TXRDp8HR+W1Q5fy=ba9rv8LbvtM_RinapXQGCg@mail.gmail.com>
-Date: Thu, 23 Oct 2014 09:37:15 -0700
-Message-ID: <CAJ-Vmom9UnC_9AyihVDJPUJvuAg9CVH1jXgnOL+F1f5kOihaig@mail.gmail.com> (sfid-20141023_183721_995909_6D841989)
-Subject: Re: [ath9k-devel] Block ACK without frame aggregation
-From: Adrian Chadd <adrian@freebsd.org>
-To: Kamran Nishat <kamran.nishat@gmail.com>
-Cc: Ali Abedi <a2abedi@uwaterloo.ca>,
-	"(ath9k-devel@lists.ath9k.org)" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20141008110842.GC25666@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I don't think the hardware supports immediate-BA. :(
+On Wed, Oct 08, 2014 at 04:38:44PM +0530, Rajkumar Manoharan wrote:
+> On Wed, Oct 08, 2014 at 12:50:28PM +0200, Michal Kazior wrote:
+> > On 8 October 2014 12:33, Rajkumar Manoharan <rmanohar@qti.qualcomm.com> wrote:
+> > > On Wed, Oct 08, 2014 at 11:45:38AM +0200, Michal Kazior wrote:
+> > >> On 8 October 2014 11:16, Rajkumar Manoharan <rmanohar@qti.qualcomm.com> wrote:
+> > >> > The commit "ath10k: workaround fw beaconing bug" is freeing
+> > >> > DMA-coherent memory in irq context which is hitting BUG ON
+> > >> > in ARM platforms. Fix this by moving dma_free out of spin
+> > >> > lock.
+> > >>
+> > >> I hardly see how moving the freeing outside the spinlock is a fix.
+> > >>
+> > >>
+> > >> > kernel BUG at mm/vmalloc.c:1512!
+> > >> > Internal error: Oops - BUG: 0 [#1] PREEMPT SMP ARM
+> > >> > CPU: 0 PID: 722 Comm: hostapd Not tainted 3.14.0 #3
+> > >> > task: dd58b840 ti: da6a6000 task.ti: da6a6000
+> > >> > PC is at vunmap+0x24/0x34
+> > >> > LR is at __arm_dma_free.isra.21+0x12c/0x190
+> > >> > [<c02a97d0>] (vunmap) from [<c021f81c>] (__arm_dma_free.isra.21+0x12c/0x190)
+> > >> > [<c021f81c>] (__arm_dma_free.isra.21) from [<bf3b2440>]
+> > >> >                         (ath10k_mac_vif_beacon_free+0xf4/0x100 [ath10k_core])
+> > >> > [<bf3b2440>] (ath10k_mac_vif_beacon_free [ath10k_core]) from [<bf3b2490>]
+> > >> >                         (ath10k_remove_interface+0x44/0x1ec [ath10k_core])
+> > >> > [<bf3b2490>] (ath10k_remove_interface [ath10k_core]) from [<bf3352e4>]
+> > >> >                         (ieee80211_add_virtual_monitor+0x9d8/0x9f0 [mac80211])
+> > >> > [<bf3352e4>] (ieee80211_add_virtual_monitor [mac80211]) from [<bf33530c>]
+> > >> >                         (ieee80211_stop+0x10/0x18 [mac80211])
+> > >> > [<bf33530c>] (ieee80211_stop [mac80211]) from [<c040d144>]
+> > >> >                         (__dev_close_many+0x9c/0xcc)
+> > >>
+> > >>  1. How can even ieee80211_add_virtual_monitor() call
+> > >> ath10k_remove_interface()? Upstream ath10k doesn't advertise
+> > >> IEEE80211_HW_WANT_MONITOR_VIF. This call trace is either invalid,
+> > >> you're not using upstream ath10k and/or have custom patches applied to
+> > >> ath10k.
+> > >>
+> > > This is the backtrace captured on panic and we are getting the same
+> > > backtrace consistently. I confirmed that add_virtual_monitor is not
+> > > called for ath10k as it is not advertising. ath10k_remove_interface is
+> > > called for master mode.
+> > >
+> > >>  2. How can ieee80211_stop() be called from an interrupt context
+> > >> anyway? ieee80211_stop() calls ieee80211_do_stop() which calls
+> > >> ieee80211_roc_purge() which tries to get a hold of local->mtx. This
+> > >> implies ieee80211_stop() isn't design to be run in an interrupt
+> > >> context to begin with so I don't see why ath10k should even care if
+> > >> ath10k_remove_interface() is called in an interrupt context at this
+> > >> point.
+> > >>
+> > > in_interrupt is counting soft and hard irqs. ieee80211_stop is not
+> > > called from interrupt context. In ath10k, by aquiring spin_lock in
+> > > ath10k_mac_vif_beacon_free is increasing soft irq count.
+> > >
+> > > In ARM arch, __arm_dma_free is calling vunmap which might sleep. So it
+> > > can not be called within spin_lock.
+> > 
+> > Did you try using GFP_ATOMIC in the dma_alloc_coherent instead of
+> > moving the spinlock?
+> >
+> Nope. The problem is while freeing dma memory not during allocation.
+> dma_free_coherent won't take any GFP_* flags.
+> > 
+> > >
+> > > Similar to dma_alloc_coherent, dma_free_coherent can not be called under
+> > > soft irq context.
+> > 
+> > The call trace points to ath10k_mac_vif_beacon_free() which doesn't
+> > use dma_free_coherent() so why are you blaming it for the BUG_ON?
+> > 
+> I agree the calltrace is a bogus. ath10k_mac_vif_beacon_cleanup is
+> calling dma_free_coherent.
+> 
+> > If anything the offender should be dma_unmap_single() but the thing is
+> > beacon_buf is always allocated for AP/IBSS now which means
+> > dma_unmap_single() is never called. For non-AP/IBSS both arvif->beacon
+> > and arvif->beacon_buf are always NULL so neither
+> > dma_alloc/free_coherent nor dma_map/unmap_single are called.
+> >
+> Agree. We need one more check in ath10k_mac_vif_beacon_free.
 
+No additional check is needed. For non beaconing mode, arvif->beacon
+should be false. isn't it?
 
-
--a
-
-On 23 October 2014 07:32, Kamran Nishat <kamran.nishat@gmail.com> wrote:
-> It is a part of 802.11n because of compatibility with 802.11e. But because
-> 802.11n gives a much more advanced AMPDU based thing I think no one
-> implemented it.  It not a mandatory  part of WMM I suppose.
->
-> On Thu, Oct 23, 2014 at 7:22 PM, Kamran Nishat <kamran.nishat@gmail.com>
-> wrote:
->>
->> I was talking about the same one. it was introduced in 802.11e (Tx-OP) not
->> in 802.11n
->>
->> On Thu, Oct 23, 2014 at 7:19 PM, Ali Abedi <a2abedi@uwaterloo.ca> wrote:
->>>
->>> Dear Adrian and Kamran,
->>>
->>> Thanks for your replies. I think we are not referring to the same
->>> concept.
->>> Can you please have a look at the attache diagram. I need the middle one
->>> the immediate BA not delayed BA.
->>>
->>>
->>> Thanks,
->>> Ali
->>>
->>>
->>>
->>>
->>> On 14-10-22 11:18 PM, Adrian Chadd wrote:
->>>>
->>>> I don't think mac80211 supports delayed-BA. :(
->>>>
->>>>
->>>> -adrian
->>>>
->>>>
->>>> On 22 October 2014 08:38, Ali Abedi <a2abedi@uwaterloo.ca> wrote:
->>>>>
->>>>> Hello,
->>>>>
->>>>> I am interested to know if we can send multiple packets
->>>>> (non-aggregated,
->>>>> single packets) and then ask
->>>>> for a block ACK? I like to know if this functionality has been
->>>>> implemented in ath9k or if
->>>>> it is possible to achieve this with slight code modifications.
->>>>>
->>>>> What I need:
->>>>> Frame-SIFS-Frame-SIFS-Frame-SIFS-REQ Block ACK-SIFS-Block ACK
->>>>>
->>>>> Best,
->>>>> Ali
->>>>> _______________________________________________
->>>>> ath9k-devel mailing list
->>>>> ath9k-devel@lists.ath9k.org
->>>>> https://lists.ath9k.org/mailman/listinfo/ath9k-devel
->>>
->>>
->>
->
->
-> _______________________________________________
-> ath9k-devel mailing list
-> ath9k-devel@lists.ath9k.org
-> https://lists.ath9k.org/mailman/listinfo/ath9k-devel
->
+-Rajkumar
