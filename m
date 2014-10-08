@@ -1,35 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:45234 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932300AbaJUSrb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Oct 2014 14:47:31 -0400
-Message-ID: <1413917246.1998.7.camel@jlt4.sipsolutions.net> (sfid-20141021_204734_868918_B9C06627)
-Subject: Re: [PATCH v5 0/4] add VHT support to minstrel_ht
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Karl Beldan <karl.beldan@gmail.com>
-Cc: Karl Beldan <karl.beldan@rivierawaves.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>
-Date: Tue, 21 Oct 2014 20:47:26 +0200
-In-Reply-To: <20141021152658.GA14839@magnum.frso.rivierawaves.com> (sfid-20141021_172713_666243_2978AE1B)
-References: <1413812762-6605-1-git-send-email-karl.beldan@gmail.com>
-	 <1413816546.32358.3.camel@jlt4.sipsolutions.net>
-	 <20141020151302.GB7691@magnum.frso.rivierawaves.com>
-	 <20141020153421.GC7691@magnum.frso.rivierawaves.com>
-	 <1413833597.32358.6.camel@jlt4.sipsolutions.net>
-	 <20141021152658.GA14839@magnum.frso.rivierawaves.com>
-	 (sfid-20141021_172713_666243_2978AE1B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from dedo.coelho.fi ([88.198.205.34]:34565 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754422AbaJHGtT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Oct 2014 02:49:19 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: emmanuel.grumbach@intel.com, michal.kazior@tieto.com,
+	linux-wireless@vger.kernel.org
+Date: Wed,  8 Oct 2014 09:48:36 +0300
+Message-Id: <1412750920-15392-4-git-send-email-luca@coelho.fi> (sfid-20141008_084935_101126_4E3D42B0)
+In-Reply-To: <1412750920-15392-1-git-send-email-luca@coelho.fi>
+References: <1412750920-15392-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH v2 3/7] mac80211: add extended channel switching capability if the driver supports CSA
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-10-21 at 17:26 +0200, Karl Beldan wrote:
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-> I still don't know why I don't see the smatch array warnings here, I
-> guess I'll live with that for now.
+The Extended Channel Switching capability bit in the extended
+capabilities element must be set if the driver supports CSA on
+non-beaconing interfaces.
 
-I'm hoping Dan will eventually pick up on it ;-)
+Since this capability needs to be set during driver registration, the
+extended_capabiliities global variable needs to be moved to the local
+structure so that it can be modified.
 
-johannes
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+---
+ include/linux/ieee80211.h  |  5 +++++
+ net/mac80211/ieee80211_i.h |  3 +++
+ net/mac80211/main.c        | 20 +++++++++++---------
+ 3 files changed, 19 insertions(+), 9 deletions(-)
+
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index b1be39c..5fab17b 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -1998,6 +1998,11 @@ enum ieee80211_tdls_actioncode {
+ 	WLAN_TDLS_DISCOVERY_REQUEST = 10,
+ };
+ 
++/* Extended Channel Switching capability to be set in the 1st byte of
++ * the @WLAN_EID_EXT_CAPABILITY information element
++ */
++#define WLAN_EXT_CAPA1_EXT_CHANNEL_SWITCHING	BIT(2)
++
+ /* Interworking capabilities are set in 7th bit of 4th byte of the
+  * @WLAN_EID_EXT_CAPABILITY information element
+  */
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index c2aaec4..a9cc491 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1307,6 +1307,9 @@ struct ieee80211_local {
+ 	/* virtual monitor interface */
+ 	struct ieee80211_sub_if_data __rcu *monitor_sdata;
+ 	struct cfg80211_chan_def monitor_chandef;
++
++	/* extended capabilities provided by mac80211 */
++	u8 ext_capa[8];
+ };
+ 
+ static inline struct ieee80211_sub_if_data *
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 0de7c93..107d1c8 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -478,11 +478,6 @@ static const struct ieee80211_vht_cap mac80211_vht_capa_mod_mask = {
+ 	},
+ };
+ 
+-static const u8 extended_capabilities[] = {
+-	0, 0, 0, 0, 0, 0, 0,
+-	WLAN_EXT_CAPA8_OPMODE_NOTIF,
+-};
+-
+ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
+ 					const struct ieee80211_ops *ops)
+ {
+@@ -539,10 +534,6 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
+ 			WIPHY_FLAG_REPORTS_OBSS |
+ 			WIPHY_FLAG_OFFCHAN_TX;
+ 
+-	wiphy->extended_capabilities = extended_capabilities;
+-	wiphy->extended_capabilities_mask = extended_capabilities;
+-	wiphy->extended_capabilities_len = ARRAY_SIZE(extended_capabilities);
+-
+ 	if (ops->remain_on_channel)
+ 		wiphy->flags |= WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
+ 
+@@ -591,6 +582,13 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
+ 	wiphy->ht_capa_mod_mask = &mac80211_ht_capa_mod_mask;
+ 	wiphy->vht_capa_mod_mask = &mac80211_vht_capa_mod_mask;
+ 
++	local->ext_capa[7] = WLAN_EXT_CAPA8_OPMODE_NOTIF;
++
++	wiphy->extended_capabilities = local->ext_capa;
++	wiphy->extended_capabilities_mask = local->ext_capa;
++	wiphy->extended_capabilities_len =
++		ARRAY_SIZE(local->ext_capa);
++
+ 	INIT_LIST_HEAD(&local->interfaces);
+ 
+ 	__hw_addr_init(&local->mc_list);
+@@ -958,6 +956,10 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 	if (local->hw.wiphy->flags & WIPHY_FLAG_SUPPORTS_TDLS)
+ 		local->hw.wiphy->flags |= WIPHY_FLAG_TDLS_EXTERNAL_SETUP;
+ 
++	/* mac80211 supports eCSA, if the driver supports STA CSA at all */
++	if (local->hw.flags & IEEE80211_HW_CHANCTX_STA_CSA)
++		local->ext_capa[0] |= WLAN_EXT_CAPA1_EXT_CHANNEL_SWITCHING;
++
+ 	local->hw.wiphy->max_num_csa_counters = IEEE80211_MAX_CSA_COUNTERS_NUM;
+ 
+ 	result = wiphy_register(local->hw.wiphy);
+-- 
+2.1.1
 
