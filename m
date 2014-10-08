@@ -1,254 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:43765 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751014AbaJYT5f (ORCPT
+Received: from mail-vc0-f171.google.com ([209.85.220.171]:50049 "EHLO
+	mail-vc0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753446AbaJHMYT convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Oct 2014 15:57:35 -0400
-Received: by mail-wi0-f171.google.com with SMTP id em10so3535250wid.10
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2014 12:57:34 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 01/31] staging: vt6655: mac80211 conversion: add new rx functions
-Date: Sat, 25 Oct 2014 09:20:11 +0100
-Message-Id: <1414225241-5480-2-git-send-email-tvboxspy@gmail.com> (sfid-20141025_215738_686186_B6B62A4D)
-In-Reply-To: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
-References: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
+	Wed, 8 Oct 2014 08:24:19 -0400
+Received: by mail-vc0-f171.google.com with SMTP id hy10so6609450vcb.30
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Oct 2014 05:24:18 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20141008104823.GB25666@qca.qualcomm.com>
+References: <1412759786-10567-1-git-send-email-rmanohar@qti.qualcomm.com>
+	<87a956hosb.fsf@kamboji.qca.qualcomm.com>
+	<20141008104823.GB25666@qca.qualcomm.com>
+Date: Wed, 8 Oct 2014 14:24:18 +0200
+Message-ID: <CA+BoTQmOZiPQRWeiZ6QqZ5MhHbweMsdf94v1f5mkYpr2461j4A@mail.gmail.com> (sfid-20141008_142422_725880_4611284A)
+Subject: Re: [PATCH] ath10k: fix kernel panic while shutting down AP
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-vnt_receive_frame which replaces device_receive_frame
+On 8 October 2014 12:48, Rajkumar Manoharan <rmanohar@qti.qualcomm.com> wrote:
+> On Wed, Oct 08, 2014 at 12:52:04PM +0300, Kalle Valo wrote:
+>> Rajkumar Manoharan <rmanohar@qti.qualcomm.com> writes:
+>>
+>> > The commit "ath10k: workaround fw beaconing bug" is freeing
+>> > DMA-coherent memory in irq context which is hitting BUG ON
+>> > in ARM platforms. Fix this by moving dma_free out of spin
+>> > lock.
+>
+>> [...]
+>>
+>> > @@ -2404,8 +2389,15 @@ void ath10k_halt(struct ath10k *ar)
+>> >
+>> >     spin_lock_bh(&ar->data_lock);
+>> >     list_for_each_entry(arvif, &ar->arvifs, list)
+>> > -           ath10k_mac_vif_beacon_cleanup(arvif);
+>> > +           ath10k_mac_vif_beacon_free(arvif);
+>> >     spin_unlock_bh(&ar->data_lock);
+>> > +   list_for_each_entry(arvif, &ar->arvifs, list) {
+>> > +           if (!arvif->beacon_buf)
+>> > +                   continue;
+>> > +           dma_free_coherent(ar->dev, IEEE80211_MAX_FRAME_LEN,
+>> > +                             arvif->beacon_buf, arvif->beacon_paddr);
+>> > +           arvif->beacon_buf = NULL;
+>> > +   }
+>> >  }
+>>
+>> Until now we have protected arvif->beacon_buf with data_lock. How do we
+>> know that this is safe to do without taking data_lock?
+>>
+> As said, spin_lock can not be used for dma_free_coherent.
+> arvif->beacon_buf is already protected by conf_mutex. At this state
+> in ath10k_halt path, no one can access beacon_buf. So mutex lock itself
+> is sufficient.
 
-and vnt_rx_data which handles mac80211 rx data
+beacon_buf is protected by conf_mutex implicitly. It wasn't the main
+intent. It is protected with data_lock spinlock.
 
-structures ieee80211_hw, ieee80211_vif and variable rx_rate are added
-in structure vnt_private
----
- drivers/staging/vt6655/device.h      |   6 +-
- drivers/staging/vt6655/device_main.c |  13 ++--
- drivers/staging/vt6655/dpc.c         | 123 +++++++++++++++++++++++++++++++++++
- drivers/staging/vt6655/dpc.h         |   2 +
- 4 files changed, 137 insertions(+), 7 deletions(-)
+Do not trust the device - if there's a spurious SWBA event while
+ath10k_remove_interface() is running you could end up with invalid
+memory access.
 
-diff --git a/drivers/staging/vt6655/device.h b/drivers/staging/vt6655/device.h
-index ab6be41..33b4215 100644
---- a/drivers/staging/vt6655/device.h
-+++ b/drivers/staging/vt6655/device.h
-@@ -57,6 +57,7 @@
- #include <linux/reboot.h>
- #include <linux/ethtool.h>
- /* Include Wireless Extension definition and check version - Jean II */
-+#include <net/mac80211.h>
- #include <linux/wireless.h>
- #include <net/iw_handler.h>	// New driver API
- 
-@@ -327,7 +328,9 @@ typedef struct __device_opt {
- 
- struct vnt_private {
- 	struct pci_dev *pcid;
--
-+	/* mac80211 */
-+	struct ieee80211_hw *hw;
-+	struct ieee80211_vif *vif;
- // netdev
- 	struct net_device *dev;
- 
-@@ -386,6 +389,7 @@ struct vnt_private {
- 	u32                         flags;
- 
- 	u32                         rx_buf_sz;
-+	u8 rx_rate;
- 	int                         multicast_limit;
- 
- 	pid_t			MLMEThr_pid;
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index c8f262f..c8ee91c 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -1336,7 +1336,7 @@ static int device_rx_srv(struct vnt_private *pDevice, unsigned int uIdx)
- 	     pRD = pRD->next) {
- 		if (works++ > 15)
- 			break;
--		if (device_receive_frame(pDevice, pRD)) {
-+		if (vnt_receive_frame(pDevice, pRD)) {
- 			if (!device_alloc_rx_buf(pDevice, pRD)) {
- 				dev_err(&pDevice->pcid->dev,
- 					"can not allocate rx buf\n");
-@@ -1344,7 +1344,6 @@ static int device_rx_srv(struct vnt_private *pDevice, unsigned int uIdx)
- 			}
- 		}
- 		pRD->m_rd0RD0.f1Owner = OWNED_BY_NIC;
--		pDevice->dev->last_rx = jiffies;
- 	}
- 
- 	pDevice->pCurrRD[uIdx] = pRD;
-@@ -1360,9 +1359,12 @@ static bool device_alloc_rx_buf(struct vnt_private *pDevice, PSRxDesc pRD)
- 	if (pRDInfo->skb == NULL)
- 		return false;
- 	ASSERT(pRDInfo->skb);
--	pRDInfo->skb->dev = pDevice->dev;
--	pRDInfo->skb_dma = pci_map_single(pDevice->pcid, skb_tail_pointer(pRDInfo->skb),
--					  pDevice->rx_buf_sz, PCI_DMA_FROMDEVICE);
-+
-+	pRDInfo->skb_dma =
-+		pci_map_single(pDevice->pcid,
-+			       skb_put(pRDInfo->skb, skb_tailroom(pRDInfo->skb)),
-+			       pDevice->rx_buf_sz, PCI_DMA_FROMDEVICE);
-+
- 	*((unsigned int *)&(pRD->m_rd0RD0)) = 0; /* FIX cast */
- 
- 	pRD->m_rd0RD0.wResCount = cpu_to_le16(pDevice->rx_buf_sz);
-@@ -1380,7 +1382,6 @@ bool device_alloc_frag_buf(struct vnt_private *pDevice,
- 	if (pDeF->skb == NULL)
- 		return false;
- 	ASSERT(pDeF->skb);
--	pDeF->skb->dev = pDevice->dev;
- 
- 	return true;
- }
-diff --git a/drivers/staging/vt6655/dpc.c b/drivers/staging/vt6655/dpc.c
-index eecf6f5..d91771f 100644
---- a/drivers/staging/vt6655/dpc.c
-+++ b/drivers/staging/vt6655/dpc.c
-@@ -1312,3 +1312,126 @@ static bool s_bAPModeRxData(
- 
- 	return true;
- }
-+
-+static bool vnt_rx_data(struct vnt_private *priv, struct sk_buff *skb,
-+			u16 bytes_received)
-+{
-+	struct ieee80211_hw *hw = priv->hw;
-+	struct ieee80211_supported_band *sband;
-+	struct ieee80211_rx_status rx_status = { 0 };
-+	struct ieee80211_hdr *hdr;
-+	__le16 fc;
-+	u8 *rsr, *new_rsr, *rssi;
-+	__le64 *tsf_time;
-+	u16 frame_size;
-+	int ii, r;
-+	u8 *rx_sts, *rx_rate, *sq;
-+	u8 *skb_data;
-+	u8 rate_idx = 0;
-+	u8 rate[MAX_RATE] = {2, 4, 11, 22, 12, 18, 24, 36, 48, 72, 96, 108};
-+	long rx_dbm;
-+
-+	/* [31:16]RcvByteCount ( not include 4-byte Status ) */
-+	frame_size = le16_to_cpu(*((__le16 *)(skb->data + 2)));
-+	if (frame_size > 2346 || frame_size < 14) {
-+		dev_dbg(&priv->pcid->dev, "------- WRONG Length 1\n");
-+		return false;
-+	}
-+
-+	skb_data = (u8 *)skb->data;
-+
-+	rx_sts = skb_data;
-+	rx_rate = skb_data + 1;
-+
-+	sband = hw->wiphy->bands[hw->conf.chandef.chan->band];
-+
-+	for (r = RATE_1M; r < MAX_RATE; r++) {
-+		if (*rx_rate == rate[r])
-+			break;
-+	}
-+
-+	priv->rx_rate = r;
-+
-+	for (ii = 0; ii < sband->n_bitrates; ii++) {
-+		if (sband->bitrates[ii].hw_value == r) {
-+			rate_idx = ii;
-+				break;
-+		}
-+	}
-+
-+	if (ii == sband->n_bitrates) {
-+		dev_dbg(&priv->pcid->dev, "Wrong RxRate %x\n", *rx_rate);
-+		return false;
-+	}
-+
-+	tsf_time = (__le64 *)(skb_data + bytes_received - 12);
-+	sq = skb_data + bytes_received - 4;
-+	new_rsr = skb_data + bytes_received - 3;
-+	rssi = skb_data + bytes_received - 2;
-+	rsr = skb_data + bytes_received - 1;
-+
-+	RFvRSSITodBm(priv, *rssi, &rx_dbm);
-+
-+	priv->byBBPreEDRSSI = (u8)rx_dbm + 1;
-+	priv->uCurrRSSI = priv->byBBPreEDRSSI;
-+
-+	skb_pull(skb, 4);
-+	skb_trim(skb, frame_size);
-+
-+	rx_status.mactime = le64_to_cpu(*tsf_time);
-+	rx_status.band = hw->conf.chandef.chan->band;
-+	rx_status.signal = rx_dbm;
-+	rx_status.flag = 0;
-+	rx_status.freq = hw->conf.chandef.chan->center_freq;
-+
-+	hdr = (struct ieee80211_hdr *)(skb->data);
-+	fc = hdr->frame_control;
-+
-+	rx_status.rate_idx = rate_idx;
-+
-+	if (ieee80211_has_protected(fc)) {
-+		if (priv->byLocalID > REV_ID_VT3253_A1)
-+			rx_status.flag = RX_FLAG_DECRYPTED;
-+	}
-+
-+	if (priv->vif && priv->bDiversityEnable) {
-+		if (ieee80211_is_data(fc) &&
-+		    (frame_size > 50) && priv->vif->bss_conf.assoc)
-+			BBvAntennaDiversity(priv, priv->rx_rate, 0);
-+	}
-+
-+	memcpy(IEEE80211_SKB_RXCB(skb), &rx_status, sizeof(rx_status));
-+
-+	ieee80211_rx_irqsafe(priv->hw, skb);
-+
-+	return true;
-+}
-+
-+bool vnt_receive_frame(struct vnt_private *priv, PSRxDesc curr_rd)
-+{
-+	PDEVICE_RD_INFO rd_info = curr_rd->pRDInfo;
-+	struct sk_buff *skb;
-+	u16 frame_size;
-+
-+	skb = rd_info->skb;
-+
-+	pci_unmap_single(priv->pcid, rd_info->skb_dma,
-+			 priv->rx_buf_sz, PCI_DMA_FROMDEVICE);
-+
-+	frame_size = le16_to_cpu(curr_rd->m_rd1RD1.wReqCount)
-+			- cpu_to_le16(curr_rd->m_rd0RD0.wResCount);
-+
-+	if ((frame_size > 2364) || (frame_size < 33)) {
-+		/* Frame Size error drop this packet.*/
-+		dev_dbg(&priv->pcid->dev, "Wrong frame size %d\n", frame_size);
-+		dev_kfree_skb_irq(skb);
-+		return true;
-+	}
-+
-+	if (vnt_rx_data(priv, skb, frame_size))
-+		return true;
-+
-+	dev_kfree_skb_irq(skb);
-+
-+	return true;
-+}
-diff --git a/drivers/staging/vt6655/dpc.h b/drivers/staging/vt6655/dpc.h
-index a068b84..09cbbac 100644
---- a/drivers/staging/vt6655/dpc.h
-+++ b/drivers/staging/vt6655/dpc.h
-@@ -39,4 +39,6 @@ device_receive_frame(
- 	PSRxDesc pCurrRD
- );
- 
-+bool vnt_receive_frame(struct vnt_private *priv, PSRxDesc curr_rd);
-+
- #endif // __RXTX_H__
--- 
-1.9.1
+It might be acceptable to drop the spinlock for ath10k_halt() since
+the device is guaranteed to be stopped at that point (effectively
+reset) though.
 
+Anyway I'm hoping this bug can be fixed with the gfp flag.
+
+
+Michał
