@@ -1,120 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f51.google.com ([74.125.82.51]:32901 "EHLO
-	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932290AbaJ2R6X (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2014 13:58:23 -0400
-Received: by mail-wg0-f51.google.com with SMTP id l18so2461498wgh.24
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2014 10:58:22 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH v2 44/48] staging: vt6655: remove typedef void *TimerFunction
-Date: Wed, 29 Oct 2014 17:56:02 +0000
-Message-Id: <1414605366-9335-45-git-send-email-tvboxspy@gmail.com> (sfid-20141029_185847_701996_192C3718)
-In-Reply-To: <1414605366-9335-1-git-send-email-tvboxspy@gmail.com>
-References: <1414605366-9335-1-git-send-email-tvboxspy@gmail.com>
+Received: from dedo.coelho.fi ([88.198.205.34]:34530 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750858AbaJHGlA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Oct 2014 02:41:00 -0400
+Message-ID: <1412750448.3599.3.camel@coelho.fi> (sfid-20141008_084118_537791_79113C5F)
+From: Luca Coelho <luca@coelho.fi>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 08 Oct 2014 09:40:48 +0300
+In-Reply-To: <CA+BoTQmG+GJieeQevaHxoQ8xdu1_OE=SWuC5QsS=JFzP2FQtRA@mail.gmail.com>
+References: <1411760105-18614-1-git-send-email-luca@coelho.fi>
+	 <1411760105-18614-7-git-send-email-luca@coelho.fi>
+	 <CA+BoTQmG+GJieeQevaHxoQ8xdu1_OE=SWuC5QsS=JFzP2FQtRA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH 6/7] mac80211: wait for the first beacon on the new
+ channel after CSA
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Covert functions TimerSQ3CallBack and TimerState1CallBack to
-the correct type for struct timer_list.function to remove
-the cast altogether.
+Sorry for the delay in replying.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/baseband.c    | 8 ++++----
- drivers/staging/vt6655/baseband.h    | 4 ++--
- drivers/staging/vt6655/device_main.c | 6 +++---
- drivers/staging/vt6655/wmgr.h        | 1 -
- 4 files changed, 9 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/staging/vt6655/baseband.c b/drivers/staging/vt6655/baseband.c
-index ed78505..b04dfd9 100644
---- a/drivers/staging/vt6655/baseband.c
-+++ b/drivers/staging/vt6655/baseband.c
-@@ -2781,10 +2781,10 @@ void BBvAntennaDiversity(struct vnt_private *pDevice,
- 
- void
- TimerSQ3CallBack(
--	void *hDeviceContext
-+	unsigned long data
- )
- {
--	struct vnt_private *pDevice = hDeviceContext;
-+	struct vnt_private *pDevice = (struct vnt_private *)data;
- 	unsigned long flags;
- 
- 	pr_debug("TimerSQ3CallBack...\n");
-@@ -2827,10 +2827,10 @@ TimerSQ3CallBack(
- 
- void
- TimerState1CallBack(
--	void *hDeviceContext
-+	unsigned long data
- )
- {
--	struct vnt_private *pDevice = hDeviceContext;
-+	struct vnt_private *pDevice = (struct vnt_private *)data;
- 	unsigned long flags;
- 
- 	pr_debug("TimerState1CallBack...\n");
-diff --git a/drivers/staging/vt6655/baseband.h b/drivers/staging/vt6655/baseband.h
-index 2d7a3e2..772ea0d 100644
---- a/drivers/staging/vt6655/baseband.h
-+++ b/drivers/staging/vt6655/baseband.h
-@@ -103,12 +103,12 @@ void BBvExitDeepSleep(void __iomem *dwIoBase, unsigned char byLocalID);
- 
- void
- TimerSQ3CallBack(
--	void *hDeviceContext
-+	unsigned long
- );
- 
- void
- TimerState1CallBack(
--	void *hDeviceContext
-+	unsigned long
- );
- 
- void BBvAntennaDiversity(struct vnt_private *pDevice,
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index 7892f86..5c91c2f 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -625,17 +625,17 @@ static void device_init_diversity_timer(struct vnt_private *pDevice)
- {
- 	init_timer(&pDevice->TimerSQ3Tmax1);
- 	pDevice->TimerSQ3Tmax1.data = (unsigned long) pDevice;
--	pDevice->TimerSQ3Tmax1.function = (TimerFunction)TimerSQ3CallBack;
-+	pDevice->TimerSQ3Tmax1.function = TimerSQ3CallBack;
- 	pDevice->TimerSQ3Tmax1.expires = RUN_AT(HZ);
- 
- 	init_timer(&pDevice->TimerSQ3Tmax2);
- 	pDevice->TimerSQ3Tmax2.data = (unsigned long) pDevice;
--	pDevice->TimerSQ3Tmax2.function = (TimerFunction)TimerSQ3CallBack;
-+	pDevice->TimerSQ3Tmax2.function = TimerSQ3CallBack;
- 	pDevice->TimerSQ3Tmax2.expires = RUN_AT(HZ);
- 
- 	init_timer(&pDevice->TimerSQ3Tmax3);
- 	pDevice->TimerSQ3Tmax3.data = (unsigned long) pDevice;
--	pDevice->TimerSQ3Tmax3.function = (TimerFunction)TimerState1CallBack;
-+	pDevice->TimerSQ3Tmax3.function = TimerState1CallBack;
- 	pDevice->TimerSQ3Tmax3.expires = RUN_AT(HZ);
- }
- 
-diff --git a/drivers/staging/vt6655/wmgr.h b/drivers/staging/vt6655/wmgr.h
-index 8f9748b..74f1f16 100644
---- a/drivers/staging/vt6655/wmgr.h
-+++ b/drivers/staging/vt6655/wmgr.h
-@@ -72,6 +72,5 @@
- 
- /*---------------------  Export Types  ------------------------------*/
- #define timer_expire(timer, next_tick)   mod_timer(&timer, RUN_AT(next_tick))
--typedef void (*TimerFunction)(unsigned long);
- 
- #endif // __WMGR_H__
--- 
-2.1.0
+On Mon, 2014-09-29 at 11:02 +0200, Michal Kazior wrote:
+> On 26 September 2014 21:35, Luca Coelho <luca@coelho.fi> wrote:
+> > From: Luciano Coelho <luciano.coelho@intel.com>
+> >
+> > Instead of immediately reopening the queues (in case of block_tx),
+> > calling the post_channel_switch operation and sending the
+> > notification, wait for the first beacon on the new channel.  This
+> > makes sure that we don't lose packets if the AP/GO is not on the new
+> > channel yet.
+> >
+> > Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+> [...]
+> 
+> Just a few nitpicks from me:
+> 
+> > +static void ieee80211_chswitch_post_beacon(struct ieee80211_sub_if_data *sdata)
+> > +{
+> > +       struct ieee80211_local *local = sdata->local;
+> > +       struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+> > +       int ret;
+> > +
+> > +       sdata_assert_lock(sdata);
+> >
+> 
+> I was thinking about WARN_ON(!sdata->vif.csa_active) here. csa_active
+> should be set in all cases if csa_waiting_bcn is set, no?
+
+Good idea, csa_active must still be true otherwise we may get into
+trouble.  I'll add the WARN_ON.
+
+
+> 
+> > -       /* XXX: wait for a beacon first? */
+> >         if (sdata->csa_block_tx) {
+> >                 ieee80211_wake_vif_queues(local, sdata,
+> >                                           IEEE80211_QUEUE_STOP_REASON_CSA);
+> >                 sdata->csa_block_tx = false;
+> >         }
+> >
+> > +       sdata->vif.csa_active = false;
+> > +       ifmgd->csa_waiting_bcn = false;
+> > +
+> >         ret = drv_post_channel_switch(sdata);
+> >         if (ret) {
+> >                 sdata_info(sdata,
+> >                            "driver post channel switch failed, disconnecting\n");
+> >                 ieee80211_queue_work(&local->hw,
+> >                                      &ifmgd->csa_connection_drop_work);
+> > -               goto out;
+> > +               return;
+> >         }
+> >       <---- here
+> > -       ieee80211_sta_reset_beacon_monitor(sdata);
+> > -       ieee80211_sta_reset_conn_monitor(sdata);
+> > -
+> > -out:
+> > -       mutex_unlock(&local->chanctx_mtx);
+> > -       mutex_unlock(&local->mtx);
+> > -       sdata_unlock(sdata);
+> >  }
+> 
+> Is that an empty line I before final `}`?
+
+Yep, good catch, I'll fix it.
+
+--
+Luca.
 
