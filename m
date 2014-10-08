@@ -1,81 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:27018 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755052AbaJHKbs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Oct 2014 06:31:48 -0400
-Date: Wed, 8 Oct 2014 16:03:15 +0530
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: fix kernel panic while shutting down AP
-Message-ID: <20141008103312.GA25666@qca.qualcomm.com> (sfid-20141008_123151_280539_47F344D9)
-References: <1412759786-10567-1-git-send-email-rmanohar@qti.qualcomm.com>
- <CA+BoTQ=K=F5TodrmuaEaJfErFx1=BL-bmPDrAaeMLjjb8c3fJQ@mail.gmail.com>
+Received: from mga03.intel.com ([134.134.136.65]:45604 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754919AbaJHK1Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Oct 2014 06:27:16 -0400
+Date: Wed, 8 Oct 2014 13:27:08 +0300
+From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+To: Loic Poulain <loic.poulain@intel.com>
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/5] net: rfkill: gpio: Configurable GPIO idx
+Message-ID: <20141008102708.GA3514@kuha.fi.intel.com> (sfid-20141008_122719_765509_1476A7EC)
+References: <1412757280-31367-1-git-send-email-loic.poulain@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <CA+BoTQ=K=F5TodrmuaEaJfErFx1=BL-bmPDrAaeMLjjb8c3fJQ@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1412757280-31367-1-git-send-email-loic.poulain@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 08, 2014 at 11:45:38AM +0200, Michal Kazior wrote:
-> On 8 October 2014 11:16, Rajkumar Manoharan <rmanohar@qti.qualcomm.com> wrote:
-> > The commit "ath10k: workaround fw beaconing bug" is freeing
-> > DMA-coherent memory in irq context which is hitting BUG ON
-> > in ARM platforms. Fix this by moving dma_free out of spin
-> > lock.
+On Wed, Oct 08, 2014 at 10:34:36AM +0200, Loic Poulain wrote:
+> Some devices don't match the current static gpio mapping:
+> -BCM4752 (GPS) uses gpio res 0 as host wake irq.
+> -OBDA8723 (Bluetooth) uses gpio res 0 as controller wake gpio
+> and res 2 as host wake irq.
 > 
-> I hardly see how moving the freeing outside the spinlock is a fix.
+> To allow more flexibility, this patch introduces an index
+> map description.
+> By default, legacy config still used (reset: idx 0;
+> shutdown: idx 1).
 > 
-> 
-> > kernel BUG at mm/vmalloc.c:1512!
-> > Internal error: Oops - BUG: 0 [#1] PREEMPT SMP ARM
-> > CPU: 0 PID: 722 Comm: hostapd Not tainted 3.14.0 #3
-> > task: dd58b840 ti: da6a6000 task.ti: da6a6000
-> > PC is at vunmap+0x24/0x34
-> > LR is at __arm_dma_free.isra.21+0x12c/0x190
-> > [<c02a97d0>] (vunmap) from [<c021f81c>] (__arm_dma_free.isra.21+0x12c/0x190)
-> > [<c021f81c>] (__arm_dma_free.isra.21) from [<bf3b2440>]
-> >                         (ath10k_mac_vif_beacon_free+0xf4/0x100 [ath10k_core])
-> > [<bf3b2440>] (ath10k_mac_vif_beacon_free [ath10k_core]) from [<bf3b2490>]
-> >                         (ath10k_remove_interface+0x44/0x1ec [ath10k_core])
-> > [<bf3b2490>] (ath10k_remove_interface [ath10k_core]) from [<bf3352e4>]
-> >                         (ieee80211_add_virtual_monitor+0x9d8/0x9f0 [mac80211])
-> > [<bf3352e4>] (ieee80211_add_virtual_monitor [mac80211]) from [<bf33530c>]
-> >                         (ieee80211_stop+0x10/0x18 [mac80211])
-> > [<bf33530c>] (ieee80211_stop [mac80211]) from [<c040d144>]
-> >                         (__dev_close_many+0x9c/0xcc)
-> 
->  1. How can even ieee80211_add_virtual_monitor() call
-> ath10k_remove_interface()? Upstream ath10k doesn't advertise
-> IEEE80211_HW_WANT_MONITOR_VIF. This call trace is either invalid,
-> you're not using upstream ath10k and/or have custom patches applied to
-> ath10k.
->
-This is the backtrace captured on panic and we are getting the same
-backtrace consistently. I confirmed that add_virtual_monitor is not
-called for ath10k as it is not advertising. ath10k_remove_interface is
-called for master mode.
+> Signed-off-by: Loic Poulain <loic.poulain@intel.com>
+> ---
+>  net/rfkill/rfkill-gpio.c | 125 +++++++++++++++++++++++++++++++++--------------
+>  1 file changed, 88 insertions(+), 37 deletions(-)
 
->  2. How can ieee80211_stop() be called from an interrupt context
-> anyway? ieee80211_stop() calls ieee80211_do_stop() which calls
-> ieee80211_roc_purge() which tries to get a hold of local->mtx. This
-> implies ieee80211_stop() isn't design to be run in an interrupt
-> context to begin with so I don't see why ath10k should even care if
-> ath10k_remove_interface() is called in an interrupt context at this
-> point.
-> 
-in_interrupt is counting soft and hard irqs. ieee80211_stop is not
-called from interrupt context. In ath10k, by aquiring spin_lock in
-ath10k_mac_vif_beacon_free is increasing soft irq count. 
+NAK
 
-In ARM arch, __arm_dma_free is calling vunmap which might sleep. So it
-can not be called within spin_lock.
+I'm afraid the order of the GPIOs is platform specific. This would
+break the systems already out in the market.
 
-Similar to dma_alloc_coherent, dma_free_coherent can not be called under
-soft irq context.
+You need to fix your firmware to generate ACPI DSDT according to ACPI
+spec. v5.1 [1], which introduces the Device Specific Data (_DSD) and
+dt like device properties. We need to be able to request the GPIO
+based on the label, not the index, with all new platforms. Here is an
+example of the type of_ASL you need to have for the device..
 
-PS: I am using upstream ath10k driver without private changes.
+        ...
+        Method (_CRS, 0, NotSerialized)  // _CRS: Current Resource Settings
+        {
+            Name (BBUF, ResourceTemplate ()
+            {
+                UartSerialBus (0x0001C200, DataBitsEight, StopBitsOne,
+                    0xFC, LittleEndian, ParityTypeNone, FlowControlNone,
+                    0x0020, 0x0020, "\\_SB.PCI0.URT1",
+                    0x00, ResourceConsumer, ,
+                    )
+                GpioInt (Level, ActiveLow, Exclusive, PullNone, 0x0000,
+                    "\\_SB.GPO3", 0x00, ResourceConsumer, ,
+                    )
+                    {   // Pin list
+                        0x003C
+                    }
+                GpioIo (Exclusive, PullDefault, 0x0000, 0x0000, IoRestrictionOutputOnly,
+                    "\\_SB.GPO3", 0x00, ResourceConsumer, ,
+                    )
+                    {   // Pin list
+                        0x003E
+                    }
+                GpioIo (Exclusive, PullDefault, 0x0000, 0x0000, IoRestrictionOutputOnly,
+                    "\\_SB.GPO3", 0x00, ResourceConsumer, ,
+                    )
+                    {   // Pin list
+                        0x0040
+                    }
+            })
+            Return (BBUF) /* \_SB_.PCI0.URT1.BTH1._CRS.BBUF */
+        }
 
--Rajkumar
+        Name (_DSD, Package ()
+        {
+            ToUUID("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),
+            Package () {
+                Package () {"reset-gpio", Package () {^BTH1, 1, 0, 0}},
+                Package () {"shutdown-gpio", Package () {^BTH1, 2, 0, 0}},
+            }
+        })
+        ...
+
+That will make sure you get the correct GPIO the moment we get support
+for the ACPI properties [2], regardless of the index. So there is no
+need for any changes to the driver.
+
+
+[1] http://www.uefi.org/sites/default/files/resources/ACPI_5_1release.pdf
+[2] https://lkml.org/lkml/2014/9/16/229
+
+
+-- 
+heikki
