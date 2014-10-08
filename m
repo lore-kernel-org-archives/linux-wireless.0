@@ -1,50 +1,170 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:42352 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752730AbaJTNy0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2014 09:54:26 -0400
-Received: by mail-la0-f46.google.com with SMTP id gi9so3972181lab.19
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2014 06:54:24 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 8/9] ath10k: don't forget to replenish after fragmented Rx
-Date: Mon, 20 Oct 2014 15:40:37 +0200
-Message-Id: <1413812438-14640-9-git-send-email-michal.kazior@tieto.com> (sfid-20141020_155433_852951_E2059E4B)
-In-Reply-To: <1413812438-14640-1-git-send-email-michal.kazior@tieto.com>
-References: <1413812438-14640-1-git-send-email-michal.kazior@tieto.com>
+Received: from dedo.coelho.fi ([88.198.205.34]:34577 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754428AbaJHGtW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Oct 2014 02:49:22 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: emmanuel.grumbach@intel.com, michal.kazior@tieto.com,
+	linux-wireless@vger.kernel.org
+Date: Wed,  8 Oct 2014 09:48:39 +0300
+Message-Id: <1412750920-15392-7-git-send-email-luca@coelho.fi> (sfid-20141008_084927_647329_13E1789A)
+In-Reply-To: <1412750920-15392-1-git-send-email-luca@coelho.fi>
+References: <1412750920-15392-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH v2 6/7] mac80211: wait for the first beacon on the new channel after CSA
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In theory it was possible to drain entire HTT Rx
-ring via fragmented Rx leading to Rx lockup.
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-In practice non-data traffic would always trigger
-replenishment via the regular Rx handler.
+Instead of immediately reopening the queues (in case of block_tx),
+calling the post_channel_switch operation and sending the
+notification, wait for the first beacon on the new channel.  This
+makes sure that we don't lose packets if the AP/GO is not on the new
+channel yet.
 
-For correctness sake make sure to replenish the
-ring on fragmented Rx.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/htt_rx.c | 2 ++
- 1 file changed, 2 insertions(+)
+ net/mac80211/ieee80211_i.h |  2 ++
+ net/mac80211/iface.c       |  2 ++
+ net/mac80211/mlme.c        | 45 ++++++++++++++++++++++++++++++++-------------
+ 3 files changed, 36 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index ddb9fe9..39e1969 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -1355,6 +1355,8 @@ static void ath10k_htt_rx_frag_handler(struct ath10k_htt *htt,
- 				      &attention);
- 	spin_unlock_bh(&htt->rx_ring.lock);
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index a9cc491..78d6121 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -434,6 +434,8 @@ struct ieee80211_if_managed {
  
-+	tasklet_schedule(&htt->rx_replenish_task);
+ 	unsigned int flags;
+ 
++	bool csa_waiting_bcn;
 +
- 	ath10k_dbg(ar, ATH10K_DBG_HTT_DUMP, "htt rx frag ahead\n");
+ 	bool beacon_crc_valid;
+ 	u32 beacon_crc;
  
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index af23722..e469b33 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -842,6 +842,8 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 	sdata_lock(sdata);
+ 	mutex_lock(&local->mtx);
+ 	sdata->vif.csa_active = false;
++	if (sdata->vif.type == NL80211_IFTYPE_STATION)
++		sdata->u.mgd.csa_waiting_bcn = false;
+ 	if (sdata->csa_block_tx) {
+ 		ieee80211_wake_vif_queues(local, sdata,
+ 					  IEEE80211_QUEUE_STOP_REASON_CSA);
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 2e29cc3..109812f 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1001,31 +1001,44 @@ static void ieee80211_chswitch_work(struct work_struct *work)
+ 	/* XXX: shouldn't really modify cfg80211-owned data! */
+ 	ifmgd->associated->channel = sdata->csa_chandef.chan;
+ 
+-	sdata->vif.csa_active = false;
++	ifmgd->csa_waiting_bcn = true;
++
++	ieee80211_sta_reset_beacon_monitor(sdata);
++	ieee80211_sta_reset_conn_monitor(sdata);
++
++out:
++	mutex_unlock(&local->chanctx_mtx);
++	mutex_unlock(&local->mtx);
++	sdata_unlock(sdata);
++}
++
++static void ieee80211_chswitch_post_beacon(struct ieee80211_sub_if_data *sdata)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
++	int ret;
++
++	sdata_assert_lock(sdata);
++
++	WARN_ON(!sdata->vif.csa_active);
+ 
+-	/* XXX: wait for a beacon first? */
+ 	if (sdata->csa_block_tx) {
+ 		ieee80211_wake_vif_queues(local, sdata,
+ 					  IEEE80211_QUEUE_STOP_REASON_CSA);
+ 		sdata->csa_block_tx = false;
+ 	}
+ 
++	sdata->vif.csa_active = false;
++	ifmgd->csa_waiting_bcn = false;
++
+ 	ret = drv_post_channel_switch(sdata);
  	if (ret) {
+ 		sdata_info(sdata,
+ 			   "driver post channel switch failed, disconnecting\n");
+ 		ieee80211_queue_work(&local->hw,
+ 				     &ifmgd->csa_connection_drop_work);
+-		goto out;
++		return;
+ 	}
+-
+-	ieee80211_sta_reset_beacon_monitor(sdata);
+-	ieee80211_sta_reset_conn_monitor(sdata);
+-
+-out:
+-	mutex_unlock(&local->chanctx_mtx);
+-	mutex_unlock(&local->mtx);
+-	sdata_unlock(sdata);
+ }
+ 
+ void ieee80211_chswitch_done(struct ieee80211_vif *vif, bool success)
+@@ -1943,6 +1956,7 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_vif_release_channel(sdata);
+ 
+ 	sdata->vif.csa_active = false;
++	ifmgd->csa_waiting_bcn = false;
+ 	if (sdata->csa_block_tx) {
+ 		ieee80211_wake_vif_queues(local, sdata,
+ 					  IEEE80211_QUEUE_STOP_REASON_CSA);
+@@ -2191,6 +2205,7 @@ static void __ieee80211_disconnect(struct ieee80211_sub_if_data *sdata)
+ 			       true, frame_buf);
+ 	mutex_lock(&local->mtx);
+ 	sdata->vif.csa_active = false;
++	ifmgd->csa_waiting_bcn = false;
+ 	if (sdata->csa_block_tx) {
+ 		ieee80211_wake_vif_queues(local, sdata,
+ 					  IEEE80211_QUEUE_STOP_REASON_CSA);
+@@ -3215,6 +3230,9 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 		}
+ 	}
+ 
++	if (ifmgd->csa_waiting_bcn)
++		ieee80211_chswitch_post_beacon(sdata);
++
+ 	if (ncrc == ifmgd->beacon_crc && ifmgd->beacon_crc_valid)
+ 		return;
+ 	ifmgd->beacon_crc = ncrc;
+@@ -3687,11 +3705,12 @@ static void ieee80211_sta_bcn_mon_timer(unsigned long data)
+ 	struct ieee80211_sub_if_data *sdata =
+ 		(struct ieee80211_sub_if_data *) data;
+ 	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+ 
+ 	if (local->quiescing)
+ 		return;
+ 
+-	if (sdata->vif.csa_active)
++	if (sdata->vif.csa_active && !ifmgd->csa_waiting_bcn)
+ 		return;
+ 
+ 	sdata->u.mgd.connection_loss = false;
+@@ -3709,7 +3728,7 @@ static void ieee80211_sta_conn_mon_timer(unsigned long data)
+ 	if (local->quiescing)
+ 		return;
+ 
+-	if (sdata->vif.csa_active)
++	if (sdata->vif.csa_active && !ifmgd->csa_waiting_bcn)
+ 		return;
+ 
+ 	ieee80211_queue_work(&local->hw, &ifmgd->monitor_work);
 -- 
-1.8.5.3
+2.1.1
 
