@@ -1,65 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f176.google.com ([209.85.192.176]:41160 "EHLO
-	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752648AbaJVQa1 (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:49110 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752846AbaJHC5r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2014 12:30:27 -0400
-Received: by mail-pd0-f176.google.com with SMTP id fp1so3817908pdb.21
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Oct 2014 09:30:27 -0700 (PDT)
-Message-ID: <5447DBA0.5080608@lwfinger.net> (sfid-20141022_183037_925525_1FF73CFE)
-Date: Wed, 22 Oct 2014 11:30:24 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 7 Oct 2014 22:57:47 -0400
+Date: Wed, 8 Oct 2014 08:29:38 +0530
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] ath10k: add tracing for frame transmission
+Message-ID: <20141008025936.GA3116@qca.qualcomm.com> (sfid-20141008_045751_724502_D06FA551)
+References: <1412615346-18010-1-git-send-email-rmanohar@qti.qualcomm.com>
+ <87lhoshrwh.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
-To: Karsten Wiese <fzuuzf@googlemail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/3] rtl8192cu: Fix for rtlwifi's bluetooth coexist functionality
-References: <1413985654-25070-1-git-send-email-fzuuzf@googlemail.com> <1413985654-25070-2-git-send-email-fzuuzf@googlemail.com>
-In-Reply-To: <1413985654-25070-2-git-send-email-fzuuzf@googlemail.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <87lhoshrwh.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/22/2014 08:47 AM, Karsten Wiese wrote:
-> Initialize function pointer with a function indicating bt coexist is not there.
-> Prevents Ooops.
->
-> Signed-off-by: Karsten Wiese <fzuuzf@googlemail.com>
-> ---
+On Tue, Oct 07, 2014 at 05:32:30PM +0300, Kalle Valo wrote:
+> Rajkumar Manoharan <rmanohar@qti.qualcomm.com> writes:
+> 
+> > Add tracing support to forward management and data frames to
+> > user space for packet inspection.
+> >
+> > Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+> 
+> !  [  80: Rajkumar Manoharan     ] [PATCH 1/2] ath10k: add tracepoint for htt tx frames
+> !      [ 105: Rajkumar Manoharan     ] [PATCH 2/2] ath10k: add tracing for frame transmission
+> 
+> For the future: it's a lot easier if you add a cover letter for the
+> patch series, keep the cover letter title unchanged and just increase
+> the version number after each revision. That way I can immeaditely see
+> what patches I should take or ignore.
+> 
+I replied to series to ignore the patchset. Sorry if the message is not
+clear. In next version, I combined both patches.
 
-I have been working on a better fix; however, I am traveling and unable to 
-finish testing it. As a result, this one should be applied.
-
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
-
-Larry
-
->   drivers/net/wireless/rtlwifi/rtl8192cu/sw.c | 7 +++++++
->   1 file changed, 7 insertions(+)
->
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-> index 7c5fbaf..e06bafe 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-> @@ -101,6 +101,12 @@ static void rtl92cu_deinit_sw_vars(struct ieee80211_hw *hw)
->   	}
->   }
->
-> +/* get bt coexist status */
-> +static bool rtl92cu_get_btc_status(void)
-> +{
-> +	return false;
-> +}
-> +
->   static struct rtl_hal_ops rtl8192cu_hal_ops = {
->   	.init_sw_vars = rtl92cu_init_sw_vars,
->   	.deinit_sw_vars = rtl92cu_deinit_sw_vars,
-> @@ -148,6 +154,7 @@ static struct rtl_hal_ops rtl8192cu_hal_ops = {
->   	.phy_set_bw_mode_callback = rtl92cu_phy_set_bw_mode_callback,
->   	.dm_dynamic_txpower = rtl92cu_dm_dynamic_txpower,
->   	.fill_h2c_cmd = rtl92c_fill_h2c_cmd,
-> +	.get_btc_status = rtl92cu_get_btc_status,
->   };
->
->   static struct rtl_mod_params rtl92cu_mod_params = {
->
-
+-Rajkumar
