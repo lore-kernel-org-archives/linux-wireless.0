@@ -1,42 +1,223 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:10236 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754244AbaJGQTM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Oct 2014 12:19:12 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] ath10k: add tracing for frame transmission
-References: <1412615346-18010-1-git-send-email-rmanohar@qti.qualcomm.com>
-Date: Tue, 7 Oct 2014 19:19:05 +0300
-In-Reply-To: <1412615346-18010-1-git-send-email-rmanohar@qti.qualcomm.com>
-	(Rajkumar Manoharan's message of "Mon, 6 Oct 2014 22:39:06 +0530")
-Message-ID: <87d2a3j1ja.fsf@kamboji.qca.qualcomm.com> (sfid-20141007_181923_968089_6363117D)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mga01.intel.com ([192.55.52.88]:53430 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754725AbaJHIde (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Oct 2014 04:33:34 -0400
+From: Loic Poulain <loic.poulain@intel.com>
+To: johannes@sipsolutions.net, heikki.krogerus@linux.intel.com
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Loic Poulain <loic.poulain@intel.com>
+Subject: [PATCH 1/5] net: rfkill: gpio: Configurable GPIO idx
+Date: Wed,  8 Oct 2014 10:34:36 +0200
+Message-Id: <1412757280-31367-1-git-send-email-loic.poulain@intel.com> (sfid-20141008_103339_913180_C08862C5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rajkumar Manoharan <rmanohar@qti.qualcomm.com> writes:
+Some devices don't match the current static gpio mapping:
+-BCM4752 (GPS) uses gpio res 0 as host wake irq.
+-OBDA8723 (Bluetooth) uses gpio res 0 as controller wake gpio
+and res 2 as host wake irq.
 
-> Add tracing support to forward management and data frames to
-> user space for packet inspection.
->
-> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To allow more flexibility, this patch introduces an index
+map description.
+By default, legacy config still used (reset: idx 0;
+shutdown: idx 1).
 
-[...]
+Signed-off-by: Loic Poulain <loic.poulain@intel.com>
+---
+ net/rfkill/rfkill-gpio.c | 125 +++++++++++++++++++++++++++++++++--------------
+ 1 file changed, 88 insertions(+), 37 deletions(-)
 
-> --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-> +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-> @@ -291,6 +291,9 @@ static inline struct sk_buff *ath10k_htt_rx_netbuf_pop(struct ath10k_htt *htt)
->  	htt->rx_ring.sw_rd_idx.msdu_payld = idx;
->  	htt->rx_ring.fill_cnt--;
->  
-> +	trace_ath10k_htt_rx_pop_msdu(ar, msdu->data, msdu->len +
-> +				     skb_tailroom(msdu));
-
-Why add skb_tailroom() to the length? I think that deserves a comment.
-
+diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
+index 0f62326..7982841 100644
+--- a/net/rfkill/rfkill-gpio.c
++++ b/net/rfkill/rfkill-gpio.c
+@@ -41,6 +41,13 @@ struct rfkill_gpio_data {
+ 	bool			clk_enabled;
+ };
+ 
++struct rfkill_gpio_desc {
++	enum rfkill_type	type;
++
++	int			reset_idx;
++	int			shutdown_idx;
++};
++
+ static int rfkill_gpio_set_power(void *data, bool blocked)
+ {
+ 	struct rfkill_gpio_data *rfkill = data;
+@@ -63,32 +70,89 @@ static const struct rfkill_ops rfkill_gpio_ops = {
+ 	.set_block = rfkill_gpio_set_power,
+ };
+ 
++static int rfkill_gpio_init(struct device *dev, struct rfkill_gpio_desc *desc)
++{
++	int ret;
++	struct gpio_desc *gpio;
++	struct rfkill_gpio_data *rfkill = dev_get_drvdata(dev);
++
++	if (!rfkill->name) {
++		dev_err(dev, "invalid platform data\n");
++		return -EINVAL;
++	}
++
++	rfkill->clk = devm_clk_get(dev, NULL);
++
++	if (!desc)
++		gpio = devm_gpiod_get_index(dev, "reset", 0);
++	else if (desc->reset_idx >= 0)
++		gpio = devm_gpiod_get_index(dev, "reset", desc->reset_idx);
++	else
++		gpio = NULL;
++
++	if (gpio && !IS_ERR(gpio)) {
++		ret = gpiod_direction_output(gpio, 0);
++		if (ret)
++			return ret;
++		rfkill->reset_gpio = gpio;
++	}
++
++	if (!desc)
++		gpio = devm_gpiod_get_index(dev, "shutdown", 1);
++	else if (desc->shutdown_idx >= 0)
++		gpio = devm_gpiod_get_index(dev, "shutdown",
++					    desc->shutdown_idx);
++	else
++		gpio = NULL;
++
++	if (gpio && !IS_ERR(gpio)) {
++		ret = gpiod_direction_output(gpio, 0);
++		if (ret)
++			return ret;
++		rfkill->shutdown_gpio = gpio;
++	}
++
++	/* Make sure at-least one of the GPIO is defined */
++	if (!rfkill->reset_gpio && !rfkill->shutdown_gpio) {
++		dev_err(dev, "invalid platform data\n");
++		return -EINVAL;
++	}
++
++	return 0;
++}
++
+ static int rfkill_gpio_acpi_probe(struct device *dev,
+ 				  struct rfkill_gpio_data *rfkill)
+ {
+ 	const struct acpi_device_id *id;
++	struct rfkill_gpio_desc *desc;
+ 
+ 	id = acpi_match_device(dev->driver->acpi_match_table, dev);
+ 	if (!id)
+ 		return -ENODEV;
+ 
++	desc = (struct rfkill_gpio_desc *)id->driver_data;
++	if (!desc)
++		return -ENODEV;
++
+ 	rfkill->name = dev_name(dev);
+-	rfkill->type = (unsigned)id->driver_data;
++	rfkill->type = desc->type;
+ 
+-	return 0;
++	return rfkill_gpio_init(dev, desc);
+ }
+ 
+ static int rfkill_gpio_probe(struct platform_device *pdev)
+ {
+ 	struct rfkill_gpio_platform_data *pdata = pdev->dev.platform_data;
+ 	struct rfkill_gpio_data *rfkill;
+-	struct gpio_desc *gpio;
+ 	int ret;
+ 
+ 	rfkill = devm_kzalloc(&pdev->dev, sizeof(*rfkill), GFP_KERNEL);
+ 	if (!rfkill)
+ 		return -ENOMEM;
+ 
++	platform_set_drvdata(pdev, rfkill);
++
+ 	if (ACPI_HANDLE(&pdev->dev)) {
+ 		ret = rfkill_gpio_acpi_probe(&pdev->dev, rfkill);
+ 		if (ret)
+@@ -96,34 +160,11 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
+ 	} else if (pdata) {
+ 		rfkill->name = pdata->name;
+ 		rfkill->type = pdata->type;
+-	} else {
+-		return -ENODEV;
+-	}
+-
+-	rfkill->clk = devm_clk_get(&pdev->dev, NULL);
+-
+-	gpio = devm_gpiod_get_index(&pdev->dev, "reset", 0);
+-	if (!IS_ERR(gpio)) {
+-		ret = gpiod_direction_output(gpio, 0);
++		ret = rfkill_gpio_init(&pdev->dev, NULL);
+ 		if (ret)
+ 			return ret;
+-		rfkill->reset_gpio = gpio;
+-	}
+-
+-	gpio = devm_gpiod_get_index(&pdev->dev, "shutdown", 1);
+-	if (!IS_ERR(gpio)) {
+-		ret = gpiod_direction_output(gpio, 0);
+-		if (ret)
+-			return ret;
+-		rfkill->shutdown_gpio = gpio;
+-	}
+-
+-	/* Make sure at-least one of the GPIO is defined and that
+-	 * a name is specified for this instance
+-	 */
+-	if ((!rfkill->reset_gpio && !rfkill->shutdown_gpio) || !rfkill->name) {
+-		dev_err(&pdev->dev, "invalid platform data\n");
+-		return -EINVAL;
++	} else {
++		return -ENODEV;
+ 	}
+ 
+ 	rfkill->rfkill_dev = rfkill_alloc(rfkill->name, &pdev->dev,
+@@ -136,8 +177,6 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
+ 	if (ret < 0)
+ 		return ret;
+ 
+-	platform_set_drvdata(pdev, rfkill);
+-
+ 	dev_info(&pdev->dev, "%s device registered.\n", rfkill->name);
+ 
+ 	return 0;
+@@ -154,13 +193,25 @@ static int rfkill_gpio_remove(struct platform_device *pdev)
+ }
+ 
+ #ifdef CONFIG_ACPI
++static struct rfkill_gpio_desc acpi_default_bluetooth = {
++	.type = RFKILL_TYPE_BLUETOOTH,
++	.reset_idx = 0,
++	.shutdown_idx = 1,
++};
++
++static struct rfkill_gpio_desc acpi_default_gps = {
++	.type = RFKILL_TYPE_GPS,
++	.reset_idx = 0,
++	.shutdown_idx = 1,
++};
++
+ static const struct acpi_device_id rfkill_acpi_match[] = {
+-	{ "BCM2E1A", RFKILL_TYPE_BLUETOOTH },
+-	{ "BCM2E39", RFKILL_TYPE_BLUETOOTH },
+-	{ "BCM2E3D", RFKILL_TYPE_BLUETOOTH },
+-	{ "BCM2E64", RFKILL_TYPE_BLUETOOTH },
+-	{ "BCM4752", RFKILL_TYPE_GPS },
+-	{ "LNV4752", RFKILL_TYPE_GPS },
++	{ "BCM2E1A", (kernel_ulong_t)&acpi_default_bluetooth },
++	{ "BCM2E39", (kernel_ulong_t)&acpi_default_bluetooth },
++	{ "BCM2E3D", (kernel_ulong_t)&acpi_default_bluetooth },
++	{ "BCM2E64", (kernel_ulong_t)&acpi_default_bluetooth },
++	{ "BCM4752", (kernel_ulong_t)&acpi_default_gps },
++	{ "LNV4752", (kernel_ulong_t)&acpi_default_gps },
+ 	{ },
+ };
+ MODULE_DEVICE_TABLE(acpi, rfkill_acpi_match);
 -- 
-Kalle Valo
+1.8.3.2
+
