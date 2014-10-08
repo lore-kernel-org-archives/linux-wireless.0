@@ -1,44 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:42118 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751693AbaJMFJw convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Oct 2014 01:09:52 -0400
-Received: by mail-wi0-f169.google.com with SMTP id h11so2338053wiw.4
-        for <linux-wireless@vger.kernel.org>; Sun, 12 Oct 2014 22:09:50 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <87ppe0aurn.fsf@kamboji.qca.qualcomm.com>
-References: <1412940780-25360-1-git-send-email-michal.kazior@tieto.com>
-	<87ppe0aurn.fsf@kamboji.qca.qualcomm.com>
-Date: Mon, 13 Oct 2014 07:09:50 +0200
-Message-ID: <CA+BoTQmgg2VvkeETQLyG-x5bqtVqDCf3PZOVbmimbXcHYfV=Ww@mail.gmail.com> (sfid-20141013_070955_484543_864CABAB)
-Subject: Re: [PATCH] ath10k: use bss_info as txpower source
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from dedo.coelho.fi ([88.198.205.34]:34552 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754401AbaJHGtQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Oct 2014 02:49:16 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: emmanuel.grumbach@intel.com, michal.kazior@tieto.com,
+	linux-wireless@vger.kernel.org
+Date: Wed,  8 Oct 2014 09:48:33 +0300
+Message-Id: <1412750920-15392-1-git-send-email-luca@coelho.fi> (sfid-20141008_084924_515515_4EE77E2E)
+Subject: [PATCH v2 0/7] mac80211: some more channel switch work
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10 October 2014 16:01, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Michal Kazior <michal.kazior@tieto.com> writes:
->
->> This simply changes the source for txpower setup.
->> It does not make ath10k use different txpower
->> values for different vifs.
->>
->> This will make it easier to implement chanctx in
->> ath10k in the future.
->>
->> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
->
-> In ath-next-test there was a conflict in ath10k_bss_info_changed().
-> Please check my resolution:
->
-> https://github.com/kvalo/ath/commit/86eea6fda33ce16a40f98d41c19ea4b0e157f5ba
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-Looks good, thanks!
+Hi,
 
+A few minor changes in v2:
 
-Michał
+  * add WARN_ON to make sure csa_active is set in
+    ieee80211_chswitch_post_beacon() [Michal];
+  * remove stray empty line [Michal];
+  * s/vifos/vif/ in a mac80211.h declaration (no clue where the "os"
+    came from :P);
+
+---8<---
+
+These patches contain some more channel switch work.  They have been
+in use in our internal tree for some time now and are mostly adding
+small details needed by the iwlmvm driver.  There's also a nice
+improvement to a long-time TODO, where we wait for a beacon on the new
+channel before we start transmitting again (in BSS station/P2P client
+mode).
+
+One slightly controversial change is the one that allows channel
+switches with multiple channel contexts.  The problem is not with
+mult-context itself, but the handling of drivers that offload the
+channel switch and have, so far, not received any information about
+the vif that is switching (so the assumption was that all vifs would
+have to switch).
+
+Please review.
+
+--
+Cheers,
+Luca.
+
+Luciano Coelho (7):
+  nl80211: sanity check the channel switch counter value
+  mac80211: add device_timestamp to the ieee80211_channel_switch struct
+  mac80211: add extended channel switching capability if the driver
+    supports CSA
+  mac80211: add pre_channel_switch driver operation
+  mac80211: add post_channel_switch driver operation
+  mac80211: wait for the first beacon on the new channel after CSA
+  mac80211: allow channel switch with multiple channel contexts
+
+ drivers/net/wireless/iwlegacy/4965-mac.c    |   2 +-
+ drivers/net/wireless/iwlegacy/4965.h        |   5 +-
+ drivers/net/wireless/iwlwifi/dvm/mac80211.c |   1 +
+ drivers/net/wireless/ti/wlcore/main.c       |  23 ++----
+ include/linux/ieee80211.h                   |   5 ++
+ include/net/mac80211.h                      |  17 +++++
+ net/mac80211/cfg.c                          |  18 ++++-
+ net/mac80211/driver-ops.h                   |  41 ++++++++++-
+ net/mac80211/ieee80211_i.h                  |   5 ++
+ net/mac80211/iface.c                        |   2 +
+ net/mac80211/main.c                         |  20 ++---
+ net/mac80211/mlme.c                         | 110 ++++++++++++++++++----------
+ net/mac80211/trace.h                        |  50 ++++++++++++-
+ net/wireless/nl80211.c                      |  10 ++-
+ 14 files changed, 237 insertions(+), 72 deletions(-)
+
+-- 
+2.1.1
+
