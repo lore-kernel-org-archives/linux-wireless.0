@@ -1,49 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:60755 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753298AbaJQSfI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Oct 2014 14:35:08 -0400
-Received: by mail-wg0-f44.google.com with SMTP id y10so1501529wgg.15
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Oct 2014 11:35:06 -0700 (PDT)
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Karl Beldan <karl.beldan@rivierawaves.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH v2 0/4] add VHT support to minstrel_ht 
-Date: Fri, 17 Oct 2014 20:34:52 +0200
-Message-Id: <1413570896-27740-1-git-send-email-karl.beldan@gmail.com> (sfid-20141017_203511_685689_DE21C182)
+Received: from mx1.redhat.com ([209.132.183.28]:18560 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754430AbaJHOdn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Oct 2014 10:33:43 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Joe Perches <joe@perches.com>
+Cc: Dan Carpenter <dan.carpenter@oracle.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	kernel-janitors@vger.kernel.org
+Subject: Re: [patch] staging: rtl8723au: incorrect use of ether_addr_copy()
+References: <20141008104014.GA23096@mwanda>
+	<1412771171.3438.25.camel@joe-AO725> <20141008124631.GC26918@mwanda>
+	<1412778150.3438.30.camel@joe-AO725>
+Date: Wed, 08 Oct 2014 16:33:26 +0200
+In-Reply-To: <1412778150.3438.30.camel@joe-AO725> (Joe Perches's message of
+	"Wed, 08 Oct 2014 07:22:30 -0700")
+Message-ID: <wrfjmw96y6kp.fsf@redhat.com> (sfid-20141008_163348_015624_B98D3BB2)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Karl Beldan <karl.beldan@rivierawaves.com>
+Joe Perches <joe@perches.com> writes:
+> On Wed, 2014-10-08 at 15:46 +0300, Dan Carpenter wrote:
+>> On Wed, Oct 08, 2014 at 05:26:11AM -0700, Joe Perches wrote:
+>> > On Wed, 2014-10-08 at 13:40 +0300, Dan Carpenter wrote:
+>> > > The return from myid() isn't aligned correctly for ether_addr_copy().
+>> > 
+>> > Hey Dan.
+>> > 
+>> > Actual evidence showing ether_addr_copy conversions
+>> > may not always be wise.
+>> > 
+>> > How did you find them?
+>> 
+>> I was just trying to see how common these kinds of bugs are.  It didn't
+>> take long to find, but my impression is that they are rare and I got
+>> lucky.  These kinds of bugs are tricky to find and we don't have any
+>> tools for it.
+>
+> As far as I know, that's true too.
+>
+> Jes, was the mac_addr field in this struct
+> ever __aligned(2)?
+>
+> struct eeprom_priv {
+>        u8              bautoload_fail_flag;
+>        u8              bloadfile_fail_flag;
+>        u8              bloadmac_fail_flag;
+>        /* u8           bempty; */
+>        /* u8           sys_config; */
+>        u8              mac_addr[6];    /* PermanentAddress */
+> ...
+> }
+>
+> As far as I can tell from git history, it was
+> that way at the first check-in.
 
-Hi,
+I may have removed other entries that were unused, and that caused it to
+become mis-aligned. I can't say for sure - the fix is straight forward
+though.
 
-This is a split version of the VHT support addition to minstrel.
-Thanks for reviewing,
-
-Karl Beldan (4):
-  mac80211: minstrel_ht: Increase the range of handled rate indexes
-  mac80211: minstrel_ht: macros adjustments for future VHT_GROUPs
-  mac80211: minstrel_ht: include type (cck/ht) in rates flag
-  mac80211: minstrel_ht: add basic support for VHT rates <= 3SS@80MHz
-v2:
-- typo in Kconfig
-- adjust room in debugfs rc_stats buffer
-- add a module param to mix ht rates with vht ones
-- default to 3SS instead of 2SS (with "mac80211: minstrel_ht: macros
-  adjustments for future VHT_GROUPs")
-- use common MINSTREL_MAX_STREAMS both for VHT and HT so that we can get
-  rid of the 'MINSTREL_MAX_STREAMS >= 3' checks for minstrel_mcs_groups
-
- net/mac80211/Kconfig                       |   7 +
- net/mac80211/rc80211_minstrel_ht.c         | 288 +++++++++++++++++++++++------
- net/mac80211/rc80211_minstrel_ht.h         |  38 +++-
- net/mac80211/rc80211_minstrel_ht_debugfs.c |  32 ++--
- 4 files changed, 286 insertions(+), 79 deletions(-)
-
--- 
-2.0.1
-
+Jes
