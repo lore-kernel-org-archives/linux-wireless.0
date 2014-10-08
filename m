@@ -1,82 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f43.google.com ([74.125.82.43]:42291 "EHLO
-	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756444AbaJ2RqI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2014 13:46:08 -0400
-Received: by mail-wg0-f43.google.com with SMTP id n12so3913924wgh.2
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2014 10:46:07 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH v2 31/34] staging: vt6655: fifo & frag control remove big endian values
-Date: Wed, 29 Oct 2014 17:44:06 +0000
-Message-Id: <1414604649-9105-32-git-send-email-tvboxspy@gmail.com> (sfid-20141029_184734_017013_EF2B627B)
-In-Reply-To: <1414604649-9105-1-git-send-email-tvboxspy@gmail.com>
-References: <1414604649-9105-1-git-send-email-tvboxspy@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:27727 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751280AbaJHOcs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Oct 2014 10:32:48 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: devel@driverdev.osuosl.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	kernel-janitors@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [patch] staging: rtl8723au: incorrect use of ether_addr_copy()
+References: <20141008104014.GA23096@mwanda> <wrfj4mvezmpm.fsf@redhat.com>
+	<20141008142451.GE26918@mwanda>
+Date: Wed, 08 Oct 2014 16:32:37 +0200
+In-Reply-To: <20141008142451.GE26918@mwanda> (Dan Carpenter's message of "Wed,
+	8 Oct 2014 17:24:51 +0300")
+Message-ID: <wrfjr3yiy6m2.fsf@redhat.com> (sfid-20141008_163253_277511_AB20F290)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Endian conversion now happens at run time only little endian
-values are valid.
+Dan Carpenter <dan.carpenter@oracle.com> writes:
+> On Wed, Oct 08, 2014 at 03:59:33PM +0200, Jes Sorensen wrote:
+>> Dan Carpenter <dan.carpenter@oracle.com> writes:
+>> > The return from myid() isn't aligned correctly for ether_addr_copy().
+>> >
+>> > Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+>> 
+>> Sorry, this makes no sense, just fix it properly!
+>> 
+>> drivers/staging/rtl8723au/include/rtw_eeprom.h:
+>> 
+>> struct eeprom_priv {
+>>         u8              bautoload_fail_flag;
+>>         u8              bloadfile_fail_flag;
+>>         u8              bloadmac_fail_flag;
+>>         /* u8           bempty; */
+>>         /* u8           sys_config; */
+>>         u8              mac_addr[6];    /* PermanentAddress */
+>>         /* u8           config0; */
+>> 
+>> Move mac_addr[6] to the top of the struct and be done with it.
+>> 
+>> NACK
+>
+> Oops.  I thought it was something from the hardware.  Actually can you
+> fix it and give me a reported-by tag?
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/desc.h | 32 --------------------------------
- 1 file changed, 32 deletions(-)
+That stuff is just copied into memory from the eeprom, so we can pretty
+much do with it as we like.
 
-diff --git a/drivers/staging/vt6655/desc.h b/drivers/staging/vt6655/desc.h
-index 9068c3e..b59405b 100644
---- a/drivers/staging/vt6655/desc.h
-+++ b/drivers/staging/vt6655/desc.h
-@@ -118,37 +118,7 @@
-  */
- #define CB_MAX_TX_ABORT_RETRY   3
- 
--#ifdef __BIG_ENDIAN
--
- /* WMAC definition FIFO Control */
--#define FIFOCTL_AUTO_FB_1   0x0010
--#define FIFOCTL_AUTO_FB_0   0x0008
--#define FIFOCTL_GRPACK      0x0004
--#define FIFOCTL_11GA        0x0003
--#define FIFOCTL_11GB        0x0002
--#define FIFOCTL_11B         0x0001
--#define FIFOCTL_11A         0x0000
--#define FIFOCTL_RTS         0x8000
--#define FIFOCTL_ISDMA0      0x4000
--#define FIFOCTL_GENINT      0x2000
--#define FIFOCTL_TMOEN       0x1000
--#define FIFOCTL_LRETRY      0x0800
--#define FIFOCTL_CRCDIS      0x0400
--#define FIFOCTL_NEEDACK     0x0200
--#define FIFOCTL_LHEAD       0x0100
--
--/* WMAC definition Frag Control */
--#define FRAGCTL_AES         0x0003
--#define FRAGCTL_TKIP        0x0002
--#define FRAGCTL_LEGACY      0x0001
--#define FRAGCTL_NONENCRYPT  0x0000
--#define FRAGCTL_ENDFRAG     0x0300
--#define FRAGCTL_MIDFRAG     0x0200
--#define FRAGCTL_STAFRAG     0x0100
--#define FRAGCTL_NONFRAG     0x0000
--
--#else
--
- #define FIFOCTL_AUTO_FB_1   0x1000
- #define FIFOCTL_AUTO_FB_0   0x0800
- #define FIFOCTL_GRPACK      0x0400
-@@ -175,8 +145,6 @@
- #define FRAGCTL_STAFRAG     0x0001
- #define FRAGCTL_NONFRAG     0x0000
- 
--#endif
--
- #define TYPE_TXDMA0     0
- #define TYPE_AC0DMA     1
- #define TYPE_ATIMDMA    2
--- 
-2.1.0
+I'll put it on my list.
 
+Jes
