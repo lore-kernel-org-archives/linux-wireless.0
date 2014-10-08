@@ -1,254 +1,217 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f45.google.com ([74.125.82.45]:35564 "EHLO
-	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753632AbaJ2Ros (ORCPT
+Received: from mail-ig0-f178.google.com ([209.85.213.178]:35444 "EHLO
+	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933620AbaJHLqf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2014 13:44:48 -0400
-Received: by mail-wg0-f45.google.com with SMTP id x12so2459010wgg.32
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2014 10:44:47 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH v2 01/34] staging: vt6655: mac80211 conversion: add new rx functions
-Date: Wed, 29 Oct 2014 17:43:36 +0000
-Message-Id: <1414604649-9105-2-git-send-email-tvboxspy@gmail.com> (sfid-20141029_184453_062534_5C49B5FD)
-In-Reply-To: <1414604649-9105-1-git-send-email-tvboxspy@gmail.com>
-References: <1414604649-9105-1-git-send-email-tvboxspy@gmail.com>
+	Wed, 8 Oct 2014 07:46:35 -0400
+Received: by mail-ig0-f178.google.com with SMTP id h3so1781695igd.17
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Oct 2014 04:46:33 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <be003eea-b253-4eb3-bf08-40d5f6dc629d@email.android.com>
+References: <1412135157-13520-1-git-send-email-asselsm@gmail.com>
+	<20141001091240.GA2011@redhat.com>
+	<CAPuovEJtuJdRakwRhdUjRwrmkfry62wJqd8p2uJQ7L0rB7DoCA@mail.gmail.com>
+	<CAPuovEJssghQv=03sn07AuYVvwULq0kSTn9kch53r+VKccy8xA@mail.gmail.com>
+	<be003eea-b253-4eb3-bf08-40d5f6dc629d@email.android.com>
+Date: Wed, 8 Oct 2014 07:46:33 -0400
+Message-ID: <CAPuovEJXkRYyWXZJD7E6_1EqemfJus7Gtr_5PztT6rDtsrRpdw@mail.gmail.com> (sfid-20141008_134644_146909_3563C925)
+Subject: Re: [PATCH] rt2x00: rt2x00queue: avoid using more headroom then
+ driver requested
+From: Mark Asselstine <asselsm@gmail.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-vnt_receive_frame which replaces device_receive_frame
+On Sun, Oct 5, 2014 at 4:39 AM, Helmut Schaa
+<helmut.schaa@googlemail.com> wrote:
+>
+>
+>
+>
+> Mark Asselstine <asselsm@gmail.com> schrieb:
+>>On Wed, Oct 1, 2014 at 9:42 PM, Mark Asselstine <asselsm@gmail.com>
+>>wrote:
+>>>
+>>> Damn, you are right. I thought I had it licked.
+>>>
+>>> Unfortunately with the overloaded variable name it was easy to get
+>>turned
+>>> around. The comments in the code didn't prevent me knotting myself up
+>>> either. If you look in in rt2x00.h, struct rt2x00_dev, the comment
+>>above the
+>>> extra_tx_headroom member says "Extra TX headroom required for
+>>alignment
+>>> purposes." I would say this is incorrect. This variable is
+>>initialized
+>>> via rt2x00dev_extra_tx_headroom() with a combination of winfo_size
+>>and
+>>> desc_size and has nothing to do with alignment.
+>>>
+>>> At any rate, keeping in mind that rt2x00_dev.hw.extra_tx_headroom
+>>> which is used to set the amount of available headroom includes room
+>>> for alignment and padding as well as winfo and desc space, and that
+>>> rt2x00_dev.extra_tx_headroom doesn't include padding or alignment,
+>>you
+>>> are correct in that we aren't over spending our headroom. Back to the
+>>> drawing board.
+>>>
+>>>
+>>> Mark
+>>>
+>>> On Wed, Oct 1, 2014 at 5:12 AM, Stanislaw Gruszka
+>><sgruszka@redhat.com>
+>>> wrote:
+>>>>
+>>>> On Tue, Sep 30, 2014 at 11:45:57PM -0400, Mark Asselstine wrote:
+>>>> > 'struct ieee80211_hw' contains 'extra_tx_headroom' which it
+>>defines as
+>>>> > "headroom to reserve in each transmit skb for use by the driver".
+>>This
+>>>> > value is properly setup during rt2x00lib_probe_hw() to account for
+>>all
+>>>> > the rt2x00lib's purposes, including DMA alignment and L2 pad if
+>>>> > needed. As such under all circumstances the proper amount of
+>>headroom
+>>>> > is allocated to a skb such that under any usage we would not ever
+>>use
+>>>> > more headroom then is allotted.
+>>>> >
+>>>> > However rt2x00queue_write_tx_frame() uses up the headroom (via
+>>calls
+>>>> > to skb_push) allotted for L2 padding (with a potential call to
+>>>> > rt2x00queue_insert_l2pad()) and uses up the headroom allotted to
+>>DMA
+>>>> > alignment (with a potential call to rt2x00queue_align_frame()) and
+>>>> > then proceeds to use up 'extra_tx_headroom' (in a call to
+>>>> > rt2x00queue_write_tx_data())
+>>>> >
+>>>> > So the driver has requested just 'extra_tx_headroom' worth of
+>>headroom
+>>>> > and we have used up 'extra_tx_headroom' + DMA + L2PAD worth. As
+>>such
+>>>> > it is possible to hit a 'skb_under_panic', where we have used up
+>>all
+>>>> > the available headroom.
+>>>> >
+>>>> > Since extra_tx_headroom was calculated as a function of
+>>winfo_size,
+>>>> > desc_size, RT2X00_L2PAD_SIZE and RT2X00_ALIGN_SIZE we can simply
+>>>> > remove the part for alignment and padding and we will know how
+>>much is
+>>>> > left to use up (for txdesc) and only use that much. Keeping the
+>>>> > driver's use of headroom to what it requested via
+>>extra_tx_headroom.
+>>>> >
+>>>> > Signed-off-by: Mark Asselstine <asselsm@gmail.com>
+>>>> > ---
+>>>> >  drivers/net/wireless/rt2x00/rt2x00queue.c | 15 ++++++++++++---
+>>>> >  1 file changed, 12 insertions(+), 3 deletions(-)
+>>>> >
+>>>> > diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c
+>>>> > b/drivers/net/wireless/rt2x00/rt2x00queue.c
+>>>> > index 8e68f87..2a48bf5 100644
+>>>> > --- a/drivers/net/wireless/rt2x00/rt2x00queue.c
+>>>> > +++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+>>>> > @@ -522,6 +522,7 @@ static int rt2x00queue_write_tx_data(struct
+>>>> > queue_entry *entry,
+>>>> >                                    struct txentry_desc *txdesc)
+>>>> >  {
+>>>> >       struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
+>>>> > +     unsigned int avail_extra_tx_headroom =
+>>>> > rt2x00dev->extra_tx_headroom;
+>>>> >
+>>>> >       /*
+>>>> >        * This should not happen, we already checked the entry
+>>>> > @@ -538,10 +539,18 @@ static int rt2x00queue_write_tx_data(struct
+>>>> > queue_entry *entry,
+>>>> >       }
+>>>> >
+>>>> >       /*
+>>>> > -      * Add the requested extra tx headroom in front of the skb.
+>>>> > +      * Add room for data at the front of the buffer for txdesc.
+>>The
+>>>> > space
+>>>> > +      * needed for this was accounted for in extra_tx_headroom,
+>>we just
+>>>> > +      * need to remove the amount allocated for padding and
+>>alignment
+>>>> > +      * to get what is left for txdesc.
+>>>> >        */
+>>>> > -     skb_push(entry->skb, rt2x00dev->extra_tx_headroom);
+>>>> > -     memset(entry->skb->data, 0, rt2x00dev->extra_tx_headroom);
+>>>> > +     if (test_bit(REQUIRE_L2PAD, &rt2x00dev->cap_flags))
+>>>> > +             avail_extra_tx_headroom -= RT2X00_L2PAD_SIZE;
+>>>> > +     else if (test_bit(REQUIRE_DMA, &rt2x00dev->cap_flags))
+>>>> > +             avail_extra_tx_headroom -= RT2X00_ALIGN_SIZE;
+>>>> > +
+>>>> > +     skb_push(entry->skb, avail_extra_tx_headroom);
+>>>> > +     memset(entry->skb->data, 0, avail_extra_tx_headroom);
+>>>>
+>>>> I don't think patch is correct.
+>>>>
+>>>> We have rt2x00->extra_tx_headroom and rt2x00->hw->extra_tx_headroom.
+>>>> Second value, which we provide as maximum needed headroom to
+>>mac80211
+>>>> is rt2x00->extra_tx_headrom + RT2X00_L2PAD_SIZE + RT2X00_ALIGN_SIZE.
+>>>>
+>>>> We really need to reserve rt2x00dev->extra_tx_headroom on TX skb, as
+>>>> this is room for metadata needed by H/W and if needed we should
+>>reserve
+>>>> RT2x00_L2PAD_SIZE and RTX00_ALIGN_SIZE. There should be room for
+>>that,
+>>>> since we provide bigger rt2x00->hw->extra_tx_headroom to mac80211.
+>>>>
+>>>> The only possibility to skb_under_panic I can see, is that we
+>>retransmit
+>>>> frame and try to align it many times, but alignment should not be
+>>needed
+>>>> once we aligned frame. Hence I'm not sure how those skb_under_panics
+>>can
+>>>> happen.
+>>
+>>I am still digging through trying to find a cause for this, without a
+>>reproducer I am starting to lose hope on finding the cause.
+>>
+>>I dug up this old thread
+>>http://rt2x00.serialmonkey.com/pipermail/users_rt2x00.serialmonkey.com/2010-November/002457.html
+>>
+>>I am thinking that the cause is an interaction with 80211mac and the
+>>rt2x00queue not doing enough to ensure we are sending the skb back in
+>>the same state as we get it. Looking at rt2x00lib_txdone() we don't
+>>return headroom that may have been taken for frame alignment and we
+>>don't account for the extra 4-bytes taken for header_align when the
+>>payload_align is larger then the header_align while setting up the
+>>l2pad. Do you know why rt2x00 doesn't return frame align space back to
+>>the headroom?
+>
+> If rt2x00 does not remove the alignment from the frame before giving it back
+> to mac80211 and the same frame comes into rt2x00 again it should be correctly
+> aligned and no additional header space is required. So this should be fine.
 
-and vnt_rx_data which handles mac80211 rx data
+Then I would say this definitely hints at a design flaw in
+rt2x00queue_insert_l2pad(). Take the following scenario.
 
-structures ieee80211_hw, ieee80211_vif and variable rx_rate are added
-in structure vnt_private
----
- drivers/staging/vt6655/device.h      |   6 +-
- drivers/staging/vt6655/device_main.c |  13 ++--
- drivers/staging/vt6655/dpc.c         | 123 +++++++++++++++++++++++++++++++++++
- drivers/staging/vt6655/dpc.h         |   2 +
- 4 files changed, 137 insertions(+), 7 deletions(-)
+* skb's first arrival in rt2x00queue_insert_l2pad(), 3 bytes needed
+for frame alignment, 2 bytes for l2pad results in 3 bytes of headroom
+taken.
+* rt2x00lib_txdone() returns 2 bytes of headroom
+* skb's second arrival in rt2x00queue_insert_l2pad(), 0 bytes needed
+for frame alignment, 2 bytes for l2pad results in 4 bytes of headroom
+taken.
+* rt2x00lib_txdone() returns 2 bytes of headroom
 
-diff --git a/drivers/staging/vt6655/device.h b/drivers/staging/vt6655/device.h
-index d769d09..82e1845 100644
---- a/drivers/staging/vt6655/device.h
-+++ b/drivers/staging/vt6655/device.h
-@@ -56,6 +56,7 @@
- #include <linux/reboot.h>
- #include <linux/ethtool.h>
- /* Include Wireless Extension definition and check version - Jean II */
-+#include <net/mac80211.h>
- #include <linux/wireless.h>
- #include <net/iw_handler.h>	/* New driver API */
- 
-@@ -319,7 +320,9 @@ typedef struct __device_opt {
- 
- struct vnt_private {
- 	struct pci_dev *pcid;
--
-+	/* mac80211 */
-+	struct ieee80211_hw *hw;
-+	struct ieee80211_vif *vif;
- /* netdev */
- 	struct net_device *dev;
- 
-@@ -378,6 +381,7 @@ struct vnt_private {
- 	u32                         flags;
- 
- 	u32                         rx_buf_sz;
-+	u8 rx_rate;
- 	int                         multicast_limit;
- 
- 	pid_t			MLMEThr_pid;
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index c8f262f..c8ee91c 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -1336,7 +1336,7 @@ static int device_rx_srv(struct vnt_private *pDevice, unsigned int uIdx)
- 	     pRD = pRD->next) {
- 		if (works++ > 15)
- 			break;
--		if (device_receive_frame(pDevice, pRD)) {
-+		if (vnt_receive_frame(pDevice, pRD)) {
- 			if (!device_alloc_rx_buf(pDevice, pRD)) {
- 				dev_err(&pDevice->pcid->dev,
- 					"can not allocate rx buf\n");
-@@ -1344,7 +1344,6 @@ static int device_rx_srv(struct vnt_private *pDevice, unsigned int uIdx)
- 			}
- 		}
- 		pRD->m_rd0RD0.f1Owner = OWNED_BY_NIC;
--		pDevice->dev->last_rx = jiffies;
- 	}
- 
- 	pDevice->pCurrRD[uIdx] = pRD;
-@@ -1360,9 +1359,12 @@ static bool device_alloc_rx_buf(struct vnt_private *pDevice, PSRxDesc pRD)
- 	if (pRDInfo->skb == NULL)
- 		return false;
- 	ASSERT(pRDInfo->skb);
--	pRDInfo->skb->dev = pDevice->dev;
--	pRDInfo->skb_dma = pci_map_single(pDevice->pcid, skb_tail_pointer(pRDInfo->skb),
--					  pDevice->rx_buf_sz, PCI_DMA_FROMDEVICE);
-+
-+	pRDInfo->skb_dma =
-+		pci_map_single(pDevice->pcid,
-+			       skb_put(pRDInfo->skb, skb_tailroom(pRDInfo->skb)),
-+			       pDevice->rx_buf_sz, PCI_DMA_FROMDEVICE);
-+
- 	*((unsigned int *)&(pRD->m_rd0RD0)) = 0; /* FIX cast */
- 
- 	pRD->m_rd0RD0.wResCount = cpu_to_le16(pDevice->rx_buf_sz);
-@@ -1380,7 +1382,6 @@ bool device_alloc_frag_buf(struct vnt_private *pDevice,
- 	if (pDeF->skb == NULL)
- 		return false;
- 	ASSERT(pDeF->skb);
--	pDeF->skb->dev = pDevice->dev;
- 
- 	return true;
- }
-diff --git a/drivers/staging/vt6655/dpc.c b/drivers/staging/vt6655/dpc.c
-index 67cadea..036bbb0 100644
---- a/drivers/staging/vt6655/dpc.c
-+++ b/drivers/staging/vt6655/dpc.c
-@@ -1321,3 +1321,126 @@ static bool s_bAPModeRxData(
- 
- 	return true;
- }
-+
-+static bool vnt_rx_data(struct vnt_private *priv, struct sk_buff *skb,
-+			u16 bytes_received)
-+{
-+	struct ieee80211_hw *hw = priv->hw;
-+	struct ieee80211_supported_band *sband;
-+	struct ieee80211_rx_status rx_status = { 0 };
-+	struct ieee80211_hdr *hdr;
-+	__le16 fc;
-+	u8 *rsr, *new_rsr, *rssi;
-+	__le64 *tsf_time;
-+	u16 frame_size;
-+	int ii, r;
-+	u8 *rx_sts, *rx_rate, *sq;
-+	u8 *skb_data;
-+	u8 rate_idx = 0;
-+	u8 rate[MAX_RATE] = {2, 4, 11, 22, 12, 18, 24, 36, 48, 72, 96, 108};
-+	long rx_dbm;
-+
-+	/* [31:16]RcvByteCount ( not include 4-byte Status ) */
-+	frame_size = le16_to_cpu(*((__le16 *)(skb->data + 2)));
-+	if (frame_size > 2346 || frame_size < 14) {
-+		dev_dbg(&priv->pcid->dev, "------- WRONG Length 1\n");
-+		return false;
-+	}
-+
-+	skb_data = (u8 *)skb->data;
-+
-+	rx_sts = skb_data;
-+	rx_rate = skb_data + 1;
-+
-+	sband = hw->wiphy->bands[hw->conf.chandef.chan->band];
-+
-+	for (r = RATE_1M; r < MAX_RATE; r++) {
-+		if (*rx_rate == rate[r])
-+			break;
-+	}
-+
-+	priv->rx_rate = r;
-+
-+	for (ii = 0; ii < sband->n_bitrates; ii++) {
-+		if (sband->bitrates[ii].hw_value == r) {
-+			rate_idx = ii;
-+				break;
-+		}
-+	}
-+
-+	if (ii == sband->n_bitrates) {
-+		dev_dbg(&priv->pcid->dev, "Wrong RxRate %x\n", *rx_rate);
-+		return false;
-+	}
-+
-+	tsf_time = (__le64 *)(skb_data + bytes_received - 12);
-+	sq = skb_data + bytes_received - 4;
-+	new_rsr = skb_data + bytes_received - 3;
-+	rssi = skb_data + bytes_received - 2;
-+	rsr = skb_data + bytes_received - 1;
-+
-+	RFvRSSITodBm(priv, *rssi, &rx_dbm);
-+
-+	priv->byBBPreEDRSSI = (u8)rx_dbm + 1;
-+	priv->uCurrRSSI = priv->byBBPreEDRSSI;
-+
-+	skb_pull(skb, 4);
-+	skb_trim(skb, frame_size);
-+
-+	rx_status.mactime = le64_to_cpu(*tsf_time);
-+	rx_status.band = hw->conf.chandef.chan->band;
-+	rx_status.signal = rx_dbm;
-+	rx_status.flag = 0;
-+	rx_status.freq = hw->conf.chandef.chan->center_freq;
-+
-+	hdr = (struct ieee80211_hdr *)(skb->data);
-+	fc = hdr->frame_control;
-+
-+	rx_status.rate_idx = rate_idx;
-+
-+	if (ieee80211_has_protected(fc)) {
-+		if (priv->byLocalID > REV_ID_VT3253_A1)
-+			rx_status.flag = RX_FLAG_DECRYPTED;
-+	}
-+
-+	if (priv->vif && priv->bDiversityEnable) {
-+		if (ieee80211_is_data(fc) &&
-+		    (frame_size > 50) && priv->vif->bss_conf.assoc)
-+			BBvAntennaDiversity(priv, priv->rx_rate, 0);
-+	}
-+
-+	memcpy(IEEE80211_SKB_RXCB(skb), &rx_status, sizeof(rx_status));
-+
-+	ieee80211_rx_irqsafe(priv->hw, skb);
-+
-+	return true;
-+}
-+
-+bool vnt_receive_frame(struct vnt_private *priv, PSRxDesc curr_rd)
-+{
-+	PDEVICE_RD_INFO rd_info = curr_rd->pRDInfo;
-+	struct sk_buff *skb;
-+	u16 frame_size;
-+
-+	skb = rd_info->skb;
-+
-+	pci_unmap_single(priv->pcid, rd_info->skb_dma,
-+			 priv->rx_buf_sz, PCI_DMA_FROMDEVICE);
-+
-+	frame_size = le16_to_cpu(curr_rd->m_rd1RD1.wReqCount)
-+			- cpu_to_le16(curr_rd->m_rd0RD0.wResCount);
-+
-+	if ((frame_size > 2364) || (frame_size < 33)) {
-+		/* Frame Size error drop this packet.*/
-+		dev_dbg(&priv->pcid->dev, "Wrong frame size %d\n", frame_size);
-+		dev_kfree_skb_irq(skb);
-+		return true;
-+	}
-+
-+	if (vnt_rx_data(priv, skb, frame_size))
-+		return true;
-+
-+	dev_kfree_skb_irq(skb);
-+
-+	return true;
-+}
-diff --git a/drivers/staging/vt6655/dpc.h b/drivers/staging/vt6655/dpc.h
-index e97e328..dd48e41 100644
---- a/drivers/staging/vt6655/dpc.h
-+++ b/drivers/staging/vt6655/dpc.h
-@@ -39,4 +39,6 @@ device_receive_frame(
- 	PSRxDesc pCurrRD
- );
- 
-+bool vnt_receive_frame(struct vnt_private *priv, PSRxDesc curr_rd);
-+
- #endif /* __RXTX_H__ */
--- 
-2.1.0
+Basically as long as any bytes are required for l2pad the headroom
+will lose 4 bytes again and again, never being returned by
+rt2x00lib_txdone().
 
+Not having spent enough time with the 80211 code I am still figuring
+out when the skb is reused but I will get there.
+
+Mark
+
+>
+> Helmut
