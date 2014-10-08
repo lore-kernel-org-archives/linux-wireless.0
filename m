@@ -1,169 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f43.google.com ([74.125.82.43]:37916 "EHLO
-	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751908AbaJYTRS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Oct 2014 15:17:18 -0400
-Received: by mail-wg0-f43.google.com with SMTP id n12so3072111wgh.2
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2014 12:17:16 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 18/31] staging: vt6655: CARDbSetPhyParameter replace s_vSetRSPINF with CARDvSetRSPINF
-Date: Sat, 25 Oct 2014 09:20:28 +0100
-Message-Id: <1414225241-5480-19-git-send-email-tvboxspy@gmail.com> (sfid-20141025_211725_090108_F8C81504)
-In-Reply-To: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
-References: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:16074 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750979AbaJHSoA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Oct 2014 14:44:00 -0400
+Message-ID: <1412793714.13755.44.camel@dcbw.local> (sfid-20141008_204407_065014_112A0296)
+Subject: Re: wl1271 driver on Linux 3.10 for SabreSD
+From: Dan Williams <dcbw@redhat.com>
+To: CHAUMETTE Hubert <hchaumette@adeneo-embedded.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 08 Oct 2014 13:41:54 -0500
+In-Reply-To: <1412790745.13755.15.camel@dcbw.local>
+References: <51562649.4716655.1412775436836.JavaMail.zimbra@adeneo-embedded.com>
+	 <1412790745.13755.15.camel@dcbw.local>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Removing s_vSetRSPINF
+On Wed, 2014-10-08 at 12:52 -0500, Dan Williams wrote:
+> On Wed, 2014-10-08 at 15:37 +0200, CHAUMETTE Hubert wrote:
+> > Hi all,
+> > 
+> > I need to activate the wl12xx driver (from drivers/net/wireless/ti/) on a (Android) Linux 3.10.31 kernel on an i.MX6Q SabreSD board. The wl1271 is to communicate with the board through an SDIO interface (SD2 on the board).
+> > 
+> > I have built the driver modules (cfg80211 and mac80211; wlcore, wlcore_sdio and wl12xx), and insmod'ed them. They are listed by lsmod :
+> > wlcore_sdio 3820 0 - Live 0x00000000
+> > wl12xx 51103 0 - Live 0x00000000
+> > wlcore 161008 1 wl12xx, Live 0x00000000
+> > mac80211 253798 2 wl12xx,wlcore, Live 0x00000000
+> > cfg80211 201451 2 wlcore,mac80211, Live 0x00000000
+> > 
+> > dmesg shows only a message from cfg80211 (no errors for other modules, when insmod'ed in the right order) :
+> > cfg80211: Calling CRDA to update world regulatory domain
+> 
+> Does the SDHCI driver recognize the device?  You should see something
+> like this in 'dmesg':
+> 
+> [78504.888006] sdhci-pci 0000:44:06.1: Will use DMA mode even though HW
+> doesn't fully claim to support it.
+> [78536.520725] mmc0: new SDIO card at address 0001
+> [78536.540309] libertas_sdio: Libertas SDIO driver
+> [78536.540313] libertas_sdio: Copyright Pierre Ossman
+> 
+> If you don't see "mmc0: new SDIO card..." somewhere, then the wl1271
+> driver isn't even involved and you need to find out why the SD/MMC layer
+> can't even see the card.
+> 
+> Once you've got it to the point of the SD/MMC stack finding the driver,
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/card.c | 121 +-----------------------------------------
- 1 file changed, 1 insertion(+), 120 deletions(-)
+I meant "finding the card" here, not "driver".
 
-diff --git a/drivers/staging/vt6655/card.c b/drivers/staging/vt6655/card.c
-index cf87b49..0574db9 100644
---- a/drivers/staging/vt6655/card.c
-+++ b/drivers/staging/vt6655/card.c
-@@ -199,125 +199,6 @@ s_vCalculateOFDMRParameter(
- 	}
- }
- 
--/*
-- * Description: Set RSPINF
-- *
-- * Parameters:
-- *  In:
-- *      pDevice             - The adapter to be set
-- *  Out:
-- *      none
-- *
-- * Return Value: None.
-- *
-- */
--static
--void
--s_vSetRSPINF(struct vnt_private *pDevice, CARD_PHY_TYPE ePHYType,
--	     void *pvSupportRateIEs, void *pvExtSupportRateIEs)
--{
--	union vnt_phy_field_swap phy;
--	unsigned char byTxRate = 0, byRsvTime = 0;    // For OFDM
--
--	//Set to Page1
--	MACvSelectPage1(pDevice->PortOffset);
--
--	/* RSPINF_b_1 */
--	vnt_get_phy_field(pDevice,
--			  14,
--			  VNTWIFIbyGetACKTxRate(RATE_1M, pvSupportRateIEs, pvExtSupportRateIEs),
--			  PK_TYPE_11B,
--			  &phy.field_read);
--
--	 /* swap over to get correct write order */
--	swap(phy.swap[0], phy.swap[1]);
--
--	VNSvOutPortD(pDevice->PortOffset + MAC_REG_RSPINF_B_1, phy.field_write);
--
--	/* RSPINF_b_2 */
--	vnt_get_phy_field(pDevice, 14,
--			  VNTWIFIbyGetACKTxRate(RATE_2M, pvSupportRateIEs, pvExtSupportRateIEs),
--			  PK_TYPE_11B, &phy.field_read);
--
--	swap(phy.swap[0], phy.swap[1]);
--
--	VNSvOutPortD(pDevice->PortOffset + MAC_REG_RSPINF_B_2, phy.field_write);
--
--	/* RSPINF_b_5 */
--	vnt_get_phy_field(pDevice, 14,
--			  VNTWIFIbyGetACKTxRate(RATE_5M, pvSupportRateIEs, pvExtSupportRateIEs),
--			  PK_TYPE_11B, &phy.field_read);
--
--	swap(phy.swap[0], phy.swap[1]);
--
--	VNSvOutPortD(pDevice->PortOffset + MAC_REG_RSPINF_B_5, phy.field_write);
--
--	/* RSPINF_b_11 */
--	vnt_get_phy_field(pDevice, 14,
--			  VNTWIFIbyGetACKTxRate(RATE_11M, pvSupportRateIEs, pvExtSupportRateIEs),
--			  PK_TYPE_11B, &phy.field_read);
--
--	swap(phy.swap[0], phy.swap[1]);
--
--	VNSvOutPortD(pDevice->PortOffset + MAC_REG_RSPINF_B_11, phy.field_write);
--
--	//RSPINF_a_6
--	s_vCalculateOFDMRParameter(RATE_6M,
--				   ePHYType,
--				   &byTxRate,
--				   &byRsvTime);
--	VNSvOutPortW(pDevice->PortOffset + MAC_REG_RSPINF_A_6, MAKEWORD(byTxRate, byRsvTime));
--	//RSPINF_a_9
--	s_vCalculateOFDMRParameter(RATE_9M,
--				   ePHYType,
--				   &byTxRate,
--				   &byRsvTime);
--	VNSvOutPortW(pDevice->PortOffset + MAC_REG_RSPINF_A_9, MAKEWORD(byTxRate, byRsvTime));
--	//RSPINF_a_12
--	s_vCalculateOFDMRParameter(RATE_12M,
--				   ePHYType,
--				   &byTxRate,
--				   &byRsvTime);
--	VNSvOutPortW(pDevice->PortOffset + MAC_REG_RSPINF_A_12, MAKEWORD(byTxRate, byRsvTime));
--	//RSPINF_a_18
--	s_vCalculateOFDMRParameter(RATE_18M,
--				   ePHYType,
--				   &byTxRate,
--				   &byRsvTime);
--	VNSvOutPortW(pDevice->PortOffset + MAC_REG_RSPINF_A_18, MAKEWORD(byTxRate, byRsvTime));
--	//RSPINF_a_24
--	s_vCalculateOFDMRParameter(RATE_24M,
--				   ePHYType,
--				   &byTxRate,
--				   &byRsvTime);
--	VNSvOutPortW(pDevice->PortOffset + MAC_REG_RSPINF_A_24, MAKEWORD(byTxRate, byRsvTime));
--	//RSPINF_a_36
--	s_vCalculateOFDMRParameter(
--		VNTWIFIbyGetACKTxRate(RATE_36M, pvSupportRateIEs, pvExtSupportRateIEs),
--		ePHYType,
--		&byTxRate,
--		&byRsvTime);
--	VNSvOutPortW(pDevice->PortOffset + MAC_REG_RSPINF_A_36, MAKEWORD(byTxRate, byRsvTime));
--	//RSPINF_a_48
--	s_vCalculateOFDMRParameter(
--		VNTWIFIbyGetACKTxRate(RATE_48M, pvSupportRateIEs, pvExtSupportRateIEs),
--		ePHYType,
--		&byTxRate,
--		&byRsvTime);
--	VNSvOutPortW(pDevice->PortOffset + MAC_REG_RSPINF_A_48, MAKEWORD(byTxRate, byRsvTime));
--	//RSPINF_a_54
--	s_vCalculateOFDMRParameter(
--		VNTWIFIbyGetACKTxRate(RATE_54M, pvSupportRateIEs, pvExtSupportRateIEs),
--		ePHYType,
--		&byTxRate,
--		&byRsvTime);
--	VNSvOutPortW(pDevice->PortOffset + MAC_REG_RSPINF_A_54, MAKEWORD(byTxRate, byRsvTime));
--	//RSPINF_a_72
--	VNSvOutPortW(pDevice->PortOffset + MAC_REG_RSPINF_A_72, MAKEWORD(byTxRate, byRsvTime));
--	//Set to Page0
--	MACvSelectPage0(pDevice->PortOffset);
--}
--
- /*---------------------  Export Functions  --------------------------*/
- 
- /*
-@@ -505,7 +386,7 @@ bool CARDbSetPhyParameter(struct vnt_private *pDevice, CARD_PHY_TYPE ePHYType,
- 		VNSvOutPortB(pDevice->PortOffset + MAC_REG_CWMAXMIN0, pDevice->byCWMaxMin);
- 	}
- 
--	s_vSetRSPINF(pDevice, ePHYType, NULL, NULL);
-+	CARDvSetRSPINF(pDevice, ePHYType);
- 
- 	return true;
- }
--- 
-1.9.1
+> find out the VID/PID of the card (it'll be somewhere
+> in /sys/bus/sdio/devices/), and make sure that matches what's in the
+> wl1271 SDIO driver (VID 0x0097 PID 0x4076).  If your device doesn't
+> match that, add it to wlcore/sdio.c's wl1271_devices array.
+> 
+> Dan
+> 
+> > 1) Can I use /sys/modules/{wlcore,wlcore_sdio,wl12xx}/ to test it ?
+> > 2) The board uses the device tree to enumerate platform devices. To correctly activate the driver, do I need to add it to the board DT (and a binding to the driver) ?
+> > 3) The driver is supposed to use a firmware (according to http://wireless.kernel.org/en/users/Drivers/wl12xx), how do I know whether it found it (no kernel log message) (I've put the firmware in /system/etc/firmware/) ?
+> > 
+> > Thanks in advance.
+> > Regards,
+> > 
+> > Hubert
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 
