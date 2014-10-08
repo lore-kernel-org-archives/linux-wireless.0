@@ -1,166 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay1.mentorg.com ([192.94.38.131]:49223 "EHLO
-	relay1.mentorg.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751670AbaJ2GfQ convert rfc822-to-8bit (ORCPT
+Received: from smtprelay0138.hostedemail.com ([216.40.44.138]:37864 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753787AbaJHOWf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2014 02:35:16 -0400
-From: "Sharma, Sanjeev" <Sanjeev_Sharma@mentor.com>
-To: Joe Perches <joe@perches.com>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-CC: "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
-	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH] staging:rtl8723au: core: Fix error reported by
- checkpatch.
-Date: Wed, 29 Oct 2014 06:35:12 +0000
-Message-ID: <FDC088D3B5555644AE135ED28A7ABDE950E890CD@EU-MBX-02.mgc.mentorg.com> (sfid-20141029_073539_443730_FA1E52B8)
-References: <1414396745-8845-1-git-send-email-sanjeev_sharma@mentor.com>
-	 <wrfjioj5aonx.fsf@redhat.com> <1414421554.8884.7.camel@perches.com>
-In-Reply-To: <1414421554.8884.7.camel@perches.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Wed, 8 Oct 2014 10:22:35 -0400
+Message-ID: <1412778150.3438.30.camel@joe-AO725> (sfid-20141008_162240_672826_241E8E8E)
+Subject: Re: [patch] staging: rtl8723au: incorrect use of ether_addr_copy()
+From: Joe Perches <joe@perches.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	kernel-janitors@vger.kernel.org
+Date: Wed, 08 Oct 2014 07:22:30 -0700
+In-Reply-To: <20141008124631.GC26918@mwanda>
+References: <20141008104014.GA23096@mwanda>
+	 <1412771171.3438.25.camel@joe-AO725> <20141008124631.GC26918@mwanda>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
------Original Message-----
-From: Joe Perches [mailto:joe@perches.com] 
-Sent: Monday, October 27, 2014 8:23 PM
-To: Jes Sorensen
-Cc: Sharma, Sanjeev; Larry.Finger@lwfinger.net; gregkh@linuxfoundation.org; linux-wireless@vger.kernel.org; devel@driverdev.osuosl.org; linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] staging:rtl8723au: core: Fix error reported by checkpatch.
-
-On Mon, 2014-10-27 at 09:43 +0100, Jes Sorensen wrote:
-> Sanjeev Sharma <sanjeev_sharma@mentor.com> writes:
-> > This is a patch to the rtw_cmd.c file that fixes Error reported by 
-> > checkpatch.
-[]
-> > diff --git a/drivers/staging/rtl8723au/core/rtw_cmd.c 
-> > b/drivers/staging/rtl8723au/core/rtw_cmd.c
-[]
-> > @@ -957,7 +957,7 @@ static void traffic_status_watchdog(struct rtw_adapter *padapter)
-> >  		/*  check traffic for  powersaving. */
-> >  			if (((pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod +
-> >  			      pmlmepriv->LinkDetectInfo.NumTxOkInPeriod) > 8) ||
-> > -			    pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod >2)
-> > +			    pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod > 2)
-> >  				bEnterPS = false;
-> >  			else
-> >  				bEnterPS = true;
+On Wed, 2014-10-08 at 15:46 +0300, Dan Carpenter wrote:
+> On Wed, Oct 08, 2014 at 05:26:11AM -0700, Joe Perches wrote:
+> > On Wed, 2014-10-08 at 13:40 +0300, Dan Carpenter wrote:
+> > > The return from myid() isn't aligned correctly for ether_addr_copy().
+> > 
+> > Hey Dan.
+> > 
+> > Actual evidence showing ether_addr_copy conversions
+> > may not always be wise.
+> > 
+> > How did you find them?
 > 
-> This makes the line longer than 80 characters, that is worse than the 
-> 'problem' you are fixing.
+> I was just trying to see how common these kinds of bugs are.  It didn't
+> take long to find, but my impression is that they are rare and I got
+> lucky.  These kinds of bugs are tricky to find and we don't have any
+> tools for it.
 
-The code already has dozens of long lines already.
+As far as I know, that's true too.
 
-This is generally a problem because the variable names are pretty long so strict 80 column adherence generally isn't possible.
+Jes, was the mac_addr field in this struct
+ever __aligned(2)?
 
-A possible way to shorten these relatively long variable name/line lengths is to use a temporary for
+struct eeprom_priv {
+       u8              bautoload_fail_flag;
+       u8              bloadfile_fail_flag;
+       u8              bloadmac_fail_flag;
+       /* u8           bempty; */
+       /* u8           sys_config; */
+       u8              mac_addr[6];    /* PermanentAddress */
+...
+}
 
-	pmlmeprv->LinkDetectInfo
+As far as I can tell from git history, it was
+that way at the first check-in.
 
-	struct rt_link_detect *ldi = &pmlmeprv->LinkDetectInfo;
-
-so:
-
-I am agree on this approach but Let's wait for Jes opinion on it.
-
-Sanjeev Sharma
-
- drivers/staging/rtl8723au/core/rtw_cmd.c | 46 ++++++++++++++++----------------
- 1 file changed, 23 insertions(+), 23 deletions(-)
-
-diff --git a/drivers/staging/rtl8723au/core/rtw_cmd.c b/drivers/staging/rtl8723au/core/rtw_cmd.c
-index d2d7edf..1b24945 100644
---- a/drivers/staging/rtl8723au/core/rtw_cmd.c
-+++ b/drivers/staging/rtl8723au/core/rtw_cmd.c
-@@ -922,34 +922,33 @@ static void traffic_status_watchdog(struct rtw_adapter *padapter)
- 	u8 bHigherBusyTxTraffic = false;
- 	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
- 	int BusyThreshold = 100;
-+	struct rt_link_detect *ldi = &pmlmepriv->LinkDetectInfo;
-+
- 	/*  */
- 	/*  Determine if our traffic is busy now */
- 	/*  */
- 	if (check_fwstate(pmlmepriv, _FW_LINKED)) {
- 		if (rtl8723a_BT_coexist(padapter))
- 			BusyThreshold = 50;
--		else if (pmlmepriv->LinkDetectInfo.bBusyTraffic)
-+		else if (ldi->bBusyTraffic)
- 			BusyThreshold = 75;
- 		/*  if we raise bBusyTraffic in last watchdog, using
- 		    lower threshold. */
--		if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod > BusyThreshold ||
--		    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod > BusyThreshold) {
-+		if (ldi->NumRxOkInPeriod > BusyThreshold ||
-+		    ldi->NumTxOkInPeriod > BusyThreshold) {
- 			bBusyTraffic = true;
- 
--			if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod >
--			    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod)
-+			if (ldi->NumRxOkInPeriod > ldi->NumTxOkInPeriod)
- 				bRxBusyTraffic = true;
- 			else
- 				bTxBusyTraffic = true;
- 		}
- 
- 		/*  Higher Tx/Rx data. */
--		if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod > 4000 ||
--		    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod > 4000) {
-+		if (ldi->NumRxOkInPeriod > 4000 ||
-+		    ldi->NumTxOkInPeriod > 4000) {
- 			bHigherBusyTraffic = true;
--
--			if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod >
--			    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod)
-+			if (ldi->NumRxOkInPeriod > ldi->NumTxOkInPeriod)
- 				bHigherBusyRxTraffic = true;
- 			else
- 				bHigherBusyTxTraffic = true;
-@@ -958,9 +957,9 @@ static void traffic_status_watchdog(struct rtw_adapter *padapter)
- 		if (!rtl8723a_BT_coexist(padapter) ||
- 		    !rtl8723a_BT_using_antenna_1(padapter)) {
- 		/*  check traffic for  powersaving. */
--			if (((pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod +
--			      pmlmepriv->LinkDetectInfo.NumTxOkInPeriod) > 8) ||
--			    pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod >2)
-+			if (((ldi->NumRxUnicastOkInPeriod +
-+			      ldi->NumTxOkInPeriod) > 8) ||
-+			    ldi->NumRxUnicastOkInPeriod > 2)
- 				bEnterPS = false;
- 			else
- 				bEnterPS = true;
-@@ -971,18 +970,19 @@ static void traffic_status_watchdog(struct rtw_adapter *padapter)
- 			else
- 				LPS_Leave23a(padapter);
- 		}
--	} else
-+	} else {
- 		LPS_Leave23a(padapter);
-+	}
- 
--	pmlmepriv->LinkDetectInfo.NumRxOkInPeriod = 0;
--	pmlmepriv->LinkDetectInfo.NumTxOkInPeriod = 0;
--	pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod = 0;
--	pmlmepriv->LinkDetectInfo.bBusyTraffic = bBusyTraffic;
--	pmlmepriv->LinkDetectInfo.bTxBusyTraffic = bTxBusyTraffic;
--	pmlmepriv->LinkDetectInfo.bRxBusyTraffic = bRxBusyTraffic;
--	pmlmepriv->LinkDetectInfo.bHigherBusyTraffic = bHigherBusyTraffic;
--	pmlmepriv->LinkDetectInfo.bHigherBusyRxTraffic = bHigherBusyRxTraffic;
--	pmlmepriv->LinkDetectInfo.bHigherBusyTxTraffic = bHigherBusyTxTraffic;
-+	ldi->NumRxOkInPeriod = 0;
-+	ldi->NumTxOkInPeriod = 0;
-+	ldi->NumRxUnicastOkInPeriod = 0;
-+	ldi->bBusyTraffic = bBusyTraffic;
-+	ldi->bTxBusyTraffic = bTxBusyTraffic;
-+	ldi->bRxBusyTraffic = bRxBusyTraffic;
-+	ldi->bHigherBusyTraffic = bHigherBusyTraffic;
-+	ldi->bHigherBusyRxTraffic = bHigherBusyRxTraffic;
-+	ldi->bHigherBusyTxTraffic = bHigherBusyTxTraffic;
- }
- 
- static void dynamic_chk_wk_hdl(struct rtw_adapter *padapter, u8 *pbuf, int sz)
+Dan, did you also look for any other alignment
+defects in uses of any is_<foo>_ether_addr calls?
 
 
