@@ -1,188 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f180.google.com ([209.85.217.180]:35562 "EHLO
-	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751632AbaJTM2f (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:58053 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755463AbaJHAIw convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2014 08:28:35 -0400
-Received: by mail-lb0-f180.google.com with SMTP id n15so3804460lbi.11
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2014 05:28:33 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 4/6] ath10k: make warm reset a bit safer and faster
-Date: Mon, 20 Oct 2014 14:14:40 +0200
-Message-Id: <1413807282-27951-5-git-send-email-michal.kazior@tieto.com> (sfid-20141020_142841_091178_0B91E98B)
-In-Reply-To: <1413807282-27951-1-git-send-email-michal.kazior@tieto.com>
-References: <1413807282-27951-1-git-send-email-michal.kazior@tieto.com>
+	Tue, 7 Oct 2014 20:08:52 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Message-ID: <21556.32962.247661.143073@gargle.gargle.HOWL> (sfid-20141008_020858_961081_71A2113E)
+Date: Wed, 8 Oct 2014 05:39:38 +0530
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: Re: [PATCH v2 3/6] ath9k: Fix sequence number assignment
+In-Reply-To: <20141007185005.GK25590@tuxdriver.com>
+References: <1412657081-3202-1-git-send-email-sujith@msujith.org>
+	<1412657081-3202-4-git-send-email-sujith@msujith.org>
+	<20141007185005.GK25590@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-One of the problems with warm reset I've found is
-that it must be guaranteed that copy engine
-registers are not being accessed while being
-reset. Otherwise in worst case scenario the host
-may lock up.
+John W. Linville wrote:
+> Hmmm...am I missing something?
+> 
+>   CC      drivers/net/wireless/ath/ath9k/tx99.o
+> In file included from include/linux/byteorder/little_endian.h:4:0,
+>                  from ./arch/x86/include/uapi/asm/byteorder.h:4,
+>                  from include/asm-generic/bitops/le.h:5,
+>                  from ./arch/x86/include/asm/bitops.h:506,
+>                  from include/linux/bitops.h:33,
+>                  from include/linux/kernel.h:10,
+>                  from include/linux/skbuff.h:17,
+>                  from include/linux/if_ether.h:23,
+>                  from include/linux/etherdevice.h:25,
+>                  from drivers/net/wireless/ath/ath9k/ath9k.h:20,
+>                  from drivers/net/wireless/ath/ath9k/tx99.c:17:
+> drivers/net/wireless/ath/ath9k/tx99.c: In function ‘ath9k_build_tx99_skb’:
+> drivers/net/wireless/ath/ath9k/tx99.c:74:37: error: ‘struct ath_tx’ has no member named ‘seq_no’
+>   hdr->seq_ctrl |= cpu_to_le16(sc->tx.seq_no);
+>                                      ^
+> include/uapi/linux/byteorder/little_endian.h:34:51: note: in definition of macro ‘__cpu_to_le16’
+>  #define __cpu_to_le16(x) ((__force __le16)(__u16)(x))
+>                                                    ^
+> drivers/net/wireless/ath/ath9k/tx99.c:74:19: note: in expansion of macro ‘cpu_to_le16’
+>   hdr->seq_ctrl |= cpu_to_le16(sc->tx.seq_no);
+>                    ^
+> make[3]: *** [drivers/net/wireless/ath/ath9k/tx99.o] Error 1
 
-Instead of using sleeps and hoping the device is
-operational in some arbitrary timeframes use
-firmware indication register.
+This is my mistake. I did not test with CONFIG_ATH9K_TX99 enabled, sorry.
+I'll send an updated series.
 
-As a side effect this makes driver
-boot/stop/recovery faster.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
-
-Notes:
-    v2:
-     * fix kernel panic on early fw crash due to CE not being fully initialized [Janusz]
-
- drivers/net/wireless/ath/ath10k/pci.c | 110 +++++++++++++++-------------------
- 1 file changed, 48 insertions(+), 62 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index c8cf177..54213ac 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -1707,89 +1707,75 @@ static void ath10k_pci_warm_reset_si0(struct ath10k *ar)
- 	msleep(10);
- }
- 
--static int ath10k_pci_warm_reset(struct ath10k *ar)
-+static void ath10k_pci_warm_reset_cpu(struct ath10k *ar)
- {
- 	u32 val;
- 
--	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot warm reset\n");
--
--	spin_lock_bh(&ar->data_lock);
--
--	ar->stats.fw_warm_reset_counter++;
--
--	spin_unlock_bh(&ar->data_lock);
--
--	/* debug */
--	val = ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS +
--				PCIE_INTR_CAUSE_ADDRESS);
--	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot host cpu intr cause: 0x%08x\n",
--		   val);
--
--	val = ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS +
--				CPU_INTR_ADDRESS);
--	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot target cpu intr cause: 0x%08x\n",
--		   val);
--
--	/* disable pending irqs */
--	ath10k_pci_write32(ar, SOC_CORE_BASE_ADDRESS +
--			   PCIE_INTR_ENABLE_ADDRESS, 0);
--
--	ath10k_pci_write32(ar, SOC_CORE_BASE_ADDRESS +
--			   PCIE_INTR_CLR_ADDRESS, ~0);
--
--	msleep(100);
--
--	/* clear fw indicator */
- 	ath10k_pci_write32(ar, FW_INDICATOR_ADDRESS, 0);
- 
--	/* clear target LF timer interrupts */
- 	val = ath10k_pci_read32(ar, RTC_SOC_BASE_ADDRESS +
--				SOC_LF_TIMER_CONTROL0_ADDRESS);
--	ath10k_pci_write32(ar, RTC_SOC_BASE_ADDRESS +
--			   SOC_LF_TIMER_CONTROL0_ADDRESS,
--			   val & ~SOC_LF_TIMER_CONTROL0_ENABLE_MASK);
-+				SOC_RESET_CONTROL_ADDRESS);
-+	ath10k_pci_write32(ar, RTC_SOC_BASE_ADDRESS + SOC_RESET_CONTROL_ADDRESS,
-+			   val | SOC_RESET_CONTROL_CPU_WARM_RST_MASK);
-+}
-+
-+static void ath10k_pci_warm_reset_ce(struct ath10k *ar)
-+{
-+	u32 val;
- 
--	/* reset CE */
- 	val = ath10k_pci_read32(ar, RTC_SOC_BASE_ADDRESS +
- 				SOC_RESET_CONTROL_ADDRESS);
-+
- 	ath10k_pci_write32(ar, RTC_SOC_BASE_ADDRESS + SOC_RESET_CONTROL_ADDRESS,
- 			   val | SOC_RESET_CONTROL_CE_RST_MASK);
--	val = ath10k_pci_read32(ar, RTC_SOC_BASE_ADDRESS +
--				SOC_RESET_CONTROL_ADDRESS);
- 	msleep(10);
--
--	/* unreset CE */
- 	ath10k_pci_write32(ar, RTC_SOC_BASE_ADDRESS + SOC_RESET_CONTROL_ADDRESS,
- 			   val & ~SOC_RESET_CONTROL_CE_RST_MASK);
-+}
-+
-+static void ath10k_pci_warm_reset_clear_lf(struct ath10k *ar)
-+{
-+	u32 val;
-+
- 	val = ath10k_pci_read32(ar, RTC_SOC_BASE_ADDRESS +
--				SOC_RESET_CONTROL_ADDRESS);
--	msleep(10);
-+				SOC_LF_TIMER_CONTROL0_ADDRESS);
-+	ath10k_pci_write32(ar, RTC_SOC_BASE_ADDRESS +
-+			   SOC_LF_TIMER_CONTROL0_ADDRESS,
-+			   val & ~SOC_LF_TIMER_CONTROL0_ENABLE_MASK);
-+}
- 
--	ath10k_pci_warm_reset_si0(ar);
-+static int ath10k_pci_warm_reset(struct ath10k *ar)
-+{
-+	int ret;
-+
-+	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot warm reset\n");
- 
--	/* debug */
--	val = ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS +
--				PCIE_INTR_CAUSE_ADDRESS);
--	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot host cpu intr cause: 0x%08x\n",
--		   val);
-+	spin_lock_bh(&ar->data_lock);
-+	ar->stats.fw_warm_reset_counter++;
-+	spin_unlock_bh(&ar->data_lock);
- 
--	val = ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS +
--				CPU_INTR_ADDRESS);
--	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot target cpu intr cause: 0x%08x\n",
--		   val);
-+	ath10k_pci_irq_disable(ar);
- 
--	/* CPU warm reset */
--	val = ath10k_pci_read32(ar, RTC_SOC_BASE_ADDRESS +
--				SOC_RESET_CONTROL_ADDRESS);
--	ath10k_pci_write32(ar, RTC_SOC_BASE_ADDRESS + SOC_RESET_CONTROL_ADDRESS,
--			   val | SOC_RESET_CONTROL_CPU_WARM_RST_MASK);
-+	/* Make sure the target CPU is not doing anything dangerous, e.g. if it
-+	 * were to access copy engine while host performs copy engine reset
-+	 * then it is possible for the device to confuse pci-e controller to
-+	 * the point of bringing host system to a complete stop (i.e. hang).
-+	 */
-+	ath10k_pci_warm_reset_si0(ar);
-+	ath10k_pci_warm_reset_cpu(ar);
-+	ath10k_pci_init_pipes(ar);
-+	ath10k_pci_wait_for_target_init(ar);
- 
--	val = ath10k_pci_read32(ar, RTC_SOC_BASE_ADDRESS +
--				SOC_RESET_CONTROL_ADDRESS);
--	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot target reset state: 0x%08x\n",
--		   val);
-+	ath10k_pci_warm_reset_clear_lf(ar);
-+	ath10k_pci_warm_reset_ce(ar);
-+	ath10k_pci_warm_reset_cpu(ar);
-+	ath10k_pci_init_pipes(ar);
- 
--	msleep(100);
-+	ret = ath10k_pci_wait_for_target_init(ar);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to wait for target init: %d\n", ret);
-+		return ret;
-+	}
- 
- 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot warm reset complete\n");
- 
--- 
-1.8.5.3
-
+Sujith
