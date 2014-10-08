@@ -1,148 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:34575 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754401AbaJHGtV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Oct 2014 02:49:21 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: emmanuel.grumbach@intel.com, michal.kazior@tieto.com,
-	linux-wireless@vger.kernel.org
-Date: Wed,  8 Oct 2014 09:48:38 +0300
-Message-Id: <1412750920-15392-6-git-send-email-luca@coelho.fi> (sfid-20141008_084931_088965_C10081D8)
-In-Reply-To: <1412750920-15392-1-git-send-email-luca@coelho.fi>
-References: <1412750920-15392-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH v2 5/7] mac80211: add post_channel_switch driver operation
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:49836 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755092AbaJHMhN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Oct 2014 08:37:13 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH] ath10k: fix kernel panic while shutting down AP
+References: <1412759786-10567-1-git-send-email-rmanohar@qti.qualcomm.com>
+	<87a956hosb.fsf@kamboji.qca.qualcomm.com>
+	<20141008104823.GB25666@qca.qualcomm.com>
+	<CA+BoTQmOZiPQRWeiZ6QqZ5MhHbweMsdf94v1f5mkYpr2461j4A@mail.gmail.com>
+Date: Wed, 8 Oct 2014 15:37:00 +0300
+In-Reply-To: <CA+BoTQmOZiPQRWeiZ6QqZ5MhHbweMsdf94v1f5mkYpr2461j4A@mail.gmail.com>
+	(Michal Kazior's message of "Wed, 8 Oct 2014 14:24:18 +0200")
+Message-ID: <87fveyg2kz.fsf@kamboji.qca.qualcomm.com> (sfid-20141008_143719_334009_D8DF795F)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-As a counterpart to the pre_channel_switch operation, add a
-post_channel_switch operation.  This allows the drivers to go back to
-a normal configuration after the channel switch is completed.
+>>> Until now we have protected arvif->beacon_buf with data_lock. How do we
+>>> know that this is safe to do without taking data_lock?
+>>>
+>> As said, spin_lock can not be used for dma_free_coherent.
+>> arvif->beacon_buf is already protected by conf_mutex. At this state
+>> in ath10k_halt path, no one can access beacon_buf. So mutex lock itself
+>> is sufficient.
+>
+> beacon_buf is protected by conf_mutex implicitly. It wasn't the main
+> intent. It is protected with data_lock spinlock.
+>
+> Do not trust the device - if there's a spurious SWBA event while
+> ath10k_remove_interface() is running you could end up with invalid
+> memory access.
+>
+> It might be acceptable to drop the spinlock for ath10k_halt() since
+> the device is guaranteed to be stopped at that point (effectively
+> reset) though.
+>
+> Anyway I'm hoping this bug can be fixed with the gfp flag.
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
----
- include/net/mac80211.h    |  6 ++++++
- net/mac80211/cfg.c        |  7 ++++++-
- net/mac80211/driver-ops.h | 16 ++++++++++++++++
- net/mac80211/mlme.c       |  9 +++++++++
- net/mac80211/trace.h      |  6 ++++++
- 5 files changed, 43 insertions(+), 1 deletion(-)
+Yeah, fixing this with the gfp flag would be much better solution.
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 19e4159..7861ed8 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2836,6 +2836,9 @@ enum ieee80211_roc_type {
-  *	before a channel switch procedure is started (ie. when a STA
-  *	gets a CSA or an userspace initiated channel-switch), allowing
-  *	the driver to prepare for the channel switch.
-+ * @post_channel_switch: This is an optional callback that is called
-+ *	after a channel switch procedure is completed, allowing the
-+ *	driver to go back to a normal configuration.
-  *
-  * @join_ibss: Join an IBSS (on an IBSS interface); this is called after all
-  *	information in bss_conf is set up and the beacon can be retrieved. A
-@@ -3046,6 +3049,9 @@ struct ieee80211_ops {
- 				  struct ieee80211_vif *vif,
- 				  struct ieee80211_channel_switch *ch_switch);
- 
-+	int (*post_channel_switch)(struct ieee80211_hw *hw,
-+				   struct ieee80211_vif *vif);
-+
- 	int (*join_ibss)(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
- 	void (*leave_ibss)(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
- 	u32 (*get_expected_throughput)(struct ieee80211_sta *sta);
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 2caa7f0..ce81ff2 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2868,7 +2868,6 @@ static int __ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
- 		return err;
- 
- 	ieee80211_bss_info_change_notify(sdata, changed);
--	cfg80211_ch_switch_notify(sdata->dev, &sdata->csa_chandef);
- 
- 	if (sdata->csa_block_tx) {
- 		ieee80211_wake_vif_queues(local, sdata,
-@@ -2876,6 +2875,12 @@ static int __ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
- 		sdata->csa_block_tx = false;
- 	}
- 
-+	err = drv_post_channel_switch(sdata);
-+	if (err)
-+		return err;
-+
-+	cfg80211_ch_switch_notify(sdata->dev, &sdata->csa_chandef);
-+
- 	return 0;
- }
- 
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index 5522672..0a60906 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -1214,6 +1214,22 @@ drv_pre_channel_switch(struct ieee80211_sub_if_data *sdata,
- 	return ret;
- }
- 
-+static inline int
-+drv_post_channel_switch(struct ieee80211_sub_if_data *sdata)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	int ret = 0;
-+
-+	if (!check_sdata_in_driver(sdata))
-+		return -EIO;
-+
-+	trace_drv_post_channel_switch(local, sdata);
-+	if (local->ops->post_channel_switch)
-+		ret = local->ops->post_channel_switch(&local->hw, &sdata->vif);
-+	trace_drv_return_int(local, ret);
-+	return ret;
-+}
-+
- static inline int drv_join_ibss(struct ieee80211_local *local,
- 				struct ieee80211_sub_if_data *sdata)
- {
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index c5fa20f..2e29cc3 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1010,6 +1010,15 @@ static void ieee80211_chswitch_work(struct work_struct *work)
- 		sdata->csa_block_tx = false;
- 	}
- 
-+	ret = drv_post_channel_switch(sdata);
-+	if (ret) {
-+		sdata_info(sdata,
-+			   "driver post channel switch failed, disconnecting\n");
-+		ieee80211_queue_work(&local->hw,
-+				     &ifmgd->csa_connection_drop_work);
-+		goto out;
-+	}
-+
- 	ieee80211_sta_reset_beacon_monitor(sdata);
- 	ieee80211_sta_reset_conn_monitor(sdata);
- 
-diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
-index 30476d2..ca0e12d 100644
---- a/net/mac80211/trace.h
-+++ b/net/mac80211/trace.h
-@@ -2141,6 +2141,12 @@ TRACE_EVENT(drv_pre_channel_switch,
- 	)
- );
- 
-+DEFINE_EVENT(local_sdata_evt, drv_post_channel_switch,
-+	     TP_PROTO(struct ieee80211_local *local,
-+		      struct ieee80211_sub_if_data *sdata),
-+	     TP_ARGS(local, sdata)
-+);
-+
- 
- #ifdef CONFIG_MAC80211_MESSAGE_TRACING
- #undef TRACE_SYSTEM
 -- 
-2.1.1
-
+Kalle Valo
