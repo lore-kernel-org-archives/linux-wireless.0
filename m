@@ -1,60 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:60128 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750843AbaJNEAH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Oct 2014 00:00:07 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH 6/9] ath9k: Fix RoC expiration
-Date: Tue, 14 Oct 2014 09:30:53 +0530
-Message-Id: <1413259256-4808-7-git-send-email-sujith@msujith.org> (sfid-20141014_060041_292086_D256C530)
-In-Reply-To: <1413259256-4808-1-git-send-email-sujith@msujith.org>
-References: <1413259256-4808-1-git-send-email-sujith@msujith.org>
+Received: from mga01.intel.com ([192.55.52.88]:53430 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754725AbaJHIdh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Oct 2014 04:33:37 -0400
+From: Loic Poulain <loic.poulain@intel.com>
+To: johannes@sipsolutions.net, heikki.krogerus@linux.intel.com
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Loic Poulain <loic.poulain@intel.com>
+Subject: [PATCH 2/5] net: rfkill: gpio: Implement PM hooks
+Date: Wed,  8 Oct 2014 10:34:37 +0200
+Message-Id: <1412757280-31367-2-git-send-email-loic.poulain@intel.com> (sfid-20141008_103341_494244_C50B4113)
+In-Reply-To: <1412757280-31367-1-git-send-email-loic.poulain@intel.com>
+References: <1412757280-31367-1-git-send-email-loic.poulain@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+GPIO based rfkill devices should also be put to sleep mode when the
+system enters suspend. This patch introduces a wake gpio.
 
-mac80211 has to be notified when a RoC period
-expires in the driver. In MCC mode, since the
-offchannel/RoC timer is set with the requested
-duration, ieee80211_remain_on_channel_expired() needs
-to be called when the timer expires.
-
-But, currently it is done after we move back to
-the operating channel. This is incorrect - fix this
-by calling ieee80211_remain_on_channel_expired() when
-the RoC timer expires and in ath_roc_complete() when
-the RoC request is aborted.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Loic Poulain <loic.poulain@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/channel.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ net/rfkill/rfkill-gpio.c | 48 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 48 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index 7fe35a5..447b397 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -894,7 +894,7 @@ void ath_roc_complete(struct ath_softc *sc, bool abort)
+diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
+index 7982841..29369d6 100644
+--- a/net/rfkill/rfkill-gpio.c
++++ b/net/rfkill/rfkill-gpio.c
+@@ -34,6 +34,7 @@ struct rfkill_gpio_data {
+ 	enum rfkill_type	type;
+ 	struct gpio_desc	*reset_gpio;
+ 	struct gpio_desc	*shutdown_gpio;
++	struct gpio_desc	*wake_gpio;
  
- 	sc->offchannel.roc_vif = NULL;
- 	sc->offchannel.roc_chan = NULL;
--	if (!abort)
-+	if (abort)
- 		ieee80211_remain_on_channel_expired(sc->hw);
- 	ath_offchannel_next(sc);
- 	ath9k_ps_restore(sc);
-@@ -1028,6 +1028,7 @@ static void ath_offchannel_timer(unsigned long data)
- 	case ATH_OFFCHANNEL_ROC_WAIT:
- 		ctx = ath_chanctx_get_oper_chan(sc, false);
- 		sc->offchannel.state = ATH_OFFCHANNEL_ROC_DONE;
-+		ieee80211_remain_on_channel_expired(sc->hw);
- 		ath_chanctx_switch(sc, ctx, NULL);
- 		break;
- 	default:
+ 	struct rfkill		*rfkill_dev;
+ 	struct clk		*clk;
+@@ -46,6 +47,7 @@ struct rfkill_gpio_desc {
+ 
+ 	int			reset_idx;
+ 	int			shutdown_idx;
++	int			wake_idx;
+ };
+ 
+ static int rfkill_gpio_set_power(void *data, bool blocked)
+@@ -57,6 +59,7 @@ static int rfkill_gpio_set_power(void *data, bool blocked)
+ 
+ 	gpiod_set_value_cansleep(rfkill->shutdown_gpio, !blocked);
+ 	gpiod_set_value_cansleep(rfkill->reset_gpio, !blocked);
++	gpiod_set_value_cansleep(rfkill->wake_gpio, !blocked);
+ 
+ 	if (blocked && !IS_ERR(rfkill->clk) && rfkill->clk_enabled)
+ 		clk_disable(rfkill->clk);
+@@ -112,6 +115,16 @@ static int rfkill_gpio_init(struct device *dev, struct rfkill_gpio_desc *desc)
+ 		rfkill->shutdown_gpio = gpio;
+ 	}
+ 
++	if (desc && (desc->wake_idx >= 0)) {
++		gpio = devm_gpiod_get_index(dev, "wake", desc->wake_idx);
++		if (!IS_ERR(gpio)) {
++			ret = gpiod_direction_output(gpio, 0);
++			if (ret)
++				return ret;
++			rfkill->wake_gpio = gpio;
++		}
++	}
++
+ 	/* Make sure at-least one of the GPIO is defined */
+ 	if (!rfkill->reset_gpio && !rfkill->shutdown_gpio) {
+ 		dev_err(dev, "invalid platform data\n");
+@@ -182,6 +195,38 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_PM
++static int rfkill_gpio_suspend(struct device *dev)
++{
++	struct rfkill_gpio_data *rfkill = dev_get_drvdata(dev);
++
++	dev_dbg(dev, "Suspend\n");
++
++	if (!rfkill->clk_enabled)
++		return 0;
++
++	gpiod_set_value_cansleep(rfkill->wake_gpio, 0);
++
++	return 0;
++}
++
++static int rfkill_gpio_resume(struct device *dev)
++{
++	struct rfkill_gpio_data *rfkill = dev_get_drvdata(dev);
++
++	dev_dbg(dev, "Resume\n");
++
++	if (!rfkill->clk_enabled)
++		return 0;
++
++	gpiod_set_value_cansleep(rfkill->wake_gpio, 1);
++
++	return 0;
++}
++#endif
++static SIMPLE_DEV_PM_OPS(rfkill_gpio_pm, rfkill_gpio_suspend,
++			 rfkill_gpio_resume);
++
+ static int rfkill_gpio_remove(struct platform_device *pdev)
+ {
+ 	struct rfkill_gpio_data *rfkill = platform_get_drvdata(pdev);
+@@ -197,12 +242,14 @@ static struct rfkill_gpio_desc acpi_default_bluetooth = {
+ 	.type = RFKILL_TYPE_BLUETOOTH,
+ 	.reset_idx = 0,
+ 	.shutdown_idx = 1,
++	.wake_idx = -1,
+ };
+ 
+ static struct rfkill_gpio_desc acpi_default_gps = {
+ 	.type = RFKILL_TYPE_GPS,
+ 	.reset_idx = 0,
+ 	.shutdown_idx = 1,
++	.wake_idx = -1,
+ };
+ 
+ static const struct acpi_device_id rfkill_acpi_match[] = {
+@@ -223,6 +270,7 @@ static struct platform_driver rfkill_gpio_driver = {
+ 	.driver = {
+ 		.name = "rfkill_gpio",
+ 		.owner = THIS_MODULE,
++		.pm = &rfkill_gpio_pm,
+ 		.acpi_match_table = ACPI_PTR(rfkill_acpi_match),
+ 	},
+ };
 -- 
-2.1.2
+1.8.3.2
 
