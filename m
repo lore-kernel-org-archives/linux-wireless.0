@@ -1,86 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:59456 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751159AbaJBKim (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:20541 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756568AbaJHOZJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Oct 2014 06:38:42 -0400
-Received: by mail-wi0-f169.google.com with SMTP id cc10so1094520wib.0
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Oct 2014 03:38:41 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH][RFC] bcma: fill core details for every device
-Date: Thu,  2 Oct 2014 12:38:23 +0200
-Message-Id: <1412246303-18172-1-git-send-email-zajec5@gmail.com> (sfid-20141002_123845_899303_EC7FCD50)
+	Wed, 8 Oct 2014 10:25:09 -0400
+Date: Wed, 8 Oct 2014 17:24:51 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: devel@driverdev.osuosl.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	kernel-janitors@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [patch] staging: rtl8723au: incorrect use of ether_addr_copy()
+Message-ID: <20141008142451.GE26918@mwanda> (sfid-20141008_162523_628916_D0A22B00)
+References: <20141008104014.GA23096@mwanda>
+ <wrfj4mvezmpm.fsf@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <wrfj4mvezmpm.fsf@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We were setting things like dma_dev, IRQ, etc. during core registration
-only. We need such info for cores handled internally (e.g. ChipCommon)
-as well.
+On Wed, Oct 08, 2014 at 03:59:33PM +0200, Jes Sorensen wrote:
+> Dan Carpenter <dan.carpenter@oracle.com> writes:
+> > The return from myid() isn't aligned correctly for ether_addr_copy().
+> >
+> > Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> 
+> Sorry, this makes no sense, just fix it properly!
+> 
+> drivers/staging/rtl8723au/include/rtw_eeprom.h:
+> 
+> struct eeprom_priv {
+>         u8              bautoload_fail_flag;
+>         u8              bloadfile_fail_flag;
+>         u8              bloadmac_fail_flag;
+>         /* u8           bempty; */
+>         /* u8           sys_config; */
+>         u8              mac_addr[6];    /* PermanentAddress */
+>         /* u8           config0; */
+> 
+> Move mac_addr[6] to the top of the struct and be done with it.
+> 
+> NACK
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/bcma/bcma_private.h | 1 +
- drivers/bcma/main.c         | 9 ++++++---
- drivers/bcma/scan.c         | 1 +
- 3 files changed, 8 insertions(+), 3 deletions(-)
+Oops.  I thought it was something from the hardware.  Actually can you
+fix it and give me a reported-by tag?
 
-diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
-index b6412b2..314ae40 100644
---- a/drivers/bcma/bcma_private.h
-+++ b/drivers/bcma/bcma_private.h
-@@ -24,6 +24,7 @@ struct bcma_bus;
- /* main.c */
- bool bcma_wait_value(struct bcma_device *core, u16 reg, u32 mask, u32 value,
- 		     int timeout);
-+void bcma_prepare_core(struct bcma_bus *bus, struct bcma_device *core);
- int bcma_bus_register(struct bcma_bus *bus);
- void bcma_bus_unregister(struct bcma_bus *bus);
- int __init bcma_bus_early_register(struct bcma_bus *bus,
-diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-index 5e7a3d4..70d0f23 100644
---- a/drivers/bcma/main.c
-+++ b/drivers/bcma/main.c
-@@ -172,10 +172,8 @@ static void bcma_of_fill_device(struct platform_device *parent,
- }
- #endif /* CONFIG_OF */
- 
--static void bcma_register_core(struct bcma_bus *bus, struct bcma_device *core)
-+void bcma_prepare_core(struct bcma_bus *bus, struct bcma_device *core)
- {
--	int err;
--
- 	core->dev.release = bcma_release_core_dev;
- 	core->dev.bus = &bcma_bus_type;
- 	dev_set_name(&core->dev, "bcma%d:%d", bus->num, core->core_index);
-@@ -199,6 +197,11 @@ static void bcma_register_core(struct bcma_bus *bus, struct bcma_device *core)
- 	case BCMA_HOSTTYPE_SDIO:
- 		break;
- 	}
-+}
-+
-+static void bcma_register_core(struct bcma_bus *bus, struct bcma_device *core)
-+{
-+	int err;
- 
- 	err = device_register(&core->dev);
- 	if (err) {
-diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
-index 14b5656..9175207 100644
---- a/drivers/bcma/scan.c
-+++ b/drivers/bcma/scan.c
-@@ -505,6 +505,7 @@ int bcma_bus_scan(struct bcma_bus *bus)
- 		bus->nr_cores++;
- 		other_core = bcma_find_core_reverse(bus, core->id.id);
- 		core->core_unit = (other_core == NULL) ? 0 : other_core->core_unit + 1;
-+		bcma_prepare_core(bus, core);
- 
- 		bcma_info(bus, "Core %d found: %s (manuf 0x%03X, id 0x%03X, rev 0x%02X, class 0x%X)\n",
- 			  core->core_index, bcma_device_name(&core->id),
--- 
-1.8.4.5
-
+regards,
+dan carpenter
