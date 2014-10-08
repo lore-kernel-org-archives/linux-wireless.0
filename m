@@ -1,72 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f53.google.com ([209.85.215.53]:52187 "EHLO
-	mail-la0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751316AbaJKQmZ convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:63316 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753269AbaJHDLo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Oct 2014 12:42:25 -0400
-Received: by mail-la0-f53.google.com with SMTP id gq15so4761265lab.26
-        for <linux-wireless@vger.kernel.org>; Sat, 11 Oct 2014 09:42:23 -0700 (PDT)
+	Tue, 7 Oct 2014 23:11:44 -0400
+Date: Wed, 8 Oct 2014 08:43:23 +0530
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] ath10k: add tracing for frame transmission
+Message-ID: <20141008031321.GB3116@qca.qualcomm.com> (sfid-20141008_051147_324895_8592FD7E)
+References: <1412615346-18010-1-git-send-email-rmanohar@qti.qualcomm.com>
+ <87d2a3j1ja.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <8738avyehi.fsf@nemi.mork.no>
-References: <8738avyehi.fsf@nemi.mork.no>
-Date: Sat, 11 Oct 2014 19:42:23 +0300
-Message-ID: <CANUX_P0OELs9tVH1a8GBOthgH2-EhwQy1oQv-Uxqy+23SX8Jqw@mail.gmail.com> (sfid-20141011_184229_267983_F12AF762)
-Subject: Re: iwlwifi/mvm: "Got an HT rate for a non data frame 0x8"
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: =?UTF-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <87d2a3j1ja.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 10, 2014 at 9:19 PM, Bjørn Mork <bjorn@mork.no> wrote:
+On Tue, Oct 07, 2014 at 07:19:05PM +0300, Kalle Valo wrote:
+> Rajkumar Manoharan <rmanohar@qti.qualcomm.com> writes:
+> 
+> > Add tracing support to forward management and data frames to
+> > user space for packet inspection.
+> >
+> > Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+> 
+> [...]
+> 
+> > --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
+> > +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+> > @@ -291,6 +291,9 @@ static inline struct sk_buff *ath10k_htt_rx_netbuf_pop(struct ath10k_htt *htt)
+> >  	htt->rx_ring.sw_rd_idx.msdu_payld = idx;
+> >  	htt->rx_ring.fill_cnt--;
+> >  
+> > +	trace_ath10k_htt_rx_pop_msdu(ar, msdu->data, msdu->len +
+> > +				     skb_tailroom(msdu));
+> 
+> Why add skb_tailroom() to the length? I think that deserves a comment.
 >
-> I just hit this warning using the 3.17.0-rc7 version of the driver:
->
-> ------------[ cut here ]------------
-> WARNING: CPU: 0 PID: 12436 at drivers/net/wireless/iwlwifi/mvm/tx.c:190 iwl_mvm_set_tx_params+0x336/0x463 [iwlmvm]()
-> Got an HT rate for a non data frame 0x8
-> Modules linked in: ext3 jbd tcp_diag inet_diag qmi_wwan option usb_wwan uas usb_storage xt_state ipt_MASQUERADE iptable_nat nf_conntrack_ipv4 nf_defrag_ipv4 nf_nat_ipv4 nf_nat nf_conntrack bridge cpuid ctr ccm nfnetlink_log nfnetlink usb_serial_simple usbserial xt_multiport iptable_filter ip_tables bnep dm_mod xt_hl nf_log_ipv6 nf_log_common xt_LOG binfmt_misc ip6table_filter ip6_tables x_tables nfsd nfs_acl nfs lockd fscache sunrpc 8021q garp stp mrp llc tun loop fuse snd_hda_codec_conexant snd_hda_codec_generic iTCO_wdt iTCO_vendor_support arc4 coretemp cdc_mbim kvm_intel cdc_wdm kvm cdc_ncm evdev usbnet mii uvcvideo cdc_acm psmouse videobuf2_vmalloc videobuf2_memops videobuf2_core serio_raw v4l2_common videodev i2c_i801 iwlmvm mac80211 snd_hda_intel snd_hda_controller snd_hda_codec
->  snd_hwdep snd_pcm_oss snd_mixer_oss iwlwifi lpc_ich mfd_core i915 snd_pcm i2c_algo_bit drm_kms_helper cfg80211 snd_timer drm wmi thinkpad_acpi nvram ac snd soundcore battery ecb btusb bluetooth video rfkill button acpi_cpufreq processor ext4 crc16 jbd2 mbcache nbd sg sd_mod crc_t10dif sr_mod crct10dif_generic cdrom crct10dif_common microcode ahci libahci libata scsi_mod ehci_pci uhci_hcd ehci_hcd e1000e ptp pps_core usbcore usb_common thermal thermal_sys [last unloaded: dummy]
-> CPU: 0 PID: 12436 Comm: wpa_supplicant Tainted: G           O   3.17.0-rc7+ #262
-> Hardware name: LENOVO 2776LEG/2776LEG, BIOS 6EET55WW (3.15 ) 12/19/2011
->  0000000000000009 ffff8802321bb748 ffffffff813bea47 0000000000000000
->  ffff8802321bb798 ffff8802321bb788 ffffffff8103eb60 0000000000000020
->  ffffffffa0640047 ffff8800b1d9bdc0 ffff88022f666c00 ffff88007f9f2a48
-> Call Trace:
->  [<ffffffff813bea47>] dump_stack+0x4e/0x68
->  [<ffffffff8103eb60>] warn_slowpath_common+0x7c/0x96
->  [<ffffffffa0640047>] ? iwl_mvm_set_tx_params+0x336/0x463 [iwlmvm]
->  [<ffffffff8103ec0e>] warn_slowpath_fmt+0x41/0x43
->  [<ffffffffa0640047>] iwl_mvm_set_tx_params+0x336/0x463 [iwlmvm]
->  [<ffffffffa0640663>] iwl_mvm_tx_skb+0x29f/0x30a [iwlmvm]
->  [<ffffffffa06391a7>] iwl_mvm_mac_tx+0xbc/0x1ae [iwlmvm]
->  [<ffffffffa059ff36>] __ieee80211_tx+0x28a/0x2f7 [mac80211]
->  [<ffffffffa05a1ade>] ieee80211_tx+0xbf/0xd1 [mac80211]
->  [<ffffffffa05a1b7c>] ieee80211_xmit+0x8c/0x95 [mac80211]
->  [<ffffffffa05a286d>] ieee80211_subif_start_xmit+0x9df/0xa3a [mac80211]
->  [<ffffffff812f813a>] dev_hard_start_xmit+0x287/0x3e5
->  [<ffffffff813142fd>] sch_direct_xmit+0x70/0x179
->  [<ffffffff812f115d>] ? spin_lock+0x9/0xb
->  [<ffffffff812f8578>] __dev_queue_xmit+0x2e0/0x4e0
->  [<ffffffff812f878e>] dev_queue_xmit+0xb/0xd
->  [<ffffffff813aec11>] packet_sendmsg+0xb5d/0xbda
->  [<ffffffff8106478e>] ? sched_clock_cpu+0xa4/0xbe
->  [<ffffffff812de615>] __sock_sendmsg_nosec+0x25/0x27
->  [<ffffffff812e0f4e>] sock_sendmsg+0x5a/0x7b
->  [<ffffffff81107686>] ? might_fault+0x55/0xa5
->  [<ffffffff812de93e>] ? copy_from_user+0x2a/0x2c
->  [<ffffffff812e1d80>] SYSC_sendto+0x10a/0x139
->  [<ffffffff810718c9>] ? trace_hardirqs_off_caller+0x37/0xa6
->  [<ffffffff813c53cd>] ? retint_swapgs+0xe/0x13
->  [<ffffffff81075976>] ? trace_hardirqs_on_caller+0x145/0x1a1
->  [<ffffffff811ee62e>] ? trace_hardirqs_on_thunk+0x3a/0x3f
->  [<ffffffff812e1f75>] SyS_sendto+0x9/0xb
->  [<ffffffff813c4852>] system_call_fastpath+0x16/0x1b
-> ---[ end trace eda735e0dce4402f ]---
->
+It is used for rx crypto length. skb_tailroom is used in most of the
+places even while dumping rx pkt by ath10k_dbg_dump.
 
-yep - tracked here: https://bugzilla.kernel.org/show_bug.cgi?id=85691
-
-Thanks!
+-Rajkumar
