@@ -1,129 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:56893 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753892AbaJQTvL (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:41850 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754413AbaJHJOt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Oct 2014 15:51:11 -0400
-Received: by mail-wg0-f44.google.com with SMTP id y10so1615469wgg.15
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Oct 2014 12:51:09 -0700 (PDT)
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Karl Beldan <karl.beldan@rivierawaves.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	karl.beldan@gmail.com, Felix Fietkau <nbd@openwrt.org>
-Subject: [RESEND PATCH v2 1/4] mac80211: minstrel_ht: Increase the range of handled rate indexes
-Date: Fri, 17 Oct 2014 21:50:56 +0200
-Message-Id: <1413575459-29612-2-git-send-email-karl.beldan@gmail.com> (sfid-20141017_215118_073933_7E4A7016)
-In-Reply-To: <1413575459-29612-1-git-send-email-karl.beldan@gmail.com>
-References: <1413570896-27740-5-git-send-email-karl.beldan@gmail.com>
- <1413575459-29612-1-git-send-email-karl.beldan@gmail.com>
+	Wed, 8 Oct 2014 05:14:49 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH] ath10k: fix kernel panic while shutting down AP
+Date: Wed, 8 Oct 2014 14:46:26 +0530
+Message-ID: <1412759786-10567-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20141008_111455_514438_0EEB5991)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Karl Beldan <karl.beldan@rivierawaves.com>
+The commit "ath10k: workaround fw beaconing bug" is freeing
+DMA-coherent memory in irq context which is hitting BUG ON
+in ARM platforms. Fix this by moving dma_free out of spin
+lock.
 
-Since 5935839ad735 ("mac80211: improve minstrel_ht rate sorting by
-throughput & probability"), the rate indexes are manipulated via u8's
-and hence allow for a maximum of 256 mcs_group entries in
-minstrel_mcs_groups.
+kernel BUG at mm/vmalloc.c:1512!
+Internal error: Oops - BUG: 0 [#1] PREEMPT SMP ARM
+CPU: 0 PID: 722 Comm: hostapd Not tainted 3.14.0 #3
+task: dd58b840 ti: da6a6000 task.ti: da6a6000
+PC is at vunmap+0x24/0x34
+LR is at __arm_dma_free.isra.21+0x12c/0x190
+[<c02a97d0>] (vunmap) from [<c021f81c>] (__arm_dma_free.isra.21+0x12c/0x190)
+[<c021f81c>] (__arm_dma_free.isra.21) from [<bf3b2440>]
+			(ath10k_mac_vif_beacon_free+0xf4/0x100 [ath10k_core])
+[<bf3b2440>] (ath10k_mac_vif_beacon_free [ath10k_core]) from [<bf3b2490>]
+			(ath10k_remove_interface+0x44/0x1ec [ath10k_core])
+[<bf3b2490>] (ath10k_remove_interface [ath10k_core]) from [<bf3352e4>]
+			(ieee80211_add_virtual_monitor+0x9d8/0x9f0 [mac80211])
+[<bf3352e4>] (ieee80211_add_virtual_monitor [mac80211]) from [<bf33530c>]
+			(ieee80211_stop+0x10/0x18 [mac80211])
+[<bf33530c>] (ieee80211_stop [mac80211]) from [<c040d144>]
+			(__dev_close_many+0x9c/0xcc)
 
-ATM, minstrel_ht advertizes support up to 3HTSS@40MHz, consuming:
-8(MCS_GROUP_RATES) * (3(SS)*2(GI)*2(BW)+1(CCK)), i.e. 104 entries.
-
-Support for 3VHTSS@80MHz will require:
-10(MCS_GROUP_RATES) * (3(SS)*2(GI)*2(BW)+1(CCK)) +
-10(MCS_GROUP_RATES) * (3(SS)*2(GI)*3(BW)), i.e. 130 + 180 entries.
-
-This change moves from u8s to u16s where necessary.
-
-Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
-Cc: Felix Fietkau <nbd@openwrt.org>
+Cc: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 ---
- net/mac80211/rc80211_minstrel_ht.c | 16 ++++++++--------
- net/mac80211/rc80211_minstrel_ht.h |  8 ++++----
- 2 files changed, 12 insertions(+), 12 deletions(-)
+ drivers/net/wireless/ath/ath10k/mac.c | 32 +++++++++++++++-----------------
+ 1 file changed, 15 insertions(+), 17 deletions(-)
 
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index 17ef54a..ccec718 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -240,8 +240,8 @@ minstrel_ht_calc_tp(struct minstrel_ht_sta *mi, int group, int rate)
-  * MCS groups, CCK rates do not provide aggregation and are therefore at last.
-  */
- static void
--minstrel_ht_sort_best_tp_rates(struct minstrel_ht_sta *mi, u8 index,
--			       u8 *tp_list)
-+minstrel_ht_sort_best_tp_rates(struct minstrel_ht_sta *mi, u16 index,
-+			       u16 *tp_list)
- {
- 	int cur_group, cur_idx, cur_thr, cur_prob;
- 	int tmp_group, tmp_idx, tmp_thr, tmp_prob;
-@@ -278,7 +278,7 @@ minstrel_ht_sort_best_tp_rates(struct minstrel_ht_sta *mi, u8 index,
-  * Find and set the topmost probability rate per sta and per group
-  */
- static void
--minstrel_ht_set_best_prob_rate(struct minstrel_ht_sta *mi, u8 index)
-+minstrel_ht_set_best_prob_rate(struct minstrel_ht_sta *mi, u16 index)
- {
- 	struct minstrel_mcs_group_data *mg;
- 	struct minstrel_rate_stats *mr;
-@@ -321,8 +321,8 @@ minstrel_ht_set_best_prob_rate(struct minstrel_ht_sta *mi, u8 index)
-  */
- static void
- minstrel_ht_assign_best_tp_rates(struct minstrel_ht_sta *mi,
--				 u8 tmp_mcs_tp_rate[MAX_THR_RATES],
--				 u8 tmp_cck_tp_rate[MAX_THR_RATES])
-+				 u16 tmp_mcs_tp_rate[MAX_THR_RATES],
-+				 u16 tmp_cck_tp_rate[MAX_THR_RATES])
- {
- 	unsigned int tmp_group, tmp_idx, tmp_cck_tp, tmp_mcs_tp;
- 	int i;
-@@ -386,8 +386,8 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
- 	struct minstrel_mcs_group_data *mg;
- 	struct minstrel_rate_stats *mr;
- 	int group, i, j;
--	u8 tmp_mcs_tp_rate[MAX_THR_RATES], tmp_group_tp_rate[MAX_THR_RATES];
--	u8 tmp_cck_tp_rate[MAX_THR_RATES], index;
-+	u16 tmp_mcs_tp_rate[MAX_THR_RATES], tmp_group_tp_rate[MAX_THR_RATES];
-+	u16 tmp_cck_tp_rate[MAX_THR_RATES], index;
- 
- 	if (mi->ampdu_packets > 0) {
- 		mi->avg_ampdu_len = minstrel_ewma(mi->avg_ampdu_len,
-@@ -517,7 +517,7 @@ minstrel_next_sample_idx(struct minstrel_ht_sta *mi)
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index bf8333c..dd4f56a 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -498,21 +498,6 @@ void ath10k_mac_vif_beacon_free(struct ath10k_vif *arvif)
+ 	arvif->beacon_sent = false;
  }
  
- static void
--minstrel_downgrade_rate(struct minstrel_ht_sta *mi, u8 *idx, bool primary)
-+minstrel_downgrade_rate(struct minstrel_ht_sta *mi, u16 *idx, bool primary)
+-static void ath10k_mac_vif_beacon_cleanup(struct ath10k_vif *arvif)
+-{
+-	struct ath10k *ar = arvif->ar;
+-
+-	lockdep_assert_held(&ar->data_lock);
+-
+-	ath10k_mac_vif_beacon_free(arvif);
+-
+-	if (arvif->beacon_buf) {
+-		dma_free_coherent(ar->dev, IEEE80211_MAX_FRAME_LEN,
+-				  arvif->beacon_buf, arvif->beacon_paddr);
+-		arvif->beacon_buf = NULL;
+-	}
+-}
+-
+ static inline int ath10k_vdev_setup_sync(struct ath10k *ar)
  {
- 	int group, orig_group;
+ 	int ret;
+@@ -2404,8 +2389,15 @@ void ath10k_halt(struct ath10k *ar)
  
-diff --git a/net/mac80211/rc80211_minstrel_ht.h b/net/mac80211/rc80211_minstrel_ht.h
-index 01570e0..8b54e89 100644
---- a/net/mac80211/rc80211_minstrel_ht.h
-+++ b/net/mac80211/rc80211_minstrel_ht.h
-@@ -34,8 +34,8 @@ struct minstrel_mcs_group_data {
- 	u8 supported;
+ 	spin_lock_bh(&ar->data_lock);
+ 	list_for_each_entry(arvif, &ar->arvifs, list)
+-		ath10k_mac_vif_beacon_cleanup(arvif);
++		ath10k_mac_vif_beacon_free(arvif);
+ 	spin_unlock_bh(&ar->data_lock);
++	list_for_each_entry(arvif, &ar->arvifs, list) {
++		if (!arvif->beacon_buf)
++			continue;
++		dma_free_coherent(ar->dev, IEEE80211_MAX_FRAME_LEN,
++				  arvif->beacon_buf, arvif->beacon_paddr);
++		arvif->beacon_buf = NULL;
++	}
+ }
  
- 	/* sorted rate set within a MCS group*/
--	u8 max_group_tp_rate[MAX_THR_RATES];
--	u8 max_group_prob_rate;
-+	u16 max_group_tp_rate[MAX_THR_RATES];
-+	u16 max_group_prob_rate;
+ static int ath10k_get_antenna(struct ieee80211_hw *hw, u32 *tx_ant, u32 *rx_ant)
+@@ -2988,9 +2980,15 @@ static void ath10k_remove_interface(struct ieee80211_hw *hw,
+ 	cancel_work_sync(&arvif->wep_key_work);
  
- 	/* MCS rate statistics */
- 	struct minstrel_rate_stats rates[MCS_GROUP_RATES];
-@@ -52,8 +52,8 @@ struct minstrel_ht_sta {
- 	unsigned int avg_ampdu_len;
+ 	spin_lock_bh(&ar->data_lock);
+-	ath10k_mac_vif_beacon_cleanup(arvif);
++	ath10k_mac_vif_beacon_free(arvif);
+ 	spin_unlock_bh(&ar->data_lock);
  
- 	/* overall sorted rate set */
--	u8 max_tp_rate[MAX_THR_RATES];
--	u8 max_prob_rate;
-+	u16 max_tp_rate[MAX_THR_RATES];
-+	u16 max_prob_rate;
- 
- 	/* time of last status update */
- 	unsigned long stats_update;
++	if (arvif->beacon_buf) {
++		dma_free_coherent(ar->dev, IEEE80211_MAX_FRAME_LEN,
++				  arvif->beacon_buf, arvif->beacon_paddr);
++		arvif->beacon_buf = NULL;
++	}
++
+ 	ret = ath10k_spectral_vif_stop(arvif);
+ 	if (ret)
+ 		ath10k_warn(ar, "failed to stop spectral for vdev %i: %d\n",
 -- 
-2.0.1
+2.1.2
 
