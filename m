@@ -1,75 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:45185 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932129AbaJVJiW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2014 05:38:22 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Arik Nemtsov <arik@wizery.com>,
-	Arik Nemtsov <arikx.nemtsov@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH] mac80211: fix network header breakage during encryption
-Date: Wed, 22 Oct 2014 12:33:45 +0300
-Message-Id: <1413970425-5829-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20141022_113825_417614_50EDBD8B)
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:56428 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750958AbaJIJqt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Oct 2014 05:46:49 -0400
+Message-ID: <54365985.1020104@broadcom.com> (sfid-20141009_114652_175603_DF2008F5)
+Date: Thu, 9 Oct 2014 11:46:45 +0200
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: Maximilian Engelhardt <maxi@daemonizer.de>,
+	Michael Tokarev <mjt@tls.msk.ru>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	"brcm80211 development" <brcm80211-dev-list@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH][RTF][RFC] brcmsmac: add workaround for old BCM4313 devices
+ with Bluetooth
+References: <1412843867-26563-1-git-send-email-zajec5@gmail.com> <CACna6ry-+hzMJ4n5PG7GJq9fZ+zwU38HGt-xZkUqKEP8yX6avA@mail.gmail.com>
+In-Reply-To: <CACna6ry-+hzMJ4n5PG7GJq9fZ+zwU38HGt-xZkUqKEP8yX6avA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+On 10/09/14 11:02, Rafał Miłecki wrote:
+> On 9 October 2014 10:37, Rafał Miłecki<zajec5@gmail.com>  wrote:
+>> +       /* TODO: Fix the condition. Only for boards>= P250 */
+>> +       if (ai_get_chip_id(wlc_hw->sih) == BCMA_CHIP_ID_BCM4313&&  (wlc_hw->boardflags&  BFL_FEM_BT)) {
+>> +               pr_info("Applying BCM4313 WL/BT workaround\n");
+>> +               ai_btcombo_p250_4313_war(wlc_hw->sih);
+>> +       }
+>
+> This of course have to be checked in some hardware documentation for
+> the correct condition. We already have some workaround (right above
+> the newly added code) for boards with boardrev>= 0x1250. So my guess
+> is the code I added applies to some other cards. The board this patch
+> is supposed to fix is:
+> board vendor: 14e4
+> board type: 608
+> board revision: 1109
+> board flags: 402201
+> board flags2: 884
+> firmware revision: 262032c
+>
+> So whatever condition we will need it'll likely need to cover above
+> case (maybe boardrev == 0x1109?).
 
-When an IV is generated, only the MAC header is moved back. The network
-header location remains the same relative to the skb head, as the new IV
-is using headroom space that was reserved in advance.
+Well, there is something fishy going on. The brcmsmac code looks like:
 
-Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- net/mac80211/wep.c | 2 --
- net/mac80211/wpa.c | 5 -----
- 2 files changed, 7 deletions(-)
+if (bfl & BFL_FEM && chip == 4313) {
+	if (!(boardrev >= 0x1250 && bfl & BFL_FEM_BT))
+		ai_epa_4313war(wlc_hw->sih);
+}
 
-diff --git a/net/mac80211/wep.c b/net/mac80211/wep.c
-index 9181fb6..a4220e9 100644
---- a/net/mac80211/wep.c
-+++ b/net/mac80211/wep.c
-@@ -111,8 +111,6 @@ static u8 *ieee80211_wep_add_iv(struct ieee80211_local *local,
- 	    (info->control.hw_key->flags & IEEE80211_KEY_FLAG_PUT_IV_SPACE))
- 		return newhdr + hdrlen;
- 
--	skb_set_network_header(skb, skb_network_offset(skb) +
--				    IEEE80211_WEP_IV_LEN);
- 	ieee80211_wep_get_iv(local, keylen, keyidx, newhdr + hdrlen);
- 	return newhdr + hdrlen;
- }
-diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
-index 983527a..12398fde 100644
---- a/net/mac80211/wpa.c
-+++ b/net/mac80211/wpa.c
-@@ -209,8 +209,6 @@ static int tkip_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
- 
- 	pos = skb_push(skb, IEEE80211_TKIP_IV_LEN);
- 	memmove(pos, pos + IEEE80211_TKIP_IV_LEN, hdrlen);
--	skb_set_network_header(skb, skb_network_offset(skb) +
--				    IEEE80211_TKIP_IV_LEN);
- 	pos += hdrlen;
- 
- 	/* the HW only needs room for the IV, but not the actual IV */
-@@ -434,8 +432,6 @@ static int ccmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
- 
- 	pos = skb_push(skb, IEEE80211_CCMP_HDR_LEN);
- 	memmove(pos, pos + IEEE80211_CCMP_HDR_LEN, hdrlen);
--	skb_set_network_header(skb, skb_network_offset(skb) +
--				    IEEE80211_CCMP_HDR_LEN);
- 
- 	/* the HW only needs room for the IV, but not the actual IV */
- 	if (info->control.hw_key &&
-@@ -575,7 +571,6 @@ ieee80211_crypto_cs_encrypt(struct ieee80211_tx_data *tx,
- 
- 	pos = skb_push(skb, cs->hdr_len);
- 	memmove(pos, pos + cs->hdr_len, hdrlen);
--	skb_set_network_header(skb, skb_network_offset(skb) + cs->hdr_len);
- 
- 	return TX_CONTINUE;
- }
--- 
-1.9.1
+However the boardflags above (0x402201) only has BFL_FEM_BT set so this 
+code is never called. I have to ask if !BFL_FEM && BFL_FEM_BT is a valid 
+combination.
+
+Regards,
+Arend
+
+
 
