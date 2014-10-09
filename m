@@ -1,34 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:60340 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750862AbaJXJwP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Oct 2014 05:52:15 -0400
-Message-ID: <1414144324.1934.0.camel@jlt4.sipsolutions.net> (sfid-20141024_115218_970293_791D8501)
-Subject: Re: [PATCH] mac80211: don't flush when probing the AP
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 24 Oct 2014 11:52:04 +0200
-In-Reply-To: <1413809838-9170-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1413491157-5352-1-git-send-email-emmanuel.grumbach@intel.com>
-	 <1413809838-9170-1-git-send-email-emmanuel.grumbach@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:45648 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751928AbaJIIdk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Oct 2014 04:33:40 -0400
+Received: by mail-wi0-f174.google.com with SMTP id cc10so12419301wib.13
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Oct 2014 01:33:38 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 1/5] ath10k: re-disable interrupts after target init
+Date: Thu,  9 Oct 2014 10:22:26 +0200
+Message-Id: <1412842950-14098-2-git-send-email-michal.kazior@tieto.com> (sfid-20141009_103354_661795_55C6374B)
+In-Reply-To: <1412842950-14098-1-git-send-email-michal.kazior@tieto.com>
+References: <1412842950-14098-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-10-20 at 15:57 +0300, Emmanuel Grumbach wrote:
-> All the callers of ieee80211_mgd_probe_ap_send return right
-> after they call the flush() callback. This means that calling
-> flush() is uneeded since its meaning is to wait until the
-> queues of the device are empty.
-> 
-> Devices that know how to report status on Tx will do so using
-> the regular path (ieee80211_tx_status) and this status will
-> trigger the continuation of the flow of the probe
-> (ieee80211_sta_tx_notify).
+If MSI isn't configured device ROM program expects
+legacy interrupts to be enabled before it can
+fully boot. Don't forget to disable legacy
+interrupts after that.
 
-Applied. For now, on mac80211-next, maybe we want to backport it later.
+While at it re-use the legacy irq enabling helper
+instead of calling ath10k_pci_write32().
 
-johannes
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/pci.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 730bb18..6077095 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -2279,14 +2279,13 @@ static int ath10k_pci_wait_for_target_init(struct ath10k *ar)
+ 
+ 		if (ar_pci->num_msi_intrs == 0)
+ 			/* Fix potential race by repeating CORE_BASE writes */
+-			ath10k_pci_write32(ar, SOC_CORE_BASE_ADDRESS +
+-					   PCIE_INTR_ENABLE_ADDRESS,
+-					   PCIE_INTR_FIRMWARE_MASK |
+-					   PCIE_INTR_CE_MASK_ALL);
++			ath10k_pci_enable_legacy_irq(ar);
+ 
+ 		mdelay(10);
+ 	} while (time_before(jiffies, timeout));
+ 
++	ath10k_pci_disable_and_clear_legacy_irq(ar);
++
+ 	if (val == 0xffffffff) {
+ 		ath10k_err(ar, "failed to read device register, device is gone\n");
+ 		return -EIO;
+-- 
+1.8.5.3
 
