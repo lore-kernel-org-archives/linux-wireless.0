@@ -1,123 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:54474 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751194AbaJNEAM (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:33568 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751008AbaJITLX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Oct 2014 00:00:12 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH 9/9] ath9k: Improve flush() in mcc mode
-Date: Tue, 14 Oct 2014 09:30:56 +0530
-Message-Id: <1413259256-4808-10-git-send-email-sujith@msujith.org> (sfid-20141014_060034_742729_07928160)
-In-Reply-To: <1413259256-4808-1-git-send-email-sujith@msujith.org>
-References: <1413259256-4808-1-git-send-email-sujith@msujith.org>
+	Thu, 9 Oct 2014 15:11:23 -0400
+From: "Xu, Peng" <pxu@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "Park, Kyeyoon" <kyeyoonp@qca.qualcomm.com>,
+	cfg80211mac80211 <cfg80211mac80211@qca.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH] cfg80211: Add support for ACS offloading
+Date: Thu, 9 Oct 2014 19:11:10 +0000
+Message-ID: <b7db9a5941324ca1aafafa36571bf910@nasanexm01a.na.qualcomm.com> (sfid-20141009_211126_648924_F39D96FA)
+References: <1412373538-17690-1-git-send-email-kyeyoonp@qca.qualcomm.com>
+	 <1412847971.1828.42.camel@jlt4.sipsolutions.net>
+	 <6c0aebecfa9d478ea43ba9c10236c19b@nasanexm01a.na.qualcomm.com>
+ <1412880033.1828.63.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1412880033.1828.63.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-
-The flush timeout in MCC mode is very small, since
-we are constrained by the time slice for each
-channel context, but since only the HW queues are
-flushed when switching contexts, it is acceptable.
-
-Since the SW queues are also emptied in the mac80211 flush()
-callback, a larger duration is needed. Add an override
-argument to __ath9k_flush() and set it when flush()
-is called in MCC mode. This allows the driver to
-drain both the SW and HW queues.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h   |  2 +-
- drivers/net/wireless/ath/ath9k/channel.c |  4 ++--
- drivers/net/wireless/ath/ath9k/main.c    | 28 +++++++++++++++++++++++++---
- 3 files changed, 28 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 7ac1b06..85d74ff 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -719,7 +719,7 @@ void ath_update_survey_nf(struct ath_softc *sc, int channel);
- void ath9k_queue_reset(struct ath_softc *sc, enum ath_reset_type type);
- void ath_ps_full_sleep(unsigned long data);
- void __ath9k_flush(struct ieee80211_hw *hw, u32 queues, bool drop,
--		   bool sw_pending);
-+		   bool sw_pending, bool timeout_override);
- 
- /**********/
- /* BTCOEX */
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index 25b898e..c7234d5 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -1232,11 +1232,11 @@ void ath_chanctx_set_next(struct ath_softc *sc, bool force)
- 		ath9k_chanctx_stop_queues(sc, sc->cur_chan);
- 		queues_stopped = true;
- 
--		__ath9k_flush(sc->hw, ~0, true, false);
-+		__ath9k_flush(sc->hw, ~0, true, false, false);
- 
- 		if (ath_chanctx_send_ps_frame(sc, true))
- 			__ath9k_flush(sc->hw, BIT(IEEE80211_AC_VO),
--				      false, false);
-+				      false, false, false);
- 
- 		send_ps = true;
- 		spin_lock_bh(&sc->chan_lock);
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index a524eeb..961a388 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -2031,14 +2031,33 @@ static void ath9k_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			u32 queues, bool drop)
- {
- 	struct ath_softc *sc = hw->priv;
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+
-+	if (ath9k_is_chanctx_enabled()) {
-+		if (!test_bit(ATH_OP_MULTI_CHANNEL, &common->op_flags))
-+			goto flush;
- 
-+		/*
-+		 * If MCC is active, extend the flush timeout
-+		 * and wait for the HW/SW queues to become
-+		 * empty. This needs to be done outside the
-+		 * sc->mutex lock to allow the channel scheduler
-+		 * to switch channel contexts.
-+		 *
-+		 * The vif queues have been stopped in mac80211,
-+		 * so there won't be any incoming frames.
-+		 */
-+		__ath9k_flush(hw, queues, drop, true, true);
-+		return;
-+	}
-+flush:
- 	mutex_lock(&sc->mutex);
--	__ath9k_flush(hw, queues, drop, true);
-+	__ath9k_flush(hw, queues, drop, true, false);
- 	mutex_unlock(&sc->mutex);
- }
- 
- void __ath9k_flush(struct ieee80211_hw *hw, u32 queues, bool drop,
--		   bool sw_pending)
-+		   bool sw_pending, bool timeout_override)
- {
- 	struct ath_softc *sc = hw->priv;
- 	struct ath_hw *ah = sc->sc_ah;
-@@ -2059,7 +2078,10 @@ void __ath9k_flush(struct ieee80211_hw *hw, u32 queues, bool drop,
- 	}
- 
- 	spin_lock_bh(&sc->chan_lock);
--	timeout = sc->cur_chan->flush_timeout;
-+	if (timeout_override)
-+		timeout = HZ / 5;
-+	else
-+		timeout = sc->cur_chan->flush_timeout;
- 	spin_unlock_bh(&sc->chan_lock);
- 
- 	ath_dbg(common, CHAN_CTX,
--- 
-2.1.2
-
+DQpIaSBKb2hhbm5lcywNClRoaXMgaXMgYmVjYXVzZSB0aGF0IE9CU1Mgc2NhbiBoYXBwZW5zIGJl
+Zm9yZSBzdGFydGluZyBBUCBhbmQgQUNTIGhhcHBlbnMgd2l0aGluIHN0YXJ0X2FwLg0KDQpUaGFu
+a3MsDQpQZW5nDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBKb2hhbm5lcyBC
+ZXJnIFttYWlsdG86am9oYW5uZXNAc2lwc29sdXRpb25zLm5ldF0gDQpTZW50OiBUaHVyc2RheSwg
+T2N0b2JlciAwOSwgMjAxNCAxMTo0MSBBTQ0KVG86IFh1LCBQZW5nDQpDYzogUGFyaywgS3lleW9v
+bjsgY2ZnODAyMTFtYWM4MDIxMTsgbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnDQpTdWJq
+ZWN0OiBSZTogW1BBVENIXSBjZmc4MDIxMTogQWRkIHN1cHBvcnQgZm9yIEFDUyBvZmZsb2FkaW5n
+DQoNCk9uIFRodSwgMjAxNC0xMC0wOSBhdCAxNzozOCArMDAwMCwgWHUsIFBlbmcgd3JvdGU6DQoN
+Cj4gVGhpcyBjaGFuZ2UgaXMgb3JpZ2luYXRlZCBmcm9tIGEgcHJvYmxlbSBjYXVzZWQgYnkgT0JT
+UyBzY2FuIGFuZCBBQ1MgDQo+IGZlYXR1cmUgaW4gdGhlIGRyaXZlci4gV2hlbiBTQVAgaXMgc3Rh
+cnRlZCwgaG9zdGFwZCB3aWxsIGRvIGFuIE9CU1MgDQo+IHNjYW4gYmFzZWQgb24gdGhlIGNoYW5u
+ZWwgc2V0dGluZyBpbiBob3N0YXBkLmNvbmYsIGlmIHRoZSB3bGFuIGRyaXZlciANCj4gaGFzIHRo
+ZSBBQ1MgY2FwYWJpbGl0eSwgaXQgbWF5IGNob29zZSBhIGRpZmZlcmVudCBjaGFubmVsLiBFdmVu
+IGl0IA0KPiBub3RpZmllcyBob3N0YXBkIGFib3V0IHRoZSBjaGFubmVsIHNlbGVjdGlvbiwgdGhl
+IE9CU1Mgc2NhbiByZXN1bHQgbWF5IA0KPiBiZWNvbWUgaW52YWxpZCBpZiBhIGRpZmZlcmVudCBj
+aGFubmVsIGlzIHNlbGVjdGVkIGFuZCBTQVAgbWF5IGVuZCB1cCANCj4gb3BlcmF0aW5nIGluIG5v
+dCBkZXNpcmVkIG1vZGUuDQo+IFRoaXMgY2hhbmdlIHdpbGwgYWxsb3cgdGhlIHdsYW4gZHJpdmVy
+IGRvIHRoZSBBQ1MgYW5kIGRlY2lkZSBhIA0KPiBjaGFubmVsLCBvbmNlIGhvc3RhcGQgaXMgbm90
+aWZpZWQsIGl0IGNhbiB0aGVuIGRvIE9CU1Mgc2NhbiB1c2luZyB0aGF0IA0KPiBjaGFubmVsLiBB
+Q1Mgb3BlcmF0aW9uIGlzIGRvbmUgZHVyaW5nIFNBUCBzdGFydGluZyB1cCwgYmVhY29uIGlzIHNl
+bnQgDQo+IGFmdGVyIGNoYW5uZWwgaXMgc2VsZWN0ZWQgYnkgZHJpdmVyLg0KDQpBbGwgb2YgdGhp
+cyBtYXkgYmUgdHJ1ZSwgYnV0IEkgd2FzIGFza2luZyB3aHkgdGhpcyBoYXMgdG8gYmUgcGFydCBv
+ZiBTVEFSVF9BUCwgYW5kIHRoYXQncyBub3QgYW5zd2VyaW5nIHRoYXQgcXVlc3Rpb24uDQoNCmpv
+aGFubmVzDQoNCg==
