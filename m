@@ -1,109 +1,168 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:33251 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752198AbaJ1Oux (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2014 10:50:53 -0400
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH 2/5] wil6210: reset flow updates
-Date: Tue, 28 Oct 2014 16:50:07 +0200
-Message-ID: <1414507810-23141-3-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20141028_155056_920777_C7A70FA9)
-In-Reply-To: <1414507810-23141-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1414507810-23141-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga03.intel.com ([134.134.136.65]:54338 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754947AbaJIL3s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Oct 2014 07:29:48 -0400
+From: Jukka Rissanen <jukka.rissanen@linux.intel.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] mac80211-hwsim: Add support for HWSIM_ATTR_DESTROY_RADIO_ON_CLOSE
+Date: Thu,  9 Oct 2014 14:29:43 +0300
+Message-Id: <1412854183-27194-1-git-send-email-jukka.rissanen@linux.intel.com> (sfid-20141009_132952_252614_F60CFE01)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As communicated with the firmware & hardware teams
+Add support for new attribute HWSIM_ATTR_DESTROY_RADIO_ON_CLOSE
+which can be set by the user space component. The attribute
+will cause the kernel to destroy all those radios that were
+created by a process if that process dies. The old behaviour
+i.e., radios are persistent is still the default.
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Jukka Rissanen <jukka.rissanen@linux.intel.com>
 ---
- drivers/net/wireless/ath/wil6210/main.c    | 23 ++++++++++++++++++-----
- drivers/net/wireless/ath/wil6210/wil6210.h |  6 ++++++
- 2 files changed, 24 insertions(+), 5 deletions(-)
+ drivers/net/wireless/mac80211_hwsim.c | 52 +++++++++++++++++++++++++++++++++--
+ drivers/net/wireless/mac80211_hwsim.h |  3 ++
+ 2 files changed, 52 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 7900384..0e95557 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -400,7 +400,7 @@ static inline void wil_release_cpu(struct wil6210_priv *wil)
- static int wil_target_reset(struct wil6210_priv *wil)
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index babbdc1..2d27c12 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -412,6 +412,8 @@ struct mac80211_hwsim_data {
+ 	struct mac_address addresses[2];
+ 	int channels, idx;
+ 	bool use_chanctx;
++	bool destroy_on_close;
++	u32 portid;
+ 
+ 	struct ieee80211_channel *tmp_chan;
+ 	struct delayed_work roc_done;
+@@ -496,6 +498,7 @@ static const struct nla_policy hwsim_genl_policy[HWSIM_ATTR_MAX + 1] = {
+ 	[HWSIM_ATTR_REG_CUSTOM_REG] = { .type = NLA_U32 },
+ 	[HWSIM_ATTR_REG_STRICT_REG] = { .type = NLA_FLAG },
+ 	[HWSIM_ATTR_SUPPORT_P2P_DEVICE] = { .type = NLA_FLAG },
++	[HWSIM_ATTR_DESTROY_RADIO_ON_CLOSE] = { .type = NLA_FLAG },
+ };
+ 
+ static void mac80211_hwsim_tx_frame(struct ieee80211_hw *hw,
+@@ -1946,7 +1949,8 @@ static struct ieee80211_ops mac80211_hwsim_mchan_ops;
+ static int mac80211_hwsim_create_radio(int channels, const char *reg_alpha2,
+ 				       const struct ieee80211_regdomain *regd,
+ 				       bool reg_strict, bool p2p_device,
+-				       bool use_chanctx)
++				       bool use_chanctx, bool destroy_on_close,
++				       u32 portid)
  {
- 	int delay = 0;
--	u32 hw_state;
-+	u32 x;
- 	u32 rev_id;
- 	bool is_sparrow = (wil->board->board == WIL_BOARD_SPARROW);
+ 	int err;
+ 	u8 addr[ETH_ALEN];
+@@ -2006,6 +2010,8 @@ static int mac80211_hwsim_create_radio(int channels, const char *reg_alpha2,
+ 	data->channels = channels;
+ 	data->use_chanctx = use_chanctx;
+ 	data->idx = idx;
++	data->destroy_on_close = destroy_on_close;
++	data->portid = portid;
  
-@@ -415,9 +415,22 @@ static int wil_target_reset(struct wil6210_priv *wil)
- 	S(RGF_USER_CLKS_CTL_SW_RST_MASK_0, BIT_CAR_PERST_RST);
+ 	if (data->use_chanctx) {
+ 		hw->wiphy->max_scan_ssids = 255;
+@@ -2434,6 +2440,7 @@ static int hwsim_create_radio_nl(struct sk_buff *msg, struct genl_info *info)
+ 	const struct ieee80211_regdomain *regd = NULL;
+ 	bool reg_strict = info->attrs[HWSIM_ATTR_REG_STRICT_REG];
+ 	bool p2p_device = info->attrs[HWSIM_ATTR_SUPPORT_P2P_DEVICE];
++	bool destroy_on_close = info->attrs[HWSIM_ATTR_DESTROY_RADIO_ON_CLOSE];
+ 	bool use_chanctx;
  
- 	wil_halt_cpu(wil);
--	C(RGF_USER_CLKS_CTL_0, BIT_USER_CLKS_CAR_AHB_SW_SEL); /* 40 MHz */
- 
- 	if (is_sparrow) {
-+		S(RGF_CAF_OSC_CONTROL, BIT_CAF_OSC_XTAL_EN);
-+		/* XTAL stabilization should take about 3ms */
-+		usleep_range(5000, 7000);
-+		x = R(RGF_CAF_PLL_LOCK_STATUS);
-+		if (!(x & BIT_CAF_OSC_DIG_XTAL_STABLE)) {
-+			wil_err(wil, "Xtal stabilization timeout\n"
-+				"RGF_CAF_PLL_LOCK_STATUS = 0x%08x\n", x);
-+			return -ETIME;
-+		}
-+		/* switch 10k to XTAL*/
-+		C(RGF_USER_SPARROW_M_4, BIT_SPARROW_M_4_SEL_SLEEP_OR_REF);
-+		/* 40 MHz */
-+		C(RGF_USER_CLKS_CTL_0, BIT_USER_CLKS_CAR_AHB_SW_SEL);
-+
- 		W(RGF_USER_CLKS_CTL_EXT_SW_RST_VEC_0, 0x3ff81f);
- 		W(RGF_USER_CLKS_CTL_EXT_SW_RST_VEC_1, 0xf);
+ 	if (info->attrs[HWSIM_ATTR_CHANNELS])
+@@ -2456,7 +2463,8 @@ static int hwsim_create_radio_nl(struct sk_buff *msg, struct genl_info *info)
  	}
-@@ -458,13 +471,13 @@ static int wil_target_reset(struct wil6210_priv *wil)
- 	/* wait until device ready. typical time is 200..250 msec */
- 	do {
- 		msleep(RST_DELAY);
--		hw_state = R(RGF_USER_HW_MACHINE_STATE);
-+		x = R(RGF_USER_HW_MACHINE_STATE);
- 		if (delay++ > RST_COUNT) {
- 			wil_err(wil, "Reset not completed, hw_state 0x%08x\n",
--				hw_state);
-+				x);
- 			return -ETIME;
- 		}
--	} while (hw_state != HW_MACHINE_BOOT_DONE);
-+	} while (x != HW_MACHINE_BOOT_DONE);
  
- 	/* TODO: Erez check rev_id != 1 */
- 	if (!is_sparrow && (rev_id != 1))
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index 7ffaf2f..18f8729 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -117,6 +117,8 @@ struct RGF_ICR {
- 	#define BIT_USER_USER_ICR_SW_INT_2	BIT(18)
- #define RGF_USER_CLKS_CTL_EXT_SW_RST_VEC_0	(0x880c18)
- #define RGF_USER_CLKS_CTL_EXT_SW_RST_VEC_1	(0x880c2c)
-+#define RGF_USER_SPARROW_M_4			(0x880c50) /* Sparrow */
-+	#define BIT_SPARROW_M_4_SEL_SLEEP_OR_REF	BIT(2)
+ 	return mac80211_hwsim_create_radio(chans, alpha2, regd, reg_strict,
+-					   p2p_device, use_chanctx);
++					   p2p_device, use_chanctx,
++					   destroy_on_close, info->snd_portid);
+ }
  
- #define RGF_DMA_EP_TX_ICR		(0x881bb4) /* struct RGF_ICR */
- 	#define BIT_DMA_EP_TX_ICR_TX_DONE	BIT(0)
-@@ -152,6 +154,10 @@ struct RGF_ICR {
- #define RGF_MAC_MTRL_COUNTER_0		(0x886aa8)
+ static int hwsim_destroy_radio_nl(struct sk_buff *msg, struct genl_info *info)
+@@ -2514,6 +2522,42 @@ static const struct genl_ops hwsim_ops[] = {
+ 	},
+ };
  
- #define RGF_CAF_ICR			(0x88946c) /* struct RGF_ICR */
-+#define RGF_CAF_OSC_CONTROL		(0x88afa4)
-+	#define BIT_CAF_OSC_XTAL_EN		BIT(0)
-+#define RGF_CAF_PLL_LOCK_STATUS		(0x88afec)
-+	#define BIT_CAF_OSC_DIG_XTAL_STABLE	BIT(0)
++struct urelease_work {
++	struct work_struct w;
++	u32 portid;
++};
++
++static void urelease_event_work(struct work_struct *work)
++{
++	struct urelease_work *w = container_of(work, struct urelease_work, w);
++	struct mac80211_hwsim_data *entry, *tmp;
++
++	spin_lock_bh(&hwsim_radio_lock);
++	list_for_each_entry_safe(entry, tmp, &hwsim_radios, list) {
++		if (entry->destroy_on_close && w->portid == entry->portid) {
++			list_del(&entry->list);
++			spin_unlock_bh(&hwsim_radio_lock);
++			mac80211_hwsim_destroy_radio(entry);
++			spin_lock_bh(&hwsim_radio_lock);
++		}
++	}
++	spin_unlock_bh(&hwsim_radio_lock);
++
++	kfree(w);
++}
++
++static void remove_user_radios(u32 portid)
++{
++	struct urelease_work *w;
++
++	w = kmalloc(sizeof(*w), GFP_ATOMIC);
++	if (w) {
++		INIT_WORK((struct work_struct *)w, urelease_event_work);
++		w->portid = portid;
++		schedule_work((struct work_struct *)w);
++	}
++}
++
+ static int mac80211_hwsim_netlink_notify(struct notifier_block *nb,
+ 					 unsigned long state,
+ 					 void *_notify)
+@@ -2523,6 +2567,8 @@ static int mac80211_hwsim_netlink_notify(struct notifier_block *nb,
+ 	if (state != NETLINK_URELEASE)
+ 		return NOTIFY_DONE;
  
- /* popular locations */
- #define HOST_MBOX   HOSTADDR(RGF_USER_USER_SCRATCH_PAD)
++	remove_user_radios(notify->portid);
++
+ 	if (notify->portid == wmediumd_portid) {
+ 		printk(KERN_INFO "mac80211_hwsim: wmediumd released netlink"
+ 		       " socket, switching to perfect channel medium\n");
+@@ -2676,7 +2722,7 @@ static int __init init_mac80211_hwsim(void)
+ 		err = mac80211_hwsim_create_radio(channels, reg_alpha2,
+ 						  regd, reg_strict,
+ 						  support_p2p_device,
+-						  channels > 1);
++						  channels > 1, false, 0);
+ 		if (err < 0)
+ 			goto out_free_radios;
+ 	}
+diff --git a/drivers/net/wireless/mac80211_hwsim.h b/drivers/net/wireless/mac80211_hwsim.h
+index c9d0315..b96d867 100644
+--- a/drivers/net/wireless/mac80211_hwsim.h
++++ b/drivers/net/wireless/mac80211_hwsim.h
+@@ -111,6 +111,8 @@ enum {
+  * @HWSIM_ATTR_USE_CHANCTX: used with the %HWSIM_CMD_CREATE_RADIO
+  *	command to force use of channel contexts even when only a
+  *	single channel is supported
++ * @HWSIM_ATTR_DESTROY_RADIO_ON_CLOSE: used with the %HWSIM_CMD_CREATE_RADIO
++ *	command to force radio removal when process that created the radio dies
+  * @__HWSIM_ATTR_MAX: enum limit
+  */
+ 
+@@ -132,6 +134,7 @@ enum {
+ 	HWSIM_ATTR_REG_STRICT_REG,
+ 	HWSIM_ATTR_SUPPORT_P2P_DEVICE,
+ 	HWSIM_ATTR_USE_CHANCTX,
++	HWSIM_ATTR_DESTROY_RADIO_ON_CLOSE,
+ 	__HWSIM_ATTR_MAX,
+ };
+ #define HWSIM_ATTR_MAX (__HWSIM_ATTR_MAX - 1)
 -- 
-2.1.0
+1.8.3.1
 
