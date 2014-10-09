@@ -1,79 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42960 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750979AbaJ0PaO (ORCPT
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:35062 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751966AbaJINhM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Oct 2014 11:30:14 -0400
-Date: Mon, 27 Oct 2014 11:15:09 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Guenter Roeck <linux@roeck-us.net>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>, linux-wireless@vger.kernel.org,
-	zajec5@gmail.com, arend@broadcom.com, arnd@arndb.de,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] bcma: fix build when CONFIG_OF_ADDRESS is not set
-Message-ID: <20141027151509.GA19976@tuxdriver.com> (sfid-20141027_163202_392633_1833C389)
-References: <5436D3CF.2030506@hauke-m.de>
- <1412890781-24160-1-git-send-email-hauke@hauke-m.de>
- <20141025203653.GA10716@roeck-us.net>
+	Thu, 9 Oct 2014 09:37:12 -0400
+Received: by mail-wi0-f173.google.com with SMTP id fb4so13170754wid.0
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Oct 2014 06:37:11 -0700 (PDT)
+Received: from wks001.net.isedev.eu ([2a01:e34:ec00:2830:c617:feff:fe63:e124])
+        by mx.google.com with ESMTPSA id d6sm5633614wiz.0.2014.10.09.06.37.09
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 09 Oct 2014 06:37:10 -0700 (PDT)
+From: ISE Development <isedev@gmail.com>
+To: linux-wireless@vger.kernel.org
+Reply-To: isedev@gmail.com
+Subject: BCM4312 / b43 DMA transmission sequence errors
+Date: Thu, 09 Oct 2014 15:37:09 +0200
+Message-ID: <5048348.6LQ0j9FUOS@wks001.net.isedev.eu> (sfid-20141009_153716_597222_B6D2B889)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20141025203653.GA10716@roeck-us.net>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Yes, I have it queued.  Things have been delayed due to my recent
-travels, etc.
+In March 2013, I submitted a patch to workaround some DMA transmission sequence errors (see mailing list archive for messages with the same title as this one). The patch allowed the b43 driver to recover gracefully from out of sequence txstatus responses from the hardware (BCM4312 in my case). 
 
-On Sat, Oct 25, 2014 at 01:36:53PM -0700, Guenter Roeck wrote:
-> On Thu, Oct 09, 2014 at 11:39:41PM +0200, Hauke Mehrtens wrote:
-> > Commit 2101e533f41a ("bcma: register bcma as device tree driver")
-> > introduces a hard dependency on OF_ADDRESS into the bcma driver.
-> > OF_ADDRESS is specifically disabled for the sparc architecture.
-> > This results in the following error when building sparc64:allmodconfig.
-> > 
-> > drivers/bcma/main.c: In function 'bcma_of_find_child_device':
-> > drivers/bcma/main.c:150:3: error: implicit declaration of function 'of_translate_address'
-> > 
-> > Fixes: 2101e533f41a ("bcma: register bcma as device tree driver")
-> > Reported-by: Guenter Roeck <linux@roeck-us.net>
-> > Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
-> 
-> The upstream kernel still does not include this patch, and the sparc64 build
-> is still broken.
-> 
-> Is this patch on its way upstream ?
-> 
-> Guenter
-> 
-> > ---
-> >  drivers/bcma/main.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-> > index d1656c2..1000955 100644
-> > --- a/drivers/bcma/main.c
-> > +++ b/drivers/bcma/main.c
-> > @@ -132,7 +132,7 @@ static bool bcma_is_core_needed_early(u16 core_id)
-> >  	return false;
-> >  }
-> >  
-> > -#ifdef CONFIG_OF
-> > +#if defined(CONFIG_OF) && defined(CONFIG_OF_ADDRESS)
-> >  static struct device_node *bcma_of_find_child_device(struct platform_device *parent,
-> >  						     struct bcma_device *core)
-> >  {
-> > -- 
-> > 1.9.1
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > Please read the FAQ at  http://www.tux.org/lkml/
-> > 
-> > 
-> 
+I have recently been looking into the problem further and have noticed the correlation below. Currently, this means nothing to me but I am sharing it in the hope that somebody with greater knowledge of the b43 driver, firmware and/or underlying devices might have an epiphany.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+On a Fedora 20 system, I rebuilt the driver with CONFIG_B43_DEBUG enabled and modified the out of sequence workaround code in b43_dma_handle_txstatus() slightly to report every error and include the txstatus cookie and sequence number in the debug message.
+
+I then correlated the debug messages with the debugfs txstatus contents:
+
+Debug message:
+[ 2830.717129] b43-phy0 debug: Out of order TX status report on DMA ring 1. Expected 138, but got 134 (cookie: 0x2086, seq: 0x01C3).
+[ 2830.919202] b43-phy0 debug: Skip on DMA ring 1 slot 138 (cookie: 0x208C, seq: 0x01C4).
+
+/sys/kernel/debug/b43/txstatus:
+074 | 0x2084 | 0x01C1 | 0x00 | 0x1 | 0x0 | 0 | 0 | 0 | 0 | 1
+075 | 0x2086 | 0x01C2 | 0x00 | 0x1 | 0x0 | 0 | 0 | 0 | 0 | 1
+076 | 0x2088 | 0x01C3 | 0x00 | 0x1 | 0x0 | 0 | 0 | 0 | 0 | 0
+077 | 0x2086 | 0x01C3 | 0x00 | 0x0 | 0x0 | 4 | 0 | 0 | 0 | 0
+078 | 0x208C | 0x01C4 | 0x00 | 0x1 | 0x0 | 0 | 0 | 0 | 0 | 1
+079 | 0x208E | 0x01C5 | 0x00 | 0x1 | 0x0 | 0 | 0 | 0 | 0 | 0
+
+-> Two txstatus reports for frame 0x01C3, the second indicating suppression (channel mismatch) and containing a wrong (but valid) cookie value.
+-> The hardware does not report on whatever was sent with cookie 0x208A (slot 138).
+
+--
+Debug message:
+[ 3097.631000] b43-phy0 debug: Skip on DMA ring 1 slot 138 (cookie: 0x208C, seq: 0x03C0).
+
+/sys/kernel/debug/b43/txstatus:
+019 | 0x2086 | 0x03BE | 0x00 | 0x2 | 0x0 | 0 | 0 | 0 | 0 | 1
+020 | 0x2088 | 0x03BF | 0x00 | 0x2 | 0x0 | 0 | 0 | 0 | 0 | 1
+021 | 0xABC4 | 0x03BF | 0x00 | 0xF | 0x3 | 4 | 0 | 1 | 0 | 1
+022 | 0x208C | 0x03C0 | 0x00 | 0x1 | 0x0 | 0 | 0 | 0 | 0 | 1
+023 | 0x208E | 0x03C1 | 0x00 | 0x3 | 0x0 | 0 | 0 | 0 | 0 | 1
+
+-> Two txstatus reports for frame 0x03BF, the second indicating suppression (channel mismatch) and containing a wrong (and invalid) cookie value. The second report is dropped in b43_handle_txstatus() as the intermediate flag is set (hence, no invalid cookie debug message).
+-> Again, the hardware has dropped whatever was sent with cookie 0x208A (slot 138).
+
+--
+Debug message:
+[ 3157.342173] b43-phy0 debug: Skip on DMA ring 1 slot 138 (cookie: 0x208C, seq: 0x04BE).
+
+/sys/kernel/debug/b43/txstatus:
+076 | 0x2084 | 0x04BB | 0x00 | 0x1 | 0x0 | 0 | 0 | 0 | 0 | 1
+077 | 0x2086 | 0x04BC | 0x00 | 0x1 | 0x0 | 0 | 0 | 0 | 0 | 1
+078 | 0x2088 | 0x04BD | 0x00 | 0x1 | 0x0 | 0 | 0 | 0 | 0 | 1
+079 | 0x9A39 | 0x04BD | 0x00 | 0x5 | 0xC | 4 | 1 | 1 | 1 | 0
+080 | 0x208C | 0x04BE | 0x00 | 0x1 | 0x0 | 0 | 0 | 0 | 0 | 1
+081 | 0x208E | 0x04BF | 0x00 | 0x1 | 0x0 | 0 | 0 | 0 | 0 | 1
+
+-> Same pattern (channel mismatch suppression for slot 136 and no report for slot 138).
+
+--
+Debug message:
+[ 3208.562873] b43-phy0 debug: TX-status contains invalid cookie: 0x2973
+[ 3209.064515] b43-phy0 debug: Skip on DMA ring 1 slot 208 (cookie: 0x20D2, seq: 0x04E0).
+
+/sys/kernel/debug/b43/txstatus:
+096 | 0x20CC | 0x04DE | 0x00 | 0x1 | 0x0 | 0 | 0 | 0 | 0 | 1
+097 | 0x20CE | 0x04DF | 0x00 | 0x1 | 0x0 | 0 | 0 | 0 | 0 | 1
+098 | 0x2973 | 0x04DF | 0x00 | 0x2 | 0x3 | 4 | 0 | 0 | 0 | 0
+099 | 0x20D2 | 0x04E0 | 0x00 | 0x1 | 0x0 | 0 | 0 | 0 | 0 | 1
+
+-> Same pattern as first case above, but this time the cookie is invalid. Also, now slots 206 (suppressed) / 208 (dropped).
+
+
+On my system, these errors only occur for slots 136/138 and 206/208. The large majority of errors (80-90%) are on slots 136/138.
+
+Every such error (invalid cookie, DMA skip, out of order TX status) that I have analysed is associated with a channel mismatch suppression response from the firmware/hardware.
+
+-- isedev
