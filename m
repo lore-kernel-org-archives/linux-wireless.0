@@ -1,48 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:20017 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751081AbaJ1KbQ (ORCPT
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:65053 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752706AbaJIOpw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2014 06:31:16 -0400
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <wireless-regdb@lists.infradead.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 02/21] wireless-regdb: Add regulatory rules for Bermuda (BM)
-Date: Tue, 28 Oct 2014 12:29:16 +0200
-Message-ID: <1414492175-13830-2-git-send-email-jouni@qca.qualcomm.com> (sfid-20141028_113121_966653_1A0DA485)
-In-Reply-To: <1414492175-13830-1-git-send-email-jouni@qca.qualcomm.com>
-References: <1414492175-13830-1-git-send-email-jouni@qca.qualcomm.com>
+	Thu, 9 Oct 2014 10:45:52 -0400
+Received: by mail-wi0-f177.google.com with SMTP id fb4so2035647wid.4
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Oct 2014 07:45:51 -0700 (PDT)
+Date: Thu, 9 Oct 2014 16:45:48 +0200
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@rivierawaves.com>
+Subject: Re: [PATCH] mac80211/trivial: fix typo in starting baserate for
+ rts_cts_rate_idx
+Message-ID: <20141009144548.GD20644@magnum.frso.rivierawaves.com> (sfid-20141009_164557_229286_3D756572)
+References: <1412690018-18429-1-git-send-email-karl.beldan@gmail.com>
+ <1412845586.1828.27.camel@jlt4.sipsolutions.net>
+ <20141009140636.GC20644@magnum.frso.rivierawaves.com>
+ <1412864103.1828.48.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1412864103.1828.48.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Source is QCA's regulatory team's efforts.
+On Thu, Oct 09, 2014 at 04:15:03PM +0200, Johannes Berg wrote:
+> On Thu, 2014-10-09 at 16:06 +0200, Karl Beldan wrote:
+> > On Thu, Oct 09, 2014 at 11:06:26AM +0200, Johannes Berg wrote:
+> > > On Tue, 2014-10-07 at 15:53 +0200, Karl Beldan wrote:
+> > > > From: Karl Beldan <karl.beldan@rivierawaves.com>
+> > > 
+> > > Is that really trivial? It seems to have some impact on the code, but I
+> > > can't right now say exactly what the impact is. Can you describe it and
+> > > say whether I should add it to mac80211 or mac80211-next? For "trivial"
+> > > I'd probably say mac80211-next, but this might be more important than
+> > > that?
+> > > 
+> > The typo is clearly showing but the faulty behavior clearly demands more
+> > detail indeed.
+> > 
+> > It affects non-(V)HT rates and can lead to selecting an rts_cts rate
+> > that is not a basic rate or way superior to the reference rate (ATM
+> > rates[0] used for the 1st attempt of the protected frame data).
+> > E.g, assuming the drivers register growing (bitrate) sorted
+> > ieee80211_rate tables, having :
+> > - rates[0].idx == d'2 and basic_rates == b'10100
+> > will select rts_cts idx b'10011 & ~d'(BIT(2)-1), i.e. 1, likewise
+> > - rates[0].idx == d'2 and basic_rates == b'10001 
+> > will select rts_cts idx b'10000
+> > The first is not a basic rate and the second is > rates[0].
+> > 
+> > I hope it clarifies things enough.
+> 
+> Well, I'm still not sure which tree I should put it in, I guess?
+> 
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
----
- db.txt | 7 +++++++
- 1 file changed, 7 insertions(+)
-
-diff --git a/db.txt b/db.txt
-index be24c73..7a0b0dc 100644
---- a/db.txt
-+++ b/db.txt
-@@ -156,6 +156,13 @@ country BL: DFS-ETSI
- 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
- 	(5490 - 5710 @ 160), (27), DFS
+All I can say is that nor this faulty behavior nor the correspond fix
+are likely to cause a crash (we always tx registered rates).
  
-+country BM: DFS-FCC
-+	(2402 - 2472 @ 40), (30)
-+	(5170 - 5250 @ 80), (24), AUTO-BW
-+	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
-+	(5490 - 5730 @ 160), (24), DFS
-+	(5735 - 5835 @ 80), (30)
-+
- country BN: DFS-JP
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 80), (20), AUTO-BW
--- 
-1.9.1
-
+Karl
