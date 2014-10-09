@@ -1,43 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36216 "EHLO mx1.redhat.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:59505 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932812AbaJ2LwD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2014 07:52:03 -0400
-Date: Wed, 29 Oct 2014 12:48:46 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Cyril Brulebois <kibi@debian.org>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] wireless: rt2x00: add new rt2800usb device
-Message-ID: <20141029114846.GC2021@redhat.com> (sfid-20141029_125242_756349_6D7BD9BE)
-References: <1414510961-28920-1-git-send-email-kibi@debian.org>
- <20141029110214.GB2021@redhat.com>
- <20141029111224.GC29720@mraw.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20141029111224.GC29720@mraw.org>
+	id S1751043AbaJISkm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Oct 2014 14:40:42 -0400
+Message-ID: <1412880033.1828.63.camel@jlt4.sipsolutions.net> (sfid-20141009_204045_279259_9245ED74)
+Subject: Re: [PATCH] cfg80211: Add support for ACS offloading
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Xu, Peng" <pxu@qca.qualcomm.com>
+Cc: "Park, Kyeyoon" <kyeyoonp@qca.qualcomm.com>,
+	cfg80211mac80211 <cfg80211mac80211@qca.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 09 Oct 2014 20:40:33 +0200
+In-Reply-To: <6c0aebecfa9d478ea43ba9c10236c19b@nasanexm01a.na.qualcomm.com>
+References: <1412373538-17690-1-git-send-email-kyeyoonp@qca.qualcomm.com>
+	 <1412847971.1828.42.camel@jlt4.sipsolutions.net>
+	 <6c0aebecfa9d478ea43ba9c10236c19b@nasanexm01a.na.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 29, 2014 at 12:12:24PM +0100, Cyril Brulebois wrote:
-> Stanislaw Gruszka <sgruszka@redhat.com> (2014-10-29):
-> > On Tue, Oct 28, 2014 at 04:42:41PM +0100, Cyril Brulebois wrote:
-> > > 0x1b75 0xa200 AirLive WN-200USB wireless 11b/g/n dongle
-> > > 
-> > > References: https://bugs.debian.org/766802
-> > > Reported-by: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
-> > 
-> > Was this patch tested by reporter? I would rather see Reported-and-tested-by tag :-)
-> 
-> The reporter confirmed the following trick worked:
-> 
->   # echo rt2800usb >> /etc/modules
->   # echo 'install rt2800usb /sbin/modprobe --ignore-install rt2800usb $CMDLINE_OPTS && echo 1b75 a200 > /sys/bus/usb/drivers/rt2800usb/new_id' > /etc/modprobe.d/ralink.conf
->   # modprobe -r rt2800usb ; modprobe rt2800usb
+On Thu, 2014-10-09 at 17:38 +0000, Xu, Peng wrote:
 
-Ok, that's fine .
+> This change is originated from a problem caused by OBSS scan and ACS
+> feature in the driver. When SAP is started, hostapd will do an OBSS
+> scan based on the channel setting in hostapd.conf, if the wlan driver
+> has the ACS capability, it may choose a different channel. Even it
+> notifies hostapd about the channel selection, the OBSS scan result
+> may become invalid if a different channel is selected and SAP may end
+> up operating in not desired mode.
+> This change will allow the wlan driver do the ACS and decide a
+> channel, once hostapd is notified, it can then do OBSS scan using that
+> channel. ACS operation is done during SAP starting up, beacon is sent
+> after channel is selected by driver. 
 
-Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
+All of this may be true, but I was asking why this has to be part of
+START_AP, and that's not answering that question.
+
+johannes
 
