@@ -1,47 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f48.google.com ([209.85.215.48]:49235 "EHLO
-	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751017AbaJLLGD (ORCPT
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:41043 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751975AbaJINAj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Oct 2014 07:06:03 -0400
-Received: by mail-la0-f48.google.com with SMTP id gi9so5300336lab.21
-        for <linux-wireless@vger.kernel.org>; Sun, 12 Oct 2014 04:06:01 -0700 (PDT)
+	Thu, 9 Oct 2014 09:00:39 -0400
+Received: by mail-wg0-f52.google.com with SMTP id a1so1202566wgh.35
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Oct 2014 06:00:38 -0700 (PDT)
+Date: Thu, 9 Oct 2014 15:00:35 +0200
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@rivierawaves.com>
+Subject: Re: [PATCH] cfg80211: set the rates mask in connection probes over
+ specified freq
+Message-ID: <20141009130035.GB20644@magnum.frso.rivierawaves.com> (sfid-20141009_150042_319630_B310E907)
+References: <1412674938-13071-1-git-send-email-karl.beldan@gmail.com>
+ <1412847177.1828.33.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-In-Reply-To: <543A36A0.8090300@broadcom.com>
-References: <1413071551-15372-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
- <543A36A0.8090300@broadcom.com>
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-Date: Sun, 12 Oct 2014 13:05:40 +0200
-Message-ID: <CAFo99gY9dyzhuJe4LwiJKgRwLRU+uVKzLpscFrZw_xZDhVKEWA@mail.gmail.com> (sfid-20141012_130652_221084_5A3B8069)
-Subject: Re: [PATCH] net: wireless: brcm80211: brcmfmac: dhd_sdio.c: Cleaning
- up missing null-terminate in conjunction with strncpy
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	Daniel Kim <dekim@broadcom.com>,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	Network Development <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1412847177.1828.33.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2014-10-12 10:06 GMT+02:00 Arend van Spriel <arend@broadcom.com>:
-> On 12-10-14 01:52, Rickard Strandqvist wrote:
->> Replacing strncpy with strlcpy to avoid strings that lacks null terminate.
->> And changed from using strncpy to strlcpy to simplify code.
->
-> Looks good to me. Just two small process related remarks:
->
-> - It is sufficient to prefix the patch with brcmfmac (skip net:...).
-> - Send the patch to the wireless maintainer, ie. John Linville.
-
-Hi
-
-Sure, no problem.
-Sending a new patch in a moment...
-
-Kind regards
-Rickard Strandqvist
+On Thu, Oct 09, 2014 at 11:32:57AM +0200, Johannes Berg wrote:
+> On Tue, 2014-10-07 at 11:42 +0200, Karl Beldan wrote:
+> > From: Karl Beldan <karl.beldan@rivierawaves.com>
+> > 
+> > ATM, specifying the frequency when connecting sends a void 'supported
+> > rates' EID.
+> 
+> Seems like this should be a stable fix?
+> 
+Indeed, I forgot to Cc stable.
+ 
+Karl
