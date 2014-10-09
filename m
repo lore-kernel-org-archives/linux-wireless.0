@@ -1,70 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.neomailbox.net ([178.209.62.157]:39187 "EHLO
-	s3.neomailbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750977AbaJMGOT (ORCPT
+Received: from mail-wg0-f48.google.com ([74.125.82.48]:46336 "EHLO
+	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751118AbaJIQ07 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Oct 2014 02:14:19 -0400
-Message-ID: <543B6D48.5060807@meshcoding.com> (sfid-20141013_081430_825564_DA29F693)
-Date: Mon, 13 Oct 2014 08:12:24 +0200
-From: Antonio Quartulli <antonio@meshcoding.com>
+	Thu, 9 Oct 2014 12:26:59 -0400
+Received: by mail-wg0-f48.google.com with SMTP id k14so1725165wgh.19
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Oct 2014 09:26:53 -0700 (PDT)
+Date: Thu, 9 Oct 2014 18:26:50 +0200
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@rivierawaves.com>
+Subject: Re: [PATCH] cfg80211: set the rates mask in connection probes over
+ specified freq
+Message-ID: <20141009162616.GA27065@magnum.frso.rivierawaves.com> (sfid-20141009_182702_979811_53D0979D)
+References: <1412674938-13071-1-git-send-email-karl.beldan@gmail.com>
+ <1412847177.1828.33.camel@jlt4.sipsolutions.net>
+ <20141009130035.GB20644@magnum.frso.rivierawaves.com>
+ <1412861162.1828.45.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-To: Sourav <sourav.chakraborty@netcommwireless.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: how to achieve SSID isolation
-References: <543B1889.3040600@netcommwireless.com>
-In-Reply-To: <543B1889.3040600@netcommwireless.com>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="JgrQfLelclxQEP6eoVVAJqdMqBcntWhKQ"
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1412861162.1828.45.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---JgrQfLelclxQEP6eoVVAJqdMqBcntWhKQ
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+On Thu, Oct 09, 2014 at 03:26:02PM +0200, Johannes Berg wrote:
+> On Thu, 2014-10-09 at 15:00 +0200, Karl Beldan wrote:
+> > On Thu, Oct 09, 2014 at 11:32:57AM +0200, Johannes Berg wrote:
+> > > On Tue, 2014-10-07 at 11:42 +0200, Karl Beldan wrote:
+> > > > From: Karl Beldan <karl.beldan@rivierawaves.com>
+> > > > 
+> > > > ATM, specifying the frequency when connecting sends a void 'supported
+> > > > rates' EID.
+> > > 
+> > > Seems like this should be a stable fix?
+> > > 
+> > Indeed, I forgot to Cc stable.
+> 
+> Ok, I guess I can just add it.
+> 
+> Then again, maybe you can make a bit more verbose commit log, and check
+> what broke it?
+> 
+After a glimpse before leaving FWIU :
 
-On 13/10/14 02:10, Sourav wrote:
-> I understand that client isolation(in a single SSID is achieved using
-> "ap_isolate" parameter).
-> Is there any parameter in hostapd.conf to achieve SSID
-> isolation......i.e the a client connected to that SSID, can't talk to
-> any other clients connected to any other SSID?
->=20
-
-I think this is something you should easily solve at the layer "above"
-hostapd. Each SSID in hostapd is represented by an interface, therefore
-you need to prevent hosts connected to one to talk to hosts connected to
-the other..but this is not hostapd's role and it depends on your network
-configuration.
-
-Cheers,
-
---=20
-Antonio Quartulli
+- 6829c878 Jul 2009 - "cfg80211: emulate connect with auth/assoc"
+original code for 'cmd'
+ieee80211_build_preq_ies takes supported rates from sband->bitrates[].
+- 8dcb2003 Aug 2010 - "mac80211: Filter ProbeReq SuppRates based on TX
+rate mask"
+ieee80211_build_preq_ies takes a rate mask, hw_scan uses -1/sw_scan uses
+sdata->rc_rateidx_mask.
+- 34850ab2 Jul 2011 - "cfg80211: allow userspace to control supported
+rates in scan" add a "bitmap of rates to advertise" in the scan request.
+- 85a237fe Jul 2011 - "mac80211: implement scan supported rates"
+take the rate mask from 'cmd'
+- 3965ac00 Sep 2011 - "wireless: Fix rate mask for scan request"
+fix rate mask when 'cmd' has params.channel
 
 
---JgrQfLelclxQEP6eoVVAJqdMqBcntWhKQ
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
+.. and rate mask remains unset when 'cmd' has params.channel
+So I guess it started showing after 85a237fe, but the original cmd never
+filled a rate mask which started existing only after 34850ab ..
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
+ 
+Karl
 
-iQIcBAEBCAAGBQJUO21QAAoJEJgn97Bh2u9eRlcP/2DJpMbAvOd+UDnzbkLXtj4Y
-rWDQe+DwAzkxlIhiI3V5icvtXl47o3JiTWSq+65sJw4UHbSBv/kqDI9fMItgRYzK
-kORhGiyR2bg2ojjl8qFOH0wDhNxMKOfh+WszpyERCiCHCj8O8t5Y89swYvUWCYfI
-l4kceyvTety3FwR5eufgs6HBjnevbIbcQQroAD6JkJI4hjSsxcxgeVRtFiuQLUv2
-w0+0HfUAPCSxVf9axrp1rQnQLTmLV3eBckijGYLofHvpcqLRC5lG7s7OMXwJW3oG
-PrAxa81wn6tVuwqlJPnGr6yE9OmjrMttzXAoFzsbBawgXpERBfoDaPQfo3jpUeoD
-r7GK1KG8Pqu15yvdGrcYt9VDJdzZzooxIEddE9NRRrZoZvfX/OeGMDgz8dvS4q3Y
-9ixi6eoqoRYFpHRStYA43P5pjI8I6rISZHP8KtHdU32eYMyeTjoS/Fq+lXpd1Z7c
-cOdDB3VstLdqgAZ8uzgJy28rOSx8keIGjb0dFKECkzl8dgfuwOSg5I0mF6NFDSc0
-wtDGWgSS8Ysb0U3ZmFyT9GsG79VNGYrH7mcC+jT+ea3aA18l9MmEG5CkMHCUb2ZD
-jl1qqnE+QHlZheqDQrxfAgmbnTOIX36Iah4fRgye59flcEkmcK3u/piwH/yB27PZ
-sdz4ev17xf9+ymOLbFRF
-=u3In
------END PGP SIGNATURE-----
-
---JgrQfLelclxQEP6eoVVAJqdMqBcntWhKQ--
