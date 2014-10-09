@@ -1,62 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:50456 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750957AbaJTMel (ORCPT
+Received: from mail-ig0-f172.google.com ([209.85.213.172]:55647 "EHLO
+	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750942AbaJIKLy convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2014 08:34:41 -0400
-Received: by mail-la0-f46.google.com with SMTP id gi9so3790702lab.5
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2014 05:34:39 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 0/3] ath10k: speed up recovery
-Date: Mon, 20 Oct 2014 14:22:35 +0200
-Message-Id: <1413807758-30249-1-git-send-email-michal.kazior@tieto.com> (sfid-20141020_143444_429513_C3864DC5)
+	Thu, 9 Oct 2014 06:11:54 -0400
+Received: by mail-ig0-f172.google.com with SMTP id r2so11866927igi.17
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Oct 2014 03:11:53 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <54365985.1020104@broadcom.com>
+References: <1412843867-26563-1-git-send-email-zajec5@gmail.com>
+	<CACna6ry-+hzMJ4n5PG7GJq9fZ+zwU38HGt-xZkUqKEP8yX6avA@mail.gmail.com>
+	<54365985.1020104@broadcom.com>
+Date: Thu, 9 Oct 2014 12:11:53 +0200
+Message-ID: <CACna6ryTwBQQnbZg+CSvoYakb4DA1+FH7j-XwfuYmoDzJORenA@mail.gmail.com> (sfid-20141009_121157_748785_29FA9B3D)
+Subject: Re: [PATCH][RTF][RFC] brcmsmac: add workaround for old BCM4313
+ devices with Bluetooth
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Maximilian Engelhardt <maxi@daemonizer.de>,
+	Michael Tokarev <mjt@tls.msk.ru>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	brcm80211 development <brcm80211-dev-list@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Patch #1 fixes a bug I've found while testing
-patches #2 and #3. It's safe to cherry-pick it in
-case patches #2 and/or #3 aren't accepted or need
-a re-spin.
+On 9 October 2014 11:46, Arend van Spriel <arend@broadcom.com> wrote:
+> On 10/09/14 11:02, Rafał Miłecki wrote:
+>>
+>> On 9 October 2014 10:37, Rafał Miłecki<zajec5@gmail.com>  wrote:
+>>>
+>>> +       /* TODO: Fix the condition. Only for boards>= P250 */
+>>> +       if (ai_get_chip_id(wlc_hw->sih) == BCMA_CHIP_ID_BCM4313&&
+>>> (wlc_hw->boardflags&  BFL_FEM_BT)) {
+>>> +               pr_info("Applying BCM4313 WL/BT workaround\n");
+>>> +               ai_btcombo_p250_4313_war(wlc_hw->sih);
+>>> +       }
+>>
+>>
+>> This of course have to be checked in some hardware documentation for
+>> the correct condition. We already have some workaround (right above
+>> the newly added code) for boards with boardrev>= 0x1250. So my guess
+>> is the code I added applies to some other cards. The board this patch
+>> is supposed to fix is:
+>> board vendor: 14e4
+>> board type: 608
+>> board revision: 1109
+>> board flags: 402201
+>> board flags2: 884
+>> firmware revision: 262032c
+>>
+>> So whatever condition we will need it'll likely need to cover above
+>> case (maybe boardrev == 0x1109?).
+>
+>
+> Well, there is something fishy going on. The brcmsmac code looks like:
+>
+> if (bfl & BFL_FEM && chip == 4313) {
+>         if (!(boardrev >= 0x1250 && bfl & BFL_FEM_BT))
+>                 ai_epa_4313war(wlc_hw->sih);
+> }
 
-I've mainly used patch #2 to test reset and
-recovery. It's pretty handy for (stress-)testing.
-
-Patch #3 should improve recovery speed in some
-cases. Notably when there's a long chain of WMI
-commands involved which take a painfully long time
-to timeout/complete if firmware crashes mid-way.
-
-Note: Patches #2 and #3 depend on `ath10k: pci
-related fixes 2014-10-09`. Without the patchset
-patches #2 and #3 must not be applied. Patch #1 is
-fine though.
-
-v2:
- * add additional comments [Kalle]
- * rename new fw crash debugfs sub-command [Kalle]
- * fix crash [Janusz]
+Ohh, I didn't notice this negation at the beginning... Now meaning of
+my functions makes more sense. The old code it only for boardrev <
+0x1250 (plus other conditions). This new function has "p250" in its
+name, that may mean it's for boardrev >= 0x1250.
 
 
-Michal Kazior (3):
-  ath10k: fix possible bmi crash
-  ath10k: expose hw restart via debugfs
-  ath10k: speed up hw recovery
+> However the boardflags above (0x402201) only has BFL_FEM_BT set so this code
+> is never called. I have to ask if !BFL_FEM && BFL_FEM_BT is a valid
+> combination.
 
- drivers/net/wireless/ath/ath10k/ce.c     |  7 +++++++
- drivers/net/wireless/ath/ath10k/core.c   | 23 +++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/core.h   |  5 +++++
- drivers/net/wireless/ath/ath10k/debug.c  |  7 ++++++-
- drivers/net/wireless/ath/ath10k/htt_tx.c |  1 -
- drivers/net/wireless/ath/ath10k/mac.c    | 14 ++++++++++++--
- drivers/net/wireless/ath/ath10k/mac.h    |  1 +
- drivers/net/wireless/ath/ath10k/pci.c    |  3 +++
- drivers/net/wireless/ath/ath10k/txrx.c   |  3 ++-
- drivers/net/wireless/ath/ath10k/wmi.c    |  5 ++++-
- 10 files changed, 63 insertions(+), 6 deletions(-)
+Yeah, that's fishy. Maybe that new function ai_btcombo_p250_4313_war
+should be called if !BFL_FEM && BFL_FEM_BT? But it sounds weird.
 
 -- 
-1.8.5.3
-
+Rafał
