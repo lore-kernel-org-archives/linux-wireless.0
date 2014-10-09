@@ -1,62 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f49.google.com ([74.125.82.49]:37650 "EHLO
-	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751765AbaJYTlE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Oct 2014 15:41:04 -0400
-Received: by mail-wg0-f49.google.com with SMTP id x12so3131231wgg.8
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2014 12:41:02 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 25/31] staging: vt6655: mac80211 conversion: PSbIsNextTBTTWakeUp convert to mac80211
-Date: Sat, 25 Oct 2014 09:20:35 +0100
-Message-Id: <1414225241-5480-26-git-send-email-tvboxspy@gmail.com> (sfid-20141025_214108_766148_B0E68ABD)
-In-Reply-To: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
-References: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:58684 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753917AbaJIPj5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Oct 2014 11:39:57 -0400
+Message-ID: <1412869190.1828.58.camel@jlt4.sipsolutions.net> (sfid-20141009_174000_260865_6FC23144)
+Subject: Re: [PATCH v2] Add mpp get/dump commands
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Henning Rogge <hrogge@gmail.com>
+Cc: "linux-wireless @ vger . kernel . org"
+	<linux-wireless@vger.kernel.org>,
+	Henning Rogge <henning.rogge@fkie.fraunhofer.de>,
+	Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+Date: Thu, 09 Oct 2014 17:39:50 +0200
+In-Reply-To: <CAGnRvuoERgLuhJf4+2+PwOctVg-dzD4kPLiAsOYOuCzf+2FF4g@mail.gmail.com> (sfid-20141009_173602_692753_BE0EEE0F)
+References: <1410505183-7325-1-git-send-email-henning.rogge@fkie.fraunhofer.de>
+	 <1412865379.1828.52.camel@jlt4.sipsolutions.net>
+	 <CAGnRvuoERgLuhJf4+2+PwOctVg-dzD4kPLiAsOYOuCzf+2FF4g@mail.gmail.com>
+	 (sfid-20141009_173602_692753_BE0EEE0F)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wake up to listen to next beacon when struct ieee80211_conf -> listen_interval == 1
+On Thu, 2014-10-09 at 17:35 +0200, Henning Rogge wrote:
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/power.c | 19 ++++++-------------
- 1 file changed, 6 insertions(+), 13 deletions(-)
+> Had to change it to make the source compile... so next time change it,
+> but not add it to the commit?
 
-diff --git a/drivers/staging/vt6655/power.c b/drivers/staging/vt6655/power.c
-index fe33bb2..5371802 100644
---- a/drivers/staging/vt6655/power.c
-+++ b/drivers/staging/vt6655/power.c
-@@ -327,21 +327,14 @@ PSbIsNextTBTTWakeUp(
- )
- {
- 	struct vnt_private *pDevice = hDeviceContext;
--	PSMgmtObject        pMgmt = pDevice->pMgmt;
-+	struct ieee80211_hw *hw = pDevice->hw;
-+	struct ieee80211_conf *conf = &hw->conf;
- 	bool bWakeUp = false;
- 
--	if (pMgmt->wListenInterval >= 2) {
--		if (pMgmt->wCountToWakeUp == 0)
--			pMgmt->wCountToWakeUp = pMgmt->wListenInterval;
--
--		pMgmt->wCountToWakeUp--;
--
--		if (pMgmt->wCountToWakeUp == 1) {
--			// Turn on wake up to listen next beacon
--			MACvRegBitsOn(pDevice->PortOffset, MAC_REG_PSCTL, PSCTL_LNBCN);
--			bWakeUp = true;
--		}
--
-+	if (conf->listen_interval == 1) {
-+		/* Turn on wake up to listen next beacon */
-+		MACvRegBitsOn(pDevice->PortOffset, MAC_REG_PSCTL, PSCTL_LNBCN);
-+		bWakeUp = true;
- 	}
- 
- 	return bWakeUp;
--- 
-1.9.1
+Yeah, see over on the thread with Lorenzo as well, where I explained
+this. I just copy nl80211.h from the kernel tree to make sure no
+mismatches happen.
+
+johannes
 
