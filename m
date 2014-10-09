@@ -1,58 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:37191 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751334AbaJGNsH (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:46417 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751161AbaJIIMH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Oct 2014 09:48:07 -0400
-Message-ID: <5433EF3A.5090504@candelatech.com> (sfid-20141007_154811_467885_11E4EC12)
-Date: Tue, 07 Oct 2014 06:48:42 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/3] mac-hwsim:  add ethtool stats support.
-References: <1411680140-20208-1-git-send-email-greearb@candelatech.com>	 <1411680140-20208-2-git-send-email-greearb@candelatech.com>	 (sfid-20140925_232229_629577_D0F1A28C) <1412671568.1825.1.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1412671568.1825.1.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Thu, 9 Oct 2014 04:12:07 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH 2/5] ath9k: Use configurable timeout for flush
+Date: Thu,  9 Oct 2014 13:42:49 +0530
+Message-Id: <1412842372-17628-3-git-send-email-sujith@msujith.org> (sfid-20141009_101217_051119_883CD7E7)
+In-Reply-To: <1412842372-17628-1-git-send-email-sujith@msujith.org>
+References: <1412842372-17628-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/07/2014 01:46 AM, Johannes Berg wrote:
-> On Thu, 2014-09-25 at 14:22 -0700, greearb@candelatech.com wrote:
->
->> +static const char mac80211_hwsim_gstrings_stats[][ETH_GSTRING_LEN] = {
->> +	"tx_pkts_nic",
->> +	"tx_bytes_nic",
->> +	"rx_pkts_nic",
->> +	"rx_bytes_nic",
->> +	"d_tx_dropped",
->> +	"d_tx_failed",
->> +	"d_ps_mode",
->> +	"d_group",
->> +	"d_tx_power",
->
-> What's that d_ prefix?
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Stats from the driver v/s from the mac80211 stack.  Basically, it
-mimics how I did ath9k, ath9k_htc, and ath10k stats (though
-not sure ath10k made it upstream yet).
+The timeout value for flushing the TX queues
+is hardcoded at 200ms right now. Use a channel
+context-specific value instead to allow adjustments
+to the timeout in case MCC is enabled.
 
-The first 4 match those wifi drivers as well as some Intel wired
-NICs.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h   | 1 +
+ drivers/net/wireless/ath/ath9k/channel.c | 1 +
+ drivers/net/wireless/ath/ath9k/main.c    | 9 ++++++++-
+ 3 files changed, 10 insertions(+), 1 deletion(-)
 
-It doesn't matter a huge amount if you want to change the names,
-but it makes user-space stats reporting easier if you would leave
-them the same...
-
-Thanks,
-Ben
-
->
-> johannes
->
-
-
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index bc90fab..43c1987 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -345,6 +345,7 @@ struct ath_chanctx {
+ 	u64 tsf_val;
+ 	u32 last_beacon;
+ 
++	int flush_timeout;
+ 	u16 txpower;
+ 	bool offchannel;
+ 	bool stopped;
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index 74a5c27..5045b10 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -117,6 +117,7 @@ void ath_chanctx_init(struct ath_softc *sc)
+ 		cfg80211_chandef_create(&ctx->chandef, chan, NL80211_CHAN_HT20);
+ 		INIT_LIST_HEAD(&ctx->vifs);
+ 		ctx->txpower = ATH_TXPOWER_MAX;
++		ctx->flush_timeout = HZ / 5; /* 200ms */
+ 		for (j = 0; j < ARRAY_SIZE(ctx->acq); j++)
+ 			INIT_LIST_HEAD(&ctx->acq[j]);
+ 	}
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 5d54f39..81a20de 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2034,7 +2034,7 @@ void __ath9k_flush(struct ieee80211_hw *hw, u32 queues, bool drop)
+ 	struct ath_softc *sc = hw->priv;
+ 	struct ath_hw *ah = sc->sc_ah;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+-	int timeout = HZ / 5; /* 200 ms */
++	int timeout;
+ 	bool drain_txq;
+ 
+ 	cancel_delayed_work_sync(&sc->tx_complete_work);
+@@ -2049,6 +2049,13 @@ void __ath9k_flush(struct ieee80211_hw *hw, u32 queues, bool drop)
+ 		return;
+ 	}
+ 
++	spin_lock_bh(&sc->chan_lock);
++	timeout = sc->cur_chan->flush_timeout;
++	spin_unlock_bh(&sc->chan_lock);
++
++	ath_dbg(common, CHAN_CTX,
++		"Flush timeout: %d\n", jiffies_to_msecs(timeout));
++
+ 	if (wait_event_timeout(sc->tx_wait, !ath9k_has_tx_pending(sc),
+ 			       timeout) > 0)
+ 		drop = false;
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.1.2
 
