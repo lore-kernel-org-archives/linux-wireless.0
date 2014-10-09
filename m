@@ -1,43 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f43.google.com ([74.125.82.43]:53866 "EHLO
-	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751772AbaJSLu0 (ORCPT
+Received: from mail-vc0-f171.google.com ([209.85.220.171]:56358 "EHLO
+	mail-vc0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750705AbaJIFo1 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Oct 2014 07:50:26 -0400
-Received: by mail-wg0-f43.google.com with SMTP id m15so3570768wgh.26
-        for <linux-wireless@vger.kernel.org>; Sun, 19 Oct 2014 04:50:25 -0700 (PDT)
+	Thu, 9 Oct 2014 01:44:27 -0400
+Received: by mail-vc0-f171.google.com with SMTP id hy10so409804vcb.30
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Oct 2014 22:44:27 -0700 (PDT)
 MIME-Version: 1.0
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Sun, 19 Oct 2014 17:20:05 +0530
-Message-ID: <CABPxzYJXPbmrfrgyoE5X9UO-3LQQVnXYtpz3x1Sd-fhts-Ns-g@mail.gmail.com> (sfid-20141019_135039_580405_D4E0A62A)
-Subject: SMPS for AP mode confoguration
-To: "hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <21557.20300.648468.965143@gargle.gargle.HOWL>
+References: <etPan.5433ced3.74b0dc51.2d48@Mac-Pro.local>
+	<CA+BoTQkvUkdkWDLOzu2cz6C6SGWFL2SCgwMDLf=ruaFwP9umjg@mail.gmail.com>
+	<21557.20300.648468.965143@gargle.gargle.HOWL>
+Date: Thu, 9 Oct 2014 07:44:26 +0200
+Message-ID: <CA+BoTQntkp4_RJuhV1A6eH+mHsJZoy0-jj-jEP161O3nm0wn9Q@mail.gmail.com> (sfid-20141009_074431_332771_62A48D8D)
+Subject: Re: How to know the information about RTS reception in mac80211 or
+ device driver
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Sujith Manoharan <sujith@msujith.org>
+Cc: Okhwan Lee <ohlee@mwnl.snu.ac.kr>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On 8 October 2014 16:50, Sujith Manoharan <sujith@msujith.org> wrote:
+> Michal Kazior wrote:
+>> I think you've just found an ath10k bug.
+>>
+>> I've been running through Rx code lately. I was looking at
+>> htt_rx_mpdu_status and noticed it was a bit greedy. I then recalled
+>> someone was complaining about RTS reception.
+>
+> Maybe the RX filter to receive control frames is not set properly in the FW ?
+> ath10k doesn't seem to use WMI_10X_PDEV_PARAM_RX_FILTER.
 
-We are testing SMPS functionality for AP mode. The driver conveys its
-capabilities through setting the HT capability which can be set to 0-3.
-
-I wanted to convey support for both Dynamic and Static Powersave
-and then control the config through hostapd.conf file. Currently this is
-not possible.From driver i can only advertize support for static (or) dynamic
-not both (HW_SUPPORTS_* is a different thing which is used in
-doing checks at debugfs level).
-
-So if i wanted to configure different modes from hostapd.conf, i
-have to change the driver settings as well.
-
-Shouldn't it be the other way around, based on driver's _HW_ flags
-we should convey the capabilities to user-space  (currently we use
-ht_cap for this) and it will configure the mode from the configuration
-file.  I think the design of SMPS configuration should be changed.
+I suspect ath10k is dropping RTS frames in
+ath10k_htt_rx_amsdu_allowed() now because RX_ATTENTION_FLAGS_MGMT_TYPE
+includes management, control and null function frames. I'm yet to
+confirm what ath10k really ends up dropping now though.
 
 
--- 
-Thanks,
-Regards,
-Chaitanya T K.
+Michał
