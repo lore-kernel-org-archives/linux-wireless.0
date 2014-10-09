@@ -1,41 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:59164 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751002AbaJIUtS (ORCPT
+Received: from mailrelay005.isp.belgacom.be ([195.238.6.171]:43623 "EHLO
+	mailrelay005.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751240AbaJISge (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2014 16:49:18 -0400
-Received: by mail-wg0-f42.google.com with SMTP id z12so2315180wgg.25
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Oct 2014 13:49:16 -0700 (PDT)
-Date: Thu, 9 Oct 2014 22:49:12 +0200
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@rivierawaves.com>
-Subject: Re: [PATCH] cfg80211: set the rates mask in connection probes over
- specified freq
-Message-ID: <20141009204912.GB19745@gobelin> (sfid-20141009_224921_838348_FBE559DF)
-References: <1412674938-13071-1-git-send-email-karl.beldan@gmail.com>
- <1412847177.1828.33.camel@jlt4.sipsolutions.net>
- <20141009130035.GB20644@magnum.frso.rivierawaves.com>
- <1412861162.1828.45.camel@jlt4.sipsolutions.net>
- <20141009162616.GA27065@magnum.frso.rivierawaves.com>
- <1412879793.1828.61.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1412879793.1828.61.camel@jlt4.sipsolutions.net>
+	Thu, 9 Oct 2014 14:36:34 -0400
+From: Fabian Frederick <fabf@skynet.be>
+To: linux-kernel@vger.kernel.org
+Cc: Fabian Frederick <fabf@skynet.be>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH 1/1 net-next] mac80211: directly return ieee80211_vif_use_reserved_context()
+Date: Thu,  9 Oct 2014 20:36:22 +0200
+Message-Id: <1412879782-8818-1-git-send-email-fabf@skynet.be> (sfid-20141009_203702_764558_8334F737)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 09, 2014 at 08:36:33PM +0200, Johannes Berg wrote:
-> Heh, so I guess this goes way back ... what does it actually affect
-> really though? only connections with iw, which should really not be done
-> that much? potentially wpa_s with wext, though I'm not even sure that
-> works?
-> 
-For wext I wouldn't know.
+No need to store ieee80211_vif_use_reserved_context result and test it before returning.
 
-> Either way - is it worth for 3.18/stable?
-> 
-Your call.
+Signed-off-by: Fabian Frederick <fabf@skynet.be>
+---
+ net/mac80211/cfg.c | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index fb6a150..c76b457 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2850,11 +2850,7 @@ static int __ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
+ 		if (sdata->reserved_ready)
+ 			return 0;
  
-Karl
+-		err = ieee80211_vif_use_reserved_context(sdata);
+-		if (err)
+-			return err;
+-
+-		return 0;
++		return ieee80211_vif_use_reserved_context(sdata);
+ 	}
+ 
+ 	if (!cfg80211_chandef_identical(&sdata->vif.bss_conf.chandef,
+-- 
+1.9.3
+
