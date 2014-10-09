@@ -1,69 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f182.google.com ([209.85.213.182]:41903 "EHLO
-	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751311AbaJIIVN (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:47694 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750942AbaJIIMC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2014 04:21:13 -0400
-MIME-Version: 1.0
-In-Reply-To: <54363ED0.605@broadcom.com>
-References: <53FDACD1.8090805@msgid.tls.msk.ru>
-	<2326963.udog5tteBt@eisbaer>
-	<542A8092.9090602@broadcom.com>
-	<1527190.sqFmD6XRNJ@eisbaer>
-	<54363ED0.605@broadcom.com>
-Date: Thu, 9 Oct 2014 10:21:12 +0200
-Message-ID: <CACna6rw3XgdJz0uKkAuas8RTzozTdFp2mgF5g1uo7LHJVSMt4g@mail.gmail.com> (sfid-20141009_102128_926426_54201F9F)
-Subject: Re: BCM4313 & brcmsmac & 3.12: only semi-working?
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Maximilian Engelhardt <maxi@daemonizer.de>,
-	Michael Tokarev <mjt@tls.msk.ru>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	brcm80211 development <brcm80211-dev-list@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 9 Oct 2014 04:12:02 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH 1/5] ath9k: Clear NoA schedule properly
+Date: Thu,  9 Oct 2014 13:42:48 +0530
+Message-Id: <1412842372-17628-2-git-send-email-sujith@msujith.org> (sfid-20141009_101212_268613_7CC2015A)
+In-Reply-To: <1412842372-17628-1-git-send-email-sujith@msujith.org>
+References: <1412842372-17628-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9 October 2014 09:52, Arend van Spriel <arend@broadcom.com> wrote:
-> I have been staring at differences brcmsmac and our internal driver (which
-> wl is derived from as well). Would you be able to make an mmiotrace loading
-> wl and brcmsmac.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Arend,
+When an active context transitions to inactive
+state, the NoA schedule needs to be removed
+for the context that has beaconing enabled.
+Not doing this will affect p2p clients.
 
-As you noticed earlier, this is a WiFi card with BT. I've checked
-siutils.c from SDK 7.14.43.7 (got it from Netgear R8000) and it has
-three BCM4313 workarounds:
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/channel.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index 709facc..74a5c27 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -356,6 +356,21 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 				"Move chanctx state from WAIT_FOR_TIMER to WAIT_FOR_BEACON\n");
+ 		}
+ 
++		/*
++		 * When a context becomes inactive, for example,
++		 * disassociation of a station context, the NoA
++		 * attribute needs to be removed from subsequent
++		 * beacons.
++		 */
++		if (!ctx->active && avp->noa_duration &&
++		    sc->sched.state != ATH_CHANCTX_STATE_WAIT_FOR_BEACON) {
++			avp->noa_duration = 0;
++			avp->periodic_noa = false;
++
++			ath_dbg(common, CHAN_CTX,
++				"Clearing NoA schedule\n");
++		}
++
+ 		if (sc->sched.state != ATH_CHANCTX_STATE_WAIT_FOR_BEACON)
+ 			break;
+ 
+-- 
+2.1.2
 
-1) si_doattach
-SI_MSG(("Applying 4313 WARs\n"));
-si_pmu_chipcontrol(sih, 0, CCTRL_4313_12MA_LED_DRIVE,
-CCTRL_4313_12MA_LED_DRIVE);
-
-It's already implemented in bcma, see driver_chipcommon_pmu.c
-
-
-2) si_epa_4313war
-/* EPA Fix */
-W_REG(sii->osh, &cc->gpiocontrol,
-R_REG(sii->osh, &cc->gpiocontrol) | GPIO_CTRL_EPA_EN_MASK);
-
-This is what you already implement in ai_epa_4313war
-
-
-3) si_pmu_synth_pwrsw_4313_war
-I don't think it's implemented.
-
-
-4) si_btcombo_p250_4313_war
-I also don't think it's implemented
-
-
-The last one (si_btcombo_p250_4313_war) looks promising, the comment
-above the function says:
-/** WL/BT control for 4313 btcombo boards >= P250 */
-I guess you need to re-implement this function and call it somewhere
-in brcmsmac.
