@@ -1,121 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:49609 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750862AbaJVImG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2014 04:42:06 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v2] cfg80211: make WMM TSPEC support flag an nl80211 feature flag
-Date: Wed, 22 Oct 2014 10:42:01 +0200
-Message-Id: <1413967321-25950-1-git-send-email-johannes@sipsolutions.net> (sfid-20141022_104211_678552_8F0DE67E)
+Received: from mail-vc0-f173.google.com ([209.85.220.173]:47815 "EHLO
+	mail-vc0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750839AbaJIL5m convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Oct 2014 07:57:42 -0400
+Received: by mail-vc0-f173.google.com with SMTP id ij19so814037vcb.18
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Oct 2014 04:57:41 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <5FF020A1CFFEEC49BD1E09530C4FF5951821936285@SC-VEXCH1.marvell.com>
+References: <CAAfyv35k1mgQh6FcWaaMciAo8Vkp055k=5xF7zu+yrHmrQbbLA@mail.gmail.com>
+	<5FF020A1CFFEEC49BD1E09530C4FF5951819DB12F1@SC-VEXCH1.marvell.com>
+	<CAAfyv35j-77AURB4fHcecbEvyGS6U+1APNRFCf3FDAd_rrWnJw@mail.gmail.com>
+	<5FF020A1CFFEEC49BD1E09530C4FF5951821351855@SC-VEXCH1.marvell.com>
+	<CAAfyv35E2HUReFpnpdsebPETKk9VPA_hfQHUEJmoJfQt6Q-Puw@mail.gmail.com>
+	<5FF020A1CFFEEC49BD1E09530C4FF5951821936285@SC-VEXCH1.marvell.com>
+Date: Thu, 9 Oct 2014 13:57:41 +0200
+Message-ID: <CAAfyv34UXMNwHf+kYCWEn+bcfGda_gA7uroLRLvhTEGGC5R57w@mail.gmail.com> (sfid-20141009_135746_011010_4D5805C3)
+Subject: Re: mwifiex_usb_submit_rx_urb: dev_alloc_skb failed when conected to 5GHz
+From: Belisko Marek <marek.belisko@gmail.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Avinash Patil <patila@marvell.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Dear Amitkumar Karwar,
 
-During the review of the corresponding wpa_supplicant patches we
-noticed that the only way for it to detect that this functionality
-is supported currently is to check for the command support. This
-can be misleading though, as the command was also designed to, in
-the future, support pure 802.11 TSPECs.
 
-Expose the WMM-TSPEC feature flag to nl80211 so later we can also
-expose an 802.11-TSPEC feature flag (if needed) to differentiate
-the two cases.
+On Thu, Oct 9, 2014 at 11:30 AM, Amitkumar Karwar <akarwar@marvell.com> wrote:
+> Hi Marek,
+>
+> Sorry for late reply. We have tried to simulate dev_alloc_skb() failure on our reference platform after 100th, 200th, 300th etc. packets. Our observation is when the failure occurs, corresponding URB won't get submitted, but traffic continues. Traffic stops when the failure count reaches 6 (mwifiex Rx URB count). We don't see any crash or system unresponsiveness.
+No I don't see such behavior. In my case usb still sending packets
+over URB (also proven by below hack). My platform is am335x (same chip
+as on beaglebone).
+>
+>
+>> I did small investigation (will my limited networking knowledge :)) and
+>> to avoid usb issue I did small hack to free received packet in skb
+>> (with specific size
+>> 1574 which sends iperf) before sending for processing to driver
+>> workqueue. With this small hack I can run iperf -b100m on client size
+>> without any allocation issue.
+>
+> That's good :) Actually kernel will take care of freeing skb when driver submits received packet using netif_rx(). Could you please share your hack?
+Yes it should be freed when netif_rx() is processed but I have feeling
+that sometimes (my case) during high load (-b 100m) packets are not
+send to kernel (not free skb)
+until skb allocation fails. I need to better understand 11n reordering code :).
 
-Note: this change isn't needed in 3.18 as there's no driver there
-yet that supports the functionality at all.
+Hack (it's dirty I know but packets of that size are send only during
+iperf session):
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/cfg80211.h       |  6 +-----
- include/uapi/linux/nl80211.h |  5 +++++
- net/wireless/nl80211.c       | 14 ++++++--------
- 3 files changed, 12 insertions(+), 13 deletions(-)
+diff --git a/drivers/net/wireless/mwifiex/usb.c
+b/drivers/net/wireless/mwifiex/usb.c
+index f90fe21..cc548a1 100644
+--- a/drivers/net/wireless/mwifiex/usb.c
++++ b/drivers/net/wireless/mwifiex/usb.c
+@@ -178,6 +178,12 @@ static void mwifiex_usb_rx_complete(struct urb *urb)
+                dev_dbg(adapter->dev, "info: recv_length=%d, status=%d\n",
+                        recv_length, status);
+                if (status == -EINPROGRESS) {
++
++                       if (skb->len >= 1574) {
++                               dev_kfree_skb_any(skb);
++                               goto setup_for_next;
++                       }
++
+                        queue_work(adapter->workqueue, &adapter->main_work);
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index ed896c0b5b8b..77aa805d7e7c 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2646,13 +2646,9 @@ struct cfg80211_ops {
-  * @WIPHY_FLAG_SUPPORTS_5_10_MHZ: Device supports 5 MHz and 10 MHz channels.
-  * @WIPHY_FLAG_HAS_CHANNEL_SWITCH: Device supports channel switch in
-  *	beaconing mode (AP, IBSS, Mesh, ...).
-- * @WIPHY_FLAG_SUPPORTS_WMM_ADMISSION: the device supports setting up WMM
-- *	TSPEC sessions (TID aka TSID 0-7) with the NL80211_CMD_ADD_TX_TS
-- *	command. Standard IEEE 802.11 TSPEC setup is not yet supported, it
-- *	needs to be able to handle Block-Ack agreements and other things.
-  */
- enum wiphy_flags {
--	WIPHY_FLAG_SUPPORTS_WMM_ADMISSION	= BIT(0),
-+	/* use hole at 0 */
- 	/* use hole at 1 */
- 	/* use hole at 2 */
- 	WIPHY_FLAG_NETNS_OK			= BIT(3),
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index b553c48404d3..be1d5def304d 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -4052,6 +4052,10 @@ enum nl80211_ap_sme_features {
-  *	multiplexing powersave, ie. can turn off all but one chain
-  *	and then wake the rest up as required after, for example,
-  *	rts/cts handshake.
-+ * @NL80211_FEATURE_SUPPORTS_WMM_ADMISSION: the device supports setting up WMM
-+ *	TSPEC sessions (TID aka TSID 0-7) with the %NL80211_CMD_ADD_TX_TS
-+ *	command. Standard IEEE 802.11 TSPEC setup is not yet supported, it
-+ *	needs to be able to handle Block-Ack agreements and other things.
-  */
- enum nl80211_feature_flags {
- 	NL80211_FEATURE_SK_TX_STATUS			= 1 << 0,
-@@ -4080,6 +4084,7 @@ enum nl80211_feature_flags {
- 	NL80211_FEATURE_ACKTO_ESTIMATION		= 1 << 23,
- 	NL80211_FEATURE_STATIC_SMPS			= 1 << 24,
- 	NL80211_FEATURE_DYNAMIC_SMPS			= 1 << 25,
-+	NL80211_FEATURE_SUPPORTS_WMM_ADMISSION		= 1 << 26,
- };
- 
- /**
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index d05fe6d6481d..d98d4ea27819 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -1514,8 +1514,8 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
- 			if (rdev->wiphy.flags & WIPHY_FLAG_HAS_CHANNEL_SWITCH)
- 				CMD(channel_switch, CHANNEL_SWITCH);
- 			CMD(set_qos_map, SET_QOS_MAP);
--			if (rdev->wiphy.flags &
--					WIPHY_FLAG_SUPPORTS_WMM_ADMISSION)
-+			if (rdev->wiphy.features &
-+					NL80211_FEATURE_SUPPORTS_WMM_ADMISSION)
- 				CMD(add_tx_ts, ADD_TX_TS);
- 		}
- 		/* add into the if now */
-@@ -9557,7 +9557,7 @@ static int nl80211_add_tx_ts(struct sk_buff *skb, struct genl_info *info)
- 	u16 admitted_time = 0;
- 	int err;
- 
--	if (!(rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_WMM_ADMISSION))
-+	if (!(rdev->wiphy.features & NL80211_FEATURE_SUPPORTS_WMM_ADMISSION))
- 		return -EOPNOTSUPP;
- 
- 	if (!info->attrs[NL80211_ATTR_TSID] || !info->attrs[NL80211_ATTR_MAC] ||
-@@ -9573,12 +9573,10 @@ static int nl80211_add_tx_ts(struct sk_buff *skb, struct genl_info *info)
- 		return -EINVAL;
- 
- 	/* WMM uses TIDs 0-7 even for TSPEC */
--	if (tsid < IEEE80211_FIRST_TSPEC_TSID) {
--		if (!(rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_WMM_ADMISSION))
--			return -EINVAL;
--	} else {
-+	if (tsid >= IEEE80211_FIRST_TSPEC_TSID) {
- 		/* TODO: handle 802.11 TSPEC/admission control
--		 * need more attributes for that (e.g. BA session requirement)
-+		 * need more attributes for that (e.g. BA session requirement);
-+		 * change the WMM adminssion test above to allow both then
- 		 */
- 		return -EINVAL;
- 	}
+                        /* urb for data_ep is re-submitted now;
+>
+> Regards,
+> Amit
+
+BR,
+
+marek
+
 -- 
-2.1.0
+as simple and primitive as possible
+-------------------------------------------------
+Marek Belisko - OPEN-NANDRA
+Freelance Developer
 
+Ruska Nova Ves 219 | Presov, 08005 Slovak Republic
+Tel: +421 915 052 184
+skype: marekwhite
+twitter: #opennandra
+web: http://open-nandra.com
