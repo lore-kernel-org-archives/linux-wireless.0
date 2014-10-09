@@ -1,65 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailservices.uwaterloo.ca ([129.97.128.141]:45322 "EHLO
-	minos.uwaterloo.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752397AbaJXUms (ORCPT
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:54247 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757219AbaJIV54 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Oct 2014 16:42:48 -0400
-Message-ID: <544AB9B8.9050407@mailservices.uwaterloo.ca> (sfid-20141024_224251_603253_AD241DDA)
-Date: Fri, 24 Oct 2014 16:42:32 -0400
-From: Ali Abedi <a2abedi@uwaterloo.ca>
+	Thu, 9 Oct 2014 17:57:56 -0400
+Date: Thu, 9 Oct 2014 14:57:50 -0700
+From: Guenter Roeck <linux@roeck-us.net>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH] bcma: Add dependency on OF_ADDRESS
+Message-ID: <20141009215750.GB20103@roeck-us.net> (sfid-20141009_235809_914275_B384C2C2)
+References: <1412872877-1771-1-git-send-email-linux@roeck-us.net>
+ <CACna6rzOeGcKrrftLx_3uWe_bAXQaQMmWb3wWHP0CjtdO8D0eg@mail.gmail.com>
+ <5436C2B4.6030801@broadcom.com>
+ <5436C367.5080908@broadcom.com>
+ <20141009172924.GD2410@roeck-us.net>
+ <5436D3CF.2030506@hauke-m.de>
+ <20141009192520.GA6552@roeck-us.net>
+ <54370298.2040502@hauke-m.de>
 MIME-Version: 1.0
-To: Adrian Chadd <adrian@freebsd.org>
-CC: ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org
-Subject: Re: strange MPDU loss pattern
-References: <544A7871.7020005@mailservices.uwaterloo.ca> <CAJ-Vmon_jefxRgZvJmOsr4ydNHbvTCyMHHejRMWqXg_SG6NJUw@mail.gmail.com>
-In-Reply-To: <CAJ-Vmon_jefxRgZvJmOsr4ydNHbvTCyMHHejRMWqXg_SG6NJUw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <54370298.2040502@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We don't use a rate adaptation at this moment (i.e., fixed rate) and the 
-setup
-  is stationary. So we expect to see relatively stable channel 
-conditions. Even if the channel
-conditions change during the aggregated frame. The first half of the MPDUs
-have the same chance of experiencing worse channel conditions.
+On Thu, Oct 09, 2014 at 11:48:08PM +0200, Hauke Mehrtens wrote:
+> On 10/09/2014 09:25 PM, Guenter Roeck wrote:
+> > On Thu, Oct 09, 2014 at 08:28:31PM +0200, Hauke Mehrtens wrote:
+> >> On 10/09/2014 07:29 PM, Guenter Roeck wrote:
+> >>> On Thu, Oct 09, 2014 at 07:18:31PM +0200, Arend van Spriel wrote:
+> >>>> On 10/09/14 19:15, Arend van Spriel wrote:
+> >>>>> On 10/09/14 18:54, Rafał Miłecki wrote:
+> >>>>>> On 9 October 2014 18:41, Guenter Roeck<linux@roeck-us.net> wrote:
+> >>>>>>> Commit 2101e533f41a ("bcma: register bcma as device tree driver")
+> >>>>>>> introduces a hard dependency on OF_ADDRESS into the bcma driver.
+> >>>>>>> OF_ADDRESS is specifically disabled for the sparc architecture.
+> >>>>>>> This results in the following error when building sparc64:allmodconfig.
+> >>>>>
+> >>>>> Does this mean on sparc (using allmodconfig) you will get CONFIG_OF and
+> >>>>> !CONFIG_OF_ADDRESS? Does that makes sense?
+> >>>>
+> >>>> Is CONFIG_OF is used on sparc to access OpenBoot information?
+> >>>>
+> >>> I have no idea. All I know is that the driver doesn't build anymore with OF
+> >>> enabled and OF_ADDRESS disabled.
+> >>
+> >> Device tree support in bcma is only needed on some SoC, when this is
+> >> used on a PCIe card it is not needed.
+> >>
+> >> I would just deactivate the parts that are using device tree in bcma
+> >> when it is not available. I will send a patch after having something to eat.
+> >>
+> > Devicetree dependency is already covered with #ifdef CONFIG_OF. Problem is
+> > that it really needs #ifdef CONFIG_OF_ADDRESS. Though even that might be
+> > better than my patch, since it would at least build the driver on sparc
+> > as it used to do.
+> > 
+> >> Is there a better method which is compatible with SPARC than using
+> >> of_translate_address() to get the reg address and also take the ranges
+> >> attribute of the bus into account?
+> >>
+> > No idea, sorry. Can you by any chance use pcie device information
+> > instead of depending on devicetree data ?
+> 
+> Device tree is not used for PCIe devices in bcma. We only use it when
+> bcma is used for the system bus on some Broadcom SoCs, currently there
+> is no plan to use device tree for PCIe devices in bcma. I think bcma is
+> only used on wifi cards connected via PCIe on Sparc systems.
+> 
+Ok. Well, with your patch the code is as good or as bad as it was prior to
+adding devicetree support to the driver, so hopefully should work.
 
-Thank,
-Ali
-
-
-On 14-10-24 03:13 PM, Adrian Chadd wrote:
-> It's not completely unsurprising - the initial channel estimate and
-> such is done at the beginning of each packet and stays constant. So if
-> there's some varying channel conditions that change that during the
-> duration of a packet, the tail end is going to end up having less SNR
-> and may end up getting more errors.
->
->
-> -adrian
->
-> On 24 October 2014 09:04, Ali Abedi <a2abedi@uwaterloo.ca> wrote:
->> Hello,
->>
->> We study the effects of 802.11n frame aggregation on throughput. We noticed
->> a
->> strange pattern in the MPDU loss within an aggregated frame. It seems that
->> the
->> second half of the MPDUs (those with higher sequence numbers) in an
->> aggregated frame
->> are more likely to be lost. Is this a known fact or is there any explanation
->> for it?
->>
->> For example if 32 frames are aggregated with sequence numbers 100 to 131.
->> Frames with sequence numbers 100-115 are more likely to be received
->> correctly
->> than 116-131.
->>
->>
->> Best,
->> Ali
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+Guenter
