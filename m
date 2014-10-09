@@ -1,80 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:51521 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752249AbaJPNmp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Oct 2014 09:42:45 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@qca.qualcomm.com
-Subject: [RFC] ath9k: Do not start BA when scanning
-Date: Thu, 16 Oct 2014 19:13:48 +0530
-Message-Id: <1413467028-2906-1-git-send-email-sujith@msujith.org> (sfid-20141016_154250_110902_49B41C91)
+Received: from s3.sipsolutions.net ([5.9.151.49]:57059 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754791AbaJIJCT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Oct 2014 05:02:19 -0400
+Message-ID: <1412845335.1828.26.camel@jlt4.sipsolutions.net> (sfid-20141009_110224_140057_051D4A52)
+Subject: Re: [PATCH] mac80211: return the vif's chandef in
+ ieee80211_cfg_get_channel()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: linux-wireless@vger.kernel.org,
+	Luciano Coelho <luciano.coelho@intel.com>
+Date: Thu, 09 Oct 2014 11:02:15 +0200
+In-Reply-To: <1412050082-7763-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1412050082-7763-1-git-send-email-emmanuel.grumbach@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Tue, 2014-09-30 at 07:08 +0300, Emmanuel Grumbach wrote:
+> From: Luciano Coelho <luciano.coelho@intel.com>
+> 
+> The chandef of the channel context a vif is using may be different
+> than the chandef of the vif itself.  For instance, the bandwidth used
+> by the vif may be narrower than the one configured in the channel
+> context.  To avoid confusion, return the vif's chandef in
+> ieee80211_cfg_get_channel() instead of the chandef of the channel
+> context.
 
-mac80211 currently has a race which can be hit
-with this sequence:
+Applied.
 
-* Start a scan operation.
-* TX BA is initiated by ieee80211_start_tx_ba_session().
-* Driver sets up internal state and calls
-  ieee80211_start_tx_ba_cb_irqsafe().
-* mac80211 adds a packet to sdata->skb_queue with
-  type IEEE80211_SDATA_QUEUE_AGG_START.
-* ieee80211_iface_work() doesn't process the
-  packet because scan is in progress.
-* ADDBA response timer expires and the sta/tid is
-  torn down.
-* Driver receives BA stop notification and calls
-  ieee80211_stop_tx_ba_cb_irqsafe().
-* This is also added to the queue by mac80211.
-* Now, scan finishes.
-
-At this point, the queued up packets might be processed
-if some other operation schedules the sdata work. Since
-the tids have been cleaned up already, warnings are hit.
-
-If this doesn't happen, the packets are left in the queue
-until the interface is torn down.
-
-Since initiating a BA session when scan is in progress
-leads to flaky connections, especially in MCC mode, we
-can drop the TX BA request. This improves connectivity
-with legacy clients in MCC mode.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/main.c | 7 +++++++
- 1 file changed, 7 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 961a388..68c5670 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1885,6 +1885,7 @@ static int ath9k_ampdu_action(struct ieee80211_hw *hw,
- 			      u16 tid, u16 *ssn, u8 buf_size)
- {
- 	struct ath_softc *sc = hw->priv;
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	bool flush = false;
- 	int ret = 0;
- 
-@@ -1896,6 +1897,12 @@ static int ath9k_ampdu_action(struct ieee80211_hw *hw,
- 	case IEEE80211_AMPDU_RX_STOP:
- 		break;
- 	case IEEE80211_AMPDU_TX_START:
-+		if (ath9k_is_chanctx_enabled()) {
-+			if (test_bit(ATH_OP_SCANNING, &common->op_flags)) {
-+				ret = -EBUSY;
-+				break;
-+			}
-+		}
- 		ath9k_ps_wakeup(sc);
- 		ret = ath_tx_aggr_start(sc, sta, tid, ssn);
- 		if (!ret)
--- 
-2.1.2
+johannes
 
