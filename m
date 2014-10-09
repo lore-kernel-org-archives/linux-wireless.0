@@ -1,78 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:34552 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754401AbaJHGtQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Oct 2014 02:49:16 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: emmanuel.grumbach@intel.com, michal.kazior@tieto.com,
-	linux-wireless@vger.kernel.org
-Date: Wed,  8 Oct 2014 09:48:33 +0300
-Message-Id: <1412750920-15392-1-git-send-email-luca@coelho.fi> (sfid-20141008_084924_515515_4EE77E2E)
-Subject: [PATCH v2 0/7] mac80211: some more channel switch work
+Received: from s3.sipsolutions.net ([5.9.151.49]:57218 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751154AbaJIJkK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Oct 2014 05:40:10 -0400
+Message-ID: <1412847604.1828.38.camel@jlt4.sipsolutions.net> (sfid-20141009_114013_921425_9693C9F2)
+Subject: Re: [PATCH] mac80211: Call mgd_prepare_tx before deauthentication
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sujith Manoharan <sujith@msujith.org>
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 09 Oct 2014 11:40:04 +0200
+In-Reply-To: <21530.29268.867868.46188@gargle.gargle.HOWL>
+References: <1410928422-25587-1-git-send-email-sujith@msujith.org>
+	 <21529.5141.845629.86918@gargle.gargle.HOWL>
+	 <0BA3FCBA62E2DC44AF3030971E174FB31B523034@hasmsx107.ger.corp.intel.com>
+	 <21529.8110.26388.664223@gargle.gargle.HOWL>
+	 <0BA3FCBA62E2DC44AF3030971E174FB31B5230C9@hasmsx107.ger.corp.intel.com>
+	 <21529.9155.323515.987489@gargle.gargle.HOWL>
+	 <0BA3FCBA62E2DC44AF3030971E174FB31B52311D@hasmsx107.ger.corp.intel.com>
+	 <21529.10109.308613.563543@gargle.gargle.HOWL>
+	 <CANUX_P3hdFeCPmqHCdP8JKwqvUUnjgp3SNy1GQDrQd0bG+WKng@mail.gmail.com>
+	 <21530.19430.782437.984290@gargle.gargle.HOWL>
+	 <21530.23545.178915.653622@gargle.gargle.HOWL>
+	 <CANUX_P3o6=sdjHPp2L7tGAeXRW0v4xqSV-2q27Neetu75bDc1A@mail.gmail.com>
+	 <21530.29268.867868.46188@gargle.gargle.HOWL>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+On Thu, 2014-09-18 at 11:19 +0530, Sujith Manoharan wrote:
 
-Hi,
+> I can see your point and agree that the original intention of the mgd_prepare_tx()
+> callback is as described in the documentation. But with multiple active
+> contexts, flush() becomes a big hammer rather than a simple emptying of
+> the queues. :-)
 
-A few minor changes in v2:
+I'm a bit conflicted about this. If we add mgd_prepare_tx() here, what's
+to say that we don't need to also do this for a variety of other frames?
+Like sending delBA action frames? I guess the difference would be that
+we don't disassoc immediately in those case.
 
-  * add WARN_ON to make sure csa_active is set in
-    ieee80211_chswitch_post_beacon() [Michal];
-  * remove stray empty line [Michal];
-  * s/vifos/vif/ in a mac80211.h declaration (no clue where the "os"
-    came from :P);
+However, if you consider deauth/flush while you're on a different
+context, then mgd_prepare_tx() would potentially not really be
+sufficient either. If that forces or waits for a context switch, you
+really have no guarantee that the deauth frame went out because it might
+be waiting behind other frames, and there's nothing that guarantees
+enough time in the context slice to actually send out all of them ...
 
----8<---
+In that sense, I think you still have to implement flush.
 
-These patches contain some more channel switch work.  They have been
-in use in our internal tree for some time now and are mostly adding
-small details needed by the iwlmvm driver.  There's also a nice
-improvement to a long-time TODO, where we wait for a beacon on the new
-channel before we start transmitting again (in BSS station/P2P client
-mode).
+But I also think you see it wrongly - you don't have to force a context
+switch in flush, flush can essentially be "wait for queue to be empty"
+and the context switching etc. happens in the background.
 
-One slightly controversial change is the one that allows channel
-switches with multiple channel contexts.  The problem is not with
-mult-context itself, but the handling of drivers that offload the
-channel switch and have, so far, not received any information about
-the vif that is switching (so the assumption was that all vifs would
-have to switch).
+mgd_prepare_tx() is, the way I see it, really more for the case where
+you really have no context scheduling *at all* and have to somehow send
+a frame anyway. In the case we're talking about you have regular context
+scheduling, and there shouldn't be a need to add a special scheduling on
+top.
 
-Please review.
-
---
-Cheers,
-Luca.
-
-Luciano Coelho (7):
-  nl80211: sanity check the channel switch counter value
-  mac80211: add device_timestamp to the ieee80211_channel_switch struct
-  mac80211: add extended channel switching capability if the driver
-    supports CSA
-  mac80211: add pre_channel_switch driver operation
-  mac80211: add post_channel_switch driver operation
-  mac80211: wait for the first beacon on the new channel after CSA
-  mac80211: allow channel switch with multiple channel contexts
-
- drivers/net/wireless/iwlegacy/4965-mac.c    |   2 +-
- drivers/net/wireless/iwlegacy/4965.h        |   5 +-
- drivers/net/wireless/iwlwifi/dvm/mac80211.c |   1 +
- drivers/net/wireless/ti/wlcore/main.c       |  23 ++----
- include/linux/ieee80211.h                   |   5 ++
- include/net/mac80211.h                      |  17 +++++
- net/mac80211/cfg.c                          |  18 ++++-
- net/mac80211/driver-ops.h                   |  41 ++++++++++-
- net/mac80211/ieee80211_i.h                  |   5 ++
- net/mac80211/iface.c                        |   2 +
- net/mac80211/main.c                         |  20 ++---
- net/mac80211/mlme.c                         | 110 ++++++++++++++++++----------
- net/mac80211/trace.h                        |  50 ++++++++++++-
- net/wireless/nl80211.c                      |  10 ++-
- 14 files changed, 237 insertions(+), 72 deletions(-)
-
--- 
-2.1.1
+johannes
 
