@@ -1,81 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:43145 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751381AbaJPRUI (ORCPT
+Received: from userp1040.oracle.com ([156.151.31.81]:16710 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751024AbaJIKAJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Oct 2014 13:20:08 -0400
-Message-ID: <1413480005.16330.15.camel@umadbro> (sfid-20141016_192034_126904_7A9CC283)
-Subject: Re: [PATCH 1/4] mac80211: OCB mode + join and leave handling
-From: Rostislav Lisovy <lisovy@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
-	jan-niklas.meier@volkswagen.de, burak.simsek@volkswagen.de,
-	Emmanuel Thierry <emmanuel.thierry@yogoko.fr>,
-	laszlo.virag@commsignia.com,
-	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
-Date: Thu, 16 Oct 2014 19:20:05 +0200
-In-Reply-To: <1413477188.15416.10.camel@umadbro>
-References: <1410445822-6559-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
-	 <1410445822-6559-2-git-send-email-rostislav.lisovy@fel.cvut.cz>
-	 (sfid-20140911_163047_025105_09D86D44) <1412843005.1828.14.camel@jlt4.sipsolutions.net>
-	 <1413477188.15416.10.camel@umadbro>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 9 Oct 2014 06:00:09 -0400
+Date: Thu, 9 Oct 2014 12:59:39 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Stanislav Yakovlev <stas.yakovlev@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [patch 2/2] ipw2x00: clean up a condition
+Message-ID: <20141009095939.GB20875@mwanda> (sfid-20141009_120014_104500_7BEDB42C)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-10-16 at 18:33 +0200, Rostislav Lisovy wrote:
-> > > +   mutex_lock(&sdata->local->mtx);
-> > > +   ieee80211_vif_release_channel(sdata);
-> > > +   mutex_unlock(&sdata->local->mtx);
-> > > +
-> > > +   skb_queue_purge(&sdata->skb_queue);
-> > > +
-> > > +   del_timer_sync(&sdata->u.ocb.housekeeping_timer);
-> > 
-> > That might call the timer - is it safe if that happens here? Looks like
-> > maybe the housekeeping would still get triggered or so.
-> 
-> You are right. I hope the following is a reasonable solution (in form of
-> a patch to my previous patch; comment stolen from some prehistoric
-> version of mesh.c):
-> 
-> @@ -127,6 +127,9 @@ void ieee80211_ocb_work(struct ieee80211_sub_if_data *sdata)
->         struct ieee80211_if_ocb *ifocb = &sdata->u.ocb;
->         struct sta_info *sta;
->  
-> +       if (!netif_running(sdata->dev))
-> +               return;
-> +
->         sdata_lock(sdata);
->  
->         spin_lock_bh(&ifocb->incomplete_lock);
-> @@ -229,6 +232,13 @@ int ieee80211_ocb_leave(struct ieee80211_sub_if_data *sdata)
->         skb_queue_purge(&sdata->skb_queue);
->  
->         del_timer_sync(&sdata->u.ocb.housekeeping_timer);
-> +       /*
-> +        * If the timer fired while we waited for it, it will have
-> +        * requeued the work. Now the work will be running again
-> +        * but will not rearm the timer again because it checks
-> +        * whether the interface is running, which, at this point,
-> +        * it no longer is.
-> +        */
->  
->         return 0;
->  }
+The original condition was "(PAGE_SIZE - len)" when "(len < PAGE_SIZE)"
+is intended.
 
-Now I realized it is not that easy (and I confused "interface running"
-and being "connected to the network"). There seems not to be a solid
-indication that we are no longer "connected" to the network.
-I think a field
-	enum {
-		IEEE80211_OCB_STOPPED,
-		IEEE80211_OCB_JOINED,
-	} state;
-in struct ieee80211_if_ocb seems to be appropriate.
+This condition is not really sufficient, but also not really needed...
+If "len > PAGE_SIZE" then it we will print a warning message in dmesg
+but there are no other effects.  Maybe we should just remove the
+condition?
 
-Best regards;
-Rostislav
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
+diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
+index edc3443..67cad9b 100644
+--- a/drivers/net/wireless/ipw2x00/ipw2200.c
++++ b/drivers/net/wireless/ipw2x00/ipw2200.c
+@@ -1363,7 +1363,7 @@ static ssize_t show_cmd_log(struct device *d,
+ 	if (!priv->cmdlog)
+ 		return 0;
+ 	for (i = (priv->cmdlog_pos + 1) % priv->cmdlog_len;
+-	     (i != priv->cmdlog_pos) && (PAGE_SIZE - len);
++	     (i != priv->cmdlog_pos) && (len < PAGE_SIZE);
+ 	     i = (i + 1) % priv->cmdlog_len) {
+ 		len +=
+ 		    snprintf(buf + len, PAGE_SIZE - len,
