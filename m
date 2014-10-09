@@ -1,116 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:44615 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753075AbaJAR5b (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Oct 2014 13:57:31 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v2] wireless:  support configuring vdev mac addr on create.
-Date: Wed,  1 Oct 2014 10:57:27 -0700
-Message-Id: <1412186247-20303-1-git-send-email-greearb@candelatech.com> (sfid-20141001_195738_754589_852C138F)
+Received: from hauke-m.de ([5.39.93.123]:59542 "EHLO hauke-m.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751065AbaJIS2f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Oct 2014 14:28:35 -0400
+Message-ID: <5436D3CF.2030506@hauke-m.de> (sfid-20141009_202840_996788_E4D3D587)
+Date: Thu, 09 Oct 2014 20:28:31 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: Guenter Roeck <linux@roeck-us.net>,
+	Arend van Spriel <arend@broadcom.com>
+CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH] bcma: Add dependency on OF_ADDRESS
+References: <1412872877-1771-1-git-send-email-linux@roeck-us.net> <CACna6rzOeGcKrrftLx_3uWe_bAXQaQMmWb3wWHP0CjtdO8D0eg@mail.gmail.com> <5436C2B4.6030801@broadcom.com> <5436C367.5080908@broadcom.com> <20141009172924.GD2410@roeck-us.net>
+In-Reply-To: <20141009172924.GD2410@roeck-us.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On 10/09/2014 07:29 PM, Guenter Roeck wrote:
+> On Thu, Oct 09, 2014 at 07:18:31PM +0200, Arend van Spriel wrote:
+>> On 10/09/14 19:15, Arend van Spriel wrote:
+>>> On 10/09/14 18:54, Rafał Miłecki wrote:
+>>>> On 9 October 2014 18:41, Guenter Roeck<linux@roeck-us.net> wrote:
+>>>>> Commit 2101e533f41a ("bcma: register bcma as device tree driver")
+>>>>> introduces a hard dependency on OF_ADDRESS into the bcma driver.
+>>>>> OF_ADDRESS is specifically disabled for the sparc architecture.
+>>>>> This results in the following error when building sparc64:allmodconfig.
+>>>
+>>> Does this mean on sparc (using allmodconfig) you will get CONFIG_OF and
+>>> !CONFIG_OF_ADDRESS? Does that makes sense?
+>>
+>> Is CONFIG_OF is used on sparc to access OpenBoot information?
+>>
+> I have no idea. All I know is that the driver doesn't build anymore with OF
+> enabled and OF_ADDRESS disabled.
 
-This is useful when creating virtual-stations, and probably
-APs and other devices as well.  Keeps udev from mucking with
-things it shouldn't, since the default MAC is never seen
-by udev when specified on the cmd-line during creation.
+Device tree support in bcma is only needed on some SoC, when this is
+used on a PCIe card it is not needed.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
+I would just deactivate the parts that are using device tree in bcma
+when it is not available. I will send a patch after having something to eat.
 
-v2:  Use is_valid_ether_addr
+Is there a better method which is compatible with SPARC than using
+of_translate_address() to get the reg address and also take the ranges
+attribute of the bus into account?
 
- include/net/cfg80211.h       | 6 +++---
- include/uapi/linux/nl80211.h | 3 +++
- net/mac80211/iface.c         | 5 ++++-
- net/mac80211/main.c          | 1 +
- net/wireless/nl80211.c       | 2 +-
- 5 files changed, 12 insertions(+), 5 deletions(-)
-
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index e1641e6..de9a67f 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -319,9 +319,9 @@ struct ieee80211_supported_band {
- /**
-  * struct vif_params - describes virtual interface parameters
-  * @use_4addr: use 4-address frames
-- * @macaddr: address to use for this virtual interface. This will only
-- * 	be used for non-netdevice interfaces. If this parameter is set
-- * 	to zero address the driver may determine the address as needed.
-+ * @macaddr: address to use for this virtual interface.
-+ * 	If this parameter is set to zero address the driver may
-+ *	determine the address as needed.
-  */
- struct vif_params {
-        int use_4addr;
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 4b28dc0..fd14703 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -4042,6 +4042,8 @@ enum nl80211_ap_sme_features {
-  *	multiplexing powersave, ie. can turn off all but one chain
-  *	and then wake the rest up as required after, for example,
-  *	rts/cts handshake.
-+ * @NL80211_FEATURE_MAC_ON_CREATE: Device supports configuring
-+ *	the vdev's MAC address upon creation.
-  */
- enum nl80211_feature_flags {
- 	NL80211_FEATURE_SK_TX_STATUS			= 1 << 0,
-@@ -4070,6 +4072,7 @@ enum nl80211_feature_flags {
- 	NL80211_FEATURE_ACKTO_ESTIMATION		= 1 << 23,
- 	NL80211_FEATURE_STATIC_SMPS			= 1 << 24,
- 	NL80211_FEATURE_DYNAMIC_SMPS			= 1 << 25,
-+	NL80211_FEATURE_MAC_ON_CREATE			= 1 << 26,
- };
- 
- /**
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 878bfca..e92783f 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1715,7 +1715,10 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
- 		}
- 
- 		ieee80211_assign_perm_addr(local, ndev->perm_addr, type);
--		memcpy(ndev->dev_addr, ndev->perm_addr, ETH_ALEN);
-+		if (params && is_valid_ether_addr(params->macaddr))
-+			memcpy(ndev->dev_addr, params->macaddr, ETH_ALEN);
-+		else
-+			memcpy(ndev->dev_addr, ndev->perm_addr, ETH_ALEN);
- 		SET_NETDEV_DEV(ndev, wiphy_dev(local->hw.wiphy));
- 
- 		/* don't use IEEE80211_DEV_TO_SUB_IF -- it checks too much */
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 8106770..eb7bdd1 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -550,6 +550,7 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
- 			   NL80211_FEATURE_SAE |
- 			   NL80211_FEATURE_HT_IBSS |
- 			   NL80211_FEATURE_VIF_TXPOWER |
-+			   NL80211_FEATURE_MAC_ON_CREATE |
- 			   NL80211_FEATURE_USERSPACE_MPM;
- 
- 	if (!ops->hw_scan)
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 8a010bd..cf79707 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2605,7 +2605,7 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
- 	    !(rdev->wiphy.interface_modes & (1 << type)))
- 		return -EOPNOTSUPP;
- 
--	if (type == NL80211_IFTYPE_P2P_DEVICE && info->attrs[NL80211_ATTR_MAC]) {
-+	if (info->attrs[NL80211_ATTR_MAC]) {
- 		nla_memcpy(params.macaddr, info->attrs[NL80211_ATTR_MAC],
- 			   ETH_ALEN);
- 		if (!is_valid_ether_addr(params.macaddr))
--- 
-1.7.11.7
-
+Hauke
