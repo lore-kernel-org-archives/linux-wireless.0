@@ -1,42 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:59662 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751128AbaJITVL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2014 15:21:11 -0400
-Message-ID: <1412882468.1828.66.camel@jlt4.sipsolutions.net> (sfid-20141009_212115_584783_4183567B)
-Subject: Re: [PATCH] cfg80211: Add support for ACS offloading
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Xu, Peng" <pxu@qca.qualcomm.com>
-Cc: "Park, Kyeyoon" <kyeyoonp@qca.qualcomm.com>,
-	cfg80211mac80211 <cfg80211mac80211@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 09 Oct 2014 21:21:08 +0200
-In-Reply-To: <b7db9a5941324ca1aafafa36571bf910@nasanexm01a.na.qualcomm.com>
-References: <1412373538-17690-1-git-send-email-kyeyoonp@qca.qualcomm.com>
-	 <1412847971.1828.42.camel@jlt4.sipsolutions.net>
-	 <6c0aebecfa9d478ea43ba9c10236c19b@nasanexm01a.na.qualcomm.com>
-	 <1412880033.1828.63.camel@jlt4.sipsolutions.net>
-	 <b7db9a5941324ca1aafafa36571bf910@nasanexm01a.na.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:48934 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751293AbaJIRPf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Oct 2014 13:15:35 -0400
+Message-ID: <5436C2B4.6030801@broadcom.com> (sfid-20141009_191605_539307_729503F7)
+Date: Thu, 9 Oct 2014 19:15:32 +0200
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: Guenter Roeck <linux@roeck-us.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	"Arnd Bergmann" <arnd@arndb.de>
+Subject: Re: [PATCH] bcma: Add dependency on OF_ADDRESS
+References: <1412872877-1771-1-git-send-email-linux@roeck-us.net> <CACna6rzOeGcKrrftLx_3uWe_bAXQaQMmWb3wWHP0CjtdO8D0eg@mail.gmail.com>
+In-Reply-To: <CACna6rzOeGcKrrftLx_3uWe_bAXQaQMmWb3wWHP0CjtdO8D0eg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-10-09 at 19:11 +0000, Xu, Peng wrote:
-> 
-> Hi Johannes,
-> This is because that OBSS scan happens before starting AP and ACS happens within start_ap.
+On 10/09/14 18:54, Rafał Miłecki wrote:
+> On 9 October 2014 18:41, Guenter Roeck<linux@roeck-us.net>  wrote:
+>> Commit 2101e533f41a ("bcma: register bcma as device tree driver")
+>> introduces a hard dependency on OF_ADDRESS into the bcma driver.
+>> OF_ADDRESS is specifically disabled for the sparc architecture.
+>> This results in the following error when building sparc64:allmodconfig.
 
-So you're saying your patch doesn't work?
+Does this mean on sparc (using allmodconfig) you will get CONFIG_OF and 
+!CONFIG_OF_ADDRESS? Does that makes sense?
 
-And it would actually be better to do what I suggested; namely:
- 1) ask the device to do ACS
- 2) do OBSS scan
- 3) start AP
+btw. the OF_ADDRESS dependency was introduced by commit "bcma: get IRQ 
+numbers from dt".
 
+Regards,
+Arend
 
-I can also ask another way: please explain the design decisions in your
-patch.
-
-johannes
+> Won't this make bcma im-POSSIBLE on MIPS? And maybe x86(_64), or at
+> least add an unneeded dependency? I think we should somehow limit this
+> to BCM5301X arch.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
 
