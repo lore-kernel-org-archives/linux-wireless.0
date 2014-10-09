@@ -1,70 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f178.google.com ([209.85.216.178]:34790 "EHLO
-	mail-qc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932381AbaJWDTE (ORCPT
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:39986 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751115AbaJIJtx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2014 23:19:04 -0400
-Message-ID: <54487346.4080604@gmail.com> (sfid-20141023_051909_305352_5AE1619B)
-Date: Thu, 23 Oct 2014 01:17:26 -0200
-From: Murilo Opsfelder Araujo <mopsfelder@gmail.com>
-MIME-Version: 1.0
-To: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-CC: Larry Finger <Larry.Finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Possible wireless issue introduced in next-20140930
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 9 Oct 2014 05:49:53 -0400
+Received: by mail-wi0-f170.google.com with SMTP id hi2so934627wib.1
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Oct 2014 02:49:52 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 0/3] ath10k: speed up recovery
+Date: Thu,  9 Oct 2014 11:38:44 +0200
+Message-Id: <1412847527-25983-1-git-send-email-michal.kazior@tieto.com> (sfid-20141009_114957_594604_96B16F87)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello, everyone.
+Hi,
 
-With next-20140930 my laptop does not work, i.e. after I enter my login 
-and password in KDM, the entire system becomes unresponsive and I need 
-to reset it in order to reboot (it does not even show the KDE splash 
-screen).
+Patch #1 fixes a bug I've found while testing
+patches #2 and #3. It's safe to cherry-pick it in
+case patches #2 and/or #3 aren't accepted or need
+a re-spin.
 
-It was working pretty fine with next-20140926.
+I've mainly used patch #2 to test reset and
+recovery. It's pretty handy for (stress-)testing.
 
-I've also tested with next-20141022 and v3.18-rc1 and no luck.
+Patch #3 should improve recovery speed in some
+cases. Notably when there's a long chain of WMI
+commands involved which take a painfully long time
+to timeout/complete if firmware crashes mid-way.
 
-git bisect pointed me to the commit below [1].  My wireless card is a 
-RTL8191SEvA [2].
+Note: Patches #2 and #3 depend on `ath10k: pci
+related fixes 2014-10-09`. Without the patchset
+patches #2 and #3 must not be applied. Patch #1 is
+fine though.
 
-I need your help to troubleshoot this.
 
-Thanks in advance.
+Michal Kazior (3):
+  ath10k: fix possible bmi crash
+  ath10k: expose hw restart via debugfs
+  ath10k: speed up hw recovery
 
-[1]
-commit 38506ecefab911785d5e1aa5889f6eeb462e0954
-Author: Larry Finger <Larry.Finger@lwfinger.net>
-Date:   Mon Sep 22 09:39:19 2014 -0500
-
-     rtlwifi: rtl_pci: Start modification for new drivers
-
-     Future patches will move the drivers for RTL8192EE and RTL8821AE
-     from staging to the regular wireless tree. Here, the necessary features
-     are added to the PCI driver. Other files are touched due to changes
-     in the various data structs.
-
-     Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-     Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
-[2]
-$ lspci -vvv
-02:00.0 Network controller: Realtek Semiconductor Co., Ltd. RTL8191SEvA 
-Wireless LAN Controller (rev 10)
-         Subsystem: Hewlett-Packard Company Device 1467
-         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- 
-ParErr- Stepping- SERR- FastB2B- DisINTx-
-         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- 
-<TAbort- <MAbort- >SERR- <PERR- INTx-
-         Latency: 0, Cache Line Size: 64 bytes
-         Interrupt: pin A routed to IRQ 16
-         Region 0: I/O ports at 3000 [size=256]
-         Region 1: Memory at d3400000 (32-bit, non-prefetchable) [size=16K]
-         Capabilities: <access denied>
-         Kernel driver in use: rtl8192se
+ drivers/net/wireless/ath/ath10k/ce.c    |  7 +++++++
+ drivers/net/wireless/ath/ath10k/core.c  | 16 ++++++++++++++++
+ drivers/net/wireless/ath/ath10k/core.h  |  5 +++++
+ drivers/net/wireless/ath/ath10k/debug.c |  7 ++++++-
+ drivers/net/wireless/ath/ath10k/mac.c   | 14 ++++++++++++--
+ drivers/net/wireless/ath/ath10k/mac.h   |  1 +
+ drivers/net/wireless/ath/ath10k/pci.c   |  3 +++
+ drivers/net/wireless/ath/ath10k/txrx.c  |  3 ++-
+ drivers/net/wireless/ath/ath10k/wmi.c   |  4 ++++
+ 9 files changed, 56 insertions(+), 4 deletions(-)
 
 -- 
-Murilo
+1.8.5.3
+
