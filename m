@@ -1,90 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:44289 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752035AbaJQCKI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Oct 2014 22:10:08 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH v2 09/23] ath9k: Fix MCC flush timeout
-Date: Fri, 17 Oct 2014 07:40:16 +0530
-Message-Id: <1413511830-5536-10-git-send-email-sujith@msujith.org> (sfid-20141017_041012_149094_5B2D3497)
-In-Reply-To: <1413511830-5536-1-git-send-email-sujith@msujith.org>
-References: <1413511830-5536-1-git-send-email-sujith@msujith.org>
+Received: from s3.sipsolutions.net ([5.9.151.49]:58281 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754974AbaJIOPG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Oct 2014 10:15:06 -0400
+Message-ID: <1412864103.1828.48.camel@jlt4.sipsolutions.net> (sfid-20141009_161538_657735_43F828BB)
+Subject: Re: [PATCH] mac80211/trivial: fix typo in starting baserate for
+ rts_cts_rate_idx
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Karl Beldan <karl.beldan@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@rivierawaves.com>
+Date: Thu, 09 Oct 2014 16:15:03 +0200
+In-Reply-To: <20141009140636.GC20644@magnum.frso.rivierawaves.com> (sfid-20141009_160640_580476_43BFD4F7)
+References: <1412690018-18429-1-git-send-email-karl.beldan@gmail.com>
+	 <1412845586.1828.27.camel@jlt4.sipsolutions.net>
+	 <20141009140636.GC20644@magnum.frso.rivierawaves.com>
+	 (sfid-20141009_160640_580476_43BFD4F7)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Thu, 2014-10-09 at 16:06 +0200, Karl Beldan wrote:
+> On Thu, Oct 09, 2014 at 11:06:26AM +0200, Johannes Berg wrote:
+> > On Tue, 2014-10-07 at 15:53 +0200, Karl Beldan wrote:
+> > > From: Karl Beldan <karl.beldan@rivierawaves.com>
+> > 
+> > Is that really trivial? It seems to have some impact on the code, but I
+> > can't right now say exactly what the impact is. Can you describe it and
+> > say whether I should add it to mac80211 or mac80211-next? For "trivial"
+> > I'd probably say mac80211-next, but this might be more important than
+> > that?
+> > 
+> The typo is clearly showing but the faulty behavior clearly demands more
+> detail indeed.
+> 
+> It affects non-(V)HT rates and can lead to selecting an rts_cts rate
+> that is not a basic rate or way superior to the reference rate (ATM
+> rates[0] used for the 1st attempt of the protected frame data).
+> E.g, assuming the drivers register growing (bitrate) sorted
+> ieee80211_rate tables, having :
+> - rates[0].idx == d'2 and basic_rates == b'10100
+> will select rts_cts idx b'10011 & ~d'(BIT(2)-1), i.e. 1, likewise
+> - rates[0].idx == d'2 and basic_rates == b'10001 
+> will select rts_cts idx b'10000
+> The first is not a basic rate and the second is > rates[0].
+> 
+> I hope it clarifies things enough.
 
-In MCC mode, the duration for a channel context
-is half the beacon interval and having a large
-flush timeout will adversely affect GO operation,
-since the default value of 200ms will overshoot
-the advertised NoA absence duration.
+Well, I'm still not sure which tree I should put it in, I guess?
 
-The scheduler initiates a channel context switch
-only when the slot duration for the current
-context expires, so there is no possibility of
-having a fixed timeout for flush.
-
-Since the channel_switch_time is added to the
-absence duration when the GO sets up the NoA
-attribute, this is the maximum time that we
-have to flush the TX queues. The duration is very
-small, but we don't have a choice in MCC mode.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/channel.c | 16 +++++++++++++++-
- 1 file changed, 15 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index 5045b10..7e518aa 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -199,6 +199,7 @@ static const char *chanctx_state_string(enum ath_chanctx_state state)
- void ath_chanctx_check_active(struct ath_softc *sc, struct ath_chanctx *ctx)
- {
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+	struct ath_chanctx *ictx;
- 	struct ath_vif *avp;
- 	bool active = false;
- 	u8 n_active = 0;
-@@ -206,6 +207,8 @@ void ath_chanctx_check_active(struct ath_softc *sc, struct ath_chanctx *ctx)
- 	if (!ctx)
- 		return;
- 
-+	ictx = ctx;
-+
- 	list_for_each_entry(avp, &ctx->vifs, list) {
- 		struct ieee80211_vif *vif = avp->vif;
- 
-@@ -228,12 +231,23 @@ void ath_chanctx_check_active(struct ath_softc *sc, struct ath_chanctx *ctx)
- 		n_active++;
- 	}
- 
-+	spin_lock_bh(&sc->chan_lock);
-+
- 	if (n_active <= 1) {
-+		ictx->flush_timeout = HZ / 5;
- 		clear_bit(ATH_OP_MULTI_CHANNEL, &common->op_flags);
-+		spin_unlock_bh(&sc->chan_lock);
- 		return;
- 	}
--	if (test_and_set_bit(ATH_OP_MULTI_CHANNEL, &common->op_flags))
-+
-+	ictx->flush_timeout = usecs_to_jiffies(sc->sched.channel_switch_time);
-+
-+	if (test_and_set_bit(ATH_OP_MULTI_CHANNEL, &common->op_flags)) {
-+		spin_unlock_bh(&sc->chan_lock);
- 		return;
-+	}
-+
-+	spin_unlock_bh(&sc->chan_lock);
- 
- 	if (ath9k_is_chanctx_enabled()) {
- 		ath_chanctx_event(sc, NULL,
--- 
-2.1.2
+johannes
 
