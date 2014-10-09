@@ -1,90 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:42203 "EHLO sipsolutions.net"
+Received: from mga11.intel.com ([192.55.52.93]:64737 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754120AbaJUGmO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Oct 2014 02:42:14 -0400
-Message-ID: <1413873729.1998.2.camel@jlt4.sipsolutions.net> (sfid-20141021_084221_635969_EAE80D8B)
-Subject: Re: [PATCH] cfg80211: Warn once for delayed scan completion
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sujith Manoharan <sujith@msujith.org>
-Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 21 Oct 2014 08:42:09 +0200
-In-Reply-To: <21573.55666.43231.68176@gargle.gargle.HOWL>
-References: <1413385042-17903-1-git-send-email-sujith@msujith.org>
-	 <CANUX_P02O-JSQkVvBCg6L9jf8wPyzPv8O_qsZa+prTJJx+20UA@mail.gmail.com>
-	 <21568.29077.518022.812356@gargle.gargle.HOWL>
-	 <1413797588.10246.3.camel@jlt4.sipsolutions.net>
-	 <21572.55536.308167.684155@gargle.gargle.HOWL>
-	 <1413798712.10246.14.camel@jlt4.sipsolutions.net>
-	 <21572.58249.490532.207564@gargle.gargle.HOWL>
-	 <1413801423.10246.16.camel@jlt4.sipsolutions.net>
-	 <21572.60015.349942.74265@gargle.gargle.HOWL>
-	 <1413806542.10246.21.camel@jlt4.sipsolutions.net>
-	 <1413809136.24269.0.camel@jlt4.sipsolutions.net>
-	 <21573.55666.43231.68176@gargle.gargle.HOWL>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1752151AbaJIM1z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Oct 2014 08:27:55 -0400
+From: Jukka Rissanen <jukka.rissanen@linux.intel.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH v2] mac80211-hwsim: Add support for HWSIM_ATTR_DESTROY_RADIO_ON_CLOSE
+Date: Thu,  9 Oct 2014 15:27:51 +0300
+Message-Id: <1412857671-23273-1-git-send-email-jukka.rissanen@linux.intel.com> (sfid-20141009_142758_740231_0962183D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-10-21 at 09:26 +0530, Sujith Manoharan wrote:
-> Johannes Berg wrote:
-> > Maybe we need something like this:
-> > 
-> > diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-> > index af0d094b2f2f..45b74ab1c59d 100644
-> > --- a/net/mac80211/scan.c
-> > +++ b/net/mac80211/scan.c
-> > @@ -985,7 +985,6 @@ void ieee80211_scan_cancel(struct ieee80211_local *local)
-> >  			drv_cancel_hw_scan(local,
-> >  				rcu_dereference_protected(local->scan_sdata,
-> >  						lockdep_is_held(&local->mtx)));
-> > -		goto out;
-> >  	}
-> 
-> Is the big comment at the beginning of ieee80211_scan_cancel()
-> outdated ? It does seem valid to me, at least the point about
-> not cancelling scan_work for HW scan.
+Add support for new attribute HWSIM_ATTR_DESTROY_RADIO_ON_CLOSE
+which can be set by the user space component. The attribute
+will cause the kernel to destroy all those radios that were
+created by a process if that process dies. The old behaviour
+i.e., radios are persistent is still the default.
 
-Yeah you're right.
+Signed-off-by: Jukka Rissanen <jukka.rissanen@linux.intel.com>
+---
+Hi,
 
-However, when the interface is deleted, the driver must still also
-remove the scan and definitely schedule the work, so most drivers will
-really always do so in cancel_hw_scan()? We could change the API and
-require that to be synchronous, like in the interface removal case, but
-maybe we don't want to.
+v2:
+- embed the work_struct into mac80211_hwsim_data which makes
+  the code simpler
 
-How about this then?
+Cheers,
+Jukka
 
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index e469b3390f2a..6f1b90eb568c 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -766,10 +766,12 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 	int i, flushed;
- 	struct ps_data *ps;
- 	struct cfg80211_chan_def chandef;
-+	bool cancel_scan;
+ drivers/net/wireless/mac80211_hwsim.c | 40 ++++++++++++++++++++++++++++++++---
+ drivers/net/wireless/mac80211_hwsim.h |  3 +++
+ 2 files changed, 40 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index babbdc1..e95ae0a 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -412,6 +412,9 @@ struct mac80211_hwsim_data {
+ 	struct mac_address addresses[2];
+ 	int channels, idx;
+ 	bool use_chanctx;
++	bool destroy_on_close;
++	struct work_struct destroy_work;
++	u32 portid;
  
- 	clear_bit(SDATA_STATE_RUNNING, &sdata->state);
+ 	struct ieee80211_channel *tmp_chan;
+ 	struct delayed_work roc_done;
+@@ -496,6 +499,7 @@ static const struct nla_policy hwsim_genl_policy[HWSIM_ATTR_MAX + 1] = {
+ 	[HWSIM_ATTR_REG_CUSTOM_REG] = { .type = NLA_U32 },
+ 	[HWSIM_ATTR_REG_STRICT_REG] = { .type = NLA_FLAG },
+ 	[HWSIM_ATTR_SUPPORT_P2P_DEVICE] = { .type = NLA_FLAG },
++	[HWSIM_ATTR_DESTROY_RADIO_ON_CLOSE] = { .type = NLA_FLAG },
+ };
  
--	if (rcu_access_pointer(local->scan_sdata) == sdata)
-+	cancel_scan = rcu_access_pointer(local->scan_sdata) == sdata;
-+	if (cancel_scan)
- 		ieee80211_scan_cancel(local);
+ static void mac80211_hwsim_tx_frame(struct ieee80211_hw *hw,
+@@ -1946,7 +1950,8 @@ static struct ieee80211_ops mac80211_hwsim_mchan_ops;
+ static int mac80211_hwsim_create_radio(int channels, const char *reg_alpha2,
+ 				       const struct ieee80211_regdomain *regd,
+ 				       bool reg_strict, bool p2p_device,
+-				       bool use_chanctx)
++				       bool use_chanctx, bool destroy_on_close,
++				       u32 portid)
+ {
+ 	int err;
+ 	u8 addr[ETH_ALEN];
+@@ -2006,6 +2011,8 @@ static int mac80211_hwsim_create_radio(int channels, const char *reg_alpha2,
+ 	data->channels = channels;
+ 	data->use_chanctx = use_chanctx;
+ 	data->idx = idx;
++	data->destroy_on_close = destroy_on_close;
++	data->portid = portid;
  
- 	/*
-@@ -993,6 +995,9 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 	if (data->use_chanctx) {
+ 		hw->wiphy->max_scan_ssids = 255;
+@@ -2434,6 +2441,7 @@ static int hwsim_create_radio_nl(struct sk_buff *msg, struct genl_info *info)
+ 	const struct ieee80211_regdomain *regd = NULL;
+ 	bool reg_strict = info->attrs[HWSIM_ATTR_REG_STRICT_REG];
+ 	bool p2p_device = info->attrs[HWSIM_ATTR_SUPPORT_P2P_DEVICE];
++	bool destroy_on_close = info->attrs[HWSIM_ATTR_DESTROY_RADIO_ON_CLOSE];
+ 	bool use_chanctx;
  
- 	ieee80211_recalc_ps(local, -1);
+ 	if (info->attrs[HWSIM_ATTR_CHANNELS])
+@@ -2456,7 +2464,8 @@ static int hwsim_create_radio_nl(struct sk_buff *msg, struct genl_info *info)
+ 	}
  
-+	if (cancel_scan)
-+		flush_delayed_work(&local->scan_work);
+ 	return mac80211_hwsim_create_radio(chans, alpha2, regd, reg_strict,
+-					   p2p_device, use_chanctx);
++					   p2p_device, use_chanctx,
++					   destroy_on_close, info->snd_portid);
+ }
+ 
+ static int hwsim_destroy_radio_nl(struct sk_buff *msg, struct genl_info *info)
+@@ -2514,6 +2523,29 @@ static const struct genl_ops hwsim_ops[] = {
+ 	},
+ };
+ 
++static void destroy_radio(struct work_struct *work)
++{
++	struct mac80211_hwsim_data *data =
++		container_of(work, struct mac80211_hwsim_data, destroy_work);
 +
- 	if (local->open_count == 0) {
- 		ieee80211_stop_device(local);
++	mac80211_hwsim_destroy_radio(data);
++}
++
++static void remove_user_radios(u32 portid)
++{
++	struct mac80211_hwsim_data *entry, *tmp;
++
++	spin_lock_bh(&hwsim_radio_lock);
++	list_for_each_entry_safe(entry, tmp, &hwsim_radios, list) {
++		if (entry->destroy_on_close && entry->portid == portid) {
++			list_del(&entry->list);
++			INIT_WORK(&entry->destroy_work, destroy_radio);
++			schedule_work(&entry->destroy_work);
++		}
++	}
++	spin_unlock_bh(&hwsim_radio_lock);
++}
++
+ static int mac80211_hwsim_netlink_notify(struct notifier_block *nb,
+ 					 unsigned long state,
+ 					 void *_notify)
+@@ -2523,6 +2555,8 @@ static int mac80211_hwsim_netlink_notify(struct notifier_block *nb,
+ 	if (state != NETLINK_URELEASE)
+ 		return NOTIFY_DONE;
  
-
-johannes
++	remove_user_radios(notify->portid);
++
+ 	if (notify->portid == wmediumd_portid) {
+ 		printk(KERN_INFO "mac80211_hwsim: wmediumd released netlink"
+ 		       " socket, switching to perfect channel medium\n");
+@@ -2676,7 +2710,7 @@ static int __init init_mac80211_hwsim(void)
+ 		err = mac80211_hwsim_create_radio(channels, reg_alpha2,
+ 						  regd, reg_strict,
+ 						  support_p2p_device,
+-						  channels > 1);
++						  channels > 1, false, 0);
+ 		if (err < 0)
+ 			goto out_free_radios;
+ 	}
+diff --git a/drivers/net/wireless/mac80211_hwsim.h b/drivers/net/wireless/mac80211_hwsim.h
+index c9d0315..b96d867 100644
+--- a/drivers/net/wireless/mac80211_hwsim.h
++++ b/drivers/net/wireless/mac80211_hwsim.h
+@@ -111,6 +111,8 @@ enum {
+  * @HWSIM_ATTR_USE_CHANCTX: used with the %HWSIM_CMD_CREATE_RADIO
+  *	command to force use of channel contexts even when only a
+  *	single channel is supported
++ * @HWSIM_ATTR_DESTROY_RADIO_ON_CLOSE: used with the %HWSIM_CMD_CREATE_RADIO
++ *	command to force radio removal when process that created the radio dies
+  * @__HWSIM_ATTR_MAX: enum limit
+  */
+ 
+@@ -132,6 +134,7 @@ enum {
+ 	HWSIM_ATTR_REG_STRICT_REG,
+ 	HWSIM_ATTR_SUPPORT_P2P_DEVICE,
+ 	HWSIM_ATTR_USE_CHANCTX,
++	HWSIM_ATTR_DESTROY_RADIO_ON_CLOSE,
+ 	__HWSIM_ATTR_MAX,
+ };
+ #define HWSIM_ATTR_MAX (__HWSIM_ATTR_MAX - 1)
+-- 
+1.8.3.1
 
