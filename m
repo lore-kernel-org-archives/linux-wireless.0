@@ -1,171 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:43876 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751505AbaJYTIv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Oct 2014 15:08:51 -0400
-Received: by mail-wi0-f169.google.com with SMTP id q5so3340674wiv.0
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2014 12:08:50 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 10/31] staging: vt6655: mac80211 conversion replace suspend resume functions
-Date: Sat, 25 Oct 2014 09:20:20 +0100
-Message-Id: <1414225241-5480-11-git-send-email-tvboxspy@gmail.com> (sfid-20141025_210855_443215_7EA9A82A)
-In-Reply-To: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
-References: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:58565 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755604AbaJIPVg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Oct 2014 11:21:36 -0400
+Message-ID: <1412868088.1828.56.camel@jlt4.sipsolutions.net> (sfid-20141009_172139_645896_020C54F6)
+Subject: Re: [PATCHv3 2/2] iw: add auto parameter to set distance command
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 09 Oct 2014 17:21:28 +0200
+In-Reply-To: <CAA2SeNLkf5RZsSYjYPpU=E0hHhe2c3G=cbUpy=gfp0kfwDRviQ@mail.gmail.com> (sfid-20141009_164635_670305_C371157F)
+References: <1410111140-4340-1-git-send-email-lorenzo.bianconi83@gmail.com>
+	 <1410111140-4340-3-git-send-email-lorenzo.bianconi83@gmail.com>
+	 <1412864474.1828.51.camel@jlt4.sipsolutions.net>
+	 <CAA2SeNLkf5RZsSYjYPpU=E0hHhe2c3G=cbUpy=gfp0kfwDRviQ@mail.gmail.com>
+	 (sfid-20141009_164635_670305_C371157F)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-add vt6655_suspend and vt6655_resume
+On Thu, 2014-10-09 at 16:46 +0200, Lorenzo Bianconi wrote:
 
-remove viawget_suspend and viawget_resume.
+> > Somehow you also changed nl80211.h here - you shouldn't do that at all
+> > really :) I will deal with the updates of that file for iw.
+> 
+> I added NL80211_ATTR_WIPHY_DYN_ACK flag attribute to nl80211_attrs
+> enumeration and NL80211_FEATURE_ACKTO_ESTIMATION flag attribute to
+> nl80211_feature_flags. I should not? Should I use a different patch?
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/device_main.c | 104 ++++++++++++-----------------------
- 1 file changed, 34 insertions(+), 70 deletions(-)
+I never apply patches to nl80211.h - I only copy the file from the
+latest kernel. That way I avoid sync issues and if then your patch
+doesn't compile I know I haven't applied the kernel patch :)
 
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index 054841b..b0f94a8 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -274,8 +274,6 @@ static int  device_ioctl(struct net_device *dev, struct ifreq *rq, int cmd);
- 
- #ifdef CONFIG_PM
- static int device_notify_reboot(struct notifier_block *, unsigned long event, void *ptr);
--static int viawget_suspend(struct pci_dev *pcid, pm_message_t state);
--static int viawget_resume(struct pci_dev *pcid);
- static struct notifier_block device_notifier = {
- 	.notifier_call = device_notify_reboot,
- 	.next = NULL,
-@@ -3482,6 +3480,37 @@ vt6655_probe(struct pci_dev *pcid, const struct pci_device_id *ent)
- 
- /*------------------------------------------------------------------*/
- 
-+#ifdef CONFIG_PM
-+static int vt6655_suspend(struct pci_dev *pcid, pm_message_t state)
-+{
-+	struct vnt_private *priv = pci_get_drvdata(pcid);
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&priv->lock, flags);
-+
-+	pci_save_state(pcid);
-+
-+	MACbShutdown(priv->PortOffset);
-+
-+	pci_disable_device(pcid);
-+	pci_set_power_state(pcid, pci_choose_state(pcid, state));
-+
-+	spin_unlock_irqrestore(&priv->lock, flags);
-+
-+	return 0;
-+}
-+
-+static int vt6655_resume(struct pci_dev *pcid)
-+{
-+
-+	pci_set_power_state(pcid, PCI_D0);
-+	pci_enable_wake(pcid, PCI_D0, 0);
-+	pci_restore_state(pcid);
-+
-+	return 0;
-+}
-+#endif
-+
- MODULE_DEVICE_TABLE(pci, vt6655_pci_id_table);
- 
- static struct pci_driver device_driver = {
-@@ -3490,8 +3519,8 @@ static struct pci_driver device_driver = {
- 	.probe = vt6655_probe,
- 	.remove = vt6655_remove,
- #ifdef CONFIG_PM
--	.suspend = viawget_suspend,
--	.resume = viawget_resume,
-+	.suspend = vt6655_suspend,
-+	.resume = vt6655_resume,
- #endif
- };
- 
-@@ -3532,75 +3561,10 @@ device_notify_reboot(struct notifier_block *nb, unsigned long event, void *p)
- 		for_each_pci_dev(pdev) {
- 			if (pci_dev_driver(pdev) == &device_driver) {
- 				if (pci_get_drvdata(pdev))
--					viawget_suspend(pdev, PMSG_HIBERNATE);
-+					vt6655_suspend(pdev, PMSG_HIBERNATE);
- 			}
- 		}
- 	}
- 	return NOTIFY_DONE;
- }
--
--static int
--viawget_suspend(struct pci_dev *pcid, pm_message_t state)
--{
--	int power_status;   // to silence the compiler
--
--	struct vnt_private *pDevice = pci_get_drvdata(pcid);
--	PSMgmtObject  pMgmt = pDevice->pMgmt;
--
--	netif_stop_queue(pDevice->dev);
--	spin_lock_irq(&pDevice->lock);
--	pci_save_state(pcid);
--	del_timer(&pDevice->sTimerCommand);
--	del_timer(&pMgmt->sTimerSecondCallback);
--	pDevice->cbFreeCmdQueue = CMD_Q_SIZE;
--	pDevice->uCmdDequeueIdx = 0;
--	pDevice->uCmdEnqueueIdx = 0;
--	pDevice->bCmdRunning = false;
--	MACbShutdown(pDevice->PortOffset);
--	MACvSaveContext(pDevice->PortOffset, pDevice->abyMacContext);
--	pDevice->bLinkPass = false;
--	memset(pMgmt->abyCurrBSSID, 0, 6);
--	pMgmt->eCurrState = WMAC_STATE_IDLE;
--	pci_disable_device(pcid);
--	power_status = pci_set_power_state(pcid, pci_choose_state(pcid, state));
--	spin_unlock_irq(&pDevice->lock);
--	return 0;
--}
--
--static int
--viawget_resume(struct pci_dev *pcid)
--{
--	struct vnt_private *pDevice = pci_get_drvdata(pcid);
--	PSMgmtObject  pMgmt = pDevice->pMgmt;
--	int power_status;   // to silence the compiler
--
--	power_status = pci_set_power_state(pcid, PCI_D0);
--	power_status = pci_enable_wake(pcid, PCI_D0, 0);
--	pci_restore_state(pcid);
--	if (netif_running(pDevice->dev)) {
--		spin_lock_irq(&pDevice->lock);
--		MACvRestoreContext(pDevice->PortOffset, pDevice->abyMacContext);
--		device_init_registers(pDevice);
--		if (pMgmt->sNodeDBTable[0].bActive) { // Assoc with BSS
--			pMgmt->sNodeDBTable[0].bActive = false;
--			pDevice->bLinkPass = false;
--			if (pMgmt->eCurrMode == WMAC_MODE_IBSS_STA) {
--				// In Adhoc, BSS state set back to started.
--				pMgmt->eCurrState = WMAC_STATE_STARTED;
--			} else {
--				pMgmt->eCurrMode = WMAC_MODE_STANDBY;
--				pMgmt->eCurrState = WMAC_STATE_IDLE;
--			}
--		}
--		init_timer(&pMgmt->sTimerSecondCallback);
--		init_timer(&pDevice->sTimerCommand);
--		MACvIntEnable(pDevice->PortOffset, IMR_MASK_VALUE);
--		BSSvClearBSSList((void *)pDevice, pDevice->bLinkPass);
--		bScheduleCommand((void *)pDevice, WLAN_CMD_BSSID_SCAN, NULL);
--		bScheduleCommand((void *)pDevice, WLAN_CMD_SSID, NULL);
--		spin_unlock_irq(&pDevice->lock);
--	}
--	return 0;
--}
--
- #endif
--- 
-1.9.1
+So yeah - you should simply not do it at all. I'll copy if/when needed.
+
+johannes
 
