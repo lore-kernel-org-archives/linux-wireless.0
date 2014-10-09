@@ -1,73 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f51.google.com ([74.125.82.51]:32921 "EHLO
-	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751792AbaJYTgo (ORCPT
+Received: from mail-wg0-f50.google.com ([74.125.82.50]:61334 "EHLO
+	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755741AbaJIM7y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Oct 2014 15:36:44 -0400
-Received: by mail-wg0-f51.google.com with SMTP id b13so3061163wgh.34
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2014 12:36:43 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 20/31] staging: vt6655: mac80211 conversion: device_free_info
-Date: Sat, 25 Oct 2014 09:20:30 +0100
-Message-Id: <1414225241-5480-21-git-send-email-tvboxspy@gmail.com> (sfid-20141025_213652_034637_61CFD748)
-In-Reply-To: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
-References: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
+	Thu, 9 Oct 2014 08:59:54 -0400
+Received: by mail-wg0-f50.google.com with SMTP id a1so1200563wgh.33
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Oct 2014 05:59:53 -0700 (PDT)
+Date: Thu, 9 Oct 2014 14:59:44 +0200
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@rivierawaves.com>,
+	Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+Subject: Re: [PATCH] mac80211: minstrel_ht: fix MCS_GROUP_RATES usage
+Message-ID: <20141009125944.GA20644@magnum.frso.rivierawaves.com> (sfid-20141009_145957_643487_6FBDB010)
+References: <1411950990-24365-1-git-send-email-karl.beldan@gmail.com>
+ <1412845101.1828.25.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1412845101.1828.25.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove net device code and add mac80211 unregister code.
-
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/device_main.c | 25 +++++++------------------
- 1 file changed, 7 insertions(+), 18 deletions(-)
-
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index 77d81b3..451b608 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -806,31 +806,20 @@ static bool device_get_pci_info(struct vnt_private *pDevice,
+On Thu, Oct 09, 2014 at 10:58:21AM +0200, Johannes Berg wrote:
+> On Mon, 2014-09-29 at 02:36 +0200, Karl Beldan wrote:
+> > From: Karl Beldan <karl.beldan@rivierawaves.com>
+> > 
+> > Commit 4441e8e9 ("mac80211: improve minstrel_ht rate sorting by
+> > throughput & probability") 
+> 
+> That commit ID doesn't exist? Anyway, I fixed it.
+> 
+> I applied the patch - but to mac80211-next since presumably you want to
+> build on this and it doesn't matter much on mac80211.
+> 
+Thanks, this was a locally git-applied commit ID.
  
- static void device_free_info(struct vnt_private *pDevice)
- {
--	struct net_device *dev = pDevice->dev;
--
--	ASSERT(pDevice);
--//2008-0714-01<Add>by chester
--	device_release_WPADEV(pDevice);
--
--//2008-07-21-01<Add>by MikeLiu
--//unregister wpadev
--	if (wpa_set_wpadev(pDevice, 0) != 0)
--		pr_err("unregister wpadev fail?\n");
-+	if (!pDevice)
-+		return;
- 
--#ifdef HOSTAP
--	if (dev)
--		vt6655_hostap_set_hostapd(pDevice, 0, 0);
--#endif
--	if (dev)
--		unregister_netdev(dev);
-+	if (pDevice->mac_hw)
-+		ieee80211_unregister_hw(pDevice->hw);
- 
- 	if (pDevice->PortOffset)
- 		iounmap(pDevice->PortOffset);
- 
- 	if (pDevice->pcid)
- 		pci_release_regions(pDevice->pcid);
--	if (dev)
--		free_netdev(dev);
-+
-+	if (pDevice->hw)
-+		ieee80211_free_hw(pDevice->hw);
- }
- 
- static bool device_init_rings(struct vnt_private *pDevice)
--- 
-1.9.1
-
+Karl
