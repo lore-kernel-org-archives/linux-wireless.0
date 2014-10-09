@@ -1,45 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:45151 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757984AbaJ1GP7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2014 02:15:59 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: stable@vger.kernel.org
+Received: from mail-wi0-f182.google.com ([209.85.212.182]:47496 "EHLO
+	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752026AbaJIJt4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Oct 2014 05:49:56 -0400
+Received: by mail-wi0-f182.google.com with SMTP id n3so1211610wiv.9
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Oct 2014 02:49:54 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
 Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 3.16 4/7] iwlwifi: remove wrong comment about alignment in iwl-fw-error-dump.h
-Date: Tue, 28 Oct 2014 08:11:23 +0200
-Message-Id: <1414476686-3407-5-git-send-email-emmanuel.grumbach@intel.com> (sfid-20141028_071621_773710_CA98AD75)
-In-Reply-To: <1414476686-3407-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1414476686-3407-1-git-send-email-emmanuel.grumbach@intel.com>
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 1/3] ath10k: fix possible bmi crash
+Date: Thu,  9 Oct 2014 11:38:45 +0200
+Message-Id: <1412847527-25983-2-git-send-email-michal.kazior@tieto.com> (sfid-20141009_115001_850795_EDF20EB8)
+In-Reply-To: <1412847527-25983-1-git-send-email-michal.kazior@tieto.com>
+References: <1412847527-25983-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-commit d4849277f92a0bfa08a988545ea527fc8e0c9571 upstream.
+While testing other things I've found that CE
+items aren't cleared properly. This could lead to
+null dereferences in BMI.
 
-The chunks of data do not need to be multipliers of 4 nor
-4-bytes aligned.
+To prevent that make sure CE revoking clears the
+nbytes value (which is used as a buffer completion
+indication) and memset the entire CE rings when
+(re)initializing.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Also make sure to check BMI xfer pointer and print
+a splat instead of crashing the kernel.
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath10k/ce.c  | 7 +++++++
+ drivers/net/wireless/ath/ath10k/pci.c | 3 +++
+ 2 files changed, 10 insertions(+)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h b/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
-index ced5ba9..9fd860f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
-@@ -92,8 +92,8 @@ enum iwl_fw_error_dump_type {
- /**
-  * struct iwl_fw_error_dump_data - data for one type
-  * @type: %enum iwl_fw_error_dump_type
-- * @len: the length starting from %data - must be a multiplier of 4.
-- * @data: the data itself padded to be a multiplier of 4.
-+ * @len: the length starting from %data
-+ * @data: the data itself
-  */
- struct iwl_fw_error_dump_data {
- 	__le32 type;
+diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
+index 4745ef2..134dea5 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.c
++++ b/drivers/net/wireless/ath/ath10k/ce.c
+@@ -558,6 +558,7 @@ int ath10k_ce_revoke_recv_next(struct ath10k_ce_pipe *ce_state,
+ 
+ 		/* sanity */
+ 		dest_ring->per_transfer_context[sw_index] = NULL;
++		desc->nbytes = 0;
+ 
+ 		/* Update sw_index */
+ 		sw_index = CE_RING_IDX_INCR(nentries_mask, sw_index);
+@@ -837,6 +838,10 @@ static int ath10k_ce_init_src_ring(struct ath10k *ar,
+ 
+ 	memset(src_ring->per_transfer_context, 0,
+ 	       nentries * sizeof(*src_ring->per_transfer_context));
++	memset(src_ring->base_addr_owner_space, 0,
++	       nentries * sizeof(struct ce_desc));
++	memset(src_ring->shadow_base, 0,
++	       nentries * sizeof(struct ce_desc));
+ 
+ 	src_ring->sw_index = ath10k_ce_src_ring_read_index_get(ar, ctrl_addr);
+ 	src_ring->sw_index &= src_ring->nentries_mask;
+@@ -874,6 +879,8 @@ static int ath10k_ce_init_dest_ring(struct ath10k *ar,
+ 
+ 	memset(dest_ring->per_transfer_context, 0,
+ 	       nentries * sizeof(*dest_ring->per_transfer_context));
++	memset(dest_ring->base_addr_owner_space, 0,
++	       nentries * sizeof(struct ce_desc));
+ 
+ 	dest_ring->sw_index = ath10k_ce_dest_ring_read_index_get(ar, ctrl_addr);
+ 	dest_ring->sw_index &= dest_ring->nentries_mask;
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 6e8e098..ca2adbd 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -1428,6 +1428,9 @@ static void ath10k_pci_bmi_recv_data(struct ath10k_ce_pipe *ce_state)
+ 					  &nbytes, &transfer_id, &flags))
+ 		return;
+ 
++	if (WARN_ON_ONCE(!xfer))
++		return;
++
+ 	if (!xfer->wait_for_resp) {
+ 		ath10k_warn(ar, "unexpected: BMI data received; ignoring\n");
+ 		return;
 -- 
-1.9.1
+1.8.5.3
 
