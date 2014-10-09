@@ -1,43 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:41606 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:57128 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751319AbaJFOXw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Oct 2014 10:23:52 -0400
-Message-ID: <1412605426.3098.15.camel@jlt4.sipsolutions.net> (sfid-20141006_162355_168087_E416ECCC)
-Subject: Re: [PATCH] iw: support setting vdev MAC during creation.
+	id S1750873AbaJIJSo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Oct 2014 05:18:44 -0400
+Message-ID: <1412846322.1828.29.camel@jlt4.sipsolutions.net> (sfid-20141009_111847_742117_BC8BAA0C)
+Subject: Re: [PATCH v4 2/2] mac80211: implement cfg80211_ops to query mesh
+ proxy path table
 From: Johannes Berg <johannes@sipsolutions.net>
-To: greearb@candelatech.com
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 06 Oct 2014 16:23:46 +0200
-In-Reply-To: <1412102935-30887-1-git-send-email-greearb@candelatech.com> (sfid-20140930_204916_791554_FDE9BF7C)
-References: <1412102935-30887-1-git-send-email-greearb@candelatech.com>
-	 (sfid-20140930_204916_791554_FDE9BF7C)
+To: Henning Rogge <hrogge@gmail.com>
+Cc: "linux-wireless @ vger . kernel . org"
+	<linux-wireless@vger.kernel.org>,
+	Henning Rogge <henning.rogge@fkie.fraunhofer.de>,
+	Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+Date: Thu, 09 Oct 2014 11:18:42 +0200
+In-Reply-To: <CAGnRvurpXRa295P9eQsaR0HnE5o19HDZfwQRcjHk7wEfBYSbbQ@mail.gmail.com> (sfid-20141009_101047_525203_86B0F418)
+References: <1410505130-7271-1-git-send-email-henning.rogge@fkie.fraunhofer.de>
+	 <1410505130-7271-3-git-send-email-henning.rogge@fkie.fraunhofer.de>
+	 <1412840290.1828.1.camel@jlt4.sipsolutions.net>
+	 <CAGnRvurpXRa295P9eQsaR0HnE5o19HDZfwQRcjHk7wEfBYSbbQ@mail.gmail.com>
+	 (sfid-20141009_101047_525203_86B0F418)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-09-30 at 11:48 -0700, greearb@candelatech.com wrote:
-> From: Ben Greear <greearb@candelatech.com>
-> 
-> This saves an extra call to change it later, and will
-> also keep udev from potentially messing with a vdev
-> it should not be messing with.
-> 
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> ---
->  info.c      |  2 ++
->  interface.c | 20 ++++++++++++++++++--
->  nl80211.h   | 30 ++++++++++++++++++++++++++++++
+On Thu, 2014-10-09 at 10:10 +0200, Henning Rogge wrote:
 
-Please don't update nl80211.h, I'll do it as appropriate. In any case, I
-haven't seen a kernel patch to add the MAC_ON_CREATE flag, so I'm
-dropping this patch for now.
+> I think it should be reasonable safe. The variable is only increased
+> (never decreased) and is used as a "information version number" for
+> the dumps via netlink to the userspace. I think the current userspace
+> tools ignore the variable completely.
 
-(Please also Cc me in the future - I have ~500+ emails per week to go
-through and was just on vacation for three weeks, making it likely that
-I miss something I wasn't Cc'ed on)
+Fair enough. I'll apply it. If an update is lost, it's likely that
+userspace saw a previous value anyway.
 
 johannes
-
 
