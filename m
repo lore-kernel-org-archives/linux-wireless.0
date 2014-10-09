@@ -1,59 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:40852 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758111AbaJ3QL2 (ORCPT
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:58392 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752211AbaJIOGk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Oct 2014 12:11:28 -0400
-Received: by mail-wi0-f177.google.com with SMTP id ex7so7867906wid.4
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Oct 2014 09:11:26 -0700 (PDT)
+	Thu, 9 Oct 2014 10:06:40 -0400
+Received: by mail-wi0-f173.google.com with SMTP id fb4so13259182wid.6
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Oct 2014 07:06:39 -0700 (PDT)
+Date: Thu, 9 Oct 2014 16:06:37 +0200
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@rivierawaves.com>
+Subject: Re: [PATCH] mac80211/trivial: fix typo in starting baserate for
+ rts_cts_rate_idx
+Message-ID: <20141009140636.GC20644@magnum.frso.rivierawaves.com> (sfid-20141009_160644_475877_75FAC281)
+References: <1412690018-18429-1-git-send-email-karl.beldan@gmail.com>
+ <1412845586.1828.27.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-In-Reply-To: <54525DD8.6080506@mailservices.uwaterloo.ca>
-References: <544A7871.7020005@mailservices.uwaterloo.ca>
-	<CAJ-Vmon_jefxRgZvJmOsr4ydNHbvTCyMHHejRMWqXg_SG6NJUw@mail.gmail.com>
-	<544AB9B8.9050407@mailservices.uwaterloo.ca>
-	<CAJ-VmomYx1Dn5Oey1v4+8Yw7n0QkBiGKynFf_qNBD1JZb_Ra_A@mail.gmail.com>
-	<544BC1B5.1040107@mailservices.uwaterloo.ca>
-	<CAJ-Vmo=ceFvBDxL=HYSVmAMfEk0yxD_-a4MP3WjcvPAaupxPPw@mail.gmail.com>
-	<544C0995.8010507@mailservices.uwaterloo.ca>
-	<CAJ-VmonTjXvqPs2APB90pNgRyKwxPE2BJk+jxFGbLGw9uK2xHw@mail.gmail.com>
-	<54525DD8.6080506@mailservices.uwaterloo.ca>
-Date: Thu, 30 Oct 2014 09:11:26 -0700
-Message-ID: <CAJ-VmonkWf5q445fR2PnsQarnA5Vuu4t4jNckU3-YUd+nbUZvQ@mail.gmail.com> (sfid-20141030_171131_959319_D1930A25)
-Subject: Re: strange MPDU loss pattern
-From: Adrian Chadd <adrian@freebsd.org>
-To: Ali Abedi <a2abedi@uwaterloo.ca>
-Cc: ath9k-devel <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1412845586.1828.27.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 30 October 2014 08:48, Ali Abedi <a2abedi@uwaterloo.ca> wrote:
-> Hi Adrian,
->
->
-> We observed that this can happen for any rate for some SNR values.
-> If the SNR is strong enough for the given MCS this won't happen.
-> But when the SNR approaches the transition region when
-> error rate starts to increase, this problem will be observed.
->
-> So this can happen even for MCS0->MCS4 when the client is far from the AP
-> and specially when it's moving.
+On Thu, Oct 09, 2014 at 11:06:26AM +0200, Johannes Berg wrote:
+> On Tue, 2014-10-07 at 15:53 +0200, Karl Beldan wrote:
+> > From: Karl Beldan <karl.beldan@rivierawaves.com>
+> 
+> Is that really trivial? It seems to have some impact on the code, but I
+> can't right now say exactly what the impact is. Can you describe it and
+> say whether I should add it to mac80211 or mac80211-next? For "trivial"
+> I'd probably say mac80211-next, but this might be more important than
+> that?
+> 
+The typo is clearly showing but the faulty behavior clearly demands more
+detail indeed.
 
-Right. That's the missing useful information here. :)
+It affects non-(V)HT rates and can lead to selecting an rts_cts rate
+that is not a basic rate or way superior to the reference rate (ATM
+rates[0] used for the 1st attempt of the protected frame data).
+E.g, assuming the drivers register growing (bitrate) sorted
+ieee80211_rate tables, having :
+- rates[0].idx == d'2 and basic_rates == b'10100
+will select rts_cts idx b'10011 & ~d'(BIT(2)-1), i.e. 1, likewise
+- rates[0].idx == d'2 and basic_rates == b'10001 
+will select rts_cts idx b'10000
+The first is not a basic rate and the second is > rates[0].
 
-Yes, I'd expect this happens whilst the client is moving. The training
-stuff is all done on the beginning of the packet and channel
-conditions aren't adjusted during packet reception - only upon the
-next received packet.
-
-(FYI - I've seen a similar pattern, but when i stand between the AP /
-STA at > MCS13 and start waving my hands around. Just that slight
-change in channel conditions == the above failure.)
-
-So thanks for reminding us that we should take A-MPDU length into
-account in our rate control code. :)
-
-
-
--adrian
+I hope it clarifies things enough.
+ 
+Karl
