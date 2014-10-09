@@ -1,55 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:37707 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751141AbaJ1MU1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2014 08:20:27 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 0/3] debugfs: adding helper for single seq_file
-Date: Tue, 28 Oct 2014 13:19:09 +0100
-Message-ID: <1414498752-9746-1-git-send-email-arend@broadcom.com> (sfid-20141028_132030_701779_22EF7D7C)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:56950 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751024AbaJII0y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Oct 2014 04:26:54 -0400
+Message-ID: <1412843212.1828.17.camel@jlt4.sipsolutions.net> (sfid-20141009_102700_384040_4AEFF411)
+Subject: Re: [PATCH 3/4] cfg80211: Join and Leave handling for OCB mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rostislav Lisovy <lisovy@gmail.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
+	jan-niklas.meier@volkswagen.de, burak.simsek@volkswagen.de,
+	Emmanuel Thierry <emmanuel.thierry@yogoko.fr>,
+	laszlo.virag@commsignia.com,
+	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+Date: Thu, 09 Oct 2014 10:26:52 +0200
+In-Reply-To: <1410445822-6559-4-git-send-email-rostislav.lisovy@fel.cvut.cz> (sfid-20140911_163049_091317_F9C6D45E)
+References: <1410445822-6559-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
+	 <1410445822-6559-4-git-send-email-rostislav.lisovy@fel.cvut.cz>
+	 (sfid-20140911_163049_091317_F9C6D45E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The first patch was already posted earlier:
+On Thu, 2014-09-11 at 16:30 +0200, Rostislav Lisovy wrote:
+> Signed-off-by: Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
 
-Message-ID: <1413043315-22332-1-git-send-email-arend@broadcom.com>
+A bit more commit log would be good :)
 
-This series include changes in driver code to investigate potential
-code savings. As example used the ath9k driver as it has a fair
-amount of debugfs files. In this series it changes 7 debugfs entries
-to use seq_file and the helper function. Below the output of the
-size utility:
+> +++ b/include/net/cfg80211.h
+> @@ -375,6 +375,8 @@ static inline enum nl80211_channel_type
+>  cfg80211_get_chandef_type(const struct cfg80211_chan_def *chandef)
+>  {
+>  	switch (chandef->width) {
+> +	case NL80211_CHAN_WIDTH_5:
+> +	case NL80211_CHAN_WIDTH_10:
+>  	case NL80211_CHAN_WIDTH_20_NOHT:
+>  		return NL80211_CHAN_NO_HT;
 
-   text	   data	    bss	    dec	    hex	filename
- 115968	   1225	     28	 117221	  1c9e5	original/ath9k.o
- 113224	   1225	     28	 114477	  1bf2d	seq_file/ath9k.o
- 111024	   1225	     28	 112277	  1b695	helper/ath9k.o
+This is wrong, the old nl80211_channel_type simply cannot express a 5 or
+10 MHz width - so this case should WARN() or something and really never
+ever be called here.
 
-This series is for 3.19 kernel and applies to the driver-core-next
-branch of the driver-core repository. If needed the ath9k patches
-may be dropped for now and I will resubmit them to wireless-next
-once the debugfs patch has made it into linux-next.
+Also, it doesn't really belong into this patch?
 
-Arend van Spriel (3):
-  debugfs: add helper function to create device related seq_file
-  ath: use seq_file api for ath9k debugfs files
-  ath: ath9k: use debugfs_create_devm_seqfile() helper for seq_file
-    entries
+> +struct ocb_setup {
+> +	struct cfg80211_chan_def chandef;
+> +};
 
- drivers/net/wireless/ath/ath9k/ahb.c   |   1 +
- drivers/net/wireless/ath/ath9k/debug.c | 429 +++++++++++----------------------
- drivers/net/wireless/ath/ath9k/debug.h |   3 +-
- drivers/net/wireless/ath/ath9k/pci.c   |   1 +
- fs/debugfs/file.c                      |  54 +++++
- include/linux/debugfs.h                |  16 +-
- 6 files changed, 207 insertions(+), 297 deletions(-)
+kernel-doc would be appreciated.
 
--- 
-1.9.1
+> @@ -892,6 +893,13 @@ cfg80211_get_chan_state(struct wireless_dev *wdev,
+>  				*radar_detect |= BIT(wdev->chandef.width);
+>  		}
+>  		return;
+> +	case NL80211_IFTYPE_OCB:
+> +		if (wdev->chandef.chan) {
+> +			*chan = wdev->chandef.chan;
+> +			*chanmode = CHAN_MODE_EXCLUSIVE;
+> +			return;
+> +		}
+
+same as in the mac80211 patch - I don't see why this should be
+exclusive.
+
+> +	WARN_ON(!setup->chandef.chan);
+
+if (WARN_ON(...))
+	return -EINVAL;
+
+would be better
+
+johannes
 
