@@ -1,65 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:57218 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751154AbaJIJkK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2014 05:40:10 -0400
-Message-ID: <1412847604.1828.38.camel@jlt4.sipsolutions.net> (sfid-20141009_114013_921425_9693C9F2)
-Subject: Re: [PATCH] mac80211: Call mgd_prepare_tx before deauthentication
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sujith Manoharan <sujith@msujith.org>
-Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:61626 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751115AbaJIRit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Oct 2014 13:38:49 -0400
+From: "Xu, Peng" <pxu@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"Park, Kyeyoon" <kyeyoonp@qca.qualcomm.com>
+CC: cfg80211mac80211 <cfg80211mac80211@qca.qualcomm.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 09 Oct 2014 11:40:04 +0200
-In-Reply-To: <21530.29268.867868.46188@gargle.gargle.HOWL>
-References: <1410928422-25587-1-git-send-email-sujith@msujith.org>
-	 <21529.5141.845629.86918@gargle.gargle.HOWL>
-	 <0BA3FCBA62E2DC44AF3030971E174FB31B523034@hasmsx107.ger.corp.intel.com>
-	 <21529.8110.26388.664223@gargle.gargle.HOWL>
-	 <0BA3FCBA62E2DC44AF3030971E174FB31B5230C9@hasmsx107.ger.corp.intel.com>
-	 <21529.9155.323515.987489@gargle.gargle.HOWL>
-	 <0BA3FCBA62E2DC44AF3030971E174FB31B52311D@hasmsx107.ger.corp.intel.com>
-	 <21529.10109.308613.563543@gargle.gargle.HOWL>
-	 <CANUX_P3hdFeCPmqHCdP8JKwqvUUnjgp3SNy1GQDrQd0bG+WKng@mail.gmail.com>
-	 <21530.19430.782437.984290@gargle.gargle.HOWL>
-	 <21530.23545.178915.653622@gargle.gargle.HOWL>
-	 <CANUX_P3o6=sdjHPp2L7tGAeXRW0v4xqSV-2q27Neetu75bDc1A@mail.gmail.com>
-	 <21530.29268.867868.46188@gargle.gargle.HOWL>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Subject: RE: [PATCH] cfg80211: Add support for ACS offloading
+Date: Thu, 9 Oct 2014 17:38:47 +0000
+Message-ID: <6c0aebecfa9d478ea43ba9c10236c19b@nasanexm01a.na.qualcomm.com> (sfid-20141009_193853_539689_98F70C31)
+References: <1412373538-17690-1-git-send-email-kyeyoonp@qca.qualcomm.com>
+ <1412847971.1828.42.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1412847971.1828.42.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-09-18 at 11:19 +0530, Sujith Manoharan wrote:
-
-> I can see your point and agree that the original intention of the mgd_prepare_tx()
-> callback is as described in the documentation. But with multiple active
-> contexts, flush() becomes a big hammer rather than a simple emptying of
-> the queues. :-)
-
-I'm a bit conflicted about this. If we add mgd_prepare_tx() here, what's
-to say that we don't need to also do this for a variety of other frames?
-Like sending delBA action frames? I guess the difference would be that
-we don't disassoc immediately in those case.
-
-However, if you consider deauth/flush while you're on a different
-context, then mgd_prepare_tx() would potentially not really be
-sufficient either. If that forces or waits for a context switch, you
-really have no guarantee that the deauth frame went out because it might
-be waiting behind other frames, and there's nothing that guarantees
-enough time in the context slice to actually send out all of them ...
-
-In that sense, I think you still have to implement flush.
-
-But I also think you see it wrongly - you don't have to force a context
-switch in flush, flush can essentially be "wait for queue to be empty"
-and the context switching etc. happens in the background.
-
-mgd_prepare_tx() is, the way I see it, really more for the case where
-you really have no context scheduling *at all* and have to somehow send
-a frame anyway. In the case we're talking about you have regular context
-scheduling, and there shouldn't be a need to add a special scheduling on
-top.
-
-johannes
-
+SGkgSm9oYW5uZXMsDQpUaGlzIGNoYW5nZSBpcyBvcmlnaW5hdGVkIGZyb20gYSBwcm9ibGVtIGNh
+dXNlZCBieSBPQlNTIHNjYW4gYW5kIEFDUyBmZWF0dXJlIGluIHRoZSBkcml2ZXIuIFdoZW4gU0FQ
+IGlzIHN0YXJ0ZWQsIGhvc3RhcGQgd2lsbCBkbyBhbiBPQlNTIHNjYW4gYmFzZWQgb24gdGhlIGNo
+YW5uZWwgc2V0dGluZyBpbiBob3N0YXBkLmNvbmYsIGlmIHRoZSB3bGFuIGRyaXZlciBoYXMgdGhl
+IEFDUyBjYXBhYmlsaXR5LCBpdCBtYXkgY2hvb3NlIGEgZGlmZmVyZW50IGNoYW5uZWwuIEV2ZW4g
+aXQgbm90aWZpZXMgaG9zdGFwZCBhYm91dCB0aGUgY2hhbm5lbCBzZWxlY3Rpb24sIHRoZSBPQlNT
+IHNjYW4gcmVzdWx0ICBtYXkgYmVjb21lIGludmFsaWQgaWYgYSBkaWZmZXJlbnQgY2hhbm5lbCBp
+cyBzZWxlY3RlZCBhbmQgU0FQIG1heSBlbmQgdXAgb3BlcmF0aW5nIGluIG5vdCBkZXNpcmVkIG1v
+ZGUuDQpUaGlzIGNoYW5nZSB3aWxsIGFsbG93IHRoZSB3bGFuIGRyaXZlciBkbyB0aGUgQUNTIGFu
+ZCBkZWNpZGUgYSBjaGFubmVsLCBvbmNlIGhvc3RhcGQgaXMgbm90aWZpZWQsIGl0IGNhbiB0aGVu
+IGRvIE9CU1Mgc2NhbiB1c2luZyB0aGF0IGNoYW5uZWwuIEFDUyBvcGVyYXRpb24gaXMgZG9uZSBk
+dXJpbmcgU0FQIHN0YXJ0aW5nIHVwLCBiZWFjb24gaXMgc2VudCBhZnRlciBjaGFubmVsIGlzIHNl
+bGVjdGVkIGJ5IGRyaXZlci4gDQoNClRoYW5rcywNClBlbmcNCg0KLS0tLS1PcmlnaW5hbCBNZXNz
+YWdlLS0tLS0NCkZyb206IEpvaGFubmVzIEJlcmcgW21haWx0bzpqb2hhbm5lc0BzaXBzb2x1dGlv
+bnMubmV0XSANClNlbnQ6IFRodXJzZGF5LCBPY3RvYmVyIDA5LCAyMDE0IDI6NDYgQU0NClRvOiBQ
+YXJrLCBLeWV5b29uDQpDYzogWHUsIFBlbmc7IGNmZzgwMjExbWFjODAyMTE7IGxpbnV4LXdpcmVs
+ZXNzQHZnZXIua2VybmVsLm9yZw0KU3ViamVjdDogUmU6IFtQQVRDSF0gY2ZnODAyMTE6IEFkZCBz
+dXBwb3J0IGZvciBBQ1Mgb2ZmbG9hZGluZw0KDQpPbiBGcmksIDIwMTQtMTAtMDMgYXQgMTQ6NTgg
+LTA3MDAsIEt5ZXlvb24gUGFyayB3cm90ZToNCj4gRnJvbTogUGVuZyBYdSA8cHh1QHFjYS5xdWFs
+Y29tbS5jb20+DQo+IA0KPiBBZGQgc3VwcG9ydCBmb3Igb2ZmbG9hZGluZyBBQ1MgZnVuY3Rpb25h
+bGl0eSB0byB0aGUgZHJpdmVyLiBBIG5ldyANCj4gZmVhdHVyZSBmbGFnIE5MODAyMTFfRkVBVFVS
+RV9BUF9BQ1NfT0ZGTE9BRCB3YXMgYWRkZWQgdG8gc3VwcG9ydCBBQ1MgDQo+IChBdXRvbWF0aWMg
+Q2hhbm5lbCBTZWxlY3Rpb24pIG9mZmxvYWQgZnVuY3Rpb25hbGl0eS4gVGhpcyBmbGFnIGFsbG93
+cyANCj4gdGhlIGRyaXZlciB0byBhZHZlcnRpc2UgaXRzIEFDUyBjYXBhYmlsaXR5Lg0KPiANCj4g
+V2hlbiBob3N0YXBkIHN0YXJ0cyB3aXRoIHRoZSAiY2hhbm5lbCIgY29uZmlndXJhdGlvbiBzZXQg
+dG8gMCwgaXQgd2lsbCANCj4gY2hlY2sgd2hldGhlciB0aGUgZHJpdmVyIGhhcyB0aGUgY2FwYWJp
+bGl0eSBvZiBkb2luZyB0aGUgQUNTIG9uIGl0cyBvd24uDQo+IElmIHRoZSBkcml2ZXIgaGFzIHN1
+Y2ggY2FwYWJpbGl0eSwgdGhlbiB0aGUgY2hhbm5lbCBzZWxlY3Rpb24gd2lsbCBiZSANCj4gZG9u
+ZSBpbiB0aGUgZHJpdmVyLiBUaGUga2VybmVsIHdpbGwgc2tpcCB0aGUgY2hhbm5lbCBpbmZvcm1h
+dGlvbiANCj4gdmFsaWRhdGlvbiBzaW5jZSBpdCB3b3VsZCBpbml0aWFsbHkgYmUgTlVMTCB3aGVu
+IHRoaXMgZmVhdHVyZSBpcyANCj4gZW5hYmxlZC4gQWZ0ZXIgdGhlIGNoYW5uZWwgaXMgc2VsZWN0
+ZWQgYnkgdGhlIGRyaXZlciwgYSBjaGFubmVsIGNoYW5nZSANCj4gZXZlbnQgd2lsbCBiZSBzZW50
+IGZyb20gdGhlIGRyaXZlciB0byB0aGUga2VybmVsIHdoaWNoIHVwZGF0ZXMgdGhlIA0KPiBjaGFu
+bmVsIGluZm9ybWF0aW9uIGl0IG1haW50YWlucy4gVGhpcyBldmVudCBpcyBpbiB0dXJuIHNlbnQg
+dG8gDQo+IGhvc3RhcGQgYW5kIHRoZSBjaGFubmVsIGluZm9ybWF0aW9uIGluIGhvc3RhcGQgd2ls
+bCBnZXQgdXBkYXRlZCBhcyB3ZWxsLg0KDQpJcyB0aGlzIGRlc2lnbiByZXF1aXJlZD8gVGhhdCBz
+ZWVtcyBhIGJpdCBzdHJhbmdlIGJlY2F1c2UgeW91J2Qgc3RhcnQgdGhlIEFQIHdpdGggLi4uIGlu
+dmFsaWQgYmVhY29uIGluZm9ybWF0aW9uPyBJbnZhbGlkIHByb2JlIHJlc3BvbnNlLCBhbmQgYWxs
+IHRoYXQ/IEV2ZW4gYW4gaW52YWxpZCBjaGFubmVsIHJlcG9ydGVkIHRvIG90aGVyIHVzZXJzcGFj
+ZS4NCg0KSSdkIG11Y2ggcHJlZmVyIG9mZmxvYWRpbmcgdGhpcyBhcyBhIHNlcGFyYXRlIG9wZXJh
+dGlvbiwgd2l0aCB0aGUgZGV2aWNlIHJlcG9ydGluZyBiYWNrIHRoZSBiZXN0IGNoYW5uZWwgKGNv
+bmZpZ3VyYXRpb24pIHRvIHVzZSwgYW5kIGhvc3RhcGQgdGhlbiB1c2luZyB0aGF0IHRvIHN0YXJ0
+IHVwIGl0cyBvcGVyYXRpb24uDQoNCmpvaGFubmVzDQoNCg0K
