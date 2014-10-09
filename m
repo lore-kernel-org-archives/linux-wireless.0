@@ -1,49 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:28784 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755312AbaJ2V0C (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2014 17:26:02 -0400
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <wireless-regdb@lists.infradead.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 6/7] wireless-regdb: Add 160 MHz channel bandwidth for Panama (PA)
-Date: Wed, 29 Oct 2014 23:25:43 +0200
-Message-ID: <1414617944-29966-1-git-send-email-jouni@qca.qualcomm.com> (sfid-20141029_222609_759437_84422B4B)
-In-Reply-To: <1414617690-29786-1-git-send-email-jouni@qca.qualcomm.com>
-References: <1414617690-29786-1-git-send-email-jouni@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:58571 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755828AbaJIPWX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Oct 2014 11:22:23 -0400
+Message-ID: <1412868141.1828.57.camel@jlt4.sipsolutions.net> (sfid-20141009_172232_089185_7934EEAB)
+Subject: Re: [PATCH] mac80211/trivial: fix typo in starting baserate for
+ rts_cts_rate_idx
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Karl Beldan <karl.beldan@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@rivierawaves.com>
+Date: Thu, 09 Oct 2014 17:22:21 +0200
+In-Reply-To: <20141009144548.GD20644@magnum.frso.rivierawaves.com> (sfid-20141009_164551_939678_070A0E89)
+References: <1412690018-18429-1-git-send-email-karl.beldan@gmail.com>
+	 <1412845586.1828.27.camel@jlt4.sipsolutions.net>
+	 <20141009140636.GC20644@magnum.frso.rivierawaves.com>
+	 <1412864103.1828.48.camel@jlt4.sipsolutions.net>
+	 <20141009144548.GD20644@magnum.frso.rivierawaves.com>
+	 (sfid-20141009_164551_939678_070A0E89)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This extends regulatory rules for Panama to allow 160 MHz VHT channels
-to be used in 5.15-5.25 GHz, 5.25-5.35 GHz. Since the rules between
-5.15-5.25 and 5.25-5.35 GHz ranges are different (e.g., DFS
-requirement), the AUTO-BW flag needs to be used to allow the maximum
-channel bandwidth to be determined automatically based on two rules.
+On Thu, 2014-10-09 at 16:45 +0200, Karl Beldan wrote:
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
----
- db.txt | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+> > > The typo is clearly showing but the faulty behavior clearly demands more
+> > > detail indeed.
+> > > 
+> > > It affects non-(V)HT rates and can lead to selecting an rts_cts rate
+> > > that is not a basic rate or way superior to the reference rate (ATM
+> > > rates[0] used for the 1st attempt of the protected frame data).
+> > > E.g, assuming the drivers register growing (bitrate) sorted
+> > > ieee80211_rate tables, having :
+> > > - rates[0].idx == d'2 and basic_rates == b'10100
+> > > will select rts_cts idx b'10011 & ~d'(BIT(2)-1), i.e. 1, likewise
+> > > - rates[0].idx == d'2 and basic_rates == b'10001 
+> > > will select rts_cts idx b'10000
+> > > The first is not a basic rate and the second is > rates[0].
+> > > 
+> > > I hope it clarifies things enough.
+> > 
+> > Well, I'm still not sure which tree I should put it in, I guess?
+> > 
+> 
+> All I can say is that nor this faulty behavior nor the correspond fix
+> are likely to cause a crash (we always tx registered rates).
 
-diff --git a/db.txt b/db.txt
-index 0df4644..499cc1b 100644
---- a/db.txt
-+++ b/db.txt
-@@ -863,8 +863,8 @@ country OM: DFS-ETSI
- 
- country PA: DFS-FCC
- 	(2402 - 2472 @ 40), (30)
--	(5170 - 5250 @ 80), (17)
--	(5250 - 5330 @ 80), (23), DFS
-+	(5170 - 5250 @ 80), (17), AUTO-BW
-+	(5250 - 5330 @ 80), (23), DFS, AUTO-BW
- 	(5735 - 5835 @ 80), (30)
- 
- country PE: DFS-FCC
--- 
-1.9.1
+But it's still pretty misbehaving, no? That IMHO warrants fixing and
+even cc stable.
+
+johannes
 
