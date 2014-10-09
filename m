@@ -1,65 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:63645 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751720AbaJGCrO (ORCPT
+Received: from mail-ig0-f170.google.com ([209.85.213.170]:42126 "EHLO
+	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752500AbaJIKqf convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Oct 2014 22:47:14 -0400
-Received: by mail-wi0-f176.google.com with SMTP id hi2so6431378wib.15
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Oct 2014 19:47:13 -0700 (PDT)
-Message-ID: <5433542F.70206@gmail.com> (sfid-20141007_044721_507611_428921BC)
-Date: Tue, 07 Oct 2014 04:47:11 +0200
-From: poma <pomidorabelisima@gmail.com>
+	Thu, 9 Oct 2014 06:46:35 -0400
+Received: by mail-ig0-f170.google.com with SMTP id hn15so2667234igb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Oct 2014 03:46:35 -0700 (PDT)
 MIME-Version: 1.0
-To: users@rt2x00.serialmonkey.com
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [rt2x00-users] MediaTek Inc. MT7601U Wireless Adapter
-References: <53FCC55B.90705@gmail.com> <20140826182849.GE30445@tuxdriver.com>	<53FD7BFA.1040304@maya.org> <20140827135550.GD15173@tuxdriver.com>	<53FE9920.2040702@gmail.com> <5402B519.1080002@gmail.com> <54034EF1.6040407@maya.org>
-In-Reply-To: <54034EF1.6040407@maya.org>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <543661E1.3050606@broadcom.com>
+References: <1412843867-26563-1-git-send-email-zajec5@gmail.com>
+	<CACna6ry-+hzMJ4n5PG7GJq9fZ+zwU38HGt-xZkUqKEP8yX6avA@mail.gmail.com>
+	<54365985.1020104@broadcom.com>
+	<CACna6ryTwBQQnbZg+CSvoYakb4DA1+FH7j-XwfuYmoDzJORenA@mail.gmail.com>
+	<543661E1.3050606@broadcom.com>
+Date: Thu, 9 Oct 2014 12:46:35 +0200
+Message-ID: <CACna6rxeka41C8ERCSvQSGF1L+bh=CWd3R2gtPWVX51sZEgESg@mail.gmail.com> (sfid-20141009_124638_388674_313C485F)
+Subject: Re: [PATCH][RTF][RFC] brcmsmac: add workaround for old BCM4313
+ devices with Bluetooth
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Maximilian Engelhardt <maxi@daemonizer.de>,
+	Michael Tokarev <mjt@tls.msk.ru>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	brcm80211 development <brcm80211-dev-list@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 9 October 2014 12:22, Arend van Spriel <arend@broadcom.com> wrote:
+> On 10/09/14 12:11, Rafał Miłecki wrote:
+>>
+>> On 9 October 2014 11:46, Arend van Spriel<arend@broadcom.com>  wrote:
+>>>
+>>> On 10/09/14 11:02, Rafał Miłecki wrote:
+>>>>
+>>>>
+>>>> On 9 October 2014 10:37, Rafał Miłecki<zajec5@gmail.com>   wrote:
+>>>>>
+>>>>>
+>>>>> +       /* TODO: Fix the condition. Only for boards>= P250 */
+>>>>> +       if (ai_get_chip_id(wlc_hw->sih) == BCMA_CHIP_ID_BCM4313&&
+>>>>> (wlc_hw->boardflags&   BFL_FEM_BT)) {
+>>>>> +               pr_info("Applying BCM4313 WL/BT workaround\n");
+>>>>> +               ai_btcombo_p250_4313_war(wlc_hw->sih);
+>>>>> +       }
+>>>>
+>>>>
+>>>>
+>>>> This of course have to be checked in some hardware documentation for
+>>>> the correct condition. We already have some workaround (right above
+>>>> the newly added code) for boards with boardrev>= 0x1250. So my guess
+>>>> is the code I added applies to some other cards. The board this patch
+>>>> is supposed to fix is:
+>>>> board vendor: 14e4
+>>>> board type: 608
+>>>> board revision: 1109
+>>>> board flags: 402201
+>>>> board flags2: 884
+>>>> firmware revision: 262032c
+>>>>
+>>>> So whatever condition we will need it'll likely need to cover above
+>>>> case (maybe boardrev == 0x1109?).
+>>>
+>>>
+>>>
+>>> Well, there is something fishy going on. The brcmsmac code looks like:
+>>>
+>>> if (bfl&  BFL_FEM&&  chip == 4313) {
+>>>          if (!(boardrev>= 0x1250&&  bfl&  BFL_FEM_BT))
+>>>                  ai_epa_4313war(wlc_hw->sih);
+>>> }
+>>
+>>
+>> Ohh, I didn't notice this negation at the beginning... Now meaning of
+>> my functions makes more sense. The old code it only for boardrev<
+>> 0x1250 (plus other conditions). This new function has "p250" in its
+>> name, that may mean it's for boardrev>= 0x1250.
+>>
+>>
+>>> However the boardflags above (0x402201) only has BFL_FEM_BT set so this
+>>> code
+>>> is never called. I have to ask if !BFL_FEM&&  BFL_FEM_BT is a valid
+>>> combination.
+>>
+>>
+>> Yeah, that's fishy. Maybe that new function ai_btcombo_p250_4313_war
+>> should be called if !BFL_FEM&&  BFL_FEM_BT? But it sounds weird.
+>
+>
+> I know where the function should be called according our driver and guess
+> what:
+>
+>   if (bfl&  BFL_FEM&&  chip == 4313) {
+>         if (!(boardrev>= 0x1250 && bfl&  BFL_FEM_BT))
+>                 ai_epa_4313war(wlc_hw->sih);
+> +       else
+> +               ai_btcombo_p250_4313_war(wlc_hw->sih);
+>   }
 
-BUG: unable to handle kernel paging request at ffffc9000277c070
-IP: [<ffffffff8165272c>] __netdev_watchdog_up+0xc/0x80
-PGD 12b01c067 PUD 12b01d067 PMD 1295e8067 PTE 0
-Oops: 0000 [#1] SMP 
-CPU: 3 PID: 1497 Comm: wpa_supplicant Tainted: G           OE  3.17.0-1.fc21.x86_64 #1
-task: ffff88007ec44e80 ti: ffff8800beddc000 task.ti: ffff8800beddc000
-RIP: 0010:[<ffffffff8165272c>]  [<ffffffff8165272c>] __netdev_watchdog_up+0xc/0x80
-RSP: 0018:ffff8800beddfcd8  EFLAGS: 00010202
-RAX: ffffc9000277c000 RBX: ffff8800caa3c000 RCX: ffff8800ca22a948
-RDX: 0000000000000000 RSI: 0000000000000005 RDI: ffff8800caa3c000
-RBP: ffff8800beddfce8 R08: 0000000000000000 R09: 0000000000000208
-R10: 0000000000000400 R11: 0000000000000010 R12: 0000000000000000
-R13: ffffc9000277c000 R14: 0000000000000000 R15: 0000000000000001
-FS:  00007fce557aa800(0000) GS:ffff88012fcc0000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-CR2: ffffc9000277c070 CR3: 000000007eeed000 CR4: 00000000000007e0
-Stack:
- ffffffff816527e8 ffff8800caa3c000 ffff8800beddfd20 ffffffffa05e4655
- ffffffffa05e4ab0 ffffffffa05e4510 000000005abd5236 ffff8800caa3c000
- 0000000000001003 ffff8800beddfd58 ffffffff8163135e ffff8800caa3c000
-Call Trace:
- [<ffffffff816527e8>] ? netif_carrier_on+0x48/0x50
- [<ffffffffa05e4655>] MainVirtualIF_open+0x85/0xe0 [mt7601Usta]
- [<ffffffffa05e4ab0>] ? RtmpOSIRQRequest+0x60/0x60 [mt7601Usta]
- [<ffffffffa05e4510>] ? RT28xx_get_ether_stats+0x150/0x150 [mt7601Usta]
- [<ffffffff8163135e>] __dev_open+0xce/0x150
- [<ffffffff8163168d>] __dev_change_flags+0x9d/0x160
- [<ffffffff81631779>] dev_change_flags+0x29/0x70
- [<ffffffff816a5bac>] devinet_ioctl+0x63c/0x710
- [<ffffffff816a6d05>] inet_ioctl+0x65/0x90
- [<ffffffff816105d5>] sock_do_ioctl+0x25/0x50
- [<ffffffff81610b30>] sock_ioctl+0x1f0/0x2c0
- [<ffffffff81220340>] do_vfs_ioctl+0x2d0/0x4b0
- [<ffffffff812205a1>] SyS_ioctl+0x81/0xa0
- [<ffffffff81135a16>] ? __audit_syscall_exit+0x1f6/0x2a0
- [<ffffffff81743469>] system_call_fastpath+0x16/0x1b
-Code: 9b 48 a4 ff c6 05 bd 12 6b 00 01 48 8b 45 d8 e9 09 ff ff ff 66 66 2e 0f 1f 84 00 00 00 00 00 66 66 66 66 90 48 8b 87 e8 01 00 00 <48> 83 78 70 00 74 41 55 48 89 e5 53 48 63 87 c0 03 00 00 85 c0 
-RIP  [<ffffffff8165272c>] __netdev_watchdog_up+0xc/0x80
- RSP <ffff8800beddfcd8>
-CR2: ffffc9000277c070
----[ end trace 97a7adc75a3f40f8 ]---
+So if your internal codebase for wl driver also checks for BFL_FEM, it
+seems my guess was wrong. There must be something else that matters.
 
+Unfortunately I have only BCM94313HMG2L which doesn't include BT.
 
+-- 
+Rafał
