@@ -1,128 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:57807 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753716AbaJQSfN (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:40595 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751219AbaJIKW3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Oct 2014 14:35:13 -0400
-Received: by mail-wi0-f176.google.com with SMTP id hi2so2782025wib.15
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Oct 2014 11:35:12 -0700 (PDT)
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Karl Beldan <karl.beldan@rivierawaves.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	karl.beldan@gmail.com, Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH v2 1/4] mac80211: minstrel_ht: Increase the range of handled rate indexes
-Date: Fri, 17 Oct 2014 20:34:53 +0200
-Message-Id: <1413570896-27740-2-git-send-email-karl.beldan@gmail.com> (sfid-20141017_203518_818654_EB84F6BA)
-In-Reply-To: <1413570896-27740-1-git-send-email-karl.beldan@gmail.com>
-References: <1413570896-27740-1-git-send-email-karl.beldan@gmail.com>
+	Thu, 9 Oct 2014 06:22:29 -0400
+Message-ID: <543661E1.3050606@broadcom.com> (sfid-20141009_122231_467971_9AEAF56C)
+Date: Thu, 9 Oct 2014 12:22:25 +0200
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: Maximilian Engelhardt <maxi@daemonizer.de>,
+	Michael Tokarev <mjt@tls.msk.ru>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	"brcm80211 development" <brcm80211-dev-list@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH][RTF][RFC] brcmsmac: add workaround for old BCM4313 devices
+ with Bluetooth
+References: <1412843867-26563-1-git-send-email-zajec5@gmail.com>	<CACna6ry-+hzMJ4n5PG7GJq9fZ+zwU38HGt-xZkUqKEP8yX6avA@mail.gmail.com>	<54365985.1020104@broadcom.com> <CACna6ryTwBQQnbZg+CSvoYakb4DA1+FH7j-XwfuYmoDzJORenA@mail.gmail.com>
+In-Reply-To: <CACna6ryTwBQQnbZg+CSvoYakb4DA1+FH7j-XwfuYmoDzJORenA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Karl Beldan <karl.beldan@rivierawaves.com>
+On 10/09/14 12:11, Rafał Miłecki wrote:
+> On 9 October 2014 11:46, Arend van Spriel<arend@broadcom.com>  wrote:
+>> On 10/09/14 11:02, Rafał Miłecki wrote:
+>>>
+>>> On 9 October 2014 10:37, Rafał Miłecki<zajec5@gmail.com>   wrote:
+>>>>
+>>>> +       /* TODO: Fix the condition. Only for boards>= P250 */
+>>>> +       if (ai_get_chip_id(wlc_hw->sih) == BCMA_CHIP_ID_BCM4313&&
+>>>> (wlc_hw->boardflags&   BFL_FEM_BT)) {
+>>>> +               pr_info("Applying BCM4313 WL/BT workaround\n");
+>>>> +               ai_btcombo_p250_4313_war(wlc_hw->sih);
+>>>> +       }
+>>>
+>>>
+>>> This of course have to be checked in some hardware documentation for
+>>> the correct condition. We already have some workaround (right above
+>>> the newly added code) for boards with boardrev>= 0x1250. So my guess
+>>> is the code I added applies to some other cards. The board this patch
+>>> is supposed to fix is:
+>>> board vendor: 14e4
+>>> board type: 608
+>>> board revision: 1109
+>>> board flags: 402201
+>>> board flags2: 884
+>>> firmware revision: 262032c
+>>>
+>>> So whatever condition we will need it'll likely need to cover above
+>>> case (maybe boardrev == 0x1109?).
+>>
+>>
+>> Well, there is something fishy going on. The brcmsmac code looks like:
+>>
+>> if (bfl&  BFL_FEM&&  chip == 4313) {
+>>          if (!(boardrev>= 0x1250&&  bfl&  BFL_FEM_BT))
+>>                  ai_epa_4313war(wlc_hw->sih);
+>> }
+>
+> Ohh, I didn't notice this negation at the beginning... Now meaning of
+> my functions makes more sense. The old code it only for boardrev<
+> 0x1250 (plus other conditions). This new function has "p250" in its
+> name, that may mean it's for boardrev>= 0x1250.
+>
+>
+>> However the boardflags above (0x402201) only has BFL_FEM_BT set so this code
+>> is never called. I have to ask if !BFL_FEM&&  BFL_FEM_BT is a valid
+>> combination.
+>
+> Yeah, that's fishy. Maybe that new function ai_btcombo_p250_4313_war
+> should be called if !BFL_FEM&&  BFL_FEM_BT? But it sounds weird.
 
-Since 5935839ad735 ("mac80211: improve minstrel_ht rate sorting by
-throughput & probability"), the rate indexes are manipulated via u8's
-and hence allow for a maximum of 256 mcs_group entries in
-minstrel_mcs_groups.
+I know where the function should be called according our driver and 
+guess what:
 
-ATM, minstrel_ht advertizes support up to 3HTSS@40MHz, consuming:
-8(MCS_GROUP_RATES) * (3(SS)*2(GI)*2(BW)+1(CCK)), i.e. 104 entries.
+   if (bfl&  BFL_FEM&&  chip == 4313) {
+   	if (!(boardrev>= 0x1250 && bfl&  BFL_FEM_BT))
+           	ai_epa_4313war(wlc_hw->sih);
++	else
++		ai_btcombo_p250_4313_war(wlc_hw->sih);
+   }
 
-Support for 3VHTSS@80MHz will require:
-10(MCS_GROUP_RATES) * (3(SS)*2(GI)*2(BW)+1(CCK)) +
-10(MCS_GROUP_RATES) * (3(SS)*2(GI)*3(BW)), i.e. 130 + 180 entries.
+I hate this inverse logic as it is so easy to overlook ;-)
 
-This change moves from u8s to u16s where necessary.
-
-Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
-Cc: Felix Fietkau <nbd@openwrt.org>
----
- net/mac80211/rc80211_minstrel_ht.c | 16 ++++++++--------
- net/mac80211/rc80211_minstrel_ht.h |  8 ++++----
- 2 files changed, 12 insertions(+), 12 deletions(-)
-
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index 17ef54a..ccec718 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -240,8 +240,8 @@ minstrel_ht_calc_tp(struct minstrel_ht_sta *mi, int group, int rate)
-  * MCS groups, CCK rates do not provide aggregation and are therefore at last.
-  */
- static void
--minstrel_ht_sort_best_tp_rates(struct minstrel_ht_sta *mi, u8 index,
--			       u8 *tp_list)
-+minstrel_ht_sort_best_tp_rates(struct minstrel_ht_sta *mi, u16 index,
-+			       u16 *tp_list)
- {
- 	int cur_group, cur_idx, cur_thr, cur_prob;
- 	int tmp_group, tmp_idx, tmp_thr, tmp_prob;
-@@ -278,7 +278,7 @@ minstrel_ht_sort_best_tp_rates(struct minstrel_ht_sta *mi, u8 index,
-  * Find and set the topmost probability rate per sta and per group
-  */
- static void
--minstrel_ht_set_best_prob_rate(struct minstrel_ht_sta *mi, u8 index)
-+minstrel_ht_set_best_prob_rate(struct minstrel_ht_sta *mi, u16 index)
- {
- 	struct minstrel_mcs_group_data *mg;
- 	struct minstrel_rate_stats *mr;
-@@ -321,8 +321,8 @@ minstrel_ht_set_best_prob_rate(struct minstrel_ht_sta *mi, u8 index)
-  */
- static void
- minstrel_ht_assign_best_tp_rates(struct minstrel_ht_sta *mi,
--				 u8 tmp_mcs_tp_rate[MAX_THR_RATES],
--				 u8 tmp_cck_tp_rate[MAX_THR_RATES])
-+				 u16 tmp_mcs_tp_rate[MAX_THR_RATES],
-+				 u16 tmp_cck_tp_rate[MAX_THR_RATES])
- {
- 	unsigned int tmp_group, tmp_idx, tmp_cck_tp, tmp_mcs_tp;
- 	int i;
-@@ -386,8 +386,8 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
- 	struct minstrel_mcs_group_data *mg;
- 	struct minstrel_rate_stats *mr;
- 	int group, i, j;
--	u8 tmp_mcs_tp_rate[MAX_THR_RATES], tmp_group_tp_rate[MAX_THR_RATES];
--	u8 tmp_cck_tp_rate[MAX_THR_RATES], index;
-+	u16 tmp_mcs_tp_rate[MAX_THR_RATES], tmp_group_tp_rate[MAX_THR_RATES];
-+	u16 tmp_cck_tp_rate[MAX_THR_RATES], index;
- 
- 	if (mi->ampdu_packets > 0) {
- 		mi->avg_ampdu_len = minstrel_ewma(mi->avg_ampdu_len,
-@@ -517,7 +517,7 @@ minstrel_next_sample_idx(struct minstrel_ht_sta *mi)
- }
- 
- static void
--minstrel_downgrade_rate(struct minstrel_ht_sta *mi, u8 *idx, bool primary)
-+minstrel_downgrade_rate(struct minstrel_ht_sta *mi, u16 *idx, bool primary)
- {
- 	int group, orig_group;
- 
-diff --git a/net/mac80211/rc80211_minstrel_ht.h b/net/mac80211/rc80211_minstrel_ht.h
-index 01570e0..8b54e89 100644
---- a/net/mac80211/rc80211_minstrel_ht.h
-+++ b/net/mac80211/rc80211_minstrel_ht.h
-@@ -34,8 +34,8 @@ struct minstrel_mcs_group_data {
- 	u8 supported;
- 
- 	/* sorted rate set within a MCS group*/
--	u8 max_group_tp_rate[MAX_THR_RATES];
--	u8 max_group_prob_rate;
-+	u16 max_group_tp_rate[MAX_THR_RATES];
-+	u16 max_group_prob_rate;
- 
- 	/* MCS rate statistics */
- 	struct minstrel_rate_stats rates[MCS_GROUP_RATES];
-@@ -52,8 +52,8 @@ struct minstrel_ht_sta {
- 	unsigned int avg_ampdu_len;
- 
- 	/* overall sorted rate set */
--	u8 max_tp_rate[MAX_THR_RATES];
--	u8 max_prob_rate;
-+	u16 max_tp_rate[MAX_THR_RATES];
-+	u16 max_prob_rate;
- 
- 	/* time of last status update */
- 	unsigned long stats_update;
--- 
-2.0.1
-
+Regards,
+Arend
