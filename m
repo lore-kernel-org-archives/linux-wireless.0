@@ -1,130 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:47803 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752457AbaJYUIj (ORCPT
+Received: from smtp-out06.msg.oleane.net ([62.161.7.4]:58595 "EHLO
+	smtp-out06.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753491AbaJJPI4 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Oct 2014 16:08:39 -0400
-Received: by mail-wg0-f44.google.com with SMTP id y10so3100920wgg.3
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2014 13:08:38 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 33/48] staging: vt6655: dead code remove ndis and pmkid strutures.
-Date: Sat, 25 Oct 2014 09:40:11 +0100
-Message-Id: <1414226426-5811-34-git-send-email-tvboxspy@gmail.com> (sfid-20141025_220842_084090_88C7092B)
-In-Reply-To: <1414226426-5811-1-git-send-email-tvboxspy@gmail.com>
-References: <1414226426-5811-1-git-send-email-tvboxspy@gmail.com>
+	Fri, 10 Oct 2014 11:08:56 -0400
+Subject: ath10k firmware crash
+Date: Fri, 10 Oct 2014 16:46:40 +0200
+Message-ID: <773DB8A82AB6A046AE0195C68612A319018C2750@sbs2003.acksys.local> (sfid-20141010_170901_302420_49D6EE6B)
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="iso-8859-1"
+From: "Cedric VONCKEN" <cedric.voncken@acksys.fr>
+To: <ath10k@lists.infradead.org>
+Cc: <linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-struct pmkid_candidate
-typedef struct _BSSID_INFO
-typedef struct tagSPMKID
-typedef struct tagSPMKIDCandidateEvent
-NDIS_802_11_MAC_ADDRESS
-typedef struct _NDIS_802_11_AI_REQFI
-typedef struct _NDIS_802_11_AI_RESFI
-typedef struct _NDIS_802_11_ASSOCIATION_INFORMATION
-typedef struct tagSAssocInfo
+	Hi all, 
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/device.h | 29 -----------------------------
- drivers/staging/vt6655/wmgr.h   | 35 -----------------------------------
- 2 files changed, 64 deletions(-)
+	I'm trying to use ath10k in client mode and AP mode with 2 wireless cards (Ap on one card and client on another card).
+	The AP mode work, but the client mode always crash. Please find below the ath10k crash information
 
-diff --git a/drivers/staging/vt6655/device.h b/drivers/staging/vt6655/device.h
-index deade0a..9db279b 100644
---- a/drivers/staging/vt6655/device.h
-+++ b/drivers/staging/vt6655/device.h
-@@ -221,32 +221,6 @@ typedef enum _NDIS_802_11_STATUS_TYPE {
- 	Ndis802_11StatusTypeMax    // not a real type, defined as an upper bound
- } NDIS_802_11_STATUS_TYPE, *PNDIS_802_11_STATUS_TYPE;
- 
--//Added new types for PMKID Candidate lists.
--struct pmkid_candidate {
--	NDIS_802_11_MAC_ADDRESS BSSID;
--	unsigned long Flags;
--};
--
--typedef struct _BSSID_INFO {
--	NDIS_802_11_MAC_ADDRESS BSSID;
--	NDIS_802_11_PMKID_VALUE PMKID;
--} BSSID_INFO, *PBSSID_INFO;
--
--typedef struct tagSPMKID {
--	unsigned long Length;
--	unsigned long BSSIDInfoCount;
--	BSSID_INFO BSSIDInfo[MAX_BSSIDINFO_4_PMKID];
--} SPMKID, *PSPMKID;
--
--typedef struct tagSPMKIDCandidateEvent {
--	NDIS_802_11_STATUS_TYPE     StatusType;
--	unsigned long Version;       // Version of the structure
--	unsigned long NumCandidates; // No. of pmkid candidates
--	struct pmkid_candidate CandidateList[MAX_PMKIDLIST];
--} SPMKIDCandidateEvent, *PSPMKIDCandidateEvent;
--
--//--
--
- //++ 802.11h related
- #define MAX_QUIET_COUNT     8
- 
-@@ -676,9 +650,6 @@ struct vnt_private {
- 	unsigned char abySNAP_RFC1042[ETH_ALEN];
- 	unsigned char abySNAP_Bridgetunnel[ETH_ALEN];
- 	unsigned char abyEEPROM[EEP_MAX_CONTEXT_SIZE];  //unsigned long alignment
--	// Pre-Authentication & PMK cache
--	SPMKID                  gsPMKID;
--	SPMKIDCandidateEvent    gsPMKIDCandidate;
- 
- 	// for 802.11h
- 	bool b11hEnable;
-diff --git a/drivers/staging/vt6655/wmgr.h b/drivers/staging/vt6655/wmgr.h
-index 1deedd8..cc8662e 100644
---- a/drivers/staging/vt6655/wmgr.h
-+++ b/drivers/staging/vt6655/wmgr.h
-@@ -78,39 +78,4 @@
- #define timer_expire(timer, next_tick)   mod_timer(&timer, RUN_AT(next_tick))
- typedef void (*TimerFunction)(unsigned long);
- 
--//+++ NDIS related
--
--typedef unsigned char NDIS_802_11_MAC_ADDRESS[6];
--typedef struct _NDIS_802_11_AI_REQFI {
--	unsigned short Capabilities;
--	unsigned short ListenInterval;
--	NDIS_802_11_MAC_ADDRESS  CurrentAPAddress;
--} NDIS_802_11_AI_REQFI, *PNDIS_802_11_AI_REQFI;
--
--typedef struct _NDIS_802_11_AI_RESFI {
--	unsigned short Capabilities;
--	unsigned short StatusCode;
--	unsigned short AssociationId;
--} NDIS_802_11_AI_RESFI, *PNDIS_802_11_AI_RESFI;
--
--typedef struct _NDIS_802_11_ASSOCIATION_INFORMATION {
--	unsigned long Length;
--	unsigned short          AvailableRequestFixedIEs;
--	NDIS_802_11_AI_REQFI    RequestFixedIEs;
--	unsigned long RequestIELength;
--	unsigned long OffsetRequestIEs;
--	unsigned short          AvailableResponseFixedIEs;
--	NDIS_802_11_AI_RESFI    ResponseFixedIEs;
--	unsigned long ResponseIELength;
--	unsigned long OffsetResponseIEs;
--} NDIS_802_11_ASSOCIATION_INFORMATION, *PNDIS_802_11_ASSOCIATION_INFORMATION;
--
--typedef struct tagSAssocInfo {
--	NDIS_802_11_ASSOCIATION_INFORMATION     AssocInfo;
--	unsigned char abyIEs[WLAN_BEACON_FR_MAXLEN+WLAN_BEACON_FR_MAXLEN];
--	// store ReqIEs set by OID_802_11_ASSOCIATION_INFORMATION
--	unsigned long RequestIELength;
--	unsigned char abyReqIEs[WLAN_BEACON_FR_MAXLEN];
--} SAssocInfo, *PSAssocInfo;
--
- #endif // __WMGR_H__
--- 
-1.9.1
+[   79.131301] ath10k: hardware name qca988x hw2.0 version 0x4100016c
+[   79.149420] ath10k: firmware version: 999.999.0.636
+[   79.167248] ath10k: target register Dump Location: 0x0040AC14
+[   79.185939] ath10k: target Register Dump
+[   79.201804] ath10k: [00]: 0x4100016C 0x00000000 0x009C4521 0x00000000
+[   79.220184] ath10k: [04]: 0x009C4521 0x00060330 0x00000019 0x00955A00
+[   79.238566] ath10k: [08]: 0x0000D0CE 0x00000000 0x0040CC94 0x00000020
+[   79.256945] ath10k: [12]: 0x00000000 0x00000000 0x00958360 0x0095836B
+[   79.275327] ath10k: [16]: 0x809A0978 0x0040AD94 0x00439304 0x0040D074
+[   79.293706] ath10k: [20]: 0x0000FFFF 0x00000000 0x0041EFB8 0x00000000
+[   79.312086] ath10k: [24]: 0x809A0978 0x0040AD94 0x00439304 0x0343389A
+[   79.330466] ath10k: [28]: 0x809AD1A2 0x0040ADE4 0x00439304 0x0043F68C
+[   79.348845] ath10k: [32]: 0x809B01DA 0x00000000 0x00410110 0x0041937C
+[   79.367224] ath10k: [36]: 0x00000000 0x00000000 0x00000000 0x00000000
+[   79.385604] ath10k: [40]: 0x00000000 0x00000000 0x00000071 0x00412700
+[   79.403984] ath10k: [44]: 0x00439BB8 0x00000000 0x00000000 0x00400000
+[   79.422364] ath10k: [48]: 0x809AE0B4 0x0040AE04 0x00400000 0x0043F68C
+[   79.440744] ath10k: [52]: 0x00000001 0x00000000 0x004231F0 0x00400000
+[   79.459124] ath10k: [56]: 0x809AE17E 0x0040AE44 0x0040FE6C 0x0040D310
+
+	I'm using openwrt, and I have the same problem with/without configuration option "Firmware optimized for sta operation".
+
+	Is it possible to use at the same time on 2 different cards the AP mode and client mode?
+
+Cedric Voncken 
 
