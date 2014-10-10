@@ -1,48 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f45.google.com ([209.85.215.45]:55453 "EHLO
-	mail-la0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755214AbaJNMZQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Oct 2014 08:25:16 -0400
-Date: Tue, 14 Oct 2014 15:16:27 +0300
-From: vadim4j@gmail.com
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH net-next] Allow to set net namespace for wireless device
- via RTM_LINK
-Message-ID: <20141014121627.GA5115@angus-think.lan> (sfid-20141014_142527_630077_112133B3)
-References: <1410467723-2550-1-git-send-email-vadim4j@gmail.com>
- <1411075535.2034.5.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1411075535.2034.5.camel@jlt4.sipsolutions.net>
+Received: from s3.sipsolutions.net ([5.9.151.49]:35374 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751918AbaJJPKh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Oct 2014 11:10:37 -0400
+Message-ID: <1412953834.3206.3.camel@jlt4.sipsolutions.net> (sfid-20141010_171040_727045_E76386DE)
+Subject: Re: [PATCH] cfg80211: set the rates mask in connection probes over
+ specified freq
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Karl Beldan <karl.beldan@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@rivierawaves.com>
+Date: Fri, 10 Oct 2014 17:10:34 +0200
+In-Reply-To: <20141009204912.GB19745@gobelin> (sfid-20141009_224917_787775_122952DC)
+References: <1412674938-13071-1-git-send-email-karl.beldan@gmail.com>
+	 <1412847177.1828.33.camel@jlt4.sipsolutions.net>
+	 <20141009130035.GB20644@magnum.frso.rivierawaves.com>
+	 <1412861162.1828.45.camel@jlt4.sipsolutions.net>
+	 <20141009162616.GA27065@magnum.frso.rivierawaves.com>
+	 <1412879793.1828.61.camel@jlt4.sipsolutions.net>
+	 <20141009204912.GB19745@gobelin> (sfid-20141009_224917_787775_122952DC)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 18, 2014 at 11:25:35PM +0200, Johannes Berg wrote:
-> On Thu, 2014-09-11 at 23:35 +0300, Vadim Kochan wrote:
-> > Added new netdev_ops callback for setting namespace in specific
-> > for this device way
-> 
-> > +++ b/include/linux/netdevice.h
-> > @@ -997,6 +997,8 @@ typedef u16 (*select_queue_fallback_t)(struct net_device *dev,
-> >   *	Callback to use for xmit over the accelerated station. This
-> >   *	is used in place of ndo_start_xmit on accelerated net
-> >   *	devices.
-> > + * int (*ndo_set_netns)(struct net_device *dev, struct net *net);
-> > + *      Callback to set net namespace in specific way for this device.
-> 
-> For the record, I don't consider it appropriate to set the net namespace
-> on one netdev and end up with multiple netdevs switching namespaces ...
-> 
-> As a result, I don't think this should done.
-> 
-> johannes
-> 
+On Thu, 2014-10-09 at 22:49 +0200, Karl Beldan wrote:
 
-The reason for this was to make possible to change netns for wireless
-dev via 'ip link' too like for 'iw' util. I just think that changing
-namespace for netdev should have the generic way. May be you can suggest
-a better way
+> > Either way - is it worth for 3.18/stable?
+> > 
+> Your call.
 
-Thanks,
+I've seen no complaints, and you haven't indicated that you'd like to
+see it in older kernels, so I've applied it to mac80211-next.
+
+johannes
+
