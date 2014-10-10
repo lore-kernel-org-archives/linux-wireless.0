@@ -1,182 +1,177 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:40659 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752246AbaJYTmT (ORCPT
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:62204 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751347AbaJJLoG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Oct 2014 15:42:19 -0400
-Received: by mail-wi0-f175.google.com with SMTP id h11so1535325wiw.2
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2014 12:42:18 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 07/31] staging: vt6655: mac80211 conversion: s_uFillDataHead add power saving poll
-Date: Sat, 25 Oct 2014 09:20:17 +0100
-Message-Id: <1414225241-5480-8-git-send-email-tvboxspy@gmail.com> (sfid-20141025_214226_290740_229314E4)
-In-Reply-To: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
-References: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
+	Fri, 10 Oct 2014 07:44:06 -0400
+Received: by mail-wi0-f181.google.com with SMTP id hi2so1783205wib.2
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Oct 2014 04:44:03 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH] ath10k: use bss_info as txpower source
+Date: Fri, 10 Oct 2014 13:33:00 +0200
+Message-Id: <1412940780-25360-1-git-send-email-michal.kazior@tieto.com> (sfid-20141010_134410_295583_41DF5D7E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Replace variable wCurrentRate with is_pspoll.
+This simply changes the source for txpower setup.
+It does not make ath10k use different txpower
+values for different vifs.
 
-add current_aid to structure vnt_private which is to be used by
-mac80211 operations.
+This will make it easier to implement chanctx in
+ath10k in the future.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/staging/vt6655/device.h |  1 +
- drivers/staging/vt6655/rxtx.c   | 64 +++++++++++++++++++++++++++++------------
- 2 files changed, 47 insertions(+), 18 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.h |  1 +
+ drivers/net/wireless/ath/ath10k/mac.c  | 94 ++++++++++++++++++++++++++--------
+ 2 files changed, 75 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/staging/vt6655/device.h b/drivers/staging/vt6655/device.h
-index 5717fa5..6073076 100644
---- a/drivers/staging/vt6655/device.h
-+++ b/drivers/staging/vt6655/device.h
-@@ -332,6 +332,7 @@ struct vnt_private {
- 	struct ieee80211_hw *hw;
- 	struct ieee80211_vif *vif;
- 	unsigned long key_entry_inuse;
-+	u16 current_aid;
- // netdev
- 	struct net_device *dev;
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 1ac2f14..fc9f558 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -273,6 +273,7 @@ struct ath10k_vif {
+ 	u8 force_sgi;
+ 	bool use_cts_prot;
+ 	int num_legacy_stations;
++	int txpower;
+ };
  
-diff --git a/drivers/staging/vt6655/rxtx.c b/drivers/staging/vt6655/rxtx.c
-index a1a594f..23ee379 100644
---- a/drivers/staging/vt6655/rxtx.c
-+++ b/drivers/staging/vt6655/rxtx.c
-@@ -169,7 +169,8 @@ s_uFillDataHead(
- 	unsigned int cbLastFragmentSize,
- 	unsigned int uMACfragNum,
- 	unsigned char byFBOption,
--	unsigned short wCurrentRate
-+	unsigned short wCurrentRate,
-+	bool is_pspoll
- );
- 
- /*---------------------  Export Variables  --------------------------*/
-@@ -674,7 +675,8 @@ s_uFillDataHead(
- 	unsigned int cbLastFragmentSize,
- 	unsigned int uMACfragNum,
- 	unsigned char byFBOption,
--	unsigned short wCurrentRate
-+	unsigned short wCurrentRate,
-+	bool is_pspoll
- )
- {
- 
-@@ -693,15 +695,24 @@ s_uFillDataHead(
- 					  pDevice->byTopCCKBasicRate,
- 					  PK_TYPE_11B, &buf->b);
- 
--			/* Get Duration and TimeStamp */
--			buf->duration_a = cpu_to_le16((u16)s_uGetDataDuration(pDevice, DATADUR_A, cbFrameLength,
--									      byPktType, wCurrentRate, bNeedAck, uFragIdx,
--									      cbLastFragmentSize, uMACfragNum,
--									      byFBOption));
--			buf->duration_b = cpu_to_le16((u16)s_uGetDataDuration(pDevice, DATADUR_B, cbFrameLength,
--									      PK_TYPE_11B, pDevice->byTopCCKBasicRate,
--									      bNeedAck, uFragIdx, cbLastFragmentSize,
--									      uMACfragNum, byFBOption));
-+			if (is_pspoll) {
-+				__le16 dur = cpu_to_le16(pDevice->current_aid | BIT(14) | BIT(15));
-+
-+				buf->duration_a = dur;
-+				buf->duration_b = dur;
-+			} else {
-+				/* Get Duration and TimeStamp */
-+				buf->duration_a =
-+					cpu_to_le16((u16)s_uGetDataDuration(pDevice, DATADUR_A, cbFrameLength,
-+									    byPktType, wCurrentRate, bNeedAck, uFragIdx,
-+									    cbLastFragmentSize, uMACfragNum,
-+									    byFBOption));
-+				buf->duration_b =
-+					cpu_to_le16((u16)s_uGetDataDuration(pDevice, DATADUR_B, cbFrameLength,
-+									    PK_TYPE_11B, pDevice->byTopCCKBasicRate,
-+									    bNeedAck, uFragIdx, cbLastFragmentSize,
-+									    uMACfragNum, byFBOption));
-+			}
- 
- 			buf->time_stamp_off_a = vnt_time_stamp_off(pDevice, wCurrentRate);
- 			buf->time_stamp_off_b = vnt_time_stamp_off(pDevice, pDevice->byTopCCKBasicRate);
-@@ -755,11 +766,18 @@ s_uFillDataHead(
- 			vnt_get_phy_field(pDevice, cbFrameLength, wCurrentRate,
- 					  byPktType, &buf->ab);
- 
--			/* Get Duration and TimeStampOff */
--			buf->duration = cpu_to_le16((u16)s_uGetDataDuration(pDevice, DATADUR_A, cbFrameLength, byPktType,
-+			if (is_pspoll) {
-+				__le16 dur = cpu_to_le16(pDevice->current_aid | BIT(14) | BIT(15));
-+
-+				buf->duration = dur;
-+			} else {
-+				/* Get Duration and TimeStampOff */
-+				buf->duration =
-+					cpu_to_le16((u16)s_uGetDataDuration(pDevice, DATADUR_A, cbFrameLength, byPktType,
- 									    wCurrentRate, bNeedAck, uFragIdx,
- 									    cbLastFragmentSize, uMACfragNum,
- 									    byFBOption));
-+			}
- 
- 			buf->time_stamp_off = vnt_time_stamp_off(pDevice, wCurrentRate);
- 			return buf->duration;
-@@ -769,17 +787,27 @@ s_uFillDataHead(
- 		/* Get SignalField, ServiceField & Length */
- 		vnt_get_phy_field(pDevice, cbFrameLength, wCurrentRate,
- 				  byPktType, &buf->ab);
--		/* Get Duration and TimeStampOff */
--		buf->duration = cpu_to_le16((u16)s_uGetDataDuration(pDevice, DATADUR_B, cbFrameLength, byPktType,
-+
-+		if (is_pspoll) {
-+			__le16 dur = cpu_to_le16(pDevice->current_aid | BIT(14) | BIT(15));
-+
-+			buf->duration = dur;
-+		} else {
-+			/* Get Duration and TimeStampOff */
-+			buf->duration =
-+				cpu_to_le16((u16)s_uGetDataDuration(pDevice, DATADUR_B, cbFrameLength, byPktType,
- 								    wCurrentRate, bNeedAck, uFragIdx,
- 								    cbLastFragmentSize, uMACfragNum,
- 								    byFBOption));
-+		}
-+
- 		buf->time_stamp_off = vnt_time_stamp_off(pDevice, wCurrentRate);
- 		return buf->duration;
- 	}
- 	return 0;
+ struct ath10k_vif_iter {
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 75e0aeb..8529b54 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -2688,12 +2688,68 @@ static void ath10k_config_chan(struct ath10k *ar)
+ 	ath10k_monitor_recalc(ar);
  }
  
++static int ath10k_mac_txpower_setup(struct ath10k *ar, int txpower)
++{
++	int ret;
++	u32 param;
 +
- static
- void
- s_vFillRTSHead(
-@@ -1346,7 +1374,7 @@ s_cbFillTxBufHead(struct vnt_private *pDevice, unsigned char byPktType,
- 			       cbFrameSize, bNeedACK, uDMAIdx, hdr, pDevice->wCurrentRate);
- 	/* Fill DataHead */
- 	uDuration = s_uFillDataHead(pDevice, byPktType, pvTxDataHd, cbFrameSize, uDMAIdx, bNeedACK,
--				    0, 0, uMACfragNum, byFBOption, pDevice->wCurrentRate);
-+				    0, 0, uMACfragNum, byFBOption, pDevice->wCurrentRate, is_pspoll);
++	lockdep_assert_held(&ar->conf_mutex);
++
++	ath10k_dbg(ar, ATH10K_DBG_MAC, "mac txpower %d\n", txpower);
++
++	param = ar->wmi.pdev_param->txpower_limit2g;
++	ret = ath10k_wmi_pdev_set_param(ar, param, txpower * 2);
++	if (ret) {
++		ath10k_warn(ar, "failed to set 2g txpower %d: %d\n",
++			    txpower, ret);
++		return ret;
++	}
++
++	param = ar->wmi.pdev_param->txpower_limit5g;
++	ret = ath10k_wmi_pdev_set_param(ar, param, txpower * 2);
++	if (ret) {
++		ath10k_warn(ar, "failed to set 5g txpower %d: %d\n",
++			    txpower, ret);
++		return ret;
++	}
++
++	return 0;
++}
++
++static int ath10k_mac_txpower_recalc(struct ath10k *ar)
++{
++	struct ath10k_vif *arvif;
++	int ret, txpower = -1;
++
++	lockdep_assert_held(&ar->conf_mutex);
++
++	list_for_each_entry(arvif, &ar->arvifs, list) {
++		WARN_ON(arvif->txpower < 0);
++
++		if (txpower == -1)
++			txpower = arvif->txpower;
++		else
++			txpower = min(txpower, arvif->txpower);
++	}
++
++	if (WARN_ON(txpower == -1))
++		return -EINVAL;
++
++	ret = ath10k_mac_txpower_setup(ar, txpower);
++	if (ret) {
++		ath10k_warn(ar, "failed to setup tx power %d: %d\n",
++			    txpower, ret);
++		return ret;
++	}
++
++	return 0;
++}
++
+ static int ath10k_config(struct ieee80211_hw *hw, u32 changed)
+ {
+ 	struct ath10k *ar = hw->priv;
+ 	struct ieee80211_conf *conf = &hw->conf;
+ 	int ret = 0;
+-	u32 param;
  
- 	hdr->duration_id = uDuration;
+ 	mutex_lock(&ar->conf_mutex);
  
-@@ -1750,7 +1778,7 @@ CMD_STATUS csMgmt_xmit(struct vnt_private *pDevice, PSTxMgmtPacket pPacket)
+@@ -2717,25 +2773,6 @@ static int ath10k_config(struct ieee80211_hw *hw, u32 changed)
+ 		}
+ 	}
  
- 	//Fill DataHead
- 	uDuration = s_uFillDataHead(pDevice, byPktType, pvTxDataHd, cbFrameSize, TYPE_TXDMA0, bNeedACK,
--				    0, 0, 1, AUTO_FB_NONE, wCurrentRate);
-+				    0, 0, 1, AUTO_FB_NONE, wCurrentRate, false);
+-	if (changed & IEEE80211_CONF_CHANGE_POWER) {
+-		ath10k_dbg(ar, ATH10K_DBG_MAC, "mac config power %d\n",
+-			   hw->conf.power_level);
+-
+-		param = ar->wmi.pdev_param->txpower_limit2g;
+-		ret = ath10k_wmi_pdev_set_param(ar, param,
+-						hw->conf.power_level * 2);
+-		if (ret)
+-			ath10k_warn(ar, "failed to set 2g txpower %d: %d\n",
+-				    hw->conf.power_level, ret);
+-
+-		param = ar->wmi.pdev_param->txpower_limit5g;
+-		ret = ath10k_wmi_pdev_set_param(ar, param,
+-						hw->conf.power_level * 2);
+-		if (ret)
+-			ath10k_warn(ar, "failed to set 5g txpower %d: %d\n",
+-				    hw->conf.power_level, ret);
+-	}
+-
+ 	if (changed & IEEE80211_CONF_CHANGE_PS)
+ 		ath10k_config_ps(ar);
  
- 	pMACHeader = (PS802_11Header) (pbyTxBufferAddr + cbHeaderSize);
+@@ -2944,6 +2981,13 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
+ 		goto err_peer_delete;
+ 	}
  
-@@ -2245,7 +2273,7 @@ void vDMA0_tx_80211(struct vnt_private *pDevice, struct sk_buff *skb,
++	arvif->txpower = vif->bss_conf.txpower;
++	ret = ath10k_mac_txpower_recalc(ar);
++	if (ret) {
++		ath10k_warn(ar, "failed to recalc tx power: %d\n", ret);
++		goto err_peer_delete;
++	}
++
+ 	mutex_unlock(&ar->conf_mutex);
+ 	return 0;
  
- 	//Fill DataHead
- 	uDuration = s_uFillDataHead(pDevice, byPktType, pvTxDataHd, cbFrameSize, TYPE_TXDMA0, bNeedACK,
--				    0, 0, 1, AUTO_FB_NONE, wCurrentRate);
-+				    0, 0, 1, AUTO_FB_NONE, wCurrentRate, false);
+@@ -3224,6 +3268,16 @@ static void ath10k_bss_info_changed(struct ieee80211_hw *hw,
+ 		}
+ 	}
  
- 	pMACHeader = (PS802_11Header) (pbyTxBufferAddr + cbHeaderSize);
- 
++	if (changed & BSS_CHANGED_TXPOWER) {
++		ath10k_dbg(ar, ATH10K_DBG_MAC, "mac vdev_id %i txpower %d\n",
++			   arvif->vdev_id, info->txpower);
++
++		arvif->txpower = info->txpower;
++		ret = ath10k_mac_txpower_recalc(ar);
++		if (ret)
++			ath10k_warn(ar, "failed to recalc tx power: %d\n", ret);
++	}
++
+ exit:
+ 	mutex_unlock(&ar->conf_mutex);
+ }
 -- 
-1.9.1
+1.8.5.3
 
