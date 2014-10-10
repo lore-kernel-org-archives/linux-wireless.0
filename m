@@ -1,88 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:52971 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753288AbaJ1OHD (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:9477 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752222AbaJJRzo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2014 10:07:03 -0400
-Message-ID: <544FA303.5060303@broadcom.com> (sfid-20141028_150708_461098_6F66FA6D)
-Date: Tue, 28 Oct 2014 15:06:59 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Fri, 10 Oct 2014 13:55:44 -0400
+Date: Fri, 10 Oct 2014 20:55:25 +0300
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/2] cfg80211: Specify frame and reason code for
+ NL80211_CMD_DEL_STATION
+Message-ID: <20141010175525.GA29436@jouni.qca.qualcomm.com> (sfid-20141010_195550_162474_5AD3E441)
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Oleksij Rempel <linux@rempel-privat.de>
-CC: Etna <etna@openmailbox.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: MediaTek WiFi hardware support in upstream kernel
-References: <544DB5A8.7090405@openmailbox.org> <20141027152026.GB19976@tuxdriver.com> <544E8CB4.3000607@rempel-privat.de> <20141028134608.GA26283@tuxdriver.com>
-In-Reply-To: <20141028134608.GA26283@tuxdriver.com>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 28-10-14 14:46, John W. Linville wrote:
-> On Mon, Oct 27, 2014 at 07:19:32PM +0100, Oleksij Rempel wrote:
->> Am 27.10.2014 um 16:20 schrieb John W. Linville:
->>> On Mon, Oct 27, 2014 at 11:02:00AM +0800, Etna wrote:
->>>> I am not a developer, but I stumbled upon this just a couple of days ago in
->>>> the OpenWRT forums:
->>>>
->>>> https://forum.openwrt.org/viewtopic.php?id=53215
->>>>
->>>> In short, MediaTek is looking for volunteers to help get their drivers
->>>> mainlined in the upstream kernels; this includes drivers for their USB and
->>>> PCI wifi hardware under both the MediaTek and Ralink brands. They are
->>>> willing to provide "chip info, reference driver, dev board, etc" and even
->>>> some degree of sponsorship, apparently subject to their management's
->>>> approval.
->>>>
->>>> In exchange, they require that the volunteers fulfill the following
->>>> requirements:
->>>> - skilled in wifi driver development
->>>> - provide a suitable schedule / roadmap
->>>> - be able to get the code mainlined in the official linux kernel.
->>>>
->>>> Those who are keen on taking up the task can contact the original poster at
->>>> hua.shao[AT]mediatek.com
->>>>
->>>> **Disclaimer: I am in no way related to, or under the employ of MediaTek or
->>>> Ralink. I am only posting this here because I have a handful of MT wifi
->>>> chips which I hope to see being supported in the upstream kernel so that I
->>>> can actually use them under Linux,
->>>
->>> Well, this is mostly good to see.  I hope there is someone that wants
->>> to take-up the cause!
->>>
->>> If someone is interested in working-on the project above but for
->>> whatever reason doesn't want to deal with MediaTek on their own,
->>> feel free to contact me.  I'll try to be helpful however I can.
->>>
->>> Thanks,
->>>
->>> John
->>
->>
->> Sounds interesting and as perfect possibility to learn. I would like to
->> do it, but i have two concerns:
->> - i never wrote an wifi driver from scratch.
-> 
-> FWIW, I think MediaTek already has some form of drivers.  With that
-> said, it might be easier to write new mac80211-based ones than to
-> adapt the existing ones.
-> 
->> - i'm seeking for a job. It means if i will find one, this project will
->> get lower priority.
-> 
-> No one can ask anything more.
-> 
->> If nobody has problems with this two points, then i'm ok.
-> 
-> It sounds like we have a volunteer!  Let me know if you need any
-> specific help or guidance.
+The optional NL80211_ATTR_MGMT_SUBTYPE and NL80211_ATTR_REASON_CODE
+attributes can now be included in NL80211_CMD_DEL_STATION to indicate to
+the driver which frame (Deauthentication/Disassociation) and reason code
+in that frame should be used to indicate removal to the specific
+station. This is used by drivers that implement AP SME and generate
+those frames internally.
 
-During LPC Felix mentioned GPLed mediatek driver for their 11ac
-chipset(s?). It is on github:
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+---
+ include/net/cfg80211.h       |  6 ++++++
+ include/uapi/linux/nl80211.h |  6 +++++-
+ net/wireless/nl80211.c       | 15 +++++++++++++++
+ net/wireless/trace.h         | 10 ++++++++--
+ 4 files changed, 34 insertions(+), 3 deletions(-)
 
-https://github.com/openwrt/mtk-wifi-gpl
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 777e191..592e2dc 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -804,9 +804,15 @@ struct station_parameters {
+  * Used to delete a station entry (or all stations).
+  *
+  * @mac: MAC address of the station to remove or NULL to remove all stations
++ * @subtype: Management frame subtype to use for indicating removal
++ *	(0 = no guidance on whether to indicate the removal to the station is
++ *	provided, 10 = Disassociation, 12 = Deauthentication)
++ * @reason_code: Reason code for the Disassociation/Deauthentication frame
+  */
+ struct station_del_parameters {
+ 	const u8 *mac;
++	u8 subtype;
++	u16 reason_code;
+ };
+ 
+ /**
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 4b28dc0..07ef683 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -227,7 +227,11 @@
+  *	the interface identified by %NL80211_ATTR_IFINDEX.
+  * @NL80211_CMD_DEL_STATION: Remove a station identified by %NL80211_ATTR_MAC
+  *	or, if no MAC address given, all stations, on the interface identified
+- *	by %NL80211_ATTR_IFINDEX.
++ *	by %NL80211_ATTR_IFINDEX. %NL80211_ATTR_MGMT_SUBTYPE and
++ *	%NL80211_ATTR_REASON_CODE can optionally be used to specify which type
++ *	of disconnection indication should be sent to the station
++ *	(Deauthentication or Disassociation frame and reason code for that
++ *	frame).
+  *
+  * @NL80211_CMD_GET_MPATH: Get mesh path attributes for mesh path to
+  * 	destination %NL80211_ATTR_MAC on the interface identified by
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 9333990..b88b239 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -4414,6 +4414,21 @@ static int nl80211_del_station(struct sk_buff *skb, struct genl_info *info)
+ 	if (!rdev->ops->del_station)
+ 		return -EOPNOTSUPP;
+ 
++	if (info->attrs[NL80211_ATTR_MGMT_SUBTYPE]) {
++		params.subtype =
++			nla_get_u8(info->attrs[NL80211_ATTR_MGMT_SUBTYPE]);
++		if (params.subtype != IEEE80211_STYPE_DISASSOC >> 4 &&
++		    params.subtype != IEEE80211_STYPE_DEAUTH >> 4)
++			return -EINVAL;
++	}
++
++	if (info->attrs[NL80211_ATTR_REASON_CODE]) {
++		params.reason_code =
++			nla_get_u16(info->attrs[NL80211_ATTR_REASON_CODE]);
++		if (params.reason_code == 0)
++			return -EINVAL; /* 0 is reserved */
++	}
++
+ 	return rdev_del_station(rdev, dev, &params);
+ }
+ 
+diff --git a/net/wireless/trace.h b/net/wireless/trace.h
+index 66bc3c9..fae55cd 100644
+--- a/net/wireless/trace.h
++++ b/net/wireless/trace.h
+@@ -688,14 +688,20 @@ DECLARE_EVENT_CLASS(station_del,
+ 		WIPHY_ENTRY
+ 		NETDEV_ENTRY
+ 		MAC_ENTRY(sta_mac)
++		__field(u8, subtype)
++		__field(u16, reason_code)
+ 	),
+ 	TP_fast_assign(
+ 		WIPHY_ASSIGN;
+ 		NETDEV_ASSIGN;
+ 		MAC_ASSIGN(sta_mac, params->mac);
++		__entry->subtype = params->subtype;
++		__entry->reason_code = params->reason_code;
+ 	),
+-	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", station mac: " MAC_PR_FMT,
+-		  WIPHY_PR_ARG, NETDEV_PR_ARG, MAC_PR_ARG(sta_mac))
++	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", station mac: " MAC_PR_FMT
++		  ", subtype: %u, reason_code: %u",
++		  WIPHY_PR_ARG, NETDEV_PR_ARG, MAC_PR_ARG(sta_mac),
++		  __entry->subtype, __entry->reason_code)
+ );
+ 
+ DEFINE_EVENT(station_del, rdev_del_station,
+-- 
+1.9.1
 
-Regards,
-Arend
 
+-- 
+Jouni Malinen                                            PGP id EFC895FA
