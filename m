@@ -1,35 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:36661 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752950AbaJTKlg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2014 06:41:36 -0400
-Message-ID: <1413801688.10246.18.camel@jlt4.sipsolutions.net> (sfid-20141020_124138_964913_86FB0FED)
-Subject: Re: [RFC] mac80211: don't flush when probing the AP
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 20 Oct 2014 12:41:28 +0200
-In-Reply-To: <1413491157-5352-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1413491157-5352-1-git-send-email-emmanuel.grumbach@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:50100 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751498AbaJJWJN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Oct 2014 18:09:13 -0400
+Received: by mail-wg0-f44.google.com with SMTP id y10so4933891wgg.27
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Oct 2014 15:09:12 -0700 (PDT)
+Message-ID: <54385907.4090003@gmail.com> (sfid-20141011_000916_962237_37347D27)
+Date: Sat, 11 Oct 2014 00:09:11 +0200
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+MIME-Version: 1.0
+To: stf_xl@wp.pl, users@rt2x00.serialmonkey.com,
+	linux-wireless@vger.kernel.org
+Subject: rt2x00: two candidates for -stable
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-10-16 at 23:25 +0300, Emmanuel Grumbach wrote:
-> All the callers of ieee80211_mgd_probe_ap_send return right
-> after they call the flush() callback. This means that calling
-> flush() is uneeded since its meaning is to wait until the
-> queues of the device are empty. It is pointless to wait if
-> there is nothing that must ensure that the frame has left
-> the Tx queue.
-> ieee80211_mgd_probe_ap_send is called at the very end of
-> a worker - so flush() is not needed.
+Hi Stanislaw,
 
-There may have been some concern that the timer/work could run again
-while the packets are still on the (possibly long) queue, but I guess
-this is reasonable? We might want to avoid that by tracking whether
-we've sent out a frame and (not) gotten a response?
+I think these two should be included in -stable :
+ac0372abf8524a7572a9cdaac6495eb2eba20457 support Ralink 5362
+6a06e554daef86c4e8d290284927b081fedb249e add new rt2800usb devices
 
-johannes
-
+-thanks-
