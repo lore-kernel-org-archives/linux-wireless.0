@@ -1,88 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:53570 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751621AbaJAKIH (ORCPT
+Received: from col004-omc2s3.hotmail.com ([65.55.34.77]:62853 "EHLO
+	COL004-OMC2S3.hotmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751948AbaJJN4z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Oct 2014 06:08:07 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@qca.qualcomm.com
-Subject: [RFC 5/5] ath9k: Fix flushing in MCC mode
-Date: Wed,  1 Oct 2014 15:38:33 +0530
-Message-Id: <1412158113-22913-6-git-send-email-sujith@msujith.org> (sfid-20141001_120811_011628_3AB3AC1F)
-In-Reply-To: <1412158113-22913-1-git-send-email-sujith@msujith.org>
-References: <1412158113-22913-1-git-send-email-sujith@msujith.org>
+	Fri, 10 Oct 2014 09:56:55 -0400
+Message-ID: <COL403-EAS377900E6B06D0233434183F3A10@phx.gbl> (sfid-20141010_155659_525090_32760918)
+From: John Frankish <john.frankish@outlook.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: Intel AC 7260 works with 64bit kernel but not 32-bit kernel
+Date: Fri, 10 Oct 2014 17:45:15 +0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Using a linux-3.16.3 64-bit kernel, the iwlwifi driver loaded with "options
+iwlwifi 11n_disable=1" works most of the time. When it doesn't work, I see
+the following error:
 
-When we are attempting to switch to a new
-channel context, the TX queues are flushed, but
-the mac80211 queues are not stopped and traffic
-can still come down to the driver.
+deauthenticating from c4:7d:4f:88:a9:b9 by local choice (Reason:
+3=DEAUTH_LEAVING)
 
-This patch fixes it by stopping the queues
-assigned to the current context/vif before
-trying to flush.
+Using a linux-3.16.3 32-bit kernel, under the same conditions, I can never
+connect, but do not see any error messages or dmesg output.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/channel.c | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+Are there any other applicable modprobe options or troubleshooting I can try
+to get the 32-bit driver working?
 
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index bf5ecd8..945c898 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -1044,9 +1044,11 @@ static void ath_offchannel_channel_change(struct ath_softc *sc)
- void ath_chanctx_set_next(struct ath_softc *sc, bool force)
- {
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+	struct ath_chanctx *old_ctx;
- 	struct timespec ts;
- 	bool measure_time = false;
- 	bool send_ps = false;
-+	bool queues_stopped = false;
- 
- 	spin_lock_bh(&sc->chan_lock);
- 	if (!sc->next_chan) {
-@@ -1076,6 +1078,10 @@ void ath_chanctx_set_next(struct ath_softc *sc, bool force)
- 			getrawmonotonic(&ts);
- 			measure_time = true;
- 		}
-+
-+		ath9k_chanctx_stop_queues(sc, sc->cur_chan);
-+		queues_stopped = true;
-+
- 		__ath9k_flush(sc->hw, ~0, true);
- 
- 		if (ath_chanctx_send_ps_frame(sc, true))
-@@ -1089,6 +1095,7 @@ void ath_chanctx_set_next(struct ath_softc *sc, bool force)
- 			sc->cur_chan->tsf_val = ath9k_hw_gettsf64(sc->sc_ah);
- 		}
- 	}
-+	old_ctx = sc->cur_chan;
- 	sc->cur_chan = sc->next_chan;
- 	sc->cur_chan->stopped = false;
- 	sc->next_chan = NULL;
-@@ -1111,7 +1118,16 @@ void ath_chanctx_set_next(struct ath_softc *sc, bool force)
- 		if (measure_time)
- 			sc->sched.channel_switch_time =
- 				ath9k_hw_get_tsf_offset(&ts, NULL);
-+		/*
-+		 * A reset will ensure that all queues are woken up,
-+		 * so there is no need to awaken them again.
-+		 */
-+		goto out;
- 	}
-+
-+	if (queues_stopped)
-+		ath9k_chanctx_wake_queues(sc, old_ctx);
-+out:
- 	if (send_ps)
- 		ath_chanctx_send_ps_frame(sc, false);
- 
--- 
-2.1.1
+Dmesg output below.
 
+Intel(R) Wireless WiFi driver for Linux, in-tree:
+Copyright(c) 2003- 2014 Intel Corporation
+iwlwifi 0000:02:00.0: irq 63 for MSI/MSI-X
+iwlwifi 0000:02:00.0: Direct firmware load failed with error -2
+iwlwifi 0000:02:00.0: Falling back to user helper
+iwlwifi 0000:02:00.0: loaded firmware version 25.222.9.0 op_mode iwlmvm
+iwlwifi 0000:02:00.0: Detected Intel(R) Dual Band Wireless AC 7260,
+REV=0x144
+iwlwifi 0000:02:00.0: L1 Disabled; Enabling L0S
+iwlwifi 0000:02:00.0: L1 Disabled; Enabling L0S
+ieee80211 phy0: Selected rate control algorithm 'iwl-mvm-rs'
+[no dmesg output seen after here with 32-bit kernel]
+wlan0: authenticate with c4:7d:4f:88:a9:b9
+wlan0: send auth to c4:7d:4f:88:a9:b9 (try 1/3)
+wlan0: authenticated
+wlan0: associate with c4:7d:4f:88:a9:b9 (try 1/3)
+wlan0: RX AssocResp from c4:7d:4f:88:a9:b9 (capab=0x431 status=0 aid=4)
+wlan0: associated
