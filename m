@@ -1,36 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:21670 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755497AbaJHKTn (ORCPT
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:36158 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751174AbaJJHg6 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Oct 2014 06:19:43 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
-Subject: Re: [PATCH v2] ath10k: add tracing for frame transmission
-References: <1412615346-18010-1-git-send-email-rmanohar@qti.qualcomm.com>
-	<87d2a3j1ja.fsf@kamboji.qca.qualcomm.com>
-	<20141008031321.GB3116@qca.qualcomm.com>
-Date: Wed, 8 Oct 2014 13:19:14 +0300
-In-Reply-To: <20141008031321.GB3116@qca.qualcomm.com> (Rajkumar Manoharan's
-	message of "Wed, 8 Oct 2014 08:43:23 +0530")
-Message-ID: <8761fuhnj1.fsf@kamboji.qca.qualcomm.com> (sfid-20141008_121950_226514_8AF3D23F)
+	Fri, 10 Oct 2014 03:36:58 -0400
+Received: by mail-wg0-f45.google.com with SMTP id m15so3135550wgh.4
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Oct 2014 00:36:57 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1412842950-14098-4-git-send-email-michal.kazior@tieto.com>
+References: <1412842950-14098-1-git-send-email-michal.kazior@tieto.com>
+	<1412842950-14098-4-git-send-email-michal.kazior@tieto.com>
+Date: Fri, 10 Oct 2014 09:36:57 +0200
+Message-ID: <CA+BoTQmZXuo+NkkzE++Puf19ZfRWk7DdLWwonNn7YuREryfEwA@mail.gmail.com> (sfid-20141010_093702_248835_2063824B)
+Subject: Re: [PATCH 3/5] ath10k: make warm reset a bit safer and faster
+From: Michal Kazior <michal.kazior@tieto.com>
+To: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rajkumar Manoharan <rmanohar@qti.qualcomm.com> writes:
-
->> > +	trace_ath10k_htt_rx_pop_msdu(ar, msdu->data, msdu->len +
->> > +				     skb_tailroom(msdu));
->> 
->> Why add skb_tailroom() to the length? I think that deserves a comment.
+On 9 October 2014 10:22, Michal Kazior <michal.kazior@tieto.com> wrote:
+> One of the problems with warm reset I've found is
+> that it must be guaranteed that copy engine
+> registers are not being accessed while being
+> reset. Otherwise in worst case scenario the host
+> may lock up.
 >
-> It is used for rx crypto length. skb_tailroom is used in most of the
-> places even while dumping rx pkt by ath10k_dbg_dump.
+> Instead of using sleeps and hoping the device is
+> operational in some arbitrary timeframes use
+> firmware indication register.
+>
+> As a side effect this makes driver
+> boot/stop/recovery faster.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+[...]
+> +static int ath10k_pci_warm_reset(struct ath10k *ar)
+> +{
+> +       int ret;
+> +
+> +       ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot warm reset\n");
+>
+> -       /* debug */
+> -       val = ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS +
+> -                               PCIE_INTR_CAUSE_ADDRESS);
+> -       ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot host cpu intr cause: 0x%08x\n",
+> -                  val);
+> +       spin_lock_bh(&ar->data_lock);
+> +       ar->stats.fw_warm_reset_counter++;
+> +       spin_unlock_bh(&ar->data_lock);
+>
+> -       val = ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS +
+> -                               CPU_INTR_ADDRESS);
+> -       ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot target cpu intr cause: 0x%08x\n",
+> -                  val);
+> +       ath10k_pci_irq_disable(ar);
+>
+> -       /* CPU warm reset */
+> -       val = ath10k_pci_read32(ar, RTC_SOC_BASE_ADDRESS +
+> -                               SOC_RESET_CONTROL_ADDRESS);
+> -       ath10k_pci_write32(ar, RTC_SOC_BASE_ADDRESS + SOC_RESET_CONTROL_ADDRESS,
+> -                          val | SOC_RESET_CONTROL_CPU_WARM_RST_MASK);
+> +       /* Make sure the target CPU is not doing anything dangerous, e.g. if it
+> +        * were to access copy engine while host performs copy engine reset
+> +        * then it is possible for the device to confuse pci-e controller to
+> +        * the point of bringing host system to a complete stop (i.e. hang).
+> +        */
+> +       ath10k_pci_warm_reset_si0(ar);
+> +       ath10k_pci_warm_reset_cpu(ar);
+> +       ath10k_pci_wait_for_target_init(ar);
 
-Ok, thanks for clarifying that.
+Since warm_reset now calls wait_for_target_init (and thus can report a
+target register dump on crash) and is called in pci_probe CE must be
+initialized (which isn't the case in the code now). This can lead to
+system crash on very early firmware crash during probing. Kudos to
+Janusz for finding this out!
 
--- 
-Kalle Valo
+I'll respin a v2 later.
+
+
+Michał
