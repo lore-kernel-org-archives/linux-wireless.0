@@ -1,59 +1,371 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:55096 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752903AbaJMJsl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Oct 2014 05:48:41 -0400
-Received: by mail-wi0-f175.google.com with SMTP id d1so6853292wiv.8
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Oct 2014 02:48:40 -0700 (PDT)
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@gmail.com>,
-	Karl Beldan <karl.beldan@rivierawaves.com>, stable@kernel.org
-Subject: [PATCH] mac80211: fix typo in starting baserate for rts_cts_rate_idx
-Date: Mon, 13 Oct 2014 11:48:12 +0200
-Message-Id: <1413193692-30521-1-git-send-email-karl.beldan@gmail.com> (sfid-20141013_114845_989649_09FF01C5)
+Received: from mx01.mykolab.com ([95.128.36.1]:30058 "EHLO mx03.mykolab.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751043AbaJJMnU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Oct 2014 08:43:20 -0400
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Fri, 10 Oct 2014 14:42:52 +0200
+From: "Schroer, Jens Peter" <jens.schroer@scypho.com>
+To: Oleksij Rempel <linux@rempel-privat.de>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Kernel Oops with =?UTF-8?Q?ath=39k=5Fhtc=20during=20AES=20dec?=
+ =?UTF-8?Q?rypt=20on=20ARM=20/=20BeagleBone=20Black?=
+In-Reply-To: <54369F07.9080705@rempel-privat.de>
+References: <51054a8c690db75aa1efacb98e4379c9@scypho.com>
+ <54368960.4040109@rempel-privat.de>
+ <828b549f60c81155be705f5173fe0e11@scypho.com>
+ <54369F07.9080705@rempel-privat.de>
+Message-ID: <1772bbe6a9db0760b4712cf8fad81fbc@scypho.com> (sfid-20141010_144325_079535_BDE2E6CC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Karl Beldan <karl.beldan@rivierawaves.com>
+Hi Oleksij,
 
-It affects non-(V)HT rates and can lead to selecting an rts_cts rate
-that is not a basic rate or way superior to the reference rate (ATM
-rates[0] used for the 1st attempt of the protected frame data).
+I have tried to recover the full dmesg, but it seems to be lost.
+I am not sure if it disappeared with during the last reboot or was not 
+synced back to the flash due to the kernel panic.
+I tried to reproduce the kernel oops, but get stuck with the problem I 
+mentioned in my other email.
+Is there a way of printing / tracing bad packages, so that when this 
+crash occures the next time, I have hopefully more information 
+available?
+Also, just for completeness, the issue that stops me from trying to 
+reproduce the kernel oops:
 
-E.g, assuming drivers register growing (bitrate) sorted tables of
-ieee80211_rate-s, having :
-- rates[0].idx == d'2 and basic_rates == b'10100
-will select rts_cts idx b'10011 & ~d'(BIT(2)-1), i.e. 1, likewise
-- rates[0].idx == d'2 and basic_rates == b'10001
-will select rts_cts idx b'10000
-The first is not a basic rate and the second is > rates[0].
+[ 1079.434044] ------------[ cut here ]------------
+[ 1079.434440] WARNING: CPU: 0 PID: 0 at net/mac80211/rx.c:3399 
+ieee80211_rx+0x566/0x59c [mac80211]()
+[ 1079.434660] Rate marked as an HT rate but passed status->rate_idx is 
+not an MCS index [0-76]: 125 (0x7d)
+[ 1079.434710] Modules linked in: ctr ccm omap_aes omap_sham evdev arc4 
+ath9k_htc ath9k_common ath9k_hw ath mac80211 cfg80211
+[ 1079.434748] CPU: 0 PID: 0 Comm: swapper Tainted: G        W      
+3.17.0-bone4 #1
+[ 1079.434856] [<c0011bbd>] (unwind_backtrace) from [<c000fa41>] 
+(show_stack+0x11/0x14)
+[ 1079.434933] [<c000fa41>] (show_stack) from [<c00311c1>] 
+(warn_slowpath_common+0x51/0x6c)
+[ 1079.434948] [<c00311c1>] (warn_slowpath_common) from [<c0031247>] 
+(warn_slowpath_fmt+0x23/0x2c)
+[ 1079.435091] [<c0031247>] (warn_slowpath_fmt) from [<bf8998a7>] 
+(ieee80211_rx+0x566/0x59c [mac80211])
+[ 1079.435342] [<bf8998a7>] (ieee80211_rx [mac80211]) from [<bf991f1d>] 
+(ath9k_rx_tasklet+0x250/0x284 [ath9k_htc])
+[ 1079.435474] [<bf991f1d>] (ath9k_rx_tasklet [ath9k_htc]) from 
+[<c003377b>] (tasklet_action+0x3f/0x68)
+[ 1079.435488] [<c003377b>] (tasklet_action) from [<c00331fd>] 
+(__do_softirq+0x65/0x1ec)
+[ 1079.435499] [<c00331fd>] (__do_softirq) from [<c003352b>] 
+(irq_exit+0x63/0x98)
+[ 1079.435567] [<c003352b>] (irq_exit) from [<c000dda3>] 
+(handle_IRQ+0x27/0x5c)
+[ 1079.435627] [<c000dda3>] (handle_IRQ) from [<c000847b>] 
+(omap3_intc_handle_irq+0x63/0x74)
+[ 1079.435650] [<c000847b>] (omap3_intc_handle_irq) from [<c05b6e1b>] 
+(__irq_svc+0x3b/0x5c)
+[ 1079.435657] Exception stack(0xc09aff68 to 0xc09affb0)
+[ 1079.435667] ff60:                   ffffffed 00000000 00000000 
+c00197e1 c09ae000 00000000
+[ 1079.435677] ff80: c09b70e4 00000000 00000000 c0a44ab8 c0a30d30 
+ffffffed c09affa0 c09affb0
+[ 1079.435685] ffa0: c000deb5 c000deb6 40010033 ffffffff
+[ 1079.435700] [<c05b6e1b>] (__irq_svc) from [<c000deb6>] 
+(arch_cpu_idle+0x1e/0x28)
+[ 1079.435715] [<c000deb6>] (arch_cpu_idle) from [<c004b2a9>] 
+(cpu_startup_entry+0x111/0x1a8)
+[ 1079.435734] [<c004b2a9>] (cpu_startup_entry) from [<c09418c5>] 
+(start_kernel+0x279/0x2e4)
+[ 1079.435741] ---[ end trace ecfa63025e0ecf98 ]---
+[ 1091.044433] ------------[ cut here ]------------
+[ 1091.044785] WARNING: CPU: 0 PID: 0 at net/mac80211/rx.c:3399 
+ieee80211_rx+0x566/0x59c [mac80211]()
+[ 1091.044865] Rate marked as an HT rate but passed status->rate_idx is 
+not an MCS index [0-76]: 127 (0x7f)
+[ 1091.044915] Modules linked in: ctr ccm omap_aes omap_sham evdev arc4 
+ath9k_htc ath9k_common ath9k_hw ath mac80211 cfg80211
+[ 1091.045050] CPU: 0 PID: 0 Comm: swapper Tainted: G        W      
+3.17.0-bone4 #1
+[ 1091.045096] [<c0011bbd>] (unwind_backtrace) from [<c000fa41>] 
+(show_stack+0x11/0x14)
+[ 1091.045204] [<c000fa41>] (show_stack) from [<c00311c1>] 
+(warn_slowpath_common+0x51/0x6c)
+[ 1091.045265] [<c00311c1>] (warn_slowpath_common) from [<c0031247>] 
+(warn_slowpath_fmt+0x23/0x2c)
+[ 1091.045411] [<c0031247>] (warn_slowpath_fmt) from [<bf8998a7>] 
+(ieee80211_rx+0x566/0x59c [mac80211])
+[ 1091.045658] [<bf8998a7>] (ieee80211_rx [mac80211]) from [<bf991f1d>] 
+(ath9k_rx_tasklet+0x250/0x284 [ath9k_htc])
+[ 1091.045796] [<bf991f1d>] (ath9k_rx_tasklet [ath9k_htc]) from 
+[<c003377b>] (tasklet_action+0x3f/0x68)
+[ 1091.045810] [<c003377b>] (tasklet_action) from [<c00331fd>] 
+(__do_softirq+0x65/0x1ec)
+[ 1091.045821] [<c00331fd>] (__do_softirq) from [<c003352b>] 
+(irq_exit+0x63/0x98)
+[ 1091.045894] [<c003352b>] (irq_exit) from [<c000dda3>] 
+(handle_IRQ+0x27/0x5c)
+[ 1091.045951] [<c000dda3>] (handle_IRQ) from [<c000847b>] 
+(omap3_intc_handle_irq+0x63/0x74)
+[ 1091.045974] [<c000847b>] (omap3_intc_handle_irq) from [<c05b6e1b>] 
+(__irq_svc+0x3b/0x5c)
+[ 1091.045981] Exception stack(0xc09aff68 to 0xc09affb0)
+[ 1091.045991] ff60:                   ffffffed 00000000 00000000 
+c00197e1 c09ae000 00000000
+[ 1091.046002] ff80: c09b70e4 00000000 00000000 c0a44ab8 c0a30d30 
+ffffffed c09affa0 c09affb0
+[ 1091.046010] ffa0: c000deb5 c000deb6 40010033 ffffffff
+[ 1091.046024] [<c05b6e1b>] (__irq_svc) from [<c000deb6>] 
+(arch_cpu_idle+0x1e/0x28)
+[ 1091.046039] [<c000deb6>] (arch_cpu_idle) from [<c004b2a9>] 
+(cpu_startup_entry+0x111/0x1a8)
+[ 1091.046058] [<c004b2a9>] (cpu_startup_entry) from [<c09418c5>] 
+(start_kernel+0x279/0x2e4)
+[ 1091.046065] ---[ end trace ecfa63025e0ecf99 ]---
 
-Also, wrt severity of the addressed misbehavior, ATM we only have one
-rts_cts_rate_idx rather than one per rate table entry, so this idx might
-still point to bitrates > rates[1..MAX_RATES].
+Regards,
+Jens
 
-Fixes: 5253ffb8 ("mac80211: always pick a basic rate to tx RTS/CTS for pre-HT rates")
-Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
----
- net/mac80211/rate.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
-index 8fdadfd..6081329 100644
---- a/net/mac80211/rate.c
-+++ b/net/mac80211/rate.c
-@@ -448,7 +448,7 @@ static void rate_fixup_ratelist(struct ieee80211_vif *vif,
- 	 */
- 	if (!(rates[0].flags & IEEE80211_TX_RC_MCS)) {
- 		u32 basic_rates = vif->bss_conf.basic_rates;
--		s8 baserate = basic_rates ? ffs(basic_rates - 1) : 0;
-+		s8 baserate = basic_rates ? ffs(basic_rates) - 1 : 0;
- 
- 		rate = &sband->bitrates[rates[0].idx];
- 
--- 
-2.0.1
 
+On 2014-10-09 16:43, Oleksij Rempel wrote:
+> Am 09.10.2014 um 15:54 schrieb Schroer, Jens Peter:
+>> Hi Oleksij,
+>> 
+>> Thanks for the reply.
+>> For this test I am running it in managed mode.
+> 
+> Can you please send complete dmesg. May be there are some previous
+> messages can give some hint.
+> 
+> Right now i assume that some bad packets are not filtered out.
+> 
+> Beside, do your source have commit d21ccfd0a60e "ath9k_htc: fix random
+> decryption failure"?
+> 
+>> /sbin/iwconfig:
+>> wlan0     IEEE 802.11bgn  ESSID:"myap"
+>>           Mode:Managed  Frequency:2.422 GHz  Access Point:
+>> 1C:EC:3B:52:9C:5A
+>>           Bit Rate=72.2 Mb/s   Tx-Power=20 dBm
+>>           Retry short limit:7   RTS thr:off   Fragment thr:off
+>>           Power Management:off
+>>           Link Quality=70/70  Signal level=-38 dBm
+>>           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+>>           Tx excessive retries:0  Invalid misc:12   Missed beacon:0
+>> 
+>> 
+>> 
+>> On 2014-10-09 15:10, Oleksij Rempel wrote:
+>>> Am 09.10.2014 um 13:06 schrieb Schroer, Jens Peter:
+>>>> Hi,
+>>>> 
+>>>> While running a iperf test, I experienced a kernel Oops in the Wifi 
+>>>> /
+>>>> crypto module. I tried to reproduce it, but only managed to do it 
+>>>> once
+>>>> so far.
+>>> 
+>>> Hmm.. do it run in monitor or AP mode?
+>>> I ask, because in combination with your other email i would assume 
+>>> that
+>>> not all corrupt packets are filtered.
+>>> 
+>>>> The system is:
+>>>> BeagleBone Black, Rev C
+>>>> Kernel 3.17.0-bone4 from BeagleBone
+>>>> Using debian Jessie for Arm
+>>>> Wifi: Netgear WNA1100
+>>>> 
+>>>> lsusb:
+>>>> Bus 002 Device 003: ID 0846:9030 NetGear, Inc. WNA1100 Wireless-N 
+>>>> 150
+>>>> [Atheros AR9271]
+>>>> Bus 002 Device 002: ID 1a40:0201 Terminus Technology Inc. FE 2.1
+>>>> 7-port Hub
+>>>> Bus 002 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+>>>> Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+>>>> 
+>>>> Scenario:
+>>>> 
+>>>> I am running
+>>>> iperf -c 192.168.1.32 -i1 -t300 -w1000k
+>>>> to test network performance
+>>>> 
+>>>> During this test I got the following kernel Oops (see below).
+>>>> Is this a known issue (I couldn't find anything related on Google so
+>>>> far)?
+>>>> 
+>>>> Kind regards,
+>>>> Jens
+>>>> 
+>>>> 
+>>>> [   72.919376] kernel BUG at crypto/scatterwalk.c:37!
+>>>> [   72.924396] Internal error: Oops - BUG: 0 [#1] THUMB2
+>>>> [   72.929691] Modules linked in: ctr ccm omap_aes omap_sham evdev 
+>>>> arc4
+>>>> ath9k_htc ath9k_common ath9k_hw ath mac80211 cfg80211
+>>>> [   72.941329] CPU: 0 PID: 0 Comm: swapper Not tainted 3.17.0-bone4 
+>>>> #1
+>>>> [   72.947902] task: c09baf68 ti: c09ae000 task.ti: c09ae000
+>>>> [   72.953577] PC is at scatterwalk_start+0x12/0x14
+>>>> [   72.958417] LR is at scatterwalk_map_and_copy+0x23/0x84
+>>>> [   72.963894] pc : [<c02eda8a>]    lr : [<c02edbd7>]    psr: 
+>>>> 20010133
+>>>> [   72.963894] sp : c09afac8  ip : 00000000  fp : c09afcf4
+>>>> [   72.975930] r10: 00000000  r9 : 00000000  r8 : 00000008
+>>>> [   72.981405] r7 : c09afb98  r6 : 00000008  r5 : c09afccc  r4 :
+>>>> 00000000
+>>>> [   72.988245] r3 : 00000000  r2 : 00000000  r1 : c09afccc  r0 :
+>>>> c09afac8
+>>>> [   72.995089] Flags: nzCv  IRQs on  FIQs on  Mode SVC_32  ISA Thumb
+>>>> Segment kernel
+>>>> [   73.002933] Control: 50c5387d  Table: 9bf9c019  DAC: 00000015
+>>>> [   73.008954] Process swapper (pid: 0, stack limit = 0xc09ae240)
+>>>> [   73.015066] Stack: (0xc09afac8 to 0xc09b0000)
+>>>> [   73.019633] fac0:                   c09afccc bf98f2c7 00000006
+>>>> c09afb78 c09afb38 de356580
+>>>> [   73.028210] fae0: c09afd7c 00000008 c09afb98 bf9bb933 00000000
+>>>> dbfa1b80 de458fa0 bf990e67
+>>>> [   73.036786] fb00: dbfa1b80 de458fa0 00000000 c09afbb0 00000006
+>>>> de356580 c09afb38 00000a34
+>>>> [   73.045360] fb20: c09afcc0 c09afd08 dbfd7a34 00000000 c09afcf4
+>>>> bf891a51 00000000 00000000
+>>>> [   73.053935] fb40: 00000000 00000000 de356580 00000000 00000018
+>>>> 00000008 c09afd7c c09afcf4
+>>>> [   73.062510] fb60: c09afccc c09afd08 00000000 00000000 00000000
+>>>> 00000000 00000000 00000000
+>>>> [   73.071085] fb80: 00000000 00000000 00000000 00000000 00000000
+>>>> 00000000 00000000 00000000
+>>>> [   73.079659] fba0: 00000000 00000000 00000000 00000000 00000000
+>>>> 00000000 00000000 00000000
+>>>> [   73.088233] fbc0: 00000000 00000000 00000000 00000000 00000000
+>>>> 00000000 00000000 00000000
+>>>> [   73.096807] fbe0: 00000000 00000000 00000000 00000000 00000000
+>>>> 00000000 00000000 00000000
+>>>> [   73.105382] fc00: 00000000 00000000 00000000 00000000 00000000
+>>>> 00000000 00000000 00000000
+>>>> [   73.113956] fc20: 00000000 00000000 00000000 00000000 00000000
+>>>> 00000000 00000000 00000000
+>>>> [   73.122531] fc40: 00000000 00000000 00000000 00000000 00000000
+>>>> 00000000 00000000 00000000
+>>>> [   73.131106] fc60: 00000000 00000000 00000000 00000000 00000000
+>>>> 00000000 00000000 00000000
+>>>> [   73.139681] fc80: 00000000 00000000 00000000 00000000 00000000
+>>>> 00000000 00000000 00000000
+>>>> [   73.148256] fca0: 00000000 00000000 00000000 00000000 00000000
+>>>> 00000000 0000007f bf886a79
+>>>> [   73.156831] fcc0: de546700 c09afd7c 00000040 dfe70ae0 00000a34
+>>>> 00000000 00000000 00000000
+>>>> [   73.165406] fce0: dfe70ae2 00000a34 00000008 00000000 00000000
+>>>> dfb045e2 00000d5e 00000018
+>>>> [   73.173980] fd00: 00000000 00000000 dfe70ae2 00000a34 00000000
+>>>> 00000000 00000000 dc8cb300
+>>>> [   73.182557] fd20: 00000000 dd54f100 c09b7008 0000001a dd4af000
+>>>> dbfd7a34 dbfd7a12 00000000
+>>>> [   73.191132] fd40: 00000000 bf886a79 00000000 dbfd7a34 00000006
+>>>> 00000000 f0800000 42881800
+>>>> [   73.199708] fd60: 7a1504c4 eebc1b89 5e9c557b e76e6008 00004996
+>>>> 00000000 00000000 eebc0001
+>>>> [   73.208282] fd80: 5e9c557b 00000000 dd56f080 dc8cb300 c09afe54
+>>>> dd54f100 c09afe2c c09afe54
+>>>> [   73.216858] fda0: 00004a88 dbfd7a12 c09ae000 00004000 00000000
+>>>> bf897719 00000000 c006a6c5
+>>>> [   73.225434] fdc0: 0003a980 00000000 00989680 00000000 684e00f5
+>>>> 00000000 c09dc848 c09baf68
+>>>> [   73.234009] fde0: 00000000 bf896ed9 0000002c 00000040 00000000
+>>>> bf896ed9 00000001 0000002d
+>>>> [   73.242583] fe00: 00989680 c09afe54 de4583a0 de530c84 c09ddf68
+>>>> 00000000 00200200 dbf87b2c
+>>>> [   73.251158] fe20: bf88a83d bf899925 264a8a64 dd54f100 de4583a0
+>>>> dd562500 dbf87800 dd4af000
+>>>> [   73.259733] fe40: 00000000 00000000 00000000 00000000 00000000
+>>>> de532580 dd54f4c0 00000036
+>>>> [   73.268309] fe60: f764151b c09ae000 00000100 bf88a855 c0a447c0
+>>>> c005fe3f 00000001 c006a53b
+>>>> [   73.276883] fe80: 00000000 de530c84 c0a9aa00 c09afec0 c09ddf68
+>>>> 00000000 00200200 c0a30d30
+>>>> [   73.285458] fea0: 00000004 c00603ad f76400ec 00000010 bf88a83d
+>>>> dbf87b2c 00000000 00200200
+>>>> [   73.294033] fec0: c09afec0 c09afec0 c0a187d8 c0a57b44 00000002
+>>>> c09ae000 00000054 00000001
+>>>> [   73.302607] fee0: c0a44ab8 c0a30d30 00000004 c00331fd 00000010
+>>>> c09df0e0 00000002 00000100
+>>>> [   73.311182] ff00: c0a57b40 0000000a ffffa748 00200000 00000054
+>>>> c09ae000 00000000 00000054
+>>>> [   73.319756] ff20: 00000054 c09aff68 c0a44ab8 c0a30d30 ffffffed
+>>>> c003352b c0a091a8 c000dda3
+>>>> [   73.328331] ff40: fa200098 fa2000b8 fa2000d8 c000847b c000deb6
+>>>> 40010033 ffffffff c09aff9c
+>>>> [   73.336908] ff60: 00000000 c05b6e1b ffffffed 00000000 00000000
+>>>> c00197e1 c09ae000 00000000
+>>>> [   73.345483] ff80: c09b70e4 00000000 00000000 c0a44ab8 c0a30d30
+>>>> ffffffed 00000000 c09affb0
+>>>> [   73.354057] ffa0: c000deb5 c000deb6 40010033 ffffffff 00000000
+>>>> c004b2a9 00000000 c097b660
+>>>> [   73.362632] ffc0: 00000000 c09418c5 ffffffff ffffffff c09414d5
+>>>> 00000000 c097b660 dc8cb300
+>>>> [   73.371208] ffe0: c0a566d4 c09b7074 c097b65c c09bc3d0 80004059
+>>>> 80008079 00000000 00000000
+>>>> [   73.379796] [<c02eda8a>] (scatterwalk_start) from [<c02edbd7>]
+>>>> (scatterwalk_map_and_copy+0x23/0x84)
+>>>> [   73.389297] [<c02edbd7>] (scatterwalk_map_and_copy) from 
+>>>> [<bf9bb933>]
+>>>> (crypto_ccm_decrypt+0x62/0x190 [ccm])
+>>>> [   73.399802] [<bf9bb933>] (crypto_ccm_decrypt [ccm]) from 
+>>>> [<bf891a51>]
+>>>> (ieee80211_aes_ccm_decrypt+0xdc/0x120 [mac80211])
+>>>> [   73.411258] [<bf891a51>] (ieee80211_aes_ccm_decrypt [mac80211]) 
+>>>> from
+>>>> [<bf886a79>] (ieee80211_crypto_ccmp_decrypt+0x1b0/0x1e4 [mac80211])
+>>>> [   73.424265] [<bf886a79>] (ieee80211_crypto_ccmp_decrypt 
+>>>> [mac80211])
+>>>> from [<bf897719>] (ieee80211_rx_handlers+0x714/0x1b34 [mac80211])
+>>>> [   73.437018] [<bf897719>] (ieee80211_rx_handlers [mac80211]) from
+>>>> [<bf899925>] (ieee80211_release_reorder_timeout+0x48/0x4c 
+>>>> [mac80211])
+>>>> [   73.449838] [<bf899925>] (ieee80211_release_reorder_timeout
+>>>> [mac80211]) from [<bf88a855>]
+>>>> (sta_rx_agg_reorder_timer_expired+0x18/0x1c [mac80211])
+>>>> [   73.463586] [<bf88a855>] (sta_rx_agg_reorder_timer_expired
+>>>> [mac80211]) from [<c005fe3f>] (call_timer_fn+0x2b/0xcc)
+>>>> [   73.474445] [<c005fe3f>] (call_timer_fn) from [<c00603ad>]
+>>>> (run_timer_softirq+0x145/0x198)
+>>>> [   73.483117] [<c00603ad>] (run_timer_softirq) from [<c00331fd>]
+>>>> (__do_softirq+0x65/0x1ec)
+>>>> [   73.491604] [<c00331fd>] (__do_softirq) from [<c003352b>]
+>>>> (irq_exit+0x63/0x98)
+>>>> [   73.499185] [<c003352b>] (irq_exit) from [<c000dda3>]
+>>>> (handle_IRQ+0x27/0x5c)
+>>>> [   73.506580] [<c000dda3>] (handle_IRQ) from [<c000847b>]
+>>>> (omap3_intc_handle_irq+0x63/0x74)
+>>>> [   73.515167] [<c000847b>] (omap3_intc_handle_irq) from 
+>>>> [<c05b6e1b>]
+>>>> (__irq_svc+0x3b/0x5c)
+>>>> [   73.523648] Exception stack(0xc09aff68 to 0xc09affb0)
+>>>> [   73.528943] ff60:                   ffffffed 00000000 00000000
+>>>> c00197e1 c09ae000 00000000
+>>>> [   73.537518] ff80: c09b70e4 00000000 00000000 c0a44ab8 c0a30d30
+>>>> ffffffed 00000000 c09affb0
+>>>> [   73.546092] ffa0: c000deb5 c000deb6 40010033 ffffffff
+>>>> [   73.551392] [<c05b6e1b>] (__irq_svc) from [<c000deb6>]
+>>>> (arch_cpu_idle+0x1e/0x28)
+>>>> [   73.559153] [<c000deb6>] (arch_cpu_idle) from [<c004b2a9>]
+>>>> (cpu_startup_entry+0x111/0x1a8)
+>>>> [   73.567829] [<c004b2a9>] (cpu_startup_entry) from [<c09418c5>]
+>>>> (start_kernel+0x279/0x2e4)
+>>>> [   73.576406] Code: b113 684b 6043 4770 (de02) b510
+>>>> [   73.581430] ---[ end trace fad732941e738de9 ]---
+>>>> [   73.586268] Kernel panic - not syncing: Fatal exception in 
+>>>> interrupt
+>>>> [   73.592929] drm_kms_helper: panic occurred, switching back to 
+>>>> text
+>>>> console
+>>>> [   73.600148] ---[ end Kernel panic - not syncing: Fatal exception 
+>>>> in
+>>>> interrupt
+>>>> 
+>>>> --
+>>>> To unsubscribe from this list: send the line "unsubscribe
+>>>> linux-wireless" in
+>>>> the body of a message to majordomo@vger.kernel.org
+>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
