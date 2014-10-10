@@ -1,207 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f172.google.com ([209.85.214.172]:42704 "EHLO
-	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752901AbaJBRBW (ORCPT
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:59296 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751722AbaJJKyc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Oct 2014 13:01:22 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, troy_tan@realsil.com.cn,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [PATCH 2/2 NEXT] rtlwifi: Fix static checker warnings for various drivers
-Date: Thu,  2 Oct 2014 12:00:54 -0500
-Message-Id: <1412269254-19983-3-git-send-email-Larry.Finger@lwfinger.net> (sfid-20141002_190132_254541_9A171B31)
-In-Reply-To: <1412269254-19983-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1412269254-19983-1-git-send-email-Larry.Finger@lwfinger.net>
+	Fri, 10 Oct 2014 06:54:32 -0400
+Received: by mail-wg0-f49.google.com with SMTP id x12so3636883wgg.32
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Oct 2014 03:54:31 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH] mac80211: enable DFS with channel contexts
+Date: Fri, 10 Oct 2014 12:43:23 +0200
+Message-Id: <1412937803-2413-1-git-send-email-michal.kazior@tieto.com> (sfid-20141010_125438_408831_1610B6DE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Indenting errors yielded the following static checker warnings:
+It is okay to enable DFS for channel contexts
+based drivers as long as no combination advertises
+radar detection and multi-channel operation at the
+same time.
 
-drivers/net/wireless/rtlwifi/rtl8192ee/hw.c:533 rtl92ee_set_hw_reg() warn: add curly braces? (if)
-drivers/net/wireless/rtlwifi/rtl8192ee/hw.c:539 rtl92ee_set_hw_reg() warn: add curly braces? (if)
-
-An unreleased version of the static checker also reported:
-
-drivers/net/wireless/rtlwifi/rtl8723be/trx.c:550 rtl8723be_rx_query_desc() warn: 'hdr' can't be NULL.
-drivers/net/wireless/rtlwifi/rtl8188ee/trx.c:621 rtl88ee_rx_query_desc() warn: 'hdr' can't be NULL.
-drivers/net/wireless/rtlwifi/rtl8192ee/trx.c:567 rtl92ee_rx_query_desc() warn: 'hdr' can't be NULL.
-drivers/net/wireless/rtlwifi/rtl8821ae/trx.c:758 rtl8821ae_rx_query_desc() warn: 'hdr' can't be NULL.
-drivers/net/wireless/rtlwifi/rtl8723ae/trx.c:494 rtl8723e_rx_query_desc() warn: 'hdr' can't be NULL.
-drivers/net/wireless/rtlwifi/rtl8192se/trx.c:315 rtl92se_rx_query_desc() warn: 'hdr' can't be NULL.
-drivers/net/wireless/rtlwifi/rtl8192ce/trx.c:392 rtl92ce_rx_query_desc() warn: 'hdr' can't be NULL.
-
-All of these are fixed.
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/rtlwifi/rtl8188ee/trx.c |  7 -------
- drivers/net/wireless/rtlwifi/rtl8192ce/trx.c |  4 ----
- drivers/net/wireless/rtlwifi/rtl8192ee/hw.c  | 24 ++++++++++++------------
- drivers/net/wireless/rtlwifi/rtl8192ee/trx.c |  7 -------
- drivers/net/wireless/rtlwifi/rtl8192se/trx.c |  4 ----
- drivers/net/wireless/rtlwifi/rtl8723ae/trx.c |  6 ------
- drivers/net/wireless/rtlwifi/rtl8723be/trx.c |  7 -------
- drivers/net/wireless/rtlwifi/rtl8821ae/trx.c |  7 -------
- 8 files changed, 12 insertions(+), 54 deletions(-)
+ net/mac80211/main.c |  5 +++--
+ net/mac80211/util.c | 16 ++++++++++++++--
+ 2 files changed, 17 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/trx.c b/drivers/net/wireless/rtlwifi/rtl8188ee/trx.c
-index cf56ec8..df549c9 100644
---- a/drivers/net/wireless/rtlwifi/rtl8188ee/trx.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8188ee/trx.c
-@@ -618,13 +618,6 @@ bool rtl88ee_rx_query_desc(struct ieee80211_hw *hw,
- 	 * to decrypt it
- 	 */
- 	if (status->decrypted) {
--		if (!hdr) {
--			WARN_ON_ONCE(true);
--			pr_err("decrypted is true but hdr NULL, from skb %p\n",
--			       rtl_get_hdr(skb));
--			return false;
--		}
--
- 		if ((!_ieee80211_is_robust_mgmt_frame(hdr)) &&
- 		    (ieee80211_has_protected(hdr->frame_control)))
- 			rx_status->flag |= RX_FLAG_DECRYPTED;
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c b/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
-index c140123..2fb9c7a 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
-@@ -389,10 +389,6 @@ bool rtl92ce_rx_query_desc(struct ieee80211_hw *hw,
- 	 * to decrypt it
- 	 */
- 	if (stats->decrypted) {
--		if (!hdr) {
--			/* In testing, hdr was NULL here */
--			return false;
--		}
- 		if ((_ieee80211_is_robust_mgmt_frame(hdr)) &&
- 		    (ieee80211_has_protected(hdr->frame_control)))
- 			rx_status->flag &= ~RX_FLAG_DECRYPTED;
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ee/hw.c b/drivers/net/wireless/rtlwifi/rtl8192ee/hw.c
-index 85d0d58..dfdc9b2 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ee/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ee/hw.c
-@@ -530,18 +530,18 @@ void rtl92ee_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 			fac = (1 << (fac + 2));
- 			if (fac > 0xf)
- 				fac = 0xf;
--				for (i = 0; i < 4; i++) {
--					if ((reg[i] & 0xf0) > (fac << 4))
--						reg[i] = (reg[i] & 0x0f) |
--							(fac << 4);
--					if ((reg[i] & 0x0f) > fac)
--						reg[i] = (reg[i] & 0xf0) | fac;
--						rtl_write_byte(rtlpriv,
--						       (REG_AGGLEN_LMT + i),
--						       reg[i]);
--				}
--				RT_TRACE(rtlpriv, COMP_MLME, DBG_LOUD,
--					 "Set HW_VAR_AMPDU_FACTOR:%#x\n", fac);
-+			for (i = 0; i < 4; i++) {
-+				if ((reg[i] & 0xf0) > (fac << 4))
-+					reg[i] = (reg[i] & 0x0f) |
-+						(fac << 4);
-+				if ((reg[i] & 0x0f) > fac)
-+					reg[i] = (reg[i] & 0xf0) | fac;
-+				rtl_write_byte(rtlpriv,
-+					       (REG_AGGLEN_LMT + i),
-+					       reg[i]);
-+			}
-+			RT_TRACE(rtlpriv, COMP_MLME, DBG_LOUD,
-+				 "Set HW_VAR_AMPDU_FACTOR:%#x\n", fac);
- 		}
- 		}
- 		break;
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c b/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c
-index 83edd95..2fcbef1 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c
-@@ -564,13 +564,6 @@ bool rtl92ee_rx_query_desc(struct ieee80211_hw *hw,
- 	 * to decrypt it
- 	 */
- 	if (status->decrypted) {
--		if (!hdr) {
--			WARN_ON_ONCE(true);
--			pr_err("decrypted is true but hdr NULL, from skb %p\n",
--			       rtl_get_hdr(skb));
--			return false;
--		}
--
- 		if ((!_ieee80211_is_robust_mgmt_frame(hdr)) &&
- 		    (ieee80211_has_protected(hdr->frame_control)))
- 			rx_status->flag |= RX_FLAG_DECRYPTED;
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/trx.c b/drivers/net/wireless/rtlwifi/rtl8192se/trx.c
-index 2b3c78b..b358ebc 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192se/trx.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192se/trx.c
-@@ -312,10 +312,6 @@ bool rtl92se_rx_query_desc(struct ieee80211_hw *hw, struct rtl_stats *stats,
- 		hdr = (struct ieee80211_hdr *)(skb->data +
- 		       stats->rx_drvinfo_size + stats->rx_bufshift);
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 107d1c8..9e322dc 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -785,13 +785,14 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 		if (local->hw.wiphy->interface_modes & BIT(NL80211_IFTYPE_WDS))
+ 			return -EINVAL;
  
--		if (!hdr) {
--			/* during testing, hdr was NULL here */
--			return false;
--		}
- 		if ((_ieee80211_is_robust_mgmt_frame(hdr)) &&
- 			(ieee80211_has_protected(hdr->frame_control)))
- 			rx_status->flag &= ~RX_FLAG_DECRYPTED;
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/trx.c b/drivers/net/wireless/rtlwifi/rtl8723ae/trx.c
-index 1da2367..d372cca 100644
---- a/drivers/net/wireless/rtlwifi/rtl8723ae/trx.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8723ae/trx.c
-@@ -491,12 +491,6 @@ bool rtl8723e_rx_query_desc(struct ieee80211_hw *hw,
- 	 * to decrypt it
- 	 */
- 	if (status->decrypted) {
--		if (!hdr) {
--			WARN_ON_ONCE(true);
--			pr_err("decrypted is true but hdr NULL, from skb %p\n",
--			       rtl_get_hdr(skb));
--			return false;
--		}
- 		if ((!_ieee80211_is_robust_mgmt_frame(hdr)) &&
- 		    (ieee80211_has_protected(hdr->frame_control)))
- 			rx_status->flag |= RX_FLAG_DECRYPTED;
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/trx.c b/drivers/net/wireless/rtlwifi/rtl8723be/trx.c
-index 9679cd2..d6a1c70 100644
---- a/drivers/net/wireless/rtlwifi/rtl8723be/trx.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8723be/trx.c
-@@ -547,13 +547,6 @@ bool rtl8723be_rx_query_desc(struct ieee80211_hw *hw,
- 	 * to decrypt it
- 	 */
- 	if (status->decrypted) {
--		if (!hdr) {
--			WARN_ON_ONCE(true);
--			pr_err("decrypted is true but hdr NULL, from skb %p\n",
--			       rtl_get_hdr(skb));
--			return false;
--		}
--
- 		if ((!_ieee80211_is_robust_mgmt_frame(hdr)) &&
- 		    (ieee80211_has_protected(hdr->frame_control)))
- 			rx_status->flag |= RX_FLAG_DECRYPTED;
-diff --git a/drivers/net/wireless/rtlwifi/rtl8821ae/trx.c b/drivers/net/wireless/rtlwifi/rtl8821ae/trx.c
-index 7ece0ef..383b86b 100644
---- a/drivers/net/wireless/rtlwifi/rtl8821ae/trx.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8821ae/trx.c
-@@ -755,13 +755,6 @@ bool rtl8821ae_rx_query_desc(struct ieee80211_hw *hw,
- 	 * to decrypt it
- 	 */
- 	if (status->decrypted) {
--		if (!hdr) {
--			WARN_ON_ONCE(true);
--			pr_err("decrypted is true but hdr NULL, from skb %p\n",
--			       rtl_get_hdr(skb));
--			return false;
--		}
--
- 		if ((!_ieee80211_is_robust_mgmt_frame(hdr)) &&
- 		    (ieee80211_has_protected(hdr->frame_control)))
- 			rx_status->flag |= RX_FLAG_DECRYPTED;
+-		/* DFS currently not supported with channel context drivers */
++		/* DFS is not supported with multi-channel combinations yet */
+ 		for (i = 0; i < local->hw.wiphy->n_iface_combinations; i++) {
+ 			const struct ieee80211_iface_combination *comb;
+ 
+ 			comb = &local->hw.wiphy->iface_combinations[i];
+ 
+-			if (comb->radar_detect_widths)
++			if (comb->radar_detect_widths &&
++			    comb->num_different_channels > 1)
+ 				return -EINVAL;
+ 		}
+ 	}
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 3c61060..c76c9d7 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -2526,11 +2526,23 @@ void ieee80211_dfs_radar_detected_work(struct work_struct *work)
+ 	struct ieee80211_local *local =
+ 		container_of(work, struct ieee80211_local, radar_detected_work);
+ 	struct cfg80211_chan_def chandef = local->hw.conf.chandef;
++	struct ieee80211_chanctx *ctx;
++	int num_chanctx = 0;
++
++	mutex_lock(&local->chanctx_mtx);
++	list_for_each_entry(ctx, &local->chanctx_list, list) {
++		if (ctx->replace_state == IEEE80211_CHANCTX_REPLACES_OTHER)
++			continue;
++
++		num_chanctx++;
++		chandef = ctx->conf.def;
++	}
++	mutex_unlock(&local->chanctx_mtx);
+ 
+ 	ieee80211_dfs_cac_cancel(local);
+ 
+-	if (local->use_chanctx)
+-		/* currently not handled */
++	if (num_chanctx > 1)
++		/* XXX: multi-channel is not supported yet */
+ 		WARN_ON(1);
+ 	else
+ 		cfg80211_radar_event(local->hw.wiphy, &chandef, GFP_KERNEL);
 -- 
-1.8.4.5
+1.8.5.3
 
