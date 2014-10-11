@@ -1,30 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailservices.uwaterloo.ca ([129.97.128.141]:42320 "EHLO
-	minos.uwaterloo.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754909AbaJVQE0 (ORCPT
+Received: from smtprelay0030.hostedemail.com ([216.40.44.30]:40883 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750747AbaJKEbU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2014 12:04:26 -0400
-Message-ID: <5447CF6D.3010401@mailservices.uwaterloo.ca> (sfid-20141022_180433_586761_5297CAD0)
-Date: Wed, 22 Oct 2014 11:38:21 -0400
-From: Ali Abedi <a2abedi@uwaterloo.ca>
-MIME-Version: 1.0
-To: "(ath9k-devel@lists.ath9k.org)" <ath9k-devel@venema.h4ckr.net>,
-	linux-wireless@vger.kernel.org
-Subject: Block ACK without frame aggregation
-Content-Type: text/plain; charset=utf-8; format=flowed
+	Sat, 11 Oct 2014 00:31:20 -0400
+Message-ID: <1413001871.8770.52.camel@joe-AO725> (sfid-20141011_063134_946861_E7A32205)
+Subject: Re: [PATCH] rtl8732au: Fix coding style violations in ieee80211.h
+From: Joe Perches <joe@perches.com>
+To: Matthew Tyler <matt.tyler@flashics.com>
+Cc: jes.sorensen@redhat.com, linux-wireless@vger.kernel.org
+Date: Fri, 10 Oct 2014 21:31:11 -0700
+In-Reply-To: <20141011041923.GA9075@ZeroX.Belkin>
+References: <20141011041923.GA9075@ZeroX.Belkin>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Sat, 2014-10-11 at 12:19 +0800, Matthew Tyler wrote:
+> Signed-off-by: Matthew Tyler <matt.tyler@flashics.com>
+[]
+> diff --git a/drivers/staging/rtl8723au/include/ieee80211.h b/drivers/staging/rtl8723au/include/ieee80211.h
+[]
+> -#define IsSupported24G(NetType) (NetType & SUPPORTED_24G_NETTYPE_MSK ? true : false)
+> -#define IsSupported5G(NetType) (NetType & SUPPORTED_5G_NETTYPE_MSK ? true : false)
+> +#define IsSupported24G(NetType) \
+> +	(NetType & SUPPORTED_24G_NETTYPE_MSK ? true : false)
 
-I am interested to know if we can send multiple packets (non-aggregated, 
-single packets) and then ask
-for a block ACK? I like to know if this functionality has been 
-implemented in ath9k or if
-it is possible to achieve this with slight code modifications.
+A lot of these would be better as static inlines or
+maybe using !! instead of ternaries.
 
-What I need:
-Frame-SIFS-Frame-SIFS-Frame-SIFS-REQ Block ACK-SIFS-Block ACK
+But it doesn't seem any of these IsSupported<foo> macros
+are used at all, so probably deleting is best.
 
-Best,
-Ali
+> @@ -266,7 +277,9 @@ join_res:
+>  */
+>  
+>  #define MAC_FMT "%02x:%02x:%02x:%02x:%02x:%02x"
+> -#define MAC_ARG(x) ((u8*)(x))[0],((u8*)(x))[1],((u8*)(x))[2],((u8*)(x))[3],((u8*)(x))[4],((u8*)(x))[5]
+> +#define MAC_ARG(x) \
+> +	(((u8 *)(x))[0], ((u8 *)(x))[1], ((u8 *)(x))[2], \
+> +	 ((u8 *)(x))[3], ((u8 *)(x))[4], ((u8 *)(x))[5])
+
+It'd be better to convert these to use %pM
+
+
