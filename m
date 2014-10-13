@@ -1,64 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f50.google.com ([74.125.82.50]:43714 "EHLO
+Received: from mail-wg0-f50.google.com ([74.125.82.50]:64499 "EHLO
 	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755513AbaJ2RpK (ORCPT
+	with ESMTP id S1751354AbaJMFqc convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2014 13:45:10 -0400
-Received: by mail-wg0-f50.google.com with SMTP id z12so2447452wgg.37
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2014 10:45:09 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH v2 14/34] staging: vt6655: mac80211 conversion: changes to set channel
-Date: Wed, 29 Oct 2014 17:43:49 +0000
-Message-Id: <1414604649-9105-15-git-send-email-tvboxspy@gmail.com> (sfid-20141029_185348_444131_92092590)
-In-Reply-To: <1414604649-9105-1-git-send-email-tvboxspy@gmail.com>
-References: <1414604649-9105-1-git-send-email-tvboxspy@gmail.com>
+	Mon, 13 Oct 2014 01:46:32 -0400
+Received: by mail-wg0-f50.google.com with SMTP id a1so7644528wgh.21
+        for <linux-wireless@vger.kernel.org>; Sun, 12 Oct 2014 22:46:30 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <773DB8A82AB6A046AE0195C68612A319018C2750@sbs2003.acksys.local>
+References: <773DB8A82AB6A046AE0195C68612A319018C2750@sbs2003.acksys.local>
+Date: Mon, 13 Oct 2014 07:46:30 +0200
+Message-ID: <CA+BoTQ=a8kY0CGGKHwRhk4cg=V0oimipuht6Pkc0K0x4WMMn-A@mail.gmail.com> (sfid-20141013_074635_361622_1B6107A6)
+Subject: Re: ath10k firmware crash
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Cedric VONCKEN <cedric.voncken@acksys.fr>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove call to sChannelTbl, the channel under mac80211 is always valid.
+On 10 October 2014 16:46, Cedric VONCKEN <cedric.voncken@acksys.fr> wrote:
+>         Hi all,
+>
+>         I'm trying to use ath10k in client mode and AP mode with 2 wireless cards (Ap on one card and client on another card).
+>         The AP mode work, but the client mode always crash. Please find below the ath10k crash information
+>
+> [   79.131301] ath10k: hardware name qca988x hw2.0 version 0x4100016c
+> [   79.149420] ath10k: firmware version: 999.999.0.636
+> [   79.167248] ath10k: target register Dump Location: 0x0040AC14
+> [   79.185939] ath10k: target Register Dump
+> [   79.201804] ath10k: [00]: 0x4100016C 0x00000000 0x009C4521 0x00000000
+> [   79.220184] ath10k: [04]: 0x009C4521 0x00060330 0x00000019 0x00955A00
+> [   79.238566] ath10k: [08]: 0x0000D0CE 0x00000000 0x0040CC94 0x00000020
+> [   79.256945] ath10k: [12]: 0x00000000 0x00000000 0x00958360 0x0095836B
+> [   79.275327] ath10k: [16]: 0x809A0978 0x0040AD94 0x00439304 0x0040D074
+> [   79.293706] ath10k: [20]: 0x0000FFFF 0x00000000 0x0041EFB8 0x00000000
+> [   79.312086] ath10k: [24]: 0x809A0978 0x0040AD94 0x00439304 0x0343389A
+> [   79.330466] ath10k: [28]: 0x809AD1A2 0x0040ADE4 0x00439304 0x0043F68C
+> [   79.348845] ath10k: [32]: 0x809B01DA 0x00000000 0x00410110 0x0041937C
+> [   79.367224] ath10k: [36]: 0x00000000 0x00000000 0x00000000 0x00000000
+> [   79.385604] ath10k: [40]: 0x00000000 0x00000000 0x00000071 0x00412700
+> [   79.403984] ath10k: [44]: 0x00439BB8 0x00000000 0x00000000 0x00400000
+> [   79.422364] ath10k: [48]: 0x809AE0B4 0x0040AE04 0x00400000 0x0043F68C
+> [   79.440744] ath10k: [52]: 0x00000001 0x00000000 0x004231F0 0x00400000
+> [   79.459124] ath10k: [56]: 0x809AE17E 0x0040AE44 0x0040FE6C 0x0040D310
+>
+>         I'm using openwrt, and I have the same problem with/without configuration option "Firmware optimized for sta operation".
 
-CARDbSetPhyParameter is nolonger set here.
+Can you then provide a crash register dump for 10.1, please? I can't
+help you much with the 636 dump.
 
-RFbSetPower is now set on byBBType
+Are you perhaps trying to run STA with 4addr bridging? If so then make
+sure you use recent ath10k as this was known to be a problem.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/channel.c | 12 +-----------
- 1 file changed, 1 insertion(+), 11 deletions(-)
+Can you also provide ath10k traces or debug logs, please?
 
-diff --git a/drivers/staging/vt6655/channel.c b/drivers/staging/vt6655/channel.c
-index 4b3c798..2379696 100644
---- a/drivers/staging/vt6655/channel.c
-+++ b/drivers/staging/vt6655/channel.c
-@@ -665,16 +665,6 @@ bool set_channel(void *pDeviceHandler, unsigned int uConnectionChannel)
- 	if (pDevice->byCurrentCh == uConnectionChannel)
- 		return bResult;
- 
--	if (!sChannelTbl[uConnectionChannel].bValid)
--		return false;
--
--	if ((uConnectionChannel > CB_MAX_CHANNEL_24G) &&
--	    (pDevice->eCurrentPHYType != PHY_TYPE_11A)) {
--		CARDbSetPhyParameter(pDevice, PHY_TYPE_11A, 0, 0, NULL, NULL);
--	} else if ((uConnectionChannel <= CB_MAX_CHANNEL_24G) &&
--		   (pDevice->eCurrentPHYType == PHY_TYPE_11A)) {
--		CARDbSetPhyParameter(pDevice, PHY_TYPE_11G, 0, 0, NULL, NULL);
--	}
- 	/* clear NAV */
- 	MACvRegBitsOn(pDevice->PortOffset, MAC_REG_MACCR, MACCR_CLRNAV);
- 
-@@ -702,7 +692,7 @@ bool set_channel(void *pDeviceHandler, unsigned int uConnectionChannel)
- 		MACvSelectPage0(pDevice->PortOffset);
- 	}
- 
--	if (pDevice->eCurrentPHYType == PHY_TYPE_11B)
-+	if (pDevice->byBBType == BB_TYPE_11B)
- 		RFbSetPower(pDevice, RATE_1M, pDevice->byCurrentCh);
- 	else
- 		RFbSetPower(pDevice, RATE_6M, pDevice->byCurrentCh);
--- 
-2.1.0
 
+>         Is it possible to use at the same time on 2 different cards the AP mode and client mode?
+
+Yes, it is possible.
+
+
+Michał
