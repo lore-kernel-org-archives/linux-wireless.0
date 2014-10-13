@@ -1,48 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:6768 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752243AbaJ2FoG (ORCPT
+Received: from smtp06.msg.oleane.net ([62.161.4.6]:46590 "EHLO
+	smtp06.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753367AbaJMMH5 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2014 01:44:06 -0400
-Date: Wed, 29 Oct 2014 11:16:05 +0530
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-	"Michal Kazior" <michal.kazior@tieto.com>
-Subject: Re: [PATCH] ath10k: add tracing for tx ieee80211 header
-Message-ID: <20141029054604.GB20332@qca.qualcomm.com> (sfid-20141029_064419_889743_3E643C82)
-References: <1414514885-3694-1-git-send-email-rmanohar@qti.qualcomm.com>
- <1414515579.1834.4.camel@jlt4.sipsolutions.net>
+	Mon, 13 Oct 2014 08:07:57 -0400
+From: "voncken" <cedric.voncken@acksys.fr>
+To: "'Michal Kazior'" <michal.kazior@tieto.com>
+Cc: <ath10k@lists.infradead.org>,
+	"'linux-wireless'" <linux-wireless@vger.kernel.org>
+References: <773DB8A82AB6A046AE0195C68612A319018C2750@sbs2003.acksys.local>	<CA+BoTQ=a8kY0CGGKHwRhk4cg=V0oimipuht6Pkc0K0x4WMMn-A@mail.gmail.com>	<024a01cfe6c7$5e427dd0$1ac77970$@acksys.fr> <CA+BoTQkaKXNfprRwGrQq6rKOZWvANNRrcmgU-iVdw1bONTA--w@mail.gmail.com>
+In-Reply-To: <CA+BoTQkaKXNfprRwGrQq6rKOZWvANNRrcmgU-iVdw1bONTA--w@mail.gmail.com>
+Subject: RE: ath10k firmware crash
+Date: Mon, 13 Oct 2014 14:06:51 +0200
+Message-ID: <025801cfe6de$2d4c7f70$87e57e50$@acksys.fr> (sfid-20141013_140801_666243_0C2A36E2)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1414515579.1834.4.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain;
+	charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 28, 2014 at 05:59:39PM +0100, Johannes Berg wrote:
-> On Tue, 2014-10-28 at 22:18 +0530, Rajkumar Manoharan wrote:
-> > For packet log, the transmitted frame 802.11 header alone is sufficient.
-> > Recording entire packet is also consuming lot of disk space. To
-> > optimize, add tracepoints for sending tx-ed 802.11 headers alone.
+> >
+> > Have you a benchmark reference with ATH10K ? at this time we can send
+> around 700 Mbit/s, is it the maximum or we can expected better ?
 > 
-> FWIW, in iwlwifi I made the data portion (only!) a separate tracing
-> subsystem, so that you can do
+> If this is OTA then this is pretty good. If this is cabled RF w/ attentuator
+> it should be possible to get ~900mbps of UDP traffic with multiple streams on
+> iperf. At least that's what I was getting on 10.1 firmware (on both AP and
+> STA) last time I checked.
 > 
-> trace-cmd record -e iwlwifi
+> Getting more than 700mbps OTA requires AP and STA antenna alignment voodoo.
 > 
-> to get the hdrs, and
+I did some tests with a linksys WRT1900AC and I have ~950 mbps OTA easily.
 > 
-> trace-cmd record -e iwlwifi -e iwlwifi_data
-> 
-> to get the hdrs, and the data, and then I put the two together in
-> userspace. That way, "-e iwlwifi" gets most useful stuff, and adding -e
-> iwlwifi_data when needed still has no duplication.
-> 
-> With what you're suggesting, it will be difficult to control tracing to
-> do exactly what's needed.
-> 
-> Anyway, I don't really care, but this just caught my eye.
-> 
-Thanks for your feedback. Will send updated patch.
+> Michał
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org More majordomo info at
+> http://vger.kernel.org/majordomo-info.html
 
--Rajkumar
