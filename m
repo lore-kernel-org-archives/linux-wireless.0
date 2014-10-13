@@ -1,97 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:54388 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750873AbaJIIiM (ORCPT
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:55096 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752903AbaJMJsl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2014 04:38:12 -0400
-Received: by mail-wi0-f177.google.com with SMTP id fb4so1051581wid.10
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Oct 2014 01:38:11 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>,
-	Maximilian Engelhardt <maxi@daemonizer.de>,
-	Michael Tokarev <mjt@tls.msk.ru>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org
-Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH][RTF][RFC] brcmsmac: add workaround for old BCM4313 devices with Bluetooth
-Date: Thu,  9 Oct 2014 10:37:47 +0200
-Message-Id: <1412843867-26563-1-git-send-email-zajec5@gmail.com> (sfid-20141009_103818_544888_779DA460)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Mon, 13 Oct 2014 05:48:41 -0400
+Received: by mail-wi0-f175.google.com with SMTP id d1so6853292wiv.8
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Oct 2014 02:48:40 -0700 (PDT)
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@gmail.com>,
+	Karl Beldan <karl.beldan@rivierawaves.com>, stable@kernel.org
+Subject: [PATCH] mac80211: fix typo in starting baserate for rts_cts_rate_idx
+Date: Mon, 13 Oct 2014 11:48:12 +0200
+Message-Id: <1413193692-30521-1-git-send-email-karl.beldan@gmail.com> (sfid-20141013_114845_989649_09FF01C5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
-Please check if it fixes BCM4313 performance problems.
----
- drivers/net/wireless/brcm80211/brcmsmac/aiutils.c | 13 +++++++++++++
- drivers/net/wireless/brcm80211/brcmsmac/aiutils.h |  3 +++
- drivers/net/wireless/brcm80211/brcmsmac/main.c    |  6 ++++++
- 3 files changed, 22 insertions(+)
+From: Karl Beldan <karl.beldan@rivierawaves.com>
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
-index 5336597..3d39176 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
-@@ -310,6 +310,9 @@
- /* External PA enable mask */
- #define GPIO_CTRL_EPA_EN_MASK 0x40
+It affects non-(V)HT rates and can lead to selecting an rts_cts rate
+that is not a basic rate or way superior to the reference rate (ATM
+rates[0] used for the 1st attempt of the protected frame data).
+
+E.g, assuming drivers register growing (bitrate) sorted tables of
+ieee80211_rate-s, having :
+- rates[0].idx == d'2 and basic_rates == b'10100
+will select rts_cts idx b'10011 & ~d'(BIT(2)-1), i.e. 1, likewise
+- rates[0].idx == d'2 and basic_rates == b'10001
+will select rts_cts idx b'10000
+The first is not a basic rate and the second is > rates[0].
+
+Also, wrt severity of the addressed misbehavior, ATM we only have one
+rts_cts_rate_idx rather than one per rate table entry, so this idx might
+still point to bitrates > rates[1..MAX_RATES].
+
+Fixes: 5253ffb8 ("mac80211: always pick a basic rate to tx RTS/CTS for pre-HT rates")
+Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
+---
+ net/mac80211/rate.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
+index 8fdadfd..6081329 100644
+--- a/net/mac80211/rate.c
++++ b/net/mac80211/rate.c
+@@ -448,7 +448,7 @@ static void rate_fixup_ratelist(struct ieee80211_vif *vif,
+ 	 */
+ 	if (!(rates[0].flags & IEEE80211_TX_RC_MCS)) {
+ 		u32 basic_rates = vif->bss_conf.basic_rates;
+-		s8 baserate = basic_rates ? ffs(basic_rates - 1) : 0;
++		s8 baserate = basic_rates ? ffs(basic_rates) - 1 : 0;
  
-+/* WL/BT control enable mask */
-+#define GPIO_CTRL_5_6_EN_MASK 0x60
-+
- #define DEFAULT_GPIOTIMERVAL \
- 	((DEFAULT_GPIO_ONTIME << GPIO_ONTIME_SHIFT) | DEFAULT_GPIO_OFFTIME)
+ 		rate = &sband->bitrates[rates[0].idx];
  
-@@ -691,6 +694,16 @@ void ai_epa_4313war(struct si_pub *sih)
- 	bcma_set32(cc, CHIPCREGOFFS(gpiocontrol), GPIO_CTRL_EPA_EN_MASK);
- }
- 
-+/* WL/BT control for 4313 btcombo boards >= P250 */
-+void ai_btcombo_p250_4313_war(struct si_pub *sih)
-+{
-+	struct si_info *sii = container_of(sih, struct si_info, pub);
-+	struct bcma_device *cc = sii->icbus->drv_cc.core;
-+
-+	bcma_set32(cc, CHIPCREGOFFS(gpiocontrol), GPIO_CTRL_5_6_EN_MASK);
-+	bcma_set32(cc, CHIPCREGOFFS(gpioouten), GPIO_CTRL_5_6_EN_MASK);
-+}
-+
- /* check if the device is removed */
- bool ai_deviceremoved(struct si_pub *sih)
- {
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
-index 2d08c15..7652a0f 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
-@@ -186,6 +186,9 @@ bool ai_deviceremoved(struct si_pub *sih);
- /* Enable Ex-PA for 4313 */
- void ai_epa_4313war(struct si_pub *sih);
- 
-+/* WL/BT control for 4313 btcombo boards >= P250 */
-+void ai_btcombo_p250_4313_war(struct si_pub *sih);
-+
- static inline u32 ai_get_cccaps(struct si_pub *sih)
- {
- 	return sih->cccaps;
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index 1b47482..046e832 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -4942,6 +4942,12 @@ static void brcms_b_hw_up(struct brcms_hardware *wlc_hw)
- 		     && (wlc_hw->boardflags & BFL_FEM_BT)))
- 			ai_epa_4313war(wlc_hw->sih);
- 	}
-+
-+	/* TODO: Fix the condition. Only for boards >= P250 */
-+	if (ai_get_chip_id(wlc_hw->sih) == BCMA_CHIP_ID_BCM4313 && (wlc_hw->boardflags & BFL_FEM_BT)) {
-+		pr_info("Applying BCM4313 WL/BT workaround\n");
-+		ai_btcombo_p250_4313_war(wlc_hw->sih);
-+	}
- }
- 
- static int brcms_b_up_prep(struct brcms_hardware *wlc_hw)
 -- 
-1.8.4.5
+2.0.1
 
