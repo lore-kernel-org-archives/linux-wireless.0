@@ -1,64 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f174.google.com ([209.85.192.174]:41802 "EHLO
-	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753114AbaJTJEa (ORCPT
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:36952 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752554AbaJMIZT convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2014 05:04:30 -0400
-Received: by mail-pd0-f174.google.com with SMTP id y13so4598303pdi.19
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2014 02:04:29 -0700 (PDT)
-Message-ID: <5444CF6B.9020309@gmail.com> (sfid-20141020_110438_562284_E4696FFB)
-Date: Mon, 20 Oct 2014 14:31:31 +0530
-From: Varka Bhadram <varkabhadram@gmail.com>
+	Mon, 13 Oct 2014 04:25:19 -0400
+Received: by mail-wi0-f179.google.com with SMTP id d1so6734137wiv.0
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Oct 2014 01:25:17 -0700 (PDT)
 MIME-Version: 1.0
-To: Karl Beldan <karl.beldan@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-CC: Karl Beldan <karl.beldan@rivierawaves.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: Re: [PATCH v4 0/4] add VHT support to minstrel_ht
-References: <1413652424-14345-5-git-send-email-karl.beldan@gmail.com> <1413795342-11995-1-git-send-email-karl.beldan@gmail.com>
-In-Reply-To: <1413795342-11995-1-git-send-email-karl.beldan@gmail.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <87fves9z5o.fsf@kamboji.qca.qualcomm.com>
+References: <1412842950-14098-1-git-send-email-michal.kazior@tieto.com>
+	<1412842950-14098-6-git-send-email-michal.kazior@tieto.com>
+	<87fves9z5o.fsf@kamboji.qca.qualcomm.com>
+Date: Mon, 13 Oct 2014 10:25:17 +0200
+Message-ID: <CA+BoTQ=HF0wCfBbC9YWFgVh2QhGzYU6uNo0hyAW4+R97bxwdHw@mail.gmail.com> (sfid-20141013_102525_382506_EA750E00)
+Subject: Re: [PATCH 5/5] ath10k: replace power up/down with reset callback
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Karl Beldan,
+On 13 October 2014 10:01, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Michal Kazior <michal.kazior@tieto.com> writes:
+>
+>> The power up/down didn't make much sense any more
+>> since hif_stop already stops the device
+>> compeletely. The target lifecycle was never symmetric
+>> so don't bother trying to make it look like it is
+>> and expose a reset hif callback instead of power
+>> up/down callbacks.
+>>
+>> This removes redundant reset calls and thus makes
+>> device boot/stop/recovery a bit faster.
+>>
+>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>
+> About this I'm not that sure. The reason why I wanted to have power_up()
+> and power_down() is the case when we need to control the target power
+> via a gpio line, which I anticipate we will need soon. If you remove
+> these how could we control the gpio line?
+>
+> Wouldn't it be the same that you just make hif_power_up() do the same as
+> hif_reset() and hif_power_down() doesn't do anything (for now)? Or am I
+> missing something?
 
-On 10/20/2014 02:25 PM, Karl Beldan wrote:
-> From: Karl Beldan <karl.beldan@rivierawaves.com>
->
-> Hi,
->
-> This is just a respin rebased on v2 of "mac80211: minstrels: fix buffer
-> overflow in HT debugfs" which only affects 4/4.
->
-> Karl Beldan (4):
->    mac80211: minstrel_ht: Increase the range of handled rate indexes
->    mac80211: minstrel_ht: macros adjustments for future VHT_GROUPs
->    mac80211: minstrel_ht: include type (cck/ht) in rates flag
->    mac80211: minstrel_ht: add basic support for VHT rates <= 3SS@80MHz
-> v2:
-> - typo in Kconfig
-> - adjust room in debugfs rc_stats buffer
-> - add a module param to mix ht rates with vht ones
-> - default to 3SS instead of 2SS (with "mac80211: minstrel_ht: macros
->    adjustments for future VHT_GROUPs")
-> - use common MINSTREL_MAX_STREAMS both for VHT and HT so that we can get
->    rid of the 'MINSTREL_MAX_STREAMS >= 3' checks for minstrel_mcs_groups
-> v3:
-> - put module param *vht_only* under CONFIG_MAC80211_RC_MINSTREL_VHT
-> v4:
-> - rebase on v2 of "mac80211: minstrels: fix buffer overflow in HT debugfs rc_stats"
->
->   net/mac80211/Kconfig                       |   7 +
->   net/mac80211/rc80211_minstrel_ht.c         | 292 +++++++++++++++++++++++------
->   net/mac80211/rc80211_minstrel_ht.h         |  38 +++-
->   net/mac80211/rc80211_minstrel_ht_debugfs.c |  32 ++--
->   4 files changed, 290 insertions(+), 79 deletions(-)
->
-Check patch errors on this series.. run checkpatch.pl on this series.
+Hmm.. I guess that's fine as well. I'll rework it to keep power_up
+(which will basically do reset) and power_down (nop for now).
 
--- 
-Regards,
-Varka Bhadram.
 
+Michał
