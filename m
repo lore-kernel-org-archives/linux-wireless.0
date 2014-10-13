@@ -1,49 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:50047 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752038AbaJCDQ4 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:37169 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752384AbaJMIBe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Oct 2014 23:16:56 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH] ath9k: Fix crash in MCC mode
-Date: Fri,  3 Oct 2014 08:47:34 +0530
-Message-Id: <1412306254-30086-1-git-send-email-sujith@msujith.org> (sfid-20141003_051659_912792_AF3D497C)
+	Mon, 13 Oct 2014 04:01:34 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 5/5] ath10k: replace power up/down with reset callback
+References: <1412842950-14098-1-git-send-email-michal.kazior@tieto.com>
+	<1412842950-14098-6-git-send-email-michal.kazior@tieto.com>
+Date: Mon, 13 Oct 2014 11:01:07 +0300
+In-Reply-To: <1412842950-14098-6-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Thu, 9 Oct 2014 10:22:30 +0200")
+Message-ID: <87fves9z5o.fsf@kamboji.qca.qualcomm.com> (sfid-20141013_100137_929376_DBEE06DB)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-When a channel context is removed, the hw_queue_base
-is set to -1, this will result in a panic because
-ath9k_chanctx_stop_queues() can be called on an interface
-that is not assigned to any context yet - for example,
-when trying to scan.
+> The power up/down didn't make much sense any more
+> since hif_stop already stops the device
+> compeletely. The target lifecycle was never symmetric
+> so don't bother trying to make it look like it is
+> and expose a reset hif callback instead of power
+> up/down callbacks.
+>
+> This removes redundant reset calls and thus makes
+> device boot/stop/recovery a bit faster.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-Fix this issue by setting the hw_queue_base to zero
-when a channel context is removed.
+About this I'm not that sure. The reason why I wanted to have power_up()
+and power_down() is the case when we need to control the target power
+via a gpio line, which I anticipate we will need soon. If you remove
+these how could we control the gpio line?
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
-It would be nice to get this merged for 3.18.
+Wouldn't it be the same that you just make hif_power_up() do the same as
+hif_reset() and hif_power_down() doesn't do anything (for now)? Or am I
+missing something?
 
- drivers/net/wireless/ath/ath9k/main.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 2051624..6f6a974 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -2332,7 +2332,7 @@ static void ath9k_remove_chanctx(struct ieee80211_hw *hw,
- 		conf->def.chan->center_freq);
- 
- 	ctx->assigned = false;
--	ctx->hw_queue_base = -1;
-+	ctx->hw_queue_base = 0;
- 	ath_chanctx_event(sc, NULL, ATH_CHANCTX_EVENT_UNASSIGN);
- 
- 	mutex_unlock(&sc->mutex);
 -- 
-2.1.2
-
+Kalle Valo
