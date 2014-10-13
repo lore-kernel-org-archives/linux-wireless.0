@@ -1,76 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailservices.uwaterloo.ca ([129.97.128.141]:54524 "EHLO
-	minos.uwaterloo.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751492AbaJYTFu (ORCPT
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:40654 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751805AbaJMGku (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Oct 2014 15:05:50 -0400
-Message-ID: <544BC1B5.1040107@mailservices.uwaterloo.ca> (sfid-20141025_210553_241765_36B84F2C)
-Date: Sat, 25 Oct 2014 11:28:53 -0400
-From: Ali Abedi <a2abedi@uwaterloo.ca>
+	Mon, 13 Oct 2014 02:40:50 -0400
+Subject: [PATCH 1/3] ath10k: add back enum ath10k_bus
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 13 Oct 2014 09:40:47 +0300
+Message-ID: <20141013064047.30315.55006.stgit@potku.adurom.net> (sfid-20141013_084058_826899_FFB9B921)
+In-Reply-To: <20141013063929.30315.41969.stgit@potku.adurom.net>
+References: <20141013063929.30315.41969.stgit@potku.adurom.net>
 MIME-Version: 1.0
-To: Adrian Chadd <adrian@freebsd.org>
-CC: ath9k-devel <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: strange MPDU loss pattern
-References: <544A7871.7020005@mailservices.uwaterloo.ca>	<CAJ-Vmon_jefxRgZvJmOsr4ydNHbvTCyMHHejRMWqXg_SG6NJUw@mail.gmail.com>	<544AB9B8.9050407@mailservices.uwaterloo.ca> <CAJ-VmomYx1Dn5Oey1v4+8Yw7n0QkBiGKynFf_qNBD1JZb_Ra_A@mail.gmail.com>
-In-Reply-To: <CAJ-VmomYx1Dn5Oey1v4+8Yw7n0QkBiGKynFf_qNBD1JZb_Ra_A@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Adrian,
+Commit 3a0861fffd223 ("ath10k: remove ath10k_bus") removed enum ath10k_bus
+because it was not used for anything at the time. But now it's needed for for
+retrieving the right calibration data file so add it back. Only new addition is
+ath10k_bus_str().
 
-We have a high end spectrum analyzer. So we are sure there is no 
-background interference
-We run our experiments in the 5 GHZ spectrum. The channel conditions can 
-still vary due to
-the movement of the people in the vicinity of the experiment setup. We 
-select a rate that
-experiences at least 20% error on average. Since if the error is 100% or 
-0% it's not interesting
-for us.
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c |    2 ++
+ drivers/net/wireless/ath/ath10k/core.h |   16 ++++++++++++++++
+ drivers/net/wireless/ath/ath10k/pci.c  |    1 +
+ 3 files changed, 19 insertions(+)
 
-My point is if the channel conditions change the distribution of failed 
-packets should be uniform.
-The first and second  half of the packets have the same chance to be 
-received successfully.
-
-
-Thanks,
-Ali
-
-
-On 25/10/2014 11:19 AM, Adrian Chadd wrote:
-> On 24 October 2014 13:42, Ali Abedi <a2abedi@uwaterloo.ca> wrote:
->> We don't use a rate adaptation at this moment (i.e., fixed rate) and the
->> setup
->>   is stationary. So we expect to see relatively stable channel conditions.
->> Even if the channel
->> conditions change during the aggregated frame. The first half of the MPDUs
->> have the same chance of experiencing worse channel conditions.
-> How do you /know/ you have stable channel conditions?
->
-> There are a lot of things that could be going on inside the devices
-> you're testing on. It doesn't have to be channel noise coming in an
-> antenna. For example, your computer could be generating rapidly
-> changing noise spurs from some clocking sources.
->
-> Try firing up the spectral scan mode on the NIC and plot the data. See
-> if there are any abnormal peaks going on over time.
->
-> And a large / long A-MPDU could be measured in milliseconds of length.
-> the original poster didn't say which rate(s) they are trying with and
-> how much margin (SNR) the receiver is seeing. Pulling out EVM from the
-> received A-MPDU frames would also be helpful.
->
-> Thanks,
->
->
->
-> -adrian
->
->
->
->
-> -adrian
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 37e31665628c..76f0db0654bb 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -1084,6 +1084,7 @@ void ath10k_core_unregister(struct ath10k *ar)
+ EXPORT_SYMBOL(ath10k_core_unregister);
+ 
+ struct ath10k *ath10k_core_create(size_t priv_size, struct device *dev,
++				  enum ath10k_bus bus,
+ 				  const struct ath10k_hif_ops *hif_ops)
+ {
+ 	struct ath10k *ar;
+@@ -1100,6 +1101,7 @@ struct ath10k *ath10k_core_create(size_t priv_size, struct device *dev,
+ 	ar->dev = dev;
+ 
+ 	ar->hif.ops = hif_ops;
++	ar->hif.bus = bus;
+ 
+ 	init_completion(&ar->scan.started);
+ 	init_completion(&ar->scan.completed);
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 1ac2f1466758..770b0bcc3e69 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -63,6 +63,20 @@
+ 
+ struct ath10k;
+ 
++enum ath10k_bus {
++	ATH10K_BUS_PCI,
++};
++
++static inline const char *ath10k_bus_str(enum ath10k_bus bus)
++{
++	switch (bus) {
++	case ATH10K_BUS_PCI:
++		return "pci";
++	}
++
++	return "unknown";
++}
++
+ struct ath10k_skb_cb {
+ 	dma_addr_t paddr;
+ 	u8 vdev_id;
+@@ -423,6 +437,7 @@ struct ath10k {
+ 	bool p2p;
+ 
+ 	struct {
++		enum ath10k_bus bus;
+ 		const struct ath10k_hif_ops *ops;
+ 	} hif;
+ 
+@@ -577,6 +592,7 @@ struct ath10k {
+ };
+ 
+ struct ath10k *ath10k_core_create(size_t priv_size, struct device *dev,
++				  enum ath10k_bus bus,
+ 				  const struct ath10k_hif_ops *hif_ops);
+ void ath10k_core_destroy(struct ath10k *ar);
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 730bb18c3f45..86f734e74103 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -2435,6 +2435,7 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
+ 	u32 chip_id;
+ 
+ 	ar = ath10k_core_create(sizeof(*ar_pci), &pdev->dev,
++				ATH10K_BUS_PCI,
+ 				&ath10k_pci_hif_ops);
+ 	if (!ar) {
+ 		dev_err(&pdev->dev, "failed to allocate core\n");
 
