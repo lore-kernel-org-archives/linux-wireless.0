@@ -1,35 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:54058 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755404AbaJHKXo (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:28554 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753649AbaJMNmJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Oct 2014 06:23:44 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Bartosz Markowski <bartosz.markowski@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: advertise all possible firmware(-api) files
-References: <1412597801-19298-1-git-send-email-bartosz.markowski@tieto.com>
-Date: Wed, 8 Oct 2014 13:23:20 +0300
-In-Reply-To: <1412597801-19298-1-git-send-email-bartosz.markowski@tieto.com>
-	(Bartosz Markowski's message of "Mon, 6 Oct 2014 14:16:41 +0200")
-Message-ID: <87siiyg8rr.fsf@kamboji.qca.qualcomm.com> (sfid-20141008_122348_668016_5B2069C6)
+	Mon, 13 Oct 2014 09:42:09 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Belisko Marek <marek.belisko@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Avinash Patil <patila@marvell.com>
+Date: Mon, 13 Oct 2014 06:41:59 -0700
+Subject: RE: mwifiex_usb_submit_rx_urb: dev_alloc_skb failed when conected
+ to 5GHz
+Message-ID: <5FF020A1CFFEEC49BD1E09530C4FF5951821936BBC@SC-VEXCH1.marvell.com> (sfid-20141013_154220_943102_A12315C1)
+References: <CAAfyv35k1mgQh6FcWaaMciAo8Vkp055k=5xF7zu+yrHmrQbbLA@mail.gmail.com>
+	<5FF020A1CFFEEC49BD1E09530C4FF5951819DB12F1@SC-VEXCH1.marvell.com>
+	<CAAfyv35j-77AURB4fHcecbEvyGS6U+1APNRFCf3FDAd_rrWnJw@mail.gmail.com>
+	<5FF020A1CFFEEC49BD1E09530C4FF5951821351855@SC-VEXCH1.marvell.com>
+	<CAAfyv35E2HUReFpnpdsebPETKk9VPA_hfQHUEJmoJfQt6Q-Puw@mail.gmail.com>
+	<5FF020A1CFFEEC49BD1E09530C4FF5951821936285@SC-VEXCH1.marvell.com>
+ <CAAfyv34UXMNwHf+kYCWEn+bcfGda_gA7uroLRLvhTEGGC5R57w@mail.gmail.com>
+In-Reply-To: <CAAfyv34UXMNwHf+kYCWEn+bcfGda_gA7uroLRLvhTEGGC5R57w@mail.gmail.com>
+Content-Type: multipart/mixed;
+	boundary="_003_5FF020A1CFFEEC49BD1E09530C4FF5951821936BBCSCVEXCH1marve_"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bartosz Markowski <bartosz.markowski@tieto.com> writes:
+--_003_5FF020A1CFFEEC49BD1E09530C4FF5951821936BBCSCVEXCH1marve_
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 
-> This is required if we take into account possibility to load the driver
-> from initrd (RAM disk), so in other words: very early in the boot process,
-> before the file system is visible.
->
-> In such case we need to have the firmware files accessible from ram disk too,
-> and this patch guarantee this.
->
-> Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
+SGkgTWFyZWssDQoNCj4+DQo+PiBUaGF0J3MgZ29vZCA6KSBBY3R1YWxseSBrZXJuZWwgd2lsbCB0
+YWtlIGNhcmUgb2YgZnJlZWluZyBza2Igd2hlbg0KPmRyaXZlciBzdWJtaXRzIHJlY2VpdmVkIHBh
+Y2tldCB1c2luZyBuZXRpZl9yeCgpLiBDb3VsZCB5b3UgcGxlYXNlIHNoYXJlDQo+eW91ciBoYWNr
+Pw0KPlllcyBpdCBzaG91bGQgYmUgZnJlZWQgd2hlbiBuZXRpZl9yeCgpIGlzIHByb2Nlc3NlZCBi
+dXQgSSBoYXZlIGZlZWxpbmcNCj50aGF0IHNvbWV0aW1lcyAobXkgY2FzZSkgZHVyaW5nIGhpZ2gg
+bG9hZCAoLWIgMTAwbSkgcGFja2V0cyBhcmUgbm90IHNlbmQNCj50byBrZXJuZWwgKG5vdCBmcmVl
+IHNrYikgdW50aWwgc2tiIGFsbG9jYXRpb24gZmFpbHMuIEkgbmVlZCB0byBiZXR0ZXINCj51bmRl
+cnN0YW5kIDExbiByZW9yZGVyaW5nIGNvZGUgOikuDQoNClJ4IHJlb3JkZXIgbG9naWMgY2FuIGJ1
+ZmZlciB1cHRvIDMyIHBhY2tldHMsIGlmIHRoZXkgYXJlbid0IHJlY2VpdmVkIGluIGNvcnJlY3Qg
+b3JkZXIuIFlvdSBhcmUgcmlnaHQuIFlvdXIgcGxhdGZvcm0gbWF5IHJ1biBvdXQgb2YgbWVtb3J5
+IGluIHRoaXMgY2FzZS4NCkNvdWxkIHlvdSBwbGVhc2UgY2hlY2sgaWYgdGhlIHByb2JsZW0gZml4
+ZXMgd2l0aCBhbnkgb2YgdGhlIGF0dGFjaGVkIGNoYW5nZXM/DQoxKSBDaGFuZ2UgUnggd2luZG93
+IHNpemUgZnJvbSAzMiB0byA4Lg0KMikgRGlzYWJsZSBBTVBEVSBmZWF0dXJlLg0KDQo+DQo+SGFj
+ayAoaXQncyBkaXJ0eSBJIGtub3cgYnV0IHBhY2tldHMgb2YgdGhhdCBzaXplIGFyZSBzZW5kIG9u
+bHkgZHVyaW5nDQo+aXBlcmYgc2Vzc2lvbik6DQo+DQo+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0
+L3dpcmVsZXNzL213aWZpZXgvdXNiLmMNCj5iL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgv
+dXNiLmMNCj5pbmRleCBmOTBmZTIxLi5jYzU0OGExIDEwMDY0NA0KPi0tLSBhL2RyaXZlcnMvbmV0
+L3dpcmVsZXNzL213aWZpZXgvdXNiLmMNCj4rKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9td2lm
+aWV4L3VzYi5jDQo+QEAgLTE3OCw2ICsxNzgsMTIgQEAgc3RhdGljIHZvaWQgbXdpZmlleF91c2Jf
+cnhfY29tcGxldGUoc3RydWN0IHVyYg0KPip1cmIpDQo+ICAgICAgICAgICAgICAgIGRldl9kYmco
+YWRhcHRlci0+ZGV2LCAiaW5mbzogcmVjdl9sZW5ndGg9JWQsDQo+c3RhdHVzPSVkXG4iLA0KPiAg
+ICAgICAgICAgICAgICAgICAgICAgIHJlY3ZfbGVuZ3RoLCBzdGF0dXMpOw0KPiAgICAgICAgICAg
+ICAgICBpZiAoc3RhdHVzID09IC1FSU5QUk9HUkVTUykgew0KPisNCj4rICAgICAgICAgICAgICAg
+ICAgICAgICBpZiAoc2tiLT5sZW4gPj0gMTU3NCkgew0KPisgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgZGV2X2tmcmVlX3NrYl9hbnkoc2tiKTsNCj4rICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgIGdvdG8gc2V0dXBfZm9yX25leHQ7DQo+KyAgICAgICAgICAgICAgICAgICAgICAg
+fQ0KPisNCg0KVGhlIGNoYW5nZSBkb2Vzbid0IGxvb2sgY29ycmVjdC4gVGhlIHNrYiBpcyBiZWlu
+ZyBwcm9jZXNzZWQvdXNlZC4gV2UgY2Fubm90IGZyZWUgaXQgaGVyZS4gVGhpcyBtYXkgY3JlYXRl
+IHByb2JsZW0uDQoNClJlZ2FyZHMsDQpBbWl0DQo=
 
-Thanks, applied.
+--_003_5FF020A1CFFEEC49BD1E09530C4FF5951821936BBCSCVEXCH1marve_
+Content-Type: application/octet-stream; name="disable_ampdu_feature.diff"
+Content-Description: disable_ampdu_feature.diff
+Content-Disposition: attachment; filename="disable_ampdu_feature.diff";
+	size=1038; creation-date="Mon, 13 Oct 2014 13:12:23 GMT";
+	modification-date="Mon, 13 Oct 2014 13:33:00 GMT"
+Content-Transfer-Encoding: base64
 
--- 
-Kalle Valo
+ZGlmZiAtLWdpdCBhL3N0YV9ldmVudC5jIGIvc3RhX2V2ZW50LmMKaW5kZXggYTFkZTJkMy4uMGI0
+MDhkMiAxMDA2NDQKLS0tIGEvc3RhX2V2ZW50LmMKKysrIGIvc3RhX2V2ZW50LmMKQEAgLTQzOSwx
+MCArNDM5LDcgQEAgaW50IG13aWZpZXhfcHJvY2Vzc19zdGFfZXZlbnQoc3RydWN0IG13aWZpZXhf
+cHJpdmF0ZSAqcHJpdikKIAkJCQlIb3N0Q21kX0FDVF9HRU5fR0VULCAwLCBOVUxMLCBmYWxzZSk7
+CiAJCWJyZWFrOwogCWNhc2UgRVZFTlRfQUREQkE6Ci0JCWRldl9kYmcoYWRhcHRlci0+ZGV2LCAi
+ZXZlbnQ6IEFEREJBIFJlcXVlc3RcbiIpOwotCQltd2lmaWV4X3NlbmRfY21kKHByaXYsIEhvc3RD
+bWRfQ01EXzExTl9BRERCQV9SU1AsCi0JCQkJIEhvc3RDbWRfQUNUX0dFTl9TRVQsIDAsCi0JCQkJ
+IGFkYXB0ZXItPmV2ZW50X2JvZHksIGZhbHNlKTsKKwkJZGV2X2RiZyhhZGFwdGVyLT5kZXYsICJl
+dmVudDogQUREQkEgUmVxdWVzdCBpZ25vcmluZy4uLlxuIik7CiAJCWJyZWFrOwogCWNhc2UgRVZF
+TlRfREVMQkE6CiAJCWRldl9kYmcoYWRhcHRlci0+ZGV2LCAiZXZlbnQ6IERFTEJBIFJlcXVlc3Rc
+biIpOwpkaWZmIC0tZ2l0IGEvd21tLmMgYi93bW0uYwppbmRleCBkYzFmMmFkLi5jYjJjNGNkIDEw
+MDY0NAotLS0gYS93bW0uYworKysgYi93bW0uYwpAQCAtNDIxLDkgKzQyMSw5IEBAIG13aWZpZXhf
+d21tX2luaXQoc3RydWN0IG13aWZpZXhfYWRhcHRlciAqYWRhcHRlcikKIAkJCQlwcml2LT5hZ2dy
+X3ByaW9fdGJsW2ldLmFtc2R1ID0KIAkJCQkJCQlCQV9TVFJFQU1fTk9UX0FMTE9XRUQ7CiAJCQlw
+cml2LT5hZ2dyX3ByaW9fdGJsW2ldLmFtcGR1X2FwID0KLQkJCQkJCQlwcml2LT50b3NfdG9fdGlk
+X2ludltpXTsKKwkJCQkJCQlCQV9TVFJFQU1fTk9UX0FMTE9XRUQ7CiAJCQlwcml2LT5hZ2dyX3By
+aW9fdGJsW2ldLmFtcGR1X3VzZXIgPQotCQkJCQkJCXByaXYtPnRvc190b190aWRfaW52W2ldOwor
+CQkJCQkJCUJBX1NUUkVBTV9OT1RfQUxMT1dFRDsKIAkJfQogCiAJCW13aWZpZXhfc2V0X2JhX3Bh
+cmFtcyhwcml2KTsK
+
+--_003_5FF020A1CFFEEC49BD1E09530C4FF5951821936BBCSCVEXCH1marve_
+Content-Type: application/octet-stream; name="reduce_Rx_window_size.diff"
+Content-Description: reduce_Rx_window_size.diff
+Content-Disposition: attachment; filename="reduce_Rx_window_size.diff";
+	size=816; creation-date="Mon, 13 Oct 2014 13:12:31 GMT";
+	modification-date="Mon, 13 Oct 2014 13:12:31 GMT"
+Content-Transfer-Encoding: base64
+
+ZGlmZiAtLWdpdCBhL2RlY2wuaCBiL2RlY2wuaAppbmRleCBhYWQzYTRiLi42YTU5ZjZlIDEwMDY0
+NAotLS0gYS9kZWNsLmgKKysrIGIvZGVjbC5oCkBAIC00MywxMyArNDMsMTMgQEAKICNkZWZpbmUg
+TVdJRklFWF9NQVhfUlhfQkFTVFJFQU1fU1VQUE9SVEVECTE2CiAKICNkZWZpbmUgTVdJRklFWF9T
+VEFfQU1QRFVfREVGX1RYV0lOU0laRSAgICAgICAgNjQKLSNkZWZpbmUgTVdJRklFWF9TVEFfQU1Q
+RFVfREVGX1JYV0lOU0laRSAgICAgICAgNjQKKyNkZWZpbmUgTVdJRklFWF9TVEFfQU1QRFVfREVG
+X1JYV0lOU0laRSAgICAgICAgOAogI2RlZmluZSBNV0lGSUVYX1VBUF9BTVBEVV9ERUZfVFhXSU5T
+SVpFICAgICAgICAzMgotI2RlZmluZSBNV0lGSUVYX1VBUF9BTVBEVV9ERUZfUlhXSU5TSVpFICAg
+ICAgICAxNgorI2RlZmluZSBNV0lGSUVYX1VBUF9BTVBEVV9ERUZfUlhXSU5TSVpFICAgICAgICA4
+CiAjZGVmaW5lIE1XSUZJRVhfMTFBQ19TVEFfQU1QRFVfREVGX1RYV0lOU0laRSAgIDY0Ci0jZGVm
+aW5lIE1XSUZJRVhfMTFBQ19TVEFfQU1QRFVfREVGX1JYV0lOU0laRSAgIDY0CisjZGVmaW5lIE1X
+SUZJRVhfMTFBQ19TVEFfQU1QRFVfREVGX1JYV0lOU0laRSAgIDgKICNkZWZpbmUgTVdJRklFWF8x
+MUFDX1VBUF9BTVBEVV9ERUZfVFhXSU5TSVpFICAgNjQKLSNkZWZpbmUgTVdJRklFWF8xMUFDX1VB
+UF9BTVBEVV9ERUZfUlhXSU5TSVpFICAgNjQKKyNkZWZpbmUgTVdJRklFWF8xMUFDX1VBUF9BTVBE
+VV9ERUZfUlhXSU5TSVpFICAgOAogCiAjZGVmaW5lIE1XSUZJRVhfREVGQVVMVF9CTE9DS19BQ0tf
+VElNRU9VVCAgMHhmZmZmCiAK
+
+--_003_5FF020A1CFFEEC49BD1E09530C4FF5951821936BBCSCVEXCH1marve_--
