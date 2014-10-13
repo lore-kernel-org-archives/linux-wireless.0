@@ -1,84 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:46081 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751601AbaJAKIA (ORCPT
+Received: from blu004-omc2s19.hotmail.com ([65.55.111.94]:56358 "EHLO
+	BLU004-OMC2S19.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751188AbaJMTex (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Oct 2014 06:08:00 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@qca.qualcomm.com
-Subject: [RFC 3/5] ath9k: Add ath9k_chanctx_stop_queues()
-Date: Wed,  1 Oct 2014 15:38:31 +0530
-Message-Id: <1412158113-22913-4-git-send-email-sujith@msujith.org> (sfid-20141001_120804_640434_942DBAA5)
-In-Reply-To: <1412158113-22913-1-git-send-email-sujith@msujith.org>
-References: <1412158113-22913-1-git-send-email-sujith@msujith.org>
+	Mon, 13 Oct 2014 15:34:53 -0400
+Message-ID: <BLU437-SMTP3548C40225183D5FB08040C3AC0@phx.gbl> (sfid-20141013_213459_509577_3E38FD64)
+Date: Mon, 13 Oct 2014 21:26:49 +0200
+From: Sir l33tname <l33tname@outlook.com>
+MIME-Version: 1.0
+To: Jes.Sorensen@redhat.com, Larry.Finger@lwfinger.net
+CC: linux-wireless@vger.kernel.org
+Subject: r8723au module
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-This can be used when the queues of a context
-needs to be stopped.
+Hey,
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h   |  5 +++++
- drivers/net/wireless/ath/ath9k/channel.c | 19 +++++++++++++++++++
- 2 files changed, 24 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 4f94d31..bfa0b15 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -456,6 +456,7 @@ void ath9k_beacon_add_noa(struct ath_softc *sc, struct ath_vif *avp,
- 			  struct sk_buff *skb);
- void ath9k_p2p_ps_timer(void *priv);
- void ath9k_chanctx_wake_queues(struct ath_softc *sc, struct ath_chanctx *ctx);
-+void ath9k_chanctx_stop_queues(struct ath_softc *sc, struct ath_chanctx *ctx);
- void ath_chanctx_check_active(struct ath_softc *sc, struct ath_chanctx *ctx);
- 
- void ath_chanctx_beacon_recv_ev(struct ath_softc *sc,
-@@ -529,6 +530,10 @@ static inline void ath9k_chanctx_wake_queues(struct ath_softc *sc,
- 					     struct ath_chanctx *ctx)
- {
- }
-+static inline void ath9k_chanctx_stop_queues(struct ath_softc *sc,
-+					     struct ath_chanctx *ctx)
-+{
-+}
- static inline void ath_chanctx_check_active(struct ath_softc *sc,
- 					    struct ath_chanctx *ctx)
- {
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index 96da03e..bf5ecd8 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -1177,6 +1177,25 @@ bool ath9k_is_chanctx_enabled(void)
- /* Queue management */
- /********************/
- 
-+void ath9k_chanctx_stop_queues(struct ath_softc *sc, struct ath_chanctx *ctx)
-+{
-+	struct ath_hw *ah = sc->sc_ah;
-+	int i;
-+
-+	if (ctx == &sc->offchannel.chan) {
-+		ieee80211_stop_queue(sc->hw,
-+				     sc->hw->offchannel_tx_hw_queue);
-+	} else {
-+		for (i = 0; i < IEEE80211_NUM_ACS; i++)
-+			ieee80211_stop_queue(sc->hw,
-+					     ctx->hw_queue_base + i);
-+	}
-+
-+	if (ah->opmode == NL80211_IFTYPE_AP)
-+		ieee80211_stop_queue(sc->hw, sc->hw->queues - 2);
-+}
-+
-+
- void ath9k_chanctx_wake_queues(struct ath_softc *sc, struct ath_chanctx *ctx)
- {
- 	struct ath_hw *ah = sc->sc_ah;
--- 
-2.1.1
+Since r8723au is out I have tried it with every kernel version.
+But every time the connection is flaky, it works fine in the beginning
+but after ~2 - 5 minutes it stops routing packages get slow, but
+it shows all the time connected (on my wlan widget). With 8723au build
+from github, none of this problems exist. (Probably because I build
+with out Bluetooth?)
 
+
+Output of modinfo
+https://gist.github.com/fliiiix/f32d8be6c7759e318088
+
+Since I have no idea what you need to debug this, please just
+ask for what I should try or what output do you like to see.
+
+sincerely yours
+l33tname
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBAgAGBQJUPCd5AAoJEEC9MWTNKh1CixMQAJRAnqOvaV7OL2asK3j98l70
+p5siv2AyTarFTJxPt4tlbOFMS8i4Nku0ugFLnVu8oDSqXjFJSMlfZxgxilpqdGAq
+84e6z3zckjrhzE0LBQ0TlOgW54fD+Thkmf8t1/K6XqkwbF+B6Ixf56/nUJJpiqI2
+zqE+DxaIJSJXJ9VKTqse2iZlWKCp7cGCCo1JUj1xo4yZeGTpo4YY7Mdh+LSfcbzz
+X9ycv0kfZ8cvYl/L9oJPVx7f5uxcgd+P1247rZLXjOomq+ShTkaVFxeY8Te+kNP0
+KhnMZ08RpFMv2Rt9FNcBHa7GALuvQdNPMQmxyC+mx2PyijrP4jJv8QbRcmgIgxEd
+sON8ADc0sewe2ENlW58IGx1RcULYahgL+aaai/ybsqXtvs09qMay1+a1i/HS2HL1
+DXN3WgJBQoRcutojxGwwzATQ1T65ySQyZxTdZOqcKm3bKVvuvBG7B8SHwqDwbDSF
+qSM0qkgzUd7T6051gX7mmEL97uMFf4l5XpZFjOp+GpLhsS7MXcwCi0Zy6Su1YD2u
+tu9NZvtlMORV7ZwQts8wrO/0n/maQ/h9oM9s2awp6Hr85N6BNlu7in0iGg+GjfPA
+070bCNadHLn0FfrXd1oMcPIlWACu3NENC3RAUWEdZTs4PUviMEbe51eCUCWqhzc0
+2lxkyx9iu4y59OCQ8E5O
+=DtYX
+-----END PGP SIGNATURE-----
