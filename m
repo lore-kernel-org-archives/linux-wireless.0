@@ -1,51 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0090.hostedemail.com ([216.40.44.90]:54845 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750900AbaJ1OyF (ORCPT
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:43207 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752959AbaJMKYc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2014 10:54:05 -0400
-Message-ID: <1414508040.6643.5.camel@perches.com> (sfid-20141028_155408_986109_1FFA36CA)
-Subject: Re: [PATCH 00/16] brcmfmac: wowl support and cleanup
-From: Joe Perches <joe@perches.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 28 Oct 2014 07:54:00 -0700
-In-Reply-To: <1414504579-12562-1-git-send-email-arend@broadcom.com>
-References: <1414504579-12562-1-git-send-email-arend@broadcom.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Mon, 13 Oct 2014 06:24:32 -0400
+Date: Mon, 13 Oct 2014 12:24:19 +0200
+From: Karl Beldan <karl.beldan@gmail.com>
+To: stable@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@rivierawaves.com>
+Subject: Re: [PATCH] mac80211: fix typo in starting baserate for
+ rts_cts_rate_idx
+Message-ID: <20141013102419.GA31608@magnum.frso.rivierawaves.com> (sfid-20141013_122436_435395_79C64183)
+References: <1413193692-30521-1-git-send-email-karl.beldan@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1413193692-30521-1-git-send-email-karl.beldan@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-10-28 at 14:56 +0100, Arend van Spriel wrote:
-> This series has a couple of wowl patches that were too late to make
-> the 3.18 merge window. Apart from those there are a number of rename
-> and rework patches that get rid of the terms dhd and wl.
-> 
-> The series is intended for 3.19 and applies to the master branch
-> of the wireless-next repository.
-> 
-> Arend van Spriel (3):
->   brcmfmac: show firmware error as string in debug message
->   brcmfmac: remove unused defintion
->   brcmfmac: do not use firmware error code in driver
-> 
-> Hante Meuleman (13):
->   brcmfmac: Add wowl support for USB devices.
->   brcmfmac: Add wowl support for SDIO devices.
->   brcmfmac: Add wowl patterns support.
->   brcmfmac: (clean) Remove usb_rdl.h as it is not needed.
->   brcmfmac: (clean) Remove packet filter configuration.
->   brcmfmac: (clean) Move tracepoint related function.
->   brcmfmac: (clean) Rename files dhd_dbg to debug
->   brcmfmac: (clean) Rename dhd_bus.h in bus.h
->   brcmfmac: (clean) Rename dhd_common.c in common.c
->   brcmfmac: (clean) Rename files wl_cfg80211 to cfg80211
->   brcmfmac: (clean) Rename sdio related files.
->   brcmfmac: (clean) Rename sdio related files.
->   brcmfmac: (clean) Move sdio related function.
+Properly cc'ing stable (I used kernel.org instead of vger.kernel.org).
 
-Does "(clean) " add anything to these commit subjects?
-
-
+On Mon, Oct 13, 2014 at 11:48:12AM +0200, Karl Beldan wrote:
+> From: Karl Beldan <karl.beldan@rivierawaves.com>
+> 
+> It affects non-(V)HT rates and can lead to selecting an rts_cts rate
+> that is not a basic rate or way superior to the reference rate (ATM
+> rates[0] used for the 1st attempt of the protected frame data).
+> 
+> E.g, assuming drivers register growing (bitrate) sorted tables of
+> ieee80211_rate-s, having :
+> - rates[0].idx == d'2 and basic_rates == b'10100
+> will select rts_cts idx b'10011 & ~d'(BIT(2)-1), i.e. 1, likewise
+> - rates[0].idx == d'2 and basic_rates == b'10001
+> will select rts_cts idx b'10000
+> The first is not a basic rate and the second is > rates[0].
+> 
+> Also, wrt severity of the addressed misbehavior, ATM we only have one
+> rts_cts_rate_idx rather than one per rate table entry, so this idx might
+> still point to bitrates > rates[1..MAX_RATES].
+> 
+> Fixes: 5253ffb8 ("mac80211: always pick a basic rate to tx RTS/CTS for pre-HT rates")
+> Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
+> ---
+>  net/mac80211/rate.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
+> index 8fdadfd..6081329 100644
+> --- a/net/mac80211/rate.c
+> +++ b/net/mac80211/rate.c
+> @@ -448,7 +448,7 @@ static void rate_fixup_ratelist(struct ieee80211_vif *vif,
+>  	 */
+>  	if (!(rates[0].flags & IEEE80211_TX_RC_MCS)) {
+>  		u32 basic_rates = vif->bss_conf.basic_rates;
+> -		s8 baserate = basic_rates ? ffs(basic_rates - 1) : 0;
+> +		s8 baserate = basic_rates ? ffs(basic_rates) - 1 : 0;
+>  
+>  		rate = &sband->bitrates[rates[0].idx];
+>  
+> -- 
+> 2.0.1
+> 
