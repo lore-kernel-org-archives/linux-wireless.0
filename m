@@ -1,169 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:30963 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751063AbaJAMga (ORCPT
+Received: from mail-wg0-f42.google.com ([74.125.82.42]:35340 "EHLO
+	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753399AbaJMMfQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Oct 2014 08:36:30 -0400
-From: Avinash Patil <patila@marvell.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Avinash Patil <patila@marvell.com>,
-	Cathy Luo <cluo@marvell.com>, Frank Huang <frankh@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 2/2] mwifiex: add support for SD8887 chipset
-Date: Wed, 1 Oct 2014 10:55:26 -0700
-Message-ID: <1412186126-5019-2-git-send-email-patila@marvell.com> (sfid-20141001_143633_650732_70E11155)
-In-Reply-To: <1412186126-5019-1-git-send-email-patila@marvell.com>
-References: <1412186126-5019-1-git-send-email-patila@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 13 Oct 2014 08:35:16 -0400
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@gmail.com>,
+	Karl Beldan <karl.beldan@rivierawaves.com>,
+	stable@vger.kernel.org
+Subject: [PATCH v2] mac80211: fix typo in starting baserate for rts_cts_rate_idx
+Date: Mon, 13 Oct 2014 14:34:41 +0200
+Message-Id: <1413203681-13846-1-git-send-email-karl.beldan@gmail.com> (sfid-20141013_143521_096749_A8661BC4)
+In-Reply-To: <1413193692-30521-1-git-send-email-karl.beldan@gmail.com>
+References: <1413193692-30521-1-git-send-email-karl.beldan@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds SD8887 support to mwifiex.
-SD8887 is Marvell's 1x1 11ac solution.
+From: Karl Beldan <karl.beldan@rivierawaves.com>
 
-The corresponding firmware image file is located at:
-"mrvl/sd8887_uapsta.bin"
+It affects non-(V)HT rates and can lead to selecting an rts_cts rate
+that is not a basic rate or way superior to the reference rate (ATM
+rates[0] used for the 1st attempt of the protected frame data).
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Frank Huang <frankh@marvell.com>
-Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+E.g, assuming drivers register growing (bitrate) sorted tables of
+ieee80211_rate-s, having :
+- rates[0].idx == d'2 and basic_rates == b'10100
+will select rts_cts idx b'10011 & ~d'(BIT(2)-1), i.e. 1, likewise
+- rates[0].idx == d'2 and basic_rates == b'10001
+will select rts_cts idx b'10000
+The first is not a basic rate and the second is > rates[0].
+
+Also, wrt severity of the addressed misbehavior, ATM we only have one
+rts_cts_rate_idx rather than one per rate table entry, so this idx might
+still point to bitrates > rates[1..MAX_RATES].
+
+Fixes: 5253ffb8c9e1 ("mac80211: always pick a basic rate to tx RTS/CTS for pre-HT rates")
+Cc: stable@vger.kernel.org
+Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
 ---
- drivers/net/wireless/mwifiex/Kconfig |  4 +--
- drivers/net/wireless/mwifiex/sdio.c  |  5 ++++
- drivers/net/wireless/mwifiex/sdio.h  | 55 ++++++++++++++++++++++++++++++++++++
- 3 files changed, 62 insertions(+), 2 deletions(-)
+ net/mac80211/rate.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mwifiex/Kconfig b/drivers/net/wireless/mwifiex/Kconfig
-index ecdf345..e70d0df 100644
---- a/drivers/net/wireless/mwifiex/Kconfig
-+++ b/drivers/net/wireless/mwifiex/Kconfig
-@@ -9,12 +9,12 @@ config MWIFIEX
- 	  mwifiex.
+diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
+index 8fdadfd..6081329 100644
+--- a/net/mac80211/rate.c
++++ b/net/mac80211/rate.c
+@@ -448,7 +448,7 @@ static void rate_fixup_ratelist(struct ieee80211_vif *vif,
+ 	 */
+ 	if (!(rates[0].flags & IEEE80211_TX_RC_MCS)) {
+ 		u32 basic_rates = vif->bss_conf.basic_rates;
+-		s8 baserate = basic_rates ? ffs(basic_rates - 1) : 0;
++		s8 baserate = basic_rates ? ffs(basic_rates) - 1 : 0;
  
- config MWIFIEX_SDIO
--	tristate "Marvell WiFi-Ex Driver for SD8786/SD8787/SD8797/SD8897"
-+	tristate "Marvell WiFi-Ex Driver for SD8786/SD8787/SD8797/SD8887/SD8897"
- 	depends on MWIFIEX && MMC
- 	select FW_LOADER
- 	---help---
- 	  This adds support for wireless adapters based on Marvell
--	  8786/8787/8797 chipsets with SDIO interface.
-+	  8786/8787/8797/8887/8897 chipsets with SDIO interface.
+ 		rate = &sband->bitrates[rates[0].idx];
  
- 	  If you choose to build it as a module, it will be called
- 	  mwifiex_sdio.
-diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
-index a22e9a9..b25766b 100644
---- a/drivers/net/wireless/mwifiex/sdio.c
-+++ b/drivers/net/wireless/mwifiex/sdio.c
-@@ -279,6 +279,8 @@ static int mwifiex_sdio_suspend(struct device *dev)
- #define SDIO_DEVICE_ID_MARVELL_8797   (0x9129)
- /* Device ID for SD8897 */
- #define SDIO_DEVICE_ID_MARVELL_8897   (0x912d)
-+/* Device ID for SD8887 */
-+#define SDIO_DEVICE_ID_MARVELL_8887   (0x9135)
- 
- /* WLAN IDs */
- static const struct sdio_device_id mwifiex_ids[] = {
-@@ -290,6 +292,8 @@ static const struct sdio_device_id mwifiex_ids[] = {
- 		.driver_data = (unsigned long) &mwifiex_sdio_sd8797},
- 	{SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, SDIO_DEVICE_ID_MARVELL_8897),
- 		.driver_data = (unsigned long) &mwifiex_sdio_sd8897},
-+	{SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, SDIO_DEVICE_ID_MARVELL_8887),
-+		.driver_data = (unsigned long)&mwifiex_sdio_sd8887},
- 	{},
- };
- 
-@@ -2233,3 +2237,4 @@ MODULE_FIRMWARE(SD8786_DEFAULT_FW_NAME);
- MODULE_FIRMWARE(SD8787_DEFAULT_FW_NAME);
- MODULE_FIRMWARE(SD8797_DEFAULT_FW_NAME);
- MODULE_FIRMWARE(SD8897_DEFAULT_FW_NAME);
-+MODULE_FIRMWARE(SD8887_DEFAULT_FW_NAME);
-diff --git a/drivers/net/wireless/mwifiex/sdio.h b/drivers/net/wireless/mwifiex/sdio.h
-index 5a08ebc..20cd9ad 100644
---- a/drivers/net/wireless/mwifiex/sdio.h
-+++ b/drivers/net/wireless/mwifiex/sdio.h
-@@ -33,6 +33,7 @@
- #define SD8787_DEFAULT_FW_NAME "mrvl/sd8787_uapsta.bin"
- #define SD8797_DEFAULT_FW_NAME "mrvl/sd8797_uapsta.bin"
- #define SD8897_DEFAULT_FW_NAME "mrvl/sd8897_uapsta.bin"
-+#define SD8887_DEFAULT_FW_NAME "mrvl/sd8887_uapsta.bin"
- 
- #define BLOCK_MODE	1
- #define BYTE_MODE	0
-@@ -334,6 +335,47 @@ static const struct mwifiex_sdio_card_reg mwifiex_reg_sd8897 = {
- 	.fw_dump_end = 0xea,
- };
- 
-+static const struct mwifiex_sdio_card_reg mwifiex_reg_sd8887 = {
-+	.start_rd_port = 0,
-+	.start_wr_port = 0,
-+	.base_0_reg = 0x6C,
-+	.base_1_reg = 0x6D,
-+	.poll_reg = 0x5C,
-+	.host_int_enable = UP_LD_HOST_INT_MASK | DN_LD_HOST_INT_MASK |
-+			CMD_PORT_UPLD_INT_MASK | CMD_PORT_DNLD_INT_MASK,
-+	.host_int_rsr_reg = 0x4,
-+	.host_int_status_reg = 0x0C,
-+	.host_int_mask_reg = 0x08,
-+	.status_reg_0 = 0x90,
-+	.status_reg_1 = 0x91,
-+	.sdio_int_mask = 0xff,
-+	.data_port_mask = 0xffffffff,
-+	.io_port_0_reg = 0xE4,
-+	.io_port_1_reg = 0xE5,
-+	.io_port_2_reg = 0xE6,
-+	.max_mp_regs = 196,
-+	.rd_bitmap_l = 0x10,
-+	.rd_bitmap_u = 0x11,
-+	.rd_bitmap_1l = 0x12,
-+	.rd_bitmap_1u = 0x13,
-+	.wr_bitmap_l = 0x14,
-+	.wr_bitmap_u = 0x15,
-+	.wr_bitmap_1l = 0x16,
-+	.wr_bitmap_1u = 0x17,
-+	.rd_len_p0_l = 0x18,
-+	.rd_len_p0_u = 0x19,
-+	.card_misc_cfg_reg = 0xd8,
-+	.card_cfg_2_1_reg = 0xd9,
-+	.cmd_rd_len_0 = 0xc0,
-+	.cmd_rd_len_1 = 0xc1,
-+	.cmd_rd_len_2 = 0xc2,
-+	.cmd_rd_len_3 = 0xc3,
-+	.cmd_cfg_0 = 0xc4,
-+	.cmd_cfg_1 = 0xc5,
-+	.cmd_cfg_2 = 0xc6,
-+	.cmd_cfg_3 = 0xc7,
-+};
-+
- static const struct mwifiex_sdio_device mwifiex_sdio_sd8786 = {
- 	.firmware = SD8786_DEFAULT_FW_NAME,
- 	.reg = &mwifiex_reg_sd87xx,
-@@ -386,6 +428,19 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd8897 = {
- 	.supports_fw_dump = true,
- };
- 
-+static const struct mwifiex_sdio_device mwifiex_sdio_sd8887 = {
-+	.firmware = SD8887_DEFAULT_FW_NAME,
-+	.reg = &mwifiex_reg_sd8887,
-+	.max_ports = 32,
-+	.mp_agg_pkt_limit = 16,
-+	.supports_sdio_new_mode = true,
-+	.has_control_mask = false,
-+	.tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_4K,
-+	.mp_tx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_32K,
-+	.mp_rx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_32K,
-+	.supports_fw_dump = false,
-+};
-+
- /*
-  * .cmdrsp_complete handler
-  */
 -- 
-1.8.1.4
+2.0.1
 
