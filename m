@@ -1,82 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:37284 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753174AbaJQCLH (ORCPT
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:42118 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751693AbaJMFJw convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Oct 2014 22:11:07 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH v2 23/23] ath9k: Do not start BA when scanning
-Date: Fri, 17 Oct 2014 07:40:30 +0530
-Message-Id: <1413511830-5536-24-git-send-email-sujith@msujith.org> (sfid-20141017_041320_989836_D8611F04)
-In-Reply-To: <1413511830-5536-1-git-send-email-sujith@msujith.org>
-References: <1413511830-5536-1-git-send-email-sujith@msujith.org>
+	Mon, 13 Oct 2014 01:09:52 -0400
+Received: by mail-wi0-f169.google.com with SMTP id h11so2338053wiw.4
+        for <linux-wireless@vger.kernel.org>; Sun, 12 Oct 2014 22:09:50 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <87ppe0aurn.fsf@kamboji.qca.qualcomm.com>
+References: <1412940780-25360-1-git-send-email-michal.kazior@tieto.com>
+	<87ppe0aurn.fsf@kamboji.qca.qualcomm.com>
+Date: Mon, 13 Oct 2014 07:09:50 +0200
+Message-ID: <CA+BoTQmgg2VvkeETQLyG-x5bqtVqDCf3PZOVbmimbXcHYfV=Ww@mail.gmail.com> (sfid-20141013_070955_484543_864CABAB)
+Subject: Re: [PATCH] ath10k: use bss_info as txpower source
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On 10 October 2014 16:01, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Michal Kazior <michal.kazior@tieto.com> writes:
+>
+>> This simply changes the source for txpower setup.
+>> It does not make ath10k use different txpower
+>> values for different vifs.
+>>
+>> This will make it easier to implement chanctx in
+>> ath10k in the future.
+>>
+>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>
+> In ath-next-test there was a conflict in ath10k_bss_info_changed().
+> Please check my resolution:
+>
+> https://github.com/kvalo/ath/commit/86eea6fda33ce16a40f98d41c19ea4b0e157f5ba
 
-mac80211 currently has a race which can be hit
-with this sequence:
+Looks good, thanks!
 
-* Start a scan operation.
-* TX BA is initiated by ieee80211_start_tx_ba_session().
-* Driver sets up internal state and calls
-  ieee80211_start_tx_ba_cb_irqsafe().
-* mac80211 adds a packet to sdata->skb_queue with
-  type IEEE80211_SDATA_QUEUE_AGG_START.
-* ieee80211_iface_work() doesn't process the
-  packet because scan is in progress.
-* ADDBA response timer expires and the sta/tid is
-  torn down.
-* Driver receives BA stop notification and calls
-  ieee80211_stop_tx_ba_cb_irqsafe().
-* This is also added to the queue by mac80211.
-* Now, scan finishes.
 
-At this point, the queued up packets might be processed
-if some other operation schedules the sdata work. Since
-the tids have been cleaned up already, warnings are hit.
-
-If this doesn't happen, the packets are left in the queue
-until the interface is torn down.
-
-Since initiating a BA session when scan is in progress
-leads to flaky connections, especially in MCC mode, we
-can drop the TX BA request. This improves connectivity
-with legacy clients in MCC mode.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/main.c | 7 +++++++
- 1 file changed, 7 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 961a388..68c5670 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1885,6 +1885,7 @@ static int ath9k_ampdu_action(struct ieee80211_hw *hw,
- 			      u16 tid, u16 *ssn, u8 buf_size)
- {
- 	struct ath_softc *sc = hw->priv;
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	bool flush = false;
- 	int ret = 0;
- 
-@@ -1896,6 +1897,12 @@ static int ath9k_ampdu_action(struct ieee80211_hw *hw,
- 	case IEEE80211_AMPDU_RX_STOP:
- 		break;
- 	case IEEE80211_AMPDU_TX_START:
-+		if (ath9k_is_chanctx_enabled()) {
-+			if (test_bit(ATH_OP_SCANNING, &common->op_flags)) {
-+				ret = -EBUSY;
-+				break;
-+			}
-+		}
- 		ath9k_ps_wakeup(sc);
- 		ret = ath_tx_aggr_start(sc, sta, tid, ssn);
- 		if (!ret)
--- 
-2.1.2
-
+Michał
