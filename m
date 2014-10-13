@@ -1,184 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:39435 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751100AbaJVGuj (ORCPT
+Received: from smtp03.msg.oleane.net ([62.161.4.3]:56642 "EHLO
+	smtp03.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753662AbaJMMBt convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2014 02:50:39 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH 1/2] ath9k: Update AR9580 initvals
-Date: Wed, 22 Oct 2014 12:21:44 +0530
-Message-Id: <1413960705-24211-2-git-send-email-sujith@msujith.org> (sfid-20141022_085042_232411_9CBEE3D3)
-In-Reply-To: <1413960705-24211-1-git-send-email-sujith@msujith.org>
-References: <1413960705-24211-1-git-send-email-sujith@msujith.org>
+	Mon, 13 Oct 2014 08:01:49 -0400
+From: "voncken" <cedric.voncken@acksys.fr>
+To: "'Michal Kazior'" <michal.kazior@tieto.com>
+Cc: <ath10k@lists.infradead.org>,
+	"'linux-wireless'" <linux-wireless@vger.kernel.org>
+References: <773DB8A82AB6A046AE0195C68612A319018C2750@sbs2003.acksys.local>	<CA+BoTQ=a8kY0CGGKHwRhk4cg=V0oimipuht6Pkc0K0x4WMMn-A@mail.gmail.com>	<023801cfe6b8$350c1930$9f244b90$@acksys.fr>	<CA+BoTQkXc-VL1ixRK5KWUiE0igCxXRQyyde86TAvuKVxZhEPdg@mail.gmail.com>	<024901cfe6c6$e1905780$a4b10680$@acksys.fr> <CA+BoTQnQkDjkMMu5x-c69s1THf7SQfet2vsOPWs++PtyEHEeTw@mail.gmail.com>
+In-Reply-To: <CA+BoTQnQkDjkMMu5x-c69s1THf7SQfet2vsOPWs++PtyEHEeTw@mail.gmail.com>
+Subject: RE: ath10k firmware crash
+Date: Mon, 13 Oct 2014 14:00:38 +0200
+Message-ID: <025701cfe6dd$50460240$f0d206c0$@acksys.fr> (sfid-20141013_140152_374468_CF92D455)
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+> > I'm using the compat wireless from Openwrt.
+> >         Compat wireless version 2014-05-22, but we updated the
+> > firmware with the latest version provided by openwrt (commit number
+> > 38eeda3ae6f90fde5546bdd48ee4ff3090f238c0 from
+> > kernel.org/pub/scm/linux/kernel/git/firmare/linux-firmware)
+> 
+> The fix for 4addr STA bridging is in the driver, not the firmware.
+> 
+> The compat version you're using doesn't contain the required fix. I'm pretty
+> sure openwrt compat 2014-09-26 contains it.
+> 
+Ok, I will test with this version. Thanks for your help.
+> 
+> Michał
 
-This fixes RX sensitivity issues with AR9580.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- .../net/wireless/ath/ath9k/ar9580_1p0_initvals.h   | 144 ++++++++++++++++++++-
- 1 file changed, 143 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ar9580_1p0_initvals.h b/drivers/net/wireless/ath/ath9k/ar9580_1p0_initvals.h
-index a5ca652..5d4629f 100644
---- a/drivers/net/wireless/ath/ath9k/ar9580_1p0_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9580_1p0_initvals.h
-@@ -24,7 +24,149 @@
- 
- #define ar9580_1p0_soc_postamble ar9300_2p2_soc_postamble
- 
--#define ar9580_1p0_radio_core ar9300_2p2_radio_core
-+static const u32 ar9580_1p0_radio_core[][2] = {
-+	/* Addr      allmodes  */
-+	{0x00016000, 0x36db2db6},
-+	{0x00016004, 0x6db6db40},
-+	{0x00016008, 0x73f00000},
-+	{0x0001600c, 0x00000000},
-+	{0x00016040, 0x7f80fff8},
-+	{0x0001604c, 0x76d005b5},
-+	{0x00016050, 0x556cf031},
-+	{0x00016054, 0x13449440},
-+	{0x00016058, 0x0c51c92c},
-+	{0x0001605c, 0x3db7fffc},
-+	{0x00016060, 0xfffffffc},
-+	{0x00016064, 0x000f0278},
-+	{0x0001606c, 0x6db60000},
-+	{0x00016080, 0x00000000},
-+	{0x00016084, 0x0e48048c},
-+	{0x00016088, 0x54214514},
-+	{0x0001608c, 0x119f481e},
-+	{0x00016090, 0x24926490},
-+	{0x00016098, 0xd2888888},
-+	{0x000160a0, 0x0a108ffe},
-+	{0x000160a4, 0x812fc370},
-+	{0x000160a8, 0x423c8000},
-+	{0x000160b4, 0x92480080},
-+	{0x000160c0, 0x00adb6d0},
-+	{0x000160c4, 0x6db6db60},
-+	{0x000160c8, 0x6db6db6c},
-+	{0x000160cc, 0x01e6c000},
-+	{0x00016100, 0x3fffbe01},
-+	{0x00016104, 0xfff80000},
-+	{0x00016108, 0x00080010},
-+	{0x00016144, 0x02084080},
-+	{0x00016148, 0x00000000},
-+	{0x00016280, 0x058a0001},
-+	{0x00016284, 0x3d840208},
-+	{0x00016288, 0x05a20408},
-+	{0x0001628c, 0x00038c07},
-+	{0x00016290, 0x00000004},
-+	{0x00016294, 0x458a214f},
-+	{0x00016380, 0x00000000},
-+	{0x00016384, 0x00000000},
-+	{0x00016388, 0x00800700},
-+	{0x0001638c, 0x00800700},
-+	{0x00016390, 0x00800700},
-+	{0x00016394, 0x00000000},
-+	{0x00016398, 0x00000000},
-+	{0x0001639c, 0x00000000},
-+	{0x000163a0, 0x00000001},
-+	{0x000163a4, 0x00000001},
-+	{0x000163a8, 0x00000000},
-+	{0x000163ac, 0x00000000},
-+	{0x000163b0, 0x00000000},
-+	{0x000163b4, 0x00000000},
-+	{0x000163b8, 0x00000000},
-+	{0x000163bc, 0x00000000},
-+	{0x000163c0, 0x000000a0},
-+	{0x000163c4, 0x000c0000},
-+	{0x000163c8, 0x14021402},
-+	{0x000163cc, 0x00001402},
-+	{0x000163d0, 0x00000000},
-+	{0x000163d4, 0x00000000},
-+	{0x00016400, 0x36db2db6},
-+	{0x00016404, 0x6db6db40},
-+	{0x00016408, 0x73f00000},
-+	{0x0001640c, 0x00000000},
-+	{0x00016440, 0x7f80fff8},
-+	{0x0001644c, 0x76d005b5},
-+	{0x00016450, 0x556cf031},
-+	{0x00016454, 0x13449440},
-+	{0x00016458, 0x0c51c92c},
-+	{0x0001645c, 0x3db7fffc},
-+	{0x00016460, 0xfffffffc},
-+	{0x00016464, 0x000f0278},
-+	{0x0001646c, 0x6db60000},
-+	{0x00016500, 0x3fffbe01},
-+	{0x00016504, 0xfff80000},
-+	{0x00016508, 0x00080010},
-+	{0x00016544, 0x02084080},
-+	{0x00016548, 0x00000000},
-+	{0x00016780, 0x00000000},
-+	{0x00016784, 0x00000000},
-+	{0x00016788, 0x00800700},
-+	{0x0001678c, 0x00800700},
-+	{0x00016790, 0x00800700},
-+	{0x00016794, 0x00000000},
-+	{0x00016798, 0x00000000},
-+	{0x0001679c, 0x00000000},
-+	{0x000167a0, 0x00000001},
-+	{0x000167a4, 0x00000001},
-+	{0x000167a8, 0x00000000},
-+	{0x000167ac, 0x00000000},
-+	{0x000167b0, 0x00000000},
-+	{0x000167b4, 0x00000000},
-+	{0x000167b8, 0x00000000},
-+	{0x000167bc, 0x00000000},
-+	{0x000167c0, 0x000000a0},
-+	{0x000167c4, 0x000c0000},
-+	{0x000167c8, 0x14021402},
-+	{0x000167cc, 0x00001402},
-+	{0x000167d0, 0x00000000},
-+	{0x000167d4, 0x00000000},
-+	{0x00016800, 0x36db2db6},
-+	{0x00016804, 0x6db6db40},
-+	{0x00016808, 0x73f00000},
-+	{0x0001680c, 0x00000000},
-+	{0x00016840, 0x7f80fff8},
-+	{0x0001684c, 0x76d005b5},
-+	{0x00016850, 0x556cf031},
-+	{0x00016854, 0x13449440},
-+	{0x00016858, 0x0c51c92c},
-+	{0x0001685c, 0x3db7fffc},
-+	{0x00016860, 0xfffffffc},
-+	{0x00016864, 0x000f0278},
-+	{0x0001686c, 0x6db60000},
-+	{0x00016900, 0x3fffbe01},
-+	{0x00016904, 0xfff80000},
-+	{0x00016908, 0x00080010},
-+	{0x00016944, 0x02084080},
-+	{0x00016948, 0x00000000},
-+	{0x00016b80, 0x00000000},
-+	{0x00016b84, 0x00000000},
-+	{0x00016b88, 0x00800700},
-+	{0x00016b8c, 0x00800700},
-+	{0x00016b90, 0x00800700},
-+	{0x00016b94, 0x00000000},
-+	{0x00016b98, 0x00000000},
-+	{0x00016b9c, 0x00000000},
-+	{0x00016ba0, 0x00000001},
-+	{0x00016ba4, 0x00000001},
-+	{0x00016ba8, 0x00000000},
-+	{0x00016bac, 0x00000000},
-+	{0x00016bb0, 0x00000000},
-+	{0x00016bb4, 0x00000000},
-+	{0x00016bb8, 0x00000000},
-+	{0x00016bbc, 0x00000000},
-+	{0x00016bc0, 0x000000a0},
-+	{0x00016bc4, 0x000c0000},
-+	{0x00016bc8, 0x14021402},
-+	{0x00016bcc, 0x00001402},
-+	{0x00016bd0, 0x00000000},
-+	{0x00016bd4, 0x00000000},
-+};
- 
- #define ar9580_1p0_mac_postamble ar9300_2p2_mac_postamble
- 
--- 
-2.1.2
 
