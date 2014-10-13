@@ -1,61 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f46.google.com ([74.125.82.46]:32775 "EHLO
-	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752425AbaJYTh1 (ORCPT
+Received: from smtp-out04.msg.oleane.net ([62.161.7.2]:42972 "EHLO
+	smtp-out04.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753080AbaJMH5j convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Oct 2014 15:37:27 -0400
-Received: by mail-wg0-f46.google.com with SMTP id l18so3152224wgh.29
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2014 12:37:26 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 45/48] staging: vt6655: Move LIFETIME RES 64us macros to rxtx.h
-Date: Sat, 25 Oct 2014 09:40:23 +0100
-Message-Id: <1414226426-5811-46-git-send-email-tvboxspy@gmail.com> (sfid-20141025_213734_119907_E02F9086)
-In-Reply-To: <1414226426-5811-1-git-send-email-tvboxspy@gmail.com>
-References: <1414226426-5811-1-git-send-email-tvboxspy@gmail.com>
+	Mon, 13 Oct 2014 03:57:39 -0400
+From: "voncken" <cedric.voncken@acksys.fr>
+To: "'Michal Kazior'" <michal.kazior@tieto.com>
+Cc: <ath10k@lists.infradead.org>,
+	"'linux-wireless'" <linux-wireless@vger.kernel.org>
+References: <773DB8A82AB6A046AE0195C68612A319018C2750@sbs2003.acksys.local> <CA+BoTQ=a8kY0CGGKHwRhk4cg=V0oimipuht6Pkc0K0x4WMMn-A@mail.gmail.com>
+In-Reply-To: <CA+BoTQ=a8kY0CGGKHwRhk4cg=V0oimipuht6Pkc0K0x4WMMn-A@mail.gmail.com>
+Subject: RE: ath10k firmware crash
+Date: Mon, 13 Oct 2014 09:35:05 +0200
+Message-ID: <023801cfe6b8$350c1930$9f244b90$@acksys.fr> (sfid-20141013_095742_876809_2AD71228)
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Used only by vnt_generate_fifo_header move these macros.
+	Thanks for your reply,
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/rxtx.h | 4 ++++
- drivers/staging/vt6655/wmgr.h | 2 --
- 2 files changed, 4 insertions(+), 2 deletions(-)
+> 
+> Can you then provide a crash register dump for 10.1, please? I can't help you
+> much with the 636 dump.
+> 
+Yes I can, but where I find it?
 
-diff --git a/drivers/staging/vt6655/rxtx.h b/drivers/staging/vt6655/rxtx.h
-index 50d77a0..cf0dfa6 100644
---- a/drivers/staging/vt6655/rxtx.h
-+++ b/drivers/staging/vt6655/rxtx.h
-@@ -32,6 +32,10 @@
- #include "ttype.h"
- #include "device.h"
- 
-+#define DEFAULT_MSDU_LIFETIME_RES_64us	8000 /* 64us */
-+#define DEFAULT_MGN_LIFETIME_RES_64us	125  /* 64us */
-+
-+
- /*---------------------  Export Definitions -------------------------*/
- 
- /*---------------------  Export Variables  --------------------------*/
-diff --git a/drivers/staging/vt6655/wmgr.h b/drivers/staging/vt6655/wmgr.h
-index 74f1f16..daf996c 100644
---- a/drivers/staging/vt6655/wmgr.h
-+++ b/drivers/staging/vt6655/wmgr.h
-@@ -51,10 +51,8 @@
- #define WCMD_PASSIVE_SCAN_TIME  100 //(ms)
- 
- #define DEFAULT_MSDU_LIFETIME           512  // ms
--#define DEFAULT_MSDU_LIFETIME_RES_64us  8000 // 64us
- 
- #define DEFAULT_MGN_LIFETIME            8    // ms
--#define DEFAULT_MGN_LIFETIME_RES_64us   125  // 64us
- 
- #define MAKE_BEACON_RESERVED            10  //(us)
- 
--- 
-1.9.1
+> Are you perhaps trying to run STA with 4addr bridging? If so then make sure
+> you use recent ath10k as this was known to be a problem.
+> 
+Yes I'm testing with 4 addr bridging because I need to bridge this interface. I' ll try without this option.
+I'm testing with commit number 38eeda3ae6f90fde5546bdd48ee4ff3090f238c0 from kernel.org/pub/scm/linux/kernel/git/firmare/linux-firmware. It is the latest version in openwrt. 
+
+> Can you also provide ath10k traces or debug logs, please?
+> 
+I'll send a trace.
+> 
+> >         Is it possible to use at the same time on 2 different cards the AP
+> mode and client mode?
+> 
+> Yes, it is possible.
+> 
+> 
+> Michał
 
