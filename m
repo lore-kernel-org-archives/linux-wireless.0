@@ -1,91 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f50.google.com ([74.125.82.50]:53529 "EHLO
-	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752230AbaJYTLP (ORCPT
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:52532 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755113AbaJNM3G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Oct 2014 15:11:15 -0400
-Received: by mail-wg0-f50.google.com with SMTP id z12so565688wgg.21
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2014 12:11:14 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 15/31] staging: vt6655: mac80211 conversion: enable power saving
-Date: Sat, 25 Oct 2014 09:20:25 +0100
-Message-Id: <1414225241-5480-16-git-send-email-tvboxspy@gmail.com> (sfid-20141025_211124_714166_3CA620C3)
-In-Reply-To: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
-References: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
+	Tue, 14 Oct 2014 08:29:06 -0400
+Received: by mail-wg0-f49.google.com with SMTP id x12so10971598wgg.32
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Oct 2014 05:29:04 -0700 (PDT)
+Message-ID: <543D170A.6060709@gmail.com> (sfid-20141014_142910_855594_B0A8C8DD)
+Date: Tue, 14 Oct 2014 14:28:58 +0200
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+MIME-Version: 1.0
+To: qca_vkondrat@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+	wireless-regdb@lists.infradead.org
+Subject: Re: [PATCH] wireless-regdb: add regulatory rule for ETSI members
+ on 60GHz band
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Convert PSvEnablePowerSaving and PSvEnablePowerSaving
+Hi,
 
-Remove mgmt->wCurrAID and use pDevice->current_aid
+related to 623d8438b724afb7c4818cb9b129a552ef2b518b at wireless-regdb.
 
-We nolonger send the PSbSendNullPacket.
+On 12/10/2012, Vladimir Kondratiev wrote:
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/power.c | 15 +++------------
- 1 file changed, 3 insertions(+), 12 deletions(-)
+> Purpose is to serve for 802.11ad specification that introduces operation
+> on the 60GHz band, using bandwidth 2160MHz.
+> 
+> For the 60GHz band, regulation defined in the "Etsi En 302 567"
+> http://docsfiles.com/pdf_final_draft_etsi_en_302_567.html
+> 
+> It defines for the frequency range 57 GHz to 66 GHz,
+> Max. power level (EIRP) for
+> indoor only: 40 dBm, and indoor/outdoor: 25 dBm
+> Also, there is spectral power density limit
+> 13 dBm/MHz for indoor and -2 dBm/MHz indoor/outdoor
 
-diff --git a/drivers/staging/vt6655/power.c b/drivers/staging/vt6655/power.c
-index 08241b9..fe33bb2 100644
---- a/drivers/staging/vt6655/power.c
-+++ b/drivers/staging/vt6655/power.c
-@@ -73,8 +73,7 @@ PSvEnablePowerSaving(
- )
- {
- 	struct vnt_private *pDevice = hDeviceContext;
--	PSMgmtObject    pMgmt = pDevice->pMgmt;
--	unsigned short wAID = pMgmt->wCurrAID | BIT14 | BIT15;
-+	u16 wAID = pDevice->current_aid | BIT(14) | BIT(15);
- 
- 	// set period of power up before TBTT
- 	VNSvOutPortW(pDevice->PortOffset + MAC_REG_PWBT, C_PWBT);
-@@ -83,7 +82,9 @@ PSvEnablePowerSaving(
- 		VNSvOutPortW(pDevice->PortOffset + MAC_REG_AIDATIM, wAID);
- 	} else {
- 		// set ATIM Window
-+#if 0 /* TODO atim window */
- 		MACvWriteATIMW(pDevice->PortOffset, pMgmt->wCurrATIMWindow);
-+#endif
- 	}
- 	// Set AutoSleep
- 	MACvRegBitsOn(pDevice->PortOffset, MAC_REG_PSCFG, PSCFG_AUTOSLEEP);
-@@ -95,22 +96,15 @@ PSvEnablePowerSaving(
- 		MACvRegBitsOff(pDevice->PortOffset, MAC_REG_PSCTL, PSCTL_ALBCN);
- 		// first time set listen next beacon
- 		MACvRegBitsOn(pDevice->PortOffset, MAC_REG_PSCTL, PSCTL_LNBCN);
--		pMgmt->wCountToWakeUp = wListenInterval;
- 	} else {
- 		// always listen beacon
- 		MACvRegBitsOn(pDevice->PortOffset, MAC_REG_PSCTL, PSCTL_ALBCN);
--		pMgmt->wCountToWakeUp = 0;
- 	}
- 
- 	// enable power saving hw function
- 	MACvRegBitsOn(pDevice->PortOffset, MAC_REG_PSCTL, PSCTL_PSEN);
- 	pDevice->bEnablePSMode = true;
- 
--	/* We don't send null pkt in ad hoc mode since beacon will handle this. */
--	if (pDevice->op_mode != NL80211_IFTYPE_ADHOC &&
--	    pDevice->op_mode == NL80211_IFTYPE_STATION)
--		PSbSendNullPacket(pDevice);
--
- 	pDevice->bPWBitOn = true;
- 	pr_debug("PS:Power Saving Mode Enable...\n");
- }
-@@ -143,9 +137,6 @@ PSvDisablePowerSaving(
- 
- 	pDevice->bEnablePSMode = false;
- 
--	if (pDevice->op_mode == NL80211_IFTYPE_STATION)
--		PSbSendNullPacket(pDevice);
--
- 	pDevice->bPWBitOn = false;
- }
- 
--- 
-1.9.1
+I don't know where you did get this information.
+ETSI EN 302 567 V1.2.1 (2012-01) http://www.etsi.org/deliver/etsi_en/302500_302599/302567/01.02.01_60/en_302567v010201p.pdf
+doesn't handle in different way indoor/outdoor.
 
+And also 57000 - 66000 is allowed.
+
+So that:
+"(57240 - 65880 @ 2160), (40), NO-OUTDOOR" should(must) be replaced by:
+"(57000 - 66000 @ 2160), (40)"
+
+> Only indoor part specified, as kernel can't use multiple
+> rules per frequency at the moment. Also, standard do not set bandwidth limitation;
+> for purpose of 802.11ad this patch specifies bandwidth 2160 MHz,
+> in this case gross EIRP limit applies. Frequency limits also set accordingly
+> to the 802.11ad channel allocation.
+> 
+> This patch apply this to the full ETSI member countries:
+> [...]
+>
+> diff --git a/db.txt b/db.txt
+> index c00602c..848c985 100644
+> --- a/db.txt
+> +++ b/db.txt
+> @@ -12,6 +12,10 @@ country 00:
+>          (5735 - 5835 @ 40), (3, 20), PASSIVE-SCAN, NO-IBSS
+>  
+>  
+> +country AD:
+> +        # 60 gHz band channels 1-4, ref: Etsi En 302 567
+> +        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
+> [...]
