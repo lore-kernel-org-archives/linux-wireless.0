@@ -1,68 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f43.google.com ([74.125.82.43]:49037 "EHLO
-	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751832AbaJYTcH (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:40605 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754590AbaJNEAC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Oct 2014 15:32:07 -0400
-Received: by mail-wg0-f43.google.com with SMTP id n12so3077371wgh.26
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2014 12:32:06 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 27/31] staging: vt6655: baseband.c replace BIT0 with BIT(0)
-Date: Sat, 25 Oct 2014 09:20:37 +0100
-Message-Id: <1414225241-5480-28-git-send-email-tvboxspy@gmail.com> (sfid-20141025_213214_256236_345480BC)
-In-Reply-To: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
-References: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
+	Tue, 14 Oct 2014 00:00:02 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH 3/9] ath9k: Use a helper function for offchannel NoA
+Date: Tue, 14 Oct 2014 09:30:50 +0530
+Message-Id: <1413259256-4808-4-git-send-email-sujith@msujith.org> (sfid-20141014_060043_495758_7F12014D)
+In-Reply-To: <1413259256-4808-1-git-send-email-sujith@msujith.org>
+References: <1413259256-4808-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/baseband.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-diff --git a/drivers/staging/vt6655/baseband.c b/drivers/staging/vt6655/baseband.c
-index b8a64c0..8adeea4 100644
---- a/drivers/staging/vt6655/baseband.c
-+++ b/drivers/staging/vt6655/baseband.c
-@@ -2116,7 +2116,7 @@ bool BBbVT3253Init(struct vnt_private *pDevice)
- 				bResult &= BBbWriteEmbedded(dwIoBase, byVT3253B0_AGC4_RFMD2959[ii][0], byVT3253B0_AGC4_RFMD2959[ii][1]);
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/channel.c | 45 +++++++++++++++++++-------------
+ 1 file changed, 27 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index 45d2c48..c6e130d 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -366,6 +366,32 @@ static void ath_chanctx_setup_timer(struct ath_softc *sc, u32 tsf_time)
+ 		"Setup chanctx timer with timeout: %d ms\n", jiffies_to_msecs(tsf_time));
+ }
  
- 			VNSvOutPortD(dwIoBase + MAC_REG_ITRTMSET, 0x23);
--			MACvRegBitsOn(dwIoBase, MAC_REG_PAPEDELAY, BIT0);
-+			MACvRegBitsOn(dwIoBase, MAC_REG_PAPEDELAY, BIT(0));
++static void ath_chanctx_offchannel_noa(struct ath_softc *sc,
++				       struct ath_chanctx *ctx,
++				       struct ath_vif *avp,
++				       u32 tsf_time)
++{
++	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
++
++	avp->noa_index++;
++	avp->offchannel_start = tsf_time;
++	avp->offchannel_duration = sc->sched.offchannel_duration;
++
++	ath_dbg(common, CHAN_CTX,
++		"offchannel noa_duration: %d, noa_start: %d, noa_index: %d\n",
++		avp->offchannel_duration,
++		avp->offchannel_start,
++		avp->noa_index);
++
++	/*
++	 * When multiple contexts are active, the NoA
++	 * has to be recalculated and advertised after
++	 * an offchannel operation.
++	 */
++	if (ctx->active && avp->noa_duration)
++		avp->noa_duration = 0;
++}
++
+ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 		       enum ath_chanctx_event ev)
+ {
+@@ -461,24 +487,7 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 		 * values and increment the index.
+ 		 */
+ 		if (sc->next_chan == &sc->offchannel.chan) {
+-			avp->noa_index++;
+-			avp->offchannel_start = tsf_time;
+-			avp->offchannel_duration = sc->sched.offchannel_duration;
+-
+-			ath_dbg(common, CHAN_CTX,
+-				"offchannel noa_duration: %d, noa_start: %d, noa_index: %d\n",
+-				avp->offchannel_duration,
+-				avp->offchannel_start,
+-				avp->noa_index);
+-
+-			/*
+-			 * When multiple contexts are active, the NoA
+-			 * has to be recalculated and advertised after
+-			 * an offchannel operation.
+-			 */
+-			if (ctx->active && avp->noa_duration)
+-				avp->noa_duration = 0;
+-
++			ath_chanctx_offchannel_noa(sc, ctx, avp, tsf_time);
+ 			break;
  		}
- 		pDevice->abyBBVGA[0] = 0x18;
- 		pDevice->abyBBVGA[1] = 0x0A;
-@@ -2149,7 +2149,7 @@ bool BBbVT3253Init(struct vnt_private *pDevice)
- 			bResult &= BBbWriteEmbedded(dwIoBase, byVT3253B0_AGC[ii][0], byVT3253B0_AGC[ii][1]);
- 
- 		VNSvOutPortB(dwIoBase + MAC_REG_ITRTMSET, 0x23);
--		MACvRegBitsOn(dwIoBase, MAC_REG_PAPEDELAY, BIT0);
-+		MACvRegBitsOn(dwIoBase, MAC_REG_PAPEDELAY, BIT(0));
- 
- 		pDevice->abyBBVGA[0] = 0x14;
- 		pDevice->abyBBVGA[1] = 0x0A;
-@@ -2455,7 +2455,7 @@ BBvPowerSaveModeON(void __iomem *dwIoBase)
- 	unsigned char byOrgData;
- 
- 	BBbReadEmbedded(dwIoBase, 0x0D, &byOrgData);
--	byOrgData |= BIT0;
-+	byOrgData |= BIT(0);
- 	BBbWriteEmbedded(dwIoBase, 0x0D, byOrgData);
- }
- 
-@@ -2477,7 +2477,7 @@ BBvPowerSaveModeOFF(void __iomem *dwIoBase)
- 	unsigned char byOrgData;
- 
- 	BBbReadEmbedded(dwIoBase, 0x0D, &byOrgData);
--	byOrgData &= ~(BIT0);
-+	byOrgData &= ~(BIT(0));
- 	BBbWriteEmbedded(dwIoBase, 0x0D, byOrgData);
- }
  
 -- 
-1.9.1
+2.1.2
 
