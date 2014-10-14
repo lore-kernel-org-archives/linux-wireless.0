@@ -1,54 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f43.google.com ([74.125.82.43]:51586 "EHLO
-	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932508AbaJaPMm (ORCPT
+Received: from smtprelay0183.hostedemail.com ([216.40.44.183]:39735 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753866AbaJNRP7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Oct 2014 11:12:42 -0400
-Message-ID: <1414768360.8048.4.camel@umadbro> (sfid-20141031_161259_078593_BE450D0E)
-Subject: Re: [PATCH 1/2] cfg80211: 802.11p OCB mode handling
-From: Rostislav Lisovy <lisovy@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
-	jan-niklas.meier@volkswagen.de, burak.simsek@volkswagen.de,
-	Emmanuel Thierry <emmanuel.thierry@yogoko.fr>,
-	laszlo.virag@commsignia.com,
-	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
-Date: Fri, 31 Oct 2014 16:12:40 +0100
-In-Reply-To: <1414761237.3014.27.camel@jlt4.sipsolutions.net>
-References: <1414665771-8371-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
-	 <1414665771-8371-2-git-send-email-rostislav.lisovy@fel.cvut.cz>
-	 (sfid-20141030_114322_295525_C7C629F8) <1414761237.3014.27.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
+	Tue, 14 Oct 2014 13:15:59 -0400
+Message-ID: <1413306955.3269.30.camel@joe-AO725> (sfid-20141014_191631_500086_DF86093C)
+Subject: Re: [PATCH 1/1 linux-next] zd1201: replace kmalloc/memset by kzalloc
+From: Joe Perches <joe@perches.com>
+To: Fabian Frederick <fabf@skynet.be>
+Cc: linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Date: Tue, 14 Oct 2014 10:15:55 -0700
+In-Reply-To: <1413304831-7203-1-git-send-email-fabf@skynet.be>
+References: <1413304831-7203-1-git-send-email-fabf@skynet.be>
+Content-Type: text/plain; charset="ISO-8859-1"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-10-31 at 14:13 +0100, Johannes Berg wrote:
-> On Thu, 2014-10-30 at 11:42 +0100, Rostislav Lisovy wrote:
-> > @@ -2093,6 +2102,7 @@ enum nl80211_iftype {
-> >  	NL80211_IFTYPE_P2P_CLIENT,
-> >  	NL80211_IFTYPE_P2P_GO,
-> >  	NL80211_IFTYPE_P2P_DEVICE,
-> > +	NL80211_IFTYPE_OCB,
-> 
-> This is causing a bunch of compiler warnings (warning: enumeration value
-> ‘NL80211_IFTYPE_OCB’ not handled in switch, e.g. in mac80211/iface.c)
-> which I think you should address in this patch. That'll mean that you
-> modify even mac80211 and potentially some drivers, but I think that's
-> the right thing to do in this patch since it's the one changing the API
-> to introduce the new value.
+On Tue, 2014-10-14 at 18:40 +0200, Fabian Frederick wrote:
+> Signed-off-by: Fabian Frederick <fabf@skynet.be>
 
-I was aware of the warnings but thought this is the chicken-egg problem
-which can't be solved properly.
-Fortunately there is no driver affected.
+It might be clearer to use a structure for this 16 byte thing.
 
-> I think there's one thing you forgot in this patch, namely
-> __cfg80211_leave() which you also need to make the __ version of the
-> leave function non-static for due to locking.
+There's a comment bit in the code:
 
-Correct. Adding to the next version of the patchset.
+/* cmdreq message: 
+	u32 type
+	u16 cmd
+	u16 parm0
+	u16 parm1
+	u16 parm2
+	u8  pad[4]
 
-Thank you;
-Rostislav
+	total: 4 + 2 + 2 + 2 + 2 + 4 = 16
+*/
+
+It seems thought that this first u32 is actually
+a series of u8s.
+
+Maybe:
+
+struct zd1201_cmdreq {
+	u8	type;
+	u8	seq;
+	u8	a;
+	u8	b;
+	__le16	cmd;
+	__le16	parm0;
+	__le16	parm1;
+	__le16	parm2;
+	u8	pad[4];
+};
+
+And does this really need to be alloc'd?
+
+maybe
+
+struct zd1202_cmdreq request = {};
+
+etc...
 
