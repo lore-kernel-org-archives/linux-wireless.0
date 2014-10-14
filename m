@@ -1,95 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:58466 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754011AbaJVJKY convert rfc822-to-8bit (ORCPT
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:44686 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754840AbaJNUVE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2014 05:10:24 -0400
-Received: by mail-ob0-f174.google.com with SMTP id uz6so913367obc.5
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Oct 2014 02:10:24 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1413921415.3763081.181696749.20A0A495@webmail.messagingengine.com>
-References: <1413463736.1316541.179720977.4FD32021@webmail.messagingengine.com>
-	<1413510814.22769.6.camel@dcbw.local>
-	<1413751717.2510219.180809145.0E693C29@webmail.messagingengine.com>
-	<CANUX_P2RHVRorVABRfWVg39d4D8dj35v3fBpY3=3jvQ1U+mfEA@mail.gmail.com>
-	<1413783023.2710583.180921653.10DFFCEE@webmail.messagingengine.com>
-	<CANUX_P0Q7cNeBzQa=2WVZFJXPTLx8F6YQk9bGCf_3uYhc5RcGA@mail.gmail.com>
-	<CANUX_P3EqgTX7cPJvQ3fWH1yijekE0G_8TiH2_OCS7nFASGtkA@mail.gmail.com>
-	<1413789724.3063896.180943829.3F15F453@webmail.messagingengine.com>
-	<CANUX_P1REqkSqN0dtak34OQ_pSGMtPvV3Vj61tW5wb1+n2A7mg@mail.gmail.com>
-	<1413833365.2949853.181221645.22D54845@webmail.messagingengine.com>
-	<CANUX_P3XzYBp7E=hScmc837TpuCr9VrxEYauG=sGMKfOCpX=qA@mail.gmail.com>
-	<54461740.5000903@openwrt.org>
-	<1413879792.3500640.181427549.198E9452@webmail.messagingengine.com>
-	<54461AEF.7040304@openwrt.org>
-	<54463CE9.3060400@gmail.com>
-	<1413921415.3763081.181696749.20A0A495@webmail.messagingengine.com>
-Date: Wed, 22 Oct 2014 12:10:24 +0300
-Message-ID: <CANUX_P0LRRczVCSFR7RE5coaYFxwFXyqC90pdm=oVwEiEt-7zw@mail.gmail.com> (sfid-20141022_111034_707555_E4F4F565)
-Subject: Re: iwlwifi: Reason 7 periodic disconnect
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: =?UTF-8?Q?Lauren=C8=9Biu_Nicola?= <lnicola@dend.ro>
-Cc: poma <pomidorabelisima@gmail.com>, Felix Fietkau <nbd@openwrt.org>,
-	Dan Williams <dcbw@redhat.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 14 Oct 2014 16:21:04 -0400
+Received: by mail-wi0-f170.google.com with SMTP id hi2so12624186wib.3
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Oct 2014 13:21:02 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] ath9k: do not overwrite AR_PHY_RADAR_1 MSB
+Date: Tue, 14 Oct 2014 22:21:00 +0200
+Message-Id: <1413318060-11563-1-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20141014_222108_055093_2987CA58)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 21, 2014 at 10:56 PM, Laurențiu Nicola <lnicola@dend.ro> wrote:
-> Yep! `scb_timeout` is 60 on my router.
->
-> On Tue, Oct 21, 2014, at 14:00, poma wrote:
->> On 21.10.2014 10:35, Felix Fietkau wrote:
->> > On 2014-10-21 10:23, Laurențiu Nicola wrote:
->> >> It's an ASUS RT-N66U running NEWD-2/K3X from r24160.
->> > This is a Broadcom based device, so it should behave in the same way as
->> > other APs/Routers running the Broadcom drivers.
->> > The driver should only send Reason 7 when receiving a PS-Poll, BlockAck,
->> > BlockAckReq or Action frame from a station that's not associated, so
->> > probably it has already kicked out your iwlwifi client earlier. Not sure
->> > why that doesn't show up in the log though.
->> >
->>
->> Whether this might refer to the Station Control Block Timeout value
->>
->> http://www.dd-wrt.com/wiki/index.php/Wl#scb_timeout
->> ...
->> scb_timeout
->>
->> AP only: inactivity timeout value for authenticated stas
->>
+Do not overwrite AR_PHY_RADAR_1 most significant byte default value
 
-Actually, mac80211 should be probing the AP every 30 seconds but a
-beacon might abort the probe...
-Can you try something like this:
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+---
+ drivers/net/wireless/ath/ath9k/ar5008_phy.c | 5 ++++-
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c | 5 ++++-
+ 2 files changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 75df184..c9db7cf 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -3295,7 +3295,8 @@ static void ieee80211_rx_mgmt_beacon(struct
-ieee80211_sub_if_data *sdata,
-        if (ifmgd->flags & IEEE80211_STA_CONNECTION_POLL) {
-                mlme_dbg_ratelimited(sdata,
-                                     "cancelling AP probe due to a
-received beacon\n");
--               ieee80211_reset_ap_probe(sdata);
-+               pr_err("Not cancelling the probe to make sure the AP
-hears us from time to time\n");
-+               //ieee80211_reset_ap_probe(sdata);
-        }
+diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+index b72d0be..ba3d788 100644
+--- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+@@ -1190,7 +1190,7 @@ static void ar5008_hw_set_nf_limits(struct ath_hw *ah)
+ static void ar5008_hw_set_radar_params(struct ath_hw *ah,
+ 				       struct ath_hw_radar_conf *conf)
+ {
+-	u32 radar_0 = 0, radar_1 = 0;
++	u32 radar_0 = 0, radar_1;
+ 
+ 	if (!conf) {
+ 		REG_CLR_BIT(ah, AR_PHY_RADAR_0, AR_PHY_RADAR_0_ENA);
+@@ -1204,6 +1204,9 @@ static void ar5008_hw_set_radar_params(struct ath_hw *ah,
+ 	radar_0 |= SM(conf->pulse_rssi, AR_PHY_RADAR_0_PRSSI);
+ 	radar_0 |= SM(conf->pulse_inband, AR_PHY_RADAR_0_INBAND);
+ 
++	radar_1 = REG_READ(ah, AR_PHY_RADAR_1);
++	radar_1 &= ~(AR_PHY_RADAR_1_MAXLEN | AR_PHY_RADAR_1_RELSTEP_THRESH |
++		     AR_PHY_RADAR_1_RELPWR_THRESH);
+ 	radar_1 |= AR_PHY_RADAR_1_MAX_RRSSI;
+ 	radar_1 |= AR_PHY_RADAR_1_BLOCK_CHECK;
+ 	radar_1 |= SM(conf->pulse_maxlen, AR_PHY_RADAR_1_MAXLEN);
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index 697c4ae..30b2f95 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -1348,7 +1348,7 @@ static void ar9003_hw_set_radar_params(struct ath_hw *ah,
+ 				       struct ath_hw_radar_conf *conf)
+ {
+ 	unsigned int regWrites = 0;
+-	u32 radar_0 = 0, radar_1 = 0;
++	u32 radar_0 = 0, radar_1;
+ 
+ 	if (!conf) {
+ 		REG_CLR_BIT(ah, AR_PHY_RADAR_0, AR_PHY_RADAR_0_ENA);
+@@ -1362,6 +1362,9 @@ static void ar9003_hw_set_radar_params(struct ath_hw *ah,
+ 	radar_0 |= SM(conf->pulse_rssi, AR_PHY_RADAR_0_PRSSI);
+ 	radar_0 |= SM(conf->pulse_inband, AR_PHY_RADAR_0_INBAND);
+ 
++	radar_1 = REG_READ(ah, AR_PHY_RADAR_1);
++	radar_1 &= ~(AR_PHY_RADAR_1_MAXLEN | AR_PHY_RADAR_1_RELSTEP_THRESH |
++		     AR_PHY_RADAR_1_RELPWR_THRESH);
+ 	radar_1 |= AR_PHY_RADAR_1_MAX_RRSSI;
+ 	radar_1 |= AR_PHY_RADAR_1_BLOCK_CHECK;
+ 	radar_1 |= SM(conf->pulse_maxlen, AR_PHY_RADAR_1_MAXLEN);
+-- 
+1.9.1
 
-        /*
-
-
-
->>
->> poma
->>
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
->> in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
