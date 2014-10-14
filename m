@@ -1,71 +1,162 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f181.google.com ([209.85.213.181]:46345 "EHLO
-	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932334AbaJUNTY (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:35162 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754495AbaJNEAA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Oct 2014 09:19:24 -0400
-Received: by mail-ig0-f181.google.com with SMTP id r10so1288562igi.8
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Oct 2014 06:19:23 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1413895856.1998.6.camel@jlt4.sipsolutions.net>
-References: <1413385042-17903-1-git-send-email-sujith@msujith.org>
-	<CANUX_P02O-JSQkVvBCg6L9jf8wPyzPv8O_qsZa+prTJJx+20UA@mail.gmail.com>
-	<21568.29077.518022.812356@gargle.gargle.HOWL>
-	<1413797588.10246.3.camel@jlt4.sipsolutions.net>
-	<21572.55536.308167.684155@gargle.gargle.HOWL>
-	<1413798712.10246.14.camel@jlt4.sipsolutions.net>
-	<21572.58249.490532.207564@gargle.gargle.HOWL>
-	<1413801423.10246.16.camel@jlt4.sipsolutions.net>
-	<21572.60015.349942.74265@gargle.gargle.HOWL>
-	<1413806542.10246.21.camel@jlt4.sipsolutions.net>
-	<1413809136.24269.0.camel@jlt4.sipsolutions.net>
-	<21573.55666.43231.68176@gargle.gargle.HOWL>
-	<1413873729.1998.2.camel@jlt4.sipsolutions.net>
-	<CAB3XZEd8xCieC8xhOw=V0rHtJadYBKwe9NjwkNsmAmXqiL4ZRQ@mail.gmail.com>
-	<1413895856.1998.6.camel@jlt4.sipsolutions.net>
-Date: Tue, 21 Oct 2014 16:19:23 +0300
-Message-ID: <CAB3XZEcFh1-=bS0T9=fA2n8Z2FedMirFATfqA_S9Y1YSqQT9zA@mail.gmail.com> (sfid-20141021_151927_429310_CC6631F4)
-Subject: Re: [PATCH] cfg80211: Warn once for delayed scan completion
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Sujith Manoharan <sujith@msujith.org>,
-	Emmanuel Grumbach <egrumbach@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 14 Oct 2014 00:00:00 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH 2/9] ath9k: Check for active GO in mgd_prepare_tx()
+Date: Tue, 14 Oct 2014 09:30:49 +0530
+Message-Id: <1413259256-4808-3-git-send-email-sujith@msujith.org> (sfid-20141014_060028_344052_6D85F1BB)
+In-Reply-To: <1413259256-4808-1-git-send-email-sujith@msujith.org>
+References: <1413259256-4808-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 21, 2014 at 3:50 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2014-10-21 at 15:27 +0300, Eliad Peller wrote:
->
->> This patch actually solves a kernel panic that can be reproduced
->> easily by increasing the delay in ieee80211_scan_completed() and
->> removing the driver right after initiating a scan - the delayed
->> scan_work never gets flushed, resulting in invalid memory access, etc.
->
-> Yeah I thought about that too - we flush the workqueue but if the timer
-> hasn't yet fired you can get issues.
->
-> OTOH, the delay there is 0, so the workqueue code doesn't even arm the
-> timer but rather puts the work on the workqueue immediately. Therefore
-> flush_work() should be enough?
->
-> Or did you not test with something like
->
-> @@ -357,7 +357,7 @@ void ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted)
->         set_bit(SCAN_COMPLETED, &local->scanning);
->         if (aborted)
->                 set_bit(SCAN_ABORTED, &local->scanning);
-> -       ieee80211_queue_delayed_work(&local->hw, &local->scan_work, 0);
-> +       ieee80211_queue_delayed_work(&local->hw, &local->scan_work, 1);
->
-yeah, that's how i tested it (with a larger delay).
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-you're right about the delay=0.
-(this might not be enough if scan_work is already delayed_queued, but
-i currently don't see how this can happen)
+If a GO interface is active when we receive a
+mgd_prepare_tx() call, then we need to send
+out a new NoA before switching to a new context.
 
-anyway, the patch looks good.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h   |  2 ++
+ drivers/net/wireless/ath/ath9k/channel.c | 14 ++++++++++
+ drivers/net/wireless/ath/ath9k/main.c    | 45 +++++++++++++++++++++++++++-----
+ 3 files changed, 54 insertions(+), 7 deletions(-)
 
-Eliad.
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 8f6f46c..b7abb4f 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -385,6 +385,7 @@ struct ath_chanctx_sched {
+ 	bool wait_switch;
+ 	bool force_noa_update;
+ 	bool extend_absence;
++	bool mgd_prepare_tx;
+ 	enum ath_chanctx_state state;
+ 	u8 beacon_miss;
+ 
+@@ -977,6 +978,7 @@ struct ath_softc {
+ 	struct ath_chanctx_sched sched;
+ 	struct ath_offchannel offchannel;
+ 	struct ath_chanctx *next_chan;
++	struct completion go_beacon;
+ #endif
+ 
+ 	unsigned long driver_data;
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index 2066b09..45d2c48 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -421,6 +421,9 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 				"Move chanctx state from WAIT_FOR_TIMER to WAIT_FOR_BEACON\n");
+ 		}
+ 
++		if (sc->sched.mgd_prepare_tx)
++			sc->sched.state = ATH_CHANCTX_STATE_WAIT_FOR_BEACON;
++
+ 		/*
+ 		 * When a context becomes inactive, for example,
+ 		 * disassociation of a station context, the NoA
+@@ -547,6 +550,15 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 		}
+ 
+ 		sc->sched.beacon_pending = false;
++
++		if (sc->sched.mgd_prepare_tx) {
++			sc->sched.mgd_prepare_tx = false;
++			complete(&sc->go_beacon);
++			ath_dbg(common, CHAN_CTX,
++				"Beacon sent, complete go_beacon\n");
++			break;
++		}
++
+ 		if (sc->sched.state != ATH_CHANCTX_STATE_WAIT_FOR_BEACON)
+ 			break;
+ 
+@@ -1263,6 +1275,8 @@ void ath9k_init_channel_context(struct ath_softc *sc)
+ 		    (unsigned long)sc);
+ 	setup_timer(&sc->sched.timer, ath_chanctx_timer,
+ 		    (unsigned long)sc);
++
++	init_completion(&sc->go_beacon);
+ }
+ 
+ void ath9k_deinit_channel_context(struct ath_softc *sc)
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index c291d54..f58781a 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2474,7 +2474,11 @@ static void ath9k_mgd_prepare_tx(struct ieee80211_hw *hw,
+ 	struct ath_softc *sc = hw->priv;
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	struct ath_vif *avp = (struct ath_vif *) vif->drv_priv;
++	struct ath_beacon_config *cur_conf;
++	struct ath_chanctx *go_ctx;
++	unsigned long timeout;
+ 	bool changed = false;
++	u32 beacon_int;
+ 
+ 	if (!test_bit(ATH_OP_MULTI_CHANNEL, &common->op_flags))
+ 		return;
+@@ -2485,19 +2489,46 @@ static void ath9k_mgd_prepare_tx(struct ieee80211_hw *hw,
+ 	mutex_lock(&sc->mutex);
+ 
+ 	spin_lock_bh(&sc->chan_lock);
+-	if (sc->next_chan || (sc->cur_chan != avp->chanctx)) {
+-		sc->next_chan = avp->chanctx;
++	if (sc->next_chan || (sc->cur_chan != avp->chanctx))
+ 		changed = true;
++	spin_unlock_bh(&sc->chan_lock);
++
++	if (!changed)
++		goto out;
++
++	go_ctx = ath_is_go_chanctx_present(sc);
++
++	if (go_ctx) {
++		/*
++		 * Wait till the GO interface gets a chance
++		 * to send out an NoA.
++		 */
++		spin_lock_bh(&sc->chan_lock);
++		sc->sched.mgd_prepare_tx = true;
++		cur_conf = &go_ctx->beacon;
++		beacon_int = TU_TO_USEC(cur_conf->beacon_interval);
++		spin_unlock_bh(&sc->chan_lock);
++
++		timeout = usecs_to_jiffies(beacon_int);
++		init_completion(&sc->go_beacon);
++
++		if (wait_for_completion_timeout(&sc->go_beacon,
++						timeout) == 0)
++			ath_dbg(common, CHAN_CTX,
++				"Failed to send new NoA\n");
+ 	}
++
+ 	ath_dbg(common, CHAN_CTX,
+-		"%s: Set chanctx state to FORCE_ACTIVE, changed: %d\n",
+-		__func__, changed);
++		"%s: Set chanctx state to FORCE_ACTIVE for vif: %pM\n",
++		__func__, vif->addr);
++
++	spin_lock_bh(&sc->chan_lock);
++	sc->next_chan = avp->chanctx;
+ 	sc->sched.state = ATH_CHANCTX_STATE_FORCE_ACTIVE;
+ 	spin_unlock_bh(&sc->chan_lock);
+ 
+-	if (changed)
+-		ath_chanctx_set_next(sc, true);
+-
++	ath_chanctx_set_next(sc, true);
++out:
+ 	mutex_unlock(&sc->mutex);
+ }
+ 
+-- 
+2.1.2
+
