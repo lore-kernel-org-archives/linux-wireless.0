@@ -1,162 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:35686 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753199AbaJQCKd (ORCPT
+Received: from zimbra.real-time.com ([63.170.91.9]:45257 "EHLO
+	zimbra.real-time.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752778AbaJNKVG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Oct 2014 22:10:33 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH v2 15/23] ath9k: Check for active GO in mgd_prepare_tx()
-Date: Fri, 17 Oct 2014 07:40:22 +0530
-Message-Id: <1413511830-5536-16-git-send-email-sujith@msujith.org> (sfid-20141017_041324_758666_244189ED)
-In-Reply-To: <1413511830-5536-1-git-send-email-sujith@msujith.org>
-References: <1413511830-5536-1-git-send-email-sujith@msujith.org>
+	Tue, 14 Oct 2014 06:21:06 -0400
+Date: Tue, 14 Oct 2014 21:20:51 +1100
+From: James Cameron <quozl@laptop.org>
+To: Belisko Marek <marek.belisko@gmail.com>
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Avinash Patil <patila@marvell.com>
+Subject: Re: mwifiex_usb_submit_rx_urb: dev_alloc_skb failed when conected to
+ 5GHz
+Message-ID: <20141014102051.GB16934@us.netrek.org> (sfid-20141014_122119_223780_A747CDC9)
+References: <5FF020A1CFFEEC49BD1E09530C4FF5951819DB12F1@SC-VEXCH1.marvell.com>
+ <CAAfyv35j-77AURB4fHcecbEvyGS6U+1APNRFCf3FDAd_rrWnJw@mail.gmail.com>
+ <5FF020A1CFFEEC49BD1E09530C4FF5951821351855@SC-VEXCH1.marvell.com>
+ <CAAfyv35E2HUReFpnpdsebPETKk9VPA_hfQHUEJmoJfQt6Q-Puw@mail.gmail.com>
+ <5FF020A1CFFEEC49BD1E09530C4FF5951821936285@SC-VEXCH1.marvell.com>
+ <CAAfyv34UXMNwHf+kYCWEn+bcfGda_gA7uroLRLvhTEGGC5R57w@mail.gmail.com>
+ <5FF020A1CFFEEC49BD1E09530C4FF5951821936BBC@SC-VEXCH1.marvell.com>
+ <CAAfyv36s+stSKU7Oi372EjsvUi+S6PSbg1wVTD1dJrMrerBPXg@mail.gmail.com>
+ <5FF020A1CFFEEC49BD1E09530C4FF5951821936F03@SC-VEXCH1.marvell.com>
+ <CAAfyv34ivLF-B0ip+uhCah0PsiRsP1QOD0qW8F73n7KERqgM2w@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAAfyv34ivLF-B0ip+uhCah0PsiRsP1QOD0qW8F73n7KERqgM2w@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Tue, Oct 14, 2014 at 10:25:01AM +0200, Belisko Marek wrote:
+> Hi Amitkumar,
+> 
+> On Tue, Oct 14, 2014 at 9:08 AM, Amitkumar Karwar <akarwar@marvell.com> wrote:
+> > Hi Marek,
+> >
+> > > I tried both (slightly modified as we're in 3.9 kernel) but
+> > > issue is still reproducible. My patch against 3.9 sources:
+> >
+> > Thanks a lot for the tests.
+> >
+> > > One thing which is not yet still clear to me why kernel console
+> > > is completely unresponsive when receiving packets in high
+> > > rates. When use iperf (on client) with -b40m it is OK but when
+> > > increase to -b100m then console is completely unresponsive until
+> > > iperf finish.
+> >
+> > Does the system recover when "-b100M" iperf is finished? Can we
+> > run iperf with "-b40M" later?  Do you see "dev_alloc_skb failed"
+> > messages in dmesg when console is unresponsive?
+> When we get "dev_alloc_skb failed" then interface is dead (cannot
+> ping ...) so no recovery is possible only system reboot.
 
-If a GO interface is active when we receive a
-mgd_prepare_tx() call, then we need to send
-out a new NoA before switching to a new context.
+This symptom was familiar to me, but on sdio.c, which is very
+different code.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h   |  2 ++
- drivers/net/wireless/ath/ath9k/channel.c | 14 ++++++++++
- drivers/net/wireless/ath/ath9k/main.c    | 45 +++++++++++++++++++++++++++-----
- 3 files changed, 54 insertions(+), 7 deletions(-)
+I've had a brief look at usb.c and offer the following comments:
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 8f6f46c..b7abb4f 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -385,6 +385,7 @@ struct ath_chanctx_sched {
- 	bool wait_switch;
- 	bool force_noa_update;
- 	bool extend_absence;
-+	bool mgd_prepare_tx;
- 	enum ath_chanctx_state state;
- 	u8 beacon_miss;
- 
-@@ -977,6 +978,7 @@ struct ath_softc {
- 	struct ath_chanctx_sched sched;
- 	struct ath_offchannel offchannel;
- 	struct ath_chanctx *next_chan;
-+	struct completion go_beacon;
- #endif
- 
- 	unsigned long driver_data;
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index 2066b09..45d2c48 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -421,6 +421,9 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
- 				"Move chanctx state from WAIT_FOR_TIMER to WAIT_FOR_BEACON\n");
- 		}
- 
-+		if (sc->sched.mgd_prepare_tx)
-+			sc->sched.state = ATH_CHANCTX_STATE_WAIT_FOR_BEACON;
-+
- 		/*
- 		 * When a context becomes inactive, for example,
- 		 * disassociation of a station context, the NoA
-@@ -547,6 +550,15 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
- 		}
- 
- 		sc->sched.beacon_pending = false;
-+
-+		if (sc->sched.mgd_prepare_tx) {
-+			sc->sched.mgd_prepare_tx = false;
-+			complete(&sc->go_beacon);
-+			ath_dbg(common, CHAN_CTX,
-+				"Beacon sent, complete go_beacon\n");
-+			break;
-+		}
-+
- 		if (sc->sched.state != ATH_CHANCTX_STATE_WAIT_FOR_BEACON)
- 			break;
- 
-@@ -1263,6 +1275,8 @@ void ath9k_init_channel_context(struct ath_softc *sc)
- 		    (unsigned long)sc);
- 	setup_timer(&sc->sched.timer, ath_chanctx_timer,
- 		    (unsigned long)sc);
-+
-+	init_completion(&sc->go_beacon);
- }
- 
- void ath9k_deinit_channel_context(struct ath_softc *sc)
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index c291d54..f58781a 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -2474,7 +2474,11 @@ static void ath9k_mgd_prepare_tx(struct ieee80211_hw *hw,
- 	struct ath_softc *sc = hw->priv;
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct ath_vif *avp = (struct ath_vif *) vif->drv_priv;
-+	struct ath_beacon_config *cur_conf;
-+	struct ath_chanctx *go_ctx;
-+	unsigned long timeout;
- 	bool changed = false;
-+	u32 beacon_int;
- 
- 	if (!test_bit(ATH_OP_MULTI_CHANNEL, &common->op_flags))
- 		return;
-@@ -2485,19 +2489,46 @@ static void ath9k_mgd_prepare_tx(struct ieee80211_hw *hw,
- 	mutex_lock(&sc->mutex);
- 
- 	spin_lock_bh(&sc->chan_lock);
--	if (sc->next_chan || (sc->cur_chan != avp->chanctx)) {
--		sc->next_chan = avp->chanctx;
-+	if (sc->next_chan || (sc->cur_chan != avp->chanctx))
- 		changed = true;
-+	spin_unlock_bh(&sc->chan_lock);
-+
-+	if (!changed)
-+		goto out;
-+
-+	go_ctx = ath_is_go_chanctx_present(sc);
-+
-+	if (go_ctx) {
-+		/*
-+		 * Wait till the GO interface gets a chance
-+		 * to send out an NoA.
-+		 */
-+		spin_lock_bh(&sc->chan_lock);
-+		sc->sched.mgd_prepare_tx = true;
-+		cur_conf = &go_ctx->beacon;
-+		beacon_int = TU_TO_USEC(cur_conf->beacon_interval);
-+		spin_unlock_bh(&sc->chan_lock);
-+
-+		timeout = usecs_to_jiffies(beacon_int);
-+		init_completion(&sc->go_beacon);
-+
-+		if (wait_for_completion_timeout(&sc->go_beacon,
-+						timeout) == 0)
-+			ath_dbg(common, CHAN_CTX,
-+				"Failed to send new NoA\n");
- 	}
-+
- 	ath_dbg(common, CHAN_CTX,
--		"%s: Set chanctx state to FORCE_ACTIVE, changed: %d\n",
--		__func__, changed);
-+		"%s: Set chanctx state to FORCE_ACTIVE for vif: %pM\n",
-+		__func__, vif->addr);
-+
-+	spin_lock_bh(&sc->chan_lock);
-+	sc->next_chan = avp->chanctx;
- 	sc->sched.state = ATH_CHANCTX_STATE_FORCE_ACTIVE;
- 	spin_unlock_bh(&sc->chan_lock);
- 
--	if (changed)
--		ath_chanctx_set_next(sc, true);
--
-+	ath_chanctx_set_next(sc, true);
-+out:
- 	mutex_unlock(&sc->mutex);
- }
- 
+- a list of six data endpoint urb is allocated in mwifiex_usb_rx_init,
+  because MWIFIEX_RX_DATA_URB is 6,
+
+- when data endpoint urb is submitted, a new skb is allocated, in
+  mwifiex_usb_submit_rx_urb, and this is the only source of
+  "dev_alloc_skb failed" message,
+
+- in normal situation, when data endpoint urb is complete, skb is
+  either freed or handed up to mwifiex_usb_recv, and the urb is
+  resubmitted, which causes a new skb to be allocated.
+
+- if "dev_alloc_skb failed" message appears, one data endpoint urb has
+  been lost and is not re-used,
+
+- if six "dev_alloc_skb failed" messages appear, the interface should
+  be dead for data receive only.
+
+Amitkumar mentioned this on 9th October; "corresponding URB won't get
+submitted".  I think this should be fixed; dev_alloc_skb should be
+harmless failure, please retry.
+
+I don't see why interface is dead with only one "dev_alloc_skb
+failed" message.
+
+> I don't see  dev_alloc_skb failed when console is unresponsive.
+> >
+> > > Any other ideas
+> > > what to change to check? Thanks.
+> >
+> > Could you please share dmesg log with dynamic debug enabled (using
+> > attached script) captured when the problem occurs?
+> I tried to capture logs but when enable DYNAMIC_DEBUG I cannot
+> reproduce issue (running test > 30 minutes without allocation
+> failure).
+
+Yes, I've seen similar; turn on debugging, and timing critical bug
+goes away.
+
+Serial console?  If so, try turning it off, and logging to dmesg
+buffer only.
+
 -- 
-2.1.2
-
+James Cameron
+http://quozl.linux.org.au/
