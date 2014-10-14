@@ -1,85 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:45970 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751056AbaJADpK (ORCPT
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:44988 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751503AbaJNIZC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Sep 2014 23:45:10 -0400
-Received: by mail-ie0-f173.google.com with SMTP id tp5so259147ieb.4
-        for <linux-wireless@vger.kernel.org>; Tue, 30 Sep 2014 20:45:09 -0700 (PDT)
-From: Mark Asselstine <asselsm@gmail.com>
-To: helmut.schaa@googlemail.com, sgruszka@redhat.com
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-Subject: [PATCH] rt2x00: rt2x00queue: avoid using more headroom then driver requested
-Date: Tue, 30 Sep 2014 23:45:57 -0400
-Message-Id: <1412135157-13520-1-git-send-email-asselsm@gmail.com> (sfid-20141001_054524_238940_CDF0DEEC)
+	Tue, 14 Oct 2014 04:25:02 -0400
+Received: by mail-vc0-f174.google.com with SMTP id hq12so7078434vcb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Oct 2014 01:25:01 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <5FF020A1CFFEEC49BD1E09530C4FF5951821936F03@SC-VEXCH1.marvell.com>
+References: <CAAfyv35k1mgQh6FcWaaMciAo8Vkp055k=5xF7zu+yrHmrQbbLA@mail.gmail.com>
+	<5FF020A1CFFEEC49BD1E09530C4FF5951819DB12F1@SC-VEXCH1.marvell.com>
+	<CAAfyv35j-77AURB4fHcecbEvyGS6U+1APNRFCf3FDAd_rrWnJw@mail.gmail.com>
+	<5FF020A1CFFEEC49BD1E09530C4FF5951821351855@SC-VEXCH1.marvell.com>
+	<CAAfyv35E2HUReFpnpdsebPETKk9VPA_hfQHUEJmoJfQt6Q-Puw@mail.gmail.com>
+	<5FF020A1CFFEEC49BD1E09530C4FF5951821936285@SC-VEXCH1.marvell.com>
+	<CAAfyv34UXMNwHf+kYCWEn+bcfGda_gA7uroLRLvhTEGGC5R57w@mail.gmail.com>
+	<5FF020A1CFFEEC49BD1E09530C4FF5951821936BBC@SC-VEXCH1.marvell.com>
+	<CAAfyv36s+stSKU7Oi372EjsvUi+S6PSbg1wVTD1dJrMrerBPXg@mail.gmail.com>
+	<5FF020A1CFFEEC49BD1E09530C4FF5951821936F03@SC-VEXCH1.marvell.com>
+Date: Tue, 14 Oct 2014 10:25:01 +0200
+Message-ID: <CAAfyv34ivLF-B0ip+uhCah0PsiRsP1QOD0qW8F73n7KERqgM2w@mail.gmail.com> (sfid-20141014_102526_106205_2E5C1465)
+Subject: Re: mwifiex_usb_submit_rx_urb: dev_alloc_skb failed when conected to 5GHz
+From: Belisko Marek <marek.belisko@gmail.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Avinash Patil <patila@marvell.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-'struct ieee80211_hw' contains 'extra_tx_headroom' which it defines as
-"headroom to reserve in each transmit skb for use by the driver". This
-value is properly setup during rt2x00lib_probe_hw() to account for all
-the rt2x00lib's purposes, including DMA alignment and L2 pad if
-needed. As such under all circumstances the proper amount of headroom
-is allocated to a skb such that under any usage we would not ever use
-more headroom then is allotted.
+Hi Amitkumar,
 
-However rt2x00queue_write_tx_frame() uses up the headroom (via calls
-to skb_push) allotted for L2 padding (with a potential call to
-rt2x00queue_insert_l2pad()) and uses up the headroom allotted to DMA
-alignment (with a potential call to rt2x00queue_align_frame()) and
-then proceeds to use up 'extra_tx_headroom' (in a call to
-rt2x00queue_write_tx_data())
+On Tue, Oct 14, 2014 at 9:08 AM, Amitkumar Karwar <akarwar@marvell.com> wrote:
+> Hi Marek,
+>
+>>I tried both (slightly modified as we're in 3.9 kernel) but issue is
+>>still reproducible. My patch against 3.9 sources:
+>
+> Thanks a lot for the tests.
+>
+>>One thing which is not yet still clear to me why kernel console is
+>>completely unresponsive when receiving packets in high rates. When use
+>>iperf (on client) with -b40m it is OK but when increase to -b100m then
+>>console is completely unresponsive until iperf finish.
+>
+> Does the system recover when "-b100M" iperf is finished? Can we run iperf with "-b40M" later?
+> Do you see "dev_alloc_skb failed" messages in dmesg when console is unresponsive?
+When we get "dev_alloc_skb failed" then interface is dead (cannot ping
+...) so no recovery is possible only system reboot.
+I don't see  dev_alloc_skb failed when console is unresponsive.
+>
+>>Any other ideas
+>>what to change to check? Thanks.
+>
+> Could you please share dmesg log with dynamic debug enabled (using attached script) captured when the problem occurs?
+I tried to capture logs but when enable DYNAMIC_DEBUG I cannot
+reproduce issue (running test > 30 minutes without allocation
+failure).
+>
+> Best regards,
+> Amit
 
-So the driver has requested just 'extra_tx_headroom' worth of headroom
-and we have used up 'extra_tx_headroom' + DMA + L2PAD worth. As such
-it is possible to hit a 'skb_under_panic', where we have used up all
-the available headroom.
+BR,
 
-Since extra_tx_headroom was calculated as a function of winfo_size,
-desc_size, RT2X00_L2PAD_SIZE and RT2X00_ALIGN_SIZE we can simply
-remove the part for alignment and padding and we will know how much is
-left to use up (for txdesc) and only use that much. Keeping the
-driver's use of headroom to what it requested via extra_tx_headroom.
+marek
 
-Signed-off-by: Mark Asselstine <asselsm@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00queue.c | 15 ++++++++++++---
- 1 file changed, 12 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index 8e68f87..2a48bf5 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -522,6 +522,7 @@ static int rt2x00queue_write_tx_data(struct queue_entry *entry,
- 				     struct txentry_desc *txdesc)
- {
- 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
-+	unsigned int avail_extra_tx_headroom = rt2x00dev->extra_tx_headroom;
- 
- 	/*
- 	 * This should not happen, we already checked the entry
-@@ -538,10 +539,18 @@ static int rt2x00queue_write_tx_data(struct queue_entry *entry,
- 	}
- 
- 	/*
--	 * Add the requested extra tx headroom in front of the skb.
-+	 * Add room for data at the front of the buffer for txdesc. The space
-+	 * needed for this was accounted for in extra_tx_headroom, we just
-+	 * need to remove the amount allocated for padding and alignment
-+	 * to get what is left for txdesc.
- 	 */
--	skb_push(entry->skb, rt2x00dev->extra_tx_headroom);
--	memset(entry->skb->data, 0, rt2x00dev->extra_tx_headroom);
-+	if (test_bit(REQUIRE_L2PAD, &rt2x00dev->cap_flags))
-+		avail_extra_tx_headroom -= RT2X00_L2PAD_SIZE;
-+	else if (test_bit(REQUIRE_DMA, &rt2x00dev->cap_flags))
-+		avail_extra_tx_headroom -= RT2X00_ALIGN_SIZE;
-+
-+	skb_push(entry->skb, avail_extra_tx_headroom);
-+	memset(entry->skb->data, 0, avail_extra_tx_headroom);
- 
- 	/*
- 	 * Call the driver's write_tx_data function, if it exists.
 -- 
-1.9.1
+as simple and primitive as possible
+-------------------------------------------------
+Marek Belisko - OPEN-NANDRA
+Freelance Developer
 
+Ruska Nova Ves 219 | Presov, 08005 Slovak Republic
+Tel: +421 915 052 184
+skype: marekwhite
+twitter: #opennandra
+web: http://open-nandra.com
