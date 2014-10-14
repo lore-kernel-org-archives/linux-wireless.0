@@ -1,227 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f173.google.com ([209.85.217.173]:46874 "EHLO
-	mail-lb0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752544AbaJ1JoG (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:54416 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750759AbaJNEAF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2014 05:44:06 -0400
-Received: by mail-lb0-f173.google.com with SMTP id l4so238212lbv.32
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Oct 2014 02:44:05 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v3 3/4] ath10k: split reset logic from power up
-Date: Tue, 28 Oct 2014 10:32:07 +0100
-Message-Id: <1414488728-31489-4-git-send-email-michal.kazior@tieto.com> (sfid-20141028_104418_804058_CEB27355)
-In-Reply-To: <1414488728-31489-1-git-send-email-michal.kazior@tieto.com>
-References: <1414488728-31489-1-git-send-email-michal.kazior@tieto.com>
+	Tue, 14 Oct 2014 00:00:05 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH 5/9] ath9k: Use a helper function for bmiss
+Date: Tue, 14 Oct 2014 09:30:52 +0530
+Message-Id: <1413259256-4808-6-git-send-email-sujith@msujith.org> (sfid-20141014_060032_286582_EE520571)
+In-Reply-To: <1413259256-4808-1-git-send-email-sujith@msujith.org>
+References: <1413259256-4808-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The power up procedure was overly complex due to
-warm/cold reset workarounds and issues.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
+ drivers/net/wireless/ath/ath9k/channel.c | 45 ++++++++++++++++++--------------
+ 1 file changed, 26 insertions(+), 19 deletions(-)
 
-Notes:
-    v2:
-     * fix indentation [Kalle]
-
- drivers/net/wireless/ath/ath10k/pci.c | 151 ++++++++++++++++++----------------
- 1 file changed, 80 insertions(+), 71 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index af36730..117e14d 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -1792,10 +1792,86 @@ static int ath10k_pci_warm_reset(struct ath10k *ar)
- 	return 0;
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index 7d6f76b..7fe35a5 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -366,6 +366,31 @@ static void ath_chanctx_setup_timer(struct ath_softc *sc, u32 tsf_time)
+ 		"Setup chanctx timer with timeout: %d ms\n", jiffies_to_msecs(tsf_time));
  }
  
--static int __ath10k_pci_hif_power_up(struct ath10k *ar, bool cold_reset)
-+static int ath10k_pci_chip_reset(struct ath10k *ar)
++static void ath_chanctx_handle_bmiss(struct ath_softc *sc,
++				     struct ath_chanctx *ctx,
++				     struct ath_vif *avp)
 +{
-+	int i, ret;
-+	u32 val;
-+
-+	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot chip reset\n");
-+
-+	/* Some hardware revisions (e.g. CUS223v2) has issues with cold reset.
-+	 * It is thus preferred to use warm reset which is safer but may not be
-+	 * able to recover the device from all possible fail scenarios.
-+	 *
-+	 * Warm reset doesn't always work on first try so attempt it a few
-+	 * times before giving up.
++	/*
++	 * Clear the extend_absence flag if it had been
++	 * set during the previous beacon transmission,
++	 * since we need to revert to the normal NoA
++	 * schedule.
 +	 */
-+	for (i = 0; i < ATH10K_PCI_NUM_WARM_RESET_ATTEMPTS; i++) {
-+		ret = ath10k_pci_warm_reset(ar);
-+		if (ret) {
-+			ath10k_warn(ar, "failed to warm reset attempt %d of %d: %d\n",
-+				    i + 1, ATH10K_PCI_NUM_WARM_RESET_ATTEMPTS,
-+				    ret);
-+			continue;
-+		}
-+
-+		/* FIXME: Sometimes copy engine doesn't recover after warm
-+		 * reset. In most cases this needs cold reset. In some of these
-+		 * cases the device is in such a state that a cold reset may
-+		 * lock up the host.
-+		 *
-+		 * Reading any host interest register via copy engine is
-+		 * sufficient to verify if device is capable of booting
-+		 * firmware blob.
-+		 */
-+		ret = ath10k_pci_init_pipes(ar);
-+		if (ret) {
-+			ath10k_warn(ar, "failed to init copy engine: %d\n",
-+				    ret);
-+			continue;
-+		}
-+
-+		ret = ath10k_pci_diag_read32(ar, QCA988X_HOST_INTEREST_ADDRESS,
-+					     &val);
-+		if (ret) {
-+			ath10k_warn(ar, "failed to poke copy engine: %d\n",
-+				    ret);
-+			continue;
-+		}
-+
-+		ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot chip reset complete (warm)\n");
-+		return 0;
++	if (ctx->active && sc->sched.extend_absence) {
++		avp->noa_duration = 0;
++		sc->sched.extend_absence = false;
 +	}
 +
-+	if (ath10k_pci_reset_mode == ATH10K_PCI_RESET_WARM_ONLY) {
-+		ath10k_warn(ar, "refusing cold reset as requested\n");
-+		return -EPERM;
++	/* If at least two consecutive beacons were missed on the STA
++	 * chanctx, stay on the STA channel for one extra beacon period,
++	 * to resync the timer properly.
++	 */
++	if (ctx->active && sc->sched.beacon_miss >= 2) {
++		avp->noa_duration = 0;
++		sc->sched.extend_absence = true;
 +	}
-+
-+	ret = ath10k_pci_cold_reset(ar);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to cold reset: %d\n", ret);
-+		return ret;
-+	}
-+
-+	ret = ath10k_pci_wait_for_target_init(ar);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to wait for target after cold reset: %d\n",
-+			    ret);
-+		return ret;
-+	}
-+
-+	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot chip reset complete (cold)\n");
-+
-+	return 0;
 +}
 +
-+static int ath10k_pci_hif_power_up(struct ath10k *ar)
- {
- 	int ret;
+ static void ath_chanctx_offchannel_noa(struct ath_softc *sc,
+ 				       struct ath_chanctx *ctx,
+ 				       struct ath_vif *avp,
+@@ -524,25 +549,7 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 			break;
+ 		}
  
-+	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot hif power up\n");
-+
- 	/*
- 	 * Bring the target up cleanly.
- 	 *
-@@ -1806,13 +1882,9 @@ static int __ath10k_pci_hif_power_up(struct ath10k *ar, bool cold_reset)
- 	 * is in an unexpected state. We try to catch that here in order to
- 	 * reset the Target and retry the probe.
- 	 */
--	if (cold_reset)
--		ret = ath10k_pci_cold_reset(ar);
--	else
--		ret = ath10k_pci_warm_reset(ar);
--
-+	ret = ath10k_pci_chip_reset(ar);
- 	if (ret) {
--		ath10k_err(ar, "failed to reset target: %d\n", ret);
-+		ath10k_err(ar, "failed to reset chip: %d\n", ret);
- 		goto err;
- 	}
- 
-@@ -1822,12 +1894,6 @@ static int __ath10k_pci_hif_power_up(struct ath10k *ar, bool cold_reset)
- 		goto err;
- 	}
- 
--	ret = ath10k_pci_wait_for_target_init(ar);
--	if (ret) {
--		ath10k_err(ar, "failed to wait for target to init: %d\n", ret);
--		goto err_ce;
--	}
--
- 	ret = ath10k_pci_init_config(ar);
- 	if (ret) {
- 		ath10k_err(ar, "failed to setup init config: %d\n", ret);
-@@ -1844,68 +1910,11 @@ static int __ath10k_pci_hif_power_up(struct ath10k *ar, bool cold_reset)
- 
- err_ce:
- 	ath10k_pci_ce_deinit(ar);
--	ath10k_pci_warm_reset(ar);
--err:
--	return ret;
--}
--
--static int ath10k_pci_hif_power_up_warm(struct ath10k *ar)
--{
--	int i, ret;
--
--	/*
--	 * Sometime warm reset succeeds after retries.
--	 *
--	 * FIXME: It might be possible to tune ath10k_pci_warm_reset() to work
--	 * at first try.
--	 */
--	for (i = 0; i < ATH10K_PCI_NUM_WARM_RESET_ATTEMPTS; i++) {
--		ret = __ath10k_pci_hif_power_up(ar, false);
--		if (ret == 0)
--			break;
--
--		ath10k_warn(ar, "failed to warm reset (attempt %d out of %d): %d\n",
--			    i + 1, ATH10K_PCI_NUM_WARM_RESET_ATTEMPTS, ret);
--	}
- 
-+err:
- 	return ret;
- }
- 
--static int ath10k_pci_hif_power_up(struct ath10k *ar)
--{
--	int ret;
--
--	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot hif power up\n");
--
--	/*
--	 * Hardware CUS232 version 2 has some issues with cold reset and the
--	 * preferred (and safer) way to perform a device reset is through a
--	 * warm reset.
--	 *
--	 * Warm reset doesn't always work though so fall back to cold reset may
--	 * be necessary.
--	 */
--	ret = ath10k_pci_hif_power_up_warm(ar);
--	if (ret) {
--		ath10k_warn(ar, "failed to power up target using warm reset: %d\n",
--			    ret);
--
--		if (ath10k_pci_reset_mode == ATH10K_PCI_RESET_WARM_ONLY)
--			return ret;
--
--		ath10k_warn(ar, "trying cold reset\n");
--
--		ret = __ath10k_pci_hif_power_up(ar, true);
--		if (ret) {
--			ath10k_err(ar, "failed to power up target using cold reset too (%d)\n",
--				   ret);
--			return ret;
+-		/*
+-		 * Clear the extend_absence flag if it had been
+-		 * set during the previous beacon transmission,
+-		 * since we need to revert to the normal NoA
+-		 * schedule.
+-		 */
+-		if (ctx->active && sc->sched.extend_absence) {
+-			avp->noa_duration = 0;
+-			sc->sched.extend_absence = false;
 -		}
--	}
 -
--	return 0;
--}
--
- static void ath10k_pci_hif_power_down(struct ath10k *ar)
- {
- 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot hif power down\n");
+-		/* If at least two consecutive beacons were missed on the STA
+-		 * chanctx, stay on the STA channel for one extra beacon period,
+-		 * to resync the timer properly.
+-		 */
+-		if (ctx->active && sc->sched.beacon_miss >= 2) {
+-			avp->noa_duration = 0;
+-			sc->sched.extend_absence = true;
+-		}
++		ath_chanctx_handle_bmiss(sc, ctx, avp);
+ 
+ 		/* Prevent wrap-around issues */
+ 		if (avp->noa_duration && tsf_time - avp->noa_start > BIT(30))
 -- 
-1.8.5.3
+2.1.2
 
