@@ -1,138 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:50739 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751513AbaJZUAx (ORCPT
+Received: from mail-vc0-f177.google.com ([209.85.220.177]:60000 "EHLO
+	mail-vc0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752778AbaJNKsI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Oct 2014 16:00:53 -0400
-From: Paul McQuade <paulmcquad@gmail.com>
-To: paulmcquad@gmail.com
-Cc: linux-kernel@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-wireless@vger.kernel.org, gregkh@linuxfoundation.org,
-	Jes.Sorensen@redhat.com, Larry.Finger@lwfinger.net
-Subject: [PATCH] staging: rtl8723au: create macro get_max_rate
-Date: Sun, 26 Oct 2014 20:00:48 +0000
-Message-Id: <1414353648-6651-1-git-send-email-paulmcquad@gmail.com> (sfid-20141026_210139_185995_0E68F888)
+	Tue, 14 Oct 2014 06:48:08 -0400
+Received: by mail-vc0-f177.google.com with SMTP id hq11so7197285vcb.36
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Oct 2014 03:48:07 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20141014102051.GB16934@us.netrek.org>
+References: <5FF020A1CFFEEC49BD1E09530C4FF5951819DB12F1@SC-VEXCH1.marvell.com>
+	<CAAfyv35j-77AURB4fHcecbEvyGS6U+1APNRFCf3FDAd_rrWnJw@mail.gmail.com>
+	<5FF020A1CFFEEC49BD1E09530C4FF5951821351855@SC-VEXCH1.marvell.com>
+	<CAAfyv35E2HUReFpnpdsebPETKk9VPA_hfQHUEJmoJfQt6Q-Puw@mail.gmail.com>
+	<5FF020A1CFFEEC49BD1E09530C4FF5951821936285@SC-VEXCH1.marvell.com>
+	<CAAfyv34UXMNwHf+kYCWEn+bcfGda_gA7uroLRLvhTEGGC5R57w@mail.gmail.com>
+	<5FF020A1CFFEEC49BD1E09530C4FF5951821936BBC@SC-VEXCH1.marvell.com>
+	<CAAfyv36s+stSKU7Oi372EjsvUi+S6PSbg1wVTD1dJrMrerBPXg@mail.gmail.com>
+	<5FF020A1CFFEEC49BD1E09530C4FF5951821936F03@SC-VEXCH1.marvell.com>
+	<CAAfyv34ivLF-B0ip+uhCah0PsiRsP1QOD0qW8F73n7KERqgM2w@mail.gmail.com>
+	<20141014102051.GB16934@us.netrek.org>
+Date: Tue, 14 Oct 2014 12:48:07 +0200
+Message-ID: <CAAfyv34btPrqW5Z=wzdFi7e+tOYF6XPdxY6sKcMy0CBzBsVFqA@mail.gmail.com> (sfid-20141014_124812_718208_7170DF15)
+Subject: Re: mwifiex_usb_submit_rx_urb: dev_alloc_skb failed when conected to 5GHz
+From: Belisko Marek <marek.belisko@gmail.com>
+To: James Cameron <quozl@laptop.org>
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Avinash Patil <patila@marvell.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-create marco for max_rate values
+Dear James Cameron,
 
-Signed-off-by: Paul McQuade <paulmcquad@gmail.com>
----
- drivers/staging/rtl8723au/core/rtw_ieee80211.c | 75 ++++++++++++--------------
- 1 file changed, 34 insertions(+), 41 deletions(-)
+On Tue, Oct 14, 2014 at 12:20 PM, James Cameron <quozl@laptop.org> wrote:
+> On Tue, Oct 14, 2014 at 10:25:01AM +0200, Belisko Marek wrote:
+>> Hi Amitkumar,
+>>
+>> On Tue, Oct 14, 2014 at 9:08 AM, Amitkumar Karwar <akarwar@marvell.com> wrote:
+>> > Hi Marek,
+>> >
+>> > > I tried both (slightly modified as we're in 3.9 kernel) but
+>> > > issue is still reproducible. My patch against 3.9 sources:
+>> >
+>> > Thanks a lot for the tests.
+>> >
+>> > > One thing which is not yet still clear to me why kernel console
+>> > > is completely unresponsive when receiving packets in high
+>> > > rates. When use iperf (on client) with -b40m it is OK but when
+>> > > increase to -b100m then console is completely unresponsive until
+>> > > iperf finish.
+>> >
+>> > Does the system recover when "-b100M" iperf is finished? Can we
+>> > run iperf with "-b40M" later?  Do you see "dev_alloc_skb failed"
+>> > messages in dmesg when console is unresponsive?
+>> When we get "dev_alloc_skb failed" then interface is dead (cannot
+>> ping ...) so no recovery is possible only system reboot.
+>
+> This symptom was familiar to me, but on sdio.c, which is very
+> different code.
+>
+> I've had a brief look at usb.c and offer the following comments:
+>
+> - a list of six data endpoint urb is allocated in mwifiex_usb_rx_init,
+>   because MWIFIEX_RX_DATA_URB is 6,
+>
+> - when data endpoint urb is submitted, a new skb is allocated, in
+>   mwifiex_usb_submit_rx_urb, and this is the only source of
+>   "dev_alloc_skb failed" message,
+>
+> - in normal situation, when data endpoint urb is complete, skb is
+>   either freed or handed up to mwifiex_usb_recv, and the urb is
+>   resubmitted, which causes a new skb to be allocated.
+>
+> - if "dev_alloc_skb failed" message appears, one data endpoint urb has
+>   been lost and is not re-used,
+>
+> - if six "dev_alloc_skb failed" messages appear, the interface should
+>   be dead for data receive only.
+>
+> Amitkumar mentioned this on 9th October; "corresponding URB won't get
+> submitted".  I think this should be fixed; dev_alloc_skb should be
+> harmless failure, please retry.
+>
+> I don't see why interface is dead with only one "dev_alloc_skb
+> failed" message.
+Maybe my description wasn't  not correct. I see 6 "dev_alloc_skb
+failed" messages and then interface is dead
+as you wrote.
+>
+>> I don't see  dev_alloc_skb failed when console is unresponsive.
+>> >
+>> > > Any other ideas
+>> > > what to change to check? Thanks.
+>> >
+>> > Could you please share dmesg log with dynamic debug enabled (using
+>> > attached script) captured when the problem occurs?
+>> I tried to capture logs but when enable DYNAMIC_DEBUG I cannot
+>> reproduce issue (running test > 30 minutes without allocation
+>> failure).
+>
+> Yes, I've seen similar; turn on debugging, and timing critical bug
+> goes away.
+>
+> Serial console?  If so, try turning it off, and logging to dmesg
+> buffer only.
+When turning off serial console how then I get kernel messages from
+dmesg buffer?
+>
+> --
+> James Cameron
+> http://quozl.linux.org.au/
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_ieee80211.c b/drivers/staging/rtl8723au/core/rtw_ieee80211.c
-index 6274cb3..1592eaf 100644
---- a/drivers/staging/rtl8723au/core/rtw_ieee80211.c
-+++ b/drivers/staging/rtl8723au/core/rtw_ieee80211.c
-@@ -13,6 +13,8 @@
-  *
-  ******************************************************************************/
- #define _IEEE80211_C
-+#define get_max_rate(r1, r2, r3, r4)					\
-+	(bw_40MHz ? (short_GI_40 ? r1 : r2) : (short_GI_20 ? r3 : r4))
- 
- #include <drv_types.h>
- #include <linux/ieee80211.h>
-@@ -794,65 +796,56 @@ u16 rtw_mcs_rate23a(u8 rf_type, u8 bw_40MHz, u8 short_GI_20, u8 short_GI_40,
- 
- 	if (rf_type == RF_1T1R) {
- 		if (mcs->rx_mask[0] & BIT(7))
--			max_rate = (bw_40MHz) ? ((short_GI_40)?1500:1350):
--				((short_GI_20)?722:650);
-+			max_rate = get_max_rate(1500, 1350, 722, 650);
- 		else if (mcs->rx_mask[0] & BIT(6))
--			max_rate = (bw_40MHz) ? ((short_GI_40)?1350:1215):
--				((short_GI_20)?650:585);
-+			max_rate = get_max_rate(1350, 1215, 650, 585);
- 		else if (mcs->rx_mask[0] & BIT(5))
--			max_rate = (bw_40MHz) ? ((short_GI_40)?1200:1080):
--				((short_GI_20)?578:520);
-+			max_rate = get_max_rate(1200, 1080, 578, 520);
- 		else if (mcs->rx_mask[0] & BIT(4))
--			max_rate = (bw_40MHz) ? ((short_GI_40)?900:810):
--				((short_GI_20)?433:390);
-+			max_rate = get_max_rate(900, 810, 433, 390);
- 		else if (mcs->rx_mask[0] & BIT(3))
--			max_rate = (bw_40MHz) ? ((short_GI_40)?600:540):
--				((short_GI_20)?289:260);
-+			max_rate = get_max_rate(600, 540, 289, 260);
- 		else if (mcs->rx_mask[0] & BIT(2))
--			max_rate = (bw_40MHz) ? ((short_GI_40)?450:405):
--				((short_GI_20)?217:195);
-+			max_rate = get_max_rate(450, 405, 217, 195);
- 		else if (mcs->rx_mask[0] & BIT(1))
--			max_rate = (bw_40MHz) ? ((short_GI_40)?300:270):
--				((short_GI_20)?144:130);
-+			max_rate = get_max_rate(300, 270, 144, 130);
- 		else if (mcs->rx_mask[0] & BIT(0))
--			max_rate = (bw_40MHz) ? ((short_GI_40)?150:135):
--				((short_GI_20)?72:65);
-+			max_rate = get_max_rate(150, 135, 72, 65);
- 	} else {
- 		if (mcs->rx_mask[1]) {
- 			if (mcs->rx_mask[1] & BIT(7))
--				max_rate = (bw_40MHz) ? ((short_GI_40)?3000:2700):((short_GI_20)?1444:1300);
-+				max_rate = get_max_rate(3000, 2700, 1444, 1300);
- 			else if (mcs->rx_mask[1] & BIT(6))
--				max_rate = (bw_40MHz) ? ((short_GI_40)?2700:2430):((short_GI_20)?1300:1170);
-+				max_rate = get_max_rate(2700, 2430, 1300, 1170);
- 			else if (mcs->rx_mask[1] & BIT(5))
--				max_rate = (bw_40MHz) ? ((short_GI_40)?2400:2160):((short_GI_20)?1156:1040);
-+				max_rate = get_max_rate(2400, 2160, 1156, 1040);
- 			else if (mcs->rx_mask[1] & BIT(4))
--				max_rate = (bw_40MHz) ? ((short_GI_40)?1800:1620):((short_GI_20)?867:780);
-+				max_rate = get_max_rate(1800, 1620, 867, 780);
- 			else if (mcs->rx_mask[1] & BIT(3))
--				max_rate = (bw_40MHz) ? ((short_GI_40)?1200:1080):((short_GI_20)?578:520);
-+				max_rate = get_max_rate(1200, 1080, 578, 520);
- 			else if (mcs->rx_mask[1] & BIT(2))
--				max_rate = (bw_40MHz) ? ((short_GI_40)?900:810):((short_GI_20)?433:390);
-+				max_rate = get_max_rate(900, 810, 433, 390);
- 			else if (mcs->rx_mask[1] & BIT(1))
--				max_rate = (bw_40MHz) ? ((short_GI_40)?600:540):((short_GI_20)?289:260);
-+				max_rate = get_max_rate(600, 540, 289, 260);
- 			else if (mcs->rx_mask[1] & BIT(0))
--				max_rate = (bw_40MHz) ? ((short_GI_40)?300:270):((short_GI_20)?144:130);
-+				max_rate = get_max_rate(300, 270, 144, 130);
- 		} else {
--			if (mcs->rx_mask[0] & BIT(7))
--				max_rate = (bw_40MHz) ? ((short_GI_40)?1500:1350):((short_GI_20)?722:650);
--			else if (mcs->rx_mask[0] & BIT(6))
--				max_rate = (bw_40MHz) ? ((short_GI_40)?1350:1215):((short_GI_20)?650:585);
--			else if (mcs->rx_mask[0] & BIT(5))
--				max_rate = (bw_40MHz) ? ((short_GI_40)?1200:1080):((short_GI_20)?578:520);
--			else if (mcs->rx_mask[0] & BIT(4))
--				max_rate = (bw_40MHz) ? ((short_GI_40)?900:810):((short_GI_20)?433:390);
--			else if (mcs->rx_mask[0] & BIT(3))
--				max_rate = (bw_40MHz) ? ((short_GI_40)?600:540):((short_GI_20)?289:260);
--			else if (mcs->rx_mask[0] & BIT(2))
--				max_rate = (bw_40MHz) ? ((short_GI_40)?450:405):((short_GI_20)?217:195);
--			else if (mcs->rx_mask[0] & BIT(1))
--				max_rate = (bw_40MHz) ? ((short_GI_40)?300:270):((short_GI_20)?144:130);
--			else if (mcs->rx_mask[0] & BIT(0))
--				max_rate = (bw_40MHz) ? ((short_GI_40)?150:135):((short_GI_20)?72:65);
--		}
-+		if (mcs->rx_mask[0] & BIT(7))
-+			max_rate = get_max_rate(1500, 1350, 722, 650);
-+		else if (mcs->rx_mask[0] & BIT(6))
-+			max_rate = get_max_rate(1350, 1215, 650, 585);
-+		else if (mcs->rx_mask[0] & BIT(5))
-+			max_rate = get_max_rate(1200, 1080, 578, 520);
-+		else if (mcs->rx_mask[0] & BIT(4))
-+			max_rate = get_max_rate(900, 810, 433, 390);
-+		else if (mcs->rx_mask[0] & BIT(3))
-+			max_rate = get_max_rate(600, 540, 289, 260);
-+		else if (mcs->rx_mask[0] & BIT(2))
-+			max_rate = get_max_rate(450, 405, 217, 195);
-+		else if (mcs->rx_mask[0] & BIT(1))
-+			max_rate = get_max_rate(300, 270, 144, 130);
-+		else if (mcs->rx_mask[0] & BIT(0))
-+			max_rate = get_max_rate(150, 135, 72, 65);
- 	}
- 	return max_rate;
- }
+BR,
+
+marek
+
 -- 
-1.9.1
+as simple and primitive as possible
+-------------------------------------------------
+Marek Belisko - OPEN-NANDRA
+Freelance Developer
 
+Ruska Nova Ves 219 | Presov, 08005 Slovak Republic
+Tel: +421 915 052 184
+skype: marekwhite
+twitter: #opennandra
+web: http://open-nandra.com
