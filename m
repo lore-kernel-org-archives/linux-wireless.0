@@ -1,147 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:53430 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754771AbaJHIdj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Oct 2014 04:33:39 -0400
-From: Loic Poulain <loic.poulain@intel.com>
-To: johannes@sipsolutions.net, heikki.krogerus@linux.intel.com
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Loic Poulain <loic.poulain@intel.com>
-Subject: [PATCH 3/5] net: rfkill: gpio: Implement host wake up support
-Date: Wed,  8 Oct 2014 10:34:38 +0200
-Message-Id: <1412757280-31367-3-git-send-email-loic.poulain@intel.com> (sfid-20141008_103345_481752_97850ED5)
-In-Reply-To: <1412757280-31367-1-git-send-email-loic.poulain@intel.com>
-References: <1412757280-31367-1-git-send-email-loic.poulain@intel.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:39780 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751998AbaJNKBk convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Oct 2014 06:01:40 -0400
+From: "Malinen, Jouni" <jouni@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/2] cfg80211: Specify frame and reason code for
+ NL80211_CMD_DEL_STATION
+Date: Tue, 14 Oct 2014 10:01:38 +0000
+Message-ID: <D062B86A.43EB2%jouni@qca.qualcomm.com> (sfid-20141014_120153_823405_4AFF5FAA)
+References: <20141010175525.GA29436@jouni.qca.qualcomm.com>
+ <1413278472.2455.3.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1413278472.2455.3.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some GPIO based rfkill devices can wake their host up from suspend by
-toggling an input (from the host perspective) GPIO.
-This patch adds a generic support for that feature by registering a
-threaded interrupt routine and thus setting the corresponding GPIO as a
-wake up source.
 
-Signed-off-by: Loic Poulain <loic.poulain@intel.com>
----
- net/rfkill/rfkill-gpio.c | 49 ++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 49 insertions(+)
 
-diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
-index 29369d6..2f6aad1 100644
---- a/net/rfkill/rfkill-gpio.c
-+++ b/net/rfkill/rfkill-gpio.c
-@@ -26,6 +26,7 @@
- #include <linux/slab.h>
- #include <linux/acpi.h>
- #include <linux/gpio/consumer.h>
-+#include <linux/interrupt.h>
- 
- #include <linux/rfkill-gpio.h>
- 
-@@ -36,6 +37,8 @@ struct rfkill_gpio_data {
- 	struct gpio_desc	*shutdown_gpio;
- 	struct gpio_desc	*wake_gpio;
- 
-+	int			host_wake_irq;
-+
- 	struct rfkill		*rfkill_dev;
- 	struct clk		*clk;
- 
-@@ -48,6 +51,7 @@ struct rfkill_gpio_desc {
- 	int			reset_idx;
- 	int			shutdown_idx;
- 	int			wake_idx;
-+	int			host_wake_idx;
- };
- 
- static int rfkill_gpio_set_power(void *data, bool blocked)
-@@ -73,6 +77,15 @@ static const struct rfkill_ops rfkill_gpio_ops = {
- 	.set_block = rfkill_gpio_set_power,
- };
- 
-+static irqreturn_t rfkill_gpio_host_wake(int irq, void *dev)
-+{
-+	struct rfkill_gpio_data *rfkill = dev;
-+
-+	pr_info("Host wake IRQ for %s\n", rfkill->name);
-+
-+	return IRQ_HANDLED;
-+}
-+
- static int rfkill_gpio_init(struct device *dev, struct rfkill_gpio_desc *desc)
- {
- 	int ret;
-@@ -125,6 +138,34 @@ static int rfkill_gpio_init(struct device *dev, struct rfkill_gpio_desc *desc)
- 		}
- 	}
- 
-+	rfkill->host_wake_irq = -1;
-+
-+	if (desc && (desc->host_wake_idx >= 0)) {
-+		gpio = devm_gpiod_get_index(dev, "host_wake",
-+					    desc->host_wake_idx);
-+		if (!IS_ERR(gpio)) {
-+			int irqf = IRQF_TRIGGER_RISING | IRQF_NO_SUSPEND |
-+				   IRQF_ONESHOT;
-+
-+			ret = gpiod_direction_input(gpio);
-+			if (ret)
-+				return ret;
-+
-+			rfkill->host_wake_irq = gpiod_to_irq(gpio);
-+			ret = devm_request_threaded_irq(dev,
-+							rfkill->host_wake_irq,
-+							NULL,
-+							rfkill_gpio_host_wake,
-+							irqf, "host_wake",
-+							rfkill);
-+			if (ret)
-+				return ret;
-+
-+			/* Wakeup IRQ, only used in suspend */
-+			disable_irq(rfkill->host_wake_irq);
-+		}
-+	}
-+
- 	/* Make sure at-least one of the GPIO is defined */
- 	if (!rfkill->reset_gpio && !rfkill->shutdown_gpio) {
- 		dev_err(dev, "invalid platform data\n");
-@@ -205,6 +246,9 @@ static int rfkill_gpio_suspend(struct device *dev)
- 	if (!rfkill->clk_enabled)
- 		return 0;
- 
-+	if (rfkill->host_wake_irq >= 0)
-+		enable_irq(rfkill->host_wake_irq);
-+
- 	gpiod_set_value_cansleep(rfkill->wake_gpio, 0);
- 
- 	return 0;
-@@ -219,6 +263,9 @@ static int rfkill_gpio_resume(struct device *dev)
- 	if (!rfkill->clk_enabled)
- 		return 0;
- 
-+	if (rfkill->host_wake_irq >= 0)
-+		disable_irq(rfkill->host_wake_irq);
-+
- 	gpiod_set_value_cansleep(rfkill->wake_gpio, 1);
- 
- 	return 0;
-@@ -243,6 +290,7 @@ static struct rfkill_gpio_desc acpi_default_bluetooth = {
- 	.reset_idx = 0,
- 	.shutdown_idx = 1,
- 	.wake_idx = -1,
-+	.host_wake_idx = -1,
- };
- 
- static struct rfkill_gpio_desc acpi_default_gps = {
-@@ -250,6 +298,7 @@ static struct rfkill_gpio_desc acpi_default_gps = {
- 	.reset_idx = 0,
- 	.shutdown_idx = 1,
- 	.wake_idx = -1,
-+	.host_wake_idx = -1,
- };
- 
- static const struct acpi_device_id rfkill_acpi_match[] = {
--- 
-1.8.3.2
+On 14/10/14 11:21 am, "Johannes Berg" <johannes@sipsolutions.net> wrote:
+
+>On Fri, 2014-10-10 at 20:55 +0300, Jouni Malinen wrote:
+>
+>>+ * @reason_code: Reason code for the Disassociation/Deauthentication
+>>frame
+>>   */
+>>  struct station_del_parameters {
+>>  	const u8 *mac;
+>> +	u8 subtype;
+>> +	u16 reason_code;
+>
+>the reason_code could end up being zero right now, if userspace doesn't
+>specify the attribute.
+
+That was more or less by design, but not really fully documented and not
+really supposed to be used if the subtype is not provided.
+
+>I think you should probably force a reason code to be given when
+>specifying the subtype. And I'm thinking that defaulting to deauth/3
+>would be better than leaving it up to the driver(s)?
+
+I guess we could do that in cfg80211. I was trying to follow the current
+behavior for this (i.e., not telling the driver what to do if user space
+does not require something). As an example, ath6kl uses Deauthentication
+with reason code 2. I don't think reason code 3 would be a good default,
+though, since it has a special meaning for P2P groups (GO indicates group
+is being terminated). That specific use case is one of the main reasons
+for making sure that user space can specify that Deauthentication with a
+specific reason code is used.
+
+I think I would be fine with cfg80211 default being Deauthentication frame
+with reason code 2, so if that is what you would like to see here (rather
+than leaving this to the drivers), I can update the patch to behave in
+that way.
+
+- Jouni
 
