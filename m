@@ -1,65 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:58100 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753155AbaJFS0Z (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:65187 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750994AbaJOUvK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Oct 2014 14:26:25 -0400
-Message-ID: <5432DEEB.8020107@candelatech.com> (sfid-20141006_202629_550801_58D5C7FE)
-Date: Mon, 06 Oct 2014 11:26:51 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Wed, 15 Oct 2014 16:51:10 -0400
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 1/4] wireless:  expose set-wiphy-name method to other
- modules.
-References: <1411773856-25042-1-git-send-email-greearb@candelatech.com>	 (sfid-20140927_012441_483840_20B8643D) <1412605634.3098.18.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1412605634.3098.18.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <20141009095742.GA20875@mwanda>
+References: <20141009095742.GA20875@mwanda>
+Date: Wed, 15 Oct 2014 13:51:07 -0700
+Message-ID: <CA++WF2NinL3_pGtqZxjr6p4BpHBkGRbBTXaXFNSdoxgzX_Lb=Q@mail.gmail.com> (sfid-20141015_225115_590385_A189B134)
+Subject: Re: [patch 1/2] ipw2x00: remove unused ->ibss_dfs pointer
+From: Stanislav Yakovlev <stas.yakovlev@gmail.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	wireless <linux-wireless@vger.kernel.org>,
+	kernel-janitors@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/06/2014 07:27 AM, Johannes Berg wrote:
-> On Fri, 2014-09-26 at 16:24 -0700, greearb@candelatech.com wrote:
->
->> +/*
->> + * Attempt to rename a device.  Acquire RTNL before calling.
->> + */
->
-> please add kernel-doc
->
->> +int cfg80211_dev_rename_wiphy(struct wiphy *wiphy, char *newname);
->
-> Should also be const char *
->
-> And should probably be called cfg80211_rename_wiphy() only? What's the
-> dev doing there?
->>
->> +int cfg80211_dev_rename_wiphy(struct wiphy *wiphy, char *newname)
->> +{
->> +	struct cfg80211_registered_device *rdev;
->> +
->> +	rdev = wiphy_to_rdev(wiphy);
->> +	return cfg80211_dev_rename(rdev, newname);
->
-> You could just inlin ethe wiphy_to_rdev() and get rid of the variable.
->
-> Anyhow - if the intent is to do this at creation, why do you do it after
-> the fact? Couldn't you just specify the name when creating it?
+Hello Dan,
 
-That would be fine with me..I thought it might be more invasive
-and thus less welcome.  I'll see what it takes to implement it
-like that when I get a chance.  On the road this week, so might
-be a bit...
-
-Thanks,
-Ben
-
+On 9 October 2014 02:57, Dan Carpenter <dan.carpenter@oracle.com> wrote:
+> The ->ibss_dfs pointer is always allocated with a user controlled
+> length.  This caused a static checker warning because what if the length
+> was zero?  In that case, any dereference of ->ibss_dfs would lead to an
+> Oops.
 >
-> johannes
+> It turns out that this isn't a problem because the ->ibss_dfs pointer is
+> never used.  This patch deletes it along with all the related code.  In
+> particular the entire libipw_network_reset() function can be removed.
 >
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
+Looks fine, thanks.
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Stanislav.
