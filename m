@@ -1,62 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:16724 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752357AbaJAO4L (ORCPT
+Received: from smtp28.msg.oleane.net ([62.161.4.28]:36533 "EHLO
+	smtp28.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750758AbaJONGS convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Oct 2014 10:56:11 -0400
-Date: Wed, 1 Oct 2014 17:55:53 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: eyal@wizery.com
-Cc: Eyal Shapira <eyal@wizery.com>, linux-wireless@vger.kernel.org
-Subject: re: iwlwifi: mvm: rs: refactor to allow direct rs updating
-Message-ID: <20141001145553.GA32299@mwanda> (sfid-20141001_165703_054696_6FCCF1A9)
+	Wed, 15 Oct 2014 09:06:18 -0400
+From: "voncken" <cedric.voncken@acksys.fr>
+To: "'Bartosz Markowski'" <bartosz.markowski@tieto.com>
+Cc: "'Michal Kazior'" <michal.kazior@tieto.com>,
+	"'ath10k'" <ath10k@lists.infradead.org>,
+	"'linux-wireless'" <linux-wireless@vger.kernel.org>
+References: <773DB8A82AB6A046AE0195C68612A319018C2750@sbs2003.acksys.local>	<CA+BoTQ=a8kY0CGGKHwRhk4cg=V0oimipuht6Pkc0K0x4WMMn-A@mail.gmail.com>	<024a01cfe6c7$5e427dd0$1ac77970$@acksys.fr>	<CA+BoTQkaKXNfprRwGrQq6rKOZWvANNRrcmgU-iVdw1bONTA--w@mail.gmail.com>	<025801cfe6de$2d4c7f70$87e57e50$@acksys.fr> <CACKGw+H1QSvAL0Ri3HT6E_rhw=DhzDwj1XEeqwjwFkzJVQpz9Q@mail.gmail.com>
+In-Reply-To: <CACKGw+H1QSvAL0Ri3HT6E_rhw=DhzDwj1XEeqwjwFkzJVQpz9Q@mail.gmail.com>
+Subject: RE: ath10k firmware crash
+Date: Wed, 15 Oct 2014 15:05:09 +0200
+Message-ID: <02f001cfe878$a64038e0$f2c0aaa0$@acksys.fr> (sfid-20141015_150621_352029_96638BB5)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Eyal Shapira,
+> > I did some tests with a linksys WRT1900AC and I have ~950 mbps OTA easily.
+> 
+> You mean ath10k (STA) VS WRT1900AC get up ~950mbps?
+> If so, could you say what's the HW, FW version you use?
+> 
+My test platform is one WRT1900AC set in bridge mode with a computer.
 
-This is a semi-automatic email about new static checker warnings.
+If I use the WRT1900AC in AP mode with another computer, I have 950 mbps
+If I use the cavium octon III dev plateform + ath10k driver in AP mode, I have around 700 mbps
 
-The patch 1ebc8f2ef83d: "iwlwifi: mvm: rs: refactor to allow direct
-rs updating" from Sep 14, 2014, leads to the following Smatch
-complaint:
+I'm using the latest compat wireless (2014-09-26) from openwrt.
+The wireless card is the WLE900VX from compex or DAXA-O1 from Unex.
 
-drivers/net/wireless/iwlwifi/mvm/rs.c:1228 iwl_mvm_rs_tx_status()
-	 warn: variable dereferenced before check 'sta' (see line 1037)
+The WRT1900AC have mimo 4x4 with 3 streams, and my wireless card have mimo 3x3 with 3 streams. Maybe that explains the difference.
 
-drivers/net/wireless/iwlwifi/mvm/rs.c
-  1036		u8 reduced_txp = (uintptr_t)info->status.status_driver_data[0];
-  1037		struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
-                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Patch introduces a new unchecked "sta" dereference.
+Cedric Voncken.
+> --
+> Bartosz
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org More majordomo info at
+> http://vger.kernel.org/majordomo-info.html
 
-  1038		struct iwl_lq_sta *lq_sta = &mvmsta->lq_sta;
-  1039	
-  1040		/* Treat uninitialized rate scaling data same as non-existing. */
-  1041		if (!lq_sta) {
-  1042			IWL_DEBUG_RATE(mvm, "Station rate scaling not created yet.\n");
-  1043			return;
-  1044		} else if (!lq_sta->pers.drv) {
-  1045			IWL_DEBUG_RATE(mvm, "Rate scaling not initialized yet.\n");
-  1046			return;
-  1047		}
-  1048	
-
-[ snip ]
-
-  1223		/* The last TX rate is cached in lq_sta; it's set in if/else above */
-  1224		lq_sta->last_rate_n_flags = ucode_rate;
-  1225		IWL_DEBUG_RATE(mvm, "reduced txpower: %d\n", reduced_txp);
-  1226	done:
-  1227		/* See if there's a better rate or modulation mode to try. */
-  1228		if (sta && sta->supp_rates[info->band])
-                    ^^^
-The existing code assumes "sta" can be NULL.
-
-  1229			rs_rate_scale_perform(mvm, sta, lq_sta, tid);
-  1230	}
-
-regards,
-dan carpenter
