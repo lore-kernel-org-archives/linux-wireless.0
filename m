@@ -1,89 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bh-25.webhostbox.net ([208.91.199.152]:47647 "EHLO
-	bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751725AbaJ0PnI (ORCPT
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:47505 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750721AbaJOUw2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Oct 2014 11:43:08 -0400
-Received: from mailnull by bh-25.webhostbox.net with sa-checked (Exim 4.82)
-	(envelope-from <linux@roeck-us.net>)
-	id 1XimRn-000N15-SG
-	for linux-wireless@vger.kernel.org; Mon, 27 Oct 2014 15:43:08 +0000
-Date: Mon, 27 Oct 2014 08:42:51 -0700
-From: Guenter Roeck <linux@roeck-us.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>, linux-wireless@vger.kernel.org,
-	zajec5@gmail.com, arend@broadcom.com, arnd@arndb.de,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] bcma: fix build when CONFIG_OF_ADDRESS is not set
-Message-ID: <20141027154251.GB7677@roeck-us.net> (sfid-20141027_164313_480756_8DFB8036)
-References: <5436D3CF.2030506@hauke-m.de>
- <1412890781-24160-1-git-send-email-hauke@hauke-m.de>
- <20141025203653.GA10716@roeck-us.net>
- <20141027151509.GA19976@tuxdriver.com>
+	Wed, 15 Oct 2014 16:52:28 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20141027151509.GA19976@tuxdriver.com>
+In-Reply-To: <20141009095939.GB20875@mwanda>
+References: <20141009095939.GB20875@mwanda>
+Date: Wed, 15 Oct 2014 13:52:27 -0700
+Message-ID: <CA++WF2N4v20EqEaH-DnKAEzn4PwHWQHBEq6=Uthf7TsRZpimEg@mail.gmail.com> (sfid-20141015_225233_501200_B9B89554)
+Subject: Re: [patch 2/2] ipw2x00: clean up a condition
+From: Stanislav Yakovlev <stas.yakovlev@gmail.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	wireless <linux-wireless@vger.kernel.org>,
+	kernel-janitors@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 27, 2014 at 11:15:09AM -0400, John W. Linville wrote:
-> Yes, I have it queued.  Things have been delayed due to my recent
-> travels, etc.
-> 
-Thanks!
+Hello Dan,
 
-Guenter
+On 9 October 2014 02:59, Dan Carpenter <dan.carpenter@oracle.com> wrote:
+> The original condition was "(PAGE_SIZE - len)" when "(len < PAGE_SIZE)"
+> is intended.
+>
+> This condition is not really sufficient, but also not really needed...
+> If "len > PAGE_SIZE" then it we will print a warning message in dmesg
+> but there are no other effects.  Maybe we should just remove the
+> condition?
+>
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-> On Sat, Oct 25, 2014 at 01:36:53PM -0700, Guenter Roeck wrote:
-> > On Thu, Oct 09, 2014 at 11:39:41PM +0200, Hauke Mehrtens wrote:
-> > > Commit 2101e533f41a ("bcma: register bcma as device tree driver")
-> > > introduces a hard dependency on OF_ADDRESS into the bcma driver.
-> > > OF_ADDRESS is specifically disabled for the sparc architecture.
-> > > This results in the following error when building sparc64:allmodconfig.
-> > > 
-> > > drivers/bcma/main.c: In function 'bcma_of_find_child_device':
-> > > drivers/bcma/main.c:150:3: error: implicit declaration of function 'of_translate_address'
-> > > 
-> > > Fixes: 2101e533f41a ("bcma: register bcma as device tree driver")
-> > > Reported-by: Guenter Roeck <linux@roeck-us.net>
-> > > Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
-> > 
-> > The upstream kernel still does not include this patch, and the sparc64 build
-> > is still broken.
-> > 
-> > Is this patch on its way upstream ?
-> > 
-> > Guenter
-> > 
-> > > ---
-> > >  drivers/bcma/main.c | 2 +-
-> > >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > > 
-> > > diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-> > > index d1656c2..1000955 100644
-> > > --- a/drivers/bcma/main.c
-> > > +++ b/drivers/bcma/main.c
-> > > @@ -132,7 +132,7 @@ static bool bcma_is_core_needed_early(u16 core_id)
-> > >  	return false;
-> > >  }
-> > >  
-> > > -#ifdef CONFIG_OF
-> > > +#if defined(CONFIG_OF) && defined(CONFIG_OF_ADDRESS)
-> > >  static struct device_node *bcma_of_find_child_device(struct platform_device *parent,
-> > >  						     struct bcma_device *core)
-> > >  {
-> > > -- 
-> > > 1.9.1
-> > > 
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > > Please read the FAQ at  http://www.tux.org/lkml/
-> > > 
-> > > 
-> > 
-> 
-> -- 
-> John W. Linville		Someday the world will need a hero, and you
-> linville@tuxdriver.com			might be all we have.  Be ready.
+Looks fine, thanks.
+
+Stanislav.
