@@ -1,51 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:60392 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932554AbaJXMfE (ORCPT
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:63201 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750776AbaJOVT2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Oct 2014 08:35:04 -0400
-Received: by mail-wi0-f172.google.com with SMTP id bs8so1074927wib.17
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Oct 2014 05:35:02 -0700 (PDT)
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@rivierawaves.com>
-Subject: [PATCH] mac80211: minstrel_ht: do not always skip ht rates vht_only is true
-Date: Fri, 24 Oct 2014 14:34:49 +0200
-Message-Id: <1414154089-5185-1-git-send-email-karl.beldan@gmail.com> (sfid-20141024_143508_751551_228A29FF)
-In-Reply-To: <1414152061.1934.2.camel@jlt4.sipsolutions.net>
-References: <1414152061.1934.2.camel@jlt4.sipsolutions.net>
+	Wed, 15 Oct 2014 17:19:28 -0400
+Received: by mail-wi0-f181.google.com with SMTP id hi2so3045714wib.14
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Oct 2014 14:19:27 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CANa-JWyxT0LDwmhS-G=exHbHMipBr51sRyazH9XA5dnUZEjKRw@mail.gmail.com>
+References: <CANa-JWyxT0LDwmhS-G=exHbHMipBr51sRyazH9XA5dnUZEjKRw@mail.gmail.com>
+Date: Wed, 15 Oct 2014 14:19:27 -0700
+Message-ID: <CA++WF2OOatF6z3m8-0rs3oJinQ1HjNj92XOwoTcAvz2OpYShbA@mail.gmail.com> (sfid-20141015_231932_152408_9DF9D95F)
+Subject: Re: ipw2200 driver in kernels 3+
+From: Stanislav Yakovlev <stas.yakovlev@gmail.com>
+To: Frank Langille <flangille@gmail.com>
+Cc: wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Karl Beldan <karl.beldan@rivierawaves.com>
+Hello Frank,
 
-When CONFIG_MAC80211_RC_MINSTREL_VHT is set, the module param
-minstrel_vht_only tells minstrel_ht whether to allow the mix of ht rates
-with vht rates.
-ATM, minstrel_ht skips ht rates when minstrel_vht_only is true, but it does
-that even if vht is not supported, which makes the sta rates fallback to
-legacy as no ht rate gets enabled.
+On 15 October 2014 12:34, Frank Langille <flangille@gmail.com> wrote:
+> ... the menuconfig option to select this
+> driver seems to have disappeared sometime after kernel 3.4.104, which
+> is the last longterm version I can see that allows me to include the
+> driver in my build.
+>
+> Is it possible to have the option made available again?
 
-Fixes: 9208247d74bc ("mac80211: minstrel_ht: add basic support for VHT rates <= 3SS@80MHz")
-Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
----
- net/mac80211/rc80211_minstrel_ht.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Yes it is, to do so you need to enable old wireless extensions support
+(CONFIG_CFG80211_WEXT), Network support-> Wireless-> cfg80211 wireless
+configuration API -> cfg80211 wireless extension computability.
 
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index 4666681..c50fd94 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -1193,7 +1193,7 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
- 		/* HT rate */
- 		if (gflags & IEEE80211_TX_RC_MCS) {
- #ifdef CONFIG_MAC80211_RC_MINSTREL_VHT
--			if (minstrel_vht_only)
-+			if (use_vht && minstrel_vht_only)
- 				continue;
- #endif
- 			mi->groups[i].supported = mcs->rx_mask[nss - 1];
--- 
-2.0.1
-
+Stanislav.
