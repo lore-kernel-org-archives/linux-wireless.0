@@ -1,56 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:39301 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751375AbaJ1OAS (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:40557 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751464AbaJOIL6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2014 10:00:18 -0400
-Date: Tue, 28 Oct 2014 09:48:59 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Sergey Ryazanov <ryazanov.s.a@gmail.com>
-Cc: Ralf Baechle <ralf@linux-mips.org>,
-	Linux MIPS <linux-mips@linux-mips.org>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath5k-devel@venema.h4ckr.net
-Subject: Re: [PATCH v2 11/13] ath5k: revert AHB bus support removing
-Message-ID: <20141028134859.GB26283@tuxdriver.com> (sfid-20141028_150023_513610_D96424F4)
-References: <1413932631-12866-1-git-send-email-ryazanov.s.a@gmail.com>
- <1413932631-12866-12-git-send-email-ryazanov.s.a@gmail.com>
- <20141027180436.GE28300@tuxdriver.com>
- <CAHNKnsTWvZy=-TBv-KPjCOD-vhwcxUUGv61doYUm0F77if-pqw@mail.gmail.com>
+	Wed, 15 Oct 2014 04:11:58 -0400
+From: Sujith Manoharan <sujith@msujith.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAHNKnsTWvZy=-TBv-KPjCOD-vhwcxUUGv61doYUm0F77if-pqw@mail.gmail.com>
+Message-ID: <21566.11399.974541.319894@gargle.gargle.HOWL> (sfid-20141015_101204_890099_92A352AA)
+Date: Wed, 15 Oct 2014 13:42:55 +0530
+To: "Malinen\, Jouni" <jouni@qca.qualcomm.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath9k-devel <ath9k-devel@qca.qualcomm.com>
+Subject: Re: [PATCH] ath9k: Reduce max roc duration
+In-Reply-To: <D063E0FD.44033%jouni@qca.qualcomm.com>
+References: <1413338387-30475-1-git-send-email-sujith@msujith.org>
+	<D063E0FD.44033%jouni@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 28, 2014 at 11:08:04AM +0400, Sergey Ryazanov wrote:
-> 2014-10-27 21:04 GMT+03:00 John W. Linville <linville@tuxdriver.com>:
-> > On Wed, Oct 22, 2014 at 03:03:49AM +0400, Sergey Ryazanov wrote:
-> >> This reverts commit 093ec3c5337434f40d77c1af06c139da3e5ba6dc.
-> >>
-> >> AHB bus code has been removed, since we did not have support Atheros
-> >> AR231x SoC, required for building the AHB version of ath5k. Now that
-> >> support WiSoC chips added we can restore functionality back.
-> >>
-> >> Singed-off-by: Sergey Ryazanov <ryazanov.s.a@gmail.com>
-> >> Cc: Jiri Slaby <jirislaby@gmail.com>
-> >> Cc: Nick Kossifidis <mickflemm@gmail.com>
-> >> Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-> >> Cc: linux-wireless@vger.kernel.org
-> >> Cc: ath5k-devel@lists.ath5k.org
-> >
-> > Acked-by: John W. Linville <linville@tuxdriver.com>
-> >
-> John, should I include these two patches in v3 or you already merge
-> them in your tree?
+John,
 
-I was intending to indicate to Ralf that I'm OK with him merging them
-as part of the larger series in his tree.  I have not merged them.
+Please drop this patch.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Sujith
+
+Malinen, Jouni wrote:
+> 
+> 
+> On 15/10/14 3:59 am, "Sujith Manoharan" <sujith@msujith.org> wrote:
+> 
+> >MCC is currently used in CUS227, an Allplay
+> >device. Since audio streaming will be affected
+> >with long offchannel periods, reduce the max.
+> >offchannel duration to 200ms.
+> >diff --git a/drivers/net/wireless/ath/ath9k/init.c
+> >b/drivers/net/wireless/ath/ath9k/init.c
+> >@@ -789,7 +789,7 @@ static void ath9k_set_hw_capab(struct ath_softc *sc,
+> >struct ieee80211_hw *hw)
+> >-		hw->wiphy->max_remain_on_channel_duration = 10000;
+> >+		hw->wiphy->max_remain_on_channel_duration = 200;
+> 
+> This looks like a bad idea as the default value. Wouldn't this break a lot
+> of use cases where longer wait is needed? Please keep in mind that
+> remain-on-channel is used for non-P2P use cases as well and there are
+> known P2P devices that won't be able to reply in 200 ms to messages in
+> many cases. I would not reduce this value below 1000 ms and really, if
+> there is need to reduce remain-on-channel operations while there is a
+> concurrent connection, that should be done dynamically at runtime, e.g.,
+> in wpa_supplicant, rather than the driver hardcoding a very small maximum
+> value.
+> 
+> - Jouni
+> 
