@@ -1,51 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hauke-m.de ([5.39.93.123]:59542 "EHLO hauke-m.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751065AbaJIS2f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2014 14:28:35 -0400
-Message-ID: <5436D3CF.2030506@hauke-m.de> (sfid-20141009_202840_996788_E4D3D587)
-Date: Thu, 09 Oct 2014 20:28:31 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: Guenter Roeck <linux@roeck-us.net>,
-	Arend van Spriel <arend@broadcom.com>
-CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH] bcma: Add dependency on OF_ADDRESS
-References: <1412872877-1771-1-git-send-email-linux@roeck-us.net> <CACna6rzOeGcKrrftLx_3uWe_bAXQaQMmWb3wWHP0CjtdO8D0eg@mail.gmail.com> <5436C2B4.6030801@broadcom.com> <5436C367.5080908@broadcom.com> <20141009172924.GD2410@roeck-us.net>
-In-Reply-To: <20141009172924.GD2410@roeck-us.net>
-Content-Type: text/plain; charset=utf-8
+Received: from mailrelay001.isp.belgacom.be ([195.238.6.51]:35453 "EHLO
+	mailrelay001.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751739AbaJOTBZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Oct 2014 15:01:25 -0400
+From: Fabian Frederick <fabf@skynet.be>
+To: linux-kernel@vger.kernel.org
+Cc: Fabian Frederick <fabf@skynet.be>,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH 1/1 net-next] NFC: digital: use sizeof(*target) instead of nfc_target
+Date: Wed, 15 Oct 2014 21:01:20 +0200
+Message-Id: <1413399680-8338-1-git-send-email-fabf@skynet.be> (sfid-20141015_210145_028992_3BC2B37A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/09/2014 07:29 PM, Guenter Roeck wrote:
-> On Thu, Oct 09, 2014 at 07:18:31PM +0200, Arend van Spriel wrote:
->> On 10/09/14 19:15, Arend van Spriel wrote:
->>> On 10/09/14 18:54, Rafał Miłecki wrote:
->>>> On 9 October 2014 18:41, Guenter Roeck<linux@roeck-us.net> wrote:
->>>>> Commit 2101e533f41a ("bcma: register bcma as device tree driver")
->>>>> introduces a hard dependency on OF_ADDRESS into the bcma driver.
->>>>> OF_ADDRESS is specifically disabled for the sparc architecture.
->>>>> This results in the following error when building sparc64:allmodconfig.
->>>
->>> Does this mean on sparc (using allmodconfig) you will get CONFIG_OF and
->>> !CONFIG_OF_ADDRESS? Does that makes sense?
->>
->> Is CONFIG_OF is used on sparc to access OpenBoot information?
->>
-> I have no idea. All I know is that the driver doesn't build anymore with OF
-> enabled and OF_ADDRESS disabled.
+See Documentation/CodingStyle Chapter 14
 
-Device tree support in bcma is only needed on some SoC, when this is
-used on a PCIe card it is not needed.
+Signed-off-by: Fabian Frederick <fabf@skynet.be>
+---
+ net/nfc/digital_technology.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-I would just deactivate the parts that are using device tree in bcma
-when it is not available. I will send a patch after having something to eat.
+diff --git a/net/nfc/digital_technology.c b/net/nfc/digital_technology.c
+index fb58ed2d..5e94b6f 100644
+--- a/net/nfc/digital_technology.c
++++ b/net/nfc/digital_technology.c
+@@ -494,7 +494,7 @@ static void digital_in_recv_sens_res(struct nfc_digital_dev *ddev, void *arg,
+ 		goto exit;
+ 	}
+ 
+-	target = kzalloc(sizeof(struct nfc_target), GFP_KERNEL);
++	target = kzalloc(sizeof(*target), GFP_KERNEL);
+ 	if (!target) {
+ 		rc = -ENOMEM;
+ 		goto exit;
+@@ -693,7 +693,7 @@ static void digital_in_recv_sensb_res(struct nfc_digital_dev *ddev, void *arg,
+ 	else
+ 		ddev->target_fsc = digital_ats_fsc[fsci];
+ 
+-	target = kzalloc(sizeof(struct nfc_target), GFP_KERNEL);
++	target = kzalloc(sizeof(*target), GFP_KERNEL);
+ 	if (!target) {
+ 		rc = -ENOMEM;
+ 		goto exit;
+-- 
+1.9.3
 
-Is there a better method which is compatible with SPARC than using
-of_translate_address() to get the reg address and also take the ranges
-attribute of the bus into account?
-
-Hauke
