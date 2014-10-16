@@ -1,58 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:42409 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752035AbaJQCJ7 (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:58607 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751269AbaJPWlt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Oct 2014 22:09:59 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH v2 07/23] ath9k: Clear NoA schedule properly
-Date: Fri, 17 Oct 2014 07:40:14 +0530
-Message-Id: <1413511830-5536-8-git-send-email-sujith@msujith.org> (sfid-20141017_041002_569780_C7986C04)
-In-Reply-To: <1413511830-5536-1-git-send-email-sujith@msujith.org>
-References: <1413511830-5536-1-git-send-email-sujith@msujith.org>
+	Thu, 16 Oct 2014 18:41:49 -0400
+Message-ID: <544049A8.3030906@candelatech.com> (sfid-20141017_004153_455480_237F1146)
+Date: Thu, 16 Oct 2014 15:41:44 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Sujith Manoharan <sujith@msujith.org>
+CC: "ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	rmanohar@qti.qualcomm.com
+Subject: Re: 3.17 regression, ath9k: Summarize hw state per channel context
+References: <542F124C.50406@candelatech.com> <21551.42474.535540.368033@gargle.gargle.HOWL> <54300485.20901@candelatech.com>
+In-Reply-To: <54300485.20901@candelatech.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On 10/04/2014 07:30 AM, Ben Greear wrote:
+> 
+> 
+> On 10/04/2014 12:46 AM, Sujith Manoharan wrote:
+>> Ben Greear wrote:
+>>> Took a while, but I found the regression that has been bugging me.
+>>>
+>>> This is on stock kernel, with hand-patched fixup from Felix that fixes
+>>> crash related to minstrel (patch made it upstream later, so that isn't
+>>> a current problem).
+>>>
+>>> The test case is easily reproducible on my systems.  I'm not sure
+>>> all the details matter, but this happens to be my test case
+>>> at the moment:
+>>>
+>>> 32-bit Fedora OS, latest supplicant, etc.  ath9k NIC.
+>>
+>> Does this happen with latest wireless-testing ?
+> 
+> It happens with a recent one, but I can test the very latest.
 
-When an active context transitions to inactive
-state, the NoA schedule needs to be removed
-for the context that has beaconing enabled.
-Not doing this will affect p2p clients.
+I found time to test it today, and problem still exists in wireless-testing
+(0275925709f044dbcbbef614847d8955ba1a7776).
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/channel.c | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+Thanks,
+Ben
 
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index 709facc..74a5c27 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -356,6 +356,21 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
- 				"Move chanctx state from WAIT_FOR_TIMER to WAIT_FOR_BEACON\n");
- 		}
- 
-+		/*
-+		 * When a context becomes inactive, for example,
-+		 * disassociation of a station context, the NoA
-+		 * attribute needs to be removed from subsequent
-+		 * beacons.
-+		 */
-+		if (!ctx->active && avp->noa_duration &&
-+		    sc->sched.state != ATH_CHANCTX_STATE_WAIT_FOR_BEACON) {
-+			avp->noa_duration = 0;
-+			avp->periodic_noa = false;
-+
-+			ath_dbg(common, CHAN_CTX,
-+				"Clearing NoA schedule\n");
-+		}
-+
- 		if (sc->sched.state != ATH_CHANCTX_STATE_WAIT_FOR_BEACON)
- 			break;
- 
 -- 
-2.1.2
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
