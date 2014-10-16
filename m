@@ -1,260 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f45.google.com ([74.125.82.45]:50543 "EHLO
-	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751765AbaJYTen (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:51521 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752249AbaJPNmp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Oct 2014 15:34:43 -0400
-Received: by mail-wg0-f45.google.com with SMTP id l18so3170399wgh.16
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2014 12:34:42 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 16/48] staging: vt6655: dead code remove IEEE11.h.c/h
-Date: Sat, 25 Oct 2014 09:39:54 +0100
-Message-Id: <1414226426-5811-17-git-send-email-tvboxspy@gmail.com> (sfid-20141025_213446_473525_77D57636)
-In-Reply-To: <1414226426-5811-1-git-send-email-tvboxspy@gmail.com>
-References: <1414226426-5811-1-git-send-email-tvboxspy@gmail.com>
+	Thu, 16 Oct 2014 09:42:45 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@qca.qualcomm.com
+Subject: [RFC] ath9k: Do not start BA when scanning
+Date: Thu, 16 Oct 2014 19:13:48 +0530
+Message-Id: <1413467028-2906-1-git-send-email-sujith@msujith.org> (sfid-20141016_154250_110902_49B41C91)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/IEEE11h.c | 139 ---------------------------------------
- drivers/staging/vt6655/IEEE11h.h |  42 ------------
- drivers/staging/vt6655/Makefile  |   3 +-
- drivers/staging/vt6655/vntwifi.c |   3 -
- 4 files changed, 1 insertion(+), 186 deletions(-)
- delete mode 100644 drivers/staging/vt6655/IEEE11h.c
- delete mode 100644 drivers/staging/vt6655/IEEE11h.h
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-diff --git a/drivers/staging/vt6655/IEEE11h.c b/drivers/staging/vt6655/IEEE11h.c
-deleted file mode 100644
-index 65eb482..0000000
---- a/drivers/staging/vt6655/IEEE11h.c
-+++ /dev/null
-@@ -1,139 +0,0 @@
--/*
-- * Copyright (c) 1996, 2005 VIA Networking Technologies, Inc.
-- * All rights reserved.
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License as published by
-- * the Free Software Foundation; either version 2 of the License, or
-- * (at your option) any later version.
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License along
-- * with this program; if not, write to the Free Software Foundation, Inc.,
-- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-- *
-- *
-- * File: IEEE11h.c
-- *
-- * Purpose:
-- *
-- * Functions:
-- *
-- * Revision History:
-- *
-- * Author: Yiching Chen
-- *
-- * Date: Mar. 31, 2005
-- *
-- */
--
--#include "ttype.h"
--#include "tmacro.h"
--#include "tether.h"
--#include "IEEE11h.h"
--#include "device.h"
--#include "wmgr.h"
--#include "rxtx.h"
--#include "channel.h"
--
--/*---------------------  Static Definitions -------------------------*/
--
--#pragma pack(1)
--
--typedef struct _WLAN_FRAME_ACTION {
--	WLAN_80211HDR_A3    Header;
--	unsigned char byCategory;
--	unsigned char byAction;
--	unsigned char abyVars[1];
--} WLAN_FRAME_ACTION, *PWLAN_FRAME_ACTION;
--
--typedef struct _WLAN_FRAME_MSRREQ {
--	WLAN_80211HDR_A3    Header;
--	unsigned char byCategory;
--	unsigned char byAction;
--	unsigned char byDialogToken;
--	WLAN_IE_MEASURE_REQ sMSRReqEIDs[1];
--} WLAN_FRAME_MSRREQ, *PWLAN_FRAME_MSRREQ;
--
--typedef struct _WLAN_FRAME_MSRREP {
--	WLAN_80211HDR_A3    Header;
--	unsigned char byCategory;
--	unsigned char byAction;
--	unsigned char byDialogToken;
--	WLAN_IE_MEASURE_REP sMSRRepEIDs[1];
--} WLAN_FRAME_MSRREP, *PWLAN_FRAME_MSRREP;
--
--typedef struct _WLAN_FRAME_TPCREQ {
--	WLAN_80211HDR_A3    Header;
--	unsigned char byCategory;
--	unsigned char byAction;
--	unsigned char byDialogToken;
--	WLAN_IE_TPC_REQ     sTPCReqEIDs;
--} WLAN_FRAME_TPCREQ, *PWLAN_FRAME_TPCREQ;
--
--typedef struct _WLAN_FRAME_TPCREP {
--	WLAN_80211HDR_A3    Header;
--	unsigned char byCategory;
--	unsigned char byAction;
--	unsigned char byDialogToken;
--	WLAN_IE_TPC_REP     sTPCRepEIDs;
--} WLAN_FRAME_TPCREP, *PWLAN_FRAME_TPCREP;
--
--#pragma pack()
--
--/* action field reference ieee 802.11h Table 20e */
--#define ACTION_MSRREQ       0
--#define ACTION_MSRREP       1
--#define ACTION_TPCREQ       2
--#define ACTION_TPCREP       3
--#define ACTION_CHSW         4
--
--/*---------------------  Static Classes  ----------------------------*/
--
--/*---------------------  Static Variables  --------------------------*/
--
--/*---------------------  Static Functions  --------------------------*/
--
--/*---------------------  Export Variables  --------------------------*/
--
--/*---------------------  Export Functions  --------------------------*/
--
--bool IEEE11hbMSRRepTx(void *pMgmtHandle)
--{
--	PSMgmtObject            pMgmt = (PSMgmtObject) pMgmtHandle;
--	PWLAN_FRAME_MSRREP      pMSRRep = (PWLAN_FRAME_MSRREP)
--		(pMgmt->abyCurrentMSRRep + sizeof(STxMgmtPacket));
--	size_t                    uLength = 0;
--	PSTxMgmtPacket          pTxPacket = NULL;
--
--	pTxPacket = (PSTxMgmtPacket)pMgmt->abyCurrentMSRRep;
--	memset(pTxPacket, 0, sizeof(STxMgmtPacket) + WLAN_A3FR_MAXLEN);
--	pTxPacket->p80211Header = (PUWLAN_80211HDR)((unsigned char *)pTxPacket +
--						    sizeof(STxMgmtPacket));
--
--	pMSRRep->Header.wFrameCtl = (WLAN_SET_FC_FTYPE(WLAN_FTYPE_MGMT) |
--				     WLAN_SET_FC_FSTYPE(WLAN_FSTYPE_ACTION)
--);
--
--	memcpy(pMSRRep->Header.abyAddr1, ((PWLAN_FRAME_MSRREQ)
--					  (pMgmt->abyCurrentMSRReq))->Header.abyAddr2, WLAN_ADDR_LEN);
--	memcpy(pMSRRep->Header.abyAddr2,
--	       CARDpGetCurrentAddress(pMgmt->pAdapter), WLAN_ADDR_LEN);
--	memcpy(pMSRRep->Header.abyAddr3, pMgmt->abyCurrBSSID, WLAN_BSSID_LEN);
--
--	pMSRRep->byCategory = 0;
--	pMSRRep->byAction = 1;
--	pMSRRep->byDialogToken = ((PWLAN_FRAME_MSRREQ)
--				  (pMgmt->abyCurrentMSRReq))->byDialogToken;
--
--	uLength = pMgmt->uLengthOfRepEIDs + offsetof(WLAN_FRAME_MSRREP,
--						     sMSRRepEIDs);
--
--	pTxPacket->cbMPDULen = uLength;
--	pTxPacket->cbPayloadLen = uLength - WLAN_HDR_ADDR3_LEN;
--	return true;
--}
-diff --git a/drivers/staging/vt6655/IEEE11h.h b/drivers/staging/vt6655/IEEE11h.h
-deleted file mode 100644
-index 5519220..0000000
---- a/drivers/staging/vt6655/IEEE11h.h
-+++ /dev/null
-@@ -1,42 +0,0 @@
--/*
-- * Copyright (c) 1996, 2005 VIA Networking Technologies, Inc.
-- * All rights reserved.
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License as published by
-- * the Free Software Foundation; either version 2 of the License, or
-- * (at your option) any later version.
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License along
-- * with this program; if not, write to the Free Software Foundation, Inc.,
-- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-- *
-- *
-- * File: IEEE11h.h
-- *
-- * Purpose: Defines the macros, types, and functions for dealing
-- *          with IEEE 802.11h.
-- *
-- * Author: Yiching Chen
-- *
-- * Date: Mar. 31, 2005
-- *
-- */
--
--#ifndef __IEEE11h_H__
--#define __IEEE11h_H__
--
--#include "ttype.h"
--#include "80211hdr.h"
--#include "80211mgr.h"
--
--bool IEEE11hbMSRRepTx(
--	void *pMgmtHandle
--);
--
--#endif // __IEEE11h_H__
-diff --git a/drivers/staging/vt6655/Makefile b/drivers/staging/vt6655/Makefile
-index 3c993a8..141c0c1 100644
---- a/drivers/staging/vt6655/Makefile
-+++ b/drivers/staging/vt6655/Makefile
-@@ -25,7 +25,6 @@ vt6655_stage-y +=	device_main.o \
- 	rf.o \
- 	wpa2.o \
- 	aes_ccmp.o \
--	vntwifi.o \
--	IEEE11h.o
-+	vntwifi.o
+mac80211 currently has a race which can be hit
+with this sequence:
+
+* Start a scan operation.
+* TX BA is initiated by ieee80211_start_tx_ba_session().
+* Driver sets up internal state and calls
+  ieee80211_start_tx_ba_cb_irqsafe().
+* mac80211 adds a packet to sdata->skb_queue with
+  type IEEE80211_SDATA_QUEUE_AGG_START.
+* ieee80211_iface_work() doesn't process the
+  packet because scan is in progress.
+* ADDBA response timer expires and the sta/tid is
+  torn down.
+* Driver receives BA stop notification and calls
+  ieee80211_stop_tx_ba_cb_irqsafe().
+* This is also added to the queue by mac80211.
+* Now, scan finishes.
+
+At this point, the queued up packets might be processed
+if some other operation schedules the sdata work. Since
+the tids have been cleaned up already, warnings are hit.
+
+If this doesn't happen, the packets are left in the queue
+until the interface is torn down.
+
+Since initiating a BA session when scan is in progress
+leads to flaky connections, especially in MCC mode, we
+can drop the TX BA request. This improves connectivity
+with legacy clients in MCC mode.
+
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 961a388..68c5670 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1885,6 +1885,7 @@ static int ath9k_ampdu_action(struct ieee80211_hw *hw,
+ 			      u16 tid, u16 *ssn, u8 buf_size)
+ {
+ 	struct ath_softc *sc = hw->priv;
++	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	bool flush = false;
+ 	int ret = 0;
  
- obj-$(CONFIG_VT6655) +=	vt6655_stage.o
-diff --git a/drivers/staging/vt6655/vntwifi.c b/drivers/staging/vt6655/vntwifi.c
-index 27e055e..a5eccf7 100644
---- a/drivers/staging/vt6655/vntwifi.c
-+++ b/drivers/staging/vt6655/vntwifi.c
-@@ -32,7 +32,6 @@
-  */
- 
- #include "vntwifi.h"
--#include "IEEE11h.h"
- #include "country.h"
- #include "device.h"
- #include "wmgr.h"
-@@ -648,8 +647,6 @@ VNTWIFIbMeasureReport(
- 		pMgmt->uLengthOfRepEIDs += (2 + pMgmt->pCurrMeasureEIDRep->len);
- 		pMgmt->pCurrMeasureEIDRep = (PWLAN_IE_MEASURE_REP) pbyCurrentEID;
- 	}
--	if (bEndOfReport)
--		IEEE11hbMSRRepTx(pMgmt);
- 
- 	return true;
- }
+@@ -1896,6 +1897,12 @@ static int ath9k_ampdu_action(struct ieee80211_hw *hw,
+ 	case IEEE80211_AMPDU_RX_STOP:
+ 		break;
+ 	case IEEE80211_AMPDU_TX_START:
++		if (ath9k_is_chanctx_enabled()) {
++			if (test_bit(ATH_OP_SCANNING, &common->op_flags)) {
++				ret = -EBUSY;
++				break;
++			}
++		}
+ 		ath9k_ps_wakeup(sc);
+ 		ret = ath_tx_aggr_start(sc, sta, tid, ssn);
+ 		if (!ret)
 -- 
-1.9.1
+2.1.2
 
