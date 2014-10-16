@@ -1,72 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39001 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751141AbaJ0Gos (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Oct 2014 02:44:48 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Joe Perches <joe@perches.com>
-Cc: Paul McQuade <paulmcquad@gmail.com>, linux-kernel@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	gregkh@linuxfoundation.org, Larry.Finger@lwfinger.net
-Subject: Re: [PATCH 2/2] staging: rtl8723au:core
-References: <1414340332-4556-1-git-send-email-paulmcquad@gmail.com>
-	<1414350250.15751.22.camel@perches.com> <wrfjegtucbgo.fsf@redhat.com>
-	<1414389096.15751.34.camel@perches.com> <wrfj1tpuca0q.fsf@redhat.com>
-	<1414390984.8884.0.camel@perches.com>
-Date: Mon, 27 Oct 2014 07:44:37 +0100
-In-Reply-To: <1414390984.8884.0.camel@perches.com> (Joe Perches's message of
-	"Sun, 26 Oct 2014 23:23:04 -0700")
-Message-ID: <wrfjd29eau5m.fsf@redhat.com> (sfid-20141027_074507_990632_BC78F265)
+Received: from mail-oi0-f45.google.com ([209.85.218.45]:52831 "EHLO
+	mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750805AbaJPMuY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Oct 2014 08:50:24 -0400
+Received: by mail-oi0-f45.google.com with SMTP id i138so2591407oig.18
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Oct 2014 05:50:24 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+Date: Thu, 16 Oct 2014 13:50:24 +0100
+Message-ID: <CAH19H-W8B9SSr7ho4LCJSEi-jy_PzXb__=ZC7sfHuRfuWY5FeA@mail.gmail.com> (sfid-20141016_145027_845707_B05B991E)
+Subject: How do I know if I have the latest firmware version installed?
+From: lapisdecor <lapisdecor@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Joe Perches <joe@perches.com> writes:
-> On Mon, 2014-10-27 at 07:16 +0100, Jes Sorensen wrote:
->> Joe Perches <joe@perches.com> writes:
->> > On Mon, 2014-10-27 at 06:45 +0100, Jes Sorensen wrote:
->> >> Joe Perches <joe@perches.com> writes:
->> >> > On Sun, 2014-10-26 at 16:18 +0000, Paul McQuade wrote:
->> >> >> ERROR: spaces required around that ':' (ctx:VxE)
->> > []
->> >> >> diff --git a/drivers/staging/rtl8723au/core/rtw_ieee80211.c
->> >> >> b/drivers/staging/rtl8723au/core/rtw_ieee80211.c
->> > []
->> >> >> @@ -794,28 +794,28 @@ u16 rtw_mcs_rate23a(u8 rf_type, u8 bw_40MHz, u8 short_GI_20, u8 short_GI_40,
->> >> >>  
->> >> >>  	if (rf_type == RF_1T1R) {
->> >> >>  		if (mcs->rx_mask[0] & BIT(7))
->> >> >> -			max_rate = (bw_40MHz) ? ((short_GI_40)?1500:1350):
->> >> >> +			max_rate = (bw_40MHz) ? ((short_GI_40)?1500:1350) :
->> > []
->> >> >
->> >> > A macro could help intelligibility here - maybe something like:
->> >> >
->> >> > #define get_max_rate(r1, r2, r3, r4)					\
->> >> > 	(bw_40MHz ? (short_GI_40 ? r1 : r2) : (short_GI_20 ? r3 : r4))
->> >> > and:
->> >> >  		if (mcs->rx_mask[0] & BIT(7))
->> >> > 			max_rate = get_max_rate(1500, 1350, 722, 650);
->> >> 
->> >> Hiding a parameter to a macro like that is bad coding practice, so don't
->> >> do that please!
->> >
->> > Yes and no.
->> >
->> > Adding the other 3 arguments to the macro doesn't help legibility.
->> >
->> > Keeping the macro definition local to the place that it's used
->> > can help avoid typos.
->> 
->> It's wrong, so just don't do it here!
->
-> It's not "wrong", you just don't like it.
+Hi,
 
-I consider it wrong, and I am the co-maintainer of this driver .... and
-I NACK it.
+I did
 
-There's a gazillion real issues to fix in this driver, adding a bad
-macro isn't on that list.
+ls /lib/firmware/iwlwifi-3945*
+/lib/firmware/iwlwifi-3945-2.ucode
 
-Jes
+but my wifi card  very rarelly, sometimes disconnects (router is ok)
+
+I see there are 5 versions for this firmware on the site.
+
+how can i check if I have the latest? I'm running Ubuntu 14.04 and
+
+uname -r
+3.13.0-37-generic
+
+Thank you!
+
+Luis Louro
