@@ -1,48 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:15620 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751363AbaJ1KoC (ORCPT
+Received: from smtprelay0178.hostedemail.com ([216.40.44.178]:37877 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750765AbaJPIuq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2014 06:44:02 -0400
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <wireless-regdb@lists.infradead.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 08/21] wireless-regdb: Add regulatory rules for Cayman Islands (KY)
-Date: Tue, 28 Oct 2014 12:42:54 +0200
-Message-ID: <1414492987-16118-1-git-send-email-jouni@qca.qualcomm.com> (sfid-20141028_114407_130981_784443A2)
-In-Reply-To: <1414492175-13830-1-git-send-email-jouni@qca.qualcomm.com>
-References: <1414492175-13830-1-git-send-email-jouni@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 16 Oct 2014 04:50:46 -0400
+Message-ID: <1413449441.7484.22.camel@perches.com> (sfid-20141016_105110_990535_0FE86341)
+Subject: Re: [PATCH 1/1 linux-next] zd1201: replace kmalloc/memset by kzalloc
+From: Joe Perches <joe@perches.com>
+To: Fabian Frederick <fabf@skynet.be>
+Cc: =?ISO-8859-1?Q?Bj=F8rn?= Mork <bjorn@mork.no>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Date: Thu, 16 Oct 2014 01:50:41 -0700
+In-Reply-To: <346236957.6316.1413446930736.open-xchange@webmail.nmp.skynet.be>
+References: <1413304831-7203-1-git-send-email-fabf@skynet.be>
+	 <1413306955.3269.30.camel@joe-AO725> <87iojm8qxp.fsf@nemi.mork.no>
+	 <346236957.6316.1413446930736.open-xchange@webmail.nmp.skynet.be>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Source is QCA's regulatory team's efforts.
+On Thu, 2014-10-16 at 10:08 +0200, Fabian Frederick wrote:
+> Adding a structure would be a nice design update indeed but this would require
+> some testing...Separate patch maybe ?
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
----
- db.txt | 7 +++++++
- 1 file changed, 7 insertions(+)
+Of course that'd be fine.
 
-diff --git a/db.txt b/db.txt
-index 4ecfcf3..6d8abd1 100644
---- a/db.txt
-+++ b/db.txt
-@@ -625,6 +625,13 @@ country KW: DFS-ETSI
- 	(5170 - 5250 @ 80), (20), AUTO-BW
- 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
- 
-+country KY: DFS-FCC
-+	(2402 - 2482 @ 40), (20)
-+	(5170 - 5250 @ 80), (24), AUTO-BW
-+	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
-+	(5490 - 5730 @ 160), (24), DFS
-+	(5735 - 5835 @ 80), (30)
-+
- country KZ:
- 	(2402 - 2482 @ 40), (20)
- 
--- 
-1.9.1
 
