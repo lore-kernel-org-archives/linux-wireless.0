@@ -1,52 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailrelay001.isp.belgacom.be ([195.238.6.51]:35622 "EHLO
-	mailrelay001.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750776AbaJOTCg (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:38914 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753199AbaJQCKY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Oct 2014 15:02:36 -0400
-From: Fabian Frederick <fabf@skynet.be>
-To: linux-kernel@vger.kernel.org
-Cc: Fabian Frederick <fabf@skynet.be>,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 1/1 net-next] NFC: llcp: use sizeof(*sdres) instead of nfc_llcp_sdp_tlv
-Date: Wed, 15 Oct 2014 21:02:30 +0200
-Message-Id: <1413399750-8426-1-git-send-email-fabf@skynet.be> (sfid-20141015_210254_816862_B6A08A76)
+	Thu, 16 Oct 2014 22:10:24 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH v2 13/23] ath9k: Fix address management
+Date: Fri, 17 Oct 2014 07:40:20 +0530
+Message-Id: <1413511830-5536-14-git-send-email-sujith@msujith.org> (sfid-20141017_041320_358112_A4B662F6)
+In-Reply-To: <1413511830-5536-1-git-send-email-sujith@msujith.org>
+References: <1413511830-5536-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- See Documentation/CodingStyle Chapter 14
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Signed-off-by: Fabian Frederick <fabf@skynet.be>
+Since both the arguments need to satisfy
+the alignment requirements of ether_addr_copy(),
+use memcpy() in cases where there will be no
+big performance benefit and make sure that
+ether_addr_copy() calls use properly aligned
+arguments.
+
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- net/nfc/llcp_commands.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath.h         | 2 +-
+ drivers/net/wireless/ath/ath9k/ath9k.h | 2 +-
+ drivers/net/wireless/ath/ath9k/main.c  | 6 +++---
+ 3 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/net/nfc/llcp_commands.c b/net/nfc/llcp_commands.c
-index a3ad69a..a450075 100644
---- a/net/nfc/llcp_commands.c
-+++ b/net/nfc/llcp_commands.c
-@@ -120,7 +120,7 @@ struct nfc_llcp_sdp_tlv *nfc_llcp_build_sdres_tlv(u8 tid, u8 sap)
- 	struct nfc_llcp_sdp_tlv *sdres;
- 	u8 value[2];
+diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
+index e5ba6fa..9c56ecb 100644
+--- a/drivers/net/wireless/ath/ath.h
++++ b/drivers/net/wireless/ath/ath.h
+@@ -147,7 +147,7 @@ struct ath_common {
+ 	u16 cachelsz;
+ 	u16 curaid;
+ 	u8 macaddr[ETH_ALEN];
+-	u8 curbssid[ETH_ALEN];
++	u8 curbssid[ETH_ALEN] __aligned(2);
+ 	u8 bssidmask[ETH_ALEN];
  
--	sdres = kzalloc(sizeof(struct nfc_llcp_sdp_tlv), GFP_KERNEL);
-+	sdres = kzalloc(sizeof(*sdres), GFP_KERNEL);
- 	if (sdres == NULL)
- 		return NULL;
+ 	u32 rx_bufsize;
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index d4b71ed..9e92cb21 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -595,7 +595,7 @@ struct ath_vif {
+ 	u16 seq_no;
  
-@@ -149,7 +149,7 @@ struct nfc_llcp_sdp_tlv *nfc_llcp_build_sdreq_tlv(u8 tid, char *uri,
+ 	/* BSS info */
+-	u8 bssid[ETH_ALEN];
++	u8 bssid[ETH_ALEN] __aligned(2);
+ 	u16 aid;
+ 	bool assoc;
  
- 	pr_debug("uri: %s, len: %zu\n", uri, uri_len);
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 0545fe6..c291d54 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1057,7 +1057,7 @@ static void ath9k_set_offchannel_state(struct ath_softc *sc)
  
--	sdreq = kzalloc(sizeof(struct nfc_llcp_sdp_tlv), GFP_KERNEL);
-+	sdreq = kzalloc(sizeof(*sdreq), GFP_KERNEL);
- 	if (sdreq == NULL)
- 		return NULL;
+ 	eth_zero_addr(common->curbssid);
+ 	eth_broadcast_addr(common->bssidmask);
+-	ether_addr_copy(common->macaddr, vif->addr);
++	memcpy(common->macaddr, vif->addr, ETH_ALEN);
+ 	common->curaid = 0;
+ 	ah->opmode = vif->type;
+ 	ah->imask &= ~ATH9K_INT_SWBA;
+@@ -1098,7 +1098,7 @@ void ath9k_calculate_summary_state(struct ath_softc *sc,
+ 	ath9k_calculate_iter_data(sc, ctx, &iter_data);
+ 
+ 	if (iter_data.has_hw_macaddr)
+-		ether_addr_copy(common->macaddr, iter_data.hw_macaddr);
++		memcpy(common->macaddr, iter_data.hw_macaddr, ETH_ALEN);
+ 
+ 	memcpy(common->bssidmask, iter_data.mask, ETH_ALEN);
+ 	ath_hw_setbssidmask(common);
+@@ -1785,7 +1785,7 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
+ 		ath_dbg(common, CONFIG, "BSSID %pM Changed ASSOC %d\n",
+ 			bss_conf->bssid, bss_conf->assoc);
+ 
+-		ether_addr_copy(avp->bssid, bss_conf->bssid);
++		memcpy(avp->bssid, bss_conf->bssid, ETH_ALEN);
+ 		avp->aid = bss_conf->aid;
+ 		avp->assoc = bss_conf->assoc;
  
 -- 
-1.9.3
+2.1.2
 
