@@ -1,45 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:48741 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753683AbaJ1Ld6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2014 07:33:58 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johill@sipsolutions.net
-Cc: j@w1.fi, linux-wireless@vger.kernel.org
-Date: Tue, 28 Oct 2014 13:33:05 +0200
-Message-Id: <1414495985-26937-3-git-send-email-luca@coelho.fi> (sfid-20141028_123402_116818_22D615D1)
-In-Reply-To: <1414495985-26937-1-git-send-email-luca@coelho.fi>
-References: <1414495985-26937-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH 2/2] mac80211: schedule the actual switch of the station before CSA count 0
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:40392 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754013AbaJQTvO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Oct 2014 15:51:14 -0400
+Received: by mail-wi0-f180.google.com with SMTP id em10so2114476wid.7
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Oct 2014 12:51:13 -0700 (PDT)
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Karl Beldan <karl.beldan@rivierawaves.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	karl.beldan@gmail.com, Felix Fietkau <nbd@openwrt.org>
+Subject: [RESEND PATCH v2 3/4] mac80211: minstrel_ht: include type (cck/ht) in rates flag
+Date: Fri, 17 Oct 2014 21:50:58 +0200
+Message-Id: <1413575459-29612-4-git-send-email-karl.beldan@gmail.com> (sfid-20141017_215120_501211_CA17BB37)
+In-Reply-To: <1413575459-29612-1-git-send-email-karl.beldan@gmail.com>
+References: <1413570896-27740-5-git-send-email-karl.beldan@gmail.com>
+ <1413575459-29612-1-git-send-email-karl.beldan@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+From: Karl Beldan <karl.beldan@rivierawaves.com>
 
-Due to the time it takes to process the beacon that started the CSA
-process, we may be late for the switch if we try to reach exactly
-beacon 0.  To avoid that, use count - 1 when calculating the switch time.
+ATM, we grep cck rates idx with idx / MCS_GROUP_RATES ==
+MINSTREL_CCK_GROUP.
+Matching neither-cck-non-ht rates could be done by replacing '==' with
+'>', however it would be less versatile or explicit.
+This will allow to match VHT rates with IEEE80211_TX_RC_VHT_MCS.
 
-Reported-by: Jouni Malinen <j@w1.fi>
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
+Cc: Felix Fietkau <nbd@openwrt.org>
 ---
- net/mac80211/mlme.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ net/mac80211/rc80211_minstrel_ht.c | 28 ++++++++++++++--------------
+ 1 file changed, 14 insertions(+), 14 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index ae9f3bd..284ddda 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1195,7 +1195,8 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 		ieee80211_queue_work(&local->hw, &ifmgd->chswitch_work);
- 	else
- 		mod_timer(&ifmgd->chswitch_timer,
--			  TU_TO_EXP_TIME(csa_ie.count * cbss->beacon_interval));
-+			  TU_TO_EXP_TIME((csa_ie.count - 1) *
-+					 cbss->beacon_interval));
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index a48eb76..e760d3d 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -51,6 +51,7 @@
+ 	[GROUP_IDX(_streams, _sgi, _ht40)] = {				\
+ 	.streams = _streams,						\
+ 	.flags =							\
++		IEEE80211_TX_RC_MCS |					\
+ 		(_sgi ? IEEE80211_TX_RC_SHORT_GI : 0) |			\
+ 		(_ht40 ? IEEE80211_TX_RC_40_MHZ_WIDTH : 0),		\
+ 	.duration = {							\
+@@ -83,6 +84,7 @@
+ #define CCK_GROUP					\
+ 	[MINSTREL_CCK_GROUP] = {			\
+ 		.streams = 0,				\
++		.flags = 0,				\
+ 		.duration = {				\
+ 			CCK_DURATION_LIST(false),	\
+ 			CCK_DURATION_LIST(true)		\
+@@ -716,7 +718,7 @@ minstrel_ht_set_rate(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
+ 	const struct mcs_group *group = &minstrel_mcs_groups[index / MCS_GROUP_RATES];
+ 	struct minstrel_rate_stats *mr;
+ 	u8 idx;
+-	u16 flags;
++	u16 flags = group->flags;
+ 
+ 	mr = minstrel_get_ratestats(mi, index);
+ 	if (!mr->retry_updated)
+@@ -732,13 +734,10 @@ minstrel_ht_set_rate(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
+ 		ratetbl->rate[offset].count_rts = mr->retry_count_rtscts;
+ 	}
+ 
+-	if (index / MCS_GROUP_RATES == MINSTREL_CCK_GROUP) {
++	if (index / MCS_GROUP_RATES == MINSTREL_CCK_GROUP)
+ 		idx = mp->cck_rates[index % ARRAY_SIZE(mp->cck_rates)];
+-		flags = 0;
+-	} else {
++	else
+ 		idx = index % MCS_GROUP_RATES + (group->streams - 1) * 8;
+-		flags = IEEE80211_TX_RC_MCS | group->flags;
+-	}
+ 
+ 	if (offset > 0) {
+ 		ratetbl->rate[offset].count = ratetbl->rate[offset].count_rts;
+@@ -918,13 +917,12 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
+ 	if (sample_idx / MCS_GROUP_RATES == MINSTREL_CCK_GROUP) {
+ 		int idx = sample_idx % ARRAY_SIZE(mp->cck_rates);
+ 		rate->idx = mp->cck_rates[idx];
+-		rate->flags = 0;
+-		return;
++	} else {
++		rate->idx = sample_idx % MCS_GROUP_RATES +
++			    (sample_group->streams - 1) * 8;
+ 	}
+ 
+-	rate->idx = sample_idx % MCS_GROUP_RATES +
+-		    (sample_group->streams - 1) * 8;
+-	rate->flags = IEEE80211_TX_RC_MCS | sample_group->flags;
++	rate->flags = sample_group->flags;
  }
  
- static bool
+ static void
+@@ -1006,14 +1004,16 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
+ 		mi->tx_flags |= IEEE80211_TX_CTL_LDPC;
+ 
+ 	for (i = 0; i < ARRAY_SIZE(mi->groups); i++) {
++		u32 gflags = minstrel_mcs_groups[i].flags;
++
+ 		mi->groups[i].supported = 0;
+ 		if (i == MINSTREL_CCK_GROUP) {
+ 			minstrel_ht_update_cck(mp, mi, sband, sta);
+ 			continue;
+ 		}
+ 
+-		if (minstrel_mcs_groups[i].flags & IEEE80211_TX_RC_SHORT_GI) {
+-			if (minstrel_mcs_groups[i].flags & IEEE80211_TX_RC_40_MHZ_WIDTH) {
++		if (gflags & IEEE80211_TX_RC_SHORT_GI) {
++			if (gflags & IEEE80211_TX_RC_40_MHZ_WIDTH) {
+ 				if (!(sta_cap & IEEE80211_HT_CAP_SGI_40))
+ 					continue;
+ 			} else {
+@@ -1022,7 +1022,7 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
+ 			}
+ 		}
+ 
+-		if (minstrel_mcs_groups[i].flags & IEEE80211_TX_RC_40_MHZ_WIDTH &&
++		if (gflags & IEEE80211_TX_RC_40_MHZ_WIDTH &&
+ 		    sta->bandwidth < IEEE80211_STA_RX_BW_40)
+ 			continue;
+ 
 -- 
-2.1.1
+2.0.1
 
