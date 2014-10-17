@@ -1,38 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:51163 "EHLO sipsolutions.net"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751749AbaJ0LVT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Oct 2014 07:21:19 -0400
-Message-ID: <1414408856.3836.3.camel@jlt4.sipsolutions.net> (sfid-20141027_122122_960841_6E074522)
-Subject: Re: [PATCH 0/3] Add mcast event when hwsim radios are created and
- removed
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jukka Rissanen <jukka.rissanen@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 27 Oct 2014 12:20:56 +0100
-In-Reply-To: <1414406688-3827-1-git-send-email-jukka.rissanen@linux.intel.com> (sfid-20141027_114536_599448_FF2C1C5E)
-References: <1414406688-3827-1-git-send-email-jukka.rissanen@linux.intel.com>
-	 (sfid-20141027_114536_599448_FF2C1C5E)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ig0-f180.google.com ([209.85.213.180]:51664 "EHLO
+	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751524AbaJQXmi convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Oct 2014 19:42:38 -0400
+Received: by mail-ig0-f180.google.com with SMTP id uq10so1786446igb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Oct 2014 16:42:37 -0700 (PDT)
+MIME-Version: 1.0
+Date: Sat, 18 Oct 2014 01:42:37 +0200
+Message-ID: <CACna6ryaj7sGhczjCDBxJVu5buRxhu_A7rQXAdcx2___sWpuBg@mail.gmail.com> (sfid-20141018_014242_340947_912CDF55)
+Subject: Documenting AP (and others) mode support
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-10-27 at 12:44 +0200, Jukka Rissanen wrote:
-> Hi,
-> 
-> patch 1 renames HWSIM_CMD_CREATE_RADIO to HWSIM_CMD_NEW_RADIO and
-> HWSIM_CMD_DESTROY_RADIO to HWSIM_CMD_DEL_RADIO. They are more
-> fitting on how other pieces of the wireless system work. A define
-> to old name is provided for backward compatibility.
+For a long time I was curious how AP mode is supported in both:
+hostapd and cfg80211/mac80211. Unfortunately I wasn't able to find a
+straightforward answer. Random info I found was rather confusing,
+outdated. For example hostapd wiki page was convincing me I need a
+monitor mode interface for hostapd.
 
-That seems reasonable, if a little gratuitous.
+So I've slightly updated
+http://wireless.kernel.org/en/users/Documentation/hostapd#About_hostapd
 
-> Patches 2 and 3 use the newly named enums and provide a way to inform
-> the listeners on the multicast group "config" when new radio is created
-> and existing radio is deleted.
+And created
+http://wireless.kernel.org/en/developers/Documentation/cfg80211/API
+(inspired by mac80211/API wiki page)
 
-Why bother? There are nl80211 events for this already, no?
+Of course this is only a beginning, but I don't think I should go
+further will my limited knowledge.
 
-johannes
+So there goes my request: could you review what I've written and
+continue my work, if you can? I don't think my description of cfg80211
+and AP mode covers much. I'm still not sure about meaning of
+WIPHY_FLAG_HAVE_AP_SME (it seems to be important flag for hostapd) and
+of course there are mode modes (not just AP) to describe.
 
+P.S.
+Another topic I'm interested in is multiple SSIDs support. If someone
+could start that, it would be great.
+
+-- 
+Rafał
