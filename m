@@ -1,64 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:53246
-	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932109AbaJVP5m (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:37531 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753199AbaJQCKq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2014 11:57:42 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH] mac80211: add support for driver tx power reporting
-Date: Wed, 22 Oct 2014 17:57:38 +0200
-Message-Id: <1413993458-62517-1-git-send-email-nbd@openwrt.org> (sfid-20141022_175749_370256_2C27B844)
+	Thu, 16 Oct 2014 22:10:46 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH v2 18/23] ath9k: Use a helper function for bmiss
+Date: Fri, 17 Oct 2014 07:40:25 +0530
+Message-Id: <1413511830-5536-19-git-send-email-sujith@msujith.org> (sfid-20141017_041325_410408_3B5A5077)
+In-Reply-To: <1413511830-5536-1-git-send-email-sujith@msujith.org>
+References: <1413511830-5536-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The configured tx power is often limited by hardware capabilities,
-channel settings, antenna configuration, etc.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- include/net/mac80211.h | 5 +++++
- net/mac80211/cfg.c     | 3 +++
- 2 files changed, 8 insertions(+)
+ drivers/net/wireless/ath/ath9k/channel.c | 45 ++++++++++++++++++--------------
+ 1 file changed, 26 insertions(+), 19 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 0ad1f47..41b0e60 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2838,6 +2838,9 @@ enum ieee80211_roc_type {
-  * @get_expected_throughput: extract the expected throughput towards the
-  *	specified station. The returned value is expressed in Kbps. It returns 0
-  *	if the RC algorithm does not have proper data to provide.
-+ *
-+ * @get_txpower: get current maximum tx power (in dBm) based on configuration
-+ *	and hardware limits.
-  */
- struct ieee80211_ops {
- 	void (*tx)(struct ieee80211_hw *hw,
-@@ -3039,6 +3042,8 @@ struct ieee80211_ops {
- 	int (*join_ibss)(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
- 	void (*leave_ibss)(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
- 	u32 (*get_expected_throughput)(struct ieee80211_sta *sta);
-+	int (*get_txpower)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-+			   int *dbm);
- };
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index 7d6f76b..7fe35a5 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -366,6 +366,31 @@ static void ath_chanctx_setup_timer(struct ath_softc *sc, u32 tsf_time)
+ 		"Setup chanctx timer with timeout: %d ms\n", jiffies_to_msecs(tsf_time));
+ }
  
- /**
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index fb6a150..7cb31a8 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2081,6 +2081,9 @@ static int ieee80211_get_tx_power(struct wiphy *wiphy,
- 	struct ieee80211_local *local = wiphy_priv(wiphy);
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
- 
-+	if (local->ops->get_txpower)
-+		return local->ops->get_txpower(&local->hw, &sdata->vif, dbm);
++static void ath_chanctx_handle_bmiss(struct ath_softc *sc,
++				     struct ath_chanctx *ctx,
++				     struct ath_vif *avp)
++{
++	/*
++	 * Clear the extend_absence flag if it had been
++	 * set during the previous beacon transmission,
++	 * since we need to revert to the normal NoA
++	 * schedule.
++	 */
++	if (ctx->active && sc->sched.extend_absence) {
++		avp->noa_duration = 0;
++		sc->sched.extend_absence = false;
++	}
 +
- 	if (!local->use_chanctx)
- 		*dbm = local->hw.conf.power_level;
- 	else
++	/* If at least two consecutive beacons were missed on the STA
++	 * chanctx, stay on the STA channel for one extra beacon period,
++	 * to resync the timer properly.
++	 */
++	if (ctx->active && sc->sched.beacon_miss >= 2) {
++		avp->noa_duration = 0;
++		sc->sched.extend_absence = true;
++	}
++}
++
+ static void ath_chanctx_offchannel_noa(struct ath_softc *sc,
+ 				       struct ath_chanctx *ctx,
+ 				       struct ath_vif *avp,
+@@ -524,25 +549,7 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 			break;
+ 		}
+ 
+-		/*
+-		 * Clear the extend_absence flag if it had been
+-		 * set during the previous beacon transmission,
+-		 * since we need to revert to the normal NoA
+-		 * schedule.
+-		 */
+-		if (ctx->active && sc->sched.extend_absence) {
+-			avp->noa_duration = 0;
+-			sc->sched.extend_absence = false;
+-		}
+-
+-		/* If at least two consecutive beacons were missed on the STA
+-		 * chanctx, stay on the STA channel for one extra beacon period,
+-		 * to resync the timer properly.
+-		 */
+-		if (ctx->active && sc->sched.beacon_miss >= 2) {
+-			avp->noa_duration = 0;
+-			sc->sched.extend_absence = true;
+-		}
++		ath_chanctx_handle_bmiss(sc, ctx, avp);
+ 
+ 		/* Prevent wrap-around issues */
+ 		if (avp->noa_duration && tsf_time - avp->noa_start > BIT(30))
 -- 
-2.0.4
+2.1.2
 
