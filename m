@@ -1,88 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:4033 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933203AbaJ2PC7 (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:59611 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753174AbaJQCKy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2014 11:02:59 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 1/2] brcmsmac: fix statistic counter update function
-Date: Wed, 29 Oct 2014 16:02:50 +0100
-Message-ID: <1414594971-26389-2-git-send-email-arend@broadcom.com> (sfid-20141029_160305_649876_B65DF07A)
-In-Reply-To: <1414594971-26389-1-git-send-email-arend@broadcom.com>
-References: <1414594971-26389-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 16 Oct 2014 22:10:54 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH v2 20/23] ath9k: Send oneshot NoA
+Date: Fri, 17 Oct 2014 07:40:27 +0530
+Message-Id: <1413511830-5536-21-git-send-email-sujith@msujith.org> (sfid-20141017_041325_898982_E57E2E56)
+In-Reply-To: <1413511830-5536-1-git-send-email-sujith@msujith.org>
+References: <1413511830-5536-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The 802.11 core statistics are retrieved from the core registers
-but not stored. So the debug code was never triggered to give a
-warning message on tx underruns or rx overflows. This patch fixes
-this and assures the statistics are stored in the snapshot.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+This patch makes sure that a GO interface
+sends out a new NoA schedule with 200ms duration
+when mgd_prepare_tx() is called.
+
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/brcm80211/brcmsmac/main.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h   |  1 +
+ drivers/net/wireless/ath/ath9k/channel.c | 41 ++++++++++++++++++++++++++++++++
+ 2 files changed, 42 insertions(+)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index 1b47482..bc9be78 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -3081,7 +3081,7 @@ static bool brcms_c_ps_allowed(struct brcms_c_info *wlc)
- static void brcms_c_statsupd(struct brcms_c_info *wlc)
- {
- 	int i;
--	struct macstat macstats;
-+	struct macstat *macstats;
- #ifdef DEBUG
- 	u16 delta;
- 	u16 rxf0ovfl;
-@@ -3092,31 +3092,31 @@ static void brcms_c_statsupd(struct brcms_c_info *wlc)
- 	if (!wlc->pub->up)
- 		return;
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index b7abb4f..7ac1b06 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -620,6 +620,7 @@ struct ath_vif {
+ 	u32 noa_start;
+ 	u32 noa_duration;
+ 	bool periodic_noa;
++	bool oneshot_noa;
+ };
  
-+	macstats = wlc->core->macstat_snapshot;
+ struct ath9k_vif_iter_data {
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index 447b397..366a4d9 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -450,6 +450,27 @@ static void ath_chanctx_set_periodic_noa(struct ath_softc *sc,
+ 		avp->periodic_noa);
+ }
+ 
++static void ath_chanctx_set_oneshot_noa(struct ath_softc *sc,
++					struct ath_vif *avp,
++					u32 tsf_time,
++					u32 duration)
++{
++	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
 +
- #ifdef DEBUG
- 	/* save last rx fifo 0 overflow count */
--	rxf0ovfl = wlc->core->macstat_snapshot->rxf0ovfl;
-+	rxf0ovfl = macstats->rxf0ovfl;
++	avp->noa_index++;
++	avp->noa_start = tsf_time;
++	avp->periodic_noa = false;
++	avp->oneshot_noa = true;
++	avp->noa_duration = duration + sc->sched.channel_switch_time;
++
++	ath_dbg(common, CHAN_CTX,
++		"oneshot noa_duration: %d, noa_start: %d, noa_index: %d, periodic: %d\n",
++		avp->noa_duration,
++		avp->noa_start,
++		avp->noa_index,
++		avp->periodic_noa);
++}
++
+ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 		       enum ath_chanctx_event ev)
+ {
+@@ -476,6 +497,14 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 		if (avp->offchannel_duration)
+ 			avp->offchannel_duration = 0;
  
- 	/* save last tx fifo  underflow count */
- 	for (i = 0; i < NFIFO; i++)
--		txfunfl[i] = wlc->core->macstat_snapshot->txfunfl[i];
-+		txfunfl[i] = macstats->txfunfl[i];
- #endif				/* DEBUG */
++		if (avp->oneshot_noa) {
++			avp->noa_duration = 0;
++			avp->oneshot_noa = false;
++
++			ath_dbg(common, CHAN_CTX,
++				"Clearing oneshot NoA\n");
++		}
++
+ 		if (avp->chanctx != sc->cur_chan) {
+ 			ath_dbg(common, CHAN_CTX,
+ 				"Contexts differ, not preparing beacon\n");
+@@ -551,6 +580,18 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
  
- 	/* Read mac stats from contiguous shared memory */
--	brcms_b_copyfrom_objmem(wlc->hw, M_UCODE_MACSTAT, &macstats,
--				sizeof(struct macstat), OBJADDR_SHM_SEL);
-+	brcms_b_copyfrom_objmem(wlc->hw, M_UCODE_MACSTAT, macstats,
-+				sizeof(*macstats), OBJADDR_SHM_SEL);
+ 		ath_chanctx_handle_bmiss(sc, ctx, avp);
  
- #ifdef DEBUG
- 	/* check for rx fifo 0 overflow */
--	delta = (u16) (wlc->core->macstat_snapshot->rxf0ovfl - rxf0ovfl);
-+	delta = (u16)(macstats->rxf0ovfl - rxf0ovfl);
- 	if (delta)
- 		brcms_err(wlc->hw->d11core, "wl%d: %u rx fifo 0 overflows!\n",
- 			  wlc->pub->unit, delta);
- 
- 	/* check for tx fifo underflows */
- 	for (i = 0; i < NFIFO; i++) {
--		delta =
--		    (u16) (wlc->core->macstat_snapshot->txfunfl[i] -
--			      txfunfl[i]);
-+		delta = macstats->txfunfl[i] - txfunfl[i];
- 		if (delta)
- 			brcms_err(wlc->hw->d11core,
- 				  "wl%d: %u tx fifo %d underflows!\n",
++		/*
++		 * If a mgd_prepare_tx() has been called by mac80211,
++		 * a one-shot NoA needs to be sent. This can happen
++		 * with one or more active channel contexts - in both
++		 * cases, a new NoA schedule has to be advertised.
++		 */
++		if (sc->sched.mgd_prepare_tx) {
++			ath_chanctx_set_oneshot_noa(sc, avp, tsf_time,
++						    jiffies_to_usecs(HZ / 5));
++			break;
++		}
++
+ 		/* Prevent wrap-around issues */
+ 		if (avp->noa_duration && tsf_time - avp->noa_start > BIT(30))
+ 			avp->noa_duration = 0;
 -- 
-1.9.1
+2.1.2
 
