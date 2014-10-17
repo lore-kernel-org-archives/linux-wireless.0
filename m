@@ -1,97 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f43.google.com ([209.85.218.43]:45997 "EHLO
-	mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752562AbaJTHG5 convert rfc822-to-8bit (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:55840 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752035AbaJQCKE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2014 03:06:57 -0400
-Received: by mail-oi0-f43.google.com with SMTP id u20so3207399oif.2
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2014 00:06:57 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1413783023.2710583.180921653.10DFFCEE@webmail.messagingengine.com>
-References: <1413463736.1316541.179720977.4FD32021@webmail.messagingengine.com>
-	<1413510814.22769.6.camel@dcbw.local>
-	<1413751717.2510219.180809145.0E693C29@webmail.messagingengine.com>
-	<CANUX_P2RHVRorVABRfWVg39d4D8dj35v3fBpY3=3jvQ1U+mfEA@mail.gmail.com>
-	<1413783023.2710583.180921653.10DFFCEE@webmail.messagingengine.com>
-Date: Mon, 20 Oct 2014 10:06:56 +0300
-Message-ID: <CANUX_P0Q7cNeBzQa=2WVZFJXPTLx8F6YQk9bGCf_3uYhc5RcGA@mail.gmail.com> (sfid-20141020_090700_882140_A5C306DD)
-Subject: Re: iwlwifi: Reason 7 periodic disconnect
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: =?UTF-8?Q?Lauren=C8=9Biu_Nicola?= <lnicola@dend.ro>
-Cc: Dan Williams <dcbw@redhat.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 16 Oct 2014 22:10:04 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH v2 08/23] ath9k: Use configurable timeout for flush
+Date: Fri, 17 Oct 2014 07:40:15 +0530
+Message-Id: <1413511830-5536-9-git-send-email-sujith@msujith.org> (sfid-20141017_041008_363187_68880DBD)
+In-Reply-To: <1413511830-5536-1-git-send-email-sujith@msujith.org>
+References: <1413511830-5536-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 20, 2014 at 8:30 AM, Laurențiu Nicola <lnicola@dend.ro> wrote:
-> Here: https://bpaste.net/show/bf6dc1847ce3
->
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Are you sure you had MAC80211_MLME_DEBUG?
+The timeout value for flushing the TX queues
+is hardcoded at 200ms right now. Use a channel
+context-specific value instead to allow adjustments
+to the timeout in case MCC is enabled.
 
->
-> Laurentiu
-> On Mon, Oct 20, 2014, at 07:52, Emmanuel Grumbach wrote:
->> On Sun, Oct 19, 2014 at 11:48 PM, Laurențiu Nicola <lnicola@dend.ro>
->> wrote:
->> > Hello,
->> >
->> > Sorry for the late reply. I was using just wpa_supplicant. I also tried
->> > wicd, but it seems to hang when connecting to a network, but my
->> > understanding is that it's just a wpa_supplicant manager. I got this
->> > while installing Gentoo, but I also reproduced it on the Fedora 20 Live
->> > CD. See https://bpaste.net/show/7d5ad99260a7 for logs, but it doesn't
->> > seem to say much more than my original extract.
->> >
->> > What I found out in the meanwhile, however, is that active traffic will
->> > prevent the issue from occurring. This happened with the Fedora Live CD,
->> > but pinging the AP is also sufficient. I noticed iwconfig reports that
->> > the power saving mode is off.
->> >
->> > For what it's worth, I compiled my kernel and iwlwifi module with
->> > tracing on, so tell me if I should try that.
->>
->> Please recompile with MAC80211_MLME_DEBUG, MAC80211_STA_DEBUG and
->> reproduce - thanks.
->>
->> >
->> > Laurentiu
->> >
->> >
->> > On Fri, Oct 17, 2014, at 04:53, Dan Williams wrote:
->> >> On Thu, 2014-10-16 at 15:48 +0300, Laurențiu Nicola wrote:
->> >> > Hello,
->> >> >
->> >> > I'm using iwlwifi for a Centrino Ultimate-N 6300 on 3.14.4 and 3.17.1.
->> >> > Connect to my wireless network works, but I get disconnected every 60
->> >> > seconds or so. The dmesg output looks like
->> >> > https://bpaste.net/show/1623a8ae5dc6 .
->> >> >
->> >> > I had the same issue on the three latest firmware versions:
->> >> > iwlwifi-6000-ucode-9.176.4.1
->> >> > iwlwifi-6000-ucode-9.193.4.1
->> >> > iwlwifi-6000-ucode-9.221.4.1
->> >> >
->> >> > The dmesg log actually shows the driver loading the different versions
->> >> > above.
->> >> >
->> >> > It's the first time I try to use wireless on Linux, so I might have made
->> >> > a dumb mistake.
->> >>
->> >> Can you try to get debug output from wpa_supplicant, which is the
->> >> process that controls WiFi on Linux?  What distro and version do you
->> >> use, and do you know what WiFi management service is being used?
->> >> (NetworkManager, conman, plain wpa_supplicant, wicd, something else?)
->> >>
->> >> Dan
->> >>
->> > --
->> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> > the body of a message to majordomo@vger.kernel.org
->> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
->> in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h   | 1 +
+ drivers/net/wireless/ath/ath9k/channel.c | 1 +
+ drivers/net/wireless/ath/ath9k/main.c    | 9 ++++++++-
+ 3 files changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index bc90fab..43c1987 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -345,6 +345,7 @@ struct ath_chanctx {
+ 	u64 tsf_val;
+ 	u32 last_beacon;
+ 
++	int flush_timeout;
+ 	u16 txpower;
+ 	bool offchannel;
+ 	bool stopped;
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index 74a5c27..5045b10 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -117,6 +117,7 @@ void ath_chanctx_init(struct ath_softc *sc)
+ 		cfg80211_chandef_create(&ctx->chandef, chan, NL80211_CHAN_HT20);
+ 		INIT_LIST_HEAD(&ctx->vifs);
+ 		ctx->txpower = ATH_TXPOWER_MAX;
++		ctx->flush_timeout = HZ / 5; /* 200ms */
+ 		for (j = 0; j < ARRAY_SIZE(ctx->acq); j++)
+ 			INIT_LIST_HEAD(&ctx->acq[j]);
+ 	}
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 5d54f39..81a20de 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2034,7 +2034,7 @@ void __ath9k_flush(struct ieee80211_hw *hw, u32 queues, bool drop)
+ 	struct ath_softc *sc = hw->priv;
+ 	struct ath_hw *ah = sc->sc_ah;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+-	int timeout = HZ / 5; /* 200 ms */
++	int timeout;
+ 	bool drain_txq;
+ 
+ 	cancel_delayed_work_sync(&sc->tx_complete_work);
+@@ -2049,6 +2049,13 @@ void __ath9k_flush(struct ieee80211_hw *hw, u32 queues, bool drop)
+ 		return;
+ 	}
+ 
++	spin_lock_bh(&sc->chan_lock);
++	timeout = sc->cur_chan->flush_timeout;
++	spin_unlock_bh(&sc->chan_lock);
++
++	ath_dbg(common, CHAN_CTX,
++		"Flush timeout: %d\n", jiffies_to_msecs(timeout));
++
+ 	if (wait_event_timeout(sc->tx_wait, !ath9k_has_tx_pending(sc),
+ 			       timeout) > 0)
+ 		drop = false;
+-- 
+2.1.2
+
