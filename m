@@ -1,62 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:63448 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751115AbaJIJt4 (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:54951 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752035AbaJQCJt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2014 05:49:56 -0400
-Received: by mail-wi0-f171.google.com with SMTP id em10so12546462wid.10
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Oct 2014 02:49:55 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 2/3] ath10k: expose hw restart via debugfs
-Date: Thu,  9 Oct 2014 11:38:46 +0200
-Message-Id: <1412847527-25983-3-git-send-email-michal.kazior@tieto.com> (sfid-20141009_114959_947214_BE0E0DD4)
-In-Reply-To: <1412847527-25983-1-git-send-email-michal.kazior@tieto.com>
-References: <1412847527-25983-1-git-send-email-michal.kazior@tieto.com>
+	Thu, 16 Oct 2014 22:09:49 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH v2 04/23] ath9k: Unify reset API
+Date: Fri, 17 Oct 2014 07:40:11 +0530
+Message-Id: <1413511830-5536-5-git-send-email-sujith@msujith.org> (sfid-20141017_040958_396323_811B4845)
+In-Reply-To: <1413511830-5536-1-git-send-email-sujith@msujith.org>
+References: <1413511830-5536-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Until now it was possible to simulate soft and
-hard fw crashes but it wasn't possible to trigger
-an immediately hw restart itself (without the fw
-crash).
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-This can be useful when stress testing hw
-restarting stability, e.g. during heavy tx/rx
-traffic.
+Instead of having ath_reset_internal() and ath_reset()
+as two separate calls to perform a HW reset, have
+one function. This makes sure that the behavior will
+be the same at all callsites.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath10k/debug.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h   |  3 +--
+ drivers/net/wireless/ath/ath9k/channel.c |  2 +-
+ drivers/net/wireless/ath/ath9k/main.c    | 12 +++++++-----
+ drivers/net/wireless/ath/ath9k/tx99.c    |  4 ++--
+ 4 files changed, 11 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index 0d94feb..20f6719 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -694,7 +694,8 @@ static ssize_t ath10k_read_simulate_fw_crash(struct file *file,
- 		"To simulate firmware crash write one of the keywords to this file:\n"
- 		"`soft` - this will send WMI_FORCE_FW_HANG_ASSERT to firmware if FW supports that command.\n"
- 		"`hard` - this will send to firmware command with illegal parameters causing firmware crash.\n"
--		"`assert` - this will send special illegal parameter to firmware to cause assert failure and crash.\n";
-+		"`assert` - this will send special illegal parameter to firmware to cause assert failure and crash.\n"
-+		"`request` - this will simply queue hw restart without fw/hw actually crashing.\n";
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index aff5e4c..bc90fab 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -540,7 +540,6 @@ static inline void ath_chanctx_check_active(struct ath_softc *sc,
  
- 	return simple_read_from_buffer(user_buf, count, ppos, buf, strlen(buf));
+ #endif /* CONFIG_ATH9K_CHANNEL_CONTEXT */
+ 
+-int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan);
+ void ath_startrecv(struct ath_softc *sc);
+ bool ath_stoprecv(struct ath_softc *sc);
+ u32 ath_calcrxfilter(struct ath_softc *sc);
+@@ -1069,7 +1068,7 @@ void ath9k_tasklet(unsigned long data);
+ int ath_cabq_update(struct ath_softc *);
+ u8 ath9k_parse_mpdudensity(u8 mpdudensity);
+ irqreturn_t ath_isr(int irq, void *dev);
+-int ath_reset(struct ath_softc *sc);
++int ath_reset(struct ath_softc *sc, struct ath9k_channel *hchan);
+ void ath_cancel_work(struct ath_softc *sc);
+ void ath_restart_work(struct ath_softc *sc);
+ int ath9k_init_device(u16 devid, struct ath_softc *sc,
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index 135f74c..709facc 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -66,7 +66,7 @@ static int ath_set_channel(struct ath_softc *sc)
+ 	}
+ 
+ 	hchan = &sc->sc_ah->channels[pos];
+-	r = ath_reset_internal(sc, hchan);
++	r = ath_reset(sc, hchan);
+ 	if (r)
+ 		return r;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 446bc46..eb6ba9f 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -270,7 +270,7 @@ static bool ath_complete_reset(struct ath_softc *sc, bool start)
+ 	return true;
  }
-@@ -747,6 +748,10 @@ static ssize_t ath10k_write_simulate_fw_crash(struct file *file,
- 	} else if (!strcmp(buf, "assert")) {
- 		ath10k_info(ar, "simulating firmware assert crash\n");
- 		ret = ath10k_debug_fw_assert(ar);
-+	} else if (!strcmp(buf, "request")) {
-+		ath10k_info(ar, "user requested hw restart\n");
-+		queue_work(ar->workqueue, &ar->restart_work);
-+		ret = 0;
- 	} else {
- 		ret = -EINVAL;
- 		goto exit;
+ 
+-int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan)
++static int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan)
+ {
+ 	struct ath_hw *ah = sc->sc_ah;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+@@ -598,12 +598,12 @@ chip_reset:
+ #undef SCHED_INTR
+ }
+ 
+-int ath_reset(struct ath_softc *sc)
++int ath_reset(struct ath_softc *sc, struct ath9k_channel *hchan)
+ {
+ 	int r;
+ 
+ 	ath9k_ps_wakeup(sc);
+-	r = ath_reset_internal(sc, NULL);
++	r = ath_reset_internal(sc, hchan);
+ 	ath9k_ps_restore(sc);
+ 
+ 	return r;
+@@ -623,7 +623,9 @@ void ath_reset_work(struct work_struct *work)
+ {
+ 	struct ath_softc *sc = container_of(work, struct ath_softc, hw_reset_work);
+ 
+-	ath_reset(sc);
++	ath9k_ps_wakeup(sc);
++	ath_reset_internal(sc, NULL);
++	ath9k_ps_restore(sc);
+ }
+ 
+ /**********************/
+@@ -2044,7 +2046,7 @@ void __ath9k_flush(struct ieee80211_hw *hw, u32 queues, bool drop)
+ 		spin_unlock_bh(&sc->sc_pcu_lock);
+ 
+ 		if (!drain_txq)
+-			ath_reset(sc);
++			ath_reset(sc, NULL);
+ 
+ 		ath9k_ps_restore(sc);
+ 	}
+diff --git a/drivers/net/wireless/ath/ath9k/tx99.c b/drivers/net/wireless/ath/ath9k/tx99.c
+index 40ab65e..ac4781f 100644
+--- a/drivers/net/wireless/ath/ath9k/tx99.c
++++ b/drivers/net/wireless/ath/ath9k/tx99.c
+@@ -99,7 +99,7 @@ static struct sk_buff *ath9k_build_tx99_skb(struct ath_softc *sc)
+ 
+ static void ath9k_tx99_deinit(struct ath_softc *sc)
+ {
+-	ath_reset(sc);
++	ath_reset(sc, NULL);
+ 
+ 	ath9k_ps_wakeup(sc);
+ 	ath9k_tx99_stop(sc);
+@@ -127,7 +127,7 @@ static int ath9k_tx99_init(struct ath_softc *sc)
+ 	memset(&txctl, 0, sizeof(txctl));
+ 	txctl.txq = sc->tx.txq_map[IEEE80211_AC_VO];
+ 
+-	ath_reset(sc);
++	ath_reset(sc, NULL);
+ 
+ 	ath9k_ps_wakeup(sc);
+ 
 -- 
-1.8.5.3
+2.1.2
 
