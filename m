@@ -1,30 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:44057 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934097AbaJ2PmN (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:39264 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753199AbaJQCK2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2014 11:42:13 -0400
-Date: Wed, 29 Oct 2014 17:38:03 +0800
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Paul McQuade <paulmcquad@gmail.com>
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Jes.Sorensen@redhat.com,
-	Larry.Finger@lwfinger.net
-Subject: Re: [PATCH] staging: rtl8723au pointer issue
-Message-ID: <20141029093803.GA10589@kroah.com> (sfid-20141029_164322_877221_BA9336B3)
-References: <1414339196-4139-1-git-send-email-paulmcquad@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1414339196-4139-1-git-send-email-paulmcquad@gmail.com>
+	Thu, 16 Oct 2014 22:10:28 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH v2 14/23] ath9k: Add a function to check for an active GO
+Date: Fri, 17 Oct 2014 07:40:21 +0530
+Message-Id: <1413511830-5536-15-git-send-email-sujith@msujith.org> (sfid-20141017_041325_261409_8EB9030F)
+In-Reply-To: <1413511830-5536-1-git-send-email-sujith@msujith.org>
+References: <1413511830-5536-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Oct 26, 2014 at 03:59:56PM +0000, Paul McQuade wrote:
-> ERROR: "foo*bar" should be "foo *bar"
-> 
-> Signed-off-by: Paul McQuade <paulmcquad@gmail.com>
-> ---
->  drivers/staging/rtl8723au/core/rtw_cmd.c | 12 ++++++------
->  1 file changed, 6 insertions(+), 6 deletions(-)
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-The subject does not make sense :(
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h   |  1 +
+ drivers/net/wireless/ath/ath9k/channel.c | 30 ++++++++++++++++++++++++++++++
+ 2 files changed, 31 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 9e92cb21..8f6f46c 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -469,6 +469,7 @@ void ath_chanctx_set_next(struct ath_softc *sc, bool force);
+ void ath_offchannel_next(struct ath_softc *sc);
+ void ath_scan_complete(struct ath_softc *sc, bool abort);
+ void ath_roc_complete(struct ath_softc *sc, bool abort);
++struct ath_chanctx* ath_is_go_chanctx_present(struct ath_softc *sc);
+ 
+ #else
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index 9c4f872..2066b09 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -146,6 +146,36 @@ void ath_chanctx_set_channel(struct ath_softc *sc, struct ath_chanctx *ctx,
+ 
+ #ifdef CONFIG_ATH9K_CHANNEL_CONTEXT
+ 
++/*************/
++/* Utilities */
++/*************/
++
++struct ath_chanctx* ath_is_go_chanctx_present(struct ath_softc *sc)
++{
++	struct ath_chanctx *ctx;
++	struct ath_vif *avp;
++	struct ieee80211_vif *vif;
++
++	spin_lock_bh(&sc->chan_lock);
++
++	ath_for_each_chanctx(sc, ctx) {
++		if (!ctx->active)
++			continue;
++
++		list_for_each_entry(avp, &ctx->vifs, list) {
++			vif = avp->vif;
++
++			if (ieee80211_vif_type_p2p(vif) == NL80211_IFTYPE_P2P_GO) {
++				spin_unlock_bh(&sc->chan_lock);
++				return ctx;
++			}
++		}
++	}
++
++	spin_unlock_bh(&sc->chan_lock);
++	return NULL;
++}
++
+ /**********************************************************/
+ /* Functions to handle the channel context state machine. */
+ /**********************************************************/
+-- 
+2.1.2
+
