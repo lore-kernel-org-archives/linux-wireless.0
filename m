@@ -1,65 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:42839 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751137AbaJIIMF (ORCPT
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:62829 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753892AbaJQTvJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2014 04:12:05 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH 4/5] ath9k: Fix offchannel flush timeout
-Date: Thu,  9 Oct 2014 13:42:51 +0530
-Message-Id: <1412842372-17628-5-git-send-email-sujith@msujith.org> (sfid-20141009_101219_290949_5E0604BD)
-In-Reply-To: <1412842372-17628-1-git-send-email-sujith@msujith.org>
-References: <1412842372-17628-1-git-send-email-sujith@msujith.org>
+	Fri, 17 Oct 2014 15:51:09 -0400
+Received: by mail-wi0-f178.google.com with SMTP id h11so2307357wiw.17
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Oct 2014 12:51:08 -0700 (PDT)
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Karl Beldan <karl.beldan@rivierawaves.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: [RESEND PATCH v2 0/4] add VHT support to minstrel_ht 
+Date: Fri, 17 Oct 2014 21:50:55 +0200
+Message-Id: <1413575459-29612-1-git-send-email-karl.beldan@gmail.com> (sfid-20141017_215115_134803_527106EA)
+In-Reply-To: <1413570896-27740-5-git-send-email-karl.beldan@gmail.com>
+References: <1413570896-27740-5-git-send-email-karl.beldan@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+From: Karl Beldan <karl.beldan@rivierawaves.com>
 
-An offchannel operation also needs to have
-a flush timeout that doesn't exceed the NoA
-absence duration of a GO context, so use
-channel_switch_time. The first offchannel
-operation is set a flush timeout of 10ms since
-channel_switch_time will be zero.
+(Sorry for spamming, Felix's address was mangled.)
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/channel.c | 20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
+Hi,
 
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index 7e518aa..abc3e2e 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -207,6 +207,26 @@ void ath_chanctx_check_active(struct ath_softc *sc, struct ath_chanctx *ctx)
- 	if (!ctx)
- 		return;
- 
-+	if (ctx == &sc->offchannel.chan) {
-+		spin_lock_bh(&sc->chan_lock);
-+
-+		if (likely(sc->sched.channel_switch_time))
-+			ctx->flush_timeout =
-+				usecs_to_jiffies(sc->sched.channel_switch_time);
-+		else
-+			ctx->flush_timeout =
-+				msecs_to_jiffies(10);
-+
-+		spin_unlock_bh(&sc->chan_lock);
-+
-+		/*
-+		 * There is no need to iterate over the
-+		 * active/assigned channel contexts if
-+		 * the current context is offchannel.
-+		 */
-+		return;
-+	}
-+
- 	ictx = ctx;
- 
- 	list_for_each_entry(avp, &ctx->vifs, list) {
+This is a split version of the VHT support addition to minstrel.
+Thanks for reviewing,
+
+Karl Beldan (4):
+  mac80211: minstrel_ht: Increase the range of handled rate indexes
+  mac80211: minstrel_ht: macros adjustments for future VHT_GROUPs
+  mac80211: minstrel_ht: include type (cck/ht) in rates flag
+  mac80211: minstrel_ht: add basic support for VHT rates <= 3SS@80MHz
+v2:
+- typo in Kconfig
+- adjust room in debugfs rc_stats buffer
+- add a module param to mix ht rates with vht ones
+- default to 3SS instead of 2SS (with "mac80211: minstrel_ht: macros
+  adjustments for future VHT_GROUPs")
+- use common MINSTREL_MAX_STREAMS both for VHT and HT so that we can get
+  rid of the 'MINSTREL_MAX_STREAMS >= 3' checks for minstrel_mcs_groups
+
+ net/mac80211/Kconfig                       |   7 +
+ net/mac80211/rc80211_minstrel_ht.c         | 288 +++++++++++++++++++++++------
+ net/mac80211/rc80211_minstrel_ht.h         |  38 +++-
+ net/mac80211/rc80211_minstrel_ht_debugfs.c |  32 ++--
+ 4 files changed, 286 insertions(+), 79 deletions(-)
+
 -- 
-2.1.2
+2.0.1
 
