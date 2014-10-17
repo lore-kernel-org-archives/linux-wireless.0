@@ -1,95 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:43231 "EHLO
+Received: from s72.web-hosting.com ([198.187.29.22]:42409 "EHLO
 	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751591AbaJAKH4 (ORCPT
+	with ESMTP id S1752035AbaJQCJ7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Oct 2014 06:07:56 -0400
+	Thu, 16 Oct 2014 22:09:59 -0400
 From: Sujith Manoharan <sujith@msujith.org>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@qca.qualcomm.com
-Subject: [RFC 2/5] ath9k: Pass context to ath9k_chanctx_wake_queues()
-Date: Wed,  1 Oct 2014 15:38:30 +0530
-Message-Id: <1412158113-22913-3-git-send-email-sujith@msujith.org> (sfid-20141001_120759_518507_E257901E)
-In-Reply-To: <1412158113-22913-1-git-send-email-sujith@msujith.org>
-References: <1412158113-22913-1-git-send-email-sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH v2 07/23] ath9k: Clear NoA schedule properly
+Date: Fri, 17 Oct 2014 07:40:14 +0530
+Message-Id: <1413511830-5536-8-git-send-email-sujith@msujith.org> (sfid-20141017_041002_569780_C7986C04)
+In-Reply-To: <1413511830-5536-1-git-send-email-sujith@msujith.org>
+References: <1413511830-5536-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Change the ath9k_chanctx_wake_queues() API so
-that we can pass the channel context that needs its
-queues to be stopped.
+When an active context transitions to inactive
+state, the NoA schedule needs to be removed
+for the context that has beaconing enabled.
+Not doing this will affect p2p clients.
 
 Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h   | 5 +++--
- drivers/net/wireless/ath/ath9k/channel.c | 6 +++---
- drivers/net/wireless/ath/ath9k/main.c    | 2 +-
- 3 files changed, 7 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/ath9k/channel.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 37a5ccf..4f94d31 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -455,7 +455,7 @@ void ath9k_p2p_bss_info_changed(struct ath_softc *sc,
- void ath9k_beacon_add_noa(struct ath_softc *sc, struct ath_vif *avp,
- 			  struct sk_buff *skb);
- void ath9k_p2p_ps_timer(void *priv);
--void ath9k_chanctx_wake_queues(struct ath_softc *sc);
-+void ath9k_chanctx_wake_queues(struct ath_softc *sc, struct ath_chanctx *ctx);
- void ath_chanctx_check_active(struct ath_softc *sc, struct ath_chanctx *ctx);
- 
- void ath_chanctx_beacon_recv_ev(struct ath_softc *sc,
-@@ -525,7 +525,8 @@ static inline void ath9k_beacon_add_noa(struct ath_softc *sc, struct ath_vif *av
- static inline void ath9k_p2p_ps_timer(struct ath_softc *sc)
- {
- }
--static inline void ath9k_chanctx_wake_queues(struct ath_softc *sc)
-+static inline void ath9k_chanctx_wake_queues(struct ath_softc *sc,
-+					     struct ath_chanctx *ctx)
- {
- }
- static inline void ath_chanctx_check_active(struct ath_softc *sc,
 diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index d088f06..96da03e 100644
+index 709facc..74a5c27 100644
 --- a/drivers/net/wireless/ath/ath9k/channel.c
 +++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -1177,18 +1177,18 @@ bool ath9k_is_chanctx_enabled(void)
- /* Queue management */
- /********************/
+@@ -356,6 +356,21 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 				"Move chanctx state from WAIT_FOR_TIMER to WAIT_FOR_BEACON\n");
+ 		}
  
--void ath9k_chanctx_wake_queues(struct ath_softc *sc)
-+void ath9k_chanctx_wake_queues(struct ath_softc *sc, struct ath_chanctx *ctx)
- {
- 	struct ath_hw *ah = sc->sc_ah;
- 	int i;
- 
--	if (sc->cur_chan == &sc->offchannel.chan) {
-+	if (ctx == &sc->offchannel.chan) {
- 		ieee80211_wake_queue(sc->hw,
- 				     sc->hw->offchannel_tx_hw_queue);
- 	} else {
- 		for (i = 0; i < IEEE80211_NUM_ACS; i++)
- 			ieee80211_wake_queue(sc->hw,
--					     sc->cur_chan->hw_queue_base + i);
-+					     ctx->hw_queue_base + i);
- 	}
- 
- 	if (ah->opmode == NL80211_IFTYPE_AP)
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 5f908a0..f0035a9 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -268,7 +268,7 @@ static bool ath_complete_reset(struct ath_softc *sc, bool start)
- 	if (!ath9k_is_chanctx_enabled())
- 		ieee80211_wake_queues(sc->hw);
- 	else
--		ath9k_chanctx_wake_queues(sc);
-+		ath9k_chanctx_wake_queues(sc, sc->cur_chan);
- 
- 	ath9k_p2p_ps_timer(sc);
++		/*
++		 * When a context becomes inactive, for example,
++		 * disassociation of a station context, the NoA
++		 * attribute needs to be removed from subsequent
++		 * beacons.
++		 */
++		if (!ctx->active && avp->noa_duration &&
++		    sc->sched.state != ATH_CHANCTX_STATE_WAIT_FOR_BEACON) {
++			avp->noa_duration = 0;
++			avp->periodic_noa = false;
++
++			ath_dbg(common, CHAN_CTX,
++				"Clearing NoA schedule\n");
++		}
++
+ 		if (sc->sched.state != ATH_CHANCTX_STATE_WAIT_FOR_BEACON)
+ 			break;
  
 -- 
-2.1.1
+2.1.2
 
