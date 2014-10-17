@@ -1,82 +1,153 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.18]:56327 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752333AbaJKHbQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Oct 2014 03:31:16 -0400
-Message-ID: <5438DCBF.5090404@rempel-privat.de> (sfid-20141011_093124_171291_7499B1A7)
-Date: Sat, 11 Oct 2014 09:31:11 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
-MIME-Version: 1.0
-To: "Schroer, Jens Peter" <jens.schroer@scypho.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Kernel Oops with ath9k_htc during AES decrypt on ARM / BeagleBone
- Black
-References: <51054a8c690db75aa1efacb98e4379c9@scypho.com> <54368960.4040109@rempel-privat.de> <828b549f60c81155be705f5173fe0e11@scypho.com> <54369F07.9080705@rempel-privat.de> <1772bbe6a9db0760b4712cf8fad81fbc@scypho.com>
-In-Reply-To: <1772bbe6a9db0760b4712cf8fad81fbc@scypho.com>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="kQb2jpUIBV7IrWxaJ6qF5shgrOq9nWLA2"
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:52497 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753298AbaJQSeZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Oct 2014 14:34:25 -0400
+Received: by mail-wi0-f174.google.com with SMTP id h11so3097748wiw.7
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Oct 2014 11:34:24 -0700 (PDT)
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Karl Beldan <karl.beldan@rivierawaves.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	karl.beldan@gmail.com, Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH] mac80211: minstrels: fix buffer overflow in HT debugfs rc_stats
+Date: Fri, 17 Oct 2014 20:34:00 +0200
+Message-Id: <1413570840-27679-1-git-send-email-karl.beldan@gmail.com> (sfid-20141017_203429_102902_BD3A7D9C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---kQb2jpUIBV7IrWxaJ6qF5shgrOq9nWLA2
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+From: Karl Beldan <karl.beldan@rivierawaves.com>
 
-Am 10.10.2014 um 14:42 schrieb Schroer, Jens Peter:
-> Hi Oleksij,
->=20
-> I have tried to recover the full dmesg, but it seems to be lost.
-> I am not sure if it disappeared with during the last reboot or was not
-> synced back to the flash due to the kernel panic.
-> I tried to reproduce the kernel oops, but get stuck with the problem I
-> mentioned in my other email.
-> Is there a way of printing / tracing bad packages, so that when this
-> crash occures the next time, I have hopefully more information availabl=
-e?
-> Also, just for completeness, the issue that stops me from trying to
-> reproduce the kernel oops:
+ATM an HT rc_stats line is 106 chars.
+Times 8(MCS_GROUP_RATES)*3(SS)*2(GI)*2(BW) + CCK(4), i.e. x100, this is
+well above the current 8192 - sizeof(*ms) currently allocated.
 
-I don't think this two reports are separate issues. In both cases it is
-triggered by processing of broken RX packages. In one case, wrong rate,
-in other case wrong length. Lets start with rate, since it seems to be
-easier to reproduce.
+Fix this by squeezing the output as follows (not that we're short on
+memory but this also improves readability and range, the new format adds
+one more digit to *ok/*cum and ok/cum):
 
-Theoretically packets with brocken rate should be just filtered out by
-ath9k_cmn_process_rate. Lets try this patch:
+- Before (HT) (106 ch):
+type           rate     throughput  ewma prob   this prob  retry   this succ/attempt   success    attempts
+CCK/LP          5.5M           0.0        0.0         0.0      0              0(  0)         0           0
+HT20/LGI ABCDP MCS0            0.0        0.0         0.0      1              0(  0)         0           0
+- After (75 ch):
+type           rate     tpt eprob *prob ret  *ok(*cum)        ok(      cum)
+CCK/LP          5.5M    0.0   0.0   0.0   0    0(   0)         0(        0)
+HT20/LGI ABCDP MCS0     0.0   0.0   0.0   1    0(   0)         0(        0)
 
-diff --git a/drivers/net/wireless/ath/ath9k/common.c
-b/drivers/net/wireless/ath/
-index c6dd7f1..f7c4db0 100644
---- a/drivers/net/wireless/ath/ath9k/common.c
-+++ b/drivers/net/wireless/ath/ath9k/common.c
-@@ -205,6 +205,7 @@ int ath9k_cmn_process_rate(struct ath_common *common,=
+- Align non-HT format Before (non-HT) (83 ch):
+rate      throughput  ewma prob  this prob  this succ/attempt   success    attempts
+ABCDP  6         0.0        0.0        0.0             0(  0)         0           0
+      54         0.0        0.0        0.0             0(  0)         0           0
+- After (61 ch):
+rate          tpt eprob *prob  *ok(*cum)        ok(      cum)
+ABCDP  1      0.0   0.0   0.0    0(   0)         0(        0)
+      54      0.0   0.0   0.0    0(   0)         0(        0)
 
-                }
-        }
+*This also adds dynamic checks for overflow, lowers the size of the
+non-HT request (allowing > 30 entries) and replaces the buddy-rounded
+allocations (s/sizeof(*ms) + 8192/8192).
 
-+       printk("Warning! Unsuported rate.\n");
-        return -EINVAL;
+Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
+Cc: Felix Fietkau <nbd@openwrt.org>
+---
+
+
+Send this one-line patch to stable ?
+-	ms = kmalloc(sizeof(*ms) + 8192, GFP_KERNEL);
++	ms = kmalloc(16384, GFP_KERNEL);
+
+
+ net/mac80211/rc80211_minstrel_debugfs.c    | 12 +++++++-----
+ net/mac80211/rc80211_minstrel_ht_debugfs.c | 13 ++++++++-----
+ 2 files changed, 15 insertions(+), 10 deletions(-)
+
+diff --git a/net/mac80211/rc80211_minstrel_debugfs.c b/net/mac80211/rc80211_minstrel_debugfs.c
+index edde723..b33be0f 100644
+--- a/net/mac80211/rc80211_minstrel_debugfs.c
++++ b/net/mac80211/rc80211_minstrel_debugfs.c
+@@ -62,14 +62,14 @@ minstrel_stats_open(struct inode *inode, struct file *file)
+ 	unsigned int i, tp, prob, eprob;
+ 	char *p;
+ 
+-	ms = kmalloc(sizeof(*ms) + 4096, GFP_KERNEL);
++	ms = kmalloc(2048, GFP_KERNEL);
+ 	if (!ms)
+ 		return -ENOMEM;
+ 
+ 	file->private_data = ms;
+ 	p = ms->buf;
+-	p += sprintf(p, "rate      throughput  ewma prob  this prob  "
+-			"this succ/attempt   success    attempts\n");
++	p += sprintf(p, "rate          tpt eprob *prob"
++			"  *ok(*cum)        ok(      cum)\n");
+ 	for (i = 0; i < mi->n_rates; i++) {
+ 		struct minstrel_rate *mr = &mi->r[i];
+ 		struct minstrel_rate_stats *mrs = &mi->r[i].stats;
+@@ -86,8 +86,8 @@ minstrel_stats_open(struct inode *inode, struct file *file)
+ 		prob = MINSTREL_TRUNC(mrs->cur_prob * 1000);
+ 		eprob = MINSTREL_TRUNC(mrs->probability * 1000);
+ 
+-		p += sprintf(p, "  %6u.%1u   %6u.%1u   %6u.%1u        "
+-				"   %3u(%3u)  %8llu    %8llu\n",
++		p += sprintf(p, " %4u.%1u %3u.%1u %3u.%1u"
++				" %4u(%4u) %9llu(%9llu)\n",
+ 				tp / 10, tp % 10,
+ 				eprob / 10, eprob % 10,
+ 				prob / 10, prob % 10,
+@@ -102,6 +102,8 @@ minstrel_stats_open(struct inode *inode, struct file *file)
+ 			mi->sample_packets);
+ 	ms->len = p - ms->buf;
+ 
++	WARN_ON(ms->len > 2048 - sizeof(*ms));
++
+ 	return 0;
  }
- EXPORT_SYMBOL(ath9k_cmn_process_rate);
+ 
+diff --git a/net/mac80211/rc80211_minstrel_ht_debugfs.c b/net/mac80211/rc80211_minstrel_ht_debugfs.c
+index a72ad46..b51b4ec 100644
+--- a/net/mac80211/rc80211_minstrel_ht_debugfs.c
++++ b/net/mac80211/rc80211_minstrel_ht_debugfs.c
+@@ -63,8 +63,8 @@ minstrel_ht_stats_dump(struct minstrel_ht_sta *mi, int i, char *p)
+ 		prob = MINSTREL_TRUNC(mr->cur_prob * 1000);
+ 		eprob = MINSTREL_TRUNC(mr->probability * 1000);
+ 
+-		p += sprintf(p, "      %6u.%1u   %6u.%1u    %6u.%1u    "
+-				"%3u            %3u(%3u)  %8llu    %8llu\n",
++		p += sprintf(p, " %4u.%1u %3u.%1u %3u.%1u "
++				"%3u %4u(%4u) %9llu(%9llu)\n",
+ 				tp / 10, tp % 10,
+ 				eprob / 10, eprob % 10,
+ 				prob / 10, prob % 10,
+@@ -96,14 +96,15 @@ minstrel_ht_stats_open(struct inode *inode, struct file *file)
+ 		return ret;
+ 	}
+ 
+-	ms = kmalloc(sizeof(*ms) + 8192, GFP_KERNEL);
++	ms = kmalloc(8192, GFP_KERNEL);
+ 	if (!ms)
+ 		return -ENOMEM;
+ 
+ 	file->private_data = ms;
+ 	p = ms->buf;
+-	p += sprintf(p, "type           rate     throughput  ewma prob   "
+-		     "this prob  retry   this succ/attempt   success    attempts\n");
++	p += sprintf(p, "type           rate     tpt eprob *prob "
++			"ret  *ok(*cum)        ok(      cum)\n");
++
+ 
+ 	p = minstrel_ht_stats_dump(mi, max_mcs, p);
+ 	for (i = 0; i < max_mcs; i++)
+@@ -118,6 +119,8 @@ minstrel_ht_stats_open(struct inode *inode, struct file *file)
+ 		MINSTREL_TRUNC(mi->avg_ampdu_len * 10) % 10);
+ 	ms->len = p - ms->buf;
+ 
++	WARN_ON(ms->len > 8192 - sizeof(*ms));
++
+ 	return nonseekable_open(inode, file);
+ }
+ 
+-- 
+2.0.1
 
---=20
-Regards,
-Oleksij
-
-
---kQb2jpUIBV7IrWxaJ6qF5shgrOq9nWLA2
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iF4EAREIAAYFAlQ43L8ACgkQHwImuRkmbWnsPQD8CEx6aA1cnG3GJ5oWTi4vSzR0
-k6RAar8p/26zffteX5kBAInX1aUg1hebvwO/1PSj4tQCb1DAJnQTx9ln/az1PNwA
-=lik6
------END PGP SIGNATURE-----
-
---kQb2jpUIBV7IrWxaJ6qF5shgrOq9nWLA2--
