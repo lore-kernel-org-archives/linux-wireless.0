@@ -1,31 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:32970 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755845AbaJHKU2 (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:37284 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753174AbaJQCLH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Oct 2014 06:20:28 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: warn on unhandled htt events
-References: <1412249575-22387-1-git-send-email-michal.kazior@tieto.com>
-Date: Wed, 8 Oct 2014 13:20:16 +0300
-In-Reply-To: <1412249575-22387-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Thu, 2 Oct 2014 13:32:55 +0200")
-Message-ID: <871tqihnhb.fsf@kamboji.qca.qualcomm.com> (sfid-20141008_122033_805659_C6755269)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 16 Oct 2014 22:11:07 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH v2 23/23] ath9k: Do not start BA when scanning
+Date: Fri, 17 Oct 2014 07:40:30 +0530
+Message-Id: <1413511830-5536-24-git-send-email-sujith@msujith.org> (sfid-20141017_041320_989836_D8611F04)
+In-Reply-To: <1413511830-5536-1-git-send-email-sujith@msujith.org>
+References: <1413511830-5536-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-> It makes a lot more sense to print these kinds of
-> problems as a warning instead of a debug.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+mac80211 currently has a race which can be hit
+with this sequence:
 
-Thanks, applied.
+* Start a scan operation.
+* TX BA is initiated by ieee80211_start_tx_ba_session().
+* Driver sets up internal state and calls
+  ieee80211_start_tx_ba_cb_irqsafe().
+* mac80211 adds a packet to sdata->skb_queue with
+  type IEEE80211_SDATA_QUEUE_AGG_START.
+* ieee80211_iface_work() doesn't process the
+  packet because scan is in progress.
+* ADDBA response timer expires and the sta/tid is
+  torn down.
+* Driver receives BA stop notification and calls
+  ieee80211_stop_tx_ba_cb_irqsafe().
+* This is also added to the queue by mac80211.
+* Now, scan finishes.
 
+At this point, the queued up packets might be processed
+if some other operation schedules the sdata work. Since
+the tids have been cleaned up already, warnings are hit.
+
+If this doesn't happen, the packets are left in the queue
+until the interface is torn down.
+
+Since initiating a BA session when scan is in progress
+leads to flaky connections, especially in MCC mode, we
+can drop the TX BA request. This improves connectivity
+with legacy clients in MCC mode.
+
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 961a388..68c5670 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1885,6 +1885,7 @@ static int ath9k_ampdu_action(struct ieee80211_hw *hw,
+ 			      u16 tid, u16 *ssn, u8 buf_size)
+ {
+ 	struct ath_softc *sc = hw->priv;
++	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	bool flush = false;
+ 	int ret = 0;
+ 
+@@ -1896,6 +1897,12 @@ static int ath9k_ampdu_action(struct ieee80211_hw *hw,
+ 	case IEEE80211_AMPDU_RX_STOP:
+ 		break;
+ 	case IEEE80211_AMPDU_TX_START:
++		if (ath9k_is_chanctx_enabled()) {
++			if (test_bit(ATH_OP_SCANNING, &common->op_flags)) {
++				ret = -EBUSY;
++				break;
++			}
++		}
+ 		ath9k_ps_wakeup(sc);
+ 		ret = ath_tx_aggr_start(sc, sta, tid, ssn);
+ 		if (!ret)
 -- 
-Kalle Valo
+2.1.2
+
