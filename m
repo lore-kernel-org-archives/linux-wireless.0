@@ -1,67 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:42640 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758132AbaJ3Tsh (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:58784 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753199AbaJQCKm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Oct 2014 15:48:37 -0400
-Message-ID: <54529613.2030102@broadcom.com> (sfid-20141030_204841_963435_EDF390B0)
-Date: Thu, 30 Oct 2014 20:48:35 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>, <ath9k-devel@venema.h4ckr.net>
-Subject: Re: [PATCH 0/3] debugfs: adding helper for single seq_file
-References: <1414498752-9746-1-git-send-email-arend@broadcom.com> <20141030191922.GA3768@tuxdriver.com> <20141030193914.GA28346@kroah.com>
-In-Reply-To: <20141030193914.GA28346@kroah.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Thu, 16 Oct 2014 22:10:42 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH v2 17/23] ath9k: Use a helper function to set NoA
+Date: Fri, 17 Oct 2014 07:40:24 +0530
+Message-Id: <1413511830-5536-18-git-send-email-sujith@msujith.org> (sfid-20141017_041321_675648_7184922D)
+In-Reply-To: <1413511830-5536-1-git-send-email-sujith@msujith.org>
+References: <1413511830-5536-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/30/14 20:39, Greg Kroah-Hartman wrote:
-> On Thu, Oct 30, 2014 at 03:19:22PM -0400, John W. Linville wrote:
->> On Tue, Oct 28, 2014 at 01:19:09PM +0100, Arend van Spriel wrote:
->>> The first patch was already posted earlier:
->>>
->>> Message-ID:<1413043315-22332-1-git-send-email-arend@broadcom.com>
->>>
->>> This series include changes in driver code to investigate potential
->>> code savings. As example used the ath9k driver as it has a fair
->>> amount of debugfs files. In this series it changes 7 debugfs entries
->>> to use seq_file and the helper function. Below the output of the
->>> size utility:
->>>
->>>     text	   data	    bss	    dec	    hex	filename
->>>   115968	   1225	     28	 117221	  1c9e5	original/ath9k.o
->>>   113224	   1225	     28	 114477	  1bf2d	seq_file/ath9k.o
->>>   111024	   1225	     28	 112277	  1b695	helper/ath9k.o
->>>
->>> This series is for 3.19 kernel and applies to the driver-core-next
->>> branch of the driver-core repository. If needed the ath9k patches
->>> may be dropped for now and I will resubmit them to wireless-next
->>> once the debugfs patch has made it into linux-next.
->>>
->>> Arend van Spriel (3):
->>>    debugfs: add helper function to create device related seq_file
->>>    ath: use seq_file api for ath9k debugfs files
->>>    ath: ath9k: use debugfs_create_devm_seqfile() helper for seq_file
->>>      entries
->>
->> Greg,
->>
->> If you are happy with the debugfs change then feel free to merge the
->> wireless patches along with it.
->
-> Ok, will do, can I get your Ack for them?
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-I saw a patch from Dan Carpenter on one of the functions I converted so 
-if John has taken that one [1] it may give merge conflict in linux-next.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/channel.c | 61 +++++++++++++++++++-------------
+ 1 file changed, 36 insertions(+), 25 deletions(-)
 
-Regards,
-Arend
-
-[1] http://mid.gmane.org/20141029154805.GC5290@mwanda
-> thanks,
->
-> greg k-h
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index c6e130d..7d6f76b 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -392,6 +392,39 @@ static void ath_chanctx_offchannel_noa(struct ath_softc *sc,
+ 		avp->noa_duration = 0;
+ }
+ 
++static void ath_chanctx_set_periodic_noa(struct ath_softc *sc,
++					 struct ath_vif *avp,
++					 struct ath_beacon_config *cur_conf,
++					 u32 tsf_time,
++					 u32 beacon_int)
++{
++	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
++
++	avp->noa_index++;
++	avp->noa_start = tsf_time;
++
++	if (sc->sched.extend_absence)
++		avp->noa_duration = (3 * beacon_int / 2) +
++			sc->sched.channel_switch_time;
++	else
++		avp->noa_duration =
++			TU_TO_USEC(cur_conf->beacon_interval) / 2 +
++			sc->sched.channel_switch_time;
++
++	if (test_bit(ATH_OP_SCANNING, &common->op_flags) ||
++	    sc->sched.extend_absence)
++		avp->periodic_noa = false;
++	else
++		avp->periodic_noa = true;
++
++	ath_dbg(common, CHAN_CTX,
++		"noa_duration: %d, noa_start: %d, noa_index: %d, periodic: %d\n",
++		avp->noa_duration,
++		avp->noa_start,
++		avp->noa_index,
++		avp->periodic_noa);
++}
++
+ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 		       enum ath_chanctx_event ev)
+ {
+@@ -521,31 +554,9 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 		 * announcement.
+ 		 */
+ 		if (ctx->active &&
+-		    (!avp->noa_duration || sc->sched.force_noa_update)) {
+-			avp->noa_index++;
+-			avp->noa_start = tsf_time;
+-
+-			if (sc->sched.extend_absence)
+-				avp->noa_duration = (3 * beacon_int / 2) +
+-					sc->sched.channel_switch_time;
+-			else
+-				avp->noa_duration =
+-					TU_TO_USEC(cur_conf->beacon_interval) / 2 +
+-					sc->sched.channel_switch_time;
+-
+-			if (test_bit(ATH_OP_SCANNING, &common->op_flags) ||
+-			    sc->sched.extend_absence)
+-				avp->periodic_noa = false;
+-			else
+-				avp->periodic_noa = true;
+-
+-			ath_dbg(common, CHAN_CTX,
+-				"noa_duration: %d, noa_start: %d, noa_index: %d, periodic: %d\n",
+-				avp->noa_duration,
+-				avp->noa_start,
+-				avp->noa_index,
+-				avp->periodic_noa);
+-		}
++		    (!avp->noa_duration || sc->sched.force_noa_update))
++			ath_chanctx_set_periodic_noa(sc, avp, cur_conf,
++						     tsf_time, beacon_int);
+ 
+ 		if (ctx->active && sc->sched.force_noa_update)
+ 			sc->sched.force_noa_update = false;
+-- 
+2.1.2
 
