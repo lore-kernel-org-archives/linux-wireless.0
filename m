@@ -1,49 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:13705 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753486AbaJ1KpN (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:43483 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751322AbaJQCJg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2014 06:45:13 -0400
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <wireless-regdb@lists.infradead.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 14/21] wireless-regdb: Add regulatory rules for Nicaragua (NI)
-Date: Tue, 28 Oct 2014 12:43:00 +0200
-Message-ID: <1414492987-16118-7-git-send-email-jouni@qca.qualcomm.com> (sfid-20141028_114520_805524_1F55BD6F)
-In-Reply-To: <1414492987-16118-1-git-send-email-jouni@qca.qualcomm.com>
-References: <1414492175-13830-1-git-send-email-jouni@qca.qualcomm.com>
- <1414492987-16118-1-git-send-email-jouni@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 16 Oct 2014 22:09:36 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH v2 01/23] ath9k: Use sta_state() callback
+Date: Fri, 17 Oct 2014 07:40:08 +0530
+Message-Id: <1413511830-5536-2-git-send-email-sujith@msujith.org> (sfid-20141017_040950_913754_D220DC00)
+In-Reply-To: <1413511830-5536-1-git-send-email-sujith@msujith.org>
+References: <1413511830-5536-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Source is QCA's regulatory team's efforts.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+Instead of using the sta_add()/sta_remove() callbacks,
+use the sta_state() callback since this gives
+more fine-grained control.
+
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- db.txt | 7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/net/wireless/ath/ath9k/main.c | 28 ++++++++++++++++++++++++++--
+ 1 file changed, 26 insertions(+), 2 deletions(-)
 
-diff --git a/db.txt b/db.txt
-index 7319579..1c9e307 100644
---- a/db.txt
-+++ b/db.txt
-@@ -812,6 +812,13 @@ country MX: DFS-FCC
- 	(5490 - 5730 @ 160), (24), DFS
- 	(5735 - 5835 @ 80), (30)
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 6f6a974..902807e 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1547,6 +1547,31 @@ static int ath9k_sta_remove(struct ieee80211_hw *hw,
+ 	return 0;
+ }
  
-+country NI: DFS-FCC
-+	(2402 - 2472 @ 40), (30)
-+	(5170 - 5250 @ 80), (24), AUTO-BW
-+	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
-+	(5490 - 5730 @ 160), (24), DFS
-+	(5735 - 5835 @ 80), (30)
++static int ath9k_sta_state(struct ieee80211_hw *hw,
++			   struct ieee80211_vif *vif,
++			   struct ieee80211_sta *sta,
++			   enum ieee80211_sta_state old_state,
++			   enum ieee80211_sta_state new_state)
++{
++	struct ath_softc *sc = hw->priv;
++	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
++	int ret = 0;
 +
- country NL: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 80), (20), NO-OUTDOOR, AUTO-BW
++	if (old_state == IEEE80211_STA_AUTH &&
++	    new_state == IEEE80211_STA_ASSOC) {
++		ret = ath9k_sta_add(hw, vif, sta);
++		ath_dbg(common, CONFIG,
++			"Add station: %pM\n", sta->addr);
++	} else if (old_state == IEEE80211_STA_ASSOC &&
++		   new_state == IEEE80211_STA_AUTH) {
++		ret = ath9k_sta_remove(hw, vif, sta);
++		ath_dbg(common, CONFIG,
++			"Remove station: %pM\n", sta->addr);
++	}
++
++	return ret;
++}
++
+ static void ath9k_sta_set_tx_filter(struct ath_hw *ah,
+ 				    struct ath_node *an,
+ 				    bool set)
+@@ -2471,8 +2496,7 @@ struct ieee80211_ops ath9k_ops = {
+ 	.remove_interface   = ath9k_remove_interface,
+ 	.config 	    = ath9k_config,
+ 	.configure_filter   = ath9k_configure_filter,
+-	.sta_add	    = ath9k_sta_add,
+-	.sta_remove	    = ath9k_sta_remove,
++	.sta_state          = ath9k_sta_state,
+ 	.sta_notify         = ath9k_sta_notify,
+ 	.conf_tx 	    = ath9k_conf_tx,
+ 	.bss_info_changed   = ath9k_bss_info_changed,
 -- 
-1.9.1
+2.1.2
 
