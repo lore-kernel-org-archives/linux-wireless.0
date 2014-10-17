@@ -1,48 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:57252 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750958AbaJIJqO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2014 05:46:14 -0400
-Message-ID: <1412847971.1828.42.camel@jlt4.sipsolutions.net> (sfid-20141009_114617_066393_70072020)
-Subject: Re: [PATCH] cfg80211: Add support for ACS offloading
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kyeyoon Park <kyeyoonp@qca.qualcomm.com>
-Cc: pxu@qca.qualcomm.com, cfg80211mac80211@qca.qualcomm.com,
-	linux-wireless@vger.kernel.org
-Date: Thu, 09 Oct 2014 11:46:11 +0200
-In-Reply-To: <1412373538-17690-1-git-send-email-kyeyoonp@qca.qualcomm.com>
-References: <1412373538-17690-1-git-send-email-kyeyoonp@qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from s72.web-hosting.com ([198.187.29.22]:37388 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753174AbaJQCLD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Oct 2014 22:11:03 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH v2 22/23] ath9k: Improve flush() in mcc mode
+Date: Fri, 17 Oct 2014 07:40:29 +0530
+Message-Id: <1413511830-5536-23-git-send-email-sujith@msujith.org> (sfid-20141017_041320_833205_22EFD645)
+In-Reply-To: <1413511830-5536-1-git-send-email-sujith@msujith.org>
+References: <1413511830-5536-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-10-03 at 14:58 -0700, Kyeyoon Park wrote:
-> From: Peng Xu <pxu@qca.qualcomm.com>
-> 
-> Add support for offloading ACS functionality to the driver. A new
-> feature flag NL80211_FEATURE_AP_ACS_OFFLOAD was added to support
-> ACS (Automatic Channel Selection) offload functionality. This flag
-> allows the driver to advertise its ACS capability.
-> 
-> When hostapd starts with the "channel" configuration set to 0, it will
-> check whether the driver has the capability of doing the ACS on its own.
-> If the driver has such capability, then the channel selection will be
-> done in the driver. The kernel will skip the channel information
-> validation since it would initially be NULL when this feature is
-> enabled. After the channel is selected by the driver, a channel
-> change event will be sent from the driver to the kernel which updates
-> the channel information it maintains. This event is in turn sent to
-> hostapd and the channel information in hostapd will get updated as well.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Is this design required? That seems a bit strange because you'd start
-the AP with ... invalid beacon information? Invalid probe response, and
-all that? Even an invalid channel reported to other userspace.
+The flush timeout in MCC mode is very small, since
+we are constrained by the time slice for each
+channel context, but since only the HW queues are
+flushed when switching contexts, it is acceptable.
 
-I'd much prefer offloading this as a separate operation, with the device
-reporting back the best channel (configuration) to use, and hostapd then
-using that to start up its operation.
+Since the SW queues are also emptied in the mac80211 flush()
+callback, a larger duration is needed. Add an override
+argument to __ath9k_flush() and set it when flush()
+is called in MCC mode. This allows the driver to
+drain both the SW and HW queues.
 
-johannes
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h   |  2 +-
+ drivers/net/wireless/ath/ath9k/channel.c |  4 ++--
+ drivers/net/wireless/ath/ath9k/main.c    | 28 +++++++++++++++++++++++++---
+ 3 files changed, 28 insertions(+), 6 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 7ac1b06..85d74ff 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -719,7 +719,7 @@ void ath_update_survey_nf(struct ath_softc *sc, int channel);
+ void ath9k_queue_reset(struct ath_softc *sc, enum ath_reset_type type);
+ void ath_ps_full_sleep(unsigned long data);
+ void __ath9k_flush(struct ieee80211_hw *hw, u32 queues, bool drop,
+-		   bool sw_pending);
++		   bool sw_pending, bool timeout_override);
+ 
+ /**********/
+ /* BTCOEX */
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index 25b898e..c7234d5 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -1232,11 +1232,11 @@ void ath_chanctx_set_next(struct ath_softc *sc, bool force)
+ 		ath9k_chanctx_stop_queues(sc, sc->cur_chan);
+ 		queues_stopped = true;
+ 
+-		__ath9k_flush(sc->hw, ~0, true, false);
++		__ath9k_flush(sc->hw, ~0, true, false, false);
+ 
+ 		if (ath_chanctx_send_ps_frame(sc, true))
+ 			__ath9k_flush(sc->hw, BIT(IEEE80211_AC_VO),
+-				      false, false);
++				      false, false, false);
+ 
+ 		send_ps = true;
+ 		spin_lock_bh(&sc->chan_lock);
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index a524eeb..961a388 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2031,14 +2031,33 @@ static void ath9k_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 			u32 queues, bool drop)
+ {
+ 	struct ath_softc *sc = hw->priv;
++	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
++
++	if (ath9k_is_chanctx_enabled()) {
++		if (!test_bit(ATH_OP_MULTI_CHANNEL, &common->op_flags))
++			goto flush;
+ 
++		/*
++		 * If MCC is active, extend the flush timeout
++		 * and wait for the HW/SW queues to become
++		 * empty. This needs to be done outside the
++		 * sc->mutex lock to allow the channel scheduler
++		 * to switch channel contexts.
++		 *
++		 * The vif queues have been stopped in mac80211,
++		 * so there won't be any incoming frames.
++		 */
++		__ath9k_flush(hw, queues, drop, true, true);
++		return;
++	}
++flush:
+ 	mutex_lock(&sc->mutex);
+-	__ath9k_flush(hw, queues, drop, true);
++	__ath9k_flush(hw, queues, drop, true, false);
+ 	mutex_unlock(&sc->mutex);
+ }
+ 
+ void __ath9k_flush(struct ieee80211_hw *hw, u32 queues, bool drop,
+-		   bool sw_pending)
++		   bool sw_pending, bool timeout_override)
+ {
+ 	struct ath_softc *sc = hw->priv;
+ 	struct ath_hw *ah = sc->sc_ah;
+@@ -2059,7 +2078,10 @@ void __ath9k_flush(struct ieee80211_hw *hw, u32 queues, bool drop,
+ 	}
+ 
+ 	spin_lock_bh(&sc->chan_lock);
+-	timeout = sc->cur_chan->flush_timeout;
++	if (timeout_override)
++		timeout = HZ / 5;
++	else
++		timeout = sc->cur_chan->flush_timeout;
+ 	spin_unlock_bh(&sc->chan_lock);
+ 
+ 	ath_dbg(common, CHAN_CTX,
+-- 
+2.1.2
 
