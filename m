@@ -1,60 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f175.google.com ([209.85.192.175]:57008 "EHLO
-	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751965AbaJ3ER1 (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:58806 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753199AbaJQCKt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Oct 2014 00:17:27 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org,
-	Murilo Opsfelder Araujo <mopsfelder@gmail.com>
-Subject: [PATCH 3/6i V3.18] rtlwifi: rtl8192se: Add missing section to read descriptor setting
-Date: Wed, 29 Oct 2014 23:17:10 -0500
-Message-Id: <1414642633-3700-4-git-send-email-Larry.Finger@lwfinger.net> (sfid-20141030_051745_927268_97A03DC2)
-In-Reply-To: <1414642633-3700-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1414642633-3700-1-git-send-email-Larry.Finger@lwfinger.net>
+	Thu, 16 Oct 2014 22:10:49 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH v2 19/23] ath9k: Fix RoC expiration
+Date: Fri, 17 Oct 2014 07:40:26 +0530
+Message-Id: <1413511830-5536-20-git-send-email-sujith@msujith.org> (sfid-20141017_041320_706315_D5A7A171)
+In-Reply-To: <1413511830-5536-1-git-send-email-sujith@msujith.org>
+References: <1413511830-5536-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The new version of rtlwifi needs code in rtl92se_get_desc() that returns
-the buffer address for read operations.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Murilo Opsfelder Araujo <mopsfelder@gmail.com>
+mac80211 has to be notified when a RoC period
+expires in the driver. In MCC mode, since the
+offchannel/RoC timer is set with the requested
+duration, ieee80211_remain_on_channel_expired() needs
+to be called when the timer expires.
+
+But, currently it is done after we move back to
+the operating channel. This is incorrect - fix this
+by calling ieee80211_remain_on_channel_expired() when
+the RoC timer expires and in ath_roc_complete() when
+the RoC request is aborted.
+
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/rtlwifi/rtl8192se/def.h | 2 ++
- drivers/net/wireless/rtlwifi/rtl8192se/trx.c | 3 +++
- 2 files changed, 5 insertions(+)
+ drivers/net/wireless/ath/ath9k/channel.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/def.h b/drivers/net/wireless/rtlwifi/rtl8192se/def.h
-index 83c9867..6e7a70b 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192se/def.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192se/def.h
-@@ -446,6 +446,8 @@
- /* DWORD 6 */
- #define SET_RX_STATUS__DESC_BUFF_ADDR(__pdesc, __val)	\
- 	SET_BITS_OFFSET_LE(__pdesc + 24, 0, 32, __val)
-+#define GET_RX_STATUS_DESC_BUFF_ADDR(__pdesc)			\
-+	SHIFT_AND_MASK_LE(__pdesc + 24, 0, 32)
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index 7fe35a5..447b397 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -894,7 +894,7 @@ void ath_roc_complete(struct ath_softc *sc, bool abort)
  
- #define SE_RX_HAL_IS_CCK_RATE(_pdesc)\
- 	(GET_RX_STATUS_DESC_RX_MCS(_pdesc) == DESC92_RATE1M ||	\
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/trx.c b/drivers/net/wireless/rtlwifi/rtl8192se/trx.c
-index b358ebc..672fd3b 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192se/trx.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192se/trx.c
-@@ -640,6 +640,9 @@ u32 rtl92se_get_desc(u8 *desc, bool istx, u8 desc_name)
- 		case HW_DESC_RXPKT_LEN:
- 			ret = GET_RX_STATUS_DESC_PKT_LEN(desc);
- 			break;
-+		case HW_DESC_RXBUFF_ADDR:
-+			ret = GET_RX_STATUS_DESC_BUFF_ADDR(desc);
-+			break;
- 		default:
- 			RT_ASSERT(false, "ERR rxdesc :%d not process\n",
- 				  desc_name);
+ 	sc->offchannel.roc_vif = NULL;
+ 	sc->offchannel.roc_chan = NULL;
+-	if (!abort)
++	if (abort)
+ 		ieee80211_remain_on_channel_expired(sc->hw);
+ 	ath_offchannel_next(sc);
+ 	ath9k_ps_restore(sc);
+@@ -1028,6 +1028,7 @@ static void ath_offchannel_timer(unsigned long data)
+ 	case ATH_OFFCHANNEL_ROC_WAIT:
+ 		ctx = ath_chanctx_get_oper_chan(sc, false);
+ 		sc->offchannel.state = ATH_OFFCHANNEL_ROC_DONE;
++		ieee80211_remain_on_channel_expired(sc->hw);
+ 		ath_chanctx_switch(sc, ctx, NULL);
+ 		break;
+ 	default:
 -- 
-2.1.1
+2.1.2
 
