@@ -1,75 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:47327 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753758AbaJGMFn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Oct 2014 08:05:43 -0400
-Message-ID: <1412683538.1825.13.camel@jlt4.sipsolutions.net> (sfid-20141007_140550_446892_6E6CF53A)
-Subject: Re: [PATCH v2] cfg80211: allow to configure dynamic PS timeout
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org,
-	Zdenek Kabelac <zkabelac@redhat.com>
-Date: Tue, 07 Oct 2014 14:05:38 +0200
-In-Reply-To: <20141007110356.GA2902@redhat.com>
-References: <1412083114-8426-1-git-send-email-sgruszka@redhat.com>
-	 <542AB859.5080008@broadcom.com> <542AB893.9090201@broadcom.com>
-	 <20141001092710.GB2011@redhat.com>
-	 <1412607640.3098.33.camel@jlt4.sipsolutions.net>
-	 <20141007110356.GA2902@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from s72.web-hosting.com ([198.187.29.22]:40435 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752398AbaJQCJk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Oct 2014 22:09:40 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH v2 02/23] ath9k: Enable multi-channel properly
+Date: Fri, 17 Oct 2014 07:40:09 +0530
+Message-Id: <1413511830-5536-3-git-send-email-sujith@msujith.org> (sfid-20141017_040954_032709_0351F514)
+In-Reply-To: <1413511830-5536-1-git-send-email-sujith@msujith.org>
+References: <1413511830-5536-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-10-07 at 13:03 +0200, Stanislaw Gruszka wrote:
-> On Mon, Oct 06, 2014 at 05:00:40PM +0200, Johannes Berg wrote:
-> > On Wed, 2014-10-01 at 11:27 +0200, Stanislaw Gruszka wrote:
-> > > Dynamic power save timeout value is suppose to be configurable via
-> > > wext, but due to iwconfig bug is not possible to set using that tool.
-> > 
-> > That's interesting, what's that bug?
-> 
-> https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=532713
-> 
-> Parsing problem. After reading bug report more detailed I found out it
-> is fixed on pre beta version v30, but it was not released i.e. on Fedora
-> we use wireless-tools v29.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Curious. I have version 30 on Debian, but all of this is *years* old.
-Hah.
+In MCC mode, currently the decision to enable
+the multi-channel state machine is done
+based on the association status if one of
+the interfaces assigned to a context is in
+station mode.
 
-> > > Allow to configure PS timeout via nl80211 - add NL80211_ATTR_PS_TIMEOUT
-> > > attribute which become timeout stated in ms.
-> > 
-> > Why do you want to be able to set it at all though? I remember having
-> > this discussion years ago, and we said that it wasn't really useful
-> > since the user has no idea when and why this should be changed. I'm not
-> > convinced that changed?
-> > 
-> > We had to keep the wext for compatibility - maybe that can now be
-> > removed if you say it's broken - but I'm not sure I see much value in
-> > adding it (and you're doing nothing to convince me otherwise, so far)
-> 
-> Zdenek (CCed) reported to me 40% download performance degradation when
-> PS is used. I think this happen because of delay between packets, but
-> it is not confirmed yet (I did not provide patches to Zdenek for
-> testing), hence perhaps problem lies somewere else. I can not reproduce
-> this issue - I have the same download performance with PS on and off,
-> I have quite bad performance when set dynamic PS timeout value less
-> than 20ms, with default 100ms things are fine.
-> 
-> I assume we can provide that setting to user space, if it allow to
-> fixup performance with PS ?
+This allows the driver to switch to the other
+context before the current station is able to
+complete the 4-way handshake in case it is
+required and this causes problems.
 
-I'm not convinced - that'll give you a way to have the bug reporter test
-it, or whatever, but that can also be achieved with debugfs or similar,
-no?
+Instead, enable multi-channel mode when the
+station moves to the authorized state. This
+disallows an early switch to the other channel.
 
-"Regular" users will never even get there, they'll either give up on
-Linux, the machine, the wifi NIC, or live with the low speeds. They'll
-never manipulate things here, and this isn't anything that a userspace
-tool could automatically manipulate either.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h   |  2 +-
+ drivers/net/wireless/ath/ath9k/channel.c |  4 ++--
+ drivers/net/wireless/ath/ath9k/main.c    | 13 +++++++------
+ 3 files changed, 10 insertions(+), 9 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 01a7db0..aff5e4c 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -362,7 +362,7 @@ enum ath_chanctx_event {
+ 	ATH_CHANCTX_EVENT_BEACON_SENT,
+ 	ATH_CHANCTX_EVENT_TSF_TIMER,
+ 	ATH_CHANCTX_EVENT_BEACON_RECEIVED,
+-	ATH_CHANCTX_EVENT_ASSOC,
++	ATH_CHANCTX_EVENT_AUTHORIZED,
+ 	ATH_CHANCTX_EVENT_SWITCH,
+ 	ATH_CHANCTX_EVENT_ASSIGN,
+ 	ATH_CHANCTX_EVENT_UNASSIGN,
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index 945c898..16bed6a 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -171,7 +171,7 @@ static const char *chanctx_event_string(enum ath_chanctx_event ev)
+ 		case_rtn_string(ATH_CHANCTX_EVENT_BEACON_SENT);
+ 		case_rtn_string(ATH_CHANCTX_EVENT_TSF_TIMER);
+ 		case_rtn_string(ATH_CHANCTX_EVENT_BEACON_RECEIVED);
+-		case_rtn_string(ATH_CHANCTX_EVENT_ASSOC);
++		case_rtn_string(ATH_CHANCTX_EVENT_AUTHORIZED);
+ 		case_rtn_string(ATH_CHANCTX_EVENT_SWITCH);
+ 		case_rtn_string(ATH_CHANCTX_EVENT_ASSIGN);
+ 		case_rtn_string(ATH_CHANCTX_EVENT_UNASSIGN);
+@@ -510,7 +510,7 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 
+ 		ath_chanctx_setup_timer(sc, tsf_time);
+ 		break;
+-	case ATH_CHANCTX_EVENT_ASSOC:
++	case ATH_CHANCTX_EVENT_AUTHORIZED:
+ 		if (sc->sched.state != ATH_CHANCTX_STATE_FORCE_ACTIVE ||
+ 		    avp->chanctx != sc->cur_chan)
+ 			break;
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 902807e..446bc46 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1569,6 +1569,13 @@ static int ath9k_sta_state(struct ieee80211_hw *hw,
+ 			"Remove station: %pM\n", sta->addr);
+ 	}
+ 
++	if (ath9k_is_chanctx_enabled()) {
++		if (old_state == IEEE80211_STA_ASSOC &&
++		    new_state == IEEE80211_STA_AUTHORIZED)
++			ath_chanctx_event(sc, vif,
++					  ATH_CHANCTX_EVENT_AUTHORIZED);
++	}
++
+ 	return ret;
+ }
+ 
+@@ -1761,12 +1768,6 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
+ 		avp->assoc = bss_conf->assoc;
+ 
+ 		ath9k_calculate_summary_state(sc, avp->chanctx);
+-
+-		if (ath9k_is_chanctx_enabled()) {
+-			if (bss_conf->assoc)
+-				ath_chanctx_event(sc, vif,
+-						  ATH_CHANCTX_EVENT_ASSOC);
+-		}
+ 	}
+ 
+ 	if (changed & BSS_CHANGED_IBSS) {
+-- 
+2.1.2
 
