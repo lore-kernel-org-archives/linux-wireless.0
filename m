@@ -1,50 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:19680 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756994AbaJ2V0I (ORCPT
+Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:49134
+	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751537AbaJRRCR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2014 17:26:08 -0400
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <wireless-regdb@lists.infradead.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 7/7] wireless-regdb: Add 160 MHz channel bandwidth for Venezuela (VE)
-Date: Wed, 29 Oct 2014 23:25:44 +0200
-Message-ID: <1414617944-29966-2-git-send-email-jouni@qca.qualcomm.com> (sfid-20141029_222613_497878_13928811)
-In-Reply-To: <1414617944-29966-1-git-send-email-jouni@qca.qualcomm.com>
-References: <1414617690-29786-1-git-send-email-jouni@qca.qualcomm.com>
- <1414617944-29966-1-git-send-email-jouni@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sat, 18 Oct 2014 13:02:17 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
+Subject: [PATCH 07/10] ath9k_hw: start initial NF calibration after PA calibration on <AR9003
+Date: Sat, 18 Oct 2014 19:02:09 +0200
+Message-Id: <1413651732-69783-7-git-send-email-nbd@openwrt.org> (sfid-20141018_190241_350210_57704CDF)
+In-Reply-To: <1413651732-69783-1-git-send-email-nbd@openwrt.org>
+References: <1413651732-69783-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This extends regulatory rules for Venezuela to allow 160 MHz VHT channels
-to be used in 5.15-5.25 GHz, 5.25-5.35 GHz. Since the rules between
-5.15-5.25 and 5.25-5.35 GHz ranges are different (e.g., DFS
-requirement), the AUTO-BW flag needs to be used to allow the maximum
-channel bandwidth to be determined automatically based on two rules.
+This makes the initial NF calibration less likely to fail.
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- db.txt | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9002_calib.c | 1 +
+ drivers/net/wireless/ath/ath9k/hw.c           | 6 ++++--
+ 2 files changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/db.txt b/db.txt
-index 499cc1b..c7854c2 100644
---- a/db.txt
-+++ b/db.txt
-@@ -1159,8 +1159,8 @@ country VC: DFS-ETSI
- # http://www.conatel.gob.ve/
- country VE: DFS-FCC
- 	(2402 - 2482 @ 40), (30)
--	(5170 - 5250 @ 80), (23)
--	(5250 - 5330 @ 80), (23), DFS
-+	(5170 - 5250 @ 80), (23), AUTO-BW
-+	(5250 - 5330 @ 80), (23), DFS, AUTO-BW
- 	(5735 - 5835 @ 80), (30)
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_calib.c b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
+index 77388fb..53c126a 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
+@@ -854,6 +854,7 @@ static bool ar9002_hw_init_cal(struct ath_hw *ah, struct ath9k_channel *chan)
  
- country VI: DFS-FCC
+ 	/* Do PA Calibration */
+ 	ar9002_hw_pa_cal(ah, true);
++	ath9k_hw_start_nfcal(ah, true);
+ 
+ 	if (ah->caldata)
+ 		set_bit(NFCAL_PENDING, &ah->caldata->cal_flags);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 8be4b14..85a7817 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1953,8 +1953,10 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	if (ath9k_hw_mci_is_enabled(ah))
+ 		ar9003_mci_check_bt(ah);
+ 
+-	ath9k_hw_loadnf(ah, chan);
+-	ath9k_hw_start_nfcal(ah, true);
++	if (AR_SREV_9300_20_OR_LATER(ah)) {
++		ath9k_hw_loadnf(ah, chan);
++		ath9k_hw_start_nfcal(ah, true);
++	}
+ 
+ 	if (AR_SREV_9300_20_OR_LATER(ah))
+ 		ar9003_hw_bb_watchdog_config(ah);
 -- 
-1.9.1
+2.0.4
 
