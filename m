@@ -1,73 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:40111 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756052AbaJ2Rpp (ORCPT
+Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:49137
+	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751476AbaJRRCR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2014 13:45:45 -0400
-Received: by mail-wi0-f180.google.com with SMTP id hi2so5304512wib.1
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2014 10:45:44 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH v2 20/34] staging: vt6655: mac80211 conversion: device_free_info
-Date: Wed, 29 Oct 2014 17:43:55 +0000
-Message-Id: <1414604649-9105-21-git-send-email-tvboxspy@gmail.com> (sfid-20141029_184911_720059_7D933522)
-In-Reply-To: <1414604649-9105-1-git-send-email-tvboxspy@gmail.com>
-References: <1414604649-9105-1-git-send-email-tvboxspy@gmail.com>
+	Sat, 18 Oct 2014 13:02:17 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
+Subject: [PATCH 08/10] ath9k: add support for endian swap of eeprom from platform data
+Date: Sat, 18 Oct 2014 19:02:10 +0200
+Message-Id: <1413651732-69783-8-git-send-email-nbd@openwrt.org> (sfid-20141018_190238_405891_4939C1DB)
+In-Reply-To: <1413651732-69783-1-git-send-email-nbd@openwrt.org>
+References: <1413651732-69783-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove net device code and add mac80211 unregister code.
+On some devices (especially little-endian ones), the flash EEPROM data
+has a different endian, which needs to be detected.
+Add a flag to the platform data to allow overriding that behavior
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/staging/vt6655/device_main.c | 25 +++++++------------------
- 1 file changed, 7 insertions(+), 18 deletions(-)
+ drivers/net/wireless/ath/ath9k/eeprom_def.c | 31 ++++++++++-------------------
+ drivers/net/wireless/ath/ath9k/hw.h         |  1 +
+ drivers/net/wireless/ath/ath9k/init.c       |  2 ++
+ include/linux/ath9k_platform.h              |  1 +
+ 4 files changed, 14 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index 77d81b3..451b608 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -806,31 +806,20 @@ static bool device_get_pci_info(struct vnt_private *pDevice,
- 
- static void device_free_info(struct vnt_private *pDevice)
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+index 3218ca9..122b846 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+@@ -262,7 +262,7 @@ static int ath9k_hw_def_check_eeprom(struct ath_hw *ah)
  {
--	struct net_device *dev = pDevice->dev;
+ 	struct ar5416_eeprom_def *eep = &ah->eeprom.def;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+-	u16 *eepdata, temp, magic, magic2;
++	u16 *eepdata, temp, magic;
+ 	u32 sum = 0, el;
+ 	bool need_swap = false;
+ 	int i, addr, size;
+@@ -272,27 +272,16 @@ static int ath9k_hw_def_check_eeprom(struct ath_hw *ah)
+ 		return false;
+ 	}
+ 
+-	if (!ath9k_hw_use_flash(ah)) {
+-		ath_dbg(common, EEPROM, "Read Magic = 0x%04X\n", magic);
 -
--	ASSERT(pDevice);
--//2008-0714-01<Add>by chester
--	device_release_WPADEV(pDevice);
+-		if (magic != AR5416_EEPROM_MAGIC) {
+-			magic2 = swab16(magic);
 -
--//2008-07-21-01<Add>by MikeLiu
--//unregister wpadev
--	if (wpa_set_wpadev(pDevice, 0) != 0)
--		pr_err("unregister wpadev fail?\n");
-+	if (!pDevice)
-+		return;
+-			if (magic2 == AR5416_EEPROM_MAGIC) {
+-				size = sizeof(struct ar5416_eeprom_def);
+-				need_swap = true;
+-				eepdata = (u16 *) (&ah->eeprom);
++	if (swab16(magic) == AR5416_EEPROM_MAGIC &&
++	    !(ah->ah_flags & AH_NO_EEP_SWAP)) {
++		size = sizeof(struct ar5416_eeprom_def);
++		need_swap = true;
++		eepdata = (u16 *) (&ah->eeprom);
  
--#ifdef HOSTAP
--	if (dev)
--		vt6655_hostap_set_hostapd(pDevice, 0, 0);
--#endif
--	if (dev)
--		unregister_netdev(dev);
-+	if (pDevice->mac_hw)
-+		ieee80211_unregister_hw(pDevice->hw);
+-				for (addr = 0; addr < size / sizeof(u16); addr++) {
+-					temp = swab16(*eepdata);
+-					*eepdata = temp;
+-					eepdata++;
+-				}
+-			} else {
+-				ath_err(common,
+-					"Invalid EEPROM Magic. Endianness mismatch.\n");
+-				return -EINVAL;
+-			}
++		for (addr = 0; addr < size / sizeof(u16); addr++) {
++			temp = swab16(*eepdata);
++			*eepdata = temp;
++			eepdata++;
+ 		}
+ 	}
  
- 	if (pDevice->PortOffset)
- 		iounmap(pDevice->PortOffset);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index f204099..c6dba9b 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -731,6 +731,7 @@ enum ath_cal_list {
+ #define AH_USE_EEPROM   0x1
+ #define AH_UNPLUGGED    0x2 /* The card has been physically removed. */
+ #define AH_FASTCC       0x4
++#define AH_NO_EEP_SWAP  0x8 /* Do not swap EEPROM data */
  
- 	if (pDevice->pcid)
- 		pci_release_regions(pDevice->pcid);
--	if (dev)
--		free_netdev(dev);
-+
-+	if (pDevice->hw)
-+		ieee80211_free_hw(pDevice->hw);
- }
+ struct ath_hw {
+ 	struct ath_ops reg_ops;
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 57a1760..5d9c711 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -531,6 +531,8 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
+ 		ah->is_clk_25mhz = pdata->is_clk_25mhz;
+ 		ah->get_mac_revision = pdata->get_mac_revision;
+ 		ah->external_reset = pdata->external_reset;
++		if (!pdata->endian_check)
++			ah->ah_flags |= AH_NO_EEP_SWAP;
+ 	}
  
- static bool device_init_rings(struct vnt_private *pDevice)
+ 	common->ops = &ah->reg_ops;
+diff --git a/include/linux/ath9k_platform.h b/include/linux/ath9k_platform.h
+index a495a95..4350165 100644
+--- a/include/linux/ath9k_platform.h
++++ b/include/linux/ath9k_platform.h
+@@ -31,6 +31,7 @@ struct ath9k_platform_data {
+ 	u32 gpio_mask;
+ 	u32 gpio_val;
+ 
++	bool endian_check;
+ 	bool is_clk_25mhz;
+ 	bool tx_gain_buffalo;
+ 
 -- 
-2.1.0
+2.0.4
 
