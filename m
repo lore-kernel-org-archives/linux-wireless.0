@@ -1,542 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f50.google.com ([74.125.82.50]:62302 "EHLO
-	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751959AbaJUIjR (ORCPT
+Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:49120
+	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751480AbaJRRCR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Oct 2014 04:39:17 -0400
-Received: by mail-wg0-f50.google.com with SMTP id a1so745059wgh.33
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Oct 2014 01:39:16 -0700 (PDT)
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Karl Beldan <karl.beldan@rivierawaves.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH v6] mac80211: minstrel_ht: add basic support for VHT rates <= 3SS@80MHz
-Date: Tue, 21 Oct 2014 10:38:38 +0200
-Message-Id: <1413880718-31273-1-git-send-email-karl.beldan@gmail.com> (sfid-20141021_103927_521544_FBA26548)
-In-Reply-To: <1413812762-6605-5-git-send-email-karl.beldan@gmail.com>
-References: <1413812762-6605-5-git-send-email-karl.beldan@gmail.com>
+	Sat, 18 Oct 2014 13:02:17 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
+Subject: [PATCH 09/10] ath9k: allow disabling bands via platform data
+Date: Sat, 18 Oct 2014 19:02:11 +0200
+Message-Id: <1413651732-69783-9-git-send-email-nbd@openwrt.org> (sfid-20141018_190242_810319_4C9FF1E8)
+In-Reply-To: <1413651732-69783-1-git-send-email-nbd@openwrt.org>
+References: <1413651732-69783-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Karl Beldan <karl.beldan@rivierawaves.com>
+Some devices have multiple bands enables in the EEPROM data, even though
+they are only calibrated for one. Allow platform data to disable
+unsupported bands.
 
-When the new CONFIG_MAC80211_RC_MINSTREL_VHT is not set (default 'N'),
-there is no behavioral change including in sampling and MCS_GROUP_RATES
-remains 8.
-Otherwise MCS_GROUP_RATES is 10, and a module parameter *vht_only*
-(default 'true'), restricts the rates selection to VHT when vht is
-supported.
-
-Regarding the debugfs stats buffer:
-It is explicitly increased from 8k to 32k to fit every rates incl. when
-both ht and vht rates are enabled, as for the format, before:
-type           rate     tpt eprob *prob ret  *ok(*cum)        ok(      cum)
-HT20/LGI ABCDP MCS0     0.0   0.0   0.0   1    0(   0)         0(        0)
-after:
- type           rate      tpt eprob *prob ret  *ok(*cum)        ok(      cum)
- HT20/LGI ABCDP MCS0      0.0   0.0   0.0   1    0(   0)         0(        0)
-VHT40/LGI       MCS5/2    0.0   0.0   0.0   0    0(   0)         0(        0)
-
-Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
-Cc: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
+ drivers/net/wireless/ath/ath9k/hw.c   | 24 ++++++++++++++++--------
+ drivers/net/wireless/ath/ath9k/hw.h   |  2 ++
+ drivers/net/wireless/ath/ath9k/init.c |  2 ++
+ include/linux/ath9k_platform.h        |  2 ++
+ 4 files changed, 22 insertions(+), 8 deletions(-)
 
-v2:
-- typo in Kconfig
-- adjust room in debugfs rc_stats buffer
-- add a module param to mix ht rates with vht ones
-- default to 3SS instead of 2SS (with "mac80211: minstrel_ht: macros
-  adjustments for future VHT_GROUPs")
-- use common MINSTREL_MAX_STREAMS both for VHT and HT so that we can get
-  rid of the 'MINSTREL_MAX_STREAMS >= 3' checks for minstrel_mcs_groups
-v3:
-- put module param *vht_only* under CONFIG_MAC80211_RC_MINSTREL_VHT
-v4:
-- rebase on v2 of "mac80211: minstrels: fix buffer overflow in HT debugfs rc_stats"
-v5:
-- fix some checkpatch complaints this, leaves 2 false positives 
-  "ERROR: Macros with complex values should be enclosed in parenthesis"
-  in array initialization
-v6:
-- s/u16/__le16/ addressing Johannes' sparse pass
-
- net/mac80211/Kconfig                       |   7 +
- net/mac80211/rc80211_minstrel_ht.c         | 216 +++++++++++++++++++++++++++--
- net/mac80211/rc80211_minstrel_ht.h         |  17 ++-
- net/mac80211/rc80211_minstrel_ht_debugfs.c |  23 +--
- 4 files changed, 241 insertions(+), 22 deletions(-)
-
-diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
-index aeb6a48..e8049ed 100644
---- a/net/mac80211/Kconfig
-+++ b/net/mac80211/Kconfig
-@@ -33,6 +33,13 @@ config MAC80211_RC_MINSTREL_HT
- 	---help---
- 	  This option enables the 'minstrel_ht' TX rate control algorithm
- 
-+config MAC80211_RC_MINSTREL_VHT
-+	bool "Minstrel 802.11ac support" if EXPERT
-+	depends on MAC80211_RC_MINSTREL_HT
-+	default n
-+	---help---
-+	  This option enables vht in the 'minstrel_ht' TX rate control algorithm
-+
- choice
- 	prompt "Default rate control algorithm"
- 	depends on MAC80211_HAS_RC
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index e760d3d..4666681 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -10,6 +10,7 @@
- #include <linux/skbuff.h>
- #include <linux/debugfs.h>
- #include <linux/random.h>
-+#include <linux/moduleparam.h>
- #include <linux/ieee80211.h>
- #include <net/mac80211.h>
- #include "rate.h"
-@@ -36,6 +37,7 @@
- 
- #define BW_20			0
- #define BW_40			1
-+#define BW_80			2
- 
- /*
-  * Define group sort order: HT40 -> SGI -> #streams
-@@ -66,6 +68,47 @@
- 	}								\
- }
- 
-+#define VHT_GROUP_IDX(_streams, _sgi, _bw)				\
-+	(MINSTREL_VHT_GROUP_0 +						\
-+	 MINSTREL_MAX_STREAMS * 2 * (_bw) +				\
-+	 MINSTREL_MAX_STREAMS * (_sgi) +				\
-+	 (_streams) - 1)
-+
-+#define BW2VBPS(_bw, r3, r2, r1)					\
-+	(_bw == BW_80 ? r3 : _bw == BW_40 ? r2 : r1)
-+
-+#define VHT_GROUP(_streams, _sgi, _bw)					\
-+	[VHT_GROUP_IDX(_streams, _sgi, _bw)] = {			\
-+	.streams = _streams,						\
-+	.flags =							\
-+		IEEE80211_TX_RC_VHT_MCS |				\
-+		(_sgi ? IEEE80211_TX_RC_SHORT_GI : 0) |			\
-+		(_bw == BW_80 ? IEEE80211_TX_RC_80_MHZ_WIDTH :		\
-+		 _bw == BW_40 ? IEEE80211_TX_RC_40_MHZ_WIDTH : 0),	\
-+	.duration = {							\
-+		MCS_DURATION(_streams, _sgi,				\
-+			     BW2VBPS(_bw,  117,  54,  26)),		\
-+		MCS_DURATION(_streams, _sgi,				\
-+			     BW2VBPS(_bw,  234, 108,  52)),		\
-+		MCS_DURATION(_streams, _sgi,				\
-+			     BW2VBPS(_bw,  351, 162,  78)),		\
-+		MCS_DURATION(_streams, _sgi,				\
-+			     BW2VBPS(_bw,  468, 216, 104)),		\
-+		MCS_DURATION(_streams, _sgi,				\
-+			     BW2VBPS(_bw,  702, 324, 156)),		\
-+		MCS_DURATION(_streams, _sgi,				\
-+			     BW2VBPS(_bw,  936, 432, 208)),		\
-+		MCS_DURATION(_streams, _sgi,				\
-+			     BW2VBPS(_bw, 1053, 486, 234)),		\
-+		MCS_DURATION(_streams, _sgi,				\
-+			     BW2VBPS(_bw, 1170, 540, 260)),		\
-+		MCS_DURATION(_streams, _sgi,				\
-+			     BW2VBPS(_bw, 1404, 648, 312)),		\
-+		MCS_DURATION(_streams, _sgi,				\
-+			     BW2VBPS(_bw, 1560, 720, 346))		\
-+	}								\
-+}
-+
- #define CCK_DURATION(_bitrate, _short, _len)		\
- 	(1000 * (10 /* SIFS */ +			\
- 	 (_short ? 72 + 24 : 144 + 48) +		\
-@@ -91,6 +134,13 @@
- 		}					\
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 85a7817..47f410e 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2344,17 +2344,25 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
  	}
  
-+#ifdef CONFIG_MAC80211_RC_MINSTREL_VHT
-+static bool minstrel_vht_only = true;
-+module_param(minstrel_vht_only, bool, 0644);
-+MODULE_PARM_DESC(minstrel_vht_only,
-+		 "Use only VHT rates when VHT is supported by sta.");
-+#endif
+ 	eeval = ah->eep_ops->get_eeprom(ah, EEP_OP_MODE);
+-	if ((eeval & (AR5416_OPFLAGS_11G | AR5416_OPFLAGS_11A)) == 0) {
+-		ath_err(common,
+-			"no band has been marked as supported in EEPROM\n");
+-		return -EINVAL;
 +
- /*
-  * To enable sufficiently targeted rate sampling, MCS rates are divided into
-  * groups, based on the number of streams and flags (HT40, SGI) that they
-@@ -124,9 +174,46 @@ const struct mcs_group minstrel_mcs_groups[] = {
- 	MCS_GROUP(3, 1, BW_40),
- #endif
- 
--	CCK_GROUP
--};
-+	CCK_GROUP,
-+
-+#ifdef CONFIG_MAC80211_RC_MINSTREL_VHT
-+	VHT_GROUP(1, 0, BW_20),
-+	VHT_GROUP(2, 0, BW_20),
-+#if MINSTREL_MAX_STREAMS >= 3
-+	VHT_GROUP(3, 0, BW_20),
-+#endif
-+
-+	VHT_GROUP(1, 1, BW_20),
-+	VHT_GROUP(2, 1, BW_20),
-+#if MINSTREL_MAX_STREAMS >= 3
-+	VHT_GROUP(3, 1, BW_20),
-+#endif
- 
-+	VHT_GROUP(1, 0, BW_40),
-+	VHT_GROUP(2, 0, BW_40),
-+#if MINSTREL_MAX_STREAMS >= 3
-+	VHT_GROUP(3, 0, BW_40),
-+#endif
-+
-+	VHT_GROUP(1, 1, BW_40),
-+	VHT_GROUP(2, 1, BW_40),
-+#if MINSTREL_MAX_STREAMS >= 3
-+	VHT_GROUP(3, 1, BW_40),
-+#endif
-+
-+	VHT_GROUP(1, 0, BW_80),
-+	VHT_GROUP(2, 0, BW_80),
-+#if MINSTREL_MAX_STREAMS >= 3
-+	VHT_GROUP(3, 0, BW_80),
-+#endif
-+
-+	VHT_GROUP(1, 1, BW_80),
-+	VHT_GROUP(2, 1, BW_80),
-+#if MINSTREL_MAX_STREAMS >= 3
-+	VHT_GROUP(3, 1, BW_80),
-+#endif
-+#endif
-+};
- 
- static u8 sample_table[SAMPLE_COLUMNS][MCS_GROUP_RATES] __read_mostly;
- 
-@@ -134,6 +221,45 @@ static void
- minstrel_ht_update_rates(struct minstrel_priv *mp, struct minstrel_ht_sta *mi);
- 
- /*
-+ * Some VHT MCSes are invalid (when Ndbps / Nes is not an integer)
-+ * e.g for MCS9@20MHzx1Nss: Ndbps=8x52*(5/6) Nes=1
-+ *
-+ * Returns the valid mcs map for struct minstrel_mcs_group_data.supported
-+ */
-+static u16
-+minstrel_get_valid_vht_rates(int bw, int nss, __le16 mcs_map)
-+{
-+	u16 mask = 0;
-+
-+	if (bw == BW_20) {
-+		if (nss != 3 && nss != 6)
-+			mask = BIT(9);
-+	} else if (bw == BW_80) {
-+		if (nss == 3 || nss == 7)
-+			mask = BIT(6);
-+		else if (nss == 6)
-+			mask = BIT(9);
-+	} else {
-+		WARN_ON(bw != BW_40);
-+	}
-+
-+	switch ((le16_to_cpu(mcs_map) >> (2 * (nss - 1))) & 3) {
-+	case IEEE80211_VHT_MCS_SUPPORT_0_7:
-+		mask |= 0x300;
-+		break;
-+	case IEEE80211_VHT_MCS_SUPPORT_0_8:
-+		mask |= 0x200;
-+		break;
-+	case IEEE80211_VHT_MCS_SUPPORT_0_9:
-+		break;
-+	default:
-+		mask = 0x3ff;
-+	}
-+
-+	return 0x3ff & ~mask;
-+}
-+
-+/*
-  * Look up an MCS group index based on mac80211 rate information
-  */
- static int
-@@ -144,6 +270,15 @@ minstrel_ht_get_group_idx(struct ieee80211_tx_rate *rate)
- 			 !!(rate->flags & IEEE80211_TX_RC_40_MHZ_WIDTH));
- }
- 
-+static int
-+minstrel_vht_get_group_idx(struct ieee80211_tx_rate *rate)
-+{
-+	return VHT_GROUP_IDX(ieee80211_rate_get_vht_nss(rate),
-+			     !!(rate->flags & IEEE80211_TX_RC_SHORT_GI),
-+			     !!(rate->flags & IEEE80211_TX_RC_40_MHZ_WIDTH) +
-+			     2*!!(rate->flags & IEEE80211_TX_RC_80_MHZ_WIDTH));
-+}
-+
- static struct minstrel_rate_stats *
- minstrel_ht_get_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
- 		      struct ieee80211_tx_rate *rate)
-@@ -153,6 +288,9 @@ minstrel_ht_get_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
- 	if (rate->flags & IEEE80211_TX_RC_MCS) {
- 		group = minstrel_ht_get_group_idx(rate);
- 		idx = rate->idx % 8;
-+	} else if (rate->flags & IEEE80211_TX_RC_VHT_MCS) {
-+		group = minstrel_vht_get_group_idx(rate);
-+		idx = ieee80211_rate_get_vht_mcs(rate);
- 	} else {
- 		group = MINSTREL_CCK_GROUP;
- 
-@@ -489,7 +627,8 @@ minstrel_ht_txstat_valid(struct minstrel_priv *mp, struct ieee80211_tx_rate *rat
- 	if (!rate->count)
- 		return false;
- 
--	if (rate->flags & IEEE80211_TX_RC_MCS)
-+	if (rate->flags & IEEE80211_TX_RC_MCS ||
-+	    rate->flags & IEEE80211_TX_RC_VHT_MCS)
- 		return true;
- 
- 	return rate->idx == mp->cck_rates[0] ||
-@@ -736,6 +875,9 @@ minstrel_ht_set_rate(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
- 
- 	if (index / MCS_GROUP_RATES == MINSTREL_CCK_GROUP)
- 		idx = mp->cck_rates[index % ARRAY_SIZE(mp->cck_rates)];
-+	else if (flags & IEEE80211_TX_RC_VHT_MCS)
-+		idx = ((group->streams - 1) << 4) |
-+		      ((index % MCS_GROUP_RATES) & 0xF);
- 	else
- 		idx = index % MCS_GROUP_RATES + (group->streams - 1) * 8;
- 
-@@ -917,6 +1059,9 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
- 	if (sample_idx / MCS_GROUP_RATES == MINSTREL_CCK_GROUP) {
- 		int idx = sample_idx % ARRAY_SIZE(mp->cck_rates);
- 		rate->idx = mp->cck_rates[idx];
-+	} else if (sample_group->flags & IEEE80211_TX_RC_VHT_MCS) {
-+		ieee80211_rate_set_vht(rate, sample_idx % MCS_GROUP_RATES,
-+				       sample_group->streams);
- 	} else {
- 		rate->idx = sample_idx % MCS_GROUP_RATES +
- 			    (sample_group->streams - 1) * 8;
-@@ -962,6 +1107,8 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
- 	struct minstrel_ht_sta *mi = &msp->ht;
- 	struct ieee80211_mcs_info *mcs = &sta->ht_cap.mcs;
- 	u16 sta_cap = sta->ht_cap.cap;
-+	struct ieee80211_sta_vht_cap *vht_cap = &sta->vht_cap;
-+	int use_vht;
- 	int n_supported = 0;
- 	int ack_dur;
- 	int stbc;
-@@ -973,6 +1120,13 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
- 
- 	BUILD_BUG_ON(ARRAY_SIZE(minstrel_mcs_groups) != MINSTREL_GROUPS_NB);
- 
-+#ifdef CONFIG_MAC80211_RC_MINSTREL_VHT
-+	if (vht_cap->vht_supported)
-+		use_vht = vht_cap->vht_mcs.tx_mcs_map != cpu_to_le16(~0);
-+	else
-+#endif
-+	use_vht = 0;
-+
- 	msp->is_ht = true;
- 	memset(mi, 0, sizeof(*mi));
- 
-@@ -996,15 +1150,19 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
- 	}
- 	mi->sample_tries = 4;
- 
--	stbc = (sta_cap & IEEE80211_HT_CAP_RX_STBC) >>
--		IEEE80211_HT_CAP_RX_STBC_SHIFT;
--	mi->tx_flags |= stbc << IEEE80211_TX_CTL_STBC_SHIFT;
-+	/* TODO tx_flags for vht - ATM the RC API is not fine-grained enough */
-+	if (!use_vht) {
-+		stbc = (sta_cap & IEEE80211_HT_CAP_RX_STBC) >>
-+			IEEE80211_HT_CAP_RX_STBC_SHIFT;
-+		mi->tx_flags |= stbc << IEEE80211_TX_CTL_STBC_SHIFT;
- 
--	if (sta_cap & IEEE80211_HT_CAP_LDPC_CODING)
--		mi->tx_flags |= IEEE80211_TX_CTL_LDPC;
-+		if (sta_cap & IEEE80211_HT_CAP_LDPC_CODING)
-+			mi->tx_flags |= IEEE80211_TX_CTL_LDPC;
-+	}
- 
- 	for (i = 0; i < ARRAY_SIZE(mi->groups); i++) {
- 		u32 gflags = minstrel_mcs_groups[i].flags;
-+		int bw, nss;
- 
- 		mi->groups[i].supported = 0;
- 		if (i == MINSTREL_CCK_GROUP) {
-@@ -1026,13 +1184,47 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
- 		    sta->bandwidth < IEEE80211_STA_RX_BW_40)
- 			continue;
- 
-+		nss = minstrel_mcs_groups[i].streams;
-+
- 		/* Mark MCS > 7 as unsupported if STA is in static SMPS mode */
--		if (sta->smps_mode == IEEE80211_SMPS_STATIC &&
--		    minstrel_mcs_groups[i].streams > 1)
-+		if (sta->smps_mode == IEEE80211_SMPS_STATIC && nss > 1)
-+			continue;
-+
-+		/* HT rate */
-+		if (gflags & IEEE80211_TX_RC_MCS) {
-+#ifdef CONFIG_MAC80211_RC_MINSTREL_VHT
-+			if (minstrel_vht_only)
-+				continue;
-+#endif
-+			mi->groups[i].supported = mcs->rx_mask[nss - 1];
-+			if (mi->groups[i].supported)
-+				n_supported++;
-+			continue;
-+		}
-+
-+		/* VHT rate */
-+		if (!vht_cap->vht_supported ||
-+		    WARN_ON(!(gflags & IEEE80211_TX_RC_VHT_MCS)) ||
-+		    WARN_ON(gflags & IEEE80211_TX_RC_160_MHZ_WIDTH))
- 			continue;
- 
--		mi->groups[i].supported =
--			mcs->rx_mask[minstrel_mcs_groups[i].streams - 1];
-+		if (gflags & IEEE80211_TX_RC_80_MHZ_WIDTH) {
-+			if (sta->bandwidth < IEEE80211_STA_RX_BW_80 ||
-+			    ((gflags & IEEE80211_TX_RC_SHORT_GI) &&
-+			     !(vht_cap->cap & IEEE80211_VHT_CAP_SHORT_GI_80))) {
-+				continue;
-+			}
-+		}
-+
-+		if (gflags & IEEE80211_TX_RC_40_MHZ_WIDTH)
-+			bw = BW_40;
-+		else if (gflags & IEEE80211_TX_RC_80_MHZ_WIDTH)
-+			bw = BW_80;
++	if (eeval & AR5416_OPFLAGS_11A) {
++		if (ah->disable_5ghz)
++			ath_warn(common, "disabling 5GHz band\n");
 +		else
-+			bw = BW_20;
-+
-+		mi->groups[i].supported = minstrel_get_valid_vht_rates(bw, nss,
-+				vht_cap->vht_mcs.tx_mcs_map);
- 
- 		if (mi->groups[i].supported)
- 			n_supported++;
-diff --git a/net/mac80211/rc80211_minstrel_ht.h b/net/mac80211/rc80211_minstrel_ht.h
-index e747ac6..f2217d6 100644
---- a/net/mac80211/rc80211_minstrel_ht.h
-+++ b/net/mac80211/rc80211_minstrel_ht.h
-@@ -15,17 +15,30 @@
-  */
- #define MINSTREL_MAX_STREAMS		3
- #define MINSTREL_HT_STREAM_GROUPS	4 /* BW(=2) * SGI(=2) */
-+#ifdef CONFIG_MAC80211_RC_MINSTREL_VHT
-+#define MINSTREL_VHT_STREAM_GROUPS	6 /* BW(=3) * SGI(=2) */
-+#else
-+#define MINSTREL_VHT_STREAM_GROUPS	0
-+#endif
- 
- #define MINSTREL_HT_GROUPS_NB	(MINSTREL_MAX_STREAMS *		\
- 				 MINSTREL_HT_STREAM_GROUPS)
-+#define MINSTREL_VHT_GROUPS_NB	(MINSTREL_MAX_STREAMS *		\
-+				 MINSTREL_VHT_STREAM_GROUPS)
- #define MINSTREL_CCK_GROUPS_NB	1
- #define MINSTREL_GROUPS_NB	(MINSTREL_HT_GROUPS_NB +	\
-+				 MINSTREL_VHT_GROUPS_NB +	\
- 				 MINSTREL_CCK_GROUPS_NB)
- 
- #define MINSTREL_HT_GROUP_0	0
- #define MINSTREL_CCK_GROUP	(MINSTREL_HT_GROUP_0 + MINSTREL_HT_GROUPS_NB)
-+#define MINSTREL_VHT_GROUP_0	(MINSTREL_CCK_GROUP + 1)
- 
--#define MCS_GROUP_RATES	8
-+#ifdef CONFIG_MAC80211_RC_MINSTREL_VHT
-+#define MCS_GROUP_RATES		10
-+#else
-+#define MCS_GROUP_RATES		8
-+#endif
- 
- struct mcs_group {
- 	u32 flags;
-@@ -40,7 +53,7 @@ struct minstrel_mcs_group_data {
- 	u8 column;
- 
- 	/* bitfield of supported MCS rates of this group */
--	u8 supported;
-+	u16 supported;
- 
- 	/* sorted rate set within a MCS group*/
- 	u16 max_group_tp_rate[MAX_THR_RATES];
-diff --git a/net/mac80211/rc80211_minstrel_ht_debugfs.c b/net/mac80211/rc80211_minstrel_ht_debugfs.c
-index d2f53b8..52bb6ef 100644
---- a/net/mac80211/rc80211_minstrel_ht_debugfs.c
-+++ b/net/mac80211/rc80211_minstrel_ht_debugfs.c
-@@ -29,6 +29,8 @@ minstrel_ht_stats_dump(struct minstrel_ht_sta *mi, int i, char *p)
- 	mg = &minstrel_mcs_groups[i];
- 	if (mg->flags & IEEE80211_TX_RC_40_MHZ_WIDTH)
- 		htmode = '4';
-+	else if (mg->flags & IEEE80211_TX_RC_80_MHZ_WIDTH)
-+		htmode = '8';
- 	if (mg->flags & IEEE80211_TX_RC_SHORT_GI)
- 		gimode = 'S';
- 
-@@ -41,9 +43,11 @@ minstrel_ht_stats_dump(struct minstrel_ht_sta *mi, int i, char *p)
- 			continue;
- 
- 		if (i == MINSTREL_CCK_GROUP)
--			p += sprintf(p, "CCK/%cP   ", j < 4 ? 'L' : 'S');
-+			p += sprintf(p, " CCK/%cP   ", j < 4 ? 'L' : 'S');
-+		else if (i >= MINSTREL_VHT_GROUP_0)
-+			p += sprintf(p, "VHT%c0/%cGI ", htmode, gimode);
- 		else
--			p += sprintf(p, "HT%c0/%cGI ", htmode, gimode);
-+			p += sprintf(p, " HT%c0/%cGI ", htmode, gimode);
- 
- 		*(p++) = (idx == mi->max_tp_rate[0]) ? 'A' : ' ';
- 		*(p++) = (idx == mi->max_tp_rate[1]) ? 'B' : ' ';
-@@ -53,9 +57,11 @@ minstrel_ht_stats_dump(struct minstrel_ht_sta *mi, int i, char *p)
- 
- 		if (i == MINSTREL_CCK_GROUP) {
- 			int r = bitrates[j % 4];
--			p += sprintf(p, " %2u.%1uM", r / 10, r % 10);
-+			p += sprintf(p, " %2u.%1uM ", r / 10, r % 10);
-+		} else if (i >= MINSTREL_VHT_GROUP_0) {
-+			p += sprintf(p, " MCS%-1u/%1u", j, mg->streams);
- 		} else {
--			p += sprintf(p, " MCS%-2u", (mg->streams - 1) * 8 + j);
-+			p += sprintf(p, " MCS%-2u ", (mg->streams - 1) * 8 + j);
- 		}
- 
- 		tp = mr->cur_tp / 10;
-@@ -94,19 +100,20 @@ minstrel_ht_stats_open(struct inode *inode, struct file *file)
- 		return ret;
++			pCap->hw_caps |= ATH9K_HW_CAP_5GHZ;
  	}
  
--	ms = kmalloc(8192, GFP_KERNEL);
-+	ms = kmalloc(32768, GFP_KERNEL);
- 	if (!ms)
- 		return -ENOMEM;
+-	if (eeval & AR5416_OPFLAGS_11A)
+-		pCap->hw_caps |= ATH9K_HW_CAP_5GHZ;
++	if (eeval & AR5416_OPFLAGS_11G) {
++		if (ah->disable_2ghz)
++			ath_warn(common, "disabling 2GHz band\n");
++		else
++			pCap->hw_caps |= ATH9K_HW_CAP_2GHZ;
++	}
  
- 	file->private_data = ms;
- 	p = ms->buf;
--	p += sprintf(p, "type           rate     tpt eprob *prob "
-+	p += sprintf(p, " type           rate      tpt eprob *prob "
- 			"ret  *ok(*cum)        ok(      cum)\n");
+-	if (eeval & AR5416_OPFLAGS_11G)
+-		pCap->hw_caps |= ATH9K_HW_CAP_2GHZ;
++	if ((pCap->hw_caps & (ATH9K_HW_CAP_2GHZ | ATH9K_HW_CAP_5GHZ)) == 0) {
++		ath_err(common, "both bands are disabled\n");
++		return -EINVAL;
++	}
  
--
- 	p = minstrel_ht_stats_dump(mi, MINSTREL_CCK_GROUP, p);
- 	for (i = 0; i < MINSTREL_CCK_GROUP; i++)
- 		p = minstrel_ht_stats_dump(mi, i, p);
-+	for (i++; i < ARRAY_SIZE(mi->groups); i++)
-+		p = minstrel_ht_stats_dump(mi, i, p);
+ 	if (AR_SREV_9485(ah) ||
+ 	    AR_SREV_9285(ah) ||
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index c6dba9b..e49721e8 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -930,6 +930,8 @@ struct ath_hw {
+ 	bool is_clk_25mhz;
+ 	int (*get_mac_revision)(void);
+ 	int (*external_reset)(void);
++	bool disable_2ghz;
++	bool disable_5ghz;
  
- 	p += sprintf(p, "\nTotal packet count::    ideal %d      "
- 			"lookaround %d\n",
-@@ -117,7 +124,7 @@ minstrel_ht_stats_open(struct inode *inode, struct file *file)
- 		MINSTREL_TRUNC(mi->avg_ampdu_len * 10) % 10);
- 	ms->len = p - ms->buf;
+ 	const struct firmware *eeprom_blob;
  
--	WARN_ON(ms->len + sizeof(*ms) > 8192);
-+	WARN_ON(ms->len + sizeof(*ms) > 32768);
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 5d9c711..2294109 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -531,6 +531,8 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
+ 		ah->is_clk_25mhz = pdata->is_clk_25mhz;
+ 		ah->get_mac_revision = pdata->get_mac_revision;
+ 		ah->external_reset = pdata->external_reset;
++		ah->disable_2ghz = pdata->disable_2ghz;
++		ah->disable_5ghz = pdata->disable_5ghz;
+ 		if (!pdata->endian_check)
+ 			ah->ah_flags |= AH_NO_EEP_SWAP;
+ 	}
+diff --git a/include/linux/ath9k_platform.h b/include/linux/ath9k_platform.h
+index 4350165..33eb274 100644
+--- a/include/linux/ath9k_platform.h
++++ b/include/linux/ath9k_platform.h
+@@ -34,6 +34,8 @@ struct ath9k_platform_data {
+ 	bool endian_check;
+ 	bool is_clk_25mhz;
+ 	bool tx_gain_buffalo;
++	bool disable_2ghz;
++	bool disable_5ghz;
  
- 	return nonseekable_open(inode, file);
- }
+ 	int (*get_mac_revision)(void);
+ 	int (*external_reset)(void);
 -- 
-2.0.1
+2.0.4
 
