@@ -1,94 +1,285 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:35062 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751966AbaJINhM (ORCPT
+Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:49140
+	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751268AbaJRRCR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2014 09:37:12 -0400
-Received: by mail-wi0-f173.google.com with SMTP id fb4so13170754wid.0
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Oct 2014 06:37:11 -0700 (PDT)
-Received: from wks001.net.isedev.eu ([2a01:e34:ec00:2830:c617:feff:fe63:e124])
-        by mx.google.com with ESMTPSA id d6sm5633614wiz.0.2014.10.09.06.37.09
-        for <linux-wireless@vger.kernel.org>
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 09 Oct 2014 06:37:10 -0700 (PDT)
-From: ISE Development <isedev@gmail.com>
+	Sat, 18 Oct 2014 13:02:17 -0400
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-Reply-To: isedev@gmail.com
-Subject: BCM4312 / b43 DMA transmission sequence errors
-Date: Thu, 09 Oct 2014 15:37:09 +0200
-Message-ID: <5048348.6LQ0j9FUOS@wks001.net.isedev.eu> (sfid-20141009_153716_597222_B6D2B889)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Cc: linville@tuxdriver.com
+Subject: [PATCH 01/10] ath9k_hw: make support for PC-OEM cards optional
+Date: Sat, 18 Oct 2014 19:02:03 +0200
+Message-Id: <1413651732-69783-1-git-send-email-nbd@openwrt.org> (sfid-20141018_190245_599527_31F1AD25)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In March 2013, I submitted a patch to workaround some DMA transmission sequence errors (see mailing list archive for messages with the same title as this one). The patch allowed the b43 driver to recover gracefully from out of sequence txstatus responses from the hardware (BCM4312 in my case). 
+The initvals use up quite a bit of space, and PC-OEM support is
+typically not needed on embedded systems
 
-I have recently been looking into the problem further and have noticed the correlation below. Currently, this means nothing to me but I am sharing it in the hope that somebody with greater knowledge of the b43 driver, firmware and/or underlying devices might have an epiphany.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/Kconfig      |  5 ++++
+ drivers/net/wireless/ath/ath9k/Makefile     |  3 ++-
+ drivers/net/wireless/ath/ath9k/ar9003_rtt.h | 36 +++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/hw.h         | 17 ++++++++++----
+ drivers/net/wireless/ath/ath9k/init.c       |  3 +++
+ drivers/net/wireless/ath/ath9k/pci.c        |  6 +++++
+ drivers/net/wireless/ath/ath9k/reg.h        | 33 +++++++++++++++-----------
+ 7 files changed, 84 insertions(+), 19 deletions(-)
 
-On a Fedora 20 system, I rebuilt the driver with CONFIG_B43_DEBUG enabled and modified the out of sequence workaround code in b43_dma_handle_txstatus() slightly to report every error and include the txstatus cookie and sequence number in the debug message.
+diff --git a/drivers/net/wireless/ath/ath9k/Kconfig b/drivers/net/wireless/ath/ath9k/Kconfig
+index 896e632..ca101d7 100644
+--- a/drivers/net/wireless/ath/ath9k/Kconfig
++++ b/drivers/net/wireless/ath/ath9k/Kconfig
+@@ -148,6 +148,11 @@ config ATH9K_CHANNEL_CONTEXT
+ 	 for multi-channel concurrency. Enable this if P2P PowerSave support
+ 	 is required.
+ 
++config ATH9K_PCOEM
++	bool "Atheros ath9k support for PC OEM cards" if EXPERT
++	depends on ATH9K
++	default y
++
+ config ATH9K_HTC
+        tristate "Atheros HTC based wireless cards support"
+        depends on USB && MAC80211
+diff --git a/drivers/net/wireless/ath/ath9k/Makefile b/drivers/net/wireless/ath/ath9k/Makefile
+index 73704c1..22b934b 100644
+--- a/drivers/net/wireless/ath/ath9k/Makefile
++++ b/drivers/net/wireless/ath/ath9k/Makefile
+@@ -32,7 +32,6 @@ ath9k_hw-y:=	\
+ 		ar5008_phy.o \
+ 		ar9002_calib.o \
+ 		ar9003_calib.o \
+-		ar9003_rtt.o \
+ 		calib.o \
+ 		eeprom.o \
+ 		eeprom_def.o \
+@@ -50,6 +49,8 @@ ath9k_hw-$(CONFIG_ATH9K_WOW) += ar9003_wow.o
+ ath9k_hw-$(CONFIG_ATH9K_BTCOEX_SUPPORT) += btcoex.o \
+ 					   ar9003_mci.o
+ 
++ath9k_hw-$(CONFIG_ATH9K_PCOEM) += ar9003_rtt.o
++
+ ath9k_hw-$(CONFIG_ATH9K_DYNACK) += dynack.o
+ 
+ obj-$(CONFIG_ATH9K_HW) += ath9k_hw.o
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_rtt.h b/drivers/net/wireless/ath/ath9k/ar9003_rtt.h
+index a43b30d..6290467 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_rtt.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_rtt.h
+@@ -17,6 +17,7 @@
+ #ifndef AR9003_RTT_H
+ #define AR9003_RTT_H
+ 
++#ifdef CONFIG_ATH9K_PCOEM
+ void ar9003_hw_rtt_enable(struct ath_hw *ah);
+ void ar9003_hw_rtt_disable(struct ath_hw *ah);
+ void ar9003_hw_rtt_set_mask(struct ath_hw *ah, u32 rtt_mask);
+@@ -25,5 +26,40 @@ void ar9003_hw_rtt_load_hist(struct ath_hw *ah);
+ void ar9003_hw_rtt_fill_hist(struct ath_hw *ah);
+ void ar9003_hw_rtt_clear_hist(struct ath_hw *ah);
+ bool ar9003_hw_rtt_restore(struct ath_hw *ah, struct ath9k_channel *chan);
++#else
++static inline void ar9003_hw_rtt_enable(struct ath_hw *ah)
++{
++}
++
++static inline void ar9003_hw_rtt_disable(struct ath_hw *ah)
++{
++}
++
++static inline void ar9003_hw_rtt_set_mask(struct ath_hw *ah, u32 rtt_mask)
++{
++}
++
++static inline bool ar9003_hw_rtt_force_restore(struct ath_hw *ah)
++{
++	return false;
++}
++
++static inline void ar9003_hw_rtt_load_hist(struct ath_hw *ah)
++{
++}
++
++static inline void ar9003_hw_rtt_fill_hist(struct ath_hw *ah)
++{
++}
++
++static inline void ar9003_hw_rtt_clear_hist(struct ath_hw *ah)
++{
++}
++
++static inline bool ar9003_hw_rtt_restore(struct ath_hw *ah, struct ath9k_channel *chan)
++{
++	return false;
++}
++#endif
+ 
+ #endif
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 975074f..7a81f5b 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -244,13 +244,20 @@ enum ath9k_hw_caps {
+ 	ATH9K_HW_CAP_2GHZ			= BIT(11),
+ 	ATH9K_HW_CAP_5GHZ			= BIT(12),
+ 	ATH9K_HW_CAP_APM			= BIT(13),
++#ifdef CONFIG_ATH9K_PCOEM
+ 	ATH9K_HW_CAP_RTT			= BIT(14),
+ 	ATH9K_HW_CAP_MCI			= BIT(15),
+-	ATH9K_HW_CAP_DFS			= BIT(16),
+-	ATH9K_HW_WOW_DEVICE_CAPABLE		= BIT(17),
+-	ATH9K_HW_CAP_PAPRD			= BIT(18),
+-	ATH9K_HW_CAP_FCC_BAND_SWITCH		= BIT(19),
+-	ATH9K_HW_CAP_BT_ANT_DIV			= BIT(20),
++	ATH9K_HW_WOW_DEVICE_CAPABLE		= BIT(16),
++	ATH9K_HW_CAP_BT_ANT_DIV			= BIT(17),
++#else
++	ATH9K_HW_CAP_RTT			= 0,
++	ATH9K_HW_CAP_MCI			= 0,
++	ATH9K_HW_WOW_DEVICE_CAPABLE		= 0,
++	ATH9K_HW_CAP_BT_ANT_DIV			= 0,
++#endif
++	ATH9K_HW_CAP_DFS			= BIT(18),
++	ATH9K_HW_CAP_PAPRD			= BIT(19),
++	ATH9K_HW_CAP_FCC_BAND_SWITCH		= BIT(20),
+ };
+ 
+ /*
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 156a944..57a1760 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -362,6 +362,9 @@ static void ath9k_init_pcoem_platform(struct ath_softc *sc)
+ 	struct ath9k_hw_capabilities *pCap = &ah->caps;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 
++	if (!IS_ENABLED(CONFIG_ATH9K_PCOEM))
++		return;
++
+ 	if (common->bus_ops->ath_bus_type != ATH_PCI)
+ 		return;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
+index c018dea..e3f60d5 100644
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -30,6 +30,7 @@ static const struct pci_device_id ath_pci_id_table[] = {
+ 	{ PCI_VDEVICE(ATHEROS, 0x0029) }, /* PCI   */
+ 	{ PCI_VDEVICE(ATHEROS, 0x002A) }, /* PCI-E */
+ 
++#ifdef CONFIG_ATH9K_PCOEM
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+ 			 0x002A,
+ 			 PCI_VENDOR_ID_AZWAVE,
+@@ -82,6 +83,7 @@ static const struct pci_device_id ath_pci_id_table[] = {
+ 			 PCI_VENDOR_ID_AZWAVE,
+ 			 0x2C37),
+ 	  .driver_data = ATH9K_PCI_BT_ANT_DIV },
++#endif
+ 
+ 	{ PCI_VDEVICE(ATHEROS, 0x002B) }, /* PCI-E */
+ 	{ PCI_VDEVICE(ATHEROS, 0x002C) }, /* PCI-E 802.11n bonded out */
+@@ -102,6 +104,7 @@ static const struct pci_device_id ath_pci_id_table[] = {
+ 
+ 	{ PCI_VDEVICE(ATHEROS, 0x0030) }, /* PCI-E  AR9300 */
+ 
++#ifdef CONFIG_ATH9K_PCOEM
+ 	/* PCI-E CUS198 */
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+ 			 0x0032,
+@@ -294,10 +297,12 @@ static const struct pci_device_id ath_pci_id_table[] = {
+ 			 PCI_VENDOR_ID_ASUSTEK,
+ 			 0x850D),
+ 	  .driver_data = ATH9K_PCI_NO_PLL_PWRSAVE },
++#endif
+ 
+ 	{ PCI_VDEVICE(ATHEROS, 0x0032) }, /* PCI-E  AR9485 */
+ 	{ PCI_VDEVICE(ATHEROS, 0x0033) }, /* PCI-E  AR9580 */
+ 
++#ifdef CONFIG_ATH9K_PCOEM
+ 	/* PCI-E CUS217 */
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+ 			 0x0034,
+@@ -657,6 +662,7 @@ static const struct pci_device_id ath_pci_id_table[] = {
+ 	/* PCI-E AR9565 (WB335) */
+ 	{ PCI_VDEVICE(ATHEROS, 0x0036),
+ 	  .driver_data = ATH9K_PCI_BT_ANT_DIV },
++#endif
+ 
+ 	{ 0 }
+ };
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index 2a938f4..1c0b1c1 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -892,10 +892,21 @@
+ 	(AR_SREV_9330((_ah)) && \
+ 	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9330_12))
+ 
++#ifdef CONFIG_ATH9K_PCOEM
++#define AR_SREV_9462(_ah) \
++	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9462))
+ #define AR_SREV_9485(_ah) \
+ 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9485))
++#define AR_SREV_9565(_ah) \
++	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9565))
++#else
++#define AR_SREV_9462(_ah) 0
++#define AR_SREV_9485(_ah) 0
++#define AR_SREV_9565(_ah) 0
++#endif
++
+ #define AR_SREV_9485_11_OR_LATER(_ah) \
+-	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9485) && \
++	(AR_SREV_9485(_ah) && \
+ 	 ((_ah)->hw_version.macRev >= AR_SREV_REVISION_9485_11))
+ #define AR_SREV_9485_OR_LATER(_ah) \
+ 	(((_ah)->hw_version.macVersion >= AR_SREV_VERSION_9485))
+@@ -915,34 +926,30 @@
+     (AR_SREV_9285_12_OR_LATER(_ah) && \
+      ((REG_READ(_ah, AR_AN_SYNTH9) & 0x7) == 0x1))
+ 
+-#define AR_SREV_9462(_ah) \
+-	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9462))
+ #define AR_SREV_9462_20(_ah) \
+-	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9462) && \
++	(AR_SREV_9462(_ah) && \
+ 	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9462_20))
+ #define AR_SREV_9462_21(_ah) \
+-	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9462) && \
++	(AR_SREV_9462(_ah) && \
+ 	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9462_21))
+ #define AR_SREV_9462_20_OR_LATER(_ah) \
+-	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9462) && \
++	(AR_SREV_9462(_ah) && \
+ 	 ((_ah)->hw_version.macRev >= AR_SREV_REVISION_9462_20))
+ #define AR_SREV_9462_21_OR_LATER(_ah) \
+-	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9462) && \
++	(AR_SREV_9462(_ah) && \
+ 	 ((_ah)->hw_version.macRev >= AR_SREV_REVISION_9462_21))
+ 
+-#define AR_SREV_9565(_ah) \
+-	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9565))
+ #define AR_SREV_9565_10(_ah) \
+-	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9565) && \
++	(AR_SREV_9565(_ah) && \
+ 	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9565_10))
+ #define AR_SREV_9565_101(_ah) \
+-	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9565) && \
++	(AR_SREV_9565(_ah) && \
+ 	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9565_101))
+ #define AR_SREV_9565_11(_ah) \
+-	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9565) && \
++	(AR_SREV_9565(_ah) && \
+ 	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9565_11))
+ #define AR_SREV_9565_11_OR_LATER(_ah) \
+-	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9565) && \
++	(AR_SREV_9565(_ah) && \
+ 	 ((_ah)->hw_version.macRev >= AR_SREV_REVISION_9565_11))
+ 
+ #define AR_SREV_9550(_ah) \
+-- 
+2.0.4
 
-I then correlated the debug messages with the debugfs txstatus contents:
-
-Debug message:
-[ 2830.717129] b43-phy0 debug: Out of order TX status report on DMA ring 1. Expected 138, but got 134 (cookie: 0x2086, seq: 0x01C3).
-[ 2830.919202] b43-phy0 debug: Skip on DMA ring 1 slot 138 (cookie: 0x208C, seq: 0x01C4).
-
-/sys/kernel/debug/b43/txstatus:
-074 | 0x2084 | 0x01C1 | 0x00 | 0x1 | 0x0 | 0 | 0 | 0 | 0 | 1
-075 | 0x2086 | 0x01C2 | 0x00 | 0x1 | 0x0 | 0 | 0 | 0 | 0 | 1
-076 | 0x2088 | 0x01C3 | 0x00 | 0x1 | 0x0 | 0 | 0 | 0 | 0 | 0
-077 | 0x2086 | 0x01C3 | 0x00 | 0x0 | 0x0 | 4 | 0 | 0 | 0 | 0
-078 | 0x208C | 0x01C4 | 0x00 | 0x1 | 0x0 | 0 | 0 | 0 | 0 | 1
-079 | 0x208E | 0x01C5 | 0x00 | 0x1 | 0x0 | 0 | 0 | 0 | 0 | 0
-
--> Two txstatus reports for frame 0x01C3, the second indicating suppression (channel mismatch) and containing a wrong (but valid) cookie value.
--> The hardware does not report on whatever was sent with cookie 0x208A (slot 138).
-
---
-Debug message:
-[ 3097.631000] b43-phy0 debug: Skip on DMA ring 1 slot 138 (cookie: 0x208C, seq: 0x03C0).
-
-/sys/kernel/debug/b43/txstatus:
-019 | 0x2086 | 0x03BE | 0x00 | 0x2 | 0x0 | 0 | 0 | 0 | 0 | 1
-020 | 0x2088 | 0x03BF | 0x00 | 0x2 | 0x0 | 0 | 0 | 0 | 0 | 1
-021 | 0xABC4 | 0x03BF | 0x00 | 0xF | 0x3 | 4 | 0 | 1 | 0 | 1
-022 | 0x208C | 0x03C0 | 0x00 | 0x1 | 0x0 | 0 | 0 | 0 | 0 | 1
-023 | 0x208E | 0x03C1 | 0x00 | 0x3 | 0x0 | 0 | 0 | 0 | 0 | 1
-
--> Two txstatus reports for frame 0x03BF, the second indicating suppression (channel mismatch) and containing a wrong (and invalid) cookie value. The second report is dropped in b43_handle_txstatus() as the intermediate flag is set (hence, no invalid cookie debug message).
--> Again, the hardware has dropped whatever was sent with cookie 0x208A (slot 138).
-
---
-Debug message:
-[ 3157.342173] b43-phy0 debug: Skip on DMA ring 1 slot 138 (cookie: 0x208C, seq: 0x04BE).
-
-/sys/kernel/debug/b43/txstatus:
-076 | 0x2084 | 0x04BB | 0x00 | 0x1 | 0x0 | 0 | 0 | 0 | 0 | 1
-077 | 0x2086 | 0x04BC | 0x00 | 0x1 | 0x0 | 0 | 0 | 0 | 0 | 1
-078 | 0x2088 | 0x04BD | 0x00 | 0x1 | 0x0 | 0 | 0 | 0 | 0 | 1
-079 | 0x9A39 | 0x04BD | 0x00 | 0x5 | 0xC | 4 | 1 | 1 | 1 | 0
-080 | 0x208C | 0x04BE | 0x00 | 0x1 | 0x0 | 0 | 0 | 0 | 0 | 1
-081 | 0x208E | 0x04BF | 0x00 | 0x1 | 0x0 | 0 | 0 | 0 | 0 | 1
-
--> Same pattern (channel mismatch suppression for slot 136 and no report for slot 138).
-
---
-Debug message:
-[ 3208.562873] b43-phy0 debug: TX-status contains invalid cookie: 0x2973
-[ 3209.064515] b43-phy0 debug: Skip on DMA ring 1 slot 208 (cookie: 0x20D2, seq: 0x04E0).
-
-/sys/kernel/debug/b43/txstatus:
-096 | 0x20CC | 0x04DE | 0x00 | 0x1 | 0x0 | 0 | 0 | 0 | 0 | 1
-097 | 0x20CE | 0x04DF | 0x00 | 0x1 | 0x0 | 0 | 0 | 0 | 0 | 1
-098 | 0x2973 | 0x04DF | 0x00 | 0x2 | 0x3 | 4 | 0 | 0 | 0 | 0
-099 | 0x20D2 | 0x04E0 | 0x00 | 0x1 | 0x0 | 0 | 0 | 0 | 0 | 1
-
--> Same pattern as first case above, but this time the cookie is invalid. Also, now slots 206 (suppressed) / 208 (dropped).
-
-
-On my system, these errors only occur for slots 136/138 and 206/208. The large majority of errors (80-90%) are on slots 136/138.
-
-Every such error (invalid cookie, DMA skip, out of order TX status) that I have analysed is associated with a channel mismatch suppression response from the firmware/hardware.
-
--- isedev
