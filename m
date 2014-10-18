@@ -1,66 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:54075 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756260AbaJHLi7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Oct 2014 07:38:59 -0400
-Date: Wed, 8 Oct 2014 14:38:45 +0300
-From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
-To: Loic Poulain <loic.poulain@intel.com>
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 3/5] net: rfkill: gpio: Implement host wake up support
-Message-ID: <20141008113845.GB3514@kuha.fi.intel.com> (sfid-20141008_134929_694001_B0D42DDF)
-References: <1412757280-31367-1-git-send-email-loic.poulain@intel.com>
- <1412757280-31367-3-git-send-email-loic.poulain@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1412757280-31367-3-git-send-email-loic.poulain@intel.com>
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:54511 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751268AbaJRRNw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 Oct 2014 13:13:52 -0400
+Received: by mail-wg0-f45.google.com with SMTP id m15so2762196wgh.28
+        for <linux-wireless@vger.kernel.org>; Sat, 18 Oct 2014 10:13:51 -0700 (PDT)
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Karl Beldan <karl.beldan@rivierawaves.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>, karl.beldan@gmail.com
+Subject: [PATCH v3 0/4] add VHT support to minstrel_ht
+Date: Sat, 18 Oct 2014 19:13:40 +0200
+Message-Id: <1413652424-14345-1-git-send-email-karl.beldan@gmail.com> (sfid-20141018_191356_616247_2856C039)
+In-Reply-To: <1413575459-29612-5-git-send-email-karl.beldan@gmail.com>
+References: <1413575459-29612-5-git-send-email-karl.beldan@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 08, 2014 at 10:34:38AM +0200, Loic Poulain wrote:
-> Some GPIO based rfkill devices can wake their host up from suspend by
-> toggling an input (from the host perspective) GPIO.
-> This patch adds a generic support for that feature by registering a
-> threaded interrupt routine and thus setting the corresponding GPIO as a
-> wake up source.
-> 
-> Signed-off-by: Loic Poulain <loic.poulain@intel.com>
-> ---
->  net/rfkill/rfkill-gpio.c | 49 ++++++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 49 insertions(+)
-
-To continue my previous answer, for this you could have the following
-_DSD..
-
-        Name (_DSD, Package ()
-        {
-            ToUUID("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),
-            Package () {
-                Package () {"host_wake-gpio", Package () {^BTH1, 0, 0, 0}},
-                Package () {"reset-gpio", Package () {^BTH1, 1, 0, 0}},
-                Package () {"shutdown-gpio", Package () {^BTH1, 2, 0, 0}},
-            }
-        })
-
-And in the driver you can then request it without caring about the
-index..
-
-        ...
-        gpio = devm_gpiod_get_index(dev, "host_wake", 3);
-        if (!IS_ERR(gpio)) {
-		ret = gpiod_direction_input(gpio);
-		if (ret)
-			return ret;
-		rfkill->irq = gpiod_to_irq(gpio);
-        ...
+From: Karl Beldan <karl.beldan@rivierawaves.com>
 
 
-Actually, we could just use devm_gpiod_get instead of
-devm_gpiod_get_index in this case.
+Karl Beldan (4):
+  mac80211: minstrel_ht: Increase the range of handled rate indexes
+  mac80211: minstrel_ht: macros adjustments for future VHT_GROUPs
+  mac80211: minstrel_ht: include type (cck/ht) in rates flag
+  mac80211: minstrel_ht: add basic support for VHT rates <= 3SS@80MHz
+v2:
+- typo in Kconfig
+- adjust room in debugfs rc_stats buffer
+- add a module param to mix ht rates with vht ones
+- default to 3SS instead of 2SS (with "mac80211: minstrel_ht: macros
+  adjustments for future VHT_GROUPs")
+- use common MINSTREL_MAX_STREAMS both for VHT and HT so that we can get
+  rid of the 'MINSTREL_MAX_STREAMS >= 3' checks for minstrel_mcs_groups
+v3:
+- put module param *vht_only* under CONFIG_MAC80211_RC_MINSTREL_VHT
 
-
-Cheers,
+ net/mac80211/Kconfig                       |   7 +
+ net/mac80211/rc80211_minstrel_ht.c         | 292 +++++++++++++++++++++++------
+ net/mac80211/rc80211_minstrel_ht.h         |  38 +++-
+ net/mac80211/rc80211_minstrel_ht_debugfs.c |  32 ++--
+ 4 files changed, 290 insertions(+), 79 deletions(-)
 
 -- 
-heikki
+2.0.1
+
