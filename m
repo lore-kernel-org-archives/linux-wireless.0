@@ -1,37 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:62722 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933203AbaJ2PDE (ORCPT
+Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:49127
+	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751483AbaJRRCR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2014 11:03:04 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 0/2] brcmsmac: fix and expose 802.11 core statistics
-Date: Wed, 29 Oct 2014 16:02:49 +0100
-Message-ID: <1414594971-26389-1-git-send-email-arend@broadcom.com> (sfid-20141029_160308_258911_C3108BC8)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sat, 18 Oct 2014 13:02:17 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
+Subject: [PATCH 02/10] ath9k_hw: remove support for UB124 tx gain table
+Date: Sat, 18 Oct 2014 19:02:04 +0200
+Message-Id: <1413651732-69783-2-git-send-email-nbd@openwrt.org> (sfid-20141018_190247_152788_B402A305)
+In-Reply-To: <1413651732-69783-1-git-send-email-nbd@openwrt.org>
+References: <1413651732-69783-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When looking at exposing the 802.11 core statistics a problem was found
-in code obtaining the statistics from the device. This series fixes that
-and exposes the statistics in debugfs. Hopefully this can reveal what
-is causing connectivity issues on certain bcm4313 chipsets.
+UB124 is a USB based reference design not supported by ath9k or
+ath9k_htc.
 
-The series is intended for 3.19 and applies to the master branch of
-the wireless-next repository.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-Arend van Spriel (2):
-  brcmsmac: fix statistic counter update function
-  brcmsmac: expose 802.11 core statistics in debugfs
-
- drivers/net/wireless/brcm80211/brcmsmac/debug.c | 166 +++++++++++++++++++-----
- drivers/net/wireless/brcm80211/brcmsmac/main.c  |  18 +--
- 2 files changed, 142 insertions(+), 42 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+index ddef9ee..cb09102 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+@@ -670,9 +670,6 @@ static void ar9003_tx_gain_table_mode5(struct ath_hw *ah)
+ 	if (AR_SREV_9485_11_OR_LATER(ah))
+ 		INIT_INI_ARRAY(&ah->iniModesTxGain,
+ 			ar9485Modes_green_ob_db_tx_gain_1_1);
+-	else if (AR_SREV_9340(ah))
+-		INIT_INI_ARRAY(&ah->iniModesTxGain,
+-			ar9340Modes_ub124_tx_gain_table_1p0);
+ 	else if (AR_SREV_9580(ah))
+ 		INIT_INI_ARRAY(&ah->iniModesTxGain,
+ 			ar9580_1p0_type5_tx_gain_table);
 -- 
-1.9.1
+2.0.4
 
