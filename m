@@ -1,122 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:39157 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753717AbaJMUO3 (ORCPT
+Received: from mail-wg0-f48.google.com ([74.125.82.48]:41411 "EHLO
+	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751233AbaJRWTH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Oct 2014 16:14:29 -0400
-Received: by mail-lb0-f174.google.com with SMTP id p9so6972320lbv.5
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Oct 2014 13:14:27 -0700 (PDT)
+	Sat, 18 Oct 2014 18:19:07 -0400
+Received: by mail-wg0-f48.google.com with SMTP id k14so3062706wgh.7
+        for <linux-wireless@vger.kernel.org>; Sat, 18 Oct 2014 15:19:05 -0700 (PDT)
+Date: Sun, 19 Oct 2014 00:19:00 +0200
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Karl Beldan <karl.beldan@rivierawaves.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: Re: [PATCH v3 0/4] add VHT support to minstrel_ht
+Message-ID: <20141018221844.GA17413@magnum.frso.rivierawaves.com> (sfid-20141019_001911_539524_9E3E09DE)
+References: <1413575459-29612-5-git-send-email-karl.beldan@gmail.com>
+ <1413652424-14345-1-git-send-email-karl.beldan@gmail.com>
+ <CABPxzY+W48L-OjWy5Zd9VJGhtG684dtOd-2rzW-9dW09YKFXaQ@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6D174C992F@AcuExch.aculab.com>
-References: <1413071551-15372-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
- <063D6719AE5E284EB5DD2968C1650D6D174C992F@AcuExch.aculab.com>
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-Date: Mon, 13 Oct 2014 22:14:07 +0200
-Message-ID: <CAFo99gZxFcTcXQnutcYt7o8aCXNRQT-aBQ6C=V4ZsK=7aUiX=w@mail.gmail.com> (sfid-20141013_221451_511871_985FEC2A)
-Subject: Re: [PATCH] net: wireless: brcm80211: brcmfmac: dhd_sdio.c: Cleaning
- up missing null-terminate in conjunction with strncpy
-To: David Laight <David.Laight@aculab.com>
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	Daniel Kim <dekim@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CABPxzY+W48L-OjWy5Zd9VJGhtG684dtOd-2rzW-9dW09YKFXaQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2014-10-13 10:55 GMT+02:00 David Laight <David.Laight@aculab.com>:
-> From: Rickard Strandqvist
->> Replacing strncpy with strlcpy to avoid strings that lacks null terminate.
->> And changed from using strncpy to strlcpy to simplify code.
->
-> I think you should return an error if the strings get truncated.
-> Silent truncation is going to lead to issues at some point in the future
-> (in some places).
->
->> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
->> ---
->>  drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   25 ++++++++++----------
->>  1 file changed, 12 insertions(+), 13 deletions(-)
->>
->> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
->> b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
->> index f55f625..d20d4e6 100644
->> --- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
->> +++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
->> @@ -670,7 +670,6 @@ static int brcmf_sdio_get_fwnames(struct brcmf_chip *ci,
->>                                 struct brcmf_sdio_dev *sdiodev)
->>  {
->>       int i;
->> -     uint fw_len, nv_len;
->>       char end;
->>
->>       for (i = 0; i < ARRAY_SIZE(brcmf_fwname_data); i++) {
->> @@ -684,25 +683,25 @@ static int brcmf_sdio_get_fwnames(struct brcmf_chip *ci,
->>               return -ENODEV;
->>       }
->>
->> -     fw_len = sizeof(sdiodev->fw_name) - 1;
->> -     nv_len = sizeof(sdiodev->nvram_name) - 1;
->>       /* check if firmware path is provided by module parameter */
->>       if (brcmf_firmware_path[0] != '\0') {
->> -             strncpy(sdiodev->fw_name, brcmf_firmware_path, fw_len);
->> -             strncpy(sdiodev->nvram_name, brcmf_firmware_path, nv_len);
->> -             fw_len -= strlen(sdiodev->fw_name);
->> -             nv_len -= strlen(sdiodev->nvram_name);
->> +             strlcpy(sdiodev->fw_name, brcmf_firmware_path,
->> +                     sizeof(sdiodev->fw_name));
->> +             strlcpy(sdiodev->nvram_name, brcmf_firmware_path,
->> +                     sizeof(sdiodev->nvram_name));
->>
->>               end = brcmf_firmware_path[strlen(brcmf_firmware_path) - 1];
->
-> If you are doing a strlen() here, you could use the length for the copy
-> and/or use it to avoid the strcat().
->
->>               if (end != '/') {
->> -                     strncat(sdiodev->fw_name, "/", fw_len);
->> -                     strncat(sdiodev->nvram_name, "/", nv_len);
->> -                     fw_len--;
->> -                     nv_len--;
->> +                     strlcat(sdiodev->fw_name, "/",
->> +                             sizeof(sdiodev->fw_name));
->> +                     strlcat(sdiodev->nvram_name, "/",
->> +                             sizeof(sdiodev->nvram_name));
->>               }
->>       }
->> -     strncat(sdiodev->fw_name, brcmf_fwname_data[i].bin, fw_len);
->> -     strncat(sdiodev->nvram_name, brcmf_fwname_data[i].nv, nv_len);
->> +     strlcat(sdiodev->fw_name, brcmf_fwname_data[i].bin,
->> +             sizeof(sdiodev->fw_name));
->> +     strlcat(sdiodev->nvram_name, brcmf_fwname_data[i].nv,
->> +             sizeof(sdiodev->nvram_name));
->
-> I assume something ensures that fw_name[0] == 0 here.
->
->         David
-
-
-Hi David
-
-
-What do you mean you would use the strlen, can you give some example
-code instead?
-
-
-Arend van Spriel wanted me to change the title before.
-So this should really continue the conversation in that new mail. And
-then you can also see my other comments.
-And I have the same type of objection to the:
-brcmf_firmware_path[0] == '\0'
-
-Se:
-https://lkml.org/lkml/2014/10/12/42
-
-Kind regards
-Rickard Strandqvist
+On Sat, Oct 18, 2014 at 11:11:48PM +0530, Krishna Chaitanya wrote:
+> On Sat, Oct 18, 2014 at 10:43 PM, Karl Beldan <karl.beldan@gmail.com> wrote:
+> >
+> > From: Karl Beldan <karl.beldan@rivierawaves.com>
+> >
+> >
+> > Karl Beldan (4):
+> >   mac80211: minstrel_ht: Increase the range of handled rate indexes
+> >   mac80211: minstrel_ht: macros adjustments for future VHT_GROUPs
+> >   mac80211: minstrel_ht: include type (cck/ht) in rates flag
+> >   mac80211: minstrel_ht: add basic support for VHT rates <= 3SS@80MHz
+> > v2:
+> > - typo in Kconfig
+> > - adjust room in debugfs rc_stats buffer
+> > - add a module param to mix ht rates with vht ones
+> > - default to 3SS instead of 2SS (with "mac80211: minstrel_ht: macros
+> >   adjustments for future VHT_GROUPs")
+> > - use common MINSTREL_MAX_STREAMS both for VHT and HT so that we can get
+> >   rid of the 'MINSTREL_MAX_STREAMS >= 3' checks for minstrel_mcs_groups
+> > v3:
+> > - put module param *vht_only* under CONFIG_MAC80211_RC_MINSTREL_VHT
+> >
+> >  net/mac80211/Kconfig                       |   7 +
+> >  net/mac80211/rc80211_minstrel_ht.c         | 292 +++++++++++++++++++++++------
+> >  net/mac80211/rc80211_minstrel_ht.h         |  38 +++-
+> >  net/mac80211/rc80211_minstrel_ht_debugfs.c |  32 ++--
+> >  4 files changed, 290 insertions(+), 79 deletions(-)
+> >
+> > --
+> >
+> We have been using you patches for some time and they do the work well.
+> Except for the sampling holes, where we were needed to add some
+> supported checks.
+Maybe you missed f12140c "mac80211: minstrel_ht: do not sample
+unsupported rates"? I posted it about the same time as the vht rfc a
+year ago. Thanks for the feedback.
+ 
+Karl
