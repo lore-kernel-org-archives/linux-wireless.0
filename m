@@ -1,37 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f45.google.com ([209.85.218.45]:52831 "EHLO
-	mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750805AbaJPMuY (ORCPT
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:54520 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751907AbaJSNVR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Oct 2014 08:50:24 -0400
-Received: by mail-oi0-f45.google.com with SMTP id i138so2591407oig.18
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Oct 2014 05:50:24 -0700 (PDT)
+	Sun, 19 Oct 2014 09:21:17 -0400
+Received: by mail-ie0-f178.google.com with SMTP id rl12so3256136iec.37
+        for <linux-wireless@vger.kernel.org>; Sun, 19 Oct 2014 06:21:16 -0700 (PDT)
 MIME-Version: 1.0
-Date: Thu, 16 Oct 2014 13:50:24 +0100
-Message-ID: <CAH19H-W8B9SSr7ho4LCJSEi-jy_PzXb__=ZC7sfHuRfuWY5FeA@mail.gmail.com> (sfid-20141016_145027_845707_B05B991E)
-Subject: How do I know if I have the latest firmware version installed?
-From: lapisdecor <lapisdecor@gmail.com>
-To: linux-wireless@vger.kernel.org
+In-Reply-To: <CABPxzYJXPbmrfrgyoE5X9UO-3LQQVnXYtpz3x1Sd-fhts-Ns-g@mail.gmail.com>
+References: <CABPxzYJXPbmrfrgyoE5X9UO-3LQQVnXYtpz3x1Sd-fhts-Ns-g@mail.gmail.com>
+Date: Sun, 19 Oct 2014 16:21:16 +0300
+Message-ID: <CAB3XZEf19C5DjK-Dod5HKKv2d6bNXgNAvjz+txZO1RQL8jzFDg@mail.gmail.com> (sfid-20141019_152128_952743_E40F700A)
+Subject: Re: SMPS for AP mode confoguration
+From: Eliad Peller <eliad@wizery.com>
+To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Cc: "hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+hi,
 
-I did
+On Sun, Oct 19, 2014 at 2:50 PM, Krishna Chaitanya
+<chaitanya.mgit@gmail.com> wrote:
+> We are testing SMPS functionality for AP mode. The driver conveys its
+> capabilities through setting the HT capability which can be set to 0-3.
+>
+> I wanted to convey support for both Dynamic and Static Powersave
+> and then control the config through hostapd.conf file. Currently this is
+> not possible.From driver i can only advertize support for static (or) dynamic
+> not both (HW_SUPPORTS_* is a different thing which is used in
+> doing checks at debugfs level).
+>
+> So if i wanted to configure different modes from hostapd.conf, i
+> have to change the driver settings as well.
+>
+> Shouldn't it be the other way around, based on driver's _HW_ flags
+> we should convey the capabilities to user-space  (currently we use
+> ht_cap for this) and it will configure the mode from the configuration
+> file.  I think the design of SMPS configuration should be changed.
+>
+this was recently changed. take a look at this patchset:
+http://www.spinics.net/lists/linux-wireless/msg126749.html
 
-ls /lib/firmware/iwlwifi-3945*
-/lib/firmware/iwlwifi-3945-2.ucode
+we also have a matching supplicant patchset that will probably be
+upstreamed soon.
 
-but my wifi card  very rarelly, sometimes disconnects (router is ok)
-
-I see there are 5 versions for this firmware on the site.
-
-how can i check if I have the latest? I'm running Ubuntu 14.04 and
-
-uname -r
-3.13.0-37-generic
-
-Thank you!
-
-Luis Louro
+Eliad.
