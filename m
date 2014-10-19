@@ -1,52 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:49829 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751347AbaJVJbA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2014 05:31:00 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: don't remove tainted keys after not programming
-Date: Wed, 22 Oct 2014 11:30:51 +0200
-Message-Id: <1413970251-29354-1-git-send-email-johannes@sipsolutions.net> (sfid-20141022_113104_858289_ABD38974)
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:44869 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752001AbaJSPEB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 19 Oct 2014 11:04:01 -0400
+Received: by mail-wi0-f181.google.com with SMTP id hi2so4433260wib.2
+        for <linux-wireless@vger.kernel.org>; Sun, 19 Oct 2014 08:03:59 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAB3XZEf19C5DjK-Dod5HKKv2d6bNXgNAvjz+txZO1RQL8jzFDg@mail.gmail.com>
+References: <CABPxzYJXPbmrfrgyoE5X9UO-3LQQVnXYtpz3x1Sd-fhts-Ns-g@mail.gmail.com>
+ <CAB3XZEf19C5DjK-Dod5HKKv2d6bNXgNAvjz+txZO1RQL8jzFDg@mail.gmail.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Sun, 19 Oct 2014 20:33:39 +0530
+Message-ID: <CABPxzY+0TZ8QQAC5k_zi-NaQNaB9T-QteE71Kux2dCay9ws5jA@mail.gmail.com> (sfid-20141019_170406_504169_ACF6DEDD)
+Subject: Re: SMPS for AP mode confoguration
+To: Eliad Peller <eliad@wizery.com>
+Cc: "hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Sun, Oct 19, 2014 at 6:51 PM, Eliad Peller <eliad@wizery.com> wrote:
+> hi,
+>
+> On Sun, Oct 19, 2014 at 2:50 PM, Krishna Chaitanya
+> <chaitanya.mgit@gmail.com> wrote:
+>> We are testing SMPS functionality for AP mode. The driver conveys its
+>> capabilities through setting the HT capability which can be set to 0-3.
+>>
+>> I wanted to convey support for both Dynamic and Static Powersave
+>> and then control the config through hostapd.conf file. Currently this is
+>> not possible.From driver i can only advertize support for static (or) dynamic
+>> not both (HW_SUPPORTS_* is a different thing which is used in
+>> doing checks at debugfs level).
+>>
+>> So if i wanted to configure different modes from hostapd.conf, i
+>> have to change the driver settings as well.
+>>
+>> Shouldn't it be the other way around, based on driver's _HW_ flags
+>> we should convey the capabilities to user-space  (currently we use
+>> ht_cap for this) and it will configure the mode from the configuration
+>> file.  I think the design of SMPS configuration should be changed.
+>>
+> this was recently changed. take a look at this patchset:
+> http://www.spinics.net/lists/linux-wireless/msg126749.html
+>
+> we also have a matching supplicant patchset that will probably be
+> upstreamed soon.
 
-When a key is tainted during resume, it is no longer programmed
-into the device; however, it's uploaded flag may (will) be set.
-Clear the flag when not programming it because it's tainted to
-avoid attempting to remove it again later.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/key.c | 11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
-
-diff --git a/net/mac80211/key.c b/net/mac80211/key.c
-index 4712150dc210..434a91ad12c8 100644
---- a/net/mac80211/key.c
-+++ b/net/mac80211/key.c
-@@ -94,8 +94,17 @@ static int ieee80211_key_enable_hw_accel(struct ieee80211_key *key)
- 
- 	might_sleep();
- 
--	if (key->flags & KEY_FLAG_TAINTED)
-+	if (key->flags & KEY_FLAG_TAINTED) {
-+		/* If we get here, it's during resume and the key is
-+		 * tainted so shouldn't be used/programmed any more.
-+		 * However, its flags may still indicate that it was
-+		 * programmed into the device (since we're in resume)
-+		 * so clear that flag now to avoid trying to remove
-+		 * it again later.
-+		 */
-+		key->flags &= ~KEY_FLAG_UPLOADED_TO_HARDWARE;
- 		return -EINVAL;
-+	}
- 
- 	if (!key->local->ops->set_key)
- 		goto out_unsupported;
--- 
-2.1.0
-
+Thanks Ellad, it looks good to me, will try out them once they are up stream.
