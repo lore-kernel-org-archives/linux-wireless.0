@@ -1,99 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:45604 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754919AbaJHK1Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Oct 2014 06:27:16 -0400
-Date: Wed, 8 Oct 2014 13:27:08 +0300
-From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
-To: Loic Poulain <loic.poulain@intel.com>
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/5] net: rfkill: gpio: Configurable GPIO idx
-Message-ID: <20141008102708.GA3514@kuha.fi.intel.com> (sfid-20141008_122719_765509_1476A7EC)
-References: <1412757280-31367-1-git-send-email-loic.poulain@intel.com>
+Received: from out3-smtp.messagingengine.com ([66.111.4.27]:39149 "EHLO
+	out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751263AbaJSUsi convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 19 Oct 2014 16:48:38 -0400
+Received: from compute6.internal (compute6.nyi.internal [10.202.2.46])
+	by gateway2.nyi.internal (Postfix) with ESMTP id A5826206C1
+	for <linux-wireless@vger.kernel.org>; Sun, 19 Oct 2014 16:48:37 -0400 (EDT)
+Message-Id: <1413751717.2510219.180809145.0E693C29@webmail.messagingengine.com> (sfid-20141019_224855_270450_1EB27A71)
+From: =?UTF-8?Q?Lauren=C8=9Biu=20Nicola?= <lnicola@dend.ro>
+To: Dan Williams <dcbw@redhat.com>
+Cc: linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1412757280-31367-1-git-send-email-loic.poulain@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <1413510814.22769.6.camel@dcbw.local>
+References: <1413463736.1316541.179720977.4FD32021@webmail.messagingengine.com>
+ <1413510814.22769.6.camel@dcbw.local>
+Subject: Re: iwlwifi: Reason 7 periodic disconnect
+Date: Sun, 19 Oct 2014 23:48:37 +0300
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 08, 2014 at 10:34:36AM +0200, Loic Poulain wrote:
-> Some devices don't match the current static gpio mapping:
-> -BCM4752 (GPS) uses gpio res 0 as host wake irq.
-> -OBDA8723 (Bluetooth) uses gpio res 0 as controller wake gpio
-> and res 2 as host wake irq.
+Hello,
+
+Sorry for the late reply. I was using just wpa_supplicant. I also tried
+wicd, but it seems to hang when connecting to a network, but my
+understanding is that it's just a wpa_supplicant manager. I got this
+while installing Gentoo, but I also reproduced it on the Fedora 20 Live
+CD. See https://bpaste.net/show/7d5ad99260a7 for logs, but it doesn't
+seem to say much more than my original extract.
+
+What I found out in the meanwhile, however, is that active traffic will
+prevent the issue from occurring. This happened with the Fedora Live CD,
+but pinging the AP is also sufficient. I noticed iwconfig reports that
+the power saving mode is off.
+
+For what it's worth, I compiled my kernel and iwlwifi module with
+tracing on, so tell me if I should try that.
+
+Laurentiu
+
+
+On Fri, Oct 17, 2014, at 04:53, Dan Williams wrote:
+> On Thu, 2014-10-16 at 15:48 +0300, Laurențiu Nicola wrote:
+> > Hello,
+> > 
+> > I'm using iwlwifi for a Centrino Ultimate-N 6300 on 3.14.4 and 3.17.1.
+> > Connect to my wireless network works, but I get disconnected every 60
+> > seconds or so. The dmesg output looks like
+> > https://bpaste.net/show/1623a8ae5dc6 .
+> > 
+> > I had the same issue on the three latest firmware versions:
+> > iwlwifi-6000-ucode-9.176.4.1
+> > iwlwifi-6000-ucode-9.193.4.1
+> > iwlwifi-6000-ucode-9.221.4.1
+> > 
+> > The dmesg log actually shows the driver loading the different versions
+> > above.
+> > 
+> > It's the first time I try to use wireless on Linux, so I might have made
+> > a dumb mistake.
 > 
-> To allow more flexibility, this patch introduces an index
-> map description.
-> By default, legacy config still used (reset: idx 0;
-> shutdown: idx 1).
+> Can you try to get debug output from wpa_supplicant, which is the
+> process that controls WiFi on Linux?  What distro and version do you
+> use, and do you know what WiFi management service is being used?
+> (NetworkManager, conman, plain wpa_supplicant, wicd, something else?)
 > 
-> Signed-off-by: Loic Poulain <loic.poulain@intel.com>
-> ---
->  net/rfkill/rfkill-gpio.c | 125 +++++++++++++++++++++++++++++++++--------------
->  1 file changed, 88 insertions(+), 37 deletions(-)
-
-NAK
-
-I'm afraid the order of the GPIOs is platform specific. This would
-break the systems already out in the market.
-
-You need to fix your firmware to generate ACPI DSDT according to ACPI
-spec. v5.1 [1], which introduces the Device Specific Data (_DSD) and
-dt like device properties. We need to be able to request the GPIO
-based on the label, not the index, with all new platforms. Here is an
-example of the type of_ASL you need to have for the device..
-
-        ...
-        Method (_CRS, 0, NotSerialized)  // _CRS: Current Resource Settings
-        {
-            Name (BBUF, ResourceTemplate ()
-            {
-                UartSerialBus (0x0001C200, DataBitsEight, StopBitsOne,
-                    0xFC, LittleEndian, ParityTypeNone, FlowControlNone,
-                    0x0020, 0x0020, "\\_SB.PCI0.URT1",
-                    0x00, ResourceConsumer, ,
-                    )
-                GpioInt (Level, ActiveLow, Exclusive, PullNone, 0x0000,
-                    "\\_SB.GPO3", 0x00, ResourceConsumer, ,
-                    )
-                    {   // Pin list
-                        0x003C
-                    }
-                GpioIo (Exclusive, PullDefault, 0x0000, 0x0000, IoRestrictionOutputOnly,
-                    "\\_SB.GPO3", 0x00, ResourceConsumer, ,
-                    )
-                    {   // Pin list
-                        0x003E
-                    }
-                GpioIo (Exclusive, PullDefault, 0x0000, 0x0000, IoRestrictionOutputOnly,
-                    "\\_SB.GPO3", 0x00, ResourceConsumer, ,
-                    )
-                    {   // Pin list
-                        0x0040
-                    }
-            })
-            Return (BBUF) /* \_SB_.PCI0.URT1.BTH1._CRS.BBUF */
-        }
-
-        Name (_DSD, Package ()
-        {
-            ToUUID("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),
-            Package () {
-                Package () {"reset-gpio", Package () {^BTH1, 1, 0, 0}},
-                Package () {"shutdown-gpio", Package () {^BTH1, 2, 0, 0}},
-            }
-        })
-        ...
-
-That will make sure you get the correct GPIO the moment we get support
-for the ACPI properties [2], regardless of the index. So there is no
-need for any changes to the driver.
-
-
-[1] http://www.uefi.org/sites/default/files/resources/ACPI_5_1release.pdf
-[2] https://lkml.org/lkml/2014/9/16/229
-
-
--- 
-heikki
+> Dan
+> 
