@@ -1,129 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:63962 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753234AbaJTIz6 (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:6963 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752950AbaJTKU6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2014 04:55:58 -0400
-Received: by mail-wi0-f174.google.com with SMTP id h11so7162230wiw.1
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2014 01:55:57 -0700 (PDT)
-From: Karl Beldan <karl.beldan@gmail.com>
+	Mon, 20 Oct 2014 06:20:58 -0400
+Date: Mon, 20 Oct 2014 13:20:45 +0300
+From: Jouni Malinen <jouni@qca.qualcomm.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Karl Beldan <karl.beldan@rivierawaves.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	karl.beldan@gmail.com
-Subject: [PATCH v4 1/4] mac80211: minstrel_ht: Increase the range of handled rate indexes
-Date: Mon, 20 Oct 2014 10:55:39 +0200
-Message-Id: <1413795342-11995-2-git-send-email-karl.beldan@gmail.com> (sfid-20141020_105611_119311_A8529D6F)
-In-Reply-To: <1413795342-11995-1-git-send-email-karl.beldan@gmail.com>
-References: <1413652424-14345-5-git-send-email-karl.beldan@gmail.com>
- <1413795342-11995-1-git-send-email-karl.beldan@gmail.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 2/2] cfg80211: Specify frame and reason code for
+ NL80211_CMD_DEL_STATION
+Message-ID: <20141020102045.GA2716@jouni.qca.qualcomm.com> (sfid-20141020_122101_902703_947EB71E)
+References: <20141010175525.GA29436@jouni.qca.qualcomm.com>
+ <1413278472.2455.3.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1413278472.2455.3.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Karl Beldan <karl.beldan@rivierawaves.com>
+The optional NL80211_ATTR_MGMT_SUBTYPE and NL80211_ATTR_REASON_CODE
+attributes can now be included in NL80211_CMD_DEL_STATION to indicate to
+the driver which frame (Deauthentication/Disassociation) and reason code
+in that frame should be used to indicate removal to the specific
+station. This is used by drivers that implement AP SME and generate
+those frames internally.
 
-Since 5935839ad735 ("mac80211: improve minstrel_ht rate sorting by
-throughput & probability"), the rate indexes are manipulated via u8's
-and hence allow for a maximum of 256 mcs_group entries in
-minstrel_mcs_groups.
-
-ATM, minstrel_ht advertizes support up to 3HTSS@40MHz, consuming:
-8(MCS_GROUP_RATES) * (3(SS)*2(GI)*2(BW)+1(CCK)), i.e. 104 entries.
-
-Support for 3VHTSS@80MHz will require:
-10(MCS_GROUP_RATES) * (3(SS)*2(GI)*2(BW)+1(CCK)) +
-10(MCS_GROUP_RATES) * (3(SS)*2(GI)*3(BW)), i.e. 130 + 180 entries.
-
-This change moves from u8s to u16s where necessary.
-
-Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
-Acked-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
 ---
- net/mac80211/rc80211_minstrel_ht.c | 16 ++++++++--------
- net/mac80211/rc80211_minstrel_ht.h |  8 ++++----
- 2 files changed, 12 insertions(+), 12 deletions(-)
+ include/net/cfg80211.h       |  5 +++++
+ include/uapi/linux/nl80211.h |  6 +++++-
+ net/wireless/nl80211.c       | 21 +++++++++++++++++++++
+ net/wireless/trace.h         | 10 ++++++++--
+ 4 files changed, 39 insertions(+), 3 deletions(-)
 
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index 17ef54a..ccec718 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -240,8 +240,8 @@ minstrel_ht_calc_tp(struct minstrel_ht_sta *mi, int group, int rate)
-  * MCS groups, CCK rates do not provide aggregation and are therefore at last.
+v2: Move default behavior selection to cfg80211 so that drivers will
+always get an indication of subtype and reason_code.
+
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 777e191..23308fb 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -804,9 +804,14 @@ struct station_parameters {
+  * Used to delete a station entry (or all stations).
+  *
+  * @mac: MAC address of the station to remove or NULL to remove all stations
++ * @subtype: Management frame subtype to use for indicating removal
++ *	(10 = Disassociation, 12 = Deauthentication)
++ * @reason_code: Reason code for the Disassociation/Deauthentication frame
   */
- static void
--minstrel_ht_sort_best_tp_rates(struct minstrel_ht_sta *mi, u8 index,
--			       u8 *tp_list)
-+minstrel_ht_sort_best_tp_rates(struct minstrel_ht_sta *mi, u16 index,
-+			       u16 *tp_list)
- {
- 	int cur_group, cur_idx, cur_thr, cur_prob;
- 	int tmp_group, tmp_idx, tmp_thr, tmp_prob;
-@@ -278,7 +278,7 @@ minstrel_ht_sort_best_tp_rates(struct minstrel_ht_sta *mi, u8 index,
-  * Find and set the topmost probability rate per sta and per group
-  */
- static void
--minstrel_ht_set_best_prob_rate(struct minstrel_ht_sta *mi, u8 index)
-+minstrel_ht_set_best_prob_rate(struct minstrel_ht_sta *mi, u16 index)
- {
- 	struct minstrel_mcs_group_data *mg;
- 	struct minstrel_rate_stats *mr;
-@@ -321,8 +321,8 @@ minstrel_ht_set_best_prob_rate(struct minstrel_ht_sta *mi, u8 index)
-  */
- static void
- minstrel_ht_assign_best_tp_rates(struct minstrel_ht_sta *mi,
--				 u8 tmp_mcs_tp_rate[MAX_THR_RATES],
--				 u8 tmp_cck_tp_rate[MAX_THR_RATES])
-+				 u16 tmp_mcs_tp_rate[MAX_THR_RATES],
-+				 u16 tmp_cck_tp_rate[MAX_THR_RATES])
- {
- 	unsigned int tmp_group, tmp_idx, tmp_cck_tp, tmp_mcs_tp;
- 	int i;
-@@ -386,8 +386,8 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
- 	struct minstrel_mcs_group_data *mg;
- 	struct minstrel_rate_stats *mr;
- 	int group, i, j;
--	u8 tmp_mcs_tp_rate[MAX_THR_RATES], tmp_group_tp_rate[MAX_THR_RATES];
--	u8 tmp_cck_tp_rate[MAX_THR_RATES], index;
-+	u16 tmp_mcs_tp_rate[MAX_THR_RATES], tmp_group_tp_rate[MAX_THR_RATES];
-+	u16 tmp_cck_tp_rate[MAX_THR_RATES], index;
+ struct station_del_parameters {
+ 	const u8 *mac;
++	u8 subtype;
++	u16 reason_code;
+ };
  
- 	if (mi->ampdu_packets > 0) {
- 		mi->avg_ampdu_len = minstrel_ewma(mi->avg_ampdu_len,
-@@ -517,7 +517,7 @@ minstrel_next_sample_idx(struct minstrel_ht_sta *mi)
+ /**
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 4b28dc0..07ef683 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -227,7 +227,11 @@
+  *	the interface identified by %NL80211_ATTR_IFINDEX.
+  * @NL80211_CMD_DEL_STATION: Remove a station identified by %NL80211_ATTR_MAC
+  *	or, if no MAC address given, all stations, on the interface identified
+- *	by %NL80211_ATTR_IFINDEX.
++ *	by %NL80211_ATTR_IFINDEX. %NL80211_ATTR_MGMT_SUBTYPE and
++ *	%NL80211_ATTR_REASON_CODE can optionally be used to specify which type
++ *	of disconnection indication should be sent to the station
++ *	(Deauthentication or Disassociation frame and reason code for that
++ *	frame).
+  *
+  * @NL80211_CMD_GET_MPATH: Get mesh path attributes for mesh path to
+  * 	destination %NL80211_ATTR_MAC on the interface identified by
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 9333990..f6902ce 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -4414,6 +4414,27 @@ static int nl80211_del_station(struct sk_buff *skb, struct genl_info *info)
+ 	if (!rdev->ops->del_station)
+ 		return -EOPNOTSUPP;
+ 
++	if (info->attrs[NL80211_ATTR_MGMT_SUBTYPE]) {
++		params.subtype =
++			nla_get_u8(info->attrs[NL80211_ATTR_MGMT_SUBTYPE]);
++		if (params.subtype != IEEE80211_STYPE_DISASSOC >> 4 &&
++		    params.subtype != IEEE80211_STYPE_DEAUTH >> 4)
++			return -EINVAL;
++	} else {
++		/* Default to Deauthentication frame */
++		params.subtype = IEEE80211_STYPE_DEAUTH >> 4;
++	}
++
++	if (info->attrs[NL80211_ATTR_REASON_CODE]) {
++		params.reason_code =
++			nla_get_u16(info->attrs[NL80211_ATTR_REASON_CODE]);
++		if (params.reason_code == 0)
++			return -EINVAL; /* 0 is reserved */
++	} else {
++		/* Default to reason code 2 */
++		params.reason_code = WLAN_REASON_PREV_AUTH_NOT_VALID;
++	}
++
+ 	return rdev_del_station(rdev, dev, &params);
  }
  
- static void
--minstrel_downgrade_rate(struct minstrel_ht_sta *mi, u8 *idx, bool primary)
-+minstrel_downgrade_rate(struct minstrel_ht_sta *mi, u16 *idx, bool primary)
- {
- 	int group, orig_group;
+diff --git a/net/wireless/trace.h b/net/wireless/trace.h
+index 66bc3c9..fae55cd 100644
+--- a/net/wireless/trace.h
++++ b/net/wireless/trace.h
+@@ -688,14 +688,20 @@ DECLARE_EVENT_CLASS(station_del,
+ 		WIPHY_ENTRY
+ 		NETDEV_ENTRY
+ 		MAC_ENTRY(sta_mac)
++		__field(u8, subtype)
++		__field(u16, reason_code)
+ 	),
+ 	TP_fast_assign(
+ 		WIPHY_ASSIGN;
+ 		NETDEV_ASSIGN;
+ 		MAC_ASSIGN(sta_mac, params->mac);
++		__entry->subtype = params->subtype;
++		__entry->reason_code = params->reason_code;
+ 	),
+-	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", station mac: " MAC_PR_FMT,
+-		  WIPHY_PR_ARG, NETDEV_PR_ARG, MAC_PR_ARG(sta_mac))
++	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", station mac: " MAC_PR_FMT
++		  ", subtype: %u, reason_code: %u",
++		  WIPHY_PR_ARG, NETDEV_PR_ARG, MAC_PR_ARG(sta_mac),
++		  __entry->subtype, __entry->reason_code)
+ );
  
-diff --git a/net/mac80211/rc80211_minstrel_ht.h b/net/mac80211/rc80211_minstrel_ht.h
-index 01570e0..8b54e89 100644
---- a/net/mac80211/rc80211_minstrel_ht.h
-+++ b/net/mac80211/rc80211_minstrel_ht.h
-@@ -34,8 +34,8 @@ struct minstrel_mcs_group_data {
- 	u8 supported;
- 
- 	/* sorted rate set within a MCS group*/
--	u8 max_group_tp_rate[MAX_THR_RATES];
--	u8 max_group_prob_rate;
-+	u16 max_group_tp_rate[MAX_THR_RATES];
-+	u16 max_group_prob_rate;
- 
- 	/* MCS rate statistics */
- 	struct minstrel_rate_stats rates[MCS_GROUP_RATES];
-@@ -52,8 +52,8 @@ struct minstrel_ht_sta {
- 	unsigned int avg_ampdu_len;
- 
- 	/* overall sorted rate set */
--	u8 max_tp_rate[MAX_THR_RATES];
--	u8 max_prob_rate;
-+	u16 max_tp_rate[MAX_THR_RATES];
-+	u16 max_prob_rate;
- 
- 	/* time of last status update */
- 	unsigned long stats_update;
+ DEFINE_EVENT(station_del, rdev_del_station,
 -- 
-2.0.1
+1.9.1
 
+-- 
+Jouni Malinen                                            PGP id EFC895FA
