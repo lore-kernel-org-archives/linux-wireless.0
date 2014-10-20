@@ -1,44 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f51.google.com ([209.85.218.51]:49672 "EHLO
-	mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750922AbaJHRpB (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:34681 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754036AbaJTWtv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Oct 2014 13:45:01 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, troy_tan@realsil.com.cn,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH V3.18] rtlwifi: Fix possible unaligned array in ether_addr_copy()
-Date: Wed,  8 Oct 2014 12:44:55 -0500
-Message-Id: <1412790295-27858-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20141008_194514_155105_1410EF1D)
+	Mon, 20 Oct 2014 18:49:51 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v2 3/6] mac80211-hwsim: support creating radios with specific name.
+Date: Mon, 20 Oct 2014 15:49:35 -0700
+Message-Id: <1413845378-27837-3-git-send-email-greearb@candelatech.com> (sfid-20141021_005001_007228_43F7954A)
+In-Reply-To: <1413845378-27837-1-git-send-email-greearb@candelatech.com>
+References: <1413845378-27837-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Two macros used to copy BSSID information use ether_addr_copy(), thus
-the arrays must be 2-byte aligned. In one case, the array could become
-unaligned if the struct containing it were changed. Use the __unaligned(2)
-attribute to retain the necessary alignment. In addition, the magic number
-used to specify the size of the array is replaced by ETH_ALEN.
+From: Ben Greear <greearb@candelatech.com>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Otherwise, it can be very difficult to know which is which
+if you are trying to do detailed testing.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/rtlwifi/wifi.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/mac80211_hwsim.c | 13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/wifi.h b/drivers/net/wireless/rtlwifi/wifi.h
-index 976667a..6866dcf 100644
---- a/drivers/net/wireless/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/rtlwifi/wifi.h
-@@ -1370,7 +1370,7 @@ struct rtl_mac {
- 	bool rdg_en;
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 00c7b3c..ef793d5 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -2023,7 +2023,7 @@ static int mac80211_hwsim_create_radio(int channels, const char *reg_alpha2,
+ 				       const struct ieee80211_regdomain *regd,
+ 				       bool reg_strict, bool p2p_device,
+ 				       bool use_chanctx, bool destroy_on_close,
+-				       u32 portid)
++				       u32 portid, char *hwname)
+ {
+ 	int err;
+ 	u8 addr[ETH_ALEN];
+@@ -2042,7 +2042,7 @@ static int mac80211_hwsim_create_radio(int channels, const char *reg_alpha2,
  
- 	/*AP*/
--	u8 bssid[6];
-+	u8 bssid[ETH_ALEN] __aligned(2);
- 	u32 vendor;
- 	u8 mcs[16];	/* 16 bytes mcs for HT rates. */
- 	u32 basic_rates; /* b/g rates */
+ 	if (use_chanctx)
+ 		ops = &mac80211_hwsim_mchan_ops;
+-	hw = ieee80211_alloc_hw(sizeof(*data), ops);
++	hw = ieee80211_alloc_hw_nm(sizeof(*data), ops, hwname);
+ 	if (!hw) {
+ 		printk(KERN_DEBUG "mac80211_hwsim: ieee80211_alloc_hw failed\n");
+ 		err = -ENOMEM;
+@@ -2516,10 +2516,14 @@ static int hwsim_create_radio_nl(struct sk_buff *msg, struct genl_info *info)
+ 	bool p2p_device = info->attrs[HWSIM_ATTR_SUPPORT_P2P_DEVICE];
+ 	bool destroy_on_close = info->attrs[HWSIM_ATTR_DESTROY_RADIO_ON_CLOSE];
+ 	bool use_chanctx;
++	char *hwname = NULL;
+ 
+ 	if (info->attrs[HWSIM_ATTR_CHANNELS])
+ 		chans = nla_get_u32(info->attrs[HWSIM_ATTR_CHANNELS]);
+ 
++	if (info->attrs[HWSIM_ATTR_RADIO_NAME])
++		hwname = nla_data(info->attrs[HWSIM_ATTR_RADIO_NAME]);
++
+ 	if (info->attrs[HWSIM_ATTR_USE_CHANCTX])
+ 		use_chanctx = true;
+ 	else
+@@ -2538,7 +2542,8 @@ static int hwsim_create_radio_nl(struct sk_buff *msg, struct genl_info *info)
+ 
+ 	return mac80211_hwsim_create_radio(chans, alpha2, regd, reg_strict,
+ 					   p2p_device, use_chanctx,
+-					   destroy_on_close, info->snd_portid);
++					   destroy_on_close, info->snd_portid,
++					   hwname);
+ }
+ 
+ static int hwsim_destroy_radio_nl(struct sk_buff *msg, struct genl_info *info)
+@@ -2795,7 +2800,7 @@ static int __init init_mac80211_hwsim(void)
+ 		err = mac80211_hwsim_create_radio(channels, reg_alpha2,
+ 						  regd, reg_strict,
+ 						  support_p2p_device,
+-						  channels > 1, false, 0);
++						  channels > 1, false, 0, NULL);
+ 		if (err < 0)
+ 			goto out_free_radios;
+ 	}
 -- 
-1.8.4.5
+1.7.11.7
 
