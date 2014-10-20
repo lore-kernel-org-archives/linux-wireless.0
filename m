@@ -1,60 +1,188 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:64721 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751060AbaJJAZP convert rfc822-to-8bit (ORCPT
+Received: from mail-lb0-f180.google.com ([209.85.217.180]:35562 "EHLO
+	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751632AbaJTM2f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2014 20:25:15 -0400
-MIME-Version: 1.0
-In-Reply-To: <20141009172120.GB2410@roeck-us.net>
-References: <1412872877-1771-1-git-send-email-linux@roeck-us.net>
- <CACna6rzOeGcKrrftLx_3uWe_bAXQaQMmWb3wWHP0CjtdO8D0eg@mail.gmail.com>
- <5436C2B4.6030801@broadcom.com> <20141009172120.GB2410@roeck-us.net>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Fri, 10 Oct 2014 11:24:53 +1100
-Message-ID: <CAGRGNgWWSX8rYatphNAmx+j3wZ7RAXgucUzi_7M6-3NeUjQDEg@mail.gmail.com> (sfid-20141010_022548_213229_4D4C3970)
-Subject: Re: [PATCH] bcma: Add dependency on OF_ADDRESS
-To: Guenter Roeck <linux@roeck-us.net>,
-	sparclinux <sparclinux@vger.kernel.org>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Arnd Bergmann <arnd@arndb.de>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 20 Oct 2014 08:28:35 -0400
+Received: by mail-lb0-f180.google.com with SMTP id n15so3804460lbi.11
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2014 05:28:33 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 4/6] ath10k: make warm reset a bit safer and faster
+Date: Mon, 20 Oct 2014 14:14:40 +0200
+Message-Id: <1413807282-27951-5-git-send-email-michal.kazior@tieto.com> (sfid-20141020_142841_091178_0B91E98B)
+In-Reply-To: <1413807282-27951-1-git-send-email-michal.kazior@tieto.com>
+References: <1413807282-27951-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+One of the problems with warm reset I've found is
+that it must be guaranteed that copy engine
+registers are not being accessed while being
+reset. Otherwise in worst case scenario the host
+may lock up.
 
-On Fri, Oct 10, 2014 at 4:21 AM, Guenter Roeck <linux@roeck-us.net> wrote:
-> On Thu, Oct 09, 2014 at 07:15:32PM +0200, Arend van Spriel wrote:
->> On 10/09/14 18:54, Rafał Miłecki wrote:
->> >On 9 October 2014 18:41, Guenter Roeck<linux@roeck-us.net>  wrote:
->> >>Commit 2101e533f41a ("bcma: register bcma as device tree driver")
->> >>introduces a hard dependency on OF_ADDRESS into the bcma driver.
->> >>OF_ADDRESS is specifically disabled for the sparc architecture.
->> >>This results in the following error when building sparc64:allmodconfig.
->>
->> Does this mean on sparc (using allmodconfig) you will get CONFIG_OF
->> and !CONFIG_OF_ADDRESS? Does that makes sense?
->>
->
-> You tell me. From drivers/of/Kconfig:
->
-> config OF_ADDRESS
->         def_bool y
->         depends on !SPARC
->         select OF_ADDRESS_PCI if PCI
->
-> Presumably there is a reason to disable OF_ADDRESS for sparc.
+Instead of using sleeps and hoping the device is
+operational in some arbitrary timeframes use
+firmware indication register.
 
-Why not ask the sparclinux list? (CC'd)
+As a side effect this makes driver
+boot/stop/recovery faster.
 
-Thanks,
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
 
+Notes:
+    v2:
+     * fix kernel panic on early fw crash due to CE not being fully initialized [Janusz]
+
+ drivers/net/wireless/ath/ath10k/pci.c | 110 +++++++++++++++-------------------
+ 1 file changed, 48 insertions(+), 62 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index c8cf177..54213ac 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -1707,89 +1707,75 @@ static void ath10k_pci_warm_reset_si0(struct ath10k *ar)
+ 	msleep(10);
+ }
+ 
+-static int ath10k_pci_warm_reset(struct ath10k *ar)
++static void ath10k_pci_warm_reset_cpu(struct ath10k *ar)
+ {
+ 	u32 val;
+ 
+-	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot warm reset\n");
+-
+-	spin_lock_bh(&ar->data_lock);
+-
+-	ar->stats.fw_warm_reset_counter++;
+-
+-	spin_unlock_bh(&ar->data_lock);
+-
+-	/* debug */
+-	val = ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS +
+-				PCIE_INTR_CAUSE_ADDRESS);
+-	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot host cpu intr cause: 0x%08x\n",
+-		   val);
+-
+-	val = ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS +
+-				CPU_INTR_ADDRESS);
+-	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot target cpu intr cause: 0x%08x\n",
+-		   val);
+-
+-	/* disable pending irqs */
+-	ath10k_pci_write32(ar, SOC_CORE_BASE_ADDRESS +
+-			   PCIE_INTR_ENABLE_ADDRESS, 0);
+-
+-	ath10k_pci_write32(ar, SOC_CORE_BASE_ADDRESS +
+-			   PCIE_INTR_CLR_ADDRESS, ~0);
+-
+-	msleep(100);
+-
+-	/* clear fw indicator */
+ 	ath10k_pci_write32(ar, FW_INDICATOR_ADDRESS, 0);
+ 
+-	/* clear target LF timer interrupts */
+ 	val = ath10k_pci_read32(ar, RTC_SOC_BASE_ADDRESS +
+-				SOC_LF_TIMER_CONTROL0_ADDRESS);
+-	ath10k_pci_write32(ar, RTC_SOC_BASE_ADDRESS +
+-			   SOC_LF_TIMER_CONTROL0_ADDRESS,
+-			   val & ~SOC_LF_TIMER_CONTROL0_ENABLE_MASK);
++				SOC_RESET_CONTROL_ADDRESS);
++	ath10k_pci_write32(ar, RTC_SOC_BASE_ADDRESS + SOC_RESET_CONTROL_ADDRESS,
++			   val | SOC_RESET_CONTROL_CPU_WARM_RST_MASK);
++}
++
++static void ath10k_pci_warm_reset_ce(struct ath10k *ar)
++{
++	u32 val;
+ 
+-	/* reset CE */
+ 	val = ath10k_pci_read32(ar, RTC_SOC_BASE_ADDRESS +
+ 				SOC_RESET_CONTROL_ADDRESS);
++
+ 	ath10k_pci_write32(ar, RTC_SOC_BASE_ADDRESS + SOC_RESET_CONTROL_ADDRESS,
+ 			   val | SOC_RESET_CONTROL_CE_RST_MASK);
+-	val = ath10k_pci_read32(ar, RTC_SOC_BASE_ADDRESS +
+-				SOC_RESET_CONTROL_ADDRESS);
+ 	msleep(10);
+-
+-	/* unreset CE */
+ 	ath10k_pci_write32(ar, RTC_SOC_BASE_ADDRESS + SOC_RESET_CONTROL_ADDRESS,
+ 			   val & ~SOC_RESET_CONTROL_CE_RST_MASK);
++}
++
++static void ath10k_pci_warm_reset_clear_lf(struct ath10k *ar)
++{
++	u32 val;
++
+ 	val = ath10k_pci_read32(ar, RTC_SOC_BASE_ADDRESS +
+-				SOC_RESET_CONTROL_ADDRESS);
+-	msleep(10);
++				SOC_LF_TIMER_CONTROL0_ADDRESS);
++	ath10k_pci_write32(ar, RTC_SOC_BASE_ADDRESS +
++			   SOC_LF_TIMER_CONTROL0_ADDRESS,
++			   val & ~SOC_LF_TIMER_CONTROL0_ENABLE_MASK);
++}
+ 
+-	ath10k_pci_warm_reset_si0(ar);
++static int ath10k_pci_warm_reset(struct ath10k *ar)
++{
++	int ret;
++
++	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot warm reset\n");
+ 
+-	/* debug */
+-	val = ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS +
+-				PCIE_INTR_CAUSE_ADDRESS);
+-	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot host cpu intr cause: 0x%08x\n",
+-		   val);
++	spin_lock_bh(&ar->data_lock);
++	ar->stats.fw_warm_reset_counter++;
++	spin_unlock_bh(&ar->data_lock);
+ 
+-	val = ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS +
+-				CPU_INTR_ADDRESS);
+-	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot target cpu intr cause: 0x%08x\n",
+-		   val);
++	ath10k_pci_irq_disable(ar);
+ 
+-	/* CPU warm reset */
+-	val = ath10k_pci_read32(ar, RTC_SOC_BASE_ADDRESS +
+-				SOC_RESET_CONTROL_ADDRESS);
+-	ath10k_pci_write32(ar, RTC_SOC_BASE_ADDRESS + SOC_RESET_CONTROL_ADDRESS,
+-			   val | SOC_RESET_CONTROL_CPU_WARM_RST_MASK);
++	/* Make sure the target CPU is not doing anything dangerous, e.g. if it
++	 * were to access copy engine while host performs copy engine reset
++	 * then it is possible for the device to confuse pci-e controller to
++	 * the point of bringing host system to a complete stop (i.e. hang).
++	 */
++	ath10k_pci_warm_reset_si0(ar);
++	ath10k_pci_warm_reset_cpu(ar);
++	ath10k_pci_init_pipes(ar);
++	ath10k_pci_wait_for_target_init(ar);
+ 
+-	val = ath10k_pci_read32(ar, RTC_SOC_BASE_ADDRESS +
+-				SOC_RESET_CONTROL_ADDRESS);
+-	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot target reset state: 0x%08x\n",
+-		   val);
++	ath10k_pci_warm_reset_clear_lf(ar);
++	ath10k_pci_warm_reset_ce(ar);
++	ath10k_pci_warm_reset_cpu(ar);
++	ath10k_pci_init_pipes(ar);
+ 
+-	msleep(100);
++	ret = ath10k_pci_wait_for_target_init(ar);
++	if (ret) {
++		ath10k_warn(ar, "failed to wait for target init: %d\n", ret);
++		return ret;
++	}
+ 
+ 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot warm reset complete\n");
+ 
 -- 
-Julian Calaby
+1.8.5.3
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
