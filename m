@@ -1,210 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:52358 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751140AbaJYT1K (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:34683 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754039AbaJTWtv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Oct 2014 15:27:10 -0400
-Received: by mail-wg0-f42.google.com with SMTP id k14so1152466wgh.1
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2014 12:27:09 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 09/31] staging: vt6655: mac80211 conversion add channel bands
-Date: Sat, 25 Oct 2014 09:20:19 +0100
-Message-Id: <1414225241-5480-10-git-send-email-tvboxspy@gmail.com> (sfid-20141025_212715_526849_31D001CA)
-In-Reply-To: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
-References: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
+	Mon, 20 Oct 2014 18:49:51 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v2 5/6] mac80211-hwsim: support creating wiphy w/out creating wlanX.
+Date: Mon, 20 Oct 2014 15:49:37 -0700
+Message-Id: <1413845378-27837-5-git-send-email-greearb@candelatech.com> (sfid-20141021_005000_387470_E6F134F9)
+In-Reply-To: <1413845378-27837-1-git-send-email-greearb@candelatech.com>
+References: <1413845378-27837-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add rates and channels according to rf type for vnt_init_bands which is a
-mac80211 replacement for init_channel_table.
+From: Ben Greear <greearb@candelatech.com>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Good for automated testing, where user can create wlan
+interfaces with specified names.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/staging/vt6655/channel.c     | 140 +++++++++++++++++++++++++++++++++++
- drivers/staging/vt6655/channel.h     |   2 +
- drivers/staging/vt6655/device_main.c |   2 +
- 3 files changed, 144 insertions(+)
+ drivers/net/wireless/mac80211_hwsim.c | 13 ++++++++++---
+ drivers/net/wireless/mac80211_hwsim.h |  2 ++
+ 2 files changed, 12 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/vt6655/channel.c b/drivers/staging/vt6655/channel.c
-index 4ce964b..5f0cf90 100644
---- a/drivers/staging/vt6655/channel.c
-+++ b/drivers/staging/vt6655/channel.c
-@@ -352,6 +352,146 @@ static struct
- 
- /*---------------------  Export Functions  --------------------------*/
- 
-+static struct ieee80211_rate vnt_rates_bg[] = {
-+	{ .bitrate = 10,  .hw_value = RATE_1M },
-+	{ .bitrate = 20,  .hw_value = RATE_2M },
-+	{ .bitrate = 55,  .hw_value = RATE_5M },
-+	{ .bitrate = 110, .hw_value = RATE_11M },
-+	{ .bitrate = 60,  .hw_value = RATE_6M },
-+	{ .bitrate = 90,  .hw_value = RATE_9M },
-+	{ .bitrate = 120, .hw_value = RATE_12M },
-+	{ .bitrate = 180, .hw_value = RATE_18M },
-+	{ .bitrate = 240, .hw_value = RATE_24M },
-+	{ .bitrate = 360, .hw_value = RATE_36M },
-+	{ .bitrate = 480, .hw_value = RATE_48M },
-+	{ .bitrate = 540, .hw_value = RATE_54M },
-+};
-+
-+static struct ieee80211_rate vnt_rates_a[] = {
-+	{ .bitrate = 60,  .hw_value = RATE_6M },
-+	{ .bitrate = 90,  .hw_value = RATE_9M },
-+	{ .bitrate = 120, .hw_value = RATE_12M },
-+	{ .bitrate = 180, .hw_value = RATE_18M },
-+	{ .bitrate = 240, .hw_value = RATE_24M },
-+	{ .bitrate = 360, .hw_value = RATE_36M },
-+	{ .bitrate = 480, .hw_value = RATE_48M },
-+	{ .bitrate = 540, .hw_value = RATE_54M },
-+};
-+
-+static struct ieee80211_channel vnt_channels_2ghz[] = {
-+	{ .center_freq = 2412, .hw_value = 1 },
-+	{ .center_freq = 2417, .hw_value = 2 },
-+	{ .center_freq = 2422, .hw_value = 3 },
-+	{ .center_freq = 2427, .hw_value = 4 },
-+	{ .center_freq = 2432, .hw_value = 5 },
-+	{ .center_freq = 2437, .hw_value = 6 },
-+	{ .center_freq = 2442, .hw_value = 7 },
-+	{ .center_freq = 2447, .hw_value = 8 },
-+	{ .center_freq = 2452, .hw_value = 9 },
-+	{ .center_freq = 2457, .hw_value = 10 },
-+	{ .center_freq = 2462, .hw_value = 11 },
-+	{ .center_freq = 2467, .hw_value = 12 },
-+	{ .center_freq = 2472, .hw_value = 13 },
-+	{ .center_freq = 2484, .hw_value = 14 }
-+};
-+
-+static struct ieee80211_channel vnt_channels_5ghz[] = {
-+	{ .center_freq = 4915, .hw_value = 15 },
-+	{ .center_freq = 4920, .hw_value = 16 },
-+	{ .center_freq = 4925, .hw_value = 17 },
-+	{ .center_freq = 4935, .hw_value = 18 },
-+	{ .center_freq = 4940, .hw_value = 19 },
-+	{ .center_freq = 4945, .hw_value = 20 },
-+	{ .center_freq = 4960, .hw_value = 21 },
-+	{ .center_freq = 4980, .hw_value = 22 },
-+	{ .center_freq = 5035, .hw_value = 23 },
-+	{ .center_freq = 5040, .hw_value = 24 },
-+	{ .center_freq = 5045, .hw_value = 25 },
-+	{ .center_freq = 5055, .hw_value = 26 },
-+	{ .center_freq = 5060, .hw_value = 27 },
-+	{ .center_freq = 5080, .hw_value = 28 },
-+	{ .center_freq = 5170, .hw_value = 29 },
-+	{ .center_freq = 5180, .hw_value = 30 },
-+	{ .center_freq = 5190, .hw_value = 31 },
-+	{ .center_freq = 5200, .hw_value = 32 },
-+	{ .center_freq = 5210, .hw_value = 33 },
-+	{ .center_freq = 5220, .hw_value = 34 },
-+	{ .center_freq = 5230, .hw_value = 35 },
-+	{ .center_freq = 5240, .hw_value = 36 },
-+	{ .center_freq = 5260, .hw_value = 37 },
-+	{ .center_freq = 5280, .hw_value = 38 },
-+	{ .center_freq = 5300, .hw_value = 39 },
-+	{ .center_freq = 5320, .hw_value = 40 },
-+	{ .center_freq = 5500, .hw_value = 41 },
-+	{ .center_freq = 5520, .hw_value = 42 },
-+	{ .center_freq = 5540, .hw_value = 43 },
-+	{ .center_freq = 5560, .hw_value = 44 },
-+	{ .center_freq = 5580, .hw_value = 45 },
-+	{ .center_freq = 5600, .hw_value = 46 },
-+	{ .center_freq = 5620, .hw_value = 47 },
-+	{ .center_freq = 5640, .hw_value = 48 },
-+	{ .center_freq = 5660, .hw_value = 49 },
-+	{ .center_freq = 5680, .hw_value = 50 },
-+	{ .center_freq = 5700, .hw_value = 51 },
-+	{ .center_freq = 5745, .hw_value = 52 },
-+	{ .center_freq = 5765, .hw_value = 53 },
-+	{ .center_freq = 5785, .hw_value = 54 },
-+	{ .center_freq = 5805, .hw_value = 55 },
-+	{ .center_freq = 5825, .hw_value = 56 }
-+};
-+
-+static struct ieee80211_supported_band vnt_supported_2ghz_band = {
-+	.channels = vnt_channels_2ghz,
-+	.n_channels = ARRAY_SIZE(vnt_channels_2ghz),
-+	.bitrates = vnt_rates_bg,
-+	.n_bitrates = ARRAY_SIZE(vnt_rates_bg),
-+};
-+
-+static struct ieee80211_supported_band vnt_supported_5ghz_band = {
-+	.channels = vnt_channels_5ghz,
-+	.n_channels = ARRAY_SIZE(vnt_channels_5ghz),
-+	.bitrates = vnt_rates_a,
-+	.n_bitrates = ARRAY_SIZE(vnt_rates_a),
-+};
-+
-+void vnt_init_bands(struct vnt_private *priv)
-+{
-+	struct ieee80211_channel *ch;
-+	int i;
-+
-+	switch (priv->byRFType) {
-+	case RF_AIROHA7230:
-+	case RF_UW2452:
-+	case RF_NOTHING:
-+	default:
-+		ch = vnt_channels_5ghz;
-+
-+		for (i = 0; i < ARRAY_SIZE(vnt_channels_5ghz); i++) {
-+			ch[i].max_power = 0x3f;
-+			ch[i].flags = IEEE80211_CHAN_NO_HT40;
-+		}
-+
-+		priv->hw->wiphy->bands[IEEE80211_BAND_5GHZ] =
-+						&vnt_supported_5ghz_band;
-+	/* fallthrough */
-+	case RF_RFMD2959:
-+	case RF_AIROHA:
-+	case RF_AL2230S:
-+	case RF_UW2451:
-+	case RF_VT3226:
-+		ch = vnt_channels_2ghz;
-+
-+		for (i = 0; i < ARRAY_SIZE(vnt_channels_2ghz); i++) {
-+			ch[i].max_power = 0x3f;
-+			ch[i].flags = IEEE80211_CHAN_NO_HT40;
-+		}
-+
-+		priv->hw->wiphy->bands[IEEE80211_BAND_2GHZ] =
-+						&vnt_supported_2ghz_band;
-+		break;
-+	}
-+}
-+
- /**
-  * is_channel_valid() - Is Country Channel Valid
-  *  @ChanneIndex: defined as VT3253 MAC channel:
-diff --git a/drivers/staging/vt6655/channel.h b/drivers/staging/vt6655/channel.h
-index 4f44c8a..0d3e1f1 100644
---- a/drivers/staging/vt6655/channel.h
-+++ b/drivers/staging/vt6655/channel.h
-@@ -33,6 +33,8 @@ typedef struct tagSChannelTblElement {
- 	unsigned char byMAP;
- } SChannelTblElement, *PSChannelTblElement;
- 
-+void vnt_init_bands(struct vnt_private *);
-+
- bool is_channel_valid(unsigned int CountryCode);
- void init_channel_table(void *pDeviceHandler);
- unsigned char get_channel_mapping(void *pDeviceHandler, unsigned char byChannelNumber, CARD_PHY_TYPE ePhyType);
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index 23d9344..054841b 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -3320,6 +3320,8 @@ int vnt_init(struct vnt_private *priv)
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index ef793d5..fc5695d 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -2023,7 +2023,7 @@ static int mac80211_hwsim_create_radio(int channels, const char *reg_alpha2,
+ 				       const struct ieee80211_regdomain *regd,
+ 				       bool reg_strict, bool p2p_device,
+ 				       bool use_chanctx, bool destroy_on_close,
+-				       u32 portid, char *hwname)
++				       u32 portid, char *hwname, bool no_vdev)
  {
- 	SET_IEEE80211_PERM_ADDR(priv->hw, priv->abyCurrentNetAddr);
+ 	int err;
+ 	u8 addr[ETH_ALEN];
+@@ -2230,6 +2230,9 @@ static int mac80211_hwsim_create_radio(int channels, const char *reg_alpha2,
+ 		schedule_timeout_interruptible(1);
+ 	}
  
-+	vnt_init_bands(priv);
++	if (no_vdev)
++		hw->flags |= IEEE80211_HW_NO_AUTO_VDEV;
 +
- 	if (ieee80211_register_hw(priv->hw))
- 		return -ENODEV;
+ 	err = ieee80211_register_hw(hw);
+ 	if (err < 0) {
+ 		printk(KERN_DEBUG "mac80211_hwsim: ieee80211_register_hw failed (%d)\n",
+@@ -2516,11 +2519,15 @@ static int hwsim_create_radio_nl(struct sk_buff *msg, struct genl_info *info)
+ 	bool p2p_device = info->attrs[HWSIM_ATTR_SUPPORT_P2P_DEVICE];
+ 	bool destroy_on_close = info->attrs[HWSIM_ATTR_DESTROY_RADIO_ON_CLOSE];
+ 	bool use_chanctx;
++	bool no_vdev = false;
+ 	char *hwname = NULL;
  
+ 	if (info->attrs[HWSIM_ATTR_CHANNELS])
+ 		chans = nla_get_u32(info->attrs[HWSIM_ATTR_CHANNELS]);
+ 
++	if (info->attrs[HWSIM_ATTR_NO_VDEV])
++		no_vdev = true;
++
+ 	if (info->attrs[HWSIM_ATTR_RADIO_NAME])
+ 		hwname = nla_data(info->attrs[HWSIM_ATTR_RADIO_NAME]);
+ 
+@@ -2543,7 +2550,7 @@ static int hwsim_create_radio_nl(struct sk_buff *msg, struct genl_info *info)
+ 	return mac80211_hwsim_create_radio(chans, alpha2, regd, reg_strict,
+ 					   p2p_device, use_chanctx,
+ 					   destroy_on_close, info->snd_portid,
+-					   hwname);
++					   hwname, no_vdev);
+ }
+ 
+ static int hwsim_destroy_radio_nl(struct sk_buff *msg, struct genl_info *info)
+@@ -2800,7 +2807,7 @@ static int __init init_mac80211_hwsim(void)
+ 		err = mac80211_hwsim_create_radio(channels, reg_alpha2,
+ 						  regd, reg_strict,
+ 						  support_p2p_device,
+-						  channels > 1, false, 0, NULL);
++						  channels > 1, false, 0, NULL, false);
+ 		if (err < 0)
+ 			goto out_free_radios;
+ 	}
+diff --git a/drivers/net/wireless/mac80211_hwsim.h b/drivers/net/wireless/mac80211_hwsim.h
+index 98c6998..71bf498 100644
+--- a/drivers/net/wireless/mac80211_hwsim.h
++++ b/drivers/net/wireless/mac80211_hwsim.h
+@@ -114,6 +114,7 @@ enum {
+  * @HWSIM_ATTR_DESTROY_RADIO_ON_CLOSE: used with the %HWSIM_CMD_CREATE_RADIO
+  *	command to force radio removal when process that created the radio dies
+  * @HWSIM_ATTR_RADIO_NAME: Name of radio, e.g. phy666
++ * @HWSIM_ATTR_NO_VDEV:  Do not create vdev (wlanX) when creating radio.
+  * @__HWSIM_ATTR_MAX: enum limit
+  */
+ 
+@@ -137,6 +138,7 @@ enum {
+ 	HWSIM_ATTR_USE_CHANCTX,
+ 	HWSIM_ATTR_DESTROY_RADIO_ON_CLOSE,
+ 	HWSIM_ATTR_RADIO_NAME,
++	HWSIM_ATTR_NO_VDEV,
+ 	__HWSIM_ATTR_MAX,
+ };
+ #define HWSIM_ATTR_MAX (__HWSIM_ATTR_MAX - 1)
 -- 
-1.9.1
+1.7.11.7
 
