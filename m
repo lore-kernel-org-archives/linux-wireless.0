@@ -1,84 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f45.google.com ([74.125.82.45]:36158 "EHLO
-	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751174AbaJJHg6 convert rfc822-to-8bit (ORCPT
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:62455 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753209AbaJTI4B (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Oct 2014 03:36:58 -0400
-Received: by mail-wg0-f45.google.com with SMTP id m15so3135550wgh.4
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Oct 2014 00:36:57 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1412842950-14098-4-git-send-email-michal.kazior@tieto.com>
-References: <1412842950-14098-1-git-send-email-michal.kazior@tieto.com>
-	<1412842950-14098-4-git-send-email-michal.kazior@tieto.com>
-Date: Fri, 10 Oct 2014 09:36:57 +0200
-Message-ID: <CA+BoTQmZXuo+NkkzE++Puf19ZfRWk7DdLWwonNn7YuREryfEwA@mail.gmail.com> (sfid-20141010_093702_248835_2063824B)
-Subject: Re: [PATCH 3/5] ath10k: make warm reset a bit safer and faster
-From: Michal Kazior <michal.kazior@tieto.com>
-To: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 20 Oct 2014 04:56:01 -0400
+Received: by mail-wg0-f52.google.com with SMTP id a1so4860848wgh.35
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2014 01:56:00 -0700 (PDT)
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Karl Beldan <karl.beldan@rivierawaves.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	karl.beldan@gmail.com
+Subject: [PATCH v4 3/4] mac80211: minstrel_ht: include type (cck/ht) in rates flag
+Date: Mon, 20 Oct 2014 10:55:41 +0200
+Message-Id: <1413795342-11995-4-git-send-email-karl.beldan@gmail.com> (sfid-20141020_105613_738353_215F6656)
+In-Reply-To: <1413795342-11995-1-git-send-email-karl.beldan@gmail.com>
+References: <1413652424-14345-5-git-send-email-karl.beldan@gmail.com>
+ <1413795342-11995-1-git-send-email-karl.beldan@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9 October 2014 10:22, Michal Kazior <michal.kazior@tieto.com> wrote:
-> One of the problems with warm reset I've found is
-> that it must be guaranteed that copy engine
-> registers are not being accessed while being
-> reset. Otherwise in worst case scenario the host
-> may lock up.
->
-> Instead of using sleeps and hoping the device is
-> operational in some arbitrary timeframes use
-> firmware indication register.
->
-> As a side effect this makes driver
-> boot/stop/recovery faster.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-[...]
-> +static int ath10k_pci_warm_reset(struct ath10k *ar)
-> +{
-> +       int ret;
-> +
-> +       ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot warm reset\n");
->
-> -       /* debug */
-> -       val = ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS +
-> -                               PCIE_INTR_CAUSE_ADDRESS);
-> -       ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot host cpu intr cause: 0x%08x\n",
-> -                  val);
-> +       spin_lock_bh(&ar->data_lock);
-> +       ar->stats.fw_warm_reset_counter++;
-> +       spin_unlock_bh(&ar->data_lock);
->
-> -       val = ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS +
-> -                               CPU_INTR_ADDRESS);
-> -       ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot target cpu intr cause: 0x%08x\n",
-> -                  val);
-> +       ath10k_pci_irq_disable(ar);
->
-> -       /* CPU warm reset */
-> -       val = ath10k_pci_read32(ar, RTC_SOC_BASE_ADDRESS +
-> -                               SOC_RESET_CONTROL_ADDRESS);
-> -       ath10k_pci_write32(ar, RTC_SOC_BASE_ADDRESS + SOC_RESET_CONTROL_ADDRESS,
-> -                          val | SOC_RESET_CONTROL_CPU_WARM_RST_MASK);
-> +       /* Make sure the target CPU is not doing anything dangerous, e.g. if it
-> +        * were to access copy engine while host performs copy engine reset
-> +        * then it is possible for the device to confuse pci-e controller to
-> +        * the point of bringing host system to a complete stop (i.e. hang).
-> +        */
-> +       ath10k_pci_warm_reset_si0(ar);
-> +       ath10k_pci_warm_reset_cpu(ar);
-> +       ath10k_pci_wait_for_target_init(ar);
+From: Karl Beldan <karl.beldan@rivierawaves.com>
 
-Since warm_reset now calls wait_for_target_init (and thus can report a
-target register dump on crash) and is called in pci_probe CE must be
-initialized (which isn't the case in the code now). This can lead to
-system crash on very early firmware crash during probing. Kudos to
-Janusz for finding this out!
+ATM, we grep cck rates idx with idx / MCS_GROUP_RATES ==
+MINSTREL_CCK_GROUP.
+Matching neither-cck-non-ht rates could be done by replacing '==' with
+'>', however it would be less versatile or explicit.
+This will allow to match VHT rates with IEEE80211_TX_RC_VHT_MCS.
 
-I'll respin a v2 later.
+Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
+Acked-by: Felix Fietkau <nbd@openwrt.org>
+---
+ net/mac80211/rc80211_minstrel_ht.c | 28 ++++++++++++++--------------
+ 1 file changed, 14 insertions(+), 14 deletions(-)
 
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index a48eb76..e760d3d 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -51,6 +51,7 @@
+ 	[GROUP_IDX(_streams, _sgi, _ht40)] = {				\
+ 	.streams = _streams,						\
+ 	.flags =							\
++		IEEE80211_TX_RC_MCS |					\
+ 		(_sgi ? IEEE80211_TX_RC_SHORT_GI : 0) |			\
+ 		(_ht40 ? IEEE80211_TX_RC_40_MHZ_WIDTH : 0),		\
+ 	.duration = {							\
+@@ -83,6 +84,7 @@
+ #define CCK_GROUP					\
+ 	[MINSTREL_CCK_GROUP] = {			\
+ 		.streams = 0,				\
++		.flags = 0,				\
+ 		.duration = {				\
+ 			CCK_DURATION_LIST(false),	\
+ 			CCK_DURATION_LIST(true)		\
+@@ -716,7 +718,7 @@ minstrel_ht_set_rate(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
+ 	const struct mcs_group *group = &minstrel_mcs_groups[index / MCS_GROUP_RATES];
+ 	struct minstrel_rate_stats *mr;
+ 	u8 idx;
+-	u16 flags;
++	u16 flags = group->flags;
+ 
+ 	mr = minstrel_get_ratestats(mi, index);
+ 	if (!mr->retry_updated)
+@@ -732,13 +734,10 @@ minstrel_ht_set_rate(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
+ 		ratetbl->rate[offset].count_rts = mr->retry_count_rtscts;
+ 	}
+ 
+-	if (index / MCS_GROUP_RATES == MINSTREL_CCK_GROUP) {
++	if (index / MCS_GROUP_RATES == MINSTREL_CCK_GROUP)
+ 		idx = mp->cck_rates[index % ARRAY_SIZE(mp->cck_rates)];
+-		flags = 0;
+-	} else {
++	else
+ 		idx = index % MCS_GROUP_RATES + (group->streams - 1) * 8;
+-		flags = IEEE80211_TX_RC_MCS | group->flags;
+-	}
+ 
+ 	if (offset > 0) {
+ 		ratetbl->rate[offset].count = ratetbl->rate[offset].count_rts;
+@@ -918,13 +917,12 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
+ 	if (sample_idx / MCS_GROUP_RATES == MINSTREL_CCK_GROUP) {
+ 		int idx = sample_idx % ARRAY_SIZE(mp->cck_rates);
+ 		rate->idx = mp->cck_rates[idx];
+-		rate->flags = 0;
+-		return;
++	} else {
++		rate->idx = sample_idx % MCS_GROUP_RATES +
++			    (sample_group->streams - 1) * 8;
+ 	}
+ 
+-	rate->idx = sample_idx % MCS_GROUP_RATES +
+-		    (sample_group->streams - 1) * 8;
+-	rate->flags = IEEE80211_TX_RC_MCS | sample_group->flags;
++	rate->flags = sample_group->flags;
+ }
+ 
+ static void
+@@ -1006,14 +1004,16 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
+ 		mi->tx_flags |= IEEE80211_TX_CTL_LDPC;
+ 
+ 	for (i = 0; i < ARRAY_SIZE(mi->groups); i++) {
++		u32 gflags = minstrel_mcs_groups[i].flags;
++
+ 		mi->groups[i].supported = 0;
+ 		if (i == MINSTREL_CCK_GROUP) {
+ 			minstrel_ht_update_cck(mp, mi, sband, sta);
+ 			continue;
+ 		}
+ 
+-		if (minstrel_mcs_groups[i].flags & IEEE80211_TX_RC_SHORT_GI) {
+-			if (minstrel_mcs_groups[i].flags & IEEE80211_TX_RC_40_MHZ_WIDTH) {
++		if (gflags & IEEE80211_TX_RC_SHORT_GI) {
++			if (gflags & IEEE80211_TX_RC_40_MHZ_WIDTH) {
+ 				if (!(sta_cap & IEEE80211_HT_CAP_SGI_40))
+ 					continue;
+ 			} else {
+@@ -1022,7 +1022,7 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
+ 			}
+ 		}
+ 
+-		if (minstrel_mcs_groups[i].flags & IEEE80211_TX_RC_40_MHZ_WIDTH &&
++		if (gflags & IEEE80211_TX_RC_40_MHZ_WIDTH &&
+ 		    sta->bandwidth < IEEE80211_STA_RX_BW_40)
+ 			continue;
+ 
+-- 
+2.0.1
 
-Michał
