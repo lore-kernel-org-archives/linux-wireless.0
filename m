@@ -1,51 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:46354 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752695AbaJ1Oug (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:34682 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754037AbaJTWtv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2014 10:50:36 -0400
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH 1/5] wil6210: do not attempt FW recovery if interface is down
-Date: Tue, 28 Oct 2014 16:50:06 +0200
-Message-ID: <1414507810-23141-2-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20141028_155039_435694_D48DCBD2)
-In-Reply-To: <1414507810-23141-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1414507810-23141-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 20 Oct 2014 18:49:51 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v2 4/6] cfg80211: support creating wiphy w/out creating wlanX.
+Date: Mon, 20 Oct 2014 15:49:36 -0700
+Message-Id: <1413845378-27837-4-git-send-email-greearb@candelatech.com> (sfid-20141021_005005_203575_FA47793A)
+In-Reply-To: <1413845378-27837-1-git-send-email-greearb@candelatech.com>
+References: <1413845378-27837-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When interface is down, recovery flow should not be attempted.
-Next ndo_open() will trigger target reset, that is FW recovery.
+From: Ben Greear <greearb@candelatech.com>
 
-Doing recovery while interface is down cause internal "up", leaving
-internal driver state in conflict with network stack. Then, when network
-stack will call ndo_open(), kernel oops will be triggered.
+This will be helpful when using the mac80211_hwsim
+wiphys and automated testing.  Let user create the
+wlan devs as needed, and named as expected.
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/ath/wil6210/main.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ include/net/mac80211.h | 7 ++++++-
+ net/mac80211/main.c    | 3 ++-
+ 2 files changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 6500caf..7900384 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -223,6 +223,11 @@ static void wil_fw_error_worker(struct work_struct *work)
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index a206a56..a5236d2 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1579,6 +1579,10 @@ struct ieee80211_tx_control {
+  *	a virtual monitor interface when monitor interfaces are the only
+  *	active interfaces.
+  *
++ * @IEEE80211_HW_NO_AUTO_VDEV: The driver would like for no wlanX to
++ *	be created.  It is expected user-space will create vdevs as
++ *      desired (and thus have them named as desired).
++ *
+  * @IEEE80211_HW_QUEUE_CONTROL: The driver wants to control per-interface
+  *	queue mapping in order to use different queues (not just one per AC)
+  *	for different virtual interfaces. See the doc section on HW queue
+@@ -1625,7 +1629,8 @@ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_SUPPORTS_DYNAMIC_PS		= 1<<12,
+ 	IEEE80211_HW_MFP_CAPABLE			= 1<<13,
+ 	IEEE80211_HW_WANT_MONITOR_VIF			= 1<<14,
+-	/* free slots */
++	IEEE80211_HW_NO_AUTO_VDEV			= 1<<15,
++	/* free slot */
+ 	IEEE80211_HW_SUPPORTS_UAPSD			= 1<<17,
+ 	IEEE80211_HW_REPORTS_TX_ACK_STATUS		= 1<<18,
+ 	IEEE80211_HW_CONNECTION_MONITOR			= 1<<19,
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index b189122..830bfec 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -1023,7 +1023,8 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 	}
  
- 	wil_dbg_misc(wil, "fw error worker\n");
- 
-+	if (!netif_running(wil_to_ndev(wil))) {
-+		wil_info(wil, "No recovery - interface is down\n");
-+		return;
-+	}
-+
- 	/* increment @recovery_count if less then WIL6210_FW_RECOVERY_TO
- 	 * passed since last recovery attempt
- 	 */
+ 	/* add one default STA interface if supported */
+-	if (local->hw.wiphy->interface_modes & BIT(NL80211_IFTYPE_STATION)) {
++	if (local->hw.wiphy->interface_modes & BIT(NL80211_IFTYPE_STATION) &&
++	    !(hw->flags & IEEE80211_HW_NO_AUTO_VDEV)) {
+ 		result = ieee80211_if_add(local, "wlan%d", NULL,
+ 					  NL80211_IFTYPE_STATION, NULL);
+ 		if (result)
 -- 
-2.1.0
+1.7.11.7
 
