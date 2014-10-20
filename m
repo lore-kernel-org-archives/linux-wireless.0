@@ -1,101 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:10455 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757934AbaJaOSa (ORCPT
+Received: from mail-oi0-f43.google.com ([209.85.218.43]:45997 "EHLO
+	mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752562AbaJTHG5 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Oct 2014 10:18:30 -0400
-Message-ID: <54539A33.6000001@broadcom.com> (sfid-20141031_151833_290838_F7682806)
-Date: Fri, 31 Oct 2014 15:18:27 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Mon, 20 Oct 2014 03:06:57 -0400
+Received: by mail-oi0-f43.google.com with SMTP id u20so3207399oif.2
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2014 00:06:57 -0700 (PDT)
 MIME-Version: 1.0
-To: Dan Carpenter <dan.carpenter@oracle.com>
-CC: <linux-wireless@vger.kernel.org>, <brcm80211-dev-list@broadcom.com>
-Subject: Re: brcm80211: use endian annotation for pmk related structure
-References: <20141031125136.GA17467@mwanda>
-In-Reply-To: <20141031125136.GA17467@mwanda>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+In-Reply-To: <1413783023.2710583.180921653.10DFFCEE@webmail.messagingengine.com>
+References: <1413463736.1316541.179720977.4FD32021@webmail.messagingengine.com>
+	<1413510814.22769.6.camel@dcbw.local>
+	<1413751717.2510219.180809145.0E693C29@webmail.messagingengine.com>
+	<CANUX_P2RHVRorVABRfWVg39d4D8dj35v3fBpY3=3jvQ1U+mfEA@mail.gmail.com>
+	<1413783023.2710583.180921653.10DFFCEE@webmail.messagingengine.com>
+Date: Mon, 20 Oct 2014 10:06:56 +0300
+Message-ID: <CANUX_P0Q7cNeBzQa=2WVZFJXPTLx8F6YQk9bGCf_3uYhc5RcGA@mail.gmail.com> (sfid-20141020_090700_882140_A5C306DD)
+Subject: Re: iwlwifi: Reason 7 periodic disconnect
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: =?UTF-8?Q?Lauren=C8=9Biu_Nicola?= <lnicola@dend.ro>
+Cc: Dan Williams <dcbw@redhat.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/31/14 13:51, Dan Carpenter wrote:
-> Hello Arend van Spriel,
+On Mon, Oct 20, 2014 at 8:30 AM, Laurențiu Nicola <lnicola@dend.ro> wrote:
+> Here: https://bpaste.net/show/bf6dc1847ce3
 >
-> The patch 40c8e95af02d: "brcm80211: use endian annotation for pmk
-> related structure" from Oct 12, 2011, leads to the following static
-> checker warning:
->
-> 	drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c:2965 brcmf_cfg80211_set_pmksa()
-> 	warn: can 'pmkid_len' be negative?
->
-> drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
->    2950  brcmf_cfg80211_set_pmksa(struct wiphy *wiphy, struct net_device *ndev,
->    2951                           struct cfg80211_pmksa *pmksa)
->    2952  {
->    2953          struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
->    2954          struct brcmf_if *ifp = netdev_priv(ndev);
->    2955          struct pmkid_list *pmkids =&cfg->pmk_list->pmkids;
->    2956          s32 err = 0;
->    2957          int i;
->    2958          int pmkid_len;
->    2959
->    2960          brcmf_dbg(TRACE, "Enter\n");
->    2961          if (!check_vif_up(ifp->vif))
->    2962                  return -EIO;
->    2963
->    2964          pmkid_len = le32_to_cpu(pmkids->npmkid);
->
-> The thinking behind this check is that endian data is less trust worthy
-> than cpu data.  But probably this comes from the hardware so it's fine?
->
-> Anyway, let's assume pmkid_len = -1.
->
->    2965          for (i = 0; i<  pmkid_len; i++)
->    2966                  if (!memcmp(pmksa->bssid, pmkids->pmkid[i].BSSID, ETH_ALEN))
->    2967                          break;
->
-> We don't enter this loop.
->
->    2968          if (i<  WL_NUM_PMKIDS_MAX) {
->
-> Zero is less than WL_NUM_PMKIDS_MAX.
->
->    2969                  memcpy(pmkids->pmkid[i].BSSID, pmksa->bssid, ETH_ALEN);
->    2970                  memcpy(pmkids->pmkid[i].PMKID, pmksa->pmkid, WLAN_PMKID_LEN);
->    2971                  if (i == pmkid_len) {
->                              ^^^^^^^^^^^^^^
-> This is false.
->
->    2972                          pmkid_len++;
->    2973                          pmkids->npmkid = cpu_to_le32(pmkid_len);
->    2974                  }
->    2975          } else
->    2976                  err = -EINVAL;
->    2977
->    2978          brcmf_dbg(CONN, "set_pmksa,IW_PMKSA_ADD - PMKID: %pM =\n",
->    2979                    pmkids->pmkid[pmkid_len].BSSID);
->                            ^^^^^^^^^^^^^^^^^^^^^^^
-> Underflow.
->
->    2980          for (i = 0; i<  WLAN_PMKID_LEN; i++)
->    2981                  brcmf_dbg(CONN, "%02x\n", pmkids->pmkid[pmkid_len].PMKID[i]);
->                                                    ^^^^^^^^^^^^^^^^^^^^^^^^
-> Underflow.
->
->    2982
->    2983          err = brcmf_update_pmklist(ndev, cfg->pmk_list, err);
->    2984
->    2985          brcmf_dbg(TRACE, "Exit\n");
->    2986          return err;
->    2987  }
 
-Hi Dan,
+Are you sure you had MAC80211_MLME_DEBUG?
 
-Understood. Not sure what the motivation is to mistrust endian more. 
-Simply because there could be conversion errors? Anyway, the main 
-question is whether pmkid_len is always between 0 and WLAN_PMKID_LEN. As 
-far as I know it is. We could 1) add additional checks here, 2) make 
-pmkid_len of u32 type, or 3) just mention the (sure) assumption in a 
-comment. I would prefer option 2) or 3).
-
-Regards,
-Arend
+>
+> Laurentiu
+> On Mon, Oct 20, 2014, at 07:52, Emmanuel Grumbach wrote:
+>> On Sun, Oct 19, 2014 at 11:48 PM, Laurențiu Nicola <lnicola@dend.ro>
+>> wrote:
+>> > Hello,
+>> >
+>> > Sorry for the late reply. I was using just wpa_supplicant. I also tried
+>> > wicd, but it seems to hang when connecting to a network, but my
+>> > understanding is that it's just a wpa_supplicant manager. I got this
+>> > while installing Gentoo, but I also reproduced it on the Fedora 20 Live
+>> > CD. See https://bpaste.net/show/7d5ad99260a7 for logs, but it doesn't
+>> > seem to say much more than my original extract.
+>> >
+>> > What I found out in the meanwhile, however, is that active traffic will
+>> > prevent the issue from occurring. This happened with the Fedora Live CD,
+>> > but pinging the AP is also sufficient. I noticed iwconfig reports that
+>> > the power saving mode is off.
+>> >
+>> > For what it's worth, I compiled my kernel and iwlwifi module with
+>> > tracing on, so tell me if I should try that.
+>>
+>> Please recompile with MAC80211_MLME_DEBUG, MAC80211_STA_DEBUG and
+>> reproduce - thanks.
+>>
+>> >
+>> > Laurentiu
+>> >
+>> >
+>> > On Fri, Oct 17, 2014, at 04:53, Dan Williams wrote:
+>> >> On Thu, 2014-10-16 at 15:48 +0300, Laurențiu Nicola wrote:
+>> >> > Hello,
+>> >> >
+>> >> > I'm using iwlwifi for a Centrino Ultimate-N 6300 on 3.14.4 and 3.17.1.
+>> >> > Connect to my wireless network works, but I get disconnected every 60
+>> >> > seconds or so. The dmesg output looks like
+>> >> > https://bpaste.net/show/1623a8ae5dc6 .
+>> >> >
+>> >> > I had the same issue on the three latest firmware versions:
+>> >> > iwlwifi-6000-ucode-9.176.4.1
+>> >> > iwlwifi-6000-ucode-9.193.4.1
+>> >> > iwlwifi-6000-ucode-9.221.4.1
+>> >> >
+>> >> > The dmesg log actually shows the driver loading the different versions
+>> >> > above.
+>> >> >
+>> >> > It's the first time I try to use wireless on Linux, so I might have made
+>> >> > a dumb mistake.
+>> >>
+>> >> Can you try to get debug output from wpa_supplicant, which is the
+>> >> process that controls WiFi on Linux?  What distro and version do you
+>> >> use, and do you know what WiFi management service is being used?
+>> >> (NetworkManager, conman, plain wpa_supplicant, wicd, something else?)
+>> >>
+>> >> Dan
+>> >>
+>> > --
+>> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> > the body of a message to majordomo@vger.kernel.org
+>> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+>> in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
