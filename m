@@ -1,56 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:38333 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752026AbaJYTJP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Oct 2014 15:09:15 -0400
-Received: by mail-wi0-f173.google.com with SMTP id ex7so3494312wid.12
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2014 12:09:13 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 29/31] staging: vt6655: device_init_registers replace spin lock
-Date: Sat, 25 Oct 2014 09:20:39 +0100
-Message-Id: <1414225241-5480-30-git-send-email-tvboxspy@gmail.com> (sfid-20141025_210918_028797_B31156A3)
-In-Reply-To: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
-References: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
+Received: from arrakis.dune.hu ([78.24.191.176]:57015 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752852AbaJTIxV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Oct 2014 04:53:21 -0400
+Message-ID: <5444CD7C.1020807@openwrt.org> (sfid-20141020_105324_857447_F08BEF38)
+Date: Mon, 20 Oct 2014 10:53:16 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Sujith Manoharan <sujith@msujith.org>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: [PATCH 01/10] ath9k_hw: make support for PC-OEM cards optional
+References: <1413651732-69783-1-git-send-email-nbd@openwrt.org> <21572.49230.430784.951715@gargle.gargle.HOWL>
+In-Reply-To: <21572.49230.430784.951715@gargle.gargle.HOWL>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use spin_lock_irqsave and spin_unlock_irqrestore.
+On 2014-10-20 09:57, Sujith Manoharan wrote:
+> Felix Fietkau wrote:
+>> diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+>> index 975074f..7a81f5b 100644
+>> --- a/drivers/net/wireless/ath/ath9k/hw.h
+>> +++ b/drivers/net/wireless/ath/ath9k/hw.h
+>> @@ -244,13 +244,20 @@ enum ath9k_hw_caps {
+>>  	ATH9K_HW_CAP_2GHZ			= BIT(11),
+>>  	ATH9K_HW_CAP_5GHZ			= BIT(12),
+>>  	ATH9K_HW_CAP_APM			= BIT(13),
+>> +#ifdef CONFIG_ATH9K_PCOEM
+>>  	ATH9K_HW_CAP_RTT			= BIT(14),
+>>  	ATH9K_HW_CAP_MCI			= BIT(15),
+>> -	ATH9K_HW_CAP_DFS			= BIT(16),
+>> -	ATH9K_HW_WOW_DEVICE_CAPABLE		= BIT(17),
+>> -	ATH9K_HW_CAP_PAPRD			= BIT(18),
+>> -	ATH9K_HW_CAP_FCC_BAND_SWITCH		= BIT(19),
+>> -	ATH9K_HW_CAP_BT_ANT_DIV			= BIT(20),
+>> +	ATH9K_HW_WOW_DEVICE_CAPABLE		= BIT(16),
+>> +	ATH9K_HW_CAP_BT_ANT_DIV			= BIT(17),
+>> +#else
+>> +	ATH9K_HW_CAP_RTT			= 0,
+>> +	ATH9K_HW_CAP_MCI			= 0,
+>> +	ATH9K_HW_WOW_DEVICE_CAPABLE		= 0,
+>> +	ATH9K_HW_CAP_BT_ANT_DIV			= 0,
+>> +#endif
+>> +	ATH9K_HW_CAP_DFS			= BIT(18),
+>> +	ATH9K_HW_CAP_PAPRD			= BIT(19),
+>> +	ATH9K_HW_CAP_FCC_BAND_SWITCH		= BIT(20),
+>>  };
+> 
+> Why is this needed ?
+To allow the compiler to optimize out code checking for these features.
+That way we don't have to #ifdef all those places where this gets used.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/device_main.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index d7dd002..c5eca10 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -406,6 +406,7 @@ device_set_options(struct vnt_private *pDevice)
- 
- static void device_init_registers(struct vnt_private *pDevice)
- {
-+	unsigned long flags;
- 	unsigned int ii;
- 	unsigned char byValue;
- 	unsigned char byValue1;
-@@ -439,11 +440,11 @@ static void device_init_registers(struct vnt_private *pDevice)
- 	/* Get Local ID */
- 	VNSvInPortB(pDevice->PortOffset + MAC_REG_LOCALID, &pDevice->byLocalID);
- 
--	spin_lock_irq(&pDevice->lock);
-+	spin_lock_irqsave(&pDevice->lock, flags);
- 
- 	SROMvReadAllContents(pDevice->PortOffset, pDevice->abyEEPROM);
- 
--	spin_unlock_irq(&pDevice->lock);
-+	spin_unlock_irqrestore(&pDevice->lock, flags);
- 
- 	/* Get Channel range */
- 	pDevice->byMinChannel = 1;
--- 
-1.9.1
-
+- Felix
