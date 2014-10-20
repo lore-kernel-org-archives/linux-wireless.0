@@ -1,33 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:59747 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753055AbaJTJlD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2014 05:41:03 -0400
-From: Sujith Manoharan <sujith@msujith.org>
+Received: from out3-smtp.messagingengine.com ([66.111.4.27]:37772 "EHLO
+	out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751003AbaJTT3Z convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Oct 2014 15:29:25 -0400
+Received: from compute6.internal (compute6.nyi.internal [10.202.2.46])
+	by gateway2.nyi.internal (Postfix) with ESMTP id 4A323206A5
+	for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2014 15:29:25 -0400 (EDT)
+Message-Id: <1413833365.2949853.181221645.22D54845@webmail.messagingengine.com> (sfid-20141020_212929_538355_B547E122)
+From: =?UTF-8?Q?Lauren=C8=9Biu=20Nicola?= <lnicola@dend.ro>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: Dan Williams <dcbw@redhat.com>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21572.55536.308167.684155@gargle.gargle.HOWL> (sfid-20141020_114114_947318_28D77153)
-Date: Mon, 20 Oct 2014 15:12:08 +0530
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] cfg80211: Warn once for delayed scan completion
-In-Reply-To: <1413797588.10246.3.camel@jlt4.sipsolutions.net>
-References: <1413385042-17903-1-git-send-email-sujith@msujith.org>
-	<CANUX_P02O-JSQkVvBCg6L9jf8wPyzPv8O_qsZa+prTJJx+20UA@mail.gmail.com>
-	<21568.29077.518022.812356@gargle.gargle.HOWL>
-	<1413797588.10246.3.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Subject: Re: iwlwifi: Reason 7 periodic disconnect
+Date: Mon, 20 Oct 2014 22:29:25 +0300
+In-Reply-To: <CANUX_P1REqkSqN0dtak34OQ_pSGMtPvV3Vj61tW5wb1+n2A7mg@mail.gmail.com>
+References: <1413463736.1316541.179720977.4FD32021@webmail.messagingengine.com>
+ <1413510814.22769.6.camel@dcbw.local>
+ <1413751717.2510219.180809145.0E693C29@webmail.messagingengine.com>
+ <CANUX_P2RHVRorVABRfWVg39d4D8dj35v3fBpY3=3jvQ1U+mfEA@mail.gmail.com>
+ <1413783023.2710583.180921653.10DFFCEE@webmail.messagingengine.com>
+ <CANUX_P0Q7cNeBzQa=2WVZFJXPTLx8F6YQk9bGCf_3uYhc5RcGA@mail.gmail.com>
+ <CANUX_P3EqgTX7cPJvQ3fWH1yijekE0G_8TiH2_OCS7nFASGtkA@mail.gmail.com>
+ <1413789724.3063896.180943829.3F15F453@webmail.messagingengine.com>
+ <CANUX_P1REqkSqN0dtak34OQ_pSGMtPvV3Vj61tW5wb1+n2A7mg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> Those commits say they *fix* the race though, so in case I was wrong you
-> should report the sequence of events so we can look at fixing it
-> properly?
+No, nothing in the DD-WRT syslog. The IP seems to be the one cached by
+my DHCP client. I also tried various suggestions found on the internet,
+but nothing helped.
 
-The commits fix both the issues (use-after-free, new scan) correctly,
-so I don't see a race ? If the driver is slow in notifying scan completion
-and the interface is removed in the meantime, this warning is hit.
+Laurentiu
 
-Sujith
+On Mon, Oct 20, 2014, at 11:23, Emmanuel Grumbach wrote:
+> On Mon, Oct 20, 2014 at 10:22 AM, Laurențiu Nicola <lnicola@dend.ro>
+> wrote:
+> > One thing that might be relevant is that, although there is a static
+> > DHCP lease configured (which works on Windows), the router/AP is giving
+> > the laptop a different IP address. The reported MACs are the same, of
+> > course. I don't know whether wpa_supplicant remembers and requests the
+> > last IP it had, but the lease was already present when I configured it.
+> >
+> > The router runs DD-WRT and I don't have problems on Windows or Android.
+> >
+> 
+> I guess you can try to get some logs from the DD-WRT - but if the AP
+> doesn't
+> give the same address to Linux as in Windows - there is something
+> fishy...
+> 
+> > Laurentiu
+> >
+> > On Mon, Oct 20, 2014, at 10:12, Emmanuel Grumbach wrote:
+> >> On Mon, Oct 20, 2014 at 10:06 AM, Emmanuel Grumbach <egrumbach@gmail.com>
+> >> wrote:
+> >> > On Mon, Oct 20, 2014 at 8:30 AM, Laurențiu Nicola <lnicola@dend.ro> wrote:
+> >> >> Here: https://bpaste.net/show/bf6dc1847ce3
+> >> >>
+> >> >
+> >> > Are you sure you had MAC80211_MLME_DEBUG?
+> >> >
+> >> >>
+> >> Ok - You probably had it - sorry. But apparently the AP is really kicking
+> >> us...
+> >> What AP do you have?
+> >> --
+> >> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+> >> in
+> >> the body of a message to majordomo@vger.kernel.org
+> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+> in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
