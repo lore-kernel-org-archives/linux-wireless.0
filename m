@@ -1,35 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.wp.pl ([212.77.101.10]:4681 "EHLO mx3.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752499AbaJKRme (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Oct 2014 13:42:34 -0400
-Date: Sat, 11 Oct 2014 19:37:30 +0200
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	Canek =?iso-8859-1?Q?Pel=E1ez_Vald=E9s?= <canek@ciencias.unam.mx>
-Subject: Re: rt2x00: two candidates for -stable
-Message-ID: <20141011173730.GA30840@localhost.localdomain> (sfid-20141011_194238_719105_CFC75DC8)
-References: <54385907.4090003@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <54385907.4090003@gmail.com>
+Received: from mail-lb0-f176.google.com ([209.85.217.176]:56394 "EHLO
+	mail-lb0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750957AbaJTM22 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Oct 2014 08:28:28 -0400
+Received: by mail-lb0-f176.google.com with SMTP id p9so3818310lbv.35
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2014 05:28:27 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 0/6] ath10k: pci related fixes 2014-10-09
+Date: Mon, 20 Oct 2014 14:14:36 +0200
+Message-Id: <1413807282-27951-1-git-send-email-michal.kazior@tieto.com> (sfid-20141020_142832_438896_4A38962D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Xose
+Hi,
 
-On Sat, Oct 11, 2014 at 12:09:11AM +0200, Xose Vazquez Perez wrote:
-> I think these two should be included in -stable :
-> ac0372abf8524a7572a9cdaac6495eb2eba20457 support Ralink 5362
-It's new chip support actually i.e. more like new feature, however
-I'm ok to post it -stable. I assume this was tested on real hardware
-and it works. It's a little surprise that no other changes were needed
-to support this chip, but that sometimes happen :-)
+First 2 patches address some irq issues.
 
-> 6a06e554daef86c4e8d290284927b081fedb249e add new rt2800usb devices
-No objections.
+Other 4 fix and cleanup device resetting.
 
-Could you post both to stable@vger.kernel.org ?
+Hopefully this will make ath10k a little more
+robust when it comes to warm reset.
 
-Stanislaw
+As a side effect of the changes ath10k now boots a
+little faster (slightly over a second instead of
+two).
+
+v2:
+ * don't remove power_up/down [Kalle]
+ * fix CE crash [Janusz]
+ * remove irq workaround in patch #2
+
+
+Michal Kazior (6):
+  ath10k: re-disable interrupts after target init
+  ath10k: mask/unmask msi fw irq
+  ath10k: split ce pipe init/alloc further
+  ath10k: make warm reset a bit safer and faster
+  ath10k: split reset logic from power up
+  ath10k: don't reset chip on power_down
+
+ drivers/net/wireless/ath/ath10k/ce.c  |  56 +++--
+ drivers/net/wireless/ath/ath10k/ce.h  |   8 +-
+ drivers/net/wireless/ath/ath10k/hw.h  |   1 +
+ drivers/net/wireless/ath/ath10k/pci.c | 390 +++++++++++++++++-----------------
+ 4 files changed, 227 insertions(+), 228 deletions(-)
+
+-- 
+1.8.5.3
+
