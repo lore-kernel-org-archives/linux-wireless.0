@@ -1,127 +1,247 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:44123 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750954AbaJAT4f (ORCPT
+Received: from mail-lb0-f177.google.com ([209.85.217.177]:48730 "EHLO
+	mail-lb0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752242AbaJTNKP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Oct 2014 15:56:35 -0400
-Message-ID: <542C5C69.9090608@broadcom.com> (sfid-20141001_215638_977480_73E72D0E)
-Date: Wed, 1 Oct 2014 21:56:25 +0200
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: <greearb@candelatech.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] wireless:  support configuring vdev mac addr on create.
-References: <1412186247-20303-1-git-send-email-greearb@candelatech.com>
-In-Reply-To: <1412186247-20303-1-git-send-email-greearb@candelatech.com>
-Content-Type: text/plain; charset="windows-1252"
+	Mon, 20 Oct 2014 09:10:15 -0400
+Received: by mail-lb0-f177.google.com with SMTP id w7so3727774lbi.8
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2014 06:10:14 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 2/7] ath10k: add sanity checks for service bmap parsing
+Date: Mon, 20 Oct 2014 14:58:40 +0200
+Message-Id: <1413809925-4352-3-git-send-email-michal.kazior@tieto.com> (sfid-20141020_151025_269178_13CDD504)
+In-Reply-To: <1413809925-4352-1-git-send-email-michal.kazior@tieto.com>
+References: <1413809925-4352-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01-10-14 19:57, greearb@candelatech.com wrote:
-> From: Ben Greear <greearb@candelatech.com>
-> 
-> This is useful when creating virtual-stations, and probably
-> APs and other devices as well.  Keeps udev from mucking with
-> things it shouldn't, since the default MAC is never seen
-> by udev when specified on the cmd-line during creation.
-> 
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> ---
-> 
-> v2:  Use is_valid_ether_addr
-> 
->  include/net/cfg80211.h       | 6 +++---
->  include/uapi/linux/nl80211.h | 3 +++
->  net/mac80211/iface.c         | 5 ++++-
->  net/mac80211/main.c          | 1 +
->  net/wireless/nl80211.c       | 2 +-
->  5 files changed, 12 insertions(+), 5 deletions(-)
-> 
-> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-> index e1641e6..de9a67f 100644
-> --- a/include/net/cfg80211.h
-> +++ b/include/net/cfg80211.h
-> @@ -319,9 +319,9 @@ struct ieee80211_supported_band {
->  /**
->   * struct vif_params - describes virtual interface parameters
->   * @use_4addr: use 4-address frames
-> - * @macaddr: address to use for this virtual interface. This will only
-> - * 	be used for non-netdevice interfaces. If this parameter is set
-> - * 	to zero address the driver may determine the address as needed.
-> + * @macaddr: address to use for this virtual interface.
-> + * 	If this parameter is set to zero address the driver may
-> + *	determine the address as needed.
->   */
->  struct vif_params {
->         int use_4addr;
-> diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-> index 4b28dc0..fd14703 100644
-> --- a/include/uapi/linux/nl80211.h
-> +++ b/include/uapi/linux/nl80211.h
-> @@ -4042,6 +4042,8 @@ enum nl80211_ap_sme_features {
->   *	multiplexing powersave, ie. can turn off all but one chain
->   *	and then wake the rest up as required after, for example,
->   *	rts/cts handshake.
-> + * @NL80211_FEATURE_MAC_ON_CREATE: Device supports configuring
-> + *	the vdev's MAC address upon creation.
->   */
->  enum nl80211_feature_flags {
->  	NL80211_FEATURE_SK_TX_STATUS			= 1 << 0,
-> @@ -4070,6 +4072,7 @@ enum nl80211_feature_flags {
->  	NL80211_FEATURE_ACKTO_ESTIMATION		= 1 << 23,
->  	NL80211_FEATURE_STATIC_SMPS			= 1 << 24,
->  	NL80211_FEATURE_DYNAMIC_SMPS			= 1 << 25,
-> +	NL80211_FEATURE_MAC_ON_CREATE			= 1 << 26,
->  };
->  
->  /**
-> diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-> index 878bfca..e92783f 100644
-> --- a/net/mac80211/iface.c
-> +++ b/net/mac80211/iface.c
-> @@ -1715,7 +1715,10 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
->  		}
->  
->  		ieee80211_assign_perm_addr(local, ndev->perm_addr, type);
-> -		memcpy(ndev->dev_addr, ndev->perm_addr, ETH_ALEN);
-> +		if (params && is_valid_ether_addr(params->macaddr))
-> +			memcpy(ndev->dev_addr, params->macaddr, ETH_ALEN);
-> +		else
-> +			memcpy(ndev->dev_addr, ndev->perm_addr, ETH_ALEN);
->  		SET_NETDEV_DEV(ndev, wiphy_dev(local->hw.wiphy));
->  
->  		/* don't use IEEE80211_DEV_TO_SUB_IF -- it checks too much */
-> diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-> index 8106770..eb7bdd1 100644
-> --- a/net/mac80211/main.c
-> +++ b/net/mac80211/main.c
-> @@ -550,6 +550,7 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
->  			   NL80211_FEATURE_SAE |
->  			   NL80211_FEATURE_HT_IBSS |
->  			   NL80211_FEATURE_VIF_TXPOWER |
-> +			   NL80211_FEATURE_MAC_ON_CREATE |
->  			   NL80211_FEATURE_USERSPACE_MPM;
->  
->  	if (!ops->hw_scan)
-> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-> index 8a010bd..cf79707 100644
-> --- a/net/wireless/nl80211.c
-> +++ b/net/wireless/nl80211.c
-> @@ -2605,7 +2605,7 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
->  	    !(rdev->wiphy.interface_modes & (1 << type)))
->  		return -EOPNOTSUPP;
->  
-> -	if (type == NL80211_IFTYPE_P2P_DEVICE && info->attrs[NL80211_ATTR_MAC]) {
-> +	if (info->attrs[NL80211_ATTR_MAC]) {
->  		nla_memcpy(params.macaddr, info->attrs[NL80211_ATTR_MAC],
->  			   ETH_ALEN);
->  		if (!is_valid_ether_addr(params.macaddr))
+This shouldn't really happen but take into account
+the original service bitmap length when mapping
+service ids.
 
-Hi Ben,
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi.c |   6 +-
+ drivers/net/wireless/ath/ath10k/wmi.h | 121 +++++++++++++++++-----------------
+ 2 files changed, 66 insertions(+), 61 deletions(-)
 
-Just noticed this last line and realized that my comment on the previous
-patch is invalid. nl80211.c already validates the mac address received
-from iw. The zero address check in ieee80211_if_add() is to determine
-whether iw provided a mac address or not.
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 45768c9..2c2e727 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -2470,10 +2470,12 @@ static void ath10k_wmi_event_service_ready(struct ath10k *ar,
+ 
+ 	if (test_bit(ATH10K_FW_FEATURE_WMI_10X, ar->fw_features)) {
+ 		ret = ath10k_wmi_10x_pull_svc_rdy_ev(skb, &arg);
+-		wmi_10x_svc_map(arg.service_map, svc_bmap);
++		wmi_10x_svc_map(arg.service_map, svc_bmap,
++				arg.service_map_len);
+ 	} else {
+ 		ret = ath10k_wmi_main_pull_svc_rdy_ev(skb, &arg);
+-		wmi_main_svc_map(arg.service_map, svc_bmap);
++		wmi_main_svc_map(arg.service_map, svc_bmap,
++				 arg.service_map_len);
+ 	}
+ 
+ 	if (ret) {
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 4d16dfe..8cf178c 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -222,128 +222,131 @@ static inline char *wmi_service_name(int service_id)
+ #undef SVCSTR
+ }
+ 
+-#define WMI_SERVICE_IS_ENABLED(wmi_svc_bmap, svc_id) \
+-	(__le32_to_cpu((wmi_svc_bmap)[(svc_id)/(sizeof(u32))]) & \
++#define WMI_SERVICE_IS_ENABLED(wmi_svc_bmap, svc_id, len) \
++	((svc_id) < (len) && \
++	 __le32_to_cpu((wmi_svc_bmap)[(svc_id)/(sizeof(u32))]) & \
+ 	 BIT((svc_id)%(sizeof(u32))))
+ 
+-#define SVCMAP(x, y) \
++#define SVCMAP(x, y, len) \
+ 	do { \
+-		if (WMI_SERVICE_IS_ENABLED((in), (x))) \
++		if (WMI_SERVICE_IS_ENABLED((in), (x), (len))) \
+ 			__set_bit(y, out); \
+ 	} while (0)
+ 
+-static inline void wmi_10x_svc_map(const __le32 *in, unsigned long *out)
++static inline void wmi_10x_svc_map(const __le32 *in, unsigned long *out,
++				   size_t len)
+ {
+ 	SVCMAP(WMI_10X_SERVICE_BEACON_OFFLOAD,
+-	       WMI_SERVICE_BEACON_OFFLOAD);
++	       WMI_SERVICE_BEACON_OFFLOAD, len);
+ 	SVCMAP(WMI_10X_SERVICE_SCAN_OFFLOAD,
+-	       WMI_SERVICE_SCAN_OFFLOAD);
++	       WMI_SERVICE_SCAN_OFFLOAD, len);
+ 	SVCMAP(WMI_10X_SERVICE_ROAM_OFFLOAD,
+-	       WMI_SERVICE_ROAM_OFFLOAD);
++	       WMI_SERVICE_ROAM_OFFLOAD, len);
+ 	SVCMAP(WMI_10X_SERVICE_BCN_MISS_OFFLOAD,
+-	       WMI_SERVICE_BCN_MISS_OFFLOAD);
++	       WMI_SERVICE_BCN_MISS_OFFLOAD, len);
+ 	SVCMAP(WMI_10X_SERVICE_STA_PWRSAVE,
+-	       WMI_SERVICE_STA_PWRSAVE);
++	       WMI_SERVICE_STA_PWRSAVE, len);
+ 	SVCMAP(WMI_10X_SERVICE_STA_ADVANCED_PWRSAVE,
+-	       WMI_SERVICE_STA_ADVANCED_PWRSAVE);
++	       WMI_SERVICE_STA_ADVANCED_PWRSAVE, len);
+ 	SVCMAP(WMI_10X_SERVICE_AP_UAPSD,
+-	       WMI_SERVICE_AP_UAPSD);
++	       WMI_SERVICE_AP_UAPSD, len);
+ 	SVCMAP(WMI_10X_SERVICE_AP_DFS,
+-	       WMI_SERVICE_AP_DFS);
++	       WMI_SERVICE_AP_DFS, len);
+ 	SVCMAP(WMI_10X_SERVICE_11AC,
+-	       WMI_SERVICE_11AC);
++	       WMI_SERVICE_11AC, len);
+ 	SVCMAP(WMI_10X_SERVICE_BLOCKACK,
+-	       WMI_SERVICE_BLOCKACK);
++	       WMI_SERVICE_BLOCKACK, len);
+ 	SVCMAP(WMI_10X_SERVICE_PHYERR,
+-	       WMI_SERVICE_PHYERR);
++	       WMI_SERVICE_PHYERR, len);
+ 	SVCMAP(WMI_10X_SERVICE_BCN_FILTER,
+-	       WMI_SERVICE_BCN_FILTER);
++	       WMI_SERVICE_BCN_FILTER, len);
+ 	SVCMAP(WMI_10X_SERVICE_RTT,
+-	       WMI_SERVICE_RTT);
++	       WMI_SERVICE_RTT, len);
+ 	SVCMAP(WMI_10X_SERVICE_RATECTRL,
+-	       WMI_SERVICE_RATECTRL);
++	       WMI_SERVICE_RATECTRL, len);
+ 	SVCMAP(WMI_10X_SERVICE_WOW,
+-	       WMI_SERVICE_WOW);
++	       WMI_SERVICE_WOW, len);
+ 	SVCMAP(WMI_10X_SERVICE_RATECTRL_CACHE,
+-	       WMI_SERVICE_RATECTRL_CACHE);
++	       WMI_SERVICE_RATECTRL_CACHE, len);
+ 	SVCMAP(WMI_10X_SERVICE_IRAM_TIDS,
+-	       WMI_SERVICE_IRAM_TIDS);
++	       WMI_SERVICE_IRAM_TIDS, len);
+ 	SVCMAP(WMI_10X_SERVICE_BURST,
+-	       WMI_SERVICE_BURST);
++	       WMI_SERVICE_BURST, len);
+ 	SVCMAP(WMI_10X_SERVICE_SMART_ANTENNA_SW_SUPPORT,
+-	       WMI_SERVICE_SMART_ANTENNA_SW_SUPPORT);
++	       WMI_SERVICE_SMART_ANTENNA_SW_SUPPORT, len);
+ 	SVCMAP(WMI_10X_SERVICE_FORCE_FW_HANG,
+-	       WMI_SERVICE_FORCE_FW_HANG);
++	       WMI_SERVICE_FORCE_FW_HANG, len);
+ 	SVCMAP(WMI_10X_SERVICE_SMART_ANTENNA_HW_SUPPORT,
+-	       WMI_SERVICE_SMART_ANTENNA_HW_SUPPORT);
++	       WMI_SERVICE_SMART_ANTENNA_HW_SUPPORT, len);
+ }
+ 
+-static inline void wmi_main_svc_map(const __le32 *in, unsigned long *out)
++static inline void wmi_main_svc_map(const __le32 *in, unsigned long *out,
++				    size_t len)
+ {
+ 	SVCMAP(WMI_MAIN_SERVICE_BEACON_OFFLOAD,
+-	       WMI_SERVICE_BEACON_OFFLOAD);
++	       WMI_SERVICE_BEACON_OFFLOAD, len);
+ 	SVCMAP(WMI_MAIN_SERVICE_SCAN_OFFLOAD,
+-	       WMI_SERVICE_SCAN_OFFLOAD);
++	       WMI_SERVICE_SCAN_OFFLOAD, len);
+ 	SVCMAP(WMI_MAIN_SERVICE_ROAM_OFFLOAD,
+-	       WMI_SERVICE_ROAM_OFFLOAD);
++	       WMI_SERVICE_ROAM_OFFLOAD, len);
+ 	SVCMAP(WMI_MAIN_SERVICE_BCN_MISS_OFFLOAD,
+-	       WMI_SERVICE_BCN_MISS_OFFLOAD);
++	       WMI_SERVICE_BCN_MISS_OFFLOAD, len);
+ 	SVCMAP(WMI_MAIN_SERVICE_STA_PWRSAVE,
+-	       WMI_SERVICE_STA_PWRSAVE);
++	       WMI_SERVICE_STA_PWRSAVE, len);
+ 	SVCMAP(WMI_MAIN_SERVICE_STA_ADVANCED_PWRSAVE,
+-	       WMI_SERVICE_STA_ADVANCED_PWRSAVE);
++	       WMI_SERVICE_STA_ADVANCED_PWRSAVE, len);
+ 	SVCMAP(WMI_MAIN_SERVICE_AP_UAPSD,
+-	       WMI_SERVICE_AP_UAPSD);
++	       WMI_SERVICE_AP_UAPSD, len);
+ 	SVCMAP(WMI_MAIN_SERVICE_AP_DFS,
+-	       WMI_SERVICE_AP_DFS);
++	       WMI_SERVICE_AP_DFS, len);
+ 	SVCMAP(WMI_MAIN_SERVICE_11AC,
+-	       WMI_SERVICE_11AC);
++	       WMI_SERVICE_11AC, len);
+ 	SVCMAP(WMI_MAIN_SERVICE_BLOCKACK,
+-	       WMI_SERVICE_BLOCKACK);
++	       WMI_SERVICE_BLOCKACK, len);
+ 	SVCMAP(WMI_MAIN_SERVICE_PHYERR,
+-	       WMI_SERVICE_PHYERR);
++	       WMI_SERVICE_PHYERR, len);
+ 	SVCMAP(WMI_MAIN_SERVICE_BCN_FILTER,
+-	       WMI_SERVICE_BCN_FILTER);
++	       WMI_SERVICE_BCN_FILTER, len);
+ 	SVCMAP(WMI_MAIN_SERVICE_RTT,
+-	       WMI_SERVICE_RTT);
++	       WMI_SERVICE_RTT, len);
+ 	SVCMAP(WMI_MAIN_SERVICE_RATECTRL,
+-	       WMI_SERVICE_RATECTRL);
++	       WMI_SERVICE_RATECTRL, len);
+ 	SVCMAP(WMI_MAIN_SERVICE_WOW,
+-	       WMI_SERVICE_WOW);
++	       WMI_SERVICE_WOW, len);
+ 	SVCMAP(WMI_MAIN_SERVICE_RATECTRL_CACHE,
+-	       WMI_SERVICE_RATECTRL_CACHE);
++	       WMI_SERVICE_RATECTRL_CACHE, len);
+ 	SVCMAP(WMI_MAIN_SERVICE_IRAM_TIDS,
+-	       WMI_SERVICE_IRAM_TIDS);
++	       WMI_SERVICE_IRAM_TIDS, len);
+ 	SVCMAP(WMI_MAIN_SERVICE_ARPNS_OFFLOAD,
+-	       WMI_SERVICE_ARPNS_OFFLOAD);
++	       WMI_SERVICE_ARPNS_OFFLOAD, len);
+ 	SVCMAP(WMI_MAIN_SERVICE_NLO,
+-	       WMI_SERVICE_NLO);
++	       WMI_SERVICE_NLO, len);
+ 	SVCMAP(WMI_MAIN_SERVICE_GTK_OFFLOAD,
+-	       WMI_SERVICE_GTK_OFFLOAD);
++	       WMI_SERVICE_GTK_OFFLOAD, len);
+ 	SVCMAP(WMI_MAIN_SERVICE_SCAN_SCH,
+-	       WMI_SERVICE_SCAN_SCH);
++	       WMI_SERVICE_SCAN_SCH, len);
+ 	SVCMAP(WMI_MAIN_SERVICE_CSA_OFFLOAD,
+-	       WMI_SERVICE_CSA_OFFLOAD);
++	       WMI_SERVICE_CSA_OFFLOAD, len);
+ 	SVCMAP(WMI_MAIN_SERVICE_CHATTER,
+-	       WMI_SERVICE_CHATTER);
++	       WMI_SERVICE_CHATTER, len);
+ 	SVCMAP(WMI_MAIN_SERVICE_COEX_FREQAVOID,
+-	       WMI_SERVICE_COEX_FREQAVOID);
++	       WMI_SERVICE_COEX_FREQAVOID, len);
+ 	SVCMAP(WMI_MAIN_SERVICE_PACKET_POWER_SAVE,
+-	       WMI_SERVICE_PACKET_POWER_SAVE);
++	       WMI_SERVICE_PACKET_POWER_SAVE, len);
+ 	SVCMAP(WMI_MAIN_SERVICE_FORCE_FW_HANG,
+-	       WMI_SERVICE_FORCE_FW_HANG);
++	       WMI_SERVICE_FORCE_FW_HANG, len);
+ 	SVCMAP(WMI_MAIN_SERVICE_GPIO,
+-	       WMI_SERVICE_GPIO);
++	       WMI_SERVICE_GPIO, len);
+ 	SVCMAP(WMI_MAIN_SERVICE_STA_DTIM_PS_MODULATED_DTIM,
+-	       WMI_SERVICE_STA_DTIM_PS_MODULATED_DTIM);
++	       WMI_SERVICE_STA_DTIM_PS_MODULATED_DTIM, len);
+ 	SVCMAP(WMI_MAIN_SERVICE_STA_UAPSD_BASIC_AUTO_TRIG,
+-	       WMI_SERVICE_STA_UAPSD_BASIC_AUTO_TRIG);
++	       WMI_SERVICE_STA_UAPSD_BASIC_AUTO_TRIG, len);
+ 	SVCMAP(WMI_MAIN_SERVICE_STA_UAPSD_VAR_AUTO_TRIG,
+-	       WMI_SERVICE_STA_UAPSD_VAR_AUTO_TRIG);
++	       WMI_SERVICE_STA_UAPSD_VAR_AUTO_TRIG, len);
+ 	SVCMAP(WMI_MAIN_SERVICE_STA_KEEP_ALIVE,
+-	       WMI_SERVICE_STA_KEEP_ALIVE);
++	       WMI_SERVICE_STA_KEEP_ALIVE, len);
+ 	SVCMAP(WMI_MAIN_SERVICE_TX_ENCAP,
+-	       WMI_SERVICE_TX_ENCAP);
++	       WMI_SERVICE_TX_ENCAP, len);
+ }
+ 
+ #undef SVCMAP
+-- 
+1.8.5.3
 
-Regards,
-Arend
