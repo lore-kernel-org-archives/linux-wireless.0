@@ -1,44 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f172.google.com ([209.85.192.172]:55131 "EHLO
-	mail-pd0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750855AbaJIR2X (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2014 13:28:23 -0400
-Date: Thu, 9 Oct 2014 10:28:17 -0700
-From: Guenter Roeck <linux@roeck-us.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH] bcma: Add dependency on OF_ADDRESS
-Message-ID: <20141009172817.GC2410@roeck-us.net> (sfid-20141009_192827_973813_B8FD9DC3)
-References: <1412872877-1771-1-git-send-email-linux@roeck-us.net>
- <CACna6rzOeGcKrrftLx_3uWe_bAXQaQMmWb3wWHP0CjtdO8D0eg@mail.gmail.com>
- <5436C2B4.6030801@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <5436C2B4.6030801@broadcom.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:36333 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753246AbaJTJv5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Oct 2014 05:51:57 -0400
+Message-ID: <1413798712.10246.14.camel@jlt4.sipsolutions.net> (sfid-20141020_115201_686175_724C46E3)
+Subject: Re: [PATCH] cfg80211: Warn once for delayed scan completion
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sujith Manoharan <sujith@msujith.org>
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 20 Oct 2014 11:51:52 +0200
+In-Reply-To: <21572.55536.308167.684155@gargle.gargle.HOWL>
+References: <1413385042-17903-1-git-send-email-sujith@msujith.org>
+	 <CANUX_P02O-JSQkVvBCg6L9jf8wPyzPv8O_qsZa+prTJJx+20UA@mail.gmail.com>
+	 <21568.29077.518022.812356@gargle.gargle.HOWL>
+	 <1413797588.10246.3.camel@jlt4.sipsolutions.net>
+	 <21572.55536.308167.684155@gargle.gargle.HOWL>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 09, 2014 at 07:15:32PM +0200, Arend van Spriel wrote:
-> On 10/09/14 18:54, Rafał Miłecki wrote:
-> >On 9 October 2014 18:41, Guenter Roeck<linux@roeck-us.net>  wrote:
-> >>Commit 2101e533f41a ("bcma: register bcma as device tree driver")
-> >>introduces a hard dependency on OF_ADDRESS into the bcma driver.
-> >>OF_ADDRESS is specifically disabled for the sparc architecture.
-> >>This results in the following error when building sparc64:allmodconfig.
+On Mon, 2014-10-20 at 15:12 +0530, Sujith Manoharan wrote:
+> Johannes Berg wrote:
+> > Those commits say they *fix* the race though, so in case I was wrong you
+> > should report the sequence of events so we can look at fixing it
+> > properly?
 > 
-> Does this mean on sparc (using allmodconfig) you will get CONFIG_OF
-> and !CONFIG_OF_ADDRESS? Does that makes sense?
-> 
-> btw. the OF_ADDRESS dependency was introduced by commit "bcma: get
-> IRQ numbers from dt".
+> The commits fix both the issues (use-after-free, new scan) correctly,
+> so I don't see a race ? If the driver is slow in notifying scan completion
+> and the interface is removed in the meantime, this warning is hit.
 
-Looking into the code again: Really ? git blame tells me otherwise.
-Also, I don't see the commit you refer to in the upstream kernel.
-Maybe I am missing something.
+But the driver can/should just do it when the interface is removed from
+it? Otherwise it has no valid way to run/continue the scan anyway?
 
-Guenter
+johannes
+
