@@ -1,53 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:49143
-	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751465AbaJRRCR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Oct 2014 13:02:17 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
-Subject: [PATCH 03/10] ath9k: fix processing RXORN interrupts
-Date: Sat, 18 Oct 2014 19:02:05 +0200
-Message-Id: <1413651732-69783-3-git-send-email-nbd@openwrt.org> (sfid-20141018_190239_029797_60484996)
-In-Reply-To: <1413651732-69783-1-git-send-email-nbd@openwrt.org>
-References: <1413651732-69783-1-git-send-email-nbd@openwrt.org>
+Received: from s3.sipsolutions.net ([5.9.151.49]:36643 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752950AbaJTKir (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Oct 2014 06:38:47 -0400
+Message-ID: <1413801518.10246.17.camel@jlt4.sipsolutions.net> (sfid-20141020_123850_504077_493D7119)
+Subject: Re: [PATCH v2 23/23] ath9k: Do not start BA when scanning
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sujith Manoharan <sujith@msujith.org>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Date: Mon, 20 Oct 2014 12:38:38 +0200
+In-Reply-To: <21572.55352.564813.169136@gargle.gargle.HOWL>
+References: <1413511830-5536-1-git-send-email-sujith@msujith.org>
+	 <1413511830-5536-24-git-send-email-sujith@msujith.org>
+	 <1413797433.10246.2.camel@jlt4.sipsolutions.net>
+	 <21572.55352.564813.169136@gargle.gargle.HOWL>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The "goto chip_reset" is a bit misleading, because it does not actually
-issue a chip reset. Instead it is bypassing processing of other
-interrupts and assumes that the tasklet will issue a chip reset.
+On Mon, 2014-10-20 at 15:09 +0530, Sujith Manoharan wrote:
+> Johannes Berg wrote:
+> > If it's a mac80211 race, wouldn't it make sense to fix it in mac80211?
+> 
+> Yes, definitely. :-)
+> 
+> But, we also ran into issues where starting a BA session
+> when HW scan was in progress (with MCC enabled) caused connectivity
+> problems, hence this fix in ath9k.
 
-In the case of RXORN this does not happen, so bypassing processing of
-other interrupts will simply allow them to fire again. Even if RXORN
-was triggering a reset, it is not critical enough to need the bypass
-here.
+mac80211 is also aware of HW scanning, but I'm not sure what it should
+do, I guess.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/main.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+> Regarding the BA race, would it make sense to flush
+> sdata->work after scan completion ?
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 6f6a974..e7d4833 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -539,11 +539,10 @@ irqreturn_t ath_isr(int irq, void *dev)
- 		sched = true;
- 
- 	/*
--	 * If a FATAL or RXORN interrupt is received, we have to reset the
--	 * chip immediately.
-+	 * If a FATAL interrupt is received, we have to reset the chip
-+	 * immediately.
- 	 */
--	if ((status & ATH9K_INT_FATAL) || ((status & ATH9K_INT_RXORN) &&
--	    !(ah->caps.hw_caps & ATH9K_HW_CAP_EDMA)))
-+	if (status & ATH9K_INT_FATAL)
- 		goto chip_reset;
- 
- 	if ((ah->config.hw_hang_checks & HW_BB_WATCHDOG) &&
--- 
-2.0.4
+Err, no idea, I haven't really looked :)
+
+johannes
 
