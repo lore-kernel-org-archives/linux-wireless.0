@@ -1,128 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:14042 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759121AbaJaMsy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Oct 2014 08:48:54 -0400
-From: Jukka Rissanen <jukka.rissanen@linux.intel.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH v3 2/2] mac80211-hwsim: Provide multicast event for HWSIM_CMD_DEL_RADIO
-Date: Fri, 31 Oct 2014 14:48:48 +0200
-Message-Id: <1414759728-20659-3-git-send-email-jukka.rissanen@linux.intel.com> (sfid-20141031_134858_584560_5B21A296)
-In-Reply-To: <1414759728-20659-1-git-send-email-jukka.rissanen@linux.intel.com>
-References: <1414759728-20659-1-git-send-email-jukka.rissanen@linux.intel.com>
+Received: from mail-oi0-f54.google.com ([209.85.218.54]:49787 "EHLO
+	mail-oi0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751031AbaJTEwi convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Oct 2014 00:52:38 -0400
+Received: by mail-oi0-f54.google.com with SMTP id v63so3147104oia.27
+        for <linux-wireless@vger.kernel.org>; Sun, 19 Oct 2014 21:52:37 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1413751717.2510219.180809145.0E693C29@webmail.messagingengine.com>
+References: <1413463736.1316541.179720977.4FD32021@webmail.messagingengine.com>
+	<1413510814.22769.6.camel@dcbw.local>
+	<1413751717.2510219.180809145.0E693C29@webmail.messagingengine.com>
+Date: Mon, 20 Oct 2014 07:52:37 +0300
+Message-ID: <CANUX_P2RHVRorVABRfWVg39d4D8dj35v3fBpY3=3jvQ1U+mfEA@mail.gmail.com> (sfid-20141020_070305_809867_96B4CBEB)
+Subject: Re: iwlwifi: Reason 7 periodic disconnect
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: =?UTF-8?Q?Lauren=C8=9Biu_Nicola?= <lnicola@dend.ro>
+Cc: Dan Williams <dcbw@redhat.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When deleting old radio via HWSIM_CMD_DEL_RADIO then listeners on the
-multicast group "config" are informed.
+On Sun, Oct 19, 2014 at 11:48 PM, Laurențiu Nicola <lnicola@dend.ro> wrote:
+> Hello,
+>
+> Sorry for the late reply. I was using just wpa_supplicant. I also tried
+> wicd, but it seems to hang when connecting to a network, but my
+> understanding is that it's just a wpa_supplicant manager. I got this
+> while installing Gentoo, but I also reproduced it on the Fedora 20 Live
+> CD. See https://bpaste.net/show/7d5ad99260a7 for logs, but it doesn't
+> seem to say much more than my original extract.
+>
+> What I found out in the meanwhile, however, is that active traffic will
+> prevent the issue from occurring. This happened with the Fedora Live CD,
+> but pinging the AP is also sufficient. I noticed iwconfig reports that
+> the power saving mode is off.
+>
+> For what it's worth, I compiled my kernel and iwlwifi module with
+> tracing on, so tell me if I should try that.
 
-Signed-off-by: Jukka Rissanen <jukka.rissanen@linux.intel.com>
----
- drivers/net/wireless/mac80211_hwsim.c | 54 ++++++++++++++++++++++++++++++-----
- 1 file changed, 47 insertions(+), 7 deletions(-)
+Please recompile with MAC80211_MLME_DEBUG, MAC80211_STA_DEBUG and
+reproduce - thanks.
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 476c89c..209db62 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -2404,8 +2404,48 @@ failed:
- 	return err;
- }
- 
--static void mac80211_hwsim_destroy_radio(struct mac80211_hwsim_data *data)
-+static void hwsim_mcast_del_radio(int id, const char *hwname,
-+				  struct genl_info *info)
- {
-+	struct sk_buff *skb;
-+	void *data;
-+	int ret;
-+
-+	skb = genlmsg_new(GENLMSG_DEFAULT_SIZE, GFP_KERNEL);
-+	if (!skb)
-+		return;
-+
-+	data = genlmsg_put(skb, 0, 0, &hwsim_genl_family, 0,
-+			   HWSIM_CMD_DEL_RADIO);
-+	if (!data)
-+		goto error;
-+
-+	ret = nla_put_u32(skb, HWSIM_ATTR_RADIO_ID, id);
-+	if (ret < 0)
-+		goto error;
-+
-+	if (hwname) {
-+		ret = nla_put(skb, HWSIM_ATTR_RADIO_NAME, strlen(hwname),
-+			      hwname);
-+		if (ret < 0)
-+			goto error;
-+	}
-+
-+	genlmsg_end(skb, data);
-+
-+	hwsim_mcast_config_msg(skb, info);
-+
-+	return;
-+
-+error:
-+	nlmsg_free(skb);
-+}
-+
-+static void mac80211_hwsim_del_radio(struct mac80211_hwsim_data *data,
-+				     const char *hwname,
-+				     struct genl_info *info)
-+{
-+	hwsim_mcast_del_radio(data->idx, hwname, info);
- 	debugfs_remove_recursive(data->debugfs);
- 	ieee80211_unregister_hw(data->hw);
- 	device_release_driver(data->dev);
-@@ -2423,7 +2463,7 @@ static void mac80211_hwsim_free(void)
- 						list))) {
- 		list_del(&data->list);
- 		spin_unlock_bh(&hwsim_radio_lock);
--		mac80211_hwsim_destroy_radio(data);
-+		mac80211_hwsim_del_radio(data, NULL, NULL);
- 		spin_lock_bh(&hwsim_radio_lock);
- 	}
- 	spin_unlock_bh(&hwsim_radio_lock);
-@@ -2683,7 +2723,7 @@ static int hwsim_new_radio_nl(struct sk_buff *msg, struct genl_info *info)
- 	return mac80211_hwsim_new_radio(info, &param);
- }
- 
--static int hwsim_destroy_radio_nl(struct sk_buff *msg, struct genl_info *info)
-+static int hwsim_del_radio_nl(struct sk_buff *msg, struct genl_info *info)
- {
- 	struct mac80211_hwsim_data *data;
- 	s64 idx = -1;
-@@ -2709,7 +2749,7 @@ static int hwsim_destroy_radio_nl(struct sk_buff *msg, struct genl_info *info)
- 
- 		list_del(&data->list);
- 		spin_unlock_bh(&hwsim_radio_lock);
--		mac80211_hwsim_destroy_radio(data);
-+		mac80211_hwsim_del_radio(data, hwname, info);
- 		return 0;
- 	}
- 	spin_unlock_bh(&hwsim_radio_lock);
-@@ -2742,9 +2782,9 @@ static const struct genl_ops hwsim_ops[] = {
- 		.flags = GENL_ADMIN_PERM,
- 	},
- 	{
--		.cmd = HWSIM_CMD_DESTROY_RADIO,
-+		.cmd = HWSIM_CMD_DEL_RADIO,
- 		.policy = hwsim_genl_policy,
--		.doit = hwsim_destroy_radio_nl,
-+		.doit = hwsim_del_radio_nl,
- 		.flags = GENL_ADMIN_PERM,
- 	},
- };
-@@ -2754,7 +2794,7 @@ static void destroy_radio(struct work_struct *work)
- 	struct mac80211_hwsim_data *data =
- 		container_of(work, struct mac80211_hwsim_data, destroy_work);
- 
--	mac80211_hwsim_destroy_radio(data);
-+	mac80211_hwsim_del_radio(data, NULL, NULL);
- }
- 
- static void remove_user_radios(u32 portid)
--- 
-1.8.3.1
-
+>
+> Laurentiu
+>
+>
+> On Fri, Oct 17, 2014, at 04:53, Dan Williams wrote:
+>> On Thu, 2014-10-16 at 15:48 +0300, Laurențiu Nicola wrote:
+>> > Hello,
+>> >
+>> > I'm using iwlwifi for a Centrino Ultimate-N 6300 on 3.14.4 and 3.17.1.
+>> > Connect to my wireless network works, but I get disconnected every 60
+>> > seconds or so. The dmesg output looks like
+>> > https://bpaste.net/show/1623a8ae5dc6 .
+>> >
+>> > I had the same issue on the three latest firmware versions:
+>> > iwlwifi-6000-ucode-9.176.4.1
+>> > iwlwifi-6000-ucode-9.193.4.1
+>> > iwlwifi-6000-ucode-9.221.4.1
+>> >
+>> > The dmesg log actually shows the driver loading the different versions
+>> > above.
+>> >
+>> > It's the first time I try to use wireless on Linux, so I might have made
+>> > a dumb mistake.
+>>
+>> Can you try to get debug output from wpa_supplicant, which is the
+>> process that controls WiFi on Linux?  What distro and version do you
+>> use, and do you know what WiFi management service is being used?
+>> (NetworkManager, conman, plain wpa_supplicant, wicd, something else?)
+>>
+>> Dan
+>>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
