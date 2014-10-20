@@ -1,33 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:49048 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:37381 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753362AbaJVGgR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2014 02:36:17 -0400
-Message-ID: <1413959764.1958.0.camel@jlt4.sipsolutions.net> (sfid-20141022_083652_267843_F4AA5752)
-Subject: Re: [PATCH 1/1 net-next] mac80211: remove unnecessary null test
- before debugfs_remove
+	id S1751924AbaJTMpq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Oct 2014 08:45:46 -0400
+Message-ID: <1413809136.24269.0.camel@jlt4.sipsolutions.net> (sfid-20141020_144550_004230_EAD09183)
+Subject: Re: [PATCH] cfg80211: Warn once for delayed scan completion
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Fabian Frederick <fabf@skynet.be>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 22 Oct 2014 08:36:04 +0200
-In-Reply-To: <1473755457.212484.1413921941002.open-xchange@webmail.nmp.skynet.be>
-References: <1413908412-5177-1-git-send-email-fabf@skynet.be>
-	 <1413918366.1998.10.camel@jlt4.sipsolutions.net>
-	 <1473755457.212484.1413921941002.open-xchange@webmail.nmp.skynet.be>
+To: Sujith Manoharan <sujith@msujith.org>
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 20 Oct 2014 14:45:36 +0200
+In-Reply-To: <1413806542.10246.21.camel@jlt4.sipsolutions.net> (sfid-20141020_140243_394048_D76951A8)
+References: <1413385042-17903-1-git-send-email-sujith@msujith.org>
+	 <CANUX_P02O-JSQkVvBCg6L9jf8wPyzPv8O_qsZa+prTJJx+20UA@mail.gmail.com>
+	 <21568.29077.518022.812356@gargle.gargle.HOWL>
+	 <1413797588.10246.3.camel@jlt4.sipsolutions.net>
+	 <21572.55536.308167.684155@gargle.gargle.HOWL>
+	 <1413798712.10246.14.camel@jlt4.sipsolutions.net>
+	 <21572.58249.490532.207564@gargle.gargle.HOWL>
+	 <1413801423.10246.16.camel@jlt4.sipsolutions.net>
+	 <21572.60015.349942.74265@gargle.gargle.HOWL>
+	 <1413806542.10246.21.camel@jlt4.sipsolutions.net>
+	 (sfid-20141020_140243_394048_D76951A8)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-10-21 at 22:05 +0200, Fabian Frederick wrote:
+On Mon, 2014-10-20 at 14:02 +0200, Johannes Berg wrote:
+> On Mon, 2014-10-20 at 16:26 +0530, Sujith Manoharan wrote:
+> 
+> > Here is a trace log showing the issue - cfg80211_scan_done()
+> > is called after NETDEV_DOWN is received in cfg80211_netdev_notifier_call().
+> > 
+> > http://pastebin.com/raw.php?i=AJqFLtZR
+> > 
+> > I've removed entries to show the issue clearly, if
+> > you need the full trace, please let me know.
+> 
+> Ah, so mac80211 is also delaying and not doing the right thing ... need
+> to look at that.
 
-> I can also resubmit patch if necessary.
+Maybe we need something like this:
 
-No worries, I've already applied the patch (with a modified commit
-message).
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index af0d094b2f2f..45b74ab1c59d 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -985,7 +985,6 @@ void ieee80211_scan_cancel(struct ieee80211_local *local)
+ 			drv_cancel_hw_scan(local,
+ 				rcu_dereference_protected(local->scan_sdata,
+ 						lockdep_is_held(&local->mtx)));
+-		goto out;
+ 	}
+ 
+ 	/*
 
 johannes
 
