@@ -1,54 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:41777 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752368AbaJGOT0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Oct 2014 10:19:26 -0400
-Date: Tue, 7 Oct 2014 10:18:44 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, larry.finger@lwfinger.net
-Subject: Re: pull request: wireless-next 2014-10-03
-Message-ID: <20141007141844.GH25590@tuxdriver.com> (sfid-20141007_161947_369309_06306878)
-References: <20141003180151.GE27414@tuxdriver.com>
- <20141005.213511.339356320070784471.davem@davemloft.net>
- <20141005.213853.488066614144870837.davem@davemloft.net>
- <20141007.004724.187788111776188480.davem@davemloft.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20141007.004724.187788111776188480.davem@davemloft.net>
+Received: from mga11.intel.com ([192.55.52.93]:41412 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751721AbaJTNBj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Oct 2014 09:01:39 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH] mac80211: don't flush when probing the AP
+Date: Mon, 20 Oct 2014 15:57:18 +0300
+Message-Id: <1413809838-9170-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20141020_150142_680104_301953BD)
+In-Reply-To: <1413491157-5352-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1413491157-5352-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 07, 2014 at 12:47:24AM -0400, David Miller wrote:
-> From: David Miller <davem@davemloft.net>
-> Date: Sun, 05 Oct 2014 21:38:53 -0400 (EDT)
-> 
-> > From: David Miller <davem@davemloft.net>
-> > Date: Sun, 05 Oct 2014 21:35:11 -0400 (EDT)
-> > 
-> >> From: "John W. Linville" <linville@tuxdriver.com>
-> >> Date: Fri, 3 Oct 2014 14:01:52 -0400
-> >> 
-> >>> Please pull tihs batch of updates intended for the 3.18 stream!
-> >> 
-> >> Pulled, thanks for the stellar pull request text, as always.
-> > 
-> > John, what's the deal with the following?  Will it be resolved by the
-> > driver being removed from the staging tree?
-> > 
-> > WARNING: drivers/staging/rtl8192ee/r8192ee: 'rtl_evm_dbm_jaguar' exported twice. Previous export was in drivers/net/wireless/rtlwifi/rtlwifi.ko
-> 
-> John, ping?
+All the callers of ieee80211_mgd_probe_ap_send return right
+after they call the flush() callback. This means that calling
+flush() is uneeded since its meaning is to wait until the
+queues of the device are empty.
 
-Sorry, Dave -- sendmail died on my local machine and I didn't notice
-until now... :-(
+Devices that know how to report status on Tx will do so using
+the regular path (ieee80211_tx_status) and this status will
+trigger the continuation of the flow of the probe
+(ieee80211_sta_tx_notify).
 
-Anyway...yes, the staging driver should be removed by a patch in
-Greg's queue.
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ net/mac80211/mlme.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-John
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 9ddd721..abba89d 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1956,8 +1956,6 @@ static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
+ 
+ 	ifmgd->probe_timeout = jiffies + msecs_to_jiffies(probe_wait_ms);
+ 	run_again(sdata, ifmgd->probe_timeout);
+-	if (sdata->local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS)
+-		ieee80211_flush_queues(sdata->local, sdata);
+ }
+ 
+ static void ieee80211_mgd_probe_ap(struct ieee80211_sub_if_data *sdata,
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.9.1
+
