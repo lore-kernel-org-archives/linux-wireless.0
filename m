@@ -1,56 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f51.google.com ([74.125.82.51]:64719 "EHLO
-	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755809AbaJ2RqE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2014 13:46:04 -0400
-Received: by mail-wg0-f51.google.com with SMTP id l18so3896600wgh.10
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2014 10:46:03 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH v2 29/34] staging: vt6655: device_init_registers replace spin lock
-Date: Wed, 29 Oct 2014 17:44:04 +0000
-Message-Id: <1414604649-9105-30-git-send-email-tvboxspy@gmail.com> (sfid-20141029_184620_967512_138B9080)
-In-Reply-To: <1414604649-9105-1-git-send-email-tvboxspy@gmail.com>
-References: <1414604649-9105-1-git-send-email-tvboxspy@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:37116 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751120AbaJTMCk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Oct 2014 08:02:40 -0400
+Message-ID: <1413806542.10246.21.camel@jlt4.sipsolutions.net> (sfid-20141020_140243_394048_D76951A8)
+Subject: Re: [PATCH] cfg80211: Warn once for delayed scan completion
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sujith Manoharan <sujith@msujith.org>
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 20 Oct 2014 14:02:22 +0200
+In-Reply-To: <21572.60015.349942.74265@gargle.gargle.HOWL>
+References: <1413385042-17903-1-git-send-email-sujith@msujith.org>
+	 <CANUX_P02O-JSQkVvBCg6L9jf8wPyzPv8O_qsZa+prTJJx+20UA@mail.gmail.com>
+	 <21568.29077.518022.812356@gargle.gargle.HOWL>
+	 <1413797588.10246.3.camel@jlt4.sipsolutions.net>
+	 <21572.55536.308167.684155@gargle.gargle.HOWL>
+	 <1413798712.10246.14.camel@jlt4.sipsolutions.net>
+	 <21572.58249.490532.207564@gargle.gargle.HOWL>
+	 <1413801423.10246.16.camel@jlt4.sipsolutions.net>
+	 <21572.60015.349942.74265@gargle.gargle.HOWL>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use spin_lock_irqsave and spin_unlock_irqrestore.
+On Mon, 2014-10-20 at 16:26 +0530, Sujith Manoharan wrote:
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/device_main.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+> Here is a trace log showing the issue - cfg80211_scan_done()
+> is called after NETDEV_DOWN is received in cfg80211_netdev_notifier_call().
+> 
+> http://pastebin.com/raw.php?i=AJqFLtZR
+> 
+> I've removed entries to show the issue clearly, if
+> you need the full trace, please let me know.
 
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index d7dd002..c5eca10 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -406,6 +406,7 @@ device_set_options(struct vnt_private *pDevice)
- 
- static void device_init_registers(struct vnt_private *pDevice)
- {
-+	unsigned long flags;
- 	unsigned int ii;
- 	unsigned char byValue;
- 	unsigned char byValue1;
-@@ -439,11 +440,11 @@ static void device_init_registers(struct vnt_private *pDevice)
- 	/* Get Local ID */
- 	VNSvInPortB(pDevice->PortOffset + MAC_REG_LOCALID, &pDevice->byLocalID);
- 
--	spin_lock_irq(&pDevice->lock);
-+	spin_lock_irqsave(&pDevice->lock, flags);
- 
- 	SROMvReadAllContents(pDevice->PortOffset, pDevice->abyEEPROM);
- 
--	spin_unlock_irq(&pDevice->lock);
-+	spin_unlock_irqrestore(&pDevice->lock, flags);
- 
- 	/* Get Channel range */
- 	pDevice->byMinChannel = 1;
--- 
-2.1.0
+Ah, so mac80211 is also delaying and not doing the right thing ... need
+to look at that.
+
+johannes
 
