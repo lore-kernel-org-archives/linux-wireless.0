@@ -1,85 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f182.google.com ([209.85.212.182]:38545 "EHLO
-	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751625AbaJZQAD (ORCPT
+Received: from mail-la0-f42.google.com ([209.85.215.42]:34439 "EHLO
+	mail-la0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750957AbaJTM2b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Oct 2014 12:00:03 -0400
-From: Paul McQuade <paulmcquad@gmail.com>
-To: paulmcquad@gmail.com
-Cc: linux-kernel@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-wireless@vger.kernel.org, gregkh@linuxfoundation.org,
-	Jes.Sorensen@redhat.com, Larry.Finger@lwfinger.net
-Subject: [PATCH] staging: rtl8723au pointer issue
-Date: Sun, 26 Oct 2014 15:59:56 +0000
-Message-Id: <1414339196-4139-1-git-send-email-paulmcquad@gmail.com> (sfid-20141026_170038_233549_D7DE50A1)
+	Mon, 20 Oct 2014 08:28:31 -0400
+Received: by mail-la0-f42.google.com with SMTP id gf13so4286575lab.1
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2014 05:28:28 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 1/6] ath10k: re-disable interrupts after target init
+Date: Mon, 20 Oct 2014 14:14:37 +0200
+Message-Id: <1413807282-27951-2-git-send-email-michal.kazior@tieto.com> (sfid-20141020_142834_590863_0E33B2F8)
+In-Reply-To: <1413807282-27951-1-git-send-email-michal.kazior@tieto.com>
+References: <1413807282-27951-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ERROR: "foo*bar" should be "foo *bar"
+If MSI isn't configured device ROM program expects
+legacy interrupts to be enabled before it can
+fully boot. Don't forget to disable legacy
+interrupts after that.
 
-Signed-off-by: Paul McQuade <paulmcquad@gmail.com>
+While at it re-use the legacy irq enabling helper
+instead of calling ath10k_pci_write32().
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/staging/rtl8723au/core/rtw_cmd.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/ath10k/pci.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_cmd.c b/drivers/staging/rtl8723au/core/rtw_cmd.c
-index 4eaa502..fef5841 100644
---- a/drivers/staging/rtl8723au/core/rtw_cmd.c
-+++ b/drivers/staging/rtl8723au/core/rtw_cmd.c
-@@ -599,7 +599,7 @@ exit:
- 	return res;
- }
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 730bb18..6077095 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -2279,14 +2279,13 @@ static int ath10k_pci_wait_for_target_init(struct ath10k *ar)
  
--int rtw_disassoc_cmd23a(struct rtw_adapter*padapter, u32 deauth_timeout_ms,
-+int rtw_disassoc_cmd23a(struct rtw_adapter *padapter, u32 deauth_timeout_ms,
- 			bool enqueue)
- {
- 	struct cmd_obj *cmdobj = NULL;
-@@ -786,7 +786,7 @@ exit:
- 	return res;
- }
+ 		if (ar_pci->num_msi_intrs == 0)
+ 			/* Fix potential race by repeating CORE_BASE writes */
+-			ath10k_pci_write32(ar, SOC_CORE_BASE_ADDRESS +
+-					   PCIE_INTR_ENABLE_ADDRESS,
+-					   PCIE_INTR_FIRMWARE_MASK |
+-					   PCIE_INTR_CE_MASK_ALL);
++			ath10k_pci_enable_legacy_irq(ar);
  
--int rtw_addbareq_cmd23a(struct rtw_adapter*padapter, u8 tid, u8 *addr)
-+int rtw_addbareq_cmd23a(struct rtw_adapter *padapter, u8 tid, u8 *addr)
- {
- 	struct cmd_priv *pcmdpriv = &padapter->cmdpriv;
- 	struct cmd_obj *ph2c;
-@@ -822,7 +822,7 @@ exit:
- 	return res;
- }
+ 		mdelay(10);
+ 	} while (time_before(jiffies, timeout));
  
--int rtw_dynamic_chk_wk_cmd23a(struct rtw_adapter*padapter)
-+int rtw_dynamic_chk_wk_cmd23a(struct rtw_adapter *padapter)
- {
- 	struct cmd_obj *ph2c;
- 	struct drvextra_cmd_parm *pdrvextra_cmd_parm;
-@@ -859,7 +859,7 @@ exit:
-  * This is only ever called from on_action_spct23a_ch_switch () which isn't
-  * called from anywhere itself
-  */
--int rtw_set_ch_cmd23a(struct rtw_adapter*padapter, u8 ch, u8 bw, u8 ch_offset,
-+int rtw_set_ch_cmd23a(struct rtw_adapter *padapter, u8 ch, u8 bw, u8 ch_offset,
- 		      u8 enqueue)
- {
- 	struct cmd_obj *pcmdobj;
-@@ -1098,7 +1098,7 @@ exit:
- 	return res;
- }
- 
--int rtw_ps_cmd23a(struct rtw_adapter*padapter)
-+int rtw_ps_cmd23a(struct rtw_adapter *padapter)
- {
- 	struct cmd_obj *ppscmd;
- 	struct drvextra_cmd_parm *pdrvextra_cmd_parm;
-@@ -1168,7 +1168,7 @@ static void rtw_chk_hi_queue_hdl(struct rtw_adapter *padapter)
- 	}
- }
- 
--int rtw_chk_hi_queue_cmd23a(struct rtw_adapter*padapter)
-+int rtw_chk_hi_queue_cmd23a(struct rtw_adapter *padapter)
- {
- 	struct cmd_obj *ph2c;
- 	struct drvextra_cmd_parm *pdrvextra_cmd_parm;
++	ath10k_pci_disable_and_clear_legacy_irq(ar);
++
+ 	if (val == 0xffffffff) {
+ 		ath10k_err(ar, "failed to read device register, device is gone\n");
+ 		return -EIO;
 -- 
-1.9.1
+1.8.5.3
 
