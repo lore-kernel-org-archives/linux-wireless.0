@@ -1,65 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:39764 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932384AbaJ2Lu6 (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:59747 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753055AbaJTJlD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2014 07:50:58 -0400
-Received: by mail-wi0-f172.google.com with SMTP id bs8so1433225wib.5
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2014 04:50:57 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eyal Shapira <eyal@wizery.com>,
-	Eyal Shapira <eyalx.shapira@intel.com>,
-	Arik Nemtsov <arikx.nemtsov@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 01/25] iwlwifi: rs: option to easily disable Tx MIMO
-Date: Wed, 29 Oct 2014 13:50:22 +0200
-Message-Id: <1414583446-11032-1-git-send-email-egrumbach@gmail.com> (sfid-20141029_125101_119160_C4C944EF)
-In-Reply-To: <CANUX_P0TURG9GNMRUOTGFfh=qzSNKkDh9Gm7Asq5jXr=0gQgLg@mail.gmail.com>
-References: <CANUX_P0TURG9GNMRUOTGFfh=qzSNKkDh9Gm7Asq5jXr=0gQgLg@mail.gmail.com>
+	Mon, 20 Oct 2014 05:41:03 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <21572.55536.308167.684155@gargle.gargle.HOWL> (sfid-20141020_114114_947318_28D77153)
+Date: Mon, 20 Oct 2014 15:12:08 +0530
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] cfg80211: Warn once for delayed scan completion
+In-Reply-To: <1413797588.10246.3.camel@jlt4.sipsolutions.net>
+References: <1413385042-17903-1-git-send-email-sujith@msujith.org>
+	<CANUX_P02O-JSQkVvBCg6L9jf8wPyzPv8O_qsZa+prTJJx+20UA@mail.gmail.com>
+	<21568.29077.518022.812356@gargle.gargle.HOWL>
+	<1413797588.10246.3.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+Johannes Berg wrote:
+> Those commits say they *fix* the race though, so in case I was wrong you
+> should report the sequence of events so we can look at fixing it
+> properly?
 
-The current TLC isn't optimized for low latency and some devices
-have issues with MIMO. This kind of combo creates latency issues.
-Allow to temporarily disable MIMO for tests in order to solve
-the latency issues without the added complexity of MIMO.
+The commits fix both the issues (use-after-free, new scan) correctly,
+so I don't see a race ? If the driver is slow in notifying scan completion
+and the interface is removed in the meantime, this warning is hit.
 
-Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
-Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/constants.h | 1 +
- drivers/net/wireless/iwlwifi/mvm/rs.c        | 3 +++
- 2 files changed, 4 insertions(+)
-
-diff --git a/drivers/net/wireless/iwlwifi/mvm/constants.h b/drivers/net/wireless/iwlwifi/mvm/constants.h
-index d4dfbe4..dfec5b5 100644
---- a/drivers/net/wireless/iwlwifi/mvm/constants.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/constants.h
-@@ -95,5 +95,6 @@
- #define IWL_MVM_FW_MCAST_FILTER_PASS_ALL	0
- #define IWL_MVM_QUOTA_THRESHOLD			8
- #define IWL_MVM_RS_RSSI_BASED_INIT_RATE         0
-+#define IWL_MVM_RS_DISABLE_MIMO			0
- 
- #endif /* __MVM_CONSTANTS_H */
-diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
-index 18a5399..0d836fe 100644
---- a/drivers/net/wireless/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
-@@ -2684,6 +2684,9 @@ void iwl_mvm_rs_rate_init(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 			lq_sta->ldpc = true;
- 	}
- 
-+	if (IWL_MVM_RS_DISABLE_MIMO)
-+		lq_sta->active_mimo2_rate = 0;
-+
- 	lq_sta->max_legacy_rate_idx = find_last_bit(&lq_sta->active_legacy_rate,
- 						    BITS_PER_LONG);
- 	lq_sta->max_siso_rate_idx = find_last_bit(&lq_sta->active_siso_rate,
--- 
-1.9.1
-
+Sujith
