@@ -1,57 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:53127 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752426AbaJYUE1 (ORCPT
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:59549 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753217AbaJTJDG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Oct 2014 16:04:27 -0400
-Received: by mail-wg0-f42.google.com with SMTP id k14so1200406wgh.25
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2014 13:04:26 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 46/48] staging: vt6655: move MAKE_BEACON_RESERVED to device.h
-Date: Sat, 25 Oct 2014 09:40:24 +0100
-Message-Id: <1414226426-5811-47-git-send-email-tvboxspy@gmail.com> (sfid-20141025_220430_553891_4969120E)
-In-Reply-To: <1414226426-5811-1-git-send-email-tvboxspy@gmail.com>
-References: <1414226426-5811-1-git-send-email-tvboxspy@gmail.com>
+	Mon, 20 Oct 2014 05:03:06 -0400
+Received: by mail-wi0-f175.google.com with SMTP id d1so6509096wiv.2
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2014 02:03:05 -0700 (PDT)
+Date: Mon, 20 Oct 2014 11:02:56 +0200
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v4 0/4] add VHT support to minstrel_ht
+Message-ID: <20141020090256.GA11871@magnum.frso.rivierawaves.com> (sfid-20141020_110311_235531_860D9597)
+References: <1413652424-14345-5-git-send-email-karl.beldan@gmail.com>
+ <1413795342-11995-1-git-send-email-karl.beldan@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1413795342-11995-1-git-send-email-karl.beldan@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Used only in function device_intr in device_main.c move macro.
+Felix, I added your Acks in the patches but git-send-email did not send
+them to the Acked-by addresses.
+ 
+Karl
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/device.h | 2 ++
- drivers/staging/vt6655/wmgr.h   | 2 --
- 2 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/staging/vt6655/device.h b/drivers/staging/vt6655/device.h
-index 42099b3..2aa42b5 100644
---- a/drivers/staging/vt6655/device.h
-+++ b/drivers/staging/vt6655/device.h
-@@ -141,6 +141,8 @@
- #define RUN_AT(x)                       (jiffies+(x))
- #endif
- 
-+#define MAKE_BEACON_RESERVED	10  /* (us) */
-+
- // DMA related
- #define RESERV_AC0DMA                   4
- 
-diff --git a/drivers/staging/vt6655/wmgr.h b/drivers/staging/vt6655/wmgr.h
-index daf996c..ea23c79 100644
---- a/drivers/staging/vt6655/wmgr.h
-+++ b/drivers/staging/vt6655/wmgr.h
-@@ -54,8 +54,6 @@
- 
- #define DEFAULT_MGN_LIFETIME            8    // ms
- 
--#define MAKE_BEACON_RESERVED            10  //(us)
--
- #define TIM_MULTICAST_MASK           0x01
- #define TIM_BITMAPOFFSET_MASK        0xFE
- #define DEFAULT_DTIM_PERIOD             1
--- 
-1.9.1
-
+On Mon, Oct 20, 2014 at 10:55:38AM +0200, Karl Beldan wrote:
+> From: Karl Beldan <karl.beldan@rivierawaves.com>
+> 
+> Hi,
+> 
+> This is just a respin rebased on v2 of "mac80211: minstrels: fix buffer
+> overflow in HT debugfs" which only affects 4/4.
+> 
