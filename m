@@ -1,52 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailrelay001.isp.belgacom.be ([195.238.6.51]:35453 "EHLO
-	mailrelay001.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751739AbaJOTBZ (ORCPT
+Received: from mail-lb0-f169.google.com ([209.85.217.169]:52282 "EHLO
+	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750957AbaJTMen (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Oct 2014 15:01:25 -0400
-From: Fabian Frederick <fabf@skynet.be>
-To: linux-kernel@vger.kernel.org
-Cc: Fabian Frederick <fabf@skynet.be>,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 1/1 net-next] NFC: digital: use sizeof(*target) instead of nfc_target
-Date: Wed, 15 Oct 2014 21:01:20 +0200
-Message-Id: <1413399680-8338-1-git-send-email-fabf@skynet.be> (sfid-20141015_210145_028992_3BC2B37A)
+	Mon, 20 Oct 2014 08:34:43 -0400
+Received: by mail-lb0-f169.google.com with SMTP id 10so3800247lbg.0
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2014 05:34:42 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 2/3] ath10k: expose hw restart via debugfs
+Date: Mon, 20 Oct 2014 14:22:37 +0200
+Message-Id: <1413807758-30249-3-git-send-email-michal.kazior@tieto.com> (sfid-20141020_143448_565313_EE1C5992)
+In-Reply-To: <1413807758-30249-1-git-send-email-michal.kazior@tieto.com>
+References: <1413807758-30249-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-See Documentation/CodingStyle Chapter 14
+Until now it was possible to simulate soft and
+hard fw crashes but it wasn't possible to trigger
+an immediately hw restart itself (without the fw
+crash).
 
-Signed-off-by: Fabian Frederick <fabf@skynet.be>
+This can be useful when stress testing hw
+restarting stability, e.g. during heavy tx/rx
+traffic.
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- net/nfc/digital_technology.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/net/nfc/digital_technology.c b/net/nfc/digital_technology.c
-index fb58ed2d..5e94b6f 100644
---- a/net/nfc/digital_technology.c
-+++ b/net/nfc/digital_technology.c
-@@ -494,7 +494,7 @@ static void digital_in_recv_sens_res(struct nfc_digital_dev *ddev, void *arg,
- 		goto exit;
- 	}
+Notes:
+    v2:
+     * s/request/hw-restart/ [Kalle]
+
+ drivers/net/wireless/ath/ath10k/debug.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index 0d94feb..3bc526b 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -694,7 +694,8 @@ static ssize_t ath10k_read_simulate_fw_crash(struct file *file,
+ 		"To simulate firmware crash write one of the keywords to this file:\n"
+ 		"`soft` - this will send WMI_FORCE_FW_HANG_ASSERT to firmware if FW supports that command.\n"
+ 		"`hard` - this will send to firmware command with illegal parameters causing firmware crash.\n"
+-		"`assert` - this will send special illegal parameter to firmware to cause assert failure and crash.\n";
++		"`assert` - this will send special illegal parameter to firmware to cause assert failure and crash.\n"
++		"`hw-restart` - this will simply queue hw restart without fw/hw actually crashing.\n";
  
--	target = kzalloc(sizeof(struct nfc_target), GFP_KERNEL);
-+	target = kzalloc(sizeof(*target), GFP_KERNEL);
- 	if (!target) {
- 		rc = -ENOMEM;
- 		goto exit;
-@@ -693,7 +693,7 @@ static void digital_in_recv_sensb_res(struct nfc_digital_dev *ddev, void *arg,
- 	else
- 		ddev->target_fsc = digital_ats_fsc[fsci];
- 
--	target = kzalloc(sizeof(struct nfc_target), GFP_KERNEL);
-+	target = kzalloc(sizeof(*target), GFP_KERNEL);
- 	if (!target) {
- 		rc = -ENOMEM;
+ 	return simple_read_from_buffer(user_buf, count, ppos, buf, strlen(buf));
+ }
+@@ -747,6 +748,10 @@ static ssize_t ath10k_write_simulate_fw_crash(struct file *file,
+ 	} else if (!strcmp(buf, "assert")) {
+ 		ath10k_info(ar, "simulating firmware assert crash\n");
+ 		ret = ath10k_debug_fw_assert(ar);
++	} else if (!strcmp(buf, "hw-restart")) {
++		ath10k_info(ar, "user requested hw restart\n");
++		queue_work(ar->workqueue, &ar->restart_work);
++		ret = 0;
+ 	} else {
+ 		ret = -EINVAL;
  		goto exit;
 -- 
-1.9.3
+1.8.5.3
 
