@@ -1,50 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:14989 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753191AbaJWI7e (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:58453 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753088AbaJTIs3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Oct 2014 04:59:34 -0400
-Date: Thu, 23 Oct 2014 11:59:28 +0300
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <wireless-regdb@lists.infradead.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH] wireless-regdb: Fix world roaming 160 MHz to use AUTO-BW
-Message-ID: <20141023085928.GA2716@jouni.qca.qualcomm.com> (sfid-20141023_105939_985950_F2034C79)
+	Mon, 20 Oct 2014 04:48:29 -0400
+From: Sujith Manoharan <sujith@msujith.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <21572.51890.316656.229674@gargle.gargle.HOWL> (sfid-20141020_104831_674341_706D167A)
+Date: Mon, 20 Oct 2014 14:11:22 +0530
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: [PATCH 06/10] ath9k_hw: do not run NF and periodic calibration at the same time
+In-Reply-To: <1413651732-69783-6-git-send-email-nbd@openwrt.org>
+References: <1413651732-69783-1-git-send-email-nbd@openwrt.org>
+	<1413651732-69783-6-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The cfg80211 reg.c implementation rejects rules that claim to have
-maximum bandwidth that is larger than the full range. For cases that
-need to merge two rules into a single one with extended maximum
-bandwidth, AUTO-BW should be used instead.
+Felix Fietkau wrote:
+> +		if (!ar9002_hw_per_calibration(ah, chan, rxchainmask, currCal))
+> +			return 0;
+> +
+> +		ah->cal_list_curr = currCal = currCal->calNext;
+> +		if (currCal->calState == CAL_WAITING) {
+> +			ath9k_hw_reset_calibration(ah, currCal);
+> +			return 0;
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
----
- db.txt | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Won't this break things if longcal is set, since other types like
+PA/OLC etc. need to be run in that case.
 
-diff --git a/db.txt b/db.txt
-index f0e4312..1e5863f 100644
---- a/db.txt
-+++ b/db.txt
-@@ -6,9 +6,9 @@ country 00:
- 	# Channel 14. Only JP enables this and for 802.11b only
- 	(2474 - 2494 @ 20), (20), NO-IR, NO-OFDM
- 	# Channel 36 - 48
--	(5170 - 5250 @ 160), (20), NO-IR
-+	(5170 - 5250 @ 80), (20), NO-IR, AUTO-BW
- 	# Channel 52 - 64
--	(5250 - 5330 @ 160), (20), NO-IR, DFS
-+	(5250 - 5330 @ 80), (20), NO-IR, DFS, AUTO-BW
- 	# Channel 100 - 144
- 	(5490 - 5730 @ 160), (20), NO-IR, DFS
- 	# Channel 149 - 165
--- 
-1.9.1
-
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+Sujith
