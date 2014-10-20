@@ -1,39 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:42116 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753593AbaJHNSK (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:60380 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753494AbaJTKrF convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Oct 2014 09:18:10 -0400
-Date: Wed, 8 Oct 2014 16:17:39 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Julia Lawall <julia.lawall@lip6.fr>
-Cc: devel@driverdev.osuosl.org, kernel-janitors@vger.kernel.org,
-	Jes Sorensen <Jes.Sorensen@redhat.com>,
-	linux-wireless@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Joe Perches <joe@perches.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [patch] staging: rtl8723au: incorrect use of ether_addr_copy()
-Message-ID: <20141008131739.GD26918@mwanda> (sfid-20141008_151816_587060_BB372C8C)
-References: <20141008104014.GA23096@mwanda>
- <1412771171.3438.25.camel@joe-AO725>
- <20141008124631.GC26918@mwanda>
- <alpine.DEB.2.10.1410081449160.2441@hadrien>
-MIME-Version: 1.0
+	Mon, 20 Oct 2014 06:47:05 -0400
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.DEB.2.10.1410081449160.2441@hadrien>
+Mime-Version: 1.0 (Mac OS X Mail 8.0 \(1990.1\))
+Subject: Re: [PATCH net-next] Allow to set net namespace for wireless device via RTM_LINK
+From: Marcel Holtmann <marcel@holtmann.org>
+In-Reply-To: <1413798437.10246.12.camel@jlt4.sipsolutions.net>
+Date: Mon, 20 Oct 2014 12:46:58 +0200
+Cc: vadim4j@gmail.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Message-Id: <128188DF-5A9B-47A5-8A89-974CF7CF9064@holtmann.org> (sfid-20141020_124710_057153_DD62BE58)
+References: <1410467723-2550-1-git-send-email-vadim4j@gmail.com> <1411075535.2034.5.camel@jlt4.sipsolutions.net> <20141014121627.GA5115@angus-think.lan> <1413798437.10246.12.camel@jlt4.sipsolutions.net>
+To: Johannes Berg <johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 08, 2014 at 02:50:50PM +0200, Julia Lawall wrote:
-> Couldn't you just use your favorite matching tool, collect the file names,
-> compile them, run pahole, and process the output in some way?  It doesn't
-> give a complete analysis (you don't find all problems), but if you find a
-> problem it is a real problem.
+Hi Johannes,
 
-Well...  You would be better off using Smatch than pahole.  And
-obviously I did try something like this, but it's fairly tricky.
+>> The reason for this was to make possible to change netns for wireless
+>> dev via 'ip link' too like for 'iw' util. I just think that changing
+>> namespace for netdev should have the generic way. May be you can suggest
+>> a better way
+> 
+> That's a respectable goal, but I think you're way overshooting it and
+> thus getting it wrong. You're changing the semantics from
+> 
+> "please switch this interface to that other netns"
+> 
+> to
+> "please switch this interface *and all others on this HW* to that other
+> netns"
+> 
+> which is, in my opinion, something so much more unexpected and prone to
+> breaking people's setups than returning "not supported" here.
 
-regards,
-dan carpenter
+this is just me thinking out loud and by no means any recommendation on doing this. I am not even sure this is a good idea.
+
+Maybe relaxing the check and allow ip link to move a wireless netdev into a namespace (and having the wiphy follow) could be allowed if it is the only netdev or the original wlan0 that each wiphy creates. I really do not know if this is worth it, but for some simpler container cases it could be beneficial if RTNL can be used instead of having to go through nl80211.
+
+Regards
+
+Marcel
 
