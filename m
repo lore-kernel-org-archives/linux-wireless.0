@@ -1,42 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:42469 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751626AbaJ3Hh3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Oct 2014 03:37:29 -0400
-Message-ID: <1414654645.1823.0.camel@jlt4.sipsolutions.net> (sfid-20141030_083732_274928_6C06326E)
-Subject: Re: [PATCH net-next] mac80211: fix spelling errors
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stephen Hemminger <stephen@networkplumber.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 30 Oct 2014 08:37:25 +0100
-In-Reply-To: <20141029225558.1422bc2f@urahara> (sfid-20141030_065609_890618_2EAB83A5)
-References: <20141029225558.1422bc2f@urahara>
-	 (sfid-20141030_065609_890618_2EAB83A5)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from s72.web-hosting.com ([198.187.29.22]:53061 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752982AbaJTK0Z (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Oct 2014 06:26:25 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <21572.58249.490532.207564@gargle.gargle.HOWL> (sfid-20141020_122629_033759_85FDFBFF)
+Date: Mon, 20 Oct 2014 15:57:21 +0530
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] cfg80211: Warn once for delayed scan completion
+In-Reply-To: <1413798712.10246.14.camel@jlt4.sipsolutions.net>
+References: <1413385042-17903-1-git-send-email-sujith@msujith.org>
+	<CANUX_P02O-JSQkVvBCg6L9jf8wPyzPv8O_qsZa+prTJJx+20UA@mail.gmail.com>
+	<21568.29077.518022.812356@gargle.gargle.HOWL>
+	<1413797588.10246.3.camel@jlt4.sipsolutions.net>
+	<21572.55536.308167.684155@gargle.gargle.HOWL>
+	<1413798712.10246.14.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-10-29 at 22:55 -0700, Stephen Hemminger wrote:
-> Use codespell to find spelling errors.
+Johannes Berg wrote:
+> But the driver can/should just do it when the interface is removed from
+> it? Otherwise it has no valid way to run/continue the scan anyway?
 
-Thanks Stephen.
+cancel_hw_scan() is called before remove_interface() and if the
+interface is removed in cfg80211 before __cfg80211_scan_done() gets
+a chance to run, then this warning is hit.
 
-> --- a/net/mac802154/ieee802154_dev.c	2014-07-25 11:02:43.895028221 -0700
-> +++ b/net/mac802154/ieee802154_dev.c	2014-10-27 20:40:26.471487715 -0700
-> @@ -267,7 +267,7 @@ ieee802154_alloc_device(size_t priv_data
->  	 * +-----------------------+
->  	 *
->  	 * Due to ieee802154 layer isn't aware of driver and MAC structures,
-> -	 * so lets allign them here.
-> +	 * so lets align them here.
->  	 */
->  
->  	priv_size = ALIGN(sizeof(*priv), NETDEV_ALIGN) + priv_data_len;
+a617302c531eaf497ccd02a61d380efc119ba999 mentions that the work item
+cannot be flushed and prevents a use-after-free crash.
 
-I'll take the rest, but can you resend this bit to the right 802.15.4
-folks?
-
-Thanks,
-johannes
-
+Sujith
