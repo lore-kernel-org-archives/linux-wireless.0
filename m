@@ -1,47 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:14042 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757928AbaJaMsw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Oct 2014 08:48:52 -0400
-From: Jukka Rissanen <jukka.rissanen@linux.intel.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH v3 0/2] Add mcast event when hwsim radios are created and removed
-Date: Fri, 31 Oct 2014 14:48:46 +0200
-Message-Id: <1414759728-20659-1-git-send-email-jukka.rissanen@linux.intel.com> (sfid-20141031_134855_666933_1CBEAE42)
+Received: from mail-la0-f42.google.com ([209.85.215.42]:41052 "EHLO
+	mail-la0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752286AbaJTNy0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Oct 2014 09:54:26 -0400
+Received: by mail-la0-f42.google.com with SMTP id gf13so4430378lab.15
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2014 06:54:23 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 7/9] ath10k: add extra sanity check when popping amsdu
+Date: Mon, 20 Oct 2014 15:40:36 +0200
+Message-Id: <1413812438-14640-8-git-send-email-michal.kazior@tieto.com> (sfid-20141020_155436_339795_73161A73)
+In-Reply-To: <1413812438-14640-1-git-send-email-michal.kazior@tieto.com>
+References: <1413812438-14640-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+The netbuf pop can return NULL. Make sure to check
+for that. It shouldn't happen but better safe than
+sorry.
 
-v3:
-- rebased on top of the latest changes in upstream
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-v2:
-- removed old patch 1 as that is already applied
-- added suitable prefixes to new function names
-- refactored the patch 1 so that multicast message building is
-  separated into a more generic function
-- instead of passing radio parameters (6 pcs) into different functions
-  separately, a struct is used instead
-
-v1:
-patch 1 renames HWSIM_CMD_CREATE_RADIO to HWSIM_CMD_NEW_RADIO and
-HWSIM_CMD_DESTROY_RADIO to HWSIM_CMD_DEL_RADIO. They are more
-fitting on how other pieces of the wireless system work. A define
-to old name is provided for backward compatibility.
-
-Patches 2 and 3 use the newly named enums and provide a way to inform
-the listeners on the multicast group "config" when new radio is created
-and existing radio is deleted.
-
-
-Jukka Rissanen (2):
-  mac80211-hwsim: Provide multicast event for HWSIM_CMD_NEW_RADIO
-  mac80211-hwsim: Provide multicast event for HWSIM_CMD_DEL_RADIO
-
- drivers/net/wireless/mac80211_hwsim.c | 329 +++++++++++++++++++++++++---------
- 1 file changed, 245 insertions(+), 84 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 7fa4d87..ddb9fe9 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -428,6 +428,15 @@ static int ath10k_htt_rx_amsdu_pop(struct ath10k_htt *htt,
+ 		while (msdu_chained--) {
+ 			struct sk_buff *next = ath10k_htt_rx_netbuf_pop(htt);
+ 
++			if (!next) {
++				ath10k_err(ar, "failed to pop chained msdu\n");
++				ath10k_htt_rx_free_msdu_chain(*head_msdu);
++				*head_msdu = NULL;
++				msdu = NULL;
++				htt->rx_confused = true;
++				break;
++			}
++
+ 			skb_trim(next, 0);
+ 			skb_put(next, min(msdu_len, HTT_RX_BUF_SIZE));
+ 			msdu_len -= next->len;
 -- 
-1.8.3.1
+1.8.5.3
 
