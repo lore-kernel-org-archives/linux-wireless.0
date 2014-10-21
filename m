@@ -1,32 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:57074 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751863AbaJIJG2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2014 05:06:28 -0400
-Message-ID: <1412845586.1828.27.camel@jlt4.sipsolutions.net> (sfid-20141009_110632_522861_4A9CCF76)
-Subject: Re: [PATCH] mac80211/trivial: fix typo in starting baserate for
- rts_cts_rate_idx
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Karl Beldan <karl.beldan@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@rivierawaves.com>
-Date: Thu, 09 Oct 2014 11:06:26 +0200
-In-Reply-To: <1412690018-18429-1-git-send-email-karl.beldan@gmail.com> (sfid-20141007_155400_521821_8DEC99D2)
-References: <1412690018-18429-1-git-send-email-karl.beldan@gmail.com>
-	 (sfid-20141007_155400_521821_8DEC99D2)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ob0-f180.google.com ([209.85.214.180]:38347 "EHLO
+	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751767AbaJUIoc convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Oct 2014 04:44:32 -0400
+Received: by mail-ob0-f180.google.com with SMTP id va2so579628obc.25
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Oct 2014 01:44:31 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1413880639.3505396.181432165.323FB850@webmail.messagingengine.com>
+References: <1413463736.1316541.179720977.4FD32021@webmail.messagingengine.com>
+	<1413510814.22769.6.camel@dcbw.local>
+	<1413751717.2510219.180809145.0E693C29@webmail.messagingengine.com>
+	<CANUX_P2RHVRorVABRfWVg39d4D8dj35v3fBpY3=3jvQ1U+mfEA@mail.gmail.com>
+	<1413783023.2710583.180921653.10DFFCEE@webmail.messagingengine.com>
+	<CANUX_P0Q7cNeBzQa=2WVZFJXPTLx8F6YQk9bGCf_3uYhc5RcGA@mail.gmail.com>
+	<CANUX_P3EqgTX7cPJvQ3fWH1yijekE0G_8TiH2_OCS7nFASGtkA@mail.gmail.com>
+	<1413789724.3063896.180943829.3F15F453@webmail.messagingengine.com>
+	<CANUX_P1REqkSqN0dtak34OQ_pSGMtPvV3Vj61tW5wb1+n2A7mg@mail.gmail.com>
+	<1413833365.2949853.181221645.22D54845@webmail.messagingengine.com>
+	<CANUX_P3XzYBp7E=hScmc837TpuCr9VrxEYauG=sGMKfOCpX=qA@mail.gmail.com>
+	<54461740.5000903@openwrt.org>
+	<1413879792.3500640.181427549.198E9452@webmail.messagingengine.com>
+	<54461AEF.7040304@openwrt.org>
+	<1413880639.3505396.181432165.323FB850@webmail.messagingengine.com>
+Date: Tue, 21 Oct 2014 11:44:31 +0300
+Message-ID: <CANUX_P2zPyRo8GZ7091EGg=3pD_RZq-Y8aRNYwpc=8Xs1JJtcw@mail.gmail.com> (sfid-20141021_104437_978082_AF7C0D25)
+Subject: Re: iwlwifi: Reason 7 periodic disconnect
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: =?UTF-8?Q?Lauren=C8=9Biu_Nicola?= <lnicola@dend.ro>
+Cc: Felix Fietkau <nbd@openwrt.org>, Dan Williams <dcbw@redhat.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-10-07 at 15:53 +0200, Karl Beldan wrote:
-> From: Karl Beldan <karl.beldan@rivierawaves.com>
+On Tue, Oct 21, 2014 at 11:37 AM, Laurențiu Nicola <lnicola@dend.ro> wrote:
+> Perhaps I'm not looking at the right log :). Do you mean enabling syslog
+> and /tmp/var/log/messages?
+>
+> Laurentiu
+>
+> On Tue, Oct 21, 2014, at 11:35, Felix Fietkau wrote:
+>> On 2014-10-21 10:23, Laurențiu Nicola wrote:
+>> > It's an ASUS RT-N66U running NEWD-2/K3X from r24160.
+>> This is a Broadcom based device, so it should behave in the same way as
+>> other APs/Routers running the Broadcom drivers.
+>> The driver should only send Reason 7 when receiving a PS-Poll, BlockAck,
+>> BlockAckReq or Action frame from a station that's not associated, so
+>> probably it has already kicked out your iwlwifi client earlier. Not sure
+>> why that doesn't show up in the log though.
+>>
 
-Is that really trivial? It seems to have some impact on the code, but I
-can't right now say exactly what the impact is. Can you describe it and
-say whether I should add it to mac80211 or mac80211-next? For "trivial"
-I'd probably say mac80211-next, but this might be more important than
-that?
+Note that it kicks iwlwifi after 1 minute - this seems short?
 
-johannes
-
+>> - Felix
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+>> in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
