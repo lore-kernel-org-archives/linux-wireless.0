@@ -1,72 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:44872 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750750AbaJUGgq convert rfc822-to-8bit (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:47248 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932685AbaJUOGp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Oct 2014 02:36:46 -0400
-Received: by mail-wi0-f173.google.com with SMTP id fb4so9059176wid.6
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2014 23:36:42 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CANUX_P06VvZ0uugayOvhZK0iM-NetftN5rZA27TtkYku66cGXA@mail.gmail.com>
-References: <1413463736.1316541.179720977.4FD32021@webmail.messagingengine.com>
- <1413510814.22769.6.camel@dcbw.local> <1413751717.2510219.180809145.0E693C29@webmail.messagingengine.com>
- <CANUX_P2RHVRorVABRfWVg39d4D8dj35v3fBpY3=3jvQ1U+mfEA@mail.gmail.com>
- <1413783023.2710583.180921653.10DFFCEE@webmail.messagingengine.com>
- <CANUX_P0Q7cNeBzQa=2WVZFJXPTLx8F6YQk9bGCf_3uYhc5RcGA@mail.gmail.com>
- <CANUX_P3EqgTX7cPJvQ3fWH1yijekE0G_8TiH2_OCS7nFASGtkA@mail.gmail.com>
- <1413789724.3063896.180943829.3F15F453@webmail.messagingengine.com>
- <CANUX_P1REqkSqN0dtak34OQ_pSGMtPvV3Vj61tW5wb1+n2A7mg@mail.gmail.com>
- <1413833365.2949853.181221645.22D54845@webmail.messagingengine.com>
- <CANUX_P3XzYBp7E=hScmc837TpuCr9VrxEYauG=sGMKfOCpX=qA@mail.gmail.com> <CANUX_P06VvZ0uugayOvhZK0iM-NetftN5rZA27TtkYku66cGXA@mail.gmail.com>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Tue, 21 Oct 2014 12:06:22 +0530
-Message-ID: <CABPxzYJmhE8wodzoVDbx=inrAusP1NLCjcj0+R7MUmQhUFcyUA@mail.gmail.com> (sfid-20141021_083649_657576_356BDC44)
-Subject: Re: iwlwifi: Reason 7 periodic disconnect
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: =?UTF-8?Q?Lauren=C8=9Biu_Nicola?= <lnicola@dend.ro>,
-	Dan Williams <dcbw@redhat.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 21 Oct 2014 10:06:45 -0400
+Received: by mail-lb0-f174.google.com with SMTP id p9so1071279lbv.5
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Oct 2014 07:06:44 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH 1/2] ath10k: remove tsf argument from rx_desc tracing
+Date: Tue, 21 Oct 2014 15:54:59 +0200
+Message-Id: <1413899700-10717-2-git-send-email-michal.kazior@tieto.com> (sfid-20141021_160649_516764_8B2AD04B)
+In-Reply-To: <1413899700-10717-1-git-send-email-michal.kazior@tieto.com>
+References: <1413899700-10717-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 21, 2014 at 11:01 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
-> On Tue, Oct 21, 2014 at 8:02 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
->> On Mon, Oct 20, 2014 at 10:29 PM, Laurențiu Nicola <lnicola@dend.ro> wrote:
->>> No, nothing in the DD-WRT syslog. The IP seems to be the one cached by
->>> my DHCP client. I also tried various suggestions found on the internet,
->>> but nothing helped.
->>>
->>
->> Can you please try to have another device in monitor mode to sniff the
->> traffic going on?
->> Felix, can you please tell me when DD-WRT can send a deauth with reason code 7?
->>
->> thanks.
->
-> Can you please disable power save?
-> For this, please make sure you have
-> https://git.kernel.org/cgit/linux/kernel/git/iwlwifi/iwlwifi-fixes.git/commit/?id=f8dfc607b2b460e8e8adfdfb3c5f5bba3a4ad01b
-> or at least have the module parameter.
-> I am wondering if the firmware is not sending frames because of power
-> save toggling.
->
-> I you could get more extensive logs from the AP it'd be great.
-> Running tracing on the AP would let us know why it thinks we are not associated.
->
-I have faced the same issue before it happens when DUT is in powersave
-and for some reason AP authenticates (in this case probably due to
-inactivity) but as DUT is in power save we don't Rx the deauth (some
-AP's don't wait
-for STA to wakeup and retrieve the deauth frame).
+Fundamtenally this was wrong. Tsf is only valid
+in first MPDU of a PPDU. This means tsf value was
+wrong most of the time during heavy traffic.
 
-So after that if DUT tries to sent any data frame, as it still thinks
-that it is connected
-(network lost also will not trigger because it still Rx beacon) and in
-that case AP deauthenticates
-us by Reason:7.
+Also I don't see much point in exposing a
+redundant (and broken) tsf value. Userspace can
+already read it from the dumped rx descriptor
+buffer.
 
-May be if we enable tx status report ACK we can pass the inactivity
-check as some AP's
-wont reset inactivity timer for probe's.
+Cc: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 4 +---
+ drivers/net/wireless/ath/ath10k/trace.h  | 9 +++------
+ 2 files changed, 4 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index fbb3175..d3741b4 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -319,7 +319,6 @@ static int ath10k_htt_rx_amsdu_pop(struct ath10k_htt *htt,
+ 	int msdu_len, msdu_chaining = 0;
+ 	struct sk_buff *msdu, *next;
+ 	struct htt_rx_desc *rx_desc;
+-	u32 tsf;
+ 
+ 	lockdep_assert_held(&htt->rx_ring.lock);
+ 
+@@ -451,8 +450,7 @@ static int ath10k_htt_rx_amsdu_pop(struct ath10k_htt *htt,
+ 		last_msdu = __le32_to_cpu(rx_desc->msdu_end.info0) &
+ 				RX_MSDU_END_INFO0_LAST_MSDU;
+ 
+-		tsf = __le32_to_cpu(rx_desc->ppdu_end.tsf_timestamp);
+-		trace_ath10k_htt_rx_desc(ar, tsf, &rx_desc->attention,
++		trace_ath10k_htt_rx_desc(ar, &rx_desc->attention,
+ 					 sizeof(*rx_desc) - sizeof(u32));
+ 		if (last_msdu) {
+ 			msdu->next = NULL;
+diff --git a/drivers/net/wireless/ath/ath10k/trace.h b/drivers/net/wireless/ath/ath10k/trace.h
+index 9d34e7f..2409cb5 100644
+--- a/drivers/net/wireless/ath/ath10k/trace.h
++++ b/drivers/net/wireless/ath/ath10k/trace.h
+@@ -282,14 +282,13 @@ TRACE_EVENT(ath10k_htt_pktlog,
+ );
+ 
+ TRACE_EVENT(ath10k_htt_rx_desc,
+-	    TP_PROTO(struct ath10k *ar, u32 tsf, void *rxdesc, u16 len),
++	    TP_PROTO(struct ath10k *ar, void *rxdesc, u16 len),
+ 
+-	TP_ARGS(ar, tsf, rxdesc, len),
++	TP_ARGS(ar, rxdesc, len),
+ 
+ 	TP_STRUCT__entry(
+ 		__string(device, dev_name(ar->dev))
+ 		__string(driver, dev_driver_string(ar->dev))
+-		__field(u32, tsf)
+ 		__field(u16, len)
+ 		__dynamic_array(u8, rxdesc, len)
+ 	),
+@@ -297,16 +296,14 @@ TRACE_EVENT(ath10k_htt_rx_desc,
+ 	TP_fast_assign(
+ 		__assign_str(device, dev_name(ar->dev));
+ 		__assign_str(driver, dev_driver_string(ar->dev));
+-		__entry->tsf = tsf;
+ 		__entry->len = len;
+ 		memcpy(__get_dynamic_array(rxdesc), rxdesc, len);
+ 	),
+ 
+ 	TP_printk(
+-		"%s %s %u len %hu",
++		"%s %s len %hu",
+ 		__get_str(driver),
+ 		__get_str(device),
+-		__entry->tsf,
+ 		__entry->len
+ 	 )
+ );
+-- 
+1.8.5.3
+
