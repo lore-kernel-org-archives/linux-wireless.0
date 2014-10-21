@@ -1,70 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f169.google.com ([209.85.217.169]:64851 "EHLO
-	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751397AbaJZMAA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Oct 2014 08:00:00 -0400
-Received: by mail-lb0-f169.google.com with SMTP id 10so4687726lbg.0
-        for <linux-wireless@vger.kernel.org>; Sun, 26 Oct 2014 04:59:58 -0700 (PDT)
-MIME-Version: 1.0
-Date: Sun, 26 Oct 2014 19:59:58 +0800
-Message-ID: <CAFf6pmS5w5jDr6O_ut7k5P6xbd9q9q1+H4iucihO2E8rq5kGfQ@mail.gmail.com> (sfid-20141026_130005_366122_52F340E8)
-Subject: p2p doesn't work at 5GHz by using mwifiex driver
-From: QW <qiuyew@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:43611 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755274AbaJUMvE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Oct 2014 08:51:04 -0400
+Message-ID: <1413895856.1998.6.camel@jlt4.sipsolutions.net> (sfid-20141021_145108_358885_283E97FA)
+Subject: Re: [PATCH] cfg80211: Warn once for delayed scan completion
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eliad Peller <eliad@wizery.com>
+Cc: Sujith Manoharan <sujith@msujith.org>,
+	Emmanuel Grumbach <egrumbach@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 21 Oct 2014 14:50:56 +0200
+In-Reply-To: <CAB3XZEd8xCieC8xhOw=V0rHtJadYBKwe9NjwkNsmAmXqiL4ZRQ@mail.gmail.com> (sfid-20141021_142704_044572_7DA56B09)
+References: <1413385042-17903-1-git-send-email-sujith@msujith.org>
+	 <CANUX_P02O-JSQkVvBCg6L9jf8wPyzPv8O_qsZa+prTJJx+20UA@mail.gmail.com>
+	 <21568.29077.518022.812356@gargle.gargle.HOWL>
+	 <1413797588.10246.3.camel@jlt4.sipsolutions.net>
+	 <21572.55536.308167.684155@gargle.gargle.HOWL>
+	 <1413798712.10246.14.camel@jlt4.sipsolutions.net>
+	 <21572.58249.490532.207564@gargle.gargle.HOWL>
+	 <1413801423.10246.16.camel@jlt4.sipsolutions.net>
+	 <21572.60015.349942.74265@gargle.gargle.HOWL>
+	 <1413806542.10246.21.camel@jlt4.sipsolutions.net>
+	 <1413809136.24269.0.camel@jlt4.sipsolutions.net>
+	 <21573.55666.43231.68176@gargle.gargle.HOWL>
+	 <1413873729.1998.2.camel@jlt4.sipsolutions.net>
+	 <CAB3XZEd8xCieC8xhOw=V0rHtJadYBKwe9NjwkNsmAmXqiL4ZRQ@mail.gmail.com>
+	 (sfid-20141021_142704_044572_7DA56B09)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
+On Tue, 2014-10-21 at 15:27 +0300, Eliad Peller wrote:
 
-I have a wifi/BT combo module with Marvell's SD8787 dual frequency
-(2.4GHz and 5GHz) chipset on it.
+> This patch actually solves a kernel panic that can be reproduced
+> easily by increasing the delay in ieee80211_scan_completed() and
+> removing the driver right after initiating a scan - the delayed
+> scan_work never gets flushed, resulting in invalid memory access, etc.
 
-When I try to build a p2p connection with other 5Ghz capable wireless
-device (Nexus 4), the connection will never be built at 5GHz.
-Same module I install on a linux-pc platform with kernel version
-3.17.1 has no problem to build a 5G p2p connection.
+Yeah I thought about that too - we flush the workqueue but if the timer
+hasn't yet fired you can get issues.
 
-The firmware I am using is from the Marvell git repo at
-git://git.marvell.com/mwifiex-firmware.git
-Using this latest commit:
+OTOH, the delay there is 0, so the workqueue code doesn't even arm the
+timer but rather puts the work on the workqueue immediately. Therefore
+flush_work() should be enough?
 
-commit 3f45b8c4cc1eb1d102bc3486b19677332dd215ab
-Author: Avinash Patil <patila@marvell.com>
-Date:   Fri Sep 12 21:05:15 2014 +0530
+Or did you not test with something like
 
-linux-firmware: update Marvell SD8787 firmware version p52
+@@ -357,7 +357,7 @@ void ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted)
+        set_bit(SCAN_COMPLETED, &local->scanning);
+        if (aborted)
+                set_bit(SCAN_ABORTED, &local->scanning);
+-       ieee80211_queue_delayed_work(&local->hw, &local->scan_work, 0);
++       ieee80211_queue_delayed_work(&local->hw, &local->scan_work, 1);
 
-Version 14.66.35.p52
-Note that this version doesn't support BT-AMP.
-The image can be downloaded through either WLAN or Bluetooth.
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Frank Huang <frankh@marvell.com>
+johannes
 
-With iw phy phy0 info, I can see that 5GHz frequency is listed. And I
-can also use this module to connect a 5G wireless router without
-problem.
-
-The mwifiex driver is from kernel version 3.10.44, which is not
-allowed to be upgraded to the latest kernel version. I cannot use
-backports either, due to the 3.10 version.
-
-Besides, there is an sdio error occurs very often when a p2p
-connection is being built:
-
-[20525.984188] mwifiex_sdio mmc0:0001:1: 2022598 : Tx timeout(#1),
-bss_type-num = 2-0
-
-then the p2p connection will be failed to be built with the error:
-
-<3>P2P-GROUP-FORMATION-FAILURE
-<3>P2P-GROUP-REMOVED wlan0 GO reason=FORMATION_FAILED
-
-I don't know if this is related to the no-5GHz issue.
-
-Any ideas? Thanks!
-
-Cheers,
-Qiuye
