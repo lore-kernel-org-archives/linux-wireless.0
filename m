@@ -1,70 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f177.google.com ([209.85.214.177]:64168 "EHLO
-	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751642AbaJEQxh (ORCPT
+Received: from mail-wg0-f41.google.com ([74.125.82.41]:64750 "EHLO
+	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751014AbaJUImB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Oct 2014 12:53:37 -0400
-Received: by mail-ob0-f177.google.com with SMTP id uy5so2818262obc.36
-        for <linux-wireless@vger.kernel.org>; Sun, 05 Oct 2014 09:53:37 -0700 (PDT)
-Date: Sun, 5 Oct 2014 11:53:34 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFT] iwlwifi: dvm: drop non VO frames when flushing
-Message-ID: <20141005165334.GB5691@ubuntu-mba51> (sfid-20141005_185349_743394_A3EB5B79)
-References: <1412517432-16309-1-git-send-email-emmanuel.grumbach@intel.com>
+	Tue, 21 Oct 2014 04:42:01 -0400
+Received: by mail-wg0-f41.google.com with SMTP id b13so766201wgh.24
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Oct 2014 01:41:59 -0700 (PDT)
+Date: Tue, 21 Oct 2014 10:41:50 +0200
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Karl Beldan <karl.beldan@rivierawaves.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: Re: [PATCH v5 0/4] add VHT support to minstrel_ht
+Message-ID: <20141021084150.GA31151@magnum.frso.rivierawaves.com> (sfid-20141021_104207_335664_91649C4E)
+References: <1413812762-6605-1-git-send-email-karl.beldan@gmail.com>
+ <1413816546.32358.3.camel@jlt4.sipsolutions.net>
+ <20141020151302.GB7691@magnum.frso.rivierawaves.com>
+ <20141020153421.GC7691@magnum.frso.rivierawaves.com>
+ <1413833597.32358.6.camel@jlt4.sipsolutions.net>
+ <1413834035.32358.7.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1412517432-16309-1-git-send-email-emmanuel.grumbach@intel.com>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1413834035.32358.7.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Oct 05, 2014 at 04:57:12PM +0300, Emmanuel Grumbach wrote:
-> When mac80211 wants to ensure that a frame is sent, it calls
-> the flush() callback. Until now, iwldvm implemented this by
-> waiting that all the frames are sent (ACKed or timeout).
-> In case of weak signal, this can take a significant amount
-> of time, delaying the next connection (in case of roaming).
-> Many users have reported that the flush would take too long
-> leading to the following error messages to be printed:
+On Mon, Oct 20, 2014 at 09:40:35PM +0200, Johannes Berg wrote:
+> On Mon, 2014-10-20 at 21:33 +0200, Johannes Berg wrote:
+> > On Mon, 2014-10-20 at 17:34 +0200, Karl Beldan wrote:
+> > > > Indeed, will resending only 4/4 do ?
+> > 
+> > Sure.
 > 
-> iwlwifi 0000:03:00.0: fail to flush all tx fifo queues Q 2
-> iwlwifi 0000:03:00.0: Current SW read_ptr 161 write_ptr 201
-> iwl data: 00000000: 00 00 00 00 00 00 00 00 fe ff 01 00 00 00 00 00
-> [snip]
-> iwlwifi 0000:03:00.0: FH TRBs(0) = 0x00000000
-> [snip]
-> iwlwifi 0000:03:00.0: Q 0 is active and mapped to fifo 3 ra_tid 0x0000 [9,9]
-> [snip]
+> I merged patches 1-3 now.
 > 
-> Instead of waiting for these packets, simply drop them. This
-> significantly improves the responsiveness of the network.
-> Note that all the queues are flushed, but the VO one. This
-> is not typically used by the applications and it likely
-> contains management frames that are useful for connection
-> or roaming.
-> 
-> This bug is tracked here:
-> https://bugzilla.kernel.org/show_bug.cgi?id=56581
-> 
-> But it is duplicated in distributions' trackers.
-> A simple search in Ubuntu's database led to these bugs:
-> 
-> https://bugs.launchpad.net/ubuntu/+source/linux-firmware/+bug/1270808
-> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1305406
-> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1356236
-> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1360597
-> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1361809
-> 
-> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> ---
-> I am trying here to fix an issues that has been affecting many users on dvm.
-> A few users in bugzilla already reported that this patch helped them a lot.
-> I am trying to get more testers :)
-
-I'll post test builds to the Ubuntu bugs and see if I can get any
-testing.
-
-Thanks,
-Seth
-
+Thanks.
+ 
+karl
