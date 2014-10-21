@@ -1,37 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f49.google.com ([74.125.82.49]:47505 "EHLO
-	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750721AbaJOUw2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Oct 2014 16:52:28 -0400
-MIME-Version: 1.0
-In-Reply-To: <20141009095939.GB20875@mwanda>
-References: <20141009095939.GB20875@mwanda>
-Date: Wed, 15 Oct 2014 13:52:27 -0700
-Message-ID: <CA++WF2N4v20EqEaH-DnKAEzn4PwHWQHBEq6=Uthf7TsRZpimEg@mail.gmail.com> (sfid-20141015_225233_501200_B9B89554)
-Subject: Re: [patch 2/2] ipw2x00: clean up a condition
-From: Stanislav Yakovlev <stas.yakovlev@gmail.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	kernel-janitors@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:45303 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932402AbaJUTGS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Oct 2014 15:06:18 -0400
+Message-ID: <1413918366.1998.10.camel@jlt4.sipsolutions.net> (sfid-20141021_210642_242595_7083D3CB)
+Subject: Re: [PATCH 1/1 net-next] mac80211: remove unnecessary null test
+ before debugfs_remove
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Fabian Frederick <fabf@skynet.be>
+Cc: linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Date: Tue, 21 Oct 2014 21:06:06 +0200
+In-Reply-To: <1413908412-5177-1-git-send-email-fabf@skynet.be>
+References: <1413908412-5177-1-git-send-email-fabf@skynet.be>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Dan,
+On Tue, 2014-10-21 at 18:20 +0200, Fabian Frederick wrote:
+> Fix checkpatch warnings:
+> 
+>     WARNING: debugfs_remove(NULL) is safe this check is probably not required
 
-On 9 October 2014 02:59, Dan Carpenter <dan.carpenter@oracle.com> wrote:
-> The original condition was "(PAGE_SIZE - len)" when "(len < PAGE_SIZE)"
-> is intended.
->
-> This condition is not really sufficient, but also not really needed...
-> If "len > PAGE_SIZE" then it we will print a warning message in dmesg
-> but there are no other effects.  Maybe we should just remove the
-> condition?
->
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+I'll apply this; however, I think that checkpatch is a just tool, and
+the commit message should reflect why you're changing the code.
+Presumably you're not doing it to make the tool happy, but to address an
+issue that the tool pointed out, so I think in most cases the commit
+message should state the former, not the latter.
 
-Looks fine, thanks.
+Note that in this particular case the NULL check check could be there to
+avoid a memory write (which can be significant depending on the context)
+so blindly doing what the tool suggested wouldn't always be a good idea.
 
-Stanislav.
+johannes
+
