@@ -1,87 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f43.google.com ([209.85.215.43]:48629 "EHLO
-	mail-la0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752629AbaJTNyW (ORCPT
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:32909 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751082AbaJUHXL convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2014 09:54:22 -0400
-Received: by mail-la0-f43.google.com with SMTP id mc6so3968164lab.2
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2014 06:54:20 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 5/9] ath10k: deduplicate htt rx dma unmapping
-Date: Mon, 20 Oct 2014 15:40:34 +0200
-Message-Id: <1413812438-14640-6-git-send-email-michal.kazior@tieto.com> (sfid-20141020_155429_929979_7A923693)
-In-Reply-To: <1413812438-14640-1-git-send-email-michal.kazior@tieto.com>
-References: <1413812438-14640-1-git-send-email-michal.kazior@tieto.com>
+	Tue, 21 Oct 2014 03:23:11 -0400
+Received: by mail-wi0-f181.google.com with SMTP id hi2so932288wib.8
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Oct 2014 00:23:09 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CANUX_P1eb-C9yK-JGHgp_dc6uJzkDA=GYzKf+CFF50cqv0pVMQ@mail.gmail.com>
+References: <1413463736.1316541.179720977.4FD32021@webmail.messagingengine.com>
+ <1413510814.22769.6.camel@dcbw.local> <1413751717.2510219.180809145.0E693C29@webmail.messagingengine.com>
+ <CANUX_P2RHVRorVABRfWVg39d4D8dj35v3fBpY3=3jvQ1U+mfEA@mail.gmail.com>
+ <1413783023.2710583.180921653.10DFFCEE@webmail.messagingengine.com>
+ <CANUX_P0Q7cNeBzQa=2WVZFJXPTLx8F6YQk9bGCf_3uYhc5RcGA@mail.gmail.com>
+ <CANUX_P3EqgTX7cPJvQ3fWH1yijekE0G_8TiH2_OCS7nFASGtkA@mail.gmail.com>
+ <1413789724.3063896.180943829.3F15F453@webmail.messagingengine.com>
+ <CANUX_P1REqkSqN0dtak34OQ_pSGMtPvV3Vj61tW5wb1+n2A7mg@mail.gmail.com>
+ <1413833365.2949853.181221645.22D54845@webmail.messagingengine.com>
+ <CANUX_P3XzYBp7E=hScmc837TpuCr9VrxEYauG=sGMKfOCpX=qA@mail.gmail.com>
+ <CANUX_P06VvZ0uugayOvhZK0iM-NetftN5rZA27TtkYku66cGXA@mail.gmail.com>
+ <CABPxzYJmhE8wodzoVDbx=inrAusP1NLCjcj0+R7MUmQhUFcyUA@mail.gmail.com>
+ <CABPxzYJkh7fV6kXhYZvbH7PBHJNBsz0DwshpZFmcDPifwXe6fQ@mail.gmail.com> <CANUX_P1eb-C9yK-JGHgp_dc6uJzkDA=GYzKf+CFF50cqv0pVMQ@mail.gmail.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Tue, 21 Oct 2014 12:52:49 +0530
+Message-ID: <CABPxzY+twpNpERES75MjVjaqGo5WKd2Rze4NH_hwCQGuqsUPxg@mail.gmail.com> (sfid-20141021_092324_367337_D970EEA2)
+Subject: Re: iwlwifi: Reason 7 periodic disconnect
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: =?UTF-8?Q?Lauren=C8=9Biu_Nicola?= <lnicola@dend.ro>,
+	Dan Williams <dcbw@redhat.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Treat non-chained and chained popping the same
-way. Also this makes netbuf pop fully symmetrical
-to (re)filling.
+On Tue, Oct 21, 2014 at 12:34 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+> On Tue, Oct 21, 2014 at 9:37 AM, Krishna Chaitanya
+> <chaitanya.mgit@gmail.com> wrote:
+>> On Tue, Oct 21, 2014 at 12:06 PM, Krishna Chaitanya
+>> <chaitanya.mgit@gmail.com> wrote:
+>>> On Tue, Oct 21, 2014 at 11:01 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+>>>> On Tue, Oct 21, 2014 at 8:02 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+>>>>> On Mon, Oct 20, 2014 at 10:29 PM, Laurențiu Nicola <lnicola@dend.ro> wrote:
+>>>>>> No, nothing in the DD-WRT syslog. The IP seems to be the one cached by
+>>>>>> my DHCP client. I also tried various suggestions found on the internet,
+>>>>>> but nothing helped.
+>>>>>>
+>>>>>
+>>>>> Can you please try to have another device in monitor mode to sniff the
+>>>>> traffic going on?
+>>>>> Felix, can you please tell me when DD-WRT can send a deauth with reason code 7?
+>>>>>
+>>>>> thanks.
+>>>>
+>>>> Can you please disable power save?
+>>>> For this, please make sure you have
+>>>> https://git.kernel.org/cgit/linux/kernel/git/iwlwifi/iwlwifi-fixes.git/commit/?id=f8dfc607b2b460e8e8adfdfb3c5f5bba3a4ad01b
+>>>> or at least have the module parameter.
+>>>> I am wondering if the firmware is not sending frames because of power
+>>>> save toggling.
+>>>>
+>>>> I you could get more extensive logs from the AP it'd be great.
+>>>> Running tracing on the AP would let us know why it thinks we are not associated.
+>>>>
+>>> I have faced the same issue before it happens when DUT is in powersave
+>>> and for some reason AP authenticates (in this case probably due to
+>> *typo: deuauthenticates.
+>>
+>>> inactivity) but as DUT is in power save we don't Rx the deauth (some
+>>> AP's don't wait
+>>> for STA to wakeup and retrieve the deauth frame).
+>>>
+>>> So after that if DUT tries to sent any data frame, as it still thinks
+>>> that it is connected
+>>> (network lost also will not trigger because it still Rx beacon) and in
+>>> that case AP deauthenticates
+>>> us by Reason:7.
+>>>
+>>> May be if we enable tx status report ACK we can pass the inactivity
+>>> check as some AP's
+>>> wont reset inactivity timer for probe's.
+>
+> That seems unlikely - we are kicked out after 1 minute?
+> Let's check, Laurentiu - can you please ping in the background and see
+> what happens?
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/htt_rx.c | 30 +++++++++---------------------
- 1 file changed, 9 insertions(+), 21 deletions(-)
+Yeah, but some Ap's do that :-)
+Quote from Laurentiu:
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index a7d29c8..41a2803 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -291,6 +291,15 @@ static inline struct sk_buff *ath10k_htt_rx_netbuf_pop(struct ath10k_htt *htt)
- 	htt->rx_ring.sw_rd_idx.msdu_payld = idx;
- 	htt->rx_ring.fill_cnt--;
- 
-+	dma_unmap_single(htt->ar->dev,
-+			 ATH10K_SKB_CB(msdu)->paddr,
-+			 msdu->len + skb_tailroom(msdu),
-+			 DMA_FROM_DEVICE);
-+	ath10k_dbg_dump(ar, ATH10K_DBG_HTT_DUMP, NULL, "htt rx netbuf pop: ",
-+			msdu->data, msdu->len + skb_tailroom(msdu));
-+	trace_ath10k_htt_rx_pop_msdu(ar, msdu->data, msdu->len +
-+				     skb_tailroom(msdu));
-+
- 	return msdu;
- }
- 
-@@ -329,16 +338,6 @@ static int ath10k_htt_rx_amsdu_pop(struct ath10k_htt *htt,
- 	while (msdu) {
- 		int last_msdu, msdu_len_invalid, msdu_chained;
- 
--		dma_unmap_single(htt->ar->dev,
--				 ATH10K_SKB_CB(msdu)->paddr,
--				 msdu->len + skb_tailroom(msdu),
--				 DMA_FROM_DEVICE);
--
--		ath10k_dbg_dump(ar, ATH10K_DBG_HTT_DUMP, NULL, "htt rx pop: ",
--				msdu->data, msdu->len + skb_tailroom(msdu));
--		trace_ath10k_htt_rx_pop_msdu(ar, msdu->data, msdu->len +
--					     skb_tailroom(msdu));
--
- 		rx_desc = (struct htt_rx_desc *)msdu->data;
- 
- 		/* FIXME: we must report msdu payload since this is what caller
-@@ -429,17 +428,6 @@ static int ath10k_htt_rx_amsdu_pop(struct ath10k_htt *htt,
- 		while (msdu_chained--) {
- 			struct sk_buff *next = ath10k_htt_rx_netbuf_pop(htt);
- 
--			dma_unmap_single(htt->ar->dev,
--					 ATH10K_SKB_CB(next)->paddr,
--					 next->len + skb_tailroom(next),
--					 DMA_FROM_DEVICE);
--
--			ath10k_dbg_dump(ar, ATH10K_DBG_HTT_DUMP, NULL,
--					"htt rx chained: ", next->data,
--					next->len + skb_tailroom(next));
--			trace_ath10k_htt_rx_pop_msdu(ar, msdu->data, msdu->len +
--						     skb_tailroom(msdu));
--
- 			skb_trim(next, 0);
- 			skb_put(next, min(msdu_len, HTT_RX_BUF_SIZE));
- 			msdu_len -= next->len;
--- 
-1.8.5.3
+"What I found out in the meanwhile, however, is that active traffic will
+prevent the issue from occurring. This happened with the Fedora Live CD,
+but pinging the AP is also sufficient. I noticed iwconfig reports that
+the power saving mode is off."
 
+So when traffic is there the issue doesn't happen, so it points to inactivity.
