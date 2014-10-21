@@ -1,126 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:59785 "EHLO
-	out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755925AbaJXIe4 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Oct 2014 04:34:56 -0400
-Received: from compute2.internal (compute2.nyi.internal [10.202.2.42])
-	by mailout.nyi.internal (Postfix) with ESMTP id 50E1420C60
-	for <linux-wireless@vger.kernel.org>; Fri, 24 Oct 2014 04:34:55 -0400 (EDT)
-Message-Id: <1414139694.796795.182782121.5786657C@webmail.messagingengine.com> (sfid-20141024_103513_778929_ABABA22D)
-From: =?UTF-8?Q?Lauren=C8=9Biu=20Nicola?= <lnicola@dend.ro>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: poma <pomidorabelisima@gmail.com>, Dan Williams <dcbw@redhat.com>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-In-Reply-To: <CANUX_P1MAY1gGjsGsk7P-Z4GBAAO_vdikbniphf7rk1jxy9Mbw@mail.gmail.com>
-References: <1413463736.1316541.179720977.4FD32021@webmail.messagingengine.com>
- <54463CE9.3060400@gmail.com>
- <1413921415.3763081.181696749.20A0A495@webmail.messagingengine.com>
- <CANUX_P0LRRczVCSFR7RE5coaYFxwFXyqC90pdm=oVwEiEt-7zw@mail.gmail.com>
- <1414014805.4127522.182191541.14C8B4DF@webmail.messagingengine.com>
- <CANUX_P0tGagXsN6XCeb_itQehqD3O9fmqknU6iSMO432NQtATA@mail.gmail.com>
- <1414049448.32460.182326557.1A0A85A4@webmail.messagingengine.com>
- <CANUX_P3usjdccnsYPQXzKbJ1PTH91fasf6BpcsCRYZH_yq2tww@mail.gmail.com>
- <1414080125.164673.182502929.61AF3AB1@webmail.messagingengine.com>
- <CANUX_P2pJYNhLEMw=iQVe-CSbxqRDqOXL_gUZXxwpmAj2qj=FA@mail.gmail.com>
- <1414085934.228950.182543717.6FA0F16D@webmail.messagingengine.com>
- <CANUX_P0nK9AQEzYGfGFKEU_vVJ9fwOPmjGTCL--zmk+J4uCz4Q@mail.gmail.com>
- <1414093367.254547.182592325.0C3991E4@webmail.messagingengine.com>
- <CANUX_P3sTY45ozSL6Rj0PRYgo9aPACdp97HV1SQna3AW5V75xw@mail.gmail.com>
- <1414094840.260168.182602541.16435971@webmail.messagingengine.com>
- <5449621C.3070400@gmail.com>
- <1414096032.264032.182610177.3DACE1A9@webmail.messagingengine.com>
- <CANUX_P0FPDSjAzh1uJ2LxWp9H8CXJgK1sdE+HYMcrTVLNH+1Kg@mail.gmail.com>
- <CANUX_P1MAY1gGjsGsk7P-Z4GBAAO_vdikbniphf7rk1jxy9Mbw@mail.gmail.com>
-Subject: Re: iwlwifi: Reason 7 periodic disconnect
-Date: Fri, 24 Oct 2014 11:34:54 +0300
+Received: from mail-wi0-f182.google.com ([209.85.212.182]:36362 "EHLO
+	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755668AbaJUQFB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Oct 2014 12:05:01 -0400
+Received: by mail-wi0-f182.google.com with SMTP id bs8so1429981wib.3
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Oct 2014 09:04:57 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 4/8] iwlwifi: mvm: BT coex - fix BT prio for probe requests
+Date: Tue, 21 Oct 2014 19:04:35 +0300
+Message-Id: <1413907479-9073-4-git-send-email-egrumbach@gmail.com> (sfid-20141021_180512_019459_57F7DF45)
+In-Reply-To: <CANUX_P0iZO6AGwcsKO3+xZZcH5ns+vMUimo+BxHNpyBhhURKRw@mail.gmail.com>
+References: <CANUX_P0iZO6AGwcsKO3+xZZcH5ns+vMUimo+BxHNpyBhhURKRw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Okay, I've filed a bug [1].
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-At some point you mentioned about using another device to monitor
-traffic. I don't have another laptop running Linux (would Android
-count?), but DD-WRT has a "wl monitor" command [2] that sounds useful.
-Should I try to install tcpdump on my router?
+The probe requests sent during scan must get BT prio 3.
+Fix that.
 
-Laurentiu
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/scan.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-[1] https://bugzilla.kernel.org/show_bug.cgi?id=86801
-[2] http://www.dd-wrt.com/wiki/index.php/Wl#monitor
+diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
+index cb85e63..b280d5d 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/scan.c
++++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
+@@ -459,7 +459,8 @@ int iwl_mvm_scan_request(struct iwl_mvm *mvm,
+ 				basic_ssid ? 1 : 0);
+ 
+ 	cmd->tx_cmd.tx_flags = cpu_to_le32(TX_CMD_FLG_SEQ_CTL |
+-					   TX_CMD_FLG_BT_DIS);
++					   3 << TX_CMD_FLG_BT_PRIO_POS);
++
+ 	cmd->tx_cmd.sta_id = mvm->aux_sta.sta_id;
+ 	cmd->tx_cmd.life_time = cpu_to_le32(TX_CMD_LIFE_TIME_INFINITE);
+ 	cmd->tx_cmd.rate_n_flags =
+-- 
+1.9.1
 
-On Fri, Oct 24, 2014, at 08:32, Emmanuel Grumbach wrote:
-> On Thu, Oct 23, 2014 at 11:33 PM, Emmanuel Grumbach <egrumbach@gmail.com>
-> wrote:
-> > On Thu, Oct 23, 2014 at 11:27 PM, Laurențiu Nicola <lnicola@dend.ro> wrote:
-> >> https://bpaste.net/show/8a0e5c68762f
-> >>
-> >> On Thu, Oct 23, 2014, at 23:16, Emmanuel Grumbach wrote:
-> >>> > https://bpaste.net/show/5cc48256d952
-> >>> >
-> >>> > On Thu, Oct 23, 2014, at 22:55, Emmanuel Grumbach wrote:
-> >>> >> On Thu, Oct 23, 2014 at 10:42 PM, Laurențiu Nicola <lnicola@dend.ro>
-> >>> >> wrote:
-> >>> >>> Doesn't seem to help https://bpaste.net/show/68e1a6b33689.
-> >>> >>
-> >>> >> ok - let me re-add the logs...
-> >>> >>
-> >>> >>
-> >>>
-> >>> This makes no sense to me.
-> >>> We do talk to the AP since we get frames Acked...
-> >
-> > This again makes no sense to me.
-> > Time to go to bed I guess.
-> 
-> Can you please open a bug on bugzilla.kernel.org?
-> Make sure to CC ilw@linux.intel.com
-> 
-> This will make it more trackable.
-> Thanks.
-> 
-> >
-> >>>
-> >>> Can you please apply this on top of what you have?
-> >>>
-> >>> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-> >>> index 2de8870..f3b1e62 100644
-> >>> --- a/net/mac80211/mlme.c
-> >>> +++ b/net/mac80211/mlme.c
-> >>> @@ -1991,15 +1991,16 @@ void ieee80211_sta_tx_notify(struct
-> >>> ieee80211_sub_if_data *sdata,
-> >>>         if (ieee80211_is_nullfunc(hdr->frame_control) &&
-> >>>             sdata->u.mgd.probe_send_count > 0) {
-> >>>                 if (ack)
-> >>> -                       ieee80211_sta_reset_conn_monitor(sdata);
-> >>> +               //      ieee80211_sta_reset_conn_monitor(sdata);
-> >>> +               ;
-> >>>                 else
-> >>>                         sdata->u.mgd.nullfunc_failed = true;
-> >>>                 ieee80211_queue_work(&sdata->local->hw, &sdata->work);
-> >>>                 return;
-> >>>         }
-> >>>
-> >>> -       if (ack)
-> >>> -               ieee80211_sta_reset_conn_monitor(sdata);
-> >>> +//     if (ack)
-> >>> +//             ieee80211_sta_reset_conn_monitor(sdata);
-> >>>  }
-> >>>
-> >>>  static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data
-> >>>  *sdata)
-> >>>
-> >>>
-> >>> Thanks.
-> >>> --
-> >>> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
-> >>> in
-> >>> the body of a message to majordomo@vger.kernel.org
-> >>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
-> in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
