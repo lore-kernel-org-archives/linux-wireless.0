@@ -1,127 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:44680
-	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751085AbaJYWc4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Oct 2014 18:32:56 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH v2] mac80211: add support for driver tx power reporting
-Date: Sun, 26 Oct 2014 00:32:53 +0200
-Message-Id: <1414276373-45058-1-git-send-email-nbd@openwrt.org> (sfid-20141026_003300_313871_6ADB1767)
+Received: from out3-smtp.messagingengine.com ([66.111.4.27]:45411 "EHLO
+	out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753906AbaJUIXN convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Oct 2014 04:23:13 -0400
+Received: from compute6.internal (compute6.nyi.internal [10.202.2.46])
+	by gateway2.nyi.internal (Postfix) with ESMTP id 26B2D209B2
+	for <linux-wireless@vger.kernel.org>; Tue, 21 Oct 2014 04:23:12 -0400 (EDT)
+Message-Id: <1413879792.3500640.181427549.198E9452@webmail.messagingengine.com> (sfid-20141021_102319_350788_B8637EDF)
+From: =?UTF-8?Q?Lauren=C8=9Biu=20Nicola?= <lnicola@dend.ro>
+To: Felix Fietkau <nbd@openwrt.org>,
+	Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: Dan Williams <dcbw@redhat.com>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <54461740.5000903@openwrt.org>
+References: <1413463736.1316541.179720977.4FD32021@webmail.messagingengine.com>
+ <1413510814.22769.6.camel@dcbw.local>
+ <1413751717.2510219.180809145.0E693C29@webmail.messagingengine.com>
+ <CANUX_P2RHVRorVABRfWVg39d4D8dj35v3fBpY3=3jvQ1U+mfEA@mail.gmail.com>
+ <1413783023.2710583.180921653.10DFFCEE@webmail.messagingengine.com>
+ <CANUX_P0Q7cNeBzQa=2WVZFJXPTLx8F6YQk9bGCf_3uYhc5RcGA@mail.gmail.com>
+ <CANUX_P3EqgTX7cPJvQ3fWH1yijekE0G_8TiH2_OCS7nFASGtkA@mail.gmail.com>
+ <1413789724.3063896.180943829.3F15F453@webmail.messagingengine.com>
+ <CANUX_P1REqkSqN0dtak34OQ_pSGMtPvV3Vj61tW5wb1+n2A7mg@mail.gmail.com>
+ <1413833365.2949853.181221645.22D54845@webmail.messagingengine.com>
+ <CANUX_P3XzYBp7E=hScmc837TpuCr9VrxEYauG=sGMKfOCpX=qA@mail.gmail.com>
+ <54461740.5000903@openwrt.org>
+Subject: Re: iwlwifi: Reason 7 periodic disconnect
+Date: Tue, 21 Oct 2014 11:23:12 +0300
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The configured tx power is often limited by hardware capabilities,
-channel settings, antenna configuration, etc.
+It's an ASUS RT-N66U running NEWD-2/K3X from r24160.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- include/net/mac80211.h    |  5 +++++
- net/mac80211/cfg.c        |  3 +++
- net/mac80211/driver-ops.h | 14 ++++++++++++++
- net/mac80211/trace.h      | 27 +++++++++++++++++++++++++++
- 4 files changed, 49 insertions(+)
+Laurentiu
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 0ad1f47..41b0e60 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2838,6 +2838,9 @@ enum ieee80211_roc_type {
-  * @get_expected_throughput: extract the expected throughput towards the
-  *	specified station. The returned value is expressed in Kbps. It returns 0
-  *	if the RC algorithm does not have proper data to provide.
-+ *
-+ * @get_txpower: get current maximum tx power (in dBm) based on configuration
-+ *	and hardware limits.
-  */
- struct ieee80211_ops {
- 	void (*tx)(struct ieee80211_hw *hw,
-@@ -3039,6 +3042,8 @@ struct ieee80211_ops {
- 	int (*join_ibss)(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
- 	void (*leave_ibss)(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
- 	u32 (*get_expected_throughput)(struct ieee80211_sta *sta);
-+	int (*get_txpower)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-+			   int *dbm);
- };
- 
- /**
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index fb6a150..df38198 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2081,6 +2081,9 @@ static int ieee80211_get_tx_power(struct wiphy *wiphy,
- 	struct ieee80211_local *local = wiphy_priv(wiphy);
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
- 
-+	if (local->ops->get_txpower)
-+		return drv_get_txpower(local, sdata, dbm);
-+
- 	if (!local->use_chanctx)
- 		*dbm = local->hw.conf.power_level;
- 	else
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index 196d48c..78c93de 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -1238,4 +1238,18 @@ static inline u32 drv_get_expected_throughput(struct ieee80211_local *local,
- 	return ret;
- }
- 
-+static inline int drv_get_txpower(struct ieee80211_local *local,
-+				  struct ieee80211_sub_if_data *sdata, int *dbm)
-+{
-+	int ret;
-+
-+	if (!local->ops->get_txpower)
-+		return -EOPNOTSUPP;
-+
-+	ret = local->ops->get_txpower(&local->hw, &sdata->vif, dbm);
-+	trace_drv_get_txpower(local, sdata, *dbm, ret);
-+
-+	return ret;
-+}
-+
- #endif /* __MAC80211_DRIVER_OPS */
-diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
-index 38fae7e..c4150d1 100644
---- a/net/mac80211/trace.h
-+++ b/net/mac80211/trace.h
-@@ -2106,6 +2106,33 @@ TRACE_EVENT(drv_channel_switch_beacon,
- 	)
- );
- 
-+TRACE_EVENT(drv_get_txpower,
-+	TP_PROTO(struct ieee80211_local *local,
-+		 struct ieee80211_sub_if_data *sdata,
-+		 int dbm, int ret),
-+
-+	TP_ARGS(local, sdata, dbm, ret),
-+
-+	TP_STRUCT__entry(
-+		LOCAL_ENTRY
-+		SDATA_ENTRY
-+		__field(int, dbm)
-+		__field(int, ret)
-+	),
-+
-+	TP_fast_assign(
-+		LOCAL_ASSIGN;
-+		SDATA_ASSIGN;
-+		__entry->dbm = dbm;
-+		__entry->ret = ret;
-+	),
-+
-+	TP_printk(
-+		LOCAL_PR_FMT STA_PR_FMT " dbm:%d ret:%d",
-+		LOCAL_PR_ARG, STA_PR_ARG, __entry->dbm, __entry->ret
-+	)
-+);
-+
- 
- #ifdef CONFIG_MAC80211_MESSAGE_TRACING
- #undef TRACE_SYSTEM
--- 
-2.1.2
-
+On Tue, Oct 21, 2014, at 11:20, Felix Fietkau wrote:
+> On 2014-10-21 07:02, Emmanuel Grumbach wrote:
+> > On Mon, Oct 20, 2014 at 10:29 PM, Laurențiu Nicola <lnicola@dend.ro> wrote:
+> >> No, nothing in the DD-WRT syslog. The IP seems to be the one cached by
+> >> my DHCP client. I also tried various suggestions found on the internet,
+> >> but nothing helped.
+> >>
+> > 
+> > Can you please try to have another device in monitor mode to sniff the
+> > traffic going on?
+> > Felix, can you please tell me when DD-WRT can send a deauth with reason code 7?
+> What kind of device is it, and what software version?
+> 
+> - Felix
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+> in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
