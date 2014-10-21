@@ -1,62 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56010 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750761AbaJ0GQu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Oct 2014 02:16:50 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Joe Perches <joe@perches.com>
-Cc: Paul McQuade <paulmcquad@gmail.com>, linux-kernel@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	gregkh@linuxfoundation.org, Larry.Finger@lwfinger.net
-Subject: Re: [PATCH 2/2] staging: rtl8723au:core
-References: <1414340332-4556-1-git-send-email-paulmcquad@gmail.com>
-	<1414350250.15751.22.camel@perches.com> <wrfjegtucbgo.fsf@redhat.com>
-	<1414389096.15751.34.camel@perches.com>
-Date: Mon, 27 Oct 2014 07:16:37 +0100
-In-Reply-To: <1414389096.15751.34.camel@perches.com> (Joe Perches's message of
-	"Sun, 26 Oct 2014 22:51:36 -0700")
-Message-ID: <wrfj1tpuca0q.fsf@redhat.com> (sfid-20141027_071709_711028_E3CA8CD4)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:50274 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755271AbaJUPxV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Oct 2014 11:53:21 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, troy_tan@realsil.com.cn,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH] rtlwifi: rtl8821ae: Fix possible array overrun
+Date: Tue, 21 Oct 2014 10:52:51 -0500
+Message-Id: <1413906771-28599-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20141021_175344_743683_D38524BC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Joe Perches <joe@perches.com> writes:
-> On Mon, 2014-10-27 at 06:45 +0100, Jes Sorensen wrote:
->> Joe Perches <joe@perches.com> writes:
->> > On Sun, 2014-10-26 at 16:18 +0000, Paul McQuade wrote:
->> >> ERROR: spaces required around that ':' (ctx:VxE)
-> []
->> >> diff --git a/drivers/staging/rtl8723au/core/rtw_ieee80211.c
->> >> b/drivers/staging/rtl8723au/core/rtw_ieee80211.c
-> []
->> >> @@ -794,28 +794,28 @@ u16 rtw_mcs_rate23a(u8 rf_type, u8 bw_40MHz, u8 short_GI_20, u8 short_GI_40,
->> >>  
->> >>  	if (rf_type == RF_1T1R) {
->> >>  		if (mcs->rx_mask[0] & BIT(7))
->> >> -			max_rate = (bw_40MHz) ? ((short_GI_40)?1500:1350):
->> >> +			max_rate = (bw_40MHz) ? ((short_GI_40)?1500:1350) :
-> []
->> >
->> > A macro could help intelligibility here - maybe something like:
->> >
->> > #define get_max_rate(r1, r2, r3, r4)					\
->> > 	(bw_40MHz ? (short_GI_40 ? r1 : r2) : (short_GI_20 ? r3 : r4))
->> > and:
->> >  		if (mcs->rx_mask[0] & BIT(7))
->> > 			max_rate = get_max_rate(1500, 1350, 722, 650);
->> 
->> Hiding a parameter to a macro like that is bad coding practice, so don't
->> do that please!
->
-> Yes and no.
->
-> Adding the other 3 arguments to the macro doesn't help legibility.
->
-> Keeping the macro definition local to the place that it's used
-> can help avoid typos.
+The kbuild test robot reported a possible array overrun. The affected code
+checks for overruns, but fails to take the steps necessary to fix them.
 
-It's wrong, so just don't do it here!
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/rtlwifi/rtl8821ae/phy.c | 15 +++++++++------
+ 1 file changed, 9 insertions(+), 6 deletions(-)
 
-Thank you,
-Jes
+diff --git a/drivers/net/wireless/rtlwifi/rtl8821ae/phy.c b/drivers/net/wireless/rtlwifi/rtl8821ae/phy.c
+index 9786313..1e9570f 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8821ae/phy.c
++++ b/drivers/net/wireless/rtlwifi/rtl8821ae/phy.c
+@@ -1889,15 +1889,18 @@ static void _rtl8821ae_store_tx_power_by_rate(struct ieee80211_hw *hw,
+ 	struct rtl_phy *rtlphy = &rtlpriv->phy;
+ 	u8 rate_section = _rtl8821ae_get_rate_section_index(regaddr);
+ 
+-	if (band != BAND_ON_2_4G && band != BAND_ON_5G)
++	if (band != BAND_ON_2_4G && band != BAND_ON_5G) {
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_WARNING, "Invalid Band %d\n", band);
+-
+-	if (rfpath >= MAX_RF_PATH)
++		band = BAND_ON_2_4G;
++	}
++	if (rfpath >= MAX_RF_PATH) {
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_WARNING, "Invalid RfPath %d\n", rfpath);
+-
+-	if (txnum >= MAX_RF_PATH)
++		rfpath = MAX_RF_PATH - 1;
++	}
++	if (txnum >= MAX_RF_PATH) {
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_WARNING, "Invalid TxNum %d\n", txnum);
+-
++		txnum = MAX_RF_PATH - 1;
++	}
+ 	rtlphy->tx_power_by_rate_offset[band][rfpath][txnum][rate_section] = data;
+ 	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
+ 		 "TxPwrByRateOffset[Band %d][RfPath %d][TxNum %d][RateSection %d] = 0x%x\n",
+-- 
+1.8.4.5
+
