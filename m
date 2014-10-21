@@ -1,90 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:54508 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753199AbaJQCKh (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:21756 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754539AbaJUISX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Oct 2014 22:10:37 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH v2 16/23] ath9k: Use a helper function for offchannel NoA
-Date: Fri, 17 Oct 2014 07:40:23 +0530
-Message-Id: <1413511830-5536-17-git-send-email-sujith@msujith.org> (sfid-20141017_041325_741808_2563A9AF)
-In-Reply-To: <1413511830-5536-1-git-send-email-sujith@msujith.org>
-References: <1413511830-5536-1-git-send-email-sujith@msujith.org>
+	Tue, 21 Oct 2014 04:18:23 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 3/3] ath10k: speed up hw recovery
+References: <1413807758-30249-1-git-send-email-michal.kazior@tieto.com>
+	<1413807758-30249-4-git-send-email-michal.kazior@tieto.com>
+Date: Tue, 21 Oct 2014 11:17:58 +0300
+In-Reply-To: <1413807758-30249-4-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Mon, 20 Oct 2014 14:22:38 +0200")
+Message-ID: <87lho9ygy1.fsf@kamboji.qca.qualcomm.com> (sfid-20141021_101831_577315_2422128E)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/channel.c | 45 +++++++++++++++++++-------------
- 1 file changed, 27 insertions(+), 18 deletions(-)
+> In some cases hw recovery was taking an absurdly
+> long time due to ath10k waiting for things that
+> would never really complete.
+>
+> Instead of waiting for inevitable timeouts poke
+> all completions and wakequeues and check if it's
+> still worth waiting.
+>
+> Reading/writing ar->state requires conf_mutex.
+> Since waiters might be holding it introduce a new
+> flag CRASH_FLUSH so it's possible to tell waiters
+> to abort whatever they were waiting for.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index 45d2c48..c6e130d 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -366,6 +366,32 @@ static void ath_chanctx_setup_timer(struct ath_softc *sc, u32 tsf_time)
- 		"Setup chanctx timer with timeout: %d ms\n", jiffies_to_msecs(tsf_time));
- }
- 
-+static void ath_chanctx_offchannel_noa(struct ath_softc *sc,
-+				       struct ath_chanctx *ctx,
-+				       struct ath_vif *avp,
-+				       u32 tsf_time)
-+{
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+
-+	avp->noa_index++;
-+	avp->offchannel_start = tsf_time;
-+	avp->offchannel_duration = sc->sched.offchannel_duration;
-+
-+	ath_dbg(common, CHAN_CTX,
-+		"offchannel noa_duration: %d, noa_start: %d, noa_index: %d\n",
-+		avp->offchannel_duration,
-+		avp->offchannel_start,
-+		avp->noa_index);
-+
-+	/*
-+	 * When multiple contexts are active, the NoA
-+	 * has to be recalculated and advertised after
-+	 * an offchannel operation.
-+	 */
-+	if (ctx->active && avp->noa_duration)
-+		avp->noa_duration = 0;
-+}
-+
- void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
- 		       enum ath_chanctx_event ev)
- {
-@@ -461,24 +487,7 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
- 		 * values and increment the index.
- 		 */
- 		if (sc->next_chan == &sc->offchannel.chan) {
--			avp->noa_index++;
--			avp->offchannel_start = tsf_time;
--			avp->offchannel_duration = sc->sched.offchannel_duration;
--
--			ath_dbg(common, CHAN_CTX,
--				"offchannel noa_duration: %d, noa_start: %d, noa_index: %d\n",
--				avp->offchannel_duration,
--				avp->offchannel_start,
--				avp->noa_index);
--
--			/*
--			 * When multiple contexts are active, the NoA
--			 * has to be recalculated and advertised after
--			 * an offchannel operation.
--			 */
--			if (ctx->active && avp->noa_duration)
--				avp->noa_duration = 0;
--
-+			ath_chanctx_offchannel_noa(sc, ctx, avp, tsf_time);
- 			break;
- 		}
- 
+While applying to ath-next-test there was a conflict in core.h. Please
+check my resolution:
+
+https://github.com/kvalo/ath/commit/6cccda0185c7df96f439dc3f87961e81843de3ee
+
 -- 
-2.1.2
-
+Kalle Valo
