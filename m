@@ -1,43 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:45151 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933535AbaJ1GQF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2014 02:16:05 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: stable@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 3.16 7/7] iwlwifi: mvm: update layout of firmware error dump
-Date: Tue, 28 Oct 2014 08:11:26 +0200
-Message-Id: <1414476686-3407-8-git-send-email-emmanuel.grumbach@intel.com> (sfid-20141028_071614_907913_B0084173)
-In-Reply-To: <1414476686-3407-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1414476686-3407-1-git-send-email-emmanuel.grumbach@intel.com>
+Received: from mail-ob0-f176.google.com ([209.85.214.176]:50247 "EHLO
+	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751676AbaJUFCf convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Oct 2014 01:02:35 -0400
+Received: by mail-ob0-f176.google.com with SMTP id m8so368738obr.21
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2014 22:02:34 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1413833365.2949853.181221645.22D54845@webmail.messagingengine.com>
+References: <1413463736.1316541.179720977.4FD32021@webmail.messagingengine.com>
+	<1413510814.22769.6.camel@dcbw.local>
+	<1413751717.2510219.180809145.0E693C29@webmail.messagingengine.com>
+	<CANUX_P2RHVRorVABRfWVg39d4D8dj35v3fBpY3=3jvQ1U+mfEA@mail.gmail.com>
+	<1413783023.2710583.180921653.10DFFCEE@webmail.messagingengine.com>
+	<CANUX_P0Q7cNeBzQa=2WVZFJXPTLx8F6YQk9bGCf_3uYhc5RcGA@mail.gmail.com>
+	<CANUX_P3EqgTX7cPJvQ3fWH1yijekE0G_8TiH2_OCS7nFASGtkA@mail.gmail.com>
+	<1413789724.3063896.180943829.3F15F453@webmail.messagingengine.com>
+	<CANUX_P1REqkSqN0dtak34OQ_pSGMtPvV3Vj61tW5wb1+n2A7mg@mail.gmail.com>
+	<1413833365.2949853.181221645.22D54845@webmail.messagingengine.com>
+Date: Tue, 21 Oct 2014 08:02:34 +0300
+Message-ID: <CANUX_P3XzYBp7E=hScmc837TpuCr9VrxEYauG=sGMKfOCpX=qA@mail.gmail.com> (sfid-20141021_070239_218435_9F20CB9E)
+Subject: Re: iwlwifi: Reason 7 periodic disconnect
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: =?UTF-8?Q?Lauren=C8=9Biu_Nicola?= <lnicola@dend.ro>
+Cc: Dan Williams <dcbw@redhat.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-commit 5bfe6f53283de44855ee45a102210abbfac995f9 upstream.
+On Mon, Oct 20, 2014 at 10:29 PM, Laurențiu Nicola <lnicola@dend.ro> wrote:
+> No, nothing in the DD-WRT syslog. The IP seems to be the one cached by
+> my DHCP client. I also tried various suggestions found on the internet,
+> but nothing helped.
+>
 
-The memory was not zeroed - fix that. Also update the
-iwl_fw_error_dump_info structure.
+Can you please try to have another device in monitor mode to sniff the
+traffic going on?
+Felix, can you please tell me when DD-WRT can send a deauth with reason code 7?
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+thanks.
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index ed10e55..83ab42a 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -678,7 +678,7 @@ static void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
- 	if (trans_len)
- 		file_len += trans_len;
- 
--	dump_file = vmalloc(file_len);
-+	dump_file = vzalloc(file_len);
- 	if (!dump_file)
- 		return;
- 
--- 
-1.9.1
-
+> Laurentiu
+>
+> On Mon, Oct 20, 2014, at 11:23, Emmanuel Grumbach wrote:
+>> On Mon, Oct 20, 2014 at 10:22 AM, Laurențiu Nicola <lnicola@dend.ro>
+>> wrote:
+>> > One thing that might be relevant is that, although there is a static
+>> > DHCP lease configured (which works on Windows), the router/AP is giving
+>> > the laptop a different IP address. The reported MACs are the same, of
+>> > course. I don't know whether wpa_supplicant remembers and requests the
+>> > last IP it had, but the lease was already present when I configured it.
+>> >
+>> > The router runs DD-WRT and I don't have problems on Windows or Android.
+>> >
+>>
+>> I guess you can try to get some logs from the DD-WRT - but if the AP
+>> doesn't
+>> give the same address to Linux as in Windows - there is something
+>> fishy...
+>>
+>> > Laurentiu
+>> >
+>> > On Mon, Oct 20, 2014, at 10:12, Emmanuel Grumbach wrote:
+>> >> On Mon, Oct 20, 2014 at 10:06 AM, Emmanuel Grumbach <egrumbach@gmail.com>
+>> >> wrote:
+>> >> > On Mon, Oct 20, 2014 at 8:30 AM, Laurențiu Nicola <lnicola@dend.ro> wrote:
+>> >> >> Here: https://bpaste.net/show/bf6dc1847ce3
+>> >> >>
+>> >> >
+>> >> > Are you sure you had MAC80211_MLME_DEBUG?
+>> >> >
+>> >> >>
+>> >> Ok - You probably had it - sorry. But apparently the AP is really kicking
+>> >> us...
+>> >> What AP do you have?
+>> >> --
+>> >> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+>> >> in
+>> >> the body of a message to majordomo@vger.kernel.org
+>> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+>> in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
