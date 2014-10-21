@@ -1,53 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:53015 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752706AbaJIOqg (ORCPT
+Received: from mail-wg0-f47.google.com ([74.125.82.47]:64254 "EHLO
+	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755859AbaJUQEz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2014 10:46:36 -0400
-Received: by mail-wi0-f181.google.com with SMTP id hi2so2007879wib.14
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Oct 2014 07:46:35 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1412864474.1828.51.camel@jlt4.sipsolutions.net>
-References: <1410111140-4340-1-git-send-email-lorenzo.bianconi83@gmail.com>
-	<1410111140-4340-3-git-send-email-lorenzo.bianconi83@gmail.com>
-	<1412864474.1828.51.camel@jlt4.sipsolutions.net>
-Date: Thu, 9 Oct 2014 16:46:35 +0200
-Message-ID: <CAA2SeNLkf5RZsSYjYPpU=E0hHhe2c3G=cbUpy=gfp0kfwDRviQ@mail.gmail.com> (sfid-20141009_164639_889695_7293224F)
-Subject: Re: [PATCHv3 2/2] iw: add auto parameter to set distance command
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 21 Oct 2014 12:04:55 -0400
+Received: by mail-wg0-f47.google.com with SMTP id x13so1749016wgg.18
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Oct 2014 09:04:53 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Liad Kaufman <liad.kaufman@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 2/8] iwlwifi: 8000: fix string given to MODULE_FIRMWARE
+Date: Tue, 21 Oct 2014 19:04:33 +0300
+Message-Id: <1413907479-9073-2-git-send-email-egrumbach@gmail.com> (sfid-20141021_180544_191521_2C31CCA5)
+In-Reply-To: <CANUX_P0iZO6AGwcsKO3+xZZcH5ns+vMUimo+BxHNpyBhhURKRw@mail.gmail.com>
+References: <CANUX_P0iZO6AGwcsKO3+xZZcH5ns+vMUimo+BxHNpyBhhURKRw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On Sun, 2014-09-07 at 19:32 +0200, Lorenzo Bianconi wrote:
->> Add auto parameter to set distance command in order to enable ACK timeout
->> estimation algorithm (dynack). Dynack is automatically disabled setting valid
->> value for coverage class. Currently dynack is supported just by ath9k
->>
->> This patch is based on "configure dynack through mac80211/cfg80211 stack"
->> patchset sent on linux-wireless
->
-> Applied.
->
->>  nl80211.h | 12 ++++++++++++
->
-> Somehow you also changed nl80211.h here - you shouldn't do that at all
-> really :) I will deal with the updates of that file for iw.
+From: Liad Kaufman <liad.kaufman@intel.com>
 
-I added NL80211_ATTR_WIPHY_DYN_ACK flag attribute to nl80211_attrs
-enumeration and NL80211_FEATURE_ACKTO_ESTIMATION flag attribute to
-nl80211_feature_flags. I should not? Should I use a different patch?
+I changed the string but forgot to update the fix also to
+MODULE_FIRMWARE().
 
->
-> johannes
->
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-8000.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Regards,
-Lorenzo
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-8000.c b/drivers/net/wireless/iwlwifi/iwl-8000.c
+index e435148..d2b7234 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-8000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-8000.c
+@@ -82,7 +82,8 @@
+ #define IWL8000_TX_POWER_VERSION	0xffff /* meaningless */
+ 
+ #define IWL8000_FW_PRE "iwlwifi-8000"
+-#define IWL8000_MODULE_FIRMWARE(api) IWL8000_FW_PRE __stringify(api) ".ucode"
++#define IWL8000_MODULE_FIRMWARE(api) \
++	IWL8000_FW_PRE "-" __stringify(api) ".ucode"
+ 
+ #define NVM_HW_SECTION_NUM_FAMILY_8000		10
+ #define DEFAULT_NVM_FILE_FAMILY_8000		"iwl_nvm_8000.bin"
 -- 
-UNIX is Sexy: who | grep -i blonde | talk; cd ~; wine; talk; touch;
-unzip; touch; strip; gasp; finger; gasp; mount; fsck; more; yes; gasp;
-umount; make clean; sleep
+1.9.1
+
