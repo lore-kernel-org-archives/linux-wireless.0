@@ -1,181 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:44569 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752112AbaJ1OAj (ORCPT
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:51647 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750814AbaJUGh1 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2014 10:00:39 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 13/16] brcmfmac: (clean) Rename files wl_cfg80211 to cfg80211
-Date: Tue, 28 Oct 2014 14:56:16 +0100
-Message-ID: <1414504579-12562-14-git-send-email-arend@broadcom.com> (sfid-20141028_150048_770758_671BED39)
-In-Reply-To: <1414504579-12562-1-git-send-email-arend@broadcom.com>
-References: <1414504579-12562-1-git-send-email-arend@broadcom.com>
+	Tue, 21 Oct 2014 02:37:27 -0400
+Received: by mail-wi0-f177.google.com with SMTP id fb4so824685wid.16
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2014 23:37:25 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CABPxzYJmhE8wodzoVDbx=inrAusP1NLCjcj0+R7MUmQhUFcyUA@mail.gmail.com>
+References: <1413463736.1316541.179720977.4FD32021@webmail.messagingengine.com>
+ <1413510814.22769.6.camel@dcbw.local> <1413751717.2510219.180809145.0E693C29@webmail.messagingengine.com>
+ <CANUX_P2RHVRorVABRfWVg39d4D8dj35v3fBpY3=3jvQ1U+mfEA@mail.gmail.com>
+ <1413783023.2710583.180921653.10DFFCEE@webmail.messagingengine.com>
+ <CANUX_P0Q7cNeBzQa=2WVZFJXPTLx8F6YQk9bGCf_3uYhc5RcGA@mail.gmail.com>
+ <CANUX_P3EqgTX7cPJvQ3fWH1yijekE0G_8TiH2_OCS7nFASGtkA@mail.gmail.com>
+ <1413789724.3063896.180943829.3F15F453@webmail.messagingengine.com>
+ <CANUX_P1REqkSqN0dtak34OQ_pSGMtPvV3Vj61tW5wb1+n2A7mg@mail.gmail.com>
+ <1413833365.2949853.181221645.22D54845@webmail.messagingengine.com>
+ <CANUX_P3XzYBp7E=hScmc837TpuCr9VrxEYauG=sGMKfOCpX=qA@mail.gmail.com>
+ <CANUX_P06VvZ0uugayOvhZK0iM-NetftN5rZA27TtkYku66cGXA@mail.gmail.com> <CABPxzYJmhE8wodzoVDbx=inrAusP1NLCjcj0+R7MUmQhUFcyUA@mail.gmail.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Tue, 21 Oct 2014 12:07:05 +0530
+Message-ID: <CABPxzYJkh7fV6kXhYZvbH7PBHJNBsz0DwshpZFmcDPifwXe6fQ@mail.gmail.com> (sfid-20141021_083730_983583_2F504C69)
+Subject: Re: iwlwifi: Reason 7 periodic disconnect
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: =?UTF-8?Q?Lauren=C8=9Biu_Nicola?= <lnicola@dend.ro>,
+	Dan Williams <dcbw@redhat.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+On Tue, Oct 21, 2014 at 12:06 PM, Krishna Chaitanya
+<chaitanya.mgit@gmail.com> wrote:
+> On Tue, Oct 21, 2014 at 11:01 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+>> On Tue, Oct 21, 2014 at 8:02 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+>>> On Mon, Oct 20, 2014 at 10:29 PM, Laurențiu Nicola <lnicola@dend.ro> wrote:
+>>>> No, nothing in the DD-WRT syslog. The IP seems to be the one cached by
+>>>> my DHCP client. I also tried various suggestions found on the internet,
+>>>> but nothing helped.
+>>>>
+>>>
+>>> Can you please try to have another device in monitor mode to sniff the
+>>> traffic going on?
+>>> Felix, can you please tell me when DD-WRT can send a deauth with reason code 7?
+>>>
+>>> thanks.
+>>
+>> Can you please disable power save?
+>> For this, please make sure you have
+>> https://git.kernel.org/cgit/linux/kernel/git/iwlwifi/iwlwifi-fixes.git/commit/?id=f8dfc607b2b460e8e8adfdfb3c5f5bba3a4ad01b
+>> or at least have the module parameter.
+>> I am wondering if the firmware is not sending frames because of power
+>> save toggling.
+>>
+>> I you could get more extensive logs from the AP it'd be great.
+>> Running tracing on the AP would let us know why it thinks we are not associated.
+>>
+> I have faced the same issue before it happens when DUT is in powersave
+> and for some reason AP authenticates (in this case probably due to
+*typo: deuauthenticates.
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/Makefile                 | 2 +-
- drivers/net/wireless/brcm80211/brcmfmac/btcoex.c                 | 2 +-
- .../wireless/brcm80211/brcmfmac/{wl_cfg80211.c => cfg80211.c}    | 5 +++--
- .../wireless/brcm80211/brcmfmac/{wl_cfg80211.h => cfg80211.h}    | 9 +++++----
- drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c              | 2 +-
- drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c               | 2 +-
- drivers/net/wireless/brcm80211/brcmfmac/p2p.c                    | 2 +-
- drivers/net/wireless/brcm80211/brcmfmac/vendor.c                 | 2 +-
- 8 files changed, 14 insertions(+), 12 deletions(-)
- rename drivers/net/wireless/brcm80211/brcmfmac/{wl_cfg80211.c => cfg80211.c} (99%)
- rename drivers/net/wireless/brcm80211/brcmfmac/{wl_cfg80211.h => cfg80211.h} (98%)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/Makefile b/drivers/net/wireless/brcm80211/brcmfmac/Makefile
-index f6e35c9..35b680550 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/Makefile
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/Makefile
-@@ -23,7 +23,7 @@ ccflags-y += -D__CHECK_ENDIAN__
- 
- obj-$(CONFIG_BRCMFMAC) += brcmfmac.o
- brcmfmac-objs += \
--		wl_cfg80211.o \
-+		cfg80211.o \
- 		chip.o \
- 		fwil.o \
- 		fweh.o \
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/btcoex.c b/drivers/net/wireless/brcm80211/brcmfmac/btcoex.c
-index a2f7e2c..e324414 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/btcoex.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/btcoex.c
-@@ -26,7 +26,7 @@
- #include "fwil_types.h"
- #include "btcoex.h"
- #include "p2p.h"
--#include "wl_cfg80211.h"
-+#include "cfg80211.h"
- 
- /* T1 start SCO/eSCO priority suppression */
- #define BRCMF_BTCOEX_OPPR_WIN_TIME   2000
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-similarity index 99%
-rename from drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-rename to drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-index 2560dff..0390e57 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-@@ -32,7 +32,7 @@
- #include "fwil_types.h"
- #include "p2p.h"
- #include "btcoex.h"
--#include "wl_cfg80211.h"
-+#include "cfg80211.h"
- #include "feature.h"
- #include "fwil.h"
- #include "proto.h"
-@@ -5657,7 +5657,8 @@ enum nl80211_iftype brcmf_cfg80211_get_iftype(struct brcmf_if *ifp)
- 	return wdev->iftype;
- }
- 
--bool brcmf_get_vif_state_any(struct brcmf_cfg80211_info *cfg, unsigned long state)
-+bool brcmf_get_vif_state_any(struct brcmf_cfg80211_info *cfg,
-+			     unsigned long state)
- {
- 	struct brcmf_cfg80211_vif *vif;
- 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.h
-similarity index 98%
-rename from drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
-rename to drivers/net/wireless/brcm80211/brcmfmac/cfg80211.h
-index 6abf94e..2a5b22c 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.h
-@@ -14,8 +14,8 @@
-  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  */
- 
--#ifndef _wl_cfg80211_h_
--#define _wl_cfg80211_h_
-+#ifndef BRCMFMAC_CFG80211_H
-+#define BRCMFMAC_CFG80211_H
- 
- /* for brcmu_d11inf */
- #include <brcmu_d11.h>
-@@ -480,7 +480,8 @@ const struct brcmf_tlv *
- brcmf_parse_tlvs(const void *buf, int buflen, uint key);
- u16 channel_to_chanspec(struct brcmu_d11inf *d11inf,
- 			struct ieee80211_channel *ch);
--bool brcmf_get_vif_state_any(struct brcmf_cfg80211_info *cfg, unsigned long state);
-+bool brcmf_get_vif_state_any(struct brcmf_cfg80211_info *cfg,
-+			     unsigned long state);
- void brcmf_cfg80211_arm_vif_event(struct brcmf_cfg80211_info *cfg,
- 				  struct brcmf_cfg80211_vif *vif);
- bool brcmf_cfg80211_vif_event_armed(struct brcmf_cfg80211_info *cfg);
-@@ -493,4 +494,4 @@ void brcmf_set_mpc(struct brcmf_if *ndev, int mpc);
- void brcmf_abort_scanning(struct brcmf_cfg80211_info *cfg);
- void brcmf_cfg80211_free_netdev(struct net_device *ndev);
- 
--#endif				/* _wl_cfg80211_h_ */
-+#endif /* BRCMFMAC_CFG80211_H */
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-index 8dbf2c1..53650b9 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-@@ -27,7 +27,7 @@
- #include "debug.h"
- #include "fwil_types.h"
- #include "p2p.h"
--#include "wl_cfg80211.h"
-+#include "cfg80211.h"
- #include "fwil.h"
- #include "fwsignal.h"
- #include "feature.h"
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-index dbd52cc..6d33331 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-@@ -34,7 +34,7 @@
- #include "fweh.h"
- #include "fwsignal.h"
- #include "p2p.h"
--#include "wl_cfg80211.h"
-+#include "cfg80211.h"
- #include "proto.h"
- 
- /**
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-index 7459c25..ae504b4 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-@@ -26,7 +26,7 @@
- #include "fwil.h"
- #include "fwil_types.h"
- #include "p2p.h"
--#include "wl_cfg80211.h"
-+#include "cfg80211.h"
- 
- /* parameters used for p2p escan */
- #define P2PAPI_SCAN_NPROBES 1
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/vendor.c b/drivers/net/wireless/brcm80211/brcmfmac/vendor.c
-index f204c83..b86a083 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/vendor.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/vendor.c
-@@ -23,7 +23,7 @@
- #include "dhd.h"
- #include "p2p.h"
- #include "debug.h"
--#include "wl_cfg80211.h"
-+#include "cfg80211.h"
- #include "vendor.h"
- #include "fwil.h"
- 
--- 
-1.9.1
-
+> inactivity) but as DUT is in power save we don't Rx the deauth (some
+> AP's don't wait
+> for STA to wakeup and retrieve the deauth frame).
+>
+> So after that if DUT tries to sent any data frame, as it still thinks
+> that it is connected
+> (network lost also will not trigger because it still Rx beacon) and in
+> that case AP deauthenticates
+> us by Reason:7.
+>
+> May be if we enable tx status report ACK we can pass the inactivity
+> check as some AP's
+> wont reset inactivity timer for probe's.
