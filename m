@@ -1,39 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:58565 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755604AbaJIPVg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2014 11:21:36 -0400
-Message-ID: <1412868088.1828.56.camel@jlt4.sipsolutions.net> (sfid-20141009_172139_645896_020C54F6)
-Subject: Re: [PATCHv3 2/2] iw: add auto parameter to set distance command
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 09 Oct 2014 17:21:28 +0200
-In-Reply-To: <CAA2SeNLkf5RZsSYjYPpU=E0hHhe2c3G=cbUpy=gfp0kfwDRviQ@mail.gmail.com> (sfid-20141009_164635_670305_C371157F)
-References: <1410111140-4340-1-git-send-email-lorenzo.bianconi83@gmail.com>
-	 <1410111140-4340-3-git-send-email-lorenzo.bianconi83@gmail.com>
-	 <1412864474.1828.51.camel@jlt4.sipsolutions.net>
-	 <CAA2SeNLkf5RZsSYjYPpU=E0hHhe2c3G=cbUpy=gfp0kfwDRviQ@mail.gmail.com>
-	 (sfid-20141009_164635_670305_C371157F)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:54528 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755945AbaJUQFB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Oct 2014 12:05:01 -0400
+Received: by mail-wi0-f180.google.com with SMTP id em10so2307755wid.1
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Oct 2014 09:04:59 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Haim Dreyfuss <haim.dreyfuss@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 5/8] iwlwifi: mvm: Add tx power condition to bss_info_changed_ap_ibss
+Date: Tue, 21 Oct 2014 19:04:36 +0300
+Message-Id: <1413907479-9073-5-git-send-email-egrumbach@gmail.com> (sfid-20141021_180524_838308_4C7A67DC)
+In-Reply-To: <CANUX_P0iZO6AGwcsKO3+xZZcH5ns+vMUimo+BxHNpyBhhURKRw@mail.gmail.com>
+References: <CANUX_P0iZO6AGwcsKO3+xZZcH5ns+vMUimo+BxHNpyBhhURKRw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-10-09 at 16:46 +0200, Lorenzo Bianconi wrote:
+From: Haim Dreyfuss <haim.dreyfuss@intel.com>
 
-> > Somehow you also changed nl80211.h here - you shouldn't do that at all
-> > really :) I will deal with the updates of that file for iw.
-> 
-> I added NL80211_ATTR_WIPHY_DYN_ACK flag attribute to nl80211_attrs
-> enumeration and NL80211_FEATURE_ACKTO_ESTIMATION flag attribute to
-> nl80211_feature_flags. I should not? Should I use a different patch?
+The tx power should be limited from many reasons.
+currently, setting the tx power is available by the mvm only for
+station interface. Adding the tx power condition to
+bss_info_changed_ap_ibss make it available also for AP.
 
-I never apply patches to nl80211.h - I only copy the file from the
-latest kernel. That way I avoid sync issues and if then your patch
-doesn't compile I know I haven't applied the kernel patch :)
+Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-So yeah - you should simply not do it at all. I'll copy if/when needed.
-
-johannes
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index c7a73c6..892a6bc 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -1734,6 +1734,13 @@ iwl_mvm_bss_info_changed_ap_ibss(struct iwl_mvm *mvm,
+ 	if (changes & BSS_CHANGED_BEACON &&
+ 	    iwl_mvm_mac_ctxt_beacon_changed(mvm, vif))
+ 		IWL_WARN(mvm, "Failed updating beacon data\n");
++
++	if (changes & BSS_CHANGED_TXPOWER) {
++		IWL_DEBUG_CALIB(mvm, "Changing TX Power to %d\n",
++				bss_conf->txpower);
++		iwl_mvm_set_tx_power(mvm, vif, bss_conf->txpower);
++	}
++
+ }
+ 
+ static void iwl_mvm_bss_info_changed(struct ieee80211_hw *hw,
+-- 
+1.9.1
 
