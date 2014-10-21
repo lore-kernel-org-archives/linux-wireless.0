@@ -1,42 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:41600 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934103AbaJ2Qus (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2014 12:50:48 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH] mac80211-hwsim: remove un-used variable
-Date: Wed, 29 Oct 2014 09:50:40 -0700
-Message-Id: <1414601440-9983-1-git-send-email-greearb@candelatech.com> (sfid-20141029_175051_039528_FD1CD71B)
+Received: from s3.sipsolutions.net ([5.9.151.49]:45474 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932369AbaJUTjP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Oct 2014 15:39:15 -0400
+Message-ID: <1413920347.1998.23.camel@jlt4.sipsolutions.net> (sfid-20141021_213917_999679_B3B089CD)
+Subject: Re: [PATCH v2 5/6] mac80211-hwsim: support creating wiphy w/out
+ creating wlanX.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: greearb@candelatech.com
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 21 Oct 2014 21:39:07 +0200
+In-Reply-To: <1413845378-27837-5-git-send-email-greearb@candelatech.com>
+References: <1413845378-27837-1-git-send-email-greearb@candelatech.com>
+	 <1413845378-27837-5-git-send-email-greearb@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On Mon, 2014-10-20 at 15:49 -0700, greearb@candelatech.com wrote:
 
-Remove un-used variable added in recent patch.  Can re-add
-this when we have an idea how to deal with receiving pkts
-from user-space on channels not supported by current operating
-mode of the virual radio.
+> +				       u32 portid, char *hwname, bool no_vdev)
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- drivers/net/wireless/mac80211_hwsim.c | 1 -
- 1 file changed, 1 deletion(-)
+same comment regarding "vdev" throughout this patch.
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index b40435c..9dd07f7 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -2424,7 +2424,6 @@ static int hwsim_cloned_frame_received_nl(struct sk_buff *skb_2,
- 	int frame_data_len;
- 	void *frame_data;
- 	struct sk_buff *skb = NULL;
--	u32 freq;
- 
- 	if (info->snd_portid != wmediumd_portid) {
- 		printk(KERN_DEBUG "mac80211-hwsim: port-id mismatch: %d %d\n",
--- 
-1.7.11.7
+Also, there shouldn't be a . at the end of the subject :-)
+
+johannes
+
 
