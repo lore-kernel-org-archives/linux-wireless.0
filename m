@@ -1,64 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f54.google.com ([209.85.192.54]:45830 "EHLO
-	mail-qg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754682AbaJXTLP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Oct 2014 15:11:15 -0400
-Message-ID: <544AA3EE.7080806@gmail.com> (sfid-20141024_211138_057309_350B627C)
-Date: Fri, 24 Oct 2014 17:09:34 -0200
-From: Murilo Opsfelder Araujo <mopsfelder@gmail.com>
-MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Mike Galbraith <umgwanakikbuti@gmail.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	troy_tan@realsil.com.cn, netdev@vger.kernel.org,
-	Thadeu Cascardo <cascardo@cascardo.eti.br>
-Subject: Re: [PATCH V3.18] rtlwifi: Add check for get_btc_status callback
-References: <1414081629-23002-1-git-send-email-Larry.Finger@lwfinger.net>	 <1414087731.5231.19.camel@marge.simpson.net>	 <5449478B.4070908@lwfinger.net> <1414116580.23080.10.camel@marge.simpson.net> <544A80B5.1090604@lwfinger.net> <544A96C0.8030107@gmail.com>
-In-Reply-To: <544A96C0.8030107@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:45442 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755139AbaJUTeL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Oct 2014 15:34:11 -0400
+Message-ID: <1413920047.1998.18.camel@jlt4.sipsolutions.net> (sfid-20141021_213414_452130_A3C81C6E)
+Subject: Re: [PATCH v2 2/6] mac80211:  allow creating wiphy devices with
+ suggested name.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: greearb@candelatech.com
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 21 Oct 2014 21:34:07 +0200
+In-Reply-To: <1413845378-27837-2-git-send-email-greearb@candelatech.com>
+References: <1413845378-27837-1-git-send-email-greearb@candelatech.com>
+	 <1413845378-27837-2-git-send-email-greearb@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/24/2014 04:13 PM, Murilo Opsfelder Araujo wrote:
-> On 10/24/2014 02:39 PM, Larry Finger wrote:
-> [...]
->>
->> Please try the attached patch. It replaces the second one I sent you. I
->> will probably redo it before submitting the final copy, but this should
->> work.
->>
->> Larry
->>
-> Hi, Larry.
->
-> I've tried your patch on top of next-20141023 and it is still crashing
-> on my laptop:
->
-> http://opsfelder.com/~murilo/lkml/next-20141023_plus_larry_patch_v2.jpg
->
-It seems a get_btc_status() check was still missing:
+There seem to be two spaces in the subject - please fix that since we
+need another spin anyway.
 
-diff --git a/drivers/net/wireless/rtlwifi/pci.c 
-b/drivers/net/wireless/rtlwifi/pci.c
-index a5a350a..ed3364d 100644
---- a/drivers/net/wireless/rtlwifi/pci.c
-+++ b/drivers/net/wireless/rtlwifi/pci.c
-@@ -1796,7 +1796,8 @@ static int rtl_pci_start(struct ieee80211_hw *hw)
-         rtl_pci_reset_trx_ring(hw);
+> + * @requested_name:  Requested name for this device.
 
-         rtlpci->driver_is_goingto_unload = false;
--       if (rtlpriv->cfg->ops->get_btc_status()) {
-+       if (rtlpriv->cfg->ops->get_btc_status &&
-+           rtlpriv->cfg->ops->get_btc_status()) {
-                 rtlpriv->btcoexist.btc_ops->btc_init_variables(rtlpriv);
-                 rtlpriv->btcoexist.btc_ops->btc_init_hal_vars(rtlpriv);
-         }
+please also just have one space here
+also same comments as with cfg80211 - document NULL and the function
+name change
 
-With this minor change and Larry's latest fix_misc_desc patch, 
-next-20141023 booted normally and kernel panic disappeared.
+> +struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t priv_data_len,
+> +					   const struct ieee80211_ops *ops,
+> +					   const char *requested_name);
+> +
+> +/**
+> + * ieee80211_alloc_hw -  Allocate a new hardware device
 
-Now, there is no wifi network available or found by wlan0.
+another place where you have two spaces :)
 
--- 
-Murilo
+johannes
+
