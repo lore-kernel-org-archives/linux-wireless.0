@@ -1,136 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:51617 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932072AbaJ2R6T (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2014 13:58:19 -0400
-Received: by mail-wi0-f181.google.com with SMTP id n3so5334331wiv.2
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2014 10:58:18 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH v2 42/48] staging: vt6655: device.h remove dead strutures and macros
-Date: Wed, 29 Oct 2014 17:56:00 +0000
-Message-Id: <1414605366-9335-43-git-send-email-tvboxspy@gmail.com> (sfid-20141029_191320_828283_55F900A5)
-In-Reply-To: <1414605366-9335-1-git-send-email-tvboxspy@gmail.com>
-References: <1414605366-9335-1-git-send-email-tvboxspy@gmail.com>
+Received: from out3-smtp.messagingengine.com ([66.111.4.27]:52928 "EHLO
+	out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753163AbaJUH2E convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Oct 2014 03:28:04 -0400
+Received: from compute1.internal (compute1.nyi.internal [10.202.2.41])
+	by gateway2.nyi.internal (Postfix) with ESMTP id 503DE208D9
+	for <linux-wireless@vger.kernel.org>; Tue, 21 Oct 2014 03:28:04 -0400 (EDT)
+Message-Id: <1413876484.3481910.181413525.516B5A23@webmail.messagingengine.com> (sfid-20141021_092817_572200_C578EC50)
+From: =?UTF-8?Q?Lauren=C8=9Biu=20Nicola?= <lnicola@dend.ro>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: Dan Williams <dcbw@redhat.com>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <CANUX_P06VvZ0uugayOvhZK0iM-NetftN5rZA27TtkYku66cGXA@mail.gmail.com>
+References: <1413463736.1316541.179720977.4FD32021@webmail.messagingengine.com>
+ <1413510814.22769.6.camel@dcbw.local>
+ <1413751717.2510219.180809145.0E693C29@webmail.messagingengine.com>
+ <CANUX_P2RHVRorVABRfWVg39d4D8dj35v3fBpY3=3jvQ1U+mfEA@mail.gmail.com>
+ <1413783023.2710583.180921653.10DFFCEE@webmail.messagingengine.com>
+ <CANUX_P0Q7cNeBzQa=2WVZFJXPTLx8F6YQk9bGCf_3uYhc5RcGA@mail.gmail.com>
+ <CANUX_P3EqgTX7cPJvQ3fWH1yijekE0G_8TiH2_OCS7nFASGtkA@mail.gmail.com>
+ <1413789724.3063896.180943829.3F15F453@webmail.messagingengine.com>
+ <CANUX_P1REqkSqN0dtak34OQ_pSGMtPvV3Vj61tW5wb1+n2A7mg@mail.gmail.com>
+ <1413833365.2949853.181221645.22D54845@webmail.messagingengine.com>
+ <CANUX_P3XzYBp7E=hScmc837TpuCr9VrxEYauG=sGMKfOCpX=qA@mail.gmail.com>
+ <CANUX_P06VvZ0uugayOvhZK0iM-NetftN5rZA27TtkYku66cGXA@mail.gmail.com>
+Subject: Re: iwlwifi: Reason 7 periodic disconnect
+Date: Tue, 21 Oct 2014 10:28:04 +0300
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/device.h | 76 -----------------------------------------
- 1 file changed, 76 deletions(-)
+I have 3.17.1, which includes the patch you mention. I also verified
+that iwconfig reports that power management is disabled.
 
-diff --git a/drivers/staging/vt6655/device.h b/drivers/staging/vt6655/device.h
-index bc33b2d..79c4ae0 100644
---- a/drivers/staging/vt6655/device.h
-+++ b/drivers/staging/vt6655/device.h
-@@ -147,16 +147,6 @@
- 
- #define	NUM				64
- 
--#define PRIVATE_Message                 0
--
--/*---------------------  Export Types  ------------------------------*/
--
--#define PRINT_K(p, args...)		\
--do {					\
--	if (PRIVATE_Message)		\
--		printk(p, ##args);	\
--} while (0)
--
- /* 0:11A 1:11B 2:11G */
- typedef enum _VIA_BB_TYPE
- {
-@@ -174,57 +164,6 @@ typedef enum _VIA_PKT_TYPE
- 	PK_TYPE_11GA
- } VIA_PKT_TYPE, *PVIA_PKT_TYPE;
- 
--typedef enum __device_msg_level {
--	MSG_LEVEL_ERR = 0,	/* Errors that will cause abnormal operation. */
--	MSG_LEVEL_NOTICE = 1,	/* Some errors need users to be notified. */
--	MSG_LEVEL_INFO = 2,	/* Normal message. */
--	MSG_LEVEL_VERBOSE = 3,	/* Will report all trival errors. */
--	MSG_LEVEL_DEBUG = 4	/* Only for debug purpose. */
--} DEVICE_MSG_LEVEL, *PDEVICE_MSG_LEVEL;
--
--/* NDIS related */
--#define MAX_BSSIDINFO_4_PMKID   16
--#define MAX_PMKIDLIST           5
--/* Flags for PMKID Candidate list structure */
--#define NDIS_802_11_PMKID_CANDIDATE_PREAUTH_ENABLED	0x01
--
--/* PMKID Structures */
--typedef unsigned char NDIS_802_11_PMKID_VALUE[16];
--
--typedef enum _NDIS_802_11_WEP_STATUS {
--	Ndis802_11WEPEnabled,
--	Ndis802_11Encryption1Enabled = Ndis802_11WEPEnabled,
--	Ndis802_11WEPDisabled,
--	Ndis802_11EncryptionDisabled = Ndis802_11WEPDisabled,
--	Ndis802_11WEPKeyAbsent,
--	Ndis802_11Encryption1KeyAbsent = Ndis802_11WEPKeyAbsent,
--	Ndis802_11WEPNotSupported,
--	Ndis802_11EncryptionNotSupported = Ndis802_11WEPNotSupported,
--	Ndis802_11Encryption2Enabled,
--	Ndis802_11Encryption2KeyAbsent,
--	Ndis802_11Encryption3Enabled,
--	Ndis802_11Encryption3KeyAbsent
--} NDIS_802_11_WEP_STATUS, *PNDIS_802_11_WEP_STATUS,
--	NDIS_802_11_ENCRYPTION_STATUS, *PNDIS_802_11_ENCRYPTION_STATUS;
--
--typedef enum _NDIS_802_11_STATUS_TYPE {
--	Ndis802_11StatusType_Authentication,
--	Ndis802_11StatusType_MediaStreamMode,
--	Ndis802_11StatusType_PMKID_CandidateList,
--	Ndis802_11StatusTypeMax    /* defined as an upper bound */
--} NDIS_802_11_STATUS_TYPE, *PNDIS_802_11_STATUS_TYPE;
--
--
--/* 802.11h related */
--#define MAX_QUIET_COUNT     8
--
--typedef struct tagSQuietControl {
--	bool bEnable;
--	unsigned long dwStartTime;
--	unsigned char byPeriod;
--	unsigned short wDuration;
--} SQuietControl, *PSQuietControl;
--
- typedef struct __chip_info_tbl {
- 	CHIP_TYPE   chip_id;
- 	char *name;
-@@ -238,20 +177,6 @@ typedef enum {
- 	OWNED_BY_NIC = 1
- } DEVICE_OWNER_TYPE, *PDEVICE_OWNER_TYPE;
- 
--/* The receive duplicate detection cache entry */
--typedef struct tagSCacheEntry {
--	unsigned short wFmSequence;
--	unsigned char abyAddr2[ETH_ALEN];
--} SCacheEntry, *PSCacheEntry;
--
--typedef struct tagSCache {
--/* The receive cache is updated circularly. The next entry to be written is
-- * indexed by the "InPtr".
-- */
--	unsigned int uInPtr;         /* Place to use next */
--	SCacheEntry     asCacheEntry[DUPLICATE_RX_CACHE_LENGTH];
--} SCache, *PSCache;
--
- #define CB_MAX_RX_FRAG                 64
- /* DeFragment Control Block, used for collecting fragments prior to reassembly */
- typedef struct tagSDeFragControlBlock {
-@@ -361,7 +286,6 @@ struct vnt_private {
- 	volatile PSRxDesc           aRD0Ring;
- 	volatile PSRxDesc           aRD1Ring;
- 	volatile PSRxDesc           pCurrRD[TYPE_MAXRD];
--	SCache                      sDupRxCache;
- 
- 	SDeFragControlBlock         sRxDFCB[CB_MAX_RX_FRAG];
- 	unsigned int	cbDFCB;
--- 
-2.1.0
+I don't know how easy it is to recompile the DD-WRT kernel. One thing I
+could do is try another firmware instead of DD-WRT to see if the issue
+still occurs.
 
+Laurentiu
+
+On Tue, Oct 21, 2014, at 08:31, Emmanuel Grumbach wrote:
+> On Tue, Oct 21, 2014 at 8:02 AM, Emmanuel Grumbach <egrumbach@gmail.com>
+> wrote:
+> > On Mon, Oct 20, 2014 at 10:29 PM, Laurențiu Nicola <lnicola@dend.ro> wrote:
+> >> No, nothing in the DD-WRT syslog. The IP seems to be the one cached by
+> >> my DHCP client. I also tried various suggestions found on the internet,
+> >> but nothing helped.
+> >>
+> >
+> > Can you please try to have another device in monitor mode to sniff the
+> > traffic going on?
+> > Felix, can you please tell me when DD-WRT can send a deauth with reason code 7?
+> >
+> > thanks.
+> 
+> Can you please disable power save?
+> For this, please make sure you have
+> https://git.kernel.org/cgit/linux/kernel/git/iwlwifi/iwlwifi-fixes.git/commit/?id=f8dfc607b2b460e8e8adfdfb3c5f5bba3a4ad01b
+> or at least have the module parameter.
+> I am wondering if the firmware is not sending frames because of power
+> save toggling.
+> 
+> I you could get more extensive logs from the AP it'd be great.
+> Running tracing on the AP would let us know why it thinks we are not
+> associated.
+> 
+> 
+> >
+> >> Laurentiu
+> >>
+> >> On Mon, Oct 20, 2014, at 11:23, Emmanuel Grumbach wrote:
+> >>> On Mon, Oct 20, 2014 at 10:22 AM, Laurențiu Nicola <lnicola@dend.ro>
+> >>> wrote:
+> >>> > One thing that might be relevant is that, although there is a static
+> >>> > DHCP lease configured (which works on Windows), the router/AP is giving
+> >>> > the laptop a different IP address. The reported MACs are the same, of
+> >>> > course. I don't know whether wpa_supplicant remembers and requests the
+> >>> > last IP it had, but the lease was already present when I configured it.
+> >>> >
+> >>> > The router runs DD-WRT and I don't have problems on Windows or Android.
+> >>> >
+> >>>
+> >>> I guess you can try to get some logs from the DD-WRT - but if the AP
+> >>> doesn't
+> >>> give the same address to Linux as in Windows - there is something
+> >>> fishy...
+> >>>
+> >>> > Laurentiu
+> >>> >
+> >>> > On Mon, Oct 20, 2014, at 10:12, Emmanuel Grumbach wrote:
+> >>> >> On Mon, Oct 20, 2014 at 10:06 AM, Emmanuel Grumbach <egrumbach@gmail.com>
+> >>> >> wrote:
+> >>> >> > On Mon, Oct 20, 2014 at 8:30 AM, Laurențiu Nicola <lnicola@dend.ro> wrote:
+> >>> >> >> Here: https://bpaste.net/show/bf6dc1847ce3
+> >>> >> >>
+> >>> >> >
+> >>> >> > Are you sure you had MAC80211_MLME_DEBUG?
+> >>> >> >
+> >>> >> >>
+> >>> >> Ok - You probably had it - sorry. But apparently the AP is really kicking
+> >>> >> us...
+> >>> >> What AP do you have?
+> >>> >> --
+> >>> >> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+> >>> >> in
+> >>> >> the body of a message to majordomo@vger.kernel.org
+> >>> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >>> --
+> >>> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+> >>> in
+> >>> the body of a message to majordomo@vger.kernel.org
+> >>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+> in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
