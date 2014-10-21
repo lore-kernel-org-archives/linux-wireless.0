@@ -1,61 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailsec111.isp.belgacom.be ([195.238.20.107]:45029 "EHLO
-	mailsec111.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932529AbaJUUFn convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Oct 2014 16:05:43 -0400
-Date: Tue, 21 Oct 2014 22:05:41 +0200 (CEST)
-From: Fabian Frederick <fabf@skynet.be>
-Reply-To: Fabian Frederick <fabf@skynet.be>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Message-ID: <1473755457.212484.1413921941002.open-xchange@webmail.nmp.skynet.be> (sfid-20141021_220557_070776_CA278FC9)
-In-Reply-To: <1413918366.1998.10.camel@jlt4.sipsolutions.net>
-References: <1413908412-5177-1-git-send-email-fabf@skynet.be> <1413918366.1998.10.camel@jlt4.sipsolutions.net>
-Subject: Re: [PATCH 1/1 net-next] mac80211: remove unnecessary null test
- before debugfs_remove
+Received: from arrakis.dune.hu ([78.24.191.176]:44977 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753484AbaJUIUT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Oct 2014 04:20:19 -0400
+Message-ID: <54461740.5000903@openwrt.org> (sfid-20141021_102029_197338_E6B23E1A)
+Date: Tue, 21 Oct 2014 10:20:16 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: Emmanuel Grumbach <egrumbach@gmail.com>,
+	=?UTF-8?B?TGF1cmVuyJtpdSBOaWM=?= =?UTF-8?B?b2xh?=
+	<lnicola@dend.ro>
+CC: Dan Williams <dcbw@redhat.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: iwlwifi: Reason 7 periodic disconnect
+References: <1413463736.1316541.179720977.4FD32021@webmail.messagingengine.com>	<1413510814.22769.6.camel@dcbw.local>	<1413751717.2510219.180809145.0E693C29@webmail.messagingengine.com>	<CANUX_P2RHVRorVABRfWVg39d4D8dj35v3fBpY3=3jvQ1U+mfEA@mail.gmail.com>	<1413783023.2710583.180921653.10DFFCEE@webmail.messagingengine.com>	<CANUX_P0Q7cNeBzQa=2WVZFJXPTLx8F6YQk9bGCf_3uYhc5RcGA@mail.gmail.com>	<CANUX_P3EqgTX7cPJvQ3fWH1yijekE0G_8TiH2_OCS7nFASGtkA@mail.gmail.com>	<1413789724.3063896.180943829.3F15F453@webmail.messagingengine.com>	<CANUX_P1REqkSqN0dtak34OQ_pSGMtPvV3Vj61tW5wb1+n2A7mg@mail.gmail.com>	<1413833365.2949853.181221645.22D54845@webmail.messagingengine.com> <CANUX_P3XzYBp7E=hScmc837TpuCr9VrxEYauG=sGMKfOCpX=qA@mail.gmail.com>
+In-Reply-To: <CANUX_P3XzYBp7E=hScmc837TpuCr9VrxEYauG=sGMKfOCpX=qA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 2014-10-21 07:02, Emmanuel Grumbach wrote:
+> On Mon, Oct 20, 2014 at 10:29 PM, Laurențiu Nicola <lnicola@dend.ro> wrote:
+>> No, nothing in the DD-WRT syslog. The IP seems to be the one cached by
+>> my DHCP client. I also tried various suggestions found on the internet,
+>> but nothing helped.
+>>
+> 
+> Can you please try to have another device in monitor mode to sniff the
+> traffic going on?
+> Felix, can you please tell me when DD-WRT can send a deauth with reason code 7?
+What kind of device is it, and what software version?
 
-
-> On 21 October 2014 at 21:06 Johannes Berg <johannes@sipsolutions.net> wrote:
->
->
-> On Tue, 2014-10-21 at 18:20 +0200, Fabian Frederick wrote:
-> > Fix checkpatch warnings:
-> >
-> >     WARNING: debugfs_remove(NULL) is safe this check is probably not
-> >required
->
-> I'll apply this; however, I think that checkpatch is a just tool, and
-> the commit message should reflect why you're changing the code.
-> Presumably you're not doing it to make the tool happy, but to address an
-> issue that the tool pointed out, so I think in most cases the commit
-> message should state the former, not the latter.
->
-> Note that in this particular case the NULL check check could be there to
-> avoid a memory write (which can be significant depending on the context)
-> so blindly doing what the tool suggested wouldn't always be a good idea.
->
-> johannes
->
-
-Thanks Johannes,
-
-Maybe you can replace commit message with:
-"
-This patch removes NULL check before debugfs_remove.
-That function already does that check and is
-only called during key management so we can add some memory writes.
-"
-
-I can also resubmit patch if necessary.
-
-Regards,
-Fabian
+- Felix
