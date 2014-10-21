@@ -1,82 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail1.bemta8.messagelabs.com ([216.82.243.206]:34790 "EHLO
-	mail1.bemta8.messagelabs.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754765AbaJMDA5 (ORCPT
+Received: from mail-ob0-f177.google.com ([209.85.214.177]:55463 "EHLO
+	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754691AbaJUJQe convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Oct 2014 23:00:57 -0400
-Message-ID: <543B4053.5060708@netcommwireless.com> (sfid-20141013_050120_788767_FA692BF2)
-Date: Mon, 13 Oct 2014 14:00:35 +1100
-From: Sourav <sourav.chakraborty@netcommwireless.com>
+	Tue, 21 Oct 2014 05:16:34 -0400
+Received: by mail-ob0-f177.google.com with SMTP id uy5so587393obc.36
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Oct 2014 02:16:33 -0700 (PDT)
 MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Clients can't connect even though hostapd is running
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+In-Reply-To: <CABPxzYKVzjXJQsi4WSwuw5fD5a9cD=ONJiUxdgrahurZk0K9Qg@mail.gmail.com>
+References: <1413463736.1316541.179720977.4FD32021@webmail.messagingengine.com>
+	<1413510814.22769.6.camel@dcbw.local>
+	<1413751717.2510219.180809145.0E693C29@webmail.messagingengine.com>
+	<CANUX_P2RHVRorVABRfWVg39d4D8dj35v3fBpY3=3jvQ1U+mfEA@mail.gmail.com>
+	<1413783023.2710583.180921653.10DFFCEE@webmail.messagingengine.com>
+	<CANUX_P0Q7cNeBzQa=2WVZFJXPTLx8F6YQk9bGCf_3uYhc5RcGA@mail.gmail.com>
+	<CANUX_P3EqgTX7cPJvQ3fWH1yijekE0G_8TiH2_OCS7nFASGtkA@mail.gmail.com>
+	<1413789724.3063896.180943829.3F15F453@webmail.messagingengine.com>
+	<CANUX_P1REqkSqN0dtak34OQ_pSGMtPvV3Vj61tW5wb1+n2A7mg@mail.gmail.com>
+	<1413833365.2949853.181221645.22D54845@webmail.messagingengine.com>
+	<CANUX_P3XzYBp7E=hScmc837TpuCr9VrxEYauG=sGMKfOCpX=qA@mail.gmail.com>
+	<54461740.5000903@openwrt.org>
+	<1413879792.3500640.181427549.198E9452@webmail.messagingengine.com>
+	<54461AEF.7040304@openwrt.org>
+	<CABPxzYKVzjXJQsi4WSwuw5fD5a9cD=ONJiUxdgrahurZk0K9Qg@mail.gmail.com>
+Date: Tue, 21 Oct 2014 12:16:33 +0300
+Message-ID: <CANUX_P29rXx6i=N0RGTA9arExqaANGNtaVV40T9rDY8M42Yo2g@mail.gmail.com> (sfid-20141021_111639_790116_582DC8F9)
+Subject: Re: iwlwifi: Reason 7 periodic disconnect
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Cc: Felix Fietkau <nbd@openwrt.org>,
+	=?UTF-8?Q?Lauren=C8=9Biu_Nicola?= <lnicola@dend.ro>,
+	Dan Williams <dcbw@redhat.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Even though hostapd process is running on our router still clients can't 
-connect to it via WiFi....error logs are as follows --
+On Tue, Oct 21, 2014 at 12:05 PM, Krishna Chaitanya
+<chaitanya.mgit@gmail.com> wrote:
+> On Tue, Oct 21, 2014 at 2:05 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+>> On 2014-10-21 10:23, Laurențiu Nicola wrote:
+>>> It's an ASUS RT-N66U running NEWD-2/K3X from r24160.
+>> This is a Broadcom based device, so it should behave in the same way as
+>> other APs/Routers running the Broadcom drivers.
+>> The driver should only send Reason 7 when receiving a PS-Poll, BlockAck,
+>> BlockAckReq or Action frame from a station that's not associated, so
+>> probably it has already kicked out your iwlwifi client earlier. Not sure
+>> why that doesn't show up in the log though.
+>>
+> May be iwlwifi is dozing and did not Rx that frame?
 
-Oct 13 13:49:31 ntc_140wx daemon.info hostapd: wlan0: STA 
-20:64:32:57:76:e7 IEEE 802.11: authenticated
-Oct 13 13:49:31 ntc_140wx daemon.info hostapd: wlan0: STA 
-20:64:32:57:76:e7 IEEE 802.11: authenticated
-Oct 13 13:49:31 ntc_140wx daemon.info hostapd: wlan0: STA 
-20:64:32:57:76:e7 IEEE 802.11: authenticated
-Oct 13 13:49:31 ntc_140wx daemon.info hostapd: wlan0: STA 
-20:64:32:57:76:e7 IEEE 802.11: authenticated
-Oct 13 13:49:31 ntc_140wx daemon.info hostapd: wlan0: STA 
-20:64:32:57:76:e7 IEEE 802.11: authenticated
-Oct 13 13:49:31 ntc_140wx daemon.info hostapd: wlan0: STA 
-20:64:32:57:76:e7 IEEE 802.11: authenticated
-Oct 13 13:49:31 ntc_140wx daemon.info hostapd: wlan0: STA 
-20:64:32:57:76:e7 IEEE 802.11: authenticated
-Oct 13 13:49:31 ntc_140wx daemon.info hostapd: wlan0: STA 
-20:64:32:57:76:e7 IEEE 802.11: associated (aid 1)
-Oct 13 13:49:31 ntc_140wx daemon.info hostapd: wlan0: STA 
-20:64:32:57:76:e7 IEEE 802.11: associated (aid 1)
-Oct 13 13:49:31 ntc_140wx daemon.info hostapd: wlan0: STA 
-20:64:32:57:76:e7 IEEE 802.11: associated (aid 1)
-Oct 13 13:49:31 ntc_140wx daemon.info hostapd: wlan0: STA 
-20:64:32:57:76:e7 IEEE 802.11: associated (aid 1)
-Oct 13 13:49:31 ntc_140wx daemon.info hostapd: wlan0: STA 
-20:64:32:57:76:e7 IEEE 802.11: associated (aid 1)
-Oct 13 13:49:31 ntc_140wx daemon.info hostapd: wlan0: STA 
-20:64:32:57:76:e7 IEEE 802.11: associated (aid 1)
-Oct 13 13:49:31 ntc_140wx daemon.info hostapd: wlan0: STA 
-20:64:32:57:76:e7 IEEE 802.11: associated (aid 1)
-Oct 13 13:49:31 ntc_140wx daemon.info hostapd: wlan0: STA 
-20:64:32:57:76:e7 IEEE 802.11: authenticated
-Oct 13 13:49:31 ntc_140wx daemon.info hostapd: wlan0: STA 
-20:64:32:57:76:e7 IEEE 802.11: authenticated
-Oct 13 13:49:31 ntc_140wx daemon.info hostapd: wlan0: STA 
-20:64:32:57:76:e7 IEEE 802.11: authenticated
-Oct 13 13:49:31 ntc_140wx daemon.info hostapd: wlan0: STA 
-20:64:32:57:76:e7 IEEE 802.11: authenticated
-Oct 13 13:49:31 ntc_140wx daemon.info hostapd: wlan0: STA 
-20:64:32:57:76:e7 IEEE 802.11: authenticated
-Oct 13 13:49:31 ntc_140wx daemon.info hostapd: wlan0: STA 
-20:64:32:57:76:e7 IEEE 802.11: authenticated
-Oct 13 13:49:31 ntc_140wx daemon.info hostapd: wlan0: STA 
-20:64:32:57:76:e7 IEEE 802.11: authenticated
-Oct 13 13:49:31 ntc_140wx daemon.info hostapd: wlan0: STA 
-20:64:32:57:76:e7 IEEE 802.11: authenticated
-Oct 13 13:49:31 ntc_140wx daemon.info hostapd: wlan0: STA 
-20:64:32:57:76:e7 IEEE 802.11: authenticated
-Oct 13 13:49:31 ntc_140wx daemon.info hostapd: wlan0: STA 
-20:64:32:57:76:e7 IEEE 802.11: authenticated
-Oct 13 13:49:31 ntc_140wx daemon.info hostapd: wlan0: STA 
-20:64:32:57:76:e7 IEEE 802.11: authenticated
-Oct 13 13:49:31 ntc_140wx daemon.info hostapd: wlan0: STA 
-20:64:32:57:76:e7 IEEE 802.11: authenticated
-
-Please suggest a solution to overcome this.
-
--- 
-Warm Regards,
-Sourav
-
-
-______________________________________________________________________
-This communication contains information which may be confidential or privileged. The information is intended solely for the use of the individual or entity named above.  If you are not the intended recipient, be aware that any disclosure, copying, distribution or use of the contents of this information is prohibited.  If you have received this communication in error, please notify me by telephone immediately.
-______________________________________________________________________
+yep - this is most probably what happens. iwlwifi goes to sleep and it
+get a deauth that it doesn't hear. Then it wakes up with an NDP and
+gets kicked out.
+But shouldn't the deauth be buffered and indicated through the TIM IE?
