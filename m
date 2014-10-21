@@ -1,189 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:14961 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750823AbaJCI06 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Oct 2014 04:26:58 -0400
-Message-ID: <542E5DD3.6010406@broadcom.com> (sfid-20141003_102707_951252_F58EEA4F)
-Date: Fri, 3 Oct 2014 10:26:59 +0200
-From: Arend van Spriel <arend@broadcom.com>
+Received: from out3-smtp.messagingengine.com ([66.111.4.27]:53141 "EHLO
+	out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754696AbaJUIHT convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Oct 2014 04:07:19 -0400
+Received: from compute1.internal (compute1.nyi.internal [10.202.2.41])
+	by gateway2.nyi.internal (Postfix) with ESMTP id 004F520A5D
+	for <linux-wireless@vger.kernel.org>; Tue, 21 Oct 2014 04:07:18 -0400 (EDT)
+Message-Id: <1413878838.3495500.181423789.432422F8@webmail.messagingengine.com> (sfid-20141021_100731_151904_B3AE312F)
+From: =?UTF-8?Q?Lauren=C8=9Biu=20Nicola?= <lnicola@dend.ro>
+To: Krishna Chaitanya <chaitanya.mgit@gmail.com>,
+	Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: Dan Williams <dcbw@redhat.com>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-To: Aron Szabo <aron@aron.ws>,
-	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: brcm8021: BCM43341
-References: <542D5DCE.5060007@aron.ws>
-In-Reply-To: <542D5DCE.5060007@aron.ws>
-Content-Type: multipart/mixed;
-	boundary="------------070806040406080109070302"
+Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <CABPxzY+twpNpERES75MjVjaqGo5WKd2Rze4NH_hwCQGuqsUPxg@mail.gmail.com>
+References: <1413463736.1316541.179720977.4FD32021@webmail.messagingengine.com>
+ <1413510814.22769.6.camel@dcbw.local>
+ <1413751717.2510219.180809145.0E693C29@webmail.messagingengine.com>
+ <CANUX_P2RHVRorVABRfWVg39d4D8dj35v3fBpY3=3jvQ1U+mfEA@mail.gmail.com>
+ <1413783023.2710583.180921653.10DFFCEE@webmail.messagingengine.com>
+ <CANUX_P0Q7cNeBzQa=2WVZFJXPTLx8F6YQk9bGCf_3uYhc5RcGA@mail.gmail.com>
+ <CANUX_P3EqgTX7cPJvQ3fWH1yijekE0G_8TiH2_OCS7nFASGtkA@mail.gmail.com>
+ <1413789724.3063896.180943829.3F15F453@webmail.messagingengine.com>
+ <CANUX_P1REqkSqN0dtak34OQ_pSGMtPvV3Vj61tW5wb1+n2A7mg@mail.gmail.com>
+ <1413833365.2949853.181221645.22D54845@webmail.messagingengine.com>
+ <CANUX_P3XzYBp7E=hScmc837TpuCr9VrxEYauG=sGMKfOCpX=qA@mail.gmail.com>
+ <CANUX_P06VvZ0uugayOvhZK0iM-NetftN5rZA27TtkYku66cGXA@mail.gmail.com>
+ <CABPxzYJmhE8wodzoVDbx=inrAusP1NLCjcj0+R7MUmQhUFcyUA@mail.gmail.com>
+ <CABPxzYJkh7fV6kXhYZvbH7PBHJNBsz0DwshpZFmcDPifwXe6fQ@mail.gmail.com>
+ <CANUX_P1eb-C9yK-JGHgp_dc6uJzkDA=GYzKf+CFF50cqv0pVMQ@mail.gmail.com>
+ <CABPxzY+twpNpERES75MjVjaqGo5WKd2Rze4NH_hwCQGuqsUPxg@mail.gmail.com>
+Subject: Re: iwlwifi: Reason 7 periodic disconnect
+Date: Tue, 21 Oct 2014 11:07:18 +0300
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---------------070806040406080109070302
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: 7bit
+Could this still happen if power saving is disabled?
 
-On 02-10-14 16:14, Aron Szabo wrote:
-> Hi!
+Laurentiu
+
+On Tue, Oct 21, 2014, at 10:22, Krishna Chaitanya wrote:
+> On Tue, Oct 21, 2014 at 12:34 PM, Emmanuel Grumbach <egrumbach@gmail.com>
+> wrote:
+> > On Tue, Oct 21, 2014 at 9:37 AM, Krishna Chaitanya
+> > <chaitanya.mgit@gmail.com> wrote:
+> >> On Tue, Oct 21, 2014 at 12:06 PM, Krishna Chaitanya
+> >> <chaitanya.mgit@gmail.com> wrote:
+> >>> On Tue, Oct 21, 2014 at 11:01 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+> >>>> On Tue, Oct 21, 2014 at 8:02 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+> >>>>> On Mon, Oct 20, 2014 at 10:29 PM, Laurențiu Nicola <lnicola@dend.ro> wrote:
+> >>>>>> No, nothing in the DD-WRT syslog. The IP seems to be the one cached by
+> >>>>>> my DHCP client. I also tried various suggestions found on the internet,
+> >>>>>> but nothing helped.
+> >>>>>>
+> >>>>>
+> >>>>> Can you please try to have another device in monitor mode to sniff the
+> >>>>> traffic going on?
+> >>>>> Felix, can you please tell me when DD-WRT can send a deauth with reason code 7?
+> >>>>>
+> >>>>> thanks.
+> >>>>
+> >>>> Can you please disable power save?
+> >>>> For this, please make sure you have
+> >>>> https://git.kernel.org/cgit/linux/kernel/git/iwlwifi/iwlwifi-fixes.git/commit/?id=f8dfc607b2b460e8e8adfdfb3c5f5bba3a4ad01b
+> >>>> or at least have the module parameter.
+> >>>> I am wondering if the firmware is not sending frames because of power
+> >>>> save toggling.
+> >>>>
+> >>>> I you could get more extensive logs from the AP it'd be great.
+> >>>> Running tracing on the AP would let us know why it thinks we are not associated.
+> >>>>
+> >>> I have faced the same issue before it happens when DUT is in powersave
+> >>> and for some reason AP authenticates (in this case probably due to
+> >> *typo: deuauthenticates.
+> >>
+> >>> inactivity) but as DUT is in power save we don't Rx the deauth (some
+> >>> AP's don't wait
+> >>> for STA to wakeup and retrieve the deauth frame).
+> >>>
+> >>> So after that if DUT tries to sent any data frame, as it still thinks
+> >>> that it is connected
+> >>> (network lost also will not trigger because it still Rx beacon) and in
+> >>> that case AP deauthenticates
+> >>> us by Reason:7.
+> >>>
+> >>> May be if we enable tx status report ACK we can pass the inactivity
+> >>> check as some AP's
+> >>> wont reset inactivity timer for probe's.
+> >
+> > That seems unlikely - we are kicked out after 1 minute?
+> > Let's check, Laurentiu - can you please ping in the background and see
+> > what happens?
 > 
-> I have an ASUS T200TA that has this chip BCM43341 02D0:A94D
-> (http://www.broadcom.com/products/Bluetooth/Bluetooth-RF-Silicon-and-Software-Solutions/BCM43341).
+> Yeah, but some Ap's do that :-)
+> Quote from Laurentiu:
 > 
-> This chip is supported by the bcmdhd driver under Android, but not by
-> this driver.
+> "What I found out in the meanwhile, however, is that active traffic will
+> prevent the issue from occurring. This happened with the Fedora Live CD,
+> but pinging the AP is also sufficient. I noticed iwconfig reports that
+> the power saving mode is off."
 > 
-> I tried to modify the driver to load the firmware extracted from the
-> Windows version, but I had no luck:
-> 
-> brcmfmac_sdio mmc1:0001:1: Direct firmware load failed with error -2
-> brcmfmac_sdio mmc1:0001:1: Falling back to user helper
-
-This can mean different things
-> The sta driver from Broadcom does not support this chip.
-
-Yep. The Broadcom wl sta driver is for softmac devices and the bcm43341
-is a fullmac device.
-
-> Without documentation and any knowledge of how wireless chips work, what
-> I can do is probably useless trial and error, so I wanted to ask for
-> help :)
-> 
-> Ha someone worked with this chip? Can somebody point me in the right
-> direction ?
-
-Nope. However, I provided a patch for bcm43340 which basically uses
-/lib/firmware/brcm/brcmfmac4334-sdio.bin. I don't know what you changed
-in brcmfmac so please share details about what you did. Attached is the
-patch I mentioned, but it needs to be modified for bcm43341.
-
-Regards,
-Arend
-
-> Thanks!
-> 
-> Yours,
-> Aron
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe
-> linux-wireless" in
+> So when traffic is there the issue doesn't happen, so it points to
+> inactivity.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+> in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
---------------070806040406080109070302
-Content-Type: application/x-extension-eml;
-	name="[PATCH] brcmfmac: add support for bcm43340 wireless chipset.eml"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
-	filename*0="[PATCH] brcmfmac: add support for bcm43340 wireless chipset.";
-	filename*1="eml"
-
-UmVjZWl2ZWQ6IGZyb20gSVJWRVhDSFNNVFAzLmNvcnAuYWQuYnJvYWRjb20uY29tICgxMC45
-LjIwNy41MykgYnkNCiBTSkVYQ0hDQVMwNS5jb3JwLmFkLmJyb2FkY29tLmNvbSAoMTAuMTYu
-MjAzLjEyKSB3aXRoIE1pY3Jvc29mdCBTTVRQIFNlcnZlcg0KIChUTFMpIGlkIDE0LjMuMTc0
-LjE7IFRodSwgMTEgU2VwIDIwMTQgMDY6MjM6MzQgLTA3MDANClJlY2VpdmVkOiBmcm9tIG1h
-aWwtc2oxLTEyLnNqLmJyb2FkY29tLmNvbSAoMTAuMTAuMTAuMjApIGJ5DQogSVJWRVhDSFNN
-VFAzLmNvcnAuYWQuYnJvYWRjb20uY29tICgxMC45LjIwNy41Mykgd2l0aCBNaWNyb3NvZnQg
-U01UUCBTZXJ2ZXIgaWQNCiAxNC4zLjE3NC4xOyBUaHUsIDExIFNlcCAyMDE0IDA2OjIzOjMx
-IC0wNzAwDQpSZWNlaXZlZDogZnJvbSBsYi1idW4tMjM1LmJ1bi5icm9hZGNvbS5jb20gKGxi
-LWJ1bi0yMzUuYnVuLmJyb2FkY29tLmNvbQ0KIFsxMC4xNzYuOC4yMzVdKQlieSBtYWlsLXNq
-MS0xMi5zai5icm9hZGNvbS5jb20gKFBvc3RmaXgpIHdpdGggRVNNVFAgaWQNCiBBQjdBNjI3
-QTgxOwlUaHUsIDExIFNlcCAyMDE0IDA2OjIzOjMwIC0wNzAwIChQRFQpDQpSZWNlaXZlZDog
-ZnJvbSBhcmVuZCBieSBsYi1idW4tMjM1LmJ1bi5icm9hZGNvbS5jb20gd2l0aCBsb2NhbCAo
-RXhpbSA0LjgyKQ0KCShlbnZlbG9wZS1mcm9tIDxhcmVuZEBicm9hZGNvbS5jb20+KQlpZCAx
-WFM0TFItMDAwNFBPLUh3OyBUaHUsIDExIFNlcCAyMDE0DQogMTU6MjM6MjkgKzAyMDANCkZy
-b206IEFyZW5kIHZhbiBTcHJpZWwgPGFyZW5kQGJyb2FkY29tLmNvbT4NClRvOiA8c2FtZW9A
-bGludXguaW50ZWwuY29tPg0KQ0M6IDxhc3ByaWVsQGdtYWlsLmNvbT4sIEFyZW5kIHZhbiBT
-cHJpZWwgPGFyZW5kQGJyb2FkY29tLmNvbT4NClN1YmplY3Q6IFtQQVRDSF0gYnJjbWZtYWM6
-IGFkZCBzdXBwb3J0IGZvciBiY200MzM0MCB3aXJlbGVzcyBjaGlwc2V0DQpEYXRlOiBUaHUs
-IDExIFNlcCAyMDE0IDE1OjIzOjI1ICswMjAwDQpNZXNzYWdlLUlEOiA8MTQxMDQ0MTgwNS0x
-NjkxMi0xLWdpdC1zZW5kLWVtYWlsLWFyZW5kQGJyb2FkY29tLmNvbT4NClgtTWFpbGVyOiBn
-aXQtc2VuZC1lbWFpbCAxLjkuMQ0KQ29udGVudC1UeXBlOiB0ZXh0L3BsYWluDQpSZXR1cm4t
-UGF0aDogYXJlbmRAYnJvYWRjb20uY29tDQpYLU1TLUV4Y2hhbmdlLU9yZ2FuaXphdGlvbi1B
-VlN0YW1wLU1haWxib3g6IFNZTUFOVEVDOzUyMjg0NjMzNjswO2luZm8NClgtTVMtRXhjaGFu
-Z2UtT3JnYW5pemF0aW9uLVNDTDogLTENClgtTVMtRXhjaGFuZ2UtT3JnYW5pemF0aW9uLUF1
-dGhTb3VyY2U6IElydmV4Y2hzbXRwMy5jb3JwLmFkLmJyb2FkY29tLmNvbQ0KWC1NUy1FeGNo
-YW5nZS1Pcmdhbml6YXRpb24tQXV0aEFzOiBBbm9ueW1vdXMNCk1JTUUtVmVyc2lvbjogMS4w
-DQoNClRoaXMgcGF0Y2ggYWRkcyBzdXBwb3J0IGZvciB0aGUgYmNtNDMzNDAgd2lyZWxlc3Mg
-Y2hpcC4gVGhpcyBkZXZpY2UNCmlzIGJhc2VkIG9uIHRoZSBiY200MzM0IGFuZCBhcyBzdWNo
-IGNhbiB1c2UgdGhlIHNhbWUgZmlybXdhcmUuDQoNClNpZ25lZC1vZmYtYnk6IEFyZW5kIHZh
-biBTcHJpZWwgPGFyZW5kQGJyb2FkY29tLmNvbT4NCi0tLQ0KSGkgU2FtdWVsLA0KDQpUaGlz
-IGNvdWxkIGRvIHRoZSB0cmljay4gRnJvbSB0aGUgaW5mb3JtYXRpb24gSSBmb3VuZCB0aGUg
-c3RhdGVtZW50DQphYm92ZSBhYm91dCB0aGUgZmlybXdhcmUgc2hvdWxkIGJlIHRydWUuIFNv
-IHlvdSBjYW4gdHJ5IHRoZQ0KYnJjbWZtYWM0MzM0LXNkaW8uYmluIGZyb20gdGhlIGxpbnV4
-IGZpcm13YXJlIHJlcG9zaXRvcnkuIElmIE11cmF0YQ0KcHJvdmlkZWQgZmlybXdhcmUgYW5k
-IG52cmFtIGZpbGUsIGNvdWxkIHlvdSBzZW50IG1lIHRoZSBudnJhbSBmaWxlDQphbmQgbWFr
-ZSBoZXhkdW1wIG9mIHRoZSBmaXJtd2FyZSB1c2luZzoNCg0KJCBoZXhkdW1wIC1DIGZpcm13
-YXJlLmJpbiB8IHRhaWwgLTIwDQoNClJlZ2FyZHMsDQpBcmVuZA0KLS0tDQogZHJpdmVycy9u
-ZXQvd2lyZWxlc3MvYnJjbTgwMjExL2JyY21mbWFjL2JjbXNkaC5jICAgICB8IDEgKw0KIGRy
-aXZlcnMvbmV0L3dpcmVsZXNzL2JyY204MDIxMS9icmNtZm1hYy9jaGlwLmMgICAgICAgfCAx
-ICsNCiBkcml2ZXJzL25ldC93aXJlbGVzcy9icmNtODAyMTEvYnJjbWZtYWMvZGhkX3NkaW8u
-YyAgIHwgMyArKy0NCiBkcml2ZXJzL25ldC93aXJlbGVzcy9icmNtODAyMTEvaW5jbHVkZS9i
-cmNtX2h3X2lkcy5oIHwgMSArDQogaW5jbHVkZS9saW51eC9tbWMvc2Rpb19pZHMuaCAgICAg
-ICAgICAgICAgICAgICAgICAgICB8IDEgKw0KIDUgZmlsZXMgY2hhbmdlZCwgNiBpbnNlcnRp
-b25zKCspLCAxIGRlbGV0aW9uKC0pDQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJl
-bGVzcy9icmNtODAyMTEvYnJjbWZtYWMvYmNtc2RoLmMgYi9kcml2ZXJzL25ldC93aXJlbGVz
-cy9icmNtODAyMTEvYnJjbWZtYWMvYmNtc2RoLmMNCmluZGV4IDhkYmQ1ZGIuLmI4NzU1ZDUg
-MTAwNjQ0DQotLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9icmNtODAyMTEvYnJjbWZtYWMv
-YmNtc2RoLmMNCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2JyY204MDIxMS9icmNtZm1h
-Yy9iY21zZGguYw0KQEAgLTEwMDUsNiArMTAwNSw3IEBAIHN0YXRpYyBjb25zdCBzdHJ1Y3Qg
-c2Rpb19kZXZpY2VfaWQgYnJjbWZfc2RtbWNfaWRzW10gPSB7DQogCUJSQ01GX1NESU9fREVW
-SUNFKEJSQ01fU0RJT180MzI5X0RFVklDRV9JRCksDQogCUJSQ01GX1NESU9fREVWSUNFKEJS
-Q01fU0RJT180MzMwX0RFVklDRV9JRCksDQogCUJSQ01GX1NESU9fREVWSUNFKEJSQ01fU0RJ
-T180MzM0X0RFVklDRV9JRCksDQorCUJSQ01GX1NESU9fREVWSUNFKEJSQ01fU0RJT180MzM0
-MF9ERVZJQ0VfSUQpLA0KIAlCUkNNRl9TRElPX0RFVklDRShCUkNNX1NESU9fNDMzNjJfREVW
-SUNFX0lEKSwNCiAJQlJDTUZfU0RJT19ERVZJQ0UoQlJDTV9TRElPXzQzMzVfNDMzOV9ERVZJ
-Q0VfSUQpLA0KIAlCUkNNRl9TRElPX0RFVklDRShCUkNNX1NESU9fNDM1NF9ERVZJQ0VfSUQp
-LA0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2JyY204MDIxMS9icmNtZm1h
-Yy9jaGlwLmMgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9icmNtODAyMTEvYnJjbWZtYWMvY2hp
-cC5jDQppbmRleCA5NWVmZGU4Li42OTA0ZWQwIDEwMDY0NA0KLS0tIGEvZHJpdmVycy9uZXQv
-d2lyZWxlc3MvYnJjbTgwMjExL2JyY21mbWFjL2NoaXAuYw0KKysrIGIvZHJpdmVycy9uZXQv
-d2lyZWxlc3MvYnJjbTgwMjExL2JyY21mbWFjL2NoaXAuYw0KQEAgLTQ5NSw2ICs0OTUsNyBA
-QCBzdGF0aWMgdm9pZCBicmNtZl9jaGlwX2dldF9yYW1pbmZvKHN0cnVjdCBicmNtZl9jaGlw
-X3ByaXYgKmNpKQ0KIAkJY2ktPnB1Yi5yYW1zaXplID0gMHg0ODAwMDsNCiAJCWJyZWFrOw0K
-IAljYXNlIEJSQ01fQ0NfNDMzNF9DSElQX0lEOg0KKwljYXNlIEJSQ01fQ0NfNDMzNDBfQ0hJ
-UF9JRDoNCiAJCWNpLT5wdWIucmFtc2l6ZSA9IDB4ODAwMDA7DQogCQlicmVhazsNCiAJY2Fz
-ZSBCUkNNX0NDXzQzMzVfQ0hJUF9JRDoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJl
-bGVzcy9icmNtODAyMTEvYnJjbWZtYWMvZGhkX3NkaW8uYyBiL2RyaXZlcnMvbmV0L3dpcmVs
-ZXNzL2JyY204MDIxMS9icmNtZm1hYy9kaGRfc2Rpby5jDQppbmRleCBmNTVmNjI1Li4xZWM1
-YmI4IDEwMDY0NA0KLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvYnJjbTgwMjExL2JyY21m
-bWFjL2RoZF9zZGlvLmMNCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2JyY204MDIxMS9i
-cmNtZm1hYy9kaGRfc2Rpby5jDQpAQCAtNjYwLDYgKzY2MCw3IEBAIHN0YXRpYyBjb25zdCBz
-dHJ1Y3QgYnJjbWZfZmlybXdhcmVfbmFtZXMgYnJjbWZfZnduYW1lX2RhdGFbXSA9IHsNCiAJ
-eyBCUkNNX0NDXzQzMjlfQ0hJUF9JRCwgMHhGRkZGRkZGRiwgQlJDTUZfRklSTVdBUkVfTlZS
-QU0oQkNNNDMyOSkgfSwNCiAJeyBCUkNNX0NDXzQzMzBfQ0hJUF9JRCwgMHhGRkZGRkZGRiwg
-QlJDTUZfRklSTVdBUkVfTlZSQU0oQkNNNDMzMCkgfSwNCiAJeyBCUkNNX0NDXzQzMzRfQ0hJ
-UF9JRCwgMHhGRkZGRkZGRiwgQlJDTUZfRklSTVdBUkVfTlZSQU0oQkNNNDMzNCkgfSwNCisJ
-eyBCUkNNX0NDXzQzMzQwX0NISVBfSUQsIDB4RkZGRkZGRkYsIEJSQ01GX0ZJUk1XQVJFX05W
-UkFNKEJDTTQzMzQpIH0sDQogCXsgQlJDTV9DQ180MzM1X0NISVBfSUQsIDB4RkZGRkZGRkYs
-IEJSQ01GX0ZJUk1XQVJFX05WUkFNKEJDTTQzMzUpIH0sDQogCXsgQlJDTV9DQ180MzM2Ml9D
-SElQX0lELCAweEZGRkZGRkZFLCBCUkNNRl9GSVJNV0FSRV9OVlJBTShCQ000MzM2MikgfSwN
-CiAJeyBCUkNNX0NDXzQzMzlfQ0hJUF9JRCwgMHhGRkZGRkZGRiwgQlJDTUZfRklSTVdBUkVf
-TlZSQU0oQkNNNDMzOSkgfSwNCkBAIC00MDc1LDcgKzQwNzYsNyBAQCBzdHJ1Y3QgYnJjbWZf
-c2RpbyAqYnJjbWZfc2Rpb19wcm9iZShzdHJ1Y3QgYnJjbWZfc2Rpb19kZXYgKnNkaW9kZXYp
-DQogDQogCS8qIHBsYXRmb3JtIHNwZWNpZmljIGNvbmZpZ3VyYXRpb246DQogCSAqICAgYWxp
-Z25tZW50cyBtdXN0IGJlIGF0IGxlYXN0IDQgYnl0ZXMgZm9yIEFETUENCi0gICAgICAgICAq
-Lw0KKwkgKi8NCiAJYnVzLT5oZWFkX2FsaWduID0gQUxJR05NRU5UOw0KIAlidXMtPnNnZW50
-cnlfYWxpZ24gPSBBTElHTk1FTlQ7DQogCWlmIChzZGlvZGV2LT5wZGF0YSkgew0KZGlmZiAt
-LWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2JyY204MDIxMS9pbmNsdWRlL2JyY21faHdf
-aWRzLmggYi9kcml2ZXJzL25ldC93aXJlbGVzcy9icmNtODAyMTEvaW5jbHVkZS9icmNtX2h3
-X2lkcy5oDQppbmRleCBhZjI2ZTBkLi4xM2ZkYzZjIDEwMDY0NA0KLS0tIGEvZHJpdmVycy9u
-ZXQvd2lyZWxlc3MvYnJjbTgwMjExL2luY2x1ZGUvYnJjbV9od19pZHMuaA0KKysrIGIvZHJp
-dmVycy9uZXQvd2lyZWxlc3MvYnJjbTgwMjExL2luY2x1ZGUvYnJjbV9od19pZHMuaA0KQEAg
-LTM0LDYgKzM0LDcgQEANCiAjZGVmaW5lIEJSQ01fQ0NfNDMyOV9DSElQX0lECQkweDQzMjkN
-CiAjZGVmaW5lIEJSQ01fQ0NfNDMzMF9DSElQX0lECQkweDQzMzANCiAjZGVmaW5lIEJSQ01f
-Q0NfNDMzNF9DSElQX0lECQkweDQzMzQNCisjZGVmaW5lIEJSQ01fQ0NfNDMzNDBfQ0hJUF9J
-RAkJNDMzNDANCiAjZGVmaW5lIEJSQ01fQ0NfNDMzNjJfQ0hJUF9JRAkJNDMzNjINCiAjZGVm
-aW5lIEJSQ01fQ0NfNDMzNV9DSElQX0lECQkweDQzMzUNCiAjZGVmaW5lIEJSQ01fQ0NfNDMz
-OV9DSElQX0lECQkweDQzMzkNCmRpZmYgLS1naXQgYS9pbmNsdWRlL2xpbnV4L21tYy9zZGlv
-X2lkcy5oIGIvaW5jbHVkZS9saW51eC9tbWMvc2Rpb19pZHMuaA0KaW5kZXggMGYwMWZlMC4u
-OGNjODIxMCAxMDA2NDQNCi0tLSBhL2luY2x1ZGUvbGludXgvbW1jL3NkaW9faWRzLmgNCisr
-KyBiL2luY2x1ZGUvbGludXgvbW1jL3NkaW9faWRzLmgNCkBAIC0yOSw2ICsyOSw3IEBADQog
-I2RlZmluZSBTRElPX0RFVklDRV9JRF9CUk9BRENPTV80MzI5CQkweDQzMjkNCiAjZGVmaW5l
-IFNESU9fREVWSUNFX0lEX0JST0FEQ09NXzQzMzAJCTB4NDMzMA0KICNkZWZpbmUgU0RJT19E
-RVZJQ0VfSURfQlJPQURDT01fNDMzNAkJMHg0MzM0DQorI2RlZmluZSBTRElPX0RFVklDRV9J
-RF9CUk9BRENPTV80MzM0MAkJNDMzNDANCiAjZGVmaW5lIFNESU9fREVWSUNFX0lEX0JST0FE
-Q09NXzQzMzVfNDMzOQkweDQzMzUNCiAjZGVmaW5lIFNESU9fREVWSUNFX0lEX0JST0FEQ09N
-XzQzMzYyCQk0MzM2Mg0KICNkZWZpbmUgU0RJT19ERVZJQ0VfSURfQlJPQURDT01fNDM1NAkJ
-MHg0MzU0DQotLSANCjEuOS4xDQoNCg==
---------------070806040406080109070302--
