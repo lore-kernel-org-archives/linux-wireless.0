@@ -1,74 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:57366 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751176AbaJBMMA (ORCPT
+Received: from mail-wg0-f46.google.com ([74.125.82.46]:37579 "EHLO
+	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751091AbaJUJ5o convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Oct 2014 08:12:00 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	wil6210@qca.qualcomm.com, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH] wil6210: remove obsolete msm platform code
-Date: Thu, 02 Oct 2014 14:11:22 +0200
-Message-ID: <3354043.ejE77YinPM@wuerfel> (sfid-20141002_141212_238886_F68A08DE)
-In-Reply-To: <1572828.LhiMXjHRdV@lx-wigig-72>
-References: <3995357.SmO1fZQuHn@wuerfel> <1572828.LhiMXjHRdV@lx-wigig-72>
+	Tue, 21 Oct 2014 05:57:44 -0400
+Received: by mail-wg0-f46.google.com with SMTP id l18so905282wgh.5
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Oct 2014 02:57:36 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <CANUX_P29rXx6i=N0RGTA9arExqaANGNtaVV40T9rDY8M42Yo2g@mail.gmail.com>
+References: <1413463736.1316541.179720977.4FD32021@webmail.messagingengine.com>
+ <1413510814.22769.6.camel@dcbw.local> <1413751717.2510219.180809145.0E693C29@webmail.messagingengine.com>
+ <CANUX_P2RHVRorVABRfWVg39d4D8dj35v3fBpY3=3jvQ1U+mfEA@mail.gmail.com>
+ <1413783023.2710583.180921653.10DFFCEE@webmail.messagingengine.com>
+ <CANUX_P0Q7cNeBzQa=2WVZFJXPTLx8F6YQk9bGCf_3uYhc5RcGA@mail.gmail.com>
+ <CANUX_P3EqgTX7cPJvQ3fWH1yijekE0G_8TiH2_OCS7nFASGtkA@mail.gmail.com>
+ <1413789724.3063896.180943829.3F15F453@webmail.messagingengine.com>
+ <CANUX_P1REqkSqN0dtak34OQ_pSGMtPvV3Vj61tW5wb1+n2A7mg@mail.gmail.com>
+ <1413833365.2949853.181221645.22D54845@webmail.messagingengine.com>
+ <CANUX_P3XzYBp7E=hScmc837TpuCr9VrxEYauG=sGMKfOCpX=qA@mail.gmail.com>
+ <54461740.5000903@openwrt.org> <1413879792.3500640.181427549.198E9452@webmail.messagingengine.com>
+ <54461AEF.7040304@openwrt.org> <CABPxzYKVzjXJQsi4WSwuw5fD5a9cD=ONJiUxdgrahurZk0K9Qg@mail.gmail.com>
+ <CANUX_P29rXx6i=N0RGTA9arExqaANGNtaVV40T9rDY8M42Yo2g@mail.gmail.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Tue, 21 Oct 2014 15:27:16 +0530
+Message-ID: <CABPxzYLm98e6p8jojCxHeaQRfhyLH+jaMHYWj1K+BqhhwtsRYg@mail.gmail.com> (sfid-20141021_115748_541425_219CA940)
+Subject: Re: iwlwifi: Reason 7 periodic disconnect
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: Felix Fietkau <nbd@openwrt.org>,
+	=?UTF-8?Q?Lauren=C8=9Biu_Nicola?= <lnicola@dend.ro>,
+	Dan Williams <dcbw@redhat.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 02 October 2014 14:29:06 Vladimir Kondratiev wrote:
-> On Tuesday, September 30, 2014 05:48:20 PM Arnd Bergmann wrote:
-> > The wil6210 driver has a glue layer for the Qualcomm MSM platform
-> > code, which apparently could never build and is unlikely to
-> > ever be able to in the future, as the MSM platform is being phased
-> > out in favor of the new QCOM platform, and the driver relies
-> > on out-of-tree infrastructure. Trying to build it currently
-> > results in this error:
-> > 
-> > drivers/net/wireless/ath/wil6210/wil_platform_msm.c:19:27: fatal error: linux/msm-bus.h: No such file or directory
-> > 
-> > Removing the driver fixes the build and makes it possible to
-> > build an allmodconfig kernel for MSM.
-> > 
-> > Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> > 
-> 
-> We are investigating this, looking for the appropriate solution.
-> Thanks for pointing to this.
+On Tue, Oct 21, 2014 at 2:46 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+> On Tue, Oct 21, 2014 at 12:05 PM, Krishna Chaitanya
+> <chaitanya.mgit@gmail.com> wrote:
+>> On Tue, Oct 21, 2014 at 2:05 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+>>> On 2014-10-21 10:23, Laurențiu Nicola wrote:
+>>>> It's an ASUS RT-N66U running NEWD-2/K3X from r24160.
+>>> This is a Broadcom based device, so it should behave in the same way as
+>>> other APs/Routers running the Broadcom drivers.
+>>> The driver should only send Reason 7 when receiving a PS-Poll, BlockAck,
+>>> BlockAckReq or Action frame from a station that's not associated, so
+>>> probably it has already kicked out your iwlwifi client earlier. Not sure
+>>> why that doesn't show up in the log though.
+>>>
+>> May be iwlwifi is dozing and did not Rx that frame?
+>
+> yep - this is most probably what happens. iwlwifi goes to sleep and it
+> get a deauth that it doesn't hear. Then it wakes up with an NDP and
+> gets kicked out.
+> But shouldn't the deauth be buffered and indicated through the TIM IE?
 
-FWIW, I took a closer look at the actual driver code now. It's
-actually worse than I thought and I don't see any possible way
-out other than removing this driver completely and starting a
-new one, if you want to use it for mach-qcom. I hadn't realized
-before that this is actually new code rather than ancient bitrot
-that suddenly started causing problems.
+Yes, but not all AP's do that, at least the one i faced the issue was
+not doing that.
 
-Some of the worst problems are:
 
-- the driver scans for DT properties that are completely
-  undocumented and have not been reviewed
 
-- if they had been reviewed, the first comment you would have
-  received is that the binding makes no sense: you scan for
-  another node rather than taking the node you already have for
-  the PCI device, then pass data into a random soc-specific
-  driver API that is not part of the upstream kernel.
-
-- as mentioned in the my patch above, the code has never been
-  compiled on a mainline kernel and now breaks builds.
-
-I think the only way forward is to have the platform support for
-whatever chip this is meant for reviewed and merged first and
-then you can write a new glue driver for the interfaces we end
-up putting into the kernel.
-My guess is that with proper interfaces between the platform
-bus driver and the wil driver glue, there would be very little
-left in terms of interface and you can just call a generic
-interface from the PCI driver, passing the 'struct device'
-for the PCI dev in to an exported interface when provided.
-
-	Arnd
+-- 
+Thanks,
+Regards,
+Chaitanya T K.
