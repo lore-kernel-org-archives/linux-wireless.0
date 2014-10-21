@@ -1,35 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews04.kpnxchange.com ([213.75.39.7]:51113 "EHLO
-	cpsmtpb-ews04.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750912AbaJaIki (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Oct 2014 04:40:38 -0400
-Message-ID: <1414744834.1964.7.camel@x220> (sfid-20141031_094119_721260_FECF8114)
-Subject: iwlwifi: mvm:  BACKPORT_WANT_DEV_COREDUMP?
-From: Paul Bolle <pebolle@tiscali.nl>
-To: Johannes Berg <johannes.berg@intel.com>
-Cc: Valentin Rothberg <valentinrothberg@gmail.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Fri, 31 Oct 2014 09:40:34 +0100
+Received: from s3.sipsolutions.net ([5.9.151.49]:45506 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755026AbaJUTmp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Oct 2014 15:42:45 -0400
+Message-ID: <1413920556.1998.26.camel@jlt4.sipsolutions.net> (sfid-20141021_214247_922341_3B3BE9AE)
+Subject: Re: [PATCH v2 6/6] cfg80211: support configuring vdev mac addr on
+ create.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: greearb@candelatech.com
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 21 Oct 2014 21:42:36 +0200
+In-Reply-To: <1413845378-27837-6-git-send-email-greearb@candelatech.com>
+References: <1413845378-27837-1-git-send-email-greearb@candelatech.com>
+	 <1413845378-27837-6-git-send-email-greearb@candelatech.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Your commit aadede6e9f4c ("iwlwifi: mvm: port to devcoredump framework")
-landed in today's linux-next (next-20141031). It adds a select statement
-for BACKPORT_WANT_DEV_COREDUMP. There's no Kconfig symbol 
-BACKPORT_WANT_DEV_COREDUMP so this select is currently a nop. (In
-https://lkml.org/lkml/2014/9/30/578 I proposed a patch that emits a
-warning in cases like this.)
+Same comment regarding "vdev", here starting from the subject.
 
-Did you perhaps meant to select WANT_DEV_COREDUMP? Or is the Kconfig
-symbol BACKPORT_WANT_DEV_COREDUMP queued somewhere?
+Also, this patch isn't purely cfg80211 - should probably split it into
+cfg80211 and mac80211 parts?
+
+On Mon, 2014-10-20 at 15:49 -0700, greearb@candelatech.com wrote:
+> From: Ben Greear <greearb@candelatech.com>
+> 
+> This is useful when creating virtual-stations, and probably
+> APs and other devices as well.
+
+It clearly is - imho worth rephrasing as just "when creating virtual
+interfaces" :-)
+
+> +++ b/include/net/cfg80211.h
+> @@ -319,9 +319,9 @@ struct ieee80211_supported_band {
+>  /**
+>   * struct vif_params - describes virtual interface parameters
+>   * @use_4addr: use 4-address frames
+> - * @macaddr: address to use for this virtual interface. This will only
+> - * 	be used for non-netdevice interfaces. If this parameter is set
+> - * 	to zero address the driver may determine the address as needed.
+> + * @macaddr: address to use for this virtual interface.
+> + *	If this parameter is set to zero address the driver may
+> + *	determine the address as needed.
 
 
-Paul Bolle
+Maybe point to the feature flag here.
+
+> + * @NL80211_FEATURE_MAC_ON_CREATE: Device supports configuring
+> + *	the vdev's MAC address upon creation.
+
+Maybe point to the attribute that's used for that here?
+
+johannes
 
