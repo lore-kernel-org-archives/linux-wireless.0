@@ -1,78 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:32807 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751086AbaJXTFg (ORCPT
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:44872 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750750AbaJUGgq convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Oct 2014 15:05:36 -0400
-Received: by mail-wi0-f174.google.com with SMTP id q5so2013950wiv.1
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Oct 2014 12:05:35 -0700 (PDT)
-Received: from [10.5.50.110] (105-236-80-71.access.mtnbusiness.co.za. [105.236.80.71])
-        by mx.google.com with ESMTPSA id ey6sm2927431wib.16.2014.10.24.12.05.33
-        for <linux-wireless@vger.kernel.org>
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 24 Oct 2014 12:05:34 -0700 (PDT)
-Message-ID: <544AA2F9.6050806@gmail.com> (sfid-20141024_210539_691167_B169FF47)
-Date: Fri, 24 Oct 2014 21:05:29 +0200
-From: jeremy lansman <jeremy.lansman@gmail.com>
-Reply-To: jeremy.lansman@gmail.com
+	Tue, 21 Oct 2014 02:36:46 -0400
+Received: by mail-wi0-f173.google.com with SMTP id fb4so9059176wid.6
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2014 23:36:42 -0700 (PDT)
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Channel Estimation Question
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <CANUX_P06VvZ0uugayOvhZK0iM-NetftN5rZA27TtkYku66cGXA@mail.gmail.com>
+References: <1413463736.1316541.179720977.4FD32021@webmail.messagingengine.com>
+ <1413510814.22769.6.camel@dcbw.local> <1413751717.2510219.180809145.0E693C29@webmail.messagingengine.com>
+ <CANUX_P2RHVRorVABRfWVg39d4D8dj35v3fBpY3=3jvQ1U+mfEA@mail.gmail.com>
+ <1413783023.2710583.180921653.10DFFCEE@webmail.messagingengine.com>
+ <CANUX_P0Q7cNeBzQa=2WVZFJXPTLx8F6YQk9bGCf_3uYhc5RcGA@mail.gmail.com>
+ <CANUX_P3EqgTX7cPJvQ3fWH1yijekE0G_8TiH2_OCS7nFASGtkA@mail.gmail.com>
+ <1413789724.3063896.180943829.3F15F453@webmail.messagingengine.com>
+ <CANUX_P1REqkSqN0dtak34OQ_pSGMtPvV3Vj61tW5wb1+n2A7mg@mail.gmail.com>
+ <1413833365.2949853.181221645.22D54845@webmail.messagingengine.com>
+ <CANUX_P3XzYBp7E=hScmc837TpuCr9VrxEYauG=sGMKfOCpX=qA@mail.gmail.com> <CANUX_P06VvZ0uugayOvhZK0iM-NetftN5rZA27TtkYku66cGXA@mail.gmail.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Tue, 21 Oct 2014 12:06:22 +0530
+Message-ID: <CABPxzYJmhE8wodzoVDbx=inrAusP1NLCjcj0+R7MUmQhUFcyUA@mail.gmail.com> (sfid-20141021_083649_657576_356BDC44)
+Subject: Re: iwlwifi: Reason 7 periodic disconnect
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: =?UTF-8?Q?Lauren=C8=9Biu_Nicola?= <lnicola@dend.ro>,
+	Dan Williams <dcbw@redhat.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi.
+On Tue, Oct 21, 2014 at 11:01 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+> On Tue, Oct 21, 2014 at 8:02 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+>> On Mon, Oct 20, 2014 at 10:29 PM, Laurențiu Nicola <lnicola@dend.ro> wrote:
+>>> No, nothing in the DD-WRT syslog. The IP seems to be the one cached by
+>>> my DHCP client. I also tried various suggestions found on the internet,
+>>> but nothing helped.
+>>>
+>>
+>> Can you please try to have another device in monitor mode to sniff the
+>> traffic going on?
+>> Felix, can you please tell me when DD-WRT can send a deauth with reason code 7?
+>>
+>> thanks.
+>
+> Can you please disable power save?
+> For this, please make sure you have
+> https://git.kernel.org/cgit/linux/kernel/git/iwlwifi/iwlwifi-fixes.git/commit/?id=f8dfc607b2b460e8e8adfdfb3c5f5bba3a4ad01b
+> or at least have the module parameter.
+> I am wondering if the firmware is not sending frames because of power
+> save toggling.
+>
+> I you could get more extensive logs from the AP it'd be great.
+> Running tracing on the AP would let us know why it thinks we are not associated.
+>
+I have faced the same issue before it happens when DUT is in powersave
+and for some reason AP authenticates (in this case probably due to
+inactivity) but as DUT is in power save we don't Rx the deauth (some
+AP's don't wait
+for STA to wakeup and retrieve the deauth frame).
 
-I beg your pardon for asking a newbe question...but..here goes anyway.
+So after that if DUT tries to sent any data frame, as it still thinks
+that it is connected
+(network lost also will not trigger because it still Rx beacon) and in
+that case AP deauthenticates
+us by Reason:7.
 
-My problem is with an Intel Advanced 6230.  I have noted over the year + 
-I have used it under Ubuntu that it seems to have a problem when I move 
-the laptop.  This is consistent with a channel estimation (tap 
-equalizer) issue under COFDM modulation.
-No, I do not know about wi-fi, and I do not relish digging into driver 
-stuff.  But I do know digital RF in general.
-If it is going to take more hoursout of my life , maybe I should buy an 
-external wi-fi for the lap top and put up with the resultant klutz.
-
-This is ping to my AP after I move about:
-64 bytes from 10.5.50.1: icmp_seq=509 ttl=64 time=1057 ms
-64 bytes from 10.5.50.1: icmp_seq=510 ttl=64 time=5382 ms
-64 bytes from 10.5.50.1: icmp_seq=511 ttl=64 time=4386 ms
-64 bytes from 10.5.50.1: icmp_seq=512 ttl=64 time=3383 ms
-64 bytes from 10.5.50.1: icmp_seq=513 ttl=64 time=2376 ms
-64 bytes from 10.5.50.1: icmp_seq=514 ttl=64 time=1438 ms
-64 bytes from 10.5.50.1: icmp_seq=515 ttl=64 time=433 ms
-64 bytes from 10.5.50.1: icmp_seq=516 ttl=64 time=823 ms
-64 bytes from 10.5.50.1: icmp_seq=517 ttl=64 time=1533 ms
-
-
-This is if I sit still a while:
-64 bytes from 10.5.50.1: icmp_seq=583 ttl=64 time=1.18 ms
-64 bytes from 10.5.50.1: icmp_seq=584 ttl=64 time=1.79 ms
-64 bytes from 10.5.50.1: icmp_seq=585 ttl=64 time=0.871 ms
-64 bytes from 10.5.50.1: icmp_seq=586 ttl=64 time=2.96 ms
-64 bytes from 10.5.50.1: icmp_seq=587 ttl=64 time=1.28 ms
-64 bytes from 10.5.50.1: icmp_seq=588 ttl=64 time=1.57 ms
-64 bytes from 10.5.50.1: icmp_seq=589 ttl=64 time=1.03 ms
-
-WIFI worked after I installed Unbuntu Trusty, but an update seems to 
-have broken it, sending performance back to what it was under 12.04.
-
-So.. do you think it might be a simple fix related to channel estimation?
-
-Thank you.
-
-
-
-
-
-
--- 
-Jeremy Lansman
-New York City USA, +1 347 696 0120
-Western Cape RSA, +27 21 300 2105
-Anchorage AK USA,+1 907 339 3800
-Skype Lansmankyes
-Fax 27862460713
-
+May be if we enable tx status report ACK we can pass the inactivity
+check as some AP's
+wont reset inactivity timer for probe's.
