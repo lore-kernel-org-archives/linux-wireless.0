@@ -1,47 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:47665 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757019AbaJ2VWL (ORCPT
+Received: from mail-pd0-f182.google.com ([209.85.192.182]:43652 "EHLO
+	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754118AbaJVQbf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2014 17:22:11 -0400
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <wireless-regdb@lists.infradead.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/7] wireless-regdb: Add 160 MHz channel bandwidth for Barbados (BB)
-Date: Wed, 29 Oct 2014 23:21:24 +0200
-Message-ID: <1414617690-29786-1-git-send-email-jouni@qca.qualcomm.com> (sfid-20141029_222216_059720_94A14BD8)
+	Wed, 22 Oct 2014 12:31:35 -0400
+Received: by mail-pd0-f182.google.com with SMTP id y10so3842322pdj.13
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Oct 2014 09:31:34 -0700 (PDT)
+Message-ID: <5447DBDB.3040706@lwfinger.net> (sfid-20141022_183139_147851_E0954097)
+Date: Wed, 22 Oct 2014 11:31:23 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Karsten Wiese <fzuuzf@googlemail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/3] rtl8192cu: Call ieee80211_register_hw from rtl_usb_probe
+References: <1413985654-25070-1-git-send-email-fzuuzf@googlemail.com> <1413985654-25070-3-git-send-email-fzuuzf@googlemail.com>
+In-Reply-To: <1413985654-25070-3-git-send-email-fzuuzf@googlemail.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This extends regulatory rules for Barbados to allow 160 MHz VHT channels
-to be used in 5.15-5.25 GHz, 5.25-5.35 GHz. Since the rules between
-5.15-5.25 and 5.25-5.35 GHz ranges are different (e.g., DFS
-requirement), the AUTO-BW flag needs to be used to allow the maximum
-channel bandwidth to be determined automatically based on two rules.
+On 10/22/2014 08:47 AM, Karsten Wiese wrote:
+> In a previous patch the call to ieee80211_register_hw was moved from the
+> load firmware callback to the rtl_pci_probe only.
+> rt8192cu also uses this callback. Currently it doesnt create a wlan%d device.
+> Fill in the call to ieee80211_register_hw in rtl_usb_probe.
+>
+> Signed-off-by: Karsten Wiese <fzuuzf@googlemail.com>
+> ---
+>   drivers/net/wireless/rtlwifi/usb.c | 11 +++++++++++
+>   1 file changed, 11 insertions(+)
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
----
- db.txt | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Sorry that I missed this one.
 
-diff --git a/db.txt b/db.txt
-index 2a54da8..8d43f45 100644
---- a/db.txt
-+++ b/db.txt
-@@ -113,8 +113,8 @@ country BA: DFS-ETSI
- 
- country BB: DFS-FCC
- 	(2402 - 2482 @ 40), (20)
--	(5170 - 5250 @ 80), (23)
--	(5250 - 5330 @ 80), (23), DFS
-+	(5170 - 5250 @ 80), (23), AUTO-BW
-+	(5250 - 5330 @ 80), (23), DFS, AUTO-BW
- 	(5735 - 5835 @ 80), (30)
- 
- country BD: DFS-JP
--- 
-1.9.1
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+
+Larry
+
+
+>
+> diff --git a/drivers/net/wireless/rtlwifi/usb.c b/drivers/net/wireless/rtlwifi/usb.c
+> index 10cf69c..46ee956 100644
+> --- a/drivers/net/wireless/rtlwifi/usb.c
+> +++ b/drivers/net/wireless/rtlwifi/usb.c
+> @@ -1117,7 +1117,18 @@ int rtl_usb_probe(struct usb_interface *intf,
+>   	}
+>   	rtlpriv->cfg->ops->init_sw_leds(hw);
+>
+> +	err = ieee80211_register_hw(hw);
+> +	if (err) {
+> +		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+> +			 "Can't register mac80211 hw.\n");
+> +		err = -ENODEV;
+> +		goto error_out;
+> +	}
+> +	rtlpriv->mac80211.mac80211_registered = 1;
+> +
+> +	set_bit(RTL_STATUS_INTERFACE_START, &rtlpriv->status);
+>   	return 0;
+> +
+>   error_out:
+>   	rtl_deinit_core(hw);
+>   	_rtl_usb_io_handler_release(hw);
+>
 
