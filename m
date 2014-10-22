@@ -1,49 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:49776 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753684AbaJ1KqS (ORCPT
+Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:54364
+	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752423AbaJVQqG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2014 06:46:18 -0400
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <wireless-regdb@lists.infradead.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 19/21] wireless-regdb: Add regulatory rules for Uganda (UG)
-Date: Tue, 28 Oct 2014 12:43:05 +0200
-Message-ID: <1414492987-16118-12-git-send-email-jouni@qca.qualcomm.com> (sfid-20141028_114622_244870_8812A937)
-In-Reply-To: <1414492987-16118-1-git-send-email-jouni@qca.qualcomm.com>
-References: <1414492175-13830-1-git-send-email-jouni@qca.qualcomm.com>
- <1414492987-16118-1-git-send-email-jouni@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 22 Oct 2014 12:46:06 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: ath10k@lists.infradead.org
+Subject: [PATCH] ath10k: add SURVEY_INFO_IN_USE for current channel on survey
+Date: Wed, 22 Oct 2014 18:46:02 +0200
+Message-Id: <1413996362-44397-1-git-send-email-nbd@openwrt.org> (sfid-20141022_184612_015930_7059A501)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Source is QCA's regulatory team's efforts.
-
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- db.txt | 7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/net/wireless/ath/ath10k/mac.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/db.txt b/db.txt
-index 8d56c92..95a750f 100644
---- a/db.txt
-+++ b/db.txt
-@@ -1114,6 +1114,13 @@ country UA: DFS-ETSI
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 4670930..bc440dc 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3975,6 +3975,9 @@ static int ath10k_get_survey(struct ieee80211_hw *hw, int idx,
  
-+country UG: DFS-FCC
-+	(2402 - 2482 @ 40), (20)
-+	(5170 - 5250 @ 80), (24), AUTO-BW
-+	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
-+	(5490 - 5730 @ 160), (24), DFS
-+	(5735 - 5835 @ 80), (30)
+ 	survey->channel = &sband->channels[idx];
+ 
++	if (ar->rx_channel == survey->channel)
++		survey->filled |= SURVEY_INFO_IN_USE;
 +
- country US: DFS-FCC
- 	(2402 - 2472 @ 40), (30)
- 	(5170 - 5250 @ 80), (17), AUTO-BW
+ exit:
+ 	mutex_unlock(&ar->conf_mutex);
+ 	return ret;
 -- 
-1.9.1
+2.0.4
 
