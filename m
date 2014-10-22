@@ -1,52 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:39557 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752521AbaJ0XOc convert rfc822-to-8bit (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:56684 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932287AbaJVTXR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Oct 2014 19:14:32 -0400
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 8.0 \(1990.1\))
-Subject: Re: [PATCH 0/3] Add mcast event when hwsim radios are created and removed
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <1414431250.27833.9.camel@coelho.fi>
-Date: Mon, 27 Oct 2014 16:14:25 -0700
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Jukka Rissanen <jukka.rissanen@linux.intel.com>,
-	linux-wireless@vger.kernel.org
-Message-Id: <9C544CA4-42D3-4419-9BC7-C42DF2420CA4@holtmann.org> (sfid-20141028_001441_651438_21C5A91C)
-References: <1414406688-3827-1-git-send-email-jukka.rissanen@linux.intel.com> <1414408856.3836.3.camel@jlt4.sipsolutions.net> <1414409397.2705.198.camel@jrissane-mobl.ger.corp.intel.com> <1414409485.3836.5.camel@jlt4.sipsolutions.net> <1414410917.2705.201.camel@jrissane-mobl.ger.corp.intel.com> <1414411714.3836.7.camel@jlt4.sipsolutions.net> <1D755566-F088-454B-AEC5-C635FFCB488A@holtmann.org> <1414431250.27833.9.camel@coelho.fi>
-To: Luca Coelho <luca@coelho.fi>
+	Wed, 22 Oct 2014 15:23:17 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v3 9/9] mac80211:  support creating vifs with specified mac address
+Date: Wed, 22 Oct 2014 12:23:06 -0700
+Message-Id: <1414005786-27572-9-git-send-email-greearb@candelatech.com> (sfid-20141022_212328_081539_AD7897D8)
+In-Reply-To: <1414005786-27572-1-git-send-email-greearb@candelatech.com>
+References: <1414005786-27572-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luca,
+From: Ben Greear <greearb@candelatech.com>
 
->>>>> That's not particularly hard to figure out, for example by looking at
->>>>> sysfs.
->>>>> 
->>>>> Is this really so time-constrained/important/... that you can't do that?
->>>> 
->>>> It does not seem very practical to dig this information from sysfs as
->>>> the same information can be easily get via netlink as this patch shows.
->>> 
->>> Well, that's a slippery slope. I'd consider it more practical to use
->>> existing APIs instead of (gratuitously) inventing new ones. It'll even
->>> work on older kernels as an added benefit.
->> 
->> I see that different. The component that handles the emulation of the new wireless device should be independent from the component driving it. I prefer to have a race free way of obtaining the needed information without having to monitor nl80211 and sysfs for this. Especially with the use cases that we have in mind it has no business with these other interfaces.
->> 
->> We have been down this route with the bridge interface where people had to dig out information from sysfs and it did not work out nicely. So now everything moves to netlink.
-> 
-> Why does hwsim have to be treated differently from any other device?
-> Unlike bridging, HW emulation doesn't seem to be a real life use case.
-> 
-> But I'm probably missing something. ;)
+This is useful when creating virtual interfaces.
 
-this is the controlling side. The thing that I call emulator. It is the component that creates/destroys the hwsim wiphy. It can also be the one that handles the packet processing similar to wmediumd.
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ net/mac80211/iface.c | 5 ++++-
+ net/mac80211/main.c  | 1 +
+ 2 files changed, 5 insertions(+), 1 deletion(-)
 
-The nl80211/cfg80211 is not treated differently here. This is purely for the MAC80211_HWSIM netlink family side of things. Makes sense?
-
-Regards
-
-Marcel
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index e469b33..1ffcc07 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -1671,7 +1671,10 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
+ 		}
+ 
+ 		ieee80211_assign_perm_addr(local, ndev->perm_addr, type);
+-		memcpy(ndev->dev_addr, ndev->perm_addr, ETH_ALEN);
++		if (params && is_valid_ether_addr(params->macaddr))
++			memcpy(ndev->dev_addr, params->macaddr, ETH_ALEN);
++		else
++			memcpy(ndev->dev_addr, ndev->perm_addr, ETH_ALEN);
+ 		SET_NETDEV_DEV(ndev, wiphy_dev(local->hw.wiphy));
+ 
+ 		/* don't use IEEE80211_DEV_TO_SUB_IF -- it checks too much */
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 7d40e3f..282a4f3 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -542,6 +542,7 @@ struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t priv_data_len,
+ 			   NL80211_FEATURE_SAE |
+ 			   NL80211_FEATURE_HT_IBSS |
+ 			   NL80211_FEATURE_VIF_TXPOWER |
++			   NL80211_FEATURE_MAC_ON_CREATE |
+ 			   NL80211_FEATURE_USERSPACE_MPM;
+ 
+ 	if (!ops->hw_scan)
+-- 
+1.7.11.7
 
