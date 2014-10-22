@@ -1,96 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f44.google.com ([209.85.218.44]:55715 "EHLO
-	mail-oi0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754182AbaJWUdR convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Oct 2014 16:33:17 -0400
-Received: by mail-oi0-f44.google.com with SMTP id x69so1307372oia.17
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Oct 2014 13:33:16 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1414096032.264032.182610177.3DACE1A9@webmail.messagingengine.com>
-References: <1413463736.1316541.179720977.4FD32021@webmail.messagingengine.com>
-	<54463CE9.3060400@gmail.com>
-	<1413921415.3763081.181696749.20A0A495@webmail.messagingengine.com>
-	<CANUX_P0LRRczVCSFR7RE5coaYFxwFXyqC90pdm=oVwEiEt-7zw@mail.gmail.com>
-	<1414014805.4127522.182191541.14C8B4DF@webmail.messagingengine.com>
-	<CANUX_P0tGagXsN6XCeb_itQehqD3O9fmqknU6iSMO432NQtATA@mail.gmail.com>
-	<1414049448.32460.182326557.1A0A85A4@webmail.messagingengine.com>
-	<CANUX_P3usjdccnsYPQXzKbJ1PTH91fasf6BpcsCRYZH_yq2tww@mail.gmail.com>
-	<1414080125.164673.182502929.61AF3AB1@webmail.messagingengine.com>
-	<CANUX_P2pJYNhLEMw=iQVe-CSbxqRDqOXL_gUZXxwpmAj2qj=FA@mail.gmail.com>
-	<1414085934.228950.182543717.6FA0F16D@webmail.messagingengine.com>
-	<CANUX_P0nK9AQEzYGfGFKEU_vVJ9fwOPmjGTCL--zmk+J4uCz4Q@mail.gmail.com>
-	<1414093367.254547.182592325.0C3991E4@webmail.messagingengine.com>
-	<CANUX_P3sTY45ozSL6Rj0PRYgo9aPACdp97HV1SQna3AW5V75xw@mail.gmail.com>
-	<1414094840.260168.182602541.16435971@webmail.messagingengine.com>
-	<5449621C.3070400@gmail.com>
-	<1414096032.264032.182610177.3DACE1A9@webmail.messagingengine.com>
-Date: Thu, 23 Oct 2014 23:33:16 +0300
-Message-ID: <CANUX_P0FPDSjAzh1uJ2LxWp9H8CXJgK1sdE+HYMcrTVLNH+1Kg@mail.gmail.com> (sfid-20141023_223321_079579_4B9F0FF5)
-Subject: Re: iwlwifi: Reason 7 periodic disconnect
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: =?UTF-8?Q?Lauren=C8=9Biu_Nicola?= <lnicola@dend.ro>
-Cc: poma <pomidorabelisima@gmail.com>, Dan Williams <dcbw@redhat.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:49411 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932123AbaJVHjy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Oct 2014 03:39:54 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: sanity check CW_min/CW_max towards driver
+Date: Wed, 22 Oct 2014 09:39:50 +0200
+Message-Id: <1413963590-22300-1-git-send-email-johannes@sipsolutions.net> (sfid-20141022_093958_996605_D9FA84C2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 23, 2014 at 11:27 PM, Laurențiu Nicola <lnicola@dend.ro> wrote:
-> https://bpaste.net/show/8a0e5c68762f
->
-> On Thu, Oct 23, 2014, at 23:16, Emmanuel Grumbach wrote:
->> > https://bpaste.net/show/5cc48256d952
->> >
->> > On Thu, Oct 23, 2014, at 22:55, Emmanuel Grumbach wrote:
->> >> On Thu, Oct 23, 2014 at 10:42 PM, Laurențiu Nicola <lnicola@dend.ro>
->> >> wrote:
->> >>> Doesn't seem to help https://bpaste.net/show/68e1a6b33689.
->> >>
->> >> ok - let me re-add the logs...
->> >>
->> >>
->>
->> This makes no sense to me.
->> We do talk to the AP since we get frames Acked...
+From: Johannes Berg <johannes.berg@intel.com>
 
-This again makes no sense to me.
-Time to go to bed I guess.
+There's no reason to ever set invalid CW_min/CW_max to the
+drivers, we should catch it in higher layers. However, the
+consequences of setting it wrong can be quite severe, so
+double-check at a low level and error out for invalid data.
 
->>
->> Can you please apply this on top of what you have?
->>
->> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
->> index 2de8870..f3b1e62 100644
->> --- a/net/mac80211/mlme.c
->> +++ b/net/mac80211/mlme.c
->> @@ -1991,15 +1991,16 @@ void ieee80211_sta_tx_notify(struct
->> ieee80211_sub_if_data *sdata,
->>         if (ieee80211_is_nullfunc(hdr->frame_control) &&
->>             sdata->u.mgd.probe_send_count > 0) {
->>                 if (ack)
->> -                       ieee80211_sta_reset_conn_monitor(sdata);
->> +               //      ieee80211_sta_reset_conn_monitor(sdata);
->> +               ;
->>                 else
->>                         sdata->u.mgd.nullfunc_failed = true;
->>                 ieee80211_queue_work(&sdata->local->hw, &sdata->work);
->>                 return;
->>         }
->>
->> -       if (ack)
->> -               ieee80211_sta_reset_conn_monitor(sdata);
->> +//     if (ack)
->> +//             ieee80211_sta_reset_conn_monitor(sdata);
->>  }
->>
->>  static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data
->>  *sdata)
->>
->>
->> Thanks.
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
->> in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Change-Id: Ibf01670252676f2b6238308e0e2ef74475fbc1b0
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Reviewed-on: https://gerrit.rds.intel.com/45309
+Tested-by: IWL Jenkins
+---
+ net/mac80211/driver-ops.h | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 1bbb0790264f..3df28e0fa045 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -631,6 +631,12 @@ static inline int drv_conf_tx(struct ieee80211_local *local,
+ 	if (!check_sdata_in_driver(sdata))
+ 		return -EIO;
+ 
++	if (WARN_ONCE(params->cw_min == 0 ||
++		      params->cw_min > params->cw_max,
++		      "%s: invalid CW_min/CW_max: %d/%d\n",
++		      sdata->name, params->cw_min, params->cw_max))
++		return -EINVAL;
++
+ 	trace_drv_conf_tx(local, sdata, ac, params);
+ 	if (local->ops->conf_tx)
+ 		ret = local->ops->conf_tx(&local->hw, &sdata->vif,
+-- 
+2.1.0
+
