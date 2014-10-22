@@ -1,87 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:38898 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751692AbaJTMem (ORCPT
+Received: from mail-pa0-f43.google.com ([209.85.220.43]:45866 "EHLO
+	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754013AbaJVKP3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2014 08:34:42 -0400
-Received: by mail-la0-f46.google.com with SMTP id gi9so3790727lab.5
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2014 05:34:41 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 1/3] ath10k: fix possible bmi crash
-Date: Mon, 20 Oct 2014 14:22:36 +0200
-Message-Id: <1413807758-30249-2-git-send-email-michal.kazior@tieto.com> (sfid-20141020_143446_774419_971F453F)
-In-Reply-To: <1413807758-30249-1-git-send-email-michal.kazior@tieto.com>
-References: <1413807758-30249-1-git-send-email-michal.kazior@tieto.com>
+	Wed, 22 Oct 2014 06:15:29 -0400
+Received: by mail-pa0-f43.google.com with SMTP id lf10so3418845pab.30
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Oct 2014 03:15:28 -0700 (PDT)
+MIME-Version: 1.0
+From: Okhwan Lee <ohlee@mwnl.snu.ac.kr>
+Date: Wed, 22 Oct 2014 19:14:56 +0900
+Message-ID: <CANzpp-=opT==PUf5FhWi_cbB91+RhWk+jB7M4bfUCqh2wzQA2A@mail.gmail.com> (sfid-20141022_121532_626552_7C95768F)
+Subject: Change channel bandwidth without iw command
+To: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While testing other things I've found that CE
-items aren't cleared properly. This could lead to
-null dereferences in BMI.
+Hi,
 
-To prevent that make sure CE revoking clears the
-nbytes value (which is used as a buffer completion
-indication) and memset the entire CE rings when
-(re)initializing.
+We are trying to implement a protocol to evaluate the performance our
+algorithm using QCA9880.
 
-Also make sure to check BMI xfer pointer and print
-a splat instead of crashing the kernel.
+To implement our protocol, a receiver have to change the bandwidth
+when a Action frame (what we define) is successfully received.
+We know that the QCA9880 can change bandwidth by using iw command in
+monitor mode.
+So, we use similar function path used by "iw dev set freq ..."
+When the receiver detects the reception of the Action frame we call
+"ieee80211_set_monitor_channel" at the end of ieee80211_rx as follows:
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/ce.c  | 7 +++++++
- drivers/net/wireless/ath/ath10k/pci.c | 3 +++
- 2 files changed, 10 insertions(+)
+/*************** net/mac80211/rx.c ******************/
 
-diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
-index 9b89ac1..92c1c6a 100644
---- a/drivers/net/wireless/ath/ath10k/ce.c
-+++ b/drivers/net/wireless/ath/ath10k/ce.c
-@@ -558,6 +558,7 @@ int ath10k_ce_revoke_recv_next(struct ath10k_ce_pipe *ce_state,
- 
- 		/* sanity */
- 		dest_ring->per_transfer_context[sw_index] = NULL;
-+		desc->nbytes = 0;
- 
- 		/* Update sw_index */
- 		sw_index = CE_RING_IDX_INCR(nentries_mask, sw_index);
-@@ -837,6 +838,10 @@ static int ath10k_ce_init_src_ring(struct ath10k *ar,
- 
- 	memset(src_ring->per_transfer_context, 0,
- 	       nentries * sizeof(*src_ring->per_transfer_context));
-+	memset(src_ring->base_addr_owner_space, 0,
-+	       nentries * sizeof(struct ce_desc));
-+	memset(src_ring->shadow_base, 0,
-+	       nentries * sizeof(struct ce_desc));
- 
- 	src_ring->sw_index = ath10k_ce_src_ring_read_index_get(ar, ctrl_addr);
- 	src_ring->sw_index &= src_ring->nentries_mask;
-@@ -874,6 +879,8 @@ static int ath10k_ce_init_dest_ring(struct ath10k *ar,
- 
- 	memset(dest_ring->per_transfer_context, 0,
- 	       nentries * sizeof(*dest_ring->per_transfer_context));
-+	memset(dest_ring->base_addr_owner_space, 0,
-+	       nentries * sizeof(struct ce_desc));
- 
- 	dest_ring->sw_index = ath10k_ce_dest_ring_read_index_get(ar, ctrl_addr);
- 	dest_ring->sw_index &= dest_ring->nentries_mask;
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index c1a2b84..8820f25 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -1432,6 +1432,9 @@ static void ath10k_pci_bmi_recv_data(struct ath10k_ce_pipe *ce_state)
- 					  &nbytes, &transfer_id, &flags))
- 		return;
- 
-+	if (WARN_ON_ONCE(!xfer))
-+		return;
-+
- 	if (!xfer->wait_for_resp) {
- 		ath10k_warn(ar, "unexpected: BMI data received; ignoring\n");
- 		return;
--- 
-1.8.5.3
+// receive action frame, change bandwidth 80 -> 20
 
+                rtnl_lock(); //lock rtnetlink used in pre_doit of nl80211
+                chandef = local->monitor_chandef; // copy current chandef
+                chandef.width = NL80211_CHAN_WIDTH_20; // set bandwidth
+                chandef.center_freq1 = 5180; // set center freq...
+                ieee80211_set_monitor_channel(wiphy, &chandef);
+                rtnl_unlock();
+
+/********************************************************/
+
+However, the receiver invokes kernel panic when receives the Action frame.
+As fas as we know, the panic is occurred in ath10k_config_chan of
+ath10k device driver.
+To the best our knowledge, our implementation exploits same function
+path of iw command in nl80211, cfg80211, mac80211 and ath10k.
+Moreover, we confirm that the input parameters (wiphy, chandef) in our
+implementation are identical to the parameters used by iw command.
+
+Is there any reason why we cannot change bandwidth?
+Of course, iw command work correctly.
+
+If you have any idea to solve this, please let me know.
+
+Thanks a lot for your reading.
+
+Sincerely yours,
+
+Okhwan Lee , Ph.D. student
