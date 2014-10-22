@@ -1,53 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:62829 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753892AbaJQTvJ (ORCPT
+Received: from mail-pd0-f176.google.com ([209.85.192.176]:41160 "EHLO
+	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752648AbaJVQa1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Oct 2014 15:51:09 -0400
-Received: by mail-wi0-f178.google.com with SMTP id h11so2307357wiw.17
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Oct 2014 12:51:08 -0700 (PDT)
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Karl Beldan <karl.beldan@rivierawaves.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [RESEND PATCH v2 0/4] add VHT support to minstrel_ht 
-Date: Fri, 17 Oct 2014 21:50:55 +0200
-Message-Id: <1413575459-29612-1-git-send-email-karl.beldan@gmail.com> (sfid-20141017_215115_134803_527106EA)
-In-Reply-To: <1413570896-27740-5-git-send-email-karl.beldan@gmail.com>
-References: <1413570896-27740-5-git-send-email-karl.beldan@gmail.com>
+	Wed, 22 Oct 2014 12:30:27 -0400
+Received: by mail-pd0-f176.google.com with SMTP id fp1so3817908pdb.21
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Oct 2014 09:30:27 -0700 (PDT)
+Message-ID: <5447DBA0.5080608@lwfinger.net> (sfid-20141022_183037_925525_1FF73CFE)
+Date: Wed, 22 Oct 2014 11:30:24 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Karsten Wiese <fzuuzf@googlemail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/3] rtl8192cu: Fix for rtlwifi's bluetooth coexist functionality
+References: <1413985654-25070-1-git-send-email-fzuuzf@googlemail.com> <1413985654-25070-2-git-send-email-fzuuzf@googlemail.com>
+In-Reply-To: <1413985654-25070-2-git-send-email-fzuuzf@googlemail.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Karl Beldan <karl.beldan@rivierawaves.com>
+On 10/22/2014 08:47 AM, Karsten Wiese wrote:
+> Initialize function pointer with a function indicating bt coexist is not there.
+> Prevents Ooops.
+>
+> Signed-off-by: Karsten Wiese <fzuuzf@googlemail.com>
+> ---
 
-(Sorry for spamming, Felix's address was mangled.)
+I have been working on a better fix; however, I am traveling and unable to 
+finish testing it. As a result, this one should be applied.
 
-Hi,
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-This is a split version of the VHT support addition to minstrel.
-Thanks for reviewing,
+Larry
 
-Karl Beldan (4):
-  mac80211: minstrel_ht: Increase the range of handled rate indexes
-  mac80211: minstrel_ht: macros adjustments for future VHT_GROUPs
-  mac80211: minstrel_ht: include type (cck/ht) in rates flag
-  mac80211: minstrel_ht: add basic support for VHT rates <= 3SS@80MHz
-v2:
-- typo in Kconfig
-- adjust room in debugfs rc_stats buffer
-- add a module param to mix ht rates with vht ones
-- default to 3SS instead of 2SS (with "mac80211: minstrel_ht: macros
-  adjustments for future VHT_GROUPs")
-- use common MINSTREL_MAX_STREAMS both for VHT and HT so that we can get
-  rid of the 'MINSTREL_MAX_STREAMS >= 3' checks for minstrel_mcs_groups
-
- net/mac80211/Kconfig                       |   7 +
- net/mac80211/rc80211_minstrel_ht.c         | 288 +++++++++++++++++++++++------
- net/mac80211/rc80211_minstrel_ht.h         |  38 +++-
- net/mac80211/rc80211_minstrel_ht_debugfs.c |  32 ++--
- 4 files changed, 286 insertions(+), 79 deletions(-)
-
--- 
-2.0.1
+>   drivers/net/wireless/rtlwifi/rtl8192cu/sw.c | 7 +++++++
+>   1 file changed, 7 insertions(+)
+>
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
+> index 7c5fbaf..e06bafe 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
+> @@ -101,6 +101,12 @@ static void rtl92cu_deinit_sw_vars(struct ieee80211_hw *hw)
+>   	}
+>   }
+>
+> +/* get bt coexist status */
+> +static bool rtl92cu_get_btc_status(void)
+> +{
+> +	return false;
+> +}
+> +
+>   static struct rtl_hal_ops rtl8192cu_hal_ops = {
+>   	.init_sw_vars = rtl92cu_init_sw_vars,
+>   	.deinit_sw_vars = rtl92cu_deinit_sw_vars,
+> @@ -148,6 +154,7 @@ static struct rtl_hal_ops rtl8192cu_hal_ops = {
+>   	.phy_set_bw_mode_callback = rtl92cu_phy_set_bw_mode_callback,
+>   	.dm_dynamic_txpower = rtl92cu_dm_dynamic_txpower,
+>   	.fill_h2c_cmd = rtl92c_fill_h2c_cmd,
+> +	.get_btc_status = rtl92cu_get_btc_status,
+>   };
+>
+>   static struct rtl_mod_params rtl92cu_mod_params = {
+>
 
