@@ -1,74 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:44686 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754840AbaJNUVE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Oct 2014 16:21:04 -0400
-Received: by mail-wi0-f170.google.com with SMTP id hi2so12624186wib.3
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Oct 2014 13:21:02 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] ath9k: do not overwrite AR_PHY_RADAR_1 MSB
-Date: Tue, 14 Oct 2014 22:21:00 +0200
-Message-Id: <1413318060-11563-1-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20141014_222108_055093_2987CA58)
+Received: from s3.sipsolutions.net ([5.9.151.49]:49371 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751105AbaJVHem (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Oct 2014 03:34:42 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] cfg80211: make WMM TSPEC support flag an nl80211 feature flag
+Date: Wed, 22 Oct 2014 09:34:32 +0200
+Message-Id: <1413963272-17873-1-git-send-email-johannes@sipsolutions.net> (sfid-20141022_093445_577306_7DB33153)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Do not overwrite AR_PHY_RADAR_1 most significant byte default value
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+During the review of the corresponding wpa_supplicant patches we
+noticed that the only way for it to detect that this functionality
+is supported currently is to check for the command support. This
+can be misleading though, as the command was also designed to, in
+the future, support pure 802.11 TSPECs.
+
+Expose the WMM-TSPEC feature flag to nl80211 so later we can also
+expose an 802.11-TSPEC feature flag (if needed) to differentiate
+the two cases.
+
+Note: this change isn't needed in 3.18 as there's no driver there
+yet that supports the functionality at all.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/ar5008_phy.c | 5 ++++-
- drivers/net/wireless/ath/ath9k/ar9003_phy.c | 5 ++++-
- 2 files changed, 8 insertions(+), 2 deletions(-)
+ include/net/cfg80211.h       |  6 +-----
+ include/uapi/linux/nl80211.h |  5 +++++
+ net/wireless/nl80211.c       | 14 ++++++--------
+ 3 files changed, 12 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-index b72d0be..ba3d788 100644
---- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-@@ -1190,7 +1190,7 @@ static void ar5008_hw_set_nf_limits(struct ath_hw *ah)
- static void ar5008_hw_set_radar_params(struct ath_hw *ah,
- 				       struct ath_hw_radar_conf *conf)
- {
--	u32 radar_0 = 0, radar_1 = 0;
-+	u32 radar_0 = 0, radar_1;
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index ed896c0b5b8b..77aa805d7e7c 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -2646,13 +2646,9 @@ struct cfg80211_ops {
+  * @WIPHY_FLAG_SUPPORTS_5_10_MHZ: Device supports 5 MHz and 10 MHz channels.
+  * @WIPHY_FLAG_HAS_CHANNEL_SWITCH: Device supports channel switch in
+  *	beaconing mode (AP, IBSS, Mesh, ...).
+- * @WIPHY_FLAG_SUPPORTS_WMM_ADMISSION: the device supports setting up WMM
+- *	TSPEC sessions (TID aka TSID 0-7) with the NL80211_CMD_ADD_TX_TS
+- *	command. Standard IEEE 802.11 TSPEC setup is not yet supported, it
+- *	needs to be able to handle Block-Ack agreements and other things.
+  */
+ enum wiphy_flags {
+-	WIPHY_FLAG_SUPPORTS_WMM_ADMISSION	= BIT(0),
++	/* use hole at 0 */
+ 	/* use hole at 1 */
+ 	/* use hole at 2 */
+ 	WIPHY_FLAG_NETNS_OK			= BIT(3),
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index b553c48404d3..be1d5def304d 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -4052,6 +4052,10 @@ enum nl80211_ap_sme_features {
+  *	multiplexing powersave, ie. can turn off all but one chain
+  *	and then wake the rest up as required after, for example,
+  *	rts/cts handshake.
++ * @NL80211_FEATURE_SUPPORTS_WMM_ADMISSION: the device supports setting up WMM
++ *	TSPEC sessions (TID aka TSID 0-7) with the %NL80211_CMD_ADD_TX_TS
++ *	command. Standard IEEE 802.11 TSPEC setup is not yet supported, it
++ *	needs to be able to handle Block-Ack agreements and other things.
+  */
+ enum nl80211_feature_flags {
+ 	NL80211_FEATURE_SK_TX_STATUS			= 1 << 0,
+@@ -4080,6 +4084,7 @@ enum nl80211_feature_flags {
+ 	NL80211_FEATURE_ACKTO_ESTIMATION		= 1 << 23,
+ 	NL80211_FEATURE_STATIC_SMPS			= 1 << 24,
+ 	NL80211_FEATURE_DYNAMIC_SMPS			= 1 << 25,
++	NL80211_FEATURE_SUPPORTS_WMM_ADMISSION		= 1 << 26,
+ };
  
- 	if (!conf) {
- 		REG_CLR_BIT(ah, AR_PHY_RADAR_0, AR_PHY_RADAR_0_ENA);
-@@ -1204,6 +1204,9 @@ static void ar5008_hw_set_radar_params(struct ath_hw *ah,
- 	radar_0 |= SM(conf->pulse_rssi, AR_PHY_RADAR_0_PRSSI);
- 	radar_0 |= SM(conf->pulse_inband, AR_PHY_RADAR_0_INBAND);
+ /**
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index d05fe6d6481d..fe7994b251ab 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1514,8 +1514,8 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
+ 			if (rdev->wiphy.flags & WIPHY_FLAG_HAS_CHANNEL_SWITCH)
+ 				CMD(channel_switch, CHANNEL_SWITCH);
+ 			CMD(set_qos_map, SET_QOS_MAP);
+-			if (rdev->wiphy.flags &
+-					WIPHY_FLAG_SUPPORTS_WMM_ADMISSION)
++			if (rdev->wiphy.features &
++					NL80211_FEATURE_SUPPORTS_WMM_ADMISSION)
+ 				CMD(add_tx_ts, ADD_TX_TS);
+ 		}
+ 		/* add into the if now */
+@@ -9557,7 +9557,7 @@ static int nl80211_add_tx_ts(struct sk_buff *skb, struct genl_info *info)
+ 	u16 admitted_time = 0;
+ 	int err;
  
-+	radar_1 = REG_READ(ah, AR_PHY_RADAR_1);
-+	radar_1 &= ~(AR_PHY_RADAR_1_MAXLEN | AR_PHY_RADAR_1_RELSTEP_THRESH |
-+		     AR_PHY_RADAR_1_RELPWR_THRESH);
- 	radar_1 |= AR_PHY_RADAR_1_MAX_RRSSI;
- 	radar_1 |= AR_PHY_RADAR_1_BLOCK_CHECK;
- 	radar_1 |= SM(conf->pulse_maxlen, AR_PHY_RADAR_1_MAXLEN);
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index 697c4ae..30b2f95 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -1348,7 +1348,7 @@ static void ar9003_hw_set_radar_params(struct ath_hw *ah,
- 				       struct ath_hw_radar_conf *conf)
- {
- 	unsigned int regWrites = 0;
--	u32 radar_0 = 0, radar_1 = 0;
-+	u32 radar_0 = 0, radar_1;
+-	if (!(rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_WMM_ADMISSION))
++	if (!(rdev->wiphy.features & NL80211_FEATURE_SUPPORTS_WMM_ADMISSION))
+ 		return -EOPNOTSUPP;
  
- 	if (!conf) {
- 		REG_CLR_BIT(ah, AR_PHY_RADAR_0, AR_PHY_RADAR_0_ENA);
-@@ -1362,6 +1362,9 @@ static void ar9003_hw_set_radar_params(struct ath_hw *ah,
- 	radar_0 |= SM(conf->pulse_rssi, AR_PHY_RADAR_0_PRSSI);
- 	radar_0 |= SM(conf->pulse_inband, AR_PHY_RADAR_0_INBAND);
+ 	if (!info->attrs[NL80211_ATTR_TSID] || !info->attrs[NL80211_ATTR_MAC] ||
+@@ -9573,12 +9573,10 @@ static int nl80211_add_tx_ts(struct sk_buff *skb, struct genl_info *info)
+ 		return -EINVAL;
  
-+	radar_1 = REG_READ(ah, AR_PHY_RADAR_1);
-+	radar_1 &= ~(AR_PHY_RADAR_1_MAXLEN | AR_PHY_RADAR_1_RELSTEP_THRESH |
-+		     AR_PHY_RADAR_1_RELPWR_THRESH);
- 	radar_1 |= AR_PHY_RADAR_1_MAX_RRSSI;
- 	radar_1 |= AR_PHY_RADAR_1_BLOCK_CHECK;
- 	radar_1 |= SM(conf->pulse_maxlen, AR_PHY_RADAR_1_MAXLEN);
+ 	/* WMM uses TIDs 0-7 even for TSPEC */
+-	if (tsid < IEEE80211_FIRST_TSPEC_TSID) {
+-		if (!(rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_WMM_ADMISSION))
+-			return -EINVAL;
+-	} else {
++	if (tsid >= IEEE80211_FIRST_TSPEC_TSID) {
+ 		/* TODO: handle 802.11 TSPEC/admission control
+-		 * need more attributes for that (e.g. BA session requirement)
++		 * need more attributes for that (e.g. BA session requirement),
++		 * change code above to allow both in that case.
+ 		 */
+ 		return -EINVAL;
+ 	}
 -- 
-1.9.1
+2.1.0
 
