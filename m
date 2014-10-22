@@ -1,79 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3-smtp.messagingengine.com ([66.111.4.27]:37772 "EHLO
-	out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751003AbaJTT3Z convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2014 15:29:25 -0400
-Received: from compute6.internal (compute6.nyi.internal [10.202.2.46])
-	by gateway2.nyi.internal (Postfix) with ESMTP id 4A323206A5
-	for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2014 15:29:25 -0400 (EDT)
-Message-Id: <1413833365.2949853.181221645.22D54845@webmail.messagingengine.com> (sfid-20141020_212929_538355_B547E122)
-From: =?UTF-8?Q?Lauren=C8=9Biu=20Nicola?= <lnicola@dend.ro>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: Dan Williams <dcbw@redhat.com>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Subject: Re: iwlwifi: Reason 7 periodic disconnect
-Date: Mon, 20 Oct 2014 22:29:25 +0300
-In-Reply-To: <CANUX_P1REqkSqN0dtak34OQ_pSGMtPvV3Vj61tW5wb1+n2A7mg@mail.gmail.com>
-References: <1413463736.1316541.179720977.4FD32021@webmail.messagingengine.com>
- <1413510814.22769.6.camel@dcbw.local>
- <1413751717.2510219.180809145.0E693C29@webmail.messagingengine.com>
- <CANUX_P2RHVRorVABRfWVg39d4D8dj35v3fBpY3=3jvQ1U+mfEA@mail.gmail.com>
- <1413783023.2710583.180921653.10DFFCEE@webmail.messagingengine.com>
- <CANUX_P0Q7cNeBzQa=2WVZFJXPTLx8F6YQk9bGCf_3uYhc5RcGA@mail.gmail.com>
- <CANUX_P3EqgTX7cPJvQ3fWH1yijekE0G_8TiH2_OCS7nFASGtkA@mail.gmail.com>
- <1413789724.3063896.180943829.3F15F453@webmail.messagingengine.com>
- <CANUX_P1REqkSqN0dtak34OQ_pSGMtPvV3Vj61tW5wb1+n2A7mg@mail.gmail.com>
+Received: from mail-wg0-f41.google.com ([74.125.82.41]:38201 "EHLO
+	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750754AbaJVQVy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Oct 2014 12:21:54 -0400
+Received: by mail-wg0-f41.google.com with SMTP id b13so4190095wgh.12
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Oct 2014 09:21:52 -0700 (PDT)
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@rivierawaves.com>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH] mac80211: minstrel_ht: use group flags instead of index to display rates
+Date: Wed, 22 Oct 2014 18:20:37 +0200
+Message-Id: <1413994837-3944-1-git-send-email-karl.beldan@gmail.com> (sfid-20141022_182158_297567_B1AC37B6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-No, nothing in the DD-WRT syslog. The IP seems to be the one cached by
-my DHCP client. I also tried various suggestions found on the internet,
-but nothing helped.
+From: Karl Beldan <karl.beldan@rivierawaves.com>
 
-Laurentiu
+When displaying a rate through debugfs minstrel_ht guesses its flags
+comparing group indexes.  Since 3ec373c421b6 ("mac80211: minstrel_ht:
+include type (cck/ht) in rates flag"), the rate flags of interest are
+present in the mcs_group-s, so use it.
+While improving the code, this also fixes a smatch false positive
+"error: testing array offset 'i' after use" in minstrel_ht_stats_dump.
+This warning only triggers after 9208247d74bc ("mac80211: minstrel_ht:
+add basic support for VHT rates <= 3SS@80MHz") with
+CONFIG_MAC80211_RC_MINSTREL_VHT unset because then MINSTREL_VHT_GROUP_0
+is above MINSTREL_GROUPS_NB and smatch only barks when the "testing
+array offset" seems to prevent possible out of bonds accesses (which
+does not happen here since i < ARRAY_SIZE(mi->groups)).
 
-On Mon, Oct 20, 2014, at 11:23, Emmanuel Grumbach wrote:
-> On Mon, Oct 20, 2014 at 10:22 AM, Laurențiu Nicola <lnicola@dend.ro>
-> wrote:
-> > One thing that might be relevant is that, although there is a static
-> > DHCP lease configured (which works on Windows), the router/AP is giving
-> > the laptop a different IP address. The reported MACs are the same, of
-> > course. I don't know whether wpa_supplicant remembers and requests the
-> > last IP it had, but the lease was already present when I configured it.
-> >
-> > The router runs DD-WRT and I don't have problems on Windows or Android.
-> >
-> 
-> I guess you can try to get some logs from the DD-WRT - but if the AP
-> doesn't
-> give the same address to Linux as in Windows - there is something
-> fishy...
-> 
-> > Laurentiu
-> >
-> > On Mon, Oct 20, 2014, at 10:12, Emmanuel Grumbach wrote:
-> >> On Mon, Oct 20, 2014 at 10:06 AM, Emmanuel Grumbach <egrumbach@gmail.com>
-> >> wrote:
-> >> > On Mon, Oct 20, 2014 at 8:30 AM, Laurențiu Nicola <lnicola@dend.ro> wrote:
-> >> >> Here: https://bpaste.net/show/bf6dc1847ce3
-> >> >>
-> >> >
-> >> > Are you sure you had MAC80211_MLME_DEBUG?
-> >> >
-> >> >>
-> >> Ok - You probably had it - sorry. But apparently the AP is really kicking
-> >> us...
-> >> What AP do you have?
-> >> --
-> >> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
-> >> in
-> >> the body of a message to majordomo@vger.kernel.org
-> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
-> in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
+Cc: Felix Fietkau <nbd@openwrt.org>
+---
+ net/mac80211/rc80211_minstrel_ht_debugfs.c | 28 ++++++++++++++++------------
+ 1 file changed, 16 insertions(+), 12 deletions(-)
+
+diff --git a/net/mac80211/rc80211_minstrel_ht_debugfs.c b/net/mac80211/rc80211_minstrel_ht_debugfs.c
+index 52bb6ef..20c676b 100644
+--- a/net/mac80211/rc80211_minstrel_ht_debugfs.c
++++ b/net/mac80211/rc80211_minstrel_ht_debugfs.c
+@@ -22,16 +22,19 @@ minstrel_ht_stats_dump(struct minstrel_ht_sta *mi, int i, char *p)
+ 	unsigned int j, tp, prob, eprob;
+ 	char htmode = '2';
+ 	char gimode = 'L';
++	u32 gflags;
+ 
+ 	if (!mi->groups[i].supported)
+ 		return p;
+ 
+ 	mg = &minstrel_mcs_groups[i];
+-	if (mg->flags & IEEE80211_TX_RC_40_MHZ_WIDTH)
++	gflags = mg->flags;
++
++	if (gflags & IEEE80211_TX_RC_40_MHZ_WIDTH)
+ 		htmode = '4';
+-	else if (mg->flags & IEEE80211_TX_RC_80_MHZ_WIDTH)
++	else if (gflags & IEEE80211_TX_RC_80_MHZ_WIDTH)
+ 		htmode = '8';
+-	if (mg->flags & IEEE80211_TX_RC_SHORT_GI)
++	if (gflags & IEEE80211_TX_RC_SHORT_GI)
+ 		gimode = 'S';
+ 
+ 	for (j = 0; j < MCS_GROUP_RATES; j++) {
+@@ -42,12 +45,12 @@ minstrel_ht_stats_dump(struct minstrel_ht_sta *mi, int i, char *p)
+ 		if (!(mi->groups[i].supported & BIT(j)))
+ 			continue;
+ 
+-		if (i == MINSTREL_CCK_GROUP)
+-			p += sprintf(p, " CCK/%cP   ", j < 4 ? 'L' : 'S');
+-		else if (i >= MINSTREL_VHT_GROUP_0)
++		if (gflags & IEEE80211_TX_RC_MCS)
++			p += sprintf(p, " HT%c0/%cGI ", htmode, gimode);
++		else if (gflags & IEEE80211_TX_RC_VHT_MCS)
+ 			p += sprintf(p, "VHT%c0/%cGI ", htmode, gimode);
+ 		else
+-			p += sprintf(p, " HT%c0/%cGI ", htmode, gimode);
++			p += sprintf(p, " CCK/%cP   ", j < 4 ? 'L' : 'S');
+ 
+ 		*(p++) = (idx == mi->max_tp_rate[0]) ? 'A' : ' ';
+ 		*(p++) = (idx == mi->max_tp_rate[1]) ? 'B' : ' ';
+@@ -55,13 +58,14 @@ minstrel_ht_stats_dump(struct minstrel_ht_sta *mi, int i, char *p)
+ 		*(p++) = (idx == mi->max_tp_rate[3]) ? 'D' : ' ';
+ 		*(p++) = (idx == mi->max_prob_rate) ? 'P' : ' ';
+ 
+-		if (i == MINSTREL_CCK_GROUP) {
+-			int r = bitrates[j % 4];
+-			p += sprintf(p, " %2u.%1uM ", r / 10, r % 10);
+-		} else if (i >= MINSTREL_VHT_GROUP_0) {
++		if (gflags & IEEE80211_TX_RC_MCS) {
++			p += sprintf(p, " MCS%-2u ", (mg->streams - 1) * 8 + j);
++		} else if (gflags & IEEE80211_TX_RC_VHT_MCS) {
+ 			p += sprintf(p, " MCS%-1u/%1u", j, mg->streams);
+ 		} else {
+-			p += sprintf(p, " MCS%-2u ", (mg->streams - 1) * 8 + j);
++			int r = bitrates[j % 4];
++
++			p += sprintf(p, " %2u.%1uM ", r / 10, r % 10);
+ 		}
+ 
+ 		tp = mr->cur_tp / 10;
+-- 
+2.0.1
+
