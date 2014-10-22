@@ -1,80 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:6712 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932177AbaJVJhg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2014 05:37:36 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Arik Nemtsov <arik@wizery.com>,
-	Arik Nemtsov <arikx.nemtsov@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH] mac80211: expose TDLS-initiator value to low level driver
-Date: Wed, 22 Oct 2014 12:32:48 +0300
-Message-Id: <1413970368-5777-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20141022_113739_487676_8886B2C1)
+Received: from mail-lb0-f176.google.com ([209.85.217.176]:61210 "EHLO
+	mail-lb0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933049AbaJVMif (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Oct 2014 08:38:35 -0400
+Received: by mail-lb0-f176.google.com with SMTP id p9so2686094lbv.7
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Oct 2014 05:38:34 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH] ath10k: call correct function for frag threshold
+Date: Wed, 22 Oct 2014 14:27:05 +0200
+Message-Id: <1413980825-11186-1-git-send-email-michal.kazior@tieto.com> (sfid-20141022_143838_338753_2801577C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+Rts threshold was being configured instead of
+fragmentation threshold.
 
-Some drivers need to know which station is the TDLS link initiator.
-Expose this value via the mac80211 ieee80211_sta structure.
+Keep in mind available firmware binaries don't
+seem to support fragmentation anyway so this
+doesn't fix fragmentation threshold per se.
 
-Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- include/net/mac80211.h | 3 +++
- net/mac80211/tdls.c    | 8 ++++++--
- 2 files changed, 9 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath10k/mac.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index e544bbf..3a8cb99 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1427,6 +1427,8 @@ struct ieee80211_sta_rates {
-  * @smps_mode: current SMPS mode (off, static or dynamic)
-  * @rates: rate control selection table
-  * @tdls: indicates whether the STA is a TDLS peer
-+ * @tdls_initiator: indicates the STA is an initiator of the TDLS link. Only
-+ *	valid if the STA is a TDLS peer in the first place.
-  */
- struct ieee80211_sta {
- 	u32 supp_rates[IEEE80211_NUM_BANDS];
-@@ -1442,6 +1444,7 @@ struct ieee80211_sta {
- 	enum ieee80211_smps_mode smps_mode;
- 	struct ieee80211_sta_rates __rcu *rates;
- 	bool tdls;
-+	bool tdls_initiator;
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index f6d2fd0..1d119116 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3872,7 +3872,7 @@ static int ath10k_set_frag_threshold(struct ieee80211_hw *hw, u32 value)
+ 		ath10k_dbg(ar, ATH10K_DBG_MAC, "mac vdev %d fragmentation threshold %d\n",
+ 			   arvif->vdev_id, value);
  
- 	/* must be last */
- 	u8 drv_priv[0] __aligned(sizeof(void *));
-diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
-index 4ea25de..b4f368e 100644
---- a/net/mac80211/tdls.c
-+++ b/net/mac80211/tdls.c
-@@ -562,8 +562,10 @@ ieee80211_tdls_prep_mgmt_packet(struct wiphy *wiphy, struct net_device *dev,
- 	/* infer the initiator if we can, to support old userspace */
- 	switch (action_code) {
- 	case WLAN_TDLS_SETUP_REQUEST:
--		if (sta)
-+		if (sta) {
- 			set_sta_flag(sta, WLAN_STA_TDLS_INITIATOR);
-+			sta->sta.tdls_initiator = false;
-+		}
- 		/* fall-through */
- 	case WLAN_TDLS_SETUP_CONFIRM:
- 	case WLAN_TDLS_DISCOVERY_REQUEST:
-@@ -575,8 +577,10 @@ ieee80211_tdls_prep_mgmt_packet(struct wiphy *wiphy, struct net_device *dev,
- 		 * Make the last packet sent take effect for the initiator
- 		 * value.
- 		 */
--		if (sta)
-+		if (sta) {
- 			clear_sta_flag(sta, WLAN_STA_TDLS_INITIATOR);
-+			sta->sta.tdls_initiator = true;
-+		}
- 		/* fall-through */
- 	case WLAN_PUB_ACTION_TDLS_DISCOVER_RES:
- 		initiator = false;
+-		ret = ath10k_mac_set_rts(arvif, value);
++		ret = ath10k_mac_set_frag(arvif, value);
+ 		if (ret) {
+ 			ath10k_warn(ar, "failed to set fragmentation threshold for vdev %d: %d\n",
+ 				    arvif->vdev_id, ret);
 -- 
-1.9.1
+1.8.5.3
 
