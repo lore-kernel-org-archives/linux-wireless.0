@@ -1,47 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0030.hostedemail.com ([216.40.44.30]:40883 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750747AbaJKEbU (ORCPT
+Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:53246
+	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932109AbaJVP5m (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Oct 2014 00:31:20 -0400
-Message-ID: <1413001871.8770.52.camel@joe-AO725> (sfid-20141011_063134_946861_E7A32205)
-Subject: Re: [PATCH] rtl8732au: Fix coding style violations in ieee80211.h
-From: Joe Perches <joe@perches.com>
-To: Matthew Tyler <matt.tyler@flashics.com>
-Cc: jes.sorensen@redhat.com, linux-wireless@vger.kernel.org
-Date: Fri, 10 Oct 2014 21:31:11 -0700
-In-Reply-To: <20141011041923.GA9075@ZeroX.Belkin>
-References: <20141011041923.GA9075@ZeroX.Belkin>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Wed, 22 Oct 2014 11:57:42 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: [PATCH] mac80211: add support for driver tx power reporting
+Date: Wed, 22 Oct 2014 17:57:38 +0200
+Message-Id: <1413993458-62517-1-git-send-email-nbd@openwrt.org> (sfid-20141022_175749_370256_2C27B844)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2014-10-11 at 12:19 +0800, Matthew Tyler wrote:
-> Signed-off-by: Matthew Tyler <matt.tyler@flashics.com>
-[]
-> diff --git a/drivers/staging/rtl8723au/include/ieee80211.h b/drivers/staging/rtl8723au/include/ieee80211.h
-[]
-> -#define IsSupported24G(NetType) (NetType & SUPPORTED_24G_NETTYPE_MSK ? true : false)
-> -#define IsSupported5G(NetType) (NetType & SUPPORTED_5G_NETTYPE_MSK ? true : false)
-> +#define IsSupported24G(NetType) \
-> +	(NetType & SUPPORTED_24G_NETTYPE_MSK ? true : false)
+The configured tx power is often limited by hardware capabilities,
+channel settings, antenna configuration, etc.
 
-A lot of these would be better as static inlines or
-maybe using !! instead of ternaries.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ include/net/mac80211.h | 5 +++++
+ net/mac80211/cfg.c     | 3 +++
+ 2 files changed, 8 insertions(+)
 
-But it doesn't seem any of these IsSupported<foo> macros
-are used at all, so probably deleting is best.
-
-> @@ -266,7 +277,9 @@ join_res:
->  */
->  
->  #define MAC_FMT "%02x:%02x:%02x:%02x:%02x:%02x"
-> -#define MAC_ARG(x) ((u8*)(x))[0],((u8*)(x))[1],((u8*)(x))[2],((u8*)(x))[3],((u8*)(x))[4],((u8*)(x))[5]
-> +#define MAC_ARG(x) \
-> +	(((u8 *)(x))[0], ((u8 *)(x))[1], ((u8 *)(x))[2], \
-> +	 ((u8 *)(x))[3], ((u8 *)(x))[4], ((u8 *)(x))[5])
-
-It'd be better to convert these to use %pM
-
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 0ad1f47..41b0e60 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2838,6 +2838,9 @@ enum ieee80211_roc_type {
+  * @get_expected_throughput: extract the expected throughput towards the
+  *	specified station. The returned value is expressed in Kbps. It returns 0
+  *	if the RC algorithm does not have proper data to provide.
++ *
++ * @get_txpower: get current maximum tx power (in dBm) based on configuration
++ *	and hardware limits.
+  */
+ struct ieee80211_ops {
+ 	void (*tx)(struct ieee80211_hw *hw,
+@@ -3039,6 +3042,8 @@ struct ieee80211_ops {
+ 	int (*join_ibss)(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
+ 	void (*leave_ibss)(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
+ 	u32 (*get_expected_throughput)(struct ieee80211_sta *sta);
++	int (*get_txpower)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
++			   int *dbm);
+ };
+ 
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index fb6a150..7cb31a8 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2081,6 +2081,9 @@ static int ieee80211_get_tx_power(struct wiphy *wiphy,
+ 	struct ieee80211_local *local = wiphy_priv(wiphy);
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
+ 
++	if (local->ops->get_txpower)
++		return local->ops->get_txpower(&local->hw, &sdata->vif, dbm);
++
+ 	if (!local->use_chanctx)
+ 		*dbm = local->hw.conf.power_level;
+ 	else
+-- 
+2.0.4
 
