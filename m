@@ -1,456 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f50.google.com ([74.125.82.50]:54165 "EHLO
-	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752425AbaJYT4y (ORCPT
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:37829 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751511AbaJVOPw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Oct 2014 15:56:54 -0400
-Received: by mail-wg0-f50.google.com with SMTP id z12so601990wgg.21
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2014 12:56:53 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 39/48] staging: vt6655: dead code remove iocmd.h
-Date: Sat, 25 Oct 2014 09:40:17 +0100
-Message-Id: <1414226426-5811-40-git-send-email-tvboxspy@gmail.com> (sfid-20141025_215658_859135_8718042C)
-In-Reply-To: <1414226426-5811-1-git-send-email-tvboxspy@gmail.com>
-References: <1414226426-5811-1-git-send-email-tvboxspy@gmail.com>
+	Wed, 22 Oct 2014 10:15:52 -0400
+Received: by mail-wi0-f175.google.com with SMTP id d1so1517924wiv.2
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Oct 2014 07:15:50 -0700 (PDT)
+Date: Wed, 22 Oct 2014 16:15:48 +0200
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Karl Beldan <karl.beldan@rivierawaves.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: Re: [PATCH v5 0/4] add VHT support to minstrel_ht
+Message-ID: <20141022141547.GB29537@magnum.frso.rivierawaves.com> (sfid-20141022_161556_365662_4D35BFA6)
+References: <1413812762-6605-1-git-send-email-karl.beldan@gmail.com>
+ <1413816546.32358.3.camel@jlt4.sipsolutions.net>
+ <20141020151302.GB7691@magnum.frso.rivierawaves.com>
+ <20141020153421.GC7691@magnum.frso.rivierawaves.com>
+ <1413833597.32358.6.camel@jlt4.sipsolutions.net>
+ <20141021152658.GA14839@magnum.frso.rivierawaves.com>
+ <1413917246.1998.7.camel@jlt4.sipsolutions.net>
+ <20141022135438.GA29537@magnum.frso.rivierawaves.com>
+ <1413986851.28927.4.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1413986851.28927.4.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/device_main.c |   1 -
- drivers/staging/vt6655/iocmd.h       | 408 -----------------------------------
- 2 files changed, 409 deletions(-)
- delete mode 100644 drivers/staging/vt6655/iocmd.h
+On Wed, Oct 22, 2014 at 04:07:31PM +0200, Johannes Berg wrote:
+> On Wed, 2014-10-22 at 15:54 +0200, Karl Beldan wrote:
+> > On Tue, Oct 21, 2014 at 08:47:26PM +0200, Johannes Berg wrote:
+> > > On Tue, 2014-10-21 at 17:26 +0200, Karl Beldan wrote:
+> > > 
+> > > > I still don't know why I don't see the smatch array warnings here, I
+> > > > guess I'll live with that for now.
+> > > 
+> > > I'm hoping Dan will eventually pick up on it ;-)
+> > > 
+> > smatch is good, I get your warnings now when unsetting
+> > MAC80211_RC_MINSTREL_VHT. I did not click until after checking
+> > checking smatch's check_overflow.c, when there's a use after check, it
+> > only barks when the indexes checked are out of bounds.
+> 
+> Wait, are you saying it *is* out of bounds when VHT isn't turned on?
+> 
 
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index b8b5a93..9755856 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -60,7 +60,6 @@
- #include "mac.h"
- #include "wmgr.h"
- #include "power.h"
--#include "iocmd.h"
- #include "rxtx.h"
- #include "dpc.h"
- #include "rf.h"
-diff --git a/drivers/staging/vt6655/iocmd.h b/drivers/staging/vt6655/iocmd.h
-deleted file mode 100644
-index a665cfd..0000000
---- a/drivers/staging/vt6655/iocmd.h
-+++ /dev/null
-@@ -1,408 +0,0 @@
--/*
-- * Copyright (c) 1996, 2003 VIA Networking Technologies, Inc.
-- * All rights reserved.
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License as published by
-- * the Free Software Foundation; either version 2 of the License, or
-- * (at your option) any later version.
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License along
-- * with this program; if not, write to the Free Software Foundation, Inc.,
-- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-- *
-- * File: iocmd.h
-- *
-- * Purpose: Handles the viawget ioctl private interface functions
-- *
-- * Author: Lyndon Chen
-- *
-- * Date: May 8, 2002
-- *
-- */
--
--#ifndef __IOCMD_H__
--#define __IOCMD_H__
--
--#include "ttype.h"
--
--// ioctl Command code
--#define MAGIC_CODE	                 0x3142
--#define IOCTL_CMD_TEST	            (SIOCDEVPRIVATE + 0)
--#define IOCTL_CMD_SET			    (SIOCDEVPRIVATE + 1)
--#define IOCTL_CMD_HOSTAPD           (SIOCDEVPRIVATE + 2)
--#define IOCTL_CMD_WPA               (SIOCDEVPRIVATE + 3)
--
--typedef enum tagWMAC_CMD {
--	WLAN_CMD_BSS_SCAN,
--	WLAN_CMD_BSS_JOIN,
--	WLAN_CMD_DISASSOC,
--	WLAN_CMD_SET_WEP,
--	WLAN_CMD_GET_LINK,
--	WLAN_CMD_GET_LISTLEN,
--	WLAN_CMD_GET_LIST,
--	WLAN_CMD_GET_MIB,
--	WLAN_CMD_GET_STAT,
--	WLAN_CMD_STOP_MAC,
--	WLAN_CMD_START_MAC,
--	WLAN_CMD_AP_START,
--	WLAN_CMD_SET_HOSTAPD,
--	WLAN_CMD_SET_HOSTAPD_STA,
--	WLAN_CMD_SET_802_1X,
--	WLAN_CMD_SET_HOST_WEP,
--	WLAN_CMD_SET_WPA,
--	WLAN_CMD_GET_NODE_CNT,
--	WLAN_CMD_ZONETYPE_SET,
--	WLAN_CMD_GET_NODE_LIST
--} WMAC_CMD, *PWMAC_CMD;
--
--typedef enum tagWZONETYPE {
--	ZoneType_USA = 0,
--	ZoneType_Japan = 1,
--	ZoneType_Europe = 2
--} WZONETYPE;
--
--#define ADHOC	0
--#define INFRA	1
--#define BOTH	2
--#define AP	    3
--
--#define ADHOC_STARTED	   1
--#define ADHOC_JOINTED	   2
--
--#define PHY80211a       0
--#define PHY80211b       1
--#define PHY80211g       2
--
--#define SSID_ID                0
--#define SSID_MAXLEN            32
--#define BSSID_LEN              6
--#define WEP_NKEYS              4
--#define WEP_KEYMAXLEN          29
--#define WEP_40BIT_LEN          5
--#define WEP_104BIT_LEN         13
--#define WEP_232BIT_LEN         16
--
--// Ioctl interface structure
--// Command structure
--//
--#pragma pack(1)
--typedef struct tagSCmdRequest {
--	u8	    name[16];
--	void __user *data;
--	u16	    wResult;
--	u16     wCmdCode;
--} SCmdRequest, *PSCmdRequest;
--
--//
--// Scan
--//
--
--typedef struct tagSCmdScan {
--	u8 ssid[SSID_MAXLEN + 2];
--} SCmdScan, *PSCmdScan;
--
--//
--// BSS Join
--//
--
--typedef struct tagSCmdBSSJoin {
--	u16	    wBSSType;
--	u16     wBBPType;
--	u8	    ssid[SSID_MAXLEN + 2];
--	u32	    uChannel;
--	bool bPSEnable;
--	bool bShareKeyAuth;
--} SCmdBSSJoin, *PSCmdBSSJoin;
--
--//
--// Zonetype Setting
--//
--
--typedef struct tagSCmdZoneTypeSet {
--	bool bWrite;
--	WZONETYPE  ZoneType;
--} SCmdZoneTypeSet, *PSCmdZoneTypeSet;
--
--#ifdef WPA_SM_Transtatus
--typedef struct tagSWPAResult {
--	char	ifname[100];
--	u8 proto;
--	u8 key_mgmt;
--	u8 eap_type;
--	bool authenticated;
--} SWPAResult, *PSWPAResult;
--#endif
--
--typedef struct tagSCmdStartAP {
--	u16	    wBSSType;
--	u16     wBBPType;
--	u8	    ssid[SSID_MAXLEN + 2];
--	u32	    uChannel;
--	u32     uBeaconInt;
--	bool bShareKeyAuth;
--	u8      byBasicRate;
--} SCmdStartAP, *PSCmdStartAP;
--
--typedef struct tagSCmdSetWEP {
--	bool bEnableWep;
--	u8      byKeyIndex;
--	u8      abyWepKey[WEP_NKEYS][WEP_KEYMAXLEN];
--	bool bWepKeyAvailable[WEP_NKEYS];
--	u32     auWepKeyLength[WEP_NKEYS];
--} SCmdSetWEP, *PSCmdSetWEP;
--
--typedef struct tagSBSSIDItem {
--	u32	    uChannel;
--	u8      abyBSSID[BSSID_LEN];
--	u8      abySSID[SSID_MAXLEN + 1];
--	u8      byNetType;
--	u16	    wBeaconInterval;
--	u16	    wCapInfo;        // for address of byNetType at align 4
--
--	bool bWEPOn;
--	u32     uRSSI;
--} SBSSIDItem;
--
--typedef struct tagSBSSIDList {
--	u32		    uItem;
--	SBSSIDItem	sBSSIDList[0];
--} SBSSIDList, *PSBSSIDList;
--
--typedef struct tagSCmdLinkStatus {
--	bool bLink;
--	u16   wBSSType;
--	u8      byState;
--	u8      abyBSSID[BSSID_LEN];
--	u8      abySSID[SSID_MAXLEN + 2];
--	u32     uChannel;
--	u32     uLinkRate;
--} SCmdLinkStatus, *PSCmdLinkStatus;
--
--//
--// 802.11 counter
--//
--typedef struct tagSDot11MIBCount {
--	u32 TransmittedFragmentCount;
--	u32 MulticastTransmittedFrameCount;
--	u32 FailedCount;
--	u32 RetryCount;
--	u32 MultipleRetryCount;
--	u32 RTSSuccessCount;
--	u32 RTSFailureCount;
--	u32 ACKFailureCount;
--	u32 FrameDuplicateCount;
--	u32 ReceivedFragmentCount;
--	u32 MulticastReceivedFrameCount;
--	u32 FCSErrorCount;
--} SDot11MIBCount, *PSDot11MIBCount;
--
--//
--// statistic counter
--//
--typedef struct tagSStatMIBCount {
--	//
--	// ISR status count
--	//
--	u32   dwIsrTx0OK;
--	u32   dwIsrTx1OK;
--	u32   dwIsrBeaconTxOK;
--	u32   dwIsrRxOK;
--	u32   dwIsrTBTTInt;
--	u32   dwIsrSTIMERInt;
--	u32   dwIsrUnrecoverableError;
--	u32   dwIsrSoftInterrupt;
--	u32   dwIsrRxNoBuf;
--
--	u32   dwIsrUnknown;
--
--	// RSR status count
--	//
--	u32   dwRsrFrmAlgnErr;
--	u32   dwRsrErr;
--	u32   dwRsrCRCErr;
--	u32   dwRsrCRCOk;
--	u32   dwRsrBSSIDOk;
--	u32   dwRsrADDROk;
--	u32   dwRsrICVOk;
--	u32   dwNewRsrShortPreamble;
--	u32   dwRsrLong;
--	u32   dwRsrRunt;
--
--	u32   dwRsrRxControl;
--	u32   dwRsrRxData;
--	u32   dwRsrRxManage;
--
--	u32   dwRsrRxPacket;
--	u32   dwRsrRxOctet;
--	u32   dwRsrBroadcast;
--	u32   dwRsrMulticast;
--	u32   dwRsrDirected;
--	// 64-bit OID
--	u32   ullRsrOK;
--
--	// for some optional OIDs (64 bits) and DMI support
--	u32   ullRxBroadcastBytes;
--	u32   ullRxMulticastBytes;
--	u32   ullRxDirectedBytes;
--	u32   ullRxBroadcastFrames;
--	u32   ullRxMulticastFrames;
--	u32   ullRxDirectedFrames;
--
--	u32   dwRsrRxFragment;
--	u32   dwRsrRxFrmLen64;
--	u32   dwRsrRxFrmLen65_127;
--	u32   dwRsrRxFrmLen128_255;
--	u32   dwRsrRxFrmLen256_511;
--	u32   dwRsrRxFrmLen512_1023;
--	u32   dwRsrRxFrmLen1024_1518;
--
--	// TSR0,1 status count
--	//
--	u32   dwTsrTotalRetry[2];        // total collision retry count
--	u32   dwTsrOnceRetry[2];         // this packet only occur one collision
--	u32   dwTsrMoreThanOnceRetry[2]; // this packet occur more than one collision
--	u32   dwTsrRetry[2];             // this packet has ever occur collision,
--	// that is (dwTsrOnceCollision0 + dwTsrMoreThanOnceCollision0)
--	u32   dwTsrACKData[2];
--	u32   dwTsrErr[2];
--	u32   dwAllTsrOK[2];
--	u32   dwTsrRetryTimeout[2];
--	u32   dwTsrTransmitTimeout[2];
--
--	u32   dwTsrTxPacket[2];
--	u32   dwTsrTxOctet[2];
--	u32   dwTsrBroadcast[2];
--	u32   dwTsrMulticast[2];
--	u32   dwTsrDirected[2];
--
--	// RD/TD count
--	u32   dwCntRxFrmLength;
--	u32   dwCntTxBufLength;
--
--	u8    abyCntRxPattern[16];
--	u8    abyCntTxPattern[16];
--
--	// Software check....
--	u32   dwCntRxDataErr;             // rx buffer data software compare CRC err count
--	u32   dwCntDecryptErr;            // rx buffer data software compare CRC err count
--	u32   dwCntRxICVErr;              // rx buffer data software compare CRC err count
--	u32    idxRxErrorDesc;             // index for rx data error RD
--
--	// 64-bit OID
--	u32   ullTsrOK[2];
--
--	// for some optional OIDs (64 bits) and DMI support
--	u32   ullTxBroadcastFrames[2];
--	u32   ullTxMulticastFrames[2];
--	u32   ullTxDirectedFrames[2];
--	u32   ullTxBroadcastBytes[2];
--	u32   ullTxMulticastBytes[2];
--	u32   ullTxDirectedBytes[2];
--} SStatMIBCount, *PSStatMIBCount;
--
--typedef struct tagSNodeItem {
--	// STA info
--	u16            wAID;
--	u8             abyMACAddr[6];
--	u16            wTxDataRate;
--	u16            wInActiveCount;
--	u16            wEnQueueCnt;
--	u16            wFlags;
--	bool bPWBitOn;
--	u8             byKeyIndex;
--	u16            wWepKeyLength;
--	u8            abyWepKey[WEP_KEYMAXLEN];
--	// Auto rate fallback vars
--	bool bIsInFallback;
--	u32            uTxFailures;
--	u32            uTxAttempts;
--	u16            wFailureRatio;
--} SNodeItem;
--
--typedef struct tagSNodeList {
--	u32		    uItem;
--	SNodeItem	sNodeList[0];
--} SNodeList, *PSNodeList;
--
--typedef struct tagSCmdValue {
--	u32 dwValue;
--} SCmdValue,  *PSCmdValue;
--
--//
--// hostapd & viawget ioctl related
--//
--
--enum {
--	VIAWGET_HOSTAPD_FLUSH = 1,
--	VIAWGET_HOSTAPD_ADD_STA = 2,
--	VIAWGET_HOSTAPD_REMOVE_STA = 3,
--	VIAWGET_HOSTAPD_GET_INFO_STA = 4,
--	VIAWGET_HOSTAPD_SET_ENCRYPTION = 5,
--	VIAWGET_HOSTAPD_GET_ENCRYPTION = 6,
--	VIAWGET_HOSTAPD_SET_FLAGS_STA = 7,
--	VIAWGET_HOSTAPD_SET_ASSOC_AP_ADDR = 8,
--	VIAWGET_HOSTAPD_SET_GENERIC_ELEMENT = 9,
--	VIAWGET_HOSTAPD_MLME = 10,
--	VIAWGET_HOSTAPD_SCAN_REQ = 11,
--	VIAWGET_HOSTAPD_STA_CLEAR_STATS = 12,
--};
--
--#define VIAWGET_HOSTAPD_GENERIC_ELEMENT_HDR_LEN				\
--	((int)(&((struct viawget_hostapd_param *)0)->u.generic_elem.data))
--
--// Maximum length for algorithm names (-1 for nul termination) used in ioctl()
--
--struct viawget_hostapd_param {
--	u32 cmd;
--	u8 sta_addr[6];
--	union {
--		struct {
--			u16 aid;
--			u16 capability;
--			u8 tx_supp_rates;
--		} add_sta;
--		struct {
--			u32 inactive_sec;
--		} get_info_sta;
--		struct {
--			u8 alg;
--			u32 flags;
--			u32 err;
--			u8 idx;
--			u8 seq[8];
--			u16 key_len;
--			u8 key[0];
--		} crypt;
--		struct {
--			u32 flags_and;
--			u32 flags_or;
--		} set_flags_sta;
--		struct {
--			u16 rid;
--			u16 len;
--			u8 data[0];
--		} rid;
--		struct {
--			u8 len;
--			u8 data[0];
--		} generic_elem;
--		struct {
--			u16 cmd;
--			u16 reason_code;
--		} mlme;
--		struct {
--			u8 ssid_len;
--			u8 ssid[32];
--		} scan_req;
--	} u;
--};
--
--#pragma pack()
--
--#endif //__IOCMD_H__
--- 
-1.9.1
+The smatch warning pops on
+{
+if (!(mi->groups[i].supported & BIT(j)))
+	continue;
+	...
+else if (i >= MINSTREL_VHT_GROUP_0)
+}
 
+MINSTREL_VHT_GROUP_0 is out of bonds (not i which remains <
+ARRAY_SIZE(mi->groups)).
+
+ 
+Karl
