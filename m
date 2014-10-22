@@ -1,60 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54742 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751359AbaJENPo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Oct 2014 09:15:44 -0400
-Date: Sun, 5 Oct 2014 15:13:12 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Mark Asselstine <asselsm@gmail.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	rt2x00 Users List <users@rt2x00.serialmonkey.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] rt2x00: rt2x00queue: avoid using more headroom then
- driver requested
-Message-ID: <20141005131312.GA1827@redhat.com> (sfid-20141005_151549_303589_BB897B19)
-References: <1412135157-13520-1-git-send-email-asselsm@gmail.com>
- <20141001091240.GA2011@redhat.com>
- <CAPuovEJtuJdRakwRhdUjRwrmkfry62wJqd8p2uJQ7L0rB7DoCA@mail.gmail.com>
- <CAPuovEJssghQv=03sn07AuYVvwULq0kSTn9kch53r+VKccy8xA@mail.gmail.com>
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:58466 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754011AbaJVJKY convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Oct 2014 05:10:24 -0400
+Received: by mail-ob0-f174.google.com with SMTP id uz6so913367obc.5
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Oct 2014 02:10:24 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAPuovEJssghQv=03sn07AuYVvwULq0kSTn9kch53r+VKccy8xA@mail.gmail.com>
+In-Reply-To: <1413921415.3763081.181696749.20A0A495@webmail.messagingengine.com>
+References: <1413463736.1316541.179720977.4FD32021@webmail.messagingengine.com>
+	<1413510814.22769.6.camel@dcbw.local>
+	<1413751717.2510219.180809145.0E693C29@webmail.messagingengine.com>
+	<CANUX_P2RHVRorVABRfWVg39d4D8dj35v3fBpY3=3jvQ1U+mfEA@mail.gmail.com>
+	<1413783023.2710583.180921653.10DFFCEE@webmail.messagingengine.com>
+	<CANUX_P0Q7cNeBzQa=2WVZFJXPTLx8F6YQk9bGCf_3uYhc5RcGA@mail.gmail.com>
+	<CANUX_P3EqgTX7cPJvQ3fWH1yijekE0G_8TiH2_OCS7nFASGtkA@mail.gmail.com>
+	<1413789724.3063896.180943829.3F15F453@webmail.messagingengine.com>
+	<CANUX_P1REqkSqN0dtak34OQ_pSGMtPvV3Vj61tW5wb1+n2A7mg@mail.gmail.com>
+	<1413833365.2949853.181221645.22D54845@webmail.messagingengine.com>
+	<CANUX_P3XzYBp7E=hScmc837TpuCr9VrxEYauG=sGMKfOCpX=qA@mail.gmail.com>
+	<54461740.5000903@openwrt.org>
+	<1413879792.3500640.181427549.198E9452@webmail.messagingengine.com>
+	<54461AEF.7040304@openwrt.org>
+	<54463CE9.3060400@gmail.com>
+	<1413921415.3763081.181696749.20A0A495@webmail.messagingengine.com>
+Date: Wed, 22 Oct 2014 12:10:24 +0300
+Message-ID: <CANUX_P0LRRczVCSFR7RE5coaYFxwFXyqC90pdm=oVwEiEt-7zw@mail.gmail.com> (sfid-20141022_111034_707555_E4F4F565)
+Subject: Re: iwlwifi: Reason 7 periodic disconnect
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: =?UTF-8?Q?Lauren=C8=9Biu_Nicola?= <lnicola@dend.ro>
+Cc: poma <pomidorabelisima@gmail.com>, Felix Fietkau <nbd@openwrt.org>,
+	Dan Williams <dcbw@redhat.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Oct 04, 2014 at 07:38:25PM -0400, Mark Asselstine wrote:
-> >> The only possibility to skb_under_panic I can see, is that we retransmit
-> >> frame and try to align it many times, but alignment should not be needed
-> >> once we aligned frame. Hence I'm not sure how those skb_under_panics can
-> >> happen.
-> 
-> I am still digging through trying to find a cause for this, without a
-> reproducer I am starting to lose hope on finding the cause.
-> 
-> I dug up this old thread
-> http://rt2x00.serialmonkey.com/pipermail/users_rt2x00.serialmonkey.com/2010-November/002457.html
+On Tue, Oct 21, 2014 at 10:56 PM, Laurențiu Nicola <lnicola@dend.ro> wrote:
+> Yep! `scb_timeout` is 60 on my router.
 >
-> I am thinking that the cause is an interaction with 80211mac and the
-> rt2x00queue not doing enough to ensure we are sending the skb back in
-> the same state as we get it. Looking at rt2x00lib_txdone() we don't
-> return headroom that may have been taken for frame alignment and we
-> don't account for the extra 4-bytes taken for header_align when the
-> payload_align is larger then the header_align while setting up the
-> l2pad.
+> On Tue, Oct 21, 2014, at 14:00, poma wrote:
+>> On 21.10.2014 10:35, Felix Fietkau wrote:
+>> > On 2014-10-21 10:23, Laurențiu Nicola wrote:
+>> >> It's an ASUS RT-N66U running NEWD-2/K3X from r24160.
+>> > This is a Broadcom based device, so it should behave in the same way as
+>> > other APs/Routers running the Broadcom drivers.
+>> > The driver should only send Reason 7 when receiving a PS-Poll, BlockAck,
+>> > BlockAckReq or Action frame from a station that's not associated, so
+>> > probably it has already kicked out your iwlwifi client earlier. Not sure
+>> > why that doesn't show up in the log though.
+>> >
+>>
+>> Whether this might refer to the Station Control Block Timeout value
+>>
+>> http://www.dd-wrt.com/wiki/index.php/Wl#scb_timeout
+>> ...
+>> scb_timeout
+>>
+>> AP only: inactivity timeout value for authenticated stas
+>>
 
-I think we reserve sufficient space, 4 bytes for payload align plus
-4 bytes for header align.
+Actually, mac80211 should be probing the AP every 30 seconds but a
+beacon might abort the probe...
+Can you try something like this:
 
-> Do you know why rt2x00 doesn't return frame align space back to
-> the headroom?
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 75df184..c9db7cf 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3295,7 +3295,8 @@ static void ieee80211_rx_mgmt_beacon(struct
+ieee80211_sub_if_data *sdata,
+        if (ifmgd->flags & IEEE80211_STA_CONNECTION_POLL) {
+                mlme_dbg_ratelimited(sdata,
+                                     "cancelling AP probe due to a
+received beacon\n");
+-               ieee80211_reset_ap_probe(sdata);
++               pr_err("Not cancelling the probe to make sure the AP
+hears us from time to time\n");
++               //ieee80211_reset_ap_probe(sdata);
+        }
 
-For performance reasons I guess.
+        /*
 
-If we return (payload) aligned skb to mac80211 and mac80211 will
-retransmit that skb we will not align it again, since it's already
-aligned. But perhaps we really need to return original tx skb to
-mac80211, but if so, I would like to know detailed reason why.
 
-Thanks
-Stanislaw
 
+>>
+>> poma
+>>
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+>> in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
