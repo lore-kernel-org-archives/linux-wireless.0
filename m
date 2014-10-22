@@ -1,54 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:58281 "EHLO sipsolutions.net"
+Received: from mga14.intel.com ([192.55.52.115]:11906 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754974AbaJIOPG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2014 10:15:06 -0400
-Message-ID: <1412864103.1828.48.camel@jlt4.sipsolutions.net> (sfid-20141009_161538_657735_43F828BB)
-Subject: Re: [PATCH] mac80211/trivial: fix typo in starting baserate for
- rts_cts_rate_idx
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Karl Beldan <karl.beldan@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@rivierawaves.com>
-Date: Thu, 09 Oct 2014 16:15:03 +0200
-In-Reply-To: <20141009140636.GC20644@magnum.frso.rivierawaves.com> (sfid-20141009_160640_580476_43BFD4F7)
-References: <1412690018-18429-1-git-send-email-karl.beldan@gmail.com>
-	 <1412845586.1828.27.camel@jlt4.sipsolutions.net>
-	 <20141009140636.GC20644@magnum.frso.rivierawaves.com>
-	 (sfid-20141009_160640_580476_43BFD4F7)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1754192AbaJVJfW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Oct 2014 05:35:22 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Arik Nemtsov <arik@wizery.com>,
+	Arik Nemtsov <arikx.nemtsov@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH] mac80211: expose API allowing station iteration
+Date: Wed, 22 Oct 2014 12:30:59 +0300
+Message-Id: <1413970259-5649-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20141022_113531_587806_2E9F40BC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-10-09 at 16:06 +0200, Karl Beldan wrote:
-> On Thu, Oct 09, 2014 at 11:06:26AM +0200, Johannes Berg wrote:
-> > On Tue, 2014-10-07 at 15:53 +0200, Karl Beldan wrote:
-> > > From: Karl Beldan <karl.beldan@rivierawaves.com>
-> > 
-> > Is that really trivial? It seems to have some impact on the code, but I
-> > can't right now say exactly what the impact is. Can you describe it and
-> > say whether I should add it to mac80211 or mac80211-next? For "trivial"
-> > I'd probably say mac80211-next, but this might be more important than
-> > that?
-> > 
-> The typo is clearly showing but the faulty behavior clearly demands more
-> detail indeed.
-> 
-> It affects non-(V)HT rates and can lead to selecting an rts_cts rate
-> that is not a basic rate or way superior to the reference rate (ATM
-> rates[0] used for the 1st attempt of the protected frame data).
-> E.g, assuming the drivers register growing (bitrate) sorted
-> ieee80211_rate tables, having :
-> - rates[0].idx == d'2 and basic_rates == b'10100
-> will select rts_cts idx b'10011 & ~d'(BIT(2)-1), i.e. 1, likewise
-> - rates[0].idx == d'2 and basic_rates == b'10001 
-> will select rts_cts idx b'10000
-> The first is not a basic rate and the second is > rates[0].
-> 
-> I hope it clarifies things enough.
+From: Arik Nemtsov <arik@wizery.com>
 
-Well, I'm still not sure which tree I should put it in, I guess?
+Allow drivers to iterate all stations currently uploaded to them.
 
-johannes
+Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ include/net/mac80211.h | 16 ++++++++++++++++
+ net/mac80211/util.c    | 28 ++++++++++++++++++++++++++++
+ 2 files changed, 44 insertions(+)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 9dc5e76..e544bbf 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -4190,6 +4190,22 @@ void ieee80211_iterate_active_interfaces_rtnl(struct ieee80211_hw *hw,
+ 					      void *data);
+ 
+ /**
++ * ieee80211_iterate_stations_atomic - iterate stations
++ *
++ * This function iterates over all stations associated with a given
++ * hardware that are currently uploaded to the driver and calls the callback
++ * function for them.
++ * This function requires the iterator callback function to be atomic,
++ *
++ * @hw: the hardware struct of which the interfaces should be iterated over
++ * @iterator: the iterator function to call, cannot sleep
++ * @data: first argument of the iterator function
++ */
++void ieee80211_iterate_stations_atomic(struct ieee80211_hw *hw,
++				       void (*iterator)(void *data,
++						struct ieee80211_sta *sta),
++				       void *data);
++/**
+  * ieee80211_queue_work - add work onto the mac80211 workqueue
+  *
+  * Drivers and mac80211 use this to add work onto the mac80211 workqueue.
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index c76c9d7..3d07d8d 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -693,6 +693,34 @@ void ieee80211_iterate_active_interfaces_rtnl(
+ }
+ EXPORT_SYMBOL_GPL(ieee80211_iterate_active_interfaces_rtnl);
+ 
++static void __iterate_stations(struct ieee80211_local *local,
++			       void (*iterator)(void *data,
++						struct ieee80211_sta *sta),
++			       void *data)
++{
++	struct sta_info *sta;
++
++	list_for_each_entry_rcu(sta, &local->sta_list, list) {
++		if (!sta->uploaded)
++			continue;
++
++		iterator(data, &sta->sta);
++	}
++}
++
++void ieee80211_iterate_stations_atomic(struct ieee80211_hw *hw,
++			void (*iterator)(void *data,
++					 struct ieee80211_sta *sta),
++			void *data)
++{
++	struct ieee80211_local *local = hw_to_local(hw);
++
++	rcu_read_lock();
++	__iterate_stations(local, iterator, data);
++	rcu_read_unlock();
++}
++EXPORT_SYMBOL_GPL(ieee80211_iterate_stations_atomic);
++
+ struct ieee80211_vif *wdev_to_ieee80211_vif(struct wireless_dev *wdev)
+ {
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
+-- 
+1.9.1
 
