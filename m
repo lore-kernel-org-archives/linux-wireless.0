@@ -1,51 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f180.google.com ([209.85.213.180]:38084 "EHLO
-	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754791AbaJIJCl convert rfc822-to-8bit (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:54080 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753727AbaJVQHn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2014 05:02:41 -0400
-Received: by mail-ig0-f180.google.com with SMTP id uq10so2967684igb.7
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Oct 2014 02:02:41 -0700 (PDT)
+	Wed, 22 Oct 2014 12:07:43 -0400
+Message-ID: <5447D64E.9030301@candelatech.com> (sfid-20141022_180749_804361_E051CD15)
+Date: Wed, 22 Oct 2014 09:07:42 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <1412843867-26563-1-git-send-email-zajec5@gmail.com>
-References: <1412843867-26563-1-git-send-email-zajec5@gmail.com>
-Date: Thu, 9 Oct 2014 11:02:41 +0200
-Message-ID: <CACna6ry-+hzMJ4n5PG7GJq9fZ+zwU38HGt-xZkUqKEP8yX6avA@mail.gmail.com> (sfid-20141009_110250_016878_5326B6D5)
-Subject: Re: [PATCH][RTF][RFC] brcmsmac: add workaround for old BCM4313
- devices with Bluetooth
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>,
-	Maximilian Engelhardt <maxi@daemonizer.de>,
-	Michael Tokarev <mjt@tls.msk.ru>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	brcm80211 development <brcm80211-dev-list@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2 1/6] cfg80211:  support creating wiphy with suggested
+ name.
+References: <1413845378-27837-1-git-send-email-greearb@candelatech.com> <1413919898.1998.15.camel@jlt4.sipsolutions.net> <5446BD98.3010107@candelatech.com>
+In-Reply-To: <5446BD98.3010107@candelatech.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9 October 2014 10:37, Rafał Miłecki <zajec5@gmail.com> wrote:
-> +       /* TODO: Fix the condition. Only for boards >= P250 */
-> +       if (ai_get_chip_id(wlc_hw->sih) == BCMA_CHIP_ID_BCM4313 && (wlc_hw->boardflags & BFL_FEM_BT)) {
-> +               pr_info("Applying BCM4313 WL/BT workaround\n");
-> +               ai_btcombo_p250_4313_war(wlc_hw->sih);
-> +       }
+On 10/21/2014 01:10 PM, Ben Greear wrote:
+> On 10/21/2014 12:31 PM, Johannes Berg wrote:
+> 
+>>>  	/* give it a proper name */
+>>> -	dev_set_name(&rdev->wiphy.dev, PHY_NAME "%d", rdev->wiphy_idx);
+>>> +	if (requested_name && requested_name[0]) {
+>>> +		struct cfg80211_registered_device *rdev2;
+>>> +		int wiphy_idx, taken = -1, result, digits;
+>>> +
+>>> +		/* Code below is from cfg80211_dev_rename */
+>>
+>> can you refactor this then please?
+> 
+> I'll see what I can do on this, as well as take care of
+> the rest of the comments.
 
-This of course have to be checked in some hardware documentation for
-the correct condition. We already have some workaround (right above
-the newly added code) for boards with boardrev >= 0x1250. So my guess
-is the code I added applies to some other cards. The board this patch
-is supposed to fix is:
-board vendor: 14e4
-board type: 608
-board revision: 1109
-board flags: 402201
-board flags2: 884
-firmware revision: 262032c
+I was thinking, this could be made simpler if we reduced restrictions on
+the naming.  Basically, let user (re)name the wiphy however they want, as
+long as it name is not currently in use.
 
-So whatever condition we will need it'll likely need to cover above
-case (maybe boardrev == 0x1109?).
+Might require a bit of extra locking and checking instead of just assuming the
+atomic-inc and phy%d is unique, but maybe that is worth the tradeoff?
+
+I'll get started on trying to refactor with existing constraints, but
+let me know how you feel about relaxing the restrictions...
+
+Thanks,
+Ben
+
+> 
+> Thanks,
+> Ben
+> 
+
 
 -- 
-Rafał
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
