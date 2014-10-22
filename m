@@ -1,42 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from p3plsmtpa09-02.prod.phx3.secureserver.net ([173.201.193.231]:57802
-	"EHLO p3plsmtpa09-02.prod.phx3.secureserver.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751419AbaJAQTJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Oct 2014 12:19:09 -0400
-Date: Wed, 1 Oct 2014 09:11:42 -0700
-From: "Mark A. Greer" <mgreer@animalcreek.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: NFC: trf7970a: Handle timeout values of zero
-Message-ID: <20141001161142.GA695@animalcreek.com> (sfid-20141001_181913_725838_A2E10ECB)
-References: <20141001142048.GA32518@mwanda>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20141001142048.GA32518@mwanda>
+Received: from s3.sipsolutions.net ([5.9.151.49]:49609 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750862AbaJVImG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Oct 2014 04:42:06 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v2] cfg80211: make WMM TSPEC support flag an nl80211 feature flag
+Date: Wed, 22 Oct 2014 10:42:01 +0200
+Message-Id: <1413967321-25950-1-git-send-email-johannes@sipsolutions.net> (sfid-20141022_104211_678552_8F0DE67E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 01, 2014 at 05:20:48PM +0300, Dan Carpenter wrote:
-> Hello Mark A. Greer,
-> 
-> The patch 1961843ceeca: "NFC: trf7970a: Handle timeout values of
-> zero" from Sep 2, 2014, leads to the following static checker warning:
-> 
-> 	drivers/nfc/trf7970a.c:897 trf7970a_irq()
-> 	warn: passing zero to 'ERR_PTR'
-> 
-> drivers/nfc/trf7970a.c
->    892                          trf7970a_cmd(trf, TRF7970A_CMD_FIFO_RESET);
->    893  
->    894                          if (!trf->timeout) {
->    895                                  trf->ignore_timeout = !cancel_delayed_work(
->    896                                                  &trf->timeout_work);
->    897                                  trf->rx_skb = ERR_PTR(0);
->                                                       ^^^^^^^^^^
-> Why not just say "NULL"?
+From: Johannes Berg <johannes.berg@intel.com>
 
-No reason.  I thought I'd fixed them all.
+During the review of the corresponding wpa_supplicant patches we
+noticed that the only way for it to detect that this functionality
+is supported currently is to check for the command support. This
+can be misleading though, as the command was also designed to, in
+the future, support pure 802.11 TSPECs.
 
-Mark
---
+Expose the WMM-TSPEC feature flag to nl80211 so later we can also
+expose an 802.11-TSPEC feature flag (if needed) to differentiate
+the two cases.
+
+Note: this change isn't needed in 3.18 as there's no driver there
+yet that supports the functionality at all.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/cfg80211.h       |  6 +-----
+ include/uapi/linux/nl80211.h |  5 +++++
+ net/wireless/nl80211.c       | 14 ++++++--------
+ 3 files changed, 12 insertions(+), 13 deletions(-)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index ed896c0b5b8b..77aa805d7e7c 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -2646,13 +2646,9 @@ struct cfg80211_ops {
+  * @WIPHY_FLAG_SUPPORTS_5_10_MHZ: Device supports 5 MHz and 10 MHz channels.
+  * @WIPHY_FLAG_HAS_CHANNEL_SWITCH: Device supports channel switch in
+  *	beaconing mode (AP, IBSS, Mesh, ...).
+- * @WIPHY_FLAG_SUPPORTS_WMM_ADMISSION: the device supports setting up WMM
+- *	TSPEC sessions (TID aka TSID 0-7) with the NL80211_CMD_ADD_TX_TS
+- *	command. Standard IEEE 802.11 TSPEC setup is not yet supported, it
+- *	needs to be able to handle Block-Ack agreements and other things.
+  */
+ enum wiphy_flags {
+-	WIPHY_FLAG_SUPPORTS_WMM_ADMISSION	= BIT(0),
++	/* use hole at 0 */
+ 	/* use hole at 1 */
+ 	/* use hole at 2 */
+ 	WIPHY_FLAG_NETNS_OK			= BIT(3),
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index b553c48404d3..be1d5def304d 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -4052,6 +4052,10 @@ enum nl80211_ap_sme_features {
+  *	multiplexing powersave, ie. can turn off all but one chain
+  *	and then wake the rest up as required after, for example,
+  *	rts/cts handshake.
++ * @NL80211_FEATURE_SUPPORTS_WMM_ADMISSION: the device supports setting up WMM
++ *	TSPEC sessions (TID aka TSID 0-7) with the %NL80211_CMD_ADD_TX_TS
++ *	command. Standard IEEE 802.11 TSPEC setup is not yet supported, it
++ *	needs to be able to handle Block-Ack agreements and other things.
+  */
+ enum nl80211_feature_flags {
+ 	NL80211_FEATURE_SK_TX_STATUS			= 1 << 0,
+@@ -4080,6 +4084,7 @@ enum nl80211_feature_flags {
+ 	NL80211_FEATURE_ACKTO_ESTIMATION		= 1 << 23,
+ 	NL80211_FEATURE_STATIC_SMPS			= 1 << 24,
+ 	NL80211_FEATURE_DYNAMIC_SMPS			= 1 << 25,
++	NL80211_FEATURE_SUPPORTS_WMM_ADMISSION		= 1 << 26,
+ };
+ 
+ /**
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index d05fe6d6481d..d98d4ea27819 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1514,8 +1514,8 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
+ 			if (rdev->wiphy.flags & WIPHY_FLAG_HAS_CHANNEL_SWITCH)
+ 				CMD(channel_switch, CHANNEL_SWITCH);
+ 			CMD(set_qos_map, SET_QOS_MAP);
+-			if (rdev->wiphy.flags &
+-					WIPHY_FLAG_SUPPORTS_WMM_ADMISSION)
++			if (rdev->wiphy.features &
++					NL80211_FEATURE_SUPPORTS_WMM_ADMISSION)
+ 				CMD(add_tx_ts, ADD_TX_TS);
+ 		}
+ 		/* add into the if now */
+@@ -9557,7 +9557,7 @@ static int nl80211_add_tx_ts(struct sk_buff *skb, struct genl_info *info)
+ 	u16 admitted_time = 0;
+ 	int err;
+ 
+-	if (!(rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_WMM_ADMISSION))
++	if (!(rdev->wiphy.features & NL80211_FEATURE_SUPPORTS_WMM_ADMISSION))
+ 		return -EOPNOTSUPP;
+ 
+ 	if (!info->attrs[NL80211_ATTR_TSID] || !info->attrs[NL80211_ATTR_MAC] ||
+@@ -9573,12 +9573,10 @@ static int nl80211_add_tx_ts(struct sk_buff *skb, struct genl_info *info)
+ 		return -EINVAL;
+ 
+ 	/* WMM uses TIDs 0-7 even for TSPEC */
+-	if (tsid < IEEE80211_FIRST_TSPEC_TSID) {
+-		if (!(rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_WMM_ADMISSION))
+-			return -EINVAL;
+-	} else {
++	if (tsid >= IEEE80211_FIRST_TSPEC_TSID) {
+ 		/* TODO: handle 802.11 TSPEC/admission control
+-		 * need more attributes for that (e.g. BA session requirement)
++		 * need more attributes for that (e.g. BA session requirement);
++		 * change the WMM adminssion test above to allow both then
+ 		 */
+ 		return -EINVAL;
+ 	}
+-- 
+2.1.0
+
