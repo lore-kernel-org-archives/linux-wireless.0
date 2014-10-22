@@ -1,87 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:50532 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751094AbaJGMdK (ORCPT
+Received: from mail-vc0-f175.google.com ([209.85.220.175]:46414 "EHLO
+	mail-vc0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750932AbaJVNg0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Oct 2014 08:33:10 -0400
-Received: by mail-wi0-f177.google.com with SMTP id fb4so7701661wid.16
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Oct 2014 05:33:09 -0700 (PDT)
+	Wed, 22 Oct 2014 09:36:26 -0400
+Received: by mail-vc0-f175.google.com with SMTP id id10so1945208vcb.34
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Oct 2014 06:36:25 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1412683538.1825.13.camel@jlt4.sipsolutions.net>
-References: <1412083114-8426-1-git-send-email-sgruszka@redhat.com>
- <542AB859.5080008@broadcom.com> <542AB893.9090201@broadcom.com>
- <20141001092710.GB2011@redhat.com> <1412607640.3098.33.camel@jlt4.sipsolutions.net>
- <20141007110356.GA2902@redhat.com> <1412683538.1825.13.camel@jlt4.sipsolutions.net>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Tue, 7 Oct 2014 18:02:49 +0530
-Message-ID: <CABPxzYJ2Qghy87XhfSCdY+vB3CiNn-HpH_8BP=LfafLc37yiZQ@mail.gmail.com> (sfid-20141007_143315_113826_F2FA6A0B)
-Subject: Re: [PATCH v2] cfg80211: allow to configure dynamic PS timeout
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Zdenek Kabelac <zkabelac@redhat.com>
+In-Reply-To: <CAAfyv34ivLF-B0ip+uhCah0PsiRsP1QOD0qW8F73n7KERqgM2w@mail.gmail.com>
+References: <CAAfyv35k1mgQh6FcWaaMciAo8Vkp055k=5xF7zu+yrHmrQbbLA@mail.gmail.com>
+	<5FF020A1CFFEEC49BD1E09530C4FF5951819DB12F1@SC-VEXCH1.marvell.com>
+	<CAAfyv35j-77AURB4fHcecbEvyGS6U+1APNRFCf3FDAd_rrWnJw@mail.gmail.com>
+	<5FF020A1CFFEEC49BD1E09530C4FF5951821351855@SC-VEXCH1.marvell.com>
+	<CAAfyv35E2HUReFpnpdsebPETKk9VPA_hfQHUEJmoJfQt6Q-Puw@mail.gmail.com>
+	<5FF020A1CFFEEC49BD1E09530C4FF5951821936285@SC-VEXCH1.marvell.com>
+	<CAAfyv34UXMNwHf+kYCWEn+bcfGda_gA7uroLRLvhTEGGC5R57w@mail.gmail.com>
+	<5FF020A1CFFEEC49BD1E09530C4FF5951821936BBC@SC-VEXCH1.marvell.com>
+	<CAAfyv36s+stSKU7Oi372EjsvUi+S6PSbg1wVTD1dJrMrerBPXg@mail.gmail.com>
+	<5FF020A1CFFEEC49BD1E09530C4FF5951821936F03@SC-VEXCH1.marvell.com>
+	<CAAfyv34ivLF-B0ip+uhCah0PsiRsP1QOD0qW8F73n7KERqgM2w@mail.gmail.com>
+Date: Wed, 22 Oct 2014 15:36:25 +0200
+Message-ID: <CAAfyv37uyPwED3tzX_4RjeTuf8LXqtL3zH4f-cNOLuRB+w=z6Q@mail.gmail.com> (sfid-20141022_153629_607561_1756F0CF)
+Subject: Re: mwifiex_usb_submit_rx_urb: dev_alloc_skb failed when conected to 5GHz
+From: Belisko Marek <marek.belisko@gmail.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Avinash Patil <patila@marvell.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 7, 2014 at 5:35 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
->
-> On Tue, 2014-10-07 at 13:03 +0200, Stanislaw Gruszka wrote:
-> > On Mon, Oct 06, 2014 at 05:00:40PM +0200, Johannes Berg wrote:
-> > > On Wed, 2014-10-01 at 11:27 +0200, Stanislaw Gruszka wrote:
-> > > > Dynamic power save timeout value is suppose to be configurable via
-> > > > wext, but due to iwconfig bug is not possible to set using that tool.
-> > >
-> > > That's interesting, what's that bug?
-> >
-> > https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=532713
-> >
-> > Parsing problem. After reading bug report more detailed I found out it
-> > is fixed on pre beta version v30, but it was not released i.e. on Fedora
-> > we use wireless-tools v29.
->
-> Curious. I have version 30 on Debian, but all of this is *years* old.
-> Hah.
->
-> > > > Allow to configure PS timeout via nl80211 - add NL80211_ATTR_PS_TIMEOUT
-> > > > attribute which become timeout stated in ms.
-> > >
-> > > Why do you want to be able to set it at all though? I remember having
-> > > this discussion years ago, and we said that it wasn't really useful
-> > > since the user has no idea when and why this should be changed. I'm not
-> > > convinced that changed?
-> > >
-> > > We had to keep the wext for compatibility - maybe that can now be
-> > > removed if you say it's broken - but I'm not sure I see much value in
-> > > adding it (and you're doing nothing to convince me otherwise, so far)
-> >
-> > Zdenek (CCed) reported to me 40% download performance degradation when
-> > PS is used. I think this happen because of delay between packets, but
-> > it is not confirmed yet (I did not provide patches to Zdenek for
-> > testing), hence perhaps problem lies somewere else. I can not reproduce
-> > this issue - I have the same download performance with PS on and off,
-> > I have quite bad performance when set dynamic PS timeout value less
-> > than 20ms, with default 100ms things are fine.
-> >
-> > I assume we can provide that setting to user space, if it allow to
-> > fixup performance with PS ?
->
-> I'm not convinced - that'll give you a way to have the bug reporter test
-> it, or whatever, but that can also be achieved with debugfs or similar,
-> no?
->
-> "Regular" users will never even get there, they'll either give up on
-> Linux, the machine, the wifi NIC, or live with the low speeds. They'll
-> never manipulate things here, and this isn't anything that a userspace
-> tool could automatically manipulate either.
+Below reply I post by accident in html which was rejected by ML.
+Re-posting again. Sorry about that.
 
-iw/iwconfig tools are not only used by regular users but also used by
-developers/
-engineers. We use it heavily for all our wifi testing, and when
-debugging performance
-related issue having a configurable ps timeout is of value. We had to
-hack the kernel
-to change that value (did not had enough time to work on iw/iwconfig).
+On Tue, Oct 14, 2014 at 10:25 AM, Belisko Marek <marek.belisko@gmail.com> wrote:
+> Hi Amitkumar,
+>
+> On Tue, Oct 14, 2014 at 9:08 AM, Amitkumar Karwar <akarwar@marvell.com> wrote:
+>> Hi Marek,
+>>
+>>>I tried both (slightly modified as we're in 3.9 kernel) but issue is
+>>>still reproducible. My patch against 3.9 sources:
+>>
+>> Thanks a lot for the tests.
+>>
+>>>One thing which is not yet still clear to me why kernel console is
+>>>completely unresponsive when receiving packets in high rates. When use
+>>>iperf (on client) with -b40m it is OK but when increase to -b100m then
+>>>console is completely unresponsive until iperf finish.
+>>
+>> Does the system recover when "-b100M" iperf is finished? Can we run iperf with "-b40M" later?
+>> Do you see "dev_alloc_skb failed" messages in dmesg when console is unresponsive?
+> When we get "dev_alloc_skb failed" then interface is dead (cannot ping
+> ...) so no recovery is possible only system reboot.
+> I don't see  dev_alloc_skb failed when console is unresponsive.
+>>
+>>>Any other ideas
+>>>what to change to check? Thanks.
+>>
+>> Could you please share dmesg log with dynamic debug enabled (using attached script) captured when the problem occurs?
+> I tried to capture logs but when enable DYNAMIC_DEBUG I cannot
+> reproduce issue (running test > 30 minutes without allocation
+> failure).
+Any update on this? Should I provide some other logs?
+>>
+>> Best regards,
+>> Amit
+>
+> BR,
+>
+> marek
+>
+> --
+> as simple and primitive as possible
+> -------------------------------------------------
+> Marek Belisko - OPEN-NANDRA
+> Freelance Developer
+>
+> Ruska Nova Ves 219 | Presov, 08005 Slovak Republic
+> Tel: +421 915 052 184
+> skype: marekwhite
+> twitter: #opennandra
+> web: http://open-nandra.com
 
-So IMHO we need to have this configurable either through iw/mac80211 debugfs.
+Thanks,
+
+marek
+
+-- 
+as simple and primitive as possible
+-------------------------------------------------
+Marek Belisko - OPEN-NANDRA
+Freelance Developer
+
+Ruska Nova Ves 219 | Presov, 08005 Slovak Republic
+Tel: +421 915 052 184
+skype: marekwhite
+twitter: #opennandra
+web: http://open-nandra.com
