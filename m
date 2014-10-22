@@ -1,50 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:40536 "EHLO
+Received: from s72.web-hosting.com ([198.187.29.22]:39204 "EHLO
 	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752886AbaJTIrv (ORCPT
+	with ESMTP id S1751100AbaJVGul (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2014 04:47:51 -0400
+	Wed, 22 Oct 2014 02:50:41 -0400
 From: Sujith Manoharan <sujith@msujith.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21572.49230.430784.951715@gargle.gargle.HOWL> (sfid-20141020_104754_614655_88B028DD)
-Date: Mon, 20 Oct 2014 13:27:02 +0530
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: [PATCH 01/10] ath9k_hw: make support for PC-OEM cards optional
-In-Reply-To: <1413651732-69783-1-git-send-email-nbd@openwrt.org>
-References: <1413651732-69783-1-git-send-email-nbd@openwrt.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH 2/2] ath9k: Update AR955x initvals
+Date: Wed, 22 Oct 2014 12:21:45 +0530
+Message-Id: <1413960705-24211-3-git-send-email-sujith@msujith.org> (sfid-20141022_085044_372524_812FF537)
+In-Reply-To: <1413960705-24211-1-git-send-email-sujith@msujith.org>
+References: <1413960705-24211-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau wrote:
-> diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-> index 975074f..7a81f5b 100644
-> --- a/drivers/net/wireless/ath/ath9k/hw.h
-> +++ b/drivers/net/wireless/ath/ath9k/hw.h
-> @@ -244,13 +244,20 @@ enum ath9k_hw_caps {
->  	ATH9K_HW_CAP_2GHZ			= BIT(11),
->  	ATH9K_HW_CAP_5GHZ			= BIT(12),
->  	ATH9K_HW_CAP_APM			= BIT(13),
-> +#ifdef CONFIG_ATH9K_PCOEM
->  	ATH9K_HW_CAP_RTT			= BIT(14),
->  	ATH9K_HW_CAP_MCI			= BIT(15),
-> -	ATH9K_HW_CAP_DFS			= BIT(16),
-> -	ATH9K_HW_WOW_DEVICE_CAPABLE		= BIT(17),
-> -	ATH9K_HW_CAP_PAPRD			= BIT(18),
-> -	ATH9K_HW_CAP_FCC_BAND_SWITCH		= BIT(19),
-> -	ATH9K_HW_CAP_BT_ANT_DIV			= BIT(20),
-> +	ATH9K_HW_WOW_DEVICE_CAPABLE		= BIT(16),
-> +	ATH9K_HW_CAP_BT_ANT_DIV			= BIT(17),
-> +#else
-> +	ATH9K_HW_CAP_RTT			= 0,
-> +	ATH9K_HW_CAP_MCI			= 0,
-> +	ATH9K_HW_WOW_DEVICE_CAPABLE		= 0,
-> +	ATH9K_HW_CAP_BT_ANT_DIV			= 0,
-> +#endif
-> +	ATH9K_HW_CAP_DFS			= BIT(18),
-> +	ATH9K_HW_CAP_PAPRD			= BIT(19),
-> +	ATH9K_HW_CAP_FCC_BAND_SWITCH		= BIT(20),
->  };
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Why is this needed ?
+* Fix a 11b/EVM issue by adjusting
+  FIR filter coefficients.
+
+* Fix a problem with receiving probe request
+  frames sent at 11b rate.
+
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar955x_1p0_initvals.h | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ar955x_1p0_initvals.h b/drivers/net/wireless/ath/ath9k/ar955x_1p0_initvals.h
+index 74d8bc0..fd6a84c 100644
+--- a/drivers/net/wireless/ath/ath9k/ar955x_1p0_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar955x_1p0_initvals.h
+@@ -507,7 +507,7 @@ static const u32 ar955x_1p0_baseband_core[][2] = {
+ 	{0x00009d04, 0x40206c10},
+ 	{0x00009d08, 0x009c4060},
+ 	{0x00009d0c, 0x9883800a},
+-	{0x00009d10, 0x01834061},
++	{0x00009d10, 0x01884061},
+ 	{0x00009d14, 0x00c0040b},
+ 	{0x00009d18, 0x00000000},
+ 	{0x00009e08, 0x0038230c},
+@@ -545,9 +545,9 @@ static const u32 ar955x_1p0_baseband_core[][2] = {
+ 	{0x0000a370, 0x00000000},
+ 	{0x0000a390, 0x00000001},
+ 	{0x0000a394, 0x00000444},
+-	{0x0000a398, 0x1f020503},
+-	{0x0000a39c, 0x29180c03},
+-	{0x0000a3a0, 0x9a8b6844},
++	{0x0000a398, 0x001f0e0f},
++	{0x0000a39c, 0x0075393f},
++	{0x0000a3a0, 0xb79f6427},
+ 	{0x0000a3a4, 0x00000000},
+ 	{0x0000a3a8, 0xaaaaaaaa},
+ 	{0x0000a3ac, 0x3c466478},
+-- 
+2.1.2
+
