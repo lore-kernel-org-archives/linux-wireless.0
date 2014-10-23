@@ -1,60 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f172.google.com ([209.85.192.172]:65370 "EHLO
-	mail-pd0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752348AbaJ3ER2 (ORCPT
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:48654 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750852AbaJWGhf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Oct 2014 00:17:28 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org,
-	Murilo Opsfelder Araujo <mopsfelder@gmail.com>
-Subject: [PATCH 4/6i V3.18] rtlwifi: rtl8192ce: Add missing section to read descriptor setting
-Date: Wed, 29 Oct 2014 23:17:11 -0500
-Message-Id: <1414642633-3700-5-git-send-email-Larry.Finger@lwfinger.net> (sfid-20141030_051755_227958_D7B01A18)
-In-Reply-To: <1414642633-3700-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1414642633-3700-1-git-send-email-Larry.Finger@lwfinger.net>
+	Thu, 23 Oct 2014 02:37:35 -0400
+Received: by mail-wi0-f180.google.com with SMTP id em10so1061527wid.1
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Oct 2014 23:37:33 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 0/5] wiphy-specific regulatory management
+Date: Thu, 23 Oct 2014 09:37:32 +0300
+Message-Id: <1414046257-22184-1-git-send-email-arik@wizery.com> (sfid-20141023_083738_545313_A73073CC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The new version of rtlwifi needs code in rtl92ce_get_desc() that returns
-the buffer address for read operations.
+This series includes two patches sent previously - allowing more channel
+flags to propagate from regdom info and introducing a regulatory enforcement
+mechanism for interfaces inhibiting a forbidden channel after a regulatory
+update.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Murilo Opsfelder Araujo <mopsfelder@gmail.com>
----
- drivers/net/wireless/rtlwifi/rtl8192ce/def.h | 2 ++
- drivers/net/wireless/rtlwifi/rtl8192ce/trx.c | 3 +++
- 2 files changed, 5 insertions(+)
+Introduce wiphy-specific regulatory management. This allows devices to manage
+regdomain changes exclusively for their own wiphy. These devices do not update
+the cfg80211 regdomain and are unaffected by hints external to the device/FW.
+Introduce a new API to allow these devices to set their own regdomain.
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/def.h b/drivers/net/wireless/rtlwifi/rtl8192ce/def.h
-index 831df10..9b660df 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/def.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/def.h
-@@ -114,6 +114,8 @@
- 	LE_BITS_TO_4BYTE(((__pcmdfbhdr) + 4), 16, 4)
- #define	GET_C2H_CMD_FEEDBACK_CCX_SEQ(__pcmdfbhdr)	\
- 	LE_BITS_TO_4BYTE(((__pcmdfbhdr) + 4), 20, 12)
-+#define GET_RX_STATUS_DESC_BUFF_ADDR(__pdesc)			\
-+	SHIFT_AND_MASK_LE(__pdesc + 24, 0, 32)
- 
- #define CHIP_VER_B			BIT(4)
- #define CHIP_BONDING_IDENTIFIER(_value) (((_value) >> 22) & 0x3)
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c b/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
-index 2fb9c7a..dc3d20b 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
-@@ -728,6 +728,9 @@ u32 rtl92ce_get_desc(u8 *p_desc, bool istx, u8 desc_name)
- 		case HW_DESC_RXPKT_LEN:
- 			ret = GET_RX_DESC_PKT_LEN(pdesc);
- 			break;
-+		case HW_DESC_RXBUFF_ADDR:
-+			ret = GET_RX_STATUS_DESC_BUFF_ADDR(pdesc);
-+			break;
- 		default:
- 			RT_ASSERT(false, "ERR rxdesc :%d not process\n",
- 				  desc_name);
+Arik Nemtsov (2):
+  cfg80211: introduce regulatory flags controlling bw
+  cfg80211: leave invalid channels on regdomain change
+
+Jonathan Doron (3):
+  cfg80211: update missing fields in custom regulatory path
+  cfg80211: allow wiphy specific regdomain management
+  cfg80211: Allow usermode to query wiphy specific regd info
+
+ include/net/cfg80211.h       |  14 +++
+ include/net/regulatory.h     |   9 ++
+ include/uapi/linux/nl80211.h |  23 +++++
+ net/wireless/core.c          |   7 ++
+ net/wireless/nl80211.c       | 132 ++++++++++++++++++++++------
+ net/wireless/nl80211.h       |   1 +
+ net/wireless/reg.c           | 201 ++++++++++++++++++++++++++++++++++++++++++-
+ net/wireless/reg.h           |   1 +
+ 8 files changed, 356 insertions(+), 32 deletions(-)
+
 -- 
-2.1.1
+1.9.1
 
