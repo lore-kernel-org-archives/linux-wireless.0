@@ -1,43 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:55793 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755809AbaJ2RqK (ORCPT
+Received: from mail-yh0-f52.google.com ([209.85.213.52]:49911 "EHLO
+	mail-yh0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753658AbaJWS2N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2014 13:46:10 -0400
-Received: by mail-wi0-f177.google.com with SMTP id ex7so5288098wid.4
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2014 10:46:09 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH v2 32/34] staging: vt6655: vnt_rx_data: uCurrRSSI should have the value of *rssi
-Date: Wed, 29 Oct 2014 17:44:07 +0000
-Message-Id: <1414604649-9105-33-git-send-email-tvboxspy@gmail.com> (sfid-20141029_184622_424743_12E2BF76)
-In-Reply-To: <1414604649-9105-1-git-send-email-tvboxspy@gmail.com>
-References: <1414604649-9105-1-git-send-email-tvboxspy@gmail.com>
+	Thu, 23 Oct 2014 14:28:13 -0400
+Message-ID: <5449485B.4040903@gmail.com> (sfid-20141023_202833_839355_388F70C9)
+Date: Thu, 23 Oct 2014 16:26:35 -0200
+From: Murilo Opsfelder Araujo <mopsfelder@gmail.com>
+MIME-Version: 1.0
+To: Larry Finger <Larry.Finger@lwfinger.net>, linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, troy_tan@realsil.com.cn,
+	netdev@vger.kernel.org, Mike Galbraith <umgwanakikbuti@gmail.com>,
+	Thadeu Cascardo <cascardo@cascardo.eti.br>
+Subject: Re: [PATCH V3.18] rtlwifi: Add check for get_btc_status callback
+References: <1414081629-23002-1-git-send-email-Larry.Finger@lwfinger.net>
+In-Reply-To: <1414081629-23002-1-git-send-email-Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixes issue of byBBVGANew is wrong in device_intr
+On 10/23/2014 02:27 PM, Larry Finger wrote:
+> Drivers that do not use the get_btc_status() callback may not define a
+> dummy routine. The caller needs to check before making the call.
+>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Murilo Opsfelder Araujo <mopsfelder@gmail.com>
+> Cc: Mike Galbraith <umgwanakikbuti@gmail.com>
+> Cc: Thadeu Cascardo <cascardo@cascardo.eti.br>
+> ---
+>
+> John,
+>
+> This missing statement is causing kernel crashes for several of the drivers.
+> This patch should be applied ASAP.
+>
+> Larry
+> ---
+>
+>   drivers/net/wireless/rtlwifi/pci.c | 3 ++-
+>   1 file changed, 2 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
+> index 667aba8..25daa87 100644
+> --- a/drivers/net/wireless/rtlwifi/pci.c
+> +++ b/drivers/net/wireless/rtlwifi/pci.c
+> @@ -1796,7 +1796,8 @@ static int rtl_pci_start(struct ieee80211_hw *hw)
+>   	rtl_pci_reset_trx_ring(hw);
+>
+>   	rtlpci->driver_is_goingto_unload = false;
+> -	if (rtlpriv->cfg->ops->get_btc_status()) {
+> +	if (rtlpriv->cfg->ops->get_btc_status &&
+> +	    rtlpriv->cfg->ops->get_btc_status()) {
+>   		rtlpriv->btcoexist.btc_ops->btc_init_variables(rtlpriv);
+>   		rtlpriv->btcoexist.btc_ops->btc_init_hal_vars(rtlpriv);
+>   	}
+>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/dpc.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Hi, Larry.
 
-diff --git a/drivers/staging/vt6655/dpc.c b/drivers/staging/vt6655/dpc.c
-index 036bbb0..11153ef 100644
---- a/drivers/staging/vt6655/dpc.c
-+++ b/drivers/staging/vt6655/dpc.c
-@@ -1382,7 +1382,7 @@ static bool vnt_rx_data(struct vnt_private *priv, struct sk_buff *skb,
- 	RFvRSSITodBm(priv, *rssi, &rx_dbm);
- 
- 	priv->byBBPreEDRSSI = (u8)rx_dbm + 1;
--	priv->uCurrRSSI = priv->byBBPreEDRSSI;
-+	priv->uCurrRSSI = *rssi;
- 
- 	skb_pull(skb, 4);
- 	skb_trim(skb, frame_size);
+I've applied this patch on top of next-20141023 and my system still 
+crashes (perhaps at a point after .get_btc_status is called).
+
+I'm not sure how to capture the panic message in text plain so I took a 
+photo of it: 
+http://opsfelder.com/~murilo/lkml/next-20141023_plus_larry_patch.jpg
+
 -- 
-2.1.0
-
+Murilo
