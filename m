@@ -1,434 +1,319 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:59339 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932102AbaJ2R6O (ORCPT
+Received: from mail-ob0-f170.google.com ([209.85.214.170]:63295 "EHLO
+	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754261AbaJWTzS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2014 13:58:14 -0400
-Received: by mail-wg0-f42.google.com with SMTP id k14so2511730wgh.15
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2014 10:58:13 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH v2 39/48] staging: vt6655: dead code remove iocmd.h
-Date: Wed, 29 Oct 2014 17:55:57 +0000
-Message-Id: <1414605366-9335-40-git-send-email-tvboxspy@gmail.com> (sfid-20141029_185856_063557_5A192CE6)
-In-Reply-To: <1414605366-9335-1-git-send-email-tvboxspy@gmail.com>
-References: <1414605366-9335-1-git-send-email-tvboxspy@gmail.com>
+	Thu, 23 Oct 2014 15:55:18 -0400
+Received: by mail-ob0-f170.google.com with SMTP id nt9so1457303obb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Oct 2014 12:55:18 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1414093367.254547.182592325.0C3991E4@webmail.messagingengine.com>
+References: <1413463736.1316541.179720977.4FD32021@webmail.messagingengine.com>
+	<1413510814.22769.6.camel@dcbw.local>
+	<1413751717.2510219.180809145.0E693C29@webmail.messagingengine.com>
+	<CANUX_P2RHVRorVABRfWVg39d4D8dj35v3fBpY3=3jvQ1U+mfEA@mail.gmail.com>
+	<1413783023.2710583.180921653.10DFFCEE@webmail.messagingengine.com>
+	<CANUX_P0Q7cNeBzQa=2WVZFJXPTLx8F6YQk9bGCf_3uYhc5RcGA@mail.gmail.com>
+	<CANUX_P3EqgTX7cPJvQ3fWH1yijekE0G_8TiH2_OCS7nFASGtkA@mail.gmail.com>
+	<1413789724.3063896.180943829.3F15F453@webmail.messagingengine.com>
+	<CANUX_P1REqkSqN0dtak34OQ_pSGMtPvV3Vj61tW5wb1+n2A7mg@mail.gmail.com>
+	<1413833365.2949853.181221645.22D54845@webmail.messagingengine.com>
+	<CANUX_P3XzYBp7E=hScmc837TpuCr9VrxEYauG=sGMKfOCpX=qA@mail.gmail.com>
+	<54461740.5000903@openwrt.org>
+	<1413879792.3500640.181427549.198E9452@webmail.messagingengine.com>
+	<54461AEF.7040304@openwrt.org>
+	<54463CE9.3060400@gmail.com>
+	<1413921415.3763081.181696749.20A0A495@webmail.messagingengine.com>
+	<CANUX_P0LRRczVCSFR7RE5coaYFxwFXyqC90pdm=oVwEiEt-7zw@mail.gmail.com>
+	<1414014805.4127522.182191541.14C8B4DF@webmail.messagingengine.com>
+	<CANUX_P0tGagXsN6XCeb_itQehqD3O9fmqknU6iSMO432NQtATA@mail.gmail.com>
+	<1414049448.32460.182326557.1A0A85A4@webmail.messagingengine.com>
+	<CANUX_P3usjdccnsYPQXzKbJ1PTH91fasf6BpcsCRYZH_yq2tww@mail.gmail.com>
+	<1414080125.164673.182502929.61AF3AB1@webmail.messagingengine.com>
+	<CANUX_P2pJYNhLEMw=iQVe-CSbxqRDqOXL_gUZXxwpmAj2qj=FA@mail.gmail.com>
+	<1414085934.228950.182543717.6FA0F16D@webmail.messagingengine.com>
+	<CANUX_P0nK9AQEzYGfGFKEU_vVJ9fwOPmjGTCL--zmk+J4uCz4Q@mail.gmail.com>
+	<1414093367.254547.182592325.0C3991E4@webmail.messagingengine.com>
+Date: Thu, 23 Oct 2014 22:55:18 +0300
+Message-ID: <CANUX_P3sTY45ozSL6Rj0PRYgo9aPACdp97HV1SQna3AW5V75xw@mail.gmail.com> (sfid-20141023_215523_087948_1E85062A)
+Subject: Re: iwlwifi: Reason 7 periodic disconnect
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: =?UTF-8?Q?Lauren=C8=9Biu_Nicola?= <lnicola@dend.ro>
+Cc: poma <pomidorabelisima@gmail.com>, Dan Williams <dcbw@redhat.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: multipart/mixed; boundary=001a113d2bf299f29405061c7180
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/device_main.c |   1 -
- drivers/staging/vt6655/iocmd.h       | 386 -----------------------------------
- 2 files changed, 387 deletions(-)
- delete mode 100644 drivers/staging/vt6655/iocmd.h
+--001a113d2bf299f29405061c7180
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index d5ab7c4..7892f86 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -60,7 +60,6 @@
- #include "mac.h"
- #include "wmgr.h"
- #include "power.h"
--#include "iocmd.h"
- #include "rxtx.h"
- #include "dpc.h"
- #include "rf.h"
-diff --git a/drivers/staging/vt6655/iocmd.h b/drivers/staging/vt6655/iocmd.h
-deleted file mode 100644
-index 804c903..0000000
---- a/drivers/staging/vt6655/iocmd.h
-+++ /dev/null
-@@ -1,386 +0,0 @@
--/*
-- * Copyright (c) 1996, 2003 VIA Networking Technologies, Inc.
-- * All rights reserved.
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License as published by
-- * the Free Software Foundation; either version 2 of the License, or
-- * (at your option) any later version.
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License along
-- * with this program; if not, write to the Free Software Foundation, Inc.,
-- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-- *
-- * File: iocmd.h
-- *
-- * Purpose: Handles the viawget ioctl private interface functions
-- *
-- * Author: Lyndon Chen
-- *
-- * Date: May 8, 2002
-- *
-- */
--
--#ifndef __IOCMD_H__
--#define __IOCMD_H__
--
--#include "ttype.h"
--
--/* ioctl Command code */
--#define MAGIC_CODE	                 0x3142
--#define IOCTL_CMD_TEST	            (SIOCDEVPRIVATE + 0)
--#define IOCTL_CMD_SET			    (SIOCDEVPRIVATE + 1)
--#define IOCTL_CMD_HOSTAPD           (SIOCDEVPRIVATE + 2)
--#define IOCTL_CMD_WPA               (SIOCDEVPRIVATE + 3)
--
--typedef enum tagWMAC_CMD {
--	WLAN_CMD_BSS_SCAN,
--	WLAN_CMD_BSS_JOIN,
--	WLAN_CMD_DISASSOC,
--	WLAN_CMD_SET_WEP,
--	WLAN_CMD_GET_LINK,
--	WLAN_CMD_GET_LISTLEN,
--	WLAN_CMD_GET_LIST,
--	WLAN_CMD_GET_MIB,
--	WLAN_CMD_GET_STAT,
--	WLAN_CMD_STOP_MAC,
--	WLAN_CMD_START_MAC,
--	WLAN_CMD_AP_START,
--	WLAN_CMD_SET_HOSTAPD,
--	WLAN_CMD_SET_HOSTAPD_STA,
--	WLAN_CMD_SET_802_1X,
--	WLAN_CMD_SET_HOST_WEP,
--	WLAN_CMD_SET_WPA,
--	WLAN_CMD_GET_NODE_CNT,
--	WLAN_CMD_ZONETYPE_SET,
--	WLAN_CMD_GET_NODE_LIST
--} WMAC_CMD, *PWMAC_CMD;
--
--typedef enum tagWZONETYPE {
--	ZoneType_USA = 0,
--	ZoneType_Japan = 1,
--	ZoneType_Europe = 2
--} WZONETYPE;
--
--#define ADHOC	0
--#define INFRA	1
--#define BOTH	2
--#define AP	    3
--
--#define ADHOC_STARTED	   1
--#define ADHOC_JOINTED	   2
--
--#define PHY80211a       0
--#define PHY80211b       1
--#define PHY80211g       2
--
--#define SSID_ID                0
--#define SSID_MAXLEN            32
--#define BSSID_LEN              6
--#define WEP_NKEYS              4
--#define WEP_KEYMAXLEN          29
--#define WEP_40BIT_LEN          5
--#define WEP_104BIT_LEN         13
--#define WEP_232BIT_LEN         16
--
--/* Ioctl interface structure, Command structure */
--#pragma pack(1)
--typedef struct tagSCmdRequest {
--	u8	    name[16];
--	void __user *data;
--	u16	    wResult;
--	u16     wCmdCode;
--} SCmdRequest, *PSCmdRequest;
--
--/* Scan */
--typedef struct tagSCmdScan {
--	u8 ssid[SSID_MAXLEN + 2];
--} SCmdScan, *PSCmdScan;
--
--/* BSS Join */
--typedef struct tagSCmdBSSJoin {
--	u16	    wBSSType;
--	u16     wBBPType;
--	u8	    ssid[SSID_MAXLEN + 2];
--	u32	    uChannel;
--	bool bPSEnable;
--	bool bShareKeyAuth;
--} SCmdBSSJoin, *PSCmdBSSJoin;
--
--/* Zonetype Setting */
--typedef struct tagSCmdZoneTypeSet {
--	bool bWrite;
--	WZONETYPE  ZoneType;
--} SCmdZoneTypeSet, *PSCmdZoneTypeSet;
--
--#ifdef WPA_SM_Transtatus
--typedef struct tagSWPAResult {
--	char	ifname[100];
--	u8 proto;
--	u8 key_mgmt;
--	u8 eap_type;
--	bool authenticated;
--} SWPAResult, *PSWPAResult;
--#endif
--
--typedef struct tagSCmdStartAP {
--	u16	    wBSSType;
--	u16     wBBPType;
--	u8	    ssid[SSID_MAXLEN + 2];
--	u32	    uChannel;
--	u32     uBeaconInt;
--	bool bShareKeyAuth;
--	u8      byBasicRate;
--} SCmdStartAP, *PSCmdStartAP;
--
--typedef struct tagSCmdSetWEP {
--	bool bEnableWep;
--	u8      byKeyIndex;
--	u8      abyWepKey[WEP_NKEYS][WEP_KEYMAXLEN];
--	bool bWepKeyAvailable[WEP_NKEYS];
--	u32     auWepKeyLength[WEP_NKEYS];
--} SCmdSetWEP, *PSCmdSetWEP;
--
--typedef struct tagSBSSIDItem {
--	u32	    uChannel;
--	u8      abyBSSID[BSSID_LEN];
--	u8      abySSID[SSID_MAXLEN + 1];
--	u8      byNetType;
--	u16	    wBeaconInterval;
--	u16	    wCapInfo;        /* for address of byNetType at align 4 */
--
--	bool bWEPOn;
--	u32     uRSSI;
--} SBSSIDItem;
--
--typedef struct tagSBSSIDList {
--	u32		    uItem;
--	SBSSIDItem	sBSSIDList[0];
--} SBSSIDList, *PSBSSIDList;
--
--typedef struct tagSCmdLinkStatus {
--	bool bLink;
--	u16   wBSSType;
--	u8      byState;
--	u8      abyBSSID[BSSID_LEN];
--	u8      abySSID[SSID_MAXLEN + 2];
--	u32     uChannel;
--	u32     uLinkRate;
--} SCmdLinkStatus, *PSCmdLinkStatus;
--
--/* 802.11 counter */
--typedef struct tagSDot11MIBCount {
--	u32 TransmittedFragmentCount;
--	u32 MulticastTransmittedFrameCount;
--	u32 FailedCount;
--	u32 RetryCount;
--	u32 MultipleRetryCount;
--	u32 RTSSuccessCount;
--	u32 RTSFailureCount;
--	u32 ACKFailureCount;
--	u32 FrameDuplicateCount;
--	u32 ReceivedFragmentCount;
--	u32 MulticastReceivedFrameCount;
--	u32 FCSErrorCount;
--} SDot11MIBCount, *PSDot11MIBCount;
--
--/* statistic counter */
--typedef struct tagSStatMIBCount {
--	/* ISR status count */
--	u32   dwIsrTx0OK;
--	u32   dwIsrTx1OK;
--	u32   dwIsrBeaconTxOK;
--	u32   dwIsrRxOK;
--	u32   dwIsrTBTTInt;
--	u32   dwIsrSTIMERInt;
--	u32   dwIsrUnrecoverableError;
--	u32   dwIsrSoftInterrupt;
--	u32   dwIsrRxNoBuf;
--
--	u32   dwIsrUnknown;
--
--	/* RSR status count */
--	u32   dwRsrFrmAlgnErr;
--	u32   dwRsrErr;
--	u32   dwRsrCRCErr;
--	u32   dwRsrCRCOk;
--	u32   dwRsrBSSIDOk;
--	u32   dwRsrADDROk;
--	u32   dwRsrICVOk;
--	u32   dwNewRsrShortPreamble;
--	u32   dwRsrLong;
--	u32   dwRsrRunt;
--
--	u32   dwRsrRxControl;
--	u32   dwRsrRxData;
--	u32   dwRsrRxManage;
--
--	u32   dwRsrRxPacket;
--	u32   dwRsrRxOctet;
--	u32   dwRsrBroadcast;
--	u32   dwRsrMulticast;
--	u32   dwRsrDirected;
--	/* 64-bit OID */
--	u32   ullRsrOK;
--
--	/* for some optional OIDs (64 bits) and DMI support */
--	u32   ullRxBroadcastBytes;
--	u32   ullRxMulticastBytes;
--	u32   ullRxDirectedBytes;
--	u32   ullRxBroadcastFrames;
--	u32   ullRxMulticastFrames;
--	u32   ullRxDirectedFrames;
--
--	u32   dwRsrRxFragment;
--	u32   dwRsrRxFrmLen64;
--	u32   dwRsrRxFrmLen65_127;
--	u32   dwRsrRxFrmLen128_255;
--	u32   dwRsrRxFrmLen256_511;
--	u32   dwRsrRxFrmLen512_1023;
--	u32   dwRsrRxFrmLen1024_1518;
--
--	/* TSR0,1 status count */
--	u32   dwTsrTotalRetry[2];   /* total collision retry count */
--	u32   dwTsrOnceRetry[2];    /* this packet only occur one collision */
--	u32   dwTsrMoreThanOnceRetry[2]; /* this packet occur more than one collision */
--	u32   dwTsrRetry[2];             /* this packet has ever occur collision */
--	/* that is (dwTsrOnceCollision0 + dwTsrMoreThanOnceCollision0) */
--	u32   dwTsrACKData[2];
--	u32   dwTsrErr[2];
--	u32   dwAllTsrOK[2];
--	u32   dwTsrRetryTimeout[2];
--	u32   dwTsrTransmitTimeout[2];
--
--	u32   dwTsrTxPacket[2];
--	u32   dwTsrTxOctet[2];
--	u32   dwTsrBroadcast[2];
--	u32   dwTsrMulticast[2];
--	u32   dwTsrDirected[2];
--
--	/* RD/TD count */
--	u32   dwCntRxFrmLength;
--	u32   dwCntTxBufLength;
--
--	u8    abyCntRxPattern[16];
--	u8    abyCntTxPattern[16];
--
--	/* Software check */
--	u32   dwCntRxDataErr;             /* rx buffer data software compare CRC err count */
--	u32   dwCntDecryptErr;            /* rx buffer data software compare CRC err count */
--	u32   dwCntRxICVErr;              /* rx buffer data software compare CRC err count */
--	u32    idxRxErrorDesc;             /* index for rx data error RD */
--
--	/* 64-bit OID */
--	u32   ullTsrOK[2];
--
--	/* for some optional OIDs (64 bits) and DMI support */
--	u32   ullTxBroadcastFrames[2];
--	u32   ullTxMulticastFrames[2];
--	u32   ullTxDirectedFrames[2];
--	u32   ullTxBroadcastBytes[2];
--	u32   ullTxMulticastBytes[2];
--	u32   ullTxDirectedBytes[2];
--} SStatMIBCount, *PSStatMIBCount;
--
--typedef struct tagSNodeItem {
--	/* STA info */
--	u16            wAID;
--	u8             abyMACAddr[6];
--	u16            wTxDataRate;
--	u16            wInActiveCount;
--	u16            wEnQueueCnt;
--	u16            wFlags;
--	bool bPWBitOn;
--	u8             byKeyIndex;
--	u16            wWepKeyLength;
--	u8            abyWepKey[WEP_KEYMAXLEN];
--	/* Auto rate fallback vars */
--	bool bIsInFallback;
--	u32            uTxFailures;
--	u32            uTxAttempts;
--	u16            wFailureRatio;
--} SNodeItem;
--
--typedef struct tagSNodeList {
--	u32		    uItem;
--	SNodeItem	sNodeList[0];
--} SNodeList, *PSNodeList;
--
--typedef struct tagSCmdValue {
--	u32 dwValue;
--} SCmdValue,  *PSCmdValue;
--
--/* hostapd & viawget ioctl related */
--enum {
--	VIAWGET_HOSTAPD_FLUSH = 1,
--	VIAWGET_HOSTAPD_ADD_STA = 2,
--	VIAWGET_HOSTAPD_REMOVE_STA = 3,
--	VIAWGET_HOSTAPD_GET_INFO_STA = 4,
--	VIAWGET_HOSTAPD_SET_ENCRYPTION = 5,
--	VIAWGET_HOSTAPD_GET_ENCRYPTION = 6,
--	VIAWGET_HOSTAPD_SET_FLAGS_STA = 7,
--	VIAWGET_HOSTAPD_SET_ASSOC_AP_ADDR = 8,
--	VIAWGET_HOSTAPD_SET_GENERIC_ELEMENT = 9,
--	VIAWGET_HOSTAPD_MLME = 10,
--	VIAWGET_HOSTAPD_SCAN_REQ = 11,
--	VIAWGET_HOSTAPD_STA_CLEAR_STATS = 12,
--};
--
--#define VIAWGET_HOSTAPD_GENERIC_ELEMENT_HDR_LEN				\
--	((int)(&((struct viawget_hostapd_param *)0)->u.generic_elem.data))
--
--/*Maximum length for algorithm names (-1 for nul termination) used in ioctl()*/
--
--struct viawget_hostapd_param {
--	u32 cmd;
--	u8 sta_addr[6];
--	union {
--		struct {
--			u16 aid;
--			u16 capability;
--			u8 tx_supp_rates;
--		} add_sta;
--		struct {
--			u32 inactive_sec;
--		} get_info_sta;
--		struct {
--			u8 alg;
--			u32 flags;
--			u32 err;
--			u8 idx;
--			u8 seq[8];
--			u16 key_len;
--			u8 key[0];
--		} crypt;
--		struct {
--			u32 flags_and;
--			u32 flags_or;
--		} set_flags_sta;
--		struct {
--			u16 rid;
--			u16 len;
--			u8 data[0];
--		} rid;
--		struct {
--			u8 len;
--			u8 data[0];
--		} generic_elem;
--		struct {
--			u16 cmd;
--			u16 reason_code;
--		} mlme;
--		struct {
--			u8 ssid_len;
--			u8 ssid[32];
--		} scan_req;
--	} u;
--};
--
--#pragma pack()
--
--#endif /* __IOCMD_H__ */
--- 
-2.1.0
+On Thu, Oct 23, 2014 at 10:42 PM, Lauren=C8=9Biu Nicola <lnicola@dend.ro> w=
+rote:
+> Doesn't seem to help https://bpaste.net/show/68e1a6b33689.
 
+ok - let me re-add the logs...
+
+
+>
+> Laurentiu
+>
+> On Thu, Oct 23, 2014, at 22:28, Emmanuel Grumbach wrote:
+>> On Thu, Oct 23, 2014 at 8:38 PM, Lauren=C8=9Biu Nicola <lnicola@dend.ro>
+>> wrote:
+>> > Okay. I'm running 3.17.1, so the line numbers might not be the ones
+>> > you're expecting:
+>> >
+>> > patching file net/mac80211/mlme.c
+>> > Hunk #1 succeeded at 128 (offset -1 lines).
+>> > Hunk #2 succeeded at 137 (offset -1 lines).
+>> > Hunk #3 succeeded at 1875 (offset -209 lines).
+>> > Hunk #4 succeeded at 1886 (offset -207 lines).
+>> > Hunk #5 succeeded at 1908 (offset -207 lines).
+>> > Hunk #6 succeeded at 1924 (offset -244 lines).
+>> >
+>> > dmesg output is at https://bpaste.net/show/649277aaada8 .
+>>
+>> can you please test the patch attached?
+>>
+>> (remove the previous one first please)
+>>
+>> >
+>> > Laurentiu
+>> >
+>> > On Thu, Oct 23, 2014, at 19:46, Emmanuel Grumbach wrote:
+>> >> On Thu, Oct 23, 2014 at 7:02 PM, Lauren=C8=9Biu Nicola <lnicola@dend.=
+ro>
+>> >> wrote:
+>> >> > Sorry, but I only saw a two-line change [1] to
+>> >> > `ieee80211_rx_mgmt_beacon` (which already had a log message). Am I
+>> >> > missing something?
+>> >> >
+>> >> > [1] http://www.spinics.net/lists/linux-wireless/msg128340.html
+>> >> >
+>> >>
+>> >> No - you are not. I did miss something...I forgot to attach the patch=
+.
+>> >> Here you go.
+>> >>
+>> >> > Laurentiu
+>> >> >
+>> >> > On Thu, Oct 23, 2014, at 11:07, Emmanuel Grumbach wrote:
+>> >> >> On Thu, Oct 23, 2014 at 10:30 AM, Lauren=C8=9Biu Nicola <lnicola@d=
+end.ro>
+>> >> >> wrote:
+>> >> >> > I did; the card still gets disconnected and the message doesn't =
+show up
+>> >> >> > in dmesg.
+>> >> >> >
+>> >> >>
+>> >> >> You had *none* of the many prints I added in the log?
+>> >> >>
+>> >> >> That seems really weird...
+>> >> >>
+>> >> >> > Laurentiu
+>> >> >> >
+>> >> >> > On Thu, Oct 23, 2014, at 08:21, Emmanuel Grumbach wrote:
+>> >> >> >> On Thu, Oct 23, 2014 at 12:53 AM, Lauren=C8=9Biu Nicola <lnicol=
+a@dend.ro>
+>> >> >> >> wrote:
+>> >> >> >> > Nope. It seems that code doesn't get executed when my issue o=
+ccurs (or
+>> >> >> >> > in my five or ten minutes of uptime). I've seen
+>> >> >> >> > `ieee80211_reset_ap_probe` get called by `ieee80211_rx_mgmt_p=
+robe_resp`,
+>> >> >> >> > but (if I'm not wrong) not on every disconnect.
+>> >> >> >> >
+>> >> >> >> > And as far as I can tell, force_cam is set to true.
+>> >> >> >>
+>> >> >> >> Can you please try with the patch attached and send the logs?
+>> >> >> >> I again need MAC80211_MLME_DEBUG.
+>> >> >> >>
+>> >> >> >> Thanks.
+>> >> >> >>
+>> >> >> >> >
+>> >> >> >> > Laurentiu
+>> >> >> >> >
+>> >> >> >> > On Wed, Oct 22, 2014, at 12:10, Emmanuel Grumbach wrote:
+>> >> >> >> >> On Tue, Oct 21, 2014 at 10:56 PM, Lauren=C8=9Biu Nicola <lni=
+cola@dend.ro>
+>> >> >> >> >> wrote:
+>> >> >> >> >> > Yep! `scb_timeout` is 60 on my router.
+>> >> >> >> >> >
+>> >> >> >> >> > On Tue, Oct 21, 2014, at 14:00, poma wrote:
+>> >> >> >> >> >> On 21.10.2014 10:35, Felix Fietkau wrote:
+>> >> >> >> >> >> > On 2014-10-21 10:23, Lauren=C8=9Biu Nicola wrote:
+>> >> >> >> >> >> >> It's an ASUS RT-N66U running NEWD-2/K3X from r24160.
+>> >> >> >> >> >> > This is a Broadcom based device, so it should behave in=
+ the same way as
+>> >> >> >> >> >> > other APs/Routers running the Broadcom drivers.
+>> >> >> >> >> >> > The driver should only send Reason 7 when receiving a P=
+S-Poll, BlockAck,
+>> >> >> >> >> >> > BlockAckReq or Action frame from a station that's not a=
+ssociated, so
+>> >> >> >> >> >> > probably it has already kicked out your iwlwifi client =
+earlier. Not sure
+>> >> >> >> >> >> > why that doesn't show up in the log though.
+>> >> >> >> >> >> >
+>> >> >> >> >> >>
+>> >> >> >> >> >> Whether this might refer to the Station Control Block Tim=
+eout value
+>> >> >> >> >> >>
+>> >> >> >> >> >> http://www.dd-wrt.com/wiki/index.php/Wl#scb_timeout
+>> >> >> >> >> >> ...
+>> >> >> >> >> >> scb_timeout
+>> >> >> >> >> >>
+>> >> >> >> >> >> AP only: inactivity timeout value for authenticated stas
+>> >> >> >> >> >>
+>> >> >> >> >>
+>> >> >> >> >> Actually, mac80211 should be probing the AP every 30 seconds=
+ but a
+>> >> >> >> >> beacon might abort the probe...
+>> >> >> >> >> Can you try something like this:
+>> >> >> >> >>
+>> >> >> >> >> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+>> >> >> >> >> index 75df184..c9db7cf 100644
+>> >> >> >> >> --- a/net/mac80211/mlme.c
+>> >> >> >> >> +++ b/net/mac80211/mlme.c
+>> >> >> >> >> @@ -3295,7 +3295,8 @@ static void ieee80211_rx_mgmt_beacon(s=
+truct
+>> >> >> >> >> ieee80211_sub_if_data *sdata,
+>> >> >> >> >>         if (ifmgd->flags & IEEE80211_STA_CONNECTION_POLL) {
+>> >> >> >> >>                 mlme_dbg_ratelimited(sdata,
+>> >> >> >> >>                                      "cancelling AP probe du=
+e to a
+>> >> >> >> >> received beacon\n");
+>> >> >> >> >> -               ieee80211_reset_ap_probe(sdata);
+>> >> >> >> >> +               pr_err("Not cancelling the probe to make sur=
+e the AP
+>> >> >> >> >> hears us from time to time\n");
+>> >> >> >> >> +               //ieee80211_reset_ap_probe(sdata);
+>> >> >> >> >>         }
+>> >> >> >> >>
+>> >> >> >> >>         /*
+>> >> >> >> >>
+>> >> >> >> >>
+>> >> >> >> >>
+>> >> >> >> >> >>
+>> >> >> >> >> >> poma
+>> >> >> >> >> >>
+>> >> >> >> >> >>
+>> >> >> >> >> >> --
+>> >> >> >> >> >> To unsubscribe from this list: send the line "unsubscribe=
+ linux-wireless"
+>> >> >> >> >> >> in
+>> >> >> >> >> >> the body of a message to majordomo@vger.kernel.org
+>> >> >> >> >> >> More majordomo info at  http://vger.kernel.org/majordomo-=
+info.html
+>> >> >> >> >> --
+>> >> >> >> >> To unsubscribe from this list: send the line "unsubscribe li=
+nux-wireless"
+>> >> >> >> >> in
+>> >> >> >> >> the body of a message to majordomo@vger.kernel.org
+>> >> >> >> >> More majordomo info at  http://vger.kernel.org/majordomo-inf=
+o.html
+>> >> >> >> --
+>> >> >> >> To unsubscribe from this list: send the line "unsubscribe linux=
+-wireless"
+>> >> >> >> in
+>> >> >> >> the body of a message to majordomo@vger.kernel.org
+>> >> >> >> More majordomo info at  http://vger.kernel.org/majordomo-info.h=
+tml
+>> >> >> --
+>> >> >> To unsubscribe from this list: send the line "unsubscribe linux-wi=
+reless"
+>> >> >> in
+>> >> >> the body of a message to majordomo@vger.kernel.org
+>> >> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> >> Email had 1 attachment:
+>> >> + PROBE.patch
+>> >>   3k (application/octet-stream)
+>> Email had 1 attachment:
+>> + a.patch
+>>   3k (application/octet-stream)
+
+--001a113d2bf299f29405061c7180
+Content-Type: application/octet-stream; name="a.patch"
+Content-Disposition: attachment; filename="a.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_i1mj4d9r0
+
+ZGlmZiAtLWdpdCBhL25ldC9tYWM4MDIxMS9tbG1lLmMgYi9uZXQvbWFjODAyMTEvbWxtZS5jCmlu
+ZGV4IDJkZTg4NzAuLjQ1N2Y1MjA3IDEwMDY0NAotLS0gYS9uZXQvbWFjODAyMTEvbWxtZS5jCisr
+KyBiL25ldC9tYWM4MDIxMS9tbG1lLmMKQEAgLTEyOSw2ICsxMjksNyBAQCB2b2lkIGllZWU4MDIx
+MV9zdGFfcmVzZXRfY29ubl9tb25pdG9yKHN0cnVjdCBpZWVlODAyMTFfc3ViX2lmX2RhdGEgKnNk
+YXRhKQogewogCXN0cnVjdCBpZWVlODAyMTFfaWZfbWFuYWdlZCAqaWZtZ2QgPSAmc2RhdGEtPnUu
+bWdkOwogCisJbWxtZV9kYmcoc2RhdGEsICIlczolZFxuIiwgX19mdW5jX18sIF9fTElORV9fKTsK
+IAlpZiAodW5saWtlbHkoIXNkYXRhLT51Lm1nZC5hc3NvY2lhdGVkKSkKIAkJcmV0dXJuOwogCkBA
+IC0xMzcsNiArMTM4LDkgQEAgdm9pZCBpZWVlODAyMTFfc3RhX3Jlc2V0X2Nvbm5fbW9uaXRvcihz
+dHJ1Y3QgaWVlZTgwMjExX3N1Yl9pZl9kYXRhICpzZGF0YSkKIAlpZiAoc2RhdGEtPmxvY2FsLT5o
+dy5mbGFncyAmIElFRUU4MDIxMV9IV19DT05ORUNUSU9OX01PTklUT1IpCiAJCXJldHVybjsKIAor
+CW1sbWVfZGJnKHNkYXRhLCAiJXM6JWRcbiIsIF9fZnVuY19fLCBfX0xJTkVfXyk7CisKKwlkdW1w
+X3N0YWNrKCk7CiAJbW9kX3RpbWVyKCZzZGF0YS0+dS5tZ2QuY29ubl9tb25fdGltZXIsCiAJCSAg
+cm91bmRfamlmZmllc191cChqaWZmaWVzICsgSUVFRTgwMjExX0NPTk5FQ1RJT05fSURMRV9USU1F
+KSk7CiB9CkBAIC0xOTMzLDI4ICsxOTM3LDEzIEBAIHN0YXRpYyB2b2lkIGllZWU4MDIxMV9zZXRf
+ZGlzYXNzb2Moc3RydWN0IGllZWU4MDIxMV9zdWJfaWZfZGF0YSAqc2RhdGEsCiAJc2RhdGEtPmVu
+Y3J5cHRfaGVhZHJvb20gPSBJRUVFODAyMTFfRU5DUllQVF9IRUFEUk9PTTsKIH0KIAotdm9pZCBp
+ZWVlODAyMTFfc3RhX3J4X25vdGlmeShzdHJ1Y3QgaWVlZTgwMjExX3N1Yl9pZl9kYXRhICpzZGF0
+YSwKLQkJCSAgICAgc3RydWN0IGllZWU4MDIxMV9oZHIgKmhkcikKLXsKLQkvKgotCSAqIFdlIGNh
+biBwb3N0cG9uZSB0aGUgbWdkLnRpbWVyIHdoZW5ldmVyIHJlY2VpdmluZyB1bmljYXN0IGZyYW1l
+cwotCSAqIGZyb20gQVAgYmVjYXVzZSB3ZSBrbm93IHRoYXQgdGhlIGNvbm5lY3Rpb24gaXMgd29y
+a2luZyBib3RoIHdheXMKLQkgKiBhdCB0aGF0IHRpbWUuIEJ1dCBtdWx0aWNhc3QgZnJhbWVzIChh
+bmQgaGVuY2UgYWxzbyBiZWFjb25zKSBtdXN0Ci0JICogYmUgaWdub3JlZCBoZXJlLCBiZWNhdXNl
+IHdlIG5lZWQgdG8gdHJpZ2dlciB0aGUgdGltZXIgZHVyaW5nCi0JICogZGF0YSBpZGxlIHBlcmlv
+ZHMgZm9yIHNlbmRpbmcgdGhlIHBlcmlvZGljIHByb2JlIHJlcXVlc3QgdG8gdGhlCi0JICogQVAg
+d2UncmUgY29ubmVjdGVkIHRvLgotCSAqLwotCWlmIChpc19tdWx0aWNhc3RfZXRoZXJfYWRkciho
+ZHItPmFkZHIxKSkKLQkJcmV0dXJuOwotCi0JaWVlZTgwMjExX3N0YV9yZXNldF9jb25uX21vbml0
+b3Ioc2RhdGEpOwotfQotCiBzdGF0aWMgdm9pZCBpZWVlODAyMTFfcmVzZXRfYXBfcHJvYmUoc3Ry
+dWN0IGllZWU4MDIxMV9zdWJfaWZfZGF0YSAqc2RhdGEpCiB7CiAJc3RydWN0IGllZWU4MDIxMV9p
+Zl9tYW5hZ2VkICppZm1nZCA9ICZzZGF0YS0+dS5tZ2Q7CiAJc3RydWN0IGllZWU4MDIxMV9sb2Nh
+bCAqbG9jYWwgPSBzZGF0YS0+bG9jYWw7CiAKKwltbG1lX2RiZyhzZGF0YSwgIiVzOiVkIHN0YXJ0
+XG4iLCBfX2Z1bmNfXywgX19MSU5FX18pOworCiAJbXV0ZXhfbG9jaygmbG9jYWwtPm10eCk7CiAJ
+aWYgKCEoaWZtZ2QtPmZsYWdzICYgSUVFRTgwMjExX1NUQV9DT05ORUNUSU9OX1BPTEwpKQogCQln
+b3RvIG91dDsKQEAgLTE5NzUsMTMgKzE5NjQsMjcgQEAgc3RhdGljIHZvaWQgaWVlZTgwMjExX3Jl
+c2V0X2FwX3Byb2JlKHN0cnVjdCBpZWVlODAyMTFfc3ViX2lmX2RhdGEgKnNkYXRhKQogCSAqLwog
+CWllZWU4MDIxMV9zdGFfcmVzZXRfYmVhY29uX21vbml0b3Ioc2RhdGEpOwogCi0JbW9kX3RpbWVy
+KCZpZm1nZC0+Y29ubl9tb25fdGltZXIsCi0JCSAgcm91bmRfamlmZmllc191cChqaWZmaWVzICsK
+LQkJCQkgICBJRUVFODAyMTFfQ09OTkVDVElPTl9JRExFX1RJTUUpKTsKIG91dDoKIAltdXRleF91
+bmxvY2soJmxvY2FsLT5tdHgpOwogfQogCit2b2lkIGllZWU4MDIxMV9zdGFfcnhfbm90aWZ5KHN0
+cnVjdCBpZWVlODAyMTFfc3ViX2lmX2RhdGEgKnNkYXRhLAorCQkJICAgICBzdHJ1Y3QgaWVlZTgw
+MjExX2hkciAqaGRyKQoreworCS8qCisJICogV2UgY2FuIHBvc3Rwb25lIHRoZSBtZ2QudGltZXIg
+d2hlbmV2ZXIgcmVjZWl2aW5nIHVuaWNhc3QgZnJhbWVzCisJICogZnJvbSBBUCBiZWNhdXNlIHdl
+IGtub3cgdGhhdCB0aGUgY29ubmVjdGlvbiBpcyB3b3JraW5nIGJvdGggd2F5cworCSAqIGF0IHRo
+YXQgdGltZS4gQnV0IG11bHRpY2FzdCBmcmFtZXMgKGFuZCBoZW5jZSBhbHNvIGJlYWNvbnMpIG11
+c3QKKwkgKiBiZSBpZ25vcmVkIGhlcmUsIGJlY2F1c2Ugd2UgbmVlZCB0byB0cmlnZ2VyIHRoZSB0
+aW1lciBkdXJpbmcKKwkgKiBkYXRhIGlkbGUgcGVyaW9kcyBmb3Igc2VuZGluZyB0aGUgcGVyaW9k
+aWMgcHJvYmUgcmVxdWVzdCB0byB0aGUKKwkgKiBBUCB3ZSdyZSBjb25uZWN0ZWQgdG8uCisJICov
+CisJaWYgKGlzX211bHRpY2FzdF9ldGhlcl9hZGRyKGhkci0+YWRkcjEpKQorCQlyZXR1cm47CisK
+KwlpZWVlODAyMTFfcmVzZXRfYXBfcHJvYmUoc2RhdGEpOworfQorCiB2b2lkIGllZWU4MDIxMV9z
+dGFfdHhfbm90aWZ5KHN0cnVjdCBpZWVlODAyMTFfc3ViX2lmX2RhdGEgKnNkYXRhLAogCQkJICAg
+ICBzdHJ1Y3QgaWVlZTgwMjExX2hkciAqaGRyLCBib29sIGFjaykKIHsKQEAgLTE5OTAsMTYgKzE5
+OTMsMjAgQEAgdm9pZCBpZWVlODAyMTFfc3RhX3R4X25vdGlmeShzdHJ1Y3QgaWVlZTgwMjExX3N1
+Yl9pZl9kYXRhICpzZGF0YSwKIAogCWlmIChpZWVlODAyMTFfaXNfbnVsbGZ1bmMoaGRyLT5mcmFt
+ZV9jb250cm9sKSAmJgogCSAgICBzZGF0YS0+dS5tZ2QucHJvYmVfc2VuZF9jb3VudCA+IDApIHsK
+LQkJaWYgKGFjaykKKwkJaWYgKGFjaykgeworCQkJbWxtZV9kYmcoc2RhdGEsICIlczolZCBSZXNl
+dGluZyBjb25uIG1vblxuIiwgX19mdW5jX18sIF9fTElORV9fKTsKIAkJCWllZWU4MDIxMV9zdGFf
+cmVzZXRfY29ubl9tb25pdG9yKHNkYXRhKTsKKwkJfQogCQllbHNlCiAJCQlzZGF0YS0+dS5tZ2Qu
+bnVsbGZ1bmNfZmFpbGVkID0gdHJ1ZTsKIAkJaWVlZTgwMjExX3F1ZXVlX3dvcmsoJnNkYXRhLT5s
+b2NhbC0+aHcsICZzZGF0YS0+d29yayk7CiAJCXJldHVybjsKIAl9CiAKLQlpZiAoYWNrKQorCWlm
+IChhY2spIHsKKwkJbWxtZV9kYmcoc2RhdGEsICIlczolZCBSZXNldGluZyBjb25uIG1vblxuIiwg
+X19mdW5jX18sIF9fTElORV9fKTsKIAkJaWVlZTgwMjExX3N0YV9yZXNldF9jb25uX21vbml0b3Io
+c2RhdGEpOworCX0KIH0KIAogc3RhdGljIHZvaWQgaWVlZTgwMjExX21nZF9wcm9iZV9hcF9zZW5k
+KHN0cnVjdCBpZWVlODAyMTFfc3ViX2lmX2RhdGEgKnNkYXRhKQpAQCAtMzY4Miw2ICszNjg5LDcg
+QEAgc3RhdGljIHZvaWQgaWVlZTgwMjExX3N0YV9jb25uX21vbl90aW1lcih1bnNpZ25lZCBsb25n
+IGRhdGEpCiAJCShzdHJ1Y3QgaWVlZTgwMjExX3N1Yl9pZl9kYXRhICopIGRhdGE7CiAJc3RydWN0
+IGllZWU4MDIxMV9pZl9tYW5hZ2VkICppZm1nZCA9ICZzZGF0YS0+dS5tZ2Q7CiAJc3RydWN0IGll
+ZWU4MDIxMV9sb2NhbCAqbG9jYWwgPSBzZGF0YS0+bG9jYWw7CisJbWxtZV9kYmcoc2RhdGEsICIl
+czolZFxuIiwgX19mdW5jX18sIF9fTElORV9fKTsKIAogCWlmIChsb2NhbC0+cXVpZXNjaW5nKQog
+CQlyZXR1cm47CkBAIC0zNjg5LDYgKzM2OTcsNyBAQCBzdGF0aWMgdm9pZCBpZWVlODAyMTFfc3Rh
+X2Nvbm5fbW9uX3RpbWVyKHVuc2lnbmVkIGxvbmcgZGF0YSkKIAlpZiAoc2RhdGEtPnZpZi5jc2Ff
+YWN0aXZlKQogCQlyZXR1cm47CiAKKwltbG1lX2RiZyhzZGF0YSwgIiVzOiVkICBLSUNLSU5HIFBS
+T0JFXG4iLCBfX2Z1bmNfXywgX19MSU5FX18pOwogCWllZWU4MDIxMV9xdWV1ZV93b3JrKCZsb2Nh
+bC0+aHcsICZpZm1nZC0+bW9uaXRvcl93b3JrKTsKIH0KIApAQCAtMzY5OCw2ICszNzA3LDcgQEAg
+c3RhdGljIHZvaWQgaWVlZTgwMjExX3N0YV9tb25pdG9yX3dvcmsoc3RydWN0IHdvcmtfc3RydWN0
+ICp3b3JrKQogCQljb250YWluZXJfb2Yod29yaywgc3RydWN0IGllZWU4MDIxMV9zdWJfaWZfZGF0
+YSwKIAkJCSAgICAgdS5tZ2QubW9uaXRvcl93b3JrKTsKIAorCW1sbWVfZGJnKHNkYXRhLCAiJXM6
+JWRcbiIsIF9fZnVuY19fLCBfX0xJTkVfXyk7CiAJaWVlZTgwMjExX21nZF9wcm9iZV9hcChzZGF0
+YSwgZmFsc2UpOwogfQogCg==
+--001a113d2bf299f29405061c7180--
