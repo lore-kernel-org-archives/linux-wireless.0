@@ -1,82 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f49.google.com ([74.125.82.49]:59296 "EHLO
-	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751722AbaJJKyc (ORCPT
+Received: from mail-oi0-f44.google.com ([209.85.218.44]:55715 "EHLO
+	mail-oi0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754182AbaJWUdR convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Oct 2014 06:54:32 -0400
-Received: by mail-wg0-f49.google.com with SMTP id x12so3636883wgg.32
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Oct 2014 03:54:31 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] mac80211: enable DFS with channel contexts
-Date: Fri, 10 Oct 2014 12:43:23 +0200
-Message-Id: <1412937803-2413-1-git-send-email-michal.kazior@tieto.com> (sfid-20141010_125438_408831_1610B6DE)
+	Thu, 23 Oct 2014 16:33:17 -0400
+Received: by mail-oi0-f44.google.com with SMTP id x69so1307372oia.17
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Oct 2014 13:33:16 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1414096032.264032.182610177.3DACE1A9@webmail.messagingengine.com>
+References: <1413463736.1316541.179720977.4FD32021@webmail.messagingengine.com>
+	<54463CE9.3060400@gmail.com>
+	<1413921415.3763081.181696749.20A0A495@webmail.messagingengine.com>
+	<CANUX_P0LRRczVCSFR7RE5coaYFxwFXyqC90pdm=oVwEiEt-7zw@mail.gmail.com>
+	<1414014805.4127522.182191541.14C8B4DF@webmail.messagingengine.com>
+	<CANUX_P0tGagXsN6XCeb_itQehqD3O9fmqknU6iSMO432NQtATA@mail.gmail.com>
+	<1414049448.32460.182326557.1A0A85A4@webmail.messagingengine.com>
+	<CANUX_P3usjdccnsYPQXzKbJ1PTH91fasf6BpcsCRYZH_yq2tww@mail.gmail.com>
+	<1414080125.164673.182502929.61AF3AB1@webmail.messagingengine.com>
+	<CANUX_P2pJYNhLEMw=iQVe-CSbxqRDqOXL_gUZXxwpmAj2qj=FA@mail.gmail.com>
+	<1414085934.228950.182543717.6FA0F16D@webmail.messagingengine.com>
+	<CANUX_P0nK9AQEzYGfGFKEU_vVJ9fwOPmjGTCL--zmk+J4uCz4Q@mail.gmail.com>
+	<1414093367.254547.182592325.0C3991E4@webmail.messagingengine.com>
+	<CANUX_P3sTY45ozSL6Rj0PRYgo9aPACdp97HV1SQna3AW5V75xw@mail.gmail.com>
+	<1414094840.260168.182602541.16435971@webmail.messagingengine.com>
+	<5449621C.3070400@gmail.com>
+	<1414096032.264032.182610177.3DACE1A9@webmail.messagingengine.com>
+Date: Thu, 23 Oct 2014 23:33:16 +0300
+Message-ID: <CANUX_P0FPDSjAzh1uJ2LxWp9H8CXJgK1sdE+HYMcrTVLNH+1Kg@mail.gmail.com> (sfid-20141023_223321_079579_4B9F0FF5)
+Subject: Re: iwlwifi: Reason 7 periodic disconnect
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: =?UTF-8?Q?Lauren=C8=9Biu_Nicola?= <lnicola@dend.ro>
+Cc: poma <pomidorabelisima@gmail.com>, Dan Williams <dcbw@redhat.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It is okay to enable DFS for channel contexts
-based drivers as long as no combination advertises
-radar detection and multi-channel operation at the
-same time.
+On Thu, Oct 23, 2014 at 11:27 PM, Laurențiu Nicola <lnicola@dend.ro> wrote:
+> https://bpaste.net/show/8a0e5c68762f
+>
+> On Thu, Oct 23, 2014, at 23:16, Emmanuel Grumbach wrote:
+>> > https://bpaste.net/show/5cc48256d952
+>> >
+>> > On Thu, Oct 23, 2014, at 22:55, Emmanuel Grumbach wrote:
+>> >> On Thu, Oct 23, 2014 at 10:42 PM, Laurențiu Nicola <lnicola@dend.ro>
+>> >> wrote:
+>> >>> Doesn't seem to help https://bpaste.net/show/68e1a6b33689.
+>> >>
+>> >> ok - let me re-add the logs...
+>> >>
+>> >>
+>>
+>> This makes no sense to me.
+>> We do talk to the AP since we get frames Acked...
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- net/mac80211/main.c |  5 +++--
- net/mac80211/util.c | 16 ++++++++++++++--
- 2 files changed, 17 insertions(+), 4 deletions(-)
+This again makes no sense to me.
+Time to go to bed I guess.
 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 107d1c8..9e322dc 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -785,13 +785,14 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 		if (local->hw.wiphy->interface_modes & BIT(NL80211_IFTYPE_WDS))
- 			return -EINVAL;
- 
--		/* DFS currently not supported with channel context drivers */
-+		/* DFS is not supported with multi-channel combinations yet */
- 		for (i = 0; i < local->hw.wiphy->n_iface_combinations; i++) {
- 			const struct ieee80211_iface_combination *comb;
- 
- 			comb = &local->hw.wiphy->iface_combinations[i];
- 
--			if (comb->radar_detect_widths)
-+			if (comb->radar_detect_widths &&
-+			    comb->num_different_channels > 1)
- 				return -EINVAL;
- 		}
- 	}
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 3c61060..c76c9d7 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -2526,11 +2526,23 @@ void ieee80211_dfs_radar_detected_work(struct work_struct *work)
- 	struct ieee80211_local *local =
- 		container_of(work, struct ieee80211_local, radar_detected_work);
- 	struct cfg80211_chan_def chandef = local->hw.conf.chandef;
-+	struct ieee80211_chanctx *ctx;
-+	int num_chanctx = 0;
-+
-+	mutex_lock(&local->chanctx_mtx);
-+	list_for_each_entry(ctx, &local->chanctx_list, list) {
-+		if (ctx->replace_state == IEEE80211_CHANCTX_REPLACES_OTHER)
-+			continue;
-+
-+		num_chanctx++;
-+		chandef = ctx->conf.def;
-+	}
-+	mutex_unlock(&local->chanctx_mtx);
- 
- 	ieee80211_dfs_cac_cancel(local);
- 
--	if (local->use_chanctx)
--		/* currently not handled */
-+	if (num_chanctx > 1)
-+		/* XXX: multi-channel is not supported yet */
- 		WARN_ON(1);
- 	else
- 		cfg80211_radar_event(local->hw.wiphy, &chandef, GFP_KERNEL);
--- 
-1.8.5.3
-
+>>
+>> Can you please apply this on top of what you have?
+>>
+>> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+>> index 2de8870..f3b1e62 100644
+>> --- a/net/mac80211/mlme.c
+>> +++ b/net/mac80211/mlme.c
+>> @@ -1991,15 +1991,16 @@ void ieee80211_sta_tx_notify(struct
+>> ieee80211_sub_if_data *sdata,
+>>         if (ieee80211_is_nullfunc(hdr->frame_control) &&
+>>             sdata->u.mgd.probe_send_count > 0) {
+>>                 if (ack)
+>> -                       ieee80211_sta_reset_conn_monitor(sdata);
+>> +               //      ieee80211_sta_reset_conn_monitor(sdata);
+>> +               ;
+>>                 else
+>>                         sdata->u.mgd.nullfunc_failed = true;
+>>                 ieee80211_queue_work(&sdata->local->hw, &sdata->work);
+>>                 return;
+>>         }
+>>
+>> -       if (ack)
+>> -               ieee80211_sta_reset_conn_monitor(sdata);
+>> +//     if (ack)
+>> +//             ieee80211_sta_reset_conn_monitor(sdata);
+>>  }
+>>
+>>  static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data
+>>  *sdata)
+>>
+>>
+>> Thanks.
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+>> in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
