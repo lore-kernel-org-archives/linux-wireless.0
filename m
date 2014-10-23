@@ -1,371 +1,1216 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx01.mykolab.com ([95.128.36.1]:30058 "EHLO mx03.mykolab.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751043AbaJJMnU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Oct 2014 08:43:20 -0400
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Fri, 10 Oct 2014 14:42:52 +0200
-From: "Schroer, Jens Peter" <jens.schroer@scypho.com>
-To: Oleksij Rempel <linux@rempel-privat.de>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Kernel Oops with =?UTF-8?Q?ath=39k=5Fhtc=20during=20AES=20dec?=
- =?UTF-8?Q?rypt=20on=20ARM=20/=20BeagleBone=20Black?=
-In-Reply-To: <54369F07.9080705@rempel-privat.de>
-References: <51054a8c690db75aa1efacb98e4379c9@scypho.com>
- <54368960.4040109@rempel-privat.de>
- <828b549f60c81155be705f5173fe0e11@scypho.com>
- <54369F07.9080705@rempel-privat.de>
-Message-ID: <1772bbe6a9db0760b4712cf8fad81fbc@scypho.com> (sfid-20141010_144325_079535_BDE2E6CC)
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:34075 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753191AbaJWJAf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Oct 2014 05:00:35 -0400
+Date: Thu, 23 Oct 2014 12:00:05 +0300
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <wireless-regdb@lists.infradead.org>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH] wireless-regdb: Add 160 MHz channel bandwidth for VHT
+Message-ID: <20141023090005.GA2748@jouni.qca.qualcomm.com> (sfid-20141023_110040_669017_E1171A20)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Oleksij,
+This extends regulatory rules for number of countries that allow 160 MHz
+VHT channels to be used in 5.15-5.25 GHz, 5.25-5.35 GHz, and 5.47-5.725
+GHz ranges. Since the rules between 5.15-5.25 and 5.25-5.35 GHz ranges
+are different in most cases (e.g., DFS requirement), the AUTO-BW flag
+needs to be used to allow the maximum channel bandwidth to be determined
+automatically based on two rules. The larger 5.47-5.725 GHz range is
+large enough to fit the full 160 MHz channel in a single rule, so that
+does not require similar handling and can just change the maximum
+allowed bandwidth to 160 MHz in the rule.
 
-I have tried to recover the full dmesg, but it seems to be lost.
-I am not sure if it disappeared with during the last reboot or was not 
-synced back to the flash due to the kernel panic.
-I tried to reproduce the kernel oops, but get stuck with the problem I 
-mentioned in my other email.
-Is there a way of printing / tracing bad packages, so that when this 
-crash occures the next time, I have hopefully more information 
-available?
-Also, just for completeness, the issue that stops me from trying to 
-reproduce the kernel oops:
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+---
+ db.txt | 616 ++++++++++++++++++++++++++++++++---------------------------------
+ 1 file changed, 308 insertions(+), 308 deletions(-)
 
-[ 1079.434044] ------------[ cut here ]------------
-[ 1079.434440] WARNING: CPU: 0 PID: 0 at net/mac80211/rx.c:3399 
-ieee80211_rx+0x566/0x59c [mac80211]()
-[ 1079.434660] Rate marked as an HT rate but passed status->rate_idx is 
-not an MCS index [0-76]: 125 (0x7d)
-[ 1079.434710] Modules linked in: ctr ccm omap_aes omap_sham evdev arc4 
-ath9k_htc ath9k_common ath9k_hw ath mac80211 cfg80211
-[ 1079.434748] CPU: 0 PID: 0 Comm: swapper Tainted: G        W      
-3.17.0-bone4 #1
-[ 1079.434856] [<c0011bbd>] (unwind_backtrace) from [<c000fa41>] 
-(show_stack+0x11/0x14)
-[ 1079.434933] [<c000fa41>] (show_stack) from [<c00311c1>] 
-(warn_slowpath_common+0x51/0x6c)
-[ 1079.434948] [<c00311c1>] (warn_slowpath_common) from [<c0031247>] 
-(warn_slowpath_fmt+0x23/0x2c)
-[ 1079.435091] [<c0031247>] (warn_slowpath_fmt) from [<bf8998a7>] 
-(ieee80211_rx+0x566/0x59c [mac80211])
-[ 1079.435342] [<bf8998a7>] (ieee80211_rx [mac80211]) from [<bf991f1d>] 
-(ath9k_rx_tasklet+0x250/0x284 [ath9k_htc])
-[ 1079.435474] [<bf991f1d>] (ath9k_rx_tasklet [ath9k_htc]) from 
-[<c003377b>] (tasklet_action+0x3f/0x68)
-[ 1079.435488] [<c003377b>] (tasklet_action) from [<c00331fd>] 
-(__do_softirq+0x65/0x1ec)
-[ 1079.435499] [<c00331fd>] (__do_softirq) from [<c003352b>] 
-(irq_exit+0x63/0x98)
-[ 1079.435567] [<c003352b>] (irq_exit) from [<c000dda3>] 
-(handle_IRQ+0x27/0x5c)
-[ 1079.435627] [<c000dda3>] (handle_IRQ) from [<c000847b>] 
-(omap3_intc_handle_irq+0x63/0x74)
-[ 1079.435650] [<c000847b>] (omap3_intc_handle_irq) from [<c05b6e1b>] 
-(__irq_svc+0x3b/0x5c)
-[ 1079.435657] Exception stack(0xc09aff68 to 0xc09affb0)
-[ 1079.435667] ff60:                   ffffffed 00000000 00000000 
-c00197e1 c09ae000 00000000
-[ 1079.435677] ff80: c09b70e4 00000000 00000000 c0a44ab8 c0a30d30 
-ffffffed c09affa0 c09affb0
-[ 1079.435685] ffa0: c000deb5 c000deb6 40010033 ffffffff
-[ 1079.435700] [<c05b6e1b>] (__irq_svc) from [<c000deb6>] 
-(arch_cpu_idle+0x1e/0x28)
-[ 1079.435715] [<c000deb6>] (arch_cpu_idle) from [<c004b2a9>] 
-(cpu_startup_entry+0x111/0x1a8)
-[ 1079.435734] [<c004b2a9>] (cpu_startup_entry) from [<c09418c5>] 
-(start_kernel+0x279/0x2e4)
-[ 1079.435741] ---[ end trace ecfa63025e0ecf98 ]---
-[ 1091.044433] ------------[ cut here ]------------
-[ 1091.044785] WARNING: CPU: 0 PID: 0 at net/mac80211/rx.c:3399 
-ieee80211_rx+0x566/0x59c [mac80211]()
-[ 1091.044865] Rate marked as an HT rate but passed status->rate_idx is 
-not an MCS index [0-76]: 127 (0x7f)
-[ 1091.044915] Modules linked in: ctr ccm omap_aes omap_sham evdev arc4 
-ath9k_htc ath9k_common ath9k_hw ath mac80211 cfg80211
-[ 1091.045050] CPU: 0 PID: 0 Comm: swapper Tainted: G        W      
-3.17.0-bone4 #1
-[ 1091.045096] [<c0011bbd>] (unwind_backtrace) from [<c000fa41>] 
-(show_stack+0x11/0x14)
-[ 1091.045204] [<c000fa41>] (show_stack) from [<c00311c1>] 
-(warn_slowpath_common+0x51/0x6c)
-[ 1091.045265] [<c00311c1>] (warn_slowpath_common) from [<c0031247>] 
-(warn_slowpath_fmt+0x23/0x2c)
-[ 1091.045411] [<c0031247>] (warn_slowpath_fmt) from [<bf8998a7>] 
-(ieee80211_rx+0x566/0x59c [mac80211])
-[ 1091.045658] [<bf8998a7>] (ieee80211_rx [mac80211]) from [<bf991f1d>] 
-(ath9k_rx_tasklet+0x250/0x284 [ath9k_htc])
-[ 1091.045796] [<bf991f1d>] (ath9k_rx_tasklet [ath9k_htc]) from 
-[<c003377b>] (tasklet_action+0x3f/0x68)
-[ 1091.045810] [<c003377b>] (tasklet_action) from [<c00331fd>] 
-(__do_softirq+0x65/0x1ec)
-[ 1091.045821] [<c00331fd>] (__do_softirq) from [<c003352b>] 
-(irq_exit+0x63/0x98)
-[ 1091.045894] [<c003352b>] (irq_exit) from [<c000dda3>] 
-(handle_IRQ+0x27/0x5c)
-[ 1091.045951] [<c000dda3>] (handle_IRQ) from [<c000847b>] 
-(omap3_intc_handle_irq+0x63/0x74)
-[ 1091.045974] [<c000847b>] (omap3_intc_handle_irq) from [<c05b6e1b>] 
-(__irq_svc+0x3b/0x5c)
-[ 1091.045981] Exception stack(0xc09aff68 to 0xc09affb0)
-[ 1091.045991] ff60:                   ffffffed 00000000 00000000 
-c00197e1 c09ae000 00000000
-[ 1091.046002] ff80: c09b70e4 00000000 00000000 c0a44ab8 c0a30d30 
-ffffffed c09affa0 c09affb0
-[ 1091.046010] ffa0: c000deb5 c000deb6 40010033 ffffffff
-[ 1091.046024] [<c05b6e1b>] (__irq_svc) from [<c000deb6>] 
-(arch_cpu_idle+0x1e/0x28)
-[ 1091.046039] [<c000deb6>] (arch_cpu_idle) from [<c004b2a9>] 
-(cpu_startup_entry+0x111/0x1a8)
-[ 1091.046058] [<c004b2a9>] (cpu_startup_entry) from [<c09418c5>] 
-(start_kernel+0x279/0x2e4)
-[ 1091.046065] ---[ end trace ecfa63025e0ecf99 ]---
+diff --git a/db.txt b/db.txt
+index 1e5863f..b58cc8d 100644
+--- a/db.txt
++++ b/db.txt
+@@ -27,30 +27,30 @@ country AD:
+ 
+ country AE: DFS-FCC
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (17)
+-	(5250 - 5330 @ 80), (24), DFS
+-	(5490 - 5730 @ 80), (24), DFS
++	(5170 - 5250 @ 80), (17), AUTO-BW
++	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
++	(5490 - 5730 @ 160), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+ country AF: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 
+ # Source:
+ # http://pucanguilla.org/Downloads/January2005-Anguilla%20Table%20of%20Allocations.pdf
+ country AI: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 
+ country AL: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20.00)
+-	(5250 - 5330 @ 80), (20.00), DFS
+-	(5490 - 5710 @ 80), (27.00), DFS
++	(5170 - 5250 @ 80), (20.00), AUTO-BW
++	(5250 - 5330 @ 80), (20.00), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27.00), DFS
+ 
+ country AM: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+@@ -59,48 +59,48 @@ country AM: DFS-ETSI
+ 
+ country AN: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 
+ country AR: DFS-FCC
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (17)
+-	(5250 - 5330 @ 80), (24), DFS
+-	(5490 - 5730 @ 80), (24), DFS
++	(5170 - 5250 @ 80), (17), AUTO-BW
++	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
++	(5490 - 5730 @ 160), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+ country AT: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+ country AU:
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (17)
+-	(5250 - 5330 @ 80), (24), DFS
+-	(5490 - 5710 @ 80), (24), DFS
++	(5170 - 5250 @ 80), (17), AUTO-BW
++	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+ country AW: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 
+ country AZ: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (18)
+-	(5250 - 5330 @ 80), (18), DFS
++	(5170 - 5250 @ 80), (18), AUTO-BW
++	(5250 - 5330 @ 80), (18), DFS, AUTO-BW
+ 
+ country BA: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+@@ -116,23 +116,23 @@ country BD: DFS-JP
+ 
+ country BE: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+ country BF: DFS-FCC
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (17)
+-	(5250 - 5330 @ 80), (24), DFS
+-	(5490 - 5730 @ 80), (24), DFS
++	(5170 - 5250 @ 80), (17), AUTO-BW
++	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
++	(5490 - 5730 @ 160), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+ country BG: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+@@ -144,14 +144,14 @@ country BH: DFS-JP
+ 
+ country BL: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 
+ country BN: DFS-JP
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
+ 	(5735 - 5835 @ 80), (20)
+ 
+ country BO: DFS-JP
+@@ -161,24 +161,24 @@ country BO: DFS-JP
+ 
+ country BR: DFS-FCC
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (17)
+-	(5250 - 5330 @ 80), (24), DFS
+-	(5490 - 5730 @ 80), (24), DFS
++	(5170 - 5250 @ 80), (17), AUTO-BW
++	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
++	(5490 - 5730 @ 160), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+ # Source:
+ # http://www.bicma.gov.bt/paper/publication/nrrpart4.pdf
+ country BT: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 
+ country BY: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 
+ country BZ: DFS-JP
+ 	(2402 - 2482 @ 40), (30)
+@@ -186,9 +186,9 @@ country BZ: DFS-JP
+ 
+ country CA: DFS-FCC
+ 	(2402 - 2472 @ 40), (30)
+-	(5170 - 5250 @ 80), (17)
+-	(5250 - 5330 @ 80), (24), DFS
+-	(5490 - 5730 @ 80), (24), DFS
++	(5170 - 5250 @ 80), (17), AUTO-BW
++	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
++	(5490 - 5730 @ 160), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+ # Source:
+@@ -202,23 +202,23 @@ country CF: DFS-FCC
+ 
+ country CH: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+ country CI: DFS-FCC
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (17)
+-	(5250 - 5330 @ 80), (24), DFS
+-	(5490 - 5730 @ 80), (24), DFS
++	(5170 - 5250 @ 80), (17), AUTO-BW
++	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
++	(5490 - 5730 @ 160), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+ country CL: DFS-JP
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
+ 	(5735 - 5835 @ 80), (20)
+ 
+ country CN: DFS-FCC
+@@ -234,9 +234,9 @@ country CN: DFS-FCC
+ 
+ country CO: DFS-FCC
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (17)
+-	(5250 - 5330 @ 80), (24), DFS
+-	(5490 - 5730 @ 80), (24), DFS
++	(5170 - 5250 @ 80), (17), AUTO-BW
++	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
++	(5490 - 5730 @ 160), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+ country CR: DFS-FCC
+@@ -248,9 +248,9 @@ country CR: DFS-FCC
+ 
+ country CY: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+@@ -260,9 +260,9 @@ country CY: DFS-ETSI
+ # implemented.
+ country CZ: DFS-ETSI
+ 	(2400 - 2483.5 @ 40), (100 mW)
+-	(5150 - 5250 @ 80), (200 mW), NO-OUTDOOR
+-	(5250 - 5350 @ 80), (100 mW), NO-OUTDOOR, DFS
+-	(5470 - 5725 @ 80), (500 mW), DFS
++	(5150 - 5250 @ 80), (200 mW), NO-OUTDOOR, AUTO-BW
++	(5250 - 5350 @ 80), (100 mW), NO-OUTDOOR, DFS, AUTO-BW
++	(5470 - 5725 @ 160), (500 mW), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+@@ -282,19 +282,19 @@ country DE: DFS-ETSI
+ 	# entries 279004 and 280006
+ 	(2400 - 2483.5 @ 40), (100 mW)
+ 	# entry 303005
+-	(5150 - 5250 @ 80), (100 mW), NO-OUTDOOR
++	(5150 - 5250 @ 80), (100 mW), NO-OUTDOOR, AUTO-BW
+ 	# entries 304002 and 305002
+-	(5250 - 5350 @ 80), (100 mW), NO-OUTDOOR, DFS
++	(5250 - 5350 @ 80), (100 mW), NO-OUTDOOR, DFS, AUTO-BW
+ 	# entries 308002, 309001 and 310003
+-	(5470 - 5725 @ 80), (500 mW), DFS
++	(5470 - 5725 @ 160), (500 mW), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+ country DK: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+@@ -327,9 +327,9 @@ country EC: DFS-FCC
+ 
+ country EE: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+@@ -347,69 +347,69 @@ country EG: DFS-ETSI
+ 
+ country ES: DFS-ETSI
+ 	(2400 - 2483.5 @ 40), (100 mW)
+-	(5150 - 5250 @ 80), (200 mW), NO-OUTDOOR
+-	(5250 - 5350 @ 80), (100 mW), NO-OUTDOOR, DFS
+-	(5470 - 5725 @ 80), (500 mW), DFS
++	(5150 - 5250 @ 80), (200 mW), NO-OUTDOOR, AUTO-BW
++	(5250 - 5350 @ 80), (100 mW), NO-OUTDOOR, DFS, AUTO-BW
++	(5470 - 5725 @ 160), (500 mW), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+ country FI: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+ country FM: DFS-FCC
+ 	(2402 - 2472 @ 40), (30)
+-	(5170 - 5250 @ 80), (24)
+-	(5250 - 5330 @ 80), (24), DFS
+-	(5490 - 5730 @ 80), (24), DFS
++	(5170 - 5250 @ 80), (24), AUTO-BW
++	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
++	(5490 - 5730 @ 160), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+ country FR: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+ country GE: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (18)
+-	(5250 - 5330 @ 80), (18), DFS
++	(5170 - 5250 @ 80), (18), AUTO-BW
++	(5250 - 5330 @ 80), (18), DFS, AUTO-BW
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+ country GB: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+ country GD: DFS-FCC
+ 	(2402 - 2472 @ 40), (30)
+-	(5170 - 5250 @ 80), (17)
+-	(5250 - 5330 @ 80), (24), DFS
+-	(5490 - 5730 @ 80), (24), DFS
++	(5170 - 5250 @ 80), (17), AUTO-BW
++	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
++	(5490 - 5730 @ 160), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+ country GH: DFS-FCC
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (17)
+-	(5250 - 5330 @ 80), (24), DFS
+-	(5490 - 5730 @ 80), (24), DFS
++	(5170 - 5250 @ 80), (17), AUTO-BW
++	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
++	(5490 - 5730 @ 160), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+ country GR: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+@@ -421,8 +421,8 @@ country GL: DFS-ETSI
+ 
+ country GT: DFS-FCC
+ 	(2402 - 2472 @ 40), (30)
+-	(5170 - 5250 @ 80), (17)
+-	(5250 - 5330 @ 80), (23), DFS
++	(5170 - 5250 @ 80), (17), AUTO-BW
++	(5250 - 5330 @ 80), (23), DFS, AUTO-BW
+ 	(5735 - 5835 @ 80), (30)
+ 
+ country GU: DFS-FCC
+@@ -438,38 +438,38 @@ country GY:
+ 
+ country HN: DFS-FCC
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (17)
+-	(5250 - 5330 @ 80), (24), DFS
+-	(5490 - 5730 @ 80), (24), DFS
++	(5170 - 5250 @ 80), (17), AUTO-BW
++	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
++	(5490 - 5730 @ 160), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+ country HK:
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (17)
+-	(5250 - 5330 @ 80), (24), DFS
+-	(5490 - 5710 @ 80), (24), DFS
++	(5170 - 5250 @ 80), (17), AUTO-BW
++	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+ country HR: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+ country HT: DFS-FCC
+ 	(2402 - 2472 @ 40), (30)
+-	(5170 - 5250 @ 80), (24)
+-	(5250 - 5330 @ 80), (24), DFS
+-	(5490 - 5730 @ 80), (24), DFS
++	(5170 - 5250 @ 80), (24), AUTO-BW
++	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
++	(5490 - 5730 @ 160), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+ country HU: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+@@ -480,28 +480,28 @@ country ID: DFS-JP
+ 
+ country IE: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+ country IL: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5150 - 5250 @ 80), (200 mW), NO-OUTDOOR
+-	(5250 - 5350 @ 80), (200 mW), NO-OUTDOOR, DFS
++	(5150 - 5250 @ 80), (200 mW), NO-OUTDOOR, AUTO-BW
++	(5250 - 5350 @ 80), (200 mW), NO-OUTDOOR, DFS, AUTO-BW
+ 
+ country IN: DFS-JP
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
+ 	(5735 - 5835 @ 80), (20)
+ 
+ country IS: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+@@ -511,17 +511,17 @@ country IR: DFS-JP
+ 
+ country IT: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+ country JM: DFS-FCC
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (17)
+-	(5250 - 5330 @ 80), (24), DFS
+-	(5490 - 5730 @ 80), (24), DFS
++	(5170 - 5250 @ 80), (17), AUTO-BW
++	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
++	(5490 - 5730 @ 160), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+ country JP: DFS-JP
+@@ -529,8 +529,8 @@ country JP: DFS-JP
+ 	(2474 - 2494 @ 20), (20), NO-OFDM
+ 	(4910 - 4990 @ 40), (23)
+ 	(5030 - 5090 @ 40), (23)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
+ 	(5490 - 5710 @ 160), (23), DFS
+ 
+ country JO: DFS-JP
+@@ -546,62 +546,62 @@ country KE: DFS-JP
+ 
+ country KH: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 
+ # Source
+ # http://ntrc.kn/?page_id=7
+ country KN: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (30), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (30), DFS
+ 	(5735 - 5815 @ 80), (30)
+ 
+ country KP: DFS-JP
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
+ 	(5490 - 5630 @ 80), (30), DFS
+ 	(5735 - 5815 @ 80), (30)
+ 
+ country KR: DFS-JP
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (30), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (30), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+ country KW: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
+ 
+ country KZ:
+ 	(2402 - 2482 @ 40), (20)
+ 
+ country LB: DFS-FCC
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (17)
+-	(5250 - 5330 @ 80), (24), DFS
+-	(5490 - 5730 @ 80), (24), DFS
++	(5170 - 5250 @ 80), (17), AUTO-BW
++	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
++	(5490 - 5730 @ 160), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+ # Source:
+ # http://www.ntrc.org.lc/operational_structures.htm
+ country LC: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (30), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (30), DFS
+ 	(5735 - 5815 @ 80), (30)
+ 
+ country LI: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 
+ country LK: DFS-FCC
+ 	(2402 - 2482 @ 40), (20)
+@@ -614,66 +614,66 @@ country LK: DFS-FCC
+ # http://lca.org.ls/images/documents/lesotho_national_frequency_allocation_plan.pdf
+ country LS: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 
+ country LT: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+ country LU: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+ country LV: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+ country MC: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 
+ country MA: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
+ 
+ # Source:
+ # http://www.cnfr.md/index.php?pag=sec&id=117&l=en
+ country MD: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 
+ # Source:
+ # http://www.cept.org/files/1050/Tools%20and%20Services/EFIS%20-%20ECO%20Frequency%20Information%20System/National%20frequency%20tables/Montenegro%20NAFT%20-%202010.pdf
+ country ME: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 
+ country MF: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 
+ country MO:
+ 	(2402 - 2482 @ 40), (20)
+@@ -683,16 +683,16 @@ country MO:
+ 
+ country MH: DFS-FCC
+ 	(2402 - 2472 @ 40), (30)
+-	(5170 - 5250 @ 80), (24)
+-	(5250 - 5330 @ 80), (24), DFS
+-	(5490 - 5730 @ 80), (24), DFS
++	(5170 - 5250 @ 80), (24), AUTO-BW
++	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
++	(5490 - 5730 @ 160), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+ country MK: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+@@ -700,15 +700,15 @@ country MK: DFS-ETSI
+ # http://www.are.mr/pdfs/telec_freq_TNAbf_2010.pdf
+ country MR: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 
+ country MT: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+@@ -720,16 +720,16 @@ country MY: DFS-FCC
+ 
+ country MX: DFS-FCC
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (17)
+-	(5250 - 5330 @ 80), (24), DFS
+-	(5490 - 5730 @ 80), (24), DFS
++	(5170 - 5250 @ 80), (17), AUTO-BW
++	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
++	(5490 - 5730 @ 160), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+ country NL: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20), NO-OUTDOOR
+-	(5250 - 5330 @ 80), (20), NO-OUTDOOR, DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), NO-OUTDOOR, AUTO-BW
++	(5250 - 5330 @ 80), (20), NO-OUTDOOR, DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+@@ -740,9 +740,9 @@ country NL: DFS-ETSI
+ # which has been merged with 5470 - 5725 MHz to allow wide channels
+ country NO: DFS-ETSI
+ 	(2400 - 2483.5 @ 40), (100 mW)
+-	(5150 - 5250 @ 80), (200 mW)
+-	(5250 - 5350 @ 80), (100 mW), DFS
+-	(5470 - 5795 @ 80), (500 mW), DFS
++	(5150 - 5250 @ 80), (200 mW), AUTO-BW
++	(5250 - 5350 @ 80), (100 mW), DFS, AUTO-BW
++	(5470 - 5795 @ 160), (500 mW), DFS
+ 	(5815 - 5850 @ 35), (2000 mW), DFS
+ 	(17100 - 17300 @ 200), (100 mW)
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+@@ -750,22 +750,22 @@ country NO: DFS-ETSI
+ 
+ country NP: DFS-JP
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
+ 	(5735 - 5835 @ 80), (20)
+ 
+ country NZ: DFS-FCC
+ 	(2402 - 2482 @ 40), (30)
+-	(5170 - 5250 @ 80), (17)
+-	(5250 - 5330 @ 80), (24), DFS
+-	(5490 - 5730 @ 80), (24), DFS
++	(5170 - 5250 @ 80), (17), AUTO-BW
++	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
++	(5490 - 5730 @ 160), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+ country OM: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 
+ country PA: DFS-FCC
+ 	(2402 - 2472 @ 40), (30)
+@@ -775,23 +775,23 @@ country PA: DFS-FCC
+ 
+ country PE: DFS-FCC
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (17)
+-	(5250 - 5330 @ 80), (24), DFS
+-	(5490 - 5730 @ 80), (24), DFS
++	(5170 - 5250 @ 80), (17), AUTO-BW
++	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
++	(5490 - 5730 @ 160), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+ country PG: DFS-FCC
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (17)
+-	(5250 - 5330 @ 80), (24), DFS
+-	(5490 - 5730 @ 80), (24), DFS
++	(5170 - 5250 @ 80), (17), AUTO-BW
++	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
++	(5490 - 5730 @ 160), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+ country PH: DFS-FCC
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (17)
+-	(5250 - 5330 @ 80), (24), DFS
+-	(5490 - 5730 @ 80), (24), DFS
++	(5170 - 5250 @ 80), (17), AUTO-BW
++	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
++	(5490 - 5730 @ 160), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+ country PK: DFS-JP
+@@ -800,38 +800,38 @@ country PK: DFS-JP
+ 
+ country PL: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+ country PM: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 
+ country PT: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+ country PR: DFS-FCC
+ 	(2402 - 2472 @ 40), (30)
+-	(5170 - 5250 @ 80), (17)
+-	(5250 - 5330 @ 80), (24), DFS
+-	(5490 - 5730 @ 80), (24), DFS
++	(5170 - 5250 @ 80), (17), AUTO-BW
++	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
++	(5490 - 5730 @ 160), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+ country PW: DFS-FCC
+ 	(2402 - 2472 @ 40), (30)
+-	(5170 - 5250 @ 80), (24)
+-	(5250 - 5330 @ 80), (24), DFS
+-	(5490 - 5730 @ 80), (24), DFS
++	(5170 - 5250 @ 80), (24), AUTO-BW
++	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
++	(5490 - 5730 @ 160), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+ country QA: DFS-JP
+@@ -840,9 +840,9 @@ country QA: DFS-JP
+ 
+ country RO: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+@@ -865,45 +865,45 @@ country RU: DFS-ETSI
+ 
+ country RW: DFS-FCC
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (17)
+-	(5250 - 5330 @ 80), (24), DFS
+-	(5490 - 5730 @ 80), (24), DFS
++	(5170 - 5250 @ 80), (17), AUTO-BW
++	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
++	(5490 - 5730 @ 160), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+ country SA: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 
+ country SE: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+ country SG: DFS-FCC
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (17)
+-	(5250 - 5330 @ 80), (24), DFS
+-	(5490 - 5730 @ 80), (24), DFS
++	(5170 - 5250 @ 80), (17), AUTO-BW
++	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
++	(5490 - 5730 @ 160), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+ country SI: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+ country SK: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+@@ -911,9 +911,9 @@ country SK: DFS-ETSI
+ # Regulation N° 2004-005 ART/DG/DRC/D.Rég
+ country SN: DFS-FCC
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (17)
+-	(5250 - 5330 @ 80), (24), DFS
+-	(5490 - 5730 @ 80), (24), DFS
++	(5170 - 5250 @ 80), (17), AUTO-BW
++	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
++	(5490 - 5730 @ 160), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+ country SV: DFS-FCC
+@@ -929,16 +929,16 @@ country SY:
+ # http://www.telecommission.tc/Spectrum-plan20110324-101210.html
+ country TC: DFS-FCC
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (24)
+-	(5250 - 5330 @ 80), (24), DFS
+-	(5490 - 5730 @ 80), (24), DFS
++	(5170 - 5250 @ 80), (24), AUTO-BW
++	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
++	(5490 - 5730 @ 160), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+ country TD: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 
+ country TG: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+@@ -955,28 +955,28 @@ country TW: DFS-JP
+ 
+ country TH: DFS-FCC
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (17)
+-	(5250 - 5330 @ 80), (24), DFS
+-	(5490 - 5730 @ 80), (24), DFS
++	(5170 - 5250 @ 80), (17), AUTO-BW
++	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
++	(5490 - 5730 @ 160), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+ country TT: DFS-FCC
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (17)
+-	(5250 - 5330 @ 80), (24), DFS
+-	(5490 - 5730 @ 80), (24), DFS
++	(5170 - 5250 @ 80), (17), AUTO-BW
++	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
++	(5490 - 5730 @ 160), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+ country TN: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
+ 
+ country TR: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+  
+@@ -997,8 +997,8 @@ country UA: DFS-ETSI
+ 
+ country US: DFS-FCC
+ 	(2402 - 2472 @ 40), (30)
+-	(5170 - 5250 @ 80), (17)
+-	(5250 - 5330 @ 80), (23), DFS
++	(5170 - 5250 @ 80), (17), AUTO-BW
++	(5250 - 5330 @ 80), (23), DFS, AUTO-BW
+ 	(5735 - 5835 @ 80), (30)
+ 	# 60g band
+ 	# reference: http://cfr.regstoday.com/47cfr15.aspx#47_CFR_15p255
+@@ -1007,25 +1007,25 @@ country US: DFS-FCC
+ 
+ country UY: DFS-FCC
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (17)
+-	(5250 - 5330 @ 80), (24), DFS
+-	(5490 - 5730 @ 80), (24), DFS
++	(5170 - 5250 @ 80), (17), AUTO-BW
++	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
++	(5490 - 5730 @ 160), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+ # Source:
+ # http://cemc.uz/article/1976/
+ country UZ: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
+ 
+ # Source:
+ # http://www.ntrc.vc/regulations/Jun_2006_Spectrum_Managment_Regulations.pdf
+ country VC: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 
+ # Source:
+ # Official Gazette (Gaceta Oficial) concerning Unlicensed transmitter use
+@@ -1048,29 +1048,29 @@ country VN: DFS-FCC
+ # http://www.trr.vu/attachments/category/130/GURL_for_Short-range_Radiocommunication_Devices2.pdf
+ country VU: DFS-FCC
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (17)
+-	(5250 - 5330 @ 80), (24), DFS
+-	(5490 - 5730 @ 80), (24), DFS
++	(5170 - 5250 @ 80), (17), AUTO-BW
++	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
++	(5490 - 5730 @ 160), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+ country WF: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 
+ country YE:
+ 	(2402 - 2482 @ 40), (20)
+ 
+ country ZA: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 
+ country ZW: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20)
+-	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5710 @ 80), (27), DFS
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
+ 
+-- 
+1.9.1
 
-Regards,
-Jens
 
-
-
-On 2014-10-09 16:43, Oleksij Rempel wrote:
-> Am 09.10.2014 um 15:54 schrieb Schroer, Jens Peter:
->> Hi Oleksij,
->> 
->> Thanks for the reply.
->> For this test I am running it in managed mode.
-> 
-> Can you please send complete dmesg. May be there are some previous
-> messages can give some hint.
-> 
-> Right now i assume that some bad packets are not filtered out.
-> 
-> Beside, do your source have commit d21ccfd0a60e "ath9k_htc: fix random
-> decryption failure"?
-> 
->> /sbin/iwconfig:
->> wlan0     IEEE 802.11bgn  ESSID:"myap"
->>           Mode:Managed  Frequency:2.422 GHz  Access Point:
->> 1C:EC:3B:52:9C:5A
->>           Bit Rate=72.2 Mb/s   Tx-Power=20 dBm
->>           Retry short limit:7   RTS thr:off   Fragment thr:off
->>           Power Management:off
->>           Link Quality=70/70  Signal level=-38 dBm
->>           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
->>           Tx excessive retries:0  Invalid misc:12   Missed beacon:0
->> 
->> 
->> 
->> On 2014-10-09 15:10, Oleksij Rempel wrote:
->>> Am 09.10.2014 um 13:06 schrieb Schroer, Jens Peter:
->>>> Hi,
->>>> 
->>>> While running a iperf test, I experienced a kernel Oops in the Wifi 
->>>> /
->>>> crypto module. I tried to reproduce it, but only managed to do it 
->>>> once
->>>> so far.
->>> 
->>> Hmm.. do it run in monitor or AP mode?
->>> I ask, because in combination with your other email i would assume 
->>> that
->>> not all corrupt packets are filtered.
->>> 
->>>> The system is:
->>>> BeagleBone Black, Rev C
->>>> Kernel 3.17.0-bone4 from BeagleBone
->>>> Using debian Jessie for Arm
->>>> Wifi: Netgear WNA1100
->>>> 
->>>> lsusb:
->>>> Bus 002 Device 003: ID 0846:9030 NetGear, Inc. WNA1100 Wireless-N 
->>>> 150
->>>> [Atheros AR9271]
->>>> Bus 002 Device 002: ID 1a40:0201 Terminus Technology Inc. FE 2.1
->>>> 7-port Hub
->>>> Bus 002 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
->>>> Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
->>>> 
->>>> Scenario:
->>>> 
->>>> I am running
->>>> iperf -c 192.168.1.32 -i1 -t300 -w1000k
->>>> to test network performance
->>>> 
->>>> During this test I got the following kernel Oops (see below).
->>>> Is this a known issue (I couldn't find anything related on Google so
->>>> far)?
->>>> 
->>>> Kind regards,
->>>> Jens
->>>> 
->>>> 
->>>> [   72.919376] kernel BUG at crypto/scatterwalk.c:37!
->>>> [   72.924396] Internal error: Oops - BUG: 0 [#1] THUMB2
->>>> [   72.929691] Modules linked in: ctr ccm omap_aes omap_sham evdev 
->>>> arc4
->>>> ath9k_htc ath9k_common ath9k_hw ath mac80211 cfg80211
->>>> [   72.941329] CPU: 0 PID: 0 Comm: swapper Not tainted 3.17.0-bone4 
->>>> #1
->>>> [   72.947902] task: c09baf68 ti: c09ae000 task.ti: c09ae000
->>>> [   72.953577] PC is at scatterwalk_start+0x12/0x14
->>>> [   72.958417] LR is at scatterwalk_map_and_copy+0x23/0x84
->>>> [   72.963894] pc : [<c02eda8a>]    lr : [<c02edbd7>]    psr: 
->>>> 20010133
->>>> [   72.963894] sp : c09afac8  ip : 00000000  fp : c09afcf4
->>>> [   72.975930] r10: 00000000  r9 : 00000000  r8 : 00000008
->>>> [   72.981405] r7 : c09afb98  r6 : 00000008  r5 : c09afccc  r4 :
->>>> 00000000
->>>> [   72.988245] r3 : 00000000  r2 : 00000000  r1 : c09afccc  r0 :
->>>> c09afac8
->>>> [   72.995089] Flags: nzCv  IRQs on  FIQs on  Mode SVC_32  ISA Thumb
->>>> Segment kernel
->>>> [   73.002933] Control: 50c5387d  Table: 9bf9c019  DAC: 00000015
->>>> [   73.008954] Process swapper (pid: 0, stack limit = 0xc09ae240)
->>>> [   73.015066] Stack: (0xc09afac8 to 0xc09b0000)
->>>> [   73.019633] fac0:                   c09afccc bf98f2c7 00000006
->>>> c09afb78 c09afb38 de356580
->>>> [   73.028210] fae0: c09afd7c 00000008 c09afb98 bf9bb933 00000000
->>>> dbfa1b80 de458fa0 bf990e67
->>>> [   73.036786] fb00: dbfa1b80 de458fa0 00000000 c09afbb0 00000006
->>>> de356580 c09afb38 00000a34
->>>> [   73.045360] fb20: c09afcc0 c09afd08 dbfd7a34 00000000 c09afcf4
->>>> bf891a51 00000000 00000000
->>>> [   73.053935] fb40: 00000000 00000000 de356580 00000000 00000018
->>>> 00000008 c09afd7c c09afcf4
->>>> [   73.062510] fb60: c09afccc c09afd08 00000000 00000000 00000000
->>>> 00000000 00000000 00000000
->>>> [   73.071085] fb80: 00000000 00000000 00000000 00000000 00000000
->>>> 00000000 00000000 00000000
->>>> [   73.079659] fba0: 00000000 00000000 00000000 00000000 00000000
->>>> 00000000 00000000 00000000
->>>> [   73.088233] fbc0: 00000000 00000000 00000000 00000000 00000000
->>>> 00000000 00000000 00000000
->>>> [   73.096807] fbe0: 00000000 00000000 00000000 00000000 00000000
->>>> 00000000 00000000 00000000
->>>> [   73.105382] fc00: 00000000 00000000 00000000 00000000 00000000
->>>> 00000000 00000000 00000000
->>>> [   73.113956] fc20: 00000000 00000000 00000000 00000000 00000000
->>>> 00000000 00000000 00000000
->>>> [   73.122531] fc40: 00000000 00000000 00000000 00000000 00000000
->>>> 00000000 00000000 00000000
->>>> [   73.131106] fc60: 00000000 00000000 00000000 00000000 00000000
->>>> 00000000 00000000 00000000
->>>> [   73.139681] fc80: 00000000 00000000 00000000 00000000 00000000
->>>> 00000000 00000000 00000000
->>>> [   73.148256] fca0: 00000000 00000000 00000000 00000000 00000000
->>>> 00000000 0000007f bf886a79
->>>> [   73.156831] fcc0: de546700 c09afd7c 00000040 dfe70ae0 00000a34
->>>> 00000000 00000000 00000000
->>>> [   73.165406] fce0: dfe70ae2 00000a34 00000008 00000000 00000000
->>>> dfb045e2 00000d5e 00000018
->>>> [   73.173980] fd00: 00000000 00000000 dfe70ae2 00000a34 00000000
->>>> 00000000 00000000 dc8cb300
->>>> [   73.182557] fd20: 00000000 dd54f100 c09b7008 0000001a dd4af000
->>>> dbfd7a34 dbfd7a12 00000000
->>>> [   73.191132] fd40: 00000000 bf886a79 00000000 dbfd7a34 00000006
->>>> 00000000 f0800000 42881800
->>>> [   73.199708] fd60: 7a1504c4 eebc1b89 5e9c557b e76e6008 00004996
->>>> 00000000 00000000 eebc0001
->>>> [   73.208282] fd80: 5e9c557b 00000000 dd56f080 dc8cb300 c09afe54
->>>> dd54f100 c09afe2c c09afe54
->>>> [   73.216858] fda0: 00004a88 dbfd7a12 c09ae000 00004000 00000000
->>>> bf897719 00000000 c006a6c5
->>>> [   73.225434] fdc0: 0003a980 00000000 00989680 00000000 684e00f5
->>>> 00000000 c09dc848 c09baf68
->>>> [   73.234009] fde0: 00000000 bf896ed9 0000002c 00000040 00000000
->>>> bf896ed9 00000001 0000002d
->>>> [   73.242583] fe00: 00989680 c09afe54 de4583a0 de530c84 c09ddf68
->>>> 00000000 00200200 dbf87b2c
->>>> [   73.251158] fe20: bf88a83d bf899925 264a8a64 dd54f100 de4583a0
->>>> dd562500 dbf87800 dd4af000
->>>> [   73.259733] fe40: 00000000 00000000 00000000 00000000 00000000
->>>> de532580 dd54f4c0 00000036
->>>> [   73.268309] fe60: f764151b c09ae000 00000100 bf88a855 c0a447c0
->>>> c005fe3f 00000001 c006a53b
->>>> [   73.276883] fe80: 00000000 de530c84 c0a9aa00 c09afec0 c09ddf68
->>>> 00000000 00200200 c0a30d30
->>>> [   73.285458] fea0: 00000004 c00603ad f76400ec 00000010 bf88a83d
->>>> dbf87b2c 00000000 00200200
->>>> [   73.294033] fec0: c09afec0 c09afec0 c0a187d8 c0a57b44 00000002
->>>> c09ae000 00000054 00000001
->>>> [   73.302607] fee0: c0a44ab8 c0a30d30 00000004 c00331fd 00000010
->>>> c09df0e0 00000002 00000100
->>>> [   73.311182] ff00: c0a57b40 0000000a ffffa748 00200000 00000054
->>>> c09ae000 00000000 00000054
->>>> [   73.319756] ff20: 00000054 c09aff68 c0a44ab8 c0a30d30 ffffffed
->>>> c003352b c0a091a8 c000dda3
->>>> [   73.328331] ff40: fa200098 fa2000b8 fa2000d8 c000847b c000deb6
->>>> 40010033 ffffffff c09aff9c
->>>> [   73.336908] ff60: 00000000 c05b6e1b ffffffed 00000000 00000000
->>>> c00197e1 c09ae000 00000000
->>>> [   73.345483] ff80: c09b70e4 00000000 00000000 c0a44ab8 c0a30d30
->>>> ffffffed 00000000 c09affb0
->>>> [   73.354057] ffa0: c000deb5 c000deb6 40010033 ffffffff 00000000
->>>> c004b2a9 00000000 c097b660
->>>> [   73.362632] ffc0: 00000000 c09418c5 ffffffff ffffffff c09414d5
->>>> 00000000 c097b660 dc8cb300
->>>> [   73.371208] ffe0: c0a566d4 c09b7074 c097b65c c09bc3d0 80004059
->>>> 80008079 00000000 00000000
->>>> [   73.379796] [<c02eda8a>] (scatterwalk_start) from [<c02edbd7>]
->>>> (scatterwalk_map_and_copy+0x23/0x84)
->>>> [   73.389297] [<c02edbd7>] (scatterwalk_map_and_copy) from 
->>>> [<bf9bb933>]
->>>> (crypto_ccm_decrypt+0x62/0x190 [ccm])
->>>> [   73.399802] [<bf9bb933>] (crypto_ccm_decrypt [ccm]) from 
->>>> [<bf891a51>]
->>>> (ieee80211_aes_ccm_decrypt+0xdc/0x120 [mac80211])
->>>> [   73.411258] [<bf891a51>] (ieee80211_aes_ccm_decrypt [mac80211]) 
->>>> from
->>>> [<bf886a79>] (ieee80211_crypto_ccmp_decrypt+0x1b0/0x1e4 [mac80211])
->>>> [   73.424265] [<bf886a79>] (ieee80211_crypto_ccmp_decrypt 
->>>> [mac80211])
->>>> from [<bf897719>] (ieee80211_rx_handlers+0x714/0x1b34 [mac80211])
->>>> [   73.437018] [<bf897719>] (ieee80211_rx_handlers [mac80211]) from
->>>> [<bf899925>] (ieee80211_release_reorder_timeout+0x48/0x4c 
->>>> [mac80211])
->>>> [   73.449838] [<bf899925>] (ieee80211_release_reorder_timeout
->>>> [mac80211]) from [<bf88a855>]
->>>> (sta_rx_agg_reorder_timer_expired+0x18/0x1c [mac80211])
->>>> [   73.463586] [<bf88a855>] (sta_rx_agg_reorder_timer_expired
->>>> [mac80211]) from [<c005fe3f>] (call_timer_fn+0x2b/0xcc)
->>>> [   73.474445] [<c005fe3f>] (call_timer_fn) from [<c00603ad>]
->>>> (run_timer_softirq+0x145/0x198)
->>>> [   73.483117] [<c00603ad>] (run_timer_softirq) from [<c00331fd>]
->>>> (__do_softirq+0x65/0x1ec)
->>>> [   73.491604] [<c00331fd>] (__do_softirq) from [<c003352b>]
->>>> (irq_exit+0x63/0x98)
->>>> [   73.499185] [<c003352b>] (irq_exit) from [<c000dda3>]
->>>> (handle_IRQ+0x27/0x5c)
->>>> [   73.506580] [<c000dda3>] (handle_IRQ) from [<c000847b>]
->>>> (omap3_intc_handle_irq+0x63/0x74)
->>>> [   73.515167] [<c000847b>] (omap3_intc_handle_irq) from 
->>>> [<c05b6e1b>]
->>>> (__irq_svc+0x3b/0x5c)
->>>> [   73.523648] Exception stack(0xc09aff68 to 0xc09affb0)
->>>> [   73.528943] ff60:                   ffffffed 00000000 00000000
->>>> c00197e1 c09ae000 00000000
->>>> [   73.537518] ff80: c09b70e4 00000000 00000000 c0a44ab8 c0a30d30
->>>> ffffffed 00000000 c09affb0
->>>> [   73.546092] ffa0: c000deb5 c000deb6 40010033 ffffffff
->>>> [   73.551392] [<c05b6e1b>] (__irq_svc) from [<c000deb6>]
->>>> (arch_cpu_idle+0x1e/0x28)
->>>> [   73.559153] [<c000deb6>] (arch_cpu_idle) from [<c004b2a9>]
->>>> (cpu_startup_entry+0x111/0x1a8)
->>>> [   73.567829] [<c004b2a9>] (cpu_startup_entry) from [<c09418c5>]
->>>> (start_kernel+0x279/0x2e4)
->>>> [   73.576406] Code: b113 684b 6043 4770 (de02) b510
->>>> [   73.581430] ---[ end trace fad732941e738de9 ]---
->>>> [   73.586268] Kernel panic - not syncing: Fatal exception in 
->>>> interrupt
->>>> [   73.592929] drm_kms_helper: panic occurred, switching back to 
->>>> text
->>>> console
->>>> [   73.600148] ---[ end Kernel panic - not syncing: Fatal exception 
->>>> in
->>>> interrupt
->>>> 
->>>> --
->>>> To unsubscribe from this list: send the line "unsubscribe
->>>> linux-wireless" in
->>>> the body of a message to majordomo@vger.kernel.org
->>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Jouni Malinen                                            PGP id EFC895FA
