@@ -1,271 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:64350 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751617AbaJYTfZ (ORCPT
+Received: from mail-oi0-f53.google.com ([209.85.218.53]:50782 "EHLO
+	mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752289AbaJWIHE convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Oct 2014 15:35:25 -0400
-Received: by mail-wg0-f47.google.com with SMTP id x13so3129907wgg.30
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2014 12:35:24 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 41/48] staging: vt6655: struct vnt_private remove dead members
-Date: Sat, 25 Oct 2014 09:40:19 +0100
-Message-Id: <1414226426-5811-42-git-send-email-tvboxspy@gmail.com> (sfid-20141025_213528_871338_B05BE3D4)
-In-Reply-To: <1414226426-5811-1-git-send-email-tvboxspy@gmail.com>
-References: <1414226426-5811-1-git-send-email-tvboxspy@gmail.com>
+	Thu, 23 Oct 2014 04:07:04 -0400
+Received: by mail-oi0-f53.google.com with SMTP id v63so334865oia.26
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Oct 2014 01:07:03 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1414049448.32460.182326557.1A0A85A4@webmail.messagingengine.com>
+References: <1413463736.1316541.179720977.4FD32021@webmail.messagingengine.com>
+	<1413510814.22769.6.camel@dcbw.local>
+	<1413751717.2510219.180809145.0E693C29@webmail.messagingengine.com>
+	<CANUX_P2RHVRorVABRfWVg39d4D8dj35v3fBpY3=3jvQ1U+mfEA@mail.gmail.com>
+	<1413783023.2710583.180921653.10DFFCEE@webmail.messagingengine.com>
+	<CANUX_P0Q7cNeBzQa=2WVZFJXPTLx8F6YQk9bGCf_3uYhc5RcGA@mail.gmail.com>
+	<CANUX_P3EqgTX7cPJvQ3fWH1yijekE0G_8TiH2_OCS7nFASGtkA@mail.gmail.com>
+	<1413789724.3063896.180943829.3F15F453@webmail.messagingengine.com>
+	<CANUX_P1REqkSqN0dtak34OQ_pSGMtPvV3Vj61tW5wb1+n2A7mg@mail.gmail.com>
+	<1413833365.2949853.181221645.22D54845@webmail.messagingengine.com>
+	<CANUX_P3XzYBp7E=hScmc837TpuCr9VrxEYauG=sGMKfOCpX=qA@mail.gmail.com>
+	<54461740.5000903@openwrt.org>
+	<1413879792.3500640.181427549.198E9452@webmail.messagingengine.com>
+	<54461AEF.7040304@openwrt.org>
+	<54463CE9.3060400@gmail.com>
+	<1413921415.3763081.181696749.20A0A495@webmail.messagingengine.com>
+	<CANUX_P0LRRczVCSFR7RE5coaYFxwFXyqC90pdm=oVwEiEt-7zw@mail.gmail.com>
+	<1414014805.4127522.182191541.14C8B4DF@webmail.messagingengine.com>
+	<CANUX_P0tGagXsN6XCeb_itQehqD3O9fmqknU6iSMO432NQtATA@mail.gmail.com>
+	<1414049448.32460.182326557.1A0A85A4@webmail.messagingengine.com>
+Date: Thu, 23 Oct 2014 11:07:03 +0300
+Message-ID: <CANUX_P3usjdccnsYPQXzKbJ1PTH91fasf6BpcsCRYZH_yq2tww@mail.gmail.com> (sfid-20141023_100721_289554_F6D77FA4)
+Subject: Re: iwlwifi: Reason 7 periodic disconnect
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: =?UTF-8?Q?Lauren=C8=9Biu_Nicola?= <lnicola@dend.ro>
+Cc: poma <pomidorabelisima@gmail.com>, Dan Williams <dcbw@redhat.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/device.h | 158 +---------------------------------------
- 1 file changed, 1 insertion(+), 157 deletions(-)
+On Thu, Oct 23, 2014 at 10:30 AM, Laurențiu Nicola <lnicola@dend.ro> wrote:
+> I did; the card still gets disconnected and the message doesn't show up
+> in dmesg.
+>
 
-diff --git a/drivers/staging/vt6655/device.h b/drivers/staging/vt6655/device.h
-index 1d1b0fb..a26e904 100644
---- a/drivers/staging/vt6655/device.h
-+++ b/drivers/staging/vt6655/device.h
-@@ -322,8 +322,6 @@ struct vnt_private {
- 	u16 current_aid;
- 	int mc_list_count;
- 	u8 mac_hw;
--// netdev
--	struct net_device *dev;
- 
- //dma addr, rx/tx pool
- 	dma_addr_t                  pool_dma;
-@@ -383,10 +381,6 @@ struct vnt_private {
- 	u8 rx_rate;
- 	int                         multicast_limit;
- 
--	pid_t			MLMEThr_pid;
--	struct completion	notify;
--	struct semaphore	mlme_semaphore;
--
- 	u32                         rx_bytes;
- 
- 	// Version control
-@@ -397,7 +391,7 @@ struct vnt_private {
- 	unsigned char byZoneType;
- 	bool bZoneRegExist;
- 	unsigned char byOriginalZonetype;
--	unsigned char abyMacContext[MAC_MAX_CONTEXT_REG];
-+
- 	unsigned char abyCurrentNetAddr[ETH_ALEN];
- 	bool bLinkPass;          // link status: OK or fail
- 
-@@ -455,14 +449,6 @@ struct vnt_private {
- 	unsigned char byOpMode;
- 	bool bBSSIDFilter;
- 	unsigned short wMaxTransmitMSDULifetime;
--	unsigned char abyBSSID[ETH_ALEN];
--	unsigned char abyDesireBSSID[ETH_ALEN];
--	unsigned short wACKDuration;       // update while speed change
--	unsigned short wRTSTransmitLen;    // update while speed change
--	unsigned char byRTSServiceField;  // update while speed change
--	unsigned char byRTSSignalField;   // update while speed change
--
--	unsigned long dwMaxReceiveLifetime;       // dot11MaxReceiveLifetime
- 
- 	bool bEncryptionEnable;
- 	bool bLongHeader;
-@@ -471,9 +457,6 @@ struct vnt_private {
- 	bool bNonERPPresent;
- 	bool bBarkerPreambleMd;
- 
--	unsigned char byERPFlag;
--	unsigned short wUseProtectCntDown;
--
- 	bool bRadioControlOff;
- 	bool bRadioOff;
- 	bool bEnablePSMode;
-@@ -496,64 +479,11 @@ struct vnt_private {
- 	unsigned int	cbBeaconBufReadySetCnt;
- 	bool bFixRate;
- 	unsigned char byCurrentCh;
--	unsigned int	uScanTime;
--
--	bool bBeaconTx;
--
--	bool bStopBeacon;
--	bool bStopDataPkt;
--	bool bStopTx0Pkt;
--	unsigned int	uAutoReConnectTime;
--
--	// 802.11 counter
--
--	unsigned int	uCmdDequeueIdx;
--	unsigned int	uCmdEnqueueIdx;
--	unsigned int	cbFreeCmdQueue;
--	bool bCmdRunning;
--	bool bCmdClear;
--
--	bool bRoaming;
--	//WOW
--	unsigned char abyIPAddr[4];
--
--	unsigned long ulTxPower;
--	NDIS_802_11_WEP_STATUS  eEncryptionStatus;
--	bool bTransmitKey;
--//2007-0925-01<Add>by MikeLiu
--//mike add :save old Encryption
--	NDIS_802_11_WEP_STATUS  eOldEncryptionStatus;
--
--	unsigned long dwIVCounter;
--
--	u64 qwPacketNumber; /* For CCMP and TKIP as TSC(6 bytes) */
--	unsigned int	uCurrentWEPMode;
--
--	unsigned char abyPRNG[WLAN_WEPMAX_KEYLEN+3];
--	unsigned char byKeyIndex;
--	unsigned int	uKeyLength;
--	unsigned char abyKey[WLAN_WEP232_KEYLEN];
- 
- 	bool bAES;
--	unsigned char byCntMeasure;
--
--	// for AP mode
--	unsigned int	uAssocCount;
--	bool bMoreData;
--
--	// QoS
--	bool bGrpAckPolicy;
--
--	// for OID_802_11_ASSOCIATION_INFORMATION
--	bool bAssocInfoSet;
- 
- 	unsigned char byAutoFBCtrl;
- 
--	bool bTxMICFail;
--	bool bRxMICFail;
--
--	unsigned int	uRATEIdx;
--
- 	// For Update BaseBand VGA Gain Offset
- 	bool bUpdateBBVGA;
- 	unsigned int	uBBVGADiffCount;
-@@ -565,23 +495,11 @@ struct vnt_private {
- 	unsigned char byBBPreEDRSSI;
- 	unsigned char byBBPreEDIndex;
- 
--	bool bRadioCmd;
- 	unsigned long dwDiagRefCount;
- 
- 	// For FOE Tuning
- 	unsigned char byFOETuning;
- 
--	// For Auto Power Tunning
--
--	unsigned char byAutoPwrTunning;
--	short                   sPSetPointCCK;
--	short                   sPSetPointOFDMG;
--	short                   sPSetPointOFDMA;
--	long                    lPFormulaOffset;
--	short                   sPThreshold;
--	char                    cAdjustStep;
--	char                    cMinTxAGC;
--
- 	// For RF Power table
- 	unsigned char byCCKPwr;
- 	unsigned char byOFDMPwrG;
-@@ -600,21 +518,6 @@ struct vnt_private {
- 	unsigned char byBBCR88;
- 	unsigned char byBBCR09;
- 
--	// command timer
--	struct timer_list       sTimerCommand;
--	struct timer_list       sTimerTxData;
--	unsigned long nTxDataTimeCout;
--	bool fTxDataInSleep;
--	bool IsTxDataTrigger;
--
--#ifdef WPA_SM_Transtatus
--	bool fWPA_Authened;           //is WPA/WPA-PSK or WPA2/WPA2-PSK authen??
--#endif
--	unsigned char byReAssocCount;   //mike add:re-association retry times!
--	unsigned char byLinkWaitCount;
--
--	unsigned char abyNodeName[17];
--
- 	bool bDiversityRegCtlON;
- 	bool bDiversityEnable;
- 	unsigned long ulDiversityNValue;
-@@ -645,73 +548,14 @@ struct vnt_private {
- 
- 	// for 802.11h
- 	bool b11hEnable;
--	unsigned char abyCountryCode[3];
--	// for 802.11h DFS
--	unsigned int	uNumOfMeasureEIDs;
--	bool bMeasureInProgress;
--	unsigned char byOrgChannel;
--	unsigned char byOrgRCR;
--	unsigned long dwOrgMAR0;
--	unsigned long dwOrgMAR4;
--	unsigned char byBasicMap;
--	unsigned char byCCAFraction;
--	unsigned char abyRPIs[8];
--	unsigned long dwRPIs[8];
--	bool bChannelSwitch;
--	unsigned char byNewChannel;
--	unsigned char byChannelSwitchCount;
--	bool bQuietEnable;
--	bool bEnableFirstQuiet;
--	unsigned char byQuietStartCount;
--	unsigned int	uQuietEnqueue;
--	unsigned long dwCurrentQuietEndTime;
--	SQuietControl           sQuiet[MAX_QUIET_COUNT];
--	// for 802.11h TPC
--	bool bCountryInfo5G;
--	bool bCountryInfo24G;
- 
- 	unsigned short wBeaconInterval;
- 
--	//WPA supplicant deamon
--	struct net_device       *wpadev;
--	bool bWPADEVUp;
--	struct sk_buff          *skb;
--#ifdef WPA_SUPPLICANT_DRIVER_WEXT_SUPPORT
--	unsigned int	bwextcount;
--	bool bWPASuppWextEnabled;
--#endif
--
--	//--
--#ifdef HOSTAP
--	// user space daemon: hostapd, is used for HOSTAP
--	bool bEnableHostapd;
--	bool bEnable8021x;
--	bool bEnableHostWEP;
--	struct net_device       *apdev;
--	int (*tx_80211)(struct sk_buff *skb, struct net_device *dev);
--#endif
- 	unsigned int	uChannel;
--	bool bMACSuspend;
- 
- 	struct iw_statistics	wstats;		// wireless stats
--	bool bCommit;
- };
- 
--static inline bool device_get_ip(struct vnt_private *pInfo)
--{
--	struct in_device *in_dev = (struct in_device *)pInfo->dev->ip_ptr;
--	struct in_ifaddr *ifa;
--
--	if (in_dev != NULL) {
--		ifa = (struct in_ifaddr *)in_dev->ifa_list;
--		if (ifa != NULL) {
--			memcpy(pInfo->abyIPAddr, &ifa->ifa_address, 4);
--			return true;
--		}
--	}
--	return false;
--}
--
- static inline PDEVICE_RD_INFO alloc_rd_info(void)
- {
- 	return kzalloc(sizeof(DEVICE_RD_INFO), GFP_ATOMIC);
--- 
-1.9.1
+You had *none* of the many prints I added in the log?
 
+That seems really weird...
+
+> Laurentiu
+>
+> On Thu, Oct 23, 2014, at 08:21, Emmanuel Grumbach wrote:
+>> On Thu, Oct 23, 2014 at 12:53 AM, Laurențiu Nicola <lnicola@dend.ro>
+>> wrote:
+>> > Nope. It seems that code doesn't get executed when my issue occurs (or
+>> > in my five or ten minutes of uptime). I've seen
+>> > `ieee80211_reset_ap_probe` get called by `ieee80211_rx_mgmt_probe_resp`,
+>> > but (if I'm not wrong) not on every disconnect.
+>> >
+>> > And as far as I can tell, force_cam is set to true.
+>>
+>> Can you please try with the patch attached and send the logs?
+>> I again need MAC80211_MLME_DEBUG.
+>>
+>> Thanks.
+>>
+>> >
+>> > Laurentiu
+>> >
+>> > On Wed, Oct 22, 2014, at 12:10, Emmanuel Grumbach wrote:
+>> >> On Tue, Oct 21, 2014 at 10:56 PM, Laurențiu Nicola <lnicola@dend.ro>
+>> >> wrote:
+>> >> > Yep! `scb_timeout` is 60 on my router.
+>> >> >
+>> >> > On Tue, Oct 21, 2014, at 14:00, poma wrote:
+>> >> >> On 21.10.2014 10:35, Felix Fietkau wrote:
+>> >> >> > On 2014-10-21 10:23, Laurențiu Nicola wrote:
+>> >> >> >> It's an ASUS RT-N66U running NEWD-2/K3X from r24160.
+>> >> >> > This is a Broadcom based device, so it should behave in the same way as
+>> >> >> > other APs/Routers running the Broadcom drivers.
+>> >> >> > The driver should only send Reason 7 when receiving a PS-Poll, BlockAck,
+>> >> >> > BlockAckReq or Action frame from a station that's not associated, so
+>> >> >> > probably it has already kicked out your iwlwifi client earlier. Not sure
+>> >> >> > why that doesn't show up in the log though.
+>> >> >> >
+>> >> >>
+>> >> >> Whether this might refer to the Station Control Block Timeout value
+>> >> >>
+>> >> >> http://www.dd-wrt.com/wiki/index.php/Wl#scb_timeout
+>> >> >> ...
+>> >> >> scb_timeout
+>> >> >>
+>> >> >> AP only: inactivity timeout value for authenticated stas
+>> >> >>
+>> >>
+>> >> Actually, mac80211 should be probing the AP every 30 seconds but a
+>> >> beacon might abort the probe...
+>> >> Can you try something like this:
+>> >>
+>> >> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+>> >> index 75df184..c9db7cf 100644
+>> >> --- a/net/mac80211/mlme.c
+>> >> +++ b/net/mac80211/mlme.c
+>> >> @@ -3295,7 +3295,8 @@ static void ieee80211_rx_mgmt_beacon(struct
+>> >> ieee80211_sub_if_data *sdata,
+>> >>         if (ifmgd->flags & IEEE80211_STA_CONNECTION_POLL) {
+>> >>                 mlme_dbg_ratelimited(sdata,
+>> >>                                      "cancelling AP probe due to a
+>> >> received beacon\n");
+>> >> -               ieee80211_reset_ap_probe(sdata);
+>> >> +               pr_err("Not cancelling the probe to make sure the AP
+>> >> hears us from time to time\n");
+>> >> +               //ieee80211_reset_ap_probe(sdata);
+>> >>         }
+>> >>
+>> >>         /*
+>> >>
+>> >>
+>> >>
+>> >> >>
+>> >> >> poma
+>> >> >>
+>> >> >>
+>> >> >> --
+>> >> >> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+>> >> >> in
+>> >> >> the body of a message to majordomo@vger.kernel.org
+>> >> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> >> --
+>> >> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+>> >> in
+>> >> the body of a message to majordomo@vger.kernel.org
+>> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+>> in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
