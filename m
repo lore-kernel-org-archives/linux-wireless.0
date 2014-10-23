@@ -1,39 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:43652 "EHLO
-	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750808AbaJMGko (ORCPT
+Received: from mail-oi0-f47.google.com ([209.85.218.47]:63104 "EHLO
+	mail-oi0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932543AbaJWDfb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Oct 2014 02:40:44 -0400
-Subject: [PATCH 0/3] ath10k: cal file support
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 13 Oct 2014 09:40:40 +0300
-Message-ID: <20141013063929.30315.41969.stgit@potku.adurom.net> (sfid-20141013_084057_430143_105C82A3)
+	Wed, 22 Oct 2014 23:35:31 -0400
+Received: by mail-oi0-f47.google.com with SMTP id a141so129168oig.34
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Oct 2014 20:35:30 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <CAJ-Vmo=y=dwZjBHqbsqP5cPK+jL91W-OyA7=y8tqowgSLJKAwA@mail.gmail.com>
+References: <5447CF6D.3010401@mailservices.uwaterloo.ca>
+	<CAJ-Vmo=y=dwZjBHqbsqP5cPK+jL91W-OyA7=y8tqowgSLJKAwA@mail.gmail.com>
+Date: Thu, 23 Oct 2014 08:35:30 +0500
+Message-ID: <CADxDmp7XcofyAT9sAGBM6yq2FmffmgbKqjiEpc5ZavKDXM9wgQ@mail.gmail.com> (sfid-20141023_053535_821476_F3391133)
+Subject: Re: [ath9k-devel] Block ACK without frame aggregation
+From: Kamran Nishat <kamran.nishat@gmail.com>
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: Ali Abedi <a2abedi@uwaterloo.ca>,
+	"(ath9k-devel@lists.ath9k.org)" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+I think you should look in earlier drivers from Atheors. Because this
+delayed BA for separate packets was introduced before 802.11n in
+802.11e perhaps.
 
-this adds support for loading calibration data from a file as discussed some
-time ago. Please review.
-
-Kalle
-
----
-
-Kalle Valo (3):
-      ath10k: add back enum ath10k_bus
-      ath10k: refactor ath10k_init_download_firmware()
-      ath10k: retrieve calibration data from file
-
-
- drivers/net/wireless/ath/ath10k/core.c  |  107 +++++++++++++++++++++++++------
- drivers/net/wireless/ath/ath10k/core.h  |   36 ++++++++++
- drivers/net/wireless/ath/ath10k/debug.c |    5 +
- drivers/net/wireless/ath/ath10k/hw.h    |    4 +
- drivers/net/wireless/ath/ath10k/pci.c   |    1 
- 5 files changed, 129 insertions(+), 24 deletions(-)
-
+On Thu, Oct 23, 2014 at 8:18 AM, Adrian Chadd <adrian@freebsd.org> wrote:
+> I don't think mac80211 supports delayed-BA. :(
+>
+>
+> -adrian
+>
+>
+> On 22 October 2014 08:38, Ali Abedi <a2abedi@uwaterloo.ca> wrote:
+>> Hello,
+>>
+>> I am interested to know if we can send multiple packets (non-aggregated,
+>> single packets) and then ask
+>> for a block ACK? I like to know if this functionality has been
+>> implemented in ath9k or if
+>> it is possible to achieve this with slight code modifications.
+>>
+>> What I need:
+>> Frame-SIFS-Frame-SIFS-Frame-SIFS-REQ Block ACK-SIFS-Block ACK
+>>
+>> Best,
+>> Ali
+>> _______________________________________________
+>> ath9k-devel mailing list
+>> ath9k-devel@lists.ath9k.org
+>> https://lists.ath9k.org/mailman/listinfo/ath9k-devel
+> _______________________________________________
+> ath9k-devel mailing list
+> ath9k-devel@lists.ath9k.org
+> https://lists.ath9k.org/mailman/listinfo/ath9k-devel
