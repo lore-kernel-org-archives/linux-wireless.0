@@ -1,45 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:42618 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752488AbaJBBCr (ORCPT
+Received: from mail-yh0-f41.google.com ([209.85.213.41]:64360 "EHLO
+	mail-yh0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751109AbaJWP2B (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Oct 2014 21:02:47 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH v2 02/10] ath9k: Print RoC expiration
-Date: Thu,  2 Oct 2014 06:33:12 +0530
-Message-Id: <1412211800-24344-3-git-send-email-sujith@msujith.org> (sfid-20141002_030249_801290_728CD180)
-In-Reply-To: <1412211800-24344-1-git-send-email-sujith@msujith.org>
-References: <1412211800-24344-1-git-send-email-sujith@msujith.org>
+	Thu, 23 Oct 2014 11:28:01 -0400
+Message-ID: <54491E1E.6090001@gmail.com> (sfid-20141023_172828_691015_15D21CFF)
+Date: Thu, 23 Oct 2014 13:26:22 -0200
+From: Murilo Opsfelder Araujo <mopsfelder@gmail.com>
+MIME-Version: 1.0
+To: Mike Galbraith <umgwanakikbuti@gmail.com>
+CC: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Thadeu Cascardo <cascardo@cascardo.eti.br>
+Subject: Re: Possible wireless issue introduced in next-20140930
+References: <54487346.4080604@gmail.com> <1414041815.5228.37.camel@marge.simpson.net>
+In-Reply-To: <1414041815.5228.37.camel@marge.simpson.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On 10/23/2014 03:23 AM, Mike Galbraith wrote:
+> On Thu, 2014-10-23 at 01:17 -0200, Murilo Opsfelder Araujo wrote:
+>> Hello, everyone.
+>>
+>> With next-20140930 my laptop does not work, i.e. after I enter my login
+>> and password in KDM, the entire system becomes unresponsive and I need
+>> to reset it in order to reboot (it does not even show the KDE splash
+>> screen).
+>>
+>> It was working pretty fine with next-20140926.
+>>
+>> I've also tested with next-20141022 and v3.18-rc1 and no luck.
+>>
+>> git bisect pointed me to the commit below [1].  My wireless card is a
+>> RTL8191SEvA [2].
+>
+> Mine is RTL8191SEvB.
+>
+> I was going to bisect RTL8191SE regression when I got a chance, but you
+> beat me to it.
+>
+>> commit 38506ecefab911785d5e1aa5889f6eeb462e0954
+>> Author: Larry Finger <Larry.Finger@lwfinger.net>
+>> Date:   Mon Sep 22 09:39:19 2014 -0500
+>>
+>>       rtlwifi: rtl_pci: Start modification for new drivers
+>
+> Did you confirm that bisection result, ie revert it at HEAD of whichever
+> tree you bisected?
+>
+> The revert (master) removed some warnings on the way to kaboom here, but
+> the drivers is still toxic.  My log follows in case it's the same thing.
+> I can't go hunting atm, maybe during the weekend if the problem hasn't
+> evaporate by then.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/channel.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+next-20141023 does not work as well.
 
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index b93f83c..d088f06 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -761,6 +761,13 @@ void ath_offchannel_next(struct ath_softc *sc)
- 
- void ath_roc_complete(struct ath_softc *sc, bool abort)
- {
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+With commit 38506ecefab911785d5e1aa5889f6eeb462e0954 reverted, kernel 
+blows up very early in boot.
+
+Cascardo (CC:) helped me to investigate and it seems that when 
+rtlpriv->cfg->ops->get_btc_status() is called, it is pointing to a NULL 
+function.
+
+With the changes below, written by Cascardo, I could get rid of 
+oops/panic and system booted normally.  But there was no wifi network 
+available (like if wifi card was disabled).
+
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/sw.c 
+b/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
+index 1bff2a0..807f0f7 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
+@@ -253,6 +253,11 @@ static void rtl92s_deinit_sw_vars(struct 
+ieee80211_hw *hw)
+         }
+  }
+
++static bool rtl92s_get_btc_status(void)
++{
++       return false;
++}
 +
-+	if (abort)
-+		ath_dbg(common, CHAN_CTX, "RoC aborted\n");
-+	else
-+		ath_dbg(common, CHAN_CTX, "RoC expired\n");
-+
- 	sc->offchannel.roc_vif = NULL;
- 	sc->offchannel.roc_chan = NULL;
- 	if (!abort)
+  static struct rtl_hal_ops rtl8192se_hal_ops = {
+         .init_sw_vars = rtl92s_init_sw_vars,
+         .deinit_sw_vars = rtl92s_deinit_sw_vars,
+@@ -294,6 +299,7 @@ static struct rtl_hal_ops rtl8192se_hal_ops = {
+         .set_bbreg = rtl92s_phy_set_bb_reg,
+         .get_rfreg = rtl92s_phy_query_rf_reg,
+         .set_rfreg = rtl92s_phy_set_rf_reg,
++       .get_btc_status = rtl92s_get_btc_status,
+  };
+
+  static struct rtl_mod_params rtl92se_mod_params = {
+
 -- 
-2.1.1
-
+Murilo
