@@ -1,85 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:46417 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751161AbaJIIMH (ORCPT
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:39144 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752423AbaJWNU3 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2014 04:12:07 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH 2/5] ath9k: Use configurable timeout for flush
-Date: Thu,  9 Oct 2014 13:42:49 +0530
-Message-Id: <1412842372-17628-3-git-send-email-sujith@msujith.org> (sfid-20141009_101217_051119_883CD7E7)
-In-Reply-To: <1412842372-17628-1-git-send-email-sujith@msujith.org>
-References: <1412842372-17628-1-git-send-email-sujith@msujith.org>
+	Thu, 23 Oct 2014 09:20:29 -0400
+Received: by mail-wi0-f177.google.com with SMTP id ex7so1782445wid.16
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Oct 2014 06:20:28 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1413807758-30249-1-git-send-email-michal.kazior@tieto.com>
+References: <1413807758-30249-1-git-send-email-michal.kazior@tieto.com>
+Date: Thu, 23 Oct 2014 15:20:28 +0200
+Message-ID: <CA+BoTQkrUQ6T60qztMuBbjy=vU-4Cho+yBXS051W=fNRTgNeig@mail.gmail.com> (sfid-20141023_152040_165032_3423039C)
+Subject: Re: [PATCH v2 0/3] ath10k: speed up recovery
+From: Michal Kazior <michal.kazior@tieto.com>
+To: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On 20 October 2014 14:22, Michal Kazior <michal.kazior@tieto.com> wrote:
+> Patch #1 fixes a bug I've found while testing
+> patches #2 and #3. It's safe to cherry-pick it in
+> case patches #2 and/or #3 aren't accepted or need
+> a re-spin.
+>
+> I've mainly used patch #2 to test reset and
+> recovery. It's pretty handy for (stress-)testing.
+>
+> Patch #3 should improve recovery speed in some
+> cases. Notably when there's a long chain of WMI
+> commands involved which take a painfully long time
+> to timeout/complete if firmware crashes mid-way.
+>
+> Note: Patches #2 and #3 depend on `ath10k: pci
+> related fixes 2014-10-09`. Without the patchset
+> patches #2 and #3 must not be applied. Patch #1 is
+> fine though.
 
-The timeout value for flushing the TX queues
-is hardcoded at 200ms right now. Use a channel
-context-specific value instead to allow adjustments
-to the timeout in case MCC is enabled.
+Do not apply this patchset yet, please. I need to do a minor fix in
+the 'ath10k: fix possible bmi crash' regarding warm reset patch from
+the other patchset.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h   | 1 +
- drivers/net/wireless/ath/ath9k/channel.c | 1 +
- drivers/net/wireless/ath/ath9k/main.c    | 9 ++++++++-
- 3 files changed, 10 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index bc90fab..43c1987 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -345,6 +345,7 @@ struct ath_chanctx {
- 	u64 tsf_val;
- 	u32 last_beacon;
- 
-+	int flush_timeout;
- 	u16 txpower;
- 	bool offchannel;
- 	bool stopped;
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index 74a5c27..5045b10 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -117,6 +117,7 @@ void ath_chanctx_init(struct ath_softc *sc)
- 		cfg80211_chandef_create(&ctx->chandef, chan, NL80211_CHAN_HT20);
- 		INIT_LIST_HEAD(&ctx->vifs);
- 		ctx->txpower = ATH_TXPOWER_MAX;
-+		ctx->flush_timeout = HZ / 5; /* 200ms */
- 		for (j = 0; j < ARRAY_SIZE(ctx->acq); j++)
- 			INIT_LIST_HEAD(&ctx->acq[j]);
- 	}
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 5d54f39..81a20de 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -2034,7 +2034,7 @@ void __ath9k_flush(struct ieee80211_hw *hw, u32 queues, bool drop)
- 	struct ath_softc *sc = hw->priv;
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
--	int timeout = HZ / 5; /* 200 ms */
-+	int timeout;
- 	bool drain_txq;
- 
- 	cancel_delayed_work_sync(&sc->tx_complete_work);
-@@ -2049,6 +2049,13 @@ void __ath9k_flush(struct ieee80211_hw *hw, u32 queues, bool drop)
- 		return;
- 	}
- 
-+	spin_lock_bh(&sc->chan_lock);
-+	timeout = sc->cur_chan->flush_timeout;
-+	spin_unlock_bh(&sc->chan_lock);
-+
-+	ath_dbg(common, CHAN_CTX,
-+		"Flush timeout: %d\n", jiffies_to_msecs(timeout));
-+
- 	if (wait_event_timeout(sc->tx_wait, !ath9k_has_tx_pending(sc),
- 			       timeout) > 0)
- 		drop = false;
--- 
-2.1.2
-
+Michał
