@@ -1,47 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:44394 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753290AbaJTKzx (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:23669 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751010AbaJWNcG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2014 06:55:53 -0400
-From: Sujith Manoharan <sujith@msujith.org>
+	Thu, 23 Oct 2014 09:32:06 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Felix Fietkau <nbd@openwrt.org>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: Re: [PATCH] ath10k: add SURVEY_INFO_IN_USE for current channel on survey
+References: <1413996362-44397-1-git-send-email-nbd@openwrt.org>
+	<87k33rqmwq.fsf@kamboji.qca.qualcomm.com>
+	<5448DF0B.2090906@openwrt.org>
+Date: Thu, 23 Oct 2014 16:31:59 +0300
+In-Reply-To: <5448DF0B.2090906@openwrt.org> (Felix Fietkau's message of "Thu,
+	23 Oct 2014 12:57:15 +0200")
+Message-ID: <87siieq5dc.fsf@kamboji.qca.qualcomm.com> (sfid-20141023_153210_398983_4C5BE28C)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21572.60015.349942.74265@gargle.gargle.HOWL> (sfid-20141020_125556_301580_4F89AFA9)
-Date: Mon, 20 Oct 2014 16:26:47 +0530
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] cfg80211: Warn once for delayed scan completion
-In-Reply-To: <1413801423.10246.16.camel@jlt4.sipsolutions.net>
-References: <1413385042-17903-1-git-send-email-sujith@msujith.org>
-	<CANUX_P02O-JSQkVvBCg6L9jf8wPyzPv8O_qsZa+prTJJx+20UA@mail.gmail.com>
-	<21568.29077.518022.812356@gargle.gargle.HOWL>
-	<1413797588.10246.3.camel@jlt4.sipsolutions.net>
-	<21572.55536.308167.684155@gargle.gargle.HOWL>
-	<1413798712.10246.14.camel@jlt4.sipsolutions.net>
-	<21572.58249.490532.207564@gargle.gargle.HOWL>
-	<1413801423.10246.16.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> I'm not sure that's true - the WARN_ON you're modifying keys off
-> something that happens in cfg80211_scan_done(), not
-> __cfg80211_scan_done(), so as long as the driver called
-> cfg80211_scan_done() properly things should be OK?
+Felix Fietkau <nbd@openwrt.org> writes:
 
-Here is a trace log showing the issue - cfg80211_scan_done()
-is called after NETDEV_DOWN is received in cfg80211_netdev_notifier_call().
+> On 2014-10-23 09:13, Kalle Valo wrote:
+>> Felix Fietkau <nbd@openwrt.org> writes:
+>> 
+>>> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+>>> ---
+>>>  drivers/net/wireless/ath/ath10k/mac.c | 3 +++
+>>>  1 file changed, 3 insertions(+)
+>>>
+>>> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+>>> index 4670930..bc440dc 100644
+>>> --- a/drivers/net/wireless/ath/ath10k/mac.c
+>>> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+>>> @@ -3975,6 +3975,9 @@ static int ath10k_get_survey(struct ieee80211_hw *hw, int idx,
+>>>  
+>>>  	survey->channel = &sband->channels[idx];
+>>>  
+>>> +	if (ar->rx_channel == survey->channel)
+>>> +		survey->filled |= SURVEY_INFO_IN_USE;
+>>> +
+>> 
+>> Why? Does this fix a visible bug? What changes from user space point of
+>> view? I'm asking because I want to add something to the commit log.
+>
+> When user space requests survey info, it is useful to know which of the
+> survey data refers to the channel that is currently actively being used.
+> One of the use cases is getting the current channel noise for status output.
+> Without this flag you would have to look up the channel separately and
+> then compare it against the frequency in the survey output in user space.
 
-http://pastebin.com/raw.php?i=AJqFLtZR
+Perfect, thanks. I added this to the commit log in ath-next-test:
 
-I've removed entries to show the issue clearly, if
-you need the full trace, please let me know.
+commit f7528c6fca1b2ee1899069f1066012f47586a0c8
+Author: Felix Fietkau <nbd@openwrt.org>
+Date:   Wed Oct 22 18:46:02 2014 +0200
 
-> How are you implementing cancel_hw_scan()? You need to call
-> ieee80211_scan_completed() by the time the function returns.
+    ath10k: add SURVEY_INFO_IN_USE for current channel on survey
+    
+    When user space requests survey info, it is useful to know which of the survey
+    data refers to the channel that is currently actively being used.  One of the
+    use cases is getting the current channel noise for status output.  Without this
+    flag you would have to look up the channel separately and then compare it
+    against the frequency in the survey output in user space.
+    
+    Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+    Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-Yes, that's what we do in ath9k.
-
-Sujith
+-- 
+Kalle Valo
