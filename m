@@ -1,100 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f175.google.com ([209.85.220.175]:46414 "EHLO
-	mail-vc0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750932AbaJVNg0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2014 09:36:26 -0400
-Received: by mail-vc0-f175.google.com with SMTP id id10so1945208vcb.34
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Oct 2014 06:36:25 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAAfyv34ivLF-B0ip+uhCah0PsiRsP1QOD0qW8F73n7KERqgM2w@mail.gmail.com>
-References: <CAAfyv35k1mgQh6FcWaaMciAo8Vkp055k=5xF7zu+yrHmrQbbLA@mail.gmail.com>
-	<5FF020A1CFFEEC49BD1E09530C4FF5951819DB12F1@SC-VEXCH1.marvell.com>
-	<CAAfyv35j-77AURB4fHcecbEvyGS6U+1APNRFCf3FDAd_rrWnJw@mail.gmail.com>
-	<5FF020A1CFFEEC49BD1E09530C4FF5951821351855@SC-VEXCH1.marvell.com>
-	<CAAfyv35E2HUReFpnpdsebPETKk9VPA_hfQHUEJmoJfQt6Q-Puw@mail.gmail.com>
-	<5FF020A1CFFEEC49BD1E09530C4FF5951821936285@SC-VEXCH1.marvell.com>
-	<CAAfyv34UXMNwHf+kYCWEn+bcfGda_gA7uroLRLvhTEGGC5R57w@mail.gmail.com>
-	<5FF020A1CFFEEC49BD1E09530C4FF5951821936BBC@SC-VEXCH1.marvell.com>
-	<CAAfyv36s+stSKU7Oi372EjsvUi+S6PSbg1wVTD1dJrMrerBPXg@mail.gmail.com>
-	<5FF020A1CFFEEC49BD1E09530C4FF5951821936F03@SC-VEXCH1.marvell.com>
-	<CAAfyv34ivLF-B0ip+uhCah0PsiRsP1QOD0qW8F73n7KERqgM2w@mail.gmail.com>
-Date: Wed, 22 Oct 2014 15:36:25 +0200
-Message-ID: <CAAfyv37uyPwED3tzX_4RjeTuf8LXqtL3zH4f-cNOLuRB+w=z6Q@mail.gmail.com> (sfid-20141022_153629_607561_1756F0CF)
-Subject: Re: mwifiex_usb_submit_rx_urb: dev_alloc_skb failed when conected to 5GHz
-From: Belisko Marek <marek.belisko@gmail.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Avinash Patil <patila@marvell.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:56841 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754841AbaJWRTN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Oct 2014 13:19:13 -0400
+Message-ID: <1414084745.1926.8.camel@jlt4.sipsolutions.net> (sfid-20141023_191916_796252_D1337B65)
+Subject: Re: mac80211-hwsim question
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 23 Oct 2014 19:19:05 +0200
+In-Reply-To: <54493276.4030007@candelatech.com> (sfid-20141023_185314_774672_09890850)
+References: <54493276.4030007@candelatech.com>
+	 (sfid-20141023_185314_774672_09890850)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Below reply I post by accident in html which was rejected by ML.
-Re-posting again. Sorry about that.
+On Thu, 2014-10-23 at 09:53 -0700, Ben Greear wrote:
+> From what I can tell, when hwsim sends frames to wmediumd using netlink sockets,
+> it does not include any channel/frequency information in the netlink packet.
+> 
+> Any reason not to add that?
 
-On Tue, Oct 14, 2014 at 10:25 AM, Belisko Marek <marek.belisko@gmail.com> wrote:
-> Hi Amitkumar,
->
-> On Tue, Oct 14, 2014 at 9:08 AM, Amitkumar Karwar <akarwar@marvell.com> wrote:
->> Hi Marek,
->>
->>>I tried both (slightly modified as we're in 3.9 kernel) but issue is
->>>still reproducible. My patch against 3.9 sources:
->>
->> Thanks a lot for the tests.
->>
->>>One thing which is not yet still clear to me why kernel console is
->>>completely unresponsive when receiving packets in high rates. When use
->>>iperf (on client) with -b40m it is OK but when increase to -b100m then
->>>console is completely unresponsive until iperf finish.
->>
->> Does the system recover when "-b100M" iperf is finished? Can we run iperf with "-b40M" later?
->> Do you see "dev_alloc_skb failed" messages in dmesg when console is unresponsive?
-> When we get "dev_alloc_skb failed" then interface is dead (cannot ping
-> ...) so no recovery is possible only system reboot.
-> I don't see  dev_alloc_skb failed when console is unresponsive.
->>
->>>Any other ideas
->>>what to change to check? Thanks.
->>
->> Could you please share dmesg log with dynamic debug enabled (using attached script) captured when the problem occurs?
-> I tried to capture logs but when enable DYNAMIC_DEBUG I cannot
-> reproduce issue (running test > 30 minutes without allocation
-> failure).
-Any update on this? Should I provide some other logs?
->>
->> Best regards,
->> Amit
->
-> BR,
->
-> marek
->
-> --
-> as simple and primitive as possible
-> -------------------------------------------------
-> Marek Belisko - OPEN-NANDRA
-> Freelance Developer
->
-> Ruska Nova Ves 219 | Presov, 08005 Slovak Republic
-> Tel: +421 915 052 184
-> skype: marekwhite
-> twitter: #opennandra
-> web: http://open-nandra.com
+I guess it wasn't needed, and when you "RX" a frame from netlink it uses
+the current channel that the radio is tuned to.
 
-Thanks,
+That, however, will actually fail with the multi-channel option, so more
+work is clearly needed for that.
 
-marek
+johannes
 
--- 
-as simple and primitive as possible
--------------------------------------------------
-Marek Belisko - OPEN-NANDRA
-Freelance Developer
-
-Ruska Nova Ves 219 | Presov, 08005 Slovak Republic
-Tel: +421 915 052 184
-skype: marekwhite
-twitter: #opennandra
-web: http://open-nandra.com
