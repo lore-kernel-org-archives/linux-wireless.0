@@ -1,59 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:36458 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751745AbaJGEn4 (ORCPT
+Received: from mail-qc0-f178.google.com ([209.85.216.178]:34790 "EHLO
+	mail-qc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932381AbaJWDTE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Oct 2014 00:43:56 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH v2 6/6] ath9k: Process beacons properly
-Date: Tue,  7 Oct 2014 10:14:41 +0530
-Message-Id: <1412657081-3202-7-git-send-email-sujith@msujith.org> (sfid-20141007_064401_031966_33D90653)
-In-Reply-To: <1412657081-3202-1-git-send-email-sujith@msujith.org>
-References: <1412657081-3202-1-git-send-email-sujith@msujith.org>
+	Wed, 22 Oct 2014 23:19:04 -0400
+Message-ID: <54487346.4080604@gmail.com> (sfid-20141023_051909_305352_5AE1619B)
+Date: Thu, 23 Oct 2014 01:17:26 -0200
+From: Murilo Opsfelder Araujo <mopsfelder@gmail.com>
+MIME-Version: 1.0
+To: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+CC: Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Possible wireless issue introduced in next-20140930
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Hello, everyone.
 
-When the current operating channel context has
-been marked as ATH_CHANCTX_STATE_FORCE_ACTIVE,
-do not process beacons that might be received,
-since we have to wait for the station to become
-authorized.
+With next-20140930 my laptop does not work, i.e. after I enter my login 
+and password in KDM, the entire system becomes unresponsive and I need 
+to reset it in order to reboot (it does not even show the KDE splash 
+screen).
 
-Also, since the cached TSF value will be zero
-initially do not rearm the timer in this
-case when a beacon is received, since it results
-in spurious values.
+It was working pretty fine with next-20140926.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/channel.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+I've also tested with next-20141022 and v3.18-rc1 and no luck.
 
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index 16bed6a..135f74c 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -495,10 +495,15 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
- 		    sc->cur_chan == &sc->offchannel.chan)
- 			break;
- 
--		ath_chanctx_adjust_tbtt_delta(sc);
- 		sc->sched.beacon_pending = false;
- 		sc->sched.beacon_miss = 0;
- 
-+		if (sc->sched.state == ATH_CHANCTX_STATE_FORCE_ACTIVE ||
-+		    !sc->cur_chan->tsf_val)
-+			break;
-+
-+		ath_chanctx_adjust_tbtt_delta(sc);
-+
- 		/* TSF time might have been updated by the incoming beacon,
- 		 * need update the channel switch timer to reflect the change.
- 		 */
+git bisect pointed me to the commit below [1].  My wireless card is a 
+RTL8191SEvA [2].
+
+I need your help to troubleshoot this.
+
+Thanks in advance.
+
+[1]
+commit 38506ecefab911785d5e1aa5889f6eeb462e0954
+Author: Larry Finger <Larry.Finger@lwfinger.net>
+Date:   Mon Sep 22 09:39:19 2014 -0500
+
+     rtlwifi: rtl_pci: Start modification for new drivers
+
+     Future patches will move the drivers for RTL8192EE and RTL8821AE
+     from staging to the regular wireless tree. Here, the necessary features
+     are added to the PCI driver. Other files are touched due to changes
+     in the various data structs.
+
+     Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+     Signed-off-by: John W. Linville <linville@tuxdriver.com>
+
+[2]
+$ lspci -vvv
+02:00.0 Network controller: Realtek Semiconductor Co., Ltd. RTL8191SEvA 
+Wireless LAN Controller (rev 10)
+         Subsystem: Hewlett-Packard Company Device 1467
+         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- 
+ParErr- Stepping- SERR- FastB2B- DisINTx-
+         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- 
+<TAbort- <MAbort- >SERR- <PERR- INTx-
+         Latency: 0, Cache Line Size: 64 bytes
+         Interrupt: pin A routed to IRQ 16
+         Region 0: I/O ports at 3000 [size=256]
+         Region 1: Memory at d3400000 (32-bit, non-prefetchable) [size=16K]
+         Capabilities: <access denied>
+         Kernel driver in use: rtl8192se
+
 -- 
-2.1.2
-
+Murilo
