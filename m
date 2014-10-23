@@ -1,164 +1,268 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f175.google.com ([209.85.217.175]:55187 "EHLO
-	mail-lb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750979AbaJ1XTK (ORCPT
+Received: from mail-lb0-f176.google.com ([209.85.217.176]:35807 "EHLO
+	mail-lb0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750939AbaJWFXj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2014 19:19:10 -0400
-Received: by mail-lb0-f175.google.com with SMTP id b6so1510777lbj.6
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Oct 2014 16:19:08 -0700 (PDT)
-From: Sergey Ryazanov <ryazanov.s.a@gmail.com>
-To: Ralf Baechle <ralf@linux-mips.org>
-Cc: Linux MIPS <linux-mips@linux-mips.org>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
-Subject: [PATCH v3 12/13] ath5k: update dependencies
-Date: Wed, 29 Oct 2014 03:18:49 +0400
-Message-Id: <1414538330-5548-13-git-send-email-ryazanov.s.a@gmail.com> (sfid-20141029_001915_218311_9B4FB9E0)
-In-Reply-To: <1414538330-5548-1-git-send-email-ryazanov.s.a@gmail.com>
-References: <1414538330-5548-1-git-send-email-ryazanov.s.a@gmail.com>
+	Thu, 23 Oct 2014 01:23:39 -0400
+Message-ID: <1414041815.5228.37.camel@marge.simpson.net> (sfid-20141023_072359_532126_2AC35280)
+Subject: Re: Possible wireless issue introduced in next-20140930
+From: Mike Galbraith <umgwanakikbuti@gmail.com>
+To: Murilo Opsfelder Araujo <mopsfelder@gmail.com>
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Date: Thu, 23 Oct 2014 07:23:35 +0200
+In-Reply-To: <54487346.4080604@gmail.com>
+References: <54487346.4080604@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-- Use config symbol defined in the driver instead of arch specific one for
-  conditional compilation.
-- Rename the ATHEROS_AR231X config symbol to ATH25.
-- Fix include (ar231x_platform.h -> ath25_platform.h).
-- Some of AR231x SoCs (e.g. AR2315) have PCI bus support, so remove !PCI
-  dependency, which block AHB support build.
+On Thu, 2014-10-23 at 01:17 -0200, Murilo Opsfelder Araujo wrote: 
+> Hello, everyone.
+> 
+> With next-20140930 my laptop does not work, i.e. after I enter my login 
+> and password in KDM, the entire system becomes unresponsive and I need 
+> to reset it in order to reboot (it does not even show the KDE splash 
+> screen).
+> 
+> It was working pretty fine with next-20140926.
+> 
+> I've also tested with next-20141022 and v3.18-rc1 and no luck.
+> 
+> git bisect pointed me to the commit below [1].  My wireless card is a 
+> RTL8191SEvA [2].
 
-Signed-off-by: Sergey Ryazanov <ryazanov.s.a@gmail.com>
-Acked-by: John W. Linville <linville@tuxdriver.com>
-Cc: Jiri Slaby <jirislaby@gmail.com>
-Cc: Nick Kossifidis <mickflemm@gmail.com>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: ath5k-devel@lists.ath5k.org
----
+Mine is RTL8191SEvB.
 
-Changes since RFC:
-  - merge together patches that update ath5k dependencies
+I was going to bisect RTL8191SE regression when I got a chance, but you
+beat me to it.
 
-Changes since v1:
-  - rename config symbol AR231X -> ATH25
-  - rename arch header ar231x_platform.h -> ath25_platform.h
+> commit 38506ecefab911785d5e1aa5889f6eeb462e0954
+> Author: Larry Finger <Larry.Finger@lwfinger.net>
+> Date:   Mon Sep 22 09:39:19 2014 -0500
+> 
+>      rtlwifi: rtl_pci: Start modification for new drivers
 
- drivers/net/wireless/ath/ath5k/Kconfig | 10 +++++-----
- drivers/net/wireless/ath/ath5k/ahb.c   |  2 +-
- drivers/net/wireless/ath/ath5k/ath5k.h |  2 +-
- drivers/net/wireless/ath/ath5k/base.c  |  4 ++--
- drivers/net/wireless/ath/ath5k/led.c   |  4 ++--
- 5 files changed, 11 insertions(+), 11 deletions(-)
+Did you confirm that bisection result, ie revert it at HEAD of whichever
+tree you bisected?
 
-diff --git a/drivers/net/wireless/ath/ath5k/Kconfig b/drivers/net/wireless/ath/ath5k/Kconfig
-index c9f81a3..2399a39 100644
---- a/drivers/net/wireless/ath/ath5k/Kconfig
-+++ b/drivers/net/wireless/ath/ath5k/Kconfig
-@@ -1,13 +1,13 @@
- config ATH5K
- 	tristate "Atheros 5xxx wireless cards support"
--	depends on (PCI || ATHEROS_AR231X) && MAC80211
-+	depends on (PCI || ATH25) && MAC80211
- 	select ATH_COMMON
- 	select MAC80211_LEDS
- 	select LEDS_CLASS
- 	select NEW_LEDS
- 	select AVERAGE
--	select ATH5K_AHB if (ATHEROS_AR231X && !PCI)
--	select ATH5K_PCI if (!ATHEROS_AR231X && PCI)
-+	select ATH5K_AHB if ATH25
-+	select ATH5K_PCI if !ATH25
- 	---help---
- 	  This module adds support for wireless adapters based on
- 	  Atheros 5xxx chipset.
-@@ -54,14 +54,14 @@ config ATH5K_TRACER
- 
- config ATH5K_AHB
- 	bool "Atheros 5xxx AHB bus support"
--	depends on (ATHEROS_AR231X && !PCI)
-+	depends on ATH25
- 	---help---
- 	  This adds support for WiSoC type chipsets of the 5xxx Atheros
- 	  family.
- 
- config ATH5K_PCI
- 	bool "Atheros 5xxx PCI bus support"
--	depends on (!ATHEROS_AR231X && PCI)
-+	depends on (!ATH25 && PCI)
- 	---help---
- 	  This adds support for PCI type chipsets of the 5xxx Atheros
- 	  family.
-diff --git a/drivers/net/wireless/ath/ath5k/ahb.c b/drivers/net/wireless/ath/ath5k/ahb.c
-index 79bffe1..8f387cf 100644
---- a/drivers/net/wireless/ath/ath5k/ahb.c
-+++ b/drivers/net/wireless/ath/ath5k/ahb.c
-@@ -20,7 +20,7 @@
- #include <linux/platform_device.h>
- #include <linux/etherdevice.h>
- #include <linux/export.h>
--#include <ar231x_platform.h>
-+#include <ath25_platform.h>
- #include "ath5k.h"
- #include "debug.h"
- #include "base.h"
-diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
-index 85316bb..1ed7a88 100644
---- a/drivers/net/wireless/ath/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath/ath5k/ath5k.h
-@@ -1647,7 +1647,7 @@ static inline struct ath_regulatory *ath5k_hw_regulatory(struct ath5k_hw *ah)
- 	return &(ath5k_hw_common(ah)->regulatory);
- }
- 
--#ifdef CONFIG_ATHEROS_AR231X
-+#ifdef CONFIG_ATH5K_AHB
- #define AR5K_AR2315_PCI_BASE	((void __iomem *)0xb0100000)
- 
- static inline void __iomem *ath5k_ahb_reg(struct ath5k_hw *ah, u16 reg)
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 59a8724..bc9cb35 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -99,7 +99,7 @@ static int ath5k_reset(struct ath5k_hw *ah, struct ieee80211_channel *chan,
- 
- /* Known SREVs */
- static const struct ath5k_srev_name srev_names[] = {
--#ifdef CONFIG_ATHEROS_AR231X
-+#ifdef CONFIG_ATH5K_AHB
- 	{ "5312",	AR5K_VERSION_MAC,	AR5K_SREV_AR5312_R2 },
- 	{ "5312",	AR5K_VERSION_MAC,	AR5K_SREV_AR5312_R7 },
- 	{ "2313",	AR5K_VERSION_MAC,	AR5K_SREV_AR2313_R8 },
-@@ -142,7 +142,7 @@ static const struct ath5k_srev_name srev_names[] = {
- 	{ "5413",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_5413 },
- 	{ "5424",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_5424 },
- 	{ "5133",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_5133 },
--#ifdef CONFIG_ATHEROS_AR231X
-+#ifdef CONFIG_ATH5K_AHB
- 	{ "2316",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_2316 },
- 	{ "2317",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_2317 },
- #endif
-diff --git a/drivers/net/wireless/ath/ath5k/led.c b/drivers/net/wireless/ath/ath5k/led.c
-index 2062d11..ca4b7cc 100644
---- a/drivers/net/wireless/ath/ath5k/led.c
-+++ b/drivers/net/wireless/ath/ath5k/led.c
-@@ -163,7 +163,7 @@ int ath5k_init_leds(struct ath5k_hw *ah)
- {
- 	int ret = 0;
- 	struct ieee80211_hw *hw = ah->hw;
--#ifndef CONFIG_ATHEROS_AR231X
-+#ifndef CONFIG_ATH5K_AHB
- 	struct pci_dev *pdev = ah->pdev;
- #endif
- 	char name[ATH5K_LED_MAX_NAME_LEN + 1];
-@@ -172,7 +172,7 @@ int ath5k_init_leds(struct ath5k_hw *ah)
- 	if (!ah->pdev)
- 		return 0;
- 
--#ifdef CONFIG_ATHEROS_AR231X
-+#ifdef CONFIG_ATH5K_AHB
- 	match = NULL;
- #else
- 	match = pci_match_id(&ath5k_led_devices[0], pdev);
--- 
-1.8.5.5
+The revert (master) removed some warnings on the way to kaboom here, but
+the drivers is still toxic.  My log follows in case it's the same thing.
+I can't go hunting atm, maybe during the weekend if the problem hasn't
+evaporate by then.
+
+Master:
+[   28.028817] cfg80211: Calling CRDA to update world regulatory domain
+[   28.102230] cfg80211: World regulatory domain updated:
+[   28.103799] cfg80211:  DFS Master region: unset
+[   28.103838] cfg80211:   (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp), (dfs_cac_time)
+[   28.107012] cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm), (N/A)
+[   28.108663] cfg80211:   (2457000 KHz - 2482000 KHz @ 40000 KHz), (300 mBi, 2000 mBm), (N/A)
+[   28.110251] cfg80211:   (2474000 KHz - 2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm), (N/A)
+[   28.111837] cfg80211:   (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 2000 mBm), (N/A)
+[   28.113422] cfg80211:   (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm), (N/A)
+[   29.577727] rtl8192se 0000:08:00.0: enabling device (0000 -> 0003)
+[   29.618681] rtl8192se: FW Power Save off (module option)
+[   29.620355] rtl8192se: Driver for Realtek RTL8192SE/RTL8191SE
+[   29.620355] Loading firmware rtlwifi/rtl8192sefw.bin
+[   29.648444] ------------[ cut here ]------------
+[   29.650012] WARNING: CPU: 1 PID: 59 at fs/sysfs/dir.c:31 sysfs_warn_dup+0x68/0x80()
+[   29.651602] sysfs: cannot create duplicate filename '/devices/pci0000:00/0000:00:1c.5/0000:08:00.0/ieee80211/phy0'
+[   29.653278] Modules linked in: rtl8192se(+) rtl_pci rtlwifi mac80211 cfg80211 btusb bluetooth coretemp iTCO_wdt iTCO_vendor_support serio_raw microcode toshiba_acpi sparse_keymap snd_hda_codec_hdmi snd_hda_codec_conexant rfkill snd_hda_codec_generic pcspkr uvcvideo videobuf2_core v4l2_common videodev videobuf2_vmalloc videobuf2_memops joydev i2c_i801 wmi lpc_ich mfd_core acpi_cpufreq toshiba_haps snd_hda_intel snd_hda_controller snd_hda_codec snd_hwdep toshiba_bluetooth snd_pcm snd_seq snd_timer snd_seq_device snd battery ac soundcore sg autofs4 i915 drm_kms_helper drm i2c_algo_bit thermal video processor thermal_sys button scsi_dh_rdac scsi_dh_alua scsi_dh_emc scsi_dh_hp_sw scsi_dh netconsole atl1c
+[   29.655223] CPU: 1 PID: 59 Comm: kworker/1:4 Not tainted 3.18.0-master #48
+[   29.655225] Hardware name: TOSHIBA ��������������������������������/��������������������������������, BIOS V1.70    09/29/2009
+[   29.655231] Workqueue: events request_firmware_work_func
+[   29.655235]  0000000000000009 ffff8800379bba98 ffffffff8158f1d4 000000000000c5c5
+[   29.655238]  ffff8800379bbae8 ffff8800379bbad8 ffffffff8104c801 0000000000003664
+[   29.655241]  ffff880037b0c000 ffff880136392dc0 ffff8800371feeb0 ffff88013b027098
+[   29.655242] Call Trace:
+[   29.655248]  [<ffffffff8158f1d4>] dump_stack+0x46/0x58
+[   29.655253]  [<ffffffff8104c801>] warn_slowpath_common+0x81/0xa0
+[   29.655256]  [<ffffffff8104c866>] warn_slowpath_fmt+0x46/0x50
+[   29.655261]  [<ffffffff811d1108>] ? kernfs_path+0x48/0x60
+[   29.655263]  [<ffffffff811d4588>] sysfs_warn_dup+0x68/0x80
+[   29.655266]  [<ffffffff811d462e>] sysfs_create_dir_ns+0x8e/0xa0
+[   29.655270]  [<ffffffff8128e149>] kobject_add_internal+0xc9/0x400
+[   29.655273]  [<ffffffff8128e8b0>] kobject_add+0x60/0xb0
+[   29.655276]  [<ffffffff81593b16>] ? mutex_lock+0x16/0x37
+[   29.655281]  [<ffffffff81388624>] device_add+0x104/0x600
+[   29.655285]  [<ffffffff8114c3ce>] ? lazy_max_pages+0x1e/0x30
+[   29.655312]  [<ffffffffa0401d0d>] wiphy_register+0x3fd/0x710 [cfg80211]
+[   29.655315]  [<ffffffff8114dd92>] ? __vunmap+0xc2/0x110
+[   29.655346]  [<ffffffffa04a5cfc>] ? ieee80211_register_hw+0x1ec/0x9a0 [mac80211]
+[   29.655361]  [<ffffffffa04a5e78>] ieee80211_register_hw+0x368/0x9a0 [mac80211]
+[   29.655369]  [<ffffffffa049126b>] rtl92se_fw_cb+0xab/0x1d0 [rtl8192se]
+[   29.655373]  [<ffffffff8139b650>] request_firmware_work_func+0x30/0x60
+[   29.655378]  [<ffffffff810627ed>] process_one_work+0x14d/0x3d0
+[   29.655381]  [<ffffffff81062b91>] worker_thread+0x121/0x480
+[   29.655384]  [<ffffffff81062a70>] ? process_one_work+0x3d0/0x3d0
+[   29.655387]  [<ffffffff810672c9>] kthread+0xc9/0xe0
+[   29.655390]  [<ffffffff81067200>] ? __kthread_parkme+0x80/0x80
+[   29.655394]  [<ffffffff81595b6c>] ret_from_fork+0x7c/0xb0
+[   29.655397]  [<ffffffff81067200>] ? __kthread_parkme+0x80/0x80
+[   29.655399] ---[ end trace 3935ea42665e29bc ]---
+[   29.655401] ------------[ cut here ]------------
+[   29.655404] WARNING: CPU: 1 PID: 59 at lib/kobject.c:240 kobject_add_internal+0x294/0x400()
+[   29.655406] kobject_add_internal failed for phy0 with -EEXIST, don't try to register things with the same name in the same directory.
+[   29.655442] Modules linked in: rtl8192se(+) rtl_pci rtlwifi mac80211 cfg80211 btusb bluetooth coretemp iTCO_wdt iTCO_vendor_support serio_raw microcode toshiba_acpi sparse_keymap snd_hda_codec_hdmi snd_hda_codec_conexant rfkill snd_hda_codec_generic pcspkr uvcvideo videobuf2_core v4l2_common videodev videobuf2_vmalloc videobuf2_memops joydev i2c_i801 wmi lpc_ich mfd_core acpi_cpufreq toshiba_haps snd_hda_intel snd_hda_controller snd_hda_codec snd_hwdep toshiba_bluetooth snd_pcm snd_seq snd_timer snd_seq_device snd battery ac soundcore sg autofs4 i915 drm_kms_helper drm i2c_algo_bit thermal video processor thermal_sys button scsi_dh_rdac scsi_dh_alua scsi_dh_emc scsi_dh_hp_sw scsi_dh netconsole atl1c
+[   29.655444] CPU: 1 PID: 59 Comm: kworker/1:4 Tainted: G        W      3.18.0-master #48
+[   29.655446] Hardware name: TOSHIBA ��������������������������������/��������������������������������, BIOS V1.70    09/29/2009
+[   29.655449] Workqueue: events request_firmware_work_func
+[   29.655452]  0000000000000009 ffff8800379bbaf8 ffffffff8158f1d4 0000000000004e4e
+[   29.655455]  ffff8800379bbb48 ffff8800379bbb38 ffffffff8104c801 ffff8800379bbb38
+[   29.655458]  ffff880036470350 00000000ffffffef ffff8800367d72c0 ffff88013b027098
+[   29.655459] Call Trace:
+[   29.655462]  [<ffffffff8158f1d4>] dump_stack+0x46/0x58
+[   29.655465]  [<ffffffff8104c801>] warn_slowpath_common+0x81/0xa0
+[   29.655468]  [<ffffffff8104c866>] warn_slowpath_fmt+0x46/0x50
+[   29.655471]  [<ffffffff8128e314>] kobject_add_internal+0x294/0x400
+[   29.655474]  [<ffffffff8128e8b0>] kobject_add+0x60/0xb0
+[   29.655477]  [<ffffffff81593b16>] ? mutex_lock+0x16/0x37
+[   29.655480]  [<ffffffff81388624>] device_add+0x104/0x600
+[   29.655483]  [<ffffffff8114c3ce>] ? lazy_max_pages+0x1e/0x30
+[   29.655496]  [<ffffffffa0401d0d>] wiphy_register+0x3fd/0x710 [cfg80211]
+[   29.655498]  [<ffffffff8114dd92>] ? __vunmap+0xc2/0x110
+[   29.655512]  [<ffffffffa04a5cfc>] ? ieee80211_register_hw+0x1ec/0x9a0 [mac80211]
+[   29.655526]  [<ffffffffa04a5e78>] ieee80211_register_hw+0x368/0x9a0 [mac80211]
+[   29.655533]  [<ffffffffa049126b>] rtl92se_fw_cb+0xab/0x1d0 [rtl8192se]
+[   29.655536]  [<ffffffff8139b650>] request_firmware_work_func+0x30/0x60
+[   29.655540]  [<ffffffff810627ed>] process_one_work+0x14d/0x3d0
+[   29.655543]  [<ffffffff81062b91>] worker_thread+0x121/0x480
+[   29.655546]  [<ffffffff81062a70>] ? process_one_work+0x3d0/0x3d0
+[   29.655548]  [<ffffffff810672c9>] kthread+0xc9/0xe0
+[   29.655551]  [<ffffffff81067200>] ? __kthread_parkme+0x80/0x80
+[   29.655555]  [<ffffffff81595b6c>] ret_from_fork+0x7c/0xb0
+[   29.655557]  [<ffffffff81067200>] ? __kthread_parkme+0x80/0x80
+[   29.655559] ---[ end trace 3935ea42665e29bd ]---
+[   29.655563] rtl8192se:rtl92se_fw_cb():<0-0> Can't register mac80211 hw
+[   29.818806] ieee80211 phy0: Selected rate control algorithm 'rtl_rc'
+[   30.265418] rtl8192se:rtl92se_get_desc(): ERR rxdesc :4 not process
+[   30.267617] rtl8192se:rtl92se_get_desc(): ERR rxdesc :4 not process
+[   30.269767] rtl8192se:rtl92se_get_desc(): ERR rxdesc :4 not process
+[   30.271919] rtl8192se:rtl92se_get_desc(): ERR rxdesc :4 not process
+[   30.274034] rtl8192se:rtl92se_get_desc(): ERR rxdesc :4 not process
+[   30.276117] rtl8192se:rtl92se_get_desc(): ERR rxdesc :4 not process
+
+... more
+
+[   30.684030] rtl8192se:rtl92se_get_desc(): ERR rxdesc :4 not process
+[   30.684408] rtl8192se:rtl92se_get_desc(): ERR rxdesc :4 not process
+[   30.684776] rtl8192se:rtl92se_get_desc(): ERR rxdesc :4 not process
+[   30.685139] rtl8192se:rtl92se_get_desc(): ERR rxdesc :4 not process
+[   30.685535] rtl8192se:rtl92se_get_desc(): ERR rxdesc :4 not process
+[   30.685901] rtl8192se:rtl92se_get_desc(): ERR rxdesc :4 not process
+[   30.686290] rtl8192se:rtl92se_get_desc(): ERR rxdesc :4 not process
+[   30.686710] BUG: unable to handle kernel NULL pointer dereference at           (null)
+[   30.687145] IP: [<          (null)>]           (null)
+[   30.687592] PGD 137165067 PUD 135e2e067 PMD 0 
+[   30.688094] Oops: 0010 [#1] SMP 
+[   30.688601] Modules linked in: arc4 rtl8192se rtl_pci rtlwifi mac80211 cfg80211 btusb bluetooth[    0.000000] Initializing cgroup subsys cpuset
+[    0.000000] Initializing cgroup subsys cpu
+[    0.000000] Initializing cgroup subsys cpuacct
+(kdump tried to do its thing, but fscking systemd busted it, so, no oops/crash)
+
+Master with 38506ece reverted, kdump disabled:
+[   19.383131] rtl8192se 0000:08:00.0: enabling device (0000 -> 0003)
+[   19.424672] rtl8192se: FW Power Save off (module option)
+[   19.427269] rtl8192se: Driver for Realtek RTL8192SE/RTL8191SE
+[   19.427269] Loading firmware rtlwifi/rtl8192sefw.bin
+[   19.525633] EXT4-fs (sda1): mounted filesystem with ordered data mode. Opts: acl
+[   19.528188] ieee80211 phy0: Selected rate control algorithm 'rtl_rc'
+[   25.515995] BUG: unable to handle kernel NULL pointer dereference at           (null)
+[   25.516020] IP: [<          (null)>]           (null)
+[   25.516020] PGD 362a6067 PUD 36d39067 PMD 0 
+[   25.516020] Oops: 0010 [#1] SMP 
+[   25.516020] Modules linked in: arc4 rtl8192se rtl_pci rtlwifi uvcvideo coretemp videobuf2_core mac80211 iTCO_wdt iTCO_vendor_support cfg80211 v4l2_common btusb videodev lpc_ich bluetooth mfd_core microcode toshiba_acpi sparse_keymap rfkill videobuf2_vmalloc videobuf2_memops serio_raw i2c_i801 joydev snd_hda_codec_hdmi snd_hda_codec_conexant snd_hda_codec_generic snd_hda_intel snd_hda_controller snd_hda_codec snd_hwdep toshiba_haps wmi snd_pcm toshiba_bluetooth snd_seq snd_timer snd_seq_device snd battery[   25.526648] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+
+[   25.526604]  soundcore ac acpi_cpufreq sg autofs4 i915 drm_kms_helper drm i2c_algo_bit thermal video processor thermal_sys button scsi_dh_rdac scsi_dh_alua scsi_dh_emc scsi_dh_hp_sw scsi_dh netconsole atl1c
+[   25.526604] CPU: 1 PID: 21 Comm: kworker/1:1 Not tainted 3.18.0-master #49
+[   25.526604] Hardware name: TOSHIBA ��������������������������������/��������������������������������, BIOS V1.70    09/29/2009
+[   25.526604] Workqueue: rtl92s_pci rtl_watchdog_wq_callback [rtlwifi]
+[   25.526604] task: ffff88013f2e2550 ti: ffff88013f2e4000 task.ti: ffff88013f2e4000
+[   25.526604] RIP: 0010:[<0000000000000000>]  [<          (null)>]           (null)
+[   25.526604] RSP: 0018:ffff88013f2e7d80  EFLAGS: 00010293
+[   25.526604] RAX: ffffffffa05363c0 RBX: ffff8800364019c0 RCX: 0000000000000000
+[   25.526604] RDX: 0000000000000001 RSI: 000000000000005d RDI: ffff880036400620
+[   25.526604] RBP: ffff88013f2e7df8 R08: ffffffff81658a40 R09: ffffc90022306aa0
+[   25.526604] R10: 000000000000037e R11: 0000000000aaaaaa R12: ffff880036400620
+[   25.526604] R13: 0000000000000000 R14: 0000000000000000 R15: 0000000000000000
+[   25.526604] FS:  0000000000000000(0000) GS:ffff88013fd00000(0000) knlGS:0000000000000000
+[   25.526604] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+[   25.526604] CR2: 0000000000000000 CR3: 00000000365e2000 CR4: 00000000000407e0
+[   25.526604] Stack:
+[   25.526604]  ffffffffa04ff51e ffff880037bdbc00 0000000000000002 ffff880037b8e400
+[   25.526604]  0000000037bdbe10 0000000000000000 0000000000000000 0000000000000000
+[   25.526604]  0000000000000000 ffff88013f2e7e38 ffff880036401be0 ffff88013f239700
+[   25.526604] Call Trace:
+[   25.526604]  [<ffffffffa04ff51e>] ? rtl_watchdog_wq_callback+0xfe/0x420 [rtlwifi]
+[   25.526604]  [<ffffffff810627ed>] process_one_work+0x14d/0x3d0
+[   25.526604]  [<ffffffff81062b91>] worker_thread+0x121/0x480
+[   25.526604]  [<ffffffff81062a70>] ? process_one_work+0x3d0/0x3d0
+[   25.526604]  [<ffffffff810672c9>] kthread+0xc9/0xe0
+[   25.526604]  [<ffffffff81067200>] ? __kthread_parkme+0x80/0x80
+[   25.526604]  [<ffffffff81595b6c>] ret_from_fork+0x7c/0xb0
+[   25.526604]  [<ffffffff81067200>] ? __kthread_parkme+0x80/0x80
+[   25.526604] Code:  Bad RIP value.
+[   25.526604] RIP  [<          (null)>]           (null)
+[   25.526604]  RSP <ffff88013f2e7d80>
+[   25.526604] CR2: 0000000000000000
+[   25.526604] ---[ end trace fc110bb3836ecc51 ]---
+[   25.607061] BUG: unable to handle kernel paging request at ffffffffffffffd8
+[   25.609239] IP: [<ffffffff81067a71>] kthread_data+0x11/0x20
+[   25.609239] PGD 1a16067 PUD 1a18067 PMD 0 
+[   25.609239] Oops: 0000 [#2] SMP 
+[   25.609239] Modules linked in: arc4 rtl8192se rtl_pci rtlwifi uvcvideo coretemp videobuf2_core mac80211 iTCO_wdt iTCO_vendor_support cfg80211 v4l2_common btusb videodev lpc_ich bluetooth mfd_core microcode toshiba_acpi sparse_keymap rfkill videobuf2_vmalloc videobuf2_memops serio_raw i2c_i801 joydev snd_hda_codec_hdmi snd_hda_codec_conexant snd_hda_codec_generic snd_hda_intel snd_hda_controller snd_hda_codec snd_hwdep toshiba_haps wmi snd_pcm toshiba_bluetooth snd_seq snd_timer snd_seq_device snd battery soundcore ac acpi_cpufreq sg autofs4 i915 drm_kms_helper drm i2c_algo_bit thermal video processor thermal_sys button scsi_dh_rdac scsi_dh_alua scsi_dh_emc scsi_dh_hp_sw scsi_dh netconsole atl1c
+[   25.609239] CPU: 1 PID: 21 Comm: kworker/1:1 Tainted: G      D        3.18.0-master #49
+[   25.609239] Hardware name: TOSHIBA ��������������������������������/��������������������������������, BIOS V1.70    09/29/2009
+[   25.609239] task: ffff88013f2e2550 ti: ffff88013f2e4000 task.ti: ffff88013f2e4000
+[   25.609239] RIP: 0010:[<ffffffff81067a71>]  [<ffffffff81067a71>] kthread_data+0x11/0x20
+[   25.609239] RSP: 0018:ffff88013f2e7990  EFLAGS: 00010092
+[   25.609239] RAX: 0000000000000000 RBX: 0000000000000001 RCX: 000000019c731d81
+[   25.609239] RDX: 0000000000000000 RSI: 0000000000000001 RDI: ffff88013f2e2550
+[   25.609239] RBP: ffff88013f2e79a8 R08: ffff88013f1f8990 R09: 00000000000003ac
+[   25.609239] R10: 000000000000bc00 R11: 000000000000b407 R12: ffff88013fd12b00
+[   25.609239] R13: 0000000000000001 R14: 0000000000000000 R15: ffff88013f2e2550
+[   25.609239] FS:  0000000000000000(0000) GS:ffff88013fd00000(0000) knlGS:0000000000000000
+[   25.609239] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+[   25.609239] CR2: 0000000000000028 CR3: 0000000037075000 CR4: 00000000000407e0
+[   25.609239] Stack:
+[   25.609239]  ffffffff81063225 ffff88013f2e79a8 ffff88013f2e2550 ffff88013f2e7a18
+[   25.609239]  ffffffff81591aa9 ffff88013f2e2550 0000000000012b00 ffff88013f2e7fd8
+[   25.609239]  0000000000012b00 ffff88013f2e7a08 ffff88013f2e2550 ffff88013f2e2550
+[   25.609239] Call Trace:
+[   25.609239]  [<ffffffff81063225>] ? wq_worker_sleeping+0x15/0xa0
+[   25.609239]  [<ffffffff81591aa9>] __schedule+0x549/0x810
+[   25.609239]  [<ffffffff81591d99>] schedule+0x29/0x70
+[   25.609239]  [<ffffffff8104dfa2>] do_exit+0x6a2/0x9e0
+[   25.609239]  [<ffffffff8100645e>] oops_end+0x8e/0xd0
+[   25.609239]  [<ffffffff8158a27a>] no_context+0x248/0x298
+[   25.609239]  [<ffffffff8158a337>] __bad_area_nosemaphore+0x6d/0x1c6
+[   25.609239]  [<ffffffff8158a4a3>] bad_area_nosemaphore+0x13/0x15
+[   25.609239]  [<ffffffff8103d67c>] __do_page_fault+0x9c/0x530
+[   25.609239]  [<ffffffff812ef124>] ? soft_cursor+0x1b4/0x250
+[   25.609239]  [<ffffffff8103db1c>] do_page_fault+0xc/0x10
+[   25.609239]  [<ffffffff81597722>] page_fault+0x22/0x30
+[   25.609239]  [<ffffffffa04ff51e>] ? rtl_watchdog_wq_callback+0xfe/0x420 [rtlwifi]
+[   25.609239]  [<ffffffff810627ed>] process_one_work+0x14d/0x3d0
+[   25.609239]  [<ffffffff81062b91>] worker_thread+0x121/0x480
+[   25.609239]  [<ffffffff81062a70>] ? process_one_work+0x3d0/0x3d0
+[   25.609239]  [<ffffffff810672c9>] kthread+0xc9/0xe0
+[   25.609239]  [<ffffffff81067200>] ? __kthread_parkme+0x80/0x80
+[   25.609239]  [<ffffffff81595b6c>] ret_from_fork+0x7c/0xb0
+[   25.609239]  [<ffffffff81067200>] ? __kthread_parkme+0x80/0x80
+[   25.609239] Code: 48 89 e5 5d 48 8b 40 c8 48 c1 e8 02 83 e0 01 c3 66 2e 0f 1f 84 00 00 00 00 00 66 66 66 66 90 48 8b 87 60 04 00 00 55 48 89 e5 5d <48> 8b 40 d8 c3 66 2e 0f 1f 84 00 00 00 00 00 66 66 66 66 90 55 
+[   25.609239] RIP  [<ffffffff81067a71>] kthread_data+0x11/0x20
+[   25.609239]  RSP <ffff88013f2e7990>
+[   25.609239] CR2: ffffffffffffffd8
+[   25.609239] ---[ end trace fc110bb3836ecc52 ]---
+[   25.609239] Fixing recursive fault but reboot is needed!
+[   25.609239] Kernel panic - not syncing: Watchdog detected hard LOCKUP on cpu 1
+[   25.609239] Shutting down cpus with NMI
+[   25.609239] Kernel Offset: 0x0 from 0xffffffff81000000 (relocation range: 0xffffffff80000000-0xffffffff9fffffff)
+[   25.609239] drm_kms_helper: panic occurred, switching back to text console
+[   25.609239] Rebooting in 60 seconds..
+
 
