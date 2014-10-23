@@ -1,37 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:45030 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756251AbaJaO02 (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:54898 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932545AbaJWNOI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Oct 2014 10:26:28 -0400
-Date: Fri, 31 Oct 2014 17:26:18 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com
-Subject: Re: brcm80211: use endian annotation for pmk related structure
-Message-ID: <20141031142618.GL6890@mwanda> (sfid-20141031_152654_086856_2F44DC91)
-References: <20141031125136.GA17467@mwanda>
- <54539A33.6000001@broadcom.com>
+	Thu, 23 Oct 2014 09:14:08 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 4/6] ath10k: make warm reset a bit safer and faster
+References: <1413807282-27951-1-git-send-email-michal.kazior@tieto.com>
+	<1413807282-27951-5-git-send-email-michal.kazior@tieto.com>
+	<CA+BoTQ=P2XOaOsaVOj+=fEs=nGfhUCNQvDYx6qb=A=JRCnbQmg@mail.gmail.com>
+Date: Thu, 23 Oct 2014 16:14:00 +0300
+In-Reply-To: <CA+BoTQ=P2XOaOsaVOj+=fEs=nGfhUCNQvDYx6qb=A=JRCnbQmg@mail.gmail.com>
+	(Michal Kazior's message of "Thu, 23 Oct 2014 10:27:57 +0200")
+Message-ID: <871tpzq67b.fsf@kamboji.qca.qualcomm.com> (sfid-20141023_151413_631442_DC19A83E)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <54539A33.6000001@broadcom.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 31, 2014 at 03:18:27PM +0100, Arend van Spriel wrote:
-> Understood. Not sure what the motivation is to mistrust endian more.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Endian data tends to come from suspicious places such as disk images,
-usb devices, and networks.
+> On 20 October 2014 14:14, Michal Kazior <michal.kazior@tieto.com> wrote:
+>> One of the problems with warm reset I've found is
+>> that it must be guaranteed that copy engine
+>> registers are not being accessed while being
+>> reset. Otherwise in worst case scenario the host
+>> may lock up.
+>>
+>> Instead of using sleeps and hoping the device is
+>> operational in some arbitrary timeframes use
+>> firmware indication register.
+>>
+>> As a side effect this makes driver
+>> boot/stop/recovery faster.
+>>
+>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>> ---
+>>
+>> Notes:
+>>     v2:
+>>      * fix kernel panic on early fw crash due to CE not being fully initialized [Janusz]
+>
+> Marek reported he sees a memory leak and git bisect blames this patch.
+> Please don't apply this patch yet.
 
-> Simply because there could be conversion errors? Anyway, the main
-> question is whether pmkid_len is always between 0 and
-> WLAN_PMKID_LEN. As far as I know it is. We could 1) add additional
-> checks here, 2) make pmkid_len of u32 type, or 3) just mention the
-> (sure) assumption in a comment. I would prefer option 2) or 3).
+Ok, thanks for letting me know. What about rest of the patches in the
+patchset? I assume it's safe to apply them.
 
-I would prefer 2.  Static checker warnings are a pain.
-
-regards,
-dan carpenter
-
+-- 
+Kalle Valo
