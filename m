@@ -1,47 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f52.google.com ([209.85.215.52]:51461 "EHLO
-	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752673AbaJTNyQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2014 09:54:16 -0400
-Received: by mail-la0-f52.google.com with SMTP id hz20so3930632lab.39
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2014 06:54:15 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 1/9] ath10k: don't drop control and null func Rx
-Date: Mon, 20 Oct 2014 15:40:30 +0200
-Message-Id: <1413812438-14640-2-git-send-email-michal.kazior@tieto.com> (sfid-20141020_155420_422310_14D5882F)
-In-Reply-To: <1413812438-14640-1-git-send-email-michal.kazior@tieto.com>
-References: <1413812438-14640-1-git-send-email-michal.kazior@tieto.com>
+Received: from mga11.intel.com ([192.55.52.93]:12585 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755071AbaJWTVy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Oct 2014 15:21:54 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Arnd Hannemann <arnd@arndnet.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: "ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [Ilw] WARNING: drivers/net/wireless/iwlwifi/mvm/tx.c:197
+ iwl_mvm_set_tx_params+0x5f4/0x630 [iwlmvm]()
+Date: Thu, 23 Oct 2014 19:21:12 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB31B55331A@hasmsx107.ger.corp.intel.com> (sfid-20141023_212215_508304_C869C027)
+References: <5449525A.6000009@arndnet.de>
+In-Reply-To: <5449525A.6000009@arndnet.de>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-HTT_RX_IND_MPDU_STATUS_MGMT_CTRL was pretty greedy
-and because of that ath10k ended up dropping
-Control Frames as well as Null Func frames.
-
-Reported-by: Okhwan Lee <ohlee@mwnl.snu.ac.kr>
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/htt_rx.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index fbb3175..63c69d8 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -1200,8 +1200,7 @@ static bool ath10k_htt_rx_amsdu_allowed(struct ath10k_htt *htt,
- 	}
- 
- 	/* Skip mgmt frames while we handle this in WMI */
--	if (status == HTT_RX_IND_MPDU_STATUS_MGMT_CTRL ||
--	    attention & RX_ATTENTION_FLAGS_MGMT_TYPE) {
-+	if (attention & RX_ATTENTION_FLAGS_MGMT_TYPE) {
- 		ath10k_dbg(ar, ATH10K_DBG_HTT, "htt rx mgmt ctrl\n");
- 		return false;
- 	}
--- 
-1.8.5.3
-
+PiBIaSwNCj4gDQo+IG9uIHJlY2VudCBMaW51cyBnaXQsIEkgcmVndWxhcnkgZ2V0IHRoZSBmb2xs
+b3dpbmcgYmFja3RyYWNlIChzaW5jZSAzLjE3IGFyb3VuZA0KPiBvciBzbykuDQo+IEhXIGlzIElu
+dGVsIENvcnBvcmF0aW9uIFdpcmVsZXNzIDcyNjAgKHJldiA4MykNCj4gDQo+IFsgMTc3NC4zNDA5
+ODBdIC0tLS0tLS0tLS0tLVsgY3V0IGhlcmUgXS0tLS0tLS0tLS0tLQ0KPiBbIDE3NzQuMzQxMDAz
+XSBXQVJOSU5HOiBDUFU6IDIgUElEOiAyNDAyIGF0DQo+IC9ob21lL2FybmQvUHJvamVrdGUva2Vy
+bmVsL2xpbnV4LQ0KPiAyLjYvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9tdm0vdHguYzox
+OTcNCj4gaXdsX212bV9zZXRfdHhfcGFyYW1zKzB4NWY0LzB4NjMwIFtpd2xtdm1dKCkNCg0KWWVw
+ICAtIGZpeCBpcyBpbiBteSB0cmVlIGFscmVhZHkuDQoNCj4gWyAxNzc0LjM0MTAwNF0gR290IGFu
+IEhUIHJhdGUgZm9yIGEgbm9uIGRhdGEgZnJhbWUgMHg4DQo+IFsgMTc3NC4zNDEwMDVdIE1vZHVs
+ZXMgbGlua2VkIGluOiBjY20geHRfQ0hFQ0tTVU0gaXB0YWJsZV9tYW5nbGUNCj4geHRfdGNwdWRw
+IGJyaWRnZSBzdHAgbGxjIGlwNnRhYmxlX2ZpbHRlciBpcDZfdGFibGVzIGlwdGFibGVfZmlsdGVy
+IGlwX3RhYmxlcw0KPiBlYnRhYmxlX25hdCBlYnRhYmxlcyB4X3RhYmxlcyBkbV9jcnlwdCBjZGNf
+bmNtIHV2Y3ZpZGVvIHVzYm5ldA0KPiB2aWRlb2J1ZjJfdm1hbGxvYyB2aWRlb2J1ZjJfbWVtb3Bz
+IG1paSB2aWRlb2J1ZjJfY29yZSBjZGNfd2RtDQo+IGNkY19hY20gdjRsMl9jb21tb24gdmlkZW9k
+ZXYgbWVkaWEgYnR1c2IgZGVmbGF0ZSBjdHIgdHdvZmlzaF9nZW5lcmljDQo+IHR3b2Zpc2hfeDg2
+XzY0XzN3YXkgdHdvZmlzaF94ODZfNjQgdHdvZmlzaF9jb21tb24gY2FtZWxsaWFfZ2VuZXJpYw0K
+PiBjYW1lbGxpYV94ODZfNjQgc2VycGVudF9zc2UyX3g4Nl82NCBzZXJwZW50X2dlbmVyaWMgeHRz
+IGJsb3dmaXNoX2dlbmVyaWMNCj4gYmxvd2Zpc2hfeDg2XzY0IGJsb3dmaXNoX2NvbW1vbiBjYXN0
+NV9nZW5lcmljIGNhc3RfY29tbW9uDQo+IGRlczNfZWRlX3g4Nl82NCBkZXNfZ2VuZXJpYyBjbWFj
+IHhjYmMgcm1kMTYwIHNoYTUxMl9nZW5lcmljDQo+IGNyeXB0b19udWxsIGFmX2tleSB4ZnJtX2Fs
+Z28gcmZjb21tIGJuZXAgYmx1ZXRvb3RoIGFyYzQgYmluZm10X21pc2MNCj4gc25kX2hkYV9jb2Rl
+Y19yZWFsdGVrIHNuZF9oZGFfY29kZWNfZ2VuZXJpYyBzbmRfaGRhX2NvZGVjX2hkbWkNCj4geDg2
+X3BrZ190ZW1wX3RoZXJtYWwgY29yZXRlbXAga3ZtX2ludGVsIGRtX211bHRpcGF0aCBrdm0NCj4g
+Z2hhc2hfY2xtdWxuaV9pbnRlbCBhZXNuaV9pbnRlbCBhZXNfeDg2XzY0IGFibGtfaGVscGVyIGNy
+eXB0ZCBscncgZ2YxMjhtdWwNCj4gZ2x1ZV9oZWxwZXIgc25kX2hkYV9pbnRlbCBtaWNyb2NvZGUg
+c25kX2hkYV9jb250cm9sbGVyIGpveWRldiBzZXJpb19yYXcNCj4gaXdsbXZtIHNuZF9oZGFfY29k
+ZWMgbHBjX2ljaCBtYWM4MDIxMSBzbmRfaHdkZXAgd21pIHRoaW5rcGFkXw0KPiAgYWNwaSBudnJh
+DQo+IG0gdHBtX3RpcyBzbmRfcGNtIGl3bHdpZmkgY2ZnODAyMTEgc25kX3NlcV9taWRpIHNuZF9z
+ZXFfbWlkaV9ldmVudA0KPiBzbmRfcmF3bWlkaSBzbmRfc2VxIHNuZF9zZXFfZGV2aWNlIHNuZF90
+aW1lciBzbmQgeGhjaV9wY2kgeGhjaV9oY2QNCj4gc291bmRjb3JlIGJ0cmZzIHhvciByYWlkNl9w
+cSBydHN4X3BjaV9zZG1tYyBydHN4X3BjaSBwc21vdXNlIGk5MTUNCj4gaTJjX2FsZ29fYml0IGRy
+bV9rbXNfaGVscGVyIGFoY2kgbGliYWhjaSBlMTAwMGUgcHRwIGRybSBwcHNfY29yZSB2aWRlbw0K
+PiBbIDE3NzQuMzQxMDYwXSBDUFU6IDIgUElEOiAyNDAyIENvbW06IHdwYV9zdXBwbGljYW50IFRh
+aW50ZWQ6IFANCj4gMy4xOC4wLXJjMWFoYSsgIzENCj4gWyAxNzc0LjM0MTA2MV0gSGFyZHdhcmUg
+bmFtZTogTEVOT1ZPIDIwQVFDVE8xV1cvMjBBUUNUTzFXVywNCj4gQklPUyBHSkVUNzlXVyAoMi4y
+OSApIDA5LzAzLzIwMTQNCj4gWyAxNzc0LjM0MTA2M10gIDAwMDAwMDAwMDAwMDAwMDkgZmZmZjg4
+MDMwMmI5MzcyOCBmZmZmZmZmZjgxNjhlODVhDQo+IDAwMDAwMDAwMDAwMDAwMDANCj4gWyAxNzc0
+LjM0MTA2NV0gIGZmZmY4ODAzMDJiOTM3NzggZmZmZjg4MDMwMmI5Mzc2OCBmZmZmZmZmZjgxMDRj
+NWQxDQo+IGZmZmY4ODAzMDJiOTM3ZDgNCj4gWyAxNzc0LjM0MTA2N10gIGZmZmY4ODAyZTRhODI0
+ODAgZmZmZjg4MDBhNTIwYjAyNiAwMDAwMDAwMDAwMDAwMDAwDQo+IGZmZmY4ODAzMGQ3ZjlhODgN
+Cj4gWyAxNzc0LjM0MTA2OV0gQ2FsbCBUcmFjZToNCj4gWyAxNzc0LjM0MTA3NF0gIFs8ZmZmZmZm
+ZmY4MTY4ZTg1YT5dIGR1bXBfc3RhY2srMHg0Ni8weDU4DQo+IFsgMTc3NC4zNDEwNzhdICBbPGZm
+ZmZmZmZmODEwNGM1ZDE+XSB3YXJuX3Nsb3dwYXRoX2NvbW1vbisweDgxLzB4YTANCj4gWyAxNzc0
+LjM0MTA4MF0gIFs8ZmZmZmZmZmY4MTA0YzYzNj5dIHdhcm5fc2xvd3BhdGhfZm10KzB4NDYvMHg1
+MA0KPiBbIDE3NzQuMzQxMDg5XSAgWzxmZmZmZmZmZmMwNmY5N2E0Pl0gaXdsX212bV9zZXRfdHhf
+cGFyYW1zKzB4NWY0LzB4NjMwDQo+IFtpd2xtdm1dDQo+IFsgMTc3NC4zNDEwOTVdICBbPGZmZmZm
+ZmZmYzA2ZjlhMjQ+XSBpd2xfbXZtX3R4X3NrYisweDU0LzB4MzUwIFtpd2xtdm1dDQo+IFsgMTc3
+NC4zNDExMDFdICBbPGZmZmZmZmZmYzA2ZjE1MmY+XSBpd2xfbXZtX21hY190eCsweGFmLzB4MWIw
+IFtpd2xtdm1dDQo+IFsgMTc3NC4zNDExMDRdICBbPGZmZmZmZmZmODEwNGM3YzY+XSA/IHB1dF9v
+bmxpbmVfY3B1cysweDU2LzB4ODANCj4gWyAxNzc0LjM0MTEyMF0gIFs8ZmZmZmZmZmZjMDYwY2Y5
+MT5dIF9faWVlZTgwMjExX3R4KzB4MjcxLzB4MzgwIFttYWM4MDIxMV0NCj4gWyAxNzc0LjM0MTEz
+M10gIFs8ZmZmZmZmZmZjMDYwZjdjYT5dIGllZWU4MDIxMV90eCsweGNhLzB4MTAwIFttYWM4MDIx
+MV0NCj4gWyAxNzc0LjM0MTE0NF0gIFs8ZmZmZmZmZmZjMDYwZmEwMT5dIGllZWU4MDIxMV94bWl0
+KzB4YTEvMHgxMDAgW21hYzgwMjExXQ0KPiBbIDE3NzQuMzQxMTU1XSAgWzxmZmZmZmZmZmMwNjEw
+MzNhPl0NCj4gaWVlZTgwMjExX3N1YmlmX3N0YXJ0X3htaXQrMHg2NmEvMHhkMTAgW21hYzgwMjEx
+XQ0KPiBbIDE3NzQuMzQxMTYwXSAgWzxmZmZmZmZmZjgxNTlhMDE5Pl0gZGV2X2hhcmRfc3RhcnRf
+eG1pdCsweDE2OS8weDNkMA0KPiBbIDE3NzQuMzQxMTYzXSAgWzxmZmZmZmZmZjgxNWJhMzYyPl0g
+c2NoX2RpcmVjdF94bWl0KzB4ZTIvMHgxZTANCj4gWyAxNzc0LjM0MTE2Nl0gIFs8ZmZmZmZmZmY4
+MTU5YTRjNz5dIF9fZGV2X3F1ZXVlX3htaXQrMHgyNDcvMHg1NjANCj4gWyAxNzc0LjM0MTE2OF0g
+IFs8ZmZmZmZmZmY4MTU5YTdmMD5dIGRldl9xdWV1ZV94bWl0KzB4MTAvMHgyMA0KPiBbIDE3NzQu
+MzQxMTcxXSAgWzxmZmZmZmZmZjgxNjc1YzVkPl0gcGFja2V0X3NlbmRtc2crMHhlOGQvMHgxMTMw
+DQo+IFsgMTc3NC4zNDExNzRdICBbPGZmZmZmZmZmODE1N2YxMzI+XSA/IHNvY2tfcmVjdm1zZysw
+eGEyLzB4ZDANCj4gWyAxNzc0LjM0MTE3Nl0gIFs8ZmZmZmZmZmY4MTU3ZWU0Mz5dIHNvY2tfc2Vu
+ZG1zZysweDkzLzB4ZDANCj4gWyAxNzc0LjM0MTE3OV0gIFs8ZmZmZmZmZmY4MTFhZWUwMD5dID8g
+ZXZpY3QrMHgxMTAvMHgxODANCj4gWyAxNzc0LjM0MTE4Ml0gIFs8ZmZmZmZmZmY4MTFhOWMyYj5d
+ID8gX19kX2ZyZWUrMHgyYi8weDUwDQo+IFsgMTc3NC4zNDExODVdICBbPGZmZmZmZmZmODExYjBm
+MzM+XSA/IF9fZmRnZXQrMHgxMy8weDIwDQo+IFsgMTc3NC4zNDExODddICBbPGZmZmZmZmZmODE1
+N2VmZjE+XSBTWVNDX3NlbmR0bysweDEyMS8weDFjMA0KPiBbIDE3NzQuMzQxMTg5XSAgWzxmZmZm
+ZmZmZjgxNTgwMDMyPl0gPyBfX3N5c19yZWN2bXNnKzB4NDIvMHg4MA0KPiBbIDE3NzQuMzQxMTky
+XSAgWzxmZmZmZmZmZjgxNTdmYjBlPl0gU3lTX3NlbmR0bysweGUvMHgxMA0KPiBbIDE3NzQuMzQx
+MTk0XSAgWzxmZmZmZmZmZjgxNjk1NDUyPl0gc3lzdGVtX2NhbGxfZmFzdHBhdGgrMHgxMi8weDE3
+DQo+IFsgMTc3NC4zNDExOTVdIC0tLVsgZW5kIHRyYWNlIGYyNWJiZWZhM2Y1YTdhYTEgXS0tLQ0K
+PiANCg0K
