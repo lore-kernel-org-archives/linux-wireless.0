@@ -1,63 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:41919 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932784AbaJ2Lvl (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:38114 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752287AbaJWRVz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2014 07:51:41 -0400
-Received: by mail-wi0-f172.google.com with SMTP id bs8so1433145wib.11
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2014 04:51:40 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eliad Peller <eliad@wizery.com>,
-	Eliad Peller <eliadx.peller@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 25/25] iwlwifi: mvm: unref SCAN ref on scan completion
-Date: Wed, 29 Oct 2014 13:50:46 +0200
-Message-Id: <1414583446-11032-25-git-send-email-egrumbach@gmail.com> (sfid-20141029_125153_593399_DA3302C7)
-In-Reply-To: <CANUX_P0TURG9GNMRUOTGFfh=qzSNKkDh9Gm7Asq5jXr=0gQgLg@mail.gmail.com>
-References: <CANUX_P0TURG9GNMRUOTGFfh=qzSNKkDh9Gm7Asq5jXr=0gQgLg@mail.gmail.com>
+	Thu, 23 Oct 2014 13:21:55 -0400
+Message-ID: <54493932.2090703@candelatech.com> (sfid-20141023_192158_596927_380B2801)
+Date: Thu, 23 Oct 2014 10:21:54 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: mac80211-hwsim question
+References: <54493276.4030007@candelatech.com>  (sfid-20141023_185314_774672_09890850) <1414084745.1926.8.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1414084745.1926.8.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+On 10/23/2014 10:19 AM, Johannes Berg wrote:
+> On Thu, 2014-10-23 at 09:53 -0700, Ben Greear wrote:
+>> From what I can tell, when hwsim sends frames to wmediumd using netlink sockets,
+>> it does not include any channel/frequency information in the netlink packet.
+>>
+>> Any reason not to add that?
+> 
+> I guess it wasn't needed, and when you "RX" a frame from netlink it uses
+> the current channel that the radio is tuned to.
+> 
+> That, however, will actually fail with the multi-channel option, so more
+> work is clearly needed for that.
 
-The scan reference wasn't released in case of offloaded scan,
-causing the refcount to go wrong and prevent the device
-from going into d0i3.
+I need this for my purposes, so I'll work on adding this sometime soonish
+unless someone beats me to it.
 
-Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/scan.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+Thanks,
+Ben
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
-index 042fcdc..5cd59a4 100644
---- a/drivers/net/wireless/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
-@@ -673,6 +673,7 @@ int iwl_mvm_rx_scan_offload_complete_notif(struct iwl_mvm *mvm,
- 		mvm->scan_status = IWL_MVM_SCAN_NONE;
- 		ieee80211_scan_completed(mvm->hw,
- 					 status == IWL_SCAN_OFFLOAD_ABORTED);
-+		iwl_mvm_unref(mvm, IWL_MVM_REF_SCAN);
- 	}
- 
- 	mvm->last_ebs_successful = !ebs_status;
-@@ -1107,8 +1108,12 @@ int iwl_mvm_scan_offload_stop(struct iwl_mvm *mvm, bool notify)
- 	/*
- 	 * Clear the scan status so the next scan requests will succeed. This
- 	 * also ensures the Rx handler doesn't do anything, as the scan was
--	 * stopped from above.
-+	 * stopped from above. Since the rx handler won't do anything now,
-+	 * we have to release the scan reference here.
- 	 */
-+	if (mvm->scan_status == IWL_MVM_SCAN_OS)
-+		iwl_mvm_unref(mvm, IWL_MVM_REF_SCAN);
-+
- 	mvm->scan_status = IWL_MVM_SCAN_NONE;
- 
- 	if (notify) {
 -- 
-1.9.1
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
