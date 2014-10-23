@@ -1,46 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:40395 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752076AbaJBRpS (ORCPT
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:42383 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752461AbaJWI17 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Oct 2014 13:45:18 -0400
-Date: Thu, 2 Oct 2014 13:37:46 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Sergey Ryazanov <ryazanov.s.a@gmail.com>
-Cc: Ralf Baechle <ralf@linux-mips.org>,
-	Linux MIPS <linux-mips@linux-mips.org>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath5k-devel@venema.h4ckr.net
-Subject: Re: [PATCH 15/16] ath5k: update dependencies
-Message-ID: <20141002173746.GB12208@tuxdriver.com> (sfid-20141002_194523_641558_A7D0532B)
-References: <1411929195-23775-1-git-send-email-ryazanov.s.a@gmail.com>
- <1411929195-23775-16-git-send-email-ryazanov.s.a@gmail.com>
- <20140930172044.GE11919@tuxdriver.com>
- <CAHNKnsSNO3-mzcKcGdnxEndbq6y_Pr0Gqrv2dMVCZZssgqMnWA@mail.gmail.com>
+	Thu, 23 Oct 2014 04:27:59 -0400
+Received: by mail-wi0-f175.google.com with SMTP id d1so3435164wiv.14
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Oct 2014 01:27:58 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAHNKnsSNO3-mzcKcGdnxEndbq6y_Pr0Gqrv2dMVCZZssgqMnWA@mail.gmail.com>
+In-Reply-To: <1413807282-27951-5-git-send-email-michal.kazior@tieto.com>
+References: <1413807282-27951-1-git-send-email-michal.kazior@tieto.com>
+	<1413807282-27951-5-git-send-email-michal.kazior@tieto.com>
+Date: Thu, 23 Oct 2014 10:27:57 +0200
+Message-ID: <CA+BoTQ=P2XOaOsaVOj+=fEs=nGfhUCNQvDYx6qb=A=JRCnbQmg@mail.gmail.com> (sfid-20141023_102804_912231_8A476A69)
+Subject: Re: [PATCH v2 4/6] ath10k: make warm reset a bit safer and faster
+From: Michal Kazior <michal.kazior@tieto.com>
+To: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 01, 2014 at 06:41:34PM +0400, Sergey Ryazanov wrote:
-> 2014-09-30 21:20 GMT+04:00 John W. Linville <linville@tuxdriver.com>:
-> > This patch does not seem to apply to wireless-next.  What tree is it
-> > based upon?
-> >
-> > John
-> >
-> Its based on linux-mips. I thought that ath5k was not changed in
-> recent time and did not  rebase patch on top of wireless-next.
-> 
-> John, could you delay patch merging? There is an idea to rename ar231x
-> in ath25, to be consistent with ath79 for AR71xx/AR9xxx.
+On 20 October 2014 14:14, Michal Kazior <michal.kazior@tieto.com> wrote:
+> One of the problems with warm reset I've found is
+> that it must be guaranteed that copy engine
+> registers are not being accessed while being
+> reset. Otherwise in worst case scenario the host
+> may lock up.
+>
+> Instead of using sleeps and hoping the device is
+> operational in some arbitrary timeframes use
+> firmware indication register.
+>
+> As a side effect this makes driver
+> boot/stop/recovery faster.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> ---
+>
+> Notes:
+>     v2:
+>      * fix kernel panic on early fw crash due to CE not being fully initialized [Janusz]
 
-OK
+Marek reported he sees a memory leak and git bisect blames this patch.
+Please don't apply this patch yet.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+
+Michał
