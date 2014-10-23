@@ -1,90 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41980 "EHLO mx1.redhat.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:57154 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751863AbaJIJn0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2014 05:43:26 -0400
-Date: Thu, 9 Oct 2014 11:40:50 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Mark Asselstine <asselsm@gmail.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	rt2x00 Users List <users@rt2x00.serialmonkey.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] rt2x00: rt2x00queue: avoid using more headroom then
- driver requested
-Message-ID: <20141009094038.GA1996@redhat.com> (sfid-20141009_114329_627921_9FBA0E18)
-References: <1412135157-13520-1-git-send-email-asselsm@gmail.com>
- <20141001091240.GA2011@redhat.com>
- <CAPuovEJtuJdRakwRhdUjRwrmkfry62wJqd8p2uJQ7L0rB7DoCA@mail.gmail.com>
- <CAPuovEJssghQv=03sn07AuYVvwULq0kSTn9kch53r+VKccy8xA@mail.gmail.com>
- <be003eea-b253-4eb3-bf08-40d5f6dc629d@email.android.com>
- <CAPuovEJXkRYyWXZJD7E6_1EqemfJus7Gtr_5PztT6rDtsrRpdw@mail.gmail.com>
- <20141008130006.GB5186@redhat.com>
- <CAPuovEKn+Lz3dqSZPhgd+-F4=n6tTOYyg3MDQ=E5yntGM8zYZg@mail.gmail.com>
- <CAPuovE+vAp9W3xBi6z3TDz51rKESXMuOT9Ow7ZX3Sm7dYQ+mFg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAPuovE+vAp9W3xBi6z3TDz51rKESXMuOT9Ow7ZX3Sm7dYQ+mFg@mail.gmail.com>
+	id S1754564AbaJWSfs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Oct 2014 14:35:48 -0400
+Message-ID: <1414089336.1926.10.camel@jlt4.sipsolutions.net> (sfid-20141023_203551_449754_1B74BC11)
+Subject: pull-request: mac80211 2014-10-23
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 23 Oct 2014 20:35:36 +0200
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 08, 2014 at 11:34:22PM -0400, Mark Asselstine wrote:
-> On Wed, Oct 8, 2014 at 3:52 PM, Mark Asselstine <asselsm@gmail.com> wrote:
-> > On Wed, Oct 8, 2014 at 9:00 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> >>
-> >> On Wed, Oct 08, 2014 at 07:46:33AM -0400, Mark Asselstine wrote:
-> >> > > If rt2x00 does not remove the alignment from the frame before giving it back
-> >> > > to mac80211 and the same frame comes into rt2x00 again it should be correctly
-> >> > > aligned and no additional header space is required. So this should be fine.
-> >> >
-> >> > Then I would say this definitely hints at a design flaw in
-> >> > rt2x00queue_insert_l2pad(). Take the following scenario.
-> >> >
-> >> > * skb's first arrival in rt2x00queue_insert_l2pad(), 3 bytes needed
-> >> > for frame alignment, 2 bytes for l2pad results in 3 bytes of headroom
-> >> > taken.
-> >> Not quite realistic assumption - header length will have to be odd then.
-> >>
-> >> But if such situation would happen we will have:
-> >>
-> >> header_align=2, payload_align=3, l2pad=3
-> >>
-> >> Since payload_align will be bigger than header_align, header_align will
-> >> be increased to 6.
-> >>
-> >> Header will be moved by 6 bytes, frame will be moved by 3 bytes,
-> >> between header and frame there will be l2pad equal to 3.
-> >>
-> >> > * rt2x00lib_txdone() returns 2 bytes of headroom
-> >> Return 3 bytes.
-> >>
-> >> > * skb's second arrival in rt2x00queue_insert_l2pad(), 0 bytes needed
-> >> > for frame alignment, 2 bytes for l2pad results in 4 bytes of headroom
-> >> > taken.
-> >> Header will be moved by 3 bytes.
-> >>
-> >> > * rt2x00lib_txdone() returns 2 bytes of headroom
-> >> Return 3 bytes.
-> >>
-> >> > Basically as long as any bytes are required for l2pad the headroom
-> >> > will lose 4 bytes again and again, never being returned by
-> >> > rt2x00lib_txdone().
-> >>
-> >> I think that's not true - you made a few mistakes in your scenario,
-> >> but perhaps I'm wrong :-)
-> >
-> > No just me being an idiot. I had thought
-> >  frame == header + l2pad + payload
-> > not
-> >  frame == payload
-> >
-> 
-> By the way, I assumed that this due to the name and contents of
-> rt2x00queue_align_frame(). Where all the data (header and payload) are
-> aligned to a 4-byte boundary and the function is name 'align_frame'. I
-> assume your interpretation is the correct one, can you confirm?
+John,
 
-Frame term is used mostly to describe all data including header and
-payload.
+Please pull the below changes for the current 3.18 preparations. More
+details below.
 
-Stanislaw
+Thanks,
+johannes
+
+---
+
+The following changes since commit
+35a9ad8af0bb0fa3525e6d0d20e32551d226f38e:
+
+  Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next (2014-10-08 21:40:54 -0400)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git
+tags/mac80211-for-john-2014-10-23
+
+for you to fetch changes up to 11b2357d5dbce999803e9055f8c09829a8a87db4:
+
+  mac80211: minstrels: fix buffer overflow in HT debugfs rc_stats
+(2014-10-20 16:37:01 +0200)
+
+----------------------------------------------------------------
+Here are a few fixes for the wireless stack: one fixes the
+RTS rate, one for a debugfs file, one to return the correct
+channel to userspace, a sanity check for a userspace value
+and the remaining two are just documentation fixes.
+
+----------------------------------------------------------------
+Fabian Frederick (1):
+      net: rfkill: kernel-doc warning fixes
+
+Karl Beldan (2):
+      mac80211: fix typo in starting baserate for rts_cts_rate_idx
+      mac80211: minstrels: fix buffer overflow in HT debugfs rc_stats
+
+Liad Kaufman (1):
+      mac80211: fix warning on htmldocs for last_tdls_pkt_time
+
+Luciano Coelho (2):
+      mac80211: return the vif's chandef in ieee80211_cfg_get_channel()
+      nl80211: sanity check the channel switch counter value
+
+ net/mac80211/cfg.c                         |  2 +-
+ net/mac80211/rate.c                        |  2 +-
+ net/mac80211/rc80211_minstrel_debugfs.c    | 12 +++++++-----
+ net/mac80211/rc80211_minstrel_ht_debugfs.c | 13 ++++++++-----
+ net/mac80211/sta_info.h                    |  1 +
+ net/rfkill/core.c                          |  4 ++--
+ net/wireless/nl80211.c                     | 10 +++++++++-
+ 7 files changed, 29 insertions(+), 15 deletions(-)
+
 
