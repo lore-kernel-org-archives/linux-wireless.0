@@ -1,82 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f173.google.com ([209.85.213.173]:34623 "EHLO
-	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760441AbaJ3PUp (ORCPT
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:50191 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755809AbaJWOF6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Oct 2014 11:20:45 -0400
-Received: by mail-ig0-f173.google.com with SMTP id r10so3532115igi.0
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Oct 2014 08:20:44 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1414404914-163837-1-git-send-email-mika.westerberg@linux.intel.com>
-References: <1414404914-163837-1-git-send-email-mika.westerberg@linux.intel.com>
-Date: Thu, 30 Oct 2014 16:20:44 +0100
-Message-ID: <CACRpkdag38GawJEZ+m+P-qcRQk24asSaP8GCmu6ssvDPHud4eg@mail.gmail.com> (sfid-20141030_162103_096740_3AB1729E)
-Subject: Re: [PATCH] net: rfkill: gpio: Add default GPIO driver mappings for ACPI
-From: Linus Walleij <linus.walleij@linaro.org>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 23 Oct 2014 10:05:58 -0400
+Received: by mail-wi0-f179.google.com with SMTP id d1so2104036wiv.0
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Oct 2014 07:05:57 -0700 (PDT)
+From: Bartosz Markowski <bartosz.markowski@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Bartosz Markowski <bartosz.markowski@tieto.com>
+Subject: [PATCH] ath10k: fix pm resume after suspend
+Date: Thu, 23 Oct 2014 16:05:49 +0200
+Message-Id: <1414073150-11593-1-git-send-email-bartosz.markowski@tieto.com> (sfid-20141023_160722_853367_CCAF9862)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 27, 2014 at 11:15 AM, Mika Westerberg
-<mika.westerberg@linux.intel.com> wrote:
+Firmware was crashing when we were trying to warm reset it
+after suspend. This was due to the fact that target registeres
+can be accessed only if the hardware is awaken.
 
-> The driver uses devm_gpiod_get_index(..., index) so that the index refers
-> directly to the GpioIo resource under the ACPI device. The problem with
-> this is that if the ordering changes we get wrong GPIOs.
->
-> With ACPI 5.1 _DSD we can now use names instead to reference GPIOs
-> analogous to Device Tree. However, we still have systems out there that do
-> not provide _DSD at all. These systems must be supported as well.
->
-> Luckily we now have acpi_dev_add_driver_gpios() that can be used to provide
-> mappings for systems where _DSD is not provided and still take advantage of
-> _DSD if it exists.
->
-> This patch changes the driver to create default GPIO mappings if we are
-> running on ACPI system.
->
-> While there we can drop the indices completely and use devm_gpiod_get()
-> with name instead.
->
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> ---
-> Hi,
->
-> This patch is based on top of linux-pm/device-properties [1] and following
-> patch from Rafael [2].
->
-> Johannes, John,
->
-> If you are happy with the patch, can you ACK it so that we can merge it
-> with the rest of the device-properties patches. Thanks.
->
-> [1] git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git
-> [2] https://lkml.org/lkml/2014/10/24/690
-(...)
-> +static const struct acpi_gpio_params reset_gpios = { 0, 0, false };
-> +static const struct acpi_gpio_params shutdown_gpios = { 1, 0, false };
-> +
-> +static const struct acpi_gpio_mapping acpi_rfkill_default_gpios[] = {
-> +       { "reset-gpios", &reset_gpios, 1 },
-> +       { "shutdown-gpios", &shutdown_gpios, 1 },
-> +       { },
-> +};
+This patch makes sure to awake the device also on the hif up,
+not only in case of probe call path.
 
-Jaysis, it could use a comment above the map telling the poor code
-reader what is actually going on.
+Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/pci.c | 22 +++++++++++++++++-----
+ 1 file changed, 17 insertions(+), 5 deletions(-)
 
-Other than that, this is what we have to live with I guess so:
-Acked-by: Linus Walleij <linus.walleij@linaro.org>
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 86f734e..4dee319 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -1858,10 +1858,16 @@ static int ath10k_pci_hif_power_up_warm(struct ath10k *ar)
+ 
+ static int ath10k_pci_hif_power_up(struct ath10k *ar)
+ {
+-	int ret;
++	int ret = 0;
+ 
+ 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot hif power up\n");
+ 
++	ret = ath10k_pci_wake(ar);
++	if (ret) {
++		ath10k_err(ar, "failed to wake up target: %d\n", ret);
++		return ret;
++	}
++
+ 	/*
+ 	 * Hardware CUS232 version 2 has some issues with cold reset and the
+ 	 * preferred (and safer) way to perform a device reset is through a
+@@ -1876,7 +1882,7 @@ static int ath10k_pci_hif_power_up(struct ath10k *ar)
+ 			    ret);
+ 
+ 		if (ath10k_pci_reset_mode == ATH10K_PCI_RESET_WARM_ONLY)
+-			return ret;
++			goto err_sleep;
+ 
+ 		ath10k_warn(ar, "trying cold reset\n");
+ 
+@@ -1884,11 +1890,15 @@ static int ath10k_pci_hif_power_up(struct ath10k *ar)
+ 		if (ret) {
+ 			ath10k_err(ar, "failed to power up target using cold reset too (%d)\n",
+ 				   ret);
+-			return ret;
++			goto err_sleep;
+ 		}
+ 	}
+ 
+-	return 0;
++	return ret;
++
++err_sleep:
++	ath10k_pci_sleep(ar);
++	return ret;
+ }
+ 
+ static void ath10k_pci_hif_power_down(struct ath10k *ar)
+@@ -1896,6 +1906,7 @@ static void ath10k_pci_hif_power_down(struct ath10k *ar)
+ 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot hif power down\n");
+ 
+ 	ath10k_pci_warm_reset(ar);
++	ath10k_pci_sleep(ar);
+ }
+ 
+ #ifdef CONFIG_PM
+@@ -2513,6 +2524,8 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
+ 	/* This shouldn't race as the device has been reset above. */
+ 	ath10k_pci_irq_disable(ar);
+ 
++	ath10k_pci_sleep(ar);
++
+ 	ret = ath10k_core_register(ar, chip_id);
+ 	if (ret) {
+ 		ath10k_err(ar, "failed to register driver core: %d\n", ret);
+@@ -2564,7 +2577,6 @@ static void ath10k_pci_remove(struct pci_dev *pdev)
+ 	ath10k_pci_deinit_irq(ar);
+ 	ath10k_pci_ce_deinit(ar);
+ 	ath10k_pci_free_ce(ar);
+-	ath10k_pci_sleep(ar);
+ 	ath10k_pci_release(ar);
+ 	ath10k_core_destroy(ar);
+ }
+-- 
+1.8.2
 
-Yours,
-Linus Walleij
