@@ -1,51 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f172.google.com ([209.85.220.172]:41716 "EHLO
-	mail-vc0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753074AbaJHORM convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:8149 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753110AbaJWOKi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Oct 2014 10:17:12 -0400
-Received: by mail-vc0-f172.google.com with SMTP id lf12so6858426vcb.3
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Oct 2014 07:17:11 -0700 (PDT)
+	Thu, 23 Oct 2014 10:10:38 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: Re: [PATCH 1/2] ath10k: remove tsf argument from rx_desc tracing
+References: <1413899700-10717-1-git-send-email-michal.kazior@tieto.com>
+	<1413899700-10717-2-git-send-email-michal.kazior@tieto.com>
+	<CA+BoTQmr=uZNeqKxoHM5sG2EU7sBfdETXvzuXkNxDjTJ9ANAbg@mail.gmail.com>
+Date: Thu, 23 Oct 2014 17:10:31 +0300
+In-Reply-To: <CA+BoTQmr=uZNeqKxoHM5sG2EU7sBfdETXvzuXkNxDjTJ9ANAbg@mail.gmail.com>
+	(Michal Kazior's message of "Wed, 22 Oct 2014 10:46:43 +0200")
+Message-ID: <878uk6q3l4.fsf@kamboji.qca.qualcomm.com> (sfid-20141023_161041_592978_2FDDB42D)
 MIME-Version: 1.0
-In-Reply-To: <etPan.5433ced3.74b0dc51.2d48@Mac-Pro.local>
-References: <etPan.5433ced3.74b0dc51.2d48@Mac-Pro.local>
-Date: Wed, 8 Oct 2014 16:17:11 +0200
-Message-ID: <CA+BoTQkvUkdkWDLOzu2cz6C6SGWFL2SCgwMDLf=ruaFwP9umjg@mail.gmail.com> (sfid-20141008_161715_952452_1EF25DB9)
-Subject: Re: How to know the information about RTS reception in mac80211 or
- device driver
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Okhwan Lee <ohlee@mwnl.snu.ac.kr>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-+ath10k@lists.infradead.org
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-On 7 October 2014 13:30, Okhwan Lee <ohlee@mwnl.snu.ac.kr> wrote:
-> Hi,
+> On 21 October 2014 15:54, Michal Kazior <michal.kazior@tieto.com> wrote:
+>> Fundamtenally this was wrong. Tsf is only valid
+>> in first MPDU of a PPDU. This means tsf value was
 >
-> We are trying to develop an algorithm by using the information of RTS reception at the receiver side. (actually, we need the preceding frame of A-MPDU).
-> As far as we know, RTS/CTS exchange is done by firmware of NIC.
-> However, in monitor mode, we quite sure that the RTS/CTS frame reception should be reported to upper layer.
-> As an evidence, Wireshark can capture and display the RTS/CTS reception.
+> s/first MPDU/last MPDU/
 >
-> However, mac80211 and device driver (e.g., ath10k) can not recognize the reception of RTS even if we put the WiFi NIC in monitor mode.
-> We check the type and subtype of frame_control field for all the received frames at the “ieee80211_rx_monitor” function of mac80211.
-> We can find the reception of data frames amd mgmt frames, but there is no RTS/CTS frame.
-> (We confirm that there is the RTS/CTS frame by using wireshark.)
+> I must've had a brain fart when writing the commit log yesterday.
 >
-> Is there any way to know the information about RTS reception in mac80211 or device driver?
+> @Kalle: Should I re-spin or will you fix it before applying?
 
-I think you've just found an ath10k bug.
+No need to re-spin, I edited the commit log in ath-next-test. I also
+fixed a typo in "fundamentally".
 
-I've been running through Rx code lately. I was looking at
-htt_rx_mpdu_status and noticed it was a bit greedy. I then recalled
-someone was complaining about RTS reception.
+commit d75153c577ddfffa9e7438e8225dfaf564f34552
+Author: Michal Kazior <michal.kazior@tieto.com>
+Date:   Thu Oct 23 17:04:27 2014 +0300
 
-I'll try to fix this soon. I'll put you in Cc in case you'd want to
-play with it before it's merged.
+    ath10k: remove tsf argument from rx_desc tracing
+    
+    Fundamentally this was wrong. Tsf is only valid
+    in last MPDU of a PPDU. This means tsf value was
+    wrong most of the time during heavy traffic.
+    
+    Also I don't see much point in exposing a
+    redundant (and broken) tsf value. Userspace can
+    already read it from the dumped rx descriptor
+    buffer.
+    
+    Cc: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+    Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+    Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
 
-Michał
+-- 
+Kalle Valo
