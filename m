@@ -1,38 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f177.google.com ([209.85.216.177]:50716 "EHLO
-	mail-qc0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751033AbaJOTeg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Oct 2014 15:34:36 -0400
-Received: by mail-qc0-f177.google.com with SMTP id c9so1560342qcz.8
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Oct 2014 12:34:36 -0700 (PDT)
-MIME-Version: 1.0
-Date: Wed, 15 Oct 2014 15:34:35 -0400
-Message-ID: <CANa-JWyxT0LDwmhS-G=exHbHMipBr51sRyazH9XA5dnUZEjKRw@mail.gmail.com> (sfid-20141015_213442_465167_34A731E9)
-Subject: ipw2200 driver in kernels 3+
-From: Frank Langille <flangille@gmail.com>
+Received: from plane.gmane.org ([80.91.229.3]:38938 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751573AbaJXCFG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Oct 2014 22:05:06 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1XhUFU-0001n1-8D
+	for linux-wireless@vger.kernel.org; Fri, 24 Oct 2014 04:05:04 +0200
+Received: from 61.150.43.68 ([61.150.43.68])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Oct 2014 04:05:04 +0200
+Received: from ivycx1992 by 61.150.43.68 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Oct 2014 04:05:04 +0200
 To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+From: Tsaixiong <ivycx1992@gmail.com>
+Subject: Re: [RFCv2 07/10] ath9k: enable control frame reception
+Date: Fri, 24 Oct 2014 02:00:11 +0000 (UTC)
+Message-ID: <loom.20141024T035214-81@post.gmane.org> (sfid-20141024_040510_612446_F050F0C8)
+References: <1405246704-7489-1-git-send-email-lorenzo.bianconi83@gmail.com> <1405246704-7489-8-git-send-email-lorenzo.bianconi83@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, my apologies if I am sending this email to the wrong place.
+Lorenzo Bianconi <lorenzo.bianconi83@...> writes:
 
-I recently started toying with an old Dell laptop that uses the very
-old ipw2200 intel network driver/firmware mentioned above.
+> 
+> Enable control frame reception if dynamic ack processing is enabled
+> 
+> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@...>
+> ---
+>  drivers/net/wireless/ath/ath9k/recv.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/recv.c 
+b/drivers/net/wireless/ath/ath9k/recv.c
+> index ad317a4..cc5ba4a 100644
+> --- a/drivers/net/wireless/ath/ath9k/recv.c
+> +++ b/drivers/net/wireless/ath/ath9k/recv.c
+>  <at>  <at>  -398,7 +398,7  <at>  <at>  u32 ath_calcrxfilter(struct ath_softc 
+*sc)
+>  	if (sc->sc_ah->is_monitoring)
+>  		rfilt |= ATH9K_RX_FILTER_PROM;
+> 
+> -	if (sc->rx.rxfilter & FIF_CONTROL)
+> +	if ((sc->rx.rxfilter & FIF_CONTROL) || sc->sc_ah->dynack.enabled)
+>  		rfilt |= ATH9K_RX_FILTER_CONTROL;
+> 
+>  	if ((sc->sc_ah->opmode == NL80211_IFTYPE_STATION) &&
 
-I think support for this item remains in the kernel, as indicated by
-the continued existence of
-/linux/drivers/net/wireless/ipw2X00/ipw2200.c and ipw2200.h and
-corresponding firmware. However, the menuconfig option to select this
-driver seems to have disappeared sometime after kernel 3.4.104, which
-is the last longterm version I can see that allows me to include the
-driver in my build.
+Dear Lorenzo:
 
-Is it possible to have the option made available again? I realize the
-request is trivial but think it's worth mentioning, having lost a few
-hairs trying to understand what was going on  :)
+Thank you your patch!But I want to know where can I get the RTS/CTS and ACK in 
+MAC80211 or ATH9K after adopting this change,using the function 
+ieee80211_rx_h_ctrl(/net/mac80211/rx.c)?
 
-Cheers,
+Any reply will be much appreciated!!
 
-Frank
