@@ -1,43 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f49.google.com ([74.125.82.49]:49327 "EHLO
-	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756321AbaJ2Rp7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2014 13:45:59 -0400
-Received: by mail-wg0-f49.google.com with SMTP id x13so3864738wgg.8
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2014 10:45:58 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH v2 26/34] staging: vt6655: MACvSetDefaultKeyEntry replace WLAN_WEP104_KEYLEN
-Date: Wed, 29 Oct 2014 17:44:01 +0000
-Message-Id: <1414604649-9105-27-git-send-email-tvboxspy@gmail.com> (sfid-20141029_184607_509517_6693FA0C)
-In-Reply-To: <1414604649-9105-1-git-send-email-tvboxspy@gmail.com>
-References: <1414604649-9105-1-git-send-email-tvboxspy@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:60358 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755934AbaJXJxb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Oct 2014 05:53:31 -0400
+Message-ID: <1414144408.1934.1.camel@jlt4.sipsolutions.net> (sfid-20141024_115334_763902_66B2D8D8)
+Subject: Re: [PATCH v2 2/2] iw: add vendor send command
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 24 Oct 2014 11:53:28 +0200
+In-Reply-To: <1410778078-25244-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20140915_124826_584469_C9D374FB)
+References: <1410778078-25244-1-git-send-email-janusz.dziedzic@tieto.com>
+	 (sfid-20140915_124826_584469_C9D374FB)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-with WLAN_KEY_LEN_WEP40
+On Mon, 2014-09-15 at 12:47 +0200, Janusz Dziedzic wrote:
+> This allow to send vendor data to the driver.
+> This command required OUI and SUBCMD parameters.
+> 
+> Also optional DATA parameter could be used:
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/mac.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Applied, sorry for the delay.
 
-diff --git a/drivers/staging/vt6655/mac.c b/drivers/staging/vt6655/mac.c
-index e3b0b7f..a347f39 100644
---- a/drivers/staging/vt6655/mac.c
-+++ b/drivers/staging/vt6655/mac.c
-@@ -1526,7 +1526,7 @@ void MACvSetDefaultKeyEntry(void __iomem *dwIoBase, unsigned int uKeyLen,
- 		VNSvOutPortW(dwIoBase + MAC_REG_MISCFFCTL, MISCFFCTL_WRITE);
- 	}
- 	dwData = *pdwKey;
--	if (uKeyLen == WLAN_WEP104_KEYLEN)
-+	if (uKeyLen == WLAN_KEY_LEN_WEP40)
- 		dwData |= 0x80000000;
- 
- 	VNSvOutPortW(dwIoBase + MAC_REG_MISCFFNDEX, wOffset+3);
--- 
-2.1.0
+johannes
 
