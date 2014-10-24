@@ -1,264 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f51.google.com ([74.125.82.51]:52450 "EHLO
-	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755323AbaJ2RpH (ORCPT
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:49262 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753878AbaJXLin convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2014 13:45:07 -0400
-Received: by mail-wg0-f51.google.com with SMTP id l18so2430104wgh.38
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2014 10:45:06 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH v2 12/34] staging: vt6655: mac80211 conversion: changes to device_intr
-Date: Wed, 29 Oct 2014 17:43:47 +0000
-Message-Id: <1414604649-9105-13-git-send-email-tvboxspy@gmail.com> (sfid-20141029_184517_448740_C95AF867)
-In-Reply-To: <1414604649-9105-1-git-send-email-tvboxspy@gmail.com>
-References: <1414604649-9105-1-git-send-email-tvboxspy@gmail.com>
+	Fri, 24 Oct 2014 07:38:43 -0400
+Received: by mail-wg0-f49.google.com with SMTP id x12so875802wgg.8
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Oct 2014 04:38:42 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <etPan.544a384b.74b0dc51.8406@Mac-Pro.local>
+References: <CANzpp-=opT==PUf5FhWi_cbB91+RhWk+jB7M4bfUCqh2wzQA2A@mail.gmail.com>
+	<CA+BoTQmHGtO+XCRg1_jJstm+wHRQLU9sEpBRJ7U+_xO3nq7_VA@mail.gmail.com>
+	<CANzpp-kV8LzPgeXHq=DHKsLSdTT+-9gjj08RXST4r3-QOtkanw@mail.gmail.com>
+	<CA+BoTQn0iEYEQJ4AdO7xfRSHjX1CfO_uovPaxbtxSWQw0vPS+Q@mail.gmail.com>
+	<etPan.544a384b.74b0dc51.8406@Mac-Pro.local>
+Date: Fri, 24 Oct 2014 13:38:42 +0200
+Message-ID: <CA+BoTQkxX1fhQVGx7jUkoG6NRz+EP+ZWJwAvNwqHDNv5Fw4COA@mail.gmail.com> (sfid-20141024_133847_729364_7DDB4BEB)
+Subject: Re: Change channel bandwidth without iw command
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Okhwan Lee <ohlee@mwnl.snu.ac.kr>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove net device code.
+On 24 October 2014 13:30, Okhwan Lee <ohlee@mwnl.snu.ac.kr> wrote:
+>  Hi,
+>
+> This linked images are the printed error messages when the kernel is in panic.
+> http://www.mwnl.snu.ac.kr/~ohlee/1.jpg
+> http://www.mwnl.snu.ac.kr/~ohlee/2.jpg
 
-Remove current measure code and function s_vCompleteCurrentMeasure
-and switch code which are now handled by mac80211
+Thanks.
 
-Change beaconing to mac80211.
+Panic doesn't seem to include anything directly related to ath10k
+which suggests this may be some nasty memory corruption issue. You
+might want to enable memory debugging when building kernel (Kernel
+Hacking) - hopefully it'll get some extra info before the panic.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/device_main.c | 175 ++---------------------------------
- 1 file changed, 8 insertions(+), 167 deletions(-)
+How did you come to a conclusion that ath10k's monitor vdev stopping
+and wait_for_completion_timeout() are involved?
 
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index 5ece184..69c98c2 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -400,45 +400,6 @@ device_set_options(struct vnt_private *pDevice)
- 		 (int)pDevice->bDiversityRegCtlON);
- }
- 
--static void s_vCompleteCurrentMeasure(struct vnt_private *pDevice,
--				      unsigned char byResult)
--{
--	unsigned int ii;
--	unsigned long dwDuration = 0;
--	unsigned char byRPI0 = 0;
--
--	for (ii = 1; ii < 8; ii++) {
--		pDevice->dwRPIs[ii] *= 255;
--		dwDuration |= *((unsigned short *)(pDevice->pCurrMeasureEID->sReq.abyDuration));
--		dwDuration <<= 10;
--		pDevice->dwRPIs[ii] /= dwDuration;
--		pDevice->abyRPIs[ii] = (unsigned char)pDevice->dwRPIs[ii];
--		byRPI0 += pDevice->abyRPIs[ii];
--	}
--	pDevice->abyRPIs[0] = (0xFF - byRPI0);
--
--	if (pDevice->uNumOfMeasureEIDs == 0) {
--		VNTWIFIbMeasureReport(pDevice->pMgmt,
--				      true,
--				      pDevice->pCurrMeasureEID,
--				      byResult,
--				      pDevice->byBasicMap,
--				      pDevice->byCCAFraction,
--				      pDevice->abyRPIs
--			);
--	} else {
--		VNTWIFIbMeasureReport(pDevice->pMgmt,
--				      false,
--				      pDevice->pCurrMeasureEID,
--				      byResult,
--				      pDevice->byBasicMap,
--				      pDevice->byCCAFraction,
--				      pDevice->abyRPIs
--			);
--		CARDbStartMeasure(pDevice, pDevice->pCurrMeasureEID++, pDevice->uNumOfMeasureEIDs);
--	}
--}
--
- //
- // Initialisation of MAC & BBP registers
- //
-@@ -2056,14 +2017,11 @@ static int  device_xmit(struct sk_buff *skb, struct net_device *dev) {
- 
- static  irqreturn_t  device_intr(int irq,  void *dev_instance)
- {
--	struct net_device *dev = dev_instance;
--	struct vnt_private *pDevice = netdev_priv(dev);
-+	struct vnt_private *pDevice = dev_instance;
- 	int             max_count = 0;
- 	unsigned long dwMIBCounter = 0;
--	PSMgmtObject    pMgmt = pDevice->pMgmt;
- 	unsigned char byOrgPageSel = 0;
- 	int             handled = 0;
--	unsigned char byData = 0;
- 	int             ii = 0;
- 	unsigned long flags;
- 
-@@ -2106,94 +2064,7 @@ static  irqreturn_t  device_intr(int irq,  void *dev_instance)
- 			device_error(pDevice, pDevice->dwIsr);
- 		}
- 
--		if (pDevice->byLocalID > REV_ID_VT3253_B1) {
--			if (pDevice->dwIsr & ISR_MEASURESTART) {
--				// 802.11h measure start
--				pDevice->byOrgChannel = pDevice->byCurrentCh;
--				VNSvInPortB(pDevice->PortOffset + MAC_REG_RCR, &(pDevice->byOrgRCR));
--				VNSvOutPortB(pDevice->PortOffset + MAC_REG_RCR, (RCR_RXALLTYPE | RCR_UNICAST | RCR_BROADCAST | RCR_MULTICAST | RCR_WPAERR));
--				MACvSelectPage1(pDevice->PortOffset);
--				VNSvInPortD(pDevice->PortOffset + MAC_REG_MAR0, &(pDevice->dwOrgMAR0));
--				VNSvInPortD(pDevice->PortOffset + MAC_REG_MAR4, &(pDevice->dwOrgMAR4));
--				MACvSelectPage0(pDevice->PortOffset);
--				//xxxx
--				if (set_channel(pDevice, pDevice->pCurrMeasureEID->sReq.byChannel)) {
--					pDevice->bMeasureInProgress = true;
--					MACvSelectPage1(pDevice->PortOffset);
--					MACvRegBitsOn(pDevice->PortOffset, MAC_REG_MSRCTL, MSRCTL_READY);
--					MACvSelectPage0(pDevice->PortOffset);
--					pDevice->byBasicMap = 0;
--					pDevice->byCCAFraction = 0;
--					for (ii = 0; ii < 8; ii++)
--						pDevice->dwRPIs[ii] = 0;
--
--				} else {
--					// can not measure because set channel fail
--					// clear measure control
--					MACvRegBitsOff(pDevice->PortOffset, MAC_REG_MSRCTL, MSRCTL_EN);
--					s_vCompleteCurrentMeasure(pDevice, MEASURE_MODE_INCAPABLE);
--					MACvSelectPage1(pDevice->PortOffset);
--					MACvRegBitsOn(pDevice->PortOffset, MAC_REG_MSRCTL+1, MSRCTL1_TXPAUSE);
--					MACvSelectPage0(pDevice->PortOffset);
--				}
--			}
--			if (pDevice->dwIsr & ISR_MEASUREEND) {
--				// 802.11h measure end
--				pDevice->bMeasureInProgress = false;
--				VNSvOutPortB(pDevice->PortOffset + MAC_REG_RCR, pDevice->byOrgRCR);
--				MACvSelectPage1(pDevice->PortOffset);
--				VNSvOutPortD(pDevice->PortOffset + MAC_REG_MAR0, pDevice->dwOrgMAR0);
--				VNSvOutPortD(pDevice->PortOffset + MAC_REG_MAR4, pDevice->dwOrgMAR4);
--				VNSvInPortB(pDevice->PortOffset + MAC_REG_MSRBBSTS, &byData);
--				pDevice->byBasicMap |= (byData >> 4);
--				VNSvInPortB(pDevice->PortOffset + MAC_REG_CCAFRACTION, &pDevice->byCCAFraction);
--				VNSvInPortB(pDevice->PortOffset + MAC_REG_MSRCTL, &byData);
--				// clear measure control
--				MACvRegBitsOff(pDevice->PortOffset, MAC_REG_MSRCTL, MSRCTL_EN);
--				MACvSelectPage0(pDevice->PortOffset);
--				set_channel(pDevice, pDevice->byOrgChannel);
--				MACvSelectPage1(pDevice->PortOffset);
--				MACvRegBitsOn(pDevice->PortOffset, MAC_REG_MSRCTL+1, MSRCTL1_TXPAUSE);
--				MACvSelectPage0(pDevice->PortOffset);
--				if (byData & MSRCTL_FINISH) {
--					// measure success
--					s_vCompleteCurrentMeasure(pDevice, 0);
--				} else {
--					// can not measure because not ready before end of measure time
--					s_vCompleteCurrentMeasure(pDevice, MEASURE_MODE_LATE);
--				}
--			}
--			if (pDevice->dwIsr & ISR_QUIETSTART) {
--				do {
--					;
--				} while (!CARDbStartQuiet(pDevice));
--			}
--		}
--
- 		if (pDevice->dwIsr & ISR_TBTT) {
--			if (pDevice->bEnableFirstQuiet) {
--				pDevice->byQuietStartCount--;
--				if (pDevice->byQuietStartCount == 0) {
--					pDevice->bEnableFirstQuiet = false;
--					MACvSelectPage1(pDevice->PortOffset);
--					MACvRegBitsOn(pDevice->PortOffset, MAC_REG_MSRCTL, (MSRCTL_QUIETTXCHK | MSRCTL_QUIETEN));
--					MACvSelectPage0(pDevice->PortOffset);
--				}
--			}
--			if (pDevice->bChannelSwitch &&
--			    (pDevice->op_mode == NL80211_IFTYPE_STATION)) {
--				pDevice->byChannelSwitchCount--;
--				if (pDevice->byChannelSwitchCount == 0) {
--					pDevice->bChannelSwitch = false;
--					set_channel(pDevice, pDevice->byNewChannel);
--					VNTWIFIbChannelSwitch(pDevice->pMgmt, pDevice->byNewChannel);
--					MACvSelectPage1(pDevice->PortOffset);
--					MACvRegBitsOn(pDevice->PortOffset, MAC_REG_MSRCTL+1, MSRCTL1_TXPAUSE);
--					MACvSelectPage0(pDevice->PortOffset);
--					CARDbStartTxPacket(pDevice, PKT_TYPE_802_11_ALL);
--
--				}
--			}
- 			if (pDevice->op_mode != NL80211_IFTYPE_ADHOC) {
- 				if ((pDevice->bUpdateBBVGA) && pDevice->bLinkPass && (pDevice->uCurrRSSI != 0)) {
- 					long            ldBm;
-@@ -2234,10 +2105,11 @@ static  irqreturn_t  device_intr(int irq,  void *dev_instance)
- 			if (pDevice->bEnablePSMode)
- 				PSbIsNextTBTTWakeUp((void *)pDevice);
- 
--			if ((pDevice->op_mode == NL80211_IFTYPE_AP) ||
--			    (pDevice->op_mode == NL80211_IFTYPE_ADHOC)) {
-+			if ((pDevice->op_mode == NL80211_IFTYPE_AP ||
-+			    pDevice->op_mode == NL80211_IFTYPE_ADHOC) &&
-+			    pDevice->vif->bss_conf.enable_beacon) {
- 				MACvOneShotTimer1MicroSec(pDevice->PortOffset,
--							  (pMgmt->wIBSSBeaconPeriod - MAKE_BEACON_RESERVED) << 10);
-+							  (pDevice->vif->bss_conf.beacon_int - MAKE_BEACON_RESERVED) << 10);
- 			}
- 
- 			/* TODO: adhoc PS mode */
-@@ -2250,34 +2122,7 @@ static  irqreturn_t  device_intr(int irq,  void *dev_instance)
- 				pDevice->cbBeaconBufReadySetCnt = 0;
- 			}
- 
--			if (pDevice->op_mode == NL80211_IFTYPE_AP) {
--				if (pMgmt->byDTIMCount > 0) {
--					pMgmt->byDTIMCount--;
--					pMgmt->sNodeDBTable[0].bRxPSPoll = false;
--				} else {
--					if (pMgmt->byDTIMCount == 0) {
--						// check if mutltcast tx bufferring
--						pMgmt->byDTIMCount = pMgmt->byDTIMPeriod - 1;
--						pMgmt->sNodeDBTable[0].bRxPSPoll = true;
--						bScheduleCommand((void *)pDevice, WLAN_CMD_RX_PSPOLL, NULL);
--					}
--				}
--			}
- 			pDevice->bBeaconSent = true;
--
--			if (pDevice->bChannelSwitch) {
--				pDevice->byChannelSwitchCount--;
--				if (pDevice->byChannelSwitchCount == 0) {
--					pDevice->bChannelSwitch = false;
--					set_channel(pDevice, pDevice->byNewChannel);
--					VNTWIFIbChannelSwitch(pDevice->pMgmt, pDevice->byNewChannel);
--					MACvSelectPage1(pDevice->PortOffset);
--					MACvRegBitsOn(pDevice->PortOffset, MAC_REG_MSRCTL+1, MSRCTL1_TXPAUSE);
--					MACvSelectPage0(pDevice->PortOffset);
--					CARDbStartTxPacket(pDevice, PKT_TYPE_802_11_ALL);
--				}
--			}
--
- 		}
- 
- 		if (pDevice->dwIsr & ISR_RXDMA0)
-@@ -2293,14 +2138,10 @@ static  irqreturn_t  device_intr(int irq,  void *dev_instance)
- 			max_count += device_tx_srv(pDevice, TYPE_AC0DMA);
- 
- 		if (pDevice->dwIsr & ISR_SOFTTIMER1) {
--			if (pDevice->op_mode == NL80211_IFTYPE_AP) {
--				if (pDevice->bShortSlotTime)
--					pMgmt->wCurrCapInfo |= WLAN_SET_CAP_INFO_SHORTSLOTTIME(1);
--				else
--					pMgmt->wCurrCapInfo &= ~(WLAN_SET_CAP_INFO_SHORTSLOTTIME(1));
-+			if (pDevice->vif) {
-+				if (pDevice->vif->bss_conf.enable_beacon)
-+					vnt_beacon_make(pDevice, pDevice->vif);
- 			}
--			bMgrPrepareBeaconToSend(pDevice, pMgmt);
--			pDevice->byCntMeasure = 0;
- 		}
- 
- 		MACvReadISR(pDevice->PortOffset, &pDevice->dwIsr);
--- 
-2.1.0
 
+Michał
