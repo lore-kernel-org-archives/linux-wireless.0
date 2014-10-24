@@ -1,66 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0036.hostedemail.com ([216.40.44.36]:46240 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752502AbaJKSOt (ORCPT
+Received: from mailservices.uwaterloo.ca ([129.97.128.141]:58185 "EHLO
+	minos.uwaterloo.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752465AbaJXQEO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Oct 2014 14:14:49 -0400
-Message-ID: <1413051286.22149.2.camel@joe-AO725> (sfid-20141011_201458_576686_11F27D83)
-Subject: Re: [PATCH V3.18] rtlwifi: rtl8192ee: Prevent log spamming for
- switch statements
-From: Joe Perches <joe@perches.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	troy_tan@realsil.com.cn, netdev@vger.kernel.org
-Date: Sat, 11 Oct 2014 11:14:46 -0700
-In-Reply-To: <1413050393-6257-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1413050393-6257-1-git-send-email-Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Fri, 24 Oct 2014 12:04:14 -0400
+Message-ID: <544A7871.7020005@mailservices.uwaterloo.ca> (sfid-20141024_180417_238480_8F60A841)
+Date: Fri, 24 Oct 2014 12:04:01 -0400
+From: Ali Abedi <a2abedi@uwaterloo.ca>
+MIME-Version: 1.0
+To: ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org
+Subject: strange MPDU loss pattern
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2014-10-11 at 12:59 -0500, Larry Finger wrote:
-> The driver logs a message when the default branch of switch statements are
-> taken. Such information is useful when debugging, but these log items should
-> not be seen for standard usage.
+Hello,
 
-Hey Larry.
+We study the effects of 802.11n frame aggregation on throughput. We 
+noticed a
+strange pattern in the MPDU loss within an aggregated frame. It seems 
+that the
+second half of the MPDUs (those with higher sequence numbers) in an 
+aggregated frame
+are more likely to be lost. Is this a known fact or is there any 
+explanation for it?
 
-At some point, it'd be good to make RT_TRACE use
-the generic dynamic_debug facility.
-
-Something like the below, but I believe there are
-some issues with include ordering and #define DEBUG
-when dynamic_debug is not #defined.
-
----
-
- drivers/net/wireless/rtlwifi/debug.h | 7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/rtlwifi/debug.h b/drivers/net/wireless/rtlwifi/debug.h
-index fc794b3..fbc8185 100644
---- a/drivers/net/wireless/rtlwifi/debug.h
-+++ b/drivers/net/wireless/rtlwifi/debug.h
-@@ -178,17 +178,14 @@ do {									\
- do {									\
- 	if (unlikely(((comp) & rtlpriv->dbg.global_debugcomponents) &&	\
- 		     ((level) <= rtlpriv->dbg.global_debuglevel))) {	\
--		printk(KERN_DEBUG KBUILD_MODNAME ":%s():<%lx-%x> " fmt,	\
--		       __func__, in_interrupt(), in_atomic(),		\
--		       ##__VA_ARGS__);					\
-+		pr_debug(fmt, ##__VA_ARGS__);				\
- 	}								\
- } while (0)
- 
- #define RTPRINT(rtlpriv, dbgtype, dbgflag, fmt, ...)			\
- do {									\
- 	if (unlikely(rtlpriv->dbg.dbgp_type[dbgtype] & dbgflag)) {	\
--		printk(KERN_DEBUG KBUILD_MODNAME ": " fmt,		\
--		       ##__VA_ARGS__);					\
-+		pr_debug(fmt, ##__VA_ARGS__);				\
- 	}								\
- } while (0)
- 
+For example if 32 frames are aggregated with sequence numbers 100 to 131.
+Frames with sequence numbers 100-115 are more likely to be received 
+correctly
+than 116-131.
 
 
+Best,
+Ali
