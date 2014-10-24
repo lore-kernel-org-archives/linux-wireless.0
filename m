@@ -1,55 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:32926 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752491AbaJXTNS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Oct 2014 15:13:18 -0400
-Received: by mail-wg0-f47.google.com with SMTP id x13so1749710wgg.30
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Oct 2014 12:13:17 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:53330 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756090AbaJXMPQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Oct 2014 08:15:16 -0400
+Date: Fri, 24 Oct 2014 14:12:40 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: Pavel Machek <pavel@ucw.cz>,
+	kernel list <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>
+Subject: Re: 3.18-rc0: iwlegacy failed after a while
+Message-ID: <20141024121240.GA3177@redhat.com> (sfid-20141024_141553_303677_DBB68A22)
+References: <0BA3FCBA62E2DC44AF3030971E174FB31B552E3F@hasmsx107.ger.corp.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <544A7871.7020005@mailservices.uwaterloo.ca>
-References: <544A7871.7020005@mailservices.uwaterloo.ca>
-Date: Fri, 24 Oct 2014 12:13:16 -0700
-Message-ID: <CAJ-Vmon_jefxRgZvJmOsr4ydNHbvTCyMHHejRMWqXg_SG6NJUw@mail.gmail.com> (sfid-20141024_211325_276221_B9D14EEF)
-Subject: Re: strange MPDU loss pattern
-From: Adrian Chadd <adrian@freebsd.org>
-To: Ali Abedi <a2abedi@uwaterloo.ca>
-Cc: ath9k-devel <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB31B552E3F@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It's not completely unsurprising - the initial channel estimate and
-such is done at the beginning of each packet and stays constant. So if
-there's some varying channel conditions that change that during the
-duration of a packet, the tail end is going to end up having less SNR
-and may end up getting more errors.
+On Thu, Oct 23, 2014 at 01:02:37PM +0000, Grumbach, Emmanuel wrote:
+> [Changed subject]
+> This is really iwlegacy and not iwlwifi.
+> 
+> 
+> > 
+> > Hi!
+> > 
+> > Full dmesg is in the attachment, I guess the troubles started with:
+> > 
+> > iwl3945 0000:03:00.0: Queue 4 stuck for 2004 ms.
+> > iwl3945 0000:03:00.0: On demand firmware reload
+> > iwl3945 0000:03:00.0: Master Disable Timed Out, 100 usec
+> > ieee80211 phy0: Hardware restart was requested
+> > iwl3945 0000:03:00.0: BSM uCode verification failed at addr
+> > 0x00003800+0 (of 900), is 0xa5\
+> > a5a5a2, s/b 0xf802020
+> > iwl3945 0000:03:00.0: Unable to set up bootstrap uCode: -5
+> > 
+> > Best regards,
+> > 								Pavel
+> > 
+> > --
+> 
+> Huh - I don't remember any change there, but you should ask the right person - iwlegacy maintainer :)
 
+Since 3.17 we have only 2 minor iwlegacy changes on current linus tree.
+If this is a regression it's probably caused by different subsystem
+changes, most likely by PCI changes. If this is not regression, such
+errors could be caused by enabling PS, but that has to be done
+explicitly, Pavel did you enable power_save ? 
 
--adrian
-
-On 24 October 2014 09:04, Ali Abedi <a2abedi@uwaterloo.ca> wrote:
-> Hello,
->
-> We study the effects of 802.11n frame aggregation on throughput. We noticed
-> a
-> strange pattern in the MPDU loss within an aggregated frame. It seems that
-> the
-> second half of the MPDUs (those with higher sequence numbers) in an
-> aggregated frame
-> are more likely to be lost. Is this a known fact or is there any explanation
-> for it?
->
-> For example if 32 frames are aggregated with sequence numbers 100 to 131.
-> Frames with sequence numbers 100-115 are more likely to be received
-> correctly
-> than 116-131.
->
->
-> Best,
-> Ali
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Stanislaw
