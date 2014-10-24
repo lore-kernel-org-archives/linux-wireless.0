@@ -1,69 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:36211 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753055AbaJTJk4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2014 05:40:56 -0400
-Message-ID: <1413798050.10246.8.camel@jlt4.sipsolutions.net> (sfid-20141020_114118_044397_6F60E700)
-Subject: Re: [PATCH 1/4] mac80211: OCB mode + join and leave handling
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rostislav Lisovy <lisovy@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
-	jan-niklas.meier@volkswagen.de, burak.simsek@volkswagen.de,
-	Emmanuel Thierry <emmanuel.thierry@yogoko.fr>,
-	laszlo.virag@commsignia.com,
-	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
-Date: Mon, 20 Oct 2014 11:40:50 +0200
-In-Reply-To: <1413477188.15416.10.camel@umadbro> (sfid-20141016_183311_325998_34050460)
-References: <1410445822-6559-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
-	 <1410445822-6559-2-git-send-email-rostislav.lisovy@fel.cvut.cz>
-	 (sfid-20140911_163047_025105_09D86D44) <1412843005.1828.14.camel@jlt4.sipsolutions.net>
-	 <1413477188.15416.10.camel@umadbro> (sfid-20141016_183311_325998_34050460)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pd0-f180.google.com ([209.85.192.180]:59754 "EHLO
+	mail-pd0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753878AbaJXLaW convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Oct 2014 07:30:22 -0400
+Received: by mail-pd0-f180.google.com with SMTP id fp1so1312827pdb.11
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Oct 2014 04:30:22 -0700 (PDT)
+Date: Fri, 24 Oct 2014 20:30:19 +0900
+From: Okhwan Lee <ohlee@mwnl.snu.ac.kr>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"=?utf-8?Q?ath10k=40lists.infradead.org?="
+	<ath10k@lists.infradead.org>
+Message-ID: <etPan.544a384b.74b0dc51.8406@Mac-Pro.local> (sfid-20141024_133026_517873_67D15D72)
+In-Reply-To: <CA+BoTQn0iEYEQJ4AdO7xfRSHjX1CfO_uovPaxbtxSWQw0vPS+Q@mail.gmail.com>
+References: <CANzpp-=opT==PUf5FhWi_cbB91+RhWk+jB7M4bfUCqh2wzQA2A@mail.gmail.com>
+ <CA+BoTQmHGtO+XCRg1_jJstm+wHRQLU9sEpBRJ7U+_xO3nq7_VA@mail.gmail.com>
+ <CANzpp-kV8LzPgeXHq=DHKsLSdTT+-9gjj08RXST4r3-QOtkanw@mail.gmail.com>
+ <CA+BoTQn0iEYEQJ4AdO7xfRSHjX1CfO_uovPaxbtxSWQw0vPS+Q@mail.gmail.com>
+Subject: Re: Change channel bandwidth without iw command
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-10-16 at 18:33 +0200, Rostislav Lisovy wrote:
+ Hi, 
 
-> You are right. I hope the following is a reasonable solution (in form of
-> a patch to my previous patch; comment stolen from some prehistoric
-> version of mesh.c):
-> 
-> @@ -127,6 +127,9 @@ void ieee80211_ocb_work(struct ieee80211_sub_if_data *sdata)
->         struct ieee80211_if_ocb *ifocb = &sdata->u.ocb;
->         struct sta_info *sta;
+This linked images are the printed error messages when the kernel is in panic. 
+http://www.mwnl.snu.ac.kr/~ohlee/1.jpg
+http://www.mwnl.snu.ac.kr/~ohlee/2.jpg
+
+Thank you for your help.
+
+Okhwan
+
+
+--  
+Okhwan Lee
+Sent with Airmail  
+
+켜짐 2014년 10월 24일 에서 오후 4:49:23, Michal Kazior (michal.kazior@tieto.com(mailto:michal.kazior@tieto.com)) 작성됨:
+
+> On 23 October 2014 08:57, Okhwan Lee wrote:
+> > Hi,
+> >
+> > Thank you for your answer.
+> >
+> >> The panic printout would be most helpful. My best guess is this
+> >> crashes in ath10k_dbg() at the very beginning of ath10k_config_chan
+> >> because ar->chandef.chan is NULL. This is probably the case since you
+> >> use monitor_chandef which is probably "empty" at the point you invoke
+> >> your code.
+> >
+> > First, we confirm that ar->chandef.chan is not NULL.
+> > We find out the the error occurs when "wait_for_completion_timeout" is called.
+> > Ath10k is trying to stop vdev (monitor_dev) when change the channel setting.
+> > We have no idea about the details of function, but it make waiting
+> > time duration for previous event.
+> > We also test by replacing wait_for_completion_timeout to
+> > wait_for_completion (i.e., it use maximum timeout value)
+> > But the kernel panic is still there.
+> >
+> > However, it is not easy to printout the messages when the panic is occurred,
+> > because the system stop (similar to bluescreen in widnows?).
+> > After reboot the system, the log messagess from panic is not recored
+> > in kernel log messages (/var/log/syslog, dmesg, kernel_llog) .
 >  
-> +       if (!netif_running(sdata->dev))
-> +               return;
-
-Not sure, it seems you should check "is it operating in OCB mode"? OTOH,
-when it's not operating but still around it probably doesn't matter?
-
-> @@ -229,6 +232,13 @@ int ieee80211_ocb_leave(struct ieee80211_sub_if_data *sdata)
->         skb_queue_purge(&sdata->skb_queue);
+> Can you at least do a photo of the panic, post it to an image hosting
+> site and link it, please?
 >  
->         del_timer_sync(&sdata->u.ocb.housekeeping_timer);
-> +       /*
-> +        * If the timer fired while we waited for it, it will have
-> +        * requeued the work. Now the work will be running again
-> +        * but will not rearm the timer again because it checks
-> +        * whether the interface is running, which, at this point,
-> +        * it no longer is.
-> +        */
-
-Well, the comment is wrong, since leave() can and will be done while the
-interface is running.
-
-> > This isn't safe - ocb_rx_no_sta() used GFP_KERNEL, that's clearly not
-> > allowed in this context. But it does answer my previous question about
-> > the function being exported - I had assumed that you wouldn't call it
-> > here since it would be unsafe :)
-> 
-> A call to sta_info_alloc(sdata, addr, GFP_ATOMIC);
-> in ieee80211_ocb_rx_no_sta() should solve this.
-
-Yeah, I guess so, didn't check in detail now.
-
-johannes
+>  
+> Michał
 
