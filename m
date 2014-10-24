@@ -1,182 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from daemonizer.de ([87.230.18.164]:51210 "EHLO daemonizer.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753471AbaJHWTQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Oct 2014 18:19:16 -0400
-From: Maximilian Engelhardt <maxi@daemonizer.de>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Michael Tokarev <mjt@tls.msk.ru>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: BCM4313 & brcmsmac & 3.12: only semi-working?
-Date: Thu, 09 Oct 2014 00:19:03 +0200
-Message-ID: <1527190.sqFmD6XRNJ@eisbaer> (sfid-20141009_001925_770333_859F495D)
-In-Reply-To: <542A8092.9090602@broadcom.com>
-References: <53FDACD1.8090805@msgid.tls.msk.ru> <2326963.udog5tteBt@eisbaer> <542A8092.9090602@broadcom.com>
+Received: from mail-yh0-f51.google.com ([209.85.213.51]:58253 "EHLO
+	mail-yh0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752092AbaJXFcq convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Oct 2014 01:32:46 -0400
+Received: by mail-yh0-f51.google.com with SMTP id t59so444530yho.38
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Oct 2014 22:32:45 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart5197269.Gpuo0GhADS"; micalg="pgp-sha512"; protocol="application/pgp-signature"
+In-Reply-To: <CANUX_P0FPDSjAzh1uJ2LxWp9H8CXJgK1sdE+HYMcrTVLNH+1Kg@mail.gmail.com>
+References: <1413463736.1316541.179720977.4FD32021@webmail.messagingengine.com>
+	<54463CE9.3060400@gmail.com>
+	<1413921415.3763081.181696749.20A0A495@webmail.messagingengine.com>
+	<CANUX_P0LRRczVCSFR7RE5coaYFxwFXyqC90pdm=oVwEiEt-7zw@mail.gmail.com>
+	<1414014805.4127522.182191541.14C8B4DF@webmail.messagingengine.com>
+	<CANUX_P0tGagXsN6XCeb_itQehqD3O9fmqknU6iSMO432NQtATA@mail.gmail.com>
+	<1414049448.32460.182326557.1A0A85A4@webmail.messagingengine.com>
+	<CANUX_P3usjdccnsYPQXzKbJ1PTH91fasf6BpcsCRYZH_yq2tww@mail.gmail.com>
+	<1414080125.164673.182502929.61AF3AB1@webmail.messagingengine.com>
+	<CANUX_P2pJYNhLEMw=iQVe-CSbxqRDqOXL_gUZXxwpmAj2qj=FA@mail.gmail.com>
+	<1414085934.228950.182543717.6FA0F16D@webmail.messagingengine.com>
+	<CANUX_P0nK9AQEzYGfGFKEU_vVJ9fwOPmjGTCL--zmk+J4uCz4Q@mail.gmail.com>
+	<1414093367.254547.182592325.0C3991E4@webmail.messagingengine.com>
+	<CANUX_P3sTY45ozSL6Rj0PRYgo9aPACdp97HV1SQna3AW5V75xw@mail.gmail.com>
+	<1414094840.260168.182602541.16435971@webmail.messagingengine.com>
+	<5449621C.3070400@gmail.com>
+	<1414096032.264032.182610177.3DACE1A9@webmail.messagingengine.com>
+	<CANUX_P0FPDSjAzh1uJ2LxWp9H8CXJgK1sdE+HYMcrTVLNH+1Kg@mail.gmail.com>
+Date: Fri, 24 Oct 2014 08:32:45 +0300
+Message-ID: <CANUX_P1MAY1gGjsGsk7P-Z4GBAAO_vdikbniphf7rk1jxy9Mbw@mail.gmail.com> (sfid-20141024_073250_135739_6414251C)
+Subject: Re: iwlwifi: Reason 7 periodic disconnect
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: =?UTF-8?Q?Lauren=C8=9Biu_Nicola?= <lnicola@dend.ro>
+Cc: poma <pomidorabelisima@gmail.com>, Dan Williams <dcbw@redhat.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Oct 23, 2014 at 11:33 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+> On Thu, Oct 23, 2014 at 11:27 PM, Laurențiu Nicola <lnicola@dend.ro> wrote:
+>> https://bpaste.net/show/8a0e5c68762f
+>>
+>> On Thu, Oct 23, 2014, at 23:16, Emmanuel Grumbach wrote:
+>>> > https://bpaste.net/show/5cc48256d952
+>>> >
+>>> > On Thu, Oct 23, 2014, at 22:55, Emmanuel Grumbach wrote:
+>>> >> On Thu, Oct 23, 2014 at 10:42 PM, Laurențiu Nicola <lnicola@dend.ro>
+>>> >> wrote:
+>>> >>> Doesn't seem to help https://bpaste.net/show/68e1a6b33689.
+>>> >>
+>>> >> ok - let me re-add the logs...
+>>> >>
+>>> >>
+>>>
+>>> This makes no sense to me.
+>>> We do talk to the AP since we get frames Acked...
+>
+> This again makes no sense to me.
+> Time to go to bed I guess.
 
---nextPart5197269.Gpuo0GhADS
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+Can you please open a bug on bugzilla.kernel.org?
+Make sure to CC ilw@linux.intel.com
 
-On Tuesday 30 September 2014 12:06:10 Arend van Spriel wrote:
-> On 09/29/14 21:40, Maximilian Engelhardt wrote:
-> > On Monday 29 September 2014 15:44:03 Arend van Spriel wrote:
-> >> On 09/26/14 17:20, Michael Tokarev wrote:
-> >>> I can send it your way, -- guess it will be quite a bit costly,
-> >>> but I don't have any use for it anyway (short of throwing it
-> >>> away), and since I already spent significantly more money due
-> >>> to all this (whole thinkpad plus ssds and several wifi adaptors),
-> >>> this additional cost is just a small noize.  But since that's
-> >>> 2nd card in a row, maybe there's something else in there, the
-> >>> prob is not in the card?
-> >> 
-> >> Could be. Maybe some BIOS issue. Can you make some hi-res pictures of
-> >> the card and email them to me? If it is identical to what I already have
-> >> over here there is not much sense in sending it.
-> >> 
-> >> Regards,
-> >> Arend
-> > 
-> > Hi Arend,
-> > 
-> > I just saw this thread on linux-wireless and wanted to answer as it might
-> > be of interest to you.
-> > 
-> > I also own a BCM4313 wireless network card. About a year ago I reported
-> > some problems with reception strength which were then fixed after some
-> > time, debugging and testing passed. At that time I also did some
-> > throughput testing, but only had a 802.11g access-point to test. The
-> > results were not ideal, but also not too bad. So at that time I thought
-> > the issues were all more or less fixed and mostly fine. I also don't use
-> > wireless very much, so as long as things do work somehow acceptable I
-> > probably don't notice any problems immediately. So it comes that only
-> > about some month ago I noticed that the throughput I measured with my 11g
-> > access-point (about half the rate than with an atheros card on the same
-> > ap) is about the same on a 11n access-point where it should be much
-> > faster. I didn't experience any stalls, but that may also be that I
-> > didn't use the card enough to really notice them.
-> > 
-> > I always wanted to report a bug because of the low throughout, but never
-> > got to it because of lack of time. I didn't want to provide a report
-> > saying just it doesn't work or it's slow without any data about it and a
-> > description how to reproduce it, as I think without this information a
-> > bug report is mostly useless.
-> > 
-> > I also had a look at the kernel changelog of the brcmsm driver and notices
-> > there was little to no activity lately. Because of this I also wasn't sure
-> > if there is still someone interesting in fixing bugs for this device.
-> > 
-> > As I was annoyed by the bad support for this card I decided it would be
-> > more easy and much less time consuming to simply buy another card than
-> > trying to get this fixed. So I bought a BCM43228 card, because it also
-> > supports 5 GHz. Only after it arrived I noticed that it was only
-> > supported by the 3.17+ kernel (not so much of a problem) and that it only
-> > seems to work in 802.11g mode (only slow speeds and no 5 GHz). At least I
-> > could use it in full 11g speeds, so it was a improvement.
-> > 
-> > So I still don't have a card that does simply work. As I hope the missing
-> > support for my BCM43228 will hopefully be added some time in the future it
-> > probably would still be worth fixing the BCM4313 card as other users will
-> > also benefit from it.
-> > 
-> > A friend of mine also has the same laptop than me and the same (or at
-> > least
-> > very similar) wireless card. He has told me he has also problem with
-> > stalls
-> > like Michael reported (if I remember the history of the thread correctly).
-> > 
-> > So I'm not really sure where I should go from here. I can try to provide
-> > some debugging information as time permits, but I don't know how much
-> > time I will have for this in the future. Of course ideally I want to use
-> > the BCM43228 card with full support, as it can work on 5 GHz.
-> > 
-> > Currently the BCM43228 card is plugged into my laptop, but I want to avoid
-> > swapping the cards more that very few times because the antenna connectors
-> > are only designed for very few (un)plug cycles.
-> > 
-> > If it's of any information, my card is labeled BCM-BCM94313HMGB on the
-> > sticker, the laptop where it was originally is a ThinkPad Edge E135.
-> 
-> Thanks for taking time to chime in. This chipset is a pain in the....
-> The label info does help. You have a 4313 with internal PA for which
-> support was added later. The card that Michael has seems to have an
-> external PA. The initial iPA support patch broke things for everyone
-> with external PA so it was reverted. In the second round it was better,
-> but it seems Michael still had issues. As he mentioned BT issues and his
-> card shares the external PA between WLAN and BT I believe that there is
-> a BT-coex issue.
-> 
-> What is causing your 4313 to seemingly do 11g rates is hard to tell
-> without any debug info. I have that card over here, but in my cabled
-> setup it is doing 72Mbps, ie. 11n rate. I can run a rate-vs-range test
-> to see if there is an issue.
-> 
-> Thanks again and
-> Regards,
-> Arend
+This will make it more trackable.
+Thanks.
 
-Hi Arend,
-
-Today I changed back to the BC4313 card to verify the speed is still slow. At 
-first it was slow as I remembered it (down about 3 Mbits/s, up about 1 Mbit/s, 
-measured with iperf).
-I then booted an Ubuntu Live image to try the wl driver, just to verify that 
-it performs better and the hardware is still fine. First on the Ubuntu Live 
-image the speed with the brcmsmac driver were the same as in my test above. I 
-the installed the wl driver, unloaded the brcmsmac module and loaded the wl 
-module. That however did not work as something in the kernel crashed and 
-wireless didn't work at all. I rebootet the system to test again in case this 
-was a random failure. What was interesting after this reboot was that the 
-wireless connection was fast with the brcmsmac driver. I got about 35 Mbit/s 
-up and down speed. I then tried the wl driver again but it still crashed.
-
-After this I rebooted into my normal Debian system and the brcmsmac driver was 
-still fast. So what was different now than before. I realized that I always did 
-a reboot, so the Laptop was never really off between the boots. I then shut 
-down the laptop and waited a few seconds before turning it on again. And after 
-that the driver was back to the slow speed.
-
-I did not verify this a second time, but for now it very much looks like the 
-wl driver is settings something in the card that is necessary for getting 
-faster speeds. This seems to be preserved on reboot but not on poweroff.
-
-I hope this my help you finding the problem in the brcmsmac driver. Feel free 
-to ask if you need any addition debug information from me.
-
-And for the record, my atheros usb card is still much faster, it reaches 
-130 Mbit/s.
-
-Greetings,
-Maxi
-
---nextPart5197269.Gpuo0GhADS
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAABCgAGBQJUNbhaAAoJEIHqZH0kK9IVK4YQAIX0p/7UOQtXVVlOhIKvvcM9
-xTR4YDJ3gHyiKKSx/kZOCgmuyjbTkZ7A1s2re3DYzaNnY3TM1Y7rNOV8v5ao/dsA
-j4/zAub0bv3E7r3hNi85J30BHv365yMTtrZDqwuQxPx2vtZ8aAZVTQHGEmuTjAWJ
-o8PF2eevySWsnvfciyWlJMwESTi1HdHhOuAZWvxiv+fTbgQNCZdK90CeGvHnTKz1
-1oDY8Yae0U5XzwmvuRpxCjS5IHWuAzrUrGjKY2ri3fodjSGcLryOe7d+qWMidJAS
-iaT51AIm0yzKFTye1UZ9cWK/3B7cIWETct4f+LyjnzfL9t4OKgt9MtKDyuGThy10
-4jDAcWbJI6HXRJbskDixK2AOqRGVs9wqwXEP/+5q/lSA/fH1pBYjn53ojNib3BEz
-7lBpquUY9VkDfzGgyc+BhCWtpUmlXGaYK50+SMKhLaoxoaJGnmE4TDIbRaaCmzLa
-S4/6LOGu/FeH8Fpx0vAn04oYxbo1oLvzutdzbOOLiOKDahtWzn9b7hILCTT7126H
-fPJqLxycJPcwQFWdTos/iw8L8K51JIrL/fBRgtVLduyhuWbzcu7F70tmeszKWGCk
-wyRZD9tzT0nCSaLRRY/c2l/VfCbOsSc4jpKkddeR4YROnYW88in9uB9DNHqmGcXg
-cFaWCpiB3t0OGzVS7j+M
-=bSVn
------END PGP SIGNATURE-----
-
---nextPart5197269.Gpuo0GhADS--
-
+>
+>>>
+>>> Can you please apply this on top of what you have?
+>>>
+>>> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+>>> index 2de8870..f3b1e62 100644
+>>> --- a/net/mac80211/mlme.c
+>>> +++ b/net/mac80211/mlme.c
+>>> @@ -1991,15 +1991,16 @@ void ieee80211_sta_tx_notify(struct
+>>> ieee80211_sub_if_data *sdata,
+>>>         if (ieee80211_is_nullfunc(hdr->frame_control) &&
+>>>             sdata->u.mgd.probe_send_count > 0) {
+>>>                 if (ack)
+>>> -                       ieee80211_sta_reset_conn_monitor(sdata);
+>>> +               //      ieee80211_sta_reset_conn_monitor(sdata);
+>>> +               ;
+>>>                 else
+>>>                         sdata->u.mgd.nullfunc_failed = true;
+>>>                 ieee80211_queue_work(&sdata->local->hw, &sdata->work);
+>>>                 return;
+>>>         }
+>>>
+>>> -       if (ack)
+>>> -               ieee80211_sta_reset_conn_monitor(sdata);
+>>> +//     if (ack)
+>>> +//             ieee80211_sta_reset_conn_monitor(sdata);
+>>>  }
+>>>
+>>>  static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data
+>>>  *sdata)
+>>>
+>>>
+>>> Thanks.
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+>>> in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
