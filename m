@@ -1,52 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:7444 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161347AbaJaAdu (ORCPT
+Received: from mail-qg0-f54.google.com ([209.85.192.54]:45830 "EHLO
+	mail-qg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754682AbaJXTLP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Oct 2014 20:33:50 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v3 0/3] ath10k: speed up recovery
-References: <1414488878-31561-1-git-send-email-michal.kazior@tieto.com>
-Date: Fri, 31 Oct 2014 02:33:44 +0200
-In-Reply-To: <1414488878-31561-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Tue, 28 Oct 2014 10:34:35 +0100")
-Message-ID: <87h9yldqmv.fsf@kamboji.qca.qualcomm.com> (sfid-20141031_013354_305876_7BFD8E83)
+	Fri, 24 Oct 2014 15:11:15 -0400
+Message-ID: <544AA3EE.7080806@gmail.com> (sfid-20141024_211138_057309_350B627C)
+Date: Fri, 24 Oct 2014 17:09:34 -0200
+From: Murilo Opsfelder Araujo <mopsfelder@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Mike Galbraith <umgwanakikbuti@gmail.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	troy_tan@realsil.com.cn, netdev@vger.kernel.org,
+	Thadeu Cascardo <cascardo@cascardo.eti.br>
+Subject: Re: [PATCH V3.18] rtlwifi: Add check for get_btc_status callback
+References: <1414081629-23002-1-git-send-email-Larry.Finger@lwfinger.net>	 <1414087731.5231.19.camel@marge.simpson.net>	 <5449478B.4070908@lwfinger.net> <1414116580.23080.10.camel@marge.simpson.net> <544A80B5.1090604@lwfinger.net> <544A96C0.8030107@gmail.com>
+In-Reply-To: <544A96C0.8030107@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+On 10/24/2014 04:13 PM, Murilo Opsfelder Araujo wrote:
+> On 10/24/2014 02:39 PM, Larry Finger wrote:
+> [...]
+>>
+>> Please try the attached patch. It replaces the second one I sent you. I
+>> will probably redo it before submitting the final copy, but this should
+>> work.
+>>
+>> Larry
+>>
+> Hi, Larry.
+>
+> I've tried your patch on top of next-20141023 and it is still crashing
+> on my laptop:
+>
+> http://opsfelder.com/~murilo/lkml/next-20141023_plus_larry_patch_v2.jpg
+>
+It seems a get_btc_status() check was still missing:
 
-> Patch #1 fixes a bug I've found while testing
-> patches #2 and #3. It's safe to cherry-pick it in
-> case patches #2 and/or #3 aren't accepted or need
-> a re-spin.
->
-> I've mainly used patch #2 to test reset and
-> recovery. It's pretty handy for (stress-)testing.
->
-> Patch #3 should improve recovery speed in some
-> cases. Notably when there's a long chain of WMI
-> commands involved which take a painfully long time
-> to timeout/complete if firmware crashes mid-way.
->
-> Note: Patches #2 and #3 depend on `ath10k: pci
-> related fixes 2014-10-09`. Without the patchset
-> patches #2 and #3 must not be applied. Patch #1 is
-> fine though.
->
-> v3:
->  * skip shadow ring cleanup in #1
->
-> Michal Kazior (3):
->   ath10k: fix possible bmi crash
->   ath10k: expose hw restart via debugfs
->   ath10k: speed up hw recovery
+diff --git a/drivers/net/wireless/rtlwifi/pci.c 
+b/drivers/net/wireless/rtlwifi/pci.c
+index a5a350a..ed3364d 100644
+--- a/drivers/net/wireless/rtlwifi/pci.c
++++ b/drivers/net/wireless/rtlwifi/pci.c
+@@ -1796,7 +1796,8 @@ static int rtl_pci_start(struct ieee80211_hw *hw)
+         rtl_pci_reset_trx_ring(hw);
 
-Thanks, all three patches applied.
+         rtlpci->driver_is_goingto_unload = false;
+-       if (rtlpriv->cfg->ops->get_btc_status()) {
++       if (rtlpriv->cfg->ops->get_btc_status &&
++           rtlpriv->cfg->ops->get_btc_status()) {
+                 rtlpriv->btcoexist.btc_ops->btc_init_variables(rtlpriv);
+                 rtlpriv->btcoexist.btc_ops->btc_init_hal_vars(rtlpriv);
+         }
+
+With this minor change and Larry's latest fix_misc_desc patch, 
+next-20141023 booted normally and kernel panic disappeared.
+
+Now, there is no wifi network available or found by wlan0.
 
 -- 
-Kalle Valo
+Murilo
