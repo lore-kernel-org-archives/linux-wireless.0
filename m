@@ -1,153 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:46757 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750942AbaJIIMJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2014 04:12:09 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH 5/5] ath9k: Check for pending frames properly
-Date: Thu,  9 Oct 2014 13:42:52 +0530
-Message-Id: <1412842372-17628-6-git-send-email-sujith@msujith.org> (sfid-20141009_101221_672107_E4CC38BB)
-In-Reply-To: <1412842372-17628-1-git-send-email-sujith@msujith.org>
-References: <1412842372-17628-1-git-send-email-sujith@msujith.org>
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:59785 "EHLO
+	out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755925AbaJXIe4 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Oct 2014 04:34:56 -0400
+Received: from compute2.internal (compute2.nyi.internal [10.202.2.42])
+	by mailout.nyi.internal (Postfix) with ESMTP id 50E1420C60
+	for <linux-wireless@vger.kernel.org>; Fri, 24 Oct 2014 04:34:55 -0400 (EDT)
+Message-Id: <1414139694.796795.182782121.5786657C@webmail.messagingengine.com> (sfid-20141024_103513_778929_ABABA22D)
+From: =?UTF-8?Q?Lauren=C8=9Biu=20Nicola?= <lnicola@dend.ro>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: poma <pomidorabelisima@gmail.com>, Dan Williams <dcbw@redhat.com>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <CANUX_P1MAY1gGjsGsk7P-Z4GBAAO_vdikbniphf7rk1jxy9Mbw@mail.gmail.com>
+References: <1413463736.1316541.179720977.4FD32021@webmail.messagingengine.com>
+ <54463CE9.3060400@gmail.com>
+ <1413921415.3763081.181696749.20A0A495@webmail.messagingengine.com>
+ <CANUX_P0LRRczVCSFR7RE5coaYFxwFXyqC90pdm=oVwEiEt-7zw@mail.gmail.com>
+ <1414014805.4127522.182191541.14C8B4DF@webmail.messagingengine.com>
+ <CANUX_P0tGagXsN6XCeb_itQehqD3O9fmqknU6iSMO432NQtATA@mail.gmail.com>
+ <1414049448.32460.182326557.1A0A85A4@webmail.messagingengine.com>
+ <CANUX_P3usjdccnsYPQXzKbJ1PTH91fasf6BpcsCRYZH_yq2tww@mail.gmail.com>
+ <1414080125.164673.182502929.61AF3AB1@webmail.messagingengine.com>
+ <CANUX_P2pJYNhLEMw=iQVe-CSbxqRDqOXL_gUZXxwpmAj2qj=FA@mail.gmail.com>
+ <1414085934.228950.182543717.6FA0F16D@webmail.messagingengine.com>
+ <CANUX_P0nK9AQEzYGfGFKEU_vVJ9fwOPmjGTCL--zmk+J4uCz4Q@mail.gmail.com>
+ <1414093367.254547.182592325.0C3991E4@webmail.messagingengine.com>
+ <CANUX_P3sTY45ozSL6Rj0PRYgo9aPACdp97HV1SQna3AW5V75xw@mail.gmail.com>
+ <1414094840.260168.182602541.16435971@webmail.messagingengine.com>
+ <5449621C.3070400@gmail.com>
+ <1414096032.264032.182610177.3DACE1A9@webmail.messagingengine.com>
+ <CANUX_P0FPDSjAzh1uJ2LxWp9H8CXJgK1sdE+HYMcrTVLNH+1Kg@mail.gmail.com>
+ <CANUX_P1MAY1gGjsGsk7P-Z4GBAAO_vdikbniphf7rk1jxy9Mbw@mail.gmail.com>
+Subject: Re: iwlwifi: Reason 7 periodic disconnect
+Date: Fri, 24 Oct 2014 11:34:54 +0300
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Okay, I've filed a bug [1].
 
-Pending frames in the driver can be present
-either in the HW queues or SW. ath9k_has_pending_frames()
-currently checks for the HW queues first and then
-checks if any ACs are queued in the driver.
+At some point you mentioned about using another device to monitor
+traffic. I don't have another laptop running Linux (would Android
+count?), but DD-WRT has a "wl monitor" command [2] that sounds useful.
+Should I try to install tcpdump on my router?
 
-In MCC mode, we need to check the HW queues alone, since
-the SW queues are just marked as 'stopped' - they will
-be processed in the next context switch. But since we
-don't differentiate this now, mention whether we want
-to check if there are frames in the SW queues.
+Laurentiu
 
-* The flush() callback checks both HW and SW queues.
-* The tx_frames_pending() callback does the same.
-* The call to __ath9k_flush() in MCC mode checks HW queues alone.
+[1] https://bugzilla.kernel.org/show_bug.cgi?id=86801
+[2] http://www.dd-wrt.com/wiki/index.php/Wl#monitor
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h   |  3 ++-
- drivers/net/wireless/ath/ath9k/channel.c |  5 +++--
- drivers/net/wireless/ath/ath9k/main.c    | 21 ++++++++++++++-------
- 3 files changed, 19 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 43c1987..d4b71ed 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -715,7 +715,8 @@ int ath_update_survey_stats(struct ath_softc *sc);
- void ath_update_survey_nf(struct ath_softc *sc, int channel);
- void ath9k_queue_reset(struct ath_softc *sc, enum ath_reset_type type);
- void ath_ps_full_sleep(unsigned long data);
--void __ath9k_flush(struct ieee80211_hw *hw, u32 queues, bool drop);
-+void __ath9k_flush(struct ieee80211_hw *hw, u32 queues, bool drop,
-+		   bool sw_pending);
- 
- /**********/
- /* BTCOEX */
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index abc3e2e..9c4f872 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -1137,10 +1137,11 @@ void ath_chanctx_set_next(struct ath_softc *sc, bool force)
- 		ath9k_chanctx_stop_queues(sc, sc->cur_chan);
- 		queues_stopped = true;
- 
--		__ath9k_flush(sc->hw, ~0, true);
-+		__ath9k_flush(sc->hw, ~0, true, false);
- 
- 		if (ath_chanctx_send_ps_frame(sc, true))
--			__ath9k_flush(sc->hw, BIT(IEEE80211_AC_VO), false);
-+			__ath9k_flush(sc->hw, BIT(IEEE80211_AC_VO),
-+				      false, false);
- 
- 		send_ps = true;
- 		spin_lock_bh(&sc->chan_lock);
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 81a20de..2048ef1 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -54,7 +54,8 @@ u8 ath9k_parse_mpdudensity(u8 mpdudensity)
- 	}
- }
- 
--static bool ath9k_has_pending_frames(struct ath_softc *sc, struct ath_txq *txq)
-+static bool ath9k_has_pending_frames(struct ath_softc *sc, struct ath_txq *txq,
-+				     bool sw_pending)
- {
- 	bool pending = false;
- 
-@@ -65,6 +66,9 @@ static bool ath9k_has_pending_frames(struct ath_softc *sc, struct ath_txq *txq)
- 		goto out;
- 	}
- 
-+	if (!sw_pending)
-+		goto out;
-+
- 	if (txq->mac80211_qnum >= 0) {
- 		struct list_head *list;
- 
-@@ -2003,7 +2007,8 @@ static void ath9k_set_coverage_class(struct ieee80211_hw *hw,
- 	mutex_unlock(&sc->mutex);
- }
- 
--static bool ath9k_has_tx_pending(struct ath_softc *sc)
-+static bool ath9k_has_tx_pending(struct ath_softc *sc,
-+				 bool sw_pending)
- {
- 	int i, npend = 0;
- 
-@@ -2011,7 +2016,8 @@ static bool ath9k_has_tx_pending(struct ath_softc *sc)
- 		if (!ATH_TXQ_SETUP(sc, i))
- 			continue;
- 
--		npend = ath9k_has_pending_frames(sc, &sc->tx.txq[i]);
-+		npend = ath9k_has_pending_frames(sc, &sc->tx.txq[i],
-+						 sw_pending);
- 		if (npend)
- 			break;
- 	}
-@@ -2025,11 +2031,12 @@ static void ath9k_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	struct ath_softc *sc = hw->priv;
- 
- 	mutex_lock(&sc->mutex);
--	__ath9k_flush(hw, queues, drop);
-+	__ath9k_flush(hw, queues, drop, true);
- 	mutex_unlock(&sc->mutex);
- }
- 
--void __ath9k_flush(struct ieee80211_hw *hw, u32 queues, bool drop)
-+void __ath9k_flush(struct ieee80211_hw *hw, u32 queues, bool drop,
-+		   bool sw_pending)
- {
- 	struct ath_softc *sc = hw->priv;
- 	struct ath_hw *ah = sc->sc_ah;
-@@ -2056,7 +2063,7 @@ void __ath9k_flush(struct ieee80211_hw *hw, u32 queues, bool drop)
- 	ath_dbg(common, CHAN_CTX,
- 		"Flush timeout: %d\n", jiffies_to_msecs(timeout));
- 
--	if (wait_event_timeout(sc->tx_wait, !ath9k_has_tx_pending(sc),
-+	if (wait_event_timeout(sc->tx_wait, !ath9k_has_tx_pending(sc, sw_pending),
- 			       timeout) > 0)
- 		drop = false;
- 
-@@ -2079,7 +2086,7 @@ static bool ath9k_tx_frames_pending(struct ieee80211_hw *hw)
- {
- 	struct ath_softc *sc = hw->priv;
- 
--	return ath9k_has_tx_pending(sc);
-+	return ath9k_has_tx_pending(sc, true);
- }
- 
- static int ath9k_tx_last_beacon(struct ieee80211_hw *hw)
--- 
-2.1.2
-
+On Fri, Oct 24, 2014, at 08:32, Emmanuel Grumbach wrote:
+> On Thu, Oct 23, 2014 at 11:33 PM, Emmanuel Grumbach <egrumbach@gmail.com>
+> wrote:
+> > On Thu, Oct 23, 2014 at 11:27 PM, Laurențiu Nicola <lnicola@dend.ro> wrote:
+> >> https://bpaste.net/show/8a0e5c68762f
+> >>
+> >> On Thu, Oct 23, 2014, at 23:16, Emmanuel Grumbach wrote:
+> >>> > https://bpaste.net/show/5cc48256d952
+> >>> >
+> >>> > On Thu, Oct 23, 2014, at 22:55, Emmanuel Grumbach wrote:
+> >>> >> On Thu, Oct 23, 2014 at 10:42 PM, Laurențiu Nicola <lnicola@dend.ro>
+> >>> >> wrote:
+> >>> >>> Doesn't seem to help https://bpaste.net/show/68e1a6b33689.
+> >>> >>
+> >>> >> ok - let me re-add the logs...
+> >>> >>
+> >>> >>
+> >>>
+> >>> This makes no sense to me.
+> >>> We do talk to the AP since we get frames Acked...
+> >
+> > This again makes no sense to me.
+> > Time to go to bed I guess.
+> 
+> Can you please open a bug on bugzilla.kernel.org?
+> Make sure to CC ilw@linux.intel.com
+> 
+> This will make it more trackable.
+> Thanks.
+> 
+> >
+> >>>
+> >>> Can you please apply this on top of what you have?
+> >>>
+> >>> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> >>> index 2de8870..f3b1e62 100644
+> >>> --- a/net/mac80211/mlme.c
+> >>> +++ b/net/mac80211/mlme.c
+> >>> @@ -1991,15 +1991,16 @@ void ieee80211_sta_tx_notify(struct
+> >>> ieee80211_sub_if_data *sdata,
+> >>>         if (ieee80211_is_nullfunc(hdr->frame_control) &&
+> >>>             sdata->u.mgd.probe_send_count > 0) {
+> >>>                 if (ack)
+> >>> -                       ieee80211_sta_reset_conn_monitor(sdata);
+> >>> +               //      ieee80211_sta_reset_conn_monitor(sdata);
+> >>> +               ;
+> >>>                 else
+> >>>                         sdata->u.mgd.nullfunc_failed = true;
+> >>>                 ieee80211_queue_work(&sdata->local->hw, &sdata->work);
+> >>>                 return;
+> >>>         }
+> >>>
+> >>> -       if (ack)
+> >>> -               ieee80211_sta_reset_conn_monitor(sdata);
+> >>> +//     if (ack)
+> >>> +//             ieee80211_sta_reset_conn_monitor(sdata);
+> >>>  }
+> >>>
+> >>>  static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data
+> >>>  *sdata)
+> >>>
+> >>>
+> >>> Thanks.
+> >>> --
+> >>> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+> >>> in
+> >>> the body of a message to majordomo@vger.kernel.org
+> >>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+> in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
