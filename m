@@ -1,149 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f50.google.com ([74.125.82.50]:53881 "EHLO
-	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752430AbaJYTxm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Oct 2014 15:53:42 -0400
-Received: by mail-wg0-f50.google.com with SMTP id z12so614866wgg.9
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2014 12:53:41 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 47/48] staging: vt6655: dead code remove wmgr.h
-Date: Sat, 25 Oct 2014 09:40:25 +0100
-Message-Id: <1414226426-5811-48-git-send-email-tvboxspy@gmail.com> (sfid-20141025_215345_534178_402019BE)
-In-Reply-To: <1414226426-5811-1-git-send-email-tvboxspy@gmail.com>
-References: <1414226426-5811-1-git-send-email-tvboxspy@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:35030 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751615AbaJXUcs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Oct 2014 16:32:48 -0400
+Message-ID: <1414182764.2326.11.camel@jlt4.sipsolutions.net> (sfid-20141024_223251_747285_81BD204E)
+Subject: Re: Question phy capabilities in 'iw'
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Fri, 24 Oct 2014 22:32:44 +0200
+In-Reply-To: <544A8171.3000607@candelatech.com> (sfid-20141024_184229_839199_53471630)
+References: <544A8171.3000607@candelatech.com>
+	 (sfid-20141024_184229_839199_53471630)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-on removal needs to be replaced by card.h in device.h
+On Fri, 2014-10-24 at 09:42 -0700, Ben Greear wrote:
+> Here is the capabilities list from an mac80211_hwsim driver.
+> 
+> I am curious what information this is actually trying to convey.
+> 
+> For instance, why is AP in two different places, with different
+> values (2048 in first section, 8 in second) ?
+> 
+> 	valid interface combinations:
+> 		 * #{ IBSS } <= 1, #{ managed, AP, mesh point, P2P-client, P2P-GO } <= 2048,
+> 		   total <= 2048, #channels <= 1
+> 		 * #{ AP } <= 8,
+> 		   total <= 8, #channels <= 1, radar detect widths: { 20 MHz (no HT), 20 MHz, 40 MHz, 80 MHz, 160 MHz }
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/device.h      |  2 +-
- drivers/staging/vt6655/device_main.c |  1 -
- drivers/staging/vt6655/power.c       |  1 -
- drivers/staging/vt6655/wmgr.h        | 72 ------------------------------------
- 4 files changed, 1 insertion(+), 75 deletions(-)
- delete mode 100644 drivers/staging/vt6655/wmgr.h
+That was probably just a copy-paste error -- check the commit that
+introduced it, I'm guessing it came from ath10k or so.
 
-diff --git a/drivers/staging/vt6655/device.h b/drivers/staging/vt6655/device.h
-index 2aa42b5..f2d8ddd 100644
---- a/drivers/staging/vt6655/device.h
-+++ b/drivers/staging/vt6655/device.h
-@@ -72,7 +72,7 @@
- 
- #include "device_cfg.h"
- #include "ttype.h"
--#include "wmgr.h"
-+#include "card.h"
- #include "mib.h"
- #include "srom.h"
- #include "desc.h"
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index b469872..d5c2cdb 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -58,7 +58,6 @@
- #include "channel.h"
- #include "baseband.h"
- #include "mac.h"
--#include "wmgr.h"
- #include "power.h"
- #include "rxtx.h"
- #include "dpc.h"
-diff --git a/drivers/staging/vt6655/power.c b/drivers/staging/vt6655/power.c
-index 6f83650..a8aedee 100644
---- a/drivers/staging/vt6655/power.c
-+++ b/drivers/staging/vt6655/power.c
-@@ -40,7 +40,6 @@
- #include "ttype.h"
- #include "mac.h"
- #include "device.h"
--#include "wmgr.h"
- #include "power.h"
- #include "card.h"
- 
-diff --git a/drivers/staging/vt6655/wmgr.h b/drivers/staging/vt6655/wmgr.h
-deleted file mode 100644
-index ea23c79..0000000
---- a/drivers/staging/vt6655/wmgr.h
-+++ /dev/null
-@@ -1,72 +0,0 @@
--/*
-- * Copyright (c) 1996, 2003 VIA Networking Technologies, Inc.
-- * All rights reserved.
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License as published by
-- * the Free Software Foundation; either version 2 of the License, or
-- * (at your option) any later version.
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License along
-- * with this program; if not, write to the Free Software Foundation, Inc.,
-- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-- *
-- *
-- * File: wmgr.h
-- *
-- * Purpose:
-- *
-- * Author: lyndon chen
-- *
-- * Date: Jan 2, 2003
-- *
-- * Functions:
-- *
-- * Revision History:
-- *
-- */
--
--#ifndef __WMGR_H__
--#define __WMGR_H__
--
--#include "ttype.h"
--#include "card.h"
--
--/*---------------------  Export Definitions -------------------------*/
--
--// Scan time
--#define PROBE_DELAY                  100  // (us)
--#define SWITCH_CHANNEL_DELAY         200 // (us)
--#define WLAN_SCAN_MINITIME           25   // (ms)
--#define WLAN_SCAN_MAXTIME            100  // (ms)
--#define TRIVIAL_SYNC_DIFFERENCE      0    // (us)
--#define DEFAULT_IBSS_BI              100  // (ms)
--
--#define WCMD_ACTIVE_SCAN_TIME   50 //(ms)
--#define WCMD_PASSIVE_SCAN_TIME  100 //(ms)
--
--#define DEFAULT_MSDU_LIFETIME           512  // ms
--
--#define DEFAULT_MGN_LIFETIME            8    // ms
--
--#define TIM_MULTICAST_MASK           0x01
--#define TIM_BITMAPOFFSET_MASK        0xFE
--#define DEFAULT_DTIM_PERIOD             1
--
--#define AP_LONG_RETRY_LIMIT             4
--
--#define DEFAULT_IBSS_CHANNEL            6  //2.4G
--
--/*---------------------  Export Classes  ----------------------------*/
--
--/*---------------------  Export Variables  --------------------------*/
--
--/*---------------------  Export Types  ------------------------------*/
--#define timer_expire(timer, next_tick)   mod_timer(&timer, RUN_AT(next_tick))
--
--#endif // __WMGR_H__
--- 
-1.9.1
+johannes
 
