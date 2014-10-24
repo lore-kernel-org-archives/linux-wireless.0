@@ -1,72 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:51650 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752979AbaJMJZi convert rfc822-to-8bit (ORCPT
+Received: from mail-la0-f42.google.com ([209.85.215.42]:51057 "EHLO
+	mail-la0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756111AbaJXOXA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Oct 2014 05:25:38 -0400
-Received: by mail-wi0-f175.google.com with SMTP id d1so6798451wiv.8
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Oct 2014 02:25:37 -0700 (PDT)
+	Fri, 24 Oct 2014 10:23:00 -0400
+Received: by mail-la0-f42.google.com with SMTP id gf13so3038685lab.29
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Oct 2014 07:22:59 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <024901cfe6c6$e1905780$a4b10680$@acksys.fr>
-References: <773DB8A82AB6A046AE0195C68612A319018C2750@sbs2003.acksys.local>
-	<CA+BoTQ=a8kY0CGGKHwRhk4cg=V0oimipuht6Pkc0K0x4WMMn-A@mail.gmail.com>
-	<023801cfe6b8$350c1930$9f244b90$@acksys.fr>
-	<CA+BoTQkXc-VL1ixRK5KWUiE0igCxXRQyyde86TAvuKVxZhEPdg@mail.gmail.com>
-	<024901cfe6c6$e1905780$a4b10680$@acksys.fr>
-Date: Mon, 13 Oct 2014 11:25:37 +0200
-Message-ID: <CA+BoTQnQkDjkMMu5x-c69s1THf7SQfet2vsOPWs++PtyEHEeTw@mail.gmail.com> (sfid-20141013_112556_931177_C1AEE009)
-Subject: Re: ath10k firmware crash
-From: Michal Kazior <michal.kazior@tieto.com>
-To: voncken <cedric.voncken@acksys.fr>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <87lho5muz6.fsf@kamboji.qca.qualcomm.com>
+References: <1413823085-3187-1-git-send-email-yanbol@qti.qualcomm.com>
+	<87lho5muz6.fsf@kamboji.qca.qualcomm.com>
+Date: Fri, 24 Oct 2014 22:22:59 +0800
+Message-ID: <CAFuUQkj2Nn8TVQAHHUCNP+90zfUe0XSWWVQqVL_2C6bO524PVg@mail.gmail.com> (sfid-20141024_162305_873460_37EF1AD9)
+Subject: Re: [PATCH v3] Add the target register read/write and memory dump
+ debugfs interface
+From: YanBo <dreamfly281@gmail.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Yanbo Li <yanbol@qti.qualcomm.com>, senthilb@qti.qualcomm.com,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath10k@lists.infradead.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 13 October 2014 11:20, voncken <cedric.voncken@acksys.fr> wrote:
+On Fri, Oct 24, 2014 at 9:57 PM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
 >
+> Yanbo Li <yanbol@qti.qualcomm.com> writes:
 >
->> -----Message d'origine-----
->> De : Michal Kazior [mailto:michal.kazior@tieto.com]
->> Envoyé : lundi 13 octobre 2014 09:54
->> À : voncken
->> Cc : ath10k@lists.infradead.org; linux-wireless
->> Objet : Re: ath10k firmware crash
->>
->> On 13 October 2014 09:35, voncken <cedric.voncken@acksys.fr> wrote:
->> >         Thanks for your reply,
->> >
->> >>
->> >> Can you then provide a crash register dump for 10.1, please? I can't
->> >> help you much with the 636 dump.
->> >>
->> > Yes I can, but where I find it?
->>
->> https://github.com/kvalo/ath10k-firmware/blob/master/10.1/firmware-
->> 2.bin_10.1.467.2-1
->>
->>
->> >> Are you perhaps trying to run STA with 4addr bridging? If so then
->> >> make sure you use recent ath10k as this was known to be a problem.
->> >>
->> > Yes I'm testing with 4 addr bridging because I need to bridge this
->> interface. I' ll try without this option.
->> > I'm testing with commit number 38eeda3ae6f90fde5546bdd48ee4ff3090f238c0
->> from kernel.org/pub/scm/linux/kernel/git/firmare/linux-firmware. It is the
->> latest version in openwrt.
->> >
->> >> Can you also provide ath10k traces or debug logs, please?
->> >>
->> > I'll send a trace.
->>
-> I'm using the compat wireless from Openwrt.
->         Compat wireless version 2014-05-22, but we updated the firmware with the latest version provided by openwrt (commit number 38eeda3ae6f90fde5546bdd48ee4ff3090f238c0 from kernel.org/pub/scm/linux/kernel/git/firmare/linux-firmware)
+> > The debugfs interface reg_addr&reg_val used to read and write the target
+> > register.
+> > The interface mem_addr&mem_val used to dump the targer memory and also
+> > can be used to assign value to target memory
+>
+> I think you got the mail from kbuild bot already, but this patch has a
+> sparse warning:
+>
+> >> drivers/net/wireless/ath/ath10k/debug.c:1182:26: sparse: incorrect type in assignment (different base types)
+>    drivers/net/wireless/ath/ath10k/debug.c:1182:26:    expected restricted __le32 [usertype] <noident>
+>    drivers/net/wireless/ath/ath10k/debug.c:1182:26:    got unsigned int [unsigned] [addressable] [usertype] mem_val
+>
 
-The fix for 4addr STA bridging is in the driver, not the firmware.
+Thanks for checking, will fix in local and submit again together with
+Michal's suggestion.
 
-The compat version you're using doesn't contain the required fix. I'm
-pretty sure openwrt compat 2014-09-26 contains it.
-
-
-Michał
+BR /Yanbo
