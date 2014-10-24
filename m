@@ -1,93 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:57451 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751076AbaJNEAK (ORCPT
+Received: from mail-wg0-f42.google.com ([74.125.82.42]:41978 "EHLO
+	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756130AbaJXLs5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Oct 2014 00:00:10 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH 8/9] ath9k: Fix HW scan abort
-Date: Tue, 14 Oct 2014 09:30:55 +0530
-Message-Id: <1413259256-4808-9-git-send-email-sujith@msujith.org> (sfid-20141014_060039_774624_DDF5311E)
-In-Reply-To: <1413259256-4808-1-git-send-email-sujith@msujith.org>
-References: <1413259256-4808-1-git-send-email-sujith@msujith.org>
+	Fri, 24 Oct 2014 07:48:57 -0400
+Received: by mail-wg0-f42.google.com with SMTP id z12so885901wgg.25
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Oct 2014 04:48:56 -0700 (PDT)
+Date: Fri, 24 Oct 2014 13:48:52 +0200
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Karl Beldan <karl.beldan@rivierawaves.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: Re: [PATCH v6] mac80211: minstrel_ht: add basic support for VHT
+ rates <= 3SS@80MHz
+Message-ID: <20141024114829.GA11675@magnum.frso.rivierawaves.com> (sfid-20141024_134900_866876_DC4EB55B)
+References: <1413812762-6605-5-git-send-email-karl.beldan@gmail.com>
+ <1413880718-31273-1-git-send-email-karl.beldan@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1413880718-31273-1-git-send-email-karl.beldan@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Hi,
 
-Instead of using ATH_CHANCTX_EVENT_ASSIGN to abort
-a HW scan when a new interface becomes active, use the
-mgd_prepare_tx() callback. This allows us to make
-sure that the GO's channel becomes operational by
-using flush_work().
+On Tue, Oct 21, 2014 at 10:38:38AM +0200, Karl Beldan wrote:
+> From: Karl Beldan <karl.beldan@rivierawaves.com>
+> 
+> @@ -1026,13 +1184,47 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
+>  		    sta->bandwidth < IEEE80211_STA_RX_BW_40)
+>  			continue;
+>  
+> +		nss = minstrel_mcs_groups[i].streams;
+> +
+>  		/* Mark MCS > 7 as unsupported if STA is in static SMPS mode */
+> -		if (sta->smps_mode == IEEE80211_SMPS_STATIC &&
+> -		    minstrel_mcs_groups[i].streams > 1)
+> +		if (sta->smps_mode == IEEE80211_SMPS_STATIC && nss > 1)
+> +			continue;
+> +
+> +		/* HT rate */
+> +		if (gflags & IEEE80211_TX_RC_MCS) {
+> +#ifdef CONFIG_MAC80211_RC_MINSTREL_VHT
+> +			if (minstrel_vht_only)
+> +				continue;
+> +#endif
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/channel.c | 16 ----------------
- drivers/net/wireless/ath/ath9k/main.c    | 14 +++++++++++++-
- 2 files changed, 13 insertions(+), 17 deletions(-)
+When reformatting for 80chars I introduced a pb, the test should be 
+'if (use_vht && minstrel_vht_only)' instead.
+The consequence is VHT-unable devices with
+CONFIG_MAC80211_RC_MINSTREL_VHT set won't have HT rates enabled.
+Johannes can you squash it in or should I send you a patch ?
 
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index 366a4d9..25b898e 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -743,22 +743,6 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
- 		ieee80211_queue_work(sc->hw, &sc->chanctx_work);
- 		break;
- 	case ATH_CHANCTX_EVENT_ASSIGN:
--		/*
--		 * When adding a new channel context, check if a scan
--		 * is in progress and abort it since the addition of
--		 * a new channel context is usually followed by VIF
--		 * assignment, in which case we have to start multi-channel
--		 * operation.
--		 */
--		if (test_bit(ATH_OP_SCANNING, &common->op_flags)) {
--			ath_dbg(common, CHAN_CTX,
--				"Aborting HW scan to add new context\n");
--
--			spin_unlock_bh(&sc->chan_lock);
--			del_timer_sync(&sc->offchannel.timer);
--			ath_scan_complete(sc, true);
--			spin_lock_bh(&sc->chan_lock);
--		}
- 		break;
- 	case ATH_CHANCTX_EVENT_CHANGE:
- 		break;
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index f58781a..a524eeb 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -2365,7 +2365,6 @@ static int ath9k_add_chanctx(struct ieee80211_hw *hw,
- 			conf->def.chan->center_freq);
  
- 		ath_chanctx_set_channel(sc, ctx, &conf->def);
--		ath_chanctx_event(sc, NULL, ATH_CHANCTX_EVENT_ASSIGN);
- 
- 		mutex_unlock(&sc->mutex);
- 		return 0;
-@@ -2496,6 +2495,19 @@ static void ath9k_mgd_prepare_tx(struct ieee80211_hw *hw,
- 	if (!changed)
- 		goto out;
- 
-+	if (test_bit(ATH_OP_SCANNING, &common->op_flags)) {
-+		ath_dbg(common, CHAN_CTX,
-+			"%s: Aborting HW scan\n", __func__);
-+
-+		mutex_unlock(&sc->mutex);
-+
-+		del_timer_sync(&sc->offchannel.timer);
-+		ath_scan_complete(sc, true);
-+		flush_work(&sc->chanctx_work);
-+
-+		mutex_lock(&sc->mutex);
-+	}
-+
- 	go_ctx = ath_is_go_chanctx_present(sc);
- 
- 	if (go_ctx) {
--- 
-2.1.2
-
+Karl
