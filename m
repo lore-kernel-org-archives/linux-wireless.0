@@ -1,30 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49248 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932259AbaJ2LFT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2014 07:05:19 -0400
-Date: Wed, 29 Oct 2014 12:02:15 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Cyril Brulebois <kibi@debian.org>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] wireless: rt2x00: add new rt2800usb device
-Message-ID: <20141029110214.GB2021@redhat.com> (sfid-20141029_120549_958443_F44B1096)
-References: <1414510961-28920-1-git-send-email-kibi@debian.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1414510961-28920-1-git-send-email-kibi@debian.org>
+Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:34744
+	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752501AbaJYTVa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 25 Oct 2014 15:21:30 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, sujith@msujith.org
+Subject: [PATCH v2 10/10] ath9k: use a random MAC address if the EEPROM address is invalid
+Date: Sat, 25 Oct 2014 17:19:35 +0200
+Message-Id: <1414250375-74121-10-git-send-email-nbd@openwrt.org> (sfid-20141025_212134_001707_54BEDDAF)
+In-Reply-To: <1414250375-74121-1-git-send-email-nbd@openwrt.org>
+References: <1414250375-74121-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 28, 2014 at 04:42:41PM +0100, Cyril Brulebois wrote:
-> 0x1b75 0xa200 AirLive WN-200USB wireless 11b/g/n dongle
-> 
-> References: https://bugs.debian.org/766802
-> Reported-by: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
+Based on OpenWrt patch by Gabor Juhos
 
-Was this patch tested by reporter? I would rather see Reported-and-tested-by tag :-)
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/hw.c | 13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
 
-Stanislaw
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 47f410e..ee9fb52 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -19,6 +19,7 @@
+ #include <linux/module.h>
+ #include <linux/time.h>
+ #include <linux/bitops.h>
++#include <linux/etherdevice.h>
+ #include <asm/unaligned.h>
+ 
+ #include "hw.h"
+@@ -446,8 +447,16 @@ static int ath9k_hw_init_macaddr(struct ath_hw *ah)
+ 		common->macaddr[2 * i] = eeval >> 8;
+ 		common->macaddr[2 * i + 1] = eeval & 0xff;
+ 	}
+-	if (sum == 0 || sum == 0xffff * 3)
+-		return -EADDRNOTAVAIL;
++	if (!is_valid_ether_addr(common->macaddr)) {
++		ath_err(common,
++			"eeprom contains invalid mac address: %pM\n",
++			common->macaddr);
++
++		random_ether_addr(common->macaddr);
++		ath_err(common,
++			"random mac address will be used: %pM\n",
++			common->macaddr);
++	}
+ 
+ 	return 0;
+ }
+-- 
+2.1.2
+
