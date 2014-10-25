@@ -1,117 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f52.google.com ([74.125.82.52]:54789 "EHLO
-	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752080AbaJFSYe (ORCPT
+Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:35580
+	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751792AbaJYTgc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Oct 2014 14:24:34 -0400
-Received: by mail-wg0-f52.google.com with SMTP id a1so7276172wgh.35
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Oct 2014 11:24:33 -0700 (PDT)
-From: Andrea Merello <andrea.merello@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
-	bernhard@schiffner-limbach.de, dan.carpenter@oracle.com,
-	xose.vazquez@gmail.com, ralf@czekalla.com,
-	Andrea Merello <andrea.merello@gmail.com>
-Subject: [PATCH] rtl818x_pci: fix response rate may be incorrect.
-Date: Mon,  6 Oct 2014 20:23:55 +0200
-Message-Id: <1412619835-12038-1-git-send-email-andrea.merello@gmail.com> (sfid-20141006_202437_615626_FF5D87C3)
+	Sat, 25 Oct 2014 15:36:32 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, sujith@msujith.org
+Subject: [PATCH v2 08/10] ath9k: add support for endian swap of eeprom from platform data
+Date: Sat, 25 Oct 2014 17:19:33 +0200
+Message-Id: <1414250375-74121-8-git-send-email-nbd@openwrt.org> (sfid-20141025_213635_835177_301AA6C5)
+In-Reply-To: <1414250375-74121-1-git-send-email-nbd@openwrt.org>
+References: <1414250375-74121-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently the allowed "respose rate" set (rates for HW generated frames
-like ACKs) is the same as the basic rate set.
+On some devices (especially little-endian ones), the flash EEPROM data
+has a different endian, which needs to be detected.
+Add a flag to the platform data to allow overriding that behavior
 
-The HW will use the higher allowed response rate that is lower than the
-rate of the received frame.
-
-This is more or less what IEEE80211 mandates, but I missed the fact
-that IEEE80211 also says that whenever it happens that for a modulation
-class there is no any rate in the basic rates set, then the response rate
-set shall include also all the mandatory rates for that modulation class.
-
-This patch adds mandatory OFDM rates to the allowed response rate set if
-no OFDM rate is included in the basic rate set.
-
-Depending by the AP, I faced cases in which this patch seems to cause a
-noticeable perfomance improvement.
-
-- With my usual test AP there is no particular perfomance difference.
-- With a prism54/hostapd AP this patch causes RX thoughput increase from
-  about 5Mbps to about 20Mbps.
-
-Hopefully this patch may help people that faced performance regression wrt
-the old staging driver.
-
-Signed-off-by: Andrea Merello <andrea.merello@gmail.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/rtl818x/rtl8180/dev.c | 36 +++++++++++++++++++++---------
- 1 file changed, 25 insertions(+), 11 deletions(-)
+ drivers/net/wireless/ath/ath9k/eeprom_def.c | 31 ++++++++++-------------------
+ drivers/net/wireless/ath/ath9k/hw.h         |  1 +
+ drivers/net/wireless/ath/ath9k/init.c       |  2 ++
+ include/linux/ath9k_platform.h              |  1 +
+ 4 files changed, 14 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/net/wireless/rtl818x/rtl8180/dev.c b/drivers/net/wireless/rtl818x/rtl8180/dev.c
-index ded967a..706b844 100644
---- a/drivers/net/wireless/rtl818x/rtl8180/dev.c
-+++ b/drivers/net/wireless/rtl818x/rtl8180/dev.c
-@@ -742,35 +742,49 @@ static void rtl8180_int_disable(struct ieee80211_hw *dev)
- }
- 
- static void rtl8180_conf_basic_rates(struct ieee80211_hw *dev,
--			    u32 rates_mask)
-+			    u32 basic_mask)
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+index 3218ca9..122b846 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+@@ -262,7 +262,7 @@ static int ath9k_hw_def_check_eeprom(struct ath_hw *ah)
  {
- 	struct rtl8180_priv *priv = dev->priv;
--
--	u8 max, min;
- 	u16 reg;
--
--	max = fls(rates_mask) - 1;
--	min = ffs(rates_mask) - 1;
-+	u32 resp_mask;
-+	u8 basic_max;
-+	u8 resp_max, resp_min;
-+
-+	resp_mask = basic_mask;
-+	/* IEEE80211 says the response rate should be equal to the highest basic
-+	 * rate that is not faster than received frame. But it says also that if
-+	 * the basic rate set does not contains any rate for the current
-+	 * modulation class then mandatory rate set must be used for that
-+	 * modulation class. Eventually add OFDM mandatory rates..
-+	 */
-+	if ((resp_mask & 0xf) == resp_mask)
-+		resp_mask |= 0x150; /* 6, 12, 24Mbps */
- 
- 	switch (priv->chip_family) {
- 
- 	case RTL818X_CHIP_FAMILY_RTL8180:
- 		/* in 8180 this is NOT a BITMAP */
-+		basic_max = fls(basic_mask) - 1;
- 		reg = rtl818x_ioread16(priv, &priv->map->BRSR);
- 		reg &= ~3;
--		reg |= max;
-+		reg |= basic_max;
- 		rtl818x_iowrite16(priv, &priv->map->BRSR, reg);
- 		break;
- 
- 	case RTL818X_CHIP_FAMILY_RTL8185:
-+		resp_max = fls(resp_mask) - 1;
-+		resp_min = ffs(resp_mask) - 1;
- 		/* in 8185 this is a BITMAP */
--		rtl818x_iowrite16(priv, &priv->map->BRSR, rates_mask);
--		rtl818x_iowrite8(priv, &priv->map->RESP_RATE, (max << 4) | min);
-+		rtl818x_iowrite16(priv, &priv->map->BRSR, basic_mask);
-+		rtl818x_iowrite8(priv, &priv->map->RESP_RATE, (resp_max << 4) |
-+				resp_min);
- 		break;
- 
- 	case RTL818X_CHIP_FAMILY_RTL8187SE:
--		/* in 8187se this is a BITMAP */
--		rtl818x_iowrite16(priv, &priv->map->BRSR_8187SE, rates_mask);
-+		/* in 8187se this is a BITMAP. BRSR reg actually sets
-+		 * response rates.
-+		 */
-+		rtl818x_iowrite16(priv, &priv->map->BRSR_8187SE, resp_mask);
- 		break;
+ 	struct ar5416_eeprom_def *eep = &ah->eeprom.def;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+-	u16 *eepdata, temp, magic, magic2;
++	u16 *eepdata, temp, magic;
+ 	u32 sum = 0, el;
+ 	bool need_swap = false;
+ 	int i, addr, size;
+@@ -272,27 +272,16 @@ static int ath9k_hw_def_check_eeprom(struct ath_hw *ah)
+ 		return false;
  	}
- }
+ 
+-	if (!ath9k_hw_use_flash(ah)) {
+-		ath_dbg(common, EEPROM, "Read Magic = 0x%04X\n", magic);
+-
+-		if (magic != AR5416_EEPROM_MAGIC) {
+-			magic2 = swab16(magic);
+-
+-			if (magic2 == AR5416_EEPROM_MAGIC) {
+-				size = sizeof(struct ar5416_eeprom_def);
+-				need_swap = true;
+-				eepdata = (u16 *) (&ah->eeprom);
++	if (swab16(magic) == AR5416_EEPROM_MAGIC &&
++	    !(ah->ah_flags & AH_NO_EEP_SWAP)) {
++		size = sizeof(struct ar5416_eeprom_def);
++		need_swap = true;
++		eepdata = (u16 *) (&ah->eeprom);
+ 
+-				for (addr = 0; addr < size / sizeof(u16); addr++) {
+-					temp = swab16(*eepdata);
+-					*eepdata = temp;
+-					eepdata++;
+-				}
+-			} else {
+-				ath_err(common,
+-					"Invalid EEPROM Magic. Endianness mismatch.\n");
+-				return -EINVAL;
+-			}
++		for (addr = 0; addr < size / sizeof(u16); addr++) {
++			temp = swab16(*eepdata);
++			*eepdata = temp;
++			eepdata++;
+ 		}
+ 	}
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index f204099..c6dba9b 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -731,6 +731,7 @@ enum ath_cal_list {
+ #define AH_USE_EEPROM   0x1
+ #define AH_UNPLUGGED    0x2 /* The card has been physically removed. */
+ #define AH_FASTCC       0x4
++#define AH_NO_EEP_SWAP  0x8 /* Do not swap EEPROM data */
+ 
+ struct ath_hw {
+ 	struct ath_ops reg_ops;
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 0d80011..3a1da83 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -531,6 +531,8 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
+ 		ah->is_clk_25mhz = pdata->is_clk_25mhz;
+ 		ah->get_mac_revision = pdata->get_mac_revision;
+ 		ah->external_reset = pdata->external_reset;
++		if (!pdata->endian_check)
++			ah->ah_flags |= AH_NO_EEP_SWAP;
+ 	}
+ 
+ 	common->ops = &ah->reg_ops;
+diff --git a/include/linux/ath9k_platform.h b/include/linux/ath9k_platform.h
+index a495a95..4350165 100644
+--- a/include/linux/ath9k_platform.h
++++ b/include/linux/ath9k_platform.h
+@@ -31,6 +31,7 @@ struct ath9k_platform_data {
+ 	u32 gpio_mask;
+ 	u32 gpio_val;
+ 
++	bool endian_check;
+ 	bool is_clk_25mhz;
+ 	bool tx_gain_buffalo;
+ 
 -- 
-1.9.1
+2.1.2
 
