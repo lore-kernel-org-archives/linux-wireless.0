@@ -1,230 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:1697 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758262AbaJ3J1W (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Oct 2014 05:27:22 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2] ath10k: handle ieee80211 header and payload tracing separately
-Date: Thu, 30 Oct 2014 14:58:56 +0530
-Message-ID: <1414661336-20764-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20141030_102725_967304_270072B3)
+Received: from arrakis.dune.hu ([78.24.191.176]:45677 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751085AbaJYWa3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 25 Oct 2014 18:30:29 -0400
+Message-ID: <544C2466.1030709@openwrt.org> (sfid-20141026_003034_342091_32AAA55B)
+Date: Sun, 26 Oct 2014 00:29:58 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: add support for driver tx power reporting
+References: <1413993458-62517-1-git-send-email-nbd@openwrt.org> <1414161186.2326.1.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1414161186.2326.1.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For packet log, the transmitted frame 802.11 header alone is sufficient.
-Recording entire packet is also consuming lot of disk space. To optimize
-this, tx and rx data tracepoints are splitted into header and payload
-tracepoints.
+On 2014-10-24 16:33, Johannes Berg wrote:
+> On Wed, 2014-10-22 at 17:57 +0200, Felix Fietkau wrote:
+>> The configured tx power is often limited by hardware capabilities,
+>> channel settings, antenna configuration, etc.
+>> 
+>> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+>> ---
+>>  include/net/mac80211.h | 5 +++++
+>>  net/mac80211/cfg.c     | 3 +++
+>>  2 files changed, 8 insertions(+)
+>> 
+>> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+>> index 0ad1f47..41b0e60 100644
+>> --- a/include/net/mac80211.h
+>> +++ b/include/net/mac80211.h
+>> @@ -2838,6 +2838,9 @@ enum ieee80211_roc_type {
+>>   * @get_expected_throughput: extract the expected throughput towards the
+>>   *	specified station. The returned value is expressed in Kbps. It returns 0
+>>   *	if the RC algorithm does not have proper data to provide.
+>> + *
+>> + * @get_txpower: get current maximum tx power (in dBm) based on configuration
+>> + *	and hardware limits.
+>>   */
+>>  struct ieee80211_ops {
+>>  	void (*tx)(struct ieee80211_hw *hw,
+>> @@ -3039,6 +3042,8 @@ struct ieee80211_ops {
+>>  	int (*join_ibss)(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
+>>  	void (*leave_ibss)(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
+>>  	u32 (*get_expected_throughput)(struct ieee80211_sta *sta);
+>> +	int (*get_txpower)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+>> +			   int *dbm);
+>>  };
+>>  
+>>  /**
+>> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+>> index fb6a150..7cb31a8 100644
+>> --- a/net/mac80211/cfg.c
+>> +++ b/net/mac80211/cfg.c
+>> @@ -2081,6 +2081,9 @@ static int ieee80211_get_tx_power(struct wiphy *wiphy,
+>>  	struct ieee80211_local *local = wiphy_priv(wiphy);
+>>  	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
+>>  
+>> +	if (local->ops->get_txpower)
+>> +		return local->ops->get_txpower(&local->hw, &sdata->vif, dbm);
+> 
+> Might be good to have tracing?
+Sending v2.
 
-To record tx ieee80211 headers
+> And when this is supported, maybe there should be a cop-out for the
+> driver to say "please use your value"? OTOH it can access the data that
+> mac80211 currently reports so that's probably not needed?
+I don't see the point in having that, since the driver can just take it
+from the hw/bss conf directly.
 
-     trace-cmd record -e ath10k_tx_hdr
-
-To record complete packets
-
-     trace-cmd record -e ath10k_tx_hdr -e ath10k_tx_payload
-
-Cc: Michal Kazior <michal.kazior@tieto.com>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
----
-v2: Move header len processing inside trace
- drivers/net/wireless/ath/ath10k/htt_rx.c |  4 +-
- drivers/net/wireless/ath/ath10k/htt_tx.c |  3 +-
- drivers/net/wireless/ath/ath10k/trace.h  | 77 +++++++++++++++++++++++++++-----
- drivers/net/wireless/ath/ath10k/wmi.c    |  7 ++-
- 4 files changed, 75 insertions(+), 16 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index a691fdf..52c6306 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -297,8 +297,6 @@ static inline struct sk_buff *ath10k_htt_rx_netbuf_pop(struct ath10k_htt *htt)
- 			 DMA_FROM_DEVICE);
- 	ath10k_dbg_dump(ar, ATH10K_DBG_HTT_DUMP, NULL, "htt rx netbuf pop: ",
- 			msdu->data, msdu->len + skb_tailroom(msdu));
--	trace_ath10k_htt_rx_pop_msdu(ar, msdu->data, msdu->len +
--				     skb_tailroom(msdu));
- 
- 	return msdu;
- }
-@@ -903,6 +901,8 @@ static void ath10k_process_rx(struct ath10k *ar,
- 		   !!(status->flag & RX_FLAG_AMSDU_MORE));
- 	ath10k_dbg_dump(ar, ATH10K_DBG_HTT_DUMP, NULL, "rx skb: ",
- 			skb->data, skb->len);
-+	trace_ath10k_rx_hdr(ar, skb->data, skb->len);
-+	trace_ath10k_rx_payload(ar, skb->data, skb->len);
- 
- 	ieee80211_rx(ar->hw, skb);
- }
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index b0df470..1e51249 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -564,7 +564,8 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
- 		   (u32)skb_cb->paddr, vdev_id, tid);
- 	ath10k_dbg_dump(ar, ATH10K_DBG_HTT_DUMP, NULL, "htt tx msdu: ",
- 			msdu->data, msdu->len);
--	trace_ath10k_htt_tx_msdu(ar, msdu->data, msdu->len);
-+	trace_ath10k_tx_hdr(ar, msdu->data, msdu->len);
-+	trace_ath10k_tx_payload(ar, msdu->data, msdu->len);
- 
- 	sg_items[0].transfer_id = 0;
- 	sg_items[0].transfer_context = NULL;
-diff --git a/drivers/net/wireless/ath/ath10k/trace.h b/drivers/net/wireless/ath/ath10k/trace.h
-index b9a2ba6..919dc7e 100644
---- a/drivers/net/wireless/ath/ath10k/trace.h
-+++ b/drivers/net/wireless/ath/ath10k/trace.h
-@@ -341,7 +341,10 @@ TRACE_EVENT(ath10k_txrx_tx_unref,
- 	 )
- );
- 
--DECLARE_EVENT_CLASS(ath10k_data_event,
-+#define ATH10K_FRM_HDR_LEN  \
-+	ieee80211_hdrlen(((struct ieee80211_hdr *)data)->frame_control)
-+
-+DECLARE_EVENT_CLASS(ath10k_hdr_event,
- 		    TP_PROTO(struct ath10k *ar, void *data, size_t len),
- 
- 	TP_ARGS(ar, data, len),
-@@ -350,14 +353,14 @@ DECLARE_EVENT_CLASS(ath10k_data_event,
- 		__string(device, dev_name(ar->dev))
- 		__string(driver, dev_driver_string(ar->dev))
- 		__field(size_t, len)
--		__dynamic_array(u8, data, len)
-+		__dynamic_array(u8, data, ATH10K_FRM_HDR_LEN)
- 	),
- 
- 	TP_fast_assign(
- 		__assign_str(device, dev_name(ar->dev));
- 		__assign_str(driver, dev_driver_string(ar->dev));
--		__entry->len = len;
--		memcpy(__get_dynamic_array(data), data, len);
-+		__entry->len = ATH10K_FRM_HDR_LEN;
-+		memcpy(__get_dynamic_array(data), data, __entry->len);
- 	),
- 
- 	TP_printk(
-@@ -368,30 +371,82 @@ DECLARE_EVENT_CLASS(ath10k_data_event,
- 	)
- );
- 
--DEFINE_EVENT(ath10k_data_event, ath10k_htt_tx_msdu,
--	     TP_PROTO(struct ath10k *ar, void *data, size_t len),
--	     TP_ARGS(ar, data, len)
-+DECLARE_EVENT_CLASS(ath10k_payload_event,
-+		    TP_PROTO(struct ath10k *ar, void *data, size_t len),
-+
-+	TP_ARGS(ar, data, len),
-+
-+	TP_STRUCT__entry(
-+		__string(device, dev_name(ar->dev))
-+		__string(driver, dev_driver_string(ar->dev))
-+		__field(size_t, len)
-+		__dynamic_array(u8, payload, (len - ATH10K_FRM_HDR_LEN))
-+	),
-+
-+	TP_fast_assign(
-+		__assign_str(device, dev_name(ar->dev));
-+		__assign_str(driver, dev_driver_string(ar->dev));
-+		__entry->len = len - ATH10K_FRM_HDR_LEN;
-+		memcpy(__get_dynamic_array(payload),
-+		       data + ATH10K_FRM_HDR_LEN, __entry->len);
-+	),
-+
-+	TP_printk(
-+		"%s %s len %zu\n",
-+		__get_str(driver),
-+		__get_str(device),
-+		__entry->len
-+	)
- );
- 
--DEFINE_EVENT(ath10k_data_event, ath10k_htt_rx_pop_msdu,
-+
-+DEFINE_EVENT(ath10k_hdr_event, ath10k_tx_hdr,
- 	     TP_PROTO(struct ath10k *ar, void *data, size_t len),
- 	     TP_ARGS(ar, data, len)
- );
- 
--DEFINE_EVENT(ath10k_data_event, ath10k_wmi_mgmt_tx,
-+DEFINE_EVENT(ath10k_payload_event, ath10k_tx_payload,
- 	     TP_PROTO(struct ath10k *ar, void *data, size_t len),
- 	     TP_ARGS(ar, data, len)
- );
- 
--DEFINE_EVENT(ath10k_data_event, ath10k_wmi_bcn_tx,
-+DEFINE_EVENT(ath10k_hdr_event, ath10k_rx_hdr,
- 	     TP_PROTO(struct ath10k *ar, void *data, size_t len),
- 	     TP_ARGS(ar, data, len)
- );
- 
--DEFINE_EVENT(ath10k_data_event, ath10k_htt_rx_desc,
-+DEFINE_EVENT(ath10k_payload_event, ath10k_rx_payload,
- 	     TP_PROTO(struct ath10k *ar, void *data, size_t len),
- 	     TP_ARGS(ar, data, len)
- );
-+
-+TRACE_EVENT(ath10k_htt_rx_desc,
-+	    TP_PROTO(struct ath10k *ar, void *data, size_t len),
-+
-+	TP_ARGS(ar, data, len),
-+
-+	TP_STRUCT__entry(
-+		__string(device, dev_name(ar->dev))
-+		__string(driver, dev_driver_string(ar->dev))
-+		__field(u16, len)
-+		__dynamic_array(u8, rxdesc, len)
-+	),
-+
-+	TP_fast_assign(
-+		__assign_str(device, dev_name(ar->dev));
-+		__assign_str(driver, dev_driver_string(ar->dev));
-+		__entry->len = len;
-+		memcpy(__get_dynamic_array(rxdesc), data, len);
-+	),
-+
-+	TP_printk(
-+		"%s %s rxdesc len %d",
-+		__get_str(driver),
-+		__get_str(device),
-+		__entry->len
-+	 )
-+);
-+
- #endif /* _TRACE_H_ || TRACE_HEADER_MULTI_READ*/
- 
- /* we don't want to use include/trace/events */
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index ae746ce..3dcb216 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -834,7 +834,8 @@ int ath10k_wmi_mgmt_tx(struct ath10k *ar, struct sk_buff *skb)
- 	ath10k_dbg(ar, ATH10K_DBG_WMI, "wmi mgmt tx skb %p len %d ftype %02x stype %02x\n",
- 		   wmi_skb, wmi_skb->len, fc & IEEE80211_FCTL_FTYPE,
- 		   fc & IEEE80211_FCTL_STYPE);
--	trace_ath10k_wmi_mgmt_tx(ar, skb->data, skb->len);
-+	trace_ath10k_tx_hdr(ar, skb->data, skb->len);
-+	trace_ath10k_tx_payload(ar, skb->data, skb->len);
- 
- 	/* Send the management frame buffer to the target */
- 	ret = ath10k_wmi_cmd_send(ar, wmi_skb, ar->wmi.cmd->mgmt_tx_cmdid);
-@@ -1893,7 +1894,9 @@ static void ath10k_wmi_event_host_swba(struct ath10k *ar, struct sk_buff *skb)
- 		arvif->beacon = bcn;
- 		arvif->beacon_sent = false;
- 
--		trace_ath10k_wmi_bcn_tx(ar, bcn->data, bcn->len);
-+		trace_ath10k_tx_hdr(ar, bcn->data, bcn->len);
-+		trace_ath10k_tx_payload(ar, bcn->data, bcn->len);
-+
- 		ath10k_wmi_tx_beacon_nowait(arvif);
- skip:
- 		spin_unlock_bh(&ar->data_lock);
--- 
-2.1.3
-
+- Felix
