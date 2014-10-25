@@ -1,270 +1,379 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:44586 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752442AbaJ1MVL (ORCPT
+Received: from mail-wg0-f41.google.com ([74.125.82.41]:43332 "EHLO
+	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751252AbaJYURl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2014 08:21:11 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 3/3] ath: ath9k: use debugfs_create_devm_seqfile() helper for seq_file entries
-Date: Tue, 28 Oct 2014 13:19:12 +0100
-Message-ID: <1414498752-9746-4-git-send-email-arend@broadcom.com> (sfid-20141028_132116_182359_63F8284B)
-In-Reply-To: <1414498752-9746-1-git-send-email-arend@broadcom.com>
-References: <1414498752-9746-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sat, 25 Oct 2014 16:17:41 -0400
+Received: by mail-wg0-f41.google.com with SMTP id b13so3168444wgh.12
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2014 13:17:39 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 43/48] staging: vt6655: dead code remove 80211hdr.h
+Date: Sat, 25 Oct 2014 09:40:21 +0100
+Message-Id: <1414226426-5811-44-git-send-email-tvboxspy@gmail.com> (sfid-20141025_221745_860317_54477C51)
+In-Reply-To: <1414226426-5811-1-git-send-email-tvboxspy@gmail.com>
+References: <1414226426-5811-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the helper to get rid of the file operations per debugfs file. The
-struct ath9k_softc pointer is set as device driver data to be obtained
-in the seq_file read operation.
-
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/ahb.c   |   1 +
- drivers/net/wireless/ath/ath9k/debug.c | 122 ++++++---------------------------
- drivers/net/wireless/ath/ath9k/pci.c   |   1 +
- 3 files changed, 24 insertions(+), 100 deletions(-)
+ drivers/staging/vt6655/80211hdr.h | 318 --------------------------------------
+ drivers/staging/vt6655/device.h   |   1 -
+ drivers/staging/vt6655/wmgr.h     |   1 -
+ 3 files changed, 320 deletions(-)
+ delete mode 100644 drivers/staging/vt6655/80211hdr.h
 
-diff --git a/drivers/net/wireless/ath/ath9k/ahb.c b/drivers/net/wireless/ath/ath9k/ahb.c
-index 4173838..74b009b 100644
---- a/drivers/net/wireless/ath/ath9k/ahb.c
-+++ b/drivers/net/wireless/ath/ath9k/ahb.c
-@@ -126,6 +126,7 @@ static int ath_ahb_probe(struct platform_device *pdev)
- 	sc = hw->priv;
- 	sc->hw = hw;
- 	sc->dev = &pdev->dev;
-+	dev_set_drvdata(sc->dev, sc);
- 	sc->mem = mem;
- 	sc->irq = irq;
- 
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index 1d6bfda..62d8a09 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -403,7 +403,7 @@ static const struct file_operations fops_antenna_diversity = {
- 
- static int read_file_dma(struct seq_file *file, void *data)
- {
--	struct ath_softc *sc = file->private;
-+	struct ath_softc *sc = dev_get_drvdata(file->private);
- 	struct ath_hw *ah = sc->sc_ah;
- 	u32 val[ATH9K_NUM_DMA_DEBUG_REGS];
- 	int i, qcuOffset = 0, dcuOffset = 0;
-@@ -470,20 +470,6 @@ static int read_file_dma(struct seq_file *file, void *data)
- 	return 0;
- }
- 
--static int open_file_dma(struct inode *inode, struct file *f)
--{
--	return single_open(f, read_file_dma, inode->i_private);
--}
+diff --git a/drivers/staging/vt6655/80211hdr.h b/drivers/staging/vt6655/80211hdr.h
+deleted file mode 100644
+index 36e14ec..0000000
+--- a/drivers/staging/vt6655/80211hdr.h
++++ /dev/null
+@@ -1,318 +0,0 @@
+-/*
+- * Copyright (c) 1996, 2003 VIA Networking Technologies, Inc.
+- * All rights reserved.
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2 of the License, or
+- * (at your option) any later version.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License along
+- * with this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+- *
+- *
+- * File: 80211hdr.h
+- *
+- * Purpose: 802.11 MAC headers related pre-defines and macros.
+- *
+- *
+- * Author: Lyndon Chen
+- *
+- * Date: Apr 8, 2002
+- *
+- */
 -
--static const struct file_operations fops_dma = {
--	.open = open_file_dma,
--	.read = seq_read,
--	.owner = THIS_MODULE,
--	.llseek = seq_lseek,
--	.release = single_release,
--};
+-#ifndef __80211HDR_H__
+-#define __80211HDR_H__
 -
+-#include "ttype.h"
 -
- void ath_debug_stat_interrupt(struct ath_softc *sc, enum ath9k_int status)
- {
- 	if (status)
-@@ -539,7 +525,7 @@ void ath_debug_stat_interrupt(struct ath_softc *sc, enum ath9k_int status)
- 
- static int read_file_interrupt(struct seq_file *file, void *data)
- {
--	struct ath_softc *sc = file->private;
-+	struct ath_softc *sc = dev_get_drvdata(file->private);
- 
- #define PR_IS(a, s)						\
- 	do {							\
-@@ -600,22 +586,9 @@ static int read_file_interrupt(struct seq_file *file, void *data)
- 	return 0;
- }
- 
--static int open_file_interrupt(struct inode *inode, struct file *f)
--{
--	return single_open(f, read_file_interrupt, inode->i_private);
--}
+-/* bit type */
+-#define BIT0	0x00000001
+-#define BIT1	0x00000002
+-#define BIT2	0x00000004
+-#define BIT3	0x00000008
+-#define BIT4	0x00000010
+-#define BIT5	0x00000020
+-#define BIT6	0x00000040
+-#define BIT7	0x00000080
+-#define BIT8	0x00000100
+-#define BIT9	0x00000200
+-#define BIT10	0x00000400
+-#define BIT11	0x00000800
+-#define BIT12	0x00001000
+-#define BIT13	0x00002000
+-#define BIT14	0x00004000
+-#define BIT15	0x00008000
+-#define BIT16	0x00010000
+-#define BIT17	0x00020000
+-#define BIT18	0x00040000
+-#define BIT19	0x00080000
+-#define BIT20	0x00100000
+-#define BIT21	0x00200000
+-#define BIT22	0x00400000
+-#define BIT23	0x00800000
+-#define BIT24	0x01000000
+-#define BIT25	0x02000000
+-#define BIT26	0x04000000
+-#define BIT27	0x08000000
+-#define BIT28	0x10000000
+-#define BIT29	0x20000000
+-#define BIT30	0x40000000
+-#define BIT31	0x80000000
 -
--static const struct file_operations fops_interrupt = {
--	.read = seq_read,
--	.open = open_file_interrupt,
--	.owner = THIS_MODULE,
--	.llseek = seq_lseek,
--	.release = single_release,
--};
+-/* 802.11 frame related, defined as 802.11 spec */
+-#define WLAN_ADDR_LEN               6
+-#define WLAN_CRC_LEN                4
+-#define WLAN_CRC32_LEN              4
+-#define WLAN_FCS_LEN                4
+-#define WLAN_BSSID_LEN              6
+-#define WLAN_BSS_TS_LEN             8
+-#define WLAN_HDR_ADDR2_LEN          16
+-#define WLAN_HDR_ADDR3_LEN          24
+-#define WLAN_HDR_ADDR4_LEN          30
+-#define WLAN_IEHDR_LEN              2
+-#define WLAN_SSID_MAXLEN            32
+-#define WLAN_RATES_MAXLEN           16
+-#define WLAN_RATES_MAXLEN_11B       4
+-#define WLAN_RSN_MAXLEN             32
+-#define WLAN_DATA_MAXLEN            2312
+-#define WLAN_A3FR_MAXLEN            (WLAN_HDR_ADDR3_LEN + WLAN_DATA_MAXLEN + \
+-				     WLAN_CRC_LEN)
 -
- static int read_file_xmit(struct seq_file *file, void *data)
- {
--	struct ath_softc *sc = file->private;
-+	struct ath_softc *sc = dev_get_drvdata(file->private);
- 
- 	seq_printf(file, "%30s %10s%10s%10s\n\n", "BE", "BK", "VI", "VO");
- 
-@@ -661,7 +634,7 @@ static void print_queue(struct ath_softc *sc, struct ath_txq *txq,
- 
- static int read_file_queues(struct seq_file *file, void *data)
- {
--	struct ath_softc *sc = file->private;
-+	struct ath_softc *sc = dev_get_drvdata(file->private);
- 	struct ath_txq *txq;
- 	int i;
- 	static const char *qname[4] = {
-@@ -682,7 +655,7 @@ static int read_file_queues(struct seq_file *file, void *data)
- 
- static int read_file_misc(struct seq_file *file, void *data)
- {
--	struct ath_softc *sc = file->private;
-+	struct ath_softc *sc = dev_get_drvdata(file->private);
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct ath9k_vif_iter_data iter_data;
- 	struct ath_chanctx *ctx;
-@@ -772,7 +745,7 @@ static int read_file_misc(struct seq_file *file, void *data)
- 
- static int read_file_reset(struct seq_file *file, void *data)
- {
--	struct ath_softc *sc = file->private;
-+	struct ath_softc *sc = dev_get_drvdata(file->private);
- 
- 	seq_printf(file, "%17s: %2d\n", "Baseband Hang",
- 		   sc->debug.stats.reset[RESET_TYPE_BB_HANG]);
-@@ -833,58 +806,6 @@ void ath_debug_stat_tx(struct ath_softc *sc, struct ath_buf *bf,
- 		TX_STAT_INC(qnum, delim_underrun);
- }
- 
--static int open_file_xmit(struct inode *inode, struct file *f)
--{
--	return single_open(f, read_file_xmit, inode->i_private);
--}
+-#define WLAN_BEACON_FR_MAXLEN       WLAN_A3FR_MAXLEN
+-#define WLAN_ATIM_FR_MAXLEN         (WLAN_HDR_ADDR3_LEN + 0)
+-#define WLAN_NULLDATA_FR_MAXLEN     (WLAN_HDR_ADDR3_LEN + 0)
+-#define WLAN_DISASSOC_FR_MAXLEN     (WLAN_HDR_ADDR3_LEN + 2)
+-#define WLAN_ASSOCREQ_FR_MAXLEN     WLAN_A3FR_MAXLEN
+-#define WLAN_ASSOCRESP_FR_MAXLEN    WLAN_A3FR_MAXLEN
+-#define WLAN_REASSOCREQ_FR_MAXLEN   WLAN_A3FR_MAXLEN
+-#define WLAN_REASSOCRESP_FR_MAXLEN  WLAN_A3FR_MAXLEN
+-#define WLAN_PROBEREQ_FR_MAXLEN     WLAN_A3FR_MAXLEN
+-#define WLAN_PROBERESP_FR_MAXLEN    WLAN_A3FR_MAXLEN
+-#define WLAN_AUTHEN_FR_MAXLEN       WLAN_A3FR_MAXLEN
+-#define WLAN_DEAUTHEN_FR_MAXLEN     (WLAN_HDR_ADDR3_LEN + 2)
 -
--static const struct file_operations fops_xmit = {
--	.read = seq_read,
--	.open = open_file_xmit,
--	.owner = THIS_MODULE,
--	.llseek = seq_lseek,
--	.release = single_release,
--};
+-#define WLAN_WEP_NKEYS              4
+-#define WLAN_WEP40_KEYLEN           5
+-#define WLAN_WEP104_KEYLEN          13
+-#define WLAN_WEP232_KEYLEN          29
+-#define WLAN_WEPMAX_KEYLEN          32
+-#define WLAN_CHALLENGE_IE_MAXLEN    255
+-#define WLAN_CHALLENGE_IE_LEN       130
+-#define WLAN_CHALLENGE_LEN          128
+-#define WLAN_WEP_IV_LEN             4
+-#define WLAN_WEP_ICV_LEN            4
+-#define WLAN_FRAGS_MAX              16
 -
--static int open_file_queues(struct inode *inode, struct file *f)
--{
--	return single_open(f, read_file_queues, inode->i_private);
--}
+-/* Frame Type */
+-#define WLAN_TYPE_MGR 0x00
+-#define WLAN_TYPE_CTL  0x01
+-#define WLAN_TYPE_DATA 0x02
 -
--static const struct file_operations fops_queues = {
--	.read = seq_read,
--	.open = open_file_queues,
--	.owner = THIS_MODULE,
--	.llseek = seq_lseek,
--	.release = single_release,
--};
+-#define WLAN_FTYPE_MGMT 0x00
+-#define WLAN_FTYPE_CTL  0x01
+-#define WLAN_FTYPE_DATA 0x02
 -
--static int open_file_misc(struct inode *inode, struct file *f)
--{
--	return single_open(f, read_file_misc, inode->i_private);
--}
+-/* Frame Subtypes */
+-#define WLAN_FSTYPE_ASSOCREQ        0x00
+-#define WLAN_FSTYPE_ASSOCRESP       0x01
+-#define WLAN_FSTYPE_REASSOCREQ      0x02
+-#define WLAN_FSTYPE_REASSOCRESP     0x03
+-#define WLAN_FSTYPE_PROBEREQ        0x04
+-#define WLAN_FSTYPE_PROBERESP       0x05
+-#define WLAN_FSTYPE_BEACON          0x08
+-#define WLAN_FSTYPE_ATIM            0x09
+-#define WLAN_FSTYPE_DISASSOC        0x0a
+-#define WLAN_FSTYPE_AUTHEN          0x0b
+-#define WLAN_FSTYPE_DEAUTHEN        0x0c
+-#define WLAN_FSTYPE_ACTION          0x0d
 -
--static const struct file_operations fops_misc = {
--	.read = seq_read,
--	.open = open_file_misc,
--	.owner = THIS_MODULE,
--	.llseek = seq_lseek,
--	.release = single_release,
--};
+-/* Control */
+-#define WLAN_FSTYPE_PSPOLL          0x0a
+-#define WLAN_FSTYPE_RTS             0x0b
+-#define WLAN_FSTYPE_CTS             0x0c
+-#define WLAN_FSTYPE_ACK             0x0d
+-#define WLAN_FSTYPE_CFEND           0x0e
+-#define WLAN_FSTYPE_CFENDCFACK      0x0f
 -
--static int open_file_reset(struct inode *inode, struct file *f)
--{
--	return single_open(f, read_file_reset, inode->i_private);
--}
+-/* Data */
+-#define WLAN_FSTYPE_DATAONLY        0x00
+-#define WLAN_FSTYPE_DATA_CFACK      0x01
+-#define WLAN_FSTYPE_DATA_CFPOLL     0x02
+-#define WLAN_FSTYPE_DATA_CFACK_CFPOLL   0x03
+-#define WLAN_FSTYPE_NULL            0x04
+-#define WLAN_FSTYPE_CFACK           0x05
+-#define WLAN_FSTYPE_CFPOLL          0x06
+-#define WLAN_FSTYPE_CFACK_CFPOLL    0x07
 -
--static const struct file_operations fops_reset = {
--	.read = seq_read,
--	.open = open_file_reset,
--	.owner = THIS_MODULE,
--	.llseek = seq_lseek,
--	.release = single_release,
--};
+-#ifdef __BIG_ENDIAN
 -
- void ath_debug_stat_rx(struct ath_softc *sc, struct ath_rx_status *rs)
- {
- 	ath9k_cmn_debug_stat_rx(&sc->debug.stats.rxstats, rs);
-@@ -1014,7 +935,7 @@ static const struct file_operations fops_regdump = {
+-/* GET & SET Frame Control bit */
+-#define WLAN_GET_FC_PRVER(n)    (((unsigned short)(n) >> 8) & (BIT0 | BIT1))
+-#define WLAN_GET_FC_FTYPE(n)    ((((unsigned short)(n) >> 8) & (BIT2 | BIT3)) >> 2)
+-#define WLAN_GET_FC_FSTYPE(n)   ((((unsigned short)(n) >> 8) & (BIT4|BIT5|BIT6|BIT7)) >> 4)
+-#define WLAN_GET_FC_TODS(n)     ((((unsigned short)(n) << 8) & (BIT8)) >> 8)
+-#define WLAN_GET_FC_FROMDS(n)   ((((unsigned short)(n) << 8) & (BIT9)) >> 9)
+-#define WLAN_GET_FC_MOREFRAG(n) ((((unsigned short)(n) << 8) & (BIT10)) >> 10)
+-#define WLAN_GET_FC_RETRY(n)    ((((unsigned short)(n) << 8) & (BIT11)) >> 11)
+-#define WLAN_GET_FC_PWRMGT(n)   ((((unsigned short)(n) << 8) & (BIT12)) >> 12)
+-#define WLAN_GET_FC_MOREDATA(n) ((((unsigned short)(n) << 8) & (BIT13)) >> 13)
+-#define WLAN_GET_FC_ISWEP(n)    ((((unsigned short)(n) << 8) & (BIT14)) >> 14)
+-#define WLAN_GET_FC_ORDER(n)    ((((unsigned short)(n) << 8) & (BIT15)) >> 15)
+-
+-/* Sequence Field bit */
+-#define WLAN_GET_SEQ_FRGNUM(n) (((unsigned short)(n) >> 8) & (BIT0|BIT1|BIT2|BIT3))
+-#define WLAN_GET_SEQ_SEQNUM(n) ((((unsigned short)(n) >> 8) & (~(BIT0|BIT1|BIT2|BIT3))) >> 4)
+-
+-/* Capability Field bit */
+-#define WLAN_GET_CAP_INFO_ESS(n)           (((n) >> 8) & BIT0)
+-#define WLAN_GET_CAP_INFO_IBSS(n)          ((((n) >> 8) & BIT1) >> 1)
+-#define WLAN_GET_CAP_INFO_CFPOLLABLE(n)    ((((n) >> 8) & BIT2) >> 2)
+-#define WLAN_GET_CAP_INFO_CFPOLLREQ(n)     ((((n) >> 8) & BIT3) >> 3)
+-#define WLAN_GET_CAP_INFO_PRIVACY(n)       ((((n) >> 8) & BIT4) >> 4)
+-#define WLAN_GET_CAP_INFO_SHORTPREAMBLE(n) ((((n) >> 8) & BIT5) >> 5)
+-#define WLAN_GET_CAP_INFO_PBCC(n)          ((((n) >> 8) & BIT6) >> 6)
+-#define WLAN_GET_CAP_INFO_AGILITY(n)       ((((n) >> 8) & BIT7) >> 7)
+-#define WLAN_GET_CAP_INFO_SPECTRUMMNG(n)   ((((n))      & BIT8) >> 10)
+-#define WLAN_GET_CAP_INFO_SHORTSLOTTIME(n) ((((n))      & BIT10) >> 10)
+-#define WLAN_GET_CAP_INFO_DSSSOFDM(n)      ((((n))      & BIT13) >> 13)
+-#define WLAN_GET_CAP_INFO_GRPACK(n)        ((((n))      & BIT14) >> 14)
+-
+-#else
+-
+-/* GET & SET Frame Control bit */
+-#define WLAN_GET_FC_PRVER(n)    (((unsigned short)(n)) & (BIT0 | BIT1))
+-#define WLAN_GET_FC_FTYPE(n)    ((((unsigned short)(n)) & (BIT2 | BIT3)) >> 2)
+-#define WLAN_GET_FC_FSTYPE(n)   ((((unsigned short)(n)) & (BIT4|BIT5|BIT6|BIT7)) >> 4)
+-#define WLAN_GET_FC_TODS(n)     ((((unsigned short)(n)) & (BIT8)) >> 8)
+-#define WLAN_GET_FC_FROMDS(n)   ((((unsigned short)(n)) & (BIT9)) >> 9)
+-#define WLAN_GET_FC_MOREFRAG(n) ((((unsigned short)(n)) & (BIT10)) >> 10)
+-#define WLAN_GET_FC_RETRY(n)    ((((unsigned short)(n)) & (BIT11)) >> 11)
+-#define WLAN_GET_FC_PWRMGT(n)   ((((unsigned short)(n)) & (BIT12)) >> 12)
+-#define WLAN_GET_FC_MOREDATA(n) ((((unsigned short)(n)) & (BIT13)) >> 13)
+-#define WLAN_GET_FC_ISWEP(n)    ((((unsigned short)(n)) & (BIT14)) >> 14)
+-#define WLAN_GET_FC_ORDER(n)    ((((unsigned short)(n)) & (BIT15)) >> 15)
+-
+-/* Sequence Field bit */
+-#define WLAN_GET_SEQ_FRGNUM(n) (((unsigned short)(n)) & (BIT0|BIT1|BIT2|BIT3))
+-#define WLAN_GET_SEQ_SEQNUM(n) ((((unsigned short)(n)) & (~(BIT0|BIT1|BIT2|BIT3))) >> 4)
+-
+-/* Capability Field bit */
+-#define WLAN_GET_CAP_INFO_ESS(n)           ((n) & BIT0)
+-#define WLAN_GET_CAP_INFO_IBSS(n)          (((n) & BIT1) >> 1)
+-#define WLAN_GET_CAP_INFO_CFPOLLABLE(n)    (((n) & BIT2) >> 2)
+-#define WLAN_GET_CAP_INFO_CFPOLLREQ(n)     (((n) & BIT3) >> 3)
+-#define WLAN_GET_CAP_INFO_PRIVACY(n)       (((n) & BIT4) >> 4)
+-#define WLAN_GET_CAP_INFO_SHORTPREAMBLE(n) (((n) & BIT5) >> 5)
+-#define WLAN_GET_CAP_INFO_PBCC(n)          (((n) & BIT6) >> 6)
+-#define WLAN_GET_CAP_INFO_AGILITY(n)       (((n) & BIT7) >> 7)
+-#define WLAN_GET_CAP_INFO_SPECTRUMMNG(n)   (((n) & BIT8) >> 10)
+-#define WLAN_GET_CAP_INFO_SHORTSLOTTIME(n) (((n) & BIT10) >> 10)
+-#define WLAN_GET_CAP_INFO_DSSSOFDM(n)      (((n) & BIT13) >> 13)
+-#define WLAN_GET_CAP_INFO_GRPACK(n)        (((n) & BIT14) >> 14)
+-
+-#endif /*#ifdef __BIG_ENDIAN */
+-
+-#define WLAN_SET_CAP_INFO_ESS(n)           (n)
+-#define WLAN_SET_CAP_INFO_IBSS(n)          ((n) << 1)
+-#define WLAN_SET_CAP_INFO_CFPOLLABLE(n)    ((n) << 2)
+-#define WLAN_SET_CAP_INFO_CFPOLLREQ(n)     ((n) << 3)
+-#define WLAN_SET_CAP_INFO_PRIVACY(n)       ((n) << 4)
+-#define WLAN_SET_CAP_INFO_SHORTPREAMBLE(n) ((n) << 5)
+-#define WLAN_SET_CAP_INFO_SPECTRUMMNG(n)   ((n) << 8)
+-#define WLAN_SET_CAP_INFO_PBCC(n)          ((n) << 6)
+-#define WLAN_SET_CAP_INFO_AGILITY(n)       ((n) << 7)
+-#define WLAN_SET_CAP_INFO_SHORTSLOTTIME(n) ((n) << 10)
+-#define WLAN_SET_CAP_INFO_DSSSOFDM(n)      ((n) << 13)
+-#define WLAN_SET_CAP_INFO_GRPACK(n)        ((n) << 14)
+-
+-#define WLAN_SET_FC_PRVER(n)    ((unsigned short)(n))
+-#define WLAN_SET_FC_FTYPE(n)    (((unsigned short)(n)) << 2)
+-#define WLAN_SET_FC_FSTYPE(n)   (((unsigned short)(n)) << 4)
+-#define WLAN_SET_FC_TODS(n)     (((unsigned short)(n)) << 8)
+-#define WLAN_SET_FC_FROMDS(n)   (((unsigned short)(n)) << 9)
+-#define WLAN_SET_FC_MOREFRAG(n) (((unsigned short)(n)) << 10)
+-#define WLAN_SET_FC_RETRY(n)    (((unsigned short)(n)) << 11)
+-#define WLAN_SET_FC_PWRMGT(n)   (((unsigned short)(n)) << 12)
+-#define WLAN_SET_FC_MOREDATA(n) (((unsigned short)(n)) << 13)
+-#define WLAN_SET_FC_ISWEP(n)    (((unsigned short)(n)) << 14)
+-#define WLAN_SET_FC_ORDER(n)    (((unsigned short)(n)) << 15)
+-
+-#define WLAN_SET_SEQ_FRGNUM(n) ((unsigned short)(n))
+-#define WLAN_SET_SEQ_SEQNUM(n) (((unsigned short)(n)) << 4)
+-
+-/* ERP Field bit */
+-
+-#define WLAN_GET_ERP_NONERP_PRESENT(n)     ((n) & BIT0)
+-#define WLAN_GET_ERP_USE_PROTECTION(n)     (((n) & BIT1) >> 1)
+-#define WLAN_GET_ERP_BARKER_MODE(n)        (((n) & BIT2) >> 2)
+-
+-#define WLAN_SET_ERP_NONERP_PRESENT(n)     (n)
+-#define WLAN_SET_ERP_USE_PROTECTION(n)     ((n) << 1)
+-#define WLAN_SET_ERP_BARKER_MODE(n)        ((n) << 2)
+-
+-/* Support & Basic Rates field */
+-#define WLAN_MGMT_IS_BASICRATE(b)    ((b) & BIT7)
+-#define WLAN_MGMT_GET_RATE(b)        ((b) & ~BIT7)
+-
+-/* TIM field */
+-#define WLAN_MGMT_IS_MULTICAST_TIM(b)   ((b) & BIT0)
+-#define WLAN_MGMT_GET_TIM_OFFSET(b)     (((b) & ~BIT0) >> 1)
+-
+-/* 3-Addr & 4-Addr */
+-#define WLAN_HDR_A3_DATA_PTR(p) (((unsigned char *)(p)) + WLAN_HDR_ADDR3_LEN)
+-#define WLAN_HDR_A4_DATA_PTR(p) (((unsigned char *)(p)) + WLAN_HDR_ADDR4_LEN)
+-
+-/* IEEE ADDR */
+-#define IEEE_ADDR_UNIVERSAL         0x02
+-#define IEEE_ADDR_GROUP             0x01
+-
+-typedef struct {
+-	unsigned char abyAddr[6];
+-} IEEE_ADDR, *PIEEE_ADDR;
+-
+-/* 802.11 Header Format */
+-
+-typedef struct tagWLAN_80211HDR_A2 {
+-	unsigned short wFrameCtl;
+-	unsigned short wDurationID;
+-	unsigned char abyAddr1[WLAN_ADDR_LEN];
+-	unsigned char abyAddr2[WLAN_ADDR_LEN];
+-} __attribute__ ((__packed__))
+-WLAN_80211HDR_A2, *PWLAN_80211HDR_A2;
+-
+-typedef struct tagWLAN_80211HDR_A3 {
+-	unsigned short wFrameCtl;
+-	unsigned short wDurationID;
+-	unsigned char abyAddr1[WLAN_ADDR_LEN];
+-	unsigned char abyAddr2[WLAN_ADDR_LEN];
+-	unsigned char abyAddr3[WLAN_ADDR_LEN];
+-	unsigned short wSeqCtl;
+-} __attribute__ ((__packed__))
+-WLAN_80211HDR_A3, *PWLAN_80211HDR_A3;
+-
+-typedef struct tagWLAN_80211HDR_A4 {
+-	unsigned short wFrameCtl;
+-	unsigned short wDurationID;
+-	unsigned char abyAddr1[WLAN_ADDR_LEN];
+-	unsigned char abyAddr2[WLAN_ADDR_LEN];
+-	unsigned char abyAddr3[WLAN_ADDR_LEN];
+-	unsigned short wSeqCtl;
+-	unsigned char abyAddr4[WLAN_ADDR_LEN];
+-} __attribute__ ((__packed__))
+-WLAN_80211HDR_A4, *PWLAN_80211HDR_A4;
+-
+-typedef union tagUWLAN_80211HDR {
+-	WLAN_80211HDR_A2        sA2;
+-	WLAN_80211HDR_A3        sA3;
+-	WLAN_80211HDR_A4        sA4;
+-} UWLAN_80211HDR, *PUWLAN_80211HDR;
+-
+-#endif /* __80211HDR_H__ */
+diff --git a/drivers/staging/vt6655/device.h b/drivers/staging/vt6655/device.h
+index c8f1a3e..42099b3 100644
+--- a/drivers/staging/vt6655/device.h
++++ b/drivers/staging/vt6655/device.h
+@@ -72,7 +72,6 @@
  
- static int read_file_dump_nfcal(struct seq_file *file, void *data)
- {
--	struct ath_softc *sc = file->private;
-+	struct ath_softc *sc = dev_get_drvdata(file->private);
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath9k_nfcal_hist *h = sc->cur_chan->caldata.nfCalHist;
- 	struct ath_common *common = ath9k_hw_common(ah);
-@@ -1256,14 +1177,14 @@ int ath9k_init_debug(struct ath_hw *ah)
- 	ath9k_tx99_init_debug(sc);
- 	ath9k_spectral_init_debug(sc);
+ #include "device_cfg.h"
+ #include "ttype.h"
+-#include "80211hdr.h"
+ #include "wmgr.h"
+ #include "mib.h"
+ #include "srom.h"
+diff --git a/drivers/staging/vt6655/wmgr.h b/drivers/staging/vt6655/wmgr.h
+index 44976e0..8f9748b 100644
+--- a/drivers/staging/vt6655/wmgr.h
++++ b/drivers/staging/vt6655/wmgr.h
+@@ -35,7 +35,6 @@
+ #define __WMGR_H__
  
--	debugfs_create_file("dma", S_IRUSR, sc->debug.debugfs_phy, sc,
--			    &fops_dma);
--	debugfs_create_file("interrupt", S_IRUSR, sc->debug.debugfs_phy, sc,
--			    &fops_interrupt);
--	debugfs_create_file("xmit", S_IRUSR, sc->debug.debugfs_phy, sc,
--			    &fops_xmit);
--	debugfs_create_file("queues", S_IRUSR, sc->debug.debugfs_phy, sc,
--			    &fops_queues);
-+	debugfs_create_devm_seqfile(sc->dev, "dma", sc->debug.debugfs_phy,
-+				    read_file_dma);
-+	debugfs_create_devm_seqfile(sc->dev, "interrupt", sc->debug.debugfs_phy,
-+				    read_file_interrupt);
-+	debugfs_create_devm_seqfile(sc->dev, "xmit", sc->debug.debugfs_phy,
-+				    read_file_xmit);
-+	debugfs_create_devm_seqfile(sc->dev, "queues", sc->debug.debugfs_phy,
-+				    read_file_queues);
- 	debugfs_create_u32("qlen_bk", S_IRUSR | S_IWUSR, sc->debug.debugfs_phy,
- 			   &sc->tx.txq_max_pending[IEEE80211_AC_BK]);
- 	debugfs_create_u32("qlen_be", S_IRUSR | S_IWUSR, sc->debug.debugfs_phy,
-@@ -1272,10 +1193,10 @@ int ath9k_init_debug(struct ath_hw *ah)
- 			   &sc->tx.txq_max_pending[IEEE80211_AC_VI]);
- 	debugfs_create_u32("qlen_vo", S_IRUSR | S_IWUSR, sc->debug.debugfs_phy,
- 			   &sc->tx.txq_max_pending[IEEE80211_AC_VO]);
--	debugfs_create_file("misc", S_IRUSR, sc->debug.debugfs_phy, sc,
--			    &fops_misc);
--	debugfs_create_file("reset", S_IRUSR, sc->debug.debugfs_phy, sc,
--			    &fops_reset);
-+	debugfs_create_devm_seqfile(sc->dev, "misc", sc->debug.debugfs_phy,
-+				    read_file_misc);
-+	debugfs_create_devm_seqfile(sc->dev, "reset", sc->debug.debugfs_phy,
-+				    read_file_reset);
+ #include "ttype.h"
+-#include "80211hdr.h"
+ #include "card.h"
  
- 	ath9k_cmn_debug_recv(sc->debug.debugfs_phy, &sc->debug.stats.rxstats);
- 	ath9k_cmn_debug_phy_err(sc->debug.debugfs_phy, &sc->debug.stats.rxstats);
-@@ -1297,8 +1218,9 @@ int ath9k_init_debug(struct ath_hw *ah)
- 			    &ah->config.cwm_ignore_extcca);
- 	debugfs_create_file("regdump", S_IRUSR, sc->debug.debugfs_phy, sc,
- 			    &fops_regdump);
--	debugfs_create_file("dump_nfcal", S_IRUSR, sc->debug.debugfs_phy, sc,
--			    &fops_dump_nfcal);
-+	debugfs_create_devm_seqfile(sc->dev, "dump_nfcal",
-+				    sc->debug.debugfs_phy,
-+				    read_file_dump_nfcal);
- 
- 	ath9k_cmn_debug_base_eeprom(sc->debug.debugfs_phy, sc->sc_ah);
- 	ath9k_cmn_debug_modal_eeprom(sc->debug.debugfs_phy, sc->sc_ah);
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index c018dea..90c9e3c 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -856,6 +856,7 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	sc = hw->priv;
- 	sc->hw = hw;
- 	sc->dev = &pdev->dev;
-+	dev_set_drvdata(sc->dev, sc);
- 	sc->mem = pcim_iomap_table(pdev)[0];
- 	sc->driver_data = id->driver_data;
- 
+ /*---------------------  Export Definitions -------------------------*/
 -- 
 1.9.1
 
