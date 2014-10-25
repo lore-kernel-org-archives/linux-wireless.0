@@ -1,233 +1,919 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f179.google.com ([209.85.214.179]:41509 "EHLO
-	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751022AbaJWQqY (ORCPT
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:51553 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752237AbaJYTjt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Oct 2014 12:46:24 -0400
-Received: by mail-ob0-f179.google.com with SMTP id wp4so1047510obc.24
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Oct 2014 09:46:24 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1414080125.164673.182502929.61AF3AB1@webmail.messagingengine.com>
-References: <1413463736.1316541.179720977.4FD32021@webmail.messagingengine.com>
-	<1413510814.22769.6.camel@dcbw.local>
-	<1413751717.2510219.180809145.0E693C29@webmail.messagingengine.com>
-	<CANUX_P2RHVRorVABRfWVg39d4D8dj35v3fBpY3=3jvQ1U+mfEA@mail.gmail.com>
-	<1413783023.2710583.180921653.10DFFCEE@webmail.messagingengine.com>
-	<CANUX_P0Q7cNeBzQa=2WVZFJXPTLx8F6YQk9bGCf_3uYhc5RcGA@mail.gmail.com>
-	<CANUX_P3EqgTX7cPJvQ3fWH1yijekE0G_8TiH2_OCS7nFASGtkA@mail.gmail.com>
-	<1413789724.3063896.180943829.3F15F453@webmail.messagingengine.com>
-	<CANUX_P1REqkSqN0dtak34OQ_pSGMtPvV3Vj61tW5wb1+n2A7mg@mail.gmail.com>
-	<1413833365.2949853.181221645.22D54845@webmail.messagingengine.com>
-	<CANUX_P3XzYBp7E=hScmc837TpuCr9VrxEYauG=sGMKfOCpX=qA@mail.gmail.com>
-	<54461740.5000903@openwrt.org>
-	<1413879792.3500640.181427549.198E9452@webmail.messagingengine.com>
-	<54461AEF.7040304@openwrt.org>
-	<54463CE9.3060400@gmail.com>
-	<1413921415.3763081.181696749.20A0A495@webmail.messagingengine.com>
-	<CANUX_P0LRRczVCSFR7RE5coaYFxwFXyqC90pdm=oVwEiEt-7zw@mail.gmail.com>
-	<1414014805.4127522.182191541.14C8B4DF@webmail.messagingengine.com>
-	<CANUX_P0tGagXsN6XCeb_itQehqD3O9fmqknU6iSMO432NQtATA@mail.gmail.com>
-	<1414049448.32460.182326557.1A0A85A4@webmail.messagingengine.com>
-	<CANUX_P3usjdccnsYPQXzKbJ1PTH91fasf6BpcsCRYZH_yq2tww@mail.gmail.com>
-	<1414080125.164673.182502929.61AF3AB1@webmail.messagingengine.com>
-Date: Thu, 23 Oct 2014 19:46:23 +0300
-Message-ID: <CANUX_P2pJYNhLEMw=iQVe-CSbxqRDqOXL_gUZXxwpmAj2qj=FA@mail.gmail.com> (sfid-20141023_184628_334831_4BA265C0)
-Subject: Re: iwlwifi: Reason 7 periodic disconnect
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: =?UTF-8?Q?Lauren=C8=9Biu_Nicola?= <lnicola@dend.ro>
-Cc: poma <pomidorabelisima@gmail.com>, Dan Williams <dcbw@redhat.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: multipart/mixed; boundary=e89a8f64272806cead050619ce55
+	Sat, 25 Oct 2014 15:39:49 -0400
+Received: by mail-wi0-f178.google.com with SMTP id q5so3579476wiv.17
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2014 12:39:47 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 07/48] staging: vt6655: dead code remove legacy hostap.c/h
+Date: Sat, 25 Oct 2014 09:39:45 +0100
+Message-Id: <1414226426-5811-8-git-send-email-tvboxspy@gmail.com> (sfid-20141025_213953_029969_8FE5EE4F)
+In-Reply-To: <1414226426-5811-1-git-send-email-tvboxspy@gmail.com>
+References: <1414226426-5811-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---e89a8f64272806cead050619ce55
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+hoatap is now supported by mac80211 in nl80211 mode
 
-On Thu, Oct 23, 2014 at 7:02 PM, Lauren=C8=9Biu Nicola <lnicola@dend.ro> wr=
-ote:
-> Sorry, but I only saw a two-line change [1] to
-> `ieee80211_rx_mgmt_beacon` (which already had a log message). Am I
-> missing something?
->
-> [1] http://www.spinics.net/lists/linux-wireless/msg128340.html
->
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/Makefile      |   1 -
+ drivers/staging/vt6655/device_main.c |   1 -
+ drivers/staging/vt6655/dpc.c         |   1 -
+ drivers/staging/vt6655/hostap.c      | 764 -----------------------------------
+ drivers/staging/vt6655/hostap.h      |  58 ---
+ drivers/staging/vt6655/rxtx.c        |   1 -
+ 6 files changed, 826 deletions(-)
+ delete mode 100644 drivers/staging/vt6655/hostap.c
+ delete mode 100644 drivers/staging/vt6655/hostap.h
 
-No - you are not. I did miss something...I forgot to attach the patch.
-Here you go.
+diff --git a/drivers/staging/vt6655/Makefile b/drivers/staging/vt6655/Makefile
+index 6e93499..2d53450 100644
+--- a/drivers/staging/vt6655/Makefile
++++ b/drivers/staging/vt6655/Makefile
+@@ -21,7 +21,6 @@ vt6655_stage-y +=	device_main.o \
+ 	rc4.o \
+ 	tether.o \
+ 	tcrc.o \
+-	hostap.o \
+ 	wpa.o \
+ 	key.o \
+ 	tkip.o \
+diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
+index facf317..2b5c9ab 100644
+--- a/drivers/staging/vt6655/device_main.c
++++ b/drivers/staging/vt6655/device_main.c
+@@ -68,7 +68,6 @@
+ #include "rxtx.h"
+ #include "wroute.h"
+ #include "bssdb.h"
+-#include "hostap.h"
+ #include "wpactl.h"
+ #include "dpc.h"
+ #include "datarate.h"
+diff --git a/drivers/staging/vt6655/dpc.c b/drivers/staging/vt6655/dpc.c
+index d91771f..b80d760 100644
+--- a/drivers/staging/vt6655/dpc.c
++++ b/drivers/staging/vt6655/dpc.c
+@@ -50,7 +50,6 @@
+ #include "tcrc.h"
+ #include "wctl.h"
+ #include "wroute.h"
+-#include "hostap.h"
+ #include "rf.h"
+ #include "iowpa.h"
+ #include "aes_ccmp.h"
+diff --git a/drivers/staging/vt6655/hostap.c b/drivers/staging/vt6655/hostap.c
+deleted file mode 100644
+index 2db08df..0000000
+--- a/drivers/staging/vt6655/hostap.c
++++ /dev/null
+@@ -1,764 +0,0 @@
+-/*
+- * Copyright (c) 1996, 2003 VIA Networking Technologies, Inc.
+- * All rights reserved.
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2 of the License, or
+- * (at your option) any later version.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License along
+- * with this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+- *
+- * File: hostap.c
+- *
+- * Purpose: handle hostap deamon ioctl input/out functions
+- *
+- * Author: Lyndon Chen
+- *
+- * Date: Oct. 20, 2003
+- *
+- * Functions:
+- *
+- * Revision History:
+- *
+- */
+-
+-#include "hostap.h"
+-#include "iocmd.h"
+-#include "mac.h"
+-#include "card.h"
+-#include "baseband.h"
+-#include "wpactl.h"
+-#include "key.h"
+-
+-#define VIAWGET_HOSTAPD_MAX_BUF_SIZE 1024
+-#define HOSTAP_CRYPT_FLAG_SET_TX_KEY BIT0
+-#define HOSTAP_CRYPT_ERR_UNKNOWN_ADDR 3
+-#define HOSTAP_CRYPT_ERR_KEY_SET_FAILED 5
+-
+-/*---------------------  Static Definitions -------------------------*/
+-
+-/*---------------------  Static Classes  ----------------------------*/
+-
+-/*---------------------  Static Functions  --------------------------*/
+-
+-/*---------------------  Export Variables  --------------------------*/
+-
+-/*
+- * Description:
+- *      register net_device (AP) for hostap deamon
+- *
+- * Parameters:
+- *  In:
+- *      pDevice             -
+- *      rtnl_locked         -
+- *  Out:
+- *
+- * Return Value:
+- *
+- */
+-
+-static int hostap_enable_hostapd(struct vnt_private *pDevice, int rtnl_locked)
+-{
+-	struct vnt_private *apdev_priv;
+-	struct net_device *dev = pDevice->dev;
+-	int ret;
+-	const struct net_device_ops apdev_netdev_ops = {
+-		.ndo_start_xmit         = pDevice->tx_80211,
+-	};
+-
+-	pr_debug("%s: Enabling hostapd mode\n", dev->name);
+-
+-	pDevice->apdev = alloc_etherdev(sizeof(*apdev_priv));
+-	if (pDevice->apdev == NULL)
+-		return -ENOMEM;
+-
+-	apdev_priv = netdev_priv(pDevice->apdev);
+-	*apdev_priv = *pDevice;
+-	eth_hw_addr_inherit(pDevice->apdev, dev);
+-
+-	pDevice->apdev->netdev_ops = &apdev_netdev_ops;
+-
+-	pDevice->apdev->type = ARPHRD_IEEE80211;
+-
+-	pDevice->apdev->base_addr = dev->base_addr;
+-	pDevice->apdev->irq = dev->irq;
+-	pDevice->apdev->mem_start = dev->mem_start;
+-	pDevice->apdev->mem_end = dev->mem_end;
+-	sprintf(pDevice->apdev->name, "%sap", dev->name);
+-	if (rtnl_locked)
+-		ret = register_netdevice(pDevice->apdev);
+-	else
+-		ret = register_netdev(pDevice->apdev);
+-	if (ret) {
+-		pr_debug("%s: register_netdevice(AP) failed!\n",
+-			 dev->name);
+-		free_netdev(pDevice->apdev);
+-		pDevice->apdev = NULL;
+-		return -1;
+-	}
+-
+-	pr_debug("%s: Registered netdevice %s for AP management\n",
+-		 dev->name, pDevice->apdev->name);
+-
+-	KeyvInitTable(&pDevice->sKey, pDevice->PortOffset);
+-
+-	return 0;
+-}
+-
+-/*
+- * Description:
+- *      unregister net_device(AP)
+- *
+- * Parameters:
+- *  In:
+- *      pDevice             -
+- *      rtnl_locked         -
+- *  Out:
+- *
+- * Return Value:
+- *
+- */
+-
+-static int hostap_disable_hostapd(struct vnt_private *pDevice, int rtnl_locked)
+-{
+-	pr_debug("%s: disabling hostapd mode\n", pDevice->dev->name);
+-
+-	if (pDevice->apdev && pDevice->apdev->name && pDevice->apdev->name[0]) {
+-		if (rtnl_locked)
+-			unregister_netdevice(pDevice->apdev);
+-		else
+-			unregister_netdev(pDevice->apdev);
+-		pr_debug("%s: Netdevice %s unregistered\n",
+-			 pDevice->dev->name, pDevice->apdev->name);
+-	}
+-	if (pDevice->apdev)
+-		free_netdev(pDevice->apdev);
+-	pDevice->apdev = NULL;
+-	pDevice->bEnable8021x = false;
+-	pDevice->bEnableHostWEP = false;
+-	pDevice->bEncryptionEnable = false;
+-
+-/* 4.2007-0118-03,<Add> by EinsnLiu */
+-/* execute some clear work */
+-	pDevice->pMgmt->byCSSPK = KEY_CTL_NONE;
+-	pDevice->pMgmt->byCSSGK = KEY_CTL_NONE;
+-	KeyvInitTable(&pDevice->sKey, pDevice->PortOffset);
+-
+-	return 0;
+-}
+-
+-/*
+- * Description:
+- *      Set enable/disable hostapd mode
+- *
+- * Parameters:
+- *  In:
+- *      pDevice             -
+- *      rtnl_locked         -
+- *  Out:
+- *
+- * Return Value:
+- *
+- */
+-
+-int vt6655_hostap_set_hostapd(struct vnt_private *pDevice,
+-			      int val, int rtnl_locked)
+-{
+-	if (val < 0 || val > 1)
+-		return -EINVAL;
+-
+-	if (pDevice->bEnableHostapd == val)
+-		return 0;
+-
+-	pDevice->bEnableHostapd = val;
+-
+-	if (val)
+-		return hostap_enable_hostapd(pDevice, rtnl_locked);
+-	return hostap_disable_hostapd(pDevice, rtnl_locked);
+-}
+-
+-/*
+- * Description:
+- *      remove station function supported for hostap deamon
+- *
+- * Parameters:
+- *  In:
+- *      pDevice   -
+- *      param     -
+- *  Out:
+- *
+- * Return Value:
+- *
+- */
+-static int hostap_remove_sta(struct vnt_private *pDevice,
+-			     struct viawget_hostapd_param *param)
+-{
+-	unsigned int uNodeIndex;
+-
+-	if (BSSDBbIsSTAInNodeDB(pDevice->pMgmt, param->sta_addr, &uNodeIndex))
+-		BSSvRemoveOneNode(pDevice, uNodeIndex);
+-	else
+-		return -ENOENT;
+-
+-	return 0;
+-}
+-
+-/*
+- * Description:
+- *      add a station from hostap deamon
+- *
+- * Parameters:
+- *  In:
+- *      pDevice   -
+- *      param     -
+- *  Out:
+- *
+- * Return Value:
+- *
+- */
+-static int hostap_add_sta(struct vnt_private *pDevice,
+-			  struct viawget_hostapd_param *param)
+-{
+-	PSMgmtObject    pMgmt = pDevice->pMgmt;
+-	unsigned int uNodeIndex;
+-
+-	if (!BSSDBbIsSTAInNodeDB(pMgmt, param->sta_addr, &uNodeIndex))
+-		BSSvCreateOneNode(pDevice, &uNodeIndex);
+-
+-	memcpy(pMgmt->sNodeDBTable[uNodeIndex].abyMACAddr, param->sta_addr, WLAN_ADDR_LEN);
+-	pMgmt->sNodeDBTable[uNodeIndex].eNodeState = NODE_ASSOC;
+-	pMgmt->sNodeDBTable[uNodeIndex].wCapInfo = param->u.add_sta.capability;
+-/* TODO listenInterval */
+-	pMgmt->sNodeDBTable[uNodeIndex].bPSEnable = false;
+-	pMgmt->sNodeDBTable[uNodeIndex].bySuppRate = param->u.add_sta.tx_supp_rates;
+-
+-	/* set max tx rate */
+-	pMgmt->sNodeDBTable[uNodeIndex].wTxDataRate =
+-		pMgmt->sNodeDBTable[uNodeIndex].wMaxSuppRate;
+-	/* set max basic rate */
+-	pMgmt->sNodeDBTable[uNodeIndex].wMaxBasicRate = RATE_2M;
+-	/* Todo: check sta preamble, if ap can't support, set status code */
+-	pMgmt->sNodeDBTable[uNodeIndex].bShortPreamble =
+-		WLAN_GET_CAP_INFO_SHORTPREAMBLE(pMgmt->sNodeDBTable[uNodeIndex].wCapInfo);
+-
+-	pMgmt->sNodeDBTable[uNodeIndex].wAID = (unsigned short)param->u.add_sta.aid;
+-
+-	pMgmt->sNodeDBTable[uNodeIndex].ulLastRxJiffer = jiffies;
+-
+-	pr_debug("Add STA AID= %d\n", pMgmt->sNodeDBTable[uNodeIndex].wAID);
+-	pr_debug("MAC=%pM\n", param->sta_addr);
+-	pr_debug("Max Support rate = %d\n",
+-		 pMgmt->sNodeDBTable[uNodeIndex].wMaxSuppRate);
+-
+-	return 0;
+-}
+-
+-/*
+- * Description:
+- *      get station info
+- *
+- * Parameters:
+- *  In:
+- *      pDevice   -
+- *      param     -
+- *  Out:
+- *
+- * Return Value:
+- *
+- */
+-
+-static int hostap_get_info_sta(struct vnt_private *pDevice,
+-			       struct viawget_hostapd_param *param)
+-{
+-	PSMgmtObject    pMgmt = pDevice->pMgmt;
+-	unsigned int uNodeIndex;
+-
+-	if (BSSDBbIsSTAInNodeDB(pMgmt, param->sta_addr, &uNodeIndex)) {
+-		param->u.get_info_sta.inactive_sec =
+-			(jiffies - pMgmt->sNodeDBTable[uNodeIndex].ulLastRxJiffer) / HZ;
+-	} else {
+-		return -ENOENT;
+-	}
+-
+-	return 0;
+-}
+-
+-/*
+- * Description:
+- *      set station flag
+- *
+- * Parameters:
+- *  In:
+- *      pDevice   -
+- *      param     -
+- *  Out:
+- *
+- * Return Value:
+- *
+- */
+-static int hostap_set_flags_sta(struct vnt_private *pDevice,
+-				struct viawget_hostapd_param *param)
+-{
+-	PSMgmtObject    pMgmt = pDevice->pMgmt;
+-	unsigned int uNodeIndex;
+-
+-	if (BSSDBbIsSTAInNodeDB(pMgmt, param->sta_addr, &uNodeIndex)) {
+-		pMgmt->sNodeDBTable[uNodeIndex].dwFlags |= param->u.set_flags_sta.flags_or;
+-		pMgmt->sNodeDBTable[uNodeIndex].dwFlags &= param->u.set_flags_sta.flags_and;
+-		pr_debug(" dwFlags = %x\n",
+-			 (unsigned int)pMgmt->sNodeDBTable[uNodeIndex].dwFlags);
+-	} else {
+-		return -ENOENT;
+-	}
+-
+-	return 0;
+-}
+-
+-/*
+- * Description:
+- *      set generic element (wpa ie)
+- *
+- * Parameters:
+- *  In:
+- *      pDevice   -
+- *      param     -
+- *  Out:
+- *
+- * Return Value:
+- *
+- */
+-static int hostap_set_generic_element(struct vnt_private *pDevice,
+-				      struct viawget_hostapd_param *param)
+-{
+-	PSMgmtObject    pMgmt = pDevice->pMgmt;
+-
+-	if (param->u.generic_elem.len > sizeof(pMgmt->abyWPAIE))
+-		return -EINVAL;
+-
+-	memcpy(pMgmt->abyWPAIE,
+-	       param->u.generic_elem.data,
+-	       param->u.generic_elem.len
+-		);
+-
+-	pMgmt->wWPAIELen = param->u.generic_elem.len;
+-
+-	pr_debug("pMgmt->wWPAIELen = %d\n", pMgmt->wWPAIELen);
+-
+-	/* disable wpa */
+-	if (pMgmt->wWPAIELen == 0) {
+-		pMgmt->eAuthenMode = WMAC_AUTH_OPEN;
+-		pr_debug(" No WPAIE, Disable WPA\n");
+-	} else  {
+-		/* enable wpa */
+-		if ((pMgmt->abyWPAIE[0] == WLAN_EID_RSN_WPA) ||
+-		    (pMgmt->abyWPAIE[0] == WLAN_EID_RSN)) {
+-			pMgmt->eAuthenMode = WMAC_AUTH_WPANONE;
+-			pr_debug("Set WPAIE enable WPA\n");
+-		} else
+-			return -EINVAL;
+-	}
+-
+-	return 0;
+-}
+-
+-/*
+- * Description:
+- *      flush station nodes table.
+- *
+- * Parameters:
+- *  In:
+- *      pDevice   -
+- *  Out:
+- *
+- * Return Value:
+- *
+- */
+-
+-static void hostap_flush_sta(struct vnt_private *pDevice)
+-{
+-	/* reserved node index =0 for multicast node. */
+-	BSSvClearNodeDBTable(pDevice, 1);
+-	pDevice->uAssocCount = 0;
+-}
+-
+-/*
+- * Description:
+- *      set each stations encryption key
+- *
+- * Parameters:
+- *  In:
+- *      pDevice   -
+- *      param     -
+- *  Out:
+- *
+- * Return Value:
+- *
+- */
+-static int hostap_set_encryption(struct vnt_private *pDevice,
+-				 struct viawget_hostapd_param *param,
+-				 int param_len)
+-{
+-	PSMgmtObject    pMgmt = pDevice->pMgmt;
+-	unsigned long dwKeyIndex = 0;
+-	unsigned char abyKey[MAX_KEY_LEN];
+-	unsigned char abySeq[MAX_KEY_LEN];
+-	u64 KeyRSC;
+-	unsigned char byKeyDecMode = KEY_CTL_WEP;
+-	int     iNodeIndex = -1;
+-	int     ii;
+-	bool bKeyTableFull = false;
+-	unsigned short wKeyCtl = 0;
+-
+-	param->u.crypt.err = 0;
+-
+-	if (param->u.crypt.alg > WPA_ALG_CCMP)
+-		return -EINVAL;
+-
+-	if ((param->u.crypt.idx > 3) || (param->u.crypt.key_len > MAX_KEY_LEN)) {
+-		param->u.crypt.err = HOSTAP_CRYPT_ERR_KEY_SET_FAILED;
+-		pr_debug(" HOSTAP_CRYPT_ERR_KEY_SET_FAILED\n");
+-		return -EINVAL;
+-	}
+-
+-	if (is_broadcast_ether_addr(param->sta_addr)) {
+-		if (param->u.crypt.idx >= MAX_GROUP_KEY)
+-			return -EINVAL;
+-		iNodeIndex = 0;
+-
+-	} else {
+-		if (BSSDBbIsSTAInNodeDB(pMgmt, param->sta_addr, &iNodeIndex) == false) {
+-			param->u.crypt.err = HOSTAP_CRYPT_ERR_UNKNOWN_ADDR;
+-			pr_debug(" HOSTAP_CRYPT_ERR_UNKNOWN_ADDR\n");
+-			return -EINVAL;
+-		}
+-	}
+-	pr_debug(" hostap_set_encryption: sta_index %d\n", iNodeIndex);
+-	pr_debug(" hostap_set_encryption: alg %d\n", param->u.crypt.alg);
+-
+-	if (param->u.crypt.alg == WPA_ALG_NONE) {
+-		if (pMgmt->sNodeDBTable[iNodeIndex].bOnFly) {
+-			if (!KeybRemoveKey(&(pDevice->sKey),
+-					  param->sta_addr,
+-					  pMgmt->sNodeDBTable[iNodeIndex].dwKeyIndex,
+-					  pDevice->PortOffset)) {
+-				pr_debug("KeybRemoveKey fail\n");
+-			}
+-			pMgmt->sNodeDBTable[iNodeIndex].bOnFly = false;
+-		}
+-		pMgmt->sNodeDBTable[iNodeIndex].byKeyIndex = 0;
+-		pMgmt->sNodeDBTable[iNodeIndex].dwKeyIndex = 0;
+-		pMgmt->sNodeDBTable[iNodeIndex].uWepKeyLength = 0;
+-		pMgmt->sNodeDBTable[iNodeIndex].KeyRSC = 0;
+-		pMgmt->sNodeDBTable[iNodeIndex].dwTSC47_16 = 0;
+-		pMgmt->sNodeDBTable[iNodeIndex].wTSC15_0 = 0;
+-		pMgmt->sNodeDBTable[iNodeIndex].byCipherSuite = 0;
+-		memset(&pMgmt->sNodeDBTable[iNodeIndex].abyWepKey[0],
+-		       0,
+-		       MAX_KEY_LEN
+-);
+-
+-		return 0;
+-	}
+-
+-	memcpy(abyKey, param->u.crypt.key, param->u.crypt.key_len);
+-	/* copy to node key tbl */
+-	pMgmt->sNodeDBTable[iNodeIndex].byKeyIndex = param->u.crypt.idx;
+-	pMgmt->sNodeDBTable[iNodeIndex].uWepKeyLength = param->u.crypt.key_len;
+-	memcpy(&pMgmt->sNodeDBTable[iNodeIndex].abyWepKey[0],
+-	       param->u.crypt.key,
+-	       param->u.crypt.key_len
+-);
+-
+-	dwKeyIndex = (unsigned long)(param->u.crypt.idx);
+-	if (param->u.crypt.flags & HOSTAP_CRYPT_FLAG_SET_TX_KEY) {
+-		pDevice->byKeyIndex = (unsigned char)dwKeyIndex;
+-		pDevice->bTransmitKey = true;
+-		dwKeyIndex |= (1 << 31);
+-	}
+-
+-	if (param->u.crypt.alg == WPA_ALG_WEP) {
+-		if ((pDevice->bEnable8021x == false) || (iNodeIndex == 0)) {
+-			KeybSetDefaultKey(&(pDevice->sKey),
+-					  dwKeyIndex & ~(BIT30 | USE_KEYRSC),
+-					  param->u.crypt.key_len,
+-					  NULL,
+-					  abyKey,
+-					  KEY_CTL_WEP,
+-					  pDevice->PortOffset,
+-					  pDevice->byLocalID);
+-
+-		} else {
+-			/* 8021x enable, individual key */
+-			dwKeyIndex |= (1 << 30); /* set pairwise key */
+-			if (KeybSetKey(&(pDevice->sKey),
+-				       &param->sta_addr[0],
+-				       dwKeyIndex & ~(USE_KEYRSC),
+-				       param->u.crypt.key_len,
+-				       (u64 *) &KeyRSC,
+-				       (unsigned char *)abyKey,
+-				       KEY_CTL_WEP,
+-				       pDevice->PortOffset,
+-				       pDevice->byLocalID)) {
+-				pMgmt->sNodeDBTable[iNodeIndex].bOnFly = true;
+-
+-			} else {
+-				/* Key Table Full */
+-				pMgmt->sNodeDBTable[iNodeIndex].bOnFly = false;
+-				bKeyTableFull = true;
+-			}
+-		}
+-		pDevice->eEncryptionStatus = Ndis802_11Encryption1Enabled;
+-		pDevice->bEncryptionEnable = true;
+-		pMgmt->byCSSPK = KEY_CTL_WEP;
+-		pMgmt->byCSSGK = KEY_CTL_WEP;
+-		pMgmt->sNodeDBTable[iNodeIndex].byCipherSuite = KEY_CTL_WEP;
+-		pMgmt->sNodeDBTable[iNodeIndex].dwKeyIndex = dwKeyIndex;
+-		return 0;
+-	}
+-
+-	if (param->u.crypt.seq) {
+-		memcpy(&abySeq, param->u.crypt.seq, 8);
+-		for (ii = 0; ii < 8; ii++)
+-			KeyRSC |= (u64)abySeq[ii] << (ii * 8);
+-
+-		dwKeyIndex |= 1 << 29;
+-		pMgmt->sNodeDBTable[iNodeIndex].KeyRSC = KeyRSC;
+-	}
+-
+-	if (param->u.crypt.alg == WPA_ALG_TKIP) {
+-		if (param->u.crypt.key_len != MAX_KEY_LEN)
+-			return -EINVAL;
+-		pDevice->eEncryptionStatus = Ndis802_11Encryption2Enabled;
+-		byKeyDecMode = KEY_CTL_TKIP;
+-		pMgmt->byCSSPK = KEY_CTL_TKIP;
+-		pMgmt->byCSSGK = KEY_CTL_TKIP;
+-	}
+-
+-	if (param->u.crypt.alg == WPA_ALG_CCMP) {
+-		if ((param->u.crypt.key_len != AES_KEY_LEN) ||
+-		    (pDevice->byLocalID <= REV_ID_VT3253_A1))
+-			return -EINVAL;
+-		pDevice->eEncryptionStatus = Ndis802_11Encryption3Enabled;
+-		byKeyDecMode = KEY_CTL_CCMP;
+-		pMgmt->byCSSPK = KEY_CTL_CCMP;
+-		pMgmt->byCSSGK = KEY_CTL_CCMP;
+-	}
+-
+-	if (iNodeIndex == 0) {
+-		KeybSetDefaultKey(&(pDevice->sKey),
+-				  dwKeyIndex,
+-				  param->u.crypt.key_len,
+-				  (u64 *) &KeyRSC,
+-				  abyKey,
+-				  byKeyDecMode,
+-				  pDevice->PortOffset,
+-				  pDevice->byLocalID);
+-		pMgmt->sNodeDBTable[iNodeIndex].bOnFly = true;
+-
+-	} else {
+-		dwKeyIndex |= (1 << 30); /* set pairwise key */
+-		if (KeybSetKey(&(pDevice->sKey),
+-			       &param->sta_addr[0],
+-			       dwKeyIndex,
+-			       param->u.crypt.key_len,
+-			       (u64 *) &KeyRSC,
+-			       (unsigned char *)abyKey,
+-			       byKeyDecMode,
+-			       pDevice->PortOffset,
+-			       pDevice->byLocalID)) {
+-			pMgmt->sNodeDBTable[iNodeIndex].bOnFly = true;
+-
+-		} else {
+-			/* Key Table Full */
+-			pMgmt->sNodeDBTable[iNodeIndex].bOnFly = false;
+-			bKeyTableFull = true;
+-			pr_debug(" Key Table Full\n");
+-		}
+-
+-	}
+-
+-	if (bKeyTableFull) {
+-		wKeyCtl &= 0x7F00;              /* clear all key control filed */
+-		wKeyCtl |= (byKeyDecMode << 4);
+-		wKeyCtl |= (byKeyDecMode);
+-		wKeyCtl |= 0x0044;              /* use group key for all address */
+-		wKeyCtl |= 0x4000;              /* disable KeyTable[MAX_KEY_TABLE-1] on-fly to genernate rx int */
+-		MACvSetDefaultKeyCtl(pDevice->PortOffset, wKeyCtl, MAX_KEY_TABLE-1, pDevice->byLocalID);
+-	}
+-
+-	pr_debug(" Set key sta_index= %d\n", iNodeIndex);
+-	pr_debug(" tx_index=%d len=%d\n",
+-		 param->u.crypt.idx, param->u.crypt.key_len);
+-	pr_debug(" key=%x-%x-%x-%x-%x-xxxxx\n",
+-		 pMgmt->sNodeDBTable[iNodeIndex].abyWepKey[0],
+-		 pMgmt->sNodeDBTable[iNodeIndex].abyWepKey[1],
+-		 pMgmt->sNodeDBTable[iNodeIndex].abyWepKey[2],
+-		 pMgmt->sNodeDBTable[iNodeIndex].abyWepKey[3],
+-		 pMgmt->sNodeDBTable[iNodeIndex].abyWepKey[4]);
+-
+-	/* set wep key */
+-	pDevice->bEncryptionEnable = true;
+-	pMgmt->sNodeDBTable[iNodeIndex].byCipherSuite = byKeyDecMode;
+-	pMgmt->sNodeDBTable[iNodeIndex].dwKeyIndex = dwKeyIndex;
+-	pMgmt->sNodeDBTable[iNodeIndex].dwTSC47_16 = 0;
+-	pMgmt->sNodeDBTable[iNodeIndex].wTSC15_0 = 0;
+-
+-	return 0;
+-}
+-
+-/*
+- * Description:
+- *      get each stations encryption key
+- *
+- * Parameters:
+- *  In:
+- *      pDevice   -
+- *      param     -
+- *  Out:
+- *
+- * Return Value:
+- *
+- */
+-static int hostap_get_encryption(struct vnt_private *pDevice,
+-				 struct viawget_hostapd_param *param,
+-				 int param_len)
+-{
+-	PSMgmtObject    pMgmt = pDevice->pMgmt;
+-	int     ii;
+-	int     iNodeIndex = 0;
+-
+-	param->u.crypt.err = 0;
+-
+-	if (is_broadcast_ether_addr(param->sta_addr)) {
+-		iNodeIndex = 0;
+-	} else {
+-		if (BSSDBbIsSTAInNodeDB(pMgmt, param->sta_addr, &iNodeIndex) == false) {
+-			param->u.crypt.err = HOSTAP_CRYPT_ERR_UNKNOWN_ADDR;
+-			pr_debug("hostap_get_encryption: HOSTAP_CRYPT_ERR_UNKNOWN_ADDR\n");
+-			return -EINVAL;
+-		}
+-	}
+-	pr_debug("hostap_get_encryption: %d\n", iNodeIndex);
+-	memset(param->u.crypt.seq, 0, 8);
+-	for (ii = 0; ii < 8; ii++)
+-		param->u.crypt.seq[ii] = (unsigned char)pMgmt->sNodeDBTable[iNodeIndex].KeyRSC >> (ii * 8);
+-
+-	return 0;
+-}
+-
+-/*
+- * Description:
+- *      vt6655_hostap_ioctl main function supported for hostap deamon.
+- *
+- * Parameters:
+- *  In:
+- *      pDevice   -
+- *      iw_point  -
+- *  Out:
+- *
+- * Return Value:
+- *
+- */
+-int vt6655_hostap_ioctl(struct vnt_private *pDevice, struct iw_point *p)
+-{
+-	struct viawget_hostapd_param *param;
+-	int ret = 0;
+-	int ap_ioctl = 0;
+-
+-	if (p->length < sizeof(struct viawget_hostapd_param) ||
+-	    p->length > VIAWGET_HOSTAPD_MAX_BUF_SIZE || !p->pointer)
+-		return -EINVAL;
+-
+-	param = kmalloc((int)p->length, GFP_KERNEL);
+-	if (param == NULL)
+-		return -ENOMEM;
+-
+-	if (copy_from_user(param, p->pointer, p->length)) {
+-		ret = -EFAULT;
+-		goto out;
+-	}
+-
+-	switch (param->cmd) {
+-	case VIAWGET_HOSTAPD_SET_ENCRYPTION:
+-		pr_debug("VIAWGET_HOSTAPD_SET_ENCRYPTION\n");
+-		spin_lock_irq(&pDevice->lock);
+-		ret = hostap_set_encryption(pDevice, param, p->length);
+-		spin_unlock_irq(&pDevice->lock);
+-		break;
+-	case VIAWGET_HOSTAPD_GET_ENCRYPTION:
+-		pr_debug("VIAWGET_HOSTAPD_GET_ENCRYPTION\n");
+-		spin_lock_irq(&pDevice->lock);
+-		ret = hostap_get_encryption(pDevice, param, p->length);
+-		spin_unlock_irq(&pDevice->lock);
+-		break;
+-	case VIAWGET_HOSTAPD_SET_ASSOC_AP_ADDR:
+-		pr_debug("VIAWGET_HOSTAPD_SET_ASSOC_AP_ADDR\n");
+-		ret = -EOPNOTSUPP;
+-		goto out;
+-	case VIAWGET_HOSTAPD_FLUSH:
+-		pr_debug("VIAWGET_HOSTAPD_FLUSH\n");
+-		spin_lock_irq(&pDevice->lock);
+-		hostap_flush_sta(pDevice);
+-		spin_unlock_irq(&pDevice->lock);
+-		break;
+-	case VIAWGET_HOSTAPD_ADD_STA:
+-		pr_debug("VIAWGET_HOSTAPD_ADD_STA\n");
+-		spin_lock_irq(&pDevice->lock);
+-		ret = hostap_add_sta(pDevice, param);
+-		spin_unlock_irq(&pDevice->lock);
+-		break;
+-	case VIAWGET_HOSTAPD_REMOVE_STA:
+-		pr_debug("VIAWGET_HOSTAPD_REMOVE_STA\n");
+-		spin_lock_irq(&pDevice->lock);
+-		ret = hostap_remove_sta(pDevice, param);
+-		spin_unlock_irq(&pDevice->lock);
+-		break;
+-	case VIAWGET_HOSTAPD_GET_INFO_STA:
+-		pr_debug("VIAWGET_HOSTAPD_GET_INFO_STA\n");
+-		ret = hostap_get_info_sta(pDevice, param);
+-		ap_ioctl = 1;
+-		break;
+-	case VIAWGET_HOSTAPD_SET_FLAGS_STA:
+-		pr_debug("VIAWGET_HOSTAPD_SET_FLAGS_STA\n");
+-		ret = hostap_set_flags_sta(pDevice, param);
+-		break;
+-	case VIAWGET_HOSTAPD_MLME:
+-		pr_debug("VIAWGET_HOSTAPD_MLME\n");
+-		ret = -EOPNOTSUPP;
+-		goto out;
+-	case VIAWGET_HOSTAPD_SET_GENERIC_ELEMENT:
+-		pr_debug("VIAWGET_HOSTAPD_SET_GENERIC_ELEMENT\n");
+-		ret = hostap_set_generic_element(pDevice, param);
+-		break;
+-	case VIAWGET_HOSTAPD_SCAN_REQ:
+-		pr_debug("VIAWGET_HOSTAPD_SCAN_REQ\n");
+-		ret = -EOPNOTSUPP;
+-		goto out;
+-	case VIAWGET_HOSTAPD_STA_CLEAR_STATS:
+-		pr_debug("VIAWGET_HOSTAPD_STA_CLEAR_STATS\n");
+-		ret = -EOPNOTSUPP;
+-		goto out;
+-	default:
+-		pr_debug("vt6655_hostap_ioctl: unknown cmd=%d\n",
+-			 (int)param->cmd);
+-		ret = -EOPNOTSUPP;
+-		goto out;
+-	}
+-
+-	if ((ret == 0) && ap_ioctl) {
+-		if (copy_to_user(p->pointer, param, p->length))
+-			ret = -EFAULT;
+-	}
+-
+-out:
+-	kfree(param);
+-	return ret;
+-}
+diff --git a/drivers/staging/vt6655/hostap.h b/drivers/staging/vt6655/hostap.h
+deleted file mode 100644
+index fc5f9ed..0000000
+--- a/drivers/staging/vt6655/hostap.h
++++ /dev/null
+@@ -1,58 +0,0 @@
+-/*
+- * Copyright (c) 1996, 2003 VIA Networking Technologies, Inc.
+- * All rights reserved.
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2 of the License, or
+- * (at your option) any later version.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License along
+- * with this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+- *
+- * File: hostap.h
+- *
+- * Purpose:
+- *
+- * Author: Lyndon Chen
+- *
+- * Date: May 21, 2003
+- *
+- */
+-
+-#ifndef __HOSTAP_H__
+-#define __HOSTAP_H__
+-
+-#include "device.h"
+-
+-#define WLAN_RATE_1M    BIT0
+-#define WLAN_RATE_2M    BIT1
+-#define WLAN_RATE_5M5   BIT2
+-#define WLAN_RATE_11M   BIT3
+-#define WLAN_RATE_6M    BIT4
+-#define WLAN_RATE_9M    BIT5
+-#define WLAN_RATE_12M   BIT6
+-#define WLAN_RATE_18M   BIT7
+-#define WLAN_RATE_24M   BIT8
+-#define WLAN_RATE_36M   BIT9
+-#define WLAN_RATE_48M   BIT10
+-#define WLAN_RATE_54M   BIT11
+-
+-#ifndef ETH_P_PAE
+-#define ETH_P_PAE 0x888E /* Port Access Entity (IEEE 802.1X) */
+-#endif /* ETH_P_PAE */
+-
+-#ifndef ARPHRD_IEEE80211
+-#define ARPHRD_IEEE80211 801
+-#endif
+-
+-int vt6655_hostap_set_hostapd(struct vnt_private *, int val, int rtnl_locked);
+-int vt6655_hostap_ioctl(struct vnt_private *, struct iw_point *p);
+-
+-#endif /*  __HOSTAP_H__ */
+diff --git a/drivers/staging/vt6655/rxtx.c b/drivers/staging/vt6655/rxtx.c
+index de8f59c..644e0d2 100644
+--- a/drivers/staging/vt6655/rxtx.c
++++ b/drivers/staging/vt6655/rxtx.c
+@@ -60,7 +60,6 @@
+ #include "tcrc.h"
+ #include "wctl.h"
+ #include "wroute.h"
+-#include "hostap.h"
+ #include "rf.h"
+ 
+ /*---------------------  Static Definitions -------------------------*/
+-- 
+1.9.1
 
-> Laurentiu
->
-> On Thu, Oct 23, 2014, at 11:07, Emmanuel Grumbach wrote:
->> On Thu, Oct 23, 2014 at 10:30 AM, Lauren=C8=9Biu Nicola <lnicola@dend.ro=
->
->> wrote:
->> > I did; the card still gets disconnected and the message doesn't show u=
-p
->> > in dmesg.
->> >
->>
->> You had *none* of the many prints I added in the log?
->>
->> That seems really weird...
->>
->> > Laurentiu
->> >
->> > On Thu, Oct 23, 2014, at 08:21, Emmanuel Grumbach wrote:
->> >> On Thu, Oct 23, 2014 at 12:53 AM, Lauren=C8=9Biu Nicola <lnicola@dend=
-.ro>
->> >> wrote:
->> >> > Nope. It seems that code doesn't get executed when my issue occurs =
-(or
->> >> > in my five or ten minutes of uptime). I've seen
->> >> > `ieee80211_reset_ap_probe` get called by `ieee80211_rx_mgmt_probe_r=
-esp`,
->> >> > but (if I'm not wrong) not on every disconnect.
->> >> >
->> >> > And as far as I can tell, force_cam is set to true.
->> >>
->> >> Can you please try with the patch attached and send the logs?
->> >> I again need MAC80211_MLME_DEBUG.
->> >>
->> >> Thanks.
->> >>
->> >> >
->> >> > Laurentiu
->> >> >
->> >> > On Wed, Oct 22, 2014, at 12:10, Emmanuel Grumbach wrote:
->> >> >> On Tue, Oct 21, 2014 at 10:56 PM, Lauren=C8=9Biu Nicola <lnicola@d=
-end.ro>
->> >> >> wrote:
->> >> >> > Yep! `scb_timeout` is 60 on my router.
->> >> >> >
->> >> >> > On Tue, Oct 21, 2014, at 14:00, poma wrote:
->> >> >> >> On 21.10.2014 10:35, Felix Fietkau wrote:
->> >> >> >> > On 2014-10-21 10:23, Lauren=C8=9Biu Nicola wrote:
->> >> >> >> >> It's an ASUS RT-N66U running NEWD-2/K3X from r24160.
->> >> >> >> > This is a Broadcom based device, so it should behave in the s=
-ame way as
->> >> >> >> > other APs/Routers running the Broadcom drivers.
->> >> >> >> > The driver should only send Reason 7 when receiving a PS-Poll=
-, BlockAck,
->> >> >> >> > BlockAckReq or Action frame from a station that's not associa=
-ted, so
->> >> >> >> > probably it has already kicked out your iwlwifi client earlie=
-r. Not sure
->> >> >> >> > why that doesn't show up in the log though.
->> >> >> >> >
->> >> >> >>
->> >> >> >> Whether this might refer to the Station Control Block Timeout v=
-alue
->> >> >> >>
->> >> >> >> http://www.dd-wrt.com/wiki/index.php/Wl#scb_timeout
->> >> >> >> ...
->> >> >> >> scb_timeout
->> >> >> >>
->> >> >> >> AP only: inactivity timeout value for authenticated stas
->> >> >> >>
->> >> >>
->> >> >> Actually, mac80211 should be probing the AP every 30 seconds but a
->> >> >> beacon might abort the probe...
->> >> >> Can you try something like this:
->> >> >>
->> >> >> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
->> >> >> index 75df184..c9db7cf 100644
->> >> >> --- a/net/mac80211/mlme.c
->> >> >> +++ b/net/mac80211/mlme.c
->> >> >> @@ -3295,7 +3295,8 @@ static void ieee80211_rx_mgmt_beacon(struct
->> >> >> ieee80211_sub_if_data *sdata,
->> >> >>         if (ifmgd->flags & IEEE80211_STA_CONNECTION_POLL) {
->> >> >>                 mlme_dbg_ratelimited(sdata,
->> >> >>                                      "cancelling AP probe due to a
->> >> >> received beacon\n");
->> >> >> -               ieee80211_reset_ap_probe(sdata);
->> >> >> +               pr_err("Not cancelling the probe to make sure the =
-AP
->> >> >> hears us from time to time\n");
->> >> >> +               //ieee80211_reset_ap_probe(sdata);
->> >> >>         }
->> >> >>
->> >> >>         /*
->> >> >>
->> >> >>
->> >> >>
->> >> >> >>
->> >> >> >> poma
->> >> >> >>
->> >> >> >>
->> >> >> >> --
->> >> >> >> To unsubscribe from this list: send the line "unsubscribe linux=
--wireless"
->> >> >> >> in
->> >> >> >> the body of a message to majordomo@vger.kernel.org
->> >> >> >> More majordomo info at  http://vger.kernel.org/majordomo-info.h=
-tml
->> >> >> --
->> >> >> To unsubscribe from this list: send the line "unsubscribe linux-wi=
-reless"
->> >> >> in
->> >> >> the body of a message to majordomo@vger.kernel.org
->> >> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> >> --
->> >> To unsubscribe from this list: send the line "unsubscribe linux-wirel=
-ess"
->> >> in
->> >> the body of a message to majordomo@vger.kernel.org
->> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless=
-"
->> in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
---e89a8f64272806cead050619ce55
-Content-Type: application/octet-stream; name="PROBE.patch"
-Content-Disposition: attachment; filename="PROBE.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_i1mcdkki0
-
-ZGlmZiAtLWdpdCBhL25ldC9tYWM4MDIxMS9tbG1lLmMgYi9uZXQvbWFjODAyMTEvbWxtZS5jCmlu
-ZGV4IDc1ZGYxODQuLmU5YzJmMTYgMTAwNjQ0Ci0tLSBhL25ldC9tYWM4MDIxMS9tbG1lLmMKKysr
-IGIvbmV0L21hYzgwMjExL21sbWUuYwpAQCAtMTI5LDYgKzEyOSw3IEBAIHZvaWQgaWVlZTgwMjEx
-X3N0YV9yZXNldF9jb25uX21vbml0b3Ioc3RydWN0IGllZWU4MDIxMV9zdWJfaWZfZGF0YSAqc2Rh
-dGEpCiB7CiAJc3RydWN0IGllZWU4MDIxMV9pZl9tYW5hZ2VkICppZm1nZCA9ICZzZGF0YS0+dS5t
-Z2Q7CiAKKwltbG1lX2RiZyhzZGF0YSwgIiVzOiVkXG4iLCBfX2Z1bmNfXywgX19MSU5FX18pOwog
-CWlmICh1bmxpa2VseSghc2RhdGEtPnUubWdkLmFzc29jaWF0ZWQpKQogCQlyZXR1cm47CiAKQEAg
-LTEzNyw2ICsxMzgsNyBAQCB2b2lkIGllZWU4MDIxMV9zdGFfcmVzZXRfY29ubl9tb25pdG9yKHN0
-cnVjdCBpZWVlODAyMTFfc3ViX2lmX2RhdGEgKnNkYXRhKQogCWlmIChzZGF0YS0+bG9jYWwtPmh3
-LmZsYWdzICYgSUVFRTgwMjExX0hXX0NPTk5FQ1RJT05fTU9OSVRPUikKIAkJcmV0dXJuOwogCisJ
-bWxtZV9kYmcoc2RhdGEsICIlczolZFxuIiwgX19mdW5jX18sIF9fTElORV9fKTsKIAltb2RfdGlt
-ZXIoJnNkYXRhLT51Lm1nZC5jb25uX21vbl90aW1lciwKIAkJICByb3VuZF9qaWZmaWVzX3VwKGpp
-ZmZpZXMgKyBJRUVFODAyMTFfQ09OTkVDVElPTl9JRExFX1RJTUUpKTsKIH0KQEAgLTIwODIsNiAr
-MjA4NCw3IEBAIHZvaWQgaWVlZTgwMjExX3N0YV9yeF9ub3RpZnkoc3RydWN0IGllZWU4MDIxMV9z
-dWJfaWZfZGF0YSAqc2RhdGEsCiAJaWYgKGlzX211bHRpY2FzdF9ldGhlcl9hZGRyKGhkci0+YWRk
-cjEpKQogCQlyZXR1cm47CiAKKwltbG1lX2RiZyhzZGF0YSwgIiVzOiVkIHJlc2V0aW5nIHRoZSBD
-b25uIG1vbml0b3JcbiIsIF9fZnVuY19fLCBfX0xJTkVfXyk7CiAJaWVlZTgwMjExX3N0YV9yZXNl
-dF9jb25uX21vbml0b3Ioc2RhdGEpOwogfQogCkBAIC0yMDkwLDYgKzIwOTMsOCBAQCBzdGF0aWMg
-dm9pZCBpZWVlODAyMTFfcmVzZXRfYXBfcHJvYmUoc3RydWN0IGllZWU4MDIxMV9zdWJfaWZfZGF0
-YSAqc2RhdGEpCiAJc3RydWN0IGllZWU4MDIxMV9pZl9tYW5hZ2VkICppZm1nZCA9ICZzZGF0YS0+
-dS5tZ2Q7CiAJc3RydWN0IGllZWU4MDIxMV9sb2NhbCAqbG9jYWwgPSBzZGF0YS0+bG9jYWw7CiAK
-KwltbG1lX2RiZyhzZGF0YSwgIiVzOiVkIHN0YXJ0XG4iLCBfX2Z1bmNfXywgX19MSU5FX18pOwor
-CiAJbXV0ZXhfbG9jaygmbG9jYWwtPm10eCk7CiAJaWYgKCEoaWZtZ2QtPmZsYWdzICYgSUVFRTgw
-MjExX1NUQV9DT05ORUNUSU9OX1BPTEwpKQogCQlnb3RvIG91dDsKQEAgLTIxMTAsNiArMjExNSw3
-IEBAIHN0YXRpYyB2b2lkIGllZWU4MDIxMV9yZXNldF9hcF9wcm9iZShzdHJ1Y3QgaWVlZTgwMjEx
-X3N1Yl9pZl9kYXRhICpzZGF0YSkKIAkgKi8KIAlpZWVlODAyMTFfc3RhX3Jlc2V0X2JlYWNvbl9t
-b25pdG9yKHNkYXRhKTsKIAorCW1sbWVfZGJnKHNkYXRhLCAiJXM6JWQgcG9zdHBvbmluZyB0aGUg
-Q29ubl9tb25fdGltZXJcbiIsIF9fZnVuY19fLCBfX0xJTkVfXyk7CiAJbW9kX3RpbWVyKCZpZm1n
-ZC0+Y29ubl9tb25fdGltZXIsCiAJCSAgcm91bmRfamlmZmllc191cChqaWZmaWVzICsKIAkJCQkg
-ICBJRUVFODAyMTFfQ09OTkVDVElPTl9JRExFX1RJTUUpKTsKQEAgLTIxNjIsMTYgKzIxNjgsMjAg
-QEAgdm9pZCBpZWVlODAyMTFfc3RhX3R4X25vdGlmeShzdHJ1Y3QgaWVlZTgwMjExX3N1Yl9pZl9k
-YXRhICpzZGF0YSwKIAogCWlmIChpZWVlODAyMTFfaXNfbnVsbGZ1bmMoaGRyLT5mcmFtZV9jb250
-cm9sKSAmJgogCSAgICBzZGF0YS0+dS5tZ2QucHJvYmVfc2VuZF9jb3VudCA+IDApIHsKLQkJaWYg
-KGFjaykKKwkJaWYgKGFjaykgeworCQkJbWxtZV9kYmcoc2RhdGEsICIlczolZCBSZXNldGluZyBj
-b25uIG1vblxuIiwgX19mdW5jX18sIF9fTElORV9fKTsKIAkJCWllZWU4MDIxMV9zdGFfcmVzZXRf
-Y29ubl9tb25pdG9yKHNkYXRhKTsKKwkJfQogCQllbHNlCiAJCQlzZGF0YS0+dS5tZ2QubnVsbGZ1
-bmNfZmFpbGVkID0gdHJ1ZTsKIAkJaWVlZTgwMjExX3F1ZXVlX3dvcmsoJnNkYXRhLT5sb2NhbC0+
-aHcsICZzZGF0YS0+d29yayk7CiAJCXJldHVybjsKIAl9CiAKLQlpZiAoYWNrKQorCWlmIChhY2sp
-IHsKKwkJbWxtZV9kYmcoc2RhdGEsICIlczolZCBSZXNldGluZyBjb25uIG1vblxuIiwgX19mdW5j
-X18sIF9fTElORV9fKTsKIAkJaWVlZTgwMjExX3N0YV9yZXNldF9jb25uX21vbml0b3Ioc2RhdGEp
-OworCX0KIH0KIAogc3RhdGljIHZvaWQgaWVlZTgwMjExX21nZF9wcm9iZV9hcF9zZW5kKHN0cnVj
-dCBpZWVlODAyMTFfc3ViX2lmX2RhdGEgKnNkYXRhKQo=
---e89a8f64272806cead050619ce55--
