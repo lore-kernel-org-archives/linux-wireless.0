@@ -1,73 +1,169 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:45677 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751085AbaJYWa3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Oct 2014 18:30:29 -0400
-Message-ID: <544C2466.1030709@openwrt.org> (sfid-20141026_003034_342091_32AAA55B)
-Date: Sun, 26 Oct 2014 00:29:58 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: add support for driver tx power reporting
-References: <1413993458-62517-1-git-send-email-nbd@openwrt.org> <1414161186.2326.1.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1414161186.2326.1.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
+Received: from mail-wg0-f43.google.com ([74.125.82.43]:37916 "EHLO
+	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751908AbaJYTRS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 25 Oct 2014 15:17:18 -0400
+Received: by mail-wg0-f43.google.com with SMTP id n12so3072111wgh.2
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2014 12:17:16 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 18/31] staging: vt6655: CARDbSetPhyParameter replace s_vSetRSPINF with CARDvSetRSPINF
+Date: Sat, 25 Oct 2014 09:20:28 +0100
+Message-Id: <1414225241-5480-19-git-send-email-tvboxspy@gmail.com> (sfid-20141025_211725_090108_F8C81504)
+In-Reply-To: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
+References: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2014-10-24 16:33, Johannes Berg wrote:
-> On Wed, 2014-10-22 at 17:57 +0200, Felix Fietkau wrote:
->> The configured tx power is often limited by hardware capabilities,
->> channel settings, antenna configuration, etc.
->> 
->> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
->> ---
->>  include/net/mac80211.h | 5 +++++
->>  net/mac80211/cfg.c     | 3 +++
->>  2 files changed, 8 insertions(+)
->> 
->> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
->> index 0ad1f47..41b0e60 100644
->> --- a/include/net/mac80211.h
->> +++ b/include/net/mac80211.h
->> @@ -2838,6 +2838,9 @@ enum ieee80211_roc_type {
->>   * @get_expected_throughput: extract the expected throughput towards the
->>   *	specified station. The returned value is expressed in Kbps. It returns 0
->>   *	if the RC algorithm does not have proper data to provide.
->> + *
->> + * @get_txpower: get current maximum tx power (in dBm) based on configuration
->> + *	and hardware limits.
->>   */
->>  struct ieee80211_ops {
->>  	void (*tx)(struct ieee80211_hw *hw,
->> @@ -3039,6 +3042,8 @@ struct ieee80211_ops {
->>  	int (*join_ibss)(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
->>  	void (*leave_ibss)(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
->>  	u32 (*get_expected_throughput)(struct ieee80211_sta *sta);
->> +	int (*get_txpower)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
->> +			   int *dbm);
->>  };
->>  
->>  /**
->> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
->> index fb6a150..7cb31a8 100644
->> --- a/net/mac80211/cfg.c
->> +++ b/net/mac80211/cfg.c
->> @@ -2081,6 +2081,9 @@ static int ieee80211_get_tx_power(struct wiphy *wiphy,
->>  	struct ieee80211_local *local = wiphy_priv(wiphy);
->>  	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
->>  
->> +	if (local->ops->get_txpower)
->> +		return local->ops->get_txpower(&local->hw, &sdata->vif, dbm);
-> 
-> Might be good to have tracing?
-Sending v2.
+Removing s_vSetRSPINF
 
-> And when this is supported, maybe there should be a cop-out for the
-> driver to say "please use your value"? OTOH it can access the data that
-> mac80211 currently reports so that's probably not needed?
-I don't see the point in having that, since the driver can just take it
-from the hw/bss conf directly.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/card.c | 121 +-----------------------------------------
+ 1 file changed, 1 insertion(+), 120 deletions(-)
 
-- Felix
+diff --git a/drivers/staging/vt6655/card.c b/drivers/staging/vt6655/card.c
+index cf87b49..0574db9 100644
+--- a/drivers/staging/vt6655/card.c
++++ b/drivers/staging/vt6655/card.c
+@@ -199,125 +199,6 @@ s_vCalculateOFDMRParameter(
+ 	}
+ }
+ 
+-/*
+- * Description: Set RSPINF
+- *
+- * Parameters:
+- *  In:
+- *      pDevice             - The adapter to be set
+- *  Out:
+- *      none
+- *
+- * Return Value: None.
+- *
+- */
+-static
+-void
+-s_vSetRSPINF(struct vnt_private *pDevice, CARD_PHY_TYPE ePHYType,
+-	     void *pvSupportRateIEs, void *pvExtSupportRateIEs)
+-{
+-	union vnt_phy_field_swap phy;
+-	unsigned char byTxRate = 0, byRsvTime = 0;    // For OFDM
+-
+-	//Set to Page1
+-	MACvSelectPage1(pDevice->PortOffset);
+-
+-	/* RSPINF_b_1 */
+-	vnt_get_phy_field(pDevice,
+-			  14,
+-			  VNTWIFIbyGetACKTxRate(RATE_1M, pvSupportRateIEs, pvExtSupportRateIEs),
+-			  PK_TYPE_11B,
+-			  &phy.field_read);
+-
+-	 /* swap over to get correct write order */
+-	swap(phy.swap[0], phy.swap[1]);
+-
+-	VNSvOutPortD(pDevice->PortOffset + MAC_REG_RSPINF_B_1, phy.field_write);
+-
+-	/* RSPINF_b_2 */
+-	vnt_get_phy_field(pDevice, 14,
+-			  VNTWIFIbyGetACKTxRate(RATE_2M, pvSupportRateIEs, pvExtSupportRateIEs),
+-			  PK_TYPE_11B, &phy.field_read);
+-
+-	swap(phy.swap[0], phy.swap[1]);
+-
+-	VNSvOutPortD(pDevice->PortOffset + MAC_REG_RSPINF_B_2, phy.field_write);
+-
+-	/* RSPINF_b_5 */
+-	vnt_get_phy_field(pDevice, 14,
+-			  VNTWIFIbyGetACKTxRate(RATE_5M, pvSupportRateIEs, pvExtSupportRateIEs),
+-			  PK_TYPE_11B, &phy.field_read);
+-
+-	swap(phy.swap[0], phy.swap[1]);
+-
+-	VNSvOutPortD(pDevice->PortOffset + MAC_REG_RSPINF_B_5, phy.field_write);
+-
+-	/* RSPINF_b_11 */
+-	vnt_get_phy_field(pDevice, 14,
+-			  VNTWIFIbyGetACKTxRate(RATE_11M, pvSupportRateIEs, pvExtSupportRateIEs),
+-			  PK_TYPE_11B, &phy.field_read);
+-
+-	swap(phy.swap[0], phy.swap[1]);
+-
+-	VNSvOutPortD(pDevice->PortOffset + MAC_REG_RSPINF_B_11, phy.field_write);
+-
+-	//RSPINF_a_6
+-	s_vCalculateOFDMRParameter(RATE_6M,
+-				   ePHYType,
+-				   &byTxRate,
+-				   &byRsvTime);
+-	VNSvOutPortW(pDevice->PortOffset + MAC_REG_RSPINF_A_6, MAKEWORD(byTxRate, byRsvTime));
+-	//RSPINF_a_9
+-	s_vCalculateOFDMRParameter(RATE_9M,
+-				   ePHYType,
+-				   &byTxRate,
+-				   &byRsvTime);
+-	VNSvOutPortW(pDevice->PortOffset + MAC_REG_RSPINF_A_9, MAKEWORD(byTxRate, byRsvTime));
+-	//RSPINF_a_12
+-	s_vCalculateOFDMRParameter(RATE_12M,
+-				   ePHYType,
+-				   &byTxRate,
+-				   &byRsvTime);
+-	VNSvOutPortW(pDevice->PortOffset + MAC_REG_RSPINF_A_12, MAKEWORD(byTxRate, byRsvTime));
+-	//RSPINF_a_18
+-	s_vCalculateOFDMRParameter(RATE_18M,
+-				   ePHYType,
+-				   &byTxRate,
+-				   &byRsvTime);
+-	VNSvOutPortW(pDevice->PortOffset + MAC_REG_RSPINF_A_18, MAKEWORD(byTxRate, byRsvTime));
+-	//RSPINF_a_24
+-	s_vCalculateOFDMRParameter(RATE_24M,
+-				   ePHYType,
+-				   &byTxRate,
+-				   &byRsvTime);
+-	VNSvOutPortW(pDevice->PortOffset + MAC_REG_RSPINF_A_24, MAKEWORD(byTxRate, byRsvTime));
+-	//RSPINF_a_36
+-	s_vCalculateOFDMRParameter(
+-		VNTWIFIbyGetACKTxRate(RATE_36M, pvSupportRateIEs, pvExtSupportRateIEs),
+-		ePHYType,
+-		&byTxRate,
+-		&byRsvTime);
+-	VNSvOutPortW(pDevice->PortOffset + MAC_REG_RSPINF_A_36, MAKEWORD(byTxRate, byRsvTime));
+-	//RSPINF_a_48
+-	s_vCalculateOFDMRParameter(
+-		VNTWIFIbyGetACKTxRate(RATE_48M, pvSupportRateIEs, pvExtSupportRateIEs),
+-		ePHYType,
+-		&byTxRate,
+-		&byRsvTime);
+-	VNSvOutPortW(pDevice->PortOffset + MAC_REG_RSPINF_A_48, MAKEWORD(byTxRate, byRsvTime));
+-	//RSPINF_a_54
+-	s_vCalculateOFDMRParameter(
+-		VNTWIFIbyGetACKTxRate(RATE_54M, pvSupportRateIEs, pvExtSupportRateIEs),
+-		ePHYType,
+-		&byTxRate,
+-		&byRsvTime);
+-	VNSvOutPortW(pDevice->PortOffset + MAC_REG_RSPINF_A_54, MAKEWORD(byTxRate, byRsvTime));
+-	//RSPINF_a_72
+-	VNSvOutPortW(pDevice->PortOffset + MAC_REG_RSPINF_A_72, MAKEWORD(byTxRate, byRsvTime));
+-	//Set to Page0
+-	MACvSelectPage0(pDevice->PortOffset);
+-}
+-
+ /*---------------------  Export Functions  --------------------------*/
+ 
+ /*
+@@ -505,7 +386,7 @@ bool CARDbSetPhyParameter(struct vnt_private *pDevice, CARD_PHY_TYPE ePHYType,
+ 		VNSvOutPortB(pDevice->PortOffset + MAC_REG_CWMAXMIN0, pDevice->byCWMaxMin);
+ 	}
+ 
+-	s_vSetRSPINF(pDevice, ePHYType, NULL, NULL);
++	CARDvSetRSPINF(pDevice, ePHYType);
+ 
+ 	return true;
+ }
+-- 
+1.9.1
+
