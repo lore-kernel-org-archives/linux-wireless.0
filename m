@@ -1,42 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:38114 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752287AbaJWRVz (ORCPT
+Received: from mail-wg0-f51.google.com ([74.125.82.51]:59676 "EHLO
+	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751892AbaJYTj0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Oct 2014 13:21:55 -0400
-Message-ID: <54493932.2090703@candelatech.com> (sfid-20141023_192158_596927_380B2801)
-Date: Thu, 23 Oct 2014 10:21:54 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: mac80211-hwsim question
-References: <54493276.4030007@candelatech.com>  (sfid-20141023_185314_774672_09890850) <1414084745.1926.8.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1414084745.1926.8.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+	Sat, 25 Oct 2014 15:39:26 -0400
+Received: by mail-wg0-f51.google.com with SMTP id b13so3063391wgh.34
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2014 12:39:25 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 17/31] staging: vt6655: mac80211 conversion: card.c use basic_rates
+Date: Sat, 25 Oct 2014 09:20:27 +0100
+Message-Id: <1414225241-5480-18-git-send-email-tvboxspy@gmail.com> (sfid-20141025_213929_154954_8E810272)
+In-Reply-To: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
+References: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/23/2014 10:19 AM, Johannes Berg wrote:
-> On Thu, 2014-10-23 at 09:53 -0700, Ben Greear wrote:
->> From what I can tell, when hwsim sends frames to wmediumd using netlink sockets,
->> it does not include any channel/frequency information in the netlink packet.
->>
->> Any reason not to add that?
-> 
-> I guess it wasn't needed, and when you "RX" a frame from netlink it uses
-> the current channel that the radio is tuned to.
-> 
-> That, however, will actually fail with the multi-channel option, so more
-> work is clearly needed for that.
+Use basic_rates to find cck and ofdm rates.
 
-I need this for my purposes, so I'll work on adding this sometime soonish
-unless someone beats me to it.
+wBasicRate will be removed later.
 
-Thanks,
-Ben
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/card.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/staging/vt6655/card.c b/drivers/staging/vt6655/card.c
+index 5eddabc..cf87b49 100644
+--- a/drivers/staging/vt6655/card.c
++++ b/drivers/staging/vt6655/card.c
+@@ -1488,7 +1488,7 @@ static unsigned short CARDwGetCCKControlRate(struct vnt_private *pDevice,
+ 	unsigned int ui = (unsigned int) wRateIdx;
+ 
+ 	while (ui > RATE_1M) {
+-		if (pDevice->wBasicRate & ((unsigned short)1 << ui))
++		if (pDevice->basic_rates & ((u32)0x1 << ui))
+ 			return (unsigned short)ui;
+ 
+ 		ui--;
+@@ -1514,7 +1514,7 @@ static unsigned short CARDwGetOFDMControlRate(struct vnt_private *pDevice,
+ {
+ 	unsigned int ui = (unsigned int) wRateIdx;
+ 
+-	pr_debug("BASIC RATE: %X\n", pDevice->wBasicRate);
++	pr_debug("BASIC RATE: %X\n", pDevice->basic_rates);
+ 
+ 	if (!CARDbIsOFDMinBasicRate((void *)pDevice)) {
+ 		pr_debug("CARDwGetOFDMControlRate:(NO OFDM) %d\n", wRateIdx);
+@@ -1523,7 +1523,7 @@ static unsigned short CARDwGetOFDMControlRate(struct vnt_private *pDevice,
+ 		return wRateIdx;
+ 	}
+ 	while (ui > RATE_11M) {
+-		if (pDevice->wBasicRate & ((unsigned short)1 << ui)) {
++		if (pDevice->basic_rates & ((u32)0x1 << ui)) {
+ 			pr_debug("CARDwGetOFDMControlRate : %d\n", ui);
+ 			return (unsigned short)ui;
+ 		}
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.9.1
 
