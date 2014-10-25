@@ -1,62 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailrelay008.isp.belgacom.be ([195.238.6.174]:24195 "EHLO
-	mailrelay008.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752071AbaJOTD2 (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:45918 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751973AbaJYTSk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Oct 2014 15:03:28 -0400
-From: Fabian Frederick <fabf@skynet.be>
-To: linux-kernel@vger.kernel.org
-Cc: Fabian Frederick <fabf@skynet.be>,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 1/1 net-next] NFC: netlink: use sizeof(*iter) instead of class_dev_iter
-Date: Wed, 15 Oct 2014 21:03:00 +0200
-Message-Id: <1413399780-8470-1-git-send-email-fabf@skynet.be> (sfid-20141015_210352_093881_2F82ABC5)
+	Sat, 25 Oct 2014 15:18:40 -0400
+Received: by mail-wi0-f172.google.com with SMTP id bs8so3508029wib.5
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2014 12:18:39 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 00/31] staging: vt6655: Conversion to mac80211
+Date: Sat, 25 Oct 2014 09:20:10 +0100
+Message-Id: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com> (sfid-20141025_211844_266575_C56B49C4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Also fixes kzalloc on struct se_io_ctx
-See Documentation/CodingStyle Chapter 14
+The patches in this series convert the driver to mac80211.
 
-Signed-off-by: Fabian Frederick <fabf@skynet.be>
----
- net/nfc/netlink.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+As well as infrastructure mode the driver now operates in
+IBSS and access point modes.
 
-diff --git a/net/nfc/netlink.c b/net/nfc/netlink.c
-index 43cb1c1..b4ba68e 100644
---- a/net/nfc/netlink.c
-+++ b/net/nfc/netlink.c
-@@ -534,7 +534,7 @@ static int nfc_genl_dump_devices(struct sk_buff *skb,
- 
- 	if (!iter) {
- 		first_call = true;
--		iter = kmalloc(sizeof(struct class_dev_iter), GFP_KERNEL);
-+		iter = kmalloc(sizeof(*iter), GFP_KERNEL);
- 		if (!iter)
- 			return -ENOMEM;
- 		cb->args[0] = (long) iter;
-@@ -1242,7 +1242,7 @@ static int nfc_genl_dump_ses(struct sk_buff *skb,
- 
- 	if (!iter) {
- 		first_call = true;
--		iter = kmalloc(sizeof(struct class_dev_iter), GFP_KERNEL);
-+		iter = kmalloc(sizeof(*iter), GFP_KERNEL);
- 		if (!iter)
- 			return -ENOMEM;
- 		cb->args[0] = (long) iter;
-@@ -1360,7 +1360,7 @@ static int nfc_genl_se_io(struct sk_buff *skb, struct genl_info *info)
- 	if (!apdu)
- 		return -EINVAL;
- 
--	ctx = kzalloc(sizeof(struct se_io_ctx), GFP_KERNEL);
-+	ctx = kzalloc(sizeof(*ctx), GFP_KERNEL);
- 	if (!ctx)
- 		return -ENOMEM;
- 
+Host access point is now working with hostapd in nl80211 mode.
+
+The driver continues to operate diversity mode in infrastructure mode.
+
+There is still a lot of work that needs doing particularly remodeling
+rxtx to something similar to vt6656 driver.
+
+These patches creates huge amount of dead code that will be
+removed in the next series.
+
+Malcolm Priestley (31):
+  staging: vt6655: mac80211 conversion: add new rx functions
+  staging: vt6655: mac80211 conversion: add new key functions
+  staging: vt6655: mac8021 conversion: add new tx functions
+  staging: vt6655: mac80211 conversion: s_cbFillTxBufHead
+  staging: vt6655: dead code remove s_vFillFragParameter.
+  staging: vt6655: mac80211 conversion: s_vFillRTSHead convert to using
+    struct ieee80211_hdr
+  staging: vt6655: mac80211 conversion: s_uFillDataHead add power saving
+    poll
+  staging: vt6655: mac80211 conversion add main mac80211 functions
+  staging: vt6655: mac80211 conversion add channel bands
+  staging: vt6655: mac80211 conversion replace suspend resume functions
+  staging: vt6655: mac80211 conversion: device_print_info remove
+    netdevice.
+  staging: vt6655: mac80211 conversion: changes to device_intr
+  staging: vt6655: mac80211 conversion: device_tx_srv tx and add report
+    rates
+  staging: vt6655: mac80211 conversion: changes to set channel
+  staging: vt6655: mac80211 conversion: enable power saving
+  staging: vt6655: mac80211 conversion: changes to CARDbSetPhyParameter
+  staging: vt6655: mac80211 conversion: card.c use basic_rates
+  staging: vt6655: CARDbSetPhyParameter replace s_vSetRSPINF with
+    CARDvSetRSPINF
+  staging: vt6655: mac80211 conversion: device_init_registers remove
+    legacy code
+  staging: vt6655: mac80211 conversion: device_free_info
+  staging: vt6655: switch driver over to mac80211
+  staging: vt6655: phy type same as bb type
+  staging: vt6655: mac80211 conversion: device_error remove legacy
+    functions
+  staging: vt6655: vt6655_probe remove management pointers
+  staging: vt6655: mac80211 conversion: PSbIsNextTBTTWakeUp convert to
+    mac80211
+  staging: vt6655: MACvSetDefaultKeyEntry replace WLAN_WEP104_KEYLEN
+  staging: vt6655: baseband.c replace BIT0 with BIT(0)
+  staging: vt6655: s_vGenerateTxParameter remove unused cbMACHdLen
+  staging: vt6655: device_init_registers replace spin lock
+  staging: vt6655: baseband.c timers replace spin lock
+  staging: vt6655: fifo & frag control remove big endian values
+
+ drivers/staging/vt6655/Kconfig       |    4 +-
+ drivers/staging/vt6655/baseband.c    |   21 +-
+ drivers/staging/vt6655/card.c        |  186 +----
+ drivers/staging/vt6655/card.h        |    4 +-
+ drivers/staging/vt6655/channel.c     |  152 +++-
+ drivers/staging/vt6655/channel.h     |    2 +
+ drivers/staging/vt6655/desc.h        |   37 +-
+ drivers/staging/vt6655/device.h      |   11 +-
+ drivers/staging/vt6655/device_main.c | 1322 ++++++++++++++++++++--------------
+ drivers/staging/vt6655/dpc.c         |  123 ++++
+ drivers/staging/vt6655/dpc.h         |    2 +
+ drivers/staging/vt6655/key.c         |  136 ++++
+ drivers/staging/vt6655/key.h         |   17 +
+ drivers/staging/vt6655/mac.c         |    2 +-
+ drivers/staging/vt6655/power.c       |   34 +-
+ drivers/staging/vt6655/rxtx.c        | 1098 +++++++++++-----------------
+ drivers/staging/vt6655/rxtx.h        |   14 +
+ 17 files changed, 1694 insertions(+), 1471 deletions(-)
+
 -- 
-1.9.3
+1.9.1
 
