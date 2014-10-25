@@ -1,91 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f175.google.com ([209.85.192.175]:48053 "EHLO
-	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752413AbaJ3ER3 (ORCPT
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:57386 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750939AbaJYTF2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Oct 2014 00:17:29 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org,
-	Murilo Opsfelder Araujo <mopsfelder@gmail.com>
-Subject: [PATCH 5/6 V3.18] rtlwifi: rtl8821ae: Remove extra semicolons
-Date: Wed, 29 Oct 2014 23:17:12 -0500
-Message-Id: <1414642633-3700-6-git-send-email-Larry.Finger@lwfinger.net> (sfid-20141030_051747_097391_E8E04810)
-In-Reply-To: <1414642633-3700-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1414642633-3700-1-git-send-email-Larry.Finger@lwfinger.net>
+	Sat, 25 Oct 2014 15:05:28 -0400
+Received: by mail-wi0-f171.google.com with SMTP id em10so3489191wid.10
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2014 12:05:27 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 30/31] staging: vt6655: baseband.c timers replace spin lock
+Date: Sat, 25 Oct 2014 09:20:40 +0100
+Message-Id: <1414225241-5480-31-git-send-email-tvboxspy@gmail.com> (sfid-20141025_210532_300200_159FBD9E)
+In-Reply-To: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
+References: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The kbuild test robot reports that there are extra semicolons in this
-driver. All of them are caused by using "};" rather than "}" at the
-end of a switch statement. This patch does not change any functionality.
+Use spin_lock_irqsave and spin_unlock_irqrestore
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Murilo Opsfelder Araujo <mopsfelder@gmail.com>
+in functions TimerSQ3CallBack and TimerState1CallBack
+
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/rtlwifi/rtl8821ae/phy.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/staging/vt6655/baseband.c | 13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8821ae/phy.c b/drivers/net/wireless/rtlwifi/rtl8821ae/phy.c
-index 1e9570f..9b4d8a6 100644
---- a/drivers/net/wireless/rtlwifi/rtl8821ae/phy.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8821ae/phy.c
-@@ -800,7 +800,7 @@ static void _rtl8821ae_phy_set_txpower_by_rate_base(struct ieee80211_hw *hw,
- 				 "Invalid RateSection %d in Band 2.4G,Rf Path %d, %dTx in PHY_SetTxPowerByRateBase()\n",
- 				 rate_section, path, txnum);
- 			break;
--		};
-+		}
- 	} else if (band == BAND_ON_5G) {
- 		switch (rate_section) {
- 		case OFDM:
-@@ -823,7 +823,7 @@ static void _rtl8821ae_phy_set_txpower_by_rate_base(struct ieee80211_hw *hw,
- 				"Invalid RateSection %d in Band 5G, Rf Path %d, %dTx in PHY_SetTxPowerByRateBase()\n",
- 				rate_section, path, txnum);
- 			break;
--		};
-+		}
- 	} else {
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
- 			"Invalid Band %d in PHY_SetTxPowerByRateBase()\n", band);
-@@ -870,7 +870,7 @@ static u8 _rtl8821ae_phy_get_txpower_by_rate_base(struct ieee80211_hw *hw,
- 				 "Invalid RateSection %d in Band 2.4G, Rf Path %d, %dTx in PHY_GetTxPowerByRateBase()\n",
- 				 rate_section, path, txnum);
- 			break;
--		};
-+		}
- 	} else if (band == BAND_ON_5G) {
- 		switch (rate_section) {
- 		case OFDM:
-@@ -893,7 +893,7 @@ static u8 _rtl8821ae_phy_get_txpower_by_rate_base(struct ieee80211_hw *hw,
- 				 "Invalid RateSection %d in Band 5G, Rf Path %d, %dTx in PHY_GetTxPowerByRateBase()\n",
- 				 rate_section, path, txnum);
- 			break;
--		};
-+		}
- 	} else {
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
- 			 "Invalid Band %d in PHY_GetTxPowerByRateBase()\n", band);
-@@ -3746,7 +3746,7 @@ static void _rtl8821ae_iqk_tx_fill_iqc(struct ieee80211_hw *hw,
- 		break;
- 	default:
- 		break;
--	};
-+	}
+diff --git a/drivers/staging/vt6655/baseband.c b/drivers/staging/vt6655/baseband.c
+index 8adeea4..c7ad927 100644
+--- a/drivers/staging/vt6655/baseband.c
++++ b/drivers/staging/vt6655/baseband.c
+@@ -2786,9 +2786,11 @@ TimerSQ3CallBack(
+ )
+ {
+ 	struct vnt_private *pDevice = hDeviceContext;
++	unsigned long flags;
+ 
+ 	pr_debug("TimerSQ3CallBack...\n");
+-	spin_lock_irq(&pDevice->lock);
++
++	spin_lock_irqsave(&pDevice->lock, flags);
+ 
+ 	pr_debug("3.[%08x][%08x], %d\n",
+ 		 (int)pDevice->ulRatio_State0, (int)pDevice->ulRatio_State1,
+@@ -2803,7 +2805,7 @@ TimerSQ3CallBack(
+ 	add_timer(&pDevice->TimerSQ3Tmax3);
+ 	add_timer(&pDevice->TimerSQ3Tmax2);
+ 
+-	spin_unlock_irq(&pDevice->lock);
++	spin_unlock_irqrestore(&pDevice->lock, flags);
  }
  
- static void _rtl8821ae_iqk_rx_fill_iqc(struct ieee80211_hw *hw,
-@@ -3767,7 +3767,7 @@ static void _rtl8821ae_iqk_rx_fill_iqc(struct ieee80211_hw *hw,
- 		break;
- 	default:
- 		break;
--	};
-+	}
- }
+ /*+
+@@ -2830,10 +2832,12 @@ TimerState1CallBack(
+ )
+ {
+ 	struct vnt_private *pDevice = hDeviceContext;
++	unsigned long flags;
  
- #define cal_num 10
+ 	pr_debug("TimerState1CallBack...\n");
+ 
+-	spin_lock_irq(&pDevice->lock);
++	spin_lock_irqsave(&pDevice->lock, flags);
++
+ 	if (pDevice->uDiversityCnt < pDevice->ulDiversityMValue/100) {
+ 		s_vChangeAntenna(pDevice);
+ 		pDevice->TimerSQ3Tmax3.expires =  RUN_AT(pDevice->byTMax3 * HZ);
+@@ -2864,5 +2868,6 @@ TimerState1CallBack(
+ 	}
+ 	pDevice->byAntennaState = 0;
+ 	BBvClearAntDivSQ3Value(pDevice);
+-	spin_unlock_irq(&pDevice->lock);
++
++	spin_unlock_irqrestore(&pDevice->lock, flags);
+ }
 -- 
-2.1.1
+1.9.1
 
