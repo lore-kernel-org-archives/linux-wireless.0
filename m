@@ -1,140 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:6963 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752950AbaJTKU6 (ORCPT
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:43876 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751505AbaJYTIv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2014 06:20:58 -0400
-Date: Mon, 20 Oct 2014 13:20:45 +0300
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 2/2] cfg80211: Specify frame and reason code for
- NL80211_CMD_DEL_STATION
-Message-ID: <20141020102045.GA2716@jouni.qca.qualcomm.com> (sfid-20141020_122101_902703_947EB71E)
-References: <20141010175525.GA29436@jouni.qca.qualcomm.com>
- <1413278472.2455.3.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1413278472.2455.3.camel@jlt4.sipsolutions.net>
+	Sat, 25 Oct 2014 15:08:51 -0400
+Received: by mail-wi0-f169.google.com with SMTP id q5so3340674wiv.0
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2014 12:08:50 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 10/31] staging: vt6655: mac80211 conversion replace suspend resume functions
+Date: Sat, 25 Oct 2014 09:20:20 +0100
+Message-Id: <1414225241-5480-11-git-send-email-tvboxspy@gmail.com> (sfid-20141025_210855_443215_7EA9A82A)
+In-Reply-To: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
+References: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The optional NL80211_ATTR_MGMT_SUBTYPE and NL80211_ATTR_REASON_CODE
-attributes can now be included in NL80211_CMD_DEL_STATION to indicate to
-the driver which frame (Deauthentication/Disassociation) and reason code
-in that frame should be used to indicate removal to the specific
-station. This is used by drivers that implement AP SME and generate
-those frames internally.
+add vt6655_suspend and vt6655_resume
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+remove viawget_suspend and viawget_resume.
+
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- include/net/cfg80211.h       |  5 +++++
- include/uapi/linux/nl80211.h |  6 +++++-
- net/wireless/nl80211.c       | 21 +++++++++++++++++++++
- net/wireless/trace.h         | 10 ++++++++--
- 4 files changed, 39 insertions(+), 3 deletions(-)
+ drivers/staging/vt6655/device_main.c | 104 ++++++++++++-----------------------
+ 1 file changed, 34 insertions(+), 70 deletions(-)
 
-v2: Move default behavior selection to cfg80211 so that drivers will
-always get an indication of subtype and reason_code.
-
-
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 777e191..23308fb 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -804,9 +804,14 @@ struct station_parameters {
-  * Used to delete a station entry (or all stations).
-  *
-  * @mac: MAC address of the station to remove or NULL to remove all stations
-+ * @subtype: Management frame subtype to use for indicating removal
-+ *	(10 = Disassociation, 12 = Deauthentication)
-+ * @reason_code: Reason code for the Disassociation/Deauthentication frame
-  */
- struct station_del_parameters {
- 	const u8 *mac;
-+	u8 subtype;
-+	u16 reason_code;
+diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
+index 054841b..b0f94a8 100644
+--- a/drivers/staging/vt6655/device_main.c
++++ b/drivers/staging/vt6655/device_main.c
+@@ -274,8 +274,6 @@ static int  device_ioctl(struct net_device *dev, struct ifreq *rq, int cmd);
+ 
+ #ifdef CONFIG_PM
+ static int device_notify_reboot(struct notifier_block *, unsigned long event, void *ptr);
+-static int viawget_suspend(struct pci_dev *pcid, pm_message_t state);
+-static int viawget_resume(struct pci_dev *pcid);
+ static struct notifier_block device_notifier = {
+ 	.notifier_call = device_notify_reboot,
+ 	.next = NULL,
+@@ -3482,6 +3480,37 @@ vt6655_probe(struct pci_dev *pcid, const struct pci_device_id *ent)
+ 
+ /*------------------------------------------------------------------*/
+ 
++#ifdef CONFIG_PM
++static int vt6655_suspend(struct pci_dev *pcid, pm_message_t state)
++{
++	struct vnt_private *priv = pci_get_drvdata(pcid);
++	unsigned long flags;
++
++	spin_lock_irqsave(&priv->lock, flags);
++
++	pci_save_state(pcid);
++
++	MACbShutdown(priv->PortOffset);
++
++	pci_disable_device(pcid);
++	pci_set_power_state(pcid, pci_choose_state(pcid, state));
++
++	spin_unlock_irqrestore(&priv->lock, flags);
++
++	return 0;
++}
++
++static int vt6655_resume(struct pci_dev *pcid)
++{
++
++	pci_set_power_state(pcid, PCI_D0);
++	pci_enable_wake(pcid, PCI_D0, 0);
++	pci_restore_state(pcid);
++
++	return 0;
++}
++#endif
++
+ MODULE_DEVICE_TABLE(pci, vt6655_pci_id_table);
+ 
+ static struct pci_driver device_driver = {
+@@ -3490,8 +3519,8 @@ static struct pci_driver device_driver = {
+ 	.probe = vt6655_probe,
+ 	.remove = vt6655_remove,
+ #ifdef CONFIG_PM
+-	.suspend = viawget_suspend,
+-	.resume = viawget_resume,
++	.suspend = vt6655_suspend,
++	.resume = vt6655_resume,
+ #endif
  };
  
- /**
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 4b28dc0..07ef683 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -227,7 +227,11 @@
-  *	the interface identified by %NL80211_ATTR_IFINDEX.
-  * @NL80211_CMD_DEL_STATION: Remove a station identified by %NL80211_ATTR_MAC
-  *	or, if no MAC address given, all stations, on the interface identified
-- *	by %NL80211_ATTR_IFINDEX.
-+ *	by %NL80211_ATTR_IFINDEX. %NL80211_ATTR_MGMT_SUBTYPE and
-+ *	%NL80211_ATTR_REASON_CODE can optionally be used to specify which type
-+ *	of disconnection indication should be sent to the station
-+ *	(Deauthentication or Disassociation frame and reason code for that
-+ *	frame).
-  *
-  * @NL80211_CMD_GET_MPATH: Get mesh path attributes for mesh path to
-  * 	destination %NL80211_ATTR_MAC on the interface identified by
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 9333990..f6902ce 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -4414,6 +4414,27 @@ static int nl80211_del_station(struct sk_buff *skb, struct genl_info *info)
- 	if (!rdev->ops->del_station)
- 		return -EOPNOTSUPP;
- 
-+	if (info->attrs[NL80211_ATTR_MGMT_SUBTYPE]) {
-+		params.subtype =
-+			nla_get_u8(info->attrs[NL80211_ATTR_MGMT_SUBTYPE]);
-+		if (params.subtype != IEEE80211_STYPE_DISASSOC >> 4 &&
-+		    params.subtype != IEEE80211_STYPE_DEAUTH >> 4)
-+			return -EINVAL;
-+	} else {
-+		/* Default to Deauthentication frame */
-+		params.subtype = IEEE80211_STYPE_DEAUTH >> 4;
-+	}
-+
-+	if (info->attrs[NL80211_ATTR_REASON_CODE]) {
-+		params.reason_code =
-+			nla_get_u16(info->attrs[NL80211_ATTR_REASON_CODE]);
-+		if (params.reason_code == 0)
-+			return -EINVAL; /* 0 is reserved */
-+	} else {
-+		/* Default to reason code 2 */
-+		params.reason_code = WLAN_REASON_PREV_AUTH_NOT_VALID;
-+	}
-+
- 	return rdev_del_station(rdev, dev, &params);
+@@ -3532,75 +3561,10 @@ device_notify_reboot(struct notifier_block *nb, unsigned long event, void *p)
+ 		for_each_pci_dev(pdev) {
+ 			if (pci_dev_driver(pdev) == &device_driver) {
+ 				if (pci_get_drvdata(pdev))
+-					viawget_suspend(pdev, PMSG_HIBERNATE);
++					vt6655_suspend(pdev, PMSG_HIBERNATE);
+ 			}
+ 		}
+ 	}
+ 	return NOTIFY_DONE;
  }
- 
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index 66bc3c9..fae55cd 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -688,14 +688,20 @@ DECLARE_EVENT_CLASS(station_del,
- 		WIPHY_ENTRY
- 		NETDEV_ENTRY
- 		MAC_ENTRY(sta_mac)
-+		__field(u8, subtype)
-+		__field(u16, reason_code)
- 	),
- 	TP_fast_assign(
- 		WIPHY_ASSIGN;
- 		NETDEV_ASSIGN;
- 		MAC_ASSIGN(sta_mac, params->mac);
-+		__entry->subtype = params->subtype;
-+		__entry->reason_code = params->reason_code;
- 	),
--	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", station mac: " MAC_PR_FMT,
--		  WIPHY_PR_ARG, NETDEV_PR_ARG, MAC_PR_ARG(sta_mac))
-+	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", station mac: " MAC_PR_FMT
-+		  ", subtype: %u, reason_code: %u",
-+		  WIPHY_PR_ARG, NETDEV_PR_ARG, MAC_PR_ARG(sta_mac),
-+		  __entry->subtype, __entry->reason_code)
- );
- 
- DEFINE_EVENT(station_del, rdev_del_station,
+-
+-static int
+-viawget_suspend(struct pci_dev *pcid, pm_message_t state)
+-{
+-	int power_status;   // to silence the compiler
+-
+-	struct vnt_private *pDevice = pci_get_drvdata(pcid);
+-	PSMgmtObject  pMgmt = pDevice->pMgmt;
+-
+-	netif_stop_queue(pDevice->dev);
+-	spin_lock_irq(&pDevice->lock);
+-	pci_save_state(pcid);
+-	del_timer(&pDevice->sTimerCommand);
+-	del_timer(&pMgmt->sTimerSecondCallback);
+-	pDevice->cbFreeCmdQueue = CMD_Q_SIZE;
+-	pDevice->uCmdDequeueIdx = 0;
+-	pDevice->uCmdEnqueueIdx = 0;
+-	pDevice->bCmdRunning = false;
+-	MACbShutdown(pDevice->PortOffset);
+-	MACvSaveContext(pDevice->PortOffset, pDevice->abyMacContext);
+-	pDevice->bLinkPass = false;
+-	memset(pMgmt->abyCurrBSSID, 0, 6);
+-	pMgmt->eCurrState = WMAC_STATE_IDLE;
+-	pci_disable_device(pcid);
+-	power_status = pci_set_power_state(pcid, pci_choose_state(pcid, state));
+-	spin_unlock_irq(&pDevice->lock);
+-	return 0;
+-}
+-
+-static int
+-viawget_resume(struct pci_dev *pcid)
+-{
+-	struct vnt_private *pDevice = pci_get_drvdata(pcid);
+-	PSMgmtObject  pMgmt = pDevice->pMgmt;
+-	int power_status;   // to silence the compiler
+-
+-	power_status = pci_set_power_state(pcid, PCI_D0);
+-	power_status = pci_enable_wake(pcid, PCI_D0, 0);
+-	pci_restore_state(pcid);
+-	if (netif_running(pDevice->dev)) {
+-		spin_lock_irq(&pDevice->lock);
+-		MACvRestoreContext(pDevice->PortOffset, pDevice->abyMacContext);
+-		device_init_registers(pDevice);
+-		if (pMgmt->sNodeDBTable[0].bActive) { // Assoc with BSS
+-			pMgmt->sNodeDBTable[0].bActive = false;
+-			pDevice->bLinkPass = false;
+-			if (pMgmt->eCurrMode == WMAC_MODE_IBSS_STA) {
+-				// In Adhoc, BSS state set back to started.
+-				pMgmt->eCurrState = WMAC_STATE_STARTED;
+-			} else {
+-				pMgmt->eCurrMode = WMAC_MODE_STANDBY;
+-				pMgmt->eCurrState = WMAC_STATE_IDLE;
+-			}
+-		}
+-		init_timer(&pMgmt->sTimerSecondCallback);
+-		init_timer(&pDevice->sTimerCommand);
+-		MACvIntEnable(pDevice->PortOffset, IMR_MASK_VALUE);
+-		BSSvClearBSSList((void *)pDevice, pDevice->bLinkPass);
+-		bScheduleCommand((void *)pDevice, WLAN_CMD_BSSID_SCAN, NULL);
+-		bScheduleCommand((void *)pDevice, WLAN_CMD_SSID, NULL);
+-		spin_unlock_irq(&pDevice->lock);
+-	}
+-	return 0;
+-}
+-
+ #endif
 -- 
 1.9.1
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
