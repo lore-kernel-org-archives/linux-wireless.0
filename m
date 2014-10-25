@@ -1,889 +1,1303 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:46503 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756675AbaJ2R5c (ORCPT
+Received: from mail-wg0-f47.google.com ([74.125.82.47]:33977 "EHLO
+	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751185AbaJYTiM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2014 13:57:32 -0400
-Received: by mail-wi0-f177.google.com with SMTP id ex7so5323074wid.10
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2014 10:57:31 -0700 (PDT)
+	Sat, 25 Oct 2014 15:38:12 -0400
+Received: by mail-wg0-f47.google.com with SMTP id x13so3084125wgg.18
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2014 12:38:10 -0700 (PDT)
 From: Malcolm Priestley <tvboxspy@gmail.com>
 To: gregkh@linuxfoundation.org
 Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
 	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH v2 17/48] staging: vt6655: card.c/h remove dead functions
-Date: Wed, 29 Oct 2014 17:55:35 +0000
-Message-Id: <1414605366-9335-18-git-send-email-tvboxspy@gmail.com> (sfid-20141029_185751_958529_9C92F6E1)
-In-Reply-To: <1414605366-9335-1-git-send-email-tvboxspy@gmail.com>
-References: <1414605366-9335-1-git-send-email-tvboxspy@gmail.com>
+Subject: [PATCH 04/48] staging: vt6655: dead code remove net device code
+Date: Sat, 25 Oct 2014 09:39:42 +0100
+Message-Id: <1414226426-5811-5-git-send-email-tvboxspy@gmail.com> (sfid-20141025_213815_942963_EEE4C3D4)
+In-Reply-To: <1414226426-5811-1-git-send-email-tvboxspy@gmail.com>
+References: <1414226426-5811-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+All functions are dead and nolonger of use.
+
 Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/staging/vt6655/card.c | 724 ------------------------------------------
- drivers/staging/vt6655/card.h |  75 -----
- 2 files changed, 799 deletions(-)
+ drivers/staging/vt6655/device.h      |    2 -
+ drivers/staging/vt6655/device_main.c | 1176 ----------------------------------
+ drivers/staging/vt6655/wcmd.c        |    4 -
+ 3 files changed, 1182 deletions(-)
 
-diff --git a/drivers/staging/vt6655/card.c b/drivers/staging/vt6655/card.c
-index 72896c1..bff77c8 100644
---- a/drivers/staging/vt6655/card.c
-+++ b/drivers/staging/vt6655/card.c
-@@ -34,8 +34,6 @@
-  *      CARDvUpdateNextTBTT - Sync. NIC Beacon time
-  *      CARDbRadioPowerOff - Turn Off NIC Radio Power
-  *      CARDbRadioPowerOn - Turn On NIC Radio Power
-- *      CARDbSetWEPMode - Set NIC Wep mode
-- *      CARDbSetTxPower - Set NIC tx power
-  *
-  * Revision History:
-  *      06-10-2003 Bryan YC Fan:  Re-write codes to support VT3253 spec.
-@@ -50,12 +48,7 @@
- #include "mac.h"
- #include "desc.h"
- #include "rf.h"
--#include "vntwifi.h"
- #include "power.h"
--#include "key.h"
--#include "rc4.h"
--#include "country.h"
--#include "channel.h"
+diff --git a/drivers/staging/vt6655/device.h b/drivers/staging/vt6655/device.h
+index 35a1689..a3020d7 100644
+--- a/drivers/staging/vt6655/device.h
++++ b/drivers/staging/vt6655/device.h
+@@ -755,8 +755,6 @@ static inline PDEVICE_TD_INFO alloc_td_info(void)
  
- /*---------------------  Static Definitions -------------------------*/
- 
-@@ -201,43 +194,6 @@ s_vCalculateOFDMRParameter(
  /*---------------------  Export Functions  --------------------------*/
  
- /*
-- * Description: Get Card short preamble option value
-- *
-- * Parameters:
-- *  In:
-- *      pDevice             - The adapter to be set
-- *  Out:
-- *      none
-- *
-- * Return Value: true if short preamble; otherwise false
-- */
--bool CARDbIsShortPreamble(struct vnt_private *pDevice)
--{
+-bool device_dma0_xmit(struct vnt_private *pDevice,
+-		      struct sk_buff *skb, unsigned int uNodeIndex);
+ bool device_alloc_frag_buf(struct vnt_private *pDevice,
+ 			   PSDeFragControlBlock pDeF);
+ #endif
+diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
+index 3a1c9ee..810b7b1 100644
+--- a/drivers/staging/vt6655/device_main.c
++++ b/drivers/staging/vt6655/device_main.c
+@@ -32,20 +32,12 @@
+  *   device_free_info - device structure resource free function
+  *   device_get_pci_info - get allocated pci io/mem resource
+  *   device_print_info - print out resource
+- *   device_open - allocate dma/descripter resource & initial mac/bbp function
+- *   device_xmit - asynchrous data tx function
+  *   device_intr - interrupt handle function
+- *   device_set_multi - set mac filter
+- *   device_ioctl - ioctl entry
+- *   device_close - shutdown mac/bbp & free dma/descripter resource
+  *   device_rx_srv - rx service function
+- *   device_receive_frame - rx data function
+  *   device_alloc_rx_buf - rx buffer pre-allocated function
+  *   device_alloc_frag_buf - rx fragement pre-allocated function
+  *   device_free_tx_buf - free tx buffer function
+  *   device_free_frag_buf- free de-fragement buffer
+- *   device_dma0_tx_80211- tx 802.11 frame via dma0
+- *   device_dma0_xmit- tx PS bufferred frame via dma0
+  *   device_init_rd0_ring- initial rd dma0 ring
+  *   device_init_rd1_ring- initial rd dma1 ring
+  *   device_init_td0_ring- initial tx dma0 ring buffer
+@@ -265,12 +257,7 @@ static void device_free_info(struct vnt_private *pDevice);
+ static bool device_get_pci_info(struct vnt_private *, struct pci_dev *pcid);
+ static void device_print_info(struct vnt_private *pDevice);
+ static void device_init_diversity_timer(struct vnt_private *pDevice);
+-static int  device_open(struct net_device *dev);
+-static int  device_xmit(struct sk_buff *skb, struct net_device *dev);
+ static  irqreturn_t  device_intr(int irq,  void *dev_instance);
+-static void device_set_multi(struct net_device *dev);
+-static int  device_close(struct net_device *dev);
+-static int  device_ioctl(struct net_device *dev, struct ifreq *rq, int cmd);
+ 
+ #ifdef CONFIG_PM
+ static int device_notify_reboot(struct notifier_block *, unsigned long event, void *ptr);
+@@ -287,11 +274,6 @@ static void device_init_defrag_cb(struct vnt_private *pDevice);
+ static void device_init_td0_ring(struct vnt_private *pDevice);
+ static void device_init_td1_ring(struct vnt_private *pDevice);
+ 
+-static int  device_dma0_tx_80211(struct sk_buff *skb, struct net_device *dev);
+-//2008-0714<Add>by Mike Liu
+-static bool device_release_WPADEV(struct vnt_private *pDevice);
 -
--	if (pDevice->byPreambleType == 0)
+-static int  ethtool_ioctl(struct net_device *dev, void __user *useraddr);
+ static int  device_rx_srv(struct vnt_private *pDevice, unsigned int uIdx);
+ static int  device_tx_srv(struct vnt_private *pDevice, unsigned int uIdx);
+ static bool device_alloc_rx_buf(struct vnt_private *pDevice, PSRxDesc pDesc);
+@@ -672,45 +654,6 @@ static void device_init_diversity_timer(struct vnt_private *pDevice)
+ 	pDevice->TimerSQ3Tmax3.expires = RUN_AT(HZ);
+ }
+ 
+-static bool device_release_WPADEV(struct vnt_private *pDevice)
+-{
+-	viawget_wpa_header *wpahdr;
+-	int ii = 0;
+-
+-	//send device close to wpa_supplicnat layer
+-	if (pDevice->bWPADEVUp) {
+-		wpahdr = (viawget_wpa_header *)pDevice->skb->data;
+-		wpahdr->type = VIAWGET_DEVICECLOSE_MSG;
+-		wpahdr->resp_ie_len = 0;
+-		wpahdr->req_ie_len = 0;
+-		skb_put(pDevice->skb, sizeof(viawget_wpa_header));
+-		pDevice->skb->dev = pDevice->wpadev;
+-		skb_reset_mac_header(pDevice->skb);
+-		pDevice->skb->pkt_type = PACKET_HOST;
+-		pDevice->skb->protocol = htons(ETH_P_802_2);
+-		memset(pDevice->skb->cb, 0, sizeof(pDevice->skb->cb));
+-		netif_rx(pDevice->skb);
+-		pDevice->skb = dev_alloc_skb((int)pDevice->rx_buf_sz);
+-
+-		while (pDevice->bWPADEVUp) {
+-			set_current_state(TASK_UNINTERRUPTIBLE);
+-			schedule_timeout(HZ / 20);          //wait 50ms
+-			ii++;
+-			if (ii > 20)
+-				break;
+-		}
+-	}
+-	return true;
+-}
+-
+-static const struct net_device_ops device_netdev_ops = {
+-	.ndo_open               = device_open,
+-	.ndo_stop               = device_close,
+-	.ndo_do_ioctl           = device_ioctl,
+-	.ndo_start_xmit         = device_xmit,
+-	.ndo_set_rx_mode	= device_set_multi,
+-};
+-
+ static void device_print_info(struct vnt_private *pDevice)
+ {
+ 	dev_info(&pDevice->pcid->dev, "%s\n", get_chip_name(pDevice->chip_id));
+@@ -1297,653 +1240,6 @@ static void device_free_tx_buf(struct vnt_private *pDevice, PSTxDesc pDesc)
+ 	pTDInfo->byFlags = 0;
+ }
+ 
+-static int  device_open(struct net_device *dev)
+-{
+-	struct vnt_private *pDevice = netdev_priv(dev);
+-	int i;
+-
+-	pDevice->rx_buf_sz = PKT_BUF_SZ;
+-	if (!device_init_rings(pDevice))
+-		return -ENOMEM;
+-
+-//2008-5-13 <add> by chester
+-	i = request_irq(pDevice->pcid->irq, &device_intr, IRQF_SHARED, dev->name, dev);
+-	if (i)
+-		return i;
+-
+-#ifdef WPA_SM_Transtatus
+-	pDevice->fWPA_Authened = false;
+-#endif
+-	pr_debug("call device init rd0 ring\n");
+-	device_init_rd0_ring(pDevice);
+-	device_init_rd1_ring(pDevice);
+-	device_init_defrag_cb(pDevice);
+-	device_init_td0_ring(pDevice);
+-	device_init_td1_ring(pDevice);
+-
+-	if (pDevice->bDiversityRegCtlON)
+-		device_init_diversity_timer(pDevice);
+-
+-	vMgrObjectInit(pDevice);
+-	vMgrTimerInit(pDevice);
+-
+-	pr_debug("call device_init_registers\n");
+-	device_init_registers(pDevice);
+-
+-	MACvReadEtherAddress(pDevice->PortOffset, pDevice->abyCurrentNetAddr);
+-	ether_addr_copy(pDevice->pMgmt->abyMACAddr, pDevice->abyCurrentNetAddr);
+-	device_set_multi(pDevice->dev);
+-
+-	// Init for Key Management
+-	KeyvInitTable(&pDevice->sKey, pDevice->PortOffset);
+-	add_timer(&(pDevice->pMgmt->sTimerSecondCallback));
+-
+-#ifdef WPA_SUPPLICANT_DRIVER_WEXT_SUPPORT
+-	pDevice->bwextcount = 0;
+-	pDevice->bWPASuppWextEnabled = false;
+-#endif
+-	pDevice->byReAssocCount = 0;
+-	pDevice->bWPADEVUp = false;
+-	// Patch: if WEP key already set by iwconfig but device not yet open
+-	if (pDevice->bEncryptionEnable && pDevice->bTransmitKey) {
+-		KeybSetDefaultKey(&(pDevice->sKey),
+-				  (unsigned long)(pDevice->byKeyIndex | (1 << 31)),
+-				  pDevice->uKeyLength,
+-				  NULL,
+-				  pDevice->abyKey,
+-				  KEY_CTL_WEP,
+-				  pDevice->PortOffset,
+-				  pDevice->byLocalID
+-			);
+-		pDevice->eEncryptionStatus = Ndis802_11Encryption1Enabled;
+-	}
+-
+-	pr_debug("call MACvIntEnable\n");
+-	MACvIntEnable(pDevice->PortOffset, IMR_MASK_VALUE);
+-
+-	if (pDevice->pMgmt->eConfigMode == WMAC_CONFIG_AP) {
+-		bScheduleCommand((void *)pDevice, WLAN_CMD_RUN_AP, NULL);
+-	} else {
+-		bScheduleCommand((void *)pDevice, WLAN_CMD_BSSID_SCAN, NULL);
+-		bScheduleCommand((void *)pDevice, WLAN_CMD_SSID, NULL);
+-	}
+-	pDevice->flags |= DEVICE_FLAGS_OPENED;
+-
+-	pr_debug("device_open success..\n");
+-	return 0;
+-}
+-
+-static int  device_close(struct net_device *dev)
+-{
+-	struct vnt_private *pDevice = netdev_priv(dev);
+-	PSMgmtObject     pMgmt = pDevice->pMgmt;
+-//2007-1121-02<Add>by EinsnLiu
+-	if (pDevice->bLinkPass) {
+-		bScheduleCommand((void *)pDevice, WLAN_CMD_DISASSOCIATE, NULL);
+-		mdelay(30);
+-	}
+-
+-	del_timer(&pDevice->sTimerTxData);
+-	del_timer(&pDevice->sTimerCommand);
+-	del_timer(&pMgmt->sTimerSecondCallback);
+-	if (pDevice->bDiversityRegCtlON) {
+-		del_timer(&pDevice->TimerSQ3Tmax1);
+-		del_timer(&pDevice->TimerSQ3Tmax2);
+-		del_timer(&pDevice->TimerSQ3Tmax3);
+-	}
+-
+-	netif_stop_queue(dev);
+-	pDevice->bCmdRunning = false;
+-	MACbShutdown(pDevice->PortOffset);
+-	MACbSoftwareReset(pDevice->PortOffset);
+-	CARDbRadioPowerOff(pDevice);
+-
+-	pDevice->bLinkPass = false;
+-	memset(pMgmt->abyCurrBSSID, 0, 6);
+-	pMgmt->eCurrState = WMAC_STATE_IDLE;
+-	device_free_td0_ring(pDevice);
+-	device_free_td1_ring(pDevice);
+-	device_free_rd0_ring(pDevice);
+-	device_free_rd1_ring(pDevice);
+-	device_free_frag_buf(pDevice);
+-	device_free_rings(pDevice);
+-	BSSvClearNodeDBTable(pDevice, 0);
+-	free_irq(dev->irq, dev);
+-	pDevice->flags &= (~DEVICE_FLAGS_OPENED);
+-	//2008-0714-01<Add>by chester
+-	device_release_WPADEV(pDevice);
+-
+-	pr_debug("device_close..\n");
+-	return 0;
+-}
+-
+-static int device_dma0_tx_80211(struct sk_buff *skb, struct net_device *dev)
+-{
+-	struct vnt_private *pDevice = netdev_priv(dev);
+-	unsigned char *pbMPDU;
+-	unsigned int cbMPDULen = 0;
+-
+-	pr_debug("device_dma0_tx_80211\n");
+-	spin_lock_irq(&pDevice->lock);
+-
+-	if (AVAIL_TD(pDevice, TYPE_TXDMA0) <= 0) {
+-		pr_debug("device_dma0_tx_80211, td0 <=0\n");
+-		dev_kfree_skb_irq(skb);
+-		spin_unlock_irq(&pDevice->lock);
+-		return 0;
+-	}
+-
+-	if (pDevice->bStopTx0Pkt) {
+-		dev_kfree_skb_irq(skb);
+-		spin_unlock_irq(&pDevice->lock);
+-		return 0;
+-	}
+-
+-	cbMPDULen = skb->len;
+-	pbMPDU = skb->data;
+-
+-	vDMA0_tx_80211(pDevice, skb, pbMPDU, cbMPDULen);
+-
+-	spin_unlock_irq(&pDevice->lock);
+-
+-	return 0;
+-}
+-
+-bool device_dma0_xmit(struct vnt_private *pDevice,
+-		      struct sk_buff *skb, unsigned int uNodeIndex)
+-{
+-	PSMgmtObject    pMgmt = pDevice->pMgmt;
+-	PSTxDesc        pHeadTD, pLastTD;
+-	unsigned int cbFrameBodySize;
+-	unsigned int uMACfragNum;
+-	unsigned char byPktType;
+-	bool bNeedEncryption = false;
+-	PSKeyItem       pTransmitKey = NULL;
+-	unsigned int cbHeaderSize;
+-	unsigned int ii;
+-	SKeyItem        STempKey;
+-
+-	if (pDevice->bStopTx0Pkt) {
+-		dev_kfree_skb_irq(skb);
 -		return false;
--
--	return true;
--}
--
--/*
-- * Description: Get Card short slot time option value
-- *
-- * Parameters:
-- *  In:
-- *      pDevice             - The adapter to be set
-- *  Out:
-- *      none
-- *
-- * Return Value: true if short slot time; otherwise false
-- */
--bool CARDbIsShorSlotTime(struct vnt_private *pDevice)
--{
--
--	return pDevice->bShortSlotTime;
--}
--
--/*
-  * Description: Update IFS
-  *
-  * Parameters:
-@@ -455,218 +411,6 @@ bool CARDbSetBeaconPeriod(struct vnt_private *pDevice,
- }
- 
- /*
-- * Description: Card Stop Hardware Tx
-- *
-- * Parameters:
-- *  In:
-- *      pDeviceHandler      - The adapter to be set
-- *      ePktType            - Packet type to stop
-- *  Out:
-- *      none
-- *
-- * Return Value: true if all data packet complete; otherwise false.
-- */
--bool CARDbStopTxPacket(struct vnt_private *pDevice, CARD_PKT_TYPE ePktType)
--{
--
--	if (ePktType == PKT_TYPE_802_11_ALL) {
--		pDevice->bStopBeacon = true;
--		pDevice->bStopTx0Pkt = true;
--		pDevice->bStopDataPkt = true;
--	} else if (ePktType == PKT_TYPE_802_11_BCN) {
--		pDevice->bStopBeacon = true;
--	} else if (ePktType == PKT_TYPE_802_11_MNG) {
--		pDevice->bStopTx0Pkt = true;
--	} else if (ePktType == PKT_TYPE_802_11_DATA) {
--		pDevice->bStopDataPkt = true;
 -	}
 -
--	if (pDevice->bStopBeacon == true) {
--		if (pDevice->bIsBeaconBufReadySet == true) {
--			if (pDevice->cbBeaconBufReadySetCnt < WAIT_BEACON_TX_DOWN_TMO) {
--				pDevice->cbBeaconBufReadySetCnt++;
--				return false;
--			}
+-	if (AVAIL_TD(pDevice, TYPE_TXDMA0) <= 0) {
+-		dev_kfree_skb_irq(skb);
+-		pr_debug("device_dma0_xmit, td0 <=0\n");
+-		return false;
+-	}
+-
+-	if (pMgmt->eCurrMode == WMAC_MODE_ESS_AP) {
+-		if (pDevice->uAssocCount == 0) {
+-			dev_kfree_skb_irq(skb);
+-			pr_debug("device_dma0_xmit, assocCount = 0\n");
+-			return false;
 -		}
--		pDevice->bIsBeaconBufReadySet = false;
--		pDevice->cbBeaconBufReadySetCnt = 0;
--		MACvRegBitsOff(pDevice->PortOffset, MAC_REG_TCR, TCR_AUTOBCNTX);
--	}
--	/* wait all TD0 complete */
--	if (pDevice->bStopTx0Pkt == true) {
--		if (pDevice->iTDUsed[TYPE_TXDMA0] != 0)
--			return false;
--	}
--	/* wait all Data TD complete */
--	if (pDevice->bStopDataPkt == true) {
--		if (pDevice->iTDUsed[TYPE_AC0DMA] != 0)
--			return false;
 -	}
 -
--	return true;
--}
+-	pHeadTD = pDevice->apCurrTD[TYPE_TXDMA0];
 -
--/*
-- * Description: Card Start Hardware Tx
-- *
-- * Parameters:
-- *  In:
-- *      pDeviceHandler      - The adapter to be set
-- *      ePktType            - Packet type to start
-- *  Out:
-- *      none
-- *
-- * Return Value: true if success; false if failed.
-- */
--bool CARDbStartTxPacket(struct vnt_private *pDevice, CARD_PKT_TYPE ePktType)
--{
+-	pHeadTD->m_td1TD1.byTCR = (TCR_EDP|TCR_STP);
 -
--	if (ePktType == PKT_TYPE_802_11_ALL) {
--		pDevice->bStopBeacon = false;
--		pDevice->bStopTx0Pkt = false;
--		pDevice->bStopDataPkt = false;
--	} else if (ePktType == PKT_TYPE_802_11_BCN) {
--		pDevice->bStopBeacon = false;
--	} else if (ePktType == PKT_TYPE_802_11_MNG) {
--		pDevice->bStopTx0Pkt = false;
--	} else if (ePktType == PKT_TYPE_802_11_DATA) {
--		pDevice->bStopDataPkt = false;
+-	memcpy(pDevice->sTxEthHeader.abyDstAddr, (unsigned char *)(skb->data), ETH_HLEN);
+-	cbFrameBodySize = skb->len - ETH_HLEN;
+-
+-	// 802.1H
+-	if (ntohs(pDevice->sTxEthHeader.wType) > ETH_DATA_LEN)
+-		cbFrameBodySize += 8;
+-
+-	uMACfragNum = cbGetFragCount(pDevice, pTransmitKey, cbFrameBodySize, &pDevice->sTxEthHeader);
+-
+-	if (uMACfragNum > AVAIL_TD(pDevice, TYPE_TXDMA0)) {
+-		dev_kfree_skb_irq(skb);
+-		return false;
 -	}
+-	byPktType = (unsigned char)pDevice->byPacketType;
 -
--	if ((pDevice->bStopBeacon == false) &&
--	    (pDevice->bBeaconBufReady == true) &&
--	    (pDevice->op_mode == NL80211_IFTYPE_ADHOC)) {
--		MACvRegBitsOn(pDevice->PortOffset, MAC_REG_TCR, TCR_AUTOBCNTX);
--	}
--
--	return true;
--}
--
--/*
-- * Description: Card Set BSSID value
-- *
-- * Parameters:
-- *  In:
-- *      pDeviceHandler      - The adapter to be set
-- *      pbyBSSID            - pointer to BSSID field
-- *      bAdhoc              - flag to indicate IBSS
-- *  Out:
-- *      none
-- *
-- * Return Value: true if success; false if failed.
-- */
--bool CARDbSetBSSID(struct vnt_private *pDevice,
--		   unsigned char *pbyBSSID, enum nl80211_iftype op_mode)
--{
--
--	MACvWriteBSSIDAddress(pDevice->PortOffset, pbyBSSID);
--	memcpy(pDevice->abyBSSID, pbyBSSID, WLAN_BSSID_LEN);
--	if (op_mode == NL80211_IFTYPE_ADHOC)
--		MACvRegBitsOn(pDevice->PortOffset, MAC_REG_HOSTCR, HOSTCR_ADHOC);
--	else
--		MACvRegBitsOff(pDevice->PortOffset, MAC_REG_HOSTCR, HOSTCR_ADHOC);
--
--	if (op_mode == NL80211_IFTYPE_AP)
--		MACvRegBitsOn(pDevice->PortOffset, MAC_REG_HOSTCR, HOSTCR_AP);
--	else
--		MACvRegBitsOff(pDevice->PortOffset, MAC_REG_HOSTCR, HOSTCR_AP);
--
--	if (op_mode == NL80211_IFTYPE_UNSPECIFIED) {
--		MACvRegBitsOff(pDevice->PortOffset, MAC_REG_RCR, RCR_BSSID);
--		pDevice->bBSSIDFilter = false;
--		pDevice->byRxMode &= ~RCR_BSSID;
--		pr_debug("wcmd: rx_mode = %x\n", pDevice->byRxMode);
--	} else {
--		if (is_zero_ether_addr(pDevice->abyBSSID) == false) {
--			MACvRegBitsOn(pDevice->PortOffset, MAC_REG_RCR, RCR_BSSID);
--			pDevice->bBSSIDFilter = true;
--			pDevice->byRxMode |= RCR_BSSID;
--		}
--		pr_debug("wmgr: rx_mode = %x\n", pDevice->byRxMode);
--	}
--	/* Adopt BSS state in Adapter Device Object */
--	pDevice->op_mode = op_mode;
--	return true;
--}
--
--/*
-- * Description: Card indicate status
-- *
-- * Parameters:
-- *  In:
-- *      pDeviceHandler      - The adapter to be set
-- *      eStatus             - Status
-- *  Out:
-- *      none
-- *
-- * Return Value: true if success; false if failed.
-- */
--
--/*
-- * Description: Save Assoc info. contain in assoc. response frame
-- *
-- * Parameters:
-- *  In:
-- *      pDevice             - The adapter to be set
-- *      wCapabilityInfo     - Capability information
-- *      wStatus             - Status code
-- *      wAID                - Assoc. ID
-- *      uLen                - Length of IEs
-- *      pbyIEs              - pointer to IEs
-- *  Out:
-- *      none
-- *
-- * Return Value: true if succeed; otherwise false
-- */
--bool CARDbSetTxDataRate(
--	struct vnt_private *pDevice,
--	unsigned short wDataRate
--)
--{
--
--	pDevice->wCurrentRate = wDataRate;
--	return true;
--}
--
--/*
-- * Routine Description:
-- *      Consider to power down when no more packets to tx or rx.
-- *
-- * Parameters:
-- *  In:
-- *      pDevice             - The adapter to be set
-- *  Out:
-- *      none
-- *
-- * Return Value: true if power down success; otherwise false
-- */
--bool
--CARDbPowerDown(
--	struct vnt_private *pDevice
--)
--{
--	unsigned int uIdx;
--
--	/* check if already in Doze mode */
--	if (MACbIsRegBitsOn(pDevice->PortOffset, MAC_REG_PSCTL, PSCTL_PS))
--		return true;
--
--	/* Froce PSEN on */
--	MACvRegBitsOn(pDevice->PortOffset, MAC_REG_PSCTL, PSCTL_PSEN);
--
--	/* check if all TD are empty */
--
--	for (uIdx = 0; uIdx < TYPE_MAXTD; uIdx++) {
--		if (pDevice->iTDUsed[uIdx] != 0)
--			return false;
--	}
--
--	MACvRegBitsOn(pDevice->PortOffset, MAC_REG_PSCTL, PSCTL_GO2DOZE);
--	pr_debug("Go to Doze ZZZZZZZZZZZZZZZ\n");
--	return true;
--}
--
--/*
-  * Description: Turn off Radio power
-  *
-  * Parameters:
-@@ -761,474 +505,6 @@ bool CARDbRadioPowerOn(struct vnt_private *pDevice)
- 	return bResult;
- }
- 
--bool CARDbRemoveKey(struct vnt_private *pDevice, unsigned char *pbyBSSID)
--{
--
--	KeybRemoveAllKey(&(pDevice->sKey), pbyBSSID, pDevice->PortOffset);
--	return true;
--}
--
--/*
-- * Description:
-- *    Add BSSID in PMKID Candidate list.
-- *
-- * Parameters:
-- *  In:
-- *      hDeviceContext - device structure point
-- *      pbyBSSID - BSSID address for adding
-- *      wRSNCap - BSS's RSN capability
-- *  Out:
-- *      none
-- *
-- * Return Value: none.
-- */
--bool
--CARDbAdd_PMKID_Candidate(
--	struct vnt_private *pDevice,
--	unsigned char *pbyBSSID,
--	bool bRSNCapExist,
--	unsigned short wRSNCap
--)
--{
--	struct pmkid_candidate *pCandidateList;
--	unsigned int ii = 0;
--
--	pr_debug("bAdd_PMKID_Candidate START: (%d)\n",
--		 (int)pDevice->gsPMKIDCandidate.NumCandidates);
--
--	if (pDevice->gsPMKIDCandidate.NumCandidates >= MAX_PMKIDLIST) {
--		pr_debug("vFlush_PMKID_Candidate: 3\n");
--		memset(&pDevice->gsPMKIDCandidate, 0, sizeof(SPMKIDCandidateEvent));
--	}
--
--	for (ii = 0; ii < 6; ii++)
--		pr_debug("%02X ", *(pbyBSSID + ii));
--
--	pr_debug("\n");
--
--	/* Update Old Candidate */
--	for (ii = 0; ii < pDevice->gsPMKIDCandidate.NumCandidates; ii++) {
--		pCandidateList = &pDevice->gsPMKIDCandidate.CandidateList[ii];
--		if (!memcmp(pCandidateList->BSSID, pbyBSSID, ETH_ALEN)) {
--			if (bRSNCapExist && (wRSNCap & BIT0))
--				pCandidateList->Flags |= NDIS_802_11_PMKID_CANDIDATE_PREAUTH_ENABLED;
+-	if (pDevice->bFixRate) {
+-		if (pDevice->eCurrentPHYType == PHY_TYPE_11B) {
+-			if (pDevice->uConnectionRate >= RATE_11M)
+-				pDevice->wCurrentRate = RATE_11M;
 -			else
--				pCandidateList->Flags &= ~(NDIS_802_11_PMKID_CANDIDATE_PREAUTH_ENABLED);
--
--			return true;
--		}
--	}
--
--	/* New Candidate */
--	pCandidateList = &pDevice->gsPMKIDCandidate.CandidateList[pDevice->gsPMKIDCandidate.NumCandidates];
--	if (bRSNCapExist && (wRSNCap & BIT0))
--		pCandidateList->Flags |= NDIS_802_11_PMKID_CANDIDATE_PREAUTH_ENABLED;
--	else
--		pCandidateList->Flags &= ~(NDIS_802_11_PMKID_CANDIDATE_PREAUTH_ENABLED);
--
--	ether_addr_copy(pCandidateList->BSSID, pbyBSSID);
--	pDevice->gsPMKIDCandidate.NumCandidates++;
--	pr_debug("NumCandidates:%d\n",
--		 (int)pDevice->gsPMKIDCandidate.NumCandidates);
--	return true;
--}
--
--void *
--CARDpGetCurrentAddress(
--	struct vnt_private *pDevice
--)
--{
--
--	return pDevice->abyCurrentNetAddr;
--}
--
--/*
-- * Description:
-- *    Start Spectrum Measure defined in 802.11h
-- *
-- * Parameters:
-- *  In:
-- *      hDeviceContext - device structure point
-- *  Out:
-- *      none
-- *
-- * Return Value: none.
-- */
--bool
--CARDbStartMeasure(
--	struct vnt_private *pDevice,
--	void *pvMeasureEIDs,
--	unsigned int uNumOfMeasureEIDs
--)
--{
--	PWLAN_IE_MEASURE_REQ    pEID = (PWLAN_IE_MEASURE_REQ) pvMeasureEIDs;
--	u64 qwCurrTSF;
--	u64 qwStartTSF;
--	bool bExpired = true;
--	unsigned short wDuration = 0;
--
--	if ((pEID == NULL) ||
--	    (uNumOfMeasureEIDs == 0)) {
--		return true;
--	}
--	CARDbGetCurrentTSF(pDevice->PortOffset, &qwCurrTSF);
--	if (pDevice->bMeasureInProgress == true) {
--		pDevice->bMeasureInProgress = false;
--		VNSvOutPortB(pDevice->PortOffset + MAC_REG_RCR, pDevice->byOrgRCR);
--		MACvSelectPage1(pDevice->PortOffset);
--		VNSvOutPortD(pDevice->PortOffset + MAC_REG_MAR0, pDevice->dwOrgMAR0);
--		VNSvOutPortD(pDevice->PortOffset + MAC_REG_MAR4, pDevice->dwOrgMAR4);
--		/* clear measure control */
--		MACvRegBitsOff(pDevice->PortOffset, MAC_REG_MSRCTL, MSRCTL_EN);
--		MACvSelectPage0(pDevice->PortOffset);
--		set_channel(pDevice, pDevice->byOrgChannel);
--		MACvSelectPage1(pDevice->PortOffset);
--		MACvRegBitsOn(pDevice->PortOffset, MAC_REG_MSRCTL+1, MSRCTL1_TXPAUSE);
--		MACvSelectPage0(pDevice->PortOffset);
--	}
--	pDevice->uNumOfMeasureEIDs = uNumOfMeasureEIDs;
--
--	do {
--		pDevice->pCurrMeasureEID = pEID;
--		pEID++;
--		pDevice->uNumOfMeasureEIDs--;
--
--		if (pDevice->byLocalID > REV_ID_VT3253_B1) {
--			qwStartTSF = *((u64 *)(pDevice->pCurrMeasureEID->sReq.abyStartTime));
--			wDuration = *((unsigned short *)(pDevice->pCurrMeasureEID->sReq.abyDuration));
--			wDuration += 1; /* 1 TU for channel switching */
--
--			if (qwStartTSF == 0) {
--				/* start immediately by setting start TSF == current TSF + 2 TU */
--				qwStartTSF = qwCurrTSF + 2048;
--
--				bExpired = false;
--				break;
--			} else {
--				/* start at setting start TSF - 1TU(for channel switching) */
--				qwStartTSF -= 1024;
--			}
--
--			if (qwCurrTSF < qwStartTSF) {
--				bExpired = false;
--				break;
--			}
--			VNTWIFIbMeasureReport(pDevice->pMgmt,
--					      false,
--					      pDevice->pCurrMeasureEID,
--					      MEASURE_MODE_LATE,
--					      pDevice->byBasicMap,
--					      pDevice->byCCAFraction,
--					      pDevice->abyRPIs
--				);
+-				pDevice->wCurrentRate = (unsigned short)pDevice->uConnectionRate;
 -		} else {
--			/* hardware do not support measure */
--			VNTWIFIbMeasureReport(pDevice->pMgmt,
--					      false,
--					      pDevice->pCurrMeasureEID,
--					      MEASURE_MODE_INCAPABLE,
--					      pDevice->byBasicMap,
--					      pDevice->byCCAFraction,
--					      pDevice->abyRPIs
--				);
+-			if (pDevice->uConnectionRate >= RATE_54M)
+-				pDevice->wCurrentRate = RATE_54M;
+-			else
+-				pDevice->wCurrentRate = (unsigned short)pDevice->uConnectionRate;
 -		}
--	} while (pDevice->uNumOfMeasureEIDs != 0);
--
--	if (!bExpired) {
--		MACvSelectPage1(pDevice->PortOffset);
--		VNSvOutPortD(pDevice->PortOffset + MAC_REG_MSRSTART, (u32)qwStartTSF);
--		VNSvOutPortD(pDevice->PortOffset + MAC_REG_MSRSTART + 4, (u32)(qwStartTSF >> 32));
--		VNSvOutPortW(pDevice->PortOffset + MAC_REG_MSRDURATION, wDuration);
--		MACvRegBitsOn(pDevice->PortOffset, MAC_REG_MSRCTL, MSRCTL_EN);
--		MACvSelectPage0(pDevice->PortOffset);
 -	} else {
--		/* all measure start time expired we should complete action */
--		VNTWIFIbMeasureReport(pDevice->pMgmt,
--				      true,
--				      NULL,
--				      0,
--				      pDevice->byBasicMap,
--				      pDevice->byCCAFraction,
--				      pDevice->abyRPIs
+-		pDevice->wCurrentRate = pDevice->pMgmt->sNodeDBTable[uNodeIndex].wTxDataRate;
+-	}
+-
+-	//preamble type
+-	if (pMgmt->sNodeDBTable[uNodeIndex].bShortPreamble)
+-		pDevice->byPreambleType = pDevice->byShortPreamble;
+-	else
+-		pDevice->byPreambleType = PREAMBLE_LONG;
+-
+-	pr_debug("dma0: pDevice->wCurrentRate = %d\n", pDevice->wCurrentRate);
+-
+-	if (pDevice->wCurrentRate <= RATE_11M) {
+-		byPktType = PK_TYPE_11B;
+-	} else if (pDevice->eCurrentPHYType == PHY_TYPE_11A) {
+-		byPktType = PK_TYPE_11A;
+-	} else {
+-		if (pDevice->bProtectMode)
+-			byPktType = PK_TYPE_11GB;
+-		else
+-			byPktType = PK_TYPE_11GA;
+-	}
+-
+-	if (pDevice->bEncryptionEnable)
+-		bNeedEncryption = true;
+-
+-	if (pDevice->bEnableHostWEP) {
+-		pTransmitKey = &STempKey;
+-		pTransmitKey->byCipherSuite = pMgmt->sNodeDBTable[uNodeIndex].byCipherSuite;
+-		pTransmitKey->dwKeyIndex = pMgmt->sNodeDBTable[uNodeIndex].dwKeyIndex;
+-		pTransmitKey->uKeyLength = pMgmt->sNodeDBTable[uNodeIndex].uWepKeyLength;
+-		pTransmitKey->dwTSC47_16 = pMgmt->sNodeDBTable[uNodeIndex].dwTSC47_16;
+-		pTransmitKey->wTSC15_0 = pMgmt->sNodeDBTable[uNodeIndex].wTSC15_0;
+-		memcpy(pTransmitKey->abyKey,
+-		       &pMgmt->sNodeDBTable[uNodeIndex].abyWepKey[0],
+-		       pTransmitKey->uKeyLength
 -			);
 -	}
+-	vGenerateFIFOHeader(pDevice, byPktType, pDevice->pbyTmpBuff, bNeedEncryption,
+-			    cbFrameBodySize, TYPE_TXDMA0, pHeadTD,
+-			    &pDevice->sTxEthHeader, (unsigned char *)skb->data, pTransmitKey, uNodeIndex,
+-			    &uMACfragNum,
+-			    &cbHeaderSize
+-		);
+-
+-	if (MACbIsRegBitsOn(pDevice->PortOffset, MAC_REG_PSCTL, PSCTL_PS)) {
+-		// Disable PS
+-		MACbPSWakeup(pDevice->PortOffset);
+-	}
+-
+-	pDevice->bPWBitOn = false;
+-
+-	pLastTD = pHeadTD;
+-	for (ii = 0; ii < uMACfragNum; ii++) {
+-		// Poll Transmit the adapter
+-		wmb();
+-		pHeadTD->m_td0TD0.f1Owner = OWNED_BY_NIC;
+-		wmb();
+-		if (ii == (uMACfragNum - 1))
+-			pLastTD = pHeadTD;
+-		pHeadTD = pHeadTD->next;
+-	}
+-
+-	// Save the information needed by the tx interrupt handler
+-	// to complete the Send request
+-	pLastTD->pTDInfo->skb = skb;
+-	pLastTD->pTDInfo->byFlags = 0;
+-	pLastTD->pTDInfo->byFlags |= TD_FLAGS_NETIF_SKB;
+-
+-	pDevice->apCurrTD[TYPE_TXDMA0] = pHeadTD;
+-
+-	MACvTransmit0(pDevice->PortOffset);
+-
 -	return true;
 -}
 -
--/*
-- * Description:
-- *    Do Channel Switch defined in 802.11h
-- *
-- * Parameters:
-- *  In:
-- *      hDeviceContext - device structure point
-- *  Out:
-- *      none
-- *
-- * Return Value: none.
-- */
--bool
--CARDbChannelSwitch(
--	struct vnt_private *pDevice,
--	unsigned char byMode,
--	unsigned char byNewChannel,
--	unsigned char byCount
--)
--{
--	bool bResult = true;
+-//TYPE_AC0DMA data tx
+-static int  device_xmit(struct sk_buff *skb, struct net_device *dev) {
+-	struct vnt_private *pDevice = netdev_priv(dev);
+-	PSMgmtObject    pMgmt = pDevice->pMgmt;
+-	PSTxDesc        pHeadTD, pLastTD;
+-	unsigned int uNodeIndex = 0;
+-	unsigned char byMask[8] = {1, 2, 4, 8, 0x10, 0x20, 0x40, 0x80};
+-	unsigned short wAID;
+-	unsigned int uMACfragNum = 1;
+-	unsigned int cbFrameBodySize;
+-	unsigned char byPktType;
+-	unsigned int cbHeaderSize;
+-	bool bNeedEncryption = false;
+-	PSKeyItem       pTransmitKey = NULL;
+-	SKeyItem        STempKey;
+-	unsigned int ii;
+-	bool bTKIP_UseGTK = false;
+-	bool bNeedDeAuth = false;
+-	unsigned char *pbyBSSID;
+-	bool bNodeExist = false;
 -
--	if (byCount == 0) {
--		bResult = set_channel(pDevice, byNewChannel);
--		VNTWIFIbChannelSwitch(pDevice->pMgmt, byNewChannel);
--		MACvSelectPage1(pDevice->PortOffset);
--		MACvRegBitsOn(pDevice->PortOffset, MAC_REG_MSRCTL+1, MSRCTL1_TXPAUSE);
--		MACvSelectPage0(pDevice->PortOffset);
--		return bResult;
+-	spin_lock_irq(&pDevice->lock);
+-	if (!pDevice->bLinkPass) {
+-		dev_kfree_skb_irq(skb);
+-		spin_unlock_irq(&pDevice->lock);
+-		return 0;
 -	}
--	pDevice->byChannelSwitchCount = byCount;
--	pDevice->byNewChannel = byNewChannel;
--	pDevice->bChannelSwitch = true;
--	if (byMode == 1)
--		bResult = CARDbStopTxPacket(pDevice, PKT_TYPE_802_11_ALL);
 -
--	return bResult;
--}
--
--/*
-- * Description:
-- *    Handle Quiet EID defined in 802.11h
-- *
-- * Parameters:
-- *  In:
-- *      hDeviceContext - device structure point
-- *  Out:
-- *      none
-- *
-- * Return Value: none.
-- */
--bool
--CARDbSetQuiet(
--	struct vnt_private *pDevice,
--	bool bResetQuiet,
--	unsigned char byQuietCount,
--	unsigned char byQuietPeriod,
--	unsigned short wQuietDuration,
--	unsigned short wQuietOffset
--)
--{
--	unsigned int ii = 0;
--
--	if (bResetQuiet) {
--		MACvRegBitsOff(pDevice->PortOffset, MAC_REG_MSRCTL, (MSRCTL_QUIETTXCHK | MSRCTL_QUIETEN));
--		for (ii = 0; ii < MAX_QUIET_COUNT; ii++)
--			pDevice->sQuiet[ii].bEnable = false;
--
--		pDevice->uQuietEnqueue = 0;
--		pDevice->bEnableFirstQuiet = false;
--		pDevice->bQuietEnable = false;
--		pDevice->byQuietStartCount = byQuietCount;
+-	if (pDevice->bStopDataPkt) {
+-		dev_kfree_skb_irq(skb);
+-		spin_unlock_irq(&pDevice->lock);
+-		return 0;
 -	}
--	if (pDevice->sQuiet[pDevice->uQuietEnqueue].bEnable == false) {
--		pDevice->sQuiet[pDevice->uQuietEnqueue].bEnable = true;
--		pDevice->sQuiet[pDevice->uQuietEnqueue].byPeriod = byQuietPeriod;
--		pDevice->sQuiet[pDevice->uQuietEnqueue].wDuration = wQuietDuration;
--		pDevice->sQuiet[pDevice->uQuietEnqueue].dwStartTime = (unsigned long) byQuietCount;
--		pDevice->sQuiet[pDevice->uQuietEnqueue].dwStartTime *= pDevice->wBeaconInterval;
--		pDevice->sQuiet[pDevice->uQuietEnqueue].dwStartTime += wQuietOffset;
--		pDevice->uQuietEnqueue++;
--		pDevice->uQuietEnqueue %= MAX_QUIET_COUNT;
--		if (pDevice->byQuietStartCount < byQuietCount)
--			pDevice->byQuietStartCount = byQuietCount;
--	}
--	return true;
--}
 -
--/*
-- * Description:
-- *    Do Quiet, It will be called by either ISR(after start)
-- *    or VNTWIFI(before start) so we do not need a SPINLOCK
-- *
-- * Parameters:
-- *  In:
-- *      hDeviceContext - device structure point
-- *  Out:
-- *      none
-- *
-- * Return Value: none.
-- */
--bool
--CARDbStartQuiet(
--	struct vnt_private *pDevice
--)
--{
--	unsigned int ii = 0;
--	unsigned long dwStartTime = 0xFFFFFFFF;
--	unsigned int uCurrentQuietIndex = 0;
--	unsigned long dwNextTime = 0;
--	unsigned long dwGap = 0;
--	unsigned long dwDuration = 0;
--
--	for (ii = 0; ii < MAX_QUIET_COUNT; ii++) {
--		if ((pDevice->sQuiet[ii].bEnable == true) &&
--		    (dwStartTime > pDevice->sQuiet[ii].dwStartTime)) {
--			dwStartTime = pDevice->sQuiet[ii].dwStartTime;
--			uCurrentQuietIndex = ii;
+-	if (pMgmt->eCurrMode == WMAC_MODE_ESS_AP) {
+-		if (pDevice->uAssocCount == 0) {
+-			dev_kfree_skb_irq(skb);
+-			spin_unlock_irq(&pDevice->lock);
+-			return 0;
 -		}
--	}
--	if (dwStartTime == 0xFFFFFFFF) {
--		/* no more quiet */
--		pDevice->bQuietEnable = false;
--		MACvRegBitsOff(pDevice->PortOffset, MAC_REG_MSRCTL, (MSRCTL_QUIETTXCHK | MSRCTL_QUIETEN));
--	} else {
--		if (pDevice->bQuietEnable == false) {
--			/* first quiet */
--			pDevice->byQuietStartCount--;
--			dwNextTime = pDevice->sQuiet[uCurrentQuietIndex].dwStartTime;
--			dwNextTime %= pDevice->wBeaconInterval;
--			MACvSelectPage1(pDevice->PortOffset);
--			VNSvOutPortW(pDevice->PortOffset + MAC_REG_QUIETINIT, (unsigned short) dwNextTime);
--			VNSvOutPortW(pDevice->PortOffset + MAC_REG_QUIETDUR, (unsigned short) pDevice->sQuiet[uCurrentQuietIndex].wDuration);
--			if (pDevice->byQuietStartCount == 0) {
--				pDevice->bEnableFirstQuiet = false;
--				MACvRegBitsOn(pDevice->PortOffset, MAC_REG_MSRCTL, (MSRCTL_QUIETTXCHK | MSRCTL_QUIETEN));
--			} else {
--				pDevice->bEnableFirstQuiet = true;
+-		if (is_multicast_ether_addr((unsigned char *)(skb->data))) {
+-			uNodeIndex = 0;
+-			bNodeExist = true;
+-			if (pMgmt->sNodeDBTable[0].bPSEnable) {
+-				skb_queue_tail(&(pMgmt->sNodeDBTable[0].sTxPSQueue), skb);
+-				pMgmt->sNodeDBTable[0].wEnQueueCnt++;
+-				// set tx map
+-				pMgmt->abyPSTxMap[0] |= byMask[0];
+-				spin_unlock_irq(&pDevice->lock);
+-				return 0;
 -			}
--			MACvSelectPage0(pDevice->PortOffset);
 -		} else {
--			if (pDevice->dwCurrentQuietEndTime > pDevice->sQuiet[uCurrentQuietIndex].dwStartTime) {
--				/* overlap with previous Quiet */
--				dwGap =  pDevice->dwCurrentQuietEndTime - pDevice->sQuiet[uCurrentQuietIndex].dwStartTime;
--				if (dwGap >= pDevice->sQuiet[uCurrentQuietIndex].wDuration) {
--					/*
--					 * return false to indicate next quiet
--					 * expired, should call this function
--					 * again
--					 */
--					return false;
+-			if (BSSDBbIsSTAInNodeDB(pMgmt, (unsigned char *)(skb->data), &uNodeIndex)) {
+-				if (pMgmt->sNodeDBTable[uNodeIndex].bPSEnable) {
+-					skb_queue_tail(&pMgmt->sNodeDBTable[uNodeIndex].sTxPSQueue, skb);
+-					pMgmt->sNodeDBTable[uNodeIndex].wEnQueueCnt++;
+-					// set tx map
+-					wAID = pMgmt->sNodeDBTable[uNodeIndex].wAID;
+-					pMgmt->abyPSTxMap[wAID >> 3] |=  byMask[wAID & 7];
+-					pr_debug("Set:pMgmt->abyPSTxMap[%d]= %d\n",
+-						 (wAID >> 3),
+-						 pMgmt->abyPSTxMap[wAID >> 3]);
+-					spin_unlock_irq(&pDevice->lock);
+-					return 0;
 -				}
--				dwDuration = pDevice->sQuiet[uCurrentQuietIndex].wDuration - dwGap;
--				dwGap = 0;
+-
+-				if (pMgmt->sNodeDBTable[uNodeIndex].bShortPreamble)
+-					pDevice->byPreambleType = pDevice->byShortPreamble;
+-				else
+-					pDevice->byPreambleType = PREAMBLE_LONG;
+-
+-				bNodeExist = true;
+-
+-			}
+-		}
+-
+-		if (!bNodeExist) {
+-			pr_debug("Unknown STA not found in node DB\n");
+-			dev_kfree_skb_irq(skb);
+-			spin_unlock_irq(&pDevice->lock);
+-			return 0;
+-		}
+-	}
+-
+-	pHeadTD = pDevice->apCurrTD[TYPE_AC0DMA];
+-
+-	pHeadTD->m_td1TD1.byTCR = (TCR_EDP|TCR_STP);
+-
+-	memcpy(pDevice->sTxEthHeader.abyDstAddr, (unsigned char *)(skb->data), ETH_HLEN);
+-	cbFrameBodySize = skb->len - ETH_HLEN;
+-	// 802.1H
+-	if (ntohs(pDevice->sTxEthHeader.wType) > ETH_DATA_LEN)
+-		cbFrameBodySize += 8;
+-
+-	if (pDevice->bEncryptionEnable) {
+-		bNeedEncryption = true;
+-		// get Transmit key
+-		do {
+-			if ((pDevice->pMgmt->eCurrMode == WMAC_MODE_ESS_STA) &&
+-			    (pDevice->pMgmt->eCurrState == WMAC_STATE_ASSOC)) {
+-				pbyBSSID = pDevice->abyBSSID;
+-				// get pairwise key
+-				if (KeybGetTransmitKey(&(pDevice->sKey), pbyBSSID, PAIRWISE_KEY, &pTransmitKey) == false) {
+-					// get group key
+-					if (KeybGetTransmitKey(&(pDevice->sKey), pbyBSSID, GROUP_KEY, &pTransmitKey) == true) {
+-						bTKIP_UseGTK = true;
+-						pr_debug("Get GTK\n");
+-						break;
+-					}
+-				} else {
+-					pr_debug("Get PTK\n");
+-					break;
+-				}
+-			} else if (pDevice->pMgmt->eCurrMode == WMAC_MODE_IBSS_STA) {
+-				pbyBSSID = pDevice->sTxEthHeader.abyDstAddr;  //TO_DS = 0 and FROM_DS = 0 --> 802.11 MAC Address1
+-				pr_debug("IBSS Serach Key:\n");
+-				for (ii = 0; ii < 6; ii++)
+-					pr_debug("%x\n", *(pbyBSSID+ii));
+-				pr_debug("\n");
+-
+-				// get pairwise key
+-				if (KeybGetTransmitKey(&(pDevice->sKey), pbyBSSID, PAIRWISE_KEY, &pTransmitKey) == true)
+-					break;
+-			}
+-			// get group key
+-			pbyBSSID = pDevice->abyBroadcastAddr;
+-			if (KeybGetTransmitKey(&(pDevice->sKey), pbyBSSID, GROUP_KEY, &pTransmitKey) == false) {
+-				pTransmitKey = NULL;
+-				if (pDevice->pMgmt->eCurrMode == WMAC_MODE_IBSS_STA)
+-					pr_debug("IBSS and KEY is NULL. [%d]\n",
+-						 pDevice->pMgmt->eCurrMode);
+-				else
+-					pr_debug("NOT IBSS and KEY is NULL. [%d]\n",
+-						 pDevice->pMgmt->eCurrMode);
 -			} else {
--				dwGap = pDevice->sQuiet[uCurrentQuietIndex].dwStartTime - pDevice->dwCurrentQuietEndTime;
--				dwDuration = pDevice->sQuiet[uCurrentQuietIndex].wDuration;
+-				bTKIP_UseGTK = true;
+-				pr_debug("Get GTK\n");
 -			}
--			/* set GAP and Next duration */
--			MACvSelectPage1(pDevice->PortOffset);
--			VNSvOutPortW(pDevice->PortOffset + MAC_REG_QUIETGAP, (unsigned short) dwGap);
--			VNSvOutPortW(pDevice->PortOffset + MAC_REG_QUIETDUR, (unsigned short) dwDuration);
--			MACvRegBitsOn(pDevice->PortOffset, MAC_REG_MSRCTL, MSRCTL_QUIETRPT);
--			MACvSelectPage0(pDevice->PortOffset);
+-		} while (false);
+-	}
+-
+-	if (pDevice->bEnableHostWEP) {
+-		pr_debug("acdma0: STA index %d\n", uNodeIndex);
+-		if (pDevice->bEncryptionEnable) {
+-			pTransmitKey = &STempKey;
+-			pTransmitKey->byCipherSuite = pMgmt->sNodeDBTable[uNodeIndex].byCipherSuite;
+-			pTransmitKey->dwKeyIndex = pMgmt->sNodeDBTable[uNodeIndex].dwKeyIndex;
+-			pTransmitKey->uKeyLength = pMgmt->sNodeDBTable[uNodeIndex].uWepKeyLength;
+-			pTransmitKey->dwTSC47_16 = pMgmt->sNodeDBTable[uNodeIndex].dwTSC47_16;
+-			pTransmitKey->wTSC15_0 = pMgmt->sNodeDBTable[uNodeIndex].wTSC15_0;
+-			memcpy(pTransmitKey->abyKey,
+-			       &pMgmt->sNodeDBTable[uNodeIndex].abyWepKey[0],
+-			       pTransmitKey->uKeyLength
+-				);
 -		}
--		pDevice->bQuietEnable = true;
--		pDevice->dwCurrentQuietEndTime = pDevice->sQuiet[uCurrentQuietIndex].dwStartTime;
--		pDevice->dwCurrentQuietEndTime += pDevice->sQuiet[uCurrentQuietIndex].wDuration;
--		if (pDevice->sQuiet[uCurrentQuietIndex].byPeriod == 0) {
--			/* not period disable current quiet element */
--			pDevice->sQuiet[uCurrentQuietIndex].bEnable = false;
+-	}
+-
+-	uMACfragNum = cbGetFragCount(pDevice, pTransmitKey, cbFrameBodySize, &pDevice->sTxEthHeader);
+-
+-	if (uMACfragNum > AVAIL_TD(pDevice, TYPE_AC0DMA)) {
+-		pr_debug("uMACfragNum > AVAIL_TD(TYPE_AC0DMA) = %d\n",
+-			 uMACfragNum);
+-		dev_kfree_skb_irq(skb);
+-		spin_unlock_irq(&pDevice->lock);
+-		return 0;
+-	}
+-
+-	if (pTransmitKey != NULL) {
+-		if ((pTransmitKey->byCipherSuite == KEY_CTL_WEP) &&
+-		    (pTransmitKey->uKeyLength == WLAN_WEP232_KEYLEN)) {
+-			uMACfragNum = 1; //WEP256 doesn't support fragment
+-		}
+-	}
+-
+-	byPktType = (unsigned char)pDevice->byPacketType;
+-
+-	if (pDevice->bFixRate) {
+-		if (pDevice->eCurrentPHYType == PHY_TYPE_11B) {
+-			if (pDevice->uConnectionRate >= RATE_11M)
+-				pDevice->wCurrentRate = RATE_11M;
+-			else
+-				pDevice->wCurrentRate = (unsigned short)pDevice->uConnectionRate;
 -		} else {
--			/* set next period start time */
--			dwNextTime = (unsigned long) pDevice->sQuiet[uCurrentQuietIndex].byPeriod;
--			dwNextTime *= pDevice->wBeaconInterval;
--			pDevice->sQuiet[uCurrentQuietIndex].dwStartTime = dwNextTime;
--		}
--		if (pDevice->dwCurrentQuietEndTime > 0x80010000) {
--			/* decreament all time to avoid wrap around */
--			for (ii = 0; ii < MAX_QUIET_COUNT; ii++) {
--				if (pDevice->sQuiet[ii].bEnable == true)
--					pDevice->sQuiet[ii].dwStartTime -= 0x80000000;
+-			if ((pDevice->eCurrentPHYType == PHY_TYPE_11A) &&
+-			    (pDevice->uConnectionRate <= RATE_6M)) {
+-				pDevice->wCurrentRate = RATE_6M;
+-			} else {
+-				if (pDevice->uConnectionRate >= RATE_54M)
+-					pDevice->wCurrentRate = RATE_54M;
+-				else
+-					pDevice->wCurrentRate = (unsigned short)pDevice->uConnectionRate;
 -
 -			}
--			pDevice->dwCurrentQuietEndTime -= 0x80000000;
+-		}
+-		pDevice->byACKRate = (unsigned char) pDevice->wCurrentRate;
+-		pDevice->byTopCCKBasicRate = RATE_1M;
+-		pDevice->byTopOFDMBasicRate = RATE_6M;
+-	} else {
+-		//auto rate
+-		if (pDevice->sTxEthHeader.wType == TYPE_PKT_802_1x) {
+-			if (pDevice->eCurrentPHYType != PHY_TYPE_11A) {
+-				pDevice->wCurrentRate = RATE_1M;
+-				pDevice->byACKRate = RATE_1M;
+-				pDevice->byTopCCKBasicRate = RATE_1M;
+-				pDevice->byTopOFDMBasicRate = RATE_6M;
+-			} else {
+-				pDevice->wCurrentRate = RATE_6M;
+-				pDevice->byACKRate = RATE_6M;
+-				pDevice->byTopCCKBasicRate = RATE_1M;
+-				pDevice->byTopOFDMBasicRate = RATE_6M;
+-			}
+-		} else {
+-			VNTWIFIvGetTxRate(pDevice->pMgmt,
+-					  pDevice->sTxEthHeader.abyDstAddr,
+-					  &(pDevice->wCurrentRate),
+-					  &(pDevice->byACKRate),
+-					  &(pDevice->byTopCCKBasicRate),
+-					  &(pDevice->byTopOFDMBasicRate));
+-
 -		}
 -	}
--	return true;
--}
 -
--/*
-- * Description:
-- *    Set Local Power Constraint
-- *
-- * Parameters:
-- *  In:
-- *      hDeviceContext - device structure point
-- *  Out:
-- *      none
-- *
-- * Return Value: none.
-- */
--void
--CARDvSetPowerConstraint(
--	struct vnt_private *pDevice,
--	unsigned char byChannel,
--	char byPower
--)
--{
 -
--	if (byChannel > CB_MAX_CHANNEL_24G) {
--		if (pDevice->bCountryInfo5G == true)
--			pDevice->abyLocalPwr[byChannel] = pDevice->abyRegPwr[byChannel] - byPower;
--
+-	if (pDevice->wCurrentRate <= RATE_11M) {
+-		byPktType = PK_TYPE_11B;
+-	} else if (pDevice->eCurrentPHYType == PHY_TYPE_11A) {
+-		byPktType = PK_TYPE_11A;
 -	} else {
--		if (pDevice->bCountryInfo24G == true)
--			pDevice->abyLocalPwr[byChannel] = pDevice->abyRegPwr[byChannel] - byPower;
--
+-		if (pDevice->bProtectMode)
+-			byPktType = PK_TYPE_11GB;
+-		else
+-			byPktType = PK_TYPE_11GA;
 -	}
--}
 -
--/*
-- * Description:
-- *    Set Local Power Constraint
-- *
-- * Parameters:
-- *  In:
-- *      hDeviceContext - device structure point
-- *  Out:
-- *      none
-- *
-- * Return Value: none.
-- */
--void
--CARDvGetPowerCapability(
--	struct vnt_private *pDevice,
--	unsigned char *pbyMinPower,
--	unsigned char *pbyMaxPower
--)
--{
--	unsigned char byDec = 0;
+-	if (bNeedEncryption) {
+-		pr_debug("ntohs Pkt Type=%04x\n",
+-			 ntohs(pDevice->sTxEthHeader.wType));
+-		if ((pDevice->sTxEthHeader.wType) == TYPE_PKT_802_1x) {
+-			bNeedEncryption = false;
+-			pr_debug("Pkt Type=%04x\n",
+-				 (pDevice->sTxEthHeader.wType));
+-			if ((pDevice->pMgmt->eCurrMode == WMAC_MODE_ESS_STA) && (pDevice->pMgmt->eCurrState == WMAC_STATE_ASSOC)) {
+-				if (pTransmitKey == NULL) {
+-					pr_debug("Don't Find TX KEY\n");
+-				} else {
+-					if (bTKIP_UseGTK) {
+-						pr_debug("error: KEY is GTK!!~~\n");
+-					} else {
+-						pr_debug("Find PTK [%lX]\n",
+-							 pTransmitKey->dwKeyIndex);
+-						bNeedEncryption = true;
+-					}
+-				}
+-			}
 -
--	*pbyMaxPower = pDevice->abyOFDMDefaultPwr[pDevice->byCurrentCh];
--	byDec = pDevice->abyOFDMPwrTbl[pDevice->byCurrentCh];
--	if (pDevice->byRFType == RF_UW2452) {
--		byDec *= 3;
--		byDec >>= 1;
--	} else {
--		byDec <<= 1;
+-			if (pDevice->byCntMeasure == 2) {
+-				bNeedDeAuth = true;
+-				pDevice->s802_11Counter.TKIPCounterMeasuresInvoked++;
+-			}
+-
+-			if (pDevice->bEnableHostWEP) {
+-				if ((uNodeIndex != 0) &&
+-				    (pMgmt->sNodeDBTable[uNodeIndex].dwKeyIndex & PAIRWISE_KEY)) {
+-					pr_debug("Find PTK [%lX]\n",
+-						 pTransmitKey->dwKeyIndex);
+-					bNeedEncryption = true;
+-				}
+-			}
+-		} else {
+-			if (pTransmitKey == NULL) {
+-				pr_debug("return no tx key\n");
+-				dev_kfree_skb_irq(skb);
+-				spin_unlock_irq(&pDevice->lock);
+-				return 0;
+-			}
+-		}
 -	}
--	*pbyMinPower = pDevice->abyOFDMDefaultPwr[pDevice->byCurrentCh] - byDec;
+-
+-	vGenerateFIFOHeader(pDevice, byPktType, pDevice->pbyTmpBuff, bNeedEncryption,
+-			    cbFrameBodySize, TYPE_AC0DMA, pHeadTD,
+-			    &pDevice->sTxEthHeader, (unsigned char *)skb->data, pTransmitKey, uNodeIndex,
+-			    &uMACfragNum,
+-			    &cbHeaderSize
+-		);
+-
+-	if (MACbIsRegBitsOn(pDevice->PortOffset, MAC_REG_PSCTL, PSCTL_PS)) {
+-		// Disable PS
+-		MACbPSWakeup(pDevice->PortOffset);
+-	}
+-	pDevice->bPWBitOn = false;
+-
+-	pLastTD = pHeadTD;
+-	for (ii = 0; ii < uMACfragNum; ii++) {
+-		// Poll Transmit the adapter
+-		wmb();
+-		pHeadTD->m_td0TD0.f1Owner = OWNED_BY_NIC;
+-		wmb();
+-		if (ii == uMACfragNum - 1)
+-			pLastTD = pHeadTD;
+-		pHeadTD = pHeadTD->next;
+-	}
+-
+-	// Save the information needed by the tx interrupt handler
+-	// to complete the Send request
+-	pLastTD->pTDInfo->skb = skb;
+-	pLastTD->pTDInfo->byFlags = 0;
+-	pLastTD->pTDInfo->byFlags |= TD_FLAGS_NETIF_SKB;
+-	pDevice->nTxDataTimeCout = 0; //2008-8-21 chester <add> for send null packet
+-
+-	if (AVAIL_TD(pDevice, TYPE_AC0DMA) <= 1)
+-		netif_stop_queue(dev);
+-
+-	pDevice->apCurrTD[TYPE_AC0DMA] = pHeadTD;
+-
+-	if (pDevice->bFixRate)
+-		pr_debug("FixRate:Rate is %d,TxPower is %d\n", pDevice->wCurrentRate, pDevice->byCurPwr);
+-
+-	{
+-		unsigned char Protocol_Version;    //802.1x Authentication
+-		unsigned char Packet_Type;           //802.1x Authentication
+-		unsigned char Descriptor_type;
+-		unsigned short Key_info;
+-		bool bTxeapol_key = false;
+-
+-		Protocol_Version = skb->data[ETH_HLEN];
+-		Packet_Type = skb->data[ETH_HLEN+1];
+-		Descriptor_type = skb->data[ETH_HLEN+1+1+2];
+-		Key_info = (skb->data[ETH_HLEN+1+1+2+1] << 8)|(skb->data[ETH_HLEN+1+1+2+2]);
+-		if (pDevice->sTxEthHeader.wType == TYPE_PKT_802_1x) {
+-			if (((Protocol_Version == 1) || (Protocol_Version == 2)) &&
+-			    (Packet_Type == 3)) {  //802.1x OR eapol-key challenge frame transfer
+-				bTxeapol_key = true;
+-				if ((Descriptor_type == 254) || (Descriptor_type == 2)) {       //WPA or RSN
+-					if (!(Key_info & BIT3) &&   //group-key challenge
+-					    (Key_info & BIT8) && (Key_info & BIT9)) {    //send 2/2 key
+-						pDevice->fWPA_Authened = true;
+-						if (Descriptor_type == 254)
+-							pr_debug("WPA ");
+-						else
+-							pr_debug("WPA2 ");
+-						pr_debug("Authentication completed!!\n");
+-					}
+-				}
+-			}
+-		}
+-	}
+-
+-	MACvTransmitAC0(pDevice->PortOffset);
+-
+-	dev->trans_start = jiffies;
+-
+-	spin_unlock_irq(&pDevice->lock);
+-	return 0;
 -}
 -
--/*
-- * Description:
-- *    Get Current Tx Power
-- *
-- * Parameters:
-- *  In:
-- *      hDeviceContext - device structure point
-- *  Out:
-- *      none
-- *
-- * Return Value: none.
-- */
--char
--CARDbyGetTransmitPower(
--	struct vnt_private *pDevice
--)
--{
--
--	return pDevice->byCurPwrdBm;
--}
--
- void
- CARDvSafeResetTx(
- 	struct vnt_private *pDevice
-diff --git a/drivers/staging/vt6655/card.h b/drivers/staging/vt6655/card.h
-index a51a849..3a626a3 100644
---- a/drivers/staging/vt6655/card.h
-+++ b/drivers/staging/vt6655/card.h
-@@ -85,91 +85,16 @@ void CARDvUpdateNextTBTT(void __iomem *dwIoBase, u64 qwTSF, unsigned short wBeac
- bool CARDbGetCurrentTSF(void __iomem *dwIoBase, u64 *pqwCurrTSF);
- u64 CARDqGetNextTBTT(u64 qwTSF, unsigned short wBeaconInterval);
- u64 CARDqGetTSFOffset(unsigned char byRxRate, u64 qwTSF1, u64 qwTSF2);
--bool CARDbSetTxPower(struct vnt_private *, unsigned long ulTxPower);
- unsigned char CARDbyGetPktType(struct vnt_private *);
- void CARDvSafeResetTx(struct vnt_private *);
- void CARDvSafeResetRx(struct vnt_private *);
- bool CARDbRadioPowerOff(struct vnt_private *);
- bool CARDbRadioPowerOn(struct vnt_private *);
--bool CARDbIsShortPreamble(struct vnt_private *);
--bool CARDbIsShorSlotTime(struct vnt_private *);
- bool CARDbSetPhyParameter(struct vnt_private *, CARD_PHY_TYPE ePHYType,
- 			  unsigned short wCapInfo, unsigned char byERPField,
- 			  void *pvSupportRateIEs, void *pvExtSupportRateIEs);
- bool CARDbUpdateTSF(struct vnt_private *, unsigned char byRxRate,
- 		    u64 qwBSSTimestamp, u64 qwLocalTSF);
--bool CARDbStopTxPacket(struct vnt_private *, CARD_PKT_TYPE ePktType);
--bool CARDbStartTxPacket(struct vnt_private *, CARD_PKT_TYPE ePktType);
- bool CARDbSetBeaconPeriod(struct vnt_private *, unsigned short wBeaconInterval);
--bool CARDbSetBSSID(struct vnt_private *,
--		   unsigned char *pbyBSSID, enum nl80211_iftype);
--
--bool CARDbPowerDown(struct vnt_private *);
--
--bool CARDbSetTxDataRate(struct vnt_private *, unsigned short wDataRate);
--
--bool CARDbRemoveKey(struct vnt_private *, unsigned char *pbyBSSID);
--
--bool
--CARDbAdd_PMKID_Candidate(
--	struct vnt_private *,
--	unsigned char *pbyBSSID,
--	bool bRSNCapExist,
--	unsigned short wRSNCap
--);
--
--void *
--CARDpGetCurrentAddress(
--	struct vnt_private *
--);
--
--bool
--CARDbStartMeasure(
--	struct vnt_private *,
--	void *pvMeasureEIDs,
--	unsigned int uNumOfMeasureEIDs
--);
--
--bool
--CARDbChannelSwitch(
--	struct vnt_private *,
--	unsigned char byMode,
--	unsigned char byNewChannel,
--	unsigned char byCount
--);
--
--bool
--CARDbSetQuiet(
--	struct vnt_private *,
--	bool bResetQuiet,
--	unsigned char byQuietCount,
--	unsigned char byQuietPeriod,
--	unsigned short wQuietDuration,
--	unsigned short wQuietOffset
--);
--
--bool
--CARDbStartQuiet(
--	struct vnt_private *
--);
--
--void
--CARDvSetPowerConstraint(
--	struct vnt_private *,
--	unsigned char byChannel,
--	char byPower
--);
--
--void
--CARDvGetPowerCapability(
--	struct vnt_private *,
--	unsigned char *pbyMinPower,
--	unsigned char *pbyMaxPower
--);
--
--char
--CARDbyGetTransmitPower(
--	struct vnt_private *
--);
+ static  irqreturn_t  device_intr(int irq,  void *dev_instance)
+ {
+ 	struct vnt_private *pDevice = dev_instance;
+@@ -2095,477 +1391,6 @@ static  irqreturn_t  device_intr(int irq,  void *dev_instance)
+ 	return IRQ_RETVAL(handled);
+ }
  
- #endif // __CARD_H__
+-static void device_set_multi(struct net_device *dev) {
+-	struct vnt_private *pDevice = netdev_priv(dev);
+-	PSMgmtObject     pMgmt = pDevice->pMgmt;
+-	u32              mc_filter[2];
+-	struct netdev_hw_addr *ha;
+-
+-	VNSvInPortB(pDevice->PortOffset + MAC_REG_RCR, &(pDevice->byRxMode));
+-
+-	if (dev->flags & IFF_PROMISC) {         /* Set promiscuous. */
+-		pr_notice("%s: Promiscuous mode enabled\n", dev->name);
+-		/* Unconditionally log net taps. */
+-		pDevice->byRxMode |= (RCR_MULTICAST|RCR_BROADCAST|RCR_UNICAST);
+-	} else if ((netdev_mc_count(dev) > pDevice->multicast_limit)
+-		 ||  (dev->flags & IFF_ALLMULTI)) {
+-		MACvSelectPage1(pDevice->PortOffset);
+-		VNSvOutPortD(pDevice->PortOffset + MAC_REG_MAR0, 0xffffffff);
+-		VNSvOutPortD(pDevice->PortOffset + MAC_REG_MAR0 + 4, 0xffffffff);
+-		MACvSelectPage0(pDevice->PortOffset);
+-		pDevice->byRxMode |= (RCR_MULTICAST|RCR_BROADCAST);
+-	} else {
+-		memset(mc_filter, 0, sizeof(mc_filter));
+-		netdev_for_each_mc_addr(ha, dev) {
+-			int bit_nr = ether_crc(ETH_ALEN, ha->addr) >> 26;
+-
+-			mc_filter[bit_nr >> 5] |= cpu_to_le32(1 << (bit_nr & 31));
+-		}
+-		MACvSelectPage1(pDevice->PortOffset);
+-		VNSvOutPortD(pDevice->PortOffset + MAC_REG_MAR0, mc_filter[0]);
+-		VNSvOutPortD(pDevice->PortOffset + MAC_REG_MAR0 + 4, mc_filter[1]);
+-		MACvSelectPage0(pDevice->PortOffset);
+-		pDevice->byRxMode &= ~(RCR_UNICAST);
+-		pDevice->byRxMode |= (RCR_MULTICAST|RCR_BROADCAST);
+-	}
+-
+-	if (pMgmt->eConfigMode == WMAC_CONFIG_AP) {
+-		// If AP mode, don't enable RCR_UNICAST. Since hw only compare addr1 with local mac.
+-		pDevice->byRxMode |= (RCR_MULTICAST|RCR_BROADCAST);
+-		pDevice->byRxMode &= ~(RCR_UNICAST);
+-	}
+-
+-	VNSvOutPortB(pDevice->PortOffset + MAC_REG_RCR, pDevice->byRxMode);
+-	pr_debug("pDevice->byRxMode = %x\n", pDevice->byRxMode);
+-}
+-
+-static int  device_ioctl(struct net_device *dev, struct ifreq *rq, int cmd)
+-{
+-	struct vnt_private *pDevice = netdev_priv(dev);
+-	struct iwreq *wrq = (struct iwreq *)rq;
+-	int rc = 0;
+-	PSMgmtObject pMgmt = pDevice->pMgmt;
+-	PSCmdRequest pReq;
+-
+-	if (pMgmt == NULL) {
+-		rc = -EFAULT;
+-		return rc;
+-	}
+-
+-	switch (cmd) {
+-	case SIOCGIWNAME:
+-		rc = iwctl_giwname(dev, NULL, (char *)&(wrq->u.name), NULL);
+-		break;
+-
+-	case SIOCGIWNWID:     //0x8b03  support
+-		rc = -EOPNOTSUPP;
+-		break;
+-
+-		// Set frequency/channel
+-	case SIOCSIWFREQ:
+-		rc = iwctl_siwfreq(dev, NULL, &(wrq->u.freq), NULL);
+-		break;
+-
+-		// Get frequency/channel
+-	case SIOCGIWFREQ:
+-		rc = iwctl_giwfreq(dev, NULL, &(wrq->u.freq), NULL);
+-		break;
+-
+-		// Set desired network name (ESSID)
+-	case SIOCSIWESSID:
+-
+-	{
+-		char essid[IW_ESSID_MAX_SIZE+1];
+-
+-		if (wrq->u.essid.length > IW_ESSID_MAX_SIZE) {
+-			rc = -E2BIG;
+-			break;
+-		}
+-		if (copy_from_user(essid, wrq->u.essid.pointer,
+-				   wrq->u.essid.length)) {
+-			rc = -EFAULT;
+-			break;
+-		}
+-		rc = iwctl_siwessid(dev, NULL,
+-				    &(wrq->u.essid), essid);
+-	}
+-	break;
+-
+-	// Get current network name (ESSID)
+-	case SIOCGIWESSID:
+-
+-	{
+-		char essid[IW_ESSID_MAX_SIZE+1];
+-
+-		if (wrq->u.essid.pointer)
+-			rc = iwctl_giwessid(dev, NULL,
+-					    &(wrq->u.essid), essid);
+-		if (copy_to_user(wrq->u.essid.pointer,
+-				 essid,
+-				 wrq->u.essid.length))
+-			rc = -EFAULT;
+-	}
+-	break;
+-
+-	case SIOCSIWAP:
+-
+-		rc = iwctl_siwap(dev, NULL, &(wrq->u.ap_addr), NULL);
+-		break;
+-
+-		// Get current Access Point (BSSID)
+-	case SIOCGIWAP:
+-		rc = iwctl_giwap(dev, NULL, &(wrq->u.ap_addr), NULL);
+-		break;
+-
+-		// Set desired station name
+-	case SIOCSIWNICKN:
+-		pr_debug(" SIOCSIWNICKN\n");
+-		rc = -EOPNOTSUPP;
+-		break;
+-
+-		// Get current station name
+-	case SIOCGIWNICKN:
+-		pr_debug(" SIOCGIWNICKN\n");
+-		rc = -EOPNOTSUPP;
+-		break;
+-
+-		// Set the desired bit-rate
+-	case SIOCSIWRATE:
+-		rc = iwctl_siwrate(dev, NULL, &(wrq->u.bitrate), NULL);
+-		break;
+-
+-		// Get the current bit-rate
+-	case SIOCGIWRATE:
+-
+-		rc = iwctl_giwrate(dev, NULL, &(wrq->u.bitrate), NULL);
+-		break;
+-
+-		// Set the desired RTS threshold
+-	case SIOCSIWRTS:
+-
+-		rc = iwctl_siwrts(dev, NULL, &(wrq->u.rts), NULL);
+-		break;
+-
+-		// Get the current RTS threshold
+-	case SIOCGIWRTS:
+-
+-		rc = iwctl_giwrts(dev, NULL, &(wrq->u.rts), NULL);
+-		break;
+-
+-		// Set the desired fragmentation threshold
+-	case SIOCSIWFRAG:
+-
+-		rc = iwctl_siwfrag(dev, NULL, &(wrq->u.frag), NULL);
+-		break;
+-
+-		// Get the current fragmentation threshold
+-	case SIOCGIWFRAG:
+-
+-		rc = iwctl_giwfrag(dev, NULL, &(wrq->u.frag), NULL);
+-		break;
+-
+-		// Set mode of operation
+-	case SIOCSIWMODE:
+-		rc = iwctl_siwmode(dev, NULL, &(wrq->u.mode), NULL);
+-		break;
+-
+-		// Get mode of operation
+-	case SIOCGIWMODE:
+-		rc = iwctl_giwmode(dev, NULL, &(wrq->u.mode), NULL);
+-		break;
+-
+-		// Set WEP keys and mode
+-	case SIOCSIWENCODE: {
+-		char abyKey[WLAN_WEP232_KEYLEN];
+-
+-		if (wrq->u.encoding.pointer) {
+-			if (wrq->u.encoding.length > WLAN_WEP232_KEYLEN) {
+-				rc = -E2BIG;
+-				break;
+-			}
+-			memset(abyKey, 0, WLAN_WEP232_KEYLEN);
+-			if (copy_from_user(abyKey,
+-					   wrq->u.encoding.pointer,
+-					   wrq->u.encoding.length)) {
+-				rc = -EFAULT;
+-				break;
+-			}
+-		} else if (wrq->u.encoding.length != 0) {
+-			rc = -EINVAL;
+-			break;
+-		}
+-		rc = iwctl_siwencode(dev, NULL, &(wrq->u.encoding), abyKey);
+-	}
+-	break;
+-
+-	// Get the WEP keys and mode
+-	case SIOCGIWENCODE:
+-
+-		if (!capable(CAP_NET_ADMIN)) {
+-			rc = -EPERM;
+-			break;
+-		}
+-		{
+-			char abyKey[WLAN_WEP232_KEYLEN];
+-
+-			rc = iwctl_giwencode(dev, NULL, &(wrq->u.encoding), abyKey);
+-			if (rc != 0)
+-				break;
+-			if (wrq->u.encoding.pointer) {
+-				if (copy_to_user(wrq->u.encoding.pointer,
+-						 abyKey,
+-						 wrq->u.encoding.length))
+-					rc = -EFAULT;
+-			}
+-		}
+-		break;
+-
+-		// Get the current Tx-Power
+-	case SIOCGIWTXPOW:
+-		pr_debug(" SIOCGIWTXPOW\n");
+-		rc = -EOPNOTSUPP;
+-		break;
+-
+-	case SIOCSIWTXPOW:
+-		pr_debug(" SIOCSIWTXPOW\n");
+-		rc = -EOPNOTSUPP;
+-		break;
+-
+-	case SIOCSIWRETRY:
+-
+-		rc = iwctl_siwretry(dev, NULL, &(wrq->u.retry), NULL);
+-		break;
+-
+-	case SIOCGIWRETRY:
+-
+-		rc = iwctl_giwretry(dev, NULL, &(wrq->u.retry), NULL);
+-		break;
+-
+-		// Get range of parameters
+-	case SIOCGIWRANGE:
+-
+-	{
+-		struct iw_range range;
+-
+-		rc = iwctl_giwrange(dev, NULL, &(wrq->u.data), (char *)&range);
+-		if (copy_to_user(wrq->u.data.pointer, &range, sizeof(struct iw_range)))
+-			rc = -EFAULT;
+-	}
+-
+-	break;
+-
+-	case SIOCGIWPOWER:
+-
+-		rc = iwctl_giwpower(dev, NULL, &(wrq->u.power), NULL);
+-		break;
+-
+-	case SIOCSIWPOWER:
+-
+-		rc = iwctl_siwpower(dev, NULL, &(wrq->u.power), NULL);
+-		break;
+-
+-	case SIOCGIWSENS:
+-
+-		rc = iwctl_giwsens(dev, NULL, &(wrq->u.sens), NULL);
+-		break;
+-
+-	case SIOCSIWSENS:
+-		pr_debug(" SIOCSIWSENS\n");
+-		rc = -EOPNOTSUPP;
+-		break;
+-
+-	case SIOCGIWAPLIST: {
+-		char buffer[IW_MAX_AP * (sizeof(struct sockaddr) + sizeof(struct iw_quality))];
+-
+-		if (wrq->u.data.pointer) {
+-			rc = iwctl_giwaplist(dev, NULL, &(wrq->u.data), buffer);
+-			if (rc == 0) {
+-				if (copy_to_user(wrq->u.data.pointer,
+-						 buffer,
+-						 (wrq->u.data.length * (sizeof(struct sockaddr) +  sizeof(struct iw_quality)))
+-					    ))
+-					rc = -EFAULT;
+-			}
+-		}
+-	}
+-	break;
+-
+-#ifdef WIRELESS_SPY
+-	// Set the spy list
+-	case SIOCSIWSPY:
+-
+-		pr_debug(" SIOCSIWSPY\n");
+-		rc = -EOPNOTSUPP;
+-		break;
+-
+-		// Get the spy list
+-	case SIOCGIWSPY:
+-
+-		pr_debug(" SIOCGIWSPY\n");
+-		rc = -EOPNOTSUPP;
+-		break;
+-
+-#endif // WIRELESS_SPY
+-
+-	case SIOCGIWPRIV:
+-		pr_debug(" SIOCGIWPRIV\n");
+-		rc = -EOPNOTSUPP;
+-		break;
+-
+-//2008-0409-07, <Add> by Einsn Liu
+-#ifdef WPA_SUPPLICANT_DRIVER_WEXT_SUPPORT
+-	case SIOCSIWAUTH:
+-		pr_debug(" SIOCSIWAUTH\n");
+-		rc = iwctl_siwauth(dev, NULL, &(wrq->u.param), NULL);
+-		break;
+-
+-	case SIOCGIWAUTH:
+-		pr_debug(" SIOCGIWAUTH\n");
+-		rc = iwctl_giwauth(dev, NULL, &(wrq->u.param), NULL);
+-		break;
+-
+-	case SIOCSIWGENIE:
+-		pr_debug(" SIOCSIWGENIE\n");
+-		rc = iwctl_siwgenie(dev, NULL, &(wrq->u.data), wrq->u.data.pointer);
+-		break;
+-
+-	case SIOCGIWGENIE:
+-		pr_debug(" SIOCGIWGENIE\n");
+-		rc = iwctl_giwgenie(dev, NULL, &(wrq->u.data), wrq->u.data.pointer);
+-		break;
+-
+-	case SIOCSIWENCODEEXT: {
+-		char extra[sizeof(struct iw_encode_ext)+MAX_KEY_LEN+1];
+-
+-		pr_debug(" SIOCSIWENCODEEXT\n");
+-		if (wrq->u.encoding.pointer) {
+-			memset(extra, 0, sizeof(struct iw_encode_ext)+MAX_KEY_LEN + 1);
+-			if (wrq->u.encoding.length > (sizeof(struct iw_encode_ext) + MAX_KEY_LEN)) {
+-				rc = -E2BIG;
+-				break;
+-			}
+-			if (copy_from_user(extra, wrq->u.encoding.pointer, wrq->u.encoding.length)) {
+-				rc = -EFAULT;
+-				break;
+-			}
+-		} else if (wrq->u.encoding.length != 0) {
+-			rc = -EINVAL;
+-			break;
+-		}
+-		rc = iwctl_siwencodeext(dev, NULL, &(wrq->u.encoding), extra);
+-	}
+-	break;
+-
+-	case SIOCGIWENCODEEXT:
+-		pr_debug(" SIOCGIWENCODEEXT\n");
+-		rc = iwctl_giwencodeext(dev, NULL, &(wrq->u.encoding), NULL);
+-		break;
+-
+-	case SIOCSIWMLME:
+-		pr_debug(" SIOCSIWMLME\n");
+-		rc = iwctl_siwmlme(dev, NULL, &(wrq->u.data), wrq->u.data.pointer);
+-		break;
+-
+-#endif // #ifdef WPA_SUPPLICANT_DRIVER_WEXT_SUPPORT
+-//End Add -- //2008-0409-07, <Add> by Einsn Liu
+-
+-	case IOCTL_CMD_TEST:
+-
+-		if (!(pDevice->flags & DEVICE_FLAGS_OPENED)) {
+-			rc = -EFAULT;
+-			break;
+-		}
+-		rc = 0;
+-		pReq = (PSCmdRequest)rq;
+-		pReq->wResult = MAGIC_CODE;
+-		break;
+-
+-	case IOCTL_CMD_SET:
+-
+-		if (!(pDevice->flags & DEVICE_FLAGS_OPENED) &&
+-		    (((PSCmdRequest)rq)->wCmdCode != WLAN_CMD_SET_WPA))	{
+-				rc = -EFAULT;
+-				break;
+-			}
+-			rc = 0;
+-
+-		if (test_and_set_bit(0, (void *)&(pMgmt->uCmdBusy)))
+-			return -EBUSY;
+-
+-		rc = private_ioctl(pDevice, rq);
+-		clear_bit(0, (void *)&(pMgmt->uCmdBusy));
+-		break;
+-
+-	case IOCTL_CMD_HOSTAPD:
+-
+-		rc = vt6655_hostap_ioctl(pDevice, &wrq->u.data);
+-		break;
+-
+-	case IOCTL_CMD_WPA:
+-
+-		rc = wpa_ioctl(pDevice, &wrq->u.data);
+-		break;
+-
+-	case SIOCETHTOOL:
+-		return ethtool_ioctl(dev, rq->ifr_data);
+-		// All other calls are currently unsupported
+-
+-	default:
+-		rc = -EOPNOTSUPP;
+-		pr_debug("Ioctl command not support..%x\n", cmd);
+-
+-	}
+-
+-	if (pDevice->bCommit) {
+-		if (pMgmt->eConfigMode == WMAC_CONFIG_AP) {
+-			netif_stop_queue(pDevice->dev);
+-			spin_lock_irq(&pDevice->lock);
+-			bScheduleCommand((void *)pDevice, WLAN_CMD_RUN_AP, NULL);
+-			spin_unlock_irq(&pDevice->lock);
+-		} else {
+-			pr_debug("Commit the settings\n");
+-			spin_lock_irq(&pDevice->lock);
+-			pDevice->bLinkPass = false;
+-			memset(pMgmt->abyCurrBSSID, 0, 6);
+-			pMgmt->eCurrState = WMAC_STATE_IDLE;
+-			netif_stop_queue(pDevice->dev);
+-#ifdef WPA_SUPPLICANT_DRIVER_WEXT_SUPPORT
+-			pMgmt->eScanType = WMAC_SCAN_ACTIVE;
+-			if (!pDevice->bWPASuppWextEnabled)
+-#endif
+-				bScheduleCommand((void *)pDevice, WLAN_CMD_BSSID_SCAN, pMgmt->abyDesireSSID);
+-			bScheduleCommand((void *)pDevice, WLAN_CMD_SSID, NULL);
+-			spin_unlock_irq(&pDevice->lock);
+-		}
+-		pDevice->bCommit = false;
+-	}
+-
+-	return rc;
+-}
+-
+-static int ethtool_ioctl(struct net_device *dev, void __user *useraddr)
+-{
+-	u32 ethcmd;
+-
+-	if (copy_from_user(&ethcmd, useraddr, sizeof(ethcmd)))
+-		return -EFAULT;
+-
+-	switch (ethcmd) {
+-	case ETHTOOL_GDRVINFO: {
+-		struct ethtool_drvinfo info = {ETHTOOL_GDRVINFO};
+-
+-		strncpy(info.driver, DEVICE_NAME, sizeof(info.driver)-1);
+-		strncpy(info.version, DEVICE_VERSION, sizeof(info.version)-1);
+-		if (copy_to_user(useraddr, &info, sizeof(info)))
+-			return -EFAULT;
+-		return 0;
+-	}
+-
+-	}
+-
+-	return -EOPNOTSUPP;
+-}
+-
+ static int vnt_tx_packet(struct vnt_private *priv, struct sk_buff *skb)
+ {
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+@@ -3159,7 +1984,6 @@ vt6655_probe(struct pci_dev *pcid, const struct pci_device_id *ent)
+ 
+ 	/* Enable the chip specified capabilities */
+ 	priv->flags = priv->sOpts.flags | (pChip_info->flags & 0xff000000UL);
+-	priv->tx_80211 = device_dma0_tx_80211;
+ 
+ 	wiphy = priv->hw->wiphy;
+ 
+diff --git a/drivers/staging/vt6655/wcmd.c b/drivers/staging/vt6655/wcmd.c
+index 7302196..53f81f1 100644
+--- a/drivers/staging/vt6655/wcmd.c
++++ b/drivers/staging/vt6655/wcmd.c
+@@ -723,8 +723,6 @@ vCommandTimer(
+ 				} else {
+ 					pDevice->bMoreData = true;
+ 				}
+-				if (!device_dma0_xmit(pDevice, skb, 0))
+-					pr_debug("Multicast ps tx fail\n");
+ 
+ 				pMgmt->sNodeDBTable[0].wEnQueueCnt--;
+ 			}
+@@ -746,8 +744,6 @@ vCommandTimer(
+ 					} else {
+ 						pDevice->bMoreData = true;
+ 					}
+-					if (!device_dma0_xmit(pDevice, skb, ii))
+-						pr_debug("sta ps tx fail\n");
+ 
+ 					pMgmt->sNodeDBTable[ii].wEnQueueCnt--;
+ 					// check if sta ps enabled, and wait next pspoll.
 -- 
-2.1.0
+1.9.1
 
