@@ -1,143 +1,173 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:48737 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753458AbaJ1Ld5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2014 07:33:57 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johill@sipsolutions.net
-Cc: j@w1.fi, linux-wireless@vger.kernel.org
-Date: Tue, 28 Oct 2014 13:33:04 +0200
-Message-Id: <1414495985-26937-2-git-send-email-luca@coelho.fi> (sfid-20141028_123405_201808_89DF929A)
-In-Reply-To: <1414495985-26937-1-git-send-email-luca@coelho.fi>
-References: <1414495985-26937-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH 1/2] mac80211: use secondary channel offset IE also beacons during CSA
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:57689 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751816AbaJYTus (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 25 Oct 2014 15:50:48 -0400
+Received: by mail-wi0-f177.google.com with SMTP id ex7so3577015wid.16
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2014 12:50:46 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 25/48] staging: vt6655L remove tether.c functions
+Date: Sat, 25 Oct 2014 09:40:03 +0100
+Message-Id: <1414226426-5811-26-git-send-email-tvboxspy@gmail.com> (sfid-20141025_215050_889987_CE108762)
+In-Reply-To: <1414226426-5811-1-git-send-email-tvboxspy@gmail.com>
+References: <1414226426-5811-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+remove
+ETHbyGetHashIndexByCrc32
+ETHbIsBufferCrc32Ok
 
-If we are switching from an HT40+ to an HT40- channel (or vice-versa),
-we need the secondary channel offset IE to specify what is the
-post-CSA offset to be used.  This applies both to beacons and to probe
-responses.
+tether.h header will be removed later
 
-In ieee80211_parse_ch_switch_ie() we were ignoring this IE from
-beacons and using the *current* HT information IE instead.  This was
-causing us to use the same offset as before the switch.
-
-Fix that by using the secondary channel offset IE also for beacons and
-don't ever use the pre-switch offset.  Additionally, remove the
-"beacon" argument from ieee80211_parse_ch_switch_ie(), since it's not
-needed anymore.
-
-Reported-by: Jouni Malinen <j@w1.fi>
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- net/mac80211/ibss.c        |  2 +-
- net/mac80211/ieee80211_i.h |  3 +--
- net/mac80211/mesh.c        |  2 +-
- net/mac80211/mlme.c        |  2 +-
- net/mac80211/spectmgmt.c   | 18 ++++++------------
- 5 files changed, 10 insertions(+), 17 deletions(-)
+ drivers/staging/vt6655/Makefile |   1 -
+ drivers/staging/vt6655/tether.c | 105 ----------------------------------------
+ drivers/staging/vt6655/tether.h |   4 --
+ 3 files changed, 110 deletions(-)
+ delete mode 100644 drivers/staging/vt6655/tether.c
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 56b5357..509bc15 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -805,7 +805,7 @@ ieee80211_ibss_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+diff --git a/drivers/staging/vt6655/Makefile b/drivers/staging/vt6655/Makefile
+index d571e6f..1a5876d 100644
+--- a/drivers/staging/vt6655/Makefile
++++ b/drivers/staging/vt6655/Makefile
+@@ -14,7 +14,6 @@ vt6655_stage-y +=	device_main.o \
+ 	power.o \
+ 	srom.o \
+ 	mib.o \
+-	tether.o \
+ 	tcrc.o \
+ 	key.o \
+ 	rf.o
+diff --git a/drivers/staging/vt6655/tether.c b/drivers/staging/vt6655/tether.c
+deleted file mode 100644
+index 1e7d3e2..0000000
+--- a/drivers/staging/vt6655/tether.c
++++ /dev/null
+@@ -1,105 +0,0 @@
+-/*
+- * Copyright (c) 2003 VIA Networking, Inc. All rights reserved.
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2 of the License, or
+- * (at your option) any later version.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License along
+- * with this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+- *
+- *
+- * File: tether.c
+- *
+- * Purpose:
+- *
+- * Author: Tevin Chen
+- *
+- * Date: May 21, 1996
+- *
+- * Functions:
+- *      ETHbyGetHashIndexByCrc32 - Calculate multicast hash value by CRC32
+- *      ETHbIsBufferCrc32Ok - Check CRC value of the buffer if Ok or not
+- *
+- * Revision History:
+- *
+- */
+-
+-#include "device.h"
+-#include "tmacro.h"
+-#include "tcrc.h"
+-#include "tether.h"
+-
+-/*---------------------  Static Definitions -------------------------*/
+-
+-/*---------------------  Static Classes  ----------------------------*/
+-
+-/*---------------------  Static Variables  --------------------------*/
+-
+-/*---------------------  Static Functions  --------------------------*/
+-
+-/*---------------------  Export Variables  --------------------------*/
+-
+-/*
+- * Description: Calculate multicast hash value by CRC32
+- *
+- * Parameters:
+- *  In:
+- *		pbyMultiAddr    - Multicast Address
+- *  Out:
+- *      none
+- *
+- * Return Value: Hash value
+- *
+- */
+-unsigned char ETHbyGetHashIndexByCrc32(unsigned char *pbyMultiAddr)
+-{
+-	int     ii;
+-	unsigned char byTmpHash;
+-	unsigned char byHash = 0;
+-
+-	// get the least 6-bits from CRC generator
+-	byTmpHash = (unsigned char)(CRCdwCrc32(pbyMultiAddr, ETH_ALEN,
+-					       0xFFFFFFFFL) & 0x3F);
+-	// reverse most bit to least bit
+-	for (ii = 0; ii < (sizeof(byTmpHash) * 8); ii++) {
+-		byHash <<= 1;
+-		if (byTmpHash & 0x01)
+-			byHash |= 1;
+-		byTmpHash >>= 1;
+-	}
+-
+-	// adjust 6-bits to the right most
+-	return byHash >> 2;
+-}
+-
+-/*
+- * Description: Check CRC value of the buffer if Ok or not
+- *
+- * Parameters:
+- *  In:
+- *		pbyBuffer	    - pointer of buffer (normally is rx buffer)
+- *		cbFrameLength	- length of buffer, including CRC portion
+- *  Out:
+- *      none
+- *
+- * Return Value: true if ok; false if error.
+- *
+- */
+-bool ETHbIsBufferCrc32Ok(unsigned char *pbyBuffer, unsigned int cbFrameLength)
+-{
+-	unsigned long dwCRC;
+-
+-	dwCRC = CRCdwGetCrc32(pbyBuffer, cbFrameLength - 4);
+-	if (cpu_to_le32(*((unsigned long *)(pbyBuffer + cbFrameLength - 4))) != dwCRC)
+-		return false;
+-
+-	return true;
+-}
+diff --git a/drivers/staging/vt6655/tether.h b/drivers/staging/vt6655/tether.h
+index 94cc883..850554c 100644
+--- a/drivers/staging/vt6655/tether.h
++++ b/drivers/staging/vt6655/tether.h
+@@ -185,8 +185,4 @@ S802_11Header, *PS802_11Header;
  
- 	memset(&params, 0, sizeof(params));
- 	memset(&csa_ie, 0, sizeof(csa_ie));
--	err = ieee80211_parse_ch_switch_ie(sdata, elems, beacon,
-+	err = ieee80211_parse_ch_switch_ie(sdata, elems,
- 					   ifibss->chandef.chan->band,
- 					   sta_flags, ifibss->bssid, &csa_ie);
- 	/* can't switch to destination channel, fail */
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 146a818..96074df 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1676,7 +1676,6 @@ void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
-  * ieee80211_parse_ch_switch_ie - parses channel switch IEs
-  * @sdata: the sdata of the interface which has received the frame
-  * @elems: parsed 802.11 elements received with the frame
-- * @beacon: indicates if the frame was a beacon or probe response
-  * @current_band: indicates the current band
-  * @sta_flags: contains information about own capabilities and restrictions
-  *	to decide which channel switch announcements can be accepted. Only the
-@@ -1690,7 +1689,7 @@ void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
-  * Return: 0 on success, <0 on error and >0 if there is nothing to parse.
-  */
- int ieee80211_parse_ch_switch_ie(struct ieee80211_sub_if_data *sdata,
--				 struct ieee802_11_elems *elems, bool beacon,
-+				 struct ieee802_11_elems *elems,
- 				 enum ieee80211_band current_band,
- 				 u32 sta_flags, u8 *bssid,
- 				 struct ieee80211_csa_ie *csa_ie);
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index e9f99c1..0c8b2a7 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -874,7 +874,7 @@ ieee80211_mesh_process_chnswitch(struct ieee80211_sub_if_data *sdata,
+ /*---------------------  Export Functions  --------------------------*/
  
- 	memset(&params, 0, sizeof(params));
- 	memset(&csa_ie, 0, sizeof(csa_ie));
--	err = ieee80211_parse_ch_switch_ie(sdata, elems, beacon, band,
-+	err = ieee80211_parse_ch_switch_ie(sdata, elems, band,
- 					   sta_flags, sdata->vif.addr,
- 					   &csa_ie);
- 	if (err < 0)
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index c078cd3..ae9f3bd 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1096,7 +1096,7 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 
- 	current_band = cbss->channel->band;
- 	memset(&csa_ie, 0, sizeof(csa_ie));
--	res = ieee80211_parse_ch_switch_ie(sdata, elems, beacon, current_band,
-+	res = ieee80211_parse_ch_switch_ie(sdata, elems, current_band,
- 					   ifmgd->flags,
- 					   ifmgd->associated->bssid, &csa_ie);
- 	if (res	< 0)
-diff --git a/net/mac80211/spectmgmt.c b/net/mac80211/spectmgmt.c
-index 6ab0090..efeba56 100644
---- a/net/mac80211/spectmgmt.c
-+++ b/net/mac80211/spectmgmt.c
-@@ -22,7 +22,7 @@
- #include "wme.h"
- 
- int ieee80211_parse_ch_switch_ie(struct ieee80211_sub_if_data *sdata,
--				 struct ieee802_11_elems *elems, bool beacon,
-+				 struct ieee802_11_elems *elems,
- 				 enum ieee80211_band current_band,
- 				 u32 sta_flags, u8 *bssid,
- 				 struct ieee80211_csa_ie *csa_ie)
-@@ -91,19 +91,13 @@ int ieee80211_parse_ch_switch_ie(struct ieee80211_sub_if_data *sdata,
- 		return -EINVAL;
- 	}
- 
--	if (!beacon && sec_chan_offs) {
-+	if (sec_chan_offs) {
- 		secondary_channel_offset = sec_chan_offs->sec_chan_offs;
--	} else if (beacon && ht_oper) {
--		secondary_channel_offset =
--			ht_oper->ht_param & IEEE80211_HT_PARAM_CHA_SEC_OFFSET;
- 	} else if (!(sta_flags & IEEE80211_STA_DISABLE_HT)) {
--		/* If it's not a beacon, HT is enabled and the IE not present,
--		 * it's 20 MHz, 802.11-2012 8.5.2.6:
--		 *	This element [the Secondary Channel Offset Element] is
--		 *	present when switching to a 40 MHz channel. It may be
--		 *	present when switching to a 20 MHz channel (in which
--		 *	case the secondary channel offset is set to SCN).
--		 */
-+		/* If the secondary channel offset IE is not present,
-+		 * we can't know what's the post-CSA offset, so the
-+		 * best we can do is use 20MHz.
-+		*/
- 		secondary_channel_offset = IEEE80211_HT_PARAM_CHA_SEC_NONE;
- 	}
- 
+-unsigned char ETHbyGetHashIndexByCrc32(unsigned char *pbyMultiAddr);
+-//unsigned char ETHbyGetHashIndexByCrc(unsigned char *pbyMultiAddr);
+-bool ETHbIsBufferCrc32Ok(unsigned char *pbyBuffer, unsigned int cbFrameLength);
+-
+ #endif // __TETHER_H__
 -- 
-2.1.1
+1.9.1
 
