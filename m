@@ -1,33 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:56841 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754841AbaJWRTN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Oct 2014 13:19:13 -0400
-Message-ID: <1414084745.1926.8.camel@jlt4.sipsolutions.net> (sfid-20141023_191916_796252_D1337B65)
-Subject: Re: mac80211-hwsim question
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 23 Oct 2014 19:19:05 +0200
-In-Reply-To: <54493276.4030007@candelatech.com> (sfid-20141023_185314_774672_09890850)
-References: <54493276.4030007@candelatech.com>
-	 (sfid-20141023_185314_774672_09890850)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:33384 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751505AbaJYTKd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 25 Oct 2014 15:10:33 -0400
+Received: by mail-wi0-f181.google.com with SMTP id n3so3558840wiv.8
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2014 12:10:32 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 26/31] staging: vt6655: MACvSetDefaultKeyEntry replace WLAN_WEP104_KEYLEN
+Date: Sat, 25 Oct 2014 09:20:36 +0100
+Message-Id: <1414225241-5480-27-git-send-email-tvboxspy@gmail.com> (sfid-20141025_211036_305194_E9F60DEC)
+In-Reply-To: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
+References: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-10-23 at 09:53 -0700, Ben Greear wrote:
-> From what I can tell, when hwsim sends frames to wmediumd using netlink sockets,
-> it does not include any channel/frequency information in the netlink packet.
-> 
-> Any reason not to add that?
+with WLAN_KEY_LEN_WEP40
 
-I guess it wasn't needed, and when you "RX" a frame from netlink it uses
-the current channel that the radio is tuned to.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/mac.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-That, however, will actually fail with the multi-channel option, so more
-work is clearly needed for that.
-
-johannes
+diff --git a/drivers/staging/vt6655/mac.c b/drivers/staging/vt6655/mac.c
+index e3b0b7f..a347f39 100644
+--- a/drivers/staging/vt6655/mac.c
++++ b/drivers/staging/vt6655/mac.c
+@@ -1526,7 +1526,7 @@ void MACvSetDefaultKeyEntry(void __iomem *dwIoBase, unsigned int uKeyLen,
+ 		VNSvOutPortW(dwIoBase + MAC_REG_MISCFFCTL, MISCFFCTL_WRITE);
+ 	}
+ 	dwData = *pdwKey;
+-	if (uKeyLen == WLAN_WEP104_KEYLEN)
++	if (uKeyLen == WLAN_KEY_LEN_WEP40)
+ 		dwData |= 0x80000000;
+ 
+ 	VNSvOutPortW(dwIoBase + MAC_REG_MISCFFNDEX, wOffset+3);
+-- 
+1.9.1
 
