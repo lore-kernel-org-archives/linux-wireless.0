@@ -1,62 +1,888 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:37829 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751511AbaJVOPw (ORCPT
+Received: from mail-wg0-f48.google.com ([74.125.82.48]:65150 "EHLO
+	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751679AbaJYTau (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2014 10:15:52 -0400
-Received: by mail-wi0-f175.google.com with SMTP id d1so1517924wiv.2
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Oct 2014 07:15:50 -0700 (PDT)
-Date: Wed, 22 Oct 2014 16:15:48 +0200
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Karl Beldan <karl.beldan@rivierawaves.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: Re: [PATCH v5 0/4] add VHT support to minstrel_ht
-Message-ID: <20141022141547.GB29537@magnum.frso.rivierawaves.com> (sfid-20141022_161556_365662_4D35BFA6)
-References: <1413812762-6605-1-git-send-email-karl.beldan@gmail.com>
- <1413816546.32358.3.camel@jlt4.sipsolutions.net>
- <20141020151302.GB7691@magnum.frso.rivierawaves.com>
- <20141020153421.GC7691@magnum.frso.rivierawaves.com>
- <1413833597.32358.6.camel@jlt4.sipsolutions.net>
- <20141021152658.GA14839@magnum.frso.rivierawaves.com>
- <1413917246.1998.7.camel@jlt4.sipsolutions.net>
- <20141022135438.GA29537@magnum.frso.rivierawaves.com>
- <1413986851.28927.4.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1413986851.28927.4.camel@jlt4.sipsolutions.net>
+	Sat, 25 Oct 2014 15:30:50 -0400
+Received: by mail-wg0-f48.google.com with SMTP id m15so1214299wgh.31
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2014 12:30:49 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 22/48] staging: vt6655: dead code remove vntwifi.c functions
+Date: Sat, 25 Oct 2014 09:40:00 +0100
+Message-Id: <1414226426-5811-23-git-send-email-tvboxspy@gmail.com> (sfid-20141025_213053_712844_ACFC0274)
+In-Reply-To: <1414226426-5811-1-git-send-email-tvboxspy@gmail.com>
+References: <1414226426-5811-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 22, 2014 at 04:07:31PM +0200, Johannes Berg wrote:
-> On Wed, 2014-10-22 at 15:54 +0200, Karl Beldan wrote:
-> > On Tue, Oct 21, 2014 at 08:47:26PM +0200, Johannes Berg wrote:
-> > > On Tue, 2014-10-21 at 17:26 +0200, Karl Beldan wrote:
-> > > 
-> > > > I still don't know why I don't see the smatch array warnings here, I
-> > > > guess I'll live with that for now.
-> > > 
-> > > I'm hoping Dan will eventually pick up on it ;-)
-> > > 
-> > smatch is good, I get your warnings now when unsetting
-> > MAC80211_RC_MINSTREL_VHT. I did not click until after checking
-> > checking smatch's check_overflow.c, when there's a use after check, it
-> > only barks when the indexes checked are out of bounds.
-> 
-> Wait, are you saying it *is* out of bounds when VHT isn't turned on?
-> 
+Header will be removed later
 
-The smatch warning pops on
-{
-if (!(mi->groups[i].supported & BIT(j)))
-	continue;
-	...
-else if (i >= MINSTREL_VHT_GROUP_0)
-}
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/Makefile  |   3 +-
+ drivers/staging/vt6655/vntwifi.c | 658 ---------------------------------------
+ drivers/staging/vt6655/vntwifi.h | 168 ----------
+ 3 files changed, 1 insertion(+), 828 deletions(-)
+ delete mode 100644 drivers/staging/vt6655/vntwifi.c
 
-MINSTREL_VHT_GROUP_0 is out of bonds (not i which remains <
-ARRAY_SIZE(mi->groups)).
-
+diff --git a/drivers/staging/vt6655/Makefile b/drivers/staging/vt6655/Makefile
+index 5449ced..d571e6f 100644
+--- a/drivers/staging/vt6655/Makefile
++++ b/drivers/staging/vt6655/Makefile
+@@ -17,7 +17,6 @@ vt6655_stage-y +=	device_main.o \
+ 	tether.o \
+ 	tcrc.o \
+ 	key.o \
+-	rf.o \
+-	vntwifi.o
++	rf.o
  
-Karl
+ obj-$(CONFIG_VT6655) +=	vt6655_stage.o
+diff --git a/drivers/staging/vt6655/vntwifi.c b/drivers/staging/vt6655/vntwifi.c
+deleted file mode 100644
+index 54c65fc..0000000
+--- a/drivers/staging/vt6655/vntwifi.c
++++ /dev/null
+@@ -1,658 +0,0 @@
+-/*
+- * Copyright (c) 1996, 2003 VIA Networking Technologies, Inc.
+- * All rights reserved.
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2 of the License, or
+- * (at your option) any later version.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License along
+- * with this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+- *
+- *
+- * File: vntwifi.c
+- *
+- * Purpose: export functions for vntwifi lib
+- *
+- * Functions:
+- *
+- * Revision History:
+- *
+- * Author: Yiching Chen
+- *
+- * Date: feb. 2, 2005
+- *
+- */
+-
+-#include "vntwifi.h"
+-#include "country.h"
+-#include "device.h"
+-#include "wmgr.h"
+-
+-/*---------------------  Static Definitions -------------------------*/
+-
+-/*---------------------  Static Classes  ----------------------------*/
+-
+-/*---------------------  Static Variables  --------------------------*/
+-
+-/*---------------------  Static Functions  --------------------------*/
+-
+-/*---------------------  Export Variables  --------------------------*/
+-
+-/*---------------------  Export Functions  --------------------------*/
+-
+-/*+
+- *
+- * Description:
+- *    Set Operation Mode
+- *
+- * Parameters:
+- *  In:
+- *      pMgmtHandle - pointer to management object
+- *      eOPMode     - Operation Mode
+- *  Out:
+- *      none
+- *
+- * Return Value: none
+- *
+- -*/
+-void
+-VNTWIFIvSetOPMode(
+-	void *pMgmtHandle,
+-	WMAC_CONFIG_MODE eOPMode
+-)
+-{
+-	PSMgmtObject        pMgmt = (PSMgmtObject)pMgmtHandle;
+-
+-	pMgmt->eConfigMode = eOPMode;
+-}
+-
+-/*+
+- *
+- * Description:
+- *    Set Operation Mode
+- *
+- * Parameters:
+- *  In:
+- *      pMgmtHandle - pointer to management object
+- *      wBeaconPeriod - Beacon Period
+- *      wATIMWindow - ATIM window
+- *      uChannel - channel number
+- *  Out:
+- *      none
+- *
+- * Return Value: none
+- *
+- -*/
+-void
+-VNTWIFIvSetIBSSParameter(
+-	void *pMgmtHandle,
+-	unsigned short wBeaconPeriod,
+-	unsigned short wATIMWindow,
+-	unsigned int uChannel
+-)
+-{
+-	PSMgmtObject        pMgmt = (PSMgmtObject)pMgmtHandle;
+-
+-	pMgmt->wIBSSBeaconPeriod = wBeaconPeriod;
+-	pMgmt->wIBSSATIMWindow = wATIMWindow;
+-	pMgmt->uIBSSChannel = uChannel;
+-}
+-
+-/*+
+- *
+- * Description:
+- *    Get current SSID
+- *
+- * Parameters:
+- *  In:
+- *      pMgmtHandle - pointer to management object
+- *  Out:
+- *      none
+- *
+- * Return Value: current SSID pointer.
+- *
+- -*/
+-PWLAN_IE_SSID
+-VNTWIFIpGetCurrentSSID(
+-	void *pMgmtHandle
+-)
+-{
+-	PSMgmtObject        pMgmt = (PSMgmtObject)pMgmtHandle;
+-
+-	return (PWLAN_IE_SSID) pMgmt->abyCurrSSID;
+-}
+-
+-/*+
+- *
+- * Description:
+- *    Get current link channel
+- *
+- * Parameters:
+- *  In:
+- *      pMgmtHandle - pointer to management object
+- *  Out:
+- *      none
+- *
+- * Return Value: current Channel.
+- *
+- -*/
+-unsigned int
+-VNTWIFIpGetCurrentChannel(
+-	void *pMgmtHandle
+-)
+-{
+-	PSMgmtObject        pMgmt = (PSMgmtObject)pMgmtHandle;
+-
+-	if (pMgmtHandle != NULL)
+-		return pMgmt->uCurrChannel;
+-
+-	return 0;
+-}
+-
+-/*+
+- *
+- * Description:
+- *    Get current Assoc ID
+- *
+- * Parameters:
+- *  In:
+- *      pMgmtHandle - pointer to management object
+- *  Out:
+- *      none
+- *
+- * Return Value: current Assoc ID
+- *
+- -*/
+-unsigned short
+-VNTWIFIwGetAssocID(
+-	void *pMgmtHandle
+-)
+-{
+-	PSMgmtObject        pMgmt = (PSMgmtObject)pMgmtHandle;
+-
+-	return pMgmt->wCurrAID;
+-}
+-
+-/*+
+- *
+- * Description:
+- *    This routine return max support rate of IES
+- *
+- * Parameters:
+- *  In:
+- *      pSupportRateIEs
+- *      pExtSupportRateIEs
+- *
+- *  Out:
+- *
+- * Return Value: max support rate
+- *
+- -*/
+-unsigned char
+-VNTWIFIbyGetMaxSupportRate(
+-	PWLAN_IE_SUPP_RATES pSupportRateIEs,
+-	PWLAN_IE_SUPP_RATES pExtSupportRateIEs
+-)
+-{
+-	unsigned char byMaxSupportRate = RATE_1M;
+-	unsigned char bySupportRate = RATE_1M;
+-	unsigned int ii = 0;
+-
+-	if (pSupportRateIEs) {
+-		for (ii = 0; ii < pSupportRateIEs->len; ii++) {
+-			if (bySupportRate > byMaxSupportRate)
+-				byMaxSupportRate = bySupportRate;
+-
+-		}
+-	}
+-	if (pExtSupportRateIEs) {
+-		for (ii = 0; ii < pExtSupportRateIEs->len; ii++) {
+-			if (bySupportRate > byMaxSupportRate)
+-				byMaxSupportRate = bySupportRate;
+-
+-		}
+-	}
+-
+-	return byMaxSupportRate;
+-}
+-
+-/*+
+- *
+- * Description:
+- *    This routine return data rate of ACK packtet
+- *
+- * Parameters:
+- *  In:
+- *      byRxDataRate
+- *      pSupportRateIEs
+- *      pExtSupportRateIEs
+- *
+- *  Out:
+- *
+- * Return Value: max support rate
+- *
+- -*/
+-unsigned char
+-VNTWIFIbyGetACKTxRate(
+-	unsigned char byRxDataRate,
+-	PWLAN_IE_SUPP_RATES pSupportRateIEs,
+-	PWLAN_IE_SUPP_RATES pExtSupportRateIEs
+-)
+-{
+-	unsigned char byMaxAckRate;
+-	unsigned int ii;
+-
+-	if (byRxDataRate <= RATE_11M) {
+-		byMaxAckRate = RATE_1M;
+-	} else  {
+-		/* 24M is mandatory for 802.11a and 802.11g */
+-		byMaxAckRate = RATE_24M;
+-	}
+-	if (pSupportRateIEs) {
+-		for (ii = 0; ii < pSupportRateIEs->len; ii++) {
+-			if (pSupportRateIEs->abyRates[ii] & 0x80) {
+-			}
+-		}
+-	}
+-	if (pExtSupportRateIEs) {
+-		for (ii = 0; ii < pExtSupportRateIEs->len; ii++) {
+-			if (pExtSupportRateIEs->abyRates[ii] & 0x80) {
+-			}
+-		}
+-	}
+-
+-	return byMaxAckRate;
+-}
+-
+-/*+
+- *
+- * Description:
+- *    Set Authentication Mode
+- *
+- * Parameters:
+- *  In:
+- *      pMgmtHandle - pointer to management object
+- *      eAuthMode   - Authentication mode
+- *  Out:
+- *      none
+- *
+- * Return Value: none
+- *
+- -*/
+-void
+-VNTWIFIvSetAuthenticationMode(
+-	void *pMgmtHandle,
+-	WMAC_AUTHENTICATION_MODE eAuthMode
+-)
+-{
+-	PSMgmtObject        pMgmt = (PSMgmtObject)pMgmtHandle;
+-
+-	pMgmt->eAuthenMode = eAuthMode;
+-	if ((eAuthMode == WMAC_AUTH_SHAREKEY) ||
+-	    (eAuthMode == WMAC_AUTH_AUTO)) {
+-		pMgmt->bShareKeyAlgorithm = true;
+-	} else {
+-		pMgmt->bShareKeyAlgorithm = false;
+-	}
+-}
+-
+-/*+
+- *
+- * Description:
+- *    Set Encryption Mode
+- *
+- * Parameters:
+- *  In:
+- *      pMgmtHandle - pointer to management object
+- *      eAuthMode   - Authentication mode
+- *  Out:
+- *      none
+- *
+- * Return Value: none
+- *
+- -*/
+-void
+-VNTWIFIvSetEncryptionMode(
+-	void *pMgmtHandle,
+-	WMAC_ENCRYPTION_MODE eEncryptionMode
+-)
+-{
+-	PSMgmtObject        pMgmt = (PSMgmtObject)pMgmtHandle;
+-
+-	pMgmt->eEncryptionMode = eEncryptionMode;
+-	if ((eEncryptionMode == WMAC_ENCRYPTION_WEPEnabled) ||
+-	    (eEncryptionMode == WMAC_ENCRYPTION_TKIPEnabled) ||
+-	    (eEncryptionMode == WMAC_ENCRYPTION_AESEnabled)) {
+-		pMgmt->bPrivacyInvoked = true;
+-	} else {
+-		pMgmt->bPrivacyInvoked = false;
+-	}
+-}
+-
+-bool
+-VNTWIFIbConfigPhyMode(
+-	void *pMgmtHandle,
+-	CARD_PHY_TYPE ePhyType
+-)
+-{
+-	PSMgmtObject        pMgmt = (PSMgmtObject)pMgmtHandle;
+-
+-	if ((ePhyType != PHY_TYPE_AUTO) &&
+-	    (ePhyType != pMgmt->eCurrentPHYMode)) {
+-		if (CARDbSetPhyParameter(pMgmt->pAdapter, ePhyType, 0, 0, NULL, NULL) == true)
+-			pMgmt->eCurrentPHYMode = ePhyType;
+-		else
+-			return false;
+-	}
+-	pMgmt->eConfigPHYMode = ePhyType;
+-	return true;
+-}
+-
+-void
+-VNTWIFIbGetConfigPhyMode(
+-	void *pMgmtHandle,
+-	void *pePhyType
+-)
+-{
+-	PSMgmtObject        pMgmt = (PSMgmtObject)pMgmtHandle;
+-
+-	if ((pMgmt != NULL) && (pePhyType != NULL))
+-		*(PCARD_PHY_TYPE)pePhyType = pMgmt->eConfigPHYMode;
+-}
+-
+-/*+
+- *
+- * Description:
+- *      Clear BSS List Database except current assoc BSS
+- *
+- * Parameters:
+- *  In:
+- *      pMgmtHandle     - Management Object structure
+- *      bLinkPass       - Current Link status
+- *  Out:
+- *
+- * Return Value: None.
+- *
+- -*/
+-
+-/*+
+- *
+- * Description:
+- *      Query BSS List in management database
+- *
+- * Parameters:
+- *  In:
+- *      pMgmtHandle     - Management Object structure
+- *  Out:
+- *      puBSSCount      - BSS count
+- *      pvFirstBSS      - pointer to first BSS
+- *
+- * Return Value: None.
+- *
+- -*/
+-
+-void
+-VNTWIFIvQueryBSSList(void *pMgmtHandle, unsigned int *puBSSCount, void **pvFirstBSS)
+-{
+-	unsigned int ii = 0;
+-	PSMgmtObject    pMgmt = (PSMgmtObject)pMgmtHandle;
+-	PKnownBSS       pBSS = NULL;
+-	unsigned int uCount = 0;
+-
+-	*pvFirstBSS = NULL;
+-
+-	for (ii = 0; ii < MAX_BSS_NUM; ii++) {
+-		pBSS = &(pMgmt->sBSSList[ii]);
+-		if (!pBSS->bActive)
+-			continue;
+-
+-		if (*pvFirstBSS == NULL)
+-			*pvFirstBSS = &(pMgmt->sBSSList[ii]);
+-
+-		uCount++;
+-	}
+-	*puBSSCount = uCount;
+-}
+-
+-void
+-VNTWIFIvGetNextBSS(
+-	void *pMgmtHandle,
+-	void *pvCurrentBSS,
+-	void **pvNextBSS
+-)
+-{
+-	PKnownBSS       pBSS = (PKnownBSS) pvCurrentBSS;
+-	PSMgmtObject    pMgmt = (PSMgmtObject)pMgmtHandle;
+-
+-	*pvNextBSS = NULL;
+-
+-	while (*pvNextBSS == NULL) {
+-		pBSS++;
+-		if (pBSS > &(pMgmt->sBSSList[MAX_BSS_NUM]))
+-			return;
+-
+-		if (pBSS->bActive == true) {
+-			*pvNextBSS = pBSS;
+-			return;
+-		}
+-	}
+-}
+-
+-/*+
+- *
+- * Description:
+- *      Update Tx attemps, Tx failure counter in Node DB
+- *
+- *  In:
+- *  Out:
+- *      none
+- *
+- * Return Value: none
+- *
+- -*/
+-void
+-VNTWIFIvUpdateNodeTxCounter(
+-	void *pMgmtHandle,
+-	unsigned char *pbyDestAddress,
+-	bool bTxOk,
+-	unsigned short wRate,
+-	unsigned char *pbyTxFailCount
+-)
+-{
+-	PSMgmtObject    pMgmt = (PSMgmtObject)pMgmtHandle;
+-	unsigned int uNodeIndex = 0;
+-	unsigned int ii;
+-
+-	if ((pMgmt->eCurrMode == WMAC_MODE_IBSS_STA) ||
+-	    (pMgmt->eCurrMode == WMAC_MODE_ESS_AP)) {
+-	}
+-
+-	pMgmt->sNodeDBTable[uNodeIndex].uTxAttempts++;
+-	if (bTxOk) {
+-		/* transmit success, TxAttempts at least plus one */
+-		pMgmt->sNodeDBTable[uNodeIndex].uTxOk[MAX_RATE]++;
+-		pMgmt->sNodeDBTable[uNodeIndex].uTxOk[wRate]++;
+-	} else {
+-		pMgmt->sNodeDBTable[uNodeIndex].uTxFailures++;
+-	}
+-	pMgmt->sNodeDBTable[uNodeIndex].uTxRetry += pbyTxFailCount[MAX_RATE];
+-	for (ii = 0; ii < MAX_RATE; ii++)
+-		pMgmt->sNodeDBTable[uNodeIndex].uTxFail[ii] += pbyTxFailCount[ii];
+-}
+-
+-void
+-VNTWIFIvGetTxRate(
+-	void *pMgmtHandle,
+-	unsigned char *pbyDestAddress,
+-	unsigned short *pwTxDataRate,
+-	unsigned char *pbyACKRate,
+-	unsigned char *pbyCCKBasicRate,
+-	unsigned char *pbyOFDMBasicRate
+-)
+-{
+-	PSMgmtObject        pMgmt = (PSMgmtObject)pMgmtHandle;
+-	unsigned short wTxDataRate = RATE_1M;
+-	unsigned char byACKRate = RATE_1M;
+-	unsigned char byCCKBasicRate = RATE_1M;
+-	unsigned char byOFDMBasicRate = RATE_24M;
+-	PWLAN_IE_SUPP_RATES pSupportRateIEs = NULL;
+-	PWLAN_IE_SUPP_RATES pExtSupportRateIEs = NULL;
+-
+-	if ((pMgmt->eCurrMode == WMAC_MODE_IBSS_STA) ||
+-	    (pMgmt->eCurrMode == WMAC_MODE_ESS_AP)) {
+-		/* Adhoc Tx rate decided from node DB */
+-	} else { /* Infrastructure: rate decided from AP Node, index = 0 */
+-
+-		wTxDataRate = (pMgmt->sNodeDBTable[0].wTxDataRate);
+-
+-		pSupportRateIEs = (PWLAN_IE_SUPP_RATES) pMgmt->abyCurrSuppRates;
+-		pExtSupportRateIEs = (PWLAN_IE_SUPP_RATES) pMgmt->abyCurrExtSuppRates;
+-	}
+-	byACKRate = VNTWIFIbyGetACKTxRate((unsigned char) wTxDataRate,
+-					    pSupportRateIEs,
+-					    pExtSupportRateIEs
+-);
+-	if (byACKRate > (unsigned char) wTxDataRate)
+-		byACKRate = (unsigned char) wTxDataRate;
+-
+-	byCCKBasicRate = VNTWIFIbyGetACKTxRate(RATE_11M,
+-						pSupportRateIEs,
+-						pExtSupportRateIEs
+-);
+-	byOFDMBasicRate = VNTWIFIbyGetACKTxRate(RATE_54M,
+-						pSupportRateIEs,
+-						pExtSupportRateIEs
+-);
+-	*pwTxDataRate = wTxDataRate;
+-	*pbyACKRate = byACKRate;
+-	*pbyCCKBasicRate = byCCKBasicRate;
+-	*pbyOFDMBasicRate = byOFDMBasicRate;
+-}
+-
+-unsigned char
+-VNTWIFIbyGetKeyCypher(
+-	void *pMgmtHandle,
+-	bool bGroupKey
+-)
+-{
+-	PSMgmtObject    pMgmt = (PSMgmtObject)pMgmtHandle;
+-
+-	if (bGroupKey)
+-		return pMgmt->byCSSGK;
+-	return pMgmt->byCSSPK;
+-}
+-
+-bool
+-VNTWIFIbSetPMKIDCache(
+-	void *pMgmtObject,
+-	unsigned long ulCount,
+-	void *pPMKIDInfo
+-)
+-{
+-	return true;
+-}
+-
+-unsigned short
+-VNTWIFIwGetMaxSupportRate(
+-	void *pMgmtObject
+-)
+-{
+-	unsigned short wRate = RATE_54M;
+-	PSMgmtObject    pMgmt = (PSMgmtObject) pMgmtObject;
+-
+-	for (wRate = RATE_54M; wRate > RATE_1M; wRate--) {
+-		if (pMgmt->sNodeDBTable[0].wSuppRate & (1<<wRate))
+-			return wRate;
+-	}
+-
+-	if (pMgmt->eCurrentPHYMode == PHY_TYPE_11A)
+-		return RATE_6M;
+-	return RATE_1M;
+-}
+-
+-void
+-VNTWIFIvSet11h(
+-	void *pMgmtObject,
+-	bool b11hEnable
+-)
+-{
+-	PSMgmtObject    pMgmt = (PSMgmtObject) pMgmtObject;
+-
+-	pMgmt->b11hEnable = b11hEnable;
+-}
+-
+-bool
+-VNTWIFIbMeasureReport(
+-	void *pMgmtObject,
+-	bool bEndOfReport,
+-	void *pvMeasureEID,
+-	unsigned char byReportMode,
+-	unsigned char byBasicMap,
+-	unsigned char byCCAFraction,
+-	unsigned char *pbyRPIs
+-)
+-{
+-	PSMgmtObject    pMgmt = (PSMgmtObject) pMgmtObject;
+-	unsigned char *pbyCurrentEID = (unsigned char *)(pMgmt->pCurrMeasureEIDRep);
+-
+-	if ((pvMeasureEID != NULL) &&
+-	    (pMgmt->uLengthOfRepEIDs < (WLAN_A3FR_MAXLEN - sizeof(MEASEURE_REP) - sizeof(WLAN_80211HDR_A3) - 3))
+-) {
+-		pMgmt->pCurrMeasureEIDRep->byElementID = WLAN_EID_MEASURE_REP;
+-		pMgmt->pCurrMeasureEIDRep->len = 3;
+-		pMgmt->pCurrMeasureEIDRep->byToken = ((PWLAN_IE_MEASURE_REQ)pvMeasureEID)->byToken;
+-		pMgmt->pCurrMeasureEIDRep->byMode = byReportMode;
+-		pMgmt->pCurrMeasureEIDRep->byType = ((PWLAN_IE_MEASURE_REQ) pvMeasureEID)->byType;
+-		switch (pMgmt->pCurrMeasureEIDRep->byType) {
+-		case MEASURE_TYPE_BASIC:
+-			pMgmt->pCurrMeasureEIDRep->len += sizeof(MEASEURE_REP_BASIC);
+-			memcpy(&(pMgmt->pCurrMeasureEIDRep->sRep.sBasic),
+-			       &(((PWLAN_IE_MEASURE_REQ) pvMeasureEID)->sReq),
+-			       sizeof(MEASEURE_REQ));
+-			pMgmt->pCurrMeasureEIDRep->sRep.sBasic.byMap = byBasicMap;
+-			break;
+-		case MEASURE_TYPE_CCA:
+-			pMgmt->pCurrMeasureEIDRep->len += sizeof(MEASEURE_REP_CCA);
+-			memcpy(&(pMgmt->pCurrMeasureEIDRep->sRep.sCCA),
+-			       &(((PWLAN_IE_MEASURE_REQ) pvMeasureEID)->sReq),
+-			       sizeof(MEASEURE_REQ));
+-			pMgmt->pCurrMeasureEIDRep->sRep.sCCA.byCCABusyFraction = byCCAFraction;
+-			break;
+-		case MEASURE_TYPE_RPI:
+-			pMgmt->pCurrMeasureEIDRep->len += sizeof(MEASEURE_REP_RPI);
+-			memcpy(&(pMgmt->pCurrMeasureEIDRep->sRep.sRPI),
+-			       &(((PWLAN_IE_MEASURE_REQ) pvMeasureEID)->sReq),
+-			       sizeof(MEASEURE_REQ));
+-			memcpy(pMgmt->pCurrMeasureEIDRep->sRep.sRPI.abyRPIdensity, pbyRPIs, 8);
+-			break;
+-		default:
+-			break;
+-		}
+-		pbyCurrentEID += (2 + pMgmt->pCurrMeasureEIDRep->len);
+-		pMgmt->uLengthOfRepEIDs += (2 + pMgmt->pCurrMeasureEIDRep->len);
+-		pMgmt->pCurrMeasureEIDRep = (PWLAN_IE_MEASURE_REP) pbyCurrentEID;
+-	}
+-
+-	return true;
+-}
+-
+-bool
+-VNTWIFIbChannelSwitch(
+-	void *pMgmtObject,
+-	unsigned char byNewChannel
+-)
+-{
+-	PSMgmtObject    pMgmt = (PSMgmtObject) pMgmtObject;
+-
+-	pMgmt->uCurrChannel = byNewChannel;
+-	pMgmt->bSwitchChannel = false;
+-	return true;
+-}
+diff --git a/drivers/staging/vt6655/vntwifi.h b/drivers/staging/vt6655/vntwifi.h
+index 9db734f..ad180e0 100644
+--- a/drivers/staging/vt6655/vntwifi.h
++++ b/drivers/staging/vt6655/vntwifi.h
+@@ -100,173 +100,5 @@ typedef enum tagWMAC_POWER_MODE {
+ 	WMAC_POWER_MAX
+ } WMAC_POWER_MODE, *PWMAC_POWER_MODE;
+ 
+-#define VNTWIFIbIsShortSlotTime(wCapInfo)               \
+-	WLAN_GET_CAP_INFO_SHORTSLOTTIME(wCapInfo)       \
+-
+-#define VNTWIFIbIsProtectMode(byERP)                    \
+-	((byERP & WLAN_EID_ERP_USE_PROTECTION) != 0)    \
+-
+-#define VNTWIFIbIsBarkerMode(byERP)                     \
+-	((byERP & WLAN_EID_ERP_BARKER_MODE) != 0)       \
+-
+-#define VNTWIFIbIsShortPreamble(wCapInfo)               \
+-	WLAN_GET_CAP_INFO_SHORTPREAMBLE(wCapInfo)       \
+-
+-#define VNTWIFIbIsEncryption(wCapInfo)		\
+-	WLAN_GET_CAP_INFO_PRIVACY(wCapInfo)	\
+-
+-#define VNTWIFIbIsESS(wCapInfo)			\
+-	WLAN_GET_CAP_INFO_ESS(wCapInfo)		\
+-
+-/*---------------------  Export Classes  ----------------------------*/
+-
+-/*---------------------  Export Variables  --------------------------*/
+-
+-/*---------------------  Export Types  ------------------------------*/
+-
+-/*---------------------  Export Functions  --------------------------*/
+-
+-void
+-VNTWIFIvSetIBSSParameter(
+-	void *pMgmtHandle,
+-	unsigned short wBeaconPeriod,
+-	unsigned short wATIMWindow,
+-	unsigned int uChannel
+-);
+-
+-void
+-VNTWIFIvSetOPMode(
+-	void *pMgmtHandle,
+-	WMAC_CONFIG_MODE eOPMode
+-);
+-
+-PWLAN_IE_SSID
+-VNTWIFIpGetCurrentSSID(
+-	void *pMgmtHandle
+-);
+-
+-unsigned int
+-VNTWIFIpGetCurrentChannel(
+-	void *pMgmtHandle
+-);
+-
+-unsigned short
+-VNTWIFIwGetAssocID(
+-	void *pMgmtHandle
+-);
+-
+-unsigned char
+-VNTWIFIbyGetMaxSupportRate(
+-	PWLAN_IE_SUPP_RATES pSupportRateIEs,
+-	PWLAN_IE_SUPP_RATES pExtSupportRateIEs
+-);
+-
+-unsigned char
+-VNTWIFIbyGetACKTxRate(
+-	unsigned char byRxDataRate,
+-	PWLAN_IE_SUPP_RATES pSupportRateIEs,
+-	PWLAN_IE_SUPP_RATES pExtSupportRateIEs
+-);
+-
+-void
+-VNTWIFIvSetAuthenticationMode(
+-	void *pMgmtHandle,
+-	WMAC_AUTHENTICATION_MODE eAuthMode
+-);
+-
+-void
+-VNTWIFIvSetEncryptionMode(
+-	void *pMgmtHandle,
+-	WMAC_ENCRYPTION_MODE eEncryptionMode
+-);
+-
+-bool
+-VNTWIFIbConfigPhyMode(
+-	void *pMgmtHandle,
+-	CARD_PHY_TYPE ePhyType
+-);
+-
+-void
+-VNTWIFIbGetConfigPhyMode(
+-	void *pMgmtHandle,
+-	void *pePhyType
+-);
+-
+-void
+-VNTWIFIvQueryBSSList(void *pMgmtHandle, unsigned int *puBSSCount,
+-		     void **pvFirstBSS);
+-
+-void
+-VNTWIFIvGetNextBSS(
+-	void *pMgmtHandle,
+-	void *pvCurrentBSS,
+-	void **pvNextBSS
+-);
+-
+-void
+-VNTWIFIvUpdateNodeTxCounter(
+-	void *pMgmtHandle,
+-	unsigned char *pbyDestAddress,
+-	bool bTxOk,
+-	unsigned short wRate,
+-	unsigned char *pbyTxFailCount
+-);
+-
+-void
+-VNTWIFIvGetTxRate(
+-	void *pMgmtHandle,
+-	unsigned char *pbyDestAddress,
+-	unsigned short *pwTxDataRate,
+-	unsigned char *pbyACKRate,
+-	unsigned char *pbyCCKBasicRate,
+-	unsigned char *pbyOFDMBasicRate
+-);
+-
+-unsigned char
+-VNTWIFIbyGetKeyCypher(
+-	void *pMgmtHandle,
+-	bool bGroupKey
+-);
+-
+-bool
+-VNTWIFIbSetPMKIDCache(
+-	void *pMgmtObject,
+-	unsigned long ulCount,
+-	void *pPMKIDInfo
+-);
+-
+-bool
+-VNTWIFIbCommandRunning(
+-	void *pMgmtObject
+-);
+-
+-unsigned short
+-VNTWIFIwGetMaxSupportRate(
+-	void *pMgmtObject
+-);
+-
+-// for 802.11h
+-void
+-VNTWIFIvSet11h(
+-	void *pMgmtObject,
+-	bool b11hEnable
+-);
+-
+-bool
+-VNTWIFIbMeasureReport(
+-	void *pMgmtObject,
+-	bool bEndOfReport,
+-	void *pvMeasureEID,
+-	unsigned char byReportMode,
+-	unsigned char byBasicMap,
+-	unsigned char byCCAFraction,
+-	unsigned char *pbyRPIs
+-);
+-
+-bool
+-VNTWIFIbChannelSwitch(
+-	void *pMgmtObject,
+-	unsigned char byNewChannel
+-);
+ 
+ #endif //__VNTWIFI_H__
+-- 
+1.9.1
+
