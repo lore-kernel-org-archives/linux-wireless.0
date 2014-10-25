@@ -1,214 +1,362 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:57268 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932300AbaJ2LLI (ORCPT
+Received: from mail-wi0-f182.google.com ([209.85.212.182]:40187 "EHLO
+	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752430AbaJYTxJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2014 07:11:08 -0400
-Received: by mail-wi0-f181.google.com with SMTP id n3so4225507wiv.14
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2014 04:11:06 -0700 (PDT)
-Message-ID: <5450CB46.4050207@gmail.com> (sfid-20141029_121113_300442_2C9AC38C)
-Date: Wed, 29 Oct 2014 13:11:02 +0200
-From: jeremy lansman <jeremy.lansman@gmail.com>
-Reply-To: jeremy.lansman@gmail.com
-MIME-Version: 1.0
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Channel Estimation Question
-References: <544AA2F9.6050806@gmail.com> <CANUX_P1eHKLa4JQ9zx8D_mXr84__raCH0NrzGkxxB5CxTsGGAQ@mail.gmail.com>
-In-Reply-To: <CANUX_P1eHKLa4JQ9zx8D_mXr84__raCH0NrzGkxxB5CxTsGGAQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+	Sat, 25 Oct 2014 15:53:09 -0400
+Received: by mail-wi0-f182.google.com with SMTP id d1so19074wiv.3
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2014 12:53:07 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 36/48] staging: vt6655: dead code remove tether.h
+Date: Sat, 25 Oct 2014 09:40:14 +0100
+Message-Id: <1414226426-5811-37-git-send-email-tvboxspy@gmail.com> (sfid-20141025_215313_414286_D4576D78)
+In-Reply-To: <1414226426-5811-1-git-send-email-tvboxspy@gmail.com>
+References: <1414226426-5811-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Emmanul;
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/baseband.c    |   1 -
+ drivers/staging/vt6655/baseband.h    |   1 -
+ drivers/staging/vt6655/desc.h        |   1 -
+ drivers/staging/vt6655/device.h      |   3 -
+ drivers/staging/vt6655/device_main.c |   1 -
+ drivers/staging/vt6655/key.h         |   1 -
+ drivers/staging/vt6655/mac.c         |   1 -
+ drivers/staging/vt6655/mib.h         |   1 -
+ drivers/staging/vt6655/rxtx.c        |   1 -
+ drivers/staging/vt6655/srom.c        |   1 -
+ drivers/staging/vt6655/tether.h      | 188 -----------------------------------
+ 11 files changed, 200 deletions(-)
+ delete mode 100644 drivers/staging/vt6655/tether.h
 
-Thank you for that.
-
-I am a newbe to changing things at this low a level, so before I take 
-the time to learn something new, I decided to do a test.
-
-  On the page it says, "When mac80211 wants to ensure that a frame is 
-sent, it calls the flush() callback. Until now, iwldvm implemented this 
-by waiting that all the frames are sent (ACKed or timeout). In case of 
-weak signal, this can take a significant amount of time,..."
-
-In this case the signal is not weak, and there is no co-channel or 
-adjacent channel interference.   The only interference will be from 
-multipath reflections.
-
-I just ran a test to demonstrate.
-
-Here is a signal sitting in one place as reported by nm-tool:
-   Wireless Access Points (* = current AP)
-   Busklandia:      Infra, D6:CA:6D:7A:BF:39, Freq 2447 MHz, Rate 54 
-Mb/s, Strength 55 WPA2
-   FishNet:         Infra, D6:CA:6D:7A:BF:37, Freq 2447 MHz, Rate 54 
-Mb/s, Strength 55
-*Office-C-Band:  Infra, D4:CA:6D:C5:68:29, Freq 5260 MHz, Rate 6 Mb/s, 
-Strength 44 WPA
-
-Note I am using my Mikrotik 5 GHz AP, which is on the ouside wall of a 
-building some 10 meters away.
-Here is the ping to this AP with the laptop on the floor after it has 
-been sitting for a while:
-64 bytes from 192.168.66.1: icmp_seq=60 ttl=64 time=1.18 ms
-64 bytes from 192.168.66.1: icmp_seq=61 ttl=64 time=1.16 ms
-64 bytes from 192.168.66.1: icmp_seq=62 ttl=64 time=1.08 ms
-64 bytes from 192.168.66.1: icmp_seq=63 ttl=64 time=1.15 ms
-64 bytes from 192.168.66.1: icmp_seq=64 ttl=64 time=1.02 ms
-64 bytes from 192.168.66.1: icmp_seq=65 ttl=64 time=1.10 ms
-64 bytes from 192.168.66.1: icmp_seq=66 ttl=64 time=1.11 ms
-
-Now I pick up the laptop and move it to a stronger signal.
-
-64 bytes from 192.168.66.1: icmp_seq=259 ttl=64 time=1.09 ms
-64 bytes from 192.168.66.1: icmp_seq=260 ttl=64 time=1.03 ms
-64 bytes from 192.168.66.1: icmp_seq=261 ttl=64 time=0.986 ms
-64 bytes from 192.168.66.1: icmp_seq=262 ttl=64 time=0.971 ms
-64 bytes from 192.168.66.1: icmp_seq=263 ttl=64 time=1.02 ms
-64 bytes from 192.168.66.1: icmp_seq=264 ttl=64 time=1.90 ms
-64 bytes from 192.168.66.1: icmp_seq=265 ttl=64 time=1.02 ms
-64 bytes from 192.168.66.1: icmp_seq=266 ttl=64 time=6038 ms
-64 bytes from 192.168.66.1: icmp_seq=267 ttl=64 time=5032 ms
-64 bytes from 192.168.66.1: icmp_seq=268 ttl=64 time=4024 ms
-64 bytes from 192.168.66.1: icmp_seq=269 ttl=64 time=3016 ms
-64 bytes from 192.168.66.1: icmp_seq=270 ttl=64 time=2008 ms
-64 bytes from 192.168.66.1: icmp_seq=271 ttl=64 time=1000 ms
-64 bytes from 192.168.66.1: icmp_seq=272 ttl=64 time=99.1 ms
-64 bytes from 192.168.66.1: icmp_seq=273 ttl=64 time=4017 ms
-64 bytes from 192.168.66.1: icmp_seq=274 ttl=64 time=3011 ms
-64 bytes from 192.168.66.1: icmp_seq=275 ttl=64 time=2003 ms
-64 bytes from 192.168.66.1: icmp_seq=276 ttl=64 time=995 ms
-64 bytes from 192.168.66.1: icmp_seq=277 ttl=64 time=87.5 ms
-64 bytes from 192.168.66.1: icmp_seq=278 ttl=64 time=1146 ms
-64 bytes from 192.168.66.1: icmp_seq=279 ttl=64 time=139 ms
-64 bytes from 192.168.66.1: icmp_seq=280 ttl=64 time=1148 ms
-64 bytes from 192.168.66.1: icmp_seq=281 ttl=64 time=142 ms
-64 bytes from 192.168.66.1: icmp_seq=282 ttl=64 time=5001 ms
-64 bytes from 192.168.66.1: icmp_seq=283 ttl=64 time=4001 ms
-64 bytes from 192.168.66.1: icmp_seq=284 ttl=64 time=3002 ms
-64 bytes from 192.168.66.1: icmp_seq=285 ttl=64 time=2002 ms
-64 bytes from 192.168.66.1: icmp_seq=286 ttl=64 time=1003 ms
-64 bytes from 192.168.66.1: icmp_seq=287 ttl=64 time=5.03 ms
-64 bytes from 192.168.66.1: icmp_seq=288 ttl=64 time=3018 ms
-64 bytes from 192.168.66.1: icmp_seq=289 ttl=64 time=2011 ms
-64 bytes from 192.168.66.1: icmp_seq=290 ttl=64 time=1003 ms
-64 bytes from 192.168.66.1: icmp_seq=291 ttl=64 time=3.11 ms
-64 bytes from 192.168.66.1: icmp_seq=292 ttl=64 time=1007 ms
-
-nm-tool says this signal is much stronger and still says there are no 
-other visible access points.
-
-       Wireless Access Points (* = current AP)
-     FishNet:         Infra, D6:CA:6D:7A:BF:37, Freq 2447 MHz, Rate 54 
-Mb/s, Strength 75
-     Busklandia:      Infra, D6:CA:6D:7A:BF:39, Freq 2447 MHz, Rate 54 
-Mb/s, Strength 54 WPA2
-     *Office-C-Band:  Infra, D4:CA:6D:C5:68:29, Freq 5260 MHz, Rate 6 
-Mb/s, Strength 59 WPA2
-
-A frequency scan on the Mikrotik  5 GHz both will show there is nothing 
-to be seen.
-
-Based upon my theory, it would be true that a lot of frames are not 
-acknowledged due to "interference".  However, it would be multipath 
-interference.  In 802.11x multipath should not be a problem unless the 
-reflection is from a very distant object.
-
-So, although application of your suggested cure SHOULD HELP, it would be 
-correcting a symptom for something which is not caused by weak signal.
-
-I would appreciate any comment you have on this, as I suspect you know a 
-lot more than I.
-
-Later today I will attempt to apply your suggested fix.
-
-Thanks
-
-
-
-
-
-
-
-
-
-
-
-
-On 25/10/2014 18:10, Emmanuel Grumbach wrote:
-> On Fri, Oct 24, 2014 at 10:05 PM, jeremy lansman
-> <jeremy.lansman@gmail.com> wrote:
->> Hi.
->>
->> I beg your pardon for asking a newbe question...but..here goes anyway.
->>
->> My problem is with an Intel Advanced 6230.  I have noted over the year + I
->> have used it under Ubuntu that it seems to have a problem when I move the
->> laptop.  This is consistent with a channel estimation (tap equalizer) issue
->> under COFDM modulation.
->> No, I do not know about wi-fi, and I do not relish digging into driver
->> stuff.  But I do know digital RF in general.
->> If it is going to take more hoursout of my life , maybe I should buy an
->> external wi-fi for the lap top and put up with the resultant klutz.
-> Please try this:
->
-> https://git.kernel.org/cgit/linux/kernel/git/iwlwifi/iwlwifi-fixes.git/commit/?id=a0855054e59b0c5b2b00237fdb5147f7bcc18efb
->
-> It is on its way upstream.
->
->> This is ping to my AP after I move about:
->> 64 bytes from 10.5.50.1: icmp_seq=509 ttl=64 time=1057 ms
->> 64 bytes from 10.5.50.1: icmp_seq=510 ttl=64 time=5382 ms
->> 64 bytes from 10.5.50.1: icmp_seq=511 ttl=64 time=4386 ms
->> 64 bytes from 10.5.50.1: icmp_seq=512 ttl=64 time=3383 ms
->> 64 bytes from 10.5.50.1: icmp_seq=513 ttl=64 time=2376 ms
->> 64 bytes from 10.5.50.1: icmp_seq=514 ttl=64 time=1438 ms
->> 64 bytes from 10.5.50.1: icmp_seq=515 ttl=64 time=433 ms
->> 64 bytes from 10.5.50.1: icmp_seq=516 ttl=64 time=823 ms
->> 64 bytes from 10.5.50.1: icmp_seq=517 ttl=64 time=1533 ms
->>
->>
->> This is if I sit still a while:
->> 64 bytes from 10.5.50.1: icmp_seq=583 ttl=64 time=1.18 ms
->> 64 bytes from 10.5.50.1: icmp_seq=584 ttl=64 time=1.79 ms
->> 64 bytes from 10.5.50.1: icmp_seq=585 ttl=64 time=0.871 ms
->> 64 bytes from 10.5.50.1: icmp_seq=586 ttl=64 time=2.96 ms
->> 64 bytes from 10.5.50.1: icmp_seq=587 ttl=64 time=1.28 ms
->> 64 bytes from 10.5.50.1: icmp_seq=588 ttl=64 time=1.57 ms
->> 64 bytes from 10.5.50.1: icmp_seq=589 ttl=64 time=1.03 ms
->>
->> WIFI worked after I installed Unbuntu Trusty, but an update seems to have
->> broken it, sending performance back to what it was under 12.04.
->>
->> So.. do you think it might be a simple fix related to channel estimation?
->>
->> Thank you.
->>
->>
->>
->>
->>
->>
->> --
->> Jeremy Lansman
->> New York City USA, +1 347 696 0120
->> Western Cape RSA, +27 21 300 2105
->> Anchorage AK USA,+1 907 339 3800
->> Skype Lansmankyes
->> Fax 27862460713
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
+diff --git a/drivers/staging/vt6655/baseband.c b/drivers/staging/vt6655/baseband.c
+index c7ad927..ed78505 100644
+--- a/drivers/staging/vt6655/baseband.c
++++ b/drivers/staging/vt6655/baseband.c
+@@ -50,7 +50,6 @@
+  */
+ 
+ #include "tmacro.h"
+-#include "tether.h"
+ #include "mac.h"
+ #include "baseband.h"
+ #include "srom.h"
+diff --git a/drivers/staging/vt6655/baseband.h b/drivers/staging/vt6655/baseband.h
+index 31f2255..2d7a3e2 100644
+--- a/drivers/staging/vt6655/baseband.h
++++ b/drivers/staging/vt6655/baseband.h
+@@ -31,7 +31,6 @@
+ #define __BASEBAND_H__
+ 
+ #include "ttype.h"
+-#include "tether.h"
+ #include "device.h"
+ 
+ /*
+diff --git a/drivers/staging/vt6655/desc.h b/drivers/staging/vt6655/desc.h
+index ba735ea..9e8f23f 100644
+--- a/drivers/staging/vt6655/desc.h
++++ b/drivers/staging/vt6655/desc.h
+@@ -35,7 +35,6 @@
+ #include <linux/mm.h>
+ #include "linux/ieee80211.h"
+ #include "ttype.h"
+-#include "tether.h"
+ 
+ #define B_OWNED_BY_CHIP     1
+ #define B_OWNED_BY_HOST     0
+diff --git a/drivers/staging/vt6655/device.h b/drivers/staging/vt6655/device.h
+index 8790622..48130b5 100644
+--- a/drivers/staging/vt6655/device.h
++++ b/drivers/staging/vt6655/device.h
+@@ -73,7 +73,6 @@
+ #include "device_cfg.h"
+ #include "ttype.h"
+ #include "80211hdr.h"
+-#include "tether.h"
+ #include "wmgr.h"
+ #include "mib.h"
+ #include "srom.h"
+@@ -639,8 +638,6 @@ struct vnt_private {
+ 	unsigned long uNumSQ3[MAX_RATE];
+ 	unsigned short wAntDiversityMaxRate;
+ 
+-	SEthernetHeader         sTxEthHeader;
+-	SEthernetHeader         sRxEthHeader;
+ 	unsigned char abyBroadcastAddr[ETH_ALEN];
+ 	unsigned char abySNAP_RFC1042[ETH_ALEN];
+ 	unsigned char abySNAP_Bridgetunnel[ETH_ALEN];
+diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
+index 0c410f2..244b3ff 100644
+--- a/drivers/staging/vt6655/device_main.c
++++ b/drivers/staging/vt6655/device_main.c
+@@ -58,7 +58,6 @@
+ #include "channel.h"
+ #include "baseband.h"
+ #include "mac.h"
+-#include "tether.h"
+ #include "wmgr.h"
+ #include "power.h"
+ #include "iocmd.h"
+diff --git a/drivers/staging/vt6655/key.h b/drivers/staging/vt6655/key.h
+index 56d1b05..53b4606 100644
+--- a/drivers/staging/vt6655/key.h
++++ b/drivers/staging/vt6655/key.h
+@@ -33,7 +33,6 @@
+ #include <net/mac80211.h>
+ 
+ #include "ttype.h"
+-#include "tether.h"
+ #include "80211mgr.h"
+ 
+ /*---------------------  Export Definitions -------------------------*/
+diff --git a/drivers/staging/vt6655/mac.c b/drivers/staging/vt6655/mac.c
+index a347f39..955dbfe 100644
+--- a/drivers/staging/vt6655/mac.c
++++ b/drivers/staging/vt6655/mac.c
+@@ -69,7 +69,6 @@
+  */
+ 
+ #include "tmacro.h"
+-#include "tether.h"
+ #include "mac.h"
+ 
+ unsigned short TxRate_iwconfig;//2008-5-8 <add> by chester
+diff --git a/drivers/staging/vt6655/mib.h b/drivers/staging/vt6655/mib.h
+index fdb40f2..a2e6106 100644
+--- a/drivers/staging/vt6655/mib.h
++++ b/drivers/staging/vt6655/mib.h
+@@ -30,7 +30,6 @@
+ #define __MIB_H__
+ 
+ #include "ttype.h"
+-#include "tether.h"
+ #include "desc.h"
+ 
+ //
+diff --git a/drivers/staging/vt6655/rxtx.c b/drivers/staging/vt6655/rxtx.c
+index 246a250..f4da7e7 100644
+--- a/drivers/staging/vt6655/rxtx.c
++++ b/drivers/staging/vt6655/rxtx.c
+@@ -50,7 +50,6 @@
+ 
+ #include "device.h"
+ #include "rxtx.h"
+-#include "tether.h"
+ #include "card.h"
+ #include "mac.h"
+ #include "baseband.h"
+diff --git a/drivers/staging/vt6655/srom.c b/drivers/staging/vt6655/srom.c
+index 5396e58..1ac60fb 100644
+--- a/drivers/staging/vt6655/srom.c
++++ b/drivers/staging/vt6655/srom.c
+@@ -44,7 +44,6 @@
+ 
+ #include "upc.h"
+ #include "tmacro.h"
+-#include "tether.h"
+ #include "mac.h"
+ #include "srom.h"
+ 
+diff --git a/drivers/staging/vt6655/tether.h b/drivers/staging/vt6655/tether.h
+deleted file mode 100644
+index 850554c..0000000
+--- a/drivers/staging/vt6655/tether.h
++++ /dev/null
+@@ -1,188 +0,0 @@
+-/*
+- * Copyright (c) 1996, 2003 VIA Networking Technologies, Inc.
+- * All rights reserved.
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2 of the License, or
+- * (at your option) any later version.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License along
+- * with this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+- *
+- * File: tether.h
+- *
+- * Purpose:
+- *
+- * Author: Tevin Chen
+- *
+- * Date: Jan. 28, 1997
+- *
+- */
+-
+-#ifndef __TETHER_H__
+-#define __TETHER_H__
+-
+-#include <linux/etherdevice.h>
+-#include "ttype.h"
+-
+-/*---------------------  Export Definitions -------------------------*/
+-//
+-// constants
+-//
+-#define U_ETHER_ADDR_STR_LEN (ETH_ALEN * 2 + 1)
+-// Ethernet address string length
+-
+-#define MAX_LOOKAHEAD_SIZE  ETH_FRAME_LEN
+-
+-#define U_MULTI_ADDR_LEN    8           // multicast address length
+-
+-#ifdef __BIG_ENDIAN
+-
+-#define TYPE_PKT_IP         0x0800      //
+-#define TYPE_PKT_ARP        0x0806      //
+-#define TYPE_PKT_RARP       0x8035      //
+-#define TYPE_PKT_IPX	    0x8137	    //
+-#define TYPE_PKT_802_1x     0x888e
+-#define TYPE_PKT_PreAuth    0x88C7
+-
+-#define TYPE_PKT_PING_M_REQ 0x8011      // master reguest
+-#define TYPE_PKT_PING_S_GNT 0x8022      // slave grant
+-#define TYPE_PKT_PING_M     0x8077      // pingpong master packet
+-#define TYPE_PKT_PING_S     0x8088      // pingpong slave packet
+-#define TYPE_PKT_WOL_M_REQ  0x8033      // WOL waker request
+-#define TYPE_PKT_WOL_S_GNT  0x8044      // WOL sleeper grant
+-#define TYPE_MGMT_PROBE_RSP 0x5000
+-#define TYPE_PKT_VNT_DIAG   0x8011      // Diag Pkt
+-#define TYPE_PKT_VNT_PER    0x8888      // Diag PER Pkt
+-//
+-// wFrameCtl field in the S802_11Header
+-//
+-// NOTE....
+-//   in network byte order, high byte is going first
+-#define FC_TODS             0x0001
+-#define FC_FROMDS           0x0002
+-#define FC_MOREFRAG         0x0004
+-#define FC_RETRY            0x0008
+-#define FC_POWERMGT         0x0010
+-#define FC_MOREDATA         0x0020
+-#define FC_WEP              0x0040
+-#define TYPE_802_11_ATIM    0x9000
+-
+-#define TYPE_802_11_DATA    0x0800
+-#define TYPE_802_11_CTL     0x0400
+-#define TYPE_802_11_MGMT    0x0000
+-#define TYPE_802_11_MASK    0x0C00
+-#define TYPE_SUBTYPE_MASK   0xFC00
+-#define TYPE_802_11_NODATA  0x4000
+-#define TYPE_DATE_NULL      0x4800
+-
+-#define TYPE_CTL_PSPOLL     0xa400
+-#define TYPE_CTL_RTS        0xb400
+-#define TYPE_CTL_CTS        0xc400
+-#define TYPE_CTL_ACK        0xd400
+-
+-#else //if LITTLE_ENDIAN
+-//
+-// wType field in the SEthernetHeader
+-//
+-// NOTE....
+-//   in network byte order, high byte is going first
+-#define TYPE_PKT_IP         0x0008      //
+-#define TYPE_PKT_ARP        0x0608      //
+-#define TYPE_PKT_RARP       0x3580      //
+-#define TYPE_PKT_IPX	    0x3781	    //
+-
+-#define TYPE_PKT_802_1x     0x8e88
+-#define TYPE_PKT_PreAuth    0xC788
+-
+-#define TYPE_PKT_PING_M_REQ 0x1180      // master reguest
+-#define TYPE_PKT_PING_S_GNT 0x2280      // slave grant
+-#define TYPE_PKT_PING_M     0x7780      // pingpong master packet
+-#define TYPE_PKT_PING_S     0x8880      // pingpong slave packet
+-#define TYPE_PKT_WOL_M_REQ  0x3380      // WOL waker request
+-#define TYPE_PKT_WOL_S_GNT  0x4480      // WOL sleeper grant
+-#define TYPE_MGMT_PROBE_RSP 0x0050
+-#define TYPE_PKT_VNT_DIAG   0x1180      // Diag Pkt
+-#define TYPE_PKT_VNT_PER    0x8888      // Diag PER Pkt
+-//
+-// wFrameCtl field in the S802_11Header
+-//
+-// NOTE....
+-//   in network byte order, high byte is going first
+-#define FC_TODS             0x0100
+-#define FC_FROMDS           0x0200
+-#define FC_MOREFRAG         0x0400
+-#define FC_RETRY            0x0800
+-#define FC_POWERMGT         0x1000
+-#define FC_MOREDATA         0x2000
+-#define FC_WEP              0x4000
+-#define TYPE_802_11_ATIM    0x0090
+-
+-#define TYPE_802_11_DATA    0x0008
+-#define TYPE_802_11_CTL     0x0004
+-#define TYPE_802_11_MGMT    0x0000
+-#define TYPE_802_11_MASK    0x000C
+-#define TYPE_SUBTYPE_MASK   0x00FC
+-#define TYPE_802_11_NODATA  0x0040
+-#define TYPE_DATE_NULL      0x0048
+-
+-#define TYPE_CTL_PSPOLL     0x00a4
+-#define TYPE_CTL_RTS        0x00b4
+-#define TYPE_CTL_CTS        0x00c4
+-#define TYPE_CTL_ACK        0x00d4
+-
+-#endif //#ifdef __BIG_ENDIAN
+-
+-#define WEP_IV_MASK         0x00FFFFFF
+-
+-/*---------------------  Export Types  ------------------------------*/
+-//
+-// Ethernet packet
+-//
+-typedef struct tagSEthernetHeader {
+-	unsigned char abyDstAddr[ETH_ALEN];
+-	unsigned char abySrcAddr[ETH_ALEN];
+-	unsigned short wType;
+-} __attribute__ ((__packed__))
+-SEthernetHeader, *PSEthernetHeader;
+-
+-//
+-// 802_3 packet
+-//
+-typedef struct tagS802_3Header {
+-	unsigned char abyDstAddr[ETH_ALEN];
+-	unsigned char abySrcAddr[ETH_ALEN];
+-	unsigned short wLen;
+-} __attribute__ ((__packed__))
+-S802_3Header, *PS802_3Header;
+-
+-//
+-// 802_11 packet
+-//
+-typedef struct tagS802_11Header {
+-	unsigned short wFrameCtl;
+-	unsigned short wDurationID;
+-	unsigned char abyAddr1[ETH_ALEN];
+-	unsigned char abyAddr2[ETH_ALEN];
+-	unsigned char abyAddr3[ETH_ALEN];
+-	unsigned short wSeqCtl;
+-	unsigned char abyAddr4[ETH_ALEN];
+-} __attribute__ ((__packed__))
+-S802_11Header, *PS802_11Header;
+-
+-/*---------------------  Export Macros ------------------------------*/
+-
+-/*---------------------  Export Classes  ----------------------------*/
+-
+-/*---------------------  Export Variables  --------------------------*/
+-
+-/*---------------------  Export Functions  --------------------------*/
+-
+-#endif // __TETHER_H__
 -- 
-Jeremy Lansman
-New York City USA, +1 347 696 0120
-Western Cape RSA, +27 21 300 2105
-Anchorage AK USA,+1 907 339 3800
-Skype Lansmankyes
-Fax 27862460713
+1.9.1
 
