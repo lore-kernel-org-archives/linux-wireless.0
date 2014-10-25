@@ -1,115 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:28554 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753649AbaJMNmJ (ORCPT
+Received: from mail-wg0-f43.google.com ([74.125.82.43]:38540 "EHLO
+	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752314AbaJYTYp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Oct 2014 09:42:09 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Belisko Marek <marek.belisko@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Avinash Patil <patila@marvell.com>
-Date: Mon, 13 Oct 2014 06:41:59 -0700
-Subject: RE: mwifiex_usb_submit_rx_urb: dev_alloc_skb failed when conected
- to 5GHz
-Message-ID: <5FF020A1CFFEEC49BD1E09530C4FF5951821936BBC@SC-VEXCH1.marvell.com> (sfid-20141013_154220_943102_A12315C1)
-References: <CAAfyv35k1mgQh6FcWaaMciAo8Vkp055k=5xF7zu+yrHmrQbbLA@mail.gmail.com>
-	<5FF020A1CFFEEC49BD1E09530C4FF5951819DB12F1@SC-VEXCH1.marvell.com>
-	<CAAfyv35j-77AURB4fHcecbEvyGS6U+1APNRFCf3FDAd_rrWnJw@mail.gmail.com>
-	<5FF020A1CFFEEC49BD1E09530C4FF5951821351855@SC-VEXCH1.marvell.com>
-	<CAAfyv35E2HUReFpnpdsebPETKk9VPA_hfQHUEJmoJfQt6Q-Puw@mail.gmail.com>
-	<5FF020A1CFFEEC49BD1E09530C4FF5951821936285@SC-VEXCH1.marvell.com>
- <CAAfyv34UXMNwHf+kYCWEn+bcfGda_gA7uroLRLvhTEGGC5R57w@mail.gmail.com>
-In-Reply-To: <CAAfyv34UXMNwHf+kYCWEn+bcfGda_gA7uroLRLvhTEGGC5R57w@mail.gmail.com>
-Content-Type: multipart/mixed;
-	boundary="_003_5FF020A1CFFEEC49BD1E09530C4FF5951821936BBCSCVEXCH1marve_"
-MIME-Version: 1.0
+	Sat, 25 Oct 2014 15:24:45 -0400
+Received: by mail-wg0-f43.google.com with SMTP id n12so3131998wgh.14
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2014 12:24:44 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 44/48] staging: vt6655: remove typedef void *TimerFunction
+Date: Sat, 25 Oct 2014 09:40:22 +0100
+Message-Id: <1414226426-5811-45-git-send-email-tvboxspy@gmail.com> (sfid-20141025_212454_288016_C46A2C52)
+In-Reply-To: <1414226426-5811-1-git-send-email-tvboxspy@gmail.com>
+References: <1414226426-5811-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---_003_5FF020A1CFFEEC49BD1E09530C4FF5951821936BBCSCVEXCH1marve_
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Covert functions TimerSQ3CallBack and TimerState1CallBack to
+the correct type for struct timer_list.function to remove
+the cast altogether.
 
-SGkgTWFyZWssDQoNCj4+DQo+PiBUaGF0J3MgZ29vZCA6KSBBY3R1YWxseSBrZXJuZWwgd2lsbCB0
-YWtlIGNhcmUgb2YgZnJlZWluZyBza2Igd2hlbg0KPmRyaXZlciBzdWJtaXRzIHJlY2VpdmVkIHBh
-Y2tldCB1c2luZyBuZXRpZl9yeCgpLiBDb3VsZCB5b3UgcGxlYXNlIHNoYXJlDQo+eW91ciBoYWNr
-Pw0KPlllcyBpdCBzaG91bGQgYmUgZnJlZWQgd2hlbiBuZXRpZl9yeCgpIGlzIHByb2Nlc3NlZCBi
-dXQgSSBoYXZlIGZlZWxpbmcNCj50aGF0IHNvbWV0aW1lcyAobXkgY2FzZSkgZHVyaW5nIGhpZ2gg
-bG9hZCAoLWIgMTAwbSkgcGFja2V0cyBhcmUgbm90IHNlbmQNCj50byBrZXJuZWwgKG5vdCBmcmVl
-IHNrYikgdW50aWwgc2tiIGFsbG9jYXRpb24gZmFpbHMuIEkgbmVlZCB0byBiZXR0ZXINCj51bmRl
-cnN0YW5kIDExbiByZW9yZGVyaW5nIGNvZGUgOikuDQoNClJ4IHJlb3JkZXIgbG9naWMgY2FuIGJ1
-ZmZlciB1cHRvIDMyIHBhY2tldHMsIGlmIHRoZXkgYXJlbid0IHJlY2VpdmVkIGluIGNvcnJlY3Qg
-b3JkZXIuIFlvdSBhcmUgcmlnaHQuIFlvdXIgcGxhdGZvcm0gbWF5IHJ1biBvdXQgb2YgbWVtb3J5
-IGluIHRoaXMgY2FzZS4NCkNvdWxkIHlvdSBwbGVhc2UgY2hlY2sgaWYgdGhlIHByb2JsZW0gZml4
-ZXMgd2l0aCBhbnkgb2YgdGhlIGF0dGFjaGVkIGNoYW5nZXM/DQoxKSBDaGFuZ2UgUnggd2luZG93
-IHNpemUgZnJvbSAzMiB0byA4Lg0KMikgRGlzYWJsZSBBTVBEVSBmZWF0dXJlLg0KDQo+DQo+SGFj
-ayAoaXQncyBkaXJ0eSBJIGtub3cgYnV0IHBhY2tldHMgb2YgdGhhdCBzaXplIGFyZSBzZW5kIG9u
-bHkgZHVyaW5nDQo+aXBlcmYgc2Vzc2lvbik6DQo+DQo+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0
-L3dpcmVsZXNzL213aWZpZXgvdXNiLmMNCj5iL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgv
-dXNiLmMNCj5pbmRleCBmOTBmZTIxLi5jYzU0OGExIDEwMDY0NA0KPi0tLSBhL2RyaXZlcnMvbmV0
-L3dpcmVsZXNzL213aWZpZXgvdXNiLmMNCj4rKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9td2lm
-aWV4L3VzYi5jDQo+QEAgLTE3OCw2ICsxNzgsMTIgQEAgc3RhdGljIHZvaWQgbXdpZmlleF91c2Jf
-cnhfY29tcGxldGUoc3RydWN0IHVyYg0KPip1cmIpDQo+ICAgICAgICAgICAgICAgIGRldl9kYmco
-YWRhcHRlci0+ZGV2LCAiaW5mbzogcmVjdl9sZW5ndGg9JWQsDQo+c3RhdHVzPSVkXG4iLA0KPiAg
-ICAgICAgICAgICAgICAgICAgICAgIHJlY3ZfbGVuZ3RoLCBzdGF0dXMpOw0KPiAgICAgICAgICAg
-ICAgICBpZiAoc3RhdHVzID09IC1FSU5QUk9HUkVTUykgew0KPisNCj4rICAgICAgICAgICAgICAg
-ICAgICAgICBpZiAoc2tiLT5sZW4gPj0gMTU3NCkgew0KPisgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgZGV2X2tmcmVlX3NrYl9hbnkoc2tiKTsNCj4rICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgIGdvdG8gc2V0dXBfZm9yX25leHQ7DQo+KyAgICAgICAgICAgICAgICAgICAgICAg
-fQ0KPisNCg0KVGhlIGNoYW5nZSBkb2Vzbid0IGxvb2sgY29ycmVjdC4gVGhlIHNrYiBpcyBiZWlu
-ZyBwcm9jZXNzZWQvdXNlZC4gV2UgY2Fubm90IGZyZWUgaXQgaGVyZS4gVGhpcyBtYXkgY3JlYXRl
-IHByb2JsZW0uDQoNClJlZ2FyZHMsDQpBbWl0DQo=
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/baseband.c    | 8 ++++----
+ drivers/staging/vt6655/baseband.h    | 4 ++--
+ drivers/staging/vt6655/device_main.c | 6 +++---
+ drivers/staging/vt6655/wmgr.h        | 1 -
+ 4 files changed, 9 insertions(+), 10 deletions(-)
 
---_003_5FF020A1CFFEEC49BD1E09530C4FF5951821936BBCSCVEXCH1marve_
-Content-Type: application/octet-stream; name="disable_ampdu_feature.diff"
-Content-Description: disable_ampdu_feature.diff
-Content-Disposition: attachment; filename="disable_ampdu_feature.diff";
-	size=1038; creation-date="Mon, 13 Oct 2014 13:12:23 GMT";
-	modification-date="Mon, 13 Oct 2014 13:33:00 GMT"
-Content-Transfer-Encoding: base64
+diff --git a/drivers/staging/vt6655/baseband.c b/drivers/staging/vt6655/baseband.c
+index ed78505..b04dfd9 100644
+--- a/drivers/staging/vt6655/baseband.c
++++ b/drivers/staging/vt6655/baseband.c
+@@ -2781,10 +2781,10 @@ void BBvAntennaDiversity(struct vnt_private *pDevice,
+ 
+ void
+ TimerSQ3CallBack(
+-	void *hDeviceContext
++	unsigned long data
+ )
+ {
+-	struct vnt_private *pDevice = hDeviceContext;
++	struct vnt_private *pDevice = (struct vnt_private *)data;
+ 	unsigned long flags;
+ 
+ 	pr_debug("TimerSQ3CallBack...\n");
+@@ -2827,10 +2827,10 @@ TimerSQ3CallBack(
+ 
+ void
+ TimerState1CallBack(
+-	void *hDeviceContext
++	unsigned long data
+ )
+ {
+-	struct vnt_private *pDevice = hDeviceContext;
++	struct vnt_private *pDevice = (struct vnt_private *)data;
+ 	unsigned long flags;
+ 
+ 	pr_debug("TimerState1CallBack...\n");
+diff --git a/drivers/staging/vt6655/baseband.h b/drivers/staging/vt6655/baseband.h
+index 2d7a3e2..772ea0d 100644
+--- a/drivers/staging/vt6655/baseband.h
++++ b/drivers/staging/vt6655/baseband.h
+@@ -103,12 +103,12 @@ void BBvExitDeepSleep(void __iomem *dwIoBase, unsigned char byLocalID);
+ 
+ void
+ TimerSQ3CallBack(
+-	void *hDeviceContext
++	unsigned long
+ );
+ 
+ void
+ TimerState1CallBack(
+-	void *hDeviceContext
++	unsigned long
+ );
+ 
+ void BBvAntennaDiversity(struct vnt_private *pDevice,
+diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
+index 9755856..b469872 100644
+--- a/drivers/staging/vt6655/device_main.c
++++ b/drivers/staging/vt6655/device_main.c
+@@ -625,17 +625,17 @@ static void device_init_diversity_timer(struct vnt_private *pDevice)
+ {
+ 	init_timer(&pDevice->TimerSQ3Tmax1);
+ 	pDevice->TimerSQ3Tmax1.data = (unsigned long) pDevice;
+-	pDevice->TimerSQ3Tmax1.function = (TimerFunction)TimerSQ3CallBack;
++	pDevice->TimerSQ3Tmax1.function = TimerSQ3CallBack;
+ 	pDevice->TimerSQ3Tmax1.expires = RUN_AT(HZ);
+ 
+ 	init_timer(&pDevice->TimerSQ3Tmax2);
+ 	pDevice->TimerSQ3Tmax2.data = (unsigned long) pDevice;
+-	pDevice->TimerSQ3Tmax2.function = (TimerFunction)TimerSQ3CallBack;
++	pDevice->TimerSQ3Tmax2.function = TimerSQ3CallBack;
+ 	pDevice->TimerSQ3Tmax2.expires = RUN_AT(HZ);
+ 
+ 	init_timer(&pDevice->TimerSQ3Tmax3);
+ 	pDevice->TimerSQ3Tmax3.data = (unsigned long) pDevice;
+-	pDevice->TimerSQ3Tmax3.function = (TimerFunction)TimerState1CallBack;
++	pDevice->TimerSQ3Tmax3.function = TimerState1CallBack;
+ 	pDevice->TimerSQ3Tmax3.expires = RUN_AT(HZ);
+ }
+ 
+diff --git a/drivers/staging/vt6655/wmgr.h b/drivers/staging/vt6655/wmgr.h
+index 8f9748b..74f1f16 100644
+--- a/drivers/staging/vt6655/wmgr.h
++++ b/drivers/staging/vt6655/wmgr.h
+@@ -72,6 +72,5 @@
+ 
+ /*---------------------  Export Types  ------------------------------*/
+ #define timer_expire(timer, next_tick)   mod_timer(&timer, RUN_AT(next_tick))
+-typedef void (*TimerFunction)(unsigned long);
+ 
+ #endif // __WMGR_H__
+-- 
+1.9.1
 
-ZGlmZiAtLWdpdCBhL3N0YV9ldmVudC5jIGIvc3RhX2V2ZW50LmMKaW5kZXggYTFkZTJkMy4uMGI0
-MDhkMiAxMDA2NDQKLS0tIGEvc3RhX2V2ZW50LmMKKysrIGIvc3RhX2V2ZW50LmMKQEAgLTQzOSwx
-MCArNDM5LDcgQEAgaW50IG13aWZpZXhfcHJvY2Vzc19zdGFfZXZlbnQoc3RydWN0IG13aWZpZXhf
-cHJpdmF0ZSAqcHJpdikKIAkJCQlIb3N0Q21kX0FDVF9HRU5fR0VULCAwLCBOVUxMLCBmYWxzZSk7
-CiAJCWJyZWFrOwogCWNhc2UgRVZFTlRfQUREQkE6Ci0JCWRldl9kYmcoYWRhcHRlci0+ZGV2LCAi
-ZXZlbnQ6IEFEREJBIFJlcXVlc3RcbiIpOwotCQltd2lmaWV4X3NlbmRfY21kKHByaXYsIEhvc3RD
-bWRfQ01EXzExTl9BRERCQV9SU1AsCi0JCQkJIEhvc3RDbWRfQUNUX0dFTl9TRVQsIDAsCi0JCQkJ
-IGFkYXB0ZXItPmV2ZW50X2JvZHksIGZhbHNlKTsKKwkJZGV2X2RiZyhhZGFwdGVyLT5kZXYsICJl
-dmVudDogQUREQkEgUmVxdWVzdCBpZ25vcmluZy4uLlxuIik7CiAJCWJyZWFrOwogCWNhc2UgRVZF
-TlRfREVMQkE6CiAJCWRldl9kYmcoYWRhcHRlci0+ZGV2LCAiZXZlbnQ6IERFTEJBIFJlcXVlc3Rc
-biIpOwpkaWZmIC0tZ2l0IGEvd21tLmMgYi93bW0uYwppbmRleCBkYzFmMmFkLi5jYjJjNGNkIDEw
-MDY0NAotLS0gYS93bW0uYworKysgYi93bW0uYwpAQCAtNDIxLDkgKzQyMSw5IEBAIG13aWZpZXhf
-d21tX2luaXQoc3RydWN0IG13aWZpZXhfYWRhcHRlciAqYWRhcHRlcikKIAkJCQlwcml2LT5hZ2dy
-X3ByaW9fdGJsW2ldLmFtc2R1ID0KIAkJCQkJCQlCQV9TVFJFQU1fTk9UX0FMTE9XRUQ7CiAJCQlw
-cml2LT5hZ2dyX3ByaW9fdGJsW2ldLmFtcGR1X2FwID0KLQkJCQkJCQlwcml2LT50b3NfdG9fdGlk
-X2ludltpXTsKKwkJCQkJCQlCQV9TVFJFQU1fTk9UX0FMTE9XRUQ7CiAJCQlwcml2LT5hZ2dyX3By
-aW9fdGJsW2ldLmFtcGR1X3VzZXIgPQotCQkJCQkJCXByaXYtPnRvc190b190aWRfaW52W2ldOwor
-CQkJCQkJCUJBX1NUUkVBTV9OT1RfQUxMT1dFRDsKIAkJfQogCiAJCW13aWZpZXhfc2V0X2JhX3Bh
-cmFtcyhwcml2KTsK
-
---_003_5FF020A1CFFEEC49BD1E09530C4FF5951821936BBCSCVEXCH1marve_
-Content-Type: application/octet-stream; name="reduce_Rx_window_size.diff"
-Content-Description: reduce_Rx_window_size.diff
-Content-Disposition: attachment; filename="reduce_Rx_window_size.diff";
-	size=816; creation-date="Mon, 13 Oct 2014 13:12:31 GMT";
-	modification-date="Mon, 13 Oct 2014 13:12:31 GMT"
-Content-Transfer-Encoding: base64
-
-ZGlmZiAtLWdpdCBhL2RlY2wuaCBiL2RlY2wuaAppbmRleCBhYWQzYTRiLi42YTU5ZjZlIDEwMDY0
-NAotLS0gYS9kZWNsLmgKKysrIGIvZGVjbC5oCkBAIC00MywxMyArNDMsMTMgQEAKICNkZWZpbmUg
-TVdJRklFWF9NQVhfUlhfQkFTVFJFQU1fU1VQUE9SVEVECTE2CiAKICNkZWZpbmUgTVdJRklFWF9T
-VEFfQU1QRFVfREVGX1RYV0lOU0laRSAgICAgICAgNjQKLSNkZWZpbmUgTVdJRklFWF9TVEFfQU1Q
-RFVfREVGX1JYV0lOU0laRSAgICAgICAgNjQKKyNkZWZpbmUgTVdJRklFWF9TVEFfQU1QRFVfREVG
-X1JYV0lOU0laRSAgICAgICAgOAogI2RlZmluZSBNV0lGSUVYX1VBUF9BTVBEVV9ERUZfVFhXSU5T
-SVpFICAgICAgICAzMgotI2RlZmluZSBNV0lGSUVYX1VBUF9BTVBEVV9ERUZfUlhXSU5TSVpFICAg
-ICAgICAxNgorI2RlZmluZSBNV0lGSUVYX1VBUF9BTVBEVV9ERUZfUlhXSU5TSVpFICAgICAgICA4
-CiAjZGVmaW5lIE1XSUZJRVhfMTFBQ19TVEFfQU1QRFVfREVGX1RYV0lOU0laRSAgIDY0Ci0jZGVm
-aW5lIE1XSUZJRVhfMTFBQ19TVEFfQU1QRFVfREVGX1JYV0lOU0laRSAgIDY0CisjZGVmaW5lIE1X
-SUZJRVhfMTFBQ19TVEFfQU1QRFVfREVGX1JYV0lOU0laRSAgIDgKICNkZWZpbmUgTVdJRklFWF8x
-MUFDX1VBUF9BTVBEVV9ERUZfVFhXSU5TSVpFICAgNjQKLSNkZWZpbmUgTVdJRklFWF8xMUFDX1VB
-UF9BTVBEVV9ERUZfUlhXSU5TSVpFICAgNjQKKyNkZWZpbmUgTVdJRklFWF8xMUFDX1VBUF9BTVBE
-VV9ERUZfUlhXSU5TSVpFICAgOAogCiAjZGVmaW5lIE1XSUZJRVhfREVGQVVMVF9CTE9DS19BQ0tf
-VElNRU9VVCAgMHhmZmZmCiAK
-
---_003_5FF020A1CFFEEC49BD1E09530C4FF5951821936BBCSCVEXCH1marve_--
