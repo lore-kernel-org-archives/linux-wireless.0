@@ -1,126 +1,209 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f50.google.com ([209.85.218.50]:54814 "EHLO
-	mail-oi0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753232AbaJUICW convert rfc822-to-8bit (ORCPT
+Received: from mail-wg0-f43.google.com ([74.125.82.43]:64788 "EHLO
+	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752176AbaJYUHE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Oct 2014 04:02:22 -0400
-Received: by mail-oi0-f50.google.com with SMTP id i138so513617oig.23
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Oct 2014 01:02:22 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1413876484.3481910.181413525.516B5A23@webmail.messagingengine.com>
-References: <1413463736.1316541.179720977.4FD32021@webmail.messagingengine.com>
-	<1413510814.22769.6.camel@dcbw.local>
-	<1413751717.2510219.180809145.0E693C29@webmail.messagingengine.com>
-	<CANUX_P2RHVRorVABRfWVg39d4D8dj35v3fBpY3=3jvQ1U+mfEA@mail.gmail.com>
-	<1413783023.2710583.180921653.10DFFCEE@webmail.messagingengine.com>
-	<CANUX_P0Q7cNeBzQa=2WVZFJXPTLx8F6YQk9bGCf_3uYhc5RcGA@mail.gmail.com>
-	<CANUX_P3EqgTX7cPJvQ3fWH1yijekE0G_8TiH2_OCS7nFASGtkA@mail.gmail.com>
-	<1413789724.3063896.180943829.3F15F453@webmail.messagingengine.com>
-	<CANUX_P1REqkSqN0dtak34OQ_pSGMtPvV3Vj61tW5wb1+n2A7mg@mail.gmail.com>
-	<1413833365.2949853.181221645.22D54845@webmail.messagingengine.com>
-	<CANUX_P3XzYBp7E=hScmc837TpuCr9VrxEYauG=sGMKfOCpX=qA@mail.gmail.com>
-	<CANUX_P06VvZ0uugayOvhZK0iM-NetftN5rZA27TtkYku66cGXA@mail.gmail.com>
-	<1413876484.3481910.181413525.516B5A23@webmail.messagingengine.com>
-Date: Tue, 21 Oct 2014 11:02:22 +0300
-Message-ID: <CANUX_P0dmtC5BVgYv23m6y8_GUDu+hXc+z8PNoS1yPWFUpaMtQ@mail.gmail.com> (sfid-20141021_100232_588611_FB919F94)
-Subject: Re: iwlwifi: Reason 7 periodic disconnect
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: =?UTF-8?Q?Lauren=C8=9Biu_Nicola?= <lnicola@dend.ro>
-Cc: Dan Williams <dcbw@redhat.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>
-Content-Type: text/plain; charset=UTF-8
+	Sat, 25 Oct 2014 16:07:04 -0400
+Received: by mail-wg0-f43.google.com with SMTP id n12so3167146wgh.14
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2014 13:07:03 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 40/48] staging: vt6655: dead code remove country.h
+Date: Sat, 25 Oct 2014 09:40:18 +0100
+Message-Id: <1414226426-5811-41-git-send-email-tvboxspy@gmail.com> (sfid-20141025_220710_710177_2D263B3C)
+In-Reply-To: <1414226426-5811-1-git-send-email-tvboxspy@gmail.com>
+References: <1414226426-5811-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 21, 2014 at 10:28 AM, Laurențiu Nicola <lnicola@dend.ro> wrote:
-> I have 3.17.1, which includes the patch you mention. I also verified
-> that iwconfig reports that power management is disabled.
->
-> I don't know how easy it is to recompile the DD-WRT kernel. One thing I
-> could do is try another firmware instead of DD-WRT to see if the issue
-> still occurs.
->
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/channel.c |   1 -
+ drivers/staging/vt6655/country.h | 161 ---------------------------------------
+ 2 files changed, 162 deletions(-)
+ delete mode 100644 drivers/staging/vt6655/country.h
 
-I guess you can try to use the vendor's firmware and see what happens.
-Another option is try to tweak DD-WRT not to kick client out after 1 minute :)
+diff --git a/drivers/staging/vt6655/channel.c b/drivers/staging/vt6655/channel.c
+index d505fa3..49c2d9a 100644
+--- a/drivers/staging/vt6655/channel.c
++++ b/drivers/staging/vt6655/channel.c
+@@ -21,7 +21,6 @@
+  */
+ 
+ #include "baseband.h"
+-#include "country.h"
+ #include "channel.h"
+ #include "device.h"
+ #include "rf.h"
+diff --git a/drivers/staging/vt6655/country.h b/drivers/staging/vt6655/country.h
+deleted file mode 100644
+index 2365fb1..0000000
+--- a/drivers/staging/vt6655/country.h
++++ /dev/null
+@@ -1,161 +0,0 @@
+-/*
+- * Copyright (c) 1996, 2003 VIA Networking Technologies, Inc.
+- * All rights reserved.
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2 of the License, or
+- * (at your option) any later version.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License along
+- * with this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+- *
+- *
+- * File: country.h
+- *
+- * Purpose: Country Code information
+- *
+- * Author: Lucas Lin
+- *
+- * Date: Dec 23, 2004
+- *
+- */
+-
+-#ifndef __COUNTRY_H__
+-#define __COUNTRY_H__
+-
+-#include "ttype.h"
+-
+-/************************************************************************
+- * The definition here should be complied with the INF country order
+- * Please check with VNWL.inf/VNWL64.inf/VNWL*.inf
+- ************************************************************************/
+-typedef enum _COUNTRY_CODE {
+-	CCODE_FCC = 0,
+-	CCODE_TELEC,
+-	CCODE_ETSI,
+-	CCODE_RESV3,
+-	CCODE_RESV4,
+-	CCODE_RESV5,
+-	CCODE_RESV6,
+-	CCODE_RESV7,
+-	CCODE_RESV8,
+-	CCODE_RESV9,
+-	CCODE_RESVa,
+-	CCODE_RESVb,
+-	CCODE_RESVc,
+-	CCODE_RESVd,
+-	CCODE_RESVe,
+-	CCODE_ALLBAND,
+-	CCODE_ALBANIA,
+-	CCODE_ALGERIA,
+-	CCODE_ARGENTINA,
+-	CCODE_ARMENIA,
+-	CCODE_AUSTRALIA,
+-	CCODE_AUSTRIA,
+-	CCODE_AZERBAIJAN,
+-	CCODE_BAHRAIN,
+-	CCODE_BELARUS,
+-	CCODE_BELGIUM,
+-	CCODE_BELIZE,
+-	CCODE_BOLIVIA,
+-	CCODE_BRAZIL,
+-	CCODE_BRUNEI_DARUSSALAM,
+-	CCODE_BULGARIA,
+-	CCODE_CANADA,
+-	CCODE_CHILE,
+-	CCODE_CHINA,
+-	CCODE_COLOMBIA,
+-	CCODE_COSTA_RICA,
+-	CCODE_CROATIA,
+-	CCODE_CYPRUS,
+-	CCODE_CZECH,
+-	CCODE_DENMARK,
+-	CCODE_DOMINICAN_REPUBLIC,
+-	CCODE_ECUADOR,
+-	CCODE_EGYPT,
+-	CCODE_EL_SALVADOR,
+-	CCODE_ESTONIA,
+-	CCODE_FINLAND,
+-	CCODE_FRANCE,
+-	CCODE_GERMANY,
+-	CCODE_GREECE,
+-	CCODE_GEORGIA,
+-	CCODE_GUATEMALA,
+-	CCODE_HONDURAS,
+-	CCODE_HONG_KONG,
+-	CCODE_HUNGARY,
+-	CCODE_ICELAND,
+-	CCODE_INDIA,
+-	CCODE_INDONESIA,
+-	CCODE_IRAN,
+-	CCODE_IRELAND,
+-	CCODE_ITALY,
+-	CCODE_ISRAEL,
+-	CCODE_JAPAN,
+-	CCODE_JORDAN,
+-	CCODE_KAZAKHSTAN,
+-	CCODE_KUWAIT,
+-	CCODE_LATVIA,
+-	CCODE_LEBANON,
+-	CCODE_LEICHTENSTEIN,
+-	CCODE_LITHUANIA,
+-	CCODE_LUXEMBURG,
+-	CCODE_MACAU,
+-	CCODE_MACEDONIA,
+-	CCODE_MALTA,
+-	CCODE_MALAYSIA,
+-	CCODE_MEXICO,
+-	CCODE_MONACO,
+-	CCODE_MOROCCO,
+-	CCODE_NETHERLANDS,
+-	CCODE_NEW_ZEALAND,
+-	CCODE_NORTH_KOREA,
+-	CCODE_NORWAY,
+-	CCODE_OMAN,
+-	CCODE_PAKISTAN,
+-	CCODE_PANAMA,
+-	CCODE_PERU,
+-	CCODE_PHILIPPINES,
+-	CCODE_POLAND,
+-	CCODE_PORTUGAL,
+-	CCODE_PUERTO_RICO,
+-	CCODE_QATAR,
+-	CCODE_ROMANIA,
+-	CCODE_RUSSIA,
+-	CCODE_SAUDI_ARABIA,
+-	CCODE_SINGAPORE,
+-	CCODE_SLOVAKIA,
+-	CCODE_SLOVENIA,
+-	CCODE_SOUTH_AFRICA,
+-	CCODE_SOUTH_KOREA,
+-	CCODE_SPAIN,
+-	CCODE_SWEDEN,
+-	CCODE_SWITZERLAND,
+-	CCODE_SYRIA,
+-	CCODE_TAIWAN,
+-	CCODE_THAILAND,
+-	CCODE_TRINIDAD_TOBAGO,
+-	CCODE_TUNISIA,
+-	CCODE_TURKEY,
+-	CCODE_UK,
+-	CCODE_UKRAINE,
+-	CCODE_UNITED_ARAB_EMIRATES,
+-	CCODE_UNITED_STATES,
+-	CCODE_URUGUAY,
+-	CCODE_UZBEKISTAN,
+-	CCODE_VENEZUELA,
+-	CCODE_VIETNAM,
+-	CCODE_YEMEN,
+-	CCODE_ZIMBABWE,
+-	CCODE_JAPAN_W52_W53,
+-	CCODE_MAX
+-} COUNTRY_CODE;
+-
+-#endif  /* __COUNTRY_H__ */
+-- 
+1.9.1
 
-> Laurentiu
->
-> On Tue, Oct 21, 2014, at 08:31, Emmanuel Grumbach wrote:
->> On Tue, Oct 21, 2014 at 8:02 AM, Emmanuel Grumbach <egrumbach@gmail.com>
->> wrote:
->> > On Mon, Oct 20, 2014 at 10:29 PM, Laurențiu Nicola <lnicola@dend.ro> wrote:
->> >> No, nothing in the DD-WRT syslog. The IP seems to be the one cached by
->> >> my DHCP client. I also tried various suggestions found on the internet,
->> >> but nothing helped.
->> >>
->> >
->> > Can you please try to have another device in monitor mode to sniff the
->> > traffic going on?
->> > Felix, can you please tell me when DD-WRT can send a deauth with reason code 7?
->> >
->> > thanks.
->>
->> Can you please disable power save?
->> For this, please make sure you have
->> https://git.kernel.org/cgit/linux/kernel/git/iwlwifi/iwlwifi-fixes.git/commit/?id=f8dfc607b2b460e8e8adfdfb3c5f5bba3a4ad01b
->> or at least have the module parameter.
->> I am wondering if the firmware is not sending frames because of power
->> save toggling.
->>
->> I you could get more extensive logs from the AP it'd be great.
->> Running tracing on the AP would let us know why it thinks we are not
->> associated.
->>
->>
->> >
->> >> Laurentiu
->> >>
->> >> On Mon, Oct 20, 2014, at 11:23, Emmanuel Grumbach wrote:
->> >>> On Mon, Oct 20, 2014 at 10:22 AM, Laurențiu Nicola <lnicola@dend.ro>
->> >>> wrote:
->> >>> > One thing that might be relevant is that, although there is a static
->> >>> > DHCP lease configured (which works on Windows), the router/AP is giving
->> >>> > the laptop a different IP address. The reported MACs are the same, of
->> >>> > course. I don't know whether wpa_supplicant remembers and requests the
->> >>> > last IP it had, but the lease was already present when I configured it.
->> >>> >
->> >>> > The router runs DD-WRT and I don't have problems on Windows or Android.
->> >>> >
->> >>>
->> >>> I guess you can try to get some logs from the DD-WRT - but if the AP
->> >>> doesn't
->> >>> give the same address to Linux as in Windows - there is something
->> >>> fishy...
->> >>>
->> >>> > Laurentiu
->> >>> >
->> >>> > On Mon, Oct 20, 2014, at 10:12, Emmanuel Grumbach wrote:
->> >>> >> On Mon, Oct 20, 2014 at 10:06 AM, Emmanuel Grumbach <egrumbach@gmail.com>
->> >>> >> wrote:
->> >>> >> > On Mon, Oct 20, 2014 at 8:30 AM, Laurențiu Nicola <lnicola@dend.ro> wrote:
->> >>> >> >> Here: https://bpaste.net/show/bf6dc1847ce3
->> >>> >> >>
->> >>> >> >
->> >>> >> > Are you sure you had MAC80211_MLME_DEBUG?
->> >>> >> >
->> >>> >> >>
->> >>> >> Ok - You probably had it - sorry. But apparently the AP is really kicking
->> >>> >> us...
->> >>> >> What AP do you have?
->> >>> >> --
->> >>> >> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
->> >>> >> in
->> >>> >> the body of a message to majordomo@vger.kernel.org
->> >>> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> >>> --
->> >>> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
->> >>> in
->> >>> the body of a message to majordomo@vger.kernel.org
->> >>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
->> in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
