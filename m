@@ -1,41 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:58055 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751181AbaJ0Io5 (ORCPT
+Received: from mail-wg0-f48.google.com ([74.125.82.48]:52527 "EHLO
+	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752077AbaJYTZm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Oct 2014 04:44:57 -0400
-Received: by mail-wi0-f172.google.com with SMTP id d1so2098751wiv.17
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Oct 2014 01:44:56 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <87siieom8s.fsf@kamboji.qca.qualcomm.com>
-References: <1414073150-11593-1-git-send-email-bartosz.markowski@tieto.com>
-	<87siieom8s.fsf@kamboji.qca.qualcomm.com>
-Date: Mon, 27 Oct 2014 09:44:56 +0100
-Message-ID: <CACKGw+FBM8jV+ctYK=3D+oBWLYEv6snG_sOSZ-wbmwUFs5v-KA@mail.gmail.com> (sfid-20141027_094500_388292_43C8A5F5)
-Subject: Re: [PATCH] ath10k: fix pm resume after suspend
-From: Bartosz Markowski <bartosz.markowski@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath10k <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Sat, 25 Oct 2014 15:25:42 -0400
+Received: by mail-wg0-f48.google.com with SMTP id m15so1211373wgh.19
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2014 12:25:41 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 24/31] staging: vt6655: vt6655_probe remove management pointers
+Date: Sat, 25 Oct 2014 09:20:34 +0100
+Message-Id: <1414225241-5480-25-git-send-email-tvboxspy@gmail.com> (sfid-20141025_212547_102574_8EFEAC17)
+In-Reply-To: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
+References: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 23 October 2014 17:10, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Bartosz Markowski <bartosz.markowski@tieto.com> writes:
->
->> Firmware was crashing when we were trying to warm reset it
->> after suspend. This was due to the fact that target registeres
->> can be accessed only if the hardware is awaken.
->>
->> This patch makes sure to awake the device also on the hif up,
->> not only in case of probe call path.
->>
->> Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
->
-> This one has non-trivial conflicts. Can you rebase, please?
+All these pointers are now dead.
 
-Sure, I've sent a PATCH v2.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/device_main.c | 2 --
+ 1 file changed, 2 deletions(-)
 
+diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
+index 0bd2ca8..d7dd002 100644
+--- a/drivers/staging/vt6655/device_main.c
++++ b/drivers/staging/vt6655/device_main.c
+@@ -3266,8 +3266,6 @@ vt6655_probe(struct pci_dev *pcid, const struct pci_device_id *ent)
+ 	/* Enable the chip specified capabilities */
+ 	priv->flags = priv->sOpts.flags | (pChip_info->flags & 0xff000000UL);
+ 	priv->tx_80211 = device_dma0_tx_80211;
+-	priv->sMgmtObj.pAdapter = (void *)priv;
+-	priv->pMgmt = &(priv->sMgmtObj);
+ 
+ 	wiphy = priv->hw->wiphy;
+ 
 -- 
-Bartosz
+1.9.1
+
