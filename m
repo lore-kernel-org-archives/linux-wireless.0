@@ -1,240 +1,798 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:18579 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755697AbaJ2Jy2 (ORCPT
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:40529 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752588AbaJYTSN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2014 05:54:28 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Belisko Marek <marek.belisko@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Avinash Patil <patila@marvell.com>
-Date: Wed, 29 Oct 2014 02:54:19 -0700
-Subject: RE: mwifiex_usb_submit_rx_urb: dev_alloc_skb failed when conected
- to 5GHz
-Message-ID: <5FF020A1CFFEEC49BD1E09530C4FF5951821B47FD7@SC-VEXCH1.marvell.com> (sfid-20141029_105438_943658_5C39BE68)
-References: <CAAfyv35k1mgQh6FcWaaMciAo8Vkp055k=5xF7zu+yrHmrQbbLA@mail.gmail.com>
-	<5FF020A1CFFEEC49BD1E09530C4FF5951819DB12F1@SC-VEXCH1.marvell.com>
-	<CAAfyv35j-77AURB4fHcecbEvyGS6U+1APNRFCf3FDAd_rrWnJw@mail.gmail.com>
-	<5FF020A1CFFEEC49BD1E09530C4FF5951821351855@SC-VEXCH1.marvell.com>
-	<CAAfyv35E2HUReFpnpdsebPETKk9VPA_hfQHUEJmoJfQt6Q-Puw@mail.gmail.com>
-	<5FF020A1CFFEEC49BD1E09530C4FF5951821936285@SC-VEXCH1.marvell.com>
-	<CAAfyv34UXMNwHf+kYCWEn+bcfGda_gA7uroLRLvhTEGGC5R57w@mail.gmail.com>
-	<5FF020A1CFFEEC49BD1E09530C4FF5951821936BBC@SC-VEXCH1.marvell.com>
-	<CAAfyv36s+stSKU7Oi372EjsvUi+S6PSbg1wVTD1dJrMrerBPXg@mail.gmail.com>
-	<5FF020A1CFFEEC49BD1E09530C4FF5951821936F03@SC-VEXCH1.marvell.com>
-	<CAAfyv34ivLF-B0ip+uhCah0PsiRsP1QOD0qW8F73n7KERqgM2w@mail.gmail.com>
-	<CAAfyv37uyPwED3tzX_4RjeTuf8LXqtL3zH4f-cNOLuRB+w=z6Q@mail.gmail.com>
-	<5FF020A1CFFEEC49BD1E09530C4FF5951821545AE6@SC-VEXCH1.marvell.com>
- <CAAfyv35G=9WyYxQZjt3EYfGC+u0z81ktXrO7LEUrADxKX3XDNA@mail.gmail.com>
-In-Reply-To: <CAAfyv35G=9WyYxQZjt3EYfGC+u0z81ktXrO7LEUrADxKX3XDNA@mail.gmail.com>
-Content-Type: multipart/mixed;
-	boundary="_003_5FF020A1CFFEEC49BD1E09530C4FF5951821B47FD7SCVEXCH1marve_"
-MIME-Version: 1.0
+	Sat, 25 Oct 2014 15:18:13 -0400
+Received: by mail-wi0-f173.google.com with SMTP id ex7so3527726wid.0
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2014 12:18:12 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 24/48] staging: vt6655: mib remove unused functions and structure members
+Date: Sat, 25 Oct 2014 09:40:02 +0100
+Message-Id: <1414226426-5811-25-git-send-email-tvboxspy@gmail.com> (sfid-20141025_211826_079099_BC329594)
+In-Reply-To: <1414226426-5811-1-git-send-email-tvboxspy@gmail.com>
+References: <1414226426-5811-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---_003_5FF020A1CFFEEC49BD1E09530C4FF5951821B47FD7SCVEXCH1marve_
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/mib.c | 423 -------------------------------------------
+ drivers/staging/vt6655/mib.h | 259 --------------------------
+ 2 files changed, 682 deletions(-)
 
-SGkgTWFyZWssDQoNCldlIGhhdmUgb25lIGZpeCBpbiBSeCByZW9yZGVyIGxvZ2ljIGFuZCBoYXZl
-IGhhbmRsZWQgZGV2X2FsbG9jX3NrYiBmYWlsdXJlIGJ5IHJlc3VibWl0dGluZyB0aGUgdXJicy4N
-CkNvdWxkIHlvdSBwbGVhc2UgdGVzdCBhdHRhY2hlZCBleHBlcmltZW50YWwgcGF0Y2hlcz8NCg0K
-PlsgICA3Ni43Njk2NjJdIHVzYiAxLTE6IFJlY2VpdmVkIGJldHdlZW4gMiBCQVI6MjkxOA0KPlsg
-ICA3Ni43NzUwNDddIHVzYiAxLTE6IE5ldHdvcmtpbmcgc2VuZCBzaXplOjI5MTQNCj5bICAgNzcu
-MDY3NDkxXSB1c2IgMS0xOiByeF9wZW5kaW5nOjEwMTU1DQo+WyAgIDc3LjE3NzUyNF0gdXNiIDEt
-MTogcnhfcGVuZGluZyBrZXJuZWw6MTAzODMNCj5BY2NvcmRpbmcgbG9nIGl0IHNlZW1zIHJ4X3Bl
-bmRpbmcgaXMgc2xvd2x5IGluY3JlYXNpbmcgdW50aWwgYWxsb2NhdGlvbg0KPmZhaWxzLiBDb2Rl
-IGhhY2tzIGFyZSBhdHRhY2hlZC4NCg0KSSBhbSBjaGVja2luZyB5b3VyIGhhY2tzLiBUaGUgcmVh
-c29uIGZvciBodWdlIHJ4X3BlbmRpbmcgY291bnQgaXMgd2UgbWlnaHQgaGF2ZSBtaXNzZWQgdG8g
-ZGVjcmVtZW50IHRoZSBjb3VudCBhdCBzb21lIHBsYWNlLiBUaGUgZGlmZmVyZW5jZSBiZXR3ZWVu
-ICIgUmVjZWl2ZWQgYmV0d2VlbiAyIEJBUiIgYW5kICJOZXR3b3JraW5nIHNlbmQgc2l6ZSIgY291
-bGQgYmUgZ2VudWluZSBsZWFrcy4gV2Ugd2lsbCBsb29rIGludG8gdGhpcy4NCg0KUmVnYXJkcywN
-CkFtaXQNCg0KDQo=
+diff --git a/drivers/staging/vt6655/mib.c b/drivers/staging/vt6655/mib.c
+index 111c018..d2f351d 100644
+--- a/drivers/staging/vt6655/mib.c
++++ b/drivers/staging/vt6655/mib.c
+@@ -25,24 +25,15 @@
+  * Date: May 21, 1996
+  *
+  * Functions:
+- *      STAvClearAllCounter - Clear All MIB Counter
+  *      STAvUpdateIstStatCounter - Update ISR statistic counter
+- *      STAvUpdateRDStatCounter - Update Rx statistic counter
+- *      STAvUpdateRDStatCounterEx - Update Rx statistic counter and copy rcv data
+- *      STAvUpdateTDStatCounter - Update Tx statistic counter
+- *      STAvUpdateTDStatCounterEx - Update Tx statistic counter and copy tx data
+  *      STAvUpdate802_11Counter - Update 802.11 mib counter
+  *
+  * Revision History:
+  *
+  */
+ 
+-#include "upc.h"
+ #include "mac.h"
+-#include "tether.h"
+ #include "mib.h"
+-#include "wctl.h"
+-#include "baseband.h"
+ 
+ /*---------------------  Static Classes  ----------------------------*/
+ 
+@@ -55,24 +46,6 @@
+ /*---------------------  Export Functions  --------------------------*/
+ 
+ /*
+- * Description: Clear All Statistic Counter
+- *
+- * Parameters:
+- *  In:
+- *      pStatistic  - Pointer to Statistic Counter Data Structure
+- *  Out:
+- *      none
+- *
+- * Return Value: none
+- *
+- */
+-void STAvClearAllCounter(PSStatCounter pStatistic)
+-{
+-	// set memory to zero
+-	memset(pStatistic, 0, sizeof(SStatCounter));
+-}
+-
+-/*
+  * Description: Update Isr Statistic Counter
+  *
+  * Parameters:
+@@ -139,373 +112,6 @@ void STAvUpdateIsrStatCounter(PSStatCounter pStatistic, unsigned long dwIsr)
+ }
+ 
+ /*
+- * Description: Update Rx Statistic Counter
+- *
+- * Parameters:
+- *  In:
+- *      pStatistic      - Pointer to Statistic Counter Data Structure
+- *      byRSR           - Rx Status
+- *      byNewRSR        - Rx Status
+- *      pbyBuffer       - Rx Buffer
+- *      cbFrameLength   - Rx Length
+- *  Out:
+- *      none
+- *
+- * Return Value: none
+- *
+- */
+-void STAvUpdateRDStatCounter(PSStatCounter pStatistic,
+-			     unsigned char byRSR, unsigned char byNewRSR, unsigned char byRxRate,
+-			     unsigned char *pbyBuffer, unsigned int cbFrameLength)
+-{
+-	//need change
+-	PS802_11Header pHeader = (PS802_11Header)pbyBuffer;
+-
+-	if (byRSR & RSR_ADDROK)
+-		pStatistic->dwRsrADDROk++;
+-	if (byRSR & RSR_CRCOK) {
+-		pStatistic->dwRsrCRCOk++;
+-
+-		pStatistic->ullRsrOK++;
+-
+-		if (cbFrameLength >= ETH_ALEN) {
+-			// update counters in case of successful transmit
+-			if (byRSR & RSR_ADDRBROAD) {
+-				pStatistic->ullRxBroadcastFrames++;
+-				pStatistic->ullRxBroadcastBytes += (unsigned long long) cbFrameLength;
+-			} else if (byRSR & RSR_ADDRMULTI) {
+-				pStatistic->ullRxMulticastFrames++;
+-				pStatistic->ullRxMulticastBytes += (unsigned long long) cbFrameLength;
+-			} else {
+-				pStatistic->ullRxDirectedFrames++;
+-				pStatistic->ullRxDirectedBytes += (unsigned long long) cbFrameLength;
+-			}
+-		}
+-	}
+-
+-	if (byRxRate == 22) {
+-		pStatistic->CustomStat.ullRsr11M++;
+-		if (byRSR & RSR_CRCOK)
+-			pStatistic->CustomStat.ullRsr11MCRCOk++;
+-
+-		pr_debug("11M: ALL[%d], OK[%d]:[%02x]\n",
+-			 (int)pStatistic->CustomStat.ullRsr11M,
+-			 (int)pStatistic->CustomStat.ullRsr11MCRCOk, byRSR);
+-	} else if (byRxRate == 11) {
+-		pStatistic->CustomStat.ullRsr5M++;
+-		if (byRSR & RSR_CRCOK)
+-			pStatistic->CustomStat.ullRsr5MCRCOk++;
+-
+-		pr_debug(" 5M: ALL[%d], OK[%d]:[%02x]\n",
+-			 (int)pStatistic->CustomStat.ullRsr5M,
+-			 (int)pStatistic->CustomStat.ullRsr5MCRCOk, byRSR);
+-	} else if (byRxRate == 4) {
+-		pStatistic->CustomStat.ullRsr2M++;
+-		if (byRSR & RSR_CRCOK)
+-			pStatistic->CustomStat.ullRsr2MCRCOk++;
+-
+-		pr_debug(" 2M: ALL[%d], OK[%d]:[%02x]\n",
+-			 (int)pStatistic->CustomStat.ullRsr2M,
+-			 (int)pStatistic->CustomStat.ullRsr2MCRCOk, byRSR);
+-	} else if (byRxRate == 2) {
+-		pStatistic->CustomStat.ullRsr1M++;
+-		if (byRSR & RSR_CRCOK)
+-			pStatistic->CustomStat.ullRsr1MCRCOk++;
+-
+-		pr_debug(" 1M: ALL[%d], OK[%d]:[%02x]\n",
+-			 (int)pStatistic->CustomStat.ullRsr1M,
+-			 (int)pStatistic->CustomStat.ullRsr1MCRCOk, byRSR);
+-	} else if (byRxRate == 12) {
+-		pStatistic->CustomStat.ullRsr6M++;
+-		if (byRSR & RSR_CRCOK)
+-			pStatistic->CustomStat.ullRsr6MCRCOk++;
+-
+-		pr_debug(" 6M: ALL[%d], OK[%d]\n",
+-			 (int)pStatistic->CustomStat.ullRsr6M,
+-			 (int)pStatistic->CustomStat.ullRsr6MCRCOk);
+-	} else if (byRxRate == 18) {
+-		pStatistic->CustomStat.ullRsr9M++;
+-		if (byRSR & RSR_CRCOK)
+-			pStatistic->CustomStat.ullRsr9MCRCOk++;
+-
+-		pr_debug(" 9M: ALL[%d], OK[%d]\n",
+-			 (int)pStatistic->CustomStat.ullRsr9M,
+-			 (int)pStatistic->CustomStat.ullRsr9MCRCOk);
+-	} else if (byRxRate == 24) {
+-		pStatistic->CustomStat.ullRsr12M++;
+-		if (byRSR & RSR_CRCOK)
+-			pStatistic->CustomStat.ullRsr12MCRCOk++;
+-
+-		pr_debug("12M: ALL[%d], OK[%d]\n",
+-			 (int)pStatistic->CustomStat.ullRsr12M,
+-			 (int)pStatistic->CustomStat.ullRsr12MCRCOk);
+-	} else if (byRxRate == 36) {
+-		pStatistic->CustomStat.ullRsr18M++;
+-		if (byRSR & RSR_CRCOK)
+-			pStatistic->CustomStat.ullRsr18MCRCOk++;
+-
+-		pr_debug("18M: ALL[%d], OK[%d]\n",
+-			 (int)pStatistic->CustomStat.ullRsr18M,
+-			 (int)pStatistic->CustomStat.ullRsr18MCRCOk);
+-	} else if (byRxRate == 48) {
+-		pStatistic->CustomStat.ullRsr24M++;
+-		if (byRSR & RSR_CRCOK)
+-			pStatistic->CustomStat.ullRsr24MCRCOk++;
+-
+-		pr_debug("24M: ALL[%d], OK[%d]\n",
+-			 (int)pStatistic->CustomStat.ullRsr24M,
+-			 (int)pStatistic->CustomStat.ullRsr24MCRCOk);
+-	} else if (byRxRate == 72) {
+-		pStatistic->CustomStat.ullRsr36M++;
+-		if (byRSR & RSR_CRCOK)
+-			pStatistic->CustomStat.ullRsr36MCRCOk++;
+-
+-		pr_debug("36M: ALL[%d], OK[%d]\n",
+-			 (int)pStatistic->CustomStat.ullRsr36M,
+-			 (int)pStatistic->CustomStat.ullRsr36MCRCOk);
+-	} else if (byRxRate == 96) {
+-		pStatistic->CustomStat.ullRsr48M++;
+-		if (byRSR & RSR_CRCOK)
+-			pStatistic->CustomStat.ullRsr48MCRCOk++;
+-
+-		pr_debug("48M: ALL[%d], OK[%d]\n",
+-			 (int)pStatistic->CustomStat.ullRsr48M,
+-			 (int)pStatistic->CustomStat.ullRsr48MCRCOk);
+-	} else if (byRxRate == 108) {
+-		pStatistic->CustomStat.ullRsr54M++;
+-		if (byRSR & RSR_CRCOK)
+-			pStatistic->CustomStat.ullRsr54MCRCOk++;
+-
+-		pr_debug("54M: ALL[%d], OK[%d]\n",
+-			 (int)pStatistic->CustomStat.ullRsr54M,
+-			 (int)pStatistic->CustomStat.ullRsr54MCRCOk);
+-	} else {
+-		pr_debug("Unknown: Total[%d], CRCOK[%d]\n",
+-			 (int)pStatistic->dwRsrRxPacket+1,
+-			 (int)pStatistic->dwRsrCRCOk);
+-	}
+-
+-	if (byRSR & RSR_BSSIDOK)
+-		pStatistic->dwRsrBSSIDOk++;
+-
+-	if (byRSR & RSR_BCNSSIDOK)
+-		pStatistic->dwRsrBCNSSIDOk++;
+-	if (byRSR & RSR_IVLDLEN)  //invalid len (> 2312 byte)
+-		pStatistic->dwRsrLENErr++;
+-	if (byRSR & RSR_IVLDTYP)  //invalid packet type
+-		pStatistic->dwRsrTYPErr++;
+-	if (byRSR & (RSR_IVLDTYP | RSR_IVLDLEN))
+-		pStatistic->dwRsrErr++;
+-
+-	if (byNewRSR & NEWRSR_DECRYPTOK)
+-		pStatistic->dwNewRsrDECRYPTOK++;
+-	if (byNewRSR & NEWRSR_CFPIND)
+-		pStatistic->dwNewRsrCFP++;
+-	if (byNewRSR & NEWRSR_HWUTSF)
+-		pStatistic->dwNewRsrUTSF++;
+-	if (byNewRSR & NEWRSR_BCNHITAID)
+-		pStatistic->dwNewRsrHITAID++;
+-	if (byNewRSR & NEWRSR_BCNHITAID0)
+-		pStatistic->dwNewRsrHITAID0++;
+-
+-	// increase rx packet count
+-	pStatistic->dwRsrRxPacket++;
+-	pStatistic->dwRsrRxOctet += cbFrameLength;
+-
+-	if (IS_TYPE_DATA(pbyBuffer))
+-		pStatistic->dwRsrRxData++;
+-	else if (IS_TYPE_MGMT(pbyBuffer))
+-		pStatistic->dwRsrRxManage++;
+-	else if (IS_TYPE_CONTROL(pbyBuffer))
+-		pStatistic->dwRsrRxControl++;
+-
+-	if (byRSR & RSR_ADDRBROAD)
+-		pStatistic->dwRsrBroadcast++;
+-	else if (byRSR & RSR_ADDRMULTI)
+-		pStatistic->dwRsrMulticast++;
+-	else
+-		pStatistic->dwRsrDirected++;
+-
+-	if (WLAN_GET_FC_MOREFRAG(pHeader->wFrameCtl))
+-		pStatistic->dwRsrRxFragment++;
+-
+-	if (cbFrameLength < ETH_ZLEN + 4)
+-		pStatistic->dwRsrRunt++;
+-	else if (cbFrameLength == ETH_ZLEN + 4)
+-		pStatistic->dwRsrRxFrmLen64++;
+-	else if ((65 <= cbFrameLength) && (cbFrameLength <= 127))
+-		pStatistic->dwRsrRxFrmLen65_127++;
+-	else if ((128 <= cbFrameLength) && (cbFrameLength <= 255))
+-		pStatistic->dwRsrRxFrmLen128_255++;
+-	else if ((256 <= cbFrameLength) && (cbFrameLength <= 511))
+-		pStatistic->dwRsrRxFrmLen256_511++;
+-	else if ((512 <= cbFrameLength) && (cbFrameLength <= 1023))
+-		pStatistic->dwRsrRxFrmLen512_1023++;
+-	else if ((1024 <= cbFrameLength) && (cbFrameLength <= ETH_FRAME_LEN + 4))
+-		pStatistic->dwRsrRxFrmLen1024_1518++;
+-	else if (cbFrameLength > ETH_FRAME_LEN + 4)
+-		pStatistic->dwRsrLong++;
+-}
+-
+-/*
+- * Description: Update Rx Statistic Counter and copy Rx buffer
+- *
+- * Parameters:
+- *  In:
+- *      pStatistic      - Pointer to Statistic Counter Data Structure
+- *      byRSR           - Rx Status
+- *      byNewRSR        - Rx Status
+- *      pbyBuffer       - Rx Buffer
+- *      cbFrameLength   - Rx Length
+- *  Out:
+- *      none
+- *
+- * Return Value: none
+- *
+- */
+-
+-void
+-STAvUpdateRDStatCounterEx(
+-	PSStatCounter   pStatistic,
+-	unsigned char byRSR,
+-	unsigned char byNewRSR,
+-	unsigned char byRxRate,
+-	unsigned char *pbyBuffer,
+-	unsigned int cbFrameLength
+-)
+-{
+-	STAvUpdateRDStatCounter(
+-		pStatistic,
+-		byRSR,
+-		byNewRSR,
+-		byRxRate,
+-		pbyBuffer,
+-		cbFrameLength
+-);
+-
+-	// rx length
+-	pStatistic->dwCntRxFrmLength = cbFrameLength;
+-	// rx pattern, we just see 10 bytes for sample
+-	memcpy(pStatistic->abyCntRxPattern, (unsigned char *)pbyBuffer, 10);
+-}
+-
+-/*
+- * Description: Update Tx Statistic Counter
+- *
+- * Parameters:
+- *  In:
+- *      pStatistic      - Pointer to Statistic Counter Data Structure
+- *      byTSR0          - Tx Status
+- *      byTSR1          - Tx Status
+- *      pbyBuffer       - Tx Buffer
+- *      cbFrameLength   - Tx Length
+- *      uIdx            - Index of Tx DMA
+- *  Out:
+- *      none
+- *
+- * Return Value: none
+- *
+- */
+-void
+-STAvUpdateTDStatCounter(
+-	PSStatCounter   pStatistic,
+-	unsigned char byTSR0,
+-	unsigned char byTSR1,
+-	unsigned char *pbyBuffer,
+-	unsigned int cbFrameLength,
+-	unsigned int uIdx
+-)
+-{
+-	PWLAN_80211HDR_A4   pHeader;
+-	unsigned char *pbyDestAddr;
+-	unsigned char byTSR0_NCR = byTSR0 & TSR0_NCR;
+-
+-	pHeader = (PWLAN_80211HDR_A4) pbyBuffer;
+-	if (WLAN_GET_FC_TODS(pHeader->wFrameCtl) == 0)
+-		pbyDestAddr = &(pHeader->abyAddr1[0]);
+-	else
+-		pbyDestAddr = &(pHeader->abyAddr3[0]);
+-
+-	// increase tx packet count
+-	pStatistic->dwTsrTxPacket[uIdx]++;
+-	pStatistic->dwTsrTxOctet[uIdx] += cbFrameLength;
+-
+-	if (byTSR0_NCR != 0) {
+-		pStatistic->dwTsrRetry[uIdx]++;
+-		pStatistic->dwTsrTotalRetry[uIdx] += byTSR0_NCR;
+-
+-		if (byTSR0_NCR == 1)
+-			pStatistic->dwTsrOnceRetry[uIdx]++;
+-		else
+-			pStatistic->dwTsrMoreThanOnceRetry[uIdx]++;
+-	}
+-
+-	if ((byTSR1&(TSR1_TERR|TSR1_RETRYTMO|TSR1_TMO|ACK_DATA)) == 0) {
+-		pStatistic->ullTsrOK[uIdx]++;
+-		pStatistic->CustomStat.ullTsrAllOK =
+-			(pStatistic->ullTsrOK[TYPE_AC0DMA] + pStatistic->ullTsrOK[TYPE_TXDMA0]);
+-		// update counters in case that successful transmit
+-		if (is_broadcast_ether_addr(pbyDestAddr)) {
+-			pStatistic->ullTxBroadcastFrames[uIdx]++;
+-			pStatistic->ullTxBroadcastBytes[uIdx] += (unsigned long long) cbFrameLength;
+-		} else if (is_multicast_ether_addr(pbyDestAddr)) {
+-			pStatistic->ullTxMulticastFrames[uIdx]++;
+-			pStatistic->ullTxMulticastBytes[uIdx] += (unsigned long long) cbFrameLength;
+-		} else {
+-			pStatistic->ullTxDirectedFrames[uIdx]++;
+-			pStatistic->ullTxDirectedBytes[uIdx] += (unsigned long long) cbFrameLength;
+-		}
+-	} else {
+-		if (byTSR1 & TSR1_TERR)
+-			pStatistic->dwTsrErr[uIdx]++;
+-		if (byTSR1 & TSR1_RETRYTMO)
+-			pStatistic->dwTsrRetryTimeout[uIdx]++;
+-		if (byTSR1 & TSR1_TMO)
+-			pStatistic->dwTsrTransmitTimeout[uIdx]++;
+-		if (byTSR1 & ACK_DATA)
+-			pStatistic->dwTsrACKData[uIdx]++;
+-	}
+-
+-	if (is_broadcast_ether_addr(pbyDestAddr))
+-		pStatistic->dwTsrBroadcast[uIdx]++;
+-	else if (is_multicast_ether_addr(pbyDestAddr))
+-		pStatistic->dwTsrMulticast[uIdx]++;
+-	else
+-		pStatistic->dwTsrDirected[uIdx]++;
+-}
+-
+-/*
+- * Description: Update Tx Statistic Counter and copy Tx buffer
+- *
+- * Parameters:
+- *  In:
+- *      pStatistic      - Pointer to Statistic Counter Data Structure
+- *      pbyBuffer       - Tx Buffer
+- *      cbFrameLength   - Tx Length
+- *  Out:
+- *      none
+- *
+- * Return Value: none
+- *
+- */
+-void
+-STAvUpdateTDStatCounterEx(
+-	PSStatCounter   pStatistic,
+-	unsigned char *pbyBuffer,
+-	unsigned long cbFrameLength
+-)
+-{
+-	unsigned int uPktLength;
+-
+-	uPktLength = (unsigned int)cbFrameLength;
+-
+-	// tx length
+-	pStatistic->dwCntTxBufLength = uPktLength;
+-	// tx pattern, we just see 16 bytes for sample
+-	memcpy(pStatistic->abyCntTxPattern, pbyBuffer, 16);
+-}
+-
+-/*
+  * Description: Update 802.11 mib counter
+  *
+  * Parameters:
+@@ -526,37 +132,8 @@ STAvUpdate802_11Counter(
+ 	unsigned long dwCounter
+ )
+ {
+-	p802_11Counter->MulticastTransmittedFrameCount = (unsigned long long) (pStatistic->dwTsrBroadcast[TYPE_AC0DMA] +
+-									       pStatistic->dwTsrBroadcast[TYPE_TXDMA0] +
+-									       pStatistic->dwTsrMulticast[TYPE_AC0DMA] +
+-									       pStatistic->dwTsrMulticast[TYPE_TXDMA0]);
+-	p802_11Counter->FailedCount = (unsigned long long) (pStatistic->dwTsrErr[TYPE_AC0DMA] + pStatistic->dwTsrErr[TYPE_TXDMA0]);
+-	p802_11Counter->RetryCount = (unsigned long long) (pStatistic->dwTsrRetry[TYPE_AC0DMA] + pStatistic->dwTsrRetry[TYPE_TXDMA0]);
+-	p802_11Counter->MultipleRetryCount = (unsigned long long) (pStatistic->dwTsrMoreThanOnceRetry[TYPE_AC0DMA] +
+-								   pStatistic->dwTsrMoreThanOnceRetry[TYPE_TXDMA0]);
+ 	p802_11Counter->RTSSuccessCount += (unsigned long long)  (dwCounter & 0x000000ff);
+ 	p802_11Counter->RTSFailureCount += (unsigned long long) ((dwCounter & 0x0000ff00) >> 8);
+ 	p802_11Counter->ACKFailureCount += (unsigned long long) ((dwCounter & 0x00ff0000) >> 16);
+ 	p802_11Counter->FCSErrorCount +=   (unsigned long long) ((dwCounter & 0xff000000) >> 24);
+-	p802_11Counter->MulticastReceivedFrameCount = (unsigned long long) (pStatistic->dwRsrBroadcast +
+-									    pStatistic->dwRsrMulticast);
+-}
+-
+-/*
+- * Description: Clear 802.11 mib counter
+- *
+- * Parameters:
+- *  In:
+- *      p802_11Counter  - Pointer to 802.11 mib counter
+- *  Out:
+- *      none
+- *
+- * Return Value: none
+- *
+- */
+-void
+-STAvClear802_11Counter(PSDot11Counters p802_11Counter)
+-{
+-	// set memory to zero
+-	memset(p802_11Counter, 0, sizeof(SDot11Counters));
+ }
+diff --git a/drivers/staging/vt6655/mib.h b/drivers/staging/vt6655/mib.h
+index 732bdda..fdb40f2 100644
+--- a/drivers/staging/vt6655/mib.h
++++ b/drivers/staging/vt6655/mib.h
+@@ -38,136 +38,16 @@
+ //
+ 
+ typedef struct tagSDot11Counters {
+-	unsigned long Length;
+-	unsigned long long   TransmittedFragmentCount;
+-	unsigned long long   MulticastTransmittedFrameCount;
+-	unsigned long long   FailedCount;
+-	unsigned long long   RetryCount;
+-	unsigned long long   MultipleRetryCount;
+ 	unsigned long long   RTSSuccessCount;
+ 	unsigned long long   RTSFailureCount;
+ 	unsigned long long   ACKFailureCount;
+-	unsigned long long   FrameDuplicateCount;
+-	unsigned long long   ReceivedFragmentCount;
+-	unsigned long long   MulticastReceivedFrameCount;
+ 	unsigned long long   FCSErrorCount;
+-	unsigned long long   TKIPLocalMICFailures;
+-	unsigned long long   TKIPRemoteMICFailures;
+-	unsigned long long   TKIPICVErrors;
+-	unsigned long long   TKIPCounterMeasuresInvoked;
+-	unsigned long long   TKIPReplays;
+-	unsigned long long   CCMPFormatErrors;
+-	unsigned long long   CCMPReplays;
+-	unsigned long long   CCMPDecryptErrors;
+-	unsigned long long   FourWayHandshakeFailures;
+ } SDot11Counters, *PSDot11Counters;
+ 
+ //
+-// MIB2 counter
+-//
+-typedef struct tagSMib2Counter {
+-	long    ifIndex;
+-	char    ifDescr[256];
+-	long    ifType;
+-	long    ifMtu;
+-	unsigned long ifSpeed;
+-	unsigned char ifPhysAddress[ETH_ALEN];
+-	long    ifAdminStatus;
+-	long    ifOperStatus;
+-	unsigned long ifLastChange;
+-	unsigned long ifInOctets;
+-	unsigned long ifInUcastPkts;
+-	unsigned long ifInNUcastPkts;
+-	unsigned long ifInDiscards;
+-	unsigned long ifInErrors;
+-	unsigned long ifInUnknownProtos;
+-	unsigned long ifOutOctets;
+-	unsigned long ifOutUcastPkts;
+-	unsigned long ifOutNUcastPkts;
+-	unsigned long ifOutDiscards;
+-	unsigned long ifOutErrors;
+-	unsigned long ifOutQLen;
+-	unsigned long ifSpecific;
+-} SMib2Counter, *PSMib2Counter;
+-
+-// Value in the ifType entry
+-#define WIRELESSLANIEEE80211b      6
+-
+-// Value in the ifAdminStatus/ifOperStatus entry
+-#define UP                  1
+-#define DOWN                2
+-#define TESTING             3
+-
+-//
+-// RMON counter
+-//
+-typedef struct tagSRmonCounter {
+-	long    etherStatsIndex;
+-	unsigned long etherStatsDataSource;
+-	unsigned long etherStatsDropEvents;
+-	unsigned long etherStatsOctets;
+-	unsigned long etherStatsPkts;
+-	unsigned long etherStatsBroadcastPkts;
+-	unsigned long etherStatsMulticastPkts;
+-	unsigned long etherStatsCRCAlignErrors;
+-	unsigned long etherStatsUndersizePkts;
+-	unsigned long etherStatsOversizePkts;
+-	unsigned long etherStatsFragments;
+-	unsigned long etherStatsJabbers;
+-	unsigned long etherStatsCollisions;
+-	unsigned long etherStatsPkt64Octets;
+-	unsigned long etherStatsPkt65to127Octets;
+-	unsigned long etherStatsPkt128to255Octets;
+-	unsigned long etherStatsPkt256to511Octets;
+-	unsigned long etherStatsPkt512to1023Octets;
+-	unsigned long etherStatsPkt1024to1518Octets;
+-	unsigned long etherStatsOwners;
+-	unsigned long etherStatsStatus;
+-} SRmonCounter, *PSRmonCounter;
+-
+-//
+-// Custom counter
+-//
+-typedef struct tagSCustomCounters {
+-	unsigned long Length;
+-
+-	unsigned long long   ullTsrAllOK;
+-
+-	unsigned long long   ullRsr11M;
+-	unsigned long long   ullRsr5M;
+-	unsigned long long   ullRsr2M;
+-	unsigned long long   ullRsr1M;
+-
+-	unsigned long long   ullRsr11MCRCOk;
+-	unsigned long long   ullRsr5MCRCOk;
+-	unsigned long long   ullRsr2MCRCOk;
+-	unsigned long long   ullRsr1MCRCOk;
+-
+-	unsigned long long   ullRsr54M;
+-	unsigned long long   ullRsr48M;
+-	unsigned long long   ullRsr36M;
+-	unsigned long long   ullRsr24M;
+-	unsigned long long   ullRsr18M;
+-	unsigned long long   ullRsr12M;
+-	unsigned long long   ullRsr9M;
+-	unsigned long long   ullRsr6M;
+-
+-	unsigned long long   ullRsr54MCRCOk;
+-	unsigned long long   ullRsr48MCRCOk;
+-	unsigned long long   ullRsr36MCRCOk;
+-	unsigned long long   ullRsr24MCRCOk;
+-	unsigned long long   ullRsr18MCRCOk;
+-	unsigned long long   ullRsr12MCRCOk;
+-	unsigned long long   ullRsr9MCRCOk;
+-	unsigned long long   ullRsr6MCRCOk;
+-} SCustomCounters, *PSCustomCounters;
+-
+-//
+ // Custom counter
+ //
+ typedef struct tagSISRCounters {
+-	unsigned long Length;
+-
+ 	unsigned long dwIsrTx0OK;
+ 	unsigned long dwIsrAC0TxOK;
+ 	unsigned long dwIsrBeaconTxOK;
+@@ -183,161 +63,22 @@ typedef struct tagSISRCounters {
+ 	unsigned long dwIsrUnknown;
+ 
+ 	unsigned long dwIsrRx1OK;
+-	unsigned long dwIsrATIMTxOK;
+-	unsigned long dwIsrSYNCTxOK;
+-	unsigned long dwIsrCFPEnd;
+-	unsigned long dwIsrATIMEnd;
+-	unsigned long dwIsrSYNCFlushOK;
+ 	unsigned long dwIsrSTIMER1Int;
+ } SISRCounters, *PSISRCounters;
+ 
+-// Value in the etherStatsStatus entry
+-#define VALID               1
+-#define CREATE_REQUEST      2
+-#define UNDER_CREATION      3
+-#define INVALID             4
+-
+ //
+ // statistic counter
+ //
+ typedef struct tagSStatCounter {
+-	// RSR status count
+-	//
+-	unsigned long dwRsrFrmAlgnErr;
+-	unsigned long dwRsrErr;
+-	unsigned long dwRsrCRCErr;
+-	unsigned long dwRsrCRCOk;
+-	unsigned long dwRsrBSSIDOk;
+-	unsigned long dwRsrADDROk;
+-	unsigned long dwRsrBCNSSIDOk;
+-	unsigned long dwRsrLENErr;
+-	unsigned long dwRsrTYPErr;
+-
+-	unsigned long dwNewRsrDECRYPTOK;
+-	unsigned long dwNewRsrCFP;
+-	unsigned long dwNewRsrUTSF;
+-	unsigned long dwNewRsrHITAID;
+-	unsigned long dwNewRsrHITAID0;
+-
+-	unsigned long dwRsrLong;
+-	unsigned long dwRsrRunt;
+-
+-	unsigned long dwRsrRxControl;
+-	unsigned long dwRsrRxData;
+-	unsigned long dwRsrRxManage;
+-
+-	unsigned long dwRsrRxPacket;
+-	unsigned long dwRsrRxOctet;
+-	unsigned long dwRsrBroadcast;
+-	unsigned long dwRsrMulticast;
+-	unsigned long dwRsrDirected;
+-	// 64-bit OID
+-	unsigned long long   ullRsrOK;
+-
+-	// for some optional OIDs (64 bits) and DMI support
+-	unsigned long long   ullRxBroadcastBytes;
+-	unsigned long long   ullRxMulticastBytes;
+-	unsigned long long   ullRxDirectedBytes;
+-	unsigned long long   ullRxBroadcastFrames;
+-	unsigned long long   ullRxMulticastFrames;
+-	unsigned long long   ullRxDirectedFrames;
+-
+-	unsigned long dwRsrRxFragment;
+-	unsigned long dwRsrRxFrmLen64;
+-	unsigned long dwRsrRxFrmLen65_127;
+-	unsigned long dwRsrRxFrmLen128_255;
+-	unsigned long dwRsrRxFrmLen256_511;
+-	unsigned long dwRsrRxFrmLen512_1023;
+-	unsigned long dwRsrRxFrmLen1024_1518;
+-
+-	// TSR status count
+-	//
+-	unsigned long dwTsrTotalRetry[TYPE_MAXTD];        // total collision retry count
+-	unsigned long dwTsrOnceRetry[TYPE_MAXTD];         // this packet only occur one collision
+-	unsigned long dwTsrMoreThanOnceRetry[TYPE_MAXTD]; // this packet occur more than one collision
+-	unsigned long dwTsrRetry[TYPE_MAXTD];             // this packet has ever occur collision,
+-	// that is (dwTsrOnceCollision0 + dwTsrMoreThanOnceCollision0)
+-	unsigned long dwTsrACKData[TYPE_MAXTD];
+-	unsigned long dwTsrErr[TYPE_MAXTD];
+-	unsigned long dwAllTsrOK[TYPE_MAXTD];
+-	unsigned long dwTsrRetryTimeout[TYPE_MAXTD];
+-	unsigned long dwTsrTransmitTimeout[TYPE_MAXTD];
+-
+-	unsigned long dwTsrTxPacket[TYPE_MAXTD];
+-	unsigned long dwTsrTxOctet[TYPE_MAXTD];
+-	unsigned long dwTsrBroadcast[TYPE_MAXTD];
+-	unsigned long dwTsrMulticast[TYPE_MAXTD];
+-	unsigned long dwTsrDirected[TYPE_MAXTD];
+-
+-	// RD/TD count
+-	unsigned long dwCntRxFrmLength;
+-	unsigned long dwCntTxBufLength;
+-
+-	unsigned char abyCntRxPattern[16];
+-	unsigned char abyCntTxPattern[16];
+-
+-	// Software check....
+-	unsigned long dwCntRxDataErr;             // rx buffer data software compare CRC err count
+-	unsigned long dwCntDecryptErr;            // rx buffer data software compare CRC err count
+-	unsigned long dwCntRxICVErr;              // rx buffer data software compare CRC err count
+-	unsigned int idxRxErrorDesc[TYPE_MAXRD]; // index for rx data error RD
+-
+-	// 64-bit OID
+-	unsigned long long   ullTsrOK[TYPE_MAXTD];
+-
+-	// for some optional OIDs (64 bits) and DMI support
+-	unsigned long long   ullTxBroadcastFrames[TYPE_MAXTD];
+-	unsigned long long   ullTxMulticastFrames[TYPE_MAXTD];
+-	unsigned long long   ullTxDirectedFrames[TYPE_MAXTD];
+-	unsigned long long   ullTxBroadcastBytes[TYPE_MAXTD];
+-	unsigned long long   ullTxMulticastBytes[TYPE_MAXTD];
+-	unsigned long long   ullTxDirectedBytes[TYPE_MAXTD];
+-
+ 	SISRCounters ISRStat;
+-
+-	SCustomCounters CustomStat;
+-
+-#ifdef Calcu_LinkQual
+-	//Tx count:
+-	unsigned long TxNoRetryOkCount;
+-	unsigned long TxRetryOkCount;
+-	unsigned long TxFailCount;
+-	//Rx count:
+-	unsigned long RxOkCnt;
+-	unsigned long RxFcsErrCnt;
+-	//statistic
+-	unsigned long SignalStren;
+-	unsigned long LinkQuality;
+-#endif
+ } SStatCounter, *PSStatCounter;
+ 
+-void STAvClearAllCounter(PSStatCounter pStatistic);
+-
+ void STAvUpdateIsrStatCounter(PSStatCounter pStatistic, unsigned long dwIsr);
+ 
+-void STAvUpdateRDStatCounter(PSStatCounter pStatistic,
+-			     unsigned char byRSR, unsigned char byNewRSR, unsigned char byRxRate,
+-			     unsigned char *pbyBuffer, unsigned int cbFrameLength);
+-
+-void STAvUpdateRDStatCounterEx(PSStatCounter pStatistic,
+-			       unsigned char byRSR, unsigned char byNewRsr, unsigned char byRxRate,
+-			       unsigned char *pbyBuffer, unsigned int cbFrameLength);
+-
+-void STAvUpdateTDStatCounter(PSStatCounter pStatistic, unsigned char byTSR0, unsigned char byTSR1,
+-			     unsigned char *pbyBuffer, unsigned int cbFrameLength, unsigned int uIdx);
+-
+-void STAvUpdateTDStatCounterEx(
+-	PSStatCounter   pStatistic,
+-	unsigned char *pbyBuffer,
+-	unsigned long cbFrameLength
+-);
+-
+ void STAvUpdate802_11Counter(
+ 	PSDot11Counters p802_11Counter,
+ 	PSStatCounter   pStatistic,
+ 	unsigned long dwCounter
+ );
+ 
+-void STAvClear802_11Counter(PSDot11Counters p802_11Counter);
+-
+ #endif // __MIB_H__
+-- 
+1.9.1
 
---_003_5FF020A1CFFEEC49BD1E09530C4FF5951821B47FD7SCVEXCH1marve_
-Content-Type: application/octet-stream;
-	name="0001-mwifiex-restart-rxreorder-timer-correctly.patch"
-Content-Description: 0001-mwifiex-restart-rxreorder-timer-correctly.patch
-Content-Disposition: attachment;
-	filename="0001-mwifiex-restart-rxreorder-timer-correctly.patch"; size=6015;
-	creation-date="Wed, 29 Oct 2014 00:40:03 GMT";
-	modification-date="Wed, 29 Oct 2014 00:24:41 GMT"
-Content-Transfer-Encoding: base64
-
-RnJvbSBkNGE2OTA0YjdjNjMxNTk4MmU4Zjc4YTMxZjhlZTNlOWIyN2RiY2M1IE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBNYXJjIFlhbmcgPHlhbmd5YW5nQG1hcnZlbGwuY29tPgpEYXRl
-OiBUdWUsIDI4IE9jdCAyMDE0IDE3OjE0OjE2IC0wNzAwClN1YmplY3Q6IFtQQVRDSF0gbXdpZmll
-eDogcmVzdGFydCByeHJlb3JkZXIgdGltZXIgY29ycmVjdGx5CgpXaGVuIGRvaW5nIDExTiBSWCBy
-ZW9yZGVyaW5nLCBpZiB0aGVyZSBpcyBhIGhvbGUgaW4gUlggdGFibGUsCmRyaXZlciB3aWxsIG5v
-dCBzZW5kIHBhY2tldHMgdG8ga2VybmVsIHVudGlsIHRoZSByeHJlb3JkZXIKdGltZXIgZXhwaXJl
-cyBvciB0aGUgdGFibGUgaXMgZnVsbC4gSG93ZXZlciwgY3VycmVudGx5CmRyaXZlciBhbHdheXMg
-cmVzdGFydHMgcnhyZW9yZGVyIHRpbWVyIHdoZW4gcmVjZWl2aW5nIGEKcGFja2V0LCB3aGljaCBj
-YXVzZXMgdGhlIHRpbWVyIGhhcmRseSB0byBleHBpcmUuIFNvLCB3aGVuCmNvbm5lY3RlZCB3aXRo
-IHNvbWUgMTFOIEFQIGluIGEgYnVzeSBlbnZpcm9ubWVudCwgc29tZXRpbWVzCnBpbmcgcGFja2V0
-cyBhcmUgYmxvY2tlZCBmb3IgYWJvdXQgMzAgc2Vjb25kcy4KClRoZSByeHJlb3JkZXIgdGltZXIg
-c2hvdWxkIG9ubHkgYmUgcmVzdGFydGVkIHdoZW46CjEuIFRoZSB0aW1lciBpcyBub3Qgc2V0LCBP
-UgoyLiBUaGUgc3RhcnRfd2luIGlzIGNoYW5nZWQKClNpZ25lZC1vZmYtYnk6IE1hcmMgWWFuZyA8
-eWFuZ3lhbmdAbWFydmVsbC5jb20+ClNpZ25lZC1vZmYtYnk6IENhdGh5IEx1byA8Y2x1b0BtYXJ2
-ZWxsLmNvbT4KU2lnbmVkLW9mZi1ieTogQ2hpbi1SYW4gTG8gPGNybG9AbWFydmVsbC5jb20+ClNp
-Z25lZC1vZmYtYnk6IFBsdXMgQ2hlbiA8cGNoZW5AbWFydmVsbC5jb20+Ci0tLQogZHJpdmVycy9u
-ZXQvd2lyZWxlc3MvbXdpZmlleC8xMW5fcnhyZW9yZGVyLmMgfCA1MyArKysrKysrKysrKysrKysr
-KysrKystLS0tLS0tCiBkcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4LzExbl9yeHJlb3JkZXIu
-aCB8ICAxICsKIGRyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvbWFpbi5oICAgICAgICAgIHwg
-IDEgKwogMyBmaWxlcyBjaGFuZ2VkLCA0MyBpbnNlcnRpb25zKCspLCAxMiBkZWxldGlvbnMoLSkK
-CmRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4LzExbl9yeHJlb3JkZXIu
-YyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvMTFuX3J4cmVvcmRlci5jCmluZGV4IDQw
-MDU3MDcuLjBhYzQwNGYgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgv
-MTFuX3J4cmVvcmRlci5jCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvMTFuX3J4
-cmVvcmRlci5jCkBAIC0xOTYsNiArMTk2LDcgQEAgbXdpZmlleF9kZWxfcnhfcmVvcmRlcl9lbnRy
-eShzdHJ1Y3QgbXdpZmlleF9wcml2YXRlICpwcml2LAogCW13aWZpZXhfMTFuX2Rpc3BhdGNoX3Br
-dF91bnRpbF9zdGFydF93aW4ocHJpdiwgdGJsLCBzdGFydF93aW4pOwogCiAJZGVsX3RpbWVyX3N5
-bmMoJnRibC0+dGltZXJfY29udGV4dC50aW1lcik7CisJdGJsLT50aW1lcl9jb250ZXh0LnRpbWVy
-X2lzX3NldCA9IGZhbHNlOwogCiAJc3Bpbl9sb2NrX2lycXNhdmUoJnByaXYtPnJ4X3Jlb3JkZXJf
-dGJsX2xvY2ssIGZsYWdzKTsKIAlsaXN0X2RlbCgmdGJsLT5saXN0KTsKQEAgLTI5Nyw2ICsyOTgs
-NyBAQCBtd2lmaWV4X2ZsdXNoX2RhdGEodW5zaWduZWQgbG9uZyBjb250ZXh0KQogCQkoc3RydWN0
-IHJlb3JkZXJfdG1yX2NueHQgKikgY29udGV4dDsKIAlpbnQgc3RhcnRfd2luLCBzZXFfbnVtOwog
-CisJY3R4LT50aW1lcl9pc19zZXQgPSBmYWxzZTsKIAlzZXFfbnVtID0gbXdpZmlleF8xMW5fZmlu
-ZF9sYXN0X3NlcV9udW0oY3R4KTsKIAogCWlmIChzZXFfbnVtIDwgMCkKQEAgLTM4NSw2ICszODcs
-NyBAQCBtd2lmaWV4XzExbl9jcmVhdGVfcnhfcmVvcmRlcl90Ymwoc3RydWN0IG13aWZpZXhfcHJp
-dmF0ZSAqcHJpdiwgdTggKnRhLAogCiAJbmV3X25vZGUtPnRpbWVyX2NvbnRleHQucHRyID0gbmV3
-X25vZGU7CiAJbmV3X25vZGUtPnRpbWVyX2NvbnRleHQucHJpdiA9IHByaXY7CisJbmV3X25vZGUt
-PnRpbWVyX2NvbnRleHQudGltZXJfaXNfc2V0ID0gZmFsc2U7CiAKIAlpbml0X3RpbWVyKCZuZXdf
-bm9kZS0+dGltZXJfY29udGV4dC50aW1lcik7CiAJbmV3X25vZGUtPnRpbWVyX2NvbnRleHQudGlt
-ZXIuZnVuY3Rpb24gPSBtd2lmaWV4X2ZsdXNoX2RhdGE7CkBAIC0zOTksNiArNDAyLDIzIEBAIG13
-aWZpZXhfMTFuX2NyZWF0ZV9yeF9yZW9yZGVyX3RibChzdHJ1Y3QgbXdpZmlleF9wcml2YXRlICpw
-cml2LCB1OCAqdGEsCiAJc3Bpbl91bmxvY2tfaXJxcmVzdG9yZSgmcHJpdi0+cnhfcmVvcmRlcl90
-YmxfbG9jaywgZmxhZ3MpOwogfQogCitzdGF0aWMgdm9pZAorbXdpZmlleF8xMW5fcnhyZW9yZGVy
-X3RpbWVyX3Jlc3RhcnQoc3RydWN0IG13aWZpZXhfcnhfcmVvcmRlcl90YmwgKnRibCkKK3sKKwl1
-MzIgbWluX2ZsdXNoX3RpbWUgPSAwOworI2RlZmluZSBCQV9XSU5fU0laRV8zMiAzMgorCWlmICh0
-YmwtPndpbl9zaXplID49IEJBX1dJTl9TSVpFXzMyKQorCQltaW5fZmx1c2hfdGltZSA9IE1JTl9G
-TFVTSF9USU1FUl8xNV9NUzsKKwllbHNlCisJCW1pbl9mbHVzaF90aW1lID0gTUlOX0ZMVVNIX1RJ
-TUVSX01TOworCisJZGVsX3RpbWVyKCZ0YmwtPnRpbWVyX2NvbnRleHQudGltZXIpOworCW1vZF90
-aW1lcigmdGJsLT50aW1lcl9jb250ZXh0LnRpbWVyLAorCQkgIGppZmZpZXMgKyBtc2Vjc190b19q
-aWZmaWVzKG1pbl9mbHVzaF90aW1lICogdGJsLT53aW5fc2l6ZSkpOworCisJdGJsLT50aW1lcl9j
-b250ZXh0LnRpbWVyX2lzX3NldCA9IHRydWU7Cit9CisKIC8qCiAgKiBUaGlzIGZ1bmN0aW9uIHBy
-ZXBhcmVzIGNvbW1hbmQgZm9yIGFkZGluZyBhIEJBIHJlcXVlc3QuCiAgKgpAQCAtNTIzLDMxICs1
-NDMsMzEgQEAgaW50IG13aWZpZXhfMTFuX3J4X3Jlb3JkZXJfcGt0KHN0cnVjdCBtd2lmaWV4X3By
-aXZhdGUgKnByaXYsCiAJCQkJdTggKnRhLCB1OCBwa3RfdHlwZSwgdm9pZCAqcGF5bG9hZCkKIHsK
-IAlzdHJ1Y3QgbXdpZmlleF9yeF9yZW9yZGVyX3RibCAqdGJsOwotCWludCBzdGFydF93aW4sIGVu
-ZF93aW4sIHdpbl9zaXplOworCWludCBwcmV2X3N0YXJ0X3dpbiwgc3RhcnRfd2luLCBlbmRfd2lu
-LCB3aW5fc2l6ZTsKIAl1MTYgcGt0X2luZGV4OwogCWJvb2wgaW5pdF93aW5kb3dfc2hpZnQgPSBm
-YWxzZTsKKwlpbnQgcmV0ID0gMDsKIAogCXRibCA9IG13aWZpZXhfMTFuX2dldF9yeF9yZW9yZGVy
-X3RibChwcml2LCB0aWQsIHRhKTsKIAlpZiAoIXRibCkgewogCQlpZiAocGt0X3R5cGUgIT0gUEtU
-X1RZUEVfQkFSKQogCQkJbXdpZmlleF8xMW5fZGlzcGF0Y2hfcGt0KHByaXYsIHBheWxvYWQpOwot
-CQlyZXR1cm4gMDsKKwkJcmV0dXJuIHJldDsKIAl9CiAKIAlpZiAoKHBrdF90eXBlID09IFBLVF9U
-WVBFX0FNU0RVKSAmJiAhdGJsLT5hbXNkdSkgewogCQltd2lmaWV4XzExbl9kaXNwYXRjaF9wa3Qo
-cHJpdiwgcGF5bG9hZCk7Ci0JCXJldHVybiAwOworCQlyZXR1cm4gcmV0OwogCX0KIAogCXN0YXJ0
-X3dpbiA9IHRibC0+c3RhcnRfd2luOworCXByZXZfc3RhcnRfd2luID0gc3RhcnRfd2luOwogCXdp
-bl9zaXplID0gdGJsLT53aW5fc2l6ZTsKIAllbmRfd2luID0gKChzdGFydF93aW4gKyB3aW5fc2l6
-ZSkgLSAxKSAmIChNQVhfVElEX1ZBTFVFIC0gMSk7CiAJaWYgKHRibC0+ZmxhZ3MgJiBSWFJFT1Jf
-SU5JVF9XSU5ET1dfU0hJRlQpIHsKIAkJaW5pdF93aW5kb3dfc2hpZnQgPSB0cnVlOwogCQl0Ymwt
-PmZsYWdzICY9IH5SWFJFT1JfSU5JVF9XSU5ET1dfU0hJRlQ7CiAJfQotCW1vZF90aW1lcigmdGJs
-LT50aW1lcl9jb250ZXh0LnRpbWVyLAotCQkgIGppZmZpZXMgKyBtc2Vjc190b19qaWZmaWVzKE1J
-Tl9GTFVTSF9USU1FUl9NUyAqIHdpbl9zaXplKSk7CiAKIAlpZiAodGJsLT5mbGFncyAmIFJYUkVP
-Ul9GT1JDRV9OT19EUk9QKSB7CiAJCWRldl9kYmcocHJpdi0+YWRhcHRlci0+ZGV2LApAQCAtNTY4
-LDExICs1ODgsMTQgQEAgaW50IG13aWZpZXhfMTFuX3J4X3Jlb3JkZXJfcGt0KHN0cnVjdCBtd2lm
-aWV4X3ByaXZhdGUgKnByaXYsCiAJCWlmICgoc3RhcnRfd2luICsgVFdPUE9XMTEpID4gKE1BWF9U
-SURfVkFMVUUgLSAxKSkgewogCQkJaWYgKHNlcV9udW0gPj0gKChzdGFydF93aW4gKyBUV09QT1cx
-MSkgJgogCQkJCQkoTUFYX1RJRF9WQUxVRSAtIDEpKSAmJgotCQkJICAgIHNlcV9udW0gPCBzdGFy
-dF93aW4pCi0JCQkJcmV0dXJuIC0xOworCQkJICAgIHNlcV9udW0gPCBzdGFydF93aW4pIHsKKwkJ
-CQlyZXQgPSAtMTsKKwkJCQlnb3RvIGRvbmU7CisJCQl9CiAJCX0gZWxzZSBpZiAoKHNlcV9udW0g
-PCBzdGFydF93aW4pIHx8Ci0JCQkgICAoc2VxX251bSA+IChzdGFydF93aW4gKyBUV09QT1cxMSkp
-KSB7Ci0JCQlyZXR1cm4gLTE7CisJCQkgICAoc2VxX251bSA+PSAoc3RhcnRfd2luICsgVFdPUE9X
-MTEpKSkgeworCQkJcmV0ID0gLTE7CisJCQlnb3RvIGRvbmU7CiAJCX0KIAl9CiAKQEAgLTYwMSw4
-ICs2MjQsMTAgQEAgaW50IG13aWZpZXhfMTFuX3J4X3Jlb3JkZXJfcGt0KHN0cnVjdCBtd2lmaWV4
-X3ByaXZhdGUgKnByaXYsCiAJCWVsc2UKIAkJCXBrdF9pbmRleCA9IChzZXFfbnVtK01BWF9USURf
-VkFMVUUpIC0gc3RhcnRfd2luOwogCi0JCWlmICh0YmwtPnJ4X3Jlb3JkZXJfcHRyW3BrdF9pbmRl
-eF0pCi0JCQlyZXR1cm4gLTE7CisJCWlmICh0YmwtPnJ4X3Jlb3JkZXJfcHRyW3BrdF9pbmRleF0p
-IHsKKwkJCXJldCA9IC0xOworCQkJZ290byBkb25lOworCQl9CiAKIAkJdGJsLT5yeF9yZW9yZGVy
-X3B0cltwa3RfaW5kZXhdID0gcGF5bG9hZDsKIAl9CkBAIC02MTMsNyArNjM4LDExIEBAIGludCBt
-d2lmaWV4XzExbl9yeF9yZW9yZGVyX3BrdChzdHJ1Y3QgbXdpZmlleF9wcml2YXRlICpwcml2LAog
-CSAqLwogCW13aWZpZXhfMTFuX3NjYW5fYW5kX2Rpc3BhdGNoKHByaXYsIHRibCk7CiAKLQlyZXR1
-cm4gMDsKK2RvbmU6CisJaWYgKCF0YmwtPnRpbWVyX2NvbnRleHQudGltZXJfaXNfc2V0IHx8CisJ
-ICAgIHByZXZfc3RhcnRfd2luICE9IHRibC0+c3RhcnRfd2luKQorCQltd2lmaWV4XzExbl9yeHJl
-b3JkZXJfdGltZXJfcmVzdGFydCh0YmwpOworCXJldHVybiByZXQ7CiB9CiAKIC8qCmRpZmYgLS1n
-aXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4LzExbl9yeHJlb3JkZXIuaCBiL2RyaXZl
-cnMvbmV0L3dpcmVsZXNzL213aWZpZXgvMTFuX3J4cmVvcmRlci5oCmluZGV4IDNhODdiYjAuLjY5
-ODFlNTMgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvMTFuX3J4cmVv
-cmRlci5oCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvMTFuX3J4cmVvcmRlci5o
-CkBAIC0yMSw2ICsyMSw3IEBACiAjZGVmaW5lIF9NV0lGSUVYXzExTl9SWFJFT1JERVJfSF8KIAog
-I2RlZmluZSBNSU5fRkxVU0hfVElNRVJfTVMJCTUwCisjZGVmaW5lIE1JTl9GTFVTSF9USU1FUl8x
-NV9NUwkJMTUKIAogI2RlZmluZSBQS1RfVFlQRV9CQVIgMHhFNwogI2RlZmluZSBNQVhfVElEX1ZB
-TFVFCQkJKDIgPDwgMTEpCmRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4
-L21haW4uaCBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvbWFpbi5oCmluZGV4IGUyNjM1
-NzQuLmY1NTY1OGQgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvbWFp
-bi5oCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvbWFpbi5oCkBAIC01OTIsNiAr
-NTkyLDcgQEAgc3RydWN0IHJlb3JkZXJfdG1yX2NueHQgewogCXN0cnVjdCB0aW1lcl9saXN0IHRp
-bWVyOwogCXN0cnVjdCBtd2lmaWV4X3J4X3Jlb3JkZXJfdGJsICpwdHI7CiAJc3RydWN0IG13aWZp
-ZXhfcHJpdmF0ZSAqcHJpdjsKKwl1OCB0aW1lcl9pc19zZXQ7CiB9OwogCiBzdHJ1Y3QgbXdpZmll
-eF9yeF9yZW9yZGVyX3RibCB7Ci0tIAoxLjguMAoK
-
---_003_5FF020A1CFFEEC49BD1E09530C4FF5951821B47FD7SCVEXCH1marve_
-Content-Type: application/octet-stream;
-	name="0001-mwifiex-resubmit-Rx-data-URBS-when-dev_alloc_skb-fai.patch"
-Content-Description: 0001-mwifiex-resubmit-Rx-data-URBS-when-dev_alloc_skb-fai.patch
-Content-Disposition: attachment;
-	filename="0001-mwifiex-resubmit-Rx-data-URBS-when-dev_alloc_skb-fai.patch";
-	size=3204; creation-date="Tue, 28 Oct 2014 13:30:57 GMT";
-	modification-date="Tue, 28 Oct 2014 13:26:11 GMT"
-Content-Transfer-Encoding: base64
-
-RnJvbSA2NTE0ZTczMzg4NjI0MzBjNDk4YjlmMDdjNjQ1NWQ2MWI5MTNkZGEwIE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBYaW5taW5nIEh1IDxodXhtQG1hcnZlbGwuY29tPgpEYXRlOiBU
-dWUsIDI4IE9jdCAyMDE0IDA2OjAwOjI5IC0wNzAwClN1YmplY3Q6IFtQQVRDSF0gbXdpZmlleCBy
-ZXN1Ym1pdCBSeCBkYXRhIFVSQlMgd2hlbiBkZXZfYWxsb2Nfc2tiIGZhaWwKCm13aWZpZXggdXNl
-IHNpeCB1cmJzIHJ4IGRhdGEgcGFja2V0ICwgbmV3IHVyYiByZXF1ZXN0IHdpbGwgYmUKc3VibWl0
-dGVkIHdoZW4gcHJldmlvdXMgdXJiIHJlcXVlc3QgY29tcGxldGVkLiBzb21ldGltZXMsIHRoaXMg
-Y3ljbGUKbWlnaHQgYmUgYnJva2VuIChObyBhdmFpbGFibGUgbWVtZW9yeSAuaS5lKQoKd2hlbiBh
-bGwgdGhlIHNpeCByeCB1cmJzIGN5Y2xlIGFyZSBicm9rZW4gLCBzb21lIHN0cmFuZ2UgaXNzdWVz
-IChjcmFzaCAuaS5lKQp3aWxsIGhhcHBlbi4KClRoaXMgcGF0Y2ggZW5oYW5jZSB0aGlzIGNhc2Ug
-LCBieSByZXN1Ym1pdCB0aGUgYnJva2VuIHVyYiByZXF1ZXN0IGluCm1haW4gcHJvY2Vzcy4KClNp
-Z25lZC1vZmYtYnk6IFhpbm1pbmcgSHUgPGh1eG1AbWFydmVsbC5jb20+ClNpZ25lZC1vZmYtYnk6
-IENhdGh5IEx1byA8Y2x1b0BtYXJ2ZWxsLmNvbT4KU2lnbmVkLW9mZi1ieTogQXZpbmFzaCBQYXRp
-bCA8cGF0aWxhQG1hcnZlbGwuY29tPgoKLS0tCiBkcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4
-L21haW4uYyB8IDE5ICsrKysrKysrKysrKysrKysrKysKIGRyaXZlcnMvbmV0L3dpcmVsZXNzL213
-aWZpZXgvbWFpbi5oIHwgIDEgKwogZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC91c2IuYyAg
-fCAgMSArCiAzIGZpbGVzIGNoYW5nZWQsIDIxIGluc2VydGlvbnMoKykKCmRpZmYgLS1naXQgYS9k
-cml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L21haW4uYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNz
-L213aWZpZXgvbWFpbi5jCmluZGV4IGVhYjQ5NTYuLjJhYjUxYmUgMTAwNjQ0Ci0tLSBhL2RyaXZl
-cnMvbmV0L3dpcmVsZXNzL213aWZpZXgvbWFpbi5jCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNz
-L213aWZpZXgvbWFpbi5jCkBAIC0yMSw2ICsyMSw3IEBACiAjaW5jbHVkZSAid21tLmgiCiAjaW5j
-bHVkZSAiY2ZnODAyMTEuaCIKICNpbmNsdWRlICIxMW4uaCIKKyNpbmNsdWRlICJ1c2IuaCIKIAog
-I2RlZmluZSBWRVJTSU9OCSIxLjAiCiAKQEAgLTE4Miw2ICsxODMsOSBAQCBpbnQgbXdpZmlleF9t
-YWluX3Byb2Nlc3Moc3RydWN0IG13aWZpZXhfYWRhcHRlciAqYWRhcHRlcikKIAlpbnQgcmV0ID0g
-MDsKIAl1bnNpZ25lZCBsb25nIGZsYWdzOwogCXN0cnVjdCBza19idWZmICpza2I7CisJc3RydWN0
-IHVzYl9jYXJkX3JlYyAqY2FyZDsKKwlzdHJ1Y3QgdXJiX2NvbnRleHQgdXJiOworCWludCBpOwog
-CiAJc3Bpbl9sb2NrX2lycXNhdmUoJmFkYXB0ZXItPm1haW5fcHJvY19sb2NrLCBmbGFncyk7CiAK
-QEAgLTE5OSw2ICsyMDMsMjEgQEAgcHJvY2Vzc19zdGFydDoKIAkJICAgIChhZGFwdGVyLT5od19z
-dGF0dXMgPT0gTVdJRklFWF9IV19TVEFUVVNfTk9UX1JFQURZKSkKIAkJCWJyZWFrOwogCisJCWlm
-IChhZGFwdGVyLT5pZmFjZV90eXBlID09IE1XSUZJRVhfVVNCKSB7CisJCQlpbnQgc3ogPSBNV0lG
-SUVYX1JYX0RBVEFfQlVGX1NJWkU7CisKKwkJCWNhcmQgPSAoc3RydWN0IHVzYl9jYXJkX3JlYyAq
-KWFkYXB0ZXItPmNhcmQ7CisJCQlpZiAoYXRvbWljX3JlYWQoJmNhcmQtPnJ4X2RhdGFfdXJiX3Bl
-bmRpbmcpIDwKKwkJCQkJTVdJRklFWF9SWF9EQVRBX1VSQi8yKSB7CisJCQkJZm9yIChpID0gMDsg
-aSA8IE1XSUZJRVhfUlhfREFUQV9VUkI7IGkrKykgeworCQkJCQlpZiAoY2FyZC0+cnhfZGF0YV9s
-aXN0W2ldLnNrYikKKwkJCQkJCWNvbnRpbnVlOworCQkJCQl1cmIgPSBjYXJkLT5yeF9kYXRhX2xp
-c3RbaV07CisJCQkJCWFkYXB0ZXItPmlmX29wcy5zdWJtaXRfcnhfdXJiKCZ1cmIsIHN6KTsKKwkJ
-CQl9CisJCQl9CisJCX0KKwogCQkvKiBJZiB3ZSBwcm9jZXNzIGludGVycnVwdHMgZmlyc3QsIGl0
-IHdvdWxkIGluY3JlYXNlIFJYIHBlbmRpbmcKIAkJICogZXZlbiBmdXJ0aGVyLiBBdm9pZCB0aGlz
-IGJ5IGNoZWNraW5nIGlmIHJ4X3BlbmRpbmcgaGFzCiAJCSAqIGNyb3NzZWQgaGlnaCB0aHJlc2hv
-bGQgYW5kIHNjaGVkdWxlIHJ4IHdvcmsgcXVldWUKZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dp
-cmVsZXNzL213aWZpZXgvbWFpbi5oIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9tYWlu
-LmgKaW5kZXggZWRlNDQ5My4uNmRmMTg3NiAxMDA2NDQKLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxl
-c3MvbXdpZmlleC9tYWluLmgKKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9tYWlu
-LmgKQEAgLTcwMiw2ICs3MDIsNyBAQCBzdHJ1Y3QgbXdpZmlleF9pZl9vcHMgewogCXZvaWQgKCpm
-d19kdW1wKShzdHJ1Y3QgbXdpZmlleF9hZGFwdGVyICopOwogCWludCAoKmNsZWFuX3BjaWVfcmlu
-ZykgKHN0cnVjdCBtd2lmaWV4X2FkYXB0ZXIgKmFkYXB0ZXIpOwogCXZvaWQgKCppZmFjZV93b3Jr
-KShzdHJ1Y3Qgd29ya19zdHJ1Y3QgKndvcmspOworCWludCAoKnN1Ym1pdF9yeF91cmIpKHN0cnVj
-dCB1cmJfY29udGV4dCAqY3R4LCBpbnQgc2l6ZSk7CiB9OwogCiBzdHJ1Y3QgbXdpZmlleF9hZGFw
-dGVyIHsKZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvdXNiLmMgYi9k
-cml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L3VzYi5jCmluZGV4IDcxMThhMTguLjNiMGRiZjcg
-MTAwNjQ0Ci0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvdXNiLmMKKysrIGIvZHJp
-dmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC91c2IuYwpAQCAtOTk4LDYgKzk5OCw3IEBAIHN0YXRp
-YyBzdHJ1Y3QgbXdpZmlleF9pZl9vcHMgdXNiX29wcyA9IHsKIAkuZXZlbnRfY29tcGxldGUgPQlt
-d2lmaWV4X3VzYl9jbWRfZXZlbnRfY29tcGxldGUsCiAJLmRhdGFfY29tcGxldGUgPQltd2lmaWV4
-X3VzYl9kYXRhX2NvbXBsZXRlLAogCS5ob3N0X3RvX2NhcmQgPQkJbXdpZmlleF91c2JfaG9zdF90
-b19jYXJkLAorCS5zdWJtaXRfcnhfdXJiID0gbXdpZmlleF91c2Jfc3VibWl0X3J4X3VyYiwKIH07
-CiAKIC8qIFRoaXMgZnVuY3Rpb24gaW5pdGlhbGl6ZXMgdGhlIFVTQiBkcml2ZXIgbW9kdWxlLgot
-LSAKMS44LjEuNAoK
-
---_003_5FF020A1CFFEEC49BD1E09530C4FF5951821B47FD7SCVEXCH1marve_--
