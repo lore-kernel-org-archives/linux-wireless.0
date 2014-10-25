@@ -1,45 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:34431 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751369AbaJPUaa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Oct 2014 16:30:30 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [RFC] mac80211: don't flush when probing the AP
-Date: Thu, 16 Oct 2014 23:25:57 +0300
-Message-Id: <1413491157-5352-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20141016_223033_220808_FE3E4779)
+Received: from bh-25.webhostbox.net ([208.91.199.152]:55416 "EHLO
+	bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751286AbaJYUhK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 25 Oct 2014 16:37:10 -0400
+Received: from mailnull by bh-25.webhostbox.net with sa-checked (Exim 4.82)
+	(envelope-from <linux@roeck-us.net>)
+	id 1Xi85G-000LSi-49
+	for linux-wireless@vger.kernel.org; Sat, 25 Oct 2014 20:37:10 +0000
+Date: Sat, 25 Oct 2014 13:36:53 -0700
+From: Guenter Roeck <linux@roeck-us.net>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	zajec5@gmail.com, arend@broadcom.com, arnd@arndb.de,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] bcma: fix build when CONFIG_OF_ADDRESS is not set
+Message-ID: <20141025203653.GA10716@roeck-us.net> (sfid-20141025_223716_132652_411D8D0B)
+References: <5436D3CF.2030506@hauke-m.de>
+ <1412890781-24160-1-git-send-email-hauke@hauke-m.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1412890781-24160-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-All the callers of ieee80211_mgd_probe_ap_send return right
-after they call the flush() callback. This means that calling
-flush() is uneeded since its meaning is to wait until the
-queues of the device are empty. It is pointless to wait if
-there is nothing that must ensure that the frame has left
-the Tx queue.
-ieee80211_mgd_probe_ap_send is called at the very end of
-a worker - so flush() is not needed.
+On Thu, Oct 09, 2014 at 11:39:41PM +0200, Hauke Mehrtens wrote:
+> Commit 2101e533f41a ("bcma: register bcma as device tree driver")
+> introduces a hard dependency on OF_ADDRESS into the bcma driver.
+> OF_ADDRESS is specifically disabled for the sparc architecture.
+> This results in the following error when building sparc64:allmodconfig.
+> 
+> drivers/bcma/main.c: In function 'bcma_of_find_child_device':
+> drivers/bcma/main.c:150:3: error: implicit declaration of function 'of_translate_address'
+> 
+> Fixes: 2101e533f41a ("bcma: register bcma as device tree driver")
+> Reported-by: Guenter Roeck <linux@roeck-us.net>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- net/mac80211/mlme.c | 2 --
- 1 file changed, 2 deletions(-)
+The upstream kernel still does not include this patch, and the sparc64 build
+is still broken.
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 0a39361..75df184 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2219,8 +2219,6 @@ static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
- 
- 	ifmgd->probe_timeout = jiffies + msecs_to_jiffies(probe_wait_ms);
- 	run_again(sdata, ifmgd->probe_timeout);
--	if (sdata->local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS)
--		ieee80211_flush_queues(sdata->local, sdata);
- }
- 
- static void ieee80211_mgd_probe_ap(struct ieee80211_sub_if_data *sdata,
--- 
-1.9.1
+Is this patch on its way upstream ?
 
+Guenter
+
+> ---
+>  drivers/bcma/main.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
+> index d1656c2..1000955 100644
+> --- a/drivers/bcma/main.c
+> +++ b/drivers/bcma/main.c
+> @@ -132,7 +132,7 @@ static bool bcma_is_core_needed_early(u16 core_id)
+>  	return false;
+>  }
+>  
+> -#ifdef CONFIG_OF
+> +#if defined(CONFIG_OF) && defined(CONFIG_OF_ADDRESS)
+>  static struct device_node *bcma_of_find_child_device(struct platform_device *parent,
+>  						     struct bcma_device *core)
+>  {
+> -- 
+> 1.9.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+> 
+> 
