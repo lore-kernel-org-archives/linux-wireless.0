@@ -1,161 +1,209 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:60493 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752176AbaJYTw6 (ORCPT
+Received: from mail-wg0-f42.google.com ([74.125.82.42]:52358 "EHLO
+	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751140AbaJYT1K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Oct 2014 15:52:58 -0400
-Received: by mail-wi0-f178.google.com with SMTP id q5so3593974wiv.11
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2014 12:52:57 -0700 (PDT)
+	Sat, 25 Oct 2014 15:27:10 -0400
+Received: by mail-wg0-f42.google.com with SMTP id k14so1152466wgh.1
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2014 12:27:09 -0700 (PDT)
 From: Malcolm Priestley <tvboxspy@gmail.com>
 To: gregkh@linuxfoundation.org
 Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
 	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 16/31] staging: vt6655: mac80211 conversion: changes to CARDbSetPhyParameter
-Date: Sat, 25 Oct 2014 09:20:26 +0100
-Message-Id: <1414225241-5480-17-git-send-email-tvboxspy@gmail.com> (sfid-20141025_215302_490701_C83A60AC)
+Subject: [PATCH 09/31] staging: vt6655: mac80211 conversion add channel bands
+Date: Sat, 25 Oct 2014 09:20:19 +0100
+Message-Id: <1414225241-5480-10-git-send-email-tvboxspy@gmail.com> (sfid-20141025_212715_526849_31D001CA)
 In-Reply-To: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
 References: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-CARDbSetPhyParameter appears to use two different strutures to find supported
-rates.
-
-Remove PWLAN_IE_SUPP_RATES and use basic_rates to find rates supported.
-
-mac80211 now sets bShortSlotTime, bBarkerPreambleMd and byPreambleType remove
-setting these.
+Add rates and channels according to rf type for vnt_init_bands which is a
+mac80211 replacement for init_channel_table.
 
 Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/staging/vt6655/card.c | 61 ++++++++-----------------------------------
- 1 file changed, 11 insertions(+), 50 deletions(-)
+ drivers/staging/vt6655/channel.c     | 140 +++++++++++++++++++++++++++++++++++
+ drivers/staging/vt6655/channel.h     |   2 +
+ drivers/staging/vt6655/device_main.c |   2 +
+ 3 files changed, 144 insertions(+)
 
-diff --git a/drivers/staging/vt6655/card.c b/drivers/staging/vt6655/card.c
-index f2a33a9..5eddabc 100644
---- a/drivers/staging/vt6655/card.c
-+++ b/drivers/staging/vt6655/card.c
-@@ -74,15 +74,6 @@
+diff --git a/drivers/staging/vt6655/channel.c b/drivers/staging/vt6655/channel.c
+index 4ce964b..5f0cf90 100644
+--- a/drivers/staging/vt6655/channel.c
++++ b/drivers/staging/vt6655/channel.c
+@@ -352,6 +352,146 @@ static struct
  
- #define WAIT_BEACON_TX_DOWN_TMO         3    // Times
+ /*---------------------  Export Functions  --------------------------*/
  
--//1M,   2M,   5M,  11M,  18M,  24M,  36M,  54M
--static unsigned char abyDefaultSuppRatesG[] = {WLAN_EID_SUPP_RATES, 8, 0x02, 0x04, 0x0B, 0x16, 0x24, 0x30, 0x48, 0x6C};
--//6M,   9M,  12M,  48M
--static unsigned char abyDefaultExtSuppRatesG[] = {WLAN_EID_EXTSUPP_RATES, 4, 0x0C, 0x12, 0x18, 0x60};
--//6M,   9M,  12M,  18M,  24M,  36M,  48M,  54M
--static unsigned char abyDefaultSuppRatesA[] = {WLAN_EID_SUPP_RATES, 8, 0x0C, 0x12, 0x18, 0x24, 0x30, 0x48, 0x60, 0x6C};
--//1M,   2M,   5M,  11M,
--static unsigned char abyDefaultSuppRatesB[] = {WLAN_EID_SUPP_RATES, 4, 0x02, 0x04, 0x0B, 0x16};
--
- /*---------------------  Static Variables  --------------------------*/
- 
- static const unsigned short cwRXBCNTSFOff[MAX_RATE] =
-@@ -389,14 +380,10 @@ bool CARDbSetPhyParameter(struct vnt_private *pDevice, CARD_PHY_TYPE ePHYType,
- 	unsigned char bySIFS = 0;
- 	unsigned char byDIFS = 0;
- 	unsigned char byData;
--	PWLAN_IE_SUPP_RATES pSupportRates = (PWLAN_IE_SUPP_RATES) pvSupportRateIEs;
--	PWLAN_IE_SUPP_RATES pExtSupportRates = (PWLAN_IE_SUPP_RATES) pvExtSupportRateIEs;
++static struct ieee80211_rate vnt_rates_bg[] = {
++	{ .bitrate = 10,  .hw_value = RATE_1M },
++	{ .bitrate = 20,  .hw_value = RATE_2M },
++	{ .bitrate = 55,  .hw_value = RATE_5M },
++	{ .bitrate = 110, .hw_value = RATE_11M },
++	{ .bitrate = 60,  .hw_value = RATE_6M },
++	{ .bitrate = 90,  .hw_value = RATE_9M },
++	{ .bitrate = 120, .hw_value = RATE_12M },
++	{ .bitrate = 180, .hw_value = RATE_18M },
++	{ .bitrate = 240, .hw_value = RATE_24M },
++	{ .bitrate = 360, .hw_value = RATE_36M },
++	{ .bitrate = 480, .hw_value = RATE_48M },
++	{ .bitrate = 540, .hw_value = RATE_54M },
++};
++
++static struct ieee80211_rate vnt_rates_a[] = {
++	{ .bitrate = 60,  .hw_value = RATE_6M },
++	{ .bitrate = 90,  .hw_value = RATE_9M },
++	{ .bitrate = 120, .hw_value = RATE_12M },
++	{ .bitrate = 180, .hw_value = RATE_18M },
++	{ .bitrate = 240, .hw_value = RATE_24M },
++	{ .bitrate = 360, .hw_value = RATE_36M },
++	{ .bitrate = 480, .hw_value = RATE_48M },
++	{ .bitrate = 540, .hw_value = RATE_54M },
++};
++
++static struct ieee80211_channel vnt_channels_2ghz[] = {
++	{ .center_freq = 2412, .hw_value = 1 },
++	{ .center_freq = 2417, .hw_value = 2 },
++	{ .center_freq = 2422, .hw_value = 3 },
++	{ .center_freq = 2427, .hw_value = 4 },
++	{ .center_freq = 2432, .hw_value = 5 },
++	{ .center_freq = 2437, .hw_value = 6 },
++	{ .center_freq = 2442, .hw_value = 7 },
++	{ .center_freq = 2447, .hw_value = 8 },
++	{ .center_freq = 2452, .hw_value = 9 },
++	{ .center_freq = 2457, .hw_value = 10 },
++	{ .center_freq = 2462, .hw_value = 11 },
++	{ .center_freq = 2467, .hw_value = 12 },
++	{ .center_freq = 2472, .hw_value = 13 },
++	{ .center_freq = 2484, .hw_value = 14 }
++};
++
++static struct ieee80211_channel vnt_channels_5ghz[] = {
++	{ .center_freq = 4915, .hw_value = 15 },
++	{ .center_freq = 4920, .hw_value = 16 },
++	{ .center_freq = 4925, .hw_value = 17 },
++	{ .center_freq = 4935, .hw_value = 18 },
++	{ .center_freq = 4940, .hw_value = 19 },
++	{ .center_freq = 4945, .hw_value = 20 },
++	{ .center_freq = 4960, .hw_value = 21 },
++	{ .center_freq = 4980, .hw_value = 22 },
++	{ .center_freq = 5035, .hw_value = 23 },
++	{ .center_freq = 5040, .hw_value = 24 },
++	{ .center_freq = 5045, .hw_value = 25 },
++	{ .center_freq = 5055, .hw_value = 26 },
++	{ .center_freq = 5060, .hw_value = 27 },
++	{ .center_freq = 5080, .hw_value = 28 },
++	{ .center_freq = 5170, .hw_value = 29 },
++	{ .center_freq = 5180, .hw_value = 30 },
++	{ .center_freq = 5190, .hw_value = 31 },
++	{ .center_freq = 5200, .hw_value = 32 },
++	{ .center_freq = 5210, .hw_value = 33 },
++	{ .center_freq = 5220, .hw_value = 34 },
++	{ .center_freq = 5230, .hw_value = 35 },
++	{ .center_freq = 5240, .hw_value = 36 },
++	{ .center_freq = 5260, .hw_value = 37 },
++	{ .center_freq = 5280, .hw_value = 38 },
++	{ .center_freq = 5300, .hw_value = 39 },
++	{ .center_freq = 5320, .hw_value = 40 },
++	{ .center_freq = 5500, .hw_value = 41 },
++	{ .center_freq = 5520, .hw_value = 42 },
++	{ .center_freq = 5540, .hw_value = 43 },
++	{ .center_freq = 5560, .hw_value = 44 },
++	{ .center_freq = 5580, .hw_value = 45 },
++	{ .center_freq = 5600, .hw_value = 46 },
++	{ .center_freq = 5620, .hw_value = 47 },
++	{ .center_freq = 5640, .hw_value = 48 },
++	{ .center_freq = 5660, .hw_value = 49 },
++	{ .center_freq = 5680, .hw_value = 50 },
++	{ .center_freq = 5700, .hw_value = 51 },
++	{ .center_freq = 5745, .hw_value = 52 },
++	{ .center_freq = 5765, .hw_value = 53 },
++	{ .center_freq = 5785, .hw_value = 54 },
++	{ .center_freq = 5805, .hw_value = 55 },
++	{ .center_freq = 5825, .hw_value = 56 }
++};
++
++static struct ieee80211_supported_band vnt_supported_2ghz_band = {
++	.channels = vnt_channels_2ghz,
++	.n_channels = ARRAY_SIZE(vnt_channels_2ghz),
++	.bitrates = vnt_rates_bg,
++	.n_bitrates = ARRAY_SIZE(vnt_rates_bg),
++};
++
++static struct ieee80211_supported_band vnt_supported_5ghz_band = {
++	.channels = vnt_channels_5ghz,
++	.n_channels = ARRAY_SIZE(vnt_channels_5ghz),
++	.bitrates = vnt_rates_a,
++	.n_bitrates = ARRAY_SIZE(vnt_rates_a),
++};
++
++void vnt_init_bands(struct vnt_private *priv)
++{
++	struct ieee80211_channel *ch;
 +	int i;
- 
- 	//Set SIFS, DIFS, EIFS, SlotTime, CwMin
- 	if (ePHYType == PHY_TYPE_11A) {
--		if (pSupportRates == NULL)
--			pSupportRates = (PWLAN_IE_SUPP_RATES) abyDefaultSuppRatesA;
--
- 		if (pDevice->byRFType == RF_AIROHA7230) {
- 			// AL7230 use single PAPE and connect to PAPE_2.4G
- 			MACvSetBBType(pDevice->PortOffset, BB_TYPE_11G);
-@@ -424,9 +411,6 @@ bool CARDbSetPhyParameter(struct vnt_private *pDevice, CARD_PHY_TYPE ePHYType,
- 		byDIFS = C_SIFS_A + 2*C_SLOT_SHORT;
- 		byCWMaxMin = 0xA4;
- 	} else if (ePHYType == PHY_TYPE_11B) {
--		if (pSupportRates == NULL)
--			pSupportRates = (PWLAN_IE_SUPP_RATES) abyDefaultSuppRatesB;
--
- 		MACvSetBBType(pDevice->PortOffset, BB_TYPE_11B);
- 		if (pDevice->byRFType == RF_AIROHA7230) {
- 			pDevice->abyBBVGA[0] = 0x1C;
-@@ -450,10 +434,6 @@ bool CARDbSetPhyParameter(struct vnt_private *pDevice, CARD_PHY_TYPE ePHYType,
- 		byDIFS = C_SIFS_BG + 2*C_SLOT_LONG;
- 		byCWMaxMin = 0xA5;
- 	} else {// PK_TYPE_11GA & PK_TYPE_11GB
--		if (pSupportRates == NULL) {
--			pSupportRates = (PWLAN_IE_SUPP_RATES) abyDefaultSuppRatesG;
--			pExtSupportRates = (PWLAN_IE_SUPP_RATES) abyDefaultExtSuppRatesG;
--		}
- 		MACvSetBBType(pDevice->PortOffset, BB_TYPE_11G);
- 		if (pDevice->byRFType == RF_AIROHA7230) {
- 			pDevice->abyBBVGA[0] = 0x1C;
-@@ -473,32 +453,22 @@ bool CARDbSetPhyParameter(struct vnt_private *pDevice, CARD_PHY_TYPE ePHYType,
- 		}
- 		BBbWriteEmbedded(pDevice->PortOffset, 0x88, 0x08);
- 		bySIFS = C_SIFS_BG;
--		if (VNTWIFIbIsShortSlotTime(wCapInfo)) {
 +
-+		if (pDevice->bShortSlotTime) {
- 			bySlot = C_SLOT_SHORT;
- 			byDIFS = C_SIFS_BG + 2*C_SLOT_SHORT;
- 		} else {
- 			bySlot = C_SLOT_LONG;
- 			byDIFS = C_SIFS_BG + 2*C_SLOT_LONG;
- 		}
--		if (VNTWIFIbyGetMaxSupportRate(pSupportRates, pExtSupportRates) > RATE_11M)
--			byCWMaxMin = 0xA4;
--		else
--			byCWMaxMin = 0xA5;
- 
--		if (pDevice->bProtectMode != VNTWIFIbIsProtectMode(byERPField)) {
--			pDevice->bProtectMode = VNTWIFIbIsProtectMode(byERPField);
--			if (pDevice->bProtectMode)
--				MACvEnableProtectMD(pDevice->PortOffset);
--			else
--				MACvDisableProtectMD(pDevice->PortOffset);
-+		byCWMaxMin = 0xa4;
- 
--		}
--		if (pDevice->bBarkerPreambleMd != VNTWIFIbIsBarkerMode(byERPField)) {
--			pDevice->bBarkerPreambleMd = VNTWIFIbIsBarkerMode(byERPField);
--			if (pDevice->bBarkerPreambleMd)
--				MACvEnableBarkerPreambleMd(pDevice->PortOffset);
--			else
--				MACvDisableBarkerPreambleMd(pDevice->PortOffset);
-+		for (i = RATE_54M; i >= RATE_6M; i--) {
-+			if (pDevice->basic_rates & ((u32)(0x1 << i))) {
-+				byCWMaxMin |= 0x1;
-+				break;
-+			}
- 		}
- 	}
- 
-@@ -527,10 +497,6 @@ bool CARDbSetPhyParameter(struct vnt_private *pDevice, CARD_PHY_TYPE ePHYType,
- 	if (pDevice->bySlot != bySlot) {
- 		pDevice->bySlot = bySlot;
- 		VNSvOutPortB(pDevice->PortOffset + MAC_REG_SLOT, pDevice->bySlot);
--		if (pDevice->bySlot == C_SLOT_SHORT)
--			pDevice->bShortSlotTime = true;
--		else
--			pDevice->bShortSlotTime = false;
- 
- 		BBvSetShortSlotTime(pDevice);
- 	}
-@@ -538,14 +504,9 @@ bool CARDbSetPhyParameter(struct vnt_private *pDevice, CARD_PHY_TYPE ePHYType,
- 		pDevice->byCWMaxMin = byCWMaxMin;
- 		VNSvOutPortB(pDevice->PortOffset + MAC_REG_CWMAXMIN0, pDevice->byCWMaxMin);
- 	}
--	if (VNTWIFIbIsShortPreamble(wCapInfo))
--		pDevice->byPreambleType = pDevice->byShortPreamble;
--	else
--		pDevice->byPreambleType = 0;
- 
--	s_vSetRSPINF(pDevice, ePHYType, pSupportRates, pExtSupportRates);
--	pDevice->eCurrentPHYType = ePHYType;
--	// set for NDIS OID_802_11SUPPORTED_RATES
-+	s_vSetRSPINF(pDevice, ePHYType, NULL, NULL);
++	switch (priv->byRFType) {
++	case RF_AIROHA7230:
++	case RF_UW2452:
++	case RF_NOTHING:
++	default:
++		ch = vnt_channels_5ghz;
 +
- 	return true;
- }
++		for (i = 0; i < ARRAY_SIZE(vnt_channels_5ghz); i++) {
++			ch[i].max_power = 0x3f;
++			ch[i].flags = IEEE80211_CHAN_NO_HT40;
++		}
++
++		priv->hw->wiphy->bands[IEEE80211_BAND_5GHZ] =
++						&vnt_supported_5ghz_band;
++	/* fallthrough */
++	case RF_RFMD2959:
++	case RF_AIROHA:
++	case RF_AL2230S:
++	case RF_UW2451:
++	case RF_VT3226:
++		ch = vnt_channels_2ghz;
++
++		for (i = 0; i < ARRAY_SIZE(vnt_channels_2ghz); i++) {
++			ch[i].max_power = 0x3f;
++			ch[i].flags = IEEE80211_CHAN_NO_HT40;
++		}
++
++		priv->hw->wiphy->bands[IEEE80211_BAND_2GHZ] =
++						&vnt_supported_2ghz_band;
++		break;
++	}
++}
++
+ /**
+  * is_channel_valid() - Is Country Channel Valid
+  *  @ChanneIndex: defined as VT3253 MAC channel:
+diff --git a/drivers/staging/vt6655/channel.h b/drivers/staging/vt6655/channel.h
+index 4f44c8a..0d3e1f1 100644
+--- a/drivers/staging/vt6655/channel.h
++++ b/drivers/staging/vt6655/channel.h
+@@ -33,6 +33,8 @@ typedef struct tagSChannelTblElement {
+ 	unsigned char byMAP;
+ } SChannelTblElement, *PSChannelTblElement;
+ 
++void vnt_init_bands(struct vnt_private *);
++
+ bool is_channel_valid(unsigned int CountryCode);
+ void init_channel_table(void *pDeviceHandler);
+ unsigned char get_channel_mapping(void *pDeviceHandler, unsigned char byChannelNumber, CARD_PHY_TYPE ePhyType);
+diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
+index 23d9344..054841b 100644
+--- a/drivers/staging/vt6655/device_main.c
++++ b/drivers/staging/vt6655/device_main.c
+@@ -3320,6 +3320,8 @@ int vnt_init(struct vnt_private *priv)
+ {
+ 	SET_IEEE80211_PERM_ADDR(priv->hw, priv->abyCurrentNetAddr);
+ 
++	vnt_init_bands(priv);
++
+ 	if (ieee80211_register_hw(priv->hw))
+ 		return -ENODEV;
  
 -- 
 1.9.1
