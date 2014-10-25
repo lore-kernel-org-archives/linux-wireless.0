@@ -1,90 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:47282 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751024AbaJIIMD (ORCPT
+Received: from mail-wg0-f50.google.com ([74.125.82.50]:53529 "EHLO
+	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752230AbaJYTLP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2014 04:12:03 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH 3/5] ath9k: Fix MCC flush timeout
-Date: Thu,  9 Oct 2014 13:42:50 +0530
-Message-Id: <1412842372-17628-4-git-send-email-sujith@msujith.org> (sfid-20141009_101212_882858_D2562A8A)
-In-Reply-To: <1412842372-17628-1-git-send-email-sujith@msujith.org>
-References: <1412842372-17628-1-git-send-email-sujith@msujith.org>
+	Sat, 25 Oct 2014 15:11:15 -0400
+Received: by mail-wg0-f50.google.com with SMTP id z12so565688wgg.21
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2014 12:11:14 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 15/31] staging: vt6655: mac80211 conversion: enable power saving
+Date: Sat, 25 Oct 2014 09:20:25 +0100
+Message-Id: <1414225241-5480-16-git-send-email-tvboxspy@gmail.com> (sfid-20141025_211124_714166_3CA620C3)
+In-Reply-To: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
+References: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Convert PSvEnablePowerSaving and PSvEnablePowerSaving
 
-In MCC mode, the duration for a channel context
-is half the beacon interval and having a large
-flush timeout will adversely affect GO operation,
-since the default value of 200ms will overshoot
-the advertised NoA absence duration.
+Remove mgmt->wCurrAID and use pDevice->current_aid
 
-The scheduler initiates a channel context switch
-only when the slot duration for the current
-context expires, so there is no possibility of
-having a fixed timeout for flush.
+We nolonger send the PSbSendNullPacket.
 
-Since the channel_switch_time is added to the
-absence duration when the GO sets up the NoA
-attribute, this is the maximum time that we
-have to flush the TX queues. The duration is very
-small, but we don't have a choice in MCC mode.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/channel.c | 16 +++++++++++++++-
- 1 file changed, 15 insertions(+), 1 deletion(-)
+ drivers/staging/vt6655/power.c | 15 +++------------
+ 1 file changed, 3 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index 5045b10..7e518aa 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -199,6 +199,7 @@ static const char *chanctx_state_string(enum ath_chanctx_state state)
- void ath_chanctx_check_active(struct ath_softc *sc, struct ath_chanctx *ctx)
+diff --git a/drivers/staging/vt6655/power.c b/drivers/staging/vt6655/power.c
+index 08241b9..fe33bb2 100644
+--- a/drivers/staging/vt6655/power.c
++++ b/drivers/staging/vt6655/power.c
+@@ -73,8 +73,7 @@ PSvEnablePowerSaving(
+ )
  {
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+	struct ath_chanctx *ictx;
- 	struct ath_vif *avp;
- 	bool active = false;
- 	u8 n_active = 0;
-@@ -206,6 +207,8 @@ void ath_chanctx_check_active(struct ath_softc *sc, struct ath_chanctx *ctx)
- 	if (!ctx)
- 		return;
+ 	struct vnt_private *pDevice = hDeviceContext;
+-	PSMgmtObject    pMgmt = pDevice->pMgmt;
+-	unsigned short wAID = pMgmt->wCurrAID | BIT14 | BIT15;
++	u16 wAID = pDevice->current_aid | BIT(14) | BIT(15);
  
-+	ictx = ctx;
-+
- 	list_for_each_entry(avp, &ctx->vifs, list) {
- 		struct ieee80211_vif *vif = avp->vif;
- 
-@@ -228,12 +231,23 @@ void ath_chanctx_check_active(struct ath_softc *sc, struct ath_chanctx *ctx)
- 		n_active++;
+ 	// set period of power up before TBTT
+ 	VNSvOutPortW(pDevice->PortOffset + MAC_REG_PWBT, C_PWBT);
+@@ -83,7 +82,9 @@ PSvEnablePowerSaving(
+ 		VNSvOutPortW(pDevice->PortOffset + MAC_REG_AIDATIM, wAID);
+ 	} else {
+ 		// set ATIM Window
++#if 0 /* TODO atim window */
+ 		MACvWriteATIMW(pDevice->PortOffset, pMgmt->wCurrATIMWindow);
++#endif
+ 	}
+ 	// Set AutoSleep
+ 	MACvRegBitsOn(pDevice->PortOffset, MAC_REG_PSCFG, PSCFG_AUTOSLEEP);
+@@ -95,22 +96,15 @@ PSvEnablePowerSaving(
+ 		MACvRegBitsOff(pDevice->PortOffset, MAC_REG_PSCTL, PSCTL_ALBCN);
+ 		// first time set listen next beacon
+ 		MACvRegBitsOn(pDevice->PortOffset, MAC_REG_PSCTL, PSCTL_LNBCN);
+-		pMgmt->wCountToWakeUp = wListenInterval;
+ 	} else {
+ 		// always listen beacon
+ 		MACvRegBitsOn(pDevice->PortOffset, MAC_REG_PSCTL, PSCTL_ALBCN);
+-		pMgmt->wCountToWakeUp = 0;
  	}
  
-+	spin_lock_bh(&sc->chan_lock);
-+
- 	if (n_active <= 1) {
-+		ictx->flush_timeout = HZ / 5;
- 		clear_bit(ATH_OP_MULTI_CHANNEL, &common->op_flags);
-+		spin_unlock_bh(&sc->chan_lock);
- 		return;
- 	}
--	if (test_and_set_bit(ATH_OP_MULTI_CHANNEL, &common->op_flags))
-+
-+	ictx->flush_timeout = usecs_to_jiffies(sc->sched.channel_switch_time);
-+
-+	if (test_and_set_bit(ATH_OP_MULTI_CHANNEL, &common->op_flags)) {
-+		spin_unlock_bh(&sc->chan_lock);
- 		return;
-+	}
-+
-+	spin_unlock_bh(&sc->chan_lock);
+ 	// enable power saving hw function
+ 	MACvRegBitsOn(pDevice->PortOffset, MAC_REG_PSCTL, PSCTL_PSEN);
+ 	pDevice->bEnablePSMode = true;
  
- 	if (ath9k_is_chanctx_enabled()) {
- 		ath_chanctx_event(sc, NULL,
+-	/* We don't send null pkt in ad hoc mode since beacon will handle this. */
+-	if (pDevice->op_mode != NL80211_IFTYPE_ADHOC &&
+-	    pDevice->op_mode == NL80211_IFTYPE_STATION)
+-		PSbSendNullPacket(pDevice);
+-
+ 	pDevice->bPWBitOn = true;
+ 	pr_debug("PS:Power Saving Mode Enable...\n");
+ }
+@@ -143,9 +137,6 @@ PSvDisablePowerSaving(
+ 
+ 	pDevice->bEnablePSMode = false;
+ 
+-	if (pDevice->op_mode == NL80211_IFTYPE_STATION)
+-		PSbSendNullPacket(pDevice);
+-
+ 	pDevice->bPWBitOn = false;
+ }
+ 
 -- 
-2.1.2
+1.9.1
 
