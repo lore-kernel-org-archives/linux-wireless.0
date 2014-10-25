@@ -1,86 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f171.google.com ([209.85.214.171]:49848 "EHLO
-	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754193AbaJUHEb convert rfc822-to-8bit (ORCPT
+Received: from mail-wg0-f48.google.com ([74.125.82.48]:57539 "EHLO
+	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752563AbaJYTSM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Oct 2014 03:04:31 -0400
-Received: by mail-ob0-f171.google.com with SMTP id va2so485896obc.16
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Oct 2014 00:04:31 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CABPxzYJkh7fV6kXhYZvbH7PBHJNBsz0DwshpZFmcDPifwXe6fQ@mail.gmail.com>
-References: <1413463736.1316541.179720977.4FD32021@webmail.messagingengine.com>
-	<1413510814.22769.6.camel@dcbw.local>
-	<1413751717.2510219.180809145.0E693C29@webmail.messagingengine.com>
-	<CANUX_P2RHVRorVABRfWVg39d4D8dj35v3fBpY3=3jvQ1U+mfEA@mail.gmail.com>
-	<1413783023.2710583.180921653.10DFFCEE@webmail.messagingengine.com>
-	<CANUX_P0Q7cNeBzQa=2WVZFJXPTLx8F6YQk9bGCf_3uYhc5RcGA@mail.gmail.com>
-	<CANUX_P3EqgTX7cPJvQ3fWH1yijekE0G_8TiH2_OCS7nFASGtkA@mail.gmail.com>
-	<1413789724.3063896.180943829.3F15F453@webmail.messagingengine.com>
-	<CANUX_P1REqkSqN0dtak34OQ_pSGMtPvV3Vj61tW5wb1+n2A7mg@mail.gmail.com>
-	<1413833365.2949853.181221645.22D54845@webmail.messagingengine.com>
-	<CANUX_P3XzYBp7E=hScmc837TpuCr9VrxEYauG=sGMKfOCpX=qA@mail.gmail.com>
-	<CANUX_P06VvZ0uugayOvhZK0iM-NetftN5rZA27TtkYku66cGXA@mail.gmail.com>
-	<CABPxzYJmhE8wodzoVDbx=inrAusP1NLCjcj0+R7MUmQhUFcyUA@mail.gmail.com>
-	<CABPxzYJkh7fV6kXhYZvbH7PBHJNBsz0DwshpZFmcDPifwXe6fQ@mail.gmail.com>
-Date: Tue, 21 Oct 2014 10:04:30 +0300
-Message-ID: <CANUX_P1eb-C9yK-JGHgp_dc6uJzkDA=GYzKf+CFF50cqv0pVMQ@mail.gmail.com> (sfid-20141021_090437_452018_41398743)
-Subject: Re: iwlwifi: Reason 7 periodic disconnect
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Cc: =?UTF-8?Q?Lauren=C8=9Biu_Nicola?= <lnicola@dend.ro>,
-	Dan Williams <dcbw@redhat.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>
-Content-Type: text/plain; charset=UTF-8
+	Sat, 25 Oct 2014 15:18:12 -0400
+Received: by mail-wg0-f48.google.com with SMTP id m15so1210070wgh.7
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2014 12:18:11 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 14/31] staging: vt6655: mac80211 conversion: changes to set channel
+Date: Sat, 25 Oct 2014 09:20:24 +0100
+Message-Id: <1414225241-5480-15-git-send-email-tvboxspy@gmail.com> (sfid-20141025_211824_938824_C3BF6EC0)
+In-Reply-To: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
+References: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 21, 2014 at 9:37 AM, Krishna Chaitanya
-<chaitanya.mgit@gmail.com> wrote:
-> On Tue, Oct 21, 2014 at 12:06 PM, Krishna Chaitanya
-> <chaitanya.mgit@gmail.com> wrote:
->> On Tue, Oct 21, 2014 at 11:01 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
->>> On Tue, Oct 21, 2014 at 8:02 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
->>>> On Mon, Oct 20, 2014 at 10:29 PM, Laurențiu Nicola <lnicola@dend.ro> wrote:
->>>>> No, nothing in the DD-WRT syslog. The IP seems to be the one cached by
->>>>> my DHCP client. I also tried various suggestions found on the internet,
->>>>> but nothing helped.
->>>>>
->>>>
->>>> Can you please try to have another device in monitor mode to sniff the
->>>> traffic going on?
->>>> Felix, can you please tell me when DD-WRT can send a deauth with reason code 7?
->>>>
->>>> thanks.
->>>
->>> Can you please disable power save?
->>> For this, please make sure you have
->>> https://git.kernel.org/cgit/linux/kernel/git/iwlwifi/iwlwifi-fixes.git/commit/?id=f8dfc607b2b460e8e8adfdfb3c5f5bba3a4ad01b
->>> or at least have the module parameter.
->>> I am wondering if the firmware is not sending frames because of power
->>> save toggling.
->>>
->>> I you could get more extensive logs from the AP it'd be great.
->>> Running tracing on the AP would let us know why it thinks we are not associated.
->>>
->> I have faced the same issue before it happens when DUT is in powersave
->> and for some reason AP authenticates (in this case probably due to
-> *typo: deuauthenticates.
->
->> inactivity) but as DUT is in power save we don't Rx the deauth (some
->> AP's don't wait
->> for STA to wakeup and retrieve the deauth frame).
->>
->> So after that if DUT tries to sent any data frame, as it still thinks
->> that it is connected
->> (network lost also will not trigger because it still Rx beacon) and in
->> that case AP deauthenticates
->> us by Reason:7.
->>
->> May be if we enable tx status report ACK we can pass the inactivity
->> check as some AP's
->> wont reset inactivity timer for probe's.
+Remove call to sChannelTbl, the channel under mac80211 is always valid.
 
-That seems unlikely - we are kicked out after 1 minute?
-Let's check, Laurentiu - can you please ping in the background and see
-what happens?
+CARDbSetPhyParameter is nolonger set here.
+
+RFbSetPower is now set on byBBType
+
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/channel.c | 12 +-----------
+ 1 file changed, 1 insertion(+), 11 deletions(-)
+
+diff --git a/drivers/staging/vt6655/channel.c b/drivers/staging/vt6655/channel.c
+index 5f0cf90..48ad8a4 100644
+--- a/drivers/staging/vt6655/channel.c
++++ b/drivers/staging/vt6655/channel.c
+@@ -668,16 +668,6 @@ bool set_channel(void *pDeviceHandler, unsigned int uConnectionChannel)
+ 	if (pDevice->byCurrentCh == uConnectionChannel)
+ 		return bResult;
+ 
+-	if (!sChannelTbl[uConnectionChannel].bValid)
+-		return false;
+-
+-	if ((uConnectionChannel > CB_MAX_CHANNEL_24G) &&
+-	    (pDevice->eCurrentPHYType != PHY_TYPE_11A)) {
+-		CARDbSetPhyParameter(pDevice, PHY_TYPE_11A, 0, 0, NULL, NULL);
+-	} else if ((uConnectionChannel <= CB_MAX_CHANNEL_24G) &&
+-		   (pDevice->eCurrentPHYType == PHY_TYPE_11A)) {
+-		CARDbSetPhyParameter(pDevice, PHY_TYPE_11G, 0, 0, NULL, NULL);
+-	}
+ 	// clear NAV
+ 	MACvRegBitsOn(pDevice->PortOffset, MAC_REG_MACCR, MACCR_CLRNAV);
+ 
+@@ -707,7 +697,7 @@ bool set_channel(void *pDeviceHandler, unsigned int uConnectionChannel)
+ 		MACvSelectPage0(pDevice->PortOffset);
+ 	}
+ 
+-	if (pDevice->eCurrentPHYType == PHY_TYPE_11B)
++	if (pDevice->byBBType == BB_TYPE_11B)
+ 		RFbSetPower(pDevice, RATE_1M, pDevice->byCurrentCh);
+ 	else
+ 		RFbSetPower(pDevice, RATE_6M, pDevice->byCurrentCh);
+-- 
+1.9.1
+
