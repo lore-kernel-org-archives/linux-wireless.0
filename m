@@ -1,129 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:51324 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932865AbaJVMXC (ORCPT
+Received: from mail-wg0-f46.google.com ([74.125.82.46]:32775 "EHLO
+	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752425AbaJYTh1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2014 08:23:02 -0400
-Received: by mail-wi0-f175.google.com with SMTP id d1so1206284wiv.2
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Oct 2014 05:23:00 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH] mac80211: Export IE split function
-Date: Wed, 22 Oct 2014 15:22:49 +0300
-Message-Id: <1413980569-25501-1-git-send-email-egrumbach@gmail.com> (sfid-20141022_142307_007162_C0DDCDB0)
+	Sat, 25 Oct 2014 15:37:27 -0400
+Received: by mail-wg0-f46.google.com with SMTP id l18so3152224wgh.29
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2014 12:37:26 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 45/48] staging: vt6655: Move LIFETIME RES 64us macros to rxtx.h
+Date: Sat, 25 Oct 2014 09:40:23 +0100
+Message-Id: <1414226426-5811-46-git-send-email-tvboxspy@gmail.com> (sfid-20141025_213734_119907_E02F9086)
+In-Reply-To: <1414226426-5811-1-git-send-email-tvboxspy@gmail.com>
+References: <1414226426-5811-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Used only by vnt_generate_fifo_header move these macros.
 
-Export ieee80211_ie_split function, so it can be reused by drivers
-which require to insert additional elements.
-
-Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- include/net/mac80211.h     | 28 ++++++++++++++++++++++++++++
- net/mac80211/ieee80211_i.h |  2 --
- net/mac80211/util.c        | 26 +-------------------------
- 3 files changed, 29 insertions(+), 27 deletions(-)
+ drivers/staging/vt6655/rxtx.h | 4 ++++
+ drivers/staging/vt6655/wmgr.h | 2 --
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 0ad1f47..52c94fa 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -4888,4 +4888,32 @@ void ieee80211_update_p2p_noa(struct ieee80211_noa_data *data, u32 tsf);
- void ieee80211_tdls_oper_request(struct ieee80211_vif *vif, const u8 *peer,
- 				 enum nl80211_tdls_operation oper,
- 				 u16 reason_code, gfp_t gfp);
+diff --git a/drivers/staging/vt6655/rxtx.h b/drivers/staging/vt6655/rxtx.h
+index 50d77a0..cf0dfa6 100644
+--- a/drivers/staging/vt6655/rxtx.h
++++ b/drivers/staging/vt6655/rxtx.h
+@@ -32,6 +32,10 @@
+ #include "ttype.h"
+ #include "device.h"
+ 
++#define DEFAULT_MSDU_LIFETIME_RES_64us	8000 /* 64us */
++#define DEFAULT_MGN_LIFETIME_RES_64us	125  /* 64us */
 +
-+/**
-+ * ieee80211_ie_split - split an IE buffer according to ordering
-+ *
-+ * @ies: the IE buffer
-+ * @ielen: the length of the IE buffer
-+ * @ids: an array with element IDs that are allowed before
-+ *	the split
-+ * @n_ids: the size of the element ID array
-+ * @offset: offset where to start splitting in the buffer
-+ *
-+ * This function splits an IE buffer by updating the @offset
-+ * variable to point to the location where the buffer should be
-+ * split.
-+ *
-+ * It assumes that the given IE buffer is well-formed, this
-+ * has to be guaranteed by the caller!
-+ *
-+ * It also assumes that the IEs in the buffer are ordered
-+ * correctly, if not the result of using this function will not
-+ * be ordered correctly either, i.e. it does no reordering.
-+ *
-+ * The function returns the offset where the next part of the
-+ * buffer starts, which may be @ielen if the entire (remainder)
-+ * of the buffer should be used.
-+ */
-+size_t ieee80211_ie_split(const u8 *ies, size_t ielen,
-+			  const u8 *ids, int n_ids, size_t offset);
- #endif /* MAC80211_H */
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index c2aaec4..587b61d 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1833,8 +1833,6 @@ int __ieee80211_request_smps_ap(struct ieee80211_sub_if_data *sdata,
- void ieee80211_recalc_smps(struct ieee80211_sub_if_data *sdata);
- void ieee80211_recalc_min_chandef(struct ieee80211_sub_if_data *sdata);
++
+ /*---------------------  Export Definitions -------------------------*/
  
--size_t ieee80211_ie_split(const u8 *ies, size_t ielen,
--			  const u8 *ids, int n_ids, size_t offset);
- size_t ieee80211_ie_split_vendor(const u8 *ies, size_t ielen, size_t offset);
- u8 *ieee80211_ie_build_ht_cap(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
- 			      u16 cap);
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 3c61060..b2ec3c38 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -2052,31 +2052,6 @@ static bool ieee80211_id_in_list(const u8 *ids, int n_ids, u8 id)
- 	return false;
- }
+ /*---------------------  Export Variables  --------------------------*/
+diff --git a/drivers/staging/vt6655/wmgr.h b/drivers/staging/vt6655/wmgr.h
+index 74f1f16..daf996c 100644
+--- a/drivers/staging/vt6655/wmgr.h
++++ b/drivers/staging/vt6655/wmgr.h
+@@ -51,10 +51,8 @@
+ #define WCMD_PASSIVE_SCAN_TIME  100 //(ms)
  
--/**
-- * ieee80211_ie_split - split an IE buffer according to ordering
-- *
-- * @ies: the IE buffer
-- * @ielen: the length of the IE buffer
-- * @ids: an array with element IDs that are allowed before
-- *	the split
-- * @n_ids: the size of the element ID array
-- * @offset: offset where to start splitting in the buffer
-- *
-- * This function splits an IE buffer by updating the @offset
-- * variable to point to the location where the buffer should be
-- * split.
-- *
-- * It assumes that the given IE buffer is well-formed, this
-- * has to be guaranteed by the caller!
-- *
-- * It also assumes that the IEs in the buffer are ordered
-- * correctly, if not the result of using this function will not
-- * be ordered correctly either, i.e. it does no reordering.
-- *
-- * The function returns the offset where the next part of the
-- * buffer starts, which may be @ielen if the entire (remainder)
-- * of the buffer should be used.
-- */
- size_t ieee80211_ie_split(const u8 *ies, size_t ielen,
- 			  const u8 *ids, int n_ids, size_t offset)
- {
-@@ -2087,6 +2062,7 @@ size_t ieee80211_ie_split(const u8 *ies, size_t ielen,
+ #define DEFAULT_MSDU_LIFETIME           512  // ms
+-#define DEFAULT_MSDU_LIFETIME_RES_64us  8000 // 64us
  
- 	return pos;
- }
-+EXPORT_SYMBOL(ieee80211_ie_split);
+ #define DEFAULT_MGN_LIFETIME            8    // ms
+-#define DEFAULT_MGN_LIFETIME_RES_64us   125  // 64us
  
- size_t ieee80211_ie_split_vendor(const u8 *ies, size_t ielen, size_t offset)
- {
+ #define MAKE_BEACON_RESERVED            10  //(us)
+ 
 -- 
 1.9.1
 
