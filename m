@@ -1,95 +1,178 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:4660 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752016AbaJFMMW (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:44856 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752237AbaJYTkC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Oct 2014 08:12:22 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 1/4] ath10k: Add support to configure pktlog filter
-References: <1412269778-1045-1-git-send-email-rmanohar@qti.qualcomm.com>
-	<1412269778-1045-2-git-send-email-rmanohar@qti.qualcomm.com>
-	<877g0dl8j6.fsf@kamboji.qca.qualcomm.com>
-	<20141006120656.GA19615@qca.qualcomm.com>
-Date: Mon, 6 Oct 2014 15:11:57 +0300
-In-Reply-To: <20141006120656.GA19615@qca.qualcomm.com> (Rajkumar Manoharan's
-	message of "Mon, 6 Oct 2014 17:36:58 +0530")
-Message-ID: <87y4stjt2q.fsf@kamboji.qca.qualcomm.com> (sfid-20141006_141228_871821_7417DB51)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Sat, 25 Oct 2014 15:40:02 -0400
+Received: by mail-wi0-f172.google.com with SMTP id d1so7295wiv.5
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2014 12:40:01 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 38/48] staging: vt6655: dead code remove iowpa.h
+Date: Sat, 25 Oct 2014 09:40:16 +0100
+Message-Id: <1414226426-5811-39-git-send-email-tvboxspy@gmail.com> (sfid-20141025_214006_021291_AEE56481)
+In-Reply-To: <1414226426-5811-1-git-send-email-tvboxspy@gmail.com>
+References: <1414226426-5811-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rajkumar Manoharan <rmanohar@qti.qualcomm.com> writes:
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/device_main.c |   1 -
+ drivers/staging/vt6655/iowpa.h       | 130 -----------------------------------
+ 2 files changed, 131 deletions(-)
+ delete mode 100644 drivers/staging/vt6655/iowpa.h
 
-> On Mon, Oct 06, 2014 at 02:52:45PM +0300, Kalle Valo wrote:
->> Rajkumar Manoharan <rmanohar@qti.qualcomm.com> writes:
->> 
->> > Add support to configure packet log filters (tx, rx, rate control)
->> > via debugfs. To disable htt pktlog events set the filters to 0.
->> >
->> > ex:
->> >
->> > To enable pktlog for all filters
->> >
->> >    echo 0x1f > /sys/kernel/debug/ieee80211/phy*/ath10k/pktlog_filter
->> >
->> > To disable pktlog
->> >
->> >    echo 0 > /sys/kernel/debug/ieee80211/phy*/ath10k/pktlog_filter
->> >
->> > Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
->> 
->> I did minor changes to the error handling in
->> ath10k_write_pktlog_filter() and in ath10k_debug_start(). Diff below and
->> full commit here:
->> 
->> https://github.com/kvalo/ath/commit/470c43d83b7ee4147dea38a4f7b986070555a032
->> 
->> Please review my changes.
->
-> LGTM.
-
-Joe Perches pointed out to me offline that I had missed '\n' in two of
-the warning messages. So one more change:
-
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -1402,13 +1402,13 @@ int ath10k_debug_start(struct ath10k *ar)
- 		if (ret)
- 			/* not serious */
- 			ath10k_warn(ar,
--				    "failed to enable pktlog filter %x: %d",
-+				    "failed to enable pktlog filter %x: %d\n",
- 				    ar->debug.pktlog_filter, ret);
- 	} else {
- 		ret = ath10k_wmi_pdev_pktlog_disable(ar);
- 		if (ret)
- 			/* not serious */
--			ath10k_warn(ar, "failed to disable pktlog: %d", ret);
-+			ath10k_warn(ar, "failed to disable pktlog: %d\n", ret);
- 	}
- 
- 	return ret;
-@@ -1532,14 +1532,14 @@ static ssize_t ath10k_write_pktlog_filter(struct file *file,
- 	if (filter && (filter != ar->debug.pktlog_filter)) {
- 		ret = ath10k_wmi_pdev_pktlog_enable(ar, filter);
- 		if (ret) {
--			ath10k_warn(ar, "failed to enable pktlog filter %x: %d",
-+			ath10k_warn(ar, "failed to enable pktlog filter %x: %d\n",
- 				    ar->debug.pktlog_filter, ret);
- 			goto out;
- 		}
- 	} else {
- 		ret = ath10k_wmi_pdev_pktlog_disable(ar);
- 		if (ret) {
--			ath10k_warn(ar, "failed to disable pktlog: %d", ret);
-+			ath10k_warn(ar, "failed to disable pktlog: %d\n", ret);
- 			goto out;
- 		}
- 	}
-
-
+diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
+index 244b3ff..b8b5a93 100644
+--- a/drivers/staging/vt6655/device_main.c
++++ b/drivers/staging/vt6655/device_main.c
+@@ -64,7 +64,6 @@
+ #include "rxtx.h"
+ #include "dpc.h"
+ #include "rf.h"
+-#include "iowpa.h"
+ #include <linux/delay.h>
+ #include <linux/kthread.h>
+ #include <linux/slab.h>
+diff --git a/drivers/staging/vt6655/iowpa.h b/drivers/staging/vt6655/iowpa.h
+deleted file mode 100644
+index fe4b22e..0000000
+--- a/drivers/staging/vt6655/iowpa.h
++++ /dev/null
+@@ -1,130 +0,0 @@
+-/*
+- * Copyright (c) 1996, 2003 VIA Networking Technologies, Inc.
+- * All rights reserved.
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2 of the License, or
+- * (at your option) any later version.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License along
+- * with this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+- *
+- * File: iowpa.h
+- *
+- * Purpose: Handles wpa supplicant ioctl interface
+- *
+- * Author: Lyndon Chen
+- *
+- * Date: May 8, 2002
+- *
+- */
+-
+-#ifndef __IOWPA_H__
+-#define __IOWPA_H__
+-
+-#define WPA_IE_LEN 64
+-
+-//WPA related
+-
+-enum {
+-	VIAWGET_SET_WPA = 1,
+-	VIAWGET_SET_KEY = 2,
+-	VIAWGET_SET_SCAN = 3,
+-	VIAWGET_GET_SCAN = 4,
+-	VIAWGET_GET_SSID = 5,
+-	VIAWGET_GET_BSSID = 6,
+-	VIAWGET_SET_DROP_UNENCRYPT = 7,
+-	VIAWGET_SET_DEAUTHENTICATE = 8,
+-	VIAWGET_SET_ASSOCIATE = 9,
+-	VIAWGET_SET_DISASSOCIATE = 10
+-};
+-
+-enum {
+-	VIAWGET_ASSOC_MSG = 1,
+-	VIAWGET_DISASSOC_MSG = 2,
+-	VIAWGET_PTK_MIC_MSG = 3,
+-	VIAWGET_GTK_MIC_MSG = 4,
+-	VIAWGET_CCKM_ROAM_MSG = 5,
+-	VIAWGET_DEVICECLOSE_MSG = 6
+-};
+-
+-#pragma pack(1)
+-typedef struct viawget_wpa_header {
+-	u8 type;
+-	u16 req_ie_len;
+-	u16 resp_ie_len;
+-} viawget_wpa_header;
+-
+-struct viawget_wpa_param {
+-	u32 cmd;
+-	u8 addr[6];
+-	union {
+-		struct {
+-			u8 len;
+-			u8 data[0];
+-		} generic_elem;
+-
+-		struct {
+-			u8 bssid[6];
+-			u8 ssid[32];
+-			u8 ssid_len;
+-			u8 __user *wpa_ie;
+-			u16 wpa_ie_len;
+-			int pairwise_suite;
+-			int group_suite;
+-			int key_mgmt_suite;
+-			int auth_alg;
+-			int mode;
+-
+-		} wpa_associate;
+-
+-		struct {
+-			int alg_name;
+-			u16 key_index;
+-			u16 set_tx;
+-			u8 *seq;
+-			u16 seq_len;
+-			u8 *key;
+-			u16 key_len;
+-		} wpa_key;
+-
+-		struct {
+-			u8 ssid_len;
+-			u8 ssid[32];
+-		} scan_req;
+-
+-		struct {
+-			u16 scan_count;
+-			u8 __user *buf;
+-		} scan_results;
+-
+-	} u;
+-};
+-
+-#pragma pack(1)
+-struct viawget_scan_result {
+-	u8 bssid[6];
+-	u8 ssid[32];
+-	u16 ssid_len;
+-	u8 wpa_ie[WPA_IE_LEN];
+-	u16 wpa_ie_len;
+-	u8 rsn_ie[WPA_IE_LEN];
+-	u16 rsn_ie_len;
+-	int freq; // MHz
+-	int caps; // e.g. privacy
+-	int qual; // signal quality
+-	int noise;
+-	int level;
+-	int maxrate;
+-};
+-
+-#pragma pack()
+-
+-#endif //__IOWPA_H__
 -- 
-Kalle Valo
+1.9.1
+
