@@ -1,65 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:63633 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756912AbaJ2R5p (ORCPT
+Received: from mail-wg0-f41.google.com ([74.125.82.41]:42082 "EHLO
+	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752457AbaJYUJ3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2014 13:57:45 -0400
-Received: by mail-wi0-f171.google.com with SMTP id q5so2428521wiv.16
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2014 10:57:44 -0700 (PDT)
+	Sat, 25 Oct 2014 16:09:29 -0400
+Received: by mail-wg0-f41.google.com with SMTP id b13so3162142wgh.12
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2014 13:09:27 -0700 (PDT)
 From: Malcolm Priestley <tvboxspy@gmail.com>
 To: gregkh@linuxfoundation.org
 Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
 	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH v2 23/48] staging: vt6655: key.c remove dead functions
-Date: Wed, 29 Oct 2014 17:55:41 +0000
-Message-Id: <1414605366-9335-24-git-send-email-tvboxspy@gmail.com> (sfid-20141029_185946_262089_77E7E3DF)
-In-Reply-To: <1414605366-9335-1-git-send-email-tvboxspy@gmail.com>
-References: <1414605366-9335-1-git-send-email-tvboxspy@gmail.com>
+Subject: [PATCH 27/48] staging: vt6655: dead code remove 80211mgr.c and functions
+Date: Sat, 25 Oct 2014 09:40:05 +0100
+Message-Id: <1414226426-5811-28-git-send-email-tvboxspy@gmail.com> (sfid-20141025_220932_406980_2CD50A1F)
+In-Reply-To: <1414226426-5811-1-git-send-email-tvboxspy@gmail.com>
+References: <1414226426-5811-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+80211mgr.h header will be removed later
+
 Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/staging/vt6655/device.h |   1 -
- drivers/staging/vt6655/key.c    | 760 ----------------------------------------
- drivers/staging/vt6655/key.h    | 120 -------
- 3 files changed, 881 deletions(-)
+ drivers/staging/vt6655/80211mgr.c | 1006 -------------------------------------
+ drivers/staging/vt6655/80211mgr.h |  110 ----
+ drivers/staging/vt6655/Makefile   |    1 -
+ 3 files changed, 1117 deletions(-)
+ delete mode 100644 drivers/staging/vt6655/80211mgr.c
 
-diff --git a/drivers/staging/vt6655/device.h b/drivers/staging/vt6655/device.h
-index 4bea237..a5e5a007 100644
---- a/drivers/staging/vt6655/device.h
-+++ b/drivers/staging/vt6655/device.h
-@@ -539,7 +539,6 @@ struct vnt_private {
- 	bool bTransmitKey;
- 	NDIS_802_11_WEP_STATUS  eOldEncryptionStatus;
- 
--	SKeyManagement          sKey;
- 	unsigned long dwIVCounter;
- 
- 	u64 qwPacketNumber; /* For CCMP and TKIP as TSC(6 bytes) */
-diff --git a/drivers/staging/vt6655/key.c b/drivers/staging/vt6655/key.c
-index b2fa812..f2b3fea 100644
---- a/drivers/staging/vt6655/key.c
-+++ b/drivers/staging/vt6655/key.c
-@@ -25,772 +25,12 @@
-  *
-  * Date: May 29, 2003
-  *
+diff --git a/drivers/staging/vt6655/80211mgr.c b/drivers/staging/vt6655/80211mgr.c
+deleted file mode 100644
+index 22ded38..0000000
+--- a/drivers/staging/vt6655/80211mgr.c
++++ /dev/null
+@@ -1,1006 +0,0 @@
+-/*
+- * Copyright (c) 1996, 2003 VIA Networking Technologies, Inc.
+- * All rights reserved.
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2 of the License, or
+- * (at your option) any later version.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License along
+- * with this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+- *
+- * File: 80211mgr.c
+- *
+- * Purpose: Handles the 802.11 management support functions
+- *
+- * Author: Lyndon Chen
+- *
+- * Date: May 8, 2002
+- *
 - * Functions:
-- *      KeyvInitTable - Init Key management table
-- *      KeybGetKey - Get Key from table
-- *      KeybSetKey - Set Key to table
-- *      KeybRemoveKey - Remove Key from table
-- *      KeybGetTransmitKey - Get Transmit Key from table
+- *      vMgrEncodeBeacon - Encode the Beacon frame
+- *      vMgrDecodeBeacon - Decode the Beacon frame
+- *      vMgrEncodeIBSSATIM - Encode the IBSS ATIM frame
+- *      vMgrDecodeIBSSATIM - Decode the IBSS ATIM frame
+- *      vMgrEncodeDisassociation - Encode the Disassociation frame
+- *      vMgrDecodeDisassociation - Decode the Disassociation frame
+- *      vMgrEncodeAssocRequest - Encode the Association request frame
+- *      vMgrDecodeAssocRequest - Decode the Association request frame
+- *      vMgrEncodeAssocResponse - Encode the Association response frame
+- *      vMgrDecodeAssocResponse - Decode the Association response frame
+- *      vMgrEncodeReAssocRequest - Encode the ReAssociation request frame
+- *      vMgrDecodeReAssocRequest - Decode the ReAssociation request frame
+- *      vMgrEncodeProbeRequest - Encode the Probe request frame
+- *      vMgrDecodeProbeRequest - Decode the Probe request frame
+- *      vMgrEncodeProbeResponse - Encode the Probe response frame
+- *      vMgrDecodeProbeResponse - Decode the Probe response frame
+- *      vMgrEncodeAuthen - Encode the Authentication frame
+- *      vMgrDecodeAuthen - Decode the Authentication frame
+- *      vMgrEncodeDeauthen - Encode the DeAuthentication frame
+- *      vMgrDecodeDeauthen - Decode the DeAuthentication frame
+- *      vMgrEncodeReassocResponse - Encode the Reassociation response frame
+- *      vMgrDecodeReassocResponse - Decode the Reassociation response frame
 - *
 - * Revision History:
 - *
-  */
- 
- #include "tmacro.h"
- #include "key.h"
- #include "mac.h"
- 
+- */
+-
+-#include "tmacro.h"
+-#include "tether.h"
+-#include "80211mgr.h"
+-#include "80211hdr.h"
+-#include "device.h"
+-
 -/*---------------------  Static Definitions -------------------------*/
 -
 -/*---------------------  Static Classes  ----------------------------*/
@@ -68,883 +102,1075 @@ index b2fa812..f2b3fea 100644
 -
 -/*---------------------  Export Variables  --------------------------*/
 -
--/*---------------------  Static Definitions -------------------------*/
--
--/*---------------------  Static Classes  ----------------------------*/
--
--/*---------------------  Static Variables  --------------------------*/
--
--/*---------------------  Static Functions  --------------------------*/
--static void
--s_vCheckKeyTableValid(PSKeyManagement pTable, void __iomem *dwIoBase)
--{
--	int i;
--
--	for (i = 0; i < MAX_KEY_TABLE; i++) {
--		if (pTable->KeyTable[i].bInUse &&
--		    !pTable->KeyTable[i].PairwiseKey.bKeyValid &&
--		    !pTable->KeyTable[i].GroupKey[0].bKeyValid &&
--		    !pTable->KeyTable[i].GroupKey[1].bKeyValid &&
--		    !pTable->KeyTable[i].GroupKey[2].bKeyValid &&
--		    !pTable->KeyTable[i].GroupKey[3].bKeyValid) {
--			pTable->KeyTable[i].bInUse = false;
--			pTable->KeyTable[i].wKeyCtl = 0;
--			pTable->KeyTable[i].bSoftWEP = false;
--			MACvDisableKeyEntry(dwIoBase, i);
--		}
--	}
--}
--
 -/*---------------------  Export Functions  --------------------------*/
 -
--/*
-- * Description: Init Key management table
+-/*+
 - *
-- * Parameters:
-- *  In:
-- *      pTable          - Pointer to Key table
-- *  Out:
-- *      none
+- * Routine Description:
+- * Encode Beacon frame body offset
 - *
-- * Return Value: none
+- * Return Value:
+- *    None.
 - *
-- */
--void KeyvInitTable(PSKeyManagement pTable, void __iomem *dwIoBase)
--{
--	int i;
--	int jj;
+- -*/
 -
--	for (i = 0; i < MAX_KEY_TABLE; i++) {
--		pTable->KeyTable[i].bInUse = false;
--		pTable->KeyTable[i].PairwiseKey.bKeyValid = false;
--		pTable->KeyTable[i].PairwiseKey.pvKeyTable = (void *)&pTable->KeyTable[i];
--		for (jj = 0; jj < MAX_GROUP_KEY; jj++) {
--			pTable->KeyTable[i].GroupKey[jj].bKeyValid = false;
--			pTable->KeyTable[i].GroupKey[jj].pvKeyTable = (void *)&pTable->KeyTable[i];
--		}
--		pTable->KeyTable[i].wKeyCtl = 0;
--		pTable->KeyTable[i].dwGTKeyIndex = 0;
--		pTable->KeyTable[i].bSoftWEP = false;
--		MACvDisableKeyEntry(dwIoBase, i);
--	}
--}
--
--/*
-- * Description: Get Key from table
-- *
-- * Parameters:
-- *  In:
-- *      pTable          - Pointer to Key table
-- *      pbyBSSID        - BSSID of Key
-- *      dwKeyIndex      - Key Index (0xFFFFFFFF means pairwise key)
-- *  Out:
-- *      pKey            - Key return
-- *
-- * Return Value: true if found otherwise false
-- *
-- */
--bool KeybGetKey(
--	PSKeyManagement pTable,
--	unsigned char *pbyBSSID,
--	unsigned long dwKeyIndex,
--	PSKeyItem       *pKey
+-void
+-vMgrEncodeBeacon(
+-	PWLAN_FR_BEACON  pFrame
 -)
 -{
--	int i;
+-	pFrame->pHdr = (PUWLAN_80211HDR)pFrame->pBuf;
 -
--	pr_debug("KeybGetKey()\n");
+-	/* Fixed Fields */
+-	pFrame->pqwTimestamp = (__le64 *)
+-				(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)) +
+-				 WLAN_BEACON_OFF_TS);
+-	pFrame->pwBeaconInterval = (unsigned short *)
+-				(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)) +
+-				 WLAN_BEACON_OFF_BCN_INT);
+-	pFrame->pwCapInfo = (unsigned short *)
+-			    (WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)) +
+-			     WLAN_BEACON_OFF_CAPINFO);
 -
--	*pKey = NULL;
--	for (i = 0; i < MAX_KEY_TABLE; i++) {
--		if (pTable->KeyTable[i].bInUse &&
--		    ether_addr_equal(pTable->KeyTable[i].abyBSSID, pbyBSSID)) {
--			if (dwKeyIndex == 0xFFFFFFFF) {
--				if (pTable->KeyTable[i].PairwiseKey.bKeyValid) {
--					*pKey = &(pTable->KeyTable[i].PairwiseKey);
--					return true;
--				} else {
--					return false;
--				}
--			} else if (dwKeyIndex < MAX_GROUP_KEY) {
--				if (pTable->KeyTable[i].GroupKey[dwKeyIndex].bKeyValid) {
--					*pKey = &(pTable->KeyTable[i].GroupKey[dwKeyIndex]);
--					return true;
--				} else {
--					return false;
--				}
--			} else {
--				return false;
+-	pFrame->len = WLAN_HDR_ADDR3_LEN + WLAN_BEACON_OFF_SSID;
+-}
+-
+-/*+
+- *
+- * Routine Description:
+- * Decode Beacon frame body offset
+- *
+- *
+- * Return Value:
+- *    None.
+- *
+- -*/
+-
+-void
+-vMgrDecodeBeacon(
+-	PWLAN_FR_BEACON  pFrame
+-)
+-{
+-	PWLAN_IE        pItem;
+-
+-	pFrame->pHdr = (PUWLAN_80211HDR)pFrame->pBuf;
+-
+-	/* Fixed Fields */
+-	pFrame->pqwTimestamp = (__le64 *)
+-				(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)) +
+-				 WLAN_BEACON_OFF_TS);
+-	pFrame->pwBeaconInterval = (unsigned short *)
+-				   (WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)) +
+-				    WLAN_BEACON_OFF_BCN_INT);
+-	pFrame->pwCapInfo = (unsigned short *)
+-			    (WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)) +
+-			     WLAN_BEACON_OFF_CAPINFO);
+-
+-	/* Information elements */
+-	pItem = (PWLAN_IE)((unsigned char *)
+-			   (WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3))) +
+-			    WLAN_BEACON_OFF_SSID);
+-	while (((unsigned char *)pItem) < (pFrame->pBuf + pFrame->len)) {
+-		switch (pItem->byElementID) {
+-		case WLAN_EID_SSID:
+-			if (pFrame->pSSID == NULL)
+-				pFrame->pSSID = (PWLAN_IE_SSID)pItem;
+-			break;
+-		case WLAN_EID_SUPP_RATES:
+-			if (pFrame->pSuppRates == NULL)
+-				pFrame->pSuppRates = (PWLAN_IE_SUPP_RATES)pItem;
+-			break;
+-		case WLAN_EID_FH_PARMS:
+-			/* pFrame->pFHParms = (PWLAN_IE_FH_PARMS)pItem; */
+-			break;
+-		case WLAN_EID_DS_PARMS:
+-			if (pFrame->pDSParms == NULL)
+-				pFrame->pDSParms = (PWLAN_IE_DS_PARMS)pItem;
+-			break;
+-		case WLAN_EID_CF_PARMS:
+-			if (pFrame->pCFParms == NULL)
+-				pFrame->pCFParms = (PWLAN_IE_CF_PARMS)pItem;
+-			break;
+-		case WLAN_EID_IBSS_PARMS:
+-			if (pFrame->pIBSSParms == NULL)
+-				pFrame->pIBSSParms = (PWLAN_IE_IBSS_PARMS)pItem;
+-			break;
+-		case WLAN_EID_TIM:
+-			if (pFrame->pTIM == NULL)
+-				pFrame->pTIM = (PWLAN_IE_TIM)pItem;
+-			break;
+-
+-		case WLAN_EID_RSN:
+-			if (pFrame->pRSN == NULL)
+-				pFrame->pRSN = (PWLAN_IE_RSN)pItem;
+-			break;
+-		case WLAN_EID_RSN_WPA:
+-			if (pFrame->pRSNWPA == NULL) {
 -			}
+-			break;
+-
+-		case WLAN_EID_ERP:
+-			if (pFrame->pERP == NULL)
+-				pFrame->pERP = (PWLAN_IE_ERP)pItem;
+-			break;
+-		case WLAN_EID_EXTSUPP_RATES:
+-			if (pFrame->pExtSuppRates == NULL)
+-				pFrame->pExtSuppRates =
+-						    (PWLAN_IE_SUPP_RATES)pItem;
+-			break;
+-
+-		case WLAN_EID_COUNTRY:      /* 7 */
+-			if (pFrame->pIE_Country == NULL)
+-				pFrame->pIE_Country = (PWLAN_IE_COUNTRY)pItem;
+-			break;
+-
+-		case WLAN_EID_PWR_CONSTRAINT:   /* 32 */
+-			if (pFrame->pIE_PowerConstraint == NULL)
+-				pFrame->pIE_PowerConstraint =
+-						      (PWLAN_IE_PW_CONST)pItem;
+-			break;
+-
+-		case WLAN_EID_CH_SWITCH:    /* 37 */
+-			if (pFrame->pIE_CHSW == NULL)
+-				pFrame->pIE_CHSW = (PWLAN_IE_CH_SW)pItem;
+-			break;
+-
+-		case WLAN_EID_QUIET:        /* 40 */
+-			if (pFrame->pIE_Quiet == NULL)
+-				pFrame->pIE_Quiet = (PWLAN_IE_QUIET)pItem;
+-			break;
+-
+-		case WLAN_EID_IBSS_DFS:
+-			if (pFrame->pIE_IBSSDFS == NULL)
+-				pFrame->pIE_IBSSDFS = (PWLAN_IE_IBSS_DFS)pItem;
+-			break;
+-
+-		default:
+-			pr_debug("Unrecognized EID=%dd in beacon decode\n",
+-				 pItem->byElementID);
+-			break;
+-
 -		}
+-		pItem = (PWLAN_IE)(((unsigned char *)pItem) + 2 + pItem->len);
 -	}
--	return false;
 -}
 -
--/*
-- * Description: Set Key to table
+-/*+
 - *
-- * Parameters:
-- *  In:
-- *      pTable          - Pointer to Key table
-- *      pbyBSSID        - BSSID of Key
-- *      dwKeyIndex      - Key index (reference to NDIS DDK)
-- *      uKeyLength      - Key length
-- *      KeyRSC          - Key RSC
-- *      pbyKey          - Pointer to key
-- *  Out:
-- *      none
+- * Routine Description:
+- *  Encode IBSS ATIM
 - *
-- * Return Value: true if success otherwise false
 - *
-- */
--bool KeybSetKey(
--	PSKeyManagement pTable,
--	unsigned char *pbyBSSID,
--	unsigned long dwKeyIndex,
--	unsigned long uKeyLength,
--	u64 *pKeyRSC,
--	unsigned char *pbyKey,
--	unsigned char byKeyDecMode,
--	void __iomem *dwIoBase,
--	unsigned char byLocalID
+- * Return Value:
+- *    None.
+- *
+- -*/
+-
+-void
+-vMgrEncodeIBSSATIM(
+-	PWLAN_FR_IBSSATIM   pFrame
 -)
 -{
--	int i, j;
--	unsigned int ii;
--	PSKeyItem   pKey;
--	unsigned int uKeyIdx;
+-	pFrame->pHdr = (PUWLAN_80211HDR)pFrame->pBuf;
+-	pFrame->len = WLAN_HDR_ADDR3_LEN;
+-}
 -
--	pr_debug("Enter KeybSetKey: %lX\n", dwKeyIndex);
+-/*+
+- *
+- * Routine Description:
+- *  Decode IBSS ATIM
+- *
+- *
+- * Return Value:
+- *    None.
+- *
+- -*/
 -
--	j = (MAX_KEY_TABLE-1);
--	for (i = 0; i < (MAX_KEY_TABLE - 1); i++) {
--		if (!pTable->KeyTable[i].bInUse && (j == (MAX_KEY_TABLE-1))) {
--			// found empty table
--			j = i;
--		}
--		if (pTable->KeyTable[i].bInUse &&
--		    ether_addr_equal(pTable->KeyTable[i].abyBSSID, pbyBSSID)) {
--			// found table already exist
--			if ((dwKeyIndex & PAIRWISE_KEY) != 0) {
--				// Pairwise key
--				pKey = &(pTable->KeyTable[i].PairwiseKey);
--				pTable->KeyTable[i].wKeyCtl &= 0xFFF0;          // clear pairwise key control filed
--				pTable->KeyTable[i].wKeyCtl |= byKeyDecMode;
--				uKeyIdx = 4;                                    // use HW key entry 4 for pairwise key
--			} else {
--				// Group key
--				if ((dwKeyIndex & 0x000000FF) >= MAX_GROUP_KEY)
--					return false;
--				pKey = &(pTable->KeyTable[i].GroupKey[dwKeyIndex & 0x000000FF]);
--				if ((dwKeyIndex & TRANSMIT_KEY) != 0)  {
--					// Group transmit key
--					pTable->KeyTable[i].dwGTKeyIndex = dwKeyIndex;
--					pr_debug("Group transmit key(R)[%lX]: %d\n",
--						 pTable->KeyTable[i].dwGTKeyIndex, i);
--				}
--				pTable->KeyTable[i].wKeyCtl &= 0xFF0F;          // clear group key control filed
--				pTable->KeyTable[i].wKeyCtl |= (byKeyDecMode << 4);
--				pTable->KeyTable[i].wKeyCtl |= 0x0040;          // use group key for group address
--				uKeyIdx = (dwKeyIndex & 0x000000FF);
+-void
+-vMgrDecodeIBSSATIM(
+-	PWLAN_FR_IBSSATIM   pFrame
+-)
+-{
+-	pFrame->pHdr = (PUWLAN_80211HDR)pFrame->pBuf;
+-}
+-
+-/*+
+- *
+- * Routine Description:
+- *  Encode Disassociation
+- *
+- *
+- * Return Value:
+- *    None.
+- *
+- -*/
+-
+-void
+-vMgrEncodeDisassociation(
+-	PWLAN_FR_DISASSOC  pFrame
+-)
+-{
+-	pFrame->pHdr = (PUWLAN_80211HDR)pFrame->pBuf;
+-
+-	/* Fixed Fields */
+-	pFrame->pwReason = (unsigned short *)
+-			   (WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)) +
+-			    WLAN_DISASSOC_OFF_REASON);
+-	pFrame->len = WLAN_HDR_ADDR3_LEN + WLAN_DISASSOC_OFF_REASON +
+-		      sizeof(*(pFrame->pwReason));
+-}
+-
+-/*+
+- *
+- * Routine Description:
+- *  Decode Disassociation
+- *
+- *
+- * Return Value:
+- *    None.
+- *
+- -*/
+-
+-void
+-vMgrDecodeDisassociation(
+-	PWLAN_FR_DISASSOC  pFrame
+-)
+-{
+-	pFrame->pHdr = (PUWLAN_80211HDR)pFrame->pBuf;
+-
+-	/* Fixed Fields */
+-	pFrame->pwReason = (unsigned short *)
+-			   (WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)) +
+-			    WLAN_DISASSOC_OFF_REASON);
+-}
+-
+-/*+
+- *
+- * Routine Description:
+- *  Encode Association Request
+- *
+- *
+- * Return Value:
+- *    None.
+- *
+- -*/
+-
+-void
+-vMgrEncodeAssocRequest(
+-	PWLAN_FR_ASSOCREQ  pFrame
+-)
+-{
+-	pFrame->pHdr = (PUWLAN_80211HDR)pFrame->pBuf;
+-	/* Fixed Fields */
+-	pFrame->pwCapInfo = (unsigned short *)
+-			    (WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)) +
+-			     WLAN_ASSOCREQ_OFF_CAP_INFO);
+-	pFrame->pwListenInterval = (unsigned short *)
+-				   (WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)) +
+-				    WLAN_ASSOCREQ_OFF_LISTEN_INT);
+-	pFrame->len = WLAN_HDR_ADDR3_LEN + WLAN_ASSOCREQ_OFF_LISTEN_INT +
+-		      sizeof(*(pFrame->pwListenInterval));
+-}
+-
+-/*+
+- *
+- * Routine Description: (AP)
+- *  Decode Association Request
+- *
+- *
+- * Return Value:
+- *    None.
+- *
+- -*/
+-
+-void
+-vMgrDecodeAssocRequest(
+-	PWLAN_FR_ASSOCREQ  pFrame
+-)
+-{
+-	PWLAN_IE   pItem;
+-
+-	pFrame->pHdr = (PUWLAN_80211HDR)pFrame->pBuf;
+-	/* Fixed Fields */
+-	pFrame->pwCapInfo = (unsigned short *)
+-			    (WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)) +
+-			     WLAN_ASSOCREQ_OFF_CAP_INFO);
+-	pFrame->pwListenInterval = (unsigned short *)
+-				   (WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)) +
+-				    WLAN_ASSOCREQ_OFF_LISTEN_INT);
+-
+-	/* Information elements */
+-	pItem = (PWLAN_IE)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3))
+-			   + WLAN_ASSOCREQ_OFF_SSID);
+-
+-	while (((unsigned char *)pItem) < (pFrame->pBuf + pFrame->len)) {
+-		switch (pItem->byElementID) {
+-		case WLAN_EID_SSID:
+-			if (pFrame->pSSID == NULL)
+-				pFrame->pSSID = (PWLAN_IE_SSID)pItem;
+-			break;
+-		case WLAN_EID_SUPP_RATES:
+-			if (pFrame->pSuppRates == NULL)
+-				pFrame->pSuppRates =
+-						   (PWLAN_IE_SUPP_RATES)pItem;
+-			break;
+-
+-		case WLAN_EID_RSN:
+-			if (pFrame->pRSN == NULL)
+-				pFrame->pRSN = (PWLAN_IE_RSN)pItem;
+-			break;
+-		case WLAN_EID_RSN_WPA:
+-			if (pFrame->pRSNWPA == NULL) {
 -			}
--			pTable->KeyTable[i].wKeyCtl |= 0x8000;              // enable on-fly
+-			break;
+-		case WLAN_EID_EXTSUPP_RATES:
+-			if (pFrame->pExtSuppRates == NULL)
+-				pFrame->pExtSuppRates =
+-						    (PWLAN_IE_SUPP_RATES)pItem;
+-			break;
 -
--			pKey->bKeyValid = true;
--			pKey->uKeyLength = uKeyLength;
--			pKey->dwKeyIndex = dwKeyIndex;
--			pKey->byCipherSuite = byKeyDecMode;
--			memcpy(pKey->abyKey, pbyKey, uKeyLength);
--			if (byKeyDecMode == KEY_CTL_WEP) {
--				if (uKeyLength == WLAN_WEP40_KEYLEN)
--					pKey->abyKey[15] &= 0x7F;
--				if (uKeyLength == WLAN_WEP104_KEYLEN)
--					pKey->abyKey[15] |= 0x80;
--			}
--			MACvSetKeyEntry(dwIoBase, pTable->KeyTable[i].wKeyCtl, i, uKeyIdx, pbyBSSID, (u32 *)pKey->abyKey, byLocalID);
--
--			if ((dwKeyIndex & USE_KEYRSC) == 0) {
--				// RSC set by NIC
--				pKey->KeyRSC = 0;
--			} else {
--				pKey->KeyRSC = *pKeyRSC;
--			}
--			pKey->dwTSC47_16 = 0;
--			pKey->wTSC15_0 = 0;
--
--			pr_debug("KeybSetKey(R):\n");
--			pr_debug("pKey->bKeyValid: %d\n ", pKey->bKeyValid);
--			pr_debug("pKey->abyKey: ");
--			for (ii = 0; ii < pKey->uKeyLength; ii++)
--				pr_debug("%02x ", pKey->abyKey[ii]);
--
--			pr_debug("\n");
--
--			pr_debug("pKey->dwTSC47_16: %lx\n ", pKey->dwTSC47_16);
--			pr_debug("pKey->wTSC15_0: %x\n ", pKey->wTSC15_0);
--			pr_debug("pKey->dwKeyIndex: %lx\n ", pKey->dwKeyIndex);
--
--			return true;
+-		default:
+-			pr_debug("Unrecognized EID=%dd in assocreq decode\n",
+-				 pItem->byElementID);
+-			break;
 -		}
--	}
--	if (j < (MAX_KEY_TABLE-1)) {
--		ether_addr_copy(pTable->KeyTable[j].abyBSSID, pbyBSSID);
--		pTable->KeyTable[j].bInUse = true;
--		if ((dwKeyIndex & PAIRWISE_KEY) != 0)  {
--			// Pairwise key
--			pKey = &(pTable->KeyTable[j].PairwiseKey);
--			pTable->KeyTable[j].wKeyCtl &= 0xFFF0;          // clear pairwise key control filed
--			pTable->KeyTable[j].wKeyCtl |= byKeyDecMode;
--			uKeyIdx = 4;                                    // use HW key entry 4 for pairwise key
--		} else {
--			// Group key
--			if ((dwKeyIndex & 0x000000FF) >= MAX_GROUP_KEY)
--				return false;
--			pKey = &(pTable->KeyTable[j].GroupKey[dwKeyIndex & 0x000000FF]);
--			if ((dwKeyIndex & TRANSMIT_KEY) != 0)  {
--				// Group transmit key
--				pTable->KeyTable[j].dwGTKeyIndex = dwKeyIndex;
--				pr_debug("Group transmit key(N)[%lX]: %d\n",
--					 pTable->KeyTable[j].dwGTKeyIndex, j);
--			}
--			pTable->KeyTable[j].wKeyCtl &= 0xFF0F;          // clear group key control filed
--			pTable->KeyTable[j].wKeyCtl |= (byKeyDecMode << 4);
--			pTable->KeyTable[j].wKeyCtl |= 0x0040;          // use group key for group address
--			uKeyIdx = (dwKeyIndex & 0x000000FF);
--		}
--		pTable->KeyTable[j].wKeyCtl |= 0x8000;              // enable on-fly
--
--		pKey->bKeyValid = true;
--		pKey->uKeyLength = uKeyLength;
--		pKey->dwKeyIndex = dwKeyIndex;
--		pKey->byCipherSuite = byKeyDecMode;
--		memcpy(pKey->abyKey, pbyKey, uKeyLength);
--		if (byKeyDecMode == KEY_CTL_WEP) {
--			if (uKeyLength == WLAN_WEP40_KEYLEN)
--				pKey->abyKey[15] &= 0x7F;
--			if (uKeyLength == WLAN_WEP104_KEYLEN)
--				pKey->abyKey[15] |= 0x80;
--		}
--		MACvSetKeyEntry(dwIoBase, pTable->KeyTable[j].wKeyCtl, j, uKeyIdx, pbyBSSID, (u32 *)pKey->abyKey, byLocalID);
--
--		if ((dwKeyIndex & USE_KEYRSC) == 0) {
--			// RSC set by NIC
--			pKey->KeyRSC = 0;
--		} else {
--			pKey->KeyRSC = *pKeyRSC;
--		}
--		pKey->dwTSC47_16 = 0;
--		pKey->wTSC15_0 = 0;
--
--		pr_debug("KeybSetKey(N):\n");
--		pr_debug("pKey->bKeyValid: %d\n ", pKey->bKeyValid);
--		pr_debug("pKey->uKeyLength: %d\n ", (int)pKey->uKeyLength);
--		pr_debug("pKey->abyKey: ");
--		for (ii = 0; ii < pKey->uKeyLength; ii++)
--			pr_debug("%02x ", pKey->abyKey[ii]);
--
--		pr_debug("\n");
--
--		pr_debug("pKey->dwTSC47_16: %lx\n ", pKey->dwTSC47_16);
--		pr_debug("pKey->wTSC15_0: %x\n ", pKey->wTSC15_0);
--		pr_debug("pKey->dwKeyIndex: %lx\n ", pKey->dwKeyIndex);
--
--		return true;
--	}
--	return false;
--}
--
--/*
-- * Description: Remove Key from table
-- *
-- * Parameters:
-- *  In:
-- *      pTable          - Pointer to Key table
-- *      pbyBSSID        - BSSID of Key
-- *      dwKeyIndex      - Key Index (reference to NDIS DDK)
-- *  Out:
-- *      none
-- *
-- * Return Value: true if success otherwise false
-- *
-- */
--bool KeybRemoveKey(
--	PSKeyManagement pTable,
--	unsigned char *pbyBSSID,
--	unsigned long dwKeyIndex,
--	void __iomem *dwIoBase
--)
--{
--	int  i;
--
--	if (is_broadcast_ether_addr(pbyBSSID)) {
--		// delete all keys
--		if ((dwKeyIndex & PAIRWISE_KEY) != 0) {
--			for (i = 0; i < MAX_KEY_TABLE; i++)
--				pTable->KeyTable[i].PairwiseKey.bKeyValid = false;
--
--			s_vCheckKeyTableValid(pTable, dwIoBase);
--			return true;
--		} else if ((dwKeyIndex & 0x000000FF) < MAX_GROUP_KEY) {
--			for (i = 0; i < MAX_KEY_TABLE; i++) {
--				pTable->KeyTable[i].GroupKey[dwKeyIndex & 0x000000FF].bKeyValid = false;
--				if ((dwKeyIndex & 0x7FFFFFFF) == (pTable->KeyTable[i].dwGTKeyIndex & 0x7FFFFFFF)) {
--					// remove Group transmit key
--					pTable->KeyTable[i].dwGTKeyIndex = 0;
--				}
--			}
--			s_vCheckKeyTableValid(pTable, dwIoBase);
--			return true;
--		}
--		return false;
--	}
--
--	for (i = 0; i < MAX_KEY_TABLE; i++) {
--		if (pTable->KeyTable[i].bInUse &&
--		    ether_addr_equal(pTable->KeyTable[i].abyBSSID, pbyBSSID)) {
--			if ((dwKeyIndex & PAIRWISE_KEY) != 0) {
--				pTable->KeyTable[i].PairwiseKey.bKeyValid = false;
--				s_vCheckKeyTableValid(pTable, dwIoBase);
--				return true;
--			} else if ((dwKeyIndex & 0x000000FF) < MAX_GROUP_KEY) {
--				pTable->KeyTable[i].GroupKey[dwKeyIndex & 0x000000FF].bKeyValid = false;
--				if ((dwKeyIndex & 0x7FFFFFFF) == (pTable->KeyTable[i].dwGTKeyIndex & 0x7FFFFFFF)) {
--					// remove Group transmit key
--					pTable->KeyTable[i].dwGTKeyIndex = 0;
--				}
--				s_vCheckKeyTableValid(pTable, dwIoBase);
--				return true;
--			}
--			return false;
--		}
--	}
--	return false;
--}
--
--/*
-- * Description: Remove Key from table
-- *
-- * Parameters:
-- *  In:
-- *      pTable          - Pointer to Key table
-- *      pbyBSSID        - BSSID of Key
-- *  Out:
-- *      none
-- *
-- * Return Value: true if success otherwise false
-- *
-- */
--bool KeybRemoveAllKey(
--	PSKeyManagement pTable,
--	unsigned char *pbyBSSID,
--	void __iomem *dwIoBase
--)
--{
--	int i, u;
--
--	for (i = 0; i < MAX_KEY_TABLE; i++) {
--		if (pTable->KeyTable[i].bInUse &&
--		    ether_addr_equal(pTable->KeyTable[i].abyBSSID, pbyBSSID)) {
--			pTable->KeyTable[i].PairwiseKey.bKeyValid = false;
--			for (u = 0; u < MAX_GROUP_KEY; u++)
--				pTable->KeyTable[i].GroupKey[u].bKeyValid = false;
--
--			pTable->KeyTable[i].dwGTKeyIndex = 0;
--			s_vCheckKeyTableValid(pTable, dwIoBase);
--			return true;
--		}
--	}
--	return false;
--}
--
--/*
-- * Description: Remove WEP Key from table
-- *
-- * Parameters:
-- *  In:
-- *      pTable          - Pointer to Key table
-- *  Out:
-- *      none
-- *
-- * Return Value: true if success otherwise false
-- *
-- */
--void KeyvRemoveWEPKey(
--	PSKeyManagement pTable,
--	unsigned long dwKeyIndex,
--	void __iomem *dwIoBase
--)
--{
--	if ((dwKeyIndex & 0x000000FF) < MAX_GROUP_KEY) {
--		if (pTable->KeyTable[MAX_KEY_TABLE-1].bInUse) {
--			if (pTable->KeyTable[MAX_KEY_TABLE-1].GroupKey[dwKeyIndex & 0x000000FF].byCipherSuite == KEY_CTL_WEP) {
--				pTable->KeyTable[MAX_KEY_TABLE-1].GroupKey[dwKeyIndex & 0x000000FF].bKeyValid = false;
--				if ((dwKeyIndex & 0x7FFFFFFF) == (pTable->KeyTable[MAX_KEY_TABLE-1].dwGTKeyIndex & 0x7FFFFFFF)) {
--					// remove Group transmit key
--					pTable->KeyTable[MAX_KEY_TABLE-1].dwGTKeyIndex = 0;
--				}
--			}
--		}
--		s_vCheckKeyTableValid(pTable, dwIoBase);
+-		pItem = (PWLAN_IE)(((unsigned char *)pItem) + 2 + pItem->len);
 -	}
 -}
 -
--void KeyvRemoveAllWEPKey(
--	PSKeyManagement pTable,
--	void __iomem *dwIoBase
+-/*+
+- *
+- * Routine Description: (AP)
+- *  Encode Association Response
+- *
+- *
+- * Return Value:
+- *    None.
+- *
+- -*/
+-
+-void
+-vMgrEncodeAssocResponse(
+-	PWLAN_FR_ASSOCRESP  pFrame
 -)
 -{
--	int i;
+-	pFrame->pHdr = (PUWLAN_80211HDR)pFrame->pBuf;
 -
--	for (i = 0; i < MAX_GROUP_KEY; i++)
--		KeyvRemoveWEPKey(pTable, i, dwIoBase);
+-	/* Fixed Fields */
+-	pFrame->pwCapInfo = (unsigned short *)
+-			    (WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)) +
+-			     WLAN_ASSOCRESP_OFF_CAP_INFO);
+-	pFrame->pwStatus = (unsigned short *)
+-			   (WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)) +
+-			    WLAN_ASSOCRESP_OFF_STATUS);
+-	pFrame->pwAid = (unsigned short *)
+-			(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)) +
+-			 WLAN_ASSOCRESP_OFF_AID);
+-	pFrame->len = WLAN_HDR_ADDR3_LEN + WLAN_ASSOCRESP_OFF_AID +
+-		      sizeof(*(pFrame->pwAid));
 -}
 -
--/*
-- * Description: Get Transmit Key from table
+-/*+
 - *
-- * Parameters:
-- *  In:
-- *      pTable          - Pointer to Key table
-- *      pbyBSSID        - BSSID of Key
-- *  Out:
-- *      pKey            - Key return
+- * Routine Description:
+- *  Decode Association Response
 - *
-- * Return Value: true if found otherwise false
 - *
-- */
--bool KeybGetTransmitKey(
--	PSKeyManagement pTable,
--	unsigned char *pbyBSSID,
--	unsigned long dwKeyType,
--	PSKeyItem       *pKey
+- * Return Value:
+- *    None.
+- *
+- -*/
+-
+-void
+-vMgrDecodeAssocResponse(
+-	PWLAN_FR_ASSOCRESP  pFrame
 -)
 -{
--	int i, ii;
+-	PWLAN_IE   pItem;
 -
--	*pKey = NULL;
--	for (i = 0; i < MAX_KEY_TABLE; i++) {
--		if (pTable->KeyTable[i].bInUse &&
--		    ether_addr_equal(pTable->KeyTable[i].abyBSSID, pbyBSSID)) {
--			if (dwKeyType == PAIRWISE_KEY) {
--				if (pTable->KeyTable[i].PairwiseKey.bKeyValid) {
--					*pKey = &(pTable->KeyTable[i].PairwiseKey);
+-	pFrame->pHdr = (PUWLAN_80211HDR)pFrame->pBuf;
 -
--					pr_debug("KeybGetTransmitKey:");
--					pr_debug("PAIRWISE_KEY: KeyTable.abyBSSID: ");
--					for (ii = 0; ii < 6; ii++)
--						pr_debug("%x ",
--							 pTable->KeyTable[i].abyBSSID[ii]);
+-	/* Fixed Fields */
+-	pFrame->pwCapInfo = (unsigned short *)
+-			    (WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)) +
+-			     WLAN_ASSOCRESP_OFF_CAP_INFO);
+-	pFrame->pwStatus = (unsigned short *)
+-			   (WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)) +
+-			    WLAN_ASSOCRESP_OFF_STATUS);
+-	pFrame->pwAid = (unsigned short *)
+-			(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)) +
+-			 WLAN_ASSOCRESP_OFF_AID);
 -
--					pr_debug("\n");
+-	/* Information elements */
+-	pFrame->pSuppRates  = (PWLAN_IE_SUPP_RATES)
+-			      (WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)) +
+-			       WLAN_ASSOCRESP_OFF_SUPP_RATES);
 -
--					return true;
--				} else {
--					pr_debug("PairwiseKey.bKeyValid == false\n");
--					return false;
--				}
--			} // End of Type == PAIRWISE
--			else {
--				if (pTable->KeyTable[i].dwGTKeyIndex == 0) {
--					pr_debug("ERROR: dwGTKeyIndex == 0 !!!\n");
--					return false;
--				}
--				if (pTable->KeyTable[i].GroupKey[(pTable->KeyTable[i].dwGTKeyIndex&0x000000FF)].bKeyValid) {
--					*pKey = &(pTable->KeyTable[i].GroupKey[(pTable->KeyTable[i].dwGTKeyIndex&0x000000FF)]);
+-	pItem = (PWLAN_IE)(pFrame->pSuppRates);
+-	pItem = (PWLAN_IE)(((unsigned char *)pItem) + 2 + pItem->len);
 -
--					pr_debug("KeybGetTransmitKey:");
--					pr_debug("GROUP_KEY: KeyTable.abyBSSID\n");
--					for (ii = 0; ii < 6; ii++)
--						pr_debug("%x ",
--							 pTable->KeyTable[i].abyBSSID[ii]);
--
--					pr_debug("\n");
--					pr_debug("dwGTKeyIndex: %lX\n",
--						 pTable->KeyTable[i].dwGTKeyIndex);
--
--					return true;
--				} else {
--					pr_debug("GroupKey.bKeyValid == false\n");
--					return false;
--				}
--			} // End of Type = GROUP
--		} // BSSID match
--	}
--	pr_debug("ERROR: NO Match BSSID !!! ");
--	for (ii = 0; ii < 6; ii++)
--		pr_debug("%02x ", *(pbyBSSID+ii));
--
--	pr_debug("\n");
--	return false;
--}
--
--/*
-- * Description: Check Pairewise Key
-- *
-- * Parameters:
-- *  In:
-- *      pTable          - Pointer to Key table
-- *  Out:
-- *      none
-- *
-- * Return Value: true if found otherwise false
-- *
-- */
--bool KeybCheckPairewiseKey(
--	PSKeyManagement pTable,
--	PSKeyItem       *pKey
--)
--{
--	int i;
--
--	*pKey = NULL;
--	for (i = 0; i < MAX_KEY_TABLE; i++) {
--		if (pTable->KeyTable[i].bInUse &&
--		    pTable->KeyTable[i].PairwiseKey.bKeyValid) {
--			*pKey = &(pTable->KeyTable[i].PairwiseKey);
--			return true;
--		}
--	}
--	return false;
--}
--
--/*
-- * Description: Set Key to table
-- *
-- * Parameters:
-- *  In:
-- *      pTable          - Pointer to Key table
-- *      dwKeyIndex      - Key index (reference to NDIS DDK)
-- *      uKeyLength      - Key length
-- *      KeyRSC          - Key RSC
-- *      pbyKey          - Pointer to key
-- *  Out:
-- *      none
-- *
-- * Return Value: true if success otherwise false
-- *
-- */
--bool KeybSetDefaultKey(
--	PSKeyManagement pTable,
--	unsigned long dwKeyIndex,
--	unsigned long uKeyLength,
--	u64 *pKeyRSC,
--	unsigned char *pbyKey,
--	unsigned char byKeyDecMode,
--	void __iomem *dwIoBase,
--	unsigned char byLocalID
--)
--{
--	unsigned int ii;
--	PSKeyItem   pKey;
--	unsigned int uKeyIdx;
--
--	pr_debug("Enter KeybSetDefaultKey: %1x, %d\n",
--		 (int)dwKeyIndex, (int)uKeyLength);
--
--	if ((dwKeyIndex & PAIRWISE_KEY) != 0) // Pairwise key
--		return false;
--	else if ((dwKeyIndex & 0x000000FF) >= MAX_GROUP_KEY)
--		return false;
--
--	if (uKeyLength > MAX_KEY_LEN)
--		return false;
--
--	pTable->KeyTable[MAX_KEY_TABLE - 1].bInUse = true;
--	for (ii = 0; ii < ETH_ALEN; ii++)
--		pTable->KeyTable[MAX_KEY_TABLE - 1].abyBSSID[ii] = 0xFF;
--
--	// Group key
--	pKey = &(pTable->KeyTable[MAX_KEY_TABLE - 1].GroupKey[dwKeyIndex & 0x000000FF]);
--	if ((dwKeyIndex & TRANSMIT_KEY) != 0)  {
--		// Group transmit key
--		pTable->KeyTable[MAX_KEY_TABLE-1].dwGTKeyIndex = dwKeyIndex;
--		pr_debug("Group transmit key(R)[%lX]: %d\n",
--			 pTable->KeyTable[MAX_KEY_TABLE-1].dwGTKeyIndex,
--			 MAX_KEY_TABLE-1);
--
--	}
--	pTable->KeyTable[MAX_KEY_TABLE-1].wKeyCtl &= 0x7F00;          // clear all key control filed
--	pTable->KeyTable[MAX_KEY_TABLE-1].wKeyCtl |= (byKeyDecMode << 4);
--	pTable->KeyTable[MAX_KEY_TABLE-1].wKeyCtl |= (byKeyDecMode);
--	pTable->KeyTable[MAX_KEY_TABLE-1].wKeyCtl |= 0x0044;          // use group key for all address
--	uKeyIdx = (dwKeyIndex & 0x000000FF);
--
--	if ((uKeyLength == WLAN_WEP232_KEYLEN) &&
--	    (byKeyDecMode == KEY_CTL_WEP)) {
--		pTable->KeyTable[MAX_KEY_TABLE-1].wKeyCtl |= 0x4000;              // disable on-fly disable address match
--		pTable->KeyTable[MAX_KEY_TABLE-1].bSoftWEP = true;
+-	if ((((unsigned char *)pItem) < (pFrame->pBuf + pFrame->len)) &&
+-	    (pItem->byElementID == WLAN_EID_EXTSUPP_RATES)) {
+-		pFrame->pExtSuppRates = (PWLAN_IE_SUPP_RATES)pItem;
+-		pr_debug("pFrame->pExtSuppRates=[%p]\n", pItem);
 -	} else {
--		if (!pTable->KeyTable[MAX_KEY_TABLE-1].bSoftWEP)
--			pTable->KeyTable[MAX_KEY_TABLE-1].wKeyCtl |= 0xC000;          // enable on-fly disable address match
+-		pFrame->pExtSuppRates = NULL;
 -	}
--
--	pKey->bKeyValid = true;
--	pKey->uKeyLength = uKeyLength;
--	pKey->dwKeyIndex = dwKeyIndex;
--	pKey->byCipherSuite = byKeyDecMode;
--	memcpy(pKey->abyKey, pbyKey, uKeyLength);
--	if (byKeyDecMode == KEY_CTL_WEP) {
--		if (uKeyLength == WLAN_WEP40_KEYLEN)
--			pKey->abyKey[15] &= 0x7F;
--		if (uKeyLength == WLAN_WEP104_KEYLEN)
--			pKey->abyKey[15] |= 0x80;
--	}
--	MACvSetKeyEntry(dwIoBase, pTable->KeyTable[MAX_KEY_TABLE-1].wKeyCtl, MAX_KEY_TABLE-1, uKeyIdx, pTable->KeyTable[MAX_KEY_TABLE-1].abyBSSID, (u32 *)pKey->abyKey, byLocalID);
--
--	if ((dwKeyIndex & USE_KEYRSC) == 0) {
--		// RSC set by NIC
--		pKey->KeyRSC = 0;
--	} else {
--		pKey->KeyRSC = *pKeyRSC;
--	}
--	pKey->dwTSC47_16 = 0;
--	pKey->wTSC15_0 = 0;
--
--	pr_debug("KeybSetKey(R):\n");
--	pr_debug("pKey->bKeyValid: %d\n", pKey->bKeyValid);
--	pr_debug("pKey->uKeyLength: %d\n", (int)pKey->uKeyLength);
--	pr_debug("pKey->abyKey:\n");
--	for (ii = 0; ii < pKey->uKeyLength; ii++)
--		pr_debug("%x", pKey->abyKey[ii]);
--
--	pr_debug("\n");
--
--	pr_debug("pKey->dwTSC47_16: %lx\n", pKey->dwTSC47_16);
--	pr_debug("pKey->wTSC15_0: %x\n", pKey->wTSC15_0);
--	pr_debug("pKey->dwKeyIndex: %lx\n", pKey->dwKeyIndex);
--
--	return true;
 -}
 -
--/*
-- * Description: Set Key to table
+-/*+
 - *
-- * Parameters:
-- *  In:
-- *      pTable          - Pointer to Key table
-- *      dwKeyIndex      - Key index (reference to NDIS DDK)
-- *      uKeyLength      - Key length
-- *      KeyRSC          - Key RSC
-- *      pbyKey          - Pointer to key
-- *  Out:
-- *      none
+- * Routine Description:
+- *  Encode Reassociation Request
 - *
-- * Return Value: true if success otherwise false
 - *
-- */
--bool KeybSetAllGroupKey(
--	PSKeyManagement pTable,
--	unsigned long dwKeyIndex,
--	unsigned long uKeyLength,
--	u64 *pKeyRSC,
--	unsigned char *pbyKey,
--	unsigned char byKeyDecMode,
--	void __iomem *dwIoBase,
--	unsigned char byLocalID
+- * Return Value:
+- *    None.
+- *
+- -*/
+-
+-void
+-vMgrEncodeReassocRequest(
+-	PWLAN_FR_REASSOCREQ  pFrame
 -)
 -{
--	int         i;
--	unsigned int ii;
--	PSKeyItem   pKey;
--	unsigned int uKeyIdx;
+-	pFrame->pHdr = (PUWLAN_80211HDR)pFrame->pBuf;
 -
--	pr_debug("Enter KeybSetAllGroupKey: %lX\n", dwKeyIndex);
--
--	if ((dwKeyIndex & PAIRWISE_KEY) != 0) // Pairwise key
--		return false;
--	else if ((dwKeyIndex & 0x000000FF) >= MAX_GROUP_KEY)
--		return false;
--
--	for (i = 0; i < MAX_KEY_TABLE - 1; i++) {
--		if (pTable->KeyTable[i].bInUse) {
--			// found table already exist
--			// Group key
--			pKey = &(pTable->KeyTable[i].GroupKey[dwKeyIndex & 0x000000FF]);
--			if ((dwKeyIndex & TRANSMIT_KEY) != 0)  {
--				// Group transmit key
--				pTable->KeyTable[i].dwGTKeyIndex = dwKeyIndex;
--				pr_debug("Group transmit key(R)[%lX]: %d\n",
--					 pTable->KeyTable[i].dwGTKeyIndex, i);
--
--			}
--			pTable->KeyTable[i].wKeyCtl &= 0xFF0F;          // clear group key control filed
--			pTable->KeyTable[i].wKeyCtl |= (byKeyDecMode << 4);
--			pTable->KeyTable[i].wKeyCtl |= 0x0040;          // use group key for group address
--			uKeyIdx = (dwKeyIndex & 0x000000FF);
--
--			pTable->KeyTable[i].wKeyCtl |= 0x8000;              // enable on-fly
--
--			pKey->bKeyValid = true;
--			pKey->uKeyLength = uKeyLength;
--			pKey->dwKeyIndex = dwKeyIndex;
--			pKey->byCipherSuite = byKeyDecMode;
--			memcpy(pKey->abyKey, pbyKey, uKeyLength);
--			if (byKeyDecMode == KEY_CTL_WEP) {
--				if (uKeyLength == WLAN_WEP40_KEYLEN)
--					pKey->abyKey[15] &= 0x7F;
--				if (uKeyLength == WLAN_WEP104_KEYLEN)
--					pKey->abyKey[15] |= 0x80;
--			}
--			MACvSetKeyEntry(dwIoBase, pTable->KeyTable[i].wKeyCtl, i, uKeyIdx, pTable->KeyTable[i].abyBSSID, (u32 *)pKey->abyKey, byLocalID);
--
--			if ((dwKeyIndex & USE_KEYRSC) == 0) {
--				// RSC set by NIC
--				pKey->KeyRSC = 0;
--			} else {
--				pKey->KeyRSC = *pKeyRSC;
--			}
--			pKey->dwTSC47_16 = 0;
--			pKey->wTSC15_0 = 0;
--
--			pr_debug("KeybSetKey(R):\n");
--			pr_debug("pKey->bKeyValid: %d\n ", pKey->bKeyValid);
--			pr_debug("pKey->uKeyLength: %d\n ",
--				 (int)pKey->uKeyLength);
--			pr_debug("pKey->abyKey: ");
--			for (ii = 0; ii < pKey->uKeyLength; ii++)
--				pr_debug("%02x ", pKey->abyKey[ii]);
--
--			pr_debug("\n");
--
--		} // (pTable->KeyTable[i].bInUse == true)
--	}
--	return true;
+-	/* Fixed Fields */
+-	pFrame->pwCapInfo = (unsigned short *)
+-			    (WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)) +
+-			     WLAN_REASSOCREQ_OFF_CAP_INFO);
+-	pFrame->pwListenInterval = (unsigned short *)
+-				   (WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)) +
+-				    WLAN_REASSOCREQ_OFF_LISTEN_INT);
+-	pFrame->pAddrCurrAP = (PIEEE_ADDR)
+-			      (WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)) +
+-			       WLAN_REASSOCREQ_OFF_CURR_AP);
+-	pFrame->len = WLAN_HDR_ADDR3_LEN + WLAN_REASSOCREQ_OFF_CURR_AP +
+-		      sizeof(*(pFrame->pAddrCurrAP));
 -}
 -
- int vnt_key_init_table(struct vnt_private *priv)
- {
- 	u32 i;
-diff --git a/drivers/staging/vt6655/key.h b/drivers/staging/vt6655/key.h
-index d70ffd6..56d1b05 100644
---- a/drivers/staging/vt6655/key.h
-+++ b/drivers/staging/vt6655/key.h
-@@ -63,126 +63,6 @@
- #define VNT_KEY_ONFLY		0x8000
- #define VNT_KEY_ONFLY_ALL	0x4000
+-/*+
+- *
+- * Routine Description: (AP)
+- *  Decode Reassociation Request
+- *
+- *
+- * Return Value:
+- *    None.
+- *
+- -*/
+-
+-void
+-vMgrDecodeReassocRequest(
+-	PWLAN_FR_REASSOCREQ  pFrame
+-)
+-{
+-	PWLAN_IE   pItem;
+-
+-	pFrame->pHdr = (PUWLAN_80211HDR)pFrame->pBuf;
+-
+-	/* Fixed Fields */
+-	pFrame->pwCapInfo = (unsigned short *)
+-			    (WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)) +
+-			     WLAN_REASSOCREQ_OFF_CAP_INFO);
+-	pFrame->pwListenInterval = (unsigned short *)
+-				   (WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)) +
+-				    WLAN_REASSOCREQ_OFF_LISTEN_INT);
+-	pFrame->pAddrCurrAP = (PIEEE_ADDR)
+-			      (WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)) +
+-			       WLAN_REASSOCREQ_OFF_CURR_AP);
+-
+-	/* Information elements */
+-	pItem = (PWLAN_IE)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3))
+-			   + WLAN_REASSOCREQ_OFF_SSID);
+-
+-	while (((unsigned char *)pItem) < (pFrame->pBuf + pFrame->len)) {
+-		switch (pItem->byElementID) {
+-		case WLAN_EID_SSID:
+-			if (pFrame->pSSID == NULL)
+-				pFrame->pSSID = (PWLAN_IE_SSID)pItem;
+-			break;
+-		case WLAN_EID_SUPP_RATES:
+-			if (pFrame->pSuppRates == NULL)
+-				pFrame->pSuppRates =
+-						    (PWLAN_IE_SUPP_RATES)pItem;
+-			break;
+-
+-		case WLAN_EID_RSN:
+-			if (pFrame->pRSN == NULL)
+-				pFrame->pRSN = (PWLAN_IE_RSN)pItem;
+-			break;
+-		case WLAN_EID_RSN_WPA:
+-			if (pFrame->pRSNWPA == NULL) {
+-			}
+-			break;
+-
+-		case WLAN_EID_EXTSUPP_RATES:
+-			if (pFrame->pExtSuppRates == NULL)
+-				pFrame->pExtSuppRates =
+-						    (PWLAN_IE_SUPP_RATES)pItem;
+-			break;
+-		default:
+-			pr_debug("Unrecognized EID=%dd in reassocreq decode\n",
+-				 pItem->byElementID);
+-			break;
+-		}
+-		pItem = (PWLAN_IE)(((unsigned char *)pItem) + 2 + pItem->len);
+-	}
+-}
+-
+-/*+
+- *
+- * Routine Description:
+- *  Encode Probe Request
+- *
+- *
+- * Return Value:
+- *    None.
+- *
+- -*/
+-
+-void
+-vMgrEncodeProbeRequest(
+-	PWLAN_FR_PROBEREQ  pFrame
+-)
+-{
+-	pFrame->pHdr = (PUWLAN_80211HDR)pFrame->pBuf;
+-	pFrame->len = WLAN_HDR_ADDR3_LEN;
+-}
+-
+-/*+
+- *
+- * Routine Description:
+- *  Decode Probe Request
+- *
+- *
+- * Return Value:
+- *    None.
+- *
+- -*/
+-
+-void
+-vMgrDecodeProbeRequest(
+-	PWLAN_FR_PROBEREQ  pFrame
+-)
+-{
+-	PWLAN_IE   pItem;
+-
+-	pFrame->pHdr = (PUWLAN_80211HDR)pFrame->pBuf;
+-
+-	/* Information elements */
+-	pItem = (PWLAN_IE)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)));
+-
+-	while (((unsigned char *)pItem) < (pFrame->pBuf + pFrame->len)) {
+-		switch (pItem->byElementID) {
+-		case WLAN_EID_SSID:
+-			if (pFrame->pSSID == NULL)
+-				pFrame->pSSID = (PWLAN_IE_SSID)pItem;
+-			break;
+-
+-		case WLAN_EID_SUPP_RATES:
+-			if (pFrame->pSuppRates == NULL)
+-				pFrame->pSuppRates =
+-						   (PWLAN_IE_SUPP_RATES)pItem;
+-			break;
+-
+-		case WLAN_EID_EXTSUPP_RATES:
+-			if (pFrame->pExtSuppRates == NULL)
+-				pFrame->pExtSuppRates =
+-						    (PWLAN_IE_SUPP_RATES)pItem;
+-			break;
+-
+-		default:
+-			pr_debug("Bad EID=%dd in probereq\n",
+-				 pItem->byElementID);
+-			break;
+-		}
+-
+-		pItem = (PWLAN_IE)(((unsigned char *)pItem) + 2 +  pItem->len);
+-	}
+-}
+-
+-/*+
+- *
+- * Routine Description:
+- *  Encode Probe Response
+- *
+- *
+- * Return Value:
+- *    None.
+- *
+- -*/
+-
+-void
+-vMgrEncodeProbeResponse(
+-	PWLAN_FR_PROBERESP  pFrame
+-)
+-{
+-	pFrame->pHdr = (PUWLAN_80211HDR)pFrame->pBuf;
+-
+-	/* Fixed Fields */
+-	pFrame->pqwTimestamp = (__le64 *)
+-			       (WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)) +
+-				WLAN_PROBERESP_OFF_TS);
+-	pFrame->pwBeaconInterval = (unsigned short *)
+-				   (WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)) +
+-				    WLAN_PROBERESP_OFF_BCN_INT);
+-	pFrame->pwCapInfo = (unsigned short *)
+-			    (WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)) +
+-			     WLAN_PROBERESP_OFF_CAP_INFO);
+-
+-	pFrame->len = WLAN_HDR_ADDR3_LEN + WLAN_PROBERESP_OFF_CAP_INFO +
+-		      sizeof(*(pFrame->pwCapInfo));
+-}
+-
+-/*+
+- *
+- * Routine Description:
+- *  Decode Probe Response
+- *
+- *
+- * Return Value:
+- *    None.
+- *
+- -*/
+-
+-void
+-vMgrDecodeProbeResponse(
+-	PWLAN_FR_PROBERESP  pFrame
+-)
+-{
+-	PWLAN_IE    pItem;
+-
+-	pFrame->pHdr = (PUWLAN_80211HDR)pFrame->pBuf;
+-
+-	/* Fixed Fields */
+-	pFrame->pqwTimestamp = (__le64 *)
+-			       (WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)) +
+-				WLAN_PROBERESP_OFF_TS);
+-	pFrame->pwBeaconInterval = (unsigned short *)
+-				   (WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)) +
+-				    WLAN_PROBERESP_OFF_BCN_INT);
+-	pFrame->pwCapInfo = (unsigned short *)
+-			    (WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)) +
+-			     WLAN_PROBERESP_OFF_CAP_INFO);
+-
+-	/* Information elements */
+-	pItem = (PWLAN_IE)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3))
+-			   + WLAN_PROBERESP_OFF_SSID);
+-
+-	while (((unsigned char *)pItem) < (pFrame->pBuf + pFrame->len)) {
+-		switch (pItem->byElementID) {
+-		case WLAN_EID_SSID:
+-			if (pFrame->pSSID == NULL)
+-				pFrame->pSSID = (PWLAN_IE_SSID)pItem;
+-			break;
+-		case WLAN_EID_SUPP_RATES:
+-			if (pFrame->pSuppRates == NULL)
+-				pFrame->pSuppRates =
+-						   (PWLAN_IE_SUPP_RATES)pItem;
+-			break;
+-		case WLAN_EID_FH_PARMS:
+-			break;
+-		case WLAN_EID_DS_PARMS:
+-			if (pFrame->pDSParms == NULL)
+-				pFrame->pDSParms = (PWLAN_IE_DS_PARMS)pItem;
+-			break;
+-		case WLAN_EID_CF_PARMS:
+-			if (pFrame->pCFParms == NULL)
+-				pFrame->pCFParms = (PWLAN_IE_CF_PARMS)pItem;
+-			break;
+-		case WLAN_EID_IBSS_PARMS:
+-			if (pFrame->pIBSSParms == NULL)
+-				pFrame->pIBSSParms =
+-						   (PWLAN_IE_IBSS_PARMS)pItem;
+-			break;
+-
+-		case WLAN_EID_RSN:
+-			if (pFrame->pRSN == NULL)
+-				pFrame->pRSN = (PWLAN_IE_RSN)pItem;
+-			break;
+-		case WLAN_EID_RSN_WPA:
+-			if (pFrame->pRSNWPA == NULL) {
+-			}
+-			break;
+-		case WLAN_EID_ERP:
+-			if (pFrame->pERP == NULL)
+-				pFrame->pERP = (PWLAN_IE_ERP)pItem;
+-			break;
+-		case WLAN_EID_EXTSUPP_RATES:
+-			if (pFrame->pExtSuppRates == NULL)
+-				pFrame->pExtSuppRates =
+-						    (PWLAN_IE_SUPP_RATES)pItem;
+-			break;
+-
+-		case WLAN_EID_COUNTRY:      /* 7 */
+-			if (pFrame->pIE_Country == NULL)
+-				pFrame->pIE_Country = (PWLAN_IE_COUNTRY)pItem;
+-			break;
+-
+-		case WLAN_EID_PWR_CONSTRAINT:   /* 32 */
+-			if (pFrame->pIE_PowerConstraint == NULL)
+-				pFrame->pIE_PowerConstraint =
+-						      (PWLAN_IE_PW_CONST)pItem;
+-			break;
+-
+-		case WLAN_EID_CH_SWITCH:    /* 37 */
+-			if (pFrame->pIE_CHSW == NULL)
+-				pFrame->pIE_CHSW = (PWLAN_IE_CH_SW)pItem;
+-			break;
+-
+-		case WLAN_EID_QUIET:        /* 40 */
+-			if (pFrame->pIE_Quiet == NULL)
+-				pFrame->pIE_Quiet = (PWLAN_IE_QUIET)pItem;
+-			break;
+-
+-		case WLAN_EID_IBSS_DFS:
+-			if (pFrame->pIE_IBSSDFS == NULL)
+-				pFrame->pIE_IBSSDFS = (PWLAN_IE_IBSS_DFS)pItem;
+-			break;
+-
+-		default:
+-			pr_debug("Bad EID=%dd in proberesp\n",
+-				 pItem->byElementID);
+-			break;
+-		}
+-
+-		pItem = (PWLAN_IE)(((unsigned char *)pItem) + 2 +  pItem->len);
+-	}
+-}
+-
+-/*+
+- *
+- * Routine Description:
+- *     Encode Authentication frame
+- *
+- *
+- * Return Value:
+- *    None.
+- *
+- -*/
+-
+-void
+-vMgrEncodeAuthen(
+-	PWLAN_FR_AUTHEN  pFrame
+-)
+-{
+-	pFrame->pHdr = (PUWLAN_80211HDR)pFrame->pBuf;
+-
+-	/* Fixed Fields */
+-	pFrame->pwAuthAlgorithm = (unsigned short *)
+-				  (WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)) +
+-				   WLAN_AUTHEN_OFF_AUTH_ALG);
+-	pFrame->pwAuthSequence = (unsigned short *)
+-				 (WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)) +
+-				  WLAN_AUTHEN_OFF_AUTH_SEQ);
+-	pFrame->pwStatus = (unsigned short *)
+-			   (WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)) +
+-			    WLAN_AUTHEN_OFF_STATUS);
+-	pFrame->len = WLAN_HDR_ADDR3_LEN + WLAN_AUTHEN_OFF_STATUS +
+-		      sizeof(*(pFrame->pwStatus));
+-}
+-
+-/*+
+- *
+- * Routine Description:
+- *   Decode Authentication
+- *
+- *
+- * Return Value:
+- *    None.
+- *
+- -*/
+-
+-void
+-vMgrDecodeAuthen(
+-	PWLAN_FR_AUTHEN  pFrame
+-)
+-{
+-	PWLAN_IE    pItem;
+-
+-	pFrame->pHdr = (PUWLAN_80211HDR)pFrame->pBuf;
+-
+-	/* Fixed Fields */
+-	pFrame->pwAuthAlgorithm = (unsigned short *)
+-				  (WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)) +
+-				   WLAN_AUTHEN_OFF_AUTH_ALG);
+-	pFrame->pwAuthSequence = (unsigned short *)
+-				 (WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)) +
+-				  WLAN_AUTHEN_OFF_AUTH_SEQ);
+-	pFrame->pwStatus = (unsigned short *)
+-			   (WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)) +
+-			    WLAN_AUTHEN_OFF_STATUS);
+-
+-	/* Information elements */
+-	pItem = (PWLAN_IE)(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3))
+-			   + WLAN_AUTHEN_OFF_CHALLENGE);
+-
+-	if (((unsigned char *)pItem) < (pFrame->pBuf + pFrame->len) &&
+-	    pItem->byElementID == WLAN_EID_CHALLENGE)
+-		pFrame->pChallenge = (PWLAN_IE_CHALLENGE)pItem;
+-}
+-
+-/*+
+- *
+- * Routine Description:
+- *   Encode Authentication
+- *
+- *
+- * Return Value:
+- *    None.
+- *
+- -*/
+-
+-void
+-vMgrEncodeDeauthen(
+-	PWLAN_FR_DEAUTHEN  pFrame
+-)
+-{
+-	pFrame->pHdr = (PUWLAN_80211HDR)pFrame->pBuf;
+-
+-	/* Fixed Fields */
+-	pFrame->pwReason = (unsigned short *)
+-			   (WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)) +
+-			    WLAN_DEAUTHEN_OFF_REASON);
+-	pFrame->len = WLAN_HDR_ADDR3_LEN + WLAN_DEAUTHEN_OFF_REASON +
+-		      sizeof(*(pFrame->pwReason));
+-}
+-
+-/*+
+- *
+- * Routine Description:
+- *   Decode Deauthentication
+- *
+- *
+- * Return Value:
+- *    None.
+- *
+- -*/
+-
+-void
+-vMgrDecodeDeauthen(
+-	PWLAN_FR_DEAUTHEN  pFrame
+-)
+-{
+-	pFrame->pHdr = (PUWLAN_80211HDR)pFrame->pBuf;
+-
+-	/* Fixed Fields */
+-	pFrame->pwReason = (unsigned short *)
+-			   (WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)) +
+-			    WLAN_DEAUTHEN_OFF_REASON);
+-}
+-
+-/*+
+- *
+- * Routine Description: (AP)
+- *   Encode Reassociation Response
+- *
+- *
+- * Return Value:
+- *    None.
+- *
+- -*/
+-
+-void
+-vMgrEncodeReassocResponse(
+-	PWLAN_FR_REASSOCRESP  pFrame
+-)
+-{
+-	pFrame->pHdr = (PUWLAN_80211HDR)pFrame->pBuf;
+-
+-	/* Fixed Fields */
+-	pFrame->pwCapInfo = (unsigned short *)
+-			    (WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)) +
+-			     WLAN_REASSOCRESP_OFF_CAP_INFO);
+-	pFrame->pwStatus = (unsigned short *)
+-			   (WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)) +
+-			    WLAN_REASSOCRESP_OFF_STATUS);
+-	pFrame->pwAid = (unsigned short *)
+-			(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)) +
+-			 WLAN_REASSOCRESP_OFF_AID);
+-
+-	pFrame->len = WLAN_HDR_ADDR3_LEN + WLAN_REASSOCRESP_OFF_AID +
+-		      sizeof(*(pFrame->pwAid));
+-}
+-
+-/*+
+- *
+- * Routine Description:
+- *   Decode Reassociation Response
+- *
+- *
+- * Return Value:
+- *    None.
+- *
+- -*/
+-
+-void
+-vMgrDecodeReassocResponse(
+-	PWLAN_FR_REASSOCRESP  pFrame
+-)
+-{
+-	PWLAN_IE   pItem;
+-
+-	pFrame->pHdr = (PUWLAN_80211HDR)pFrame->pBuf;
+-
+-	/* Fixed Fields */
+-	pFrame->pwCapInfo = (unsigned short *)
+-			    (WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)) +
+-			     WLAN_REASSOCRESP_OFF_CAP_INFO);
+-	pFrame->pwStatus = (unsigned short *)
+-			   (WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)) +
+-			    WLAN_REASSOCRESP_OFF_STATUS);
+-	pFrame->pwAid = (unsigned short *)
+-			(WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)) +
+-			 WLAN_REASSOCRESP_OFF_AID);
+-
+-	/* Information elements */
+-	pFrame->pSuppRates = (PWLAN_IE_SUPP_RATES)
+-			     (WLAN_HDR_A3_DATA_PTR(&(pFrame->pHdr->sA3)) +
+-			      WLAN_REASSOCRESP_OFF_SUPP_RATES);
+-
+-	pItem = (PWLAN_IE)(pFrame->pSuppRates);
+-	pItem = (PWLAN_IE)(((unsigned char *)pItem) + 2 + pItem->len);
+-
+-	if ((((unsigned char *)pItem) < (pFrame->pBuf + pFrame->len)) &&
+-	    (pItem->byElementID == WLAN_EID_EXTSUPP_RATES)) {
+-		pFrame->pExtSuppRates = (PWLAN_IE_SUPP_RATES)pItem;
+-	}
+-}
+diff --git a/drivers/staging/vt6655/80211mgr.h b/drivers/staging/vt6655/80211mgr.h
+index d462a8a..94cff3b 100644
+--- a/drivers/staging/vt6655/80211mgr.h
++++ b/drivers/staging/vt6655/80211mgr.h
+@@ -612,114 +612,4 @@ typedef struct tagWLAN_FR_DEAUTHEN {
+ 	unsigned short *pwReason;
+ } WLAN_FR_DEAUTHEN, *PWLAN_FR_DEAUTHEN;
  
--typedef struct tagSKeyItem {
--	bool bKeyValid;
--	unsigned long uKeyLength;
--	unsigned char abyKey[MAX_KEY_LEN];
--	u64 KeyRSC;
--	unsigned long dwTSC47_16;
--	unsigned short wTSC15_0;
--	unsigned char byCipherSuite;
--	unsigned char byReserved0;
--	unsigned long dwKeyIndex;
--	void *pvKeyTable;
--} SKeyItem, *PSKeyItem; //64
--
--typedef struct tagSKeyTable {
--	unsigned char abyBSSID[ETH_ALEN];  //6
--	unsigned char byReserved0[2];              //8
--	SKeyItem    PairwiseKey;
--	SKeyItem    GroupKey[MAX_GROUP_KEY]; //64*5 = 320, 320+8=328
--	unsigned long dwGTKeyIndex;            // GroupTransmitKey Index
--	bool bInUse;
--	//2006-1116-01,<Modify> by NomadZhao
--	bool bSoftWEP;
--	unsigned short wKeyCtl;      // for address of wKeyCtl at align 4
--
--	unsigned char byReserved1[6];
--} SKeyTable, *PSKeyTable; //348
--
--typedef struct tagSKeyManagement {
--	SKeyTable   KeyTable[MAX_KEY_TABLE];
--} SKeyManagement, *PSKeyManagement;
--
--/*---------------------  Export Types  ------------------------------*/
--
--/*---------------------  Export Macros ------------------------------*/
--
--/*---------------------  Export Classes  ----------------------------*/
--
--/*---------------------  Export Variables  --------------------------*/
--
--/*---------------------  Export Functions  --------------------------*/
--
--void KeyvInitTable(PSKeyManagement pTable, void __iomem *dwIoBase);
--
--bool KeybGetKey(
--	PSKeyManagement pTable,
--	unsigned char *pbyBSSID,
--	unsigned long dwKeyIndex,
--	PSKeyItem       *pKey
+-void
+-vMgrEncodeBeacon(
+-	PWLAN_FR_BEACON  pFrame
 -);
 -
--bool KeybSetKey(
--	PSKeyManagement pTable,
--	unsigned char *pbyBSSID,
--	unsigned long dwKeyIndex,
--	unsigned long uKeyLength,
--	u64 *pKeyRSC,
--	unsigned char *pbyKey,
--	unsigned char byKeyDecMode,
--	void __iomem *dwIoBase,
--	unsigned char byLocalID
+-void
+-vMgrDecodeBeacon(
+-	PWLAN_FR_BEACON  pFrame
 -);
 -
--bool KeybSetDefaultKey(
--	PSKeyManagement pTable,
--	unsigned long dwKeyIndex,
--	unsigned long uKeyLength,
--	u64 *pKeyRSC,
--	unsigned char *pbyKey,
--	unsigned char byKeyDecMode,
--	void __iomem *dwIoBase,
--	unsigned char byLocalID
+-void
+-vMgrEncodeIBSSATIM(
+-	PWLAN_FR_IBSSATIM   pFrame
 -);
 -
--bool KeybRemoveKey(
--	PSKeyManagement pTable,
--	unsigned char *pbyBSSID,
--	unsigned long dwKeyIndex,
--	void __iomem *dwIoBase
+-void
+-vMgrDecodeIBSSATIM(
+-	PWLAN_FR_IBSSATIM   pFrame
 -);
 -
--bool KeybGetTransmitKey(
--	PSKeyManagement pTable,
--	unsigned char *pbyBSSID,
--	unsigned long dwKeyType,
--	PSKeyItem       *pKey
+-void
+-vMgrEncodeDisassociation(
+-	PWLAN_FR_DISASSOC  pFrame
 -);
 -
--bool KeybCheckPairewiseKey(
--	PSKeyManagement pTable,
--	PSKeyItem       *pKey
+-void
+-vMgrDecodeDisassociation(
+-	PWLAN_FR_DISASSOC  pFrame
 -);
 -
--bool KeybRemoveAllKey(
--	PSKeyManagement pTable,
--	unsigned char *pbyBSSID,
--	void __iomem *dwIoBase
+-void
+-vMgrEncodeAssocRequest(
+-	PWLAN_FR_ASSOCREQ  pFrame
 -);
 -
--void KeyvRemoveWEPKey(
--	PSKeyManagement pTable,
--	unsigned long dwKeyIndex,
--	void __iomem *dwIoBase
+-void
+-vMgrDecodeAssocRequest(
+-	PWLAN_FR_ASSOCREQ  pFrame
 -);
 -
--void KeyvRemoveAllWEPKey(
--	PSKeyManagement pTable,
--	void __iomem *dwIoBase
+-void
+-vMgrEncodeAssocResponse(
+-	PWLAN_FR_ASSOCRESP  pFrame
 -);
 -
--bool KeybSetAllGroupKey(
--	PSKeyManagement pTable,
--	unsigned long dwKeyIndex,
--	unsigned long uKeyLength,
--	u64 *pKeyRSC,
--	unsigned char *pbyKey,
--	unsigned char byKeyDecMode,
--	void __iomem *dwIoBase,
--	unsigned char byLocalID
+-void
+-vMgrDecodeAssocResponse(
+-	PWLAN_FR_ASSOCRESP  pFrame
 -);
 -
- struct vnt_private;
- 
- int vnt_key_init_table(struct vnt_private *);
+-void
+-vMgrEncodeReassocRequest(
+-	PWLAN_FR_REASSOCREQ  pFrame
+-);
+-
+-void
+-vMgrDecodeReassocRequest(
+-	PWLAN_FR_REASSOCREQ  pFrame
+-);
+-
+-void
+-vMgrEncodeProbeRequest(
+-	PWLAN_FR_PROBEREQ  pFrame
+-);
+-
+-void
+-vMgrDecodeProbeRequest(
+-	PWLAN_FR_PROBEREQ  pFrame
+-);
+-
+-void
+-vMgrEncodeProbeResponse(
+-	PWLAN_FR_PROBERESP  pFrame
+-);
+-
+-void
+-vMgrDecodeProbeResponse(
+-	PWLAN_FR_PROBERESP  pFrame
+-);
+-
+-void
+-vMgrEncodeAuthen(
+-	PWLAN_FR_AUTHEN  pFrame
+-);
+-
+-void
+-vMgrDecodeAuthen(
+-	PWLAN_FR_AUTHEN  pFrame
+-);
+-
+-void
+-vMgrEncodeDeauthen(
+-	PWLAN_FR_DEAUTHEN  pFrame
+-);
+-
+-void
+-vMgrDecodeDeauthen(
+-	PWLAN_FR_DEAUTHEN  pFrame
+-);
+-
+-void
+-vMgrEncodeReassocResponse(
+-	PWLAN_FR_REASSOCRESP  pFrame
+-);
+-
+-void
+-vMgrDecodeReassocResponse(
+-	PWLAN_FR_REASSOCRESP  pFrame
+-);
+-
+ #endif/* __80211MGR_H__ */
+diff --git a/drivers/staging/vt6655/Makefile b/drivers/staging/vt6655/Makefile
+index 390c23e..5f3c019 100644
+--- a/drivers/staging/vt6655/Makefile
++++ b/drivers/staging/vt6655/Makefile
+@@ -8,7 +8,6 @@ vt6655_stage-y +=	device_main.o \
+ 	mac.o \
+ 	baseband.o \
+ 	wctl.o \
+-	80211mgr.o \
+ 	rxtx.o \
+ 	dpc.o \
+ 	power.o \
 -- 
-2.1.0
+1.9.1
 
