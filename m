@@ -1,41 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f50.google.com ([209.85.215.50]:40457 "EHLO
-	mail-la0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751273AbaJTNyP (ORCPT
+Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:34735
+	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752395AbaJYTV2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2014 09:54:15 -0400
-Received: by mail-la0-f50.google.com with SMTP id s18so3945408lam.23
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2014 06:54:13 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 0/9] ath10k: htt rx fixes and clean ups
-Date: Mon, 20 Oct 2014 15:40:29 +0200
-Message-Id: <1413812438-14640-1-git-send-email-michal.kazior@tieto.com> (sfid-20141020_155418_625374_3C2C3BF8)
+	Sat, 25 Oct 2014 15:21:28 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, sujith@msujith.org
+Subject: [PATCH v2 04/10] ath9k: clean up debugfs print of reset causes
+Date: Sat, 25 Oct 2014 17:19:29 +0200
+Message-Id: <1414250375-74121-4-git-send-email-nbd@openwrt.org> (sfid-20141025_212132_415528_D8086448)
+In-Reply-To: <1414250375-74121-1-git-send-email-nbd@openwrt.org>
+References: <1414250375-74121-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Reduce code duplication
 
-I've found a couple of issues while reworking rx
-path.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/debug.c | 48 +++++++++++++++-------------------
+ 1 file changed, 21 insertions(+), 27 deletions(-)
 
-
-Michal Kazior (9):
-  ath10k: don't drop control and null func Rx
-  ath10k: remove unused variable
-  ath10k: use ieee80211 defines for crypto param lengths
-  ath10k: fix rx buffer tracing
-  ath10k: deduplicate htt rx dma unmapping
-  ath10k: don't drop frames aggressively
-  ath10k: add extra sanity check when popping amsdu
-  ath10k: don't forget to replenish after fragmented Rx
-  ath10k: clear htt->rx_confused on load
-
- drivers/net/wireless/ath/ath10k/htt_rx.c | 91 ++++++++++++++------------------
- 1 file changed, 39 insertions(+), 52 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index 46f20a3..cf4a98b 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -852,36 +852,30 @@ static ssize_t read_file_reset(struct file *file, char __user *user_buf,
+ 			       size_t count, loff_t *ppos)
+ {
+ 	struct ath_softc *sc = file->private_data;
++	static const char * const reset_cause[__RESET_TYPE_MAX] = {
++		[RESET_TYPE_BB_HANG] = "Baseband Hang",
++		[RESET_TYPE_BB_WATCHDOG] = "Baseband Watchdog",
++		[RESET_TYPE_FATAL_INT] = "Fatal HW Error",
++		[RESET_TYPE_TX_ERROR] = "TX HW error",
++		[RESET_TYPE_TX_GTT] = "Transmit timeout",
++		[RESET_TYPE_TX_HANG] = "TX Path Hang",
++		[RESET_TYPE_PLL_HANG] = "PLL RX Hang",
++		[RESET_TYPE_MAC_HANG] = "MAC Hang",
++		[RESET_TYPE_BEACON_STUCK] = "Stuck Beacon",
++		[RESET_TYPE_MCI] = "MCI Reset",
++	};
+ 	char buf[512];
+ 	unsigned int len = 0;
++	int i;
+ 
+-	len += scnprintf(buf + len, sizeof(buf) - len,
+-			 "%17s: %2d\n", "Baseband Hang",
+-			 sc->debug.stats.reset[RESET_TYPE_BB_HANG]);
+-	len += scnprintf(buf + len, sizeof(buf) - len,
+-			 "%17s: %2d\n", "Baseband Watchdog",
+-			 sc->debug.stats.reset[RESET_TYPE_BB_WATCHDOG]);
+-	len += scnprintf(buf + len, sizeof(buf) - len,
+-			 "%17s: %2d\n", "Fatal HW Error",
+-			 sc->debug.stats.reset[RESET_TYPE_FATAL_INT]);
+-	len += scnprintf(buf + len, sizeof(buf) - len,
+-			 "%17s: %2d\n", "TX HW error",
+-			 sc->debug.stats.reset[RESET_TYPE_TX_ERROR]);
+-	len += scnprintf(buf + len, sizeof(buf) - len,
+-			 "%17s: %2d\n", "TX Path Hang",
+-			 sc->debug.stats.reset[RESET_TYPE_TX_HANG]);
+-	len += scnprintf(buf + len, sizeof(buf) - len,
+-			 "%17s: %2d\n", "PLL RX Hang",
+-			 sc->debug.stats.reset[RESET_TYPE_PLL_HANG]);
+-	len += scnprintf(buf + len, sizeof(buf) - len,
+-			 "%17s: %2d\n", "MAC Hang",
+-			 sc->debug.stats.reset[RESET_TYPE_MAC_HANG]);
+-	len += scnprintf(buf + len, sizeof(buf) - len,
+-			 "%17s: %2d\n", "Stuck Beacon",
+-			 sc->debug.stats.reset[RESET_TYPE_BEACON_STUCK]);
+-	len += scnprintf(buf + len, sizeof(buf) - len,
+-			 "%17s: %2d\n", "MCI Reset",
+-			 sc->debug.stats.reset[RESET_TYPE_MCI]);
++	for (i = 0; i < ARRAY_SIZE(reset_cause); i++) {
++		if (!reset_cause[i])
++		    continue;
++
++		len += scnprintf(buf + len, sizeof(buf) - len,
++				 "%17s: %2d\n", reset_cause[i],
++				 sc->debug.stats.reset[i]);
++	}
+ 
+ 	if (len > sizeof(buf))
+ 		len = sizeof(buf);
 -- 
-1.8.5.3
+2.1.2
 
