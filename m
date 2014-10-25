@@ -1,87 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f182.google.com ([209.85.212.182]:47496 "EHLO
-	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752026AbaJIJt4 (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:50226 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752261AbaJYTzp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2014 05:49:56 -0400
-Received: by mail-wi0-f182.google.com with SMTP id n3so1211610wiv.9
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Oct 2014 02:49:54 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 1/3] ath10k: fix possible bmi crash
-Date: Thu,  9 Oct 2014 11:38:45 +0200
-Message-Id: <1412847527-25983-2-git-send-email-michal.kazior@tieto.com> (sfid-20141009_115001_850795_EDF20EB8)
-In-Reply-To: <1412847527-25983-1-git-send-email-michal.kazior@tieto.com>
-References: <1412847527-25983-1-git-send-email-michal.kazior@tieto.com>
+	Sat, 25 Oct 2014 15:55:45 -0400
+Received: by mail-wi0-f172.google.com with SMTP id d1so20800wiv.11
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2014 12:55:44 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 30/48] staging: vt6655: move all RATE_* macros to device.h
+Date: Sat, 25 Oct 2014 09:40:08 +0100
+Message-Id: <1414226426-5811-31-git-send-email-tvboxspy@gmail.com> (sfid-20141025_215548_339364_3F138AB5)
+In-Reply-To: <1414226426-5811-1-git-send-email-tvboxspy@gmail.com>
+References: <1414226426-5811-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While testing other things I've found that CE
-items aren't cleared properly. This could lead to
-null dereferences in BMI.
-
-To prevent that make sure CE revoking clears the
-nbytes value (which is used as a buffer completion
-indication) and memset the entire CE rings when
-(re)initializing.
-
-Also make sure to check BMI xfer pointer and print
-a splat instead of crashing the kernel.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/ce.c  | 7 +++++++
- drivers/net/wireless/ath/ath10k/pci.c | 3 +++
- 2 files changed, 10 insertions(+)
+ drivers/staging/vt6655/device.h  | 15 +++++++++++++++
+ drivers/staging/vt6655/vntwifi.h | 14 --------------
+ 2 files changed, 15 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
-index 4745ef2..134dea5 100644
---- a/drivers/net/wireless/ath/ath10k/ce.c
-+++ b/drivers/net/wireless/ath/ath10k/ce.c
-@@ -558,6 +558,7 @@ int ath10k_ce_revoke_recv_next(struct ath10k_ce_pipe *ce_state,
+diff --git a/drivers/staging/vt6655/device.h b/drivers/staging/vt6655/device.h
+index fa2d49c..e97a0d2 100644
+--- a/drivers/staging/vt6655/device.h
++++ b/drivers/staging/vt6655/device.h
+@@ -84,6 +84,21 @@
  
- 		/* sanity */
- 		dest_ring->per_transfer_context[sw_index] = NULL;
-+		desc->nbytes = 0;
+ /*---------------------  Export Definitions -------------------------*/
  
- 		/* Update sw_index */
- 		sw_index = CE_RING_IDX_INCR(nentries_mask, sw_index);
-@@ -837,6 +838,10 @@ static int ath10k_ce_init_src_ring(struct ath10k *ar,
- 
- 	memset(src_ring->per_transfer_context, 0,
- 	       nentries * sizeof(*src_ring->per_transfer_context));
-+	memset(src_ring->base_addr_owner_space, 0,
-+	       nentries * sizeof(struct ce_desc));
-+	memset(src_ring->shadow_base, 0,
-+	       nentries * sizeof(struct ce_desc));
- 
- 	src_ring->sw_index = ath10k_ce_src_ring_read_index_get(ar, ctrl_addr);
- 	src_ring->sw_index &= src_ring->nentries_mask;
-@@ -874,6 +879,8 @@ static int ath10k_ce_init_dest_ring(struct ath10k *ar,
- 
- 	memset(dest_ring->per_transfer_context, 0,
- 	       nentries * sizeof(*dest_ring->per_transfer_context));
-+	memset(dest_ring->base_addr_owner_space, 0,
-+	       nentries * sizeof(struct ce_desc));
- 
- 	dest_ring->sw_index = ath10k_ce_dest_ring_read_index_get(ar, ctrl_addr);
- 	dest_ring->sw_index &= dest_ring->nentries_mask;
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 6e8e098..ca2adbd 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -1428,6 +1428,9 @@ static void ath10k_pci_bmi_recv_data(struct ath10k_ce_pipe *ce_state)
- 					  &nbytes, &transfer_id, &flags))
- 		return;
- 
-+	if (WARN_ON_ONCE(!xfer))
-+		return;
++#define RATE_1M		0
++#define RATE_2M		1
++#define RATE_5M		2
++#define RATE_11M	3
++#define RATE_6M		4
++#define RATE_9M		5
++#define RATE_12M	6
++#define RATE_18M	7
++#define RATE_24M	8
++#define RATE_36M	9
++#define RATE_48M	10
++#define RATE_54M	11
++#define RATE_AUTO	12
++#define MAX_RATE	12
 +
- 	if (!xfer->wait_for_resp) {
- 		ath10k_warn(ar, "unexpected: BMI data received; ignoring\n");
- 		return;
+ #define MAC_MAX_CONTEXT_REG     (256+128)
+ 
+ #define MAX_MULTICAST_ADDRESS_NUM       32
+diff --git a/drivers/staging/vt6655/vntwifi.h b/drivers/staging/vt6655/vntwifi.h
+index ad180e0..2ba7713 100644
+--- a/drivers/staging/vt6655/vntwifi.h
++++ b/drivers/staging/vt6655/vntwifi.h
+@@ -35,20 +35,6 @@
+ #include "card.h"
+ 
+ /*---------------------  Export Definitions -------------------------*/
+-#define RATE_1M         0
+-#define RATE_2M         1
+-#define RATE_5M         2
+-#define RATE_11M        3
+-#define RATE_6M         4
+-#define RATE_9M         5
+-#define RATE_12M        6
+-#define RATE_18M        7
+-#define RATE_24M        8
+-#define RATE_36M        9
+-#define RATE_48M       10
+-#define RATE_54M       11
+-#define RATE_AUTO      12
+-#define MAX_RATE       12
+ 
+ // key CipherSuite
+ #define KEY_CTL_WEP         0x00
 -- 
-1.8.5.3
+1.9.1
 
