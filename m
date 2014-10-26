@@ -1,49 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:14250 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161019AbaJaARx (ORCPT
+Received: from mail-wg0-f50.google.com ([74.125.82.50]:44746 "EHLO
+	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751635AbaJZU7F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Oct 2014 20:17:53 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: avoid possible deadlock with scan timeout
-References: <1414488189-28625-1-git-send-email-michal.kazior@tieto.com>
-Date: Fri, 31 Oct 2014 02:17:33 +0200
-In-Reply-To: <1414488189-28625-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Tue, 28 Oct 2014 10:23:09 +0100")
-Message-ID: <87ppd9drdu.fsf@kamboji.qca.qualcomm.com> (sfid-20141031_011757_312297_EB8CFDFE)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Sun, 26 Oct 2014 16:59:05 -0400
+From: Paul McQuade <paulmcquad@gmail.com>
+To: paulmcquad@gmail.com
+Cc: linux-kernel@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-wireless@vger.kernel.org, gregkh@linuxfoundation.org,
+	Jes.Sorensen@redhat.com, Larry.Finger@lwfinger.net
+Subject: [PATCH][V2] staging: rtl8723au: create macro get_max_rate
+Date: Sun, 26 Oct 2014 20:58:55 +0000
+Message-Id: <1414357135-7141-1-git-send-email-paulmcquad@gmail.com> (sfid-20141026_215937_483574_10FC0B8A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+create marco for max_rate values
 
-> This should prevent deadlock predicted by the
-> following splat:
->
->  ======================================================
->  [ INFO: possible circular locking dependency detected ]
->  3.17.0-wl-ath+ #67 Not tainted
->  -------------------------------------------------------
->  kworker/u32:1/7230 is trying to acquire lock:
->   (&ar->conf_mutex){+.+.+.}, at: [<ffffffffa040a57d>] ath10k_scan_timeout_work+0x2d/0x50 [ath10k_core]
->
->  but task is already holding lock:
->   ((&(&ar->scan.timeout)->work)){+.+...}, at: [<ffffffff8106dae1>] process_one_work+0x151/0x470
->
->  which lock already depends on the new lock.
->
+Signed-off-by: Paul McQuade <paulmcquad@gmail.com>
+---
+ drivers/staging/rtl8723au/core/rtw_ieee80211.c | 58 ++++++++++++--------------
+ 1 file changed, 26 insertions(+), 32 deletions(-)
 
-[...]
-
->   *** DEADLOCK ***
->
-> Reported-by: Marek Puzyniak <marek.puzyniak@tieto.com>
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-
-Thanks, applied.
-
+diff --git a/drivers/staging/rtl8723au/core/rtw_ieee80211.c b/drivers/staging/rtl8723au/core/rtw_ieee80211.c
+index 6274cb3..4c0414d 100644
+--- a/drivers/staging/rtl8723au/core/rtw_ieee80211.c
++++ b/drivers/staging/rtl8723au/core/rtw_ieee80211.c
+@@ -13,6 +13,8 @@
+  *
+  ******************************************************************************/
+ #define _IEEE80211_C
++#define get_max_rate(r1, r2, r3, r4)					\
++	(bw_40MHz ? (short_GI_40 ? r1 : r2) : (short_GI_20 ? r3 : r4))
+ 
+ #include <drv_types.h>
+ #include <linux/ieee80211.h>
+@@ -794,64 +796,56 @@ u16 rtw_mcs_rate23a(u8 rf_type, u8 bw_40MHz, u8 short_GI_20, u8 short_GI_40,
+ 
+ 	if (rf_type == RF_1T1R) {
+ 		if (mcs->rx_mask[0] & BIT(7))
+-			max_rate = (bw_40MHz) ? ((short_GI_40)?1500:1350):
+-				((short_GI_20)?722:650);
++			max_rate = get_max_rate(1500, 1350, 722, 650);
+ 		else if (mcs->rx_mask[0] & BIT(6))
+-			max_rate = (bw_40MHz) ? ((short_GI_40)?1350:1215):
+-				((short_GI_20)?650:585);
++			max_rate = get_max_rate(1350, 1215, 650, 585);
+ 		else if (mcs->rx_mask[0] & BIT(5))
+-			max_rate = (bw_40MHz) ? ((short_GI_40)?1200:1080):
+-				((short_GI_20)?578:520);
++			max_rate = get_max_rate(1200, 1080, 578, 520);
+ 		else if (mcs->rx_mask[0] & BIT(4))
+-			max_rate = (bw_40MHz) ? ((short_GI_40)?900:810):
+-				((short_GI_20)?433:390);
++			max_rate = get_max_rate(900, 810, 433, 390);
+ 		else if (mcs->rx_mask[0] & BIT(3))
+-			max_rate = (bw_40MHz) ? ((short_GI_40)?600:540):
+-				((short_GI_20)?289:260);
++			max_rate = get_max_rate(600, 540, 289, 260);
+ 		else if (mcs->rx_mask[0] & BIT(2))
+-			max_rate = (bw_40MHz) ? ((short_GI_40)?450:405):
+-				((short_GI_20)?217:195);
++			max_rate = get_max_rate(450, 405, 217, 195);
+ 		else if (mcs->rx_mask[0] & BIT(1))
+-			max_rate = (bw_40MHz) ? ((short_GI_40)?300:270):
+-				((short_GI_20)?144:130);
++			max_rate = get_max_rate(300, 270, 144, 130);
+ 		else if (mcs->rx_mask[0] & BIT(0))
+-			max_rate = (bw_40MHz) ? ((short_GI_40)?150:135):
+-				((short_GI_20)?72:65);
++			max_rate = get_max_rate(150, 135, 72, 65);
+ 	} else {
+ 		if (mcs->rx_mask[1]) {
+ 			if (mcs->rx_mask[1] & BIT(7))
+-				max_rate = (bw_40MHz) ? ((short_GI_40)?3000:2700):((short_GI_20)?1444:1300);
++				max_rate = get_max_rate(3000, 2700, 1444, 1300);
+ 			else if (mcs->rx_mask[1] & BIT(6))
+-				max_rate = (bw_40MHz) ? ((short_GI_40)?2700:2430):((short_GI_20)?1300:1170);
++				max_rate = get_max_rate(2700, 2430, 1300, 1170);
+ 			else if (mcs->rx_mask[1] & BIT(5))
+-				max_rate = (bw_40MHz) ? ((short_GI_40)?2400:2160):((short_GI_20)?1156:1040);
++				max_rate = get_max_rate(2400, 2160, 1156, 1040);
+ 			else if (mcs->rx_mask[1] & BIT(4))
+-				max_rate = (bw_40MHz) ? ((short_GI_40)?1800:1620):((short_GI_20)?867:780);
++				max_rate = get_max_rate(1800, 1620, 867, 780);
+ 			else if (mcs->rx_mask[1] & BIT(3))
+-				max_rate = (bw_40MHz) ? ((short_GI_40)?1200:1080):((short_GI_20)?578:520);
++				max_rate = get_max_rate(1200, 1080, 578, 520);
+ 			else if (mcs->rx_mask[1] & BIT(2))
+-				max_rate = (bw_40MHz) ? ((short_GI_40)?900:810):((short_GI_20)?433:390);
++				max_rate = get_max_rate(900, 810, 433, 390);
+ 			else if (mcs->rx_mask[1] & BIT(1))
+-				max_rate = (bw_40MHz) ? ((short_GI_40)?600:540):((short_GI_20)?289:260);
++				max_rate = get_max_rate(600, 540, 289, 260);
+ 			else if (mcs->rx_mask[1] & BIT(0))
+-				max_rate = (bw_40MHz) ? ((short_GI_40)?300:270):((short_GI_20)?144:130);
++				max_rate = get_max_rate(300, 270, 144, 130);
+ 		} else {
+ 			if (mcs->rx_mask[0] & BIT(7))
+-				max_rate = (bw_40MHz) ? ((short_GI_40)?1500:1350):((short_GI_20)?722:650);
++				max_rate = get_max_rate(1500, 1350, 722, 650);
+ 			else if (mcs->rx_mask[0] & BIT(6))
+-				max_rate = (bw_40MHz) ? ((short_GI_40)?1350:1215):((short_GI_20)?650:585);
++				max_rate = get_max_rate(1350, 1215, 650, 585);
+ 			else if (mcs->rx_mask[0] & BIT(5))
+-				max_rate = (bw_40MHz) ? ((short_GI_40)?1200:1080):((short_GI_20)?578:520);
++				max_rate = get_max_rate(1200, 1080, 578, 520);
+ 			else if (mcs->rx_mask[0] & BIT(4))
+-				max_rate = (bw_40MHz) ? ((short_GI_40)?900:810):((short_GI_20)?433:390);
++				max_rate = get_max_rate(900, 810, 433, 390);
+ 			else if (mcs->rx_mask[0] & BIT(3))
+-				max_rate = (bw_40MHz) ? ((short_GI_40)?600:540):((short_GI_20)?289:260);
++				max_rate = get_max_rate(600, 540, 289, 260);
+ 			else if (mcs->rx_mask[0] & BIT(2))
+-				max_rate = (bw_40MHz) ? ((short_GI_40)?450:405):((short_GI_20)?217:195);
++				max_rate = get_max_rate(450, 405, 217, 195);
+ 			else if (mcs->rx_mask[0] & BIT(1))
+-				max_rate = (bw_40MHz) ? ((short_GI_40)?300:270):((short_GI_20)?144:130);
++				max_rate = get_max_rate(300, 270, 144, 130);
+ 			else if (mcs->rx_mask[0] & BIT(0))
+-				max_rate = (bw_40MHz) ? ((short_GI_40)?150:135):((short_GI_20)?72:65);
++				max_rate = get_max_rate(150, 135, 72, 65);
+ 		}
+ 	}
+ 	return max_rate;
 -- 
-Kalle Valo
+1.9.1
+
