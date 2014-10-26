@@ -1,51 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f171.google.com ([209.85.192.171]:50860 "EHLO
-	mail-pd0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751071AbaJZJKp convert rfc822-to-8bit (ORCPT
+Received: from mail-wg0-f41.google.com ([74.125.82.41]:51546 "EHLO
+	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751593AbaJZQS6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Oct 2014 05:10:45 -0400
-Received: by mail-pd0-f171.google.com with SMTP id r10so3859739pdi.30
-        for <linux-wireless@vger.kernel.org>; Sun, 26 Oct 2014 02:10:44 -0700 (PDT)
-Date: Sun, 26 Oct 2014 18:10:39 +0900
-From: Okhwan Lee <ohlee@mwnl.snu.ac.kr>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"=?utf-8?Q?ath10k=40lists.infradead.org?="
-	<ath10k@lists.infradead.org>
-Message-ID: <etPan.544cba8f.6b8b4567.764@Mac-Pro.local> (sfid-20141026_101049_418186_AD6F3D9C)
-In-Reply-To: <CA+BoTQkxX1fhQVGx7jUkoG6NRz+EP+ZWJwAvNwqHDNv5Fw4COA@mail.gmail.com>
-References: <CANzpp-=opT==PUf5FhWi_cbB91+RhWk+jB7M4bfUCqh2wzQA2A@mail.gmail.com>
- <CA+BoTQmHGtO+XCRg1_jJstm+wHRQLU9sEpBRJ7U+_xO3nq7_VA@mail.gmail.com>
- <CANzpp-kV8LzPgeXHq=DHKsLSdTT+-9gjj08RXST4r3-QOtkanw@mail.gmail.com>
- <CA+BoTQn0iEYEQJ4AdO7xfRSHjX1CfO_uovPaxbtxSWQw0vPS+Q@mail.gmail.com>
- <etPan.544a384b.74b0dc51.8406@Mac-Pro.local>
- <CA+BoTQkxX1fhQVGx7jUkoG6NRz+EP+ZWJwAvNwqHDNv5Fw4COA@mail.gmail.com>
-Subject: Re: Change channel bandwidth without iw command
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Sun, 26 Oct 2014 12:18:58 -0400
+From: Paul McQuade <paulmcquad@gmail.com>
+To: paulmcquad@gmail.com
+Cc: linux-kernel@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-wireless@vger.kernel.org, gregkh@linuxfoundation.org,
+	Jes.Sorensen@redhat.com, Larry.Finger@lwfinger.net
+Subject: [PATCH 2/2] staging: rtl8723au:core
+Date: Sun, 26 Oct 2014 16:18:52 +0000
+Message-Id: <1414340332-4556-1-git-send-email-paulmcquad@gmail.com> (sfid-20141026_171920_154071_4527F3BC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- Hi, 
+ERROR: spaces required around that ':' (ctx:VxE)
 
-Thanks for your help.
+Signed-off-by: Paul McQuade <paulmcquad@gmail.com>
+---
+ drivers/staging/rtl8723au/core/rtw_ieee80211.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-We just disable some functions step by step. 
-Then we can conclude that wait_for_completion_timeout makes kernel panic. 
-We guess that monitor vdev stopping after reception of a Action frame requires more time than the case when using iw command. 
-Instead of wait_for_completion_timeout, we also use alternative function, wait_for_completion (uses maximum timeout value), 
-but the panic is still there.
-
-We don’t have the expert on kernel memory debugging from now on. 
-We have to study more how to handle it. 
-
-Again, thank you.
- 
-Okhwan Lee
-Sent with Airmail  
-
-켜짐 2014년 10월 24일 에서 오후 8:38:44, Michal Kazior (michal.kazior@tieto.com(mailto:michal.kazior@tieto.com)) 작성됨:
-
->  
-
+diff --git a/drivers/staging/rtl8723au/core/rtw_ieee80211.c b/drivers/staging/rtl8723au/core/rtw_ieee80211.c
+index 6274cb3..41006cf 100644
+--- a/drivers/staging/rtl8723au/core/rtw_ieee80211.c
++++ b/drivers/staging/rtl8723au/core/rtw_ieee80211.c
+@@ -794,28 +794,28 @@ u16 rtw_mcs_rate23a(u8 rf_type, u8 bw_40MHz, u8 short_GI_20, u8 short_GI_40,
+ 
+ 	if (rf_type == RF_1T1R) {
+ 		if (mcs->rx_mask[0] & BIT(7))
+-			max_rate = (bw_40MHz) ? ((short_GI_40)?1500:1350):
++			max_rate = (bw_40MHz) ? ((short_GI_40)?1500:1350) :
+ 				((short_GI_20)?722:650);
+ 		else if (mcs->rx_mask[0] & BIT(6))
+-			max_rate = (bw_40MHz) ? ((short_GI_40)?1350:1215):
++			max_rate = (bw_40MHz) ? ((short_GI_40)?1350:1215) :
+ 				((short_GI_20)?650:585);
+ 		else if (mcs->rx_mask[0] & BIT(5))
+-			max_rate = (bw_40MHz) ? ((short_GI_40)?1200:1080):
++			max_rate = (bw_40MHz) ? ((short_GI_40)?1200:1080) :
+ 				((short_GI_20)?578:520);
+ 		else if (mcs->rx_mask[0] & BIT(4))
+-			max_rate = (bw_40MHz) ? ((short_GI_40)?900:810):
++			max_rate = (bw_40MHz) ? ((short_GI_40)?900:810) :
+ 				((short_GI_20)?433:390);
+ 		else if (mcs->rx_mask[0] & BIT(3))
+-			max_rate = (bw_40MHz) ? ((short_GI_40)?600:540):
++			max_rate = (bw_40MHz) ? ((short_GI_40)?600:540) :
+ 				((short_GI_20)?289:260);
+ 		else if (mcs->rx_mask[0] & BIT(2))
+-			max_rate = (bw_40MHz) ? ((short_GI_40)?450:405):
++			max_rate = (bw_40MHz) ? ((short_GI_40)?450:405) :
+ 				((short_GI_20)?217:195);
+ 		else if (mcs->rx_mask[0] & BIT(1))
+-			max_rate = (bw_40MHz) ? ((short_GI_40)?300:270):
++			max_rate = (bw_40MHz) ? ((short_GI_40)?300:270) :
+ 				((short_GI_20)?144:130);
+ 		else if (mcs->rx_mask[0] & BIT(0))
+-			max_rate = (bw_40MHz) ? ((short_GI_40)?150:135):
++			max_rate = (bw_40MHz) ? ((short_GI_40)?150:135) :
+ 				((short_GI_20)?72:65);
+ 	} else {
+ 		if (mcs->rx_mask[1]) {
+-- 
+1.9.1
 
