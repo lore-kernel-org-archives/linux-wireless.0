@@ -1,36 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:57984 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934564AbaJ3P1Q (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:43020 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751157AbaJZLF5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Oct 2014 11:27:16 -0400
-Message-ID: <545258D6.20000@lwfinger.net> (sfid-20141030_162720_336768_58F5552A)
-Date: Thu, 30 Oct 2014 10:27:18 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Sun, 26 Oct 2014 07:05:57 -0400
+Date: Sun, 26 Oct 2014 12:05:54 +0100
+From: Pavel Machek <pavel@ucw.cz>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	kernel list <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>
+Subject: Re: 3.18-rc0: iwlegacy failed after a while
+Message-ID: <20141026110554.GA1634@amd> (sfid-20141026_120620_550418_7B99188F)
+References: <0BA3FCBA62E2DC44AF3030971E174FB31B552E3F@hasmsx107.ger.corp.intel.com>
+ <20141024121240.GA3177@redhat.com>
+ <20141025114246.GA16230@amd>
+ <20141026103314.GB2588@redhat.com>
 MIME-Version: 1.0
-To: Luca Coelho <luca@coelho.fi>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org,
-	Murilo Opsfelder Araujo <mopsfelder@gmail.com>
-Subject: Re: [PATCH 0/6 3.18] Fixes for iwlwifi drivers
-References: <1414642633-3700-1-git-send-email-Larry.Finger@lwfinger.net> <1414667312.27833.22.camel@coelho.fi>
-In-Reply-To: <1414667312.27833.22.camel@coelho.fi>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20141026103314.GB2588@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/30/2014 06:08 AM, Luca Coelho wrote:
-> The cover-letter subject is wrong. :) I guess you meant
-> s/iwlwifi/rtlwifi/ ;)
+On Sun 2014-10-26 11:33:15, Stanislaw Gruszka wrote:
+> On Sat, Oct 25, 2014 at 01:42:46PM +0200, Pavel Machek wrote:
+> > > Since 3.17 we have only 2 minor iwlegacy changes on current linus tree.
+> > > If this is a regression it's probably caused by different subsystem
+> > > changes, most likely by PCI changes. If this is not regression, such
+> > > errors could be caused by enabling PS, but that has to be done
+> > > explicitly, Pavel did you enable power_save ? 
+> > 
+> > This is running pretty standart MATE desktop, and no, I don't think I
+> > enabled that.
+> 
+> It can be checked by "iw dev wlan0 get power_save" .
+> 
+> More important quiestions: Is this regression, did you see this error
+> before? How reproducible is this problem?
 
-Yes, the changes were for rtlwifi, not iwlwifi. Sorry. (:
+I've never seen it before, and it only happened once after update to
+3.18-rc.
 
-My laptop has an Intel 7260 card built in, and it is working correctly on both 
-2.4 and 5G bands under mainline 3.18-rc2.
+> There is this message in the dmesg:
+> 
+> iwl3945 0000:03:00.0: BSM uCode verification failed at addr 0x00003800+0 (of 900), is 0xa5a5a5a2, s/b 0xf802020
+> 
+> 0xa5a5a5a2 value suggest that we disconnect from the PCI bus, hence
+> this could be also a H/W problem.
 
-Those types of errors are what I get for trying to "work" while on a family 
-vacation. Unfortunately, I needed to submit those patches quickly to prevent a 
-set of conflicting updates from being accepted, and I made a silly mistake.
+That machine is 10 years old and will work for another 10. It does not
+have h/w problems ;-).
 
-Larry
-
+									Pavel
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
