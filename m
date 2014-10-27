@@ -1,50 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:12298 "EHLO
-	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756441AbaJHMu6 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:42960 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750979AbaJ0PaO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Oct 2014 08:50:58 -0400
-Date: Wed, 8 Oct 2014 14:50:50 +0200 (CEST)
-From: Julia Lawall <julia.lawall@lip6.fr>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-cc: Joe Perches <joe@perches.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	kernel-janitors@vger.kernel.org
-Subject: Re: [patch] staging: rtl8723au: incorrect use of ether_addr_copy()
-In-Reply-To: <20141008124631.GC26918@mwanda>
-Message-ID: <alpine.DEB.2.10.1410081449160.2441@hadrien> (sfid-20141008_145104_181315_E2E82C1D)
-References: <20141008104014.GA23096@mwanda> <1412771171.3438.25.camel@joe-AO725> <20141008124631.GC26918@mwanda>
+	Mon, 27 Oct 2014 11:30:14 -0400
+Date: Mon, 27 Oct 2014 11:15:09 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Guenter Roeck <linux@roeck-us.net>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>, linux-wireless@vger.kernel.org,
+	zajec5@gmail.com, arend@broadcom.com, arnd@arndb.de,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] bcma: fix build when CONFIG_OF_ADDRESS is not set
+Message-ID: <20141027151509.GA19976@tuxdriver.com> (sfid-20141027_163202_392633_1833C389)
+References: <5436D3CF.2030506@hauke-m.de>
+ <1412890781-24160-1-git-send-email-hauke@hauke-m.de>
+ <20141025203653.GA10716@roeck-us.net>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20141025203653.GA10716@roeck-us.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Yes, I have it queued.  Things have been delayed due to my recent
+travels, etc.
 
+On Sat, Oct 25, 2014 at 01:36:53PM -0700, Guenter Roeck wrote:
+> On Thu, Oct 09, 2014 at 11:39:41PM +0200, Hauke Mehrtens wrote:
+> > Commit 2101e533f41a ("bcma: register bcma as device tree driver")
+> > introduces a hard dependency on OF_ADDRESS into the bcma driver.
+> > OF_ADDRESS is specifically disabled for the sparc architecture.
+> > This results in the following error when building sparc64:allmodconfig.
+> > 
+> > drivers/bcma/main.c: In function 'bcma_of_find_child_device':
+> > drivers/bcma/main.c:150:3: error: implicit declaration of function 'of_translate_address'
+> > 
+> > Fixes: 2101e533f41a ("bcma: register bcma as device tree driver")
+> > Reported-by: Guenter Roeck <linux@roeck-us.net>
+> > Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> 
+> The upstream kernel still does not include this patch, and the sparc64 build
+> is still broken.
+> 
+> Is this patch on its way upstream ?
+> 
+> Guenter
+> 
+> > ---
+> >  drivers/bcma/main.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
+> > index d1656c2..1000955 100644
+> > --- a/drivers/bcma/main.c
+> > +++ b/drivers/bcma/main.c
+> > @@ -132,7 +132,7 @@ static bool bcma_is_core_needed_early(u16 core_id)
+> >  	return false;
+> >  }
+> >  
+> > -#ifdef CONFIG_OF
+> > +#if defined(CONFIG_OF) && defined(CONFIG_OF_ADDRESS)
+> >  static struct device_node *bcma_of_find_child_device(struct platform_device *parent,
+> >  						     struct bcma_device *core)
+> >  {
+> > -- 
+> > 1.9.1
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > Please read the FAQ at  http://www.tux.org/lkml/
+> > 
+> > 
+> 
 
-On Wed, 8 Oct 2014, Dan Carpenter wrote:
-
-> On Wed, Oct 08, 2014 at 05:26:11AM -0700, Joe Perches wrote:
-> > On Wed, 2014-10-08 at 13:40 +0300, Dan Carpenter wrote:
-> > > The return from myid() isn't aligned correctly for ether_addr_copy().
-> >
-> > Hey Dan.
-> >
-> > Actual evidence showing ether_addr_copy conversions
-> > may not always be wise.
-> >
-> > How did you find them?
->
-> I was just trying to see how common these kinds of bugs are.  It didn't
-> take long to find, but my impression is that they are rare and I got
-> lucky.  These kinds of bugs are tricky to find and we don't have any
-> tools for it.
-
-Couldn't you just use your favorite matching tool, collect the file names,
-compile them, run pahole, and process the output in some way?  It doesn't
-give a complete analysis (you don't find all problems), but if you find a
-problem it is a real problem.
-
-julia
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
