@@ -1,44 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from glenfiddich.mraw.org ([62.210.215.98]:39270 "EHLO
-	glenfiddich.mraw.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750740AbaJ1QAQ (ORCPT
+Received: from smtprelay0105.hostedemail.com ([216.40.44.105]:59682 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750873AbaJ0GXJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2014 12:00:16 -0400
-From: Cyril Brulebois <kibi@debian.org>
-To: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Cyril Brulebois <kibi@debian.org>, stable@vger.kernel.org
-Subject: [PATCH] wireless: rt2x00: add new rt2800usb device
-Date: Tue, 28 Oct 2014 16:42:41 +0100
-Message-Id: <1414510961-28920-1-git-send-email-kibi@debian.org> (sfid-20141028_170106_421447_98EF4C50)
+	Mon, 27 Oct 2014 02:23:09 -0400
+Message-ID: <1414390984.8884.0.camel@perches.com> (sfid-20141027_072330_315600_6B98128D)
+Subject: Re: [PATCH 2/2] staging: rtl8723au:core
+From: Joe Perches <joe@perches.com>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: Paul McQuade <paulmcquad@gmail.com>, linux-kernel@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	gregkh@linuxfoundation.org, Larry.Finger@lwfinger.net
+Date: Sun, 26 Oct 2014 23:23:04 -0700
+In-Reply-To: <wrfj1tpuca0q.fsf@redhat.com>
+References: <1414340332-4556-1-git-send-email-paulmcquad@gmail.com>
+	 <1414350250.15751.22.camel@perches.com> <wrfjegtucbgo.fsf@redhat.com>
+	 <1414389096.15751.34.camel@perches.com> <wrfj1tpuca0q.fsf@redhat.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-0x1b75 0xa200 AirLive WN-200USB wireless 11b/g/n dongle
+On Mon, 2014-10-27 at 07:16 +0100, Jes Sorensen wrote:
+> Joe Perches <joe@perches.com> writes:
+> > On Mon, 2014-10-27 at 06:45 +0100, Jes Sorensen wrote:
+> >> Joe Perches <joe@perches.com> writes:
+> >> > On Sun, 2014-10-26 at 16:18 +0000, Paul McQuade wrote:
+> >> >> ERROR: spaces required around that ':' (ctx:VxE)
+> > []
+> >> >> diff --git a/drivers/staging/rtl8723au/core/rtw_ieee80211.c
+> >> >> b/drivers/staging/rtl8723au/core/rtw_ieee80211.c
+> > []
+> >> >> @@ -794,28 +794,28 @@ u16 rtw_mcs_rate23a(u8 rf_type, u8 bw_40MHz, u8 short_GI_20, u8 short_GI_40,
+> >> >>  
+> >> >>  	if (rf_type == RF_1T1R) {
+> >> >>  		if (mcs->rx_mask[0] & BIT(7))
+> >> >> -			max_rate = (bw_40MHz) ? ((short_GI_40)?1500:1350):
+> >> >> +			max_rate = (bw_40MHz) ? ((short_GI_40)?1500:1350) :
+> > []
+> >> >
+> >> > A macro could help intelligibility here - maybe something like:
+> >> >
+> >> > #define get_max_rate(r1, r2, r3, r4)					\
+> >> > 	(bw_40MHz ? (short_GI_40 ? r1 : r2) : (short_GI_20 ? r3 : r4))
+> >> > and:
+> >> >  		if (mcs->rx_mask[0] & BIT(7))
+> >> > 			max_rate = get_max_rate(1500, 1350, 722, 650);
+> >> 
+> >> Hiding a parameter to a macro like that is bad coding practice, so don't
+> >> do that please!
+> >
+> > Yes and no.
+> >
+> > Adding the other 3 arguments to the macro doesn't help legibility.
+> >
+> > Keeping the macro definition local to the place that it's used
+> > can help avoid typos.
+> 
+> It's wrong, so just don't do it here!
 
-References: https://bugs.debian.org/766802
-Reported-by: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
-Cc: stable@vger.kernel.org
-Signed-off-by: Cyril Brulebois <kibi@debian.org>
----
- drivers/net/wireless/rt2x00/rt2800usb.c |    1 +
- 1 file changed, 1 insertion(+)
+It's not "wrong", you just don't like it.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index 573897b..8444313 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -1111,6 +1111,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
- 	/* Ovislink */
- 	{ USB_DEVICE(0x1b75, 0x3071) },
- 	{ USB_DEVICE(0x1b75, 0x3072) },
-+	{ USB_DEVICE(0x1b75, 0xa200) },
- 	/* Para */
- 	{ USB_DEVICE(0x20b8, 0x8888) },
- 	/* Pegatron */
--- 
-1.7.10.4
+
 
