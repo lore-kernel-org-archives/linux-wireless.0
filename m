@@ -1,49 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f46.google.com ([74.125.82.46]:42759 "EHLO
-	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932710AbaJ2Lvh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2014 07:51:37 -0400
-Received: by mail-wg0-f46.google.com with SMTP id x13so3099747wgg.5
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2014 04:51:36 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: David Spinadel <david.spinadel@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 23/25] iwlwifi: mvm: fix scan condition iterator
-Date: Wed, 29 Oct 2014 13:50:44 +0200
-Message-Id: <1414583446-11032-23-git-send-email-egrumbach@gmail.com> (sfid-20141029_131321_342420_E0366814)
-In-Reply-To: <CANUX_P0TURG9GNMRUOTGFfh=qzSNKkDh9Gm7Asq5jXr=0gQgLg@mail.gmail.com>
-References: <CANUX_P0TURG9GNMRUOTGFfh=qzSNKkDh9Gm7Asq5jXr=0gQgLg@mail.gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:39328 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751181AbaJ0Ion (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Oct 2014 04:44:43 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Sanjeev Sharma <sanjeev_sharma@mentor.com>
+Cc: <Larry.Finger@lwfinger.net>, <gregkh@linuxfoundation.org>,
+	<linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
+	<linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] staging:rtl8723au: core: Fix error reported by checkpatch.
+References: <1414396745-8845-1-git-send-email-sanjeev_sharma@mentor.com>
+Date: Mon, 27 Oct 2014 09:43:14 +0100
+In-Reply-To: <1414396745-8845-1-git-send-email-sanjeev_sharma@mentor.com>
+	(Sanjeev Sharma's message of "Mon, 27 Oct 2014 13:29:05 +0530")
+Message-ID: <wrfjioj5aonx.fsf@redhat.com> (sfid-20141027_094459_768585_A48973D0)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Spinadel <david.spinadel@intel.com>
+Sanjeev Sharma <sanjeev_sharma@mentor.com> writes:
+> This is a patch to the rtw_cmd.c file that fixes
+> Error reported by checkpatch.
+>
+> Signed-off-by: Sanjeev Sharma <Sanjeev_Sharma@mentor.com>
+> ---
+>  drivers/staging/rtl8723au/core/rtw_cmd.c | 83 +++++++++++++++-----------------
+>  1 file changed, 40 insertions(+), 43 deletions(-)
+>
+> diff --git a/drivers/staging/rtl8723au/core/rtw_cmd.c b/drivers/staging/rtl8723au/core/rtw_cmd.c
+> index 4eaa502..c1f6254 100644
+> --- a/drivers/staging/rtl8723au/core/rtw_cmd.c
+> +++ b/drivers/staging/rtl8723au/core/rtw_cmd.c
+> @@ -957,7 +957,7 @@ static void traffic_status_watchdog(struct rtw_adapter *padapter)
+>  		/*  check traffic for  powersaving. */
+>  			if (((pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod +
+>  			      pmlmepriv->LinkDetectInfo.NumTxOkInPeriod) > 8) ||
+> -			    pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod >2)
+> +			    pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod > 2)
+>  				bEnterPS = false;
+>  			else
+>  				bEnterPS = true;
 
-Scan condition iterator assumes that an interface is associated if
-phy_ctxt is assigned, but this isn't the sutuation in P2P device.
-OTOH P2P device is never associated so we can simply ignore it.
+This makes the line longer than 80 characters, that is worse than the
+'problem' you are fixing.
 
-Signed-off-by: David Spinadel <david.spinadel@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/scan.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
-index 64c02a2..042fcdc 100644
---- a/drivers/net/wireless/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
-@@ -270,7 +270,8 @@ static void iwl_mvm_scan_condition_iterator(void *data, u8 *mac,
- 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
- 	bool *global_bound = data;
- 
--	if (mvmvif->phy_ctxt && mvmvif->phy_ctxt->id < MAX_PHYS)
-+	if (vif->type != NL80211_IFTYPE_P2P_DEVICE && mvmvif->phy_ctxt &&
-+	    mvmvif->phy_ctxt->id < MAX_PHYS)
- 		*global_bound = true;
- }
- 
--- 
-1.9.1
-
+Jes
