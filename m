@@ -1,96 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:11906 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754192AbaJVJfW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2014 05:35:22 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Arik Nemtsov <arik@wizery.com>,
-	Arik Nemtsov <arikx.nemtsov@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH] mac80211: expose API allowing station iteration
-Date: Wed, 22 Oct 2014 12:30:59 +0300
-Message-Id: <1413970259-5649-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20141022_113531_587806_2E9F40BC)
+Received: from mail2.candelatech.com ([208.74.158.173]:47321 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752684AbaJ0XWz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Oct 2014 19:22:55 -0400
+Message-ID: <544ED3CD.30406@candelatech.com> (sfid-20141028_002307_441087_BE89DF21)
+Date: Mon, 27 Oct 2014 16:22:53 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Marcel Holtmann <marcel@holtmann.org>
+CC: Luca Coelho <luca@coelho.fi>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jukka Rissanen <jukka.rissanen@linux.intel.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 0/3] Add mcast event when hwsim radios are created and
+ removed
+References: <1414406688-3827-1-git-send-email-jukka.rissanen@linux.intel.com> <1414408856.3836.3.camel@jlt4.sipsolutions.net> <1414409397.2705.198.camel@jrissane-mobl.ger.corp.intel.com> <1414409485.3836.5.camel@jlt4.sipsolutions.net> <1414410917.2705.201.camel@jrissane-mobl.ger.corp.intel.com> <1414411714.3836.7.camel@jlt4.sipsolutions.net> <1D755566-F088-454B-AEC5-C635FFCB488A@holtmann.org> <1414431250.27833.9.camel@coelho.fi> <9C544CA4-42D3-4419-9BC7-C42DF2420CA4@holtmann.org>
+In-Reply-To: <9C544CA4-42D3-4419-9BC7-C42DF2420CA4@holtmann.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+On 10/27/2014 04:14 PM, Marcel Holtmann wrote:
+> Hi Luca,
+> 
+>>>>>> That's not particularly hard to figure out, for example by looking at
+>>>>>> sysfs.
+>>>>>>
+>>>>>> Is this really so time-constrained/important/... that you can't do that?
+>>>>>
+>>>>> It does not seem very practical to dig this information from sysfs as
+>>>>> the same information can be easily get via netlink as this patch shows.
+>>>>
+>>>> Well, that's a slippery slope. I'd consider it more practical to use
+>>>> existing APIs instead of (gratuitously) inventing new ones. It'll even
+>>>> work on older kernels as an added benefit.
+>>>
+>>> I see that different. The component that handles the emulation of the new wireless device should be independent from the component driving it. I prefer to have a race free way of obtaining the needed information without having to monitor nl80211 and sysfs for this. Especially with the use cases that we have in mind it has no business with these other interfaces.
+>>>
+>>> We have been down this route with the bridge interface where people had to dig out information from sysfs and it did not work out nicely. So now everything moves to netlink.
+>>
+>> Why does hwsim have to be treated differently from any other device?
+>> Unlike bridging, HW emulation doesn't seem to be a real life use case.
+>>
+>> But I'm probably missing something. ;)
+> 
+> this is the controlling side. The thing that I call emulator. It is the component that creates/destroys the hwsim wiphy. It can also be the one that handles the packet processing similar to wmediumd.
+> 
+> The nl80211/cfg80211 is not treated differently here. This is purely for the MAC80211_HWSIM netlink family side of things. Makes sense?
 
-Allow drivers to iterate all stations currently uploaded to them.
+I just got some patches accepted upstream that allow you to name the phy upon creation
+(and to suppress wlanX creation in case that is desired).
 
-Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- include/net/mac80211.h | 16 ++++++++++++++++
- net/mac80211/util.c    | 28 ++++++++++++++++++++++++++++
- 2 files changed, 44 insertions(+)
+If your control tool is creating the phys, then it can know ahead of time the names
+and match the events that way.
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 9dc5e76..e544bbf 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -4190,6 +4190,22 @@ void ieee80211_iterate_active_interfaces_rtnl(struct ieee80211_hw *hw,
- 					      void *data);
- 
- /**
-+ * ieee80211_iterate_stations_atomic - iterate stations
-+ *
-+ * This function iterates over all stations associated with a given
-+ * hardware that are currently uploaded to the driver and calls the callback
-+ * function for them.
-+ * This function requires the iterator callback function to be atomic,
-+ *
-+ * @hw: the hardware struct of which the interfaces should be iterated over
-+ * @iterator: the iterator function to call, cannot sleep
-+ * @data: first argument of the iterator function
-+ */
-+void ieee80211_iterate_stations_atomic(struct ieee80211_hw *hw,
-+				       void (*iterator)(void *data,
-+						struct ieee80211_sta *sta),
-+				       void *data);
-+/**
-  * ieee80211_queue_work - add work onto the mac80211 workqueue
-  *
-  * Drivers and mac80211 use this to add work onto the mac80211 workqueue.
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index c76c9d7..3d07d8d 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -693,6 +693,34 @@ void ieee80211_iterate_active_interfaces_rtnl(
- }
- EXPORT_SYMBOL_GPL(ieee80211_iterate_active_interfaces_rtnl);
- 
-+static void __iterate_stations(struct ieee80211_local *local,
-+			       void (*iterator)(void *data,
-+						struct ieee80211_sta *sta),
-+			       void *data)
-+{
-+	struct sta_info *sta;
-+
-+	list_for_each_entry_rcu(sta, &local->sta_list, list) {
-+		if (!sta->uploaded)
-+			continue;
-+
-+		iterator(data, &sta->sta);
-+	}
-+}
-+
-+void ieee80211_iterate_stations_atomic(struct ieee80211_hw *hw,
-+			void (*iterator)(void *data,
-+					 struct ieee80211_sta *sta),
-+			void *data)
-+{
-+	struct ieee80211_local *local = hw_to_local(hw);
-+
-+	rcu_read_lock();
-+	__iterate_stations(local, iterator, data);
-+	rcu_read_unlock();
-+}
-+EXPORT_SYMBOL_GPL(ieee80211_iterate_stations_atomic);
-+
- struct ieee80211_vif *wdev_to_ieee80211_vif(struct wireless_dev *wdev)
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
+I'm not taking sides on your particular patch, but those features made my
+tool a lot easier to write and more efficient.
+
+Thanks,
+Ben
+
 -- 
-1.9.1
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
