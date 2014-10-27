@@ -1,50 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gamma.ubit.hu ([46.19.33.31]:44694 "EHLO gamma.reon.hu"
+Received: from mga02.intel.com ([134.134.136.20]:24569 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754357AbaJBO56 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Oct 2014 10:57:58 -0400
-Received: from alpha.solidcluster.net ([195.228.155.188] helo=beta.solidcluster.net)
-	by gamma.reon.hu with esmtp (Exim 4.72)
-	(envelope-from <aron@aron.ws>)
-	id 1XZh9j-0000wx-Ou
-	for linux-wireless@vger.kernel.org; Thu, 02 Oct 2014 16:14:55 +0200
-Received: from catv-89-133-38-156.catv.broadband.hu ([89.133.38.156] helo=[192.168.1.50])
-	by beta.solidcluster.net with esmtpa (Exim 4.80.1)
-	(envelope-from <aron@aron.ws>)
-	id 1XZhA0-0003Fw-8C
-	for linux-wireless@vger.kernel.org; Thu, 02 Oct 2014 16:15:12 +0200
-Message-ID: <542D5DCE.5060007@aron.ws> (sfid-20141002_165807_334569_4228F0A3)
-Date: Thu, 02 Oct 2014 16:14:38 +0200
-From: Aron Szabo <aron@aron.ws>
-MIME-Version: 1.0
+	id S1751836AbaJ0Kpd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Oct 2014 06:45:33 -0400
+From: Jukka Rissanen <jukka.rissanen@linux.intel.com>
 To: linux-wireless@vger.kernel.org
-Subject: brcm8021: BCM43341
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Subject: [PATCH 1/3] mac80211-hwsim: Rename CREATE and DESTROY radio to NEW and DEL radio
+Date: Mon, 27 Oct 2014 12:44:46 +0200
+Message-Id: <1414406688-3827-2-git-send-email-jukka.rissanen@linux.intel.com> (sfid-20141027_114542_004307_3D71781D)
+In-Reply-To: <1414406688-3827-1-git-send-email-jukka.rissanen@linux.intel.com>
+References: <1414406688-3827-1-git-send-email-jukka.rissanen@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+Using the name HWSIM_CMD_NEW_RADIO and HWSIM_CMD_DEL_RADIO is more
+fitting on how other pieces of the wireless system work.
 
-I have an ASUS T200TA that has this chip BCM43341 02D0:A94D 
-(http://www.broadcom.com/products/Bluetooth/Bluetooth-RF-Silicon-and-Software-Solutions/BCM43341).
-This chip is supported by the bcmdhd driver under Android, but not by 
-this driver.
+Signed-off-by: Jukka Rissanen <jukka.rissanen@linux.intel.com>
+---
+ drivers/net/wireless/mac80211_hwsim.h | 14 +++++++++-----
+ 1 file changed, 9 insertions(+), 5 deletions(-)
 
-I tried to modify the driver to load the firmware extracted from the 
-Windows version, but I had no luck:
+diff --git a/drivers/net/wireless/mac80211_hwsim.h b/drivers/net/wireless/mac80211_hwsim.h
+index c9d0315..1f4f790 100644
+--- a/drivers/net/wireless/mac80211_hwsim.h
++++ b/drivers/net/wireless/mac80211_hwsim.h
+@@ -65,9 +65,10 @@ enum hwsim_tx_control_flags {
+  * kernel, uses:
+  *	%HWSIM_ATTR_ADDR_TRANSMITTER, %HWSIM_ATTR_FLAGS,
+  *	%HWSIM_ATTR_TX_INFO, %HWSIM_ATTR_SIGNAL, %HWSIM_ATTR_COOKIE
+- * @HWSIM_CMD_CREATE_RADIO: create a new radio with the given parameters,
+- *	returns the radio ID (>= 0) or negative on errors
+- * @HWSIM_CMD_DESTROY_RADIO: destroy a radio
++ * @HWSIM_CMD_NEW_RADIO: create a new radio with the given parameters,
++ *	returns the radio ID (>= 0) or negative on errors, if successful
++ *	then multicast the result
++ * @HWSIM_CMD_DEL_RADIO: destroy a radio, reply is multicasted
+  * @__HWSIM_CMD_MAX: enum limit
+  */
+ enum {
+@@ -75,12 +76,15 @@ enum {
+ 	HWSIM_CMD_REGISTER,
+ 	HWSIM_CMD_FRAME,
+ 	HWSIM_CMD_TX_INFO_FRAME,
+-	HWSIM_CMD_CREATE_RADIO,
+-	HWSIM_CMD_DESTROY_RADIO,
++	HWSIM_CMD_NEW_RADIO,
++	HWSIM_CMD_DEL_RADIO,
+ 	__HWSIM_CMD_MAX,
+ };
+ #define HWSIM_CMD_MAX (_HWSIM_CMD_MAX - 1)
+ 
++#define HWSIM_CMD_CREATE_RADIO   HWSIM_CMD_NEW_RADIO
++#define HWSIM_CMD_DESTROY_RADIO  HWSIM_CMD_DEL_RADIO
++
+ /**
+  * enum hwsim_attrs - hwsim netlink attributes
+  *
+-- 
+1.8.3.1
 
-brcmfmac_sdio mmc1:0001:1: Direct firmware load failed with error -2
-brcmfmac_sdio mmc1:0001:1: Falling back to user helper
-
-The sta driver from Broadcom does not support this chip.
-
-Without documentation and any knowledge of how wireless chips work, what 
-I can do is probably useless trial and error, so I wanted to ask for help :)
-
-Ha someone worked with this chip? Can somebody point me in the right 
-direction ?
-
-Thanks!
-
-Yours,
-Aron
