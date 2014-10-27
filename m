@@ -1,53 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:33954 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753386AbaJBBCy (ORCPT
+Received: from smtprelay0092.hostedemail.com ([216.40.44.92]:46972 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751060AbaJ0Fvj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Oct 2014 21:02:54 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH v2 05/10] ath9k: Remove duplicate code
-Date: Thu,  2 Oct 2014 06:33:15 +0530
-Message-Id: <1412211800-24344-6-git-send-email-sujith@msujith.org> (sfid-20141002_030257_676321_34DF6C61)
-In-Reply-To: <1412211800-24344-1-git-send-email-sujith@msujith.org>
-References: <1412211800-24344-1-git-send-email-sujith@msujith.org>
+	Mon, 27 Oct 2014 01:51:39 -0400
+Message-ID: <1414389096.15751.34.camel@perches.com> (sfid-20141027_065156_043194_64A7F4C3)
+Subject: Re: [PATCH 2/2] staging: rtl8723au:core
+From: Joe Perches <joe@perches.com>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: Paul McQuade <paulmcquad@gmail.com>, linux-kernel@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	gregkh@linuxfoundation.org, Larry.Finger@lwfinger.net
+Date: Sun, 26 Oct 2014 22:51:36 -0700
+In-Reply-To: <wrfjegtucbgo.fsf@redhat.com>
+References: <1414340332-4556-1-git-send-email-paulmcquad@gmail.com>
+	 <1414350250.15751.22.camel@perches.com> <wrfjegtucbgo.fsf@redhat.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Mon, 2014-10-27 at 06:45 +0100, Jes Sorensen wrote:
+> Joe Perches <joe@perches.com> writes:
+> > On Sun, 2014-10-26 at 16:18 +0000, Paul McQuade wrote:
+> >> ERROR: spaces required around that ':' (ctx:VxE)
+[]
+> >> diff --git a/drivers/staging/rtl8723au/core/rtw_ieee80211.c b/drivers/staging/rtl8723au/core/rtw_ieee80211.c
+[]
+> >> @@ -794,28 +794,28 @@ u16 rtw_mcs_rate23a(u8 rf_type, u8 bw_40MHz, u8 short_GI_20, u8 short_GI_40,
+> >>  
+> >>  	if (rf_type == RF_1T1R) {
+> >>  		if (mcs->rx_mask[0] & BIT(7))
+> >> -			max_rate = (bw_40MHz) ? ((short_GI_40)?1500:1350):
+> >> +			max_rate = (bw_40MHz) ? ((short_GI_40)?1500:1350) :
+[]
+> >
+> > A macro could help intelligibility here - maybe something like:
+> >
+> > #define get_max_rate(r1, r2, r3, r4)					\
+> > 	(bw_40MHz ? (short_GI_40 ? r1 : r2) : (short_GI_20 ? r3 : r4))
+> > and:
+> >  		if (mcs->rx_mask[0] & BIT(7))
+> > 			max_rate = get_max_rate(1500, 1350, 722, 650);
+> 
+> Hiding a parameter to a macro like that is bad coding practice, so don't
+> do that please!
 
-ath9k_has_tx_pending() can be used to
-check if there are pending frames instead
-of having duplicate code.
+Yes and no.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/main.c | 10 +---------
- 1 file changed, 1 insertion(+), 9 deletions(-)
+Adding the other 3 arguments to the macro doesn't help legibility.
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 73a4438..65ca7ac 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -2039,16 +2039,8 @@ void __ath9k_flush(struct ieee80211_hw *hw, u32 queues, bool drop)
- static bool ath9k_tx_frames_pending(struct ieee80211_hw *hw)
- {
- 	struct ath_softc *sc = hw->priv;
--	int i;
--
--	for (i = 0; i < ATH9K_NUM_TX_QUEUES; i++) {
--		if (!ATH_TXQ_SETUP(sc, i))
--			continue;
- 
--		if (ath9k_has_pending_frames(sc, &sc->tx.txq[i]))
--			return true;
--	}
--	return false;
-+	return ath9k_has_tx_pending(sc);
- }
- 
- static int ath9k_tx_last_beacon(struct ieee80211_hw *hw)
--- 
-2.1.1
+Keeping the macro definition local to the place that it's used
+can help avoid typos.
+
 
