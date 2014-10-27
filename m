@@ -1,56 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:51177 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1758611AbaJ3LIr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Oct 2014 07:08:47 -0400
-Message-ID: <1414667312.27833.22.camel@coelho.fi> (sfid-20141030_120850_842704_3141D8F2)
-From: Luca Coelho <luca@coelho.fi>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org,
-	Murilo Opsfelder Araujo <mopsfelder@gmail.com>
-Date: Thu, 30 Oct 2014 13:08:32 +0200
-In-Reply-To: <1414642633-3700-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1414642633-3700-1-git-send-email-Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [PATCH 0/6 3.18] Fixes for iwlwifi drivers
+Received: from bh-25.webhostbox.net ([208.91.199.152]:47647 "EHLO
+	bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751725AbaJ0PnI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Oct 2014 11:43:08 -0400
+Received: from mailnull by bh-25.webhostbox.net with sa-checked (Exim 4.82)
+	(envelope-from <linux@roeck-us.net>)
+	id 1XimRn-000N15-SG
+	for linux-wireless@vger.kernel.org; Mon, 27 Oct 2014 15:43:08 +0000
+Date: Mon, 27 Oct 2014 08:42:51 -0700
+From: Guenter Roeck <linux@roeck-us.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>, linux-wireless@vger.kernel.org,
+	zajec5@gmail.com, arend@broadcom.com, arnd@arndb.de,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] bcma: fix build when CONFIG_OF_ADDRESS is not set
+Message-ID: <20141027154251.GB7677@roeck-us.net> (sfid-20141027_164313_480756_8DFB8036)
+References: <5436D3CF.2030506@hauke-m.de>
+ <1412890781-24160-1-git-send-email-hauke@hauke-m.de>
+ <20141025203653.GA10716@roeck-us.net>
+ <20141027151509.GA19976@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20141027151509.GA19976@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The cover-letter subject is wrong. :) I guess you meant
-s/iwlwifi/rtlwifi/ ;)
-
---
-Luca.
-
-On Wed, 2014-10-29 at 23:17 -0500, Larry Finger wrote:
-> Some late changes to rtlwifi made some of the older drivers not start correctly.
-> These patches should be applied to 3.18.
+On Mon, Oct 27, 2014 at 11:15:09AM -0400, John W. Linville wrote:
+> Yes, I have it queued.  Things have been delayed due to my recent
+> travels, etc.
 > 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Murilo Opsfelder Araujo <mopsfelder@gmail.com>
-> 
-> Larry Finger (6):
->   rtlwifi: rtl8192ce: rtl8192de: rtl8192se: Fix handling for missing
->     get_btc_status
->   rtlwifi: rtl8192se: Fix duplicate calls to ieee80211_register_hw()
->   rtlwifi: rtl8192se: Add missing section to read descriptor setting
->   rtlwifi: rtl8192ce: Add missing section to read descriptor setting
->   rtlwifi: rtl8821ae: Remove extra semicolons
->   rtlwifi: rtl8192se: Fix firmware loading
-> 
->  drivers/net/wireless/rtlwifi/core.c          |  6 ++++++
->  drivers/net/wireless/rtlwifi/core.h          |  1 +
->  drivers/net/wireless/rtlwifi/rtl8192ce/def.h |  2 ++
->  drivers/net/wireless/rtlwifi/rtl8192ce/sw.c  |  1 +
->  drivers/net/wireless/rtlwifi/rtl8192ce/trx.c |  3 +++
->  drivers/net/wireless/rtlwifi/rtl8192de/sw.c  |  1 +
->  drivers/net/wireless/rtlwifi/rtl8192se/def.h |  2 ++
->  drivers/net/wireless/rtlwifi/rtl8192se/sw.c  | 22 +++-------------------
->  drivers/net/wireless/rtlwifi/rtl8192se/trx.c |  3 +++
->  drivers/net/wireless/rtlwifi/rtl8821ae/phy.c | 12 ++++++------
->  10 files changed, 28 insertions(+), 25 deletions(-)
-> 
+Thanks!
 
+Guenter
 
+> On Sat, Oct 25, 2014 at 01:36:53PM -0700, Guenter Roeck wrote:
+> > On Thu, Oct 09, 2014 at 11:39:41PM +0200, Hauke Mehrtens wrote:
+> > > Commit 2101e533f41a ("bcma: register bcma as device tree driver")
+> > > introduces a hard dependency on OF_ADDRESS into the bcma driver.
+> > > OF_ADDRESS is specifically disabled for the sparc architecture.
+> > > This results in the following error when building sparc64:allmodconfig.
+> > > 
+> > > drivers/bcma/main.c: In function 'bcma_of_find_child_device':
+> > > drivers/bcma/main.c:150:3: error: implicit declaration of function 'of_translate_address'
+> > > 
+> > > Fixes: 2101e533f41a ("bcma: register bcma as device tree driver")
+> > > Reported-by: Guenter Roeck <linux@roeck-us.net>
+> > > Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> > 
+> > The upstream kernel still does not include this patch, and the sparc64 build
+> > is still broken.
+> > 
+> > Is this patch on its way upstream ?
+> > 
+> > Guenter
+> > 
+> > > ---
+> > >  drivers/bcma/main.c | 2 +-
+> > >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > > 
+> > > diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
+> > > index d1656c2..1000955 100644
+> > > --- a/drivers/bcma/main.c
+> > > +++ b/drivers/bcma/main.c
+> > > @@ -132,7 +132,7 @@ static bool bcma_is_core_needed_early(u16 core_id)
+> > >  	return false;
+> > >  }
+> > >  
+> > > -#ifdef CONFIG_OF
+> > > +#if defined(CONFIG_OF) && defined(CONFIG_OF_ADDRESS)
+> > >  static struct device_node *bcma_of_find_child_device(struct platform_device *parent,
+> > >  						     struct bcma_device *core)
+> > >  {
+> > > -- 
+> > > 1.9.1
+> > > 
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > > Please read the FAQ at  http://www.tux.org/lkml/
+> > > 
+> > > 
+> > 
+> 
+> -- 
+> John W. Linville		Someday the world will need a hero, and you
+> linville@tuxdriver.com			might be all we have.  Be ready.
