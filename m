@@ -1,46 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f180.google.com ([209.85.213.180]:51664 "EHLO
-	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751524AbaJQXmi convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Oct 2014 19:42:38 -0400
-Received: by mail-ig0-f180.google.com with SMTP id uq10so1786446igb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Oct 2014 16:42:37 -0700 (PDT)
+Received: from [62.4.27.34] ([62.4.27.34]:35909 "EHLO mail.openmailbox.org"
+	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1751957AbaJ0DFP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 26 Oct 2014 23:05:15 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by mail.openmailbox.org (Postfix) with ESMTP id 8A1892E0514
+	for <linux-wireless@vger.kernel.org>; Mon, 27 Oct 2014 03:57:32 +0100 (CET)
+Received: from mail.openmailbox.org ([62.4.27.34])
+	by localhost (mail.openmailbox.org [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id kO6fu5v0Uwut for <linux-wireless@vger.kernel.org>;
+	Mon, 27 Oct 2014 03:57:30 +0100 (CET)
+Message-ID: <544DB5A8.7090405@openmailbox.org> (sfid-20141027_040636_325420_A7F9A918)
+Date: Mon, 27 Oct 2014 11:02:00 +0800
+From: Etna <etna@openmailbox.org>
 MIME-Version: 1.0
-Date: Sat, 18 Oct 2014 01:42:37 +0200
-Message-ID: <CACna6ryaj7sGhczjCDBxJVu5buRxhu_A7rQXAdcx2___sWpuBg@mail.gmail.com> (sfid-20141018_014242_340947_912CDF55)
-Subject: Documenting AP (and others) mode support
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: linux-wireless@vger.kernel.org
+Subject: MediaTek WiFi hardware support in upstream kernel
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For a long time I was curious how AP mode is supported in both:
-hostapd and cfg80211/mac80211. Unfortunately I wasn't able to find a
-straightforward answer. Random info I found was rather confusing,
-outdated. For example hostapd wiki page was convincing me I need a
-monitor mode interface for hostapd.
+I am not a developer, but I stumbled upon this just a couple of days ago 
+in the OpenWRT forums:
 
-So I've slightly updated
-http://wireless.kernel.org/en/users/Documentation/hostapd#About_hostapd
+https://forum.openwrt.org/viewtopic.php?id=53215
 
-And created
-http://wireless.kernel.org/en/developers/Documentation/cfg80211/API
-(inspired by mac80211/API wiki page)
+In short, MediaTek is looking for volunteers to help get their drivers 
+mainlined in the upstream kernels; this includes drivers for their USB 
+and PCI wifi hardware under both the MediaTek and Ralink brands. They 
+are willing to provide "chip info, reference driver, dev board, etc" and 
+even some degree of sponsorship, apparently subject to their 
+management's approval.
 
-Of course this is only a beginning, but I don't think I should go
-further will my limited knowledge.
+In exchange, they require that the volunteers fulfill the following 
+requirements:
+- skilled in wifi driver development
+- provide a suitable schedule / roadmap
+- be able to get the code mainlined in the official linux kernel.
 
-So there goes my request: could you review what I've written and
-continue my work, if you can? I don't think my description of cfg80211
-and AP mode covers much. I'm still not sure about meaning of
-WIPHY_FLAG_HAVE_AP_SME (it seems to be important flag for hostapd) and
-of course there are mode modes (not just AP) to describe.
+Those who are keen on taking up the task can contact the original poster 
+at hua.shao[AT]mediatek.com
 
-P.S.
-Another topic I'm interested in is multiple SSIDs support. If someone
-could start that, it would be great.
-
--- 
-Rafał
+**Disclaimer: I am in no way related to, or under the employ of MediaTek 
+or Ralink. I am only posting this here because I have a handful of MT 
+wifi chips which I hope to see being supported in the upstream kernel so 
+that I can actually use them under Linux,
