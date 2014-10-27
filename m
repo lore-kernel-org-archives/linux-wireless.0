@@ -1,77 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from glenfiddich.mraw.org ([62.210.215.98]:43047 "EHLO
-	glenfiddich.mraw.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932384AbaJ2L2O (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2014 07:28:14 -0400
-Date: Wed, 29 Oct 2014 12:12:24 +0100
-From: Cyril Brulebois <kibi@debian.org>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] wireless: rt2x00: add new rt2800usb device
-Message-ID: <20141029111224.GC29720@mraw.org> (sfid-20141029_122839_761356_16469085)
-References: <1414510961-28920-1-git-send-email-kibi@debian.org>
- <20141029110214.GB2021@redhat.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="5G06lTa6Jq83wMTw"
-In-Reply-To: <20141029110214.GB2021@redhat.com>
+Received: from mga09.intel.com ([134.134.136.24]:24106 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751149AbaJ0LzU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Oct 2014 07:55:20 -0400
+Message-ID: <1414410917.2705.201.camel@jrissane-mobl.ger.corp.intel.com> (sfid-20141027_125523_884195_24A2C116)
+Subject: Re: [PATCH 0/3] Add mcast event when hwsim radios are created and
+ removed
+From: Jukka Rissanen <jukka.rissanen@linux.intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 27 Oct 2014 13:55:17 +0200
+In-Reply-To: <1414409485.3836.5.camel@jlt4.sipsolutions.net>
+References: <1414406688-3827-1-git-send-email-jukka.rissanen@linux.intel.com>
+	 (sfid-20141027_114536_599448_FF2C1C5E) <1414408856.3836.3.camel@jlt4.sipsolutions.net>
+	 <1414409397.2705.198.camel@jrissane-mobl.ger.corp.intel.com>
+	 <1414409485.3836.5.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On ma, 2014-10-27 at 12:31 +0100, Johannes Berg wrote:
+> On Mon, 2014-10-27 at 13:29 +0200, Jukka Rissanen wrote:
+> 
+> > Yes, but from generic nl80211 event you cannot know if event is from
+> > hwsim radio or not. With this patch, the listener can know that the
+> > radio new/del event is specifically related to hwsim radio.
+> 
+> That's not particularly hard to figure out, for example by looking at
+> sysfs.
+> 
+> Is this really so time-constrained/important/... that you can't do that?
 
---5G06lTa6Jq83wMTw
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+It does not seem very practical to dig this information from sysfs as
+the same information can be easily get via netlink as this patch shows.
 
-Stanislaw Gruszka <sgruszka@redhat.com> (2014-10-29):
-> On Tue, Oct 28, 2014 at 04:42:41PM +0100, Cyril Brulebois wrote:
-> > 0x1b75 0xa200 AirLive WN-200USB wireless 11b/g/n dongle
-> >=20
-> > References: https://bugs.debian.org/766802
-> > Reported-by: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
->=20
-> Was this patch tested by reporter? I would rather see Reported-and-tested=
--by tag :-)
 
-The reporter confirmed the following trick worked:
+Cheers,
+Jukka
 
-  # echo rt2800usb >> /etc/modules
-  # echo 'install rt2800usb /sbin/modprobe --ignore-install rt2800usb $CMDL=
-INE_OPTS && echo 1b75 a200 > /sys/bus/usb/drivers/rt2800usb/new_id' > /etc/=
-modprobe.d/ralink.conf
-  # modprobe -r rt2800usb ; modprobe rt2800usb
 
-but I'll try and get this patch tested on top of 3.16.x (which is what
-we have in Debian at the moment) if that's good enough for you.
-
-Mraw,
-KiBi.
-
---5G06lTa6Jq83wMTw
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBAgAGBQJUUMuYAAoJEP+RSvDCs1UgqXoP/ir73I8VkEWvHsLs56Wc2Jo5
-Wf4Zpr19uj1KGuktexF8UpaIdzi84Ot3DWW3L0Jxb8GtBE3yr1MNDKGCQ+yncQcw
-RGqkbYb3DuAPfPb3ecg21er5dBZNZ+anu2uKcyd5nxeNh4U5N+Brr4qLapPHoNp+
-FtDE68+6b1W9HmEnSMz2uZdXLUTKOYPR4je34eIt8x1pULlRpRUEUtM090q9D94s
-lx2hmDxrMxTigkpJUJ2NCSen4uklS/pPpF1yd5Htst5l7TaXXxHTf+gh3Y5B+a77
-VC3P/+rWbJamYtUD2jvYDUS5VlL0PaMAFYEOdoU8wFP528SJi9woVIB2WbFrULQY
-mVvdsMDpn2lk+MkFy3kbHqLNTsJZvmTrvSvbOnYTmFGaVoHt/OTQDrRHHWXHyIve
-RtHGdrK+qjVexHfHT4xrjnYC1Mw5/2fJOO14oCq4E/v8I/AADVCedg41pAtusKrS
-hd1EQ7cLH/ewxsWXY97aRolqQNqIb842UVVANir648dIkT72CLDuialK3OLVvUNI
-In+iTlEFhkJrbctPJ7Mk6fOOcuzPU9+kv3pdJgwhh7VhPzNYANsZZG7fquuyg1Pk
-cTGTHaIzQP/pZhp9WlVk+ghpoL4PJmH2kWCbomZAK2vQOCQu8O5aQKQ/mloYVH0r
-MIP0hb1J8kEsVOtAwR/M
-=VB1b
------END PGP SIGNATURE-----
-
---5G06lTa6Jq83wMTw--
