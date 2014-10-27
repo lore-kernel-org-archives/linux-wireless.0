@@ -1,34 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:51198 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751135AbaJ0Lbg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Oct 2014 07:31:36 -0400
-Message-ID: <1414409485.3836.5.camel@jlt4.sipsolutions.net> (sfid-20141027_123139_005955_66405B29)
-Subject: Re: [PATCH 0/3] Add mcast event when hwsim radios are created and
- removed
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jukka Rissanen <jukka.rissanen@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 27 Oct 2014 12:31:25 +0100
-In-Reply-To: <1414409397.2705.198.camel@jrissane-mobl.ger.corp.intel.com>
-References: <1414406688-3827-1-git-send-email-jukka.rissanen@linux.intel.com>
-	 (sfid-20141027_114536_599448_FF2C1C5E) <1414408856.3836.3.camel@jlt4.sipsolutions.net>
-	 <1414409397.2705.198.camel@jrissane-mobl.ger.corp.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wg0-f42.google.com ([74.125.82.42]:47076 "EHLO
+	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751808AbaJ0AQT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 26 Oct 2014 20:16:19 -0400
+From: Paul McQuade <paulmcquad@gmail.com>
+To: paulmcquad@gmail.com
+Cc: linux-kernel@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-wireless@vger.kernel.org, gdonald@gmail.com,
+	gregkh@linuxfoundation.org, Jes.Sorensen@redhat.com,
+	Larry.Finger@lwfinger.net
+Subject: [PATCH 2/2] staging: rtl8723au: core style issue
+Date: Mon, 27 Oct 2014 00:16:08 +0000
+Message-Id: <1414368968-9841-1-git-send-email-paulmcquad@gmail.com> (sfid-20141027_011643_068808_15911948)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-10-27 at 13:29 +0200, Jukka Rissanen wrote:
+spaces required around %
 
-> Yes, but from generic nl80211 event you cannot know if event is from
-> hwsim radio or not. With this patch, the listener can know that the
-> radio new/del event is specifically related to hwsim radio.
+Signed-off-by: Paul McQuade <paulmcquad@gmail.com>
+---
+ drivers/staging/rtl8723au/core/rtw_recv.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-That's not particularly hard to figure out, for example by looking at
-sysfs.
-
-Is this really so time-constrained/important/... that you can't do that?
-
-johannes
+diff --git a/drivers/staging/rtl8723au/core/rtw_recv.c b/drivers/staging/rtl8723au/core/rtw_recv.c
+index 5bc7734..6343d49a 100644
+--- a/drivers/staging/rtl8723au/core/rtw_recv.c
++++ b/drivers/staging/rtl8723au/core/rtw_recv.c
+@@ -2381,7 +2381,7 @@ void rtw_signal_stat_timer_hdl23a(unsigned long data)
+ 		if (!check_fwstate(&adapter->mlmepriv, _FW_UNDER_SURVEY)) {
+ 			tmp_s = (avg_signal_strength + (_alpha - 1) *
+ 				 recvpriv->signal_strength);
+-			if (tmp_s %_alpha)
++			if (tmp_s % _alpha)
+ 				tmp_s = tmp_s / _alpha + 1;
+ 			else
+ 				tmp_s = tmp_s / _alpha;
+@@ -2390,7 +2390,7 @@ void rtw_signal_stat_timer_hdl23a(unsigned long data)
+ 
+ 			tmp_q = (avg_signal_qual + (_alpha - 1) *
+ 				 recvpriv->signal_qual);
+-			if (tmp_q %_alpha)
++			if (tmp_q % _alpha)
+ 				tmp_q = tmp_q / _alpha + 1;
+ 			else
+ 				tmp_q = tmp_q / _alpha;
+-- 
+1.9.1
 
