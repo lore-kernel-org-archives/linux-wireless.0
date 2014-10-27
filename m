@@ -1,69 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f54.google.com ([209.85.218.54]:33387 "EHLO
-	mail-oi0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751147AbaJKSAL (ORCPT
+Received: from mga09.intel.com ([134.134.136.24]:23810 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750815AbaJ0GOe convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Oct 2014 14:00:11 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, troy_tan@realsil.com.cn,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH V3.18] rtlwifi: rtl8192ee: Prevent log spamming for switch statements
-Date: Sat, 11 Oct 2014 12:59:53 -0500
-Message-Id: <1413050393-6257-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20141011_200018_097956_134340DE)
+	Mon, 27 Oct 2014 02:14:34 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Joe Perches <joe@perches.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+CC: "Berg, Johannes" <johannes.berg@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Subject: RE: [PATCH 07/11] iwlwifi: dvm: Fix probable mask then right shift
+ defect
+Date: Mon, 27 Oct 2014 06:14:29 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB31B556ABD@hasmsx107.ger.corp.intel.com> (sfid-20141027_071503_230142_DDFF00DC)
+References: <cover.1414387334.git.joe@perches.com>
+ <83c3bfdd0c8f21fbbcbd9ebb5746a8fb04494fac.1414387334.git.joe@perches.com>
+In-Reply-To: <83c3bfdd0c8f21fbbcbd9ebb5746a8fb04494fac.1414387334.git.joe@perches.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver logs a message when the default branch of switch statements are
-taken. Such information is useful when debugging, but these log items should
-not be seen for standard usage.
+> 
+> Precedence of & and >> is not the same and is not left to right.
+> shift has higher precedence and should be done after the mask.
+> 
+> Add parentheses around the mask.
+> 
+> Signed-off-by: Joe Perches <joe@perches.com>
+> ---
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/rtlwifi/rtl8192ee/hw.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ee/hw.c b/drivers/net/wireless/rtlwifi/rtl8192ee/hw.c
-index dfdc9b2..1a87edc 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ee/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ee/hw.c
-@@ -362,7 +362,7 @@ void rtl92ee_get_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 		}
- 		break;
- 	default:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
-+		RT_TRACE(rtlpriv, COMP_ERR, DBG_DMESG,
- 			 "switch case not process %x\n", variable);
- 		break;
- 	}
-@@ -591,7 +591,7 @@ void rtl92ee_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 				acm_ctrl &= (~ACMHW_BEQEN);
- 				break;
- 			default:
--				RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
-+				RT_TRACE(rtlpriv, COMP_ERR, DBG_DMESG,
- 					 "switch case not process\n");
- 				break;
- 			}
-@@ -710,7 +710,7 @@ void rtl92ee_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 		}
- 		break;
- 	default:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
-+		RT_TRACE(rtlpriv, COMP_ERR, DBG_DMESG,
- 			 "switch case not process %x\n", variable);
- 		break;
- 	}
-@@ -2424,7 +2424,7 @@ void rtl92ee_set_key(struct ieee80211_hw *hw, u32 key_index,
- 			enc_algo = CAM_AES;
- 			break;
- 		default:
--			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
-+			RT_TRACE(rtlpriv, COMP_ERR, DBG_DMESG,
- 				 "switch case not process\n");
- 			enc_algo = CAM_TKIP;
- 			break;
--- 
-1.8.4.5
-
+Applied - thanks.
