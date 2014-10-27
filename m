@@ -1,47 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.outflux.net ([198.145.64.163]:33862 "EHLO smtp.outflux.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751490AbaJTV52 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2014 17:57:28 -0400
-Date: Mon, 20 Oct 2014 14:57:08 -0700
-From: Kees Cook <keescook@chromium.org>
-To: linux-kernel@vger.kernel.org
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH] rtlwifi: prevent format string usage from leaking
-Message-ID: <20141020215708.GA32650@www.outflux.net> (sfid-20141020_235744_954428_087926D3)
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:45752 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751113AbaJ0RaO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Oct 2014 13:30:14 -0400
+Date: Mon, 27 Oct 2014 13:26:37 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
+Subject: Re: [PATCH] wireless-regdb: add regulatory rule for ETSI members on
+ 60GHz band
+Message-ID: <20141027172636.GA28300@tuxdriver.com> (sfid-20141027_183024_309453_12E2D2C9)
+References: <543D170A.6060709@gmail.com>
+ <1465375.2aSLY3brRR@lx-wigig-72>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1465375.2aSLY3brRR@lx-wigig-72>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use "%s" in the workqueue allocation to make sure the rtl_hal_cfg name
-can never accidentally leak information via a format string.
+On Sun, Oct 19, 2014 at 09:49:52AM +0300, Vladimir Kondratiev wrote:
+> On Tuesday, October 14, 2014 02:28:58 PM Xose Vazquez Perez wrote:
+> > "(57240 - 65880 @ 2160), (40), NO-OUTDOOR" should(must) be replaced by:
+> > "(57000 - 66000 @ 2160), (40)"
+> > 
+> 
+> Yes, looks like you are right. I used draft that I don't see on its location any more,
+> and final document indeed says what you wrote.
 
-Signed-off-by: Kees Cook <keescook@chromium.org>
----
- drivers/net/wireless/rtlwifi/base.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/rtlwifi/base.c b/drivers/net/wireless/rtlwifi/base.c
-index 58ba71830886..40b6d1d006d7 100644
---- a/drivers/net/wireless/rtlwifi/base.c
-+++ b/drivers/net/wireless/rtlwifi/base.c
-@@ -467,7 +467,7 @@ static void _rtl_init_deferred_work(struct ieee80211_hw *hw)
- 		    rtl_easy_concurrent_retrytimer_callback, (unsigned long)hw);
- 	/* <2> work queue */
- 	rtlpriv->works.hw = hw;
--	rtlpriv->works.rtl_wq = alloc_workqueue(rtlpriv->cfg->name, 0, 0);
-+	rtlpriv->works.rtl_wq = alloc_workqueue("%s", 0, 0, rtlpriv->cfg->name);
- 	INIT_DELAYED_WORK(&rtlpriv->works.watchdog_wq,
- 			  (void *)rtl_watchdog_wq_callback);
- 	INIT_DELAYED_WORK(&rtlpriv->works.ips_nic_off_wq,
--- 
-1.9.1
-
+Would someone like to post a patch to that effect?
 
 -- 
-Kees Cook
-Chrome OS Security
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
