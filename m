@@ -1,50 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:39788 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751816AbaJYTnc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Oct 2014 15:43:32 -0400
-Received: by mail-wi0-f169.google.com with SMTP id q5so3380441wiv.4
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2014 12:43:31 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 28/31] staging: vt6655: s_vGenerateTxParameter remove unused cbMACHdLen
-Date: Sat, 25 Oct 2014 09:20:38 +0100
-Message-Id: <1414225241-5480-29-git-send-email-tvboxspy@gmail.com> (sfid-20141025_214335_837780_7A49E626)
-In-Reply-To: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
-References: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
+Received: from mail.neratec.com ([46.140.151.2]:64154 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752299AbaJ0Ou6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Oct 2014 10:50:58 -0400
+Message-ID: <544E5BCF.6000703@neratec.com> (sfid-20141027_155101_570907_EE82A498)
+Date: Mon, 27 Oct 2014 15:50:55 +0100
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+MIME-Version: 1.0
+To: Adrien Decostre <ad.decostre@gmail.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: Re: Questions regarding ath9k and new EN 300 328 regulation
+References: <CAOtFK_Ue0xjEaYY3qm0n2Tj=Hnu1dbphupmdZmiouVuGLnktoA@mail.gmail.com> <544E21D4.9020401@neratec.com> <CAOtFK_XWgBxPNy77XVDc1XbYUkdPSd-Q9wmREN2iL6A8bzFDoQ@mail.gmail.com>
+In-Reply-To: <CAOtFK_XWgBxPNy77XVDc1XbYUkdPSd-Q9wmREN2iL6A8bzFDoQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/rxtx.c | 4 ----
- 1 file changed, 4 deletions(-)
+On 10/27/2014 03:18 PM, Adrien Decostre wrote:
+> Hello Zefir,
+> 
+> Thanks a lot for your answer. This helps me a lot.
+> If I correctly understand, the ability of ath9k to detect all pulses
+> may also depend of the platform performances. So on an embedded
+> platform with limited performances, we may observe more pulses losses
+> than on a more powerful platform. Is this a right statement?
+> 
+No, there is no bottleneck in the platform performance. Presumed radar pulses are
+reported as RX_ERROR descriptors and even lower end embedded systems are able to
+handle the load. What makes the difference with the minimum pulse width is the
+chip DFS engine's ability to isolate and identify very short spikes as potential
+radar pulses.
 
-diff --git a/drivers/staging/vt6655/rxtx.c b/drivers/staging/vt6655/rxtx.c
-index 23ee379..9beabea 100644
---- a/drivers/staging/vt6655/rxtx.c
-+++ b/drivers/staging/vt6655/rxtx.c
-@@ -1132,7 +1132,6 @@ s_vGenerateTxParameter(
- 	unsigned short wCurrentRate
- )
- {
--	unsigned int cbMACHdLen = WLAN_HDR_ADDR3_LEN; //24
- 	unsigned short wFifoCtl;
- 	bool bDisCRC = false;
- 	unsigned char byFBOption = AUTO_FB_NONE;
-@@ -1150,9 +1149,6 @@ s_vGenerateTxParameter(
- 	else if (wFifoCtl & FIFOCTL_AUTO_FB_1)
- 		byFBOption = AUTO_FB_1;
- 
--	if (pDevice->bLongHeader)
--		cbMACHdLen = WLAN_HDR_ADDR3_LEN + 6;
--
- 	if (!pvRrvTime)
- 		return;
- 
--- 
-1.9.1
+This goes very deeply into material I had available under NDA while implementing
+the DFS support for ath9k. If you intend to work on that topic, I encourage you to
+contact the folks at QCA and join their 'NDA for Developers' program. The document
+you want to read is 'Baseband DFS 2 (Radar) Micro-Architecture'.
 
+> What about the CONFIG_ATH9K_DFS_CERTIFIED build options? Do we need it
+> to enable the detection of 0.5usec. pulses?
+> 
+Yes, this driver specific flag (also available for 10k) you need to set to get the
+DFS detector built (not related to pulse width). It essentially shifts the
+responsibility of the product working in restricted bands to you / the manufacturer.
+
+
+> Thanks in advance for your answer.
+> 
+> Best regards
+> 
+> Adrien
+> 
+
+Good Luck,
+Zefir
