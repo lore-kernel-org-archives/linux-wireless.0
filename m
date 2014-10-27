@@ -1,98 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f180.google.com ([209.85.192.180]:47709 "EHLO
-	mail-pd0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751494AbaJ3ERW (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:46048 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751404AbaJ0RpK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Oct 2014 00:17:22 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org,
-	Murilo Opsfelder Araujo <mopsfelder@gmail.com>
-Subject: [PATCH 1/6 3.18] rtlwifi: rtl8192ce: rtl8192de: rtl8192se: Fix handling for missing get_btc_status
-Date: Wed, 29 Oct 2014 23:17:08 -0500
-Message-Id: <1414642633-3700-2-git-send-email-Larry.Finger@lwfinger.net> (sfid-20141030_051738_690235_DD4D4453)
-In-Reply-To: <1414642633-3700-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1414642633-3700-1-git-send-email-Larry.Finger@lwfinger.net>
+	Mon, 27 Oct 2014 13:45:10 -0400
+Date: Mon, 27 Oct 2014 13:37:33 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: Re: pull request: iwlwifi 2014-10-21
+Message-ID: <20141027173733.GC28300@tuxdriver.com> (sfid-20141027_184521_003974_4E415C84)
+References: <CANUX_P0iZO6AGwcsKO3+xZZcH5ns+vMUimo+BxHNpyBhhURKRw@mail.gmail.com>
+ <20141023174807.GB3639@tuxdriver.com>
+ <CANUX_P2PLeomX0EA9EG1fhKfogP1-pKZ+N9ON_oddYdC-e4=Wg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CANUX_P2PLeomX0EA9EG1fhKfogP1-pKZ+N9ON_oddYdC-e4=Wg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The recent changes in checking for Bluetooth status added some callbacks to code
-in rtlwifi. To make certain that all callbacks are defined, a dummy routine has been
-added to rtlwifi, and the drivers that need to use it are modified.
+On Thu, Oct 23, 2014 at 09:24:33PM +0300, Emmanuel Grumbach wrote:
+> On Thu, Oct 23, 2014 at 8:48 PM, John W. Linville
+> <linville@tuxdriver.com> wrote:
+> > I do not have the 3.18-rc1 tag, because Dave doesn't have it yet in
+> > the net.git tre.  Please rebase.
+> >
+> 
+> Done - new tag:
+> 
+> git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git
+> tags/iwlwifi-for-john-2014-10-23
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Murilo Opsfelder Araujo <mopsfelder@gmail.com>
----
- drivers/net/wireless/rtlwifi/core.c         | 6 ++++++
- drivers/net/wireless/rtlwifi/core.h         | 1 +
- drivers/net/wireless/rtlwifi/rtl8192ce/sw.c | 1 +
- drivers/net/wireless/rtlwifi/rtl8192de/sw.c | 1 +
- drivers/net/wireless/rtlwifi/rtl8192se/sw.c | 1 +
- 5 files changed, 10 insertions(+)
+Pulling now...
+ 
+> > Thanks,
+> >
+> > John
+> >
+> > On Tue, Oct 21, 2014 at 12:29:08PM +0300, Emmanuel Grumbach wrote:
+> >> Hi John,
+> >>
+> >> Here is a first pull request for 3.18. This time I chose to work with
+> >> signed tags instead of signing emails.
+> >> Let me know if this is an issue for you.
+> >> Description of the content below.
+> >>
+> >> Note that this you haven't updated your trees yet and Linus released
+> >> 3.18-rc1 already,
+> >> I decided to base my trees on Linus's tag. Let me know you want me to
+> >> change this.
+> >>
+> >> Thanks!
+> >>
+> >> The following changes since commit f114040e3ea6e07372334ade75d1ee0775c355e1:
+> >>
+> >>   Linux 3.18-rc1 (2014-10-19 18:08:38 -0700)
+> >>
+> >> are available in the git repository at:
+> >>
+> >>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git
+> >> tags/iwlwifi-for-john-2014-10-21
+> >>
+> >> for you to fetch changes up to ae35aee606d0ea5678c75fa058ea6eb048fc1d79:
+> >>
+> >>   Revert "iwlwifi: mvm: treat EAPOLs like mgmt frames wrt rate"
+> >> (2014-10-21 09:00:27 +0300)
+> >>
+> >> ----------------------------------------------------------------
+> >> I revert here a patch that caused interoperability issues.
+> >> dvm gets a fix for a bug that was reported by many users.
+> >> Two minor fixes for BT Coex and platform power fix that helps
+> >> reducing latency when the PCIe link goes to low power states.
+> >>
+> >> ----------------------------------------------------------------
+> >> Emmanuel Grumbach (5):
+> >>       iwlwifi: configure the LTR
+> >>       iwlwifi: mvm: BT Coex - update the MPLUT Boost register value
+> >>       iwlwifi: mvm: BT coex - fix BT prio for probe requests
+> >>       iwlwifi: dvm: drop non VO frames when flushing
+> >>       Revert "iwlwifi: mvm: treat EAPOLs like mgmt frames wrt rate"
+> >>
+> >> Haim Dreyfuss (1):
+> >>       iwlwifi: mvm: Add tx power condition to bss_info_changed_ap_ibss
+> >>
+> >> Liad Kaufman (1):
+> >>       iwlwifi: 8000: fix string given to MODULE_FIRMWARE
+> >>
+> >> Matti Gottlieb (1):
+> >>       iwlwifi: mvm: ROC - bug fixes around time events and locking
+> >>
+> >>  drivers/net/wireless/iwlwifi/dvm/mac80211.c     | 24 +++++++++++++-----------
+> >>  drivers/net/wireless/iwlwifi/iwl-8000.c         |  3 ++-
+> >>  drivers/net/wireless/iwlwifi/iwl-trans.h        |  2 ++
+> >>  drivers/net/wireless/iwlwifi/mvm/coex.c         |  4 ++--
+> >>  drivers/net/wireless/iwlwifi/mvm/coex_legacy.c  |  4 ++--
+> >>  drivers/net/wireless/iwlwifi/mvm/fw-api-power.h | 35
+> >> ++++++++++++++++++++++++++++++++++-
+> >>  drivers/net/wireless/iwlwifi/mvm/fw-api.h       |  1 +
+> >>  drivers/net/wireless/iwlwifi/mvm/fw.c           |  9 +++++++++
+> >>  drivers/net/wireless/iwlwifi/mvm/mac80211.c     | 32
+> >> +++++++++++++++++++++++---------
+> >>  drivers/net/wireless/iwlwifi/mvm/ops.c          |  1 +
+> >>  drivers/net/wireless/iwlwifi/mvm/scan.c         |  3 ++-
+> >>  drivers/net/wireless/iwlwifi/mvm/time-event.c   |  2 +-
+> >>  drivers/net/wireless/iwlwifi/mvm/tx.c           |  8 ++------
+> >>  drivers/net/wireless/iwlwifi/pcie/trans.c       | 16 +++++++++-------
+> >>  14 files changed, 103 insertions(+), 41 deletions(-)
+> >> --
+> >> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> >> the body of a message to majordomo@vger.kernel.org
+> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >>
+> >
+> > --
+> > John W. Linville                Someday the world will need a hero, and you
+> > linville@tuxdriver.com                  might be all we have.  Be ready.
+> 
 
-diff --git a/drivers/net/wireless/rtlwifi/core.c b/drivers/net/wireless/rtlwifi/core.c
-index f6179bc..07dae0d 100644
---- a/drivers/net/wireless/rtlwifi/core.c
-+++ b/drivers/net/wireless/rtlwifi/core.c
-@@ -1828,3 +1828,9 @@ const struct ieee80211_ops rtl_ops = {
- 	.flush = rtl_op_flush,
- };
- EXPORT_SYMBOL_GPL(rtl_ops);
-+
-+bool rtl_btc_status_false(void)
-+{
-+	return false;
-+}
-+EXPORT_SYMBOL_GPL(rtl_btc_status_false);
-diff --git a/drivers/net/wireless/rtlwifi/core.h b/drivers/net/wireless/rtlwifi/core.h
-index 59cd3b9..624e1dc 100644
---- a/drivers/net/wireless/rtlwifi/core.h
-+++ b/drivers/net/wireless/rtlwifi/core.h
-@@ -42,5 +42,6 @@ void rtl_rfreg_delay(struct ieee80211_hw *hw, enum radio_path rfpath, u32 addr,
- 		     u32 mask, u32 data);
- void rtl_bb_delay(struct ieee80211_hw *hw, u32 addr, u32 data);
- bool rtl_cmd_send_packet(struct ieee80211_hw *hw, struct sk_buff *skb);
-+bool rtl_btc_status_false(void);
- 
- #endif
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c b/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
-index d86b5b5..46ea076 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
-@@ -244,6 +244,7 @@ static struct rtl_hal_ops rtl8192ce_hal_ops = {
- 	.phy_lc_calibrate = _rtl92ce_phy_lc_calibrate,
- 	.phy_set_bw_mode_callback = rtl92ce_phy_set_bw_mode_callback,
- 	.dm_dynamic_txpower = rtl92ce_dm_dynamic_txpower,
-+	.get_btc_status = rtl_btc_status_false,
- };
- 
- static struct rtl_mod_params rtl92ce_mod_params = {
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/sw.c b/drivers/net/wireless/rtlwifi/rtl8192de/sw.c
-index edab5a5..a0aba08 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192de/sw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192de/sw.c
-@@ -251,6 +251,7 @@ static struct rtl_hal_ops rtl8192de_hal_ops = {
- 	.get_rfreg = rtl92d_phy_query_rf_reg,
- 	.set_rfreg = rtl92d_phy_set_rf_reg,
- 	.linked_set_reg = rtl92d_linked_set_reg,
-+	.get_btc_status = rtl_btc_status_false,
- };
- 
- static struct rtl_mod_params rtl92de_mod_params = {
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/sw.c b/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
-index 1bff2a0..5e16984 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
-@@ -294,6 +294,7 @@ static struct rtl_hal_ops rtl8192se_hal_ops = {
- 	.set_bbreg = rtl92s_phy_set_bb_reg,
- 	.get_rfreg = rtl92s_phy_query_rf_reg,
- 	.set_rfreg = rtl92s_phy_set_rf_reg,
-+	.get_btc_status = rtl_btc_status_false,
- };
- 
- static struct rtl_mod_params rtl92se_mod_params = {
 -- 
-2.1.1
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
