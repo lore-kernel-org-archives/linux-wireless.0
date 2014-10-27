@@ -1,53 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:56426 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750720AbaJFFsu (ORCPT
+Received: from smtprelay0101.hostedemail.com ([216.40.44.101]:44381 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751326AbaJ0FZU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Oct 2014 01:48:50 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH 1/6] ath: Fix smatch warning
-Date: Mon,  6 Oct 2014 11:19:34 +0530
-Message-Id: <1412574579-22532-2-git-send-email-sujith@msujith.org> (sfid-20141006_074859_607722_52101F37)
-In-Reply-To: <1412574579-22532-1-git-send-email-sujith@msujith.org>
-References: <1412574579-22532-1-git-send-email-sujith@msujith.org>
+	Mon, 27 Oct 2014 01:25:20 -0400
+From: Joe Perches <joe@perches.com>
+To: linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+	dri-devel@lists.freedesktop.org, ivtv-devel@ivtvdriver.org,
+	linux-media@vger.kernel.org, patches@opensource.wolfsonmicro.com,
+	netdev@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-parisc@vger.kernel.org
+Cc: linux-input@vger.kernel.org, linux-wireless@vger.kernel.org,
+	alsa-devel@alsa-project.org
+Subject: [PATCH 00/11] treewide: mask then shift defects and style updates
+Date: Sun, 26 Oct 2014 22:24:56 -0700
+Message-Id: <cover.1414387334.git.joe@perches.com> (sfid-20141027_062848_542111_69B9D767)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+logical mask has lower precedence than shift but should be
+done before the shift so parentheses are generally required.
 
-drivers/net/wireless/ath/main.c:88 ath_printk()
-	 error: we previously assumed 'common->hw' could be null (see line 82)
+And when masking with a fixed value after a shift, normal kernel
+style has the shift on the left, then the shift on the right so
+convert a few non-conforming uses.
 
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/main.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+Joe Perches (11):
+  block: nvme-scsi: Fix probable mask then right shift defects
+  radeon: evergreen: Fix probable mask then right shift defects
+  aiptek: Fix probable mask then right shift defects
+  dvb-net: Fix probable mask then right shift defects
+  cx25840/cx18: Use standard ordering of mask and shift
+  wm8350-core: Fix probable mask then right shift defect
+  iwlwifi: dvm: Fix probable mask then right shift defect
+  ssb: driver_chip_comon_pmu: Fix probable mask then right shift defect
+  tty: ipwireless: Fix probable mask then right shift defects
+  hwa-hc: Fix probable mask then right shift defect
+  sound: ad1889: Fix probable mask then right shift defects
 
-diff --git a/drivers/net/wireless/ath/main.c b/drivers/net/wireless/ath/main.c
-index 83f47af..338d723 100644
---- a/drivers/net/wireless/ath/main.c
-+++ b/drivers/net/wireless/ath/main.c
-@@ -79,13 +79,13 @@ void ath_printk(const char *level, const struct ath_common* common,
- 	vaf.fmt = fmt;
- 	vaf.va = &args;
- 
--	if (common && common->hw && common->hw->wiphy)
-+	if (common && common->hw && common->hw->wiphy) {
- 		printk("%sath: %s: %pV",
- 		       level, wiphy_name(common->hw->wiphy), &vaf);
--	else
-+		trace_ath_log(common->hw->wiphy, &vaf);
-+	} else {
- 		printk("%sath: %pV", level, &vaf);
--
--	trace_ath_log(common->hw->wiphy, &vaf);
-+	}
- 
- 	va_end(args);
- }
+ drivers/block/nvme-scsi.c                | 12 ++++++------
+ drivers/gpu/drm/radeon/evergreen.c       |  3 ++-
+ drivers/input/tablet/aiptek.c            |  6 +++---
+ drivers/media/dvb-core/dvb_net.c         |  4 +++-
+ drivers/media/i2c/cx25840/cx25840-core.c | 12 ++++++------
+ drivers/media/pci/cx18/cx18-av-core.c    | 16 ++++++++--------
+ drivers/mfd/wm8350-core.c                |  2 +-
+ drivers/net/wireless/iwlwifi/dvm/lib.c   |  4 ++--
+ drivers/ssb/driver_chipcommon_pmu.c      |  4 ++--
+ drivers/tty/ipwireless/hardware.c        | 12 ++++++------
+ drivers/usb/host/hwa-hc.c                |  2 +-
+ sound/pci/ad1889.c                       |  8 ++++----
+ 12 files changed, 44 insertions(+), 41 deletions(-)
+
 -- 
 2.1.2
 
