@@ -1,37 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:47741 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751266AbaJGOJh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Oct 2014 10:09:37 -0400
-Message-ID: <1412690969.1825.18.camel@jlt4.sipsolutions.net> (sfid-20141007_160941_044949_901381C7)
-Subject: Re: [RFC] mac80211: enable DFS with channel contexts
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 07 Oct 2014 16:09:29 +0200
-In-Reply-To: <CA+BoTQmrsA9Sk12ePaSaNqox2YOPjG0yqB2avRcB+a4qFgmz+w@mail.gmail.com> (sfid-20141007_154328_696584_5EA09D74)
-References: <1412232304-7588-1-git-send-email-michal.kazior@tieto.com>
-	 <1412671748.1825.4.camel@jlt4.sipsolutions.net>
-	 <CA+BoTQmrsA9Sk12ePaSaNqox2YOPjG0yqB2avRcB+a4qFgmz+w@mail.gmail.com>
-	 (sfid-20141007_154328_696584_5EA09D74)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from relay1.mentorg.com ([192.94.38.131]:51238 "EHLO
+	relay1.mentorg.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751024AbaJ0H7Q (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Oct 2014 03:59:16 -0400
+From: Sanjeev Sharma <sanjeev_sharma@mentor.com>
+To: <Larry.Finger@lwfinger.net>, <Jes.Sorensen@redhat.com>
+CC: <gregkh@linuxfoundation.org>, <linux-wireless@vger.kernel.org>,
+	<devel@driverdev.osuosl.org>, <linux-kernel@vger.kernel.org>,
+	Sanjeev Sharma <sanjeev_sharma@mentor.com>,
+	Sanjeev Sharma <Sanjeev_Sharma@mentor.com>
+Subject: [PATCH] staging:rtl8723au: core: Fix error reported by checkpatch.
+Date: Mon, 27 Oct 2014 13:29:05 +0530
+Message-ID: <1414396745-8845-1-git-send-email-sanjeev_sharma@mentor.com> (sfid-20141027_085933_584157_080BF0F7)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-10-07 at 15:43 +0200, Michal Kazior wrote:
+This is a patch to the rtw_cmd.c file that fixes
+Error reported by checkpatch.
 
-> Correct. However ieee80211_radar_detected() takes only ieee80211_hw as
-> an argument now. Skipping this check in mac80211 might bite later if
-> someone extends cfg80211 later for multi-channel radar detection with
-> non-mac80211 driver in mind and forgets about updating mac80211.
+Signed-off-by: Sanjeev Sharma <Sanjeev_Sharma@mentor.com>
+---
+ drivers/staging/rtl8723au/core/rtw_cmd.c | 83 +++++++++++++++-----------------
+ 1 file changed, 40 insertions(+), 43 deletions(-)
 
-Yeah that's a good point.
-
-> Or are you okay with relying on the cfg80211 check alone? If so I'll
-> update the patch.
-
-No, it's fine, just wanted to clarify.
-
-johannes
+diff --git a/drivers/staging/rtl8723au/core/rtw_cmd.c b/drivers/staging/rtl8723au/core/rtw_cmd.c
+index 4eaa502..c1f6254 100644
+--- a/drivers/staging/rtl8723au/core/rtw_cmd.c
++++ b/drivers/staging/rtl8723au/core/rtw_cmd.c
+@@ -957,7 +957,7 @@ static void traffic_status_watchdog(struct rtw_adapter *padapter)
+ 		/*  check traffic for  powersaving. */
+ 			if (((pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod +
+ 			      pmlmepriv->LinkDetectInfo.NumTxOkInPeriod) > 8) ||
+-			    pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod >2)
++			    pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod > 2)
+ 				bEnterPS = false;
+ 			else
+ 				bEnterPS = true;
+@@ -1017,46 +1017,44 @@ static void lps_ctrl_wk_hdl(struct rtw_adapter *padapter, u8 lps_ctrl_type)
+ 	    check_fwstate(pmlmepriv, WIFI_ADHOC_STATE))
+ 		return;
+ 
+-	switch (lps_ctrl_type)
+-	{
+-		case LPS_CTRL_SCAN:
+-			rtl8723a_BT_wifiscan_notify(padapter, true);
+-			if (!rtl8723a_BT_using_antenna_1(padapter)) {
+-				if (check_fwstate(pmlmepriv, _FW_LINKED))
+-					LPS_Leave23a(padapter);
+-			}
+-			break;
+-		case LPS_CTRL_JOINBSS:
++	switch (lps_ctrl_type) {
++	case LPS_CTRL_SCAN:
++		rtl8723a_BT_wifiscan_notify(padapter, true);
++		if (!rtl8723a_BT_using_antenna_1(padapter)) {
++			if (check_fwstate(pmlmepriv, _FW_LINKED))
+ 			LPS_Leave23a(padapter);
+-			break;
+-		case LPS_CTRL_CONNECT:
+-			mstatus = 1;/* connect */
+-			/*  Reset LPS Setting */
+-			padapter->pwrctrlpriv.LpsIdleCount = 0;
+-			rtl8723a_set_FwJoinBssReport_cmd(padapter, 1);
+-			rtl8723a_BT_mediastatus_notify(padapter, mstatus);
+-			break;
+-		case LPS_CTRL_DISCONNECT:
+-			mstatus = 0;/* disconnect */
+-			rtl8723a_BT_mediastatus_notify(padapter, mstatus);
+-			if (!rtl8723a_BT_using_antenna_1(padapter))
+-				LPS_Leave23a(padapter);
+-			rtl8723a_set_FwJoinBssReport_cmd(padapter, 0);
+-			break;
+-		case LPS_CTRL_SPECIAL_PACKET:
+-			pwrpriv->DelayLPSLastTimeStamp = jiffies;
+-			rtl8723a_BT_specialpacket_notify(padapter);
+-			if (!rtl8723a_BT_using_antenna_1(padapter))
+-				LPS_Leave23a(padapter);
+-			break;
+-		case LPS_CTRL_LEAVE:
+-			rtl8723a_BT_lps_leave(padapter);
+-			if (!rtl8723a_BT_using_antenna_1(padapter))
+-				LPS_Leave23a(padapter);
+-			break;
+-
+-		default:
+-			break;
++		}
++		break;
++	case LPS_CTRL_JOINBSS:
++		LPS_Leave23a(padapter);
++		break;
++	case LPS_CTRL_CONNECT:
++		mstatus = 1;/* connect */
++		/*  Reset LPS Setting */
++		padapter->pwrctrlpriv.LpsIdleCount = 0;
++		rtl8723a_set_FwJoinBssReport_cmd(padapter, 1);
++		rtl8723a_BT_mediastatus_notify(padapter, mstatus);
++		break;
++	case LPS_CTRL_DISCONNECT:
++		mstatus = 0;/* disconnect */
++		rtl8723a_BT_mediastatus_notify(padapter, mstatus);
++		if (!rtl8723a_BT_using_antenna_1(padapter))
++			LPS_Leave23a(padapter);
++		rtl8723a_set_FwJoinBssReport_cmd(padapter, 0);
++		break;
++	case LPS_CTRL_SPECIAL_PACKET:
++		pwrpriv->DelayLPSLastTimeStamp = jiffies;
++		rtl8723a_BT_specialpacket_notify(padapter);
++		if (!rtl8723a_BT_using_antenna_1(padapter))
++			LPS_Leave23a(padapter);
++		break;
++	case LPS_CTRL_LEAVE:
++		rtl8723a_BT_lps_leave(padapter);
++		if (!rtl8723a_BT_using_antenna_1(padapter))
++			LPS_Leave23a(padapter);
++		break;
++	default:
++		break;
+ 	}
+ }
+ 
+@@ -1152,7 +1150,7 @@ static void rtw_chk_hi_queue_hdl(struct rtw_adapter *padapter)
+ 
+ 			cnt++;
+ 
+-			if (cnt>10)
++			if (cnt > 10)
+ 				break;
+ 
+ 			val = rtl8723a_chk_hi_queue_empty(padapter);
+@@ -1305,8 +1303,7 @@ int rtw_drvextra_cmd_hdl23a(struct rtw_adapter *padapter, const u8 *pbuf)
+ 
+ 	pdrvextra_cmd = (struct drvextra_cmd_parm *)pbuf;
+ 
+-	switch (pdrvextra_cmd->ec_id)
+-	{
++	switch (pdrvextra_cmd->ec_id) {
+ 	case DYNAMIC_CHK_WK_CID:
+ 		dynamic_chk_wk_hdl(padapter, pdrvextra_cmd->pbuf,
+ 				   pdrvextra_cmd->type_size);
+-- 
+1.7.11.7
 
