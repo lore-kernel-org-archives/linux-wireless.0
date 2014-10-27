@@ -1,39 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:10269 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751663AbaJIKq1 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:46045 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751026AbaJ0RpJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2014 06:46:27 -0400
-Message-ID: <54366781.8090005@broadcom.com> (sfid-20141009_124630_977080_116876E3)
-Date: Thu, 9 Oct 2014 12:46:25 +0200
-From: Arend van Spriel <arend@broadcom.com>
+	Mon, 27 Oct 2014 13:45:09 -0400
+Date: Mon, 27 Oct 2014 13:39:45 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: pull-request: mac80211 2014-10-23
+Message-ID: <20141027173945.GD28300@tuxdriver.com> (sfid-20141027_184518_873113_3E85A14A)
+References: <1414089336.1926.10.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: Michael Tokarev <mjt@tls.msk.ru>,
-	Maximilian Engelhardt <maxi@daemonizer.de>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	"brcm80211 development" <brcm80211-dev-list@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH][RTF][RFC] brcmsmac: add workaround for old BCM4313 devices
- with Bluetooth
-References: <1412843867-26563-1-git-send-email-zajec5@gmail.com>	<CACna6ry-+hzMJ4n5PG7GJq9fZ+zwU38HGt-xZkUqKEP8yX6avA@mail.gmail.com>	<54365985.1020104@broadcom.com>	<CACna6ryTwBQQnbZg+CSvoYakb4DA1+FH7j-XwfuYmoDzJORenA@mail.gmail.com>	<543661E1.3050606@broadcom.com>	<54366332.9060906@msgid.tls.msk.ru> <CACna6ryEoBYKoRvA7WKJLYva_oUkY+rMjkgo_wj66WhGkxXpgg@mail.gmail.com>
-In-Reply-To: <CACna6ryEoBYKoRvA7WKJLYva_oUkY+rMjkgo_wj66WhGkxXpgg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1414089336.1926.10.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/09/14 12:37, Rafał Miłecki wrote:
-> On 9 October 2014 12:28, Michael Tokarev<mjt@tls.msk.ru>  wrote:
->> 09.10.2014 14:22, Arend van Spriel wrote:
->>> I know where the function should be called according our driver and guess what:
->>>
->>>    if (bfl&   BFL_FEM&&   chip == 4313) {
->>
->> Can you fix whitespace there too, and add parens around the&  operation, while at it?
->
-> I think you didn't realize it's a pseudo-code / reference ;)
+On Thu, Oct 23, 2014 at 08:35:36PM +0200, Johannes Berg wrote:
+> John,
+> 
+> Please pull the below changes for the current 3.18 preparations. More
+> details below.
+> 
+> Thanks,
+> johannes
+> 
+> ---
+> 
+> The following changes since commit
+> 35a9ad8af0bb0fa3525e6d0d20e32551d226f38e:
+> 
+>   Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next (2014-10-08 21:40:54 -0400)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git
+> tags/mac80211-for-john-2014-10-23
+> 
+> for you to fetch changes up to 11b2357d5dbce999803e9055f8c09829a8a87db4:
+> 
+>   mac80211: minstrels: fix buffer overflow in HT debugfs rc_stats
+> (2014-10-20 16:37:01 +0200)
+> 
+> ----------------------------------------------------------------
+> Here are a few fixes for the wireless stack: one fixes the
+> RTS rate, one for a debugfs file, one to return the correct
+> channel to userspace, a sanity check for a userspace value
+> and the remaining two are just documentation fixes.
+> 
+> ----------------------------------------------------------------
+> Fabian Frederick (1):
+>       net: rfkill: kernel-doc warning fixes
+> 
+> Karl Beldan (2):
+>       mac80211: fix typo in starting baserate for rts_cts_rate_idx
+>       mac80211: minstrels: fix buffer overflow in HT debugfs rc_stats
+> 
+> Liad Kaufman (1):
+>       mac80211: fix warning on htmldocs for last_tdls_pkt_time
+> 
+> Luciano Coelho (2):
+>       mac80211: return the vif's chandef in ieee80211_cfg_get_channel()
+>       nl80211: sanity check the channel switch counter value
+> 
+>  net/mac80211/cfg.c                         |  2 +-
+>  net/mac80211/rate.c                        |  2 +-
+>  net/mac80211/rc80211_minstrel_debugfs.c    | 12 +++++++-----
+>  net/mac80211/rc80211_minstrel_ht_debugfs.c | 13 ++++++++-----
+>  net/mac80211/sta_info.h                    |  1 +
+>  net/rfkill/core.c                          |  4 ++--
+>  net/wireless/nl80211.c                     | 10 +++++++++-
+>  7 files changed, 29 insertions(+), 15 deletions(-)
 
-Indeed or just me being lazy :-p
+Pulling now...
 
-Regards,
-Arend
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
