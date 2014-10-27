@@ -1,170 +1,206 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:34577 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754428AbaJHGtW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Oct 2014 02:49:22 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: emmanuel.grumbach@intel.com, michal.kazior@tieto.com,
-	linux-wireless@vger.kernel.org
-Date: Wed,  8 Oct 2014 09:48:39 +0300
-Message-Id: <1412750920-15392-7-git-send-email-luca@coelho.fi> (sfid-20141008_084927_647329_13E1789A)
-In-Reply-To: <1412750920-15392-1-git-send-email-luca@coelho.fi>
-References: <1412750920-15392-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH v2 6/7] mac80211: wait for the first beacon on the new channel after CSA
+Received: from mga02.intel.com ([134.134.136.20]:36889 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752459AbaJ0Mne (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Oct 2014 08:43:34 -0400
+From: Tomasz Bursztyka <tomasz.bursztyka@linux.intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Tomasz Bursztyka <tomasz.bursztyka@linux.intel.com>
+Subject: [PATCH] wireless: nl80211: Broadcast CMD_NEW_INTERFACE and CMD_DEL_INTERFACE
+Date: Mon, 27 Oct 2014 14:43:27 +0200
+Message-Id: <1414413807-7649-1-git-send-email-tomasz.bursztyka@linux.intel.com> (sfid-20141027_134340_833740_6984A324)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+Let the other listeners being notified when a new or del interface
+command has been issued, thus reducing later necessary request to be in
+sync with current context.
 
-Instead of immediately reopening the queues (in case of block_tx),
-calling the post_channel_switch operation and sending the
-notification, wait for the first beacon on the new channel.  This
-makes sure that we don't lose packets if the AP/GO is not on the new
-channel yet.
-
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Signed-off-by: Tomasz Bursztyka <tomasz.bursztyka@linux.intel.com>
 ---
- net/mac80211/ieee80211_i.h |  2 ++
- net/mac80211/iface.c       |  2 ++
- net/mac80211/mlme.c        | 45 ++++++++++++++++++++++++++++++++-------------
- 3 files changed, 36 insertions(+), 13 deletions(-)
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index a9cc491..78d6121 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -434,6 +434,8 @@ struct ieee80211_if_managed {
+Hi, 
+
+In order not to change current API behavior for the command issuer, I kept
+the reply for NEW_INTERFACE unicasted, as well as the returned status for
+DEL_INTERFACE. This patch only add the notification for all other listeners.
+
+It bloats a bit nl80211_send_iface() function (I wanted to reuse its logic
+for both commands). Tell me if you would prefer a better way to do this.
+
+Tomasz
+
+ net/wireless/nl80211.c | 82 +++++++++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 67 insertions(+), 15 deletions(-)
+
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index cb9f5a4..b555c26 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2336,12 +2336,18 @@ static int nl80211_send_chandef(struct sk_buff *msg,
  
- 	unsigned int flags;
+ static int nl80211_send_iface(struct sk_buff *msg, u32 portid, u32 seq, int flags,
+ 			      struct cfg80211_registered_device *rdev,
+-			      struct wireless_dev *wdev)
++			      struct wireless_dev *wdev,
++			      enum nl80211_iftype iftype, u64 wdev_id,
++			      u8 *wdev_address, struct net_device *dev,
++			      u8 ssid_len, u8 *ssid, bool new)
+ {
+-	struct net_device *dev = wdev->netdev;
++	u8 cmd = NL80211_CMD_NEW_INTERFACE;
+ 	void *hdr;
  
-+	bool csa_waiting_bcn;
+-	hdr = nl80211hdr_put(msg, portid, seq, flags, NL80211_CMD_NEW_INTERFACE);
++	if (!new)
++		cmd = NL80211_CMD_DEL_INTERFACE;
 +
- 	bool beacon_crc_valid;
- 	u32 beacon_crc;
++	hdr = nl80211hdr_put(msg, portid, seq, flags, cmd);
+ 	if (!hdr)
+ 		return -1;
  
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index af23722..e469b33 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -842,6 +842,8 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 	sdata_lock(sdata);
- 	mutex_lock(&local->mtx);
- 	sdata->vif.csa_active = false;
-+	if (sdata->vif.type == NL80211_IFTYPE_STATION)
-+		sdata->u.mgd.csa_waiting_bcn = false;
- 	if (sdata->csa_block_tx) {
- 		ieee80211_wake_vif_queues(local, sdata,
- 					  IEEE80211_QUEUE_STOP_REASON_CSA);
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 2e29cc3..109812f 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1001,31 +1001,44 @@ static void ieee80211_chswitch_work(struct work_struct *work)
- 	/* XXX: shouldn't really modify cfg80211-owned data! */
- 	ifmgd->associated->channel = sdata->csa_chandef.chan;
+@@ -2351,15 +2357,15 @@ static int nl80211_send_iface(struct sk_buff *msg, u32 portid, u32 seq, int flag
+ 		goto nla_put_failure;
  
--	sdata->vif.csa_active = false;
-+	ifmgd->csa_waiting_bcn = true;
-+
-+	ieee80211_sta_reset_beacon_monitor(sdata);
-+	ieee80211_sta_reset_conn_monitor(sdata);
-+
-+out:
-+	mutex_unlock(&local->chanctx_mtx);
-+	mutex_unlock(&local->mtx);
-+	sdata_unlock(sdata);
-+}
-+
-+static void ieee80211_chswitch_post_beacon(struct ieee80211_sub_if_data *sdata)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
-+	int ret;
-+
-+	sdata_assert_lock(sdata);
-+
-+	WARN_ON(!sdata->vif.csa_active);
+ 	if (nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx) ||
+-	    nla_put_u32(msg, NL80211_ATTR_IFTYPE, wdev->iftype) ||
+-	    nla_put_u64(msg, NL80211_ATTR_WDEV, wdev_id(wdev)) ||
+-	    nla_put(msg, NL80211_ATTR_MAC, ETH_ALEN, wdev_address(wdev)) ||
++	    nla_put_u32(msg, NL80211_ATTR_IFTYPE, iftype) ||
++	    nla_put_u64(msg, NL80211_ATTR_WDEV, wdev_id) ||
++	    nla_put(msg, NL80211_ATTR_MAC, ETH_ALEN, wdev_address) ||
+ 	    nla_put_u32(msg, NL80211_ATTR_GENERATION,
+ 			rdev->devlist_generation ^
+ 			(cfg80211_rdev_list_generation << 2)))
+ 		goto nla_put_failure;
  
--	/* XXX: wait for a beacon first? */
- 	if (sdata->csa_block_tx) {
- 		ieee80211_wake_vif_queues(local, sdata,
- 					  IEEE80211_QUEUE_STOP_REASON_CSA);
- 		sdata->csa_block_tx = false;
- 	}
+-	if (rdev->ops->get_channel) {
++	if (wdev && rdev->ops->get_channel) {
+ 		int ret;
+ 		struct cfg80211_chan_def chandef;
  
-+	sdata->vif.csa_active = false;
-+	ifmgd->csa_waiting_bcn = false;
-+
- 	ret = drv_post_channel_switch(sdata);
- 	if (ret) {
- 		sdata_info(sdata,
- 			   "driver post channel switch failed, disconnecting\n");
- 		ieee80211_queue_work(&local->hw,
- 				     &ifmgd->csa_connection_drop_work);
--		goto out;
-+		return;
- 	}
--
--	ieee80211_sta_reset_beacon_monitor(sdata);
--	ieee80211_sta_reset_conn_monitor(sdata);
--
--out:
--	mutex_unlock(&local->chanctx_mtx);
--	mutex_unlock(&local->mtx);
--	sdata_unlock(sdata);
- }
- 
- void ieee80211_chswitch_done(struct ieee80211_vif *vif, bool success)
-@@ -1943,6 +1956,7 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_vif_release_channel(sdata);
- 
- 	sdata->vif.csa_active = false;
-+	ifmgd->csa_waiting_bcn = false;
- 	if (sdata->csa_block_tx) {
- 		ieee80211_wake_vif_queues(local, sdata,
- 					  IEEE80211_QUEUE_STOP_REASON_CSA);
-@@ -2191,6 +2205,7 @@ static void __ieee80211_disconnect(struct ieee80211_sub_if_data *sdata)
- 			       true, frame_buf);
- 	mutex_lock(&local->mtx);
- 	sdata->vif.csa_active = false;
-+	ifmgd->csa_waiting_bcn = false;
- 	if (sdata->csa_block_tx) {
- 		ieee80211_wake_vif_queues(local, sdata,
- 					  IEEE80211_QUEUE_STOP_REASON_CSA);
-@@ -3215,6 +3230,9 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+@@ -2370,10 +2376,8 @@ static int nl80211_send_iface(struct sk_buff *msg, u32 portid, u32 seq, int flag
  		}
  	}
  
-+	if (ifmgd->csa_waiting_bcn)
-+		ieee80211_chswitch_post_beacon(sdata);
+-	if (wdev->ssid_len) {
+-		if (nla_put(msg, NL80211_ATTR_SSID, wdev->ssid_len, wdev->ssid))
++	if (ssid_len && nla_put(msg, NL80211_ATTR_SSID, ssid_len, ssid))
+ 			goto nla_put_failure;
+-	}
+ 
+ 	return genlmsg_end(msg, hdr);
+ 
+@@ -2382,6 +2386,28 @@ static int nl80211_send_iface(struct sk_buff *msg, u32 portid, u32 seq, int flag
+ 	return -EMSGSIZE;
+ }
+ 
++static void nl80211_notify_iface(struct cfg80211_registered_device *rdev,
++				 struct wireless_dev *wdev,
++				 enum nl80211_iftype iftype, u64 wdev_id,
++				 u8 *wdev_address, struct net_device *dev,
++				 u8 ssid_len, u8 *ssid, bool new, u32 portid)
++{
++	struct sk_buff *msg;
 +
- 	if (ncrc == ifmgd->beacon_crc && ifmgd->beacon_crc_valid)
- 		return;
- 	ifmgd->beacon_crc = ncrc;
-@@ -3687,11 +3705,12 @@ static void ieee80211_sta_bcn_mon_timer(unsigned long data)
- 	struct ieee80211_sub_if_data *sdata =
- 		(struct ieee80211_sub_if_data *) data;
- 	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
++	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
++	if (!msg)
++		return;
++
++	if (nl80211_send_iface(msg, 0, 0, 0, rdev, wdev, iftype, wdev_id,
++			       wdev_address, dev, ssid_len, ssid, new) < 0) {
++		nlmsg_free(msg);
++		return;
++	}
++
++	genlmsg_multicast_netns(&nl80211_fam, wiphy_net(&rdev->wiphy),
++				msg, portid, NL80211_MCGRP_CONFIG, GFP_KERNEL);
++}
++
+ static int nl80211_dump_interface(struct sk_buff *skb, struct netlink_callback *cb)
+ {
+ 	int wp_idx = 0;
+@@ -2408,7 +2434,11 @@ static int nl80211_dump_interface(struct sk_buff *skb, struct netlink_callback *
+ 			}
+ 			if (nl80211_send_iface(skb, NETLINK_CB(cb->skb).portid,
+ 					       cb->nlh->nlmsg_seq, NLM_F_MULTI,
+-					       rdev, wdev) < 0) {
++					       rdev, wdev, wdev->iftype,
++					       wdev_id(wdev),
++					       wdev_address(wdev),
++					       wdev->netdev, wdev->ssid_len,
++					       wdev->ssid, true) < 0) {
+ 				goto out;
+ 			}
+ 			if_idx++;
+@@ -2436,7 +2466,9 @@ static int nl80211_get_interface(struct sk_buff *skb, struct genl_info *info)
+ 		return -ENOMEM;
  
- 	if (local->quiescing)
- 		return;
+ 	if (nl80211_send_iface(msg, info->snd_portid, info->snd_seq, 0,
+-			       rdev, wdev) < 0) {
++			       rdev, wdev, wdev->iftype, wdev_id(wdev),
++			       wdev_address(wdev), wdev->netdev,
++			       wdev->ssid_len, wdev->ssid, true) < 0) {
+ 		nlmsg_free(msg);
+ 		return -ENOBUFS;
+ 	}
+@@ -2675,11 +2707,17 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
+ 	}
  
--	if (sdata->vif.csa_active)
-+	if (sdata->vif.csa_active && !ifmgd->csa_waiting_bcn)
- 		return;
+ 	if (nl80211_send_iface(msg, info->snd_portid, info->snd_seq, 0,
+-			       rdev, wdev) < 0) {
++			       rdev, wdev, wdev->iftype, wdev_id(wdev),
++			       wdev_address(wdev), wdev->netdev,
++			       wdev->ssid_len, wdev->ssid, true) < 0) {
+ 		nlmsg_free(msg);
+ 		return -ENOBUFS;
+ 	}
  
- 	sdata->u.mgd.connection_loss = false;
-@@ -3709,7 +3728,7 @@ static void ieee80211_sta_conn_mon_timer(unsigned long data)
- 	if (local->quiescing)
- 		return;
++	nl80211_notify_iface(rdev, wdev, wdev->iftype, wdev_id(wdev),
++			     wdev_address(wdev), wdev->netdev, wdev->ssid_len,
++			     wdev->ssid, true, info->snd_portid);
++
+ 	return genlmsg_reply(msg, info);
+ }
  
--	if (sdata->vif.csa_active)
-+	if (sdata->vif.csa_active && !ifmgd->csa_waiting_bcn)
- 		return;
+@@ -2687,10 +2725,17 @@ static int nl80211_del_interface(struct sk_buff *skb, struct genl_info *info)
+ {
+ 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+ 	struct wireless_dev *wdev = info->user_ptr[1];
++	enum nl80211_iftype iftype = wdev->iftype;
++	struct net_device *dev = wdev->netdev;
++	u8 address[ETH_ALEN];
++	u64 id = wdev_id(wdev);
++	int status;
  
- 	ieee80211_queue_work(&local->hw, &ifmgd->monitor_work);
+ 	if (!rdev->ops->del_virtual_intf)
+ 		return -EOPNOTSUPP;
+ 
++	memcpy(address, wdev_address(wdev), ETH_ALEN);
++
+ 	/*
+ 	 * If we remove a wireless device without a netdev then clear
+ 	 * user_ptr[1] so that nl80211_post_doit won't dereference it
+@@ -2698,10 +2743,17 @@ static int nl80211_del_interface(struct sk_buff *skb, struct genl_info *info)
+ 	 * since the wdev has been freed, unlike with a netdev where
+ 	 * we need the dev_put() for the netdev to really be freed.
+ 	 */
+-	if (!wdev->netdev)
++	if (!dev)
+ 		info->user_ptr[1] = NULL;
+ 
+-	return rdev_del_virtual_intf(rdev, wdev);
++	status = rdev_del_virtual_intf(rdev, wdev);
++	if (status < 0)
++		return status;
++
++	nl80211_notify_iface(rdev, NULL, iftype, id, address, dev,
++			     0, NULL, false, info->snd_portid);
++
++	return status;
+ }
+ 
+ static int nl80211_set_noack_map(struct sk_buff *skb, struct genl_info *info)
 -- 
-2.1.1
+2.0.4
 
