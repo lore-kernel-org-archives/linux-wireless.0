@@ -1,121 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3-smtp.messagingengine.com ([66.111.4.27]:52928 "EHLO
-	out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753163AbaJUH2E convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Oct 2014 03:28:04 -0400
-Received: from compute1.internal (compute1.nyi.internal [10.202.2.41])
-	by gateway2.nyi.internal (Postfix) with ESMTP id 503DE208D9
-	for <linux-wireless@vger.kernel.org>; Tue, 21 Oct 2014 03:28:04 -0400 (EDT)
-Message-Id: <1413876484.3481910.181413525.516B5A23@webmail.messagingengine.com> (sfid-20141021_092817_572200_C578EC50)
-From: =?UTF-8?Q?Lauren=C8=9Biu=20Nicola?= <lnicola@dend.ro>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: Dan Williams <dcbw@redhat.com>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:46830 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751377AbaJ0SPR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Oct 2014 14:15:17 -0400
+Date: Mon, 27 Oct 2014 14:04:37 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Sergey Ryazanov <ryazanov.s.a@gmail.com>
+Cc: Ralf Baechle <ralf@linux-mips.org>,
+	Linux MIPS <linux-mips@linux-mips.org>,
+	Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net
+Subject: Re: [PATCH v2 11/13] ath5k: revert AHB bus support removing
+Message-ID: <20141027180436.GE28300@tuxdriver.com> (sfid-20141027_191525_435514_8400FA22)
+References: <1413932631-12866-1-git-send-email-ryazanov.s.a@gmail.com>
+ <1413932631-12866-12-git-send-email-ryazanov.s.a@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-In-Reply-To: <CANUX_P06VvZ0uugayOvhZK0iM-NetftN5rZA27TtkYku66cGXA@mail.gmail.com>
-References: <1413463736.1316541.179720977.4FD32021@webmail.messagingengine.com>
- <1413510814.22769.6.camel@dcbw.local>
- <1413751717.2510219.180809145.0E693C29@webmail.messagingengine.com>
- <CANUX_P2RHVRorVABRfWVg39d4D8dj35v3fBpY3=3jvQ1U+mfEA@mail.gmail.com>
- <1413783023.2710583.180921653.10DFFCEE@webmail.messagingengine.com>
- <CANUX_P0Q7cNeBzQa=2WVZFJXPTLx8F6YQk9bGCf_3uYhc5RcGA@mail.gmail.com>
- <CANUX_P3EqgTX7cPJvQ3fWH1yijekE0G_8TiH2_OCS7nFASGtkA@mail.gmail.com>
- <1413789724.3063896.180943829.3F15F453@webmail.messagingengine.com>
- <CANUX_P1REqkSqN0dtak34OQ_pSGMtPvV3Vj61tW5wb1+n2A7mg@mail.gmail.com>
- <1413833365.2949853.181221645.22D54845@webmail.messagingengine.com>
- <CANUX_P3XzYBp7E=hScmc837TpuCr9VrxEYauG=sGMKfOCpX=qA@mail.gmail.com>
- <CANUX_P06VvZ0uugayOvhZK0iM-NetftN5rZA27TtkYku66cGXA@mail.gmail.com>
-Subject: Re: iwlwifi: Reason 7 periodic disconnect
-Date: Tue, 21 Oct 2014 10:28:04 +0300
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1413932631-12866-12-git-send-email-ryazanov.s.a@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have 3.17.1, which includes the patch you mention. I also verified
-that iwconfig reports that power management is disabled.
+On Wed, Oct 22, 2014 at 03:03:49AM +0400, Sergey Ryazanov wrote:
+> This reverts commit 093ec3c5337434f40d77c1af06c139da3e5ba6dc.
+> 
+> AHB bus code has been removed, since we did not have support Atheros
+> AR231x SoC, required for building the AHB version of ath5k. Now that
+> support WiSoC chips added we can restore functionality back.
+> 
+> Singed-off-by: Sergey Ryazanov <ryazanov.s.a@gmail.com>
+> Cc: Jiri Slaby <jirislaby@gmail.com>
+> Cc: Nick Kossifidis <mickflemm@gmail.com>
+> Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+> Cc: linux-wireless@vger.kernel.org
+> Cc: ath5k-devel@lists.ath5k.org
 
-I don't know how easy it is to recompile the DD-WRT kernel. One thing I
-could do is try another firmware instead of DD-WRT to see if the issue
-still occurs.
+Acked-by: John W. Linville <linville@tuxdriver.com>
 
-Laurentiu
-
-On Tue, Oct 21, 2014, at 08:31, Emmanuel Grumbach wrote:
-> On Tue, Oct 21, 2014 at 8:02 AM, Emmanuel Grumbach <egrumbach@gmail.com>
-> wrote:
-> > On Mon, Oct 20, 2014 at 10:29 PM, Laurențiu Nicola <lnicola@dend.ro> wrote:
-> >> No, nothing in the DD-WRT syslog. The IP seems to be the one cached by
-> >> my DHCP client. I also tried various suggestions found on the internet,
-> >> but nothing helped.
-> >>
-> >
-> > Can you please try to have another device in monitor mode to sniff the
-> > traffic going on?
-> > Felix, can you please tell me when DD-WRT can send a deauth with reason code 7?
-> >
-> > thanks.
-> 
-> Can you please disable power save?
-> For this, please make sure you have
-> https://git.kernel.org/cgit/linux/kernel/git/iwlwifi/iwlwifi-fixes.git/commit/?id=f8dfc607b2b460e8e8adfdfb3c5f5bba3a4ad01b
-> or at least have the module parameter.
-> I am wondering if the firmware is not sending frames because of power
-> save toggling.
-> 
-> I you could get more extensive logs from the AP it'd be great.
-> Running tracing on the AP would let us know why it thinks we are not
-> associated.
-> 
-> 
-> >
-> >> Laurentiu
-> >>
-> >> On Mon, Oct 20, 2014, at 11:23, Emmanuel Grumbach wrote:
-> >>> On Mon, Oct 20, 2014 at 10:22 AM, Laurențiu Nicola <lnicola@dend.ro>
-> >>> wrote:
-> >>> > One thing that might be relevant is that, although there is a static
-> >>> > DHCP lease configured (which works on Windows), the router/AP is giving
-> >>> > the laptop a different IP address. The reported MACs are the same, of
-> >>> > course. I don't know whether wpa_supplicant remembers and requests the
-> >>> > last IP it had, but the lease was already present when I configured it.
-> >>> >
-> >>> > The router runs DD-WRT and I don't have problems on Windows or Android.
-> >>> >
-> >>>
-> >>> I guess you can try to get some logs from the DD-WRT - but if the AP
-> >>> doesn't
-> >>> give the same address to Linux as in Windows - there is something
-> >>> fishy...
-> >>>
-> >>> > Laurentiu
-> >>> >
-> >>> > On Mon, Oct 20, 2014, at 10:12, Emmanuel Grumbach wrote:
-> >>> >> On Mon, Oct 20, 2014 at 10:06 AM, Emmanuel Grumbach <egrumbach@gmail.com>
-> >>> >> wrote:
-> >>> >> > On Mon, Oct 20, 2014 at 8:30 AM, Laurențiu Nicola <lnicola@dend.ro> wrote:
-> >>> >> >> Here: https://bpaste.net/show/bf6dc1847ce3
-> >>> >> >>
-> >>> >> >
-> >>> >> > Are you sure you had MAC80211_MLME_DEBUG?
-> >>> >> >
-> >>> >> >>
-> >>> >> Ok - You probably had it - sorry. But apparently the AP is really kicking
-> >>> >> us...
-> >>> >> What AP do you have?
-> >>> >> --
-> >>> >> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
-> >>> >> in
-> >>> >> the body of a message to majordomo@vger.kernel.org
-> >>> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >>> --
-> >>> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
-> >>> in
-> >>> the body of a message to majordomo@vger.kernel.org
-> >>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
-> in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
