@@ -1,65 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.ispras.ru ([83.149.199.45]:50939 "EHLO mail.ispras.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752782AbaJXUDX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Oct 2014 16:03:23 -0400
-From: Alexey Khoroshilov <khoroshilov@ispras.ru>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
-Subject: [PATCH] ath6kl: remove incorrect reset_resume handler
-Date: Sat, 25 Oct 2014 00:02:52 +0400
-Message-Id: <1414180972-16413-1-git-send-email-khoroshilov@ispras.ru> (sfid-20141024_220344_769819_7584873B)
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:42955 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750958AbaJ0PaN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Oct 2014 11:30:13 -0400
+Date: Mon, 27 Oct 2014 11:20:26 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Etna <etna@openmailbox.org>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: MediaTek WiFi hardware support in upstream kernel
+Message-ID: <20141027152026.GB19976@tuxdriver.com> (sfid-20141027_163038_682728_24B1DC76)
+References: <544DB5A8.7090405@openmailbox.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <544DB5A8.7090405@openmailbox.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Existing implementation of reset_resume handler just calls
-ath6kl_usb_remove() that deallocates all resources.
-It can lead to double free, etc. on disconnect.
+On Mon, Oct 27, 2014 at 11:02:00AM +0800, Etna wrote:
+> I am not a developer, but I stumbled upon this just a couple of days ago in
+> the OpenWRT forums:
+> 
+> https://forum.openwrt.org/viewtopic.php?id=53215
+> 
+> In short, MediaTek is looking for volunteers to help get their drivers
+> mainlined in the upstream kernels; this includes drivers for their USB and
+> PCI wifi hardware under both the MediaTek and Ralink brands. They are
+> willing to provide "chip info, reference driver, dev board, etc" and even
+> some degree of sponsorship, apparently subject to their management's
+> approval.
+> 
+> In exchange, they require that the volunteers fulfill the following
+> requirements:
+> - skilled in wifi driver development
+> - provide a suitable schedule / roadmap
+> - be able to get the code mainlined in the official linux kernel.
+> 
+> Those who are keen on taking up the task can contact the original poster at
+> hua.shao[AT]mediatek.com
+> 
+> **Disclaimer: I am in no way related to, or under the employ of MediaTek or
+> Ralink. I am only posting this here because I have a handful of MT wifi
+> chips which I hope to see being supported in the upstream kernel so that I
+> can actually use them under Linux,
 
-The patch removes reset_resume handler,
-so usb core could conservatively reset the driver.
+Well, this is mostly good to see.  I hope there is someone that wants
+to take-up the cause!
 
-Found by Linux Driver Verification project (linuxtesting.org).
+If someone is interested in working-on the project above but for
+whatever reason doesn't want to deal with MediaTek on their own,
+feel free to contact me.  I'll try to be helpful however I can.
 
-Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
----
- drivers/net/wireless/ath/ath6kl/usb.c | 9 ---------
- 1 file changed, 9 deletions(-)
+Thanks,
 
-diff --git a/drivers/net/wireless/ath/ath6kl/usb.c b/drivers/net/wireless/ath/ath6kl/usb.c
-index a6a5e40b3e98..9da3594fd010 100644
---- a/drivers/net/wireless/ath/ath6kl/usb.c
-+++ b/drivers/net/wireless/ath/ath6kl/usb.c
-@@ -1193,18 +1193,10 @@ static int ath6kl_usb_pm_resume(struct usb_interface *interface)
- 	return 0;
- }
- 
--static int ath6kl_usb_pm_reset_resume(struct usb_interface *intf)
--{
--	if (usb_get_intfdata(intf))
--		ath6kl_usb_remove(intf);
--	return 0;
--}
--
- #else
- 
- #define ath6kl_usb_pm_suspend NULL
- #define ath6kl_usb_pm_resume NULL
--#define ath6kl_usb_pm_reset_resume NULL
- 
- #endif
- 
-@@ -1222,7 +1214,6 @@ static struct usb_driver ath6kl_usb_driver = {
- 	.probe = ath6kl_usb_probe,
- 	.suspend = ath6kl_usb_pm_suspend,
- 	.resume = ath6kl_usb_pm_resume,
--	.reset_resume = ath6kl_usb_pm_reset_resume,
- 	.disconnect = ath6kl_usb_remove,
- 	.id_table = ath6kl_usb_ids,
- 	.supports_autosuspend = true,
+John
 -- 
-1.9.1
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
