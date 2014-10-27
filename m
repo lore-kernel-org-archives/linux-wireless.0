@@ -1,71 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:61001 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751273AbaJYSa2 (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:47899 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751141AbaJ0JxP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Oct 2014 14:30:28 -0400
-Received: by mail-wi0-f175.google.com with SMTP id h11so1466542wiw.8
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2014 11:30:27 -0700 (PDT)
+	Mon, 27 Oct 2014 05:53:15 -0400
+Date: Mon, 27 Oct 2014 12:52:43 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Joe Perches <joe@perches.com>
+Cc: Stanislav Yakovlev <stas.yakovlev@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: Re: [patch] ipw2x00: shift wrap bugs setting ->rt_tsf
+Message-ID: <20141027095243.GA6890@mwanda> (sfid-20141027_105319_958377_67047D52)
+References: <20141024081534.GA11140@mwanda>
+ <1414143811.15751.14.camel@perches.com>
 MIME-Version: 1.0
-In-Reply-To: <544BC1B5.1040107@mailservices.uwaterloo.ca>
-References: <544A7871.7020005@mailservices.uwaterloo.ca>
-	<CAJ-Vmon_jefxRgZvJmOsr4ydNHbvTCyMHHejRMWqXg_SG6NJUw@mail.gmail.com>
-	<544AB9B8.9050407@mailservices.uwaterloo.ca>
-	<CAJ-VmomYx1Dn5Oey1v4+8Yw7n0QkBiGKynFf_qNBD1JZb_Ra_A@mail.gmail.com>
-	<544BC1B5.1040107@mailservices.uwaterloo.ca>
-Date: Sat, 25 Oct 2014 11:30:26 -0700
-Message-ID: <CAJ-Vmo=ceFvBDxL=HYSVmAMfEk0yxD_-a4MP3WjcvPAaupxPPw@mail.gmail.com> (sfid-20141025_203031_633277_DB25FBE0)
-Subject: Re: strange MPDU loss pattern
-From: Adrian Chadd <adrian@freebsd.org>
-To: Ali Abedi <a2abedi@uwaterloo.ca>
-Cc: ath9k-devel <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1414143811.15751.14.camel@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 25 October 2014 08:28, Ali Abedi <a2abedi@uwaterloo.ca> wrote:
-> Hi Adrian,
->
-> We have a high end spectrum analyzer. So we are sure there is no background
-> interference
-> We run our experiments in the 5 GHZ spectrum. The channel conditions can
-> still vary due to
-> the movement of the people in the vicinity of the experiment setup. We
-> select a rate that
-> experiences at least 20% error on average. Since if the error is 100% or 0%
-> it's not interesting
-> for us.
->
-> My point is if the channel conditions change the distribution of failed
-> packets should be uniform.
-> The first and second  half of the packets have the same chance to be
-> received successfully.
+On Fri, Oct 24, 2014 at 02:43:31AM -0700, Joe Perches wrote:
+> On Fri, 2014-10-24 at 11:15 +0300, Dan Carpenter wrote:
+> > @@ -8028,10 +8028,10 @@ static void ipw_handle_promiscuous_rx(struct ipw_priv *priv,
+> >  
+> >  	/* Zero the flags, we'll add to them as we go */
+> >  	ipw_rt->rt_flags = 0;
+> > -	ipw_rt->rt_tsf = (u64)(frame->parent_tsf[3] << 24 |
+> > -			       frame->parent_tsf[2] << 16 |
+> > -			       frame->parent_tsf[1] << 8  |
+> > -			       frame->parent_tsf[0]);
+> > +	ipw_rt->rt_tsf = (u64)frame->parent_tsf[3] << 24 |
+> > +			      frame->parent_tsf[2] << 16 |
+> > +			      frame->parent_tsf[1] << 8  |
+> > +			      frame->parent_tsf[0];
+> >  
+> >  	/* Convert to DBM */
+> >  	ipw_rt->rt_dbmsignal = signal;
+> 
+> struct ipw_rt_hdr {
+> 	struct ieee80211_radiotap_header rt_hdr;
+> 	u64 rt_tsf;      /* TSF */	/* XXX */
+> 	u8 rt_flags;	/* radiotap packet flags *
+> 	u8 rt_rate;	/* rate in 500kb/s */
+> 	__le16 rt_channel;	/* channel in mhz */
+> 	__le16 rt_chbitmask;	/* channel bitfield */
+> 	s8 rt_dbmsignal;	/* signal in dbM, kluged to signed */
+> 	s8 rt_dbmnoise;
+> 	u8 rt_antenna;	/* antenna number */
+> 	u8 payload[0];  /* payload... */
+> } __packed;
+> 
+> Maybe rt_tsf (which is otherwise unused in this code),
+> should be __le64 so maybe use (u32) ?
+> 
+> 	ipw_rt->rt_txf = cpu_to_le64((u32)(frame->parent_tsf[3] << 24 |
+> 					   frame->parent_tsf[2] << 16 |
+> 					   frame->parent_tsf[1] << 8  |
+> 					   frame->parent_tsf[0]));
+> 
 
-Here's a little story.
+Hm...  It don't think it makes sense to truncate the top bits away by
+truncating to u32.  You may be right though that there is some larger
+bugs here than just the truncation.
 
-My first wifi contract had me spend months trying to figure out why an
-AP was losing its mind. It'd get stuck in a "stuck beacon" loop and
-only a hard powercycle of /all/ of the access points in an area would
-clear it.
+Both the "frame" and the "ipw_rt" struct seem to hold little endian
+values generally so probably ->rt_txf should be an __le64 like you say.
 
-It turned out that the PCB design had some non-grounded /
-non-populated tracks that just "happened" to form a 2GHz resonator.
-Once we grounded those tracks, the APs started behaving themselves.
+Perhaps the maintainers know what should be done?
 
-The company in question spent months with high end spectrum analysis
-kit in the lab (where it never happened) and underground (where it did
-happen.) It's only after they stuck the spectrum analyser probe
-_inside the access point_ right up close to the NIC did they see it.
+regards,
+dan carpenter
 
-Here's the spectrum analyser traces. You can see the peak.
-
-http://www.creative.net.au/ath/
-
-So, weirder crap has happened.
-
-Which NICs and which MCS rates are you using?
-
-
-
--adrian
