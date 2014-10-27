@@ -1,103 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f49.google.com ([74.125.82.49]:56335 "EHLO
-	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753455AbaJ2Ror (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2014 13:44:47 -0400
-Received: by mail-wg0-f49.google.com with SMTP id x13so2442076wgg.22
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2014 10:44:45 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH v2 00/34] staging: vt6655: Conversion to mac80211
-Date: Wed, 29 Oct 2014 17:43:35 +0000
-Message-Id: <1414604649-9105-1-git-send-email-tvboxspy@gmail.com> (sfid-20141029_184450_813198_D8577974)
+Received: from mx1.redhat.com ([209.132.183.28]:56010 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750761AbaJ0GQu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Oct 2014 02:16:50 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Joe Perches <joe@perches.com>
+Cc: Paul McQuade <paulmcquad@gmail.com>, linux-kernel@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	gregkh@linuxfoundation.org, Larry.Finger@lwfinger.net
+Subject: Re: [PATCH 2/2] staging: rtl8723au:core
+References: <1414340332-4556-1-git-send-email-paulmcquad@gmail.com>
+	<1414350250.15751.22.camel@perches.com> <wrfjegtucbgo.fsf@redhat.com>
+	<1414389096.15751.34.camel@perches.com>
+Date: Mon, 27 Oct 2014 07:16:37 +0100
+In-Reply-To: <1414389096.15751.34.camel@perches.com> (Joe Perches's message of
+	"Sun, 26 Oct 2014 22:51:36 -0700")
+Message-ID: <wrfj1tpuca0q.fsf@redhat.com> (sfid-20141027_071709_711028_E3CA8CD4)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The patches in this series convert the driver to mac80211.
+Joe Perches <joe@perches.com> writes:
+> On Mon, 2014-10-27 at 06:45 +0100, Jes Sorensen wrote:
+>> Joe Perches <joe@perches.com> writes:
+>> > On Sun, 2014-10-26 at 16:18 +0000, Paul McQuade wrote:
+>> >> ERROR: spaces required around that ':' (ctx:VxE)
+> []
+>> >> diff --git a/drivers/staging/rtl8723au/core/rtw_ieee80211.c
+>> >> b/drivers/staging/rtl8723au/core/rtw_ieee80211.c
+> []
+>> >> @@ -794,28 +794,28 @@ u16 rtw_mcs_rate23a(u8 rf_type, u8 bw_40MHz, u8 short_GI_20, u8 short_GI_40,
+>> >>  
+>> >>  	if (rf_type == RF_1T1R) {
+>> >>  		if (mcs->rx_mask[0] & BIT(7))
+>> >> -			max_rate = (bw_40MHz) ? ((short_GI_40)?1500:1350):
+>> >> +			max_rate = (bw_40MHz) ? ((short_GI_40)?1500:1350) :
+> []
+>> >
+>> > A macro could help intelligibility here - maybe something like:
+>> >
+>> > #define get_max_rate(r1, r2, r3, r4)					\
+>> > 	(bw_40MHz ? (short_GI_40 ? r1 : r2) : (short_GI_20 ? r3 : r4))
+>> > and:
+>> >  		if (mcs->rx_mask[0] & BIT(7))
+>> > 			max_rate = get_max_rate(1500, 1350, 722, 650);
+>> 
+>> Hiding a parameter to a macro like that is bad coding practice, so don't
+>> do that please!
+>
+> Yes and no.
+>
+> Adding the other 3 arguments to the macro doesn't help legibility.
+>
+> Keeping the macro definition local to the place that it's used
+> can help avoid typos.
 
-As well as infrastructure mode the driver now operates in
-IBSS and access point modes.
+It's wrong, so just don't do it here!
 
-Host access point is now working with hostapd in nl80211 mode.
-
-The driver continues to operate diversity mode in infrastructure mode.
-
-There is still a lot of work that needs doing particularly remodeling
-rxtx to something similar to vt6656 driver.
-
-These patches creates huge amount of dead code that will be
-removed in the next series.
-
-Changes from v1 3 additional patches fixing tsf and rssi issues
-
-Rebased on staging-testing.
-
-Malcolm Priestley (34):
-  staging: vt6655: mac80211 conversion: add new rx functions
-  staging: vt6655: mac80211 conversion: add new key functions
-  staging: vt6655: mac8021 conversion: add new tx functions
-  staging: vt6655: mac80211 conversion: s_cbFillTxBufHead
-  staging: vt6655: dead code remove s_vFillFragParameter.
-  staging: vt6655: mac80211 conversion: s_vFillRTSHead convert to using
-    struct ieee80211_hdr
-  staging: vt6655: mac80211 conversion: s_uFillDataHead add power saving
-    poll
-  staging: vt6655: mac80211 conversion add main mac80211 functions
-  staging: vt6655: mac80211 conversion add channel bands
-  staging: vt6655: mac80211 conversion replace suspend resume functions
-  staging: vt6655: mac80211 conversion: device_print_info remove
-    netdevice.
-  staging: vt6655: mac80211 conversion: changes to device_intr
-  staging: vt6655: mac80211 conversion: device_tx_srv tx and add report
-    rates
-  staging: vt6655: mac80211 conversion: changes to set channel
-  staging: vt6655: mac80211 conversion: enable power saving
-  staging: vt6655: mac80211 conversion: changes to CARDbSetPhyParameter
-  staging: vt6655: mac80211 conversion: card.c use basic_rates
-  staging: vt6655: CARDbSetPhyParameter replace s_vSetRSPINF with
-    CARDvSetRSPINF
-  staging: vt6655: mac80211 conversion: device_init_registers remove
-    legacy code
-  staging: vt6655: mac80211 conversion: device_free_info
-  staging: vt6655: switch driver over to mac80211
-  staging: vt6655: phy type same as bb type
-  staging: vt6655: mac80211 conversion: device_error remove legacy
-    functions
-  staging: vt6655: vt6655_probe remove management pointers
-  staging: vt6655: mac80211 conversion: PSbIsNextTBTTWakeUp convert to
-    mac80211
-  staging: vt6655: MACvSetDefaultKeyEntry replace WLAN_WEP104_KEYLEN
-  staging: vt6655: baseband.c replace BIT0 with BIT(0)
-  staging: vt6655: s_vGenerateTxParameter remove unused cbMACHdLen
-  staging: vt6655: device_init_registers replace spin lock
-  staging: vt6655: baseband.c timers replace spin lock
-  staging: vt6655: fifo & frag control remove big endian values
-  staging: vt6655: vnt_rx_data: uCurrRSSI should have the value of *rssi
-  staging: vt6655: don't update bUpdateBBVGA when off channel
-  staging: vt6655: reset tsf on dissociation
-
- drivers/staging/vt6655/Kconfig       |    4 +-
- drivers/staging/vt6655/baseband.c    |   21 +-
- drivers/staging/vt6655/card.c        |  185 +----
- drivers/staging/vt6655/card.h        |    4 +-
- drivers/staging/vt6655/channel.c     |  152 +++-
- drivers/staging/vt6655/channel.h     |    2 +
- drivers/staging/vt6655/desc.h        |   33 +-
- drivers/staging/vt6655/device.h      |   11 +-
- drivers/staging/vt6655/device_main.c | 1328 ++++++++++++++++++++--------------
- drivers/staging/vt6655/dpc.c         |  123 ++++
- drivers/staging/vt6655/dpc.h         |    2 +
- drivers/staging/vt6655/key.c         |  136 ++++
- drivers/staging/vt6655/key.h         |   17 +
- drivers/staging/vt6655/mac.c         |    2 +-
- drivers/staging/vt6655/power.c       |   34 +-
- drivers/staging/vt6655/rxtx.c        | 1098 +++++++++++-----------------
- drivers/staging/vt6655/rxtx.h        |   14 +
- 17 files changed, 1698 insertions(+), 1468 deletions(-)
-
--- 
-2.1.0
-
+Thank you,
+Jes
