@@ -1,87 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:10637 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752612AbaJFN0U (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Oct 2014 09:26:20 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 3/4] ath10k: add htt rx tracepoints
-Date: Mon, 6 Oct 2014 18:57:03 +0530
-Message-ID: <1412602024-31706-4-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20141006_152622_805984_3B2894CD)
-In-Reply-To: <1412602024-31706-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1412602024-31706-1-git-send-email-rmanohar@qti.qualcomm.com>
+Received: from mail.neratec.com ([46.140.151.2]:45741 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751191AbaJ0KvM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Oct 2014 06:51:12 -0400
+Message-ID: <544E21D4.9020401@neratec.com> (sfid-20141027_115115_334983_7FFAF047)
+Date: Mon, 27 Oct 2014 11:43:32 +0100
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Adrien Decostre <ad.decostre@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Questions regarding ath9k and new EN 300 328 regulation
+References: <CAOtFK_Ue0xjEaYY3qm0n2Tj=Hnu1dbphupmdZmiouVuGLnktoA@mail.gmail.com>
+In-Reply-To: <CAOtFK_Ue0xjEaYY3qm0n2Tj=Hnu1dbphupmdZmiouVuGLnktoA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michal Kazior <michal.kazior@tieto.com>
+On 10/24/2014 05:23 PM, Adrien Decostre wrote:
+> 
+> I am looking for information about the compliancy of the ath9k driver
+> to the EN 300 328 ETSI regulation.
+> 
+> Would someone know if ath9k has already been tested for this regulation?
+> 
+> Is it needed to enable any specific flag in ath9k to guarantee
+> compliancy to the adaptivity tests described in EN 300 328?
+> 
+> 
+The pattern detector currently used in ath was initially developed for ath9k when
+EN 300.328 v1.5.1 was released. It passed the ETSI certification in a German lab
+and the source code (besides moving it up in the tree to be also available for
+10k) was basically not touched ever since.
 
-Although frame contents were printed via dbg_dump
-already it was not possible to easily filter them
-out for processing.
+I did not track all the DFS requirement changes up to the latest v1.9.1 draft, but
+afaik the sole difference relevant for the detector is the reduction of the
+shortest pulses width in the test pattern specification from 0.7 to 0.5us. With
+that, the chance of the current implementation to pass a v1.8 certification
+depends on ath9k's ability to detect the shorter pulses. I did some initial
+measurements years ago to get a rough picture, which showed that the ath9k is
+losing like 30% of the 0.5us pulses (as compared to .7us).
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/htt_rx.c |  3 +++
- drivers/net/wireless/ath/ath10k/trace.h  | 27 +++++++++++++++++++++++++++
- 2 files changed, 30 insertions(+)
+With the patches you referred, YMMV - you would need to perform thorough
+statistical analyses to get an estimate on whether it would pass.
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 7add88e..4dbb2dd 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -291,6 +291,9 @@ static inline struct sk_buff *ath10k_htt_rx_netbuf_pop(struct ath10k_htt *htt)
- 	htt->rx_ring.sw_rd_idx.msdu_payld = idx;
- 	htt->rx_ring.fill_cnt--;
- 
-+	trace_ath10k_htt_rx_pop_msdu(ar, msdu->data, msdu->len +
-+				     skb_tailroom(msdu));
-+
- 	return msdu;
- }
- 
-diff --git a/drivers/net/wireless/ath/ath10k/trace.h b/drivers/net/wireless/ath/ath10k/trace.h
-index c074de0..6d39055 100644
---- a/drivers/net/wireless/ath/ath10k/trace.h
-+++ b/drivers/net/wireless/ath/ath10k/trace.h
-@@ -424,6 +424,33 @@ TRACE_EVENT(ath10k_wmi_bcn_tx,
- 		__entry->len
- 	)
- );
-+
-+TRACE_EVENT(ath10k_htt_rx_pop_msdu,
-+	    TP_PROTO(struct ath10k *ar, void *data, size_t len),
-+
-+	TP_ARGS(ar, data, len),
-+
-+	TP_STRUCT__entry(
-+		__string(device, dev_name(ar->dev))
-+		__string(driver, dev_driver_string(ar->dev))
-+		__field(size_t, len)
-+		__dynamic_array(u8, data, len)
-+	),
-+
-+	TP_fast_assign(
-+		__assign_str(device, dev_name(ar->dev));
-+		__assign_str(driver, dev_driver_string(ar->dev));
-+		__entry->len = len;
-+		memcpy(__get_dynamic_array(data), data, len);
-+	),
-+
-+	TP_printk(
-+		"%s %s len %zu\n",
-+		__get_str(driver),
-+		__get_str(device),
-+		__entry->len
-+	)
-+);
- #endif /* _TRACE_H_ || TRACE_HEADER_MULTI_READ*/
- 
- /* we don't want to use include/trace/events */
--- 
-2.1.2
+As for the adaptivity tests, they are not part of DFS (see note in 4.9.1) and
+maybe would best fit within the ACS module
+(http://wireless.kernel.org/en/users/Documentation/acs). The current DFS support
+available in ath9k is limited to bare radar detection, which is enabled through
+CONFIG_CFG80211_CERTIFICATION_ONUS.
 
+
+Cheers,
+Zefir
