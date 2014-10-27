@@ -1,86 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f44.google.com ([209.85.215.44]:34698 "EHLO
-	mail-la0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751127AbaJLLkH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Oct 2014 07:40:07 -0400
-Received: by mail-la0-f44.google.com with SMTP id hs14so5413341lab.3
-        for <linux-wireless@vger.kernel.org>; Sun, 12 Oct 2014 04:40:06 -0700 (PDT)
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-To: Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>, linville@tuxdriver.com
-Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	Daniel Kim <dekim@broadcom.com>,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2] brcmfmac: dhd_sdio.c:  Cleaning up missing null-terminate in conjunction with strncpy
-Date: Sun, 12 Oct 2014 13:42:14 +0200
-Message-Id: <1413114134-18044-2-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20141012_134045_960065_8F48754A)
-In-Reply-To: <1413114134-18044-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-References: <1413114134-18044-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+Received: from s3.sipsolutions.net ([5.9.151.49]:51198 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751135AbaJ0Lbg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Oct 2014 07:31:36 -0400
+Message-ID: <1414409485.3836.5.camel@jlt4.sipsolutions.net> (sfid-20141027_123139_005955_66405B29)
+Subject: Re: [PATCH 0/3] Add mcast event when hwsim radios are created and
+ removed
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jukka Rissanen <jukka.rissanen@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 27 Oct 2014 12:31:25 +0100
+In-Reply-To: <1414409397.2705.198.camel@jrissane-mobl.ger.corp.intel.com>
+References: <1414406688-3827-1-git-send-email-jukka.rissanen@linux.intel.com>
+	 (sfid-20141027_114536_599448_FF2C1C5E) <1414408856.3836.3.camel@jlt4.sipsolutions.net>
+	 <1414409397.2705.198.camel@jrissane-mobl.ger.corp.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Replacing strncpy with strlcpy to avoid strings that lacks null terminate.
-And changed from using strncat to strlcat to simplify code.
+On Mon, 2014-10-27 at 13:29 +0200, Jukka Rissanen wrote:
 
-Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
----
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   25 ++++++++++----------
- 1 file changed, 12 insertions(+), 13 deletions(-)
+> Yes, but from generic nl80211 event you cannot know if event is from
+> hwsim radio or not. With this patch, the listener can know that the
+> radio new/del event is specifically related to hwsim radio.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index f55f625..d20d4e6 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -670,7 +670,6 @@ static int brcmf_sdio_get_fwnames(struct brcmf_chip *ci,
- 				  struct brcmf_sdio_dev *sdiodev)
- {
- 	int i;
--	uint fw_len, nv_len;
- 	char end;
- 
- 	for (i = 0; i < ARRAY_SIZE(brcmf_fwname_data); i++) {
-@@ -684,25 +683,25 @@ static int brcmf_sdio_get_fwnames(struct brcmf_chip *ci,
- 		return -ENODEV;
- 	}
- 
--	fw_len = sizeof(sdiodev->fw_name) - 1;
--	nv_len = sizeof(sdiodev->nvram_name) - 1;
- 	/* check if firmware path is provided by module parameter */
- 	if (brcmf_firmware_path[0] != '\0') {
--		strncpy(sdiodev->fw_name, brcmf_firmware_path, fw_len);
--		strncpy(sdiodev->nvram_name, brcmf_firmware_path, nv_len);
--		fw_len -= strlen(sdiodev->fw_name);
--		nv_len -= strlen(sdiodev->nvram_name);
-+		strlcpy(sdiodev->fw_name, brcmf_firmware_path,
-+			sizeof(sdiodev->fw_name));
-+		strlcpy(sdiodev->nvram_name, brcmf_firmware_path,
-+			sizeof(sdiodev->nvram_name));
- 
- 		end = brcmf_firmware_path[strlen(brcmf_firmware_path) - 1];
- 		if (end != '/') {
--			strncat(sdiodev->fw_name, "/", fw_len);
--			strncat(sdiodev->nvram_name, "/", nv_len);
--			fw_len--;
--			nv_len--;
-+			strlcat(sdiodev->fw_name, "/",
-+				sizeof(sdiodev->fw_name));
-+			strlcat(sdiodev->nvram_name, "/",
-+				sizeof(sdiodev->nvram_name));
- 		}
- 	}
--	strncat(sdiodev->fw_name, brcmf_fwname_data[i].bin, fw_len);
--	strncat(sdiodev->nvram_name, brcmf_fwname_data[i].nv, nv_len);
-+	strlcat(sdiodev->fw_name, brcmf_fwname_data[i].bin,
-+		sizeof(sdiodev->fw_name));
-+	strlcat(sdiodev->nvram_name, brcmf_fwname_data[i].nv,
-+		sizeof(sdiodev->nvram_name));
- 
- 	return 0;
- }
--- 
-1.7.10.4
+That's not particularly hard to figure out, for example by looking at
+sysfs.
+
+Is this really so time-constrained/important/... that you can't do that?
+
+johannes
 
