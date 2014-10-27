@@ -1,64 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0183.hostedemail.com ([216.40.44.183]:39735 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753866AbaJNRP7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Oct 2014 13:15:59 -0400
-Message-ID: <1413306955.3269.30.camel@joe-AO725> (sfid-20141014_191631_500086_DF86093C)
-Subject: Re: [PATCH 1/1 linux-next] zd1201: replace kmalloc/memset by kzalloc
-From: Joe Perches <joe@perches.com>
-To: Fabian Frederick <fabf@skynet.be>
-Cc: linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Tue, 14 Oct 2014 10:15:55 -0700
-In-Reply-To: <1413304831-7203-1-git-send-email-fabf@skynet.be>
-References: <1413304831-7203-1-git-send-email-fabf@skynet.be>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from mga09.intel.com ([134.134.136.24]:45061 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751632AbaJ0L37 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Oct 2014 07:29:59 -0400
+Message-ID: <1414409397.2705.198.camel@jrissane-mobl.ger.corp.intel.com> (sfid-20141027_123003_044236_3EA76848)
+Subject: Re: [PATCH 0/3] Add mcast event when hwsim radios are created and
+ removed
+From: Jukka Rissanen <jukka.rissanen@linux.intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 27 Oct 2014 13:29:57 +0200
+In-Reply-To: <1414408856.3836.3.camel@jlt4.sipsolutions.net>
+References: <1414406688-3827-1-git-send-email-jukka.rissanen@linux.intel.com>
+	 (sfid-20141027_114536_599448_FF2C1C5E) <1414408856.3836.3.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-10-14 at 18:40 +0200, Fabian Frederick wrote:
-> Signed-off-by: Fabian Frederick <fabf@skynet.be>
+Hi Johannes,
 
-It might be clearer to use a structure for this 16 byte thing.
+On ma, 2014-10-27 at 12:20 +0100, Johannes Berg wrote:
+> On Mon, 2014-10-27 at 12:44 +0200, Jukka Rissanen wrote:
+> > Hi,
+> > 
+> > patch 1 renames HWSIM_CMD_CREATE_RADIO to HWSIM_CMD_NEW_RADIO and
+> > HWSIM_CMD_DESTROY_RADIO to HWSIM_CMD_DEL_RADIO. They are more
+> > fitting on how other pieces of the wireless system work. A define
+> > to old name is provided for backward compatibility.
+> 
+> That seems reasonable, if a little gratuitous.
+> 
+> > Patches 2 and 3 use the newly named enums and provide a way to inform
+> > the listeners on the multicast group "config" when new radio is created
+> > and existing radio is deleted.
+> 
+> Why bother? There are nl80211 events for this already, no?
 
-There's a comment bit in the code:
+Yes, but from generic nl80211 event you cannot know if event is from
+hwsim radio or not. With this patch, the listener can know that the
+radio new/del event is specifically related to hwsim radio.
 
-/* cmdreq message: 
-	u32 type
-	u16 cmd
-	u16 parm0
-	u16 parm1
-	u16 parm2
-	u8  pad[4]
 
-	total: 4 + 2 + 2 + 2 + 2 + 4 = 16
-*/
+Cheers,
+Jukka
 
-It seems thought that this first u32 is actually
-a series of u8s.
-
-Maybe:
-
-struct zd1201_cmdreq {
-	u8	type;
-	u8	seq;
-	u8	a;
-	u8	b;
-	__le16	cmd;
-	__le16	parm0;
-	__le16	parm1;
-	__le16	parm2;
-	u8	pad[4];
-};
-
-And does this really need to be alloc'd?
-
-maybe
-
-struct zd1202_cmdreq request = {};
-
-etc...
 
