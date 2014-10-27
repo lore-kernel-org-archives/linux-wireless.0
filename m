@@ -1,51 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:20541 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756568AbaJHOZJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Oct 2014 10:25:09 -0400
-Date: Wed, 8 Oct 2014 17:24:51 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: devel@driverdev.osuosl.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	kernel-janitors@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [patch] staging: rtl8723au: incorrect use of ether_addr_copy()
-Message-ID: <20141008142451.GE26918@mwanda> (sfid-20141008_162523_628916_D0A22B00)
-References: <20141008104014.GA23096@mwanda>
- <wrfj4mvezmpm.fsf@redhat.com>
+Received: from mx1.redhat.com ([209.132.183.28]:39001 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751141AbaJ0Gos (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Oct 2014 02:44:48 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Joe Perches <joe@perches.com>
+Cc: Paul McQuade <paulmcquad@gmail.com>, linux-kernel@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	gregkh@linuxfoundation.org, Larry.Finger@lwfinger.net
+Subject: Re: [PATCH 2/2] staging: rtl8723au:core
+References: <1414340332-4556-1-git-send-email-paulmcquad@gmail.com>
+	<1414350250.15751.22.camel@perches.com> <wrfjegtucbgo.fsf@redhat.com>
+	<1414389096.15751.34.camel@perches.com> <wrfj1tpuca0q.fsf@redhat.com>
+	<1414390984.8884.0.camel@perches.com>
+Date: Mon, 27 Oct 2014 07:44:37 +0100
+In-Reply-To: <1414390984.8884.0.camel@perches.com> (Joe Perches's message of
+	"Sun, 26 Oct 2014 23:23:04 -0700")
+Message-ID: <wrfjd29eau5m.fsf@redhat.com> (sfid-20141027_074507_990632_BC78F265)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <wrfj4mvezmpm.fsf@redhat.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 08, 2014 at 03:59:33PM +0200, Jes Sorensen wrote:
-> Dan Carpenter <dan.carpenter@oracle.com> writes:
-> > The return from myid() isn't aligned correctly for ether_addr_copy().
-> >
-> > Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> 
-> Sorry, this makes no sense, just fix it properly!
-> 
-> drivers/staging/rtl8723au/include/rtw_eeprom.h:
-> 
-> struct eeprom_priv {
->         u8              bautoload_fail_flag;
->         u8              bloadfile_fail_flag;
->         u8              bloadmac_fail_flag;
->         /* u8           bempty; */
->         /* u8           sys_config; */
->         u8              mac_addr[6];    /* PermanentAddress */
->         /* u8           config0; */
-> 
-> Move mac_addr[6] to the top of the struct and be done with it.
-> 
-> NACK
+Joe Perches <joe@perches.com> writes:
+> On Mon, 2014-10-27 at 07:16 +0100, Jes Sorensen wrote:
+>> Joe Perches <joe@perches.com> writes:
+>> > On Mon, 2014-10-27 at 06:45 +0100, Jes Sorensen wrote:
+>> >> Joe Perches <joe@perches.com> writes:
+>> >> > On Sun, 2014-10-26 at 16:18 +0000, Paul McQuade wrote:
+>> >> >> ERROR: spaces required around that ':' (ctx:VxE)
+>> > []
+>> >> >> diff --git a/drivers/staging/rtl8723au/core/rtw_ieee80211.c
+>> >> >> b/drivers/staging/rtl8723au/core/rtw_ieee80211.c
+>> > []
+>> >> >> @@ -794,28 +794,28 @@ u16 rtw_mcs_rate23a(u8 rf_type, u8 bw_40MHz, u8 short_GI_20, u8 short_GI_40,
+>> >> >>  
+>> >> >>  	if (rf_type == RF_1T1R) {
+>> >> >>  		if (mcs->rx_mask[0] & BIT(7))
+>> >> >> -			max_rate = (bw_40MHz) ? ((short_GI_40)?1500:1350):
+>> >> >> +			max_rate = (bw_40MHz) ? ((short_GI_40)?1500:1350) :
+>> > []
+>> >> >
+>> >> > A macro could help intelligibility here - maybe something like:
+>> >> >
+>> >> > #define get_max_rate(r1, r2, r3, r4)					\
+>> >> > 	(bw_40MHz ? (short_GI_40 ? r1 : r2) : (short_GI_20 ? r3 : r4))
+>> >> > and:
+>> >> >  		if (mcs->rx_mask[0] & BIT(7))
+>> >> > 			max_rate = get_max_rate(1500, 1350, 722, 650);
+>> >> 
+>> >> Hiding a parameter to a macro like that is bad coding practice, so don't
+>> >> do that please!
+>> >
+>> > Yes and no.
+>> >
+>> > Adding the other 3 arguments to the macro doesn't help legibility.
+>> >
+>> > Keeping the macro definition local to the place that it's used
+>> > can help avoid typos.
+>> 
+>> It's wrong, so just don't do it here!
+>
+> It's not "wrong", you just don't like it.
 
-Oops.  I thought it was something from the hardware.  Actually can you
-fix it and give me a reported-by tag?
+I consider it wrong, and I am the co-maintainer of this driver .... and
+I NACK it.
 
-regards,
-dan carpenter
+There's a gazillion real issues to fix in this driver, adding a bad
+macro isn't on that list.
+
+Jes
