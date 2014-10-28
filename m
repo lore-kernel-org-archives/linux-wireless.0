@@ -1,59 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f43.google.com ([74.125.82.43]:43126 "EHLO
-	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753395AbaJGIoo (ORCPT
+Received: from smtprelay0086.hostedemail.com ([216.40.44.86]:55097 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751030AbaJ1VTE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Oct 2014 04:44:44 -0400
-Received: by mail-wg0-f43.google.com with SMTP id m15so8538054wgh.26
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Oct 2014 01:44:43 -0700 (PDT)
-Date: Tue, 7 Oct 2014 10:44:27 +0200
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	johannes@sipsolutions.net, nbd@nbd.name, ikstream86@gmail.com
-Subject: Re: [PATCH v2 2/2] mac80211: improve minstrel_ht rate sorting by
- throughput & probability
-Message-ID: <20141007084427.GA9964@magnum.frso.rivierawaves.com> (sfid-20141007_104448_742732_CA5D1D65)
-References: <1410297734-21187-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
- <1410297734-21187-3-git-send-email-thomas@net.t-labs.tu-berlin.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1410297734-21187-3-git-send-email-thomas@net.t-labs.tu-berlin.de>
+	Tue, 28 Oct 2014 17:19:04 -0400
+Message-ID: <1414531138.10912.12.camel@perches.com> (sfid-20141028_221928_532452_23DB8371)
+Subject: [PATCH] carl9170: Convert byte_rev_table uses to bitrev8
+From: Joe Perches <joe@perches.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Wang, Yalin" <Yalin.Wang@sonymobile.com>,
+	Russell King <linux@arm.linux.org.uk>, linux-mm@kvack.org,
+	Will Deacon <Will.Deacon@arm.com>,
+	Akinobu Mita <akinobu.mita@gmail.com>,
+	linux-arm-kernel@lists.infradead.org,
+	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Date: Tue, 28 Oct 2014 14:18:58 -0700
+In-Reply-To: <1414392371.8884.2.camel@perches.com>
+References: <35FD53F367049845BC99AC72306C23D103E010D18254@CNBJMBX05.corpusers.net>
+	 <35FD53F367049845BC99AC72306C23D103E010D18257@CNBJMBX05.corpusers.net>
+	 <1414392371.8884.2.camel@perches.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Use the inline function instead of directly indexing the array.
 
-On Tue, Sep 09, 2014 at 11:22:14PM +0200, Thomas Huehn wrote:
-> @@ -260,13 +399,14 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
->  	mi->sample_slow = 0;
->  	mi->sample_count = 0;
->  
-> -	for (group = 0; group < ARRAY_SIZE(minstrel_mcs_groups); group++) {
-> -		bool mg_rates_valid = false;
-> +	/* Initialize global rate indexes */
-> +	for(j = 0; j < MAX_THR_RATES; j++){
-> +		tmp_mcs_tp_rate[j] = 0;
-> +		tmp_cck_tp_rate[j] = 0;
-> +	}
->  
+This allows some architectures with hardware instructions
+for bit reversals to eliminate the array.
 
-Pb if a driver doesn't support the first entry it. 
-Maybe using a mi->min_ridx set in minstrel_ht_update_caps would be
-practical.
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+On Sun, 2014-10-26 at 23:46 -0700, Joe Perches wrote:
+> On Mon, 2014-10-27 at 14:37 +0800, Wang, Yalin wrote:
+> > this change add CONFIG_HAVE_ARCH_BITREVERSE config option,
+> > so that we can use arm/arm64 rbit instruction to do bitrev operation
+> > by hardware.
+[]
+> > diff --git a/include/linux/bitrev.h b/include/linux/bitrev.h
+> > index 7ffe03f..ef5b2bb 100644
+> > --- a/include/linux/bitrev.h
+> > +++ b/include/linux/bitrev.h
+> > @@ -3,6 +3,14 @@
+> >  
+> >  #include <linux/types.h>
+> >  
+> > +#ifdef CONFIG_HAVE_ARCH_BITREVERSE
+> > +#include <asm/bitrev.h>
+> > +
+> > +#define bitrev32 __arch_bitrev32
+> > +#define bitrev16 __arch_bitrev16
+> > +#define bitrev8 __arch_bitrev8
+> > +
+> > +#else
+> >  extern u8 const byte_rev_table[256];
 
-> @@ -274,24 +414,16 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
->  
->  		mi->sample_count++;
->  
-> +		/* (re)Initialize group rate indexes */
-> +		for(j = 0; j < MAX_THR_RATES; j++)
-> +			tmp_group_tp_rate[j] = group;
-> +
+ drivers/net/wireless/ath/carl9170/phy.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-You meant group * MCS_GROUP_RATES, no ?
-And group * MCS_GROUP_RATES + ffs(mg->supported) - 1 would be correct
-but this corner case is not easily triggerable, ATM.
+diff --git a/drivers/net/wireless/ath/carl9170/phy.c b/drivers/net/wireless/ath/carl9170/phy.c
+index b80b213..dca6df1 100644
+--- a/drivers/net/wireless/ath/carl9170/phy.c
++++ b/drivers/net/wireless/ath/carl9170/phy.c
+@@ -994,7 +994,7 @@ static int carl9170_init_rf_bank4_pwr(struct ar9170 *ar, bool band5ghz,
+ 			refsel0 = 0;
+ 			refsel1 = 1;
+ 		}
+-		chansel = byte_rev_table[chansel];
++		chansel = bitrev8(chansel);
+ 	} else {
+ 		if (freq == 2484) {
+ 			chansel = 10 + (freq - 2274) / 5;
+@@ -1002,7 +1002,7 @@ static int carl9170_init_rf_bank4_pwr(struct ar9170 *ar, bool band5ghz,
+ 		} else
+ 			chansel = 16 + (freq - 2272) / 5;
+ 		chansel *= 4;
+-		chansel = byte_rev_table[chansel];
++		chansel = bitrev8(chansel);
+ 	}
+ 
+ 	d1 =	chansel;
 
--- 
-Karl
+
