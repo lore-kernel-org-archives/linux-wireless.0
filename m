@@ -1,36 +1,174 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:50641 "EHLO
-	out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759767AbaJ1GXn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2014 02:23:43 -0400
-Received: from compute3.internal (compute3.nyi.internal [10.202.2.43])
-	by mailout.nyi.internal (Postfix) with ESMTP id B1EBB20AB4
-	for <linux-wireless@vger.kernel.org>; Tue, 28 Oct 2014 02:23:42 -0400 (EDT)
-Date: Tue, 28 Oct 2014 14:22:31 +0800
-From: Greg KH <greg@kroah.com>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: stable@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 3.16 0/7] Backort firmware monitor to 3.16
-Message-ID: <20141028062231.GA12676@kroah.com> (sfid-20141028_072348_803852_0F6557EC)
-References: <1414476686-3407-1-git-send-email-emmanuel.grumbach@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga02.intel.com ([134.134.136.20]:45151 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757989AbaJ1GQB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Oct 2014 02:16:01 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: stable@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 3.16 5/7] iwlwifi: mvm: don't collect logs in the interrupt thread
+Date: Tue, 28 Oct 2014 08:11:24 +0200
+Message-Id: <1414476686-3407-6-git-send-email-emmanuel.grumbach@intel.com> (sfid-20141028_071620_006978_8D5121EF)
 In-Reply-To: <1414476686-3407-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1414476686-3407-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 28, 2014 at 08:11:19AM +0200, Emmanuel Grumbach wrote:
-> This patch series allows to use the firmware debugging features
-> of iwlwifi on 3.16. These features are already in 3.17.
-> 
-> I know that this patch series is not compliant with Greg's
-> rules for stable patches. It is unlikely that these patches
-> will be applied on vanilla 3.16 - I know that.
+commit 78dae98fab85f4cd2d38cfc3474dea6e87e7b53a upstream.
 
-Good, because I just released the last 3.16-stable-rc kernel, so even if
-I wanted to, I wouldn't take these :)
+Instead of reading all the data in the context of the
+interrupt thread, collect the data in the restart flow
+before the actual restart takes place so that the device
+still has all the information.
+Remove iwl_mvm_fw_error_sram_dump and move its content to
+iwl_mvm_fw_error_dump.
 
-thanks,
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/mvm.h   |  3 ---
+ drivers/net/wireless/iwlwifi/mvm/ops.c   | 31 ++++++++++++-------------------
+ drivers/net/wireless/iwlwifi/mvm/utils.c | 22 ----------------------
+ 3 files changed, 12 insertions(+), 44 deletions(-)
 
-greg k-h
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index fcc6c29..e084fc6 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -586,8 +586,6 @@ struct iwl_mvm {
+ 	/* -1 for always, 0 for never, >0 for that many times */
+ 	s8 restart_fw;
+ 	void *fw_error_dump;
+-	void *fw_error_sram;
+-	u32 fw_error_sram_len;
+ 	u32 *fw_error_rxf;
+ 	u32 fw_error_rxf_len;
+ 
+@@ -721,7 +719,6 @@ u8 iwl_mvm_mac80211_idx_to_hwrate(int rate_idx);
+ void iwl_mvm_dump_nic_error_log(struct iwl_mvm *mvm);
+ #ifdef CONFIG_IWLWIFI_DEBUGFS
+ void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm);
+-void iwl_mvm_fw_error_sram_dump(struct iwl_mvm *mvm);
+ void iwl_mvm_fw_error_rxf_dump(struct iwl_mvm *mvm);
+ #endif
+ u8 first_antenna(u8 mask);
+diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
+index 2910f6d..94506ec 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
+@@ -549,7 +549,6 @@ static void iwl_op_mode_mvm_stop(struct iwl_op_mode *op_mode)
+ 
+ 	kfree(mvm->scan_cmd);
+ 	vfree(mvm->fw_error_dump);
+-	kfree(mvm->fw_error_sram);
+ 	kfree(mvm->fw_error_rxf);
+ 	kfree(mvm->mcast_filter_cmd);
+ 	mvm->mcast_filter_cmd = NULL;
+@@ -827,6 +826,8 @@ void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
+ 	struct iwl_fw_error_dump_file *dump_file;
+ 	struct iwl_fw_error_dump_data *dump_data;
+ 	struct iwl_fw_error_dump_info *dump_info;
++	const struct fw_img *img;
++	u32 sram_len, sram_ofs;
+ 	u32 file_len;
+ 	u32 trans_len;
+ 
+@@ -835,9 +836,13 @@ void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
+ 	if (mvm->fw_error_dump)
+ 		return;
+ 
++	img = &mvm->fw->img[mvm->cur_ucode];
++	sram_ofs = img->sec[IWL_UCODE_SECTION_DATA].offset;
++	sram_len = img->sec[IWL_UCODE_SECTION_DATA].len;
++
+ 	file_len = sizeof(*dump_file) +
+ 		   sizeof(*dump_data) * 3 +
+-		   mvm->fw_error_sram_len +
++		   sram_len +
+ 		   mvm->fw_error_rxf_len +
+ 		   sizeof(*dump_info);
+ 
+@@ -869,6 +874,8 @@ void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
+ 	strncpy(dump_info->bus_human_readable, mvm->dev->bus->name,
+ 		sizeof(dump_info->bus_human_readable));
+ 
++	iwl_mvm_fw_error_rxf_dump(mvm);
++
+ 	dump_data = iwl_fw_error_next_data(dump_data);
+ 	dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_RXF);
+ 	dump_data->len = cpu_to_le32(mvm->fw_error_rxf_len);
+@@ -876,23 +883,14 @@ void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
+ 
+ 	dump_data = iwl_fw_error_next_data(dump_data);
+ 	dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_SRAM);
+-	dump_data->len = cpu_to_le32(mvm->fw_error_sram_len);
+-
+-	/*
+-	 * No need for lock since at the stage the FW isn't loaded. So it
+-	 * can't assert - we are the only one who can possibly be accessing
+-	 * mvm->fw_error_sram right now.
+-	 */
+-	memcpy(dump_data->data, mvm->fw_error_sram, mvm->fw_error_sram_len);
++	dump_data->len = cpu_to_le32(sram_len);
++	iwl_trans_read_mem_bytes(mvm->trans, sram_ofs, dump_data->data,
++				 sram_len);
+ 
+ 	kfree(mvm->fw_error_rxf);
+ 	mvm->fw_error_rxf = NULL;
+ 	mvm->fw_error_rxf_len = 0;
+ 
+-	kfree(mvm->fw_error_sram);
+-	mvm->fw_error_sram = NULL;
+-	mvm->fw_error_sram_len = 0;
+-
+ 	if (trans_len) {
+ 		void *buf = iwl_fw_error_next_data(dump_data);
+ 		u32 real_trans_len = iwl_trans_dump_data(mvm->trans, buf,
+@@ -910,11 +908,6 @@ static void iwl_mvm_nic_error(struct iwl_op_mode *op_mode)
+ 
+ 	iwl_mvm_dump_nic_error_log(mvm);
+ 
+-#ifdef CONFIG_IWLWIFI_DEBUGFS
+-	iwl_mvm_fw_error_sram_dump(mvm);
+-	iwl_mvm_fw_error_rxf_dump(mvm);
+-#endif
+-
+ 	iwl_mvm_nic_restart(mvm);
+ }
+ 
+diff --git a/drivers/net/wireless/iwlwifi/mvm/utils.c b/drivers/net/wireless/iwlwifi/mvm/utils.c
+index aa9fc77..15db97c 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/utils.c
++++ b/drivers/net/wireless/iwlwifi/mvm/utils.c
+@@ -520,28 +520,6 @@ void iwl_mvm_dump_nic_error_log(struct iwl_mvm *mvm)
+ }
+ 
+ #ifdef CONFIG_IWLWIFI_DEBUGFS
+-void iwl_mvm_fw_error_sram_dump(struct iwl_mvm *mvm)
+-{
+-	const struct fw_img *img;
+-	u32 ofs, sram_len;
+-	void *sram;
+-
+-	if (!mvm->ucode_loaded || mvm->fw_error_sram || mvm->fw_error_dump)
+-		return;
+-
+-	img = &mvm->fw->img[mvm->cur_ucode];
+-	ofs = img->sec[IWL_UCODE_SECTION_DATA].offset;
+-	sram_len = img->sec[IWL_UCODE_SECTION_DATA].len;
+-
+-	sram = kzalloc(sram_len, GFP_ATOMIC);
+-	if (!sram)
+-		return;
+-
+-	iwl_trans_read_mem_bytes(mvm->trans, ofs, sram, sram_len);
+-	mvm->fw_error_sram = sram;
+-	mvm->fw_error_sram_len = sram_len;
+-}
+-
+ void iwl_mvm_fw_error_rxf_dump(struct iwl_mvm *mvm)
+ {
+ 	int i, reg_val;
+-- 
+1.9.1
+
