@@ -1,58 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:51624 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751876AbaJBBDJ (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:20017 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751081AbaJ1KbQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Oct 2014 21:03:09 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH v2 09/10] ath9k: Fix queue handling for channel contexts
-Date: Thu,  2 Oct 2014 06:33:19 +0530
-Message-Id: <1412211800-24344-10-git-send-email-sujith@msujith.org> (sfid-20141002_030313_162492_C82A16C4)
-In-Reply-To: <1412211800-24344-1-git-send-email-sujith@msujith.org>
-References: <1412211800-24344-1-git-send-email-sujith@msujith.org>
+	Tue, 28 Oct 2014 06:31:16 -0400
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <wireless-regdb@lists.infradead.org>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 02/21] wireless-regdb: Add regulatory rules for Bermuda (BM)
+Date: Tue, 28 Oct 2014 12:29:16 +0200
+Message-ID: <1414492175-13830-2-git-send-email-jouni@qca.qualcomm.com> (sfid-20141028_113121_966653_1A0DA485)
+In-Reply-To: <1414492175-13830-1-git-send-email-jouni@qca.qualcomm.com>
+References: <1414492175-13830-1-git-send-email-jouni@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Source is QCA's regulatory team's efforts.
 
-When a full chip reset is done, all the queues
-across all VIFs are stopped, but if MCC is enabled,
-only the queues of the current context is awakened,
-when we complete the reset.
-
-This results in unfairness for the inactive context.
-Since frames are queued internally in the driver if
-there is a context mismatch, we can awaken all the
-queues when coming out of a reset.
-
-The VIF-specific queues are still used in flow control,
-to ensure fairness when traffic is high.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath9k/main.c | 7 +------
- 1 file changed, 1 insertion(+), 6 deletions(-)
+ db.txt | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index f0035a9..2051624 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -264,12 +264,7 @@ static bool ath_complete_reset(struct ath_softc *sc, bool start)
+diff --git a/db.txt b/db.txt
+index be24c73..7a0b0dc 100644
+--- a/db.txt
++++ b/db.txt
+@@ -156,6 +156,13 @@ country BL: DFS-ETSI
+ 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
+ 	(5490 - 5710 @ 160), (27), DFS
  
- 	ath9k_hw_set_interrupts(ah);
- 	ath9k_hw_enable_interrupts(ah);
--
--	if (!ath9k_is_chanctx_enabled())
--		ieee80211_wake_queues(sc->hw);
--	else
--		ath9k_chanctx_wake_queues(sc, sc->cur_chan);
--
-+	ieee80211_wake_queues(sc->hw);
- 	ath9k_p2p_ps_timer(sc);
- 
- 	return true;
++country BM: DFS-FCC
++	(2402 - 2472 @ 40), (30)
++	(5170 - 5250 @ 80), (24), AUTO-BW
++	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
++	(5490 - 5730 @ 160), (24), DFS
++	(5735 - 5835 @ 80), (30)
++
+ country BN: DFS-JP
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 80), (20), AUTO-BW
 -- 
-2.1.1
+1.9.1
 
