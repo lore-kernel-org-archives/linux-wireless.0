@@ -1,54 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f175.google.com ([209.85.217.175]:51504 "EHLO
-	mail-lb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751273AbaJTNyS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2014 09:54:18 -0400
-Received: by mail-lb0-f175.google.com with SMTP id u10so3866354lbd.6
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2014 06:54:16 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
+Received: from mga02.intel.com ([134.134.136.20]:45151 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933535AbaJ1GQF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Oct 2014 02:16:05 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: stable@vger.kernel.org
 Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 2/9] ath10k: remove unused variable
-Date: Mon, 20 Oct 2014 15:40:31 +0200
-Message-Id: <1413812438-14640-3-git-send-email-michal.kazior@tieto.com> (sfid-20141020_155422_948983_A9E27A7E)
-In-Reply-To: <1413812438-14640-1-git-send-email-michal.kazior@tieto.com>
-References: <1413812438-14640-1-git-send-email-michal.kazior@tieto.com>
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 3.16 7/7] iwlwifi: mvm: update layout of firmware error dump
+Date: Tue, 28 Oct 2014 08:11:26 +0200
+Message-Id: <1414476686-3407-8-git-send-email-emmanuel.grumbach@intel.com> (sfid-20141028_071614_907913_B0084173)
+In-Reply-To: <1414476686-3407-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1414476686-3407-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The rx descriptor variable was no longer used in
-the rx handler.
+commit 5bfe6f53283de44855ee45a102210abbfac995f9 upstream.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+The memory was not zeroed - fix that. Also update the
+iwl_fw_error_dump_info structure.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/htt_rx.c | 5 -----
- 1 file changed, 5 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 63c69d8..61ff2ac 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -1230,7 +1230,6 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
- 	struct ath10k *ar = htt->ar;
- 	struct ieee80211_rx_status *rx_status = &htt->rx_status;
- 	struct htt_rx_indication_mpdu_range *mpdu_ranges;
--	struct htt_rx_desc *rxd;
- 	enum htt_rx_mpdu_status status;
- 	struct ieee80211_hdr *hdr;
- 	int num_mpdu_ranges;
-@@ -1301,10 +1300,6 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
- 				continue;
- 			}
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index ed10e55..83ab42a 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -678,7 +678,7 @@ static void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
+ 	if (trans_len)
+ 		file_len += trans_len;
  
--			rxd = container_of((void *)msdu_head->data,
--					   struct htt_rx_desc,
--					   msdu_payload);
--
- 			if (!ath10k_htt_rx_amsdu_allowed(htt, msdu_head,
- 							 status,
- 							 channel_set,
+-	dump_file = vmalloc(file_len);
++	dump_file = vzalloc(file_len);
+ 	if (!dump_file)
+ 		return;
+ 
 -- 
-1.8.5.3
+1.9.1
 
