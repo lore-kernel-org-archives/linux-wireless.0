@@ -1,32 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:41622 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752330AbaJFO2U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Oct 2014 10:28:20 -0400
-Message-ID: <1412605698.3098.19.camel@jlt4.sipsolutions.net> (sfid-20141006_162823_858970_25337D61)
-Subject: Re: [PATCH v2 4/4] hwsim:  support creating wiphy w/out creating
- wlanX.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: greearb@candelatech.com
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 06 Oct 2014 16:28:18 +0200
-In-Reply-To: <1411773856-25042-4-git-send-email-greearb@candelatech.com> (sfid-20140927_012440_871377_8AAD11F5)
-References: <1411773856-25042-1-git-send-email-greearb@candelatech.com>
-	 <1411773856-25042-4-git-send-email-greearb@candelatech.com>
-	 (sfid-20140927_012440_871377_8AAD11F5)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:37707 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751141AbaJ1MU1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Oct 2014 08:20:27 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 0/3] debugfs: adding helper for single seq_file
+Date: Tue, 28 Oct 2014 13:19:09 +0100
+Message-ID: <1414498752-9746-1-git-send-email-arend@broadcom.com> (sfid-20141028_132030_701779_22EF7D7C)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-You also really need to work on the subject prefixes...
+The first patch was already posted earlier:
 
-They should be
-1) cfg80211
-2) mac80211-hwsim:
-3) mac80211:
-4) mac80211-hwsim:
+Message-ID: <1413043315-22332-1-git-send-email-arend@broadcom.com>
 
-johannes
+This series include changes in driver code to investigate potential
+code savings. As example used the ath9k driver as it has a fair
+amount of debugfs files. In this series it changes 7 debugfs entries
+to use seq_file and the helper function. Below the output of the
+size utility:
 
+   text	   data	    bss	    dec	    hex	filename
+ 115968	   1225	     28	 117221	  1c9e5	original/ath9k.o
+ 113224	   1225	     28	 114477	  1bf2d	seq_file/ath9k.o
+ 111024	   1225	     28	 112277	  1b695	helper/ath9k.o
+
+This series is for 3.19 kernel and applies to the driver-core-next
+branch of the driver-core repository. If needed the ath9k patches
+may be dropped for now and I will resubmit them to wireless-next
+once the debugfs patch has made it into linux-next.
+
+Arend van Spriel (3):
+  debugfs: add helper function to create device related seq_file
+  ath: use seq_file api for ath9k debugfs files
+  ath: ath9k: use debugfs_create_devm_seqfile() helper for seq_file
+    entries
+
+ drivers/net/wireless/ath/ath9k/ahb.c   |   1 +
+ drivers/net/wireless/ath/ath9k/debug.c | 429 +++++++++++----------------------
+ drivers/net/wireless/ath/ath9k/debug.h |   3 +-
+ drivers/net/wireless/ath/ath9k/pci.c   |   1 +
+ fs/debugfs/file.c                      |  54 +++++
+ include/linux/debugfs.h                |  16 +-
+ 6 files changed, 207 insertions(+), 297 deletions(-)
+
+-- 
+1.9.1
 
