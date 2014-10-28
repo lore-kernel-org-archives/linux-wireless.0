@@ -1,90 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f182.google.com ([209.85.213.182]:33389 "EHLO
-	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754503AbaJHTwg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Oct 2014 15:52:36 -0400
-Received: by mail-ig0-f182.google.com with SMTP id hn15so128552igb.3
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Oct 2014 12:52:35 -0700 (PDT)
+Received: from mx4.wp.pl ([212.77.101.11]:36746 "EHLO mx4.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752036AbaJ1KKs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Oct 2014 06:10:48 -0400
+Date: Tue, 28 Oct 2014 11:12:44 +0100
+From: Stanislaw Gruszka <stf_xl@wp.pl>
+To: poma <pomidorabelisima@gmail.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	GSS_MTK_WCN_ACS@mediatek.com, linux-wireless@vger.kernel.org,
+	users@rt2x00.serialmonkey.com, Hua Shao <hua.shao@mediatek.com>,
+	Oleksij Rempel <linux@rempel-privat.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [rt2x00-users] MediaTek Inc. MT7601U Wireless Adapter
+Message-ID: <20141028101244.GB2323@localhost.localdomain> (sfid-20141028_111052_536516_9FB5C20F)
+References: <20140827135550.GD15173@tuxdriver.com>
+ <53FE9920.2040702@gmail.com>
+ <5402B519.1080002@gmail.com>
+ <54034EF1.6040407@maya.org>
+ <5433542F.70206@gmail.com>
+ <20141007135731.GF25590@tuxdriver.com>
+ <5433FFC0.2040704@gmail.com>
+ <543402EF.8080509@gmail.com>
+ <20141008095352.GB1920@redhat.com>
+ <544F4A11.7030806@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20141008130006.GB5186@redhat.com>
-References: <1412135157-13520-1-git-send-email-asselsm@gmail.com>
-	<20141001091240.GA2011@redhat.com>
-	<CAPuovEJtuJdRakwRhdUjRwrmkfry62wJqd8p2uJQ7L0rB7DoCA@mail.gmail.com>
-	<CAPuovEJssghQv=03sn07AuYVvwULq0kSTn9kch53r+VKccy8xA@mail.gmail.com>
-	<be003eea-b253-4eb3-bf08-40d5f6dc629d@email.android.com>
-	<CAPuovEJXkRYyWXZJD7E6_1EqemfJus7Gtr_5PztT6rDtsrRpdw@mail.gmail.com>
-	<20141008130006.GB5186@redhat.com>
-Date: Wed, 8 Oct 2014 15:52:35 -0400
-Message-ID: <CAPuovEKn+Lz3dqSZPhgd+-F4=n6tTOYyg3MDQ=E5yntGM8zYZg@mail.gmail.com> (sfid-20141008_215239_323386_9B1C53D1)
-Subject: Re: [PATCH] rt2x00: rt2x00queue: avoid using more headroom then
- driver requested
-From: Mark Asselstine <asselsm@gmail.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	rt2x00 Users List <users@rt2x00.serialmonkey.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <544F4A11.7030806@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 8, 2014 at 9:00 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
->
-> On Wed, Oct 08, 2014 at 07:46:33AM -0400, Mark Asselstine wrote:
-> > > If rt2x00 does not remove the alignment from the frame before giving it back
-> > > to mac80211 and the same frame comes into rt2x00 again it should be correctly
-> > > aligned and no additional header space is required. So this should be fine.
-> >
-> > Then I would say this definitely hints at a design flaw in
-> > rt2x00queue_insert_l2pad(). Take the following scenario.
-> >
-> > * skb's first arrival in rt2x00queue_insert_l2pad(), 3 bytes needed
-> > for frame alignment, 2 bytes for l2pad results in 3 bytes of headroom
-> > taken.
-> Not quite realistic assumption - header length will have to be odd then.
->
-> But if such situation would happen we will have:
->
-> header_align=2, payload_align=3, l2pad=3
->
-> Since payload_align will be bigger than header_align, header_align will
-> be increased to 6.
->
-> Header will be moved by 6 bytes, frame will be moved by 3 bytes,
-> between header and frame there will be l2pad equal to 3.
->
-> > * rt2x00lib_txdone() returns 2 bytes of headroom
-> Return 3 bytes.
->
-> > * skb's second arrival in rt2x00queue_insert_l2pad(), 0 bytes needed
-> > for frame alignment, 2 bytes for l2pad results in 4 bytes of headroom
-> > taken.
-> Header will be moved by 3 bytes.
->
-> > * rt2x00lib_txdone() returns 2 bytes of headroom
-> Return 3 bytes.
->
-> > Basically as long as any bytes are required for l2pad the headroom
-> > will lose 4 bytes again and again, never being returned by
-> > rt2x00lib_txdone().
->
-> I think that's not true - you made a few mistakes in your scenario,
-> but perhaps I'm wrong :-)
+On Tue, Oct 28, 2014 at 08:47:29AM +0100, poma wrote:
+> On 08.10.2014 11:53, Stanislaw Gruszka wrote:
+> > On Tue, Oct 07, 2014 at 05:12:47PM +0200, poma wrote:
+> >> BTW, pán Gruszka, when will these devices be supported as a part of the upstream Linux kernel?
+> > 
+> > I'm not an oracle :-)
+> > 
+> > Larry declared to work on some mt76xx chip support, I'm cc him.
+> > 
+> > I can also work on new chips for rt2x00, but wanted to finish some
+> > other work before.
+> > 
+> > Stanislaw 
+> > 
+> 
+> Even better pán Gruszka, MediaTek has spoken. :)
+> I hope that they really support further development here.
 
-No just me being an idiot. I had thought
- frame == header + l2pad + payload
-not
- frame == payload
+Me too.
 
-With this straight your numbers makes sense and my scenario is
-incorrect. We don't continue to eat in to the headroom but rather take
-and return a small bit.
-
-Thanks for your patience, it has been a while since I have been
-working on this stuff. I am still motivated to hunt this issue down,
-you might just need to correct me along the way.
-
-Mark
-
->
-> Stanislaw
+Stanislaw
