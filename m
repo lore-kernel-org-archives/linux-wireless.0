@@ -1,285 +1,239 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:49140
-	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751268AbaJRRCR (ORCPT
+Received: from mail-lb0-f180.google.com ([209.85.217.180]:34059 "EHLO
+	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751505AbaJ1JqJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Oct 2014 13:02:17 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
-Subject: [PATCH 01/10] ath9k_hw: make support for PC-OEM cards optional
-Date: Sat, 18 Oct 2014 19:02:03 +0200
-Message-Id: <1413651732-69783-1-git-send-email-nbd@openwrt.org> (sfid-20141018_190245_599527_31F1AD25)
+	Tue, 28 Oct 2014 05:46:09 -0400
+Received: by mail-lb0-f180.google.com with SMTP id z12so239143lbi.25
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Oct 2014 02:46:08 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v3 3/3] ath10k: speed up hw recovery
+Date: Tue, 28 Oct 2014 10:34:38 +0100
+Message-Id: <1414488878-31561-4-git-send-email-michal.kazior@tieto.com> (sfid-20141028_104618_337220_B0F1ABB8)
+In-Reply-To: <1414488878-31561-1-git-send-email-michal.kazior@tieto.com>
+References: <1414488878-31561-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The initvals use up quite a bit of space, and PC-OEM support is
-typically not needed on embedded systems
+In some cases hw recovery was taking an absurdly
+long time due to ath10k waiting for things that
+would never really complete.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Instead of waiting for inevitable timeouts poke
+all completions and wakequeues and check if it's
+still worth waiting.
+
+Reading/writing ar->state requires conf_mutex.
+Since waiters might be holding it introduce a new
+flag CRASH_FLUSH so it's possible to tell waiters
+to abort whatever they were waiting for.
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/ath/ath9k/Kconfig      |  5 ++++
- drivers/net/wireless/ath/ath9k/Makefile     |  3 ++-
- drivers/net/wireless/ath/ath9k/ar9003_rtt.h | 36 +++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/hw.h         | 17 ++++++++++----
- drivers/net/wireless/ath/ath9k/init.c       |  3 +++
- drivers/net/wireless/ath/ath9k/pci.c        |  6 +++++
- drivers/net/wireless/ath/ath9k/reg.h        | 33 +++++++++++++++-----------
- 7 files changed, 84 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/Kconfig b/drivers/net/wireless/ath/ath9k/Kconfig
-index 896e632..ca101d7 100644
---- a/drivers/net/wireless/ath/ath9k/Kconfig
-+++ b/drivers/net/wireless/ath/ath9k/Kconfig
-@@ -148,6 +148,11 @@ config ATH9K_CHANNEL_CONTEXT
- 	 for multi-channel concurrency. Enable this if P2P PowerSave support
- 	 is required.
+Notes:
+    v2:
+     * comment use of barrier() [Kalle]
+     * comment CRASH_FLUSH vs ar->state in commit log [Kalle]
+     * fix crash on too early use of waitqueues [Janusz]
+
+ drivers/net/wireless/ath/ath10k/core.c   | 23 +++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/core.h   |  5 +++++
+ drivers/net/wireless/ath/ath10k/htt_tx.c |  1 -
+ drivers/net/wireless/ath/ath10k/mac.c    | 14 ++++++++++++--
+ drivers/net/wireless/ath/ath10k/mac.h    |  1 +
+ drivers/net/wireless/ath/ath10k/txrx.c   |  3 ++-
+ drivers/net/wireless/ath/ath10k/wmi.c    |  5 ++++-
+ 7 files changed, 47 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 5c23d00..6f2c459 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -744,6 +744,25 @@ static void ath10k_core_restart(struct work_struct *work)
+ {
+ 	struct ath10k *ar = container_of(work, struct ath10k, restart_work);
  
-+config ATH9K_PCOEM
-+	bool "Atheros ath9k support for PC OEM cards" if EXPERT
-+	depends on ATH9K
-+	default y
++	set_bit(ATH10K_FLAG_CRASH_FLUSH, &ar->dev_flags);
 +
- config ATH9K_HTC
-        tristate "Atheros HTC based wireless cards support"
-        depends on USB && MAC80211
-diff --git a/drivers/net/wireless/ath/ath9k/Makefile b/drivers/net/wireless/ath/ath9k/Makefile
-index 73704c1..22b934b 100644
---- a/drivers/net/wireless/ath/ath9k/Makefile
-+++ b/drivers/net/wireless/ath/ath9k/Makefile
-@@ -32,7 +32,6 @@ ath9k_hw-y:=	\
- 		ar5008_phy.o \
- 		ar9002_calib.o \
- 		ar9003_calib.o \
--		ar9003_rtt.o \
- 		calib.o \
- 		eeprom.o \
- 		eeprom_def.o \
-@@ -50,6 +49,8 @@ ath9k_hw-$(CONFIG_ATH9K_WOW) += ar9003_wow.o
- ath9k_hw-$(CONFIG_ATH9K_BTCOEX_SUPPORT) += btcoex.o \
- 					   ar9003_mci.o
++	/* Place a barrier to make sure the compiler doesn't reorder
++	 * CRASH_FLUSH and calling other functions.
++	 */
++	barrier();
++
++	ieee80211_stop_queues(ar->hw);
++	ath10k_drain_tx(ar);
++	complete_all(&ar->scan.started);
++	complete_all(&ar->scan.completed);
++	complete_all(&ar->scan.on_channel);
++	complete_all(&ar->offchan_tx_completed);
++	complete_all(&ar->install_key_done);
++	complete_all(&ar->vdev_setup_done);
++	wake_up(&ar->htt.empty_tx_wq);
++	wake_up(&ar->wmi.tx_credits_wq);
++	wake_up(&ar->peer_mapping_wq);
++
+ 	mutex_lock(&ar->conf_mutex);
  
-+ath9k_hw-$(CONFIG_ATH9K_PCOEM) += ar9003_rtt.o
-+
- ath9k_hw-$(CONFIG_ATH9K_DYNACK) += dynack.o
+ 	switch (ar->state) {
+@@ -781,6 +800,8 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode)
  
- obj-$(CONFIG_ATH9K_HW) += ath9k_hw.o
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_rtt.h b/drivers/net/wireless/ath/ath9k/ar9003_rtt.h
-index a43b30d..6290467 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_rtt.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_rtt.h
-@@ -17,6 +17,7 @@
- #ifndef AR9003_RTT_H
- #define AR9003_RTT_H
+ 	lockdep_assert_held(&ar->conf_mutex);
  
-+#ifdef CONFIG_ATH9K_PCOEM
- void ar9003_hw_rtt_enable(struct ath_hw *ah);
- void ar9003_hw_rtt_disable(struct ath_hw *ah);
- void ar9003_hw_rtt_set_mask(struct ath_hw *ah, u32 rtt_mask);
-@@ -25,5 +26,40 @@ void ar9003_hw_rtt_load_hist(struct ath_hw *ah);
- void ar9003_hw_rtt_fill_hist(struct ath_hw *ah);
- void ar9003_hw_rtt_clear_hist(struct ath_hw *ah);
- bool ar9003_hw_rtt_restore(struct ath_hw *ah, struct ath9k_channel *chan);
-+#else
-+static inline void ar9003_hw_rtt_enable(struct ath_hw *ah)
-+{
-+}
++	clear_bit(ATH10K_FLAG_CRASH_FLUSH, &ar->dev_flags);
 +
-+static inline void ar9003_hw_rtt_disable(struct ath_hw *ah)
-+{
-+}
-+
-+static inline void ar9003_hw_rtt_set_mask(struct ath_hw *ah, u32 rtt_mask)
-+{
-+}
-+
-+static inline bool ar9003_hw_rtt_force_restore(struct ath_hw *ah)
-+{
-+	return false;
-+}
-+
-+static inline void ar9003_hw_rtt_load_hist(struct ath_hw *ah)
-+{
-+}
-+
-+static inline void ar9003_hw_rtt_fill_hist(struct ath_hw *ah)
-+{
-+}
-+
-+static inline void ar9003_hw_rtt_clear_hist(struct ath_hw *ah)
-+{
-+}
-+
-+static inline bool ar9003_hw_rtt_restore(struct ath_hw *ah, struct ath9k_channel *chan)
-+{
-+	return false;
-+}
-+#endif
+ 	ath10k_bmi_start(ar);
  
- #endif
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 975074f..7a81f5b 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -244,13 +244,20 @@ enum ath9k_hw_caps {
- 	ATH9K_HW_CAP_2GHZ			= BIT(11),
- 	ATH9K_HW_CAP_5GHZ			= BIT(12),
- 	ATH9K_HW_CAP_APM			= BIT(13),
-+#ifdef CONFIG_ATH9K_PCOEM
- 	ATH9K_HW_CAP_RTT			= BIT(14),
- 	ATH9K_HW_CAP_MCI			= BIT(15),
--	ATH9K_HW_CAP_DFS			= BIT(16),
--	ATH9K_HW_WOW_DEVICE_CAPABLE		= BIT(17),
--	ATH9K_HW_CAP_PAPRD			= BIT(18),
--	ATH9K_HW_CAP_FCC_BAND_SWITCH		= BIT(19),
--	ATH9K_HW_CAP_BT_ANT_DIV			= BIT(20),
-+	ATH9K_HW_WOW_DEVICE_CAPABLE		= BIT(16),
-+	ATH9K_HW_CAP_BT_ANT_DIV			= BIT(17),
-+#else
-+	ATH9K_HW_CAP_RTT			= 0,
-+	ATH9K_HW_CAP_MCI			= 0,
-+	ATH9K_HW_WOW_DEVICE_CAPABLE		= 0,
-+	ATH9K_HW_CAP_BT_ANT_DIV			= 0,
-+#endif
-+	ATH9K_HW_CAP_DFS			= BIT(18),
-+	ATH9K_HW_CAP_PAPRD			= BIT(19),
-+	ATH9K_HW_CAP_FCC_BAND_SWITCH		= BIT(20),
+ 	if (ath10k_init_configure_target(ar)) {
+@@ -1185,6 +1206,8 @@ struct ath10k *ath10k_core_create(size_t priv_size, struct device *dev,
+ 
+ 	INIT_LIST_HEAD(&ar->peers);
+ 	init_waitqueue_head(&ar->peer_mapping_wq);
++	init_waitqueue_head(&ar->htt.empty_tx_wq);
++	init_waitqueue_head(&ar->wmi.tx_credits_wq);
+ 
+ 	init_completion(&ar->offchan_tx_completed);
+ 	INIT_WORK(&ar->offchan_tx_work, ath10k_offchan_tx_work);
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 1e3fd10..114bac0 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -386,6 +386,11 @@ enum ath10k_dev_flags {
+ 	/* Indicates that ath10k device is during CAC phase of DFS */
+ 	ATH10K_CAC_RUNNING,
+ 	ATH10K_FLAG_CORE_REGISTERED,
++
++	/* Device has crashed and needs to restart. This indicates any pending
++	 * waiters should immediately cancel instead of waiting for a time out.
++	 */
++	ATH10K_FLAG_CRASH_FLUSH,
  };
  
- /*
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 156a944..57a1760 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -362,6 +362,9 @@ static void ath9k_init_pcoem_platform(struct ath_softc *sc)
- 	struct ath9k_hw_capabilities *pCap = &ah->caps;
- 	struct ath_common *common = ath9k_hw_common(ah);
+ enum ath10k_cal_mode {
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index b0df470..1702c97 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -92,7 +92,6 @@ int ath10k_htt_tx_alloc(struct ath10k_htt *htt)
+ 	struct ath10k *ar = htt->ar;
  
-+	if (!IS_ENABLED(CONFIG_ATH9K_PCOEM))
-+		return;
+ 	spin_lock_init(&htt->tx_lock);
+-	init_waitqueue_head(&htt->empty_tx_wq);
+ 
+ 	if (test_bit(ATH10K_FW_FEATURE_WMI_10X, htt->ar->fw_features))
+ 		htt->max_num_pending_tx = TARGET_10X_NUM_MSDU_DESC;
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index a726107..b2edfb4 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -519,6 +519,9 @@ static inline int ath10k_vdev_setup_sync(struct ath10k *ar)
+ 
+ 	lockdep_assert_held(&ar->conf_mutex);
+ 
++	if (test_bit(ATH10K_FLAG_CRASH_FLUSH, &ar->dev_flags))
++		return -ESHUTDOWN;
 +
- 	if (common->bus_ops->ath_bus_type != ATH_PCI)
- 		return;
+ 	ret = wait_for_completion_timeout(&ar->vdev_setup_done,
+ 					  ATH10K_VDEV_SETUP_TIMEOUT_HZ);
+ 	if (ret == 0)
+@@ -551,6 +554,8 @@ static int ath10k_monitor_vdev_start(struct ath10k *ar, int vdev_id)
+ 	arg.channel.max_reg_power = channel->max_reg_power * 2;
+ 	arg.channel.max_antenna_gain = channel->max_antenna_gain * 2;
  
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index c018dea..e3f60d5 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -30,6 +30,7 @@ static const struct pci_device_id ath_pci_id_table[] = {
- 	{ PCI_VDEVICE(ATHEROS, 0x0029) }, /* PCI   */
- 	{ PCI_VDEVICE(ATHEROS, 0x002A) }, /* PCI-E */
- 
-+#ifdef CONFIG_ATH9K_PCOEM
- 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
- 			 0x002A,
- 			 PCI_VENDOR_ID_AZWAVE,
-@@ -82,6 +83,7 @@ static const struct pci_device_id ath_pci_id_table[] = {
- 			 PCI_VENDOR_ID_AZWAVE,
- 			 0x2C37),
- 	  .driver_data = ATH9K_PCI_BT_ANT_DIV },
-+#endif
- 
- 	{ PCI_VDEVICE(ATHEROS, 0x002B) }, /* PCI-E */
- 	{ PCI_VDEVICE(ATHEROS, 0x002C) }, /* PCI-E 802.11n bonded out */
-@@ -102,6 +104,7 @@ static const struct pci_device_id ath_pci_id_table[] = {
- 
- 	{ PCI_VDEVICE(ATHEROS, 0x0030) }, /* PCI-E  AR9300 */
- 
-+#ifdef CONFIG_ATH9K_PCOEM
- 	/* PCI-E CUS198 */
- 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
- 			 0x0032,
-@@ -294,10 +297,12 @@ static const struct pci_device_id ath_pci_id_table[] = {
- 			 PCI_VENDOR_ID_ASUSTEK,
- 			 0x850D),
- 	  .driver_data = ATH9K_PCI_NO_PLL_PWRSAVE },
-+#endif
- 
- 	{ PCI_VDEVICE(ATHEROS, 0x0032) }, /* PCI-E  AR9485 */
- 	{ PCI_VDEVICE(ATHEROS, 0x0033) }, /* PCI-E  AR9580 */
- 
-+#ifdef CONFIG_ATH9K_PCOEM
- 	/* PCI-E CUS217 */
- 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
- 			 0x0034,
-@@ -657,6 +662,7 @@ static const struct pci_device_id ath_pci_id_table[] = {
- 	/* PCI-E AR9565 (WB335) */
- 	{ PCI_VDEVICE(ATHEROS, 0x0036),
- 	  .driver_data = ATH9K_PCI_BT_ANT_DIV },
-+#endif
- 
- 	{ 0 }
- };
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index 2a938f4..1c0b1c1 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -892,10 +892,21 @@
- 	(AR_SREV_9330((_ah)) && \
- 	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9330_12))
- 
-+#ifdef CONFIG_ATH9K_PCOEM
-+#define AR_SREV_9462(_ah) \
-+	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9462))
- #define AR_SREV_9485(_ah) \
- 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9485))
-+#define AR_SREV_9565(_ah) \
-+	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9565))
-+#else
-+#define AR_SREV_9462(_ah) 0
-+#define AR_SREV_9485(_ah) 0
-+#define AR_SREV_9565(_ah) 0
-+#endif
++	reinit_completion(&ar->vdev_setup_done);
 +
- #define AR_SREV_9485_11_OR_LATER(_ah) \
--	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9485) && \
-+	(AR_SREV_9485(_ah) && \
- 	 ((_ah)->hw_version.macRev >= AR_SREV_REVISION_9485_11))
- #define AR_SREV_9485_OR_LATER(_ah) \
- 	(((_ah)->hw_version.macVersion >= AR_SREV_VERSION_9485))
-@@ -915,34 +926,30 @@
-     (AR_SREV_9285_12_OR_LATER(_ah) && \
-      ((REG_READ(_ah, AR_AN_SYNTH9) & 0x7) == 0x1))
+ 	ret = ath10k_wmi_vdev_start(ar, &arg);
+ 	if (ret) {
+ 		ath10k_warn(ar, "failed to request monitor vdev %i start: %d\n",
+@@ -598,6 +603,8 @@ static int ath10k_monitor_vdev_stop(struct ath10k *ar)
+ 		ath10k_warn(ar, "failed to put down monitor vdev %i: %d\n",
+ 			    ar->monitor_vdev_id, ret);
  
--#define AR_SREV_9462(_ah) \
--	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9462))
- #define AR_SREV_9462_20(_ah) \
--	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9462) && \
-+	(AR_SREV_9462(_ah) && \
- 	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9462_20))
- #define AR_SREV_9462_21(_ah) \
--	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9462) && \
-+	(AR_SREV_9462(_ah) && \
- 	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9462_21))
- #define AR_SREV_9462_20_OR_LATER(_ah) \
--	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9462) && \
-+	(AR_SREV_9462(_ah) && \
- 	 ((_ah)->hw_version.macRev >= AR_SREV_REVISION_9462_20))
- #define AR_SREV_9462_21_OR_LATER(_ah) \
--	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9462) && \
-+	(AR_SREV_9462(_ah) && \
- 	 ((_ah)->hw_version.macRev >= AR_SREV_REVISION_9462_21))
++	reinit_completion(&ar->vdev_setup_done);
++
+ 	ret = ath10k_wmi_vdev_stop(ar, ar->monitor_vdev_id);
+ 	if (ret)
+ 		ath10k_warn(ar, "failed to to request monitor vdev %i stop: %d\n",
+@@ -2350,7 +2357,7 @@ static void ath10k_tx(struct ieee80211_hw *hw,
+ }
  
--#define AR_SREV_9565(_ah) \
--	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9565))
- #define AR_SREV_9565_10(_ah) \
--	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9565) && \
-+	(AR_SREV_9565(_ah) && \
- 	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9565_10))
- #define AR_SREV_9565_101(_ah) \
--	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9565) && \
-+	(AR_SREV_9565(_ah) && \
- 	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9565_101))
- #define AR_SREV_9565_11(_ah) \
--	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9565) && \
-+	(AR_SREV_9565(_ah) && \
- 	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9565_11))
- #define AR_SREV_9565_11_OR_LATER(_ah) \
--	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9565) && \
-+	(AR_SREV_9565(_ah) && \
- 	 ((_ah)->hw_version.macRev >= AR_SREV_REVISION_9565_11))
+ /* Must not be called with conf_mutex held as workers can use that also. */
+-static void ath10k_drain_tx(struct ath10k *ar)
++void ath10k_drain_tx(struct ath10k *ar)
+ {
+ 	/* make sure rcu-protected mac80211 tx path itself is drained */
+ 	synchronize_net();
+@@ -3908,7 +3915,9 @@ static void ath10k_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 			empty = (ar->htt.num_pending_tx == 0);
+ 			spin_unlock_bh(&ar->htt.tx_lock);
  
- #define AR_SREV_9550(_ah) \
+-			skip = (ar->state == ATH10K_STATE_WEDGED);
++			skip = (ar->state == ATH10K_STATE_WEDGED) ||
++			       test_bit(ATH10K_FLAG_CRASH_FLUSH,
++					&ar->dev_flags);
+ 
+ 			(empty || skip);
+ 		}), ATH10K_FLUSH_TIMEOUT_HZ);
+@@ -4005,6 +4014,7 @@ static void ath10k_restart_complete(struct ieee80211_hw *hw)
+ 	if (ar->state == ATH10K_STATE_RESTARTED) {
+ 		ath10k_info(ar, "device successfully recovered\n");
+ 		ar->state = ATH10K_STATE_ON;
++		ieee80211_wake_queues(ar->hw);
+ 	}
+ 
+ 	mutex_unlock(&ar->conf_mutex);
+diff --git a/drivers/net/wireless/ath/ath10k/mac.h b/drivers/net/wireless/ath/ath10k/mac.h
+index 965c511..4e3c989 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.h
++++ b/drivers/net/wireless/ath/ath10k/mac.h
+@@ -40,6 +40,7 @@ void ath10k_mgmt_over_wmi_tx_purge(struct ath10k *ar);
+ void ath10k_mgmt_over_wmi_tx_work(struct work_struct *work);
+ void ath10k_halt(struct ath10k *ar);
+ void ath10k_mac_vif_beacon_free(struct ath10k_vif *arvif);
++void ath10k_drain_tx(struct ath10k *ar);
+ 
+ static inline struct ath10k_vif *ath10k_vif_to_arvif(struct ieee80211_vif *vif)
+ {
+diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
+index f9c90e3..7579de8 100644
+--- a/drivers/net/wireless/ath/ath10k/txrx.c
++++ b/drivers/net/wireless/ath/ath10k/txrx.c
+@@ -146,7 +146,8 @@ static int ath10k_wait_for_peer_common(struct ath10k *ar, int vdev_id,
+ 			mapped = !!ath10k_peer_find(ar, vdev_id, addr);
+ 			spin_unlock_bh(&ar->data_lock);
+ 
+-			mapped == expect_mapped;
++			(mapped == expect_mapped ||
++			 test_bit(ATH10K_FLAG_CRASH_FLUSH, &ar->dev_flags));
+ 		}), 3*HZ);
+ 
+ 	if (ret <= 0)
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index ae746ce..5592844 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -779,6 +779,10 @@ int ath10k_wmi_cmd_send(struct ath10k *ar, struct sk_buff *skb, u32 cmd_id)
+ 		ath10k_wmi_tx_beacons_nowait(ar);
+ 
+ 		ret = ath10k_wmi_cmd_send_nowait(ar, skb, cmd_id);
++
++		if (ret && test_bit(ATH10K_FLAG_CRASH_FLUSH, &ar->dev_flags))
++			ret = -ESHUTDOWN;
++
+ 		(ret != -EAGAIN);
+ 	}), 3*HZ);
+ 
+@@ -4398,7 +4402,6 @@ int ath10k_wmi_attach(struct ath10k *ar)
+ 
+ 	init_completion(&ar->wmi.service_ready);
+ 	init_completion(&ar->wmi.unified_ready);
+-	init_waitqueue_head(&ar->wmi.tx_credits_wq);
+ 
+ 	return 0;
+ }
 -- 
-2.0.4
+1.8.5.3
 
