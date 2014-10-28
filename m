@@ -1,55 +1,330 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:57314 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753670AbaJBBDB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Oct 2014 21:03:01 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH v2 06/10] ath9k: Fix queue handling in flush()
-Date: Thu,  2 Oct 2014 06:33:16 +0530
-Message-Id: <1412211800-24344-7-git-send-email-sujith@msujith.org> (sfid-20141002_030304_181816_1834C5EC)
-In-Reply-To: <1412211800-24344-1-git-send-email-sujith@msujith.org>
-References: <1412211800-24344-1-git-send-email-sujith@msujith.org>
+Received: from mga02.intel.com ([134.134.136.20]:45151 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933495AbaJ1GQD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Oct 2014 02:16:03 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: stable@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 3.16 6/7] iwlwifi: mvm: kill iwl_mvm_fw_error_rxf_dump
+Date: Tue, 28 Oct 2014 08:11:25 +0200
+Message-Id: <1414476686-3407-7-git-send-email-emmanuel.grumbach@intel.com> (sfid-20141028_071611_708082_36932FDE)
+In-Reply-To: <1414476686-3407-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1414476686-3407-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+commit 655e6d6db21b0c0d411aef9d816816fb68b0496c upstream.
 
-When draining of the TX queues fails, a
-full HW reset is done. ath_reset() makes sure
-that the queues in mac80211 are restarted,
-so there is no need to wake them up again.
+Its content can move to the caller.
+While at it, move iwl_mvm_fw_error_rxf_dump to caller.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/main.c | 5 -----
- 1 file changed, 5 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 100 ++++++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/mvm/mvm.h      |   6 --
+ drivers/net/wireless/iwlwifi/mvm/ops.c      |  83 -----------------------
+ drivers/net/wireless/iwlwifi/mvm/utils.c    |  43 ------------
+ 4 files changed, 100 insertions(+), 132 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 65ca7ac..5f908a0 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1999,7 +1999,6 @@ void __ath9k_flush(struct ieee80211_hw *hw, u32 queues, bool drop)
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	int timeout = HZ / 5; /* 200 ms */
- 	bool drain_txq;
--	int i;
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 98556d0..ed10e55 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -80,6 +80,8 @@
+ #include "fw-api-scan.h"
+ #include "iwl-phy-db.h"
+ #include "testmode.h"
++#include "iwl-fw-error-dump.h"
++#include "iwl-prph.h"
  
- 	cancel_delayed_work_sync(&sc->tx_complete_work);
+ static const struct ieee80211_iface_limit iwl_mvm_limits[] = {
+ 	{
+@@ -637,6 +639,104 @@ static void iwl_mvm_cleanup_iterator(void *data, u8 *mac,
+ 	mvmvif->phy_ctxt = NULL;
+ }
  
-@@ -2027,10 +2026,6 @@ void __ath9k_flush(struct ieee80211_hw *hw, u32 queues, bool drop)
- 			ath_reset(sc);
++#ifdef CONFIG_IWLWIFI_DEBUGFS
++static void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
++{
++	struct iwl_fw_error_dump_file *dump_file;
++	struct iwl_fw_error_dump_data *dump_data;
++	struct iwl_fw_error_dump_info *dump_info;
++	const struct fw_img *img;
++	u32 sram_len, sram_ofs;
++	u32 file_len, rxf_len;
++	unsigned long flags;
++	u32 trans_len;
++	int reg_val;
++
++	lockdep_assert_held(&mvm->mutex);
++
++	if (mvm->fw_error_dump)
++		return;
++
++	img = &mvm->fw->img[mvm->cur_ucode];
++	sram_ofs = img->sec[IWL_UCODE_SECTION_DATA].offset;
++	sram_len = img->sec[IWL_UCODE_SECTION_DATA].len;
++
++	/* reading buffer size */
++	reg_val = iwl_trans_read_prph(mvm->trans, RXF_SIZE_ADDR);
++	rxf_len = (reg_val & RXF_SIZE_BYTE_CNT_MSK) >> RXF_SIZE_BYTE_CND_POS;
++
++	/* the register holds the value divided by 128 */
++	rxf_len = rxf_len << 7;
++
++	file_len = sizeof(*dump_file) +
++		   sizeof(*dump_data) * 3 +
++		   sram_len +
++		   rxf_len +
++		   sizeof(*dump_info);
++
++	trans_len = iwl_trans_dump_data(mvm->trans, NULL, 0);
++	if (trans_len)
++		file_len += trans_len;
++
++	dump_file = vmalloc(file_len);
++	if (!dump_file)
++		return;
++
++	mvm->fw_error_dump = dump_file;
++
++	dump_file->barker = cpu_to_le32(IWL_FW_ERROR_DUMP_BARKER);
++	dump_file->file_len = cpu_to_le32(file_len);
++	dump_data = (void *)dump_file->data;
++
++	dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_DEV_FW_INFO);
++	dump_data->len = cpu_to_le32(sizeof(*dump_info));
++	dump_info = (void *) dump_data->data;
++	dump_info->device_family =
++		mvm->cfg->device_family == IWL_DEVICE_FAMILY_7000 ?
++			cpu_to_le32(IWL_FW_ERROR_DUMP_FAMILY_7) :
++			cpu_to_le32(IWL_FW_ERROR_DUMP_FAMILY_8);
++	memcpy(dump_info->fw_human_readable, mvm->fw->human_readable,
++	       sizeof(dump_info->fw_human_readable));
++	strncpy(dump_info->dev_human_readable, mvm->cfg->name,
++		sizeof(dump_info->dev_human_readable));
++	strncpy(dump_info->bus_human_readable, mvm->dev->bus->name,
++		sizeof(dump_info->bus_human_readable));
++
++	dump_data = iwl_fw_error_next_data(dump_data);
++	dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_RXF);
++	dump_data->len = cpu_to_le32(rxf_len);
++
++	if (iwl_trans_grab_nic_access(mvm->trans, false, &flags)) {
++		u32 *rxf = (void *)dump_data->data;
++		int i;
++
++		for (i = 0; i < (rxf_len / sizeof(u32)); i++) {
++			iwl_trans_write_prph(mvm->trans,
++					     RXF_LD_FENCE_OFFSET_ADDR,
++					     i * sizeof(u32));
++			rxf[i] = iwl_trans_read_prph(mvm->trans,
++						     RXF_FIFO_RD_FENCE_ADDR);
++		}
++		iwl_trans_release_nic_access(mvm->trans, &flags);
++	}
++
++	dump_data = iwl_fw_error_next_data(dump_data);
++	dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_SRAM);
++	dump_data->len = cpu_to_le32(sram_len);
++	iwl_trans_read_mem_bytes(mvm->trans, sram_ofs, dump_data->data,
++				 sram_len);
++
++	if (trans_len) {
++		void *buf = iwl_fw_error_next_data(dump_data);
++		u32 real_trans_len = iwl_trans_dump_data(mvm->trans, buf,
++							 trans_len);
++		dump_data = (void *)((u8 *)buf + real_trans_len);
++		dump_file->file_len =
++			cpu_to_le32(file_len - trans_len + real_trans_len);
++	}
++}
++#endif
++
+ static void iwl_mvm_restart_cleanup(struct iwl_mvm *mvm)
+ {
+ #ifdef CONFIG_IWLWIFI_DEBUGFS
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index e084fc6..e99b7f1 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -586,8 +586,6 @@ struct iwl_mvm {
+ 	/* -1 for always, 0 for never, >0 for that many times */
+ 	s8 restart_fw;
+ 	void *fw_error_dump;
+-	u32 *fw_error_rxf;
+-	u32 fw_error_rxf_len;
  
- 		ath9k_ps_restore(sc);
--		for (i = 0; i < IEEE80211_NUM_ACS; i++) {
--			ieee80211_wake_queue(sc->hw,
--					     sc->cur_chan->hw_queue_base + i);
--		}
+ #ifdef CONFIG_IWLWIFI_LEDS
+ 	struct led_classdev led;
+@@ -717,10 +715,6 @@ void iwl_mvm_hwrate_to_tx_rate(u32 rate_n_flags,
+ 			       struct ieee80211_tx_rate *r);
+ u8 iwl_mvm_mac80211_idx_to_hwrate(int rate_idx);
+ void iwl_mvm_dump_nic_error_log(struct iwl_mvm *mvm);
+-#ifdef CONFIG_IWLWIFI_DEBUGFS
+-void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm);
+-void iwl_mvm_fw_error_rxf_dump(struct iwl_mvm *mvm);
+-#endif
+ u8 first_antenna(u8 mask);
+ u8 iwl_mvm_next_antenna(struct iwl_mvm *mvm, u8 valid, u8 last_idx);
+ 
+diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
+index 94506ec..172c1d4 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
+@@ -549,7 +549,6 @@ static void iwl_op_mode_mvm_stop(struct iwl_op_mode *op_mode)
+ 
+ 	kfree(mvm->scan_cmd);
+ 	vfree(mvm->fw_error_dump);
+-	kfree(mvm->fw_error_rxf);
+ 	kfree(mvm->mcast_filter_cmd);
+ 	mvm->mcast_filter_cmd = NULL;
+ 
+@@ -820,88 +819,6 @@ static void iwl_mvm_nic_restart(struct iwl_mvm *mvm)
  	}
+ }
  
- 	ieee80211_queue_delayed_work(hw, &sc->tx_complete_work, 0);
+-#ifdef CONFIG_IWLWIFI_DEBUGFS
+-void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
+-{
+-	struct iwl_fw_error_dump_file *dump_file;
+-	struct iwl_fw_error_dump_data *dump_data;
+-	struct iwl_fw_error_dump_info *dump_info;
+-	const struct fw_img *img;
+-	u32 sram_len, sram_ofs;
+-	u32 file_len;
+-	u32 trans_len;
+-
+-	lockdep_assert_held(&mvm->mutex);
+-
+-	if (mvm->fw_error_dump)
+-		return;
+-
+-	img = &mvm->fw->img[mvm->cur_ucode];
+-	sram_ofs = img->sec[IWL_UCODE_SECTION_DATA].offset;
+-	sram_len = img->sec[IWL_UCODE_SECTION_DATA].len;
+-
+-	file_len = sizeof(*dump_file) +
+-		   sizeof(*dump_data) * 3 +
+-		   sram_len +
+-		   mvm->fw_error_rxf_len +
+-		   sizeof(*dump_info);
+-
+-	trans_len = iwl_trans_dump_data(mvm->trans, NULL, 0);
+-	if (trans_len)
+-		file_len += trans_len;
+-
+-	dump_file = vmalloc(file_len);
+-	if (!dump_file)
+-		return;
+-
+-	mvm->fw_error_dump = dump_file;
+-
+-	dump_file->barker = cpu_to_le32(IWL_FW_ERROR_DUMP_BARKER);
+-	dump_file->file_len = cpu_to_le32(file_len);
+-	dump_data = (void *)dump_file->data;
+-
+-	dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_DEV_FW_INFO);
+-	dump_data->len = cpu_to_le32(sizeof(*dump_info));
+-	dump_info = (void *) dump_data->data;
+-	dump_info->device_family =
+-		mvm->cfg->device_family == IWL_DEVICE_FAMILY_7000 ?
+-			cpu_to_le32(IWL_FW_ERROR_DUMP_FAMILY_7) :
+-			cpu_to_le32(IWL_FW_ERROR_DUMP_FAMILY_8);
+-	memcpy(dump_info->fw_human_readable, mvm->fw->human_readable,
+-	       sizeof(dump_info->fw_human_readable));
+-	strncpy(dump_info->dev_human_readable, mvm->cfg->name,
+-		sizeof(dump_info->dev_human_readable));
+-	strncpy(dump_info->bus_human_readable, mvm->dev->bus->name,
+-		sizeof(dump_info->bus_human_readable));
+-
+-	iwl_mvm_fw_error_rxf_dump(mvm);
+-
+-	dump_data = iwl_fw_error_next_data(dump_data);
+-	dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_RXF);
+-	dump_data->len = cpu_to_le32(mvm->fw_error_rxf_len);
+-	memcpy(dump_data->data, mvm->fw_error_rxf, mvm->fw_error_rxf_len);
+-
+-	dump_data = iwl_fw_error_next_data(dump_data);
+-	dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_SRAM);
+-	dump_data->len = cpu_to_le32(sram_len);
+-	iwl_trans_read_mem_bytes(mvm->trans, sram_ofs, dump_data->data,
+-				 sram_len);
+-
+-	kfree(mvm->fw_error_rxf);
+-	mvm->fw_error_rxf = NULL;
+-	mvm->fw_error_rxf_len = 0;
+-
+-	if (trans_len) {
+-		void *buf = iwl_fw_error_next_data(dump_data);
+-		u32 real_trans_len = iwl_trans_dump_data(mvm->trans, buf,
+-							 trans_len);
+-		dump_data = (void *)((u8 *)buf + real_trans_len);
+-		dump_file->file_len =
+-			cpu_to_le32(file_len - trans_len + real_trans_len);
+-	}
+-}
+-#endif
+-
+ static void iwl_mvm_nic_error(struct iwl_op_mode *op_mode)
+ {
+ 	struct iwl_mvm *mvm = IWL_OP_MODE_GET_MVM(op_mode);
+diff --git a/drivers/net/wireless/iwlwifi/mvm/utils.c b/drivers/net/wireless/iwlwifi/mvm/utils.c
+index 15db97c..ac249da 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/utils.c
++++ b/drivers/net/wireless/iwlwifi/mvm/utils.c
+@@ -519,49 +519,6 @@ void iwl_mvm_dump_nic_error_log(struct iwl_mvm *mvm)
+ 		iwl_mvm_dump_umac_error_log(mvm);
+ }
+ 
+-#ifdef CONFIG_IWLWIFI_DEBUGFS
+-void iwl_mvm_fw_error_rxf_dump(struct iwl_mvm *mvm)
+-{
+-	int i, reg_val;
+-	unsigned long flags;
+-
+-	if (!mvm->ucode_loaded || mvm->fw_error_rxf || mvm->fw_error_dump)
+-		return;
+-
+-	/* reading buffer size */
+-	reg_val = iwl_trans_read_prph(mvm->trans, RXF_SIZE_ADDR);
+-	mvm->fw_error_rxf_len =
+-		(reg_val & RXF_SIZE_BYTE_CNT_MSK) >> RXF_SIZE_BYTE_CND_POS;
+-
+-	/* the register holds the value divided by 128 */
+-	mvm->fw_error_rxf_len = mvm->fw_error_rxf_len << 7;
+-
+-	if (!mvm->fw_error_rxf_len)
+-		return;
+-
+-	mvm->fw_error_rxf =  kzalloc(mvm->fw_error_rxf_len, GFP_ATOMIC);
+-	if (!mvm->fw_error_rxf) {
+-		mvm->fw_error_rxf_len = 0;
+-		return;
+-	}
+-
+-	if (!iwl_trans_grab_nic_access(mvm->trans, false, &flags)) {
+-		kfree(mvm->fw_error_rxf);
+-		mvm->fw_error_rxf = NULL;
+-		mvm->fw_error_rxf_len = 0;
+-		return;
+-	}
+-
+-	for (i = 0; i < (mvm->fw_error_rxf_len / sizeof(u32)); i++) {
+-		iwl_trans_write_prph(mvm->trans, RXF_LD_FENCE_OFFSET_ADDR,
+-				     i * sizeof(u32));
+-		mvm->fw_error_rxf[i] =
+-			iwl_trans_read_prph(mvm->trans, RXF_FIFO_RD_FENCE_ADDR);
+-	}
+-	iwl_trans_release_nic_access(mvm->trans, &flags);
+-}
+-#endif
+-
+ /**
+  * iwl_mvm_send_lq_cmd() - Send link quality command
+  * @init: This command is sent as part of station initialization right
 -- 
-2.1.1
+1.9.1
 
