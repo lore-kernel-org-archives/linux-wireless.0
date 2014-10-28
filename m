@@ -1,42 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f49.google.com ([74.125.82.49]:40383 "EHLO
-	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756101AbaJ2Rpr (ORCPT
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:50641 "EHLO
+	out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759767AbaJ1GXn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2014 13:45:47 -0400
-Received: by mail-wg0-f49.google.com with SMTP id x13so2445335wgg.36
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2014 10:45:46 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH v2 21/34] staging: vt6655: switch driver over to mac80211
-Date: Wed, 29 Oct 2014 17:43:56 +0000
-Message-Id: <1414604649-9105-22-git-send-email-tvboxspy@gmail.com> (sfid-20141029_184606_868182_44ED1100)
-In-Reply-To: <1414604649-9105-1-git-send-email-tvboxspy@gmail.com>
-References: <1414604649-9105-1-git-send-email-tvboxspy@gmail.com>
+	Tue, 28 Oct 2014 02:23:43 -0400
+Received: from compute3.internal (compute3.nyi.internal [10.202.2.43])
+	by mailout.nyi.internal (Postfix) with ESMTP id B1EBB20AB4
+	for <linux-wireless@vger.kernel.org>; Tue, 28 Oct 2014 02:23:42 -0400 (EDT)
+Date: Tue, 28 Oct 2014 14:22:31 +0800
+From: Greg KH <greg@kroah.com>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: stable@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3.16 0/7] Backort firmware monitor to 3.16
+Message-ID: <20141028062231.GA12676@kroah.com> (sfid-20141028_072348_803852_0F6557EC)
+References: <1414476686-3407-1-git-send-email-emmanuel.grumbach@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1414476686-3407-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/Kconfig | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+On Tue, Oct 28, 2014 at 08:11:19AM +0200, Emmanuel Grumbach wrote:
+> This patch series allows to use the firmware debugging features
+> of iwlwifi on 3.16. These features are already in 3.17.
+> 
+> I know that this patch series is not compliant with Greg's
+> rules for stable patches. It is unlikely that these patches
+> will be applied on vanilla 3.16 - I know that.
 
-diff --git a/drivers/staging/vt6655/Kconfig b/drivers/staging/vt6655/Kconfig
-index c3ba693..77cfc70 100644
---- a/drivers/staging/vt6655/Kconfig
-+++ b/drivers/staging/vt6655/Kconfig
-@@ -1,8 +1,6 @@
- config VT6655
-    tristate "VIA Technologies VT6655 support"
--   depends on PCI && WLAN && m
--   select WIRELESS_EXT
--   select WEXT_PRIV
-+   depends on PCI && MAC80211 && m
-    ---help---
-    This is a vendor-written driver for VIA VT6655.
- 
--- 
-2.1.0
+Good, because I just released the last 3.16-stable-rc kernel, so even if
+I wanted to, I wouldn't take these :)
 
+thanks,
+
+greg k-h
