@@ -1,46 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:43989 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934100AbaJ2PmD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2014 11:42:03 -0400
-Date: Wed, 29 Oct 2014 17:14:41 +0800
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Malcolm Priestley <tvboxspy@gmail.com>
-Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net
-Subject: Re: [PATCH 00/31] staging: vt6655: Conversion to mac80211
-Message-ID: <20141029091441.GA4852@kroah.com> (sfid-20141029_164733_813116_0625D197)
-References: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
+Received: from mga02.intel.com ([134.134.136.20]:45151 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757984AbaJ1GP7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Oct 2014 02:15:59 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: stable@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 3.16 4/7] iwlwifi: remove wrong comment about alignment in iwl-fw-error-dump.h
+Date: Tue, 28 Oct 2014 08:11:23 +0200
+Message-Id: <1414476686-3407-5-git-send-email-emmanuel.grumbach@intel.com> (sfid-20141028_071621_773710_CA98AD75)
+In-Reply-To: <1414476686-3407-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1414476686-3407-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Oct 25, 2014 at 09:20:10AM +0100, Malcolm Priestley wrote:
-> The patches in this series convert the driver to mac80211.
-> 
-> As well as infrastructure mode the driver now operates in
-> IBSS and access point modes.
-> 
-> Host access point is now working with hostapd in nl80211 mode.
-> 
-> The driver continues to operate diversity mode in infrastructure mode.
-> 
-> There is still a lot of work that needs doing particularly remodeling
-> rxtx to something similar to vt6656 driver.
-> 
-> These patches creates huge amount of dead code that will be
-> removed in the next series.
+commit d4849277f92a0bfa08a988545ea527fc8e0c9571 upstream.
 
-I really wanted to apply these, but they wouldn't apply due to other
-changes in my branch since you made these.  Actually, I couldn't figure
-out what branch you made them against, as they didn't even apply cleanly
-to 3.18-rc1.
+The chunks of data do not need to be multipliers of 4 nor
+4-bytes aligned.
 
-Can you refresh this series, and your second one, against my
-staging-testing branch of staging.git and resend?
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-thanks,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h b/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
+index ced5ba9..9fd860f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
+@@ -92,8 +92,8 @@ enum iwl_fw_error_dump_type {
+ /**
+  * struct iwl_fw_error_dump_data - data for one type
+  * @type: %enum iwl_fw_error_dump_type
+- * @len: the length starting from %data - must be a multiplier of 4.
+- * @data: the data itself padded to be a multiplier of 4.
++ * @len: the length starting from %data
++ * @data: the data itself
+  */
+ struct iwl_fw_error_dump_data {
+ 	__le32 type;
+-- 
+1.9.1
 
-greg k-h
