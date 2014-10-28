@@ -1,92 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f45.google.com ([74.125.82.45]:62573 "EHLO
-	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932384AbaJ2LvD (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:34320 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752084AbaJ1KiK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2014 07:51:03 -0400
-Received: by mail-wg0-f45.google.com with SMTP id x12so1693230wgg.18
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2014 04:51:01 -0700 (PDT)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Luciano Coelho <luciano.coelho@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 03/25] iwlwifi: mvm: hold the rtnl when resuming from a d3 test
-Date: Wed, 29 Oct 2014 13:50:24 +0200
-Message-Id: <1414583446-11032-3-git-send-email-egrumbach@gmail.com> (sfid-20141029_125107_753679_613DB76A)
-In-Reply-To: <CANUX_P0TURG9GNMRUOTGFfh=qzSNKkDh9Gm7Asq5jXr=0gQgLg@mail.gmail.com>
-References: <CANUX_P0TURG9GNMRUOTGFfh=qzSNKkDh9Gm7Asq5jXr=0gQgLg@mail.gmail.com>
+	Tue, 28 Oct 2014 06:38:10 -0400
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <wireless-regdb@lists.infradead.org>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 06/21] wireless-regdb: Add regulatory rules for French Guiana (GF)
+Date: Tue, 28 Oct 2014 12:29:20 +0200
+Message-ID: <1414492175-13830-6-git-send-email-jouni@qca.qualcomm.com> (sfid-20141028_113831_823705_8D77E491)
+In-Reply-To: <1414492175-13830-1-git-send-email-jouni@qca.qualcomm.com>
+References: <1414492175-13830-1-git-send-email-jouni@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+Source is QCA's regulatory team's efforts.
 
-We use ieee80211_iter_keys() which requires the rtnl to be held.  If
-we don't lock the rtnl, like we do when we suspend during a d3 test,
-we get the following splat:
-
- RTNL: assertion failed at net/mac80211/key.c (566)
- CPU: 1 PID: 26529 Comm: cat Tainted: G        W  O 3.10.29-dev #1
- Hardware name: Dell Inc. Latitude E6430/0CPWYR, BIOS A09 12/13/2012
-  e7b15008 e7b15008 e68adc1c c168aa62 e68adc54 f91f20b6 f923700c f9236fd8
-  00000236 00000000 ece23874 00000000 f94941e0 00000000 e43b8e48 e7b15008
-  00000000 e8b69e78 e68adcc0 f9493ab9 e68adc68 00000000 e43b8e48 e7b15008
- Call Trace:
-  [<c168aa62>] dump_stack+0x16/0x18
-  [<f91f20b6>] ieee80211_iter_keys+0x166/0x170 [mac80211]
-  [<f94941e0>] ? iwl_mvm_query_wakeup_reasons+0x5f0/0x5f0 [iwlmvm]
-  [<f9493ab9>] iwl_mvm_setup_connection_keep.isra.5+0x99/0x1d0 [iwlmvm]
-  [<f9165e28>] ? cfg80211_report_wowlan_wakeup+0x308/0x510 [cfg80211]
-  [<f9493fe5>] iwl_mvm_query_wakeup_reasons+0x3f5/0x5f0 [iwlmvm]
-  [<c116125a>] ? init_object+0x3a/0x70
-  [<f8a5b8ee>] ? iwl_trans_pcie_d3_resume+0x1be/0x3a0 [iwlwifi]
-  [<f94956da>] __iwl_mvm_resume+0x14a/0x180 [iwlmvm]
-  [<f9495736>] iwl_mvm_d3_test_release+0x26/0xc0 [iwlmvm]
-  [<c117a64d>] __fput+0xad/0x210
-  [<c117a7bd>] ____fput+0xd/0x10
-  [<c10601a1>] task_work_run+0x81/0xb0
-  [<c1040fa5>] do_exit+0x255/0xac0
-  [<c104e511>] ? dequeue_signal+0x31/0x1a0
-  [<c1041888>] do_group_exit+0x38/0xa0
-  [<c10a6cfb>] ? trace_hardirqs_on+0xb/0x10
-  [<c1051c31>] get_signal_to_deliver+0x1e1/0x8e0
-  [<c104bd52>] ? try_to_del_timer_sync+0x42/0x60
-  [<c104bd70>] ? try_to_del_timer_sync+0x60/0x60
-  [<c168dc82>] ? schedule_timeout+0x102/0x2a0
-  [<c10011ba>] do_signal+0x3a/0x8e0
-  [<c104b190>] ? __internal_add_timer+0xb0/0xb0
-  [<c168de7a>] ? schedule_timeout_interruptible+0x1a/0x20
-  [<c104ce39>] ? msleep_interruptible+0x39/0x40
-  [<f94939a9>] ? iwl_mvm_d3_test_read+0x49/0x70 [iwlmvm]
-  [<c11797fc>] ? vfs_read+0x8c/0x160
-  [<c11243af>] ? SyS_fadvise64_64+0x15f/0x2b0
-  [<f9493960>] ? iwl_mvm_wowlan_program_keys+0x4a0/0x4a0 [iwlmvm]
-  [<c1179a57>] ? SyS_read+0x57/0xa0
-  [<c1001acf>] do_notify_resume+0x6f/0xa0
-  [<c1692500>] work_notifysig+0x29/0x31
-
-Fix this by hold the rtnl lock when calling __iwl_mvm_resume() in the
-d3 test wake up path.
-
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/d3.c | 2 ++
- 1 file changed, 2 insertions(+)
+ db.txt | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/d3.c b/drivers/net/wireless/iwlwifi/mvm/d3.c
-index c17be0f..5b26922 100644
---- a/drivers/net/wireless/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/d3.c
-@@ -1741,7 +1741,9 @@ static int iwl_mvm_d3_test_release(struct inode *inode, struct file *file)
- 	int remaining_time = 10;
+diff --git a/db.txt b/db.txt
+index 024b424..07e56d0 100644
+--- a/db.txt
++++ b/db.txt
+@@ -418,6 +418,12 @@ country GE: DFS-ETSI
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
  
- 	mvm->d3_test_active = false;
-+	rtnl_lock();
- 	__iwl_mvm_resume(mvm, true);
-+	rtnl_unlock();
- 	iwl_abort_notification_waits(&mvm->notif_wait);
- 	ieee80211_restart_hw(mvm->hw);
- 
++country GF: DFS-ETSI
++	(2402 - 2482 @ 40), (20)
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
++
+ country GB: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 80), (20), AUTO-BW
 -- 
 1.9.1
 
