@@ -1,65 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:61626 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751115AbaJIRit (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:3852 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751377AbaJ1N6x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2014 13:38:49 -0400
-From: "Xu, Peng" <pxu@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"Park, Kyeyoon" <kyeyoonp@qca.qualcomm.com>
-CC: cfg80211mac80211 <cfg80211mac80211@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH] cfg80211: Add support for ACS offloading
-Date: Thu, 9 Oct 2014 17:38:47 +0000
-Message-ID: <6c0aebecfa9d478ea43ba9c10236c19b@nasanexm01a.na.qualcomm.com> (sfid-20141009_193853_539689_98F70C31)
-References: <1412373538-17690-1-git-send-email-kyeyoonp@qca.qualcomm.com>
- <1412847971.1828.42.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1412847971.1828.42.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+	Tue, 28 Oct 2014 09:58:53 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 06/16] brcmfmac: do not use firmware error code in driver
+Date: Tue, 28 Oct 2014 14:56:09 +0100
+Message-ID: <1414504579-12562-7-git-send-email-arend@broadcom.com> (sfid-20141028_145856_421587_6B8E1826)
+In-Reply-To: <1414504579-12562-1-git-send-email-arend@broadcom.com>
+References: <1414504579-12562-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSm9oYW5uZXMsDQpUaGlzIGNoYW5nZSBpcyBvcmlnaW5hdGVkIGZyb20gYSBwcm9ibGVtIGNh
-dXNlZCBieSBPQlNTIHNjYW4gYW5kIEFDUyBmZWF0dXJlIGluIHRoZSBkcml2ZXIuIFdoZW4gU0FQ
-IGlzIHN0YXJ0ZWQsIGhvc3RhcGQgd2lsbCBkbyBhbiBPQlNTIHNjYW4gYmFzZWQgb24gdGhlIGNo
-YW5uZWwgc2V0dGluZyBpbiBob3N0YXBkLmNvbmYsIGlmIHRoZSB3bGFuIGRyaXZlciBoYXMgdGhl
-IEFDUyBjYXBhYmlsaXR5LCBpdCBtYXkgY2hvb3NlIGEgZGlmZmVyZW50IGNoYW5uZWwuIEV2ZW4g
-aXQgbm90aWZpZXMgaG9zdGFwZCBhYm91dCB0aGUgY2hhbm5lbCBzZWxlY3Rpb24sIHRoZSBPQlNT
-IHNjYW4gcmVzdWx0ICBtYXkgYmVjb21lIGludmFsaWQgaWYgYSBkaWZmZXJlbnQgY2hhbm5lbCBp
-cyBzZWxlY3RlZCBhbmQgU0FQIG1heSBlbmQgdXAgb3BlcmF0aW5nIGluIG5vdCBkZXNpcmVkIG1v
-ZGUuDQpUaGlzIGNoYW5nZSB3aWxsIGFsbG93IHRoZSB3bGFuIGRyaXZlciBkbyB0aGUgQUNTIGFu
-ZCBkZWNpZGUgYSBjaGFubmVsLCBvbmNlIGhvc3RhcGQgaXMgbm90aWZpZWQsIGl0IGNhbiB0aGVu
-IGRvIE9CU1Mgc2NhbiB1c2luZyB0aGF0IGNoYW5uZWwuIEFDUyBvcGVyYXRpb24gaXMgZG9uZSBk
-dXJpbmcgU0FQIHN0YXJ0aW5nIHVwLCBiZWFjb24gaXMgc2VudCBhZnRlciBjaGFubmVsIGlzIHNl
-bGVjdGVkIGJ5IGRyaXZlci4gDQoNClRoYW5rcywNClBlbmcNCg0KLS0tLS1PcmlnaW5hbCBNZXNz
-YWdlLS0tLS0NCkZyb206IEpvaGFubmVzIEJlcmcgW21haWx0bzpqb2hhbm5lc0BzaXBzb2x1dGlv
-bnMubmV0XSANClNlbnQ6IFRodXJzZGF5LCBPY3RvYmVyIDA5LCAyMDE0IDI6NDYgQU0NClRvOiBQ
-YXJrLCBLeWV5b29uDQpDYzogWHUsIFBlbmc7IGNmZzgwMjExbWFjODAyMTE7IGxpbnV4LXdpcmVs
-ZXNzQHZnZXIua2VybmVsLm9yZw0KU3ViamVjdDogUmU6IFtQQVRDSF0gY2ZnODAyMTE6IEFkZCBz
-dXBwb3J0IGZvciBBQ1Mgb2ZmbG9hZGluZw0KDQpPbiBGcmksIDIwMTQtMTAtMDMgYXQgMTQ6NTgg
-LTA3MDAsIEt5ZXlvb24gUGFyayB3cm90ZToNCj4gRnJvbTogUGVuZyBYdSA8cHh1QHFjYS5xdWFs
-Y29tbS5jb20+DQo+IA0KPiBBZGQgc3VwcG9ydCBmb3Igb2ZmbG9hZGluZyBBQ1MgZnVuY3Rpb25h
-bGl0eSB0byB0aGUgZHJpdmVyLiBBIG5ldyANCj4gZmVhdHVyZSBmbGFnIE5MODAyMTFfRkVBVFVS
-RV9BUF9BQ1NfT0ZGTE9BRCB3YXMgYWRkZWQgdG8gc3VwcG9ydCBBQ1MgDQo+IChBdXRvbWF0aWMg
-Q2hhbm5lbCBTZWxlY3Rpb24pIG9mZmxvYWQgZnVuY3Rpb25hbGl0eS4gVGhpcyBmbGFnIGFsbG93
-cyANCj4gdGhlIGRyaXZlciB0byBhZHZlcnRpc2UgaXRzIEFDUyBjYXBhYmlsaXR5Lg0KPiANCj4g
-V2hlbiBob3N0YXBkIHN0YXJ0cyB3aXRoIHRoZSAiY2hhbm5lbCIgY29uZmlndXJhdGlvbiBzZXQg
-dG8gMCwgaXQgd2lsbCANCj4gY2hlY2sgd2hldGhlciB0aGUgZHJpdmVyIGhhcyB0aGUgY2FwYWJp
-bGl0eSBvZiBkb2luZyB0aGUgQUNTIG9uIGl0cyBvd24uDQo+IElmIHRoZSBkcml2ZXIgaGFzIHN1
-Y2ggY2FwYWJpbGl0eSwgdGhlbiB0aGUgY2hhbm5lbCBzZWxlY3Rpb24gd2lsbCBiZSANCj4gZG9u
-ZSBpbiB0aGUgZHJpdmVyLiBUaGUga2VybmVsIHdpbGwgc2tpcCB0aGUgY2hhbm5lbCBpbmZvcm1h
-dGlvbiANCj4gdmFsaWRhdGlvbiBzaW5jZSBpdCB3b3VsZCBpbml0aWFsbHkgYmUgTlVMTCB3aGVu
-IHRoaXMgZmVhdHVyZSBpcyANCj4gZW5hYmxlZC4gQWZ0ZXIgdGhlIGNoYW5uZWwgaXMgc2VsZWN0
-ZWQgYnkgdGhlIGRyaXZlciwgYSBjaGFubmVsIGNoYW5nZSANCj4gZXZlbnQgd2lsbCBiZSBzZW50
-IGZyb20gdGhlIGRyaXZlciB0byB0aGUga2VybmVsIHdoaWNoIHVwZGF0ZXMgdGhlIA0KPiBjaGFu
-bmVsIGluZm9ybWF0aW9uIGl0IG1haW50YWlucy4gVGhpcyBldmVudCBpcyBpbiB0dXJuIHNlbnQg
-dG8gDQo+IGhvc3RhcGQgYW5kIHRoZSBjaGFubmVsIGluZm9ybWF0aW9uIGluIGhvc3RhcGQgd2ls
-bCBnZXQgdXBkYXRlZCBhcyB3ZWxsLg0KDQpJcyB0aGlzIGRlc2lnbiByZXF1aXJlZD8gVGhhdCBz
-ZWVtcyBhIGJpdCBzdHJhbmdlIGJlY2F1c2UgeW91J2Qgc3RhcnQgdGhlIEFQIHdpdGggLi4uIGlu
-dmFsaWQgYmVhY29uIGluZm9ybWF0aW9uPyBJbnZhbGlkIHByb2JlIHJlc3BvbnNlLCBhbmQgYWxs
-IHRoYXQ/IEV2ZW4gYW4gaW52YWxpZCBjaGFubmVsIHJlcG9ydGVkIHRvIG90aGVyIHVzZXJzcGFj
-ZS4NCg0KSSdkIG11Y2ggcHJlZmVyIG9mZmxvYWRpbmcgdGhpcyBhcyBhIHNlcGFyYXRlIG9wZXJh
-dGlvbiwgd2l0aCB0aGUgZGV2aWNlIHJlcG9ydGluZyBiYWNrIHRoZSBiZXN0IGNoYW5uZWwgKGNv
-bmZpZ3VyYXRpb24pIHRvIHVzZSwgYW5kIGhvc3RhcGQgdGhlbiB1c2luZyB0aGF0IHRvIHN0YXJ0
-IHVwIGl0cyBvcGVyYXRpb24uDQoNCmpvaGFubmVzDQoNCg0K
+Passing the firmware error codes up the driver may be mapped to
+linux error numbers which may impact proper fault analysis. So
+better pass up a generic failure code, ie. -EBADE and only show
+firmware error code in FIL debug message.
+
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/fwil.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwil.c b/drivers/net/wireless/brcm80211/brcmfmac/fwil.c
+index 42da73e..dccbdc1 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fwil.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fwil.c
+@@ -122,12 +122,11 @@ brcmf_fil_cmd_data(struct brcmf_if *ifp, u32 cmd, void *data, u32 len, bool set)
+ 		err = brcmf_proto_query_dcmd(drvr, ifp->ifidx, cmd, data, len);
+ 
+ 	if (err >= 0)
+-		err = 0;
+-	else
+-		brcmf_dbg(FIL, "Failed: %s (%d)\n",
+-			  brcmf_fil_get_errstr((u32)(-err)), err);
++		return 0;
+ 
+-	return err;
++	brcmf_dbg(FIL, "Failed: %s (%d)\n",
++		  brcmf_fil_get_errstr((u32)(-err)), err);
++	return -EBADE;
+ }
+ 
+ s32
+-- 
+1.9.1
+
