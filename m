@@ -1,57 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f50.google.com ([74.125.82.50]:47261 "EHLO
-	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751077AbaJRRmJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Oct 2014 13:42:09 -0400
-Received: by mail-wg0-f50.google.com with SMTP id a1so2781138wgh.33
-        for <linux-wireless@vger.kernel.org>; Sat, 18 Oct 2014 10:42:08 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1413652424-14345-1-git-send-email-karl.beldan@gmail.com>
-References: <1413575459-29612-5-git-send-email-karl.beldan@gmail.com> <1413652424-14345-1-git-send-email-karl.beldan@gmail.com>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Sat, 18 Oct 2014 23:11:48 +0530
-Message-ID: <CABPxzY+W48L-OjWy5Zd9VJGhtG684dtOd-2rzW-9dW09YKFXaQ@mail.gmail.com> (sfid-20141018_194224_569478_686D835E)
-Subject: Re: [PATCH v3 0/4] add VHT support to minstrel_ht
-To: Karl Beldan <karl.beldan@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Karl Beldan <karl.beldan@rivierawaves.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from dedo.coelho.fi ([88.198.205.34]:48734 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753076AbaJ1Ld5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Oct 2014 07:33:57 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johill@sipsolutions.net
+Cc: j@w1.fi, linux-wireless@vger.kernel.org
+Date: Tue, 28 Oct 2014 13:33:03 +0200
+Message-Id: <1414495985-26937-1-git-send-email-luca@coelho.fi> (sfid-20141028_123400_357674_AE0528C7)
+Subject: [PATCH 0/2] mac80211: fix HT+ to HT- (and vice-versa) CSA
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Oct 18, 2014 at 10:43 PM, Karl Beldan <karl.beldan@gmail.com> wrote:
->
-> From: Karl Beldan <karl.beldan@rivierawaves.com>
->
->
-> Karl Beldan (4):
->   mac80211: minstrel_ht: Increase the range of handled rate indexes
->   mac80211: minstrel_ht: macros adjustments for future VHT_GROUPs
->   mac80211: minstrel_ht: include type (cck/ht) in rates flag
->   mac80211: minstrel_ht: add basic support for VHT rates <= 3SS@80MHz
-> v2:
-> - typo in Kconfig
-> - adjust room in debugfs rc_stats buffer
-> - add a module param to mix ht rates with vht ones
-> - default to 3SS instead of 2SS (with "mac80211: minstrel_ht: macros
->   adjustments for future VHT_GROUPs")
-> - use common MINSTREL_MAX_STREAMS both for VHT and HT so that we can get
->   rid of the 'MINSTREL_MAX_STREAMS >= 3' checks for minstrel_mcs_groups
-> v3:
-> - put module param *vht_only* under CONFIG_MAC80211_RC_MINSTREL_VHT
->
->  net/mac80211/Kconfig                       |   7 +
->  net/mac80211/rc80211_minstrel_ht.c         | 292 +++++++++++++++++++++++------
->  net/mac80211/rc80211_minstrel_ht.h         |  38 +++-
->  net/mac80211/rc80211_minstrel_ht_debugfs.c |  32 ++--
->  4 files changed, 290 insertions(+), 79 deletions(-)
->
-> --
->
-We have been using you patches for some time and they do the work well.
-Except for the sampling holes, where we were needed to add some
-supported checks.
-Thanks for sharing them early.
+From: Luciano Coelho <luciano.coelho@intel.com>
+
+These two patches fix a bug that Jouni found when running his hostap
+hwsim test scripts (ap_ht40_csa).  The failure was caused by two
+different bugs which are fixed in this patchset.
+
+The first bug was that we were not using the secondary channel offset
+IE of beacons for the switch, but the offset of the current channel,
+which cause us to use the same offset. 
+
+The second bug was that we were trying to switch at the exact time of
+the switch on the station side, which, because of the processing time,
+was causing us to be too late.
+
+Luciano Coelho (2):
+  mac80211: use secondary channel offset IE also beacons during CSA
+  mac80211: schedule the actual switch of the station before CSA count 0
+
+ net/mac80211/ibss.c        |  2 +-
+ net/mac80211/ieee80211_i.h |  3 +--
+ net/mac80211/mesh.c        |  2 +-
+ net/mac80211/mlme.c        |  5 +++--
+ net/mac80211/spectmgmt.c   | 18 ++++++------------
+ 5 files changed, 12 insertions(+), 18 deletions(-)
+
+-- 
+2.1.1
+
