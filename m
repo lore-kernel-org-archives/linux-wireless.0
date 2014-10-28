@@ -1,503 +1,303 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:33081 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753243AbaJTI4C (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:58839 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751510AbaJ1OBK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2014 04:56:02 -0400
-Received: by mail-wi0-f170.google.com with SMTP id hi2so7804049wib.3
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2014 01:56:01 -0700 (PDT)
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Karl Beldan <karl.beldan@rivierawaves.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	karl.beldan@gmail.com
-Subject: [PATCH v4 4/4] mac80211: minstrel_ht: add basic support for VHT rates <= 3SS@80MHz
-Date: Mon, 20 Oct 2014 10:55:42 +0200
-Message-Id: <1413795342-11995-5-git-send-email-karl.beldan@gmail.com> (sfid-20141020_105611_860169_1AEEFA8F)
-In-Reply-To: <1413795342-11995-1-git-send-email-karl.beldan@gmail.com>
-References: <1413652424-14345-5-git-send-email-karl.beldan@gmail.com>
- <1413795342-11995-1-git-send-email-karl.beldan@gmail.com>
+	Tue, 28 Oct 2014 10:01:10 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 15/16] brcmfmac: (clean) Rename sdio related files.
+Date: Tue, 28 Oct 2014 14:56:18 +0100
+Message-ID: <1414504579-12562-16-git-send-email-arend@broadcom.com> (sfid-20141028_150122_935984_5E892737)
+In-Reply-To: <1414504579-12562-1-git-send-email-arend@broadcom.com>
+References: <1414504579-12562-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Karl Beldan <karl.beldan@rivierawaves.com>
+From: Hante Meuleman <meuleman@broadcom.com>
 
-When the new CONFIG_MAC80211_RC_MINSTREL_VHT is not set (default 'N'),
-there is no behavioral change including in sampling and MCS_GROUP_RATES
-remains 8.
-Otherwise MCS_GROUP_RATES is 10, and a module parameter *vht_only*
-(default 'true'), restricts the rates selection to VHT when vht is
-supported.
+Rename sdio_host.h to sdio.h and dhd_sdio.c to sdio.c.
 
-Regarding the debugfs stats buffer:
-It is explicitly increased from 8k to 32k to fit every rates incl. when
-both ht and vht rates are enabled, as for the format, before:
-type           rate     tpt eprob *prob ret  *ok(*cum)        ok(      cum)
-HT20/LGI ABCDP MCS0     0.0   0.0   0.0   1    0(   0)         0(        0)
-after:
- type           rate      tpt eprob *prob ret  *ok(*cum)        ok(      cum)
- HT20/LGI ABCDP MCS0      0.0   0.0   0.0   1    0(   0)         0(        0)
-VHT40/LGI       MCS5/2    0.0   0.0   0.0   0    0(   0)         0(        0)
-
-Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
-Acked-by: Felix Fietkau <nbd@openwrt.org>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- net/mac80211/Kconfig                       |   7 +
- net/mac80211/rc80211_minstrel_ht.c         | 197 +++++++++++++++++++++++++++--
- net/mac80211/rc80211_minstrel_ht.h         |  16 ++-
- net/mac80211/rc80211_minstrel_ht_debugfs.c |  22 +++-
- 4 files changed, 223 insertions(+), 19 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/Makefile                | 2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/bcdc.c                  | 2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/btcoex.c                | 2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c              | 2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/common.c                | 2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/commonring.c            | 2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/{dhd_linux.c => core.c} | 2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/{dhd.h => core.h}       | 6 +++---
+ drivers/net/wireless/brcm80211/brcmfmac/debug.c                 | 2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/feature.c               | 2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/flowring.c              | 2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/fweh.c                  | 2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/fwil.c                  | 2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c              | 2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c                | 2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/p2p.c                   | 2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/proto.c                 | 2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/vendor.c                | 2 +-
+ 18 files changed, 20 insertions(+), 20 deletions(-)
+ rename drivers/net/wireless/brcm80211/brcmfmac/{dhd_linux.c => core.c} (99%)
+ rename drivers/net/wireless/brcm80211/brcmfmac/{dhd.h => core.h} (98%)
 
-diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
-index aeb6a48..e8049ed 100644
---- a/net/mac80211/Kconfig
-+++ b/net/mac80211/Kconfig
-@@ -33,6 +33,13 @@ config MAC80211_RC_MINSTREL_HT
- 	---help---
- 	  This option enables the 'minstrel_ht' TX rate control algorithm
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/Makefile b/drivers/net/wireless/brcm80211/brcmfmac/Makefile
+index 40ba46b..dc4c750 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/Makefile
++++ b/drivers/net/wireless/brcm80211/brcmfmac/Makefile
+@@ -31,7 +31,7 @@ brcmfmac-objs += \
+ 		p2p.o \
+ 		proto.o \
+ 		common.o \
+-		dhd_linux.o \
++		core.o \
+ 		firmware.o \
+ 		feature.o \
+ 		btcoex.o \
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcdc.c b/drivers/net/wireless/brcm80211/brcmfmac/bcdc.c
+index d5a2d94..8e0e91c 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcdc.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcdc.c
+@@ -25,7 +25,7 @@
+ #include <brcmu_utils.h>
+ #include <brcmu_wifi.h>
  
-+config MAC80211_RC_MINSTREL_VHT
-+	bool "Minstrel 802.11ac support" if EXPERT
-+	depends on MAC80211_RC_MINSTREL_HT
-+	default n
-+	---help---
-+	  This option enables vht in the 'minstrel_ht' TX rate control algorithm
-+
- choice
- 	prompt "Default rate control algorithm"
- 	depends on MAC80211_HAS_RC
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index e760d3d..772cff9 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -10,6 +10,7 @@
- #include <linux/skbuff.h>
- #include <linux/debugfs.h>
- #include <linux/random.h>
-+#include <linux/moduleparam.h>
- #include <linux/ieee80211.h>
- #include <net/mac80211.h>
- #include "rate.h"
-@@ -36,6 +37,7 @@
+-#include "dhd.h"
++#include "core.h"
+ #include "bus.h"
+ #include "fwsignal.h"
+ #include "debug.h"
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/btcoex.c b/drivers/net/wireless/brcm80211/brcmfmac/btcoex.c
+index e324414..0445163 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/btcoex.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/btcoex.c
+@@ -20,7 +20,7 @@
+ #include <brcmu_wifi.h>
+ #include <brcmu_utils.h>
+ #include <defs.h>
+-#include <dhd.h>
++#include "core.h"
+ #include "debug.h"
+ #include "fwil.h"
+ #include "fwil_types.h"
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
+index 0390e57..8822f2b 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
+@@ -26,7 +26,7 @@
+ #include <brcmu_utils.h>
+ #include <defs.h>
+ #include <brcmu_wifi.h>
+-#include "dhd.h"
++#include "core.h"
+ #include "debug.h"
+ #include "tracepoint.h"
+ #include "fwil_types.h"
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/common.c b/drivers/net/wireless/brcm80211/brcmfmac/common.c
+index 75642e4..183cec9 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/common.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/common.c
+@@ -19,7 +19,7 @@
+ #include <linux/netdevice.h>
+ #include <brcmu_wifi.h>
+ #include <brcmu_utils.h>
+-#include "dhd.h"
++#include "core.h"
+ #include "bus.h"
+ #include "debug.h"
+ #include "fwil.h"
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/commonring.c b/drivers/net/wireless/brcm80211/brcmfmac/commonring.c
+index c6d65b8..77656c7 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/commonring.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/commonring.c
+@@ -19,7 +19,7 @@
+ #include <brcmu_utils.h>
+ #include <brcmu_wifi.h>
  
- #define BW_20			0
- #define BW_40			1
-+#define BW_80			2
+-#include "dhd.h"
++#include "core.h"
+ #include "commonring.h"
  
- /*
-  * Define group sort order: HT40 -> SGI -> #streams
-@@ -66,6 +68,37 @@
- 	}								\
- }
  
-+#define VHT_GROUP_IDX(_streams, _sgi, _bw)			\
-+	(MINSTREL_VHT_GROUP_0 +					\
-+	 MINSTREL_MAX_STREAMS * 2 * (_bw) +			\
-+	 MINSTREL_MAX_STREAMS * (_sgi) +			\
-+	 (_streams) - 1)
-+
-+#define BW2VBPS(_bw, r3, r2, r1)						\
-+	(_bw == BW_80 ? r3 : _bw == BW_40 ? r2 : r1)
-+
-+#define VHT_GROUP(_streams, _sgi, _bw)						\
-+	[VHT_GROUP_IDX(_streams, _sgi, _bw)] = {				\
-+	.streams = _streams,							\
-+	.flags =								\
-+		IEEE80211_TX_RC_VHT_MCS |					\
-+		(_sgi ? IEEE80211_TX_RC_SHORT_GI : 0) |				\
-+		(_bw == BW_80 ? IEEE80211_TX_RC_80_MHZ_WIDTH :			\
-+		 _bw == BW_40 ? IEEE80211_TX_RC_40_MHZ_WIDTH : 0),		\
-+	.duration = {								\
-+		MCS_DURATION(_streams, _sgi, BW2VBPS(_bw,  117,  54,  26)),	\
-+		MCS_DURATION(_streams, _sgi, BW2VBPS(_bw,  234, 108,  52)),	\
-+		MCS_DURATION(_streams, _sgi, BW2VBPS(_bw,  351, 162,  78)),	\
-+		MCS_DURATION(_streams, _sgi, BW2VBPS(_bw,  468, 216, 104)),	\
-+		MCS_DURATION(_streams, _sgi, BW2VBPS(_bw,  702, 324, 156)),	\
-+		MCS_DURATION(_streams, _sgi, BW2VBPS(_bw,  936, 432, 208)),	\
-+		MCS_DURATION(_streams, _sgi, BW2VBPS(_bw, 1053, 486, 234)),	\
-+		MCS_DURATION(_streams, _sgi, BW2VBPS(_bw, 1170, 540, 260)),	\
-+		MCS_DURATION(_streams, _sgi, BW2VBPS(_bw, 1404, 648, 312)),	\
-+		MCS_DURATION(_streams, _sgi, BW2VBPS(_bw, 1560, 720, 346))	\
-+	}									\
-+}
-+
- #define CCK_DURATION(_bitrate, _short, _len)		\
- 	(1000 * (10 /* SIFS */ +			\
- 	 (_short ? 72 + 24 : 144 + 48) +		\
-@@ -91,6 +124,12 @@
- 		}					\
- 	}
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/core.c
+similarity index 99%
+rename from drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+rename to drivers/net/wireless/brcm80211/brcmfmac/core.c
+index 53650b9..f407665 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/core.c
+@@ -22,7 +22,7 @@
+ #include <brcmu_utils.h>
+ #include <brcmu_wifi.h>
  
-+#ifdef CONFIG_MAC80211_RC_MINSTREL_VHT
-+static bool minstrel_vht_only = true;
-+module_param(minstrel_vht_only, bool, 0644);
-+MODULE_PARM_DESC(minstrel_vht_only, "Use only VHT rates when VHT is supported by sta.");
-+#endif
-+
- /*
-  * To enable sufficiently targeted rate sampling, MCS rates are divided into
-  * groups, based on the number of streams and flags (HT40, SGI) that they
-@@ -124,9 +163,46 @@ const struct mcs_group minstrel_mcs_groups[] = {
- 	MCS_GROUP(3, 1, BW_40),
- #endif
- 
--	CCK_GROUP
--};
-+	CCK_GROUP,
-+
-+#ifdef CONFIG_MAC80211_RC_MINSTREL_VHT
-+	VHT_GROUP(1, 0, BW_20),
-+	VHT_GROUP(2, 0, BW_20),
-+#if MINSTREL_MAX_STREAMS >= 3
-+	VHT_GROUP(3, 0, BW_20),
-+#endif
- 
-+	VHT_GROUP(1, 1, BW_20),
-+	VHT_GROUP(2, 1, BW_20),
-+#if MINSTREL_MAX_STREAMS >= 3
-+	VHT_GROUP(3, 1, BW_20),
-+#endif
-+
-+	VHT_GROUP(1, 0, BW_40),
-+	VHT_GROUP(2, 0, BW_40),
-+#if MINSTREL_MAX_STREAMS >= 3
-+	VHT_GROUP(3, 0, BW_40),
-+#endif
-+
-+	VHT_GROUP(1, 1, BW_40),
-+	VHT_GROUP(2, 1, BW_40),
-+#if MINSTREL_MAX_STREAMS >= 3
-+	VHT_GROUP(3, 1, BW_40),
-+#endif
-+
-+	VHT_GROUP(1, 0, BW_80),
-+	VHT_GROUP(2, 0, BW_80),
-+#if MINSTREL_MAX_STREAMS >= 3
-+	VHT_GROUP(3, 0, BW_80),
-+#endif
-+
-+	VHT_GROUP(1, 1, BW_80),
-+	VHT_GROUP(2, 1, BW_80),
-+#if MINSTREL_MAX_STREAMS >= 3
-+	VHT_GROUP(3, 1, BW_80),
-+#endif
-+#endif
-+};
- 
- static u8 sample_table[SAMPLE_COLUMNS][MCS_GROUP_RATES] __read_mostly;
- 
-@@ -134,6 +210,44 @@ static void
- minstrel_ht_update_rates(struct minstrel_priv *mp, struct minstrel_ht_sta *mi);
- 
- /*
-+ * Some VHT MCSes are invalid (when Ndbps / Nes is not an integer)
-+ * e.g for MCS9@20MHzx1Nss: Ndbps=8x52*(5/6) Nes=1
-+ *
-+ * Returns the valid mcs map for struct minstrel_mcs_group_data.supported
-+ */
-+static u16
-+minstrel_get_valid_vht_rates(int bw, int nss, u16 mcs_map)
-+{
-+	u16 mask = 0;
-+
-+	if (bw == BW_20) {
-+		if (nss != 3 && nss != 6)
-+			mask = BIT(9);
-+	} else if (bw == BW_80) {
-+		if (nss == 3 || nss == 7)
-+			mask = BIT(6);
-+		else if (nss == 6)
-+			mask = BIT(9);
-+	} else
-+		WARN_ON(bw != BW_40);
-+
-+	switch ((le16_to_cpu(mcs_map) >> (2 * (nss - 1))) & 3) {
-+	case IEEE80211_VHT_MCS_SUPPORT_0_7:
-+		mask |= 0x300;
-+		break;
-+	case IEEE80211_VHT_MCS_SUPPORT_0_8:
-+		mask |= 0x200;
-+		break;
-+	case IEEE80211_VHT_MCS_SUPPORT_0_9:
-+		break;
-+	default:
-+		mask = 0x3ff;
-+	}
-+
-+	return 0x3ff & ~mask;
-+}
-+
-+/*
-  * Look up an MCS group index based on mac80211 rate information
+-#include "dhd.h"
++#include "core.h"
+ #include "bus.h"
+ #include "debug.h"
+ #include "fwil_types.h"
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h b/drivers/net/wireless/brcm80211/brcmfmac/core.h
+similarity index 98%
+rename from drivers/net/wireless/brcm80211/brcmfmac/dhd.h
+rename to drivers/net/wireless/brcm80211/brcmfmac/core.h
+index 5e4317d..7df22bd 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/core.h
+@@ -18,8 +18,8 @@
+  * Common types *
   */
- static int
-@@ -144,6 +258,15 @@ minstrel_ht_get_group_idx(struct ieee80211_tx_rate *rate)
- 			 !!(rate->flags & IEEE80211_TX_RC_40_MHZ_WIDTH));
- }
  
-+static int
-+minstrel_vht_get_group_idx(struct ieee80211_tx_rate *rate)
-+{
-+	return VHT_GROUP_IDX(ieee80211_rate_get_vht_nss(rate),
-+			     !!(rate->flags & IEEE80211_TX_RC_SHORT_GI),
-+			     !!(rate->flags & IEEE80211_TX_RC_40_MHZ_WIDTH) +
-+			     2*!!(rate->flags & IEEE80211_TX_RC_80_MHZ_WIDTH));
-+}
-+
- static struct minstrel_rate_stats *
- minstrel_ht_get_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
- 		      struct ieee80211_tx_rate *rate)
-@@ -153,6 +276,9 @@ minstrel_ht_get_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
- 	if (rate->flags & IEEE80211_TX_RC_MCS) {
- 		group = minstrel_ht_get_group_idx(rate);
- 		idx = rate->idx % 8;
-+	} else if (rate->flags & IEEE80211_TX_RC_VHT_MCS) {
-+		group = minstrel_vht_get_group_idx(rate);
-+		idx = ieee80211_rate_get_vht_mcs(rate);
- 	} else {
- 		group = MINSTREL_CCK_GROUP;
+-#ifndef _BRCMF_H_
+-#define _BRCMF_H_
++#ifndef BRCMFMAC_CORE_H
++#define BRCMFMAC_CORE_H
  
-@@ -489,7 +615,8 @@ minstrel_ht_txstat_valid(struct minstrel_priv *mp, struct ieee80211_tx_rate *rat
- 	if (!rate->count)
- 		return false;
+ #include "fweh.h"
  
--	if (rate->flags & IEEE80211_TX_RC_MCS)
-+	if (rate->flags & IEEE80211_TX_RC_MCS ||
-+	    rate->flags & IEEE80211_TX_RC_VHT_MCS)
- 		return true;
+@@ -186,4 +186,4 @@ void brcmf_netif_rx(struct brcmf_if *ifp, struct sk_buff *skb);
+ /* Sets dongle media info (drv_version, mac address). */
+ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp);
  
- 	return rate->idx == mp->cck_rates[0] ||
-@@ -736,6 +863,9 @@ minstrel_ht_set_rate(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
+-#endif				/* _BRCMF_H_ */
++#endif /* BRCMFMAC_CORE_H */
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/debug.c b/drivers/net/wireless/brcm80211/brcmfmac/debug.c
+index 340b104..9b473d5 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/debug.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/debug.c
+@@ -19,7 +19,7 @@
  
- 	if (index / MCS_GROUP_RATES == MINSTREL_CCK_GROUP)
- 		idx = mp->cck_rates[index % ARRAY_SIZE(mp->cck_rates)];
-+	else if (flags & IEEE80211_TX_RC_VHT_MCS)
-+		idx = ((group->streams - 1) << 4) |
-+		      ((index % MCS_GROUP_RATES) & 0xF);
- 	else
- 		idx = index % MCS_GROUP_RATES + (group->streams - 1) * 8;
+ #include <brcmu_wifi.h>
+ #include <brcmu_utils.h>
+-#include "dhd.h"
++#include "core.h"
+ #include "bus.h"
+ #include "debug.h"
  
-@@ -917,6 +1047,9 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
- 	if (sample_idx / MCS_GROUP_RATES == MINSTREL_CCK_GROUP) {
- 		int idx = sample_idx % ARRAY_SIZE(mp->cck_rates);
- 		rate->idx = mp->cck_rates[idx];
-+	} else if (sample_group->flags & IEEE80211_TX_RC_VHT_MCS) {
-+		ieee80211_rate_set_vht(rate, sample_idx % MCS_GROUP_RATES,
-+				       sample_group->streams);
- 	} else {
- 		rate->idx = sample_idx % MCS_GROUP_RATES +
- 			    (sample_group->streams - 1) * 8;
-@@ -962,6 +1095,8 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
- 	struct minstrel_ht_sta *mi = &msp->ht;
- 	struct ieee80211_mcs_info *mcs = &sta->ht_cap.mcs;
- 	u16 sta_cap = sta->ht_cap.cap;
-+	struct ieee80211_sta_vht_cap *vht_cap = &sta->vht_cap;
-+	int use_vht;
- 	int n_supported = 0;
- 	int ack_dur;
- 	int stbc;
-@@ -973,6 +1108,13 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/feature.c b/drivers/net/wireless/brcm80211/brcmfmac/feature.c
+index d4be4c4..931f68a 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/feature.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/feature.c
+@@ -17,7 +17,7 @@
+ #include <linux/netdevice.h>
  
- 	BUILD_BUG_ON(ARRAY_SIZE(minstrel_mcs_groups) != MINSTREL_GROUPS_NB);
+ #include <brcm_hw_ids.h>
+-#include "dhd.h"
++#include "core.h"
+ #include "bus.h"
+ #include "debug.h"
+ #include "fwil.h"
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/flowring.c b/drivers/net/wireless/brcm80211/brcmfmac/flowring.c
+index e9cb550..44f3a84 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/flowring.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/flowring.c
+@@ -19,7 +19,7 @@
+ #include <linux/etherdevice.h>
+ #include <brcmu_utils.h>
  
-+#ifdef CONFIG_MAC80211_RC_MINSTREL_VHT
-+	if (vht_cap->vht_supported)
-+		use_vht = vht_cap->vht_mcs.tx_mcs_map != cpu_to_le16(~0);
-+	else
-+#endif
-+	use_vht = 0;
-+
- 	msp->is_ht = true;
- 	memset(mi, 0, sizeof(*mi));
+-#include "dhd.h"
++#include "core.h"
+ #include "debug.h"
+ #include "bus.h"
+ #include "proto.h"
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fweh.c b/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
+index ce98ce5..7338b33 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
+@@ -18,7 +18,7 @@
+ #include "brcmu_wifi.h"
+ #include "brcmu_utils.h"
  
-@@ -996,12 +1138,15 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
- 	}
- 	mi->sample_tries = 4;
+-#include "dhd.h"
++#include "core.h"
+ #include "debug.h"
+ #include "tracepoint.h"
+ #include "fwsignal.h"
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwil.c b/drivers/net/wireless/brcm80211/brcmfmac/fwil.c
+index 70db41f..51f88c1 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fwil.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fwil.c
+@@ -22,7 +22,7 @@
+ #include <linux/netdevice.h>
+ #include <brcmu_utils.h>
+ #include <brcmu_wifi.h>
+-#include "dhd.h"
++#include "core.h"
+ #include "bus.h"
+ #include "debug.h"
+ #include "tracepoint.h"
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+index 6d33331..f0dda0e 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+@@ -26,7 +26,7 @@
  
--	stbc = (sta_cap & IEEE80211_HT_CAP_RX_STBC) >>
--		IEEE80211_HT_CAP_RX_STBC_SHIFT;
--	mi->tx_flags |= stbc << IEEE80211_TX_CTL_STBC_SHIFT;
-+	/* TODO tx_flags for vht - ATM the RC API is not fine-grained enough */
-+	if (!use_vht) {
-+		stbc = (sta_cap & IEEE80211_HT_CAP_RX_STBC) >>
-+			IEEE80211_HT_CAP_RX_STBC_SHIFT;
-+		mi->tx_flags |= stbc << IEEE80211_TX_CTL_STBC_SHIFT;
+ #include <brcmu_utils.h>
+ #include <brcmu_wifi.h>
+-#include "dhd.h"
++#include "core.h"
+ #include "debug.h"
+ #include "bus.h"
+ #include "fwil.h"
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
+index 18e1770..02d39ce 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
+@@ -24,7 +24,7 @@
+ #include <brcmu_utils.h>
+ #include <brcmu_wifi.h>
  
--	if (sta_cap & IEEE80211_HT_CAP_LDPC_CODING)
--		mi->tx_flags |= IEEE80211_TX_CTL_LDPC;
-+		if (sta_cap & IEEE80211_HT_CAP_LDPC_CODING)
-+			mi->tx_flags |= IEEE80211_TX_CTL_LDPC;
-+	}
+-#include "dhd.h"
++#include "core.h"
+ #include "debug.h"
+ #include "proto.h"
+ #include "msgbuf.h"
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
+index ae504b4..effb48e 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
+@@ -21,7 +21,7 @@
+ #include <brcmu_wifi.h>
+ #include <brcmu_utils.h>
+ #include <defs.h>
+-#include <dhd.h>
++#include "core.h"
+ #include "debug.h"
+ #include "fwil.h"
+ #include "fwil_types.h"
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/proto.c b/drivers/net/wireless/brcm80211/brcmfmac/proto.c
+index 5e83b2b..26b68c3 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/proto.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/proto.c
+@@ -20,7 +20,7 @@
+ #include <linux/netdevice.h>
  
- 	for (i = 0; i < ARRAY_SIZE(mi->groups); i++) {
- 		u32 gflags = minstrel_mcs_groups[i].flags;
-@@ -1012,6 +1157,11 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
- 			continue;
- 		}
+ #include <brcmu_wifi.h>
+-#include "dhd.h"
++#include "core.h"
+ #include "bus.h"
+ #include "debug.h"
+ #include "proto.h"
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/vendor.c b/drivers/net/wireless/brcm80211/brcmfmac/vendor.c
+index b86a083..222f26a 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/vendor.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/vendor.c
+@@ -20,7 +20,7 @@
  
-+#ifdef CONFIG_MAC80211_RC_MINSTREL_VHT
-+		if (minstrel_vht_only && !(gflags & IEEE80211_TX_RC_VHT_MCS))
-+			continue;
-+#endif
-+
- 		if (gflags & IEEE80211_TX_RC_SHORT_GI) {
- 			if (gflags & IEEE80211_TX_RC_40_MHZ_WIDTH) {
- 				if (!(sta_cap & IEEE80211_HT_CAP_SGI_40))
-@@ -1031,8 +1181,35 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
- 		    minstrel_mcs_groups[i].streams > 1)
- 			continue;
- 
--		mi->groups[i].supported =
--			mcs->rx_mask[minstrel_mcs_groups[i].streams - 1];
-+		if (gflags & IEEE80211_TX_RC_VHT_MCS) {
-+			int bw;
-+			if (!vht_cap->vht_supported)
-+				continue;
-+			if (gflags & IEEE80211_TX_RC_80_MHZ_WIDTH) {
-+
-+				if (sta->bandwidth < IEEE80211_STA_RX_BW_80 ||
-+				    ((gflags & IEEE80211_TX_RC_SHORT_GI) &&
-+				     !(vht_cap->cap & IEEE80211_VHT_CAP_SHORT_GI_80))) {
-+					continue;
-+				}
-+			}
-+			if (WARN_ON(gflags & IEEE80211_TX_RC_160_MHZ_WIDTH))
-+				continue;
-+
-+			if (gflags & IEEE80211_TX_RC_40_MHZ_WIDTH)
-+				bw = BW_40;
-+			else if (gflags & IEEE80211_TX_RC_80_MHZ_WIDTH)
-+				bw = BW_80;
-+			else
-+				bw = BW_20;
-+			mi->groups[i].supported =
-+				minstrel_get_valid_vht_rates(bw,
-+						minstrel_mcs_groups[i].streams,
-+						vht_cap->vht_mcs.tx_mcs_map);
-+		} else {
-+			mi->groups[i].supported =
-+				mcs->rx_mask[minstrel_mcs_groups[i].streams - 1];
-+		}
- 
- 		if (mi->groups[i].supported)
- 			n_supported++;
-diff --git a/net/mac80211/rc80211_minstrel_ht.h b/net/mac80211/rc80211_minstrel_ht.h
-index 7b46592..72fd0a5 100644
---- a/net/mac80211/rc80211_minstrel_ht.h
-+++ b/net/mac80211/rc80211_minstrel_ht.h
-@@ -15,16 +15,28 @@
-  */
- #define MINSTREL_MAX_STREAMS		3
- #define MINSTREL_HT_STREAM_GROUPS	4 /* BW(=2) * SGI(=2) */
-+#ifdef CONFIG_MAC80211_RC_MINSTREL_VHT
-+#define MINSTREL_VHT_STREAM_GROUPS	6 /* BW(=3) * SGI(=2) */
-+#else
-+#define MINSTREL_VHT_STREAM_GROUPS	0
-+#endif
- 
- #define MINSTREL_HT_GROUPS_NB	(MINSTREL_MAX_STREAMS * MINSTREL_HT_STREAM_GROUPS)
-+#define MINSTREL_VHT_GROUPS_NB	(MINSTREL_MAX_STREAMS * MINSTREL_VHT_STREAM_GROUPS)
- #define MINSTREL_CCK_GROUPS_NB	1
- #define MINSTREL_GROUPS_NB	(MINSTREL_HT_GROUPS_NB +	\
-+				 MINSTREL_VHT_GROUPS_NB +	\
- 				 MINSTREL_CCK_GROUPS_NB)
- 
- #define MINSTREL_HT_GROUP_0	0
- #define MINSTREL_CCK_GROUP	(MINSTREL_HT_GROUP_0 + MINSTREL_HT_GROUPS_NB)
-+#define MINSTREL_VHT_GROUP_0	(MINSTREL_CCK_GROUP + 1)
- 
--#define MCS_GROUP_RATES	8
-+#ifdef CONFIG_MAC80211_RC_MINSTREL_VHT
-+#define MCS_GROUP_RATES		10
-+#else
-+#define MCS_GROUP_RATES		8
-+#endif
- 
- struct mcs_group {
- 	u32 flags;
-@@ -39,7 +51,7 @@ struct minstrel_mcs_group_data {
- 	u8 column;
- 
- 	/* bitfield of supported MCS rates of this group */
--	u8 supported;
-+	u16 supported;
- 
- 	/* sorted rate set within a MCS group*/
- 	u16 max_group_tp_rate[MAX_THR_RATES];
-diff --git a/net/mac80211/rc80211_minstrel_ht_debugfs.c b/net/mac80211/rc80211_minstrel_ht_debugfs.c
-index d2f53b8..31ec8ab 100644
---- a/net/mac80211/rc80211_minstrel_ht_debugfs.c
-+++ b/net/mac80211/rc80211_minstrel_ht_debugfs.c
-@@ -29,6 +29,8 @@ minstrel_ht_stats_dump(struct minstrel_ht_sta *mi, int i, char *p)
- 	mg = &minstrel_mcs_groups[i];
- 	if (mg->flags & IEEE80211_TX_RC_40_MHZ_WIDTH)
- 		htmode = '4';
-+	else if (mg->flags & IEEE80211_TX_RC_80_MHZ_WIDTH)
-+		htmode = '8';
- 	if (mg->flags & IEEE80211_TX_RC_SHORT_GI)
- 		gimode = 'S';
- 
-@@ -41,9 +43,11 @@ minstrel_ht_stats_dump(struct minstrel_ht_sta *mi, int i, char *p)
- 			continue;
- 
- 		if (i == MINSTREL_CCK_GROUP)
--			p += sprintf(p, "CCK/%cP   ", j < 4 ? 'L' : 'S');
-+			p += sprintf(p, " CCK/%cP   ", j < 4 ? 'L' : 'S');
-+		else if (i >= MINSTREL_VHT_GROUP_0)
-+			p += sprintf(p, "VHT%c0/%cGI ", htmode, gimode/*, mg->streams*/);
- 		else
--			p += sprintf(p, "HT%c0/%cGI ", htmode, gimode);
-+			p += sprintf(p, " HT%c0/%cGI ", htmode, gimode);
- 
- 		*(p++) = (idx == mi->max_tp_rate[0]) ? 'A' : ' ';
- 		*(p++) = (idx == mi->max_tp_rate[1]) ? 'B' : ' ';
-@@ -53,9 +57,11 @@ minstrel_ht_stats_dump(struct minstrel_ht_sta *mi, int i, char *p)
- 
- 		if (i == MINSTREL_CCK_GROUP) {
- 			int r = bitrates[j % 4];
--			p += sprintf(p, " %2u.%1uM", r / 10, r % 10);
-+			p += sprintf(p, " %2u.%1uM ", r / 10, r % 10);
-+		} else if (i >= MINSTREL_VHT_GROUP_0) {
-+			p += sprintf(p, " MCS%-1u/%1u", j, mg->streams);
- 		} else {
--			p += sprintf(p, " MCS%-2u", (mg->streams - 1) * 8 + j);
-+			p += sprintf(p, " MCS%-2u ", (mg->streams - 1) * 8 + j);
- 		}
- 
- 		tp = mr->cur_tp / 10;
-@@ -94,19 +100,21 @@ minstrel_ht_stats_open(struct inode *inode, struct file *file)
- 		return ret;
- 	}
- 
--	ms = kmalloc(8192, GFP_KERNEL);
-+	ms = kmalloc(32768, GFP_KERNEL);
- 	if (!ms)
- 		return -ENOMEM;
- 
- 	file->private_data = ms;
- 	p = ms->buf;
--	p += sprintf(p, "type           rate     tpt eprob *prob "
-+	p += sprintf(p, " type           rate      tpt eprob *prob "
- 			"ret  *ok(*cum)        ok(      cum)\n");
- 
- 
- 	p = minstrel_ht_stats_dump(mi, MINSTREL_CCK_GROUP, p);
- 	for (i = 0; i < MINSTREL_CCK_GROUP; i++)
- 		p = minstrel_ht_stats_dump(mi, i, p);
-+	for (i++; i < ARRAY_SIZE(mi->groups); i++)
-+		p = minstrel_ht_stats_dump(mi, i, p);
- 
- 	p += sprintf(p, "\nTotal packet count::    ideal %d      "
- 			"lookaround %d\n",
-@@ -117,7 +125,7 @@ minstrel_ht_stats_open(struct inode *inode, struct file *file)
- 		MINSTREL_TRUNC(mi->avg_ampdu_len * 10) % 10);
- 	ms->len = p - ms->buf;
- 
--	WARN_ON(ms->len + sizeof(*ms) > 8192);
-+	WARN_ON(ms->len + sizeof(*ms) > 32768);
- 
- 	return nonseekable_open(inode, file);
- }
+ #include <brcmu_wifi.h>
+ #include "fwil_types.h"
+-#include "dhd.h"
++#include "core.h"
+ #include "p2p.h"
+ #include "debug.h"
+ #include "cfg80211.h"
 -- 
-2.0.1
+1.9.1
 
