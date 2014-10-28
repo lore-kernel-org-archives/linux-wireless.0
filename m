@@ -1,110 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:60032 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751745AbaJGEnz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Oct 2014 00:43:55 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH v2 5/6] ath9k: Enable multi-channel properly
-Date: Tue,  7 Oct 2014 10:14:40 +0530
-Message-Id: <1412657081-3202-6-git-send-email-sujith@msujith.org> (sfid-20141007_064359_153311_A11803B5)
-In-Reply-To: <1412657081-3202-1-git-send-email-sujith@msujith.org>
-References: <1412657081-3202-1-git-send-email-sujith@msujith.org>
+Received: from dedo.coelho.fi ([88.198.205.34]:48878 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753077AbaJ1Ncl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Oct 2014 09:32:41 -0400
+Message-ID: <1414503152.27833.17.camel@coelho.fi> (sfid-20141028_143252_454131_78822A14)
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: j@w1.fi, linux-wireless@vger.kernel.org
+Date: Tue, 28 Oct 2014 15:32:32 +0200
+In-Reply-To: <1414495985-26937-1-git-send-email-luca@coelho.fi>
+References: <1414495985-26937-1-git-send-email-luca@coelho.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH 0/2] mac80211: fix HT+ to HT- (and vice-versa) CSA
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+(fixed Johannes' email address)
 
-In MCC mode, currently the decision to enable
-the multi-channel state machine is done
-based on the association status if one of
-the interfaces assigned to a context is in
-station mode.
+Both these bugs go far back, so IMHO they should go to 3.8 and stable.
 
-This allows the driver to switch to the other
-context before the current station is able to
-complete the 4-way handshake in case it is
-required and this causes problems.
+1/2 goes back to 3.13
+2/2 goes back to 2.6.30 (though the affected code changed somewhat
+                         since then)
 
-Instead, enable multi-channel mode when the
-station moves to the authorized state. This
-disallows an early switch to the other channel.
+--
+Luca.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h   |  2 +-
- drivers/net/wireless/ath/ath9k/channel.c |  4 ++--
- drivers/net/wireless/ath/ath9k/main.c    | 13 +++++++------
- 3 files changed, 10 insertions(+), 9 deletions(-)
+On Tue, 2014-10-28 at 13:33 +0200, Luca Coelho wrote:
+> From: Luciano Coelho <luciano.coelho@intel.com>
+> 
+> These two patches fix a bug that Jouni found when running his hostap
+> hwsim test scripts (ap_ht40_csa).  The failure was caused by two
+> different bugs which are fixed in this patchset.
+> 
+> The first bug was that we were not using the secondary channel offset
+> IE of beacons for the switch, but the offset of the current channel,
+> which cause us to use the same offset. 
+> 
+> The second bug was that we were trying to switch at the exact time of
+> the switch on the station side, which, because of the processing time,
+> was causing us to be too late.
+> 
+> Luciano Coelho (2):
+>   mac80211: use secondary channel offset IE also beacons during CSA
+>   mac80211: schedule the actual switch of the station before CSA count 0
+> 
+>  net/mac80211/ibss.c        |  2 +-
+>  net/mac80211/ieee80211_i.h |  3 +--
+>  net/mac80211/mesh.c        |  2 +-
+>  net/mac80211/mlme.c        |  5 +++--
+>  net/mac80211/spectmgmt.c   | 18 ++++++------------
+>  5 files changed, 12 insertions(+), 18 deletions(-)
+> 
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 01a7db0..aff5e4c 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -362,7 +362,7 @@ enum ath_chanctx_event {
- 	ATH_CHANCTX_EVENT_BEACON_SENT,
- 	ATH_CHANCTX_EVENT_TSF_TIMER,
- 	ATH_CHANCTX_EVENT_BEACON_RECEIVED,
--	ATH_CHANCTX_EVENT_ASSOC,
-+	ATH_CHANCTX_EVENT_AUTHORIZED,
- 	ATH_CHANCTX_EVENT_SWITCH,
- 	ATH_CHANCTX_EVENT_ASSIGN,
- 	ATH_CHANCTX_EVENT_UNASSIGN,
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index 945c898..16bed6a 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -171,7 +171,7 @@ static const char *chanctx_event_string(enum ath_chanctx_event ev)
- 		case_rtn_string(ATH_CHANCTX_EVENT_BEACON_SENT);
- 		case_rtn_string(ATH_CHANCTX_EVENT_TSF_TIMER);
- 		case_rtn_string(ATH_CHANCTX_EVENT_BEACON_RECEIVED);
--		case_rtn_string(ATH_CHANCTX_EVENT_ASSOC);
-+		case_rtn_string(ATH_CHANCTX_EVENT_AUTHORIZED);
- 		case_rtn_string(ATH_CHANCTX_EVENT_SWITCH);
- 		case_rtn_string(ATH_CHANCTX_EVENT_ASSIGN);
- 		case_rtn_string(ATH_CHANCTX_EVENT_UNASSIGN);
-@@ -510,7 +510,7 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
- 
- 		ath_chanctx_setup_timer(sc, tsf_time);
- 		break;
--	case ATH_CHANCTX_EVENT_ASSOC:
-+	case ATH_CHANCTX_EVENT_AUTHORIZED:
- 		if (sc->sched.state != ATH_CHANCTX_STATE_FORCE_ACTIVE ||
- 		    avp->chanctx != sc->cur_chan)
- 			break;
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 902807e..446bc46 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1569,6 +1569,13 @@ static int ath9k_sta_state(struct ieee80211_hw *hw,
- 			"Remove station: %pM\n", sta->addr);
- 	}
- 
-+	if (ath9k_is_chanctx_enabled()) {
-+		if (old_state == IEEE80211_STA_ASSOC &&
-+		    new_state == IEEE80211_STA_AUTHORIZED)
-+			ath_chanctx_event(sc, vif,
-+					  ATH_CHANCTX_EVENT_AUTHORIZED);
-+	}
-+
- 	return ret;
- }
- 
-@@ -1761,12 +1768,6 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
- 		avp->assoc = bss_conf->assoc;
- 
- 		ath9k_calculate_summary_state(sc, avp->chanctx);
--
--		if (ath9k_is_chanctx_enabled()) {
--			if (bss_conf->assoc)
--				ath_chanctx_event(sc, vif,
--						  ATH_CHANCTX_EVENT_ASSOC);
--		}
- 	}
- 
- 	if (changed & BSS_CHANGED_IBSS) {
--- 
-2.1.2
 
