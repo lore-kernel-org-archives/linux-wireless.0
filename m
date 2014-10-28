@@ -1,100 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([46.140.151.2]:43551 "EHLO mail.neratec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759631AbaJ3Mzy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Oct 2014 08:55:54 -0400
-Message-ID: <54523557.1030908@neratec.com> (sfid-20141030_135558_024685_AB7466B1)
-Date: Thu, 30 Oct 2014 13:55:51 +0100
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:33251 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752198AbaJ1Oux (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Oct 2014 10:50:53 -0400
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: [PATCH 2/5] wil6210: reset flow updates
+Date: Tue, 28 Oct 2014 16:50:07 +0200
+Message-ID: <1414507810-23141-3-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20141028_155056_920777_C7A70FA9)
+In-Reply-To: <1414507810-23141-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1414507810-23141-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Adrien Decostre <ad.decostre@gmail.com>
-CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: Re: Questions regarding ath9k and new EN 300 328 regulation
-References: <CAOtFK_Ue0xjEaYY3qm0n2Tj=Hnu1dbphupmdZmiouVuGLnktoA@mail.gmail.com> <544E21D4.9020401@neratec.com> <CAOtFK_XWgBxPNy77XVDc1XbYUkdPSd-Q9wmREN2iL6A8bzFDoQ@mail.gmail.com> <544E5BCF.6000703@neratec.com> <CAOtFK_VG0Z3EkAfYNjiQGdcUp03Pa2SMP+-6cfdJMMT8Rg4Y6A@mail.gmail.com>
-In-Reply-To: <CAOtFK_VG0Z3EkAfYNjiQGdcUp03Pa2SMP+-6cfdJMMT8Rg4Y6A@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As written before, you need to look at DFS and adaptivity as two independent
-mechanisms.
+As communicated with the firmware & hardware teams
 
-You can disable support for DFS channels in the driver anytime by not setting the
-required configuration options. As a result, you won't be able to operate actively
-on a DFS channel (monitor mode should still work).
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/main.c    | 23 ++++++++++++++++++-----
+ drivers/net/wireless/ath/wil6210/wil6210.h |  6 ++++++
+ 2 files changed, 24 insertions(+), 5 deletions(-)
 
-Adaptivity you could start playing without DFS (it is anyway not limited to DFS
-channels). At a later stage a working adaptivity module might provide
-meta-information helpful to improve DFS processing / management (like: ah, there
-is a master already using DFS channel X - assuming that one did a CAC already,
-there should be no radar device around). The certification requirements leave
-enough room for interpreting those supplemental results in one way or another.
-
-
-Cheers,
-Zefir
-
-On 10/27/2014 07:23 PM, Adrien Decostre wrote:
-> Dear Zefir,
-> 
-> Thanks a lot for these precisions, This makes thing more clear.
-> 
-> There is still one thing unclear to me. If we do not consider working
-> on the DFS channels and that we only want to operate on channels 36,
-> 40, 44 and 48 in EU. Do we still need to enable DFS flags in ath9k to
-> comply with EN 300 328 v1.8.1. I mean, is the same pulse detector
-> algorithm used for DFS and for the adaptivity tests on channels 36 to
-> 48?
-> 
-> Many thanks in advance for your answer.
-> 
-> Best regards
-> 
-> Adrien
-> 
-> 
-> On Mon, Oct 27, 2014 at 3:50 PM, Zefir Kurtisi
-> <zefir.kurtisi@neratec.com> wrote:
->> On 10/27/2014 03:18 PM, Adrien Decostre wrote:
->>> Hello Zefir,
->>>
->>> Thanks a lot for your answer. This helps me a lot.
->>> If I correctly understand, the ability of ath9k to detect all pulses
->>> may also depend of the platform performances. So on an embedded
->>> platform with limited performances, we may observe more pulses losses
->>> than on a more powerful platform. Is this a right statement?
->>>
->> No, there is no bottleneck in the platform performance. Presumed radar pulses are
->> reported as RX_ERROR descriptors and even lower end embedded systems are able to
->> handle the load. What makes the difference with the minimum pulse width is the
->> chip DFS engine's ability to isolate and identify very short spikes as potential
->> radar pulses.
->>
->> This goes very deeply into material I had available under NDA while implementing
->> the DFS support for ath9k. If you intend to work on that topic, I encourage you to
->> contact the folks at QCA and join their 'NDA for Developers' program. The document
->> you want to read is 'Baseband DFS 2 (Radar) Micro-Architecture'.
->>
->>> What about the CONFIG_ATH9K_DFS_CERTIFIED build options? Do we need it
->>> to enable the detection of 0.5usec. pulses?
->>>
->> Yes, this driver specific flag (also available for 10k) you need to set to get the
->> DFS detector built (not related to pulse width). It essentially shifts the
->> responsibility of the product working in restricted bands to you / the manufacturer.
->>
->>
->>> Thanks in advance for your answer.
->>>
->>> Best regards
->>>
->>> Adrien
->>>
->>
->> Good Luck,
->> Zefir
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index 7900384..0e95557 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -400,7 +400,7 @@ static inline void wil_release_cpu(struct wil6210_priv *wil)
+ static int wil_target_reset(struct wil6210_priv *wil)
+ {
+ 	int delay = 0;
+-	u32 hw_state;
++	u32 x;
+ 	u32 rev_id;
+ 	bool is_sparrow = (wil->board->board == WIL_BOARD_SPARROW);
+ 
+@@ -415,9 +415,22 @@ static int wil_target_reset(struct wil6210_priv *wil)
+ 	S(RGF_USER_CLKS_CTL_SW_RST_MASK_0, BIT_CAR_PERST_RST);
+ 
+ 	wil_halt_cpu(wil);
+-	C(RGF_USER_CLKS_CTL_0, BIT_USER_CLKS_CAR_AHB_SW_SEL); /* 40 MHz */
+ 
+ 	if (is_sparrow) {
++		S(RGF_CAF_OSC_CONTROL, BIT_CAF_OSC_XTAL_EN);
++		/* XTAL stabilization should take about 3ms */
++		usleep_range(5000, 7000);
++		x = R(RGF_CAF_PLL_LOCK_STATUS);
++		if (!(x & BIT_CAF_OSC_DIG_XTAL_STABLE)) {
++			wil_err(wil, "Xtal stabilization timeout\n"
++				"RGF_CAF_PLL_LOCK_STATUS = 0x%08x\n", x);
++			return -ETIME;
++		}
++		/* switch 10k to XTAL*/
++		C(RGF_USER_SPARROW_M_4, BIT_SPARROW_M_4_SEL_SLEEP_OR_REF);
++		/* 40 MHz */
++		C(RGF_USER_CLKS_CTL_0, BIT_USER_CLKS_CAR_AHB_SW_SEL);
++
+ 		W(RGF_USER_CLKS_CTL_EXT_SW_RST_VEC_0, 0x3ff81f);
+ 		W(RGF_USER_CLKS_CTL_EXT_SW_RST_VEC_1, 0xf);
+ 	}
+@@ -458,13 +471,13 @@ static int wil_target_reset(struct wil6210_priv *wil)
+ 	/* wait until device ready. typical time is 200..250 msec */
+ 	do {
+ 		msleep(RST_DELAY);
+-		hw_state = R(RGF_USER_HW_MACHINE_STATE);
++		x = R(RGF_USER_HW_MACHINE_STATE);
+ 		if (delay++ > RST_COUNT) {
+ 			wil_err(wil, "Reset not completed, hw_state 0x%08x\n",
+-				hw_state);
++				x);
+ 			return -ETIME;
+ 		}
+-	} while (hw_state != HW_MACHINE_BOOT_DONE);
++	} while (x != HW_MACHINE_BOOT_DONE);
+ 
+ 	/* TODO: Erez check rev_id != 1 */
+ 	if (!is_sparrow && (rev_id != 1))
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 7ffaf2f..18f8729 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -117,6 +117,8 @@ struct RGF_ICR {
+ 	#define BIT_USER_USER_ICR_SW_INT_2	BIT(18)
+ #define RGF_USER_CLKS_CTL_EXT_SW_RST_VEC_0	(0x880c18)
+ #define RGF_USER_CLKS_CTL_EXT_SW_RST_VEC_1	(0x880c2c)
++#define RGF_USER_SPARROW_M_4			(0x880c50) /* Sparrow */
++	#define BIT_SPARROW_M_4_SEL_SLEEP_OR_REF	BIT(2)
+ 
+ #define RGF_DMA_EP_TX_ICR		(0x881bb4) /* struct RGF_ICR */
+ 	#define BIT_DMA_EP_TX_ICR_TX_DONE	BIT(0)
+@@ -152,6 +154,10 @@ struct RGF_ICR {
+ #define RGF_MAC_MTRL_COUNTER_0		(0x886aa8)
+ 
+ #define RGF_CAF_ICR			(0x88946c) /* struct RGF_ICR */
++#define RGF_CAF_OSC_CONTROL		(0x88afa4)
++	#define BIT_CAF_OSC_XTAL_EN		BIT(0)
++#define RGF_CAF_PLL_LOCK_STATUS		(0x88afec)
++	#define BIT_CAF_OSC_DIG_XTAL_STABLE	BIT(0)
+ 
+ /* popular locations */
+ #define HOST_MBOX   HOSTADDR(RGF_USER_USER_SCRATCH_PAD)
+-- 
+2.1.0
 
