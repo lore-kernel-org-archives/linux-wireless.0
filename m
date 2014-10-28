@@ -1,66 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f182.google.com ([209.85.192.182]:46649 "EHLO
-	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751170AbaJITZ1 (ORCPT
+Received: from mail-yh0-f53.google.com ([209.85.213.53]:42629 "EHLO
+	mail-yh0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752559AbaJ1HIZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2014 15:25:27 -0400
-Date: Thu, 9 Oct 2014 12:25:20 -0700
-From: Guenter Roeck <linux@roeck-us.net>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH] bcma: Add dependency on OF_ADDRESS
-Message-ID: <20141009192520.GA6552@roeck-us.net> (sfid-20141009_212549_647729_25BDD8EE)
-References: <1412872877-1771-1-git-send-email-linux@roeck-us.net>
- <CACna6rzOeGcKrrftLx_3uWe_bAXQaQMmWb3wWHP0CjtdO8D0eg@mail.gmail.com>
- <5436C2B4.6030801@broadcom.com>
- <5436C367.5080908@broadcom.com>
- <20141009172924.GD2410@roeck-us.net>
- <5436D3CF.2030506@hauke-m.de>
+	Tue, 28 Oct 2014 03:08:25 -0400
+Received: by mail-yh0-f53.google.com with SMTP id z6so29002yhz.12
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Oct 2014 00:08:24 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <5436D3CF.2030506@hauke-m.de>
+In-Reply-To: <20141027180436.GE28300@tuxdriver.com>
+References: <1413932631-12866-1-git-send-email-ryazanov.s.a@gmail.com>
+ <1413932631-12866-12-git-send-email-ryazanov.s.a@gmail.com> <20141027180436.GE28300@tuxdriver.com>
+From: Sergey Ryazanov <ryazanov.s.a@gmail.com>
+Date: Tue, 28 Oct 2014 11:08:04 +0400
+Message-ID: <CAHNKnsTWvZy=-TBv-KPjCOD-vhwcxUUGv61doYUm0F77if-pqw@mail.gmail.com> (sfid-20141028_080834_461834_85C62D11)
+Subject: Re: [PATCH v2 11/13] ath5k: revert AHB bus support removing
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Ralf Baechle <ralf@linux-mips.org>,
+	Linux MIPS <linux-mips@linux-mips.org>,
+	Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath5k-devel@venema.h4ckr.net
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 09, 2014 at 08:28:31PM +0200, Hauke Mehrtens wrote:
-> On 10/09/2014 07:29 PM, Guenter Roeck wrote:
-> > On Thu, Oct 09, 2014 at 07:18:31PM +0200, Arend van Spriel wrote:
-> >> On 10/09/14 19:15, Arend van Spriel wrote:
-> >>> On 10/09/14 18:54, Rafał Miłecki wrote:
-> >>>> On 9 October 2014 18:41, Guenter Roeck<linux@roeck-us.net> wrote:
-> >>>>> Commit 2101e533f41a ("bcma: register bcma as device tree driver")
-> >>>>> introduces a hard dependency on OF_ADDRESS into the bcma driver.
-> >>>>> OF_ADDRESS is specifically disabled for the sparc architecture.
-> >>>>> This results in the following error when building sparc64:allmodconfig.
-> >>>
-> >>> Does this mean on sparc (using allmodconfig) you will get CONFIG_OF and
-> >>> !CONFIG_OF_ADDRESS? Does that makes sense?
-> >>
-> >> Is CONFIG_OF is used on sparc to access OpenBoot information?
-> >>
-> > I have no idea. All I know is that the driver doesn't build anymore with OF
-> > enabled and OF_ADDRESS disabled.
-> 
-> Device tree support in bcma is only needed on some SoC, when this is
-> used on a PCIe card it is not needed.
-> 
-> I would just deactivate the parts that are using device tree in bcma
-> when it is not available. I will send a patch after having something to eat.
-> 
-Devicetree dependency is already covered with #ifdef CONFIG_OF. Problem is
-that it really needs #ifdef CONFIG_OF_ADDRESS. Though even that might be
-better than my patch, since it would at least build the driver on sparc
-as it used to do.
+2014-10-27 21:04 GMT+03:00 John W. Linville <linville@tuxdriver.com>:
+> On Wed, Oct 22, 2014 at 03:03:49AM +0400, Sergey Ryazanov wrote:
+>> This reverts commit 093ec3c5337434f40d77c1af06c139da3e5ba6dc.
+>>
+>> AHB bus code has been removed, since we did not have support Atheros
+>> AR231x SoC, required for building the AHB version of ath5k. Now that
+>> support WiSoC chips added we can restore functionality back.
+>>
+>> Singed-off-by: Sergey Ryazanov <ryazanov.s.a@gmail.com>
+>> Cc: Jiri Slaby <jirislaby@gmail.com>
+>> Cc: Nick Kossifidis <mickflemm@gmail.com>
+>> Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+>> Cc: linux-wireless@vger.kernel.org
+>> Cc: ath5k-devel@lists.ath5k.org
+>
+> Acked-by: John W. Linville <linville@tuxdriver.com>
+>
+John, should I include these two patches in v3 or you already merge
+them in your tree?
 
-> Is there a better method which is compatible with SPARC than using
-> of_translate_address() to get the reg address and also take the ranges
-> attribute of the bus into account?
-> 
-No idea, sorry. Can you by any chance use pcie device information
-instead of depending on devicetree data ?
-
-Guenter
+-- 
+BR,
+Sergey
