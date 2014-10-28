@@ -1,46 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:50325 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753386AbaJBBCv (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:15620 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751363AbaJ1KoC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Oct 2014 21:02:51 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH v2 04/10] ath9k: Fix pending frame check
-Date: Thu,  2 Oct 2014 06:33:14 +0530
-Message-Id: <1412211800-24344-5-git-send-email-sujith@msujith.org> (sfid-20141002_030253_614777_9331F566)
-In-Reply-To: <1412211800-24344-1-git-send-email-sujith@msujith.org>
-References: <1412211800-24344-1-git-send-email-sujith@msujith.org>
+	Tue, 28 Oct 2014 06:44:02 -0400
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <wireless-regdb@lists.infradead.org>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 08/21] wireless-regdb: Add regulatory rules for Cayman Islands (KY)
+Date: Tue, 28 Oct 2014 12:42:54 +0200
+Message-ID: <1414492987-16118-1-git-send-email-jouni@qca.qualcomm.com> (sfid-20141028_114407_130981_784443A2)
+In-Reply-To: <1414492175-13830-1-git-send-email-jouni@qca.qualcomm.com>
+References: <1414492175-13830-1-git-send-email-jouni@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Source is QCA's regulatory team's efforts.
 
-Checking for the queue depth outside of
-the TX queue lock is incorrect and in this
-case, is not required since it is done inside
-ath9k_has_pending_frames().
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath9k/main.c | 3 ---
- 1 file changed, 3 deletions(-)
+ db.txt | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 84c0cd4..73a4438 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1974,9 +1974,6 @@ static bool ath9k_has_tx_pending(struct ath_softc *sc)
- 		if (!ATH_TXQ_SETUP(sc, i))
- 			continue;
+diff --git a/db.txt b/db.txt
+index 4ecfcf3..6d8abd1 100644
+--- a/db.txt
++++ b/db.txt
+@@ -625,6 +625,13 @@ country KW: DFS-ETSI
+ 	(5170 - 5250 @ 80), (20), AUTO-BW
+ 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
  
--		if (!sc->tx.txq[i].axq_depth)
--			continue;
--
- 		npend = ath9k_has_pending_frames(sc, &sc->tx.txq[i]);
- 		if (npend)
- 			break;
++country KY: DFS-FCC
++	(2402 - 2482 @ 40), (20)
++	(5170 - 5250 @ 80), (24), AUTO-BW
++	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
++	(5490 - 5730 @ 160), (24), DFS
++	(5735 - 5835 @ 80), (30)
++
+ country KZ:
+ 	(2402 - 2482 @ 40), (20)
+ 
 -- 
-2.1.1
+1.9.1
 
