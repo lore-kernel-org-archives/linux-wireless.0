@@ -1,94 +1,280 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:7120 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750826AbaJLIGw (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:22845 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753418AbaJ1OA0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Oct 2014 04:06:52 -0400
-Message-ID: <543A36A0.8090300@broadcom.com> (sfid-20141012_100817_589080_60BF6E0C)
-Date: Sun, 12 Oct 2014 10:06:56 +0200
+	Tue, 28 Oct 2014 10:00:26 -0400
 From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-CC: Brett Rudley <brudley@broadcom.com>,
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
 	Hante Meuleman <meuleman@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	Daniel Kim <dekim@broadcom.com>,
-	<linux-wireless@vger.kernel.org>,
-	<brcm80211-dev-list@broadcom.com>, <netdev@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] net: wireless: brcm80211: brcmfmac: dhd_sdio.c:  Cleaning
- up missing null-terminate in conjunction with strncpy
-References: <1413071551-15372-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-In-Reply-To: <1413071551-15372-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-Content-Type: text/plain; charset="windows-1252"
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 11/16] brcmfmac: (clean) Rename dhd_bus.h in bus.h
+Date: Tue, 28 Oct 2014 14:56:14 +0100
+Message-ID: <1414504579-12562-12-git-send-email-arend@broadcom.com> (sfid-20141028_150032_670086_7C828843)
+In-Reply-To: <1414504579-12562-1-git-send-email-arend@broadcom.com>
+References: <1414504579-12562-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12-10-14 01:52, Rickard Strandqvist wrote:
-> Replacing strncpy with strlcpy to avoid strings that lacks null terminate.
-> And changed from using strncpy to strlcpy to simplify code.
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Looks good to me. Just two small process related remarks:
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/bcdc.c               | 2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c             | 2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/{dhd_bus.h => bus.h} | 9 ++++-----
+ drivers/net/wireless/brcm80211/brcmfmac/debug.c              | 2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c         | 2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c          | 2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c           | 2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/feature.c            | 2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/flowring.c           | 2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/fwil.c               | 2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c           | 2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c             | 2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/pcie.c               | 2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/proto.c              | 2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/usb.c                | 3 +--
+ drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c        | 2 +-
+ 16 files changed, 19 insertions(+), 21 deletions(-)
+ rename drivers/net/wireless/brcm80211/brcmfmac/{dhd_bus.h => bus.h} (98%)
 
-- It is sufficient to prefix the patch with brcmfmac (skip net:...).
-- Send the patch to the wireless maintainer, ie. John Linville.
-
-Acked-by: Arend van Spriel <arend@broadcom.com>
-> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-> ---
->  drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   25 ++++++++++----------
->  1 file changed, 12 insertions(+), 13 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-> index f55f625..d20d4e6 100644
-> --- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-> +++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-> @@ -670,7 +670,6 @@ static int brcmf_sdio_get_fwnames(struct brcmf_chip *ci,
->  				  struct brcmf_sdio_dev *sdiodev)
->  {
->  	int i;
-> -	uint fw_len, nv_len;
->  	char end;
->  
->  	for (i = 0; i < ARRAY_SIZE(brcmf_fwname_data); i++) {
-> @@ -684,25 +683,25 @@ static int brcmf_sdio_get_fwnames(struct brcmf_chip *ci,
->  		return -ENODEV;
->  	}
->  
-> -	fw_len = sizeof(sdiodev->fw_name) - 1;
-> -	nv_len = sizeof(sdiodev->nvram_name) - 1;
->  	/* check if firmware path is provided by module parameter */
->  	if (brcmf_firmware_path[0] != '\0') {
-> -		strncpy(sdiodev->fw_name, brcmf_firmware_path, fw_len);
-> -		strncpy(sdiodev->nvram_name, brcmf_firmware_path, nv_len);
-> -		fw_len -= strlen(sdiodev->fw_name);
-> -		nv_len -= strlen(sdiodev->nvram_name);
-> +		strlcpy(sdiodev->fw_name, brcmf_firmware_path,
-> +			sizeof(sdiodev->fw_name));
-> +		strlcpy(sdiodev->nvram_name, brcmf_firmware_path,
-> +			sizeof(sdiodev->nvram_name));
->  
->  		end = brcmf_firmware_path[strlen(brcmf_firmware_path) - 1];
->  		if (end != '/') {
-> -			strncat(sdiodev->fw_name, "/", fw_len);
-> -			strncat(sdiodev->nvram_name, "/", nv_len);
-> -			fw_len--;
-> -			nv_len--;
-> +			strlcat(sdiodev->fw_name, "/",
-> +				sizeof(sdiodev->fw_name));
-> +			strlcat(sdiodev->nvram_name, "/",
-> +				sizeof(sdiodev->nvram_name));
->  		}
->  	}
-> -	strncat(sdiodev->fw_name, brcmf_fwname_data[i].bin, fw_len);
-> -	strncat(sdiodev->nvram_name, brcmf_fwname_data[i].nv, nv_len);
-> +	strlcat(sdiodev->fw_name, brcmf_fwname_data[i].bin,
-> +		sizeof(sdiodev->fw_name));
-> +	strlcat(sdiodev->nvram_name, brcmf_fwname_data[i].nv,
-> +		sizeof(sdiodev->nvram_name));
->  
->  	return 0;
->  }
-> 
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcdc.c b/drivers/net/wireless/brcm80211/brcmfmac/bcdc.c
+index 11d3dfa..d5a2d94 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcdc.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcdc.c
+@@ -26,7 +26,7 @@
+ #include <brcmu_wifi.h>
+ 
+ #include "dhd.h"
+-#include "dhd_bus.h"
++#include "bus.h"
+ #include "fwsignal.h"
+ #include "debug.h"
+ #include "tracepoint.h"
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+index 8c0dfea..969bdd6 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+@@ -41,7 +41,7 @@
+ #include <chipcommon.h>
+ #include <soc.h>
+ #include "chip.h"
+-#include "dhd_bus.h"
++#include "bus.h"
+ #include "debug.h"
+ #include "sdio_host.h"
+ #include "of.h"
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h b/drivers/net/wireless/brcm80211/brcmfmac/bus.h
+similarity index 98%
+rename from drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
+rename to drivers/net/wireless/brcm80211/brcmfmac/bus.h
+index 0421cfe..ef344e4 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bus.h
+@@ -14,8 +14,8 @@
+  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+  */
+ 
+-#ifndef _BRCMF_BUS_H_
+-#define _BRCMF_BUS_H_
++#ifndef BRCMFMAC_BUS_H
++#define BRCMFMAC_BUS_H
+ 
+ #include "debug.h"
+ 
+@@ -227,8 +227,7 @@ void brcmf_txflowblock(struct device *dev, bool state);
+ void brcmf_txcomplete(struct device *dev, struct sk_buff *txp, bool success);
+ 
+ int brcmf_bus_start(struct device *dev);
+-s32 brcmf_iovar_data_set(struct device *dev, char *name, void *data,
+-				u32 len);
++s32 brcmf_iovar_data_set(struct device *dev, char *name, void *data, u32 len);
+ void brcmf_bus_add_txhdrlen(struct device *dev, uint len);
+ 
+ #ifdef CONFIG_BRCMFMAC_SDIO
+@@ -241,4 +240,4 @@ void brcmf_usb_exit(void);
+ void brcmf_usb_register(void);
+ #endif
+ 
+-#endif				/* _BRCMF_BUS_H_ */
++#endif /* BRCMFMAC_BUS_H */
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/debug.c b/drivers/net/wireless/brcm80211/brcmfmac/debug.c
+index 27e5108..340b104 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/debug.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/debug.c
+@@ -20,7 +20,7 @@
+ #include <brcmu_wifi.h>
+ #include <brcmu_utils.h>
+ #include "dhd.h"
+-#include "dhd_bus.h"
++#include "bus.h"
+ #include "debug.h"
+ 
+ static struct dentry *root_folder;
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
+index 78ada88..7723994 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
+@@ -20,7 +20,7 @@
+ #include <brcmu_wifi.h>
+ #include <brcmu_utils.h>
+ #include "dhd.h"
+-#include "dhd_bus.h"
++#include "bus.h"
+ #include "debug.h"
+ #include "fwil.h"
+ #include "fwil_types.h"
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+index 2522e68..8dbf2c1 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+@@ -23,7 +23,7 @@
+ #include <brcmu_wifi.h>
+ 
+ #include "dhd.h"
+-#include "dhd_bus.h"
++#include "bus.h"
+ #include "debug.h"
+ #include "fwil_types.h"
+ #include "p2p.h"
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index 4fc2f52..224e922 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -96,7 +96,7 @@ struct rte_console {
+ #endif				/* DEBUG */
+ #include <chipcommon.h>
+ 
+-#include "dhd_bus.h"
++#include "bus.h"
+ #include "debug.h"
+ #include "tracepoint.h"
+ 
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/feature.c b/drivers/net/wireless/brcm80211/brcmfmac/feature.c
+index 86b854e..d4be4c4 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/feature.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/feature.c
+@@ -18,7 +18,7 @@
+ 
+ #include <brcm_hw_ids.h>
+ #include "dhd.h"
+-#include "dhd_bus.h"
++#include "bus.h"
+ #include "debug.h"
+ #include "fwil.h"
+ #include "feature.h"
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/flowring.c b/drivers/net/wireless/brcm80211/brcmfmac/flowring.c
+index 15a2cc5..e9cb550 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/flowring.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/flowring.c
+@@ -21,7 +21,7 @@
+ 
+ #include "dhd.h"
+ #include "debug.h"
+-#include "dhd_bus.h"
++#include "bus.h"
+ #include "proto.h"
+ #include "flowring.h"
+ #include "msgbuf.h"
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwil.c b/drivers/net/wireless/brcm80211/brcmfmac/fwil.c
+index 424146c..70db41f 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fwil.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fwil.c
+@@ -23,7 +23,7 @@
+ #include <brcmu_utils.h>
+ #include <brcmu_wifi.h>
+ #include "dhd.h"
+-#include "dhd_bus.h"
++#include "bus.h"
+ #include "debug.h"
+ #include "tracepoint.h"
+ #include "fwil.h"
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+index 5a3cf64..dbd52cc 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+@@ -28,7 +28,7 @@
+ #include <brcmu_wifi.h>
+ #include "dhd.h"
+ #include "debug.h"
+-#include "dhd_bus.h"
++#include "bus.h"
+ #include "fwil.h"
+ #include "fwil_types.h"
+ #include "fweh.h"
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
+index 87924d3..18e1770 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
+@@ -30,7 +30,7 @@
+ #include "msgbuf.h"
+ #include "commonring.h"
+ #include "flowring.h"
+-#include "dhd_bus.h"
++#include "bus.h"
+ #include "tracepoint.h"
+ 
+ 
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
+index d8fe7ab..b0ae799 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
+@@ -31,7 +31,7 @@
+ #include <brcm_hw_ids.h>
+ 
+ #include "debug.h"
+-#include "dhd_bus.h"
++#include "bus.h"
+ #include "commonring.h"
+ #include "msgbuf.h"
+ #include "pcie.h"
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/proto.c b/drivers/net/wireless/brcm80211/brcmfmac/proto.c
+index f96b932..5e83b2b 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/proto.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/proto.c
+@@ -21,7 +21,7 @@
+ 
+ #include <brcmu_wifi.h>
+ #include "dhd.h"
+-#include "dhd_bus.h"
++#include "bus.h"
+ #include "debug.h"
+ #include "proto.h"
+ #include "bcdc.h"
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+index 4eb9b2c..5265aa7 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+@@ -23,8 +23,7 @@
+ #include <brcmu_utils.h>
+ #include <brcm_hw_ids.h>
+ #include <brcmu_wifi.h>
+-#include <dhd_bus.h>
+-
++#include "bus.h"
+ #include "debug.h"
+ #include "firmware.h"
+ #include "usb.h"
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index 50bc6a0..2560dff 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -37,7 +37,7 @@
+ #include "fwil.h"
+ #include "proto.h"
+ #include "vendor.h"
+-#include "dhd_bus.h"
++#include "bus.h"
+ 
+ #define BRCMF_SCAN_IE_LEN_MAX		2048
+ #define BRCMF_PNO_VERSION		2
+-- 
+1.9.1
 
