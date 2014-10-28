@@ -1,37 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:45460 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753075AbaJGIqN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Oct 2014 04:46:13 -0400
-Message-ID: <1412671568.1825.1.camel@jlt4.sipsolutions.net> (sfid-20141007_104616_669186_DC88C9DB)
-Subject: Re: [PATCH 2/3] mac-hwsim:  add ethtool stats support.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: greearb@candelatech.com
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 07 Oct 2014 10:46:08 +0200
-In-Reply-To: <1411680140-20208-2-git-send-email-greearb@candelatech.com> (sfid-20140925_232229_629577_D0F1A28C)
-References: <1411680140-20208-1-git-send-email-greearb@candelatech.com>
-	 <1411680140-20208-2-git-send-email-greearb@candelatech.com>
-	 (sfid-20140925_232229_629577_D0F1A28C)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:46500 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753535AbaJ1OvH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Oct 2014 10:51:07 -0400
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: [PATCH 4/5] wil6210: improve dmesg for fw error handling
+Date: Tue, 28 Oct 2014 16:50:09 +0200
+Message-ID: <1414507810-23141-5-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20141028_155128_663370_1854C93D)
+In-Reply-To: <1414507810-23141-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1414507810-23141-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-09-25 at 14:22 -0700, greearb@candelatech.com wrote:
+In case of FW error, make it clear (in dmesg) what branch is taken
+in the error recovery code.
 
-> +static const char mac80211_hwsim_gstrings_stats[][ETH_GSTRING_LEN] = {
-> +	"tx_pkts_nic",
-> +	"tx_bytes_nic",
-> +	"rx_pkts_nic",
-> +	"rx_bytes_nic",
-> +	"d_tx_dropped",
-> +	"d_tx_failed",
-> +	"d_ps_mode",
-> +	"d_group",
-> +	"d_tx_power",
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/main.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-What's that d_ prefix?
-
-johannes
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index b3a84ae..92705c0 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -267,9 +267,12 @@ static void wil_fw_error_worker(struct work_struct *work)
+ 		break;
+ 	case NL80211_IFTYPE_AP:
+ 	case NL80211_IFTYPE_P2P_GO:
++		wil_info(wil, "No recovery for AP-like interface\n");
+ 		/* recovery in these modes is done by upper layers */
+ 		break;
+ 	default:
++		wil_err(wil, "No recovery - unknown interface type %d\n",
++			wdev->iftype);
+ 		break;
+ 	}
+ 	mutex_unlock(&wil->mutex);
+-- 
+2.1.0
 
