@@ -1,37 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:40624 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754421AbaJVIqp convert rfc822-to-8bit (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:43112 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753418AbaJ1OAY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2014 04:46:45 -0400
-Received: by mail-wi0-f180.google.com with SMTP id em10so673042wid.7
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Oct 2014 01:46:43 -0700 (PDT)
+	Tue, 28 Oct 2014 10:00:24 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 12/16] brcmfmac: (clean) Rename dhd_common.c in common.c
+Date: Tue, 28 Oct 2014 14:56:15 +0100
+Message-ID: <1414504579-12562-13-git-send-email-arend@broadcom.com> (sfid-20141028_150028_095987_F81FD3B1)
+In-Reply-To: <1414504579-12562-1-git-send-email-arend@broadcom.com>
+References: <1414504579-12562-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1413899700-10717-2-git-send-email-michal.kazior@tieto.com>
-References: <1413899700-10717-1-git-send-email-michal.kazior@tieto.com>
-	<1413899700-10717-2-git-send-email-michal.kazior@tieto.com>
-Date: Wed, 22 Oct 2014 10:46:43 +0200
-Message-ID: <CA+BoTQmr=uZNeqKxoHM5sG2EU7sBfdETXvzuXkNxDjTJ9ANAbg@mail.gmail.com> (sfid-20141022_104657_147599_0A3661BC)
-Subject: Re: [PATCH 1/2] ath10k: remove tsf argument from rx_desc tracing
-From: Michal Kazior <michal.kazior@tieto.com>
-To: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 21 October 2014 15:54, Michal Kazior <michal.kazior@tieto.com> wrote:
-> Fundamtenally this was wrong. Tsf is only valid
-> in first MPDU of a PPDU. This means tsf value was
+From: Hante Meuleman <meuleman@broadcom.com>
 
-s/first MPDU/last MPDU/
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/Makefile                   | 2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/{dhd_common.c => common.c} | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+ rename drivers/net/wireless/brcm80211/brcmfmac/{dhd_common.c => common.c} (99%)
 
-I must've had a brain fart when writing the commit log yesterday.
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/Makefile b/drivers/net/wireless/brcm80211/brcmfmac/Makefile
+index 1da9042..f6e35c9 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/Makefile
++++ b/drivers/net/wireless/brcm80211/brcmfmac/Makefile
+@@ -30,7 +30,7 @@ brcmfmac-objs += \
+ 		fwsignal.o \
+ 		p2p.o \
+ 		proto.o \
+-		dhd_common.o \
++		common.o \
+ 		dhd_linux.o \
+ 		firmware.o \
+ 		feature.o \
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c b/drivers/net/wireless/brcm80211/brcmfmac/common.c
+similarity index 99%
+rename from drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
+rename to drivers/net/wireless/brcm80211/brcmfmac/common.c
+index 7723994..75642e4 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/common.c
+@@ -52,9 +52,9 @@ bool brcmf_c_prec_enq(struct device *dev, struct pktq *q,
+ 	}
+ 
+ 	/* Determine precedence from which to evict packet, if any */
+-	if (pktq_pfull(q, prec))
++	if (pktq_pfull(q, prec)) {
+ 		eprec = prec;
+-	else if (pktq_full(q)) {
++	} else if (pktq_full(q)) {
+ 		p = brcmu_pktq_peek_tail(q, &eprec);
+ 		if (eprec > prec)
+ 			return false;
+-- 
+1.9.1
 
-@Kalle: Should I re-spin or will you fix it before applying?
-
-
-Michał
