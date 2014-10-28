@@ -1,41 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f176.google.com ([209.85.217.176]:55245 "EHLO
-	mail-lb0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751553AbaJ1JoC (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:10318 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753558AbaJ1KpT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2014 05:44:02 -0400
-Received: by mail-lb0-f176.google.com with SMTP id p9so241080lbv.35
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Oct 2014 02:44:00 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v3 0/4] ath10k: pci related fixes 2014-10-09
-Date: Tue, 28 Oct 2014 10:32:04 +0100
-Message-Id: <1414488728-31489-1-git-send-email-michal.kazior@tieto.com> (sfid-20141028_104415_623641_60188F80)
+	Tue, 28 Oct 2014 06:45:19 -0400
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <wireless-regdb@lists.infradead.org>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 15/21] wireless-regdb: Add regulatory rules for French Polynesia (PF)
+Date: Tue, 28 Oct 2014 12:43:01 +0200
+Message-ID: <1414492987-16118-8-git-send-email-jouni@qca.qualcomm.com> (sfid-20141028_114527_053977_21946A50)
+In-Reply-To: <1414492987-16118-1-git-send-email-jouni@qca.qualcomm.com>
+References: <1414492175-13830-1-git-send-email-jouni@qca.qualcomm.com>
+ <1414492987-16118-1-git-send-email-jouni@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Source is QCA's regulatory team's efforts.
 
-This is a partial re-spin which includes the
-not-yet-applied patches that fix/change warm
-reset.
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+---
+ db.txt | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-v3:
- * change CE ring cleanup (new patch #1)
-
-
-Michal Kazior (4):
-  ath10k: change ce ring cleanup logic
-  ath10k: make warm reset a bit safer and faster
-  ath10k: split reset logic from power up
-  ath10k: don't reset chip on power_down
-
- drivers/net/wireless/ath/ath10k/ce.c  |   6 -
- drivers/net/wireless/ath/ath10k/pci.c | 345 +++++++++++++++++-----------------
- 2 files changed, 176 insertions(+), 175 deletions(-)
-
+diff --git a/db.txt b/db.txt
+index 1c9e307..640d2a7 100644
+--- a/db.txt
++++ b/db.txt
+@@ -874,6 +874,12 @@ country PE: DFS-FCC
+ 	(5490 - 5730 @ 160), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
++country PF: DFS-ETSI
++	(2402 - 2482 @ 40), (20)
++	(5170 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5490 - 5710 @ 160), (27), DFS
++
+ country PG: DFS-FCC
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 80), (17), AUTO-BW
 -- 
-1.8.5.3
+1.9.1
 
