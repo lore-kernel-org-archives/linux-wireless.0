@@ -1,31 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f177.google.com ([209.85.213.177]:53721 "EHLO
-	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751066AbaJIQys (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:34380 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753635AbaJ1Kpt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2014 12:54:48 -0400
+	Tue, 28 Oct 2014 06:45:49 -0400
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <wireless-regdb@lists.infradead.org>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 16/21] wireless-regdb: Add regulatory rules for Paraguay (PY)
+Date: Tue, 28 Oct 2014 12:43:02 +0200
+Message-ID: <1414492987-16118-9-git-send-email-jouni@qca.qualcomm.com> (sfid-20141028_114555_802852_385E3457)
+In-Reply-To: <1414492987-16118-1-git-send-email-jouni@qca.qualcomm.com>
+References: <1414492175-13830-1-git-send-email-jouni@qca.qualcomm.com>
+ <1414492987-16118-1-git-send-email-jouni@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <1412872877-1771-1-git-send-email-linux@roeck-us.net>
-References: <1412872877-1771-1-git-send-email-linux@roeck-us.net>
-Date: Thu, 9 Oct 2014 18:54:48 +0200
-Message-ID: <CACna6rzOeGcKrrftLx_3uWe_bAXQaQMmWb3wWHP0CjtdO8D0eg@mail.gmail.com> (sfid-20141009_185453_924659_F63183E9)
-Subject: Re: [PATCH] bcma: Add dependency on OF_ADDRESS
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Guenter Roeck <linux@roeck-us.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Arnd Bergmann <arnd@arndb.de>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9 October 2014 18:41, Guenter Roeck <linux@roeck-us.net> wrote:
-> Commit 2101e533f41a ("bcma: register bcma as device tree driver")
-> introduces a hard dependency on OF_ADDRESS into the bcma driver.
-> OF_ADDRESS is specifically disabled for the sparc architecture.
-> This results in the following error when building sparc64:allmodconfig.
+Source is QCA's regulatory team's efforts.
 
-Won't this make bcma im-POSSIBLE on MIPS? And maybe x86(_64), or at
-least add an unneeded dependency? I think we should somehow limit this
-to BCM5301X arch.
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+---
+ db.txt | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/db.txt b/db.txt
+index 640d2a7..7e14d24 100644
+--- a/db.txt
++++ b/db.txt
+@@ -934,6 +934,13 @@ country PW: DFS-FCC
+ 	(5490 - 5730 @ 160), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
++country PY: DFS-FCC
++	(2402 - 2482 @ 40), (20)
++	(5170 - 5250 @ 80), (24), AUTO-BW
++	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
++	(5490 - 5730 @ 160), (24), DFS
++	(5735 - 5835 @ 80), (30)
++
+ country QA: DFS-JP
+ 	(2402 - 2482 @ 40), (20)
+ 	(5735 - 5835 @ 80), (30)
+-- 
+1.9.1
+
