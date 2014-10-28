@@ -1,79 +1,188 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f42.google.com ([209.85.218.42]:59666 "EHLO
-	mail-oi0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751472AbaJPUi3 (ORCPT
+Received: from mail-la0-f47.google.com ([209.85.215.47]:42369 "EHLO
+	mail-la0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752257AbaJ1JoF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Oct 2014 16:38:29 -0400
-Received: by mail-oi0-f42.google.com with SMTP id a141so3319577oig.29
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Oct 2014 13:38:29 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1413385042-17903-1-git-send-email-sujith@msujith.org>
-References: <1413385042-17903-1-git-send-email-sujith@msujith.org>
-Date: Thu, 16 Oct 2014 23:38:28 +0300
-Message-ID: <CANUX_P02O-JSQkVvBCg6L9jf8wPyzPv8O_qsZa+prTJJx+20UA@mail.gmail.com> (sfid-20141016_223833_924218_CB57E4A1)
-Subject: Re: [PATCH] cfg80211: Warn once for delayed scan completion
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Sujith Manoharan <sujith@msujith.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 28 Oct 2014 05:44:05 -0400
+Received: by mail-la0-f47.google.com with SMTP id pv20so243815lab.34
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Oct 2014 02:44:03 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v3 2/4] ath10k: make warm reset a bit safer and faster
+Date: Tue, 28 Oct 2014 10:32:06 +0100
+Message-Id: <1414488728-31489-3-git-send-email-michal.kazior@tieto.com> (sfid-20141028_104416_799971_56A699CF)
+In-Reply-To: <1414488728-31489-1-git-send-email-michal.kazior@tieto.com>
+References: <1414488728-31489-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 15, 2014 at 5:57 PM, Sujith Manoharan <sujith@msujith.org> wrote:
-> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
->
-> Scan completion for drivers that use HW scanning
-> causes a warning to be hit if the interface has been
-> removed. Since cfg80211 ensures that both use-after-free
-> and scheduling a new scan doesn't happen in this case,
-> WARN_ON_ONCE can be used. With ath9k this warning is seen
-> many times when multi-channel-concurrency is enabled.
->
-> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+One of the problems with warm reset I've found is
+that it must be guaranteed that copy engine
+registers are not being accessed while being
+reset. Otherwise in worst case scenario the host
+may lock up.
 
-It is not really my business, but how come this happen with ath9k?
-The scan should be cancelled before the interface is removed. You mean
-that the scan cancellation is
-asynchronous and the notification of the cancellation termination can
-come after the cfg80211 has removed
-the interface?
+Instead of using sleeps and hoping the device is
+operational in some arbitrary timeframes use
+firmware indication register.
 
-> ---
->  net/wireless/core.c | 2 +-
->  net/wireless/scan.c | 2 +-
->  2 files changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/net/wireless/core.c b/net/wireless/core.c
-> index f52a4cd..2be08e8 100644
-> --- a/net/wireless/core.c
-> +++ b/net/wireless/core.c
-> @@ -931,7 +931,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
->         case NETDEV_DOWN:
->                 cfg80211_update_iface_num(rdev, wdev->iftype, -1);
->                 if (rdev->scan_req && rdev->scan_req->wdev == wdev) {
-> -                       if (WARN_ON(!rdev->scan_req->notified))
-> +                       if (WARN_ON_ONCE(!rdev->scan_req->notified))
->                                 rdev->scan_req->aborted = true;
->                         ___cfg80211_scan_done(rdev, false);
->                 }
-> diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-> index bda39f1..c0fc0b3 100644
-> --- a/net/wireless/scan.c
-> +++ b/net/wireless/scan.c
-> @@ -239,7 +239,7 @@ void __cfg80211_scan_done(struct work_struct *wk)
->  void cfg80211_scan_done(struct cfg80211_scan_request *request, bool aborted)
->  {
->         trace_cfg80211_scan_done(request, aborted);
-> -       WARN_ON(request != wiphy_to_rdev(request->wiphy)->scan_req);
-> +       WARN_ON_ONCE(request != wiphy_to_rdev(request->wiphy)->scan_req);
->
->         request->aborted = aborted;
->         request->notified = true;
-> --
-> 2.1.2
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+As a side effect this makes driver
+boot/stop/recovery faster.
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+
+Notes:
+    v2:
+     * fix kernel panic on early fw crash due to CE not being fully initialized [Janusz]
+
+ drivers/net/wireless/ath/ath10k/pci.c | 110 +++++++++++++++-------------------
+ 1 file changed, 48 insertions(+), 62 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index a8a3e1b..af36730 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -1717,89 +1717,75 @@ static void ath10k_pci_warm_reset_si0(struct ath10k *ar)
+ 	msleep(10);
+ }
+ 
+-static int ath10k_pci_warm_reset(struct ath10k *ar)
++static void ath10k_pci_warm_reset_cpu(struct ath10k *ar)
+ {
+ 	u32 val;
+ 
+-	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot warm reset\n");
+-
+-	spin_lock_bh(&ar->data_lock);
+-
+-	ar->stats.fw_warm_reset_counter++;
+-
+-	spin_unlock_bh(&ar->data_lock);
+-
+-	/* debug */
+-	val = ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS +
+-				PCIE_INTR_CAUSE_ADDRESS);
+-	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot host cpu intr cause: 0x%08x\n",
+-		   val);
+-
+-	val = ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS +
+-				CPU_INTR_ADDRESS);
+-	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot target cpu intr cause: 0x%08x\n",
+-		   val);
+-
+-	/* disable pending irqs */
+-	ath10k_pci_write32(ar, SOC_CORE_BASE_ADDRESS +
+-			   PCIE_INTR_ENABLE_ADDRESS, 0);
+-
+-	ath10k_pci_write32(ar, SOC_CORE_BASE_ADDRESS +
+-			   PCIE_INTR_CLR_ADDRESS, ~0);
+-
+-	msleep(100);
+-
+-	/* clear fw indicator */
+ 	ath10k_pci_write32(ar, FW_INDICATOR_ADDRESS, 0);
+ 
+-	/* clear target LF timer interrupts */
+ 	val = ath10k_pci_read32(ar, RTC_SOC_BASE_ADDRESS +
+-				SOC_LF_TIMER_CONTROL0_ADDRESS);
+-	ath10k_pci_write32(ar, RTC_SOC_BASE_ADDRESS +
+-			   SOC_LF_TIMER_CONTROL0_ADDRESS,
+-			   val & ~SOC_LF_TIMER_CONTROL0_ENABLE_MASK);
++				SOC_RESET_CONTROL_ADDRESS);
++	ath10k_pci_write32(ar, RTC_SOC_BASE_ADDRESS + SOC_RESET_CONTROL_ADDRESS,
++			   val | SOC_RESET_CONTROL_CPU_WARM_RST_MASK);
++}
++
++static void ath10k_pci_warm_reset_ce(struct ath10k *ar)
++{
++	u32 val;
+ 
+-	/* reset CE */
+ 	val = ath10k_pci_read32(ar, RTC_SOC_BASE_ADDRESS +
+ 				SOC_RESET_CONTROL_ADDRESS);
++
+ 	ath10k_pci_write32(ar, RTC_SOC_BASE_ADDRESS + SOC_RESET_CONTROL_ADDRESS,
+ 			   val | SOC_RESET_CONTROL_CE_RST_MASK);
+-	val = ath10k_pci_read32(ar, RTC_SOC_BASE_ADDRESS +
+-				SOC_RESET_CONTROL_ADDRESS);
+ 	msleep(10);
+-
+-	/* unreset CE */
+ 	ath10k_pci_write32(ar, RTC_SOC_BASE_ADDRESS + SOC_RESET_CONTROL_ADDRESS,
+ 			   val & ~SOC_RESET_CONTROL_CE_RST_MASK);
++}
++
++static void ath10k_pci_warm_reset_clear_lf(struct ath10k *ar)
++{
++	u32 val;
++
+ 	val = ath10k_pci_read32(ar, RTC_SOC_BASE_ADDRESS +
+-				SOC_RESET_CONTROL_ADDRESS);
+-	msleep(10);
++				SOC_LF_TIMER_CONTROL0_ADDRESS);
++	ath10k_pci_write32(ar, RTC_SOC_BASE_ADDRESS +
++			   SOC_LF_TIMER_CONTROL0_ADDRESS,
++			   val & ~SOC_LF_TIMER_CONTROL0_ENABLE_MASK);
++}
+ 
+-	ath10k_pci_warm_reset_si0(ar);
++static int ath10k_pci_warm_reset(struct ath10k *ar)
++{
++	int ret;
++
++	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot warm reset\n");
+ 
+-	/* debug */
+-	val = ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS +
+-				PCIE_INTR_CAUSE_ADDRESS);
+-	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot host cpu intr cause: 0x%08x\n",
+-		   val);
++	spin_lock_bh(&ar->data_lock);
++	ar->stats.fw_warm_reset_counter++;
++	spin_unlock_bh(&ar->data_lock);
+ 
+-	val = ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS +
+-				CPU_INTR_ADDRESS);
+-	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot target cpu intr cause: 0x%08x\n",
+-		   val);
++	ath10k_pci_irq_disable(ar);
+ 
+-	/* CPU warm reset */
+-	val = ath10k_pci_read32(ar, RTC_SOC_BASE_ADDRESS +
+-				SOC_RESET_CONTROL_ADDRESS);
+-	ath10k_pci_write32(ar, RTC_SOC_BASE_ADDRESS + SOC_RESET_CONTROL_ADDRESS,
+-			   val | SOC_RESET_CONTROL_CPU_WARM_RST_MASK);
++	/* Make sure the target CPU is not doing anything dangerous, e.g. if it
++	 * were to access copy engine while host performs copy engine reset
++	 * then it is possible for the device to confuse pci-e controller to
++	 * the point of bringing host system to a complete stop (i.e. hang).
++	 */
++	ath10k_pci_warm_reset_si0(ar);
++	ath10k_pci_warm_reset_cpu(ar);
++	ath10k_pci_init_pipes(ar);
++	ath10k_pci_wait_for_target_init(ar);
+ 
+-	val = ath10k_pci_read32(ar, RTC_SOC_BASE_ADDRESS +
+-				SOC_RESET_CONTROL_ADDRESS);
+-	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot target reset state: 0x%08x\n",
+-		   val);
++	ath10k_pci_warm_reset_clear_lf(ar);
++	ath10k_pci_warm_reset_ce(ar);
++	ath10k_pci_warm_reset_cpu(ar);
++	ath10k_pci_init_pipes(ar);
+ 
+-	msleep(100);
++	ret = ath10k_pci_wait_for_target_init(ar);
++	if (ret) {
++		ath10k_warn(ar, "failed to wait for target init: %d\n", ret);
++		return ret;
++	}
+ 
+ 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot warm reset complete\n");
+ 
+-- 
+1.8.5.3
+
