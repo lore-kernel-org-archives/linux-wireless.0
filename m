@@ -1,47 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:60739 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753088AbaJTIsg (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:18132 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750927AbaJ1N5X (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2014 04:48:36 -0400
-From: Sujith Manoharan <sujith@msujith.org>
+	Tue, 28 Oct 2014 09:57:23 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 00/16] brcmfmac: wowl support and cleanup
+Date: Tue, 28 Oct 2014 14:56:03 +0100
+Message-ID: <1414504579-12562-1-git-send-email-arend@broadcom.com> (sfid-20141028_145734_054840_143E985C)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21572.52159.282902.959145@gargle.gargle.HOWL> (sfid-20141020_104847_717237_41E80D7D)
-Date: Mon, 20 Oct 2014 14:15:51 +0530
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: [PATCH 07/10] ath9k_hw: start initial NF calibration after PA calibration on <AR9003
-In-Reply-To: <1413651732-69783-7-git-send-email-nbd@openwrt.org>
-References: <1413651732-69783-1-git-send-email-nbd@openwrt.org>
-	<1413651732-69783-7-git-send-email-nbd@openwrt.org>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau wrote:
->  	ar9002_hw_pa_cal(ah, true);
-> +	ath9k_hw_start_nfcal(ah, true);
->  
->  	if (ah->caldata)
->  		set_bit(NFCAL_PENDING, &ah->caldata->cal_flags);
-> diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-> index 8be4b14..85a7817 100644
-> --- a/drivers/net/wireless/ath/ath9k/hw.c
-> +++ b/drivers/net/wireless/ath/ath9k/hw.c
-> @@ -1953,8 +1953,10 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
->  	if (ath9k_hw_mci_is_enabled(ah))
->  		ar9003_mci_check_bt(ah);
->  
-> -	ath9k_hw_loadnf(ah, chan);
-> -	ath9k_hw_start_nfcal(ah, true);
-> +	if (AR_SREV_9300_20_OR_LATER(ah)) {
-> +		ath9k_hw_loadnf(ah, chan);
-> +		ath9k_hw_start_nfcal(ah, true);
-> +	}
+This series has a couple of wowl patches that were too late to make
+the 3.18 merge window. Apart from those there are a number of rename
+and rework patches that get rid of the terms dhd and wl.
 
-This doesn't seem to load the NF registers for AR9002 ?
-If a chip reset is done for some reason when the driver is
-operational, don't we have to load the history values ?
+The series is intended for 3.19 and applies to the master branch
+of the wireless-next repository.
 
-Sujith
+Arend van Spriel (3):
+  brcmfmac: show firmware error as string in debug message
+  brcmfmac: remove unused defintion
+  brcmfmac: do not use firmware error code in driver
+
+Hante Meuleman (13):
+  brcmfmac: Add wowl support for USB devices.
+  brcmfmac: Add wowl support for SDIO devices.
+  brcmfmac: Add wowl patterns support.
+  brcmfmac: (clean) Remove usb_rdl.h as it is not needed.
+  brcmfmac: (clean) Remove packet filter configuration.
+  brcmfmac: (clean) Move tracepoint related function.
+  brcmfmac: (clean) Rename files dhd_dbg to debug
+  brcmfmac: (clean) Rename dhd_bus.h in bus.h
+  brcmfmac: (clean) Rename dhd_common.c in common.c
+  brcmfmac: (clean) Rename files wl_cfg80211 to cfg80211
+  brcmfmac: (clean) Rename sdio related files.
+  brcmfmac: (clean) Rename sdio related files.
+  brcmfmac: (clean) Move sdio related function.
+
+ drivers/net/wireless/brcm80211/brcmfmac/Makefile   |  10 +-
+ drivers/net/wireless/brcm80211/brcmfmac/bcdc.c     |   6 +-
+ drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   |  51 ++-
+ drivers/net/wireless/brcm80211/brcmfmac/btcoex.c   |   6 +-
+ .../brcm80211/brcmfmac/{dhd_bus.h => bus.h}        |  11 +-
+ .../brcmfmac/{wl_cfg80211.c => cfg80211.c}         |  77 +++-
+ .../brcmfmac/{wl_cfg80211.h => cfg80211.h}         |   9 +-
+ drivers/net/wireless/brcm80211/brcmfmac/chip.c     |   2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/common.c   | 168 +++++++++
+ .../net/wireless/brcm80211/brcmfmac/commonring.c   |   2 +-
+ .../brcm80211/brcmfmac/{dhd_linux.c => core.c}     |   8 +-
+ .../wireless/brcm80211/brcmfmac/{dhd.h => core.h}  |   7 +-
+ .../brcm80211/brcmfmac/{dhd_dbg.c => debug.c}      |   6 +-
+ .../brcm80211/brcmfmac/{dhd_dbg.h => debug.h}      |   6 +-
+ .../net/wireless/brcm80211/brcmfmac/dhd_common.c   | 400 ---------------------
+ drivers/net/wireless/brcm80211/brcmfmac/feature.c  |  11 +-
+ drivers/net/wireless/brcm80211/brcmfmac/firmware.c |   2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/flowring.c |   6 +-
+ drivers/net/wireless/brcm80211/brcmfmac/fweh.c     |   4 +-
+ drivers/net/wireless/brcm80211/brcmfmac/fwil.c     |  84 ++++-
+ .../net/wireless/brcm80211/brcmfmac/fwil_types.h   |  89 +++--
+ drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |   8 +-
+ drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c   |   6 +-
+ drivers/net/wireless/brcm80211/brcmfmac/of.c       |   4 +-
+ drivers/net/wireless/brcm80211/brcmfmac/p2p.c      |   6 +-
+ drivers/net/wireless/brcm80211/brcmfmac/pcie.c     |   4 +-
+ drivers/net/wireless/brcm80211/brcmfmac/proto.c    |   6 +-
+ .../brcm80211/brcmfmac/{dhd_sdio.c => sdio.c}      |  55 ++-
+ .../brcm80211/brcmfmac/{sdio_host.h => sdio.h}     |   8 +-
+ .../net/wireless/brcm80211/brcmfmac/tracepoint.c   |  16 +
+ drivers/net/wireless/brcm80211/brcmfmac/usb.c      | 142 ++++++--
+ drivers/net/wireless/brcm80211/brcmfmac/usb_rdl.h  |  75 ----
+ drivers/net/wireless/brcm80211/brcmfmac/vendor.c   |   6 +-
+ 33 files changed, 650 insertions(+), 651 deletions(-)
+ rename drivers/net/wireless/brcm80211/brcmfmac/{dhd_bus.h => bus.h} (98%)
+ rename drivers/net/wireless/brcm80211/brcmfmac/{wl_cfg80211.c => cfg80211.c} (98%)
+ rename drivers/net/wireless/brcm80211/brcmfmac/{wl_cfg80211.h => cfg80211.h} (98%)
+ create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/common.c
+ rename drivers/net/wireless/brcm80211/brcmfmac/{dhd_linux.c => core.c} (99%)
+ rename drivers/net/wireless/brcm80211/brcmfmac/{dhd.h => core.h} (98%)
+ rename drivers/net/wireless/brcm80211/brcmfmac/{dhd_dbg.c => debug.c} (98%)
+ rename drivers/net/wireless/brcm80211/brcmfmac/{dhd_dbg.h => debug.h} (98%)
+ delete mode 100644 drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
+ rename drivers/net/wireless/brcm80211/brcmfmac/{dhd_sdio.c => sdio.c} (98%)
+ rename drivers/net/wireless/brcm80211/brcmfmac/{sdio_host.h => sdio.h} (98%)
+ delete mode 100644 drivers/net/wireless/brcm80211/brcmfmac/usb_rdl.h
+
+-- 
+1.9.1
 
