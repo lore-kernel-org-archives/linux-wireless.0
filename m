@@ -1,60 +1,190 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:53592 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752161AbaJYSt7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Oct 2014 14:49:59 -0400
-Date: Sat, 25 Oct 2014 13:42:46 +0200
-From: Pavel Machek <pavel@ucw.cz>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	kernel list <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>
-Subject: Re: 3.18-rc0: iwlegacy failed after a while
-Message-ID: <20141025114246.GA16230@amd> (sfid-20141025_205030_713454_02005434)
-References: <0BA3FCBA62E2DC44AF3030971E174FB31B552E3F@hasmsx107.ger.corp.intel.com>
- <20141024121240.GA3177@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20141024121240.GA3177@redhat.com>
+Received: from mga02.intel.com ([134.134.136.20]:61544 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755572AbaJ1GPy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Oct 2014 02:15:54 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: stable@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 3.16 1/7] iwlwifi: add device / firmware to fw-error-dump file
+Date: Tue, 28 Oct 2014 08:11:20 +0200
+Message-Id: <1414476686-3407-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20141028_071611_080777_2EC0DECF)
+In-Reply-To: <1414476686-3407-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1414476686-3407-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri 2014-10-24 14:12:40, Stanislaw Gruszka wrote:
-> On Thu, Oct 23, 2014 at 01:02:37PM +0000, Grumbach, Emmanuel wrote:
-> > [Changed subject]
-> > This is really iwlegacy and not iwlwifi.
-> > 
-> > 
-> > > 
-> > > Hi!
-> > > 
-> > > Full dmesg is in the attachment, I guess the troubles started with:
-> > > 
-> > > iwl3945 0000:03:00.0: Queue 4 stuck for 2004 ms.
-> > > iwl3945 0000:03:00.0: On demand firmware reload
-> > > iwl3945 0000:03:00.0: Master Disable Timed Out, 100 usec
-> > > ieee80211 phy0: Hardware restart was requested
-> > > iwl3945 0000:03:00.0: BSM uCode verification failed at addr
-> > > 0x00003800+0 (of 900), is 0xa5\
-> > > a5a5a2, s/b 0xf802020
-> > > iwl3945 0000:03:00.0: Unable to set up bootstrap uCode: -5
-> > > 
-> > 
-> > Huh - I don't remember any change there, but you should ask the right person - iwlegacy maintainer :)
-> 
-> Since 3.17 we have only 2 minor iwlegacy changes on current linus tree.
-> If this is a regression it's probably caused by different subsystem
-> changes, most likely by PCI changes. If this is not regression, such
-> errors could be caused by enabling PS, but that has to be done
-> explicitly, Pavel did you enable power_save ? 
+commit 06ddbf5adac1fd2a031eade8a92239abfa6db93a upstream.
 
-This is running pretty standart MATE desktop, and no, I don't think I
-enabled that.
-									Pavel
+This can be useful later for parsing since the parsing may
+differ based on the device's family / bus.
+Also add the human readable version of the firmware.
 
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-drv.c           |  2 ++
+ drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h | 24 ++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-fw-file.h       |  5 +++--
+ drivers/net/wireless/iwlwifi/iwl-fw.h            |  3 +++
+ drivers/net/wireless/iwlwifi/mvm/ops.c           | 24 +++++++++++++++++++++---
+ 5 files changed, 53 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-drv.c b/drivers/net/wireless/iwlwifi/iwl-drv.c
+index f2a5c12..2967fce 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/iwlwifi/iwl-drv.c
+@@ -565,6 +565,8 @@ static int iwl_parse_tlv_firmware(struct iwl_drv *drv,
+ 	}
+ 
+ 	drv->fw.ucode_ver = le32_to_cpu(ucode->ver);
++	memcpy(drv->fw.human_readable, ucode->human_readable,
++	       sizeof(drv->fw.human_readable));
+ 	build = le32_to_cpu(ucode->build);
+ 
+ 	if (build)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h b/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
+index 2953ffc..aa0f85e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
+@@ -74,12 +74,15 @@
+  * @IWL_FW_ERROR_DUMP_RXF:
+  * @IWL_FW_ERROR_DUMP_TXCMD: last TX command data, structured as
+  *	&struct iwl_fw_error_dump_txcmd packets
++ * @IWL_FW_ERROR_DUMP_DEV_FW_INFO:  struct %iwl_fw_error_dump_info
++ *	info on the device / firmware.
+  */
+ enum iwl_fw_error_dump_type {
+ 	IWL_FW_ERROR_DUMP_SRAM = 0,
+ 	IWL_FW_ERROR_DUMP_REG = 1,
+ 	IWL_FW_ERROR_DUMP_RXF = 2,
+ 	IWL_FW_ERROR_DUMP_TXCMD = 3,
++	IWL_FW_ERROR_DUMP_DEV_FW_INFO = 4,
+ 
+ 	IWL_FW_ERROR_DUMP_MAX,
+ };
+@@ -120,6 +123,27 @@ struct iwl_fw_error_dump_txcmd {
+ 	u8 data[];
+ } __packed;
+ 
++enum iwl_fw_error_dump_family {
++	IWL_FW_ERROR_DUMP_FAMILY_7 = 7,
++	IWL_FW_ERROR_DUMP_FAMILY_8 = 8,
++};
++
++/**
++ * struct iwl_fw_error_dump_info - info on the device / firmware
++ * @device_family: the family of the device (7 / 8)
++ * @hw_step: the step of the device
++ * @fw_human_readable: human readable FW version
++ * @dev_human_readable: name of the device
++ * @bus_human_readable: name of the bus used
++ */
++struct iwl_fw_error_dump_info {
++	__le32 device_family;
++	__le32 hw_step;
++	u8 fw_human_readable[FW_VER_HUMAN_READABLE_SZ];
++	u8 dev_human_readable[64];
++	u8 bus_human_readable[8];
++} __packed;
++
+ /**
+  * iwl_mvm_fw_error_next_data - advance fw error dump data pointer
+  * @data: previous data block
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fw-file.h b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
+index b45e576..dc1b913 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fw-file.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
+@@ -136,7 +136,8 @@ struct iwl_ucode_tlv {
+ 	u8 data[0];
+ };
+ 
+-#define IWL_TLV_UCODE_MAGIC	0x0a4c5749
++#define IWL_TLV_UCODE_MAGIC		0x0a4c5749
++#define FW_VER_HUMAN_READABLE_SZ	64
+ 
+ struct iwl_tlv_ucode_header {
+ 	/*
+@@ -147,7 +148,7 @@ struct iwl_tlv_ucode_header {
+ 	 */
+ 	__le32 zero;
+ 	__le32 magic;
+-	u8 human_readable[64];
++	u8 human_readable[FW_VER_HUMAN_READABLE_SZ];
+ 	__le32 ver;		/* major/minor/API/serial */
+ 	__le32 build;
+ 	__le64 ignore;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fw.h b/drivers/net/wireless/iwlwifi/iwl-fw.h
+index b1a3332..663a91a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fw.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fw.h
+@@ -65,6 +65,8 @@
+ #include <linux/types.h>
+ #include <net/mac80211.h>
+ 
++#include "iwl-fw-file.h"
++
+ /**
+  * enum iwl_ucode_tlv_flag - ucode API flags
+  * @IWL_UCODE_TLV_FLAGS_PAN: This is PAN capable microcode; this previously
+@@ -312,6 +314,7 @@ struct iwl_fw {
+ 	bool mvm_fw;
+ 
+ 	struct ieee80211_cipher_scheme cs[IWL_UCODE_MAX_CS];
++	u8 human_readable[FW_VER_HUMAN_READABLE_SZ];
+ };
+ 
+ #endif  /* __iwl_fw_h__ */
+diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
+index cc2f7de..d2fdd9f 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
+@@ -826,6 +826,7 @@ void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
+ {
+ 	struct iwl_fw_error_dump_file *dump_file;
+ 	struct iwl_fw_error_dump_data *dump_data;
++	struct iwl_fw_error_dump_info *dump_info;
+ 	u32 file_len;
+ 	u32 trans_len;
+ 
+@@ -834,10 +835,11 @@ void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
+ 	if (mvm->fw_error_dump)
+ 		return;
+ 
+-	file_len = mvm->fw_error_sram_len +
++	file_len = sizeof(*dump_file) +
++		   sizeof(*dump_data) * 3 +
++		   mvm->fw_error_sram_len +
+ 		   mvm->fw_error_rxf_len +
+-		   sizeof(*dump_file) +
+-		   sizeof(*dump_data) * 2;
++		   sizeof(*dump_info);
+ 
+ 	trans_len = iwl_trans_dump_data(mvm->trans, NULL, 0);
+ 	if (trans_len)
+@@ -852,6 +854,22 @@ void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
+ 	dump_file->barker = cpu_to_le32(IWL_FW_ERROR_DUMP_BARKER);
+ 	dump_file->file_len = cpu_to_le32(file_len);
+ 	dump_data = (void *)dump_file->data;
++
++	dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_DEV_FW_INFO);
++	dump_data->len = cpu_to_le32(sizeof(*dump_info));
++	dump_info = (void *) dump_data->data;
++	dump_info->device_family =
++		mvm->cfg->device_family == IWL_DEVICE_FAMILY_7000 ?
++			cpu_to_le32(IWL_FW_ERROR_DUMP_FAMILY_7) :
++			cpu_to_le32(IWL_FW_ERROR_DUMP_FAMILY_8);
++	memcpy(dump_info->fw_human_readable, mvm->fw->human_readable,
++	       sizeof(dump_info->fw_human_readable));
++	strncpy(dump_info->dev_human_readable, mvm->cfg->name,
++		sizeof(dump_info->dev_human_readable));
++	strncpy(dump_info->bus_human_readable, mvm->dev->bus->name,
++		sizeof(dump_info->bus_human_readable));
++
++	dump_data = iwl_mvm_fw_error_next_data(dump_data);
+ 	dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_RXF);
+ 	dump_data->len = cpu_to_le32(mvm->fw_error_rxf_len);
+ 	memcpy(dump_data->data, mvm->fw_error_rxf, mvm->fw_error_rxf_len);
 -- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+1.9.1
+
