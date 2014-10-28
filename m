@@ -1,66 +1,330 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hauke-m.de ([5.39.93.123]:59727 "EHLO hauke-m.de"
+Received: from mga02.intel.com ([134.134.136.20]:45151 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932439AbaJIVsK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2014 17:48:10 -0400
-Message-ID: <54370298.2040502@hauke-m.de> (sfid-20141009_234927_829306_3A28A92A)
-Date: Thu, 09 Oct 2014 23:48:08 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: Guenter Roeck <linux@roeck-us.net>
-CC: Arend van Spriel <arend@broadcom.com>,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH] bcma: Add dependency on OF_ADDRESS
-References: <1412872877-1771-1-git-send-email-linux@roeck-us.net> <CACna6rzOeGcKrrftLx_3uWe_bAXQaQMmWb3wWHP0CjtdO8D0eg@mail.gmail.com> <5436C2B4.6030801@broadcom.com> <5436C367.5080908@broadcom.com> <20141009172924.GD2410@roeck-us.net> <5436D3CF.2030506@hauke-m.de> <20141009192520.GA6552@roeck-us.net>
-In-Reply-To: <20141009192520.GA6552@roeck-us.net>
-Content-Type: text/plain; charset=utf-8
+	id S1757982AbaJ1GP6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Oct 2014 02:15:58 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: stable@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 3.16 3/7] iwlwifi: pcie: add firmware monitor capabilities
+Date: Tue, 28 Oct 2014 08:11:22 +0200
+Message-Id: <1414476686-3407-4-git-send-email-emmanuel.grumbach@intel.com> (sfid-20141028_071617_819044_AE861D93)
+In-Reply-To: <1414476686-3407-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1414476686-3407-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/09/2014 09:25 PM, Guenter Roeck wrote:
-> On Thu, Oct 09, 2014 at 08:28:31PM +0200, Hauke Mehrtens wrote:
->> On 10/09/2014 07:29 PM, Guenter Roeck wrote:
->>> On Thu, Oct 09, 2014 at 07:18:31PM +0200, Arend van Spriel wrote:
->>>> On 10/09/14 19:15, Arend van Spriel wrote:
->>>>> On 10/09/14 18:54, Rafał Miłecki wrote:
->>>>>> On 9 October 2014 18:41, Guenter Roeck<linux@roeck-us.net> wrote:
->>>>>>> Commit 2101e533f41a ("bcma: register bcma as device tree driver")
->>>>>>> introduces a hard dependency on OF_ADDRESS into the bcma driver.
->>>>>>> OF_ADDRESS is specifically disabled for the sparc architecture.
->>>>>>> This results in the following error when building sparc64:allmodconfig.
->>>>>
->>>>> Does this mean on sparc (using allmodconfig) you will get CONFIG_OF and
->>>>> !CONFIG_OF_ADDRESS? Does that makes sense?
->>>>
->>>> Is CONFIG_OF is used on sparc to access OpenBoot information?
->>>>
->>> I have no idea. All I know is that the driver doesn't build anymore with OF
->>> enabled and OF_ADDRESS disabled.
->>
->> Device tree support in bcma is only needed on some SoC, when this is
->> used on a PCIe card it is not needed.
->>
->> I would just deactivate the parts that are using device tree in bcma
->> when it is not available. I will send a patch after having something to eat.
->>
-> Devicetree dependency is already covered with #ifdef CONFIG_OF. Problem is
-> that it really needs #ifdef CONFIG_OF_ADDRESS. Though even that might be
-> better than my patch, since it would at least build the driver on sparc
-> as it used to do.
-> 
->> Is there a better method which is compatible with SPARC than using
->> of_translate_address() to get the reg address and also take the ranges
->> attribute of the bus into account?
->>
-> No idea, sorry. Can you by any chance use pcie device information
-> instead of depending on devicetree data ?
+commit c2d202017da18ebd6567862bd9a50392970f048f upstream
 
-Device tree is not used for PCIe devices in bcma. We only use it when
-bcma is used for the system bus on some Broadcom SoCs, currently there
-is no plan to use device tree for PCIe devices in bcma. I think bcma is
-only used on wifi cards connected via PCIe on Sparc systems.
+This allows to use the firmware monitor. This capability
+uses a lot of contiguous memory (up to 64MB), so make its
+usage module parameter dependent.
 
-Hauke
+The driver will try to allocate as much contiguous memory
+as possible downgrading its requirements until the
+allocation succeeds.
+
+Dump this data into the fw-error dump file when an error
+happens.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-drv.c           |   4 +
+ drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h |  18 ++++
+ drivers/net/wireless/iwlwifi/iwl-modparams.h     |   2 +
+ drivers/net/wireless/iwlwifi/iwl-prph.h          |   6 ++
+ drivers/net/wireless/iwlwifi/pcie/internal.h     |   7 ++
+ drivers/net/wireless/iwlwifi/pcie/trans.c        | 125 ++++++++++++++++++++++-
+ 6 files changed, 158 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-drv.c b/drivers/net/wireless/iwlwifi/iwl-drv.c
+index 2967fce..32e334a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/iwlwifi/iwl-drv.c
+@@ -1396,3 +1396,7 @@ module_param_named(power_level, iwlwifi_mod_params.power_level,
+ 		int, S_IRUGO);
+ MODULE_PARM_DESC(power_level,
+ 		 "default power save level (range from 1 - 5, default: 1)");
++
++module_param_named(fw_monitor, iwlwifi_mod_params.fw_monitor, bool, S_IRUGO);
++MODULE_PARM_DESC(fw_monitor,
++		 "firmware monitor - to debug FW (default: false - needs lots of memory)");
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h b/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
+index 3584a75..ced5ba9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
+@@ -76,6 +76,7 @@
+  *	&struct iwl_fw_error_dump_txcmd packets
+  * @IWL_FW_ERROR_DUMP_DEV_FW_INFO:  struct %iwl_fw_error_dump_info
+  *	info on the device / firmware.
++ * @IWL_FW_ERROR_DUMP_FW_MONITOR: firmware monitor
+  */
+ enum iwl_fw_error_dump_type {
+ 	IWL_FW_ERROR_DUMP_SRAM = 0,
+@@ -83,6 +84,7 @@ enum iwl_fw_error_dump_type {
+ 	IWL_FW_ERROR_DUMP_RXF = 2,
+ 	IWL_FW_ERROR_DUMP_TXCMD = 3,
+ 	IWL_FW_ERROR_DUMP_DEV_FW_INFO = 4,
++	IWL_FW_ERROR_DUMP_FW_MONITOR = 5,
+ 
+ 	IWL_FW_ERROR_DUMP_MAX,
+ };
+@@ -145,6 +147,22 @@ struct iwl_fw_error_dump_info {
+ } __packed;
+ 
+ /**
++ * struct iwl_fw_error_fw_mon - FW monitor data
++ * @fw_mon_wr_ptr: the position of the write pointer in the cyclic buffer
++ * @fw_mon_base_ptr: base pointer of the data
++ * @fw_mon_cycle_cnt: number of wrap arounds
++ * @reserved: for future use
++ * @data: captured data
++ */
++struct iwl_fw_error_fw_mon {
++	__le32 fw_mon_wr_ptr;
++	__le32 fw_mon_base_ptr;
++	__le32 fw_mon_cycle_cnt;
++	__le32 reserved[3];
++	u8 data[];
++} __packed;
++
++/**
+  * iwl_fw_error_next_data - advance fw error dump data pointer
+  * @data: previous data block
+  * Returns: next data block
+diff --git a/drivers/net/wireless/iwlwifi/iwl-modparams.h b/drivers/net/wireless/iwlwifi/iwl-modparams.h
+index d051857..f2d39cb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-modparams.h
++++ b/drivers/net/wireless/iwlwifi/iwl-modparams.h
+@@ -103,6 +103,7 @@ enum iwl_disable_11n {
+  * @power_level: power level, default = 1
+  * @debug_level: levels are IWL_DL_*
+  * @ant_coupling: antenna coupling in dB, default = 0
++ * @fw_monitor: allow to use firmware monitor
+  */
+ struct iwl_mod_params {
+ 	int sw_crypto;
+@@ -120,6 +121,7 @@ struct iwl_mod_params {
+ 	int ant_coupling;
+ 	char *nvm_file;
+ 	bool uapsd_disable;
++	bool fw_monitor;
+ };
+ 
+ #endif /* #__iwl_modparams_h__ */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-prph.h b/drivers/net/wireless/iwlwifi/iwl-prph.h
+index 4997e27..47033a3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-prph.h
++++ b/drivers/net/wireless/iwlwifi/iwl-prph.h
+@@ -359,4 +359,10 @@ enum secure_load_status_reg {
+ #define RXF_LD_FENCE_OFFSET_ADDR	(0xa00c10)
+ #define RXF_FIFO_RD_FENCE_ADDR		(0xa00c0c)
+ 
++/* FW monitor */
++#define MON_BUFF_BASE_ADDR		(0xa03c3c)
++#define MON_BUFF_END_ADDR		(0xa03c40)
++#define MON_BUFF_WRPTR			(0xa03c44)
++#define MON_BUFF_CYCLE_CNT		(0xa03c48)
++
+ #endif				/* __iwl_prph_h__ */
+diff --git a/drivers/net/wireless/iwlwifi/pcie/internal.h b/drivers/net/wireless/iwlwifi/pcie/internal.h
+index 6c22b23..78f72c3 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/internal.h
++++ b/drivers/net/wireless/iwlwifi/pcie/internal.h
+@@ -260,6 +260,9 @@ iwl_pcie_get_scratchbuf_dma(struct iwl_txq *txq, int idx)
+  * @wd_timeout: queue watchdog timeout (jiffies)
+  * @reg_lock: protect hw register access
+  * @cmd_in_flight: true when we have a host command in flight
++ * @fw_mon_phys: physical address of the buffer for the firmware monitor
++ * @fw_mon_page: points to the first page of the buffer for the firmware monitor
++ * @fw_mon_size: size of the buffer for the firmware monitor
+  */
+ struct iwl_trans_pcie {
+ 	struct iwl_rxq rxq;
+@@ -312,6 +315,10 @@ struct iwl_trans_pcie {
+ 	/*protect hw register */
+ 	spinlock_t reg_lock;
+ 	bool cmd_in_flight;
++
++	dma_addr_t fw_mon_phys;
++	struct page *fw_mon_page;
++	u32 fw_mon_size;
+ };
+ 
+ #define IWL_TRANS_GET_PCIE_TRANS(_iwl_trans) \
+diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
+index 788085b..3ffac48 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
+@@ -76,6 +76,68 @@
+ #include "iwl-fw-error-dump.h"
+ #include "internal.h"
+ 
++static void iwl_pcie_free_fw_monitor(struct iwl_trans *trans)
++{
++	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
++
++	if (!trans_pcie->fw_mon_page)
++		return;
++
++	dma_unmap_page(trans->dev, trans_pcie->fw_mon_phys,
++		       trans_pcie->fw_mon_size, DMA_FROM_DEVICE);
++	__free_pages(trans_pcie->fw_mon_page,
++		     get_order(trans_pcie->fw_mon_size));
++	trans_pcie->fw_mon_page = NULL;
++	trans_pcie->fw_mon_phys = 0;
++	trans_pcie->fw_mon_size = 0;
++}
++
++static void iwl_pcie_alloc_fw_monitor(struct iwl_trans *trans)
++{
++	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
++	struct page *page;
++	dma_addr_t phys;
++	u32 size;
++	u8 power;
++
++	if (trans_pcie->fw_mon_page) {
++		dma_sync_single_for_device(trans->dev, trans_pcie->fw_mon_phys,
++					   trans_pcie->fw_mon_size,
++					   DMA_FROM_DEVICE);
++		return;
++	}
++
++	phys = 0;
++	for (power = 26; power >= 11; power--) {
++		int order;
++
++		size = BIT(power);
++		order = get_order(size);
++		page = alloc_pages(__GFP_COMP | __GFP_NOWARN | __GFP_ZERO,
++				   order);
++		if (!page)
++			continue;
++
++		phys = dma_map_page(trans->dev, page, 0, PAGE_SIZE << order,
++				    DMA_FROM_DEVICE);
++		if (dma_mapping_error(trans->dev, phys)) {
++			__free_pages(page, order);
++			continue;
++		}
++		IWL_INFO(trans,
++			 "Allocated 0x%08x bytes (order %d) for firmware monitor.\n",
++			 size, order);
++		break;
++	}
++
++	if (!page)
++		return;
++
++	trans_pcie->fw_mon_page = page;
++	trans_pcie->fw_mon_phys = phys;
++	trans_pcie->fw_mon_size = size;
++}
++
+ static u32 iwl_trans_pcie_read_shr(struct iwl_trans *trans, u32 reg)
+ {
+ 	iwl_write32(trans, HEEP_CTRL_WRD_PCIEX_CTRL_REG,
+@@ -675,6 +737,7 @@ static int iwl_pcie_load_cpu_sections(struct iwl_trans *trans,
+ static int iwl_pcie_load_given_ucode(struct iwl_trans *trans,
+ 				const struct fw_img *image)
+ {
++	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	int ret = 0;
+ 	int first_ucode_section;
+ 
+@@ -733,6 +796,20 @@ static int iwl_pcie_load_given_ucode(struct iwl_trans *trans,
+ 			return ret;
+ 	}
+ 
++	/* supported for 7000 only for the moment */
++	if (iwlwifi_mod_params.fw_monitor &&
++	    trans->cfg->device_family == IWL_DEVICE_FAMILY_7000) {
++		iwl_pcie_alloc_fw_monitor(trans);
++
++		if (trans_pcie->fw_mon_size) {
++			iwl_write_prph(trans, MON_BUFF_BASE_ADDR,
++				       trans_pcie->fw_mon_phys >> 4);
++			iwl_write_prph(trans, MON_BUFF_END_ADDR,
++				       (trans_pcie->fw_mon_phys +
++					trans_pcie->fw_mon_size) >> 4);
++		}
++	}
++
+ 	/* release CPU reset */
+ 	if (trans->cfg->device_family == IWL_DEVICE_FAMILY_8000)
+ 		iwl_write_prph(trans, RELEASE_CPU_RESET, RELEASE_CPU_RESET_BIT);
+@@ -1126,6 +1203,8 @@ void iwl_trans_pcie_free(struct iwl_trans *trans)
+ 	if (trans_pcie->napi.poll)
+ 		netif_napi_del(&trans_pcie->napi);
+ 
++	iwl_pcie_free_fw_monitor(trans);
++
+ 	kfree(trans);
+ }
+ 
+@@ -1698,10 +1777,15 @@ static u32 iwl_trans_pcie_dump_data(struct iwl_trans *trans,
+ 	u32 len;
+ 	int i, ptr;
+ 
++	len = sizeof(*data) +
++		cmdq->q.n_window * (sizeof(*txcmd) + TFD_MAX_PAYLOAD_SIZE);
++
++	if (trans_pcie->fw_mon_page)
++		len += sizeof(*data) + sizeof(struct iwl_fw_error_fw_mon) +
++			trans_pcie->fw_mon_size;
++
+ 	if (!buf)
+-		return sizeof(*data) +
+-		       cmdq->q.n_window * (sizeof(*txcmd) +
+-					   TFD_MAX_PAYLOAD_SIZE);
++		return len;
+ 
+ 	len = 0;
+ 	data = buf;
+@@ -1729,7 +1813,40 @@ static u32 iwl_trans_pcie_dump_data(struct iwl_trans *trans,
+ 	spin_unlock_bh(&cmdq->lock);
+ 
+ 	data->len = cpu_to_le32(len);
+-	return sizeof(*data) + len;
++	len += sizeof(*data);
++
++	if (trans_pcie->fw_mon_page) {
++		struct iwl_fw_error_fw_mon *fw_mon_data;
++
++		data = iwl_fw_error_next_data(data);
++		data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_FW_MONITOR);
++		data->len = cpu_to_le32(trans_pcie->fw_mon_size +
++					sizeof(*fw_mon_data));
++		fw_mon_data = (void *)data->data;
++		fw_mon_data->fw_mon_wr_ptr =
++			cpu_to_le32(iwl_read_prph(trans, MON_BUFF_WRPTR));
++		fw_mon_data->fw_mon_cycle_cnt =
++			cpu_to_le32(iwl_read_prph(trans, MON_BUFF_CYCLE_CNT));
++		fw_mon_data->fw_mon_base_ptr =
++			cpu_to_le32(iwl_read_prph(trans, MON_BUFF_BASE_ADDR));
++
++		/*
++		 * The firmware is now asserted, it won't write anything to
++		 * the buffer. CPU can take ownership to fetch the data.
++		 * The buffer will be handed back to the device before the
++		 * firmware will be restarted.
++		 */
++		dma_sync_single_for_cpu(trans->dev, trans_pcie->fw_mon_phys,
++					trans_pcie->fw_mon_size,
++					DMA_FROM_DEVICE);
++		memcpy(fw_mon_data->data, page_address(trans_pcie->fw_mon_page),
++		       trans_pcie->fw_mon_size);
++
++		len += sizeof(*data) + sizeof(*fw_mon_data) +
++			trans_pcie->fw_mon_size;
++	}
++
++	return len;
+ }
+ #else
+ static int iwl_trans_pcie_dbgfs_register(struct iwl_trans *trans,
+-- 
+1.9.1
+
