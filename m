@@ -1,40 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:41556 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751394AbaJRR37 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Oct 2014 13:29:59 -0400
-Message-ID: <5442A390.8040401@openwrt.org> (sfid-20141018_193018_634496_CFECE6F2)
-Date: Sat, 18 Oct 2014 19:29:52 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Karl Beldan <karl.beldan@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-CC: Karl Beldan <karl.beldan@rivierawaves.com>,
+Received: from smtprelay0090.hostedemail.com ([216.40.44.90]:54845 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750900AbaJ1OyF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Oct 2014 10:54:05 -0400
+Message-ID: <1414508040.6643.5.camel@perches.com> (sfid-20141028_155408_986109_1FFA36CA)
+Subject: Re: [PATCH 00/16] brcmfmac: wowl support and cleanup
+From: Joe Perches <joe@perches.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
 	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v3 0/4] add VHT support to minstrel_ht
-References: <1413575459-29612-5-git-send-email-karl.beldan@gmail.com> <1413652424-14345-1-git-send-email-karl.beldan@gmail.com>
-In-Reply-To: <1413652424-14345-1-git-send-email-karl.beldan@gmail.com>
-Content-Type: text/plain; charset=windows-1252
+Date: Tue, 28 Oct 2014 07:54:00 -0700
+In-Reply-To: <1414504579-12562-1-git-send-email-arend@broadcom.com>
+References: <1414504579-12562-1-git-send-email-arend@broadcom.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2014-10-18 19:13, Karl Beldan wrote:
-> From: Karl Beldan <karl.beldan@rivierawaves.com>
+On Tue, 2014-10-28 at 14:56 +0100, Arend van Spriel wrote:
+> This series has a couple of wowl patches that were too late to make
+> the 3.18 merge window. Apart from those there are a number of rename
+> and rework patches that get rid of the terms dhd and wl.
 > 
+> The series is intended for 3.19 and applies to the master branch
+> of the wireless-next repository.
 > 
-> Karl Beldan (4):
->   mac80211: minstrel_ht: Increase the range of handled rate indexes
->   mac80211: minstrel_ht: macros adjustments for future VHT_GROUPs
->   mac80211: minstrel_ht: include type (cck/ht) in rates flag
->   mac80211: minstrel_ht: add basic support for VHT rates <= 3SS@80MHz
-> v2:
-> - typo in Kconfig
-> - adjust room in debugfs rc_stats buffer
-> - add a module param to mix ht rates with vht ones
-> - default to 3SS instead of 2SS (with "mac80211: minstrel_ht: macros
->   adjustments for future VHT_GROUPs")
-> - use common MINSTREL_MAX_STREAMS both for VHT and HT so that we can get
->   rid of the 'MINSTREL_MAX_STREAMS >= 3' checks for minstrel_mcs_groups
-> v3:
-> - put module param *vht_only* under CONFIG_MAC80211_RC_MINSTREL_VHT
-Acked-by: Felix Fietkau <nbd@openwrt.org>
+> Arend van Spriel (3):
+>   brcmfmac: show firmware error as string in debug message
+>   brcmfmac: remove unused defintion
+>   brcmfmac: do not use firmware error code in driver
+> 
+> Hante Meuleman (13):
+>   brcmfmac: Add wowl support for USB devices.
+>   brcmfmac: Add wowl support for SDIO devices.
+>   brcmfmac: Add wowl patterns support.
+>   brcmfmac: (clean) Remove usb_rdl.h as it is not needed.
+>   brcmfmac: (clean) Remove packet filter configuration.
+>   brcmfmac: (clean) Move tracepoint related function.
+>   brcmfmac: (clean) Rename files dhd_dbg to debug
+>   brcmfmac: (clean) Rename dhd_bus.h in bus.h
+>   brcmfmac: (clean) Rename dhd_common.c in common.c
+>   brcmfmac: (clean) Rename files wl_cfg80211 to cfg80211
+>   brcmfmac: (clean) Rename sdio related files.
+>   brcmfmac: (clean) Rename sdio related files.
+>   brcmfmac: (clean) Move sdio related function.
+
+Does "(clean) " add anything to these commit subjects?
+
+
