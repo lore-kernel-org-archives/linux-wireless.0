@@ -1,155 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:38039 "EHLO
-	out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755495AbaJWQCG convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Oct 2014 12:02:06 -0400
-Received: from compute2.internal (compute2.nyi.internal [10.202.2.42])
-	by gateway2.nyi.internal (Postfix) with ESMTP id C65D02088A
-	for <linux-wireless@vger.kernel.org>; Thu, 23 Oct 2014 12:02:05 -0400 (EDT)
-Message-Id: <1414080125.164673.182502929.61AF3AB1@webmail.messagingengine.com> (sfid-20141023_180211_454745_18D26E47)
-From: =?UTF-8?Q?Lauren=C8=9Biu=20Nicola?= <lnicola@dend.ro>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: poma <pomidorabelisima@gmail.com>, Dan Williams <dcbw@redhat.com>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>
+Received: from mail-ob0-f182.google.com ([209.85.214.182]:36884 "EHLO
+	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932384AbaJ2Lsv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Oct 2014 07:48:51 -0400
+Received: by mail-ob0-f182.google.com with SMTP id nt9so2421903obb.41
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2014 04:48:50 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Subject: Re: iwlwifi: Reason 7 periodic disconnect
-Date: Thu, 23 Oct 2014 19:02:05 +0300
-In-Reply-To: <CANUX_P3usjdccnsYPQXzKbJ1PTH91fasf6BpcsCRYZH_yq2tww@mail.gmail.com>
-References: <1413463736.1316541.179720977.4FD32021@webmail.messagingengine.com>
- <1413510814.22769.6.camel@dcbw.local>
- <1413751717.2510219.180809145.0E693C29@webmail.messagingengine.com>
- <CANUX_P2RHVRorVABRfWVg39d4D8dj35v3fBpY3=3jvQ1U+mfEA@mail.gmail.com>
- <1413783023.2710583.180921653.10DFFCEE@webmail.messagingengine.com>
- <CANUX_P0Q7cNeBzQa=2WVZFJXPTLx8F6YQk9bGCf_3uYhc5RcGA@mail.gmail.com>
- <CANUX_P3EqgTX7cPJvQ3fWH1yijekE0G_8TiH2_OCS7nFASGtkA@mail.gmail.com>
- <1413789724.3063896.180943829.3F15F453@webmail.messagingengine.com>
- <CANUX_P1REqkSqN0dtak34OQ_pSGMtPvV3Vj61tW5wb1+n2A7mg@mail.gmail.com>
- <1413833365.2949853.181221645.22D54845@webmail.messagingengine.com>
- <CANUX_P3XzYBp7E=hScmc837TpuCr9VrxEYauG=sGMKfOCpX=qA@mail.gmail.com>
- <54461740.5000903@openwrt.org>
- <1413879792.3500640.181427549.198E9452@webmail.messagingengine.com>
- <54461AEF.7040304@openwrt.org> <54463CE9.3060400@gmail.com>
- <1413921415.3763081.181696749.20A0A495@webmail.messagingengine.com>
- <CANUX_P0LRRczVCSFR7RE5coaYFxwFXyqC90pdm=oVwEiEt-7zw@mail.gmail.com>
- <1414014805.4127522.182191541.14C8B4DF@webmail.messagingengine.com>
- <CANUX_P0tGagXsN6XCeb_itQehqD3O9fmqknU6iSMO432NQtATA@mail.gmail.com>
- <1414049448.32460.182326557.1A0A85A4@webmail.messagingengine.com>
- <CANUX_P3usjdccnsYPQXzKbJ1PTH91fasf6BpcsCRYZH_yq2tww@mail.gmail.com>
+Date: Wed, 29 Oct 2014 13:48:50 +0200
+Message-ID: <CANUX_P0TURG9GNMRUOTGFfh=qzSNKkDh9Gm7Asq5jXr=0gQgLg@mail.gmail.com> (sfid-20141029_124855_673787_5D63E1D0)
+Subject: pull request: iwlwifi-next 2014-10-29
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sorry, but I only saw a two-line change [1] to
-`ieee80211_rx_mgmt_beacon` (which already had a log message). Am I
-missing something?
+Hi John,
 
-[1] http://www.spinics.net/lists/linux-wireless/msg128340.html
+Here is a pull request for 3.19. More details below.
 
-Laurentiu
+Thanks!
 
-On Thu, Oct 23, 2014, at 11:07, Emmanuel Grumbach wrote:
-> On Thu, Oct 23, 2014 at 10:30 AM, Laurențiu Nicola <lnicola@dend.ro>
-> wrote:
-> > I did; the card still gets disconnected and the message doesn't show up
-> > in dmesg.
-> >
-> 
-> You had *none* of the many prints I added in the log?
-> 
-> That seems really weird...
-> 
-> > Laurentiu
-> >
-> > On Thu, Oct 23, 2014, at 08:21, Emmanuel Grumbach wrote:
-> >> On Thu, Oct 23, 2014 at 12:53 AM, Laurențiu Nicola <lnicola@dend.ro>
-> >> wrote:
-> >> > Nope. It seems that code doesn't get executed when my issue occurs (or
-> >> > in my five or ten minutes of uptime). I've seen
-> >> > `ieee80211_reset_ap_probe` get called by `ieee80211_rx_mgmt_probe_resp`,
-> >> > but (if I'm not wrong) not on every disconnect.
-> >> >
-> >> > And as far as I can tell, force_cam is set to true.
-> >>
-> >> Can you please try with the patch attached and send the logs?
-> >> I again need MAC80211_MLME_DEBUG.
-> >>
-> >> Thanks.
-> >>
-> >> >
-> >> > Laurentiu
-> >> >
-> >> > On Wed, Oct 22, 2014, at 12:10, Emmanuel Grumbach wrote:
-> >> >> On Tue, Oct 21, 2014 at 10:56 PM, Laurențiu Nicola <lnicola@dend.ro>
-> >> >> wrote:
-> >> >> > Yep! `scb_timeout` is 60 on my router.
-> >> >> >
-> >> >> > On Tue, Oct 21, 2014, at 14:00, poma wrote:
-> >> >> >> On 21.10.2014 10:35, Felix Fietkau wrote:
-> >> >> >> > On 2014-10-21 10:23, Laurențiu Nicola wrote:
-> >> >> >> >> It's an ASUS RT-N66U running NEWD-2/K3X from r24160.
-> >> >> >> > This is a Broadcom based device, so it should behave in the same way as
-> >> >> >> > other APs/Routers running the Broadcom drivers.
-> >> >> >> > The driver should only send Reason 7 when receiving a PS-Poll, BlockAck,
-> >> >> >> > BlockAckReq or Action frame from a station that's not associated, so
-> >> >> >> > probably it has already kicked out your iwlwifi client earlier. Not sure
-> >> >> >> > why that doesn't show up in the log though.
-> >> >> >> >
-> >> >> >>
-> >> >> >> Whether this might refer to the Station Control Block Timeout value
-> >> >> >>
-> >> >> >> http://www.dd-wrt.com/wiki/index.php/Wl#scb_timeout
-> >> >> >> ...
-> >> >> >> scb_timeout
-> >> >> >>
-> >> >> >> AP only: inactivity timeout value for authenticated stas
-> >> >> >>
-> >> >>
-> >> >> Actually, mac80211 should be probing the AP every 30 seconds but a
-> >> >> beacon might abort the probe...
-> >> >> Can you try something like this:
-> >> >>
-> >> >> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-> >> >> index 75df184..c9db7cf 100644
-> >> >> --- a/net/mac80211/mlme.c
-> >> >> +++ b/net/mac80211/mlme.c
-> >> >> @@ -3295,7 +3295,8 @@ static void ieee80211_rx_mgmt_beacon(struct
-> >> >> ieee80211_sub_if_data *sdata,
-> >> >>         if (ifmgd->flags & IEEE80211_STA_CONNECTION_POLL) {
-> >> >>                 mlme_dbg_ratelimited(sdata,
-> >> >>                                      "cancelling AP probe due to a
-> >> >> received beacon\n");
-> >> >> -               ieee80211_reset_ap_probe(sdata);
-> >> >> +               pr_err("Not cancelling the probe to make sure the AP
-> >> >> hears us from time to time\n");
-> >> >> +               //ieee80211_reset_ap_probe(sdata);
-> >> >>         }
-> >> >>
-> >> >>         /*
-> >> >>
-> >> >>
-> >> >>
-> >> >> >>
-> >> >> >> poma
-> >> >> >>
-> >> >> >>
-> >> >> >> --
-> >> >> >> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
-> >> >> >> in
-> >> >> >> the body of a message to majordomo@vger.kernel.org
-> >> >> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >> >> --
-> >> >> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
-> >> >> in
-> >> >> the body of a message to majordomo@vger.kernel.org
-> >> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >> --
-> >> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
-> >> in
-> >> the body of a message to majordomo@vger.kernel.org
-> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
-> in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The following changes since commit 35a9ad8af0bb0fa3525e6d0d20e32551d226f38e:
+
+  Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next
+(2014-10-08 21:40:54 -0400)
+
+are available in the git repository at:
+
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git
+tags/iwlwifi-next-for-john-2014-10-29
+
+for you to fetch changes up to d9e4d61c5b900f6938b4aa49f25a0db37aeb23b6:
+
+  iwlwifi: mvm: unref SCAN ref on scan completion (2014-10-29 13:14:41 +0200)
+
+----------------------------------------------------------------
+The big new thing here is netdetect which allows the
+firmware to wake up the platform when a specific network
+is detected. Along with that I have fixes for d3 operation.
+The usual amount of rate scaling stuff - we now support STBC.
+The other commit that stands out is Johannes's work on
+devcoredump. He basically starts to use the standard
+infrastructure he built.
+
+----------------------------------------------------------------
+Arik Nemtsov (1):
+      iwlwifi: mvm: remove mvm argument from get_queues_mask
+
+David Spinadel (1):
+      iwlwifi: mvm: fix scan condition iterator
+
+Eliad Peller (1):
+      iwlwifi: mvm: unref SCAN ref on scan completion
+
+Emmanuel Grumbach (12):
+      iwlwifi: configure the LTR
+      iwlwifi: mvm: BT Coex - update the MPLUT Boost register value
+      iwlwifi: mvm: BT coex - fix BT prio for probe requests
+      iwlwifi: dvm: drop non VO frames when flushing
+      Revert "iwlwifi: mvm: treat EAPOLs like mgmt frames wrt rate"
+      iwlwifi: pcie: fix polling in various places
+      Merge remote-tracking branch 'iwlwifi-fixes/master' into iwlwifi-next
+      iwlwifi: mvm: remove unneeded NULL pointer check
+      iwlwifi: pcie: warn if extern fw_debug buffer failed
+      iwlwifi: pcie: fix recovery from ARC reset in WoWLAN
+      iwlwifi: mvm: BT Coex - move BT_ANTENNA_COUPLING_THRESHOLD to constants
+      iwlwifi: mvm: BT Coex - make the multiprio lut a constant
+
+Eran Harary (1):
+      iwlwifi: always run the secured flow for family 8000
+
+Eyal Shapira (3):
+      iwlwifi: rs: option to easily disable Tx MIMO
+      iwlwifi: enable STBC support for 8000 chips
+      iwlwifi: mvm: rs: add Tx STBC support
+
+Gregory Greenman (1):
+      iwlwifi: allow to restrict Tx aggregation size per-device
+
+Haim Dreyfuss (1):
+      iwlwifi: mvm: Add tx power condition to bss_info_changed_ap_ibss
+
+Joe Perches (1):
+      iwlwifi: dvm: Fix probable mask then right shift defect
+
+Johannes Berg (3):
+      iwlwifi: mvm: improve MCS rate warning
+      iwlwifi: mvm: flush queues without mutex held
+      iwlwifi: mvm: port to devcoredump framework
+
+Liad Kaufman (1):
+      iwlwifi: 8000: fix string given to MODULE_FIRMWARE
+
+Luciano Coelho (7):
+      iwlwifi: mvm: hold the rtnl when resuming from a d3 test
+      iwlwifi: mvm: split wowlan handling out of the main suspend function
+      iwlwifi: mvm: move the check if associated outside of the
+iterator for wowlan
+      iwlwifi: mvm: spin off a function to start scan offload
+      iwlwifi: mvm: add debugfs entry to configure netdetect SSIDs
+      iwlwifi: mvm: change the iwl_mvm_d3_iface_iterator into a generic function
+      iwlwifi: mvm: remove unnecessary includes in tt.c
+
+Matti Gottlieb (1):
+      iwlwifi: mvm: ROC - bug fixes around time events and locking
+
+Max Stepanov (1):
+      iwlwifi: mvm: add MVM_FW_BCAST_FILTER_PASS_ALL option
+
+ drivers/net/wireless/iwlwifi/Kconfig            |   1 +
+ drivers/net/wireless/iwlwifi/dvm/lib.c          |   4 +-
+ drivers/net/wireless/iwlwifi/dvm/mac80211.c     |  24 ++++----
+ drivers/net/wireless/iwlwifi/iwl-8000.c         |   4 +-
+ drivers/net/wireless/iwlwifi/iwl-config.h       |  12 ++++
+ drivers/net/wireless/iwlwifi/iwl-drv.c          |   3 -
+ drivers/net/wireless/iwlwifi/iwl-fw.h           |   1 -
+ drivers/net/wireless/iwlwifi/iwl-trans.h        |   6 +-
+ drivers/net/wireless/iwlwifi/mvm/coex.c         |  13 +----
+ drivers/net/wireless/iwlwifi/mvm/coex_legacy.c  |  14 ++---
+ drivers/net/wireless/iwlwifi/mvm/constants.h    |   5 ++
+ drivers/net/wireless/iwlwifi/mvm/d3.c           | 318
+++++++++++++++++++++++++++++++++++++++++++++++++++++-------------------------------------------------
+ drivers/net/wireless/iwlwifi/mvm/debugfs.c      | 201
++++++++++++++++++++++++++++++++++++++++-------------------------
+ drivers/net/wireless/iwlwifi/mvm/fw-api-power.h |  35 +++++++++++-
+ drivers/net/wireless/iwlwifi/mvm/fw-api.h       |   1 +
+ drivers/net/wireless/iwlwifi/mvm/fw.c           |   9 +++
+ drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c     |   5 +-
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c     | 132
+++++++++++++++++++++++++++++--------------
+ drivers/net/wireless/iwlwifi/mvm/mvm.h          |  14 ++++-
+ drivers/net/wireless/iwlwifi/mvm/ops.c          |  16 ++++--
+ drivers/net/wireless/iwlwifi/mvm/rs.c           |  80
+++++++++++++++++++++++----
+ drivers/net/wireless/iwlwifi/mvm/rs.h           |   2 +
+ drivers/net/wireless/iwlwifi/mvm/scan.c         |  38 +++++++++++-
+ drivers/net/wireless/iwlwifi/mvm/sta.c          |   2 +-
+ drivers/net/wireless/iwlwifi/mvm/time-event.c   |   2 +-
+ drivers/net/wireless/iwlwifi/mvm/tt.c           |   4 --
+ drivers/net/wireless/iwlwifi/mvm/tx.c           |  14 ++---
+ drivers/net/wireless/iwlwifi/mvm/utils.c        |  37 ++++++++++++
+ drivers/net/wireless/iwlwifi/pcie/trans.c       |  53 ++++++++---------
+ 29 files changed, 664 insertions(+), 386 deletions(-)
