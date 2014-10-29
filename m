@@ -1,63 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:56428 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750958AbaJIJqt (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:6768 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752243AbaJ2FoG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2014 05:46:49 -0400
-Message-ID: <54365985.1020104@broadcom.com> (sfid-20141009_114652_175603_DF2008F5)
-Date: Thu, 9 Oct 2014 11:46:45 +0200
-From: Arend van Spriel <arend@broadcom.com>
+	Wed, 29 Oct 2014 01:44:06 -0400
+Date: Wed, 29 Oct 2014 11:16:05 +0530
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+	"Michal Kazior" <michal.kazior@tieto.com>
+Subject: Re: [PATCH] ath10k: add tracing for tx ieee80211 header
+Message-ID: <20141029054604.GB20332@qca.qualcomm.com> (sfid-20141029_064419_889743_3E643C82)
+References: <1414514885-3694-1-git-send-email-rmanohar@qti.qualcomm.com>
+ <1414515579.1834.4.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: Maximilian Engelhardt <maxi@daemonizer.de>,
-	Michael Tokarev <mjt@tls.msk.ru>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	"brcm80211 development" <brcm80211-dev-list@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH][RTF][RFC] brcmsmac: add workaround for old BCM4313 devices
- with Bluetooth
-References: <1412843867-26563-1-git-send-email-zajec5@gmail.com> <CACna6ry-+hzMJ4n5PG7GJq9fZ+zwU38HGt-xZkUqKEP8yX6avA@mail.gmail.com>
-In-Reply-To: <CACna6ry-+hzMJ4n5PG7GJq9fZ+zwU38HGt-xZkUqKEP8yX6avA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1414515579.1834.4.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/09/14 11:02, Rafał Miłecki wrote:
-> On 9 October 2014 10:37, Rafał Miłecki<zajec5@gmail.com>  wrote:
->> +       /* TODO: Fix the condition. Only for boards>= P250 */
->> +       if (ai_get_chip_id(wlc_hw->sih) == BCMA_CHIP_ID_BCM4313&&  (wlc_hw->boardflags&  BFL_FEM_BT)) {
->> +               pr_info("Applying BCM4313 WL/BT workaround\n");
->> +               ai_btcombo_p250_4313_war(wlc_hw->sih);
->> +       }
->
-> This of course have to be checked in some hardware documentation for
-> the correct condition. We already have some workaround (right above
-> the newly added code) for boards with boardrev>= 0x1250. So my guess
-> is the code I added applies to some other cards. The board this patch
-> is supposed to fix is:
-> board vendor: 14e4
-> board type: 608
-> board revision: 1109
-> board flags: 402201
-> board flags2: 884
-> firmware revision: 262032c
->
-> So whatever condition we will need it'll likely need to cover above
-> case (maybe boardrev == 0x1109?).
+On Tue, Oct 28, 2014 at 05:59:39PM +0100, Johannes Berg wrote:
+> On Tue, 2014-10-28 at 22:18 +0530, Rajkumar Manoharan wrote:
+> > For packet log, the transmitted frame 802.11 header alone is sufficient.
+> > Recording entire packet is also consuming lot of disk space. To
+> > optimize, add tracepoints for sending tx-ed 802.11 headers alone.
+> 
+> FWIW, in iwlwifi I made the data portion (only!) a separate tracing
+> subsystem, so that you can do
+> 
+> trace-cmd record -e iwlwifi
+> 
+> to get the hdrs, and
+> 
+> trace-cmd record -e iwlwifi -e iwlwifi_data
+> 
+> to get the hdrs, and the data, and then I put the two together in
+> userspace. That way, "-e iwlwifi" gets most useful stuff, and adding -e
+> iwlwifi_data when needed still has no duplication.
+> 
+> With what you're suggesting, it will be difficult to control tracing to
+> do exactly what's needed.
+> 
+> Anyway, I don't really care, but this just caught my eye.
+> 
+Thanks for your feedback. Will send updated patch.
 
-Well, there is something fishy going on. The brcmsmac code looks like:
-
-if (bfl & BFL_FEM && chip == 4313) {
-	if (!(boardrev >= 0x1250 && bfl & BFL_FEM_BT))
-		ai_epa_4313war(wlc_hw->sih);
-}
-
-However the boardflags above (0x402201) only has BFL_FEM_BT set so this 
-code is never called. I have to ask if !BFL_FEM && BFL_FEM_BT is a valid 
-combination.
-
-Regards,
-Arend
-
-
-
+-Rajkumar
