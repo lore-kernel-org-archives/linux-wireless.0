@@ -1,101 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:47248 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932685AbaJUOGp (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:62136 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932555AbaJ2LvO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Oct 2014 10:06:45 -0400
-Received: by mail-lb0-f174.google.com with SMTP id p9so1071279lbv.5
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Oct 2014 07:06:44 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH 1/2] ath10k: remove tsf argument from rx_desc tracing
-Date: Tue, 21 Oct 2014 15:54:59 +0200
-Message-Id: <1413899700-10717-2-git-send-email-michal.kazior@tieto.com> (sfid-20141021_160649_516764_8B2AD04B)
-In-Reply-To: <1413899700-10717-1-git-send-email-michal.kazior@tieto.com>
-References: <1413899700-10717-1-git-send-email-michal.kazior@tieto.com>
+	Wed, 29 Oct 2014 07:51:14 -0400
+Received: by mail-wg0-f44.google.com with SMTP id x12so1101243wgg.17
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2014 04:51:13 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 10/25] iwlwifi: pcie: warn if extern fw_debug buffer failed
+Date: Wed, 29 Oct 2014 13:50:31 +0200
+Message-Id: <1414583446-11032-10-git-send-email-egrumbach@gmail.com> (sfid-20141029_131321_568261_FFFC703E)
+In-Reply-To: <CANUX_P0TURG9GNMRUOTGFfh=qzSNKkDh9Gm7Asq5jXr=0gQgLg@mail.gmail.com>
+References: <CANUX_P0TURG9GNMRUOTGFfh=qzSNKkDh9Gm7Asq5jXr=0gQgLg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fundamtenally this was wrong. Tsf is only valid
-in first MPDU of a PPDU. This means tsf value was
-wrong most of the time during heavy traffic.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Also I don't see much point in exposing a
-redundant (and broken) tsf value. Userspace can
-already read it from the dumped rx descriptor
-buffer.
+Otherwise we have no way to know that the buffer hasn't been
+allocated.
 
-Cc: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/htt_rx.c | 4 +---
- drivers/net/wireless/ath/ath10k/trace.h  | 9 +++------
- 2 files changed, 4 insertions(+), 9 deletions(-)
+ drivers/net/wireless/iwlwifi/pcie/trans.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index fbb3175..d3741b4 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -319,7 +319,6 @@ static int ath10k_htt_rx_amsdu_pop(struct ath10k_htt *htt,
- 	int msdu_len, msdu_chaining = 0;
- 	struct sk_buff *msdu, *next;
- 	struct htt_rx_desc *rx_desc;
--	u32 tsf;
+diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
+index 3781b02..5c9064f 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
+@@ -133,7 +133,7 @@ static void iwl_pcie_alloc_fw_monitor(struct iwl_trans *trans)
+ 		break;
+ 	}
  
- 	lockdep_assert_held(&htt->rx_ring.lock);
+-	if (!page)
++	if (WARN_ON_ONCE(!page))
+ 		return;
  
-@@ -451,8 +450,7 @@ static int ath10k_htt_rx_amsdu_pop(struct ath10k_htt *htt,
- 		last_msdu = __le32_to_cpu(rx_desc->msdu_end.info0) &
- 				RX_MSDU_END_INFO0_LAST_MSDU;
- 
--		tsf = __le32_to_cpu(rx_desc->ppdu_end.tsf_timestamp);
--		trace_ath10k_htt_rx_desc(ar, tsf, &rx_desc->attention,
-+		trace_ath10k_htt_rx_desc(ar, &rx_desc->attention,
- 					 sizeof(*rx_desc) - sizeof(u32));
- 		if (last_msdu) {
- 			msdu->next = NULL;
-diff --git a/drivers/net/wireless/ath/ath10k/trace.h b/drivers/net/wireless/ath/ath10k/trace.h
-index 9d34e7f..2409cb5 100644
---- a/drivers/net/wireless/ath/ath10k/trace.h
-+++ b/drivers/net/wireless/ath/ath10k/trace.h
-@@ -282,14 +282,13 @@ TRACE_EVENT(ath10k_htt_pktlog,
- );
- 
- TRACE_EVENT(ath10k_htt_rx_desc,
--	    TP_PROTO(struct ath10k *ar, u32 tsf, void *rxdesc, u16 len),
-+	    TP_PROTO(struct ath10k *ar, void *rxdesc, u16 len),
- 
--	TP_ARGS(ar, tsf, rxdesc, len),
-+	TP_ARGS(ar, rxdesc, len),
- 
- 	TP_STRUCT__entry(
- 		__string(device, dev_name(ar->dev))
- 		__string(driver, dev_driver_string(ar->dev))
--		__field(u32, tsf)
- 		__field(u16, len)
- 		__dynamic_array(u8, rxdesc, len)
- 	),
-@@ -297,16 +296,14 @@ TRACE_EVENT(ath10k_htt_rx_desc,
- 	TP_fast_assign(
- 		__assign_str(device, dev_name(ar->dev));
- 		__assign_str(driver, dev_driver_string(ar->dev));
--		__entry->tsf = tsf;
- 		__entry->len = len;
- 		memcpy(__get_dynamic_array(rxdesc), rxdesc, len);
- 	),
- 
- 	TP_printk(
--		"%s %s %u len %hu",
-+		"%s %s len %hu",
- 		__get_str(driver),
- 		__get_str(device),
--		__entry->tsf,
- 		__entry->len
- 	 )
- );
+ 	trans_pcie->fw_mon_page = page;
 -- 
-1.8.5.3
+1.9.1
 
