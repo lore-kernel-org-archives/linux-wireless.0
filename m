@@ -1,64 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:64065 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751046AbaJIIHR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2014 04:07:17 -0400
-Message-ID: <5436428F.5080803@intel.com> (sfid-20141009_100724_407611_42430BCB)
-Date: Thu, 09 Oct 2014 10:08:47 +0200
-From: Loic Poulain <loic.poulain@intel.com>
-MIME-Version: 1.0
-To: Heikki Krogerus <heikki.krogerus@linux.intel.com>
-CC: johannes@sipsolutions.net, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 3/5] net: rfkill: gpio: Implement host wake up support
-References: <1412757280-31367-1-git-send-email-loic.poulain@intel.com> <1412757280-31367-3-git-send-email-loic.poulain@intel.com> <20141008113845.GB3514@kuha.fi.intel.com> <543545AE.8030900@intel.com> <20141009073854.GA9108@kuha.fi.intel.com>
-In-Reply-To: <20141009073854.GA9108@kuha.fi.intel.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:37705 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932718AbaJ2LvQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Oct 2014 07:51:16 -0400
+Received: by mail-wi0-f178.google.com with SMTP id q5so4315946wiv.17
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2014 04:51:14 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 11/25] iwlwifi: pcie: fix recovery from ARC reset in WoWLAN
+Date: Wed, 29 Oct 2014 13:50:32 +0200
+Message-Id: <1414583446-11032-11-git-send-email-egrumbach@gmail.com> (sfid-20141029_125202_168828_5D71244F)
+In-Reply-To: <CANUX_P0TURG9GNMRUOTGFfh=qzSNKkDh9Gm7Asq5jXr=0gQgLg@mail.gmail.com>
+References: <CANUX_P0TURG9GNMRUOTGFfh=qzSNKkDh9Gm7Asq5jXr=0gQgLg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks Heikki, I'll rework these patches accordingly.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Regards,
-Loic
+When the ARC is reset when we exit from Sx in case we had
+WoWLAN running, we can't access the prph before we reset
+the NIC.
 
-On 09/10/2014 09:38, Heikki Krogerus wrote:
-> On Wed, Oct 08, 2014 at 04:09:50PM +0200, Loic Poulain wrote:
->> Thanks, it sounds good to use a label instead of index.
->> However:
->> - DSD is only compatible with BIOS ACPI 5.1
->> - gpiod_get_index does not take care of con_id (label) parameter in case of
->> ACPI (acpi_find_gpio).
->> - gpiod_get calls gpiod_get_index with index 0.
->>
->> Any patch ongoing to support con_id parameter with ACPI?
-> Yes. This is the latest version being review as we speak:
-> https://lkml.org/lkml/2014/10/6/530
->
-> It is really important you get your firmware fixed. We simply can not
-> rely on the order of the resources like GPIOs in the resource
-> templates. They may be different on every second
-> board/BIOS/configuration/whatever. It's even possible for a ACPI
-> device object to have two (or more) different resource templates
-> describing the same GPIOs in different order which are then selected
-> based on some magic condition, for example user selection in BIOS setup.
->
-> The existing hardware works with the drivers we have now, and it's not
-> possible to change the BIOS/system firmware on those so we just have
-> to live with them and rely on being able to pick the correct resources
-> based on index. But everything new _must_ use _DSD properties, and
-> ACPI 5.1 in general.
->
-> So basically your BIOS must produce the ACPI tables according to ACPI
-> 5.1. If you are worried about support for ACPI 5.1 in kernel, don't
-> worry about it, it's almost ready. And in the meantime, _DSD is just
-> something kernel will ignore.
->
->
-> Cheers,
->
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/pcie/trans.c | 17 ++++++++---------
+ 1 file changed, 8 insertions(+), 9 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
+index 5c9064f..aea0fe9 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
+@@ -1023,14 +1023,6 @@ static int iwl_trans_pcie_d3_resume(struct iwl_trans *trans,
+ 		return 0;
+ 	}
+ 
+-	iwl_pcie_set_pwr(trans, false);
+-
+-	val = iwl_read32(trans, CSR_RESET);
+-	if (val & CSR_RESET_REG_FLAG_NEVO_RESET) {
+-		*status = IWL_D3_STATUS_RESET;
+-		return 0;
+-	}
+-
+ 	/*
+ 	 * Also enables interrupts - none will happen as the device doesn't
+ 	 * know we're waking it up, only when the opmode actually tells it
+@@ -1050,6 +1042,8 @@ static int iwl_trans_pcie_d3_resume(struct iwl_trans *trans,
+ 		return ret;
+ 	}
+ 
++	iwl_pcie_set_pwr(trans, false);
++
+ 	iwl_trans_pcie_tx_reset(trans);
+ 
+ 	ret = iwl_pcie_rx_init(trans);
+@@ -1058,7 +1052,12 @@ static int iwl_trans_pcie_d3_resume(struct iwl_trans *trans,
+ 		return ret;
+ 	}
+ 
+-	*status = IWL_D3_STATUS_ALIVE;
++	val = iwl_read32(trans, CSR_RESET);
++	if (val & CSR_RESET_REG_FLAG_NEVO_RESET)
++		*status = IWL_D3_STATUS_RESET;
++	else
++		*status = IWL_D3_STATUS_ALIVE;
++
+ 	return 0;
+ }
+ 
 -- 
-Intel Open Source Technology Center
-http://oss.intel.com/
+1.9.1
 
