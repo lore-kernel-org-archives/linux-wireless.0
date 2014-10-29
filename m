@@ -1,77 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:52163 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753930AbaJHDl5 (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:35927 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755809AbaJ2RqB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Oct 2014 23:41:57 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH 2/3] ath9k: Set ATH_OP_HW_RESET before HW reset
-Date: Wed,  8 Oct 2014 09:12:44 +0530
-Message-Id: <1412739765-31679-3-git-send-email-sujith@msujith.org> (sfid-20141008_054208_623786_9820F4CD)
-In-Reply-To: <1412739765-31679-1-git-send-email-sujith@msujith.org>
-References: <1412739765-31679-1-git-send-email-sujith@msujith.org>
+	Wed, 29 Oct 2014 13:46:01 -0400
+Received: by mail-wi0-f172.google.com with SMTP id bs8so2404946wib.17
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2014 10:46:00 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH v2 27/34] staging: vt6655: baseband.c replace BIT0 with BIT(0)
+Date: Wed, 29 Oct 2014 17:44:02 +0000
+Message-Id: <1414604649-9105-28-git-send-email-tvboxspy@gmail.com> (sfid-20141029_184620_362481_C703364F)
+In-Reply-To: <1414604649-9105-1-git-send-email-tvboxspy@gmail.com>
+References: <1414604649-9105-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-
-When a HW reset is done, the interrupt tasklet is
-disabled before ISRs are disabled in the HW. This
-allows a small window where the HW can still generate
-interrupts. Since the tasklet is disabled and not killed,
-it is not scheduled but deferred for execution at a later
-time.
-
-This happens because ATH_OP_HW_RESET is not set when ath_reset()
-is called. When the hw_reset_work workqueue is used, this
-problem doesn't arise because ATH_OP_HW_RESET is set
-and the ISR bails out.
-
-Set ATH_OP_HW_RESET properly in ath_reset() to avoid
-this race - all the ath_reset_internal() callers have
-been converted to use ath_reset() in the previous patch.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/main.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+ drivers/staging/vt6655/baseband.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index eb6ba9f..dda09ba 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -598,10 +598,17 @@ chip_reset:
- #undef SCHED_INTR
+diff --git a/drivers/staging/vt6655/baseband.c b/drivers/staging/vt6655/baseband.c
+index b8a64c0..8adeea4 100644
+--- a/drivers/staging/vt6655/baseband.c
++++ b/drivers/staging/vt6655/baseband.c
+@@ -2116,7 +2116,7 @@ bool BBbVT3253Init(struct vnt_private *pDevice)
+ 				bResult &= BBbWriteEmbedded(dwIoBase, byVT3253B0_AGC4_RFMD2959[ii][0], byVT3253B0_AGC4_RFMD2959[ii][1]);
+ 
+ 			VNSvOutPortD(dwIoBase + MAC_REG_ITRTMSET, 0x23);
+-			MACvRegBitsOn(dwIoBase, MAC_REG_PAPEDELAY, BIT0);
++			MACvRegBitsOn(dwIoBase, MAC_REG_PAPEDELAY, BIT(0));
+ 		}
+ 		pDevice->abyBBVGA[0] = 0x18;
+ 		pDevice->abyBBVGA[1] = 0x0A;
+@@ -2149,7 +2149,7 @@ bool BBbVT3253Init(struct vnt_private *pDevice)
+ 			bResult &= BBbWriteEmbedded(dwIoBase, byVT3253B0_AGC[ii][0], byVT3253B0_AGC[ii][1]);
+ 
+ 		VNSvOutPortB(dwIoBase + MAC_REG_ITRTMSET, 0x23);
+-		MACvRegBitsOn(dwIoBase, MAC_REG_PAPEDELAY, BIT0);
++		MACvRegBitsOn(dwIoBase, MAC_REG_PAPEDELAY, BIT(0));
+ 
+ 		pDevice->abyBBVGA[0] = 0x14;
+ 		pDevice->abyBBVGA[1] = 0x0A;
+@@ -2455,7 +2455,7 @@ BBvPowerSaveModeON(void __iomem *dwIoBase)
+ 	unsigned char byOrgData;
+ 
+ 	BBbReadEmbedded(dwIoBase, 0x0D, &byOrgData);
+-	byOrgData |= BIT0;
++	byOrgData |= BIT(0);
+ 	BBbWriteEmbedded(dwIoBase, 0x0D, byOrgData);
  }
  
-+/*
-+ * This function is called when a HW reset cannot be deferred
-+ * and has to be immediate.
-+ */
- int ath_reset(struct ath_softc *sc, struct ath9k_channel *hchan)
- {
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	int r;
+@@ -2477,7 +2477,7 @@ BBvPowerSaveModeOFF(void __iomem *dwIoBase)
+ 	unsigned char byOrgData;
  
-+	set_bit(ATH_OP_HW_RESET, &common->op_flags);
-+
- 	ath9k_ps_wakeup(sc);
- 	r = ath_reset_internal(sc, hchan);
- 	ath9k_ps_restore(sc);
-@@ -609,6 +616,11 @@ int ath_reset(struct ath_softc *sc, struct ath9k_channel *hchan)
- 	return r;
+ 	BBbReadEmbedded(dwIoBase, 0x0D, &byOrgData);
+-	byOrgData &= ~(BIT0);
++	byOrgData &= ~(BIT(0));
+ 	BBbWriteEmbedded(dwIoBase, 0x0D, byOrgData);
  }
  
-+/*
-+ * When a HW reset can be deferred, it is added to the
-+ * hw_reset_work workqueue, but we set ATH_OP_HW_RESET before
-+ * queueing.
-+ */
- void ath9k_queue_reset(struct ath_softc *sc, enum ath_reset_type type)
- {
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
 -- 
-2.1.2
+2.1.0
 
