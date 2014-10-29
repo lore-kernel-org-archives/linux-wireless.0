@@ -1,190 +1,204 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:61544 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755572AbaJ1GPy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2014 02:15:54 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: stable@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 3.16 1/7] iwlwifi: add device / firmware to fw-error-dump file
-Date: Tue, 28 Oct 2014 08:11:20 +0200
-Message-Id: <1414476686-3407-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20141028_071611_080777_2EC0DECF)
-In-Reply-To: <1414476686-3407-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1414476686-3407-1-git-send-email-emmanuel.grumbach@intel.com>
+Received: from mail-wg0-f47.google.com ([74.125.82.47]:42362 "EHLO
+	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756212AbaJ2R4x (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Oct 2014 13:56:53 -0400
+Received: by mail-wg0-f47.google.com with SMTP id a1so2475519wgh.34
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2014 10:56:52 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH v2 01/48] staging: vt6655: deadcode remove zone file operations and vntconfiguration.dat
+Date: Wed, 29 Oct 2014 17:55:19 +0000
+Message-Id: <1414605366-9335-2-git-send-email-tvboxspy@gmail.com> (sfid-20141029_185712_085045_B3E4EFC8)
+In-Reply-To: <1414605366-9335-1-git-send-email-tvboxspy@gmail.com>
+References: <1414605366-9335-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-commit 06ddbf5adac1fd2a031eade8a92239abfa6db93a upstream.
+These are now all handled by mac80211.
 
-This can be useful later for parsing since the parsing may
-differ based on the device's family / bus.
-Also add the human readable version of the firmware.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-drv.c           |  2 ++
- drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h | 24 ++++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-fw-file.h       |  5 +++--
- drivers/net/wireless/iwlwifi/iwl-fw.h            |  3 +++
- drivers/net/wireless/iwlwifi/mvm/ops.c           | 24 +++++++++++++++++++++---
- 5 files changed, 53 insertions(+), 5 deletions(-)
+ drivers/staging/vt6655/device.h             |   2 -
+ drivers/staging/vt6655/device_main.c        | 113 +---------------------------
+ drivers/staging/vt6655/vntconfiguration.dat |   1 -
+ 3 files changed, 3 insertions(+), 113 deletions(-)
+ delete mode 100644 drivers/staging/vt6655/vntconfiguration.dat
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-drv.c b/drivers/net/wireless/iwlwifi/iwl-drv.c
-index f2a5c12..2967fce 100644
---- a/drivers/net/wireless/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-drv.c
-@@ -565,6 +565,8 @@ static int iwl_parse_tlv_firmware(struct iwl_drv *drv,
+diff --git a/drivers/staging/vt6655/device.h b/drivers/staging/vt6655/device.h
+index 17a36dc..214f73f 100644
+--- a/drivers/staging/vt6655/device.h
++++ b/drivers/staging/vt6655/device.h
+@@ -750,6 +750,4 @@ bool device_dma0_xmit(struct vnt_private *pDevice,
+ 		      struct sk_buff *skb, unsigned int uNodeIndex);
+ bool device_alloc_frag_buf(struct vnt_private *pDevice,
+ 			   PSDeFragControlBlock pDeF);
+-int Config_FileOperation(struct vnt_private *pDevice,
+-			 bool fwrite, unsigned char *Parameter);
+ #endif
+diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
+index 07d2101..12fa63c 100644
+--- a/drivers/staging/vt6655/device_main.c
++++ b/drivers/staging/vt6655/device_main.c
+@@ -303,8 +303,6 @@ static void device_free_rd0_ring(struct vnt_private *pDevice);
+ static void device_free_rd1_ring(struct vnt_private *pDevice);
+ static void device_free_rings(struct vnt_private *pDevice);
+ static void device_free_frag_buf(struct vnt_private *pDevice);
+-static int Config_FileGetParameter(unsigned char *string,
+-				   unsigned char *dest, unsigned char *source);
+ 
+ /*---------------------  Export Variables  --------------------------*/
+ 
+@@ -412,7 +410,6 @@ static void device_init_registers(struct vnt_private *pDevice)
+ 	unsigned char byValue1;
+ 	unsigned char byCCKPwrdBm = 0;
+ 	unsigned char byOFDMPwrdBm = 0;
+-	int zonetype = 0;
+ 
+ 	MACbShutdown(pDevice->PortOffset);
+ 	BBvSoftwareReset(pDevice->PortOffset);
+@@ -517,41 +514,6 @@ static void device_init_registers(struct vnt_private *pDevice)
+ 
+ 	/* zonetype initial */
+ 	pDevice->byOriginalZonetype = pDevice->abyEEPROM[EEP_OFS_ZONETYPE];
+-	zonetype = Config_FileOperation(pDevice, false, NULL);
+-
+-	if (zonetype >= 0) {
+-		if ((zonetype == 0) &&
+-		    (pDevice->abyEEPROM[EEP_OFS_ZONETYPE] != 0x00)) {
+-			/* for USA */
+-			pDevice->abyEEPROM[EEP_OFS_ZONETYPE] = 0;
+-			pDevice->abyEEPROM[EEP_OFS_MAXCHANNEL] = 0x0B;
+-
+-			pr_debug("Init Zone Type :USA\n");
+-		} else if ((zonetype == 1) &&
+-			 (pDevice->abyEEPROM[EEP_OFS_ZONETYPE] != 0x01)) {
+-			/* for Japan */
+-			pDevice->abyEEPROM[EEP_OFS_ZONETYPE] = 0x01;
+-			pDevice->abyEEPROM[EEP_OFS_MAXCHANNEL] = 0x0D;
+-		} else if ((zonetype == 2) &&
+-			  (pDevice->abyEEPROM[EEP_OFS_ZONETYPE] != 0x02)) {
+-			/* for Europe */
+-			pDevice->abyEEPROM[EEP_OFS_ZONETYPE] = 0x02;
+-			pDevice->abyEEPROM[EEP_OFS_MAXCHANNEL] = 0x0D;
+-
+-			pr_debug("Init Zone Type :Europe\n");
+-		} else {
+-			if (zonetype != pDevice->abyEEPROM[EEP_OFS_ZONETYPE])
+-				pr_debug("zonetype in file[%02x] mismatch with in EEPROM[%02x]\n",
+-					 zonetype,
+-					 pDevice->abyEEPROM[EEP_OFS_ZONETYPE]);
+-			else
+-				pr_debug("Read Zonetype file success,use default zonetype setting[%02x]\n",
+-					 zonetype);
+-		}
+-	} else {
+-		pr_debug("Read Zonetype file fail,use default zonetype setting[%02x]\n",
+-			 SROMbyReadEmbedded(pDevice->PortOffset, EEP_OFS_ZONETYPE));
+-	}
+ 
+ 	/* Get RFType */
+ 	pDevice->byRFType = SROMbyReadEmbedded(pDevice->PortOffset, EEP_OFS_RFTYPE);
+@@ -595,14 +557,9 @@ static void device_init_registers(struct vnt_private *pDevice)
  	}
  
- 	drv->fw.ucode_ver = le32_to_cpu(ucode->ver);
-+	memcpy(drv->fw.human_readable, ucode->human_readable,
-+	       sizeof(drv->fw.human_readable));
- 	build = le32_to_cpu(ucode->build);
+ 	/* recover 12,13 ,14channel for EUROPE by 11 channel */
+-	if (((pDevice->abyEEPROM[EEP_OFS_ZONETYPE] == ZoneType_Japan) ||
+-	     (pDevice->abyEEPROM[EEP_OFS_ZONETYPE] == ZoneType_Europe)) &&
+-	    (pDevice->byOriginalZonetype == ZoneType_USA)) {
+-		for (ii = 11; ii < 14; ii++) {
+-			pDevice->abyCCKPwrTbl[ii] = pDevice->abyCCKPwrTbl[10];
+-			pDevice->abyOFDMPwrTbl[ii] = pDevice->abyOFDMPwrTbl[10];
+-
+-		}
++	for (ii = 11; ii < 14; ii++) {
++		pDevice->abyCCKPwrTbl[ii] = pDevice->abyCCKPwrTbl[10];
++		pDevice->abyOFDMPwrTbl[ii] = pDevice->abyOFDMPwrTbl[10];
+ 	}
  
- 	if (build)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h b/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
-index 2953ffc..aa0f85e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
-@@ -74,12 +74,15 @@
-  * @IWL_FW_ERROR_DUMP_RXF:
-  * @IWL_FW_ERROR_DUMP_TXCMD: last TX command data, structured as
-  *	&struct iwl_fw_error_dump_txcmd packets
-+ * @IWL_FW_ERROR_DUMP_DEV_FW_INFO:  struct %iwl_fw_error_dump_info
-+ *	info on the device / firmware.
-  */
- enum iwl_fw_error_dump_type {
- 	IWL_FW_ERROR_DUMP_SRAM = 0,
- 	IWL_FW_ERROR_DUMP_REG = 1,
- 	IWL_FW_ERROR_DUMP_RXF = 2,
- 	IWL_FW_ERROR_DUMP_TXCMD = 3,
-+	IWL_FW_ERROR_DUMP_DEV_FW_INFO = 4,
+ 	/* Load OFDM A Power Table */
+@@ -2139,70 +2096,6 @@ static  irqreturn_t  device_intr(int irq,  void *dev_instance)
+ 	return IRQ_RETVAL(handled);
+ }
  
- 	IWL_FW_ERROR_DUMP_MAX,
- };
-@@ -120,6 +123,27 @@ struct iwl_fw_error_dump_txcmd {
- 	u8 data[];
- } __packed;
- 
-+enum iwl_fw_error_dump_family {
-+	IWL_FW_ERROR_DUMP_FAMILY_7 = 7,
-+	IWL_FW_ERROR_DUMP_FAMILY_8 = 8,
-+};
-+
-+/**
-+ * struct iwl_fw_error_dump_info - info on the device / firmware
-+ * @device_family: the family of the device (7 / 8)
-+ * @hw_step: the step of the device
-+ * @fw_human_readable: human readable FW version
-+ * @dev_human_readable: name of the device
-+ * @bus_human_readable: name of the bus used
-+ */
-+struct iwl_fw_error_dump_info {
-+	__le32 device_family;
-+	__le32 hw_step;
-+	u8 fw_human_readable[FW_VER_HUMAN_READABLE_SZ];
-+	u8 dev_human_readable[64];
-+	u8 bus_human_readable[8];
-+} __packed;
-+
- /**
-  * iwl_mvm_fw_error_next_data - advance fw error dump data pointer
-  * @data: previous data block
-diff --git a/drivers/net/wireless/iwlwifi/iwl-fw-file.h b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
-index b45e576..dc1b913 100644
---- a/drivers/net/wireless/iwlwifi/iwl-fw-file.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
-@@ -136,7 +136,8 @@ struct iwl_ucode_tlv {
- 	u8 data[0];
- };
- 
--#define IWL_TLV_UCODE_MAGIC	0x0a4c5749
-+#define IWL_TLV_UCODE_MAGIC		0x0a4c5749
-+#define FW_VER_HUMAN_READABLE_SZ	64
- 
- struct iwl_tlv_ucode_header {
- 	/*
-@@ -147,7 +148,7 @@ struct iwl_tlv_ucode_header {
- 	 */
- 	__le32 zero;
- 	__le32 magic;
--	u8 human_readable[64];
-+	u8 human_readable[FW_VER_HUMAN_READABLE_SZ];
- 	__le32 ver;		/* major/minor/API/serial */
- 	__le32 build;
- 	__le64 ignore;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-fw.h b/drivers/net/wireless/iwlwifi/iwl-fw.h
-index b1a3332..663a91a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-fw.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-fw.h
-@@ -65,6 +65,8 @@
- #include <linux/types.h>
- #include <net/mac80211.h>
- 
-+#include "iwl-fw-file.h"
-+
- /**
-  * enum iwl_ucode_tlv_flag - ucode API flags
-  * @IWL_UCODE_TLV_FLAGS_PAN: This is PAN capable microcode; this previously
-@@ -312,6 +314,7 @@ struct iwl_fw {
- 	bool mvm_fw;
- 
- 	struct ieee80211_cipher_scheme cs[IWL_UCODE_MAX_CS];
-+	u8 human_readable[FW_VER_HUMAN_READABLE_SZ];
- };
- 
- #endif  /* __iwl_fw_h__ */
-diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
-index cc2f7de..d2fdd9f 100644
---- a/drivers/net/wireless/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
-@@ -826,6 +826,7 @@ void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
- {
- 	struct iwl_fw_error_dump_file *dump_file;
- 	struct iwl_fw_error_dump_data *dump_data;
-+	struct iwl_fw_error_dump_info *dump_info;
- 	u32 file_len;
- 	u32 trans_len;
- 
-@@ -834,10 +835,11 @@ void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
- 	if (mvm->fw_error_dump)
- 		return;
- 
--	file_len = mvm->fw_error_sram_len +
-+	file_len = sizeof(*dump_file) +
-+		   sizeof(*dump_data) * 3 +
-+		   mvm->fw_error_sram_len +
- 		   mvm->fw_error_rxf_len +
--		   sizeof(*dump_file) +
--		   sizeof(*dump_data) * 2;
-+		   sizeof(*dump_info);
- 
- 	trans_len = iwl_trans_dump_data(mvm->trans, NULL, 0);
- 	if (trans_len)
-@@ -852,6 +854,22 @@ void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
- 	dump_file->barker = cpu_to_le32(IWL_FW_ERROR_DUMP_BARKER);
- 	dump_file->file_len = cpu_to_le32(file_len);
- 	dump_data = (void *)dump_file->data;
-+
-+	dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_DEV_FW_INFO);
-+	dump_data->len = cpu_to_le32(sizeof(*dump_info));
-+	dump_info = (void *) dump_data->data;
-+	dump_info->device_family =
-+		mvm->cfg->device_family == IWL_DEVICE_FAMILY_7000 ?
-+			cpu_to_le32(IWL_FW_ERROR_DUMP_FAMILY_7) :
-+			cpu_to_le32(IWL_FW_ERROR_DUMP_FAMILY_8);
-+	memcpy(dump_info->fw_human_readable, mvm->fw->human_readable,
-+	       sizeof(dump_info->fw_human_readable));
-+	strncpy(dump_info->dev_human_readable, mvm->cfg->name,
-+		sizeof(dump_info->dev_human_readable));
-+	strncpy(dump_info->bus_human_readable, mvm->dev->bus->name,
-+		sizeof(dump_info->bus_human_readable));
-+
-+	dump_data = iwl_mvm_fw_error_next_data(dump_data);
- 	dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_RXF);
- 	dump_data->len = cpu_to_le32(mvm->fw_error_rxf_len);
- 	memcpy(dump_data->data, mvm->fw_error_rxf, mvm->fw_error_rxf_len);
+-//2008-8-4 <add> by chester
+-static int Config_FileGetParameter(unsigned char *string,
+-				   unsigned char *dest, unsigned char *source)
+-{
+-	unsigned char buf1[100];
+-	int source_len = strlen(source);
+-
+-	memset(buf1, 0, 100);
+-	strcat(buf1, string);
+-	strcat(buf1, "=");
+-	source += strlen(buf1);
+-
+-	memcpy(dest, source, source_len - strlen(buf1));
+-	return true;
+-}
+-
+-int Config_FileOperation(struct vnt_private *pDevice,
+-			 bool fwrite, unsigned char *Parameter)
+-{
+-	unsigned char *buffer = kmalloc(1024, GFP_KERNEL);
+-	unsigned char tmpbuffer[20];
+-	struct file *file;
+-	int result = 0;
+-
+-	if (!buffer) {
+-		pr_err("allocate mem for file fail?\n");
+-		return -1;
+-	}
+-	file = filp_open(CONFIG_PATH, O_RDONLY, 0);
+-	if (IS_ERR(file)) {
+-		kfree(buffer);
+-		pr_err("Config_FileOperation:open file fail?\n");
+-		return -1;
+-	}
+-
+-	if (kernel_read(file, 0, buffer, 1024) < 0) {
+-		pr_err("read file error?\n");
+-		result = -1;
+-		goto error1;
+-	}
+-
+-	if (Config_FileGetParameter("ZONETYPE", tmpbuffer, buffer) != true) {
+-		pr_err("get parameter error?\n");
+-		result = -1;
+-		goto error1;
+-	}
+-
+-	if (memcmp(tmpbuffer, "USA", 3) == 0) {
+-		result = ZoneType_USA;
+-	} else if (memcmp(tmpbuffer, "JAPAN", 5) == 0) {
+-		result = ZoneType_Japan;
+-	} else if (memcmp(tmpbuffer, "EUROPE", 5) == 0) {
+-		result = ZoneType_Europe;
+-	} else {
+-		result = -1;
+-		pr_err("Unknown Zonetype[%s]?\n", tmpbuffer);
+-	}
+-
+-error1:
+-	kfree(buffer);
+-	fput(file);
+-	return result;
+-}
+-
+ static void device_set_multi(struct net_device *dev) {
+ 	struct vnt_private *pDevice = netdev_priv(dev);
+ 	PSMgmtObject     pMgmt = pDevice->pMgmt;
+diff --git a/drivers/staging/vt6655/vntconfiguration.dat b/drivers/staging/vt6655/vntconfiguration.dat
+deleted file mode 100644
+index 0064ddc..0000000
+--- a/drivers/staging/vt6655/vntconfiguration.dat
++++ /dev/null
+@@ -1 +0,0 @@
+-ZONETYPE=EUROPE
+\ No newline at end of file
 -- 
-1.9.1
+2.1.0
 
