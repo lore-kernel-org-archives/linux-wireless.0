@@ -1,209 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:51901 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932072AbaJ2R6Q (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2014 13:58:16 -0400
-Received: by mail-wg0-f47.google.com with SMTP id a1so3875182wgh.6
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2014 10:58:14 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH v2 40/48] staging: vt6655: dead code remove country.h
-Date: Wed, 29 Oct 2014 17:55:58 +0000
-Message-Id: <1414605366-9335-41-git-send-email-tvboxspy@gmail.com> (sfid-20141029_191320_954516_77E662BD)
-In-Reply-To: <1414605366-9335-1-git-send-email-tvboxspy@gmail.com>
-References: <1414605366-9335-1-git-send-email-tvboxspy@gmail.com>
+Received: from arrakis.dune.hu ([78.24.191.176]:42280 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932091AbaJ2KR1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Oct 2014 06:17:27 -0400
+Message-ID: <5450BEB2.60208@openwrt.org> (sfid-20141029_111731_539525_9D763373)
+Date: Wed, 29 Oct 2014 11:17:22 +0100
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Oleksij Rempel <linux@rempel-privat.de>,
+	Arend van Spriel <arend@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+CC: Etna <etna@openmailbox.org>, linux-wireless@vger.kernel.org
+Subject: Re: MediaTek WiFi hardware support in upstream kernel
+References: <544DB5A8.7090405@openmailbox.org> <20141027152026.GB19976@tuxdriver.com> <544E8CB4.3000607@rempel-privat.de> <20141028134608.GA26283@tuxdriver.com> <544FA303.5060303@broadcom.com> <544FA627.3000004@rempel-privat.de>
+In-Reply-To: <544FA627.3000004@rempel-privat.de>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/channel.c |   1 -
- drivers/staging/vt6655/country.h | 161 ---------------------------------------
- 2 files changed, 162 deletions(-)
- delete mode 100644 drivers/staging/vt6655/country.h
+Hi Hackers,
 
-diff --git a/drivers/staging/vt6655/channel.c b/drivers/staging/vt6655/channel.c
-index 41146eb..6bd5f16 100644
---- a/drivers/staging/vt6655/channel.c
-+++ b/drivers/staging/vt6655/channel.c
-@@ -21,7 +21,6 @@
-  */
- 
- #include "baseband.h"
--#include "country.h"
- #include "channel.h"
- #include "device.h"
- #include "rf.h"
-diff --git a/drivers/staging/vt6655/country.h b/drivers/staging/vt6655/country.h
-deleted file mode 100644
-index 2365fb1..0000000
---- a/drivers/staging/vt6655/country.h
-+++ /dev/null
-@@ -1,161 +0,0 @@
--/*
-- * Copyright (c) 1996, 2003 VIA Networking Technologies, Inc.
-- * All rights reserved.
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License as published by
-- * the Free Software Foundation; either version 2 of the License, or
-- * (at your option) any later version.
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License along
-- * with this program; if not, write to the Free Software Foundation, Inc.,
-- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-- *
-- *
-- * File: country.h
-- *
-- * Purpose: Country Code information
-- *
-- * Author: Lucas Lin
-- *
-- * Date: Dec 23, 2004
-- *
-- */
--
--#ifndef __COUNTRY_H__
--#define __COUNTRY_H__
--
--#include "ttype.h"
--
--/************************************************************************
-- * The definition here should be complied with the INF country order
-- * Please check with VNWL.inf/VNWL64.inf/VNWL*.inf
-- ************************************************************************/
--typedef enum _COUNTRY_CODE {
--	CCODE_FCC = 0,
--	CCODE_TELEC,
--	CCODE_ETSI,
--	CCODE_RESV3,
--	CCODE_RESV4,
--	CCODE_RESV5,
--	CCODE_RESV6,
--	CCODE_RESV7,
--	CCODE_RESV8,
--	CCODE_RESV9,
--	CCODE_RESVa,
--	CCODE_RESVb,
--	CCODE_RESVc,
--	CCODE_RESVd,
--	CCODE_RESVe,
--	CCODE_ALLBAND,
--	CCODE_ALBANIA,
--	CCODE_ALGERIA,
--	CCODE_ARGENTINA,
--	CCODE_ARMENIA,
--	CCODE_AUSTRALIA,
--	CCODE_AUSTRIA,
--	CCODE_AZERBAIJAN,
--	CCODE_BAHRAIN,
--	CCODE_BELARUS,
--	CCODE_BELGIUM,
--	CCODE_BELIZE,
--	CCODE_BOLIVIA,
--	CCODE_BRAZIL,
--	CCODE_BRUNEI_DARUSSALAM,
--	CCODE_BULGARIA,
--	CCODE_CANADA,
--	CCODE_CHILE,
--	CCODE_CHINA,
--	CCODE_COLOMBIA,
--	CCODE_COSTA_RICA,
--	CCODE_CROATIA,
--	CCODE_CYPRUS,
--	CCODE_CZECH,
--	CCODE_DENMARK,
--	CCODE_DOMINICAN_REPUBLIC,
--	CCODE_ECUADOR,
--	CCODE_EGYPT,
--	CCODE_EL_SALVADOR,
--	CCODE_ESTONIA,
--	CCODE_FINLAND,
--	CCODE_FRANCE,
--	CCODE_GERMANY,
--	CCODE_GREECE,
--	CCODE_GEORGIA,
--	CCODE_GUATEMALA,
--	CCODE_HONDURAS,
--	CCODE_HONG_KONG,
--	CCODE_HUNGARY,
--	CCODE_ICELAND,
--	CCODE_INDIA,
--	CCODE_INDONESIA,
--	CCODE_IRAN,
--	CCODE_IRELAND,
--	CCODE_ITALY,
--	CCODE_ISRAEL,
--	CCODE_JAPAN,
--	CCODE_JORDAN,
--	CCODE_KAZAKHSTAN,
--	CCODE_KUWAIT,
--	CCODE_LATVIA,
--	CCODE_LEBANON,
--	CCODE_LEICHTENSTEIN,
--	CCODE_LITHUANIA,
--	CCODE_LUXEMBURG,
--	CCODE_MACAU,
--	CCODE_MACEDONIA,
--	CCODE_MALTA,
--	CCODE_MALAYSIA,
--	CCODE_MEXICO,
--	CCODE_MONACO,
--	CCODE_MOROCCO,
--	CCODE_NETHERLANDS,
--	CCODE_NEW_ZEALAND,
--	CCODE_NORTH_KOREA,
--	CCODE_NORWAY,
--	CCODE_OMAN,
--	CCODE_PAKISTAN,
--	CCODE_PANAMA,
--	CCODE_PERU,
--	CCODE_PHILIPPINES,
--	CCODE_POLAND,
--	CCODE_PORTUGAL,
--	CCODE_PUERTO_RICO,
--	CCODE_QATAR,
--	CCODE_ROMANIA,
--	CCODE_RUSSIA,
--	CCODE_SAUDI_ARABIA,
--	CCODE_SINGAPORE,
--	CCODE_SLOVAKIA,
--	CCODE_SLOVENIA,
--	CCODE_SOUTH_AFRICA,
--	CCODE_SOUTH_KOREA,
--	CCODE_SPAIN,
--	CCODE_SWEDEN,
--	CCODE_SWITZERLAND,
--	CCODE_SYRIA,
--	CCODE_TAIWAN,
--	CCODE_THAILAND,
--	CCODE_TRINIDAD_TOBAGO,
--	CCODE_TUNISIA,
--	CCODE_TURKEY,
--	CCODE_UK,
--	CCODE_UKRAINE,
--	CCODE_UNITED_ARAB_EMIRATES,
--	CCODE_UNITED_STATES,
--	CCODE_URUGUAY,
--	CCODE_UZBEKISTAN,
--	CCODE_VENEZUELA,
--	CCODE_VIETNAM,
--	CCODE_YEMEN,
--	CCODE_ZIMBABWE,
--	CCODE_JAPAN_W52_W53,
--	CCODE_MAX
--} COUNTRY_CODE;
--
--#endif  /* __COUNTRY_H__ */
--- 
-2.1.0
+Just a quick heads up:
+I'm working on a new driver for MT7662E/MT7612E, written from scratch.
+It is already able to bring up the firmware, init the MAC and do basic
+TX/RX DMA communication with the firmware.
+I've decided to not integrate it with rt2x00, because I want to avoid
+dealing with the the unnecessarily convoluted abstractions and legacy
+code in there. I believe the result will be simpler and easier to
+maintain as a new driver.
+As soon as the basic structure is in place, I will put it on a public
+git tree and post a link here.
 
+- Felix
