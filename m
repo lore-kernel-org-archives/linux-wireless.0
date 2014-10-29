@@ -1,57 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp01.msg.oleane.net ([62.161.4.1]:37170 "EHLO
-	smtp01.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752174AbaJMOH6 convert rfc822-to-8bit (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:4033 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933203AbaJ2PC7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Oct 2014 10:07:58 -0400
-From: "voncken" <cedric.voncken@acksys.fr>
-To: "'Michal Kazior'" <michal.kazior@tieto.com>
-Cc: <ath10k@lists.infradead.org>,
-	"'linux-wireless'" <linux-wireless@vger.kernel.org>
-References: <773DB8A82AB6A046AE0195C68612A319018C2750@sbs2003.acksys.local>	<CA+BoTQ=a8kY0CGGKHwRhk4cg=V0oimipuht6Pkc0K0x4WMMn-A@mail.gmail.com>	<023801cfe6b8$350c1930$9f244b90$@acksys.fr>	<CA+BoTQkXc-VL1ixRK5KWUiE0igCxXRQyyde86TAvuKVxZhEPdg@mail.gmail.com>	<024901cfe6c6$e1905780$a4b10680$@acksys.fr> <CA+BoTQnQkDjkMMu5x-c69s1THf7SQfet2vsOPWs++PtyEHEeTw@mail.gmail.com>
-In-Reply-To: <CA+BoTQnQkDjkMMu5x-c69s1THf7SQfet2vsOPWs++PtyEHEeTw@mail.gmail.com>
-Subject: RE: ath10k firmware crash
-Date: Mon, 13 Oct 2014 16:06:50 +0200
-Message-ID: <025c01cfe6ee$efed3960$cfc7ac20$@acksys.fr> (sfid-20141013_160811_438759_85167E16)
+	Wed, 29 Oct 2014 11:02:59 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 1/2] brcmsmac: fix statistic counter update function
+Date: Wed, 29 Oct 2014 16:02:50 +0100
+Message-ID: <1414594971-26389-2-git-send-email-arend@broadcom.com> (sfid-20141029_160305_649876_B65DF07A)
+In-Reply-To: <1414594971-26389-1-git-send-email-arend@broadcom.com>
+References: <1414594971-26389-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> >>
-> >> >> Are you perhaps trying to run STA with 4addr bridging? If so then
-> >> >> make sure you use recent ath10k as this was known to be a problem.
-> >> >>
-> >> > Yes I'm testing with 4 addr bridging because I need to bridge this
-> >> interface. I' ll try without this option.
-> >> > I'm testing with commit number
-> >> > 38eeda3ae6f90fde5546bdd48ee4ff3090f238c0
-> >> from kernel.org/pub/scm/linux/kernel/git/firmare/linux-firmware. It
-> >> is the latest version in openwrt.
-> >> >
-> >> >> Can you also provide ath10k traces or debug logs, please?
-> >> >>
-> >> > I'll send a trace.
-> >>
-> > I'm using the compat wireless from Openwrt.
-> >         Compat wireless version 2014-05-22, but we updated the
-> > firmware with the latest version provided by openwrt (commit number
-> > 38eeda3ae6f90fde5546bdd48ee4ff3090f238c0 from
-> > kernel.org/pub/scm/linux/kernel/git/firmare/linux-firmware)
-> 
-> The fix for 4addr STA bridging is in the driver, not the firmware.
-> 
-> The compat version you're using doesn't contain the required fix. I'm pretty
-> sure openwrt compat 2014-09-26 contains it.
-It fix my issue. Thanks for your help.
+The 802.11 core statistics are retrieved from the core registers
+but not stored. So the debug code was never triggered to give a
+warning message on tx underruns or rx overflows. This patch fixes
+this and assures the statistics are stored in the snapshot.
 
-Cedric Voncken
-> 
-> 
-> Michał
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org More majordomo info at
-> http://vger.kernel.org/majordomo-info.html
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmsmac/main.c | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index 1b47482..bc9be78 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -3081,7 +3081,7 @@ static bool brcms_c_ps_allowed(struct brcms_c_info *wlc)
+ static void brcms_c_statsupd(struct brcms_c_info *wlc)
+ {
+ 	int i;
+-	struct macstat macstats;
++	struct macstat *macstats;
+ #ifdef DEBUG
+ 	u16 delta;
+ 	u16 rxf0ovfl;
+@@ -3092,31 +3092,31 @@ static void brcms_c_statsupd(struct brcms_c_info *wlc)
+ 	if (!wlc->pub->up)
+ 		return;
+ 
++	macstats = wlc->core->macstat_snapshot;
++
+ #ifdef DEBUG
+ 	/* save last rx fifo 0 overflow count */
+-	rxf0ovfl = wlc->core->macstat_snapshot->rxf0ovfl;
++	rxf0ovfl = macstats->rxf0ovfl;
+ 
+ 	/* save last tx fifo  underflow count */
+ 	for (i = 0; i < NFIFO; i++)
+-		txfunfl[i] = wlc->core->macstat_snapshot->txfunfl[i];
++		txfunfl[i] = macstats->txfunfl[i];
+ #endif				/* DEBUG */
+ 
+ 	/* Read mac stats from contiguous shared memory */
+-	brcms_b_copyfrom_objmem(wlc->hw, M_UCODE_MACSTAT, &macstats,
+-				sizeof(struct macstat), OBJADDR_SHM_SEL);
++	brcms_b_copyfrom_objmem(wlc->hw, M_UCODE_MACSTAT, macstats,
++				sizeof(*macstats), OBJADDR_SHM_SEL);
+ 
+ #ifdef DEBUG
+ 	/* check for rx fifo 0 overflow */
+-	delta = (u16) (wlc->core->macstat_snapshot->rxf0ovfl - rxf0ovfl);
++	delta = (u16)(macstats->rxf0ovfl - rxf0ovfl);
+ 	if (delta)
+ 		brcms_err(wlc->hw->d11core, "wl%d: %u rx fifo 0 overflows!\n",
+ 			  wlc->pub->unit, delta);
+ 
+ 	/* check for tx fifo underflows */
+ 	for (i = 0; i < NFIFO; i++) {
+-		delta =
+-		    (u16) (wlc->core->macstat_snapshot->txfunfl[i] -
+-			      txfunfl[i]);
++		delta = macstats->txfunfl[i] - txfunfl[i];
+ 		if (delta)
+ 			brcms_err(wlc->hw->d11core,
+ 				  "wl%d: %u tx fifo %d underflows!\n",
+-- 
+1.9.1
 
