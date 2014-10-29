@@ -1,41 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f41.google.com ([209.85.218.41]:49995 "EHLO
-	mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751834AbaJBRBK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Oct 2014 13:01:10 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, troy_tan@realsil.com.cn,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH 0/2 NEXT] Some late fixes for rtlwifi 
-Date: Thu,  2 Oct 2014 12:00:52 -0500
-Message-Id: <1412269254-19983-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20141002_190126_598354_0C65AE3B)
+Received: from s3.sipsolutions.net ([5.9.151.49]:38720 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933872AbaJ2Psg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Oct 2014 11:48:36 -0400
+Message-ID: <1414597712.1827.14.camel@jlt4.sipsolutions.net> (sfid-20141029_164844_175973_CAE47283)
+Subject: Re: [PATCH 2/3] mac80211-hwsim: Provide multicast event for
+ HWSIM_CMD_NEW_RADIO
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jukka Rissanen <jukka.rissanen@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 29 Oct 2014 16:48:32 +0100
+In-Reply-To: <1414406688-3827-3-git-send-email-jukka.rissanen@linux.intel.com> (sfid-20141027_114540_063766_7C3E5B4A)
+References: <1414406688-3827-1-git-send-email-jukka.rissanen@linux.intel.com>
+	 <1414406688-3827-3-git-send-email-jukka.rissanen@linux.intel.com>
+	 (sfid-20141027_114540_063766_7C3E5B4A)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These patches fix a Kconfig error for RTL8192EE, and some static checker warnings
-reported by Dan Carpenter.
+On Mon, 2014-10-27 at 12:44 +0200, Jukka Rissanen wrote:
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+> +static void mcast_new_radio(int id, struct genl_info *info,
+> +			    int channels, const char *reg_alpha2,
+> +			    const struct ieee80211_regdomain *regd,
+> +			    bool reg_strict, bool p2p_device,
+> +			    bool use_chanctx)
 
-Larry Finger (2):
-  rtlwifi: Fix Kconfig for RTL8192EE
-  rtlwifi: Fix static checker warnings for various drivers
+Since you're adding yet another function with all these arguments, maybe
+you could split them out into some kind of radio config struct that you
+can pass around?
 
- drivers/net/wireless/rtlwifi/Kconfig         |  3 ++-
- drivers/net/wireless/rtlwifi/rtl8188ee/trx.c |  7 -------
- drivers/net/wireless/rtlwifi/rtl8192ce/trx.c |  4 ----
- drivers/net/wireless/rtlwifi/rtl8192ee/hw.c  | 24 ++++++++++++------------
- drivers/net/wireless/rtlwifi/rtl8192ee/trx.c |  7 -------
- drivers/net/wireless/rtlwifi/rtl8192se/trx.c |  4 ----
- drivers/net/wireless/rtlwifi/rtl8723ae/trx.c |  6 ------
- drivers/net/wireless/rtlwifi/rtl8723be/trx.c |  7 -------
- drivers/net/wireless/rtlwifi/rtl8821ae/trx.c |  7 -------
- 9 files changed, 14 insertions(+), 55 deletions(-)
+johannes
 
--- 
-1.8.4.5
 
