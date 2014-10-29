@@ -1,79 +1,162 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:38025 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752750AbaJQOw0 convert rfc822-to-8bit (ORCPT
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:45819 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755556AbaJ2RpO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Oct 2014 10:52:26 -0400
-Received: by mail-wi0-f173.google.com with SMTP id fb4so2330902wid.0
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Oct 2014 07:52:25 -0700 (PDT)
-Received: from [194.95.175.89] (edu175089.fhi-fokus.de. [194.95.175.89])
-        by mx.google.com with ESMTPSA id l5sm2352173wif.3.2014.10.17.07.52.22
-        for <linux-wireless@vger.kernel.org>
-        (version=TLSv1 cipher=RC4-SHA bits=128/128);
-        Fri, 17 Oct 2014 07:52:24 -0700 (PDT)
-Date: Fri, 17 Oct 2014 16:52:15 +0200
-Subject: Re: Frame Injection with NL80211_CMD_FRAME is failing (SOLVED)
-From: Hakan =?UTF-8?B?Q2/Fn2t1bg==?= <hakanberlin@gmail.com>
-To: <linux-wireless@vger.kernel.org>
-Message-ID: <D066F86F.F9DA%hakanberlin@gmail.com> (sfid-20141017_165230_146591_669F478E)
-Mime-version: 1.0
-Content-type: text/plain;
-	charset="UTF-8"
+	Wed, 29 Oct 2014 13:45:14 -0400
+Received: by mail-wi0-f176.google.com with SMTP id h11so2394186wiw.3
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2014 10:45:13 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH v2 16/34] staging: vt6655: mac80211 conversion: changes to CARDbSetPhyParameter
+Date: Wed, 29 Oct 2014 17:43:51 +0000
+Message-Id: <1414604649-9105-17-git-send-email-tvboxspy@gmail.com> (sfid-20141029_185354_357679_24D47DE6)
+In-Reply-To: <1414604649-9105-1-git-send-email-tvboxspy@gmail.com>
+References: <1414604649-9105-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+CARDbSetPhyParameter appears to use two different strutures to find supported
+rates.
 
-I found the problem. There is a check in /net/mac80211/cfg.c
+Remove PWLAN_IE_SUPP_RATES and use basic_rates to find rates supported.
 
-!rcu_access_pointer(sdata->bss->beacon))
+mac80211 now sets bShortSlotTime, bBarkerPreambleMd and byPreambleType remove
+these.
 
-I guess this related to beaconing. If it is not configured, off-channel is
-required in any case.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/card.c | 61 ++++++++-----------------------------------
+ 1 file changed, 11 insertions(+), 50 deletions(-)
 
-If you put the interface into AP mode and try to send frames with
-NL80211_CMD_FRAME you have to set the OFFCHANNEL_TX_OK flag in any case !!!
-
-
-Right now I am facing the problem of not getting probe-requests delivered
-to my master mode interface through NL80211_CMD_REGISTER_FRAME. It works
-only if I start an additional monitor interface on the same card. Any clue
-what to do to enable frame delivery to the AP interface without a monitor
-interface.
-
-
-Kind Regards,
-Hakan
-
-
-Am 03.10.14 12:04 schrieb "Hakan Coşkun" unter <hakanberlin@gmail.com>:
-
->Hi,
->
->For some time I am playing around with tools like scapy, senf, lorcon etc.
->Which allow to receive and construct frames in user-space and send them
->with
->pcap or raw sockets. I am trying to achieve the injection part with
->NL80211_CMD_FRAME. According to the description, only management frames
->are
->supported by this command. Am I right ?
->
->I put some printks into nl80211.c and mlme.c to follow the transmission
->part
->and to understand where my commands are failing.
->I¹ve put my interface into master mode (NL80211_IFTYPE_AP) in order pass
->the
->checks in cfg80211. When I try to send down a beacon frame or another
->management frame I got an error from cfg80211_mlme_mgmt_tx in mlme.c.
->rdev_mgmt_tx returns an error code. How can I figure out why my frame is
->not
->send down on the wiphy ?
->
->By the way, why is CMD_FRAME only restricted to management frames ?
->
->
->Regards,
->Hakan
->
-
+diff --git a/drivers/staging/vt6655/card.c b/drivers/staging/vt6655/card.c
+index eae6789..090c286 100644
+--- a/drivers/staging/vt6655/card.c
++++ b/drivers/staging/vt6655/card.c
+@@ -74,15 +74,6 @@
+ 
+ #define WAIT_BEACON_TX_DOWN_TMO         3    /* Times */
+ 
+-/* 1M,   2M,   5M,  11M,  18M,  24M,  36M,  54M */
+-static unsigned char abyDefaultSuppRatesG[] = {WLAN_EID_SUPP_RATES, 8, 0x02, 0x04, 0x0B, 0x16, 0x24, 0x30, 0x48, 0x6C};
+-/* 6M,  9M,  12M,  48M */
+-static unsigned char abyDefaultExtSuppRatesG[] = {WLAN_EID_EXTSUPP_RATES, 4, 0x0C, 0x12, 0x18, 0x60};
+-/* 6M,  9M,  12M,  18M,  24M,  36M,  48M,  54M */
+-static unsigned char abyDefaultSuppRatesA[] = {WLAN_EID_SUPP_RATES, 8, 0x0C, 0x12, 0x18, 0x24, 0x30, 0x48, 0x60, 0x6C};
+-/* 1M,   2M,   5M,  11M, */
+-static unsigned char abyDefaultSuppRatesB[] = {WLAN_EID_SUPP_RATES, 4, 0x02, 0x04, 0x0B, 0x16};
+-
+ /*---------------------  Static Variables  --------------------------*/
+ 
+ static const unsigned short cwRXBCNTSFOff[MAX_RATE] =
+@@ -384,14 +375,10 @@ bool CARDbSetPhyParameter(struct vnt_private *pDevice, CARD_PHY_TYPE ePHYType,
+ 	unsigned char bySIFS = 0;
+ 	unsigned char byDIFS = 0;
+ 	unsigned char byData;
+-	PWLAN_IE_SUPP_RATES pSupportRates = (PWLAN_IE_SUPP_RATES) pvSupportRateIEs;
+-	PWLAN_IE_SUPP_RATES pExtSupportRates = (PWLAN_IE_SUPP_RATES) pvExtSupportRateIEs;
++	int i;
+ 
+ 	/* Set SIFS, DIFS, EIFS, SlotTime, CwMin */
+ 	if (ePHYType == PHY_TYPE_11A) {
+-		if (pSupportRates == NULL)
+-			pSupportRates = (PWLAN_IE_SUPP_RATES) abyDefaultSuppRatesA;
+-
+ 		if (pDevice->byRFType == RF_AIROHA7230) {
+ 			/* AL7230 use single PAPE and connect to PAPE_2.4G */
+ 			MACvSetBBType(pDevice->PortOffset, BB_TYPE_11G);
+@@ -419,9 +406,6 @@ bool CARDbSetPhyParameter(struct vnt_private *pDevice, CARD_PHY_TYPE ePHYType,
+ 		byDIFS = C_SIFS_A + 2*C_SLOT_SHORT;
+ 		byCWMaxMin = 0xA4;
+ 	} else if (ePHYType == PHY_TYPE_11B) {
+-		if (pSupportRates == NULL)
+-			pSupportRates = (PWLAN_IE_SUPP_RATES) abyDefaultSuppRatesB;
+-
+ 		MACvSetBBType(pDevice->PortOffset, BB_TYPE_11B);
+ 		if (pDevice->byRFType == RF_AIROHA7230) {
+ 			pDevice->abyBBVGA[0] = 0x1C;
+@@ -445,10 +429,6 @@ bool CARDbSetPhyParameter(struct vnt_private *pDevice, CARD_PHY_TYPE ePHYType,
+ 		byDIFS = C_SIFS_BG + 2*C_SLOT_LONG;
+ 		byCWMaxMin = 0xA5;
+ 	} else { /* PK_TYPE_11GA & PK_TYPE_11GB */
+-		if (pSupportRates == NULL) {
+-			pSupportRates = (PWLAN_IE_SUPP_RATES) abyDefaultSuppRatesG;
+-			pExtSupportRates = (PWLAN_IE_SUPP_RATES) abyDefaultExtSuppRatesG;
+-		}
+ 		MACvSetBBType(pDevice->PortOffset, BB_TYPE_11G);
+ 		if (pDevice->byRFType == RF_AIROHA7230) {
+ 			pDevice->abyBBVGA[0] = 0x1C;
+@@ -468,32 +448,22 @@ bool CARDbSetPhyParameter(struct vnt_private *pDevice, CARD_PHY_TYPE ePHYType,
+ 		}
+ 		BBbWriteEmbedded(pDevice->PortOffset, 0x88, 0x08);
+ 		bySIFS = C_SIFS_BG;
+-		if (VNTWIFIbIsShortSlotTime(wCapInfo)) {
++
++		if (pDevice->bShortSlotTime) {
+ 			bySlot = C_SLOT_SHORT;
+ 			byDIFS = C_SIFS_BG + 2*C_SLOT_SHORT;
+ 		} else {
+ 			bySlot = C_SLOT_LONG;
+ 			byDIFS = C_SIFS_BG + 2*C_SLOT_LONG;
+ 		}
+-		if (VNTWIFIbyGetMaxSupportRate(pSupportRates, pExtSupportRates) > RATE_11M)
+-			byCWMaxMin = 0xA4;
+-		else
+-			byCWMaxMin = 0xA5;
+ 
+-		if (pDevice->bProtectMode != VNTWIFIbIsProtectMode(byERPField)) {
+-			pDevice->bProtectMode = VNTWIFIbIsProtectMode(byERPField);
+-			if (pDevice->bProtectMode)
+-				MACvEnableProtectMD(pDevice->PortOffset);
+-			else
+-				MACvDisableProtectMD(pDevice->PortOffset);
++		byCWMaxMin = 0xa4;
+ 
+-		}
+-		if (pDevice->bBarkerPreambleMd != VNTWIFIbIsBarkerMode(byERPField)) {
+-			pDevice->bBarkerPreambleMd = VNTWIFIbIsBarkerMode(byERPField);
+-			if (pDevice->bBarkerPreambleMd)
+-				MACvEnableBarkerPreambleMd(pDevice->PortOffset);
+-			else
+-				MACvDisableBarkerPreambleMd(pDevice->PortOffset);
++		for (i = RATE_54M; i >= RATE_6M; i--) {
++			if (pDevice->basic_rates & ((u32)(0x1 << i))) {
++				byCWMaxMin |= 0x1;
++				break;
++			}
+ 		}
+ 	}
+ 
+@@ -526,10 +496,6 @@ bool CARDbSetPhyParameter(struct vnt_private *pDevice, CARD_PHY_TYPE ePHYType,
+ 	if (pDevice->bySlot != bySlot) {
+ 		pDevice->bySlot = bySlot;
+ 		VNSvOutPortB(pDevice->PortOffset + MAC_REG_SLOT, pDevice->bySlot);
+-		if (pDevice->bySlot == C_SLOT_SHORT)
+-			pDevice->bShortSlotTime = true;
+-		else
+-			pDevice->bShortSlotTime = false;
+ 
+ 		BBvSetShortSlotTime(pDevice);
+ 	}
+@@ -537,14 +503,9 @@ bool CARDbSetPhyParameter(struct vnt_private *pDevice, CARD_PHY_TYPE ePHYType,
+ 		pDevice->byCWMaxMin = byCWMaxMin;
+ 		VNSvOutPortB(pDevice->PortOffset + MAC_REG_CWMAXMIN0, pDevice->byCWMaxMin);
+ 	}
+-	if (VNTWIFIbIsShortPreamble(wCapInfo))
+-		pDevice->byPreambleType = pDevice->byShortPreamble;
+-	else
+-		pDevice->byPreambleType = 0;
+ 
+-	s_vSetRSPINF(pDevice, ePHYType, pSupportRates, pExtSupportRates);
+-	pDevice->eCurrentPHYType = ePHYType;
+-	/* set for NDIS OID_802_11SUPPORTED_RATES */
++	s_vSetRSPINF(pDevice, ePHYType, NULL, NULL);
++
+ 	return true;
+ }
+ 
+-- 
+2.1.0
 
