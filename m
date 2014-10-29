@@ -1,30 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail1.bemta12.messagelabs.com ([216.82.251.2]:8845 "EHLO
-	mail1.bemta12.messagelabs.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751681AbaJMALE (ORCPT
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:39224 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932332AbaJ2R60 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Oct 2014 20:11:04 -0400
-Message-ID: <543B1889.3040600@netcommwireless.com> (sfid-20141013_021120_170491_DA81D5B4)
-Date: Mon, 13 Oct 2014 11:10:49 +1100
-From: Sourav <sourav.chakraborty@netcommwireless.com>
-MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: how to achieve SSID isolation
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Wed, 29 Oct 2014 13:58:26 -0400
+Received: by mail-wi0-f176.google.com with SMTP id h11so2426719wiw.3
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2014 10:58:25 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH v2 46/48] staging: vt6655: move MAKE_BEACON_RESERVED to device.h
+Date: Wed, 29 Oct 2014 17:56:04 +0000
+Message-Id: <1414605366-9335-47-git-send-email-tvboxspy@gmail.com> (sfid-20141029_185854_442622_196CB768)
+In-Reply-To: <1414605366-9335-1-git-send-email-tvboxspy@gmail.com>
+References: <1414605366-9335-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I understand that client isolation(in a single SSID is achieved using 
-"ap_isolate" parameter).
-Is there any parameter in hostapd.conf to achieve SSID 
-isolation......i.e the a client connected to that SSID, can't talk to 
-any other clients connected to any other SSID?
+Used only in function device_intr in device_main.c move macro.
 
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/device.h | 2 ++
+ drivers/staging/vt6655/wmgr.h   | 2 --
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/staging/vt6655/device.h b/drivers/staging/vt6655/device.h
+index e0c4069..45181a8 100644
+--- a/drivers/staging/vt6655/device.h
++++ b/drivers/staging/vt6655/device.h
+@@ -137,6 +137,8 @@
+ #define RUN_AT(x)                       (jiffies+(x))
+ #endif
+ 
++#define MAKE_BEACON_RESERVED	10  /* (us) */
++
+ /* DMA related */
+ #define RESERV_AC0DMA                   4
+ 
+diff --git a/drivers/staging/vt6655/wmgr.h b/drivers/staging/vt6655/wmgr.h
+index daf996c..ea23c79 100644
+--- a/drivers/staging/vt6655/wmgr.h
++++ b/drivers/staging/vt6655/wmgr.h
+@@ -54,8 +54,6 @@
+ 
+ #define DEFAULT_MGN_LIFETIME            8    // ms
+ 
+-#define MAKE_BEACON_RESERVED            10  //(us)
+-
+ #define TIM_MULTICAST_MASK           0x01
+ #define TIM_BITMAPOFFSET_MASK        0xFE
+ #define DEFAULT_DTIM_PERIOD             1
 -- 
-Warm Regards,
-Sourav
+2.1.0
 
-
-______________________________________________________________________
-This communication contains information which may be confidential or privileged. The information is intended solely for the use of the individual or entity named above.  If you are not the intended recipient, be aware that any disclosure, copying, distribution or use of the contents of this information is prohibited.  If you have received this communication in error, please notify me by telephone immediately.
-______________________________________________________________________
