@@ -1,46 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f176.google.com ([209.85.217.176]:61210 "EHLO
-	mail-lb0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933049AbaJVMif (ORCPT
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:55793 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755809AbaJ2RqK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2014 08:38:35 -0400
-Received: by mail-lb0-f176.google.com with SMTP id p9so2686094lbv.7
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Oct 2014 05:38:34 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] ath10k: call correct function for frag threshold
-Date: Wed, 22 Oct 2014 14:27:05 +0200
-Message-Id: <1413980825-11186-1-git-send-email-michal.kazior@tieto.com> (sfid-20141022_143838_338753_2801577C)
+	Wed, 29 Oct 2014 13:46:10 -0400
+Received: by mail-wi0-f177.google.com with SMTP id ex7so5288098wid.4
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2014 10:46:09 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH v2 32/34] staging: vt6655: vnt_rx_data: uCurrRSSI should have the value of *rssi
+Date: Wed, 29 Oct 2014 17:44:07 +0000
+Message-Id: <1414604649-9105-33-git-send-email-tvboxspy@gmail.com> (sfid-20141029_184622_424743_12E2BF76)
+In-Reply-To: <1414604649-9105-1-git-send-email-tvboxspy@gmail.com>
+References: <1414604649-9105-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rts threshold was being configured instead of
-fragmentation threshold.
+Fixes issue of byBBVGANew is wrong in device_intr
 
-Keep in mind available firmware binaries don't
-seem to support fragmentation anyway so this
-doesn't fix fragmentation threshold per se.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 2 +-
+ drivers/staging/vt6655/dpc.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index f6d2fd0..1d119116 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3872,7 +3872,7 @@ static int ath10k_set_frag_threshold(struct ieee80211_hw *hw, u32 value)
- 		ath10k_dbg(ar, ATH10K_DBG_MAC, "mac vdev %d fragmentation threshold %d\n",
- 			   arvif->vdev_id, value);
+diff --git a/drivers/staging/vt6655/dpc.c b/drivers/staging/vt6655/dpc.c
+index 036bbb0..11153ef 100644
+--- a/drivers/staging/vt6655/dpc.c
++++ b/drivers/staging/vt6655/dpc.c
+@@ -1382,7 +1382,7 @@ static bool vnt_rx_data(struct vnt_private *priv, struct sk_buff *skb,
+ 	RFvRSSITodBm(priv, *rssi, &rx_dbm);
  
--		ret = ath10k_mac_set_rts(arvif, value);
-+		ret = ath10k_mac_set_frag(arvif, value);
- 		if (ret) {
- 			ath10k_warn(ar, "failed to set fragmentation threshold for vdev %d: %d\n",
- 				    arvif->vdev_id, ret);
+ 	priv->byBBPreEDRSSI = (u8)rx_dbm + 1;
+-	priv->uCurrRSSI = priv->byBBPreEDRSSI;
++	priv->uCurrRSSI = *rssi;
+ 
+ 	skb_pull(skb, 4);
+ 	skb_trim(skb, frame_size);
 -- 
-1.8.5.3
+2.1.0
 
