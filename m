@@ -1,75 +1,197 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:52738 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757268AbaJ3TaO (ORCPT
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:43059 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756951AbaJ2R56 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Oct 2014 15:30:14 -0400
-Date: Thu, 30 Oct 2014 15:19:22 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
-Subject: Re: [PATCH 0/3] debugfs: adding helper for single seq_file
-Message-ID: <20141030191922.GA3768@tuxdriver.com> (sfid-20141030_203041_132470_11508DF7)
-References: <1414498752-9746-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1414498752-9746-1-git-send-email-arend@broadcom.com>
+	Wed, 29 Oct 2014 13:57:58 -0400
+Received: by mail-wg0-f49.google.com with SMTP id x13so2468568wgg.22
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2014 10:57:57 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH v2 31/48] staging: vt6655: dead code remove vntwifi.h
+Date: Wed, 29 Oct 2014 17:55:49 +0000
+Message-Id: <1414605366-9335-32-git-send-email-tvboxspy@gmail.com> (sfid-20141029_185811_326984_FD31813C)
+In-Reply-To: <1414605366-9335-1-git-send-email-tvboxspy@gmail.com>
+References: <1414605366-9335-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 28, 2014 at 01:19:09PM +0100, Arend van Spriel wrote:
-> The first patch was already posted earlier:
-> 
-> Message-ID: <1413043315-22332-1-git-send-email-arend@broadcom.com>
-> 
-> This series include changes in driver code to investigate potential
-> code savings. As example used the ath9k driver as it has a fair
-> amount of debugfs files. In this series it changes 7 debugfs entries
-> to use seq_file and the helper function. Below the output of the
-> size utility:
-> 
->    text	   data	    bss	    dec	    hex	filename
->  115968	   1225	     28	 117221	  1c9e5	original/ath9k.o
->  113224	   1225	     28	 114477	  1bf2d	seq_file/ath9k.o
->  111024	   1225	     28	 112277	  1b695	helper/ath9k.o
-> 
-> This series is for 3.19 kernel and applies to the driver-core-next
-> branch of the driver-core repository. If needed the ath9k patches
-> may be dropped for now and I will resubmit them to wireless-next
-> once the debugfs patch has made it into linux-next.
-> 
-> Arend van Spriel (3):
->   debugfs: add helper function to create device related seq_file
->   ath: use seq_file api for ath9k debugfs files
->   ath: ath9k: use debugfs_create_devm_seqfile() helper for seq_file
->     entries
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/device.h      |  1 -
+ drivers/staging/vt6655/device_main.c |  2 -
+ drivers/staging/vt6655/vntwifi.h     | 90 ------------------------------------
+ drivers/staging/vt6655/wmgr.h        |  5 --
+ 4 files changed, 98 deletions(-)
+ delete mode 100644 drivers/staging/vt6655/vntwifi.h
 
-Greg,
-
-If you are happy with the debugfs change then feel free to merge the
-wireless patches along with it.
-
-John
-
-> 
->  drivers/net/wireless/ath/ath9k/ahb.c   |   1 +
->  drivers/net/wireless/ath/ath9k/debug.c | 429 +++++++++++----------------------
->  drivers/net/wireless/ath/ath9k/debug.h |   3 +-
->  drivers/net/wireless/ath/ath9k/pci.c   |   1 +
->  fs/debugfs/file.c                      |  54 +++++
->  include/linux/debugfs.h                |  16 +-
->  6 files changed, 207 insertions(+), 297 deletions(-)
-> 
-> -- 
-> 1.9.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
+diff --git a/drivers/staging/vt6655/device.h b/drivers/staging/vt6655/device.h
+index b96d832..5e48608 100644
+--- a/drivers/staging/vt6655/device.h
++++ b/drivers/staging/vt6655/device.h
+@@ -507,7 +507,6 @@ struct vnt_private {
+ 	bool bEnablePSMode;
+ 	unsigned short wListenInterval;
+ 	bool bPWBitOn;
+-	WMAC_POWER_MODE         ePSMode;
+ 
+ 	/* GPIO Radio Control */
+ 	unsigned char byRadioCtl;
+diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
+index 1111d1e..d8fd44c 100644
+--- a/drivers/staging/vt6655/device_main.c
++++ b/drivers/staging/vt6655/device_main.c
+@@ -344,7 +344,6 @@ device_set_options(struct vnt_private *pDevice)
+ 	pDevice->wMaxTransmitMSDULifetime = DEFAULT_MSDU_LIFETIME;
+ 	pDevice->byShortPreamble = (pDevice->sOpts.flags & DEVICE_FLAGS_PREAMBLE_TYPE) ? 1 : 0;
+ 	pDevice->byOpMode = (pDevice->sOpts.flags & DEVICE_FLAGS_OP_MODE) ? 1 : 0;
+-	pDevice->ePSMode = (pDevice->sOpts.flags & DEVICE_FLAGS_PS_MODE) ? 1 : 0;
+ 	pDevice->b11hEnable = (pDevice->sOpts.flags & DEVICE_FLAGS_80211h_MODE) ? 1 : 0;
+ 	pDevice->bDiversityRegCtlON = (pDevice->sOpts.flags & DEVICE_FLAGS_DiversityANT) ? 1 : 0;
+ 	pDevice->uConnectionRate = pDevice->sOpts.data_rate;
+@@ -359,7 +358,6 @@ device_set_options(struct vnt_private *pDevice)
+ 
+ 	pr_debug(" uChannel= %d\n", (int)pDevice->uChannel);
+ 	pr_debug(" byOpMode= %d\n", (int)pDevice->byOpMode);
+-	pr_debug(" ePSMode= %d\n", (int)pDevice->ePSMode);
+ 	pr_debug(" wRTSThreshold= %d\n", (int)pDevice->wRTSThreshold);
+ 	pr_debug(" byShortRetryLimit= %d\n", (int)pDevice->byShortRetryLimit);
+ 	pr_debug(" byLongRetryLimit= %d\n", (int)pDevice->byLongRetryLimit);
+diff --git a/drivers/staging/vt6655/vntwifi.h b/drivers/staging/vt6655/vntwifi.h
+deleted file mode 100644
+index 2ba7713..0000000
+--- a/drivers/staging/vt6655/vntwifi.h
++++ /dev/null
+@@ -1,90 +0,0 @@
+-/*
+- * Copyright (c) 1996, 2003 VIA Networking Technologies, Inc.
+- * All rights reserved.
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2 of the License, or
+- * (at your option) any later version.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License along
+- * with this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+- *
+- *
+- * File: vntwifi.h
+- *
+- * Purpose: export VNT Host WiFi library function
+- *
+- * Author: Yiching Chen
+- *
+- * Date: Jan 7, 2004
+- *
+- */
+-
+-#ifndef __VNTWIFI_H__
+-#define __VNTWIFI_H__
+-
+-#include "ttype.h"
+-#include "80211mgr.h"
+-#include "card.h"
+-
+-/*---------------------  Export Definitions -------------------------*/
+-
+-// key CipherSuite
+-#define KEY_CTL_WEP         0x00
+-#define KEY_CTL_NONE        0x01
+-#define KEY_CTL_TKIP        0x02
+-#define KEY_CTL_CCMP        0x03
+-#define KEY_CTL_INVALID     0xFF
+-
+-#define CHANNEL_MAX_24G         14
+-
+-#define MAX_BSS_NUM             42
+-
+-// Pre-configured Authenticaiton Mode (from XP)
+-typedef enum tagWMAC_AUTHENTICATION_MODE {
+-	WMAC_AUTH_OPEN,
+-	WMAC_AUTH_SHAREKEY,
+-	WMAC_AUTH_AUTO,
+-	WMAC_AUTH_WPA,
+-	WMAC_AUTH_WPAPSK,
+-	WMAC_AUTH_WPANONE,
+-	WMAC_AUTH_WPA2,
+-	WMAC_AUTH_WPA2PSK,
+-	WMAC_AUTH_MAX       // Not a real mode, defined as upper bound
+-} WMAC_AUTHENTICATION_MODE, *PWMAC_AUTHENTICATION_MODE;
+-
+-typedef enum tagWMAC_ENCRYPTION_MODE {
+-	WMAC_ENCRYPTION_WEPEnabled,
+-	WMAC_ENCRYPTION_WEPDisabled,
+-	WMAC_ENCRYPTION_WEPKeyAbsent,
+-	WMAC_ENCRYPTION_WEPNotSupported,
+-	WMAC_ENCRYPTION_TKIPEnabled,
+-	WMAC_ENCRYPTION_TKIPKeyAbsent,
+-	WMAC_ENCRYPTION_AESEnabled,
+-	WMAC_ENCRYPTION_AESKeyAbsent
+-} WMAC_ENCRYPTION_MODE, *PWMAC_ENCRYPTION_MODE;
+-
+-// Pre-configured Mode (from XP)
+-
+-typedef enum tagWMAC_CONFIG_MODE {
+-	WMAC_CONFIG_ESS_STA = 0,
+-	WMAC_CONFIG_IBSS_STA,
+-	WMAC_CONFIG_AUTO,
+-	WMAC_CONFIG_AP
+-} WMAC_CONFIG_MODE, *PWMAC_CONFIG_MODE;
+-
+-typedef enum tagWMAC_POWER_MODE {
+-	WMAC_POWER_CAM,
+-	WMAC_POWER_FAST,
+-	WMAC_POWER_MAX
+-} WMAC_POWER_MODE, *PWMAC_POWER_MODE;
+-
+-
+-#endif //__VNTWIFI_H__
+diff --git a/drivers/staging/vt6655/wmgr.h b/drivers/staging/vt6655/wmgr.h
+index 7df62bb..ecbb8d4 100644
+--- a/drivers/staging/vt6655/wmgr.h
++++ b/drivers/staging/vt6655/wmgr.h
+@@ -39,7 +39,6 @@
+ #include "80211hdr.h"
+ #include "wcmd.h"
+ #include "bssdb.h"
+-#include "vntwifi.h"
+ #include "card.h"
+ 
+ /*---------------------  Export Definitions -------------------------*/
+@@ -189,7 +188,6 @@ typedef struct tagSMgmtObject {
+ 	unsigned char abyMACAddr[WLAN_ADDR_LEN];
+ 
+ 	// Configuration Mode
+-	WMAC_CONFIG_MODE        eConfigMode; // MAC pre-configed mode
+ 	CARD_PHY_TYPE           eCurrentPHYMode;
+ 	CARD_PHY_TYPE           eConfigPHYMode;
+ 
+@@ -245,8 +243,6 @@ typedef struct tagSMgmtObject {
+ 	unsigned char abyScanBSSID[WLAN_BSSID_LEN];
+ 
+ 	// Privacy
+-	WMAC_AUTHENTICATION_MODE eAuthenMode;
+-	WMAC_ENCRYPTION_MODE    eEncryptionMode;
+ 	bool bShareKeyAlgorithm;
+ 	unsigned char abyChallenge[WLAN_CHALLENGE_LEN];
+ 	bool bPrivacyInvoked;
+@@ -258,7 +254,6 @@ typedef struct tagSMgmtObject {
+ 	unsigned char byDTIMPeriod;
+ 
+ 	// Power saving state vars
+-	WMAC_POWER_MODE         ePSMode;
+ 	unsigned short wListenInterval;
+ 	unsigned short wCountToWakeUp;
+ 	bool bInTIMWake;
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+2.1.0
+
