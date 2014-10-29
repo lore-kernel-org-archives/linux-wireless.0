@@ -1,46 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailrelay005.isp.belgacom.be ([195.238.6.171]:43623 "EHLO
-	mailrelay005.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751240AbaJISge (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:24220 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756967AbaJ2VWM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2014 14:36:34 -0400
-From: Fabian Frederick <fabf@skynet.be>
-To: linux-kernel@vger.kernel.org
-Cc: Fabian Frederick <fabf@skynet.be>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 1/1 net-next] mac80211: directly return ieee80211_vif_use_reserved_context()
-Date: Thu,  9 Oct 2014 20:36:22 +0200
-Message-Id: <1412879782-8818-1-git-send-email-fabf@skynet.be> (sfid-20141009_203702_764558_8334F737)
+	Wed, 29 Oct 2014 17:22:12 -0400
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <wireless-regdb@lists.infradead.org>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 5/7] wireless-regdb: Add 160 MHz channel bandwidth for Malaysia (MY)
+Date: Wed, 29 Oct 2014 23:21:28 +0200
+Message-ID: <1414617690-29786-5-git-send-email-jouni@qca.qualcomm.com> (sfid-20141029_222216_836950_88DA3DEA)
+In-Reply-To: <1414617690-29786-1-git-send-email-jouni@qca.qualcomm.com>
+References: <1414617690-29786-1-git-send-email-jouni@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-No need to store ieee80211_vif_use_reserved_context result and test it before returning.
+This extends regulatory rules for Malaysia to allow 160 MHz VHT channels
+to be used in 5.15-5.25 GHz, 5.25-5.35 GHz. Since the rules between
+5.15-5.25 and 5.25-5.35 GHz ranges are different (e.g., DFS
+requirement), the AUTO-BW flag needs to be used to allow the maximum
+channel bandwidth to be determined automatically based on two rules.
 
-Signed-off-by: Fabian Frederick <fabf@skynet.be>
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
 ---
- net/mac80211/cfg.c | 6 +-----
- 1 file changed, 1 insertion(+), 5 deletions(-)
+ db.txt | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index fb6a150..c76b457 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2850,11 +2850,7 @@ static int __ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
- 		if (sdata->reserved_ready)
- 			return 0;
+diff --git a/db.txt b/db.txt
+index 10aaf44..0df4644 100644
+--- a/db.txt
++++ b/db.txt
+@@ -801,8 +801,8 @@ country MW: DFS-ETSI
  
--		err = ieee80211_vif_use_reserved_context(sdata);
--		if (err)
--			return err;
--
--		return 0;
-+		return ieee80211_vif_use_reserved_context(sdata);
- 	}
+ country MY: DFS-FCC
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (17)
+-	(5250 - 5330 @ 80), (23), DFS
++	(5170 - 5250 @ 80), (17), AUTO-BW
++	(5250 - 5330 @ 80), (23), DFS, AUTO-BW
+ 	(5735 - 5835 @ 80), (30)
  
- 	if (!cfg80211_chandef_identical(&sdata->vif.bss_conf.chandef,
+ country MX: DFS-FCC
 -- 
-1.9.3
+1.9.1
 
