@@ -1,77 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f182.google.com ([209.85.212.182]:39255 "EHLO
-	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932289AbaJ2R62 (ORCPT
+Received: from mail-wg0-f47.google.com ([74.125.82.47]:51901 "EHLO
+	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932072AbaJ2R6Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2014 13:58:28 -0400
-Received: by mail-wi0-f182.google.com with SMTP id d1so5305769wiv.3
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2014 10:58:27 -0700 (PDT)
+	Wed, 29 Oct 2014 13:58:16 -0400
+Received: by mail-wg0-f47.google.com with SMTP id a1so3875182wgh.6
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2014 10:58:14 -0700 (PDT)
 From: Malcolm Priestley <tvboxspy@gmail.com>
 To: gregkh@linuxfoundation.org
 Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
 	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH v2 47/48] staging: vt6655: dead code remove wmgr.h
-Date: Wed, 29 Oct 2014 17:56:05 +0000
-Message-Id: <1414605366-9335-48-git-send-email-tvboxspy@gmail.com> (sfid-20141029_185848_302988_08589CD1)
+Subject: [PATCH v2 40/48] staging: vt6655: dead code remove country.h
+Date: Wed, 29 Oct 2014 17:55:58 +0000
+Message-Id: <1414605366-9335-41-git-send-email-tvboxspy@gmail.com> (sfid-20141029_191320_954516_77E662BD)
 In-Reply-To: <1414605366-9335-1-git-send-email-tvboxspy@gmail.com>
 References: <1414605366-9335-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-on removal needs to be replaced by card.h in device.h
-
 Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/staging/vt6655/device.h      |  2 +-
- drivers/staging/vt6655/device_main.c |  1 -
- drivers/staging/vt6655/power.c       |  1 -
- drivers/staging/vt6655/wmgr.h        | 72 ------------------------------------
- 4 files changed, 1 insertion(+), 75 deletions(-)
- delete mode 100644 drivers/staging/vt6655/wmgr.h
+ drivers/staging/vt6655/channel.c |   1 -
+ drivers/staging/vt6655/country.h | 161 ---------------------------------------
+ 2 files changed, 162 deletions(-)
+ delete mode 100644 drivers/staging/vt6655/country.h
 
-diff --git a/drivers/staging/vt6655/device.h b/drivers/staging/vt6655/device.h
-index 45181a8..d0855bd 100644
---- a/drivers/staging/vt6655/device.h
-+++ b/drivers/staging/vt6655/device.h
-@@ -68,7 +68,7 @@
+diff --git a/drivers/staging/vt6655/channel.c b/drivers/staging/vt6655/channel.c
+index 41146eb..6bd5f16 100644
+--- a/drivers/staging/vt6655/channel.c
++++ b/drivers/staging/vt6655/channel.c
+@@ -21,7 +21,6 @@
+  */
  
- #include "device_cfg.h"
- #include "ttype.h"
--#include "wmgr.h"
-+#include "card.h"
- #include "mib.h"
- #include "srom.h"
- #include "desc.h"
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index 5c91c2f..f0b336b 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -58,7 +58,6 @@
- #include "channel.h"
  #include "baseband.h"
- #include "mac.h"
--#include "wmgr.h"
- #include "power.h"
- #include "rxtx.h"
- #include "dpc.h"
-diff --git a/drivers/staging/vt6655/power.c b/drivers/staging/vt6655/power.c
-index 6f83650..a8aedee 100644
---- a/drivers/staging/vt6655/power.c
-+++ b/drivers/staging/vt6655/power.c
-@@ -40,7 +40,6 @@
- #include "ttype.h"
- #include "mac.h"
+-#include "country.h"
+ #include "channel.h"
  #include "device.h"
--#include "wmgr.h"
- #include "power.h"
- #include "card.h"
- 
-diff --git a/drivers/staging/vt6655/wmgr.h b/drivers/staging/vt6655/wmgr.h
+ #include "rf.h"
+diff --git a/drivers/staging/vt6655/country.h b/drivers/staging/vt6655/country.h
 deleted file mode 100644
-index ea23c79..0000000
---- a/drivers/staging/vt6655/wmgr.h
+index 2365fb1..0000000
+--- a/drivers/staging/vt6655/country.h
 +++ /dev/null
-@@ -1,72 +0,0 @@
+@@ -1,161 +0,0 @@
 -/*
 - * Copyright (c) 1996, 2003 VIA Networking Technologies, Inc.
 - * All rights reserved.
@@ -91,59 +62,148 @@ index ea23c79..0000000
 - * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 - *
 - *
-- * File: wmgr.h
+- * File: country.h
 - *
-- * Purpose:
+- * Purpose: Country Code information
 - *
-- * Author: lyndon chen
+- * Author: Lucas Lin
 - *
-- * Date: Jan 2, 2003
-- *
-- * Functions:
-- *
-- * Revision History:
+- * Date: Dec 23, 2004
 - *
 - */
 -
--#ifndef __WMGR_H__
--#define __WMGR_H__
+-#ifndef __COUNTRY_H__
+-#define __COUNTRY_H__
 -
 -#include "ttype.h"
--#include "card.h"
 -
--/*---------------------  Export Definitions -------------------------*/
+-/************************************************************************
+- * The definition here should be complied with the INF country order
+- * Please check with VNWL.inf/VNWL64.inf/VNWL*.inf
+- ************************************************************************/
+-typedef enum _COUNTRY_CODE {
+-	CCODE_FCC = 0,
+-	CCODE_TELEC,
+-	CCODE_ETSI,
+-	CCODE_RESV3,
+-	CCODE_RESV4,
+-	CCODE_RESV5,
+-	CCODE_RESV6,
+-	CCODE_RESV7,
+-	CCODE_RESV8,
+-	CCODE_RESV9,
+-	CCODE_RESVa,
+-	CCODE_RESVb,
+-	CCODE_RESVc,
+-	CCODE_RESVd,
+-	CCODE_RESVe,
+-	CCODE_ALLBAND,
+-	CCODE_ALBANIA,
+-	CCODE_ALGERIA,
+-	CCODE_ARGENTINA,
+-	CCODE_ARMENIA,
+-	CCODE_AUSTRALIA,
+-	CCODE_AUSTRIA,
+-	CCODE_AZERBAIJAN,
+-	CCODE_BAHRAIN,
+-	CCODE_BELARUS,
+-	CCODE_BELGIUM,
+-	CCODE_BELIZE,
+-	CCODE_BOLIVIA,
+-	CCODE_BRAZIL,
+-	CCODE_BRUNEI_DARUSSALAM,
+-	CCODE_BULGARIA,
+-	CCODE_CANADA,
+-	CCODE_CHILE,
+-	CCODE_CHINA,
+-	CCODE_COLOMBIA,
+-	CCODE_COSTA_RICA,
+-	CCODE_CROATIA,
+-	CCODE_CYPRUS,
+-	CCODE_CZECH,
+-	CCODE_DENMARK,
+-	CCODE_DOMINICAN_REPUBLIC,
+-	CCODE_ECUADOR,
+-	CCODE_EGYPT,
+-	CCODE_EL_SALVADOR,
+-	CCODE_ESTONIA,
+-	CCODE_FINLAND,
+-	CCODE_FRANCE,
+-	CCODE_GERMANY,
+-	CCODE_GREECE,
+-	CCODE_GEORGIA,
+-	CCODE_GUATEMALA,
+-	CCODE_HONDURAS,
+-	CCODE_HONG_KONG,
+-	CCODE_HUNGARY,
+-	CCODE_ICELAND,
+-	CCODE_INDIA,
+-	CCODE_INDONESIA,
+-	CCODE_IRAN,
+-	CCODE_IRELAND,
+-	CCODE_ITALY,
+-	CCODE_ISRAEL,
+-	CCODE_JAPAN,
+-	CCODE_JORDAN,
+-	CCODE_KAZAKHSTAN,
+-	CCODE_KUWAIT,
+-	CCODE_LATVIA,
+-	CCODE_LEBANON,
+-	CCODE_LEICHTENSTEIN,
+-	CCODE_LITHUANIA,
+-	CCODE_LUXEMBURG,
+-	CCODE_MACAU,
+-	CCODE_MACEDONIA,
+-	CCODE_MALTA,
+-	CCODE_MALAYSIA,
+-	CCODE_MEXICO,
+-	CCODE_MONACO,
+-	CCODE_MOROCCO,
+-	CCODE_NETHERLANDS,
+-	CCODE_NEW_ZEALAND,
+-	CCODE_NORTH_KOREA,
+-	CCODE_NORWAY,
+-	CCODE_OMAN,
+-	CCODE_PAKISTAN,
+-	CCODE_PANAMA,
+-	CCODE_PERU,
+-	CCODE_PHILIPPINES,
+-	CCODE_POLAND,
+-	CCODE_PORTUGAL,
+-	CCODE_PUERTO_RICO,
+-	CCODE_QATAR,
+-	CCODE_ROMANIA,
+-	CCODE_RUSSIA,
+-	CCODE_SAUDI_ARABIA,
+-	CCODE_SINGAPORE,
+-	CCODE_SLOVAKIA,
+-	CCODE_SLOVENIA,
+-	CCODE_SOUTH_AFRICA,
+-	CCODE_SOUTH_KOREA,
+-	CCODE_SPAIN,
+-	CCODE_SWEDEN,
+-	CCODE_SWITZERLAND,
+-	CCODE_SYRIA,
+-	CCODE_TAIWAN,
+-	CCODE_THAILAND,
+-	CCODE_TRINIDAD_TOBAGO,
+-	CCODE_TUNISIA,
+-	CCODE_TURKEY,
+-	CCODE_UK,
+-	CCODE_UKRAINE,
+-	CCODE_UNITED_ARAB_EMIRATES,
+-	CCODE_UNITED_STATES,
+-	CCODE_URUGUAY,
+-	CCODE_UZBEKISTAN,
+-	CCODE_VENEZUELA,
+-	CCODE_VIETNAM,
+-	CCODE_YEMEN,
+-	CCODE_ZIMBABWE,
+-	CCODE_JAPAN_W52_W53,
+-	CCODE_MAX
+-} COUNTRY_CODE;
 -
--// Scan time
--#define PROBE_DELAY                  100  // (us)
--#define SWITCH_CHANNEL_DELAY         200 // (us)
--#define WLAN_SCAN_MINITIME           25   // (ms)
--#define WLAN_SCAN_MAXTIME            100  // (ms)
--#define TRIVIAL_SYNC_DIFFERENCE      0    // (us)
--#define DEFAULT_IBSS_BI              100  // (ms)
--
--#define WCMD_ACTIVE_SCAN_TIME   50 //(ms)
--#define WCMD_PASSIVE_SCAN_TIME  100 //(ms)
--
--#define DEFAULT_MSDU_LIFETIME           512  // ms
--
--#define DEFAULT_MGN_LIFETIME            8    // ms
--
--#define TIM_MULTICAST_MASK           0x01
--#define TIM_BITMAPOFFSET_MASK        0xFE
--#define DEFAULT_DTIM_PERIOD             1
--
--#define AP_LONG_RETRY_LIMIT             4
--
--#define DEFAULT_IBSS_CHANNEL            6  //2.4G
--
--/*---------------------  Export Classes  ----------------------------*/
--
--/*---------------------  Export Variables  --------------------------*/
--
--/*---------------------  Export Types  ------------------------------*/
--#define timer_expire(timer, next_tick)   mod_timer(&timer, RUN_AT(next_tick))
--
--#endif // __WMGR_H__
+-#endif  /* __COUNTRY_H__ */
 -- 
 2.1.0
 
