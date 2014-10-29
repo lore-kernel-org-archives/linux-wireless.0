@@ -1,49 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f49.google.com ([209.85.218.49]:49860 "EHLO
-	mail-oi0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753865AbaJGOpd (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:47665 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757106AbaJ2VWM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Oct 2014 10:45:33 -0400
-Message-ID: <5433FC88.6040909@lwfinger.net> (sfid-20141007_164602_864505_3B973AF0)
-Date: Tue, 07 Oct 2014 09:45:28 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 29 Oct 2014 17:22:12 -0400
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <wireless-regdb@lists.infradead.org>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/7] wireless-regdb: Add 160 MHz channel bandwidth for Dominican Republic (DO)
+Date: Wed, 29 Oct 2014 23:21:25 +0200
+Message-ID: <1414617690-29786-2-git-send-email-jouni@qca.qualcomm.com> (sfid-20141029_222219_295736_6CF0260C)
+In-Reply-To: <1414617690-29786-1-git-send-email-jouni@qca.qualcomm.com>
+References: <1414617690-29786-1-git-send-email-jouni@qca.qualcomm.com>
 MIME-Version: 1.0
-To: David Miller <davem@davemloft.net>, linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-next 2014-10-03
-References: <20141003180151.GE27414@tuxdriver.com>	<20141005.213511.339356320070784471.davem@davemloft.net>	<20141005.213853.488066614144870837.davem@davemloft.net> <20141007.004724.187788111776188480.davem@davemloft.net>
-In-Reply-To: <20141007.004724.187788111776188480.davem@davemloft.net>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/06/2014 11:47 PM, David Miller wrote:
-> From: David Miller <davem@davemloft.net>
-> Date: Sun, 05 Oct 2014 21:38:53 -0400 (EDT)
->
->> From: David Miller <davem@davemloft.net>
->> Date: Sun, 05 Oct 2014 21:35:11 -0400 (EDT)
->>
->>> From: "John W. Linville" <linville@tuxdriver.com>
->>> Date: Fri, 3 Oct 2014 14:01:52 -0400
->>>
->>>> Please pull tihs batch of updates intended for the 3.18 stream!
->>>
->>> Pulled, thanks for the stellar pull request text, as always.
->>
->> John, what's the deal with the following?  Will it be resolved by the
->> driver being removed from the staging tree?
->>
->> WARNING: drivers/staging/rtl8192ee/r8192ee: 'rtl_evm_dbm_jaguar' exported twice. Previous export was in drivers/net/wireless/rtlwifi/rtlwifi.ko
->
-> John, ping?
+This extends regulatory rules for Dominican Republic to allow 160 MHz
+VHT channels to be used in 5.15-5.25 GHz, 5.25-5.35 GHz. Since the rules
+between 5.15-5.25 and 5.25-5.35 GHz ranges are different (e.g., DFS
+requirement), the AUTO-BW flag needs to be used to allow the maximum
+channel bandwidth to be determined automatically based on two rules.
 
-David,
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+---
+ db.txt | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Yes, that message will go away once the removal of the staging driver, which was 
-handled by GregKH, gets merged with the changes from John.
-
-Larry
-
+diff --git a/db.txt b/db.txt
+index 8d43f45..999bc5f 100644
+--- a/db.txt
++++ b/db.txt
+@@ -337,8 +337,8 @@ country DM: DFS-FCC
+ 
+ country DO: DFS-FCC
+ 	(2402 - 2472 @ 40), (30)
+-	(5170 - 5250 @ 80), (17)
+-	(5250 - 5330 @ 80), (23), DFS
++	(5170 - 5250 @ 80), (17), AUTO-BW
++	(5250 - 5330 @ 80), (23), DFS, AUTO-BW
+ 	(5735 - 5835 @ 80), (30)
+ 
+ country DZ: DFS-JP
+-- 
+1.9.1
 
