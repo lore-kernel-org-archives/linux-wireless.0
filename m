@@ -1,55 +1,210 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:58762 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757832AbaJ3O3B (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Oct 2014 10:29:01 -0400
-Message-ID: <1414679338.2918.6.camel@jrissane-mobl.ger.corp.intel.com> (sfid-20141030_152905_523778_2AE2FC7D)
-Subject: Re: [PATCH 2/3] mac80211-hwsim: Provide multicast event for
- HWSIM_CMD_NEW_RADIO
-From: Jukka Rissanen <jukka.rissanen@linux.intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 30 Oct 2014 16:28:58 +0200
-In-Reply-To: <1414598014.1827.18.camel@jlt4.sipsolutions.net>
-References: <1414406688-3827-1-git-send-email-jukka.rissanen@linux.intel.com>
-	 <1414406688-3827-3-git-send-email-jukka.rissanen@linux.intel.com>
-	 (sfid-20141027_114540_063766_7C3E5B4A) <1414597807.1827.16.camel@jlt4.sipsolutions.net>
-	 (sfid-20141029_165015_857664_0FB9784E) <1414598014.1827.18.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:48060 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755323AbaJ2RpD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Oct 2014 13:45:03 -0400
+Received: by mail-wi0-f180.google.com with SMTP id hi2so5272083wib.7
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2014 10:45:01 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH v2 09/34] staging: vt6655: mac80211 conversion add channel bands
+Date: Wed, 29 Oct 2014 17:43:44 +0000
+Message-Id: <1414604649-9105-10-git-send-email-tvboxspy@gmail.com> (sfid-20141029_184510_208124_CF781FF6)
+In-Reply-To: <1414604649-9105-1-git-send-email-tvboxspy@gmail.com>
+References: <1414604649-9105-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+Add rates and channels according to rf type for vnt_init_bands which is a
+mac80211 replacement for init_channel_table.
 
-On ke, 2014-10-29 at 16:53 +0100, Johannes Berg wrote:
-> On Wed, 2014-10-29 at 16:50 +0100, Johannes Berg wrote:
-> > On Mon, 2014-10-27 at 12:44 +0200, Jukka Rissanen wrote:
-> > 
-> > > +static void mcast_msg(struct sk_buff *mcast_skb, struct genl_info *info)
-> > > +{
-> > > +	if (info)
-> > > +		genl_notify(&hwsim_genl_family, mcast_skb,
-> > > +			    genl_info_net(info), info->snd_portid,
-> > > +			    HWSIM_MCGRP_CONFIG, info->nlhdr, GFP_KERNEL);
-> > > +	else
-> > > +		genlmsg_multicast(&hwsim_genl_family, mcast_skb, 0,
-> > > +				  HWSIM_MCGRP_CONFIG, GFP_KERNEL);
-> > > +}
-> > 
-> > Also - given the parameters and what this does, that's a bad name for
-> > the function. Never mind that it doesn't have any sort of identifier
-> > (say hwsim_ prefix), it doesn't even do what it says it does.
-> 
-> Or maybe it does? I'm unsure what genl_notify() does...
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/channel.c     | 140 +++++++++++++++++++++++++++++++++++
+ drivers/staging/vt6655/channel.h     |   2 +
+ drivers/staging/vt6655/device_main.c |   2 +
+ 3 files changed, 144 insertions(+)
 
-Yes, genl_notify() will eventually call nlmsg_notify() which will
-multicast the message because we have set the group id in the call.
-
-http://lxr.free-electrons.com/source/net/netlink/af_netlink.c#L2856
-
-
-Cheers,
-Jukka
-
+diff --git a/drivers/staging/vt6655/channel.c b/drivers/staging/vt6655/channel.c
+index a19965f..4b3c798 100644
+--- a/drivers/staging/vt6655/channel.c
++++ b/drivers/staging/vt6655/channel.c
+@@ -352,6 +352,146 @@ static struct
+ 
+ /*---------------------  Export Functions  --------------------------*/
+ 
++static struct ieee80211_rate vnt_rates_bg[] = {
++	{ .bitrate = 10,  .hw_value = RATE_1M },
++	{ .bitrate = 20,  .hw_value = RATE_2M },
++	{ .bitrate = 55,  .hw_value = RATE_5M },
++	{ .bitrate = 110, .hw_value = RATE_11M },
++	{ .bitrate = 60,  .hw_value = RATE_6M },
++	{ .bitrate = 90,  .hw_value = RATE_9M },
++	{ .bitrate = 120, .hw_value = RATE_12M },
++	{ .bitrate = 180, .hw_value = RATE_18M },
++	{ .bitrate = 240, .hw_value = RATE_24M },
++	{ .bitrate = 360, .hw_value = RATE_36M },
++	{ .bitrate = 480, .hw_value = RATE_48M },
++	{ .bitrate = 540, .hw_value = RATE_54M },
++};
++
++static struct ieee80211_rate vnt_rates_a[] = {
++	{ .bitrate = 60,  .hw_value = RATE_6M },
++	{ .bitrate = 90,  .hw_value = RATE_9M },
++	{ .bitrate = 120, .hw_value = RATE_12M },
++	{ .bitrate = 180, .hw_value = RATE_18M },
++	{ .bitrate = 240, .hw_value = RATE_24M },
++	{ .bitrate = 360, .hw_value = RATE_36M },
++	{ .bitrate = 480, .hw_value = RATE_48M },
++	{ .bitrate = 540, .hw_value = RATE_54M },
++};
++
++static struct ieee80211_channel vnt_channels_2ghz[] = {
++	{ .center_freq = 2412, .hw_value = 1 },
++	{ .center_freq = 2417, .hw_value = 2 },
++	{ .center_freq = 2422, .hw_value = 3 },
++	{ .center_freq = 2427, .hw_value = 4 },
++	{ .center_freq = 2432, .hw_value = 5 },
++	{ .center_freq = 2437, .hw_value = 6 },
++	{ .center_freq = 2442, .hw_value = 7 },
++	{ .center_freq = 2447, .hw_value = 8 },
++	{ .center_freq = 2452, .hw_value = 9 },
++	{ .center_freq = 2457, .hw_value = 10 },
++	{ .center_freq = 2462, .hw_value = 11 },
++	{ .center_freq = 2467, .hw_value = 12 },
++	{ .center_freq = 2472, .hw_value = 13 },
++	{ .center_freq = 2484, .hw_value = 14 }
++};
++
++static struct ieee80211_channel vnt_channels_5ghz[] = {
++	{ .center_freq = 4915, .hw_value = 15 },
++	{ .center_freq = 4920, .hw_value = 16 },
++	{ .center_freq = 4925, .hw_value = 17 },
++	{ .center_freq = 4935, .hw_value = 18 },
++	{ .center_freq = 4940, .hw_value = 19 },
++	{ .center_freq = 4945, .hw_value = 20 },
++	{ .center_freq = 4960, .hw_value = 21 },
++	{ .center_freq = 4980, .hw_value = 22 },
++	{ .center_freq = 5035, .hw_value = 23 },
++	{ .center_freq = 5040, .hw_value = 24 },
++	{ .center_freq = 5045, .hw_value = 25 },
++	{ .center_freq = 5055, .hw_value = 26 },
++	{ .center_freq = 5060, .hw_value = 27 },
++	{ .center_freq = 5080, .hw_value = 28 },
++	{ .center_freq = 5170, .hw_value = 29 },
++	{ .center_freq = 5180, .hw_value = 30 },
++	{ .center_freq = 5190, .hw_value = 31 },
++	{ .center_freq = 5200, .hw_value = 32 },
++	{ .center_freq = 5210, .hw_value = 33 },
++	{ .center_freq = 5220, .hw_value = 34 },
++	{ .center_freq = 5230, .hw_value = 35 },
++	{ .center_freq = 5240, .hw_value = 36 },
++	{ .center_freq = 5260, .hw_value = 37 },
++	{ .center_freq = 5280, .hw_value = 38 },
++	{ .center_freq = 5300, .hw_value = 39 },
++	{ .center_freq = 5320, .hw_value = 40 },
++	{ .center_freq = 5500, .hw_value = 41 },
++	{ .center_freq = 5520, .hw_value = 42 },
++	{ .center_freq = 5540, .hw_value = 43 },
++	{ .center_freq = 5560, .hw_value = 44 },
++	{ .center_freq = 5580, .hw_value = 45 },
++	{ .center_freq = 5600, .hw_value = 46 },
++	{ .center_freq = 5620, .hw_value = 47 },
++	{ .center_freq = 5640, .hw_value = 48 },
++	{ .center_freq = 5660, .hw_value = 49 },
++	{ .center_freq = 5680, .hw_value = 50 },
++	{ .center_freq = 5700, .hw_value = 51 },
++	{ .center_freq = 5745, .hw_value = 52 },
++	{ .center_freq = 5765, .hw_value = 53 },
++	{ .center_freq = 5785, .hw_value = 54 },
++	{ .center_freq = 5805, .hw_value = 55 },
++	{ .center_freq = 5825, .hw_value = 56 }
++};
++
++static struct ieee80211_supported_band vnt_supported_2ghz_band = {
++	.channels = vnt_channels_2ghz,
++	.n_channels = ARRAY_SIZE(vnt_channels_2ghz),
++	.bitrates = vnt_rates_bg,
++	.n_bitrates = ARRAY_SIZE(vnt_rates_bg),
++};
++
++static struct ieee80211_supported_band vnt_supported_5ghz_band = {
++	.channels = vnt_channels_5ghz,
++	.n_channels = ARRAY_SIZE(vnt_channels_5ghz),
++	.bitrates = vnt_rates_a,
++	.n_bitrates = ARRAY_SIZE(vnt_rates_a),
++};
++
++void vnt_init_bands(struct vnt_private *priv)
++{
++	struct ieee80211_channel *ch;
++	int i;
++
++	switch (priv->byRFType) {
++	case RF_AIROHA7230:
++	case RF_UW2452:
++	case RF_NOTHING:
++	default:
++		ch = vnt_channels_5ghz;
++
++		for (i = 0; i < ARRAY_SIZE(vnt_channels_5ghz); i++) {
++			ch[i].max_power = 0x3f;
++			ch[i].flags = IEEE80211_CHAN_NO_HT40;
++		}
++
++		priv->hw->wiphy->bands[IEEE80211_BAND_5GHZ] =
++						&vnt_supported_5ghz_band;
++	/* fallthrough */
++	case RF_RFMD2959:
++	case RF_AIROHA:
++	case RF_AL2230S:
++	case RF_UW2451:
++	case RF_VT3226:
++		ch = vnt_channels_2ghz;
++
++		for (i = 0; i < ARRAY_SIZE(vnt_channels_2ghz); i++) {
++			ch[i].max_power = 0x3f;
++			ch[i].flags = IEEE80211_CHAN_NO_HT40;
++		}
++
++		priv->hw->wiphy->bands[IEEE80211_BAND_2GHZ] =
++						&vnt_supported_2ghz_band;
++		break;
++	}
++}
++
+ /**
+  * is_channel_valid() - Is Country Channel Valid
+  *  @ChanneIndex: defined as VT3253 MAC channel:
+diff --git a/drivers/staging/vt6655/channel.h b/drivers/staging/vt6655/channel.h
+index 4f44c8a..0d3e1f1 100644
+--- a/drivers/staging/vt6655/channel.h
++++ b/drivers/staging/vt6655/channel.h
+@@ -33,6 +33,8 @@ typedef struct tagSChannelTblElement {
+ 	unsigned char byMAP;
+ } SChannelTblElement, *PSChannelTblElement;
+ 
++void vnt_init_bands(struct vnt_private *);
++
+ bool is_channel_valid(unsigned int CountryCode);
+ void init_channel_table(void *pDeviceHandler);
+ unsigned char get_channel_mapping(void *pDeviceHandler, unsigned char byChannelNumber, CARD_PHY_TYPE ePhyType);
+diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
+index 23d9344..054841b 100644
+--- a/drivers/staging/vt6655/device_main.c
++++ b/drivers/staging/vt6655/device_main.c
+@@ -3320,6 +3320,8 @@ int vnt_init(struct vnt_private *priv)
+ {
+ 	SET_IEEE80211_PERM_ADDR(priv->hw, priv->abyCurrentNetAddr);
+ 
++	vnt_init_bands(priv);
++
+ 	if (ieee80211_register_hw(priv->hw))
+ 		return -ENODEV;
+ 
+-- 
+2.1.0
 
