@@ -1,59 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:60523 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751645AbaJOO41 (ORCPT
+Received: from userp1040.oracle.com ([156.151.31.81]:29378 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934256AbaJ2Psp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Oct 2014 10:56:27 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] cfg80211: Warn once for delayed scan completion
-Date: Wed, 15 Oct 2014 20:27:22 +0530
-Message-Id: <1413385042-17903-1-git-send-email-sujith@msujith.org> (sfid-20141015_165634_906220_D8BC6D2F)
+	Wed, 29 Oct 2014 11:48:45 -0400
+Date: Wed, 29 Oct 2014 18:48:05 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
+	kernel-janitors@vger.kernel.org
+Subject: [patch] ath9k: fix some debugfs output
+Message-ID: <20141029154805.GC5290@mwanda> (sfid-20141029_164859_514487_752484C9)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+The right shift operation has higher precedence than the mask so we
+left shift by "(i * 3)" and then immediately right shift by "(i * 3)"
+then we mask.  It should be left shift, mask, and then right shift.
 
-Scan completion for drivers that use HW scanning
-causes a warning to be hit if the interface has been
-removed. Since cfg80211 ensures that both use-after-free
-and scheduling a new scan doesn't happen in this case,
-WARN_ON_ONCE can be used. With ath9k this warning is seen
-many times when multi-channel-concurrency is enabled.
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- net/wireless/core.c | 2 +-
- net/wireless/scan.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index f52a4cd..2be08e8 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -931,7 +931,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
- 	case NETDEV_DOWN:
- 		cfg80211_update_iface_num(rdev, wdev->iftype, -1);
- 		if (rdev->scan_req && rdev->scan_req->wdev == wdev) {
--			if (WARN_ON(!rdev->scan_req->notified))
-+			if (WARN_ON_ONCE(!rdev->scan_req->notified))
- 				rdev->scan_req->aborted = true;
- 			___cfg80211_scan_done(rdev, false);
- 		}
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index bda39f1..c0fc0b3 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -239,7 +239,7 @@ void __cfg80211_scan_done(struct work_struct *wk)
- void cfg80211_scan_done(struct cfg80211_scan_request *request, bool aborted)
- {
- 	trace_cfg80211_scan_done(request, aborted);
--	WARN_ON(request != wiphy_to_rdev(request->wiphy)->scan_req);
-+	WARN_ON_ONCE(request != wiphy_to_rdev(request->wiphy)->scan_req);
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index 2a2a17d..c9afc15 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -455,7 +455,7 @@ static ssize_t read_file_dma(struct file *file, char __user *user_buf,
+ 			 "%2d          %2x      %1x     %2x           %2x\n",
+ 			 i, (*qcuBase & (0x7 << qcuOffset)) >> qcuOffset,
+ 			 (*qcuBase & (0x8 << qcuOffset)) >> (qcuOffset + 3),
+-			 val[2] & (0x7 << (i * 3)) >> (i * 3),
++			 (val[2] & (0x7 << (i * 3))) >> (i * 3),
+ 			 (*dcuBase & (0x1f << dcuOffset)) >> dcuOffset);
+ 	}
  
- 	request->aborted = aborted;
- 	request->notified = true;
--- 
-2.1.2
-
