@@ -1,111 +1,298 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:41850 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754413AbaJHJOt (ORCPT
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:62885 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756439AbaJ2R5K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Oct 2014 05:14:49 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] ath10k: fix kernel panic while shutting down AP
-Date: Wed, 8 Oct 2014 14:46:26 +0530
-Message-ID: <1412759786-10567-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20141008_111455_514438_0EEB5991)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 29 Oct 2014 13:57:10 -0400
+Received: by mail-wi0-f169.google.com with SMTP id n3so2216089wiv.4
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2014 10:57:08 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH v2 09/48] staging: vt6655: remove dead functions in power.c/h
+Date: Wed, 29 Oct 2014 17:55:27 +0000
+Message-Id: <1414605366-9335-10-git-send-email-tvboxspy@gmail.com> (sfid-20141029_185720_705105_7B2C6C43)
+In-Reply-To: <1414605366-9335-1-git-send-email-tvboxspy@gmail.com>
+References: <1414605366-9335-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The commit "ath10k: workaround fw beaconing bug" is freeing
-DMA-coherent memory in irq context which is hitting BUG ON
-in ARM platforms. Fix this by moving dma_free out of spin
-lock.
-
-kernel BUG at mm/vmalloc.c:1512!
-Internal error: Oops - BUG: 0 [#1] PREEMPT SMP ARM
-CPU: 0 PID: 722 Comm: hostapd Not tainted 3.14.0 #3
-task: dd58b840 ti: da6a6000 task.ti: da6a6000
-PC is at vunmap+0x24/0x34
-LR is at __arm_dma_free.isra.21+0x12c/0x190
-[<c02a97d0>] (vunmap) from [<c021f81c>] (__arm_dma_free.isra.21+0x12c/0x190)
-[<c021f81c>] (__arm_dma_free.isra.21) from [<bf3b2440>]
-			(ath10k_mac_vif_beacon_free+0xf4/0x100 [ath10k_core])
-[<bf3b2440>] (ath10k_mac_vif_beacon_free [ath10k_core]) from [<bf3b2490>]
-			(ath10k_remove_interface+0x44/0x1ec [ath10k_core])
-[<bf3b2490>] (ath10k_remove_interface [ath10k_core]) from [<bf3352e4>]
-			(ieee80211_add_virtual_monitor+0x9d8/0x9f0 [mac80211])
-[<bf3352e4>] (ieee80211_add_virtual_monitor [mac80211]) from [<bf33530c>]
-			(ieee80211_stop+0x10/0x18 [mac80211])
-[<bf33530c>] (ieee80211_stop [mac80211]) from [<c040d144>]
-			(__dev_close_many+0x9c/0xcc)
-
-Cc: Michal Kazior <michal.kazior@tieto.com>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 32 +++++++++++++++-----------------
- 1 file changed, 15 insertions(+), 17 deletions(-)
+ drivers/staging/vt6655/power.c | 171 -----------------------------------------
+ drivers/staging/vt6655/power.h |  16 ----
+ drivers/staging/vt6655/wcmd.c  |   2 -
+ drivers/staging/vt6655/wmgr.c  |   6 --
+ 4 files changed, 195 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index bf8333c..dd4f56a 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -498,21 +498,6 @@ void ath10k_mac_vif_beacon_free(struct ath10k_vif *arvif)
- 	arvif->beacon_sent = false;
+diff --git a/drivers/staging/vt6655/power.c b/drivers/staging/vt6655/power.c
+index 5371802..040484e 100644
+--- a/drivers/staging/vt6655/power.c
++++ b/drivers/staging/vt6655/power.c
+@@ -43,7 +43,6 @@
+ #include "wmgr.h"
+ #include "power.h"
+ #include "wcmd.h"
+-#include "rxtx.h"
+ #include "card.h"
+ 
+ /*---------------------  Static Definitions -------------------------*/
+@@ -140,176 +139,6 @@ PSvDisablePowerSaving(
+ 	pDevice->bPWBitOn = false;
  }
  
--static void ath10k_mac_vif_beacon_cleanup(struct ath10k_vif *arvif)
+-/*+
+- *
+- * Routine Description:
+- * Consider to power down when no more packets to tx or rx.
+- *
+- * Return Value:
+- *    true, if power down success
+- *    false, if fail
+- -*/
+-
+-bool
+-PSbConsiderPowerDown(
+-	void *hDeviceContext,
+-	bool bCheckRxDMA,
+-	bool bCheckCountToWakeUp
+-)
 -{
--	struct ath10k *ar = arvif->ar;
+-	struct vnt_private *pDevice = hDeviceContext;
+-	PSMgmtObject    pMgmt = pDevice->pMgmt;
+-	unsigned int uIdx;
 -
--	lockdep_assert_held(&ar->data_lock);
+-	// check if already in Doze mode
+-	if (MACbIsRegBitsOn(pDevice->PortOffset, MAC_REG_PSCTL, PSCTL_PS))
+-		return true;
 -
--	ath10k_mac_vif_beacon_free(arvif);
--
--	if (arvif->beacon_buf) {
--		dma_free_coherent(ar->dev, IEEE80211_MAX_FRAME_LEN,
--				  arvif->beacon_buf, arvif->beacon_paddr);
--		arvif->beacon_buf = NULL;
+-	if (pMgmt->eCurrMode != WMAC_MODE_IBSS_STA) {
+-		// check if in TIM wake period
+-		if (pMgmt->bInTIMWake)
+-			return false;
 -	}
+-
+-	// check scan state
+-	if (pDevice->bCmdRunning)
+-		return false;
+-
+-	// Force PSEN on
+-	MACvRegBitsOn(pDevice->PortOffset, MAC_REG_PSCTL, PSCTL_PSEN);
+-
+-	// check if all TD are empty,
+-	for (uIdx = 0; uIdx < TYPE_MAXTD; uIdx++) {
+-		if (pDevice->iTDUsed[uIdx] != 0)
+-			return false;
+-	}
+-
+-	// check if rx isr is clear
+-	if (bCheckRxDMA &&
+-	    ((pDevice->dwIsr & ISR_RXDMA0) != 0) &&
+-	    ((pDevice->dwIsr & ISR_RXDMA1) != 0)) {
+-		return false;
+-	}
+-
+-	if (pMgmt->eCurrMode != WMAC_MODE_IBSS_STA) {
+-		if (bCheckCountToWakeUp &&
+-		    (pMgmt->wCountToWakeUp == 0 || pMgmt->wCountToWakeUp == 1)) {
+-			return false;
+-		}
+-	}
+-
+-	// no Tx, no Rx isr, now go to Doze
+-	MACvRegBitsOn(pDevice->PortOffset, MAC_REG_PSCTL, PSCTL_GO2DOZE);
+-	pr_debug("Go to Doze ZZZZZZZZZZZZZZZ\n");
+-	return true;
 -}
 -
- static inline int ath10k_vdev_setup_sync(struct ath10k *ar)
- {
- 	int ret;
-@@ -2404,8 +2389,15 @@ void ath10k_halt(struct ath10k *ar)
+-/*+
+- *
+- * Routine Description:
+- * Send PS-POLL packet
+- *
+- * Return Value:
+- *    None.
+- *
+- -*/
+-
+-void
+-PSvSendPSPOLL(
+-	void *hDeviceContext
+-)
+-{
+-	struct vnt_private *pDevice = hDeviceContext;
+-	PSMgmtObject        pMgmt = pDevice->pMgmt;
+-	PSTxMgmtPacket      pTxPacket = NULL;
+-
+-	memset(pMgmt->pbyPSPacketPool, 0, sizeof(STxMgmtPacket) + WLAN_HDR_ADDR2_LEN);
+-	pTxPacket = (PSTxMgmtPacket)pMgmt->pbyPSPacketPool;
+-	pTxPacket->p80211Header = (PUWLAN_80211HDR)((unsigned char *)pTxPacket + sizeof(STxMgmtPacket));
+-	pTxPacket->p80211Header->sA2.wFrameCtl = cpu_to_le16(
+-		(
+-			WLAN_SET_FC_FTYPE(WLAN_TYPE_CTL) |
+-			WLAN_SET_FC_FSTYPE(WLAN_FSTYPE_PSPOLL) |
+-			WLAN_SET_FC_PWRMGT(0)
+-));
+-	pTxPacket->p80211Header->sA2.wDurationID = pMgmt->wCurrAID | BIT14 | BIT15;
+-	memcpy(pTxPacket->p80211Header->sA2.abyAddr1, pMgmt->abyCurrBSSID, WLAN_ADDR_LEN);
+-	memcpy(pTxPacket->p80211Header->sA2.abyAddr2, pMgmt->abyMACAddr, WLAN_ADDR_LEN);
+-	pTxPacket->cbMPDULen = WLAN_HDR_ADDR2_LEN;
+-	pTxPacket->cbPayloadLen = 0;
+-	// send the frame
+-	if (csMgmt_xmit(pDevice, pTxPacket) != CMD_STATUS_PENDING)
+-		pr_debug("Send PS-Poll packet failed..\n");
+-}
+-
+-/*+
+- *
+- * Routine Description:
+- * Send NULL packet to AP for notification power state of STA
+- *
+- * Return Value:
+- *    None.
+- *
+- -*/
+-bool
+-PSbSendNullPacket(
+-	void *hDeviceContext
+-)
+-{
+-	struct vnt_private *pDevice = hDeviceContext;
+-	PSTxMgmtPacket      pTxPacket = NULL;
+-	PSMgmtObject        pMgmt = pDevice->pMgmt;
+-	unsigned int uIdx;
+-
+-	if (!pDevice->bLinkPass)
+-		return false;
+-
+-	if (!pDevice->bEnablePSMode && !pDevice->fTxDataInSleep)
+-		return false;
+-
+-	if (pDevice->bEnablePSMode) {
+-		for (uIdx = 0; uIdx < TYPE_MAXTD; uIdx++) {
+-			if (pDevice->iTDUsed[uIdx] != 0)
+-				return false;
+-		}
+-	}
+-
+-	memset(pMgmt->pbyPSPacketPool, 0, sizeof(STxMgmtPacket) + WLAN_NULLDATA_FR_MAXLEN);
+-	pTxPacket = (PSTxMgmtPacket)pMgmt->pbyPSPacketPool;
+-	pTxPacket->p80211Header = (PUWLAN_80211HDR)((unsigned char *)pTxPacket + sizeof(STxMgmtPacket));
+-
+-	if (pDevice->bEnablePSMode) {
+-		pTxPacket->p80211Header->sA3.wFrameCtl = cpu_to_le16(
+-			(
+-				WLAN_SET_FC_FTYPE(WLAN_TYPE_DATA) |
+-				WLAN_SET_FC_FSTYPE(WLAN_FSTYPE_NULL) |
+-				WLAN_SET_FC_PWRMGT(1)
+-));
+-	} else {
+-		pTxPacket->p80211Header->sA3.wFrameCtl = cpu_to_le16(
+-			(
+-				WLAN_SET_FC_FTYPE(WLAN_TYPE_DATA) |
+-				WLAN_SET_FC_FSTYPE(WLAN_FSTYPE_NULL) |
+-				WLAN_SET_FC_PWRMGT(0)
+-));
+-	}
+-
+-	if (pMgmt->eCurrMode != WMAC_MODE_IBSS_STA)
+-		pTxPacket->p80211Header->sA3.wFrameCtl |= cpu_to_le16((unsigned short)WLAN_SET_FC_TODS(1));
+-
+-	memcpy(pTxPacket->p80211Header->sA3.abyAddr1, pMgmt->abyCurrBSSID, WLAN_ADDR_LEN);
+-	memcpy(pTxPacket->p80211Header->sA3.abyAddr2, pMgmt->abyMACAddr, WLAN_ADDR_LEN);
+-	memcpy(pTxPacket->p80211Header->sA3.abyAddr3, pMgmt->abyCurrBSSID, WLAN_BSSID_LEN);
+-	pTxPacket->cbMPDULen = WLAN_HDR_ADDR3_LEN;
+-	pTxPacket->cbPayloadLen = 0;
+-	// send the frame
+-	if (csMgmt_xmit(pDevice, pTxPacket) != CMD_STATUS_PENDING) {
+-		pr_debug("Send Null Packet failed !\n");
+-		return false;
+-	}
+-
+-	return true;
+-}
  
- 	spin_lock_bh(&ar->data_lock);
- 	list_for_each_entry(arvif, &ar->arvifs, list)
--		ath10k_mac_vif_beacon_cleanup(arvif);
-+		ath10k_mac_vif_beacon_free(arvif);
- 	spin_unlock_bh(&ar->data_lock);
-+	list_for_each_entry(arvif, &ar->arvifs, list) {
-+		if (!arvif->beacon_buf)
-+			continue;
-+		dma_free_coherent(ar->dev, IEEE80211_MAX_FRAME_LEN,
-+				  arvif->beacon_buf, arvif->beacon_paddr);
-+		arvif->beacon_buf = NULL;
-+	}
- }
+ /*+
+  *
+diff --git a/drivers/staging/vt6655/power.h b/drivers/staging/vt6655/power.h
+index 936f171..1083341 100644
+--- a/drivers/staging/vt6655/power.h
++++ b/drivers/staging/vt6655/power.h
+@@ -33,13 +33,6 @@
+ #define     PS_FAST_INTERVAL         1         // Fast power saving listen interval
+ #define     PS_MAX_INTERVAL          4         // MAX power saving listen interval
  
- static int ath10k_get_antenna(struct ieee80211_hw *hw, u32 *tx_ant, u32 *rx_ant)
-@@ -2988,9 +2980,15 @@ static void ath10k_remove_interface(struct ieee80211_hw *hw,
- 	cancel_work_sync(&arvif->wep_key_work);
+-bool
+-PSbConsiderPowerDown(
+-	void *hDeviceContext,
+-	bool bCheckRxDMA,
+-	bool bCheckCountToWakeUp
+-);
+-
+ void
+ PSvDisablePowerSaving(
+ 	void *hDeviceContext
+@@ -51,15 +44,6 @@ PSvEnablePowerSaving(
+ 	unsigned short wListenInterval
+ );
  
- 	spin_lock_bh(&ar->data_lock);
--	ath10k_mac_vif_beacon_cleanup(arvif);
-+	ath10k_mac_vif_beacon_free(arvif);
- 	spin_unlock_bh(&ar->data_lock);
+-void
+-PSvSendPSPOLL(
+-	void *hDeviceContext
+-);
+-
+-bool
+-PSbSendNullPacket(
+-	void *hDeviceContext
+-);
  
-+	if (arvif->beacon_buf) {
-+		dma_free_coherent(ar->dev, IEEE80211_MAX_FRAME_LEN,
-+				  arvif->beacon_buf, arvif->beacon_paddr);
-+		arvif->beacon_buf = NULL;
-+	}
-+
- 	ret = ath10k_spectral_vif_stop(arvif);
- 	if (ret)
- 		ath10k_warn(ar, "failed to stop spectral for vdev %i: %d\n",
+ bool
+ PSbIsNextTBTTWakeUp(
+diff --git a/drivers/staging/vt6655/wcmd.c b/drivers/staging/vt6655/wcmd.c
+index 53f81f1..33ee84f 100644
+--- a/drivers/staging/vt6655/wcmd.c
++++ b/drivers/staging/vt6655/wcmd.c
+@@ -646,7 +646,6 @@ vCommandTimer(
+ 			bClearBSSID_SCAN(pDevice);
+ 			if (pDevice->byFOETuning) {
+ 				BBvSetFOE(pDevice->PortOffset);
+-				PSbSendNullPacket(pDevice);
+ 			}
+ 			if (netif_queue_stopped(pDevice->dev))
+ 				netif_wake_queue(pDevice->dev);
+@@ -1009,7 +1008,6 @@ BSSvSecondTxData(
+ 	if ((pDevice->bLinkPass && (pMgmt->eAuthenMode < WMAC_AUTH_WPA)) ||
+ 	    pDevice->fWPA_Authened) {   /* wpa linking */
+ 		pDevice->fTxDataInSleep = true;
+-		PSbSendNullPacket(pDevice);	/* send null packet */
+ 		pDevice->fTxDataInSleep = false;
+ 	}
+ 
+diff --git a/drivers/staging/vt6655/wmgr.c b/drivers/staging/vt6655/wmgr.c
+index a1bada1..72906b0 100644
+--- a/drivers/staging/vt6655/wmgr.c
++++ b/drivers/staging/vt6655/wmgr.c
+@@ -2025,19 +2025,13 @@ s_vMgrRxBeacon(
+ 				pMgmt->bInTIMWake = true;
+ 				// send out ps-poll packet
+ 
+-				if (pMgmt->bInTIM)
+-					PSvSendPSPOLL(pDevice);
+ 
+ 			} else {
+ 				pMgmt->bInTIMWake = false;
+ 				pr_debug("BCN: Not In TIM..\n");
+ 				if (!pDevice->bPWBitOn) {
+ 					pr_debug("BCN: Send Null Packet\n");
+-					if (PSbSendNullPacket(pDevice))
+-						pDevice->bPWBitOn = true;
+ 				}
+-				if (PSbConsiderPowerDown(pDevice, false, false))
+-					pr_debug("BCN: Power down now...\n");
+ 			}
+ 
+ 		}
 -- 
-2.1.2
+2.1.0
 
