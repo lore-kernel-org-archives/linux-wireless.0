@@ -1,33 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:58453 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753088AbaJTIs3 (ORCPT
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:51642 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756372AbaJ2RqC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2014 04:48:29 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21572.51890.316656.229674@gargle.gargle.HOWL> (sfid-20141020_104831_674341_706D167A)
-Date: Mon, 20 Oct 2014 14:11:22 +0530
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: [PATCH 06/10] ath9k_hw: do not run NF and periodic calibration at the same time
-In-Reply-To: <1413651732-69783-6-git-send-email-nbd@openwrt.org>
-References: <1413651732-69783-1-git-send-email-nbd@openwrt.org>
-	<1413651732-69783-6-git-send-email-nbd@openwrt.org>
+	Wed, 29 Oct 2014 13:46:02 -0400
+Received: by mail-wi0-f169.google.com with SMTP id n3so2191210wiv.4
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2014 10:46:01 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH v2 28/34] staging: vt6655: s_vGenerateTxParameter remove unused cbMACHdLen
+Date: Wed, 29 Oct 2014 17:44:03 +0000
+Message-Id: <1414604649-9105-29-git-send-email-tvboxspy@gmail.com> (sfid-20141029_184732_157605_E7CE2A80)
+In-Reply-To: <1414604649-9105-1-git-send-email-tvboxspy@gmail.com>
+References: <1414604649-9105-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau wrote:
-> +		if (!ar9002_hw_per_calibration(ah, chan, rxchainmask, currCal))
-> +			return 0;
-> +
-> +		ah->cal_list_curr = currCal = currCal->calNext;
-> +		if (currCal->calState == CAL_WAITING) {
-> +			ath9k_hw_reset_calibration(ah, currCal);
-> +			return 0;
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/rxtx.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-Won't this break things if longcal is set, since other types like
-PA/OLC etc. need to be run in that case.
+diff --git a/drivers/staging/vt6655/rxtx.c b/drivers/staging/vt6655/rxtx.c
+index 23ee379..9beabea 100644
+--- a/drivers/staging/vt6655/rxtx.c
++++ b/drivers/staging/vt6655/rxtx.c
+@@ -1132,7 +1132,6 @@ s_vGenerateTxParameter(
+ 	unsigned short wCurrentRate
+ )
+ {
+-	unsigned int cbMACHdLen = WLAN_HDR_ADDR3_LEN; //24
+ 	unsigned short wFifoCtl;
+ 	bool bDisCRC = false;
+ 	unsigned char byFBOption = AUTO_FB_NONE;
+@@ -1150,9 +1149,6 @@ s_vGenerateTxParameter(
+ 	else if (wFifoCtl & FIFOCTL_AUTO_FB_1)
+ 		byFBOption = AUTO_FB_1;
+ 
+-	if (pDevice->bLongHeader)
+-		cbMACHdLen = WLAN_HDR_ADDR3_LEN + 6;
+-
+ 	if (!pvRrvTime)
+ 		return;
+ 
+-- 
+2.1.0
 
-Sujith
