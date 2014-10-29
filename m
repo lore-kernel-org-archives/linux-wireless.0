@@ -1,65 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:55950 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752035AbaJQCKL (ORCPT
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:34123 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755952AbaJ2Rpn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Oct 2014 22:10:11 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH v2 10/23] ath9k: Fix offchannel flush timeout
-Date: Fri, 17 Oct 2014 07:40:17 +0530
-Message-Id: <1413511830-5536-11-git-send-email-sujith@msujith.org> (sfid-20141017_041325_581984_A264B0EE)
-In-Reply-To: <1413511830-5536-1-git-send-email-sujith@msujith.org>
-References: <1413511830-5536-1-git-send-email-sujith@msujith.org>
+	Wed, 29 Oct 2014 13:45:43 -0400
+Received: by mail-wi0-f177.google.com with SMTP id ex7so5294059wid.10
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2014 10:45:42 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH v2 19/34] staging: vt6655: mac80211 conversion: device_init_registers remove legacy code
+Date: Wed, 29 Oct 2014 17:43:54 +0000
+Message-Id: <1414604649-9105-20-git-send-email-tvboxspy@gmail.com> (sfid-20141029_185040_639261_F4590CA2)
+In-Reply-To: <1414604649-9105-1-git-send-email-tvboxspy@gmail.com>
+References: <1414604649-9105-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Remove pMgmt, byCurrentCh, VNTWIFIbConfigPhyMode, eEncryptionStatus and netif_stop_queue.
 
-An offchannel operation also needs to have
-a flush timeout that doesn't exceed the NoA
-absence duration of a GO context, so use
-channel_switch_time. The first offchannel
-operation is set a flush timeout of 10ms since
-channel_switch_time will be zero.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/channel.c | 20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
+ drivers/staging/vt6655/device_main.c | 15 ---------------
+ 1 file changed, 15 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index 7e518aa..abc3e2e 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -207,6 +207,26 @@ void ath_chanctx_check_active(struct ath_softc *sc, struct ath_chanctx *ctx)
- 	if (!ctx)
- 		return;
+diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
+index a888c26..77d81b3 100644
+--- a/drivers/staging/vt6655/device_main.c
++++ b/drivers/staging/vt6655/device_main.c
+@@ -412,7 +412,6 @@ static void device_init_registers(struct vnt_private *pDevice)
+ 	unsigned char byCCKPwrdBm = 0;
+ 	unsigned char byOFDMPwrdBm = 0;
+ 	int zonetype = 0;
+-	PSMgmtObject    pMgmt = &(pDevice->sMgmtObj);
  
-+	if (ctx == &sc->offchannel.chan) {
-+		spin_lock_bh(&sc->chan_lock);
-+
-+		if (likely(sc->sched.channel_switch_time))
-+			ctx->flush_timeout =
-+				usecs_to_jiffies(sc->sched.channel_switch_time);
-+		else
-+			ctx->flush_timeout =
-+				msecs_to_jiffies(10);
-+
-+		spin_unlock_bh(&sc->chan_lock);
-+
-+		/*
-+		 * There is no need to iterate over the
-+		 * active/assigned channel contexts if
-+		 * the current context is offchannel.
-+		 */
-+		return;
-+	}
-+
- 	ictx = ctx;
+ 	MACbShutdown(pDevice->PortOffset);
+ 	BBvSoftwareReset(pDevice->PortOffset);
+@@ -616,8 +615,6 @@ static void device_init_registers(struct vnt_private *pDevice)
+ 					   (unsigned char)(ii + EEP_OFS_OFDMA_PWR_dBm));
+ 	}
  
- 	list_for_each_entry(avp, &ctx->vifs, list) {
+-	init_channel_table((void *)pDevice);
+-
+ 	if (pDevice->byLocalID > REV_ID_VT3253_B1) {
+ 		MACvSelectPage1(pDevice->PortOffset);
+ 
+@@ -652,8 +649,6 @@ static void device_init_registers(struct vnt_private *pDevice)
+ 	BBvSetRxAntennaMode(pDevice->PortOffset, pDevice->byRxAntennaMode);
+ 	BBvSetTxAntennaMode(pDevice->PortOffset, pDevice->byTxAntennaMode);
+ 
+-	pDevice->byCurrentCh = 0;
+-
+ 	/* Set BB and packet type at the same time. */
+ 	/* Set Short Slot Time, xIFS, and RSPINF. */
+ 	if (pDevice->uConnectionRate == RATE_AUTO)
+@@ -661,10 +656,6 @@ static void device_init_registers(struct vnt_private *pDevice)
+ 	else
+ 		pDevice->wCurrentRate = (unsigned short)pDevice->uConnectionRate;
+ 
+-	/* default G Mode */
+-	VNTWIFIbConfigPhyMode(pDevice->pMgmt, PHY_TYPE_11G);
+-	VNTWIFIbConfigPhyMode(pDevice->pMgmt, PHY_TYPE_AUTO);
+-
+ 	pDevice->bRadioOff = false;
+ 
+ 	pDevice->byRadioCtl = SROMbyReadEmbedded(pDevice->PortOffset,
+@@ -685,8 +676,6 @@ static void device_init_registers(struct vnt_private *pDevice)
+ 	if (pDevice->bHWRadioOff || pDevice->bRadioControlOff)
+ 		CARDbRadioPowerOff(pDevice);
+ 
+-	pMgmt->eScanType = WMAC_SCAN_PASSIVE;
+-
+ 	/* get Permanent network address */
+ 	SROMvReadEtherAddress(pDevice->PortOffset, pDevice->abyCurrentNetAddr);
+ 	pr_debug("Network address = %pM\n", pDevice->abyCurrentNetAddr);
+@@ -699,16 +688,12 @@ static void device_init_registers(struct vnt_private *pDevice)
+ 	if (pDevice->byLocalID <= REV_ID_VT3253_A1)
+ 		MACvRegBitsOn(pDevice->PortOffset, MAC_REG_RCR, RCR_WPAERR);
+ 
+-	pDevice->eEncryptionStatus = Ndis802_11EncryptionDisabled;
+-
+ 	/* Turn On Rx DMA */
+ 	MACvReceive0(pDevice->PortOffset);
+ 	MACvReceive1(pDevice->PortOffset);
+ 
+ 	/* start the adapter */
+ 	MACvStart(pDevice->PortOffset);
+-
+-	netif_stop_queue(pDevice->dev);
+ }
+ 
+ static void device_init_diversity_timer(struct vnt_private *pDevice)
 -- 
-2.1.2
+2.1.0
 
