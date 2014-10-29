@@ -1,71 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:56681 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932247AbaJVTXR (ORCPT
+Received: from mail-wg0-f46.google.com ([74.125.82.46]:65481 "EHLO
+	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755679AbaJ2R55 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2014 15:23:17 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v3 6/9] mac80211: support creating wiphy w/out creating wlanX
-Date: Wed, 22 Oct 2014 12:23:03 -0700
-Message-Id: <1414005786-27572-6-git-send-email-greearb@candelatech.com> (sfid-20141022_212332_923064_A91683E7)
-In-Reply-To: <1414005786-27572-1-git-send-email-greearb@candelatech.com>
-References: <1414005786-27572-1-git-send-email-greearb@candelatech.com>
+	Wed, 29 Oct 2014 13:57:57 -0400
+Received: by mail-wg0-f46.google.com with SMTP id x13so2490100wgg.33
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2014 10:57:55 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH v2 30/48] staging: vt6655: move all RATE_* macros to device.h
+Date: Wed, 29 Oct 2014 17:55:48 +0000
+Message-Id: <1414605366-9335-31-git-send-email-tvboxspy@gmail.com> (sfid-20141029_185807_742382_EB2E6761)
+In-Reply-To: <1414605366-9335-1-git-send-email-tvboxspy@gmail.com>
+References: <1414605366-9335-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
-
-This will be helpful when using the mac80211_hwsim
-wiphys and automated testing.  Let user create the
-vifs as needed, and named as expected.
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- include/net/mac80211.h | 7 ++++++-
- net/mac80211/main.c    | 3 ++-
- 2 files changed, 8 insertions(+), 2 deletions(-)
+ drivers/staging/vt6655/device.h  | 15 +++++++++++++++
+ drivers/staging/vt6655/vntwifi.h | 14 --------------
+ 2 files changed, 15 insertions(+), 14 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 3cf3ab8..1fd995d 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1580,6 +1580,10 @@ struct ieee80211_tx_control {
-  *	a virtual monitor interface when monitor interfaces are the only
-  *	active interfaces.
-  *
-+ * @IEEE80211_HW_NO_AUTO_VIF: The driver would like for no wlanX to
-+ *	be created.  It is expected user-space will create vifs as
-+ *	desired (and thus have them named as desired).
-+ *
-  * @IEEE80211_HW_QUEUE_CONTROL: The driver wants to control per-interface
-  *	queue mapping in order to use different queues (not just one per AC)
-  *	for different virtual interfaces. See the doc section on HW queue
-@@ -1626,7 +1630,8 @@ enum ieee80211_hw_flags {
- 	IEEE80211_HW_SUPPORTS_DYNAMIC_PS		= 1<<12,
- 	IEEE80211_HW_MFP_CAPABLE			= 1<<13,
- 	IEEE80211_HW_WANT_MONITOR_VIF			= 1<<14,
--	/* free slots */
-+	IEEE80211_HW_NO_AUTO_VIF			= 1<<15,
-+	/* free slot */
- 	IEEE80211_HW_SUPPORTS_UAPSD			= 1<<17,
- 	IEEE80211_HW_REPORTS_TX_ACK_STATUS		= 1<<18,
- 	IEEE80211_HW_CONNECTION_MONITOR			= 1<<19,
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index b189122..7d40e3f 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -1023,7 +1023,8 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 	}
+diff --git a/drivers/staging/vt6655/device.h b/drivers/staging/vt6655/device.h
+index a5e5a007..b96d832 100644
+--- a/drivers/staging/vt6655/device.h
++++ b/drivers/staging/vt6655/device.h
+@@ -80,6 +80,21 @@
  
- 	/* add one default STA interface if supported */
--	if (local->hw.wiphy->interface_modes & BIT(NL80211_IFTYPE_STATION)) {
-+	if (local->hw.wiphy->interface_modes & BIT(NL80211_IFTYPE_STATION) &&
-+	    !(hw->flags & IEEE80211_HW_NO_AUTO_VIF)) {
- 		result = ieee80211_if_add(local, "wlan%d", NULL,
- 					  NL80211_IFTYPE_STATION, NULL);
- 		if (result)
+ /*---------------------  Export Definitions -------------------------*/
+ 
++#define RATE_1M		0
++#define RATE_2M		1
++#define RATE_5M		2
++#define RATE_11M	3
++#define RATE_6M		4
++#define RATE_9M		5
++#define RATE_12M	6
++#define RATE_18M	7
++#define RATE_24M	8
++#define RATE_36M	9
++#define RATE_48M	10
++#define RATE_54M	11
++#define RATE_AUTO	12
++#define MAX_RATE	12
++
+ #define MAC_MAX_CONTEXT_REG     (256+128)
+ 
+ #define MAX_MULTICAST_ADDRESS_NUM       32
+diff --git a/drivers/staging/vt6655/vntwifi.h b/drivers/staging/vt6655/vntwifi.h
+index ad180e0..2ba7713 100644
+--- a/drivers/staging/vt6655/vntwifi.h
++++ b/drivers/staging/vt6655/vntwifi.h
+@@ -35,20 +35,6 @@
+ #include "card.h"
+ 
+ /*---------------------  Export Definitions -------------------------*/
+-#define RATE_1M         0
+-#define RATE_2M         1
+-#define RATE_5M         2
+-#define RATE_11M        3
+-#define RATE_6M         4
+-#define RATE_9M         5
+-#define RATE_12M        6
+-#define RATE_18M        7
+-#define RATE_24M        8
+-#define RATE_36M        9
+-#define RATE_48M       10
+-#define RATE_54M       11
+-#define RATE_AUTO      12
+-#define MAX_RATE       12
+ 
+ // key CipherSuite
+ #define KEY_CTL_WEP         0x00
 -- 
-1.7.11.7
+2.1.0
 
