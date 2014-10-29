@@ -1,37 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:47703 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751759AbaJAXAl (ORCPT
+Received: from mail-wg0-f41.google.com ([74.125.82.41]:58384 "EHLO
+	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932286AbaJ2R6Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Oct 2014 19:00:41 -0400
-Received: from [192.168.100.236] (firewall.candelatech.com [70.89.124.249])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mail2.candelatech.com (Postfix) with ESMTPSA id 7C11640A69D
-	for <linux-wireless@vger.kernel.org>; Wed,  1 Oct 2014 16:00:40 -0700 (PDT)
-Message-ID: <542C8798.30807@candelatech.com> (sfid-20141002_010044_639075_0C2FC189)
-Date: Wed, 01 Oct 2014 16:00:40 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Setting legacy bit-rates no longer works?
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 29 Oct 2014 13:58:24 -0400
+Received: by mail-wg0-f41.google.com with SMTP id k14so3919387wgh.0
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2014 10:58:23 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH v2 45/48] staging: vt6655: Move LIFETIME RES 64us macros to rxtx.h
+Date: Wed, 29 Oct 2014 17:56:03 +0000
+Message-Id: <1414605366-9335-46-git-send-email-tvboxspy@gmail.com> (sfid-20141029_191321_072827_0F9732A8)
+In-Reply-To: <1414605366-9335-1-git-send-email-tvboxspy@gmail.com>
+References: <1414605366-9335-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I tried this on a 3.17.0-rc7+ kernel, but reported tx-rate stays at 54Mbps
+Used only by vnt_generate_fifo_header move these macros.
 
-iw dev sta1 set bitrates legacy-5 24
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/rxtx.h | 4 ++++
+ drivers/staging/vt6655/wmgr.h | 2 --
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
-Driver is ath9k, but wpa_supplicant is configured to disable HT.
-
-I'm going to go dig into this, but if someone has any suggestions,
-please let me know.
-
-Thanks,
-Ben
-
+diff --git a/drivers/staging/vt6655/rxtx.h b/drivers/staging/vt6655/rxtx.h
+index 50d77a0..cf0dfa6 100644
+--- a/drivers/staging/vt6655/rxtx.h
++++ b/drivers/staging/vt6655/rxtx.h
+@@ -32,6 +32,10 @@
+ #include "ttype.h"
+ #include "device.h"
+ 
++#define DEFAULT_MSDU_LIFETIME_RES_64us	8000 /* 64us */
++#define DEFAULT_MGN_LIFETIME_RES_64us	125  /* 64us */
++
++
+ /*---------------------  Export Definitions -------------------------*/
+ 
+ /*---------------------  Export Variables  --------------------------*/
+diff --git a/drivers/staging/vt6655/wmgr.h b/drivers/staging/vt6655/wmgr.h
+index 74f1f16..daf996c 100644
+--- a/drivers/staging/vt6655/wmgr.h
++++ b/drivers/staging/vt6655/wmgr.h
+@@ -51,10 +51,8 @@
+ #define WCMD_PASSIVE_SCAN_TIME  100 //(ms)
+ 
+ #define DEFAULT_MSDU_LIFETIME           512  // ms
+-#define DEFAULT_MSDU_LIFETIME_RES_64us  8000 // 64us
+ 
+ #define DEFAULT_MGN_LIFETIME            8    // ms
+-#define DEFAULT_MGN_LIFETIME_RES_64us   125  // 64us
+ 
+ #define MAKE_BEACON_RESERVED            10  //(us)
+ 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.1.0
 
