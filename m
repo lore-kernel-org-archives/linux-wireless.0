@@ -1,90 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:56093 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755946AbaJUQFG (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:16930 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932994AbaJ2QLF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Oct 2014 12:05:06 -0400
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	<stable@vger.kernel.org>
-Subject: [PATCH 8/8] Revert "iwlwifi: mvm: treat EAPOLs like mgmt frames wrt rate"
-Date: Tue, 21 Oct 2014 19:04:39 +0300
-Message-Id: <1413907479-9073-8-git-send-email-egrumbach@gmail.com> (sfid-20141021_180518_053694_BD4B2DE6)
-In-Reply-To: <CANUX_P0iZO6AGwcsKO3+xZZcH5ns+vMUimo+BxHNpyBhhURKRw@mail.gmail.com>
-References: <CANUX_P0iZO6AGwcsKO3+xZZcH5ns+vMUimo+BxHNpyBhhURKRw@mail.gmail.com>
+	Wed, 29 Oct 2014 12:11:05 -0400
+Date: Wed, 29 Oct 2014 19:10:21 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Joe Perches <joe@perches.com>
+Cc: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
+	kernel-janitors@vger.kernel.org
+Subject: Re: [patch] ath9k: fix some debugfs output
+Message-ID: <20141029161021.GH6890@mwanda> (sfid-20141029_171112_241773_AC74529D)
+References: <20141029154805.GC5290@mwanda>
+ <1414598919.11707.3.camel@perches.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1414598919.11707.3.camel@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Wed, Oct 29, 2014 at 09:08:39AM -0700, Joe Perches wrote:
+> On Wed, 2014-10-29 at 18:48 +0300, Dan Carpenter wrote:
+> > The right shift operation has higher precedence than the mask so we
+> > left shift by "(i * 3)" and then immediately right shift by "(i * 3)"
+> > then we mask.  It should be left shift, mask, and then right shift.
+> > 
+> Hey Dan.
+> 
+> My grep pattern doesn't like operations on the thing masked.
+> 
+> Did you find this by some tool or visual inspection via grep?
+>
 
-This reverts commit aa11bbf3df026d6b1c6b528bef634fd9de7c2619.
-This commit was causing connection issues and is not needed
-if IWL_MVM_RS_RSSI_BASED_INIT_RATE is set to false by default.
+I wrote a Smatch check inspired by the i40e bug you found earlier.
 
-Regardless of the issues mentioned above, this patch added the
-following WARNING:
-
-WARNING: CPU: 0 PID: 3946 at drivers/net/wireless/iwlwifi/mvm/tx.c:190 iwl_mvm_set_tx_params+0x60a/0x6f0 [iwlmvm]()
-Got an HT rate for a non data frame 0x8
-CPU: 0 PID: 3946 Comm: wpa_supplicant Tainted: G           O   3.17.0+ #6
-Hardware name: LENOVO 20ANCTO1WW/20ANCTO1WW, BIOS GLET71WW (2.25 ) 07/02/2014
- 0000000000000009 ffffffff814fa911 ffff8804288db8f8 ffffffff81064f52
- 0000000000001808 ffff8804288db948 ffff88040add8660 ffff8804291b5600
- 0000000000000000 ffffffff81064fb7 ffffffffa07b73d0 0000000000000020
-Call Trace:
- [<ffffffff814fa911>] ? dump_stack+0x41/0x51
- [<ffffffff81064f52>] ? warn_slowpath_common+0x72/0x90
- [<ffffffff81064fb7>] ? warn_slowpath_fmt+0x47/0x50
- [<ffffffffa07a39ea>] ? iwl_mvm_set_tx_params+0x60a/0x6f0 [iwlmvm]
- [<ffffffffa07a3cf8>] ? iwl_mvm_tx_skb+0x48/0x3c0 [iwlmvm]
- [<ffffffffa079cb9b>] ? iwl_mvm_mac_tx+0x7b/0x180 [iwlmvm]
- [<ffffffffa0746ce9>] ? __ieee80211_tx+0x2b9/0x3c0 [mac80211]
- [<ffffffffa07492f3>] ? ieee80211_tx+0xb3/0x100 [mac80211]
- [<ffffffffa0749c49>] ? ieee80211_subif_start_xmit+0x459/0xca0 [mac80211]
- [<ffffffff814116e7>] ? dev_hard_start_xmit+0x337/0x5f0
- [<ffffffff81430d46>] ? sch_direct_xmit+0x96/0x1f0
- [<ffffffff81411ba3>] ? __dev_queue_xmit+0x203/0x4f0
- [<ffffffff8142f670>] ? ether_setup+0x70/0x70
- [<ffffffff814e96a1>] ? packet_sendmsg+0xf81/0x1110
- [<ffffffff8140625c>] ? skb_free_datagram+0xc/0x40
- [<ffffffff813f7538>] ? sock_sendmsg+0x88/0xc0
- [<ffffffff813f7274>] ? move_addr_to_kernel.part.20+0x14/0x60
- [<ffffffff811c47c2>] ? __inode_wait_for_writeback+0x62/0xb0
- [<ffffffff813f7a91>] ? SYSC_sendto+0xf1/0x180
- [<ffffffff813f88f9>] ? __sys_recvmsg+0x39/0x70
- [<ffffffff8150066d>] ? system_call_fastpath+0x1a/0x1f
----[ end trace cc19a150d311fc63 ]---
-
-which was reported here: https://bugzilla.kernel.org/show_bug.cgi?id=85691
-
-CC: <stable@vger.kernel.org> [3.13+]
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/tx.c | 8 ++------
- 1 file changed, 2 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/mvm/tx.c b/drivers/net/wireless/iwlwifi/mvm/tx.c
-index 1cb793a..c6a517c 100644
---- a/drivers/net/wireless/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/tx.c
-@@ -175,14 +175,10 @@ static void iwl_mvm_set_tx_cmd_rate(struct iwl_mvm *mvm,
- 
- 	/*
- 	 * for data packets, rate info comes from the table inside the fw. This
--	 * table is controlled by LINK_QUALITY commands. Exclude ctrl port
--	 * frames like EAPOLs which should be treated as mgmt frames. This
--	 * avoids them being sent initially in high rates which increases the
--	 * chances for completion of the 4-Way handshake.
-+	 * table is controlled by LINK_QUALITY commands
- 	 */
- 
--	if (ieee80211_is_data(fc) && sta &&
--	    !(info->control.flags & IEEE80211_TX_CTRL_PORT_CTRL_PROTO)) {
-+	if (ieee80211_is_data(fc) && sta) {
- 		tx_cmd->initial_rate_index = 0;
- 		tx_cmd->tx_flags |= cpu_to_le32(TX_CMD_FLG_STA_RATE);
- 		return;
--- 
-1.9.1
-
+regards,
+dan carpenter 
