@@ -1,47 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:2922 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751355AbaJ1Kgn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2014 06:36:43 -0400
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <wireless-regdb@lists.infradead.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 05/21] wireless-regdb: Add regulatory rules for Ethiopia (ET)
-Date: Tue, 28 Oct 2014 12:29:19 +0200
-Message-ID: <1414492175-13830-5-git-send-email-jouni@qca.qualcomm.com> (sfid-20141028_113646_142714_FD84E86E)
-In-Reply-To: <1414492175-13830-1-git-send-email-jouni@qca.qualcomm.com>
-References: <1414492175-13830-1-git-send-email-jouni@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:38737 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933467AbaJ2Pxi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Oct 2014 11:53:38 -0400
+Message-ID: <1414598014.1827.18.camel@jlt4.sipsolutions.net> (sfid-20141029_165341_428653_B6C3C9CE)
+Subject: Re: [PATCH 2/3] mac80211-hwsim: Provide multicast event for
+ HWSIM_CMD_NEW_RADIO
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jukka Rissanen <jukka.rissanen@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 29 Oct 2014 16:53:34 +0100
+In-Reply-To: <1414597807.1827.16.camel@jlt4.sipsolutions.net> (sfid-20141029_165015_857664_0FB9784E)
+References: <1414406688-3827-1-git-send-email-jukka.rissanen@linux.intel.com>
+	 <1414406688-3827-3-git-send-email-jukka.rissanen@linux.intel.com>
+	 (sfid-20141027_114540_063766_7C3E5B4A) <1414597807.1827.16.camel@jlt4.sipsolutions.net>
+	 (sfid-20141029_165015_857664_0FB9784E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Source is QCA's regulatory team's efforts.
+On Wed, 2014-10-29 at 16:50 +0100, Johannes Berg wrote:
+> On Mon, 2014-10-27 at 12:44 +0200, Jukka Rissanen wrote:
+> 
+> > +static void mcast_msg(struct sk_buff *mcast_skb, struct genl_info *info)
+> > +{
+> > +	if (info)
+> > +		genl_notify(&hwsim_genl_family, mcast_skb,
+> > +			    genl_info_net(info), info->snd_portid,
+> > +			    HWSIM_MCGRP_CONFIG, info->nlhdr, GFP_KERNEL);
+> > +	else
+> > +		genlmsg_multicast(&hwsim_genl_family, mcast_skb, 0,
+> > +				  HWSIM_MCGRP_CONFIG, GFP_KERNEL);
+> > +}
+> 
+> Also - given the parameters and what this does, that's a bad name for
+> the function. Never mind that it doesn't have any sort of identifier
+> (say hwsim_ prefix), it doesn't even do what it says it does.
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
----
- db.txt | 6 ++++++
- 1 file changed, 6 insertions(+)
+Or maybe it does? I'm unsure what genl_notify() does...
 
-diff --git a/db.txt b/db.txt
-index 40ef0e8..024b424 100644
---- a/db.txt
-+++ b/db.txt
-@@ -382,6 +382,12 @@ country ES: DFS-ETSI
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
- 
-+country ET: DFS-ETSI
-+	(2402 - 2482 @ 40), (20)
-+	(5170 - 5250 @ 80), (20), AUTO-BW
-+	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
-+	(5490 - 5710 @ 160), (27), DFS
-+
- country FI: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 80), (20), AUTO-BW
--- 
-1.9.1
+johannes
 
