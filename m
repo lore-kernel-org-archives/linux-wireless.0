@@ -1,63 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:45866 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754013AbaJVKP3 (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:24731 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756704AbaJ2VWF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2014 06:15:29 -0400
-Received: by mail-pa0-f43.google.com with SMTP id lf10so3418845pab.30
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Oct 2014 03:15:28 -0700 (PDT)
+	Wed, 29 Oct 2014 17:22:05 -0400
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <wireless-regdb@lists.infradead.org>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 3/7] wireless-regdb: Add 160 MHz channel bandwidth for Dominica (DM)
+Date: Wed, 29 Oct 2014 23:21:26 +0200
+Message-ID: <1414617690-29786-3-git-send-email-jouni@qca.qualcomm.com> (sfid-20141029_222209_191999_70243A3D)
+In-Reply-To: <1414617690-29786-1-git-send-email-jouni@qca.qualcomm.com>
+References: <1414617690-29786-1-git-send-email-jouni@qca.qualcomm.com>
 MIME-Version: 1.0
-From: Okhwan Lee <ohlee@mwnl.snu.ac.kr>
-Date: Wed, 22 Oct 2014 19:14:56 +0900
-Message-ID: <CANzpp-=opT==PUf5FhWi_cbB91+RhWk+jB7M4bfUCqh2wzQA2A@mail.gmail.com> (sfid-20141022_121532_626552_7C95768F)
-Subject: Change channel bandwidth without iw command
-To: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+This extends regulatory rules for Dominica to allow 160 MHz
+VHT channels to be used in 5.15-5.25 GHz, 5.25-5.35 GHz. Since the rules
+between 5.15-5.25 and 5.25-5.35 GHz ranges are different (e.g., DFS
+requirement), the AUTO-BW flag needs to be used to allow the maximum
+channel bandwidth to be determined automatically based on two rules.
 
-We are trying to implement a protocol to evaluate the performance our
-algorithm using QCA9880.
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+---
+ db.txt | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-To implement our protocol, a receiver have to change the bandwidth
-when a Action frame (what we define) is successfully received.
-We know that the QCA9880 can change bandwidth by using iw command in
-monitor mode.
-So, we use similar function path used by "iw dev set freq ..."
-When the receiver detects the reception of the Action frame we call
-"ieee80211_set_monitor_channel" at the end of ieee80211_rx as follows:
+diff --git a/db.txt b/db.txt
+index 999bc5f..d527b54 100644
+--- a/db.txt
++++ b/db.txt
+@@ -331,8 +331,8 @@ country DK: DFS-ETSI
+ # http://www.ntrcdom.org/index.php?option=com_content&view=category&layout=blog&id=10&Itemid=55
+ country DM: DFS-FCC
+ 	(2402 - 2472 @ 40), (30)
+-	(5170 - 5250 @ 80), (17)
+-	(5250 - 5330 @ 80), (23), DFS
++	(5170 - 5250 @ 80), (17), AUTO-BW
++	(5250 - 5330 @ 80), (23), DFS, AUTO-BW
+ 	(5735 - 5835 @ 80), (30)
+ 
+ country DO: DFS-FCC
+-- 
+1.9.1
 
-/*************** net/mac80211/rx.c ******************/
-
-// receive action frame, change bandwidth 80 -> 20
-
-                rtnl_lock(); //lock rtnetlink used in pre_doit of nl80211
-                chandef = local->monitor_chandef; // copy current chandef
-                chandef.width = NL80211_CHAN_WIDTH_20; // set bandwidth
-                chandef.center_freq1 = 5180; // set center freq...
-                ieee80211_set_monitor_channel(wiphy, &chandef);
-                rtnl_unlock();
-
-/********************************************************/
-
-However, the receiver invokes kernel panic when receives the Action frame.
-As fas as we know, the panic is occurred in ath10k_config_chan of
-ath10k device driver.
-To the best our knowledge, our implementation exploits same function
-path of iw command in nl80211, cfg80211, mac80211 and ath10k.
-Moreover, we confirm that the input parameters (wiphy, chandef) in our
-implementation are identical to the parameters used by iw command.
-
-Is there any reason why we cannot change bandwidth?
-Of course, iw command work correctly.
-
-If you have any idea to solve this, please let me know.
-
-Thanks a lot for your reading.
-
-Sincerely yours,
-
-Okhwan Lee , Ph.D. student
