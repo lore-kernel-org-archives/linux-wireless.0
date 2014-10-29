@@ -1,61 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:37404 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751632AbaJTPNQ (ORCPT
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:35259 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756145AbaJ2Rpv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2014 11:13:16 -0400
-Received: by mail-wi0-f179.google.com with SMTP id d1so6648670wiv.6
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2014 08:13:15 -0700 (PDT)
-Date: Mon, 20 Oct 2014 17:13:02 +0200
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Karl Beldan <karl.beldan@rivierawaves.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: Re: [PATCH v5 0/4] add VHT support to minstrel_ht
-Message-ID: <20141020151302.GB7691@magnum.frso.rivierawaves.com> (sfid-20141020_171319_873185_771E5100)
-References: <1413812762-6605-1-git-send-email-karl.beldan@gmail.com>
- <1413816546.32358.3.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1413816546.32358.3.camel@jlt4.sipsolutions.net>
+	Wed, 29 Oct 2014 13:45:51 -0400
+Received: by mail-wi0-f181.google.com with SMTP id n3so5280074wiv.14
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2014 10:45:50 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH v2 23/34] staging: vt6655: mac80211 conversion: device_error remove legacy functions
+Date: Wed, 29 Oct 2014 17:43:58 +0000
+Message-Id: <1414604649-9105-24-git-send-email-tvboxspy@gmail.com> (sfid-20141029_184948_186104_3EFBBE5F)
+In-Reply-To: <1414604649-9105-1-git-send-email-tvboxspy@gmail.com>
+References: <1414604649-9105-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 20, 2014 at 04:49:06PM +0200, Johannes Berg wrote:
-> On Mon, 2014-10-20 at 15:45 +0200, Karl Beldan wrote:
-> > From: Karl Beldan <karl.beldan@rivierawaves.com>
-> > 
-> > Hi,
-> > 
-> > Varka Bhadram reported checkpatch is noisy on this series.
-> > I made another pass which affects [2/4](trivially) and [4/4].
-> > This could have been a patch on top of what Felix acked, I hope you
-> > won't bother too much.
-> 
-> This series introduces the following new sparse/smatch complaints:
-> 
->   CHECK   /home/johannes/sys/wireless/net/mac80211/rc80211_minstrel_ht.c
-> /home/johannes/sys/wireless/net/mac80211/rc80211_minstrel_ht.c:246:18: warning: cast to restricted __le16
-> /home/johannes/sys/wireless/net/mac80211/rc80211_minstrel_ht.c:1227:49: warning: incorrect type in argument 3 (different base types)
-> /home/johannes/sys/wireless/net/mac80211/rc80211_minstrel_ht.c:1227:49:    expected unsigned short [unsigned] [usertype] mcs_map
-> /home/johannes/sys/wireless/net/mac80211/rc80211_minstrel_ht.c:1227:49:    got restricted __le16 [usertype] tx_mcs_map
-> 
-> Here it looks like the argument to minstrel_get_valid_vht_rates() should
-> be declared __le16.
-> 
-Indeed, will resending only 4/4 do ?
+Remove netif_stop_queue, bCmdRunning and timer functions
 
->   CHECK   /home/johannes/sys/wireless/net/mac80211/rc80211_minstrel_ht_debugfs.c
-> /home/johannes/sys/wireless/net/mac80211/rc80211_minstrel_ht_debugfs.c:47 minstrel_ht_stats_dump() error: testing array offset 'i' after use.
-> /home/johannes/sys/wireless/net/mac80211/rc80211_minstrel_ht_debugfs.c:61 minstrel_ht_stats_dump() error: testing array offset 'i' after use.
-> 
-> Here I'm not sure, seems like it's a false positive maybe? The array
-> seems large enough for everything that's going on here.
-> 
-False positive.
-I am using CF="-Wsparse-all" and I don't get those warnings with sparse
-0.4.5, I'll update.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/device_main.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
+diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
+index 451b608..0bd2ca8 100644
+--- a/drivers/staging/vt6655/device_main.c
++++ b/drivers/staging/vt6655/device_main.c
+@@ -1313,10 +1313,6 @@ static void device_error(struct vnt_private *pDevice, unsigned short status)
+ 	if (status & ISR_FETALERR) {
+ 		dev_err(&pDevice->pcid->dev, "Hardware fatal error\n");
  
-Karl
+-		netif_stop_queue(pDevice->dev);
+-		del_timer(&pDevice->sTimerCommand);
+-		del_timer(&(pDevice->pMgmt->sTimerSecondCallback));
+-		pDevice->bCmdRunning = false;
+ 		MACbShutdown(pDevice->PortOffset);
+ 		return;
+ 	}
+-- 
+2.1.0
+
