@@ -1,49 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:24731 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756704AbaJ2VWF (ORCPT
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:40775 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932729AbaJ2LvV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2014 17:22:05 -0400
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <wireless-regdb@lists.infradead.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 3/7] wireless-regdb: Add 160 MHz channel bandwidth for Dominica (DM)
-Date: Wed, 29 Oct 2014 23:21:26 +0200
-Message-ID: <1414617690-29786-3-git-send-email-jouni@qca.qualcomm.com> (sfid-20141029_222209_191999_70243A3D)
-In-Reply-To: <1414617690-29786-1-git-send-email-jouni@qca.qualcomm.com>
-References: <1414617690-29786-1-git-send-email-jouni@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 29 Oct 2014 07:51:21 -0400
+Received: by mail-wi0-f169.google.com with SMTP id n3so1309363wiv.2
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2014 04:51:20 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Max Stepanov <Max.Stepanov@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 14/25] iwlwifi: mvm: add MVM_FW_BCAST_FILTER_PASS_ALL option
+Date: Wed, 29 Oct 2014 13:50:35 +0200
+Message-Id: <1414583446-11032-14-git-send-email-egrumbach@gmail.com> (sfid-20141029_131321_462132_A563F0F0)
+In-Reply-To: <CANUX_P0TURG9GNMRUOTGFfh=qzSNKkDh9Gm7Asq5jXr=0gQgLg@mail.gmail.com>
+References: <CANUX_P0TURG9GNMRUOTGFfh=qzSNKkDh9Gm7Asq5jXr=0gQgLg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This extends regulatory rules for Dominica to allow 160 MHz
-VHT channels to be used in 5.15-5.25 GHz, 5.25-5.35 GHz. Since the rules
-between 5.15-5.25 and 5.25-5.35 GHz ranges are different (e.g., DFS
-requirement), the AUTO-BW flag needs to be used to allow the maximum
-channel bandwidth to be determined automatically based on two rules.
+From: Max Stepanov <Max.Stepanov@intel.com>
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+The MVM_FW_BCAST_FILTER_PASS_ALL option defined in iwl-dbg-cfg.ini
+configuration file allows to enable/disable FW broadcast filtering.
+
+If MVM_FW_BCAST_FILTER_PASS_ALL is not defined in iwl-dbg-cfg.ini or
+its value is 0, the mvm broadcast filtering is enabled.
+
+Setting MVM_FW_BCAST_FILTER_PASS_ALL=1 in iwl-dbg-cfg.ini blocks sending
+of BCAST_FILTER_CMD to FW.
+
+Signed-off-by: Max Stepanov <Max.Stepanov@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- db.txt | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/constants.h | 3 ++-
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c  | 3 +++
+ 2 files changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/db.txt b/db.txt
-index 999bc5f..d527b54 100644
---- a/db.txt
-+++ b/db.txt
-@@ -331,8 +331,8 @@ country DK: DFS-ETSI
- # http://www.ntrcdom.org/index.php?option=com_content&view=category&layout=blog&id=10&Itemid=55
- country DM: DFS-FCC
- 	(2402 - 2472 @ 40), (30)
--	(5170 - 5250 @ 80), (17)
--	(5250 - 5330 @ 80), (23), DFS
-+	(5170 - 5250 @ 80), (17), AUTO-BW
-+	(5250 - 5330 @ 80), (23), DFS, AUTO-BW
- 	(5735 - 5835 @ 80), (30)
+diff --git a/drivers/net/wireless/iwlwifi/mvm/constants.h b/drivers/net/wireless/iwlwifi/mvm/constants.h
+index f288783..a2b473d 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/constants.h
++++ b/drivers/net/wireless/iwlwifi/mvm/constants.h
+@@ -92,10 +92,11 @@
+ #define IWL_MVM_BT_COEX_SYNC2SCO		1
+ #define IWL_MVM_BT_COEX_CORUNNING		0
+ #define IWL_MVM_BT_COEX_MPLUT			1
++#define IWL_MVM_BT_COEX_ANTENNA_COUPLING_THRS	30
+ #define IWL_MVM_FW_MCAST_FILTER_PASS_ALL	0
++#define IWL_MVM_FW_BCAST_FILTER_PASS_ALL	0
+ #define IWL_MVM_QUOTA_THRESHOLD			8
+ #define IWL_MVM_RS_RSSI_BASED_INIT_RATE         0
+ #define IWL_MVM_RS_DISABLE_MIMO			0
+-#define IWL_MVM_BT_COEX_ANTENNA_COUPLING_THRS	30
  
- country DO: DFS-FCC
+ #endif /* __MVM_CONSTANTS_H */
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index b17877c..9fc843e 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -1382,6 +1382,9 @@ bool iwl_mvm_bcast_filter_build_cmd(struct iwl_mvm *mvm,
+ 		.cmd = cmd,
+ 	};
+ 
++	if (IWL_MVM_FW_BCAST_FILTER_PASS_ALL)
++		return false;
++
+ 	memset(cmd, 0, sizeof(*cmd));
+ 	cmd->max_bcast_filters = ARRAY_SIZE(cmd->filters);
+ 	cmd->max_macs = ARRAY_SIZE(cmd->macs);
 -- 
 1.9.1
 
