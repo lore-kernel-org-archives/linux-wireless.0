@@ -1,166 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:63875 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752415AbaJFFJs (ORCPT
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:56129 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932555AbaJ2LvT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Oct 2014 01:09:48 -0400
-From: Avinash Patil <patila@marvell.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <maithili@marvell.com>,
-	<cluo@marvell.com>, <huxm@marvell.com>, <yangyang@marvell.com>,
-	<akarwar@marvell.com>, <frankh@marvell.com>,
-	<nishants@marvell.com>, Avinash Patil <patila@marvell.com>
-Subject: [PATCH 2/2] mwifiex: add support for SD8887 chipset
-Date: Wed, 1 Oct 2014 20:53:09 +0530
-Message-ID: <1412176989-14323-2-git-send-email-patila@marvell.com> (sfid-20141006_070955_416482_217C3EEC)
-In-Reply-To: <1412176989-14323-1-git-send-email-patila@marvell.com>
-References: <1412176989-14323-1-git-send-email-patila@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 29 Oct 2014 07:51:19 -0400
+Received: by mail-wi0-f171.google.com with SMTP id q5so1434539wiv.4
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2014 04:51:18 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 13/25] iwlwifi: mvm: BT Coex - move BT_ANTENNA_COUPLING_THRESHOLD to constants
+Date: Wed, 29 Oct 2014 13:50:34 +0200
+Message-Id: <1414583446-11032-13-git-send-email-egrumbach@gmail.com> (sfid-20141029_131321_821913_A41FEA90)
+In-Reply-To: <CANUX_P0TURG9GNMRUOTGFfh=qzSNKkDh9Gm7Asq5jXr=0gQgLg@mail.gmail.com>
+References: <CANUX_P0TURG9GNMRUOTGFfh=qzSNKkDh9Gm7Asq5jXr=0gQgLg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds SD8887 support to mwifiex.
-SD8887 is Marvell's 1x1 11ac solution.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-The corresponding firmware image file is located at:
-"mrvl/sd8887_uapsta.bin"
+This is were it really needs to be.
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Frank Huang <frankh@marvell.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/mwifiex/Kconfig |  4 +--
- drivers/net/wireless/mwifiex/sdio.c  |  5 ++++
- drivers/net/wireless/mwifiex/sdio.h  | 55 ++++++++++++++++++++++++++++++++++++
- 3 files changed, 62 insertions(+), 2 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/coex.c        | 4 +---
+ drivers/net/wireless/iwlwifi/mvm/coex_legacy.c | 5 ++---
+ drivers/net/wireless/iwlwifi/mvm/constants.h   | 1 +
+ 3 files changed, 4 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/Kconfig b/drivers/net/wireless/mwifiex/Kconfig
-index ecdf345..e70d0df 100644
---- a/drivers/net/wireless/mwifiex/Kconfig
-+++ b/drivers/net/wireless/mwifiex/Kconfig
-@@ -9,12 +9,12 @@ config MWIFIEX
- 	  mwifiex.
+diff --git a/drivers/net/wireless/iwlwifi/mvm/coex.c b/drivers/net/wireless/iwlwifi/mvm/coex.c
+index da2ffb7..515f9cb 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/coex.c
++++ b/drivers/net/wireless/iwlwifi/mvm/coex.c
+@@ -72,8 +72,6 @@
+ #include "mvm.h"
+ #include "iwl-debug.h"
  
- config MWIFIEX_SDIO
--	tristate "Marvell WiFi-Ex Driver for SD8786/SD8787/SD8797/SD8897"
-+	tristate "Marvell WiFi-Ex Driver for SD8786/SD8787/SD8797/SD8887/SD8897"
- 	depends on MWIFIEX && MMC
- 	select FW_LOADER
- 	---help---
- 	  This adds support for wireless adapters based on Marvell
--	  8786/8787/8797 chipsets with SDIO interface.
-+	  8786/8787/8797/8887/8897 chipsets with SDIO interface.
+-#define BT_ANTENNA_COUPLING_THRESHOLD		(30)
+-
+ const u32 iwl_bt_ctl_kill_msk[BT_KILL_MSK_MAX] = {
+ 	[BT_KILL_MSK_DEFAULT] = 0xfffffc00,
+ 	[BT_KILL_MSK_NEVER] = 0xffffffff,
+@@ -605,7 +603,7 @@ int iwl_send_bt_init_conf(struct iwl_mvm *mvm)
  
- 	  If you choose to build it as a module, it will be called
- 	  mwifiex_sdio.
-diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
-index a22e9a9..b25766b 100644
---- a/drivers/net/wireless/mwifiex/sdio.c
-+++ b/drivers/net/wireless/mwifiex/sdio.c
-@@ -279,6 +279,8 @@ static int mwifiex_sdio_suspend(struct device *dev)
- #define SDIO_DEVICE_ID_MARVELL_8797   (0x9129)
- /* Device ID for SD8897 */
- #define SDIO_DEVICE_ID_MARVELL_8897   (0x912d)
-+/* Device ID for SD8887 */
-+#define SDIO_DEVICE_ID_MARVELL_8887   (0x9135)
+ 	bt_cmd->max_kill = cpu_to_le32(5);
+ 	bt_cmd->bt4_antenna_isolation_thr =
+-				cpu_to_le32(BT_ANTENNA_COUPLING_THRESHOLD);
++		cpu_to_le32(IWL_MVM_BT_COEX_ANTENNA_COUPLING_THRS);
+ 	bt_cmd->bt4_tx_tx_delta_freq_thr = cpu_to_le32(15);
+ 	bt_cmd->bt4_tx_rx_max_freq0 = cpu_to_le32(15);
+ 	bt_cmd->override_primary_lut = cpu_to_le32(BT_COEX_INVALID_LUT);
+diff --git a/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c b/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c
+index 8a1d2f3..3f3b8ee 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c
++++ b/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c
+@@ -102,8 +102,6 @@ static const u8 iwl_bt_prio_tbl[BT_COEX_PRIO_TBL_EVT_MAX] = {
  
- /* WLAN IDs */
- static const struct sdio_device_id mwifiex_ids[] = {
-@@ -290,6 +292,8 @@ static const struct sdio_device_id mwifiex_ids[] = {
- 		.driver_data = (unsigned long) &mwifiex_sdio_sd8797},
- 	{SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, SDIO_DEVICE_ID_MARVELL_8897),
- 		.driver_data = (unsigned long) &mwifiex_sdio_sd8897},
-+	{SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, SDIO_DEVICE_ID_MARVELL_8887),
-+		.driver_data = (unsigned long)&mwifiex_sdio_sd8887},
- 	{},
- };
+ #undef EVENT_PRIO_ANT
  
-@@ -2233,3 +2237,4 @@ MODULE_FIRMWARE(SD8786_DEFAULT_FW_NAME);
- MODULE_FIRMWARE(SD8787_DEFAULT_FW_NAME);
- MODULE_FIRMWARE(SD8797_DEFAULT_FW_NAME);
- MODULE_FIRMWARE(SD8897_DEFAULT_FW_NAME);
-+MODULE_FIRMWARE(SD8887_DEFAULT_FW_NAME);
-diff --git a/drivers/net/wireless/mwifiex/sdio.h b/drivers/net/wireless/mwifiex/sdio.h
-index 5a08ebc..20cd9ad 100644
---- a/drivers/net/wireless/mwifiex/sdio.h
-+++ b/drivers/net/wireless/mwifiex/sdio.h
-@@ -33,6 +33,7 @@
- #define SD8787_DEFAULT_FW_NAME "mrvl/sd8787_uapsta.bin"
- #define SD8797_DEFAULT_FW_NAME "mrvl/sd8797_uapsta.bin"
- #define SD8897_DEFAULT_FW_NAME "mrvl/sd8897_uapsta.bin"
-+#define SD8887_DEFAULT_FW_NAME "mrvl/sd8887_uapsta.bin"
+-#define BT_ANTENNA_COUPLING_THRESHOLD		(30)
+-
+ static int iwl_send_bt_prio_tbl(struct iwl_mvm *mvm)
+ {
+ 	if (unlikely(mvm->bt_force_ant_mode != BT_FORCE_ANT_DIS))
+@@ -593,7 +591,8 @@ int iwl_send_bt_init_conf_old(struct iwl_mvm *mvm)
+ 	}
  
- #define BLOCK_MODE	1
- #define BYTE_MODE	0
-@@ -334,6 +335,47 @@ static const struct mwifiex_sdio_card_reg mwifiex_reg_sd8897 = {
- 	.fw_dump_end = 0xea,
- };
+ 	bt_cmd->max_kill = 5;
+-	bt_cmd->bt4_antenna_isolation_thr = BT_ANTENNA_COUPLING_THRESHOLD;
++	bt_cmd->bt4_antenna_isolation_thr =
++		IWL_MVM_BT_COEX_ANTENNA_COUPLING_THRS;
+ 	bt_cmd->bt4_antenna_isolation = iwlwifi_mod_params.ant_coupling;
+ 	bt_cmd->bt4_tx_tx_delta_freq_thr = 15;
+ 	bt_cmd->bt4_tx_rx_max_freq0 = 15;
+diff --git a/drivers/net/wireless/iwlwifi/mvm/constants.h b/drivers/net/wireless/iwlwifi/mvm/constants.h
+index dfec5b5..f288783 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/constants.h
++++ b/drivers/net/wireless/iwlwifi/mvm/constants.h
+@@ -96,5 +96,6 @@
+ #define IWL_MVM_QUOTA_THRESHOLD			8
+ #define IWL_MVM_RS_RSSI_BASED_INIT_RATE         0
+ #define IWL_MVM_RS_DISABLE_MIMO			0
++#define IWL_MVM_BT_COEX_ANTENNA_COUPLING_THRS	30
  
-+static const struct mwifiex_sdio_card_reg mwifiex_reg_sd8887 = {
-+	.start_rd_port = 0,
-+	.start_wr_port = 0,
-+	.base_0_reg = 0x6C,
-+	.base_1_reg = 0x6D,
-+	.poll_reg = 0x5C,
-+	.host_int_enable = UP_LD_HOST_INT_MASK | DN_LD_HOST_INT_MASK |
-+			CMD_PORT_UPLD_INT_MASK | CMD_PORT_DNLD_INT_MASK,
-+	.host_int_rsr_reg = 0x4,
-+	.host_int_status_reg = 0x0C,
-+	.host_int_mask_reg = 0x08,
-+	.status_reg_0 = 0x90,
-+	.status_reg_1 = 0x91,
-+	.sdio_int_mask = 0xff,
-+	.data_port_mask = 0xffffffff,
-+	.io_port_0_reg = 0xE4,
-+	.io_port_1_reg = 0xE5,
-+	.io_port_2_reg = 0xE6,
-+	.max_mp_regs = 196,
-+	.rd_bitmap_l = 0x10,
-+	.rd_bitmap_u = 0x11,
-+	.rd_bitmap_1l = 0x12,
-+	.rd_bitmap_1u = 0x13,
-+	.wr_bitmap_l = 0x14,
-+	.wr_bitmap_u = 0x15,
-+	.wr_bitmap_1l = 0x16,
-+	.wr_bitmap_1u = 0x17,
-+	.rd_len_p0_l = 0x18,
-+	.rd_len_p0_u = 0x19,
-+	.card_misc_cfg_reg = 0xd8,
-+	.card_cfg_2_1_reg = 0xd9,
-+	.cmd_rd_len_0 = 0xc0,
-+	.cmd_rd_len_1 = 0xc1,
-+	.cmd_rd_len_2 = 0xc2,
-+	.cmd_rd_len_3 = 0xc3,
-+	.cmd_cfg_0 = 0xc4,
-+	.cmd_cfg_1 = 0xc5,
-+	.cmd_cfg_2 = 0xc6,
-+	.cmd_cfg_3 = 0xc7,
-+};
-+
- static const struct mwifiex_sdio_device mwifiex_sdio_sd8786 = {
- 	.firmware = SD8786_DEFAULT_FW_NAME,
- 	.reg = &mwifiex_reg_sd87xx,
-@@ -386,6 +428,19 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd8897 = {
- 	.supports_fw_dump = true,
- };
- 
-+static const struct mwifiex_sdio_device mwifiex_sdio_sd8887 = {
-+	.firmware = SD8887_DEFAULT_FW_NAME,
-+	.reg = &mwifiex_reg_sd8887,
-+	.max_ports = 32,
-+	.mp_agg_pkt_limit = 16,
-+	.supports_sdio_new_mode = true,
-+	.has_control_mask = false,
-+	.tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_4K,
-+	.mp_tx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_32K,
-+	.mp_rx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_32K,
-+	.supports_fw_dump = false,
-+};
-+
- /*
-  * .cmdrsp_complete handler
-  */
+ #endif /* __MVM_CONSTANTS_H */
 -- 
-1.8.1.4
+1.9.1
 
