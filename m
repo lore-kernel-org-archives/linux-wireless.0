@@ -1,119 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:49137
-	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751476AbaJRRCR (ORCPT
+Received: from mail-wg0-f51.google.com ([74.125.82.51]:51835 "EHLO
+	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932555AbaJ2Lva (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Oct 2014 13:02:17 -0400
-From: Felix Fietkau <nbd@openwrt.org>
+	Wed, 29 Oct 2014 07:51:30 -0400
+Received: by mail-wg0-f51.google.com with SMTP id l18so3100397wgh.10
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2014 04:51:29 -0700 (PDT)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
-Subject: [PATCH 08/10] ath9k: add support for endian swap of eeprom from platform data
-Date: Sat, 18 Oct 2014 19:02:10 +0200
-Message-Id: <1413651732-69783-8-git-send-email-nbd@openwrt.org> (sfid-20141018_190238_405891_4939C1DB)
-In-Reply-To: <1413651732-69783-1-git-send-email-nbd@openwrt.org>
-References: <1413651732-69783-1-git-send-email-nbd@openwrt.org>
+Cc: Luciano Coelho <luciano.coelho@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 19/25] iwlwifi: mvm: remove unnecessary includes in tt.c
+Date: Wed, 29 Oct 2014 13:50:40 +0200
+Message-Id: <1414583446-11032-19-git-send-email-egrumbach@gmail.com> (sfid-20141029_125153_004422_196A5936)
+In-Reply-To: <CANUX_P0TURG9GNMRUOTGFfh=qzSNKkDh9Gm7Asq5jXr=0gQgLg@mail.gmail.com>
+References: <CANUX_P0TURG9GNMRUOTGFfh=qzSNKkDh9Gm7Asq5jXr=0gQgLg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On some devices (especially little-endian ones), the flash EEPROM data
-has a different endian, which needs to be detected.
-Add a flag to the platform data to allow overriding that behavior
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+We used to need to include some headers in order to read the registers
+and do all the calculations by ourselves, but this is not done anymore
+(i.e. we let the firmware do this for us), so we don't need to include
+those headers anymore.
+
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/eeprom_def.c | 31 ++++++++++-------------------
- drivers/net/wireless/ath/ath9k/hw.h         |  1 +
- drivers/net/wireless/ath/ath9k/init.c       |  2 ++
- include/linux/ath9k_platform.h              |  1 +
- 4 files changed, 14 insertions(+), 21 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/tt.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-index 3218ca9..122b846 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-@@ -262,7 +262,7 @@ static int ath9k_hw_def_check_eeprom(struct ath_hw *ah)
- {
- 	struct ar5416_eeprom_def *eep = &ah->eeprom.def;
- 	struct ath_common *common = ath9k_hw_common(ah);
--	u16 *eepdata, temp, magic, magic2;
-+	u16 *eepdata, temp, magic;
- 	u32 sum = 0, el;
- 	bool need_swap = false;
- 	int i, addr, size;
-@@ -272,27 +272,16 @@ static int ath9k_hw_def_check_eeprom(struct ath_hw *ah)
- 		return false;
- 	}
+diff --git a/drivers/net/wireless/iwlwifi/mvm/tt.c b/drivers/net/wireless/iwlwifi/mvm/tt.c
+index acca44a..d4f2c29 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/tt.c
++++ b/drivers/net/wireless/iwlwifi/mvm/tt.c
+@@ -64,10 +64,6 @@
+  *****************************************************************************/
  
--	if (!ath9k_hw_use_flash(ah)) {
--		ath_dbg(common, EEPROM, "Read Magic = 0x%04X\n", magic);
--
--		if (magic != AR5416_EEPROM_MAGIC) {
--			magic2 = swab16(magic);
--
--			if (magic2 == AR5416_EEPROM_MAGIC) {
--				size = sizeof(struct ar5416_eeprom_def);
--				need_swap = true;
--				eepdata = (u16 *) (&ah->eeprom);
-+	if (swab16(magic) == AR5416_EEPROM_MAGIC &&
-+	    !(ah->ah_flags & AH_NO_EEP_SWAP)) {
-+		size = sizeof(struct ar5416_eeprom_def);
-+		need_swap = true;
-+		eepdata = (u16 *) (&ah->eeprom);
+ #include "mvm.h"
+-#include "iwl-config.h"
+-#include "iwl-io.h"
+-#include "iwl-csr.h"
+-#include "iwl-prph.h"
  
--				for (addr = 0; addr < size / sizeof(u16); addr++) {
--					temp = swab16(*eepdata);
--					*eepdata = temp;
--					eepdata++;
--				}
--			} else {
--				ath_err(common,
--					"Invalid EEPROM Magic. Endianness mismatch.\n");
--				return -EINVAL;
--			}
-+		for (addr = 0; addr < size / sizeof(u16); addr++) {
-+			temp = swab16(*eepdata);
-+			*eepdata = temp;
-+			eepdata++;
- 		}
- 	}
- 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index f204099..c6dba9b 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -731,6 +731,7 @@ enum ath_cal_list {
- #define AH_USE_EEPROM   0x1
- #define AH_UNPLUGGED    0x2 /* The card has been physically removed. */
- #define AH_FASTCC       0x4
-+#define AH_NO_EEP_SWAP  0x8 /* Do not swap EEPROM data */
- 
- struct ath_hw {
- 	struct ath_ops reg_ops;
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 57a1760..5d9c711 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -531,6 +531,8 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
- 		ah->is_clk_25mhz = pdata->is_clk_25mhz;
- 		ah->get_mac_revision = pdata->get_mac_revision;
- 		ah->external_reset = pdata->external_reset;
-+		if (!pdata->endian_check)
-+			ah->ah_flags |= AH_NO_EEP_SWAP;
- 	}
- 
- 	common->ops = &ah->reg_ops;
-diff --git a/include/linux/ath9k_platform.h b/include/linux/ath9k_platform.h
-index a495a95..4350165 100644
---- a/include/linux/ath9k_platform.h
-+++ b/include/linux/ath9k_platform.h
-@@ -31,6 +31,7 @@ struct ath9k_platform_data {
- 	u32 gpio_mask;
- 	u32 gpio_val;
- 
-+	bool endian_check;
- 	bool is_clk_25mhz;
- 	bool tx_gain_buffalo;
+ #define IWL_MVM_TEMP_NOTIF_WAIT_TIMEOUT	HZ
  
 -- 
-2.0.4
+1.9.1
 
