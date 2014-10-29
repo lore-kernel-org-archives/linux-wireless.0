@@ -1,55 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:48022 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751798AbaJAXuO (ORCPT
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:33129 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755251AbaJ2RpF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Oct 2014 19:50:14 -0400
-Received: from [192.168.100.236] (firewall.candelatech.com [70.89.124.249])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mail2.candelatech.com (Postfix) with ESMTPSA id 6FD0840A79A
-	for <linux-wireless@vger.kernel.org>; Wed,  1 Oct 2014 16:50:13 -0700 (PDT)
-Message-ID: <542C9335.6050900@candelatech.com> (sfid-20141002_015018_959395_29B581D3)
-Date: Wed, 01 Oct 2014 16:50:13 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Setting legacy bit-rates no longer works?
-References: <542C8798.30807@candelatech.com>
-In-Reply-To: <542C8798.30807@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 29 Oct 2014 13:45:05 -0400
+Received: by mail-wg0-f45.google.com with SMTP id x12so2489386wgg.18
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2014 10:45:04 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH v2 11/34] staging: vt6655: mac80211 conversion: device_print_info remove netdevice.
+Date: Wed, 29 Oct 2014 17:43:46 +0000
+Message-Id: <1414604649-9105-12-git-send-email-tvboxspy@gmail.com> (sfid-20141029_185359_907833_1501B6D3)
+In-Reply-To: <1414604649-9105-1-git-send-email-tvboxspy@gmail.com>
+References: <1414604649-9105-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/01/2014 04:00 PM, Ben Greear wrote:
-> I tried this on a 3.17.0-rc7+ kernel, but reported tx-rate stays at 54Mbps
-> 
-> iw dev sta1 set bitrates legacy-5 24
-> 
-> Driver is ath9k, but wpa_supplicant is configured to disable HT.
-> 
-> I'm going to go dig into this, but if someone has any suggestions,
-> please let me know.
+use dev_info for device name and pcid->irq for irq number.
 
-Ok, so my problem is that I was trying to set legacy-2.4 rates with one call to iw,
-and legacy-5 rates with another.  Any non-specified rates get set to full bit-rate,
-so that is why it wasn't working.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/device_main.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-You have to do something like:
-
-iw dev sta1 set bitrates legacy-2.4 24 legacy-5 24
-
-Probably any time supplicant sets the rates, even if not specifying
-legacy, it is going to over-write your previously set legacy rates.
-
-I think the kernel should just not make any changes if the user does
-not specify that entry in the netlink message, but that is a problem
-for another day.
-
-Thanks,
-Ben
-
+diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
+index b0f94a8..5ece184 100644
+--- a/drivers/staging/vt6655/device_main.c
++++ b/drivers/staging/vt6655/device_main.c
+@@ -809,12 +809,11 @@ static const struct net_device_ops device_netdev_ops = {
+ 
+ static void device_print_info(struct vnt_private *pDevice)
+ {
+-	struct net_device *dev = pDevice->dev;
++	dev_info(&pDevice->pcid->dev, "%s\n", get_chip_name(pDevice->chip_id));
+ 
+-	pr_info("%s: %s\n", dev->name, get_chip_name(pDevice->chip_id));
+-	pr_info("%s: MAC=%pM IO=0x%lx Mem=0x%lx IRQ=%d\n",
+-		dev->name, dev->dev_addr, (unsigned long)pDevice->ioaddr,
+-		(unsigned long)pDevice->PortOffset, pDevice->dev->irq);
++	dev_info(&pDevice->pcid->dev, "MAC=%pM IO=0x%lx Mem=0x%lx IRQ=%d\n",
++		 pDevice->abyCurrentNetAddr, (unsigned long)pDevice->ioaddr,
++		 (unsigned long)pDevice->PortOffset, pDevice->pcid->irq);
+ }
+ 
+ static void vt6655_init_info(struct pci_dev *pcid,
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.1.0
 
