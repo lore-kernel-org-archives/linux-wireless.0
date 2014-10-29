@@ -1,138 +1,166 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:44955 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751176AbaJBML3 (ORCPT
+Received: from relay1.mentorg.com ([192.94.38.131]:49223 "EHLO
+	relay1.mentorg.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751670AbaJ2GfQ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Oct 2014 08:11:29 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH 2/4] ath10k: add tracing for ath10k_htt_pktlog
-Date: Thu, 2 Oct 2014 17:42:12 +0530
-Message-ID: <1412251934-7011-3-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20141002_141132_248935_32DF5E0E)
-In-Reply-To: <1412251934-7011-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1412251934-7011-1-git-send-email-rmanohar@qti.qualcomm.com>
+	Wed, 29 Oct 2014 02:35:16 -0400
+From: "Sharma, Sanjeev" <Sanjeev_Sharma@mentor.com>
+To: Joe Perches <joe@perches.com>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+CC: "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
+	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH] staging:rtl8723au: core: Fix error reported by
+ checkpatch.
+Date: Wed, 29 Oct 2014 06:35:12 +0000
+Message-ID: <FDC088D3B5555644AE135ED28A7ABDE950E890CD@EU-MBX-02.mgc.mentorg.com> (sfid-20141029_073539_443730_FA1E52B8)
+References: <1414396745-8845-1-git-send-email-sanjeev_sharma@mentor.com>
+	 <wrfjioj5aonx.fsf@redhat.com> <1414421554.8884.7.camel@perches.com>
+In-Reply-To: <1414421554.8884.7.camel@perches.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is useful for collecting pktlog statistics of tx, rx
-and rate information, so add tracing for the API call.
+-----Original Message-----
+From: Joe Perches [mailto:joe@perches.com] 
+Sent: Monday, October 27, 2014 8:23 PM
+To: Jes Sorensen
+Cc: Sharma, Sanjeev; Larry.Finger@lwfinger.net; gregkh@linuxfoundation.org; linux-wireless@vger.kernel.org; devel@driverdev.osuosl.org; linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] staging:rtl8723au: core: Fix error reported by checkpatch.
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/debug.h  |  1 -
- drivers/net/wireless/ath/ath10k/htt.h    |  2 +-
- drivers/net/wireless/ath/ath10k/htt_rx.c |  9 +++++++++
- drivers/net/wireless/ath/ath10k/hw.h     |  9 +++++++++
- drivers/net/wireless/ath/ath10k/trace.h  | 27 +++++++++++++++++++++++++++
- 5 files changed, 46 insertions(+), 2 deletions(-)
+On Mon, 2014-10-27 at 09:43 +0100, Jes Sorensen wrote:
+> Sanjeev Sharma <sanjeev_sharma@mentor.com> writes:
+> > This is a patch to the rtw_cmd.c file that fixes Error reported by 
+> > checkpatch.
+[]
+> > diff --git a/drivers/staging/rtl8723au/core/rtw_cmd.c 
+> > b/drivers/staging/rtl8723au/core/rtw_cmd.c
+[]
+> > @@ -957,7 +957,7 @@ static void traffic_status_watchdog(struct rtw_adapter *padapter)
+> >  		/*  check traffic for  powersaving. */
+> >  			if (((pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod +
+> >  			      pmlmepriv->LinkDetectInfo.NumTxOkInPeriod) > 8) ||
+> > -			    pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod >2)
+> > +			    pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod > 2)
+> >  				bEnterPS = false;
+> >  			else
+> >  				bEnterPS = true;
+> 
+> This makes the line longer than 80 characters, that is worse than the 
+> 'problem' you are fixing.
 
-diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
-index 794e6bb..aafdcab 100644
---- a/drivers/net/wireless/ath/ath10k/debug.h
-+++ b/drivers/net/wireless/ath/ath10k/debug.h
-@@ -69,7 +69,6 @@ struct ath10k_fw_crash_data *
- ath10k_debug_get_new_fw_crash_data(struct ath10k *ar);
+The code already has dozens of long lines already.
+
+This is generally a problem because the variable names are pretty long so strict 80 column adherence generally isn't possible.
+
+A possible way to shorten these relatively long variable name/line lengths is to use a temporary for
+
+	pmlmeprv->LinkDetectInfo
+
+	struct rt_link_detect *ldi = &pmlmeprv->LinkDetectInfo;
+
+so:
+
+I am agree on this approach but Let's wait for Jes opinion on it.
+
+Sanjeev Sharma
+
+ drivers/staging/rtl8723au/core/rtw_cmd.c | 46 ++++++++++++++++----------------
+ 1 file changed, 23 insertions(+), 23 deletions(-)
+
+diff --git a/drivers/staging/rtl8723au/core/rtw_cmd.c b/drivers/staging/rtl8723au/core/rtw_cmd.c
+index d2d7edf..1b24945 100644
+--- a/drivers/staging/rtl8723au/core/rtw_cmd.c
++++ b/drivers/staging/rtl8723au/core/rtw_cmd.c
+@@ -922,34 +922,33 @@ static void traffic_status_watchdog(struct rtw_adapter *padapter)
+ 	u8 bHigherBusyTxTraffic = false;
+ 	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
+ 	int BusyThreshold = 100;
++	struct rt_link_detect *ldi = &pmlmepriv->LinkDetectInfo;
++
+ 	/*  */
+ 	/*  Determine if our traffic is busy now */
+ 	/*  */
+ 	if (check_fwstate(pmlmepriv, _FW_LINKED)) {
+ 		if (rtl8723a_BT_coexist(padapter))
+ 			BusyThreshold = 50;
+-		else if (pmlmepriv->LinkDetectInfo.bBusyTraffic)
++		else if (ldi->bBusyTraffic)
+ 			BusyThreshold = 75;
+ 		/*  if we raise bBusyTraffic in last watchdog, using
+ 		    lower threshold. */
+-		if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod > BusyThreshold ||
+-		    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod > BusyThreshold) {
++		if (ldi->NumRxOkInPeriod > BusyThreshold ||
++		    ldi->NumTxOkInPeriod > BusyThreshold) {
+ 			bBusyTraffic = true;
  
- void ath10k_debug_dbglog_add(struct ath10k *ar, u8 *buffer, int len);
+-			if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod >
+-			    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod)
++			if (ldi->NumRxOkInPeriod > ldi->NumTxOkInPeriod)
+ 				bRxBusyTraffic = true;
+ 			else
+ 				bTxBusyTraffic = true;
+ 		}
+ 
+ 		/*  Higher Tx/Rx data. */
+-		if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod > 4000 ||
+-		    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod > 4000) {
++		if (ldi->NumRxOkInPeriod > 4000 ||
++		    ldi->NumTxOkInPeriod > 4000) {
+ 			bHigherBusyTraffic = true;
 -
- #define ATH10K_DFS_STAT_INC(ar, c) (ar->debug.dfs_stats.c++)
- 
- #else
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index 3b44217..15c58e8 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -725,7 +725,7 @@ static inline u8 *htt_rx_test_get_chars(struct htt_rx_test *rx_test)
-  */
- struct htt_pktlog_msg {
- 	u8 pad[3];
--	__le32 payload[1 /* or more */];
-+	u8 payload[0];
- } __packed;
- 
- struct htt_dbg_stats_rx_reorder_stats {
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 60d40a0..a078451 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -1674,6 +1674,15 @@ void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
- 	case HTT_T2H_MSG_TYPE_RX_DELBA:
- 		ath10k_htt_rx_delba(ar, resp);
- 		break;
-+	case HTT_T2H_MSG_TYPE_PKTLOG: {
-+		struct ath10k_pktlog_hdr *hdr =
-+			(struct ath10k_pktlog_hdr *)resp->pktlog_msg.payload;
-+
-+		trace_ath10k_htt_pktlog(ar, resp->pktlog_msg.payload,
-+					sizeof(*hdr) +
-+					__le16_to_cpu(hdr->size));
-+		break;
+-			if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod >
+-			    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod)
++			if (ldi->NumRxOkInPeriod > ldi->NumTxOkInPeriod)
+ 				bHigherBusyRxTraffic = true;
+ 			else
+ 				bHigherBusyTxTraffic = true;
+@@ -958,9 +957,9 @@ static void traffic_status_watchdog(struct rtw_adapter *padapter)
+ 		if (!rtl8723a_BT_coexist(padapter) ||
+ 		    !rtl8723a_BT_using_antenna_1(padapter)) {
+ 		/*  check traffic for  powersaving. */
+-			if (((pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod +
+-			      pmlmepriv->LinkDetectInfo.NumTxOkInPeriod) > 8) ||
+-			    pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod >2)
++			if (((ldi->NumRxUnicastOkInPeriod +
++			      ldi->NumTxOkInPeriod) > 8) ||
++			    ldi->NumRxUnicastOkInPeriod > 2)
+ 				bEnterPS = false;
+ 			else
+ 				bEnterPS = true;
+@@ -971,18 +970,19 @@ static void traffic_status_watchdog(struct rtw_adapter *padapter)
+ 			else
+ 				LPS_Leave23a(padapter);
+ 		}
+-	} else
++	} else {
+ 		LPS_Leave23a(padapter);
 +	}
- 	case HTT_T2H_MSG_TYPE_RX_FLUSH: {
- 		/* Ignore this event because mac80211 takes care of Rx
- 		 * aggregation reordering.
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 006a9cb..4b86ca3 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -80,6 +80,15 @@ enum ath10k_mcast2ucast_mode {
- 	ATH10K_MCAST2UCAST_ENABLED = 1,
- };
  
-+struct ath10k_pktlog_hdr {
-+	__le16 flags;
-+	__le16 missed_cnt;
-+	__le16 log_type;
-+	__le16 size;
-+	__le32 timestamp;
-+	u8 payload[0];
-+} __packed;
-+
- /* Target specific defines for MAIN firmware */
- #define TARGET_NUM_VDEVS			8
- #define TARGET_NUM_PEER_AST			2
-diff --git a/drivers/net/wireless/ath/ath10k/trace.h b/drivers/net/wireless/ath/ath10k/trace.h
-index 574b75a..971ff23 100644
---- a/drivers/net/wireless/ath/ath10k/trace.h
-+++ b/drivers/net/wireless/ath/ath10k/trace.h
-@@ -254,6 +254,33 @@ TRACE_EVENT(ath10k_wmi_dbglog,
- 	)
- );
+-	pmlmepriv->LinkDetectInfo.NumRxOkInPeriod = 0;
+-	pmlmepriv->LinkDetectInfo.NumTxOkInPeriod = 0;
+-	pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod = 0;
+-	pmlmepriv->LinkDetectInfo.bBusyTraffic = bBusyTraffic;
+-	pmlmepriv->LinkDetectInfo.bTxBusyTraffic = bTxBusyTraffic;
+-	pmlmepriv->LinkDetectInfo.bRxBusyTraffic = bRxBusyTraffic;
+-	pmlmepriv->LinkDetectInfo.bHigherBusyTraffic = bHigherBusyTraffic;
+-	pmlmepriv->LinkDetectInfo.bHigherBusyRxTraffic = bHigherBusyRxTraffic;
+-	pmlmepriv->LinkDetectInfo.bHigherBusyTxTraffic = bHigherBusyTxTraffic;
++	ldi->NumRxOkInPeriod = 0;
++	ldi->NumTxOkInPeriod = 0;
++	ldi->NumRxUnicastOkInPeriod = 0;
++	ldi->bBusyTraffic = bBusyTraffic;
++	ldi->bTxBusyTraffic = bTxBusyTraffic;
++	ldi->bRxBusyTraffic = bRxBusyTraffic;
++	ldi->bHigherBusyTraffic = bHigherBusyTraffic;
++	ldi->bHigherBusyRxTraffic = bHigherBusyRxTraffic;
++	ldi->bHigherBusyTxTraffic = bHigherBusyTxTraffic;
+ }
  
-+TRACE_EVENT(ath10k_htt_pktlog,
-+	    TP_PROTO(struct ath10k *ar, void *buf, u16 buf_len),
-+
-+	TP_ARGS(ar, buf, buf_len),
-+
-+	TP_STRUCT__entry(
-+		__string(device, dev_name(ar->dev))
-+		__string(driver, dev_driver_string(ar->dev))
-+		__field(u16, buf_len)
-+		__dynamic_array(u8, pktlog, buf_len)
-+	),
-+
-+	TP_fast_assign(
-+		__assign_str(device, dev_name(ar->dev));
-+		__assign_str(driver, dev_driver_string(ar->dev));
-+		__entry->buf_len = buf_len;
-+		memcpy(__get_dynamic_array(pktlog), buf, buf_len);
-+	),
-+
-+	TP_printk(
-+		"%s %s size %hu",
-+		__get_str(driver),
-+		__get_str(device),
-+		__entry->buf_len
-+	 )
-+);
-+
- #endif /* _TRACE_H_ || TRACE_HEADER_MULTI_READ*/
- 
- /* we don't want to use include/trace/events */
--- 
-2.1.1
+ static void dynamic_chk_wk_hdl(struct rtw_adapter *padapter, u8 *pbuf, int sz)
+
 
