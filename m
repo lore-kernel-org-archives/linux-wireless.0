@@ -1,46 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:37169 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752384AbaJMIBe (ORCPT
+Received: from mail-wg0-f43.google.com ([74.125.82.43]:55757 "EHLO
+	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755809AbaJ2RqG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Oct 2014 04:01:34 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 5/5] ath10k: replace power up/down with reset callback
-References: <1412842950-14098-1-git-send-email-michal.kazior@tieto.com>
-	<1412842950-14098-6-git-send-email-michal.kazior@tieto.com>
-Date: Mon, 13 Oct 2014 11:01:07 +0300
-In-Reply-To: <1412842950-14098-6-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Thu, 9 Oct 2014 10:22:30 +0200")
-Message-ID: <87fves9z5o.fsf@kamboji.qca.qualcomm.com> (sfid-20141013_100137_929376_DBEE06DB)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 29 Oct 2014 13:46:06 -0400
+Received: by mail-wg0-f43.google.com with SMTP id n12so2484113wgh.16
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2014 10:46:05 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH v2 30/34] staging: vt6655: baseband.c timers replace spin lock
+Date: Wed, 29 Oct 2014 17:44:05 +0000
+Message-Id: <1414604649-9105-31-git-send-email-tvboxspy@gmail.com> (sfid-20141029_184621_559624_E60385DE)
+In-Reply-To: <1414604649-9105-1-git-send-email-tvboxspy@gmail.com>
+References: <1414604649-9105-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+Use spin_lock_irqsave and spin_unlock_irqrestore
 
-> The power up/down didn't make much sense any more
-> since hif_stop already stops the device
-> compeletely. The target lifecycle was never symmetric
-> so don't bother trying to make it look like it is
-> and expose a reset hif callback instead of power
-> up/down callbacks.
->
-> This removes redundant reset calls and thus makes
-> device boot/stop/recovery a bit faster.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+in functions TimerSQ3CallBack and TimerState1CallBack
 
-About this I'm not that sure. The reason why I wanted to have power_up()
-and power_down() is the case when we need to control the target power
-via a gpio line, which I anticipate we will need soon. If you remove
-these how could we control the gpio line?
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/baseband.c | 13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
 
-Wouldn't it be the same that you just make hif_power_up() do the same as
-hif_reset() and hif_power_down() doesn't do anything (for now)? Or am I
-missing something?
-
+diff --git a/drivers/staging/vt6655/baseband.c b/drivers/staging/vt6655/baseband.c
+index 8adeea4..c7ad927 100644
+--- a/drivers/staging/vt6655/baseband.c
++++ b/drivers/staging/vt6655/baseband.c
+@@ -2786,9 +2786,11 @@ TimerSQ3CallBack(
+ )
+ {
+ 	struct vnt_private *pDevice = hDeviceContext;
++	unsigned long flags;
+ 
+ 	pr_debug("TimerSQ3CallBack...\n");
+-	spin_lock_irq(&pDevice->lock);
++
++	spin_lock_irqsave(&pDevice->lock, flags);
+ 
+ 	pr_debug("3.[%08x][%08x], %d\n",
+ 		 (int)pDevice->ulRatio_State0, (int)pDevice->ulRatio_State1,
+@@ -2803,7 +2805,7 @@ TimerSQ3CallBack(
+ 	add_timer(&pDevice->TimerSQ3Tmax3);
+ 	add_timer(&pDevice->TimerSQ3Tmax2);
+ 
+-	spin_unlock_irq(&pDevice->lock);
++	spin_unlock_irqrestore(&pDevice->lock, flags);
+ }
+ 
+ /*+
+@@ -2830,10 +2832,12 @@ TimerState1CallBack(
+ )
+ {
+ 	struct vnt_private *pDevice = hDeviceContext;
++	unsigned long flags;
+ 
+ 	pr_debug("TimerState1CallBack...\n");
+ 
+-	spin_lock_irq(&pDevice->lock);
++	spin_lock_irqsave(&pDevice->lock, flags);
++
+ 	if (pDevice->uDiversityCnt < pDevice->ulDiversityMValue/100) {
+ 		s_vChangeAntenna(pDevice);
+ 		pDevice->TimerSQ3Tmax3.expires =  RUN_AT(pDevice->byTMax3 * HZ);
+@@ -2864,5 +2868,6 @@ TimerState1CallBack(
+ 	}
+ 	pDevice->byAntennaState = 0;
+ 	BBvClearAntDivSQ3Value(pDevice);
+-	spin_unlock_irq(&pDevice->lock);
++
++	spin_unlock_irqrestore(&pDevice->lock, flags);
+ }
 -- 
-Kalle Valo
+2.1.0
+
