@@ -1,45 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f52.google.com ([74.125.82.52]:60909 "EHLO
-	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752496AbaJYTCx (ORCPT
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:40111 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756052AbaJ2Rpp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Oct 2014 15:02:53 -0400
-Received: by mail-wg0-f52.google.com with SMTP id y10so571607wgg.35
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2014 12:02:51 -0700 (PDT)
+	Wed, 29 Oct 2014 13:45:45 -0400
+Received: by mail-wi0-f180.google.com with SMTP id hi2so5304512wib.1
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2014 10:45:44 -0700 (PDT)
 From: Malcolm Priestley <tvboxspy@gmail.com>
 To: gregkh@linuxfoundation.org
 Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
 	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 23/31] staging: vt6655: mac80211 conversion: device_error remove legacy functions
-Date: Sat, 25 Oct 2014 09:20:33 +0100
-Message-Id: <1414225241-5480-24-git-send-email-tvboxspy@gmail.com> (sfid-20141025_210259_774923_8B4A7ABA)
-In-Reply-To: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
-References: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
+Subject: [PATCH v2 20/34] staging: vt6655: mac80211 conversion: device_free_info
+Date: Wed, 29 Oct 2014 17:43:55 +0000
+Message-Id: <1414604649-9105-21-git-send-email-tvboxspy@gmail.com> (sfid-20141029_184911_720059_7D933522)
+In-Reply-To: <1414604649-9105-1-git-send-email-tvboxspy@gmail.com>
+References: <1414604649-9105-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove netif_stop_queue, bCmdRunning and timer functions
+Remove net device code and add mac80211 unregister code.
 
 Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/staging/vt6655/device_main.c | 4 ----
- 1 file changed, 4 deletions(-)
+ drivers/staging/vt6655/device_main.c | 25 +++++++------------------
+ 1 file changed, 7 insertions(+), 18 deletions(-)
 
 diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index 451b608..0bd2ca8 100644
+index 77d81b3..451b608 100644
 --- a/drivers/staging/vt6655/device_main.c
 +++ b/drivers/staging/vt6655/device_main.c
-@@ -1313,10 +1313,6 @@ static void device_error(struct vnt_private *pDevice, unsigned short status)
- 	if (status & ISR_FETALERR) {
- 		dev_err(&pDevice->pcid->dev, "Hardware fatal error\n");
+@@ -806,31 +806,20 @@ static bool device_get_pci_info(struct vnt_private *pDevice,
  
--		netif_stop_queue(pDevice->dev);
--		del_timer(&pDevice->sTimerCommand);
--		del_timer(&(pDevice->pMgmt->sTimerSecondCallback));
--		pDevice->bCmdRunning = false;
- 		MACbShutdown(pDevice->PortOffset);
- 		return;
- 	}
+ static void device_free_info(struct vnt_private *pDevice)
+ {
+-	struct net_device *dev = pDevice->dev;
+-
+-	ASSERT(pDevice);
+-//2008-0714-01<Add>by chester
+-	device_release_WPADEV(pDevice);
+-
+-//2008-07-21-01<Add>by MikeLiu
+-//unregister wpadev
+-	if (wpa_set_wpadev(pDevice, 0) != 0)
+-		pr_err("unregister wpadev fail?\n");
++	if (!pDevice)
++		return;
+ 
+-#ifdef HOSTAP
+-	if (dev)
+-		vt6655_hostap_set_hostapd(pDevice, 0, 0);
+-#endif
+-	if (dev)
+-		unregister_netdev(dev);
++	if (pDevice->mac_hw)
++		ieee80211_unregister_hw(pDevice->hw);
+ 
+ 	if (pDevice->PortOffset)
+ 		iounmap(pDevice->PortOffset);
+ 
+ 	if (pDevice->pcid)
+ 		pci_release_regions(pDevice->pcid);
+-	if (dev)
+-		free_netdev(dev);
++
++	if (pDevice->hw)
++		ieee80211_free_hw(pDevice->hw);
+ }
+ 
+ static bool device_init_rings(struct vnt_private *pDevice)
 -- 
-1.9.1
+2.1.0
 
