@@ -1,33 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:56613 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752263AbaJHTAX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Oct 2014 15:00:23 -0400
-Date: Wed, 08 Oct 2014 15:00:19 -0400 (EDT)
-Message-Id: <20141008.150019.1302200505918792300.davem@davemloft.net> (sfid-20141008_210033_230761_23D75A7D)
-To: Larry.Finger@lwfinger.net
+Received: from dedo.coelho.fi ([88.198.205.34]:51177 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1758611AbaJ3LIr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Oct 2014 07:08:47 -0400
+Message-ID: <1414667312.27833.22.camel@coelho.fi> (sfid-20141030_120850_842704_3141D8F2)
+From: Luca Coelho <luca@coelho.fi>
+To: Larry Finger <Larry.Finger@lwfinger.net>
 Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	troy_tan@realsil.com.cn, netdev@vger.kernel.org
-Subject: Re: [PATCH V3.18] rtlwifi: Fix possible unaligned array in
- ether_addr_copy()
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1412790295-27858-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1412790295-27858-1-git-send-email-Larry.Finger@lwfinger.net>
+	netdev@vger.kernel.org,
+	Murilo Opsfelder Araujo <mopsfelder@gmail.com>
+Date: Thu, 30 Oct 2014 13:08:32 +0200
+In-Reply-To: <1414642633-3700-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1414642633-3700-1-git-send-email-Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Subject: Re: [PATCH 0/6 3.18] Fixes for iwlwifi drivers
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Date: Wed,  8 Oct 2014 12:44:55 -0500
+The cover-letter subject is wrong. :) I guess you meant
+s/iwlwifi/rtlwifi/ ;)
 
-> Two macros used to copy BSSID information use ether_addr_copy(), thus
-> the arrays must be 2-byte aligned. In one case, the array could become
-> unaligned if the struct containing it were changed. Use the __unaligned(2)
-> attribute to retain the necessary alignment. In addition, the magic number
-> used to specify the size of the array is replaced by ETH_ALEN.
+--
+Luca.
+
+On Wed, 2014-10-29 at 23:17 -0500, Larry Finger wrote:
+> Some late changes to rtlwifi made some of the older drivers not start correctly.
+> These patches should be applied to 3.18.
 > 
 > Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Murilo Opsfelder Araujo <mopsfelder@gmail.com>
+> 
+> Larry Finger (6):
+>   rtlwifi: rtl8192ce: rtl8192de: rtl8192se: Fix handling for missing
+>     get_btc_status
+>   rtlwifi: rtl8192se: Fix duplicate calls to ieee80211_register_hw()
+>   rtlwifi: rtl8192se: Add missing section to read descriptor setting
+>   rtlwifi: rtl8192ce: Add missing section to read descriptor setting
+>   rtlwifi: rtl8821ae: Remove extra semicolons
+>   rtlwifi: rtl8192se: Fix firmware loading
+> 
+>  drivers/net/wireless/rtlwifi/core.c          |  6 ++++++
+>  drivers/net/wireless/rtlwifi/core.h          |  1 +
+>  drivers/net/wireless/rtlwifi/rtl8192ce/def.h |  2 ++
+>  drivers/net/wireless/rtlwifi/rtl8192ce/sw.c  |  1 +
+>  drivers/net/wireless/rtlwifi/rtl8192ce/trx.c |  3 +++
+>  drivers/net/wireless/rtlwifi/rtl8192de/sw.c  |  1 +
+>  drivers/net/wireless/rtlwifi/rtl8192se/def.h |  2 ++
+>  drivers/net/wireless/rtlwifi/rtl8192se/sw.c  | 22 +++-------------------
+>  drivers/net/wireless/rtlwifi/rtl8192se/trx.c |  3 +++
+>  drivers/net/wireless/rtlwifi/rtl8821ae/phy.c | 12 ++++++------
+>  10 files changed, 28 insertions(+), 25 deletions(-)
+> 
 
-Acked-by: David S. Miller <davem@davemloft.net>
+
