@@ -1,48 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:36221 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753055AbaJTJls (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2014 05:41:48 -0400
-Message-ID: <1413798105.10246.9.camel@jlt4.sipsolutions.net> (sfid-20141020_114153_465464_2FB462DD)
-Subject: Re: [PATCH 1/4] mac80211: OCB mode + join and leave handling
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rostislav Lisovy <lisovy@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
-	jan-niklas.meier@volkswagen.de, burak.simsek@volkswagen.de,
-	Emmanuel Thierry <emmanuel.thierry@yogoko.fr>,
-	laszlo.virag@commsignia.com,
-	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
-Date: Mon, 20 Oct 2014 11:41:45 +0200
-In-Reply-To: <1413480005.16330.15.camel@umadbro> (sfid-20141016_192008_718892_BA5E5317)
-References: <1410445822-6559-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
-	 <1410445822-6559-2-git-send-email-rostislav.lisovy@fel.cvut.cz>
-	 (sfid-20140911_163047_025105_09D86D44) <1412843005.1828.14.camel@jlt4.sipsolutions.net>
-	 <1413477188.15416.10.camel@umadbro> <1413480005.16330.15.camel@umadbro>
-	 (sfid-20141016_192008_718892_BA5E5317)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail.linuxfoundation.org ([140.211.169.12]:40181 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759855AbaJ3TkZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Oct 2014 15:40:25 -0400
+Date: Thu, 30 Oct 2014 12:39:14 -0700
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
+Subject: Re: [PATCH 0/3] debugfs: adding helper for single seq_file
+Message-ID: <20141030193914.GA28346@kroah.com> (sfid-20141030_204029_021966_5C41C21A)
+References: <1414498752-9746-1-git-send-email-arend@broadcom.com>
+ <20141030191922.GA3768@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20141030191922.GA3768@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-10-16 at 19:20 +0200, Rostislav Lisovy wrote:
+On Thu, Oct 30, 2014 at 03:19:22PM -0400, John W. Linville wrote:
+> On Tue, Oct 28, 2014 at 01:19:09PM +0100, Arend van Spriel wrote:
+> > The first patch was already posted earlier:
+> > 
+> > Message-ID: <1413043315-22332-1-git-send-email-arend@broadcom.com>
+> > 
+> > This series include changes in driver code to investigate potential
+> > code savings. As example used the ath9k driver as it has a fair
+> > amount of debugfs files. In this series it changes 7 debugfs entries
+> > to use seq_file and the helper function. Below the output of the
+> > size utility:
+> > 
+> >    text	   data	    bss	    dec	    hex	filename
+> >  115968	   1225	     28	 117221	  1c9e5	original/ath9k.o
+> >  113224	   1225	     28	 114477	  1bf2d	seq_file/ath9k.o
+> >  111024	   1225	     28	 112277	  1b695	helper/ath9k.o
+> > 
+> > This series is for 3.19 kernel and applies to the driver-core-next
+> > branch of the driver-core repository. If needed the ath9k patches
+> > may be dropped for now and I will resubmit them to wireless-next
+> > once the debugfs patch has made it into linux-next.
+> > 
+> > Arend van Spriel (3):
+> >   debugfs: add helper function to create device related seq_file
+> >   ath: use seq_file api for ath9k debugfs files
+> >   ath: ath9k: use debugfs_create_devm_seqfile() helper for seq_file
+> >     entries
+> 
+> Greg,
+> 
+> If you are happy with the debugfs change then feel free to merge the
+> wireless patches along with it.
 
-> Now I realized it is not that easy (and I confused "interface running"
-> and being "connected to the network"). There seems not to be a solid
-> indication that we are no longer "connected" to the network.
+Ok, will do, can I get your Ack for them?
 
-Oops, ignore my previous reply.
+thanks,
 
-> I think a field
-> 	enum {
-> 		IEEE80211_OCB_STOPPED,
-> 		IEEE80211_OCB_JOINED,
-> 	} state;
-> in struct ieee80211_if_ocb seems to be appropriate.
-
-Yes, that seems doable. Maybe just a "bool joined" would work just as
-well, but it won't make a difference in the result - whichever you
-prefer.
-
-johannes
-
+greg k-h
