@@ -1,32 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38603 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933329AbaJ2Pb1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2014 11:31:27 -0400
-Message-ID: <1414596680.1827.6.camel@jlt4.sipsolutions.net> (sfid-20141029_163149_951481_E5706819)
-Subject: Re: [PATCH] mac80211_hwsim: release driver when
- ieee80211_register_hw fails
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Junjie Mao <eternal.n08@gmail.com>
-Cc: Martin Pitt <martin.pitt@ubuntu.com>,
-	Fengguang Wu <fengguang.wu@intel.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Wed, 29 Oct 2014 16:31:20 +0100
-In-Reply-To: <1414459907-7509-1-git-send-email-eternal.n08@gmail.com> (sfid-20141028_023301_948024_70359C07)
-References: <1414459907-7509-1-git-send-email-eternal.n08@gmail.com>
-	 (sfid-20141028_023301_948024_70359C07)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:61115 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161326AbaJ3WqK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Oct 2014 18:46:10 -0400
+Message-ID: <5452BF4B.5070009@gmail.com> (sfid-20141030_234616_629535_DC78E125)
+Date: Thu, 30 Oct 2014 20:44:27 -0200
+From: Murilo Opsfelder Araujo <mopsfelder@gmail.com>
+MIME-Version: 1.0
+To: Larry Finger <Larry.Finger@lwfinger.net>, linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH 0/6 3.18] Fixes for iwlwifi drivers
+References: <1414642633-3700-1-git-send-email-Larry.Finger@lwfinger.net>
+In-Reply-To: <1414642633-3700-1-git-send-email-Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-10-28 at 09:31 +0800, Junjie Mao wrote:
-> The driver is not released when ieee80211_register_hw fails in
-> mac80211_hwsim_create_radio, leading to the access to the unregistered (and
-> possibly freed) device in platform_driver_unregister:
+On 10/30/2014 02:17 AM, Larry Finger wrote:
+> Some late changes to rtlwifi made some of the older drivers not start correctly.
+> These patches should be applied to 3.18.
+>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Murilo Opsfelder Araujo <mopsfelder@gmail.com>
+>
+> Larry Finger (6):
+>    rtlwifi: rtl8192ce: rtl8192de: rtl8192se: Fix handling for missing
+>      get_btc_status
+>    rtlwifi: rtl8192se: Fix duplicate calls to ieee80211_register_hw()
+>    rtlwifi: rtl8192se: Add missing section to read descriptor setting
+>    rtlwifi: rtl8192ce: Add missing section to read descriptor setting
+>    rtlwifi: rtl8821ae: Remove extra semicolons
+>    rtlwifi: rtl8192se: Fix firmware loading
+>
+>   drivers/net/wireless/rtlwifi/core.c          |  6 ++++++
+>   drivers/net/wireless/rtlwifi/core.h          |  1 +
+>   drivers/net/wireless/rtlwifi/rtl8192ce/def.h |  2 ++
+>   drivers/net/wireless/rtlwifi/rtl8192ce/sw.c  |  1 +
+>   drivers/net/wireless/rtlwifi/rtl8192ce/trx.c |  3 +++
+>   drivers/net/wireless/rtlwifi/rtl8192de/sw.c  |  1 +
+>   drivers/net/wireless/rtlwifi/rtl8192se/def.h |  2 ++
+>   drivers/net/wireless/rtlwifi/rtl8192se/sw.c  | 22 +++-------------------
+>   drivers/net/wireless/rtlwifi/rtl8192se/trx.c |  3 +++
+>   drivers/net/wireless/rtlwifi/rtl8821ae/phy.c | 12 ++++++------
+>   10 files changed, 28 insertions(+), 25 deletions(-)
+>
+Hi, Larry.
 
-Applied.
+I've applied this patchset on top of next-20141030 and got the same 
+result: kernel panic went away but the rtl8192se device does not associate.
 
-johannes
+Thanks anyway for dedicating your family time to trying to get this fixed.
 
+We can talk about that later when you're back on regular schedule.
+
+Appreciated!
+
+-- 
+Murilo
