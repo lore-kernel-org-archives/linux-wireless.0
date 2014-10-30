@@ -1,54 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:58571 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755828AbaJIPWX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2014 11:22:23 -0400
-Message-ID: <1412868141.1828.57.camel@jlt4.sipsolutions.net> (sfid-20141009_172232_089185_7934EEAB)
-Subject: Re: [PATCH] mac80211/trivial: fix typo in starting baserate for
- rts_cts_rate_idx
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Karl Beldan <karl.beldan@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@rivierawaves.com>
-Date: Thu, 09 Oct 2014 17:22:21 +0200
-In-Reply-To: <20141009144548.GD20644@magnum.frso.rivierawaves.com> (sfid-20141009_164551_939678_070A0E89)
-References: <1412690018-18429-1-git-send-email-karl.beldan@gmail.com>
-	 <1412845586.1828.27.camel@jlt4.sipsolutions.net>
-	 <20141009140636.GC20644@magnum.frso.rivierawaves.com>
-	 <1412864103.1828.48.camel@jlt4.sipsolutions.net>
-	 <20141009144548.GD20644@magnum.frso.rivierawaves.com>
-	 (sfid-20141009_164551_939678_070A0E89)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pd0-f180.google.com ([209.85.192.180]:56583 "EHLO
+	mail-pd0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751470AbaJ3ERY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Oct 2014 00:17:24 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org,
+	Murilo Opsfelder Araujo <mopsfelder@gmail.com>
+Subject: [PATCH 2/6 V3.18] rtlwifi: rtl8192se: Fix duplicate calls to ieee80211_register_hw()
+Date: Wed, 29 Oct 2014 23:17:09 -0500
+Message-Id: <1414642633-3700-3-git-send-email-Larry.Finger@lwfinger.net> (sfid-20141030_051738_093036_6F1717C5)
+In-Reply-To: <1414642633-3700-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1414642633-3700-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-10-09 at 16:45 +0200, Karl Beldan wrote:
+Driver rtlwifi has been modified to call ieee80211_register_hw()
+from the probe routine; however, the existing call in the callback
+routine for deferred firmware loading was not removed.
 
-> > > The typo is clearly showing but the faulty behavior clearly demands more
-> > > detail indeed.
-> > > 
-> > > It affects non-(V)HT rates and can lead to selecting an rts_cts rate
-> > > that is not a basic rate or way superior to the reference rate (ATM
-> > > rates[0] used for the 1st attempt of the protected frame data).
-> > > E.g, assuming the drivers register growing (bitrate) sorted
-> > > ieee80211_rate tables, having :
-> > > - rates[0].idx == d'2 and basic_rates == b'10100
-> > > will select rts_cts idx b'10011 & ~d'(BIT(2)-1), i.e. 1, likewise
-> > > - rates[0].idx == d'2 and basic_rates == b'10001 
-> > > will select rts_cts idx b'10000
-> > > The first is not a basic rate and the second is > rates[0].
-> > > 
-> > > I hope it clarifies things enough.
-> > 
-> > Well, I'm still not sure which tree I should put it in, I guess?
-> > 
-> 
-> All I can say is that nor this faulty behavior nor the correspond fix
-> are likely to cause a crash (we always tx registered rates).
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Murilo Opsfelder Araujo <mopsfelder@gmail.com>
+---
+ drivers/net/wireless/rtlwifi/rtl8192se/sw.c | 17 -----------------
+ 1 file changed, 17 deletions(-)
 
-But it's still pretty misbehaving, no? That IMHO warrants fixing and
-even cc stable.
-
-johannes
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/sw.c b/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
+index 5e16984..1fd2208 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
+@@ -87,11 +87,8 @@ static void rtl92s_init_aspm_vars(struct ieee80211_hw *hw)
+ static void rtl92se_fw_cb(const struct firmware *firmware, void *context)
+ {
+ 	struct ieee80211_hw *hw = context;
+-	struct rtl_pci_priv *pcipriv = rtl_pcipriv(hw);
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	struct rtl_pci *rtlpci = rtl_pcidev(pcipriv);
+ 	struct rt_firmware *pfirmware = NULL;
+-	int err;
+ 
+ 	RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
+ 			 "Firmware callback routine entered!\n");
+@@ -112,20 +109,6 @@ static void rtl92se_fw_cb(const struct firmware *firmware, void *context)
+ 	memcpy(pfirmware->sz_fw_tmpbuffer, firmware->data, firmware->size);
+ 	pfirmware->sz_fw_tmpbufferlen = firmware->size;
+ 	release_firmware(firmware);
+-
+-	err = ieee80211_register_hw(hw);
+-	if (err) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "Can't register mac80211 hw\n");
+-		return;
+-	} else {
+-		rtlpriv->mac80211.mac80211_registered = 1;
+-	}
+-	rtlpci->irq_alloc = 1;
+-	set_bit(RTL_STATUS_INTERFACE_START, &rtlpriv->status);
+-
+-	/*init rfkill */
+-	rtl_init_rfkill(hw);
+ }
+ 
+ static int rtl92s_init_sw_vars(struct ieee80211_hw *hw)
+-- 
+2.1.1
 
