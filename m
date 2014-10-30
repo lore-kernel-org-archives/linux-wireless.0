@@ -1,34 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:16230 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752704AbaJUHeC (ORCPT
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:57984 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934564AbaJ3P1Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Oct 2014 03:34:02 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 0/3] ath10k: assoc clean ups 2014-10-10
-References: <1412937977-5859-1-git-send-email-michal.kazior@tieto.com>
-Date: Tue, 21 Oct 2014 10:33:55 +0300
-In-Reply-To: <1412937977-5859-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Fri, 10 Oct 2014 12:46:14 +0200")
-Message-ID: <87y4s9yizg.fsf@kamboji.qca.qualcomm.com> (sfid-20141021_093406_759899_C5E6BECE)
+	Thu, 30 Oct 2014 11:27:16 -0400
+Message-ID: <545258D6.20000@lwfinger.net> (sfid-20141030_162720_336768_58F5552A)
+Date: Thu, 30 Oct 2014 10:27:18 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Luca Coelho <luca@coelho.fi>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org,
+	Murilo Opsfelder Araujo <mopsfelder@gmail.com>
+Subject: Re: [PATCH 0/6 3.18] Fixes for iwlwifi drivers
+References: <1414642633-3700-1-git-send-email-Larry.Finger@lwfinger.net> <1414667312.27833.22.camel@coelho.fi>
+In-Reply-To: <1414667312.27833.22.camel@coelho.fi>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+On 10/30/2014 06:08 AM, Luca Coelho wrote:
+> The cover-letter subject is wrong. :) I guess you meant
+> s/iwlwifi/rtlwifi/ ;)
 
-> This is a bunch of assoc-related clean ups.
->
->
-> Michal Kazior (3):
->   ath10k: clean up assoc code
->   ath10k: skip some commands on reassoc
->   ath10k: clean up sta auth/assoc code
+Yes, the changes were for rtlwifi, not iwlwifi. Sorry. (:
 
-Thanks, all three applied.
+My laptop has an Intel 7260 card built in, and it is working correctly on both 
+2.4 and 5G bands under mainline 3.18-rc2.
 
--- 
-Kalle Valo
+Those types of errors are what I get for trying to "work" while on a family 
+vacation. Unfortunately, I needed to submit those patches quickly to prevent a 
+set of conflicting updates from being accepted, and I made a silly mistake.
+
+Larry
+
