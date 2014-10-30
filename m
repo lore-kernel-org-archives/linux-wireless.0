@@ -1,95 +1,195 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:51816 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759667AbaJaNOD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Oct 2014 09:14:03 -0400
-Message-ID: <1414761237.3014.27.camel@jlt4.sipsolutions.net> (sfid-20141031_141627_639211_571FC45C)
-Subject: Re: [PATCH 1/2] cfg80211: 802.11p OCB mode handling
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rostislav Lisovy <lisovy@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
-	jan-niklas.meier@volkswagen.de, burak.simsek@volkswagen.de,
-	Emmanuel Thierry <emmanuel.thierry@yogoko.fr>,
-	laszlo.virag@commsignia.com,
-	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
-Date: Fri, 31 Oct 2014 14:13:57 +0100
-In-Reply-To: <1414665771-8371-2-git-send-email-rostislav.lisovy@fel.cvut.cz> (sfid-20141030_114322_295525_C7C629F8)
-References: <1414665771-8371-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
-	 <1414665771-8371-2-git-send-email-rostislav.lisovy@fel.cvut.cz>
-	 (sfid-20141030_114322_295525_C7C629F8)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pa0-f48.google.com ([209.85.220.48]:45350 "EHLO
+	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751514AbaJ3EaI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Oct 2014 00:30:08 -0400
+Message-ID: <5451BED0.2060906@lwfinger.net> (sfid-20141030_053036_070733_AC31F7CC)
+Date: Wed, 29 Oct 2014 23:30:08 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Murilo Opsfelder Araujo <mopsfelder@gmail.com>,
+	linux-kernel@vger.kernel.org
+CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Mike Galbraith <umgwanakikbuti@gmail.com>,
+	Thadeu Cascardo <cascardo@cascardo.eti.br>,
+	troy_tan@realsil.com.cn
+Subject: Re: [PATCH] rtlwifi: Add more checks for get_btc_status callback
+References: <1414625302-3654-1-git-send-email-mopsfelder@gmail.com>
+In-Reply-To: <1414625302-3654-1-git-send-email-mopsfelder@gmail.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-10-30 at 11:42 +0100, Rostislav Lisovy wrote:
+On 10/29/2014 06:28 PM, Murilo Opsfelder Araujo wrote:
+> This is a complement of commit 08054200117a95afc14c3d2ed3a38bf4e345bf78
+> "rtlwifi: Add check for get_btc_status callback".
+>
+> With this patch, next-20141029 at least does not panic with rtl8192se
+> device.
+>
 
-> --- a/include/net/mac80211.h
-> +++ b/include/net/mac80211.h
-> @@ -263,6 +263,7 @@ struct ieee80211_vif_chanctx_switch {
->   * @BSS_CHANGED_BANDWIDTH: The bandwidth used by this interface changed,
->   *	note that this is only called when it changes after the channel
->   *	context had been assigned.
-> + * @BSS_CHANGED_OCB: OCB join status changed
->   */
->  enum ieee80211_bss_change {
->  	BSS_CHANGED_ASSOC		= 1<<0,
-> @@ -287,6 +288,7 @@ enum ieee80211_bss_change {
->  	BSS_CHANGED_P2P_PS		= 1<<19,
->  	BSS_CHANGED_BEACON_INFO		= 1<<20,
->  	BSS_CHANGED_BANDWIDTH		= 1<<21,
-> +	BSS_CHANGED_OCB			= 1<<22,
+This patch is OK, but as noted it is not complete.
 
-This should be in the mac80211 patch.
- 
-> +	NL80211_CMD_JOIN_OCB,
-> +	NL80211_CMD_LEAVE_OCB,
->  	/* add new commands above here */
+I have patches to fix all the kernel panics for rtl8192se AND rtl8192ce. There 
+are missing parts, but I would prefer submitting mine, which would conflict with 
+this one. For that reason, NACK for this one, and please apply the set I am 
+submitting now.
 
-please leave a blank line before the comment
+Larry
 
-> @@ -2093,6 +2102,7 @@ enum nl80211_iftype {
->  	NL80211_IFTYPE_P2P_CLIENT,
->  	NL80211_IFTYPE_P2P_GO,
->  	NL80211_IFTYPE_P2P_DEVICE,
-> +	NL80211_IFTYPE_OCB,
-
-This is causing a bunch of compiler warnings (warning: enumeration value
-‘NL80211_IFTYPE_OCB’ not handled in switch, e.g. in mac80211/iface.c)
-which I think you should address in this patch. That'll mean that you
-modify even mac80211 and potentially some drivers, but I think that's
-the right thing to do in this patch since it's the one changing the API
-to introduce the new value.
-
-The later patch can then add functionality to those new case labels in
-mac80211 (this one of course adds it in cfg80211). For this patch they
-should be with the error case that will typically exist.
-
-> +static int nl80211_join_ocb(struct sk_buff *skb, struct genl_info *info)
-> +{
-> +	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-> +	struct net_device *dev = info->user_ptr[1];
-> +	struct ocb_setup setup = {};
-> +	int err;
-> +
-> +	if (!info->attrs[NL80211_ATTR_WIPHY_FREQ])
-> +		return -EINVAL;
-
-This check isn't necessary,
-
-> +	err = nl80211_parse_chandef(rdev, info, &setup.chandef);
-> +	if (err)
-> +		return err;
-
-it's also done in this function.
-
-I think there's one thing you forgot in this patch, namely
-__cfg80211_leave() which you also need to make the __ version of the
-leave function non-static for due to locking.
-
-I noticed that the switch statement there has a default case - I'll
-remove that, so be sure to rebase on mac80211-next.
-
-johannes
+> Signed-off-by: Murilo Opsfelder Araujo <mopsfelder@gmail.com>
+> ---
+>
+> Hello, everyone.
+>
+> Some days ago, I reported [1] that next-20140930 introduced an issue
+> with rtl8192se devices.
+>
+> Later on, Larry Finger proposed [2] a fix that did not solve the
+> problem thoroughly.
+>
+> This patch is based on Larry's one [3].  It also does not solve the
+> rtl8192se issue completely but I can at least boot next-20141029
+> without a panic.
+>
+> The remaining issue is that the rtl8192se device does not associate.
+> It does not even show any wifi network available.  The device is shown
+> by iwconfig, but I cannot do anything with it.
+>
+> I need help from someone out there that could provide me guidance or
+> possibly investigate the issue (I'm not a kernel expert yet).
+>
+> I'd not like to see this regression landing on v3.18.
+>
+> [1] http://marc.info/?l=linux-wireless&m=141403434929612
+> [2] http://marc.info/?l=linux-wireless&m=141408165513255
+> [3] http://marc.info/?l=linux-wireless&m=141416876810127
+>
+>   drivers/net/wireless/rtlwifi/base.c |  6 ++++--
+>   drivers/net/wireless/rtlwifi/core.c |  9 ++++++---
+>   drivers/net/wireless/rtlwifi/pci.c  |  3 ++-
+>   drivers/net/wireless/rtlwifi/ps.c   | 12 ++++++++----
+>   4 files changed, 20 insertions(+), 10 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rtlwifi/base.c b/drivers/net/wireless/rtlwifi/base.c
+> index 40b6d1d..1a51577 100644
+> --- a/drivers/net/wireless/rtlwifi/base.c
+> +++ b/drivers/net/wireless/rtlwifi/base.c
+> @@ -1234,7 +1234,8 @@ EXPORT_SYMBOL_GPL(rtl_action_proc);
+>   static void setup_arp_tx(struct rtl_priv *rtlpriv, struct rtl_ps_ctl *ppsc)
+>   {
+>   	rtlpriv->ra.is_special_data = true;
+> -	if (rtlpriv->cfg->ops->get_btc_status())
+> +	if (rtlpriv->cfg->ops->get_btc_status &&
+> +	    rtlpriv->cfg->ops->get_btc_status())
+>   		rtlpriv->btcoexist.btc_ops->btc_special_packet_notify(
+>   					rtlpriv, 1);
+>   	rtlpriv->enter_ps = false;
+> @@ -1629,7 +1630,8 @@ void rtl_watchdog_wq_callback(void *data)
+>   		}
+>   	}
+>
+> -	if (rtlpriv->cfg->ops->get_btc_status())
+> +	if (rtlpriv->cfg->ops->get_btc_status &&
+> +	    rtlpriv->cfg->ops->get_btc_status())
+>   		rtlpriv->btcoexist.btc_ops->btc_periodical(rtlpriv);
+>
+>   	rtlpriv->link_info.bcn_rx_inperiod = 0;
+> diff --git a/drivers/net/wireless/rtlwifi/core.c b/drivers/net/wireless/rtlwifi/core.c
+> index f6179bc..686d256 100644
+> --- a/drivers/net/wireless/rtlwifi/core.c
+> +++ b/drivers/net/wireless/rtlwifi/core.c
+> @@ -1133,7 +1133,8 @@ static void rtl_op_bss_info_changed(struct ieee80211_hw *hw,
+>   		ppsc->report_linked = (mstatus == RT_MEDIA_CONNECT) ?
+>   				      true : false;
+>
+> -		if (rtlpriv->cfg->ops->get_btc_status())
+> +		if (rtlpriv->cfg->ops->get_btc_status &&
+> +		    rtlpriv->cfg->ops->get_btc_status())
+>   			rtlpriv->btcoexist.btc_ops->btc_mediastatus_notify(
+>   							rtlpriv, mstatus);
+>   	}
+> @@ -1373,7 +1374,8 @@ static void rtl_op_sw_scan_start(struct ieee80211_hw *hw)
+>   		return;
+>   	}
+>
+> -	if (rtlpriv->cfg->ops->get_btc_status())
+> +	if (rtlpriv->cfg->ops->get_btc_status &&
+> +	    rtlpriv->cfg->ops->get_btc_status())
+>   		rtlpriv->btcoexist.btc_ops->btc_scan_notify(rtlpriv, 1);
+>
+>   	if (rtlpriv->dm.supp_phymode_switch) {
+> @@ -1425,7 +1427,8 @@ static void rtl_op_sw_scan_complete(struct ieee80211_hw *hw)
+>   	}
+>
+>   	rtlpriv->cfg->ops->scan_operation_backup(hw, SCAN_OPT_RESTORE);
+> -	if (rtlpriv->cfg->ops->get_btc_status())
+> +	if (rtlpriv->cfg->ops->get_btc_status &&
+> +	    rtlpriv->cfg->ops->get_btc_status())
+>   		rtlpriv->btcoexist.btc_ops->btc_scan_notify(rtlpriv, 0);
+>   }
+>
+> diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
+> index 25daa87..ed3364d 100644
+> --- a/drivers/net/wireless/rtlwifi/pci.c
+> +++ b/drivers/net/wireless/rtlwifi/pci.c
+> @@ -1833,7 +1833,8 @@ static void rtl_pci_stop(struct ieee80211_hw *hw)
+>   	unsigned long flags;
+>   	u8 RFInProgressTimeOut = 0;
+>
+> -	if (rtlpriv->cfg->ops->get_btc_status())
+> +	if (rtlpriv->cfg->ops->get_btc_status &&
+> +	    rtlpriv->cfg->ops->get_btc_status())
+>   		rtlpriv->btcoexist.btc_ops->btc_halt_notify();
+>
+>   	/*
+> diff --git a/drivers/net/wireless/rtlwifi/ps.c b/drivers/net/wireless/rtlwifi/ps.c
+> index b69321d..2278af9 100644
+> --- a/drivers/net/wireless/rtlwifi/ps.c
+> +++ b/drivers/net/wireless/rtlwifi/ps.c
+> @@ -261,7 +261,8 @@ void rtl_ips_nic_off_wq_callback(void *data)
+>   			ppsc->in_powersavemode = true;
+>
+>   			/* call before RF off */
+> -			if (rtlpriv->cfg->ops->get_btc_status())
+> +			if (rtlpriv->cfg->ops->get_btc_status &&
+> +			    rtlpriv->cfg->ops->get_btc_status())
+>   				rtlpriv->btcoexist.btc_ops->btc_ips_notify(rtlpriv,
+>   									ppsc->inactive_pwrstate);
+>
+> @@ -306,7 +307,8 @@ void rtl_ips_nic_on(struct ieee80211_hw *hw)
+>   			ppsc->in_powersavemode = false;
+>   			_rtl_ps_inactive_ps(hw);
+>   			/* call after RF on */
+> -			if (rtlpriv->cfg->ops->get_btc_status())
+> +			if (rtlpriv->cfg->ops->get_btc_status &&
+> +			    rtlpriv->cfg->ops->get_btc_status())
+>   				rtlpriv->btcoexist.btc_ops->btc_ips_notify(rtlpriv,
+>   									ppsc->inactive_pwrstate);
+>   		}
+> @@ -390,14 +392,16 @@ void rtl_lps_set_psmode(struct ieee80211_hw *hw, u8 rt_psmode)
+>   			if (ppsc->p2p_ps_info.opp_ps)
+>   				rtl_p2p_ps_cmd(hw , P2P_PS_ENABLE);
+>
+> -			if (rtlpriv->cfg->ops->get_btc_status())
+> +			if (rtlpriv->cfg->ops->get_btc_status &&
+> +			    rtlpriv->cfg->ops->get_btc_status())
+>   				rtlpriv->btcoexist.btc_ops->btc_lps_notify(rtlpriv, rt_psmode);
+>   		} else {
+>   			if (rtl_get_fwlps_doze(hw)) {
+>   				RT_TRACE(rtlpriv, COMP_RF, DBG_DMESG,
+>   					 "FW LPS enter ps_mode:%x\n",
+>   					 ppsc->fwctrl_psmode);
+> -				if (rtlpriv->cfg->ops->get_btc_status())
+> +				if (rtlpriv->cfg->ops->get_btc_status &&
+> +				    rtlpriv->cfg->ops->get_btc_status())
+>   					rtlpriv->btcoexist.btc_ops->btc_lps_notify(rtlpriv, rt_psmode);
+>   				enter_fwlps = true;
+>   				ppsc->pwr_mode = ppsc->fwctrl_psmode;
+> --
+> 2.1.2
+>
 
