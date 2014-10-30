@@ -1,38 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:29378 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934256AbaJ2Psp (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:2294 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758209AbaJ3KBJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2014 11:48:45 -0400
-Date: Wed, 29 Oct 2014 18:48:05 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
-	kernel-janitors@vger.kernel.org
-Subject: [patch] ath9k: fix some debugfs output
-Message-ID: <20141029154805.GC5290@mwanda> (sfid-20141029_164859_514487_752484C9)
+	Thu, 30 Oct 2014 06:01:09 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Belisko Marek <marek.belisko@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Avinash Patil <patila@marvell.com>
+Date: Thu, 30 Oct 2014 03:01:03 -0700
+Subject: RE: mwifiex_usb_submit_rx_urb: dev_alloc_skb failed when conected
+ to 5GHz
+Message-ID: <5FF020A1CFFEEC49BD1E09530C4FF5951821B4843B@SC-VEXCH1.marvell.com> (sfid-20141030_110115_714156_CCB0DDDC)
+References: <CAAfyv35k1mgQh6FcWaaMciAo8Vkp055k=5xF7zu+yrHmrQbbLA@mail.gmail.com>
+	<5FF020A1CFFEEC49BD1E09530C4FF5951819DB12F1@SC-VEXCH1.marvell.com>
+	<CAAfyv35j-77AURB4fHcecbEvyGS6U+1APNRFCf3FDAd_rrWnJw@mail.gmail.com>
+	<5FF020A1CFFEEC49BD1E09530C4FF5951821351855@SC-VEXCH1.marvell.com>
+	<CAAfyv35E2HUReFpnpdsebPETKk9VPA_hfQHUEJmoJfQt6Q-Puw@mail.gmail.com>
+	<5FF020A1CFFEEC49BD1E09530C4FF5951821936285@SC-VEXCH1.marvell.com>
+	<CAAfyv34UXMNwHf+kYCWEn+bcfGda_gA7uroLRLvhTEGGC5R57w@mail.gmail.com>
+	<5FF020A1CFFEEC49BD1E09530C4FF5951821936BBC@SC-VEXCH1.marvell.com>
+	<CAAfyv36s+stSKU7Oi372EjsvUi+S6PSbg1wVTD1dJrMrerBPXg@mail.gmail.com>
+	<5FF020A1CFFEEC49BD1E09530C4FF5951821936F03@SC-VEXCH1.marvell.com>
+	<CAAfyv34ivLF-B0ip+uhCah0PsiRsP1QOD0qW8F73n7KERqgM2w@mail.gmail.com>
+	<CAAfyv37uyPwED3tzX_4RjeTuf8LXqtL3zH4f-cNOLuRB+w=z6Q@mail.gmail.com>
+	<5FF020A1CFFEEC49BD1E09530C4FF5951821545AE6@SC-VEXCH1.marvell.com>
+	<CAAfyv35G=9WyYxQZjt3EYfGC+u0z81ktXrO7LEUrADxKX3XDNA@mail.gmail.com>
+	<5FF020A1CFFEEC49BD1E09530C4FF5951821B47FD7@SC-VEXCH1.marvell.com>
+ <CAAfyv35oXYBqQsPzLWz4k6cM44+GSmPC6TTgVoELEjM_FAoYQw@mail.gmail.com>
+In-Reply-To: <CAAfyv35oXYBqQsPzLWz4k6cM44+GSmPC6TTgVoELEjM_FAoYQw@mail.gmail.com>
+Content-Type: multipart/mixed;
+	boundary="_002_5FF020A1CFFEEC49BD1E09530C4FF5951821B4843BSCVEXCH1marve_"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The right shift operation has higher precedence than the mask so we
-left shift by "(i * 3)" and then immediately right shift by "(i * 3)"
-then we mask.  It should be left shift, mask, and then right shift.
+--_002_5FF020A1CFFEEC49BD1E09530C4FF5951821B4843BSCVEXCH1marve_
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+SGkgTWFyZWssDQoNClRoYW5rcyBhIGxvdCBmb3IgdGVzdGluZy4gSSBoYXZlIGFkZGVkIGZsb3cg
+Y29udHJvbCBsb2dpYyB0byBsaW1pdCBwZW5kaW5nIFJ4IHBhY2tldHMuIENvdWxkIHlvdSBwbGVh
+c2UgY2hlY2sgaWYgYXR0YWNoZWQgcGF0Y2ggZml4ZXMgb3V0IG9mIG1lbW9yeSBpc3N1ZT8NCllv
+dSBjYW4gYWxzbyBiYWNrcG9ydCBiZWxvdyBwYXRjaCB0byB5b3VyIDMuOSBrZXJuZWwgZm9yIHJ4
+X3BlbmRpbmcgY291bnQgaW1iYWxhbmNlIGlzc3VlLg0KDQpodHRwOi8vd3d3LnNwaW5pY3MubmV0
+L2xpc3RzL2xpbnV4LXdpcmVsZXNzL21zZzExNTUzNi5odG1sDQoNCllvdXIgaGFja3MgdG8gZGVj
+cmVtZW50IHJ4X3BlbmRpbmcgY291bnQgd29uJ3QgYmUgbmVlZGVkIG5vdy4NCg0KUmVnYXJkcywN
+CkFtaXRrdW1hcg0K
 
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index 2a2a17d..c9afc15 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -455,7 +455,7 @@ static ssize_t read_file_dma(struct file *file, char __user *user_buf,
- 			 "%2d          %2x      %1x     %2x           %2x\n",
- 			 i, (*qcuBase & (0x7 << qcuOffset)) >> qcuOffset,
- 			 (*qcuBase & (0x8 << qcuOffset)) >> (qcuOffset + 3),
--			 val[2] & (0x7 << (i * 3)) >> (i * 3),
-+			 (val[2] & (0x7 << (i * 3))) >> (i * 3),
- 			 (*dcuBase & (0x1f << dcuOffset)) >> dcuOffset);
- 	}
- 
+--_002_5FF020A1CFFEEC49BD1E09530C4FF5951821B4843BSCVEXCH1marve_
+Content-Type: application/octet-stream;
+	name="0001-mwifiex-add-flow-control-logic-to-Rx-data-on-USB-int.patch"
+Content-Description: 0001-mwifiex-add-flow-control-logic-to-Rx-data-on-USB-int.patch
+Content-Disposition: attachment;
+	filename="0001-mwifiex-add-flow-control-logic-to-Rx-data-on-USB-int.patch";
+	size=3524; creation-date="Thu, 30 Oct 2014 09:54:43 GMT";
+	modification-date="Thu, 30 Oct 2014 09:54:43 GMT"
+Content-Transfer-Encoding: base64
+
+RnJvbSAzZDVhOTFmYThiMTdhMDYzNDI3NmQzMmIyYjQwYTg0N2E2ZjYyNzlkIE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBBbWl0a3VtYXIgS2Fyd2FyIDxha2Fyd2FyQG1hcnZlbGwuY29t
+PgpEYXRlOiBUaHUsIDMwIE9jdCAyMDE0IDAxOjI4OjEwIC0wNzAwClN1YmplY3Q6IFtQQVRDSF0g
+bXdpZmlleDogYWRkIGZsb3cgY29udHJvbCBsb2dpYyB0byBSeCBkYXRhIG9uIFVTQiBpbnRlcmZh
+Y2UKClNpZ25lZC1vZmYtYnk6IEFtaXRrdW1hciBLYXJ3YXIgPGFrYXJ3YXJAbWFydmVsbC5jb20+
+Ci0tLQogZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9tYWluLmMgfCAgICA4ICsrKysrKy0t
+CiBkcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L21haW4uaCB8ICAgIDMgKysrCiBkcml2ZXJz
+L25ldC93aXJlbGVzcy9td2lmaWV4L3VzYi5jICB8ICAgMjMgKysrKysrKysrKysrKysrKysrKysr
+Ky0KIDMgZmlsZXMgY2hhbmdlZCwgMzEgaW5zZXJ0aW9ucygrKSwgMyBkZWxldGlvbnMoLSkKCmRp
+ZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L21haW4uYyBiL2RyaXZlcnMv
+bmV0L3dpcmVsZXNzL213aWZpZXgvbWFpbi5jCmluZGV4IDEyMTQ0M2EuLjVmMjU4NTUgMTAwNjQ0
+Ci0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvbWFpbi5jCisrKyBiL2RyaXZlcnMv
+bmV0L3dpcmVsZXNzL213aWZpZXgvbWFpbi5jCkBAIC0xOTksOSArMTk5LDEzIEBAIHByb2Nlc3Nf
+c3RhcnQ6CiAJCX0KIAogCQkvKiBDaGVjayBSeCBkYXRhIGZvciBVU0IgKi8KLQkJaWYgKGFkYXB0
+ZXItPmlmYWNlX3R5cGUgPT0gTVdJRklFWF9VU0IpCi0JCQl3aGlsZSAoKHNrYiA9IHNrYl9kZXF1
+ZXVlKCZhZGFwdGVyLT51c2JfcnhfZGF0YV9xKSkpCisJCWlmIChhZGFwdGVyLT5pZmFjZV90eXBl
+ID09IE1XSUZJRVhfVVNCKSB7CisJCQl3aGlsZSAoKHNrYiA9IHNrYl9kZXF1ZXVlKCZhZGFwdGVy
+LT51c2JfcnhfZGF0YV9xKSkpIHsKIAkJCQltd2lmaWV4X2hhbmRsZV9yeF9wYWNrZXQoYWRhcHRl
+ciwgc2tiKTsKKwkJCQlpZiAoYXRvbWljX3JlYWQoJmFkYXB0ZXItPnJ4X3BlbmRpbmcpIDwgTE9X
+X1JYX1BFTkRJTkcpCisJCQkJCWFkYXB0ZXItPmlmX29wcy5zdWJtaXRfcmVtX3J4X3VyYihhZGFw
+dGVyKTsKKwkJCX0KKwkJfQogCiAJCS8qIENoZWNrIGZvciBDbWQgUmVzcCAqLwogCQlpZiAoYWRh
+cHRlci0+Y21kX3Jlc3BfcmVjZWl2ZWQpIHsKZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVs
+ZXNzL213aWZpZXgvbWFpbi5oIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9tYWluLmgK
+aW5kZXggY2FiOGE4NS4uMjQ3YjJhNiAxMDA2NDQKLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3Mv
+bXdpZmlleC9tYWluLmgKKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9tYWluLmgK
+QEAgLTIyMiw2ICsyMjIsOCBAQCBzdHJ1Y3QgbXdpZmlleF90aWRfdGJsIHsKICNkZWZpbmUgSElH
+SF9QUklPX1RJRAkJCQk3CiAjZGVmaW5lIExPV19QUklPX1RJRAkJCQkwCiAjZGVmaW5lIE5PX1BL
+VF9QUklPX1RJRAkJCQkoLTEpCisjZGVmaW5lIExPV19SWF9QRU5ESU5HCQkJMjAKKyNkZWZpbmUg
+SElHSF9SWF9QRU5ESU5HCQkJNTAKIAogc3RydWN0IG13aWZpZXhfd21tX2Rlc2MgewogCXN0cnVj
+dCBtd2lmaWV4X3RpZF90YmwgdGlkX3RibF9wdHJbTUFYX05VTV9USURdOwpAQCAtNjE2LDYgKzYx
+OCw3IEBAIHN0cnVjdCBtd2lmaWV4X2lmX29wcyB7CiAJaW50ICgqZG5sZF9mdykgKHN0cnVjdCBt
+d2lmaWV4X2FkYXB0ZXIgKiwgc3RydWN0IG13aWZpZXhfZndfaW1hZ2UgKik7CiAJdm9pZCAoKmNh
+cmRfcmVzZXQpIChzdHJ1Y3QgbXdpZmlleF9hZGFwdGVyICopOwogCWludCAoKmNsZWFuX3BjaWVf
+cmluZykgKHN0cnVjdCBtd2lmaWV4X2FkYXB0ZXIgKmFkYXB0ZXIpOworCXZvaWQgKCpzdWJtaXRf
+cmVtX3J4X3VyYikgKHN0cnVjdCBtd2lmaWV4X2FkYXB0ZXIgKmFkYXB0ZXIpOwogfTsKIAogc3Ry
+dWN0IG13aWZpZXhfYWRhcHRlciB7CmRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9t
+d2lmaWV4L3VzYi5jIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC91c2IuYwppbmRleCBl
+M2UyYzYyLi43NzkxNzQ4IDEwMDY0NAotLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4
+L3VzYi5jCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvdXNiLmMKQEAgLTIyNiw3
+ICsyMjYsMTMgQEAgc2V0dXBfZm9yX25leHQ6CiAJZWxzZQogCQlzaXplID0gTVdJRklFWF9SWF9E
+QVRBX0JVRl9TSVpFOwogCi0JbXdpZmlleF91c2Jfc3VibWl0X3J4X3VyYihjb250ZXh0LCBzaXpl
+KTsKKwlpZiAoY2FyZC0+cnhfY21kX2VwID09IGNvbnRleHQtPmVwKSB7CisJCW13aWZpZXhfdXNi
+X3N1Ym1pdF9yeF91cmIoY29udGV4dCwgc2l6ZSk7CisJfSBlbHNlIHsKKwkJY29udGV4dC0+c2ti
+ID0gTlVMTDsKKwkJaWYgKGF0b21pY19yZWFkKCZhZGFwdGVyLT5yeF9wZW5kaW5nKSA8PSBISUdI
+X1JYX1BFTkRJTkcpCisJCQltd2lmaWV4X3VzYl9zdWJtaXRfcnhfdXJiKGNvbnRleHQsIHNpemUp
+OworCX0KIAogCXJldHVybjsKIH0KQEAgLTk4NSw2ICs5OTEsMjAgQEAgc3RhdGljIGludCBtd2lm
+aWV4X3BtX3dha2V1cF9jYXJkKHN0cnVjdCBtd2lmaWV4X2FkYXB0ZXIgKmFkYXB0ZXIpCiAJcmV0
+dXJuIDA7CiB9CiAKK3N0YXRpYyB2b2lkIG13aWZpZXhfdXNiX3N1Ym1pdF9yZW1fcnhfdXJiKHN0
+cnVjdCBtd2lmaWV4X2FkYXB0ZXIgKmFkYXB0ZXIpCit7CisJc3RydWN0IHVzYl9jYXJkX3JlYyAq
+Y2FyZCA9IChzdHJ1Y3QgdXNiX2NhcmRfcmVjICopYWRhcHRlci0+Y2FyZDsKKwlpbnQgaTsKKwlz
+dHJ1Y3QgdXJiX2NvbnRleHQgKmN0eDsKKworCWZvciAoaSA9IDA7IGkgPCBNV0lGSUVYX1JYX0RB
+VEFfVVJCOyBpKyspIHsKKwkJaWYgKGNhcmQtPnJ4X2RhdGFfbGlzdFtpXS5za2IpCisJCQljb250
+aW51ZTsKKwkJY3R4ID0gJmNhcmQtPnJ4X2RhdGFfbGlzdFtpXTsKKwkJbXdpZmlleF91c2Jfc3Vi
+bWl0X3J4X3VyYihjdHgsIE1XSUZJRVhfUlhfREFUQV9CVUZfU0laRSk7CisJfQorfQorCiBzdGF0
+aWMgc3RydWN0IG13aWZpZXhfaWZfb3BzIHVzYl9vcHMgPSB7CiAJLnJlZ2lzdGVyX2RldiA9CQlt
+d2lmaWV4X3JlZ2lzdGVyX2RldiwKIAkud2FrZXVwID0JCW13aWZpZXhfcG1fd2FrZXVwX2NhcmQs
+CkBAIC05OTYsNiArMTAxNiw3IEBAIHN0YXRpYyBzdHJ1Y3QgbXdpZmlleF9pZl9vcHMgdXNiX29w
+cyA9IHsKIAkuZXZlbnRfY29tcGxldGUgPQltd2lmaWV4X3VzYl9jbWRfZXZlbnRfY29tcGxldGUs
+CiAJLmRhdGFfY29tcGxldGUgPQltd2lmaWV4X3VzYl9kYXRhX2NvbXBsZXRlLAogCS5ob3N0X3Rv
+X2NhcmQgPQkJbXdpZmlleF91c2JfaG9zdF90b19jYXJkLAorCS5zdWJtaXRfcmVtX3J4X3VyYiA9
+CW13aWZpZXhfdXNiX3N1Ym1pdF9yZW1fcnhfdXJiLAogfTsKIAogLyogVGhpcyBmdW5jdGlvbiBp
+bml0aWFsaXplcyB0aGUgVVNCIGRyaXZlciBtb2R1bGUuCi0tIAoxLjcuMy40Cgo=
+
+--_002_5FF020A1CFFEEC49BD1E09530C4FF5951821B4843BSCVEXCH1marve_--
