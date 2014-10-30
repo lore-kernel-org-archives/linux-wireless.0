@@ -1,223 +1,230 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:62934 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752750AbaJTNqZ (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:1697 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758262AbaJ3J1W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Oct 2014 09:46:25 -0400
-Received: by mail-wg0-f42.google.com with SMTP id z12so5409655wgg.1
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Oct 2014 06:46:21 -0700 (PDT)
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Karl Beldan <karl.beldan@rivierawaves.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	karl.beldan@gmail.com, Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH v5 2/4] mac80211: minstrel_ht: macros adjustments for future VHT_GROUPs
-Date: Mon, 20 Oct 2014 15:46:00 +0200
-Message-Id: <1413812762-6605-3-git-send-email-karl.beldan@gmail.com> (sfid-20141020_154630_653916_A70D4B31)
-In-Reply-To: <1413812762-6605-1-git-send-email-karl.beldan@gmail.com>
-References: <1413812762-6605-1-git-send-email-karl.beldan@gmail.com>
+	Thu, 30 Oct 2014 05:27:22 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2] ath10k: handle ieee80211 header and payload tracing separately
+Date: Thu, 30 Oct 2014 14:58:56 +0530
+Message-ID: <1414661336-20764-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20141030_102725_967304_270072B3)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Karl Beldan <karl.beldan@rivierawaves.com>
+For packet log, the transmitted frame 802.11 header alone is sufficient.
+Recording entire packet is also consuming lot of disk space. To optimize
+this, tx and rx data tracepoints are splitted into header and payload
+tracepoints.
 
-No functional change.
+To record tx ieee80211 headers
 
-Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
-Cc: Felix Fietkau <nbd@openwrt.org>
+     trace-cmd record -e ath10k_tx_hdr
+
+To record complete packets
+
+     trace-cmd record -e ath10k_tx_hdr -e ath10k_tx_payload
+
+Cc: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 ---
- net/mac80211/rc80211_minstrel_ht.c         | 51 +++++++++++++++---------------
- net/mac80211/rc80211_minstrel_ht.h         | 15 +++++++--
- net/mac80211/rc80211_minstrel_ht_debugfs.c | 10 +++---
- 3 files changed, 42 insertions(+), 34 deletions(-)
+v2: Move header len processing inside trace
+ drivers/net/wireless/ath/ath10k/htt_rx.c |  4 +-
+ drivers/net/wireless/ath/ath10k/htt_tx.c |  3 +-
+ drivers/net/wireless/ath/ath10k/trace.h  | 77 +++++++++++++++++++++++++++-----
+ drivers/net/wireless/ath/ath10k/wmi.c    |  7 ++-
+ 4 files changed, 75 insertions(+), 16 deletions(-)
 
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index ccec718..a48eb76 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -34,12 +34,16 @@
- /* Transmit duration for the raw data part of an average sized packet */
- #define MCS_DURATION(streams, sgi, bps) MCS_SYMBOL_TIME(sgi, MCS_NSYMS((streams) * (bps)))
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index a691fdf..52c6306 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -297,8 +297,6 @@ static inline struct sk_buff *ath10k_htt_rx_netbuf_pop(struct ath10k_htt *htt)
+ 			 DMA_FROM_DEVICE);
+ 	ath10k_dbg_dump(ar, ATH10K_DBG_HTT_DUMP, NULL, "htt rx netbuf pop: ",
+ 			msdu->data, msdu->len + skb_tailroom(msdu));
+-	trace_ath10k_htt_rx_pop_msdu(ar, msdu->data, msdu->len +
+-				     skb_tailroom(msdu));
  
-+#define BW_20			0
-+#define BW_40			1
+ 	return msdu;
+ }
+@@ -903,6 +901,8 @@ static void ath10k_process_rx(struct ath10k *ar,
+ 		   !!(status->flag & RX_FLAG_AMSDU_MORE));
+ 	ath10k_dbg_dump(ar, ATH10K_DBG_HTT_DUMP, NULL, "rx skb: ",
+ 			skb->data, skb->len);
++	trace_ath10k_rx_hdr(ar, skb->data, skb->len);
++	trace_ath10k_rx_payload(ar, skb->data, skb->len);
+ 
+ 	ieee80211_rx(ar->hw, skb);
+ }
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index b0df470..1e51249 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -564,7 +564,8 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ 		   (u32)skb_cb->paddr, vdev_id, tid);
+ 	ath10k_dbg_dump(ar, ATH10K_DBG_HTT_DUMP, NULL, "htt tx msdu: ",
+ 			msdu->data, msdu->len);
+-	trace_ath10k_htt_tx_msdu(ar, msdu->data, msdu->len);
++	trace_ath10k_tx_hdr(ar, msdu->data, msdu->len);
++	trace_ath10k_tx_payload(ar, msdu->data, msdu->len);
+ 
+ 	sg_items[0].transfer_id = 0;
+ 	sg_items[0].transfer_context = NULL;
+diff --git a/drivers/net/wireless/ath/ath10k/trace.h b/drivers/net/wireless/ath/ath10k/trace.h
+index b9a2ba6..919dc7e 100644
+--- a/drivers/net/wireless/ath/ath10k/trace.h
++++ b/drivers/net/wireless/ath/ath10k/trace.h
+@@ -341,7 +341,10 @@ TRACE_EVENT(ath10k_txrx_tx_unref,
+ 	 )
+ );
+ 
+-DECLARE_EVENT_CLASS(ath10k_data_event,
++#define ATH10K_FRM_HDR_LEN  \
++	ieee80211_hdrlen(((struct ieee80211_hdr *)data)->frame_control)
 +
- /*
-  * Define group sort order: HT40 -> SGI -> #streams
-  */
- #define GROUP_IDX(_streams, _sgi, _ht40)	\
-+	MINSTREL_HT_GROUP_0 +			\
- 	MINSTREL_MAX_STREAMS * 2 * _ht40 +	\
--	MINSTREL_MAX_STREAMS * _sgi +		\
-+	MINSTREL_MAX_STREAMS * _sgi +	\
- 	_streams - 1
++DECLARE_EVENT_CLASS(ath10k_hdr_event,
+ 		    TP_PROTO(struct ath10k *ar, void *data, size_t len),
  
- /* MCS rate information for an MCS group */
-@@ -76,13 +80,13 @@
- 	CCK_ACK_DURATION(55, _short),			\
- 	CCK_ACK_DURATION(110, _short)
+ 	TP_ARGS(ar, data, len),
+@@ -350,14 +353,14 @@ DECLARE_EVENT_CLASS(ath10k_data_event,
+ 		__string(device, dev_name(ar->dev))
+ 		__string(driver, dev_driver_string(ar->dev))
+ 		__field(size_t, len)
+-		__dynamic_array(u8, data, len)
++		__dynamic_array(u8, data, ATH10K_FRM_HDR_LEN)
+ 	),
  
--#define CCK_GROUP						\
--	[MINSTREL_MAX_STREAMS * MINSTREL_STREAM_GROUPS] = {	\
--		.streams = 0,					\
--		.duration = {					\
--			CCK_DURATION_LIST(false),		\
--			CCK_DURATION_LIST(true)			\
--		}						\
-+#define CCK_GROUP					\
-+	[MINSTREL_CCK_GROUP] = {			\
-+		.streams = 0,				\
-+		.duration = {				\
-+			CCK_DURATION_LIST(false),	\
-+			CCK_DURATION_LIST(true)		\
-+		}					\
- 	}
+ 	TP_fast_assign(
+ 		__assign_str(device, dev_name(ar->dev));
+ 		__assign_str(driver, dev_driver_string(ar->dev));
+-		__entry->len = len;
+-		memcpy(__get_dynamic_array(data), data, len);
++		__entry->len = ATH10K_FRM_HDR_LEN;
++		memcpy(__get_dynamic_array(data), data, __entry->len);
+ 	),
  
- /*
-@@ -91,38 +95,36 @@
-  * use.
-  *
-  * Sortorder has to be fixed for GROUP_IDX macro to be applicable:
-- * HT40 -> SGI -> #streams
-+ * BW -> SGI -> #streams
-  */
- const struct mcs_group minstrel_mcs_groups[] = {
--	MCS_GROUP(1, 0, 0),
--	MCS_GROUP(2, 0, 0),
-+	MCS_GROUP(1, 0, BW_20),
-+	MCS_GROUP(2, 0, BW_20),
- #if MINSTREL_MAX_STREAMS >= 3
--	MCS_GROUP(3, 0, 0),
-+	MCS_GROUP(3, 0, BW_20),
- #endif
+ 	TP_printk(
+@@ -368,30 +371,82 @@ DECLARE_EVENT_CLASS(ath10k_data_event,
+ 	)
+ );
  
--	MCS_GROUP(1, 1, 0),
--	MCS_GROUP(2, 1, 0),
-+	MCS_GROUP(1, 1, BW_20),
-+	MCS_GROUP(2, 1, BW_20),
- #if MINSTREL_MAX_STREAMS >= 3
--	MCS_GROUP(3, 1, 0),
-+	MCS_GROUP(3, 1, BW_20),
- #endif
- 
--	MCS_GROUP(1, 0, 1),
--	MCS_GROUP(2, 0, 1),
-+	MCS_GROUP(1, 0, BW_40),
-+	MCS_GROUP(2, 0, BW_40),
- #if MINSTREL_MAX_STREAMS >= 3
--	MCS_GROUP(3, 0, 1),
-+	MCS_GROUP(3, 0, BW_40),
- #endif
- 
--	MCS_GROUP(1, 1, 1),
--	MCS_GROUP(2, 1, 1),
-+	MCS_GROUP(1, 1, BW_40),
-+	MCS_GROUP(2, 1, BW_40),
- #if MINSTREL_MAX_STREAMS >= 3
--	MCS_GROUP(3, 1, 1),
-+	MCS_GROUP(3, 1, BW_40),
- #endif
- 
--	/* must be last */
- 	CCK_GROUP
- };
- 
--#define MINSTREL_CCK_GROUP	(ARRAY_SIZE(minstrel_mcs_groups) - 1)
- 
- static u8 sample_table[SAMPLE_COLUMNS][MCS_GROUP_RATES] __read_mostly;
- 
-@@ -971,8 +973,7 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
- 	if (!sta->ht_cap.ht_supported)
- 		goto use_legacy;
- 
--	BUILD_BUG_ON(ARRAY_SIZE(minstrel_mcs_groups) !=
--		MINSTREL_MAX_STREAMS * MINSTREL_STREAM_GROUPS + 1);
-+	BUILD_BUG_ON(ARRAY_SIZE(minstrel_mcs_groups) != MINSTREL_GROUPS_NB);
- 
- 	msp->is_ht = true;
- 	memset(mi, 0, sizeof(*mi));
-diff --git a/net/mac80211/rc80211_minstrel_ht.h b/net/mac80211/rc80211_minstrel_ht.h
-index 8b54e89..e747ac6 100644
---- a/net/mac80211/rc80211_minstrel_ht.h
-+++ b/net/mac80211/rc80211_minstrel_ht.h
-@@ -13,8 +13,17 @@
-  * The number of streams can be changed to 2 to reduce code
-  * size and memory footprint.
-  */
--#define MINSTREL_MAX_STREAMS	3
--#define MINSTREL_STREAM_GROUPS	4
-+#define MINSTREL_MAX_STREAMS		3
-+#define MINSTREL_HT_STREAM_GROUPS	4 /* BW(=2) * SGI(=2) */
+-DEFINE_EVENT(ath10k_data_event, ath10k_htt_tx_msdu,
+-	     TP_PROTO(struct ath10k *ar, void *data, size_t len),
+-	     TP_ARGS(ar, data, len)
++DECLARE_EVENT_CLASS(ath10k_payload_event,
++		    TP_PROTO(struct ath10k *ar, void *data, size_t len),
 +
-+#define MINSTREL_HT_GROUPS_NB	(MINSTREL_MAX_STREAMS *		\
-+				 MINSTREL_HT_STREAM_GROUPS)
-+#define MINSTREL_CCK_GROUPS_NB	1
-+#define MINSTREL_GROUPS_NB	(MINSTREL_HT_GROUPS_NB +	\
-+				 MINSTREL_CCK_GROUPS_NB)
++	TP_ARGS(ar, data, len),
 +
-+#define MINSTREL_HT_GROUP_0	0
-+#define MINSTREL_CCK_GROUP	(MINSTREL_HT_GROUP_0 + MINSTREL_HT_GROUPS_NB)
++	TP_STRUCT__entry(
++		__string(device, dev_name(ar->dev))
++		__string(driver, dev_driver_string(ar->dev))
++		__field(size_t, len)
++		__dynamic_array(u8, payload, (len - ATH10K_FRM_HDR_LEN))
++	),
++
++	TP_fast_assign(
++		__assign_str(device, dev_name(ar->dev));
++		__assign_str(driver, dev_driver_string(ar->dev));
++		__entry->len = len - ATH10K_FRM_HDR_LEN;
++		memcpy(__get_dynamic_array(payload),
++		       data + ATH10K_FRM_HDR_LEN, __entry->len);
++	),
++
++	TP_printk(
++		"%s %s len %zu\n",
++		__get_str(driver),
++		__get_str(device),
++		__entry->len
++	)
+ );
  
- #define MCS_GROUP_RATES	8
+-DEFINE_EVENT(ath10k_data_event, ath10k_htt_rx_pop_msdu,
++
++DEFINE_EVENT(ath10k_hdr_event, ath10k_tx_hdr,
+ 	     TP_PROTO(struct ath10k *ar, void *data, size_t len),
+ 	     TP_ARGS(ar, data, len)
+ );
  
-@@ -80,7 +89,7 @@ struct minstrel_ht_sta {
- 	u8 cck_supported_short;
+-DEFINE_EVENT(ath10k_data_event, ath10k_wmi_mgmt_tx,
++DEFINE_EVENT(ath10k_payload_event, ath10k_tx_payload,
+ 	     TP_PROTO(struct ath10k *ar, void *data, size_t len),
+ 	     TP_ARGS(ar, data, len)
+ );
  
- 	/* MCS rate group info and statistics */
--	struct minstrel_mcs_group_data groups[MINSTREL_MAX_STREAMS * MINSTREL_STREAM_GROUPS + 1];
-+	struct minstrel_mcs_group_data groups[MINSTREL_GROUPS_NB];
- };
+-DEFINE_EVENT(ath10k_data_event, ath10k_wmi_bcn_tx,
++DEFINE_EVENT(ath10k_hdr_event, ath10k_rx_hdr,
+ 	     TP_PROTO(struct ath10k *ar, void *data, size_t len),
+ 	     TP_ARGS(ar, data, len)
+ );
  
- struct minstrel_ht_sta_priv {
-diff --git a/net/mac80211/rc80211_minstrel_ht_debugfs.c b/net/mac80211/rc80211_minstrel_ht_debugfs.c
-index d537bec..d2f53b8 100644
---- a/net/mac80211/rc80211_minstrel_ht_debugfs.c
-+++ b/net/mac80211/rc80211_minstrel_ht_debugfs.c
-@@ -18,7 +18,6 @@
- static char *
- minstrel_ht_stats_dump(struct minstrel_ht_sta *mi, int i, char *p)
- {
--	unsigned int max_mcs = MINSTREL_MAX_STREAMS * MINSTREL_STREAM_GROUPS;
- 	const struct mcs_group *mg;
- 	unsigned int j, tp, prob, eprob;
- 	char htmode = '2';
-@@ -41,7 +40,7 @@ minstrel_ht_stats_dump(struct minstrel_ht_sta *mi, int i, char *p)
- 		if (!(mi->groups[i].supported & BIT(j)))
- 			continue;
+-DEFINE_EVENT(ath10k_data_event, ath10k_htt_rx_desc,
++DEFINE_EVENT(ath10k_payload_event, ath10k_rx_payload,
+ 	     TP_PROTO(struct ath10k *ar, void *data, size_t len),
+ 	     TP_ARGS(ar, data, len)
+ );
++
++TRACE_EVENT(ath10k_htt_rx_desc,
++	    TP_PROTO(struct ath10k *ar, void *data, size_t len),
++
++	TP_ARGS(ar, data, len),
++
++	TP_STRUCT__entry(
++		__string(device, dev_name(ar->dev))
++		__string(driver, dev_driver_string(ar->dev))
++		__field(u16, len)
++		__dynamic_array(u8, rxdesc, len)
++	),
++
++	TP_fast_assign(
++		__assign_str(device, dev_name(ar->dev));
++		__assign_str(driver, dev_driver_string(ar->dev));
++		__entry->len = len;
++		memcpy(__get_dynamic_array(rxdesc), data, len);
++	),
++
++	TP_printk(
++		"%s %s rxdesc len %d",
++		__get_str(driver),
++		__get_str(device),
++		__entry->len
++	 )
++);
++
+ #endif /* _TRACE_H_ || TRACE_HEADER_MULTI_READ*/
  
--		if (i == max_mcs)
-+		if (i == MINSTREL_CCK_GROUP)
- 			p += sprintf(p, "CCK/%cP   ", j < 4 ? 'L' : 'S');
- 		else
- 			p += sprintf(p, "HT%c0/%cGI ", htmode, gimode);
-@@ -52,7 +51,7 @@ minstrel_ht_stats_dump(struct minstrel_ht_sta *mi, int i, char *p)
- 		*(p++) = (idx == mi->max_tp_rate[3]) ? 'D' : ' ';
- 		*(p++) = (idx == mi->max_prob_rate) ? 'P' : ' ';
+ /* we don't want to use include/trace/events */
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index ae746ce..3dcb216 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -834,7 +834,8 @@ int ath10k_wmi_mgmt_tx(struct ath10k *ar, struct sk_buff *skb)
+ 	ath10k_dbg(ar, ATH10K_DBG_WMI, "wmi mgmt tx skb %p len %d ftype %02x stype %02x\n",
+ 		   wmi_skb, wmi_skb->len, fc & IEEE80211_FCTL_FTYPE,
+ 		   fc & IEEE80211_FCTL_STYPE);
+-	trace_ath10k_wmi_mgmt_tx(ar, skb->data, skb->len);
++	trace_ath10k_tx_hdr(ar, skb->data, skb->len);
++	trace_ath10k_tx_payload(ar, skb->data, skb->len);
  
--		if (i == max_mcs) {
-+		if (i == MINSTREL_CCK_GROUP) {
- 			int r = bitrates[j % 4];
- 			p += sprintf(p, " %2u.%1uM", r / 10, r % 10);
- 		} else {
-@@ -85,7 +84,6 @@ minstrel_ht_stats_open(struct inode *inode, struct file *file)
- 	struct minstrel_ht_sta *mi = &msp->ht;
- 	struct minstrel_debugfs_info *ms;
- 	unsigned int i;
--	unsigned int max_mcs = MINSTREL_MAX_STREAMS * MINSTREL_STREAM_GROUPS;
- 	char *p;
- 	int ret;
+ 	/* Send the management frame buffer to the target */
+ 	ret = ath10k_wmi_cmd_send(ar, wmi_skb, ar->wmi.cmd->mgmt_tx_cmdid);
+@@ -1893,7 +1894,9 @@ static void ath10k_wmi_event_host_swba(struct ath10k *ar, struct sk_buff *skb)
+ 		arvif->beacon = bcn;
+ 		arvif->beacon_sent = false;
  
-@@ -106,8 +104,8 @@ minstrel_ht_stats_open(struct inode *inode, struct file *file)
- 			"ret  *ok(*cum)        ok(      cum)\n");
- 
- 
--	p = minstrel_ht_stats_dump(mi, max_mcs, p);
--	for (i = 0; i < max_mcs; i++)
-+	p = minstrel_ht_stats_dump(mi, MINSTREL_CCK_GROUP, p);
-+	for (i = 0; i < MINSTREL_CCK_GROUP; i++)
- 		p = minstrel_ht_stats_dump(mi, i, p);
- 
- 	p += sprintf(p, "\nTotal packet count::    ideal %d      "
+-		trace_ath10k_wmi_bcn_tx(ar, bcn->data, bcn->len);
++		trace_ath10k_tx_hdr(ar, bcn->data, bcn->len);
++		trace_ath10k_tx_payload(ar, bcn->data, bcn->len);
++
+ 		ath10k_wmi_tx_beacon_nowait(arvif);
+ skip:
+ 		spin_unlock_bh(&ar->data_lock);
 -- 
-2.0.1
+2.1.3
 
