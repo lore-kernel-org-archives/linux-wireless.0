@@ -1,58 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:35426
-	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751816AbaJYTeW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Oct 2014 15:34:22 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, sujith@msujith.org
-Subject: [PATCH v2 07/10] ath9k_hw: start initial NF calibration after PA calibration on <AR9003
-Date: Sat, 25 Oct 2014 17:19:32 +0200
-Message-Id: <1414250375-74121-7-git-send-email-nbd@openwrt.org> (sfid-20141025_213426_017110_A3FE08E1)
-In-Reply-To: <1414250375-74121-1-git-send-email-nbd@openwrt.org>
-References: <1414250375-74121-1-git-send-email-nbd@openwrt.org>
+Received: from mx1.redhat.com ([209.132.183.28]:32896 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760141AbaJ3Ot1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Oct 2014 10:49:27 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: "Sharma\, Sanjeev" <Sanjeev_Sharma@mentor.com>
+Cc: "Larry.Finger\@lwfinger.net" <Larry.Finger@lwfinger.net>,
+	"gregkh\@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devel\@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] staging:rtl8723au: core: Fix error reported by checkpatch.
+References: <1414396745-8845-1-git-send-email-sanjeev_sharma@mentor.com>
+	<wrfjioj5aonx.fsf@redhat.com>
+	<FDC088D3B5555644AE135ED28A7ABDE950E890BC@EU-MBX-02.mgc.mentorg.com>
+Date: Thu, 30 Oct 2014 15:49:14 +0100
+In-Reply-To: <FDC088D3B5555644AE135ED28A7ABDE950E890BC@EU-MBX-02.mgc.mentorg.com>
+	(Sanjeev Sharma's message of "Wed, 29 Oct 2014 06:32:48 +0000")
+Message-ID: <wrfj38a51ul1.fsf@redhat.com> (sfid-20141030_154959_097856_90255840)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This makes the initial NF calibration less likely to fail.
+"Sharma, Sanjeev" <Sanjeev_Sharma@mentor.com> writes:
+> -----Original Message-----
+> From: Jes Sorensen [mailto:Jes.Sorensen@redhat.com] 
+> Sent: Monday, October 27, 2014 2:13 PM
+> To: Sharma, Sanjeev
+> Cc: Larry.Finger@lwfinger.net; gregkh@linuxfoundation.org;
+> linux-wireless@vger.kernel.org; devel@driverdev.osuosl.org;
+> linux-kernel@vger.kernel.org
+> Subject: Re: [PATCH] staging:rtl8723au: core: Fix error reported by checkpatch.
+>
+> Sanjeev Sharma <sanjeev_sharma@mentor.com> writes:
+>> This is a patch to the rtw_cmd.c file that fixes Error reported by 
+>> checkpatch.
+>>
+>> Signed-off-by: Sanjeev Sharma <Sanjeev_Sharma@mentor.com>
+>> ---
+>>  drivers/staging/rtl8723au/core/rtw_cmd.c | 83 
+>> +++++++++++++++-----------------
+>>  1 file changed, 40 insertions(+), 43 deletions(-)
+>>
+>> diff --git a/drivers/staging/rtl8723au/core/rtw_cmd.c 
+>> b/drivers/staging/rtl8723au/core/rtw_cmd.c
+>> index 4eaa502..c1f6254 100644
+>> --- a/drivers/staging/rtl8723au/core/rtw_cmd.c
+>> +++ b/drivers/staging/rtl8723au/core/rtw_cmd.c
+>> @@ -957,7 +957,7 @@ static void traffic_status_watchdog(struct rtw_adapter *padapter)
+>>  		/*  check traffic for  powersaving. */
+>>  			if (((pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod +
+>>  			      pmlmepriv->LinkDetectInfo.NumTxOkInPeriod) > 8) ||
+>> -			    pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod >2)
+>> +			    pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod > 2)
+>>  				bEnterPS = false;
+>>  			else
+>>  				bEnterPS = true;
+>
+> This makes the line longer than 80 characters, that is worse than the 'problem' you are fixing.
+>
+> Jes
+>
+> Hello jes,
+>
+> How it can be worse because checkpatch treating this as an Error and
+> line longer than 80 character is warning reported by checkpatch and I
+> could see that in entire staging directory, 
+> every maintainer most of the time ignore the 80 column limit and give
+> priority to Error. 
+>
+> Please let me know your comment .
+>
+> Sanjeev Sharma 
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ar9002_calib.c | 2 ++
- drivers/net/wireless/ath/ath9k/hw.c           | 6 ++++--
- 2 files changed, 6 insertions(+), 2 deletions(-)
+checkpatch has it's ideas, doesn't mean it's blindly right at all
+times. In this particular case it keeps the code more readable to keep
+it below 80 characters than it does to add those two blanks and make the
+line longer.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_calib.c b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-index 07994e3..42190b6 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-@@ -856,6 +856,8 @@ static bool ar9002_hw_init_cal(struct ath_hw *ah, struct ath9k_channel *chan)
- 
- 	/* Do PA Calibration */
- 	ar9002_hw_pa_cal(ah, true);
-+	ath9k_hw_loadnf(ah, chan);
-+	ath9k_hw_start_nfcal(ah, true);
- 
- 	if (ah->caldata)
- 		set_bit(NFCAL_PENDING, &ah->caldata->cal_flags);
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 8be4b14..85a7817 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1953,8 +1953,10 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 	if (ath9k_hw_mci_is_enabled(ah))
- 		ar9003_mci_check_bt(ah);
- 
--	ath9k_hw_loadnf(ah, chan);
--	ath9k_hw_start_nfcal(ah, true);
-+	if (AR_SREV_9300_20_OR_LATER(ah)) {
-+		ath9k_hw_loadnf(ah, chan);
-+		ath9k_hw_start_nfcal(ah, true);
-+	}
- 
- 	if (AR_SREV_9300_20_OR_LATER(ah))
- 		ar9003_hw_bb_watchdog_config(ah);
--- 
-2.1.2
+I agree the long variable names are nasty, and it doesn't help they were
+done in StUdLyCaPs. If you want to attack it from that front, please go
+ahead.
 
+However, on formatting, please respond with proper email using proper
+quoting when replying.
+
+Thanks,
+Jes
