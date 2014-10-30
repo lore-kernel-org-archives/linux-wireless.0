@@ -1,58 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:56684 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932287AbaJVTXR (ORCPT
+Received: from mail-pa0-f42.google.com ([209.85.220.42]:62250 "EHLO
+	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752421AbaJ3ERb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Oct 2014 15:23:17 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v3 9/9] mac80211:  support creating vifs with specified mac address
-Date: Wed, 22 Oct 2014 12:23:06 -0700
-Message-Id: <1414005786-27572-9-git-send-email-greearb@candelatech.com> (sfid-20141022_212328_081539_AD7897D8)
-In-Reply-To: <1414005786-27572-1-git-send-email-greearb@candelatech.com>
-References: <1414005786-27572-1-git-send-email-greearb@candelatech.com>
+	Thu, 30 Oct 2014 00:17:31 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org,
+	Murilo Opsfelder Araujo <mopsfelder@gmail.com>
+Subject: [PATCH 6/6 V3.18] rtlwifi: rtl8192se: Fix firmware loading
+Date: Wed, 29 Oct 2014 23:17:13 -0500
+Message-Id: <1414642633-3700-7-git-send-email-Larry.Finger@lwfinger.net> (sfid-20141030_051746_526810_EFC2D2AC)
+In-Reply-To: <1414642633-3700-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1414642633-3700-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+An error in the code makes the allocated space for firmware to be too
+small.
 
-This is useful when creating virtual interfaces.
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Murilo Opsfelder Araujo <mopsfelder@gmail.com>
 ---
- net/mac80211/iface.c | 5 ++++-
- net/mac80211/main.c  | 1 +
- 2 files changed, 5 insertions(+), 1 deletion(-)
+ drivers/net/wireless/rtlwifi/rtl8192se/sw.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index e469b33..1ffcc07 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1671,7 +1671,10 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
- 		}
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/sw.c b/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
+index 1fd2208..aadba29 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
+@@ -209,8 +209,8 @@ static int rtl92s_init_sw_vars(struct ieee80211_hw *hw)
+ 	if (!rtlpriv->rtlhal.pfirmware)
+ 		return 1;
  
- 		ieee80211_assign_perm_addr(local, ndev->perm_addr, type);
--		memcpy(ndev->dev_addr, ndev->perm_addr, ETH_ALEN);
-+		if (params && is_valid_ether_addr(params->macaddr))
-+			memcpy(ndev->dev_addr, params->macaddr, ETH_ALEN);
-+		else
-+			memcpy(ndev->dev_addr, ndev->perm_addr, ETH_ALEN);
- 		SET_NETDEV_DEV(ndev, wiphy_dev(local->hw.wiphy));
- 
- 		/* don't use IEEE80211_DEV_TO_SUB_IF -- it checks too much */
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 7d40e3f..282a4f3 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -542,6 +542,7 @@ struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t priv_data_len,
- 			   NL80211_FEATURE_SAE |
- 			   NL80211_FEATURE_HT_IBSS |
- 			   NL80211_FEATURE_VIF_TXPOWER |
-+			   NL80211_FEATURE_MAC_ON_CREATE |
- 			   NL80211_FEATURE_USERSPACE_MPM;
- 
- 	if (!ops->hw_scan)
+-	rtlpriv->max_fw_size = RTL8190_MAX_RAW_FIRMWARE_CODE_SIZE;
+-
++	rtlpriv->max_fw_size = RTL8190_MAX_FIRMWARE_CODE_SIZE*2 +
++			       sizeof(struct fw_hdr);
+ 	pr_info("Driver for Realtek RTL8192SE/RTL8191SE\n"
+ 		"Loading firmware %s\n", rtlpriv->cfg->fw_name);
+ 	/* request fw */
 -- 
-1.7.11.7
+2.1.1
 
