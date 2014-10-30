@@ -1,62 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:58100 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756193AbaJ2Rpz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Oct 2014 13:45:55 -0400
-Received: by mail-wi0-f173.google.com with SMTP id n3so2400192wiv.12
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Oct 2014 10:45:54 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH v2 25/34] staging: vt6655: mac80211 conversion: PSbIsNextTBTTWakeUp convert to mac80211
-Date: Wed, 29 Oct 2014 17:44:00 +0000
-Message-Id: <1414604649-9105-26-git-send-email-tvboxspy@gmail.com> (sfid-20141029_184840_514175_0AB6566C)
-In-Reply-To: <1414604649-9105-1-git-send-email-tvboxspy@gmail.com>
-References: <1414604649-9105-1-git-send-email-tvboxspy@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:42469 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751626AbaJ3Hh3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Oct 2014 03:37:29 -0400
+Message-ID: <1414654645.1823.0.camel@jlt4.sipsolutions.net> (sfid-20141030_083732_274928_6C06326E)
+Subject: Re: [PATCH net-next] mac80211: fix spelling errors
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stephen Hemminger <stephen@networkplumber.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 30 Oct 2014 08:37:25 +0100
+In-Reply-To: <20141029225558.1422bc2f@urahara> (sfid-20141030_065609_890618_2EAB83A5)
+References: <20141029225558.1422bc2f@urahara>
+	 (sfid-20141030_065609_890618_2EAB83A5)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wake up to listen to next beacon when struct ieee80211_conf -> listen_interval == 1
+On Wed, 2014-10-29 at 22:55 -0700, Stephen Hemminger wrote:
+> Use codespell to find spelling errors.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/power.c | 19 ++++++-------------
- 1 file changed, 6 insertions(+), 13 deletions(-)
+Thanks Stephen.
 
-diff --git a/drivers/staging/vt6655/power.c b/drivers/staging/vt6655/power.c
-index fe33bb2..5371802 100644
---- a/drivers/staging/vt6655/power.c
-+++ b/drivers/staging/vt6655/power.c
-@@ -327,21 +327,14 @@ PSbIsNextTBTTWakeUp(
- )
- {
- 	struct vnt_private *pDevice = hDeviceContext;
--	PSMgmtObject        pMgmt = pDevice->pMgmt;
-+	struct ieee80211_hw *hw = pDevice->hw;
-+	struct ieee80211_conf *conf = &hw->conf;
- 	bool bWakeUp = false;
- 
--	if (pMgmt->wListenInterval >= 2) {
--		if (pMgmt->wCountToWakeUp == 0)
--			pMgmt->wCountToWakeUp = pMgmt->wListenInterval;
--
--		pMgmt->wCountToWakeUp--;
--
--		if (pMgmt->wCountToWakeUp == 1) {
--			// Turn on wake up to listen next beacon
--			MACvRegBitsOn(pDevice->PortOffset, MAC_REG_PSCTL, PSCTL_LNBCN);
--			bWakeUp = true;
--		}
--
-+	if (conf->listen_interval == 1) {
-+		/* Turn on wake up to listen next beacon */
-+		MACvRegBitsOn(pDevice->PortOffset, MAC_REG_PSCTL, PSCTL_LNBCN);
-+		bWakeUp = true;
- 	}
- 
- 	return bWakeUp;
--- 
-2.1.0
+> --- a/net/mac802154/ieee802154_dev.c	2014-07-25 11:02:43.895028221 -0700
+> +++ b/net/mac802154/ieee802154_dev.c	2014-10-27 20:40:26.471487715 -0700
+> @@ -267,7 +267,7 @@ ieee802154_alloc_device(size_t priv_data
+>  	 * +-----------------------+
+>  	 *
+>  	 * Due to ieee802154 layer isn't aware of driver and MAC structures,
+> -	 * so lets allign them here.
+> +	 * so lets align them here.
+>  	 */
+>  
+>  	priv_size = ALIGN(sizeof(*priv), NETDEV_ALIGN) + priv_data_len;
+
+I'll take the rest, but can you resend this bit to the right 802.15.4
+folks?
+
+Thanks,
+johannes
 
