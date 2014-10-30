@@ -1,105 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yh0-f51.google.com ([209.85.213.51]:58253 "EHLO
-	mail-yh0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752092AbaJXFcq convert rfc822-to-8bit (ORCPT
+Received: from mail-pd0-f178.google.com ([209.85.192.178]:48772 "EHLO
+	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751470AbaJ3ERU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Oct 2014 01:32:46 -0400
-Received: by mail-yh0-f51.google.com with SMTP id t59so444530yho.38
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Oct 2014 22:32:45 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CANUX_P0FPDSjAzh1uJ2LxWp9H8CXJgK1sdE+HYMcrTVLNH+1Kg@mail.gmail.com>
-References: <1413463736.1316541.179720977.4FD32021@webmail.messagingengine.com>
-	<54463CE9.3060400@gmail.com>
-	<1413921415.3763081.181696749.20A0A495@webmail.messagingengine.com>
-	<CANUX_P0LRRczVCSFR7RE5coaYFxwFXyqC90pdm=oVwEiEt-7zw@mail.gmail.com>
-	<1414014805.4127522.182191541.14C8B4DF@webmail.messagingengine.com>
-	<CANUX_P0tGagXsN6XCeb_itQehqD3O9fmqknU6iSMO432NQtATA@mail.gmail.com>
-	<1414049448.32460.182326557.1A0A85A4@webmail.messagingengine.com>
-	<CANUX_P3usjdccnsYPQXzKbJ1PTH91fasf6BpcsCRYZH_yq2tww@mail.gmail.com>
-	<1414080125.164673.182502929.61AF3AB1@webmail.messagingengine.com>
-	<CANUX_P2pJYNhLEMw=iQVe-CSbxqRDqOXL_gUZXxwpmAj2qj=FA@mail.gmail.com>
-	<1414085934.228950.182543717.6FA0F16D@webmail.messagingengine.com>
-	<CANUX_P0nK9AQEzYGfGFKEU_vVJ9fwOPmjGTCL--zmk+J4uCz4Q@mail.gmail.com>
-	<1414093367.254547.182592325.0C3991E4@webmail.messagingengine.com>
-	<CANUX_P3sTY45ozSL6Rj0PRYgo9aPACdp97HV1SQna3AW5V75xw@mail.gmail.com>
-	<1414094840.260168.182602541.16435971@webmail.messagingengine.com>
-	<5449621C.3070400@gmail.com>
-	<1414096032.264032.182610177.3DACE1A9@webmail.messagingengine.com>
-	<CANUX_P0FPDSjAzh1uJ2LxWp9H8CXJgK1sdE+HYMcrTVLNH+1Kg@mail.gmail.com>
-Date: Fri, 24 Oct 2014 08:32:45 +0300
-Message-ID: <CANUX_P1MAY1gGjsGsk7P-Z4GBAAO_vdikbniphf7rk1jxy9Mbw@mail.gmail.com> (sfid-20141024_073250_135739_6414251C)
-Subject: Re: iwlwifi: Reason 7 periodic disconnect
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: =?UTF-8?Q?Lauren=C8=9Biu_Nicola?= <lnicola@dend.ro>
-Cc: poma <pomidorabelisima@gmail.com>, Dan Williams <dcbw@redhat.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 30 Oct 2014 00:17:20 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org,
+	Murilo Opsfelder Araujo <mopsfelder@gmail.com>
+Subject: [PATCH 0/6 3.18] Fixes for iwlwifi drivers
+Date: Wed, 29 Oct 2014 23:17:07 -0500
+Message-Id: <1414642633-3700-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20141030_051804_875778_D6BA7949)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 23, 2014 at 11:33 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
-> On Thu, Oct 23, 2014 at 11:27 PM, Laurențiu Nicola <lnicola@dend.ro> wrote:
->> https://bpaste.net/show/8a0e5c68762f
->>
->> On Thu, Oct 23, 2014, at 23:16, Emmanuel Grumbach wrote:
->>> > https://bpaste.net/show/5cc48256d952
->>> >
->>> > On Thu, Oct 23, 2014, at 22:55, Emmanuel Grumbach wrote:
->>> >> On Thu, Oct 23, 2014 at 10:42 PM, Laurențiu Nicola <lnicola@dend.ro>
->>> >> wrote:
->>> >>> Doesn't seem to help https://bpaste.net/show/68e1a6b33689.
->>> >>
->>> >> ok - let me re-add the logs...
->>> >>
->>> >>
->>>
->>> This makes no sense to me.
->>> We do talk to the AP since we get frames Acked...
->
-> This again makes no sense to me.
-> Time to go to bed I guess.
+Some late changes to rtlwifi made some of the older drivers not start correctly.
+These patches should be applied to 3.18.
 
-Can you please open a bug on bugzilla.kernel.org?
-Make sure to CC ilw@linux.intel.com
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Murilo Opsfelder Araujo <mopsfelder@gmail.com>
 
-This will make it more trackable.
-Thanks.
+Larry Finger (6):
+  rtlwifi: rtl8192ce: rtl8192de: rtl8192se: Fix handling for missing
+    get_btc_status
+  rtlwifi: rtl8192se: Fix duplicate calls to ieee80211_register_hw()
+  rtlwifi: rtl8192se: Add missing section to read descriptor setting
+  rtlwifi: rtl8192ce: Add missing section to read descriptor setting
+  rtlwifi: rtl8821ae: Remove extra semicolons
+  rtlwifi: rtl8192se: Fix firmware loading
 
->
->>>
->>> Can you please apply this on top of what you have?
->>>
->>> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
->>> index 2de8870..f3b1e62 100644
->>> --- a/net/mac80211/mlme.c
->>> +++ b/net/mac80211/mlme.c
->>> @@ -1991,15 +1991,16 @@ void ieee80211_sta_tx_notify(struct
->>> ieee80211_sub_if_data *sdata,
->>>         if (ieee80211_is_nullfunc(hdr->frame_control) &&
->>>             sdata->u.mgd.probe_send_count > 0) {
->>>                 if (ack)
->>> -                       ieee80211_sta_reset_conn_monitor(sdata);
->>> +               //      ieee80211_sta_reset_conn_monitor(sdata);
->>> +               ;
->>>                 else
->>>                         sdata->u.mgd.nullfunc_failed = true;
->>>                 ieee80211_queue_work(&sdata->local->hw, &sdata->work);
->>>                 return;
->>>         }
->>>
->>> -       if (ack)
->>> -               ieee80211_sta_reset_conn_monitor(sdata);
->>> +//     if (ack)
->>> +//             ieee80211_sta_reset_conn_monitor(sdata);
->>>  }
->>>
->>>  static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data
->>>  *sdata)
->>>
->>>
->>> Thanks.
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
->>> in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ drivers/net/wireless/rtlwifi/core.c          |  6 ++++++
+ drivers/net/wireless/rtlwifi/core.h          |  1 +
+ drivers/net/wireless/rtlwifi/rtl8192ce/def.h |  2 ++
+ drivers/net/wireless/rtlwifi/rtl8192ce/sw.c  |  1 +
+ drivers/net/wireless/rtlwifi/rtl8192ce/trx.c |  3 +++
+ drivers/net/wireless/rtlwifi/rtl8192de/sw.c  |  1 +
+ drivers/net/wireless/rtlwifi/rtl8192se/def.h |  2 ++
+ drivers/net/wireless/rtlwifi/rtl8192se/sw.c  | 22 +++-------------------
+ drivers/net/wireless/rtlwifi/rtl8192se/trx.c |  3 +++
+ drivers/net/wireless/rtlwifi/rtl8821ae/phy.c | 12 ++++++------
+ 10 files changed, 28 insertions(+), 25 deletions(-)
+
+-- 
+2.1.1
+
