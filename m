@@ -1,110 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:45015 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750971AbaJNEAI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Oct 2014 00:00:08 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH 7/9] ath9k: Send oneshot NoA
-Date: Tue, 14 Oct 2014 09:30:54 +0530
-Message-Id: <1413259256-4808-8-git-send-email-sujith@msujith.org> (sfid-20141014_060037_633258_43029E3D)
-In-Reply-To: <1413259256-4808-1-git-send-email-sujith@msujith.org>
-References: <1413259256-4808-1-git-send-email-sujith@msujith.org>
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:36094 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754161AbaJ3QVK convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Oct 2014 12:21:10 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Belisko Marek <marek.belisko@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Avinash Patil <patila@marvell.com>
+Date: Thu, 30 Oct 2014 09:21:06 -0700
+Subject: RE: mwifiex_usb_submit_rx_urb: dev_alloc_skb failed when conected
+ to 5GHz
+Message-ID: <5FF020A1CFFEEC49BD1E09530C4FF5951821545AEC@SC-VEXCH1.marvell.com> (sfid-20141030_172115_280864_16BB615C)
+References: <CAAfyv35k1mgQh6FcWaaMciAo8Vkp055k=5xF7zu+yrHmrQbbLA@mail.gmail.com>
+	<5FF020A1CFFEEC49BD1E09530C4FF5951819DB12F1@SC-VEXCH1.marvell.com>
+	<CAAfyv35j-77AURB4fHcecbEvyGS6U+1APNRFCf3FDAd_rrWnJw@mail.gmail.com>
+	<5FF020A1CFFEEC49BD1E09530C4FF5951821351855@SC-VEXCH1.marvell.com>
+	<CAAfyv35E2HUReFpnpdsebPETKk9VPA_hfQHUEJmoJfQt6Q-Puw@mail.gmail.com>
+	<5FF020A1CFFEEC49BD1E09530C4FF5951821936285@SC-VEXCH1.marvell.com>
+	<CAAfyv34UXMNwHf+kYCWEn+bcfGda_gA7uroLRLvhTEGGC5R57w@mail.gmail.com>
+	<5FF020A1CFFEEC49BD1E09530C4FF5951821936BBC@SC-VEXCH1.marvell.com>
+	<CAAfyv36s+stSKU7Oi372EjsvUi+S6PSbg1wVTD1dJrMrerBPXg@mail.gmail.com>
+	<5FF020A1CFFEEC49BD1E09530C4FF5951821936F03@SC-VEXCH1.marvell.com>
+	<CAAfyv34ivLF-B0ip+uhCah0PsiRsP1QOD0qW8F73n7KERqgM2w@mail.gmail.com>
+	<CAAfyv37uyPwED3tzX_4RjeTuf8LXqtL3zH4f-cNOLuRB+w=z6Q@mail.gmail.com>
+	<5FF020A1CFFEEC49BD1E09530C4FF5951821545AE6@SC-VEXCH1.marvell.com>
+	<CAAfyv35G=9WyYxQZjt3EYfGC+u0z81ktXrO7LEUrADxKX3XDNA@mail.gmail.com>
+	<5FF020A1CFFEEC49BD1E09530C4FF5951821B47FD7@SC-VEXCH1.marvell.com>
+	<CAAfyv35oXYBqQsPzLWz4k6cM44+GSmPC6TTgVoELEjM_FAoYQw@mail.gmail.com>
+	<5FF020A1CFFEEC49BD1E09530C4FF5951821B4843B@SC-VEXCH1.marvell.com>,<CAAfyv351AXRuZw5zYQ2=6jmJrnzLLscggzduKuL6GeQbzQgNqg@mail.gmail.com>
+In-Reply-To: <CAAfyv351AXRuZw5zYQ2=6jmJrnzLLscggzduKuL6GeQbzQgNqg@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Hi Marek,
 
-This patch makes sure that a GO interface
-sends out a new NoA schedule with 200ms duration
-when mgd_prepare_tx() is called.
+>With rx_pending count imbalance + your patch on top I cannot reproduce
+>allocation failure issue (tested on 1 hour iperf session).
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h   |  1 +
- drivers/net/wireless/ath/ath9k/channel.c | 41 ++++++++++++++++++++++++++++++++
- 2 files changed, 42 insertions(+)
+Thanks for confirmation. I will prepare new patch for latest code and submit. It will be slightly different than the one shared with you due Rx work queue implementation in latest code.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index b7abb4f..7ac1b06 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -620,6 +620,7 @@ struct ath_vif {
- 	u32 noa_start;
- 	u32 noa_duration;
- 	bool periodic_noa;
-+	bool oneshot_noa;
- };
- 
- struct ath9k_vif_iter_data {
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index 447b397..366a4d9 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -450,6 +450,27 @@ static void ath_chanctx_set_periodic_noa(struct ath_softc *sc,
- 		avp->periodic_noa);
- }
- 
-+static void ath_chanctx_set_oneshot_noa(struct ath_softc *sc,
-+					struct ath_vif *avp,
-+					u32 tsf_time,
-+					u32 duration)
-+{
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+
-+	avp->noa_index++;
-+	avp->noa_start = tsf_time;
-+	avp->periodic_noa = false;
-+	avp->oneshot_noa = true;
-+	avp->noa_duration = duration + sc->sched.channel_switch_time;
-+
-+	ath_dbg(common, CHAN_CTX,
-+		"oneshot noa_duration: %d, noa_start: %d, noa_index: %d, periodic: %d\n",
-+		avp->noa_duration,
-+		avp->noa_start,
-+		avp->noa_index,
-+		avp->periodic_noa);
-+}
-+
- void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
- 		       enum ath_chanctx_event ev)
- {
-@@ -476,6 +497,14 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
- 		if (avp->offchannel_duration)
- 			avp->offchannel_duration = 0;
- 
-+		if (avp->oneshot_noa) {
-+			avp->noa_duration = 0;
-+			avp->oneshot_noa = false;
-+
-+			ath_dbg(common, CHAN_CTX,
-+				"Clearing oneshot NoA\n");
-+		}
-+
- 		if (avp->chanctx != sc->cur_chan) {
- 			ath_dbg(common, CHAN_CTX,
- 				"Contexts differ, not preparing beacon\n");
-@@ -551,6 +580,18 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
- 
- 		ath_chanctx_handle_bmiss(sc, ctx, avp);
- 
-+		/*
-+		 * If a mgd_prepare_tx() has been called by mac80211,
-+		 * a one-shot NoA needs to be sent. This can happen
-+		 * with one or more active channel contexts - in both
-+		 * cases, a new NoA schedule has to be advertised.
-+		 */
-+		if (sc->sched.mgd_prepare_tx) {
-+			ath_chanctx_set_oneshot_noa(sc, avp, tsf_time,
-+						    jiffies_to_usecs(HZ / 5));
-+			break;
-+		}
-+
- 		/* Prevent wrap-around issues */
- 		if (avp->noa_duration && tsf_time - avp->noa_start > BIT(30))
- 			avp->noa_duration = 0;
--- 
-2.1.2
+>Reason why console was completely blocked was that iperf server eats ~
+>55% cpu + kworker ~27 + ksoftirq ~14 so I think this is cause
+>why console was unresponsive.
 
+I see.
+
+>Thanks for patches. You can add my Tested-by ;)
+
+Sure.
+
+Regards,
+Amitkumar
