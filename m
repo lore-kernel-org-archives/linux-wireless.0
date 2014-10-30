@@ -1,57 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f49.google.com ([209.85.220.49]:39295 "EHLO
-	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751102AbaJWQ12 (ORCPT
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:36253 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758733AbaJ3KnW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Oct 2014 12:27:28 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, troy_tan@realsil.com.cn,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org,
-	Murilo Opsfelder Araujo <mopsfelder@gmail.com>,
-	Mike Galbraith <umgwanakikbuti@gmail.com>,
-	Thadeu Cascardo <cascardo@cascardo.eti.br>
-Subject: [PATCH V3.18] rtlwifi: Add check for get_btc_status callback
-Date: Thu, 23 Oct 2014 11:27:09 -0500
-Message-Id: <1414081629-23002-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20141023_182737_668164_661E8314)
+	Thu, 30 Oct 2014 06:43:22 -0400
+From: Rostislav Lisovy <lisovy@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
+	jan-niklas.meier@volkswagen.de, burak.simsek@volkswagen.de,
+	Emmanuel Thierry <emmanuel.thierry@yogoko.fr>,
+	laszlo.virag@commsignia.com, lisovy@gmail.com,
+	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+Subject: [PATCH 0/2 v2] cfg80211: mac80211: 802.11p OCB mode support
+Date: Thu, 30 Oct 2014 11:42:49 +0100
+Message-Id: <1414665771-8371-1-git-send-email-rostislav.lisovy@fel.cvut.cz> (sfid-20141030_114342_245212_554D4CFA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Drivers that do not use the get_btc_status() callback may not define a
-dummy routine. The caller needs to check before making the call.
+The IEEE 802.11p amendment (already part of IEEE 802.11-2012)
+specifies usage of 5 and 10 MHz wide channels in 5.9GHz band for
+vehicular environment. All the 802.11p compliant devices should
+be set to the newly added operation mode -- OCB (Outside the
+Context of a BSS). No authentication/association is necessary to
+communicate. The only parameter to be configured is the channel
+(central frequency and bandwidth) to communicate on. The channel
+has to be known a priori. It is set during the 'ocb join'
+operation (sent via netlink message from user-space).
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Murilo Opsfelder Araujo <mopsfelder@gmail.com>
-Cc: Mike Galbraith <umgwanakikbuti@gmail.com>
-Cc: Thadeu Cascardo <cascardo@cascardo.eti.br>
----
+This patchset adds the OCB mode, OCB join and leave handling
+(nl80211, cfg80211, mac80211), 802.11p EDCA parameters
+modification, RX and TX path (for unicast/broadcast messages).
 
-John,
+What aspects are ignored for now:
+* Rate control -- We limit the supported datarates to the .11a
+  mandatory rates and use the Minstrel as usual
+* Actually restricting the OCB mode to the 5.9 GHz band
 
-This missing statement is causing kernel crashes for several of the drivers.
-This patch should be applied ASAP.
+Tested with the ath9k card with slightly modified driver.
+User-space configuration utilities are not part of this patch.
 
-Larry
----
 
- drivers/net/wireless/rtlwifi/pci.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Changes since v1:
+* Do not define bssid_wildcard in a header file, define it as
+  'static const' in ieee80211_setup_sdata only (JBerg)
+* Use GFP_ATOMIC memory allocation in ieee80211_ocb_rx_no_sta
+  so it can be called in the RX path (JBerg)
+* IEEE80211_CHANCTX_EXCLUSIVE -> IEEE80211_CHANCTX_SHARED (JBerg)
+* Fix the situation when the housekeeping timer might be called
+  (JBerg)
+* Remove NL80211_CHAN_WIDTH_5/10 from 'old channels' handling
+  functions cfg80211_get_chandef_type() and nl80211_send_chandef()
+  (JBerg)
+* Do not break ABI by adding new fileds in the middle of the enum
+  nl80211_commands (JBerg)
+* Add a flag denoting whether we are joined to the network or not
+* Handle multiple consecutive calls to ocb_join
+* Many minor fixes
 
-diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
-index 667aba8..25daa87 100644
---- a/drivers/net/wireless/rtlwifi/pci.c
-+++ b/drivers/net/wireless/rtlwifi/pci.c
-@@ -1796,7 +1796,8 @@ static int rtl_pci_start(struct ieee80211_hw *hw)
- 	rtl_pci_reset_trx_ring(hw);
- 
- 	rtlpci->driver_is_goingto_unload = false;
--	if (rtlpriv->cfg->ops->get_btc_status()) {
-+	if (rtlpriv->cfg->ops->get_btc_status &&
-+	    rtlpriv->cfg->ops->get_btc_status()) {
- 		rtlpriv->btcoexist.btc_ops->btc_init_variables(rtlpriv);
- 		rtlpriv->btcoexist.btc_ops->btc_init_hal_vars(rtlpriv);
- 	}
+
+Rostislav Lisovy (2):
+  cfg80211: 802.11p OCB mode handling
+  mac80211: 802.11p OCB mode support
+
+ include/net/cfg80211.h       |  14 +++
+ include/net/mac80211.h       |   2 +
+ include/uapi/linux/nl80211.h |  10 ++
+ net/mac80211/Kconfig         |  11 ++
+ net/mac80211/Makefile        |   3 +-
+ net/mac80211/cfg.c           |  14 +++
+ net/mac80211/chan.c          |   3 +
+ net/mac80211/debug.h         |  10 ++
+ net/mac80211/driver-ops.h    |   3 +-
+ net/mac80211/ieee80211_i.h   |  29 +++++
+ net/mac80211/iface.c         |  23 ++++
+ net/mac80211/ocb.c           | 251 +++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/rx.c            |  35 ++++++
+ net/mac80211/tx.c            |  15 +++
+ net/mac80211/util.c          |  31 +++++-
+ net/mac80211/wme.c           |   4 +
+ net/wireless/Makefile        |   2 +-
+ net/wireless/chan.c          |   8 ++
+ net/wireless/core.h          |  10 ++
+ net/wireless/nl80211.c       |  41 +++++++
+ net/wireless/ocb.c           |  89 +++++++++++++++
+ net/wireless/rdev-ops.h      |  21 ++++
+ net/wireless/trace.h         |  21 ++++
+ net/wireless/util.c          |   5 +-
+ 24 files changed, 646 insertions(+), 9 deletions(-)
+ create mode 100644 net/mac80211/ocb.c
+ create mode 100644 net/wireless/ocb.c
+
 -- 
-1.8.4.5
+2.0.0.rc4
 
