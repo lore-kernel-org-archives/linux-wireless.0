@@ -1,43 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:60389 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751492AbaJ0M1O (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:52738 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757268AbaJ3TaO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Oct 2014 08:27:14 -0400
-Date: Mon, 27 Oct 2014 14:26:50 +0200
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <wireless-regdb@lists.infradead.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH] wireless-regdb: Add 5490-5710 MHz to Bulgaria (BG)
-Message-ID: <20141027122650.GA12859@jouni.qca.qualcomm.com> (sfid-20141027_132718_132297_1DD048D8)
+	Thu, 30 Oct 2014 15:30:14 -0400
+Date: Thu, 30 Oct 2014 15:19:22 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
+Subject: Re: [PATCH 0/3] debugfs: adding helper for single seq_file
+Message-ID: <20141030191922.GA3768@tuxdriver.com> (sfid-20141030_203041_132470_11508DF7)
+References: <1414498752-9746-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1414498752-9746-1-git-send-email-arend@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Source is QCA's regulatory team's efforts.
+On Tue, Oct 28, 2014 at 01:19:09PM +0100, Arend van Spriel wrote:
+> The first patch was already posted earlier:
+> 
+> Message-ID: <1413043315-22332-1-git-send-email-arend@broadcom.com>
+> 
+> This series include changes in driver code to investigate potential
+> code savings. As example used the ath9k driver as it has a fair
+> amount of debugfs files. In this series it changes 7 debugfs entries
+> to use seq_file and the helper function. Below the output of the
+> size utility:
+> 
+>    text	   data	    bss	    dec	    hex	filename
+>  115968	   1225	     28	 117221	  1c9e5	original/ath9k.o
+>  113224	   1225	     28	 114477	  1bf2d	seq_file/ath9k.o
+>  111024	   1225	     28	 112277	  1b695	helper/ath9k.o
+> 
+> This series is for 3.19 kernel and applies to the driver-core-next
+> branch of the driver-core repository. If needed the ath9k patches
+> may be dropped for now and I will resubmit them to wireless-next
+> once the debugfs patch has made it into linux-next.
+> 
+> Arend van Spriel (3):
+>   debugfs: add helper function to create device related seq_file
+>   ath: use seq_file api for ath9k debugfs files
+>   ath: ath9k: use debugfs_create_devm_seqfile() helper for seq_file
+>     entries
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
----
- db.txt | 1 +
- 1 file changed, 1 insertion(+)
+Greg,
 
-diff --git a/db.txt b/db.txt
-index 1df0b4c..43afa5c 100644
---- a/db.txt
-+++ b/db.txt
-@@ -133,6 +133,7 @@ country BG: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 80), (20), AUTO-BW
- 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
-+	(5490 - 5710 @ 160), (27), DFS
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
- 
+If you are happy with the debugfs change then feel free to merge the
+wireless patches along with it.
+
+John
+
+> 
+>  drivers/net/wireless/ath/ath9k/ahb.c   |   1 +
+>  drivers/net/wireless/ath/ath9k/debug.c | 429 +++++++++++----------------------
+>  drivers/net/wireless/ath/ath9k/debug.h |   3 +-
+>  drivers/net/wireless/ath/ath9k/pci.c   |   1 +
+>  fs/debugfs/file.c                      |  54 +++++
+>  include/linux/debugfs.h                |  16 +-
+>  6 files changed, 207 insertions(+), 297 deletions(-)
+> 
+> -- 
+> 1.9.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
 -- 
-1.9.1
-
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
