@@ -1,39 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:61203 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753807AbaJGOPo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Oct 2014 10:15:44 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 0/4] ath10k: Add pktlog support
-References: <1412269778-1045-1-git-send-email-rmanohar@qti.qualcomm.com>
-Date: Tue, 7 Oct 2014 17:15:20 +0300
-In-Reply-To: <1412269778-1045-1-git-send-email-rmanohar@qti.qualcomm.com>
-	(Rajkumar Manoharan's message of "Thu, 2 Oct 2014 22:39:34 +0530")
-Message-ID: <87sij0hsp3.fsf@kamboji.qca.qualcomm.com> (sfid-20141007_161548_312088_0965755C)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mga14.intel.com ([192.55.52.115]:21758 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934156AbaJ3PgM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Oct 2014 11:36:12 -0400
+From: Jukka Rissanen <jukka.rissanen@linux.intel.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH v2 0/2] Add mcast event when hwsim radios are created and removed
+Date: Thu, 30 Oct 2014 17:34:24 +0200
+Message-Id: <1414683266-28427-1-git-send-email-jukka.rissanen@linux.intel.com> (sfid-20141030_163615_143606_638F9ADD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rajkumar Manoharan <rmanohar@qti.qualcomm.com> writes:
+Hi,
 
-> This implements the Packet log feature for ath10k.
-> All tx and rx events and rx descriptor details are
-> posted to user space by tracepoints.
->
-> v2: Addressed review comments and based on discussion with Michal
->     dropped tx_msdu_id patch and added tx info changes
->
-> Rajkumar Manoharan (4):
->   ath10k: Add support to configure pktlog filter
->   ath10k: add tracing for ath10k_htt_pktlog
->   ath10k: add tracing for rx descriptor
->   ath10k: add tracing for tx msdu pktlog event
+v2:
+- removed old patch 1 as that is already applied
+- added suitable prefixes to new function names
+- refactored the patch 1 so that multicast message building is
+  separated into a more generic function
+- instead of passing radio parameters (6 pcs) into different functions
+  separately, a struct is used instead
 
-Thanks, all four patches applied.
+v1:
+patch 1 renames HWSIM_CMD_CREATE_RADIO to HWSIM_CMD_NEW_RADIO and
+HWSIM_CMD_DESTROY_RADIO to HWSIM_CMD_DEL_RADIO. They are more
+fitting on how other pieces of the wireless system work. A define
+to old name is provided for backward compatibility.
+
+Patches 2 and 3 use the newly named enums and provide a way to inform
+the listeners on the multicast group "config" when new radio is created
+and existing radio is deleted.
+
+
+Jukka Rissanen (2):
+  mac80211-hwsim: Provide multicast event for HWSIM_CMD_NEW_RADIO
+  mac80211-hwsim: Provide multicast event for HWSIM_CMD_DEL_RADIO
+
+ drivers/net/wireless/mac80211_hwsim.c | 285 ++++++++++++++++++++++++++--------
+ 1 file changed, 216 insertions(+), 69 deletions(-)
 
 -- 
-Kalle Valo
+1.8.3.1
+
