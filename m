@@ -1,63 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f51.google.com ([74.125.82.51]:59676 "EHLO
-	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751892AbaJYTj0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Oct 2014 15:39:26 -0400
-Received: by mail-wg0-f51.google.com with SMTP id b13so3063391wgh.34
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2014 12:39:25 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 17/31] staging: vt6655: mac80211 conversion: card.c use basic_rates
-Date: Sat, 25 Oct 2014 09:20:27 +0100
-Message-Id: <1414225241-5480-18-git-send-email-tvboxspy@gmail.com> (sfid-20141025_213929_154954_8E810272)
-In-Reply-To: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
-References: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
+Received: from mga01.intel.com ([192.55.52.88]:58762 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757832AbaJ3O3B (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Oct 2014 10:29:01 -0400
+Message-ID: <1414679338.2918.6.camel@jrissane-mobl.ger.corp.intel.com> (sfid-20141030_152905_523778_2AE2FC7D)
+Subject: Re: [PATCH 2/3] mac80211-hwsim: Provide multicast event for
+ HWSIM_CMD_NEW_RADIO
+From: Jukka Rissanen <jukka.rissanen@linux.intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 30 Oct 2014 16:28:58 +0200
+In-Reply-To: <1414598014.1827.18.camel@jlt4.sipsolutions.net>
+References: <1414406688-3827-1-git-send-email-jukka.rissanen@linux.intel.com>
+	 <1414406688-3827-3-git-send-email-jukka.rissanen@linux.intel.com>
+	 (sfid-20141027_114540_063766_7C3E5B4A) <1414597807.1827.16.camel@jlt4.sipsolutions.net>
+	 (sfid-20141029_165015_857664_0FB9784E) <1414598014.1827.18.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use basic_rates to find cck and ofdm rates.
+Hi Johannes,
 
-wBasicRate will be removed later.
+On ke, 2014-10-29 at 16:53 +0100, Johannes Berg wrote:
+> On Wed, 2014-10-29 at 16:50 +0100, Johannes Berg wrote:
+> > On Mon, 2014-10-27 at 12:44 +0200, Jukka Rissanen wrote:
+> > 
+> > > +static void mcast_msg(struct sk_buff *mcast_skb, struct genl_info *info)
+> > > +{
+> > > +	if (info)
+> > > +		genl_notify(&hwsim_genl_family, mcast_skb,
+> > > +			    genl_info_net(info), info->snd_portid,
+> > > +			    HWSIM_MCGRP_CONFIG, info->nlhdr, GFP_KERNEL);
+> > > +	else
+> > > +		genlmsg_multicast(&hwsim_genl_family, mcast_skb, 0,
+> > > +				  HWSIM_MCGRP_CONFIG, GFP_KERNEL);
+> > > +}
+> > 
+> > Also - given the parameters and what this does, that's a bad name for
+> > the function. Never mind that it doesn't have any sort of identifier
+> > (say hwsim_ prefix), it doesn't even do what it says it does.
+> 
+> Or maybe it does? I'm unsure what genl_notify() does...
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/card.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Yes, genl_notify() will eventually call nlmsg_notify() which will
+multicast the message because we have set the group id in the call.
 
-diff --git a/drivers/staging/vt6655/card.c b/drivers/staging/vt6655/card.c
-index 5eddabc..cf87b49 100644
---- a/drivers/staging/vt6655/card.c
-+++ b/drivers/staging/vt6655/card.c
-@@ -1488,7 +1488,7 @@ static unsigned short CARDwGetCCKControlRate(struct vnt_private *pDevice,
- 	unsigned int ui = (unsigned int) wRateIdx;
- 
- 	while (ui > RATE_1M) {
--		if (pDevice->wBasicRate & ((unsigned short)1 << ui))
-+		if (pDevice->basic_rates & ((u32)0x1 << ui))
- 			return (unsigned short)ui;
- 
- 		ui--;
-@@ -1514,7 +1514,7 @@ static unsigned short CARDwGetOFDMControlRate(struct vnt_private *pDevice,
- {
- 	unsigned int ui = (unsigned int) wRateIdx;
- 
--	pr_debug("BASIC RATE: %X\n", pDevice->wBasicRate);
-+	pr_debug("BASIC RATE: %X\n", pDevice->basic_rates);
- 
- 	if (!CARDbIsOFDMinBasicRate((void *)pDevice)) {
- 		pr_debug("CARDwGetOFDMControlRate:(NO OFDM) %d\n", wRateIdx);
-@@ -1523,7 +1523,7 @@ static unsigned short CARDwGetOFDMControlRate(struct vnt_private *pDevice,
- 		return wRateIdx;
- 	}
- 	while (ui > RATE_11M) {
--		if (pDevice->wBasicRate & ((unsigned short)1 << ui)) {
-+		if (pDevice->basic_rates & ((u32)0x1 << ui)) {
- 			pr_debug("CARDwGetOFDMControlRate : %d\n", ui);
- 			return (unsigned short)ui;
- 		}
--- 
-1.9.1
+http://lxr.free-electrons.com/source/net/netlink/af_netlink.c#L2856
+
+
+Cheers,
+Jukka
+
 
