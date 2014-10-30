@@ -1,43 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:22647 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750944AbaJAJqU (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:42640 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758132AbaJ3Tsh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Oct 2014 05:46:20 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id s919jR9P007620
-	for <linux-wireless@vger.kernel.org>; Wed, 1 Oct 2014 02:46:19 -0700
-Received: from sc-owa04.marvell.com ([199.233.58.150])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1pqs52b3py-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Wed, 01 Oct 2014 02:46:19 -0700
-Received: from pe-lt101 (unknown [10.31.130.210])	by maili.marvell.com
- (Postfix) with ESMTP id 2F77A3F703F	for <linux-wireless@vger.kernel.org>;
- Wed,  1 Oct 2014 02:46:18 -0700 (PDT)
-Received: from pe-lt101 (pe-lt077 [127.0.0.1])	by pe-lt101 (8.14.4/8.14.4)
- with ESMTP id s91F6MUK008280	for <linux-wireless@vger.kernel.org>; Wed, 1 Oct
- 2014 08:06:22 -0700
-Received: (from root@localhost)	by pe-lt101 (8.14.4/8.14.4/Submit) id
- s91F6Ejv008279	for linux-wireless@vger.kernel.org; Wed, 1 Oct 2014 08:06:14
- -0700
-From: MK <medhak@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] TEST PATCH
-Date: Wed, 1 Oct 2014 08:06:11 -0700
-Message-ID: <1412175971-8248-1-git-send-email-medhak@marvell.com> (sfid-20141001_114624_179387_CDF28177)
+	Thu, 30 Oct 2014 15:48:37 -0400
+Message-ID: <54529613.2030102@broadcom.com> (sfid-20141030_204841_963435_EDF390B0)
+Date: Thu, 30 Oct 2014 20:48:35 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>, <ath9k-devel@venema.h4ckr.net>
+Subject: Re: [PATCH 0/3] debugfs: adding helper for single seq_file
+References: <1414498752-9746-1-git-send-email-arend@broadcom.com> <20141030191922.GA3768@tuxdriver.com> <20141030193914.GA28346@kroah.com>
+In-Reply-To: <20141030193914.GA28346@kroah.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: XYZ <xyz.gmail.com>
+On 10/30/14 20:39, Greg Kroah-Hartman wrote:
+> On Thu, Oct 30, 2014 at 03:19:22PM -0400, John W. Linville wrote:
+>> On Tue, Oct 28, 2014 at 01:19:09PM +0100, Arend van Spriel wrote:
+>>> The first patch was already posted earlier:
+>>>
+>>> Message-ID:<1413043315-22332-1-git-send-email-arend@broadcom.com>
+>>>
+>>> This series include changes in driver code to investigate potential
+>>> code savings. As example used the ath9k driver as it has a fair
+>>> amount of debugfs files. In this series it changes 7 debugfs entries
+>>> to use seq_file and the helper function. Below the output of the
+>>> size utility:
+>>>
+>>>     text	   data	    bss	    dec	    hex	filename
+>>>   115968	   1225	     28	 117221	  1c9e5	original/ath9k.o
+>>>   113224	   1225	     28	 114477	  1bf2d	seq_file/ath9k.o
+>>>   111024	   1225	     28	 112277	  1b695	helper/ath9k.o
+>>>
+>>> This series is for 3.19 kernel and applies to the driver-core-next
+>>> branch of the driver-core repository. If needed the ath9k patches
+>>> may be dropped for now and I will resubmit them to wireless-next
+>>> once the debugfs patch has made it into linux-next.
+>>>
+>>> Arend van Spriel (3):
+>>>    debugfs: add helper function to create device related seq_file
+>>>    ath: use seq_file api for ath9k debugfs files
+>>>    ath: ath9k: use debugfs_create_devm_seqfile() helper for seq_file
+>>>      entries
+>>
+>> Greg,
+>>
+>> If you are happy with the debugfs change then feel free to merge the
+>> wireless patches along with it.
+>
+> Ok, will do, can I get your Ack for them?
 
-Please ignore this patch
+I saw a patch from Dan Carpenter on one of the functions I converted so 
+if John has taken that one [1] it may give merge conflict in linux-next.
 
----
- net/mac80211/rx.c |   10 ++++++++--
- 1 files changed, 8 insertions(+), 2 deletions(-)
+Regards,
+Arend
 
--- 
-1.7.3.4
+[1] http://mid.gmane.org/20141029154805.GC5290@mwanda
+> thanks,
+>
+> greg k-h
 
