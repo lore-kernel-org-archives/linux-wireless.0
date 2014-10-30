@@ -1,41 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cassarossa.samfundet.no ([193.35.52.29]:38081 "EHLO
-	cassarossa.samfundet.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751777AbaJFOyk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Oct 2014 10:54:40 -0400
-Date: Mon, 6 Oct 2014 16:54:34 +0200
-From: "Steinar H. Gunderson" <sgunderson@bigfoot.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v6 2/2] mac80211: support DTPC IE (from Cisco Client
- eXtensions)
-Message-ID: <20141006145434.GA35618@sesse.net> (sfid-20141006_165443_577345_74ADB65C)
-References: <20140903133328.GC18933@sesse.net>
- <E1XPB2h-0008WO-MS@pannekake.samfundet.no>
- <1410166400.7983.9.camel@jlt4.sipsolutions.net>
- <20140916234647.GA2238@sesse.net>
- <1412607134.3098.25.camel@jlt4.sipsolutions.net>
+Received: from mx1.redhat.com ([209.132.183.28]:50933 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752340AbaJ3Hsq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Oct 2014 03:48:46 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Joe Perches <joe@perches.com>
+Cc: Sanjeev Sharma <sanjeev_sharma@mentor.com>,
+	Larry.Finger@lwfinger.net, gregkh@linuxfoundation.org,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] staging:rtl8723au: core: Fix error reported by checkpatch.
+References: <1414396745-8845-1-git-send-email-sanjeev_sharma@mentor.com>
+	<wrfjioj5aonx.fsf@redhat.com> <1414421554.8884.7.camel@perches.com>
+Date: Thu, 30 Oct 2014 08:47:27 +0100
+In-Reply-To: <1414421554.8884.7.camel@perches.com> (Joe Perches's message of
+	"Mon, 27 Oct 2014 07:52:34 -0700")
+Message-ID: <wrfj61f22e40.fsf@redhat.com> (sfid-20141030_084904_343402_F00DA3BE)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1412607134.3098.25.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 06, 2014 at 04:52:14PM +0200, Johannes Berg wrote:
->> I found what I believe is an edge case: What happens if the element suddenly
->> goes away from one beacon to another? Shouldn't there be a reset of the power
->> level and then a new call to __ieee80211_recalc_txpower()?
+Joe Perches <joe@perches.com> writes:
+> On Mon, 2014-10-27 at 09:43 +0100, Jes Sorensen wrote:
+>> Sanjeev Sharma <sanjeev_sharma@mentor.com> writes:
+>> > This is a patch to the rtw_cmd.c file that fixes
+>> > Error reported by checkpatch.
+> []
+>> > diff --git a/drivers/staging/rtl8723au/core/rtw_cmd.c
+>> > b/drivers/staging/rtl8723au/core/rtw_cmd.c
+> []
+>> > @@ -957,7 +957,7 @@ static void traffic_status_watchdog(struct rtw_adapter *padapter)
+>> >  		/*  check traffic for  powersaving. */
+>> >  			if (((pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod +
+>> >  			      pmlmepriv->LinkDetectInfo.NumTxOkInPeriod) > 8) ||
+>> > -			    pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod >2)
+>> > +			    pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod > 2)
+>> >  				bEnterPS = false;
+>> >  			else
+>> >  				bEnterPS = true;
 >> 
->> (If so, I believe this bug was already present in the code before my first
->> patch, as I understand the existing logic.)
-> I'm not sure it's worth worrying about, but if you want to write a patch
-> I'd take it :)
+>> This makes the line longer than 80 characters, that is worse than the
+>> 'problem' you are fixing.
+>
+> The code already has dozens of long lines already.
+>
+> This is generally a problem because the variable names
+> are pretty long so strict 80 column adherence generally
+> isn't possible.
 
-It actually happened to me in a real situation, which is why I noticed.
-It seems neither power element is typically sent at all if the value is 0.
-(Well, Aruba seems to do. I haven't found anyone else who does.)
+It does, but that is not a reason to add more. I have generally tried to
+trim it down when I cleaned up pieces of it.
 
-/* Steinar */
--- 
-Homepage: http://www.sesse.net/
+Jes
+
+
+> A possible way to shorten these relatively long variable
+> name/line lengths is to use a temporary for
+>
+> 	pmlmeprv->LinkDetectInfo
+>
+> 	struct rt_link_detect *ldi = &pmlmeprv->LinkDetectInfo;
+>
+> so:
+>
+>  drivers/staging/rtl8723au/core/rtw_cmd.c | 46 ++++++++++++++++----------------
+>  1 file changed, 23 insertions(+), 23 deletions(-)
+>
+> diff --git a/drivers/staging/rtl8723au/core/rtw_cmd.c b/drivers/staging/rtl8723au/core/rtw_cmd.c
+> index d2d7edf..1b24945 100644
+> --- a/drivers/staging/rtl8723au/core/rtw_cmd.c
+> +++ b/drivers/staging/rtl8723au/core/rtw_cmd.c
+> @@ -922,34 +922,33 @@ static void traffic_status_watchdog(struct rtw_adapter *padapter)
+>  	u8 bHigherBusyTxTraffic = false;
+>  	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
+>  	int BusyThreshold = 100;
+> +	struct rt_link_detect *ldi = &pmlmepriv->LinkDetectInfo;
+> +
+>  	/*  */
+>  	/*  Determine if our traffic is busy now */
+>  	/*  */
+>  	if (check_fwstate(pmlmepriv, _FW_LINKED)) {
+>  		if (rtl8723a_BT_coexist(padapter))
+>  			BusyThreshold = 50;
+> -		else if (pmlmepriv->LinkDetectInfo.bBusyTraffic)
+> +		else if (ldi->bBusyTraffic)
+>  			BusyThreshold = 75;
+>  		/*  if we raise bBusyTraffic in last watchdog, using
+>  		    lower threshold. */
+> -		if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod > BusyThreshold ||
+> -		    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod > BusyThreshold) {
+> +		if (ldi->NumRxOkInPeriod > BusyThreshold ||
+> +		    ldi->NumTxOkInPeriod > BusyThreshold) {
+>  			bBusyTraffic = true;
+>  
+> -			if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod >
+> -			    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod)
+> +			if (ldi->NumRxOkInPeriod > ldi->NumTxOkInPeriod)
+>  				bRxBusyTraffic = true;
+>  			else
+>  				bTxBusyTraffic = true;
+>  		}
+>  
+>  		/*  Higher Tx/Rx data. */
+> -		if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod > 4000 ||
+> -		    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod > 4000) {
+> +		if (ldi->NumRxOkInPeriod > 4000 ||
+> +		    ldi->NumTxOkInPeriod > 4000) {
+>  			bHigherBusyTraffic = true;
+> -
+> -			if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod >
+> -			    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod)
+> +			if (ldi->NumRxOkInPeriod > ldi->NumTxOkInPeriod)
+>  				bHigherBusyRxTraffic = true;
+>  			else
+>  				bHigherBusyTxTraffic = true;
+> @@ -958,9 +957,9 @@ static void traffic_status_watchdog(struct rtw_adapter *padapter)
+>  		if (!rtl8723a_BT_coexist(padapter) ||
+>  		    !rtl8723a_BT_using_antenna_1(padapter)) {
+>  		/*  check traffic for  powersaving. */
+> -			if (((pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod +
+> -			      pmlmepriv->LinkDetectInfo.NumTxOkInPeriod) > 8) ||
+> -			    pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod >2)
+> +			if (((ldi->NumRxUnicastOkInPeriod +
+> +			      ldi->NumTxOkInPeriod) > 8) ||
+> +			    ldi->NumRxUnicastOkInPeriod > 2)
+>  				bEnterPS = false;
+>  			else
+>  				bEnterPS = true;
+> @@ -971,18 +970,19 @@ static void traffic_status_watchdog(struct rtw_adapter *padapter)
+>  			else
+>  				LPS_Leave23a(padapter);
+>  		}
+> -	} else
+> +	} else {
+>  		LPS_Leave23a(padapter);
+> +	}
+>  
+> -	pmlmepriv->LinkDetectInfo.NumRxOkInPeriod = 0;
+> -	pmlmepriv->LinkDetectInfo.NumTxOkInPeriod = 0;
+> -	pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod = 0;
+> -	pmlmepriv->LinkDetectInfo.bBusyTraffic = bBusyTraffic;
+> -	pmlmepriv->LinkDetectInfo.bTxBusyTraffic = bTxBusyTraffic;
+> -	pmlmepriv->LinkDetectInfo.bRxBusyTraffic = bRxBusyTraffic;
+> -	pmlmepriv->LinkDetectInfo.bHigherBusyTraffic = bHigherBusyTraffic;
+> -	pmlmepriv->LinkDetectInfo.bHigherBusyRxTraffic = bHigherBusyRxTraffic;
+> -	pmlmepriv->LinkDetectInfo.bHigherBusyTxTraffic = bHigherBusyTxTraffic;
+> +	ldi->NumRxOkInPeriod = 0;
+> +	ldi->NumTxOkInPeriod = 0;
+> +	ldi->NumRxUnicastOkInPeriod = 0;
+> +	ldi->bBusyTraffic = bBusyTraffic;
+> +	ldi->bTxBusyTraffic = bTxBusyTraffic;
+> +	ldi->bRxBusyTraffic = bRxBusyTraffic;
+> +	ldi->bHigherBusyTraffic = bHigherBusyTraffic;
+> +	ldi->bHigherBusyRxTraffic = bHigherBusyRxTraffic;
+> +	ldi->bHigherBusyTxTraffic = bHigherBusyTxTraffic;
+>  }
+>  
+>  static void dynamic_chk_wk_hdl(struct rtw_adapter *padapter, u8 *pbuf, int sz)
