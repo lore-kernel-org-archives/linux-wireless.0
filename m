@@ -1,68 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42966 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750979AbaJ0PaU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Oct 2014 11:30:20 -0400
-Date: Mon, 27 Oct 2014 11:21:58 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] net: rfkill: gpio: Add default GPIO driver mappings for
- ACPI
-Message-ID: <20141027152158.GC19976@tuxdriver.com> (sfid-20141027_163147_885627_5C98CC81)
-References: <1414404914-163837-1-git-send-email-mika.westerberg@linux.intel.com>
- <1414409035.3836.4.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1414409035.3836.4.camel@jlt4.sipsolutions.net>
+Received: from s3.sipsolutions.net ([5.9.151.49]:51816 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759667AbaJaNOD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 Oct 2014 09:14:03 -0400
+Message-ID: <1414761237.3014.27.camel@jlt4.sipsolutions.net> (sfid-20141031_141627_639211_571FC45C)
+Subject: Re: [PATCH 1/2] cfg80211: 802.11p OCB mode handling
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rostislav Lisovy <lisovy@gmail.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
+	jan-niklas.meier@volkswagen.de, burak.simsek@volkswagen.de,
+	Emmanuel Thierry <emmanuel.thierry@yogoko.fr>,
+	laszlo.virag@commsignia.com,
+	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+Date: Fri, 31 Oct 2014 14:13:57 +0100
+In-Reply-To: <1414665771-8371-2-git-send-email-rostislav.lisovy@fel.cvut.cz> (sfid-20141030_114322_295525_C7C629F8)
+References: <1414665771-8371-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
+	 <1414665771-8371-2-git-send-email-rostislav.lisovy@fel.cvut.cz>
+	 (sfid-20141030_114322_295525_C7C629F8)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 27, 2014 at 12:23:55PM +0100, Johannes Berg wrote:
-> On Mon, 2014-10-27 at 12:15 +0200, Mika Westerberg wrote:
-> > The driver uses devm_gpiod_get_index(..., index) so that the index refers
-> > directly to the GpioIo resource under the ACPI device. The problem with
-> > this is that if the ordering changes we get wrong GPIOs.
-> > 
-> > With ACPI 5.1 _DSD we can now use names instead to reference GPIOs
-> > analogous to Device Tree. However, we still have systems out there that do
-> > not provide _DSD at all. These systems must be supported as well.
-> > 
-> > Luckily we now have acpi_dev_add_driver_gpios() that can be used to provide
-> > mappings for systems where _DSD is not provided and still take advantage of
-> > _DSD if it exists.
-> > 
-> > This patch changes the driver to create default GPIO mappings if we are
-> > running on ACPI system.
-> > 
-> > While there we can drop the indices completely and use devm_gpiod_get()
-> > with name instead.
-> > 
-> > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> > ---
-> > Hi,
-> > 
-> > This patch is based on top of linux-pm/device-properties [1] and following
-> > patch from Rafael [2].
-> > 
-> > Johannes, John,
-> > 
-> > If you are happy with the patch, can you ACK it so that we can merge it
-> > with the rest of the device-properties patches. Thanks.
-> 
-> Acked-by: Johannes Berg <johannes@sipsolutions.net>
-> Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
+On Thu, 2014-10-30 at 11:42 +0100, Rostislav Lisovy wrote:
 
-Acked-by: John W. Linville <linville@tuxdriver.com>
+> --- a/include/net/mac80211.h
+> +++ b/include/net/mac80211.h
+> @@ -263,6 +263,7 @@ struct ieee80211_vif_chanctx_switch {
+>   * @BSS_CHANGED_BANDWIDTH: The bandwidth used by this interface changed,
+>   *	note that this is only called when it changes after the channel
+>   *	context had been assigned.
+> + * @BSS_CHANGED_OCB: OCB join status changed
+>   */
+>  enum ieee80211_bss_change {
+>  	BSS_CHANGED_ASSOC		= 1<<0,
+> @@ -287,6 +288,7 @@ enum ieee80211_bss_change {
+>  	BSS_CHANGED_P2P_PS		= 1<<19,
+>  	BSS_CHANGED_BEACON_INFO		= 1<<20,
+>  	BSS_CHANGED_BANDWIDTH		= 1<<21,
+> +	BSS_CHANGED_OCB			= 1<<22,
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+This should be in the mac80211 patch.
+ 
+> +	NL80211_CMD_JOIN_OCB,
+> +	NL80211_CMD_LEAVE_OCB,
+>  	/* add new commands above here */
+
+please leave a blank line before the comment
+
+> @@ -2093,6 +2102,7 @@ enum nl80211_iftype {
+>  	NL80211_IFTYPE_P2P_CLIENT,
+>  	NL80211_IFTYPE_P2P_GO,
+>  	NL80211_IFTYPE_P2P_DEVICE,
+> +	NL80211_IFTYPE_OCB,
+
+This is causing a bunch of compiler warnings (warning: enumeration value
+‘NL80211_IFTYPE_OCB’ not handled in switch, e.g. in mac80211/iface.c)
+which I think you should address in this patch. That'll mean that you
+modify even mac80211 and potentially some drivers, but I think that's
+the right thing to do in this patch since it's the one changing the API
+to introduce the new value.
+
+The later patch can then add functionality to those new case labels in
+mac80211 (this one of course adds it in cfg80211). For this patch they
+should be with the error case that will typically exist.
+
+> +static int nl80211_join_ocb(struct sk_buff *skb, struct genl_info *info)
+> +{
+> +	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+> +	struct net_device *dev = info->user_ptr[1];
+> +	struct ocb_setup setup = {};
+> +	int err;
+> +
+> +	if (!info->attrs[NL80211_ATTR_WIPHY_FREQ])
+> +		return -EINVAL;
+
+This check isn't necessary,
+
+> +	err = nl80211_parse_chandef(rdev, info, &setup.chandef);
+> +	if (err)
+> +		return err;
+
+it's also done in this function.
+
+I think there's one thing you forgot in this patch, namely
+__cfg80211_leave() which you also need to make the __ version of the
+leave function non-static for due to locking.
+
+I noticed that the switch statement there has a default case - I'll
+remove that, so be sure to rebase on mac80211-next.
+
+johannes
+
