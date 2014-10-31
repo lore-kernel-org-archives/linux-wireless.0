@@ -1,129 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:9477 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752222AbaJJRzo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Oct 2014 13:55:44 -0400
-Date: Fri, 10 Oct 2014 20:55:25 +0300
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/2] cfg80211: Specify frame and reason code for
- NL80211_CMD_DEL_STATION
-Message-ID: <20141010175525.GA29436@jouni.qca.qualcomm.com> (sfid-20141010_195550_162474_5AD3E441)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from s3.sipsolutions.net ([5.9.151.49]:52393 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933086AbaJaPPx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 Oct 2014 11:15:53 -0400
+Message-ID: <1414768548.3014.34.camel@jlt4.sipsolutions.net> (sfid-20141031_161612_518368_A4559479)
+Subject: Re: [PATCH 1/2] cfg80211: 802.11p OCB mode handling
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rostislav Lisovy <lisovy@gmail.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
+	jan-niklas.meier@volkswagen.de, burak.simsek@volkswagen.de,
+	Emmanuel Thierry <emmanuel.thierry@yogoko.fr>,
+	laszlo.virag@commsignia.com,
+	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+Date: Fri, 31 Oct 2014 16:15:48 +0100
+In-Reply-To: <1414768360.8048.4.camel@umadbro> (sfid-20141031_161242_006101_8D0C70ED)
+References: <1414665771-8371-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
+	 <1414665771-8371-2-git-send-email-rostislav.lisovy@fel.cvut.cz>
+	 (sfid-20141030_114322_295525_C7C629F8) <1414761237.3014.27.camel@jlt4.sipsolutions.net>
+	 <1414768360.8048.4.camel@umadbro> (sfid-20141031_161242_006101_8D0C70ED)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The optional NL80211_ATTR_MGMT_SUBTYPE and NL80211_ATTR_REASON_CODE
-attributes can now be included in NL80211_CMD_DEL_STATION to indicate to
-the driver which frame (Deauthentication/Disassociation) and reason code
-in that frame should be used to indicate removal to the specific
-station. This is used by drivers that implement AP SME and generate
-those frames internally.
+On Fri, 2014-10-31 at 16:12 +0100, Rostislav Lisovy wrote:
+> On Fri, 2014-10-31 at 14:13 +0100, Johannes Berg wrote:
+> > On Thu, 2014-10-30 at 11:42 +0100, Rostislav Lisovy wrote:
+> > > @@ -2093,6 +2102,7 @@ enum nl80211_iftype {
+> > >  	NL80211_IFTYPE_P2P_CLIENT,
+> > >  	NL80211_IFTYPE_P2P_GO,
+> > >  	NL80211_IFTYPE_P2P_DEVICE,
+> > > +	NL80211_IFTYPE_OCB,
+> > 
+> > This is causing a bunch of compiler warnings (warning: enumeration value
+> > ‘NL80211_IFTYPE_OCB’ not handled in switch, e.g. in mac80211/iface.c)
+> > which I think you should address in this patch. That'll mean that you
+> > modify even mac80211 and potentially some drivers, but I think that's
+> > the right thing to do in this patch since it's the one changing the API
+> > to introduce the new value.
+> 
+> I was aware of the warnings but thought this is the chicken-egg problem
+> which can't be solved properly.
+> Fortunately there is no driver affected.
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
----
- include/net/cfg80211.h       |  6 ++++++
- include/uapi/linux/nl80211.h |  6 +++++-
- net/wireless/nl80211.c       | 15 +++++++++++++++
- net/wireless/trace.h         | 10 ++++++++--
- 4 files changed, 34 insertions(+), 3 deletions(-)
+Yeah I checked the drivers after sending the mail :)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 777e191..592e2dc 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -804,9 +804,15 @@ struct station_parameters {
-  * Used to delete a station entry (or all stations).
-  *
-  * @mac: MAC address of the station to remove or NULL to remove all stations
-+ * @subtype: Management frame subtype to use for indicating removal
-+ *	(0 = no guidance on whether to indicate the removal to the station is
-+ *	provided, 10 = Disassociation, 12 = Deauthentication)
-+ * @reason_code: Reason code for the Disassociation/Deauthentication frame
-  */
- struct station_del_parameters {
- 	const u8 *mac;
-+	u8 subtype;
-+	u16 reason_code;
- };
- 
- /**
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 4b28dc0..07ef683 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -227,7 +227,11 @@
-  *	the interface identified by %NL80211_ATTR_IFINDEX.
-  * @NL80211_CMD_DEL_STATION: Remove a station identified by %NL80211_ATTR_MAC
-  *	or, if no MAC address given, all stations, on the interface identified
-- *	by %NL80211_ATTR_IFINDEX.
-+ *	by %NL80211_ATTR_IFINDEX. %NL80211_ATTR_MGMT_SUBTYPE and
-+ *	%NL80211_ATTR_REASON_CODE can optionally be used to specify which type
-+ *	of disconnection indication should be sent to the station
-+ *	(Deauthentication or Disassociation frame and reason code for that
-+ *	frame).
-  *
-  * @NL80211_CMD_GET_MPATH: Get mesh path attributes for mesh path to
-  * 	destination %NL80211_ATTR_MAC on the interface identified by
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 9333990..b88b239 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -4414,6 +4414,21 @@ static int nl80211_del_station(struct sk_buff *skb, struct genl_info *info)
- 	if (!rdev->ops->del_station)
- 		return -EOPNOTSUPP;
- 
-+	if (info->attrs[NL80211_ATTR_MGMT_SUBTYPE]) {
-+		params.subtype =
-+			nla_get_u8(info->attrs[NL80211_ATTR_MGMT_SUBTYPE]);
-+		if (params.subtype != IEEE80211_STYPE_DISASSOC >> 4 &&
-+		    params.subtype != IEEE80211_STYPE_DEAUTH >> 4)
-+			return -EINVAL;
-+	}
-+
-+	if (info->attrs[NL80211_ATTR_REASON_CODE]) {
-+		params.reason_code =
-+			nla_get_u16(info->attrs[NL80211_ATTR_REASON_CODE]);
-+		if (params.reason_code == 0)
-+			return -EINVAL; /* 0 is reserved */
-+	}
-+
- 	return rdev_del_station(rdev, dev, &params);
- }
- 
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index 66bc3c9..fae55cd 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -688,14 +688,20 @@ DECLARE_EVENT_CLASS(station_del,
- 		WIPHY_ENTRY
- 		NETDEV_ENTRY
- 		MAC_ENTRY(sta_mac)
-+		__field(u8, subtype)
-+		__field(u16, reason_code)
- 	),
- 	TP_fast_assign(
- 		WIPHY_ASSIGN;
- 		NETDEV_ASSIGN;
- 		MAC_ASSIGN(sta_mac, params->mac);
-+		__entry->subtype = params->subtype;
-+		__entry->reason_code = params->reason_code;
- 	),
--	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", station mac: " MAC_PR_FMT,
--		  WIPHY_PR_ARG, NETDEV_PR_ARG, MAC_PR_ARG(sta_mac))
-+	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", station mac: " MAC_PR_FMT
-+		  ", subtype: %u, reason_code: %u",
-+		  WIPHY_PR_ARG, NETDEV_PR_ARG, MAC_PR_ARG(sta_mac),
-+		  __entry->subtype, __entry->reason_code)
- );
- 
- DEFINE_EVENT(station_del, rdev_del_station,
--- 
-1.9.1
+I think you can add dummy "case OCB" statements to mac80211 in this
+patch, and then overwrite them with proper code in the next one. I'd
+like to have the build warning-free for every commit, if at all
+possible.
 
+johannes
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
