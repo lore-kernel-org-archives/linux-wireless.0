@@ -1,174 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:45151 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757989AbaJ1GQB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Oct 2014 02:16:01 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: stable@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 3.16 5/7] iwlwifi: mvm: don't collect logs in the interrupt thread
-Date: Tue, 28 Oct 2014 08:11:24 +0200
-Message-Id: <1414476686-3407-6-git-send-email-emmanuel.grumbach@intel.com> (sfid-20141028_071620_006978_8D5121EF)
-In-Reply-To: <1414476686-3407-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1414476686-3407-1-git-send-email-emmanuel.grumbach@intel.com>
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:63543 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932130AbaJaJrl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 Oct 2014 05:47:41 -0400
+Message-ID: <54535ABA.1030109@suse.cz> (sfid-20141031_104745_976805_E749A58E)
+Date: Fri, 31 Oct 2014 10:47:38 +0100
+From: Jiri Slaby <jslaby@suse.cz>
+MIME-Version: 1.0
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+CC: stable@vger.kernel.org, Stanislaw Gruszka <sgruszka@redhat.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH -stable] wireless: rt2x00: add new rt2800usb devices
+References: <1414667923-2331-1-git-send-email-xose.vazquez@gmail.com>
+In-Reply-To: <1414667923-2331-1-git-send-email-xose.vazquez@gmail.com>
+Content-Type: text/plain; charset=iso-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-commit 78dae98fab85f4cd2d38cfc3474dea6e87e7b53a upstream.
+On 10/30/2014, 12:18 PM, Xose Vazquez Perez wrote:
+> 0x0b05 0x17e8 RT5372 USB 2.0  bgn 2x2 ASUS USB-N14
+> 0x0411 0x0253 RT5572 USB 2.0 abgn 2x2 BUFFALO WLP-U2-300D
+> 0x0df6 0x0078 RT???? Sitecom N300
 
-Instead of reading all the data in the context of the
-interrupt thread, collect the data in the restart flow
-before the actual restart takes place so that the device
-still has all the information.
-Remove iwl_mvm_fw_error_sram_dump and move its content to
-iwl_mvm_fw_error_dump.
+(the same as previous)
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/mvm.h   |  3 ---
- drivers/net/wireless/iwlwifi/mvm/ops.c   | 31 ++++++++++++-------------------
- drivers/net/wireless/iwlwifi/mvm/utils.c | 22 ----------------------
- 3 files changed, 12 insertions(+), 44 deletions(-)
+> Cc: stable@vger.kernel.org
+> Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> Cc: Stanislaw Gruszka <sgruszka@redhat.com>
+> Cc: Helmut Schaa <helmut.schaa@googlemail.com>
+> Cc: John W. Linville <linville@tuxdriver.com>
+> Cc: users@rt2x00.serialmonkey.com
+> Cc: linux-wireless@vger.kernel.org
+> Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> ---
+>  drivers/net/wireless/rt2x00/rt2800usb.c | 4 ++++
+>  1 file changed, 4 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+> index 832006b..573897b 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+> @@ -1284,6 +1284,8 @@ static struct usb_device_id rt2800usb_device_table[] = {
+>  	/* Arcadyan */
+>  	{ USB_DEVICE(0x043e, 0x7a12) },
+>  	{ USB_DEVICE(0x043e, 0x7a32) },
+> +	/* ASUS */
+> +	{ USB_DEVICE(0x0b05, 0x17e8) },
+>  	/* Azurewave */
+>  	{ USB_DEVICE(0x13d3, 0x3329) },
+>  	{ USB_DEVICE(0x13d3, 0x3365) },
+> @@ -1320,6 +1322,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
+>  	{ USB_DEVICE(0x057c, 0x8501) },
+>  	/* Buffalo */
+>  	{ USB_DEVICE(0x0411, 0x0241) },
+> +	{ USB_DEVICE(0x0411, 0x0253) },
+>  	/* D-Link */
+>  	{ USB_DEVICE(0x2001, 0x3c1a) },
+>  	{ USB_DEVICE(0x2001, 0x3c21) },
+> @@ -1410,6 +1413,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
+>  	{ USB_DEVICE(0x0df6, 0x0053) },
+>  	{ USB_DEVICE(0x0df6, 0x0069) },
+>  	{ USB_DEVICE(0x0df6, 0x006f) },
+> +	{ USB_DEVICE(0x0df6, 0x0078) },
+>  	/* SMC */
+>  	{ USB_DEVICE(0x083a, 0xa512) },
+>  	{ USB_DEVICE(0x083a, 0xc522) },
+> 
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index fcc6c29..e084fc6 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -586,8 +586,6 @@ struct iwl_mvm {
- 	/* -1 for always, 0 for never, >0 for that many times */
- 	s8 restart_fw;
- 	void *fw_error_dump;
--	void *fw_error_sram;
--	u32 fw_error_sram_len;
- 	u32 *fw_error_rxf;
- 	u32 fw_error_rxf_len;
- 
-@@ -721,7 +719,6 @@ u8 iwl_mvm_mac80211_idx_to_hwrate(int rate_idx);
- void iwl_mvm_dump_nic_error_log(struct iwl_mvm *mvm);
- #ifdef CONFIG_IWLWIFI_DEBUGFS
- void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm);
--void iwl_mvm_fw_error_sram_dump(struct iwl_mvm *mvm);
- void iwl_mvm_fw_error_rxf_dump(struct iwl_mvm *mvm);
- #endif
- u8 first_antenna(u8 mask);
-diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
-index 2910f6d..94506ec 100644
---- a/drivers/net/wireless/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
-@@ -549,7 +549,6 @@ static void iwl_op_mode_mvm_stop(struct iwl_op_mode *op_mode)
- 
- 	kfree(mvm->scan_cmd);
- 	vfree(mvm->fw_error_dump);
--	kfree(mvm->fw_error_sram);
- 	kfree(mvm->fw_error_rxf);
- 	kfree(mvm->mcast_filter_cmd);
- 	mvm->mcast_filter_cmd = NULL;
-@@ -827,6 +826,8 @@ void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
- 	struct iwl_fw_error_dump_file *dump_file;
- 	struct iwl_fw_error_dump_data *dump_data;
- 	struct iwl_fw_error_dump_info *dump_info;
-+	const struct fw_img *img;
-+	u32 sram_len, sram_ofs;
- 	u32 file_len;
- 	u32 trans_len;
- 
-@@ -835,9 +836,13 @@ void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
- 	if (mvm->fw_error_dump)
- 		return;
- 
-+	img = &mvm->fw->img[mvm->cur_ucode];
-+	sram_ofs = img->sec[IWL_UCODE_SECTION_DATA].offset;
-+	sram_len = img->sec[IWL_UCODE_SECTION_DATA].len;
-+
- 	file_len = sizeof(*dump_file) +
- 		   sizeof(*dump_data) * 3 +
--		   mvm->fw_error_sram_len +
-+		   sram_len +
- 		   mvm->fw_error_rxf_len +
- 		   sizeof(*dump_info);
- 
-@@ -869,6 +874,8 @@ void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
- 	strncpy(dump_info->bus_human_readable, mvm->dev->bus->name,
- 		sizeof(dump_info->bus_human_readable));
- 
-+	iwl_mvm_fw_error_rxf_dump(mvm);
-+
- 	dump_data = iwl_fw_error_next_data(dump_data);
- 	dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_RXF);
- 	dump_data->len = cpu_to_le32(mvm->fw_error_rxf_len);
-@@ -876,23 +883,14 @@ void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
- 
- 	dump_data = iwl_fw_error_next_data(dump_data);
- 	dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_SRAM);
--	dump_data->len = cpu_to_le32(mvm->fw_error_sram_len);
--
--	/*
--	 * No need for lock since at the stage the FW isn't loaded. So it
--	 * can't assert - we are the only one who can possibly be accessing
--	 * mvm->fw_error_sram right now.
--	 */
--	memcpy(dump_data->data, mvm->fw_error_sram, mvm->fw_error_sram_len);
-+	dump_data->len = cpu_to_le32(sram_len);
-+	iwl_trans_read_mem_bytes(mvm->trans, sram_ofs, dump_data->data,
-+				 sram_len);
- 
- 	kfree(mvm->fw_error_rxf);
- 	mvm->fw_error_rxf = NULL;
- 	mvm->fw_error_rxf_len = 0;
- 
--	kfree(mvm->fw_error_sram);
--	mvm->fw_error_sram = NULL;
--	mvm->fw_error_sram_len = 0;
--
- 	if (trans_len) {
- 		void *buf = iwl_fw_error_next_data(dump_data);
- 		u32 real_trans_len = iwl_trans_dump_data(mvm->trans, buf,
-@@ -910,11 +908,6 @@ static void iwl_mvm_nic_error(struct iwl_op_mode *op_mode)
- 
- 	iwl_mvm_dump_nic_error_log(mvm);
- 
--#ifdef CONFIG_IWLWIFI_DEBUGFS
--	iwl_mvm_fw_error_sram_dump(mvm);
--	iwl_mvm_fw_error_rxf_dump(mvm);
--#endif
--
- 	iwl_mvm_nic_restart(mvm);
- }
- 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/utils.c b/drivers/net/wireless/iwlwifi/mvm/utils.c
-index aa9fc77..15db97c 100644
---- a/drivers/net/wireless/iwlwifi/mvm/utils.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/utils.c
-@@ -520,28 +520,6 @@ void iwl_mvm_dump_nic_error_log(struct iwl_mvm *mvm)
- }
- 
- #ifdef CONFIG_IWLWIFI_DEBUGFS
--void iwl_mvm_fw_error_sram_dump(struct iwl_mvm *mvm)
--{
--	const struct fw_img *img;
--	u32 ofs, sram_len;
--	void *sram;
--
--	if (!mvm->ucode_loaded || mvm->fw_error_sram || mvm->fw_error_dump)
--		return;
--
--	img = &mvm->fw->img[mvm->cur_ucode];
--	ofs = img->sec[IWL_UCODE_SECTION_DATA].offset;
--	sram_len = img->sec[IWL_UCODE_SECTION_DATA].len;
--
--	sram = kzalloc(sram_len, GFP_ATOMIC);
--	if (!sram)
--		return;
--
--	iwl_trans_read_mem_bytes(mvm->trans, ofs, sram, sram_len);
--	mvm->fw_error_sram = sram;
--	mvm->fw_error_sram_len = sram_len;
--}
--
- void iwl_mvm_fw_error_rxf_dump(struct iwl_mvm *mvm)
- {
- 	int i, reg_val;
+
 -- 
-1.9.1
-
+js
+suse labs
