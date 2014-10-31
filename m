@@ -1,90 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:41439 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751814AbaJFNBt convert rfc822-to-8bit (ORCPT
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:59377 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932555AbaJaJrP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Oct 2014 09:01:49 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Seth Forshee <seth.forshee@canonical.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [RFT] iwlwifi: dvm: drop non VO frames when flushing
-Date: Mon, 6 Oct 2014 13:01:37 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB31B53CC6D@hasmsx107.ger.corp.intel.com> (sfid-20141006_150152_481896_8BE837B7)
-References: <1412517432-16309-1-git-send-email-emmanuel.grumbach@intel.com>
- <20141006123314.GA131459@ubuntu-hedt>
- <0BA3FCBA62E2DC44AF3030971E174FB31B53CBD4@hasmsx107.ger.corp.intel.com>
- <20141006124307.GB131459@ubuntu-hedt> <20141006124402.GC131459@ubuntu-hedt>
- <0BA3FCBA62E2DC44AF3030971E174FB31B53CC1F@hasmsx107.ger.corp.intel.com>
- <20141006125921.GE131459@ubuntu-hedt>
-In-Reply-To: <20141006125921.GE131459@ubuntu-hedt>
-Content-Type: text/plain; charset="us-ascii"
+	Fri, 31 Oct 2014 05:47:15 -0400
+Message-ID: <54535AA0.6070907@suse.cz> (sfid-20141031_104724_233756_DAFB3185)
+Date: Fri, 31 Oct 2014 10:47:12 +0100
+From: Jiri Slaby <jslaby@suse.cz>
 MIME-Version: 1.0
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+CC: =?UTF-8?B?Q2FuZWsgUGVsw6FleiBWYWxkw6lz?= <canek@ciencias.unam.mx>,
+	stable@vger.kernel.org, Stanislaw Gruszka <sgruszka@redhat.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH -stable] rt2x00: support Ralink 5362.
+References: <1414667897-2277-1-git-send-email-xose.vazquez@gmail.com>
+In-Reply-To: <1414667897-2277-1-git-send-email-xose.vazquez@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 10/30/2014, 12:18 PM, Xose Vazquez Perez wrote:
+> From: Canek Peláez Valdés <canek@ciencias.unam.mx>
+
+Hi, what is this, please? No commit message, no upstream SHA, we cannot
+take the two as they stand...
+
+> Cc: stable@vger.kernel.org
+> Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> Cc: Stanislaw Gruszka <sgruszka@redhat.com>
+> Cc: Helmut Schaa <helmut.schaa@googlemail.com>
+> Cc: John W. Linville <linville@tuxdriver.com>
+> Cc: users@rt2x00.serialmonkey.com
+> Cc: linux-wireless@vger.kernel.org
+> Signed-off-by: Canek Peláez Valdés <canek@ciencias.unam.mx>
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> ---
+>  drivers/net/wireless/rt2x00/rt2800.h    | 4 +++-
+>  drivers/net/wireless/rt2x00/rt2800lib.c | 6 ++++++
+>  2 files changed, 9 insertions(+), 1 deletion(-)
 > 
-> On Mon, Oct 06, 2014 at 12:47:41PM +0000, Grumbach, Emmanuel wrote:
-> > >
-> > > On Mon, Oct 06, 2014 at 07:43:07AM -0500, Seth Forshee wrote:
-> > > > On Mon, Oct 06, 2014 at 12:35:46PM +0000, Grumbach, Emmanuel
-> wrote:
-> > > > > > Subject: Re: [RFT] iwlwifi: dvm: drop non VO frames when
-> > > > > > flushing
-> > > > > >
-> > > > > > On Sun, Oct 05, 2014 at 04:57:12PM +0300, Emmanuel Grumbach
-> wrote:
-> > > > > > > +	if (vif)
-> > > > > > > +		scd_queues &= ~BIT(vif-
-> > > >hw_queue[IEEE80211_AC_VO]);
-> > > > > >
-> > > > > > I'm backporting this to 3.13, and this part doesn't work
-> > > > > > unless 77be2c54c5bd26279abc13807398771d80cda37a is also
-> > > > > > backported. Is this critical, or can it be omitted in the backport?
-> > > > > >
-> > > > >
-> > > > > 77be2c54c5bd26279abc13807398771d80cda37a isn't really critical,
-> > > > > but it is
-> > > a dependency, and it is safe IMO.
-> > > > > But I'd wait for a bit more testing :) The patch isn't even in
-> > > > > my tree yet :)
-> > > >
-> > > > My backport is for testing too. Most of our bugs are against
-> > > > Ubuntu 14.04, which uses 3.13. Seems better to have them test this
-> > > > change in isolation rather than also testing everything which has
-> > > > changed up to 3.17.
-> > > >
-> > > > I agree the patch is safe,
-> > >
-> > > Sorry, I was ambiguous here. I mean that
-> > > 77be2c54c5bd26279abc13807398771d80cda37a is safe to backport.
-> > >
-> > > > but I'd also prefer to have it tested in the form which would
-> > > > eventually get applied to the 3.13 extended stable tree. So I take
-> > > > it for stable you would advocate applying both patches?
-> >
-> > I guess... I can rework the discussed patch (drop non VO ...) to work
-> > without 77be2c54c5bd26279abc13807398771d80cda37a, but is it really
-> worth it?
-> > I don't see any reason not to backport
-> 77be2c54c5bd26279abc13807398771d80cda37a.
-> > IMHO, the easiest is to backport
-> > 77be2c54c5bd26279abc13807398771d80cda37a and apply the drop non VO
-> on top of it.
-> >
-> > What am I missing?
-> 
-> Nothing, except that stable kernel rules dictate that only bug fixes will be
-> applied. 77be2c54c5 isn't a bug fix. If it's a necessary prerequisite then I
-> suspect they'd be accomodating, but if it's not necessary then they might
-> request a backport which doesn't require 77be2c54c5.
-> 
-> No sense it beating it to death now though. I'll backport both, and if the
-> stable trees end up with something different I can ask for additional testing.
-> Especially if it involves more than simply dropping those two lines.
+> diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
+> index a394a9a..b7434df 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800.h
+> +++ b/drivers/net/wireless/rt2x00/rt2800.h
+> @@ -52,6 +52,7 @@
+>   * RF5592 2.4G/5G 2T2R
+>   * RF3070 2.4G 1T1R
+>   * RF5360 2.4G 1T1R
+> + * RF5362 2.4G 1T1R
+>   * RF5370 2.4G 1T1R
+>   * RF5390 2.4G 1T1R
+>   */
+> @@ -72,6 +73,7 @@
+>  #define RF3070				0x3070
+>  #define RF3290				0x3290
+>  #define RF5360				0x5360
+> +#define RF5362				0x5362
+>  #define RF5370				0x5370
+>  #define RF5372				0x5372
+>  #define RF5390				0x5390
+> @@ -2145,7 +2147,7 @@ struct mac_iveiv_entry {
+>  /* Bits [7-4] for RF3320 (RT3370/RT3390), on other chipsets reserved */
+>  #define RFCSR3_PA1_BIAS_CCK		FIELD8(0x70)
+>  #define RFCSR3_PA2_CASCODE_BIAS_CCKK	FIELD8(0x80)
+> -/* Bits for RF3290/RF5360/RF5370/RF5372/RF5390/RF5392 */
+> +/* Bits for RF3290/RF5360/RF5362/RF5370/RF5372/RF5390/RF5392 */
+>  #define RFCSR3_VCOCAL_EN		FIELD8(0x80)
+>  /* Bits for RF3050 */
+>  #define RFCSR3_BIT1			FIELD8(0x02)
+> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> index 893c9d5..9f57a2d 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> @@ -3186,6 +3186,7 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
+>  		break;
+>  	case RF3070:
+>  	case RF5360:
+> +	case RF5362:
+>  	case RF5370:
+>  	case RF5372:
+>  	case RF5390:
+> @@ -3203,6 +3204,7 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
+>  	    rt2x00_rf(rt2x00dev, RF3290) ||
+>  	    rt2x00_rf(rt2x00dev, RF3322) ||
+>  	    rt2x00_rf(rt2x00dev, RF5360) ||
+> +	    rt2x00_rf(rt2x00dev, RF5362) ||
+>  	    rt2x00_rf(rt2x00dev, RF5370) ||
+>  	    rt2x00_rf(rt2x00dev, RF5372) ||
+>  	    rt2x00_rf(rt2x00dev, RF5390) ||
+> @@ -4317,6 +4319,7 @@ void rt2800_vco_calibration(struct rt2x00_dev *rt2x00dev)
+>  	case RF3070:
+>  	case RF3290:
+>  	case RF5360:
+> +	case RF5362:
+>  	case RF5370:
+>  	case RF5372:
+>  	case RF5390:
+> @@ -7095,6 +7098,7 @@ static int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
+>  	case RF3320:
+>  	case RF3322:
+>  	case RF5360:
+> +	case RF5362:
+>  	case RF5370:
+>  	case RF5372:
+>  	case RF5390:
+> @@ -7551,6 +7555,7 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+>  	case RF3320:
+>  	case RF3322:
+>  	case RF5360:
+> +	case RF5362:
+>  	case RF5370:
+>  	case RF5372:
+>  	case RF5390:
+> @@ -7680,6 +7685,7 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+>  	case RF3070:
+>  	case RF3290:
+>  	case RF5360:
+> +	case RF5362:
+>  	case RF5370:
+>  	case RF5372:
+>  	case RF5390:
 > 
 
-Yeah - I know the rules, but heh... You can even either:
-1) a patch that is not a bug fix and then no conflicts
-2) a conflict which can be tricky (bug prone) to solve
 
-Sometimes rules need to be challenged :)
+-- 
+js
+suse labs
