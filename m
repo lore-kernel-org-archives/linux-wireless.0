@@ -1,62 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f48.google.com ([74.125.82.48]:64299 "EHLO
-	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750852AbaJWGhj (ORCPT
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:44812 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751880AbaJaIDt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Oct 2014 02:37:39 -0400
-Received: by mail-wg0-f48.google.com with SMTP id k14so381763wgh.7
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Oct 2014 23:37:38 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	Jonathan Doron <jond@wizery.com>
-Subject: [PATCH 3/5] cfg80211: update missing fields in custom regulatory path
-Date: Thu, 23 Oct 2014 09:37:35 +0300
-Message-Id: <1414046257-22184-4-git-send-email-arik@wizery.com> (sfid-20141023_083742_679785_EF1D60D3)
-In-Reply-To: <1414046257-22184-1-git-send-email-arik@wizery.com>
-References: <1414046257-22184-1-git-send-email-arik@wizery.com>
+	Fri, 31 Oct 2014 04:03:49 -0400
+Received: by mail-wi0-f178.google.com with SMTP id q5so576967wiv.11
+        for <linux-wireless@vger.kernel.org>; Fri, 31 Oct 2014 01:03:48 -0700 (PDT)
+From: Bartosz Markowski <bartosz.markowski@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Bartosz Markowski <bartosz.markowski@tieto.com>
+Subject: [PATCH v3] ath10k: fix pm resume after suspend
+Date: Fri, 31 Oct 2014 09:03:43 +0100
+Message-Id: <1414742623-308-1-git-send-email-bartosz.markowski@tieto.com> (sfid-20141031_090354_665358_C5C6AD1C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jonathan Doron <jond@wizery.com>
+Firmware was crashing when we were trying to warm reset it
+after suspend. This was due to the fact that target registeres
+can be accessed only if the hardware is awaken.
 
-Some channels fields were not being updated in the custom regulatory
-path. Update them according to the code in handle_channel().
+This patch makes sure to awake the device also on the hif up,
+not only in case of probe call.
 
-Signed-off-by: Jonathan Doron <jonathanx.doron@intel.com>
-Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
 ---
- net/wireless/reg.c | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
+ drivers/net/wireless/ath/ath10k/pci.c | 18 ++++++++++++++----
+ 1 file changed, 14 insertions(+), 4 deletions(-)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index efbdff0..9575aea 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1691,10 +1691,23 @@ static void handle_channel_custom(struct wiphy *wiphy,
- 	if (max_bandwidth_khz < MHZ_TO_KHZ(160))
- 		bw_flags |= IEEE80211_CHAN_NO_160MHZ;
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index f5e426e..3a6b8a5 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -1875,6 +1875,12 @@ static int ath10k_pci_hif_power_up(struct ath10k *ar)
  
-+	chan->dfs_state = NL80211_DFS_USABLE;
-+	chan->dfs_state_entered = jiffies;
-+
-+	chan->beacon_found = false;
- 	chan->flags |= map_regdom_flags(reg_rule->flags) | bw_flags;
- 	chan->max_antenna_gain = (int) MBI_TO_DBI(power_rule->max_antenna_gain);
- 	chan->max_reg_power = chan->max_power =
- 		(int) MBM_TO_DBM(power_rule->max_eirp);
-+
-+	if (chan->flags & IEEE80211_CHAN_RADAR) {
-+		if (reg_rule->dfs_cac_ms)
-+			chan->dfs_cac_ms = reg_rule->dfs_cac_ms;
-+		else
-+			chan->dfs_cac_ms = IEEE80211_DFS_MIN_CAC_TIME_MS;
+ 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot hif power up\n");
+ 
++	ret = ath10k_pci_wake(ar);
++	if (ret) {
++		ath10k_err(ar, "failed to wake up target: %d\n", ret);
++		return ret;
 +	}
 +
-+	chan->max_power = chan->max_reg_power;
+ 	/*
+ 	 * Bring the target up cleanly.
+ 	 *
+@@ -1888,13 +1894,13 @@ static int ath10k_pci_hif_power_up(struct ath10k *ar)
+ 	ret = ath10k_pci_chip_reset(ar);
+ 	if (ret) {
+ 		ath10k_err(ar, "failed to reset chip: %d\n", ret);
+-		goto err;
++		goto err_sleep;
+ 	}
+ 
+ 	ret = ath10k_pci_init_pipes(ar);
+ 	if (ret) {
+ 		ath10k_err(ar, "failed to initialize CE: %d\n", ret);
+-		goto err;
++		goto err_sleep;
+ 	}
+ 
+ 	ret = ath10k_pci_init_config(ar);
+@@ -1914,7 +1920,8 @@ static int ath10k_pci_hif_power_up(struct ath10k *ar)
+ err_ce:
+ 	ath10k_pci_ce_deinit(ar);
+ 
+-err:
++err_sleep:
++	ath10k_pci_sleep(ar);
+ 	return ret;
  }
  
- static void handle_band_custom(struct wiphy *wiphy,
+@@ -1925,6 +1932,8 @@ static void ath10k_pci_hif_power_down(struct ath10k *ar)
+ 	/* Currently hif_power_up performs effectively a reset and hif_stop
+ 	 * resets the chip as well so there's no point in resetting here.
+ 	 */
++
++	ath10k_pci_sleep(ar);
+ }
+ 
+ #ifdef CONFIG_PM
+@@ -2526,6 +2535,8 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
+ 		goto err_deinit_irq;
+ 	}
+ 
++	ath10k_pci_sleep(ar);
++
+ 	ret = ath10k_core_register(ar, chip_id);
+ 	if (ret) {
+ 		ath10k_err(ar, "failed to register driver core: %d\n", ret);
+@@ -2577,7 +2588,6 @@ static void ath10k_pci_remove(struct pci_dev *pdev)
+ 	ath10k_pci_deinit_irq(ar);
+ 	ath10k_pci_ce_deinit(ar);
+ 	ath10k_pci_free_pipes(ar);
+-	ath10k_pci_sleep(ar);
+ 	ath10k_pci_release(ar);
+ 	ath10k_core_destroy(ar);
+ }
 -- 
-1.9.1
+1.8.2
 
