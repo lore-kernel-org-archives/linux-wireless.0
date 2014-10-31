@@ -1,36 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:23810 "EHLO mga09.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:57477 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750815AbaJ0GOe convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Oct 2014 02:14:34 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Joe Perches <joe@perches.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-CC: "Berg, Johannes" <johannes.berg@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
+	id S1751211AbaJaJzI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 Oct 2014 05:55:08 -0400
+Date: Fri, 31 Oct 2014 10:51:56 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Jiri Slaby <jslaby@suse.cz>
+Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	Canek =?iso-8859-1?Q?Pel=E1ez_Vald=E9s?= <canek@ciencias.unam.mx>,
+	stable@vger.kernel.org, Helmut Schaa <helmut.schaa@googlemail.com>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: RE: [PATCH 07/11] iwlwifi: dvm: Fix probable mask then right shift
- defect
-Date: Mon, 27 Oct 2014 06:14:29 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB31B556ABD@hasmsx107.ger.corp.intel.com> (sfid-20141027_071503_230142_DDFF00DC)
-References: <cover.1414387334.git.joe@perches.com>
- <83c3bfdd0c8f21fbbcbd9ebb5746a8fb04494fac.1414387334.git.joe@perches.com>
-In-Reply-To: <83c3bfdd0c8f21fbbcbd9ebb5746a8fb04494fac.1414387334.git.joe@perches.com>
-Content-Type: text/plain; charset="us-ascii"
+	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH -stable] rt2x00: support Ralink 5362.
+Message-ID: <20141031095118.GA2066@redhat.com> (sfid-20141031_105519_324409_EB37FFE7)
+References: <1414667897-2277-1-git-send-email-xose.vazquez@gmail.com>
+ <54535AA0.6070907@suse.cz>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <54535AA0.6070907@suse.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> 
-> Precedence of & and >> is not the same and is not left to right.
-> shift has higher precedence and should be done after the mask.
-> 
-> Add parentheses around the mask.
-> 
-> Signed-off-by: Joe Perches <joe@perches.com>
-> ---
 
-Applied - thanks.
+
+
+On Fri, Oct 31, 2014 at 10:47:12AM +0100, Jiri Slaby wrote:
+> On 10/30/2014, 12:18 PM, Xose Vazquez Perez wrote:
+> > From: Canek Peláez Valdés <canek@ciencias.unam.mx>
+> 
+> Hi, what is this, please? No commit message, no upstream SHA, we cannot
+> take the two as they stand...
+
+This is:
+
+commit ac0372abf8524a7572a9cdaac6495eb2eba20457
+Author: Canek Peláez Valdés <canek@ciencias.unam.mx>
+Date:   Sun Aug 24 19:06:11 2014 -0500
+
+    rt2x00: support Ralink 5362.
