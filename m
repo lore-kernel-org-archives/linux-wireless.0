@@ -1,31 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0178.hostedemail.com ([216.40.44.178]:37877 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750765AbaJPIuq (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:36763 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751412AbaJaFJK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Oct 2014 04:50:46 -0400
-Message-ID: <1413449441.7484.22.camel@perches.com> (sfid-20141016_105110_990535_0FE86341)
-Subject: Re: [PATCH 1/1 linux-next] zd1201: replace kmalloc/memset by kzalloc
-From: Joe Perches <joe@perches.com>
-To: Fabian Frederick <fabf@skynet.be>
-Cc: =?ISO-8859-1?Q?Bj=F8rn?= Mork <bjorn@mork.no>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Date: Thu, 16 Oct 2014 01:50:41 -0700
-In-Reply-To: <346236957.6316.1413446930736.open-xchange@webmail.nmp.skynet.be>
-References: <1413304831-7203-1-git-send-email-fabf@skynet.be>
-	 <1413306955.3269.30.camel@joe-AO725> <87iojm8qxp.fsf@nemi.mork.no>
-	 <346236957.6316.1413446930736.open-xchange@webmail.nmp.skynet.be>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Fri, 31 Oct 2014 01:09:10 -0400
+From: Avinash Patil <patila@marvell.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <huxm@marvell.com>,
+	<cluo@marvell.com>, <yangyang@marvell.com>, <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH 0/2] mwifiex: ACS support for mwifiex AP
+Date: Fri, 31 Oct 2014 16:08:25 +0530
+Message-ID: <1414751907-4957-1-git-send-email-patila@marvell.com> (sfid-20141031_060918_416699_202D4A2E)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-10-16 at 10:08 +0200, Fabian Frederick wrote:
-> Adding a structure would be a nice design update indeed but this would require
-> some testing...Separate patch maybe ?
+This patch series adds Automatic channel selection- ACS support for
+mwifiex AP.
 
-Of course that'd be fine.
+Avinash Patil (1):
+  mwifiex: channel statistics support for mwifiex
 
+Xinming Hu (1):
+  mwifiex: add cfg80211 dump_survey handler
+
+ drivers/net/wireless/mwifiex/cfg80211.c    | 66 ++++++++++++++++++++++++++
+ drivers/net/wireless/mwifiex/decl.h        | 10 ++++
+ drivers/net/wireless/mwifiex/fw.h          | 16 +++++++
+ drivers/net/wireless/mwifiex/main.c        |  6 +++
+ drivers/net/wireless/mwifiex/main.h        |  6 ++-
+ drivers/net/wireless/mwifiex/scan.c        | 76 +++++++++++++++++++++++++++++-
+ drivers/net/wireless/mwifiex/sta_cmdresp.c |  2 +-
+ 7 files changed, 179 insertions(+), 3 deletions(-)
+
+-- 
+1.8.1.4
 
