@@ -1,40 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57477 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751211AbaJaJzI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Oct 2014 05:55:08 -0400
-Date: Fri, 31 Oct 2014 10:51:56 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Jiri Slaby <jslaby@suse.cz>
-Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	Canek =?iso-8859-1?Q?Pel=E1ez_Vald=E9s?= <canek@ciencias.unam.mx>,
-	stable@vger.kernel.org, Helmut Schaa <helmut.schaa@googlemail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH -stable] rt2x00: support Ralink 5362.
-Message-ID: <20141031095118.GA2066@redhat.com> (sfid-20141031_105519_324409_EB37FFE7)
-References: <1414667897-2277-1-git-send-email-xose.vazquez@gmail.com>
- <54535AA0.6070907@suse.cz>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:22730 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161369AbaJaArV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Oct 2014 20:47:21 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Bartosz Markowski <bartosz.markowski@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] ath10k: fix pm resume after suspend
+References: <1414399436-7047-1-git-send-email-bartosz.markowski@tieto.com>
+Date: Fri, 31 Oct 2014 02:47:14 +0200
+In-Reply-To: <1414399436-7047-1-git-send-email-bartosz.markowski@tieto.com>
+	(Bartosz Markowski's message of "Mon, 27 Oct 2014 09:43:56 +0100")
+Message-ID: <87d299dq0d.fsf@kamboji.qca.qualcomm.com> (sfid-20141031_014724_806003_BAB3B676)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <54535AA0.6070907@suse.cz>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Bartosz Markowski <bartosz.markowski@tieto.com> writes:
 
+> Firmware was crashing when we were trying to warm reset it
+> after suspend. This was due to the fact that target registeres
+> can be accessed only if the hardware is awaken.
+>
+> This patch makes sure to awake the device also on the hif up,
+> not only in case of probe call.
+>
+> Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
 
+Unfortunately this still does not apply, most likely because of Michal's
+warm reset fixes I just applied. Can you rebase one more time, please?
 
-On Fri, Oct 31, 2014 at 10:47:12AM +0100, Jiri Slaby wrote:
-> On 10/30/2014, 12:18 PM, Xose Vazquez Perez wrote:
-> > From: Canek Peláez Valdés <canek@ciencias.unam.mx>
-> 
-> Hi, what is this, please? No commit message, no upstream SHA, we cannot
-> take the two as they stand...
-
-This is:
-
-commit ac0372abf8524a7572a9cdaac6495eb2eba20457
-Author: Canek Peláez Valdés <canek@ciencias.unam.mx>
-Date:   Sun Aug 24 19:06:11 2014 -0500
-
-    rt2x00: support Ralink 5362.
+-- 
+Kalle Valo
