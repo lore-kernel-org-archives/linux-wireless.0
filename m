@@ -1,38 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:65187 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750994AbaJOUvK (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:14250 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161019AbaJaARx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Oct 2014 16:51:10 -0400
+	Thu, 30 Oct 2014 20:17:53 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: avoid possible deadlock with scan timeout
+References: <1414488189-28625-1-git-send-email-michal.kazior@tieto.com>
+Date: Fri, 31 Oct 2014 02:17:33 +0200
+In-Reply-To: <1414488189-28625-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Tue, 28 Oct 2014 10:23:09 +0100")
+Message-ID: <87ppd9drdu.fsf@kamboji.qca.qualcomm.com> (sfid-20141031_011757_312297_EB8CFDFE)
 MIME-Version: 1.0
-In-Reply-To: <20141009095742.GA20875@mwanda>
-References: <20141009095742.GA20875@mwanda>
-Date: Wed, 15 Oct 2014 13:51:07 -0700
-Message-ID: <CA++WF2NinL3_pGtqZxjr6p4BpHBkGRbBTXaXFNSdoxgzX_Lb=Q@mail.gmail.com> (sfid-20141015_225115_590385_A189B134)
-Subject: Re: [patch 1/2] ipw2x00: remove unused ->ibss_dfs pointer
-From: Stanislav Yakovlev <stas.yakovlev@gmail.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	kernel-janitors@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Dan,
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-On 9 October 2014 02:57, Dan Carpenter <dan.carpenter@oracle.com> wrote:
-> The ->ibss_dfs pointer is always allocated with a user controlled
-> length.  This caused a static checker warning because what if the length
-> was zero?  In that case, any dereference of ->ibss_dfs would lead to an
-> Oops.
+> This should prevent deadlock predicted by the
+> following splat:
 >
-> It turns out that this isn't a problem because the ->ibss_dfs pointer is
-> never used.  This patch deletes it along with all the related code.  In
-> particular the entire libipw_network_reset() function can be removed.
+>  ======================================================
+>  [ INFO: possible circular locking dependency detected ]
+>  3.17.0-wl-ath+ #67 Not tainted
+>  -------------------------------------------------------
+>  kworker/u32:1/7230 is trying to acquire lock:
+>   (&ar->conf_mutex){+.+.+.}, at: [<ffffffffa040a57d>] ath10k_scan_timeout_work+0x2d/0x50 [ath10k_core]
 >
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+>  but task is already holding lock:
+>   ((&(&ar->scan.timeout)->work)){+.+...}, at: [<ffffffff8106dae1>] process_one_work+0x151/0x470
+>
+>  which lock already depends on the new lock.
+>
 
-Looks fine, thanks.
+[...]
 
-Stanislav.
+>   *** DEADLOCK ***
+>
+> Reported-by: Marek Puzyniak <marek.puzyniak@tieto.com>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+
+Thanks, applied.
+
+-- 
+Kalle Valo
