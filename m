@@ -1,55 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([46.140.151.2]:64154 "EHLO mail.neratec.com"
+Received: from mx1.redhat.com ([209.132.183.28]:40615 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752299AbaJ0Ou6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Oct 2014 10:50:58 -0400
-Message-ID: <544E5BCF.6000703@neratec.com> (sfid-20141027_155101_570907_EE82A498)
-Date: Mon, 27 Oct 2014 15:50:55 +0100
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+	id S1756295AbaJaJ7Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 Oct 2014 05:59:24 -0400
+Date: Fri, 31 Oct 2014 10:55:26 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Jiri Slaby <jslaby@suse.cz>
+Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	stable@vger.kernel.org, Helmut Schaa <helmut.schaa@googlemail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH -stable] wireless: rt2x00: add new rt2800usb devices
+Message-ID: <20141031095525.GA2214@redhat.com> (sfid-20141031_105927_964969_6D6DCBEA)
+References: <1414667923-2331-1-git-send-email-xose.vazquez@gmail.com>
+ <54535ABA.1030109@suse.cz>
 MIME-Version: 1.0
-To: Adrien Decostre <ad.decostre@gmail.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: Re: Questions regarding ath9k and new EN 300 328 regulation
-References: <CAOtFK_Ue0xjEaYY3qm0n2Tj=Hnu1dbphupmdZmiouVuGLnktoA@mail.gmail.com> <544E21D4.9020401@neratec.com> <CAOtFK_XWgBxPNy77XVDc1XbYUkdPSd-Q9wmREN2iL6A8bzFDoQ@mail.gmail.com>
-In-Reply-To: <CAOtFK_XWgBxPNy77XVDc1XbYUkdPSd-Q9wmREN2iL6A8bzFDoQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <54535ABA.1030109@suse.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/27/2014 03:18 PM, Adrien Decostre wrote:
-> Hello Zefir,
+On Fri, Oct 31, 2014 at 10:47:38AM +0100, Jiri Slaby wrote:
+> On 10/30/2014, 12:18 PM, Xose Vazquez Perez wrote:
+> > 0x0b05 0x17e8 RT5372 USB 2.0  bgn 2x2 ASUS USB-N14
+> > 0x0411 0x0253 RT5572 USB 2.0 abgn 2x2 BUFFALO WLP-U2-300D
+> > 0x0df6 0x0078 RT???? Sitecom N300
 > 
-> Thanks a lot for your answer. This helps me a lot.
-> If I correctly understand, the ability of ath9k to detect all pulses
-> may also depend of the platform performances. So on an embedded
-> platform with limited performances, we may observe more pulses losses
-> than on a more powerful platform. Is this a right statement?
-> 
-No, there is no bottleneck in the platform performance. Presumed radar pulses are
-reported as RX_ERROR descriptors and even lower end embedded systems are able to
-handle the load. What makes the difference with the minimum pulse width is the
-chip DFS engine's ability to isolate and identify very short spikes as potential
-radar pulses.
+> (the same as previous)
 
-This goes very deeply into material I had available under NDA while implementing
-the DFS support for ath9k. If you intend to work on that topic, I encourage you to
-contact the folks at QCA and join their 'NDA for Developers' program. The document
-you want to read is 'Baseband DFS 2 (Radar) Micro-Architecture'.
+This is:
 
-> What about the CONFIG_ATH9K_DFS_CERTIFIED build options? Do we need it
-> to enable the detection of 0.5usec. pulses?
-> 
-Yes, this driver specific flag (also available for 10k) you need to set to get the
-DFS detector built (not related to pulse width). It essentially shifts the
-responsibility of the product working in restricted bands to you / the manufacturer.
+committ 6a06e554daef86c4e8d290284927b081fedb249e
+Author: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Date:   Fri Jul 11 21:46:57 2014 +0200
 
+    wireless: rt2x00: add new rt2800usb devices
 
-> Thanks in advance for your answer.
-> 
-> Best regards
-> 
-> Adrien
-> 
-
-Good Luck,
-Zefir
