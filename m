@@ -1,43 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f48.google.com ([74.125.82.48]:52527 "EHLO
-	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752077AbaJYTZm (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:8082 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422646AbaJaAaN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Oct 2014 15:25:42 -0400
-Received: by mail-wg0-f48.google.com with SMTP id m15so1211373wgh.19
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Oct 2014 12:25:41 -0700 (PDT)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, forest@alittletooquiet.net,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 24/31] staging: vt6655: vt6655_probe remove management pointers
-Date: Sat, 25 Oct 2014 09:20:34 +0100
-Message-Id: <1414225241-5480-25-git-send-email-tvboxspy@gmail.com> (sfid-20141025_212547_102574_8EFEAC17)
-In-Reply-To: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
-References: <1414225241-5480-1-git-send-email-tvboxspy@gmail.com>
+	Thu, 30 Oct 2014 20:30:13 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v3 0/4] ath10k: pci related fixes 2014-10-09
+References: <1414488728-31489-1-git-send-email-michal.kazior@tieto.com>
+Date: Fri, 31 Oct 2014 02:29:51 +0200
+In-Reply-To: <1414488728-31489-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Tue, 28 Oct 2014 10:32:04 +0100")
+Message-ID: <87lhnxdqtc.fsf@kamboji.qca.qualcomm.com> (sfid-20141031_013021_370735_6ECF344A)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-All these pointers are now dead.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/device_main.c | 2 --
- 1 file changed, 2 deletions(-)
+> This is a partial re-spin which includes the
+> not-yet-applied patches that fix/change warm
+> reset.
+>
+> v3:
+>  * change CE ring cleanup (new patch #1)
+>
+>
+> Michal Kazior (4):
+>   ath10k: change ce ring cleanup logic
+>   ath10k: make warm reset a bit safer and faster
+>   ath10k: split reset logic from power up
+>   ath10k: don't reset chip on power_down
 
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index 0bd2ca8..d7dd002 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -3266,8 +3266,6 @@ vt6655_probe(struct pci_dev *pcid, const struct pci_device_id *ent)
- 	/* Enable the chip specified capabilities */
- 	priv->flags = priv->sOpts.flags | (pChip_info->flags & 0xff000000UL);
- 	priv->tx_80211 = device_dma0_tx_80211;
--	priv->sMgmtObj.pAdapter = (void *)priv;
--	priv->pMgmt = &(priv->sMgmtObj);
- 
- 	wiphy = priv->hw->wiphy;
- 
+Thanks, all four patches applied.
+
 -- 
-1.9.1
-
+Kalle Valo
