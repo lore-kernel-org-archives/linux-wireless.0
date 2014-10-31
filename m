@@ -1,181 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f49.google.com ([74.125.82.49]:37717 "EHLO
-	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754791AbaJIIdn (ORCPT
+Received: from mail-qg0-f45.google.com ([209.85.192.45]:42030 "EHLO
+	mail-qg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758537AbaJaN4l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Oct 2014 04:33:43 -0400
-Received: by mail-wg0-f49.google.com with SMTP id x12so704007wgg.32
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Oct 2014 01:33:41 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 3/5] ath10k: make warm reset a bit safer and faster
-Date: Thu,  9 Oct 2014 10:22:28 +0200
-Message-Id: <1412842950-14098-4-git-send-email-michal.kazior@tieto.com> (sfid-20141009_103423_449398_C8CAEF4E)
-In-Reply-To: <1412842950-14098-1-git-send-email-michal.kazior@tieto.com>
-References: <1412842950-14098-1-git-send-email-michal.kazior@tieto.com>
+	Fri, 31 Oct 2014 09:56:41 -0400
+Received: by mail-qg0-f45.google.com with SMTP id z107so5563094qgd.4
+        for <linux-wireless@vger.kernel.org>; Fri, 31 Oct 2014 06:56:40 -0700 (PDT)
+From: "S. Gilles" <sgilles@terpmail.umd.edu>
+Date: Fri, 31 Oct 2014 09:56:36 -0400
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: "S. Gilles" <sgilles@umd.edu>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	linux-wireless@vger.kernel.org
+Subject: Re: PROBLEM: Boot failure with bad RIP value
+Message-ID: <20141031135636.GB21718@number18> (sfid-20141031_145650_932355_891E8431)
+References: <20141013234509.GD22088@number18>
+ <543C9B66.6050705@lwfinger.net>
+ <20141014041313.GF22088@number18>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20141014041313.GF22088@number18>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-One of the problems with warm reset I've found is
-that it must be guaranteed that copy engine
-registers are not being accessed while being
-reset. Otherwise in worst case scenario the host
-may lock up.
+On Tue, Oct 14, 2014 at 12:13:13AM -0400, S. Gilles wrote:
+> On Mon, Oct 13, 2014 at 10:41:26PM -0500, Larry Finger wrote:
+> > On 10/13/2014 06:45 PM, S. Gilles wrote:
+> > > (Sending this to the right people this time, hopefully.)
+> > >
+> > > I have been getting a consistent boot failure with 3.17, which I have
+> > > bisected to
+> > >
+> > > 38506ecefab911785d5e1aa5889f6eeb462e0954 is the first bad commit
+> > > commit 38506ecefab911785d5e1aa5889f6eeb462e0954
+> > > Author: Larry Finger <Larry.Finger@lwfinger.net>
+> > > Date:   Mon Sep 22 09:39:19 2014 -0500
+> > >
+> > >      rtlwifi: rtl_pci: Start modification for new drivers
+> > >
+> > >      Future patches will move the drivers for RTL8192EE and RTL8821AE
+> > >      from staging to the regular wireless tree. Here, the necessary features
+> > >      are added to the PCI driver. Other files are touched due to changes
+> > >      in the various data structs.
+> > >
+> > >      Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> > >      Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> > >
+> > > The end of the trace (hand-retyped, so there may be errors that
+> > > escaped me):
+> > >
+> > > R10: ffffffff825f2d80 R11: 0000000000000000 R12: ffff8800b4f107c0
+> > > R13: ffff8800b4f124b8 R14: 0000000000001000 R15: ffff8800b4c7a000
+> > > FS:  000007fc66c938700(0000) GS:ffff88013e200000(0000) knlGS:0000000000000000
+> > > CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> > > CR2: 0000000000000000 CR3: 00000000b5438000 CR4: 00000000000407f0
+> > > Stack:
+> > >   ffffffffa01e20d6 ffff8800b4f12420 ffff8800b4f107c0 ffff880137d7fcd0
+> > >   ffffffffa01c97b5 ffff8800b4f107c0 ffff8800b4c7a8d0 0000000000000000
+> > >   ffff880137d7fd30 ffffffff81577304 0000000000000000 ffff8800b4c7a8c0
+> > > Call Trace:
+> > >   [<ffffffffa01e20d6>] ? rtl_pci_start+0x2b/0x15f [rtl_pci]
+> > >   [<ffffffffa01c97b5>] rtl_op_start+0x45/0x64 [rtlwifi]
+> > >   [<ffffffff81577304>] ieee80211_do_open+0x152/0xb4b
+> > >   [<ffffffff815b52bc>] ? mutex_unlock+0x9/0xb
+> > >   [<ffffffff81577d4a>] ieee80211_open+0x4d/0x57
+> > >   [<ffffffff8147df7f>] __dev_open+0x8b/0xcb
+> > >   [<ffffffff8147e1e1>] __dev_change_flags+0xa4/0x13a
+> > >   [<ffffffff8147e297>] dev_change_flags+0x20/0x53
+> > >   [<ffffffff814d0204>] devinet_ioctl+0x269/0x568
+> > >   [<ffffffff814d19b4>] inet_ioctl+0x81/0x9e
+> > >   [<ffffffff814654e6>] sock_do_ioctl+0x20/0x3d
+> > >   [<ffffffff81465a56>] sock_ioctl+0x20e/0x21a
+> > >   [<ffffffff81136242>] do_vfs_ioctl+0x39e/0x467
+> > >   [<ffffffff815b7277>] ? sysret_check+0x1b/0x56
+> > >   [<ffffffff810965fe>] ? trace_hardirqs_on_caller+0x16e/0x18a
+> > >   [<ffffffff81136343>] SyS_ioctl+0x38/0x5f
+> > >   [<ffffffff815b7252>] system_call_fastpath+0x16/0x1b
+> > > Code:  Bad RIP value.
+> > > RIP  [<          (null)>]           (null)
+> > >   RSP <ffff880137d7fc90>
+> > > CR2: 0000000000000000
+> > > ---[ end trace 7307d2524c1e640b ]---
+> > >
+> > > This is extremely easy to test (boot) and seems 100% reproducible.
+> > >
+> > > I have submitted Bug 86211 - Boot failure: Bad RIP value for rtl8192ce
+> > > for this issue.
+> > 
+> > I am traveling and it may be a few days before I am able to make a suitable 
+> > test. In the meantime, please post the appropriate stanza for the Realtek device 
+> > from the output of
+> > 
+> > lspci -nn
+> > 
+> > There are several different devices that use driver rtl8192ce, and I need to 
+> > know which one you have so that I can duplicate the problem.
+> 
+> Of course - I definitely should have mentioned that.
+> 
+> $ lspci -nn | grep RTL
+> 03:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd. RTL8188CE 802.11b/g/n WiFi Adapter [10ec:8176] (rev 01)
 
-Instead of using sleeps and hoping the device is
-operational in some arbitrary timeframes use
-firmware indication register.
+Any progress on this, or duplication?  If this isn't replicable with
+the information in Bugzilla, I can provide anything requested.
 
-As a side effect this makes driver
-boot/stop/recovery faster.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/pci.c | 108 +++++++++++++++-------------------
- 1 file changed, 46 insertions(+), 62 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index cdc03e4..dad92de 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -1708,89 +1708,73 @@ static void ath10k_pci_warm_reset_si0(struct ath10k *ar)
- 	msleep(10);
- }
- 
--static int ath10k_pci_warm_reset(struct ath10k *ar)
-+static void ath10k_pci_warm_reset_cpu(struct ath10k *ar)
- {
- 	u32 val;
- 
--	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot warm reset\n");
--
--	spin_lock_bh(&ar->data_lock);
--
--	ar->stats.fw_warm_reset_counter++;
--
--	spin_unlock_bh(&ar->data_lock);
--
--	/* debug */
--	val = ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS +
--				PCIE_INTR_CAUSE_ADDRESS);
--	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot host cpu intr cause: 0x%08x\n",
--		   val);
--
--	val = ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS +
--				CPU_INTR_ADDRESS);
--	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot target cpu intr cause: 0x%08x\n",
--		   val);
--
--	/* disable pending irqs */
--	ath10k_pci_write32(ar, SOC_CORE_BASE_ADDRESS +
--			   PCIE_INTR_ENABLE_ADDRESS, 0);
--
--	ath10k_pci_write32(ar, SOC_CORE_BASE_ADDRESS +
--			   PCIE_INTR_CLR_ADDRESS, ~0);
--
--	msleep(100);
--
--	/* clear fw indicator */
- 	ath10k_pci_write32(ar, FW_INDICATOR_ADDRESS, 0);
- 
--	/* clear target LF timer interrupts */
- 	val = ath10k_pci_read32(ar, RTC_SOC_BASE_ADDRESS +
--				SOC_LF_TIMER_CONTROL0_ADDRESS);
--	ath10k_pci_write32(ar, RTC_SOC_BASE_ADDRESS +
--			   SOC_LF_TIMER_CONTROL0_ADDRESS,
--			   val & ~SOC_LF_TIMER_CONTROL0_ENABLE_MASK);
-+				SOC_RESET_CONTROL_ADDRESS);
-+	ath10k_pci_write32(ar, RTC_SOC_BASE_ADDRESS + SOC_RESET_CONTROL_ADDRESS,
-+			   val | SOC_RESET_CONTROL_CPU_WARM_RST_MASK);
-+}
-+
-+static void ath10k_pci_warm_reset_ce(struct ath10k *ar)
-+{
-+	u32 val;
- 
--	/* reset CE */
- 	val = ath10k_pci_read32(ar, RTC_SOC_BASE_ADDRESS +
- 				SOC_RESET_CONTROL_ADDRESS);
-+
- 	ath10k_pci_write32(ar, RTC_SOC_BASE_ADDRESS + SOC_RESET_CONTROL_ADDRESS,
- 			   val | SOC_RESET_CONTROL_CE_RST_MASK);
--	val = ath10k_pci_read32(ar, RTC_SOC_BASE_ADDRESS +
--				SOC_RESET_CONTROL_ADDRESS);
- 	msleep(10);
--
--	/* unreset CE */
- 	ath10k_pci_write32(ar, RTC_SOC_BASE_ADDRESS + SOC_RESET_CONTROL_ADDRESS,
- 			   val & ~SOC_RESET_CONTROL_CE_RST_MASK);
-+}
-+
-+static void ath10k_pci_warm_reset_clear_lf(struct ath10k *ar)
-+{
-+	u32 val;
-+
- 	val = ath10k_pci_read32(ar, RTC_SOC_BASE_ADDRESS +
--				SOC_RESET_CONTROL_ADDRESS);
--	msleep(10);
-+				SOC_LF_TIMER_CONTROL0_ADDRESS);
-+	ath10k_pci_write32(ar, RTC_SOC_BASE_ADDRESS +
-+			   SOC_LF_TIMER_CONTROL0_ADDRESS,
-+			   val & ~SOC_LF_TIMER_CONTROL0_ENABLE_MASK);
-+}
- 
--	ath10k_pci_warm_reset_si0(ar);
-+static int ath10k_pci_warm_reset(struct ath10k *ar)
-+{
-+	int ret;
-+
-+	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot warm reset\n");
- 
--	/* debug */
--	val = ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS +
--				PCIE_INTR_CAUSE_ADDRESS);
--	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot host cpu intr cause: 0x%08x\n",
--		   val);
-+	spin_lock_bh(&ar->data_lock);
-+	ar->stats.fw_warm_reset_counter++;
-+	spin_unlock_bh(&ar->data_lock);
- 
--	val = ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS +
--				CPU_INTR_ADDRESS);
--	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot target cpu intr cause: 0x%08x\n",
--		   val);
-+	ath10k_pci_irq_disable(ar);
- 
--	/* CPU warm reset */
--	val = ath10k_pci_read32(ar, RTC_SOC_BASE_ADDRESS +
--				SOC_RESET_CONTROL_ADDRESS);
--	ath10k_pci_write32(ar, RTC_SOC_BASE_ADDRESS + SOC_RESET_CONTROL_ADDRESS,
--			   val | SOC_RESET_CONTROL_CPU_WARM_RST_MASK);
-+	/* Make sure the target CPU is not doing anything dangerous, e.g. if it
-+	 * were to access copy engine while host performs copy engine reset
-+	 * then it is possible for the device to confuse pci-e controller to
-+	 * the point of bringing host system to a complete stop (i.e. hang).
-+	 */
-+	ath10k_pci_warm_reset_si0(ar);
-+	ath10k_pci_warm_reset_cpu(ar);
-+	ath10k_pci_wait_for_target_init(ar);
- 
--	val = ath10k_pci_read32(ar, RTC_SOC_BASE_ADDRESS +
--				SOC_RESET_CONTROL_ADDRESS);
--	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot target reset state: 0x%08x\n",
--		   val);
-+	ath10k_pci_warm_reset_clear_lf(ar);
-+	ath10k_pci_warm_reset_ce(ar);
-+	ath10k_pci_warm_reset_cpu(ar);
- 
--	msleep(100);
-+	ret = ath10k_pci_wait_for_target_init(ar);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to wait for target init: %d\n", ret);
-+		return ret;
-+	}
- 
- 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot warm reset complete\n");
- 
 -- 
-1.8.5.3
-
+S. Gilles
