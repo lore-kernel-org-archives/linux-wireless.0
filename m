@@ -1,110 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:40435 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752398AbaJQCJk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Oct 2014 22:09:40 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH v2 02/23] ath9k: Enable multi-channel properly
-Date: Fri, 17 Oct 2014 07:40:09 +0530
-Message-Id: <1413511830-5536-3-git-send-email-sujith@msujith.org> (sfid-20141017_040954_032709_0351F514)
-In-Reply-To: <1413511830-5536-1-git-send-email-sujith@msujith.org>
-References: <1413511830-5536-1-git-send-email-sujith@msujith.org>
+Received: from s3.sipsolutions.net ([5.9.151.49]:50509 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750912AbaJaI0o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 Oct 2014 04:26:44 -0400
+Message-ID: <1414743991.3014.16.camel@jlt4.sipsolutions.net> (sfid-20141031_092648_982374_4CAC405D)
+Subject: Re: [PATCH] mac80211-hwsim:  add frequency attribute to netlink pkts
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jukka Rissanen <jukka.rissanen@linux.intel.com>
+Cc: greearb@candelatech.com, linux-wireless@vger.kernel.org
+Date: Fri, 31 Oct 2014 09:26:31 +0100
+In-Reply-To: <1414743414.2918.12.camel@jrissane-mobl.ger.corp.intel.com>
+References: <1414447486-10385-1-git-send-email-greearb@candelatech.com>
+	 <1414742568.2918.11.camel@jrissane-mobl.ger.corp.intel.com>
+	 <1414742686.3014.15.camel@jlt4.sipsolutions.net>
+	 <1414743414.2918.12.camel@jrissane-mobl.ger.corp.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Fri, 2014-10-31 at 10:16 +0200, Jukka Rissanen wrote:
+> Hi Johannes,
+> 
+> On pe, 2014-10-31 at 09:04 +0100, Johannes Berg wrote:
+> > On Fri, 2014-10-31 at 10:02 +0200, Jukka Rissanen wrote:
+> > 
+> > > while rebasing my hwsim patches on top of Ben's patches, I noticed that
+> > > the freq attribute is not mentioned in hwsim_genl_policy struct. The
+> > > same applies also to radio name and vif attributes. Just wondered should
+> > > they be mentioned in the policy struct like the other attributes?
+> > 
+> > Hmm, yes, they should be there. It's only important for the name, I
+> > guess, but better have them all. I can fix it or would you like to send
+> > a patch?
+> 
+> Please fix it so it gets applied faster :)
 
-In MCC mode, currently the decision to enable
-the multi-channel state machine is done
-based on the association status if one of
-the interfaces assigned to a context is in
-station mode.
+Done.
 
-This allows the driver to switch to the other
-context before the current station is able to
-complete the 4-way handshake in case it is
-required and this causes problems.
-
-Instead, enable multi-channel mode when the
-station moves to the authorized state. This
-disallows an early switch to the other channel.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h   |  2 +-
- drivers/net/wireless/ath/ath9k/channel.c |  4 ++--
- drivers/net/wireless/ath/ath9k/main.c    | 13 +++++++------
- 3 files changed, 10 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 01a7db0..aff5e4c 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -362,7 +362,7 @@ enum ath_chanctx_event {
- 	ATH_CHANCTX_EVENT_BEACON_SENT,
- 	ATH_CHANCTX_EVENT_TSF_TIMER,
- 	ATH_CHANCTX_EVENT_BEACON_RECEIVED,
--	ATH_CHANCTX_EVENT_ASSOC,
-+	ATH_CHANCTX_EVENT_AUTHORIZED,
- 	ATH_CHANCTX_EVENT_SWITCH,
- 	ATH_CHANCTX_EVENT_ASSIGN,
- 	ATH_CHANCTX_EVENT_UNASSIGN,
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index 945c898..16bed6a 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -171,7 +171,7 @@ static const char *chanctx_event_string(enum ath_chanctx_event ev)
- 		case_rtn_string(ATH_CHANCTX_EVENT_BEACON_SENT);
- 		case_rtn_string(ATH_CHANCTX_EVENT_TSF_TIMER);
- 		case_rtn_string(ATH_CHANCTX_EVENT_BEACON_RECEIVED);
--		case_rtn_string(ATH_CHANCTX_EVENT_ASSOC);
-+		case_rtn_string(ATH_CHANCTX_EVENT_AUTHORIZED);
- 		case_rtn_string(ATH_CHANCTX_EVENT_SWITCH);
- 		case_rtn_string(ATH_CHANCTX_EVENT_ASSIGN);
- 		case_rtn_string(ATH_CHANCTX_EVENT_UNASSIGN);
-@@ -510,7 +510,7 @@ void ath_chanctx_event(struct ath_softc *sc, struct ieee80211_vif *vif,
- 
- 		ath_chanctx_setup_timer(sc, tsf_time);
- 		break;
--	case ATH_CHANCTX_EVENT_ASSOC:
-+	case ATH_CHANCTX_EVENT_AUTHORIZED:
- 		if (sc->sched.state != ATH_CHANCTX_STATE_FORCE_ACTIVE ||
- 		    avp->chanctx != sc->cur_chan)
- 			break;
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 902807e..446bc46 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1569,6 +1569,13 @@ static int ath9k_sta_state(struct ieee80211_hw *hw,
- 			"Remove station: %pM\n", sta->addr);
- 	}
- 
-+	if (ath9k_is_chanctx_enabled()) {
-+		if (old_state == IEEE80211_STA_ASSOC &&
-+		    new_state == IEEE80211_STA_AUTHORIZED)
-+			ath_chanctx_event(sc, vif,
-+					  ATH_CHANCTX_EVENT_AUTHORIZED);
-+	}
-+
- 	return ret;
- }
- 
-@@ -1761,12 +1768,6 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
- 		avp->assoc = bss_conf->assoc;
- 
- 		ath9k_calculate_summary_state(sc, avp->chanctx);
--
--		if (ath9k_is_chanctx_enabled()) {
--			if (bss_conf->assoc)
--				ath_chanctx_event(sc, vif,
--						  ATH_CHANCTX_EVENT_ASSOC);
--		}
- 	}
- 
- 	if (changed & BSS_CHANGED_IBSS) {
--- 
-2.1.2
+johannes
 
