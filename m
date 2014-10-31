@@ -1,188 +1,199 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:25477 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751507AbaJBMFw (ORCPT
+Received: from mail-pd0-f182.google.com ([209.85.192.182]:41277 "EHLO
+	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932508AbaJaPH4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Oct 2014 08:05:52 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH 4/4] ath10k: add tracing for tx msdu pktlog event
-Date: Thu, 2 Oct 2014 17:36:10 +0530
-Message-ID: <1412251570-31096-5-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20141002_140556_198441_79821E8F)
-In-Reply-To: <1412251570-31096-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1412251570-31096-1-git-send-email-rmanohar@qti.qualcomm.com>
+	Fri, 31 Oct 2014 11:07:56 -0400
+Received: by mail-pd0-f182.google.com with SMTP id fp1so7364409pdb.41
+        for <linux-wireless@vger.kernel.org>; Fri, 31 Oct 2014 08:07:56 -0700 (PDT)
+Message-ID: <5453A5CF.90107@lwfinger.net> (sfid-20141031_160800_763596_5EED052C)
+Date: Fri, 31 Oct 2014 10:07:59 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "S. Gilles" <sgilles@terpmail.umd.edu>
+CC: "S. Gilles" <sgilles@umd.edu>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	linux-wireless@vger.kernel.org
+Subject: Re: PROBLEM: Boot failure with bad RIP value
+References: <20141013234509.GD22088@number18> <543C9B66.6050705@lwfinger.net> <20141014041313.GF22088@number18> <20141031135636.GB21718@number18>
+In-Reply-To: <20141031135636.GB21718@number18>
+Content-Type: multipart/mixed;
+ boundary="------------010401030906050208090201"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is useful for collecting msdu statistics. For every msdu
-entry in the pktlog message, corresponding msdu length is determined.
+This is a multi-part message in MIME format.
+--------------010401030906050208090201
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+On 10/31/2014 08:56 AM, S. Gilles wrote:
+>> 03:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd. RTL8188CE 802.11b/g/n WiFi Adapter [10ec:8176] (rev 01)
+>
+> Any progress on this, or duplication?  If this isn't replicable with
+> the information in Bugzilla, I can provide anything requested.
+
+Thanks for posting the PCI ID. I am currently on a family vacation, and I have 
+had little time for driver problems, and none for chasing missing information.
+
+The attached patches should fix the kernel crashes; however, I doubt that the 
+driver will work. There seems to be a problem with DMA buffers that I have not 
+had time to find.
+
+Larry
+
+
+
+--------------010401030906050208090201
+Content-Type: text/x-patch;
+ name="0002-rtlwifi-rtl8192ce-rtl8192de-rtl8192se-Fix-handling-f.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename*0="0002-rtlwifi-rtl8192ce-rtl8192de-rtl8192se-Fix-handling-f.pa";
+ filename*1="tch"
+
+>From bbaf5c9fc3bf1cf30576b546988e4e33cbd9c4a5 Mon Sep 17 00:00:00 2001
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Date: Sat, 25 Oct 2014 23:39:08 -0500
+Subject: [PATCH 2/7] rtlwifi: rtl8192ce: rtl8192de: rtl8192se: Fix handling
+ for missing get_btc_status
+To: linville@tuxdriver.com
+Cc: netdev@vger.kernel.org,
+    troy_tan@realsil.com.cn
+
+The recent changes in checking for Bluetooth status added some callbacks to code
+in rtlwifi. To make certain that all callbacks are defined, a dummy routine has been
+added to rtlwifi, and the drivers that need to use it are modified.
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/net/wireless/ath/ath10k/htt_rx.c | 48 ++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/hw.h     | 27 ++++++++++++++++++
- drivers/net/wireless/ath/ath10k/trace.h  | 33 ++++++++++++++++++++++
- 3 files changed, 108 insertions(+)
+ drivers/net/wireless/rtlwifi/core.c         | 6 ++++++
+ drivers/net/wireless/rtlwifi/core.h         | 1 +
+ drivers/net/wireless/rtlwifi/rtl8192ce/sw.c | 1 +
+ drivers/net/wireless/rtlwifi/rtl8192de/sw.c | 1 +
+ drivers/net/wireless/rtlwifi/rtl8192se/sw.c | 1 +
+ 5 files changed, 10 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index be24071..22ef0f4 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -1569,6 +1569,48 @@ static void ath10k_htt_rx_delba(struct ath10k *ar, struct htt_resp *resp)
- 	spin_unlock_bh(&ar->data_lock);
- }
- 
-+static void ath10k_htt_pktlog_msdu(struct ath10k *ar,
-+				   struct ath10k_pktlog_hdr *hdr)
+diff --git a/drivers/net/wireless/rtlwifi/core.c b/drivers/net/wireless/rtlwifi/core.c
+index f6179bc..07dae0d 100644
+--- a/drivers/net/wireless/rtlwifi/core.c
++++ b/drivers/net/wireless/rtlwifi/core.c
+@@ -1828,3 +1828,9 @@ const struct ieee80211_ops rtl_ops = {
+ 	.flush = rtl_op_flush,
+ };
+ EXPORT_SYMBOL_GPL(rtl_ops);
++
++bool rtl_btc_status_false(void)
 +{
-+	struct ath10k_htt *htt = &ar->htt;
-+	struct sk_buff *msdu;
-+	__le32 num_msdu;
-+	__le16 *msdu_id;
-+	u16 msdu_len[MAX_PKT_INFO_MSDU_ID], id;
-+	u32 i;
-+
-+	num_msdu = __le32_to_cpu(*((u32 *)hdr->payload)) * 2;
-+	if (num_msdu >= MAX_PKT_INFO_MSDU_ID)
-+		return;
-+
-+	msdu_id = (u16 *)&hdr->payload[MSDU_ID_INFO_ID_OFFSET];
-+	memset(msdu_len, 0, sizeof(msdu_len));
-+
-+	spin_lock_bh(&htt->tx_lock);
-+	for (i = 0; i < num_msdu; i++) {
-+		id = __le16_to_cpu(*msdu_id);
-+		if (id >= htt->max_num_pending_tx) {
-+			msdu_id++;
-+			continue;
-+		}
-+
-+		msdu = htt->pending_tx[id];
-+		if (!msdu) {
-+			msdu_id++;
-+			continue;
-+		}
-+
-+		msdu_len[i] =
-+			(hdr->flags & ATH10K_PKTLOG_FLG_TYPE_CLONE_S) ?
-+			CLONED_PKT_MSDU_LEN_DEFAULT : (u16)msdu->len;
-+		msdu_id++;
-+	}
-+	spin_unlock_bh(&htt->tx_lock);
-+	trace_ath10k_htt_pktlog_msdu(ar, hdr->payload,
-+				     sizeof(*hdr) + __le16_to_cpu(hdr->size),
-+				     msdu_len, sizeof(msdu_len));
++	return false;
 +}
-+
- void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
- {
- 	struct ath10k_htt *htt = &ar->htt;
-@@ -1680,6 +1722,12 @@ void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
- 		struct ath10k_pktlog_hdr *hdr =
- 			(struct ath10k_pktlog_hdr *)resp->pktlog_msg.payload;
++EXPORT_SYMBOL_GPL(rtl_btc_status_false);
+diff --git a/drivers/net/wireless/rtlwifi/core.h b/drivers/net/wireless/rtlwifi/core.h
+index 59cd3b9..624e1dc 100644
+--- a/drivers/net/wireless/rtlwifi/core.h
++++ b/drivers/net/wireless/rtlwifi/core.h
+@@ -42,5 +42,6 @@ void rtl_rfreg_delay(struct ieee80211_hw *hw, enum radio_path rfpath, u32 addr,
+ 		     u32 mask, u32 data);
+ void rtl_bb_delay(struct ieee80211_hw *hw, u32 addr, u32 data);
+ bool rtl_cmd_send_packet(struct ieee80211_hw *hw, struct sk_buff *skb);
++bool rtl_btc_status_false(void);
  
-+		if (__le16_to_cpu(hdr->log_type) ==
-+				ATH10K_PKTLOG_TYPE_TX_MSDU_ID) {
-+			ath10k_htt_pktlog_msdu(ar, hdr);
-+			break;
-+		}
-+
- 		trace_ath10k_htt_pktlog(ar, resp->pktlog_msg.payload,
- 					sizeof(*hdr) +
- 					__le16_to_cpu(hdr->size));
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 4b86ca3..57a4c72 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -80,6 +80,27 @@ enum ath10k_mcast2ucast_mode {
- 	ATH10K_MCAST2UCAST_ENABLED = 1,
+ #endif
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c b/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
+index d86b5b5..46ea076 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
+@@ -244,6 +244,7 @@ static struct rtl_hal_ops rtl8192ce_hal_ops = {
+ 	.phy_lc_calibrate = _rtl92ce_phy_lc_calibrate,
+ 	.phy_set_bw_mode_callback = rtl92ce_phy_set_bw_mode_callback,
+ 	.dm_dynamic_txpower = rtl92ce_dm_dynamic_txpower,
++	.get_btc_status = rtl_btc_status_false,
  };
  
-+/* Types of packet log events */
-+enum ath10k_pktlog_type {
-+	ATH10K_PKTLOG_TYPE_TX_CTRL = 1,
-+	ATH10K_PKTLOG_TYPE_TX_STAT,
-+	ATH10K_PKTLOG_TYPE_TX_MSDU_ID,
-+	ATH10K_PKTLOG_TYPE_TX_FRM_HDR,
-+	ATH10K_PKTLOG_TYPE_RX_STAT,
-+	ATH10K_PKTLOG_TYPE_RC_FIND,
-+	ATH10K_PKTLOG_TYPE_RC_UPDATE,
-+	ATH10K_PKTLOG_TYPE_TX_VIRT_ADDR,
-+	ATH10K_PKTLOG_TYPE_DBG_PRINT,
-+	ATH10K_PKTLOG_TYPE_MAX,
-+};
-+
-+enum ath10k_pktlog_flag_type {
-+	ATH10K_PKTLOG_FLG_TYPE_LOCAL_S = 0,
-+	ATH10K_PKTLOG_FLG_TYPE_REMOTE_S,
-+	ATH10K_PKTLOG_FLG_TYPE_CLONE_S,
-+	ATH10K_PKTLOG_FLG_TYPE_UNKNOWN_S
-+};
-+
- struct ath10k_pktlog_hdr {
- 	__le16 flags;
- 	__le16 missed_cnt;
-@@ -89,6 +110,12 @@ struct ath10k_pktlog_hdr {
- 	u8 payload[0];
- } __packed;
+ static struct rtl_mod_params rtl92ce_mod_params = {
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/sw.c b/drivers/net/wireless/rtlwifi/rtl8192de/sw.c
+index edab5a5..a0aba08 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192de/sw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192de/sw.c
+@@ -251,6 +251,7 @@ static struct rtl_hal_ops rtl8192de_hal_ops = {
+ 	.get_rfreg = rtl92d_phy_query_rf_reg,
+ 	.set_rfreg = rtl92d_phy_set_rf_reg,
+ 	.linked_set_reg = rtl92d_linked_set_reg,
++	.get_btc_status = rtl_btc_status_false,
+ };
  
-+#define MAX_PKT_INFO_MSDU_ID 192
-+#define MSDU_ID_INFO_ID_OFFSET  ((MAX_PKT_INFO_MSDU_ID >> 3) + 4)
-+#define MSDU_ID_INFO_SIZE ((MAX_PKT_INFO_MSDU_ID >> 3) + 4 + \
-+			   (MAX_PKT_INFO_MSDU_ID * 2))
-+#define CLONED_PKT_MSDU_LEN_DEFAULT 200
-+
- /* Target specific defines for MAIN firmware */
- #define TARGET_NUM_VDEVS			8
- #define TARGET_NUM_PEER_AST			2
-diff --git a/drivers/net/wireless/ath/ath10k/trace.h b/drivers/net/wireless/ath/ath10k/trace.h
-index 3dff799..4f8a20a 100644
---- a/drivers/net/wireless/ath/ath10k/trace.h
-+++ b/drivers/net/wireless/ath/ath10k/trace.h
-@@ -310,6 +310,39 @@ TRACE_EVENT(ath10k_rx_pktlog,
- 		__entry->len
- 	 )
- );
-+
-+TRACE_EVENT(ath10k_htt_pktlog_msdu,
-+	    TP_PROTO(struct ath10k *ar, void *buf, u16 buf_len,
-+		     void *msdu, u16 msdu_len),
-+
-+	TP_ARGS(ar, buf, buf_len, msdu, msdu_len),
-+
-+	TP_STRUCT__entry(
-+		__string(device, dev_name(ar->dev))
-+		__string(driver, dev_driver_string(ar->dev))
-+		__field(u16, buf_len)
-+		__dynamic_array(u8, pktlog, buf_len)
-+		__field(u16, msdu_len)
-+		__dynamic_array(u8, msdu, msdu_len)
-+	),
-+
-+	TP_fast_assign(
-+		__assign_str(device, dev_name(ar->dev));
-+		__assign_str(driver, dev_driver_string(ar->dev));
-+		__entry->buf_len = buf_len;
-+		memcpy(__get_dynamic_array(pktlog), buf, buf_len);
-+		__entry->msdu_len = msdu_len;
-+		memcpy(__get_dynamic_array(msdu), msdu, msdu_len);
-+	),
-+
-+	TP_printk(
-+		"%s %s size %hu msdu size %hu",
-+		__get_str(driver),
-+		__get_str(device),
-+		__entry->buf_len,
-+		__entry->msdu_len
-+	 )
-+);
- #endif /* _TRACE_H_ || TRACE_HEADER_MULTI_READ*/
+ static struct rtl_mod_params rtl92de_mod_params = {
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/sw.c b/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
+index 1bff2a0..5e16984 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
+@@ -294,6 +294,7 @@ static struct rtl_hal_ops rtl8192se_hal_ops = {
+ 	.set_bbreg = rtl92s_phy_set_bb_reg,
+ 	.get_rfreg = rtl92s_phy_query_rf_reg,
+ 	.set_rfreg = rtl92s_phy_set_rf_reg,
++	.get_btc_status = rtl_btc_status_false,
+ };
  
- /* we don't want to use include/trace/events */
+ static struct rtl_mod_params rtl92se_mod_params = {
 -- 
 2.1.1
 
+
+--------------010401030906050208090201
+Content-Type: text/x-patch;
+ name="0005-rtlwifi-rtl8192ce-Add-missing-section-to-read-descri.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename*0="0005-rtlwifi-rtl8192ce-Add-missing-section-to-read-descri.pa";
+ filename*1="tch"
+
+>From 4f3d6a80198c539bbf200ff3a6dd00689b50bf78 Mon Sep 17 00:00:00 2001
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Date: Sat, 25 Oct 2014 23:51:15 -0500
+Subject: [PATCH 5/7] rtlwifi: rtl8192ce: Add missing section to read
+ descriptor setting
+To: linville@tuxdriver.com
+Cc: netdev@vger.kernel.org,
+    troy_tan@realsil.com.cn
+
+The new version of rtlwifi needs code in rtl92ce_get_desc() that returns
+the buffer address for read operations.
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/rtlwifi/rtl8192ce/def.h | 2 ++
+ drivers/net/wireless/rtlwifi/rtl8192ce/trx.c | 3 +++
+ 2 files changed, 5 insertions(+)
+
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/def.h b/drivers/net/wireless/rtlwifi/rtl8192ce/def.h
+index 831df10..9b660df 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ce/def.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192ce/def.h
+@@ -114,6 +114,8 @@
+ 	LE_BITS_TO_4BYTE(((__pcmdfbhdr) + 4), 16, 4)
+ #define	GET_C2H_CMD_FEEDBACK_CCX_SEQ(__pcmdfbhdr)	\
+ 	LE_BITS_TO_4BYTE(((__pcmdfbhdr) + 4), 20, 12)
++#define GET_RX_STATUS_DESC_BUFF_ADDR(__pdesc)			\
++	SHIFT_AND_MASK_LE(__pdesc + 24, 0, 32)
+ 
+ #define CHIP_VER_B			BIT(4)
+ #define CHIP_BONDING_IDENTIFIER(_value) (((_value) >> 22) & 0x3)
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c b/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
+index 2fb9c7a..dc3d20b 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
+@@ -728,6 +728,9 @@ u32 rtl92ce_get_desc(u8 *p_desc, bool istx, u8 desc_name)
+ 		case HW_DESC_RXPKT_LEN:
+ 			ret = GET_RX_DESC_PKT_LEN(pdesc);
+ 			break;
++		case HW_DESC_RXBUFF_ADDR:
++			ret = GET_RX_STATUS_DESC_BUFF_ADDR(pdesc);
++			break;
+ 		default:
+ 			RT_ASSERT(false, "ERR rxdesc :%d not process\n",
+ 				  desc_name);
+-- 
+2.1.1
+
+
+--------------010401030906050208090201--
