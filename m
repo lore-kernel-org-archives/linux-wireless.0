@@ -1,81 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f169.google.com ([209.85.217.169]:46321 "EHLO
-	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932442AbaJUOGr (ORCPT
+Received: from mail-wg0-f43.google.com ([74.125.82.43]:51586 "EHLO
+	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932508AbaJaPMm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Oct 2014 10:06:47 -0400
-Received: by mail-lb0-f169.google.com with SMTP id 10so1092953lbg.28
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Oct 2014 07:06:45 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 2/2] ath10k: re-use trace class
-Date: Tue, 21 Oct 2014 15:55:00 +0200
-Message-Id: <1413899700-10717-3-git-send-email-michal.kazior@tieto.com> (sfid-20141021_160652_236117_F2C62D3C)
-In-Reply-To: <1413899700-10717-1-git-send-email-michal.kazior@tieto.com>
-References: <1413899700-10717-1-git-send-email-michal.kazior@tieto.com>
+	Fri, 31 Oct 2014 11:12:42 -0400
+Message-ID: <1414768360.8048.4.camel@umadbro> (sfid-20141031_161259_078593_BE450D0E)
+Subject: Re: [PATCH 1/2] cfg80211: 802.11p OCB mode handling
+From: Rostislav Lisovy <lisovy@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
+	jan-niklas.meier@volkswagen.de, burak.simsek@volkswagen.de,
+	Emmanuel Thierry <emmanuel.thierry@yogoko.fr>,
+	laszlo.virag@commsignia.com,
+	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+Date: Fri, 31 Oct 2014 16:12:40 +0100
+In-Reply-To: <1414761237.3014.27.camel@jlt4.sipsolutions.net>
+References: <1414665771-8371-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
+	 <1414665771-8371-2-git-send-email-rostislav.lisovy@fel.cvut.cz>
+	 (sfid-20141030_114322_295525_C7C629F8) <1414761237.3014.27.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of defining a completely new tracepoint
-use an existing tracepoint class.
+On Fri, 2014-10-31 at 14:13 +0100, Johannes Berg wrote:
+> On Thu, 2014-10-30 at 11:42 +0100, Rostislav Lisovy wrote:
+> > @@ -2093,6 +2102,7 @@ enum nl80211_iftype {
+> >  	NL80211_IFTYPE_P2P_CLIENT,
+> >  	NL80211_IFTYPE_P2P_GO,
+> >  	NL80211_IFTYPE_P2P_DEVICE,
+> > +	NL80211_IFTYPE_OCB,
+> 
+> This is causing a bunch of compiler warnings (warning: enumeration value
+> ‘NL80211_IFTYPE_OCB’ not handled in switch, e.g. in mac80211/iface.c)
+> which I think you should address in this patch. That'll mean that you
+> modify even mac80211 and potentially some drivers, but I think that's
+> the right thing to do in this patch since it's the one changing the API
+> to introduce the new value.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/trace.h | 32 +++++---------------------------
- 1 file changed, 5 insertions(+), 27 deletions(-)
+I was aware of the warnings but thought this is the chicken-egg problem
+which can't be solved properly.
+Fortunately there is no driver affected.
 
-diff --git a/drivers/net/wireless/ath/ath10k/trace.h b/drivers/net/wireless/ath/ath10k/trace.h
-index 2409cb5..b9a2ba6 100644
---- a/drivers/net/wireless/ath/ath10k/trace.h
-+++ b/drivers/net/wireless/ath/ath10k/trace.h
-@@ -281,33 +281,6 @@ TRACE_EVENT(ath10k_htt_pktlog,
- 	 )
- );
- 
--TRACE_EVENT(ath10k_htt_rx_desc,
--	    TP_PROTO(struct ath10k *ar, void *rxdesc, u16 len),
--
--	TP_ARGS(ar, rxdesc, len),
--
--	TP_STRUCT__entry(
--		__string(device, dev_name(ar->dev))
--		__string(driver, dev_driver_string(ar->dev))
--		__field(u16, len)
--		__dynamic_array(u8, rxdesc, len)
--	),
--
--	TP_fast_assign(
--		__assign_str(device, dev_name(ar->dev));
--		__assign_str(driver, dev_driver_string(ar->dev));
--		__entry->len = len;
--		memcpy(__get_dynamic_array(rxdesc), rxdesc, len);
--	),
--
--	TP_printk(
--		"%s %s len %hu",
--		__get_str(driver),
--		__get_str(device),
--		__entry->len
--	 )
--);
--
- TRACE_EVENT(ath10k_htt_tx,
- 	    TP_PROTO(struct ath10k *ar, u16 msdu_id, u16 msdu_len,
- 		     u8 vdev_id, u8 tid),
-@@ -414,6 +387,11 @@ DEFINE_EVENT(ath10k_data_event, ath10k_wmi_bcn_tx,
- 	     TP_PROTO(struct ath10k *ar, void *data, size_t len),
- 	     TP_ARGS(ar, data, len)
- );
-+
-+DEFINE_EVENT(ath10k_data_event, ath10k_htt_rx_desc,
-+	     TP_PROTO(struct ath10k *ar, void *data, size_t len),
-+	     TP_ARGS(ar, data, len)
-+);
- #endif /* _TRACE_H_ || TRACE_HEADER_MULTI_READ*/
- 
- /* we don't want to use include/trace/events */
--- 
-1.8.5.3
+> I think there's one thing you forgot in this patch, namely
+> __cfg80211_leave() which you also need to make the __ version of the
+> leave function non-static for due to locking.
+
+Correct. Adding to the next version of the patchset.
+
+Thank you;
+Rostislav
 
