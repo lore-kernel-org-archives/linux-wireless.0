@@ -1,157 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:43455 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751547AbaKLLgm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Nov 2014 06:36:42 -0500
-From: Jukka Rissanen <jukka.rissanen@linux.intel.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 2/2] nl80211: Stop scheduled scan if netlink client disappears
-Date: Wed, 12 Nov 2014 13:36:37 +0200
-Message-Id: <1415792197-23080-3-git-send-email-jukka.rissanen@linux.intel.com> (sfid-20141112_123646_650079_8384CDA3)
-In-Reply-To: <1415792197-23080-1-git-send-email-jukka.rissanen@linux.intel.com>
-References: <1415792197-23080-1-git-send-email-jukka.rissanen@linux.intel.com>
+Received: from mail-ig0-f175.google.com ([209.85.213.175]:52380 "EHLO
+	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750896AbaKAJvP convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Nov 2014 05:51:15 -0400
+Received: by mail-ig0-f175.google.com with SMTP id h3so2305125igd.8
+        for <linux-wireless@vger.kernel.org>; Sat, 01 Nov 2014 02:51:15 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1414804501.1032.1.camel@gmail.com>
+References: <1414804501.1032.1.camel@gmail.com>
+Date: Sat, 1 Nov 2014 10:51:15 +0100
+Message-ID: <CACna6ry7HZeDt4w-a_Se9Y4ecLJU==pROLWMYSSPNGWY=XgPZw@mail.gmail.com> (sfid-20141101_105120_169801_37F37FE4)
+Subject: Re: BCM43228 wireless card broken in kernel update [b43]
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Duncan de Wet <duncandewet@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-An attribute NL80211_ATTR_SOCKET_OWNER can be set by the scan initiator.
-If present, the attribute will cause the scan to be stopped if the client
-dies.
----
- include/net/cfg80211.h       |  2 ++
- include/uapi/linux/nl80211.h |  3 +++
- net/wireless/core.c          | 10 +++++++++-
- net/wireless/nl80211.c       | 34 ++++++++++++++++++++++++++++++++++
- 4 files changed, 48 insertions(+), 1 deletion(-)
+On 1 November 2014 02:15, Duncan de Wet <duncandewet@gmail.com> wrote:
+> After the kernel update to 3.17.1-1-ARCH, I can view a list of wireless
+> networks but not connect to any. Both GNOME network manager and wicd-gtk
+> say "Connecting..." then without an error message change to "Not
+> Connected".
+>
+> (...)
+>
+> Thank you for any help.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 220d5f5..84378bf 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1512,6 +1512,8 @@ struct cfg80211_sched_scan_request {
- 	struct wiphy *wiphy;
- 	struct net_device *dev;
- 	unsigned long scan_start;
-+	u32 owner_nlportid;
-+	struct work_struct sched_scan_stop_wk;
- 
- 	/* keep last */
- 	struct ieee80211_channel *channels[0];
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index c410284..310dc9b 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1640,6 +1640,9 @@ enum nl80211_commands {
-  * @NL80211_ATTR_SOCKET_OWNER: Flag attribute, if set during interface
-  *	creation then the new interface will be owned by the netlink socket
-  *	that created it and will be destroyed when the socket is closed.
-+ *	If set during scheduled scan start then the new scan req will be
-+ *	owned by the netlink socket that created it and the scheduled scan will
-+ *	be stopped when the socket is closed.
-  *
-  * @NL80211_ATTR_TDLS_INITIATOR: flag attribute indicating the current end is
-  *	the TDLS link initiator.
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index a4d2792..88898d9 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -840,6 +840,8 @@ void __cfg80211_leave(struct cfg80211_registered_device *rdev,
- 		      struct wireless_dev *wdev)
- {
- 	struct net_device *dev = wdev->netdev;
-+	struct cfg80211_sched_scan_request *sched_scan_req =
-+		rdev->sched_scan_req;
- 
- 	ASSERT_RTNL();
- 	ASSERT_WDEV_LOCK(wdev);
-@@ -850,8 +852,10 @@ void __cfg80211_leave(struct cfg80211_registered_device *rdev,
- 		break;
- 	case NL80211_IFTYPE_P2P_CLIENT:
- 	case NL80211_IFTYPE_STATION:
--		if (rdev->sched_scan_req && dev == rdev->sched_scan_req->dev)
-+		if (sched_scan_req && dev == sched_scan_req->dev) {
-+			cancel_work_sync(&sched_scan_req->sched_scan_stop_wk);
- 			__cfg80211_stop_sched_scan(rdev, false);
-+		}
- 
- #ifdef CONFIG_CFG80211_WEXT
- 		kfree(wdev->wext.ie);
-@@ -991,6 +995,10 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
- 
- 		if (WARN_ON(rdev->sched_scan_req &&
- 			    rdev->sched_scan_req->dev == wdev->netdev)) {
-+			struct cfg80211_sched_scan_request *sched_scan_req =
-+				rdev->sched_scan_req;
-+
-+			cancel_work_sync(&sched_scan_req->sched_scan_stop_wk);
- 			__cfg80211_stop_sched_scan(rdev, false);
- 		}
- 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index df447c0..8fc500d 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -5681,6 +5681,21 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
- 	return err;
- }
- 
-+static void nl80211_sched_scan_stop_wk(struct work_struct *work)
-+{
-+	struct cfg80211_sched_scan_request *req;
-+	struct cfg80211_registered_device *rdev;
-+
-+	req = container_of(work, struct cfg80211_sched_scan_request,
-+			   sched_scan_stop_wk);
-+
-+	rdev = wiphy_to_rdev(req->wiphy);
-+
-+	rtnl_lock();
-+	__cfg80211_stop_sched_scan(rdev, false);
-+	rtnl_unlock();
-+}
-+
- static int nl80211_start_sched_scan(struct sk_buff *skb,
- 				    struct genl_info *info)
- {
-@@ -5955,6 +5970,13 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
- 
- 	err = rdev_sched_scan_start(rdev, dev, request);
- 	if (!err) {
-+		if (info->attrs[NL80211_ATTR_SOCKET_OWNER]) {
-+			INIT_WORK(&request->sched_scan_stop_wk,
-+				  nl80211_sched_scan_stop_wk);
-+
-+			request->owner_nlportid = info->snd_portid;
-+		}
-+
- 		rdev->sched_scan_req = request;
- 		nl80211_send_sched_scan(rdev, dev,
- 					NL80211_CMD_START_SCHED_SCAN);
-@@ -12127,6 +12149,12 @@ static int nl80211_netlink_notify(struct notifier_block * nb,
- 
- 	list_for_each_entry_rcu(rdev, &cfg80211_rdev_list, list) {
- 		bool schedule_destroy_work = false;
-+		bool schedule_scan_stop = false;
-+		struct cfg80211_sched_scan_request *req = rdev->sched_scan_req;
-+
-+		if (req && req->owner_nlportid == notify->portid &&
-+		    notify->portid)
-+			schedule_scan_stop = true;
- 
- 		list_for_each_entry_rcu(wdev, &rdev->wdev_list, list) {
- 			cfg80211_mlme_unregister_socket(wdev, notify->portid);
-@@ -12157,6 +12185,12 @@ static int nl80211_netlink_notify(struct notifier_block * nb,
- 				spin_unlock(&rdev->destroy_list_lock);
- 				schedule_work(&rdev->destroy_work);
- 			}
-+		} else if (schedule_scan_stop) {
-+			req->owner_nlportid = 0;
-+
-+			if (rdev->ops->sched_scan_stop &&
-+			    rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_SCHED_SCAN)
-+				schedule_work(&req->sched_scan_stop_wk);
- 		}
- 	}
- 
+So what I suggest you is to re-do all tests with a *proper*
+(un)installing drivers and/or blacklisting them.
+
+There is no point in tracking b43 regression as there can't be one.
+There weren't any bcma/b43 changes between 3.17 and 3.17.1.
+
+I suggest you to check if Broadcom's wl can work with your BCM43228
+and 3.17.1. Make sure (I mean *sure*) you use *only* wl.ko. Then try
+to connect. This will let us know if there is anything wrong about
+cfg80211.
+
 -- 
-1.8.3.1
-
+Rafał
