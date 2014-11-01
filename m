@@ -1,99 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:49892 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751156AbaKXNuV (ORCPT
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:45684 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753399AbaKABPL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2014 08:50:21 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Yanbo Li <yanbol@qti.qualcomm.com>
-CC: <dreamfly281@gmail.com>, <linux-wireless@vger.kernel.org>,
-	<michal.kazior@tieto.com>, <ath10k@lists.infradead.org>
-Subject: Re: [PATCH] ath10k: Add the target register access and memory dump debugfs interface
-References: <1416656922-6645-1-git-send-email-yanbol@qti.qualcomm.com>
-Date: Mon, 24 Nov 2014 15:50:07 +0200
-In-Reply-To: <1416656922-6645-1-git-send-email-yanbol@qti.qualcomm.com> (Yanbo
-	Li's message of "Sat, 22 Nov 2014 19:48:42 +0800")
-Message-ID: <871tos7lo0.fsf@kamboji.qca.qualcomm.com> (sfid-20141124_145032_219707_DA5D5725)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Fri, 31 Oct 2014 21:15:11 -0400
+Received: by mail-pa0-f54.google.com with SMTP id rd3so8780862pab.13
+        for <linux-wireless@vger.kernel.org>; Fri, 31 Oct 2014 18:15:10 -0700 (PDT)
+Received: from duncan-laptop (121-74-214-149.telstraclear.net. [121.74.214.149])
+        by mx.google.com with ESMTPSA id fn4sm11048422pab.39.2014.10.31.18.15.08
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Fri, 31 Oct 2014 18:15:09 -0700 (PDT)
+Message-ID: <1414804501.1032.1.camel@gmail.com> (sfid-20141101_021517_350776_C21E7D19)
+Subject: BCM43228 wireless card broken in kernel update [b43]
+From: Duncan de Wet <duncandewet@gmail.com>
+To: linux-wireless@vger.kernel.org
+Date: Sat, 01 Nov 2014 14:15:01 +1300
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Yanbo Li <yanbol@qti.qualcomm.com> writes:
+After the kernel update to 3.17.1-1-ARCH, I can view a list of wireless
+networks but not connect to any. Both GNOME network manager and wicd-gtk
+say "Connecting..." then without an error message change to "Not
+Connected".
 
-> The debugfs interface reg_addr&reg_val used to read and write the target
-> register.
-> The interface mmem_val used to dump the targer memory and also can be
-> used to assign value to target memory
->
-> The basic usage explain as below:
->
-> Register read/write:
-> reg_addr       (the register address)                    (read&write)
-> reg_value      (the register value,  output is ASCII)    (read&write)
->
-> Read operation:
-> 1. Write the reg address to reg_addr
->    IE:  echo 0x100000 > reg_addr
-> 2. Read the value from reg_value
->    IE:  cat reg_value
-> Write operation:
-> 1. Write the reg address to reg_addr IE:  echo 0x100000 > reg_addr
-> 2. Write the value to the reg_value  IE:  echo  0x2400 > reg_value
->
-> Target memory dump:
-> mem_value (the target memory, access with the length and start address
-> 							(read&write)
-> Read operation:
->
-> 1: Read 4K(bs*count)) from address 0x400000(bs*skip)
-> dd if=mem_value bs=4 count=1024 skip=1048576 | xxd -g1
->
-> 2: Read 0x50000(bs*count) from address 0x400000(bs*skip)
-> dd if=mem_value bs=4 count=81920 skip=1048576 | xxd -g1
->
-> Write operation:
->
-> 1: Write the 0x01020304 to address 0x400400(bs*seek)
-> echo 0x01020304 | xxd -r | dd of=mem_value bs=4 seek=1048832
->
-> 2: Read the memory and then write back after edit
-> dd if=mem_value bs=4 count=1024 skip=1048576 > tmp.bin
-> edit the tmp.bin
-> dd if=tmp.bin of=mem_value bs=4 count=4 seek=1048576
->
-> It suggests assign the 4 align number to bs, IE, 4, 8, 16 ....
-> Cause the target memory width is 32bit
->
-> Signed-off-by: Yanbo Li <yanbol@qti.qualcomm.com>
+Here is the dmesg output that occurs when trying to connect to a
+wireless network, with my router hardware address redacted:
 
-The commit log is quite hard to read due to formatting, but I can clean
-that up.
+[ 1363.980448] wlp4s0: authenticate with [redacted]
+[ 1364.066378] wlp4s0: send auth to [redacted] (try 1/3)
+[ 1364.068641] wlp4s0: authenticated
+[ 1364.069358] wlp4s0: associate with [redacted] (try 1/3)
+[ 1364.073798] wlp4s0: RX AssocResp from [redacted] (capab=0x411
+status=0 aid=2)
+[ 1364.073869] wlp4s0: associated
+[ 1364.073927] IPv6: ADDRCONF(NETDEV_CHANGE): wlp4s0: link becomes ready
+[ 1364.074029] cfg80211: Calling CRDA to update world regulatory domain
+[ 1369.624786] wlp4s0: deauthenticating from [redacted] by local choice
+(Reason: 3=DEAUTH_LEAVING)
 
-> +	spin_lock_bh(&ar->data_lock);
-> +	reg_addr = ar->debug.reg_addr;
-> +	spin_unlock_bh(&ar->data_lock);
+Here is the exact model of the card, and other information from lspci if
+it is helpful:
 
-[...]
+04:00.0 Network controller [0280]: Broadcom Corporation BCM43228
+802.11a/b/g/n [14e4:4359]
+        Subsystem: Broadcom Corporation Device [14e4:0607]
+        Flags: bus master, fast devsel, latency 0, IRQ 17
+        Memory at f2500000 (64-bit, non-prefetchable) [size=16K]
+        Capabilities: [40] Power Management version 3
+        Capabilities: [58] Vendor Specific Information: Len=78 <?>
+        Capabilities: [48] MSI: Enable- Count=1/1 Maskable- 64bit+
+        Capabilities: [d0] Express Endpoint, MSI 00
+        Capabilities: [100] Advanced Error Reporting
+        Capabilities: [13c] Virtual Channel
+        Capabilities: [160] Device Serial Number [redacted]
+        Capabilities: [16c] Power Budgeting <?>
+        Kernel driver in use: bcma-pci-bridge
+        Kernel modules: bcma, wl
 
-> +	spin_lock_bh(&ar->data_lock);
-> +	ar->debug.reg_addr = reg_addr;
-> +	spin_unlock_bh(&ar->data_lock);
+I do not know why "wl" is listed as an available module because I
+uninstalled broadcom-wl already.
 
-[...]
+I am using the b43 driver, along with b43-firmware from Arch Linux AUR,
+but broadcom-wl does not work either (same issue where I can view
+networks but not connect). Everything worked before I updated my kernel.
 
-> +	spin_lock_bh(&ar->data_lock);
-> +	reg_addr = ar->debug.reg_addr;
-> +	spin_unlock_bh(&ar->data_lock);
+It also may be interesting that on startup, I get this dmesg output:
 
-[...]
+Broadcom BCM4359 802.11 Hybrid Wireless Controller 6.30.223.248
+(r487574)
 
-> +	spin_lock_bh(&ar->data_lock);
-> +	reg_addr = ar->debug.reg_addr;
-> +	spin_unlock_bh(&ar->data_lock);
+however my card is BCM43228 not BCM4359.
 
-I admit that I'm far from a locking expert, but does that make any
-difference in the functionality?
+Here is the output of `lsmod | grep b43`:
+
+b43                   410153  0 
+mac80211              604456  1 b43
+ssb                    65506  1 b43
+rng_core               12808  1 b43
+pcmcia                 53108  2 b43,ssb
+cfg80211              445286  2 b43,mac80211
+led_class              12859  2 b43,thinkpad_acpi
+bcma                   45915  1 b43
+mmc_core              110434  3 b43,ssb,rtsx_pci_sdmmc
+
+I am connected by Ethernet right now but would prefer to use wireless.
+My distribution is Arch Linux.
+
+Thank you for any help.
 
 -- 
-Kalle Valo
+Duncan de Wet
+
