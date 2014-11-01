@@ -1,86 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:37703 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751228AbaKKLWR (ORCPT
+Received: from mail-ie0-f180.google.com ([209.85.223.180]:54905 "EHLO
+	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751981AbaKAJry (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Nov 2014 06:22:17 -0500
-Message-ID: <5461F165.1010801@broadcom.com> (sfid-20141111_122224_639450_A7BADEF9)
-Date: Tue, 11 Nov 2014 12:22:13 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Sat, 1 Nov 2014 05:47:54 -0400
+Received: by mail-ie0-f180.google.com with SMTP id y20so2783025ier.11
+        for <linux-wireless@vger.kernel.org>; Sat, 01 Nov 2014 02:47:53 -0700 (PDT)
 MIME-Version: 1.0
-To: Efill <efill@me.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: (Intel Wireless 7260) + 5G + AP mode
-References: <fd333f5e-227c-4c48-a8ba-14102e26599d@me.com>
-In-Reply-To: <fd333f5e-227c-4c48-a8ba-14102e26599d@me.com>
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1414804501.1032.1.camel@gmail.com>
+References: <1414804501.1032.1.camel@gmail.com>
+Date: Sat, 1 Nov 2014 10:47:53 +0100
+Message-ID: <CACna6ryQqZf9yDtJbcUx2VQ-bMqXa7dPX__cHi1JqgsAkg8W9Q@mail.gmail.com> (sfid-20141101_104828_041401_E8FA4289)
+Subject: Re: BCM43228 wireless card broken in kernel update [b43]
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Duncan de Wet <duncandewet@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11-11-14 11:54, Efill wrote:
->  >>>>>> I’m trying to get the 7260 to act as an AP on the 5G band. Unfortunately 
-> it seems to be impossible due to the „no IR“ reg domain restriction done by the 
-> Intel >firmware internally (this is what I’ve googled so far..).
->  >>>>>>
->  >>>>>> Could someone explain to me the technical background of this. As far as 
-> I understood the regulation if DFS and TPC are used, most of the 5G channels are 
-> allowed. >Did I miss something? What’s the point of restricting the IR then?
->  >>>>
->  >>>> This is not true world wide. With the devices currently available, you
->  >>>> can't have IR in 5GHz.
->  >>>>
->  >>
->  >> Even so I don't want to teach you wrong, a quick look at wikipedia reveals a 
-> slightly different view on this:
->  >> 
-> https://en.wikipedia.org/wiki/List_of_WLAN_channels#5.C2.A0GHz_.28802.11a.2Fh.2Fj.2Fn.2Fac.29.5B17.5D 
-> 
->  >>
->  >> I mean that's exactly what's the linux kernel reg domain stuff ( 
-> http://wireless.kernel.org/en/developers/Regulatory/processing_rules ) is meant 
-> to manage, isn't it?
->  >>
->  >>> Let me clarify, with *Intel* devices currently available, you will not
->  >>> be able to have IR in 5GHz.
->  >>
->  >> That's the reason I wrote the mail in the first place. I wasn't able to use 
-> AP mode at 5G. Wich I found out by myself and didn't read somewhere e.g. at 
-> http://>wireless.kernel.org/en/users/Drivers/iwlwifi . If it's that clear and 
-> obvious, why not state it there? I would have saved me 50 Euros and some hours...
->  >>
->  >> Just a feeling, but I guess asking something like "Why?" wouldn't help me in 
-> understanding, right? This is just some marketing decision at Intel (don't 
-> support 5G AP >mode in consumer WiFi cards) developers have to follow.
->  >>
->  >>
->  >>>>>
->  >>>>> And finally: Is there a way to get it work? Some other PCI-E chip? ath10k?
->  >>
->  >> Does anyone have a working setup for 5G AP mode with linux using a 
-> (m)PCI(-e) card? Or are there only SoCs available for this job?
->  >
->  > Well, I have although I would have no idea where you could buy it. As
->  > you may guess it is a Broadcom device and comes with my job.
-> 
-> Dear Arend,
-> 
-> thanks for acknowledging that at least it's possible ;-) Do you mind releasing 
-> slightly more information on this? Which chip, connectivity, packaging etc. I've 
-> tried the Broadcom BCM4360 but had to learn that this one is lacking AP mode 
-> completely...
+Hi,
 
-Currently, I am using BCM4354 and BCM43602. The BCM4360 is a softmac
-device and the Broadcom wl driver might indeed lack AP support.
+First of all, your e-mail thread suggests a regression in b43 after
+kernel update. This is impossible, as 3.17 is the first kernel with
+b43 support for BCM43227/BCM43228/BCM43131. First thing unclear about
+your report.
 
-Regards,
-Arend
+On 1 November 2014 02:15, Duncan de Wet <duncandewet@gmail.com> wrote:
+> After the kernel update to 3.17.1-1-ARCH, I can view a list of wireless
+> networks but not connect to any. Both GNOME network manager and wicd-gtk
+> say "Connecting..." then without an error message change to "Not
+> Connected".
+>
+> Here is the dmesg output that occurs when trying to connect to a
+> wireless network, with my router hardware address redacted:
+>
+> [ 1363.980448] wlp4s0: authenticate with [redacted]
+> [ 1364.066378] wlp4s0: send auth to [redacted] (try 1/3)
+> [ 1364.068641] wlp4s0: authenticated
+> [ 1364.069358] wlp4s0: associate with [redacted] (try 1/3)
+> [ 1364.073798] wlp4s0: RX AssocResp from [redacted] (capab=0x411
+> status=0 aid=2)
+> [ 1364.073869] wlp4s0: associated
+> [ 1364.073927] IPv6: ADDRCONF(NETDEV_CHANGE): wlp4s0: link becomes ready
+> [ 1364.074029] cfg80211: Calling CRDA to update world regulatory domain
+> [ 1369.624786] wlp4s0: deauthenticating from [redacted] by local choice
+> (Reason: 3=DEAUTH_LEAVING)
 
-> Another question: Did someone had luck getting an Atheros QCA9880 V2 to work as 
-> an 802.11ac 5G AP?
-> 
-> 
-> Best,
-> Efill
-> 
-> 
+This could be some problem with the driver (I'm still not sure *which*
+driver), I guess running wpa_supplicant with -dd could tell us more.
 
+
+> Here is the exact model of the card, and other information from lspci if
+> it is helpful:
+>
+> 04:00.0 Network controller [0280]: Broadcom Corporation BCM43228
+> 802.11a/b/g/n [14e4:4359]
+>         Subsystem: Broadcom Corporation Device [14e4:0607]
+>         Flags: bus master, fast devsel, latency 0, IRQ 17
+>         Memory at f2500000 (64-bit, non-prefetchable) [size=16K]
+>         Capabilities: [40] Power Management version 3
+>         Capabilities: [58] Vendor Specific Information: Len=78 <?>
+>         Capabilities: [48] MSI: Enable- Count=1/1 Maskable- 64bit+
+>         Capabilities: [d0] Express Endpoint, MSI 00
+>         Capabilities: [100] Advanced Error Reporting
+>         Capabilities: [13c] Virtual Channel
+>         Capabilities: [160] Device Serial Number [redacted]
+>         Capabilities: [16c] Power Budgeting <?>
+>         Kernel driver in use: bcma-pci-bridge
+>         Kernel modules: bcma, wl
+>
+> I do not know why "wl" is listed as an available module because I
+> uninstalled broadcom-wl already.
+
+It doesn't seem you really uninstalled it. AFAIK otherwise "lspci"
+wouldn't have idea about "wl".
+
+
+> I am using the b43 driver, along with b43-firmware from Arch Linux AUR,
+> but broadcom-wl does not work either (same issue where I can view
+> networks but not connect). Everything worked before I updated my kernel.
+
+Broadcom's "wl" uses cfg80211 API. There could be some cfg80211 change
+in 3.17 that caused a regression for your setup, not sure how likely
+is that.
+
+
+> It also may be interesting that on startup, I get this dmesg output:
+>
+> Broadcom BCM4359 802.11 Hybrid Wireless Controller 6.30.223.248
+> (r487574)
+
+So you didn't uninstall Broadcom's wl. More over, you still load this module!
+
+
+> however my card is BCM43228 not BCM4359.
+
+Broadcom's "wl" has broken chipset reporting. It treats PCI ID as a
+chipset which is obviously not correct.
