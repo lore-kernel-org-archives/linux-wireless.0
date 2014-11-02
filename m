@@ -1,56 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:47875 "EHLO sipsolutions.net"
+Received: from mx1.redhat.com ([209.132.183.28]:41991 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751103AbaKTPWI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Nov 2014 10:22:08 -0500
-Message-ID: <1416496922.8557.7.camel@sipsolutions.net> (sfid-20141120_162212_668350_F9270085)
-Subject: Re: [PATCH v2 4/4] cfg80211: Allow usermode to query wiphy specific
- regd info
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: "Luis R. Rodriguez" <mcgrof@suse.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Jonathan Doron <jond@wizery.com>
-Date: Thu, 20 Nov 2014 16:22:02 +0100
-In-Reply-To: <CA+XVXfeqfHHDh6AcgkuBW9BwUo-s77+pnbDtP_y=e0dZQVBitg@mail.gmail.com> (sfid-20141116_120711_380898_244AC3F5)
-References: <1415895219-19848-1-git-send-email-arik@wizery.com>
-	 <1415895219-19848-4-git-send-email-arik@wizery.com>
-	 <20141113231323.GG24486@wotan.suse.de>
-	 <CA+XVXfeqfHHDh6AcgkuBW9BwUo-s77+pnbDtP_y=e0dZQVBitg@mail.gmail.com>
-	 (sfid-20141116_120711_380898_244AC3F5)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1752463AbaKBMlg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 2 Nov 2014 07:41:36 -0500
+Date: Sun, 2 Nov 2014 13:38:47 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: users@rt2x00.serialmonkey.com
+Subject: [PATCH] rt2x00: do not align payload on modern H/W
+Message-ID: <20141102123846.GB9242@redhat.com> (sfid-20141102_134147_540703_E0B14F5B)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2014-11-16 at 13:06 +0200, Arik Nemtsov wrote:
+RT2800 and newer hardware require padding between header and payload if
+header length is not multiple of 4.
 
-> We intend to add a patch to wpa_s to always add the wiphy_idx to
-> NL80211_CMD_GET_REG. With the current approach only drivers with
-> SELF_MANAGED_REG will get wiphy->regd back. This is ok since these are
-> new drivers, which are familiar with this API.
-> 
-> But if we use your suggestion and always return wiphy->regd, then some
-> driver like ath9k that uses regulatory_hint() will now get it's
-> private regd returned to the wpa_s that manages it. I'm not saying
-> it's necessarily bad, but it's different than what was returned
-> before. The cfg80211 regdomain is intersected with wiphy->regd, so now
-> ath9k will start getting more permissive channels in usermode.
-> 
-> So we thought it's best to enable the new behavior only if the driver
-> explicitly wants it, using a new regulatory flag.
+For historical reasons we also align payload to to 4 bytes boundary, but
+such alignment is not needed on modern H/W.
 
-How does this work the other way around - i.e. a newer wpa_s requesting
-per-wiphy information but it not being present?
+Patch improve performance on embedded CPUs and _possibly_ fixes
+skb_under_panic problems reported from time to time:
 
-It seems to me that either way what the kernel should return is the
-information that will actually be applied when validated, which is of
-course not possible when there are wiphy-specific regdomains and a
-global one is requested (unless there's just one wiphy, which might be
-something to consider making work?)
+https://bugzilla.kernel.org/show_bug.cgi?id=84911
+https://bugzilla.kernel.org/show_bug.cgi?id=72471
+http://marc.info/?l=linux-wireless&m=139108549530402&w=2
+https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1087591
 
-I also don't actually see a driver regulatory flag in this patch, as
-expected, so not sure what exactly you're talking about above?
+But we can not explain or otherwise confirm the patch fixes this panic
+issue for sure.
 
-johannes
+Originally-From: Helmut Schaa <helmut.schaa@googlemail.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00queue.c | 50 ++++++++-----------------------
+ 1 file changed, 12 insertions(+), 38 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+index 5642ccc..22d49d5 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.c
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+@@ -158,55 +158,29 @@ void rt2x00queue_align_frame(struct sk_buff *skb)
+ 	skb_trim(skb, frame_length);
+ }
+ 
+-void rt2x00queue_insert_l2pad(struct sk_buff *skb, unsigned int header_length)
++/*
++ * H/W needs L2 padding between the header and the paylod if header size
++ * is not 4 bytes aligned.
++ */
++void rt2x00queue_insert_l2pad(struct sk_buff *skb, unsigned int hdr_len)
+ {
+-	unsigned int payload_length = skb->len - header_length;
+-	unsigned int header_align = ALIGN_SIZE(skb, 0);
+-	unsigned int payload_align = ALIGN_SIZE(skb, header_length);
+-	unsigned int l2pad = payload_length ? L2PAD_SIZE(header_length) : 0;
++	unsigned int l2pad = (skb->len > hdr_len) ? L2PAD_SIZE(hdr_len) : 0;
+ 
+-	/*
+-	 * Adjust the header alignment if the payload needs to be moved more
+-	 * than the header.
+-	 */
+-	if (payload_align > header_align)
+-		header_align += 4;
+-
+-	/* There is nothing to do if no alignment is needed */
+-	if (!header_align)
++	if (!l2pad)
+ 		return;
+ 
+-	/* Reserve the amount of space needed in front of the frame */
+-	skb_push(skb, header_align);
+-
+-	/*
+-	 * Move the header.
+-	 */
+-	memmove(skb->data, skb->data + header_align, header_length);
+-
+-	/* Move the payload, if present and if required */
+-	if (payload_length && payload_align)
+-		memmove(skb->data + header_length + l2pad,
+-			skb->data + header_length + l2pad + payload_align,
+-			payload_length);
+-
+-	/* Trim the skb to the correct size */
+-	skb_trim(skb, header_length + l2pad + payload_length);
++	skb_push(skb, l2pad);
++	memmove(skb->data, skb->data + l2pad, hdr_len);
+ }
+ 
+-void rt2x00queue_remove_l2pad(struct sk_buff *skb, unsigned int header_length)
++void rt2x00queue_remove_l2pad(struct sk_buff *skb, unsigned int hdr_len)
+ {
+-	/*
+-	 * L2 padding is only present if the skb contains more than just the
+-	 * IEEE 802.11 header.
+-	 */
+-	unsigned int l2pad = (skb->len > header_length) ?
+-				L2PAD_SIZE(header_length) : 0;
++	unsigned int l2pad = (skb->len > hdr_len) ? L2PAD_SIZE(hdr_len) : 0;
+ 
+ 	if (!l2pad)
+ 		return;
+ 
+-	memmove(skb->data + l2pad, skb->data, header_length);
++	memmove(skb->data + l2pad, skb->data, hdr_len);
+ 	skb_pull(skb, l2pad);
+ }
+ 
+-- 
+1.8.3.1
 
