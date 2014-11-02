@@ -1,52 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:38429 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750877AbaKFT5M (ORCPT
+Received: from mail-wg0-f53.google.com ([74.125.82.53]:57595 "EHLO
+	mail-wg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751184AbaKBVww (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Nov 2014 14:57:12 -0500
-Message-ID: <545BD297.5040806@candelatech.com> (sfid-20141106_205715_626403_2B77F8B2)
-Date: Thu, 06 Nov 2014 11:57:11 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Sun, 2 Nov 2014 16:52:52 -0500
+Received: by mail-wg0-f53.google.com with SMTP id b13so9892888wgh.12
+        for <linux-wireless@vger.kernel.org>; Sun, 02 Nov 2014 13:52:51 -0800 (PST)
+Message-ID: <5456A7B0.5020909@gmail.com> (sfid-20141102_225256_604037_88D2301E)
+Date: Sun, 02 Nov 2014 22:52:48 +0100
+From: poma <pomidorabelisima@gmail.com>
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath10k <ath10k@lists.infradead.org>
-Subject: New ath10k CT firmware released.
-Content-Type: text/plain; charset=ISO-8859-1
+To: users@rt2x00.serialmonkey.com
+CC: Stanislaw Gruszka <sgruszka@redhat.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [rt2x00-users] Ralink RT3070(rt2800usb) - The Tortoise and the
+ Hare
+References: <5455C833.2080706@gmail.com> <20141102130003.GA10104@redhat.com> <54564C6E.6010904@gmail.com>
+In-Reply-To: <54564C6E.6010904@gmail.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have uploaded the latest CT version of the ath10k firmware.
 
-http://www.candelatech.com/ath10k.php
+Performance with this firmware versions are even worse
 
-This firmware fixes bugs in raw-tx mode, though probably only
-non-encrypted frames can be sent in this manner, and it requires
-an out-of-tree patch from Michal Kazior to make it work:
+ieee80211 phy0: rt2x00lib_request_firmware: Info - Loading firmware file 'rt2870.bin'
+ieee80211 phy0: rt2x00lib_request_firmware: Info - Firmware detected - version: 0.22
 
-http://comments.gmane.org/gmane.linux.drivers.ath10k.devel/246
+ieee80211 phy0: rt2x00lib_request_firmware: Info - Loading firmware file 'rt2870.bin'
+ieee80211 phy0: rt2x00lib_request_firmware: Info - Firmware detected - version: 0.233
 
-This firmware also significantly improves association times when using
-more than one vdev.  This, requires an additional kernel patch:
+ieee80211 phy0: rt2x00lib_request_firmware: Info - Loading firmware file 'rt2870.bin'
+ieee80211 phy0: rt2x00lib_request_firmware: Info - Firmware detected - version: 0.33
 
-http://dmz2.candelatech.com/git/gitweb.cgi?p=linux-3.17.dev.y/.git;a=commitdiff;h=a9756b6e2efffbec4101dbe81e9d6a2c503239ff;hp=5bfa637376c352fc17c56afc7b1d2e752750162c
+같같같같같같같같같같같같같같같같같같같같같같같같같같같같같같같같같같같같같같같같같같같같같같
 
-And, you may want the near-by patches that allow disabling some
-logging, especially if using serial console.
+Haueu this is interesting, original module rt3070sta/rt5572sta achieves the same performance 
+as the rt2800usb & Co. with firmware rt2870.bin version: 0.29, those with the beginning of the thread.
 
-There is also a small fix to max-nss logic in the firmware rate-control,
-but I am not sure this is required.  It _is_ required that you use
-currently-out-of-tree patches if you want anything other than 3x3 station
-connecting to 3x3 AP to work properly with ath10k.
 
-As always, I am interested to know how people are using
-the CT firmware, and I would welcome any help with getting
-even basic support (such as reserved feature flags)
-for this firmware in the upstream kernel.
+rt3070sta: module verification failed: signature and/or  required key missing - tainting kernel
+rtusb init --->
+usbcore: registered new interface driver rt2870
+<==== rt28xx_init, Status=0
 
-Thanks,
-Ben
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+# iwconfig ra0 
+ra0       Ralink STA  ESSID:"AP1"  Nickname:"RT2870STA"
+          Mode:Managed  Frequency=2.437 GHz  Access Point: 00:01:02:03:04:05   
+          Bit Rate=135 Mb/s   
+          RTS thr:off   Fragment thr:off
+          Encryption key:...-...-...-...-...-...-...-...
+          Link Quality=100/100  Signal level:-17 dBm  Noise level:-83 dBm
+          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+
+
+$ modinfo rt3070sta 
+filename:       /lib/modules/3.17.2-200.fc20.x86_64/updates/rt3070sta.ko
+version:        2.3.0.4
+license:        GPL
+description:    RT2870 Wireless Lan Linux Driver
+author:         Paul Lin <paul_lin@ralinktech.com>
+srcversion:     0939A5C859E365CD0DC9707
+alias:          usb:v177Fp0153d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v148Fp2070d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v0789p0166d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v07FAp7712d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v13D3p3321d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v13D3p3307d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v083ApA703d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v5A57p0282d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v0DB0p821Ad*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v0DB0p3821d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v0DB0p822Ad*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v0DB0p871Ad*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v0DB0p3871d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v0DB0p3822d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v0DB0p6899d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v0DB0p870Ad*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v0DB0p3870d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v0DB0p899Ad*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v203Dp14A9d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v0B05p1784d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v20B8p8888d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v203Dp1480d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v04BBp0948d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v04BBp0947d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v04BBp0945d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v5A57p0283d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v5A57p5257d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v1D4Dp000Ed*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v1D4Dp000Cd*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v07D1p3C17d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v07D1p3C16d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v07D1p3C0Fd*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v07D1p3C0Ed*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v07D1p3C0Dd*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v07D1p3C0Ad*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v1EDAp2310d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v1A32p0304d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v7392p7711d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v07B8p3072d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v07B8p3071d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v07B8p3070d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v2019pAB25d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v1044p800Dd*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v13D3p3305d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v13D3p3273d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v1740p9709d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v1740p9708d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v1740p9707d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v1740p9706d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v1740p9705d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v1740p9703d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v083ApA702d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v083ApA701d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v083Ap7511d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v18C5p0012d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v14B2p3C12d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v0DF6p0047d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v0DF6p0048d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v0DF6p0042d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v0DF6p003Ed*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v0DB0p822Bd*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v0DB0p871Bd*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v0DB0p822Cd*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v0DB0p871Cd*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v0DB0p3820d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v148Fp3072d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v148Fp3071d*dc*dsc*dp*ic*isc*ip*in*
+alias:          usb:v148Fp3070d*dc*dsc*dp*ic*isc*ip*in*
+depends:        
+vermagic:       3.17.2-200.fc20.x86_64 SMP mod_unload 
+parm:           mac:rt28xx: wireless mac addr (charp)
+
 
