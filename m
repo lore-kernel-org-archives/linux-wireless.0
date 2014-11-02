@@ -1,49 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54836 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751612AbaKBNDC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Nov 2014 08:03:02 -0500
-Date: Sun, 2 Nov 2014 14:00:10 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: poma <pomidorabelisima@gmail.com>
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-Subject: Re: [rt2x00-users] Ralink RT3070(rt2800usb) - The Tortoise and the
- Hare
-Message-ID: <20141102130003.GA10104@redhat.com> (sfid-20141102_140307_073073_4402E08B)
-References: <5455C833.2080706@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5455C833.2080706@gmail.com>
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:57243 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750745AbaKBFp6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 2 Nov 2014 01:45:58 -0400
+From: Alexander Aring <alex.aring@gmail.com>
+To: linux-wpan@vger.kernel.org
+Cc: kernel@pengutronix.de, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	Alexander Aring <alex.aring@gmail.com>,
+	"David S. Miller" <davem@davemloft.net>
+Subject: [PATCH bluetooth-next] netdevice: add ieee802154_ptr to net_device
+Date: Sun,  2 Nov 2014 06:44:54 +0100
+Message-Id: <1414907094-9623-1-git-send-email-alex.aring@gmail.com> (sfid-20141102_065445_034057_5AF2D0F1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Nov 02, 2014 at 06:59:15AM +0100, poma wrote:
-> Higher values, are they even possible via rt2800usb.ko & Co.?
+This patch adds an ieee802154_ptr to the net_device structure.
+Furthermore the 802.15.4 subsystem will introduce a nl802154 framework
+which is similar like the nl80211 framework and a wpan_dev structure.
+The wpan_dev structure will hold additional net_device attributes like
+address options which are 802.15.4 specific. In the upcoming nl802154
+implementation we will introduce a NL802154_FLAG_NEED_WPAN_DEV like
+NL80211_FLAG_NEED_WDEV. For this flag an ieee802154_ptr in net_device is
+needed. Additional we can access the wpan_dev attributes in upper layers
+like IEEE 802.15.4 6LoWPAN easily. Current solution is a complicated
+callback interface and getting these values over subif data structure
+in mac802154.
 
-Yes.
+Signed-off-by: Alexander Aring <alex.aring@gmail.com>
+Cc: David S. Miller <davem@davemloft.net>
+---
+Another option would be to combine ieee80211_ptr and ieee802154_ptr in
+an union. These pointer can't be used twice at the same time and the
+union solution will not make the struct net_device bigger.
 
-> ieee80211 phy0: rt2x00_set_rt: Info - RT chipset 3070, rev 0201 detected
-> ieee80211 phy0: rt2x00_set_rf: Info - RF chipset 0005 detected
+My working repository is bluetooth-next. Marcel will apply all 802.15.4
+changes. That's why this patch should go into bluetooth-next. Then I can
+send new patches which depends on this patch for introducing wpan_dev and
+nl802154.
 
-On the same RT and RF chipsets with TP-link WR-1043ND access point I have:
+ include/linux/netdevice.h | 3 +++
+ 1 file changed, 3 insertions(+)
 
-# iperf -c 192.168.1.105 -i 1
-------------------------------------------------------------
-Client connecting to 192.168.1.105, TCP port 5001
-TCP window size: 45.0 KByte (default)
-------------------------------------------------------------
-[  3] local 192.168.1.100 port 56993 connected with 192.168.1.105 port 5001
-[ ID] Interval       Transfer     Bandwidth
-[  3]  0.0- 1.0 sec  4.75 MBytes  39.8 Mbits/sec
-[  3]  1.0- 2.0 sec  8.12 MBytes  68.2 Mbits/sec
-[  3]  2.0- 3.0 sec  8.00 MBytes  67.1 Mbits/sec
-[  3]  3.0- 4.0 sec  8.75 MBytes  73.4 Mbits/sec
-[  3]  4.0- 5.0 sec  7.00 MBytes  58.7 Mbits/sec
-[  3]  5.0- 6.0 sec  9.00 MBytes  75.5 Mbits/sec
-[  3]  6.0- 7.0 sec  8.25 MBytes  69.2 Mbits/sec
-[  3]  7.0- 8.0 sec  7.75 MBytes  65.0 Mbits/sec
-[  3]  8.0- 9.0 sec  8.75 MBytes  73.4 Mbits/sec
-[  3]  9.0-10.0 sec  7.75 MBytes  65.0 Mbits/sec
-[  3]  0.0-10.0 sec  78.2 MBytes  65.5 Mbits/sec
+diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
+index 74fd5d3..c9bcf33 100644
+--- a/include/linux/netdevice.h
++++ b/include/linux/netdevice.h
+@@ -57,6 +57,8 @@ struct device;
+ struct phy_device;
+ /* 802.11 specific */
+ struct wireless_dev;
++/* 802.15.4 specific */
++struct wpan_dev;
+ 
+ void netdev_set_default_ethtool_ops(struct net_device *dev,
+ 				    const struct ethtool_ops *ops);
+@@ -1572,6 +1574,7 @@ struct net_device {
+ 	struct inet6_dev __rcu	*ip6_ptr;
+ 	void			*ax25_ptr;
+ 	struct wireless_dev	*ieee80211_ptr;
++	struct wpan_dev		*ieee802154_ptr;
+ 
+ /*
+  * Cache lines mostly used on receive path (including eth_type_trans())
+-- 
+2.1.3
 
-Stanislaw
