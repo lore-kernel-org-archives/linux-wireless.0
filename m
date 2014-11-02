@@ -1,170 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f48.google.com ([74.125.82.48]:50026 "EHLO
-	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932241AbaKXOgH (ORCPT
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:42501 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751132AbaKBPXa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2014 09:36:07 -0500
-Received: by mail-wg0-f48.google.com with SMTP id y19so12669446wgg.35
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:36:06 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Arik Nemtsov <arik@wizery.com>,
-	Arik Nemtsov <arikx.nemtsov@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 42/75] iwlwifi: mvm: add TDLS channel switch FW APIs
-Date: Mon, 24 Nov 2014 16:34:18 +0200
-Message-Id: <1416839691-28533-42-git-send-email-egrumbach@gmail.com> (sfid-20141124_153901_171332_91AD0B37)
-In-Reply-To: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
-References: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
+	Sun, 2 Nov 2014 10:23:30 -0500
+Received: by mail-wi0-f181.google.com with SMTP id n3so4578304wiv.2
+        for <linux-wireless@vger.kernel.org>; Sun, 02 Nov 2014 07:23:28 -0800 (PST)
+Message-ID: <54564C6E.6010904@gmail.com> (sfid-20141102_162333_751764_FBD0CAA5)
+Date: Sun, 02 Nov 2014 16:23:26 +0100
+From: poma <pomidorabelisima@gmail.com>
+MIME-Version: 1.0
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+CC: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+Subject: Re: [rt2x00-users] Ralink RT3070(rt2800usb) - The Tortoise and the
+ Hare
+References: <5455C833.2080706@gmail.com> <20141102130003.GA10104@redhat.com>
+In-Reply-To: <20141102130003.GA10104@redhat.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+On 02.11.2014 14:00, Stanislaw Gruszka wrote:
+> On Sun, Nov 02, 2014 at 06:59:15AM +0100, poma wrote:
+>> Higher values, are they even possible via rt2800usb.ko & Co.?
+> 
+> Yes.
+> 
+>> ieee80211 phy0: rt2x00_set_rt: Info - RT chipset 3070, rev 0201 detected
+>> ieee80211 phy0: rt2x00_set_rf: Info - RF chipset 0005 detected
+> 
+> On the same RT and RF chipsets with TP-link WR-1043ND access point I have:
+> 
+> # iperf -c 192.168.1.105 -i 1
+> ------------------------------------------------------------
+> Client connecting to 192.168.1.105, TCP port 5001
+> TCP window size: 45.0 KByte (default)
+> ------------------------------------------------------------
+> [  3] local 192.168.1.100 port 56993 connected with 192.168.1.105 port 5001
+> [ ID] Interval       Transfer     Bandwidth
+> [  3]  0.0- 1.0 sec  4.75 MBytes  39.8 Mbits/sec
+> [  3]  1.0- 2.0 sec  8.12 MBytes  68.2 Mbits/sec
+> [  3]  2.0- 3.0 sec  8.00 MBytes  67.1 Mbits/sec
+> [  3]  3.0- 4.0 sec  8.75 MBytes  73.4 Mbits/sec
+> [  3]  4.0- 5.0 sec  7.00 MBytes  58.7 Mbits/sec
+> [  3]  5.0- 6.0 sec  9.00 MBytes  75.5 Mbits/sec
+> [  3]  6.0- 7.0 sec  8.25 MBytes  69.2 Mbits/sec
+> [  3]  7.0- 8.0 sec  7.75 MBytes  65.0 Mbits/sec
+> [  3]  8.0- 9.0 sec  8.75 MBytes  73.4 Mbits/sec
+> [  3]  9.0-10.0 sec  7.75 MBytes  65.0 Mbits/sec
+> [  3]  0.0-10.0 sec  78.2 MBytes  65.5 Mbits/sec
+> 
+> Stanislaw
+> 
 
-Add a channel-switch command and a switch-start notification. Also add a
-FW TLV bit indicating TDLS channel switching support.
+For you this are the solid results?
 
-Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-fw.h     |  2 +
- drivers/net/wireless/iwlwifi/mvm/fw-api.h | 83 +++++++++++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/mvm/ops.c    |  2 +
- 3 files changed, 87 insertions(+)
+One would expect a little more detail from you, man. :)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-fw.h b/drivers/net/wireless/iwlwifi/iwl-fw.h
-index 78d3e5f..a94d244 100644
---- a/drivers/net/wireless/iwlwifi/iwl-fw.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-fw.h
-@@ -157,6 +157,7 @@ enum iwl_ucode_tlv_api {
-  * @IWL_UCODE_TLV_CAPA_QUIET_PERIOD_SUPPORT: supports Quiet Period requests
-  * @IWL_UCODE_TLV_CAPA_DQA_SUPPORT: supports dynamic queue allocation (DQA),
-  *	which also implies support for the scheduler configuration command
-+ * @IWL_UCODE_TLV_CAPA_TDLS_CHANNEL_SWITCH: supports TDLS channel switching
-  */
- enum iwl_ucode_tlv_capa {
- 	IWL_UCODE_TLV_CAPA_D0I3_SUPPORT			= BIT(0),
-@@ -167,6 +168,7 @@ enum iwl_ucode_tlv_capa {
- 	IWL_UCODE_TLV_CAPA_WFA_TPC_REP_IE_SUPPORT	= BIT(10),
- 	IWL_UCODE_TLV_CAPA_QUIET_PERIOD_SUPPORT		= BIT(11),
- 	IWL_UCODE_TLV_CAPA_DQA_SUPPORT			= BIT(12),
-+	IWL_UCODE_TLV_CAPA_TDLS_CHANNEL_SWITCH		= BIT(13),
- };
- 
- /* The default calibrate table size if not specified by firmware file */
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/iwlwifi/mvm/fw-api.h
-index 1a67788..a71fad2e 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw-api.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw-api.h
-@@ -128,6 +128,10 @@ enum {
- 	/* global key */
- 	WEP_KEY = 0x20,
- 
-+	/* TDLS */
-+	TDLS_CHANNEL_SWITCH_CMD = 0x27,
-+	TDLS_CHANNEL_SWITCH_NOTIFICATION = 0xaa,
-+
- 	/* MAC and Binding commands */
- 	MAC_CONTEXT_CMD = 0x28,
- 	TIME_EVENT_CMD = 0x29, /* both CMD and response */
-@@ -1717,4 +1721,83 @@ struct iwl_scd_txq_cfg_cmd {
- 	u8 flags;
- } __packed;
- 
-+/***********************************
-+ * TDLS API
-+ ***********************************/
-+
-+/* Type of TDLS request */
-+enum iwl_tdls_channel_switch_type {
-+	TDLS_SEND_CHAN_SW_REQ = 0,
-+	TDLS_SEND_CHAN_SW_RESP_AND_MOVE_CH,
-+	TDLS_MOVE_CH,
-+}; /* TDLS_STA_CHANNEL_SWITCH_CMD_TYPE_API_E_VER_1 */
-+
-+/**
-+ * Switch timing sub-element in a TDLS channel-switch command
-+ * @frame_timestamp: GP2 timestamp of channel-switch request/response packet
-+ *	received from peer
-+ * @max_offchan_duration: What amount of microseconds out of a DTIM is given
-+ *	to the TDLS off-channel communication. For instance if the DTIM is
-+ *	200TU and the TDLS peer is to be given 25% of the time, the value
-+ *	given will be 50TU, or 50 * 1024 if translated into microseconds.
-+ * @switch_time: switch time the peer sent in its channel switch timing IE
-+ * @switch_timout: switch timeout the peer sent in its channel switch timing IE
-+ */
-+struct iwl_tdls_channel_switch_timing {
-+	__le32 frame_timestamp; /* GP2 time of peer packet Rx */
-+	__le32 max_offchan_duration; /* given in micro-seconds */
-+	__le32 switch_time; /* given in micro-seconds */
-+	__le32 switch_timeout; /* given in micro-seconds */
-+} __packed; /* TDLS_STA_CHANNEL_SWITCH_TIMING_DATA_API_S_VER_1 */
-+
-+#define IWL_TDLS_CH_SW_FRAME_MAX_SIZE 200
-+
-+/**
-+ * TDLS channel switch frame template
-+ *
-+ * A template representing a TDLS channel-switch request or response frame
-+ *
-+ * @switch_time_offset: offset to the channel switch timing IE in the template
-+ * @tx_cmd: Tx parameters for the frame
-+ * @data: frame data
-+ */
-+struct iwl_tdls_channel_switch_frame {
-+	__le32 switch_time_offset;
-+	struct iwl_tx_cmd tx_cmd;
-+	u8 data[IWL_TDLS_CH_SW_FRAME_MAX_SIZE];
-+} __packed; /* TDLS_STA_CHANNEL_SWITCH_FRAME_API_S_VER_1 */
-+
-+/**
-+ * TDLS channel switch command
-+ *
-+ * The command is sent to initiate a channel switch and also in response to
-+ * incoming TDLS channel-switch request/response packets from remote peers.
-+ *
-+ * @switch_type: see &enum iwl_tdls_channel_switch_type
-+ * @peer_sta_id: station id of TDLS peer
-+ * @ci: channel we switch to
-+ * @timing: timing related data for command
-+ * @frame: channel-switch request/response template, depending to switch_type
-+ */
-+struct iwl_tdls_channel_switch_cmd {
-+	u8 switch_type;
-+	__le32 peer_sta_id;
-+	struct iwl_fw_channel_info ci;
-+	struct iwl_tdls_channel_switch_timing timing;
-+	struct iwl_tdls_channel_switch_frame frame;
-+} __packed; /* TDLS_STA_CHANNEL_SWITCH_CMD_API_S_VER_1 */
-+
-+/**
-+ * TDLS channel switch start notification
-+ *
-+ * @status: non-zero on success
-+ * @offchannel_duration: duration given in microseconds
-+ * @sta_id: peer currently performing the channel-switch with
-+ */
-+struct iwl_tdls_channel_switch_notif {
-+	__le32 status;
-+	__le32 offchannel_duration;
-+	__le32 sta_id;
-+} __packed; /* TDLS_STA_CHANNEL_SWITCH_NTFY_API_S_VER_1 */
-+
- #endif /* __fw_api_h__ */
-diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
-index b022fc0..8ee7362 100644
---- a/drivers/net/wireless/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
-@@ -352,6 +352,8 @@ static const char *const iwl_mvm_cmd_strings[REPLY_MAX] = {
- 	CMD(SCAN_REQ_UMAC),
- 	CMD(SCAN_ABORT_UMAC),
- 	CMD(SCAN_COMPLETE_UMAC),
-+	CMD(TDLS_CHANNEL_SWITCH_CMD),
-+	CMD(TDLS_CHANNEL_SWITCH_NOTIFICATION),
- };
- #undef CMD
- 
--- 
-1.9.1
+Care to share what are AP's:
+- hardware revision
+- firmware
+- basic and advanced wireless settings
+
+
+DD-WRT
+http://www.dd-wrt.com/wiki/index.php/Supported_Devices_802.11n#TP-Link
+
+- Model                      : WR1043N(D)
+- H.W.                       : v1.1/4/5
+- Platform & Frequency [MHz] : AR9132 @ 400
+- RAM [MB]                   : 32
+- Flash Mem. [MB]            : 8
+- Wireless NIC               : Atheros ar9103 3x3 MIMO
+- WLAN standard [802.11]     : b/g/n
+- Serial port                : 1
+- JTAG port                  : 1
+- Eth. port count            : 1 Gbit WAN 4 Gbit LAN
+- Volt. Input [V/A]          : 12V 1.5A
+- Special Features notes     : USB
+- min required DD-WRT version: WR1043ND v.24 SP2 - build 13972 - 20100223
+- Notes for Running DD-WRT   : N clients connect only at G tx/rx rate, 
+                               everything else working
+
+
+OpenWrt
+http://wiki.openwrt.org/toh/tp-link/tl-wr1043nd
+TP-Link TL-WR1043ND
+
+- HW Version: 1.x                      : 2.x                  
+- CPU       : Atheros AR9132 @ 400MHz  : Qualcomm Atheros QCA9558 @ 720MHz
+- Ram       : 32 MB                    : 64 MB
+- Flash     :  8 MB                    :  8 MB
+- Network   : 4x1                      : 4x1
+- Gigabit   : Yes                      : Yes
+- USB       : Yes                      : Yes
+- Serial    : Yes                      : Yes
+- JTag      : Yes                      : No
+
+
+Gargoyle
+http://www.gargoyle-router.com/wiki/doku.php?id=supported_routers_-_tested_routers
+TP-Link TL-WR1043ND v1-1.8
+
+
+TP-LINK
+http://www.tp-link.com/en/products/details/?model=TL-WR1043ND
+
+
+poma
 
