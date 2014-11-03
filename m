@@ -1,52 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:41178 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933342AbaKMRaC (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:16619 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750849AbaKCXfV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Nov 2014 12:30:02 -0500
-Message-ID: <5464EA91.60409@infradead.org> (sfid-20141113_183032_660116_0F6649A2)
-Date: Thu, 13 Nov 2014 09:29:53 -0800
-From: Randy Dunlap <rdunlap@infradead.org>
+	Mon, 3 Nov 2014 18:35:21 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+	"Michal Kazior" <michal.kazior@tieto.com>
+Subject: Re: [PATCH v2] ath10k: handle ieee80211 header and payload tracing separately
+References: <1414661336-20764-1-git-send-email-rmanohar@qti.qualcomm.com>
+Date: Tue, 4 Nov 2014 01:34:37 +0200
+In-Reply-To: <1414661336-20764-1-git-send-email-rmanohar@qti.qualcomm.com>
+	(Rajkumar Manoharan's message of "Thu, 30 Oct 2014 14:58:56 +0530")
+Message-ID: <874muf7t9u.fsf@kamboji.qca.qualcomm.com> (sfid-20141104_003524_831422_37C2BAC4)
 MIME-Version: 1.0
-To: akpm@linux-foundation.org, linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-next@vger.kernel.org, sfr@canb.auug.org.au, mhocko@suse.cz,
-	ath9k-devel@lists.ath9k.org
-Subject: Re: mmotm 2014-11-12-16-34 uploaded (net/wireless/ath9k)
-References: <5463fd01.PiBwUnCphi1MBsM6%akpm@linux-foundation.org>
-In-Reply-To: <5463fd01.PiBwUnCphi1MBsM6%akpm@linux-foundation.org>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/12/14 16:36, akpm@linux-foundation.org wrote:
-> The mm-of-the-moment snapshot 2014-11-12-16-34 has been uploaded to
-> 
->    http://www.ozlabs.org/~akpm/mmotm/
-> 
-> mmotm-readme.txt says
-> 
-> README for mm-of-the-moment:
-> 
-> http://www.ozlabs.org/~akpm/mmotm/
-> 
+Rajkumar Manoharan <rmanohar@qti.qualcomm.com> writes:
 
-on x86_64: (from linux-next.patch, not mmotm patches)
+> For packet log, the transmitted frame 802.11 header alone is sufficient.
+> Recording entire packet is also consuming lot of disk space. To optimize
+> this, tx and rx data tracepoints are splitted into header and payload
+> tracepoints.
+>
+> To record tx ieee80211 headers
+>
+>      trace-cmd record -e ath10k_tx_hdr
+>
+> To record complete packets
+>
+>      trace-cmd record -e ath10k_tx_hdr -e ath10k_tx_payload
+>
+> Cc: Michal Kazior <michal.kazior@tieto.com>
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 
+[...]
 
-  CC [M]  drivers/net/wireless/ath/ath9k/common-spectral.o
-../drivers/net/wireless/ath/ath9k/common-spectral.c:40:5: error: redefinition of 'ath_cmn_process_fft'
- int ath_cmn_process_fft(struct ath_spec_scan_priv *spec_priv, struct ieee80211_hdr *hdr,
-     ^
-In file included from ../drivers/net/wireless/ath/ath9k/common.h:27:0,
-                 from ../drivers/net/wireless/ath/ath9k/ath9k.h:27,
-                 from ../drivers/net/wireless/ath/ath9k/common-spectral.c:18:
-../drivers/net/wireless/ath/ath9k/common-spectral.h:146:19: note: previous definition of 'ath_cmn_process_fft' was here
- static inline int ath_cmn_process_fft(struct ath_spec_scan_priv *spec_priv,
-                   ^
-make[6]: *** [drivers/net/wireless/ath/ath9k/common-spectral.o] Error 1
+> --- a/drivers/net/wireless/ath/ath10k/trace.h
+> +++ b/drivers/net/wireless/ath/ath10k/trace.h
+> @@ -341,7 +341,10 @@ TRACE_EVENT(ath10k_txrx_tx_unref,
+>  	 )
+>  );
+>  
+> -DECLARE_EVENT_CLASS(ath10k_data_event,
+> +#define ATH10K_FRM_HDR_LEN  \
+> +	ieee80211_hdrlen(((struct ieee80211_hdr *)data)->frame_control)
 
+This macro does not look good. I would recommend to follow what Johannes
+suggested:
 
+"It would be worth hiding that inside the tracepoint's assign function,
+so instead of passing data/len here you'd pass the full skb, or the full
+skb data/skb len, like this:
+
+ar, skb->data, skb->len
+
+to both tracers. Then inside the tracer you can do the hdrlen check, and
+that way move the code into the tracing so it's not hit when tracing is
+disabled."
 
 -- 
-~Randy
+Kalle Valo
