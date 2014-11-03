@@ -1,29 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f180.google.com ([209.85.213.180]:51380 "EHLO
-	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753218AbaKHQgw (ORCPT
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:62229 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752458AbaKCTss (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Nov 2014 11:36:52 -0500
-Received: by mail-ig0-f180.google.com with SMTP id h3so7041104igd.7
-        for <linux-wireless@vger.kernel.org>; Sat, 08 Nov 2014 08:36:52 -0800 (PST)
+	Mon, 3 Nov 2014 14:48:48 -0500
+Received: by mail-wi0-f170.google.com with SMTP id q5so6986156wiv.3
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Nov 2014 11:48:46 -0800 (PST)
+Message-ID: <5457DC1C.7020200@gmail.com> (sfid-20141103_204851_670186_E0C0CB06)
+Date: Mon, 03 Nov 2014 21:48:44 +0200
+From: Emmanuel Grumbach <egrumbach@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1415451582-5610-1-git-send-email-hauke@hauke-m.de>
-References: <1415451582-5610-1-git-send-email-hauke@hauke-m.de>
-Date: Sat, 8 Nov 2014 17:36:51 +0100
-Message-ID: <CACna6rz72_CS_Zrc28qTWWeBnA=x51cBe7Pg6a3Tyt0ejUORNQ@mail.gmail.com> (sfid-20141108_173701_416557_76358916)
-Subject: Re: [PATCH v2 3.18+] b43: fix NULL pointer dereference in b43_phy_copy()
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: John Linville <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>,
-	andrey.krieger.utkin@gmail.com, v.kempter@pe.tu-clausthal.de
-Content-Type: text/plain; charset=UTF-8
+To: John Linville <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: pull request: iwlwifi 2014-11-03
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8 November 2014 13:59, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> phy_read and phy_write are not set for every phy any more sine this:
-> commit d342b95dd735014a590f9051b1ba227eb54ca8f6
+Hi John,
 
-Looks OK, thanks for your patch!
+Here is a pull request for 3.18.
+
+Details below, please pull.
+
+Thanks!
+
+The following changes since commit 7f2ac8fb31896c9fb70dbd2a2e6642b79996fc13:
+
+  iwlwifi: pcie: fix polling in various places (2014-10-23 21:21:49 +0300)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git tags/iwlwifi-for-john-2014-11-03
+
+for you to fetch changes up to 31b8b343e019e0a0c57ca9c13520a87f9cab884b:
+
+  iwlwifi: fix RFkill while calibrating (2014-11-03 15:29:17 +0200)
+
+----------------------------------------------------------------
+I fix here two issues that are related to the firmware
+loading flow. A user reported that he couldn't load the
+driver because the rfkill line was pulled up while we
+were running the calibrations. This was happening while
+booting the system: systemd was restoring the "disable
+wifi settings" and that raised an RFKILL interrupt during
+the calibration. Our driver didn't handle that properly
+and this is now fixed.
+
+----------------------------------------------------------------
+Emmanuel Grumbach (2):
+      iwlwifi: mvm: initialize the cur_ucode upon boot
+      iwlwifi: fix RFkill while calibrating
+
+ drivers/net/wireless/iwlwifi/mvm/fw.c       | 10 +++++++++-
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c |  1 +
+ drivers/net/wireless/iwlwifi/mvm/mvm.h      |  1 +
+ drivers/net/wireless/iwlwifi/mvm/ops.c      | 12 +++++++++++-
+ drivers/net/wireless/iwlwifi/pcie/trans.c   |  4 ++--
+ 5 files changed, 24 insertions(+), 4 deletions(-)
