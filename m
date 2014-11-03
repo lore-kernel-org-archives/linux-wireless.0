@@ -1,50 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:53182 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754057AbaKXOfG (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:34551 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750873AbaKCEiA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2014 09:35:06 -0500
-Received: by mail-wg0-f42.google.com with SMTP id z12so12518082wgg.15
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:35:05 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Liad Kaufman <liad.kaufman@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 06/75] iwlwifi: mvm: fix init_dbg flow to work as expected
-Date: Mon, 24 Nov 2014 16:33:42 +0200
-Message-Id: <1416839691-28533-6-git-send-email-egrumbach@gmail.com> (sfid-20141124_153513_313723_221785D3)
-In-Reply-To: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
-References: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
+	Sun, 2 Nov 2014 23:38:00 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+Message-ID: <21591.1777.261577.885153@gargle.gargle.HOWL> (sfid-20141103_053934_129748_90AFBF4F)
+Date: Mon, 3 Nov 2014 10:09:13 +0530
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: Re: [PATCH] ath9k: Cancel pending offchannel operations [and 1 more messages]
+In-Reply-To: <1414825459-8974-1-git-send-email-sujith@msujith.org>,
+	<1414825540-9064-1-git-send-email-sujith@msujith.org>
+References: <1414825540-9064-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Liad Kaufman <liad.kaufman@intel.com>
+Hi John,
 
-Even if running the driver with param init_dbg=1 - on INIT
-image error - iwl_trans_stop_device() was still called. This
-patch fixes that and calls iwl_trans_stop_device() on INIT
-image failure only if init_dbg=0.
+Can you please hold off on these patches ?
+I'll repost them after some more testing.
 
-Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/ops.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Sujith
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
-index bd52ecfa..8c5bdf9 100644
---- a/drivers/net/wireless/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
-@@ -524,7 +524,8 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
- 
- 		mutex_lock(&mvm->mutex);
- 		err = iwl_run_init_mvm_ucode(mvm, true);
--		iwl_trans_stop_device(trans);
-+		if (!err || !iwlmvm_mod_params.init_dbg)
-+			iwl_trans_stop_device(trans);
- 		mutex_unlock(&mvm->mutex);
- 		/* returns 0 if successful, 1 if success but in rfkill */
- 		if (err < 0 && !iwlmvm_mod_params.init_dbg) {
--- 
-1.9.1
+Sujith Manoharan wrote:
+> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+> 
+> In mgd_prepare_tx(), any pending HW scan is cancelled,
+> but pending RoC operations are not cancelled. This
+> results in a RoC request that never completes. For example,
+> in a GO/STA setup, if p2p-find is initiated on an active GO
+> interface wpa_s issues a RoC on the listen channel at the
+> end of each scan run.
+> 
+> Enabling the station interface will force the station context
+> and the earlier RoC is not cleared. Fix this by clearing all
+> pending offchannel operations in mgd_prepare_tx().
 
+Sujith Manoharan wrote:
+> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+> 
+> When a pending roc or scan operation is cancelled,
+> the offchannel operation is cleared, but the offchannel
+> state in the main scheduler is not cleared. This causes
+> problems since an active GO will try to process a stale
+> offchannel request that was deferred earlier. Fix this
+> by clearing the state when there is no pending offchannel
+> (roc/scan) operation.
