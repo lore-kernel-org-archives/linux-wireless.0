@@ -1,45 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bn1bon0061.outbound.protection.outlook.com ([157.56.111.61]:59072
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752119AbaKZTYb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Nov 2014 14:24:31 -0500
-Received: by mail-ie0-f179.google.com with SMTP id rp18so3261251iec.38
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Nov 2014 11:24:24 -0800 (PST)
+Received: from userp1040.oracle.com ([156.151.31.81]:45307 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751837AbaKCMWq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Nov 2014 07:22:46 -0500
+Date: Mon, 3 Nov 2014 15:22:46 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com
+Subject: Re: brcm80211: use endian annotation for pmk related structure
+Message-ID: <20141103122246.GQ6890@mwanda> (sfid-20141103_132249_565831_0B66D438)
+References: <20141031125136.GA17467@mwanda>
+ <54539A33.6000001@broadcom.com>
+ <20141031142618.GL6890@mwanda>
+ <54539EB0.2050207@broadcom.com>
 MIME-Version: 1.0
-From: Ashkan Parcham Kashani <ashkan.parchamkashani@mail.utoronto.ca>
-Date: Wed, 26 Nov 2014 14:24:03 -0500
-Message-ID: <CAPZAZS5EiYg9DPRjJjKmjm680Xh5ycmn9fZw9f2SuJ_TxnYemQ@mail.gmail.com> (sfid-20141126_202434_108146_8D1C33A5)
-Subject: Wireless Module: Carl9170 driver and firmware communication
-To: <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <54539EB0.2050207@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Fri, Oct 31, 2014 at 03:37:36PM +0100, Arend van Spriel wrote:
+> On 10/31/14 15:26, Dan Carpenter wrote:
+> >On Fri, Oct 31, 2014 at 03:18:27PM +0100, Arend van Spriel wrote:
+> >>Understood. Not sure what the motivation is to mistrust endian more.
+> >
+> >Endian data tends to come from suspicious places such as disk images,
+> >usb devices, and networks.
+> >
+> >>Simply because there could be conversion errors? Anyway, the main
+> >>question is whether pmkid_len is always between 0 and
+> >>WLAN_PMKID_LEN. As far as I know it is. We could 1) add additional
+> >>checks here, 2) make pmkid_len of u32 type, or 3) just mention the
+> >>(sure) assumption in a comment. I would prefer option 2) or 3).
+> >
+> >I would prefer 2.  Static checker warnings are a pain.
+> 
+> Now who has been tinkering on static checkers ;-) Anyway, option 2)
+> it is. Who will do the patch? :-p
 
-I'm working on a project where I need to communicate some additional
-control information between the carl9170 driver and firmware. I am not
-exactly sure where the best place to add this information would be. I
-assumed that the DMA might work if I can extend it and reserve some
-space for the controls. I only need a few bytes for the communication.
+Actually, in the end making it unsigned doesn't make sense because we
+don't check for upper bound either.
 
-I also considered using device registers for this, but it's hard to
-find documentation of which registers may be free to use.
+Let's just forget about it.
 
-It would be great to get some opinions on the best way to do this;
-would you have any advice?
+regards,
+dan carpenter
 
-If the DMA is a possible way to go, how would I go about extending it?
-To my understanding, the firmware sets the needed sizes, and the
-driver allocates the DMA accorting to specification.
-
-I'm also wondering how one would go about interrupting the firmware.
-At times, the driver will need to interrupt the firmware, in which
-case the firmware should stop transmitting any packets it is currently
-transmitting.
-
-Any help would be much appreciated. Thanks so much!
---
-Ashkan Kashani
-ashkan.parchamkashani@mail.utoronto.ca
