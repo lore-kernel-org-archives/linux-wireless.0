@@ -1,45 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:44170 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751507AbaKKSfV (ORCPT
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:58301 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752543AbaKCTtz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Nov 2014 13:35:21 -0500
-Message-ID: <546256E3.1080606@broadcom.com> (sfid-20141111_193529_365396_AD512D53)
-Date: Tue, 11 Nov 2014 19:35:15 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Felipe Contreras <felipe.contreras@gmail.com>
-CC: linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	Franky Lin <frankyl@broadcom.com>,
-	Samuel Ortiz <sameo@linux.intel.com>
-Subject: Re: brcmfmac not working on ECS LIVA
-References: <CAMP44s2XAmaiK2=BJA3TCW48Uo=5qyT5WsASDsZnOiSNgK6b0A@mail.gmail.com>	<545F4611.3010207@broadcom.com>	<CAMP44s1NiYrFkN=DQcyGiJyW+JvCGvRVzcEBGLtvGyhfWs17kQ@mail.gmail.com>	<5461EE3B.8040301@broadcom.com> <CAMP44s10T_mxqLigrPf_Ox4jej--87QmjG7cNjT8o_qyU2HXjg@mail.gmail.com>
-In-Reply-To: <CAMP44s10T_mxqLigrPf_Ox4jej--87QmjG7cNjT8o_qyU2HXjg@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+	Mon, 3 Nov 2014 14:49:55 -0500
+Received: by mail-wi0-f179.google.com with SMTP id h11so7404569wiw.6
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Nov 2014 11:49:53 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 1/2] iwlwifi: mvm: initialize the cur_ucode upon boot
+Date: Mon,  3 Nov 2014 21:49:45 +0200
+Message-Id: <1415044186-5559-1-git-send-email-egrumbach@gmail.com> (sfid-20141103_204958_301574_31D4A995)
+In-Reply-To: <5457DC1C.7020200@gmail.com>
+References: <5457DC1C.7020200@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11-11-14 19:32, Felipe Contreras wrote:
-> On Tue, Nov 11, 2014 at 5:08 AM, Arend van Spriel <arend@broadcom.com> wrote:
->> On 10-11-14 21:48, Felipe Contreras wrote:
-> 
->>> /etc/modprobe.d/brcmfmac.conf
->>> options brcmfmac debug=0xd416
->>>
->>> I see nothing extra in the debug log... Am I doing something wrong?
->>
->> Not sure. You can verify and set the log level through sysfs, ie.:
->>
->> $ cat /sys/module/brcmfmac/parameters/debug
-> 
-> 54294
-> 
-> I guess ArchLinux's kernel is missing some configuration option needed
-> for the debugging.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Can you boot the kernel with 'debug ignore_loglevel' on the kernel
-command line.
+mvm->cur_ucode wasn't set before we actually load the
+firmware. This caused issues when we boot in RFKILL since
+we get an RFKILL interrupt upon boot even before we load
+any firmware.
+This leads to issues since iwl_mvm_set_hw_rfkill_state
+(the RFKILL interrupts handler in mvm) relies on this
+variable.
 
-Regards,
-Arend
+Fix this.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/ops.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
+index 48cb25a..27fb0a1 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
+@@ -424,6 +424,7 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
+ 	}
+ 	mvm->sf_state = SF_UNINIT;
+ 	mvm->low_latency_agg_frame_limit = 6;
++	mvm->cur_ucode = IWL_UCODE_INIT;
+ 
+ 	mutex_init(&mvm->mutex);
+ 	mutex_init(&mvm->d0i3_suspend_mutex);
+-- 
+1.9.1
 
