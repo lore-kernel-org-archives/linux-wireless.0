@@ -1,35 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:55778 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751175AbaKUNR6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Nov 2014 08:17:58 -0500
-Message-ID: <1416575873.1881.7.camel@sipsolutions.net> (sfid-20141121_141805_567727_0626D120)
-Subject: Re: [PATCH] mac80211_hwsim: Send alpha2 only if non-zero
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Patrik Flykt <patrik.flykt@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 21 Nov 2014 14:17:53 +0100
-In-Reply-To: <1416575282-19966-1-git-send-email-patrik.flykt@linux.intel.com>
-References: <1416575282-19966-1-git-send-email-patrik.flykt@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from senator.holtmann.net ([87.106.208.187]:47645 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753829AbaKCVfL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Nov 2014 16:35:11 -0500
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 8.0 \(1990.1\))
+Subject: Re: [PATCH bluetooth-next] netdevice: add ieee802154_ptr to net_device
+From: Marcel Holtmann <marcel@holtmann.org>
+In-Reply-To: <20141103.122024.541066618529355652.davem@davemloft.net>
+Date: Mon, 3 Nov 2014 13:35:02 -0800
+Cc: Alexander Aring <alex.aring@gmail.com>, linux-wpan@vger.kernel.org,
+	kernel@pengutronix.de, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Message-Id: <F8A94B2C-4EFE-4867-A447-C98ED5142B3B@holtmann.org> (sfid-20141103_223520_843072_7EDD4C11)
+References: <1414907094-9623-1-git-send-email-alex.aring@gmail.com> <20141103.122024.541066618529355652.davem@davemloft.net>
+To: "David S. Miller" <davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-11-21 at 15:08 +0200, Patrik Flykt wrote:
-> A properly set alpha2 value consists of two chars that both contain
-> letters or digits. If no value is set, both chars keep their initial
-> value zero. Therefore do not send the alpha2 parameter to user space
-> if either of the characters has been left at its initial zero value.
-> 
-> Signed-off-by: Patrik Flykt <patrik.flykt@linux.intel.com>
-> ---
-> 
-> This is a fix for the issue Johannes noted with the patch adding
-> HWSIM_CMD_GET_RADIO support.
+Hi Alex,
 
-Interesting. I must have left the patch applied by accident. Oh well,
-I'll apply this as well :)
+>> This patch adds an ieee802154_ptr to the net_device structure.
+>> Furthermore the 802.15.4 subsystem will introduce a nl802154 framework
+>> which is similar like the nl80211 framework and a wpan_dev structure.
+>> The wpan_dev structure will hold additional net_device attributes like
+>> address options which are 802.15.4 specific. In the upcoming nl802154
+>> implementation we will introduce a NL802154_FLAG_NEED_WPAN_DEV like
+>> NL80211_FLAG_NEED_WDEV. For this flag an ieee802154_ptr in net_device is
+>> needed. Additional we can access the wpan_dev attributes in upper layers
+>> like IEEE 802.15.4 6LoWPAN easily. Current solution is a complicated
+>> callback interface and getting these values over subif data structure
+>> in mac802154.
+>> 
+>> Signed-off-by: Alexander Aring <alex.aring@gmail.com>
+> 
+> No objections, and you can merge this via the bluetooth tree:
+> 
+> Acked-by: David S. Miller <davem@davemloft.net>
 
-johannes
+patch has been applied to bluetooth-next tree.
+
+Regards
+
+Marcel
 
