@@ -1,30 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:57571 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751893AbaK3IjI (ORCPT
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:59324 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753529AbaKCSGy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Nov 2014 03:39:08 -0500
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: nick <xerofoify@gmail.com>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	<wil6210@qca.qualcomm.com>, <netdev@vger.kernel.org>
-Subject: Re: Question about function. wil_vring_alloc_skb in txrx.c
-Date: Sun, 30 Nov 2014 10:39:03 +0200
-Message-ID: <8489393.vIdH6vj4qd@lx-wigig-72> (sfid-20141130_093911_854404_66786781)
-In-Reply-To: <547A5554.3010900@gmail.com>
-References: <547A5554.3010900@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 3 Nov 2014 13:06:54 -0500
+Received: by mail-wi0-f177.google.com with SMTP id ex7so7174050wid.4
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Nov 2014 10:06:53 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Eran Harary <eran.harary@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH] ieee80211: add "max length of AMPDU" enum for VHT
+Date: Mon,  3 Nov 2014 20:06:47 +0200
+Message-Id: <1415038007-2873-1-git-send-email-egrumbach@gmail.com> (sfid-20141103_190707_571153_B05E8D88)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday, November 29, 2014 06:23:00 PM nick wrote:
-> Greetings Vladimr,John and others,
-> I am wondering about the TODO in the function in my message at it seems to be no longer needed due to us reserving headroom for the skb packet used in this function. The other reason I can see that this is needed is if we need to 
-> align the sk_buff for performance or hardware alignment reasons. If that is the case, would someone we willing to
-> explain to me how the maintainers would like me to align the sk_buff packet used in the function, wil_vring_alloc_skb.
-Hi Nick,
-ignore this TODO, I'll remove it. I was not sure what is better for the hardware, now I know there is no hardware
-limitation.
+From: Eran Harary <eran.harary@intel.com>
 
-Thanks, Vladimir
+Maximum length of AMPDU that an STA can receive in VHT.
+length = 2 ^ (13 + max_ampdu_length_exp) - 1.
+
+Signed-off-by: Eran Harary <eran.harary@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ include/linux/ieee80211.h | 17 ++++++++++++++++-
+ 1 file changed, 16 insertions(+), 1 deletion(-)
+
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index b1be39c..42c910e 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -1274,7 +1274,7 @@ struct ieee80211_ht_cap {
+ #define		IEEE80211_HT_AMPDU_PARM_DENSITY_SHIFT	2
+ 
+ /*
+- * Maximum length of AMPDU that the STA can receive.
++ * Maximum length of AMPDU that the STA can receive in high-throughput (HT).
+  * Length = 2 ^ (13 + max_ampdu_length_exp) - 1 (octets)
+  */
+ enum ieee80211_max_ampdu_length_exp {
+@@ -1284,6 +1284,21 @@ enum ieee80211_max_ampdu_length_exp {
+ 	IEEE80211_HT_MAX_AMPDU_64K = 3
+ };
+ 
++/*
++ * Maximum length of AMPDU that the STA can receive in VHT.
++ * Length = 2 ^ (13 + max_ampdu_length_exp) - 1 (octets)
++ */
++enum ieee80211_vht_max_ampdu_length_exp {
++	IEEE80211_VHT_MAX_AMPDU_8K = 0,
++	IEEE80211_VHT_MAX_AMPDU_16K = 1,
++	IEEE80211_VHT_MAX_AMPDU_32K = 2,
++	IEEE80211_VHT_MAX_AMPDU_64K = 3,
++	IEEE80211_VHT_MAX_AMPDU_128K = 4,
++	IEEE80211_VHT_MAX_AMPDU_256K = 5,
++	IEEE80211_VHT_MAX_AMPDU_512K = 6,
++	IEEE80211_VHT_MAX_AMPDU_1024K = 7
++};
++
+ #define IEEE80211_HT_MAX_AMPDU_FACTOR 13
+ 
+ /* Minimum MPDU start spacing */
+-- 
+1.9.1
+
