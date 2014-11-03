@@ -1,136 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f182.google.com ([209.85.212.182]:50869 "EHLO
-	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751173AbaK0HpD (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:32263 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751228AbaKCXGb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Nov 2014 02:45:03 -0500
-Received: by mail-wi0-f182.google.com with SMTP id h11so7344580wiw.9
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Nov 2014 23:45:02 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v5 4/4] cfg80211: return private regdom for self-managed devices
-Date: Thu, 27 Nov 2014 09:44:58 +0200
-Message-Id: <1417074298-12254-4-git-send-email-arik@wizery.com> (sfid-20141127_084512_440860_F9F86EDD)
-In-Reply-To: <1417074298-12254-1-git-send-email-arik@wizery.com>
-References: <1417074298-12254-1-git-send-email-arik@wizery.com>
+	Mon, 3 Nov 2014 18:06:31 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Bartosz Markowski <bartosz.markowski@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v3] ath10k: fix pm resume after suspend
+References: <1414742623-308-1-git-send-email-bartosz.markowski@tieto.com>
+Date: Tue, 4 Nov 2014 01:06:06 +0200
+In-Reply-To: <1414742623-308-1-git-send-email-bartosz.markowski@tieto.com>
+	(Bartosz Markowski's message of "Fri, 31 Oct 2014 09:03:43 +0100")
+Message-ID: <87d2937uld.fsf@kamboji.qca.qualcomm.com> (sfid-20141104_000634_756907_9E00D28A)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If a device has self-managed regulatory, insist on returning the wiphy
-specific regdomain if a wiphy-idx is specified. The global regdomain is
-meaningless for such devices.
+Bartosz Markowski <bartosz.markowski@tieto.com> writes:
 
-Also add an attribute for self-managed devices, so usermode can distinguish
-them as such.
+> Firmware was crashing when we were trying to warm reset it
+> after suspend. This was due to the fact that target registeres
+> can be accessed only if the hardware is awaken.
+>
+> This patch makes sure to awake the device also on the hif up,
+> not only in case of probe call.
+>
+> Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
 
-Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
----
- include/uapi/linux/nl80211.h |  7 +++++++
- net/wireless/nl80211.c       | 31 ++++++++++++++++++++++++++++---
- 2 files changed, 35 insertions(+), 3 deletions(-)
+Thanks, applied.
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 0143c59..67eb8ff 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1703,6 +1703,11 @@ enum nl80211_commands {
-  * @NL80211_ATTR_WIPHY_REGDOM_LIST: Nested set of attributes containing
-  *	a list of wiphy specific regdomains.
-  *
-+ * @NL80211_ATTR_WIPHY_SELF_MANAGED_REG: flag attribute indicating this device
-+ *	is self-managing its regulatory information and any regulatory domain
-+ *	obtained from it is coming from the device's wiphy and not the global
-+ *	cfg80211 regdomain.
-+ *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -2064,6 +2069,8 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_WIPHY_REGDOM_LIST,
- 
-+	NL80211_ATTR_WIPHY_SELF_MANAGED_REG,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 361a897..42bc9ed 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -398,6 +398,7 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
- 	[NL80211_ATTR_MAC_MASK] = { .len = ETH_ALEN },
- 	[NL80211_ATTR_WIPHY_PRIV_REG] = { .type = NLA_FLAG },
- 	[NL80211_ATTR_WIPHY_REGDOM_LIST] = { .type = NLA_NESTED },
-+	[NL80211_ATTR_WIPHY_SELF_MANAGED_REG] = { .type = NLA_FLAG },
- };
- 
- /* policy for the key attributes */
-@@ -5409,6 +5410,7 @@ static int nl80211_get_reg(struct sk_buff *skb, struct genl_info *info)
- 		goto put_failure;
- 
- 	if (info->attrs[NL80211_ATTR_WIPHY]) {
-+		bool self_managed;
- 		rdev = cfg80211_get_dev_from_info(genl_info_net(info), info);
- 		if (IS_ERR(rdev)) {
- 			nlmsg_free(msg);
-@@ -5416,10 +5418,22 @@ static int nl80211_get_reg(struct sk_buff *skb, struct genl_info *info)
- 		}
- 
- 		wiphy = &rdev->wiphy;
-+		self_managed = wiphy->regulatory_flags &
-+			       REGULATORY_WIPHY_SELF_MANAGED;
- 		regdom = get_wiphy_regdom(wiphy);
- 		if (regdom &&
- 		    nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx))
- 			goto nla_put_failure;
-+
-+		/* a self-managed-reg device must have a private regdom */
-+		if (WARN_ON(!regdom && self_managed)) {
-+			nlmsg_free(msg);
-+			return -EINVAL;
-+		}
-+
-+		if (self_managed &&
-+		    nla_put_flag(msg, NL80211_ATTR_WIPHY_SELF_MANAGED_REG))
-+			goto nla_put_failure;
- 	}
- 
- 	if (!regdom) {
-@@ -5467,6 +5481,10 @@ static int nl80211_get_reg(struct sk_buff *skb, struct genl_info *info)
- 		if (nla_put_flag(msg, NL80211_ATTR_WIPHY_PRIV_REG))
- 			goto nla_put_failure_rcu;
- 
-+		if (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED &&
-+		    nla_put_flag(msg, NL80211_ATTR_WIPHY_SELF_MANAGED_REG))
-+			goto nla_put_failure_rcu;
-+
- 		nla_nest_end(msg, nl_priv_regdom);
- 		i++;
- 	}
-@@ -11035,9 +11053,16 @@ static bool nl80211_reg_change_event_fill(struct sk_buff *msg,
- 			goto nla_put_failure;
- 	}
- 
--	if (request->wiphy_idx != WIPHY_IDX_INVALID &&
--	    nla_put_u32(msg, NL80211_ATTR_WIPHY, request->wiphy_idx))
--		goto nla_put_failure;
-+	if (request->wiphy_idx != WIPHY_IDX_INVALID) {
-+		struct wiphy *wiphy;
-+
-+		wiphy = wiphy_idx_to_wiphy(request->wiphy_idx);
-+		if (wiphy &&
-+		    nla_put_u32(msg, NL80211_ATTR_WIPHY, request->wiphy_idx) &&
-+		    wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED &&
-+		    nla_put_flag(msg, NL80211_ATTR_WIPHY_SELF_MANAGED_REG))
-+			goto nla_put_failure;
-+	}
- 
- 	return true;
- 
 -- 
-1.9.1
-
+Kalle Valo
