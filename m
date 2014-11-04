@@ -1,52 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:46733 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755870AbaKSRxX (ORCPT
+Received: from mail-la0-f51.google.com ([209.85.215.51]:60318 "EHLO
+	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752557AbaKDOeV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Nov 2014 12:53:23 -0500
-Message-ID: <546CD912.1090809@candelatech.com> (sfid-20141119_185325_711985_12C867B7)
-Date: Wed, 19 Nov 2014 09:53:22 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Bob Copeland <me@bobcopeland.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, luca@coelho.fi,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [RFC] mac80211: allow drivers to provide any statistics
-References: <1416221286-23126-1-git-send-email-johannes@sipsolutions.net> <20141119174925.GM11482@localhost>
-In-Reply-To: <20141119174925.GM11482@localhost>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 4 Nov 2014 09:34:21 -0500
+Received: by mail-la0-f51.google.com with SMTP id q1so983200lam.10
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Nov 2014 06:34:20 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 0/7] ath10k: rework rx path
+Date: Tue,  4 Nov 2014 15:22:04 +0100
+Message-Id: <1415110931-10945-1-git-send-email-michal.kazior@tieto.com> (sfid-20141104_153425_118704_73D34811)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/19/2014 09:49 AM, Bob Copeland wrote:
-> On Mon, Nov 17, 2014 at 11:48:06AM +0100, Johannes Berg wrote:
->> From: Johannes Berg <johannes.berg@intel.com>
->>
->> In many cases, drivers can filter things like beacons that will
->> skew statistics reported by mac80211. To get correct statistics
->> in these cases, call drivers to obtain statistics and let them
->> override all values, filling values from mac80211 if the driver
->> didn't provide them.
-> 
-> Neat.
-> 
-> For mesh, it's handy to have the (somewhat imperfectly specified)
-> sta->fail_avg too for drivers that implement all the rate control
-> in firmware and thus may not report tx status for all frames.
-> 
-> At cozybit we had implemented a drv_link_stats driver op (hack) that
-> just got last_tx_rate and fail_avg so that the airtime link metric
-> could work on such devices; this call could replace that, I hope.
+Hi,
+
+This patchset unifies rx path. Instead of
+branching for A-MSDU and MSDU cases a single
+codepath is introduced.
+
+This yields:
+
+   text    data     bss     dec     hex filename
+  14068       0       0   14068    36f4 before/htt_rx.o
+  13308       3       0   13311    33ff after/htt_rx.o
+
+I haven't measured any Rx performance loss in my
+setup but I may be biased. In theory this could
+reduce i-cache pressure and improve Rx throughput
+on CPU contrained systems by a few mbps.
+
+This patchset serves two purposes though:
+ - clean up and unify the Rx path a bit
+ - make it possible to reuse code more easily in
+   the future
 
 
-The ethtool stats API could also handle at least some of this,
-but it's a bit free-form to program against...
+Michal Kazior (7):
+  ath10k: start using sk_buff_head
+  ath10k: simplify Rx loop
+  ath10k: refactor htt->rx_confused
+  ath10k: unify rx undecapping
+  ath10k: remove unused function argument
+  ath10k: use rx descriptor for ppdu status extraction
+  ath10k: report rx rate and signal for fragmented Rx
 
-Thanks,
-Ben
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 1063 ++++++++++++++++--------------
+ 1 file changed, 577 insertions(+), 486 deletions(-)
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.8.5.3
 
