@@ -1,50 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:53047 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751699AbaKZVVQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Nov 2014 16:21:16 -0500
-Date: Wed, 26 Nov 2014 22:21:15 +0100
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-To: Arik Nemtsov <arik@wizery.com>
+Received: from mail-lb0-f182.google.com ([209.85.217.182]:48397 "EHLO
+	mail-lb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753376AbaKDOeZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Nov 2014 09:34:25 -0500
+Received: by mail-lb0-f182.google.com with SMTP id f15so12485510lbj.27
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Nov 2014 06:34:24 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
 Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jonathan Doron <jond@wizery.com>
-Subject: Re: [PATCH v4 2/4] cfg80211: allow wiphy specific regdomain
-	management
-Message-ID: <20141126212115.GS25677@wotan.suse.de> (sfid-20141126_222119_425383_F9D2BB2A)
-References: <1417035388-2511-1-git-send-email-arik@wizery.com> <1417035388-2511-2-git-send-email-arik@wizery.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1417035388-2511-2-git-send-email-arik@wizery.com>
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 3/7] ath10k: refactor htt->rx_confused
+Date: Tue,  4 Nov 2014 15:22:07 +0100
+Message-Id: <1415110931-10945-4-git-send-email-michal.kazior@tieto.com> (sfid-20141104_153431_963266_59218147)
+In-Reply-To: <1415110931-10945-1-git-send-email-michal.kazior@tieto.com>
+References: <1415110931-10945-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 26, 2014 at 10:56:26PM +0200, Arik Nemtsov wrote:
-> From: Jonathan Doron <jond@wizery.com>
-> 
-> Add a new regulatory flag that allows a driver to manage regdomain
-> changes/updates for its own wiphy.
-> A self-managed wiphys only employs regulatory information obtained from
-> the FW and driver and does not use other cfg80211 sources like
-> beacon-hints, country-code IEs and hints from other devices on the same
-> system. Conversely, a self-managed wiphy does not share its regulatory
-> hints with other devices in the system. If a system contains several
-> devices, one or more of which are self-managed, there might be
-> contradictory regulatory settings between them. Usage of flag is
-> generally discouraged. Only use it if the FW/driver is incompatible
-> with non-locally originated hints.
-> 
-> A new API lets the driver send a complete regdomain, to be applied on
-> its wiphy only.
-> 
-> After a wiphy-specific regdomain change takes place, usermode will get
-> a new type of change notification. The regulatory core also takes care
-> enforce regulatory restrictions, in case some interfaces are on
-> forbidden channels.
-> 
-> Signed-off-by: Jonathan Doron <jonathanx.doron@intel.com>
-> Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+Make the rx_confused be handled by the rx
+indication handlers instead of the buffer popping
+function.
 
-Reviewed-by: Luis R. Rodriguez <mcgrof@suse.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 29 ++++++++++++-----------------
+ 1 file changed, 12 insertions(+), 17 deletions(-)
 
- Luis
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index cba2f3b..651028e 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -316,20 +316,13 @@ static int ath10k_htt_rx_amsdu_pop(struct ath10k_htt *htt,
+ 
+ 	lockdep_assert_held(&htt->rx_ring.lock);
+ 
+-	if (htt->rx_confused) {
+-		ath10k_warn(ar, "htt is confused. refusing rx\n");
+-		return -1;
+-	}
+-
+ 	for (;;) {
+ 		int last_msdu, msdu_len_invalid, msdu_chained;
+ 
+ 		msdu = ath10k_htt_rx_netbuf_pop(htt);
+ 		if (!msdu) {
+-			ath10k_err(ar, "failed to pop msdu\n");
+ 			__skb_queue_purge(amsdu);
+-			htt->rx_confused = true;
+-			break;
++			return -ENOENT;
+ 		}
+ 
+ 		__skb_queue_tail(amsdu, msdu);
+@@ -351,10 +344,8 @@ static int ath10k_htt_rx_amsdu_pop(struct ath10k_htt *htt,
+ 		 */
+ 		if (!(__le32_to_cpu(rx_desc->attention.flags)
+ 				& RX_ATTENTION_FLAGS_MSDU_DONE)) {
+-			ath10k_err(ar, "popped an incomplete msdu\n");
+ 			__skb_queue_purge(amsdu);
+-			htt->rx_confused = true;
+-			break;
++			return -EIO;
+ 		}
+ 
+ 		*attention |= __le32_to_cpu(rx_desc->attention.flags) &
+@@ -422,10 +413,8 @@ static int ath10k_htt_rx_amsdu_pop(struct ath10k_htt *htt,
+ 		while (msdu_chained--) {
+ 			msdu = ath10k_htt_rx_netbuf_pop(htt);
+ 			if (!msdu) {
+-				ath10k_warn(ar, "failed to pop chained msdu\n");
+ 				__skb_queue_purge(amsdu);
+-				htt->rx_confused = true;
+-				break;
++				return -ENOENT;
+ 			}
+ 
+ 			__skb_queue_tail(amsdu, msdu);
+@@ -1201,6 +1190,9 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
+ 
+ 	lockdep_assert_held(&htt->rx_ring.lock);
+ 
++	if (htt->rx_confused)
++		return;
++
+ 	fw_desc_len = __le16_to_cpu(rx->prefix.fw_rx_desc_bytes);
+ 	fw_desc = (u8 *)&rx->fw_desc;
+ 
+@@ -1246,10 +1238,13 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
+ 					      &fw_desc_len, &amsdu,
+ 					      &attention);
+ 		if (ret < 0) {
+-			ath10k_warn(ar, "failed to pop amsdu from htt rx ring %d\n",
+-				    ret);
++			ath10k_warn(ar, "rx ring became corrupted: %d\n", ret);
+ 			__skb_queue_purge(&amsdu);
+-			continue;
++			/* FIXME: It's probably a good idea to reboot the
++			 * device instead of leaving it inoperable.
++			 */
++			htt->rx_confused = true;
++			break;
+ 		}
+ 
+ 		if (!ath10k_htt_rx_amsdu_allowed(htt, skb_peek(&amsdu),
+-- 
+1.8.5.3
+
