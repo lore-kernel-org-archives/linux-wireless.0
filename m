@@ -1,51 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:8366 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751669AbaKKTKR (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:43844 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751804AbaKDXYC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Nov 2014 14:10:17 -0500
-Message-ID: <54625F10.2010907@broadcom.com> (sfid-20141111_201023_645067_9BA1EAAC)
-Date: Tue, 11 Nov 2014 20:10:08 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Felipe Contreras <felipe.contreras@gmail.com>
-CC: linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	Franky Lin <frankyl@broadcom.com>,
-	Samuel Ortiz <sameo@linux.intel.com>
-Subject: Re: brcmfmac not working on ECS LIVA
-References: <CAMP44s2XAmaiK2=BJA3TCW48Uo=5qyT5WsASDsZnOiSNgK6b0A@mail.gmail.com>	<545F4611.3010207@broadcom.com>	<CAMP44s1NiYrFkN=DQcyGiJyW+JvCGvRVzcEBGLtvGyhfWs17kQ@mail.gmail.com>	<5461EE3B.8040301@broadcom.com>	<CAMP44s10T_mxqLigrPf_Ox4jej--87QmjG7cNjT8o_qyU2HXjg@mail.gmail.com>	<546256E3.1080606@broadcom.com> <CAMP44s3r7DS6eR4pDqesv1JeiWsC-j75QGdGJk=PBX208sUJ1g@mail.gmail.com>
-In-Reply-To: <CAMP44s3r7DS6eR4pDqesv1JeiWsC-j75QGdGJk=PBX208sUJ1g@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+	Tue, 4 Nov 2014 18:24:02 -0500
+From: greearb@candelatech.com
+To: ath9k-devel@lists.ath9k.org
+Cc: linux-wireless@vger.kernel.org, rmanohar@qti.qualcomm.com,
+	nbd@openwrt.org, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 2/2] ath9k:  fix regression in bssidmask calculation
+Date: Tue,  4 Nov 2014 15:22:50 -0800
+Message-Id: <1415143370-15173-2-git-send-email-greearb@candelatech.com> (sfid-20141105_002408_545863_3603EAAC)
+In-Reply-To: <1415143370-15173-1-git-send-email-greearb@candelatech.com>
+References: <1415143370-15173-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/11/14 19:49, Felipe Contreras wrote:
-> On Tue, Nov 11, 2014 at 12:35 PM, Arend van Spriel<arend@broadcom.com>  wrote:
->> On 11-11-14 19:32, Felipe Contreras wrote:
->>> On Tue, Nov 11, 2014 at 5:08 AM, Arend van Spriel<arend@broadcom.com>  wrote:
->>>> On 10-11-14 21:48, Felipe Contreras wrote:
->>>
->>>>> /etc/modprobe.d/brcmfmac.conf
->>>>> options brcmfmac debug=0xd416
->>>>>
->>>>> I see nothing extra in the debug log... Am I doing something wrong?
->>>>
->>>> Not sure. You can verify and set the log level through sysfs, ie.:
->>>>
->>>> $ cat /sys/module/brcmfmac/parameters/debug
->>>
->>> 54294
->>>
->>> I guess ArchLinux's kernel is missing some configuration option needed
->>> for the debugging.
->>
->> Can you boot the kernel with 'debug ignore_loglevel' on the kernel
->> command line.
->
-> Yes. I see more systemd messages, nothing extra from brcmfmac.
+From: Ben Greear <greearb@candelatech.com>
 
-Ok. Probably brcmfmac was not built with CONFIG_BRCMDBG. Can you 
-checkout kernel config.
+The commit that went into 3.17:
 
-Regards,
-Arend
+    ath9k: Summarize hw state per channel context
+
+    Group and set hw state (opmode, primary_sta, beacon conf) per
+    channel context instead of whole list of vifs. This would allow
+    each channel context to run in different mode (STA/AP).
+
+    Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+    Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+
+broke multi-vif configuration due to not properly calculating
+the bssid mask.
+
+The test case that caught this was:
+
+ create wlan0 and sta0-4 (6 total), not sure how much that matters.
+ associate all 6 (works fine)
+ disconnect 5 of them, leaving sta0 up
+ Start trying to bring up the other 5 one at a time.  It will
+ fail, with iw events looking like this (in these logs, several
+ sta are trying to come up, but symptom is the same with just one)
+
+The patch causing the regression made quite a few changes, but
+the part I think caused this particular problem was not
+recalculating the bssid mask when adding and removing interfaces.
+
+Re-adding those calls fixes my test case.  Fix bad comment
+as well.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+
+This needs to be reviewed by ath9k driver folks that added
+the original patch, at least.
+
+And, should be considered for 3.17 stable if fix is accepted upstream.
+
+ drivers/net/wireless/ath/ath9k/main.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index fbf23ac..d2ad9e95 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -947,9 +947,8 @@ void ath9k_calculate_iter_data(struct ath_softc *sc,
+ 	struct ath_vif *avp;
+ 
+ 	/*
+-	 * Pick the MAC address of the first interface as the new hardware
+-	 * MAC address. The hardware will use it together with the BSSID mask
+-	 * when matching addresses.
++	 * The hardware will use primary station addr together with the
++	 * BSSID mask when matching addresses.
+ 	 */
+ 	memset(iter_data, 0, sizeof(*iter_data));
+ 	memset(&iter_data->mask, 0xff, ETH_ALEN);
+@@ -1169,6 +1168,8 @@ static int ath9k_add_interface(struct ieee80211_hw *hw,
+ 		list_add_tail(&avp->list, &avp->chanctx->vifs);
+ 	}
+ 
++	ath9k_calculate_summary_state(sc, avp->chanctx);
++
+ 	ath9k_assign_hw_queues(hw, vif);
+ 
+ 	an->sc = sc;
+@@ -1238,6 +1239,8 @@ static void ath9k_remove_interface(struct ieee80211_hw *hw,
+ 
+ 	ath_tx_node_cleanup(sc, &avp->mcast_node);
+ 
++	ath9k_calculate_summary_state(sc, avp->chanctx);
++
+ 	mutex_unlock(&sc->mutex);
+ }
+ 
+-- 
+1.9.3
+
