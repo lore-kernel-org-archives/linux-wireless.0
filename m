@@ -1,65 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:54525 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752488AbaKGWAM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Nov 2014 17:00:12 -0500
-Date: Fri, 7 Nov 2014 16:50:18 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: wireless-regdb@lists.infradead.org
-Subject: [ANN] wireless-regdb: master-2014-11-07
-Message-ID: <20141107215018.GA15394@tuxdriver.com> (sfid-20141107_230016_703718_44F3451E)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:52695 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752962AbaKDKWO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Nov 2014 05:22:14 -0500
+Message-ID: <1415096517.2064.15.camel@sipsolutions.net> (sfid-20141104_112225_852460_99485AFC)
+Subject: Re: [PATCH] mac80211: replace restart_complete() with
+ reconfig_complete()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>,
+	Eliad Peller <eliadx.peller@intel.com>
+Date: Tue, 04 Nov 2014 11:21:57 +0100
+In-Reply-To: <1415094234-22006-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1415094234-22006-1-git-send-email-emmanuel.grumbach@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A new release of wireless-regdb (master-2014-11-07) is available at:
+On Tue, 2014-11-04 at 11:43 +0200, Emmanuel Grumbach wrote:
+> From: Eliad Peller <eliad@wizery.com>
+> 
+> Drivers might want to know also when mac80211 has
+> completed reconfiguring after resume (e.g. in order
+> to know when frames can be passed to mac80211).
+> 
+> Rename restart_complete() to a more-generic reconfig_complete(),
+> and add a new enum to indicate the reconfiguration type.
+> 
+> Update the current users with the new prototype.
 
-http://www.kernel.org/pub/software/network/wireless-regdb/wireless-regdb-2014.11.07.tar.gz
+Applied.
 
-Here is the short log of the changes included since the 2014-10-07
-release:
-
-John W. Linville (1):
-      wireless-regdb: update regulatory.bin based on preceding changes.
-
-Jouni Malinen (32):
-      wireless-regdb: Fix world roaming 160 MHz to use AUTO-BW
-      wireless-regdb: Add 160 MHz channel bandwidth for VHT
-      wireless-regdb: Add 160 MHz channel bandwidth for China (CN)
-      wireless-regdb: Add 5490-5710 MHz to Bulgaria (BG)
-      wireless-regdb: Add regulatory rules for American Samoa (AS)
-      wireless-regdb: Add regulatory rules for Bermuda (BM)
-      wireless-regdb: Add regulatory rules for The Bahamas (BS)
-      wireless-regdb: Add regulatory rules for Christmas Island (CX)
-      wireless-regdb: Add regulatory rules for Ethiopia (ET)
-      wireless-regdb: Add regulatory rules for French Guiana (GF)
-      wireless-regdb: Add regulatory rules for Guadeloupe (GP)
-      wireless-regdb: Add regulatory rules for Cayman Islands (KY)
-      wireless-regdb: Add regulatory rules for Mongolia (MN)
-      wireless-regdb: Add regulatory rules for Northern Mariana Islands (MP)
-      wireless-regdb: Add regulatory rules for Martinique (MQ)
-      wireless-regdb: Add regulatory rules for Mauritius (MU)
-      wireless-regdb: Add regulatory rules for Malawi (MW)
-      wireless-regdb: Add regulatory rules for Nicaragua (NI)
-      wireless-regdb: Add regulatory rules for French Polynesia (PF)
-      wireless-regdb: Add regulatory rules for Paraguay (PY)
-      wireless-regdb: Add regulatory rules for Reunion (RE)
-      wireless-regdb: Add regulatory rules for Suriname (SR)
-      wireless-regdb: Add regulatory rules for Uganda (UG)
-      wireless-regdb: Add regulatory rules for U.S. Virgin Islands (VI)
-      wireless-regdb: Add regulatory rules for Mayotte (YT)
-      wireless-regdb: Add 160 MHz channel bandwidth for Barbados (BB)
-      wireless-regdb: Add 160 MHz channel bandwidth for Dominican Republic (DO)
-      wireless-regdb: Add 160 MHz channel bandwidth for Dominica (DM)
-      wireless-regdb: Add 160 MHz channel bandwidth for Algeria (DZ)
-      wireless-regdb: Add 160 MHz channel bandwidth for Malaysia (MY)
-      wireless-regdb: Add 160 MHz channel bandwidth for Panama (PA)
-      wireless-regdb: Add 160 MHz channel bandwidth for Venezuela (VE)
-
-Vladimir Kondratiev (1):
-      wireless-regdb: update 60GHz rules for EU
-
+johannes
 
