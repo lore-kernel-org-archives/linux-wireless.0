@@ -1,46 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:34947 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754071AbaKRVvL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Nov 2014 16:51:11 -0500
-Message-ID: <1416347463.1939.9.camel@sipsolutions.net> (sfid-20141118_225117_221358_D8E42AB8)
-Subject: pull-request: mac80211 2014-11-18
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 18 Nov 2014 22:51:03 +0100
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:57809 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751160AbaKDJ12 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Nov 2014 04:27:28 -0500
+Received: by mail-wi0-f177.google.com with SMTP id ex7so8693223wid.4
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Nov 2014 01:27:27 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <B2CD83211F5FDD478D7EFFF030D107ED2AE2FDE7@hasmsx107.ger.corp.intel.com>
+References: <1415090436-12588-1-git-send-email-emmanuel.grumbach@intel.com>
+ <CABPxzYKfoO+NYi7Zs+5t6mRU+XwW5u=dKiBMsrzZ5VLO3ABDAg@mail.gmail.com> <B2CD83211F5FDD478D7EFFF030D107ED2AE2FDE7@hasmsx107.ger.corp.intel.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Tue, 4 Nov 2014 14:57:07 +0530
+Message-ID: <CABPxzYLFx7M=8E1pGYP7b7k-3xL9J8kYJ868BNDgkYgFOQNUQg@mail.gmail.com> (sfid-20141104_102733_673057_80D12D8D)
+Subject: Re: [PATCH] mac80211: Increase uapsd max SP frames number
+To: "Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
+Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John,
-
-And another patch, I'm a bit surprised nobody found this issue before.
-
-johannes
-
-The following changes since commit 4f031fa9f188b2b0641ac20087d9e16bcfb4e49d:
-
-  mac80211: Fix regression that triggers a kernel BUG with CCMP (2014-11-06 12:42:22 +0100)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-john-2014-11-18
-
-for you to fetch changes up to 280ba51d60be6f4ca3347eaa60783314f38df72e:
-
-  mac80211: minstrel_ht: fix a crash in rate sorting (2014-11-18 22:39:16 +0100)
-
-----------------------------------------------------------------
-Here's another last minute fix, for minstrel HT crashing
-depending on the value of some uninitialised stack.
-
-----------------------------------------------------------------
-Felix Fietkau (1):
-      mac80211: minstrel_ht: fix a crash in rate sorting
-
- net/mac80211/rc80211_minstrel_ht.c | 15 ++++++---------
- 1 file changed, 6 insertions(+), 9 deletions(-)
-
-
+On Tue, Nov 4, 2014 at 2:53 PM, Otcheretianski, Andrei
+<andrei.otcheretianski@intel.com> wrote:
+> The spec doesn't require unlimited to be really "unlimited" and the AP decides when to end the SP, so any value here is ok.
+> However for large traffic bursts increasing this value looks reasonable. Also looks like some certification tests expect more frames to be delivered during SP.
+> 128 is still kind of arbitrary value
+>
+>> -----Original Message-----
+>> From: Krishna Chaitanya [mailto:chaitanya.mgit@gmail.com]
+>> Sent: Tuesday, November 04, 2014 11:03
+>> To: Grumbach, Emmanuel
+>> Cc: Johannes Berg; linux-wireless; Otcheretianski, Andrei
+>> Subject: Re: [PATCH] mac80211: Increase uapsd max SP frames number
+>>
+>> On Tue, Nov 4, 2014 at 2:10 PM, Emmanuel Grumbach
+>> <emmanuel.grumbach@intel.com> wrote:
+>> > From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+>> >
+>> > Deliver up to 128 frames during SP instead of 8 if unlimited max SP is
+>> > specified during association.
+>> >
+>> > Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+>> > Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+>> > ---
+>> >  net/mac80211/sta_info.c | 2 +-
+>> >  1 file changed, 1 insertion(+), 1 deletion(-)
+>> >
+>> > diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c index
+>> > de494df..3352741 100644
+>> > --- a/net/mac80211/sta_info.c
+>> > +++ b/net/mac80211/sta_info.c
+>> > @@ -1531,7 +1531,7 @@ void ieee80211_sta_ps_deliver_uapsd(struct
+>> sta_info *sta)
+>> >                 break;
+>> >         case 0:
+>> >                 /* XXX: what is a good value? */
+>> > -               n_frames = 8;
+>> > +               n_frames = 128;
+>> >                 break;
+>> >         }
+>> What is criteria for deciding the threshold?
+>> Any specific use case for 128?
+I understand, thanks for the explanation.
