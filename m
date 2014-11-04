@@ -1,105 +1,177 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f53.google.com ([74.125.82.53]:47663 "EHLO
-	mail-wg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751451AbaKCJd0 (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:42941 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751160AbaKDL5y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Nov 2014 04:33:26 -0500
-From: Rostislav Lisovy <lisovy@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
-	jan-niklas.meier@volkswagen.de, burak.simsek@volkswagen.de,
-	Emmanuel Thierry <emmanuel.thierry@yogoko.fr>,
-	laszlo.virag@commsignia.com, lisovy@gmail.com,
-	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
-Subject: [PATCH 0/2 v3] cfg80211: mac80211: 802.11p OCB mode support
-Date: Mon,  3 Nov 2014 10:33:17 +0100
-Message-Id: <1415007199-31506-1-git-send-email-rostislav.lisovy@fel.cvut.cz> (sfid-20141103_103332_103442_D33582FF)
+	Tue, 4 Nov 2014 06:57:54 -0500
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Avinash Patil <patila@marvell.com>,
+	Cathy Luo <cluo@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 1/5] mwifiex: rx workqueue support for USB interface
+Date: Tue, 4 Nov 2014 03:56:59 -0800
+Message-ID: <1415102223-7118-1-git-send-email-akarwar@marvell.com> (sfid-20141104_125804_298466_86D1AFD2)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The IEEE 802.11p amendment (already part of IEEE 802.11-2012)
-specifies usage of 5 and 10 MHz wide channels in 5.9GHz band for
-vehicular environment. All the 802.11p compliant devices should
-be set to the newly added operation mode -- OCB (Outside the
-Context of a BSS). No authentication/association is necessary to
-communicate. The only parameter to be configured is the channel
-(central frequency and bandwidth) to communicate on. The channel
-has to be known a priori. It is set during the 'ocb join'
-operation (sent via netlink message from user-space).
+From: Avinash Patil <patila@marvell.com>
 
-This patchset adds the OCB mode, OCB join and leave handling
-(nl80211, cfg80211, mac80211), 802.11p EDCA parameters
-modification, RX and TX path (for unicast/broadcast messages).
+This patch adds RX workqueue support for USB interfaces.
+Currently rx_pending is applicable for cmd/events and Rx
+data in USB interface. Let's use it only for Rx data.
 
-What aspects are ignored for now:
-* Rate control -- We limit the supported datarates to the .11a
-  mandatory rates and use the Minstrel as usual
-* Actually restricting the OCB mode to the 5.9GHz band
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/mwifiex/init.c | 14 --------------
+ drivers/net/wireless/mwifiex/main.c |  8 +-------
+ drivers/net/wireless/mwifiex/main.h |  6 +-----
+ drivers/net/wireless/mwifiex/usb.c  |  9 +++------
+ 4 files changed, 5 insertions(+), 32 deletions(-)
 
-Tested with the ath9k card with slightly modified driver.
-User-space configuration utilities are not part of this patch.
-
-
-Changes since v2:
-* Make each separate patch warning-free (define dummy "case
-  NL80211_IFTYPE_OCB" statements to mac80211 for the "cfg80211
-  patch") (JBerg)
-* Remove unnecessary check in nl80211_join_ocb() (JBerg)
-* Do not forget to call __cfg80211_leave_ocb() in __cfg80211_leave()
-  (JBerg)
-
-Changes since v1:
-* Do not define bssid_wildcard in a header file, define it as
-  'static const' in ieee80211_setup_sdata only (JBerg)
-* Use GFP_ATOMIC memory allocation in ieee80211_ocb_rx_no_sta
-  so it can be called in the RX path (JBerg)
-* IEEE80211_CHANCTX_EXCLUSIVE -> IEEE80211_CHANCTX_SHARED (JBerg)
-* Fix the situation when the housekeeping timer might be called
-  during ocb_leave() (JBerg)
-* Remove NL80211_CHAN_WIDTH_5/10 from 'old channels' handling
-  functions cfg80211_get_chandef_type() and nl80211_send_chandef()
-  (JBerg)
-* Do not break ABI by adding new fields in the middle of the enum
-  nl80211_commands (JBerg)
-* Add a flag denoting whether we are joined to the network or not
-* Handle multiple consecutive calls to ocb_join
-* Many minor fixes
-
-
-Rostislav Lisovy (2):
-  cfg80211: mac80211: 802.11p OCB mode handling
-  mac80211: 802.11p OCB mode support
-
- include/net/cfg80211.h       |  14 +++
- include/net/mac80211.h       |   2 +
- include/uapi/linux/nl80211.h |  11 ++
- net/mac80211/Kconfig         |  11 ++
- net/mac80211/Makefile        |   3 +-
- net/mac80211/cfg.c           |  14 +++
- net/mac80211/chan.c          |   3 +
- net/mac80211/debug.h         |  10 ++
- net/mac80211/driver-ops.h    |   3 +-
- net/mac80211/ieee80211_i.h   |  29 +++++
- net/mac80211/iface.c         |  23 ++++
- net/mac80211/ocb.c           | 250 +++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/rx.c            |  35 ++++++
- net/mac80211/tx.c            |  15 +++
- net/mac80211/util.c          |  31 +++++-
- net/mac80211/wme.c           |   4 +
- net/wireless/Makefile        |   2 +-
- net/wireless/chan.c          |   8 ++
- net/wireless/core.c          |   3 +
- net/wireless/core.h          |  12 +++
- net/wireless/nl80211.c       |  39 +++++++
- net/wireless/ocb.c           |  88 +++++++++++++++
- net/wireless/rdev-ops.h      |  21 ++++
- net/wireless/trace.h         |  21 ++++
- net/wireless/util.c          |   5 +-
- 25 files changed, 648 insertions(+), 9 deletions(-)
- create mode 100644 net/mac80211/ocb.c
- create mode 100644 net/wireless/ocb.c
-
+diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
+index 580aa45..bd740b6 100644
+--- a/drivers/net/wireless/mwifiex/init.c
++++ b/drivers/net/wireless/mwifiex/init.c
+@@ -449,7 +449,6 @@ int mwifiex_init_lock_list(struct mwifiex_adapter *adapter)
+ 	spin_lock_init(&adapter->scan_pending_q_lock);
+ 	spin_lock_init(&adapter->rx_proc_lock);
+ 
+-	skb_queue_head_init(&adapter->usb_rx_data_q);
+ 	skb_queue_head_init(&adapter->rx_data_q);
+ 
+ 	for (i = 0; i < adapter->priv_num; ++i) {
+@@ -668,19 +667,6 @@ mwifiex_shutdown_drv(struct mwifiex_adapter *adapter)
+ 
+ 	spin_lock(&adapter->mwifiex_lock);
+ 
+-	if (adapter->if_ops.data_complete) {
+-		while ((skb = skb_dequeue(&adapter->usb_rx_data_q))) {
+-			struct mwifiex_rxinfo *rx_info = MWIFIEX_SKB_RXCB(skb);
+-
+-			priv = adapter->priv[rx_info->bss_num];
+-			if (priv)
+-				priv->stats.rx_dropped++;
+-
+-			dev_kfree_skb_any(skb);
+-			adapter->if_ops.data_complete(adapter);
+-		}
+-	}
+-
+ 	mwifiex_adapter_cleanup(adapter);
+ 
+ 	spin_unlock(&adapter->mwifiex_lock);
+diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
+index f26420d..cb23ca3 100644
+--- a/drivers/net/wireless/mwifiex/main.c
++++ b/drivers/net/wireless/mwifiex/main.c
+@@ -178,7 +178,6 @@ int mwifiex_main_process(struct mwifiex_adapter *adapter)
+ {
+ 	int ret = 0;
+ 	unsigned long flags;
+-	struct sk_buff *skb;
+ 
+ 	spin_lock_irqsave(&adapter->main_proc_lock, flags);
+ 
+@@ -253,11 +252,6 @@ process_start:
+ 			}
+ 		}
+ 
+-		/* Check Rx data for USB */
+-		if (adapter->iface_type == MWIFIEX_USB)
+-			while ((skb = skb_dequeue(&adapter->usb_rx_data_q)))
+-				mwifiex_handle_rx_packet(adapter, skb);
+-
+ 		/* Check for event */
+ 		if (adapter->event_received) {
+ 			adapter->event_received = false;
+@@ -864,7 +858,7 @@ mwifiex_add_card(void *card, struct semaphore *sem,
+ 	adapter->cmd_wait_q.status = 0;
+ 	adapter->scan_wait_q_woken = false;
+ 
+-	if (num_possible_cpus() > 1) {
++	if ((num_possible_cpus() > 1) || adapter->iface_type == MWIFIEX_USB) {
+ 		adapter->rx_work_enabled = true;
+ 		pr_notice("rx work enabled, cpus %d\n", num_possible_cpus());
+ 	}
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index cb39319..a9eea9b 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -106,10 +106,7 @@ enum {
+  */
+ #define IS_CARD_RX_RCVD(adapter) (adapter->cmd_resp_received || \
+ 				adapter->event_received || \
+-				((adapter->iface_type != MWIFIEX_USB) && \
+-				adapter->data_received) || \
+-				((adapter->iface_type == MWIFIEX_USB) && \
+-				!skb_queue_empty(&adapter->usb_rx_data_q)))
++				adapter->data_received)
+ 
+ #define MWIFIEX_TYPE_CMD				1
+ #define MWIFIEX_TYPE_DATA				0
+@@ -767,7 +764,6 @@ struct mwifiex_adapter {
+ 	spinlock_t scan_pending_q_lock;
+ 	/* spin lock for RX processing routine */
+ 	spinlock_t rx_proc_lock;
+-	struct sk_buff_head usb_rx_data_q;
+ 	u32 scan_processing;
+ 	u16 region_code;
+ 	struct mwifiex_802_11d_domain_reg domain_reg;
+diff --git a/drivers/net/wireless/mwifiex/usb.c b/drivers/net/wireless/mwifiex/usb.c
+index 4371e12..00afcf6 100644
+--- a/drivers/net/wireless/mwifiex/usb.c
++++ b/drivers/net/wireless/mwifiex/usb.c
+@@ -125,8 +125,10 @@ static int mwifiex_usb_recv(struct mwifiex_adapter *adapter,
+ 			dev_err(dev, "DATA: skb->len too large\n");
+ 			return -1;
+ 		}
+-		skb_queue_tail(&adapter->usb_rx_data_q, skb);
++
++		skb_queue_tail(&adapter->rx_data_q, skb);
+ 		adapter->data_received = true;
++		atomic_inc(&adapter->rx_pending);
+ 		break;
+ 	default:
+ 		dev_err(dev, "%s: unknown endport %#x\n", __func__, ep);
+@@ -176,7 +178,6 @@ static void mwifiex_usb_rx_complete(struct urb *urb)
+ 		else
+ 			skb_put(skb, recv_length - skb->len);
+ 
+-		atomic_inc(&adapter->rx_pending);
+ 		status = mwifiex_usb_recv(adapter, skb, context->ep);
+ 
+ 		dev_dbg(adapter->dev, "info: recv_length=%d, status=%d\n",
+@@ -191,7 +192,6 @@ static void mwifiex_usb_rx_complete(struct urb *urb)
+ 			if (card->rx_cmd_ep == context->ep)
+ 				return;
+ 		} else {
+-			atomic_dec(&adapter->rx_pending);
+ 			if (status == -1)
+ 				dev_err(adapter->dev,
+ 					"received data processing failed!\n");
+@@ -962,7 +962,6 @@ static void mwifiex_submit_rx_urb(struct mwifiex_adapter *adapter, u8 ep)
+ static int mwifiex_usb_cmd_event_complete(struct mwifiex_adapter *adapter,
+ 				       struct sk_buff *skb)
+ {
+-	atomic_dec(&adapter->rx_pending);
+ 	mwifiex_submit_rx_urb(adapter, MWIFIEX_USB_EP_CMD_EVENT);
+ 
+ 	return 0;
+@@ -970,8 +969,6 @@ static int mwifiex_usb_cmd_event_complete(struct mwifiex_adapter *adapter,
+ 
+ static int mwifiex_usb_data_complete(struct mwifiex_adapter *adapter)
+ {
+-	atomic_dec(&adapter->rx_pending);
+-
+ 	return 0;
+ }
+ 
 -- 
-2.0.0.rc4
+1.8.1.4
 
