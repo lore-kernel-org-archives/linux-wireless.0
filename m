@@ -1,54 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47326 "EHLO mx1.redhat.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:52687 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751087AbaKJUVj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Nov 2014 15:21:39 -0500
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Chris Ruffin <cmruffin@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	devel@driverdev.osuosl.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH] staging: rtl8723au: change typecast to match type returned by htons()
-References: <1415650025-16403-1-git-send-email-cmruffin@gmail.com>
-Date: Mon, 10 Nov 2014 15:21:30 -0500
-In-Reply-To: <1415650025-16403-1-git-send-email-cmruffin@gmail.com> (Chris
-	Ruffin's message of "Mon, 10 Nov 2014 15:07:05 -0500")
-Message-ID: <wrfjlhnivmb9.fsf@redhat.com> (sfid-20141110_212155_366300_B78B74D1)
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1751792AbaKDKRz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Nov 2014 05:17:55 -0500
+Message-ID: <1415096272.2064.14.camel@sipsolutions.net> (sfid-20141104_111800_185237_CC938328)
+Subject: Re: [PATCH v2] mac80211: Increase uapsd max SP frames number
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: linux-wireless@vger.kernel.org,
+	Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Date: Tue, 04 Nov 2014 11:17:52 +0100
+In-Reply-To: <1415093584-12767-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1415093584-12767-1-git-send-email-emmanuel.grumbach@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Chris Ruffin <cmruffin@gmail.com> writes:
-> Using a u16 pointer typecast for a result from htons() results in the following warning from sparse:
->
-> drivers/staging/rtl8723au/core/rtw_xmit.c:1279:36: warning: incorrect type in assignment (different base types)
-> drivers/staging/rtl8723au/core/rtw_xmit.c:1279:36:    expected unsigned short [unsigned] [short] [usertype] <noident>
-> drivers/staging/rtl8723au/core/rtw_xmit.c:1279:36:    got restricted __be16 [usertype] <noident>
->
-> This patch fixes the issue by using an endian-specific typecast
-> that will always match the type returned by htons().
->
-> Signed-off-by: Chris Ruffin <cmruffin@gmail.com>
-> ---
->  drivers/staging/rtl8723au/core/rtw_xmit.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+On Tue, 2014-11-04 at 11:33 +0200, Emmanuel Grumbach wrote:
+> From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+> 
+> Deliver up to 128 frames during SP instead of 8 if unlimited
+> max SP is specified during association.
+> 8 was just an arbitrary value, so is 128 since unlimited can
+> be any number.
+> However for large traffic bursts, increasing this value looks
+> reasonable. Also, it seems that a few certification tests
+> expect more frames to be delivered during SP.
 
-Looks fine to me
+Applied.
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+johannes
 
->
-> diff --git a/drivers/staging/rtl8723au/core/rtw_xmit.c b/drivers/staging/rtl8723au/core/rtw_xmit.c
-> index a0f7e27..44ef55c 100644
-> --- a/drivers/staging/rtl8723au/core/rtw_xmit.c
-> +++ b/drivers/staging/rtl8723au/core/rtw_xmit.c
-> @@ -1276,7 +1276,7 @@ s32 rtw_put_snap23a(u8 *data, u16 h_proto)
->  	snap->oui[0] = oui[0];
->  	snap->oui[1] = oui[1];
->  	snap->oui[2] = oui[2];
-> -	*(u16 *)(data + SNAP_SIZE) = htons(h_proto);
-> +	*(__be16 *)(data + SNAP_SIZE) = htons(h_proto);
->  	return SNAP_SIZE + sizeof(u16);
->  }
