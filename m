@@ -1,68 +1,233 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:47980 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753139AbaKNHIm convert rfc822-to-8bit (ORCPT
+Received: from mail-la0-f54.google.com ([209.85.215.54]:34062 "EHLO
+	mail-la0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753376AbaKDOea (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Nov 2014 02:08:42 -0500
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 8.0 \(1990.1\))
-Subject: Re: [PATCH] cfg80211: remove net-pf-16-proto-16-family-nl80211 module alias
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <1415933817.2629.14.camel@dcbw.local>
-Date: Fri, 14 Nov 2014 16:08:41 +0900
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Message-Id: <2CD74A8A-6F36-4F1C-A784-D6FC1695CC1A@holtmann.org> (sfid-20141114_080844_993451_D148B6CC)
-References: <20141113123313.GA1926@redhat.com> <1415882683.2021.3.camel@sipsolutions.net> <20141113132252.GB1926@redhat.com> <252AB6B9-9D33-4932-B75F-D3B2B057D3C0@holtmann.org> <20141113133928.GC1926@redhat.com> <4E8F3B23-EC77-4B53-8180-7DB12042E0B5@holtmann.org> <1415933817.2629.14.camel@dcbw.local>
-To: Dan Williams <dcbw@redhat.com>
+	Tue, 4 Nov 2014 09:34:30 -0500
+Received: by mail-la0-f54.google.com with SMTP id s18so998075lam.13
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Nov 2014 06:34:28 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 6/7] ath10k: use rx descriptor for ppdu status extraction
+Date: Tue,  4 Nov 2014 15:22:10 +0100
+Message-Id: <1415110931-10945-7-git-send-email-michal.kazior@tieto.com> (sfid-20141104_153436_205472_713223FA)
+In-Reply-To: <1415110931-10945-1-git-send-email-michal.kazior@tieto.com>
+References: <1415110931-10945-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dan,
+This makes it more in line with the new Rx path.
+It also makes the code more reusable because Rx
+descriptor is more accessible.
 
->>>>> With the alias cfg80211 module is loaded on systems without the wireless
->>>>> hardware when user-space use nl80211 to discover if there are wireless
->>>>> devices, what is considered as resources wastage. On systems with
->>>>> wireless hardware cfg80211 module will be loaded anyway.
->>>>> 
->>>>> Cc: Marcel Holtmann <marcel@holtmann.org>
->>>>> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
->>>>> ---
->>>>> net/wireless/core.c | 1 -
->>>>> 1 file changed, 1 deletion(-)
->>>>> 
->>>>> diff --git a/net/wireless/core.c b/net/wireless/core.c
->>>>> index a4d2792..badcabe 100644
->>>>> --- a/net/wireless/core.c
->>>>> +++ b/net/wireless/core.c
->>>>> @@ -34,7 +34,6 @@
->>>>> MODULE_AUTHOR("Johannes Berg");
->>>>> MODULE_LICENSE("GPL");
->>>>> MODULE_DESCRIPTION("wireless configuration support");
->>>>> -MODULE_ALIAS_GENL_FAMILY(NL80211_GENL_NAME);
->>>> 
->>>> NAK.
->>>> 
->>>> We want to auto-load cfg80211 when userspace asked for nl80211 netlink family.
->>> 
->>> Could you elaborate more why?
->> 
->> you want to talk to the nl80211 family. The kernel has a module that allows you to talk to this family. So let it load the netlink family.
->> 
->> If you do not want cfg80211 loaded, then fix NetworkManager and not hack the kernel. NetworkManager asks to talk to nl80211 in the first place. That one is causing the loading of cfg80211 module.
-> 
-> Unfortunately there seems to be no reliable way of detecting that an
-> ethernet-type interface is WiFi (and talks nl80211) or is not WiFi, than
-> by asking it, using nl80211.  Unless you have suggestions for this?
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 137 ++++++++++++++++++++++---------
+ 1 file changed, 96 insertions(+), 41 deletions(-)
 
-my suggestion is to fix missing DEVTYPE=wlan entries.
-
-If you want to do detection via nl80211, that is fine by me. However then NetworkManager users have to accept that this will then trigger loading of cfg80211 module. But we are not removing a correct module alias because of this.
-
-This is the same thing when you start bluetoothd without any Bluetooth controllers attached to the system. The bluetooth core module will be loaded. We are not removing the correct socket address family module auto-loading because someone does not want to have the module loaded, but poke with the socket for some reason.
-
-Regards
-
-Marcel
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 55e4568..9073a0e 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -631,23 +631,34 @@ static const u8 rx_legacy_rate_idx[] = {
+ };
+ 
+ static void ath10k_htt_rx_h_rates(struct ath10k *ar,
+-				  enum ieee80211_band band,
+-				  u8 info0, u32 info1, u32 info2,
+-				  struct ieee80211_rx_status *status)
++				  struct ieee80211_rx_status *status,
++				  struct htt_rx_desc *rxd)
+ {
++	enum ieee80211_band band;
+ 	u8 cck, rate, rate_idx, bw, sgi, mcs, nss;
+ 	u8 preamble = 0;
++	u32 info1, info2, info3;
+ 
+-	/* Check if valid fields */
+-	if (!(info0 & HTT_RX_INDICATION_INFO0_START_VALID))
++	/* Band value can't be set as undefined but freq can be 0 - use that to
++	 * determine whether band is provided.
++	 *
++	 * FIXME: Perhaps this can go away if CCK rate reporting is a little
++	 * reworked?
++	 */
++	if (!status->freq)
+ 		return;
+ 
+-	preamble = MS(info1, HTT_RX_INDICATION_INFO1_PREAMBLE_TYPE);
++	band = status->band;
++	info1 = __le32_to_cpu(rxd->ppdu_start.info1);
++	info2 = __le32_to_cpu(rxd->ppdu_start.info2);
++	info3 = __le32_to_cpu(rxd->ppdu_start.info3);
++
++	preamble = MS(info1, RX_PPDU_START_INFO1_PREAMBLE_TYPE);
+ 
+ 	switch (preamble) {
+ 	case HTT_RX_LEGACY:
+-		cck = info0 & HTT_RX_INDICATION_INFO0_LEGACY_RATE_CCK;
+-		rate = MS(info0, HTT_RX_INDICATION_INFO0_LEGACY_RATE);
++		cck = info1 & RX_PPDU_START_INFO1_L_SIG_RATE_SELECT;
++		rate = MS(info1, RX_PPDU_START_INFO1_L_SIG_RATE);
+ 		rate_idx = 0;
+ 
+ 		if (rate < 0x08 || rate > 0x0F)
+@@ -674,11 +685,11 @@ static void ath10k_htt_rx_h_rates(struct ath10k *ar,
+ 		break;
+ 	case HTT_RX_HT:
+ 	case HTT_RX_HT_WITH_TXBF:
+-		/* HT-SIG - Table 20-11 in info1 and info2 */
+-		mcs = info1 & 0x1F;
++		/* HT-SIG - Table 20-11 in info2 and info3 */
++		mcs = info2 & 0x1F;
+ 		nss = mcs >> 3;
+-		bw = (info1 >> 7) & 1;
+-		sgi = (info2 >> 7) & 1;
++		bw = (info2 >> 7) & 1;
++		sgi = (info3 >> 7) & 1;
+ 
+ 		status->rate_idx = mcs;
+ 		status->flag |= RX_FLAG_HT;
+@@ -689,12 +700,12 @@ static void ath10k_htt_rx_h_rates(struct ath10k *ar,
+ 		break;
+ 	case HTT_RX_VHT:
+ 	case HTT_RX_VHT_WITH_TXBF:
+-		/* VHT-SIG-A1 in info 1, VHT-SIG-A2 in info2
++		/* VHT-SIG-A1 in info2, VHT-SIG-A2 in info3
+ 		   TODO check this */
+-		mcs = (info2 >> 4) & 0x0F;
+-		nss = ((info1 >> 10) & 0x07) + 1;
+-		bw = info1 & 3;
+-		sgi = info2 & 1;
++		mcs = (info3 >> 4) & 0x0F;
++		nss = ((info2 >> 10) & 0x07) + 1;
++		bw = info2 & 3;
++		sgi = info3 & 1;
+ 
+ 		status->rate_idx = mcs;
+ 		status->vht_nss = nss;
+@@ -742,6 +753,73 @@ static bool ath10k_htt_rx_h_channel(struct ath10k *ar,
+ 	return true;
+ }
+ 
++static void ath10k_htt_rx_h_signal(struct ath10k *ar,
++				   struct ieee80211_rx_status *status,
++				   struct htt_rx_desc *rxd)
++{
++	/* FIXME: Get real NF */
++	status->signal = ATH10K_DEFAULT_NOISE_FLOOR +
++			 rxd->ppdu_start.rssi_comb;
++	status->flag &= ~RX_FLAG_NO_SIGNAL_VAL;
++}
++
++static void ath10k_htt_rx_h_mactime(struct ath10k *ar,
++				    struct ieee80211_rx_status *status,
++				    struct htt_rx_desc *rxd)
++{
++	/* FIXME: TSF is known only at the end of PPDU, in the last MPDU. This
++	 * means all prior MSDUs in a PPDU are reported to mac80211 without the
++	 * TSF. Is it worth holding frames until end of PPDU is known?
++	 *
++	 * FIXME: Can we get/compute 64bit TSF?
++	 */
++	status->mactime = __le32_to_cpu(rxd->ppdu_end.tsf_timestamp);
++	status->flag |= RX_FLAG_MACTIME_END;
++}
++
++static void ath10k_htt_rx_h_ppdu(struct ath10k *ar,
++				 struct sk_buff_head *amsdu,
++				 struct ieee80211_rx_status *status)
++{
++	struct sk_buff *first;
++	struct htt_rx_desc *rxd;
++	bool is_first_ppdu;
++	bool is_last_ppdu;
++
++	if (skb_queue_empty(amsdu))
++		return;
++
++	first = skb_peek(amsdu);
++	rxd = (void *)first->data - sizeof(*rxd);
++
++	is_first_ppdu = !!(rxd->attention.flags &
++			   __cpu_to_le32(RX_ATTENTION_FLAGS_FIRST_MPDU));
++	is_last_ppdu = !!(rxd->attention.flags &
++			  __cpu_to_le32(RX_ATTENTION_FLAGS_LAST_MPDU));
++
++	if (is_first_ppdu) {
++		/* New PPDU starts so clear out the old per-PPDU status. */
++		status->freq = 0;
++		status->rate_idx = 0;
++		status->vht_nss = 0;
++		status->vht_flag &= ~RX_VHT_FLAG_80MHZ;
++		status->flag &= ~(RX_FLAG_HT |
++				  RX_FLAG_VHT |
++				  RX_FLAG_SHORT_GI |
++				  RX_FLAG_40MHZ |
++				  RX_FLAG_MACTIME_END);
++		status->flag |= RX_FLAG_NO_SIGNAL_VAL;
++
++		ath10k_htt_rx_h_signal(ar, status, rxd);
++		ath10k_htt_rx_h_channel(ar, status);
++		ath10k_htt_rx_h_rates(ar, status, rxd);
++	}
++
++	if (is_last_ppdu) {
++		ath10k_htt_rx_h_mactime(ar, status, rxd);
++	}
++}
++
+ static const char * const tid_to_ac[] = {
+ 	"BE",
+ 	"BK",
+@@ -1358,7 +1436,6 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
+ 	int num_mpdu_ranges;
+ 	int fw_desc_len;
+ 	u8 *fw_desc;
+-	bool channel_set;
+ 	int i, ret, mpdu_count = 0;
+ 
+ 	lockdep_assert_held(&htt->rx_ring.lock);
+@@ -1373,29 +1450,6 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
+ 			     HTT_RX_INDICATION_INFO1_NUM_MPDU_RANGES);
+ 	mpdu_ranges = htt_rx_ind_get_mpdu_ranges(rx);
+ 
+-	/* Fill this once, while this is per-ppdu */
+-	if (rx->ppdu.info0 & HTT_RX_INDICATION_INFO0_START_VALID) {
+-		memset(rx_status, 0, sizeof(*rx_status));
+-		rx_status->signal  = ATH10K_DEFAULT_NOISE_FLOOR +
+-				     rx->ppdu.combined_rssi;
+-	}
+-
+-	if (rx->ppdu.info0 & HTT_RX_INDICATION_INFO0_END_VALID) {
+-		/* TSF available only in 32-bit */
+-		rx_status->mactime = __le32_to_cpu(rx->ppdu.tsf) & 0xffffffff;
+-		rx_status->flag |= RX_FLAG_MACTIME_END;
+-	}
+-
+-	channel_set = ath10k_htt_rx_h_channel(htt->ar, rx_status);
+-
+-	if (channel_set) {
+-		ath10k_htt_rx_h_rates(htt->ar, rx_status->band,
+-				      rx->ppdu.info0,
+-				      __le32_to_cpu(rx->ppdu.info1),
+-				      __le32_to_cpu(rx->ppdu.info2),
+-				      rx_status);
+-	}
+-
+ 	ath10k_dbg_dump(ar, ATH10K_DBG_HTT_DUMP, NULL, "htt rx ind: ",
+ 			rx, sizeof(*rx) +
+ 			(sizeof(struct htt_rx_indication_mpdu_range) *
+@@ -1418,6 +1472,7 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
+ 			break;
+ 		}
+ 
++		ath10k_htt_rx_h_ppdu(ar, &amsdu, rx_status);
+ 		ath10k_htt_rx_h_unchain(ar, &amsdu, ret > 0);
+ 		ath10k_htt_rx_h_filter(ar, &amsdu, rx_status);
+ 		ath10k_htt_rx_h_mpdu(ar, &amsdu, rx_status);
+-- 
+1.8.5.3
 
