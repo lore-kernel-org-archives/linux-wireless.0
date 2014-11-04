@@ -1,44 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:57395 "EHLO sipsolutions.net"
+Received: from mga14.intel.com ([192.55.52.115]:65351 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752275AbaKKKDw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Nov 2014 05:03:52 -0500
-Message-ID: <1415700220.2163.3.camel@sipsolutions.net> (sfid-20141111_110417_115220_28A769A6)
-Subject: Re: [PATCH 1/1] linux-wireless: Added psk in struct
- cfg80211_connect_params needed for offloading 4way handshake to driver
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "Gautam (Gautam Kumar) Shukla" <gautams@broadcom.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"davem@davemloft.net" <davem@davemloft.net>,
-	"linux-api@vger.kernel.org" <linux-api@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	Jithu Jance <jithu@broadcom.com>,
-	Sreenath S <sreenats@broadcom.com>
-Date: Tue, 11 Nov 2014 11:03:40 +0100
-In-Reply-To: <5461DCC9.5050702@broadcom.com>
-References: <DF163EE1A432BF4BBE6B2088220663A67437BD@SJEXCHMB06.corp.ad.broadcom.com>
-	 <1415698161.2163.0.camel@sipsolutions.net> <5461DCC9.5050702@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1751155AbaKDJXn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Nov 2014 04:23:43 -0500
+From: "Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
+To: Krishna Chaitanya <chaitanya.mgit@gmail.com>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH] mac80211: Increase uapsd max SP frames number
+Date: Tue, 4 Nov 2014 09:23:39 +0000
+Message-ID: <B2CD83211F5FDD478D7EFFF030D107ED2AE2FDE7@hasmsx107.ger.corp.intel.com> (sfid-20141104_102348_309965_1AC1C615)
+References: <1415090436-12588-1-git-send-email-emmanuel.grumbach@intel.com>
+ <CABPxzYKfoO+NYi7Zs+5t6mRU+XwW5u=dKiBMsrzZ5VLO3ABDAg@mail.gmail.com>
+In-Reply-To: <CABPxzYKfoO+NYi7Zs+5t6mRU+XwW5u=dKiBMsrzZ5VLO3ABDAg@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-11-11 at 10:54 +0100, Arend van Spriel wrote:
-
-> > Also, there's a competing approach from QCA that's far more suited.
-> 
-> I probably was not paying attention to it, but would you have a
-> reference to this.
-
-... digs around in email ...
-
-http://mid.gmane.org/1343907187-6686-1-git-send-email-qca_vkondrat@qca.qualcomm.com
-
-Anyway, looking back at that, it wasn't really all that different, just
-a bit more complete maybe.
-
-johannes
+VGhlIHNwZWMgZG9lc24ndCByZXF1aXJlIHVubGltaXRlZCB0byBiZSByZWFsbHkgInVubGltaXRl
+ZCIgYW5kIHRoZSBBUCBkZWNpZGVzIHdoZW4gdG8gZW5kIHRoZSBTUCwgc28gYW55IHZhbHVlIGhl
+cmUgaXMgb2suDQpIb3dldmVyIGZvciBsYXJnZSB0cmFmZmljIGJ1cnN0cyBpbmNyZWFzaW5nIHRo
+aXMgdmFsdWUgbG9va3MgcmVhc29uYWJsZS4gQWxzbyBsb29rcyBsaWtlIHNvbWUgY2VydGlmaWNh
+dGlvbiB0ZXN0cyBleHBlY3QgbW9yZSBmcmFtZXMgdG8gYmUgZGVsaXZlcmVkIGR1cmluZyBTUC4N
+CjEyOCBpcyBzdGlsbCBraW5kIG9mIGFyYml0cmFyeSB2YWx1ZQ0KDQo+IC0tLS0tT3JpZ2luYWwg
+TWVzc2FnZS0tLS0tDQo+IEZyb206IEtyaXNobmEgQ2hhaXRhbnlhIFttYWlsdG86Y2hhaXRhbnlh
+Lm1naXRAZ21haWwuY29tXQ0KPiBTZW50OiBUdWVzZGF5LCBOb3ZlbWJlciAwNCwgMjAxNCAxMTow
+Mw0KPiBUbzogR3J1bWJhY2gsIEVtbWFudWVsDQo+IENjOiBKb2hhbm5lcyBCZXJnOyBsaW51eC13
+aXJlbGVzczsgT3RjaGVyZXRpYW5za2ksIEFuZHJlaQ0KPiBTdWJqZWN0OiBSZTogW1BBVENIXSBt
+YWM4MDIxMTogSW5jcmVhc2UgdWFwc2QgbWF4IFNQIGZyYW1lcyBudW1iZXINCj4gDQo+IE9uIFR1
+ZSwgTm92IDQsIDIwMTQgYXQgMjoxMCBQTSwgRW1tYW51ZWwgR3J1bWJhY2gNCj4gPGVtbWFudWVs
+LmdydW1iYWNoQGludGVsLmNvbT4gd3JvdGU6DQo+ID4gRnJvbTogQW5kcmVpIE90Y2hlcmV0aWFu
+c2tpIDxhbmRyZWkub3RjaGVyZXRpYW5za2lAaW50ZWwuY29tPg0KPiA+DQo+ID4gRGVsaXZlciB1
+cCB0byAxMjggZnJhbWVzIGR1cmluZyBTUCBpbnN0ZWFkIG9mIDggaWYgdW5saW1pdGVkIG1heCBT
+UCBpcw0KPiA+IHNwZWNpZmllZCBkdXJpbmcgYXNzb2NpYXRpb24uDQo+ID4NCj4gPiBTaWduZWQt
+b2ZmLWJ5OiBBbmRyZWkgT3RjaGVyZXRpYW5za2kgPGFuZHJlaS5vdGNoZXJldGlhbnNraUBpbnRl
+bC5jb20+DQo+ID4gU2lnbmVkLW9mZi1ieTogRW1tYW51ZWwgR3J1bWJhY2ggPGVtbWFudWVsLmdy
+dW1iYWNoQGludGVsLmNvbT4NCj4gPiAtLS0NCj4gPiAgbmV0L21hYzgwMjExL3N0YV9pbmZvLmMg
+fCAyICstDQo+ID4gIDEgZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlvbigrKSwgMSBkZWxldGlvbigt
+KQ0KPiA+DQo+ID4gZGlmZiAtLWdpdCBhL25ldC9tYWM4MDIxMS9zdGFfaW5mby5jIGIvbmV0L21h
+YzgwMjExL3N0YV9pbmZvLmMgaW5kZXgNCj4gPiBkZTQ5NGRmLi4zMzUyNzQxIDEwMDY0NA0KPiA+
+IC0tLSBhL25ldC9tYWM4MDIxMS9zdGFfaW5mby5jDQo+ID4gKysrIGIvbmV0L21hYzgwMjExL3N0
+YV9pbmZvLmMNCj4gPiBAQCAtMTUzMSw3ICsxNTMxLDcgQEAgdm9pZCBpZWVlODAyMTFfc3RhX3Bz
+X2RlbGl2ZXJfdWFwc2Qoc3RydWN0DQo+IHN0YV9pbmZvICpzdGEpDQo+ID4gICAgICAgICAgICAg
+ICAgIGJyZWFrOw0KPiA+ICAgICAgICAgY2FzZSAwOg0KPiA+ICAgICAgICAgICAgICAgICAvKiBY
+WFg6IHdoYXQgaXMgYSBnb29kIHZhbHVlPyAqLw0KPiA+IC0gICAgICAgICAgICAgICBuX2ZyYW1l
+cyA9IDg7DQo+ID4gKyAgICAgICAgICAgICAgIG5fZnJhbWVzID0gMTI4Ow0KPiA+ICAgICAgICAg
+ICAgICAgICBicmVhazsNCj4gPiAgICAgICAgIH0NCj4gV2hhdCBpcyBjcml0ZXJpYSBmb3IgZGVj
+aWRpbmcgdGhlIHRocmVzaG9sZD8NCj4gQW55IHNwZWNpZmljIHVzZSBjYXNlIGZvciAxMjg/DQot
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0KQSBtZW1iZXIgb2YgdGhlIEludGVsIENvcnBvcmF0aW9uIGdyb3VwIG9mIGNv
+bXBhbmllcwoKVGhpcyBlLW1haWwgYW5kIGFueSBhdHRhY2htZW50cyBtYXkgY29udGFpbiBjb25m
+aWRlbnRpYWwgbWF0ZXJpYWwgZm9yCnRoZSBzb2xlIHVzZSBvZiB0aGUgaW50ZW5kZWQgcmVjaXBp
+ZW50KHMpLiBBbnkgcmV2aWV3IG9yIGRpc3RyaWJ1dGlvbgpieSBvdGhlcnMgaXMgc3RyaWN0bHkg
+cHJvaGliaXRlZC4gSWYgeW91IGFyZSBub3QgdGhlIGludGVuZGVkCnJlY2lwaWVudCwgcGxlYXNl
+IGNvbnRhY3QgdGhlIHNlbmRlciBhbmQgZGVsZXRlIGFsbCBjb3BpZXMuCg==
 
