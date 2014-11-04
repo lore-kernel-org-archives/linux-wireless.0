@@ -1,244 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f48.google.com ([209.85.215.48]:52890 "EHLO
-	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751053AbaKZLO0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Nov 2014 06:14:26 -0500
-Received: by mail-la0-f48.google.com with SMTP id s18so2229894lam.21
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Nov 2014 03:14:25 -0800 (PST)
-MIME-Version: 1.0
-Date: Wed, 26 Nov 2014 12:14:24 +0100
-Message-ID: <CAOFH_kFLoErQYjR26NyjT7ooorQxFR-9ygGEJ8T6uCoX9mJV5Q@mail.gmail.com> (sfid-20141126_121429_369835_6C0B599A)
-Subject: Regulatory domain issue with countrycode 00
-From: Mathieu Slabbinck <matty.slabbinck@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:52561 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751999AbaKDJ5G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Nov 2014 04:57:06 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: handle RIC data element in reassociation request
+Date: Tue,  4 Nov 2014 10:56:59 +0100
+Message-Id: <1415095019-14193-1-git-send-email-johannes@sipsolutions.net> (sfid-20141104_105716_793531_35BE1356)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Johannes Berg <johannes.berg@intel.com>
 
-I have a buildroot system with following versions:
-- kernel 3.14.4
-- iw 3.15
-- ath9k vermagic 3.14.4
-- cfg80211 vermagic 3.14.4
-- wireless-regdb 2014.06.13
+When the RIC data element (RDE) is included in the IEs coming
+from userspace for an association request, its handling is
+currently broken as any IEs that are contained within it would
+be split off from it and inserted again after all the IEs that
+mac80211 generates (e.g. HT, VHT.)
 
-I see issues with the 00 countrycode.
-Setting with "iw reg set 00" gives no errors.
-iw reg get reports:
-country 00: DFS-UNSET
-    (2402 - 2472 @ 40), (N/A, 20), (N/A)
-    (2457 - 2482 @ 40), (N/A, 20), (N/A), NO-IR
-    (2474 - 2494 @ 20), (N/A, 20), (N/A), NO-OFDM, NO-IR
-    (5170 - 5250 @ 160), (N/A, 20), (N/A), NO-IR
-    (5250 - 5330 @ 160), (N/A, 20), (N/A), DFS, NO-IR
-    (5490 - 5730 @ 160), (N/A, 20), (N/A), DFS, NO-IR
-    (5735 - 5835 @ 80), (N/A, 20), (N/A), NO-IR
-    (57240 - 63720 @ 2160), (N/A, 0), (N/A)
+To fix this, treat the RIC element specially, and stop after
+it only when we find something that doesn't actually belong to
+it. This assumes userspace is actually correctly building it,
+directly after the fast BSS transition IE and before all the
+others like extended capabilities.
 
-but iw list reports:
-Wiphy phy0
-    max # scan SSIDs: 4
-    max scan IEs length: 2257 bytes
-    Retry short limit: 7
-    Retry long limit: 4
-    Coverage class: 0 (up to 0m)
-    Device supports RSN-IBSS.
-    Device supports T-DLS.
-    Supported Ciphers:
-        * WEP40 (00-0f-ac:1)
-        * WEP104 (00-0f-ac:5)
-        * TKIP (00-0f-ac:2)
-        * CCMP (00-0f-ac:4)
-        * CMAC (00-0f-ac:6)
-    Available Antennas: TX 0x3 RX 0x3
-    Configured Antennas: TX 0x3 RX 0x3
-    Supported interface modes:
-         * IBSS
-         * managed
-         * AP
-         * AP/VLAN
-         * WDS
-         * monitor
-         * P2P-client
-         * P2P-GO
-    Band 1:
-        Capabilities: 0x11ef
-            RX LDPC
-            HT20/HT40
-            SM Power Save disabled
-            RX HT20 SGI
-            RX HT40 SGI
-            TX STBC
-            RX STBC 1-stream
-            Max AMSDU length: 3839 bytes
-            DSSS/CCK HT40
-        Maximum RX AMPDU length 65535 bytes (exponent: 0x003)
-        Minimum RX AMPDU time spacing: 8 usec (0x06)
-        HT TX/RX MCS rate indexes supported: 0-15
-        Bitrates (non-HT):
-            * 1.0 Mbps
-            * 2.0 Mbps (short preamble supported)
-            * 5.5 Mbps (short preamble supported)
-            * 11.0 Mbps (short preamble supported)
-            * 6.0 Mbps
-            * 9.0 Mbps
-            * 12.0 Mbps
-            * 18.0 Mbps
-            * 24.0 Mbps
-            * 36.0 Mbps
-            * 48.0 Mbps
-            * 54.0 Mbps
-        Frequencies:
-            * 2412 MHz [1] (20.0 dBm)
-            * 2417 MHz [2] (20.0 dBm)
-            * 2422 MHz [3] (20.0 dBm)
-            * 2427 MHz [4] (20.0 dBm)
-            * 2432 MHz [5] (20.0 dBm)
-            * 2437 MHz [6] (20.0 dBm)
-            * 2442 MHz [7] (20.0 dBm)
-            * 2447 MHz [8] (20.0 dBm)
-            * 2452 MHz [9] (20.0 dBm)
-            * 2457 MHz [10] (20.0 dBm)
-            * 2462 MHz [11] (20.0 dBm)
-            * 2467 MHz [12] (20.0 dBm)
-            * 2472 MHz [13] (20.0 dBm)
-            * 2484 MHz [14] (disabled)
-    Band 2:
-        Capabilities: 0x11ef
-            RX LDPC
-            HT20/HT40
-            SM Power Save disabled
-            RX HT20 SGI
-            RX HT40 SGI
-            TX STBC
-            RX STBC 1-stream
-            Max AMSDU length: 3839 bytes
-            DSSS/CCK HT40
-        Maximum RX AMPDU length 65535 bytes (exponent: 0x003)
-        Minimum RX AMPDU time spacing: 8 usec (0x06)
-        HT TX/RX MCS rate indexes supported: 0-15
-        Bitrates (non-HT):
-            * 6.0 Mbps
-            * 9.0 Mbps
-            * 12.0 Mbps
-            * 18.0 Mbps
-            * 24.0 Mbps
-            * 36.0 Mbps
-            * 48.0 Mbps
-            * 54.0 Mbps
-        Frequencies:
-            * 5180 MHz [36] (20.0 dBm)
-            * 5200 MHz [40] (20.0 dBm)
-            * 5220 MHz [44] (20.0 dBm)
-            * 5240 MHz [48] (20.0 dBm)
-            * 5260 MHz [52] (20.0 dBm) (no IR, radar detection)
-              DFS state: usable (for 3029 sec)
-            * 5280 MHz [56] (20.0 dBm) (no IR, radar detection)
-              DFS state: usable (for 3029 sec)
-            * 5300 MHz [60] (20.0 dBm) (no IR, radar detection)
-              DFS state: usable (for 3029 sec)
-            * 5320 MHz [64] (20.0 dBm) (no IR, radar detection)
-              DFS state: usable (for 3029 sec)
-            * 5500 MHz [100] (disabled)
-            * 5520 MHz [104] (disabled)
-            * 5540 MHz [108] (disabled)
-            * 5560 MHz [112] (disabled)
-            * 5580 MHz [116] (disabled)
-            * 5600 MHz [120] (disabled)
-            * 5620 MHz [124] (disabled)
-            * 5640 MHz [128] (disabled)
-            * 5660 MHz [132] (disabled)
-            * 5680 MHz [136] (disabled)
-            * 5700 MHz [140] (disabled)
-            * 5745 MHz [149] (20.0 dBm)
-            * 5765 MHz [153] (20.0 dBm)
-            * 5785 MHz [157] (20.0 dBm)
-            * 5805 MHz [161] (20.0 dBm)
-            * 5825 MHz [165] (20.0 dBm)
-    Supported commands:
-         * new_interface
-         * set_interface
-         * new_key
-         * start_ap
-         * new_station
-         * set_bss
-         * authenticate
-         * associate
-         * deauthenticate
-         * disassociate
-         * join_ibss
-         * remain_on_channel
-         * set_tx_bitrate_mask
-         * frame
-         * frame_wait_cancel
-         * set_wiphy_netns
-         * set_channel
-         * set_wds_peer
-         * tdls_mgmt
-         * tdls_oper
-         * probe_client
-         * set_noack_map
-         * register_beacons
-         * start_p2p_device
-         * set_mcast_rate
-         * Unknown command (104)
-         * connect
-         * disconnect
-    Supported TX frame types:
-         * IBSS: 0x00 0x10 0x20 0x30 0x40 0x50 0x60 0x70 0x80 0x90
-0xa0 0xb0 0xc0 0xd0 0xe0 0xf0
-         * managed: 0x00 0x10 0x20 0x30 0x40 0x50 0x60 0x70 0x80 0x90
-0xa0 0xb0 0xc0 0xd0 0xe0 0xf0
-         * AP: 0x00 0x10 0x20 0x30 0x40 0x50 0x60 0x70 0x80 0x90 0xa0
-0xb0 0xc0 0xd0 0xe0 0xf0
-         * AP/VLAN: 0x00 0x10 0x20 0x30 0x40 0x50 0x60 0x70 0x80 0x90
-0xa0 0xb0 0xc0 0xd0 0xe0 0xf0
-         * mesh point: 0x00 0x10 0x20 0x30 0x40 0x50 0x60 0x70 0x80
-0x90 0xa0 0xb0 0xc0 0xd0 0xe0 0xf0
-         * P2P-client: 0x00 0x10 0x20 0x30 0x40 0x50 0x60 0x70 0x80
-0x90 0xa0 0xb0 0xc0 0xd0 0xe0 0xf0
-         * P2P-GO: 0x00 0x10 0x20 0x30 0x40 0x50 0x60 0x70 0x80 0x90
-0xa0 0xb0 0xc0 0xd0 0xe0 0xf0
-         * P2P-device: 0x00 0x10 0x20 0x30 0x40 0x50 0x60 0x70 0x80
-0x90 0xa0 0xb0 0xc0 0xd0 0xe0 0xf0
-    Supported RX frame types:
-         * IBSS: 0x40 0xb0 0xc0 0xd0
-         * managed: 0x40 0xd0
-         * AP: 0x00 0x20 0x40 0xa0 0xb0 0xc0 0xd0
-         * AP/VLAN: 0x00 0x20 0x40 0xa0 0xb0 0xc0 0xd0
-         * mesh point: 0xb0 0xc0 0xd0
-         * P2P-client: 0x40 0xd0
-         * P2P-GO: 0x00 0x20 0x40 0xa0 0xb0 0xc0 0xd0
-         * P2P-device: 0x40 0xd0
-    software interface modes (can always be added):
-         * AP/VLAN
-         * monitor
-    valid interface combinations:
-         * #{ managed, WDS, P2P-client } <= 2048, #{ AP, P2P-GO } <= 8,
-           total <= 2048, #channels <= 1, STA/AP BI must match
-         * #{ IBSS, AP } <= 1,
-           total <= 1, #channels <= 1, STA/AP BI must match, radar
-detect widths: { 20 MHz (no HT), 20 MHz }
+This leaves as a potential problem the case where userspace is
+building the following IEs:
 
-    HT Capability overrides:
-         * MCS: ff ff ff ff ff ff ff ff ff ff
-         * maximum A-MSDU length
-         * supported channel width
-         * short GI for 40 MHz
-         * max A-MPDU length exponent
-         * min MPDU start spacing
-    Device supports TX status socket option.
-    Device supports HT-IBSS.
-    Device supports low priority scan.
-    Device supports scan flush.
-    Device supports AP scan.
+[RDE] [vendor resource description] [vendor non-resource IE]
 
-Of which the frequencies does not seem to be correct for 00.
-Any ideas where this issue can be located and how this can be resolved?
+In this case, we'd erroneously consider all three IEs to be
+part of the RIC data together, and not split them between the
+two vendor IEs. Unfortunately, it isn't easily possible to
+distinguish vendor IEs, so this isn't easy to fix. Luckily,
+this case is rare as normally wpa_supplicant will include an
+extended capabilities IE in the IEs, and that certainly will
+break the two vendor IEs apart correctly.
 
-Kr
+Reviewed-by: Eliad Peller <eliad@wizery.com>
+Reviewed-by: Beni Lev <beni.lev@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/ieee80211_i.h |  4 ++++
+ net/mac80211/mlme.c        | 27 ++++++++++++++++++++++++---
+ net/mac80211/util.c        | 26 ++++++++++++++++++++++----
+ 3 files changed, 50 insertions(+), 7 deletions(-)
 
-Mathieu
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index fbd6bee9c959..a51c993ece73 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1903,6 +1903,10 @@ int __ieee80211_request_smps_ap(struct ieee80211_sub_if_data *sdata,
+ void ieee80211_recalc_smps(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_recalc_min_chandef(struct ieee80211_sub_if_data *sdata);
+ 
++size_t ieee80211_ie_split_ric(const u8 *ies, size_t ielen,
++			      const u8 *ids, int n_ids,
++			      const u8 *after_ric, int n_after_ric,
++			      size_t offset);
+ size_t ieee80211_ie_split_vendor(const u8 *ies, size_t ielen, size_t offset);
+ u8 *ieee80211_ie_build_ht_cap(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
+ 			      u16 cap);
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index c078cd344ca4..213a420704a6 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -775,11 +775,30 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
+ 			WLAN_EID_QOS_CAPA,
+ 			WLAN_EID_RRM_ENABLED_CAPABILITIES,
+ 			WLAN_EID_MOBILITY_DOMAIN,
++			WLAN_EID_FAST_BSS_TRANSITION,	/* reassoc only */
++			WLAN_EID_RIC_DATA,		/* reassoc only */
+ 			WLAN_EID_SUPPORTED_REGULATORY_CLASSES,
+ 		};
+-		noffset = ieee80211_ie_split(assoc_data->ie, assoc_data->ie_len,
+-					     before_ht, ARRAY_SIZE(before_ht),
+-					     offset);
++		static const u8 after_ric[] = {
++			WLAN_EID_SUPPORTED_REGULATORY_CLASSES,
++			WLAN_EID_HT_CAPABILITY,
++			WLAN_EID_BSS_COEX_2040,
++			WLAN_EID_EXT_CAPABILITY,
++			WLAN_EID_QOS_TRAFFIC_CAPA,
++			WLAN_EID_TIM_BCAST_REQ,
++			WLAN_EID_INTERWORKING,
++			/* 60GHz doesn't happen right now */
++			WLAN_EID_VHT_CAPABILITY,
++			WLAN_EID_OPMODE_NOTIF,
++		};
++
++		noffset = ieee80211_ie_split_ric(assoc_data->ie,
++						 assoc_data->ie_len,
++						 before_ht,
++						 ARRAY_SIZE(before_ht),
++						 after_ric,
++						 ARRAY_SIZE(after_ric),
++						 offset);
+ 		pos = skb_put(skb, noffset - offset);
+ 		memcpy(pos, assoc_data->ie + offset, noffset - offset);
+ 		offset = noffset;
+@@ -813,6 +832,8 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
+ 			WLAN_EID_TIM_BCAST_REQ,
+ 			WLAN_EID_INTERWORKING,
+ 		};
++
++		/* RIC already taken above, so no need to handle here anymore */
+ 		noffset = ieee80211_ie_split(assoc_data->ie, assoc_data->ie_len,
+ 					     before_vht, ARRAY_SIZE(before_vht),
+ 					     offset);
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 91e16b4d4e3c..5f7b0e935b65 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -2101,16 +2101,34 @@ static bool ieee80211_id_in_list(const u8 *ids, int n_ids, u8 id)
+ 	return false;
+ }
+ 
+-size_t ieee80211_ie_split(const u8 *ies, size_t ielen,
+-			  const u8 *ids, int n_ids, size_t offset)
++size_t ieee80211_ie_split_ric(const u8 *ies, size_t ielen,
++			      const u8 *ids, int n_ids,
++			      const u8 *after_ric, int n_after_ric,
++			      size_t offset)
+ {
+ 	size_t pos = offset;
+ 
+-	while (pos < ielen && ieee80211_id_in_list(ids, n_ids, ies[pos]))
+-		pos += 2 + ies[pos + 1];
++	while (pos < ielen && ieee80211_id_in_list(ids, n_ids, ies[pos])) {
++		if (ies[pos] == WLAN_EID_RIC_DATA && n_after_ric) {
++			pos += 2 + ies[pos + 1];
++
++			while (pos < ielen &&
++			       !ieee80211_id_in_list(after_ric, n_after_ric,
++						     ies[pos]))
++				pos += 2 + ies[pos + 1];
++		} else {
++			pos += 2 + ies[pos + 1];
++		}
++	}
+ 
+ 	return pos;
+ }
++
++size_t ieee80211_ie_split(const u8 *ies, size_t ielen,
++			  const u8 *ids, int n_ids, size_t offset)
++{
++	return ieee80211_ie_split_ric(ies, ielen, ids, n_ids, NULL, 0, offset);
++}
+ EXPORT_SYMBOL(ieee80211_ie_split);
+ 
+ size_t ieee80211_ie_split_vendor(const u8 *ies, size_t ielen, size_t offset)
+-- 
+2.1.1
+
