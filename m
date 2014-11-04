@@ -1,47 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.19]:52004 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751281AbaKFHye (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Nov 2014 02:54:34 -0500
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: ath9k-devel@qca.qualcomm.com, sujith@msujith.org, nbd@openwrt.org,
-	patro@cs.wisc.edu, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH 18/21] ath9k_htc: set initial spec_config values
-Date: Thu,  6 Nov 2014 08:53:35 +0100
-Message-Id: <1415260418-14321-19-git-send-email-linux@rempel-privat.de> (sfid-20141106_085444_449480_471A8F4C)
-In-Reply-To: <1415260418-14321-1-git-send-email-linux@rempel-privat.de>
-References: <1415260418-14321-1-git-send-email-linux@rempel-privat.de>
+Received: from mail-lb0-f170.google.com ([209.85.217.170]:33600 "EHLO
+	mail-lb0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753730AbaKDOeb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Nov 2014 09:34:31 -0500
+Received: by mail-lb0-f170.google.com with SMTP id z12so2829348lbi.15
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Nov 2014 06:34:29 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 7/7] ath10k: report rx rate and signal for fragmented Rx
+Date: Tue,  4 Nov 2014 15:22:11 +0100
+Message-Id: <1415110931-10945-8-git-send-email-michal.kazior@tieto.com> (sfid-20141104_153437_875453_454020BB)
+In-Reply-To: <1415110931-10945-1-git-send-email-michal.kazior@tieto.com>
+References: <1415110931-10945-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-use values provided by Ashish Patro <patro@cs.wisc.edu>
+Fragmented Rx wasn't reporting everything. With
+the reworked Rx code it's very easy to fix it.
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/ath/ath9k/htc_drv_init.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index f91b8e6..285d0ad 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -464,6 +464,14 @@ static void ath9k_init_misc(struct ath9k_htc_priv *priv)
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 9073a0e..a22e832 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -1519,9 +1519,7 @@ static void ath10k_htt_rx_frag_handler(struct ath10k_htt *htt,
+ 		return;
+ 	}
  
- 	common->last_rssi = ATH_RSSI_DUMMY_MARKER;
- 	priv->ah->opmode = NL80211_IFTYPE_STATION;
-+
-+	priv->spec_priv.ah = priv->ah;
-+	priv->spec_priv.spec_config.enabled = 0;
-+	priv->spec_priv.spec_config.short_repeat = false;
-+	priv->spec_priv.spec_config.count = 8;
-+	priv->spec_priv.spec_config.endless = false;
-+	priv->spec_priv.spec_config.period = 0x12;
-+	priv->spec_priv.spec_config.fft_period = 0x02;
- }
- 
- static int ath9k_init_priv(struct ath9k_htc_priv *priv,
+-	/* FIXME: implement signal strength */
+-	rx_status->flag |= RX_FLAG_NO_SIGNAL_VAL;
+-
++	ath10k_htt_rx_h_ppdu(ar, &amsdu, rx_status);
+ 	ath10k_htt_rx_h_filter(ar, &amsdu, rx_status);
+ 	ath10k_htt_rx_h_mpdu(ar, &amsdu, rx_status);
+ 	ath10k_htt_rx_h_deliver(ar, &amsdu, rx_status);
 -- 
-1.9.1
+1.8.5.3
 
