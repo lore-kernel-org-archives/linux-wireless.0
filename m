@@ -1,68 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f171.google.com ([209.85.192.171]:37181 "EHLO
-	mail-pd0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755377AbaKUPBW (ORCPT
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:58697 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753819AbaKDP5Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Nov 2014 10:01:22 -0500
-Received: by mail-pd0-f171.google.com with SMTP id v10so5458515pde.30
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Nov 2014 07:01:21 -0800 (PST)
+	Tue, 4 Nov 2014 10:57:16 -0500
+Received: by mail-wi0-f180.google.com with SMTP id hi2so9700937wib.7
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Nov 2014 07:57:15 -0800 (PST)
 MIME-Version: 1.0
-Date: Fri, 21 Nov 2014 20:31:21 +0530
-Message-ID: <CAGKQeFjfMwFE8d4FVOZY7n3R1=x3naDoxT4-YKUEnA3T7AJcLw@mail.gmail.com> (sfid-20141121_160125_227508_3AE6478A)
-Subject: Linux kernel 3.12 PN-KEY Mismatch in wpa.c, packet drop
-From: deepak kumar Pradhan <hydipu@gmail.com>
-To: linux-wireless@vger.kernel.org
+In-Reply-To: <1415115463.2064.20.camel@sipsolutions.net>
+References: <1415114098-25517-1-git-send-email-henning.rogge@fkie.fraunhofer.de>
+ <1415115463.2064.20.camel@sipsolutions.net>
+From: Henning Rogge <hrogge@gmail.com>
+Date: Tue, 4 Nov 2014 16:56:55 +0100
+Message-ID: <CAGnRvuo4TzrwSfQF5SUKUKptvFxEeqVTx9zg3KfGnEU=aokyQA@mail.gmail.com> (sfid-20141104_165719_276663_DE445410)
+Subject: Re: [PATCH] cfg80211: fix nl80211 cmd id in nl80211_send_mpath()
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Henning Rogge <henning.rogge@fkie.fraunhofer.de>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 Hi,
-When I am sending heavy traffic through wireless, the packet number
-and key is mismatching.
-I have applied the below patch which solves my pn-key mismatch packet drop.
-diff -Nurp linux-custom_1/net/mac80211/wpa.c linux-custom/net/mac80211/wpa.c
---- linux-custom_1/net/mac80211/wpa.c   2014-11-09 23:14:57.000000000 -0800
-+++ linux-custom/net/mac80211/wpa.c     2014-11-13 05:16:45.000000000 -0800
-@@ -483,7 +483,7 @@ ieee80211_crypto_ccmp_encrypt(struct iee
-        return TX_CONTINUE;
- }
 
--
-+#define MAX_PN_TOLERANCE 0x05  //PN-KEY mismatch
- ieee80211_rx_result
- ieee80211_crypto_ccmp_decrypt(struct ieee80211_rx_data *rx)
- {
-@@ -495,6 +495,7 @@ ieee80211_crypto_ccmp_decrypt(struct iee
-        u8 pn[IEEE80211_CCMP_PN_LEN];
-        int data_len;
-        int queue;
-+       static const u8 zero_pn[IEEE80211_CCMP_PN_LEN] = {0};
+the only reason why nobody noticed is that the "iw" tool does not even
+check the cmd field of the kernel replies it process. I wonder if "iw"
+should check the value, just to make sure bugs like this are easier to
+detect.
 
-        hdrlen = ieee80211_hdrlen(hdr->frame_control);
+Henning Rogge
 
-@@ -537,8 +538,16 @@ ieee80211_crypto_ccmp_decrypt(struct iee
-                            skb->data + hdrlen + IEEE80211_CCMP_HDR_LEN))
-                        return RX_DROP_UNUSABLE;
-        }
--
--       memcpy(key->u.ccmp.rx_pn[queue], pn, IEEE80211_CCMP_PN_LEN);
-+
-+       //PN-KEY mismatch start
-+       if (memcmp(key->u.ccmp.rx_pn[queue], zero_pn,
-IEEE80211_CCMP_PN_LEN) == 0)
-+       {
-+               if((memcmp(pn,zero_pn,(IEEE80211_CCMP_PN_LEN-1)) == 0)
-&& (pn[IEEE80211_CCMP_PN_LEN-1] < MAX_PN_TOLERANCE))
-+                       memcpy(key->u.ccmp.rx_pn[queue], pn,
-IEEE80211_CCMP_PN_LEN);
-+       }
-+       else
-+               memcpy(key->u.ccmp.rx_pn[queue], pn, IEEE80211_CCMP_PN_LEN);
-+       //PN-KEY mismatch end
-
-        /* Remove CCMP header and MIC */
-        if (pskb_trim(skb, skb->len - IEEE80211_CCMP_MIC_LEN))
-
-
--- 
-Deepak Kumar Pradhan
+On Tue, Nov 4, 2014 at 4:37 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Tue, 2014-11-04 at 16:14 +0100, Henning Rogge wrote:
+>> Netlink command for nl80211_send_mpath() should be NL80211_CMD_NEW_MPATH.
+>
+> Doh. Applied, of course.
+>
+> johannes
+>
