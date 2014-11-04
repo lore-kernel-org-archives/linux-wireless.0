@@ -1,68 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f182.google.com ([209.85.214.182]:56402 "EHLO
-	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751491AbaKESMj (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:61045 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751732AbaKDL57 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Nov 2014 13:12:39 -0500
-Message-ID: <545A6894.7040506@lwfinger.net> (sfid-20141105_191301_623259_ACB4A994)
-Date: Wed, 05 Nov 2014 12:12:36 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 4 Nov 2014 06:57:59 -0500
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Avinash Patil <patila@marvell.com>,
+	Cathy Luo <cluo@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 2/5] mwifiex: remove data_complete handler
+Date: Tue, 4 Nov 2014 03:57:00 -0800
+Message-ID: <1415102223-7118-2-git-send-email-akarwar@marvell.com> (sfid-20141104_125804_916857_1CA2FBF4)
+In-Reply-To: <1415102223-7118-1-git-send-email-akarwar@marvell.com>
+References: <1415102223-7118-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
-To: Mike Galbraith <umgwanakikbuti@gmail.com>
-CC: Murilo Opsfelder Araujo <mopsfelder@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Thadeu Cascardo <cascardo@cascardo.eti.br>,
-	troy_tan@realsil.com.cn
-Subject: Re: [PATCH] rtlwifi: Add more checks for get_btc_status callback
-References: <1414625302-3654-1-git-send-email-mopsfelder@gmail.com>	 <5451BED0.2060906@lwfinger.net> <1415178975.5402.66.camel@marge.simpson.net>
-In-Reply-To: <1415178975.5402.66.camel@marge.simpson.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/05/2014 03:16 AM, Mike Galbraith wrote:
-> On Wed, 2014-10-29 at 23:30 -0500, Larry Finger wrote:
->> On 10/29/2014 06:28 PM, Murilo Opsfelder Araujo wrote:
->>> This is a complement of commit 08054200117a95afc14c3d2ed3a38bf4e345bf78
->>> "rtlwifi: Add check for get_btc_status callback".
->>>
->>> With this patch, next-20141029 at least does not panic with rtl8192se
->>> device.
->>>
->>
->> This patch is OK, but as noted it is not complete.
->>
->> I have patches to fix all the kernel panics for rtl8192se AND rtl8192ce. There
->> are missing parts, but I would prefer submitting mine, which would conflict with
->> this one. For that reason, NACK for this one, and please apply the set I am
->> submitting now.
->
-> It's all in there now, but my RTL8191SEvB is still dead.  Squabbling
-> with it isn't going all that well either.
->
-> As soon as 38506ece rtlwifi: rtl_pci: Start modification for new drivers
-> is applied, explosions appear.  Subsequently applying...
->
-> 08054200 rtlwifi: Add check for get_btc_status callback
-> c0386f15 rtlwifi: rtl8192ce: rtl8192de: rtl8192se: Fix handling for missing get_btc_status
-> 50147969 rtlwifi: rtl8192se: Fix duplicate calls to ieee80211_register_hw()
-> 30c5ccc6 rtlwifi: rtl8192se: Add missing section to read descriptor setting
-> 75a916e1 rtlwifi: rtl8192se: Fix firmware loading
->
-> ...fixes that mess up, but leaves the interface dead in the same manner
-> as if nothing has been reverted.  So it _seems_ the bustage lurks in
-> 38506ece somewhere.  Too bad it's non-dinky, and written in wifi-ese :)
+From: Avinash Patil <patila@marvell.com>
 
-Yes, I am aware that rtl8192se is failing, and now that I am back from vacation, 
-I am working on the problem. If you want to use the driver with kernel 3.18, 
-clone the repo at http://github.com/lwfinger/rtlwifi_new.git and build and 
-install either the master or kernel_version branches. Both work.
+This patch removes redundant data complete handler.
 
-I am in the process of trying to find what the crucial difference is between 
-that repo and the kernel version.
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/mwifiex/main.h | 1 -
+ drivers/net/wireless/mwifiex/txrx.c | 4 ----
+ drivers/net/wireless/mwifiex/usb.c  | 6 ------
+ 3 files changed, 11 deletions(-)
 
-Larry
-
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index a9eea9b..df6f877 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -687,7 +687,6 @@ struct mwifiex_if_ops {
+ 	void (*cleanup_mpa_buf) (struct mwifiex_adapter *);
+ 	int (*cmdrsp_complete) (struct mwifiex_adapter *, struct sk_buff *);
+ 	int (*event_complete) (struct mwifiex_adapter *, struct sk_buff *);
+-	int (*data_complete) (struct mwifiex_adapter *);
+ 	int (*init_fw_port) (struct mwifiex_adapter *);
+ 	int (*dnld_fw) (struct mwifiex_adapter *, struct mwifiex_fw_image *);
+ 	void (*card_reset) (struct mwifiex_adapter *);
+diff --git a/drivers/net/wireless/mwifiex/txrx.c b/drivers/net/wireless/mwifiex/txrx.c
+index 96a2126..a5983fc 100644
+--- a/drivers/net/wireless/mwifiex/txrx.c
++++ b/drivers/net/wireless/mwifiex/txrx.c
+@@ -64,10 +64,6 @@ int mwifiex_handle_rx_packet(struct mwifiex_adapter *adapter,
+ 	else
+ 		ret = mwifiex_process_sta_rx_packet(priv, skb);
+ 
+-	/* Decrement RX pending counter for each packet */
+-	if (adapter->if_ops.data_complete)
+-		adapter->if_ops.data_complete(adapter);
+-
+ 	return ret;
+ }
+ EXPORT_SYMBOL_GPL(mwifiex_handle_rx_packet);
+diff --git a/drivers/net/wireless/mwifiex/usb.c b/drivers/net/wireless/mwifiex/usb.c
+index 00afcf6..08e9ec0 100644
+--- a/drivers/net/wireless/mwifiex/usb.c
++++ b/drivers/net/wireless/mwifiex/usb.c
+@@ -967,11 +967,6 @@ static int mwifiex_usb_cmd_event_complete(struct mwifiex_adapter *adapter,
+ 	return 0;
+ }
+ 
+-static int mwifiex_usb_data_complete(struct mwifiex_adapter *adapter)
+-{
+-	return 0;
+-}
+-
+ /* This function wakes up the card. */
+ static int mwifiex_pm_wakeup_card(struct mwifiex_adapter *adapter)
+ {
+@@ -993,7 +988,6 @@ static struct mwifiex_if_ops usb_ops = {
+ 	.dnld_fw =		mwifiex_usb_dnld_fw,
+ 	.cmdrsp_complete =	mwifiex_usb_cmd_event_complete,
+ 	.event_complete =	mwifiex_usb_cmd_event_complete,
+-	.data_complete =	mwifiex_usb_data_complete,
+ 	.host_to_card =		mwifiex_usb_host_to_card,
+ };
+ 
+-- 
+1.8.1.4
 
