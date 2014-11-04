@@ -1,110 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp09.smtpout.orange.fr ([80.12.242.131]:37163 "EHLO
-	smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751198AbaKEOoe convert rfc822-to-8bit (ORCPT
+Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:45421
+	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752407AbaKDP5E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Nov 2014 09:44:34 -0500
-Date: Wed, 5 Nov 2014 15:44:28 +0100 (CET)
-From: Prigent Xavier MAPS LIS LANNION <labolis2@orange.fr>
-Reply-To: Prigent Xavier MAPS LIS LANNION <labolis2@orange.fr>
+	Tue, 4 Nov 2014 10:57:04 -0500
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-Message-ID: <408476212.14050.1415198668705.JavaMail.www@wwinf1g12> (sfid-20141105_154527_208244_56951789)
-Subject: maximum WiFi associations on AP using ath9k and wpa_supplicant
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Cc: linville@tuxdriver.com
+Subject: [PATCH] ath9k: add support for reporting tx power to mac80211
+Date: Tue,  4 Nov 2014 16:56:57 +0100
+Message-Id: <1415116617-55154-1-git-send-email-nbd@openwrt.org> (sfid-20141104_165708_912319_9799C6F1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello All,
+Track it per channel context instead of in the softc
 
- 
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h |  2 +-
+ drivers/net/wireless/ath/ath9k/init.c  | 25 ++++++++++++++-----------
+ drivers/net/wireless/ath/ath9k/main.c  | 29 +++++++++++++++++++++++++----
+ 3 files changed, 40 insertions(+), 16 deletions(-)
 
-I would like to test how maximum WiFi associations are possible on my AP with security mode. The WiFi authentication, association,4-way handshake are OK but I can not get an IP adress for the second interface.
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 85d74ff..adb49a9 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -347,6 +347,7 @@ struct ath_chanctx {
+ 
+ 	int flush_timeout;
+ 	u16 txpower;
++	u16 cur_txpower;
+ 	bool offchannel;
+ 	bool stopped;
+ 	bool active;
+@@ -987,7 +988,6 @@ struct ath_softc {
+ 	u8 gtt_cnt;
+ 	u32 intrstatus;
+ 	u16 ps_flags; /* PS_* */
+-	u16 curtxpow;
+ 	bool ps_enabled;
+ 	bool ps_idle;
+ 	short nbcnvifs;
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index a4d69a0..4a9421c 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -172,17 +172,20 @@ static void ath9k_reg_notifier(struct wiphy *wiphy,
+ 	ath_reg_notifier_apply(wiphy, request, reg);
+ 
+ 	/* Set tx power */
+-	if (ah->curchan) {
+-		sc->cur_chan->txpower = 2 * ah->curchan->chan->max_power;
+-		ath9k_ps_wakeup(sc);
+-		ath9k_hw_set_txpowerlimit(ah, sc->cur_chan->txpower, false);
+-		sc->curtxpow = ath9k_hw_regulatory(ah)->power_limit;
+-		/* synchronize DFS detector if regulatory domain changed */
+-		if (sc->dfs_detector != NULL)
+-			sc->dfs_detector->set_dfs_domain(sc->dfs_detector,
+-							 request->dfs_region);
+-		ath9k_ps_restore(sc);
+-	}
++	if (!ah->curchan)
++		return;
++
++	sc->cur_chan->txpower = 2 * ah->curchan->chan->max_power;
++	ath9k_ps_wakeup(sc);
++	ath9k_hw_set_txpowerlimit(ah, sc->cur_chan->txpower, false);
++	ath9k_cmn_update_txpow(ah, sc->cur_chan->cur_txpower,
++			       sc->cur_chan->txpower,
++			       &sc->cur_chan->cur_txpower);
++	/* synchronize DFS detector if regulatory domain changed */
++	if (sc->dfs_detector != NULL)
++		sc->dfs_detector->set_dfs_domain(sc->dfs_detector,
++						 request->dfs_region);
++	ath9k_ps_restore(sc);
+ }
+ 
+ /*
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index a91ee92..92fb067 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -233,8 +233,9 @@ static bool ath_complete_reset(struct ath_softc *sc, bool start)
+ 
+ 	ath9k_calculate_summary_state(sc, sc->cur_chan);
+ 	ath_startrecv(sc);
+-	ath9k_cmn_update_txpow(ah, sc->curtxpow,
+-			       sc->cur_chan->txpower, &sc->curtxpow);
++	ath9k_cmn_update_txpow(ah, sc->cur_chan->cur_txpower,
++			       sc->cur_chan->txpower,
++			       &sc->cur_chan->cur_txpower);
+ 	clear_bit(ATH_OP_HW_RESET, &common->op_flags);
+ 
+ 	if (!sc->cur_chan->offchannel && start) {
+@@ -1471,8 +1472,9 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
+ 	if (changed & IEEE80211_CONF_CHANGE_POWER) {
+ 		ath_dbg(common, CONFIG, "Set power: %d\n", conf->power_level);
+ 		sc->cur_chan->txpower = 2 * conf->power_level;
+-		ath9k_cmn_update_txpow(ah, sc->curtxpow,
+-				       sc->cur_chan->txpower, &sc->curtxpow);
++		ath9k_cmn_update_txpow(ah, sc->cur_chan->cur_txpower,
++				       sc->cur_chan->txpower,
++				       &sc->cur_chan->cur_txpower);
+ 	}
+ 
+ 	mutex_unlock(&sc->mutex);
+@@ -2594,6 +2596,24 @@ void ath9k_fill_chanctx_ops(void)
+ 
+ #endif
+ 
++static int ath9k_get_txpower(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
++			     int *dbm)
++{
++	struct ath_softc *sc = hw->priv;
++	struct ath_vif *avp = (void *)vif->drv_priv;
++
++	mutex_lock(&sc->mutex);
++	if (avp->chanctx)
++		*dbm = avp->chanctx->cur_txpower;
++	else
++		*dbm = sc->cur_chan->cur_txpower;
++	mutex_unlock(&sc->mutex);
++
++	*dbm /= 2;
++
++	return 0;
++}
++
+ struct ieee80211_ops ath9k_ops = {
+ 	.tx 		    = ath9k_tx,
+ 	.start 		    = ath9k_start,
+@@ -2640,4 +2660,5 @@ struct ieee80211_ops ath9k_ops = {
+ #endif
+ 	.sw_scan_start	    = ath9k_sw_scan_start,
+ 	.sw_scan_complete   = ath9k_sw_scan_complete,
++	.get_txpower        = ath9k_get_txpower,
+ };
+-- 
+2.1.2
 
-It's works in open mode using WPA supplicant but not with WPA2 AES security mode. I use an ath9k driver (AR9380) and Ubuntu 14.04 (same issue on debian 7)
-
- 
-
-Could you take a look on the following command line please:
-
- 
-#APUT SSID: Livebox-7650_5
-wpa_passphrase Livebox-7650_5 123456789 > temp.txt
-sed '1ictrl_interface=/run/wpa_supplicant' temp.txt > my.conf
-sudo rfkill block wifi
-sudo killall wpa_supplicant
-sudo rfkill unblock wifi
-ifconfig wlan0 down
-
-iw dev wlan0 del
-iw phy phy0 interface add wlan0 type managed
-sudo wpa_supplicant -B -iwlan0 -c./my.conf
-Successfully initialized wpa_supplicant
-#get WiFi status on interface wlan0 
-iw wlan0 link
-Connected to d0:84:b0:05:76:51 (on wlan0)
-    SSID: Livebox-7650_5
-    freq: 5560
-    RX: 29982 bytes (187 packets)
-    TX: 5887 bytes (25 packets)
-    signal: -40 dBm
-    tx bitrate: 65.0 MBit/s MCS 7
-
-    bss flags:    short-slot-time
-    dtim period:    0
-    beacon int:    100
-#dhclient process on interface wlan0 
-dhclient wlan0
-#get ip on interface wlan0 
-ifconfig wlan0
-wlan0     Link encap:Ethernet  HWaddr 00:03:7f:40:aa:c3  
-          inet adr:192.168.1.12  Bcast:192.168.1.255  Masque:255.255.255.0
-          adr inet6: fe80::203:7fff:fe40:aac3/64 Scope:Lien
-          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
-          Packets reçus:19 erreurs:0 :0 overruns:0 frame:0
-          TX packets:27 errors:0 dropped:0 overruns:0 carrier:0
-          collisions:0 lg file transmission:1000 
-          Octets reçus:2017 (2.0 KB) Octets transmis:6337 (6.3 KB)
-
-sudo iw dev wlan0 interface add WVSTA1 type station
-sudo ifconfig WVSTA1 hw ether 00:03:7f:40:00:01
-sudo ifconfig WVSTA1 up
-sudo wpa_supplicant -iWVSTA1 -c./my.conf -Dnl80211 &
-Successfully initialized wpa_supplicant
-WVSTA1: CTRL-EVENT-SCAN-STARTED 
-WVSTA1: SME: Trying to authenticate with d0:84:b0:05:76:51 (SSID='Livebox-7650_5' freq=5560 MHz)
-WVSTA1: Trying to associate with d0:84:b0:05:76:51 (SSID='Livebox-7650_5' freq=5560 MHz)
-WVSTA1: Associated with d0:84:b0:05:76:51
-WVSTA1: WPA: Key negotiation completed with d0:84:b0:05:76:51 [PTK=CCMP GTK=TKIP]
-WVSTA1: CTRL-EVENT-CONNECTED - Connection to d0:84:b0:05:76:51 completed [id=0 id_str=]
-#get WiFi status on interface WVSTA1 
-iw WVSTA1 link
-Connected to d0:84:b0:05:76:51 (on WVSTA1)
-    SSID: Livebox-7650_5
-    freq: 5560
-    RX: 16381 bytes (97 packets)
-    TX: 4560 bytes (21 packets)
-    signal: -40 dBm
-    tx bitrate: 65.0 MBit/s MCS 7
-
-    bss flags:    short-slot-time
-    dtim period:    0
-    beacon int:    100
-#dhclient process on interface WVSTA1 
-dhclient WVSTA1
-
-
-
-I cannot have an IP adress, it stops here....Ok in open security mode using WPA_supplicant. Do you have an idea please?
-
- 
-
-Thanks,
-
- 
-
-Regards,
-
- 
-
-Eric & Xav
