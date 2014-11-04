@@ -1,84 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:61903 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753161AbaKGTGk (ORCPT
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:44185 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754297AbaKDOuV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Nov 2014 14:06:40 -0500
-Received: by mail-wi0-f173.google.com with SMTP id n3so5536103wiv.0
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Nov 2014 11:06:39 -0800 (PST)
+	Tue, 4 Nov 2014 09:50:21 -0500
+Received: by mail-wg0-f52.google.com with SMTP id b13so13077103wgh.11
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Nov 2014 06:50:20 -0800 (PST)
 From: Malcolm Priestley <tvboxspy@gmail.com>
 To: gregkh@linuxfoundation.org
 Cc: linux-wireless@vger.kernel.org,
 	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 03/10] staging: vt6655: CARDbSetPhyParameter change CARD_PHY_TYPE to bb_type
-Date: Fri,  7 Nov 2014 19:06:02 +0000
-Message-Id: <1415387169-3843-3-git-send-email-tvboxspy@gmail.com> (sfid-20141107_200644_842447_A1F7EBF3)
-In-Reply-To: <1415387169-3843-1-git-send-email-tvboxspy@gmail.com>
-References: <1415387169-3843-1-git-send-email-tvboxspy@gmail.com>
+Subject: [PATCH] staging: vt6655: change tx wake queue
+Date: Tue,  4 Nov 2014 14:49:46 +0000
+Message-Id: <1415112586-5808-1-git-send-email-tvboxspy@gmail.com> (sfid-20141104_155030_189667_B28F5F8D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-using u8 for bb_type
+Wake queue in the dwIsr loop of device_intr instead of device_tx_srv.
+
+This fixes an issue when ISR_TXDMA0 or ISR_AC0DMA does not occur
+device_tx_srv is not called and the queue gets stuck in stopped
+condition.
+
+On test if the queue is stuck another MACvTransmitAC0 or MACvTransmit0
+in vnt_tx_packet will clear it.
+
+Check on vif that both buffers are available and the queue is stopped.
 
 Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/staging/vt6655/card.c | 8 ++++----
- drivers/staging/vt6655/card.h | 2 +-
- 2 files changed, 5 insertions(+), 5 deletions(-)
+ drivers/staging/vt6655/device_main.c | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/staging/vt6655/card.c b/drivers/staging/vt6655/card.c
-index 7b25969..6a1efd1 100644
---- a/drivers/staging/vt6655/card.c
-+++ b/drivers/staging/vt6655/card.c
-@@ -204,7 +204,7 @@ s_vCalculateOFDMRParameter(
-  *
-  * Return Value: None.
-  */
--bool CARDbSetPhyParameter(struct vnt_private *pDevice, CARD_PHY_TYPE ePHYType,
-+bool CARDbSetPhyParameter(struct vnt_private *pDevice, u8 bb_type,
- 			  unsigned short wCapInfo, unsigned char byERPField,
- 			  void *pvSupportRateIEs, void *pvExtSupportRateIEs)
- {
-@@ -216,7 +216,7 @@ bool CARDbSetPhyParameter(struct vnt_private *pDevice, CARD_PHY_TYPE ePHYType,
- 	int i;
+diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
+index f0b336b..35d69a9 100644
+--- a/drivers/staging/vt6655/device_main.c
++++ b/drivers/staging/vt6655/device_main.c
+@@ -1181,10 +1181,6 @@ static int device_tx_srv(struct vnt_private *pDevice, unsigned int uIdx)
+ 			}
+ 			device_free_tx_buf(pDevice, pTD);
+ 			pDevice->iTDUsed[uIdx]--;
+-
+-			/* Make sure queue is available */
+-			if (AVAIL_TD(pDevice, uIdx))
+-				ieee80211_wake_queues(pDevice->hw);
+ 		}
+ 	}
  
- 	/* Set SIFS, DIFS, EIFS, SlotTime, CwMin */
--	if (ePHYType == PHY_TYPE_11A) {
-+	if (bb_type == BB_TYPE_11A) {
- 		if (pDevice->byRFType == RF_AIROHA7230) {
- 			/* AL7230 use single PAPE and connect to PAPE_2.4G */
- 			MACvSetBBType(pDevice->PortOffset, BB_TYPE_11G);
-@@ -243,7 +243,7 @@ bool CARDbSetPhyParameter(struct vnt_private *pDevice, CARD_PHY_TYPE ePHYType,
- 		bySIFS = C_SIFS_A;
- 		byDIFS = C_SIFS_A + 2*C_SLOT_SHORT;
- 		byCWMaxMin = 0xA4;
--	} else if (ePHYType == PHY_TYPE_11B) {
-+	} else if (bb_type == BB_TYPE_11B) {
- 		MACvSetBBType(pDevice->PortOffset, BB_TYPE_11B);
- 		if (pDevice->byRFType == RF_AIROHA7230) {
- 			pDevice->abyBBVGA[0] = 0x1C;
-@@ -344,7 +344,7 @@ bool CARDbSetPhyParameter(struct vnt_private *pDevice, CARD_PHY_TYPE ePHYType,
+@@ -1357,6 +1353,14 @@ static  irqreturn_t  device_intr(int irq,  void *dev_instance)
+ 			}
+ 		}
  
- 	pDevice->byPacketType = CARDbyGetPktType(pDevice);
++		/* If both buffers available wake the queue */
++		if (pDevice->vif) {
++			if (AVAIL_TD(pDevice, TYPE_TXDMA0) &&
++			    AVAIL_TD(pDevice, TYPE_AC0DMA) &&
++			    ieee80211_queue_stopped(pDevice->hw, 0))
++				ieee80211_wake_queues(pDevice->hw);
++		}
++
+ 		MACvReadISR(pDevice->PortOffset, &pDevice->dwIsr);
  
--	CARDvSetRSPINF(pDevice, ePHYType);
-+	CARDvSetRSPINF(pDevice, bb_type);
- 
- 	return true;
- }
-diff --git a/drivers/staging/vt6655/card.h b/drivers/staging/vt6655/card.h
-index 2449f3c..9d19f97 100644
---- a/drivers/staging/vt6655/card.h
-+++ b/drivers/staging/vt6655/card.h
-@@ -89,7 +89,7 @@ void CARDvSafeResetTx(struct vnt_private *);
- void CARDvSafeResetRx(struct vnt_private *);
- bool CARDbRadioPowerOff(struct vnt_private *);
- bool CARDbRadioPowerOn(struct vnt_private *);
--bool CARDbSetPhyParameter(struct vnt_private *, CARD_PHY_TYPE ePHYType,
-+bool CARDbSetPhyParameter(struct vnt_private *, u8,
- 			  unsigned short wCapInfo, unsigned char byERPField,
- 			  void *pvSupportRateIEs, void *pvExtSupportRateIEs);
- bool CARDbUpdateTSF(struct vnt_private *, unsigned char byRxRate,
+ 		MACvReceive0(pDevice->PortOffset);
 -- 
 2.1.0
 
