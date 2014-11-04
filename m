@@ -1,42 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:40599 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751646AbaKDNBA (ORCPT
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:40684 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752570AbaKDJaW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Nov 2014 08:01:00 -0500
-Message-ID: <1415106058.11912.9.camel@umadbro> (sfid-20141104_140123_010490_B454B338)
-Subject: Re: [PATCH] cfg80211: Move join/leave_ocb comments to be in the
- correct order
-From: Rostislav Lisovy <lisovy@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	fengguang.wu@intel.com,
-	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
-Date: Tue, 04 Nov 2014 14:00:58 +0100
-In-Reply-To: <1415105716.2064.17.camel@sipsolutions.net>
-References: <1415105352-4295-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
-	 (sfid-20141104_134918_159065_C641379A) <1415105716.2064.17.camel@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 4 Nov 2014 04:30:22 -0500
+Received: by mail-wi0-f177.google.com with SMTP id ex7so8684931wid.10
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Nov 2014 01:30:21 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CABPxzYLFx7M=8E1pGYP7b7k-3xL9J8kYJ868BNDgkYgFOQNUQg@mail.gmail.com>
+References: <1415090436-12588-1-git-send-email-emmanuel.grumbach@intel.com>
+ <CABPxzYKfoO+NYi7Zs+5t6mRU+XwW5u=dKiBMsrzZ5VLO3ABDAg@mail.gmail.com>
+ <B2CD83211F5FDD478D7EFFF030D107ED2AE2FDE7@hasmsx107.ger.corp.intel.com> <CABPxzYLFx7M=8E1pGYP7b7k-3xL9J8kYJ868BNDgkYgFOQNUQg@mail.gmail.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Tue, 4 Nov 2014 15:00:00 +0530
+Message-ID: <CABPxzYJUYo0F5XHx6KZyBb1b9HwFkyiYfXo0Og_XtTWKLtMGxA@mail.gmail.com> (sfid-20141104_103033_848210_1BE500D6)
+Subject: Re: [PATCH] mac80211: Increase uapsd max SP frames number
+To: "Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
+Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-11-04 at 13:55 +0100, Johannes Berg wrote:
-> On Tue, 2014-11-04 at 13:49 +0100, Rostislav Lisovy wrote:
-> > Use the same ordering in the comments section as it
-> > is in the structure below.
-> 
-> Well, I think I confused you :-)
-> The report from Fengguang's build bot was actually when there was no
-> documentation, and then I added it and I guess you thought that it was
-> sending out the report because it was in the wrong place?
-> 
-> Anyway, I think I'll just leave it as is, and not apply this, ok?
+On Tue, Nov 4, 2014 at 2:57 PM, Krishna Chaitanya
+<chaitanya.mgit@gmail.com> wrote:
+> On Tue, Nov 4, 2014 at 2:53 PM, Otcheretianski, Andrei
+> <andrei.otcheretianski@intel.com> wrote:
+>> The spec doesn't require unlimited to be really "unlimited" and the AP decides when to end the SP, so any value here is ok.
+>> However for large traffic bursts increasing this value looks reasonable. Also looks like some certification tests expect more frames to be delivered during SP.
+>> 128 is still kind of arbitrary value
+>>
+>>> -----Original Message-----
+>>> From: Krishna Chaitanya [mailto:chaitanya.mgit@gmail.com]
+>>> Sent: Tuesday, November 04, 2014 11:03
+>>> To: Grumbach, Emmanuel
+>>> Cc: Johannes Berg; linux-wireless; Otcheretianski, Andrei
+>>> Subject: Re: [PATCH] mac80211: Increase uapsd max SP frames number
+>>>
+>>> On Tue, Nov 4, 2014 at 2:10 PM, Emmanuel Grumbach
+>>> <emmanuel.grumbach@intel.com> wrote:
+>>> > From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+>>> >
+>>> > Deliver up to 128 frames during SP instead of 8 if unlimited max SP is
+>>> > specified during association.
+>>> >
+>>> > Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+>>> > Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+>>> > ---
+>>> >  net/mac80211/sta_info.c | 2 +-
+>>> >  1 file changed, 1 insertion(+), 1 deletion(-)
+>>> >
+>>> > diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c index
+>>> > de494df..3352741 100644
+>>> > --- a/net/mac80211/sta_info.c
+>>> > +++ b/net/mac80211/sta_info.c
+>>> > @@ -1531,7 +1531,7 @@ void ieee80211_sta_ps_deliver_uapsd(struct
+>>> sta_info *sta)
+>>> >                 break;
+>>> >         case 0:
+>>> >                 /* XXX: what is a good value? */
+>>> > -               n_frames = 8;
+>>> > +               n_frames = 128;
+>>> >                 break;
+>>> >         }
+>>> What is criteria for deciding the threshold?
+>>> Any specific use case for 128?
+> I understand, thanks for the explanation.
 
-Yes, that is what I thought. The second confusion was that most of the
-other comments were not in the same order as their fields.
-
-Ok, no need to apply this.
-
-Rostislav
-
+can we add the reason (certification) to the commit log?
+It will be easy to understand the change.
