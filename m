@@ -1,61 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:57483 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751303AbaKDVaK (ORCPT
+Received: from mail-wg0-f50.google.com ([74.125.82.50]:65314 "EHLO
+	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753401AbaKDMtT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Nov 2014 16:30:10 -0500
-Date: Tue, 4 Nov 2014 16:16:02 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: pull-request: mac80211-next 2014-11-04
-Message-ID: <20141104211601.GE31033@tuxdriver.com> (sfid-20141104_223015_676193_8DC2F0B2)
-References: <1415096975.2064.16.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1415096975.2064.16.camel@sipsolutions.net>
+	Tue, 4 Nov 2014 07:49:19 -0500
+From: Rostislav Lisovy <lisovy@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: lisovy@gmail.com, fengguang.wu@intel.com,
+	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+Subject: [PATCH] cfg80211: Move join/leave_ocb comments to be in the correct order
+Date: Tue,  4 Nov 2014 13:49:12 +0100
+Message-Id: <1415105352-4295-1-git-send-email-rostislav.lisovy@fel.cvut.cz> (sfid-20141104_134938_361798_BDFF2881)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 04, 2014 at 11:29:35AM +0100, Johannes Berg wrote:
-> Hi John,
-> 
-> This comes relatively late, but between other things I didn't get around
-> to it until now, sorry about that.
-> 
-> We have quite a bit of content, see below.
-> 
-> Let me know if there's any problem.
-> 
-> johannes
-> 
-> ---
-> 
-> The following changes since commit 35a9ad8af0bb0fa3525e6d0d20e32551d226f38e:
-> 
->   Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next (2014-10-08 21:40:54 -0400)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git tags/mac80211-next-for-john-2014-11-04
-> 
-> for you to fetch changes up to bd2bc23292ccf5b75e32fa3090162c38c0826352:
-> 
->   mac80211: replace restart_complete() with reconfig_complete() (2014-11-04 11:18:19 +0100)
-> 
-> ----------------------------------------------------------------
-> This relatively large batch of changes is comprised of the
-> following:
->  * large mac80211-hwsim changes from Ben, Jukka and a bit myself
->  * OCB/WAVE/11p support from Rostislav on behalf of the Czech Technical
->    University in Prague and Volkswagen Group Research
->  * minstrel VHT work from Karl
->  * more CSA work from Luca
->  * WMM admission control support in mac80211 (myself)
->  * various smaller fixes, spelling corrections, and minor API additions
+Use the same ordering in the comments section as it
+is in the structure below.
 
-Pulling now...
+Signed-off-by: Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+---
+ include/net/cfg80211.h | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 5c3acd0..af0ef26 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -2182,6 +2182,11 @@ struct cfg80211_qos_map {
+  * @leave_mesh: leave the current mesh network
+  *	(invoked with the wireless_dev mutex held)
+  *
++ * @join_ocb: join the OCB network with the specified parameters
++ *	(invoked with the wireless_dev mutex held)
++ * @leave_ocb: leave the current OCB network
++ *	(invoked with the wireless_dev mutex held)
++ *
+  * @get_mesh_config: Get the current mesh configuration
+  *
+  * @update_mesh_config: Update mesh parameters on a running mesh.
+@@ -2362,11 +2367,6 @@ struct cfg80211_qos_map {
+  *	with the peer followed by immediate teardown when the addition is later
+  *	rejected)
+  * @del_tx_ts: remove an existing TX TS
+- *
+- * @join_ocb: join the OCB network with the specified parameters
+- *	(invoked with the wireless_dev mutex held)
+- * @leave_ocb: leave the current OCB network
+- *	(invoked with the wireless_dev mutex held)
+  */
+ struct cfg80211_ops {
+ 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+2.0.0.rc4
+
