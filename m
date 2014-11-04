@@ -1,49 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:46003 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752166AbaKJJMH (ORCPT
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:37919 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751646AbaKDM6t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Nov 2014 04:12:07 -0500
-Received: by mail-wi0-f174.google.com with SMTP id d1so9734484wiv.13
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Nov 2014 01:12:06 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <545FC585.1030709@broadcom.com>
-References: <1415551822-20121-1-git-send-email-arik@wizery.com>
- <1415551822-20121-11-git-send-email-arik@wizery.com> <545FC585.1030709@broadcom.com>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Mon, 10 Nov 2014 11:03:55 +0200
-Message-ID: <CA+XVXfe7JQCg8RL4exSnMcgiE1jMrTCp_hyTMzOBSBFcZ=GzRQ@mail.gmail.com> (sfid-20141110_101217_392848_F4C02153)
-Subject: Re: [PATCH 11/16] cfg80211: introduce TDLS channel switch commands
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 4 Nov 2014 07:58:49 -0500
+Message-ID: <1415105926.11912.6.camel@umadbro> (sfid-20141104_135907_793298_8F4101F8)
+Subject: Re: [PATCH 0/2 v3] cfg80211: mac80211: 802.11p OCB mode support
+From: Rostislav Lisovy <lisovy@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
+	jan-niklas.meier@volkswagen.de, burak.simsek@volkswagen.de,
+	Emmanuel Thierry <emmanuel.thierry@yogoko.fr>,
+	laszlo.virag@commsignia.com,
+	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+Date: Tue, 04 Nov 2014 13:58:46 +0100
+In-Reply-To: <1415093148.2064.5.camel@sipsolutions.net>
+References: <1415007199-31506-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
+	 (sfid-20141103_103325_972796_F4E0AE3F) <1415093148.2064.5.camel@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Nov 9, 2014 at 9:50 PM, Arend van Spriel <arend@broadcom.com> wrote:
-> On 11/09/14 17:50, Arik Nemtsov wrote:
->>
->> Introduce commands to initiate and cancel TDLS channel-switching. Once
->> TDLS channel-switching is started, the lower level driver is responsible
->> for continually initiating channel-switch operations and returning to
->> the base (AP) channel to listen for beacons from time to time.
->>
->> Upon cancellation of the channel-switch all communication between the
->> relevant TDLS peers will continue on the base channel.
->>
->> Signed-off-by: Arik Nemtsov<arikx.nemtsov@intel.com>
->> Reviewed-by: Johannes Berg<johannes.berg@intel.com>
->> Signed-off-by: Arik Nemtsov<arik@wizery.com>
->> ---
->>   include/net/cfg80211.h       |   8 ++++
->>   include/net/cfg80211.h.rej   |  15 ++++++
->
->
-> Seems something went haywire here or do you really want to add a .rej file
-> in this patch?
+On Tue, 2014-11-04 at 10:25 +0100, Johannes Berg wrote:
+> On Mon, 2014-11-03 at 10:33 +0100, Rostislav Lisovy wrote:
+> > The IEEE 802.11p amendment (already part of IEEE 802.11-2012)
+> > specifies usage of 5 and 10 MHz wide channels in 5.9GHz band for
+> > vehicular environment. All the 802.11p compliant devices should
+> > be set to the newly added operation mode -- OCB (Outside the
+> > Context of a BSS). No authentication/association is necessary to
+> > communicate. The only parameter to be configured is the channel
+> > (central frequency and bandwidth) to communicate on. The channel
+> > has to be known a priori. It is set during the 'ocb join'
+> > operation (sent via netlink message from user-space).
+> > 
+> > This patchset adds the OCB mode, OCB join and leave handling
+> > (nl80211, cfg80211, mac80211), 802.11p EDCA parameters
+> > modification, RX and TX path (for unicast/broadcast messages).
+> 
+> Applied, thanks for all the changes.
 
-Doh :)
-Thanks for that one.
+Johannes, thank you for your help.
 
-Arik
+What do you think should be the next step? Until the new nl80211.h is
+not in the 'iw' I will send some patches to the Atheros mailinglist
+(adding OCB mode handling). Thereafter I will send patches for the 'iw'?
+
+Best regards;
+Rostislav
+
