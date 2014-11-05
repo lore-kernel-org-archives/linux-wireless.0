@@ -1,53 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:8615 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751422AbaKKKoq (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:37229 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750908AbaKEIi4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Nov 2014 05:44:46 -0500
-Message-ID: <5461E89A.1060908@broadcom.com> (sfid-20141111_114508_641307_D99A3E56)
-Date: Tue, 11 Nov 2014 11:44:42 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Wed, 5 Nov 2014 03:38:56 -0500
+From: Avinash Patil <patila@marvell.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <cluo@marvell.com>,
+	<yangyang@marvell.com>, Avinash Patil <patila@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH] mwifiex: module load parameter for interface creation
+Date: Wed, 5 Nov 2014 19:38:11 +0530
+Message-ID: <1415196491-25391-1-git-send-email-patila@marvell.com> (sfid-20141105_093859_779701_4AEAB3EA)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "Gautam (Gautam Kumar) Shukla" <gautams@broadcom.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"davem@davemloft.net" <davem@davemloft.net>,
-	"linux-api@vger.kernel.org" <linux-api@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	Jithu Jance <jithu@broadcom.com>,
-	Sreenath S <sreenats@broadcom.com>,
-	Vladimir Kondratiev <vkondrat@qca.qualcomm.com>
-Subject: Re: [PATCH 1/1] linux-wireless: Added psk in struct cfg80211_connect_params
- needed for offloading 4way handshake to driver
-References: <DF163EE1A432BF4BBE6B2088220663A67437BD@SJEXCHMB06.corp.ad.broadcom.com>		 <1415698161.2163.0.camel@sipsolutions.net> <5461DCC9.5050702@broadcom.com>	 <1415700220.2163.3.camel@sipsolutions.net> <5461E67E.7010408@broadcom.com> <1415702338.2163.5.camel@sipsolutions.net>
-In-Reply-To: <1415702338.2163.5.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11-11-14 11:38, Johannes Berg wrote:
-> On Tue, 2014-11-11 at 11:35 +0100, Arend van Spriel wrote:
-> 
->> What did pop up is the wiphy flags vs. nl80211 feature flags. When that
->> comes up it looks like 'potAtoes, potaetoes' to me.
->>
->> So is there are clear design rule for when to use which flag. For me the
->> wiphy object represents the device/firmware and 4-way handshake offload
->> support is determined by what the device/firmware supports.
-> 
-> There are three types of flags:
-> 
->  * wiphy flag attributes - deprecated as far as I'm concerned
+This patch adds module load parameter driver_mode for mwifiex
+which would enable driver to create AP or P2P client interface while loading
+module. driver_mode is bitmap of interface modes for station, AP and
+P2P client.
 
-Ok. deprecated is clear enough ;-)
+Station interface is created by default and is unaffected by driver_mode
+parameter.
 
->  * wiphy nl80211 feature flags - much easier to use in kernel (and
-> userspace)
->  * nl80211 protocol flags - only one exists
->                             (NL80211_PROTOCOL_FEATURE_SPLIT_WIPHY_DUMP)
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/mwifiex/main.c | 32 ++++++++++++++++++++++++++++++++
+ drivers/net/wireless/mwifiex/main.h |  5 +++++
+ 2 files changed, 37 insertions(+)
 
-Thanks,
-Arend
+diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
+index 2a5a59b..2de8a6a 100644
+--- a/drivers/net/wireless/mwifiex/main.c
++++ b/drivers/net/wireless/mwifiex/main.c
+@@ -28,6 +28,11 @@ const char driver_version[] = "mwifiex " VERSION " (%s) ";
+ static char *cal_data_cfg;
+ module_param(cal_data_cfg, charp, 0);
+ 
++static unsigned short driver_mode;
++module_param(driver_mode, ushort, 0);
++MODULE_PARM_DESC(driver_mode,
++		 "station=0x1(default), ap-sta=0x3, station-p2p=0x5, ap-sta-p2p=0x7");
++
+ /*
+  * This function registers the device and performs all the necessary
+  * initializations.
+@@ -449,6 +454,11 @@ static void mwifiex_fw_dpc(const struct firmware *firmware, void *context)
+ 		goto err_init_fw;
+ 	}
+ 
++	if (driver_mode) {
++		driver_mode &= MWIFIEX_DRIVER_MODE_BITMASK;
++		driver_mode |= MWIFIEX_DRIVER_MODE_STA;
++	}
++
+ 	rtnl_lock();
+ 	/* Create station interface by default */
+ 	wdev = mwifiex_add_virtual_intf(adapter->wiphy, "mlan%d",
+@@ -458,6 +468,28 @@ static void mwifiex_fw_dpc(const struct firmware *firmware, void *context)
+ 		rtnl_unlock();
+ 		goto err_add_intf;
+ 	}
++
++	if (driver_mode & MWIFIEX_DRIVER_MODE_UAP) {
++		wdev = mwifiex_add_virtual_intf(adapter->wiphy, "uap%d",
++						NL80211_IFTYPE_AP, NULL, NULL);
++		if (IS_ERR(wdev)) {
++			dev_err(adapter->dev, "cannot create AP interface\n");
++			rtnl_unlock();
++			goto err_add_intf;
++		}
++	}
++
++	if (driver_mode & MWIFIEX_DRIVER_MODE_P2P) {
++		wdev = mwifiex_add_virtual_intf(adapter->wiphy, "p2p%d",
++						NL80211_IFTYPE_P2P_CLIENT, NULL,
++						NULL);
++		if (IS_ERR(wdev)) {
++			dev_err(adapter->dev,
++				"cannot create p2p client interface\n");
++			rtnl_unlock();
++			goto err_add_intf;
++		}
++	}
+ 	rtnl_unlock();
+ 
+ 	mwifiex_drv_get_driver_version(adapter, fmt, sizeof(fmt) - 1);
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 5feaffb..1038cf8 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -48,6 +48,11 @@ enum {
+ 	MWIFIEX_SYNC_CMD
+ };
+ 
++#define MWIFIEX_DRIVER_MODE_STA			BIT(0)
++#define MWIFIEX_DRIVER_MODE_UAP			BIT(1)
++#define MWIFIEX_DRIVER_MODE_P2P			BIT(2)
++#define MWIFIEX_DRIVER_MODE_BITMASK		(BIT(0) | BIT(1) | BIT(2))
++
+ #define MWIFIEX_MAX_AP				64
+ 
+ #define MWIFIEX_DEFAULT_WATCHDOG_TIMEOUT	(5 * HZ)
+-- 
+1.8.1.4
 
