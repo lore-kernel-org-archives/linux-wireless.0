@@ -1,65 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fig.raritan.com ([12.144.63.197]:1864 "EHLO fig.raritan.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751330AbaKFJ4u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Nov 2014 04:56:50 -0500
-From: Ronald Wahl <ronald.wahl@raritan.com>
-To: linux-wireless@vger.kernel.org
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-	Ronald Wahl <ronald.wahl@raritan.com>
-Subject: [PATCH] mac80211: Fix regression that triggers a kernel BUG with CCMP
-Date: Thu,  6 Nov 2014 10:55:52 +0100
-Message-Id: <1415267752-4704-1-git-send-email-ronald.wahl@raritan.com> (sfid-20141106_105655_859108_B3CFC927)
+Received: from zimbra.real-time.com ([63.170.91.9]:37866 "EHLO
+	zimbra.real-time.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751186AbaKEGZp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Nov 2014 01:25:45 -0500
+Date: Wed, 5 Nov 2014 17:25:16 +1100
+From: James Cameron <quozl@laptop.org>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	cluo@marvell.com, huxm@marvell.com, yangyang@marvell.com,
+	Avinash Patil <patila@marvell.com>
+Subject: Re: [Patch v2 3/5] mwifiex: fix out of memory issue observed for USB
+ chipsets
+Message-ID: <20141105062516.GS1015@us.netrek.org> (sfid-20141105_072605_074101_C9AF019D)
+References: <1415187271-17914-1-git-send-email-akarwar@marvell.com>
+ <1415187271-17914-3-git-send-email-akarwar@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1415187271-17914-3-git-send-email-akarwar@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit 7ec7c4a9a686c608315739ab6a2b0527a240883c (mac80211: port CCMP to
-cryptoapi's CCM driver) introduced a regression when decrypting empty
-packets (data_len == 0). This will lead to backtraces like:
+On Wed, Nov 05, 2014 at 05:04:29PM +0530, Amitkumar Karwar wrote:
+> On some platforms, system goes out of memory during heavy
+> Rx traffic with our USB chipsets.
+> 
+> In case of SDIO/PCIe, after receiving 50 packets in Rx queue
+> we stop processing interrupts till packets pending fall below
+> low threshold i.e 20. We don't have similar logic for USB,
+> so if host platform is slow, we would hit a case where firmware
+> keeps on pushing packets at high speed than driver/kernel can
+> process.
+> 
+> We will stop submitting URBs for Rx data when pending packet
+> count reaches high threshold and restart them when enough
+> packets are consumed to solve the problem.
 
-(scatterwalk_start) from [<c01312f4>] (scatterwalk_map_and_copy+0x2c/0xa8)
-(scatterwalk_map_and_copy) from [<c013a5a0>] (crypto_ccm_decrypt+0x7c/0x25c)
-(crypto_ccm_decrypt) from [<c032886c>] (ieee80211_aes_ccm_decrypt+0x160/0x170)
-(ieee80211_aes_ccm_decrypt) from [<c031c628>] (ieee80211_crypto_ccmp_decrypt+0x1ac/0x238)
-(ieee80211_crypto_ccmp_decrypt) from [<c032ef28>] (ieee80211_rx_handlers+0x870/0x1d24)
-(ieee80211_rx_handlers) from [<c0330c7c>] (ieee80211_prepare_and_rx_handle+0x8a0/0x91c)
-(ieee80211_prepare_and_rx_handle) from [<c0331260>] (ieee80211_rx+0x568/0x730)
-(ieee80211_rx) from [<c01d3054>] (__carl9170_rx+0x94c/0xa20)
-(__carl9170_rx) from [<c01d3324>] (carl9170_rx_stream+0x1fc/0x320)
-(carl9170_rx_stream) from [<c01cbccc>] (carl9170_usb_tasklet+0x80/0xc8)
-(carl9170_usb_tasklet) from [<c00199dc>] (tasklet_hi_action+0x88/0xcc)
-(tasklet_hi_action) from [<c00193c8>] (__do_softirq+0xcc/0x200)
-(__do_softirq) from [<c0019734>] (irq_exit+0x80/0xe0)
-(irq_exit) from [<c0009c10>] (handle_IRQ+0x64/0x80)
-(handle_IRQ) from [<c000c3a0>] (__irq_svc+0x40/0x4c)
-(__irq_svc) from [<c0009d44>] (arch_cpu_idle+0x2c/0x34)
+Other drivers and user activity can deplete memory.  How does this
+patch solve the problem when dev_alloc_skb fails?  I'm worried the
+underlying issue remains; handling out of memory.
 
-Such packets can appear for example when using the carl9170 wireless driver
-because hardware sometimes generates garbage when the internal FIFO overruns.
-
-This patch adds an additional length check.
-
-Signed-off-by: Ronald Wahl <ronald.wahl@raritan.com>
----
- net/mac80211/aes_ccm.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/net/mac80211/aes_ccm.c b/net/mac80211/aes_ccm.c
-index ec24378..0cd9523 100644
---- a/net/mac80211/aes_ccm.c
-+++ b/net/mac80211/aes_ccm.c
-@@ -53,6 +53,9 @@ int ieee80211_aes_ccm_decrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
- 		__aligned(__alignof__(struct aead_request));
- 	struct aead_request *aead_req = (void *) aead_req_data;
- 
-+	if (data_len == 0)
-+		return EINVAL;
-+
- 	memset(aead_req, 0, sizeof(aead_req_data));
- 
- 	sg_init_one(&pt, data, data_len);
 -- 
-1.9.3
-
+James Cameron
+http://quozl.linux.org.au/
