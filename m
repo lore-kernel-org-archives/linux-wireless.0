@@ -1,88 +1,230 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:59837 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753356AbaKXOqT (ORCPT
+Received: from relay1.mentorg.com ([192.94.38.131]:44139 "EHLO
+	relay1.mentorg.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751198AbaKELfQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2014 09:46:19 -0500
-Received: by mail-wg0-f42.google.com with SMTP id z12so12404504wgg.1
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:46:18 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] ath10k: don't drop corrupted mgmt frames
-Date: Mon, 24 Nov 2014 15:34:08 +0100
-Message-Id: <1416839648-31803-1-git-send-email-michal.kazior@tieto.com> (sfid-20141124_154627_190563_974ABDB0)
+	Wed, 5 Nov 2014 06:35:16 -0500
+From: Sanjeev Sharma <sanjeev_sharma@mentor.com>
+To: <Larry.Finger@lwfinger.net>, <Jes.Sorensen@redhat.com>
+CC: <gregkh@linuxfoundation.org>, <linux-wireless@vger.kernel.org>,
+	<devel@driverdev.osuosl.org>, <linux-kernel@vger.kernel.org>,
+	Sanjeev Sharma <sanjeev_sharma@mentor.com>,
+	Sanjeev Sharma <Sanjeev_Sharma@mentor.com>
+Subject: [PATCH v2] staging:rtl8723au: core: Fix error reported by checkpatch.
+Date: Wed, 5 Nov 2014 17:05:03 +0530
+Message-ID: <1415187303-28541-1-git-send-email-sanjeev_sharma@mentor.com> (sfid-20141105_123536_384007_4EE36B39)
+In-Reply-To: <wrfjy4rxzk5b.fsf@redhat.com>
+References: <wrfjy4rxzk5b.fsf@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some firmware revisions don't seem to deilver
-management frames with FCS error via WMI so narrow
-down the HTT rule to not drop corrupted management
-frames.
+This is a patch to the rtw_cmd.c file that fixes
+Error reported by checkpatch.
 
-This basically increases number of frames ath10k
-reports while sniffing.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Sanjeev Sharma <Sanjeev_Sharma@mentor.com>
 ---
- drivers/net/wireless/ath/ath10k/htt_rx.c | 13 +++++++++++--
- drivers/net/wireless/ath/ath10k/wmi.c    |  7 +++++--
- 2 files changed, 16 insertions(+), 4 deletions(-)
+Changes in v2:
+  - Shorten variable name by taking temporary structure 
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 75b2293..85910b2 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -1381,6 +1381,8 @@ static bool ath10k_htt_rx_amsdu_allowed(struct ath10k *ar,
- {
- 	struct sk_buff *msdu;
- 	struct htt_rx_desc *rxd;
-+	bool is_mgmt;
-+	bool has_fcs_err;
- 
- 	msdu = skb_peek(amsdu);
- 	rxd = (void *)msdu->data - sizeof(*rxd);
-@@ -1394,12 +1396,19 @@ static bool ath10k_htt_rx_amsdu_allowed(struct ath10k *ar,
- 		return false;
- 	}
- 
-+	is_mgmt = !!(rxd->attention.flags &
-+		     __cpu_to_le32(RX_ATTENTION_FLAGS_MGMT_TYPE));
-+	has_fcs_err = !!(rxd->attention.flags &
-+			 __cpu_to_le32(RX_ATTENTION_FLAGS_FCS_ERR));
+ drivers/staging/rtl8723au/core/rtw_cmd.c | 126 +++++++++++++++----------------
+ 1 file changed, 62 insertions(+), 64 deletions(-)
+
+diff --git a/drivers/staging/rtl8723au/core/rtw_cmd.c b/drivers/staging/rtl8723au/core/rtw_cmd.c
+index 4eaa502..c6f6030 100644
+--- a/drivers/staging/rtl8723au/core/rtw_cmd.c
++++ b/drivers/staging/rtl8723au/core/rtw_cmd.c
+@@ -919,34 +919,34 @@ static void traffic_status_watchdog(struct rtw_adapter *padapter)
+ 	u8 bHigherBusyTxTraffic = false;
+ 	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
+ 	int BusyThreshold = 100;
++	struct rt_link_detect *ldi = &pmlmepriv->LinkDetectInfo;
 +
- 	/* Management frames are handled via WMI events. The pros of such
- 	 * approach is that channel is explicitly provided in WMI events
- 	 * whereas HTT doesn't provide channel information for Rxed frames.
-+	 *
-+	 * However some firmware revisions don't report corrupted frames via
-+	 * WMI so don't drop them.
- 	 */
--	if (rxd->attention.flags &
--	    __cpu_to_le32(RX_ATTENTION_FLAGS_MGMT_TYPE)) {
-+	if (is_mgmt && !has_fcs_err) {
- 		ath10k_dbg(ar, ATH10K_DBG_HTT, "htt rx mgmt ctrl\n");
- 		return false;
- 	}
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index c2bc828..df948a4 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -1166,8 +1166,11 @@ static int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
- 		return 0;
- 	}
+ 	/*  */
+ 	/*  Determine if our traffic is busy now */
+ 	/*  */
+ 	if (check_fwstate(pmlmepriv, _FW_LINKED)) {
+ 		if (rtl8723a_BT_coexist(padapter))
+ 			BusyThreshold = 50;
+-		else if (pmlmepriv->LinkDetectInfo.bBusyTraffic)
++		else if (ldi->bBusyTraffic)
+ 			BusyThreshold = 75;
+ 		/*  if we raise bBusyTraffic in last watchdog, using
+ 		    lower threshold. */
+-		if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod > BusyThreshold ||
+-		    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod > BusyThreshold) {
++		if (ldi->NumRxOkInPeriod > BusyThreshold ||
++		    ldi->NumTxOkInPeriod > BusyThreshold) {
+ 			bBusyTraffic = true;
  
--	if (rx_status & WMI_RX_STATUS_ERR_CRC)
--		status->flag |= RX_FLAG_FAILED_FCS_CRC;
-+	if (rx_status & WMI_RX_STATUS_ERR_CRC) {
-+		dev_kfree_skb(skb);
-+		return 0;
-+	}
-+
- 	if (rx_status & WMI_RX_STATUS_ERR_MIC)
- 		status->flag |= RX_FLAG_MMIC_ERROR;
+-			if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod >
+-			    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod)
++			if (ldi->NumRxOkInPeriod > ldi->NumTxOkInPeriod)
+ 				bRxBusyTraffic = true;
+ 			else
+ 				bTxBusyTraffic = true;
+ 		}
  
+ 		/*  Higher Tx/Rx data. */
+-		if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod > 4000 ||
+-		    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod > 4000) {
++		if (ldi->NumRxOkInPeriod > 4000 ||
++		    ldi->NumTxOkInPeriod > 4000) {
+ 			bHigherBusyTraffic = true;
+ 
+-			if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod >
+-			    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod)
++			if (ldi->NumRxOkInPeriod > ldi->NumTxOkInPeriod)
+ 				bHigherBusyRxTraffic = true;
+ 			else
+ 				bHigherBusyTxTraffic = true;
+@@ -955,9 +955,9 @@ static void traffic_status_watchdog(struct rtw_adapter *padapter)
+ 		if (!rtl8723a_BT_coexist(padapter) ||
+ 		    !rtl8723a_BT_using_antenna_1(padapter)) {
+ 		/*  check traffic for  powersaving. */
+-			if (((pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod +
+-			      pmlmepriv->LinkDetectInfo.NumTxOkInPeriod) > 8) ||
+-			    pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod >2)
++			if (((ldi->NumRxUnicastOkInPeriod +
++			      ldi->NumTxOkInPeriod) > 8) ||
++			    ldi->NumRxUnicastOkInPeriod > 2)
+ 				bEnterPS = false;
+ 			else
+ 				bEnterPS = true;
+@@ -968,18 +968,19 @@ static void traffic_status_watchdog(struct rtw_adapter *padapter)
+ 			else
+ 				LPS_Leave23a(padapter);
+ 		}
+-	} else
++	} else {
+ 		LPS_Leave23a(padapter);
++		}
+ 
+-	pmlmepriv->LinkDetectInfo.NumRxOkInPeriod = 0;
+-	pmlmepriv->LinkDetectInfo.NumTxOkInPeriod = 0;
+-	pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod = 0;
+-	pmlmepriv->LinkDetectInfo.bBusyTraffic = bBusyTraffic;
+-	pmlmepriv->LinkDetectInfo.bTxBusyTraffic = bTxBusyTraffic;
+-	pmlmepriv->LinkDetectInfo.bRxBusyTraffic = bRxBusyTraffic;
+-	pmlmepriv->LinkDetectInfo.bHigherBusyTraffic = bHigherBusyTraffic;
+-	pmlmepriv->LinkDetectInfo.bHigherBusyRxTraffic = bHigherBusyRxTraffic;
+-	pmlmepriv->LinkDetectInfo.bHigherBusyTxTraffic = bHigherBusyTxTraffic;
++	ldi->NumRxOkInPeriod = 0;
++	ldi->NumTxOkInPeriod = 0;
++	ldi->NumRxUnicastOkInPeriod = 0;
++	ldi->bBusyTraffic = bBusyTraffic;
++	ldi->bTxBusyTraffic = bTxBusyTraffic;
++	ldi->bRxBusyTraffic = bRxBusyTraffic;
++	ldi->bHigherBusyTraffic = bHigherBusyTraffic;
++	ldi->bHigherBusyRxTraffic = bHigherBusyRxTraffic;
++	ldi->bHigherBusyTxTraffic = bHigherBusyTxTraffic;
+ }
+ 
+ static void dynamic_chk_wk_hdl(struct rtw_adapter *padapter, u8 *pbuf, int sz)
+@@ -1017,46 +1018,44 @@ static void lps_ctrl_wk_hdl(struct rtw_adapter *padapter, u8 lps_ctrl_type)
+ 	    check_fwstate(pmlmepriv, WIFI_ADHOC_STATE))
+ 		return;
+ 
+-	switch (lps_ctrl_type)
+-	{
+-		case LPS_CTRL_SCAN:
+-			rtl8723a_BT_wifiscan_notify(padapter, true);
+-			if (!rtl8723a_BT_using_antenna_1(padapter)) {
+-				if (check_fwstate(pmlmepriv, _FW_LINKED))
+-					LPS_Leave23a(padapter);
+-			}
+-			break;
+-		case LPS_CTRL_JOINBSS:
++	switch (lps_ctrl_type) {
++	case LPS_CTRL_SCAN:
++		rtl8723a_BT_wifiscan_notify(padapter, true);
++		if (!rtl8723a_BT_using_antenna_1(padapter)) {
++			if (check_fwstate(pmlmepriv, _FW_LINKED))
+ 			LPS_Leave23a(padapter);
+-			break;
+-		case LPS_CTRL_CONNECT:
+-			mstatus = 1;/* connect */
+-			/*  Reset LPS Setting */
+-			padapter->pwrctrlpriv.LpsIdleCount = 0;
+-			rtl8723a_set_FwJoinBssReport_cmd(padapter, 1);
+-			rtl8723a_BT_mediastatus_notify(padapter, mstatus);
+-			break;
+-		case LPS_CTRL_DISCONNECT:
+-			mstatus = 0;/* disconnect */
+-			rtl8723a_BT_mediastatus_notify(padapter, mstatus);
+-			if (!rtl8723a_BT_using_antenna_1(padapter))
+-				LPS_Leave23a(padapter);
+-			rtl8723a_set_FwJoinBssReport_cmd(padapter, 0);
+-			break;
+-		case LPS_CTRL_SPECIAL_PACKET:
+-			pwrpriv->DelayLPSLastTimeStamp = jiffies;
+-			rtl8723a_BT_specialpacket_notify(padapter);
+-			if (!rtl8723a_BT_using_antenna_1(padapter))
+-				LPS_Leave23a(padapter);
+-			break;
+-		case LPS_CTRL_LEAVE:
+-			rtl8723a_BT_lps_leave(padapter);
+-			if (!rtl8723a_BT_using_antenna_1(padapter))
+-				LPS_Leave23a(padapter);
+-			break;
+-
+-		default:
+-			break;
++		}
++		break;
++	case LPS_CTRL_JOINBSS:
++		LPS_Leave23a(padapter);
++		break;
++	case LPS_CTRL_CONNECT:
++		mstatus = 1;/* connect */
++		/*  Reset LPS Setting */
++		padapter->pwrctrlpriv.LpsIdleCount = 0;
++		rtl8723a_set_FwJoinBssReport_cmd(padapter, 1);
++		rtl8723a_BT_mediastatus_notify(padapter, mstatus);
++		break;
++	case LPS_CTRL_DISCONNECT:
++		mstatus = 0;/* disconnect */
++		rtl8723a_BT_mediastatus_notify(padapter, mstatus);
++		if (!rtl8723a_BT_using_antenna_1(padapter))
++			LPS_Leave23a(padapter);
++		rtl8723a_set_FwJoinBssReport_cmd(padapter, 0);
++		break;
++	case LPS_CTRL_SPECIAL_PACKET:
++		pwrpriv->DelayLPSLastTimeStamp = jiffies;
++		rtl8723a_BT_specialpacket_notify(padapter);
++		if (!rtl8723a_BT_using_antenna_1(padapter))
++			LPS_Leave23a(padapter);
++		break;
++	case LPS_CTRL_LEAVE:
++		rtl8723a_BT_lps_leave(padapter);
++		if (!rtl8723a_BT_using_antenna_1(padapter))
++			LPS_Leave23a(padapter);
++		break;
++	default:
++		break;
+ 	}
+ }
+ 
+@@ -1152,7 +1151,7 @@ static void rtw_chk_hi_queue_hdl(struct rtw_adapter *padapter)
+ 
+ 			cnt++;
+ 
+-			if (cnt>10)
++			if (cnt > 10)
+ 				break;
+ 
+ 			val = rtl8723a_chk_hi_queue_empty(padapter);
+@@ -1305,8 +1304,7 @@ int rtw_drvextra_cmd_hdl23a(struct rtw_adapter *padapter, const u8 *pbuf)
+ 
+ 	pdrvextra_cmd = (struct drvextra_cmd_parm *)pbuf;
+ 
+-	switch (pdrvextra_cmd->ec_id)
+-	{
++	switch (pdrvextra_cmd->ec_id) {
+ 	case DYNAMIC_CHK_WK_CID:
+ 		dynamic_chk_wk_hdl(padapter, pdrvextra_cmd->pbuf,
+ 				   pdrvextra_cmd->type_size);
 -- 
-1.8.5.3
+1.7.11.7
 
