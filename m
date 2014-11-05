@@ -1,52 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.19]:52227 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751249AbaKLHck (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Nov 2014 02:32:40 -0500
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: ath9k-devel@qca.qualcomm.com, sujith@msujith.org,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH] ath9k: common-spectral: don't depend from ATH9K_DEBUGFS
-Date: Wed, 12 Nov 2014 08:32:08 +0100
-Message-Id: <1415777528-611-1-git-send-email-linux@rempel-privat.de> (sfid-20141112_083243_037330_3C25EE00)
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:64086 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751243AbaKEVJg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Nov 2014 16:09:36 -0500
+Received: by mail-wi0-f177.google.com with SMTP id ex7so3252963wid.10
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Nov 2014 13:09:35 -0800 (PST)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 01/11] staging: vt6655: mac remove dead variable TxRate_iwconfig
+Date: Wed,  5 Nov 2014 21:08:49 +0000
+Message-Id: <1415221739-3045-1-git-send-email-tvboxspy@gmail.com> (sfid-20141105_220939_595166_A0A8AE6A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-we can have here two variants. Add
-ATH9K_CMN_DEBUGFS y if ATH9K_CMN_DEBUGFS || ATH9K_HTC_DEBUGFS
-wich will add more configurations and testcases. Or remove ATH9K_HTC_DEBUGFS
-which need more time to be done.
-
-So, make common-spectral ignore ATH9K_DEBUGFS option for now.
-
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/common-spectral.h | 10 ----------
- 1 file changed, 10 deletions(-)
+ drivers/staging/vt6655/mac.c | 1 -
+ drivers/staging/vt6655/mac.h | 1 -
+ 2 files changed, 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/common-spectral.h b/drivers/net/wireless/ath/ath9k/common-spectral.h
-index 214c3ba..82d9dd2 100644
---- a/drivers/net/wireless/ath/ath9k/common-spectral.h
-+++ b/drivers/net/wireless/ath/ath9k/common-spectral.h
-@@ -138,17 +138,7 @@ void ath9k_cmn_spectral_scan_trigger(struct ath_common *common,
- int ath9k_cmn_spectral_scan_config(struct ath_common *common,
- 			       struct ath_spec_scan_priv *spec_priv,
- 			       enum spectral_mode spectral_mode);
--
--#ifdef CONFIG_ATH9K_DEBUGFS
- int ath_cmn_process_fft(struct ath_spec_scan_priv *spec_priv, struct ieee80211_hdr *hdr,
- 		    struct ath_rx_status *rs, u64 tsf);
--#else
--static inline int ath_cmn_process_fft(struct ath_spec_scan_priv *spec_priv,
--				  struct ieee80211_hdr *hdr,
--				  struct ath_rx_status *rs, u64 tsf)
--{
--	return 0;
--}
--#endif /* CONFIG_ATH9K_DEBUGFS */
+diff --git a/drivers/staging/vt6655/mac.c b/drivers/staging/vt6655/mac.c
+index 955dbfe..122a6a3 100644
+--- a/drivers/staging/vt6655/mac.c
++++ b/drivers/staging/vt6655/mac.c
+@@ -71,7 +71,6 @@
+ #include "tmacro.h"
+ #include "mac.h"
  
- #endif /* SPECTRAL_H */
+-unsigned short TxRate_iwconfig;//2008-5-8 <add> by chester
+ /*---------------------  Static Classes  ----------------------------*/
+ 
+ /*---------------------  Static Variables  --------------------------*/
+diff --git a/drivers/staging/vt6655/mac.h b/drivers/staging/vt6655/mac.h
+index 5391277..23162a9 100644
+--- a/drivers/staging/vt6655/mac.h
++++ b/drivers/staging/vt6655/mac.h
+@@ -970,7 +970,6 @@ do {								\
+ 
+ /*---------------------  Export Functions  --------------------------*/
+ 
+-extern unsigned short TxRate_iwconfig;//2008-5-8 <add> by chester
+ void MACvReadAllRegs(void __iomem *dwIoBase, unsigned char *pbyMacRegs);
+ 
+ bool MACbIsRegBitsOn(void __iomem *dwIoBase, unsigned char byRegOfs, unsigned char byTestBits);
 -- 
-1.9.1
+2.1.0
 
