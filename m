@@ -1,31 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:35521 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751077AbaK0Qjg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Nov 2014 11:39:36 -0500
-Message-ID: <1417106373.32668.2.camel@sipsolutions.net> (sfid-20141127_173940_567061_5D7E1731)
-Subject: Re: [PATCH 3.18] mac80211: copy chandef from AP vif to VLANs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 27 Nov 2014 17:39:33 +0100
-In-Reply-To: <1416849136-14507-1-git-send-email-nbd@openwrt.org> (sfid-20141124_181230_833710_DB28BB93)
-References: <1416849136-14507-1-git-send-email-nbd@openwrt.org>
-	 (sfid-20141124_181230_833710_DB28BB93)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:63013 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751215AbaKEGGC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Nov 2014 01:06:02 -0500
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <cluo@marvell.com>,
+	<huxm@marvell.com>, <yangyang@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [Patch v2 4/5] mwifiex: do not setup AMPDU/AMSDU with broadcast receiver
+Date: Wed, 5 Nov 2014 17:04:30 +0530
+Message-ID: <1415187271-17914-4-git-send-email-akarwar@marvell.com> (sfid-20141105_070612_214626_AF4FD863)
+In-Reply-To: <1415187271-17914-1-git-send-email-akarwar@marvell.com>
+References: <1415187271-17914-1-git-send-email-akarwar@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-11-24 at 18:12 +0100, Felix Fietkau wrote:
-> Fixes a crash in nl80211_send_chandef, introduced in
-> 
-> commit c12bc4885f4b3bab0ed779c69d5d7e3223fa5003
-> "mac80211: return the vif's chandef in ieee80211_cfg_get_channel()"
+From: Avinash Patil <patila@marvell.com>
 
-I've fixed up the commit log myself and applied it, but I doubt we'll
-get it into 3.18 at this point, so I've applied it to mac80211-next with
-the stable tag.
+It is observed that device sometimes sends BA setup requests for
+broadcast mac address.
+This patch adds a check to avoid checking availability of
+AMPDU/AMSDU streams for broadcast mac address.
 
-johannes
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+---
+ drivers/net/wireless/mwifiex/11n.h | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/net/wireless/mwifiex/11n.h b/drivers/net/wireless/mwifiex/11n.h
+index 2ee268b..f275675 100644
+--- a/drivers/net/wireless/mwifiex/11n.h
++++ b/drivers/net/wireless/mwifiex/11n.h
+@@ -84,6 +84,8 @@ mwifiex_is_amsdu_in_ampdu_allowed(struct mwifiex_private *priv,
+ {
+ 	struct mwifiex_tx_ba_stream_tbl *tx_tbl;
+ 
++	if (is_broadcast_ether_addr(ptr->ra))
++		return false;
+ 	tx_tbl = mwifiex_get_ba_tbl(priv, tid, ptr->ra);
+ 	if (tx_tbl)
+ 		return tx_tbl->amsdu;
+@@ -96,6 +98,8 @@ static inline u8
+ mwifiex_is_ampdu_allowed(struct mwifiex_private *priv,
+ 			 struct mwifiex_ra_list_tbl *ptr, int tid)
+ {
++	if (is_broadcast_ether_addr(ptr->ra))
++		return false;
+ 	if (GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_UAP) {
+ 		return mwifiex_is_station_ampdu_allowed(priv, ptr, tid);
+ 	} else {
+-- 
+1.8.1.4
 
