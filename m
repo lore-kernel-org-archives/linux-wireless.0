@@ -1,44 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vms173023pub.verizon.net ([206.46.173.23]:12540 "EHLO
-	vms173023pub.verizon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753307AbaKLUze (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:18235 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754060AbaKEKmz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Nov 2014 15:55:34 -0500
-Received: from [192.168.1.5] ([108.28.174.148]) by vms173023.mailsrvcs.net
- (Oracle Communications Messaging Server 7.0.5.32.0 64bit (built Jul 16 2014))
- with ESMTPA id <0NEY00ATC241CS50@vms173023.mailsrvcs.net> for
- linux-wireless@vger.kernel.org; Wed, 12 Nov 2014 14:55:14 -0600 (CST)
-Message-id: <5463C931.6000502@verizon.net> (sfid-20141112_215537_816112_C3866537)
-Date: Wed, 12 Nov 2014 15:55:13 -0500
-From: "C. McPherson" <ccmcphe@verizon.net>
-MIME-version: 1.0
+	Wed, 5 Nov 2014 05:42:55 -0500
+Date: Wed, 5 Nov 2014 16:14:59 +0530
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	radiotap@radiotap.org
-Subject: Re: Vendor Namespace Question
-References: <54591CF9.7030106@verizon.net>
- (sfid-20141104_203850_228702_C706EE9A)
- <1415130476.2064.22.camel@sipsolutions.net>	<5459349F.9020903@verizon.net>
- <1415313070.17015.19.camel@sipsolutions.net>
-In-reply-to: <1415313070.17015.19.camel@sipsolutions.net>
-Content-type: text/plain; charset=windows-1252; format=flowed
+CC: Kalle Valo <kvalo@qca.qualcomm.com>, <ath10k@lists.infradead.org>,
+	<linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: Re: [PATCH v2] ath10k: handle ieee80211 header and payload tracing
+ separately
+Message-ID: <20141105104458.GA13249@qca.qualcomm.com> (sfid-20141105_114300_642840_0A2D1F79)
+References: <1414661336-20764-1-git-send-email-rmanohar@qti.qualcomm.com>
+ <874muf7t9u.fsf@kamboji.qca.qualcomm.com>
+ <20141104051643.GA14509@qca.qualcomm.com>
+ <87k33a1lli.fsf@kamboji.qca.qualcomm.com>
+ <20141105094437.GA21839@qca.qualcomm.com>
+ <1415182321.2589.14.camel@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1415182321.2589.14.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I've been off for a while, but I will download it and use it. Thanks 
-Johannes!!
+On Wed, Nov 05, 2014 at 11:12:01AM +0100, Johannes Berg wrote:
+> On Wed, 2014-11-05 at 15:14 +0530, Rajkumar Manoharan wrote:
+> 
+> > The macro is defined to ease readability and reduce # of line changes.
+> > I originally thought of naming the macro as IEEE80211_HDR_LEN. But such
+> > definition does not look correct inside driver.
+> 
+> FWIW, I pointed Kalle to the macro on IRC - IMHO you should pass
+> arguments to the macro (and probably even make it an inline function)
+> rather than having it assume certain variables exist when the macro is
+> used.
+> 
+> Kalle may have misunderstood what I was trying to say :)
+> 
+Sounds clear..Thanks for pointing out. Will change it as inline funtion..
 
-
-On 11/06/2014 05:31 PM, Johannes Berg wrote:
-> On Tue, 2014-11-04 at 15:18 -0500, C. McPherson wrote:
->> Thanks so much for the info Johannes. I did notice that rx_status was
->> getting full.  I'll go ahead and put it in skb->data, that's a good idea.
-> I just sent a patch to restore vendor radiotap stuff in mac80211.
->
-> Works for me, and I might actually have a use case for it, but please
-> tell me if you have issues with it.
->
-> johannes
->
->
-
+-Rajkumar
