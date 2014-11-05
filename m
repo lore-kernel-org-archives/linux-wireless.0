@@ -1,43 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f48.google.com ([74.125.82.48]:55420 "EHLO
-	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932651AbaKMP4W (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Nov 2014 10:56:22 -0500
-Received: by mail-wg0-f48.google.com with SMTP id y19so6439515wgg.21
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Nov 2014 07:56:19 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAB=NE6XsD+wcTZSX7oZKK72fQjMV0r_TOTeUfGOg8Oh9bHsnLg@mail.gmail.com>
-References: <1414046257-22184-1-git-send-email-arik@wizery.com>
- <CAB=NE6XbFC1aRAMOQZUTPKRbH4XeBnzpZv7-A3oREoo17mUPtQ@mail.gmail.com>
- <CA+XVXfdxT=5ch7VwZu3ntJ14jMBD0DTod5+1Y+95eDG8H2Je+Q@mail.gmail.com> <CAB=NE6XsD+wcTZSX7oZKK72fQjMV0r_TOTeUfGOg8Oh9bHsnLg@mail.gmail.com>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Thu, 13 Nov 2014 17:56:04 +0200
-Message-ID: <CA+XVXfcEM2b3eH3d6tnrydtVOKuMyUG2hoUKQUfzq3feFnFcOQ@mail.gmail.com> (sfid-20141113_165625_982210_6C0EB1A0)
-Subject: Re: [PATCH 0/5] wiphy-specific regulatory management
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:35331 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932143AbaKENpI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Nov 2014 08:45:08 -0500
+Message-ID: <1415195100.7485.1.camel@sipsolutions.net> (sfid-20141105_144525_162971_FA51749C)
+Subject: Re: [PATCH] mwifiex: module load parameter for interface creation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Avinash Patil <patila@marvell.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	cluo@marvell.com, yangyang@marvell.com,
+	Amitkumar Karwar <akarwar@marvell.com>
+Date: Wed, 05 Nov 2014 14:45:00 +0100
+In-Reply-To: <1415196491-25391-1-git-send-email-patila@marvell.com> (sfid-20141105_093859_779701_4AEAB3EA)
+References: <1415196491-25391-1-git-send-email-patila@marvell.com>
+	 (sfid-20141105_093859_779701_4AEAB3EA)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 13, 2014 at 1:07 AM, Luis R. Rodriguez
-<mcgrof@do-not-panic.com> wrote:
-> On Wed, Nov 5, 2014 at 12:41 AM, Arik Nemtsov <arik@wizery.com> wrote:
->> On Wed, Nov 5, 2014 at 5:21 AM, Luis R. Rodriguez
->> <mcgrof@do-not-panic.com> wrote:
->>> On Wed, Oct 22, 2014 at 11:37 PM, Arik Nemtsov <arik@wizery.com> wrote:
->>>>   cfg80211: allow wiphy specific regdomain management
->>>
->>> This guy never made it to my inbox.
->>
->> Here it is:
->> http://permalink.gmane.org/gmane.linux.kernel.wireless.general/129448
->
-> Look OK but I can't comment on code so please also Cc this address on
-> future patches: mcgrof@suse.com. Look forward to next iteration.
+On Wed, 2014-11-05 at 19:38 +0530, Avinash Patil wrote:
+> This patch adds module load parameter driver_mode for mwifiex
+> which would enable driver to create AP or P2P client interface while loading
+> module. driver_mode is bitmap of interface modes for station, AP and
+> P2P client.
+> 
+> Station interface is created by default and is unaffected by driver_mode
+> parameter.
 
-I'll resubmit the v2 with the pr_info change, so you'll be able to
-comment on the missing patch.
+Not really sure why this would make sense or be needed, you can always
+create the interfaces from userspace?
 
-Arik
+johannes
+
