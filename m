@@ -1,43 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:37336 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751180AbaKQOi6 (ORCPT
+Received: from mail-la0-f53.google.com ([209.85.215.53]:35863 "EHLO
+	mail-la0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752127AbaKEDIB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Nov 2014 09:38:58 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: Re: [PATCH v3] ath10k: handle ieee80211 header and payload tracing separately
-References: <1415195071-30250-1-git-send-email-rmanohar@qti.qualcomm.com>
-Date: Mon, 17 Nov 2014 16:38:52 +0200
-In-Reply-To: <1415195071-30250-1-git-send-email-rmanohar@qti.qualcomm.com>
-	(Rajkumar Manoharan's message of "Wed, 5 Nov 2014 19:14:31 +0530")
-Message-ID: <87egt1q4cj.fsf@kamboji.qca.qualcomm.com> (sfid-20141117_153901_567519_528D5E65)
+	Tue, 4 Nov 2014 22:08:01 -0500
+Received: by mail-la0-f53.google.com with SMTP id mc6so2075570lab.12
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Nov 2014 19:08:00 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1414046257-22184-2-git-send-email-arik@wizery.com>
+References: <1414046257-22184-1-git-send-email-arik@wizery.com> <1414046257-22184-2-git-send-email-arik@wizery.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Tue, 4 Nov 2014 19:07:39 -0800
+Message-ID: <CAB=NE6UG8XumXAtxoTpr5wCPzYvu+OuLrXhJOL6Cde0voX=5QA@mail.gmail.com> (sfid-20141105_040806_191475_F9888AC5)
+Subject: Re: [PATCH 1/5] cfg80211: introduce regulatory flags controlling bw
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rajkumar Manoharan <rmanohar@qti.qualcomm.com> writes:
+On Wed, Oct 22, 2014 at 11:37 PM, Arik Nemtsov <arik@wizery.com> wrote:
+> Allow setting bandwidth related regulatory flags. These flags are mapped
+> to the corresponding channel flags in the specified range.
+> Make sure the new flags are consulted when calculating the maximum
+> bandwidth allowed by a regulatory-rule.
+>
+> Also allow propagating the GO_CONCURRENT modifier from a reg-rule to a
+> channel.
+>
+> Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
 
-> For packet log, the transmitted frame 802.11 header alone is sufficient.
-> Recording entire packet is also consuming lot of disk space. To optimize
-> this, tx and rx data tracepoints are splitted into header and payload
-> tracepoints.
->
-> To record tx ieee80211 headers
->
->      trace-cmd record -e ath10k_tx_hdr
->
-> To record complete packets
->
->      trace-cmd record -e ath10k_tx_hdr -e ath10k_tx_payload
->
-> Cc: Michal Kazior <michal.kazior@tieto.com>
-> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Reviewed-by: Luis R. Rodriguez <mcgrof@suse.com>
 
-Thanks, applied.
-
--- 
-Kalle Valo
+ Luis
