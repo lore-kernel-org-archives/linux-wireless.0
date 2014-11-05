@@ -1,56 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f50.google.com ([74.125.82.50]:65314 "EHLO
-	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753401AbaKDMtT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Nov 2014 07:49:19 -0500
-From: Rostislav Lisovy <lisovy@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: lisovy@gmail.com, fengguang.wu@intel.com,
-	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
-Subject: [PATCH] cfg80211: Move join/leave_ocb comments to be in the correct order
-Date: Tue,  4 Nov 2014 13:49:12 +0100
-Message-Id: <1415105352-4295-1-git-send-email-rostislav.lisovy@fel.cvut.cz> (sfid-20141104_134938_361798_BDFF2881)
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:58974 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932299AbaKEQEh convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Nov 2014 11:04:37 -0500
+From: Avinash Patil <patila@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Cathy Luo <cluo@marvell.com>, Marc Yang <yangyang@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Date: Wed, 5 Nov 2014 07:58:23 -0800
+Subject: RE: [PATCH] mwifiex: module load parameter for interface creation
+Message-ID: <CBACCFA0AEB13A41977475BCF3E896FC666FA7DC29@SC-VEXCH2.marvell.com> (sfid-20141105_170442_781101_01C46D09)
+References: <1415196491-25391-1-git-send-email-patila@marvell.com>
+	 (sfid-20141105_093859_779701_4AEAB3EA),<1415195100.7485.1.camel@sipsolutions.net>
+In-Reply-To: <1415195100.7485.1.camel@sipsolutions.net>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the same ordering in the comments section as it
-is in the structure below.
+Hi Johannes,
 
-Signed-off-by: Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
----
- include/net/cfg80211.h | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+Customer does not wish to add interface manually using iw or other tools. So we have provided option to load driver with module parameters to meet this requirement.
+For all other cases, where default driver_mode is 0x1 behavior remains unchanged.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 5c3acd0..af0ef26 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2182,6 +2182,11 @@ struct cfg80211_qos_map {
-  * @leave_mesh: leave the current mesh network
-  *	(invoked with the wireless_dev mutex held)
-  *
-+ * @join_ocb: join the OCB network with the specified parameters
-+ *	(invoked with the wireless_dev mutex held)
-+ * @leave_ocb: leave the current OCB network
-+ *	(invoked with the wireless_dev mutex held)
-+ *
-  * @get_mesh_config: Get the current mesh configuration
-  *
-  * @update_mesh_config: Update mesh parameters on a running mesh.
-@@ -2362,11 +2367,6 @@ struct cfg80211_qos_map {
-  *	with the peer followed by immediate teardown when the addition is later
-  *	rejected)
-  * @del_tx_ts: remove an existing TX TS
-- *
-- * @join_ocb: join the OCB network with the specified parameters
-- *	(invoked with the wireless_dev mutex held)
-- * @leave_ocb: leave the current OCB network
-- *	(invoked with the wireless_dev mutex held)
-  */
- struct cfg80211_ops {
- 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
--- 
-2.0.0.rc4
+Thanks,
+Avinash
+________________________________________
+From: Johannes Berg [johannes@sipsolutions.net]
+Sent: Wednesday, November 05, 2014 7:15 PM
+To: Avinash Patil
+Cc: linville@tuxdriver.com; linux-wireless@vger.kernel.org; Cathy Luo; Marc Yang; Amitkumar Karwar
+Subject: Re: [PATCH] mwifiex: module load parameter for interface creation
+
+On Wed, 2014-11-05 at 19:38 +0530, Avinash Patil wrote:
+> This patch adds module load parameter driver_mode for mwifiex
+> which would enable driver to create AP or P2P client interface while loading
+> module. driver_mode is bitmap of interface modes for station, AP and
+> P2P client.
+>
+> Station interface is created by default and is unaffected by driver_mode
+> parameter.
+
+Not really sure why this would make sense or be needed, you can always
+create the interfaces from userspace?
+
+johannes
 
