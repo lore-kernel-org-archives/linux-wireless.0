@@ -1,42 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:43837 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932639AbaKMMot (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Nov 2014 07:44:49 -0500
-Message-ID: <1415882683.2021.3.camel@sipsolutions.net> (sfid-20141113_134506_152448_998BB541)
-Subject: Re: Can fb4e156886ce6e8309e912d8b370d192330d19d3 be reverted ?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org,
-	Marcel Holtmann <marcel@holtmann.org>
-Date: Thu, 13 Nov 2014 13:44:43 +0100
-In-Reply-To: <20141113123313.GA1926@redhat.com> (sfid-20141113_133628_786084_BDEA3269)
-References: <20141113123313.GA1926@redhat.com>
-	 (sfid-20141113_133628_786084_BDEA3269)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:56439 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751215AbaKEGFu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Nov 2014 01:05:50 -0500
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <cluo@marvell.com>,
+	<huxm@marvell.com>, <yangyang@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [Patch v2 5/5] mwifiex: fix warning while starting BSS
+Date: Wed, 5 Nov 2014 17:04:31 +0530
+Message-ID: <1415187271-17914-5-git-send-email-akarwar@marvell.com> (sfid-20141105_070553_593152_9353B69B)
+In-Reply-To: <1415187271-17914-1-git-send-email-akarwar@marvell.com>
+References: <1415187271-17914-1-git-send-email-akarwar@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-11-13 at 13:33 +0100, Stanislaw Gruszka wrote:
-> I've updated wireless code on RHEL and get complain that now
-> cfg80211 and rfkill modules are loaded on machines that do not have
-> wireless hardware. Modules are auto-loaded because NetworkManager send
-> nl80211 messages to check if there are wireless devices in the system.
-> 
-> Hence my question, can we revert commit fb4e156886ce
-> "nl80211: Add generic netlink module alias for cfg80211/nl80211" ?
+From: Avinash Patil <patila@marvell.com>
 
-Realistically, we can't revert it, but only remove the
-MODULE_ALIAS_GENL_FAMILY() line.
+We see this warning while starting mwifiex AP:
+Unsupported RX-STBC, default to 2x2
 
-> Auto loading nl80211 does not seems to be necessary, if there are
-> wireless devices nl80211 will be loaded anyway.
+This was happening because of wrong offset while copying HT
+capabilities from BSS configuration of start_ap handler.
 
-Maybe other applications would like to see an empty list of devices? But
-OTOH, if they're robust at all, they have to cope with kernels not even
-compiled with nl80211, so I guess for me I don't really see a big
-difference in whether the module alias exists or not.
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+---
+ drivers/net/wireless/mwifiex/uap_cmd.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-johannes
+diff --git a/drivers/net/wireless/mwifiex/uap_cmd.c b/drivers/net/wireless/mwifiex/uap_cmd.c
+index 300bab4..0f347fd 100644
+--- a/drivers/net/wireless/mwifiex/uap_cmd.c
++++ b/drivers/net/wireless/mwifiex/uap_cmd.c
+@@ -167,7 +167,7 @@ mwifiex_set_ht_params(struct mwifiex_private *priv,
+ 	ht_ie = cfg80211_find_ie(WLAN_EID_HT_CAPABILITY, params->beacon.tail,
+ 				 params->beacon.tail_len);
+ 	if (ht_ie) {
+-		memcpy(&bss_cfg->ht_cap, ht_ie + 2,
++		memcpy(&bss_cfg->ht_cap, ht_ie,
+ 		       sizeof(struct ieee80211_ht_cap));
+ 		cap_info = le16_to_cpu(bss_cfg->ht_cap.cap_info);
+ 		memset(&bss_cfg->ht_cap.mcs, 0,
+-- 
+1.8.1.4
 
