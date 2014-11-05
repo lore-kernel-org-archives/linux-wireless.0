@@ -1,62 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:44127 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751642AbaKGKGB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Nov 2014 05:06:01 -0500
-Date: Fri, 7 Nov 2014 13:05:43 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Luciano Coelho <luciano.coelho@intel.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: wli1271: buffer overflow static checker warning
-Message-ID: <20141107100543.GA16332@mwanda> (sfid-20141107_110613_152500_F21F3559)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:34072 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753988AbaKEKMH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Nov 2014 05:12:07 -0500
+Message-ID: <1415182321.2589.14.camel@sipsolutions.net> (sfid-20141105_111212_842708_C366D72A)
+Subject: Re: [PATCH v2] ath10k: handle ieee80211 header and payload tracing
+ separately
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>, ath10k@lists.infradead.org,
+	linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Date: Wed, 05 Nov 2014 11:12:01 +0100
+In-Reply-To: <20141105094437.GA21839@qca.qualcomm.com> (sfid-20141105_104310_542370_58A02806)
+References: <1414661336-20764-1-git-send-email-rmanohar@qti.qualcomm.com>
+	 <874muf7t9u.fsf@kamboji.qca.qualcomm.com>
+	 <20141104051643.GA14509@qca.qualcomm.com>
+	 <87k33a1lli.fsf@kamboji.qca.qualcomm.com>
+	 <20141105094437.GA21839@qca.qualcomm.com>
+	 (sfid-20141105_104310_542370_58A02806)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Luciano Coelho,
+On Wed, 2014-11-05 at 15:14 +0530, Rajkumar Manoharan wrote:
 
-The patch f5fc0f86b02a: "wl1271: add wl1271 driver files" from Aug 6,
-2009, leads to the following static checker warning:
+> The macro is defined to ease readability and reduce # of line changes.
+> I originally thought of naming the macro as IEEE80211_HDR_LEN. But such
+> definition does not look correct inside driver.
 
-	drivers/net/wireless/ti/wlcore/cmd.c:894 wlcore_cmd_configure_failsafe()
-	warn: is 'buf' large enough for 'struct acx_header'?
+FWIW, I pointed Kalle to the macro on IRC - IMHO you should pass
+arguments to the macro (and probably even make it an inline function)
+rather than having it assume certain variables exist when the macro is
+used.
 
-drivers/net/wireless/ti/wlcore/cmd.c
-   886  int wlcore_cmd_configure_failsafe(struct wl1271 *wl, u16 id, void *buf,
-   887                                    size_t len, unsigned long valid_rets)
-   888  {
-   889          struct acx_header *acx = buf;
-   890          int ret;
-   891  
-   892          wl1271_debug(DEBUG_CMD, "cmd configure (%d)", id);
-   893  
-   894          acx->id = cpu_to_le16(id);
+Kalle may have misunderstood what I was trying to say :)
 
-"len" is the size of the "buf" buffer.
+johannes
 
-The warning is because wl1271_tm_cmd_test() and friends check if
-len is too large but they don't check if it's too small.
-
-   895  
-   896          /* payload length, does not include any headers */
-   897          acx->len = cpu_to_le16(len - sizeof(*acx));
-   898  
-   899          ret = wlcore_cmd_send_failsafe(wl, CMD_CONFIGURE, acx, len, 0,
-   900                                         valid_rets);
-   901          if (ret < 0) {
-   902                  wl1271_warning("CONFIGURE command NOK");
-   903                  return ret;
-   904          }
-   905  
-   906          return ret;
-   907  }
-
-See also:
-
-	drivers/net/wireless/ti/wl1251/cmd.c:29 wl1251_cmd_send()
-	warn: is 'buf' large enough for 'struct wl1251_cmd_header'?
-
-regards,
-dan carpenter
