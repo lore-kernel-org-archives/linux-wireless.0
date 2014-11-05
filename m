@@ -1,103 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.15.4]:59144 "EHLO mout.web.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756904AbaKTPu6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Nov 2014 10:50:58 -0500
-Message-ID: <546E0DC8.3050906@users.sourceforge.net> (sfid-20141120_165129_062120_10E1E30D)
-Date: Thu, 20 Nov 2014 16:50:32 +0100
-From: SF Markus Elfring <elfring@users.sourceforge.net>
+Received: from smtp09.smtpout.orange.fr ([80.12.242.131]:37163 "EHLO
+	smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751198AbaKEOoe convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Nov 2014 09:44:34 -0500
+Date: Wed, 5 Nov 2014 15:44:28 +0100 (CET)
+From: Prigent Xavier MAPS LIS LANNION <labolis2@orange.fr>
+Reply-To: Prigent Xavier MAPS LIS LANNION <labolis2@orange.fr>
+To: linux-wireless@vger.kernel.org
+Message-ID: <408476212.14050.1415198668705.JavaMail.www@wwinf1g12> (sfid-20141105_154527_208244_56951789)
+Subject: maximum WiFi associations on AP using ath9k and wpa_supplicant
 MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	netdev@vger.kernel.org
-CC: LKML <linux-kernel@vger.kernel.org>,
-	kernel-janitors@vger.kernel.org,
-	Julia Lawall <julia.lawall@lip6.fr>
-Subject: [PATCH 1/1] net: brcm80211: Deletion of unnecessary checks before
- two function calls
-References: <5307CAA2.8060406@users.sourceforge.net> <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6> <530A086E.8010901@users.sourceforge.net> <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6> <530A72AA.3000601@users.sourceforge.net> <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6> <530B5FB6.6010207@users.sourceforge.net> <alpine.DEB.2.10.1402241710370.2074@hadrien> <530C5E18.1020800@users.sourceforge.net> <alpine.DEB.2.10.1402251014170.2080@hadrien> <530CD2C4.4050903@users.sourceforge.net> <alpine.DEB.2.10.1402251840450.7035@hadrien> <530CF8FF.8080600@users.sourceforge.net> <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6> <530DD06F.4090703@users.sourceforge.net> <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6> <5317A59D.4@users.sourceforge.net>
-In-Reply-To: <5317A59D.4@users.sourceforge.net>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Thu, 20 Nov 2014 16:42:51 +0100
+Hello All,
 
-The functions brcmu_pkt_buf_free_skb() and release_firmware() test whether
-their argument is NULL and then return immediately. Thus the test around
-the call is not needed.
+ 
 
-This issue was detected by using the Coccinelle software.
+I would like to test how maximum WiFi associations are possible on my AP with security mode. The WiFi authentication, association,4-way handshake are OK but I can not get an IP adress for the second interface.
 
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
----
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c | 3 +--
- drivers/net/wireless/brcm80211/brcmfmac/firmware.c | 3 +--
- drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c   | 3 +--
- drivers/net/wireless/brcm80211/brcmsmac/main.c     | 3 +--
- 4 files changed, 4 insertions(+), 8 deletions(-)
+It's works in open mode using WPA supplicant but not with WPA2 AES security mode. I use an ath9k driver (AR9380) and Ubuntu 14.04 (same issue on debian 7)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index f55f625..8ff7037 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -2539,8 +2539,7 @@ static void brcmf_sdio_bus_stop(struct device *dev)
- 	brcmu_pktq_flush(&bus->txq, true, NULL, NULL);
- 
- 	/* Clear any held glomming stuff */
--	if (bus->glomd)
--		brcmu_pkt_buf_free_skb(bus->glomd);
-+	brcmu_pkt_buf_free_skb(bus->glomd);
- 	brcmf_sdio_free_glom(bus);
- 
- 	/* Clear rx control and wake any waiters */
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
-index 8ea9f28..3a2d014 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
-@@ -262,8 +262,7 @@ static void brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
- 
- fail:
- 	brcmf_dbg(TRACE, "failed: dev=%s\n", dev_name(fwctx->dev));
--	if (fwctx->code)
--		release_firmware(fwctx->code);
-+	release_firmware(fwctx->code);
- 	device_release_driver(fwctx->dev);
- 	kfree(fwctx);
- }
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
-index 8f8b937..0cb00dc 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
-@@ -506,8 +506,7 @@ static int brcmf_msgbuf_query_dcmd(struct brcmf_pub *drvr, int ifidx,
- 		memcpy(buf, skb->data, (len < msgbuf->ioctl_resp_ret_len) ?
- 				       len : msgbuf->ioctl_resp_ret_len);
- 	}
--	if (skb)
--		brcmu_pkt_buf_free_skb(skb);
-+	brcmu_pkt_buf_free_skb(skb);
- 
- 	return msgbuf->ioctl_resp_status;
- }
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index 1b47482..ce538a1 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -1009,8 +1009,7 @@ brcms_c_dotxstatus(struct brcms_c_info *wlc, struct tx_status *txs)
- 		if (txh)
- 			trace_brcms_txdesc(&wlc->hw->d11core->dev, txh,
- 					   sizeof(*txh));
--		if (p)
--			brcmu_pkt_buf_free_skb(p);
-+		brcmu_pkt_buf_free_skb(p);
- 	}
- 
- 	if (dma && queue < NFIFO) {
--- 
-2.1.3
+ 
 
+Could you take a look on the following command line please:
+
+ 
+#APUT SSID: Livebox-7650_5
+wpa_passphrase Livebox-7650_5 123456789 > temp.txt
+sed '1ictrl_interface=/run/wpa_supplicant' temp.txt > my.conf
+sudo rfkill block wifi
+sudo killall wpa_supplicant
+sudo rfkill unblock wifi
+ifconfig wlan0 down
+
+iw dev wlan0 del
+iw phy phy0 interface add wlan0 type managed
+sudo wpa_supplicant -B -iwlan0 -c./my.conf
+Successfully initialized wpa_supplicant
+#get WiFi status on interface wlan0 
+iw wlan0 link
+Connected to d0:84:b0:05:76:51 (on wlan0)
+    SSID: Livebox-7650_5
+    freq: 5560
+    RX: 29982 bytes (187 packets)
+    TX: 5887 bytes (25 packets)
+    signal: -40 dBm
+    tx bitrate: 65.0 MBit/s MCS 7
+
+    bss flags:    short-slot-time
+    dtim period:    0
+    beacon int:    100
+#dhclient process on interface wlan0 
+dhclient wlan0
+#get ip on interface wlan0 
+ifconfig wlan0
+wlan0     Link encap:Ethernet  HWaddr 00:03:7f:40:aa:c3  
+          inet adr:192.168.1.12  Bcast:192.168.1.255  Masque:255.255.255.0
+          adr inet6: fe80::203:7fff:fe40:aac3/64 Scope:Lien
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          Packets reçus:19 erreurs:0 :0 overruns:0 frame:0
+          TX packets:27 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 lg file transmission:1000 
+          Octets reçus:2017 (2.0 KB) Octets transmis:6337 (6.3 KB)
+
+sudo iw dev wlan0 interface add WVSTA1 type station
+sudo ifconfig WVSTA1 hw ether 00:03:7f:40:00:01
+sudo ifconfig WVSTA1 up
+sudo wpa_supplicant -iWVSTA1 -c./my.conf -Dnl80211 &
+Successfully initialized wpa_supplicant
+WVSTA1: CTRL-EVENT-SCAN-STARTED 
+WVSTA1: SME: Trying to authenticate with d0:84:b0:05:76:51 (SSID='Livebox-7650_5' freq=5560 MHz)
+WVSTA1: Trying to associate with d0:84:b0:05:76:51 (SSID='Livebox-7650_5' freq=5560 MHz)
+WVSTA1: Associated with d0:84:b0:05:76:51
+WVSTA1: WPA: Key negotiation completed with d0:84:b0:05:76:51 [PTK=CCMP GTK=TKIP]
+WVSTA1: CTRL-EVENT-CONNECTED - Connection to d0:84:b0:05:76:51 completed [id=0 id_str=]
+#get WiFi status on interface WVSTA1 
+iw WVSTA1 link
+Connected to d0:84:b0:05:76:51 (on WVSTA1)
+    SSID: Livebox-7650_5
+    freq: 5560
+    RX: 16381 bytes (97 packets)
+    TX: 4560 bytes (21 packets)
+    signal: -40 dBm
+    tx bitrate: 65.0 MBit/s MCS 7
+
+    bss flags:    short-slot-time
+    dtim period:    0
+    beacon int:    100
+#dhclient process on interface WVSTA1 
+dhclient WVSTA1
+
+
+
+I cannot have an IP adress, it stops here....Ok in open security mode using WPA_supplicant. Do you have an idea please?
+
+ 
+
+Thanks,
+
+ 
+
+Regards,
+
+ 
+
+Eric & Xav
