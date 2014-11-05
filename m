@@ -1,241 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f50.google.com ([74.125.82.50]:54842 "EHLO
-	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751471AbaKEVJs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Nov 2014 16:09:48 -0500
-Received: by mail-wg0-f50.google.com with SMTP id z12so1917900wgg.9
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Nov 2014 13:09:47 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 08/11] staging: vt6655: baseband.c/h remove dead functions
-Date: Wed,  5 Nov 2014 21:08:56 +0000
-Message-Id: <1415221739-3045-8-git-send-email-tvboxspy@gmail.com> (sfid-20141105_220953_437588_922726EE)
-In-Reply-To: <1415221739-3045-1-git-send-email-tvboxspy@gmail.com>
-References: <1415221739-3045-1-git-send-email-tvboxspy@gmail.com>
+Received: from hauke-m.de ([5.39.93.123]:51362 "EHLO hauke-m.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750867AbaKEWbT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Nov 2014 17:31:19 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Cc: zajec5@gmail.com, b43-dev@lists.infradead.org,
+	andrey.krieger.utkin@gmail.com, v.kempter@pe.tu-clausthal.de,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 3.18+] b43: fix NULL pointer dereference in b43_phy_copy()
+Date: Wed,  5 Nov 2014 23:31:07 +0100
+Message-Id: <1415226667-28207-1-git-send-email-hauke@hauke-m.de> (sfid-20141105_233122_394191_59EB1DFE)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These functions are not used so remove them
-BBbIsRegBitsOn
-BBbIsRegBitsOff
-BBvReadAllRegs
-BBvLoopbackOn
-BBvLoopbackOff
+phy_read and phy_write are not set for every phy any more sine this:
+commit d342b95dd735014a590f9051b1ba227eb54ca8f6
+Author: Rafał Miłecki <zajec5@gmail.com>
+Date:   Thu Jul 31 21:59:43 2014 +0200
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+    b43: don't duplicate common PHY read/write ops
+
+b43_phy_copy() accesses phy_read and phy_write directly and will fail
+with some phys. This patch fixes the regression by using the
+b43_phy_read() and b43_phy_write() functions which should be used for
+read and write access.
+
+This should fix this bug report:
+https://bugzilla.kernel.org/show_bug.cgi?id=87731
+
+Reported-by: Volker Kempter <v.kempter@pe.tu-clausthal.de>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/staging/vt6655/baseband.c | 162 --------------------------------------
- drivers/staging/vt6655/baseband.h |   5 --
- 2 files changed, 167 deletions(-)
+ drivers/net/wireless/b43/phy_common.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/staging/vt6655/baseband.c b/drivers/staging/vt6655/baseband.c
-index b04dfd9..30dd59d 100644
---- a/drivers/staging/vt6655/baseband.c
-+++ b/drivers/staging/vt6655/baseband.c
-@@ -30,12 +30,7 @@
-  *      BBvCaculateParameter   - Caculate PhyLength, PhyService and Phy Signal parameter for baseband Tx
-  *      BBbReadEmbedded         - Embedded read baseband register via MAC
-  *      BBbWriteEmbedded        - Embedded write baseband register via MAC
-- *      BBbIsRegBitsOn         - Test if baseband register bits on
-- *      BBbIsRegBitsOff        - Test if baseband register bits off
-  *      BBbVT3253Init          - VIA VT3253 baseband chip init code
-- *      BBvReadAllRegs         - Read All Baseband Registers
-- *      BBvLoopbackOn          - Turn on BaseBand Loopback mode
-- *      BBvLoopbackOff         - Turn off BaseBand Loopback mode
-  *
-  * Revision History:
-  *      06-10-2003 Bryan YC Fan:  Re-write codes to support VT3253 spec.
-@@ -2036,50 +2031,6 @@ bool BBbWriteEmbedded(void __iomem *dwIoBase, unsigned char byBBAddr, unsigned c
+This should go into wireless-testing and into 3.18 as it fixes a 
+regression in 3.18.
+
+diff --git a/drivers/net/wireless/b43/phy_common.c b/drivers/net/wireless/b43/phy_common.c
+index 1dfc682..3f37401 100644
+--- a/drivers/net/wireless/b43/phy_common.c
++++ b/drivers/net/wireless/b43/phy_common.c
+@@ -301,8 +301,7 @@ void b43_phy_write(struct b43_wldev *dev, u16 reg, u16 value)
+ void b43_phy_copy(struct b43_wldev *dev, u16 destreg, u16 srcreg)
+ {
+ 	assert_mac_suspended(dev);
+-	dev->phy.ops->phy_write(dev, destreg,
+-		dev->phy.ops->phy_read(dev, srcreg));
++	b43_phy_write(dev, destreg, b43_phy_read(dev, srcreg));
  }
  
- /*
-- * Description: Test if all bits are set for the Baseband register
-- *
-- * Parameters:
-- *  In:
-- *      dwIoBase    - I/O base address
-- *      byBBAddr    - address of register in Baseband
-- *      byTestBits  - TestBits
-- *  Out:
-- *      none
-- *
-- * Return Value: true if all TestBits are set; false otherwise.
-- *
-- */
--bool BBbIsRegBitsOn(void __iomem *dwIoBase, unsigned char byBBAddr, unsigned char byTestBits)
--{
--	unsigned char byOrgData;
--
--	BBbReadEmbedded(dwIoBase, byBBAddr, &byOrgData);
--	return (byOrgData & byTestBits) == byTestBits;
--}
--
--/*
-- * Description: Test if all bits are clear for the Baseband register
-- *
-- * Parameters:
-- *  In:
-- *      dwIoBase    - I/O base address
-- *      byBBAddr    - address of register in Baseband
-- *      byTestBits  - TestBits
-- *  Out:
-- *      none
-- *
-- * Return Value: true if all TestBits are clear; false otherwise.
-- *
-- */
--bool BBbIsRegBitsOff(void __iomem *dwIoBase, unsigned char byBBAddr, unsigned char byTestBits)
--{
--	unsigned char byOrgData;
--
--	BBbReadEmbedded(dwIoBase, byBBAddr, &byOrgData);
--	return (byOrgData & byTestBits) == 0;
--}
--
--/*
-  * Description: VIA VT3253 Baseband chip init function
-  *
-  * Parameters:
-@@ -2252,119 +2203,6 @@ bool BBbVT3253Init(struct vnt_private *pDevice)
- }
- 
- /*
-- * Description: Read All Baseband Registers
-- *
-- * Parameters:
-- *  In:
-- *      dwIoBase    - I/O base address
-- *      pbyBBRegs   - Point to struct that stores Baseband Registers
-- *  Out:
-- *      none
-- *
-- * Return Value: none
-- *
-- */
--void BBvReadAllRegs(void __iomem *dwIoBase, unsigned char *pbyBBRegs)
--{
--	int  ii;
--	unsigned char byBase = 1;
--
--	for (ii = 0; ii < BB_MAX_CONTEXT_SIZE; ii++) {
--		BBbReadEmbedded(dwIoBase, (unsigned char)(ii*byBase), pbyBBRegs);
--		pbyBBRegs += byBase;
--	}
--}
--
--/*
-- * Description: Turn on BaseBand Loopback mode
-- *
-- * Parameters:
-- *  In:
-- *      dwIoBase    - I/O base address
-- *      bCCK        - If CCK is set
-- *  Out:
-- *      none
-- *
-- * Return Value: none
-- *
-- */
--
--void BBvLoopbackOn(struct vnt_private *pDevice)
--{
--	unsigned char byData;
--	void __iomem *dwIoBase = pDevice->PortOffset;
--
--	/* CR C9 = 0x00 */
--	BBbReadEmbedded(dwIoBase, 0xC9, &pDevice->byBBCRc9); /* CR201 */
--	BBbWriteEmbedded(dwIoBase, 0xC9, 0);
--	BBbReadEmbedded(dwIoBase, 0x4D, &pDevice->byBBCR4d); /* CR77 */
--	BBbWriteEmbedded(dwIoBase, 0x4D, 0x90);
--
--	/* CR 88 = 0x02(CCK), 0x03(OFDM) */
--	BBbReadEmbedded(dwIoBase, 0x88, &pDevice->byBBCR88); /* CR136 */
--
--	if (pDevice->uConnectionRate <= RATE_11M) { /* CCK */
--		/* Enable internal digital loopback: CR33 |= 0000 0001 */
--		BBbReadEmbedded(dwIoBase, 0x21, &byData); /* CR33 */
--		BBbWriteEmbedded(dwIoBase, 0x21, (unsigned char)(byData | 0x01)); /* CR33 */
--		/* CR154 = 0x00 */
--		BBbWriteEmbedded(dwIoBase, 0x9A, 0);    /* CR154 */
--
--		BBbWriteEmbedded(dwIoBase, 0x88, 0x02); /* CR239 */
--	} else { /* OFDM */
--		/* Enable internal digital loopback:CR154 |= 0000 0001 */
--		BBbReadEmbedded(dwIoBase, 0x9A, &byData); /* CR154 */
--		BBbWriteEmbedded(dwIoBase, 0x9A, (unsigned char)(byData | 0x01)); /* CR154 */
--		/* CR33 = 0x00 */
--		BBbWriteEmbedded(dwIoBase, 0x21, 0);    /* CR33 */
--
--		BBbWriteEmbedded(dwIoBase, 0x88, 0x03); /* CR239 */
--	}
--
--	/* CR14 = 0x00 */
--	BBbWriteEmbedded(dwIoBase, 0x0E, 0); /* CR14 */
--
--	/* Disable TX_IQUN */
--	BBbReadEmbedded(pDevice->PortOffset, 0x09, &pDevice->byBBCR09);
--	BBbWriteEmbedded(pDevice->PortOffset, 0x09, (unsigned char)(pDevice->byBBCR09 & 0xDE));
--}
--
--/*
-- * Description: Turn off BaseBand Loopback mode
-- *
-- * Parameters:
-- *  In:
-- *      pDevice         - Device Structure
-- *
-- *  Out:
-- *      none
-- *
-- * Return Value: none
-- *
-- */
--void BBvLoopbackOff(struct vnt_private *pDevice)
--{
--	unsigned char byData;
--	void __iomem *dwIoBase = pDevice->PortOffset;
--
--	BBbWriteEmbedded(dwIoBase, 0xC9, pDevice->byBBCRc9); /* CR201 */
--	BBbWriteEmbedded(dwIoBase, 0x88, pDevice->byBBCR88); /* CR136 */
--	BBbWriteEmbedded(dwIoBase, 0x09, pDevice->byBBCR09); /* CR136 */
--	BBbWriteEmbedded(dwIoBase, 0x4D, pDevice->byBBCR4d); /* CR77  */
--
--	if (pDevice->uConnectionRate <= RATE_11M) { /* CCK */
--		/* Set the CR33 Bit2 to disable internal Loopback. */
--		BBbReadEmbedded(dwIoBase, 0x21, &byData);/* CR33 */
--		BBbWriteEmbedded(dwIoBase, 0x21, (unsigned char)(byData & 0xFE)); /* CR33 */
--	} else { /* OFDM */
--		BBbReadEmbedded(dwIoBase, 0x9A, &byData); /* CR154 */
--		BBbWriteEmbedded(dwIoBase, 0x9A, (unsigned char)(byData & 0xFE)); /* CR154 */
--	}
--	BBbReadEmbedded(dwIoBase, 0x0E, &byData); /* CR14 */
--	BBbWriteEmbedded(dwIoBase, 0x0E, (unsigned char)(byData | 0x80)); /* CR14 */
--}
--
--/*
-  * Description: Set ShortSlotTime mode
-  *
-  * Parameters:
-diff --git a/drivers/staging/vt6655/baseband.h b/drivers/staging/vt6655/baseband.h
-index bfdd422..6ce856c 100644
---- a/drivers/staging/vt6655/baseband.h
-+++ b/drivers/staging/vt6655/baseband.h
-@@ -80,12 +80,7 @@ void vnt_get_phy_field(struct vnt_private *, u32 frame_length,
- bool BBbReadEmbedded(void __iomem *dwIoBase, unsigned char byBBAddr, unsigned char *pbyData);
- bool BBbWriteEmbedded(void __iomem *dwIoBase, unsigned char byBBAddr, unsigned char byData);
- 
--void BBvReadAllRegs(void __iomem *dwIoBase, unsigned char *pbyBBRegs);
--void BBvLoopbackOn(struct vnt_private *pDevice);
--void BBvLoopbackOff(struct vnt_private *pDevice);
- void BBvSetShortSlotTime(struct vnt_private *pDevice);
--bool BBbIsRegBitsOn(void __iomem *dwIoBase, unsigned char byBBAddr, unsigned char byTestBits);
--bool BBbIsRegBitsOff(void __iomem *dwIoBase, unsigned char byBBAddr, unsigned char byTestBits);
- void BBvSetVGAGainOffset(struct vnt_private *pDevice, unsigned char byData);
- 
- /* VT3253 Baseband */
+ void b43_phy_mask(struct b43_wldev *dev, u16 offset, u16 mask)
 -- 
-2.1.0
+1.9.1
 
