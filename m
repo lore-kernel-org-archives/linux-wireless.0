@@ -1,106 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:46890 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932115AbaKXOfR (ORCPT
+Received: from mail-ob0-f181.google.com ([209.85.214.181]:50743 "EHLO
+	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751021AbaKFO7c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2014 09:35:17 -0500
-Received: by mail-wi0-f177.google.com with SMTP id l15so5969137wiw.10
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:35:15 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Luciano Coelho <luciano.coelho@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 13/75] iwlwifi: mvm: handle unsolicited DTS_MEASUREMENT_NOTIFICATIONs
-Date: Mon, 24 Nov 2014 16:33:49 +0200
-Message-Id: <1416839691-28533-13-git-send-email-egrumbach@gmail.com> (sfid-20141124_153523_423205_B2D11B13)
-In-Reply-To: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
-References: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
+	Thu, 6 Nov 2014 09:59:32 -0500
+Received: by mail-ob0-f181.google.com with SMTP id uy5so967040obc.12
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Nov 2014 06:59:31 -0800 (PST)
+Message-ID: <545B8CD1.8020208@lwfinger.net> (sfid-20141106_155946_614767_9A31D089)
+Date: Thu, 06 Nov 2014 08:59:29 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: New WARNING from mac80211
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+Hi,
 
-Currently, the firmware only sends temperature notificaitions inside
-RX statistics notifications, which are tied to beacon filtering.  This
-is a problem because beacon filtering is not used with vifs that don't
-receive beacons (e.g. P2P GO and AP), so the driver doesn't receive
-temperature notifications in those cases.  To solve that, the firmware
-will be changed so that it sends DTS_MEASUREMENT_NOTIFICATIONs,
-independently from the beacon filtering flows.
+I have gotten a new warning while using driver rtl8192se with the mainline 
+kernel. The splat is as follows:
 
-To support that, the driver needs to also handle unsolicited
-DTS_MEASUREMENT_NOTIFICATIONs, that are not triggered by
-DTS_TRIGGER_CMD_FLAGS_TEMP requests.
+[42982.577623] ------------[ cut here ]------------
+[42982.577647] WARNING: CPU: 2 PID: 6403 at net/mac80211/agg-tx.c:698 
+ieee80211_start_tx_ba_cb+0x184/0x190 [mac80211]()
+[42982.577650] Modules linked in: fuse bnep bluetooth ctr ccm nfs fscache 
+rtl8192se rtl_pci rtlwifi arc4 iwlmvm af_packet mac80211 snd_hda_codec_generic 
+snd_hda_intel snd_hda_controller snd_hda_codec x86_pkg_temp_thermal kvm_intel 
+kvm iwlwifi snd_hwdep snd_pcm snd_timer cfg80211 snd e1000e rtsx_pci_sdmmc 
+mmc_core rtsx_pci_ms memstick lpc_ich rfkill rtsx_pci xhci_pci xhci_hcd ptp 
+pps_core wmi mfd_core serio_raw pcspkr crct10dif_pclmul crc32_pclmul 
+crc32c_intel ghash_clmulni_intel aesni_intel aes_x86_64 lrw gf128mul glue_helper 
+ablk_helper cryptd soundcore microcode acpi_cpufreq thermal processor battery ac 
+dm_mod sr_mod cdrom i915 i2c_algo_bit drm_kms_helper drm video thermal_sys hwmon 
+button sg autofs4
+[42982.578143] CPU: 2 PID: 6403 Comm: kworker/u16:0 Not tainted 3.18.0-rc3+ #29
+[42982.578146] Hardware name: TOSHIBA TECRA A50-A/TECRA A50-A, BIOS Version 4.20 
+   04/17/2014
+[42982.578163] Workqueue: phy1 ieee80211_iface_work [mac80211]
+[42982.578167]  0000000000000009 ffff880201367c48 ffffffff816b0b0f 0000000000000000
+[42982.578173]  0000000000000000 ffff880201367c88 ffffffff81055c91 ffff8800c465d328
+[42982.578180]  0000000000000000 ffff8800c30e8000 ffff8800c30e8580 ffff8800c6560f48
+[42982.578186] Call Trace:
+[42982.578195]  [<ffffffff816b0b0f>] dump_stack+0x4e/0x71
+[42982.578204]  [<ffffffff81055c91>] warn_slowpath_common+0x81/0xa0
+[42982.578209]  [<ffffffff81055d6a>] warn_slowpath_null+0x1a/0x20
+[42982.578225]  [<ffffffffa0715534>] ieee80211_start_tx_ba_cb+0x184/0x190 [mac80211]
+[42982.578240]  [<ffffffffa071c14a>] ieee80211_iface_work+0x26a/0x410 [mac80211]
+[42982.578247]  [<ffffffff8106f6a2>] ? process_one_work+0x152/0x550
+[42982.578253]  [<ffffffff8106f71f>] process_one_work+0x1cf/0x550
+[42982.578258]  [<ffffffff8106f6a2>] ? process_one_work+0x152/0x550
+[42982.578264]  [<ffffffff8106fbc1>] worker_thread+0x121/0x490
+[42982.578270]  [<ffffffff8106faa0>] ? process_one_work+0x550/0x550
+[42982.578275]  [<ffffffff81075004>] kthread+0xe4/0x100
+[42982.578280]  [<ffffffff81074f20>] ? kthread_create_on_node+0x220/0x220
+[42982.578287]  [<ffffffff816ba06c>] ret_from_fork+0x7c/0xb0
+[42982.578291]  [<ffffffff81074f20>] ? kthread_create_on_node+0x220/0x220
+[42982.578294] cfg80211: World regulatory domain updated:
+[42982.578295] ---[ end trace dd5c167b01ae2d3d ]---
 
-This change is backwards compatible and will simply not be used with
-firmware versions that do not send the notifications.
+The warning comes from the following fragment in net/mac80211/agg-tx.c:
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/mvm.h |  3 +++
- drivers/net/wireless/iwlwifi/mvm/ops.c |  2 ++
- drivers/net/wireless/iwlwifi/mvm/tt.c  | 20 ++++++++++++++++++++
- 3 files changed, 25 insertions(+)
+         if (WARN_ON(!tid_tx)) {
+                 ht_dbg(sdata, "addBA was not requested!\n");
+                 goto unlock;
+         }
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index 9ac2d4c..7d2c528 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -1211,6 +1211,9 @@ bool iwl_mvm_is_idle(struct iwl_mvm *mvm);
- /* Thermal management and CT-kill */
- void iwl_mvm_tt_tx_backoff(struct iwl_mvm *mvm, u32 backoff);
- void iwl_mvm_tt_temp_changed(struct iwl_mvm *mvm, u32 temp);
-+int iwl_mvm_temp_notif(struct iwl_mvm *mvm,
-+		       struct iwl_rx_cmd_buffer *rxb,
-+		       struct iwl_device_cmd *cmd);
- void iwl_mvm_tt_handler(struct iwl_mvm *mvm);
- void iwl_mvm_tt_initialize(struct iwl_mvm *mvm, u32 min_backoff);
- void iwl_mvm_tt_exit(struct iwl_mvm *mvm);
-diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
-index be3dd4f..737aac3 100644
---- a/drivers/net/wireless/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
-@@ -254,6 +254,8 @@ static const struct iwl_rx_handlers iwl_mvm_rx_handlers[] = {
- 	RX_HANDLER(REPLY_ERROR, iwl_mvm_rx_fw_error, false),
- 	RX_HANDLER(PSM_UAPSD_AP_MISBEHAVING_NOTIFICATION,
- 		   iwl_mvm_power_uapsd_misbehaving_ap_notif, false),
-+	RX_HANDLER(DTS_MEASUREMENT_NOTIFICATION, iwl_mvm_temp_notif, true),
-+
- };
- #undef RX_HANDLER
- #define CMD(x) [x] = #x
-diff --git a/drivers/net/wireless/iwlwifi/mvm/tt.c b/drivers/net/wireless/iwlwifi/mvm/tt.c
-index 35acf00..2b1e61f 100644
---- a/drivers/net/wireless/iwlwifi/mvm/tt.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/tt.c
-@@ -150,6 +150,26 @@ static bool iwl_mvm_temp_notif_wait(struct iwl_notif_wait_data *notif_wait,
- 	return true;
- }
- 
-+int iwl_mvm_temp_notif(struct iwl_mvm *mvm,
-+		       struct iwl_rx_cmd_buffer *rxb,
-+		       struct iwl_device_cmd *cmd)
-+{
-+	struct iwl_rx_packet *pkt = rxb_addr(rxb);
-+	int temp;
-+
-+	/* the notification is handled synchronously in ctkill, so skip here */
-+	if (test_bit(IWL_MVM_STATUS_HW_CTKILL, &mvm->status))
-+		return 0;
-+
-+	temp = iwl_mvm_temp_notif_parse(mvm, pkt);
-+	if (temp < 0)
-+		return 0;
-+
-+	iwl_mvm_tt_temp_changed(mvm, temp);
-+
-+	return 0;
-+}
-+
- static int iwl_mvm_get_temp_cmd(struct iwl_mvm *mvm)
- {
- 	struct iwl_dts_measurement_cmd cmd = {
--- 
-1.9.1
+Is there something that should be fixed in rtl8192se?
 
+Thanks,
+
+Larry
