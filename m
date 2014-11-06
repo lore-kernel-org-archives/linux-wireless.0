@@ -1,30 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:40075 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755188AbaKSR5I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Nov 2014 12:57:08 -0500
-Message-ID: <1416419825.9374.12.camel@sipsolutions.net> (sfid-20141119_185711_871669_A45FB7BD)
-Subject: Re: [PATCH v5 1/2] nl80211: Replace interface socket owner
- attribute with more generic one
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jukka Rissanen <jukka.rissanen@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 19 Nov 2014 18:57:05 +0100
-In-Reply-To: <1415892315-2911-2-git-send-email-jukka.rissanen@linux.intel.com> (sfid-20141113_162952_563314_9252CA5A)
-References: <1415892315-2911-1-git-send-email-jukka.rissanen@linux.intel.com>
-	 <1415892315-2911-2-git-send-email-jukka.rissanen@linux.intel.com>
-	 (sfid-20141113_162952_563314_9252CA5A)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-oi0-f43.google.com ([209.85.218.43]:41095 "EHLO
+	mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750999AbaKFBLS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Nov 2014 20:11:18 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH 0/3i 3.18] Fix more problems with rtlwifi
+Date: Wed,  5 Nov 2014 19:10:51 -0600
+Message-Id: <1415236254-12274-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20141106_021131_258279_84199DA3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-11-13 at 17:25 +0200, Jukka Rissanen wrote:
-> Replace NL80211_ATTR_IFACE_SOCKET_OWNER attribute with more generic
-> NL80211_ATTR_SOCKET_OWNER that can be used with other commands
-> that interface creation.
+This set of patches fix some additional problems found for rtlwifi,
+rtl8192se, and rtl8192ee.
 
-Applied.
+It is certainly possible that rtlwifi is getting too large. For that reason,
+my changes for 3.19 will be restricted to identifying common routines, and
+moving such code from the individual drivers into driver rtlwifi.
 
-johannes
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+
+
+Larry Finger (3):
+  rtlwifi: Fix setting of tx descriptor for new trx flow
+  rtlwifi: Fix errors in descriptor manipulation
+  rtlwifi: rtl8192se: Fix connection problems
+
+ drivers/net/wireless/rtlwifi/pci.c           |  16 ++--
+ drivers/net/wireless/rtlwifi/rtl8192se/hw.c  | 129 +++++++++++++--------------
+ drivers/net/wireless/rtlwifi/rtl8192se/phy.c |   8 +-
+ drivers/net/wireless/rtlwifi/rtl8192se/sw.c  |   4 +
+ drivers/net/wireless/rtlwifi/rtl8192se/trx.c |  23 +++++
+ drivers/net/wireless/rtlwifi/rtl8192se/trx.h |   4 +
+ 6 files changed, 110 insertions(+), 74 deletions(-)
+
+-- 
+2.1.2
 
