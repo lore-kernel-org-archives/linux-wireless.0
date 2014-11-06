@@ -1,57 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:43835 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751502AbaKDXYC (ORCPT
+Received: from mail-qg0-f42.google.com ([209.85.192.42]:64661 "EHLO
+	mail-qg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750789AbaKFLk2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Nov 2014 18:24:02 -0500
-From: greearb@candelatech.com
-To: ath9k-devel@lists.ath9k.org
-Cc: linux-wireless@vger.kernel.org, rmanohar@qti.qualcomm.com,
-	nbd@openwrt.org, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 1/2] ath9k:  fix misc debugfs when not using chan context
-Date: Tue,  4 Nov 2014 15:22:49 -0800
-Message-Id: <1415143370-15173-1-git-send-email-greearb@candelatech.com> (sfid-20141105_002406_891854_C71CD5FF)
+	Thu, 6 Nov 2014 06:40:28 -0500
+Message-ID: <545B5E19.7030704@gmail.com> (sfid-20141106_124048_153646_F1EC7AC6)
+Date: Thu, 06 Nov 2014 09:40:09 -0200
+From: Murilo Opsfelder Araujo <mopsfelder@gmail.com>
+MIME-Version: 1.0
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Mike Galbraith <umgwanakikbuti@gmail.com>
+CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Thadeu Cascardo <cascardo@cascardo.eti.br>,
+	troy_tan@realsil.com.cn
+Subject: Re: [PATCH] rtlwifi: Add more checks for get_btc_status callback
+References: <1414625302-3654-1-git-send-email-mopsfelder@gmail.com>	 <5451BED0.2060906@lwfinger.net> <1415178975.5402.66.camel@marge.simpson.net> <545A6894.7040506@lwfinger.net>
+In-Reply-To: <545A6894.7040506@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On 11/05/2014 04:12 PM, Larry Finger wrote:
+> On 11/05/2014 03:16 AM, Mike Galbraith wrote:
+>> On Wed, 2014-10-29 at 23:30 -0500, Larry Finger wrote:
+>>> On 10/29/2014 06:28 PM, Murilo Opsfelder Araujo wrote:
+>>>> This is a complement of commit 08054200117a95afc14c3d2ed3a38bf4e345bf78
+>>>> "rtlwifi: Add check for get_btc_status callback".
+>>>>
+>>>> With this patch, next-20141029 at least does not panic with rtl8192se
+>>>> device.
+>>>>
+>>>
+>>> This patch is OK, but as noted it is not complete.
+>>>
+>>> I have patches to fix all the kernel panics for rtl8192se AND
+>>> rtl8192ce. There
+>>> are missing parts, but I would prefer submitting mine, which would
+>>> conflict with
+>>> this one. For that reason, NACK for this one, and please apply the
+>>> set I am
+>>> submitting now.
+>>
+>> It's all in there now, but my RTL8191SEvB is still dead.  Squabbling
+>> with it isn't going all that well either.
+>>
+>> As soon as 38506ece rtlwifi: rtl_pci: Start modification for new drivers
+>> is applied, explosions appear.  Subsequently applying...
+>>
+>> 08054200 rtlwifi: Add check for get_btc_status callback
+>> c0386f15 rtlwifi: rtl8192ce: rtl8192de: rtl8192se: Fix handling for
+>> missing get_btc_status
+>> 50147969 rtlwifi: rtl8192se: Fix duplicate calls to
+>> ieee80211_register_hw()
+>> 30c5ccc6 rtlwifi: rtl8192se: Add missing section to read descriptor
+>> setting
+>> 75a916e1 rtlwifi: rtl8192se: Fix firmware loading
+>>
+>> ...fixes that mess up, but leaves the interface dead in the same manner
+>> as if nothing has been reverted.  So it _seems_ the bustage lurks in
+>> 38506ece somewhere.  Too bad it's non-dinky, and written in wifi-ese :)
+> 
+> Yes, I am aware that rtl8192se is failing, and now that I am back from
+> vacation, I am working on the problem. If you want to use the driver
+> with kernel 3.18, clone the repo at
+> http://github.com/lwfinger/rtlwifi_new.git and build and install either
+> the master or kernel_version branches. Both work.
+> 
+> I am in the process of trying to find what the crucial difference is
+> between that repo and the kernel version.
+> 
+> Larry
+> 
+> 
+I'm sending to everyone so others can jump in as well.
 
-When channel-context is not enabled, all vifs belong to
-the first context, but it is not configured as 'assigned'.
+Here are the steps I've followed.
 
-Fix misc debugfs file to print out info for non-assigned
-contexts, and also print whether ctx is assigned or not.
+Installed and booted my kernel:
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
+$ sudo dpkg -i linux-image-3.18.0-rc3-next-20141105-panda_3.18.0-rc3-next-20141105-panda-1_amd64.deb linux-headers-3.18.0-rc3-next-20141105-panda_3.18.0-rc3-next-20141105-panda-1_amd64.deb
 
-This is not overly critical, but fixes regression in 3.17 kernel.
+Built modules from Larry's github repository.
 
- drivers/net/wireless/ath/ath9k/debug.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+$ cd rtlwifi_new
+$ make
+$ sudo make install
 
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index 46f20a3..3f6d971 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -828,13 +828,14 @@ static ssize_t read_file_misc(struct file *file, char __user *user_buf,
- 
- 	i = 0;
- 	ath_for_each_chanctx(sc, ctx) {
--		if (!ctx->assigned || list_empty(&ctx->vifs))
-+		if (list_empty(&ctx->vifs))
- 			continue;
- 		ath9k_calculate_iter_data(sc, ctx, &iter_data);
- 
- 		len += scnprintf(buf + len, sizeof(buf) - len,
--			"VIF-COUNTS: CTX %i AP: %i STA: %i MESH: %i WDS: %i",
--			i++, iter_data.naps, iter_data.nstations,
-+			"VIFS: CTX %i(%i) AP: %i STA: %i MESH: %i WDS: %i",
-+			i++, (int)(ctx->assigned), iter_data.naps,
-+			iter_data.nstations,
- 			iter_data.nmeshes, iter_data.nwds);
- 		len += scnprintf(buf + len, sizeof(buf) - len,
- 			" ADHOC: %i TOTAL: %hi BEACON-VIF: %hi\n",
+$ sudo modprobe -rv rtl8192se
+rmmod rtl8192se
+rmmod rtl_pci
+rmmod rtlwifi
+rmmod mac80211
+rmmod cfg80211
+
+The module does not load:
+
+$ sudo modprobe -v rtl8192se
+insmod /lib/modules/3.18.0-rc3-next-20141105-panda/kernel/net/wireless/cfg80211.ko
+insmod /lib/modules/3.18.0-rc3-next-20141105-panda/kernel/net/mac80211/mac80211.ko
+insmod /lib/modules/3.18.0-rc3-next-20141105-panda/kernel/drivers/net/wireless/rtlwifi/rtlwifi.ko
+insmod /lib/modules/3.18.0-rc3-next-20141105-panda/kernel/drivers/net/wireless/rtlwifi/rtl_pci.ko
+insmod /lib/modules/3.18.0-rc3-next-20141105-panda/extra/rtl8192se.ko
+ERROR: could not insert 'rtl8192se': Invalid argument
+
+And /var/log/messages showed:
+
+Nov  5 22:28:01 laptop kernel: [  301.276806] rtl8192se: disagrees about version of symbol rtl_process_phyinfo
+Nov  5 22:28:01 laptop kernel: [  301.276812] rtl8192se: Unknown symbol rtl_process_phyinfo (err -22)
+Nov  5 22:28:01 laptop kernel: [  301.276864] rtl8192se: disagrees about version of symbol rtl_get_tcb_desc
+Nov  5 22:28:01 laptop kernel: [  301.276866] rtl8192se: Unknown symbol rtl_get_tcb_desc (err -22)
+
 -- 
-1.9.3
-
+Murilo
