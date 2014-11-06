@@ -1,49 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:44556 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932159AbaKXOfq (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:38429 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750877AbaKFT5M (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2014 09:35:46 -0500
-Received: by mail-wi0-f177.google.com with SMTP id l15so5951146wiw.16
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:35:45 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eliad Peller <eliad@wizery.com>,
-	Eliad Peller <eliadx.peller@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 30/75] iwlwifi: mvm: disable beacon filtering escape timer
-Date: Mon, 24 Nov 2014 16:34:06 +0200
-Message-Id: <1416839691-28533-30-git-send-email-egrumbach@gmail.com> (sfid-20141124_154138_489040_F0D669AC)
-In-Reply-To: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
-References: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
+	Thu, 6 Nov 2014 14:57:12 -0500
+Message-ID: <545BD297.5040806@candelatech.com> (sfid-20141106_205715_626403_2B77F8B2)
+Date: Thu, 06 Nov 2014 11:57:11 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath10k <ath10k@lists.infradead.org>
+Subject: New ath10k CT firmware released.
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+I have uploaded the latest CT version of the ath10k firmware.
 
-There is no reason to pass every 50th beacon if
-nothing was changed.
+http://www.candelatech.com/ath10k.php
 
-Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/fw-api-power.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This firmware fixes bugs in raw-tx mode, though probably only
+non-encrypted frames can be sent in this manner, and it requires
+an out-of-tree patch from Michal Kazior to make it work:
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api-power.h b/drivers/net/wireless/iwlwifi/mvm/fw-api-power.h
-index 2fd8ad4..4300200 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw-api-power.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw-api-power.h
-@@ -370,7 +370,7 @@ struct iwl_beacon_filter_cmd {
- #define IWL_BF_DEBUG_FLAG_DEFAULT 0
- #define IWL_BF_DEBUG_FLAG_D0I3 0
- 
--#define IWL_BF_ESCAPE_TIMER_DEFAULT 50
-+#define IWL_BF_ESCAPE_TIMER_DEFAULT 0
- #define IWL_BF_ESCAPE_TIMER_D0I3 0
- #define IWL_BF_ESCAPE_TIMER_MAX 1024
- #define IWL_BF_ESCAPE_TIMER_MIN 0
+http://comments.gmane.org/gmane.linux.drivers.ath10k.devel/246
+
+This firmware also significantly improves association times when using
+more than one vdev.  This, requires an additional kernel patch:
+
+http://dmz2.candelatech.com/git/gitweb.cgi?p=linux-3.17.dev.y/.git;a=commitdiff;h=a9756b6e2efffbec4101dbe81e9d6a2c503239ff;hp=5bfa637376c352fc17c56afc7b1d2e752750162c
+
+And, you may want the near-by patches that allow disabling some
+logging, especially if using serial console.
+
+There is also a small fix to max-nss logic in the firmware rate-control,
+but I am not sure this is required.  It _is_ required that you use
+currently-out-of-tree patches if you want anything other than 3x3 station
+connecting to 3x3 AP to work properly with ath10k.
+
+As always, I am interested to know how people are using
+the CT firmware, and I would welcome any help with getting
+even basic support (such as reserved feature flags)
+for this firmware in the upstream kernel.
+
+Thanks,
+Ben
+
 -- 
-1.9.1
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
