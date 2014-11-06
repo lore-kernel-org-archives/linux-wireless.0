@@ -1,61 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:59383
-	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756358AbaKSTIQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Nov 2014 14:08:16 -0500
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from fig.raritan.com ([24.38.102.197]:3301 "EHLO fig.raritan.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751232AbaKFKwV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Nov 2014 05:52:21 -0500
+From: Ronald Wahl <ronald.wahl@raritan.com>
 To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH v2 4/7] mac80211: minstrel_ht: switch to .tx_status_noskb
-Date: Wed, 19 Nov 2014 20:08:10 +0100
-Message-Id: <1416424093-19439-4-git-send-email-nbd@openwrt.org> (sfid-20141119_200821_782958_C9643705)
-In-Reply-To: <1416424093-19439-1-git-send-email-nbd@openwrt.org>
-References: <1416424093-19439-1-git-send-email-nbd@openwrt.org>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+	Ronald Wahl <ronald.wahl@raritan.com>
+Subject: [PATCH v2] mac80211: Fix regression that triggers a kernel BUG with CCMP
+Date: Thu,  6 Nov 2014 11:52:13 +0100
+Message-Id: <1415271133-6588-1-git-send-email-ronald.wahl@raritan.com> (sfid-20141106_115225_313179_65BBB65C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- net/mac80211/rc80211_minstrel_ht.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+Commit 7ec7c4a9a686c608315739ab6a2b0527a240883c (mac80211: port CCMP to
+cryptoapi's CCM driver) introduced a regression when decrypting empty
+packets (data_len == 0). This will lead to backtraces like:
 
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index 2641dc8..b52996a 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -709,11 +709,10 @@ minstrel_aggr_check(struct ieee80211_sta *pubsta, struct sk_buff *skb)
- static void
- minstrel_ht_tx_status(void *priv, struct ieee80211_supported_band *sband,
-                       struct ieee80211_sta *sta, void *priv_sta,
--                      struct sk_buff *skb)
-+                      struct ieee80211_tx_info *info)
- {
- 	struct minstrel_ht_sta_priv *msp = priv_sta;
- 	struct minstrel_ht_sta *mi = &msp->ht;
--	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_tx_rate *ar = info->status.rates;
- 	struct minstrel_rate_stats *rate, *rate2;
- 	struct minstrel_priv *mp = priv;
-@@ -721,7 +720,8 @@ minstrel_ht_tx_status(void *priv, struct ieee80211_supported_band *sband,
- 	int i;
+(scatterwalk_start) from [<c01312f4>] (scatterwalk_map_and_copy+0x2c/0xa8)
+(scatterwalk_map_and_copy) from [<c013a5a0>] (crypto_ccm_decrypt+0x7c/0x25c)
+(crypto_ccm_decrypt) from [<c032886c>] (ieee80211_aes_ccm_decrypt+0x160/0x170)
+(ieee80211_aes_ccm_decrypt) from [<c031c628>] (ieee80211_crypto_ccmp_decrypt+0x1ac/0x238)
+(ieee80211_crypto_ccmp_decrypt) from [<c032ef28>] (ieee80211_rx_handlers+0x870/0x1d24)
+(ieee80211_rx_handlers) from [<c0330c7c>] (ieee80211_prepare_and_rx_handle+0x8a0/0x91c)
+(ieee80211_prepare_and_rx_handle) from [<c0331260>] (ieee80211_rx+0x568/0x730)
+(ieee80211_rx) from [<c01d3054>] (__carl9170_rx+0x94c/0xa20)
+(__carl9170_rx) from [<c01d3324>] (carl9170_rx_stream+0x1fc/0x320)
+(carl9170_rx_stream) from [<c01cbccc>] (carl9170_usb_tasklet+0x80/0xc8)
+(carl9170_usb_tasklet) from [<c00199dc>] (tasklet_hi_action+0x88/0xcc)
+(tasklet_hi_action) from [<c00193c8>] (__do_softirq+0xcc/0x200)
+(__do_softirq) from [<c0019734>] (irq_exit+0x80/0xe0)
+(irq_exit) from [<c0009c10>] (handle_IRQ+0x64/0x80)
+(handle_IRQ) from [<c000c3a0>] (__irq_svc+0x40/0x4c)
+(__irq_svc) from [<c0009d44>] (arch_cpu_idle+0x2c/0x34)
+
+Such packets can appear for example when using the carl9170 wireless driver
+because hardware sometimes generates garbage when the internal FIFO overruns.
+
+This patch adds an additional length check.
+
+Cc: stable@vger.kernel.org
+Fixes: 7ec7c4a9a686 ("mac80211: port CCMP to cryptoapi's CCM driver")
+Signed-off-by: Ronald Wahl <ronald.wahl@raritan.com>
+---
+v1 -> v2:
+    - return negative error value
+
+ net/mac80211/aes_ccm.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/net/mac80211/aes_ccm.c b/net/mac80211/aes_ccm.c
+index ec24378..09d9caa 100644
+--- a/net/mac80211/aes_ccm.c
++++ b/net/mac80211/aes_ccm.c
+@@ -53,6 +53,9 @@ int ieee80211_aes_ccm_decrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
+ 		__aligned(__alignof__(struct aead_request));
+ 	struct aead_request *aead_req = (void *) aead_req_data;
  
- 	if (!msp->is_ht)
--		return mac80211_minstrel.tx_status(priv, sband, sta, &msp->legacy, skb);
-+		return mac80211_minstrel.tx_status_noskb(priv, sband, sta,
-+							 &msp->legacy, info);
++	if (data_len == 0)
++		return -EINVAL;
++
+ 	memset(aead_req, 0, sizeof(aead_req_data));
  
- 	/* This packet was aggregated but doesn't carry status info */
- 	if ((info->flags & IEEE80211_TX_CTL_AMPDU) &&
-@@ -1343,7 +1343,7 @@ static u32 minstrel_ht_get_expected_throughput(void *priv_sta)
- 
- static const struct rate_control_ops mac80211_minstrel_ht = {
- 	.name = "minstrel_ht",
--	.tx_status = minstrel_ht_tx_status,
-+	.tx_status_noskb = minstrel_ht_tx_status,
- 	.get_rate = minstrel_ht_get_rate,
- 	.rate_init = minstrel_ht_rate_init,
- 	.rate_update = minstrel_ht_rate_update,
+ 	sg_init_one(&pt, data, data_len);
 -- 
-2.1.2
+1.9.3
 
