@@ -1,173 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f49.google.com ([74.125.82.49]:36880 "EHLO
-	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751922AbaKIQu3 (ORCPT
+Received: from relay1.mentorg.com ([192.94.38.131]:35617 "EHLO
+	relay1.mentorg.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750782AbaKFGQY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Nov 2014 11:50:29 -0500
-Received: by mail-wg0-f49.google.com with SMTP id x13so7060968wgg.22
-        for <linux-wireless@vger.kernel.org>; Sun, 09 Nov 2014 08:50:28 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 03/16] mac80211: move skb info band assignment out
-Date: Sun,  9 Nov 2014 18:50:09 +0200
-Message-Id: <1415551822-20121-3-git-send-email-arik@wizery.com> (sfid-20141109_175039_525829_443AEA95)
-In-Reply-To: <1415551822-20121-1-git-send-email-arik@wizery.com>
-References: <1415551822-20121-1-git-send-email-arik@wizery.com>
+	Thu, 6 Nov 2014 01:16:24 -0500
+From: Sanjeev Sharma <sanjeev_sharma@mentor.com>
+To: <Larry.Finger@lwfinger.net>, <Jes.Sorensen@redhat.com>
+CC: <gregkh@linuxfoundation.org>, <linux-wireless@vger.kernel.org>,
+	<devel@driverdev.osuosl.org>, <linux-kernel@vger.kernel.org>,
+	Sanjeev Sharma <sanjeev_sharma@mentor.com>,
+	Sanjeev Sharma <Sanjeev_Sharma@mentor.com>
+Subject: [PATCH] staging:rtl8723au: core: Fix error reported by checkpatch.
+Date: Thu, 6 Nov 2014 11:46:13 +0530
+Message-ID: <1415254573-3451-1-git-send-email-sanjeev_sharma@mentor.com> (sfid-20141106_071703_331563_014E0E63)
+In-Reply-To: <wrfjy4rxzk5b.fsf@redhat.com>
+References: <wrfjy4rxzk5b.fsf@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This is a patch to the rtw_cmd.c file that fixes following
+error.
 
-Instead of passing the band as a parameter to ieee80211_xmit()
-and ieee80211_tx(), move it outside of the two functions while
-making sure info->band is set up before calling them.
+ERROR: spaces required around that '>' (ctx:WxV)
+ERROR: that open brace { should be on the previous line
 
-This removes the parameter and simplifies the follow commit.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Sanjeev Sharma <Sanjeev_Sharma@mentor.com>
 ---
- net/mac80211/cfg.c         |  3 ++-
- net/mac80211/ieee80211_i.h |  3 +--
- net/mac80211/sta_info.c    |  3 ++-
- net/mac80211/tx.c          | 23 +++++++++++------------
- 4 files changed, 16 insertions(+), 16 deletions(-)
+ drivers/staging/rtl8723au/core/rtw_cmd.c | 83 +++++++++++++++-----------------
+ 1 file changed, 40 insertions(+), 43 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 0618594..3d1611a 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3511,6 +3511,7 @@ static int ieee80211_probe_client(struct wiphy *wiphy, struct net_device *dev,
- 
- 	info->flags |= IEEE80211_TX_CTL_REQ_TX_STATUS |
- 		       IEEE80211_TX_INTFL_NL80211_FRAME_TX;
-+	info->band = band;
- 
- 	skb_set_queue_mapping(skb, IEEE80211_AC_VO);
- 	skb->priority = 7;
-@@ -3518,7 +3519,7 @@ static int ieee80211_probe_client(struct wiphy *wiphy, struct net_device *dev,
- 		nullfunc->qos_ctrl = cpu_to_le16(7);
- 
- 	local_bh_disable();
--	ieee80211_xmit(sdata, skb, band);
-+	ieee80211_xmit(sdata, skb);
- 	local_bh_enable();
- 	rcu_read_unlock();
- 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index bc6f12f..00cda1e 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1761,8 +1761,7 @@ void mac80211_ev_michael_mic_failure(struct ieee80211_sub_if_data *sdata, int ke
- 				     gfp_t gfp);
- void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata,
- 			       bool bss_notify);
--void ieee80211_xmit(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb,
--		    enum ieee80211_band band);
-+void ieee80211_xmit(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb);
- 
- void __ieee80211_tx_skb_tid_band(struct ieee80211_sub_if_data *sdata,
- 				 struct sk_buff *skb, int tid,
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index adc2537..9737251 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -1249,7 +1249,8 @@ static void ieee80211_send_null_response(struct ieee80211_sub_if_data *sdata,
+diff --git a/drivers/staging/rtl8723au/core/rtw_cmd.c b/drivers/staging/rtl8723au/core/rtw_cmd.c
+index 4eaa502..e9d6ac2 100644
+--- a/drivers/staging/rtl8723au/core/rtw_cmd.c
++++ b/drivers/staging/rtl8723au/core/rtw_cmd.c
+@@ -957,7 +957,7 @@ static void traffic_status_watchdog(struct rtw_adapter *padapter)
+ 		/*  check traffic for  powersaving. */
+ 			if (((pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod +
+ 			      pmlmepriv->LinkDetectInfo.NumTxOkInPeriod) > 8) ||
+-			    pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod >2)
++			    pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod > 2)
+ 				bEnterPS = false;
+ 			else
+ 				bEnterPS = true;
+@@ -1017,46 +1017,44 @@ static void lps_ctrl_wk_hdl(struct rtw_adapter *padapter, u8 lps_ctrl_type)
+ 	    check_fwstate(pmlmepriv, WIFI_ADHOC_STATE))
  		return;
- 	}
  
--	ieee80211_xmit(sdata, skb, chanctx_conf->def.chan->band);
-+	info->band = chanctx_conf->def.chan->band;
-+	ieee80211_xmit(sdata, skb);
- 	rcu_read_unlock();
- }
- 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 66af35f..c4a5494 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1426,8 +1426,7 @@ EXPORT_SYMBOL(ieee80211_tx_prepare_skb);
-  * Returns false if the frame couldn't be transmitted but was queued instead.
-  */
- static bool ieee80211_tx(struct ieee80211_sub_if_data *sdata,
--			 struct sk_buff *skb, bool txpending,
--			 enum ieee80211_band band)
-+			 struct sk_buff *skb, bool txpending)
- {
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_tx_data tx;
-@@ -1452,8 +1451,6 @@ static bool ieee80211_tx(struct ieee80211_sub_if_data *sdata,
- 		return true;
- 	}
- 
--	info->band = band;
+-	switch (lps_ctrl_type)
+-	{
+-		case LPS_CTRL_SCAN:
+-			rtl8723a_BT_wifiscan_notify(padapter, true);
+-			if (!rtl8723a_BT_using_antenna_1(padapter)) {
+-				if (check_fwstate(pmlmepriv, _FW_LINKED))
+-					LPS_Leave23a(padapter);
+-			}
+-			break;
+-		case LPS_CTRL_JOINBSS:
+-			LPS_Leave23a(padapter);
+-			break;
+-		case LPS_CTRL_CONNECT:
+-			mstatus = 1;/* connect */
+-			/*  Reset LPS Setting */
+-			padapter->pwrctrlpriv.LpsIdleCount = 0;
+-			rtl8723a_set_FwJoinBssReport_cmd(padapter, 1);
+-			rtl8723a_BT_mediastatus_notify(padapter, mstatus);
+-			break;
+-		case LPS_CTRL_DISCONNECT:
+-			mstatus = 0;/* disconnect */
+-			rtl8723a_BT_mediastatus_notify(padapter, mstatus);
+-			if (!rtl8723a_BT_using_antenna_1(padapter))
+-				LPS_Leave23a(padapter);
+-			rtl8723a_set_FwJoinBssReport_cmd(padapter, 0);
+-			break;
+-		case LPS_CTRL_SPECIAL_PACKET:
+-			pwrpriv->DelayLPSLastTimeStamp = jiffies;
+-			rtl8723a_BT_specialpacket_notify(padapter);
+-			if (!rtl8723a_BT_using_antenna_1(padapter))
++	switch (lps_ctrl_type) {
++	case LPS_CTRL_SCAN:
++		rtl8723a_BT_wifiscan_notify(padapter, true);
++		if (!rtl8723a_BT_using_antenna_1(padapter)) {
++			if (check_fwstate(pmlmepriv, _FW_LINKED))
+ 				LPS_Leave23a(padapter);
+-			break;
+-		case LPS_CTRL_LEAVE:
+-			rtl8723a_BT_lps_leave(padapter);
+-			if (!rtl8723a_BT_using_antenna_1(padapter))
+-				LPS_Leave23a(padapter);
+-			break;
 -
- 	/* set up hw_queue value early */
- 	if (!(info->flags & IEEE80211_TX_CTL_TX_OFFCHAN) ||
- 	    !(local->hw.flags & IEEE80211_HW_QUEUE_CONTROL))
-@@ -1501,8 +1498,7 @@ static int ieee80211_skb_resize(struct ieee80211_sub_if_data *sdata,
- 	return 0;
- }
- 
--void ieee80211_xmit(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb,
--		    enum ieee80211_band band)
-+void ieee80211_xmit(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb)
- {
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-@@ -1537,7 +1533,7 @@ void ieee80211_xmit(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb,
+-		default:
+-			break;
++		}
++		break;
++	case LPS_CTRL_JOINBSS:
++		LPS_Leave23a(padapter);
++		break;
++	case LPS_CTRL_CONNECT:
++		mstatus = 1;/* connect */
++		/*  Reset LPS Setting */
++		padapter->pwrctrlpriv.LpsIdleCount = 0;
++		rtl8723a_set_FwJoinBssReport_cmd(padapter, 1);
++		rtl8723a_BT_mediastatus_notify(padapter, mstatus);
++		break;
++	case LPS_CTRL_DISCONNECT:
++		mstatus = 0;/* disconnect */
++		rtl8723a_BT_mediastatus_notify(padapter, mstatus);
++		if (!rtl8723a_BT_using_antenna_1(padapter))
++			LPS_Leave23a(padapter);
++		rtl8723a_set_FwJoinBssReport_cmd(padapter, 0);
++		break;
++	case LPS_CTRL_SPECIAL_PACKET:
++		pwrpriv->DelayLPSLastTimeStamp = jiffies;
++		rtl8723a_BT_specialpacket_notify(padapter);
++		if (!rtl8723a_BT_using_antenna_1(padapter))
++			LPS_Leave23a(padapter);
++		break;
++	case LPS_CTRL_LEAVE:
++		rtl8723a_BT_lps_leave(padapter);
++		if (!rtl8723a_BT_using_antenna_1(padapter))
++			LPS_Leave23a(padapter);
++		break;
++	default:
++		break;
  	}
- 
- 	ieee80211_set_qos_hdr(sdata, skb);
--	ieee80211_tx(sdata, skb, false, band);
-+	ieee80211_tx(sdata, skb, false);
  }
  
- static bool ieee80211_parse_tx_radiotap(struct sk_buff *skb)
-@@ -1757,7 +1753,8 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
- 				     sdata->vif.type))
- 		goto fail_rcu;
+@@ -1152,7 +1150,7 @@ static void rtw_chk_hi_queue_hdl(struct rtw_adapter *padapter)
  
--	ieee80211_xmit(sdata, skb, chandef->chan->band);
-+	info->band = chandef->chan->band;
-+	ieee80211_xmit(sdata, skb);
- 	rcu_read_unlock();
+ 			cnt++;
  
- 	return NETDEV_TX_OK;
-@@ -2220,8 +2217,9 @@ void __ieee80211_subif_start_xmit(struct sk_buff *skb,
+-			if (cnt>10)
++			if (cnt > 10)
+ 				break;
  
- 	info->flags = info_flags;
- 	info->ack_frame_id = info_id;
-+	info->band = band;
+ 			val = rtl8723a_chk_hi_queue_empty(padapter);
+@@ -1305,8 +1303,7 @@ int rtw_drvextra_cmd_hdl23a(struct rtw_adapter *padapter, const u8 *pbuf)
  
--	ieee80211_xmit(sdata, skb, band);
-+	ieee80211_xmit(sdata, skb);
- 	rcu_read_unlock();
+ 	pdrvextra_cmd = (struct drvextra_cmd_parm *)pbuf;
  
- 	return;
-@@ -2277,8 +2275,8 @@ static bool ieee80211_tx_pending_skb(struct ieee80211_local *local,
- 			dev_kfree_skb(skb);
- 			return true;
- 		}
--		result = ieee80211_tx(sdata, skb, true,
--				      chanctx_conf->def.chan->band);
-+		info->band = chanctx_conf->def.chan->band;
-+		result = ieee80211_tx(sdata, skb, true);
- 	} else {
- 		struct sk_buff_head skbs;
- 
-@@ -3059,6 +3057,7 @@ void __ieee80211_tx_skb_tid_band(struct ieee80211_sub_if_data *sdata,
- 	 * requirements are that we do not come into tx with bhs on.
- 	 */
- 	local_bh_disable();
--	ieee80211_xmit(sdata, skb, band);
-+	IEEE80211_SKB_CB(skb)->band = band;
-+	ieee80211_xmit(sdata, skb);
- 	local_bh_enable();
- }
+-	switch (pdrvextra_cmd->ec_id)
+-	{
++	switch (pdrvextra_cmd->ec_id) {
+ 	case DYNAMIC_CHK_WK_CID:
+ 		dynamic_chk_wk_hdl(padapter, pdrvextra_cmd->pbuf,
+ 				   pdrvextra_cmd->type_size);
 -- 
-1.9.1
+1.7.11.7
 
