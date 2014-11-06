@@ -1,27 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:52734 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751609AbaKKXvm (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:49359 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751176AbaKFPmb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Nov 2014 18:51:42 -0500
-From: Sujith Manoharan <sujith@msujith.org>
+	Thu, 6 Nov 2014 10:42:31 -0500
+Date: Thu, 6 Nov 2014 07:41:20 -0800
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Sanjeev Sharma <sanjeev_sharma@mentor.com>
+Cc: Larry.Finger@lwfinger.net, Jes.Sorensen@redhat.com,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] staging:rtl8723au: core: Fix error reported by
+ checkpatch.
+Message-ID: <20141106154120.GB19605@kroah.com> (sfid-20141106_164250_811995_8A795912)
+References: <wrfjy4rxzk5b.fsf@redhat.com>
+ <1415254573-3451-1-git-send-email-sanjeev_sharma@mentor.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Message-ID: <21602.41319.699818.553325@gargle.gargle.HOWL> (sfid-20141112_005147_684272_1962ED82)
-Date: Wed, 12 Nov 2014 05:23:11 +0530
-To: Oleksij Rempel <linux@rempel-privat.de>
-Cc: ath9k-devel@qca.qualcomm.com, nbd@openwrt.org, patro@cs.wisc.edu,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 00/21] make spectral code common for both ath9k drivers
-In-Reply-To: <1415260418-14321-1-git-send-email-linux@rempel-privat.de>
-References: <1415260418-14321-1-git-send-email-linux@rempel-privat.de>
+In-Reply-To: <1415254573-3451-1-git-send-email-sanjeev_sharma@mentor.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Oleksij Rempel wrote:
-> - makes spectral scan code common for both ath9k and ath9k_htc.
-> - add spectral scan support to ath9k_htc.
+Please specify the "error" in the subject in some way.
 
-The ath9k changes look good...
+On Thu, Nov 06, 2014 at 11:46:13AM +0530, Sanjeev Sharma wrote:
+> This is a patch to the rtw_cmd.c file that fixes following
+> error.
+> 
+> ERROR: spaces required around that '>' (ctx:WxV)
+> ERROR: that open brace { should be on the previous line
+> 
+> Signed-off-by: Sanjeev Sharma <Sanjeev_Sharma@mentor.com>
+> ---
+>  drivers/staging/rtl8723au/core/rtw_cmd.c | 83 +++++++++++++++-----------------
+>  1 file changed, 40 insertions(+), 43 deletions(-)
 
-Sujith
+This does two different things, please make it different patches.
+
+And you sent 2 patches, with no hint as to which one comes before which.
+Please resend all of them, correctly numbered in a series, so that I
+have a chance to get the order correct when applying them.
