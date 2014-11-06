@@ -1,55 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:55985 "EHLO
+Received: from s72.web-hosting.com ([198.187.29.22]:46003 "EHLO
 	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932085AbaKPAjk (ORCPT
+	with ESMTP id S1750936AbaKFPjh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Nov 2014 19:39:40 -0500
+	Thu, 6 Nov 2014 10:39:37 -0500
 From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH v2 00/11] ath9k patches
-Date: Sun, 16 Nov 2014 06:10:59 +0530
-Message-Id: <1416098470-14122-1-git-send-email-sujith@msujith.org> (sfid-20141116_013946_393565_297D5389)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <21595.38533.767426.846290@gargle.gargle.HOWL> (sfid-20141106_163941_144318_7C25307D)
+Date: Thu, 6 Nov 2014 21:10:53 +0530
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: New WARNING from mac80211
+In-Reply-To: <1415286217.17015.12.camel@sipsolutions.net>
+References: <545B8CD1.8020208@lwfinger.net>
+	<1415286217.17015.12.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Johannes Berg wrote:
+> That sounds like the driver is calling ieee80211_start_tx_ba_cb() [*]
+> when it was never requested to start aggregation?
+> 
+> [*] given the stack dump, it's actually calling
+> ieee80211_start_tx_ba_cb_irqsafe() which goes off to a workqueue and
+> then calls ieee80211_start_tx_ba_cb() from there
 
-Fixes for -next. Some of the patches have been
-posted earlier, this series addresses Felix's review
-comments.
+I think this is the race described here: https://patchwork.kernel.org/patch/5095061/
+
+I haven't tried any workaround or fix yet, but it looks like this
+race can be hit fairly often.
+
+https://dev.openwrt.org/ticket/9654
+https://dev.openwrt.org/ticket/11862
+https://dev.openwrt.org/ticket/13542
+
+etc. :-)
 
 Sujith
-
-Miaoqing Pan (1):
-  ath9k: Use new QCA953x initvals
-
-Sujith Manoharan (10):
-  ath9k: Update QCA953x initvals
-  ath9k: Fix LED configuration
-  ath9k: Enable TSF2 for generic HW timers
-  ath9k: Store the chip chainmask in HW capabilities
-  ath9k: Fix thermometer programming
-  ath9k: Clear offchannel state properly
-  ath9k: Cancel pending offchannel operations
-  ath9k: Handle failure to send NoA
-  ath9k: Adjust tbtt delta properly
-  ath9k: Move roc completion to the offchannel timer
-
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c   |   9 +-
- drivers/net/wireless/ath/ath9k/ar9003_hw.c       |  51 ++-
- drivers/net/wireless/ath/ath9k/ar953x_initvals.h | 498 +++++++++++++++++++++--
- drivers/net/wireless/ath/ath9k/ath9k.h           |   2 +
- drivers/net/wireless/ath/ath9k/channel.c         |  17 +-
- drivers/net/wireless/ath/ath9k/gpio.c            |   9 +-
- drivers/net/wireless/ath/ath9k/hw.c              |  43 +-
- drivers/net/wireless/ath/ath9k/hw.h              |   4 +
- drivers/net/wireless/ath/ath9k/init.c            |   3 +
- drivers/net/wireless/ath/ath9k/main.c            |  58 ++-
- drivers/net/wireless/ath/ath9k/pci.c             |   4 +-
- drivers/net/wireless/ath/ath9k/reg.h             |   3 +
- 12 files changed, 620 insertions(+), 81 deletions(-)
-
--- 
-2.1.3
-
