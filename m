@@ -1,54 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yh0-f47.google.com ([209.85.213.47]:54007 "EHLO
-	mail-yh0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751515AbaKYXMv convert rfc822-to-8bit (ORCPT
+Received: from mail-la0-f46.google.com ([209.85.215.46]:65380 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750931AbaKFDD7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Nov 2014 18:12:51 -0500
-Received: by mail-yh0-f47.google.com with SMTP id f73so786331yha.34
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Nov 2014 15:12:50 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1013439490.18867944.1416932462547.JavaMail.root@wmich.edu>
-References: <2109154365.18865892.1416932147808.JavaMail.root@wmich.edu> <1013439490.18867944.1416932462547.JavaMail.root@wmich.edu>
-From: Sergey Ryazanov <ryazanov.s.a@gmail.com>
-Date: Wed, 26 Nov 2014 02:12:30 +0300
-Message-ID: <CAHNKnsRhPW2YGSTvmD-_hPci7V0hqCGyUHy4CfFr5QQtsF=FGw@mail.gmail.com> (sfid-20141126_001254_498253_040DE6E8)
-Subject: Re: Setting WLAN RF Sensitivity value
-To: Mohammad Ali Ma Abu Shattal <mohammad.a.shattal@wmich.edu>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ilw@linux.intel.com
-Content-Type: text/plain; charset=US-ASCII
+	Wed, 5 Nov 2014 22:03:59 -0500
+Message-ID: <1415243033.5306.12.camel@marge.simpson.net> (sfid-20141106_040423_406305_DA829DB6)
+Subject: Re: [PATCH] rtlwifi: Add more checks for get_btc_status callback
+From: Mike Galbraith <umgwanakikbuti@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Murilo Opsfelder Araujo <mopsfelder@gmail.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Thadeu Cascardo <cascardo@cascardo.eti.br>,
+	troy_tan@realsil.com.cn
+Date: Thu, 06 Nov 2014 04:03:53 +0100
+In-Reply-To: <545A6894.7040506@lwfinger.net>
+References: <1414625302-3654-1-git-send-email-mopsfelder@gmail.com>
+	 <5451BED0.2060906@lwfinger.net>
+	 <1415178975.5402.66.camel@marge.simpson.net>
+	 <545A6894.7040506@lwfinger.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2014-11-25 19:21 GMT+03:00 Mohammad Ali Ma Abu Shattal
-<mohammad.a.shattal@wmich.edu>:
-> Dear Sir/Madam,
->
-> I'm working on a project in which we need to set and get RF sensitivity of WLAN device.
-Could you specify, what exactly parameter do you want to control? In
-the your askubuntu post, you refer to "iwconfig wlan0 sens" command,
-which can control too many aspects, including the selection of the
-best AP and the detection of channel busy condition. And actual
-parameter "depends on the hardware implementation" as said in iwconfig
-manpage.
+On Wed, 2014-11-05 at 12:12 -0600, Larry Finger wrote:
 
-> I tried to set other settings such as operation mode, txpower and frequency using Linux commands : "ioctl" and "iwconfig" and it works fine.
-Consider using NL80211 and "iw" utility, since IOCTL based
-wireless-extensions interface is deprecated.
+> Yes, I am aware that rtl8192se is failing, and now that I am back from vacation, 
+> I am working on the problem. If you want to use the driver with kernel 3.18, 
+> clone the repo at http://github.com/lwfinger/rtlwifi_new.git and build and 
+> install either the master or kernel_version branches. Both work.
 
-> Manufacturer of my device is Broadcom. It seems that either the hardware or the driver doesn't support setting and getting sensitivity. I need to know if there exists a device and/or device driver that support this feature. details of my current hardware and device driver are posted in the askubuntu question:
-> http://askubuntu.com/questions/553286/wlan-sensitivity-setting-is-not-supported
-> kindly send me your recommendation for such device or device driver.
->
-> best regards,
-> Mohammad
-> ----------------------------
-> Mohammad Abu Shattal
-> Ph.D Student
-> Department of Electrical & Computer Engineering
-> Western Michigan University
-> Kalamazoo, MI 49008
+Nah, no hurry.  My lappy is about to go on 4 weeks vacation, and has a
+bulging suitcase full of kernels to wear :)
 
--- 
-BR,
-Sergey
+-Mike
+
