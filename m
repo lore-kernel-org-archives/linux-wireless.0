@@ -1,49 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:37245 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752494AbaKAHEV (ORCPT
+Received: from mail-oi0-f48.google.com ([209.85.218.48]:36973 "EHLO
+	mail-oi0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751333AbaKFBLU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Nov 2014 03:04:21 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH] ath9k: Clear offchannel state properly
-Date: Sat,  1 Nov 2014 12:35:40 +0530
-Message-Id: <1414825540-9064-1-git-send-email-sujith@msujith.org> (sfid-20141101_080429_856856_4868987E)
+	Wed, 5 Nov 2014 20:11:20 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH 2/3 3.18] rtlwifi: Fix errors in descriptor manipulation
+Date: Wed,  5 Nov 2014 19:10:53 -0600
+Message-Id: <1415236254-12274-3-git-send-email-Larry.Finger@lwfinger.net> (sfid-20141106_021131_902468_F149E3F7)
+In-Reply-To: <1415236254-12274-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1415236254-12274-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+There are typos in the handling of the descriptor pointers where the wrong
+descriptor is referenced. There is also an error in which the pointer is
+incremented twice.
 
-When a pending roc or scan operation is cancelled,
-the offchannel operation is cleared, but the offchannel
-state in the main scheduler is not cleared. This causes
-problems since an active GO will try to process a stale
-offchannel request that was deferred earlier. Fix this
-by clearing the state when there is no pending offchannel
-(roc/scan) operation.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/net/wireless/ath/ath9k/channel.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/net/wireless/rtlwifi/pci.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index c7234d5..89ef61a 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -900,6 +900,11 @@ void ath_offchannel_next(struct ath_softc *sc)
- 		sc->offchannel.state = ATH_OFFCHANNEL_ROC_START;
- 		ath_chanctx_offchan_switch(sc, sc->offchannel.roc_chan);
- 	} else {
-+		spin_lock_bh(&sc->chan_lock);
-+		sc->sched.offchannel_pending = false;
-+		sc->sched.wait_switch = false;
-+		spin_unlock_bh(&sc->chan_lock);
-+
- 		ath_chanctx_switch(sc, ath_chanctx_get_oper_chan(sc, false),
- 				   NULL);
- 		sc->offchannel.state = ATH_OFFCHANNEL_IDLE;
+diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
+index 116f746..6d2b628 100644
+--- a/drivers/net/wireless/rtlwifi/pci.c
++++ b/drivers/net/wireless/rtlwifi/pci.c
+@@ -1375,9 +1375,9 @@ static void _rtl_pci_free_tx_ring(struct ieee80211_hw *hw,
+ 	ring->desc = NULL;
+ 	if (rtlpriv->use_new_trx_flow) {
+ 		pci_free_consistent(rtlpci->pdev,
+-				    sizeof(*ring->desc) * ring->entries,
++				    sizeof(*ring->buffer_desc) * ring->entries,
+ 				    ring->buffer_desc, ring->buffer_desc_dma);
+-		ring->desc = NULL;
++		ring->buffer_desc = NULL;
+ 	}
+ }
+ 
+@@ -1548,7 +1548,6 @@ int rtl_pci_reset_trx_ring(struct ieee80211_hw *hw)
+ 							 true,
+ 							 HW_DESC_TXBUFF_ADDR),
+ 						 skb->len, PCI_DMA_TODEVICE);
+-				ring->idx = (ring->idx + 1) % ring->entries;
+ 				kfree_skb(skb);
+ 				ring->idx = (ring->idx + 1) % ring->entries;
+ 			}
 -- 
-2.1.3
+2.1.2
 
