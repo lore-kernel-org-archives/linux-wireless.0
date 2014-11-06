@@ -1,57 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:39989 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754166AbaKXTPI (ORCPT
+Received: from mail-wg0-f51.google.com ([74.125.82.51]:37008 "EHLO
+	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751156AbaKFUCc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2014 14:15:08 -0500
-Date: Mon, 24 Nov 2014 14:00:32 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: Re: pull request: iwlwifi-next 2014-11-24
-Message-ID: <20141124190031.GD12375@tuxdriver.com> (sfid-20141124_201514_063942_469E4F18)
-References: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
+	Thu, 6 Nov 2014 15:02:32 -0500
+Received: by mail-wg0-f51.google.com with SMTP id l18so2019407wgh.24
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Nov 2014 12:02:30 -0800 (PST)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 1/6] staging: vt6655: baseband.h remove pDevice from struct vnt_private pointer
+Date: Thu,  6 Nov 2014 20:02:00 +0000
+Message-Id: <1415304125-5165-1-git-send-email-tvboxspy@gmail.com> (sfid-20141106_210258_810341_ECFE645D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 24, 2014 at 04:34:02PM +0200, Emmanuel Grumbach wrote:
-> Hi John,
-> 
-> I have a big batch here. New features were unblocked by the merge a
-> few patches in mac80211-next.git and I was away for 2 weeks.
-> I plan to have another pull request for wireless-next before the merge
-> window opens.
-> Details below - please pull.
-> 
-> Thanks,
-> 
-> The following changes since commit 9e6f3f472c8f95021ad048acc7cd3e40a827f8ce:
-> 
->   mwifiex: Add USB8766 support (2014-11-20 16:14:39 -0500)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git
-> tags/iwlwifi-next-for-john-2014-11-24
-> 
-> for you to fetch changes up to dcad8e4299bf81f8795b44677036dfa490c9fb15:
-> 
->   iwlwifi: update the secure mem space and for the CPUs (2014-11-24
-> 08:30:44 +0200)
-> 
-> ----------------------------------------------------------------
-> Major works are CSA and TDLS. On top of that I have a new
-> firmware API for scan and a few rate control improvements.
-> Johannes find a few tricks to improve our CPU utilization
-> and adds support for a new spin of 7265 called 7265D.
-> Along with this a few random things that don't stand out.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/baseband.h | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-Pulling now...
-
+diff --git a/drivers/staging/vt6655/baseband.h b/drivers/staging/vt6655/baseband.h
+index 6ce856c..c41bc33 100644
+--- a/drivers/staging/vt6655/baseband.h
++++ b/drivers/staging/vt6655/baseband.h
+@@ -80,11 +80,11 @@ void vnt_get_phy_field(struct vnt_private *, u32 frame_length,
+ bool BBbReadEmbedded(void __iomem *dwIoBase, unsigned char byBBAddr, unsigned char *pbyData);
+ bool BBbWriteEmbedded(void __iomem *dwIoBase, unsigned char byBBAddr, unsigned char byData);
+ 
+-void BBvSetShortSlotTime(struct vnt_private *pDevice);
+-void BBvSetVGAGainOffset(struct vnt_private *pDevice, unsigned char byData);
++void BBvSetShortSlotTime(struct vnt_private *);
++void BBvSetVGAGainOffset(struct vnt_private *, unsigned char byData);
+ 
+ /* VT3253 Baseband */
+-bool BBbVT3253Init(struct vnt_private *pDevice);
++bool BBbVT3253Init(struct vnt_private *);
+ void BBvSoftwareReset(void __iomem *dwIoBase);
+ void BBvPowerSaveModeON(void __iomem *dwIoBase);
+ void BBvPowerSaveModeOFF(void __iomem *dwIoBase);
+@@ -105,9 +105,9 @@ TimerState1CallBack(
+ 	unsigned long
+ );
+ 
+-void BBvAntennaDiversity(struct vnt_private *pDevice,
++void BBvAntennaDiversity(struct vnt_private *,
+ 			 unsigned char byRxRate, unsigned char bySQ3);
+ void
+-BBvClearAntDivSQ3Value(struct vnt_private *pDevice);
++BBvClearAntDivSQ3Value(struct vnt_private *);
+ 
+ #endif /* __BASEBAND_H__ */
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+2.1.0
+
