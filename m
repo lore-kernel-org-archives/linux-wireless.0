@@ -1,87 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:55634 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750780AbaK0OGY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Nov 2014 09:06:24 -0500
-From: Pali =?utf-8?q?Roh=C3=A1r?= <pali.rohar@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Grazvydas Ignotas <notasas@gmail.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Ming Lei <ming.lei@canonical.com>,
-	"Greg Kroah-Hartman" <gregkh@linuxfoundation.org>
-Subject: wl1251: NVS firmware data
-Date: Thu, 27 Nov 2014 15:06:20 +0100
-Cc: Pavel Machek <pavel@ucw.cz>,
-	Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-	Aaro Koskinen <aaro.koskinen@iki.fi>,
-	Kalle Valo <kvalo@adurom.com>,
-	Sebastian Reichel <sre@ring0.de>,
-	David Gnedt <david.gnedt@davizone.at>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart2511393.6NRFU7IPkM";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <201411271506.20457@pali> (sfid-20141127_150645_541421_4BED0FDB)
+Received: from mout.gmx.net ([212.227.15.15]:57589 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751330AbaKFHyP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Nov 2014 02:54:15 -0500
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: ath9k-devel@qca.qualcomm.com, sujith@msujith.org, nbd@openwrt.org,
+	patro@cs.wisc.edu, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 08/21] ath9k: add ath_ps_ops bindings
+Date: Thu,  6 Nov 2014 08:53:25 +0100
+Message-Id: <1415260418-14321-9-git-send-email-linux@rempel-privat.de> (sfid-20141106_085426_691224_B96A497B)
+In-Reply-To: <1415260418-14321-1-git-send-email-linux@rempel-privat.de>
+References: <1415260418-14321-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart2511393.6NRFU7IPkM
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+---
+ drivers/net/wireless/ath/ath9k/init.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
-Hello,
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index fe811b3..61232d0 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -88,6 +88,21 @@ static const struct ieee80211_tpt_blink ath9k_tpt_blink[] = {
+ 
+ static void ath9k_deinit_softc(struct ath_softc *sc);
+ 
++void ath9k_op_ps_wakeup(struct ath_common *common)
++{
++	ath9k_ps_wakeup((struct ath_softc *) common->priv);
++}
++
++void ath9k_op_ps_restore(struct ath_common *common)
++{
++	ath9k_ps_restore((struct ath_softc *) common->priv);
++}
++
++struct ath_ps_ops ath9k_ps_ops = {
++	.wakeup = ath9k_op_ps_wakeup,
++	.restore = ath9k_op_ps_restore,
++};
++
+ /*
+  * Read and write, they both share the same lock. We do this to serialize
+  * reads and writes on Atheros 802.11n PCI devices only. This is required
+@@ -540,6 +555,7 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
+ 
+ 	common->ops = &ah->reg_ops;
+ 	common->bus_ops = bus_ops;
++	common->ps_ops = &ath9k_ps_ops;
+ 	common->ah = ah;
+ 	common->hw = sc->hw;
+ 	common->priv = sc;
+-- 
+1.9.1
 
-wifi driver wl1251 needs NVS calibration data for working. These=20
-data are loaded by driver via request_firmware from userspace=20
-file: ti-connectivity/wl1251-nvs.bin. In linux-fimrware git tree=20
-there is generic wl1251-nvs.bin file which is used by default.
-
-Driver wl1251 is used on Nokia N900 cellphone for its wifi chip.=20
-This cellphone has one special MTD partition (called CAL) where=20
-are stored some configuration data in special binary (key-value)=20
-format. And there is also stored correct calibration data for=20
-specific device (each device has different data). It is preferred=20
-to use those data instead generic one (provided by linux-firmware=20
-git tree).
-
-Now my question is: How to correctly load calibration data from=20
-special Nokia N900 CAL partition into wl1251 kernel driver?
-
-By default kernel reads ti-connectivity/wl1251-nvs.bin file from=20
-VFS if exists without any userspace support. If it fails then it=20
-fallback to loading via udev.
-
-Reading correct data from CAL partition is not easy (structure is=20
-difficult), but there is open source program which can parse CAL=20
-partition and write NVS data to stdout. So adding this CAL parser=20
-into kernel is not good idea (program is GPLv3+ code --=20
-incompatible with kernel).
-
-So how to solve this problem? How to load correct NVS data from=20
-CAL partition into wl1251 driver?
-
-It is possible to tell kernel to use some helper userspace=20
-program for loading data and if it fails then fallback to direct=20
-loading? E.g first try to use model specific data and if it fails=20
-for some reasons then fallback to reading genetic data.
-
-=2D-=20
-Pali Roh=C3=A1r
-pali.rohar@gmail.com
-
---nextPart2511393.6NRFU7IPkM
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iEYEABECAAYFAlR3L9wACgkQi/DJPQPkQ1L/qQCgukIuGXsBlSf52W0+ktfjS83g
-kTMAnj1l7WkgutGJdPl3Y7VFRpRDm74t
-=DV3s
------END PGP SIGNATURE-----
-
---nextPart2511393.6NRFU7IPkM--
