@@ -1,227 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:28773 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752098AbaKYKZF (ORCPT
+Received: from mail-qa0-f47.google.com ([209.85.216.47]:65016 "EHLO
+	mail-qa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753820AbaKFWyZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Nov 2014 05:25:05 -0500
-Subject: [PATCH v3 2/2] ath10k: add memory dump debugfs interface
-To: <ath10k@lists.infradead.org>
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Date: Tue, 25 Nov 2014 12:24:48 +0200
-Message-ID: <20141125102448.3951.97429.stgit@potku.adurom.net> (sfid-20141125_112511_053641_5FA9FC9F)
-In-Reply-To: <20141125102302.3951.10641.stgit@potku.adurom.net>
-References: <20141125102302.3951.10641.stgit@potku.adurom.net>
+	Thu, 6 Nov 2014 17:54:25 -0500
+Message-ID: <545BFBB4.3040005@gmail.com> (sfid-20141106_235453_064071_6F5017A2)
+Date: Thu, 06 Nov 2014 20:52:36 -0200
+From: Murilo Opsfelder Araujo <mopsfelder@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Mike Galbraith <umgwanakikbuti@gmail.com>
+CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Thadeu Cascardo <cascardo@cascardo.eti.br>,
+	troy_tan@realsil.com.cn
+Subject: Re: [PATCH] rtlwifi: Add more checks for get_btc_status callback
+References: <1414625302-3654-1-git-send-email-mopsfelder@gmail.com>	 <5451BED0.2060906@lwfinger.net> <1415178975.5402.66.camel@marge.simpson.net> <545A6894.7040506@lwfinger.net> <545B5E19.7030704@gmail.com>
+In-Reply-To: <545B5E19.7030704@gmail.com>
+In-Reply-To: 545B5E19.7030704@gmail.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yanbo Li <yanbol@qti.qualcomm.com>
+On 11/06/2014 09:40 AM, Murilo Opsfelder Araujo wrote:
+> On 11/05/2014 04:12 PM, Larry Finger wrote:
+>> On 11/05/2014 03:16 AM, Mike Galbraith wrote:
+>>> On Wed, 2014-10-29 at 23:30 -0500, Larry Finger wrote:
+>>>> On 10/29/2014 06:28 PM, Murilo Opsfelder Araujo wrote:
+>>>>> This is a complement of commit 08054200117a95afc14c3d2ed3a38bf4e345bf78
+>>>>> "rtlwifi: Add check for get_btc_status callback".
+>>>>>
+>>>>> With this patch, next-20141029 at least does not panic with rtl8192se
+>>>>> device.
+>>>>>
+>>>>
+>>>> This patch is OK, but as noted it is not complete.
+>>>>
+>>>> I have patches to fix all the kernel panics for rtl8192se AND
+>>>> rtl8192ce. There
+>>>> are missing parts, but I would prefer submitting mine, which would
+>>>> conflict with
+>>>> this one. For that reason, NACK for this one, and please apply the
+>>>> set I am
+>>>> submitting now.
+>>>
+>>> It's all in there now, but my RTL8191SEvB is still dead.  Squabbling
+>>> with it isn't going all that well either.
+>>>
+>>> As soon as 38506ece rtlwifi: rtl_pci: Start modification for new drivers
+>>> is applied, explosions appear.  Subsequently applying...
+>>>
+>>> 08054200 rtlwifi: Add check for get_btc_status callback
+>>> c0386f15 rtlwifi: rtl8192ce: rtl8192de: rtl8192se: Fix handling for
+>>> missing get_btc_status
+>>> 50147969 rtlwifi: rtl8192se: Fix duplicate calls to
+>>> ieee80211_register_hw()
+>>> 30c5ccc6 rtlwifi: rtl8192se: Add missing section to read descriptor
+>>> setting
+>>> 75a916e1 rtlwifi: rtl8192se: Fix firmware loading
+>>>
+>>> ...fixes that mess up, but leaves the interface dead in the same manner
+>>> as if nothing has been reverted.  So it _seems_ the bustage lurks in
+>>> 38506ece somewhere.  Too bad it's non-dinky, and written in wifi-ese :)
+>>
+>> Yes, I am aware that rtl8192se is failing, and now that I am back from
+>> vacation, I am working on the problem. If you want to use the driver
+>> with kernel 3.18, clone the repo at
+>> http://github.com/lwfinger/rtlwifi_new.git and build and install either
+>> the master or kernel_version branches. Both work.
+>>
+>> I am in the process of trying to find what the crucial difference is
+>> between that repo and the kernel version.
+>>
+>> Larry
+>>
+>>
+> I'm sending to everyone so others can jump in as well.
+> 
+> Here are the steps I've followed.
+> 
+> Installed and booted my kernel:
+> 
+> $ sudo dpkg -i linux-image-3.18.0-rc3-next-20141105-panda_3.18.0-rc3-next-20141105-panda-1_amd64.deb linux-headers-3.18.0-rc3-next-20141105-panda_3.18.0-rc3-next-20141105-panda-1_amd64.deb
+> 
+> Built modules from Larry's github repository.
+> 
+> $ cd rtlwifi_new
+> $ make
+> $ sudo make install
+> 
+> $ sudo modprobe -rv rtl8192se
+> rmmod rtl8192se
+> rmmod rtl_pci
+> rmmod rtlwifi
+> rmmod mac80211
+> rmmod cfg80211
+> 
+> The module does not load:
+> 
+> $ sudo modprobe -v rtl8192se
+> insmod /lib/modules/3.18.0-rc3-next-20141105-panda/kernel/net/wireless/cfg80211.ko
+> insmod /lib/modules/3.18.0-rc3-next-20141105-panda/kernel/net/mac80211/mac80211.ko
+> insmod /lib/modules/3.18.0-rc3-next-20141105-panda/kernel/drivers/net/wireless/rtlwifi/rtlwifi.ko
+> insmod /lib/modules/3.18.0-rc3-next-20141105-panda/kernel/drivers/net/wireless/rtlwifi/rtl_pci.ko
+> insmod /lib/modules/3.18.0-rc3-next-20141105-panda/extra/rtl8192se.ko
+> ERROR: could not insert 'rtl8192se': Invalid argument
+> 
+> And /var/log/messages showed:
+> 
+> Nov  5 22:28:01 laptop kernel: [  301.276806] rtl8192se: disagrees about version of symbol rtl_process_phyinfo
+> Nov  5 22:28:01 laptop kernel: [  301.276812] rtl8192se: Unknown symbol rtl_process_phyinfo (err -22)
+> Nov  5 22:28:01 laptop kernel: [  301.276864] rtl8192se: disagrees about version of symbol rtl_get_tcb_desc
+> Nov  5 22:28:01 laptop kernel: [  301.276866] rtl8192se: Unknown symbol rtl_get_tcb_desc (err -22)
+> 
 
-Add mem_val debugfs file for dumping the firmware (target) memory and also for
-writing to the memory. The firmware memory is accessed through one file which
-uses position of the file as the firmware memory address. For example, with dd
-use skip parameter for the address.
+Here is what I did in order to get the rtl8192se from Larry's repo to
+work:
 
-Beucase target memory width is 32 bits it's strongly recommended to use
-blocksize divisable with 4 when using this interface. For example, when using
-dd use bs=4 to set the block size to 4 and remember to divide both count and
-skip values with four.
+$ cd rtlwifi_new
+$ make
 
-To read 4 kB chunk from address 0x400000:
+$ sudo modprobe -rv rtl8192se
+rmmod rtl8192se
+rmmod rtl_pci
+rmmod rtlwifi
+rmmod mac80211
+rmmod cfg80211
 
-dd if=mem_value bs=4 count=1024 skip=1048576 | xxd -g1
+$ sudo modprobe -v cfg80211
+insmod /lib/modules/3.18.0-rc3-next-20141106-panda/kernel/net/wireless/cfg80211.ko
 
-To write value 0x01020304 to address 0x400400:
+$ sudo modprobe -v mac80211
+insmod /lib/modules/3.18.0-rc3-next-20141106-panda/kernel/net/mac80211/mac80211.ko
 
-echo 0x01020304 | xxd -r | dd of=mem_value bs=4 seek=1048832
+$ sudo insmod ./rtlwifi.ko
+$ sudo insmod ./rtl_pci.ko
+$ sudo insmod ./rtl8192se/rtl8192se.ko
 
-To read 4 KB chunk of memory and then write back after edit:
+Cascardo helped me to investigate this and the issue was that modprobe
+was loading the core rtl drivers from the next-20141105 and the
+rtl8192se from Larry's repo.  Thus, rtl8192se didn't have all its
+required symbols at loading time.
 
-dd if=mem_value of=tmp.bin bs=4 count=1024 skip=1048576
-emacs tmp.bin
-dd if=tmp.bin of=mem_value bs=4 count=1024 seek=1048576
+Loading the drivers in reverse order using insmod did the trick.
 
-Signed-off-by: Yanbo Li <yanbol@qti.qualcomm.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/debug.c |  114 +++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/hif.h   |   11 +++
- drivers/net/wireless/ath/ath10k/pci.c   |    1 
- 3 files changed, 126 insertions(+)
+Larry, your rtl8192se from rtlwifi_new repository is working pretty
+fine on my hardware.  I'm looking forward to see that code landing
+linux 3.18.
 
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index d0397d119862..ff831ca507f7 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -1047,6 +1047,117 @@ static const struct file_operations fops_reg_value = {
- 	.llseek = default_llseek,
- };
- 
-+static ssize_t ath10k_mem_value_read(struct file *file,
-+				     char __user *user_buf,
-+				     size_t count, loff_t *ppos)
-+{
-+	struct ath10k *ar = file->private_data;
-+	u8 *buf;
-+	int ret;
-+
-+	if (*ppos < 0)
-+		return -EINVAL;
-+
-+	if (!count)
-+		return 0;
-+
-+	mutex_lock(&ar->conf_mutex);
-+
-+	buf = vmalloc(count);
-+	if (!buf) {
-+		ret = -ENOMEM;
-+		goto exit;
-+	}
-+
-+	if (ar->state != ATH10K_STATE_ON &&
-+	    ar->state != ATH10K_STATE_UTF) {
-+		ret = -ENETDOWN;
-+		goto exit;
-+	}
-+
-+	ret = ath10k_hif_diag_read(ar, *ppos, buf, count);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to read address 0x%08x via diagnose window fnrom debugfs: %d\n",
-+			    (u32)(*ppos), ret);
-+		goto exit;
-+	}
-+
-+	ret = copy_to_user(user_buf, buf, count);
-+	if (ret) {
-+		ret = -EFAULT;
-+		goto exit;
-+	}
-+
-+	count -= ret;
-+	*ppos += count;
-+	ret = count;
-+
-+exit:
-+	vfree(buf);
-+	mutex_unlock(&ar->conf_mutex);
-+
-+	return ret;
-+}
-+
-+static ssize_t ath10k_mem_value_write(struct file *file,
-+				      const char __user *user_buf,
-+				      size_t count, loff_t *ppos)
-+{
-+	struct ath10k *ar = file->private_data;
-+	u8 *buf;
-+	int ret;
-+
-+	if (*ppos < 0)
-+		return -EINVAL;
-+
-+	if (!count)
-+		return 0;
-+
-+	mutex_lock(&ar->conf_mutex);
-+
-+	buf = vmalloc(count);
-+	if (!buf) {
-+		ret = -ENOMEM;
-+		goto exit;
-+	}
-+
-+	if (ar->state != ATH10K_STATE_ON &&
-+	    ar->state != ATH10K_STATE_UTF) {
-+		ret = -ENETDOWN;
-+		goto exit;
-+	}
-+
-+	ret = copy_from_user(buf, user_buf, count);
-+	if (ret) {
-+		ret = -EFAULT;
-+		goto exit;
-+	}
-+
-+	ret = ath10k_hif_diag_write(ar, *ppos, buf, count);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to write address 0x%08x via diagnose window from debugfs: %d\n",
-+			    (u32)(*ppos), ret);
-+		goto exit;
-+	}
-+
-+	*ppos += count;
-+	ret = count;
-+
-+exit:
-+	vfree(buf);
-+	mutex_unlock(&ar->conf_mutex);
-+
-+	return ret;
-+}
-+
-+static const struct file_operations fops_mem_value = {
-+	.read = ath10k_mem_value_read,
-+	.write = ath10k_mem_value_write,
-+	.open = simple_open,
-+	.owner = THIS_MODULE,
-+	.llseek = default_llseek,
-+};
-+
- static int ath10k_debug_htt_stats_req(struct ath10k *ar)
- {
- 	u64 cookie;
-@@ -1754,6 +1865,9 @@ int ath10k_debug_register(struct ath10k *ar)
- 	debugfs_create_file("reg_value", S_IRUSR | S_IWUSR,
- 			    ar->debug.debugfs_phy, ar, &fops_reg_value);
- 
-+	debugfs_create_file("mem_value", S_IRUSR | S_IWUSR,
-+			    ar->debug.debugfs_phy, ar, &fops_mem_value);
-+
- 	debugfs_create_file("chip_id", S_IRUSR, ar->debug.debugfs_phy,
- 			    ar, &fops_chip_id);
- 
-diff --git a/drivers/net/wireless/ath/ath10k/hif.h b/drivers/net/wireless/ath/ath10k/hif.h
-index bad071906540..6ac552304546 100644
---- a/drivers/net/wireless/ath/ath10k/hif.h
-+++ b/drivers/net/wireless/ath/ath10k/hif.h
-@@ -48,6 +48,8 @@ struct ath10k_hif_ops {
- 	int (*diag_read)(struct ath10k *ar, u32 address, void *buf,
- 			 size_t buf_len);
- 
-+	int (*diag_write)(struct ath10k *ar, u32 address, const void *data,
-+			  int nbytes);
- 	/*
- 	 * API to handle HIF-specific BMI message exchanges, this API is
- 	 * synchronous and only allowed to be called from a context that
-@@ -113,6 +115,15 @@ static inline int ath10k_hif_diag_read(struct ath10k *ar, u32 address, void *buf
- 	return ar->hif.ops->diag_read(ar, address, buf, buf_len);
- }
- 
-+static inline int ath10k_hif_diag_write(struct ath10k *ar, u32 address,
-+					const void *data, int nbytes)
-+{
-+	if (!ar->hif.ops->diag_write)
-+		return -EOPNOTSUPP;
-+
-+	return ar->hif.ops->diag_write(ar, address, data, nbytes);
-+}
-+
- static inline int ath10k_hif_exchange_bmi_msg(struct ath10k *ar,
- 					      void *request, u32 request_len,
- 					      void *response, u32 *response_len)
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 328ab6c5d053..0816098af578 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -1988,6 +1988,7 @@ static int ath10k_pci_hif_resume(struct ath10k *ar)
- static const struct ath10k_hif_ops ath10k_pci_hif_ops = {
- 	.tx_sg			= ath10k_pci_hif_tx_sg,
- 	.diag_read		= ath10k_pci_hif_diag_read,
-+	.diag_write		= ath10k_pci_diag_write_mem,
- 	.exchange_bmi_msg	= ath10k_pci_hif_exchange_bmi_msg,
- 	.start			= ath10k_pci_hif_start,
- 	.stop			= ath10k_pci_hif_stop,
+Thanks everyone for the help and support.  At least now, I have a
+workaround.
 
+Apreciated!
+
+-- 
+Murilo
