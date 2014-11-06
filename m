@@ -1,49 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:57511 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:41026 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751751AbaKKKjM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Nov 2014 05:39:12 -0500
-Message-ID: <1415702338.2163.5.camel@sipsolutions.net> (sfid-20141111_113932_732081_5B762C06)
-Subject: Re: [PATCH 1/1] linux-wireless: Added psk in struct
- cfg80211_connect_params needed for offloading 4way handshake to driver
+	id S1750828AbaKFLop (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Nov 2014 06:44:45 -0500
+Message-ID: <1415274279.17015.2.camel@sipsolutions.net> (sfid-20141106_124448_655287_719CC28B)
+Subject: Re: [PATCH v2] mac80211: Fix regression that triggers a kernel BUG
+ with CCMP
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "Gautam (Gautam Kumar) Shukla" <gautams@broadcom.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"davem@davemloft.net" <davem@davemloft.net>,
-	"linux-api@vger.kernel.org" <linux-api@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	Jithu Jance <jithu@broadcom.com>,
-	Sreenath S <sreenats@broadcom.com>,
-	Vladimir Kondratiev <vkondrat@qca.qualcomm.com>
-Date: Tue, 11 Nov 2014 11:38:58 +0100
-In-Reply-To: <5461E67E.7010408@broadcom.com>
-References: <DF163EE1A432BF4BBE6B2088220663A67437BD@SJEXCHMB06.corp.ad.broadcom.com>
-		 <1415698161.2163.0.camel@sipsolutions.net> <5461DCC9.5050702@broadcom.com>
-	 <1415700220.2163.3.camel@sipsolutions.net> <5461E67E.7010408@broadcom.com>
+To: Ronald Wahl <ronald.wahl@raritan.com>
+Cc: linux-wireless@vger.kernel.org,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Date: Thu, 06 Nov 2014 12:44:39 +0100
+In-Reply-To: <1415271133-6588-1-git-send-email-ronald.wahl@raritan.com>
+References: <1415271133-6588-1-git-send-email-ronald.wahl@raritan.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-11-11 at 11:35 +0100, Arend van Spriel wrote:
+On Thu, 2014-11-06 at 11:52 +0100, Ronald Wahl wrote:
+> Commit 7ec7c4a9a686c608315739ab6a2b0527a240883c (mac80211: port CCMP to
+> cryptoapi's CCM driver) introduced a regression when decrypting empty
+> packets (data_len == 0). This will lead to backtraces like:
 
-> What did pop up is the wiphy flags vs. nl80211 feature flags. When that
-> comes up it looks like 'potAtoes, potaetoes' to me.
-> 
-> So is there are clear design rule for when to use which flag. For me the
-> wiphy object represents the device/firmware and 4-way handshake offload
-> support is determined by what the device/firmware supports.
-
-There are three types of flags:
-
- * wiphy flag attributes - deprecated as far as I'm concerned
- * wiphy nl80211 feature flags - much easier to use in kernel (and
-userspace)
- * nl80211 protocol flags - only one exists
-                            (NL80211_PROTOCOL_FEATURE_SPLIT_WIPHY_DUMP)
+Applied, thanks.
 
 johannes
 
