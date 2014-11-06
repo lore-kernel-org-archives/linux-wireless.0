@@ -1,35 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:49817 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750828AbaKFWct (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Nov 2014 17:32:49 -0500
-Message-ID: <1415313166.17015.20.camel@sipsolutions.net> (sfid-20141106_233252_897951_F9D997A2)
-Subject: Re: [PATCH] mac80211: add back support for radiotap vendor
- namespace data
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 06 Nov 2014 23:32:46 +0100
-In-Reply-To: <545BF6B5.6050205@candelatech.com>
-References: <1415312956-9442-1-git-send-email-johannes@sipsolutions.net>
-	 <545BF6B5.6050205@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:52576 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751781AbaKFVFk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Nov 2014 16:05:40 -0500
+Message-ID: <545BE2A1.1040806@broadcom.com> (sfid-20141106_220820_616622_E40148F8)
+Date: Thu, 6 Nov 2014 22:05:37 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+CC: Ronald Wahl <ronald.wahl@raritan.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>,
+	Christian Lamparter <chunkeey@googlemail.com>
+Subject: Re: [PATCH] mac80211: Fix regression that triggers a kernel BUG with
+ CCMP
+References: <1415267752-4704-1-git-send-email-ronald.wahl@raritan.com>	<1415268135.1884.1.camel@sipsolutions.net>	<545B6AD3.8020301@broadcom.com>	<1415277562.17015.4.camel@sipsolutions.net>	<545B7290.6060409@raritan.com>	<1415279690.17015.7.camel@sipsolutions.net>	<545B7CB2.4080507@raritan.com> <CAKv+Gu-GE7R204_J9g4pumvuW1zA1ijVk20-5heCb9yoUuR3fg@mail.gmail.com>
+In-Reply-To: <CAKv+Gu-GE7R204_J9g4pumvuW1zA1ijVk20-5heCb9yoUuR3fg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-11-06 at 14:31 -0800, Ben Greear wrote:
-> On 11/06/2014 02:29 PM, Johannes Berg wrote:
-> > From: Johannes Berg <johannes.berg@intel.com>
-> > 
-> > Radiotap vendor namespace data might still be useful, but we
-> > reverted it because it used too much space in the RX status.
-> > Put it back, but address the space problem by using a single
-> > but only and putting everything else into the skb->data.
-> 
->   ^^ typo?
+On 11/06/14 14:55, Ard Biesheuvel wrote:
+> On 6 November 2014 14:50, Ronald Wahl<ronald.wahl@raritan.com>  wrote:
+>> On 06.11.2014 14:14, Johannes Berg wrote:
+>>>
+>>> On Thu, 2014-11-06 at 14:07 +0100, Ronald Wahl wrote:
+>>>
+>>>> But there are LTS kernels not maintained by Greg like 3.12 and 3.16. How
+>>>> about these? If sending patches to stable@kernel org is optional then
+>>>> it's better to kill that list or silently drop emails send to this list
+>>>> so no errors are returned for this address.
+>>>
+>>>
+>>> They can pick it up the same way though, no? Actually I think they
+>>> usually pick it up from Greg's tree anyway :)
+>>
+>>
+>> "Can" and "do" are different things. And you "think" you know what others
+>> people do but do you really "know" it? Anyway your original comment sounded
+>> a bit like "avoid sending it to the stable kernel mailinglist otherwise
+>> unwanted things might happen". In the end this raises the question why that
+>> stable kernel mailing still list exists or why there is no general rule not
+>> to send mails to it.
+>>
+>> So in the end that currently means that it is not wrong to send mail to
+>> stable@vger.kernel.org but it is your opinion that it is just not really
+>> necessary, right?
+>>
+>
+> You used to get an autoreply like this when cc'ing stable@ directly
+>
+> """
+> <formletter>
+>
+> This is not the correct way to submit patches for inclusion in the
+> stable kernel tree.  Please read Documentation/stable_kernel_rules.txt
+> for how to do this properly.
+>
+> </formletter>
+> """
+>
+> You are only supposed to send patches to the mailing list if they are
+> already upstream, i.e., if you know the upstream commit id of the
+> patch.
 
-yeah, should say "single bit", thanks!
+Actually, adding the "Cc: stable@vger.kernel.org" tag will assure that 
+Greg picks it up automatically from upstream thus no need to send the 
+patch to stable provided it will apply to stable trees as is.
 
-johannes
-
+Regards,
+Arend
