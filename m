@@ -1,201 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:59835 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752075AbaKIQuk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Nov 2014 11:50:40 -0500
-Received: by mail-wi0-f176.google.com with SMTP id h11so8431866wiw.15
-        for <linux-wireless@vger.kernel.org>; Sun, 09 Nov 2014 08:50:38 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 10/16] mac80211: prepare TDLS mgmt code for channel-switch templates
-Date: Sun,  9 Nov 2014 18:50:16 +0200
-Message-Id: <1415551822-20121-10-git-send-email-arik@wizery.com> (sfid-20141109_181321_483809_E43279B4)
-In-Reply-To: <1415551822-20121-1-git-send-email-arik@wizery.com>
-References: <1415551822-20121-1-git-send-email-arik@wizery.com>
+Received: from mx1.redhat.com ([209.132.183.28]:45429 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752384AbaKFKaw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Nov 2014 05:30:52 -0500
+Date: Thu, 6 Nov 2014 11:27:53 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Ronald Wahl <ronald.wahl@raritan.com>
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
+	Mike Romberg <mike-romberg@comcast.net>
+Subject: Re: [PATCH] rt2800: fix RT5592 TX power settings regression
+Message-ID: <20141106102753.GA1891@redhat.com> (sfid-20141106_113059_128646_E44DDBD1)
+References: <1415207010-9622-1-git-send-email-ronald.wahl@raritan.com>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="Qxx1br4bt0+wmkIi"
+In-Reply-To: <1415207010-9622-1-git-send-email-ronald.wahl@raritan.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Split the data-generating from the Tx-sending functionality, as we do
-not want to send templates to the lower driver. Also add an optional
-chandef argument to the data-generating portion. It will be used for
-channel-switch templates.
 
-Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- net/mac80211/tdls.c | 82 +++++++++++++++++++++++++++++++++++++----------------
- 1 file changed, 57 insertions(+), 25 deletions(-)
+--Qxx1br4bt0+wmkIi
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
-index 4554bdc..fa141ae 100644
---- a/net/mac80211/tdls.c
-+++ b/net/mac80211/tdls.c
-@@ -453,7 +453,8 @@ static void ieee80211_tdls_add_ies(struct ieee80211_sub_if_data *sdata,
- 				   struct sk_buff *skb, const u8 *peer,
- 				   u8 action_code, u16 status_code,
- 				   bool initiator, const u8 *extra_ies,
--				   size_t extra_ies_len)
-+				   size_t extra_ies_len, u8 oper_class,
-+				   struct cfg80211_chan_def *chandef)
- {
- 	switch (action_code) {
- 	case WLAN_TDLS_SETUP_REQUEST:
-@@ -589,22 +590,19 @@ ieee80211_prep_tdls_direct(struct wiphy *wiphy, struct net_device *dev,
- 	return 0;
- }
- 
--static int
--ieee80211_tdls_prep_mgmt_packet(struct wiphy *wiphy, struct net_device *dev,
--				const u8 *peer, u8 action_code,
--				u8 dialog_token, u16 status_code,
--				u32 peer_capability, bool initiator,
--				const u8 *extra_ies, size_t extra_ies_len)
-+static struct sk_buff *
-+ieee80211_tdls_build_mgmt_packet_data(struct ieee80211_sub_if_data *sdata,
-+				      const u8 *peer, u8 action_code,
-+				      u8 dialog_token, u16 status_code,
-+				      bool initiator, const u8 *extra_ies,
-+				      size_t extra_ies_len, u8 oper_class,
-+				      struct cfg80211_chan_def *chandef)
- {
--	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	struct ieee80211_local *local = sdata->local;
--	struct sk_buff *skb = NULL;
--	u32 flags = 0;
--	bool send_direct;
--	struct sta_info *sta;
-+	struct sk_buff *skb;
- 	int ret;
- 
--	skb = netdev_alloc_skb(dev,
-+	skb = netdev_alloc_skb(sdata->dev,
- 			       local->hw.extra_tx_headroom +
- 			       max(sizeof(struct ieee80211_mgmt),
- 				   sizeof(struct ieee80211_tdls_data)) +
-@@ -618,7 +616,7 @@ ieee80211_tdls_prep_mgmt_packet(struct wiphy *wiphy, struct net_device *dev,
- 			       extra_ies_len +
- 			       sizeof(struct ieee80211_tdls_lnkie));
- 	if (!skb)
--		return -ENOMEM;
-+		return NULL;
- 
- 	skb_reserve(skb, local->hw.extra_tx_headroom);
- 
-@@ -628,16 +626,16 @@ ieee80211_tdls_prep_mgmt_packet(struct wiphy *wiphy, struct net_device *dev,
- 	case WLAN_TDLS_SETUP_CONFIRM:
- 	case WLAN_TDLS_TEARDOWN:
- 	case WLAN_TDLS_DISCOVERY_REQUEST:
--		ret = ieee80211_prep_tdls_encap_data(wiphy, dev, peer,
-+		ret = ieee80211_prep_tdls_encap_data(local->hw.wiphy,
-+						     sdata->dev, peer,
- 						     action_code, dialog_token,
- 						     status_code, skb);
--		send_direct = false;
- 		break;
- 	case WLAN_PUB_ACTION_TDLS_DISCOVER_RES:
--		ret = ieee80211_prep_tdls_direct(wiphy, dev, peer, action_code,
-+		ret = ieee80211_prep_tdls_direct(local->hw.wiphy, sdata->dev,
-+						 peer, action_code,
- 						 dialog_token, status_code,
- 						 skb);
--		send_direct = true;
- 		break;
- 	default:
- 		ret = -ENOTSUPP;
-@@ -647,6 +645,30 @@ ieee80211_tdls_prep_mgmt_packet(struct wiphy *wiphy, struct net_device *dev,
- 	if (ret < 0)
- 		goto fail;
- 
-+	ieee80211_tdls_add_ies(sdata, skb, peer, action_code, status_code,
-+			       initiator, extra_ies, extra_ies_len, oper_class,
-+			       chandef);
-+	return skb;
-+
-+fail:
-+	dev_kfree_skb(skb);
-+	return NULL;
-+}
-+
-+static int
-+ieee80211_tdls_prep_mgmt_packet(struct wiphy *wiphy, struct net_device *dev,
-+				const u8 *peer, u8 action_code, u8 dialog_token,
-+				u16 status_code, u32 peer_capability,
-+				bool initiator, const u8 *extra_ies,
-+				size_t extra_ies_len, u8 oper_class,
-+				struct cfg80211_chan_def *chandef)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct sk_buff *skb = NULL;
-+	struct sta_info *sta;
-+	u32 flags = 0;
-+	int ret = 0;
-+
- 	rcu_read_lock();
- 	sta = sta_info_get(sdata, peer);
- 
-@@ -691,9 +713,17 @@ ieee80211_tdls_prep_mgmt_packet(struct wiphy *wiphy, struct net_device *dev,
- 	if (ret < 0)
- 		goto fail;
- 
--	ieee80211_tdls_add_ies(sdata, skb, peer, action_code, status_code,
--			       initiator, extra_ies, extra_ies_len);
--	if (send_direct) {
-+	skb = ieee80211_tdls_build_mgmt_packet_data(sdata, peer, action_code,
-+						    dialog_token, status_code,
-+						    initiator, extra_ies,
-+						    extra_ies_len, oper_class,
-+						    chandef);
-+	if (!skb) {
-+		ret = -EINVAL;
-+		goto fail;
-+	}
-+
-+	if (action_code == WLAN_PUB_ACTION_TDLS_DISCOVER_RES) {
- 		ieee80211_tx_skb(sdata, skb);
- 		return 0;
- 	}
-@@ -720,7 +750,7 @@ ieee80211_tdls_prep_mgmt_packet(struct wiphy *wiphy, struct net_device *dev,
- 	 * packet through the AP.
+On Wed, Nov 05, 2014 at 06:03:30PM +0100, Ronald Wahl wrote:
+> Commit cee2c7315f60beeff6137ee59e99acc77d636eeb (rt2800: fix RT5390 &
+> RT3290 TX power settings regression) needs to be extended for the RT5592
+> chipset as well. But at least for the RT5592 the existing regression fix is
+> not right because the value returned from rt2800_get_gain_calibration_delta()
+> is bogus as it is generated by an unappropriate algorithm. This can cause
+> severe connection issues with sticks that have external ALC enabled like the
+> Netis WF2150 because of too low TX power at least during the scan process.
+> 
+> So the fix for now is not to call rt2800_get_gain_calibration_delta()
+> for the RT5592 chipset. I do not touch the existing regression fix for
+> RT5390 & RT3290 but I think they may need a rework as well.
+
+Thanks for the patch, but I prefer to call rt2800_get_gain_calibration_delta()
+on chips that we know it is needed for them, something like in attached
+patch
+
+Mike, since you are cee2c7315f reporter, could you test the attached patch
+does not break driver functioning on your H/W.
+
+Thanks
+Stanislaw
+
+
+
+--Qxx1br4bt0+wmkIi
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="rt2800.diff"
+
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 9f57a2d..81ee481 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -4119,7 +4119,20 @@ static void rt2800_config_txpower_rt28xx(struct rt2x00_dev *rt2x00dev,
+ 	 * expected. We adjust it, based on TSSI reference and boundaries values
+ 	 * provided in EEPROM.
  	 */
- 	if ((action_code == WLAN_TDLS_TEARDOWN) &&
--	    (local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS)) {
-+	    (sdata->local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS)) {
- 		struct sta_info *sta = NULL;
- 		bool try_resend; /* Should we keep skb for possible resend */
+-	delta += rt2800_get_gain_calibration_delta(rt2x00dev);
++	switch (rt2x00dev->chip.rt) {
++	case RT2860:
++	case RT2872:
++	case RT2883:
++	case RT3070:
++	case RT3071:
++	case RT3090:
++	case RT3572:
++		delta += rt2800_get_gain_calibration_delta(rt2x00dev);
++		break;
++	default:
++		/* TODO: temperature compensation code for other chips. */
++		break;
++	}
  
-@@ -802,7 +832,8 @@ ieee80211_tdls_mgmt_setup(struct wiphy *wiphy, struct net_device *dev,
- 	ret = ieee80211_tdls_prep_mgmt_packet(wiphy, dev, peer, action_code,
- 					      dialog_token, status_code,
- 					      peer_capability, initiator,
--					      extra_ies, extra_ies_len);
-+					      extra_ies, extra_ies_len, 0,
-+					      NULL);
- 	if (ret < 0)
- 		goto exit;
+ 	/*
+ 	 * Decrease power according to user settings, on devices with unknown
+@@ -4136,25 +4149,19 @@ static void rt2800_config_txpower_rt28xx(struct rt2x00_dev *rt2x00dev,
+ 	 * TODO: we do not use +6 dBm option to do not increase power beyond
+ 	 * regulatory limit, however this could be utilized for devices with
+ 	 * CAPABILITY_POWER_LIMIT.
+-	 *
+-	 * TODO: add different temperature compensation code for RT3290 & RT5390
+-	 * to allow to use BBP_R1 for those chips.
+-	 */
+-	if (!rt2x00_rt(rt2x00dev, RT3290) &&
+-	    !rt2x00_rt(rt2x00dev, RT5390)) {
+-		rt2800_bbp_read(rt2x00dev, 1, &r1);
+-		if (delta <= -12) {
+-			power_ctrl = 2;
+-			delta += 12;
+-		} else if (delta <= -6) {
+-			power_ctrl = 1;
+-			delta += 6;
+-		} else {
+-			power_ctrl = 0;
+-		}
+-		rt2x00_set_field8(&r1, BBP1_TX_POWER_CTRL, power_ctrl);
+-		rt2800_bbp_write(rt2x00dev, 1, r1);
++	 */
++	if (delta <= -12) {
++		power_ctrl = 2;
++		delta += 12;
++	} else if (delta <= -6) {
++		power_ctrl = 1;
++		delta += 6;
++	} else {
++		power_ctrl = 0;
+ 	}
++	rt2800_bbp_read(rt2x00dev, 1, &r1);
++	rt2x00_set_field8(&r1, BBP1_TX_POWER_CTRL, power_ctrl);
++	rt2800_bbp_write(rt2x00dev, 1, r1);
  
-@@ -841,7 +872,8 @@ ieee80211_tdls_mgmt_teardown(struct wiphy *wiphy, struct net_device *dev,
- 	ret = ieee80211_tdls_prep_mgmt_packet(wiphy, dev, peer, action_code,
- 					      dialog_token, status_code,
- 					      peer_capability, initiator,
--					      extra_ies, extra_ies_len);
-+					      extra_ies, extra_ies_len, 0,
-+					      NULL);
- 	if (ret < 0)
- 		sdata_err(sdata, "Failed sending TDLS teardown packet %d\n",
- 			  ret);
-@@ -911,7 +943,7 @@ int ieee80211_tdls_mgmt(struct wiphy *wiphy, struct net_device *dev,
- 						      status_code,
- 						      peer_capability,
- 						      initiator, extra_ies,
--						      extra_ies_len);
-+						      extra_ies_len, 0, NULL);
- 		break;
- 	default:
- 		ret = -EOPNOTSUPP;
--- 
-1.9.1
+ 	offset = TX_PWR_CFG_0;
+ 
 
+--Qxx1br4bt0+wmkIi--
