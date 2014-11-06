@@ -1,59 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:65351 "EHLO mga14.intel.com"
+Received: from mout.gmx.net ([212.227.15.18]:53871 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751155AbaKDJXn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Nov 2014 04:23:43 -0500
-From: "Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
-To: Krishna Chaitanya <chaitanya.mgit@gmail.com>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH] mac80211: Increase uapsd max SP frames number
-Date: Tue, 4 Nov 2014 09:23:39 +0000
-Message-ID: <B2CD83211F5FDD478D7EFFF030D107ED2AE2FDE7@hasmsx107.ger.corp.intel.com> (sfid-20141104_102348_309965_1AC1C615)
-References: <1415090436-12588-1-git-send-email-emmanuel.grumbach@intel.com>
- <CABPxzYKfoO+NYi7Zs+5t6mRU+XwW5u=dKiBMsrzZ5VLO3ABDAg@mail.gmail.com>
-In-Reply-To: <CABPxzYKfoO+NYi7Zs+5t6mRU+XwW5u=dKiBMsrzZ5VLO3ABDAg@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	id S1751947AbaKFHyn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Nov 2014 02:54:43 -0500
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: ath9k-devel@qca.qualcomm.com, sujith@msujith.org, nbd@openwrt.org,
+	patro@cs.wisc.edu, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 16/21] ath9k_htc: add ath_ps_ops bindings
+Date: Thu,  6 Nov 2014 08:53:33 +0100
+Message-Id: <1415260418-14321-17-git-send-email-linux@rempel-privat.de> (sfid-20141106_085448_523949_AE91D272)
+In-Reply-To: <1415260418-14321-1-git-send-email-linux@rempel-privat.de>
+References: <1415260418-14321-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-VGhlIHNwZWMgZG9lc24ndCByZXF1aXJlIHVubGltaXRlZCB0byBiZSByZWFsbHkgInVubGltaXRl
-ZCIgYW5kIHRoZSBBUCBkZWNpZGVzIHdoZW4gdG8gZW5kIHRoZSBTUCwgc28gYW55IHZhbHVlIGhl
-cmUgaXMgb2suDQpIb3dldmVyIGZvciBsYXJnZSB0cmFmZmljIGJ1cnN0cyBpbmNyZWFzaW5nIHRo
-aXMgdmFsdWUgbG9va3MgcmVhc29uYWJsZS4gQWxzbyBsb29rcyBsaWtlIHNvbWUgY2VydGlmaWNh
-dGlvbiB0ZXN0cyBleHBlY3QgbW9yZSBmcmFtZXMgdG8gYmUgZGVsaXZlcmVkIGR1cmluZyBTUC4N
-CjEyOCBpcyBzdGlsbCBraW5kIG9mIGFyYml0cmFyeSB2YWx1ZQ0KDQo+IC0tLS0tT3JpZ2luYWwg
-TWVzc2FnZS0tLS0tDQo+IEZyb206IEtyaXNobmEgQ2hhaXRhbnlhIFttYWlsdG86Y2hhaXRhbnlh
-Lm1naXRAZ21haWwuY29tXQ0KPiBTZW50OiBUdWVzZGF5LCBOb3ZlbWJlciAwNCwgMjAxNCAxMTow
-Mw0KPiBUbzogR3J1bWJhY2gsIEVtbWFudWVsDQo+IENjOiBKb2hhbm5lcyBCZXJnOyBsaW51eC13
-aXJlbGVzczsgT3RjaGVyZXRpYW5za2ksIEFuZHJlaQ0KPiBTdWJqZWN0OiBSZTogW1BBVENIXSBt
-YWM4MDIxMTogSW5jcmVhc2UgdWFwc2QgbWF4IFNQIGZyYW1lcyBudW1iZXINCj4gDQo+IE9uIFR1
-ZSwgTm92IDQsIDIwMTQgYXQgMjoxMCBQTSwgRW1tYW51ZWwgR3J1bWJhY2gNCj4gPGVtbWFudWVs
-LmdydW1iYWNoQGludGVsLmNvbT4gd3JvdGU6DQo+ID4gRnJvbTogQW5kcmVpIE90Y2hlcmV0aWFu
-c2tpIDxhbmRyZWkub3RjaGVyZXRpYW5za2lAaW50ZWwuY29tPg0KPiA+DQo+ID4gRGVsaXZlciB1
-cCB0byAxMjggZnJhbWVzIGR1cmluZyBTUCBpbnN0ZWFkIG9mIDggaWYgdW5saW1pdGVkIG1heCBT
-UCBpcw0KPiA+IHNwZWNpZmllZCBkdXJpbmcgYXNzb2NpYXRpb24uDQo+ID4NCj4gPiBTaWduZWQt
-b2ZmLWJ5OiBBbmRyZWkgT3RjaGVyZXRpYW5za2kgPGFuZHJlaS5vdGNoZXJldGlhbnNraUBpbnRl
-bC5jb20+DQo+ID4gU2lnbmVkLW9mZi1ieTogRW1tYW51ZWwgR3J1bWJhY2ggPGVtbWFudWVsLmdy
-dW1iYWNoQGludGVsLmNvbT4NCj4gPiAtLS0NCj4gPiAgbmV0L21hYzgwMjExL3N0YV9pbmZvLmMg
-fCAyICstDQo+ID4gIDEgZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlvbigrKSwgMSBkZWxldGlvbigt
-KQ0KPiA+DQo+ID4gZGlmZiAtLWdpdCBhL25ldC9tYWM4MDIxMS9zdGFfaW5mby5jIGIvbmV0L21h
-YzgwMjExL3N0YV9pbmZvLmMgaW5kZXgNCj4gPiBkZTQ5NGRmLi4zMzUyNzQxIDEwMDY0NA0KPiA+
-IC0tLSBhL25ldC9tYWM4MDIxMS9zdGFfaW5mby5jDQo+ID4gKysrIGIvbmV0L21hYzgwMjExL3N0
-YV9pbmZvLmMNCj4gPiBAQCAtMTUzMSw3ICsxNTMxLDcgQEAgdm9pZCBpZWVlODAyMTFfc3RhX3Bz
-X2RlbGl2ZXJfdWFwc2Qoc3RydWN0DQo+IHN0YV9pbmZvICpzdGEpDQo+ID4gICAgICAgICAgICAg
-ICAgIGJyZWFrOw0KPiA+ICAgICAgICAgY2FzZSAwOg0KPiA+ICAgICAgICAgICAgICAgICAvKiBY
-WFg6IHdoYXQgaXMgYSBnb29kIHZhbHVlPyAqLw0KPiA+IC0gICAgICAgICAgICAgICBuX2ZyYW1l
-cyA9IDg7DQo+ID4gKyAgICAgICAgICAgICAgIG5fZnJhbWVzID0gMTI4Ow0KPiA+ICAgICAgICAg
-ICAgICAgICBicmVhazsNCj4gPiAgICAgICAgIH0NCj4gV2hhdCBpcyBjcml0ZXJpYSBmb3IgZGVj
-aWRpbmcgdGhlIHRocmVzaG9sZD8NCj4gQW55IHNwZWNpZmljIHVzZSBjYXNlIGZvciAxMjg/DQot
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0KQSBtZW1iZXIgb2YgdGhlIEludGVsIENvcnBvcmF0aW9uIGdyb3VwIG9mIGNv
-bXBhbmllcwoKVGhpcyBlLW1haWwgYW5kIGFueSBhdHRhY2htZW50cyBtYXkgY29udGFpbiBjb25m
-aWRlbnRpYWwgbWF0ZXJpYWwgZm9yCnRoZSBzb2xlIHVzZSBvZiB0aGUgaW50ZW5kZWQgcmVjaXBp
-ZW50KHMpLiBBbnkgcmV2aWV3IG9yIGRpc3RyaWJ1dGlvbgpieSBvdGhlcnMgaXMgc3RyaWN0bHkg
-cHJvaGliaXRlZC4gSWYgeW91IGFyZSBub3QgdGhlIGludGVuZGVkCnJlY2lwaWVudCwgcGxlYXNl
-IGNvbnRhY3QgdGhlIHNlbmRlciBhbmQgZGVsZXRlIGFsbCBjb3BpZXMuCg==
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index 4014c4b..f91b8e6 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -53,6 +53,21 @@ static const struct ieee80211_tpt_blink ath9k_htc_tpt_blink[] = {
+ };
+ #endif
+ 
++void ath9k_htc_op_ps_wakeup(struct ath_common *common)
++{
++	ath9k_htc_ps_wakeup((struct ath9k_htc_priv *) common->priv);
++}
++
++void ath9k_htc_op_ps_restore(struct ath_common *common)
++{
++	ath9k_htc_ps_restore((struct ath9k_htc_priv *) common->priv);
++}
++
++struct ath_ps_ops ath9k_htc_ps_ops = {
++	.wakeup = ath9k_htc_op_ps_wakeup,
++	.restore = ath9k_htc_op_ps_restore,
++};
++
+ static int ath9k_htc_wait_for_target(struct ath9k_htc_priv *priv)
+ {
+ 	int time_left;
+@@ -478,6 +493,7 @@ static int ath9k_init_priv(struct ath9k_htc_priv *priv,
+ 
+ 	common = ath9k_hw_common(ah);
+ 	common->ops = &ah->reg_ops;
++	common->ps_ops = &ath9k_htc_ps_ops;
+ 	common->bus_ops = &ath9k_usb_bus_ops;
+ 	common->ah = ah;
+ 	common->hw = priv->hw;
+-- 
+1.9.1
 
