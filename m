@@ -1,50 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:38769 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751175AbaKUNIF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Nov 2014 08:08:05 -0500
-From: Patrik Flykt <patrik.flykt@linux.intel.com>
-To: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Subject: [PATCH] mac80211_hwsim: Send alpha2 only if non-zero
-Date: Fri, 21 Nov 2014 15:08:02 +0200
-Message-Id: <1416575282-19966-1-git-send-email-patrik.flykt@linux.intel.com> (sfid-20141121_140809_955796_2443695A)
+Received: from tpesmarthost.raritan.com ([220.128.57.202]:13088 "EHLO
+	tpesmarthost.raritan.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750998AbaKFNHj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Nov 2014 08:07:39 -0500
+Message-ID: <545B7290.6060409@raritan.com> (sfid-20141106_140743_028279_27013AB2)
+Date: Thu, 6 Nov 2014 14:07:28 +0100
+From: Ronald Wahl <ronald.wahl@raritan.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Arend van Spriel <arend@broadcom.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Subject: Re: [PATCH] mac80211: Fix regression that triggers a kernel BUG with
+ CCMP
+References: <1415267752-4704-1-git-send-email-ronald.wahl@raritan.com>	 <1415268135.1884.1.camel@sipsolutions.net> <545B6AD3.8020301@broadcom.com> <1415277562.17015.4.camel@sipsolutions.net>
+In-Reply-To: <1415277562.17015.4.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A properly set alpha2 value consists of two chars that both contain
-letters or digits. If no value is set, both chars keep their initial
-value zero. Therefore do not send the alpha2 parameter to user space
-if either of the characters has been left at its initial zero value.
+On 06.11.2014 13:39, Johannes Berg wrote:
+> On Thu, 2014-11-06 at 13:34 +0100, Arend van Spriel wrote:
+>> On 06-11-14 11:02, Johannes Berg wrote:
+>>> Oh, regarding Cc stable - don't actually send the mail there if you can
+>>> help it.
+>>
+>> What do you mean? Are you saying: It must be tagged, but 'git
+>> send-email' should not actually add the Cc field in the mail header.
+>> What is the story here? Guess I missed a memo ;-)
+>
+> As far as I remember Greg just ignores the patches sent to the list and
+> picks them up when they hit Linus's tree instead (i.e. follows the
+> commit logs with like 'git log --grep "Cc: stable"') so there's no value
+> in actually sending out email, it's just noise.
+>
+> So far it has worked for me, so I think it must be right :)
 
-Signed-off-by: Patrik Flykt <patrik.flykt@linux.intel.com>
----
+But there are LTS kernels not maintained by Greg like 3.12 and 3.16. How 
+about these? If sending patches to stable@kernel org is optional then 
+it's better to kill that list or silently drop emails send to this list 
+so no errors are returned for this address.
 
-This is a fix for the issue Johannes noted with the patch adding
-HWSIM_CMD_GET_RADIO support.
+- ron
 
-Cheers,
-
-	Patrik
-
-
- drivers/net/wireless/mac80211_hwsim.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index e23a8d1..d399a73 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -2541,7 +2541,9 @@ static int mac80211_hwsim_get_radio(struct sk_buff *skb,
- 	if (cb)
- 		genl_dump_check_consistent(cb, hdr, &hwsim_genl_family);
- 
--	param.reg_alpha2 = data->alpha2;
-+	if (data->alpha2[0] && data->alpha2[1])
-+		param.reg_alpha2 = data->alpha2;
-+
- 	param.reg_strict = !!(data->hw->wiphy->regulatory_flags &
- 					REGULATORY_STRICT_REG);
- 	param.p2p_device = !!(data->hw->wiphy->interface_modes &
 -- 
-2.1.1
-
+Ronald Wahl - ronald.wahl@raritan.com - Phone +49 375271349-0 Fax -99
+Raritan Deutschland GmbH, Kornmarkt 7, 08056 Zwickau, Germany
+USt-IdNr. DE813094160, Steuer-Nr. 227/117/01749
+Amtsgericht Chemnitz HRB 23605
+Geschäftsführung: Stuart Hopper, Ralf Ploenes
