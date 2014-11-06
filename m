@@ -1,80 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:56996 "EHLO mx2.suse.de"
+Received: from mout.gmx.net ([212.227.15.19]:58185 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755052AbaKROKJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Nov 2014 09:10:09 -0500
-From: Jiri Slaby <jslaby@suse.cz>
-To: stable@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	Jiri Slaby <jslaby@suse.cz>
-Subject: [PATCH 3.12 152/206] wireless: rt2x00: add new rt2800usb devices
-Date: Tue, 18 Nov 2014 15:08:27 +0100
-Message-Id: <538563b0cc1371790a946bd227dc4e7069f18f83.1416319692.git.jslaby@suse.cz> (sfid-20141118_153926_679096_D3252BE2)
-In-Reply-To: <28f04bcc068a44c5641c727883947960fb8dcbd5.1416319692.git.jslaby@suse.cz>
-References: <28f04bcc068a44c5641c727883947960fb8dcbd5.1416319692.git.jslaby@suse.cz>
-In-Reply-To: <cover.1416319692.git.jslaby@suse.cz>
-References: <cover.1416319692.git.jslaby@suse.cz>
+	id S1751950AbaKFHyk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Nov 2014 02:54:40 -0500
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: ath9k-devel@qca.qualcomm.com, sujith@msujith.org, nbd@openwrt.org,
+	patro@cs.wisc.edu, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 20/21] ath9k_htc: process rx spectral packets
+Date: Thu,  6 Nov 2014 08:53:37 +0100
+Message-Id: <1415260418-14321-21-git-send-email-linux@rempel-privat.de> (sfid-20141106_085501_908729_2B17869D)
+In-Reply-To: <1415260418-14321-1-git-send-email-linux@rempel-privat.de>
+References: <1415260418-14321-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+use code provided by Ashish Patro <patro@cs.wisc.edu>
 
-3.12-stable review patch.  If anyone has any objections, please let me know.
-
-===============
-
-commit 6a06e554daef86c4e8d290284927b081fedb249e upstream.
-
-0x0b05 0x17e8 RT5372 USB 2.0  bgn 2x2 ASUS USB-N14
-0x0411 0x0253 RT5572 USB 2.0 abgn 2x2 BUFFALO WLP-U2-300D
-0x0df6 0x0078 RT???? Sitecom N300
-
-Cc: Ivo van Doorn <IvDoorn@gmail.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: John W. Linville <linville@tuxdriver.com>
-Cc: users@rt2x00.serialmonkey.com
-Cc: linux-wireless@vger.kernel.org
-Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
-Signed-off-by: Jiri Slaby <jslaby@suse.cz>
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
 ---
- drivers/net/wireless/rt2x00/rt2800usb.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index b6cb308beda1..ec816e0459cc 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -1238,6 +1238,8 @@ static struct usb_device_id rt2800usb_device_table[] = {
- 	/* Arcadyan */
- 	{ USB_DEVICE(0x043e, 0x7a12) },
- 	{ USB_DEVICE(0x043e, 0x7a32) },
-+	/* ASUS */
-+	{ USB_DEVICE(0x0b05, 0x17e8) },
- 	/* Azurewave */
- 	{ USB_DEVICE(0x13d3, 0x3329) },
- 	{ USB_DEVICE(0x13d3, 0x3365) },
-@@ -1274,6 +1276,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
- 	{ USB_DEVICE(0x057c, 0x8501) },
- 	/* Buffalo */
- 	{ USB_DEVICE(0x0411, 0x0241) },
-+	{ USB_DEVICE(0x0411, 0x0253) },
- 	/* D-Link */
- 	{ USB_DEVICE(0x2001, 0x3c1a) },
- 	{ USB_DEVICE(0x2001, 0x3c21) },
-@@ -1364,6 +1367,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
- 	{ USB_DEVICE(0x0df6, 0x0053) },
- 	{ USB_DEVICE(0x0df6, 0x0069) },
- 	{ USB_DEVICE(0x0df6, 0x006f) },
-+	{ USB_DEVICE(0x0df6, 0x0078) },
- 	/* SMC */
- 	{ USB_DEVICE(0x083a, 0xa512) },
- 	{ USB_DEVICE(0x083a, 0xc522) },
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+index 2622002..a0f58e2 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+@@ -1012,6 +1012,20 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
+ 	 * separately to avoid doing two lookups for a rate for each frame.
+ 	 */
+ 	hdr = (struct ieee80211_hdr *)skb->data;
++
++	/*
++	 * Process PHY errors and return so that the packet
++	 * can be dropped.
++	 */
++	if (rx_stats.rs_status & ATH9K_RXERR_PHY) {
++		/* TODO: Not using DFS processing now. */
++		if (ath_cmn_process_fft(&priv->spec_priv, hdr,
++				    &rx_stats, rx_status->mactime)) {
++			/* TODO: Code to collect spectral scan statistics */
++		}
++		goto rx_next;
++	}
++
+ 	if (!ath9k_cmn_rx_accept(common, hdr, rx_status, &rx_stats,
+ 			&decrypt_error, priv->rxfilter))
+ 		goto rx_next;
 -- 
-2.1.3
+1.9.1
 
