@@ -1,51 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:48937 "EHLO plane.gmane.org"
+Received: from mout.gmx.net ([212.227.15.15]:62076 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751370AbaKKSUG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Nov 2014 13:20:06 -0500
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1XoG2t-0005Jm-M5
-	for linux-wireless@vger.kernel.org; Tue, 11 Nov 2014 19:20:03 +0100
-Received: from 157.88.123.237 ([157.88.123.237])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Nov 2014 19:20:03 +0100
-Received: from hernan.gonzalez.calderon by 157.88.123.237 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Nov 2014 19:20:03 +0100
-To: linux-wireless@vger.kernel.org
-From: =?utf-8?b?SGVybsOhbg==?= Maximiliano
-	<hernan.gonzalez.calderon@gmail.com>
-Subject: 802.11p implementation 
-Date: Tue, 11 Nov 2014 18:13:33 +0000 (UTC)
-Message-ID: <loom.20141111T191201-523@post.gmane.org> (sfid-20141111_192011_134058_5C7BBDBA)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1751281AbaKFHyj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Nov 2014 02:54:39 -0500
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: ath9k-devel@qca.qualcomm.com, sujith@msujith.org, nbd@openwrt.org,
+	patro@cs.wisc.edu, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 07/21] ath: add struct ath_ps_ops
+Date: Thu,  6 Nov 2014 08:53:24 +0100
+Message-Id: <1415260418-14321-8-git-send-email-linux@rempel-privat.de> (sfid-20141106_085445_055013_AB70E4B7)
+In-Reply-To: <1415260418-14321-1-git-send-email-linux@rempel-privat.de>
+References: <1415260418-14321-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello everyone,
+we will need it to make common code
 
-I am working to adapt the ath5k module to transmit in the 5850..5925GHz
-range, in order to comply with IEEE 802.11p requirements. Our plan is to
-liberate the code to the community as soon as we develop it. I originally
-posted this in ath5k-devel mailing list, but someone suggested me to post
-try here too.
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+---
+ drivers/net/wireless/ath/ath.h | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-
-I have already compiled a new regdomains database with wireless-regdb and
-crda, and we are using the module in ATH5K_TEST_CHANNELS mode. The database
-is now defined as follows:
-
-(2402 - 2472 @ 40), (3, 27)
-(5170 - 5250 @ 40), (3, 17)
-(5250 - 5330 @ 40), (3, 20)
-(5490 - 5600 @ 40), (3, 20)
-(5650 - 5710 @ 40), (3, 20)
-(5735 - 5835 @ 40), (3, 30)
-(5835 - 5925 @ 10), (3, 30) -> For 802.11P
-
-However, when I execute "iw wlan1 ibss join TFG 5850" it returns the -22
-error number, indicating that we are using a frequency not defined.
+diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
+index 999d24f..ccba4fe 100644
+--- a/drivers/net/wireless/ath/ath.h
++++ b/drivers/net/wireless/ath/ath.h
+@@ -135,6 +135,11 @@ struct ath_ops {
+ struct ath_common;
+ struct ath_bus_ops;
+ 
++struct ath_ps_ops {
++	void (*wakeup)(struct ath_common *common);
++	void (*restore)(struct ath_common *common);
++};
++
+ struct ath_common {
+ 	void *ah;
+ 	void *priv;
+@@ -169,6 +174,7 @@ struct ath_common {
+ 	struct ath_regulatory reg_world_copy;
+ 	const struct ath_ops *ops;
+ 	const struct ath_bus_ops *bus_ops;
++	const struct ath_ps_ops *ps_ops;
+ 
+ 	bool btcoex_enabled;
+ 	bool disable_ani;
+@@ -178,6 +184,11 @@ struct ath_common {
+ 	struct ieee80211_supported_band sbands[IEEE80211_NUM_BANDS];
+ };
+ 
++static inline const struct ath_ps_ops *ath_ps_ops(struct ath_common *common)
++{
++	return common->ps_ops;
++}
++
+ struct sk_buff *ath_rxbuf_alloc(struct ath_common *common,
+ 				u32 len,
+ 				gfp_t gfp_mask);
+-- 
+1.9.1
 
