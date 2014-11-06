@@ -1,69 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f170.google.com ([209.85.213.170]:57967 "EHLO
-	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422754AbaKNWc1 (ORCPT
+Received: from tpesmarthost.raritan.com ([220.128.57.202]:37481 "EHLO
+	tpesmarthost.raritan.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751187AbaKFNuu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Nov 2014 17:32:27 -0500
-Received: by mail-ig0-f170.google.com with SMTP id a13so543973igq.3
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Nov 2014 14:32:27 -0800 (PST)
-Date: Fri, 14 Nov 2014 14:32:24 -0800
-From: Dmitry Torokhov <dtor@chromium.org>
-To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
-Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	Christophe Ricard <christophe.ricard@gmail.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] NFC: st21nfca: fix error handling of irq_of_parse_and_map
-Message-ID: <20141114223224.GA1448@dtor-ws> (sfid-20141114_233244_416544_F5E582B3)
+	Thu, 6 Nov 2014 08:50:50 -0500
+Message-ID: <545B7CB2.4080507@raritan.com> (sfid-20141106_145055_984268_8A283FD1)
+Date: Thu, 6 Nov 2014 14:50:42 +0100
+From: Ronald Wahl <ronald.wahl@raritan.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Arend van Spriel <arend@broadcom.com>,
+	<linux-wireless@vger.kernel.org>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Subject: Re: [PATCH] mac80211: Fix regression that triggers a kernel BUG with
+ CCMP
+References: <1415267752-4704-1-git-send-email-ronald.wahl@raritan.com>		 <1415268135.1884.1.camel@sipsolutions.net> <545B6AD3.8020301@broadcom.com>	 <1415277562.17015.4.camel@sipsolutions.net> <545B7290.6060409@raritan.com> <1415279690.17015.7.camel@sipsolutions.net>
+In-Reply-To: <1415279690.17015.7.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Return value of irq_of_parse_and_map() is unsigned int, with 0
-indicating failure, so testing for negative result never works.
+On 06.11.2014 14:14, Johannes Berg wrote:
+> On Thu, 2014-11-06 at 14:07 +0100, Ronald Wahl wrote:
+>
+>> But there are LTS kernels not maintained by Greg like 3.12 and 3.16. How
+>> about these? If sending patches to stable@kernel org is optional then
+>> it's better to kill that list or silently drop emails send to this list
+>> so no errors are returned for this address.
+>
+> They can pick it up the same way though, no? Actually I think they
+> usually pick it up from Greg's tree anyway :)
 
-Also report error returned by devm_gpio_request_one instead of
-clobbering it with -ENODEV.
+"Can" and "do" are different things. And you "think" you know what 
+others people do but do you really "know" it? Anyway your original 
+comment sounded a bit like "avoid sending it to the stable kernel 
+mailinglist otherwise unwanted things might happen". In the end this 
+raises the question why that stable kernel mailing still list exists or 
+why there is no general rule not to send mails to it.
 
-Signed-off-by: Dmitry Torokhov <dtor@chromium.org>
----
- drivers/nfc/st21nfca/i2c.c | 11 +++++------
- 1 file changed, 5 insertions(+), 6 deletions(-)
+So in the end that currently means that it is not wrong to send mail to 
+stable@vger.kernel.org but it is your opinion that it is just not really 
+necessary, right?
 
-diff --git a/drivers/nfc/st21nfca/i2c.c b/drivers/nfc/st21nfca/i2c.c
-index 0ea756b..6d6d282 100644
---- a/drivers/nfc/st21nfca/i2c.c
-+++ b/drivers/nfc/st21nfca/i2c.c
-@@ -531,20 +531,19 @@ static int st21nfca_hci_i2c_of_request_resources(struct i2c_client *client)
- 				  "clf_enable");
- 	if (r) {
- 		nfc_err(&client->dev, "Failed to request enable pin\n");
--		return -ENODEV;
-+		return r;
- 	}
- 
- 	phy->gpio_ena = gpio;
- 
- 	/* IRQ */
--	r = irq_of_parse_and_map(pp, 0);
--	if (r < 0) {
--		nfc_err(&client->dev, "Unable to get irq, error: %d\n", r);
--		return r;
-+	client->irq = irq_of_parse_and_map(pp, 0);
-+	if (!client->irq) {
-+		nfc_err(&client->dev, "Unable to get irq\n");
-+		return -EINVAL;
- 	}
- 
- 	phy->irq_polarity = irq_get_trigger_type(r);
--	client->irq = r;
- 
- 	return 0;
- }
--- 
-2.1.0.rc2.206.gedb03e5
-
+- ron
 
 -- 
-Dmitry
+Ronald Wahl - ronald.wahl@raritan.com - Phone +49 375271349-0 Fax -99
+Raritan Deutschland GmbH, Kornmarkt 7, 08056 Zwickau, Germany
+USt-IdNr. DE813094160, Steuer-Nr. 227/117/01749
+Amtsgericht Chemnitz HRB 23605
+Geschäftsführung: Stuart Hopper, Ralf Ploenes
