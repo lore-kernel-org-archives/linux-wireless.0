@@ -1,51 +1,224 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:59377
-	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756319AbaKSTIQ (ORCPT
+Received: from relay1.mentorg.com ([192.94.38.131]:36669 "EHLO
+	relay1.mentorg.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750881AbaKFGgo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Nov 2014 14:08:16 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH v2 5/7] mac80211: pass tx info to ieee80211_lost_packet instead of an skb
-Date: Wed, 19 Nov 2014 20:08:11 +0100
-Message-Id: <1416424093-19439-5-git-send-email-nbd@openwrt.org> (sfid-20141119_200819_270416_0C760865)
-In-Reply-To: <1416424093-19439-1-git-send-email-nbd@openwrt.org>
-References: <1416424093-19439-1-git-send-email-nbd@openwrt.org>
+	Thu, 6 Nov 2014 01:36:44 -0500
+From: Sanjeev Sharma <sanjeev_sharma@mentor.com>
+To: <Larry.Finger@lwfinger.net>, <Jes.Sorensen@redhat.com>
+CC: <gregkh@linuxfoundation.org>, <linux-wireless@vger.kernel.org>,
+	<devel@driverdev.osuosl.org>, <linux-kernel@vger.kernel.org>,
+	Sanjeev Sharma <sanjeev_sharma@mentor.com>,
+	Sanjeev Sharma <Sanjeev_Sharma@mentor.com>
+Subject: [PATCH] staging:rtl8723au: core: Fix Warning reported by checkpatch.
+Date: Thu, 6 Nov 2014 12:06:36 +0530
+Message-ID: <1415255796-8471-1-git-send-email-sanjeev_sharma@mentor.com> (sfid-20141106_073701_059851_DBF74EE2)
+In-Reply-To: <wrfjy4rxzk5b.fsf@redhat.com>
+References: <wrfjy4rxzk5b.fsf@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- net/mac80211/status.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+This is a patch to the rtw_cmd.c file that fixes following
+Warning by introducing temporary structure.
 
-diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index 9612d89..ba35a44 100644
---- a/net/mac80211/status.c
-+++ b/net/mac80211/status.c
-@@ -541,10 +541,9 @@ static void ieee80211_tx_latency_end_msrmnt(struct ieee80211_local *local,
- #define STA_LOST_TDLS_PKT_THRESHOLD	10
- #define STA_LOST_TDLS_PKT_TIME		(10*HZ) /* 10secs since last ACK */
+WARNING: line over 80 characters
+
+Signed-off-by: Sanjeev Sharma <Sanjeev_Sharma@mentor.com>
+---
+ drivers/staging/rtl8723au/core/rtw_cmd.c | 123 +++++++++++++++----------------
+ 1 file changed, 60 insertions(+), 63 deletions(-)
+
+diff --git a/drivers/staging/rtl8723au/core/rtw_cmd.c b/drivers/staging/rtl8723au/core/rtw_cmd.c
+index 4eaa502..6186575 100644
+--- a/drivers/staging/rtl8723au/core/rtw_cmd.c
++++ b/drivers/staging/rtl8723au/core/rtw_cmd.c
+@@ -919,34 +919,34 @@ static void traffic_status_watchdog(struct rtw_adapter *padapter)
+ 	u8 bHigherBusyTxTraffic = false;
+ 	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
+ 	int BusyThreshold = 100;
++	struct rt_link_detect *ldi = &pmlmepriv->LinkDetectInfo;
++
+ 	/*  */
+ 	/*  Determine if our traffic is busy now */
+ 	/*  */
+ 	if (check_fwstate(pmlmepriv, _FW_LINKED)) {
+ 		if (rtl8723a_BT_coexist(padapter))
+ 			BusyThreshold = 50;
+-		else if (pmlmepriv->LinkDetectInfo.bBusyTraffic)
++		else if (ldi->bBusyTraffic)
+ 			BusyThreshold = 75;
+ 		/*  if we raise bBusyTraffic in last watchdog, using
+ 		    lower threshold. */
+-		if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod > BusyThreshold ||
+-		    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod > BusyThreshold) {
++		if (ldi->NumRxOkInPeriod > BusyThreshold ||
++		    ldi->NumTxOkInPeriod > BusyThreshold) {
+ 			bBusyTraffic = true;
  
--static void ieee80211_lost_packet(struct sta_info *sta, struct sk_buff *skb)
-+static void ieee80211_lost_packet(struct sta_info *sta,
-+				  struct ieee80211_tx_info *info)
- {
--	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
--
- 	/* This packet was aggregated but doesn't carry status info */
- 	if ((info->flags & IEEE80211_TX_CTL_AMPDU) &&
- 	    !(info->flags & IEEE80211_TX_STAT_AMPDU))
-@@ -716,7 +715,7 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
- 				if (test_sta_flag(sta, WLAN_STA_TDLS_PEER_AUTH))
- 					sta->last_tdls_pkt_time = jiffies;
- 			} else {
--				ieee80211_lost_packet(sta, skb);
-+				ieee80211_lost_packet(sta, info);
- 			}
+-			if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod >
+-			    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod)
++			if (ldi->NumRxOkInPeriod > ldi->NumTxOkInPeriod)
+ 				bRxBusyTraffic = true;
+ 			else
+ 				bTxBusyTraffic = true;
  		}
  
+ 		/*  Higher Tx/Rx data. */
+-		if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod > 4000 ||
+-		    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod > 4000) {
++		if (ldi->NumRxOkInPeriod > 4000 ||
++		    ldi->NumTxOkInPeriod > 4000) {
+ 			bHigherBusyTraffic = true;
+ 
+-			if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod >
+-			    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod)
++			if (ldi->NumRxOkInPeriod > ldi->NumTxOkInPeriod)
+ 				bHigherBusyRxTraffic = true;
+ 			else
+ 				bHigherBusyTxTraffic = true;
+@@ -955,9 +955,9 @@ static void traffic_status_watchdog(struct rtw_adapter *padapter)
+ 		if (!rtl8723a_BT_coexist(padapter) ||
+ 		    !rtl8723a_BT_using_antenna_1(padapter)) {
+ 		/*  check traffic for  powersaving. */
+-			if (((pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod +
+-			      pmlmepriv->LinkDetectInfo.NumTxOkInPeriod) > 8) ||
+-			    pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod >2)
++			if (((ldi->NumRxUnicastOkInPeriod +
++			      ldi->NumTxOkInPeriod) > 8) ||
++			    ldi->NumRxUnicastOkInPeriod > 2)
+ 				bEnterPS = false;
+ 			else
+ 				bEnterPS = true;
+@@ -971,15 +971,15 @@ static void traffic_status_watchdog(struct rtw_adapter *padapter)
+ 	} else
+ 		LPS_Leave23a(padapter);
+ 
+-	pmlmepriv->LinkDetectInfo.NumRxOkInPeriod = 0;
+-	pmlmepriv->LinkDetectInfo.NumTxOkInPeriod = 0;
+-	pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod = 0;
+-	pmlmepriv->LinkDetectInfo.bBusyTraffic = bBusyTraffic;
+-	pmlmepriv->LinkDetectInfo.bTxBusyTraffic = bTxBusyTraffic;
+-	pmlmepriv->LinkDetectInfo.bRxBusyTraffic = bRxBusyTraffic;
+-	pmlmepriv->LinkDetectInfo.bHigherBusyTraffic = bHigherBusyTraffic;
+-	pmlmepriv->LinkDetectInfo.bHigherBusyRxTraffic = bHigherBusyRxTraffic;
+-	pmlmepriv->LinkDetectInfo.bHigherBusyTxTraffic = bHigherBusyTxTraffic;
++	ldi->NumRxOkInPeriod = 0;
++	ldi->NumTxOkInPeriod = 0;
++	ldi->NumRxUnicastOkInPeriod = 0;
++	ldi->bBusyTraffic = bBusyTraffic;
++	ldi->bTxBusyTraffic = bTxBusyTraffic;
++	ldi->bRxBusyTraffic = bRxBusyTraffic;
++	ldi->bHigherBusyTraffic = bHigherBusyTraffic;
++	ldi->bHigherBusyRxTraffic = bHigherBusyRxTraffic;
++	ldi->bHigherBusyTxTraffic = bHigherBusyTxTraffic;
+ }
+ 
+ static void dynamic_chk_wk_hdl(struct rtw_adapter *padapter, u8 *pbuf, int sz)
+@@ -1017,46 +1017,44 @@ static void lps_ctrl_wk_hdl(struct rtw_adapter *padapter, u8 lps_ctrl_type)
+ 	    check_fwstate(pmlmepriv, WIFI_ADHOC_STATE))
+ 		return;
+ 
+-	switch (lps_ctrl_type)
+-	{
+-		case LPS_CTRL_SCAN:
+-			rtl8723a_BT_wifiscan_notify(padapter, true);
+-			if (!rtl8723a_BT_using_antenna_1(padapter)) {
+-				if (check_fwstate(pmlmepriv, _FW_LINKED))
+-					LPS_Leave23a(padapter);
+-			}
+-			break;
+-		case LPS_CTRL_JOINBSS:
+-			LPS_Leave23a(padapter);
+-			break;
+-		case LPS_CTRL_CONNECT:
+-			mstatus = 1;/* connect */
+-			/*  Reset LPS Setting */
+-			padapter->pwrctrlpriv.LpsIdleCount = 0;
+-			rtl8723a_set_FwJoinBssReport_cmd(padapter, 1);
+-			rtl8723a_BT_mediastatus_notify(padapter, mstatus);
+-			break;
+-		case LPS_CTRL_DISCONNECT:
+-			mstatus = 0;/* disconnect */
+-			rtl8723a_BT_mediastatus_notify(padapter, mstatus);
+-			if (!rtl8723a_BT_using_antenna_1(padapter))
+-				LPS_Leave23a(padapter);
+-			rtl8723a_set_FwJoinBssReport_cmd(padapter, 0);
+-			break;
+-		case LPS_CTRL_SPECIAL_PACKET:
+-			pwrpriv->DelayLPSLastTimeStamp = jiffies;
+-			rtl8723a_BT_specialpacket_notify(padapter);
+-			if (!rtl8723a_BT_using_antenna_1(padapter))
+-				LPS_Leave23a(padapter);
+-			break;
+-		case LPS_CTRL_LEAVE:
+-			rtl8723a_BT_lps_leave(padapter);
+-			if (!rtl8723a_BT_using_antenna_1(padapter))
++	switch (lps_ctrl_type) {
++	case LPS_CTRL_SCAN:
++		rtl8723a_BT_wifiscan_notify(padapter, true);
++		if (!rtl8723a_BT_using_antenna_1(padapter)) {
++			if (check_fwstate(pmlmepriv, _FW_LINKED))
+ 				LPS_Leave23a(padapter);
+-			break;
+-
+-		default:
+-			break;
++		}
++		break;
++	case LPS_CTRL_JOINBSS:
++		LPS_Leave23a(padapter);
++		break;
++	case LPS_CTRL_CONNECT:
++		mstatus = 1;/* connect */
++		/*  Reset LPS Setting */
++		padapter->pwrctrlpriv.LpsIdleCount = 0;
++		rtl8723a_set_FwJoinBssReport_cmd(padapter, 1);
++		rtl8723a_BT_mediastatus_notify(padapter, mstatus);
++		break;
++	case LPS_CTRL_DISCONNECT:
++		mstatus = 0;/* disconnect */
++		rtl8723a_BT_mediastatus_notify(padapter, mstatus);
++		if (!rtl8723a_BT_using_antenna_1(padapter))
++			LPS_Leave23a(padapter);
++		rtl8723a_set_FwJoinBssReport_cmd(padapter, 0);
++		break;
++	case LPS_CTRL_SPECIAL_PACKET:
++		pwrpriv->DelayLPSLastTimeStamp = jiffies;
++		rtl8723a_BT_specialpacket_notify(padapter);
++		if (!rtl8723a_BT_using_antenna_1(padapter))
++			LPS_Leave23a(padapter);
++		break;
++	case LPS_CTRL_LEAVE:
++		rtl8723a_BT_lps_leave(padapter);
++		if (!rtl8723a_BT_using_antenna_1(padapter))
++			LPS_Leave23a(padapter);
++		break;
++	default:
++		break;
+ 	}
+ }
+ 
+@@ -1152,7 +1150,7 @@ static void rtw_chk_hi_queue_hdl(struct rtw_adapter *padapter)
+ 
+ 			cnt++;
+ 
+-			if (cnt>10)
++			if (cnt > 10)
+ 				break;
+ 
+ 			val = rtl8723a_chk_hi_queue_empty(padapter);
+@@ -1305,8 +1303,7 @@ int rtw_drvextra_cmd_hdl23a(struct rtw_adapter *padapter, const u8 *pbuf)
+ 
+ 	pdrvextra_cmd = (struct drvextra_cmd_parm *)pbuf;
+ 
+-	switch (pdrvextra_cmd->ec_id)
+-	{
++	switch (pdrvextra_cmd->ec_id) {
+ 	case DYNAMIC_CHK_WK_CID:
+ 		dynamic_chk_wk_hdl(padapter, pdrvextra_cmd->pbuf,
+ 				   pdrvextra_cmd->type_size);
 -- 
-2.1.2
+1.7.11.7
 
