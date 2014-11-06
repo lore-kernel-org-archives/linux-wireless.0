@@ -1,39 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:57419 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751575AbaKSLk0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Nov 2014 06:40:26 -0500
-Received: by mail-wg0-f44.google.com with SMTP id b13so578292wgh.31
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Nov 2014 03:40:24 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1416396152.9374.0.camel@sipsolutions.net>
-References: <1415551822-20121-1-git-send-email-arik@wizery.com>
- <1415551822-20121-16-git-send-email-arik@wizery.com> <1416396152.9374.0.camel@sipsolutions.net>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Wed, 19 Nov 2014 13:40:09 +0200
-Message-ID: <CA+XVXfefE7=o3v52-_a9QZ3FemNJ1KxOHXG6Qt3896Q=Y4CA=A@mail.gmail.com> (sfid-20141119_124029_897252_FFFBFF57)
-Subject: Re: [PATCH 16/16] mac80211: synchronously reserve TID per station
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Liad Kaufman <liad.kaufman@intel.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:49768 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750706AbaKFWbN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Nov 2014 17:31:13 -0500
+Message-ID: <1415313070.17015.19.camel@sipsolutions.net> (sfid-20141106_233116_379164_B8B2B0FA)
+Subject: Re: Vendor Namespace Question
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "C. McPherson" <ccmcphe@verizon.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	radiotap@radiotap.org
+Date: Thu, 06 Nov 2014 23:31:10 +0100
+In-Reply-To: <5459349F.9020903@verizon.net>
+References: <54591CF9.7030106@verizon.net>
+	 (sfid-20141104_203850_228702_C706EE9A) <1415130476.2064.22.camel@sipsolutions.net>
+	 <5459349F.9020903@verizon.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 19, 2014 at 1:22 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Sun, 2014-11-09 at 18:50 +0200, Arik Nemtsov wrote:
->
->> +     if (WARN_ON(tid >= IEEE80211_NUM_TIDS))
->> +             return -EINVAL;
->
-> That validates < 16
->
->> +     queues = BIT(sdata->vif.hw_queue[ieee802_1d_to_ac[tid]]);
->
-> but that's only valid for < 8, causing a smatch warning.
+On Tue, 2014-11-04 at 15:18 -0500, C. McPherson wrote:
+> Thanks so much for the info Johannes. I did notice that rx_status was 
+> getting full.  I'll go ahead and put it in skb->data, that's a good idea.
 
-It's a valid warning. It should be tid & 7 here. I'll send a fix.
+I just sent a patch to restore vendor radiotap stuff in mac80211.
 
-Arik
+Works for me, and I might actually have a use case for it, but please
+tell me if you have issues with it.
+
+johannes
+
