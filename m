@@ -1,147 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:59383 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751333AbaKKJoS (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:56996 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750926AbaKGB1T convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Nov 2014 04:44:18 -0500
-Message-ID: <5461DA68.9030607@broadcom.com> (sfid-20141111_104443_350034_D32717B1)
-Date: Tue, 11 Nov 2014 10:44:08 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Gautam (Gautam Kumar) Shukla" <gautams@broadcom.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
+	Thu, 6 Nov 2014 20:27:19 -0500
+From: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	"sujith@msujith.org" <sujith@msujith.org>
 CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	"davem@davemloft.net" <davem@davemloft.net>,
-	"linux-api@vger.kernel.org" <linux-api@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	Jithu Jance <jithu@broadcom.com>,
-	Sreenath S <sreenats@broadcom.com>
-Subject: Re: [PATCH 1/1] linux-wireless: Added psk in struct cfg80211_connect_params
- needed for offloading 4way handshake to driver
-References: <DF163EE1A432BF4BBE6B2088220663A67437BD@SJEXCHMB06.corp.ad.broadcom.com>
-In-Reply-To: <DF163EE1A432BF4BBE6B2088220663A67437BD@SJEXCHMB06.corp.ad.broadcom.com>
-Content-Type: text/plain; charset="windows-1252"
+	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
+Subject: RE: [PATCH v2] ath9k: Fix RTC_DERIVED_CLK usage
+Date: Fri, 7 Nov 2014 01:27:03 +0000
+Message-ID: <6ab906f08e04490696d056a5b9135f8b@NASANEXM01E.na.qualcomm.com> (sfid-20141107_022723_171365_ED0A9C3A)
+References: <1415251343-17046-1-git-send-email-sujith@msujith.org>
+ <20141106204208.GC4440@tuxdriver.com>
+In-Reply-To: <20141106204208.GC4440@tuxdriver.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11-11-14 06:56, Gautam (Gautam Kumar) Shukla wrote:
->
+It will cause TSF not accurate, the result is beacon interval not equal to the real time.
 
-Hi Gautam,
+Thanks,
+Miaoqing
 
-Good to see more upstream contributions, but it might be useful to have
-a driver implementation as well in this series. Maybe we can take a shot
-with brcmfmac for obvious reasons. Would you happen to have
-wpa_supplicant changes as well?
+-----Original Message-----
+From: John W. Linville [mailto:linville@tuxdriver.com] 
+Sent: Friday, November 07, 2014 4:42 AM
+To: sujith@msujith.org
+Cc: linux-wireless@vger.kernel.org; ath9k-devel; stable@vger.kernel.org
+Subject: Re: [PATCH v2] ath9k: Fix RTC_DERIVED_CLK usage
 
-I added some inline comments below.
-
-Regards,
-Arend
-
-> For offloading 4 way handshake to driver, currently we don't have any member  of struct cfg80211_connect_params to pass PSK from supplicant to driver. I have added psk for the same and added rest of the code needed in nl80211.h and nl80211.c to parse and make it available to driver.
-> From supplicant, we already have psk member field in assoc_params to use .
-
-In the commit message you should not describe what you did, but what
-problem you are trying to solve and/or what functional change the patch
-provides.
-
-> Tested on x86 linux.
+On Thu, Nov 06, 2014 at 10:52:23AM +0530, Sujith Manoharan wrote:
+> From: Miaoqing Pan <miaoqing@qca.qualcomm.com>
 > 
-> Signed-off-by: Gautam kumar shukla <gautams@broadcom.com>
+> Based on the reference clock, which could be 25MHz or 40MHz, 
+> AR_RTC_DERIVED_CLK is programmed differently for AR9340 and AR9550.
+> But, when a chip reset is done, processing the initvals sets the 
+> register back to the default value.
+> 
+> Fix this by moving the code in ath9k_hw_init_pll() to 
+> ar9003_hw_override_ini(). Also, do this override for AR9531.
+
+What is the effect of having the clock programmed incorrectly?
+
+
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Miaoqing Pan <miaoqing@qca.qualcomm.com>
+> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 > ---
-> include/net/cfg80211.h       | 2 ++
->  include/uapi/linux/nl80211.h | 8 +++++++-
->  net/wireless/nl80211.c       | 4 ++++
->  3 files changed, 13 insertions(+), 1 deletion(-)
+> v2 - Fix author address.
 > 
-> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h index a2ddcf2..6f744e0 100644
-> --- a/include/net/cfg80211.h
-> +++ b/include/net/cfg80211.h
-> @@ -1758,6 +1758,7 @@ struct cfg80211_ibss_params {
->   *    allowed to ignore this @bssid_hint if it has knowledge of a better BSS
->   *    to use.
->   * @ssid: SSID
-> + * @psk:preshared key for WPA2-PSK connection or %NULL if not specified
-
-add space after the colon sign.
-
->   * @ssid_len: Length of ssid in octets
->   * @auth_type: Authentication type (algorithm)
->   * @ie: IEs for association request
-> @@ -1783,6 +1784,7 @@ struct cfg80211_connect_params {
->      const u8 *bssid;
->      const u8 *bssid_hint;
->      const u8 *ssid;
-> +    const u8 *psk;
->      size_t ssid_len;
->      enum nl80211_auth_type auth_type;
->      const u8 *ie;
-> diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h index 4b28dc0..b01d5dd 100644
-> --- a/include/uapi/linux/nl80211.h
-> +++ b/include/uapi/linux/nl80211.h
-> @@ -421,7 +421,7 @@
->   *    %NL80211_ATTR_MAC, %NL80211_ATTR_WIPHY_FREQ, %NL80211_ATTR_CONTROL_PORT,
->   *    %NL80211_ATTR_CONTROL_PORT_ETHERTYPE,
->   *    %NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT, %NL80211_ATTR_MAC_HINT, and
-> - *    %NL80211_ATTR_WIPHY_FREQ_HINT.
-> + *    %NL80211_ATTR_WIPHY_FREQ_HINT, and %NL80211_ATTR_PSK.
->   *    If included, %NL80211_ATTR_MAC and %NL80211_ATTR_WIPHY_FREQ are
->   *    restrictions on BSS selection, i.e., they effectively prevent roaming
->   *    within the ESS. %NL80211_ATTR_MAC_HINT and %NL80211_ATTR_WIPHY_FREQ_HINT @@ -1638,6 +1638,10 @@ enum nl80211_commands {
->   * @NL80211_ATTR_SMPS_MODE: SMPS mode to use (ap mode). see
->   *    &enum nl80211_smps_mode.
->   *
-> + *    @NL80211_ATTR_PSK: a PSK value (u8 attribute).This is 32-octet 
-> + (256-bit)
-> + *    PSK.
-> + *
-
-Some indentation gone haywire here. I would remove '(u8 attribute)'. The
-mention of 32-octet seems sufficient to me.
-
->   * @NL80211_ATTR_MAX: highest attribute number currently defined
->   * @__NL80211_ATTR_AFTER_LAST: internal use
->   */
-> @@ -1990,6 +1994,8 @@ enum nl80211_attrs {
->  
->      NL80211_ATTR_SMPS_MODE,
->  
-> +    NL80211_ATTR_PSK,
+>  drivers/net/wireless/ath/ath9k/ar9003_phy.c | 13 +++++++++++++
+>  drivers/net/wireless/ath/ath9k/hw.c         | 13 -------------
+>  2 files changed, 13 insertions(+), 13 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c 
+> b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+> index 9bdaa0a..2df6d2e 100644
+> --- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+> +++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+> @@ -664,6 +664,19 @@ static void ar9003_hw_override_ini(struct ath_hw *ah)
+>  		ah->enabled_cals |= TX_CL_CAL;
+>  	else
+>  		ah->enabled_cals &= ~TX_CL_CAL;
 > +
->      /* add attributes here, update the policy in nl80211.c */
+> +	if (AR_SREV_9340(ah) || AR_SREV_9531(ah) || AR_SREV_9550(ah)) {
+> +		if (ah->is_clk_25mhz) {
+> +			REG_WRITE(ah, AR_RTC_DERIVED_CLK, 0x17c << 1);
+> +			REG_WRITE(ah, AR_SLP32_MODE, 0x0010f3d7);
+> +			REG_WRITE(ah, AR_SLP32_INC, 0x0001e7ae);
+> +		} else {
+> +			REG_WRITE(ah, AR_RTC_DERIVED_CLK, 0x261 << 1);
+> +			REG_WRITE(ah, AR_SLP32_MODE, 0x0010f400);
+> +			REG_WRITE(ah, AR_SLP32_INC, 0x0001e800);
+> +		}
+> +		udelay(100);
+> +	}
+>  }
 >  
->      __NL80211_ATTR_AFTER_LAST,
-> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c index 5839c85..91c24b1 100644
-> --- a/net/wireless/nl80211.c
-> +++ b/net/wireless/nl80211.c
-> @@ -395,6 +395,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
->      [NL80211_ATTR_USER_PRIO] = { .type = NLA_U8 },
->      [NL80211_ATTR_ADMITTED_TIME] = { .type = NLA_U16 },
->      [NL80211_ATTR_SMPS_MODE] = { .type = NLA_U8 },
-> +    [NL80211_ATTR_PSK] = { .type = NLA_BINARY, .len = 32 },
->  };
+>  static void ar9003_hw_prog_ini(struct ath_hw *ah, diff --git 
+> a/drivers/net/wireless/ath/ath9k/hw.c 
+> b/drivers/net/wireless/ath/ath9k/hw.c
+> index ee9fb52..04ae1f8 100644
+> --- a/drivers/net/wireless/ath/ath9k/hw.c
+> +++ b/drivers/net/wireless/ath/ath9k/hw.c
+> @@ -870,19 +870,6 @@ static void ath9k_hw_init_pll(struct ath_hw *ah,
+>  	udelay(RTC_PLL_SETTLE_DELAY);
 >  
->  /* policy for the key attributes */
-> @@ -7310,6 +7311,9 @@ static int nl80211_connect(struct sk_buff *skb, struct genl_info *info)
->          connect.flags |= ASSOC_REQ_USE_RRM;
->      }
+>  	REG_WRITE(ah, AR_RTC_SLEEP_CLK, AR_RTC_FORCE_DERIVED_CLK);
+> -
+> -	if (AR_SREV_9340(ah) || AR_SREV_9550(ah)) {
+> -		if (ah->is_clk_25mhz) {
+> -			REG_WRITE(ah, AR_RTC_DERIVED_CLK, 0x17c << 1);
+> -			REG_WRITE(ah, AR_SLP32_MODE, 0x0010f3d7);
+> -			REG_WRITE(ah,  AR_SLP32_INC, 0x0001e7ae);
+> -		} else {
+> -			REG_WRITE(ah, AR_RTC_DERIVED_CLK, 0x261 << 1);
+> -			REG_WRITE(ah, AR_SLP32_MODE, 0x0010f400);
+> -			REG_WRITE(ah,  AR_SLP32_INC, 0x0001e800);
+> -		}
+> -		udelay(100);
+> -	}
+>  }
 >  
-> +    if (info->attrs[NL80211_ATTR_PSK])
-> +        connect.psk = nla_data(info->attrs[NL80211_ATTR_PSK]);
-> +
->      wdev_lock(dev->ieee80211_ptr);
->      err = cfg80211_connect(rdev, dev, &connect, connkeys, NULL);
->      wdev_unlock(dev->ieee80211_ptr);
+>  static void ath9k_hw_init_interrupt_masks(struct ath_hw *ah,
 > --
-> 1.9.1
+> 2.1.3
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
 > 
 
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
