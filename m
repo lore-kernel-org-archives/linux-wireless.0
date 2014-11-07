@@ -1,51 +1,191 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:55804 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751596AbaKZJcX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Nov 2014 04:32:23 -0500
-Message-ID: <1416994339.2019.4.camel@sipsolutions.net> (sfid-20141126_103228_392270_59D5E1E6)
-Subject: Re: [PATCH v7] nl80211: Stop scheduled scan if netlink client
- disappears
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jukka Rissanen <jukka.rissanen@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 26 Nov 2014 10:32:19 +0100
-In-Reply-To: <1416992841-15728-1-git-send-email-jukka.rissanen@linux.intel.com> (sfid-20141126_100742_107746_BD7B37FA)
-References: <1416992841-15728-1-git-send-email-jukka.rissanen@linux.intel.com>
-	 (sfid-20141126_100742_107746_BD7B37FA)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from relay1.mentorg.com ([192.94.38.131]:33202 "EHLO
+	relay1.mentorg.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752491AbaKGMAV convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Nov 2014 07:00:21 -0500
+From: "Sharma, Sanjeev" <Sanjeev_Sharma@mentor.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+CC: "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
+	"Jes.Sorensen@redhat.com" <Jes.Sorensen@redhat.com>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH] staging:rtl8723au: core: Fix Warning reported by
+ checkpatch.
+Date: Fri, 7 Nov 2014 12:00:19 +0000
+Message-ID: <FDC088D3B5555644AE135ED28A7ABDE950E8B904@EU-MBX-02.mgc.mentorg.com> (sfid-20141107_130101_798099_53759ED1)
+References: <wrfjy4rxzk5b.fsf@redhat.com>
+ <1415255796-8471-1-git-send-email-sanjeev_sharma@mentor.com>
+ <20141106154301.GC19605@kroah.com>
+In-Reply-To: <20141106154301.GC19605@kroah.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-11-26 at 11:07 +0200, Jukka Rissanen wrote:
-> An attribute NL80211_ATTR_SOCKET_OWNER can be set by the scan initiator.
-> If present, the attribute will cause the scan to be stopped if the client
-> dies.
+-----Original Message-----
+From: Greg KH [mailto:gregkh@linuxfoundation.org] 
+Sent: Thursday, November 06, 2014 9:13 PM
+To: Sharma, Sanjeev
+Cc: Larry.Finger@lwfinger.net; Jes.Sorensen@redhat.com; devel@driverdev.osuosl.org; linux-wireless@vger.kernel.org; linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] staging:rtl8723au: core: Fix Warning reported by checkpatch.
+
+On Thu, Nov 06, 2014 at 12:06:36PM +0530, Sanjeev Sharma wrote:
+> This is a patch to the rtw_cmd.c file that fixes following Warning by 
+> introducing temporary structure.
 > 
-> Signed-off-by: Jukka Rissanen <jukka.rissanen@linux.intel.com>
+> WARNING: line over 80 characters
+> 
+> Signed-off-by: Sanjeev Sharma <Sanjeev_Sharma@mentor.com>
 > ---
-> Hi,
+>  drivers/staging/rtl8723au/core/rtw_cmd.c | 123 
+> +++++++++++++++----------------
+>  1 file changed, 60 insertions(+), 63 deletions(-)
+
+Same as the other patch, give us a hint as to the warning in the subject.
+
+This patch is Fix of Warning introduced in Previous patch while fixing " ERROR: spaces required around that '>' (ctx:WxV)".Can I mentioned dependency or hint in subject line or do we have
+another way to described these type of fix.(One patch introduced another Warning/Error)
+
 > 
-> v7:
-> - convert the cfg80211_sched_scan_request to __rcu pointer in order
->   to avoid races when accessing it
+> diff --git a/drivers/staging/rtl8723au/core/rtw_cmd.c 
+> b/drivers/staging/rtl8723au/core/rtw_cmd.c
+> index 4eaa502..6186575 100644
+> --- a/drivers/staging/rtl8723au/core/rtw_cmd.c
+> +++ b/drivers/staging/rtl8723au/core/rtw_cmd.c
+> @@ -919,34 +919,34 @@ static void traffic_status_watchdog(struct rtw_adapter *padapter)
+>  	u8 bHigherBusyTxTraffic = false;
+>  	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
+>  	int BusyThreshold = 100;
+> +	struct rt_link_detect *ldi = &pmlmepriv->LinkDetectInfo;
+> +
+>  	/*  */
+>  	/*  Determine if our traffic is busy now */
+>  	/*  */
+>  	if (check_fwstate(pmlmepriv, _FW_LINKED)) {
+>  		if (rtl8723a_BT_coexist(padapter))
+>  			BusyThreshold = 50;
+> -		else if (pmlmepriv->LinkDetectInfo.bBusyTraffic)
+> +		else if (ldi->bBusyTraffic)
+>  			BusyThreshold = 75;
+>  		/*  if we raise bBusyTraffic in last watchdog, using
+>  		    lower threshold. */
+> -		if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod > BusyThreshold ||
+> -		    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod > BusyThreshold) {
+> +		if (ldi->NumRxOkInPeriod > BusyThreshold ||
+> +		    ldi->NumTxOkInPeriod > BusyThreshold) {
+>  			bBusyTraffic = true;
+>  
+> -			if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod >
+> -			    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod)
+> +			if (ldi->NumRxOkInPeriod > ldi->NumTxOkInPeriod)
+>  				bRxBusyTraffic = true;
+>  			else
+>  				bTxBusyTraffic = true;
+>  		}
+>  
+>  		/*  Higher Tx/Rx data. */
+> -		if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod > 4000 ||
+> -		    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod > 4000) {
+> +		if (ldi->NumRxOkInPeriod > 4000 ||
+> +		    ldi->NumTxOkInPeriod > 4000) {
+>  			bHigherBusyTraffic = true;
+>  
+> -			if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod >
+> -			    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod)
+> +			if (ldi->NumRxOkInPeriod > ldi->NumTxOkInPeriod)
+>  				bHigherBusyRxTraffic = true;
+>  			else
+>  				bHigherBusyTxTraffic = true;
+> @@ -955,9 +955,9 @@ static void traffic_status_watchdog(struct rtw_adapter *padapter)
+>  		if (!rtl8723a_BT_coexist(padapter) ||
+>  		    !rtl8723a_BT_using_antenna_1(padapter)) {
+>  		/*  check traffic for  powersaving. */
+> -			if (((pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod +
+> -			      pmlmepriv->LinkDetectInfo.NumTxOkInPeriod) > 8) ||
+> -			    pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod >2)
+> +			if (((ldi->NumRxUnicastOkInPeriod +
+> +			      ldi->NumTxOkInPeriod) > 8) ||
+> +			    ldi->NumRxUnicastOkInPeriod > 2)
+>  				bEnterPS = false;
+>  			else
+>  				bEnterPS = true;
+> @@ -971,15 +971,15 @@ static void traffic_status_watchdog(struct rtw_adapter *padapter)
+>  	} else
+>  		LPS_Leave23a(padapter);
+>  
+> -	pmlmepriv->LinkDetectInfo.NumRxOkInPeriod = 0;
+> -	pmlmepriv->LinkDetectInfo.NumTxOkInPeriod = 0;
+> -	pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod = 0;
+> -	pmlmepriv->LinkDetectInfo.bBusyTraffic = bBusyTraffic;
+> -	pmlmepriv->LinkDetectInfo.bTxBusyTraffic = bTxBusyTraffic;
+> -	pmlmepriv->LinkDetectInfo.bRxBusyTraffic = bRxBusyTraffic;
+> -	pmlmepriv->LinkDetectInfo.bHigherBusyTraffic = bHigherBusyTraffic;
+> -	pmlmepriv->LinkDetectInfo.bHigherBusyRxTraffic = bHigherBusyRxTraffic;
+> -	pmlmepriv->LinkDetectInfo.bHigherBusyTxTraffic = bHigherBusyTxTraffic;
+> +	ldi->NumRxOkInPeriod = 0;
+> +	ldi->NumTxOkInPeriod = 0;
+> +	ldi->NumRxUnicastOkInPeriod = 0;
+> +	ldi->bBusyTraffic = bBusyTraffic;
+> +	ldi->bTxBusyTraffic = bTxBusyTraffic;
+> +	ldi->bRxBusyTraffic = bRxBusyTraffic;
+> +	ldi->bHigherBusyTraffic = bHigherBusyTraffic;
+> +	ldi->bHigherBusyRxTraffic = bHigherBusyRxTraffic;
+> +	ldi->bHigherBusyTxTraffic = bHigherBusyTxTraffic;
+>  }
+>  
+>  static void dynamic_chk_wk_hdl(struct rtw_adapter *padapter, u8 
+> *pbuf, int sz) @@ -1017,46 +1017,44 @@ static void lps_ctrl_wk_hdl(struct rtw_adapter *padapter, u8 lps_ctrl_type)
+>  	    check_fwstate(pmlmepriv, WIFI_ADHOC_STATE))
+>  		return;
+>  
+> -	switch (lps_ctrl_type)
+> -	{
+> -		case LPS_CTRL_SCAN:
+> -			rtl8723a_BT_wifiscan_notify(padapter, true);
+> -			if (!rtl8723a_BT_using_antenna_1(padapter)) {
+> -				if (check_fwstate(pmlmepriv, _FW_LINKED))
+> -					LPS_Leave23a(padapter);
+> -			}
+> -			break;
+> -		case LPS_CTRL_JOINBSS:
+> -			LPS_Leave23a(padapter);
+> -			break;
+> -		case LPS_CTRL_CONNECT:
+> -			mstatus = 1;/* connect */
+> -			/*  Reset LPS Setting */
+> -			padapter->pwrctrlpriv.LpsIdleCount = 0;
+> -			rtl8723a_set_FwJoinBssReport_cmd(padapter, 1);
+> -			rtl8723a_BT_mediastatus_notify(padapter, mstatus);
+> -			break;
+> -		case LPS_CTRL_DISCONNECT:
+> -			mstatus = 0;/* disconnect */
+> -			rtl8723a_BT_mediastatus_notify(padapter, mstatus);
+> -			if (!rtl8723a_BT_using_antenna_1(padapter))
+> -				LPS_Leave23a(padapter);
+> -			rtl8723a_set_FwJoinBssReport_cmd(padapter, 0);
+> -			break;
+> -		case LPS_CTRL_SPECIAL_PACKET:
+> -			pwrpriv->DelayLPSLastTimeStamp = jiffies;
+> -			rtl8723a_BT_specialpacket_notify(padapter);
+> -			if (!rtl8723a_BT_using_antenna_1(padapter))
+> -				LPS_Leave23a(padapter);
+> -			break;
+> -		case LPS_CTRL_LEAVE:
+> -			rtl8723a_BT_lps_leave(padapter);
+> -			if (!rtl8723a_BT_using_antenna_1(padapter))
+> +	switch (lps_ctrl_type) {
+> +	case LPS_CTRL_SCAN:
+> +		rtl8723a_BT_wifiscan_notify(padapter, true);
+> +		if (!rtl8723a_BT_using_antenna_1(padapter)) {
+> +			if (check_fwstate(pmlmepriv, _FW_LINKED))
+>  				LPS_Leave23a(padapter);
 
-You totally need to revisit how to use RCU.
+You are doing more than one thing here, something you did not specify in your changelog above, which isn't ok :(
 
-Just some examples:
- * don't synchronize_rcu() after assignment - what did you do that for?
- * don't use rcu_read_lock() when you already have the write lock (rtnl)
- * don't use rcu_access_pointer(), use
-    - local variables
-    - rcu_dereference_protected() (or rather rtnl_dereference())
-    - rcu_dereference()
- * actually fix it to assign the values before rcu_assign_pointer() so
-they're
-   all published together ...
+Please fix up and resend.
 
-Also, please make that a separate patch so it isn't mixed with the
-functional changes.
+thanks,
 
-johannes
-
+greg k-h
