@@ -1,30 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:53878 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750706AbaKYF1S (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:33514 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751069AbaKGDQA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Nov 2014 00:27:18 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21620.5017.657509.251220@gargle.gargle.HOWL> (sfid-20141125_062903_241616_4C129D88)
-Date: Tue, 25 Nov 2014 10:58:57 +0530
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/3] ath10k: Fix shared WEP
-In-Reply-To: <87lhn0639s.fsf@kamboji.qca.qualcomm.com>
-References: <1416796657-24657-1-git-send-email-sujith@msujith.org>
-	<1416796657-24657-2-git-send-email-sujith@msujith.org>
-	<87lhn0639s.fsf@kamboji.qca.qualcomm.com>
+	Thu, 6 Nov 2014 22:16:00 -0500
+Date: Thu, 06 Nov 2014 22:15:57 -0500 (EST)
+Message-Id: <20141106.221557.165590048048299292.davem@davemloft.net> (sfid-20141107_041623_569233_E32AF823)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2014-11-06
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20141106205231.GE4440@tuxdriver.com>
+References: <20141106205231.GE4440@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo wrote:
-> No magic numbers, please. I didn't find anything for IV internals from
-> ieee80211.h, not sure if we should add them there or just use ath10k
-> internal defines.
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Thu, 6 Nov 2014 15:52:31 -0500
 
-We are just retrieving the keyidx from the IV - not sure adding a couple
-of macros for "6" and "3" will make any difference.
+> Please pull this batch of fixes intended for the 3.18 stream...
+> 
+> For the mac80211 bits, Johannes says:
+> 
+> "This contains another small set of fixes for 3.18, these are all
+> over the place and most of the bugs are old, one even dates back
+> to the original mac80211 we merged into the kernel."
+> 
+> For the iwlwifi bits, Emmanuel says:
+> 
+> "I fix here two issues that are related to the firmware
+> loading flow. A user reported that he couldn't load the
+> driver because the rfkill line was pulled up while we
+> were running the calibrations. This was happening while
+> booting the system: systemd was restoring the "disable
+> wifi settings" and that raised an RFKILL interrupt during
+> the calibration. Our driver didn't handle that properly
+> and this is now fixed."
+> 
+> Please let me know if there are problems!
 
-Sujith
+Pulled, thanks John.
