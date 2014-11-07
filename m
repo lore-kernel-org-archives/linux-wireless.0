@@ -1,78 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:51931 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753762AbaKXO3j (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2014 09:29:39 -0500
-Received: by mail-wi0-f176.google.com with SMTP id ex7so5818394wid.15
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:29:38 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 2/3] ath10k: put board size into hw_params
-Date: Mon, 24 Nov 2014 15:17:25 +0100
-Message-Id: <1416838646-18801-2-git-send-email-michal.kazior@tieto.com> (sfid-20141124_152944_941645_2AE46294)
-In-Reply-To: <1416838646-18801-1-git-send-email-michal.kazior@tieto.com>
-References: <1416838646-18801-1-git-send-email-michal.kazior@tieto.com>
+Received: from dedo.coelho.fi ([88.198.205.34]:58120 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752672AbaKGN3I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Nov 2014 08:29:08 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, emmanuel.grumbach@intel.com
+Date: Fri,  7 Nov 2014 15:28:33 +0200
+Message-Id: <1415366914-10997-2-git-send-email-luca@coelho.fi> (sfid-20141107_142915_804804_09412FAC)
+In-Reply-To: <1415366914-10997-1-git-send-email-luca@coelho.fi>
+References: <1415366914-10997-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH 1/2] mac80211: fix order of setting ch_switch and drv_pre_channel_switch call
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This makes it easier to extend the list of
-supported hardware.
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+There was a mistake when merging commit 6d027bcc (mac80211: add
+pre_channel_switch driver operation) for upstream.  The assignment of
+the values in the ch_switch structure came below the call to
+drv_pre_channel_switch.  Fix the order.
+
+Fixes: 6d027bcc (mac80211: add pre_channel_switch driver operation)
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/core.c | 8 +++++---
- drivers/net/wireless/ath/ath10k/core.h | 2 ++
- 2 files changed, 7 insertions(+), 3 deletions(-)
+ net/mac80211/cfg.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 3904ce3..204aa04 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -63,6 +63,8 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 			.fw = QCA988X_HW_2_0_FW_FILE,
- 			.otp = QCA988X_HW_2_0_OTP_FILE,
- 			.board = QCA988X_HW_2_0_BOARD_DATA_FILE,
-+			.board_size = QCA988X_BOARD_DATA_SZ,
-+			.board_ext_size = QCA988X_BOARD_EXT_DATA_SZ,
- 		},
- 	},
- };
-@@ -156,8 +158,8 @@ static const struct firmware *ath10k_fetch_fw_file(struct ath10k *ar,
- static int ath10k_push_board_ext_data(struct ath10k *ar, const void *data,
- 				      size_t data_len)
- {
--	u32 board_data_size = QCA988X_BOARD_DATA_SZ;
--	u32 board_ext_data_size = QCA988X_BOARD_EXT_DATA_SZ;
-+	u32 board_data_size = ar->hw_params.fw.board_size;
-+	u32 board_ext_data_size = ar->hw_params.fw.board_ext_size;
- 	u32 board_ext_data_addr;
- 	int ret;
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index c5be146..a43a148 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3158,6 +3158,12 @@ __ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 		goto out;
+ 	}
  
-@@ -203,7 +205,7 @@ static int ath10k_push_board_ext_data(struct ath10k *ar, const void *data,
- static int ath10k_download_board_data(struct ath10k *ar, const void *data,
- 				      size_t data_len)
- {
--	u32 board_data_size = QCA988X_BOARD_DATA_SZ;
-+	u32 board_data_size = ar->hw_params.fw.board_size;
- 	u32 address;
- 	int ret;
++	ch_switch.timestamp = 0;
++	ch_switch.device_timestamp = 0;
++	ch_switch.block_tx = params->block_tx;
++	ch_switch.chandef = params->chandef;
++	ch_switch.count = params->count;
++
+ 	err = drv_pre_channel_switch(sdata, &ch_switch);
+ 	if (err)
+ 		goto out;
+@@ -3175,12 +3181,6 @@ __ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 		goto out;
+ 	}
  
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index d37ffd6..1cc81e8 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -482,6 +482,8 @@ struct ath10k {
- 			const char *fw;
- 			const char *otp;
- 			const char *board;
-+			size_t board_size;
-+			size_t board_ext_size;
- 		} fw;
- 	} hw_params;
- 
+-	ch_switch.timestamp = 0;
+-	ch_switch.device_timestamp = 0;
+-	ch_switch.block_tx = params->block_tx;
+-	ch_switch.chandef = params->chandef;
+-	ch_switch.count = params->count;
+-
+ 	err = ieee80211_set_csa_beacon(sdata, params, &changed);
+ 	if (err) {
+ 		ieee80211_vif_unreserve_chanctx(sdata);
 -- 
-1.8.5.3
+2.1.1
 
