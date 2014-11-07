@@ -1,43 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:39848 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750943AbaKQH2Y (ORCPT
+Received: from mail-wg0-f48.google.com ([74.125.82.48]:36470 "EHLO
+	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752579AbaKGTGi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Nov 2014 02:28:24 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] ath10k: Block radar events when requested
-Date: Mon, 17 Nov 2014 12:59:53 +0530
-Message-Id: <1416209393-24736-1-git-send-email-sujith@msujith.org> (sfid-20141117_082833_652047_BC570B01)
+	Fri, 7 Nov 2014 14:06:38 -0500
+Received: by mail-wg0-f48.google.com with SMTP id m15so4419457wgh.35
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Nov 2014 11:06:36 -0800 (PST)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 01/10] staging: vt6655: CARDvUpdateBasicTopRate use basic_rates to find top rate
+Date: Fri,  7 Nov 2014 19:06:00 +0000
+Message-Id: <1415387169-3843-1-git-send-email-tvboxspy@gmail.com> (sfid-20141107_200640_740490_3B62E8AE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+basic_rates should now be used to find it.
 
-This patch ensures that reporting of a radar in simulation
-is not done when detection is disabled explicitly by
-using the debugfs knob 'dfs_block_radar_events'.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/debug.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/staging/vt6655/card.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index 9147dd3..fa1accd 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -1437,7 +1437,8 @@ static ssize_t ath10k_write_simulate_radar(struct file *file,
- {
- 	struct ath10k *ar = file->private_data;
+diff --git a/drivers/staging/vt6655/card.c b/drivers/staging/vt6655/card.c
+index aaa7289..d7b023b 100644
+--- a/drivers/staging/vt6655/card.c
++++ b/drivers/staging/vt6655/card.c
+@@ -843,7 +843,7 @@ void CARDvUpdateBasicTopRate(struct vnt_private *pDevice)
  
--	ieee80211_radar_detected(ar->hw);
-+	if (!ar->dfs_block_radar_events)
-+		ieee80211_radar_detected(ar->hw);
+ 	/* Determines the highest basic rate. */
+ 	for (ii = RATE_54M; ii >= RATE_6M; ii--) {
+-		if ((pDevice->wBasicRate) & ((unsigned short)(1<<ii))) {
++		if ((pDevice->basic_rates) & ((u32)(1 << ii))) {
+ 			byTopOFDM = ii;
+ 			break;
+ 		}
+@@ -851,7 +851,7 @@ void CARDvUpdateBasicTopRate(struct vnt_private *pDevice)
+ 	pDevice->byTopOFDMBasicRate = byTopOFDM;
  
- 	return count;
- }
+ 	for (ii = RATE_11M;; ii--) {
+-		if ((pDevice->wBasicRate) & ((unsigned short)(1<<ii))) {
++		if ((pDevice->basic_rates) & ((u32)(1 << ii))) {
+ 			byTopCCK = ii;
+ 			break;
+ 		}
 -- 
-2.1.3
+2.1.0
 
