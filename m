@@ -1,41 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f47.google.com ([209.85.215.47]:50770 "EHLO
-	mail-la0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750895AbaKZVnz (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:42792 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752654AbaKGTE4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Nov 2014 16:43:55 -0500
-Received: by mail-la0-f47.google.com with SMTP id hz20so3125869lab.20
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Nov 2014 13:43:54 -0800 (PST)
+	Fri, 7 Nov 2014 14:04:56 -0500
+Date: Fri, 7 Nov 2014 11:04:55 -0800
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: Re: [PATCH 1/3] debugfs: add helper function to create device
+ related seq_file
+Message-ID: <20141107190455.GA4653@kroah.com> (sfid-20141107_200459_840020_489EEA7A)
+References: <1414498752-9746-1-git-send-email-arend@broadcom.com>
+ <1414498752-9746-2-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <20141126213531.GT25677@wotan.suse.de>
-References: <1417035388-2511-1-git-send-email-arik@wizery.com>
- <1417035388-2511-3-git-send-email-arik@wizery.com> <20141126213531.GT25677@wotan.suse.de>
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-Date: Wed, 26 Nov 2014 16:43:33 -0500
-Message-ID: <CAB=NE6VXWdjE=ZJvjJ4K56vXMZvi15j2WLi7Vj6cOkA=X2ArOA@mail.gmail.com> (sfid-20141126_224359_126164_E5106AD7)
-Subject: Re: [PATCH v4 3/4] cfg80211: allow usermode to query wiphy specific regdom
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1414498752-9746-2-git-send-email-arend@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 26, 2014 at 4:35 PM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
-> We're not checking here if this was a managed wiphy or not, we
-> want userspace to be able to tell if a wiphy was managed or not.
+On Tue, Oct 28, 2014 at 01:19:10PM +0100, Arend van Spriel wrote:
+> This patch adds a helper function that simplifies adding a
+> so-called single_open sequence file for device drivers. The
+> calling device driver needs to provide a read function and
+> a device pointer. The field struct seq_file::private will
+> reference the device pointer upon call to the read function
+> so the driver can obtain his data from it and do its task
+> of providing the file content using seq_printf() calls and
+> alike. Using this helper function also gets rid of the need
+> to specify file operations per debugfs file.
+> 
+> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+> ---
+>  fs/debugfs/file.c       | 54 +++++++++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/debugfs.h | 16 ++++++++++++++-
+>  2 files changed, 69 insertions(+), 1 deletion(-)
 
-Ah I see what you did, yes that is what I wanted but since you allowed
-for self managed regdomains *first* the placement of this patch in
-terms of order would mean we are not giving userspace information it
-should have needed right after this commit. After your 4th patch we do
-though. We want commits to work well linearly in history so can you
-move this patch to number 2 in the series and bump number 2 to be
-patch number 3? That way right after commit 2 we are not lying to
-userspace.
-
-The question about having userspace specify the wiphy still stands as
-I'd expect userspace asking only for a regd for a wiphy would want
-only that one, not all, or the central one.
-
- Luis
+Please run your patches through checkpatch before sending them so you
+don't get grumpy emails from maintainers complaining about whitespace
+errors :(
