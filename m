@@ -1,73 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail3-relais-sop.national.inria.fr ([192.134.164.104]:54078
-	"EHLO mail3-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750781AbaKVOoj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Nov 2014 09:44:39 -0500
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
-Cc: kernel-janitors@vger.kernel.org,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 1/6] NFC: pn533: fix error return code
-Date: Sat, 22 Nov 2014 15:39:14 +0100
-Message-Id: <1416667159-9808-2-git-send-email-Julia.Lawall@lip6.fr> (sfid-20141122_154657_147880_6C1D47AB)
-In-Reply-To: <1416667159-9808-1-git-send-email-Julia.Lawall@lip6.fr>
-References: <1416667159-9808-1-git-send-email-Julia.Lawall@lip6.fr>
+Received: from dedo.coelho.fi ([88.198.205.34]:58429 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751806AbaKGThi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Nov 2014 14:37:38 -0500
+In-Reply-To: <1415387721.1954.0.camel@sipsolutions.net>
+References: <1415312956-9442-1-git-send-email-johannes@sipsolutions.net> <1415363870.12617.0.camel@coelho.fi> <1415387721.1954.0.camel@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+ charset=UTF-8
+From: Luca Coelho <luca@coelho.fi>
+Date: Fri, 07 Nov 2014 21:37:25 +0200
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Message-ID: <1D96301C-ADA3-4A41-9E1D-97D5A5C82B94@coelho.fi> (sfid-20141107_203741_742974_3386DCC6)
+Subject: Re: [PATCH] mac80211: add back support for radiotap vendor namespace data
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Julia Lawall <Julia.Lawall@lip6.fr>
+On November 7, 2014 9:15:21 PM EET, Johannes Berg <johannes@sipsolutions.net> wrote:
+>On Fri, 2014-11-07 at 14:37 +0200, Luca Coelho wrote:
+>
+>> > +#if 0
+>> > +	struct ieee80211_vendor_radiotap *rtap;
+>> > +
+>> > +	rtap = (void *)skb_push(skb, sizeof(*rtap) + 8 + 4);
+>> > +	/*
+>> > +	 * Don't enable this code by default as the OUI 00:00:00
+>> > +	 * is registered to Xerox so we shouldn't use it here, it
+>> > +	 * might find its way into pcap files.
+>> > +	 * Note that this code requires the headroom in the SKB
+>> > +	 * that was allocated earlier.
+>> > +	 */
+>
+>> Is this #if 0'ed section here on purpose? If yes, maybe explain it in
+>> the commit message?
+>
+>You're the second person to ask this, but come on ... really? :)
 
-Return a negative error code on failure.
+Okay, I know I'm missing something. But i just hate #if 0s, especially when I don't easily understand the need for them.
 
-A simplified version of the semantic match that finds this problem is as
-follows: (http://coccinelle.lip6.fr/)
 
-// <smpl>
-@@
-identifier ret; expression e1,e2;
-@@
-(
-if (\(ret < 0\|ret != 0\))
- { ... return ret; }
-|
-ret = 0
-)
-... when != ret = e1
-    when != &ret
-*if(...)
-{
-  ... when != ret = e2
-      when forall
- return ret;
-}
-// </smpl>
+>
+>johannes
 
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-
----
-The error code is chosen according to the other call to this function
-in the same file.
-
- drivers/nfc/pn533.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/nfc/pn533.c b/drivers/nfc/pn533.c
-index d46a700..a859303 100644
---- a/drivers/nfc/pn533.c
-+++ b/drivers/nfc/pn533.c
-@@ -2554,8 +2554,10 @@ static int pn533_data_exchange_complete(struct pn533 *dev, void *_arg,
- 	}
- 
- 	skb = pn533_build_response(dev);
--	if (!skb)
-+	if (!skb) {
-+		rc = -EIO;
- 		goto error;
-+	}
- 
- 	arg->cb(arg->cb_context, skb, 0);
- 	kfree(arg);
 
