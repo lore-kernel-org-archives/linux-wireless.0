@@ -1,84 +1,206 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:35696 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754243AbaKNGKA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Nov 2014 01:10:00 -0500
-Message-ID: <1415945381.3117.17.camel@coelho.fi> (sfid-20141114_071008_279571_EBF6B6C7)
-From: Luca Coelho <luca@coelho.fi>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	linux-wireless@vger.kernel.org
-Date: Fri, 14 Nov 2014 08:09:41 +0200
-In-Reply-To: <1415933712.2629.12.camel@dcbw.local>
-References: <20141113123313.GA1926@redhat.com>
-	 <1415882683.2021.3.camel@sipsolutions.net>
-	 <A21755E2-3054-46B2-9BA6-07347FB91E1E@holtmann.org>
-	 <1415933712.2629.12.camel@dcbw.local>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: Can fb4e156886ce6e8309e912d8b370d192330d19d3 be reverted ?
+Received: from mx1.redhat.com ([209.132.183.28]:51157 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751480AbaKGPql (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Nov 2014 10:46:41 -0500
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: "Sharma\, Sanjeev" <Sanjeev_Sharma@mentor.com>
+Cc: Greg KH <gregkh@linuxfoundation.org>,
+	"Larry.Finger\@lwfinger.net" <Larry.Finger@lwfinger.net>,
+	"devel\@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] staging:rtl8723au: core: Fix Warning reported by checkpatch.
+References: <wrfjy4rxzk5b.fsf@redhat.com>
+	<1415255796-8471-1-git-send-email-sanjeev_sharma@mentor.com>
+	<20141106154301.GC19605@kroah.com>
+	<FDC088D3B5555644AE135ED28A7ABDE950E8B904@EU-MBX-02.mgc.mentorg.com>
+Date: Fri, 07 Nov 2014 10:46:18 -0500
+In-Reply-To: <FDC088D3B5555644AE135ED28A7ABDE950E8B904@EU-MBX-02.mgc.mentorg.com>
+	(Sanjeev Sharma's message of "Fri, 7 Nov 2014 12:00:19 +0000")
+Message-ID: <wrfj61er2eut.fsf@redhat.com> (sfid-20141107_164703_186110_96AE0B70)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-11-13 at 20:55 -0600, Dan Williams wrote:
-> On Thu, 2014-11-13 at 22:41 +0900, Marcel Holtmann wrote:
-> > Hi Johannes,
-> > 
-> > >> I've updated wireless code on RHEL and get complain that now
-> > >> cfg80211 and rfkill modules are loaded on machines that do not have
-> > >> wireless hardware. Modules are auto-loaded because NetworkManager send
-> > >> nl80211 messages to check if there are wireless devices in the system.
-> > >> 
-> > >> Hence my question, can we revert commit fb4e156886ce
-> > >> "nl80211: Add generic netlink module alias for cfg80211/nl80211" ?
-> > > 
-> > > Realistically, we can't revert it, but only remove the
-> > > MODULE_ALIAS_GENL_FAMILY() line.
-> > > 
-> > >> Auto loading nl80211 does not seems to be necessary, if there are
-> > >> wireless devices nl80211 will be loaded anyway.
-> > > 
-> > > Maybe other applications would like to see an empty list of devices? But
-> > > OTOH, if they're robust at all, they have to cope with kernels not even
-> > > compiled with nl80211, so I guess for me I don't really see a big
-> > > difference in whether the module alias exists or not.
-> > 
-> > auto-loading cfg80211 module when userspace requests nl80211 netlink family is exactly the right thing to do. Systems compiled without nl80211 support and systems with no wireless device attached are two different things.
-> > 
-> > Someone can fix NetworkManager to not send nl80211 messages or just plain accept that cfg80211 will be loaded.
-> 
-> NM uses nl80211 initially to determine whether *any* ethernet-type
-> interface (a) is actually WiFi, and (b) should be driven by nl80211 or
-> WEXT.  Because of the variety of drivers (both in-kernel and
-> out-of-kernel) and the variety of kernel versions (NM supports back to
-> early 3.x series) we cannot rely on specific behavior.
-> 
-> So given an ethernet-type interface, how do we determine that it is
-> wifi?
-> 
-> DEVTYPE=wlan - not always reliable due to driver and kernel versions
-> 
-> "phy80211" in sysfs: same reason; also doesn't capture WEXT or
-> out-of-tree drivers
-> 
-> nl80211 calls: this is the only 100% reliable mechanism to detect
-> whether an ethernet-type interface is actually WiFi and nl80211-capable.
-> 
-> And unfortunately calling nl80211 loads the module...
+"Sharma, Sanjeev" <Sanjeev_Sharma@mentor.com> writes:
+> -----Original Message-----
+> From: Greg KH [mailto:gregkh@linuxfoundation.org] 
+> Sent: Thursday, November 06, 2014 9:13 PM
+> To: Sharma, Sanjeev
+> Cc: Larry.Finger@lwfinger.net; Jes.Sorensen@redhat.com;
+> devel@driverdev.osuosl.org; linux-wireless@vger.kernel.org;
+> linux-kernel@vger.kernel.org
+> Subject: Re: [PATCH] staging:rtl8723au: core: Fix Warning reported by
+> checkpatch.
+>
+> On Thu, Nov 06, 2014 at 12:06:36PM +0530, Sanjeev Sharma wrote:
+>> This is a patch to the rtw_cmd.c file that fixes following Warning by 
+>> introducing temporary structure.
+>> 
+>> WARNING: line over 80 characters
+>> 
+>> Signed-off-by: Sanjeev Sharma <Sanjeev_Sharma@mentor.com>
+>> ---
+>>  drivers/staging/rtl8723au/core/rtw_cmd.c | 123 
+>> +++++++++++++++----------------
+>>  1 file changed, 60 insertions(+), 63 deletions(-)
+>
+> Same as the other patch, give us a hint as to the warning in the subject.
+>
+> This patch is Fix of Warning introduced in Previous patch while fixing " ERROR: spaces required around that '>' (ctx:WxV)".Can I mentioned dependency or hint in subject line or do we have
+> another way to described these type of fix.(One patch introduced another Warning/Error)
 
-So, basically the conclusion is: there's no way around it.  If someone
-in userspace uses nl80211 it must be loaded, regardless of whether
-nl80211 is automatically loaded or if depmod bring it in.
+When replying to these messages, please do it properly with proper
+quoting. Do NOT resend other peoples' emails with just an
+"-----Original Message-----" line and no comments and no indentation of
+the message you respond to.
 
-The only way to address Stanislaw's initial concern is, as already
-proposed before, to change userspace.
+If you have any questions, please read:
+https://www.ietf.org/rfc/rfc1855.txt
 
-Or, maybe nl80211/cfg80211 could be unloaded automatically as well? If
-no driver uses it from below and nobody from userspace uses it for a
-period of time, off it goes...
+Jes
 
---
-Luca.
-
+>
+>> 
+>> diff --git a/drivers/staging/rtl8723au/core/rtw_cmd.c 
+>> b/drivers/staging/rtl8723au/core/rtw_cmd.c
+>> index 4eaa502..6186575 100644
+>> --- a/drivers/staging/rtl8723au/core/rtw_cmd.c
+>> +++ b/drivers/staging/rtl8723au/core/rtw_cmd.c
+>> @@ -919,34 +919,34 @@ static void traffic_status_watchdog(struct rtw_adapter *padapter)
+>>  	u8 bHigherBusyTxTraffic = false;
+>>  	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
+>>  	int BusyThreshold = 100;
+>> +	struct rt_link_detect *ldi = &pmlmepriv->LinkDetectInfo;
+>> +
+>>  	/*  */
+>>  	/*  Determine if our traffic is busy now */
+>>  	/*  */
+>>  	if (check_fwstate(pmlmepriv, _FW_LINKED)) {
+>>  		if (rtl8723a_BT_coexist(padapter))
+>>  			BusyThreshold = 50;
+>> -		else if (pmlmepriv->LinkDetectInfo.bBusyTraffic)
+>> +		else if (ldi->bBusyTraffic)
+>>  			BusyThreshold = 75;
+>>  		/*  if we raise bBusyTraffic in last watchdog, using
+>>  		    lower threshold. */
+>> -		if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod > BusyThreshold ||
+>> -		    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod > BusyThreshold) {
+>> +		if (ldi->NumRxOkInPeriod > BusyThreshold ||
+>> +		    ldi->NumTxOkInPeriod > BusyThreshold) {
+>>  			bBusyTraffic = true;
+>>  
+>> -			if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod >
+>> -			    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod)
+>> +			if (ldi->NumRxOkInPeriod > ldi->NumTxOkInPeriod)
+>>  				bRxBusyTraffic = true;
+>>  			else
+>>  				bTxBusyTraffic = true;
+>>  		}
+>>  
+>>  		/*  Higher Tx/Rx data. */
+>> -		if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod > 4000 ||
+>> -		    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod > 4000) {
+>> +		if (ldi->NumRxOkInPeriod > 4000 ||
+>> +		    ldi->NumTxOkInPeriod > 4000) {
+>>  			bHigherBusyTraffic = true;
+>>  
+>> -			if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod >
+>> -			    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod)
+>> +			if (ldi->NumRxOkInPeriod > ldi->NumTxOkInPeriod)
+>>  				bHigherBusyRxTraffic = true;
+>>  			else
+>>  				bHigherBusyTxTraffic = true;
+>> @@ -955,9 +955,9 @@ static void traffic_status_watchdog(struct rtw_adapter *padapter)
+>>  		if (!rtl8723a_BT_coexist(padapter) ||
+>>  		    !rtl8723a_BT_using_antenna_1(padapter)) {
+>>  		/*  check traffic for  powersaving. */
+>> -			if (((pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod +
+>> -			      pmlmepriv->LinkDetectInfo.NumTxOkInPeriod) > 8) ||
+>> -			    pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod >2)
+>> +			if (((ldi->NumRxUnicastOkInPeriod +
+>> +			      ldi->NumTxOkInPeriod) > 8) ||
+>> +			    ldi->NumRxUnicastOkInPeriod > 2)
+>>  				bEnterPS = false;
+>>  			else
+>>  				bEnterPS = true;
+>> @@ -971,15 +971,15 @@ static void traffic_status_watchdog(struct rtw_adapter *padapter)
+>>  	} else
+>>  		LPS_Leave23a(padapter);
+>>  
+>> -	pmlmepriv->LinkDetectInfo.NumRxOkInPeriod = 0;
+>> -	pmlmepriv->LinkDetectInfo.NumTxOkInPeriod = 0;
+>> -	pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod = 0;
+>> -	pmlmepriv->LinkDetectInfo.bBusyTraffic = bBusyTraffic;
+>> -	pmlmepriv->LinkDetectInfo.bTxBusyTraffic = bTxBusyTraffic;
+>> -	pmlmepriv->LinkDetectInfo.bRxBusyTraffic = bRxBusyTraffic;
+>> -	pmlmepriv->LinkDetectInfo.bHigherBusyTraffic = bHigherBusyTraffic;
+>> -	pmlmepriv->LinkDetectInfo.bHigherBusyRxTraffic = bHigherBusyRxTraffic;
+>> -	pmlmepriv->LinkDetectInfo.bHigherBusyTxTraffic = bHigherBusyTxTraffic;
+>> +	ldi->NumRxOkInPeriod = 0;
+>> +	ldi->NumTxOkInPeriod = 0;
+>> +	ldi->NumRxUnicastOkInPeriod = 0;
+>> +	ldi->bBusyTraffic = bBusyTraffic;
+>> +	ldi->bTxBusyTraffic = bTxBusyTraffic;
+>> +	ldi->bRxBusyTraffic = bRxBusyTraffic;
+>> +	ldi->bHigherBusyTraffic = bHigherBusyTraffic;
+>> +	ldi->bHigherBusyRxTraffic = bHigherBusyRxTraffic;
+>> +	ldi->bHigherBusyTxTraffic = bHigherBusyTxTraffic;
+>>  }
+>>  
+>>  static void dynamic_chk_wk_hdl(struct rtw_adapter *padapter, u8 
+>> *pbuf, int sz) @@ -1017,46 +1017,44 @@ static void lps_ctrl_wk_hdl(struct rtw_adapter *padapter, u8 lps_ctrl_type)
+>>  	    check_fwstate(pmlmepriv, WIFI_ADHOC_STATE))
+>>  		return;
+>>  
+>> -	switch (lps_ctrl_type)
+>> -	{
+>> -		case LPS_CTRL_SCAN:
+>> -			rtl8723a_BT_wifiscan_notify(padapter, true);
+>> -			if (!rtl8723a_BT_using_antenna_1(padapter)) {
+>> -				if (check_fwstate(pmlmepriv, _FW_LINKED))
+>> -					LPS_Leave23a(padapter);
+>> -			}
+>> -			break;
+>> -		case LPS_CTRL_JOINBSS:
+>> -			LPS_Leave23a(padapter);
+>> -			break;
+>> -		case LPS_CTRL_CONNECT:
+>> -			mstatus = 1;/* connect */
+>> -			/*  Reset LPS Setting */
+>> -			padapter->pwrctrlpriv.LpsIdleCount = 0;
+>> -			rtl8723a_set_FwJoinBssReport_cmd(padapter, 1);
+>> -			rtl8723a_BT_mediastatus_notify(padapter, mstatus);
+>> -			break;
+>> -		case LPS_CTRL_DISCONNECT:
+>> -			mstatus = 0;/* disconnect */
+>> -			rtl8723a_BT_mediastatus_notify(padapter, mstatus);
+>> -			if (!rtl8723a_BT_using_antenna_1(padapter))
+>> -				LPS_Leave23a(padapter);
+>> -			rtl8723a_set_FwJoinBssReport_cmd(padapter, 0);
+>> -			break;
+>> -		case LPS_CTRL_SPECIAL_PACKET:
+>> -			pwrpriv->DelayLPSLastTimeStamp = jiffies;
+>> -			rtl8723a_BT_specialpacket_notify(padapter);
+>> -			if (!rtl8723a_BT_using_antenna_1(padapter))
+>> -				LPS_Leave23a(padapter);
+>> -			break;
+>> -		case LPS_CTRL_LEAVE:
+>> -			rtl8723a_BT_lps_leave(padapter);
+>> -			if (!rtl8723a_BT_using_antenna_1(padapter))
+>> +	switch (lps_ctrl_type) {
+>> +	case LPS_CTRL_SCAN:
+>> +		rtl8723a_BT_wifiscan_notify(padapter, true);
+>> +		if (!rtl8723a_BT_using_antenna_1(padapter)) {
+>> +			if (check_fwstate(pmlmepriv, _FW_LINKED))
+>>  				LPS_Leave23a(padapter);
+>
+> You are doing more than one thing here, something you did not specify in your changelog above, which isn't ok :(
+>
+> Please fix up and resend.
+>
+> thanks,
+>
+> greg k-h
