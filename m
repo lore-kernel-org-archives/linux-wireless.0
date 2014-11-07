@@ -1,51 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:61261 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751846AbaK1OjD convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:11035 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751299AbaKGNOm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Nov 2014 09:39:03 -0500
-Received: by mail-wi0-f172.google.com with SMTP id n3so18776554wiv.5
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Nov 2014 06:39:01 -0800 (PST)
+	Fri, 7 Nov 2014 08:14:42 -0500
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH 1/2] ath10k: add modpram 'skip_otp' to ignore empty otp error during BMI
+Date: Fri, 7 Nov 2014 18:46:44 +0530
+Message-ID: <1415366205-11672-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20141107_141446_266117_C4052639)
 MIME-Version: 1.0
-In-Reply-To: <1417079481-22255-8-git-send-email-michal.kazior@tieto.com>
-References: <1417079481-22255-1-git-send-email-michal.kazior@tieto.com>
-	<1417079481-22255-8-git-send-email-michal.kazior@tieto.com>
-Date: Fri, 28 Nov 2014 15:39:01 +0100
-Message-ID: <CA+BoTQn=g8-=FEEoW7Ux+p6s=EBy_3rwCP3qXWk_8ijR6jXY+Q@mail.gmail.com> (sfid-20141128_153907_825870_5B9F6D66)
-Subject: Re: [PATCH v2 7/7] ath10k: implement wmi-tlv backend
-From: Michal Kazior <michal.kazior@tieto.com>
-To: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 27 November 2014 at 10:11, Michal Kazior <michal.kazior@tieto.com> wrote:
-> Latest main firmware branch introduced a new WMI
-> ABI called wmi-tlv. It is not a tlv strictly
-> speaking but something that resembles it because
-> it is ordered and may have duplicate id entries.
->
-> This prepares ath10k to support new hw.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-[...]
-> @@ -215,6 +254,42 @@ static inline char *wmi_service_name(int service_id)
->         SVCSTR(WMI_SERVICE_BURST);
->         SVCSTR(WMI_SERVICE_SMART_ANTENNA_SW_SUPPORT);
->         SVCSTR(WMI_SERVICE_SMART_ANTENNA_HW_SUPPORT);
-> +       SVCSTR(WMI_SERVICE_ROAM_SCAN_OFFLOAD);
-> +       SVCSTR(WMI_SERVICE_AP_PS_DETECT_OUT_OF_SYNC);
-> +       SVCSTR(WMI_SERVICE_EARLY_RX);
-[...]
-> +       SVCSTR(WMI_SERVICE_RX_FULL_REORDER);
-> +       SVCSTR(WMI_SERVICE_DHCP_OFFLOAD);
+This patch would help bring up wifi interface with default board
+data in case of failures in otp download. It is useful for initial
+caliberation.
 
-I've added 3 new service enums in v2:
-WMI_SERVICE_STA_RX_IPA_OFFLOAD_SUPPORT, WMI_SERVICE_MDNS_OFFLOAD,
-WMI_SERVICE_SAP_AUTH_OFFLOAD but apparently I forgot to add SVCSTR()
-for that..
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 5c23d00..2de49e4 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -31,12 +31,15 @@
+ unsigned int ath10k_debug_mask;
+ static bool uart_print;
+ static unsigned int ath10k_p2p;
++static bool skip_otp;
+ module_param_named(debug_mask, ath10k_debug_mask, uint, 0644);
+ module_param(uart_print, bool, 0644);
+ module_param_named(p2p, ath10k_p2p, uint, 0644);
++module_param(skip_otp, bool, 0644);
+ MODULE_PARM_DESC(debug_mask, "Debugging mask");
+ MODULE_PARM_DESC(uart_print, "Uart target debugging");
+ MODULE_PARM_DESC(p2p, "Enable ath10k P2P support");
++MODULE_PARM_DESC(skip_otp, "Skip otp failure for calibration in testmode");
+ 
+ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 	{
+@@ -280,7 +283,7 @@ static int ath10k_download_and_run_otp(struct ath10k *ar)
+ 
+ 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot otp execute result %d\n", result);
+ 
+-	if (result != 0) {
++	if (!skip_otp && result != 0) {
+ 		ath10k_err(ar, "otp calibration failed: %d", result);
+ 		return -EINVAL;
+ 	}
+-- 
+2.1.3
 
-Michał
