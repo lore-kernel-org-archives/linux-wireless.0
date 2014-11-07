@@ -1,46 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:61086 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752237AbaKYFxa (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:48901 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751884AbaKGPaR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Nov 2014 00:53:30 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Sujith Manoharan <sujith@msujith.org>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/3] ath10k: Fix shared WEP
-References: <1416796657-24657-1-git-send-email-sujith@msujith.org>
-	<1416796657-24657-2-git-send-email-sujith@msujith.org>
-	<87lhn0639s.fsf@kamboji.qca.qualcomm.com>
-	<21620.5017.657509.251220@gargle.gargle.HOWL>
-Date: Tue, 25 Nov 2014 07:53:12 +0200
-In-Reply-To: <21620.5017.657509.251220@gargle.gargle.HOWL> (Sujith Manoharan's
-	message of "Tue, 25 Nov 2014 10:58:57 +0530")
-Message-ID: <87y4qz3jxz.fsf@kamboji.qca.qualcomm.com> (sfid-20141125_065349_385988_E34B595A)
+	Fri, 7 Nov 2014 10:30:17 -0500
+Date: Fri, 7 Nov 2014 10:19:08 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH 3/3 3.18] rtlwifi: rtl8192se: Fix connection problems
+Message-ID: <20141107151908.GB29733@tuxdriver.com> (sfid-20141107_163023_724372_6DE1923B)
+References: <1415236254-12274-1-git-send-email-Larry.Finger@lwfinger.net>
+ <1415236254-12274-4-git-send-email-Larry.Finger@lwfinger.net>
+ <20141106204549.GD4440@tuxdriver.com>
+ <545BFA52.6000309@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <545BFA52.6000309@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sujith Manoharan <sujith@msujith.org> writes:
+On Thu, Nov 06, 2014 at 04:46:42PM -0600, Larry Finger wrote:
+> On 11/06/2014 02:45 PM, John W. Linville wrote:
+> >On Wed, Nov 05, 2014 at 07:10:54PM -0600, Larry Finger wrote:
+> >>Changes in the vendor driver were added to rtlwifi, but some updates
+> >>to rtl8192se were missed.
+> >>
+> >>Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> >>---
+> >>  drivers/net/wireless/rtlwifi/rtl8192se/hw.c  | 129 +++++++++++++--------------
+> >>  drivers/net/wireless/rtlwifi/rtl8192se/phy.c |   8 +-
+> >>  drivers/net/wireless/rtlwifi/rtl8192se/sw.c  |   4 +
+> >>  drivers/net/wireless/rtlwifi/rtl8192se/trx.c |  23 +++++
+> >>  drivers/net/wireless/rtlwifi/rtl8192se/trx.h |   4 +
+> >>  5 files changed, 100 insertions(+), 68 deletions(-)
+> >
+> >This looks a bit big for a fix.  Could this be broken-up a bit more?
+> >Perhaps you could enhance the changelog a bit more?
+> 
+> I had used a scatter-gun approach to finding the missing parts, and I did
+> not take the time to see which changes were crucial, and which were not.
+> 
+> Now that I knew what it took, I was able to eliminate a lot of the patch
+> that can be deferred for 3.19.
+> 
+> The commit message and the changelog for the new version are
+> 
+> Changes in the vendor driver were added to rtlwifi, but some updates
+> to rtl8192se were missed, and the driver could neither scan nor connect.
+> There are other changes that will enhance performance, but this minimal
+> set fixes the basic functionality.
+> 
+>  drivers/net/wireless/rtlwifi/pci.c           |  3 ++-
+>  drivers/net/wireless/rtlwifi/rtl8192se/hw.c  |  7 +++++--
+>  drivers/net/wireless/rtlwifi/rtl8192se/phy.c |  2 ++
+>  drivers/net/wireless/rtlwifi/rtl8192se/sw.c  | 16 ++++++++++++++++
+>  4 files changed, 25 insertions(+), 3 deletions(-)
+> 
+> Will that be OK? I need to do more testing, but V2 of the patch should be
+> ready for submission by tomorrow.
 
-> Kalle Valo wrote:
->> No magic numbers, please. I didn't find anything for IV internals from
->> ieee80211.h, not sure if we should add them there or just use ath10k
->> internal defines.
->
-> We are just retrieving the keyidx from the IV - not sure adding a couple
-> of macros for "6" and "3" will make any difference.
+That sounds better, at least. :-)  Thanks, Larry!
 
-It won't make a difference for you but it will for someone else reading
-that part of code.
-
-keyidx = skb->data[hdrlen + WEP_HDR_IV_LEN] >> WEP_HDR_KEY_ID_LSB;
-
-versus:
-
-keyidx = skb->data[hdrlen + 3] >> 6;
-
-(I didn't check the standard so tha names can be totally wrong.)
-
+John
 -- 
-Kalle Valo
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
