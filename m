@@ -1,57 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f51.google.com ([74.125.82.51]:37008 "EHLO
-	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751156AbaKFUCc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Nov 2014 15:02:32 -0500
-Received: by mail-wg0-f51.google.com with SMTP id l18so2019407wgh.24
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Nov 2014 12:02:30 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
+Received: from dedo.coelho.fi ([88.198.205.34]:58051 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751299AbaKGMh6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Nov 2014 07:37:58 -0500
+Message-ID: <1415363870.12617.0.camel@coelho.fi> (sfid-20141107_133802_481495_256D658F)
+From: Luca Coelho <luca@coelho.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
 Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 1/6] staging: vt6655: baseband.h remove pDevice from struct vnt_private pointer
-Date: Thu,  6 Nov 2014 20:02:00 +0000
-Message-Id: <1415304125-5165-1-git-send-email-tvboxspy@gmail.com> (sfid-20141106_210258_810341_ECFE645D)
+	Johannes Berg <johannes.berg@intel.com>
+Date: Fri, 07 Nov 2014 14:37:50 +0200
+In-Reply-To: <1415312956-9442-1-git-send-email-johannes@sipsolutions.net>
+References: <1415312956-9442-1-git-send-email-johannes@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH] mac80211: add back support for radiotap vendor
+ namespace data
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/baseband.h | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+On Thu, 2014-11-06 at 23:29 +0100, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> Radiotap vendor namespace data might still be useful, but we
+> reverted it because it used too much space in the RX status.
+> Put it back, but address the space problem by using a single
+> but only and putting everything else into the skb->data.
+> 
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+>  drivers/net/wireless/mac80211_hwsim.c |  43 +++++++++++++++
+>  include/net/mac80211.h                |  33 +++++++++++
+>  net/mac80211/rx.c                     | 100 ++++++++++++++++++++++++++++------
+>  3 files changed, 158 insertions(+), 18 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+> index 209db62ee627..89e14fa6c884 100644
+> --- a/drivers/net/wireless/mac80211_hwsim.c
+> +++ b/drivers/net/wireless/mac80211_hwsim.c
+> @@ -984,6 +984,46 @@ static void mac80211_hwsim_tx_iter(void *_data, u8 *addr,
+>  	data->receive = true;
+>  }
+>  
+> +static void mac80211_hwsim_add_vendor_rtap(struct sk_buff *skb)
+> +{
+> +#if 0
+> +	struct ieee80211_vendor_radiotap *rtap;
+> +
+> +	rtap = (void *)skb_push(skb, sizeof(*rtap) + 8 + 4);
+> +	/*
+> +	 * Don't enable this code by default as the OUI 00:00:00
+> +	 * is registered to Xerox so we shouldn't use it here, it
+> +	 * might find its way into pcap files.
+> +	 * Note that this code requires the headroom in the SKB
+> +	 * that was allocated earlier.
+> +	 */
+> +	rtap->oui[0] = 0x00;
+> +	rtap->oui[1] = 0x00;
+> +	rtap->oui[2] = 0x00;
+> +	rtap->subns = 127;
+> +
+> +	/*
+> +	 * Radiotap vendor namespaces can (and should) also be
+> +	 * split into fields by using the standard radiotap
+> +	 * presence bitmap mechanism. Use just BIT(0) here for
+> +	 * the presence bitmap.
+> +	 */
+> +	rtap->present = BIT(0);
+> +	/* We have 8 bytes of (dummy) data */
+> +	rtap->len = 8;
+> +	/* For testing, also require it to be aligned */
+> +	rtap->align = 8;
+> +	/* And also test that padding works, 4 bytes */
+> +	rtap->pad = 4;
+> +	/* push the data */
+> +	memcpy(rtap->data, "ABCDEFGH", 8);
+> +	/* make sure to clear padding, mac80211 doesn't */
+> +	memset(rtap->data + 8, 0, 4);
+> +
+> +	IEEE80211_SKB_RXCB(skb)->flag |= RX_FLAG_RADIOTAP_VENDOR_DATA;
+> +#endif
 
-diff --git a/drivers/staging/vt6655/baseband.h b/drivers/staging/vt6655/baseband.h
-index 6ce856c..c41bc33 100644
---- a/drivers/staging/vt6655/baseband.h
-+++ b/drivers/staging/vt6655/baseband.h
-@@ -80,11 +80,11 @@ void vnt_get_phy_field(struct vnt_private *, u32 frame_length,
- bool BBbReadEmbedded(void __iomem *dwIoBase, unsigned char byBBAddr, unsigned char *pbyData);
- bool BBbWriteEmbedded(void __iomem *dwIoBase, unsigned char byBBAddr, unsigned char byData);
- 
--void BBvSetShortSlotTime(struct vnt_private *pDevice);
--void BBvSetVGAGainOffset(struct vnt_private *pDevice, unsigned char byData);
-+void BBvSetShortSlotTime(struct vnt_private *);
-+void BBvSetVGAGainOffset(struct vnt_private *, unsigned char byData);
- 
- /* VT3253 Baseband */
--bool BBbVT3253Init(struct vnt_private *pDevice);
-+bool BBbVT3253Init(struct vnt_private *);
- void BBvSoftwareReset(void __iomem *dwIoBase);
- void BBvPowerSaveModeON(void __iomem *dwIoBase);
- void BBvPowerSaveModeOFF(void __iomem *dwIoBase);
-@@ -105,9 +105,9 @@ TimerState1CallBack(
- 	unsigned long
- );
- 
--void BBvAntennaDiversity(struct vnt_private *pDevice,
-+void BBvAntennaDiversity(struct vnt_private *,
- 			 unsigned char byRxRate, unsigned char bySQ3);
- void
--BBvClearAntDivSQ3Value(struct vnt_private *pDevice);
-+BBvClearAntDivSQ3Value(struct vnt_private *);
- 
- #endif /* __BASEBAND_H__ */
--- 
-2.1.0
+Is this #if 0'ed section here on purpose? If yes, maybe explain it in
+the commit message?
+
+--
+Luca.
 
