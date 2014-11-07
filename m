@@ -1,124 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:30432 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750760AbaKEGFq (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:54190 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751828AbaKGVaJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Nov 2014 01:05:46 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <cluo@marvell.com>,
-	<huxm@marvell.com>, <yangyang@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [Patch v2 3/5] mwifiex: fix out of memory issue observed for USB chipsets
-Date: Wed, 5 Nov 2014 17:04:29 +0530
-Message-ID: <1415187271-17914-3-git-send-email-akarwar@marvell.com> (sfid-20141105_070550_021252_4BF94F9F)
-In-Reply-To: <1415187271-17914-1-git-send-email-akarwar@marvell.com>
-References: <1415187271-17914-1-git-send-email-akarwar@marvell.com>
+	Fri, 7 Nov 2014 16:30:09 -0500
+Date: Fri, 7 Nov 2014 16:21:18 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Peter Gent <Peter.Gent@mbie.govt.nz>
+Cc: "wireless-regdb@lists.infradead.org"
+	<wireless-regdb@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: wireless-regdb: Update regulatory rules for New Zealand (NZ) on
+ 5GHz and 60 GHz [UNCLASSIFIED]
+Message-ID: <20141107212117.GF29733@tuxdriver.com> (sfid-20141107_223014_676581_88BF5CBF)
+References: <D0D2EC853BFD0147A005CC7FAC0E4A53E39A56A6@AKI2K113.wd.govt.nz>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <D0D2EC853BFD0147A005CC7FAC0E4A53E39A56A6@AKI2K113.wd.govt.nz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On some platforms, system goes out of memory during heavy
-Rx traffic with our USB chipsets.
+On Tue, Oct 28, 2014 at 01:04:10AM +0000, Peter Gent wrote:
+> Hi,
+> 
+> We wish to note the following changes should be made to the wireless regulatory database to reflect some recent changes to the 60 GHz band here in New Zealand. In additional there are some inaccuracies when compared to our current licencing for the 5 GHz "Wi-Fi" band.
+> 
+> The updated entry for New Zealand should read:
+> 
+> 5150 MHz  - 5250 MHz  80MHz channels, indoor use only at -7.0 dBW EIRP TPC enabled
+> 5250 MHz -  5350 MHz  80 MHz channels, indoor use at -7.0 dBW EIRP, outdoor use at 0 dBW EIRP with DFS and TPC enabled* 
+> 5470 MHz  - 5725 MHz  80 MHz channels, 0 dBW EIRP with DFS and TPC enabled*
+> 5725 MHz  - 5875 MHz  80 MHz channels, 6.0 dBW EIRP with frequency hopping enabled  
+> 57000 MHz - 66000 MHz, indoor use only at 13.0 dBW EIRP 
+> 
+> *if TPC is not enabled, than transmit power must be reduced by 3dB
+> 
+> Further information on SRD licencing rules can be found at http://www.rsm.govt.nz/cms/licensees/types-of-licence/general-user-licences/short-range-devices 
+> 
+> Regards
+> 
+> Peter
 
-In case of SDIO/PCIe, after receiving 50 packets in Rx queue
-we stop processing interrupts till packets pending fall below
-low threshold i.e 20. We don't have similar logic for USB,
-so if host platform is slow, we would hit a case where firmware
-keeps on pushing packets at high speed than driver/kernel can
-process.
+Peter,
 
-We will stop submitting URBs for Rx data when pending packet
-count reaches high threshold and restart them when enough
-packets are consumed to solve the problem.
+Thanks for making us aware of this info.  I'm sorry that there has
+been no other response so far.
 
-BugLink: https://bugzilla.kernel.org/show_bug.cgi?id=85071
-Reported-by: Marek Belisko <marek.belisko@gmail.com>
-Tested-by: Marek Belisko <marek.belisko@gmail.com>
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
- drivers/net/wireless/mwifiex/main.c |  2 ++
- drivers/net/wireless/mwifiex/main.h |  1 +
- drivers/net/wireless/mwifiex/usb.c  | 23 ++++++++++++++++++++++-
- 3 files changed, 25 insertions(+), 1 deletion(-)
+Changes to our regulatory rules database are typically proposed in the
+form of a patch.  This promotes specificity in making such changes.
+I suspect that you are unfamiliar with this form of change proposal,
+so I have taken a first whack at it.
 
-diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
-index cb23ca3..2a5a59b 100644
---- a/drivers/net/wireless/mwifiex/main.c
-+++ b/drivers/net/wireless/mwifiex/main.c
-@@ -146,6 +146,8 @@ static int mwifiex_process_rx(struct mwifiex_adapter *adapter)
- 		atomic_dec(&adapter->rx_pending);
- 		if (adapter->delay_main_work &&
- 		    (atomic_read(&adapter->rx_pending) < LOW_RX_PENDING)) {
-+			if (adapter->if_ops.submit_rem_rx_urbs)
-+				adapter->if_ops.submit_rem_rx_urbs(adapter);
- 			adapter->delay_main_work = false;
- 			queue_work(adapter->workqueue, &adapter->main_work);
- 		}
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index df6f877..5feaffb 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -693,6 +693,7 @@ struct mwifiex_if_ops {
- 	void (*fw_dump)(struct mwifiex_adapter *);
- 	int (*clean_pcie_ring) (struct mwifiex_adapter *adapter);
- 	void (*iface_work)(struct work_struct *work);
-+	void (*submit_rem_rx_urbs)(struct mwifiex_adapter *adapter);
- };
+While I maintain the database, I am not as radio proficient as I
+perhaps should be.  I normally leave writing such patches for others,
+and wait for some level of agreement to be reached before applying
+changes.  In this case, it is quite likely that I have overlooked
+something or misinterpreted (or simply misunderstood) your change
+suggestions.
+
+I hope that you and others will take a moment to comment and/or
+suggest further changes to my proposed changes below.  Without some
+affirmative commentary I will not apply any derivative of the changes
+specified below.
+
+Thanks!
+
+John
+
+diff --git a/db.txt b/db.txt
+index 6cf86e15627b..3b9db42309dc 100644
+--- a/db.txt
++++ b/db.txt
+@@ -848,12 +848,20 @@ country NP: DFS-JP
+ 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
+ 	(5735 - 5835 @ 80), (20)
  
- struct mwifiex_adapter {
-diff --git a/drivers/net/wireless/mwifiex/usb.c b/drivers/net/wireless/mwifiex/usb.c
-index 08e9ec0..6cc8519 100644
---- a/drivers/net/wireless/mwifiex/usb.c
-+++ b/drivers/net/wireless/mwifiex/usb.c
-@@ -222,7 +222,13 @@ setup_for_next:
- 	else
- 		size = MWIFIEX_RX_DATA_BUF_SIZE;
++# 5150 MHz  - 5250 MHz  80MHz channels, indoor use only at -7.0 dBW EIRP TPC enabled
++# 5250 MHz -  5350 MHz  80 MHz channels, indoor use at -7.0 dBW EIRP, outdoor use at 0 dBW EIRP with DFS and TPC enabled*
++# 5470 MHz  - 5725 MHz  80 MHz channels, 0 dBW EIRP with DFS and TPC enabled*
++# 5725 MHz  - 5875 MHz  80 MHz channels, 6.0 dBW EIRP with frequency hopping enabled
++# 57000 MHz - 66000 MHz, indoor use only at 13.0 dBW EIRP
++# *if TPC is not enabled, than transmit power must be reduced by 3dB
++# http://www.rsm.govt.nz/cms/licensees/types-of-licence/general-user-licences/short-range-devices
+ country NZ: DFS-FCC
+ 	(2402 - 2482 @ 40), (30)
+-	(5170 - 5250 @ 80), (17), AUTO-BW
+-	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
+-	(5490 - 5730 @ 160), (24), DFS
+-	(5735 - 5835 @ 80), (30)
++	(5150 - 5250 @ 80), (20), AUTO-BW
++	(5250 - 5350 @ 80), (20), DFS, AUTO-BW
++	(5470 - 5725 @ 160), (27), DFS
++	(5725 - 5875 @ 80), (33)
++	(57000 - 66000 @ 2160), (40)
  
--	mwifiex_usb_submit_rx_urb(context, size);
-+	if (card->rx_cmd_ep == context->ep) {
-+		mwifiex_usb_submit_rx_urb(context, size);
-+	} else {
-+		context->skb = NULL;
-+		if (atomic_read(&adapter->rx_pending) <= HIGH_RX_PENDING)
-+			mwifiex_usb_submit_rx_urb(context, size);
-+	}
- 
- 	return;
- }
-@@ -978,6 +984,20 @@ static int mwifiex_pm_wakeup_card(struct mwifiex_adapter *adapter)
- 	return 0;
- }
- 
-+static void mwifiex_usb_submit_rem_rx_urbs(struct mwifiex_adapter *adapter)
-+{
-+	struct usb_card_rec *card = (struct usb_card_rec *)adapter->card;
-+	int i;
-+	struct urb_context *ctx;
-+
-+	for (i = 0; i < MWIFIEX_RX_DATA_URB; i++) {
-+		if (card->rx_data_list[i].skb)
-+			continue;
-+		ctx = &card->rx_data_list[i];
-+		mwifiex_usb_submit_rx_urb(ctx, MWIFIEX_RX_DATA_BUF_SIZE);
-+	}
-+}
-+
- static struct mwifiex_if_ops usb_ops = {
- 	.register_dev =		mwifiex_register_dev,
- 	.unregister_dev =	mwifiex_unregister_dev,
-@@ -989,6 +1009,7 @@ static struct mwifiex_if_ops usb_ops = {
- 	.cmdrsp_complete =	mwifiex_usb_cmd_event_complete,
- 	.event_complete =	mwifiex_usb_cmd_event_complete,
- 	.host_to_card =		mwifiex_usb_host_to_card,
-+	.submit_rem_rx_urbs =	mwifiex_usb_submit_rem_rx_urbs,
- };
- 
- /* This function initializes the USB driver module.
+ country OM: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+
 -- 
-1.8.1.4
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
