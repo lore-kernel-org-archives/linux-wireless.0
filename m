@@ -1,142 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:34093 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751020AbaKZFiV (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:29191 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751604AbaKGKQB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Nov 2014 00:38:21 -0500
-From: Avinash Patil <patila@marvell.com>
-To: <ulf.hansson@linaro.org>
-CC: <linux-mmc@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-	<akarwar@marvell.com>, <cluo@marvell.com>, <yangyang@marvell.com>,
-	<huxm@marvell.com>, <patila@marvell.com>, <bin9zha0@gmail.com>,
-	Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH] mmc: new API for data write using scatter gather DMA
-Date: Wed, 26 Nov 2014 16:37:36 +0530
-Message-ID: <1417000056-16920-1-git-send-email-patila@marvell.com> (sfid-20141126_063827_103048_9A8DA09F)
+	Fri, 7 Nov 2014 05:16:01 -0500
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH] mwifiex: fix version display problem on big endian platforms
+Date: Fri, 7 Nov 2014 02:14:52 -0800
+Message-ID: <1415355292-1929-1-git-send-email-akarwar@marvell.com> (sfid-20141107_111611_204094_A420B5BE)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Bing Zhao <bzhao@marvell.com>
+It's been observed that wrong firmware version (ex. 66.14.96.p9
+instead of 14.66.9.p96) is displayed on big endian platforms.
 
-This patch adds new API to handle scatter gather aggregation.
+The problem is fixed here.
 
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
+Reported-by: Daniel Mosquera <daniel.mosquera@ctag.com>
+Tested-by: Daniel Mosquera <daniel.mosquera@ctag.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 ---
- drivers/mmc/core/sdio_ops.c   | 65 +++++++++++++++++++++++++++++++++++++++++++
- include/linux/mmc/sdio_func.h |  5 ++++
- 2 files changed, 70 insertions(+)
+ drivers/net/wireless/mwifiex/sta_ioctl.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/mmc/core/sdio_ops.c b/drivers/mmc/core/sdio_ops.c
-index 62508b4..4c5e362 100644
---- a/drivers/mmc/core/sdio_ops.c
-+++ b/drivers/mmc/core/sdio_ops.c
-@@ -15,6 +15,7 @@
- #include <linux/mmc/card.h>
- #include <linux/mmc/mmc.h>
- #include <linux/mmc/sdio.h>
-+#include <linux/export.h>
- 
- #include "core.h"
- #include "sdio_ops.h"
-@@ -204,6 +205,70 @@ int mmc_io_rw_extended(struct mmc_card *card, int write, unsigned fn,
- 	return 0;
- }
- 
-+int mmc_io_rw_extended_sg(struct mmc_card *card, int write, unsigned fn,
-+			  unsigned addr, int incr_addr,
-+			  struct sg_table *sgt, unsigned blksz)
-+{
-+	struct mmc_request mrq = {NULL};
-+	struct mmc_command cmd = {0};
-+	struct mmc_data data = {0};
-+	struct scatterlist *sg_ptr;
-+	unsigned blocks = 0;
-+	int i;
-+
-+	BUG_ON(!card || !card->host);
-+	BUG_ON(fn > 7);
-+	BUG_ON(!blksz);
-+	for_each_sg(sgt->sgl, sg_ptr, sgt->nents, i) {
-+		WARN_ON(sg_ptr->length > card->host->max_seg_size);
-+		blocks += DIV_ROUND_UP(sg_ptr->length, blksz);
-+	}
-+
-+	/* sanity check */
-+	if (addr & ~0x1FFFF)
-+		return -EINVAL;
-+
-+	mrq.cmd = &cmd;
-+	mrq.data = &data;
-+
-+	cmd.opcode = SD_IO_RW_EXTENDED;
-+	cmd.arg = write ? 0x80000000 : 0x00000000;
-+	cmd.arg |= fn << 28;
-+	cmd.arg |= incr_addr ? 0x04000000 : 0x00000000;
-+	cmd.arg |= addr << 9;
-+	cmd.arg |= 0x08000000 | blocks;
-+	cmd.flags = MMC_RSP_SPI_R5 | MMC_RSP_R5 | MMC_CMD_ADTC;
-+
-+	data.blksz = blksz;
-+	data.blocks = blocks;
-+	data.flags = write ? MMC_DATA_WRITE : MMC_DATA_READ;
-+
-+	data.sg = sgt->sgl;
-+	data.sg_len = sgt->nents;
-+
-+	mmc_set_data_timeout(&data, card);
-+	mmc_wait_for_req(card->host, &mrq);
-+
-+	if (cmd.error)
-+		return cmd.error;
-+	if (data.error)
-+		return data.error;
-+
-+	if (mmc_host_is_spi(card->host)) {
-+		/* host driver already reported errors */
-+	} else {
-+		if (cmd.resp[0] & R5_ERROR)
-+			return -EIO;
-+		if (cmd.resp[0] & R5_FUNCTION_NUMBER)
-+			return -EINVAL;
-+		if (cmd.resp[0] & R5_OUT_OF_RANGE)
-+			return -ERANGE;
-+	}
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(mmc_io_rw_extended_sg);
-+
- int sdio_reset(struct mmc_host *host)
+diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
+index 92f3eb8..1626868 100644
+--- a/drivers/net/wireless/mwifiex/sta_ioctl.c
++++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
+@@ -1026,12 +1026,12 @@ mwifiex_drv_get_driver_version(struct mwifiex_adapter *adapter, char *version,
+ 			       int max_len)
  {
- 	int ret;
-diff --git a/include/linux/mmc/sdio_func.h b/include/linux/mmc/sdio_func.h
-index 50f0bc9..927ea8f 100644
---- a/include/linux/mmc/sdio_func.h
-+++ b/include/linux/mmc/sdio_func.h
-@@ -14,6 +14,7 @@
+ 	union {
+-		u32 l;
++		__le32 l;
+ 		u8 c[4];
+ 	} ver;
+ 	char fw_ver[32];
  
- #include <linux/device.h>
- #include <linux/mod_devicetable.h>
-+#include <linux/scatterlist.h>
+-	ver.l = adapter->fw_release_number;
++	ver.l = cpu_to_le32(adapter->fw_release_number);
+ 	sprintf(fw_ver, "%u.%u.%u.p%u", ver.c[2], ver.c[1], ver.c[0], ver.c[3]);
  
- #include <linux/mmc/pm.h>
- 
-@@ -153,6 +154,10 @@ extern int sdio_memcpy_toio(struct sdio_func *func, unsigned int addr,
- extern int sdio_writesb(struct sdio_func *func, unsigned int addr,
- 	void *src, int count);
- 
-+int mmc_io_rw_extended_sg(struct mmc_card *card, int write, unsigned fn,
-+			  unsigned addr, int incr_addr,
-+			  struct sg_table *sgt, unsigned blksz);
-+
- extern unsigned char sdio_f0_readb(struct sdio_func *func,
- 	unsigned int addr, int *err_ret);
- extern void sdio_f0_writeb(struct sdio_func *func, unsigned char b,
+ 	snprintf(version, max_len, driver_version, fw_ver);
 -- 
 1.8.1.4
 
