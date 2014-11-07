@@ -1,52 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f178.google.com ([209.85.214.178]:36621 "EHLO
-	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751017AbaKYQcS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Nov 2014 11:32:18 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, Valerio Passini <valerio.passini@unicam.it>
-Subject: [PATCH 1/2 3.18] rtlwifi: rtl8821ae: Fix 5G detection problem
-Date: Tue, 25 Nov 2014 10:32:06 -0600
-Message-Id: <1416933127-25912-2-git-send-email-Larry.Finger@lwfinger.net> (sfid-20141125_173236_847623_15DE9E2D)
-In-Reply-To: <1416933127-25912-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1416933127-25912-1-git-send-email-Larry.Finger@lwfinger.net>
+Received: from dedo.coelho.fi ([88.198.205.34]:58036 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751873AbaKGMcG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Nov 2014 07:32:06 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, emmanuel.grumbach@intel.com
+Date: Fri,  7 Nov 2014 14:31:37 +0200
+Message-Id: <1415363497-8475-4-git-send-email-luca@coelho.fi> (sfid-20141107_133212_835864_EA64BAA3)
+In-Reply-To: <1415363497-8475-1-git-send-email-luca@coelho.fi>
+References: <1415363497-8475-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH v2 3/3] cfg80211/nl80211: allow any interface to send channel switch notifications
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The changes associated with moving this driver from staging to the regular
-tree missed one section setting the allowable rates for the 5GHz band.
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-This patch is needed to fix the regression reported in Bug #88811
-(https://bugzilla.kernel.org/show_bug.cgi?id=88811).
+For multi-vif channel switches, we want to send
+NL80211_CMD_CH_SWITCH_NOTIFY to the userspace to let it decide whether
+other interfaces need to be moved as well.  This is needed when we
+want a P2P GO interface to follow the channel of a station, for
+example.
 
-Reported-by: Valerio Passini <valerio.passini@unicam.it>
-Tested-by: Valerio Passini <valerio.passini@unicam.it>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Valerio Passini <valerio.passini@unicam.it>
+Modify the code so that all interfaces can send CSA notifications.
+Additionally, send notifications for STA CSA as well.
+
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/rtlwifi/rtl8821ae/hw.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ include/uapi/linux/nl80211.h | 4 +++-
+ net/mac80211/mlme.c          | 2 ++
+ net/wireless/nl80211.c       | 6 ------
+ 3 files changed, 5 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
-index 310d316..18f34f7 100644
---- a/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
-@@ -3672,8 +3672,9 @@ static void rtl8821ae_update_hal_rate_mask(struct ieee80211_hw *hw,
- 		mac->opmode == NL80211_IFTYPE_ADHOC)
- 		macid = sta->aid + 1;
- 	if (wirelessmode == WIRELESS_MODE_N_5G ||
--	    wirelessmode == WIRELESS_MODE_AC_5G)
--		ratr_bitmap = sta->supp_rates[NL80211_BAND_5GHZ];
-+	    wirelessmode == WIRELESS_MODE_AC_5G ||
-+	    wirelessmode == WIRELESS_MODE_A)
-+		ratr_bitmap = (sta->supp_rates[NL80211_BAND_5GHZ])<<4;
- 	else
- 		ratr_bitmap = sta->supp_rates[NL80211_BAND_2GHZ];
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 3541634..a552736 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -643,7 +643,9 @@
+  * @NL80211_CMD_CH_SWITCH_NOTIFY: An AP or GO may decide to switch channels
+  *	independently of the userspace SME, send this event indicating
+  *	%NL80211_ATTR_IFINDEX is now on %NL80211_ATTR_WIPHY_FREQ and the
+- *	attributes determining channel width.
++ *	attributes determining channel width.  This indication may also be
++ *	sent when a remotely-initiated switch (e.g., when a STA receives a CSA
++ *	from the remote AP) is completed;
+  *
+  * @NL80211_CMD_CH_SWITCH_STARTED_NOTIFY: Notify that a channel switch
+  *	has been started on an interface, regardless of the initiator
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index e31299f..6c60bfb 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1049,6 +1049,8 @@ static void ieee80211_chswitch_post_beacon(struct ieee80211_sub_if_data *sdata)
+ 		sdata->csa_block_tx = false;
+ 	}
  
++	cfg80211_ch_switch_notify(sdata->dev, &sdata->reserved_chandef);
++
+ 	sdata->vif.csa_active = false;
+ 	ifmgd->csa_waiting_bcn = false;
+ 
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 24fd292..d0a8361 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -11702,12 +11702,6 @@ void cfg80211_ch_switch_notify(struct net_device *dev,
+ 
+ 	trace_cfg80211_ch_switch_notify(dev, chandef);
+ 
+-	if (WARN_ON(wdev->iftype != NL80211_IFTYPE_AP &&
+-		    wdev->iftype != NL80211_IFTYPE_P2P_GO &&
+-		    wdev->iftype != NL80211_IFTYPE_ADHOC &&
+-		    wdev->iftype != NL80211_IFTYPE_MESH_POINT))
+-		return;
+-
+ 	wdev->chandef = *chandef;
+ 	wdev->preset_chandef = *chandef;
+ 	nl80211_ch_switch_notify(rdev, dev, chandef, GFP_KERNEL,
 -- 
-2.1.2
+2.1.1
 
