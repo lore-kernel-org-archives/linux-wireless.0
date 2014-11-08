@@ -1,59 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:59602 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753161AbaKGTGu (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:49447 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753725AbaKHQ0c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Nov 2014 14:06:50 -0500
-Received: by mail-wi0-f178.google.com with SMTP id bs8so5477184wib.17
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Nov 2014 11:06:49 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 08/10] staging: vt6655: replace typedef enum _VIA_BB_TYPE with macros
-Date: Fri,  7 Nov 2014 19:06:07 +0000
-Message-Id: <1415387169-3843-8-git-send-email-tvboxspy@gmail.com> (sfid-20141107_201320_953094_B7DDF08C)
-In-Reply-To: <1415387169-3843-1-git-send-email-tvboxspy@gmail.com>
-References: <1415387169-3843-1-git-send-email-tvboxspy@gmail.com>
+	Sat, 8 Nov 2014 11:26:32 -0500
+Date: Sat, 8 Nov 2014 08:25:17 -0800
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: Re: [PATCH 2/3] ath: use seq_file api for ath9k debugfs files
+Message-ID: <20141108162517.GA16580@kroah.com> (sfid-20141108_172940_945522_19007F21)
+References: <1414498752-9746-1-git-send-email-arend@broadcom.com>
+ <1414498752-9746-3-git-send-email-arend@broadcom.com>
+ <20141107190522.GA4694@kroah.com>
+ <545E1E45.9040204@broadcom.com>
+ <545E23B6.1060004@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <545E23B6.1060004@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Replacing type with u8
+On Sat, Nov 08, 2014 at 03:07:50PM +0100, Arend van Spriel wrote:
+> On 11/08/14 14:44, Arend van Spriel wrote:
+> >On 11/07/14 20:05, Greg Kroah-Hartman wrote:
+> >>On Tue, Oct 28, 2014 at 01:19:11PM +0100, Arend van Spriel wrote:
+> >>>The debugfs files that are defined in debug.c which are read-only
+> >>>and using a simple_open as .open file operation have been modified
+> >>>to use the single_open seq_file API. This simplifies the read
+> >>>functions defining the file contents.
+> >>>
+> >>>Signed-off-by: Arend van Spriel<arend@broadcom.com>
+> >>>Acked-by: John W. Linville<linville@tuxdriver.com>
+> >>>---
+> >>>drivers/net/wireless/ath/ath9k/debug.c | 425
+> >>>+++++++++++++--------------------
+> >>>drivers/net/wireless/ath/ath9k/debug.h | 3 +-
+> >>>2 files changed, 173 insertions(+), 255 deletions(-)
+> >>
+> >>I can't take patch 1/3 right now, but even if I could, this one doesn't
+> >>apply to 3.18-rc3 :(
+> 
+> driver-core/driver-core-next branch is not on 3.18-rc3.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/device.h | 11 ++++-------
- 1 file changed, 4 insertions(+), 7 deletions(-)
+Yes it is based on that branch.  Why do you think it isn't?
 
-diff --git a/drivers/staging/vt6655/device.h b/drivers/staging/vt6655/device.h
-index dab07e1..3742d8d 100644
---- a/drivers/staging/vt6655/device.h
-+++ b/drivers/staging/vt6655/device.h
-@@ -148,12 +148,9 @@
- #define	NUM				64
- 
- /* 0:11A 1:11B 2:11G */
--typedef enum _VIA_BB_TYPE
--{
--	BB_TYPE_11A = 0,
--	BB_TYPE_11B,
--	BB_TYPE_11G
--} VIA_BB_TYPE, *PVIA_BB_TYPE;
-+#define BB_TYPE_11A    0
-+#define BB_TYPE_11B    1
-+#define BB_TYPE_11G    2
- 
- /* 0:11a,1:11b,2:11gb(only CCK in BasicRate),3:11ga(OFDM in Basic Rate) */
- typedef enum _VIA_PKT_TYPE
-@@ -321,7 +318,7 @@ struct vnt_private {
- 	unsigned char bySlot;
- 	unsigned char byCWMaxMin;
- 
--	VIA_BB_TYPE		byBBType; /* 0:11A, 1:11B, 2:11G */
-+	u8		byBBType; /* 0:11A, 1:11B, 2:11G */
- 	VIA_PKT_TYPE            byPacketType; /*
- 					       * 0:11a,1:11b,2:11gb (only CCK
- 					       * in BasicRate), 3:11ga (OFDM in
--- 
-2.1.0
+> Should I rebase the series on driver-core/master?
 
+No, that's a "clean" 3.18-rc3, which doesn't include any patches that
+I've accepted so far for 3.19.
+
+> As this is for 3.19 I figured it needed to go on some -next branch.
+
+Yes, if you make it against driver-core-next that is fine, please do so.
+
+thanks,
+
+greg k-h
