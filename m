@@ -1,83 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f49.google.com ([74.125.82.49]:42782 "EHLO
-	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752105AbaKLBC1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Nov 2014 20:02:27 -0500
-Message-ID: <5462B1A3.9020401@gmail.com> (sfid-20141112_020249_935991_1BD50144)
-Date: Tue, 11 Nov 2014 20:02:27 -0500
-From: Mathy Vanhoef <vanhoefm@gmail.com>
-MIME-Version: 1.0
-To: Oliver Neukum <oneukum@suse.de>
-CC: brudley@broadcom.com, Arend van Spriel <arend@broadcom.com>,
-	Franky Lin <frankyl@broadcom.com>, meuleman@broadcom.com,
-	John Linville <linville@tuxdriver.com>, pieterpg@broadcom.com,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] brcmfmac: unlink URB when request timed out
-References: <545FAE05.2030701@gmail.com> <1415610506.16488.20.camel@linux-0dmf.site>
-In-Reply-To: <1415610506.16488.20.camel@linux-0dmf.site>
-Content-Type: text/plain; charset=utf-8
+Received: from st11p02mm-asmtpout002.mac.com ([17.172.220.237]:48408 "EHLO
+	st11p02mm-asmtp002.mac.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753918AbaKHRdf convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 8 Nov 2014 12:33:35 -0500
+Received: from [192.168.1.251] (i5E86CD40.versanet.de [94.134.205.64])
+ by st11p02mm-asmtp002.mac.com
+ (Oracle Communications Messaging Server 7u4-27.10(7.0.4.27.9) 64bit (built Jun
+  6 2014)) with ESMTPSA id <0NEQ00FVFB9SYJA0@st11p02mm-asmtp002.mac.com> for
+ linux-wireless@vger.kernel.org; Sat, 08 Nov 2014 16:33:12 +0000 (GMT)
+From: efill@me.com
+Content-type: text/plain; charset=windows-1252
+Subject: Intel Wireless 7260 + 5G + AP mode
+Message-id: <733AE580-92D4-486C-888C-9694F6AAB92F@me.com> (sfid-20141108_183343_565029_2BB612E0)
+Date: Sat, 08 Nov 2014 17:33:10 +0100
+To: linux-wireless@vger.kernel.org, ilw@linux.intel.com
+MIME-version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/10/2014 04:08 AM, Oliver Neukum wrote:
-> On Sun, 2014-11-09 at 13:10 -0500, Mathy Vanhoef wrote:
->> From: Mathy Vanhoef <vanhoefm@gmail.com>
->>
->> Unlink the submitted URB in brcmf_usb_dl_cmd if the request timed out. This
->> assures the URB is never submitted twice, preventing a driver crash.
->
-> Hi,
->
-> I am afrad this patch is no good. The diagnosis is good,
-> but the fix introduces serious problems.
->
->> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
->> index 5265aa7..1bc7858 100644
->> --- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
->> +++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
->> @@ -738,10 +738,12 @@ static int brcmf_usb_dl_cmd(struct brcmf_usbdev_info *devinfo, u8 cmd,
->>   goto finalize;
->>   }
->>  
->> - if (!brcmf_usb_ioctl_resp_wait(devinfo))
->> + if (!brcmf_usb_ioctl_resp_wait(devinfo)) {
->> + usb_unlink_urb(devinfo->ctl_urb);
->
-> This is the asynchronous unlink. You have no guarantee it is finished
-> after this point.
->
->>   ret = -ETIMEDOUT;
->> - else
->> + } else {
->>   memcpy(buffer, tmpbuf, buflen);
->> + }
->>  
->>  finalize:
->>   kfree(tmpbuf);
->
-> Which means that you are freeing memory that may still be used by DMA
-> at this time.
-> In addition you have no guarantee that the unlink is indeed finished
-> by the time the URB is reused.
-> If you wish to take this approach you better forget about this URB
-> and allocate a new one and free the buffer from the callback.
+Dear all,
 
-Hi Oliver,
+I’m trying to get the 7260 to act as an AP on the 5G band. Unfortunately it seems to be impossible due to the „no IR“ reg domain restriction done by the Intel firmware internally (this is what I’ve googled so far..).
 
-Good catch. I think the DMA issue is also present in the current driver: it
-frees the buffer without unlinking/killing the URB at all. Can a malicious USB
-device force a timeout to occur (i.e. delay the call to the completion
-handler)? If so this might be a use-after-free vulnerability.
+Could someone explain to me the technical background of this. As far as I understood the regulation if DFS and TPC are used, most of the 5G channels are allowed. Did I miss something? What’s the point of restricting the IR then?
 
-It seems using usb_kill_urb instead of usb_unlink_urb in the patch prevents any
-possible use-after-free. Can someone double check?
+And finally: Is there a way to get it work? Some other PCI-E chip? ath10k?
 
-Kind regards,
-Mathy
-
->
-> Regards
-> Oliver
->
+All the best,
+Efill
