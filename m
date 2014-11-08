@@ -1,117 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.w1.fi ([212.71.239.96]:45556 "EHLO
-	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755050AbaK0LpY (ORCPT
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:36501 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753395AbaKHQxu convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Nov 2014 06:45:24 -0500
-Date: Thu, 27 Nov 2014 13:45:20 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Tomasz Bursztyka <tomasz.bursztyka@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v3] nl80211: Broadcast CMD_NEW_INTERFACE and
- CMD_DEL_INTERFACE
-Message-ID: <20141127114520.GA18225@w1.fi> (sfid-20141127_124538_369588_69F92058)
-References: <1415802405-10002-1-git-send-email-tomasz.bursztyka@linux.intel.com>
+	Sat, 8 Nov 2014 11:53:50 -0500
+Received: by mail-wi0-f179.google.com with SMTP id h11so7095126wiw.12
+        for <linux-wireless@vger.kernel.org>; Sat, 08 Nov 2014 08:53:49 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1415802405-10002-1-git-send-email-tomasz.bursztyka@linux.intel.com>
+In-Reply-To: <545CDF7F.70906@einfach.org>
+References: <loom.20140215T180245-390@post.gmane.org>
+	<CAOpc7mFVD-+CgrFm+cBVkrOSoeQZ0TRk-jNE32D0S6rtYJp9_g@mail.gmail.com>
+	<CAJ-Vmom7Pk09o9GPdRxEzCTinB2X9bvQE_g83nJ-1m9zD9804g@mail.gmail.com>
+	<CAK4gkpzR=pS+XzCHLpQwzCNjaQmm7JoUE_NhVGK_mhj=EXgadw@mail.gmail.com>
+	<CAK4gkpy8uvWJW9RaHqkxTiSza0Y+79owD=2K8V-VHf6qOH_bdA@mail.gmail.com>
+	<CAHNKnsS_tD0GJj9xLJJM-Lf0Np=L208BeY+fwj1tnRTVU_gyjA@mail.gmail.com>
+	<545CDF7F.70906@einfach.org>
+Date: Sat, 8 Nov 2014 08:53:49 -0800
+Message-ID: <CAJ-Vmom-0bMiczcmMXVHs=eFxepcE82E3teLQF-GRq7Vq1=o5Q@mail.gmail.com> (sfid-20141108_175404_697440_29A73027)
+Subject: Re: [ath5k-devel] Rookie needs helps with ath5k basics
+From: Adrian Chadd <adrian@freebsd.org>
+To: Bruno Randolf <br1@einfach.org>
+Cc: Sergey Ryazanov <ryazanov.s.a@gmail.com>,
+	=?UTF-8?Q?Hern=C3=A1n_Maximiliano_Gonz=C3=A1lez_Calder=C3=B3n?=
+	<hernan.gonzalez.calderon@gmail.com>,
+	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 12, 2014 at 04:26:45PM +0200, Tomasz Bursztyka wrote:
-> Let the other listeners being notified when a new or del interface
-> command has been issued, thus reducing later necessary request to be in
-> sync with current context.
+Hi,
 
-This seems to trigger a NULL pointer dereference in
-nl80211_send_chandef(). See below for logs. Please also note that it
-would have been trivial to find this with automated mac80211_hwsim test
-setup described here http://buildbot.w1.fi/hwsim/ before this commit was
-applied.. This happens every time, e.g., with ap_vlan_open test case.
+right. The default NIC EEPROM setup doesn't include those channels
+because they haven't tested them out.
 
- 
-[    6.271676] ------------[ cut here ]------------
-[    6.272032] WARNING: CPU: 1 PID: 590 at net/wireless/nl80211.c:2320 nl80211_send_chandef+0x127/0x130()
-[    6.272710] CPU: 1 PID: 590 Comm: hostapd Not tainted 3.17.0+ #380
-[    6.273162] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Bochs 01/01/2011
-[    6.273752]  0000000000000009 ffff88001e083918 ffffffff814e6044 ffffffff8108fbe1
-[    6.274346]  0000000000000000 ffff88001e083958 ffffffff81040bbc ffff88001e083968
-[    6.274924]  ffff88001e0839e0 ffff88001eb20d00 0000000000000000 ffff88001e2088d0
-[    6.275502] Call Trace:
-[    6.275690]  [<ffffffff814e6044>] dump_stack+0x4e/0x71
-[    6.276069]  [<ffffffff8108fbe1>] ? console_unlock+0x1f1/0x4d0
-[    6.276498]  [<ffffffff81040bbc>] warn_slowpath_common+0x7c/0xa0
-[    6.276939]  [<ffffffff81040cca>] warn_slowpath_null+0x1a/0x20
-[    6.277368]  [<ffffffff813f9677>] nl80211_send_chandef+0x127/0x130
-[    6.277821]  [<ffffffff813f9a35>] nl80211_send_iface+0x3b5/0x5e0
-[    6.278281]  [<ffffffff813f9ccc>] nl80211_del_interface+0x6c/0x520
-[    6.278736]  [<ffffffff8131b9a4>] genl_family_rcv_msg+0x194/0x330
-[    6.279183]  [<ffffffff8131bb40>] ? genl_family_rcv_msg+0x330/0x330
-[    6.279644]  [<ffffffff8131bbce>] genl_rcv_msg+0x8e/0xd0
-[    6.280047]  [<ffffffff8131b081>] netlink_rcv_skb+0xb1/0xc0
-[    6.280679]  [<ffffffff8131b7ed>] ? genl_rcv+0x1d/0x40
-[    6.281251]  [<ffffffff8131b7fc>] genl_rcv+0x2c/0x40
-[    6.281797]  [<ffffffff81319786>] netlink_unicast+0x156/0x230
-[    6.282355]  [<ffffffff8131a0e0>] netlink_sendmsg+0x320/0x410
-[    6.282870]  [<ffffffff812d6eb9>] sock_sendmsg+0x69/0x90
-[    6.283343]  [<ffffffff812e5b66>] ? verify_iovec+0x56/0xe0
-[    6.283830]  [<ffffffff812d71a8>] ___sys_sendmsg.part.38+0x2c8/0x2e0
-[    6.284373]  [<ffffffff810889e0>] ? __lock_acquire+0x430/0xbd0
-[    6.284882]  [<ffffffff81089aa0>] ? lock_release_non_nested+0xa0/0x300
-[    6.285425]  [<ffffffff8111b18c>] ? might_fault+0x8c/0xa0
-[    6.285898]  [<ffffffff8111b143>] ? might_fault+0x43/0xa0
-[    6.286384]  [<ffffffff812d892e>] __sys_sendmsg+0x4e/0x90
-[    6.286849]  [<ffffffff812d897e>] SyS_sendmsg+0xe/0x10
-[    6.287312]  [<ffffffff814f0be9>] system_call_fastpath+0x12/0x17
-[    6.287816] ---[ end trace 144e876be0145ff5 ]---
-[    6.288265] BUG: unable to handle kernel NULL pointer dereference at 0000000000000004
-[    6.288937] IP: [<ffffffff813f958a>] nl80211_send_chandef+0x3a/0x130
-[    6.289356] PGD 1df2b067 PUD 1df2e067 PMD 0 
-[    6.289661] Oops: 0000 [#1] PREEMPT SMP 
-[    6.289944] CPU: 1 PID: 590 Comm: hostapd Tainted: G        W      3.17.0+ #380
-[    6.290038] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Bochs 01/01/2011
-[    6.290038] task: ffff88001e1a2040 ti: ffff88001e080000 task.ti: ffff88001e080000
-[    6.290038] RIP: 0010:[<ffffffff813f958a>]  [<ffffffff813f958a>] nl80211_send_chandef+0x3a/0x130
-[    6.290038] RSP: 0018:ffff88001e083978  EFLAGS: 00010296
-[    6.290038] RAX: 0000000000000000 RBX: ffff88001e0839e0 RCX: ffff88001e083984
-[    6.290038] RDX: 0000000000000004 RSI: 0000000000000026 RDI: ffff88001eb20d00
-[    6.290038] RBP: ffff88001e0839a8 R08: 0000000000000001 R09: 0000000000000001
-[    6.290038] R10: 0000000000000001 R11: 0000000000000001 R12: ffff88001eb20d00
-[    6.290038] R13: 0000000000000000 R14: ffff88001e2088d0 R15: ffff88001deb0000
-[    6.290038] FS:  00007fc7f9aac740(0000) GS:ffff88001fc80000(0000) knlGS:0000000000000000
-[    6.290038] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[    6.290038] CR2: 0000000000000004 CR3: 000000001df28000 CR4: 00000000000006a0
-[    6.290038] Stack:
-[    6.290038]  0000000000000246 0000000000000000 ffff88001e0839a8 0000000000000246
-[    6.290038]  ffff88001eb20d00 ffff88001de50014 ffff88001e083a28 ffffffff813f9a35
-[    6.290038]  00000000000000d0 ffff88001deb0420 000000030000000c 0000001b00000004
-[    6.290038] Call Trace:
-[    6.290038]  [<ffffffff813f9a35>] nl80211_send_iface+0x3b5/0x5e0
-[    6.290038]  [<ffffffff813f9ccc>] nl80211_del_interface+0x6c/0x520
-[    6.290038]  [<ffffffff8131b9a4>] genl_family_rcv_msg+0x194/0x330
-[    6.290038]  [<ffffffff8131bb40>] ? genl_family_rcv_msg+0x330/0x330
-[    6.290038]  [<ffffffff8131bbce>] genl_rcv_msg+0x8e/0xd0
-[    6.290038]  [<ffffffff8131b081>] netlink_rcv_skb+0xb1/0xc0
-[    6.290038]  [<ffffffff8131b7ed>] ? genl_rcv+0x1d/0x40
-[    6.290038]  [<ffffffff8131b7fc>] genl_rcv+0x2c/0x40
-[    6.290038]  [<ffffffff81319786>] netlink_unicast+0x156/0x230
-[    6.290038]  [<ffffffff8131a0e0>] netlink_sendmsg+0x320/0x410
-[    6.290038]  [<ffffffff812d6eb9>] sock_sendmsg+0x69/0x90
-[    6.290038]  [<ffffffff812e5b66>] ? verify_iovec+0x56/0xe0
-[    6.290038]  [<ffffffff812d71a8>] ___sys_sendmsg.part.38+0x2c8/0x2e0
-[    6.290038]  [<ffffffff810889e0>] ? __lock_acquire+0x430/0xbd0
-[    6.290038]  [<ffffffff81089aa0>] ? lock_release_non_nested+0xa0/0x300
-[    6.290038]  [<ffffffff8111b18c>] ? might_fault+0x8c/0xa0
-[    6.290038]  [<ffffffff8111b143>] ? might_fault+0x43/0xa0
-[    6.290038]  [<ffffffff812d892e>] __sys_sendmsg+0x4e/0x90
-[    6.290038]  [<ffffffff812d897e>] SyS_sendmsg+0xe/0x10
-[    6.290038]  [<ffffffff814f0be9>] system_call_fastpath+0x12/0x17
-[    6.290038] Code: 48 89 f7 48 89 f3 48 83 ec 20 e8 12 9a 02 00 84 c0 0f 84 f0 00 00 00 48 8b 03 48 8d 4d dc ba 04 00 00 00 be 26 00 00 00 4c 89 e7 <0f> b7 40 04 89 45 dc e8 5a 7b e0 ff 85 c0 0f 85 ba 00 00 00 8b 
-[    6.290038] RIP  [<ffffffff813f958a>] nl80211_send_chandef+0x3a/0x130
-[    6.290038]  RSP <ffff88001e083978>
-[    6.290038] CR2: 0000000000000004
-[    6.307574] ---[ end trace 144e876be0145ff6 ]---
-[    6.308157] Kernel panic - not syncing: Fatal exception
+If you have an 802.11p regulatory compliant NIC then it should have
+the 11p frequencies show up in the EEPROM channel range.
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+So you should definitely first check that the NIC EEPROM has those as
+available channels. :)
+
+
+
+-adrian
+
+
+On 7 November 2014 07:04, Bruno Randolf <br1@einfach.org> wrote:
+> Hi,
+>
+> I don't remember all the details but there are various places which can
+> limit the available channels in ath5k. Check
+>
+> ath5k_is_standard_channel()
+> ath5k_setup_channels()
+> ath5k_setup_bands()
+>
+> in drivers/net/wireless/ath/ath5k/base.c
+>
+> Good luck!
+>
+> bruno
+>
+> On 11/07/2014 02:27 PM, Sergey Ryazanov wrote:
+>> Cc linux-wireless since Rostislav Lisovy just working on adding
+>> 802.11p to the stack.
+>>
+>> 2014-11-07 16:49 GMT+03:00 Hernán Maximiliano González Calderón
+>> <hernan.gonzalez.calderon@gmail.com>:
+>>> Hello everyone,
+>>>
+>>> I am still working to adapt the ath5k module to transmit in the
+>>> 5850..5925GHz range, in order to comply with IEEE 802.11p requirements. Our
+>>> plan is to liberate the code to the community as soon as we develop it.
+>>>
+>>> I have already compiled a new regdomains database with wireless-regdb and
+>>> crda, and we are using the module in ATH5K_TEST_CHANNELS mode. The database
+>>> is now defined as follows:
+>>>
+>>> (2402 - 2472 @ 40), (3, 27)
+>>> (5170 - 5250 @ 40), (3, 17)
+>>> (5250 - 5330 @ 40), (3, 20)
+>>> (5490 - 5600 @ 40), (3, 20)
+>>> (5650 - 5710 @ 40), (3, 20)
+>>> (5735 - 5835 @ 40), (3, 30)
+>>> (5835 - 5925 @ 10), (3, 30)
+>>>
+>>> However, when I execute "iw wlan1 ibss join TFG 5850" it returns the -22
+>>> error number, indicating that we are using a frequency not defined.
+>>>
+>>> 2014-02-19 17:22 GMT+01:00 Hernán Maximiliano González Calderón
+>>> <hernan.gonzalez.calderon@gmail.com>:
+>>>>
+>>>> Thanks for the quick reply and sorry for not giving an answer until now,
+>>>> but first I had to talk with my project advisor. The reason we chose ath5k
+>>>> was that the cards we bought used it and all information we gather about
+>>>> this kind of projects were related to that driver.
+>>>>
+>>>> I also have talked with my advisor and whatever we accomplish will come
+>>>> back to the community.
+>>>>
+>>>> I am just starting with the project and I am needing some guides, the tips
+>>>> and info you all gave me will be very helpful. I will keep on working and
+>>>> will tell you if I get something done.
+>>>>
+>>>> Thanks a lot,
+>>>> Hernán M. G. C.
+>>>>
+>>>>
+>>>> 2014-02-18 2:03 GMT+01:00 Adrian Chadd <adrian@freebsd.org>:
+>>>>>
+>>>>> ... because some of the 802.11p NICs are actually ath5k NICs that have
+>>>>> the relevant bandpass filters for 5.9GHz and high output amplifiers.
+>>>>>
+>>>>>
+>>>>>
+>>>>> -a
+>>>>>
+>>>>>
+>>>>> On 17 February 2014 01:27, Holger Schurig <holgerschurig@gmail.com>
+>>>>> wrote:
+>>>>>> Okay, I admit that I cannot help you, I have no clue on the driver
+>>>>>> level.
+>>>>>>
+>>>>>> But maybe I can help with the methodology. :-)
+>>>>>>
+>>>>>> You mention 802.11p (car-to-car-communication). Is there any specific
+>>>>>> reason you base it on ath5k and not on ath9k?  If you look at the
+>>>>>> number of commits, then you should see that ath9k is much more lively.
+>>>>>> People are actively working with that code and might be able to be
+>>>>>> answer more specific questions.
+>>>>>> Another thing that I noted: I have seen over the years many requests
+>>>>>> of information from uni projects in this mailing list. But I'm quite
+>>>>>> unsure if ever something came back into the Linux kernel. How do you
+>>>>>> plan to tackle that?  I have the feeling that people are more likely
+>>>>>> to cooperate if the work doesn't end up in yet another black hole ...
+>>>>>>
+>>>>>> And one tip: ask specific questions, not broad ones. For example, look
+>>>>>> at what features you need to implement 802.11p. Now look at what OSI
+>>>>>> level this has to be done, e.g. at hardware level (frequency,
+>>>>>> bandwidth), driver level, or protocoll layer (mac80211, user-space
+>>>>>> layer (e.g. wpa_supplicant). That would allow you to ask questions not
+>>>>>> like "Tell me everything", but "Oh, I need to do XYZ, where can I do
+>>>>>> it?". It might even help you in finding your way, e.g. by looking into
+>>>>>> git commits inside the ath/ath9k subdirectories that might have
+>>>>>> something to do with what you need.
+>>>>>> _______________________________________________
+>>>>>> ath5k-devel mailing list
+>>>>>> ath5k-devel@lists.ath5k.org
+>>>>>> https://lists.ath5k.org/mailman/listinfo/ath5k-devel
+>>
+>
