@@ -1,60 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:63013 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751215AbaKEGGC (ORCPT
+Received: from mail-ob0-f173.google.com ([209.85.214.173]:57772 "EHLO
+	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752309AbaKHUj7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Nov 2014 01:06:02 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <cluo@marvell.com>,
-	<huxm@marvell.com>, <yangyang@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [Patch v2 4/5] mwifiex: do not setup AMPDU/AMSDU with broadcast receiver
-Date: Wed, 5 Nov 2014 17:04:30 +0530
-Message-ID: <1415187271-17914-4-git-send-email-akarwar@marvell.com> (sfid-20141105_070612_214626_AF4FD863)
-In-Reply-To: <1415187271-17914-1-git-send-email-akarwar@marvell.com>
-References: <1415187271-17914-1-git-send-email-akarwar@marvell.com>
+	Sat, 8 Nov 2014 15:39:59 -0500
+Received: by mail-ob0-f173.google.com with SMTP id wn1so4144637obc.4
+        for <linux-wireless@vger.kernel.org>; Sat, 08 Nov 2014 12:39:58 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+Date: Sat, 8 Nov 2014 14:39:58 -0600
+Message-ID: <CAMP44s2XAmaiK2=BJA3TCW48Uo=5qyT5WsASDsZnOiSNgK6b0A@mail.gmail.com> (sfid-20141108_214004_481670_6407C93E)
+Subject: brcmfmac not working on ECS LIVA
+From: Felipe Contreras <felipe.contreras@gmail.com>
+To: linux-wireless Mailing List <linux-wireless@vger.kernel.org>
+Cc: arend@broadcom.com, frankyl@broadcom.com,
+	Samuel Ortiz <sameo@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+Hi,
 
-It is observed that device sometimes sends BA setup requests for
-broadcast mac address.
-This patch adds a check to avoid checking availability of
-AMPDU/AMSDU streams for broadcast mac address.
+I just got an ECS LIVA and I haven't been able to get the wireless
+working. First I got the error that the brcmfmac43241b4-sdio.txt file
+was missing. I got the file from the ECS's beta drivers [1], but it's
+still not working.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Avinash Patil <patila@marvell.com>
----
- drivers/net/wireless/mwifiex/11n.h | 4 ++++
- 1 file changed, 4 insertions(+)
+brcmfmac: brcmf_sdio_drivestrengthinit: No SDIO Drive strength init
+done for chip 4324 rev 5 pmurev 17
+brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0: Jul 17 2013
+07:36:07 version 6.10.197.71 (r412987) FWID 01-882d2634
+brcmfmac: brcmf_add_if: ERROR: netdev:wlan0 already exists
+brcmfmac: brcmf_add_if: ignore IF event
 
-diff --git a/drivers/net/wireless/mwifiex/11n.h b/drivers/net/wireless/mwifiex/11n.h
-index 2ee268b..f275675 100644
---- a/drivers/net/wireless/mwifiex/11n.h
-+++ b/drivers/net/wireless/mwifiex/11n.h
-@@ -84,6 +84,8 @@ mwifiex_is_amsdu_in_ampdu_allowed(struct mwifiex_private *priv,
- {
- 	struct mwifiex_tx_ba_stream_tbl *tx_tbl;
- 
-+	if (is_broadcast_ether_addr(ptr->ra))
-+		return false;
- 	tx_tbl = mwifiex_get_ba_tbl(priv, tid, ptr->ra);
- 	if (tx_tbl)
- 		return tx_tbl->amsdu;
-@@ -96,6 +98,8 @@ static inline u8
- mwifiex_is_ampdu_allowed(struct mwifiex_private *priv,
- 			 struct mwifiex_ra_list_tbl *ptr, int tid)
- {
-+	if (is_broadcast_ether_addr(ptr->ra))
-+		return false;
- 	if (GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_UAP) {
- 		return mwifiex_is_station_ampdu_allowed(priv, ptr, tid);
- 	} else {
+WPA association/authentication failed for interface 'wlan0'
+
+I also tried a nvram file that is stored in EFI variables, but it
+didn't work either.
+
+Some things seem to work some times, but not the whole association.
+
+This is a 3.17.2 kernel.
+
+Any ideas?
+
+[1] http://www.ecs.com.tw/LIVA/support.html
+
 -- 
-1.8.1.4
-
+Felipe Contreras
