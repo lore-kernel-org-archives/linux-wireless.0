@@ -1,45 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f43.google.com ([74.125.82.43]:62622 "EHLO
-	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753876AbaKXOQ5 (ORCPT
+Received: from mail-ig0-f180.google.com ([209.85.213.180]:51380 "EHLO
+	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753218AbaKHQgw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2014 09:16:57 -0500
-Received: by mail-wg0-f43.google.com with SMTP id l18so12716667wgh.16
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:16:56 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] ath10k: remove extra_tx_headroom
-Date: Mon, 24 Nov 2014 15:04:46 +0100
-Message-Id: <1416837886-18377-1-git-send-email-michal.kazior@tieto.com> (sfid-20141124_151700_722506_8BC2098E)
+	Sat, 8 Nov 2014 11:36:52 -0500
+Received: by mail-ig0-f180.google.com with SMTP id h3so7041104igd.7
+        for <linux-wireless@vger.kernel.org>; Sat, 08 Nov 2014 08:36:52 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1415451582-5610-1-git-send-email-hauke@hauke-m.de>
+References: <1415451582-5610-1-git-send-email-hauke@hauke-m.de>
+Date: Sat, 8 Nov 2014 17:36:51 +0100
+Message-ID: <CACna6rz72_CS_Zrc28qTWWeBnA=x51cBe7Pg6a3Tyt0ejUORNQ@mail.gmail.com> (sfid-20141108_173701_416557_76358916)
+Subject: Re: [PATCH v2 3.18+] b43: fix NULL pointer dereference in b43_phy_copy()
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: John Linville <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>,
+	andrey.krieger.utkin@gmail.com, v.kempter@pe.tu-clausthal.de
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Comment was out-of-date. The headroom is no longer
-necessary because HTT Tx fragment list is stored
-in dma pool item associated with each sk_buff.
+On 8 November 2014 13:59, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> phy_read and phy_write are not set for every phy any more sine this:
+> commit d342b95dd735014a590f9051b1ba227eb54ca8f6
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 4 ----
- 1 file changed, 4 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 1245ac8..5bb9f83 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -4905,10 +4905,6 @@ int ath10k_mac_register(struct ath10k *ar)
- 			IEEE80211_HW_AP_LINK_PS |
- 			IEEE80211_HW_SPECTRUM_MGMT;
- 
--	/* MSDU can have HTT TX fragment pushed in front. The additional 4
--	 * bytes is used for padding/alignment if necessary. */
--	ar->hw->extra_tx_headroom += sizeof(struct htt_data_tx_desc_frag)*2 + 4;
--
- 	ar->hw->wiphy->features |= NL80211_FEATURE_STATIC_SMPS;
- 
- 	if (ar->ht_cap_info & WMI_HT_CAP_DYNAMIC_SMPS)
--- 
-1.8.5.3
-
+Looks OK, thanks for your patch!
