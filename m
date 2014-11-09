@@ -1,97 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:43905 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751235AbaKDAHR (ORCPT
+Received: from mail-wg0-f42.google.com ([74.125.82.42]:60822 "EHLO
+	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752108AbaKIQur (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Nov 2014 19:07:17 -0500
-Message-ID: <1415059621.27313.39.camel@decadent.org.uk> (sfid-20141104_010721_820703_5481FFB8)
-Subject: Re: [PATCH 3.16 0/7] Backort firmware monitor to 3.16
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: stable@vger.kernel.org, linux-wireless@vger.kernel.org,
-	=?ISO-8859-1?Q?Bj=F8rn?= Mork <bjorn@mork.no>,
-	767088@bugs.debian.org
-Date: Tue, 04 Nov 2014 00:07:01 +0000
-In-Reply-To: <1414476686-3407-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1414476686-3407-1-git-send-email-emmanuel.grumbach@intel.com>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-+Etj/+k9cXv1Xz2ddaNY"
-Mime-Version: 1.0
+	Sun, 9 Nov 2014 11:50:47 -0500
+Received: by mail-wg0-f42.google.com with SMTP id k14so7051261wgh.1
+        for <linux-wireless@vger.kernel.org>; Sun, 09 Nov 2014 08:50:46 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Liad Kaufman <liad.kaufman@intel.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 15/16] mac80211: add specific-queue flushing support
+Date: Sun,  9 Nov 2014 18:50:21 +0200
+Message-Id: <1415551822-20121-15-git-send-email-arik@wizery.com> (sfid-20141109_181320_776246_89234FB4)
+In-Reply-To: <1415551822-20121-1-git-send-email-arik@wizery.com>
+References: <1415551822-20121-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Liad Kaufman <liad.kaufman@intel.com>
 
---=-+Etj/+k9cXv1Xz2ddaNY
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+If the HW supports IEEE80211_HW_QUEUE_CONTROL, allow
+flushing only specific queues rather than all of them.
 
-On Tue, 2014-10-28 at 08:11 +0200, Emmanuel Grumbach wrote:
-> This patch series allows to use the firmware debugging features
-> of iwlwifi on 3.16. These features are already in 3.17.
->=20
-> I know that this patch series is not compliant with Greg's
-> rules for stable patches. It is unlikely that these patches
-> will be applied on vanilla 3.16 - I know that.
-> I send them here so that distros can apply them if they want
-> to.
-> I know there are distros shipping 3.16, and having these
-> patches in can greatly help our ability to debug nasty
-> issues.
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ net/mac80211/ieee80211_i.h |  3 +++
+ net/mac80211/util.c        | 20 +++++++++++++++-----
+ 2 files changed, 18 insertions(+), 5 deletions(-)
 
-Thanks, I've applied these to Debian's package.
-
-Ben.
-
-> Emmanuel Grumbach (7):
->   iwlwifi: add device / firmware to fw-error-dump file
->   iwlwifi: rename iwl_mvm_fw_error_next_data
->   iwlwifi: pcie: add firmware monitor capabilities
->   iwlwifi: remove wrong comment about alignment in iwl-fw-error-dump.h
->   iwlwifi: mvm: don't collect logs in the interrupt thread
->   iwlwifi: mvm: kill iwl_mvm_fw_error_rxf_dump
->   iwlwifi: mvm: update layout of firmware error dump
->=20
->  drivers/net/wireless/iwlwifi/iwl-drv.c           |   6 ++
->  drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h |  50 ++++++++-
->  drivers/net/wireless/iwlwifi/iwl-fw-file.h       |   5 +-
->  drivers/net/wireless/iwlwifi/iwl-fw.h            |   3 +
->  drivers/net/wireless/iwlwifi/iwl-modparams.h     |   2 +
->  drivers/net/wireless/iwlwifi/iwl-prph.h          |   6 ++
->  drivers/net/wireless/iwlwifi/mvm/mac80211.c      | 100 +++++++++++++++++=
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 5de2e5f..a30d408 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1881,6 +1881,9 @@ void ieee80211_add_pending_skbs(struct ieee80211_local *local,
+ 				struct sk_buff_head *skbs);
+ void ieee80211_flush_queues(struct ieee80211_local *local,
+ 			    struct ieee80211_sub_if_data *sdata);
++void __ieee80211_flush_queues(struct ieee80211_local *local,
++			      struct ieee80211_sub_if_data *sdata,
++			      unsigned int queues);
+ 
+ void ieee80211_send_auth(struct ieee80211_sub_if_data *sdata,
+ 			 u16 transaction, u16 auth_alg, u16 status,
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 9e5bfd6..745a8a9 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -576,15 +576,19 @@ ieee80211_get_vif_queues(struct ieee80211_local *local,
+ 	return queues;
+ }
+ 
+-void ieee80211_flush_queues(struct ieee80211_local *local,
+-			    struct ieee80211_sub_if_data *sdata)
++void __ieee80211_flush_queues(struct ieee80211_local *local,
++			      struct ieee80211_sub_if_data *sdata,
++			      unsigned int queues)
+ {
+-	unsigned int queues;
+-
+ 	if (!local->ops->flush)
+ 		return;
+ 
+-	queues = ieee80211_get_vif_queues(local, sdata);
++	/*
++	 * If no queue was set, or if the HW doesn't support
++	 * IEEE80211_HW_QUEUE_CONTROL - flush all queues
++	 */
++	if (!queues || !(local->hw.flags & IEEE80211_HW_QUEUE_CONTROL))
++		queues = ieee80211_get_vif_queues(local, sdata);
+ 
+ 	ieee80211_stop_queues_by_reason(&local->hw, queues,
+ 					IEEE80211_QUEUE_STOP_REASON_FLUSH,
+@@ -597,6 +601,12 @@ void ieee80211_flush_queues(struct ieee80211_local *local,
+ 					false);
+ }
+ 
++void ieee80211_flush_queues(struct ieee80211_local *local,
++			    struct ieee80211_sub_if_data *sdata)
++{
++	__ieee80211_flush_queues(local, sdata, 0);
++}
 +
->  drivers/net/wireless/iwlwifi/mvm/mvm.h           |   9 --
->  drivers/net/wireless/iwlwifi/mvm/ops.c           |  72 -------------
->  drivers/net/wireless/iwlwifi/mvm/utils.c         |  65 ------------
->  drivers/net/wireless/iwlwifi/pcie/internal.h     |   7 ++
->  drivers/net/wireless/iwlwifi/pcie/trans.c        | 125 +++++++++++++++++=
-+++++-
->  12 files changed, 294 insertions(+), 156 deletions(-)
->=20
+ void ieee80211_stop_vif_queues(struct ieee80211_local *local,
+ 			       struct ieee80211_sub_if_data *sdata,
+ 			       enum queue_stop_reason reason)
+-- 
+1.9.1
 
---=20
-Ben Hutchings
-Larkinson's Law: All laws are basically false.
-
---=-+Etj/+k9cXv1Xz2ddaNY
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIVAwUAVFgYque/yOyVhhEJAQo2bRAAuVYPLeJQZofVTHA7HvpDFdPS57YCn+si
-KSwlkZq4HInGzS4ar3CocD+Q7K8cZa+GFH8VyI3EPrD9aDR8i/FJgNWNEB+7uG6O
-bcuvmDFLt4gImkvp2UbV6ZQcE2ATMO8YXO7gyScmu/MKy436yYbXhpRYAmhpm7eZ
-nXJNWNGODsqGs3VCmboZQ6C/w8nPfciHXN9XakvRg6oJA33lcTeUZziA0M70CbRQ
-KjmUzjm/JY8MI5Z7jUJdvQON96gHniFGcQvUxyi7JqFeAU1xRWAQ6O9kogS3ReMq
-+/F0ltlbiRfsnFAwpML+L2GRmv/5Hoiwk51E8HyeKg9P2GFLqu53uTgUpyUxUcNP
-vGN9//3KwZ8dwRAgC+9J5W/JAy2QejV7s28GYeCssyJb4JFDrZoZX7QpkDxj0wxw
-clfK/yI680kUMG8T2Uz+FhzfWoIKSrT4e7Mg/ICg2voVI//eh+ZA0q5lwTRxrub8
-hs7q8+i9FRMGcn3FoHsIUc4Np7lwAT2EAsWlxAC17UEUj2WvhG+DEsNb5pASb1PW
-ZxxG8Luhs3YUBSKtwdhXhZ0iT5dRzz8834cNciH9BD7Oflq8HTb6l1KWnTBWavFA
-06k+i52Eh7K/0aiBh2B510jy96BeofVPGIIaClNtmcdVXGnZdjMgibyuVHTv7Jlu
-LwR6ImPdXvM=
-=IQ3t
------END PGP SIGNATURE-----
-
---=-+Etj/+k9cXv1Xz2ddaNY--
