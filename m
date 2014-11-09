@@ -1,206 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f54.google.com ([209.85.215.54]:59119 "EHLO
-	mail-la0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753125AbaKSJwT (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:32947 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751456AbaKIKcG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Nov 2014 04:52:19 -0500
-Message-ID: <546C6850.9050901@gmail.com> (sfid-20141119_105246_768591_1E343F01)
-Date: Wed, 19 Nov 2014 12:52:16 +0300
-From: Dmitry Tunin <hanipouspilot@gmail.com>
+	Sun, 9 Nov 2014 05:32:06 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH V2 1/3] debugfs: add helper function to create device related seq_file
+Date: Sun, 9 Nov 2014 11:31:58 +0100
+Message-ID: <1415529120-16314-2-git-send-email-arend@broadcom.com> (sfid-20141109_113219_963535_990DFB5C)
+In-Reply-To: <1415529120-16314-1-git-send-email-arend@broadcom.com>
+References: <1415529120-16314-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: Michel Memeteau - EKIMIA <contact@ekimia.fr>
-CC: Marcel Holtmann <marcel@holtmann.org>,
-	linux-bluetooth@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	"larry.finger" <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH v3] ath3k: Add support of MCI 13d3:3408 bt device
-References: <CANoib0HW2umPpzzerYNq1fMMnkYxOa78o5X90-K=eNEnTGSO1w@mail.gmail.com> <F01422F2-5F7C-406A-A06B-2C2CE96B9E3A@holtmann.org> <546C3CCE.400@gmail.com> <CAKxAHQ4intUoy2qv9ftTJL_c2JN3kYn8bC_Jk9=93rvvXNE80Q@mail.gmail.com>
-In-Reply-To: <CAKxAHQ4intUoy2qv9ftTJL_c2JN3kYn8bC_Jk9=93rvvXNE80Q@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Michael,
+This patch adds a helper function that simplifies adding a
+so-called single_open sequence file for device drivers. The
+calling device driver needs to provide a read function and
+a device pointer. The field struct seq_file::private will
+reference the device pointer upon call to the read function
+so the driver can obtain his data from it and do its task
+of providing the file content using seq_printf() calls and
+alike. Using this helper function also gets rid of the need
+to specify file operations per debugfs file.
 
-As I understood it is a combined device with BT and Wi-Fi WB335 ( based 
-on AR9565 )
-It has MCI bt chip.
-http://wireless.kernel.org/en/users/Drivers/ath9k/btcoex
-http://wireless.kernel.org/en/users/Drivers/ath3k
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ fs/debugfs/file.c       | 54 +++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/debugfs.h | 16 ++++++++++++++-
+ 2 files changed, 69 insertions(+), 1 deletion(-)
 
-But still ath3k firmware is needed.
-
-I am just confused if it is AR3011 or AR3012 device.
-According to iProduct in lsusb it must be AR3011. But in Windows driver 
-inf file it says
-
-%VID_13D3&PID_3408% = QCABTUSB, USB\VID_13D3&PID_3408 ;AZW
-
-VID_13D3&PID_3374  = "Qualcomm Atheros AR3012 Bluetooth 4.0 + HS"
-VID_13D3&PID_3375  = "Qualcomm Atheros AR3012 Bluetooth 4.0 + HS"
-VID_13D3&PID_3393  = "Qualcomm Atheros AR9462 Bluetooth 4.0 + HS"
-VID_13D3&PID_3395  = "Qualcomm Atheros AR9462 Bluetooth 4.0 + HS"
-VID_13D3&PID_3397  = "Qualcomm Atheros AR9462 Bluetooth 4.0 + HS"
-VID_13D3&PID_3398  = "Qualcomm Atheros AR9462 Bluetooth 4.0 + HS"
-VID_13D3&PID_3402  = "Qualcomm Atheros AR3012 Bluetooth 4.0 + HS"
-VID_13D3&PID_3408  = "Qualcomm Atheros Bluetooth 4.0 + HS"
-
-AR3011 must be bt 3.0, AR3012 is bt 4.0
-Here it is shown as 4.0, but no AR3012. May be it is some new type of chip.
-
-But it works with both version of patches with AR3012 or without.
-I do not know how to test if it is really 4.0 or not.
-
-Dmitry.
-
-19.11.2014 12:37, Michel Memeteau - EKIMIA wrote:
-> Hi,
->
-> I tried to understand why this "0x13d3, 0x3408" device support  wouldn't go
-> in btusb as it's really close to IMC BT chip found in Realtek Wifi devices
-> which is on the path to go in btusb [1]
->
-> then I guess there is a lot of code that could be shared to support all IMC
-> usb devices in the btusb module.
->
-> Regards.
->
-> [1] https://github.com/lwfinger/rtl8723au_bt/tree/new
->
-> <------------------------------------------------------------------------------------------------------------------>
-> Michel Memeteau  - Directeur.
-> <http://shop.ekimia.fr/>
->
-> Notre Boutique Ordinateurs GNU/Linux : http://shop.ekimia.fr
-> 49 chemin de l'union 13720 La Bouilladisse - France.
-> Fixe :  +33 (0) 972308334   Mobile : +33(0) 624808051
-> <------------------------------------------------------------------------------------------------------------------>
->
-> 2014-11-19 7:46 GMT+01:00 Dmitry Tunin <hanipouspilot@gmail.com>:
->
->> Hi Marcel,
->>
->> Here is information from /sys/kernel/debug/usb/devices
->>
->> T:  Bus=01 Lev=02 Prnt=03 Port=00 Cnt=01 Dev#= 20 Spd=12 MxCh= 0
->> D:  Ver= 1.10 Cls=e0(wlcon) Sub=01 Prot=01 MxPS=64 #Cfgs= 1
->> P:  Vendor=13d3 ProdID=3408 Rev= 0.02
->> C:* #Ifs= 2 Cfg#= 1 Atr=e0 MxPwr=100mA
->> A:  FirstIf#= 0 IfCount= 2 Cls=e0(wlcon) Sub=01 Prot=01
->> I:* If#= 0 Alt= 0 #EPs= 3 Cls=e0(wlcon) Sub=01 Prot=01 Driver=btusb
->> E:  Ad=81(I) Atr=03(Int.) MxPS=  16 Ivl=1ms
->> E:  Ad=82(I) Atr=02(Bulk) MxPS=  64 Ivl=0ms
->> E:  Ad=02(O) Atr=02(Bulk) MxPS=  64 Ivl=0ms
->> I:* If#= 1 Alt= 0 #EPs= 2 Cls=e0(wlcon) Sub=01 Prot=01 Driver=btusb
->> E:  Ad=83(I) Atr=01(Isoc) MxPS=   0 Ivl=1ms
->> E:  Ad=03(O) Atr=01(Isoc) MxPS=   0 Ivl=1ms
->> I:  If#= 1 Alt= 1 #EPs= 2 Cls=e0(wlcon) Sub=01 Prot=01 Driver=btusb
->> E:  Ad=83(I) Atr=01(Isoc) MxPS=   9 Ivl=1ms
->> E:  Ad=03(O) Atr=01(Isoc) MxPS=   9 Ivl=1ms
->> I:  If#= 1 Alt= 2 #EPs= 2 Cls=e0(wlcon) Sub=01 Prot=01 Driver=btusb
->> E:  Ad=83(I) Atr=01(Isoc) MxPS=  17 Ivl=1ms
->> E:  Ad=03(O) Atr=01(Isoc) MxPS=  17 Ivl=1ms
->> I:  If#= 1 Alt= 3 #EPs= 2 Cls=e0(wlcon) Sub=01 Prot=01 Driver=btusb
->> E:  Ad=83(I) Atr=01(Isoc) MxPS=  25 Ivl=1ms
->> E:  Ad=03(O) Atr=01(Isoc) MxPS=  25 Ivl=1ms
->> I:  If#= 1 Alt= 4 #EPs= 2 Cls=e0(wlcon) Sub=01 Prot=01 Driver=btusb
->> E:  Ad=83(I) Atr=01(Isoc) MxPS=  33 Ivl=1ms
->> E:  Ad=03(O) Atr=01(Isoc) MxPS=  33 Ivl=1ms
->> I:  If#= 1 Alt= 5 #EPs= 2 Cls=e0(wlcon) Sub=01 Prot=01 Driver=btusb
->> E:  Ad=83(I) Atr=01(Isoc) MxPS=  49 Ivl=1ms
->> E:  Ad=03(O) Atr=01(Isoc) MxPS=  49 Ivl=1ms
->>
->>
->> I hope this mail client is OK now.
->>
->> Add support for bluetooth MCI WB335 (AR9565) Wi-Fi+bt module.
->> It is AR3011 device according to iProduct == 0.
->> So btusb should be blacklisted
->> I submitted a wrong patch before asif  it was an AR3012 device,
->> but it works both ways. This is the right one.
->>
->> Signed-off-by: Dmitry Tunin<hanipouspilot@gmail.com>
->>
->> ---
->>
->> diff --git a/drivers/bluetooth/ath3k.c b/drivers/bluetooth/ath3k.c
->> index d85ced2..3b53116 100644
->> --- a/drivers/bluetooth/ath3k.c
->> +++ b/drivers/bluetooth/ath3k.c
->> @@ -69,6 +69,7 @@ static const struct usb_device_id ath3k_table[] = {
->>       { USB_DEVICE(0x0CF3, 0x3002) },
->>       { USB_DEVICE(0x0CF3, 0xE019) },
->>       { USB_DEVICE(0x13d3, 0x3304) },
->> +    { USB_DEVICE(0x13d3, 0x3408) },
->>
->>       /* Atheros AR9285 Malbec with sflash firmware */
->>       { USB_DEVICE(0x03F0, 0x311D) },
->> diff --git a/drivers/bluetooth/btusb.c b/drivers/bluetooth/btusb.c
->> index edfc17b..bbf5c1c 100644
->> --- a/drivers/bluetooth/btusb.c
->> +++ b/drivers/bluetooth/btusb.c
->> @@ -146,6 +146,7 @@ static const struct usb_device_id blacklist_table[] = {
->>       { USB_DEVICE(0x0cf3, 0x3002), .driver_info = BTUSB_IGNORE },
->>       { USB_DEVICE(0x0cf3, 0xe019), .driver_info = BTUSB_IGNORE },
->>       { USB_DEVICE(0x13d3, 0x3304), .driver_info = BTUSB_IGNORE },
->> +    { USB_DEVICE(0x13d3, 0x3408), .driver_info = BTUSB_IGNORE },
->>
->>       /* Atheros AR9285 Malbec with sflash firmware */
->>       { USB_DEVICE(0x03f0, 0x311d), .driver_info = BTUSB_IGNORE },
->>
->>
->> 19.11.2014 01:56, Marcel Holtmann wrote:
->>
->>> Hi Dmitry,
->>>
->>>   Add support for bluetooth MCI WB335 (AR9565) Wi-Fi+bt module.
->>>> It is AR3011 device according to iProduct == 0.
->>>> So btusb should be blacklisted
->>>> I submitted a wrong patch before asif  it was an AR3012 device,
->>>> but it works both ways. This is the right one.
->>>>
->>> include the device details from /sys/kernel/debug/usb/devices.
->>>
->>>   Signed-off-by: Dmitry Tunin <hanipouspilot@gmail.com>
->>>> are */
->>>>
->>> No idea what this are */ is.
->>>
->>>   ---
->>>> diff --git a/drivers/bluetooth/ath3k.c b/drivers/bluetooth/ath3k.c
->>>> index d85ced2..3b53116 100644
->>>> --- a/drivers/bluetooth/ath3k.c
->>>> +++ b/drivers/bluetooth/ath3k.c
->>>> @@ -69,6 +69,7 @@ static const struct usb_device_id ath3k_table[] = {
->>>>    { USB_DEVICE(0x0CF3, 0x3002) },
->>>>    { USB_DEVICE(0x0CF3, 0xE019) },
->>>>    { USB_DEVICE(0x13d3, 0x3304) },
->>>> + { USB_DEVICE(0x13d3, 0x3408) },
->>>>
->>>>    /* Atheros AR9285 Malbec with sflash firmware */
->>>>    { USB_DEVICE(0x03F0, 0x311D) },
->>>> diff --git a/drivers/bluetooth/btusb.c b/drivers/bluetooth/btusb.c
->>>> index edfc17b..bbf5c1c 100644
->>>> --- a/drivers/bluetooth/btusb.c
->>>> +++ b/drivers/bluetooth/btusb.c
->>>> @@ -146,6 +146,7 @@ static const struct usb_device_id blacklist_table[]
->>>> = {
->>>>    { USB_DEVICE(0x0cf3, 0x3002), .driver_info = BTUSB_IGNORE },
->>>>    { USB_DEVICE(0x0cf3, 0xe019), .driver_info = BTUSB_IGNORE },
->>>>    { USB_DEVICE(0x13d3, 0x3304), .driver_info = BTUSB_IGNORE },
->>>> + { USB_DEVICE(0x13d3, 0x3408), .driver_info = BTUSB_IGNORE },
->>>>
->>> Fix whitespace here or use a proper mail client.
->>>
->>> Regards
->>>
->>> Marcel
->>>
->>>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-bluetooth"
->> in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
+diff --git a/fs/debugfs/file.c b/fs/debugfs/file.c
+index 76c08c2..a2f8ec7 100644
+--- a/fs/debugfs/file.c
++++ b/fs/debugfs/file.c
+@@ -22,6 +22,7 @@
+ #include <linux/io.h>
+ #include <linux/slab.h>
+ #include <linux/atomic.h>
++#include <linux/device.h>
+ 
+ static ssize_t default_read_file(struct file *file, char __user *buf,
+ 				 size_t count, loff_t *ppos)
+@@ -761,3 +762,56 @@ struct dentry *debugfs_create_regset32(const char *name, umode_t mode,
+ EXPORT_SYMBOL_GPL(debugfs_create_regset32);
+ 
+ #endif /* CONFIG_HAS_IOMEM */
++
++struct debugfs_devm_entry {
++	int (*read)(struct seq_file *seq, void *data);
++	struct device *dev;
++};
++
++static int debugfs_devm_entry_open(struct inode *inode, struct file *f)
++{
++	struct debugfs_devm_entry *entry = inode->i_private;
++
++	return single_open(f, entry->read, entry->dev);
++}
++
++static const struct file_operations debugfs_devm_entry_ops = {
++	.owner = THIS_MODULE,
++	.open = debugfs_devm_entry_open,
++	.release = single_release,
++	.read = seq_read,
++	.llseek = seq_lseek
++};
++
++/**
++ * debugfs_create_devm_seqfile - create a debugfs file that is bound to device.
++ *
++ * @dev: device related to this debugfs file.
++ * @name: name of the debugfs file.
++ * @parent: a pointer to the parent dentry for this file.  This should be a
++ *	directory dentry if set.  If this parameter is %NULL, then the
++ *	file will be created in the root of the debugfs filesystem.
++ * @read_fn: function pointer called to print the seq_file content.
++ */
++struct dentry *debugfs_create_devm_seqfile(struct device *dev, const char *name,
++					   struct dentry *parent,
++					   int (*read_fn)(struct seq_file *s,
++							  void *data))
++{
++	struct debugfs_devm_entry *entry;
++
++	if (IS_ERR(parent))
++		return ERR_PTR(-ENOENT);
++
++	entry = devm_kzalloc(dev, sizeof(*entry), GFP_KERNEL);
++	if (!entry)
++		return ERR_PTR(-ENOMEM);
++
++	entry->read = read_fn;
++	entry->dev = dev;
++
++	return debugfs_create_file(name, S_IRUGO, parent, entry,
++				   &debugfs_devm_entry_ops);
++}
++EXPORT_SYMBOL_GPL(debugfs_create_devm_seqfile);
++
+diff --git a/include/linux/debugfs.h b/include/linux/debugfs.h
+index 4d0b4d1..4bbe2ac 100644
+--- a/include/linux/debugfs.h
++++ b/include/linux/debugfs.h
+@@ -99,13 +99,18 @@ struct dentry *debugfs_create_u32_array(const char *name, umode_t mode,
+ 					struct dentry *parent,
+ 					u32 *array, u32 elements);
+ 
++struct dentry *debugfs_create_devm_seqfile(struct device *dev, const char *name,
++					   struct dentry *parent,
++					   int (*read_fn)(struct seq_file *s,
++							  void *data));
++
+ bool debugfs_initialized(void);
+ 
+ #else
+ 
+ #include <linux/err.h>
+ 
+-/* 
++/*
+  * We do not return NULL from these functions if CONFIG_DEBUG_FS is not enabled
+  * so users have a chance to detect if there was a real error or not.  We don't
+  * want to duplicate the design decision mistakes of procfs and devfs again.
+@@ -251,6 +256,15 @@ static inline struct dentry *debugfs_create_u32_array(const char *name, umode_t
+ 	return ERR_PTR(-ENODEV);
+ }
+ 
++static inline struct dentry *debugfs_create_devm_seqfile(struct device *dev,
++							 const char *name,
++							 struct dentry *parent,
++					   int (*read_fn)(struct seq_file *s,
++							  void *data))
++{
++	return ERR_PTR(-ENODEV);
++}
++
+ #endif
+ 
+ #endif
+-- 
+1.9.1
 
