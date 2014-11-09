@@ -1,279 +1,288 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:47104 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751046AbaK0VHM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Nov 2014 16:07:12 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 27 Nov 2014 23:06:52 +0200
-Message-Id: <1417122413-2935-1-git-send-email-luca@coelho.fi> (sfid-20141127_220718_934566_F8F837FE)
-Subject: [PATCH iw 1/2] update nl80211.h
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:40958 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751449AbaKIQu2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 9 Nov 2014 11:50:28 -0500
+Received: by mail-wg0-f49.google.com with SMTP id x13so7060940wgg.22
+        for <linux-wireless@vger.kernel.org>; Sun, 09 Nov 2014 08:50:26 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Liad Kaufman <liad.kaufman@intel.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 02/16] mac80211: retransmit TDLS teardown packet through AP if not ACKed
+Date: Sun,  9 Nov 2014 18:50:08 +0200
+Message-Id: <1415551822-20121-2-git-send-email-arik@wizery.com> (sfid-20141109_175038_852518_4DF1B9DC)
+In-Reply-To: <1415551822-20121-1-git-send-email-arik@wizery.com>
+References: <1415551822-20121-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+From: Liad Kaufman <liad.kaufman@intel.com>
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Since the TDLS peer station might not receive the teardown
+packet (e.g., when in PS), this makes sure the packet is
+retransmitted - this time through the AP - if the TDLS peer
+didn't ACK the packet.
+
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
 ---
- nl80211.h | 119 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 115 insertions(+), 4 deletions(-)
+ include/linux/ieee80211.h  | 25 ++++++++++++++++++++
+ net/mac80211/ieee80211_i.h |  4 ++++
+ net/mac80211/mlme.c        | 12 ++++++++++
+ net/mac80211/status.c      | 55 ++++++++++++++++++++++++++++++++++++++++--
+ net/mac80211/tdls.c        | 59 +++++++++++++++++++++++++++++++++++++---------
+ 5 files changed, 142 insertions(+), 13 deletions(-)
 
-diff --git a/nl80211.h b/nl80211.h
-index f7daae5..d775245 100644
---- a/nl80211.h
-+++ b/nl80211.h
-@@ -643,7 +643,18 @@
-  * @NL80211_CMD_CH_SWITCH_NOTIFY: An AP or GO may decide to switch channels
-  *	independently of the userspace SME, send this event indicating
-  *	%NL80211_ATTR_IFINDEX is now on %NL80211_ATTR_WIPHY_FREQ and the
-- *	attributes determining channel width.
-+ *	attributes determining channel width.  This indication may also be
-+ *	sent when a remotely-initiated switch (e.g., when a STA receives a CSA
-+ *	from the remote AP) is completed;
-+ *
-+ * @NL80211_CMD_CH_SWITCH_STARTED_NOTIFY: Notify that a channel switch
-+ *	has been started on an interface, regardless of the initiator
-+ *	(ie. whether it was requested from a remote device or
-+ *	initiated on our own).  It indicates that
-+ *	%NL80211_ATTR_IFINDEX will be on %NL80211_ATTR_WIPHY_FREQ
-+ *	after %NL80211_ATTR_CH_SWITCH_COUNT TBTT's.  The userspace may
-+ *	decide to react to this indication by requesting other
-+ *	interfaces to change channel as well.
-  *
-  * @NL80211_CMD_START_P2P_DEVICE: Start the given P2P Device, identified by
-  *	its %NL80211_ATTR_WDEV identifier. It must have been created with
-@@ -746,6 +757,23 @@
-  *	destination %NL80211_ATTR_MAC on the interface identified by
-  *	%NL80211_ATTR_IFINDEX.
-  *
-+ * @NL80211_CMD_JOIN_OCB: Join the OCB network. The center frequency and
-+ *	bandwidth of a channel must be given.
-+ * @NL80211_CMD_LEAVE_OCB: Leave the OCB network -- no special arguments, the
-+ *	network is determined by the network interface.
-+ *
-+ * @NL80211_CMD_TDLS_CHANNEL_SWITCH: Start channel-switching with a TDLS peer,
-+ *	identified by the %NL80211_ATTR_MAC parameter. A target channel is
-+ *	provided via %NL80211_ATTR_WIPHY_FREQ and other attributes determining
-+ *	channel width/type. The target operating class is given via
-+ *	%NL80211_ATTR_OPER_CLASS.
-+ *	The driver is responsible for continually initiating channel-switching
-+ *	operations and returning to the base channel for communication with the
-+ *	AP.
-+ * @NL80211_CMD_TDLS_CANCEL_CHANNEL_SWITCH: Stop channel-switching with a TDLS
-+ *	peer given by %NL80211_ATTR_MAC. Both peers must be on the base channel
-+ *	when this command completes.
-+ *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-  */
-@@ -922,6 +950,14 @@ enum nl80211_commands {
- 
- 	NL80211_CMD_GET_MPP,
- 
-+	NL80211_CMD_JOIN_OCB,
-+	NL80211_CMD_LEAVE_OCB,
-+
-+	NL80211_CMD_CH_SWITCH_STARTED_NOTIFY,
-+
-+	NL80211_CMD_TDLS_CHANNEL_SWITCH,
-+	NL80211_CMD_TDLS_CANCEL_CHANNEL_SWITCH,
-+
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-@@ -1616,9 +1652,9 @@ enum nl80211_commands {
-  * @NL80211_ATTR_TDLS_PEER_CAPABILITY: flags for TDLS peer capabilities, u32.
-  *	As specified in the &enum nl80211_tdls_peer_capability.
-  *
-- * @NL80211_ATTR_IFACE_SOCKET_OWNER: flag attribute, if set during interface
-+ * @NL80211_ATTR_SOCKET_OWNER: Flag attribute, if set during interface
-  *	creation then the new interface will be owned by the netlink socket
-- *	that created it and will be destroyed when the socket is closed
-+ *	that created it and will be destroyed when the socket is closed.
-  *
-  * @NL80211_ATTR_TDLS_INITIATOR: flag attribute indicating the current end is
-  *	the TDLS link initiator.
-@@ -1648,6 +1684,11 @@ enum nl80211_commands {
-  * @NL80211_ATTR_SMPS_MODE: SMPS mode to use (ap mode). see
-  *	&enum nl80211_smps_mode.
-  *
-+ * @NL80211_ATTR_OPER_CLASS: operating class
-+ *
-+ * @NL80211_ATTR_MAC_MASK: MAC address mask
-+ *
-+ * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -1983,7 +2024,7 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_TDLS_PEER_CAPABILITY,
- 
--	NL80211_ATTR_IFACE_SOCKET_OWNER,
-+	NL80211_ATTR_SOCKET_OWNER,
- 
- 	NL80211_ATTR_CSA_C_OFFSETS_TX,
- 	NL80211_ATTR_MAX_CSA_COUNTERS,
-@@ -2000,15 +2041,21 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_SMPS_MODE,
- 
-+	NL80211_ATTR_OPER_CLASS,
-+
-+	NL80211_ATTR_MAC_MASK,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-+	NUM_NL80211_ATTR = __NL80211_ATTR_AFTER_LAST,
- 	NL80211_ATTR_MAX = __NL80211_ATTR_AFTER_LAST - 1
- };
- 
- /* source-level API compatibility */
- #define NL80211_ATTR_SCAN_GENERATION NL80211_ATTR_GENERATION
- #define	NL80211_ATTR_MESH_PARAMS NL80211_ATTR_MESH_CONFIG
-+#define NL80211_ATTR_IFACE_SOCKET_OWNER NL80211_ATTR_SOCKET_OWNER
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index f65b544..4e2bb91 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -19,6 +19,7 @@
+ #include <linux/types.h>
+ #include <linux/if_ether.h>
+ #include <asm/byteorder.h>
++#include <asm/unaligned.h>
  
  /*
-  * Allow user space programs to use #ifdef on new attributes by defining them
-@@ -2074,6 +2121,8 @@ enum nl80211_attrs {
-  *	and therefore can't be created in the normal ways, use the
-  *	%NL80211_CMD_START_P2P_DEVICE and %NL80211_CMD_STOP_P2P_DEVICE
-  *	commands to create and destroy one
-+ * @NL80211_IF_TYPE_OCB: Outside Context of a BSS
-+ *	This mode corresponds to the MIB variable dot11OCBActivated=true
-  * @NL80211_IFTYPE_MAX: highest interface type number currently defined
-  * @NUM_NL80211_IFTYPES: number of defined interface types
-  *
-@@ -2093,6 +2142,7 @@ enum nl80211_iftype {
- 	NL80211_IFTYPE_P2P_CLIENT,
- 	NL80211_IFTYPE_P2P_GO,
- 	NL80211_IFTYPE_P2P_DEVICE,
-+	NL80211_IFTYPE_OCB,
+  * DS bit usage
+@@ -2418,6 +2419,30 @@ static inline bool ieee80211_check_tim(const struct ieee80211_tim_ie *tim,
+ 	return !!(tim->virtual_map[index] & mask);
+ }
  
- 	/* keep last */
- 	NUM_NL80211_IFTYPES,
-@@ -2641,6 +2691,11 @@ enum nl80211_sched_scan_match_attr {
-  * @NL80211_RRF_AUTO_BW: maximum available bandwidth should be calculated
-  *	base on contiguous rules and wider channels will be allowed to cross
-  *	multiple contiguous/overlapping frequency ranges.
-+ * @NL80211_RRF_GO_CONCURRENT: See &NL80211_FREQUENCY_ATTR_GO_CONCURRENT
-+ * @NL80211_RRF_NO_HT40MINUS: channels can't be used in HT40- operation
-+ * @NL80211_RRF_NO_HT40PLUS: channels can't be used in HT40+ operation
-+ * @NL80211_RRF_NO_80MHZ: 80MHz operation not allowed
-+ * @NL80211_RRF_NO_160MHZ: 160MHz operation not allowed
-  */
- enum nl80211_reg_rule_flags {
- 	NL80211_RRF_NO_OFDM		= 1<<0,
-@@ -2653,11 +2708,18 @@ enum nl80211_reg_rule_flags {
- 	NL80211_RRF_NO_IR		= 1<<7,
- 	__NL80211_RRF_NO_IBSS		= 1<<8,
- 	NL80211_RRF_AUTO_BW		= 1<<11,
-+	NL80211_RRF_GO_CONCURRENT	= 1<<12,
-+	NL80211_RRF_NO_HT40MINUS	= 1<<13,
-+	NL80211_RRF_NO_HT40PLUS		= 1<<14,
-+	NL80211_RRF_NO_80MHZ		= 1<<15,
-+	NL80211_RRF_NO_160MHZ		= 1<<16,
- };
++/**
++ * ieee80211_get_tdls_action - get tdls packet action (or -1, if not tdls packet)
++ * @skb: the skb containing the frame, length will not be checked
++ * @hdr_size: the size of the ieee80211_hdr that starts at skb->data
++ *
++ * This function assumes the frame is a data frame, and that the network header
++ * is in the correct place.
++ */
++static inline int ieee80211_get_tdls_action(struct sk_buff *skb, u32 hdr_size)
++{
++	if (!skb_is_nonlinear(skb) &&
++	    skb->len > (skb_network_offset(skb) + 2)) {
++		/* Point to where the indication of TDLS should start */
++		const u8 *tdls_data = skb_network_header(skb) - 2;
++
++		if (get_unaligned_be16(tdls_data) == ETH_P_TDLS &&
++		    tdls_data[2] == WLAN_TDLS_SNAP_RFTYPE &&
++		    tdls_data[3] == WLAN_CATEGORY_TDLS)
++			return tdls_data[4];
++	}
++
++	return -1;
++}
++
+ /* convert time units */
+ #define TU_TO_JIFFIES(x)	(usecs_to_jiffies((x) * 1024))
+ #define TU_TO_EXP_TIME(x)	(jiffies + TU_TO_JIFFIES(x))
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 208953d..bc6f12f 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -525,8 +525,12 @@ struct ieee80211_if_managed {
+ 	struct ieee80211_vht_cap vht_capa; /* configured VHT overrides */
+ 	struct ieee80211_vht_cap vht_capa_mask; /* Valid parts of vht_capa */
  
- #define NL80211_RRF_PASSIVE_SCAN	NL80211_RRF_NO_IR
- #define NL80211_RRF_NO_IBSS		NL80211_RRF_NO_IR
- #define NL80211_RRF_NO_IR		NL80211_RRF_NO_IR
-+#define NL80211_RRF_NO_HT40		(NL80211_RRF_NO_HT40MINUS |\
-+					 NL80211_RRF_NO_HT40PLUS)
++	/* TDLS support */
+ 	u8 tdls_peer[ETH_ALEN] __aligned(2);
+ 	struct delayed_work tdls_peer_del_work;
++	struct sk_buff *orig_teardown_skb; /* The original teardown skb */
++	struct sk_buff *teardown_skb; /* A copy to send through the AP */
++	spinlock_t teardown_lock; /* To lock changing teardown_skb */
  
- /* For backport compatibility with older userspace */
- #define NL80211_RRF_NO_IR_ALL		(NL80211_RRF_NO_IR | __NL80211_RRF_NO_IBSS)
-@@ -3555,6 +3617,25 @@ struct nl80211_pattern_support {
-  * @NL80211_WOWLAN_TRIG_WAKEUP_TCP_NOMORETOKENS: For wakeup reporting only,
-  *	the TCP connection ran out of tokens to use for data to send to the
-  *	service
-+ * @NL80211_WOWLAN_TRIG_NET_DETECT: wake up when a configured network
-+ *	is detected.  This is a nested attribute that contains the
-+ *	same attributes used with @NL80211_CMD_START_SCHED_SCAN.  It
-+ *	specifies how the scan is performed (e.g. the interval and the
-+ *	channels to scan) as well as the scan results that will
-+ *	trigger a wake (i.e. the matchsets).
-+ * @NL80211_WOWLAN_TRIG_NET_DETECT_RESULTS: nested attribute
-+ *	containing an array with information about what triggered the
-+ *	wake up.  If no elements are present in the array, it means
-+ *	that the information is not available.  If more than one
-+ *	element is present, it means that more than one match
-+ *	occurred.
-+ *	Each element in the array is a nested attribute that contains
-+ *	one optional %NL80211_ATTR_SSID attribute and one optional
-+ *	%NL80211_ATTR_SCAN_FREQUENCIES attribute.  At least one of
-+ *	these attributes must be present.  If
-+ *	%NL80211_ATTR_SCAN_FREQUENCIES contains more than one
-+ *	frequency, it means that the match occurred in more than one
-+ *	channel.
-  * @NUM_NL80211_WOWLAN_TRIG: number of wake on wireless triggers
-  * @MAX_NL80211_WOWLAN_TRIG: highest wowlan trigger attribute number
-  *
-@@ -3580,6 +3661,8 @@ enum nl80211_wowlan_triggers {
- 	NL80211_WOWLAN_TRIG_WAKEUP_TCP_MATCH,
- 	NL80211_WOWLAN_TRIG_WAKEUP_TCP_CONNLOST,
- 	NL80211_WOWLAN_TRIG_WAKEUP_TCP_NOMORETOKENS,
-+	NL80211_WOWLAN_TRIG_NET_DETECT,
-+	NL80211_WOWLAN_TRIG_NET_DETECT_RESULTS,
+ 	/* WMM-AC TSPEC support */
+ 	struct ieee80211_sta_tx_tspec tx_tspec[IEEE80211_NUM_ACS];
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 213a420..dc7f088 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3998,6 +3998,11 @@ void ieee80211_sta_setup_sdata(struct ieee80211_sub_if_data *sdata)
+ 		ifmgd->req_smps = IEEE80211_SMPS_AUTOMATIC;
+ 	else
+ 		ifmgd->req_smps = IEEE80211_SMPS_OFF;
++
++	/* Setup TDLS data */
++	spin_lock_init(&ifmgd->teardown_lock);
++	ifmgd->teardown_skb = NULL;
++	ifmgd->orig_teardown_skb = NULL;
+ }
  
- 	/* keep last */
- 	NUM_NL80211_WOWLAN_TRIG,
-@@ -4059,6 +4142,20 @@ enum nl80211_ap_sme_features {
-  * @NL80211_FEATURE_MAC_ON_CREATE: Device supports configuring
-  *	the vif's MAC address upon creation.
-  *	See 'macaddr' field in the vif_params (cfg80211.h).
-+ * @NL80211_FEATURE_TDLS_CHANNEL_SWITCH: Driver supports channel switching when
-+ *	operating as a TDLS peer.
-+ * @NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR: This device/driver supports using a
-+ *	random MAC address during scan (if the device is unassociated); the
-+ *	%NL80211_SCAN_FLAG_RANDOM_ADDR flag may be set for scans and the MAC
-+ *	address mask/value will be used.
-+ * @NL80211_FEATURE_SCHED_SCAN_RANDOM_MAC_ADDR: This device/driver supports
-+ *	using a random MAC address for every scan iteration during scheduled
-+ *	scan (while not associated), the %NL80211_SCAN_FLAG_RANDOM_ADDR may
-+ *	be set for scheduled scan and the MAC address mask/value will be used.
-+ * @NL80211_FEATURE_ND_RANDOM_MAC_ADDR: This device/driver supports using a
-+ *	random MAC address for every scan iteration during "net detect", i.e.
-+ *	scan in unassociated WoWLAN, the %NL80211_SCAN_FLAG_RANDOM_ADDR may
-+ *	be set for scheduled scan and the MAC address mask/value will be used.
-  */
- enum nl80211_feature_flags {
- 	NL80211_FEATURE_SK_TX_STATUS			= 1 << 0,
-@@ -4089,6 +4186,10 @@ enum nl80211_feature_flags {
- 	NL80211_FEATURE_DYNAMIC_SMPS			= 1 << 25,
- 	NL80211_FEATURE_SUPPORTS_WMM_ADMISSION		= 1 << 26,
- 	NL80211_FEATURE_MAC_ON_CREATE			= 1 << 27,
-+	NL80211_FEATURE_TDLS_CHANNEL_SWITCH		= 1 << 28,
-+	NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR		= 1 << 29,
-+	NL80211_FEATURE_SCHED_SCAN_RANDOM_MAC_ADDR	= 1 << 30,
-+	NL80211_FEATURE_ND_RANDOM_MAC_ADDR		= 1 << 31,
- };
+ /* scan finished notification */
+@@ -4860,6 +4865,13 @@ void ieee80211_mgd_stop(struct ieee80211_sub_if_data *sdata)
+ 	}
+ 	if (ifmgd->auth_data)
+ 		ieee80211_destroy_auth_data(sdata, false);
++	spin_lock_bh(&ifmgd->teardown_lock);
++	if (ifmgd->teardown_skb) {
++		kfree_skb(ifmgd->teardown_skb);
++		ifmgd->teardown_skb = NULL;
++		ifmgd->orig_teardown_skb = NULL;
++	}
++	spin_unlock_bh(&ifmgd->teardown_lock);
+ 	del_timer_sync(&ifmgd->timer);
+ 	sdata_unlock(sdata);
+ }
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index 9612d89..71de2d3 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -390,6 +390,46 @@ ieee80211_add_tx_radiotap_header(struct ieee80211_local *local,
+ 	}
+ }
  
- /**
-@@ -4137,11 +4238,21 @@ enum nl80211_connect_failed_reason {
-  *	dangerous because will destroy stations performance as a lot of frames
-  *	will be lost while scanning off-channel, therefore it must be used only
-  *	when really needed
-+ * @NL80211_SCAN_FLAG_RANDOM_ADDR: use a random MAC address for this scan (or
-+ *	for scheduled scan: a different one for every scan iteration). When the
-+ *	flag is set, depending on device capabilities the @NL80211_ATTR_MAC and
-+ *	@NL80211_ATTR_MAC_MASK attributes may also be given in which case only
-+ *	the masked bits will be preserved from the MAC address and the remainder
-+ *	randomised. If the attributes are not given full randomisation (46 bits,
-+ *	locally administered 1, multicast 0) is assumed.
-+ *	This flag must not be requested when the feature isn't supported, check
-+ *	the nl80211 feature flags for the device.
-  */
- enum nl80211_scan_flags {
- 	NL80211_SCAN_FLAG_LOW_PRIORITY			= 1<<0,
- 	NL80211_SCAN_FLAG_FLUSH				= 1<<1,
- 	NL80211_SCAN_FLAG_AP				= 1<<2,
-+	NL80211_SCAN_FLAG_RANDOM_ADDR			= 1<<3,
- };
++/*
++ * Handles the tx for TDLS teardown frames.
++ * If the frame wasn't ACKed by the peer - it will be re-sent through the AP
++ */
++static void ieee80211_tdls_td_tx_handle(struct ieee80211_local *local,
++					struct ieee80211_sub_if_data *sdata,
++					struct sk_buff *skb, u32 flags)
++{
++	struct sk_buff *teardown_skb;
++	struct sk_buff *orig_teardown_skb;
++	bool is_teardown = false;
++
++	/* Get the teardown data we need and free the lock */
++	spin_lock(&sdata->u.mgd.teardown_lock);
++	teardown_skb = sdata->u.mgd.teardown_skb;
++	orig_teardown_skb = sdata->u.mgd.orig_teardown_skb;
++	if ((skb == orig_teardown_skb) && teardown_skb) {
++		sdata->u.mgd.teardown_skb = NULL;
++		sdata->u.mgd.orig_teardown_skb = NULL;
++		is_teardown = true;
++	}
++	spin_unlock(&sdata->u.mgd.teardown_lock);
++
++	if (is_teardown) {
++		/* This mechanism relies on being able to get ACKs */
++		WARN_ON(!(local->hw.flags &
++			  IEEE80211_HW_REPORTS_TX_ACK_STATUS));
++
++		/* Check if peer has ACKed */
++		if (flags & IEEE80211_TX_STAT_ACK) {
++			dev_kfree_skb_any(teardown_skb);
++		} else {
++			tdls_dbg(sdata,
++				 "TDLS Resending teardown through AP\n");
++
++			ieee80211_subif_start_xmit(teardown_skb, skb->dev);
++		}
++	}
++}
++
+ static void ieee80211_report_used_skb(struct ieee80211_local *local,
+ 				      struct sk_buff *skb, bool dropped)
+ {
+@@ -426,8 +466,19 @@ static void ieee80211_report_used_skb(struct ieee80211_local *local,
+ 		if (!sdata) {
+ 			skb->dev = NULL;
+ 		} else if (info->flags & IEEE80211_TX_INTFL_MLME_CONN_TX) {
+-			ieee80211_mgd_conn_tx_status(sdata, hdr->frame_control,
+-						     acked);
++			unsigned int hdr_size =
++				ieee80211_hdrlen(hdr->frame_control);
++
++			/* Check to see if packet is a TDLS teardown packet */
++			if (ieee80211_is_data(hdr->frame_control) &&
++			    (ieee80211_get_tdls_action(skb, hdr_size) ==
++			     WLAN_TDLS_TEARDOWN))
++				ieee80211_tdls_td_tx_handle(local, sdata, skb,
++							    info->flags);
++			else
++				ieee80211_mgd_conn_tx_status(sdata,
++							     hdr->frame_control,
++							     acked);
+ 		} else if (ieee80211_is_nullfunc(hdr->frame_control) ||
+ 			   ieee80211_is_qos_nullfunc(hdr->frame_control)) {
+ 			cfg80211_probe_status(sdata->dev, hdr->addr1,
+diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
+index b4f368e..d4fe091 100644
+--- a/net/mac80211/tdls.c
++++ b/net/mac80211/tdls.c
+@@ -512,20 +512,22 @@ ieee80211_tdls_prep_mgmt_packet(struct wiphy *wiphy, struct net_device *dev,
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct sk_buff *skb = NULL;
++	u32 flags = 0;
+ 	bool send_direct;
+ 	struct sta_info *sta;
+ 	int ret;
  
- /**
+-	skb = dev_alloc_skb(local->hw.extra_tx_headroom +
+-			    max(sizeof(struct ieee80211_mgmt),
+-				sizeof(struct ieee80211_tdls_data)) +
+-			    50 + /* supported rates */
+-			    7 + /* ext capab */
+-			    26 + /* max(WMM-info, WMM-param) */
+-			    2 + max(sizeof(struct ieee80211_ht_cap),
+-				    sizeof(struct ieee80211_ht_operation)) +
+-			    extra_ies_len +
+-			    sizeof(struct ieee80211_tdls_lnkie));
++	skb = netdev_alloc_skb(dev,
++			       local->hw.extra_tx_headroom +
++			       max(sizeof(struct ieee80211_mgmt),
++				   sizeof(struct ieee80211_tdls_data)) +
++			       50 + /* supported rates */
++			       7 + /* ext capab */
++			       26 + /* max(WMM-info, WMM-param) */
++			       2 + max(sizeof(struct ieee80211_ht_cap),
++				       sizeof(struct ieee80211_ht_operation)) +
++			       extra_ies_len +
++			       sizeof(struct ieee80211_tdls_lnkie));
+ 	if (!skb)
+ 		return -ENOMEM;
+ 
+@@ -623,9 +625,44 @@ ieee80211_tdls_prep_mgmt_packet(struct wiphy *wiphy, struct net_device *dev,
+ 		break;
+ 	}
+ 
++	/*
++	 * Set the WLAN_TDLS_TEARDOWN flag to indicate a teardown in progress.
++	 * Later, if no ACK is returned from peer, we will re-send the teardown
++	 * packet through the AP.
++	 */
++	if ((action_code == WLAN_TDLS_TEARDOWN) &&
++	    (local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS)) {
++		struct sta_info *sta = NULL;
++		bool try_resend; /* Should we keep skb for possible resend */
++
++		/* If not sending directly to peer - no point in keeping skb */
++		rcu_read_lock();
++		sta = sta_info_get(sdata, peer);
++		try_resend = sta && test_sta_flag(sta, WLAN_STA_TDLS_PEER_AUTH);
++		rcu_read_unlock();
++
++		spin_lock_bh(&sdata->u.mgd.teardown_lock);
++		if (try_resend && !sdata->u.mgd.teardown_skb) {
++			/* Mark it as requiring TX status callback  */
++			flags |= IEEE80211_TX_CTL_REQ_TX_STATUS |
++				 IEEE80211_TX_INTFL_MLME_CONN_TX;
++
++			/*
++			 * skb is copied since mac80211 will later set
++			 * properties that might not be the same as the AP,
++			 * such as encryption, QoS, addresses, etc.
++			 *
++			 * No problem if skb_copy() fails, so no need to check.
++			 */
++			sdata->u.mgd.teardown_skb = skb_copy(skb, GFP_ATOMIC);
++			sdata->u.mgd.orig_teardown_skb = skb;
++		}
++		spin_unlock_bh(&sdata->u.mgd.teardown_lock);
++	}
++
+ 	/* disable bottom halves when entering the Tx path */
+ 	local_bh_disable();
+-	ret = ieee80211_subif_start_xmit(skb, dev);
++	__ieee80211_subif_start_xmit(skb, dev, flags);
+ 	local_bh_enable();
+ 
+ 	return ret;
 -- 
-2.1.3
+1.9.1
 
