@@ -1,142 +1,755 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:52810 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750812AbaKYU2s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Nov 2014 15:28:48 -0500
-Date: Tue, 25 Nov 2014 21:28:47 +0100
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jonathan Doron <jond@wizery.com>
-Subject: Re: [PATCH v3 3/3] cfg80211: Allow usermode to query wiphy
-	specific regd info
-Message-ID: <20141125202847.GL25677@wotan.suse.de> (sfid-20141125_212851_837089_B037B9E6)
-References: <1416754941-4439-1-git-send-email-arik@wizery.com> <1416754941-4439-3-git-send-email-arik@wizery.com>
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:57819 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751447AbaKIKcG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 9 Nov 2014 05:32:06 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH V2 2/3] ath: use seq_file api for ath9k debugfs files
+Date: Sun, 9 Nov 2014 11:31:59 +0100
+Message-ID: <1415529120-16314-3-git-send-email-arend@broadcom.com> (sfid-20141109_113219_350963_57EF196D)
+In-Reply-To: <1415529120-16314-1-git-send-email-arend@broadcom.com>
+References: <1415529120-16314-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1416754941-4439-3-git-send-email-arik@wizery.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Nov 23, 2014 at 05:02:21PM +0200, Arik Nemtsov wrote:
-> From: Jonathan Doron <jond@wizery.com>
-> 
-> Allow usermode to query wiphy-specific regd info, for drivers that use
-> wiphy-specific regulatory management.
-> 
-> Use the existing API for sending regdomain info to usermode, but return
-> the wiphy-specific regd in case wiphy index is provided and the driver
-> employs wiphy-specific management. This implies user and kernel-mode
-> support for the feature and is backward compatible.
-> 
-> Signed-off-by: Jonathan Doron <jonathanx.doron@intel.com>
-> Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
-> ---
->  include/uapi/linux/nl80211.h | 18 ++++++++++-
->  net/wireless/nl80211.c       | 71 ++++++++++++++++++++++++++++++++++++--------
->  net/wireless/reg.c           |  2 +-
->  net/wireless/reg.h           |  1 +
->  4 files changed, 78 insertions(+), 14 deletions(-)
-> 
-> diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-> index 3771e7d..b222e5c 100644
-> --- a/include/uapi/linux/nl80211.h
-> +++ b/include/uapi/linux/nl80211.h
-> @@ -252,7 +252,12 @@
->   *	%NL80211_ATTR_IFINDEX.
->   *
->   * @NL80211_CMD_GET_REG: ask the wireless core to send us its currently set
-> - * 	regulatory domain.
-> + *	regulatory domain. If %NL80211_ATTR_WIPHY is specified and the device
-> + *	self-manages its regulatory settings, its private regulatory domain
-> + *	will be returned.
-> + *	If %NL80211_ATTR_WIPHY_GET_PRIV_REG is specified in addition to
-> + *	%NL80211_ATTR_WIPHY, a device's private regulatory domain will be
-> + *	returned, even if it's regulatory is not self-managed.
->   * @NL80211_CMD_SET_REG: Set current regulatory domain. CRDA sends this command
->   *	after being queried by the kernel. CRDA replies by sending a regulatory
->   *	domain structure which consists of %NL80211_ATTR_REG_ALPHA set to our
-> @@ -1693,6 +1698,14 @@ enum nl80211_commands {
->   *
->   * @NL80211_ATTR_MAC_MASK: MAC address mask
->   *
-> + * @NL80211_ATTR_WIPHY_SELF_MANAGED_REG: flag attribute indicating the
-> + *	regulatory information was obtained from the private regdomain
-> + *	of a device with self-managed regulatory.
-> + * @NL80211_ATTR_WIPHY_GET_PRIV_REG: flag attribute indicating the regulatory
-> + *	information should be obtained from a device's private regdomain,
-> + *	if it exists. This will happen even if the device is not self-managing
-> + *	its regulatory.
+The debugfs files that are defined in debug.c which are read-only
+and using a simple_open as .open file operation have been modified
+to use the single_open seq_file API. This simplifies the read
+functions defining the file contents.
 
-As with REGULATORY_WIPHY_SELF_MANAGED we need a flag that cfg80211 sets for
-drivers that use regulatory_hint() API, perhaps REGULATORY_WIPHY_REG_HINT.
-Then this can be used by cfg80211 to send to userspace regdomains for wiphys
-that have used this API. Below you enable userspace to only query for these
-explictly but we want to be able to let userspace get all information, ie
-through 'iw reg get'. This should go in as a separate patch along with
-NL80211_ATTR_WIPHY_GET_PRIV_REG as its use predates
-NL80211_ATTR_WIPHY_SELF_MANAGED_REG, this will also let you stuff in the boiler
-plate code for getting that reg first, getting self managed regd's can then
-go in as a clear secondary evolutionary step.
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/ath/ath9k/debug.c | 455 ++++++++++++++-------------------
+ drivers/net/wireless/ath/ath9k/debug.h |  11 +-
+ 2 files changed, 192 insertions(+), 274 deletions(-)
 
-The documentation for NL80211_ATTR_WIPHY_GET_PRIV_REG can refer to the new
-%REGULATORY_WIPHY_REG_HINT flag. NL80211_ATTR_WIPHY_SELF_MANAGED_REG should
-refer to %REGULATORY_WIPHY_SELF_MANAGED
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index 5c45e78..e7b709f 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -401,22 +401,14 @@ static const struct file_operations fops_antenna_diversity = {
+ 	.llseek = default_llseek,
+ };
+ 
+-static ssize_t read_file_dma(struct file *file, char __user *user_buf,
+-			     size_t count, loff_t *ppos)
++static int read_file_dma(struct seq_file *file, void *data)
+ {
+-	struct ath_softc *sc = file->private_data;
++	struct ath_softc *sc = file->private;
+ 	struct ath_hw *ah = sc->sc_ah;
+-	char *buf;
+-	int retval;
+-	unsigned int len = 0;
+ 	u32 val[ATH9K_NUM_DMA_DEBUG_REGS];
+ 	int i, qcuOffset = 0, dcuOffset = 0;
+ 	u32 *qcuBase = &val[0], *dcuBase = &val[4];
+ 
+-	buf = kmalloc(DMA_BUF_LEN, GFP_KERNEL);
+-	if (!buf)
+-		return -ENOMEM;
+-
+ 	ath9k_ps_wakeup(sc);
+ 
+ 	REG_WRITE_D(ah, AR_MACMISC,
+@@ -424,21 +416,18 @@ static ssize_t read_file_dma(struct file *file, char __user *user_buf,
+ 		   (AR_MACMISC_MISC_OBS_BUS_1 <<
+ 		    AR_MACMISC_MISC_OBS_BUS_MSB_S)));
+ 
+-	len += scnprintf(buf + len, DMA_BUF_LEN - len,
+-			 "Raw DMA Debug values:\n");
++	seq_puts(file, "Raw DMA Debug values:\n");
+ 
+ 	for (i = 0; i < ATH9K_NUM_DMA_DEBUG_REGS; i++) {
+ 		if (i % 4 == 0)
+-			len += scnprintf(buf + len, DMA_BUF_LEN - len, "\n");
++			seq_puts(file, "\n");
+ 
+ 		val[i] = REG_READ_D(ah, AR_DMADBG_0 + (i * sizeof(u32)));
+-		len += scnprintf(buf + len, DMA_BUF_LEN - len, "%d: %08x ",
+-				 i, val[i]);
++		seq_printf(file, "%d: %08x ", i, val[i]);
+ 	}
+ 
+-	len += scnprintf(buf + len, DMA_BUF_LEN - len, "\n\n");
+-	len += scnprintf(buf + len, DMA_BUF_LEN - len,
+-			 "Num QCU: chain_st fsp_ok fsp_st DCU: chain_st\n");
++	seq_puts(file, "\n\n");
++	seq_puts(file, "Num QCU: chain_st fsp_ok fsp_st DCU: chain_st\n");
+ 
+ 	for (i = 0; i < ATH9K_NUM_QUEUES; i++, qcuOffset += 4, dcuOffset += 5) {
+ 		if (i == 8) {
+@@ -451,55 +440,47 @@ static ssize_t read_file_dma(struct file *file, char __user *user_buf,
+ 			dcuBase++;
+ 		}
+ 
+-		len += scnprintf(buf + len, DMA_BUF_LEN - len,
+-			 "%2d          %2x      %1x     %2x           %2x\n",
+-			 i, (*qcuBase & (0x7 << qcuOffset)) >> qcuOffset,
+-			 (*qcuBase & (0x8 << qcuOffset)) >> (qcuOffset + 3),
+-			 (val[2] & (0x7 << (i * 3))) >> (i * 3),
+-			 (*dcuBase & (0x1f << dcuOffset)) >> dcuOffset);
++		seq_printf(file, "%2d          %2x      %1x     %2x           %2x\n",
++			   i, (*qcuBase & (0x7 << qcuOffset)) >> qcuOffset,
++			   (*qcuBase & (0x8 << qcuOffset)) >> (qcuOffset + 3),
++			   (val[2] & (0x7 << (i * 3))) >> (i * 3),
++			   (*dcuBase & (0x1f << dcuOffset)) >> dcuOffset);
+ 	}
+ 
+-	len += scnprintf(buf + len, DMA_BUF_LEN - len, "\n");
+-
+-	len += scnprintf(buf + len, DMA_BUF_LEN - len,
+-		"qcu_stitch state:   %2x    qcu_fetch state:        %2x\n",
+-		(val[3] & 0x003c0000) >> 18, (val[3] & 0x03c00000) >> 22);
+-	len += scnprintf(buf + len, DMA_BUF_LEN - len,
+-		"qcu_complete state: %2x    dcu_complete state:     %2x\n",
+-		(val[3] & 0x1c000000) >> 26, (val[6] & 0x3));
+-	len += scnprintf(buf + len, DMA_BUF_LEN - len,
+-		"dcu_arb state:      %2x    dcu_fp state:           %2x\n",
+-		(val[5] & 0x06000000) >> 25, (val[5] & 0x38000000) >> 27);
+-	len += scnprintf(buf + len, DMA_BUF_LEN - len,
+-		"chan_idle_dur:     %3d    chan_idle_dur_valid:     %1d\n",
+-		(val[6] & 0x000003fc) >> 2, (val[6] & 0x00000400) >> 10);
+-	len += scnprintf(buf + len, DMA_BUF_LEN - len,
+-		"txfifo_valid_0:      %1d    txfifo_valid_1:          %1d\n",
+-		(val[6] & 0x00000800) >> 11, (val[6] & 0x00001000) >> 12);
+-	len += scnprintf(buf + len, DMA_BUF_LEN - len,
+-		"txfifo_dcu_num_0:   %2d    txfifo_dcu_num_1:       %2d\n",
+-		(val[6] & 0x0001e000) >> 13, (val[6] & 0x001e0000) >> 17);
+-
+-	len += scnprintf(buf + len, DMA_BUF_LEN - len, "pcu observe: 0x%x\n",
+-			 REG_READ_D(ah, AR_OBS_BUS_1));
+-	len += scnprintf(buf + len, DMA_BUF_LEN - len,
+-			 "AR_CR: 0x%x\n", REG_READ_D(ah, AR_CR));
++	seq_puts(file, "\n");
++
++	seq_printf(file, "qcu_stitch state:   %2x    qcu_fetch state:        %2x\n",
++		   (val[3] & 0x003c0000) >> 18, (val[3] & 0x03c00000) >> 22);
++	seq_printf(file, "qcu_complete state: %2x    dcu_complete state:     %2x\n",
++		   (val[3] & 0x1c000000) >> 26, (val[6] & 0x3));
++	seq_printf(file, "dcu_arb state:      %2x    dcu_fp state:           %2x\n",
++		   (val[5] & 0x06000000) >> 25, (val[5] & 0x38000000) >> 27);
++	seq_printf(file, "chan_idle_dur:     %3d    chan_idle_dur_valid:     %1d\n",
++		   (val[6] & 0x000003fc) >> 2, (val[6] & 0x00000400) >> 10);
++	seq_printf(file, "txfifo_valid_0:      %1d    txfifo_valid_1:          %1d\n",
++		   (val[6] & 0x00000800) >> 11, (val[6] & 0x00001000) >> 12);
++	seq_printf(file, "txfifo_dcu_num_0:   %2d    txfifo_dcu_num_1:       %2d\n",
++		   (val[6] & 0x0001e000) >> 13, (val[6] & 0x001e0000) >> 17);
++
++	seq_printf(file, "pcu observe: 0x%x\n", REG_READ_D(ah, AR_OBS_BUS_1));
++	seq_printf(file, "AR_CR: 0x%x\n", REG_READ_D(ah, AR_CR));
+ 
+ 	ath9k_ps_restore(sc);
+ 
+-	if (len > DMA_BUF_LEN)
+-		len = DMA_BUF_LEN;
++	return 0;
++}
+ 
+-	retval = simple_read_from_buffer(user_buf, count, ppos, buf, len);
+-	kfree(buf);
+-	return retval;
++static int open_file_dma(struct inode *inode, struct file *f)
++{
++	return single_open(f, read_file_dma, inode->i_private);
+ }
+ 
+ static const struct file_operations fops_dma = {
+-	.read = read_file_dma,
+-	.open = simple_open,
++	.open = open_file_dma,
++	.read = seq_read,
+ 	.owner = THIS_MODULE,
+-	.llseek = default_llseek,
++	.llseek = seq_lseek,
++	.release = single_release,
+ };
+ 
+ 
+@@ -556,22 +537,14 @@ void ath_debug_stat_interrupt(struct ath_softc *sc, enum ath9k_int status)
+ 		sc->debug.stats.istats.gen_timer++;
+ }
+ 
+-static ssize_t read_file_interrupt(struct file *file, char __user *user_buf,
+-				   size_t count, loff_t *ppos)
++static int read_file_interrupt(struct seq_file *file, void *data)
+ {
+-	struct ath_softc *sc = file->private_data;
+-	unsigned int len = 0;
+-	int rv;
+-	int mxlen = 4000;
+-	char *buf = kmalloc(mxlen, GFP_KERNEL);
+-	if (!buf)
+-		return -ENOMEM;
++	struct ath_softc *sc = file->private;
+ 
+ #define PR_IS(a, s)						\
+ 	do {							\
+-		len += scnprintf(buf + len, mxlen - len,	\
+-				 "%21s: %10u\n", a,		\
+-				 sc->debug.stats.istats.s);	\
++		seq_printf(file, "%21s: %10u\n", a,		\
++			   sc->debug.stats.istats.s);		\
+ 	} while (0)
+ 
+ 	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA) {
+@@ -602,8 +575,7 @@ static ssize_t read_file_interrupt(struct file *file, char __user *user_buf,
+ 	PR_IS("GENTIMER", gen_timer);
+ 	PR_IS("TOTAL", total);
+ 
+-	len += scnprintf(buf + len, mxlen - len,
+-			 "SYNC_CAUSE stats:\n");
++	seq_puts(file, "SYNC_CAUSE stats:\n");
+ 
+ 	PR_IS("Sync-All", sync_cause_all);
+ 	PR_IS("RTC-IRQ", sync_rtc_irq);
+@@ -625,35 +597,27 @@ static ssize_t read_file_interrupt(struct file *file, char __user *user_buf,
+ 	PR_IS("MAC-Asleep", mac_asleep);
+ 	PR_IS("MAC-Sleep-Access", mac_sleep_access);
+ 
+-	if (len > mxlen)
+-		len = mxlen;
++	return 0;
++}
+ 
+-	rv = simple_read_from_buffer(user_buf, count, ppos, buf, len);
+-	kfree(buf);
+-	return rv;
++static int open_file_interrupt(struct inode *inode, struct file *f)
++{
++	return single_open(f, read_file_interrupt, inode->i_private);
+ }
+ 
+ static const struct file_operations fops_interrupt = {
+-	.read = read_file_interrupt,
+-	.open = simple_open,
++	.read = seq_read,
++	.open = open_file_interrupt,
+ 	.owner = THIS_MODULE,
+-	.llseek = default_llseek,
++	.llseek = seq_lseek,
++	.release = single_release,
+ };
+ 
+-static ssize_t read_file_xmit(struct file *file, char __user *user_buf,
+-			      size_t count, loff_t *ppos)
++static int read_file_xmit(struct seq_file *file, void *data)
+ {
+-	struct ath_softc *sc = file->private_data;
+-	char *buf;
+-	unsigned int len = 0, size = 2048;
+-	ssize_t retval = 0;
+-
+-	buf = kzalloc(size, GFP_KERNEL);
+-	if (buf == NULL)
+-		return -ENOMEM;
++	struct ath_softc *sc = file->private;
+ 
+-	len += sprintf(buf, "%30s %10s%10s%10s\n\n",
+-		       "BE", "BK", "VI", "VO");
++	seq_printf(file, "%30s %10s%10s%10s\n\n", "BE", "BK", "VI", "VO");
+ 
+ 	PR("MPDUs Queued:    ", queued);
+ 	PR("MPDUs Completed: ", completed);
+@@ -678,153 +642,115 @@ static ssize_t read_file_xmit(struct file *file, char __user *user_buf,
+ 	PR("HW-tx-proc-desc: ", txprocdesc);
+ 	PR("TX-Failed:       ", txfailed);
+ 
+-	if (len > size)
+-		len = size;
+-
+-	retval = simple_read_from_buffer(user_buf, count, ppos, buf, len);
+-	kfree(buf);
+-
+-	return retval;
++	return 0;
+ }
+ 
+-static ssize_t print_queue(struct ath_softc *sc, struct ath_txq *txq,
+-			   char *buf, ssize_t size)
++static void print_queue(struct ath_softc *sc, struct ath_txq *txq,
++			struct seq_file *file)
+ {
+-	ssize_t len = 0;
+-
+ 	ath_txq_lock(sc, txq);
+ 
+-	len += scnprintf(buf + len, size - len, "%s: %d ",
+-			 "qnum", txq->axq_qnum);
+-	len += scnprintf(buf + len, size - len, "%s: %2d ",
+-			 "qdepth", txq->axq_depth);
+-	len += scnprintf(buf + len, size - len, "%s: %2d ",
+-			 "ampdu-depth", txq->axq_ampdu_depth);
+-	len += scnprintf(buf + len, size - len, "%s: %3d ",
+-			 "pending", txq->pending_frames);
+-	len += scnprintf(buf + len, size - len, "%s: %d\n",
+-			 "stopped", txq->stopped);
++	seq_printf(file, "%s: %d ", "qnum", txq->axq_qnum);
++	seq_printf(file, "%s: %2d ", "qdepth", txq->axq_depth);
++	seq_printf(file, "%s: %2d ", "ampdu-depth", txq->axq_ampdu_depth);
++	seq_printf(file, "%s: %3d ", "pending", txq->pending_frames);
++	seq_printf(file, "%s: %d\n", "stopped", txq->stopped);
+ 
+ 	ath_txq_unlock(sc, txq);
+-	return len;
+ }
+ 
+-static ssize_t read_file_queues(struct file *file, char __user *user_buf,
+-				size_t count, loff_t *ppos)
++static int read_file_queues(struct seq_file *file, void *data)
+ {
+-	struct ath_softc *sc = file->private_data;
++	struct ath_softc *sc = file->private;
+ 	struct ath_txq *txq;
+-	char *buf;
+-	unsigned int len = 0;
+-	const unsigned int size = 1024;
+-	ssize_t retval = 0;
+ 	int i;
+ 	static const char *qname[4] = {
+ 		"VO", "VI", "BE", "BK"
+ 	};
+ 
+-	buf = kzalloc(size, GFP_KERNEL);
+-	if (buf == NULL)
+-		return -ENOMEM;
+-
+ 	for (i = 0; i < IEEE80211_NUM_ACS; i++) {
+ 		txq = sc->tx.txq_map[i];
+-		len += scnprintf(buf + len, size - len, "(%s):  ", qname[i]);
+-		len += print_queue(sc, txq, buf + len, size - len);
++		seq_printf(file, "(%s):  ", qname[i]);
++		print_queue(sc, txq, file);
+ 	}
+ 
+-	len += scnprintf(buf + len, size - len, "(CAB): ");
+-	len += print_queue(sc, sc->beacon.cabq, buf + len, size - len);
+-
+-	if (len > size)
+-		len = size;
+-
+-	retval = simple_read_from_buffer(user_buf, count, ppos, buf, len);
+-	kfree(buf);
++	seq_puts(file, "(CAB): ");
++	print_queue(sc, sc->beacon.cabq, file);
+ 
+-	return retval;
++	return 0;
+ }
+ 
+-static ssize_t read_file_misc(struct file *file, char __user *user_buf,
+-			      size_t count, loff_t *ppos)
++static int read_file_misc(struct seq_file *file, void *data)
+ {
+-	struct ath_softc *sc = file->private_data;
++	struct ath_softc *sc = file->private;
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	struct ath9k_vif_iter_data iter_data;
+ 	struct ath_chanctx *ctx;
+-	char buf[512];
+-	unsigned int len = 0;
+-	ssize_t retval = 0;
+ 	unsigned int reg;
+ 	u32 rxfilter, i;
+ 
+-	len += scnprintf(buf + len, sizeof(buf) - len,
+-			 "BSSID: %pM\n", common->curbssid);
+-	len += scnprintf(buf + len, sizeof(buf) - len,
+-			 "BSSID-MASK: %pM\n", common->bssidmask);
+-	len += scnprintf(buf + len, sizeof(buf) - len,
+-			 "OPMODE: %s\n",
+-			 ath_opmode_to_string(sc->sc_ah->opmode));
++	seq_printf(file, "BSSID: %pM\n", common->curbssid);
++	seq_printf(file, "BSSID-MASK: %pM\n", common->bssidmask);
++	seq_printf(file, "OPMODE: %s\n",
++		   ath_opmode_to_string(sc->sc_ah->opmode));
+ 
+ 	ath9k_ps_wakeup(sc);
+ 	rxfilter = ath9k_hw_getrxfilter(sc->sc_ah);
+ 	ath9k_ps_restore(sc);
+ 
+-	len += scnprintf(buf + len, sizeof(buf) - len,
+-			 "RXFILTER: 0x%x", rxfilter);
++	seq_printf(file, "RXFILTER: 0x%x", rxfilter);
+ 
+ 	if (rxfilter & ATH9K_RX_FILTER_UCAST)
+-		len += scnprintf(buf + len, sizeof(buf) - len, " UCAST");
++		seq_puts(file, " UCAST");
+ 	if (rxfilter & ATH9K_RX_FILTER_MCAST)
+-		len += scnprintf(buf + len, sizeof(buf) - len, " MCAST");
++		seq_puts(file, " MCAST");
+ 	if (rxfilter & ATH9K_RX_FILTER_BCAST)
+-		len += scnprintf(buf + len, sizeof(buf) - len, " BCAST");
++		seq_puts(file, " BCAST");
+ 	if (rxfilter & ATH9K_RX_FILTER_CONTROL)
+-		len += scnprintf(buf + len, sizeof(buf) - len, " CONTROL");
++		seq_puts(file, " CONTROL");
+ 	if (rxfilter & ATH9K_RX_FILTER_BEACON)
+-		len += scnprintf(buf + len, sizeof(buf) - len, " BEACON");
++		seq_puts(file, " BEACON");
+ 	if (rxfilter & ATH9K_RX_FILTER_PROM)
+-		len += scnprintf(buf + len, sizeof(buf) - len, " PROM");
++		seq_puts(file, " PROM");
+ 	if (rxfilter & ATH9K_RX_FILTER_PROBEREQ)
+-		len += scnprintf(buf + len, sizeof(buf) - len, " PROBEREQ");
++		seq_puts(file, " PROBEREQ");
+ 	if (rxfilter & ATH9K_RX_FILTER_PHYERR)
+-		len += scnprintf(buf + len, sizeof(buf) - len, " PHYERR");
++		seq_puts(file, " PHYERR");
+ 	if (rxfilter & ATH9K_RX_FILTER_MYBEACON)
+-		len += scnprintf(buf + len, sizeof(buf) - len, " MYBEACON");
++		seq_puts(file, " MYBEACON");
+ 	if (rxfilter & ATH9K_RX_FILTER_COMP_BAR)
+-		len += scnprintf(buf + len, sizeof(buf) - len, " COMP_BAR");
++		seq_puts(file, " COMP_BAR");
+ 	if (rxfilter & ATH9K_RX_FILTER_PSPOLL)
+-		len += scnprintf(buf + len, sizeof(buf) - len, " PSPOLL");
++		seq_puts(file, " PSPOLL");
+ 	if (rxfilter & ATH9K_RX_FILTER_PHYRADAR)
+-		len += scnprintf(buf + len, sizeof(buf) - len, " PHYRADAR");
++		seq_puts(file, " PHYRADAR");
+ 	if (rxfilter & ATH9K_RX_FILTER_MCAST_BCAST_ALL)
+-		len += scnprintf(buf + len, sizeof(buf) - len, " MCAST_BCAST_ALL");
++		seq_puts(file, " MCAST_BCAST_ALL");
+ 	if (rxfilter & ATH9K_RX_FILTER_CONTROL_WRAPPER)
+-		len += scnprintf(buf + len, sizeof(buf) - len, " CONTROL_WRAPPER");
++		seq_puts(file, " CONTROL_WRAPPER");
+ 
+-	len += scnprintf(buf + len, sizeof(buf) - len, "\n");
++	seq_puts(file, "\n");
+ 
+ 	reg = sc->sc_ah->imask;
+ 
+-	len += scnprintf(buf + len, sizeof(buf) - len,
+-			 "INTERRUPT-MASK: 0x%x", reg);
++	seq_printf(file, "INTERRUPT-MASK: 0x%x", reg);
+ 
+ 	if (reg & ATH9K_INT_SWBA)
+-		len += scnprintf(buf + len, sizeof(buf) - len, " SWBA");
++		seq_puts(file, " SWBA");
+ 	if (reg & ATH9K_INT_BMISS)
+-		len += scnprintf(buf + len, sizeof(buf) - len, " BMISS");
++		seq_puts(file, " BMISS");
+ 	if (reg & ATH9K_INT_CST)
+-		len += scnprintf(buf + len, sizeof(buf) - len, " CST");
++		seq_puts(file, " CST");
+ 	if (reg & ATH9K_INT_RX)
+-		len += scnprintf(buf + len, sizeof(buf) - len, " RX");
++		seq_puts(file, " RX");
+ 	if (reg & ATH9K_INT_RXHP)
+-		len += scnprintf(buf + len, sizeof(buf) - len, " RXHP");
++		seq_puts(file, " RXHP");
+ 	if (reg & ATH9K_INT_RXLP)
+-		len += scnprintf(buf + len, sizeof(buf) - len, " RXLP");
++		seq_puts(file, " RXLP");
+ 	if (reg & ATH9K_INT_BB_WATCHDOG)
+-		len += scnprintf(buf + len, sizeof(buf) - len, " BB_WATCHDOG");
++		seq_puts(file, " BB_WATCHDOG");
+ 
+-	len += scnprintf(buf + len, sizeof(buf) - len, "\n");
++	seq_puts(file, "\n");
+ 
+ 	i = 0;
+ 	ath_for_each_chanctx(sc, ctx) {
+@@ -832,61 +758,42 @@ static ssize_t read_file_misc(struct file *file, char __user *user_buf,
+ 			continue;
+ 		ath9k_calculate_iter_data(sc, ctx, &iter_data);
+ 
+-		len += scnprintf(buf + len, sizeof(buf) - len,
+-			"VIF-COUNTS: CTX %i AP: %i STA: %i MESH: %i WDS: %i",
+-			i++, iter_data.naps, iter_data.nstations,
+-			iter_data.nmeshes, iter_data.nwds);
+-		len += scnprintf(buf + len, sizeof(buf) - len,
+-			" ADHOC: %i TOTAL: %hi BEACON-VIF: %hi\n",
+-			iter_data.nadhocs, sc->cur_chan->nvifs, sc->nbcnvifs);
++		seq_printf(file,
++			   "VIF-COUNTS: CTX %i AP: %i STA: %i MESH: %i WDS: %i",
++			   i++, iter_data.naps, iter_data.nstations,
++			   iter_data.nmeshes, iter_data.nwds);
++		seq_printf(file, " ADHOC: %i TOTAL: %hi BEACON-VIF: %hi\n",
++			   iter_data.nadhocs, sc->cur_chan->nvifs,
++			   sc->nbcnvifs);
+ 	}
+ 
+-	if (len > sizeof(buf))
+-		len = sizeof(buf);
+-
+-	retval = simple_read_from_buffer(user_buf, count, ppos, buf, len);
+-	return retval;
++	return 0;
+ }
+ 
+-static ssize_t read_file_reset(struct file *file, char __user *user_buf,
+-			       size_t count, loff_t *ppos)
++static int read_file_reset(struct seq_file *file, void *data)
+ {
+-	struct ath_softc *sc = file->private_data;
+-	char buf[512];
+-	unsigned int len = 0;
+-
+-	len += scnprintf(buf + len, sizeof(buf) - len,
+-			 "%17s: %2d\n", "Baseband Hang",
+-			 sc->debug.stats.reset[RESET_TYPE_BB_HANG]);
+-	len += scnprintf(buf + len, sizeof(buf) - len,
+-			 "%17s: %2d\n", "Baseband Watchdog",
+-			 sc->debug.stats.reset[RESET_TYPE_BB_WATCHDOG]);
+-	len += scnprintf(buf + len, sizeof(buf) - len,
+-			 "%17s: %2d\n", "Fatal HW Error",
+-			 sc->debug.stats.reset[RESET_TYPE_FATAL_INT]);
+-	len += scnprintf(buf + len, sizeof(buf) - len,
+-			 "%17s: %2d\n", "TX HW error",
+-			 sc->debug.stats.reset[RESET_TYPE_TX_ERROR]);
+-	len += scnprintf(buf + len, sizeof(buf) - len,
+-			 "%17s: %2d\n", "TX Path Hang",
+-			 sc->debug.stats.reset[RESET_TYPE_TX_HANG]);
+-	len += scnprintf(buf + len, sizeof(buf) - len,
+-			 "%17s: %2d\n", "PLL RX Hang",
+-			 sc->debug.stats.reset[RESET_TYPE_PLL_HANG]);
+-	len += scnprintf(buf + len, sizeof(buf) - len,
+-			 "%17s: %2d\n", "MAC Hang",
+-			 sc->debug.stats.reset[RESET_TYPE_MAC_HANG]);
+-	len += scnprintf(buf + len, sizeof(buf) - len,
+-			 "%17s: %2d\n", "Stuck Beacon",
+-			 sc->debug.stats.reset[RESET_TYPE_BEACON_STUCK]);
+-	len += scnprintf(buf + len, sizeof(buf) - len,
+-			 "%17s: %2d\n", "MCI Reset",
+-			 sc->debug.stats.reset[RESET_TYPE_MCI]);
+-
+-	if (len > sizeof(buf))
+-		len = sizeof(buf);
++	struct ath_softc *sc = file->private;
++
++	seq_printf(file, "%17s: %2d\n", "Baseband Hang",
++		   sc->debug.stats.reset[RESET_TYPE_BB_HANG]);
++	seq_printf(file, "%17s: %2d\n", "Baseband Watchdog",
++		   sc->debug.stats.reset[RESET_TYPE_BB_WATCHDOG]);
++	seq_printf(file, "%17s: %2d\n", "Fatal HW Error",
++		   sc->debug.stats.reset[RESET_TYPE_FATAL_INT]);
++	seq_printf(file, "%17s: %2d\n", "TX HW error",
++		   sc->debug.stats.reset[RESET_TYPE_TX_ERROR]);
++	seq_printf(file, "%17s: %2d\n", "TX Path Hang",
++		   sc->debug.stats.reset[RESET_TYPE_TX_HANG]);
++	seq_printf(file, "%17s: %2d\n", "PLL RX Hang",
++		   sc->debug.stats.reset[RESET_TYPE_PLL_HANG]);
++	seq_printf(file, "%17s: %2d\n", "MAC Hang",
++		   sc->debug.stats.reset[RESET_TYPE_MAC_HANG]);
++	seq_printf(file, "%17s: %2d\n", "Stuck Beacon",
++		   sc->debug.stats.reset[RESET_TYPE_BEACON_STUCK]);
++	seq_printf(file, "%17s: %2d\n", "MCI Reset",
++		   sc->debug.stats.reset[RESET_TYPE_MCI]);
+ 
+-	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
++	return 0;
+ }
+ 
+ void ath_debug_stat_tx(struct ath_softc *sc, struct ath_buf *bf,
+@@ -926,32 +833,56 @@ void ath_debug_stat_tx(struct ath_softc *sc, struct ath_buf *bf,
+ 		TX_STAT_INC(qnum, delim_underrun);
+ }
+ 
++static int open_file_xmit(struct inode *inode, struct file *f)
++{
++	return single_open(f, read_file_xmit, inode->i_private);
++}
++
+ static const struct file_operations fops_xmit = {
+-	.read = read_file_xmit,
+-	.open = simple_open,
++	.read = seq_read,
++	.open = open_file_xmit,
+ 	.owner = THIS_MODULE,
+-	.llseek = default_llseek,
++	.llseek = seq_lseek,
++	.release = single_release,
+ };
+ 
++static int open_file_queues(struct inode *inode, struct file *f)
++{
++	return single_open(f, read_file_queues, inode->i_private);
++}
++
+ static const struct file_operations fops_queues = {
+-	.read = read_file_queues,
+-	.open = simple_open,
++	.read = seq_read,
++	.open = open_file_queues,
+ 	.owner = THIS_MODULE,
+-	.llseek = default_llseek,
++	.llseek = seq_lseek,
++	.release = single_release,
+ };
+ 
++static int open_file_misc(struct inode *inode, struct file *f)
++{
++	return single_open(f, read_file_misc, inode->i_private);
++}
++
+ static const struct file_operations fops_misc = {
+-	.read = read_file_misc,
+-	.open = simple_open,
++	.read = seq_read,
++	.open = open_file_misc,
+ 	.owner = THIS_MODULE,
+-	.llseek = default_llseek,
++	.llseek = seq_lseek,
++	.release = single_release,
+ };
+ 
++static int open_file_reset(struct inode *inode, struct file *f)
++{
++	return single_open(f, read_file_reset, inode->i_private);
++}
++
+ static const struct file_operations fops_reset = {
+-	.read = read_file_reset,
+-	.open = simple_open,
++	.read = seq_read,
++	.open = open_file_reset,
+ 	.owner = THIS_MODULE,
+-	.llseek = default_llseek,
++	.llseek = seq_lseek,
++	.release = single_release,
+ };
+ 
+ void ath_debug_stat_rx(struct ath_softc *sc, struct ath_rx_status *rs)
+@@ -960,7 +891,7 @@ void ath_debug_stat_rx(struct ath_softc *sc, struct ath_rx_status *rs)
+ }
+ 
+ static ssize_t read_file_regidx(struct file *file, char __user *user_buf,
+-                                size_t count, loff_t *ppos)
++				size_t count, loff_t *ppos)
+ {
+ 	struct ath_softc *sc = file->private_data;
+ 	char buf[32];
+@@ -971,7 +902,7 @@ static ssize_t read_file_regidx(struct file *file, char __user *user_buf,
+ }
+ 
+ static ssize_t write_file_regidx(struct file *file, const char __user *user_buf,
+-			     size_t count, loff_t *ppos)
++				 size_t count, loff_t *ppos)
+ {
+ 	struct ath_softc *sc = file->private_data;
+ 	unsigned long regidx;
+@@ -999,7 +930,7 @@ static const struct file_operations fops_regidx = {
+ };
+ 
+ static ssize_t read_file_regval(struct file *file, char __user *user_buf,
+-			     size_t count, loff_t *ppos)
++				size_t count, loff_t *ppos)
+ {
+ 	struct ath_softc *sc = file->private_data;
+ 	struct ath_hw *ah = sc->sc_ah;
+@@ -1015,7 +946,7 @@ static ssize_t read_file_regval(struct file *file, char __user *user_buf,
+ }
+ 
+ static ssize_t write_file_regval(struct file *file, const char __user *user_buf,
+-			     size_t count, loff_t *ppos)
++				 size_t count, loff_t *ppos)
+ {
+ 	struct ath_softc *sc = file->private_data;
+ 	struct ath_hw *ah = sc->sc_ah;
+@@ -1081,57 +1012,45 @@ static const struct file_operations fops_regdump = {
+ 	.llseek = default_llseek,/* read accesses f_pos */
+ };
+ 
+-static ssize_t read_file_dump_nfcal(struct file *file, char __user *user_buf,
+-				    size_t count, loff_t *ppos)
++static int read_file_dump_nfcal(struct seq_file *file, void *data)
+ {
+-	struct ath_softc *sc = file->private_data;
++	struct ath_softc *sc = file->private;
+ 	struct ath_hw *ah = sc->sc_ah;
+ 	struct ath9k_nfcal_hist *h = sc->cur_chan->caldata.nfCalHist;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	struct ieee80211_conf *conf = &common->hw->conf;
+-	u32 len = 0, size = 1500;
+ 	u32 i, j;
+-	ssize_t retval = 0;
+-	char *buf;
+ 	u8 chainmask = (ah->rxchainmask << 3) | ah->rxchainmask;
+ 	u8 nread;
+ 
+-	buf = kzalloc(size, GFP_KERNEL);
+-	if (!buf)
+-		return -ENOMEM;
+-
+-	len += scnprintf(buf + len, size - len,
+-			 "Channel Noise Floor : %d\n", ah->noise);
+-	len += scnprintf(buf + len, size - len,
+-			 "Chain | privNF | # Readings | NF Readings\n");
++	seq_printf(file, "Channel Noise Floor : %d\n", ah->noise);
++	seq_puts(file, "Chain | privNF | # Readings | NF Readings\n");
+ 	for (i = 0; i < NUM_NF_READINGS; i++) {
+ 		if (!(chainmask & (1 << i)) ||
+ 		    ((i >= AR5416_MAX_CHAINS) && !conf_is_ht40(conf)))
+ 			continue;
+ 
+ 		nread = AR_PHY_CCA_FILTERWINDOW_LENGTH - h[i].invalidNFcount;
+-		len += scnprintf(buf + len, size - len, " %d\t %d\t %d\t\t",
+-				 i, h[i].privNF, nread);
++		seq_printf(file, " %d\t %d\t %d\t\t", i, h[i].privNF, nread);
+ 		for (j = 0; j < nread; j++)
+-			len += scnprintf(buf + len, size - len,
+-					 " %d", h[i].nfCalBuffer[j]);
+-		len += scnprintf(buf + len, size - len, "\n");
++			seq_printf(file, " %d", h[i].nfCalBuffer[j]);
++		seq_puts(file, "\n");
+ 	}
+ 
+-	if (len > size)
+-		len = size;
+-
+-	retval = simple_read_from_buffer(user_buf, count, ppos, buf, len);
+-	kfree(buf);
++	return 0;
++}
+ 
+-	return retval;
++static int open_file_dump_nfcal(struct inode *inode, struct file *f)
++{
++	return single_open(f, read_file_dump_nfcal, inode->i_private);
+ }
+ 
+ static const struct file_operations fops_dump_nfcal = {
+-	.read = read_file_dump_nfcal,
+-	.open = simple_open,
++	.read = seq_read,
++	.open = open_file_dump_nfcal,
+ 	.owner = THIS_MODULE,
+-	.llseek = default_llseek,
++	.llseek = seq_lseek,
++	.release = single_release,
+ };
+ 
+ #ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
+diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
+index 53ae15b..15dba7d 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.h
++++ b/drivers/net/wireless/ath/ath9k/debug.h
+@@ -195,12 +195,11 @@ struct ath_tx_stats {
+ #define TXSTATS sc->debug.stats.txstats
+ #define PR(str, elem)							\
+ 	do {								\
+-		len += scnprintf(buf + len, size - len,			\
+-				 "%s%13u%11u%10u%10u\n", str,		\
+-				 TXSTATS[PR_QNUM(IEEE80211_AC_BE)].elem,\
+-				 TXSTATS[PR_QNUM(IEEE80211_AC_BK)].elem,\
+-				 TXSTATS[PR_QNUM(IEEE80211_AC_VI)].elem,\
+-				 TXSTATS[PR_QNUM(IEEE80211_AC_VO)].elem); \
++		seq_printf(file, "%s%13u%11u%10u%10u\n", str,		\
++			   TXSTATS[PR_QNUM(IEEE80211_AC_BE)].elem,\
++			   TXSTATS[PR_QNUM(IEEE80211_AC_BK)].elem,\
++			   TXSTATS[PR_QNUM(IEEE80211_AC_VI)].elem,\
++			   TXSTATS[PR_QNUM(IEEE80211_AC_VO)].elem); \
+ 	} while(0)
+ 
+ struct ath_rx_rate_stats {
+-- 
+1.9.1
 
-> @@ -5346,13 +5345,54 @@ static int nl80211_get_reg(struct sk_buff *skb, struct genl_info *info)
->  	if (!hdr)
->  		goto put_failure;
->  
-> -	if (reg_last_request_cell_base() &&
-> -	    nla_put_u32(msg, NL80211_ATTR_USER_REG_HINT_TYPE,
-> -			NL80211_USER_REG_HINT_CELL_BASE))
-> -		goto nla_put_failure;
-> +	if (info->attrs[NL80211_ATTR_WIPHY]) {
-> +		u32 reg_flags;
-> +		struct wiphy *wiphy;
-> +		struct cfg80211_registered_device *rdev =
-> +			cfg80211_get_dev_from_info(genl_info_net(info), info);
-> +
-> +		if (IS_ERR(rdev)) {
-> +			nlmsg_free(msg);
-> +			return PTR_ERR(rdev);
-> +		}
-> +
-> +		wiphy = &rdev->wiphy;
-> +		reg_flags = wiphy->regulatory_flags;
-> +		if (reg_flags & REGULATORY_WIPHY_SELF_MANAGED ||
-> +		    info->attrs[NL80211_ATTR_WIPHY_GET_PRIV_REG]) {
-> +			regdom = get_wiphy_regdom(wiphy);
-> +			if (!regdom) {
-> +				nlmsg_free(msg);
-> +				return -EINVAL;
-> +			}
-> +
-> +			if (nla_put_u32(msg, NL80211_ATTR_WIPHY,
-> +					rdev->wiphy_idx))
-> +				goto nla_put_failure;
-> +
-> +			if (reg_flags & REGULATORY_WIPHY_SELF_MANAGED &&
-> +			    nla_put_flag(msg,
-> +					 NL80211_ATTR_WIPHY_SELF_MANAGED_REG))
-> +				goto nla_put_failure;
-> +		}
-> +	}
-
-If no NL80211_ATTR_WIPHY was requested specifically it would still
-be good to send the central regulatory domain followed by each
-wiphy's own regulatory domain whether priv or managed. Can you add
-that as well? With the split above the first patch would send
-all regds for all wiphys that used regulatory_hint(), the second
-patch would extend this to add the self managed list too.
-
-I think we really need then only two interfaces:
-
-iw reg get
-iw reg get dev wlan0
-
-I don't think we need to be letting userspace asking for
-NL80211_ATTR_WIPHY_SELF_MANAGED_REG regds or priv ones.
-
- Luis
