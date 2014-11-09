@@ -1,98 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:3486 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751547AbaKSNtc (ORCPT
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:35208 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751040AbaKISKS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Nov 2014 08:49:32 -0500
-Message-ID: <546C9FE9.60100@broadcom.com> (sfid-20141119_144945_408737_77053F37)
-Date: Wed, 19 Nov 2014 14:49:29 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Sun, 9 Nov 2014 13:10:18 -0500
+Message-ID: <545FAE05.2030701@gmail.com> (sfid-20141109_191057_822264_65EC2E0F)
+Date: Sun, 09 Nov 2014 13:10:13 -0500
+From: Mathy Vanhoef <vanhoefm@gmail.com>
 MIME-Version: 1.0
-To: Maximilian Engelhardt <maxi@daemonizer.de>
-CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Michael Tokarev <mjt@tls.msk.ru>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	"brcm80211 development" <brcm80211-dev-list@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Network Development" <netdev@vger.kernel.org>
-Subject: Re: BCM4313 & brcmsmac & 3.12: only semi-working?
-References: <53FDACD1.8090805@msgid.tls.msk.ru> <54363ED0.605@broadcom.com> <CACna6rw3XgdJz0uKkAuas8RTzozTdFp2mgF5g1uo7LHJVSMt4g@mail.gmail.com> <3543341.FmUQFH9nrl@eisbaer> <546C9F2B.8090104@broadcom.com>
-In-Reply-To: <546C9F2B.8090104@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+To: brudley@broadcom.com, arend@broadcom.com, frankyl@broadcom.com,
+	meuleman@broadcom.com, linville@tuxdriver.com,
+	pieterpg@broadcom.com, linux-wireless@vger.kernel.org,
+	brcm80211-dev-list@broadcom.com, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] brcmfmac: unlink URB when request timed out
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/19/14 14:46, Arend van Spriel wrote:
-> On 11/17/14 23:36, Maximilian Engelhardt wrote:
->> On Thursday 09 October 2014 10:21:12 Rafał Miłecki wrote:
->>> On 9 October 2014 09:52, Arend van Spriel<arend@broadcom.com> wrote:
->>>> I have been staring at differences brcmsmac and our internal driver
->>>> (which
->>>> wl is derived from as well). Would you be able to make an mmiotrace
->>>> loading
->>>> wl and brcmsmac.
->>>
->>> Arend,
->>>
->>> As you noticed earlier, this is a WiFi card with BT. I've checked
->>> siutils.c from SDK 7.14.43.7 (got it from Netgear R8000) and it has
->>> three BCM4313 workarounds:
->>>
->>>
->>> 1) si_doattach
->>> SI_MSG(("Applying 4313 WARs\n"));
->>> si_pmu_chipcontrol(sih, 0, CCTRL_4313_12MA_LED_DRIVE,
->>> CCTRL_4313_12MA_LED_DRIVE);
->>>
->>> It's already implemented in bcma, see driver_chipcommon_pmu.c
->>>
->>>
->>> 2) si_epa_4313war
->>> /* EPA Fix */
->>> W_REG(sii->osh,&cc->gpiocontrol,
->>> R_REG(sii->osh,&cc->gpiocontrol) | GPIO_CTRL_EPA_EN_MASK);
->>>
->>> This is what you already implement in ai_epa_4313war
->>>
->>>
->>> 3) si_pmu_synth_pwrsw_4313_war
->>> I don't think it's implemented.
->>>
->>>
->>> 4) si_btcombo_p250_4313_war
->>> I also don't think it's implemented
->>>
->>>
->>> The last one (si_btcombo_p250_4313_war) looks promising, the comment
->>> above the function says:
->>> /** WL/BT control for 4313 btcombo boards>= P250 */
->>> I guess you need to re-implement this function and call it somewhere
->>> in brcmsmac.
->>
->> Hi,
->>
->> I just wanted to ask if there is any progress on this issue since I
->> haven't
->> heard anything for a month. Please let me know if you need any additional
->> information.
->
-> I had a bit of problem with the mmiotrace files. Well, my (virtual)
-> linux machine had as it ended up swapping on my disk and went down the
-> drain.
->
-> I still wanted to look at items 3) and 4) that Rafal mentioned although
-> item 4) does not seems to apply to Michael's 4313 it may help yours. I
-> submitted a patch to get counter statistics from the 802.11 core on the
-> chip [1] as I am curious whether that will show a possible lead.
->
-> Regards,
-> Arend
+From: Mathy Vanhoef <vanhoefm@gmail.com>
 
-+ links
+Unlink the submitted URB in brcmf_usb_dl_cmd if the request timed out. This
+assures the URB is never submitted twice, preventing a driver crash.
 
-patch [1] depends on patch [2]
+Signed-off-by: Mathy Vanhoef <vanhoefm@gmail.com>
+---
+Currently brcmfmac may crash when a USB device is attached (tested with a LG
+TWFM-B003D). In particular it fails on the second call to brcmf_usb_dl_cmd in
+the while loop of brcmf_usb_resetcfg. The problem is that an URB is being
+submitted twice:
 
-[1] 
-https://git.kernel.org/cgit/linux/kernel/git/linville/wireless-next.git/commit/drivers/net/wireless/brcm80211?id=3fe33c4ce
-[2] 
-https://git.kernel.org/cgit/linux/kernel/git/linville/wireless-next.git/commit/drivers/net/wireless/brcm80211?id=9146782b1b
+[  169.861800] brcmfmac: brcmf_usb_dl_writeimage Enter, fw f14db000, len 348160
+[  171.787791] brcmfmac: brcmf_usb_dl_writeimage Exit, err=0
+[  171.787797] brcmfmac: brcmf_usb_dlstart Exit, err=0
+[  171.787799] brcmfmac: brcmf_usb_dlrun Enter
+[  171.791794] brcmfmac: brcmf_usb_resetcfg Enter
+[  173.988072] ------------[ cut here ]------------
+[  173.988083] WARNING: CPU: 0 PID: 369 at drivers/usb/core/urb.c:339 usb_submit_urb+0x4e6/0x500()
+[  173.988085] URB eaf45f00 submitted while active
+[  173.988086] Modules linked in: brcmfmac brcmutil vmw_pvscsi pcnet32 mptspi mptscsih mptbase
+[  173.988100] CPU: 0 PID: 369 Comm: kworker/0:2 Not tainted 3.18.0-rc3-wl #1
+[  173.988102] Hardware name: VMware, Inc. VMware Virtual Platform/440BX Desktop Reference Platform, BIOS 6.00 07/31/2013
+[  173.988106] Workqueue: events request_firmware_work_func
+[  173.988108]  00000000 00000000 ee747db8 c1711f4a ee747df8 ee747de8 c103edaf c18d1e10
+[  173.988112]  ee747e14 00000171 c18a8b29 00000153 c1490556 c1490556 eaf45f00 eafdc660
+[  173.988115]  f14b8fa0 ee747e00 c103ee4e 00000009 ee747df8 c18d1e10 ee747e14 ee747e50
+[  173.988119] Call Trace:
+[  173.988129]  [<c1711f4a>] dump_stack+0x41/0x52
+[  173.988136]  [<c103edaf>] warn_slowpath_common+0x7f/0xa0
+[  173.988139]  [<c1490556>] ? usb_submit_urb+0x4e6/0x500
+[  173.988141]  [<c1490556>] ? usb_submit_urb+0x4e6/0x500
+[  173.988147]  [<f14b8fa0>] ? brcmf_usb_ioctl_resp_wake+0x40/0x40 [brcmfmac]
+[  173.988150]  [<c103ee4e>] warn_slowpath_fmt+0x2e/0x30
+[  173.988152]  [<c1490556>] usb_submit_urb+0x4e6/0x500
+[  173.988156]  [<c1123de1>] ? __kmalloc+0x21/0x140
+[  173.988161]  [<f14b91c3>] ? brcmf_usb_dl_cmd+0x33/0x120 [brcmfmac]
+[  173.988166]  [<f14b9243>] brcmf_usb_dl_cmd+0xb3/0x120 [brcmfmac]
+[  173.988170]  [<f14ba6c4>] brcmf_usb_probe_phase2+0x4e4/0x640 [brcmfmac]
+[  173.988176]  [<f14b4900>] brcmf_fw_request_code_done+0xd0/0xf0 [brcmfmac]
+[  173.988178]  [<c1400876>] request_firmware_work_func+0x26/0x50
+[  173.988182]  [<c10513ee>] process_one_work+0x11e/0x360
+[  173.988184]  [<c1051750>] worker_thread+0xf0/0x3c0
+[  173.988205]  [<c106e14a>] ? __wake_up_locked+0x1a/0x20
+[  173.988208]  [<c1051660>] ? process_scheduled_works+0x30/0x30
+[  173.988211]  [<c1055b56>] kthread+0x96/0xb0
+[  173.988214]  [<c1719c81>] ret_from_kernel_thread+0x21/0x30
+[  173.988217]  [<c1055ac0>] ? kthread_worker_fn+0x110/0x110
+[  173.988219] ---[ end trace 0c88bf46801de083 ]---
+[  173.988221] brcmf_usb_dl_cmd: usb_submit_urb failed -16
+[  173.988396] brcmfmac: brcmf_usb_probe_phase2 failed: dev=1-1, err=-19
+[  173.989503] brcmfmac: brcmf_usb_disconnect Enter
+
+This patch fixes the brcmf_usb_dl_cmd function to prevent an URB from being
+submitted twice. Tested using a LG TWFM-B003D, which now works properly.
+
+
+ drivers/net/wireless/brcm80211/brcmfmac/usb.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+index 5265aa7..1bc7858 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+@@ -738,10 +738,12 @@ static int brcmf_usb_dl_cmd(struct brcmf_usbdev_info *devinfo, u8 cmd,
+ 		goto finalize;
+ 	}
+ 
+-	if (!brcmf_usb_ioctl_resp_wait(devinfo))
++	if (!brcmf_usb_ioctl_resp_wait(devinfo)) {
++		usb_unlink_urb(devinfo->ctl_urb);
+ 		ret = -ETIMEDOUT;
+-	else
++	} else {
+ 		memcpy(buffer, tmpbuf, buflen);
++	}
+ 
+ finalize:
+ 	kfree(tmpbuf);
+-- 
+1.7.10.4
+
