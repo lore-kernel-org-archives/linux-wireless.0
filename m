@@ -1,44 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:31078 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964887AbaKNPJq (ORCPT
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:59596 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751922AbaKIQuc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Nov 2014 10:09:46 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Pushpal Sidhu <psidhu@gateworks.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v4 0/2] ath10k: testmode support
-References: <20140910152136.12610.18499.stgit@potku.adurom.net>
-	<87zje528im.fsf@kamboji.qca.qualcomm.com>
-	<CAD1M061Gky-a28Rokmgyd-5x_m_h1SNmj9ZxUd4v1fP=bae35g@mail.gmail.com>
-Date: Fri, 14 Nov 2014 17:09:21 +0200
-In-Reply-To: <CAD1M061Gky-a28Rokmgyd-5x_m_h1SNmj9ZxUd4v1fP=bae35g@mail.gmail.com>
-	(Pushpal Sidhu's message of "Thu, 13 Nov 2014 16:08:30 -0800")
-Message-ID: <87389lstst.fsf@kamboji.qca.qualcomm.com> (sfid-20141114_160950_610820_F109B19F)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Sun, 9 Nov 2014 11:50:32 -0500
+Received: by mail-wi0-f181.google.com with SMTP id n3so8461767wiv.2
+        for <linux-wireless@vger.kernel.org>; Sun, 09 Nov 2014 08:50:31 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 05/16] mac80211: add function to create data frame template including key
+Date: Sun,  9 Nov 2014 18:50:11 +0200
+Message-Id: <1415551822-20121-5-git-send-email-arik@wizery.com> (sfid-20141109_175040_975796_B3B3B247)
+In-Reply-To: <1415551822-20121-1-git-send-email-arik@wizery.com>
+References: <1415551822-20121-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pushpal Sidhu <psidhu@gateworks.com> writes:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> On Thu, Sep 11, 2014 at 1:43 PM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->> Kalle Valo <kvalo@qca.qualcomm.com> writes:
->>
->>> latest version of my testmode patches. Getting closer, more or less cosmetic
->>> changes this time :)
->
-> While looking through this patchset (sorry it took two months), I have
-> to wonder: what's this utf.bin blob? It seems in order to use
-> testmode, we need this binary blob that I can't seem to find (I looked
-> in linux-firmware and https://github.com/kvalo/ath10k-firmware). If,
-> for whatever reason, this binary blob is not releasable, what's the
-> point of adding in testmode to this driver?
+For some TDLS channel switch implementations data frames need to be
+sent by the firmware based on a template. This template should be
+created by mac80211, and thus needs to properly be built from an
+802.3 frame into an 802.11 frame. In addition, the device will need
+the key information so the select_key handler needs to be run.
+However, the driver/device will be responsible for all of the crypto
+encapsulation, as the sequence numbers etc. cannot be built by the
+host anyway in this case since it's a template to be used multiple
+times.
 
-testmode is for functionality needed in the factory, it's not meant for
-normal users. That's why all distros should have CONFIG_NL80211_TESTMODE
-disabled.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ net/mac80211/ieee80211_i.h |  3 +++
+ net/mac80211/tx.c          | 31 +++++++++++++++++++++++++++++++
+ 2 files changed, 34 insertions(+)
 
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 00cda1e..53eb41f 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1634,6 +1634,9 @@ void __ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 				  u32 info_flags);
+ void ieee80211_purge_tx_queue(struct ieee80211_hw *hw,
+ 			      struct sk_buff_head *skbs);
++struct sk_buff *
++ieee80211_build_data_template(struct ieee80211_sub_if_data *sdata,
++			      struct sk_buff *skb, u32 info_flags);
+ 
+ /* HT */
+ void ieee80211_apply_htcap_overrides(struct ieee80211_sub_if_data *sdata,
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index f67131a..54007ce 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2277,6 +2277,37 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 	return NETDEV_TX_OK;
+ }
+ 
++struct sk_buff *
++ieee80211_build_data_template(struct ieee80211_sub_if_data *sdata,
++			      struct sk_buff *skb, u32 info_flags)
++{
++	struct ieee80211_hdr *hdr;
++	struct ieee80211_tx_data tx = {
++		.local = sdata->local,
++		.sdata = sdata,
++	};
++
++	rcu_read_lock();
++
++	skb = ieee80211_build_hdr(sdata, skb, info_flags);
++	if (IS_ERR(skb))
++		goto out;
++
++	hdr = (void *)skb->data;
++	tx.sta = sta_info_get(sdata, hdr->addr1);
++	tx.skb = skb;
++
++	if (ieee80211_tx_h_select_key(&tx) != TX_CONTINUE) {
++		rcu_read_unlock();
++		kfree_skb(skb);
++		return ERR_PTR(-EINVAL);
++	}
++
++out:
++	rcu_read_unlock();
++	return skb;
++}
++
+ /*
+  * ieee80211_clear_tx_pending may not be called in a context where
+  * it is possible that it packets could come in again.
 -- 
-Kalle Valo
+1.9.1
+
