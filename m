@@ -1,38 +1,270 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f178.google.com ([209.85.214.178]:47534 "EHLO
-	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751408AbaK2SyU (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:4976 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751431AbaKIKcJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Nov 2014 13:54:20 -0500
-Message-ID: <547A1659.9070605@lwfinger.net> (sfid-20141129_195505_739862_B6A9137E)
-Date: Sat, 29 Nov 2014 12:54:17 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Sun, 9 Nov 2014 05:32:09 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH V2 3/3] ath: ath9k: use debugfs_create_devm_seqfile() helper for seq_file entries
+Date: Sun, 9 Nov 2014 11:32:00 +0100
+Message-ID: <1415529120-16314-4-git-send-email-arend@broadcom.com> (sfid-20141109_113220_555648_2F1ECB9F)
+In-Reply-To: <1415529120-16314-1-git-send-email-arend@broadcom.com>
+References: <1415529120-16314-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: nick <xerofoify@gmail.com>,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	=?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <m@bues.ch>
-CC: Network Development <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	b43-dev <b43-dev@lists.infradead.org>
-Subject: Re: [PATCH] drivers:net:wireless: Add mutex locking for function,
- b43_op_beacon_set_time in main.c
-References: <1417213013-19758-1-git-send-email-xerofoify@gmail.com>	<CACna6rxmOC0h9hOpa=5iWFM1THQ8Q4hCi8MnmqkZJbB_U0PJ0A@mail.gmail.com>	<20141129002148.1beb21d9@wiggum>	<54793E4E.7050602@gmail.com>	<20141129095632.69361457@wiggum> <CACna6ryjZ-LY06wAMzoL77Wca3McUUT+VYsO4EPO87NqjBnaNw@mail.gmail.com> <547A0BC5.2080005@gmail.com>
-In-Reply-To: <547A0BC5.2080005@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/29/2014 12:09 PM, nick wrote:
-> Sorry about that, next time I will be more careful.
+Use the helper to get rid of the file operations per debugfs file. The
+struct ath9k_softc pointer is set as device driver data to be obtained
+in the seq_file read operation.
 
-One other thing would be to change the initial part of the subject. Yes, the 
-device is in drivers/net/wireless/, but it is much more common to not include 
-those in patches that are sent to Linville. I would have used "b43: Add ...". 
-That catches the eye more quickly. As they say in the newspaper business, "Don't 
-bury the lead."
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/ath/ath9k/ahb.c   |   1 +
+ drivers/net/wireless/ath/ath9k/debug.c | 122 ++++++---------------------------
+ drivers/net/wireless/ath/ath9k/pci.c   |   1 +
+ 3 files changed, 24 insertions(+), 100 deletions(-)
 
-Larry
-
+diff --git a/drivers/net/wireless/ath/ath9k/ahb.c b/drivers/net/wireless/ath/ath9k/ahb.c
+index e000c4c..750a130 100644
+--- a/drivers/net/wireless/ath/ath9k/ahb.c
++++ b/drivers/net/wireless/ath/ath9k/ahb.c
+@@ -126,6 +126,7 @@ static int ath_ahb_probe(struct platform_device *pdev)
+ 	sc = hw->priv;
+ 	sc->hw = hw;
+ 	sc->dev = &pdev->dev;
++	dev_set_drvdata(sc->dev, sc);
+ 	sc->mem = mem;
+ 	sc->irq = irq;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index e7b709f..a1f1614 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -403,7 +403,7 @@ static const struct file_operations fops_antenna_diversity = {
+ 
+ static int read_file_dma(struct seq_file *file, void *data)
+ {
+-	struct ath_softc *sc = file->private;
++	struct ath_softc *sc = dev_get_drvdata(file->private);
+ 	struct ath_hw *ah = sc->sc_ah;
+ 	u32 val[ATH9K_NUM_DMA_DEBUG_REGS];
+ 	int i, qcuOffset = 0, dcuOffset = 0;
+@@ -470,20 +470,6 @@ static int read_file_dma(struct seq_file *file, void *data)
+ 	return 0;
+ }
+ 
+-static int open_file_dma(struct inode *inode, struct file *f)
+-{
+-	return single_open(f, read_file_dma, inode->i_private);
+-}
+-
+-static const struct file_operations fops_dma = {
+-	.open = open_file_dma,
+-	.read = seq_read,
+-	.owner = THIS_MODULE,
+-	.llseek = seq_lseek,
+-	.release = single_release,
+-};
+-
+-
+ void ath_debug_stat_interrupt(struct ath_softc *sc, enum ath9k_int status)
+ {
+ 	if (status)
+@@ -539,7 +525,7 @@ void ath_debug_stat_interrupt(struct ath_softc *sc, enum ath9k_int status)
+ 
+ static int read_file_interrupt(struct seq_file *file, void *data)
+ {
+-	struct ath_softc *sc = file->private;
++	struct ath_softc *sc = dev_get_drvdata(file->private);
+ 
+ #define PR_IS(a, s)						\
+ 	do {							\
+@@ -600,22 +586,9 @@ static int read_file_interrupt(struct seq_file *file, void *data)
+ 	return 0;
+ }
+ 
+-static int open_file_interrupt(struct inode *inode, struct file *f)
+-{
+-	return single_open(f, read_file_interrupt, inode->i_private);
+-}
+-
+-static const struct file_operations fops_interrupt = {
+-	.read = seq_read,
+-	.open = open_file_interrupt,
+-	.owner = THIS_MODULE,
+-	.llseek = seq_lseek,
+-	.release = single_release,
+-};
+-
+ static int read_file_xmit(struct seq_file *file, void *data)
+ {
+-	struct ath_softc *sc = file->private;
++	struct ath_softc *sc = dev_get_drvdata(file->private);
+ 
+ 	seq_printf(file, "%30s %10s%10s%10s\n\n", "BE", "BK", "VI", "VO");
+ 
+@@ -661,7 +634,7 @@ static void print_queue(struct ath_softc *sc, struct ath_txq *txq,
+ 
+ static int read_file_queues(struct seq_file *file, void *data)
+ {
+-	struct ath_softc *sc = file->private;
++	struct ath_softc *sc = dev_get_drvdata(file->private);
+ 	struct ath_txq *txq;
+ 	int i;
+ 	static const char *qname[4] = {
+@@ -682,7 +655,7 @@ static int read_file_queues(struct seq_file *file, void *data)
+ 
+ static int read_file_misc(struct seq_file *file, void *data)
+ {
+-	struct ath_softc *sc = file->private;
++	struct ath_softc *sc = dev_get_drvdata(file->private);
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	struct ath9k_vif_iter_data iter_data;
+ 	struct ath_chanctx *ctx;
+@@ -772,7 +745,7 @@ static int read_file_misc(struct seq_file *file, void *data)
+ 
+ static int read_file_reset(struct seq_file *file, void *data)
+ {
+-	struct ath_softc *sc = file->private;
++	struct ath_softc *sc = dev_get_drvdata(file->private);
+ 
+ 	seq_printf(file, "%17s: %2d\n", "Baseband Hang",
+ 		   sc->debug.stats.reset[RESET_TYPE_BB_HANG]);
+@@ -833,58 +806,6 @@ void ath_debug_stat_tx(struct ath_softc *sc, struct ath_buf *bf,
+ 		TX_STAT_INC(qnum, delim_underrun);
+ }
+ 
+-static int open_file_xmit(struct inode *inode, struct file *f)
+-{
+-	return single_open(f, read_file_xmit, inode->i_private);
+-}
+-
+-static const struct file_operations fops_xmit = {
+-	.read = seq_read,
+-	.open = open_file_xmit,
+-	.owner = THIS_MODULE,
+-	.llseek = seq_lseek,
+-	.release = single_release,
+-};
+-
+-static int open_file_queues(struct inode *inode, struct file *f)
+-{
+-	return single_open(f, read_file_queues, inode->i_private);
+-}
+-
+-static const struct file_operations fops_queues = {
+-	.read = seq_read,
+-	.open = open_file_queues,
+-	.owner = THIS_MODULE,
+-	.llseek = seq_lseek,
+-	.release = single_release,
+-};
+-
+-static int open_file_misc(struct inode *inode, struct file *f)
+-{
+-	return single_open(f, read_file_misc, inode->i_private);
+-}
+-
+-static const struct file_operations fops_misc = {
+-	.read = seq_read,
+-	.open = open_file_misc,
+-	.owner = THIS_MODULE,
+-	.llseek = seq_lseek,
+-	.release = single_release,
+-};
+-
+-static int open_file_reset(struct inode *inode, struct file *f)
+-{
+-	return single_open(f, read_file_reset, inode->i_private);
+-}
+-
+-static const struct file_operations fops_reset = {
+-	.read = seq_read,
+-	.open = open_file_reset,
+-	.owner = THIS_MODULE,
+-	.llseek = seq_lseek,
+-	.release = single_release,
+-};
+-
+ void ath_debug_stat_rx(struct ath_softc *sc, struct ath_rx_status *rs)
+ {
+ 	ath9k_cmn_debug_stat_rx(&sc->debug.stats.rxstats, rs);
+@@ -1014,7 +935,7 @@ static const struct file_operations fops_regdump = {
+ 
+ static int read_file_dump_nfcal(struct seq_file *file, void *data)
+ {
+-	struct ath_softc *sc = file->private;
++	struct ath_softc *sc = dev_get_drvdata(file->private);
+ 	struct ath_hw *ah = sc->sc_ah;
+ 	struct ath9k_nfcal_hist *h = sc->cur_chan->caldata.nfCalHist;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+@@ -1256,14 +1177,14 @@ int ath9k_init_debug(struct ath_hw *ah)
+ 	ath9k_tx99_init_debug(sc);
+ 	ath9k_spectral_init_debug(sc);
+ 
+-	debugfs_create_file("dma", S_IRUSR, sc->debug.debugfs_phy, sc,
+-			    &fops_dma);
+-	debugfs_create_file("interrupt", S_IRUSR, sc->debug.debugfs_phy, sc,
+-			    &fops_interrupt);
+-	debugfs_create_file("xmit", S_IRUSR, sc->debug.debugfs_phy, sc,
+-			    &fops_xmit);
+-	debugfs_create_file("queues", S_IRUSR, sc->debug.debugfs_phy, sc,
+-			    &fops_queues);
++	debugfs_create_devm_seqfile(sc->dev, "dma", sc->debug.debugfs_phy,
++				    read_file_dma);
++	debugfs_create_devm_seqfile(sc->dev, "interrupt", sc->debug.debugfs_phy,
++				    read_file_interrupt);
++	debugfs_create_devm_seqfile(sc->dev, "xmit", sc->debug.debugfs_phy,
++				    read_file_xmit);
++	debugfs_create_devm_seqfile(sc->dev, "queues", sc->debug.debugfs_phy,
++				    read_file_queues);
+ 	debugfs_create_u32("qlen_bk", S_IRUSR | S_IWUSR, sc->debug.debugfs_phy,
+ 			   &sc->tx.txq_max_pending[IEEE80211_AC_BK]);
+ 	debugfs_create_u32("qlen_be", S_IRUSR | S_IWUSR, sc->debug.debugfs_phy,
+@@ -1272,10 +1193,10 @@ int ath9k_init_debug(struct ath_hw *ah)
+ 			   &sc->tx.txq_max_pending[IEEE80211_AC_VI]);
+ 	debugfs_create_u32("qlen_vo", S_IRUSR | S_IWUSR, sc->debug.debugfs_phy,
+ 			   &sc->tx.txq_max_pending[IEEE80211_AC_VO]);
+-	debugfs_create_file("misc", S_IRUSR, sc->debug.debugfs_phy, sc,
+-			    &fops_misc);
+-	debugfs_create_file("reset", S_IRUSR, sc->debug.debugfs_phy, sc,
+-			    &fops_reset);
++	debugfs_create_devm_seqfile(sc->dev, "misc", sc->debug.debugfs_phy,
++				    read_file_misc);
++	debugfs_create_devm_seqfile(sc->dev, "reset", sc->debug.debugfs_phy,
++				    read_file_reset);
+ 
+ 	ath9k_cmn_debug_recv(sc->debug.debugfs_phy, &sc->debug.stats.rxstats);
+ 	ath9k_cmn_debug_phy_err(sc->debug.debugfs_phy, &sc->debug.stats.rxstats);
+@@ -1297,8 +1218,9 @@ int ath9k_init_debug(struct ath_hw *ah)
+ 			    &ah->config.cwm_ignore_extcca);
+ 	debugfs_create_file("regdump", S_IRUSR, sc->debug.debugfs_phy, sc,
+ 			    &fops_regdump);
+-	debugfs_create_file("dump_nfcal", S_IRUSR, sc->debug.debugfs_phy, sc,
+-			    &fops_dump_nfcal);
++	debugfs_create_devm_seqfile(sc->dev, "dump_nfcal",
++				    sc->debug.debugfs_phy,
++				    read_file_dump_nfcal);
+ 
+ 	ath9k_cmn_debug_base_eeprom(sc->debug.debugfs_phy, sc->sc_ah);
+ 	ath9k_cmn_debug_modal_eeprom(sc->debug.debugfs_phy, sc->sc_ah);
+diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
+index c018dea..90c9e3c 100644
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -856,6 +856,7 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	sc = hw->priv;
+ 	sc->hw = hw;
+ 	sc->dev = &pdev->dev;
++	dev_set_drvdata(sc->dev, sc);
+ 	sc->mem = pcim_iomap_table(pdev)[0];
+ 	sc->driver_data = id->driver_data;
+ 
+-- 
+1.9.1
 
