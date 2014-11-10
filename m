@@ -1,152 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:14229 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753898AbaKMP3s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Nov 2014 10:29:48 -0500
-From: Jukka Rissanen <jukka.rissanen@linux.intel.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH v5 2/2] nl80211: Stop scheduled scan if netlink client disappears
-Date: Thu, 13 Nov 2014 17:25:15 +0200
-Message-Id: <1415892315-2911-3-git-send-email-jukka.rissanen@linux.intel.com> (sfid-20141113_162954_070889_EBEB661D)
-In-Reply-To: <1415892315-2911-1-git-send-email-jukka.rissanen@linux.intel.com>
-References: <1415892315-2911-1-git-send-email-jukka.rissanen@linux.intel.com>
+Received: from dedo.coelho.fi ([88.198.205.34]:59421 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752146AbaKJJXs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Nov 2014 04:23:48 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: emmanuel.grumbach@intel.com
+Cc: linux-wireless@vger.kernel.org,
+	Luciano Coelho <luciano.coelho@intel.com>
+Date: Mon, 10 Nov 2014 11:10:17 +0200
+Message-Id: <1415610621-27438-13-git-send-email-luca@coelho.fi> (sfid-20141110_102400_075552_1E18D7C3)
+In-Reply-To: <1415610621-27438-1-git-send-email-luca@coelho.fi>
+References: <1415610621-27438-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH 12/16] iwlwifi: mvm: add a channel_switch op to bypass mac80211 timer
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-An attribute NL80211_ATTR_SOCKET_OWNER can be set by the scan initiator.
-If present, the attribute will cause the scan to be stopped if the client
-dies.
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-Signed-off-by: Jukka Rissanen <jukka.rissanen@linux.intel.com>
+We need to call ieee80211_chswitch_done() ourselves just when the
+absence TE started, so we perform the actual context switch early
+enough.  To do so, add a dummy channel_switch op, which will cause
+mac80211 to skip the countdown timer and allow us to call
+ieee80211_chswitch_done() to complete the operation.
+
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
 ---
- include/net/cfg80211.h       |  1 +
- include/uapi/linux/nl80211.h |  3 +++
- net/wireless/core.c          | 17 +++++++++++++++++
- net/wireless/core.h          |  2 ++
- net/wireless/nl80211.c       | 15 +++++++++++++++
- 5 files changed, 38 insertions(+)
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c   | 15 +++++++++++++++
+ drivers/net/wireless/iwlwifi/mvm/time-event.c |  1 +
+ 2 files changed, 16 insertions(+)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 220d5f5..6fa764a 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1512,6 +1512,7 @@ struct cfg80211_sched_scan_request {
- 	struct wiphy *wiphy;
- 	struct net_device *dev;
- 	unsigned long scan_start;
-+	u32 owner_nlportid;
- 
- 	/* keep last */
- 	struct ieee80211_channel *channels[0];
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 185f9c7..5038240 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1640,6 +1640,9 @@ enum nl80211_commands {
-  * @NL80211_ATTR_SOCKET_OWNER: Flag attribute, if set during interface
-  *	creation then the new interface will be owned by the netlink socket
-  *	that created it and will be destroyed when the socket is closed.
-+ *	If set during scheduled scan start then the new scan req will be
-+ *	owned by the netlink socket that created it and the scheduled scan will
-+ *	be stopped when the socket is closed.
-  *
-  * @NL80211_ATTR_TDLS_INITIATOR: flag attribute indicating the current end is
-  *	the TDLS link initiator.
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index a4d2792..6fffcb3 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -320,6 +320,21 @@ static void cfg80211_destroy_iface_wk(struct work_struct *work)
- 	rtnl_unlock();
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index de6a64d..55ab81e 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -3016,6 +3016,20 @@ static int iwl_mvm_mac_testmode_cmd(struct ieee80211_hw *hw,
  }
+ #endif
  
-+static void cfg80211_sched_scan_stop_wk(struct work_struct *work)
++static void iwl_mvm_channel_switch(struct ieee80211_hw *hw,
++				   struct ieee80211_vif *vif,
++				   struct ieee80211_channel_switch *chsw)
 +{
-+	struct cfg80211_registered_device *rdev;
++	/* By implementing this operation, we prevent mac80211 from
++	 * starting its own channel switch timer, so that we can call
++	 * ieee80211_chswitch_done() ourselves at the right time
++	 * (which is when the absence time event starts).
++	 */
 +
-+	rdev = container_of(work, struct cfg80211_registered_device,
-+			   sched_scan_stop_wk);
-+
-+	rtnl_lock();
-+
-+	if (rdev->sched_scan_req)
-+		__cfg80211_stop_sched_scan(rdev, false);
-+
-+	rtnl_unlock();
++	IWL_DEBUG_MAC80211(IWL_MAC80211_GET_MVM(hw),
++			   "dummy channel switch op\n");
 +}
 +
- /* exported functions */
+ static int iwl_mvm_pre_channel_switch(struct ieee80211_hw *hw,
+ 				      struct ieee80211_vif *vif,
+ 				      struct ieee80211_channel_switch *chsw)
+@@ -3190,6 +3204,7 @@ const struct ieee80211_ops iwl_mvm_hw_ops = {
  
- struct wiphy *wiphy_new_nm(const struct cfg80211_ops *ops, int sizeof_priv,
-@@ -406,6 +421,7 @@ use_default_name:
- 	INIT_LIST_HEAD(&rdev->destroy_list);
- 	spin_lock_init(&rdev->destroy_list_lock);
- 	INIT_WORK(&rdev->destroy_work, cfg80211_destroy_iface_wk);
-+	INIT_WORK(&rdev->sched_scan_stop_wk, cfg80211_sched_scan_stop_wk);
+ 	.set_tim = iwl_mvm_set_tim,
  
- #ifdef CONFIG_CFG80211_DEFAULT_PS
- 	rdev->wiphy.flags |= WIPHY_FLAG_PS_ON_BY_DEFAULT;
-@@ -760,6 +776,7 @@ void wiphy_unregister(struct wiphy *wiphy)
- 	flush_work(&rdev->event_work);
- 	cancel_delayed_work_sync(&rdev->dfs_update_channels_wk);
- 	flush_work(&rdev->destroy_work);
-+	flush_work(&rdev->sched_scan_stop_wk);
++	.channel_switch = iwl_mvm_channel_switch,
+ 	.pre_channel_switch = iwl_mvm_pre_channel_switch,
+ 	.post_channel_switch = iwl_mvm_post_channel_switch,
  
- #ifdef CONFIG_PM
- 	if (rdev->wiphy.wowlan_config && rdev->ops->set_wakeup)
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 61ee664..1bdffac 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -84,6 +84,8 @@ struct cfg80211_registered_device {
- 	struct list_head destroy_list;
- 	struct work_struct destroy_work;
- 
-+	struct work_struct sched_scan_stop_wk;
-+
- 	/* must be last because of the way we do wiphy_priv(),
- 	 * and it should at least be aligned to NETDEV_ALIGN */
- 	struct wiphy wiphy __aligned(NETDEV_ALIGN);
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index df447c0..8ab3610 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -5955,6 +5955,9 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
- 
- 	err = rdev_sched_scan_start(rdev, dev, request);
- 	if (!err) {
-+		if (info->attrs[NL80211_ATTR_SOCKET_OWNER])
-+			request->owner_nlportid = info->snd_portid;
-+
- 		rdev->sched_scan_req = request;
- 		nl80211_send_sched_scan(rdev, dev,
- 					NL80211_CMD_START_SCHED_SCAN);
-@@ -12127,6 +12130,12 @@ static int nl80211_netlink_notify(struct notifier_block * nb,
- 
- 	list_for_each_entry_rcu(rdev, &cfg80211_rdev_list, list) {
- 		bool schedule_destroy_work = false;
-+		bool schedule_scan_stop = false;
-+		struct cfg80211_sched_scan_request *req = rdev->sched_scan_req;
-+
-+		if (req && req->owner_nlportid == notify->portid &&
-+		    notify->portid)
-+			schedule_scan_stop = true;
- 
- 		list_for_each_entry_rcu(wdev, &rdev->wdev_list, list) {
- 			cfg80211_mlme_unregister_socket(wdev, notify->portid);
-@@ -12157,6 +12166,12 @@ static int nl80211_netlink_notify(struct notifier_block * nb,
- 				spin_unlock(&rdev->destroy_list_lock);
- 				schedule_work(&rdev->destroy_work);
- 			}
-+		} else if (schedule_scan_stop) {
-+			req->owner_nlportid = 0;
-+
-+			if (rdev->ops->sched_scan_stop &&
-+			    rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_SCHED_SCAN)
-+				schedule_work(&rdev->sched_scan_stop_wk);
- 		}
- 	}
- 
+diff --git a/drivers/net/wireless/iwlwifi/mvm/time-event.c b/drivers/net/wireless/iwlwifi/mvm/time-event.c
+index aa05a71..2feff15 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/time-event.c
++++ b/drivers/net/wireless/iwlwifi/mvm/time-event.c
+@@ -207,6 +207,7 @@ iwl_mvm_te_handle_notify_csa(struct iwl_mvm *mvm,
+ 		break;
+ 	case NL80211_IFTYPE_STATION:
+ 		iwl_mvm_csa_client_absent(mvm, te_data->vif);
++		ieee80211_chswitch_done(te_data->vif, true);
+ 		break;
+ 	default:
+ 		/* should never happen */
 -- 
-1.8.3.1
+2.1.1
 
