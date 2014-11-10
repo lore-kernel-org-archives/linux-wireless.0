@@ -1,69 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f54.google.com ([74.125.82.54]:61746 "EHLO
-	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752825AbaKXOLK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2014 09:11:10 -0500
-Received: by mail-wg0-f54.google.com with SMTP id l2so1837267wgh.13
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:11:09 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 2/3] ath10k: make hw roc more reliable
-Date: Mon, 24 Nov 2014 14:58:32 +0100
-Message-Id: <1416837513-13386-2-git-send-email-michal.kazior@tieto.com> (sfid-20141124_151116_150754_1EBD9AE2)
-In-Reply-To: <1416837513-13386-1-git-send-email-michal.kazior@tieto.com>
-References: <1416837513-13386-1-git-send-email-michal.kazior@tieto.com>
+Received: from dedo.coelho.fi ([88.198.205.34]:59299 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750890AbaKJH0I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Nov 2014 02:26:08 -0500
+Received: from a88-113-225-236.elisa-laajakaista.fi ([88.113.225.236] helo=dubbel.ger.corp.intel.com)
+	by dedo.coelho.fi with esmtpsa (TLS1.2:RSA_AES_128_CBC_SHA256:128)
+	(Exim 4.80)
+	(envelope-from <luca@coelho.fi>)
+	id 1XnjMU-00054v-Hg
+	for linux-wireless@vger.kernel.org; Mon, 10 Nov 2014 09:26:06 +0200
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Date: Mon, 10 Nov 2014 09:25:57 +0200
+Message-Id: <1415604357-27894-1-git-send-email-luca@coelho.fi> (sfid-20141110_082611_863847_CA2632D8)
+Subject: [PATCH] wlcore: make wlcore_cmd_send_failsafe() static
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With P2P concurrency requested hw roc duration
-time can be very small. Some firmware revisions
-refuse scan requests with too small channel dwell
-time.
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-This prevents messages like, e.g. with connected
-STA vif and performing P2P Find:
+The wlcore_cmd_send_failsafe() function is only called in the cmd.c
+file, where it is definde.  Make it static.
 
- ath10k_pci 0000:00:05.0: failed to switch to channel for roc scan
- ieee80211 phy3: failed to start next HW ROC (-110)
+Additionally, move the EXPORT_SYMBOL macro for wl1271_cmd_send() to
+the right place.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 2 ++
- drivers/net/wireless/ath/ath10k/wmi.h | 5 +++++
- 2 files changed, 7 insertions(+)
+ drivers/net/wireless/ti/wlcore/cmd.c | 7 ++++---
+ drivers/net/wireless/ti/wlcore/cmd.h | 2 --
+ 2 files changed, 4 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 8deae4d..272a9d9 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3807,6 +3807,8 @@ static int ath10k_remain_on_channel(struct ieee80211_hw *hw,
- 	if (ret)
- 		goto exit;
+diff --git a/drivers/net/wireless/ti/wlcore/cmd.c b/drivers/net/wireless/ti/wlcore/cmd.c
+index 5c6f3c8..dd2e448 100644
+--- a/drivers/net/wireless/ti/wlcore/cmd.c
++++ b/drivers/net/wireless/ti/wlcore/cmd.c
+@@ -131,8 +131,9 @@ static int __wlcore_cmd_send(struct wl1271 *wl, u16 id, void *buf,
+  * send command to fw and return cmd status on success
+  * valid_rets contains a bitmap of allowed error codes
+  */
+-int wlcore_cmd_send_failsafe(struct wl1271 *wl, u16 id, void *buf, size_t len,
+-			     size_t res_len, unsigned long valid_rets)
++static int wlcore_cmd_send_failsafe(struct wl1271 *wl, u16 id, void *buf,
++				    size_t len, size_t res_len,
++				    unsigned long valid_rets)
+ {
+ 	int ret = __wlcore_cmd_send(wl, id, buf, len, res_len);
  
-+	duration = max(duration, WMI_SCAN_CHAN_MIN_TIME_MSEC);
-+
- 	memset(&arg, 0, sizeof(arg));
- 	ath10k_wmi_start_scan_init(ar, &arg);
- 	arg.vdev_id = arvif->vdev_id;
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index a38d788..1b7141a 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -1952,6 +1952,11 @@ struct wmi_ssid_list {
- #define WLAN_SCAN_PARAMS_MAX_BSSID   4
- #define WLAN_SCAN_PARAMS_MAX_IE_LEN  256
+@@ -153,7 +154,6 @@ fail:
+ 	wl12xx_queue_recovery_work(wl);
+ 	return ret;
+ }
+-EXPORT_SYMBOL_GPL(wl1271_cmd_send);
  
-+/* Values lower than this may be refused by some firmware revisions with a scan
-+ * completion with a timedout reason.
-+ */
-+#define WMI_SCAN_CHAN_MIN_TIME_MSEC 40
-+
- /* Scan priority numbers must be sequential, starting with 0 */
- enum wmi_scan_priority {
- 	WMI_SCAN_PRIORITY_VERY_LOW = 0,
+ /*
+  * wrapper for wlcore_cmd_send that accept only CMD_STATUS_SUCCESS
+@@ -168,6 +168,7 @@ int wl1271_cmd_send(struct wl1271 *wl, u16 id, void *buf, size_t len,
+ 		return ret;
+ 	return 0;
+ }
++EXPORT_SYMBOL_GPL(wl1271_cmd_send);
+ 
+ /*
+  * Poll the mailbox event field until any of the bits in the mask is set or a
+diff --git a/drivers/net/wireless/ti/wlcore/cmd.h b/drivers/net/wireless/ti/wlcore/cmd.h
+index ca6a28b..453684a 100644
+--- a/drivers/net/wireless/ti/wlcore/cmd.h
++++ b/drivers/net/wireless/ti/wlcore/cmd.h
+@@ -31,8 +31,6 @@ struct acx_header;
+ 
+ int wl1271_cmd_send(struct wl1271 *wl, u16 id, void *buf, size_t len,
+ 		    size_t res_len);
+-int wlcore_cmd_send_failsafe(struct wl1271 *wl, u16 id, void *buf, size_t len,
+-			     size_t res_len, unsigned long valid_rets);
+ int wl12xx_cmd_role_enable(struct wl1271 *wl, u8 *addr, u8 role_type,
+ 			   u8 *role_id);
+ int wl12xx_cmd_role_disable(struct wl1271 *wl, u8 *role_id);
 -- 
-1.8.5.3
+2.1.1
 
