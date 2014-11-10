@@ -1,124 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:55942 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755349AbaKUN2a (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Nov 2014 08:28:30 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 1/2] nl80211: support MSDU statistics
-Date: Fri, 21 Nov 2014 14:28:24 +0100
-Message-Id: <1416576505-15023-1-git-send-email-johannes@sipsolutions.net> (sfid-20141121_142834_070138_2793BA04)
+Received: from dedo.coelho.fi ([88.198.205.34]:59381 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752075AbaKJJKj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Nov 2014 04:10:39 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: emmanuel.grumbach@intel.com
+Cc: linux-wireless@vger.kernel.org,
+	Luciano Coelho <luciano.coelho@intel.com>
+Date: Mon, 10 Nov 2014 11:10:12 +0200
+Message-Id: <1415610621-27438-8-git-send-email-luca@coelho.fi> (sfid-20141110_101117_975583_B019F507)
+In-Reply-To: <1415610621-27438-1-git-send-email-luca@coelho.fi>
+References: <1415610621-27438-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH 07/16] iwlwifi: mvm: disable PS during channel switch
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-The base for the current statistics is pretty mixed up, support
-exporting RX/TX statistics for MSDUs.
+Disable PS when pre_channel_switch is called and add the
+post_channel_switch operation to re-enable PS when the channel switch
+is completed.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
 ---
- include/net/cfg80211.h       | 10 +++++++++-
- include/uapi/linux/nl80211.h | 12 ++++++++++++
- net/wireless/nl80211.c       | 12 ++++++++++++
- 3 files changed, 33 insertions(+), 1 deletion(-)
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 28 +++++++++++++++++++++++++---
+ 1 file changed, 25 insertions(+), 3 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 4db4f47c9745..6e4ee9ceb482 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -964,6 +964,10 @@ struct sta_bss_parameters {
-  * @txrate: current unicast bitrate from this station
-  * @rxrate: current unicast bitrate to this station
-  * @rx_packets: packets (MSDUs & MMPDUs) received from this station
-+ * @rx_qos_msdu: QoS-MSDUs received from this station (per TID)
-+ * @rx_nonqos_msdu: non-QoS-MSDUs received from this station
-+ * @tx_qos_msdu: QoS-MSDUs sent to this station (per TID)
-+ * @tx_nonqos_msdu: non-QoS-MSDUs sent to this station
-  * @tx_packets: packets (MSDUs & MMPDUs) transmitted to this station
-  * @tx_retries: cumulative retry counts (MPDUs)
-  * @tx_failed: number of failed transmissions (MPDUs) (retries exceeded, no ACK)
-@@ -991,7 +995,7 @@ struct sta_bss_parameters {
-  *	from this peer
-  */
- struct station_info {
--	u32 filled;
-+	u64 filled;
- 	u32 connected_time;
- 	u32 inactive_time;
- 	u64 rx_bytes;
-@@ -1013,6 +1017,10 @@ struct station_info {
- 	u32 tx_retries;
- 	u32 tx_failed;
- 	u32 rx_dropped_misc;
-+	u64 rx_qos_msdu[IEEE80211_NUM_TIDS];
-+	u64 rx_nonqos_msdu;
-+	u64 tx_qos_msdu[IEEE80211_NUM_TIDS];
-+	u64 tx_nonqos_msdu;
- 	struct sta_bss_parameters bss_param;
- 	struct nl80211_sta_flag_update sta_flags;
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 9cf90af..221f823 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -3039,7 +3039,7 @@ static int iwl_mvm_pre_channel_switch(struct ieee80211_hw *hw,
+ {
+ 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
+ 	struct ieee80211_vif *csa_vif;
+-	struct iwl_mvm_vif *mvmvif;
++	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
+ 	int ret;
  
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 945a17e019b2..21a0cc79b221 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -2342,6 +2342,14 @@ enum nl80211_sta_bss_param {
-  * @NL80211_STA_INFO_BEACON_RX: number of beacons received from this peer (u64)
-  * @NL80211_STA_INFO_BEACON_SIGNAL_AVG: signal strength average
-  *	for beacons only (u8, dBm)
-+ * @NL80211_STA_INFO_RX_QOS_MSDU: number of QoS-MSDUs received from this
-+ *	station, per TID (array of 16 u64 values)
-+ * @NL80211_STA_INFO_RX_NONQOS_MSDU: number of non-QoS-MSDUs received from this
-+ *	station (u64)
-+ * @NL80211_STA_INFO_TX_QOS_MSDU: number of QoS-MSDUs sent to this station,
-+ *	per TID (array of 16 u64 values)
-+ * @NL80211_STA_INFO_TX_NONQOS_MSDU: number of non-QoS-MSDUs sent to this
-+ *	station (u64)
-  * @__NL80211_STA_INFO_AFTER_LAST: internal
-  * @NL80211_STA_INFO_MAX: highest possible station info attribute
-  */
-@@ -2377,6 +2385,10 @@ enum nl80211_sta_info {
- 	NL80211_STA_INFO_RX_DROP_MISC,
- 	NL80211_STA_INFO_BEACON_RX,
- 	NL80211_STA_INFO_BEACON_SIGNAL_AVG,
-+	NL80211_STA_INFO_RX_QOS_MSDU,
-+	NL80211_STA_INFO_RX_NONQOS_MSDU,
-+	NL80211_STA_INFO_TX_QOS_MSDU,
-+	NL80211_STA_INFO_TX_NONQOS_MSDU,
+ 	mutex_lock(&mvm->mutex);
+@@ -3060,7 +3060,6 @@ static int iwl_mvm_pre_channel_switch(struct ieee80211_hw *hw,
  
- 	/* keep last */
- 	__NL80211_STA_INFO_AFTER_LAST,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 0e3ffaf2ce94..4891c5240acd 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -3660,6 +3660,14 @@ static int nl80211_send_station(struct sk_buff *msg, u32 cmd, u32 portid,
- 		goto nla_put_failure;					\
- 	} while (0)
+ 		rcu_assign_pointer(mvm->csa_vif, vif);
  
-+#define PUT_SINFO_TIDS(attr, memb) do {					\
-+	BUILD_BUG_ON(sizeof(sinfo->memb) != sizeof(u64) * IEEE80211_NUM_TIDS);\
-+	if (sinfo->filled & BIT(NL80211_STA_INFO_ ## attr) &&		\
-+	    nla_put(msg, NL80211_STA_INFO_ ## attr,			\
-+		    sizeof(sinfo->memb), sinfo->memb))			\
-+		goto nla_put_failure;					\
-+	} while (0)
+-		mvmvif = iwl_mvm_vif_from_mac80211(vif);
+ 		if (WARN_ONCE(mvmvif->csa_countdown,
+ 			      "Previous CSA countdown didn't complete")) {
+ 			ret = -EBUSY;
+@@ -3072,7 +3071,11 @@ static int iwl_mvm_pre_channel_switch(struct ieee80211_hw *hw,
+ 		break;
+ 	}
+ 
+-	ret = 0;
++	mvmvif->ps_disabled = true;
 +
- 	PUT_SINFO(CONNECTED_TIME, connected_time, u32);
- 	PUT_SINFO(INACTIVE_TIME, inactive_time, u32);
++	ret = iwl_mvm_power_update_ps(mvm);
++	if (ret)
++		goto out_unlock;
  
-@@ -3751,6 +3759,10 @@ static int nl80211_send_station(struct sk_buff *msg, u32 cmd, u32 portid,
- 	PUT_SINFO(RX_DROP_MISC, rx_dropped_misc, u64);
- 	PUT_SINFO(BEACON_RX, rx_beacon, u64);
- 	PUT_SINFO(BEACON_SIGNAL_AVG, rx_beacon_signal_avg, u8);
-+	PUT_SINFO_TIDS(RX_QOS_MSDU, rx_qos_msdu);
-+	PUT_SINFO(RX_NONQOS_MSDU, rx_nonqos_msdu, u64);
-+	PUT_SINFO_TIDS(TX_QOS_MSDU, tx_qos_msdu);
-+	PUT_SINFO(TX_NONQOS_MSDU, tx_nonqos_msdu, u64);
+ out_unlock:
+ 	mutex_unlock(&mvm->mutex);
+@@ -3080,6 +3083,24 @@ out_unlock:
+ 	return ret;
+ }
  
- #undef PUT_SINFO
- 	nla_nest_end(msg, sinfoattr);
++static int iwl_mvm_post_channel_switch(struct ieee80211_hw *hw,
++				       struct ieee80211_vif *vif)
++{
++	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
++	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
++	int ret;
++
++	mutex_lock(&mvm->mutex);
++
++	mvmvif->ps_disabled = false;
++
++	ret = iwl_mvm_power_update_ps(mvm);
++
++	mutex_unlock(&mvm->mutex);
++
++	return ret;
++}
++
+ static void iwl_mvm_mac_flush(struct ieee80211_hw *hw,
+ 			      struct ieee80211_vif *vif, u32 queues, bool drop)
+ {
+@@ -3154,6 +3175,7 @@ const struct ieee80211_ops iwl_mvm_hw_ops = {
+ 	.set_tim = iwl_mvm_set_tim,
+ 
+ 	.pre_channel_switch = iwl_mvm_pre_channel_switch,
++	.post_channel_switch = iwl_mvm_post_channel_switch,
+ 
+ 	CFG80211_TESTMODE_CMD(iwl_mvm_mac_testmode_cmd)
+ 
 -- 
 2.1.1
 
