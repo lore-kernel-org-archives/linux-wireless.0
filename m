@@ -1,169 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:42112 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932105AbaKXOfN (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:50337 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752086AbaKJLbK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2014 09:35:13 -0500
-Received: by mail-wi0-f173.google.com with SMTP id r20so5860906wiv.6
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:35:11 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 10/75] iwlwifi: mvm: rs - don't use the shared antenna when BT load is high
-Date: Mon, 24 Nov 2014 16:33:46 +0200
-Message-Id: <1416839691-28533-10-git-send-email-egrumbach@gmail.com> (sfid-20141124_154441_142599_47274279)
-In-Reply-To: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
-References: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
+	Mon, 10 Nov 2014 06:31:10 -0500
+From: Luis Henriques <luis.henriques@canonical.com>
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Luis Henriques <luis.henriques@canonical.com>,
+	kernel-team@lists.ubuntu.com
+Subject: [3.16.y-ckt extended stable] Patch "wireless: rt2x00: add new rt2800usb devices" has been added to staging queue
+Date: Mon, 10 Nov 2014 11:30:59 +0000
+Message-Id: <1415619059-7150-1-git-send-email-luis.henriques@canonical.com> (sfid-20141110_123114_710632_4A534908)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+This is a note to let you know that I have just added a patch titled
 
-When we need only one antenna, we should refrain from using
-the antenna that is shared with BT if BT load is high.
-Fix this.
+    wireless: rt2x00: add new rt2800usb devices
 
-Reviewed-by: Eyal Shapira <eyal@wizery.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+to the linux-3.16.y-queue branch of the 3.16.y-ckt extended stable tree 
+which can be found at:
+
+ http://kernel.ubuntu.com/git?p=ubuntu/linux.git;a=shortlog;h=refs/heads/linux-3.16.y-queue
+
+This patch is scheduled to be released in version 3.16.7-ckt1.
+
+If you, or anyone else, feels it should not be added to this tree, please 
+reply to this email.
+
+For more information about the 3.16.y-ckt tree, see
+https://wiki.ubuntu.com/Kernel/Dev/ExtendedStable
+
+Thanks.
+-Luis
+
+------
+
+>From 7ad1b700adf44cf6765359529058726f4b34a996 Mon Sep 17 00:00:00 2001
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Date: Fri, 11 Jul 2014 21:46:57 +0200
+Subject: wireless: rt2x00: add new rt2800usb devices
+
+commit 6a06e554daef86c4e8d290284927b081fedb249e upstream.
+
+0x0b05 0x17e8 RT5372 USB 2.0  bgn 2x2 ASUS USB-N14
+0x0411 0x0253 RT5572 USB 2.0 abgn 2x2 BUFFALO WLP-U2-300D
+0x0df6 0x0078 RT???? Sitecom N300
+
+Cc: Ivo van Doorn <IvDoorn@gmail.com>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: John W. Linville <linville@tuxdriver.com>
+Cc: users@rt2x00.serialmonkey.com
+Cc: linux-wireless@vger.kernel.org
+Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Luis Henriques <luis.henriques@canonical.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/coex.c        | 16 ++++++++++++++++
- drivers/net/wireless/iwlwifi/mvm/coex_legacy.c |  6 ++++++
- drivers/net/wireless/iwlwifi/mvm/mvm.h         |  2 ++
- drivers/net/wireless/iwlwifi/mvm/rs.c          | 16 ++++++++++++++++
- 4 files changed, 40 insertions(+)
+ drivers/net/wireless/rt2x00/rt2800usb.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/coex.c b/drivers/net/wireless/iwlwifi/mvm/coex.c
-index 508c813..a3bfda4 100644
---- a/drivers/net/wireless/iwlwifi/mvm/coex.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/coex.c
-@@ -1137,6 +1137,22 @@ bool iwl_mvm_bt_coex_is_mimo_allowed(struct iwl_mvm *mvm,
- 	return lut_type != BT_COEX_LOOSE_LUT;
- }
- 
-+bool iwl_mvm_bt_coex_is_ant_avail(struct iwl_mvm *mvm, u8 ant)
-+{
-+	/* there is no other antenna, shared antenna is always available */
-+	if (mvm->cfg->bt_shared_single_ant)
-+		return true;
-+
-+	if (ant & mvm->cfg->non_shared_ant)
-+		return true;
-+
-+	if (!(mvm->fw->ucode_capa.api[0] & IWL_UCODE_TLV_API_BT_COEX_SPLIT))
-+		return iwl_mvm_bt_coex_is_shared_ant_avail_old(mvm);
-+
-+	return le32_to_cpu(mvm->last_bt_notif.bt_activity_grading) <
-+		BT_HIGH_TRAFFIC;
-+}
-+
- bool iwl_mvm_bt_coex_is_shared_ant_avail(struct iwl_mvm *mvm)
- {
- 	/* there is no other antenna, shared antenna is always available */
-diff --git a/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c b/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c
-index b571e1b..cda5111 100644
---- a/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c
-@@ -1156,6 +1156,12 @@ bool iwl_mvm_bt_coex_is_mimo_allowed_old(struct iwl_mvm *mvm,
- 	return lut_type != BT_COEX_LOOSE_LUT;
- }
- 
-+bool iwl_mvm_bt_coex_is_ant_avail_old(struct iwl_mvm *mvm, u8 ant)
-+{
-+	u32 ag = le32_to_cpu(mvm->last_bt_notif_old.bt_activity_grading);
-+	return ag < BT_HIGH_TRAFFIC;
-+}
-+
- bool iwl_mvm_bt_coex_is_shared_ant_avail_old(struct iwl_mvm *mvm)
- {
- 	u32 ag = le32_to_cpu(mvm->last_bt_notif_old.bt_activity_grading);
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index c89ac95..105a76b 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -1086,12 +1086,14 @@ u16 iwl_mvm_coex_agg_time_limit(struct iwl_mvm *mvm,
- 				struct ieee80211_sta *sta);
- bool iwl_mvm_bt_coex_is_mimo_allowed(struct iwl_mvm *mvm,
- 				     struct ieee80211_sta *sta);
-+bool iwl_mvm_bt_coex_is_ant_avail(struct iwl_mvm *mvm, u8 ant);
- bool iwl_mvm_bt_coex_is_shared_ant_avail(struct iwl_mvm *mvm);
- bool iwl_mvm_bt_coex_is_tpc_allowed(struct iwl_mvm *mvm,
- 				    enum ieee80211_band band);
- u8 iwl_mvm_bt_coex_tx_prio(struct iwl_mvm *mvm, struct ieee80211_hdr *hdr,
- 			   struct ieee80211_tx_info *info, u8 ac);
- 
-+bool iwl_mvm_bt_coex_is_ant_avail_old(struct iwl_mvm *mvm, u8 ant);
- bool iwl_mvm_bt_coex_is_shared_ant_avail_old(struct iwl_mvm *mvm);
- void iwl_mvm_bt_coex_vif_change_old(struct iwl_mvm *mvm);
- int iwl_send_bt_init_conf_old(struct iwl_mvm *mvm);
-diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
-index bbd2f9b..c05f5a5 100644
---- a/drivers/net/wireless/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
-@@ -158,6 +158,12 @@ struct rs_tx_column {
- 	allow_column_func_t checks[MAX_COLUMN_CHECKS];
- };
- 
-+static bool rs_ant_allow(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
-+			 struct iwl_scale_tbl_info *tbl)
-+{
-+	return iwl_mvm_bt_coex_is_ant_avail(mvm, tbl->rate.ant);
-+}
-+
- static bool rs_mimo_allow(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 			  struct iwl_scale_tbl_info *tbl)
- {
-@@ -218,6 +224,9 @@ static const struct rs_tx_column rs_tx_columns[] = {
- 			RS_COLUMN_INVALID,
- 			RS_COLUMN_INVALID,
- 		},
-+		.checks = {
-+			rs_ant_allow,
-+		},
- 	},
- 	[RS_COLUMN_LEGACY_ANT_B] = {
- 		.mode = RS_LEGACY,
-@@ -231,6 +240,9 @@ static const struct rs_tx_column rs_tx_columns[] = {
- 			RS_COLUMN_INVALID,
- 			RS_COLUMN_INVALID,
- 		},
-+		.checks = {
-+			rs_ant_allow,
-+		},
- 	},
- 	[RS_COLUMN_SISO_ANT_A] = {
- 		.mode = RS_SISO,
-@@ -246,6 +258,7 @@ static const struct rs_tx_column rs_tx_columns[] = {
- 		},
- 		.checks = {
- 			rs_siso_allow,
-+			rs_ant_allow,
- 		},
- 	},
- 	[RS_COLUMN_SISO_ANT_B] = {
-@@ -262,6 +275,7 @@ static const struct rs_tx_column rs_tx_columns[] = {
- 		},
- 		.checks = {
- 			rs_siso_allow,
-+			rs_ant_allow,
- 		},
- 	},
- 	[RS_COLUMN_SISO_ANT_A_SGI] = {
-@@ -279,6 +293,7 @@ static const struct rs_tx_column rs_tx_columns[] = {
- 		},
- 		.checks = {
- 			rs_siso_allow,
-+			rs_ant_allow,
- 			rs_sgi_allow,
- 		},
- 	},
-@@ -297,6 +312,7 @@ static const struct rs_tx_column rs_tx_columns[] = {
- 		},
- 		.checks = {
- 			rs_siso_allow,
-+			rs_ant_allow,
- 			rs_sgi_allow,
- 		},
- 	},
--- 
-1.9.1
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index 832006b5aab1..573897b8e878 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -1284,6 +1284,8 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	/* Arcadyan */
+ 	{ USB_DEVICE(0x043e, 0x7a12) },
+ 	{ USB_DEVICE(0x043e, 0x7a32) },
++	/* ASUS */
++	{ USB_DEVICE(0x0b05, 0x17e8) },
+ 	/* Azurewave */
+ 	{ USB_DEVICE(0x13d3, 0x3329) },
+ 	{ USB_DEVICE(0x13d3, 0x3365) },
+@@ -1320,6 +1322,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x057c, 0x8501) },
+ 	/* Buffalo */
+ 	{ USB_DEVICE(0x0411, 0x0241) },
++	{ USB_DEVICE(0x0411, 0x0253) },
+ 	/* D-Link */
+ 	{ USB_DEVICE(0x2001, 0x3c1a) },
+ 	{ USB_DEVICE(0x2001, 0x3c21) },
+@@ -1410,6 +1413,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x0df6, 0x0053) },
+ 	{ USB_DEVICE(0x0df6, 0x0069) },
+ 	{ USB_DEVICE(0x0df6, 0x006f) },
++	{ USB_DEVICE(0x0df6, 0x0078) },
+ 	/* SMC */
+ 	{ USB_DEVICE(0x083a, 0xa512) },
+ 	{ USB_DEVICE(0x083a, 0xc522) },
+--
+2.1.0
 
