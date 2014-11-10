@@ -1,54 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:48778 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750879AbaKYUaZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Nov 2014 15:30:25 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
+Received: from dedo.coelho.fi ([88.198.205.34]:59425 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752463AbaKJJXv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Nov 2014 04:23:51 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: emmanuel.grumbach@intel.com
 Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, Valerio Passini <valerio.passini@unicam.it>
-Subject: [PATCH 1/2 V3 3.18] rtlwifi: rtl8821ae: Fix 5G detection problem
-Date: Tue, 25 Nov 2014 14:28:48 -0600
-Message-Id: <1416947328-5431-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20141125_213033_067416_9248A8C2)
+	Luciano Coelho <luciano.coelho@intel.com>
+Date: Mon, 10 Nov 2014 11:10:16 +0200
+Message-Id: <1415610621-27438-12-git-send-email-luca@coelho.fi> (sfid-20141110_102401_350471_5DDB4909)
+In-Reply-To: <1415610621-27438-1-git-send-email-luca@coelho.fi>
+References: <1415610621-27438-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH 11/16] iwlwifi: mvm: finalize on post_switch instead of unassign
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The changes associated with moving this driver from staging to the regular
-tree missed one section setting the allowable rates for the 5GHz band.
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-This patch is needed to fix the regression reported in Bug #88811
-(https://bugzilla.kernel.org/show_bug.cgi?id=88811).
+Now that mac80211 waits for the first beacon on the new channel before
+calling post_channel_switch, the reconfiguration of the firmware
+should be done in the post_channel_switch operation instead of when
+assigning the vif to the new context.
 
-Reported-by: Valerio Passini <valerio.passini@unicam.it>
-Tested-by: Valerio Passini <valerio.passini@unicam.it>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Valerio Passini <valerio.passini@unicam.it>
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
 ---
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 31 ++++++++++++++++++-----------
+ 1 file changed, 19 insertions(+), 12 deletions(-)
 
-V2 - removed extra parentheses as suggested by John Linville.
-V3 - Add spaces around the << operator
----
- drivers/net/wireless/rtlwifi/rtl8821ae/hw.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
-index 310d316..18f34f7 100644
---- a/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
-@@ -3672,8 +3672,9 @@ static void rtl8821ae_update_hal_rate_mask(struct ieee80211_hw *hw,
- 		mac->opmode == NL80211_IFTYPE_ADHOC)
- 		macid = sta->aid + 1;
- 	if (wirelessmode == WIRELESS_MODE_N_5G ||
--	    wirelessmode == WIRELESS_MODE_AC_5G)
--		ratr_bitmap = sta->supp_rates[NL80211_BAND_5GHZ];
-+	    wirelessmode == WIRELESS_MODE_AC_5G ||
-+	    wirelessmode == WIRELESS_MODE_A)
-+		ratr_bitmap = sta->supp_rates[NL80211_BAND_5GHZ] << 4;
- 	else
- 		ratr_bitmap = sta->supp_rates[NL80211_BAND_2GHZ];
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 3fb2b49..de6a64d 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -2714,23 +2714,13 @@ static int __iwl_mvm_assign_vif_chanctx(struct iwl_mvm *mvm,
+ 	}
  
+ 	/* Handle binding during CSA */
+-	if ((vif->type == NL80211_IFTYPE_AP) ||
+-	    (switching_chanctx && (vif->type == NL80211_IFTYPE_STATION))) {
++	if (vif->type == NL80211_IFTYPE_AP) {
+ 		iwl_mvm_update_quotas(mvm, NULL);
+ 		iwl_mvm_mac_ctxt_changed(mvm, vif, false, NULL);
+ 	}
+ 
+ 	if (switching_chanctx && vif->type == NL80211_IFTYPE_STATION) {
+-		struct iwl_mvm_sta *mvmsta;
+-
+-		mvmsta = iwl_mvm_sta_from_staid_protected(mvm,
+-							  mvmvif->ap_sta_id);
+-
+-		if (WARN_ON(!mvmsta))
+-			goto out;
+-
+-		/* TODO: only re-enable after the first beacon */
+-		iwl_mvm_sta_modify_disable_tx(mvm, mvmsta, false);
++		iwl_mvm_update_quotas(mvm, NULL);
+ 	}
+ 
+ 	goto out;
+@@ -3101,10 +3091,27 @@ static int iwl_mvm_post_channel_switch(struct ieee80211_hw *hw,
+ 
+ 	mutex_lock(&mvm->mutex);
+ 
++	if (vif->type == NL80211_IFTYPE_STATION) {
++		struct iwl_mvm_sta *mvmsta;
++
++		mvmsta = iwl_mvm_sta_from_staid_protected(mvm,
++							  mvmvif->ap_sta_id);
++
++		if (WARN_ON(!mvmsta)) {
++			ret = -EIO;
++			goto out_unlock;
++		}
++
++		iwl_mvm_sta_modify_disable_tx(mvm, mvmsta, false);
++
++		iwl_mvm_mac_ctxt_changed(mvm, vif, false, NULL);
++	}
++
+ 	mvmvif->ps_disabled = false;
+ 
+ 	ret = iwl_mvm_power_update_ps(mvm);
+ 
++out_unlock:
+ 	mutex_unlock(&mvm->mutex);
+ 
+ 	return ret;
 -- 
-2.1.2
+2.1.1
 
