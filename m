@@ -1,57 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f179.google.com ([209.85.192.179]:42517 "EHLO
-	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757807AbaKTUK5 (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:46003 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752166AbaKJJMH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Nov 2014 15:10:57 -0500
-Received: by mail-pd0-f179.google.com with SMTP id w10so3734266pde.10
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Nov 2014 12:10:57 -0800 (PST)
+	Mon, 10 Nov 2014 04:12:07 -0500
+Received: by mail-wi0-f174.google.com with SMTP id d1so9734484wiv.13
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Nov 2014 01:12:06 -0800 (PST)
 MIME-Version: 1.0
-From: Catalin Iacob <iacobcatalin@gmail.com>
-Date: Thu, 20 Nov 2014 21:10:37 +0100
-Message-ID: <CAHg_5go+AZTytHq7OyoV_r35sj2wW0OwgBq+sm8R+zJbOXiYcA@mail.gmail.com> (sfid-20141120_211114_440071_8AD37E8C)
-Subject: rtl8192ce 3.18 regression scan doesn't find any APs
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
+In-Reply-To: <545FC585.1030709@broadcom.com>
+References: <1415551822-20121-1-git-send-email-arik@wizery.com>
+ <1415551822-20121-11-git-send-email-arik@wizery.com> <545FC585.1030709@broadcom.com>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Mon, 10 Nov 2014 11:03:55 +0200
+Message-ID: <CA+XVXfe7JQCg8RL4exSnMcgiE1jMrTCp_hyTMzOBSBFcZ=GzRQ@mail.gmail.com> (sfid-20141110_101217_392848_F4C02153)
+Subject: Re: [PATCH 11/16] cfg80211: introduce TDLS channel switch commands
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since the 3.18 merge window my wireless card cannot find any access
-point (tested with both NetworkManager and sudo /usr/sbin/iw dev
-wlp2s0 scan). More precisely, in 3.18-rc1 I got the oops described at
-http://marc.info/?l=linux-wireless&m=141324391807122&w=2. Sometime
-after rc1 Larry fixed this but when I tested again I found that scan
-doesn't work (tested 3.18-rc3 and just now 3.18-rc5).
+On Sun, Nov 9, 2014 at 9:50 PM, Arend van Spriel <arend@broadcom.com> wrote:
+> On 11/09/14 17:50, Arik Nemtsov wrote:
+>>
+>> Introduce commands to initiate and cancel TDLS channel-switching. Once
+>> TDLS channel-switching is started, the lower level driver is responsible
+>> for continually initiating channel-switch operations and returning to
+>> the base (AP) channel to listen for beacons from time to time.
+>>
+>> Upon cancellation of the channel-switch all communication between the
+>> relevant TDLS peers will continue on the base channel.
+>>
+>> Signed-off-by: Arik Nemtsov<arikx.nemtsov@intel.com>
+>> Reviewed-by: Johannes Berg<johannes.berg@intel.com>
+>> Signed-off-by: Arik Nemtsov<arik@wizery.com>
+>> ---
+>>   include/net/cfg80211.h       |   8 ++++
+>>   include/net/cfg80211.h.rej   |  15 ++++++
+>
+>
+> Seems something went haywire here or do you really want to add a .rej file
+> in this patch?
 
-According to lspci -nn my hardware is:
-02:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd.
-RTL8188CE 802.11b/g/n WiFi Adapter [10ec:8176] (rev 01)
+Doh :)
+Thanks for that one.
 
-If I grep dmesg for rtl, for 3.17 which works I get:
-[   31.208206] rtl8192ce:_rtl92ce_read_chip_version():<0-0> Chip
-Version ID: B_CHIP_88C
-[   31.219973] rtl8192ce: Using firmware rtlwifi/rtl8192cfw.bin
-[   31.861478] ieee80211 phy0: Selected rate control algorithm 'rtl_rc'
-[   31.865655] rtlwifi: wireless switch is on
-[   31.872019] rtl8192ce 0000:02:00.0 wlp2s0: renamed from wlan0
-[   41.428487] rtl8192ce 0000:02:00.0 wlp2s0: disabling HT as WMM/QoS
-is not supported by the AP
-[   41.428499] rtl8192ce 0000:02:00.0 wlp2s0: disabling VHT as WMM/QoS
-is not supported by the AP
-
-3.18 says:
-[   29.213829] rtl8192ce:_rtl92ce_read_chip_version():<0-0> Chip
-Version ID: B_CHIP_88C
-[   29.230599] rtl8192ce: Using firmware rtlwifi/rtl8192cfw.bin
-[   29.330232] ieee80211 phy0: Selected rate control algorithm 'rtl_rc'
-[   29.332250] rtlwifi: rtlwifi: wireless switch is on
-[   29.339416] rtl8192ce 0000:02:00.0 wlp2s0: renamed from wlan0
-[  344.942070] rtl8192ce:rtl92ce_get_hw_reg():<0-0> switch case not processed
-
-I added some debug prints and the last line comes from core.c,
-rtl_op_stop which calls get_hw_reg with HAL_DEF_WOWLAN. This happens
-indeed when I untick Enable wireless in NetworkManager. I assume it's
-not related to the more serious scan issue.
-
-How can I help with debugging this?
+Arik
