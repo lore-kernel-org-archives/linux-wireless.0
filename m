@@ -1,163 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f50.google.com ([74.125.82.50]:50010 "EHLO
-	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753112AbaKCTt5 (ORCPT
+Received: from mail-wg0-f41.google.com ([74.125.82.41]:43012 "EHLO
+	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751584AbaKJKaj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Nov 2014 14:49:57 -0500
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	<stable@vger.kernel.org>
-Subject: [PATCH 2/2] iwlwifi: fix RFkill while calibrating
-Date: Mon,  3 Nov 2014 21:49:46 +0200
-Message-Id: <1415044186-5559-2-git-send-email-egrumbach@gmail.com> (sfid-20141103_205001_542425_62C046E4)
-In-Reply-To: <5457DC1C.7020200@gmail.com>
-References: <5457DC1C.7020200@gmail.com>
+	Mon, 10 Nov 2014 05:30:39 -0500
+Received: by mail-wg0-f41.google.com with SMTP id k14so8433948wgh.0
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Nov 2014 02:30:38 -0800 (PST)
+From: Uwe Brauer <oub@mat.ucm.es>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"ilw\@linux.intel.com" <ilw@linux.intel.com>
+Subject: Re: Thinkpad X60s/200s: Intel 3945/5100 works with kernel 2.6.32-67/3.0.0-32 but not 3.7 vanilla.
+References: <87d28zdplq.fsf@mat.ucm.es>
+	<CANUX_P0f0WAHoq3CsC3V-jp4m3_Q7qLz7X+Mvn1hk9_JPrPTGg@mail.gmail.com>
+Reply-To: Uwe Brauer <oub@mat.ucm.es>
+Date: Mon, 10 Nov 2014 11:30:26 +0100
+Message-ID: <87egtbxs8t.fsf@mat.ucm.es> (sfid-20141110_113043_489571_43C3C8D9)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-If the RFkill interrupt fires while we calibrate, it would
-make the firmware fail and the driver wasn't able to recover.
-Change the flow so that the driver will kill the firmware
-in that case.
+   > On Fri, Nov 7, 2014 at 4:58 PM, Uwe Brauer <oub@mat.ucm.es> wrote:
 
-Since we have now two flows that are calling
-trans_stop_device (the RFkill interrupt and the
-op_mode_mvm_start function) - we need to better sync this.
-Use the STATUS_DEVICE_ENABLED in the pcie transport in an
-atomic way to achieve this.
+   > you problem is that you didn't compile the kernel with wireless
+   > extensions. This interface is deprecated, but I don't remember if it
+   > was the case for 3.7.
+   > In any case, this is a problem in your config, not a driver issue.
 
-This fixes: https://bugzilla.kernel.org/show_bug.cgi?id=86231
+What make you say that?
+My config file concerning wireless options is:
 
-CC: <stable@vger.kernel.org> [3.10+]
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Reviewed-by: Luciano Coelho <luciano.coelho@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/fw.c       | 10 +++++++++-
- drivers/net/wireless/iwlwifi/mvm/mac80211.c |  1 +
- drivers/net/wireless/iwlwifi/mvm/mvm.h      |  1 +
- drivers/net/wireless/iwlwifi/mvm/ops.c      | 11 ++++++++++-
- drivers/net/wireless/iwlwifi/pcie/trans.c   |  4 ++--
- 5 files changed, 23 insertions(+), 4 deletions(-)
+CONFIG_WIRELESS=y
+CONFIG_WIRELESS_EXT=y
+CONFIG_IPWIRELESS=m
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw.c b/drivers/net/wireless/iwlwifi/mvm/fw.c
-index e0d9f19..eb03943 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw.c
-@@ -284,7 +284,7 @@ int iwl_run_init_mvm_ucode(struct iwl_mvm *mvm, bool read_nvm)
- 
- 	lockdep_assert_held(&mvm->mutex);
- 
--	if (WARN_ON_ONCE(mvm->init_ucode_complete))
-+	if (WARN_ON_ONCE(mvm->init_ucode_complete || mvm->calibrating))
- 		return 0;
- 
- 	iwl_init_notification_wait(&mvm->notif_wait,
-@@ -334,6 +334,8 @@ int iwl_run_init_mvm_ucode(struct iwl_mvm *mvm, bool read_nvm)
- 		goto out;
- 	}
- 
-+	mvm->calibrating = true;
-+
- 	/* Send TX valid antennas before triggering calibrations */
- 	ret = iwl_send_tx_ant_cfg(mvm, mvm->fw->valid_tx_ant);
- 	if (ret)
-@@ -358,11 +360,17 @@ int iwl_run_init_mvm_ucode(struct iwl_mvm *mvm, bool read_nvm)
- 			MVM_UCODE_CALIB_TIMEOUT);
- 	if (!ret)
- 		mvm->init_ucode_complete = true;
-+
-+	if (ret && iwl_mvm_is_radio_killed(mvm)) {
-+		IWL_DEBUG_RF_KILL(mvm, "RFKILL while calibrating.\n");
-+		ret = 1;
-+	}
- 	goto out;
- 
- error:
- 	iwl_remove_notification(&mvm->notif_wait, &calib_wait);
- out:
-+	mvm->calibrating = false;
- 	if (iwlmvm_mod_params.init_dbg && !mvm->nvm_data) {
- 		/* we want to debug INIT and we have no NVM - fake */
- 		mvm->nvm_data = kzalloc(sizeof(struct iwl_nvm_data) +
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index 585fe5b..b624058 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -788,6 +788,7 @@ static void iwl_mvm_restart_cleanup(struct iwl_mvm *mvm)
- 
- 	mvm->scan_status = IWL_MVM_SCAN_NONE;
- 	mvm->ps_disabled = false;
-+	mvm->calibrating = false;
- 
- 	/* just in case one was running */
- 	ieee80211_remain_on_channel_expired(mvm->hw);
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index b153ced..845429c 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -548,6 +548,7 @@ struct iwl_mvm {
- 	enum iwl_ucode_type cur_ucode;
- 	bool ucode_loaded;
- 	bool init_ucode_complete;
-+	bool calibrating;
- 	u32 error_event_table;
- 	u32 log_event_table;
- 	u32 umac_error_event_table;
-diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
-index 27fb0a1..5b719ee 100644
---- a/drivers/net/wireless/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
-@@ -753,6 +753,7 @@ void iwl_mvm_set_hw_ctkill_state(struct iwl_mvm *mvm, bool state)
- static bool iwl_mvm_set_hw_rfkill_state(struct iwl_op_mode *op_mode, bool state)
- {
- 	struct iwl_mvm *mvm = IWL_OP_MODE_GET_MVM(op_mode);
-+	bool calibrating = ACCESS_ONCE(mvm->calibrating);
- 
- 	if (state)
- 		set_bit(IWL_MVM_STATUS_HW_RFKILL, &mvm->status);
-@@ -761,7 +762,15 @@ static bool iwl_mvm_set_hw_rfkill_state(struct iwl_op_mode *op_mode, bool state)
- 
- 	wiphy_rfkill_set_hw_state(mvm->hw->wiphy, iwl_mvm_is_radio_killed(mvm));
- 
--	return state && mvm->cur_ucode != IWL_UCODE_INIT;
-+	/* iwl_run_init_mvm_ucode is waiting for results, abort it */
-+	if (calibrating)
-+		iwl_abort_notification_waits(&mvm->notif_wait);
-+
-+	/*
-+	 * Stop the device if we run OPERATIONAL firmware or if we are in the
-+	 * middle of the calibrations.
-+	 */
-+	return state && (mvm->cur_ucode != IWL_UCODE_INIT || calibrating);
- }
- 
- static void iwl_mvm_free_skb(struct iwl_op_mode *op_mode, struct sk_buff *skb)
-diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
-index 3781b02..160c3eb 100644
---- a/drivers/net/wireless/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
-@@ -915,7 +915,8 @@ static void iwl_trans_pcie_stop_device(struct iwl_trans *trans)
- 	 * restart. So don't process again if the device is
- 	 * already dead.
- 	 */
--	if (test_bit(STATUS_DEVICE_ENABLED, &trans->status)) {
-+	if (test_and_clear_bit(STATUS_DEVICE_ENABLED, &trans->status)) {
-+		IWL_DEBUG_INFO(trans, "DEVICE_ENABLED bit was set and is now cleared\n");
- 		iwl_pcie_tx_stop(trans);
- 		iwl_pcie_rx_stop(trans);
- 
-@@ -945,7 +946,6 @@ static void iwl_trans_pcie_stop_device(struct iwl_trans *trans)
- 	/* clear all status bits */
- 	clear_bit(STATUS_SYNC_HCMD_ACTIVE, &trans->status);
- 	clear_bit(STATUS_INT_ENABLED, &trans->status);
--	clear_bit(STATUS_DEVICE_ENABLED, &trans->status);
- 	clear_bit(STATUS_TPOWER_PMI, &trans->status);
- 	clear_bit(STATUS_RFKILL, &trans->status);
- 
--- 
-1.9.1
+These are all the options I encounter.
 
