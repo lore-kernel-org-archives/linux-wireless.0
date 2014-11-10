@@ -1,34 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f44.google.com ([209.85.218.44]:43176 "EHLO
-	mail-oi0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752015AbaKKWcH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Nov 2014 17:32:07 -0500
-Received: by mail-oi0-f44.google.com with SMTP id h136so7783924oig.3
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Nov 2014 14:32:06 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <545F4611.3010207@broadcom.com>
-References: <CAMP44s2XAmaiK2=BJA3TCW48Uo=5qyT5WsASDsZnOiSNgK6b0A@mail.gmail.com>
-	<545F4611.3010207@broadcom.com>
-Date: Tue, 11 Nov 2014 16:32:06 -0600
-Message-ID: <CAMP44s2V59VDx0s7q5Yr=KvGZNn8ptRJGHS4W8Ja=+ciKZaSzg@mail.gmail.com> (sfid-20141111_233213_156146_3503CBD1)
-Subject: Re: brcmfmac not working on ECS LIVA
-From: Felipe Contreras <felipe.contreras@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:53779 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751890AbaKJVJz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Nov 2014 16:09:55 -0500
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	Franky Lin <frankyl@broadcom.com>,
-	Samuel Ortiz <sameo@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8
+Cc: Chris Ruffin <cmruffin@gmail.com>,
+	<linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<devel@driverdev.osuosl.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	"Greg Kroah-Hartman" <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH] staging: rtl8723au: change typecast to match type returned by htons()
+References: <1415650025-16403-1-git-send-email-cmruffin@gmail.com>
+	<wrfjlhnivmb9.fsf@redhat.com> <54611FF5.40405@broadcom.com>
+Date: Mon, 10 Nov 2014 16:09:37 -0500
+In-Reply-To: <54611FF5.40405@broadcom.com> (Arend van Spriel's message of
+	"Mon, 10 Nov 2014 21:28:37 +0100")
+Message-ID: <wrfj8ujivk32.fsf@redhat.com> (sfid-20141110_221019_434335_878B521E)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Nov 9, 2014 at 4:46 AM, Arend van Spriel <arend@broadcom.com> wrote:
+Arend van Spriel <arend@broadcom.com> writes:
+> On 10-11-14 21:21, Jes Sorensen wrote:
+>> Chris Ruffin <cmruffin@gmail.com> writes:
+>>> Using a u16 pointer typecast for a result from htons() results in
+>>> the following warning from sparse:
+>>>
+>>> drivers/staging/rtl8723au/core/rtw_xmit.c:1279:36: warning:
+>>> incorrect type in assignment (different base types)
+>>> drivers/staging/rtl8723au/core/rtw_xmit.c:1279:36: expected
+>>> unsigned short [unsigned] [short] [usertype] <noident>
+>>> drivers/staging/rtl8723au/core/rtw_xmit.c:1279:36: got restricted
+>>> __be16 [usertype] <noident>
+>>>
+>>> This patch fixes the issue by using an endian-specific typecast
+>>> that will always match the type returned by htons().
+>>>
+>>> Signed-off-by: Chris Ruffin <cmruffin@gmail.com>
+>>> ---
+>>>  drivers/staging/rtl8723au/core/rtw_xmit.c |    2 +-
+>>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>> 
+>> Looks fine to me
+>> 
+>> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+>> 
+>>>
+>>> diff --git a/drivers/staging/rtl8723au/core/rtw_xmit.c
+>>> b/drivers/staging/rtl8723au/core/rtw_xmit.c
+>>> index a0f7e27..44ef55c 100644
+>>> --- a/drivers/staging/rtl8723au/core/rtw_xmit.c
+>>> +++ b/drivers/staging/rtl8723au/core/rtw_xmit.c
+>>> @@ -1276,7 +1276,7 @@ s32 rtw_put_snap23a(u8 *data, u16 h_proto)
+>>>  	snap->oui[0] = oui[0];
+>>>  	snap->oui[1] = oui[1];
+>>>  	snap->oui[2] = oui[2];
+>>> -	*(u16 *)(data + SNAP_SIZE) = htons(h_proto);
+>>> +	*(__be16 *)(data + SNAP_SIZE) = htons(h_proto);
+>
+> Could (data + SNAP_SIZE) be on a unaligned address?
 
-> Could you share the nvram obtained from EFI? Also please create a kernel log
-> with debug=0xd416.
+It shouldn't but probably better to take it into account. I am moving
+things around in this code right now, so I'll just fix it in a follow-on
+patch to this one.
 
-There you go:
-http://people.freedesktop.org/~felipec/dmesg-brcm.txt
-
--- 
-Felipe Contreras
+Cheers,
+Jes
