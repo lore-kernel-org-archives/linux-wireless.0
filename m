@@ -1,69 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:50436 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750946AbaKYUqJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Nov 2014 15:46:09 -0500
-Date: Tue, 25 Nov 2014 14:53:34 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Valerio Passini <valerio.passini@unicam.it>
-Subject: Re: [PATCH 1/2 3.18] rtlwifi: rtl8821ae: Fix 5G detection problem
-Message-ID: <20141125195333.GJ15476@tuxdriver.com> (sfid-20141125_214613_382845_DBFC2ECB)
-References: <1416933127-25912-1-git-send-email-Larry.Finger@lwfinger.net>
- <1416933127-25912-2-git-send-email-Larry.Finger@lwfinger.net>
- <20141125184625.GC15476@tuxdriver.com>
- <5474DD88.7060002@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5474DD88.7060002@lwfinger.net>
+Received: from s3.sipsolutions.net ([5.9.151.49]:51381 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752088AbaKJJcx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Nov 2014 04:32:53 -0500
+Message-ID: <1415611968.1847.7.camel@sipsolutions.net> (sfid-20141110_103256_219716_55446610)
+Subject: Re: [PATCH 1/2] mac80211-hwsim: Factor out netlink attribute
+ appending
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Patrik Flykt <patrik.flykt@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 10 Nov 2014 10:32:48 +0100
+In-Reply-To: <1415348520-28558-2-git-send-email-patrik.flykt@linux.intel.com> (sfid-20141107_092208_883031_E35223C8)
+References: <1415348520-28558-1-git-send-email-patrik.flykt@linux.intel.com>
+	 <1415348520-28558-2-git-send-email-patrik.flykt@linux.intel.com>
+	 (sfid-20141107_092208_883031_E35223C8)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 25, 2014 at 01:50:32PM -0600, Larry Finger wrote:
-> On 11/25/2014 12:46 PM, John W. Linville wrote:
-> >On Tue, Nov 25, 2014 at 10:32:06AM -0600, Larry Finger wrote:
-> >>The changes associated with moving this driver from staging to the regular
-> >>tree missed one section setting the allowable rates for the 5GHz band.
-> >>
-> >>This patch is needed to fix the regression reported in Bug #88811
-> >>(https://bugzilla.kernel.org/show_bug.cgi?id=88811).
-> >>
-> >>Reported-by: Valerio Passini <valerio.passini@unicam.it>
-> >>Tested-by: Valerio Passini <valerio.passini@unicam.it>
-> >>Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> >>Cc: Valerio Passini <valerio.passini@unicam.it>
-> >>---
-> >>  drivers/net/wireless/rtlwifi/rtl8821ae/hw.c | 5 +++--
-> >>  1 file changed, 3 insertions(+), 2 deletions(-)
-> >>
-> >>diff --git a/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
-> >>index 310d316..18f34f7 100644
-> >>--- a/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
-> >>+++ b/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
-> >>@@ -3672,8 +3672,9 @@ static void rtl8821ae_update_hal_rate_mask(struct ieee80211_hw *hw,
-> >>  		mac->opmode == NL80211_IFTYPE_ADHOC)
-> >>  		macid = sta->aid + 1;
-> >>  	if (wirelessmode == WIRELESS_MODE_N_5G ||
-> >>-	    wirelessmode == WIRELESS_MODE_AC_5G)
-> >>-		ratr_bitmap = sta->supp_rates[NL80211_BAND_5GHZ];
-> >>+	    wirelessmode == WIRELESS_MODE_AC_5G ||
-> >>+	    wirelessmode == WIRELESS_MODE_A)
-> >>+		ratr_bitmap = (sta->supp_rates[NL80211_BAND_5GHZ])<<4;
-> >
-> >The parenthesis seem superfluous.  How about this line instead?
-> >
-> >+		ratr_bitmap = sta->supp_rates[NL80211_BAND_5GHZ] << 4;
-> >
-> >>  	else
-> >>  		ratr_bitmap = sta->supp_rates[NL80211_BAND_2GHZ];
-> 
-> Good idea. V2 is on its way.
+On Fri, 2014-11-07 at 10:21 +0200, Patrik Flykt wrote:
 
-No need -- I merged it with my version of the line. :-)
+> -error:
+> -	nlmsg_free(skb);
+> -	return NULL;
+> +	return 0;
+>  }
+>  
+> -static void hswim_mcast_new_radio(int id, struct genl_info *info,
+> +static void hwsim_mcast_new_radio(int id, struct genl_info *info,
+>  				  struct hwsim_new_radio_params *param)
+>  {
+>  	struct sk_buff *mcast_skb;
+> +	void *data;
+>  
+> -	mcast_skb = build_radio_msg(HWSIM_CMD_NEW_RADIO, id, param);
+> +	mcast_skb = genlmsg_new(GENLMSG_DEFAULT_SIZE, GFP_KERNEL);
+>  	if (!mcast_skb)
+>  		return;
+>  
+> +	data = genlmsg_put(mcast_skb, 0, 0, &hwsim_genl_family, 0,
+> +			   HWSIM_CMD_NEW_RADIO);
+> +	if (!data)
+> +		goto out_err;
+> +
+> +	if (append_radio_msg(mcast_skb, id, param) < 0)
+> +		goto out_err;
+> +
+> +	if (genlmsg_end(mcast_skb, data))
+> +		goto out_err;
+> +
+>  	hwsim_mcast_config_msg(mcast_skb, info);
+> +	return;
+> +
+> +out_err:
+> +	genlmsg_cancel(mcast_skb, data);
+>  }
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+You seem to have lost the nlmsg_free() in error cases.
+
+johannes
+
