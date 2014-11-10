@@ -1,74 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:13673 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755788AbaKTV1F (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Nov 2014 16:27:05 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 1/4] brcmfmac: fix static checker warning in pmklist handling
-Date: Thu, 20 Nov 2014 22:26:59 +0100
-Message-ID: <1416518822-29585-2-git-send-email-arend@broadcom.com> (sfid-20141120_222710_457681_B925FFE3)
-In-Reply-To: <1416518822-29585-1-git-send-email-arend@broadcom.com>
-References: <1416518822-29585-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from dedo.coelho.fi ([88.198.205.34]:59446 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752204AbaKJJ1S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Nov 2014 04:27:18 -0500
+Message-ID: <1415611630.12617.6.camel@coelho.fi> (sfid-20141110_102722_607814_CC26C231)
+From: Luca Coelho <luca@coelho.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Date: Mon, 10 Nov 2014 11:27:10 +0200
+In-Reply-To: <1415610648-5072-1-git-send-email-johannes@sipsolutions.net>
+References: <1415610648-5072-1-git-send-email-johannes@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH v2] mac80211: add back support for radiotap vendor
+ namespace data
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The patch fixes a static checker warning:
+On Mon, 2014-11-10 at 10:10 +0100, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> Radiotap vendor namespace data might still be useful, but we
+> reverted it because it used too much space in the RX status.
+> Put it back, but address the space problem by using a single
+> bit only and putting everything else into the skb->data.
+> 
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+>  drivers/net/wireless/mac80211_hwsim.c |  50 +++++++++++++++++
+>  include/net/mac80211.h                |  37 +++++++++++++
+>  net/mac80211/rx.c                     | 100 ++++++++++++++++++++++++++++------
+>  3 files changed, 169 insertions(+), 18 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+> index 209db62ee627..58f11bb0896f 100644
+> --- a/drivers/net/wireless/mac80211_hwsim.c
+> +++ b/drivers/net/wireless/mac80211_hwsim.c
+> @@ -984,6 +984,53 @@ static void mac80211_hwsim_tx_iter(void *_data, u8 *addr,
+>  	data->receive = true;
+>  }
+>  
+> +static void mac80211_hwsim_add_vendor_rtap(struct sk_buff *skb)
+> +{
+> +	/*
+> +	 * To enable this code, #define the HWSIM_RADIOTAP_OUI,
+> +	 * e.g. like this:
+> +	 * #define HWSIM_RADIOTAP_OUI "\x02\x00\x00"
+> +	 * (but you should use a valid OUI, not that)
+> +	 *
+> +	 * If anyone wants to 'donate' a radiotap OUI/subns code
+> +	 * please send a patch removing this #ifdef and changing
+> +	 * the values accordingly.
+> +	 */
+> +#ifdef HWSIM_RADIOTAP_OUI
 
-   drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c:2965
-      brcmf_cfg80211_set_pmksa()
-	warn: can 'pmkid_len' be negative?
+Ah... Thanks! This is now visible even to my aging eyes. :D
 
-The answer to the question above is likely no so changing its
-type to unsigned is sufficient.
-
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-index f8a9dfa..d1928de 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-@@ -2932,7 +2932,7 @@ brcmf_update_pmklist(struct net_device *ndev,
- 		     struct brcmf_cfg80211_pmk_list *pmk_list, s32 err)
- {
- 	int i, j;
--	int pmkid_len;
-+	u32 pmkid_len;
- 
- 	pmkid_len = le32_to_cpu(pmk_list->pmkids.npmkid);
- 
-@@ -2960,8 +2960,7 @@ brcmf_cfg80211_set_pmksa(struct wiphy *wiphy, struct net_device *ndev,
- 	struct brcmf_if *ifp = netdev_priv(ndev);
- 	struct pmkid_list *pmkids = &cfg->pmk_list->pmkids;
- 	s32 err = 0;
--	int i;
--	int pmkid_len;
-+	u32 pmkid_len, i;
- 
- 	brcmf_dbg(TRACE, "Enter\n");
- 	if (!check_vif_up(ifp->vif))
-@@ -3000,7 +2999,7 @@ brcmf_cfg80211_del_pmksa(struct wiphy *wiphy, struct net_device *ndev,
- 	struct brcmf_if *ifp = netdev_priv(ndev);
- 	struct pmkid_list pmkid;
- 	s32 err = 0;
--	int i, pmkid_len;
-+	u32 pmkid_len, i;
- 
- 	brcmf_dbg(TRACE, "Enter\n");
- 	if (!check_vif_up(ifp->vif))
--- 
-1.9.1
+--
+Luca.
 
