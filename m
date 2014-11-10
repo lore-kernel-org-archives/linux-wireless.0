@@ -1,47 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:41967 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751051AbaKGAre (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:37752 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750930AbaKJIzL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Nov 2014 19:47:34 -0500
-Message-ID: <545C16A5.9030106@candelatech.com> (sfid-20141107_014737_023300_2879406F)
-Date: Thu, 06 Nov 2014 16:47:33 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 10 Nov 2014 03:55:11 -0500
+Date: Mon, 10 Nov 2014 09:55:09 +0100
+From: Pavel Machek <pavel@ucw.cz>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	kernel list <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>
+Subject: Re: 3.18-rc0: iwlegacy failed after a while
+Message-ID: <20141110085508.GB2582@amd> (sfid-20141110_095548_165882_B444F5EB)
+References: <0BA3FCBA62E2DC44AF3030971E174FB31B552E3F@hasmsx107.ger.corp.intel.com>
+ <20141024121240.GA3177@redhat.com>
+ <20141025114246.GA16230@amd>
+ <20141026103314.GB2588@redhat.com>
+ <20141026110554.GA1634@amd>
+ <20141028222014.GA27961@amd>
+ <20141102122544.GA9242@redhat.com>
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath10k <ath10k@lists.infradead.org>
-Subject: Re: New ath10k CT firmware released.
-References: <545BD297.5040806@candelatech.com>
-In-Reply-To: <545BD297.5040806@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20141102122544.GA9242@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/06/2014 11:57 AM, Ben Greear wrote:
-> I have uploaded the latest CT version of the ath10k firmware.
+On Sun 2014-11-02 13:25:45, Stanislaw Gruszka wrote:
+> On Tue, Oct 28, 2014 at 11:20:15PM +0100, Pavel Machek wrote:
+> > > > It can be checked by "iw dev wlan0 get power_save" .
+> > 
+> > So it seems I have power save on. I guess someone enabled it for me :-).
+> > 
+> > root@duo:~# iwconfig wlan0
+> > wlan0     IEEE 802.11abg  ESSID:off/any  
+> >           Mode:Managed  Access Point: Not-Associated   Tx-Power=15 dBm   
+> >           Retry short limit:7   RTS thr:off   Fragment thr:off
+> >           Encryption key:off
+> >           Power Management:on
+> >           
+> > root@duo:~# iw dev wlan0 get power_save
+> > Power save: on
+> > root@duo:~# 
 > 
-> http://www.candelatech.com/ath10k.php
-> 
-> This firmware fixes bugs in raw-tx mode, though probably only
-> non-encrypted frames can be sent in this manner, and it requires
-> an out-of-tree patch from Michal Kazior to make it work:
-> 
-> http://comments.gmane.org/gmane.linux.drivers.ath10k.devel/246
-> 
-> This firmware also significantly improves association times when using
-> more than one vdev.  This, requires an additional kernel patch:
-> 
-> http://dmz2.candelatech.com/git/gitweb.cgi?p=linux-3.17.dev.y/.git;a=commitdiff;h=a9756b6e2efffbec4101dbe81e9d6a2c503239ff;hp=5bfa637376c352fc17c56afc7b1d2e752750162c
+> Could you confirm that problem happen with power save on and do not
+> happen without it ?
 
-I was a bit too clever it seems....  I have to be more careful about disabling
-the ch reservation when there are no vdevs active, I think.
+It has not happened for a while, but I was not loading wifi as
+heavily.
 
-Hope to have it fixed shortly.
-
-Thanks,
-Ben
-
+But even powersave=on case needs to be fixed, right?
+									Pavel
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
