@@ -1,53 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from tpesmarthost.raritan.com ([220.128.57.202]:13088 "EHLO
-	tpesmarthost.raritan.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750998AbaKFNHj (ORCPT
+Received: from mail-yk0-f171.google.com ([209.85.160.171]:59227 "EHLO
+	mail-yk0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750829AbaKJUIJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Nov 2014 08:07:39 -0500
-Message-ID: <545B7290.6060409@raritan.com> (sfid-20141106_140743_028279_27013AB2)
-Date: Thu, 6 Nov 2014 14:07:28 +0100
-From: Ronald Wahl <ronald.wahl@raritan.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Arend van Spriel <arend@broadcom.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Subject: Re: [PATCH] mac80211: Fix regression that triggers a kernel BUG with
- CCMP
-References: <1415267752-4704-1-git-send-email-ronald.wahl@raritan.com>	 <1415268135.1884.1.camel@sipsolutions.net> <545B6AD3.8020301@broadcom.com> <1415277562.17015.4.camel@sipsolutions.net>
-In-Reply-To: <1415277562.17015.4.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+	Mon, 10 Nov 2014 15:08:09 -0500
+From: Chris Ruffin <cmruffin@gmail.com>
+To: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	devel@driverdev.osuosl.org, Jes Sorensen <Jes.Sorensen@redhat.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Chris Ruffin <cmruffin@gmail.com>
+Subject: [PATCH] staging: rtl8723au: change typecast to match type returned by htons()
+Date: Mon, 10 Nov 2014 15:07:05 -0500
+Message-Id: <1415650025-16403-1-git-send-email-cmruffin@gmail.com> (sfid-20141110_210828_571292_C34469A8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06.11.2014 13:39, Johannes Berg wrote:
-> On Thu, 2014-11-06 at 13:34 +0100, Arend van Spriel wrote:
->> On 06-11-14 11:02, Johannes Berg wrote:
->>> Oh, regarding Cc stable - don't actually send the mail there if you can
->>> help it.
->>
->> What do you mean? Are you saying: It must be tagged, but 'git
->> send-email' should not actually add the Cc field in the mail header.
->> What is the story here? Guess I missed a memo ;-)
->
-> As far as I remember Greg just ignores the patches sent to the list and
-> picks them up when they hit Linus's tree instead (i.e. follows the
-> commit logs with like 'git log --grep "Cc: stable"') so there's no value
-> in actually sending out email, it's just noise.
->
-> So far it has worked for me, so I think it must be right :)
+Using a u16 pointer typecast for a result from htons() results in the following warning from sparse:
 
-But there are LTS kernels not maintained by Greg like 3.12 and 3.16. How 
-about these? If sending patches to stable@kernel org is optional then 
-it's better to kill that list or silently drop emails send to this list 
-so no errors are returned for this address.
+drivers/staging/rtl8723au/core/rtw_xmit.c:1279:36: warning: incorrect type in assignment (different base types)
+drivers/staging/rtl8723au/core/rtw_xmit.c:1279:36:    expected unsigned short [unsigned] [short] [usertype] <noident>
+drivers/staging/rtl8723au/core/rtw_xmit.c:1279:36:    got restricted __be16 [usertype] <noident>
 
-- ron
+This patch fixes the issue by using an endian-specific typecast
+that will always match the type returned by htons().
 
+Signed-off-by: Chris Ruffin <cmruffin@gmail.com>
+---
+ drivers/staging/rtl8723au/core/rtw_xmit.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/staging/rtl8723au/core/rtw_xmit.c b/drivers/staging/rtl8723au/core/rtw_xmit.c
+index a0f7e27..44ef55c 100644
+--- a/drivers/staging/rtl8723au/core/rtw_xmit.c
++++ b/drivers/staging/rtl8723au/core/rtw_xmit.c
+@@ -1276,7 +1276,7 @@ s32 rtw_put_snap23a(u8 *data, u16 h_proto)
+ 	snap->oui[0] = oui[0];
+ 	snap->oui[1] = oui[1];
+ 	snap->oui[2] = oui[2];
+-	*(u16 *)(data + SNAP_SIZE) = htons(h_proto);
++	*(__be16 *)(data + SNAP_SIZE) = htons(h_proto);
+ 	return SNAP_SIZE + sizeof(u16);
+ }
+ 
 -- 
-Ronald Wahl - ronald.wahl@raritan.com - Phone +49 375271349-0 Fax -99
-Raritan Deutschland GmbH, Kornmarkt 7, 08056 Zwickau, Germany
-USt-IdNr. DE813094160, Steuer-Nr. 227/117/01749
-Amtsgericht Chemnitz HRB 23605
-Geschäftsführung: Stuart Hopper, Ralf Ploenes
+1.7.10.4
+
