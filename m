@@ -1,35 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:53740 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757523AbaKUJtA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Nov 2014 04:49:00 -0500
-Message-ID: <1416563318.1881.2.camel@sipsolutions.net> (sfid-20141121_104905_153658_B6932C44)
-Subject: Re: [PATCH v3] mac80211: keep sending peer candidate events while
- in listen state
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Nishikawa, Kenzoh" <Kenzoh.Nishikawa@jp.sony.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devel@lists.open80211s.org" <devel@lists.open80211s.org>,
-	"Bob Copeland (me@bobcopeland.com)" <me@bobcopeland.com>
-Date: Fri, 21 Nov 2014 10:48:38 +0100
-In-Reply-To: <1416563244.1881.1.camel@sipsolutions.net> (sfid-20141121_104759_725228_CF4DFC5E)
-References: <2EB4F5C65A3B8E4E92660930F4EF6B5B06C8BC@JPYOKXMS113.jp.sony.com>
-	 (sfid-20141121_101258_074290_AAFA54B9) <1416563244.1881.1.camel@sipsolutions.net>
-	 (sfid-20141121_104759_725228_CF4DFC5E)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-oi0-f46.google.com ([209.85.218.46]:35426 "EHLO
+	mail-oi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750993AbaKJUsr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Nov 2014 15:48:47 -0500
+Received: by mail-oi0-f46.google.com with SMTP id g201so5977048oib.5
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Nov 2014 12:48:46 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <545F4611.3010207@broadcom.com>
+References: <CAMP44s2XAmaiK2=BJA3TCW48Uo=5qyT5WsASDsZnOiSNgK6b0A@mail.gmail.com>
+	<545F4611.3010207@broadcom.com>
+Date: Mon, 10 Nov 2014 14:48:46 -0600
+Message-ID: <CAMP44s1NiYrFkN=DQcyGiJyW+JvCGvRVzcEBGLtvGyhfWs17kQ@mail.gmail.com> (sfid-20141110_214850_581335_3012A075)
+Subject: Re: brcmfmac not working on ECS LIVA
+From: Felipe Contreras <felipe.contreras@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	Franky Lin <frankyl@broadcom.com>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-11-21 at 10:47 +0100, Johannes Berg wrote:
+Hi,
 
-> > +	else if (sta->plink_state == NL80211_PLINK_LISTEN &&
-> > +		(sdata->u.mesh.user_mpm ||
-> > +		sdata->u.mesh.security & IEEE80211_MESH_SEC_AUTHED))
-> 
-> the latter two lines should be indented by one more space
+On Sun, Nov 9, 2014 at 4:46 AM, Arend van Spriel <arend@broadcom.com> wrote:
 
-Actually the third by 2 to match the containing parenthesis.
+> The ideas may come to us with a bit more trace information. The logging
+> above is the usual stuff so no problem indication there.
+>
+> I looked at the nvram file from [1]. At the end there are some entries about
+> OOB wakeup, ie. starting with 'sd_'. You may remove those, but giving the
+> logging it would not be the first thing to do.
 
-johannes
+I removed the sd_ lines, it didn't help.
 
+> Could you share the nvram obtained from EFI? Also please create a kernel log
+> with debug=0xd416.
+
+Sure, the nvram file is here:
+
+http://pastie.org/9710358
+
+I tried adding this file:
+
+/etc/modprobe.d/brcmfmac.conf
+options brcmfmac debug=0xd416
+
+I see nothing extra in the debug log... Am I doing something wrong?
+
+-- 
+Felipe Contreras
