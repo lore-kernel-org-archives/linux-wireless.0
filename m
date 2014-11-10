@@ -1,76 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:36106 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751176AbaK1WD1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Nov 2014 17:03:27 -0500
-Date: Fri, 28 Nov 2014 23:03:25 +0100
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-To: Arik Nemtsov <arik@wizery.com>
+Received: from dedo.coelho.fi ([88.198.205.34]:59423 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752459AbaKJJXu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Nov 2014 04:23:50 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: emmanuel.grumbach@intel.com
 Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH v5 2/4] cfg80211: allow usermode to query wiphy
-	specific regdom
-Message-ID: <20141128220325.GY25677@wotan.suse.de> (sfid-20141128_230331_545923_94305336)
-References: <1417074298-12254-1-git-send-email-arik@wizery.com> <1417074298-12254-2-git-send-email-arik@wizery.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1417074298-12254-2-git-send-email-arik@wizery.com>
+	Luciano Coelho <luciano.coelho@intel.com>
+Date: Mon, 10 Nov 2014 11:10:15 +0200
+Message-Id: <1415610621-27438-11-git-send-email-luca@coelho.fi> (sfid-20141110_102400_753417_46FE26B4)
+In-Reply-To: <1415610621-27438-1-git-send-email-luca@coelho.fi>
+References: <1415610621-27438-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH 10/16] iwlwifi: mvm: schedule CSA time event a bit before beacon 1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 27, 2014 at 09:44:56AM +0200, Arik Nemtsov wrote:
-> If a wiphy-idx is specified, the kernel will return the wiphy specific
-> regdomain, if such exists. Otherwise return the global regdom.
-> 
-> When no wiphy-idx is specified, return the global regdomain as well as
-> all wiphy-specific regulatory domains in the system, via a new nested
-> list of attributes.
-> 
-> Add a new attribute for each wiphy-specific regdomain, for usermode to
-> identify it as such.
-> 
-> Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
-> ---
-> v5: don't return all regdomains if a specific wiphy is requested
-> 
->  include/uapi/linux/nl80211.h |  16 +++++-
->  net/wireless/nl80211.c       | 127 +++++++++++++++++++++++++++++++++----------
->  net/wireless/reg.c           |   2 +-
->  net/wireless/reg.h           |   1 +
->  4 files changed, 115 insertions(+), 31 deletions(-)
-> 
-> diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-> index d775245..1f2f7d6 100644
-> --- a/include/uapi/linux/nl80211.h
-> +++ b/include/uapi/linux/nl80211.h
-> @@ -252,7 +252,9 @@
->   *	%NL80211_ATTR_IFINDEX.
->   *
->   * @NL80211_CMD_GET_REG: ask the wireless core to send us its currently set
-> - * 	regulatory domain.
-> + *	regulatory domain. If %NL80211_ATTR_WIPHY is specified and the device
-> + *	has a private regulatory domain, it will be returned. Otherwise, the
-> + *	global regdomain will be returned.
->   * @NL80211_CMD_SET_REG: Set current regulatory domain. CRDA sends this command
->   *	after being queried by the kernel. CRDA replies by sending a regulatory
->   *	domain structure which consists of %NL80211_ATTR_REG_ALPHA set to our
-> @@ -1688,6 +1690,14 @@ enum nl80211_commands {
->   *
->   * @NL80211_ATTR_MAC_MASK: MAC address mask
->   *
-> + * @NL80211_ATTR_WIPHY_PRIV_REG: flag attribute indicating the regulatory
-> + *	information was obtained from the device's wiphy. This can happen
-> + *	when the driver uses the regulatory_hint() API for setting the device's
-> + *	regulatory domain.
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-Can you clarify here that even if a driver used regulatory_hint() its device
-will still have some settings further restricted by consenus with other
-regulatory data gathered by cfg80211, the main cfg80211 regulatory domain
-is reflective of what the wiphy is really allowed, the wiphy->regd in this
-case would be reflective of the regulatory domain that the device originally
-wanted.
+Instead of using a hardcoded number of TUs before beacon 0 as the time
+to start the absence and actual channel switch, calculate it in
+relation to the beacon interval.  We use 10 TUs + beacon interval
+before beacon 0 to target a bit before beacon 1.  This gives us enough
+time to switch to the new channel before the AP/GO switches.
 
-Other than that I think we need a flag to let nl80211 pass all regdomains,
-to address Johannes' concerns.
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 12 ++++++++----
+ drivers/net/wireless/iwlwifi/mvm/mvm.h      | 13 +++++++++----
+ 2 files changed, 17 insertions(+), 8 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 0ca6185..3fb2b49 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -3062,14 +3062,18 @@ static int iwl_mvm_pre_channel_switch(struct ieee80211_hw *hw,
+ 
+ 		break;
+ 	case NL80211_IFTYPE_STATION:
+-		apply_time = chsw->timestamp +
+-			(vif->bss_conf.beacon_int * chsw->count * 1024);
++		/* Schedule the time event to a bit before beacon 1,
++		 * to make sure we're in the new channel when the
++		 * GO/AP arrives.
++		 */
++		apply_time = chsw->device_timestamp +
++			((vif->bss_conf.beacon_int * (chsw->count - 1) -
++			  IWL_MVM_CHANNEL_SWITCH_TIME_CLIENT) * 1024);
+ 
+ 		if (chsw->block_tx)
+ 			iwl_mvm_csa_client_absent(mvm, vif);
+ 
+-		iwl_mvm_schedule_csa_period(mvm, vif,
+-					    IWL_MVM_CHANNEL_SWITCH_TIME_CLIENT,
++		iwl_mvm_schedule_csa_period(mvm, vif, vif->bss_conf.beacon_int,
+ 					    apply_time);
+ 		break;
+ 	default:
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index 6c4c255..3280698 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -87,12 +87,17 @@
+ /* A TimeUnit is 1024 microsecond */
+ #define MSEC_TO_TU(_msec)	(_msec*1000/1024)
+ 
+-/* These values represent the number of TUs before CSA "beacon 0" TBTT
+- * when the CSA time-event needs to be scheduled to start.  They must
+- * be big enough to ensure that we switch in time.
++/* For GO, this value represents the number of TUs before CSA "beacon
++ * 0" TBTT when the CSA time-event needs to be scheduled to start.  It
++ * must be big enough to ensure that we switch in time.
+  */
+ #define IWL_MVM_CHANNEL_SWITCH_TIME_GO		40
+-#define IWL_MVM_CHANNEL_SWITCH_TIME_CLIENT	110
++
++/* For client, this value represents the number of TUs before CSA
++ * "beacon 1" TBTT, instead.  This is because we don't know when the
++ * GO/AP will be in the new channel, so we switch early enough.
++ */
++#define IWL_MVM_CHANNEL_SWITCH_TIME_CLIENT	10
+ 
+ /*
+  * This value (in TUs) is used to fine tune the CSA NoA end time which should
+-- 
+2.1.1
+
