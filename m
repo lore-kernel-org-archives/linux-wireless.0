@@ -1,58 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:58033 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751660AbaKGMcG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Nov 2014 07:32:06 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, emmanuel.grumbach@intel.com
-Date: Fri,  7 Nov 2014 14:31:36 +0200
-Message-Id: <1415363497-8475-3-git-send-email-luca@coelho.fi> (sfid-20141107_133216_452842_5FF7094C)
-In-Reply-To: <1415363497-8475-1-git-send-email-luca@coelho.fi>
-References: <1415363497-8475-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH v2 2/3] mac80211: send channel switch started notifications
+Received: from cantor2.suse.de ([195.135.220.15]:33246 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751827AbaKJJIZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Nov 2014 04:08:25 -0500
+Message-ID: <1415610506.16488.20.camel@linux-0dmf.site> (sfid-20141110_100856_201494_5C248E20)
+Subject: Re: [PATCH] brcmfmac: unlink URB when request timed out
+From: Oliver Neukum <oneukum@suse.de>
+To: Mathy Vanhoef <vanhoefm@gmail.com>
+Cc: brudley@broadcom.com, arend@broadcom.com, frankyl@broadcom.com,
+	meuleman@broadcom.com, linville@tuxdriver.com,
+	pieterpg@broadcom.com, linux-wireless@vger.kernel.org,
+	brcm80211-dev-list@broadcom.com, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Mon, 10 Nov 2014 10:08:26 +0100
+In-Reply-To: <545FAE05.2030701@gmail.com>
+References: <545FAE05.2030701@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+On Sun, 2014-11-09 at 13:10 -0500, Mathy Vanhoef wrote:
+> From: Mathy Vanhoef <vanhoefm@gmail.com>
+> 
+> Unlink the submitted URB in brcmf_usb_dl_cmd if the request timed out. This
+> assures the URB is never submitted twice, preventing a driver crash.
 
-Send a channel switch notification to userspace when a channel switch
-is requested or when we react to a remote CSA.
+Hi,
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
----
- net/mac80211/cfg.c  | 3 +++
- net/mac80211/mlme.c | 3 +++
- 2 files changed, 6 insertions(+)
+I am afrad this patch is no good. The diagnosis is good,
+but the fix introduces serious problems.
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 0618594..c5be146 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3195,6 +3195,9 @@ __ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- 		ieee80211_stop_vif_queues(local, sdata,
- 					  IEEE80211_QUEUE_STOP_REASON_CSA);
- 
-+	cfg80211_ch_switch_started_notify(sdata->dev, &sdata->csa_chandef,
-+					  params->count);
-+
- 	if (changed) {
- 		ieee80211_bss_info_change_notify(sdata, changed);
- 		drv_channel_switch_beacon(sdata, &params->chandef);
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 0d166e7..e31299f 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1205,6 +1205,9 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 					  IEEE80211_QUEUE_STOP_REASON_CSA);
- 	mutex_unlock(&local->mtx);
- 
-+	cfg80211_ch_switch_started_notify(sdata->dev, &csa_ie.chandef,
-+					  csa_ie.count);
-+
- 	if (local->ops->channel_switch) {
- 		/* use driver's channel switch callback */
- 		drv_channel_switch(local, sdata, &ch_switch);
+> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+> index 5265aa7..1bc7858 100644
+> --- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+> +++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+> @@ -738,10 +738,12 @@ static int brcmf_usb_dl_cmd(struct brcmf_usbdev_info *devinfo, u8 cmd,
+>  		goto finalize;
+>  	}
+>  
+> -	if (!brcmf_usb_ioctl_resp_wait(devinfo))
+> +	if (!brcmf_usb_ioctl_resp_wait(devinfo)) {
+> +		usb_unlink_urb(devinfo->ctl_urb);
+
+This is the asynchronous unlink. You have no guarantee it is finished
+after this point.
+
+>  		ret = -ETIMEDOUT;
+> -	else
+> +	} else {
+>  		memcpy(buffer, tmpbuf, buflen);
+> +	}
+>  
+>  finalize:
+>  	kfree(tmpbuf);
+
+Which means that you are freeing memory that may still be used by DMA
+at this time.
+In addition you have no guarantee that the unlink is indeed finished
+by the time the URB is reused.
+If you wish to take this approach you better forget about this URB
+and allocate a new one and free the buffer from the callback.
+
+	Regards
+		Oliver
+
 -- 
-2.1.1
+Oliver Neukum <oneukum@suse.de>
 
