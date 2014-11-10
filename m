@@ -1,83 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:14229 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752261AbaKMP3s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Nov 2014 10:29:48 -0500
-From: Jukka Rissanen <jukka.rissanen@linux.intel.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH v5 1/2] nl80211: Replace interface socket owner attribute with more generic one
-Date: Thu, 13 Nov 2014 17:25:14 +0200
-Message-Id: <1415892315-2911-2-git-send-email-jukka.rissanen@linux.intel.com> (sfid-20141113_162952_563314_9252CA5A)
-In-Reply-To: <1415892315-2911-1-git-send-email-jukka.rissanen@linux.intel.com>
-References: <1415892315-2911-1-git-send-email-jukka.rissanen@linux.intel.com>
+Received: from dedo.coelho.fi ([88.198.205.34]:59437 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752086AbaKJJYQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Nov 2014 04:24:16 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: emmanuel.grumbach@intel.com
+Cc: linux-wireless@vger.kernel.org,
+	Luciano Coelho <luciano.coelho@intel.com>
+Date: Mon, 10 Nov 2014 11:10:18 +0200
+Message-Id: <1415610621-27438-14-git-send-email-luca@coelho.fi> (sfid-20141110_102420_787997_F6C59EB7)
+In-Reply-To: <1415610621-27438-1-git-send-email-luca@coelho.fi>
+References: <1415610621-27438-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH 13/16] iwlwifi: mvm: disable beacon filtering during CSA
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Replace NL80211_ATTR_IFACE_SOCKET_OWNER attribute with more generic
-NL80211_ATTR_SOCKET_OWNER that can be used with other commands
-that interface creation.
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-Signed-off-by: Jukka Rissanen <jukka.rissanen@linux.intel.com>
+After a channel switch, transmission on the new channel is only
+started once we see a beacon on it.  Thus, beacon filtering needs to
+be disabled during channel switch so that mac80211 receives this
+beacon and finishes the process.
+
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
 ---
- include/uapi/linux/nl80211.h | 7 ++++---
- net/wireless/nl80211.c       | 4 ++--
- 2 files changed, 6 insertions(+), 5 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 442369f..185f9c7 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1637,9 +1637,9 @@ enum nl80211_commands {
-  * @NL80211_ATTR_TDLS_PEER_CAPABILITY: flags for TDLS peer capabilities, u32.
-  *	As specified in the &enum nl80211_tdls_peer_capability.
-  *
-- * @NL80211_ATTR_IFACE_SOCKET_OWNER: flag attribute, if set during interface
-+ * @NL80211_ATTR_SOCKET_OWNER: Flag attribute, if set during interface
-  *	creation then the new interface will be owned by the netlink socket
-- *	that created it and will be destroyed when the socket is closed
-+ *	that created it and will be destroyed when the socket is closed.
-  *
-  * @NL80211_ATTR_TDLS_INITIATOR: flag attribute indicating the current end is
-  *	the TDLS link initiator.
-@@ -2004,7 +2004,7 @@ enum nl80211_attrs {
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 55ab81e..7c031ee 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -3079,6 +3079,12 @@ static int iwl_mvm_pre_channel_switch(struct ieee80211_hw *hw,
  
- 	NL80211_ATTR_TDLS_PEER_CAPABILITY,
+ 		iwl_mvm_schedule_csa_period(mvm, vif, vif->bss_conf.beacon_int,
+ 					    apply_time);
++		if (mvmvif->bf_data.bf_enabled) {
++			ret = iwl_mvm_disable_beacon_filter(mvm, vif, 0);
++			if (ret)
++				goto out_unlock;
++		}
++
+ 		break;
+ 	default:
+ 		break;
+@@ -3119,6 +3125,10 @@ static int iwl_mvm_post_channel_switch(struct ieee80211_hw *hw,
+ 		iwl_mvm_sta_modify_disable_tx(mvm, mvmsta, false);
  
--	NL80211_ATTR_IFACE_SOCKET_OWNER,
-+	NL80211_ATTR_SOCKET_OWNER,
- 
- 	NL80211_ATTR_CSA_C_OFFSETS_TX,
- 	NL80211_ATTR_MAX_CSA_COUNTERS,
-@@ -2030,6 +2030,7 @@ enum nl80211_attrs {
- /* source-level API compatibility */
- #define NL80211_ATTR_SCAN_GENERATION NL80211_ATTR_GENERATION
- #define	NL80211_ATTR_MESH_PARAMS NL80211_ATTR_MESH_CONFIG
-+#define NL80211_ATTR_IFACE_SOCKET_OWNER NL80211_ATTR_SOCKET_OWNER
- 
- /*
-  * Allow user space programs to use #ifdef on new attributes by defining them
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index d0a8361..df447c0 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -388,7 +388,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
- 	[NL80211_ATTR_MAC_HINT] = { .len = ETH_ALEN },
- 	[NL80211_ATTR_WIPHY_FREQ_HINT] = { .type = NLA_U32 },
- 	[NL80211_ATTR_TDLS_PEER_CAPABILITY] = { .type = NLA_U32 },
--	[NL80211_ATTR_IFACE_SOCKET_OWNER] = { .type = NLA_FLAG },
-+	[NL80211_ATTR_SOCKET_OWNER] = { .type = NLA_FLAG },
- 	[NL80211_ATTR_CSA_C_OFFSETS_TX] = { .type = NLA_BINARY },
- 	[NL80211_ATTR_USE_RRM] = { .type = NLA_FLAG },
- 	[NL80211_ATTR_TSID] = { .type = NLA_U8 },
-@@ -2646,7 +2646,7 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
- 		return PTR_ERR(wdev);
+ 		iwl_mvm_mac_ctxt_changed(mvm, vif, false, NULL);
++
++		ret = iwl_mvm_enable_beacon_filter(mvm, vif, 0);
++		if (ret)
++			goto out_unlock;
  	}
  
--	if (info->attrs[NL80211_ATTR_IFACE_SOCKET_OWNER])
-+	if (info->attrs[NL80211_ATTR_SOCKET_OWNER])
- 		wdev->owner_nlportid = info->snd_portid;
- 
- 	switch (type) {
+ 	mvmvif->ps_disabled = false;
 -- 
-1.8.3.1
+2.1.1
 
