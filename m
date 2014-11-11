@@ -1,45 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:40817 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751031AbaK1LXG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Nov 2014 06:23:06 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v2] cfg80211: make WEXT compatibility unselectable
-Date: Fri, 28 Nov 2014 12:23:02 +0100
-Message-Id: <1417173782-30157-1-git-send-email-johannes@sipsolutions.net> (sfid-20141128_122309_813878_7F6DA5B7)
+Received: from relay1.mentorg.com ([192.94.38.131]:60976 "EHLO
+	relay1.mentorg.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752258AbaKKJ6Y (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Nov 2014 04:58:24 -0500
+From: Sanjeev Sharma <sanjeev_sharma@mentor.com>
+To: <Larry.Finger@lwfinger.net>, <Jes.Sorensen@redhat.com>
+CC: <gregkh@linuxfoundation.org>, <linux-wireless@vger.kernel.org>,
+	<devel@driverdev.osuosl.org>, <linux-kernel@vger.kernel.org>,
+	Sanjeev Sharma <sanjeev_sharma@mentor.com>,
+	Sanjeev Sharma <Sanjeev_Sharma@mentor.com>
+Subject: [PATCH] staging:rtl8723au: core: Fix checkpatch warning
+Date: Tue, 11 Nov 2014 15:28:14 +0530
+Message-ID: <1415699894-20243-1-git-send-email-sanjeev_sharma@mentor.com> (sfid-20141111_105841_826581_02BC022F)
+In-Reply-To: <wrfjy4rxzk5b.fsf@redhat.com>
+References: <wrfjy4rxzk5b.fsf@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This is a patch to the rtw_cmd.c file that fixes following
+Warning by introducing temporary structure.
 
-This option has been marked for deprecation and removal for
-a little more than two years, but it's not been very clearly
-signalled since it was always possible to just select it.
+WARNING: line over 80 characters
 
-Make it unselectable now to signal anyone who's still using
-it after all this time more clearly. They can still get it
-back, but only by patching the kernel.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Sanjeev Sharma <Sanjeev_Sharma@mentor.com>
 ---
- net/wireless/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/staging/rtl8723au/core/rtw_cmd.c | 42 ++++++++++++++++----------------
+ 1 file changed, 21 insertions(+), 21 deletions(-)
 
-diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
-index 29c8675f9a11..22ba971741e5 100644
---- a/net/wireless/Kconfig
-+++ b/net/wireless/Kconfig
-@@ -175,7 +175,7 @@ config CFG80211_INTERNAL_REGDB
- 	  Most distributions have a CRDA package.  So if unsure, say N.
+diff --git a/drivers/staging/rtl8723au/core/rtw_cmd.c b/drivers/staging/rtl8723au/core/rtw_cmd.c
+index cd2e915..6eccd86 100644
+--- a/drivers/staging/rtl8723au/core/rtw_cmd.c
++++ b/drivers/staging/rtl8723au/core/rtw_cmd.c
+@@ -919,34 +919,34 @@ static void traffic_status_watchdog(struct rtw_adapter *padapter)
+ 	u8 bHigherBusyTxTraffic = false;
+ 	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
+ 	int BusyThreshold = 100;
++	struct rt_link_detect *ldi = &pmlmepriv->LinkDetectInfo;
++
+ 	/*  */
+ 	/*  Determine if our traffic is busy now */
+ 	/*  */
+ 	if (check_fwstate(pmlmepriv, _FW_LINKED)) {
+ 		if (rtl8723a_BT_coexist(padapter))
+ 			BusyThreshold = 50;
+-		else if (pmlmepriv->LinkDetectInfo.bBusyTraffic)
++		else if (ldi->bBusyTraffic)
+ 			BusyThreshold = 75;
+ 		/*  if we raise bBusyTraffic in last watchdog, using
+ 		    lower threshold. */
+-		if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod > BusyThreshold ||
+-		    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod > BusyThreshold) {
++		if (ldi->NumRxOkInPeriod > BusyThreshold ||
++		    ldi->NumTxOkInPeriod > BusyThreshold) {
+ 			bBusyTraffic = true;
  
- config CFG80211_WEXT
--	bool "cfg80211 wireless extensions compatibility"
-+	bool
- 	depends on CFG80211
- 	select WEXT_CORE
- 	help
+-			if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod >
+-			    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod)
++			if (ldi->NumRxOkInPeriod > ldi->NumTxOkInPeriod)
+ 				bRxBusyTraffic = true;
+ 			else
+ 				bTxBusyTraffic = true;
+ 		}
+ 
+ 		/*  Higher Tx/Rx data. */
+-		if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod > 4000 ||
+-		    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod > 4000) {
++		if (ldi->NumRxOkInPeriod > 4000 ||
++		    ldi->NumTxOkInPeriod > 4000) {
+ 			bHigherBusyTraffic = true;
+ 
+-			if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod >
+-			    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod)
++			if (ldi->NumRxOkInPeriod > ldi->NumTxOkInPeriod)
+ 				bHigherBusyRxTraffic = true;
+ 			else
+ 				bHigherBusyTxTraffic = true;
+@@ -955,9 +955,9 @@ static void traffic_status_watchdog(struct rtw_adapter *padapter)
+ 		if (!rtl8723a_BT_coexist(padapter) ||
+ 		    !rtl8723a_BT_using_antenna_1(padapter)) {
+ 		/*  check traffic for  powersaving. */
+-			if (((pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod +
+-			      pmlmepriv->LinkDetectInfo.NumTxOkInPeriod) > 8) ||
+-			    pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod > 2)
++			if (((ldi->NumRxUnicastOkInPeriod +
++			      ldi->NumTxOkInPeriod) > 8) ||
++			    ldi->NumRxUnicastOkInPeriod > 2)
+ 				bEnterPS = false;
+ 			else
+ 				bEnterPS = true;
+@@ -971,15 +971,15 @@ static void traffic_status_watchdog(struct rtw_adapter *padapter)
+ 	} else
+ 		LPS_Leave23a(padapter);
+ 
+-	pmlmepriv->LinkDetectInfo.NumRxOkInPeriod = 0;
+-	pmlmepriv->LinkDetectInfo.NumTxOkInPeriod = 0;
+-	pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod = 0;
+-	pmlmepriv->LinkDetectInfo.bBusyTraffic = bBusyTraffic;
+-	pmlmepriv->LinkDetectInfo.bTxBusyTraffic = bTxBusyTraffic;
+-	pmlmepriv->LinkDetectInfo.bRxBusyTraffic = bRxBusyTraffic;
+-	pmlmepriv->LinkDetectInfo.bHigherBusyTraffic = bHigherBusyTraffic;
+-	pmlmepriv->LinkDetectInfo.bHigherBusyRxTraffic = bHigherBusyRxTraffic;
+-	pmlmepriv->LinkDetectInfo.bHigherBusyTxTraffic = bHigherBusyTxTraffic;
++	ldi->NumRxOkInPeriod = 0;
++	ldi->NumTxOkInPeriod = 0;
++	ldi->NumRxUnicastOkInPeriod = 0;
++	ldi->bBusyTraffic = bBusyTraffic;
++	ldi->bTxBusyTraffic = bTxBusyTraffic;
++	ldi->bRxBusyTraffic = bRxBusyTraffic;
++	ldi->bHigherBusyTraffic = bHigherBusyTraffic;
++	ldi->bHigherBusyRxTraffic = bHigherBusyRxTraffic;
++	ldi->bHigherBusyTxTraffic = bHigherBusyTxTraffic;
+ }
+ 
+ static void dynamic_chk_wk_hdl(struct rtw_adapter *padapter, u8 *pbuf, int sz)
 -- 
-2.1.1
+1.7.11.7
 
