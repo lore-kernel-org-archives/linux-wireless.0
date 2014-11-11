@@ -1,50 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:56065
-	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754676AbaKOX2F (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:25520 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751238AbaKKG1E convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Nov 2014 18:28:05 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH 1/6] mac80211: minstrel_ht: add a small optimization to minstrel_aggr_check
-Date: Sun, 16 Nov 2014 00:27:55 +0100
-Message-Id: <1416094080-49220-1-git-send-email-nbd@openwrt.org> (sfid-20141116_002819_017021_519DE13F)
+	Tue, 11 Nov 2014 01:27:04 -0500
+From: "Gautam (Gautam Kumar) Shukla" <gautams@broadcom.com>
+To: "linville@tuxdriver.com" <linville@tuxdriver.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"davem@davemloft.net" <davem@davemloft.net>,
+	"linux-api@vger.kernel.org" <linux-api@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	Jithu Jance <jithu@broadcom.com>,
+	Sreenath S <sreenats@broadcom.com>
+Subject: [PATCH 2/2] linux-wireless:Added wiphy capability flag for
+ offloading 4way handshake to driver
+Date: Tue, 11 Nov 2014 06:27:03 +0000
+Message-ID: <DF163EE1A432BF4BBE6B2088220663A6743890@SJEXCHMB06.corp.ad.broadcom.com> (sfid-20141111_072736_728214_FF2C6F94)
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Check the queue mapping earlier, skb->queue_mapping is more likely than
-skb->data to still be in d-cache.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+For offloading 4 way handshake to driver , currently we don't have WIPHY capability flag to communicate same to supplicant.
+I have added the flag NL80211_ATTR_4WAY_KEY_HANDSHAKE  and rest of the code for the same.
+
+Tested on x86 linux machine
+
+Signed-off-by: Gautam kumar shukla <gautams@broadcom.com>
 ---
- net/mac80211/rc80211_minstrel_ht.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ include/net/cfg80211.h       | 4 ++++
+ include/uapi/linux/nl80211.h | 5 ++++-
+ net/wireless/nl80211.c       | 4 ++++
+ 3 files changed, 12 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index c50fd94..62ff7cf 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -690,6 +690,9 @@ minstrel_aggr_check(struct ieee80211_sta *pubsta, struct sk_buff *skb)
- 	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
- 	u16 tid;
- 
-+	if (skb_get_queue_mapping(skb) == IEEE80211_AC_VO)
-+		return;
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 6f744e0..b37de0a 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -2629,7 +2629,10 @@ struct cfg80211_ops {
+  *	TSPEC sessions (TID aka TSID 0-7) with the NL80211_CMD_ADD_TX_TS
+  *	command. Standard IEEE 802.11 TSPEC setup is not yet supported, it
+  *	needs to be able to handle Block-Ack agreements and other things.
++ *	@WIPHY_FLAG_SUPPORTS_4WAY_HANDHSHAKE:the device supports 4way handshake
++ *	in the driver/firmware.
+  */
 +
- 	if (unlikely(!ieee80211_is_data_qos(hdr->frame_control)))
- 		return;
+ enum wiphy_flags {
+ 	WIPHY_FLAG_SUPPORTS_WMM_ADMISSION	= BIT(0),
+ 	/* use hole at 1 */
+@@ -2654,6 +2657,7 @@ enum wiphy_flags {
+ 	WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL	= BIT(21),
+ 	WIPHY_FLAG_SUPPORTS_5_10_MHZ		= BIT(22),
+ 	WIPHY_FLAG_HAS_CHANNEL_SWITCH		= BIT(23),
++	WIPHY_FLAG_SUPPORTS_4WAY_HANDSHAKE	= BIT(24),
+ };
  
-@@ -700,9 +703,6 @@ minstrel_aggr_check(struct ieee80211_sta *pubsta, struct sk_buff *skb)
- 	if (likely(sta->ampdu_mlme.tid_tx[tid]))
- 		return;
+ /**
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index b01d5dd..2c474a3 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1640,9 +1640,11 @@ enum nl80211_commands {
+  *
+  *	@NL80211_ATTR_PSK: a PSK value (u8 attribute).This is 32-octet (256-bit)
+  *	PSK.
++ * @NL80211_ATTR_4WAY_KEY_HANDSHAKE: Indicates whether the driver is capable
++ * of 4way key handshake
+  *
+  *
+- * @NL80211_ATTR_MAX: highest attribute number currently defined
++ * * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+ enum nl80211_attrs {
+@@ -1995,6 +1997,7 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_SMPS_MODE,
  
--	if (skb_get_queue_mapping(skb) == IEEE80211_AC_VO)
--		return;
--
- 	ieee80211_start_tx_ba_session(pubsta, tid, 5000);
- }
+ 	NL80211_ATTR_PSK,
++	NL80211_ATTR_4WAY_KEY_HANDSHAKE,
  
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 91c24b1..5f85c41 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -396,6 +396,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
+ 	[NL80211_ATTR_ADMITTED_TIME] = { .type = NLA_U16 },
+ 	[NL80211_ATTR_SMPS_MODE] = { .type = NLA_U8 },
+ 	[NL80211_ATTR_PSK] = { .type = NLA_BINARY, .len = 32 },
++	[NL80211_ATTR_4WAY_KEY_HANDSHAKE] = { .type = NLA_FLAG },
+ };
+ 
+ /* policy for the key attributes */
+@@ -1303,6 +1304,9 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
+ 		if ((rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_FW_ROAM) &&
+ 		    nla_put_flag(msg, NL80211_ATTR_ROAM_SUPPORT))
+ 			goto nla_put_failure;
++		if ((rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_4WAY_HANDSHAKE) &&
++			nla_put_flag(msg,NL80211_ATTR_4WAY_KEY_HANDSHAKE))
++			goto nla_put_failure;
+ 		if ((rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_TDLS) &&
+ 		    nla_put_flag(msg, NL80211_ATTR_TDLS_SUPPORT))
+ 			goto nla_put_failure;
 -- 
-2.1.2
+1.9.1
 
