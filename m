@@ -1,42 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:56935 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750781AbaK0PQK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Nov 2014 10:16:10 -0500
-Date: Thu, 27 Nov 2014 07:14:48 -0800
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
-Cc: Ming Lei <ming.lei@canonical.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Grazvydas Ignotas <notasas@gmail.com>,
+Received: from s3.sipsolutions.net ([5.9.151.49]:57511 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751751AbaKKKjM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Nov 2014 05:39:12 -0500
+Message-ID: <1415702338.2163.5.camel@sipsolutions.net> (sfid-20141111_113932_732081_5B762C06)
+Subject: Re: [PATCH 1/1] linux-wireless: Added psk in struct
+ cfg80211_connect_params needed for offloading 4way handshake to driver
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "Gautam (Gautam Kumar) Shukla" <gautams@broadcom.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Pavel Machek <pavel@ucw.cz>,
-	Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-	Aaro Koskinen <aaro.koskinen@iki.fi>,
-	Kalle Valo <kvalo@adurom.com>,
-	Sebastian Reichel <sre@ring0.de>,
-	David Gnedt <david.gnedt@davizone.at>
-Subject: Re: wl1251: NVS firmware data
-Message-ID: <20141127151448.GA23064@kroah.com> (sfid-20141127_161631_806741_56F7B4C8)
-References: <201411271506.20457@pali>
- <CACVXFVMr8jH1ZzyPNG91VDK8DuVjQsHn9ks62sSNjOfUnNsURQ@mail.gmail.com>
- <201411271543.23527@pali>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <201411271543.23527@pali>
+	"davem@davemloft.net" <davem@davemloft.net>,
+	"linux-api@vger.kernel.org" <linux-api@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	Jithu Jance <jithu@broadcom.com>,
+	Sreenath S <sreenats@broadcom.com>,
+	Vladimir Kondratiev <vkondrat@qca.qualcomm.com>
+Date: Tue, 11 Nov 2014 11:38:58 +0100
+In-Reply-To: <5461E67E.7010408@broadcom.com>
+References: <DF163EE1A432BF4BBE6B2088220663A67437BD@SJEXCHMB06.corp.ad.broadcom.com>
+		 <1415698161.2163.0.camel@sipsolutions.net> <5461DCC9.5050702@broadcom.com>
+	 <1415700220.2163.3.camel@sipsolutions.net> <5461E67E.7010408@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 27, 2014 at 03:43:23PM +0100, Pali Rohár wrote:
-> Which userspace helper programs for (automatic) firmware loading 
-> are used? Can be udev configured to use own program for loading 
-> firmware instead that udev integrated which looking for firmware 
-> only in /lib/firmware files?
+On Tue, 2014-11-11 at 11:35 +0100, Arend van Spriel wrote:
 
-The code to load firmware from userspace has been removed from udev, so
-that's not going to work at all, sorry.
+> What did pop up is the wiphy flags vs. nl80211 feature flags. When that
+> comes up it looks like 'potAtoes, potaetoes' to me.
+> 
+> So is there are clear design rule for when to use which flag. For me the
+> wiphy object represents the device/firmware and 4-way handshake offload
+> support is determined by what the device/firmware supports.
 
-greg k-h
+There are three types of flags:
+
+ * wiphy flag attributes - deprecated as far as I'm concerned
+ * wiphy nl80211 feature flags - much easier to use in kernel (and
+userspace)
+ * nl80211 protocol flags - only one exists
+                            (NL80211_PROTOCOL_FEATURE_SPLIT_WIPHY_DUMP)
+
+johannes
+
