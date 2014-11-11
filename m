@@ -1,45 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:49483 "EHLO mga01.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:57224 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750914AbaKDJVZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Nov 2014 04:21:25 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
-Subject: RE: [PATCH] mac80211: Increase uapsd max SP frames number
-Date: Tue, 4 Nov 2014 09:21:18 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB31B55C8CE@hasmsx107.ger.corp.intel.com> (sfid-20141104_102132_810929_495C538F)
-References: <1415090436-12588-1-git-send-email-emmanuel.grumbach@intel.com>
- <CABPxzYKfoO+NYi7Zs+5t6mRU+XwW5u=dKiBMsrzZ5VLO3ABDAg@mail.gmail.com>
-In-Reply-To: <CABPxzYKfoO+NYi7Zs+5t6mRU+XwW5u=dKiBMsrzZ5VLO3ABDAg@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	id S1751333AbaKKJ3k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Nov 2014 04:29:40 -0500
+Message-ID: <1415698161.2163.0.camel@sipsolutions.net> (sfid-20141111_103013_707715_A61D4522)
+Subject: Re: [PATCH 1/1] linux-wireless: Added psk in struct
+ cfg80211_connect_params needed for offloading 4way handshake to driver
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Gautam (Gautam Kumar) Shukla" <gautams@broadcom.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"davem@davemloft.net" <davem@davemloft.net>,
+	"linux-api@vger.kernel.org" <linux-api@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	Jithu Jance <jithu@broadcom.com>,
+	Sreenath S <sreenats@broadcom.com>
+Date: Tue, 11 Nov 2014 10:29:21 +0100
+In-Reply-To: <DF163EE1A432BF4BBE6B2088220663A67437BD@SJEXCHMB06.corp.ad.broadcom.com>
+References: <DF163EE1A432BF4BBE6B2088220663A67437BD@SJEXCHMB06.corp.ad.broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiANCj4gT24gVHVlLCBOb3YgNCwgMjAxNCBhdCAyOjEwIFBNLCBFbW1hbnVlbCBHcnVtYmFjaA0K
-PiA8ZW1tYW51ZWwuZ3J1bWJhY2hAaW50ZWwuY29tPiB3cm90ZToNCj4gPiBGcm9tOiBBbmRyZWkg
-T3RjaGVyZXRpYW5za2kgPGFuZHJlaS5vdGNoZXJldGlhbnNraUBpbnRlbC5jb20+DQo+ID4NCj4g
-PiBEZWxpdmVyIHVwIHRvIDEyOCBmcmFtZXMgZHVyaW5nIFNQIGluc3RlYWQgb2YgOCBpZiB1bmxp
-bWl0ZWQgbWF4IFNQIGlzDQo+ID4gc3BlY2lmaWVkIGR1cmluZyBhc3NvY2lhdGlvbi4NCj4gPg0K
-PiA+IFNpZ25lZC1vZmYtYnk6IEFuZHJlaSBPdGNoZXJldGlhbnNraSA8YW5kcmVpLm90Y2hlcmV0
-aWFuc2tpQGludGVsLmNvbT4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBFbW1hbnVlbCBHcnVtYmFjaCA8
-ZW1tYW51ZWwuZ3J1bWJhY2hAaW50ZWwuY29tPg0KPiA+IC0tLQ0KPiA+ICBuZXQvbWFjODAyMTEv
-c3RhX2luZm8uYyB8IDIgKy0NCj4gPiAgMSBmaWxlIGNoYW5nZWQsIDEgaW5zZXJ0aW9uKCspLCAx
-IGRlbGV0aW9uKC0pDQo+ID4NCj4gPiBkaWZmIC0tZ2l0IGEvbmV0L21hYzgwMjExL3N0YV9pbmZv
-LmMgYi9uZXQvbWFjODAyMTEvc3RhX2luZm8uYyBpbmRleA0KPiA+IGRlNDk0ZGYuLjMzNTI3NDEg
-MTAwNjQ0DQo+ID4gLS0tIGEvbmV0L21hYzgwMjExL3N0YV9pbmZvLmMNCj4gPiArKysgYi9uZXQv
-bWFjODAyMTEvc3RhX2luZm8uYw0KPiA+IEBAIC0xNTMxLDcgKzE1MzEsNyBAQCB2b2lkIGllZWU4
-MDIxMV9zdGFfcHNfZGVsaXZlcl91YXBzZChzdHJ1Y3QNCj4gc3RhX2luZm8gKnN0YSkNCj4gPiAg
-ICAgICAgICAgICAgICAgYnJlYWs7DQo+ID4gICAgICAgICBjYXNlIDA6DQo+ID4gICAgICAgICAg
-ICAgICAgIC8qIFhYWDogd2hhdCBpcyBhIGdvb2QgdmFsdWU/ICovDQo+ID4gLSAgICAgICAgICAg
-ICAgIG5fZnJhbWVzID0gODsNCj4gPiArICAgICAgICAgICAgICAgbl9mcmFtZXMgPSAxMjg7DQo+
-ID4gICAgICAgICAgICAgICAgIGJyZWFrOw0KPiA+ICAgICAgICAgfQ0KPiBXaGF0IGlzIGNyaXRl
-cmlhIGZvciBkZWNpZGluZyB0aGUgdGhyZXNob2xkPw0KPiBBbnkgc3BlY2lmaWMgdXNlIGNhc2Ug
-Zm9yIDEyOD8NCg0KV2VsbCAtIHRoaXMgaXMgd2h5IHRoaXMgY29tbWl0IGRvZXNuJ3QgcmVtb3Zl
-IHRoZSBUT0RPIDopDQpUaGUgcmVhc29uIGZvciB0aGlzIGNoYW5nZSBpcyBhIGNlcnRpZmljYXRp
-b24gaXNzdWUgaW4gV01NLVBTIHdpdGggUDJQIEdPIChOb0EgY3V0dGluZyBzaG9ydCBhIFNQKS4N
-CkkgZ3Vlc3MgdGhlIHByb3BlciB3YXkgdG8gaGFuZGxlIHRoYXQgaXMgdG8gbWFrZSBpdCBjb25m
-aWd1cmFibGUuDQo=
+On Tue, 2014-11-11 at 05:56 +0000, Gautam (Gautam Kumar) Shukla wrote:
+> For offloading 4 way handshake to driver, currently we don't have any
+> member  of struct cfg80211_connect_params to pass PSK from supplicant
+> to driver. I have added psk for the same and added rest of the code
+> needed in nl80211.h and nl80211.c to parse and make it available to
+> driver.
+> From supplicant, we already have psk member field in assoc_params to
+> use .
+> 
+> Tested on x86 linux.
+
+Your commit message needs serious work.
+
+Also, there's a competing approach from QCA that's far more suited.
+
+In either case though, I'm going to ask which driver is going to use
+this and when it's going to land in mainline.
+
+johannes
+
