@@ -1,41 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:53362 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751857AbaKUJMB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Nov 2014 04:12:01 -0500
-Message-ID: <1416561105.1881.0.camel@sipsolutions.net> (sfid-20141121_101239_820381_7838CCD5)
-Subject: Re: [PATCH v6] nl80211: Stop scheduled scan if netlink client
- disappears
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jukka Rissanen <jukka.rissanen@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 21 Nov 2014 10:11:45 +0100
-In-Reply-To: <1416556822.2703.4.camel@jrissane-mobl.ger.corp.intel.com>
-References: <1416483178-5528-1-git-send-email-jukka.rissanen@linux.intel.com>
-	 (sfid-20141120_123314_318179_38B7117E) <1416496456.8557.2.camel@sipsolutions.net>
-	 <1416556822.2703.4.camel@jrissane-mobl.ger.corp.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:53408 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751437AbaKKKd3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Nov 2014 05:33:29 -0500
+From: "Gautam (Gautam Kumar) Shukla" <gautams@broadcom.com>
+To: Arend Van Spriel <arend@broadcom.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"davem@davemloft.net" <davem@davemloft.net>,
+	"linux-api@vger.kernel.org" <linux-api@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	Jithu Jance <jithu@broadcom.com>,
+	Sreenath S <sreenats@broadcom.com>
+Subject: RE: [PATCH 1/1] linux-wireless: Added psk in struct
+ cfg80211_connect_params needed for offloading 4way handshake to driver
+Date: Tue, 11 Nov 2014 10:33:29 +0000
+Message-ID: <DF163EE1A432BF4BBE6B2088220663A6743C05@SJEXCHMB06.corp.ad.broadcom.com> (sfid-20141111_113333_511647_B86CAE80)
+References: <DF163EE1A432BF4BBE6B2088220663A67437BD@SJEXCHMB06.corp.ad.broadcom.com>
+ <1415698161.2163.0.camel@sipsolutions.net> <5461DCC9.5050702@broadcom.com>
+In-Reply-To: <5461DCC9.5050702@broadcom.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-11-21 at 10:00 +0200, Jukka Rissanen wrote:
-
-> > Your patch also still has the problem I pointed out to you before - you
-> > can get the following sequence of events:
-> > 
-> > start_sched_scan (owner=true)
-> > close socket - schedule worker
-> > start_sched_scan (from another socket, owner doesn't matter)
-> 
-> If I am reading the code correctly from
-> nl80211.c:nl80211_start_sched_scan() this socket will get -EINPROGRESS.
-> Only after the worker has finished and called
-> __cfg80211_stop_sched_scan() will the other socket able to start a new
-> scheduled scan. Or I might have just missed some important detail
-> here :)
-
-Oh, you're right, my mistake.
-
-johannes
-
+VGhhbmtzIGEgbG90ICBKb2hhbm5lcyBhbmQgQXJlbmQgLCBmb3IgeW91ciBjb21tZW50cyBhbmQg
+cmV2aWV3IC4NCkl0IHdpbGwgcmVhbGx5IGhlbHAgbWUgaW4gbXkgbmV4dCBwYXRjaCBzdWJtaXNz
+aW9uIC4NCg0KSnVzdCB3YW50ZWQgdG8ga25vdyB3aGVuIFFDQSBwYXRjaCB3aWxsIGdldCBpbiBt
+YWluIGxpbmUgYXMgaXQgd2FzICBsYXN0IHVwZGF0ZWQgb24gIDIzIGF1ZyAyMDEyLg0KDQoNClRo
+YW5rcyBhbmQgcmVnYXJkcw0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogQXJl
+bmQgdmFuIFNwcmllbCBbbWFpbHRvOmFyZW5kQGJyb2FkY29tLmNvbV0gDQpTZW50OiBUdWVzZGF5
+LCBOb3ZlbWJlciAxMSwgMjAxNCAzOjI0IFBNDQpUbzogSm9oYW5uZXMgQmVyZzsgR2F1dGFtIChH
+YXV0YW0gS3VtYXIpIFNodWtsYQ0KQ2M6IGxpbnZpbGxlQHR1eGRyaXZlci5jb207IGxpbnV4LXdp
+cmVsZXNzQHZnZXIua2VybmVsLm9yZzsgZGF2ZW1AZGF2ZW1sb2Z0Lm5ldDsgbGludXgtYXBpQHZn
+ZXIua2VybmVsLm9yZzsgbGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZzsgbmV0ZGV2QHZnZXIu
+a2VybmVsLm9yZzsgSml0aHUgSmFuY2U7IFNyZWVuYXRoIFMNClN1YmplY3Q6IFJlOiBbUEFUQ0gg
+MS8xXSBsaW51eC13aXJlbGVzczogQWRkZWQgcHNrIGluIHN0cnVjdCBjZmc4MDIxMV9jb25uZWN0
+X3BhcmFtcyBuZWVkZWQgZm9yIG9mZmxvYWRpbmcgNHdheSBoYW5kc2hha2UgdG8gZHJpdmVyDQoN
+Ck9uIDExLTExLTE0IDEwOjI5LCBKb2hhbm5lcyBCZXJnIHdyb3RlOg0KPiBPbiBUdWUsIDIwMTQt
+MTEtMTEgYXQgMDU6NTYgKzAwMDAsIEdhdXRhbSAoR2F1dGFtIEt1bWFyKSBTaHVrbGEgd3JvdGU6
+DQo+PiBGb3Igb2ZmbG9hZGluZyA0IHdheSBoYW5kc2hha2UgdG8gZHJpdmVyLCBjdXJyZW50bHkg
+d2UgZG9uJ3QgaGF2ZSBhbnkgDQo+PiBtZW1iZXIgIG9mIHN0cnVjdCBjZmc4MDIxMV9jb25uZWN0
+X3BhcmFtcyB0byBwYXNzIFBTSyBmcm9tIHN1cHBsaWNhbnQgDQo+PiB0byBkcml2ZXIuIEkgaGF2
+ZSBhZGRlZCBwc2sgZm9yIHRoZSBzYW1lIGFuZCBhZGRlZCByZXN0IG9mIHRoZSBjb2RlIA0KPj4g
+bmVlZGVkIGluIG5sODAyMTEuaCBhbmQgbmw4MDIxMS5jIHRvIHBhcnNlIGFuZCBtYWtlIGl0IGF2
+YWlsYWJsZSB0byANCj4+IGRyaXZlci4NCj4+IEZyb20gc3VwcGxpY2FudCwgd2UgYWxyZWFkeSBo
+YXZlIHBzayBtZW1iZXIgZmllbGQgaW4gYXNzb2NfcGFyYW1zIHRvIA0KPj4gdXNlIC4NCj4+DQo+
+PiBUZXN0ZWQgb24geDg2IGxpbnV4Lg0KPiANCj4gWW91ciBjb21taXQgbWVzc2FnZSBuZWVkcyBz
+ZXJpb3VzIHdvcmsuDQo+IA0KPiBBbHNvLCB0aGVyZSdzIGEgY29tcGV0aW5nIGFwcHJvYWNoIGZy
+b20gUUNBIHRoYXQncyBmYXIgbW9yZSBzdWl0ZWQuDQoNCkkgcHJvYmFibHkgd2FzIG5vdCBwYXlp
+bmcgYXR0ZW50aW9uIHRvIGl0LCBidXQgd291bGQgeW91IGhhdmUgYSByZWZlcmVuY2UgdG8gdGhp
+cy4NCg0KPiBJbiBlaXRoZXIgY2FzZSB0aG91Z2gsIEknbSBnb2luZyB0byBhc2sgd2hpY2ggZHJp
+dmVyIGlzIGdvaW5nIHRvIHVzZSANCj4gdGhpcyBhbmQgd2hlbiBpdCdzIGdvaW5nIHRvIGxhbmQg
+aW4gbWFpbmxpbmUuDQoNCkkgaGFkIHRoZSBzYW1lIHF1ZXN0aW9uIDstKQ0KDQo+IGpvaGFubmVz
+DQo+IA0KPiAtLQ0KPiBUbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGlu
+ZSAidW5zdWJzY3JpYmUgDQo+IGxpbnV4LXdpcmVsZXNzIiBpbiB0aGUgYm9keSBvZiBhIG1lc3Nh
+Z2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZyANCj4gTW9yZSBtYWpvcmRvbW8gaW5mbyBh
+dCAgaHR0cDovL3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1sDQo+IA0KDQo=
