@@ -1,60 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:41960 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752169AbaKKJyV (ORCPT
+Received: from mail-la0-f47.google.com ([209.85.215.47]:55122 "EHLO
+	mail-la0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751623AbaKKK7s (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Nov 2014 04:54:21 -0500
-Message-ID: <5461DCC9.5050702@broadcom.com> (sfid-20141111_105449_986104_5AC9242E)
-Date: Tue, 11 Nov 2014 10:54:17 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Tue, 11 Nov 2014 05:59:48 -0500
+Received: by mail-la0-f47.google.com with SMTP id gd6so9098772lab.20
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Nov 2014 02:59:46 -0800 (PST)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"Gautam (Gautam Kumar) Shukla" <gautams@broadcom.com>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"davem@davemloft.net" <davem@davemloft.net>,
-	"linux-api@vger.kernel.org" <linux-api@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	Jithu Jance <jithu@broadcom.com>,
-	Sreenath S <sreenats@broadcom.com>
-Subject: Re: [PATCH 1/1] linux-wireless: Added psk in struct cfg80211_connect_params
- needed for offloading 4way handshake to driver
-References: <DF163EE1A432BF4BBE6B2088220663A67437BD@SJEXCHMB06.corp.ad.broadcom.com> <1415698161.2163.0.camel@sipsolutions.net>
-In-Reply-To: <1415698161.2163.0.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <7ffaf316-b423-4f1e-a3f4-2b458aeba323@me.com>
+References: <7ffaf316-b423-4f1e-a3f4-2b458aeba323@me.com>
+Date: Tue, 11 Nov 2014 10:59:46 +0000
+Message-ID: <CABUTiXUwE162nRuLkMus-oKQM32FbcnqKE5JtiJwr29VAdB-Rw@mail.gmail.com> (sfid-20141111_115951_606173_35EEF35E)
+Subject: Re: linux + 5G band + AP mode
+From: Bruno Antunes <baantunes@gmail.com>
+To: Efill <efill@me.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11-11-14 10:29, Johannes Berg wrote:
-> On Tue, 2014-11-11 at 05:56 +0000, Gautam (Gautam Kumar) Shukla wrote:
->> For offloading 4 way handshake to driver, currently we don't have any
->> member  of struct cfg80211_connect_params to pass PSK from supplicant
->> to driver. I have added psk for the same and added rest of the code
->> needed in nl80211.h and nl80211.c to parse and make it available to
->> driver.
->> From supplicant, we already have psk member field in assoc_params to
->> use .
->>
->> Tested on x86 linux.
-> 
-> Your commit message needs serious work.
-> 
-> Also, there's a competing approach from QCA that's far more suited.
+Hi
 
-I probably was not paying attention to it, but would you have a
-reference to this.
+On 11 November 2014 10:41, Efill <efill@me.com> wrote:
+> Dear all,
+>
+>
+> Are there any working (m)PCI(e) adapters out there suitable to run an AP at
+> 5G (using 802.11ac)?
 
-> In either case though, I'm going to ask which driver is going to use
-> this and when it's going to land in mainline.
+You can use atheros cards they support both AP and Sta modes on 802.11ac.
 
-I had the same question ;-)
+Linux wireless mailing list is the place to ask not hostap.
 
-> johannes
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
+>
+> Does someone have a working dualband (using two adapters one for 11n@2G and
+> one for 11ac@5G) setup she/he is willing to share? I appreciate any thoughts
+> on this.
+>
+>
+> Thanks,
+> Efill
+>
+>
+>
+> _______________________________________________
+> HostAP mailing list
+> HostAP@lists.shmoo.com
+> http://lists.shmoo.com/mailman/listinfo/hostap
+>
