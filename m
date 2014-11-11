@@ -1,42 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:16338 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932637AbaKMNW0 (ORCPT
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:57173 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751097AbaKKQLc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Nov 2014 08:22:26 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Ben Greear <greearb@candelatech.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 06/10] ath10k: use configured nss instead of max nss.
-References: <1411507045-18973-1-git-send-email-greearb@candelatech.com>
-	<1411507045-18973-6-git-send-email-greearb@candelatech.com>
-	<54592F3E.10204@candelatech.com>
-Date: Thu, 13 Nov 2014 15:22:12 +0200
-In-Reply-To: <54592F3E.10204@candelatech.com> (Ben Greear's message of "Tue,
-	04 Nov 2014 11:55:42 -0800")
-Message-ID: <87ioijteuz.fsf@kamboji.qca.qualcomm.com> (sfid-20141113_142229_623081_5336319F)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 11 Nov 2014 11:11:32 -0500
+Received: by mail-wi0-f180.google.com with SMTP id hi2so2106545wib.13
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Nov 2014 08:11:31 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>,
+	Eliad Peller <eliadx.peller@intel.com>
+Subject: [PATCH] mac80211: don't allow 40MHz tx rates in case of 20MHz chandef
+Date: Tue, 11 Nov 2014 18:11:22 +0200
+Message-Id: <1415722282-29309-1-git-send-email-egrumbach@gmail.com> (sfid-20141111_171135_471270_7DB91DD2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Greear <greearb@candelatech.com> writes:
+From: Eliad Peller <eliad@wizery.com>
 
-> On 09/23/2014 02:17 PM, greearb@candelatech.com wrote:
->> From: Ben Greear <greearb@candelatech.com>
->> 
->> When re-associating a station, the nss was set back to
->> maximum value even if user had configured small number
->> of tx chains.  So, pay attention to user's config in
->> this case as well.
->
-> Looks like this (and probably the related patch) did not make
-> it upstream yet.
->
-> Is someone waiting for more changes from me or did this just
-> get lost?
+When 20MHz chandef is used, 40MHz rates shouldn't be
+used (by the rate-control algorithm), even if the sta
+ht capabilities indicate support for it.
 
-Sorry, it fell through the cracks. I'll take a look at them soon.
+Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
+Singed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ net/mac80211/vht.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
+diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
+index 671ce0d..bc9e8fc 100644
+--- a/net/mac80211/vht.c
++++ b/net/mac80211/vht.c
+@@ -287,6 +287,8 @@ enum ieee80211_sta_rx_bandwidth ieee80211_sta_cur_vht_bw(struct sta_info *sta)
+ 		/* fall through */
+ 	case NL80211_CHAN_WIDTH_20_NOHT:
+ 	case NL80211_CHAN_WIDTH_20:
++		bw = IEEE80211_STA_RX_BW_20;
++		break;
+ 	case NL80211_CHAN_WIDTH_40:
+ 		bw = sta->sta.ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40 ?
+ 				IEEE80211_STA_RX_BW_40 : IEEE80211_STA_RX_BW_20;
 -- 
-Kalle Valo
+1.9.1
+
