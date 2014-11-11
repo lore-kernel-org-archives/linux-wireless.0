@@ -1,53 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:50548 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751736AbaKKVpJ (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:53534 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752059AbaKKHGI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Nov 2014 16:45:09 -0500
-Date: Tue, 11 Nov 2014 16:35:02 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: bluetooth-next 2014-11-07
-Message-ID: <20141111213501.GG6780@tuxdriver.com> (sfid-20141111_224549_765423_FDB28AF7)
-References: <20141107092754.GA6995@t440s.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20141107092754.GA6995@t440s.lan>
+	Tue, 11 Nov 2014 02:06:08 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH 3/6] ath9k: Use new QCA953x initvals
+Date: Tue, 11 Nov 2014 12:37:21 +0530
+Message-Id: <1415689644-29693-4-git-send-email-sujith@msujith.org> (sfid-20141111_080618_072157_0A8C7BCE)
+In-Reply-To: <1415689644-29693-1-git-send-email-sujith@msujith.org>
+References: <1415689644-29693-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 07, 2014 at 11:27:54AM +0200, Johan Hedberg wrote:
-> Hi John
-> 
-> Here's another set of patches for 3.19. Most of it is again fixes and
-> cleanups to ieee802154 related code from Alexander Aring. We've also got
-> better handling of hardware error events along with a proper API for HCI
-> drivers to notify the HCI core of such situations. There's also a minor
-> fix for mgmt events as well as a sparse warning fix. The code for
-> sending HCI commands synchronously also gets a fix where we might loose
-> the completion event in the case of very fast HW (particularly easily
-> reproducible with an emulated HCI device).
-> 
-> Please let me know if there are any issues pulling. Thanks.
-> 
-> Johan
-> 
-> ---
-> The following changes since commit 6bc6c49f1e2f3ab1bec05d1c08aad219ab4eb5d0:
-> 
->   mwifiex: add cfg80211 dump_survey handler (2014-10-31 16:07:49 -0400)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next.git for-upstream
-> 
-> for you to fetch changes up to 56b2c3eea398c772dd895dc62c18cbdd1ba127b1:
-> 
->   6lowpan: move skb_free from error paths in decompression (2014-11-06 22:09:48 +0100)
+From: Miaoqing Pan <miaoqing@qca.qualcomm.com>
 
-Pulling now...
+This patch updates the initvals for QCA953x v1.1 and v2.0
 
+Signed-off-by: Miaoqing Pan <miaoqing@qca.qualcomm.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c | 51 ++++++++++++++++++++++++------
+ 1 file changed, 41 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+index cb09102..06ad217 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+@@ -333,12 +333,29 @@ static void ar9003_hw_init_mode_regs(struct ath_hw *ah)
+ 			       qca953x_1p0_soc_preamble);
+ 		INIT_INI_ARRAY(&ah->iniSOC[ATH_INI_POST],
+ 			       qca953x_1p0_soc_postamble);
+-		INIT_INI_ARRAY(&ah->iniModesRxGain,
+-			       qca953x_1p0_common_wo_xlna_rx_gain_table);
+-		INIT_INI_ARRAY(&ah->ini_modes_rx_gain_bounds,
+-			       qca953x_1p0_common_wo_xlna_rx_gain_bounds);
+-		INIT_INI_ARRAY(&ah->iniModesTxGain,
+-			       qca953x_1p0_modes_no_xpa_tx_gain_table);
++
++		if (AR_SREV_9531_20(ah)) {
++			INIT_INI_ARRAY(&ah->iniModesRxGain,
++				       qca953x_2p0_common_wo_xlna_rx_gain_table);
++			INIT_INI_ARRAY(&ah->ini_modes_rx_gain_bounds,
++				       qca953x_2p0_common_wo_xlna_rx_gain_bounds);
++		} else {
++			INIT_INI_ARRAY(&ah->iniModesRxGain,
++				       qca953x_1p0_common_wo_xlna_rx_gain_table);
++			INIT_INI_ARRAY(&ah->ini_modes_rx_gain_bounds,
++				       qca953x_1p0_common_wo_xlna_rx_gain_bounds);
++		}
++
++		if (AR_SREV_9531_20(ah))
++			INIT_INI_ARRAY(&ah->iniModesTxGain,
++				       qca953x_2p0_modes_no_xpa_tx_gain_table);
++		else if (AR_SREV_9531_11(ah))
++			INIT_INI_ARRAY(&ah->iniModesTxGain,
++				       qca953x_1p1_modes_no_xpa_tx_gain_table);
++		else
++			INIT_INI_ARRAY(&ah->iniModesTxGain,
++				       qca953x_1p0_modes_no_xpa_tx_gain_table);
++
+ 		INIT_INI_ARRAY(&ah->iniModesFastClock,
+ 			       qca953x_1p0_modes_fast_clock);
+ 	} else if (AR_SREV_9580(ah)) {
+@@ -518,9 +535,15 @@ static void ar9003_tx_gain_table_mode0(struct ath_hw *ah)
+ 	else if (AR_SREV_9550(ah))
+ 		INIT_INI_ARRAY(&ah->iniModesTxGain,
+ 			ar955x_1p0_modes_xpa_tx_gain_table);
+-	else if (AR_SREV_9531(ah))
++	else if (AR_SREV_9531_10(ah))
++		INIT_INI_ARRAY(&ah->iniModesTxGain,
++			       qca953x_1p0_modes_xpa_tx_gain_table);
++	else if (AR_SREV_9531_11(ah))
+ 		INIT_INI_ARRAY(&ah->iniModesTxGain,
+-			qca953x_1p0_modes_xpa_tx_gain_table);
++			       qca953x_1p1_modes_xpa_tx_gain_table);
++	else if (AR_SREV_9531_20(ah))
++		INIT_INI_ARRAY(&ah->iniModesTxGain,
++			       qca953x_2p0_modes_xpa_tx_gain_table);
+ 	else if (AR_SREV_9580(ah))
+ 		INIT_INI_ARRAY(&ah->iniModesTxGain,
+ 			ar9580_1p0_lowest_ob_db_tx_gain_table);
+@@ -562,7 +585,10 @@ static void ar9003_tx_gain_table_mode1(struct ath_hw *ah)
+ 		INIT_INI_ARRAY(&ah->iniModesTxGain,
+ 			ar955x_1p0_modes_no_xpa_tx_gain_table);
+ 	else if (AR_SREV_9531(ah)) {
+-		if (AR_SREV_9531_11(ah))
++		if (AR_SREV_9531_20(ah))
++			INIT_INI_ARRAY(&ah->iniModesTxGain,
++				       qca953x_2p0_modes_no_xpa_tx_gain_table);
++		else if (AR_SREV_9531_11(ah))
+ 			INIT_INI_ARRAY(&ah->iniModesTxGain,
+ 				       qca953x_1p1_modes_no_xpa_tx_gain_table);
+ 		else
+@@ -789,11 +815,16 @@ static void ar9003_rx_gain_table_mode1(struct ath_hw *ah)
+ 			ar955x_1p0_common_wo_xlna_rx_gain_table);
+ 		INIT_INI_ARRAY(&ah->ini_modes_rx_gain_bounds,
+ 			ar955x_1p0_common_wo_xlna_rx_gain_bounds);
+-	} else if (AR_SREV_9531(ah)) {
++	} else if (AR_SREV_9531_10(ah) || AR_SREV_9531_11(ah)) {
+ 		INIT_INI_ARRAY(&ah->iniModesRxGain,
+ 			       qca953x_1p0_common_wo_xlna_rx_gain_table);
+ 		INIT_INI_ARRAY(&ah->ini_modes_rx_gain_bounds,
+ 			       qca953x_1p0_common_wo_xlna_rx_gain_bounds);
++	} else if (AR_SREV_9531_20(ah)) {
++		INIT_INI_ARRAY(&ah->iniModesRxGain,
++			       qca953x_2p0_common_wo_xlna_rx_gain_table);
++		INIT_INI_ARRAY(&ah->ini_modes_rx_gain_bounds,
++			       qca953x_2p0_common_wo_xlna_rx_gain_bounds);
+ 	} else if (AR_SREV_9580(ah))
+ 		INIT_INI_ARRAY(&ah->iniModesRxGain,
+ 			ar9580_1p0_wo_xlna_rx_gain_table);
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+2.1.3
+
