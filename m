@@ -1,210 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f53.google.com ([74.125.82.53]:54636 "EHLO
-	mail-wg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753549AbaKLVMD (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:8615 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751422AbaKKKoq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Nov 2014 16:12:03 -0500
-Received: by mail-wg0-f53.google.com with SMTP id b13so15247021wgh.40
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Nov 2014 13:12:01 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 7/8] staging: vt6655: rf.c Removed unneeded comments
-Date: Wed, 12 Nov 2014 21:11:14 +0000
-Message-Id: <1415826675-8446-7-git-send-email-tvboxspy@gmail.com> (sfid-20141112_221209_421715_7329F095)
-In-Reply-To: <1415826675-8446-1-git-send-email-tvboxspy@gmail.com>
-References: <1415826675-8446-1-git-send-email-tvboxspy@gmail.com>
+	Tue, 11 Nov 2014 05:44:46 -0500
+Message-ID: <5461E89A.1060908@broadcom.com> (sfid-20141111_114508_641307_D99A3E56)
+Date: Tue, 11 Nov 2014 11:44:42 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "Gautam (Gautam Kumar) Shukla" <gautams@broadcom.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"davem@davemloft.net" <davem@davemloft.net>,
+	"linux-api@vger.kernel.org" <linux-api@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	Jithu Jance <jithu@broadcom.com>,
+	Sreenath S <sreenats@broadcom.com>,
+	Vladimir Kondratiev <vkondrat@qca.qualcomm.com>
+Subject: Re: [PATCH 1/1] linux-wireless: Added psk in struct cfg80211_connect_params
+ needed for offloading 4way handshake to driver
+References: <DF163EE1A432BF4BBE6B2088220663A67437BD@SJEXCHMB06.corp.ad.broadcom.com>		 <1415698161.2163.0.camel@sipsolutions.net> <5461DCC9.5050702@broadcom.com>	 <1415700220.2163.3.camel@sipsolutions.net> <5461E67E.7010408@broadcom.com> <1415702338.2163.5.camel@sipsolutions.net>
+In-Reply-To: <1415702338.2163.5.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Type and function that are not present comments
+On 11-11-14 11:38, Johannes Berg wrote:
+> On Tue, 2014-11-11 at 11:35 +0100, Arend van Spriel wrote:
+> 
+>> What did pop up is the wiphy flags vs. nl80211 feature flags. When that
+>> comes up it looks like 'potAtoes, potaetoes' to me.
+>>
+>> So is there are clear design rule for when to use which flag. For me the
+>> wiphy object represents the device/firmware and 4-way handshake offload
+>> support is determined by what the device/firmware supports.
+> 
+> There are three types of flags:
+> 
+>  * wiphy flag attributes - deprecated as far as I'm concerned
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/rf.c | 134 --------------------------------------------
- 1 file changed, 134 deletions(-)
+Ok. deprecated is clear enough ;-)
 
-diff --git a/drivers/staging/vt6655/rf.c b/drivers/staging/vt6655/rf.c
-index 87d97da..0b16ebf 100644
---- a/drivers/staging/vt6655/rf.c
-+++ b/drivers/staging/vt6655/rf.c
-@@ -39,8 +39,6 @@
- #include "rf.h"
- #include "baseband.h"
- 
--/*---------------------  Static Definitions -------------------------*/
--
- #define BY_AL2230_REG_LEN     23 //24bit
- #define CB_AL2230_INIT_SEQ    15
- #define SWITCH_CHANNEL_DELAY_AL2230 200 //us
-@@ -51,10 +49,6 @@
- #define SWITCH_CHANNEL_DELAY_AL7230 200 //us
- #define AL7230_PWR_IDX_LEN    64
- 
--/*---------------------  Static Classes  ----------------------------*/
--
--/*---------------------  Static Variables  --------------------------*/
--
- static const unsigned long dwAL2230InitTable[CB_AL2230_INIT_SEQ] = {
- 	0x03F79000+(BY_AL2230_REG_LEN<<3)+IFREGCTL_REGW, //
- 	0x03333100+(BY_AL2230_REG_LEN<<3)+IFREGCTL_REGW, //
-@@ -410,8 +404,6 @@ static const unsigned long dwAL7230ChannelTable2[CB_MAX_CHANNEL] = {
- 	0x77D78400+(BY_AL7230_REG_LEN<<3)+IFREGCTL_REGW  // channel = 165, Tf = 5825MHz (56)
- };
- 
--/*---------------------  Static Functions  --------------------------*/
--
- /*
-  * Description: AIROHA IFRF chip init function
-  *
-@@ -498,64 +490,6 @@ static bool s_bAL7230SelectChannel(struct vnt_private *priv, unsigned char byCha
- }
- 
- /*
-- * Description: Select channel with UW2452 chip
-- *
-- * Parameters:
-- *  In:
-- *      dwIoBase    - I/O base address
-- *      uChannel    - Channel number
-- *  Out:
-- *      none
-- *
-- * Return Value: true if succeeded; false if failed.
-- *
-- */
--
--/*
-- * Description: UW2452 IFRF chip init function
-- *
-- * Parameters:
-- *  In:
-- *      dwIoBase    - I/O base address
-- *  Out:
-- *      none
-- *
-- * Return Value: true if succeeded; false if failed.
-- *
-- */
--
--/*
-- * Description: VT3226 IFRF chip init function
-- *
-- * Parameters:
-- *  In:
-- *      dwIoBase    - I/O base address
-- *  Out:
-- *      none
-- *
-- * Return Value: true if succeeded; false if failed.
-- *
-- */
--
--/*
-- * Description: Select channel with VT3226 chip
-- *
-- * Parameters:
-- *  In:
-- *      dwIoBase    - I/O base address
-- *      uChannel    - Channel number
-- *  Out:
-- *      none
-- *
-- * Return Value: true if succeeded; false if failed.
-- *
-- */
--
--/*---------------------  Export Variables  --------------------------*/
--
--/*---------------------  Export Functions  --------------------------*/
--
--/*
-  * Description: Write to IF/RF, by embedded programming
-  *
-  * Parameters:
-@@ -590,33 +524,6 @@ bool IFRFbWriteEmbedded(struct vnt_private *priv, unsigned long dwData)
- }
- 
- /*
-- * Description: RFMD RF2959 IFRF chip init function
-- *
-- * Parameters:
-- *  In:
-- *      dwIoBase    - I/O base address
-- *  Out:
-- *      none
-- *
-- * Return Value: true if succeeded; false if failed.
-- *
-- */
--
--/*
-- * Description: Select channel with RFMD 2959 chip
-- *
-- * Parameters:
-- *  In:
-- *      dwIoBase    - I/O base address
-- *      uChannel    - Channel number
-- *  Out:
-- *      none
-- *
-- * Return Value: true if succeeded; false if failed.
-- *
-- */
--
--/*
-  * Description: AIROHA IFRF chip init function
-  *
-  * Parameters:
-@@ -693,47 +600,6 @@ static bool RFbAL2230SelectChannel(struct vnt_private *priv, unsigned char byCha
- }
- 
- /*
-- * Description: UW2451 IFRF chip init function
-- *
-- * Parameters:
-- *  In:
-- *      dwIoBase    - I/O base address
-- *  Out:
-- *      none
-- *
-- * Return Value: true if succeeded; false if failed.
-- *
-- */
--
--/*
-- * Description: Select channel with UW2451 chip
-- *
-- * Parameters:
-- *  In:
-- *      dwIoBase    - I/O base address
-- *      uChannel    - Channel number
-- *  Out:
-- *      none
-- *
-- * Return Value: true if succeeded; false if failed.
-- *
-- */
--
--/*
-- * Description: Set sleep mode to UW2451 chip
-- *
-- * Parameters:
-- *  In:
-- *      dwIoBase    - I/O base address
-- *      uChannel    - Channel number
-- *  Out:
-- *      none
-- *
-- * Return Value: true if succeeded; false if failed.
-- *
-- */
--
--/*
-  * Description: RF init function
-  *
-  * Parameters:
--- 
-2.1.0
+>  * wiphy nl80211 feature flags - much easier to use in kernel (and
+> userspace)
+>  * nl80211 protocol flags - only one exists
+>                             (NL80211_PROTOCOL_FEATURE_SPLIT_WIPHY_DUMP)
+
+Thanks,
+Arend
 
