@@ -1,51 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-hk1on0142.outbound.protection.outlook.com ([134.170.140.142]:19417
-	"EHLO APAC01-HK1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751135AbaKQJgf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Nov 2014 04:36:35 -0500
-From: "Nishikawa, Kenzoh" <Kenzoh.Nishikawa@jp.sony.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "devel@lists.open80211s.org" <devel@lists.open80211s.org>,
-	Thomas Pedersen <thomas@noack.us>
-Subject: [PATCH v2] mac80211: Send peering open frame again if beacon from
- listen state peer is received
-Date: Mon, 17 Nov 2014 09:35:42 +0000
-Message-ID: <2EB4F5C65A3B8E4E92660930F4EF6B5B069684@JPYOKXMS113.jp.sony.com> (sfid-20141117_103639_969803_9949AE09)
-Content-Type: text/plain; charset="us-ascii"
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:50548 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751736AbaKKVpJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Nov 2014 16:45:09 -0500
+Date: Tue, 11 Nov 2014 16:35:02 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: bluetooth-next 2014-11-07
+Message-ID: <20141111213501.GG6780@tuxdriver.com> (sfid-20141111_224549_765423_FDB28AF7)
+References: <20141107092754.GA6995@t440s.lan>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20141107092754.GA6995@t440s.lan>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixes the problem that a mesh peering process won't be fired again 
-after the previous first peering trial fails due to like air propagation error
-if the peering is managed by user space such as wpa_supplicant.
+On Fri, Nov 07, 2014 at 11:27:54AM +0200, Johan Hedberg wrote:
+> Hi John
+> 
+> Here's another set of patches for 3.19. Most of it is again fixes and
+> cleanups to ieee802154 related code from Alexander Aring. We've also got
+> better handling of hardware error events along with a proper API for HCI
+> drivers to notify the HCI core of such situations. There's also a minor
+> fix for mgmt events as well as a sparse warning fix. The code for
+> sending HCI commands synchronously also gets a fix where we might loose
+> the completion event in the case of very fast HW (particularly easily
+> reproducible with an emulated HCI device).
+> 
+> Please let me know if there are any issues pulling. Thanks.
+> 
+> Johan
+> 
+> ---
+> The following changes since commit 6bc6c49f1e2f3ab1bec05d1c08aad219ab4eb5d0:
+> 
+>   mwifiex: add cfg80211 dump_survey handler (2014-10-31 16:07:49 -0400)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next.git for-upstream
+> 
+> for you to fetch changes up to 56b2c3eea398c772dd895dc62c18cbdd1ba127b1:
+> 
+>   6lowpan: move skb_free from error paths in decompression (2014-11-06 22:09:48 +0100)
 
-This patch works with another patch for wpa_supplicant described here
-which fires a peering process again triggered by the notice from kernel.
-http://lists.shmoo.com/pipermail/hostap/2014-November/031235.html
+Pulling now...
 
-Signed-off-by: Kenzoh Nishikawa <Kenzoh.Nishikawa at jp.sony.com>
----
-net/mac80211/mesh_plink.c |    7 +++++++
-1 file changed, 7 insertions(+)
-
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 32c7bd0..dfc429b 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -524,6 +524,13 @@ void mesh_neighbour_update(struct ieee80211_sub_if_data *sdata,
- 	    sdata->u.mesh.mshcfg.auto_open_plinks &&
- 	    rssi_threshold_check(sta, sdata))
- 		changed = mesh_plink_open(sta);
-+	else if (sta->plink_state == NL80211_PLINK_LISTEN &&
-+		(sdata->u.mesh.user_mpm ||
-+		sdata->u.mesh.security & IEEE80211_MESH_SEC_AUTHED))
-+		cfg80211_notify_new_peer_candidate(sdata->dev, hw_addr,
-+							   elems->ie_start,
-+							   elems->total_len,
-+							   GFP_KERNEL);
- 
- 	ieee80211_mps_frame_release(sta, elems);
- out:
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
