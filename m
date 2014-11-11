@@ -1,51 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:39999 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932939AbaKMNgZ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Nov 2014 08:36:25 -0500
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 8.0 \(1990.1\))
-Subject: Re: [PATCH] cfg80211: remove net-pf-16-proto-16-family-nl80211 module alias
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <20141113132252.GB1926@redhat.com>
-Date: Thu, 13 Nov 2014 22:36:17 +0900
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Message-Id: <252AB6B9-9D33-4932-B75F-D3B2B057D3C0@holtmann.org> (sfid-20141113_143628_880399_E72FDEAE)
-References: <20141113123313.GA1926@redhat.com> <1415882683.2021.3.camel@sipsolutions.net> <20141113132252.GB1926@redhat.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:57395 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752275AbaKKKDw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Nov 2014 05:03:52 -0500
+Message-ID: <1415700220.2163.3.camel@sipsolutions.net> (sfid-20141111_110417_115220_28A769A6)
+Subject: Re: [PATCH 1/1] linux-wireless: Added psk in struct
+ cfg80211_connect_params needed for offloading 4way handshake to driver
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "Gautam (Gautam Kumar) Shukla" <gautams@broadcom.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"davem@davemloft.net" <davem@davemloft.net>,
+	"linux-api@vger.kernel.org" <linux-api@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	Jithu Jance <jithu@broadcom.com>,
+	Sreenath S <sreenats@broadcom.com>
+Date: Tue, 11 Nov 2014 11:03:40 +0100
+In-Reply-To: <5461DCC9.5050702@broadcom.com>
+References: <DF163EE1A432BF4BBE6B2088220663A67437BD@SJEXCHMB06.corp.ad.broadcom.com>
+	 <1415698161.2163.0.camel@sipsolutions.net> <5461DCC9.5050702@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stanislaw,
+On Tue, 2014-11-11 at 10:54 +0100, Arend van Spriel wrote:
 
-> With the alias cfg80211 module is loaded on systems without the wireless
-> hardware when user-space use nl80211 to discover if there are wireless
-> devices, what is considered as resources wastage. On systems with
-> wireless hardware cfg80211 module will be loaded anyway.
+> > Also, there's a competing approach from QCA that's far more suited.
 > 
-> Cc: Marcel Holtmann <marcel@holtmann.org>
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> ---
-> net/wireless/core.c | 1 -
-> 1 file changed, 1 deletion(-)
-> 
-> diff --git a/net/wireless/core.c b/net/wireless/core.c
-> index a4d2792..badcabe 100644
-> --- a/net/wireless/core.c
-> +++ b/net/wireless/core.c
-> @@ -34,7 +34,6 @@
-> MODULE_AUTHOR("Johannes Berg");
-> MODULE_LICENSE("GPL");
-> MODULE_DESCRIPTION("wireless configuration support");
-> -MODULE_ALIAS_GENL_FAMILY(NL80211_GENL_NAME);
+> I probably was not paying attention to it, but would you have a
+> reference to this.
 
-NAK.
+... digs around in email ...
 
-We want to auto-load cfg80211 when userspace asked for nl80211 netlink family.
+http://mid.gmane.org/1343907187-6686-1-git-send-email-qca_vkondrat@qca.qualcomm.com
 
-Regards
+Anyway, looking back at that, it wasn't really all that different, just
+a bit more complete maybe.
 
-Marcel
+johannes
 
