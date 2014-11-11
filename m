@@ -1,52 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:46667 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932587AbaKURFq (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:44527 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752104AbaKKJtF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Nov 2014 12:05:46 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Sujith Manoharan <sujith@msujith.org>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC] ath10k: Fix shared WEP
-References: <1416492382-18058-1-git-send-email-sujith@msujith.org>
-Date: Fri, 21 Nov 2014 19:05:41 +0200
-In-Reply-To: <1416492382-18058-1-git-send-email-sujith@msujith.org> (Sujith
-	Manoharan's message of "Thu, 20 Nov 2014 19:36:22 +0530")
-Message-ID: <87k32obi1m.fsf@kamboji.qca.qualcomm.com> (sfid-20141121_180550_819125_8C788313)
+	Tue, 11 Nov 2014 04:49:05 -0500
+Message-ID: <5461DB8C.2020201@broadcom.com> (sfid-20141111_104941_153570_62E46F3C)
+Date: Tue, 11 Nov 2014 10:49:00 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: "Gautam (Gautam Kumar) Shukla" <gautams@broadcom.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"davem@davemloft.net" <davem@davemloft.net>,
+	"linux-api@vger.kernel.org" <linux-api@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	Jithu Jance <jithu@broadcom.com>,
+	Sreenath S <sreenats@broadcom.com>
+Subject: Re: [PATCH 2/2] linux-wireless:Added wiphy capability flag for offloading
+ 4way handshake to driver
+References: <DF163EE1A432BF4BBE6B2088220663A6743890@SJEXCHMB06.corp.ad.broadcom.com>
+In-Reply-To: <DF163EE1A432BF4BBE6B2088220663A6743890@SJEXCHMB06.corp.ad.broadcom.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sujith Manoharan <sujith@msujith.org> writes:
+On 11-11-14 07:27, Gautam (Gautam Kumar) Shukla wrote:
+> 
+> For offloading 4 way handshake to driver , currently we don't have WIPHY capability flag to communicate same to supplicant.
+> I have added the flag NL80211_ATTR_4WAY_KEY_HANDSHAKE  and rest of the code for the same.
+> 
+> Tested on x86 linux machine
+> 
+> Signed-off-by: Gautam kumar shukla <gautams@broadcom.com>
+> ---
+>  include/net/cfg80211.h       | 4 ++++
+>  include/uapi/linux/nl80211.h | 5 ++++-
+>  net/wireless/nl80211.c       | 4 ++++
+>  3 files changed, 12 insertions(+), 1 deletion(-)
+> 
+> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+> index 6f744e0..b37de0a 100644
+> --- a/include/net/cfg80211.h
+> +++ b/include/net/cfg80211.h
+> @@ -2629,7 +2629,10 @@ struct cfg80211_ops {
+>   *	TSPEC sessions (TID aka TSID 0-7) with the NL80211_CMD_ADD_TX_TS
+>   *	command. Standard IEEE 802.11 TSPEC setup is not yet supported, it
+>   *	needs to be able to handle Block-Ack agreements and other things.
+> + *	@WIPHY_FLAG_SUPPORTS_4WAY_HANDHSHAKE:the device supports 4way handshake
 
-> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
->
-> When static keys are used in shared WEP, when a
-> station is associated, message 3 is sent with an
-> encrypted payload. But, for subsequent
-> authentications that are triggered without a
-> deauth, the auth frame is decrypted by the HW. To
-> handle this, check if the WEP keys have already
-> been set for the peer and if so, mark the
-> frame as decrypted.
->
-> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Indentation seems wrong here. Also add space after the colon sign.
 
-[...]
-
-> +		if (peer_key) {
-> +			ath10k_dbg(ar, ATH10K_DBG_MAC,
-> +				   "wep key present for peer: %pM\n", addr);
-> +			status->flag |= RX_FLAG_DECRYPTED;
-> +		}
-> +	}
+> + *	in the driver/firmware.
+>   */
 > +
-> +}
+>  enum wiphy_flags {
+>  	WIPHY_FLAG_SUPPORTS_WMM_ADMISSION	= BIT(0),
+>  	/* use hole at 1 */
+> @@ -2654,6 +2657,7 @@ enum wiphy_flags {
+>  	WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL	= BIT(21),
+>  	WIPHY_FLAG_SUPPORTS_5_10_MHZ		= BIT(22),
+>  	WIPHY_FLAG_HAS_CHANNEL_SWITCH		= BIT(23),
+> +	WIPHY_FLAG_SUPPORTS_4WAY_HANDSHAKE	= BIT(24),
+>  };
+>  
+>  /**
+> diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+> index b01d5dd..2c474a3 100644
+> --- a/include/uapi/linux/nl80211.h
+> +++ b/include/uapi/linux/nl80211.h
+> @@ -1640,9 +1640,11 @@ enum nl80211_commands {
+>   *
+>   *	@NL80211_ATTR_PSK: a PSK value (u8 attribute).This is 32-octet (256-bit)
+>   *	PSK.
+> + * @NL80211_ATTR_4WAY_KEY_HANDSHAKE: Indicates whether the driver is capable
+> + * of 4way key handshake
 
-A checkpatch warning:
+convention is to have a tab in the continuing line.
 
-drivers/net/wireless/ath/ath10k/wmi.c:1141: CHECK: Blank lines aren't necessary before a close brace '}'
+>   *
+>   *
+> - * @NL80211_ATTR_MAX: highest attribute number currently defined
+> + * * @NL80211_ATTR_MAX: highest attribute number currently defined
 
--- 
-Kalle Valo
+huh?
+
+>   * @__NL80211_ATTR_AFTER_LAST: internal use
+>   */
+>  enum nl80211_attrs {
+> @@ -1995,6 +1997,7 @@ enum nl80211_attrs {
+>  	NL80211_ATTR_SMPS_MODE,
+>  
+>  	NL80211_ATTR_PSK,
+> +	NL80211_ATTR_4WAY_KEY_HANDSHAKE,
+>  
+>  	/* add attributes here, update the policy in nl80211.c */
+>  
+> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+> index 91c24b1..5f85c41 100644
+> --- a/net/wireless/nl80211.c
+> +++ b/net/wireless/nl80211.c
+> @@ -396,6 +396,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
+>  	[NL80211_ATTR_ADMITTED_TIME] = { .type = NLA_U16 },
+>  	[NL80211_ATTR_SMPS_MODE] = { .type = NLA_U8 },
+>  	[NL80211_ATTR_PSK] = { .type = NLA_BINARY, .len = 32 },
+> +	[NL80211_ATTR_4WAY_KEY_HANDSHAKE] = { .type = NLA_FLAG },
+>  };
+>  
+>  /* policy for the key attributes */
+> @@ -1303,6 +1304,9 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
+>  		if ((rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_FW_ROAM) &&
+>  		    nla_put_flag(msg, NL80211_ATTR_ROAM_SUPPORT))
+>  			goto nla_put_failure;
+> +		if ((rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_4WAY_HANDSHAKE) &&
+> +			nla_put_flag(msg,NL80211_ATTR_4WAY_KEY_HANDSHAKE))
+> +			goto nla_put_failure;
+>  		if ((rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_TDLS) &&
+>  		    nla_put_flag(msg, NL80211_ATTR_TDLS_SUPPORT))
+>  			goto nla_put_failure;
+> 
+
