@@ -1,39 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:56080 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758138AbaKUNxE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Nov 2014 08:53:04 -0500
-Message-ID: <1416577981.1881.9.camel@sipsolutions.net> (sfid-20141121_145309_834447_D90C131E)
-Subject: Re: [RFC 1/2] nl80211: support MSDU statistics
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from mail-pa0-f42.google.com ([209.85.220.42]:46433 "EHLO
+	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752234AbaKKKTz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Nov 2014 05:19:55 -0500
+Received: by mail-pa0-f42.google.com with SMTP id bj1so10346220pad.15
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Nov 2014 02:19:55 -0800 (PST)
+MIME-Version: 1.0
+Date: Tue, 11 Nov 2014 15:49:55 +0530
+Message-ID: <CAGKQeFgX+qZ2MSjRio+OKo5GZDzgZCRcZ3d=DAkYWcppC2nG3w@mail.gmail.com> (sfid-20141111_111958_832924_6F9AC449)
+Subject: PN KEY MISMATCH: PACKET DROPPED MAC80211
+From: deepak kumar Pradhan <hydipu@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: Eyal Shapira <eyal@wizery.com>
-Date: Fri, 21 Nov 2014 14:53:01 +0100
-In-Reply-To: <1416576505-15023-1-git-send-email-johannes@sipsolutions.net> (sfid-20141121_142834_070138_2793BA04)
-References: <1416576505-15023-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20141121_142834_070138_2793BA04)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-11-21 at 14:28 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> The base for the current statistics is pretty mixed up, support
-> exporting RX/TX statistics for MSDUs.
-
-Umm. Getting ahead of myself here - I actually wanted to make them
-per-rate as well, but it's a bit awkward.
-
-And it actually raises another question.
-
-For RX, it is easy to do per-rate per-TID in mac80211. For TX, per-rate
-is considerably more difficult and should probably have rate scaling
-algorithm involvement, at least as far as iwlwifi is concerned.
-
-Now, however, having separate counters for TX for per-rate and per-TID
-seems a bit strange, if for RX they're per-rate/TID?
-
-johannes
-
+We are using IXDP465 intel board which is running kernel 3.12.2 with a
+wireless >Atheros card (driver ath9k) for mesh networking using authsae for
+secured mesh >network.
+Under stress tests we are getting gap in wireless connectivity. On further
+investigation, we found that the Packet Number and Key is mismatched and
+packet >dropped.
+(In function: ieee80211_crypto_ccmp_decrypt, file net/mac80211/wpa.c file).
+To fix this we tried the below patch, but we still facing the same
+issue(gap).
+Has someone observed this issue. Any inputs on this is much appreciated.
+Please forgive me if I have posted to a wrong list, and please guide me
+where should I post this?
