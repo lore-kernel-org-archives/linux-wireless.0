@@ -1,370 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.15]:49985 "EHLO mout.gmx.net"
+Received: from mga11.intel.com ([192.55.52.93]:53892 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751950AbaKFHzB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Nov 2014 02:55:01 -0500
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: ath9k-devel@qca.qualcomm.com, sujith@msujith.org, nbd@openwrt.org,
-	patro@cs.wisc.edu, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH 06/21] ath9k: remove all struct ath_softc dependencies from spectral code
-Date: Thu,  6 Nov 2014 08:53:23 +0100
-Message-Id: <1415260418-14321-7-git-send-email-linux@rempel-privat.de> (sfid-20141106_085509_558328_163EFB1E)
-In-Reply-To: <1415260418-14321-1-git-send-email-linux@rempel-privat.de>
-References: <1415260418-14321-1-git-send-email-linux@rempel-privat.de>
+	id S1752713AbaKKIYA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Nov 2014 03:24:00 -0500
+From: Tomasz Bursztyka <tomasz.bursztyka@linux.intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Tomasz Bursztyka <tomasz.bursztyka@linux.intel.com>
+Subject: [PATCH v2] nl80211: Broadcast CMD_NEW_INTERFACE and CMD_DEL_INTERFACE
+Date: Tue, 11 Nov 2014 10:19:25 +0200
+Message-Id: <1415693965-3081-1-git-send-email-tomasz.bursztyka@linux.intel.com> (sfid-20141111_092406_015374_24F83E13)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/debug.c    |  4 +-
- drivers/net/wireless/ath/ath9k/recv.c     |  2 +-
- drivers/net/wireless/ath/ath9k/spectral.c | 87 ++++++++++++++++---------------
- drivers/net/wireless/ath/ath9k/spectral.h |  8 +--
- 4 files changed, 51 insertions(+), 50 deletions(-)
+Let the other listeners being notified when a new or del interface
+command has been issued, thus reducing later necessary request to be in
+sync with current context.
 
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index f0a802e..6492619 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -1310,7 +1310,7 @@ void ath9k_get_et_stats(struct ieee80211_hw *hw,
+Signed-off-by: Tomasz Bursztyka <tomasz.bursztyka@linux.intel.com>
+---
+ net/wireless/nl80211.c | 50 +++++++++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 41 insertions(+), 9 deletions(-)
+
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 1a31736..032e371 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2341,12 +2341,16 @@ static int nl80211_send_chandef(struct sk_buff *msg,
  
- void ath9k_deinit_debug(struct ath_softc *sc)
+ static int nl80211_send_iface(struct sk_buff *msg, u32 portid, u32 seq, int flags,
+ 			      struct cfg80211_registered_device *rdev,
+-			      struct wireless_dev *wdev)
++			      struct wireless_dev *wdev, bool new)
  {
--	ath9k_spectral_deinit_debug(sc);
-+	ath9k_spectral_deinit_debug(&sc->spec_priv);
- }
+ 	struct net_device *dev = wdev->netdev;
++	u8 cmd = NL80211_CMD_NEW_INTERFACE;
+ 	void *hdr;
  
- int ath9k_init_debug(struct ath_hw *ah)
-@@ -1330,7 +1330,7 @@ int ath9k_init_debug(struct ath_hw *ah)
+-	hdr = nl80211hdr_put(msg, portid, seq, flags, NL80211_CMD_NEW_INTERFACE);
++	if (!new)
++		cmd = NL80211_CMD_DEL_INTERFACE;
++
++	hdr = nl80211hdr_put(msg, portid, seq, flags, cmd);
+ 	if (!hdr)
+ 		return -1;
  
- 	ath9k_dfs_init_debug(sc);
- 	ath9k_tx99_init_debug(sc);
--	ath9k_spectral_init_debug(sc, sc->debug.debugfs_phy);
-+	ath9k_spectral_init_debug(&sc->spec_priv, sc->debug.debugfs_phy);
+@@ -2364,7 +2368,7 @@ static int nl80211_send_iface(struct sk_buff *msg, u32 portid, u32 seq, int flag
+ 			(cfg80211_rdev_list_generation << 2)))
+ 		goto nla_put_failure;
  
- 	debugfs_create_file("dma", S_IRUSR, sc->debug.debugfs_phy, sc,
- 			    &fops_dma);
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 6914e21..e97c693 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -870,7 +870,7 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
- 	 */
- 	if (rx_stats->rs_status & ATH9K_RXERR_PHY) {
- 		ath9k_dfs_process_phyerr(sc, hdr, rx_stats, rx_status->mactime);
--		if (ath_process_fft(sc, hdr, rx_stats, rx_status->mactime))
-+		if (ath_process_fft(&sc->spec_priv, hdr, rx_stats, rx_status->mactime))
- 			RX_STAT_INC(rx_spectral);
+-	if (rdev->ops->get_channel) {
++	if (new && rdev->ops->get_channel) {
+ 		int ret;
+ 		struct cfg80211_chan_def chandef;
  
- 		return -EINVAL;
-diff --git a/drivers/net/wireless/ath/ath9k/spectral.c b/drivers/net/wireless/ath/ath9k/spectral.c
-index d272380..50af6bc 100644
---- a/drivers/net/wireless/ath/ath9k/spectral.c
-+++ b/drivers/net/wireless/ath/ath9k/spectral.c
-@@ -24,23 +24,24 @@ static s8 fix_rssi_inv_only(u8 rssi_val)
- 	return (s8) rssi_val;
- }
- 
--static void ath_debug_send_fft_sample(struct ath_softc *sc,
-+static void ath_debug_send_fft_sample(struct ath_spec_scan_priv *spec_priv,
- 				      struct fft_sample_tlv *fft_sample_tlv)
- {
- 	int length;
--	if (!sc->spec_priv.rfs_chan_spec_scan)
-+	if (!spec_priv->rfs_chan_spec_scan)
- 		return;
- 
- 	length = __be16_to_cpu(fft_sample_tlv->length) +
- 		 sizeof(*fft_sample_tlv);
--	relay_write(sc->spec_priv.rfs_chan_spec_scan, fft_sample_tlv, length);
-+	relay_write(spec_priv->rfs_chan_spec_scan, fft_sample_tlv, length);
- }
- 
- /* returns 1 if this was a spectral frame, even if not handled. */
--int ath_process_fft(struct ath_softc *sc, struct ieee80211_hdr *hdr,
-+int ath_process_fft(struct ath_spec_scan_priv *spec_priv, struct ieee80211_hdr *hdr,
- 		    struct ath_rx_status *rs, u64 tsf)
- {
--	struct ath_hw *ah = sc->sc_ah;
-+	struct ath_hw *ah = spec_priv->ah;
-+	struct ath_common *common = ath9k_hw_common(spec_priv->ah);
- 	u8 num_bins, *bins, *vdata = (u8 *)hdr;
- 	struct fft_sample_ht20 fft_sample_20;
- 	struct fft_sample_ht20_40 fft_sample_40;
-@@ -67,7 +68,7 @@ int ath_process_fft(struct ath_softc *sc, struct ieee80211_hdr *hdr,
- 	if (!(radar_info->pulse_bw_info & SPECTRAL_SCAN_BITMASK))
- 		return 0;
- 
--	chan_type = cfg80211_get_chandef_type(&sc->hw->conf.chandef);
-+	chan_type = cfg80211_get_chandef_type(&common->hw->conf.chandef);
- 	if ((chan_type == NL80211_CHAN_HT40MINUS) ||
- 	    (chan_type == NL80211_CHAN_HT40PLUS)) {
- 		fft_len = SPECTRAL_HT20_40_TOTAL_DATA_LEN;
-@@ -199,7 +200,7 @@ int ath_process_fft(struct ath_softc *sc, struct ieee80211_hdr *hdr,
- 		tlv = (struct fft_sample_tlv *)&fft_sample_20;
+@@ -2375,7 +2379,7 @@ static int nl80211_send_iface(struct sk_buff *msg, u32 portid, u32 seq, int flag
+ 		}
  	}
  
--	ath_debug_send_fft_sample(sc, tlv);
-+	ath_debug_send_fft_sample(spec_priv, tlv);
- 
- 	return 1;
- }
-@@ -211,11 +212,11 @@ int ath_process_fft(struct ath_softc *sc, struct ieee80211_hdr *hdr,
- static ssize_t read_file_spec_scan_ctl(struct file *file, char __user *user_buf,
- 				       size_t count, loff_t *ppos)
- {
--	struct ath_softc *sc = file->private_data;
-+	struct ath_spec_scan_priv *spec_priv = file->private_data;
- 	char *mode = "";
- 	unsigned int len;
- 
--	switch (sc->spec_priv.spectral_mode) {
-+	switch (spec_priv->spectral_mode) {
- 	case SPECTRAL_DISABLED:
- 		mode = "disable";
- 		break;
-@@ -237,8 +238,8 @@ static ssize_t write_file_spec_scan_ctl(struct file *file,
- 					const char __user *user_buf,
- 					size_t count, loff_t *ppos)
- {
--	struct ath_softc *sc = file->private_data;
--	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+	struct ath_spec_scan_priv *spec_priv = file->private_data;
-+	struct ath_common *common = ath9k_hw_common(spec_priv->ah);
- 	char buf[32];
- 	ssize_t len;
- 
-@@ -252,18 +253,18 @@ static ssize_t write_file_spec_scan_ctl(struct file *file,
- 	buf[len] = '\0';
- 
- 	if (strncmp("trigger", buf, 7) == 0) {
--		ath9k_spectral_scan_trigger(sc->hw);
-+		ath9k_spectral_scan_trigger(common->hw);
- 	} else if (strncmp("background", buf, 10) == 0) {
--		ath9k_spectral_scan_config(sc->hw, SPECTRAL_BACKGROUND);
-+		ath9k_spectral_scan_config(common->hw, SPECTRAL_BACKGROUND);
- 		ath_dbg(common, CONFIG, "spectral scan: background mode enabled\n");
- 	} else if (strncmp("chanscan", buf, 8) == 0) {
--		ath9k_spectral_scan_config(sc->hw, SPECTRAL_CHANSCAN);
-+		ath9k_spectral_scan_config(common->hw, SPECTRAL_CHANSCAN);
- 		ath_dbg(common, CONFIG, "spectral scan: channel scan mode enabled\n");
- 	} else if (strncmp("manual", buf, 6) == 0) {
--		ath9k_spectral_scan_config(sc->hw, SPECTRAL_MANUAL);
-+		ath9k_spectral_scan_config(common->hw, SPECTRAL_MANUAL);
- 		ath_dbg(common, CONFIG, "spectral scan: manual mode enabled\n");
- 	} else if (strncmp("disable", buf, 7) == 0) {
--		ath9k_spectral_scan_config(sc->hw, SPECTRAL_DISABLED);
-+		ath9k_spectral_scan_config(common->hw, SPECTRAL_DISABLED);
- 		ath_dbg(common, CONFIG, "spectral scan: disabled\n");
- 	} else {
- 		return -EINVAL;
-@@ -288,11 +289,11 @@ static ssize_t read_file_spectral_short_repeat(struct file *file,
- 					       char __user *user_buf,
- 					       size_t count, loff_t *ppos)
- {
--	struct ath_softc *sc = file->private_data;
-+	struct ath_spec_scan_priv *spec_priv = file->private_data;
- 	char buf[32];
- 	unsigned int len;
- 
--	len = sprintf(buf, "%d\n", sc->spec_priv.spec_config.short_repeat);
-+	len = sprintf(buf, "%d\n", spec_priv->spec_config.short_repeat);
- 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
- }
- 
-@@ -300,7 +301,7 @@ static ssize_t write_file_spectral_short_repeat(struct file *file,
- 						const char __user *user_buf,
- 						size_t count, loff_t *ppos)
- {
--	struct ath_softc *sc = file->private_data;
-+	struct ath_spec_scan_priv *spec_priv = file->private_data;
- 	unsigned long val;
- 	char buf[32];
- 	ssize_t len;
-@@ -316,7 +317,7 @@ static ssize_t write_file_spectral_short_repeat(struct file *file,
- 	if (val > 1)
- 		return -EINVAL;
- 
--	sc->spec_priv.spec_config.short_repeat = val;
-+	spec_priv->spec_config.short_repeat = val;
- 	return count;
- }
- 
-@@ -336,11 +337,11 @@ static ssize_t read_file_spectral_count(struct file *file,
- 					char __user *user_buf,
- 					size_t count, loff_t *ppos)
- {
--	struct ath_softc *sc = file->private_data;
-+	struct ath_spec_scan_priv *spec_priv = file->private_data;
- 	char buf[32];
- 	unsigned int len;
- 
--	len = sprintf(buf, "%d\n", sc->spec_priv.spec_config.count);
-+	len = sprintf(buf, "%d\n", spec_priv->spec_config.count);
- 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
- }
- 
-@@ -348,7 +349,7 @@ static ssize_t write_file_spectral_count(struct file *file,
- 					 const char __user *user_buf,
- 					 size_t count, loff_t *ppos)
- {
--	struct ath_softc *sc = file->private_data;
-+	struct ath_spec_scan_priv *spec_priv = file->private_data;
- 	unsigned long val;
- 	char buf[32];
- 	ssize_t len;
-@@ -364,7 +365,7 @@ static ssize_t write_file_spectral_count(struct file *file,
- 	if (val > 255)
- 		return -EINVAL;
- 
--	sc->spec_priv.spec_config.count = val;
-+	spec_priv->spec_config.count = val;
- 	return count;
- }
- 
-@@ -384,11 +385,11 @@ static ssize_t read_file_spectral_period(struct file *file,
- 					 char __user *user_buf,
- 					 size_t count, loff_t *ppos)
- {
--	struct ath_softc *sc = file->private_data;
-+	struct ath_spec_scan_priv *spec_priv = file->private_data;
- 	char buf[32];
- 	unsigned int len;
- 
--	len = sprintf(buf, "%d\n", sc->spec_priv.spec_config.period);
-+	len = sprintf(buf, "%d\n", spec_priv->spec_config.period);
- 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
- }
- 
-@@ -396,7 +397,7 @@ static ssize_t write_file_spectral_period(struct file *file,
- 					  const char __user *user_buf,
- 					  size_t count, loff_t *ppos)
- {
--	struct ath_softc *sc = file->private_data;
-+	struct ath_spec_scan_priv *spec_priv = file->private_data;
- 	unsigned long val;
- 	char buf[32];
- 	ssize_t len;
-@@ -412,7 +413,7 @@ static ssize_t write_file_spectral_period(struct file *file,
- 	if (val > 255)
- 		return -EINVAL;
- 
--	sc->spec_priv.spec_config.period = val;
-+	spec_priv->spec_config.period = val;
- 	return count;
- }
- 
-@@ -432,11 +433,11 @@ static ssize_t read_file_spectral_fft_period(struct file *file,
- 					     char __user *user_buf,
- 					     size_t count, loff_t *ppos)
- {
--	struct ath_softc *sc = file->private_data;
-+	struct ath_spec_scan_priv *spec_priv = file->private_data;
- 	char buf[32];
- 	unsigned int len;
- 
--	len = sprintf(buf, "%d\n", sc->spec_priv.spec_config.fft_period);
-+	len = sprintf(buf, "%d\n", spec_priv->spec_config.fft_period);
- 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
- }
- 
-@@ -444,7 +445,7 @@ static ssize_t write_file_spectral_fft_period(struct file *file,
- 					      const char __user *user_buf,
- 					      size_t count, loff_t *ppos)
- {
--	struct ath_softc *sc = file->private_data;
-+	struct ath_spec_scan_priv *spec_priv = file->private_data;
- 	unsigned long val;
- 	char buf[32];
- 	ssize_t len;
-@@ -460,7 +461,7 @@ static ssize_t write_file_spectral_fft_period(struct file *file,
- 	if (val > 15)
- 		return -EINVAL;
- 
--	sc->spec_priv.spec_config.fft_period = val;
-+	spec_priv->spec_config.fft_period = val;
- 	return count;
- }
- 
-@@ -506,38 +507,38 @@ static struct rchan_callbacks rfs_spec_scan_cb = {
- /* Debug Init/Deinit */
- /*********************/
- 
--void ath9k_spectral_deinit_debug(struct ath_softc *sc)
-+void ath9k_spectral_deinit_debug(struct ath_spec_scan_priv *spec_priv)
- {
--	if (config_enabled(CONFIG_ATH9K_DEBUGFS) && sc->spec_priv.rfs_chan_spec_scan) {
--		relay_close(sc->spec_priv.rfs_chan_spec_scan);
--		sc->spec_priv.rfs_chan_spec_scan = NULL;
-+	if (config_enabled(CONFIG_ATH9K_DEBUGFS) && spec_priv->rfs_chan_spec_scan) {
-+		relay_close(spec_priv->rfs_chan_spec_scan);
-+		spec_priv->rfs_chan_spec_scan = NULL;
+-	if (wdev->ssid_len) {
++	if (new && wdev->ssid_len) {
+ 		if (nla_put(msg, NL80211_ATTR_SSID, wdev->ssid_len, wdev->ssid))
+ 			goto nla_put_failure;
  	}
+@@ -2413,7 +2417,7 @@ static int nl80211_dump_interface(struct sk_buff *skb, struct netlink_callback *
+ 			}
+ 			if (nl80211_send_iface(skb, NETLINK_CB(cb->skb).portid,
+ 					       cb->nlh->nlmsg_seq, NLM_F_MULTI,
+-					       rdev, wdev) < 0) {
++					       rdev, wdev, true) < 0) {
+ 				goto out;
+ 			}
+ 			if_idx++;
+@@ -2441,7 +2445,7 @@ static int nl80211_get_interface(struct sk_buff *skb, struct genl_info *info)
+ 		return -ENOMEM;
+ 
+ 	if (nl80211_send_iface(msg, info->snd_portid, info->snd_seq, 0,
+-			       rdev, wdev) < 0) {
++			       rdev, wdev, true) < 0) {
+ 		nlmsg_free(msg);
+ 		return -ENOBUFS;
+ 	}
+@@ -2587,7 +2591,7 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
+ 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+ 	struct vif_params params;
+ 	struct wireless_dev *wdev;
+-	struct sk_buff *msg;
++	struct sk_buff *msg, *n_msg;
+ 	int err;
+ 	enum nl80211_iftype type = NL80211_IFTYPE_UNSPECIFIED;
+ 	u32 flags;
+@@ -2682,11 +2686,24 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
+ 	}
+ 
+ 	if (nl80211_send_iface(msg, info->snd_portid, info->snd_seq, 0,
+-			       rdev, wdev) < 0) {
++			       rdev, wdev, true) < 0) {
+ 		nlmsg_free(msg);
+ 		return -ENOBUFS;
+ 	}
+ 
++	n_msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
++	if (n_msg) {
++		if (nl80211_send_iface(n_msg, 0, 0, 0, rdev, wdev, true) < 0) {
++			nlmsg_free(n_msg);
++			goto out;
++		}
++
++		genlmsg_multicast_netns(&nl80211_fam, wiphy_net(&rdev->wiphy),
++					n_msg, 0, NL80211_MCGRP_CONFIG,
++					GFP_KERNEL);
++	}
++
++out:
+ 	return genlmsg_reply(msg, info);
  }
  
--void ath9k_spectral_init_debug(struct ath_softc *sc, struct dentry *debugfs_phy)
-+void ath9k_spectral_init_debug(struct ath_spec_scan_priv *spec_priv, struct dentry *debugfs_phy)
+@@ -2694,10 +2711,18 @@ static int nl80211_del_interface(struct sk_buff *skb, struct genl_info *info)
  {
--	sc->spec_priv.rfs_chan_spec_scan = relay_open("spectral_scan",
-+	spec_priv->rfs_chan_spec_scan = relay_open("spectral_scan",
- 					    debugfs_phy,
- 					    1024, 256, &rfs_spec_scan_cb,
- 					    NULL);
- 	debugfs_create_file("spectral_scan_ctl",
- 			    S_IRUSR | S_IWUSR,
--			    debugfs_phy, sc,
-+			    debugfs_phy, spec_priv,
- 			    &fops_spec_scan_ctl);
- 	debugfs_create_file("spectral_short_repeat",
- 			    S_IRUSR | S_IWUSR,
--			    debugfs_phy, sc,
-+			    debugfs_phy, spec_priv,
- 			    &fops_spectral_short_repeat);
- 	debugfs_create_file("spectral_count",
- 			    S_IRUSR | S_IWUSR,
--			    debugfs_phy, sc,
-+			    debugfs_phy, spec_priv,
- 			    &fops_spectral_count);
- 	debugfs_create_file("spectral_period",
- 			    S_IRUSR | S_IWUSR,
--			    debugfs_phy, sc,
-+			    debugfs_phy, spec_priv,
- 			    &fops_spectral_period);
- 	debugfs_create_file("spectral_fft_period",
- 			    S_IRUSR | S_IWUSR,
--			    debugfs_phy, sc,
-+			    debugfs_phy, spec_priv,
- 			    &fops_spectral_fft_period);
- }
-diff --git a/drivers/net/wireless/ath/ath9k/spectral.h b/drivers/net/wireless/ath/ath9k/spectral.h
-index 638320d..555fcbb 100644
---- a/drivers/net/wireless/ath/ath9k/spectral.h
-+++ b/drivers/net/wireless/ath/ath9k/spectral.h
-@@ -130,18 +130,18 @@ static inline u8 spectral_bitmap_weight(u8 *bins)
- 	return bins[0] & 0x3f;
+ 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+ 	struct wireless_dev *wdev = info->user_ptr[1];
++	struct sk_buff *msg;
++	int status;
+ 
+ 	if (!rdev->ops->del_virtual_intf)
+ 		return -EOPNOTSUPP;
+ 
++	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
++	if (msg && nl80211_send_iface(msg, 0, 0, 0, rdev, wdev, false) < 0) {
++			nlmsg_free(msg);
++			msg = NULL;
++	}
++
+ 	/*
+ 	 * If we remove a wireless device without a netdev then clear
+ 	 * user_ptr[1] so that nl80211_post_doit won't dereference it
+@@ -2708,7 +2733,14 @@ static int nl80211_del_interface(struct sk_buff *skb, struct genl_info *info)
+ 	if (!wdev->netdev)
+ 		info->user_ptr[1] = NULL;
+ 
+-	return rdev_del_virtual_intf(rdev, wdev);
++	status = rdev_del_virtual_intf(rdev, wdev);
++	if (status >= 0 && msg) {
++		genlmsg_multicast_netns(&nl80211_fam, wiphy_net(&rdev->wiphy),
++					msg, 0, NL80211_MCGRP_CONFIG,
++					GFP_KERNEL);
++	}
++
++	return status;
  }
  
--void ath9k_spectral_init_debug(struct ath_softc *sc, struct dentry *debugfs_phy);
--void ath9k_spectral_deinit_debug(struct ath_softc *sc);
-+void ath9k_spectral_init_debug(struct ath_spec_scan_priv *spec_priv, struct dentry *debugfs_phy);
-+void ath9k_spectral_deinit_debug(struct ath_spec_scan_priv *spec_priv);
- 
- void ath9k_spectral_scan_trigger(struct ieee80211_hw *hw);
- int ath9k_spectral_scan_config(struct ieee80211_hw *hw,
- 			       enum spectral_mode spectral_mode);
- 
- #ifdef CONFIG_ATH9K_DEBUGFS
--int ath_process_fft(struct ath_softc *sc, struct ieee80211_hdr *hdr,
-+int ath_process_fft(struct ath_spec_scan_priv *spec_priv, struct ieee80211_hdr *hdr,
- 		    struct ath_rx_status *rs, u64 tsf);
- #else
--static inline int ath_process_fft(struct ath_softc *sc,
-+static inline int ath_process_fft(struct ath_spec_scan_priv *spec_priv,
- 				  struct ieee80211_hdr *hdr,
- 				  struct ath_rx_status *rs, u64 tsf)
- {
+ static int nl80211_set_noack_map(struct sk_buff *skb, struct genl_info *info)
 -- 
-1.9.1
+2.0.4
 
