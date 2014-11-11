@@ -1,89 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:51230 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754567AbaKOUvx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Nov 2014 15:51:53 -0500
-Date: Sat, 15 Nov 2014 21:51:49 +0100
-From: Christophe RICARD <christophe.ricard@gmail.com>
-To: Dmitry Torokhov <dtor@chromium.org>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-nfc@lists.01.org
-Subject: Re: [PATCH] NFC: st21nfcb: fix error handling of
- irq_of_parse_and_map
-Message-ID: <20141115215149.5d68464f@toffy-MacBookPro> (sfid-20141115_215214_857208_B1BF1DBA)
-In-Reply-To: <20141114223527.GA2622@dtor-ws>
-References: <20141114223527.GA2622@dtor-ws>
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:21142 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751138AbaKKNFs convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Nov 2014 08:05:48 -0500
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: James Cameron <quozl@laptop.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Avinash Patil <patila@marvell.com>
+Date: Tue, 11 Nov 2014 05:05:43 -0800
+Subject: RE: [PATCH] mwifiex: simplify ad hoc join capability info
+Message-ID: <5FF020A1CFFEEC49BD1E09530C4FF5951821CF27E7@SC-VEXCH1.marvell.com> (sfid-20141111_140551_956024_2737B454)
+References: <20141111052127.GA18499@us.netrek.org>
+In-Reply-To: <20141111052127.GA18499@us.netrek.org>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dmitry,
+Hi James,
 
-Thank you for your feedback.
-A patch got already pushed earlier this month:
-https://lists.01.org/pipermail/linux-nfc/2014-November/003126.html
+>While preparing an ad-hoc start command, the capability info bitmap is
+>needlessly set from the command, and then the ESS bit cleared.
+>
+>Change to set the bitmap directly without reference to the command.
+>
+>Signed-off-by: James Cameron <quozl@laptop.org>
 
-The i2c-core is already running the i2c_of_parse_and_map function when
-registering the slave device when using dts. This step got removed for
-this reason. 
+Acked-by: Amitkumar Karwar <akarwar@marvell.com>
 
-However, i will take into account your second point in order to report
-devm_gpio_request_one instead of -ENODEV in a future patchset.
-
-Best Regards
-Christophe
-
-On Fri, 14 Nov 2014 14:35:27 -0800
-Dmitry Torokhov <dtor@chromium.org> wrote:
-
-> Return value of irq_of_parse_and_map() is unsigned int, with 0
-> indicating failure, so testing for negative result never works.
-> 
-> Also report error returned by devm_gpio_request_one instead of
-> clobbering it with -ENODEV.
-> 
-> Signed-off-by: Dmitry Torokhov <dtor@chromium.org>
-> ---
-> 
-> Not tested, found by casual code inspection.
-> 
->  drivers/nfc/st21nfcb/i2c.c | 11 +++++------
->  1 file changed, 5 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/nfc/st21nfcb/i2c.c b/drivers/nfc/st21nfcb/i2c.c
-> index c5d2427..abe73ec 100644
-> --- a/drivers/nfc/st21nfcb/i2c.c
-> +++ b/drivers/nfc/st21nfcb/i2c.c
-> @@ -258,19 +258,18 @@ static int
-> st21nfcb_nci_i2c_of_request_resources(struct i2c_client *client)
-> GPIOF_OUT_INIT_HIGH, "clf_reset"); if (r) {
->  		nfc_err(&client->dev, "Failed to request reset
-> pin\n");
-> -		return -ENODEV;
-> +		return r;
->  	}
->  	phy->gpio_reset = gpio;
->  
->  	/* IRQ */
-> -	r = irq_of_parse_and_map(pp, 0);
-> -	if (r < 0) {
-> -		nfc_err(&client->dev, "Unable to get irq, error:
-> %d\n", r);
-> -		return r;
-> +	client->irq = irq_of_parse_and_map(pp, 0);
-> +	if (!client->irq) {
-> +		nfc_err(&client->dev, "Unable to get irq\n");
-> +		return -EINVAL;
->  	}
->  
->  	phy->irq_polarity = irq_get_trigger_type(r);
-> -	client->irq = r;
->  
->  	return 0;
->  }
-
+Thanks,
+Amitkumar
