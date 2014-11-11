@@ -1,58 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:52912 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755093AbaK0MIw (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:44170 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751507AbaKKSfV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Nov 2014 07:08:52 -0500
-Subject: [PATCH v4 0/2] ath10k: device tree support
-To: <ath10k@lists.infradead.org>
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <devicetree@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-	<toshik@chromium.org>
-Date: Thu, 27 Nov 2014 14:08:47 +0200
-Message-ID: <20141127120727.17546.61202.stgit@potku.adurom.net> (sfid-20141127_130904_714816_A211B43B)
+	Tue, 11 Nov 2014 13:35:21 -0500
+Message-ID: <546256E3.1080606@broadcom.com> (sfid-20141111_193529_365396_AD512D53)
+Date: Tue, 11 Nov 2014 19:35:15 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
+To: Felipe Contreras <felipe.contreras@gmail.com>
+CC: linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	Franky Lin <frankyl@broadcom.com>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Subject: Re: brcmfmac not working on ECS LIVA
+References: <CAMP44s2XAmaiK2=BJA3TCW48Uo=5qyT5WsASDsZnOiSNgK6b0A@mail.gmail.com>	<545F4611.3010207@broadcom.com>	<CAMP44s1NiYrFkN=DQcyGiJyW+JvCGvRVzcEBGLtvGyhfWs17kQ@mail.gmail.com>	<5461EE3B.8040301@broadcom.com> <CAMP44s10T_mxqLigrPf_Ox4jej--87QmjG7cNjT8o_qyU2HXjg@mail.gmail.com>
+In-Reply-To: <CAMP44s10T_mxqLigrPf_Ox4jej--87QmjG7cNjT8o_qyU2HXjg@mail.gmail.com>
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On 11-11-14 19:32, Felipe Contreras wrote:
+> On Tue, Nov 11, 2014 at 5:08 AM, Arend van Spriel <arend@broadcom.com> wrote:
+>> On 10-11-14 21:48, Felipe Contreras wrote:
+> 
+>>> /etc/modprobe.d/brcmfmac.conf
+>>> options brcmfmac debug=0xd416
+>>>
+>>> I see nothing extra in the debug log... Am I doing something wrong?
+>>
+>> Not sure. You can verify and set the log level through sysfs, ie.:
+>>
+>> $ cat /sys/module/brcmfmac/parameters/debug
+> 
+> 54294
+> 
+> I guess ArchLinux's kernel is missing some configuration option needed
+> for the debugging.
 
-here's providing ath10k calibration data via device tree support which
-Toshi and me have been working on. Please review.
+Can you boot the kernel with 'debug ignore_loglevel' on the kernel
+command line.
 
-Device tree maintainers: please review the bindings document
-carefully, this is the first time I have written one.
-
-v4:
-
-* use correct devicetree mailing list address
-
-v3:
-
-* add a debug message to ath10k
-
-* write bindings file
-
-* use ar->dev.of_node instead of pci_device_to_OF_node()
-
-v2:
-
-* fixed a bug that returns an uninitialized value if the node is not
-  found
-
----
-
-Kalle Valo (1):
-      dt: bindings: add ath10k wireless device
-
-Toshi Kikuchi (1):
-      ath10k: read calibration data from Device Tree
-
-
- .../bindings/net/wireless/qcom,ath10k.txt          |   30 +++++++++
- drivers/net/wireless/ath/ath10k/core.c             |   70 ++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/core.h             |    3 +
- 3 files changed, 102 insertions(+), 1 deletion(-)
- create mode 100644 Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+Regards,
+Arend
 
