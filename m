@@ -1,87 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f49.google.com ([74.125.82.49]:63418 "EHLO
-	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750963AbaKZPjs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Nov 2014 10:39:48 -0500
-Received: by mail-wg0-f49.google.com with SMTP id x12so4030024wgg.8
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Nov 2014 07:39:47 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20141126152810.GN25677@wotan.suse.de>
-References: <1416754941-4439-1-git-send-email-arik@wizery.com>
- <20141125193846.GJ25677@wotan.suse.de> <CA+XVXfdn52z88FZJdzE66-NKVUQ-vj1Wu0TGgq8FNjBVaYa9pA@mail.gmail.com>
- <20141126152810.GN25677@wotan.suse.de>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Wed, 26 Nov 2014 17:39:31 +0200
-Message-ID: <CA+XVXff+c1qEz6reAozm1wh-4wMxsH9BD=St2Gr9Mrmg2n6GHQ@mail.gmail.com> (sfid-20141126_163956_975993_19A939FB)
-Subject: Re: [PATCH v3 1/3] cfg80211: leave invalid channels on regdomain change
-To: "Luis R. Rodriguez" <mcgrof@suse.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Received: from smtp.rcn.com ([69.168.97.78]:8700 "EHLO smtp.rcn.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751361AbaKLGrY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Nov 2014 01:47:24 -0500
+From: David Ward <david.ward@ll.mit.edu>
+To: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>
+Cc: =?UTF-8?q?Martin=20Hundeb=C3=B8ll?= <martin@hundeboll.net>,
+	linux-wireless@vger.kernel.org, David Ward <david.ward@ll.mit.edu>
+Subject: [PATCH] iwlwifi: dvm: Implement sta_rc_update() mac80211 callback
+Date: Wed, 12 Nov 2014 01:26:52 -0500
+Message-Id: <1415773612-8724-1-git-send-email-david.ward@ll.mit.edu> (sfid-20141112_074727_898056_DF805D02)
+In-Reply-To: <1411997268.1663.0@smtp.hundeboll.net>
+References: <1411997268.1663.0@smtp.hundeboll.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 26, 2014 at 5:28 PM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
-> On Wed, Nov 26, 2014 at 05:06:37PM +0200, Arik Nemtsov wrote:
->> On Tue, Nov 25, 2014 at 9:38 PM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
->> > On Sun, Nov 23, 2014 at 05:02:19PM +0200, Arik Nemtsov wrote:
->> >> When the regulatory settings change, some channels might become invalid.
->> >> Disconnect interfaces acting on these channels, after giving userspace
->> >> code a grace period to leave them.
->> >>
->> >> This mode is currently opt-in, and not all interface operating modes are
->> >> supported for regulatory-enforcement checks. A wiphy that wishes to use
->> >> the new enforcement code must specify an appropriate regulatory flag,
->> >> and all its supported interface modes must be supported by the chekcing
->> >> code.
->> >
->> > This is all looking beter now, since I had a few requests for the last patch
->> > I'll ask for some other things here without asking  to negage the flag purpose
->> > as I originally wanted.
->> >
->> >> Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
->> >> ---
->> >>  include/net/regulatory.h |   6 +++
->> >>  net/wireless/core.c      |  13 ++++++
->> >>  net/wireless/reg.c       | 106 ++++++++++++++++++++++++++++++++++++++++++++++-
->> >>  3 files changed, 124 insertions(+), 1 deletion(-)
->> >>
->> >> diff --git a/include/net/regulatory.h b/include/net/regulatory.h
->> >> index dad7ab2..701177c 100644
->> >> --- a/include/net/regulatory.h
->> >> +++ b/include/net/regulatory.h
->> >> @@ -136,6 +136,11 @@ struct regulatory_request {
->> >>   *      otherwise initiating radiation is not allowed. This will enable the
->> >>   *      relaxations enabled under the CFG80211_REG_RELAX_NO_IR configuration
->> >>   *      option
->> >> + * @REGULATORY_ENFORCE_CHANNELS: the regulatory core will make sure all
->> >> + *   interfaces on this wiphy reside on allowed channels. Upon a regdomain
->> >> + *   change, the interfaces are given a grace period to disconnect or move
->> >> + *   to an allowed channels. Interfaces on forbidden channels are forcibly
->> >> + *   disconnected.
->> >
->> > Please rename to REGULATORY_IGNORE_STALE_KICKOFF, also please add
->> > some information about the amount current of grace period used,
->> > and types of interfaces supported. Since this is a regulatory flag
->> > this information will help folks decide whether to enable or not.
->> > Also encourage its use, and mention that once all supported devices
->> > get support for this will be enabled by default. In the meantime
->> > I'd prefer if this feature was enabled by default if the supported
->> > interface types of a dveice match the white list of supported
->> > interfaces.
->>
->> btw, I think you meant REGULATORY_STALE_KICKOFF, since it's an opt-in flag.
->
-> Indeed, the REGULATORY_IGNORE_STALE_KICKOFF would be the inversion, which
-> is really a better way to deal with this but Johannes considered it more
-> work. I'll leave it up to you but if the supported interfaces on a driver
-> work with it we should enable this by default. This is why the inversion
-> (REGULATORY_IGNORE_STALE_KICKOFF) would work better in the end, as we want
-> to keep this on by default and only let folks opt out.
+Perform rate scaling properly when operating in an IBSS. Prior to
+this, the 5300 and 6205 devices (at least) would only transmit at
+1 Mbps to other stations in an IBSS. This now allows transmission
+at HT rates.
 
-I thought we agreed this to be opt-in, even if all interfaces are
-supported? I still think an untested driver might be hurt by this
-patch. For instance if it requires a different grace period, etc.
+Signed-off-by: David Ward <david.ward@ll.mit.edu>
+---
+ drivers/net/wireless/iwlwifi/dvm/mac80211.c | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
-Arik
+diff --git a/drivers/net/wireless/iwlwifi/dvm/mac80211.c b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
+index 47e64e8..742218d 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
+@@ -940,6 +940,22 @@ static int iwlagn_mac_sta_state(struct ieee80211_hw *hw,
+ 	return ret;
+ }
+ 
++static void iwlagn_mac_sta_rc_update(struct ieee80211_hw *hw,
++				     struct ieee80211_vif *vif,
++				     struct ieee80211_sta *sta, u32 changed)
++{
++	struct iwl_priv *priv = IWL_MAC80211_GET_DVM(hw);
++
++	if (!(changed & IEEE80211_RC_SUPP_RATES_CHANGED))
++		return;
++
++	/* Update rate scaling */
++	IWL_DEBUG_INFO(priv,
++		       "Updating rate scaling for station %pM\n",
++		       sta->addr);
++	iwl_rs_rate_init(priv, sta, iwl_sta_id(sta));
++}
++
+ static void iwlagn_mac_channel_switch(struct ieee80211_hw *hw,
+ 				      struct ieee80211_vif *vif,
+ 				      struct ieee80211_channel_switch *ch_switch)
+@@ -1610,6 +1626,7 @@ const struct ieee80211_ops iwlagn_hw_ops = {
+ 	.hw_scan = iwlagn_mac_hw_scan,
+ 	.sta_notify = iwlagn_mac_sta_notify,
+ 	.sta_state = iwlagn_mac_sta_state,
++	.sta_rc_update = iwlagn_mac_sta_rc_update,
+ 	.channel_switch = iwlagn_mac_channel_switch,
+ 	.flush = iwlagn_mac_flush,
+ 	.tx_last_beacon = iwlagn_mac_tx_last_beacon,
+-- 
+1.9.1
+
