@@ -1,55 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f178.google.com ([209.85.214.178]:60128 "EHLO
-	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752048AbaK1Ql2 (ORCPT
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:48448 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752190AbaKLOae convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Nov 2014 11:41:28 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, Catalin Iacob <iacobcatalin@gmail.com>
-Subject: [PATCH 3/3 for 3.18] rtlwifi: rtl8192ce: Fix missing interrupt ready flag
-Date: Fri, 28 Nov 2014 10:41:16 -0600
-Message-Id: <1417192876-12101-4-git-send-email-Larry.Finger@lwfinger.net> (sfid-20141128_174136_137665_6FAD47E6)
-In-Reply-To: <1417192876-12101-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1417192876-12101-1-git-send-email-Larry.Finger@lwfinger.net>
+	Wed, 12 Nov 2014 09:30:34 -0500
+Received: by mail-wi0-f175.google.com with SMTP id l15so1126787wiw.8
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Nov 2014 06:30:31 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1415773612-8724-1-git-send-email-david.ward@ll.mit.edu>
+References: <1411997268.1663.0@smtp.hundeboll.net>
+	<1415773612-8724-1-git-send-email-david.ward@ll.mit.edu>
+Date: Wed, 12 Nov 2014 15:30:29 +0100
+Message-ID: <CA+BoTQkU0Ldd+Ui-EW26DuAFiRQEeV08k8grV_N79j6zLkHbsw@mail.gmail.com> (sfid-20141112_153037_516367_FF5872E1)
+Subject: Re: [PATCH] iwlwifi: dvm: Implement sta_rc_update() mac80211 callback
+From: Michal Kazior <michal.kazior@tieto.com>
+To: David Ward <david.ward@ll.mit.edu>
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	=?UTF-8?Q?Martin_Hundeb=C3=B8ll?= <martin@hundeboll.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Proper operation with the rewritten PCI mini driver requires that a flag be set
-when interrupts are enabled. This flag was missed.  This patch is one of three needed to
-fix the kernel regression reported at https://bugzilla.kernel.org/show_bug.cgi?id=88951.
+On 12 November 2014 07:26, David Ward <david.ward@ll.mit.edu> wrote:
+[...]
+> +static void iwlagn_mac_sta_rc_update(struct ieee80211_hw *hw,
+> +                                    struct ieee80211_vif *vif,
+> +                                    struct ieee80211_sta *sta, u32 changed)
+> +{
+> +       struct iwl_priv *priv = IWL_MAC80211_GET_DVM(hw);
+> +
+> +       if (!(changed & IEEE80211_RC_SUPP_RATES_CHANGED))
+> +               return;
+> +
+> +       /* Update rate scaling */
+> +       IWL_DEBUG_INFO(priv,
+> +                      "Updating rate scaling for station %pM\n",
+> +                      sta->addr);
+> +       iwl_rs_rate_init(priv, sta, iwl_sta_id(sta));
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Reported-by: Catalin Iacob <iacobcatalin@gmail.com>
-Tested-by: Catalin Iacob <iacobcatalin@gmail.com>
-Cc: Catalin Iacob <iacobcatalin@gmail.com>
----
- drivers/net/wireless/rtlwifi/rtl8192ce/hw.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+sta_rc_update() must be atomic. I'm not really familiar with iwl that
+much but it seems to me iwl_rs_rate_init() -> iwl_send_lq_cmd(..., 0,
+true) can sleep, no?
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-index 55357d6..d2ec516 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-@@ -1287,6 +1287,7 @@ void rtl92ce_enable_interrupt(struct ieee80211_hw *hw)
- 
- 	rtl_write_dword(rtlpriv, REG_HIMR, rtlpci->irq_mask[0] & 0xFFFFFFFF);
- 	rtl_write_dword(rtlpriv, REG_HIMRE, rtlpci->irq_mask[1] & 0xFFFFFFFF);
-+	rtlpci->irq_enabled = true;
- }
- 
- void rtl92ce_disable_interrupt(struct ieee80211_hw *hw)
-@@ -1296,7 +1297,7 @@ void rtl92ce_disable_interrupt(struct ieee80211_hw *hw)
- 
- 	rtl_write_dword(rtlpriv, REG_HIMR, IMR8190_DISABLED);
- 	rtl_write_dword(rtlpriv, REG_HIMRE, IMR8190_DISABLED);
--	synchronize_irq(rtlpci->pdev->irq);
-+	rtlpci->irq_enabled = false;
- }
- 
- static void _rtl92ce_poweroff_adapter(struct ieee80211_hw *hw)
--- 
-2.1.2
 
+Michał
