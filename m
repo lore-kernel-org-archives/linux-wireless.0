@@ -1,42 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:8416 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751125AbaKYTz6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Nov 2014 14:55:58 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH V2 0/2] brcm80211: minor rework
-Date: Tue, 25 Nov 2014 20:55:52 +0100
-Message-ID: <1416945354-23346-1-git-send-email-arend@broadcom.com> (sfid-20141125_205611_127854_09D22B1B)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from dedo.coelho.fi ([88.198.205.34]:34028 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751715AbaKLLrS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Nov 2014 06:47:18 -0500
+Message-ID: <1415792829.3117.5.camel@coelho.fi> (sfid-20141112_124722_682283_2206FE4A)
+From: Luca Coelho <luca@coelho.fi>
+To: Jukka Rissanen <jukka.rissanen@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 12 Nov 2014 13:47:09 +0200
+In-Reply-To: <1415792197-23080-2-git-send-email-jukka.rissanen@linux.intel.com>
+References: <1415792197-23080-1-git-send-email-jukka.rissanen@linux.intel.com>
+	 <1415792197-23080-2-git-send-email-jukka.rissanen@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH v2 1/2] nl80211: Replace interface socket owner
+ attribute with more generic one
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixing my mistake in utils.c these two patches will
-extend the information in the hardware debugfs file.
+On Wed, 2014-11-12 at 13:36 +0200, Jukka Rissanen wrote:
+> @@ -2056,6 +2056,8 @@ enum nl80211_attrs {
+>  #define NL80211_ATTR_KEY NL80211_ATTR_KEY
+>  #define NL80211_ATTR_KEYS NL80211_ATTR_KEYS
+>  #define NL80211_ATTR_FEATURE_FLAGS NL80211_ATTR_FEATURE_FLAGS
+> +#define NL80211_ATTR_IFACE_SOCKET_OWNER NL80211_ATTR_SOCKET_OWNER
+> +#define NL80211_ATTR_SOCKET_OWNER NL80211_ATTR_SOCKET_OWNER
 
-It is intended for 3.19 and applies to the master
-branch of the wireless-next repository, ie.:
+The second define seems to be a mistake?
 
-  commit 18ca43823f3ce111c6efb8cc90d9f35246527727
-  Author: Amitkumar Karwar <akarwar@marvell.com>
-  Date:   Tue Nov 25 06:43:06 2014 -0800
-
-      mwifiex: add Tx status support for ACTION frames
-
-Arend van Spriel (2):
-  brcmutil: add helper function to format board revision
-  brcmsmac: extend hardware info shown in debugfs
-
- drivers/net/wireless/brcm80211/brcmsmac/debug.c    | 40 +++++++++++++++-------
- drivers/net/wireless/brcm80211/brcmutil/utils.c    | 16 +++++++++
- .../net/wireless/brcm80211/include/brcmu_utils.h   |  2 ++
- 3 files changed, 45 insertions(+), 13 deletions(-)
-
--- 
-1.9.1
+--
+Luca.
 
