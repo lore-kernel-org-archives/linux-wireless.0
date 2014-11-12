@@ -1,230 +1,210 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay1.mentorg.com ([192.94.38.131]:44139 "EHLO
-	relay1.mentorg.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751198AbaKELfQ (ORCPT
+Received: from mail-wg0-f53.google.com ([74.125.82.53]:54636 "EHLO
+	mail-wg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753549AbaKLVMD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Nov 2014 06:35:16 -0500
-From: Sanjeev Sharma <sanjeev_sharma@mentor.com>
-To: <Larry.Finger@lwfinger.net>, <Jes.Sorensen@redhat.com>
-CC: <gregkh@linuxfoundation.org>, <linux-wireless@vger.kernel.org>,
-	<devel@driverdev.osuosl.org>, <linux-kernel@vger.kernel.org>,
-	Sanjeev Sharma <sanjeev_sharma@mentor.com>,
-	Sanjeev Sharma <Sanjeev_Sharma@mentor.com>
-Subject: [PATCH v2] staging:rtl8723au: core: Fix error reported by checkpatch.
-Date: Wed, 5 Nov 2014 17:05:03 +0530
-Message-ID: <1415187303-28541-1-git-send-email-sanjeev_sharma@mentor.com> (sfid-20141105_123536_384007_4EE36B39)
-In-Reply-To: <wrfjy4rxzk5b.fsf@redhat.com>
-References: <wrfjy4rxzk5b.fsf@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 12 Nov 2014 16:12:03 -0500
+Received: by mail-wg0-f53.google.com with SMTP id b13so15247021wgh.40
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Nov 2014 13:12:01 -0800 (PST)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 7/8] staging: vt6655: rf.c Removed unneeded comments
+Date: Wed, 12 Nov 2014 21:11:14 +0000
+Message-Id: <1415826675-8446-7-git-send-email-tvboxspy@gmail.com> (sfid-20141112_221209_421715_7329F095)
+In-Reply-To: <1415826675-8446-1-git-send-email-tvboxspy@gmail.com>
+References: <1415826675-8446-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a patch to the rtw_cmd.c file that fixes
-Error reported by checkpatch.
+Type and function that are not present comments
 
-Signed-off-by: Sanjeev Sharma <Sanjeev_Sharma@mentor.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
-Changes in v2:
-  - Shorten variable name by taking temporary structure 
+ drivers/staging/vt6655/rf.c | 134 --------------------------------------------
+ 1 file changed, 134 deletions(-)
 
- drivers/staging/rtl8723au/core/rtw_cmd.c | 126 +++++++++++++++----------------
- 1 file changed, 62 insertions(+), 64 deletions(-)
-
-diff --git a/drivers/staging/rtl8723au/core/rtw_cmd.c b/drivers/staging/rtl8723au/core/rtw_cmd.c
-index 4eaa502..c6f6030 100644
---- a/drivers/staging/rtl8723au/core/rtw_cmd.c
-+++ b/drivers/staging/rtl8723au/core/rtw_cmd.c
-@@ -919,34 +919,34 @@ static void traffic_status_watchdog(struct rtw_adapter *padapter)
- 	u8 bHigherBusyTxTraffic = false;
- 	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
- 	int BusyThreshold = 100;
-+	struct rt_link_detect *ldi = &pmlmepriv->LinkDetectInfo;
-+
- 	/*  */
- 	/*  Determine if our traffic is busy now */
- 	/*  */
- 	if (check_fwstate(pmlmepriv, _FW_LINKED)) {
- 		if (rtl8723a_BT_coexist(padapter))
- 			BusyThreshold = 50;
--		else if (pmlmepriv->LinkDetectInfo.bBusyTraffic)
-+		else if (ldi->bBusyTraffic)
- 			BusyThreshold = 75;
- 		/*  if we raise bBusyTraffic in last watchdog, using
- 		    lower threshold. */
--		if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod > BusyThreshold ||
--		    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod > BusyThreshold) {
-+		if (ldi->NumRxOkInPeriod > BusyThreshold ||
-+		    ldi->NumTxOkInPeriod > BusyThreshold) {
- 			bBusyTraffic = true;
+diff --git a/drivers/staging/vt6655/rf.c b/drivers/staging/vt6655/rf.c
+index 87d97da..0b16ebf 100644
+--- a/drivers/staging/vt6655/rf.c
++++ b/drivers/staging/vt6655/rf.c
+@@ -39,8 +39,6 @@
+ #include "rf.h"
+ #include "baseband.h"
  
--			if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod >
--			    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod)
-+			if (ldi->NumRxOkInPeriod > ldi->NumTxOkInPeriod)
- 				bRxBusyTraffic = true;
- 			else
- 				bTxBusyTraffic = true;
- 		}
- 
- 		/*  Higher Tx/Rx data. */
--		if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod > 4000 ||
--		    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod > 4000) {
-+		if (ldi->NumRxOkInPeriod > 4000 ||
-+		    ldi->NumTxOkInPeriod > 4000) {
- 			bHigherBusyTraffic = true;
- 
--			if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod >
--			    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod)
-+			if (ldi->NumRxOkInPeriod > ldi->NumTxOkInPeriod)
- 				bHigherBusyRxTraffic = true;
- 			else
- 				bHigherBusyTxTraffic = true;
-@@ -955,9 +955,9 @@ static void traffic_status_watchdog(struct rtw_adapter *padapter)
- 		if (!rtl8723a_BT_coexist(padapter) ||
- 		    !rtl8723a_BT_using_antenna_1(padapter)) {
- 		/*  check traffic for  powersaving. */
--			if (((pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod +
--			      pmlmepriv->LinkDetectInfo.NumTxOkInPeriod) > 8) ||
--			    pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod >2)
-+			if (((ldi->NumRxUnicastOkInPeriod +
-+			      ldi->NumTxOkInPeriod) > 8) ||
-+			    ldi->NumRxUnicastOkInPeriod > 2)
- 				bEnterPS = false;
- 			else
- 				bEnterPS = true;
-@@ -968,18 +968,19 @@ static void traffic_status_watchdog(struct rtw_adapter *padapter)
- 			else
- 				LPS_Leave23a(padapter);
- 		}
--	} else
-+	} else {
- 		LPS_Leave23a(padapter);
-+		}
- 
--	pmlmepriv->LinkDetectInfo.NumRxOkInPeriod = 0;
--	pmlmepriv->LinkDetectInfo.NumTxOkInPeriod = 0;
--	pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod = 0;
--	pmlmepriv->LinkDetectInfo.bBusyTraffic = bBusyTraffic;
--	pmlmepriv->LinkDetectInfo.bTxBusyTraffic = bTxBusyTraffic;
--	pmlmepriv->LinkDetectInfo.bRxBusyTraffic = bRxBusyTraffic;
--	pmlmepriv->LinkDetectInfo.bHigherBusyTraffic = bHigherBusyTraffic;
--	pmlmepriv->LinkDetectInfo.bHigherBusyRxTraffic = bHigherBusyRxTraffic;
--	pmlmepriv->LinkDetectInfo.bHigherBusyTxTraffic = bHigherBusyTxTraffic;
-+	ldi->NumRxOkInPeriod = 0;
-+	ldi->NumTxOkInPeriod = 0;
-+	ldi->NumRxUnicastOkInPeriod = 0;
-+	ldi->bBusyTraffic = bBusyTraffic;
-+	ldi->bTxBusyTraffic = bTxBusyTraffic;
-+	ldi->bRxBusyTraffic = bRxBusyTraffic;
-+	ldi->bHigherBusyTraffic = bHigherBusyTraffic;
-+	ldi->bHigherBusyRxTraffic = bHigherBusyRxTraffic;
-+	ldi->bHigherBusyTxTraffic = bHigherBusyTxTraffic;
- }
- 
- static void dynamic_chk_wk_hdl(struct rtw_adapter *padapter, u8 *pbuf, int sz)
-@@ -1017,46 +1018,44 @@ static void lps_ctrl_wk_hdl(struct rtw_adapter *padapter, u8 lps_ctrl_type)
- 	    check_fwstate(pmlmepriv, WIFI_ADHOC_STATE))
- 		return;
- 
--	switch (lps_ctrl_type)
--	{
--		case LPS_CTRL_SCAN:
--			rtl8723a_BT_wifiscan_notify(padapter, true);
--			if (!rtl8723a_BT_using_antenna_1(padapter)) {
--				if (check_fwstate(pmlmepriv, _FW_LINKED))
--					LPS_Leave23a(padapter);
--			}
--			break;
--		case LPS_CTRL_JOINBSS:
-+	switch (lps_ctrl_type) {
-+	case LPS_CTRL_SCAN:
-+		rtl8723a_BT_wifiscan_notify(padapter, true);
-+		if (!rtl8723a_BT_using_antenna_1(padapter)) {
-+			if (check_fwstate(pmlmepriv, _FW_LINKED))
- 			LPS_Leave23a(padapter);
--			break;
--		case LPS_CTRL_CONNECT:
--			mstatus = 1;/* connect */
--			/*  Reset LPS Setting */
--			padapter->pwrctrlpriv.LpsIdleCount = 0;
--			rtl8723a_set_FwJoinBssReport_cmd(padapter, 1);
--			rtl8723a_BT_mediastatus_notify(padapter, mstatus);
--			break;
--		case LPS_CTRL_DISCONNECT:
--			mstatus = 0;/* disconnect */
--			rtl8723a_BT_mediastatus_notify(padapter, mstatus);
--			if (!rtl8723a_BT_using_antenna_1(padapter))
--				LPS_Leave23a(padapter);
--			rtl8723a_set_FwJoinBssReport_cmd(padapter, 0);
--			break;
--		case LPS_CTRL_SPECIAL_PACKET:
--			pwrpriv->DelayLPSLastTimeStamp = jiffies;
--			rtl8723a_BT_specialpacket_notify(padapter);
--			if (!rtl8723a_BT_using_antenna_1(padapter))
--				LPS_Leave23a(padapter);
--			break;
--		case LPS_CTRL_LEAVE:
--			rtl8723a_BT_lps_leave(padapter);
--			if (!rtl8723a_BT_using_antenna_1(padapter))
--				LPS_Leave23a(padapter);
--			break;
+-/*---------------------  Static Definitions -------------------------*/
 -
--		default:
--			break;
-+		}
-+		break;
-+	case LPS_CTRL_JOINBSS:
-+		LPS_Leave23a(padapter);
-+		break;
-+	case LPS_CTRL_CONNECT:
-+		mstatus = 1;/* connect */
-+		/*  Reset LPS Setting */
-+		padapter->pwrctrlpriv.LpsIdleCount = 0;
-+		rtl8723a_set_FwJoinBssReport_cmd(padapter, 1);
-+		rtl8723a_BT_mediastatus_notify(padapter, mstatus);
-+		break;
-+	case LPS_CTRL_DISCONNECT:
-+		mstatus = 0;/* disconnect */
-+		rtl8723a_BT_mediastatus_notify(padapter, mstatus);
-+		if (!rtl8723a_BT_using_antenna_1(padapter))
-+			LPS_Leave23a(padapter);
-+		rtl8723a_set_FwJoinBssReport_cmd(padapter, 0);
-+		break;
-+	case LPS_CTRL_SPECIAL_PACKET:
-+		pwrpriv->DelayLPSLastTimeStamp = jiffies;
-+		rtl8723a_BT_specialpacket_notify(padapter);
-+		if (!rtl8723a_BT_using_antenna_1(padapter))
-+			LPS_Leave23a(padapter);
-+		break;
-+	case LPS_CTRL_LEAVE:
-+		rtl8723a_BT_lps_leave(padapter);
-+		if (!rtl8723a_BT_using_antenna_1(padapter))
-+			LPS_Leave23a(padapter);
-+		break;
-+	default:
-+		break;
- 	}
+ #define BY_AL2230_REG_LEN     23 //24bit
+ #define CB_AL2230_INIT_SEQ    15
+ #define SWITCH_CHANNEL_DELAY_AL2230 200 //us
+@@ -51,10 +49,6 @@
+ #define SWITCH_CHANNEL_DELAY_AL7230 200 //us
+ #define AL7230_PWR_IDX_LEN    64
+ 
+-/*---------------------  Static Classes  ----------------------------*/
+-
+-/*---------------------  Static Variables  --------------------------*/
+-
+ static const unsigned long dwAL2230InitTable[CB_AL2230_INIT_SEQ] = {
+ 	0x03F79000+(BY_AL2230_REG_LEN<<3)+IFREGCTL_REGW, //
+ 	0x03333100+(BY_AL2230_REG_LEN<<3)+IFREGCTL_REGW, //
+@@ -410,8 +404,6 @@ static const unsigned long dwAL7230ChannelTable2[CB_MAX_CHANNEL] = {
+ 	0x77D78400+(BY_AL7230_REG_LEN<<3)+IFREGCTL_REGW  // channel = 165, Tf = 5825MHz (56)
+ };
+ 
+-/*---------------------  Static Functions  --------------------------*/
+-
+ /*
+  * Description: AIROHA IFRF chip init function
+  *
+@@ -498,64 +490,6 @@ static bool s_bAL7230SelectChannel(struct vnt_private *priv, unsigned char byCha
  }
  
-@@ -1152,7 +1151,7 @@ static void rtw_chk_hi_queue_hdl(struct rtw_adapter *padapter)
+ /*
+- * Description: Select channel with UW2452 chip
+- *
+- * Parameters:
+- *  In:
+- *      dwIoBase    - I/O base address
+- *      uChannel    - Channel number
+- *  Out:
+- *      none
+- *
+- * Return Value: true if succeeded; false if failed.
+- *
+- */
+-
+-/*
+- * Description: UW2452 IFRF chip init function
+- *
+- * Parameters:
+- *  In:
+- *      dwIoBase    - I/O base address
+- *  Out:
+- *      none
+- *
+- * Return Value: true if succeeded; false if failed.
+- *
+- */
+-
+-/*
+- * Description: VT3226 IFRF chip init function
+- *
+- * Parameters:
+- *  In:
+- *      dwIoBase    - I/O base address
+- *  Out:
+- *      none
+- *
+- * Return Value: true if succeeded; false if failed.
+- *
+- */
+-
+-/*
+- * Description: Select channel with VT3226 chip
+- *
+- * Parameters:
+- *  In:
+- *      dwIoBase    - I/O base address
+- *      uChannel    - Channel number
+- *  Out:
+- *      none
+- *
+- * Return Value: true if succeeded; false if failed.
+- *
+- */
+-
+-/*---------------------  Export Variables  --------------------------*/
+-
+-/*---------------------  Export Functions  --------------------------*/
+-
+-/*
+  * Description: Write to IF/RF, by embedded programming
+  *
+  * Parameters:
+@@ -590,33 +524,6 @@ bool IFRFbWriteEmbedded(struct vnt_private *priv, unsigned long dwData)
+ }
  
- 			cnt++;
+ /*
+- * Description: RFMD RF2959 IFRF chip init function
+- *
+- * Parameters:
+- *  In:
+- *      dwIoBase    - I/O base address
+- *  Out:
+- *      none
+- *
+- * Return Value: true if succeeded; false if failed.
+- *
+- */
+-
+-/*
+- * Description: Select channel with RFMD 2959 chip
+- *
+- * Parameters:
+- *  In:
+- *      dwIoBase    - I/O base address
+- *      uChannel    - Channel number
+- *  Out:
+- *      none
+- *
+- * Return Value: true if succeeded; false if failed.
+- *
+- */
+-
+-/*
+  * Description: AIROHA IFRF chip init function
+  *
+  * Parameters:
+@@ -693,47 +600,6 @@ static bool RFbAL2230SelectChannel(struct vnt_private *priv, unsigned char byCha
+ }
  
--			if (cnt>10)
-+			if (cnt > 10)
- 				break;
- 
- 			val = rtl8723a_chk_hi_queue_empty(padapter);
-@@ -1305,8 +1304,7 @@ int rtw_drvextra_cmd_hdl23a(struct rtw_adapter *padapter, const u8 *pbuf)
- 
- 	pdrvextra_cmd = (struct drvextra_cmd_parm *)pbuf;
- 
--	switch (pdrvextra_cmd->ec_id)
--	{
-+	switch (pdrvextra_cmd->ec_id) {
- 	case DYNAMIC_CHK_WK_CID:
- 		dynamic_chk_wk_hdl(padapter, pdrvextra_cmd->pbuf,
- 				   pdrvextra_cmd->type_size);
+ /*
+- * Description: UW2451 IFRF chip init function
+- *
+- * Parameters:
+- *  In:
+- *      dwIoBase    - I/O base address
+- *  Out:
+- *      none
+- *
+- * Return Value: true if succeeded; false if failed.
+- *
+- */
+-
+-/*
+- * Description: Select channel with UW2451 chip
+- *
+- * Parameters:
+- *  In:
+- *      dwIoBase    - I/O base address
+- *      uChannel    - Channel number
+- *  Out:
+- *      none
+- *
+- * Return Value: true if succeeded; false if failed.
+- *
+- */
+-
+-/*
+- * Description: Set sleep mode to UW2451 chip
+- *
+- * Parameters:
+- *  In:
+- *      dwIoBase    - I/O base address
+- *      uChannel    - Channel number
+- *  Out:
+- *      none
+- *
+- * Return Value: true if succeeded; false if failed.
+- *
+- */
+-
+-/*
+  * Description: RF init function
+  *
+  * Parameters:
 -- 
-1.7.11.7
+2.1.0
 
