@@ -1,57 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f170.google.com ([209.85.223.170]:49639 "EHLO
-	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422644AbaKNWMZ (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:60573 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932834AbaKLBpB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Nov 2014 17:12:25 -0500
-Received: by mail-ie0-f170.google.com with SMTP id tp5so18916162ieb.29
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Nov 2014 14:12:24 -0800 (PST)
-Date: Fri, 14 Nov 2014 14:12:21 -0800
-From: Dmitry Torokhov <dtor@chromium.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] brcmfmac: fix error handling of irq_of_parse_and_map
-Message-ID: <20141114221221.GA35541@dtor-ws> (sfid-20141114_231245_241043_A5D5208D)
+	Tue, 11 Nov 2014 20:45:01 -0500
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: linux-kernel@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	stable@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
+	Xose Vazquez Perez <xose.vazquez@gmail.com>
+Subject: [PATCH 3.14 142/203] wireless: rt2x00: add new rt2800usb devices
+Date: Wed, 12 Nov 2014 10:16:52 +0900
+Message-Id: <20141112011549.213858125@linuxfoundation.org> (sfid-20141112_034441_178921_CD3691C6)
+In-Reply-To: <20141112011542.686743533@linuxfoundation.org>
+References: <20141112011542.686743533@linuxfoundation.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Return value of irq_of_parse_and_map() is unsigned int, with 0
-indicating failure, so testing for negative result never works.
+3.14-stable review patch.  If anyone has any objections, please let me know.
 
-Signed-off-by: Dmitry Torokhov <dtor@chromium.org>
+------------------
+
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+
+commit 6a06e554daef86c4e8d290284927b081fedb249e upstream.
+
+0x0b05 0x17e8 RT5372 USB 2.0  bgn 2x2 ASUS USB-N14
+0x0411 0x0253 RT5572 USB 2.0 abgn 2x2 BUFFALO WLP-U2-300D
+0x0df6 0x0078 RT???? Sitecom N300
+
+Cc: Ivo van Doorn <IvDoorn@gmail.com>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: John W. Linville <linville@tuxdriver.com>
+Cc: users@rt2x00.serialmonkey.com
+Cc: linux-wireless@vger.kernel.org
+Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+
 ---
+ drivers/net/wireless/rt2x00/rt2800usb.c |    4 ++++
+ 1 file changed, 4 insertions(+)
 
-Not tested, found by casual code inspection.
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -1235,6 +1235,8 @@ static struct usb_device_id rt2800usb_de
+ 	/* Arcadyan */
+ 	{ USB_DEVICE(0x043e, 0x7a12) },
+ 	{ USB_DEVICE(0x043e, 0x7a32) },
++	/* ASUS */
++	{ USB_DEVICE(0x0b05, 0x17e8) },
+ 	/* Azurewave */
+ 	{ USB_DEVICE(0x13d3, 0x3329) },
+ 	{ USB_DEVICE(0x13d3, 0x3365) },
+@@ -1271,6 +1273,7 @@ static struct usb_device_id rt2800usb_de
+ 	{ USB_DEVICE(0x057c, 0x8501) },
+ 	/* Buffalo */
+ 	{ USB_DEVICE(0x0411, 0x0241) },
++	{ USB_DEVICE(0x0411, 0x0253) },
+ 	/* D-Link */
+ 	{ USB_DEVICE(0x2001, 0x3c1a) },
+ 	{ USB_DEVICE(0x2001, 0x3c21) },
+@@ -1361,6 +1364,7 @@ static struct usb_device_id rt2800usb_de
+ 	{ USB_DEVICE(0x0df6, 0x0053) },
+ 	{ USB_DEVICE(0x0df6, 0x0069) },
+ 	{ USB_DEVICE(0x0df6, 0x006f) },
++	{ USB_DEVICE(0x0df6, 0x0078) },
+ 	/* SMC */
+ 	{ USB_DEVICE(0x083a, 0xa512) },
+ 	{ USB_DEVICE(0x083a, 0xc522) },
 
- drivers/net/wireless/brcm80211/brcmfmac/of.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/of.c b/drivers/net/wireless/brcm80211/brcmfmac/of.c
-index eb3fce82..c824570 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/of.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/of.c
-@@ -40,8 +40,8 @@ void brcmf_of_probe(struct brcmf_sdio_dev *sdiodev)
- 		return;
- 
- 	irq = irq_of_parse_and_map(np, 0);
--	if (irq < 0) {
--		brcmf_err("interrupt could not be mapped: err=%d\n", irq);
-+	if (!irq) {
-+		brcmf_err("interrupt could not be mapped\n");
- 		devm_kfree(dev, sdiodev->pdata);
- 		return;
- 	}
--- 
-2.1.0.rc2.206.gedb03e5
-
-
--- 
-Dmitry
