@@ -1,51 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:59375
-	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756339AbaKSTIQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Nov 2014 14:08:16 -0500
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from plane.gmane.org ([80.91.229.3]:43655 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753244AbaKLOfF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Nov 2014 09:35:05 -0500
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1XoZ0h-0001tW-WF
+	for linux-wireless@vger.kernel.org; Wed, 12 Nov 2014 15:35:04 +0100
+Received: from 143.129.72.187 ([143.129.72.187])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Nov 2014 15:35:03 +0100
+Received: from patrick.d.bosch by 143.129.72.187 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Nov 2014 15:35:03 +0100
 To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH v2 3/7] mac80211: minstrel: switch to .tx_status_noskb
-Date: Wed, 19 Nov 2014 20:08:09 +0100
-Message-Id: <1416424093-19439-3-git-send-email-nbd@openwrt.org> (sfid-20141119_200829_226435_B37AA3E9)
-In-Reply-To: <1416424093-19439-1-git-send-email-nbd@openwrt.org>
-References: <1416424093-19439-1-git-send-email-nbd@openwrt.org>
+From: Patrick Bosch <patrick.d.bosch@gmail.com>
+Subject: MAC acl equivalent to iwpriv for nl80211 drivers
+Date: Wed, 12 Nov 2014 14:31:12 +0000 (UTC)
+Message-ID: <loom.20141112T152857-158@post.gmane.org> (sfid-20141112_153512_863981_13720E9E)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- net/mac80211/rc80211_minstrel.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+Hello everybody
 
-diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
-index c2b91bf..d51f6b1 100644
---- a/net/mac80211/rc80211_minstrel.c
-+++ b/net/mac80211/rc80211_minstrel.c
-@@ -223,11 +223,10 @@ minstrel_update_stats(struct minstrel_priv *mp, struct minstrel_sta_info *mi)
- static void
- minstrel_tx_status(void *priv, struct ieee80211_supported_band *sband,
- 		   struct ieee80211_sta *sta, void *priv_sta,
--		   struct sk_buff *skb)
-+		   struct ieee80211_tx_info *info)
- {
- 	struct minstrel_priv *mp = priv;
- 	struct minstrel_sta_info *mi = priv_sta;
--	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_tx_rate *ar = info->status.rates;
- 	int i, ndx;
- 	int success;
-@@ -674,7 +673,7 @@ static u32 minstrel_get_expected_throughput(void *priv_sta)
- 
- const struct rate_control_ops mac80211_minstrel = {
- 	.name = "minstrel",
--	.tx_status = minstrel_tx_status,
-+	.tx_status_noskb = minstrel_tx_status,
- 	.get_rate = minstrel_get_rate,
- 	.rate_init = minstrel_rate_init,
- 	.alloc = minstrel_alloc,
--- 
-2.1.2
+I hope I do post this in the correct mailing list.
+
+My problem is the following:
+
+I want to add/delete new MAC addresses to the acl without restarting
+anything. Without restarting I mean that there shouldn't be a time frame
+where no beacon frames are sent. This happened to me on an OpenWRT
+router and I want to avoid this effect.
+
+It seems to me that iwpriv offers exactly this functionality. You can add
+a list of MAC addresses and define how they should be handled. Iw
+doesn't seem to offer this option. Is there any other way to get this
+functionality? 
+
+Another question would be, if there is a way to forge management
+frames, similar to what hostapd_cli can do for deauthentication and
+disassociation frames? 
+
+Any help is appreciated!
+
+Kind regards
+Patrick
+
 
