@@ -1,34 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:52687 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751792AbaKDKRz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Nov 2014 05:17:55 -0500
-Message-ID: <1415096272.2064.14.camel@sipsolutions.net> (sfid-20141104_111800_185237_CC938328)
-Subject: Re: [PATCH v2] mac80211: Increase uapsd max SP frames number
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Date: Tue, 04 Nov 2014 11:17:52 +0100
-In-Reply-To: <1415093584-12767-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1415093584-12767-1-git-send-email-emmanuel.grumbach@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:39152 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752369AbaKLHZv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Nov 2014 02:25:51 -0500
+Received: by mail-wi0-f178.google.com with SMTP id bs8so3884298wib.5
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Nov 2014 23:25:49 -0800 (PST)
+MIME-Version: 1.0
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <8761ellhbc.fsf@mat.ucm.es>
+References: <87d28zdplq.fsf@mat.ucm.es>
+	<CANUX_P0f0WAHoq3CsC3V-jp4m3_Q7qLz7X+Mvn1hk9_JPrPTGg@mail.gmail.com>
+	<87egtbxs8t.fsf@mat.ucm.es>
+	<1415615960.1847.11.camel@sipsolutions.net>
+	<8761ellhbc.fsf@mat.ucm.es>
+Date: Wed, 12 Nov 2014 08:25:49 +0100
+Message-ID: <CA+icZUVurGqVhvmn4vNkb_pOKW8++4F9iFjwUGeL8Ap_Tb=2jw@mail.gmail.com> (sfid-20141112_082554_127291_4404ADC9)
+Subject: Re: Thinkpad X60s/200s: Intel 3945/5100 works with kernel
+ 2.6.32-67/3.0.0-32 but not 3.7 vanilla.
+From: Sedat Dilek <sedat.dilek@gmail.com>
+To: Uwe Brauer <oub@mat.ucm.es>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Emmanuel Grumbach <egrumbach@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-11-04 at 11:33 +0200, Emmanuel Grumbach wrote:
-> From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-> 
-> Deliver up to 128 frames during SP instead of 8 if unlimited
-> max SP is specified during association.
-> 8 was just an arbitrary value, so is 128 since unlimited can
-> be any number.
-> However for large traffic bursts, increasing this value looks
-> reasonable. Also, it seems that a few certification tests
-> expect more frames to be delivered during SP.
+On Tue, Nov 11, 2014 at 7:31 PM, Uwe Brauer <oub@mat.ucm.es> wrote:
+>
+>    > On Mon, 2014-11-10 at 11:30 +0100, Uwe Brauer wrote:
+>
+>    > You'd need CONFIG_CFG80211_WEXT (or so) as well, but realistically you
+>
+> Thanks indeed that solved the problem. So I can use ubuntu
+> 10.04+jfs+trim+wireless great!
+>
+>    > should stop using wireless extensions and use nl80211 (via the "iw"
+>    > tool) instead.
+>
+> Thanks but I am not sure whether it will work in Ubuntu 10.04 I am
+> currently using.
+>
 
-Applied.
+Is 10.04 an LTS version (means support till 2015)?
+Might be there exist some 3rd party or the $-backports which will have
+an iw package.
 
-johannes
-
+- Sedat -
