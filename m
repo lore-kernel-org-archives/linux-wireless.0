@@ -1,97 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:60479 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750926AbaK0QAC (ORCPT
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:58180 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751034AbaKLIkc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Nov 2014 11:00:02 -0500
-Date: Thu, 27 Nov 2014 07:58:40 -0800
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
-Cc: Ming Lei <ming.lei@canonical.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Grazvydas Ignotas <notasas@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Pavel Machek <pavel@ucw.cz>,
-	Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-	Aaro Koskinen <aaro.koskinen@iki.fi>,
-	Kalle Valo <kvalo@adurom.com>,
-	Sebastian Reichel <sre@ring0.de>,
-	David Gnedt <david.gnedt@davizone.at>
-Subject: Re: wl1251: NVS firmware data
-Message-ID: <20141127155840.GC24149@kroah.com> (sfid-20141127_170038_744062_6D9674E8)
-References: <201411271506.20457@pali>
- <201411271543.23527@pali>
- <20141127151655.GB23064@kroah.com>
- <201411271622.58916@pali>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <201411271622.58916@pali>
+	Wed, 12 Nov 2014 03:40:32 -0500
+Received: by mail-pa0-f51.google.com with SMTP id kq14so12406820pab.24
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Nov 2014 00:40:32 -0800 (PST)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH] ath9k: fix the assignment of hw queues for mesh interface
+Date: Wed, 12 Nov 2014 16:40:19 +0800
+Message-Id: <1415781619-4384-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20141112_094035_956370_46EE6DF4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 27, 2014 at 04:22:58PM +0100, Pali Rohár wrote:
-> On Thursday 27 November 2014 16:16:55 Greg Kroah-Hartman wrote:
-> > On Thu, Nov 27, 2014 at 03:43:23PM +0100, Pali Rohár wrote:
-> > > On Thursday 27 November 2014 15:21:44 Ming Lei wrote:
-> > > > On Thu, Nov 27, 2014 at 10:06 PM, Pali Rohár
-> > > 
-> > > <pali.rohar@gmail.com> wrote:
-> > > > > Hello,
-> > > > > 
-> > > > > wifi driver wl1251 needs NVS calibration data for
-> > > > > working. These data are loaded by driver via
-> > > > > request_firmware from userspace file:
-> > > > > ti-connectivity/wl1251-nvs.bin. In linux-fimrware git
-> > > > > tree there is generic wl1251-nvs.bin file which is used
-> > > > > by default.
-> > > > > 
-> > > > > Driver wl1251 is used on Nokia N900 cellphone for its
-> > > > > wifi chip. This cellphone has one special MTD partition
-> > > > > (called CAL) where are stored some configuration data
-> > > > > in special binary (key-value) format. And there is also
-> > > > > stored correct calibration data for specific device
-> > > > > (each device has different data). It is preferred to
-> > > > > use those data instead generic one (provided by
-> > > > > linux-firmware git tree).
-> > > > > 
-> > > > > Now my question is: How to correctly load calibration
-> > > > > data from special Nokia N900 CAL partition into wl1251
-> > > > > kernel driver?
-> > > > 
-> > > > It is better to let user space script handle the request.
-> > > 
-> > > Yes, this makes sense. Implementing CAL parser in kernel
-> > > wl1251 driver would be hard...
-> > > 
-> > > > > By default kernel reads ti-connectivity/wl1251-nvs.bin
-> > > > > file from VFS if exists without any userspace support.
-> > > > > If it fails then it fallback to loading via udev.
-> > > > 
-> > > > You can remove or rename this file so that loading from
-> > > > user space can be triggered.
-> > > 
-> > > It is no so easy... In case when CAL does not contains NVS
-> > > data then we want to use this generic NVS file. And telling
-> > > everybody to rename this is file is not good solution...
-> > 
-> > But that's up to your system configuration, not the kernel. 
-> > Make a userspace package for the firmware that creates it in
-> > the format you need it to be in, for the hardware you have,
-> > and then there would not be any need for a kernel change,
-> > right?
-> > 
-> > greg k-h
-> 
-> Not so simple as you think. Some parts of NVS data are configured 
-> based on location and cellular station. Data are not static.
+We need to assign the hw queues for mesh interface. Otherwise,
+we are not able to bring up the mesh interface due to the
+IEEE80211_INVAL_HW_QUEUE error.
 
-Then you need a dynamic program that you control, in userspace, to dump
-the needed data into the kernel.  Don't try to do it with "static"
-firmware files.  Use the binary sysfs file interface for this if you
-want.
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-good luck,
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 644552c..88a5cf2 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1188,7 +1188,8 @@ static void ath9k_assign_hw_queues(struct ieee80211_hw *hw,
+ 	for (i = 0; i < IEEE80211_NUM_ACS; i++)
+ 		vif->hw_queue[i] = i;
+ 
+-	if (vif->type == NL80211_IFTYPE_AP)
++	if (vif->type == NL80211_IFTYPE_AP ||
++	    vif->type == NL80211_IFTYPE_MESH_POINT)
+ 		vif->cab_queue = hw->queues - 2;
+ 	else
+ 		vif->cab_queue = IEEE80211_INVAL_HW_QUEUE;
+-- 
+2.1.1
 
-greg k-h
