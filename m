@@ -1,33 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:39987 "EHLO sipsolutions.net"
+Received: from mout.gmx.net ([212.227.15.18]:57365 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755206AbaKSRh6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Nov 2014 12:37:58 -0500
-Message-ID: <1416418675.9374.7.camel@sipsolutions.net> (sfid-20141119_183801_176791_907A5671)
-Subject: Re: [PATCH] mac80211: don't allow 40MHz tx rates in case of 20MHz
- chandef
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>,
-	Eliad Peller <eliadx.peller@intel.com>
-Date: Wed, 19 Nov 2014 18:37:55 +0100
-In-Reply-To: <1415722282-29309-1-git-send-email-egrumbach@gmail.com> (sfid-20141111_171131_662829_319984B9)
-References: <1415722282-29309-1-git-send-email-egrumbach@gmail.com>
-	 (sfid-20141111_171131_662829_319984B9)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1750720AbaKLGo3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Nov 2014 01:44:29 -0500
+Message-ID: <546301C5.6010705@rempel-privat.de> (sfid-20141112_074433_218537_9F21D48E)
+Date: Wed, 12 Nov 2014 07:44:21 +0100
+From: Oleksij Rempel <linux@rempel-privat.de>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath9k_htc: remove return of value in empty definintion
+ of ath9k_htc_deinit_debug
+References: <1415744629-6946-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <1415744629-6946-1-git-send-email-linville@tuxdriver.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="SPuQKdWfig6RwJGRqfljUf62mNeRFROR6"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-11-11 at 18:11 +0200, Emmanuel Grumbach wrote:
-> From: Eliad Peller <eliad@wizery.com>
-> 
-> When 20MHz chandef is used, 40MHz rates shouldn't be
-> used (by the rate-control algorithm), even if the sta
-> ht capabilities indicate support for it.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--SPuQKdWfig6RwJGRqfljUf62mNeRFROR6
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Applied. If we need to backport it please send it to stable once it hits
-mainline.
+Am 11.11.2014 um 23:23 schrieb John W. Linville:
+> Cc: Oleksij Rempel <linux@rempel-privat.de>
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/htc.h | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+>=20
+> diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireles=
+s/ath/ath9k/htc.h
+> index b34acdeb1f21..9dde265d3f84 100644
+> --- a/drivers/net/wireless/ath/ath9k/htc.h
+> +++ b/drivers/net/wireless/ath/ath9k/htc.h
+> @@ -629,7 +629,9 @@ int ath9k_htc_init_debug(struct ath_hw *ah);
+>  void ath9k_htc_deinit_debug(struct ath9k_htc_priv *priv);
+>  #else
+>  static inline int ath9k_htc_init_debug(struct ath_hw *ah) { return 0; =
+};
+> -static inline void ath9k_htc_deinit_debug(struct ath9k_htc_priv *priv)=
+ { return 0; };
+> +static inline void ath9k_htc_deinit_debug(struct ath9k_htc_priv *priv)=
 
-johannes
+> +{
+> +}
+>  #endif /* CONFIG_ATH9K_HTC_DEBUGFS */
+> =20
+>  #endif /* HTC_H */
+>=20
 
+Thank you.
+
+--=20
+Regards,
+Oleksij
+
+
+--SPuQKdWfig6RwJGRqfljUf62mNeRFROR6
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iF4EAREIAAYFAlRjAcUACgkQHwImuRkmbWlaaQD/chmDKjqE4iq7UvfIrmcI0Mf6
+KEjfln7ONRPTdyHnLbQA/1ul+P5rp8wvk+RFQUs41ZXn8FM3O6847jn/PTduVw8T
+=Wr8T
+-----END PGP SIGNATURE-----
+
+--SPuQKdWfig6RwJGRqfljUf62mNeRFROR6--
