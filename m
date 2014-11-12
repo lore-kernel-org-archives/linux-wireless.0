@@ -1,159 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:49475 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757431AbaKUJDc convert rfc822-to-8bit (ORCPT
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:36269 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753309AbaKLVLw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Nov 2014 04:03:32 -0500
-Received: by mail-wg0-f47.google.com with SMTP id n12so5945610wgh.34
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Nov 2014 01:03:30 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1416492382-18058-1-git-send-email-sujith@msujith.org>
-References: <1416492382-18058-1-git-send-email-sujith@msujith.org>
-Date: Fri, 21 Nov 2014 10:03:30 +0100
-Message-ID: <CA+BoTQnyf0tvg8ngLqsoux-A9-3J46cDuJdd-V=kS24wWS4Y1A@mail.gmail.com> (sfid-20141121_100339_161520_01FC11E4)
-Subject: Re: [RFC] ath10k: Fix shared WEP
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Sujith Manoharan <sujith@msujith.org>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 12 Nov 2014 16:11:52 -0500
+Received: by mail-wg0-f49.google.com with SMTP id x13so15241240wgg.36
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Nov 2014 13:11:51 -0800 (PST)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 1/8] staging: vt6655: card Remove function vUpdateIFS
+Date: Wed, 12 Nov 2014 21:11:08 +0000
+Message-Id: <1415826675-8446-1-git-send-email-tvboxspy@gmail.com> (sfid-20141112_221155_959075_A3685DD9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 20 November 2014 15:06, Sujith Manoharan <sujith@msujith.org> wrote:
-> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
->
-> When static keys are used in shared WEP, when a
-> station is associated, message 3 is sent with an
-> encrypted payload. But, for subsequent
-> authentications that are triggered without a
-> deauth, the auth frame is decrypted by the HW. To
-> handle this, check if the WEP keys have already
-> been set for the peer and if so, mark the
-> frame as decrypted.
+vUpdateIFS does the same operations of CARDbSetPhyParameter there
+is not need to call this function.
 
-IOW This fixes a corner case when station reconnects but ath10k AP for
-some reason didn't notice it (e.g. station went out of range and came
-back before AP inactivity timer kicked in), right? Or is there another
-scenario? It might be a good idea to include this in the commit log.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/card.c        | 65 ------------------------------------
+ drivers/staging/vt6655/card.h        |  1 -
+ drivers/staging/vt6655/device_main.c |  1 -
+ 3 files changed, 67 deletions(-)
 
+diff --git a/drivers/staging/vt6655/card.c b/drivers/staging/vt6655/card.c
+index 532c3c8..a93ca16 100644
+--- a/drivers/staging/vt6655/card.c
++++ b/drivers/staging/vt6655/card.c
+@@ -21,7 +21,6 @@
+  * Functions:
+  *      s_vSafeResetTx - Rest Tx
+  *      CARDvSetRSPINF - Set RSPINF
+- *      vUpdateIFS - Update slotTime,SIFS,DIFS, and EIFS
+  *      CARDvUpdateBasicTopRate - Update BasicTopRate
+  *      CARDbAddBasicRate - Add to BasicRateSet
+  *      CARDbIsOFDMinBasicRate - Check if any OFDM rate is in BasicRateSet
+@@ -770,70 +769,6 @@ void CARDvSetRSPINF(struct vnt_private *pDevice, u8 bb_type)
+ 	MACvSelectPage0(pDevice->PortOffset);
+ }
+ 
+-/*
+- * Description: Update IFS
+- *
+- * Parameters:
+- *  In:
+- *      pDevice             - The adapter to be set
+- *  Out:
+- *      none
+- *
+- * Return Value: None.
+- */
+-void vUpdateIFS(struct vnt_private *pDevice)
+-{
+-	/* Set SIFS, DIFS, EIFS, SlotTime, CwMin */
+-
+-	unsigned char byMaxMin = 0;
+-
+-	if (pDevice->byPacketType == PK_TYPE_11A) { /*0000 0000 0000 0000,11a*/
+-		pDevice->uSlot = C_SLOT_SHORT;
+-		pDevice->uSIFS = C_SIFS_A;
+-		pDevice->uDIFS = C_SIFS_A + 2*C_SLOT_SHORT;
+-		pDevice->uCwMin = C_CWMIN_A;
+-		byMaxMin = 4;
+-	} else if (pDevice->byPacketType == PK_TYPE_11B) {
+-					/* 0000 0001 0000 0000,11b */
+-		pDevice->uSlot = C_SLOT_LONG;
+-		pDevice->uSIFS = C_SIFS_BG;
+-		pDevice->uDIFS = C_SIFS_BG + 2*C_SLOT_LONG;
+-		pDevice->uCwMin = C_CWMIN_B;
+-		byMaxMin = 5;
+-	} else { /* PK_TYPE_11GA & PK_TYPE_11GB */
+-		pDevice->uSIFS = C_SIFS_BG;
+-		if (pDevice->bShortSlotTime)
+-			pDevice->uSlot = C_SLOT_SHORT;
+-		else
+-			pDevice->uSlot = C_SLOT_LONG;
+-
+-		pDevice->uDIFS = C_SIFS_BG + 2*pDevice->uSlot;
+-		if (pDevice->wBasicRate & 0x0150) {
+-			/* 0000 0001 0101 0000,24M,12M,6M */
+-			pDevice->uCwMin = C_CWMIN_A;
+-			byMaxMin = 4;
+-		} else {
+-			pDevice->uCwMin = C_CWMIN_B;
+-			byMaxMin = 5;
+-		}
+-	}
+-
+-	pDevice->uCwMax = C_CWMAX;
+-	pDevice->uEIFS = C_EIFS;
+-	if (pDevice->byRFType == RF_RFMD2959) {
+-		/* bcs TX_PE will reserve 3 us */
+-		VNSvOutPortB(pDevice->PortOffset + MAC_REG_SIFS, (unsigned char)(pDevice->uSIFS - 3));
+-		VNSvOutPortB(pDevice->PortOffset + MAC_REG_DIFS, (unsigned char)(pDevice->uDIFS - 3));
+-	} else {
+-		VNSvOutPortB(pDevice->PortOffset + MAC_REG_SIFS, (unsigned char)pDevice->uSIFS);
+-		VNSvOutPortB(pDevice->PortOffset + MAC_REG_DIFS, (unsigned char)pDevice->uDIFS);
+-	}
+-	VNSvOutPortB(pDevice->PortOffset + MAC_REG_EIFS, (unsigned char)pDevice->uEIFS);
+-	VNSvOutPortB(pDevice->PortOffset + MAC_REG_SLOT, (unsigned char)pDevice->uSlot);
+-	byMaxMin |= 0xA0; /* 1010 1111,C_CWMAX = 1023 */
+-	VNSvOutPortB(pDevice->PortOffset + MAC_REG_CWMAXMIN0, (unsigned char)byMaxMin);
+-}
+-
+ void CARDvUpdateBasicTopRate(struct vnt_private *pDevice)
+ {
+ 	unsigned char byTopOFDM = RATE_24M, byTopCCK = RATE_1M;
+diff --git a/drivers/staging/vt6655/card.h b/drivers/staging/vt6655/card.h
+index 605d8a8..2e56710 100644
+--- a/drivers/staging/vt6655/card.h
++++ b/drivers/staging/vt6655/card.h
+@@ -67,7 +67,6 @@ typedef enum _CARD_STATUS_TYPE {
+ struct vnt_private;
+ 
+ void CARDvSetRSPINF(struct vnt_private *, u8);
+-void vUpdateIFS(struct vnt_private *);
+ void CARDvUpdateBasicTopRate(struct vnt_private *);
+ bool CARDbIsOFDMinBasicRate(struct vnt_private *);
+ void CARDvSetLoopbackMode(void __iomem *dwIoBase, unsigned short wLoopbackMode);
+diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
+index 2e31784..1392332 100644
+--- a/drivers/staging/vt6655/device_main.c
++++ b/drivers/staging/vt6655/device_main.c
+@@ -1485,7 +1485,6 @@ static void vnt_bss_info_changed(struct ieee80211_hw *hw,
+ 		else
+ 			priv->bShortSlotTime = false;
+ 
+-		vUpdateIFS(priv);
+ 		CARDbSetPhyParameter(priv, priv->byBBType);
+ 		BBvSetVGAGainOffset(priv, priv->abyBBVGA[0]);
+ 	}
+-- 
+2.1.0
 
-[...]
-> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-> index 1245ac8..e8fee46 100644
-> --- a/drivers/net/wireless/ath/ath10k/mac.c
-> +++ b/drivers/net/wireless/ath/ath10k/mac.c
-> @@ -179,6 +179,31 @@ static int ath10k_clear_peer_keys(struct ath10k_vif *arvif,
->         return first_errno;
->  }
->
-> +bool ath10k_is_peer_wep_key_set(struct ath10k *ar, const u8 *addr,
-> +                               u8 keyidx)
-
-Functions in mac.c should have ath10k_mac_ prefix. I'm aware not all
-function follow this rule (albeit they should).
-
-
-> +{
-> +       struct ath10k_peer *peer;
-> +       int i;
-> +
-> +       /*
-> +        * We don't know which vdev this peer belongs to,
-> +        * since WMI doesn't give us that information.
-> +        */
-> +       spin_lock_bh(&ar->data_lock);
-> +       peer = ath10k_peer_find(ar, 0, addr);
-> +       spin_unlock_bh(&ar->data_lock);
-
-I don't think the above will work for mBSS, e.g. consider vdev_id=0
-being an open network and vdev_id=1 being wep-shared. Maybe it's about
-time to introduce ath10k_peer_find_by_addr(struct ath10k *ar, const u8
-*)?
-
-
-> +
-> +       if (!peer)
-> +               return false;
-> +
-> +       for (i = 0; i < ARRAY_SIZE(peer->keys); i++) {
-> +               if (peer->keys[i] && peer->keys[i]->keyidx == keyidx)
-> +                       return true;
-> +       }
-
-Read access to peer->keys should be protected by either data_lock or
-conf_mutex. Obviously the latter can't be used because this function
-will be called from an atomic context leaving the data_lock. The
-entire is_peer_wep_key_set() should require data_lock to be held while
-it is called to avoid races.
-
-Oh, and apparently this is buggy anyway because
-ath10k_install_peer_wep_keys() is oblivious to this. Oops..
-
-
-[...]
-> diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-> index c2bc828..8f1186e 100644
-> --- a/drivers/net/wireless/ath/ath10k/wmi.c
-> +++ b/drivers/net/wireless/ath/ath10k/wmi.c
-> @@ -1113,6 +1113,33 @@ static inline u8 get_rate_idx(u32 rate, enum ieee80211_band band)
->         return rate_idx;
->  }
->
-> +static void ath10k_check_wep(struct ath10k *ar, struct sk_buff *skb,
-> +                            struct ieee80211_rx_status *status)
-
-Function in wmi.c should have ath10k_wmi_ prefix. I also don't like
-the name as it doesn't convey what it does in the slightest. Perhaps
-ath10k_wmi_mgmt_rx_h_wep_reauth() or ath10k_wmi_handle_wep_reauth()
-would be a bit better?
-
-
-> +{
-> +       struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-> +       unsigned int hdrlen;
-> +       bool peer_key;
-> +       u8 *addr, keyidx;
-> +
-> +       if (ieee80211_is_auth(hdr->frame_control) &&
-> +           ieee80211_has_protected(hdr->frame_control)) {
-
-My preference is to use guards in functions like these, i.e.
-  if (!auth || !protected) return;
-and then continue with the code without extra indentation.
-
-
-> +               hdrlen = ieee80211_hdrlen(hdr->frame_control);
-> +               if (skb->len < (hdrlen + 4))
-
-It's probably a good idea to use IEEE80211_WEP_IV_LEN instead of literal 4.
-
-
-> +                       return;
-> +
-> +               keyidx = skb->data[hdrlen + 3] >> 6;
-> +               addr = ieee80211_get_SA(hdr);
-> +               peer_key = ath10k_is_peer_wep_key_set(ar, addr, keyidx);
-> +
-> +               if (peer_key) {
-
-Again, I'd do a guard: `if (!peer_key) return`. But I'm just picky :-P
-I leave the final decision up to you or Kalle.
-
-
-[...]
-> @@ -1200,6 +1227,8 @@ static int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
->         hdr = (struct ieee80211_hdr *)skb->data;
->         fc = le16_to_cpu(hdr->frame_control);
->
-> +       ath10k_check_wep(ar, skb, status);
-> +
->         /* FW delivers WEP Shared Auth frame with Protected Bit set and
->          * encrypted payload. However in case of PMF it delivers decrypted
->          * frames with Protected Bit set. */
-
-This is getting a little messy. Did you consider to somehow unify the
-previous wep shared & pmf code with your new fix?
-
-
-Michał
