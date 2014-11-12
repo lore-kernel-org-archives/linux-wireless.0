@@ -1,138 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f51.google.com ([74.125.82.51]:59091 "EHLO
-	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754159AbaKXOf0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2014 09:35:26 -0500
-Received: by mail-wg0-f51.google.com with SMTP id k14so12193178wgh.24
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:35:25 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
+Received: from mga01.intel.com ([192.55.52.88]:60814 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752873AbaKLMJE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Nov 2014 07:09:04 -0500
+From: Jukka Rissanen <jukka.rissanen@linux.intel.com>
 To: linux-wireless@vger.kernel.org
-Cc: Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 17/75] iwlwifi: mvm: Insert DS Parameter Set placeholder in probes
-Date: Mon, 24 Nov 2014 16:33:53 +0200
-Message-Id: <1416839691-28533-17-git-send-email-egrumbach@gmail.com> (sfid-20141124_154346_650261_22BD2293)
-In-Reply-To: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
-References: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
+Subject: [PATCH v3 2/2] nl80211: Stop scheduled scan if netlink client disappears
+Date: Wed, 12 Nov 2014 14:08:59 +0200
+Message-Id: <1415794139-7124-3-git-send-email-jukka.rissanen@linux.intel.com> (sfid-20141112_130909_519151_DCCF3FB0)
+In-Reply-To: <1415794139-7124-1-git-send-email-jukka.rissanen@linux.intel.com>
+References: <1415794139-7124-1-git-send-email-jukka.rissanen@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+An attribute NL80211_ATTR_SOCKET_OWNER can be set by the scan initiator.
+If present, the attribute will cause the scan to be stopped if the client
+dies.
 
-Since it's too complicated for the fw to insert a DS Parameter Set
-element in the middle of the frame, it was decided that it should be
-done by the host. The fw will only parse the frame and update the
-current channel field.
-
-Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Jukka Rissanen <jukka.rissanen@linux.intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-fw.h   |  4 +--
- drivers/net/wireless/iwlwifi/mvm/scan.c | 53 +++++++++++++++++++++++++++++----
- 2 files changed, 50 insertions(+), 7 deletions(-)
+ include/net/cfg80211.h       |  2 ++
+ include/uapi/linux/nl80211.h |  3 +++
+ net/wireless/core.c          | 10 +++++++++-
+ net/wireless/nl80211.c       | 34 ++++++++++++++++++++++++++++++++++
+ 4 files changed, 48 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-fw.h b/drivers/net/wireless/iwlwifi/iwl-fw.h
-index 6f7ae5f..598065b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-fw.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-fw.h
-@@ -148,8 +148,8 @@ enum iwl_ucode_tlv_api {
-  * @IWL_UCODE_TLV_CAPA_TXPOWER_INSERTION_SUPPORT: supports insertion of current
-  *	tx power value into TPC Report action frame and Link Measurement Report
-  *	action frame
-- * @IWL_UCODE_TLV_CAPA_DS_PARAM_SET_IE_SUPPORT: supports adding DS params
-- *	element in probe requests.
-+ * @IWL_UCODE_TLV_CAPA_DS_PARAM_SET_IE_SUPPORT: supports updating current
-+ *	channel in DS parameter set element in probe requests.
-  * @IWL_UCODE_TLV_CAPA_WFA_TPC_REP_IE_SUPPORT: supports adding TPC Report IE in
-  *	probe requests.
-  * @IWL_UCODE_TLV_CAPA_QUIET_PERIOD_SUPPORT: supports Quiet Period requests
-diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
-index fb2a862..8a1f4a8 100644
---- a/drivers/net/wireless/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
-@@ -366,6 +366,10 @@ static int iwl_mvm_max_scan_ie_fw_cmd_room(struct iwl_mvm *mvm,
- 	    !is_sched_scan)
- 		max_probe_len -= 32;
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 220d5f5..84378bf 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1512,6 +1512,8 @@ struct cfg80211_sched_scan_request {
+ 	struct wiphy *wiphy;
+ 	struct net_device *dev;
+ 	unsigned long scan_start;
++	u32 owner_nlportid;
++	struct work_struct sched_scan_stop_wk;
  
-+	/* DS parameter set element is added on 2.4GHZ band if required */
-+	if (iwl_mvm_rrm_scan_needed(mvm))
-+		max_probe_len -= 3;
+ 	/* keep last */
+ 	struct ieee80211_channel *channels[0];
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 185f9c7..5038240 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1640,6 +1640,9 @@ enum nl80211_commands {
+  * @NL80211_ATTR_SOCKET_OWNER: Flag attribute, if set during interface
+  *	creation then the new interface will be owned by the netlink socket
+  *	that created it and will be destroyed when the socket is closed.
++ *	If set during scheduled scan start then the new scan req will be
++ *	owned by the netlink socket that created it and the scheduled scan will
++ *	be stopped when the socket is closed.
+  *
+  * @NL80211_ATTR_TDLS_INITIATOR: flag attribute indicating the current end is
+  *	the TDLS link initiator.
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index a4d2792..88898d9 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -840,6 +840,8 @@ void __cfg80211_leave(struct cfg80211_registered_device *rdev,
+ 		      struct wireless_dev *wdev)
+ {
+ 	struct net_device *dev = wdev->netdev;
++	struct cfg80211_sched_scan_request *sched_scan_req =
++		rdev->sched_scan_req;
+ 
+ 	ASSERT_RTNL();
+ 	ASSERT_WDEV_LOCK(wdev);
+@@ -850,8 +852,10 @@ void __cfg80211_leave(struct cfg80211_registered_device *rdev,
+ 		break;
+ 	case NL80211_IFTYPE_P2P_CLIENT:
+ 	case NL80211_IFTYPE_STATION:
+-		if (rdev->sched_scan_req && dev == rdev->sched_scan_req->dev)
++		if (sched_scan_req && dev == sched_scan_req->dev) {
++			cancel_work_sync(&sched_scan_req->sched_scan_stop_wk);
+ 			__cfg80211_stop_sched_scan(rdev, false);
++		}
+ 
+ #ifdef CONFIG_CFG80211_WEXT
+ 		kfree(wdev->wext.ie);
+@@ -991,6 +995,10 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 
+ 		if (WARN_ON(rdev->sched_scan_req &&
+ 			    rdev->sched_scan_req->dev == wdev->netdev)) {
++			struct cfg80211_sched_scan_request *sched_scan_req =
++				rdev->sched_scan_req;
 +
- 	return max_probe_len;
++			cancel_work_sync(&sched_scan_req->sched_scan_stop_wk);
+ 			__cfg80211_stop_sched_scan(rdev, false);
+ 		}
+ 
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index df447c0..8fc500d 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -5681,6 +5681,21 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
+ 	return err;
  }
  
-@@ -1155,6 +1159,42 @@ iwl_mvm_lmac_scan_cfg_channels(struct iwl_mvm *mvm,
- 	}
- }
- 
-+static u8 *iwl_mvm_copy_and_insert_ds_elem(struct iwl_mvm *mvm, const u8 *ies,
-+					   size_t len, u8 *const pos)
++static void nl80211_sched_scan_stop_wk(struct work_struct *work)
 +{
-+	static const u8 before_ds_params[] = {
-+			WLAN_EID_SSID,
-+			WLAN_EID_SUPP_RATES,
-+			WLAN_EID_REQUEST,
-+			WLAN_EID_EXT_SUPP_RATES,
-+	};
-+	size_t offs;
-+	u8 *newpos = pos;
++	struct cfg80211_sched_scan_request *req;
++	struct cfg80211_registered_device *rdev;
 +
-+	if (!iwl_mvm_rrm_scan_needed(mvm)) {
-+		memcpy(newpos, ies, len);
-+		return newpos + len;
-+	}
++	req = container_of(work, struct cfg80211_sched_scan_request,
++			   sched_scan_stop_wk);
 +
-+	offs = ieee80211_ie_split(ies, len,
-+				  before_ds_params,
-+				  ARRAY_SIZE(before_ds_params),
-+				  0);
++	rdev = wiphy_to_rdev(req->wiphy);
 +
-+	memcpy(newpos, ies, offs);
-+	newpos += offs;
-+
-+	/* Add a placeholder for DS Parameter Set element */
-+	*newpos++ = WLAN_EID_DS_PARAMS;
-+	*newpos++ = 1;
-+	*newpos++ = 0;
-+
-+	memcpy(newpos, ies + offs, len - offs);
-+	newpos += len - offs;
-+
-+	return newpos;
++	rtnl_lock();
++	__cfg80211_stop_sched_scan(rdev, false);
++	rtnl_unlock();
 +}
 +
- static void
- iwl_mvm_build_unified_scan_probe(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 				 struct ieee80211_scan_ies *ies,
-@@ -1164,7 +1204,7 @@ iwl_mvm_build_unified_scan_probe(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 		sizeof(struct iwl_scan_channel_cfg_lmac) *
- 			mvm->fw->ucode_capa.n_scan_channels);
- 	struct ieee80211_mgmt *frame = (struct ieee80211_mgmt *)preq->buf;
--	u8 *pos;
-+	u8 *pos, *newpos;
+ static int nl80211_start_sched_scan(struct sk_buff *skb,
+ 				    struct genl_info *info)
+ {
+@@ -5955,6 +5970,13 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
  
- 	frame->frame_control = cpu_to_le16(IEEE80211_STYPE_PROBE_REQ);
- 	eth_broadcast_addr(frame->da);
-@@ -1179,11 +1219,14 @@ iwl_mvm_build_unified_scan_probe(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 	preq->mac_header.offset = 0;
- 	preq->mac_header.len = cpu_to_le16(24 + 2);
+ 	err = rdev_sched_scan_start(rdev, dev, request);
+ 	if (!err) {
++		if (info->attrs[NL80211_ATTR_SOCKET_OWNER]) {
++			INIT_WORK(&request->sched_scan_stop_wk,
++				  nl80211_sched_scan_stop_wk);
++
++			request->owner_nlportid = info->snd_portid;
++		}
++
+ 		rdev->sched_scan_req = request;
+ 		nl80211_send_sched_scan(rdev, dev,
+ 					NL80211_CMD_START_SCHED_SCAN);
+@@ -12127,6 +12149,12 @@ static int nl80211_netlink_notify(struct notifier_block * nb,
  
--	memcpy(pos, ies->ies[IEEE80211_BAND_2GHZ],
--	       ies->len[IEEE80211_BAND_2GHZ]);
-+	/* Insert ds parameter set element on 2.4 GHz band */
-+	newpos = iwl_mvm_copy_and_insert_ds_elem(mvm,
-+						 ies->ies[IEEE80211_BAND_2GHZ],
-+						 ies->len[IEEE80211_BAND_2GHZ],
-+						 pos);
- 	preq->band_data[0].offset = cpu_to_le16(pos - preq->buf);
--	preq->band_data[0].len = cpu_to_le16(ies->len[IEEE80211_BAND_2GHZ]);
--	pos += ies->len[IEEE80211_BAND_2GHZ];
-+	preq->band_data[0].len = cpu_to_le16(newpos - pos);
-+	pos = newpos;
+ 	list_for_each_entry_rcu(rdev, &cfg80211_rdev_list, list) {
+ 		bool schedule_destroy_work = false;
++		bool schedule_scan_stop = false;
++		struct cfg80211_sched_scan_request *req = rdev->sched_scan_req;
++
++		if (req && req->owner_nlportid == notify->portid &&
++		    notify->portid)
++			schedule_scan_stop = true;
  
- 	memcpy(pos, ies->ies[IEEE80211_BAND_5GHZ],
- 	       ies->len[IEEE80211_BAND_5GHZ]);
+ 		list_for_each_entry_rcu(wdev, &rdev->wdev_list, list) {
+ 			cfg80211_mlme_unregister_socket(wdev, notify->portid);
+@@ -12157,6 +12185,12 @@ static int nl80211_netlink_notify(struct notifier_block * nb,
+ 				spin_unlock(&rdev->destroy_list_lock);
+ 				schedule_work(&rdev->destroy_work);
+ 			}
++		} else if (schedule_scan_stop) {
++			req->owner_nlportid = 0;
++
++			if (rdev->ops->sched_scan_stop &&
++			    rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_SCHED_SCAN)
++				schedule_work(&req->sched_scan_stop_wk);
+ 		}
+ 	}
+ 
 -- 
-1.9.1
+1.8.3.1
 
