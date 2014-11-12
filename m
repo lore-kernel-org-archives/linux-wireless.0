@@ -1,55 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:50521 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751320AbaKJWxZ (ORCPT
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:59564 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751399AbaKLHbw convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Nov 2014 17:53:25 -0500
-Message-ID: <546141E2.2080309@candelatech.com> (sfid-20141110_235328_487435_AC63DEF8)
-Date: Mon, 10 Nov 2014 14:53:22 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Wed, 12 Nov 2014 02:31:52 -0500
+Received: by mail-wi0-f176.google.com with SMTP id h11so3935776wiw.3
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Nov 2014 23:31:50 -0800 (PST)
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath10k <ath10k@lists.infradead.org>
-Subject: Re: New ath10k CT firmware released.
-References: <545BD297.5040806@candelatech.com> <545C16A5.9030106@candelatech.com>
-In-Reply-To: <545C16A5.9030106@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <CA+icZUVurGqVhvmn4vNkb_pOKW8++4F9iFjwUGeL8Ap_Tb=2jw@mail.gmail.com>
+References: <87d28zdplq.fsf@mat.ucm.es>
+	<CANUX_P0f0WAHoq3CsC3V-jp4m3_Q7qLz7X+Mvn1hk9_JPrPTGg@mail.gmail.com>
+	<87egtbxs8t.fsf@mat.ucm.es>
+	<1415615960.1847.11.camel@sipsolutions.net>
+	<8761ellhbc.fsf@mat.ucm.es>
+	<CA+icZUVurGqVhvmn4vNkb_pOKW8++4F9iFjwUGeL8Ap_Tb=2jw@mail.gmail.com>
+Date: Wed, 12 Nov 2014 08:31:50 +0100
+Message-ID: <CA+icZUXM45emQoNfiY_81JQupUAxUeX9Tkxus_szuVxxxSBPvw@mail.gmail.com> (sfid-20141112_083155_329099_5F05C3AE)
+Subject: Re: Thinkpad X60s/200s: Intel 3945/5100 works with kernel
+ 2.6.32-67/3.0.0-32 but not 3.7 vanilla.
+From: Sedat Dilek <sedat.dilek@gmail.com>
+To: Uwe Brauer <oub@mat.ucm.es>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Emmanuel Grumbach <egrumbach@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/06/2014 04:47 PM, Ben Greear wrote:
-> On 11/06/2014 11:57 AM, Ben Greear wrote:
->> I have uploaded the latest CT version of the ath10k firmware.
+On Wed, Nov 12, 2014 at 8:25 AM, Sedat Dilek <sedat.dilek@gmail.com> wrote:
+> On Tue, Nov 11, 2014 at 7:31 PM, Uwe Brauer <oub@mat.ucm.es> wrote:
 >>
->> http://www.candelatech.com/ath10k.php
+>>    > On Mon, 2014-11-10 at 11:30 +0100, Uwe Brauer wrote:
 >>
->> This firmware fixes bugs in raw-tx mode, though probably only
->> non-encrypted frames can be sent in this manner, and it requires
->> an out-of-tree patch from Michal Kazior to make it work:
+>>    > You'd need CONFIG_CFG80211_WEXT (or so) as well, but realistically you
 >>
->> http://comments.gmane.org/gmane.linux.drivers.ath10k.devel/246
+>> Thanks indeed that solved the problem. So I can use ubuntu
+>> 10.04+jfs+trim+wireless great!
 >>
->> This firmware also significantly improves association times when using
->> more than one vdev.  This, requires an additional kernel patch:
+>>    > should stop using wireless extensions and use nl80211 (via the "iw"
+>>    > tool) instead.
 >>
->> http://dmz2.candelatech.com/git/gitweb.cgi?p=linux-3.17.dev.y/.git;a=commitdiff;h=a9756b6e2efffbec4101dbe81e9d6a2c503239ff;hp=5bfa637376c352fc17c56afc7b1d2e752750162c
-> 
-> I was a bit too clever it seems....  I have to be more careful about disabling
-> the ch reservation when there are no vdevs active, I think.
-> 
-> Hope to have it fixed shortly.
+>> Thanks but I am not sure whether it will work in Ubuntu 10.04 I am
+>> currently using.
+>>
+>
 
-Looks like firmware was fine, so it remains unchanged.  But, the driver patch has to
-be more careful and only disable ch reservation if we currently have an active channel.
+[ To answer myself... ]
 
-This patch (on top of the one linked above) seems to work well:
+> Is 10.04 an LTS version (means support till 2015)?
 
-http://dmz2.candelatech.com/git/gitweb.cgi?p=linux-3.17.dev.y/.git;a=commitdiff;h=5ed93f05d72769b06246280d514b72d617bb9fde
+Yupp (see below).
 
-Thanks,
-Ben
+> Might be there exist some 3rd party or the $-backports which will have
+> an iw package.
+>
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+» Ubuntu » Packages » lucid (10.04LTS) » net » iw
 
+iw (0.9.19~ubuntu1) [universe] <--- Activate "universe"!
+
+http://packages.ubuntu.com/lucid/iw
+
+- Sedat -
