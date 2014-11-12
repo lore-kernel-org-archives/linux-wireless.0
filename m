@@ -1,59 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:35919 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753866AbaKMNsS convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Nov 2014 08:48:18 -0500
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 8.0 \(1990.1\))
-Subject: Re: [PATCH] cfg80211: remove net-pf-16-proto-16-family-nl80211 module alias
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <20141113133928.GC1926@redhat.com>
-Date: Thu, 13 Nov 2014 22:48:11 +0900
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Message-Id: <4E8F3B23-EC77-4B53-8180-7DB12042E0B5@holtmann.org> (sfid-20141113_144821_252109_71D5BCAB)
-References: <20141113123313.GA1926@redhat.com> <1415882683.2021.3.camel@sipsolutions.net> <20141113132252.GB1926@redhat.com> <252AB6B9-9D33-4932-B75F-D3B2B057D3C0@holtmann.org> <20141113133928.GC1926@redhat.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
+Received: from mga09.intel.com ([134.134.136.24]:11745 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753015AbaKLOmn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Nov 2014 09:42:43 -0500
+From: Patrik Flykt <patrik.flykt@linux.intel.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH v2 1/2] mac80211-hwsim: Factor out netlink attribute appending
+Date: Wed, 12 Nov 2014 16:42:39 +0200
+Message-Id: <1415803360-4073-2-git-send-email-patrik.flykt@linux.intel.com> (sfid-20141112_154252_610154_3687E769)
+In-Reply-To: <1415803360-4073-1-git-send-email-patrik.flykt@linux.intel.com>
+References: <1415803360-4073-1-git-send-email-patrik.flykt@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stanislaw,
+Factor out netlink message attribute appending in order to reuse it
+with later code. As a result move netlink skb allocation to the
+calling function.
 
->>> With the alias cfg80211 module is loaded on systems without the wireless
->>> hardware when user-space use nl80211 to discover if there are wireless
->>> devices, what is considered as resources wastage. On systems with
->>> wireless hardware cfg80211 module will be loaded anyway.
->>> 
->>> Cc: Marcel Holtmann <marcel@holtmann.org>
->>> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
->>> ---
->>> net/wireless/core.c | 1 -
->>> 1 file changed, 1 deletion(-)
->>> 
->>> diff --git a/net/wireless/core.c b/net/wireless/core.c
->>> index a4d2792..badcabe 100644
->>> --- a/net/wireless/core.c
->>> +++ b/net/wireless/core.c
->>> @@ -34,7 +34,6 @@
->>> MODULE_AUTHOR("Johannes Berg");
->>> MODULE_LICENSE("GPL");
->>> MODULE_DESCRIPTION("wireless configuration support");
->>> -MODULE_ALIAS_GENL_FAMILY(NL80211_GENL_NAME);
->> 
->> NAK.
->> 
->> We want to auto-load cfg80211 when userspace asked for nl80211 netlink family.
-> 
-> Could you elaborate more why?
+Signed-off-by: Patrik Flykt <patrik.flykt@linux.intel.com>
+---
 
-you want to talk to the nl80211 family. The kernel has a module that allows you to talk to this family. So let it load the netlink family.
+v2: Free skb in error path
 
-If you do not want cfg80211 loaded, then fix NetworkManager and not hack the kernel. NetworkManager asks to talk to nl80211 in the first place. That one is causing the loading of cfg80211 module.
+ drivers/net/wireless/mac80211_hwsim.c | 60 +++++++++++++++++------------------
+ 1 file changed, 30 insertions(+), 30 deletions(-)
 
-You can also de-install the NetworkManager module for wireless, right. Then none of this should happen. Seriously, fix your userspace and do not blame the kernel for a perfect valid behavior.
-
-Regards
-
-Marcel
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 58f11bb..804c92f 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -2107,36 +2107,26 @@ static void hwsim_mcast_config_msg(struct sk_buff *mcast_skb,
+ 				  HWSIM_MCGRP_CONFIG, GFP_KERNEL);
+ }
+ 
+-static struct sk_buff *build_radio_msg(int cmd, int id,
+-				       struct hwsim_new_radio_params *param)
++static int append_radio_msg(struct sk_buff *skb, int id,
++			    struct hwsim_new_radio_params *param)
+ {
+-	struct sk_buff *skb;
+-	void *data;
+ 	int ret;
+ 
+-	skb = genlmsg_new(GENLMSG_DEFAULT_SIZE, GFP_KERNEL);
+-	if (!skb)
+-		return NULL;
+-
+-	data = genlmsg_put(skb, 0, 0, &hwsim_genl_family, 0, cmd);
+-	if (!data)
+-		goto error;
+-
+ 	ret = nla_put_u32(skb, HWSIM_ATTR_RADIO_ID, id);
+ 	if (ret < 0)
+-		goto error;
++		return ret;
+ 
+ 	if (param->channels) {
+ 		ret = nla_put_u32(skb, HWSIM_ATTR_CHANNELS, param->channels);
+ 		if (ret < 0)
+-			goto error;
++			return ret;
+ 	}
+ 
+ 	if (param->reg_alpha2) {
+ 		ret = nla_put(skb, HWSIM_ATTR_REG_HINT_ALPHA2, 2,
+ 			      param->reg_alpha2);
+ 		if (ret < 0)
+-			goto error;
++			return ret;
+ 	}
+ 
+ 	if (param->regd) {
+@@ -2149,54 +2139,64 @@ static struct sk_buff *build_radio_msg(int cmd, int id,
+ 		if (i < ARRAY_SIZE(hwsim_world_regdom_custom)) {
+ 			ret = nla_put_u32(skb, HWSIM_ATTR_REG_CUSTOM_REG, i);
+ 			if (ret < 0)
+-				goto error;
++				return ret;
+ 		}
+ 	}
+ 
+ 	if (param->reg_strict) {
+ 		ret = nla_put_flag(skb, HWSIM_ATTR_REG_STRICT_REG);
+ 		if (ret < 0)
+-			goto error;
++			return ret;
+ 	}
+ 
+ 	if (param->p2p_device) {
+ 		ret = nla_put_flag(skb, HWSIM_ATTR_SUPPORT_P2P_DEVICE);
+ 		if (ret < 0)
+-			goto error;
++			return ret;
+ 	}
+ 
+ 	if (param->use_chanctx) {
+ 		ret = nla_put_flag(skb, HWSIM_ATTR_USE_CHANCTX);
+ 		if (ret < 0)
+-			goto error;
++			return ret;
+ 	}
+ 
+ 	if (param->hwname) {
+ 		ret = nla_put(skb, HWSIM_ATTR_RADIO_NAME,
+ 			      strlen(param->hwname), param->hwname);
+ 		if (ret < 0)
+-			goto error;
++			return ret;
+ 	}
+ 
+-	genlmsg_end(skb, data);
+-
+-	return skb;
+-
+-error:
+-	nlmsg_free(skb);
+-	return NULL;
++	return 0;
+ }
+ 
+-static void hswim_mcast_new_radio(int id, struct genl_info *info,
++static void hwsim_mcast_new_radio(int id, struct genl_info *info,
+ 				  struct hwsim_new_radio_params *param)
+ {
+ 	struct sk_buff *mcast_skb;
++	void *data;
+ 
+-	mcast_skb = build_radio_msg(HWSIM_CMD_NEW_RADIO, id, param);
++	mcast_skb = genlmsg_new(GENLMSG_DEFAULT_SIZE, GFP_KERNEL);
+ 	if (!mcast_skb)
+ 		return;
+ 
++	data = genlmsg_put(mcast_skb, 0, 0, &hwsim_genl_family, 0,
++			   HWSIM_CMD_NEW_RADIO);
++	if (!data)
++		goto out_err;
++
++	if (append_radio_msg(mcast_skb, id, param) < 0)
++		goto out_err;
++
++	genlmsg_end(mcast_skb, data);
++
+ 	hwsim_mcast_config_msg(mcast_skb, info);
++	return;
++
++out_err:
++	genlmsg_cancel(mcast_skb, data);
++	nlmsg_free(mcast_skb);
+ }
+ 
+ static int mac80211_hwsim_new_radio(struct genl_info *info,
+@@ -2442,7 +2442,7 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
+ 	spin_unlock_bh(&hwsim_radio_lock);
+ 
+ 	if (idx > 0)
+-		hswim_mcast_new_radio(idx, info, param);
++		hwsim_mcast_new_radio(idx, info, param);
+ 
+ 	return idx;
+ 
+-- 
+2.1.1
 
