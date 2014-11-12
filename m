@@ -1,42 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:43455 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751547AbaKLLgk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Nov 2014 06:36:40 -0500
-From: Jukka Rissanen <jukka.rissanen@linux.intel.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 0/2] Stop scheduled scan if netlink client disappears
-Date: Wed, 12 Nov 2014 13:36:35 +0200
-Message-Id: <1415792197-23080-1-git-send-email-jukka.rissanen@linux.intel.com> (sfid-20141112_123644_132491_6AEFA19C)
+Received: from mail-oi0-f43.google.com ([209.85.218.43]:44907 "EHLO
+	mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753309AbaKLVfO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Nov 2014 16:35:14 -0500
+Received: by mail-oi0-f43.google.com with SMTP id e131so9385237oig.16
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Nov 2014 13:35:13 -0800 (PST)
+Message-ID: <5463D28F.9080106@lwfinger.net> (sfid-20141112_223521_748694_A407390B)
+Date: Wed, 12 Nov 2014 15:35:11 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Felix Fietkau <nbd@openwrt.org>,
+	Oleksij Rempel <linux@rempel-privat.de>,
+	Arend van Spriel <arend@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+CC: Etna <etna@openmailbox.org>, linux-wireless@vger.kernel.org
+Subject: Re: MediaTek WiFi hardware support in upstream kernel
+References: <544DB5A8.7090405@openmailbox.org> <20141027152026.GB19976@tuxdriver.com> <544E8CB4.3000607@rempel-privat.de> <20141028134608.GA26283@tuxdriver.com> <544FA303.5060303@broadcom.com> <544FA627.3000004@rempel-privat.de> <5450BEB2.60208@openwrt.org> <5461F937.9060004@rempel-privat.de> <5463CB6C.3030204@openwrt.org>
+In-Reply-To: <5463CB6C.3030204@openwrt.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On 11/12/2014 03:04 PM, Felix Fietkau wrote:
+> The chips I'm working with are both MT7662 and MT7612. My driver already
+> works as a simple AP or station in 802.11n mode with some limited
+> aggregation support. I'm getting around 45-50 Mbit/s TCP throughput on
+> HT20 with iperf. I will post code soon, stay tuned!
 
-v2:
+Felix,
 
-- split the patch
-- In patch 1, use a generic NL80211_ATTR_SOCKET_OWNER attribute and
-  convert the old code that uses NL80211_ATTR_IFACE_SOCKET_OWNER to
-  use the new value. A define is provided for backward compatibility.
-- Any pending schedule scan stop worker is cancelled when interface is
-  taken down in patch 2
+If your driver will work with the MT7630, I will be happy to test it when posted.
 
-Cheers,
-Jukka
+Larry
 
-
-Jukka Rissanen (2):
-  nl80211: Replace interface socket owner attribute with more generic
-    one
-  nl80211: Stop scheduled scan if netlink client disappears
-
- include/net/cfg80211.h       |  2 ++
- include/uapi/linux/nl80211.h | 11 ++++++++---
- net/wireless/core.c          | 10 +++++++++-
- net/wireless/nl80211.c       | 38 ++++++++++++++++++++++++++++++++++++--
- 4 files changed, 55 insertions(+), 6 deletions(-)
-
--- 
-1.8.3.1
 
