@@ -1,102 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:43555 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750759AbaKXWAL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2014 17:00:11 -0500
-Date: Mon, 24 Nov 2014 16:50:49 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 3/4] brcmsmac: extend hardware info shown in debugfs
-Message-ID: <20141124215049.GA4484@tuxdriver.com> (sfid-20141124_230016_564495_CD7F5963)
-References: <1416518822-29585-1-git-send-email-arend@broadcom.com>
- <1416518822-29585-4-git-send-email-arend@broadcom.com>
+Received: from mout.gmx.net ([212.227.15.15]:56443 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750732AbaKLGpZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Nov 2014 01:45:25 -0500
+Message-ID: <546301B6.9090609@rempel-privat.de> (sfid-20141112_074528_820272_EE52F309)
+Date: Wed, 12 Nov 2014 07:44:06 +0100
+From: Oleksij Rempel <linux@rempel-privat.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1416518822-29585-4-git-send-email-arend@broadcom.com>
+To: Sujith Manoharan <sujith@msujith.org>
+CC: ath9k-devel@qca.qualcomm.com, nbd@openwrt.org, patro@cs.wisc.edu,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 00/21] make spectral code common for both ath9k drivers
+References: <1415260418-14321-1-git-send-email-linux@rempel-privat.de> <21602.42365.82080.843506@gargle.gargle.HOWL>
+In-Reply-To: <21602.42365.82080.843506@gargle.gargle.HOWL>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="C7DBGjEMn12eFXMwFIgHMnh6goLPJ3lLi"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hmmm...I'm not sure why, but this is causing problems for me...
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--C7DBGjEMn12eFXMwFIgHMnh6goLPJ3lLi
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-ERROR: "brcmu_boardrev_str" [drivers/net/wireless/brcm80211/brcmsmac/brcmsmac.ko] undefined!
+Am 12.11.2014 um 01:10 schrieb Sujith Manoharan:
+> Oleksij Rempel wrote:
+>> - makes spectral scan code common for both ath9k and ath9k_htc.
+>> - add spectral scan support to ath9k_htc.
+>=20
+> This has been merged, but I am getting a build error.
+>=20
+> ../drivers/net/wireless/ath/ath9k/common-spectral.c:40:5: error: redefi=
+nition of =E2=80=98ath_cmn_process_fft=E2=80=99
+>  int ath_cmn_process_fft(struct ath_spec_scan_priv *spec_priv, struct i=
+eee80211_hdr *hdr,
+>      ^
+> In file included from ../drivers/net/wireless/ath/ath9k/common.h:27:0,
+>                  from ../drivers/net/wireless/ath/ath9k/ath9k.h:27,
+>                  from ../drivers/net/wireless/ath/ath9k/common-spectral=
+=2Ec:18:
+> ../drivers/net/wireless/ath/ath9k/common-spectral.h:146:19: note: previ=
+ous definition of =E2=80=98ath_cmn_process_fft=E2=80=99 was here
+>  static inline int ath_cmn_process_fft(struct ath_spec_scan_priv *spec_=
+priv,
+>                    ^
+> ../scripts/Makefile.build:257: recipe for target 'drivers/net/wireless/=
+ath/ath9k/common-spectral.o' failed
+> make[10]: *** [drivers/net/wireless/ath/ath9k/common-spectral.o] Error =
+1
+> make[10]: *** Waiting for unfinished jobs....
+>   CC [M]  drivers/target/iscsi/iscsi_target_erl0.o
+>   CC      drivers/thermal/thermal_core.o
+> In file included from ../drivers/net/wireless/ath/ath9k/htc_hst.c:19:0:=
 
-On Thu, Nov 20, 2014 at 10:27:01PM +0100, Arend van Spriel wrote:
-> The hardware info now also include radio and phy information, which
-> can be helpful in debugging issues.
-> 
-> Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
-> ---
->  drivers/net/wireless/brcm80211/brcmsmac/debug.c | 40 +++++++++++++++++--------
->  1 file changed, 27 insertions(+), 13 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/debug.c b/drivers/net/wireless/brcm80211/brcmsmac/debug.c
-> index 19740c1..c9a8b93 100644
-> --- a/drivers/net/wireless/brcm80211/brcmsmac/debug.c
-> +++ b/drivers/net/wireless/brcm80211/brcmsmac/debug.c
-> @@ -30,6 +30,7 @@
->  #include "main.h"
->  #include "debug.h"
->  #include "brcms_trace_events.h"
-> +#include "phy/phy_int.h"
->  
->  static struct dentry *root_folder;
->  
-> @@ -74,20 +75,33 @@ static
->  int brcms_debugfs_hardware_read(struct seq_file *s, void *data)
->  {
->  	struct brcms_pub *drvr = s->private;
-> +	struct brcms_hardware *hw = drvr->wlc->hw;
-> +	struct bcma_device *core = hw->d11core;
-> +	struct bcma_bus *bus = core->bus;
-> +	char boardrev[10];
->  
-> -	seq_printf(s, "board vendor: %x\n"
-> -		   "board type: %x\n"
-> -		   "board revision: %x\n"
-> -		   "board flags: %x\n"
-> -		   "board flags2: %x\n"
-> -		   "firmware revision: %x\n",
-> -		   drvr->wlc->hw->d11core->bus->boardinfo.vendor,
-> -		   drvr->wlc->hw->d11core->bus->boardinfo.type,
-> -		   drvr->wlc->hw->boardrev,
-> -		   drvr->wlc->hw->boardflags,
-> -		   drvr->wlc->hw->boardflags2,
-> -		   drvr->wlc->ucode_rev);
-> -
-> +	seq_printf(s, "chipnum 0x%x\n"
-> +		   "chiprev 0x%x\n"
-> +		   "chippackage 0x%x\n"
-> +		   "corerev 0x%x\n"
-> +		   "boardid 0x%x\n"
-> +		   "boardvendor 0x%x\n"
-> +		   "boardrev %s\n"
-> +		   "boardflags 0x%x\n"
-> +		   "boardflags2 0x%x\n"
-> +		   "ucoderev 0x%x\n"
-> +		   "radiorev 0x%x\n"
-> +		   "phytype 0x%x\n"
-> +		   "phyrev 0x%x\n"
-> +		   "anarev 0x%x\n"
-> +		   "nvramrev %d\n",
-> +		   bus->chipinfo.id, bus->chipinfo.rev, bus->chipinfo.pkg,
-> +		   core->id.rev, bus->boardinfo.type, bus->boardinfo.vendor,
-> +		   brcmu_boardrev_str(hw->boardrev, boardrev),
-> +		   drvr->wlc->hw->boardflags, drvr->wlc->hw->boardflags2,
-> +		   drvr->wlc->ucode_rev, hw->band->radiorev,
-> +		   hw->band->phytype, hw->band->phyrev, hw->band->pi->ana_rev,
-> +		   hw->sromrev);
->  	return 0;
->  }
->  
-> -- 
-> 1.9.1
-> 
-> 
+> ../drivers/net/wireless/ath/ath9k/htc.h: In function =E2=80=98ath9k_htc=
+_deinit_debug=E2=80=99:
+> ../drivers/net/wireless/ath/ath9k/htc.h:632:74: warning: =E2=80=98retur=
+n=E2=80=99 with a value, in function returning void
+>  static inline void ath9k_htc_deinit_debug(struct ath9k_htc_priv *priv)=
+ { return 0; };
+>                                                                        =
+   ^
+> ../scripts/Makefile.build:402: recipe for target 'drivers/net/wireless/=
+ath/ath9k' failed
+> make[9]: *** [drivers/net/wireless/ath/ath9k] Error 2
+> ../scripts/Makefile.build:402: recipe for target 'drivers/net/wireless/=
+ath' failed
+> make[8]: *** [drivers/net/wireless/ath] Error 2
+> make[8]: *** Waiting for unfinished jobs....
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Hi,
+
+thank you for testing.
+John already provided patch for this.
+
+--=20
+Regards,
+Oleksij
+
+
+--C7DBGjEMn12eFXMwFIgHMnh6goLPJ3lLi
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iF4EAREIAAYFAlRjAbYACgkQHwImuRkmbWncSgEAkM/rfZo/zwdPZ6HZsHqI7L8O
+WaXFMFH2Yo06j2Mdbe0BAJOd3VarAwT0iSk61J6wvGaW83mOm7vE4NEQb27ZMekk
+=64SI
+-----END PGP SIGNATURE-----
+
+--C7DBGjEMn12eFXMwFIgHMnh6goLPJ3lLi--
