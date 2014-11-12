@@ -1,73 +1,161 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f169.google.com ([209.85.213.169]:41800 "EHLO
-	mail-ig0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752558AbaKQNh3 (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:50346 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753404AbaKLVLy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Nov 2014 08:37:29 -0500
-Received: by mail-ig0-f169.google.com with SMTP id hl2so2000903igb.0
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Nov 2014 05:37:28 -0800 (PST)
-Date: Mon, 17 Nov 2014 08:34:18 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: "Nishikawa, Kenzoh" <Kenzoh.Nishikawa@jp.sony.com>,
-	devel@lists.open80211s.org
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] mac80211: Send peering open frame again if beacon
- from listen state peer is received
-Message-ID: <20141117133418.GG11482@localhost> (sfid-20141117_143742_486910_05D4D5B4)
-References: <2EB4F5C65A3B8E4E92660930F4EF6B5B069684@JPYOKXMS113.jp.sony.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <2EB4F5C65A3B8E4E92660930F4EF6B5B069684@JPYOKXMS113.jp.sony.com>
+	Wed, 12 Nov 2014 16:11:54 -0500
+Received: by mail-wi0-f174.google.com with SMTP id d1so6299171wiv.1
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Nov 2014 13:11:53 -0800 (PST)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 2/8] staging: vt6655: card.c move __iomem into functions.
+Date: Wed, 12 Nov 2014 21:11:09 +0000
+Message-Id: <1415826675-8446-2-git-send-email-tvboxspy@gmail.com> (sfid-20141112_221158_169623_E11B9383)
+In-Reply-To: <1415826675-8446-1-git-send-email-tvboxspy@gmail.com>
+References: <1415826675-8446-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 17, 2014 at 09:35:42AM +0000, Nishikawa, Kenzoh via Devel wrote:
-> Fixes the problem that a mesh peering process won't be fired again 
-> after the previous first peering trial fails due to like air propagation error
-> if the peering is managed by user space such as wpa_supplicant.
-> 
-> This patch works with another patch for wpa_supplicant described here
-> which fires a peering process again triggered by the notice from kernel.
-> http://lists.shmoo.com/pipermail/hostap/2014-November/031235.html
+Removing dereferencing from callers
 
-I think this makes sense in principle.  I also checked authsae and it
-should handle getting these additional events so no problems with
-existing userspace.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/card.c        | 18 ++++++++++++------
+ drivers/staging/vt6655/card.h        |  8 ++++----
+ drivers/staging/vt6655/device_main.c |  7 +++----
+ drivers/staging/vt6655/rxtx.c        |  2 +-
+ 4 files changed, 20 insertions(+), 15 deletions(-)
 
-However, some comments:
-
-The subject doesn't really match what this does.  I would also describe
-the new kernel behavior in the commit log in addition to the motivation.
-
-Maybe something like this:
-
-mac80211: keep sending peer candidate events while in listen state
-
-Instead of sending peer candidate events just once, send them as
-long as the peer remains in the LISTEN state in the peering state
-machine, when userspace is implementing the peering manager.  Userspace
-may silence the events from a peer by progressing the state machine or
-by setting the link state to BLOCKED.
-
-Fixes the problem that a mesh peering process won't be fired again
-after the previous first peering trial fails due to like air propagation error
-if the peering is managed by user space such as wpa_supplicant.
-
-This patch works with another patch for wpa_supplicant described here
-which fires a peering process again triggered by the notice from kernel.
-http://lists.shmoo.com/pipermail/hostap/2014-November/031235.html
-
-> +		(sdata->u.mesh.user_mpm ||
-> +		sdata->u.mesh.security & IEEE80211_MESH_SEC_AUTHED))
-> +		cfg80211_notify_new_peer_candidate(sdata->dev, hw_addr,
-> +							   elems->ie_start,
-> +							   elems->total_len,
-> +							   GFP_KERNEL);
-
->From a cursory glance I think this needs to be GFP_ATOMIC -- don't you get
-lockdep warnings?  (If not, make sure CONFIG_PROVE_LOCKING is enabled, and
-that you aren't hitting other lockdep warnings prior to this code running.)
-This code is in an RCU read critical section as far as I can tell.
-
+diff --git a/drivers/staging/vt6655/card.c b/drivers/staging/vt6655/card.c
+index a93ca16..a079640 100644
+--- a/drivers/staging/vt6655/card.c
++++ b/drivers/staging/vt6655/card.c
+@@ -394,7 +394,7 @@ bool CARDbSetBeaconPeriod(struct vnt_private *pDevice,
+ {
+ 	u64 qwNextTBTT = 0;
+ 
+-	CARDbGetCurrentTSF(pDevice->PortOffset, &qwNextTBTT); /* Get Local TSF counter */
++	CARDbGetCurrentTSF(pDevice, &qwNextTBTT); /* Get Local TSF counter */
+ 
+ 	qwNextTBTT = CARDqGetNextTBTT(qwNextTBTT, wBeaconInterval);
+ 
+@@ -828,8 +828,10 @@ unsigned char CARDbyGetPktType(struct vnt_private *pDevice)
+  *
+  * Return Value: none
+  */
+-void CARDvSetLoopbackMode(void __iomem *dwIoBase, unsigned short wLoopbackMode)
++void CARDvSetLoopbackMode(struct vnt_private *priv, unsigned short wLoopbackMode)
+ {
++	void __iomem *dwIoBase = priv->PortOffset;
++
+ 	switch (wLoopbackMode) {
+ 	case CARD_LB_NONE:
+ 	case CARD_LB_MAC:
+@@ -905,8 +907,9 @@ u64 CARDqGetTSFOffset(unsigned char byRxRate, u64 qwTSF1, u64 qwTSF2)
+  *
+  * Return Value: true if success; otherwise false
+  */
+-bool CARDbGetCurrentTSF(void __iomem *dwIoBase, u64 *pqwCurrTSF)
++bool CARDbGetCurrentTSF(struct vnt_private *priv, u64 *pqwCurrTSF)
+ {
++	void __iomem *dwIoBase = priv->PortOffset;
+ 	unsigned short ww;
+ 	unsigned char byData;
+ 
+@@ -964,11 +967,12 @@ u64 CARDqGetNextTBTT(u64 qwTSF, unsigned short wBeaconInterval)
+  *
+  * Return Value: none
+  */
+-void CARDvSetFirstNextTBTT(void __iomem *dwIoBase, unsigned short wBeaconInterval)
++void CARDvSetFirstNextTBTT(struct vnt_private *priv, unsigned short wBeaconInterval)
+ {
++	void __iomem *dwIoBase = priv->PortOffset;
+ 	u64 qwNextTBTT = 0;
+ 
+-	CARDbGetCurrentTSF(dwIoBase, &qwNextTBTT); /* Get Local TSF counter */
++	CARDbGetCurrentTSF(priv, &qwNextTBTT); /* Get Local TSF counter */
+ 
+ 	qwNextTBTT = CARDqGetNextTBTT(qwNextTBTT, wBeaconInterval);
+ 	/* Set NextTBTT */
+@@ -991,8 +995,10 @@ void CARDvSetFirstNextTBTT(void __iomem *dwIoBase, unsigned short wBeaconInterva
+  *
+  * Return Value: none
+  */
+-void CARDvUpdateNextTBTT(void __iomem *dwIoBase, u64 qwTSF, unsigned short wBeaconInterval)
++void CARDvUpdateNextTBTT(struct vnt_private *priv, u64 qwTSF, unsigned short wBeaconInterval)
+ {
++	void __iomem *dwIoBase = priv->PortOffset;
++
+ 	qwTSF = CARDqGetNextTBTT(qwTSF, wBeaconInterval);
+ 	/* Set NextTBTT */
+ 	VNSvOutPortD(dwIoBase + MAC_REG_NEXTTBTT, (u32)qwTSF);
+diff --git a/drivers/staging/vt6655/card.h b/drivers/staging/vt6655/card.h
+index 2e56710..2dfc419 100644
+--- a/drivers/staging/vt6655/card.h
++++ b/drivers/staging/vt6655/card.h
+@@ -69,11 +69,11 @@ struct vnt_private;
+ void CARDvSetRSPINF(struct vnt_private *, u8);
+ void CARDvUpdateBasicTopRate(struct vnt_private *);
+ bool CARDbIsOFDMinBasicRate(struct vnt_private *);
+-void CARDvSetLoopbackMode(void __iomem *dwIoBase, unsigned short wLoopbackMode);
++void CARDvSetLoopbackMode(struct vnt_private *, unsigned short wLoopbackMode);
+ bool CARDbSoftwareReset(struct vnt_private *);
+-void CARDvSetFirstNextTBTT(void __iomem *dwIoBase, unsigned short wBeaconInterval);
+-void CARDvUpdateNextTBTT(void __iomem *dwIoBase, u64 qwTSF, unsigned short wBeaconInterval);
+-bool CARDbGetCurrentTSF(void __iomem *dwIoBase, u64 *pqwCurrTSF);
++void CARDvSetFirstNextTBTT(struct vnt_private *, unsigned short wBeaconInterval);
++void CARDvUpdateNextTBTT(struct vnt_private *, u64 qwTSF, unsigned short wBeaconInterval);
++bool CARDbGetCurrentTSF(struct vnt_private *, u64 *pqwCurrTSF);
+ u64 CARDqGetNextTBTT(u64 qwTSF, unsigned short wBeaconInterval);
+ u64 CARDqGetTSFOffset(unsigned char byRxRate, u64 qwTSF1, u64 qwTSF2);
+ unsigned char CARDbyGetPktType(struct vnt_private *);
+diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
+index 1392332..83e4162 100644
+--- a/drivers/staging/vt6655/device_main.c
++++ b/drivers/staging/vt6655/device_main.c
+@@ -1513,8 +1513,7 @@ static void vnt_bss_info_changed(struct ieee80211_hw *hw,
+ 
+ 			CARDbSetBeaconPeriod(priv, conf->beacon_int);
+ 
+-			CARDvSetFirstNextTBTT(priv->PortOffset,
+-					      conf->beacon_int);
++			CARDvSetFirstNextTBTT(priv, conf->beacon_int);
+ 		} else {
+ 			VNSvOutPortB(priv->PortOffset + MAC_REG_TFTCTL,
+ 				     TFTCTL_TSFCNTRST);
+@@ -1633,7 +1632,7 @@ static u64 vnt_get_tsf(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ 	struct vnt_private *priv = hw->priv;
+ 	u64 tsf;
+ 
+-	CARDbGetCurrentTSF(priv->PortOffset, &tsf);
++	CARDbGetCurrentTSF(priv, &tsf);
+ 
+ 	return tsf;
+ }
+@@ -1643,7 +1642,7 @@ static void vnt_set_tsf(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ {
+ 	struct vnt_private *priv = hw->priv;
+ 
+-	CARDvUpdateNextTBTT(priv->PortOffset, tsf, vif->bss_conf.beacon_int);
++	CARDvUpdateNextTBTT(priv, tsf, vif->bss_conf.beacon_int);
+ }
+ 
+ static void vnt_reset_tsf(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+diff --git a/drivers/staging/vt6655/rxtx.c b/drivers/staging/vt6655/rxtx.c
+index f4da7e7..4189405 100644
+--- a/drivers/staging/vt6655/rxtx.c
++++ b/drivers/staging/vt6655/rxtx.c
+@@ -1521,7 +1521,7 @@ int vnt_beacon_enable(struct vnt_private *priv, struct ieee80211_vif *vif,
+ 
+ 	VNSvOutPortB(priv->PortOffset + MAC_REG_TFTCTL, TFTCTL_TSFCNTREN);
+ 
+-	CARDvSetFirstNextTBTT(priv->PortOffset, conf->beacon_int);
++	CARDvSetFirstNextTBTT(priv, conf->beacon_int);
+ 
+ 	CARDbSetBeaconPeriod(priv, conf->beacon_int);
+ 
 -- 
-Bob Copeland %% http://bobcopeland.com/
+2.1.0
+
