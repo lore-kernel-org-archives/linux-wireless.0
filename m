@@ -1,40 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:3626 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757152AbaKUCjo convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Nov 2014 21:39:44 -0500
-From: "Li, Yanbo" <yanbol@qti.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: "Valo, Kalle" <kvalo@qca.qualcomm.com>,
-	"dreamfly281@gmail.com" <dreamfly281@gmail.com>,
-	"michal.kazior@tieto.com" <michal.kazior@tieto.com>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH] Add the target register read/write and memory dump
- debugfs interface
-Date: Fri, 21 Nov 2014 02:39:42 +0000
-Message-ID: <5b9b8ec5e5234a81be5fffcaab520d4e@nasanexm02e.na.qualcomm.com> (sfid-20141121_033951_245066_B8EAC8FF)
-References: <1416500565-29875-1-git-send-email-yanbol@qti.qualcomm.com>
- <20141120194521.GC31881@tuxdriver.com>
-In-Reply-To: <20141120194521.GC31881@tuxdriver.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from cantor2.suse.de ([195.135.220.15]:58989 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750720AbaKLHAn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Nov 2014 02:00:43 -0500
+Message-ID: <1415775644.1761.1.camel@linux-0dmf.site> (sfid-20141112_080046_698941_C6CC4936)
+Subject: Re: [PATCH] brcmfmac: unlink URB when request timed out
+From: Oliver Neukum <oneukum@suse.de>
+To: Mathy Vanhoef <vanhoefm@gmail.com>
+Cc: brudley@broadcom.com, Arend van Spriel <arend@broadcom.com>,
+	Franky Lin <frankyl@broadcom.com>, meuleman@broadcom.com,
+	John Linville <linville@tuxdriver.com>, pieterpg@broadcom.com,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Wed, 12 Nov 2014 08:00:44 +0100
+In-Reply-To: <5462B1A3.9020401@gmail.com>
+References: <545FAE05.2030701@gmail.com>
+	 <1415610506.16488.20.camel@linux-0dmf.site> <5462B1A3.9020401@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> -----Original Message-----
-> From: John W. Linville [mailto:linville@tuxdriver.com]
-> Sent: Friday, November 21, 2014 3:45 AM
-> To: Li, Yanbo
-> Cc: Valo, Kalle; dreamfly281@gmail.com; michal.kazior@tieto.com;
-> ath10k@lists.infradead.org; linux-wireless@vger.kernel.org
-> Subject: Re: [PATCH] Add the target register read/write and memory dump
-> debugfs interface
-> 
-> The subject should start like "ath10k: ..."
-> 
-Resend with the prefix, please review base on the new thread.
+On Tue, 2014-11-11 at 20:02 -0500, Mathy Vanhoef wrote:
+> On 11/10/2014 04:08 AM, Oliver Neukum wrote:
 
-Thanks 
-BR /Yanbo
+> > Which means that you are freeing memory that may still be used by DMA
+> > at this time.
+> > In addition you have no guarantee that the unlink is indeed finished
+> > by the time the URB is reused.
+> > If you wish to take this approach you better forget about this URB
+> > and allocate a new one and free the buffer from the callback.
+> 
+> Hi Oliver,
+> 
+> Good catch. I think the DMA issue is also present in the current driver: it
+> frees the buffer without unlinking/killing the URB at all. Can a malicious USB
+
+Yes, it is present.
+
+> device force a timeout to occur (i.e. delay the call to the completion
+> handler)? If so this might be a use-after-free vulnerability.
+> 
+> It seems using usb_kill_urb instead of usb_unlink_urb in the patch prevents any
+> possible use-after-free. Can someone double check?
+
+usb_kill_urb() will do the job.
+
+	Regards
+		Oliver
+
+
