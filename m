@@ -1,152 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay1.mentorg.com ([192.94.38.131]:35617 "EHLO
-	relay1.mentorg.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750782AbaKFGQY (ORCPT
+Received: from mga01.intel.com ([192.55.52.88]:44056 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752414AbaKLOEA convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Nov 2014 01:16:24 -0500
-From: Sanjeev Sharma <sanjeev_sharma@mentor.com>
-To: <Larry.Finger@lwfinger.net>, <Jes.Sorensen@redhat.com>
-CC: <gregkh@linuxfoundation.org>, <linux-wireless@vger.kernel.org>,
-	<devel@driverdev.osuosl.org>, <linux-kernel@vger.kernel.org>,
-	Sanjeev Sharma <sanjeev_sharma@mentor.com>,
-	Sanjeev Sharma <Sanjeev_Sharma@mentor.com>
-Subject: [PATCH] staging:rtl8723au: core: Fix error reported by checkpatch.
-Date: Thu, 6 Nov 2014 11:46:13 +0530
-Message-ID: <1415254573-3451-1-git-send-email-sanjeev_sharma@mentor.com> (sfid-20141106_071703_331563_014E0E63)
-In-Reply-To: <wrfjy4rxzk5b.fsf@redhat.com>
-References: <wrfjy4rxzk5b.fsf@redhat.com>
+	Wed, 12 Nov 2014 09:04:00 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: David Ward <david.ward@ll.mit.edu>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>
+CC: Martin Hundeb?ll <martin@hundeboll.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH] iwlwifi: dvm: Implement sta_rc_update() mac80211
+ callback
+Date: Wed, 12 Nov 2014 14:01:08 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB31B562E61@hasmsx107.ger.corp.intel.com> (sfid-20141112_150404_376522_73403476)
+References: <1411997268.1663.0@smtp.hundeboll.net>
+ <1415773612-8724-1-git-send-email-david.ward@ll.mit.edu>
+In-Reply-To: <1415773612-8724-1-git-send-email-david.ward@ll.mit.edu>
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a patch to the rtw_cmd.c file that fixes following
-error.
+> 
+> Perform rate scaling properly when operating in an IBSS. Prior to this, the
+> 5300 and 6205 devices (at least) would only transmit at
+> 1 Mbps to other stations in an IBSS. This now allows transmission at HT rates.
+> 
+> Signed-off-by: David Ward <david.ward@ll.mit.edu>
+> ---
+>  drivers/net/wireless/iwlwifi/dvm/mac80211.c | 17 +++++++++++++++++
+>  1 file changed, 17 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/dvm/mac80211.c
+> b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
+> index 47e64e8..742218d 100644
+> --- a/drivers/net/wireless/iwlwifi/dvm/mac80211.c
+> +++ b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
+> @@ -940,6 +940,22 @@ static int iwlagn_mac_sta_state(struct
+> ieee80211_hw *hw,
+>  	return ret;
+>  }
+> 
+> +static void iwlagn_mac_sta_rc_update(struct ieee80211_hw *hw,
+> +				     struct ieee80211_vif *vif,
+> +				     struct ieee80211_sta *sta, u32 changed) {
+> +	struct iwl_priv *priv = IWL_MAC80211_GET_DVM(hw);
+> +
+> +	if (!(changed & IEEE80211_RC_SUPP_RATES_CHANGED))
+> +		return;
+> +
+> +	/* Update rate scaling */
+> +	IWL_DEBUG_INFO(priv,
+> +		       "Updating rate scaling for station %pM\n",
+> +		       sta->addr);
+> +	iwl_rs_rate_init(priv, sta, iwl_sta_id(sta)); }
+> +
+>  static void iwlagn_mac_channel_switch(struct ieee80211_hw *hw,
+>  				      struct ieee80211_vif *vif,
+>  				      struct ieee80211_channel_switch
+> *ch_switch) @@ -1610,6 +1626,7 @@ const struct ieee80211_ops
+> iwlagn_hw_ops = {
+>  	.hw_scan = iwlagn_mac_hw_scan,
+>  	.sta_notify = iwlagn_mac_sta_notify,
+>  	.sta_state = iwlagn_mac_sta_state,
+> +	.sta_rc_update = iwlagn_mac_sta_rc_update,
 
-ERROR: spaces required around that '>' (ctx:WxV)
-ERROR: that open brace { should be on the previous line
+Well - this would be called in other flows as well. For example, when we receive a beacon that changes the bandwidth or alike. I am not sure we want to re-init the rate scale data in this case, and more importantly, I am not sure it will not race with the tx / tx_status path that updates / uses the rate scale data.
 
-Signed-off-by: Sanjeev Sharma <Sanjeev_Sharma@mentor.com>
----
- drivers/staging/rtl8723au/core/rtw_cmd.c | 83 +++++++++++++++-----------------
- 1 file changed, 40 insertions(+), 43 deletions(-)
-
-diff --git a/drivers/staging/rtl8723au/core/rtw_cmd.c b/drivers/staging/rtl8723au/core/rtw_cmd.c
-index 4eaa502..e9d6ac2 100644
---- a/drivers/staging/rtl8723au/core/rtw_cmd.c
-+++ b/drivers/staging/rtl8723au/core/rtw_cmd.c
-@@ -957,7 +957,7 @@ static void traffic_status_watchdog(struct rtw_adapter *padapter)
- 		/*  check traffic for  powersaving. */
- 			if (((pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod +
- 			      pmlmepriv->LinkDetectInfo.NumTxOkInPeriod) > 8) ||
--			    pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod >2)
-+			    pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod > 2)
- 				bEnterPS = false;
- 			else
- 				bEnterPS = true;
-@@ -1017,46 +1017,44 @@ static void lps_ctrl_wk_hdl(struct rtw_adapter *padapter, u8 lps_ctrl_type)
- 	    check_fwstate(pmlmepriv, WIFI_ADHOC_STATE))
- 		return;
- 
--	switch (lps_ctrl_type)
--	{
--		case LPS_CTRL_SCAN:
--			rtl8723a_BT_wifiscan_notify(padapter, true);
--			if (!rtl8723a_BT_using_antenna_1(padapter)) {
--				if (check_fwstate(pmlmepriv, _FW_LINKED))
--					LPS_Leave23a(padapter);
--			}
--			break;
--		case LPS_CTRL_JOINBSS:
--			LPS_Leave23a(padapter);
--			break;
--		case LPS_CTRL_CONNECT:
--			mstatus = 1;/* connect */
--			/*  Reset LPS Setting */
--			padapter->pwrctrlpriv.LpsIdleCount = 0;
--			rtl8723a_set_FwJoinBssReport_cmd(padapter, 1);
--			rtl8723a_BT_mediastatus_notify(padapter, mstatus);
--			break;
--		case LPS_CTRL_DISCONNECT:
--			mstatus = 0;/* disconnect */
--			rtl8723a_BT_mediastatus_notify(padapter, mstatus);
--			if (!rtl8723a_BT_using_antenna_1(padapter))
--				LPS_Leave23a(padapter);
--			rtl8723a_set_FwJoinBssReport_cmd(padapter, 0);
--			break;
--		case LPS_CTRL_SPECIAL_PACKET:
--			pwrpriv->DelayLPSLastTimeStamp = jiffies;
--			rtl8723a_BT_specialpacket_notify(padapter);
--			if (!rtl8723a_BT_using_antenna_1(padapter))
-+	switch (lps_ctrl_type) {
-+	case LPS_CTRL_SCAN:
-+		rtl8723a_BT_wifiscan_notify(padapter, true);
-+		if (!rtl8723a_BT_using_antenna_1(padapter)) {
-+			if (check_fwstate(pmlmepriv, _FW_LINKED))
- 				LPS_Leave23a(padapter);
--			break;
--		case LPS_CTRL_LEAVE:
--			rtl8723a_BT_lps_leave(padapter);
--			if (!rtl8723a_BT_using_antenna_1(padapter))
--				LPS_Leave23a(padapter);
--			break;
--
--		default:
--			break;
-+		}
-+		break;
-+	case LPS_CTRL_JOINBSS:
-+		LPS_Leave23a(padapter);
-+		break;
-+	case LPS_CTRL_CONNECT:
-+		mstatus = 1;/* connect */
-+		/*  Reset LPS Setting */
-+		padapter->pwrctrlpriv.LpsIdleCount = 0;
-+		rtl8723a_set_FwJoinBssReport_cmd(padapter, 1);
-+		rtl8723a_BT_mediastatus_notify(padapter, mstatus);
-+		break;
-+	case LPS_CTRL_DISCONNECT:
-+		mstatus = 0;/* disconnect */
-+		rtl8723a_BT_mediastatus_notify(padapter, mstatus);
-+		if (!rtl8723a_BT_using_antenna_1(padapter))
-+			LPS_Leave23a(padapter);
-+		rtl8723a_set_FwJoinBssReport_cmd(padapter, 0);
-+		break;
-+	case LPS_CTRL_SPECIAL_PACKET:
-+		pwrpriv->DelayLPSLastTimeStamp = jiffies;
-+		rtl8723a_BT_specialpacket_notify(padapter);
-+		if (!rtl8723a_BT_using_antenna_1(padapter))
-+			LPS_Leave23a(padapter);
-+		break;
-+	case LPS_CTRL_LEAVE:
-+		rtl8723a_BT_lps_leave(padapter);
-+		if (!rtl8723a_BT_using_antenna_1(padapter))
-+			LPS_Leave23a(padapter);
-+		break;
-+	default:
-+		break;
- 	}
- }
- 
-@@ -1152,7 +1150,7 @@ static void rtw_chk_hi_queue_hdl(struct rtw_adapter *padapter)
- 
- 			cnt++;
- 
--			if (cnt>10)
-+			if (cnt > 10)
- 				break;
- 
- 			val = rtl8723a_chk_hi_queue_empty(padapter);
-@@ -1305,8 +1303,7 @@ int rtw_drvextra_cmd_hdl23a(struct rtw_adapter *padapter, const u8 *pbuf)
- 
- 	pdrvextra_cmd = (struct drvextra_cmd_parm *)pbuf;
- 
--	switch (pdrvextra_cmd->ec_id)
--	{
-+	switch (pdrvextra_cmd->ec_id) {
- 	case DYNAMIC_CHK_WK_CID:
- 		dynamic_chk_wk_hdl(padapter, pdrvextra_cmd->pbuf,
- 				   pdrvextra_cmd->type_size);
--- 
-1.7.11.7
+>  	.channel_switch = iwlagn_mac_channel_switch,
+>  	.flush = iwlagn_mac_flush,
+>  	.tx_last_beacon = iwlagn_mac_tx_last_beacon,
+> --
+> 1.9.1
 
