@@ -1,34 +1,175 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f172.google.com ([209.85.217.172]:43842 "EHLO
-	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751107AbaKZT6c (ORCPT
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:34304 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753404AbaKLVL4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Nov 2014 14:58:32 -0500
-Received: by mail-lb0-f172.google.com with SMTP id u10so3083370lbd.17
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Nov 2014 11:58:30 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <546E6C62.9010808@lwfinger.net>
-References: <CAHg_5go+AZTytHq7OyoV_r35sj2wW0OwgBq+sm8R+zJbOXiYcA@mail.gmail.com>
- <546E6C62.9010808@lwfinger.net>
-From: Catalin Iacob <iacobcatalin@gmail.com>
-Date: Wed, 26 Nov 2014 20:58:10 +0100
-Message-ID: <CAHg_5grY7m6FoyvnaavmzAVLNAso9KYM11dkR7fGhZ7dpnFJZg@mail.gmail.com> (sfid-20141126_205835_288309_0A970950)
-Subject: Re: rtl8192ce 3.18 regression scan doesn't find any APs
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Wed, 12 Nov 2014 16:11:56 -0500
+Received: by mail-wi0-f171.google.com with SMTP id r20so6269155wiv.16
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Nov 2014 13:11:55 -0800 (PST)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 3/8] staging: vt6655: rf remove __iomem *dwIoBase from functions
+Date: Wed, 12 Nov 2014 21:11:10 +0000
+Message-Id: <1415826675-8446-3-git-send-email-tvboxspy@gmail.com> (sfid-20141112_221159_813289_0FBBDAE9)
+In-Reply-To: <1415826675-8446-1-git-send-email-tvboxspy@gmail.com>
+References: <1415826675-8446-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 20, 2014 at 11:34 PM, Larry Finger
-<Larry.Finger@lwfinger.net> wrote:
-> I have reproduced the problem, but I do not yet know the fix. Please file a
-> bug report at bugzilla.kernel.org on this problem. Be sure to mark it as a
-> regression, and assign it to me. When I find the fix, being able to cite the
-> bug report will help get a last-minute patch into 3.18.
+replacing with vnt_private and removing dereferencing from callers
 
-Thanks for looking at this. Great that you could reproduce it.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/channel.c |  8 +++++---
+ drivers/staging/vt6655/rf.c      | 25 ++++++++++++++++---------
+ drivers/staging/vt6655/rf.h      |  6 +++---
+ 3 files changed, 24 insertions(+), 15 deletions(-)
 
-I've filed https://bugzilla.kernel.org/show_bug.cgi?id=88951 and added
-you to CC since I don't have permissions to change the Assigned to
-field.
+diff --git a/drivers/staging/vt6655/channel.c b/drivers/staging/vt6655/channel.c
+index cc1bc94..c8f739d 100644
+--- a/drivers/staging/vt6655/channel.c
++++ b/drivers/staging/vt6655/channel.c
+@@ -188,14 +188,16 @@ bool set_channel(void *pDeviceHandler, unsigned int uConnectionChannel)
+ 	/* TX_PE will reserve 3 us for MAX2829 A mode only, it is for better TX throughput */
+ 
+ 	if (pDevice->byRFType == RF_AIROHA7230)
+-		RFbAL7230SelectChannelPostProcess(pDevice->PortOffset, pDevice->byCurrentCh, (unsigned char)uConnectionChannel);
++		RFbAL7230SelectChannelPostProcess(pDevice, pDevice->byCurrentCh,
++						  (unsigned char)uConnectionChannel);
+ 
+ 	pDevice->byCurrentCh = (unsigned char)uConnectionChannel;
+-	bResult &= RFbSelectChannel(pDevice->PortOffset, pDevice->byRFType, (unsigned char)uConnectionChannel);
++	bResult &= RFbSelectChannel(pDevice, pDevice->byRFType,
++				    (unsigned char)uConnectionChannel);
+ 
+ 	/* Init Synthesizer Table */
+ 	if (pDevice->bEnablePSMode)
+-		RFvWriteWakeProgSyn(pDevice->PortOffset, pDevice->byRFType, uConnectionChannel);
++		RFvWriteWakeProgSyn(pDevice, pDevice->byRFType, uConnectionChannel);
+ 
+ 	BBvSoftwareReset(pDevice);
+ 
+diff --git a/drivers/staging/vt6655/rf.c b/drivers/staging/vt6655/rf.c
+index 2b1e7a0..da2c5e6 100644
+--- a/drivers/staging/vt6655/rf.c
++++ b/drivers/staging/vt6655/rf.c
+@@ -468,8 +468,9 @@ static bool s_bAL7230Init(struct vnt_private *priv)
+ }
+ 
+ // Need to Pull PLLON low when writing channel registers through 3-wire interface
+-static bool s_bAL7230SelectChannel(void __iomem *dwIoBase, unsigned char byChannel)
++static bool s_bAL7230SelectChannel(struct vnt_private *priv, unsigned char byChannel)
+ {
++	void __iomem *dwIoBase = priv->PortOffset;
+ 	bool bResult;
+ 
+ 	bResult = true;
+@@ -627,8 +628,9 @@ bool IFRFbWriteEmbedded(void __iomem *dwIoBase, unsigned long dwData)
+  * Return Value: true if succeeded; false if failed.
+  *
+  */
+-static bool RFbAL2230Init(void __iomem *dwIoBase)
++static bool RFbAL2230Init(struct vnt_private *priv)
+ {
++	void __iomem *dwIoBase = priv->PortOffset;
+ 	int     ii;
+ 	bool bResult;
+ 
+@@ -674,8 +676,9 @@ static bool RFbAL2230Init(void __iomem *dwIoBase)
+ 	return bResult;
+ }
+ 
+-static bool RFbAL2230SelectChannel(void __iomem *dwIoBase, unsigned char byChannel)
++static bool RFbAL2230SelectChannel(struct vnt_private *priv, unsigned char byChannel)
+ {
++	void __iomem *dwIoBase = priv->PortOffset;
+ 	bool bResult;
+ 
+ 	bResult = true;
+@@ -756,7 +759,7 @@ bool RFbInit(
+ 	case RF_AIROHA:
+ 	case RF_AL2230S:
+ 		pDevice->byMaxPwrLevel = AL2230_PWR_IDX_LEN;
+-		bResult = RFbAL2230Init(pDevice->PortOffset);
++		bResult = RFbAL2230Init(pDevice);
+ 		break;
+ 	case RF_AIROHA7230:
+ 		pDevice->byMaxPwrLevel = AL7230_PWR_IDX_LEN;
+@@ -785,18 +788,18 @@ bool RFbInit(
+  * Return Value: true if succeeded; false if failed.
+  *
+  */
+-bool RFbSelectChannel(void __iomem *dwIoBase, unsigned char byRFType, unsigned char byChannel)
++bool RFbSelectChannel(struct vnt_private *priv, unsigned char byRFType, unsigned char byChannel)
+ {
+ 	bool bResult = true;
+ 
+ 	switch (byRFType) {
+ 	case RF_AIROHA:
+ 	case RF_AL2230S:
+-		bResult = RFbAL2230SelectChannel(dwIoBase, byChannel);
++		bResult = RFbAL2230SelectChannel(priv, byChannel);
+ 		break;
+ 		//{{ RobertYu: 20050104
+ 	case RF_AIROHA7230:
+-		bResult = s_bAL7230SelectChannel(dwIoBase, byChannel);
++		bResult = s_bAL7230SelectChannel(priv, byChannel);
+ 		break;
+ 		//}} RobertYu
+ 	case RF_NOTHING:
+@@ -821,8 +824,9 @@ bool RFbSelectChannel(void __iomem *dwIoBase, unsigned char byRFType, unsigned c
+  * Return Value: None.
+  *
+  */
+-bool RFvWriteWakeProgSyn(void __iomem *dwIoBase, unsigned char byRFType, unsigned int uChannel)
++bool RFvWriteWakeProgSyn(struct vnt_private *priv, unsigned char byRFType, unsigned int uChannel)
+ {
++	void __iomem *dwIoBase = priv->PortOffset;
+ 	int   ii;
+ 	unsigned char byInitCount = 0;
+ 	unsigned char bySleepCount = 0;
+@@ -1071,8 +1075,11 @@ RFvRSSITodBm(
+ 
+ // Post processing for the 11b/g and 11a.
+ // for save time on changing Reg2,3,5,7,10,12,15
+-bool RFbAL7230SelectChannelPostProcess(void __iomem *dwIoBase, unsigned char byOldChannel, unsigned char byNewChannel)
++bool RFbAL7230SelectChannelPostProcess(struct vnt_private *priv,
++				       unsigned char byOldChannel,
++				       unsigned char byNewChannel)
+ {
++	void __iomem *dwIoBase = priv->PortOffset;
+ 	bool bResult;
+ 
+ 	bResult = true;
+diff --git a/drivers/staging/vt6655/rf.h b/drivers/staging/vt6655/rf.h
+index e8a7372..98c2326 100644
+--- a/drivers/staging/vt6655/rf.h
++++ b/drivers/staging/vt6655/rf.h
+@@ -74,11 +74,11 @@
+ /*---------------------  Export Functions  --------------------------*/
+ 
+ bool IFRFbWriteEmbedded(void __iomem *dwIoBase, unsigned long dwData);
+-bool RFbSelectChannel(void __iomem *dwIoBase, unsigned char byRFType, unsigned char byChannel);
++bool RFbSelectChannel(struct vnt_private *, unsigned char byRFType, unsigned char byChannel);
+ bool RFbInit(
+ 	struct vnt_private *
+ );
+-bool RFvWriteWakeProgSyn(void __iomem *dwIoBase, unsigned char byRFType, unsigned int uChannel);
++bool RFvWriteWakeProgSyn(struct vnt_private *, unsigned char byRFType, unsigned int uChannel);
+ bool RFbSetPower(struct vnt_private *, unsigned int uRATE, unsigned int uCH);
+ bool RFbRawSetPower(
+ 	struct vnt_private *,
+@@ -94,7 +94,7 @@ RFvRSSITodBm(
+ );
+ 
+ //{{ RobertYu: 20050104
+-bool RFbAL7230SelectChannelPostProcess(void __iomem *dwIoBase, unsigned char byOldChannel, unsigned char byNewChannel);
++bool RFbAL7230SelectChannelPostProcess(struct vnt_private *, unsigned char byOldChannel, unsigned char byNewChannel);
+ //}} RobertYu
+ 
+ #endif // __RF_H__
+-- 
+2.1.0
+
