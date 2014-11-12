@@ -1,62 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:30350 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932174AbaKMKrr (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:60872 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755254AbaKLDdN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Nov 2014 05:47:47 -0500
-Message-ID: <54648C50.6000702@broadcom.com> (sfid-20141113_114753_165499_00CFC31D)
-Date: Thu, 13 Nov 2014 11:47:44 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Tue, 11 Nov 2014 22:33:13 -0500
+From: Sujith Manoharan <sujith@msujith.org>
 MIME-Version: 1.0
-To: Felipe Contreras <felipe.contreras@gmail.com>
-CC: linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>
-Subject: Re: brcmfmac not working on ECS LIVA
-References: <CAMP44s2XAmaiK2=BJA3TCW48Uo=5qyT5WsASDsZnOiSNgK6b0A@mail.gmail.com>	<545F4611.3010207@broadcom.com>	<CAMP44s2V59VDx0s7q5Yr=KvGZNn8ptRJGHS4W8Ja=+ciKZaSzg@mail.gmail.com>	<54633939.6000400@broadcom.com> <CAMP44s1DOA31ob24=qzz83MnVFmm60EpgaPYvLbwUv-AP5FRbw@mail.gmail.com>
-In-Reply-To: <CAMP44s1DOA31ob24=qzz83MnVFmm60EpgaPYvLbwUv-AP5FRbw@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <21602.54599.303861.990586@gargle.gargle.HOWL> (sfid-20141112_043321_912777_0C48212D)
+Date: Wed, 12 Nov 2014 09:04:31 +0530
+To: "nbd\@openwrt.org" <nbd@openwrt.org>
+Cc: "Pan\, Miaoqing" <miaoqing@qti.qualcomm.com>,
+	John Linville <linville@tuxdriver.com>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath9k-devel <ath9k-devel@qca.qualcomm.com>
+Subject: RE: [PATCH 4/6] ath9k: Fix high tx power in multi-chain mode
+In-Reply-To: <5326b4c51c744de285b390d8c78a47be@NASANEXM01E.na.qualcomm.com>
+References: <1415689644-29693-1-git-send-email-sujith@msujith.org>
+	<1415689644-29693-5-git-send-email-sujith@msujith.org>
+	<54621BFF.7080709@openwrt.org>
+	<21602.40415.179942.572517@gargle.gargle.HOWL>
+	<5326b4c51c744de285b390d8c78a47be@NASANEXM01E.na.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12-11-14 16:23, Felipe Contreras wrote:
-> On Wed, Nov 12, 2014 at 4:40 AM, Arend van Spriel <arend@broadcom.com> wrote:
->> On 11-11-14 23:32, Felipe Contreras wrote:
->>> On Sun, Nov 9, 2014 at 4:46 AM, Arend van Spriel <arend@broadcom.com> wrote:
->>>
->>>> Could you share the nvram obtained from EFI? Also please create a kernel log
->>>> with debug=0xd416.
->>>
->>> There you go:
->>> http://people.freedesktop.org/~felipec/dmesg-brcm.txt
->>>
->>
->> It is using the sdhci-acpi driver for the sdio host controller. If I am
->> not mistaken that one does runtime-pm. This has caused issues with our
->> device. This is what happens:
->>
->> 1. driver sends control message and waits for firmware response.
->>  2. runtime pm kicks in and suspends host controller.
->>   3. host controller suspend disable sdio clock.
->>    4. host controller does not detect firmware interrupt for response.
->>     5. control message times out.
->>
->> You can disable it through sysfs, but the patch below may do it.
-> 
-> I tried this patch, and although it seems to make a difference, it
-> still doesn't work.
-> 
-> http://people.freedesktop.org/~felipec/dmesg-brcm-2.txt
+Pan, Miaoqing wrote:
+> the issue was found on ap143(QCA9531, 11n, 2x2), reported by Korea team.  They
+> want to make ap143 to work on 1x2 or 2x2 mode.
 
-Hi Felipe,
+Ok, so apparently there are boards that are 2x2 in the HW, but the
+tx chainmask is set as 1 in the eeprom. In such cases, the thermometer
+has to be enabled for both the chains. So, I think we need this fix.
 
-All the messages to the firmware seem ok. If connection would succeed I
-normally see a LINK event followed by SET_SSID event. In your log I only
-see the SET_SSID event with failed status, hence the connect is
-unsuccessful. Do you have any control over the AP? Could you try without
-WPA security to quickly confirm connection works? May help in root
-causing the issue.
-
-Regards,
-Arend
-
+Sujith
