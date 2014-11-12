@@ -1,92 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:61792 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751830AbaKEVJu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Nov 2014 16:09:50 -0500
-Received: by mail-wi0-f177.google.com with SMTP id ex7so3237190wid.16
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Nov 2014 13:09:49 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 09/11] staging: vt6655: device_set_options remove dead variables
-Date: Wed,  5 Nov 2014 21:08:57 +0000
-Message-Id: <1415221739-3045-9-git-send-email-tvboxspy@gmail.com> (sfid-20141105_220958_239518_0741898F)
-In-Reply-To: <1415221739-3045-1-git-send-email-tvboxspy@gmail.com>
-References: <1415221739-3045-1-git-send-email-tvboxspy@gmail.com>
+Received: from mga01.intel.com ([192.55.52.88]:60814 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752541AbaKLMJD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Nov 2014 07:09:03 -0500
+From: Jukka Rissanen <jukka.rissanen@linux.intel.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH v3 1/2] nl80211: Replace interface socket owner attribute with more generic one
+Date: Wed, 12 Nov 2014 14:08:58 +0200
+Message-Id: <1415794139-7124-2-git-send-email-jukka.rissanen@linux.intel.com> (sfid-20141112_130914_215126_729270A3)
+In-Reply-To: <1415794139-7124-1-git-send-email-jukka.rissanen@linux.intel.com>
+References: <1415794139-7124-1-git-send-email-jukka.rissanen@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-uConnectionRate
-wRTSThreshold
-byOpMode
-b11hEnable
-uChannel
+Replace NL80211_ATTR_IFACE_SOCKET_OWNER attribute with more generic
+NL80211_ATTR_SOCKET_OWNER that can be used with other commands
+that interface creation.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Jukka Rissanen <jukka.rissanen@linux.intel.com>
 ---
- drivers/staging/vt6655/device.h      | 8 --------
- drivers/staging/vt6655/device_main.c | 5 -----
- 2 files changed, 13 deletions(-)
+ include/uapi/linux/nl80211.h | 7 ++++---
+ net/wireless/nl80211.c       | 4 ++--
+ 2 files changed, 6 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/staging/vt6655/device.h b/drivers/staging/vt6655/device.h
-index 05f2993..74d2afb 100644
---- a/drivers/staging/vt6655/device.h
-+++ b/drivers/staging/vt6655/device.h
-@@ -335,17 +335,14 @@ struct vnt_private {
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 442369f..185f9c7 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1637,9 +1637,9 @@ enum nl80211_commands {
+  * @NL80211_ATTR_TDLS_PEER_CAPABILITY: flags for TDLS peer capabilities, u32.
+  *	As specified in the &enum nl80211_tdls_peer_capability.
+  *
+- * @NL80211_ATTR_IFACE_SOCKET_OWNER: flag attribute, if set during interface
++ * @NL80211_ATTR_SOCKET_OWNER: Flag attribute, if set during interface
+  *	creation then the new interface will be owned by the netlink socket
+- *	that created it and will be destroyed when the socket is closed
++ *	that created it and will be destroyed when the socket is closed.
+  *
+  * @NL80211_ATTR_TDLS_INITIATOR: flag attribute indicating the current end is
+  *	the TDLS link initiator.
+@@ -2004,7 +2004,7 @@ enum nl80211_attrs {
  
- 	unsigned char byMinChannel;
- 	unsigned char byMaxChannel;
--	unsigned int	uConnectionRate;
+ 	NL80211_ATTR_TDLS_PEER_CAPABILITY,
  
- 	unsigned char byPreambleType;
- 	unsigned char byShortPreamble;
+-	NL80211_ATTR_IFACE_SOCKET_OWNER,
++	NL80211_ATTR_SOCKET_OWNER,
  
- 	unsigned short wCurrentRate;
--	unsigned short wRTSThreshold;
- 	unsigned char byShortRetryLimit;
- 	unsigned char byLongRetryLimit;
- 	enum nl80211_iftype op_mode;
--	unsigned char byOpMode;
- 	bool bBSSIDFilter;
- 	unsigned short wMaxTransmitMSDULifetime;
+ 	NL80211_ATTR_CSA_C_OFFSETS_TX,
+ 	NL80211_ATTR_MAX_CSA_COUNTERS,
+@@ -2030,6 +2030,7 @@ enum nl80211_attrs {
+ /* source-level API compatibility */
+ #define NL80211_ATTR_SCAN_GENERATION NL80211_ATTR_GENERATION
+ #define	NL80211_ATTR_MESH_PARAMS NL80211_ATTR_MESH_CONFIG
++#define NL80211_ATTR_IFACE_SOCKET_OWNER NL80211_ATTR_SOCKET_OWNER
  
-@@ -442,13 +439,8 @@ struct vnt_private {
+ /*
+  * Allow user space programs to use #ifdef on new attributes by defining them
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index d0a8361..df447c0 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -388,7 +388,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
+ 	[NL80211_ATTR_MAC_HINT] = { .len = ETH_ALEN },
+ 	[NL80211_ATTR_WIPHY_FREQ_HINT] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_TDLS_PEER_CAPABILITY] = { .type = NLA_U32 },
+-	[NL80211_ATTR_IFACE_SOCKET_OWNER] = { .type = NLA_FLAG },
++	[NL80211_ATTR_SOCKET_OWNER] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_CSA_C_OFFSETS_TX] = { .type = NLA_BINARY },
+ 	[NL80211_ATTR_USE_RRM] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_TSID] = { .type = NLA_U8 },
+@@ -2646,7 +2646,7 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
+ 		return PTR_ERR(wdev);
+ 	}
  
- 	unsigned char abyEEPROM[EEP_MAX_CONTEXT_SIZE]; /* unsigned long alignment */
+-	if (info->attrs[NL80211_ATTR_IFACE_SOCKET_OWNER])
++	if (info->attrs[NL80211_ATTR_SOCKET_OWNER])
+ 		wdev->owner_nlportid = info->snd_portid;
  
--	/* for 802.11h */
--	bool b11hEnable;
--
- 	unsigned short wBeaconInterval;
- 
--	unsigned int	uChannel;
--
- 	struct iw_statistics	wstats;		/* wireless stats */
- };
- 
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index a35069b..5fc6022 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -231,16 +231,11 @@ device_set_options(struct vnt_private *pDevice)
- 	pDevice->bUpdateBBVGA = true;
- 	pDevice->byPreambleType = 0;
- 
--	pr_debug(" uChannel= %d\n", (int)pDevice->uChannel);
--	pr_debug(" byOpMode= %d\n", (int)pDevice->byOpMode);
--	pr_debug(" wRTSThreshold= %d\n", (int)pDevice->wRTSThreshold);
- 	pr_debug(" byShortRetryLimit= %d\n", (int)pDevice->byShortRetryLimit);
- 	pr_debug(" byLongRetryLimit= %d\n", (int)pDevice->byLongRetryLimit);
- 	pr_debug(" byPreambleType= %d\n", (int)pDevice->byPreambleType);
- 	pr_debug(" byShortPreamble= %d\n", (int)pDevice->byShortPreamble);
--	pr_debug(" uConnectionRate= %d\n", (int)pDevice->uConnectionRate);
- 	pr_debug(" byBBType= %d\n", (int)pDevice->byBBType);
--	pr_debug(" pDevice->b11hEnable= %d\n", (int)pDevice->b11hEnable);
- 	pr_debug(" pDevice->bDiversityRegCtlON= %d\n",
- 		 (int)pDevice->bDiversityRegCtlON);
- }
+ 	switch (type) {
 -- 
-2.1.0
+1.8.3.1
 
