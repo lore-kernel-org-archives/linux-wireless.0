@@ -1,87 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:55495 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750882AbaKYO2U (ORCPT
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:42782 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752105AbaKLBC1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Nov 2014 09:28:20 -0500
-Received: by mail-wi0-f179.google.com with SMTP id ex7so1625445wid.12
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Nov 2014 06:28:18 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 2/3] ath10k: clean up num_peers locking
-Date: Tue, 25 Nov 2014 15:16:04 +0100
-Message-Id: <1416924965-28216-2-git-send-email-michal.kazior@tieto.com> (sfid-20141125_152824_429158_839ACDA1)
-In-Reply-To: <1416924965-28216-1-git-send-email-michal.kazior@tieto.com>
-References: <1416834909-7130-1-git-send-email-michal.kazior@tieto.com>
- <1416924965-28216-1-git-send-email-michal.kazior@tieto.com>
+	Tue, 11 Nov 2014 20:02:27 -0500
+Message-ID: <5462B1A3.9020401@gmail.com> (sfid-20141112_020249_935991_1BD50144)
+Date: Tue, 11 Nov 2014 20:02:27 -0500
+From: Mathy Vanhoef <vanhoefm@gmail.com>
+MIME-Version: 1.0
+To: Oliver Neukum <oneukum@suse.de>
+CC: brudley@broadcom.com, Arend van Spriel <arend@broadcom.com>,
+	Franky Lin <frankyl@broadcom.com>, meuleman@broadcom.com,
+	John Linville <linville@tuxdriver.com>, pieterpg@broadcom.com,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] brcmfmac: unlink URB when request timed out
+References: <545FAE05.2030701@gmail.com> <1415610506.16488.20.camel@linux-0dmf.site>
+In-Reply-To: <1415610506.16488.20.camel@linux-0dmf.site>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The var was supposed to be protected by data_lock
-but it wasn't so in all instances. It's actually
-not necessary to have a spinlock protected
-num_peers so drop it.
+On 11/10/2014 04:08 AM, Oliver Neukum wrote:
+> On Sun, 2014-11-09 at 13:10 -0500, Mathy Vanhoef wrote:
+>> From: Mathy Vanhoef <vanhoefm@gmail.com>
+>>
+>> Unlink the submitted URB in brcmf_usb_dl_cmd if the request timed out. This
+>> assures the URB is never submitted twice, preventing a driver crash.
+>
+> Hi,
+>
+> I am afrad this patch is no good. The diagnosis is good,
+> but the fix introduces serious problems.
+>
+>> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+>> index 5265aa7..1bc7858 100644
+>> --- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+>> +++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+>> @@ -738,10 +738,12 @@ static int brcmf_usb_dl_cmd(struct brcmf_usbdev_info *devinfo, u8 cmd,
+>>   goto finalize;
+>>   }
+>>  
+>> - if (!brcmf_usb_ioctl_resp_wait(devinfo))
+>> + if (!brcmf_usb_ioctl_resp_wait(devinfo)) {
+>> + usb_unlink_urb(devinfo->ctl_urb);
+>
+> This is the asynchronous unlink. You have no guarantee it is finished
+> after this point.
+>
+>>   ret = -ETIMEDOUT;
+>> - else
+>> + } else {
+>>   memcpy(buffer, tmpbuf, buflen);
+>> + }
+>>  
+>>  finalize:
+>>   kfree(tmpbuf);
+>
+> Which means that you are freeing memory that may still be used by DMA
+> at this time.
+> In addition you have no guarantee that the unlink is indeed finished
+> by the time the URB is reused.
+> If you wish to take this approach you better forget about this URB
+> and allocate a new one and free the buffer from the callback.
 
-All instances of num_peers are already within
-conf_mutex sections so use that.
+Hi Oliver,
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/core.h | 2 +-
- drivers/net/wireless/ath/ath10k/mac.c  | 8 +++-----
- 2 files changed, 4 insertions(+), 6 deletions(-)
+Good catch. I think the DMA issue is also present in the current driver: it
+frees the buffer without unlinking/killing the URB at all. Can a malicious USB
+device force a timeout to occur (i.e. delay the call to the completion
+handler)? If so this might be a use-after-free vulnerability.
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 8f86bd3..be7e50b6 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -560,7 +560,7 @@ struct ath10k {
- 	struct list_head peers;
- 	wait_queue_head_t peer_mapping_wq;
- 
--	/* number of created peers; protected by data_lock */
-+	/* protected by conf_mutex */
- 	int num_peers;
- 
- 	struct work_struct offchan_tx_work;
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 7b5a888..3312e75 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -339,9 +339,8 @@ static int ath10k_peer_create(struct ath10k *ar, u32 vdev_id, const u8 *addr)
- 			    addr, vdev_id, ret);
- 		return ret;
- 	}
--	spin_lock_bh(&ar->data_lock);
-+
- 	ar->num_peers++;
--	spin_unlock_bh(&ar->data_lock);
- 
- 	return 0;
- }
-@@ -432,9 +431,7 @@ static int ath10k_peer_delete(struct ath10k *ar, u32 vdev_id, const u8 *addr)
- 	if (ret)
- 		return ret;
- 
--	spin_lock_bh(&ar->data_lock);
- 	ar->num_peers--;
--	spin_unlock_bh(&ar->data_lock);
- 
- 	return 0;
- }
-@@ -471,8 +468,9 @@ static void ath10k_peer_cleanup_all(struct ath10k *ar)
- 		list_del(&peer->list);
- 		kfree(peer);
- 	}
--	ar->num_peers = 0;
- 	spin_unlock_bh(&ar->data_lock);
-+
-+	ar->num_peers = 0;
- }
- 
- /************************/
--- 
-1.8.5.3
+It seems using usb_kill_urb instead of usb_unlink_urb in the patch prevents any
+possible use-after-free. Can someone double check?
 
+Kind regards,
+Mathy
+
+>
+> Regards
+> Oliver
+>
