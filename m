@@ -1,45 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f182.google.com ([209.85.212.182]:63320 "EHLO
-	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754785AbaKSOur (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Nov 2014 09:50:47 -0500
-Received: by mail-wi0-f182.google.com with SMTP id h11so2117717wiw.3
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Nov 2014 06:50:46 -0800 (PST)
-Message-ID: <546CAE45.6090201@parkeon.com> (sfid-20141119_155051_175390_FFD2D561)
-Date: Wed, 19 Nov 2014 15:50:45 +0100
-From: Martin Fuzzey <mfuzzey@parkeon.com>
+Received: from arrakis.dune.hu ([78.24.191.176]:45735 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750850AbaKLL0n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Nov 2014 06:26:43 -0500
+Message-ID: <546343EF.5090803@openwrt.org> (sfid-20141112_122647_180113_0C39602E)
+Date: Wed, 12 Nov 2014 12:26:39 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-To: Avinash Patil <patila@marvell.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: Re: [REGRESSION] mwifiex: memory corruption on WEP disassociation
-References: <546B5E82.7000207@parkeon.com>,<20141118184241.GD13458@tuxdriver.com> <CBACCFA0AEB13A41977475BCF3E896FC666FA7DC82@SC-VEXCH2.marvell.com>,<546C57AF.1040700@parkeon.com> <CBACCFA0AEB13A41977475BCF3E896FC666FA7DC8F@SC-VEXCH2.marvell.com>
-In-Reply-To: <CBACCFA0AEB13A41977475BCF3E896FC666FA7DC8F@SC-VEXCH2.marvell.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Sujith Manoharan <sujith@msujith.org>,
+	John Linville <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: Re: [PATCH 1/6] ath9k: disable overriding AR9340 SLP32 registers
+References: <1415689644-29693-1-git-send-email-sujith@msujith.org> <1415689644-29693-2-git-send-email-sujith@msujith.org>
+In-Reply-To: <1415689644-29693-2-git-send-email-sujith@msujith.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Avinash,
+On 2014-11-11 08:07, Sujith Manoharan wrote:
+> From: Miaoqing Pan <miaoqing@qca.qualcomm.com>
+> 
+> For AR9340, the correct values for SLP32 registers are present
+> in the initvals, so overriding them is not needed.
+> 
+> Signed-off-by: Miaoqing Pan <miaoqing@qca.qualcomm.com>
+> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+What's the point in doing this? The writes don't hurt, and this change
+is making the code uglier.
 
-On 19/11/14 09:44, Avinash Patil wrote:
-> Could you please check if issue is seen with this FW as well?
-> Here is link:
-> http://git.marvell.com/?p=mwifiex-firmware.git;a=commit;h=3f45b8c4cc1eb1d102bc3486b19677332dd215ab
-
-Tried that firmware  (14.66.35.p52) with kernel 3.16, same issue.
-It still uses V1 keys.
-
-I also tried kernel 3.18-rc5 (with the original 14.66.9.p96 firmware) 
-and, while it didn't crash, some logs I added showed that a short (10 
-byte) response was still being handed to 
-mwifiex_ret_802_11_key_material_v1().
-It didn't crash because I was "lucky" enough that the non initialized 
-key length field happened to contain zero.
-
-
-Regards,
-
-Martin
-
+- Felix
