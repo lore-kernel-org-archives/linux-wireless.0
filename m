@@ -1,35 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:3087 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751953AbaK1QgH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Nov 2014 11:36:07 -0500
-From: Avinash Patil <patila@marvell.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Cathy Luo <cluo@marvell.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Date: Fri, 28 Nov 2014 08:35:52 -0800
-Subject: Re: [PATCH] cfg80211: do not check for carrier during
- start_radar_detect
-Message-ID: <CBACCFA0AEB13A41977475BCF3E896FC66736E7972@SC-VEXCH2.marvell.com> (sfid-20141128_173613_859011_ACFAC403)
-Content-Type: text/plain; charset="utf-8"
+Received: from arrakis.dune.hu ([78.24.191.176]:41220 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751865AbaKLIsN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Nov 2014 03:48:13 -0500
+Message-ID: <54631EC7.1030009@openwrt.org> (sfid-20141112_094816_971387_0D07C64D)
+Date: Wed, 12 Nov 2014 09:48:07 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
+To: Sujith Manoharan <sujith@msujith.org>
+CC: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>,
+	John Linville <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath9k-devel <ath9k-devel@qca.qualcomm.com>
+Subject: Re: [PATCH 4/6] ath9k: Fix high tx power in multi-chain mode
+References: <1415689644-29693-1-git-send-email-sujith@msujith.org>	<1415689644-29693-5-git-send-email-sujith@msujith.org>	<54621BFF.7080709@openwrt.org>	<21602.40415.179942.572517@gargle.gargle.HOWL>	<5326b4c51c744de285b390d8c78a47be@NASANEXM01E.na.qualcomm.com> <21602.54599.303861.990586@gargle.gargle.HOWL>
+In-Reply-To: <21602.54599.303861.990586@gargle.gargle.HOWL>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-WWVzOyBiZWF0cyBtZSBhcyB3ZWxsLgoKVGhhdCdzIHdoeSBJIGFkZGVkIG9yaWdpbmFsIGF1dGhv
-cnMgLSBTaW1vbiBhbmQgSmFudXN6LgoKLUF2aW5hc2gKCk9uIE5vdiAyOCwgMjAxNCA4OjQxIFBN
-LCBKb2hhbm5lcyBCZXJnIDxqb2hhbm5lc0BzaXBzb2x1dGlvbnMubmV0PiB3cm90ZToKPgo+IE9u
-IEZyaSwgMjAxNC0xMS0yOCBhdCAxNjo1OCArMDUzMCwgQXZpbmFzaCBQYXRpbCB3cm90ZToKPiA+
-IFJhZGFyIGRldGVjdGlvbiBoYXBwZW5zIGJlZm9yZSBzdGFydGluZyBBUDsgc28gbmV0ZGV2IGNh
-cnJpZXIgbWF5IGJlIGRvcm1hbnQKPiA+IGF0IHRoaXMgdGltZS4gUmVtb3ZlIHRoaXMgY2hlY2sg
-ZnJvbSBjZmc4MDIxMV9zdGFydF9yYWRhcl9kZXRlY3Rpb24uCj4KPiBMb29rcyBmaW5lIHRvIG1l
-LCBidXQgSSB3b25kZXIgaG93IGl0IGV2ZXIgd29ya2VkPwo+Cj4gam9oYW5uZXMKPgo+IC0tCj4g
-VG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJl
-IGxpbnV4LXdpcmVsZXNzIiBpbgo+IHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9A
-dmdlci5rZXJuZWwub3JnCj4gTW9yZSBtYWpvcmRvbW8gaW5mbyBhdMKgIGh0dHA6Ly92Z2VyLmtl
-cm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbAo=
+On 2014-11-12 04:34, Sujith Manoharan wrote:
+> Pan, Miaoqing wrote:
+>> the issue was found on ap143(QCA9531, 11n, 2x2), reported by Korea team.  They
+>> want to make ap143 to work on 1x2 or 2x2 mode.
+> 
+> Ok, so apparently there are boards that are 2x2 in the HW, but the
+> tx chainmask is set as 1 in the eeprom. In such cases, the thermometer
+> has to be enabled for both the chains. So, I think we need this fix.
+Makes sense. I don't like all these duplicated SREV checks though.
+Let's store the chip_chainmask variable from ath9k_hw_fill_cap_info
+somewhere in ath_hw and use that.
+
+- Felix
