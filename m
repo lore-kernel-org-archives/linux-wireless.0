@@ -1,61 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:53001 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753161AbaKGTGr (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:53500 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751712AbaKLAJO convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Nov 2014 14:06:47 -0500
-Received: by mail-wi0-f176.google.com with SMTP id h11so5501633wiw.15
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Nov 2014 11:06:45 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 06/10] staging: vt6655: dead code remove typedef enum _CARD_PHY_TYPE
-Date: Fri,  7 Nov 2014 19:06:05 +0000
-Message-Id: <1415387169-3843-6-git-send-email-tvboxspy@gmail.com> (sfid-20141107_200650_285726_A8BCFC27)
-In-Reply-To: <1415387169-3843-1-git-send-email-tvboxspy@gmail.com>
-References: <1415387169-3843-1-git-send-email-tvboxspy@gmail.com>
+	Tue, 11 Nov 2014 19:09:14 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Message-ID: <21602.42365.82080.843506@gargle.gargle.HOWL> (sfid-20141112_010917_609667_136A0591)
+Date: Wed, 12 Nov 2014 05:40:37 +0530
+To: Oleksij Rempel <linux@rempel-privat.de>
+Cc: ath9k-devel@qca.qualcomm.com, nbd@openwrt.org, patro@cs.wisc.edu,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 00/21] make spectral code common for both ath9k drivers
+In-Reply-To: <1415260418-14321-1-git-send-email-linux@rempel-privat.de>
+References: <1415260418-14321-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Removing unused eCurrentPHYType
+Oleksij Rempel wrote:
+> - makes spectral scan code common for both ath9k and ath9k_htc.
+> - add spectral scan support to ath9k_htc.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/card.h   | 7 -------
- drivers/staging/vt6655/device.h | 1 -
- 2 files changed, 8 deletions(-)
+This has been merged, but I am getting a build error.
 
-diff --git a/drivers/staging/vt6655/card.h b/drivers/staging/vt6655/card.h
-index 306f7b7..30f3472 100644
---- a/drivers/staging/vt6655/card.h
-+++ b/drivers/staging/vt6655/card.h
-@@ -51,13 +51,6 @@
- #define CB_MAX_CHANNEL_5G       42
- #define CB_MAX_CHANNEL          (CB_MAX_CHANNEL_24G+CB_MAX_CHANNEL_5G)
- 
--typedef enum _CARD_PHY_TYPE {
--	PHY_TYPE_11A = 0,
--	PHY_TYPE_11B,
--	PHY_TYPE_11G,
--	PHY_TYPE_AUTO
--} CARD_PHY_TYPE, *PCARD_PHY_TYPE;
--
- typedef enum _CARD_PKT_TYPE {
- 	PKT_TYPE_802_11_BCN,
- 	PKT_TYPE_802_11_MNG,
-diff --git a/drivers/staging/vt6655/device.h b/drivers/staging/vt6655/device.h
-index 1393210..dab07e1 100644
---- a/drivers/staging/vt6655/device.h
-+++ b/drivers/staging/vt6655/device.h
-@@ -320,7 +320,6 @@ struct vnt_private {
- 	unsigned char byEIFS;
- 	unsigned char bySlot;
- 	unsigned char byCWMaxMin;
--	CARD_PHY_TYPE		eCurrentPHYType;
- 
- 	VIA_BB_TYPE		byBBType; /* 0:11A, 1:11B, 2:11G */
- 	VIA_PKT_TYPE            byPacketType; /*
--- 
-2.1.0
+../drivers/net/wireless/ath/ath9k/common-spectral.c:40:5: error: redefinition of ‘ath_cmn_process_fft’
+ int ath_cmn_process_fft(struct ath_spec_scan_priv *spec_priv, struct ieee80211_hdr *hdr,
+     ^
+In file included from ../drivers/net/wireless/ath/ath9k/common.h:27:0,
+                 from ../drivers/net/wireless/ath/ath9k/ath9k.h:27,
+                 from ../drivers/net/wireless/ath/ath9k/common-spectral.c:18:
+../drivers/net/wireless/ath/ath9k/common-spectral.h:146:19: note: previous definition of ‘ath_cmn_process_fft’ was here
+ static inline int ath_cmn_process_fft(struct ath_spec_scan_priv *spec_priv,
+                   ^
+../scripts/Makefile.build:257: recipe for target 'drivers/net/wireless/ath/ath9k/common-spectral.o' failed
+make[10]: *** [drivers/net/wireless/ath/ath9k/common-spectral.o] Error 1
+make[10]: *** Waiting for unfinished jobs....
+  CC [M]  drivers/target/iscsi/iscsi_target_erl0.o
+  CC      drivers/thermal/thermal_core.o
+In file included from ../drivers/net/wireless/ath/ath9k/htc_hst.c:19:0:
+../drivers/net/wireless/ath/ath9k/htc.h: In function ‘ath9k_htc_deinit_debug’:
+../drivers/net/wireless/ath/ath9k/htc.h:632:74: warning: ‘return’ with a value, in function returning void
+ static inline void ath9k_htc_deinit_debug(struct ath9k_htc_priv *priv) { return 0; };
+                                                                          ^
+../scripts/Makefile.build:402: recipe for target 'drivers/net/wireless/ath/ath9k' failed
+make[9]: *** [drivers/net/wireless/ath/ath9k] Error 2
+../scripts/Makefile.build:402: recipe for target 'drivers/net/wireless/ath' failed
+make[8]: *** [drivers/net/wireless/ath] Error 2
+make[8]: *** Waiting for unfinished jobs....
 
+Sujith
