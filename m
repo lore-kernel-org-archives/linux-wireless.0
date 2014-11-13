@@ -1,63 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f46.google.com ([74.125.82.46]:46541 "EHLO
-	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750716AbaKJSMq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Nov 2014 13:12:46 -0500
-Received: by mail-wg0-f46.google.com with SMTP id x13so9847583wgg.19
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Nov 2014 10:12:45 -0800 (PST)
-MIME-Version: 1.0
-Date: Mon, 10 Nov 2014 12:12:45 -0600
-Message-ID: <CAP+RiCBDAi7e6vj5vvrcEpt17JicdmPwq16zhG9Fun11HfnBkw@mail.gmail.com> (sfid-20141110_191250_152671_8BBAAC80)
-Subject: Laptop disassociating by local choice (reason=17)
-From: Brent Taylor <motobud@gmail.com>
-To: kvalo@qca.qualcomm.com, ath6kl@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mga11.intel.com ([192.55.52.93]:14229 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752261AbaKMP3r (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Nov 2014 10:29:47 -0500
+From: Jukka Rissanen <jukka.rissanen@linux.intel.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH v5 0/2] Stop scheduled scan if netlink client disappears
+Date: Thu, 13 Nov 2014 17:25:13 +0200
+Message-Id: <1415892315-2911-1-git-send-email-jukka.rissanen@linux.intel.com> (sfid-20141113_162950_727724_8E6C6D01)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Resending in plain text mode...
+Hi,
 
-Hi Kalle,
-   I have a custom built board with an AR6003 WiFi chip running
-linux-3.10.40 and hostapd 2.2 that I'm trying to use as an access
-point.
+v5:
+- discarded the locking changes in v4
+- instead of trying to schedule sched_scan_stop worker from
+  struct cfg80211_sched_scan_request, move the worker to wiphy
+  as that makes it easier to manage the sched_scan_stop worker.
+  There are also one scheduled scan / wiphy so it is also logical
+  to do it like this.
 
-My configuration file for hostapd is:
-interface=wlan0
-driver=nl80211
-ssid=testssid
-channel=1
-own_ip_addr=**********
-auth_algs=1
-wpa=2
-wpa_passphrase=**********
-wpa_key_mgmt=WPA-PSK
-wpa_pairwise=TKIP
-rns_pairwise=CCMP
-ignore_broadcase_ssid=1
+v4:
+- rtnl locking issues fixed in patch 2
 
-I should mention that this configuration works with a USB WiFi stick
-with an ath9k chipset running the same linux kernel and hostapd
-binary.
+v3:
+- backward compatibility define tweaked in patch 1
+- added missing signed-off-by:
 
-When using the AR6003 chipset the client Laptop (HP EliteBook 8440p
-running ubuntu 12.04.3 LTS) does not connect and prints the message:
-wlan0: disassociating from <device mac> by local choice (reason=17)
+v2:
+- split the patch
+- In patch 1, use a generic NL80211_ATTR_SOCKET_OWNER attribute and
+  convert the old code that uses NL80211_ATTR_IFACE_SOCKET_OWNER to
+  use the new value. A define is provided for backward compatibility.
+- Any pending schedule scan stop worker is cancelled when interface is
+  taken down in patch 2
 
-Running Wireshark on the Laptop, I see "Key (msg 1/4)", "Key (msg
-2/4)", and then "Key (msg 3/4)" before it tries to reauthenticate.
+Cheers,
+Jukka
 
-On the access point device, I see the logs from WAP that message 3/4
-was sent and the next message received is NL80211_CMD_DEL_STATION.
 
-I've searched online for the reason=17 and haven't come across an
-answer yet.  The access point device is not connected to a computer
-that is connected to the internet, so while getting log files is
-possible, it 's just not the easiest thing to do.  If requested, I
-could get a log dump from hostapd and/or debug output from the ath6kl
-driver.
+Jukka Rissanen (2):
+  nl80211: Replace interface socket owner attribute with more generic
+    one
+  nl80211: Stop scheduled scan if netlink client disappears
 
-Thanks for any help
-Brent Taylor
+ include/net/cfg80211.h       |  1 +
+ include/uapi/linux/nl80211.h | 10 +++++++---
+ net/wireless/core.c          | 17 +++++++++++++++++
+ net/wireless/core.h          |  2 ++
+ net/wireless/nl80211.c       | 19 +++++++++++++++++--
+ 5 files changed, 44 insertions(+), 5 deletions(-)
+
+-- 
+1.8.3.1
+
