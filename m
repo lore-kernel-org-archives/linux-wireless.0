@@ -1,63 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f50.google.com ([74.125.82.50]:63105 "EHLO
-	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755449AbaK0JXo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Nov 2014 04:23:44 -0500
-Received: by mail-wg0-f50.google.com with SMTP id k14so5887053wgh.37
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Nov 2014 01:23:43 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 0/7] ath10k: add support for new wmi-tlv backend
-Date: Thu, 27 Nov 2014 10:11:14 +0100
-Message-Id: <1417079481-22255-1-git-send-email-michal.kazior@tieto.com> (sfid-20141127_102354_570757_452C6088)
+Received: from mga14.intel.com ([192.55.52.115]:13244 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753777AbaKMNt7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Nov 2014 08:49:59 -0500
+From: Jukka Rissanen <jukka.rissanen@linux.intel.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH v4 1/2] nl80211: Replace interface socket owner attribute with more generic one
+Date: Thu, 13 Nov 2014 15:49:51 +0200
+Message-Id: <1415886592-18253-2-git-send-email-jukka.rissanen@linux.intel.com> (sfid-20141113_145004_277851_96074746)
+In-Reply-To: <1415886592-18253-1-git-send-email-jukka.rissanen@linux.intel.com>
+References: <1415886592-18253-1-git-send-email-jukka.rissanen@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Replace NL80211_ATTR_IFACE_SOCKET_OWNER attribute with more generic
+NL80211_ATTR_SOCKET_OWNER that can be used with other commands
+that interface creation.
 
-First 2 patches are simple fixes. Patch 3 isn't
-strictly related to wmi-tlv but I decided to
-include it anyway. Other patches gradually
-implement wmi-tlv.
+Signed-off-by: Jukka Rissanen <jukka.rissanen@linux.intel.com>
+---
+ include/uapi/linux/nl80211.h | 7 ++++---
+ net/wireless/nl80211.c       | 4 ++--
+ 2 files changed, 6 insertions(+), 5 deletions(-)
 
-There's a bunch of false-positive checkpatch
-warnings regarding `CHECK: No space is necessary
-after a cast`.
-
-v2:
- * a lot of fixes (see notes on patch #7)
-
-Michal Kazior (7):
-  ath10k: fix wmi svc bitmap dbg print
-  ath10k: add sanity checks for service bmap parsing
-  ath10k: make wmi service bitmap non-debug
-  ath10k: implement intermediate event args
-  ath10k: introduce wmi ops
-  ath10k: make some wmi functions public
-  ath10k: implement wmi-tlv backend
-
- drivers/net/wireless/ath/ath10k/Makefile   |    1 +
- drivers/net/wireless/ath/ath10k/ce.c       |    2 +
- drivers/net/wireless/ath/ath10k/core.c     |    4 +
- drivers/net/wireless/ath/ath10k/core.h     |    6 +-
- drivers/net/wireless/ath/ath10k/debug.c    |   12 +-
- drivers/net/wireless/ath/ath10k/debug.h    |    9 -
- drivers/net/wireless/ath/ath10k/hw.h       |    9 +
- drivers/net/wireless/ath/ath10k/mac.c      |   47 +
- drivers/net/wireless/ath/ath10k/spectral.c |    1 +
- drivers/net/wireless/ath/ath10k/wmi-ops.h  |  820 ++++++++++
- drivers/net/wireless/ath/ath10k/wmi-tlv.c  | 2218 ++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi-tlv.h  | 1380 +++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi.c      | 1359 ++++++++++-------
- drivers/net/wireless/ath/ath10k/wmi.h      |  386 +++--
- 14 files changed, 5593 insertions(+), 661 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath10k/wmi-ops.h
- create mode 100644 drivers/net/wireless/ath/ath10k/wmi-tlv.c
- create mode 100644 drivers/net/wireless/ath/ath10k/wmi-tlv.h
-
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 442369f..185f9c7 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1637,9 +1637,9 @@ enum nl80211_commands {
+  * @NL80211_ATTR_TDLS_PEER_CAPABILITY: flags for TDLS peer capabilities, u32.
+  *	As specified in the &enum nl80211_tdls_peer_capability.
+  *
+- * @NL80211_ATTR_IFACE_SOCKET_OWNER: flag attribute, if set during interface
++ * @NL80211_ATTR_SOCKET_OWNER: Flag attribute, if set during interface
+  *	creation then the new interface will be owned by the netlink socket
+- *	that created it and will be destroyed when the socket is closed
++ *	that created it and will be destroyed when the socket is closed.
+  *
+  * @NL80211_ATTR_TDLS_INITIATOR: flag attribute indicating the current end is
+  *	the TDLS link initiator.
+@@ -2004,7 +2004,7 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_TDLS_PEER_CAPABILITY,
+ 
+-	NL80211_ATTR_IFACE_SOCKET_OWNER,
++	NL80211_ATTR_SOCKET_OWNER,
+ 
+ 	NL80211_ATTR_CSA_C_OFFSETS_TX,
+ 	NL80211_ATTR_MAX_CSA_COUNTERS,
+@@ -2030,6 +2030,7 @@ enum nl80211_attrs {
+ /* source-level API compatibility */
+ #define NL80211_ATTR_SCAN_GENERATION NL80211_ATTR_GENERATION
+ #define	NL80211_ATTR_MESH_PARAMS NL80211_ATTR_MESH_CONFIG
++#define NL80211_ATTR_IFACE_SOCKET_OWNER NL80211_ATTR_SOCKET_OWNER
+ 
+ /*
+  * Allow user space programs to use #ifdef on new attributes by defining them
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index d0a8361..df447c0 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -388,7 +388,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
+ 	[NL80211_ATTR_MAC_HINT] = { .len = ETH_ALEN },
+ 	[NL80211_ATTR_WIPHY_FREQ_HINT] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_TDLS_PEER_CAPABILITY] = { .type = NLA_U32 },
+-	[NL80211_ATTR_IFACE_SOCKET_OWNER] = { .type = NLA_FLAG },
++	[NL80211_ATTR_SOCKET_OWNER] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_CSA_C_OFFSETS_TX] = { .type = NLA_BINARY },
+ 	[NL80211_ATTR_USE_RRM] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_TSID] = { .type = NLA_U8 },
+@@ -2646,7 +2646,7 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
+ 		return PTR_ERR(wdev);
+ 	}
+ 
+-	if (info->attrs[NL80211_ATTR_IFACE_SOCKET_OWNER])
++	if (info->attrs[NL80211_ATTR_SOCKET_OWNER])
+ 		wdev->owner_nlportid = info->snd_portid;
+ 
+ 	switch (type) {
 -- 
-1.8.5.3
+1.8.3.1
 
