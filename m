@@ -1,50 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:37023
-	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751650AbaK3Tiy (ORCPT
+Received: from mail-wg0-f48.google.com ([74.125.82.48]:55420 "EHLO
+	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932651AbaKMP4W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Nov 2014 14:38:54 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, h.feurstein@gmail.com, sujith@msujith.org,
-	thomas@net.t-labs.tu-berlin.de
-Subject: [PATCH 1/2] ath9k_hw: fix hardware queue allocation
-Date: Sun, 30 Nov 2014 20:38:40 +0100
-Message-Id: <1417376321-1906-1-git-send-email-nbd@openwrt.org> (sfid-20141130_203920_776685_B19BD51F)
+	Thu, 13 Nov 2014 10:56:22 -0500
+Received: by mail-wg0-f48.google.com with SMTP id y19so6439515wgg.21
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Nov 2014 07:56:19 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAB=NE6XsD+wcTZSX7oZKK72fQjMV0r_TOTeUfGOg8Oh9bHsnLg@mail.gmail.com>
+References: <1414046257-22184-1-git-send-email-arik@wizery.com>
+ <CAB=NE6XbFC1aRAMOQZUTPKRbH4XeBnzpZv7-A3oREoo17mUPtQ@mail.gmail.com>
+ <CA+XVXfdxT=5ch7VwZu3ntJ14jMBD0DTod5+1Y+95eDG8H2Je+Q@mail.gmail.com> <CAB=NE6XsD+wcTZSX7oZKK72fQjMV0r_TOTeUfGOg8Oh9bHsnLg@mail.gmail.com>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Thu, 13 Nov 2014 17:56:04 +0200
+Message-ID: <CA+XVXfcEM2b3eH3d6tnrydtVOKuMyUG2hoUKQUfzq3feFnFcOQ@mail.gmail.com> (sfid-20141113_165625_982210_6C0EB1A0)
+Subject: Re: [PATCH 0/5] wiphy-specific regulatory management
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver passes the desired hardware queue index for a WMM data queue
-in qinfo->tqi_subtype. This was ignored in ath9k_hw_setuptxqueue, which
-instead relied on the order in which the function is called.
+On Thu, Nov 13, 2014 at 1:07 AM, Luis R. Rodriguez
+<mcgrof@do-not-panic.com> wrote:
+> On Wed, Nov 5, 2014 at 12:41 AM, Arik Nemtsov <arik@wizery.com> wrote:
+>> On Wed, Nov 5, 2014 at 5:21 AM, Luis R. Rodriguez
+>> <mcgrof@do-not-panic.com> wrote:
+>>> On Wed, Oct 22, 2014 at 11:37 PM, Arik Nemtsov <arik@wizery.com> wrote:
+>>>>   cfg80211: allow wiphy specific regdomain management
+>>>
+>>> This guy never made it to my inbox.
+>>
+>> Here it is:
+>> http://permalink.gmane.org/gmane.linux.kernel.wireless.general/129448
+>
+> Look OK but I can't comment on code so please also Cc this address on
+> future patches: mcgrof@suse.com. Look forward to next iteration.
 
-Cc: stable@vger.kernel.org
-Reported-by: Hubert Feurstein <h.feurstein@gmail.com>
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/mac.c | 9 +--------
- 1 file changed, 1 insertion(+), 8 deletions(-)
+I'll resubmit the v2 with the pr_info change, so you'll be able to
+comment on the missing patch.
 
-diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-index 275205a..3e58bfa 100644
---- a/drivers/net/wireless/ath/ath9k/mac.c
-+++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -311,14 +311,7 @@ int ath9k_hw_setuptxqueue(struct ath_hw *ah, enum ath9k_tx_queue type,
- 		q = ATH9K_NUM_TX_QUEUES - 3;
- 		break;
- 	case ATH9K_TX_QUEUE_DATA:
--		for (q = 0; q < ATH9K_NUM_TX_QUEUES; q++)
--			if (ah->txq[q].tqi_type ==
--			    ATH9K_TX_QUEUE_INACTIVE)
--				break;
--		if (q == ATH9K_NUM_TX_QUEUES) {
--			ath_err(common, "No available TX queue\n");
--			return -1;
--		}
-+		q = qinfo->tqi_subtype;
- 		break;
- 	default:
- 		ath_err(common, "Invalid TX queue type: %u\n", type);
--- 
-2.1.2
-
+Arik
