@@ -1,189 +1,184 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hauke-m.de ([5.39.93.123]:46662 "EHLO hauke-m.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752574AbaKAPzF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Nov 2014 11:55:05 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Cc: zajec5@gmail.com, arnd@arndb.de, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v7 1/2] bcma: make it possible to specify a IRQ num in bcma_core_irq()
-Date: Sat,  1 Nov 2014 16:54:55 +0100
-Message-Id: <1414857296-1287-2-git-send-email-hauke@hauke-m.de> (sfid-20141101_165517_100088_E608D91F)
-In-Reply-To: <1414857296-1287-1-git-send-email-hauke@hauke-m.de>
-References: <1414857296-1287-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:48123 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933088AbaKMQNr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Nov 2014 11:13:47 -0500
+Received: by mail-wi0-f172.google.com with SMTP id bs8so8800149wib.17
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Nov 2014 08:13:46 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: "Luis R. Rodriguez" <mcgrof@suse.com>,
+	Jonathan Doron <jond@wizery.com>
+Subject: [PATCH v2 4/4] cfg80211: Allow usermode to query wiphy specific regd info
+Date: Thu, 13 Nov 2014 18:13:39 +0200
+Message-Id: <1415895219-19848-4-git-send-email-arik@wizery.com> (sfid-20141113_171406_093413_8D6B6995)
+In-Reply-To: <1415895219-19848-1-git-send-email-arik@wizery.com>
+References: <1415895219-19848-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This moves bcma_core_irq() to main.c and add a extra parameter with a
-number so that we can return different irq number for devices with more
-than one.
+From: Jonathan Doron <jond@wizery.com>
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Allow usermode to query wiphy-specific regd info, for drivers that use
+wiphy-specific regulatory management.
+
+Use the existing API for sending regdomain info to usermode, but return
+the wiphy-specific regd in case wiphy index is provided and the driver
+employs wiphy-specific management. This implies user and kernel-mode
+support for the feature and is backward compatible.
+
+Signed-off-by: Jonathan Doron <jonathanx.doron@intel.com>
+Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
 ---
- drivers/bcma/driver_chipcommon.c      |  2 +-
- drivers/bcma/driver_gpio.c            |  4 ++--
- drivers/bcma/driver_mips.c            | 11 ++---------
- drivers/bcma/driver_pci_host.c        |  4 ++--
- drivers/bcma/main.c                   | 22 ++++++++++++++++++++++
- include/linux/bcma/bcma.h             |  2 ++
- include/linux/bcma/bcma_driver_mips.h |  4 ++--
- 7 files changed, 33 insertions(+), 16 deletions(-)
+ include/uapi/linux/nl80211.h |  6 +++++
+ net/wireless/nl80211.c       | 54 +++++++++++++++++++++++++++++++++++---------
+ net/wireless/reg.c           |  2 +-
+ net/wireless/reg.h           |  1 +
+ 4 files changed, 51 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/bcma/driver_chipcommon.c b/drivers/bcma/driver_chipcommon.c
-index b068f98..19f6796 100644
---- a/drivers/bcma/driver_chipcommon.c
-+++ b/drivers/bcma/driver_chipcommon.c
-@@ -339,7 +339,7 @@ void bcma_chipco_serial_init(struct bcma_drv_cc *cc)
- 		return;
- 	}
- 
--	irq = bcma_core_irq(cc->core);
-+	irq = bcma_core_irq(cc->core, 0);
- 
- 	/* Determine the registers of the UARTs */
- 	cc->nr_serial_ports = (cc->capabilities & BCMA_CC_CAP_NRUART);
-diff --git a/drivers/bcma/driver_gpio.c b/drivers/bcma/driver_gpio.c
-index 706b9ae..598a6cd 100644
---- a/drivers/bcma/driver_gpio.c
-+++ b/drivers/bcma/driver_gpio.c
-@@ -152,7 +152,7 @@ static int bcma_gpio_irq_domain_init(struct bcma_drv_cc *cc)
- 					 handle_simple_irq);
- 	}
- 
--	hwirq = bcma_core_irq(cc->core);
-+	hwirq = bcma_core_irq(cc->core, 0);
- 	err = request_irq(hwirq, bcma_gpio_irq_handler, IRQF_SHARED, "gpio",
- 			  cc);
- 	if (err)
-@@ -183,7 +183,7 @@ static void bcma_gpio_irq_domain_exit(struct bcma_drv_cc *cc)
- 		return;
- 
- 	bcma_cc_mask32(cc, BCMA_CC_IRQMASK, ~BCMA_CC_IRQ_GPIO);
--	free_irq(bcma_core_irq(cc->core), cc);
-+	free_irq(bcma_core_irq(cc->core, 0), cc);
- 	for (gpio = 0; gpio < chip->ngpio; gpio++) {
- 		int irq = irq_find_mapping(cc->irq_domain, gpio);
- 
-diff --git a/drivers/bcma/driver_mips.c b/drivers/bcma/driver_mips.c
-index 004d6aa..5ec69c3 100644
---- a/drivers/bcma/driver_mips.c
-+++ b/drivers/bcma/driver_mips.c
-@@ -115,7 +115,7 @@ static u32 bcma_core_mips_irqflag(struct bcma_device *dev)
-  * If disabled, 5 is returned.
-  * If not supported, 6 is returned.
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index f050dcb..9c996bc 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1674,6 +1674,10 @@ enum nl80211_commands {
+  * @NL80211_ATTR_SMPS_MODE: SMPS mode to use (ap mode). see
+  *	&enum nl80211_smps_mode.
+  *
++ * @NL80211_ATTR_WIPHY_SELF_MANAGED_REG: flag attribute indicating the
++ *	regulatory information came from the driver and not from the global
++ *	cfg80211 regulatory domain information.
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
   */
--static unsigned int bcma_core_mips_irq(struct bcma_device *dev)
-+unsigned int bcma_core_mips_irq(struct bcma_device *dev)
- {
- 	struct bcma_device *mdev = dev->bus->drv_mips.core;
- 	u32 irqflag;
-@@ -133,13 +133,6 @@ static unsigned int bcma_core_mips_irq(struct bcma_device *dev)
- 	return 5;
- }
+@@ -2026,6 +2030,8 @@ enum nl80211_attrs {
  
--unsigned int bcma_core_irq(struct bcma_device *dev)
--{
--	unsigned int mips_irq = bcma_core_mips_irq(dev);
--	return mips_irq <= 4 ? mips_irq + 2 : 0;
--}
--EXPORT_SYMBOL(bcma_core_irq);
--
- static void bcma_core_mips_set_irq(struct bcma_device *dev, unsigned int irq)
- {
- 	unsigned int oldirq = bcma_core_mips_irq(dev);
-@@ -423,7 +416,7 @@ void bcma_core_mips_init(struct bcma_drv_mips *mcore)
- 		break;
- 	default:
- 		list_for_each_entry(core, &bus->cores, list) {
--			core->irq = bcma_core_irq(core);
-+			core->irq = bcma_core_irq(core, 0);
- 		}
- 		bcma_err(bus,
- 			 "Unknown device (0x%x) found, can not configure IRQs\n",
-diff --git a/drivers/bcma/driver_pci_host.c b/drivers/bcma/driver_pci_host.c
-index c3d7b03..c8a6b74 100644
---- a/drivers/bcma/driver_pci_host.c
-+++ b/drivers/bcma/driver_pci_host.c
-@@ -593,7 +593,7 @@ int bcma_core_pci_plat_dev_init(struct pci_dev *dev)
- 	pr_info("PCI: Fixing up device %s\n", pci_name(dev));
+ 	NL80211_ATTR_SMPS_MODE,
  
- 	/* Fix up interrupt lines */
--	dev->irq = bcma_core_irq(pc_host->pdev->core);
-+	dev->irq = bcma_core_irq(pc_host->pdev->core, 0);
- 	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, dev->irq);
- 
- 	readrq = pcie_get_readrq(dev);
-@@ -617,6 +617,6 @@ int bcma_core_pci_pcibios_map_irq(const struct pci_dev *dev)
- 
- 	pc_host = container_of(dev->bus->ops, struct bcma_drv_pci_host,
- 			       pci_ops);
--	return bcma_core_irq(pc_host->pdev->core);
-+	return bcma_core_irq(pc_host->pdev->core, 0);
- }
- EXPORT_SYMBOL(bcma_core_pci_pcibios_map_irq);
-diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-index a15e0bc..03cd421 100644
---- a/drivers/bcma/main.c
-+++ b/drivers/bcma/main.c
-@@ -169,6 +169,28 @@ static void bcma_of_fill_device(struct platform_device *parent,
- }
- #endif /* CONFIG_OF */
- 
-+unsigned int bcma_core_irq(struct bcma_device *core, int num)
-+{
-+	struct bcma_bus *bus = core->bus;
-+	unsigned int mips_irq;
++	NL80211_ATTR_WIPHY_SELF_MANAGED_REG,
 +
-+	switch (bus->hosttype) {
-+	case BCMA_HOSTTYPE_PCI:
-+		return bus->host_pci->irq;
-+	case BCMA_HOSTTYPE_SOC:
-+		if (bus->drv_mips.core && num == 0) {
-+			mips_irq = bcma_core_mips_irq(core);
-+			return mips_irq <= 4 ? mips_irq + 2 : 0;
-+		}
-+		break;
-+	case BCMA_HOSTTYPE_SDIO:
-+		return 0;
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 3a422e6..f1f632c 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -395,6 +395,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
+ 	[NL80211_ATTR_USER_PRIO] = { .type = NLA_U8 },
+ 	[NL80211_ATTR_ADMITTED_TIME] = { .type = NLA_U16 },
+ 	[NL80211_ATTR_SMPS_MODE] = { .type = NLA_U8 },
++	[NL80211_ATTR_WIPHY_SELF_MANAGED_REG] = { .type = NLA_FLAG },
+ };
+ 
+ /* policy for the key attributes */
+@@ -5287,14 +5288,24 @@ static int nl80211_update_mesh_config(struct sk_buff *skb,
+ 
+ static int nl80211_get_reg(struct sk_buff *skb, struct genl_info *info)
+ {
+-	const struct ieee80211_regdomain *regdom;
++	const struct ieee80211_regdomain *regdom = NULL;
++	struct cfg80211_registered_device *rdev;
+ 	struct sk_buff *msg;
+ 	void *hdr = NULL;
+ 	struct nlattr *nl_reg_rules;
+ 	unsigned int i;
+ 
+-	if (!cfg80211_regdomain)
+-		return -EINVAL;
++	if (info->attrs[NL80211_ATTR_WIPHY] != NULL) {
++		struct wiphy *wiphy;
++
++		rdev = cfg80211_get_dev_from_info(genl_info_net(info), info);
++		if (IS_ERR(rdev))
++			return PTR_ERR(rdev);
++
++		wiphy = &rdev->wiphy;
++		if (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED)
++			regdom = get_wiphy_regdom(wiphy);
 +	}
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL(bcma_core_irq);
-+
- void bcma_prepare_core(struct bcma_bus *bus, struct bcma_device *core)
- {
- 	core->dev.release = bcma_release_core_dev;
-diff --git a/include/linux/bcma/bcma.h b/include/linux/bcma/bcma.h
-index 729f48e..eb1c6a4 100644
---- a/include/linux/bcma/bcma.h
-+++ b/include/linux/bcma/bcma.h
-@@ -447,4 +447,6 @@ extern u32 bcma_chipco_pll_read(struct bcma_drv_cc *cc, u32 offset);
- #define  BCMA_DMA_TRANSLATION_DMA64_CMT	0x80000000 /* Client Mode Translation for 64-bit DMA */
- extern u32 bcma_core_dma_translation(struct bcma_device *core);
  
-+extern unsigned int bcma_core_irq(struct bcma_device *core, int num);
+ 	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
+ 	if (!msg)
+@@ -5305,13 +5316,27 @@ static int nl80211_get_reg(struct sk_buff *skb, struct genl_info *info)
+ 	if (!hdr)
+ 		goto put_failure;
+ 
+-	if (reg_last_request_cell_base() &&
+-	    nla_put_u32(msg, NL80211_ATTR_USER_REG_HINT_TYPE,
+-			NL80211_USER_REG_HINT_CELL_BASE))
+-		goto nla_put_failure;
++	if (!regdom) {
++		if (!cfg80211_regdomain) {
++			nlmsg_free(msg);
++			return -EINVAL;
++		}
 +
- #endif /* LINUX_BCMA_H_ */
-diff --git a/include/linux/bcma/bcma_driver_mips.h b/include/linux/bcma/bcma_driver_mips.h
-index fb61f3f..0b3b32a 100644
---- a/include/linux/bcma/bcma_driver_mips.h
-+++ b/include/linux/bcma/bcma_driver_mips.h
-@@ -43,12 +43,12 @@ struct bcma_drv_mips {
- extern void bcma_core_mips_init(struct bcma_drv_mips *mcore);
- extern void bcma_core_mips_early_init(struct bcma_drv_mips *mcore);
++		if (reg_last_request_cell_base() &&
++		    nla_put_u32(msg, NL80211_ATTR_USER_REG_HINT_TYPE,
++				NL80211_USER_REG_HINT_CELL_BASE))
++			goto nla_put_failure;
++	} else {
++		if (nla_put_flag(msg, NL80211_ATTR_WIPHY_SELF_MANAGED_REG))
++			goto nla_put_failure;
++		if (nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx))
++			goto nla_put_failure;
++	}
  
--extern unsigned int bcma_core_irq(struct bcma_device *core);
-+extern unsigned int bcma_core_mips_irq(struct bcma_device *dev);
- #else
- static inline void bcma_core_mips_init(struct bcma_drv_mips *mcore) { }
- static inline void bcma_core_mips_early_init(struct bcma_drv_mips *mcore) { }
+ 	rcu_read_lock();
+-	regdom = rcu_dereference(cfg80211_regdomain);
++
++	if (regdom == NULL)
++		regdom = rcu_dereference(cfg80211_regdomain);
  
--static inline unsigned int bcma_core_irq(struct bcma_device *core)
-+static inline unsigned int bcma_core_mips_irq(struct bcma_device *dev)
- {
- 	return 0;
+ 	if (nla_put_string(msg, NL80211_ATTR_REG_ALPHA2, regdom->alpha2) ||
+ 	    (regdom->dfs_region &&
+@@ -10687,9 +10712,16 @@ static bool nl80211_reg_change_event_fill(struct sk_buff *msg,
+ 			goto nla_put_failure;
+ 	}
+ 
+-	if (request->wiphy_idx != WIPHY_IDX_INVALID &&
+-	    nla_put_u32(msg, NL80211_ATTR_WIPHY, request->wiphy_idx))
+-		goto nla_put_failure;
++	if (request->wiphy_idx != WIPHY_IDX_INVALID) {
++		struct wiphy *wiphy;
++
++		wiphy = wiphy_idx_to_wiphy(request->wiphy_idx);
++		if ((wiphy != NULL) &&
++		    nla_put_u32(msg, NL80211_ATTR_WIPHY, request->wiphy_idx) &&
++		    (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED) &&
++		    (nla_put_flag(msg, NL80211_ATTR_WIPHY_SELF_MANAGED_REG)))
++			goto nla_put_failure;
++	}
+ 
+ 	return true;
+ 
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 4ee282d..a5f32d5 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -142,7 +142,7 @@ static const struct ieee80211_regdomain *get_cfg80211_regdom(void)
+ 	return rtnl_dereference(cfg80211_regdomain);
  }
+ 
+-static const struct ieee80211_regdomain *get_wiphy_regdom(struct wiphy *wiphy)
++const struct ieee80211_regdomain *get_wiphy_regdom(struct wiphy *wiphy)
+ {
+ 	return rtnl_dereference(wiphy->regd);
+ }
+diff --git a/net/wireless/reg.h b/net/wireless/reg.h
+index 5e48031..4b45d6e 100644
+--- a/net/wireless/reg.h
++++ b/net/wireless/reg.h
+@@ -38,6 +38,7 @@ unsigned int reg_get_max_bandwidth(const struct ieee80211_regdomain *rd,
+ 				   const struct ieee80211_reg_rule *rule);
+ 
+ bool reg_last_request_cell_base(void);
++const struct ieee80211_regdomain *get_wiphy_regdom(struct wiphy *wiphy);
+ 
+ /**
+  * regulatory_hint_found_beacon - hints a beacon was found on a channel
 -- 
 1.9.1
 
