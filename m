@@ -1,55 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f48.google.com ([209.85.218.48]:36973 "EHLO
-	mail-oi0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751333AbaKFBLU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Nov 2014 20:11:20 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH 2/3 3.18] rtlwifi: Fix errors in descriptor manipulation
-Date: Wed,  5 Nov 2014 19:10:53 -0600
-Message-Id: <1415236254-12274-3-git-send-email-Larry.Finger@lwfinger.net> (sfid-20141106_021131_902468_F149E3F7)
-In-Reply-To: <1415236254-12274-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1415236254-12274-1-git-send-email-Larry.Finger@lwfinger.net>
+Received: from mga14.intel.com ([192.55.52.115]:13244 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753768AbaKMNt5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Nov 2014 08:49:57 -0500
+From: Jukka Rissanen <jukka.rissanen@linux.intel.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH v4 0/2] Stop scheduled scan if netlink client disappears
+Date: Thu, 13 Nov 2014 15:49:50 +0200
+Message-Id: <1415886592-18253-1-git-send-email-jukka.rissanen@linux.intel.com> (sfid-20141113_145000_277548_F3474789)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are typos in the handling of the descriptor pointers where the wrong
-descriptor is referenced. There is also an error in which the pointer is
-incremented twice.
+Hi,
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/rtlwifi/pci.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+v4:
+- rtnl locking issues fixed in patch 2
 
-diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
-index 116f746..6d2b628 100644
---- a/drivers/net/wireless/rtlwifi/pci.c
-+++ b/drivers/net/wireless/rtlwifi/pci.c
-@@ -1375,9 +1375,9 @@ static void _rtl_pci_free_tx_ring(struct ieee80211_hw *hw,
- 	ring->desc = NULL;
- 	if (rtlpriv->use_new_trx_flow) {
- 		pci_free_consistent(rtlpci->pdev,
--				    sizeof(*ring->desc) * ring->entries,
-+				    sizeof(*ring->buffer_desc) * ring->entries,
- 				    ring->buffer_desc, ring->buffer_desc_dma);
--		ring->desc = NULL;
-+		ring->buffer_desc = NULL;
- 	}
- }
- 
-@@ -1548,7 +1548,6 @@ int rtl_pci_reset_trx_ring(struct ieee80211_hw *hw)
- 							 true,
- 							 HW_DESC_TXBUFF_ADDR),
- 						 skb->len, PCI_DMA_TODEVICE);
--				ring->idx = (ring->idx + 1) % ring->entries;
- 				kfree_skb(skb);
- 				ring->idx = (ring->idx + 1) % ring->entries;
- 			}
+v3:
+- backward compatibility define tweaked in patch 1
+- added missing signed-off-by:
+
+v2:
+- split the patch
+- In patch 1, use a generic NL80211_ATTR_SOCKET_OWNER attribute and
+  convert the old code that uses NL80211_ATTR_IFACE_SOCKET_OWNER to
+  use the new value. A define is provided for backward compatibility.
+- Any pending schedule scan stop worker is cancelled when interface is
+  taken down in patch 2
+
+Cheers,
+Jukka
+
+
+Jukka Rissanen (2):
+  nl80211: Replace interface socket owner attribute with more generic
+    one
+  nl80211: Stop scheduled scan if netlink client disappears
+
+ include/net/cfg80211.h       |  2 ++
+ include/uapi/linux/nl80211.h | 10 +++++++---
+ net/wireless/core.c          |  5 ++++-
+ net/wireless/nl80211.c       | 39 +++++++++++++++++++++++++++++++++++++--
+ 4 files changed, 50 insertions(+), 6 deletions(-)
+
 -- 
-2.1.2
+1.8.3.1
 
