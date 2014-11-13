@@ -1,47 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:59896 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750922AbaKYQWY (ORCPT
+Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:52400
+	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S933529AbaKMReL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Nov 2014 11:22:24 -0500
-Message-ID: <5474ACBF.7090905@candelatech.com> (sfid-20141125_172315_312768_F10144C2)
-Date: Tue, 25 Nov 2014 08:22:23 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Subject: Re: [PATCH 1/2] ath10k: move create-ht-cap methods above set-antenna.
-References: <1411576506-11815-1-git-send-email-greearb@candelatech.com> <874mtn3dof.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <874mtn3dof.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 13 Nov 2014 12:34:11 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
+Subject: [PATCH 3.18 1/3] ath9k: prevent early IRQs from accessing hardware
+Date: Thu, 13 Nov 2014 18:34:03 +0100
+Message-Id: <1415900045-49093-1-git-send-email-nbd@openwrt.org> (sfid-20141113_183416_271934_3DE220DC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/25/2014 12:08 AM, Kalle Valo wrote:
-> greearb@candelatech.com writes:
-> 
->> From: Ben Greear <greearb@candelatech.com>
->>
->> We will need to use these in set-antenna, so move them
->> so that we do not have to define the method signatures.
->>
->> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> 
-> I'm dropping these two patches. Please resend once we figure out how to
-> handle the band updated.
+IRQs are suppressed if ah == NULL and ATH_OP_INVALID being set in
+common->op_flags. Close a short time window between those two.
 
-It might be a while...I'm working on some other tasks these days
-and don't have time to respin ath10k patches at the moment.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/init.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-If someone else wants to work on getting them upstream, please be
-my guest.
-
-Per Felix's comment, maybe my patches were actually OK as they are....
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index c5bcddd..3c6ded9 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -529,10 +529,14 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
+ 	ah->reg_ops.read = ath9k_ioread32;
+ 	ah->reg_ops.write = ath9k_iowrite32;
+ 	ah->reg_ops.rmw = ath9k_reg_rmw;
+-	sc->sc_ah = ah;
+ 	pCap = &ah->caps;
+ 
+ 	common = ath9k_hw_common(ah);
++
++	/* Will be cleared in ath9k_start() */
++	set_bit(ATH_OP_INVALID, &common->op_flags);
++
++	sc->sc_ah = ah;
+ 	sc->dfs_detector = dfs_pattern_detector_init(common, NL80211_DFS_UNSET);
+ 	sc->tx99_power = MAX_RATE_POWER + 1;
+ 	init_waitqueue_head(&sc->tx_wait);
+@@ -893,9 +897,6 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc,
+ 	common = ath9k_hw_common(ah);
+ 	ath9k_set_hw_capab(sc, hw);
+ 
+-	/* Will be cleared in ath9k_start() */
+-	set_bit(ATH_OP_INVALID, &common->op_flags);
+-
+ 	/* Initialize regulatory */
+ 	error = ath_regd_init(&common->regulatory, sc->hw->wiphy,
+ 			      ath9k_reg_notifier);
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.1.2
 
