@@ -1,94 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:29318 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752334AbaKKM67 (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:30350 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932174AbaKMKrr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Nov 2014 07:58:59 -0500
+	Thu, 13 Nov 2014 05:47:47 -0500
+Message-ID: <54648C50.6000702@broadcom.com> (sfid-20141113_114753_165499_00CFC31D)
+Date: Thu, 13 Nov 2014 11:47:44 +0100
 From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>,
-	<stable@vger.kernel.org>
-Subject: [PATCH for-3.18] brcmfmac: fix conversion of channel width 20MHZ_NOHT
-Date: Tue, 11 Nov 2014 13:58:44 +0100
-Message-ID: <1415710735-7184-1-git-send-email-arend@broadcom.com> (sfid-20141111_135910_289871_261620CF)
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Felipe Contreras <felipe.contreras@gmail.com>
+CC: linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>
+Subject: Re: brcmfmac not working on ECS LIVA
+References: <CAMP44s2XAmaiK2=BJA3TCW48Uo=5qyT5WsASDsZnOiSNgK6b0A@mail.gmail.com>	<545F4611.3010207@broadcom.com>	<CAMP44s2V59VDx0s7q5Yr=KvGZNn8ptRJGHS4W8Ja=+ciKZaSzg@mail.gmail.com>	<54633939.6000400@broadcom.com> <CAMP44s1DOA31ob24=qzz83MnVFmm60EpgaPYvLbwUv-AP5FRbw@mail.gmail.com>
+In-Reply-To: <CAMP44s1DOA31ob24=qzz83MnVFmm60EpgaPYvLbwUv-AP5FRbw@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The function chandef_to_chanspec() failed when converting a
-chandef with bandwidth set to NL80211_CHAN_WIDTH_20_NOHT. This
-was reported by user running the device in AP mode.
+On 12-11-14 16:23, Felipe Contreras wrote:
+> On Wed, Nov 12, 2014 at 4:40 AM, Arend van Spriel <arend@broadcom.com> wrote:
+>> On 11-11-14 23:32, Felipe Contreras wrote:
+>>> On Sun, Nov 9, 2014 at 4:46 AM, Arend van Spriel <arend@broadcom.com> wrote:
+>>>
+>>>> Could you share the nvram obtained from EFI? Also please create a kernel log
+>>>> with debug=0xd416.
+>>>
+>>> There you go:
+>>> http://people.freedesktop.org/~felipec/dmesg-brcm.txt
+>>>
+>>
+>> It is using the sdhci-acpi driver for the sdio host controller. If I am
+>> not mistaken that one does runtime-pm. This has caused issues with our
+>> device. This is what happens:
+>>
+>> 1. driver sends control message and waits for firmware response.
+>>  2. runtime pm kicks in and suspends host controller.
+>>   3. host controller suspend disable sdio clock.
+>>    4. host controller does not detect firmware interrupt for response.
+>>     5. control message times out.
+>>
+>> You can disable it through sysfs, but the patch below may do it.
+> 
+> I tried this patch, and although it seems to make a difference, it
+> still doesn't work.
+> 
+> http://people.freedesktop.org/~felipec/dmesg-brcm-2.txt
 
-------------[ cut here ]------------
-WARNING: CPU: 0 PID: 304 at
-	drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c:381
-		chandef_to_chanspec.isra.11+0x158/0x184()
+Hi Felipe,
 
-Modules linked in:
+All the messages to the firmware seem ok. If connection would succeed I
+normally see a LINK event followed by SET_SSID event. In your log I only
+see the SET_SSID event with failed status, hence the connect is
+unsuccessful. Do you have any control over the AP? Could you try without
+WPA security to quickly confirm connection works? May help in root
+causing the issue.
 
-CPU: 0 PID: 304 Comm: hostapd Not tainted 3.16.0-rc7-abb+g64aa90f #8
-
-[<c0014bb4>] (unwind_backtrace) from [<c0012314>] (show_stack+0x10/0x14)
-[<c0012314>] (show_stack) from [<c001d3f8>] (warn_slowpath_common+0x6c/0x8c)
-[<c001d3f8>] (warn_slowpath_common) from [<c001d4b4>] (warn_slowpath_null+0x1c/0x24)
-[<c001d4b4>] (warn_slowpath_null) from [<c03449a4>] (chandef_to_chanspec.isra.11+0x158/0x184)
-[<c03449a4>] (chandef_to_chanspec.isra.11) from [<c0348e00>] (brcmf_cfg80211_start_ap+0x1e4/0x614)
-[<c0348e00>] (brcmf_cfg80211_start_ap) from [<c04d1468>] (nl80211_start_ap+0x288/0x414)
-[<c04d1468>] (nl80211_start_ap) from [<c043d144>] (genl_rcv_msg+0x21c/0x38c)
-[<c043d144>] (genl_rcv_msg) from [<c043c740>] (netlink_rcv_skb+0xac/0xc0)
-[<c043c740>] (netlink_rcv_skb) from [<c043cf14>] (genl_rcv+0x20/0x34)
-[<c043cf14>] (genl_rcv) from [<c043c0a0>] (netlink_unicast+0x150/0x20c)
-[<c043c0a0>] (netlink_unicast) from [<c043c4b8>] (netlink_sendmsg+0x2b8/0x398)
-[<c043c4b8>] (netlink_sendmsg) from [<c04066a4>] (sock_sendmsg+0x84/0xa8)
-[<c04066a4>] (sock_sendmsg) from [<c0407c5c>] (___sys_sendmsg.part.29+0x268/0x278)
-[<c0407c5c>] (___sys_sendmsg.part.29) from [<c0408bdc>] (__sys_sendmsg+0x4c/0x7c)
-[<c0408bdc>] (__sys_sendmsg) from [<c000ec60>] (ret_fast_syscall+0x0/0x44)
----[ end trace 965ee2158c9905a2 ]---
-
-Cc: stable@vger.kernel.org # v3.17
-Reported-by: Pontus Fuchs <pontusf@broadcom.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c | 6 ++++++
- 1 file changed, 6 insertions(+)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index 28fa25b..39b45c0 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -299,6 +299,7 @@ static u16 chandef_to_chanspec(struct brcmu_d11inf *d11inf,
- 	primary_offset = ch->center_freq1 - ch->chan->center_freq;
- 	switch (ch->width) {
- 	case NL80211_CHAN_WIDTH_20:
-+	case NL80211_CHAN_WIDTH_20_NOHT:
- 		ch_inf.bw = BRCMU_CHAN_BW_20;
- 		WARN_ON(primary_offset != 0);
- 		break;
-@@ -323,6 +324,10 @@ static u16 chandef_to_chanspec(struct brcmu_d11inf *d11inf,
- 				ch_inf.sb = BRCMU_CHAN_SB_LU;
- 		}
- 		break;
-+	case NL80211_CHAN_WIDTH_80P80:
-+	case NL80211_CHAN_WIDTH_160:
-+	case NL80211_CHAN_WIDTH_5:
-+	case NL80211_CHAN_WIDTH_10:
- 	default:
- 		WARN_ON_ONCE(1);
- 	}
-@@ -333,6 +338,7 @@ static u16 chandef_to_chanspec(struct brcmu_d11inf *d11inf,
- 	case IEEE80211_BAND_5GHZ:
- 		ch_inf.band = BRCMU_CHAN_BAND_5G;
- 		break;
-+	case IEEE80211_BAND_60GHZ:
- 	default:
- 		WARN_ON_ONCE(1);
- 	}
--- 
-1.9.1
+Regards,
+Arend
 
