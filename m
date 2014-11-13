@@ -1,50 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:51097 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751120AbaKVOlO (ORCPT
+Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:52398
+	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S933525AbaKMReL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Nov 2014 09:41:14 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: nick <xerofoify@gmail.com>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	<netdev@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: Re: FIX ME locking is implemented?
-References: <54709610.6020502@gmail.com>
-Date: Sat, 22 Nov 2014 16:41:07 +0200
-In-Reply-To: <54709610.6020502@gmail.com> (nick's message of "Sat, 22 Nov 2014
-	08:56:32 -0500")
-Message-ID: <87lhn38fi4.fsf@kamboji.qca.qualcomm.com> (sfid-20141122_154135_592436_A70BB795)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 13 Nov 2014 12:34:11 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
+Subject: [PATCH 3.18 2/3] ath9k: set ATH_OP_INVALID before disabling hardware
+Date: Thu, 13 Nov 2014 18:34:04 +0100
+Message-Id: <1415900045-49093-2-git-send-email-nbd@openwrt.org> (sfid-20141113_183419_350972_71F3C04C)
+In-Reply-To: <1415900045-49093-1-git-send-email-nbd@openwrt.org>
+References: <1415900045-49093-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-nick <xerofoify@gmail.com> writes:
+Closes another small IRQ handler race
 
-> I am wondering why the fix me in the code below still exists as this
-> code is clearly being locked properly with a spin lock on the lock
-> related to the created linked list in this code.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/main.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-It would be nice to mention what driver and file you are referring to.
-So this is from ath6kl_tx_queue_full() in
-drivers/net/wireless/ath/ath6kl/txrx.c.
-
-> /* FIXME: Locking */
-> spin_lock_bh(&ar->list_lock);
-> list_for_each_entry(vif, &ar->vif_list, list) {
-> 	if (vif->nw_type == ADHOC_NETWORK ||
->  			action != HTC_SEND_FULL_DROP) {
->                         spin_unlock_bh(&ar->list_lock);
->
->                          set_bit(NETQ_STOPPED, &vif->flags);
->                          netif_stop_queue(vif->ndev);
->
->                          return action;
->               }
->         }
->         spin_unlock_bh(&ar->list_lock);
-
-Most probably someone just forgot to update the comment, patches welcome :)
-
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 644552c..ee67956 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -885,6 +885,9 @@ static void ath9k_stop(struct ieee80211_hw *hw)
+ 						    &sc->cur_chan->chandef);
+ 
+ 	ath9k_hw_reset(ah, ah->curchan, ah->caldata, false);
++
++	set_bit(ATH_OP_INVALID, &common->op_flags);
++
+ 	ath9k_hw_phy_disable(ah);
+ 
+ 	ath9k_hw_configpcipowersave(ah, true);
+@@ -893,7 +896,6 @@ static void ath9k_stop(struct ieee80211_hw *hw)
+ 
+ 	ath9k_ps_restore(sc);
+ 
+-	set_bit(ATH_OP_INVALID, &common->op_flags);
+ 	sc->ps_idle = prev_idle;
+ 
+ 	mutex_unlock(&sc->mutex);
 -- 
-Kalle Valo
+2.1.2
+
