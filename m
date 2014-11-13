@@ -1,40 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:50985 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750770AbaKZVjW (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:16338 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932637AbaKMNW0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Nov 2014 16:39:22 -0500
-Date: Wed, 26 Nov 2014 16:39:20 -0500 (EST)
-Message-Id: <20141126.163920.2254225978631403023.davem@davemloft.net> (sfid-20141126_224143_033567_5A82D9E9)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless 2014-11-26
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20141126194743.GA12284@tuxdriver.com>
-References: <20141126194743.GA12284@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Thu, 13 Nov 2014 08:22:26 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Ben Greear <greearb@candelatech.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 06/10] ath10k: use configured nss instead of max nss.
+References: <1411507045-18973-1-git-send-email-greearb@candelatech.com>
+	<1411507045-18973-6-git-send-email-greearb@candelatech.com>
+	<54592F3E.10204@candelatech.com>
+Date: Thu, 13 Nov 2014 15:22:12 +0200
+In-Reply-To: <54592F3E.10204@candelatech.com> (Ben Greear's message of "Tue,
+	04 Nov 2014 11:55:42 -0800")
+Message-ID: <87ioijteuz.fsf@kamboji.qca.qualcomm.com> (sfid-20141113_142229_623081_5336319F)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 26 Nov 2014 14:47:43 -0500
+Ben Greear <greearb@candelatech.com> writes:
 
-> Please pull this little batch of fixes intended for the 3.18 stream...
-> 
-> For the iwlwifi one, Emmanuel says:
-> 
-> "Not all the firmware know how to handle the HOT_SPOT_CMD.
-> Make sure that the firmware will know this command before
-> sending it. This avoids a firmware crash."
-> 
-> Along with that, Larry sends a pair of rtlwifi fixes to address some
-> discrepancies from moving drivers out of staging.  Larry says:
-> 
-> "These two patches are needed to fix a regression introduced when
-> driver rtl8821ae was moved from staging to the regular wireless tree."
-> 
-> Please let me know if there are problems!
+> On 09/23/2014 02:17 PM, greearb@candelatech.com wrote:
+>> From: Ben Greear <greearb@candelatech.com>
+>> 
+>> When re-associating a station, the nss was set back to
+>> maximum value even if user had configured small number
+>> of tx chains.  So, pay attention to user's config in
+>> this case as well.
+>
+> Looks like this (and probably the related patch) did not make
+> it upstream yet.
+>
+> Is someone waiting for more changes from me or did this just
+> get lost?
 
-Pulled John, thanks a lot!
+Sorry, it fell through the cracks. I'll take a look at them soon.
+
+-- 
+Kalle Valo
