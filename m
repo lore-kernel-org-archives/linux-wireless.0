@@ -1,68 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f53.google.com ([209.85.215.53]:36786 "EHLO
-	mail-la0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752039AbaKEDRD (ORCPT
+Received: from out3-smtp.messagingengine.com ([66.111.4.27]:53015 "EHLO
+	out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933146AbaKMSYo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Nov 2014 22:17:03 -0500
-Received: by mail-la0-f53.google.com with SMTP id mc6so2004986lab.26
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Nov 2014 19:17:02 -0800 (PST)
+	Thu, 13 Nov 2014 13:24:44 -0500
+Received: from compute5.internal (compute5.nyi.internal [10.202.2.45])
+	by mailout.nyi.internal (Postfix) with ESMTP id 1233C2062E
+	for <linux-wireless@vger.kernel.org>; Thu, 13 Nov 2014 13:24:44 -0500 (EST)
+Message-ID: <5464F5D6.5090905@noack.us> (sfid-20141113_192454_735073_971325C2)
+Date: Thu, 13 Nov 2014 10:17:58 -0800
+From: Thomas Pedersen <thomas@noack.us>
 MIME-Version: 1.0
-In-Reply-To: <1414046257-22184-3-git-send-email-arik@wizery.com>
-References: <1414046257-22184-1-git-send-email-arik@wizery.com> <1414046257-22184-3-git-send-email-arik@wizery.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Tue, 4 Nov 2014 19:16:42 -0800
-Message-ID: <CAB=NE6VaTS+d-NJDkezN5+4b9txVrXXynMHZGxVjG08aEC2EsQ@mail.gmail.com> (sfid-20141105_041709_268068_7A4E0E72)
-Subject: Re: [PATCH 2/5] cfg80211: leave invalid channels on regdomain change
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: "Nishikawa, Kenzoh" <Kenzoh.Nishikawa@jp.sony.com>,
+	devel@lists.open80211s.org,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mac80211: Send peering open frame again if beacon from
+ listen state peer is received
+References: <2EB4F5C65A3B8E4E92660930F4EF6B5B0619B9@JPYOKXMS113.jp.sony.com>
+In-Reply-To: <2EB4F5C65A3B8E4E92660930F4EF6B5B0619B9@JPYOKXMS113.jp.sony.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 22, 2014 at 11:37 PM, Arik Nemtsov <arik@wizery.com> wrote:
-> +static bool reg_wdev_chan_valid(struct wiphy *wiphy, struct wireless_dev *wdev)
-> +{
-> +       struct ieee80211_channel *ch;
-> +       struct cfg80211_chan_def chandef;
-> +       struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
-> +       bool ret = true;
-> +
-> +       wdev_lock(wdev);
-> +
-> +       if (!wdev->netdev || !netif_running(wdev->netdev))
-> +               goto out;
-> +
-> +       switch (wdev->iftype) {
-> +       case NL80211_IFTYPE_AP:
-> +       case NL80211_IFTYPE_P2P_GO:
-> +               if (!wdev->beacon_interval)
-> +                       goto out;
-> +
-> +               ret = cfg80211_reg_can_beacon(wiphy,
-> +                                             &wdev->chandef, wdev->iftype);
-> +               break;
-> +       case NL80211_IFTYPE_STATION:
-> +       case NL80211_IFTYPE_P2P_CLIENT:
-> +               if (!wdev->current_bss ||
-> +                   !wdev->current_bss->pub.channel)
-> +                       goto out;
-> +
-> +               ch = wdev->current_bss->pub.channel;
-> +               if (rdev->ops->get_channel &&
-> +                   !rdev_get_channel(rdev, wdev, &chandef))
-> +                       ret = cfg80211_chandef_usable(wiphy, &chandef,
-> +                                                     IEEE80211_CHAN_DISABLED);
-> +               else
-> +                       ret = !(ch->flags & IEEE80211_CHAN_DISABLED);
-> +               break;
-> +       default:
-> +               /* others not implemented for now */
+Hi Kenzoh,
 
-Looks good to me except this of course, since its a flag that will
-enable this per wiphy might as well WARN() if you really do not want
-to think about this. That means that once someone does enable this on
-a wiphy with the other type of interfaces they'll have to think about
-this, likewise one could warn if a wiphy interface is registered with
-the flag to follow this but supports a mode not handled here yet.
+Looks like your email is part HTML. Please submit using git-send-email.
+Your patch looks ok, just a small comment below.
 
- Luis
+On 11/12/2014 08:27 PM, Nishikawa, Kenzoh via Devel wrote:
+ > net/mac80211/mesh_plink.c |    6 ++++++
+ > 1 file changed, 6 insertions(+)
+ > diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+ > index 32c7bd0..5ca4306 100644
+ > --- a/net/mac80211/mesh_plink.c
+ > +++ b/net/mac80211/mesh_plink.c
+ >
+ > @@ -524,6 +524,12 @@ void mesh_neighbour_update(struct ieee80211_sub_if_data *sdata,
+ >                  sdata->u.mesh.mshcfg.auto_open_plinks &&
+ >                  rssi_threshold_check(sta, sdata))
+ >                            changed = mesh_plink_open(sta);
+ > +            else if (sta->plink_state == NL80211_PLINK_LISTEN &&
+
+You should probably check for (sdata->u.mesh.security & IEEE80211_MESH_SEC_AUTHED)
+as well like in mesh_sta_info_alloc().
+
+ > +                          sdata->u.mesh.user_mpm)
+ > +                          cfg80211_notify_new_peer_candidate(sdata->dev, hw_addr,
+ > +                                                                                                   elems->ie_start,
+ > +                                                                                                   elems->total_len,
+ > +                                                                                                   GFP_KERNEL);
+ >               ieee80211_mps_frame_release(sta, elems);
+ > out:
+
+-- 
+thomas
