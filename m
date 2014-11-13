@@ -1,37 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f173.google.com ([209.85.217.173]:43053 "EHLO
-	mail-lb0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753550AbaKLXIB (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:45744 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752830AbaKMADn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Nov 2014 18:08:01 -0500
-Received: by mail-lb0-f173.google.com with SMTP id n15so10364915lbi.18
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Nov 2014 15:08:00 -0800 (PST)
+	Wed, 12 Nov 2014 19:03:43 -0500
+From: Sujith Manoharan <sujith@msujith.org>
 MIME-Version: 1.0
-In-Reply-To: <CA+XVXfdxT=5ch7VwZu3ntJ14jMBD0DTod5+1Y+95eDG8H2Je+Q@mail.gmail.com>
-References: <1414046257-22184-1-git-send-email-arik@wizery.com>
- <CAB=NE6XbFC1aRAMOQZUTPKRbH4XeBnzpZv7-A3oREoo17mUPtQ@mail.gmail.com> <CA+XVXfdxT=5ch7VwZu3ntJ14jMBD0DTod5+1Y+95eDG8H2Je+Q@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Wed, 12 Nov 2014 15:07:39 -0800
-Message-ID: <CAB=NE6XsD+wcTZSX7oZKK72fQjMV0r_TOTeUfGOg8Oh9bHsnLg@mail.gmail.com> (sfid-20141113_000823_896504_47B5E427)
-Subject: Re: [PATCH 0/5] wiphy-specific regulatory management
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <21603.62903.29605.927800@gargle.gargle.HOWL> (sfid-20141113_010346_491660_6B9D4B15)
+Date: Thu, 13 Nov 2014 05:35:11 +0530
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: Re: [PATCH 1/6] ath9k: disable overriding AR9340 SLP32 registers
+In-Reply-To: <546343EF.5090803@openwrt.org>
+References: <1415689644-29693-1-git-send-email-sujith@msujith.org>
+	<1415689644-29693-2-git-send-email-sujith@msujith.org>
+	<546343EF.5090803@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 5, 2014 at 12:41 AM, Arik Nemtsov <arik@wizery.com> wrote:
-> On Wed, Nov 5, 2014 at 5:21 AM, Luis R. Rodriguez
-> <mcgrof@do-not-panic.com> wrote:
->> On Wed, Oct 22, 2014 at 11:37 PM, Arik Nemtsov <arik@wizery.com> wrote:
->>>   cfg80211: allow wiphy specific regdomain management
->>
->> This guy never made it to my inbox.
->
-> Here it is:
-> http://permalink.gmane.org/gmane.linux.kernel.wireless.general/129448
+Felix Fietkau wrote:
+> What's the point in doing this? The writes don't hurt, and this change
+> is making the code uglier.
 
-Look OK but I can't comment on code so please also Cc this address on
-future patches: mcgrof@suse.com. Look forward to next iteration.
+Well, the code is redundant and I don't see the point in
+doing the writes when we don't have to ? We could maybe
+restructure it a bit...
 
- Luis
+Sujith
