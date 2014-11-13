@@ -1,98 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:59381 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752075AbaKJJKj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Nov 2014 04:10:39 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: emmanuel.grumbach@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Luciano Coelho <luciano.coelho@intel.com>
-Date: Mon, 10 Nov 2014 11:10:12 +0200
-Message-Id: <1415610621-27438-8-git-send-email-luca@coelho.fi> (sfid-20141110_101117_975583_B019F507)
-In-Reply-To: <1415610621-27438-1-git-send-email-luca@coelho.fi>
-References: <1415610621-27438-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH 07/16] iwlwifi: mvm: disable PS during channel switch
+Received: from mx1.redhat.com ([209.132.183.28]:48124 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933296AbaKMUbc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Nov 2014 15:31:32 -0500
+Message-ID: <1415910648.27937.72.camel@ul30vt.home> (sfid-20141113_213136_750389_DD52B0E4)
+Subject: Qualcomm Atheros AR93xx reset behavior
+From: Alex Williamson <alex.williamson@redhat.com>
+To: ath9k-devel@qca.qualcomm.com
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k-devel@venema.h4ckr.net,
+	Andreas Hartmann <andihartmann@freenet.de>,
+	linux-pci <linux-pci@vger.kernel.org>
+Date: Thu, 13 Nov 2014 13:30:48 -0700
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+Hi,
 
-Disable PS when pre_channel_switch is called and add the
-post_channel_switch operation to re-enable PS when the channel switch
-is completed.
+This is a question not about the wireless properties of the Atheros
+AR93xx, but about the PCIe bus reset behavior.  We have a user reporting
+errors with a TP-LINK TL-WDN4800 and I've acquired the same card and
+have been able to reproduce the error on two systems.  The problem is
+that if we attempt to do a secondary bus reset or link down from the
+parent bridge of these devices, the card will throw errors like Surprise
+Down and never seems to return to a working state, sometimes throwing
+machine checks if we attempt to access config space again.
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 28 +++++++++++++++++++++++++---
- 1 file changed, 25 insertions(+), 3 deletions(-)
+The reason for attempting bus resets is that we want to use PCI device
+assignment to attach the device to a virtual machine.  Performing a bus
+reset puts the device in a known state for the VM and clears any guest
+state from the device when returning it to the host.  For most devices
+this works quite well, especially when the device does not support FLR.
+In this case we need to figure out if we need a blacklist mechanism to
+avoid bus resets for this device or whether there's a procedure we can
+use to create a device specific reset in place of a standard bus reset.
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index 9cf90af..221f823 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -3039,7 +3039,7 @@ static int iwl_mvm_pre_channel_switch(struct ieee80211_hw *hw,
- {
- 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
- 	struct ieee80211_vif *csa_vif;
--	struct iwl_mvm_vif *mvmvif;
-+	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
- 	int ret;
- 
- 	mutex_lock(&mvm->mutex);
-@@ -3060,7 +3060,6 @@ static int iwl_mvm_pre_channel_switch(struct ieee80211_hw *hw,
- 
- 		rcu_assign_pointer(mvm->csa_vif, vif);
- 
--		mvmvif = iwl_mvm_vif_from_mac80211(vif);
- 		if (WARN_ONCE(mvmvif->csa_countdown,
- 			      "Previous CSA countdown didn't complete")) {
- 			ret = -EBUSY;
-@@ -3072,7 +3071,11 @@ static int iwl_mvm_pre_channel_switch(struct ieee80211_hw *hw,
- 		break;
- 	}
- 
--	ret = 0;
-+	mvmvif->ps_disabled = true;
-+
-+	ret = iwl_mvm_power_update_ps(mvm);
-+	if (ret)
-+		goto out_unlock;
- 
- out_unlock:
- 	mutex_unlock(&mvm->mutex);
-@@ -3080,6 +3083,24 @@ out_unlock:
- 	return ret;
- }
- 
-+static int iwl_mvm_post_channel_switch(struct ieee80211_hw *hw,
-+				       struct ieee80211_vif *vif)
-+{
-+	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
-+	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
-+	int ret;
-+
-+	mutex_lock(&mvm->mutex);
-+
-+	mvmvif->ps_disabled = false;
-+
-+	ret = iwl_mvm_power_update_ps(mvm);
-+
-+	mutex_unlock(&mvm->mutex);
-+
-+	return ret;
-+}
-+
- static void iwl_mvm_mac_flush(struct ieee80211_hw *hw,
- 			      struct ieee80211_vif *vif, u32 queues, bool drop)
- {
-@@ -3154,6 +3175,7 @@ const struct ieee80211_ops iwl_mvm_hw_ops = {
- 	.set_tim = iwl_mvm_set_tim,
- 
- 	.pre_channel_switch = iwl_mvm_pre_channel_switch,
-+	.post_channel_switch = iwl_mvm_post_channel_switch,
- 
- 	CFG80211_TESTMODE_CMD(iwl_mvm_mac_testmode_cmd)
- 
--- 
-2.1.1
+The specific device is:
+
+xx:xx.x Network controller [0280]: Qualcomm Atheros AR93xx Wireless Network Adapter [168c:0030] (rev 01)
+        Subsystem: Qualcomm Atheros Device [168c:3112]
+
+Is there anyone with access to hardware specs for this device that can
+help?  Perhaps there's an errata on the PCIe interface that might
+explain it or some specific steps we can take to make the device behave
+for reset.  Thanks!
+
+Alex
 
