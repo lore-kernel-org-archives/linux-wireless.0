@@ -1,70 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53779 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:34123 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751890AbaKJVJz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Nov 2014 16:09:55 -0500
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Chris Ruffin <cmruffin@gmail.com>,
-	<linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<devel@driverdev.osuosl.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	"Greg Kroah-Hartman" <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH] staging: rtl8723au: change typecast to match type returned by htons()
-References: <1415650025-16403-1-git-send-email-cmruffin@gmail.com>
-	<wrfjlhnivmb9.fsf@redhat.com> <54611FF5.40405@broadcom.com>
-Date: Mon, 10 Nov 2014 16:09:37 -0500
-In-Reply-To: <54611FF5.40405@broadcom.com> (Arend van Spriel's message of
-	"Mon, 10 Nov 2014 21:28:37 +0100")
-Message-ID: <wrfj8ujivk32.fsf@redhat.com> (sfid-20141110_221019_434335_878B521E)
+	id S932199AbaKMMgJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Nov 2014 07:36:09 -0500
+Date: Thu, 13 Nov 2014 13:33:14 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Marcel Holtmann <marcel@holtmann.org>
+Subject: Can fb4e156886ce6e8309e912d8b370d192330d19d3 be reverted ?
+Message-ID: <20141113123313.GA1926@redhat.com> (sfid-20141113_133628_786084_BDEA3269)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend@broadcom.com> writes:
-> On 10-11-14 21:21, Jes Sorensen wrote:
->> Chris Ruffin <cmruffin@gmail.com> writes:
->>> Using a u16 pointer typecast for a result from htons() results in
->>> the following warning from sparse:
->>>
->>> drivers/staging/rtl8723au/core/rtw_xmit.c:1279:36: warning:
->>> incorrect type in assignment (different base types)
->>> drivers/staging/rtl8723au/core/rtw_xmit.c:1279:36: expected
->>> unsigned short [unsigned] [short] [usertype] <noident>
->>> drivers/staging/rtl8723au/core/rtw_xmit.c:1279:36: got restricted
->>> __be16 [usertype] <noident>
->>>
->>> This patch fixes the issue by using an endian-specific typecast
->>> that will always match the type returned by htons().
->>>
->>> Signed-off-by: Chris Ruffin <cmruffin@gmail.com>
->>> ---
->>>  drivers/staging/rtl8723au/core/rtw_xmit.c |    2 +-
->>>  1 file changed, 1 insertion(+), 1 deletion(-)
->> 
->> Looks fine to me
->> 
->> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
->> 
->>>
->>> diff --git a/drivers/staging/rtl8723au/core/rtw_xmit.c
->>> b/drivers/staging/rtl8723au/core/rtw_xmit.c
->>> index a0f7e27..44ef55c 100644
->>> --- a/drivers/staging/rtl8723au/core/rtw_xmit.c
->>> +++ b/drivers/staging/rtl8723au/core/rtw_xmit.c
->>> @@ -1276,7 +1276,7 @@ s32 rtw_put_snap23a(u8 *data, u16 h_proto)
->>>  	snap->oui[0] = oui[0];
->>>  	snap->oui[1] = oui[1];
->>>  	snap->oui[2] = oui[2];
->>> -	*(u16 *)(data + SNAP_SIZE) = htons(h_proto);
->>> +	*(__be16 *)(data + SNAP_SIZE) = htons(h_proto);
->
-> Could (data + SNAP_SIZE) be on a unaligned address?
+I've updated wireless code on RHEL and get complain that now
+cfg80211 and rfkill modules are loaded on machines that do not have
+wireless hardware. Modules are auto-loaded because NetworkManager send
+nl80211 messages to check if there are wireless devices in the system.
 
-It shouldn't but probably better to take it into account. I am moving
-things around in this code right now, so I'll just fix it in a follow-on
-patch to this one.
+Hence my question, can we revert commit fb4e156886ce
+"nl80211: Add generic netlink module alias for cfg80211/nl80211" ?
 
-Cheers,
-Jes
+Auto loading nl80211 does not seems to be necessary, if there are
+wireless devices nl80211 will be loaded anyway.
+
+Stanislaw
+
