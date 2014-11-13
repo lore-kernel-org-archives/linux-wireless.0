@@ -1,54 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:36050 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752477AbaKCLFc (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:11973 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932329AbaKMKzA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Nov 2014 06:05:32 -0500
-Date: Mon, 3 Nov 2014 11:05:26 +0000
-From: Luis Henriques <luis.henriques@canonical.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Jiri Slaby <jslaby@suse.cz>,
-	Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	Canek =?iso-8859-1?Q?Pel=E1ez_Vald=E9s?= <canek@ciencias.unam.mx>,
-	stable@vger.kernel.org, Helmut Schaa <helmut.schaa@googlemail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH -stable] rt2x00: support Ralink 5362.
-Message-ID: <20141103110526.GG6874@hercules> (sfid-20141103_120538_924572_3684E23C)
-References: <1414667897-2277-1-git-send-email-xose.vazquez@gmail.com>
- <54535AA0.6070907@suse.cz>
- <20141031095118.GA2066@redhat.com>
+	Thu, 13 Nov 2014 05:55:00 -0500
+From: Avinash Patil <patila@marvell.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
+	<cluo@marvell.com>, <yangyang@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH 1/6] mwifiex: update rx packet descriptor structure to match FW
+Date: Thu, 13 Nov 2014 21:54:13 +0530
+Message-ID: <1415895858-4007-2-git-send-email-patila@marvell.com> (sfid-20141113_115505_083760_2C09742C)
+In-Reply-To: <1415895858-4007-1-git-send-email-patila@marvell.com>
+References: <1415895858-4007-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20141031095118.GA2066@redhat.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 31, 2014 at 10:51:56AM +0100, Stanislaw Gruszka wrote:
-> 
-> 
-> 
-> On Fri, Oct 31, 2014 at 10:47:12AM +0100, Jiri Slaby wrote:
-> > On 10/30/2014, 12:18 PM, Xose Vazquez Perez wrote:
-> > > From: Canek Peláez Valdés <canek@ciencias.unam.mx>
-> > 
-> > Hi, what is this, please? No commit message, no upstream SHA, we cannot
-> > take the two as they stand...
-> 
-> This is:
-> 
-> commit ac0372abf8524a7572a9cdaac6495eb2eba20457
-> Author: Canek Peláez Valdés <canek@ciencias.unam.mx>
-> Date:   Sun Aug 24 19:06:11 2014 -0500
-> 
->     rt2x00: support Ralink 5362.
-> --
-> To unsubscribe from this list: send the line "unsubscribe stable" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+RX packet descriptor structure has recently changed in FW.
+This patch updates rxpd accordingly.
 
-Thanks, queuing this patch for the 3.16 kernel.
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+---
+ drivers/net/wireless/mwifiex/fw.h | 1 +
+ 1 file changed, 1 insertion(+)
 
-Cheers,
---
-Luís
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index 7f922a8..e095f37 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -584,6 +584,7 @@ struct rxpd {
+ 	 * [Bit 7] Reserved
+ 	 */
+ 	u8 ht_info;
++	u8 reserved[3];
+ 	u8 flags;
+ } __packed;
+ 
+-- 
+1.8.1.4
+
