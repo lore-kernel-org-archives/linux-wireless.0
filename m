@@ -1,47 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f178.google.com ([209.85.192.178]:44010 "EHLO
-	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750879AbaKYOtH (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:5071 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932468AbaKMKzm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Nov 2014 09:49:07 -0500
-Received: by mail-pd0-f178.google.com with SMTP id g10so689530pdj.37
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Nov 2014 06:49:07 -0800 (PST)
+	Thu, 13 Nov 2014 05:55:42 -0500
+From: Avinash Patil <patila@marvell.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
+	<cluo@marvell.com>, <yangyang@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH 5/6] mwifiex: support for parsing TDLS discovery frames
+Date: Thu, 13 Nov 2014 21:54:17 +0530
+Message-ID: <1415895858-4007-6-git-send-email-patila@marvell.com> (sfid-20141113_115544_976754_FE8075EB)
+In-Reply-To: <1415895858-4007-1-git-send-email-patila@marvell.com>
+References: <1415895858-4007-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
-Date: Tue, 25 Nov 2014 22:49:07 +0800
-Message-ID: <CAFuUQkibQ0o5H=5b4ZQyiadiPuoU8gY+5pg9TyqKLzMvV3q2SA@mail.gmail.com> (sfid-20141125_154921_684484_2B993A83)
-Subject: Re: [PATCH] mac80211: check if channels allow 80 MHz for VHT probe requests
-From: YanBo <dreamfly281@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>, j@w1.fi,
-	Kalle Valo <kvalo@qca.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 25, 2014 at 10:18 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2014-11-25 at 22:13 +0800, YanBo wrote:
->
->> > But is all of that really the right way? I'm not completely convinced.
->>
->> Except set the flag, the HW itself should support this feature, or
->> else it also doesn't work, I'd
->> send the patch in soon for public review.
->
-> Yeah, but is it really the right way to advertise VHT? In the spec, VHT
-> means you also have 80 MHz support - do you really think you can/will do
-> 80 MHz on 2.4 GHz? Seems like all of this will cause more corner cases.
->
->> >
+This patch adds support for parsing TDLS discovery
+frames. After parsing, we update peer RSSI information.
 
-Agree with you that it need a bigger discussion about whether
-advertise VHT is the suitable/best
-way to support the  VHT at 2.4G feature.
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+---
+ drivers/net/wireless/mwifiex/util.c | 38 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 38 insertions(+)
 
-We are considered this ways as it is already be used by some vendor
-like BRCM or Qualcomm Atheros
-in there full mac product, and there will be IOT issue if there are
-kinds of different implementation.
+diff --git a/drivers/net/wireless/mwifiex/util.c b/drivers/net/wireless/mwifiex/util.c
+index ec79c49..a113ef8 100644
+--- a/drivers/net/wireless/mwifiex/util.c
++++ b/drivers/net/wireless/mwifiex/util.c
+@@ -141,6 +141,38 @@ int mwifiex_get_debug_info(struct mwifiex_private *priv,
+ 	return 0;
+ }
+ 
++static int
++mwifiex_parse_mgmt_packet(struct mwifiex_private *priv, u8 *payload, u16 len,
++			  struct rxpd *rx_pd)
++{
++	u16 stype;
++	u8 category, action_code;
++	struct ieee80211_hdr *ieee_hdr = (void *)payload;
++
++	stype =  (cpu_to_le16(ieee_hdr->frame_control) & IEEE80211_FCTL_STYPE);
++
++	switch (stype) {
++	case IEEE80211_STYPE_ACTION:
++		category = *(payload + sizeof(struct ieee80211_hdr));
++		action_code = *(payload + sizeof(struct ieee80211_hdr) + 1);
++		if (category == WLAN_CATEGORY_PUBLIC &&
++		    action_code == WLAN_PUB_ACTION_TDLS_DISCOVER_RES) {
++			dev_dbg(priv->adapter->dev,
++				"TDLS discovery response %pM nf=%d, snr=%d\n",
++				ieee_hdr->addr2, rx_pd->nf, rx_pd->snr);
++			mwifiex_auto_tdls_update_peer_signal(priv,
++							     ieee_hdr->addr2,
++							     rx_pd->snr,
++							     rx_pd->nf);
++		}
++		break;
++	default:
++		dev_dbg(priv->adapter->dev,
++			"unknown mgmt frame subytpe %#x\n", stype);
++	}
++
++	return 0;
++}
+ /*
+  * This function processes the received management packet and send it
+  * to the kernel.
+@@ -151,6 +183,7 @@ mwifiex_process_mgmt_packet(struct mwifiex_private *priv,
+ {
+ 	struct rxpd *rx_pd;
+ 	u16 pkt_len;
++	struct ieee80211_hdr *ieee_hdr;
+ 
+ 	if (!skb)
+ 		return -1;
+@@ -162,6 +195,11 @@ mwifiex_process_mgmt_packet(struct mwifiex_private *priv,
+ 
+ 	pkt_len = le16_to_cpu(rx_pd->rx_pkt_length);
+ 
++	ieee_hdr = (void *)skb->data;
++	if (ieee80211_is_mgmt(ieee_hdr->frame_control)) {
++		mwifiex_parse_mgmt_packet(priv, (u8 *)ieee_hdr,
++					  pkt_len, rx_pd);
++	}
+ 	/* Remove address4 */
+ 	memmove(skb->data + sizeof(struct ieee80211_hdr_3addr),
+ 		skb->data + sizeof(struct ieee80211_hdr),
+-- 
+1.8.1.4
 
-Thanks
-BR /Yanbo
