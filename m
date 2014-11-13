@@ -1,60 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:59437 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752086AbaKJJYQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Nov 2014 04:24:16 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: emmanuel.grumbach@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Luciano Coelho <luciano.coelho@intel.com>
-Date: Mon, 10 Nov 2014 11:10:18 +0200
-Message-Id: <1415610621-27438-14-git-send-email-luca@coelho.fi> (sfid-20141110_102420_787997_F6C59EB7)
-In-Reply-To: <1415610621-27438-1-git-send-email-luca@coelho.fi>
-References: <1415610621-27438-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH 13/16] iwlwifi: mvm: disable beacon filtering during CSA
+Received: from mga14.intel.com ([192.55.52.115]:13244 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933046AbaKMNuB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Nov 2014 08:50:01 -0500
+From: Jukka Rissanen <jukka.rissanen@linux.intel.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH v4 2/2] nl80211: Stop scheduled scan if netlink client disappears
+Date: Thu, 13 Nov 2014 15:49:52 +0200
+Message-Id: <1415886592-18253-3-git-send-email-jukka.rissanen@linux.intel.com> (sfid-20141113_145007_695801_4D8E9F47)
+In-Reply-To: <1415886592-18253-1-git-send-email-jukka.rissanen@linux.intel.com>
+References: <1415886592-18253-1-git-send-email-jukka.rissanen@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+An attribute NL80211_ATTR_SOCKET_OWNER can be set by the scan initiator.
+If present, the attribute will cause the scan to be stopped if the client
+dies.
 
-After a channel switch, transmission on the new channel is only
-started once we see a beacon on it.  Thus, beacon filtering needs to
-be disabled during channel switch so that mac80211 receives this
-beacon and finishes the process.
-
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Signed-off-by: Jukka Rissanen <jukka.rissanen@linux.intel.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ include/net/cfg80211.h       |  2 ++
+ include/uapi/linux/nl80211.h |  3 +++
+ net/wireless/core.c          |  5 ++++-
+ net/wireless/nl80211.c       | 35 +++++++++++++++++++++++++++++++++++
+ 4 files changed, 44 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index 55ab81e..7c031ee 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -3079,6 +3079,12 @@ static int iwl_mvm_pre_channel_switch(struct ieee80211_hw *hw,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 220d5f5..84378bf 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1512,6 +1512,8 @@ struct cfg80211_sched_scan_request {
+ 	struct wiphy *wiphy;
+ 	struct net_device *dev;
+ 	unsigned long scan_start;
++	u32 owner_nlportid;
++	struct work_struct sched_scan_stop_wk;
  
- 		iwl_mvm_schedule_csa_period(mvm, vif, vif->bss_conf.beacon_int,
- 					    apply_time);
-+		if (mvmvif->bf_data.bf_enabled) {
-+			ret = iwl_mvm_disable_beacon_filter(mvm, vif, 0);
-+			if (ret)
-+				goto out_unlock;
+ 	/* keep last */
+ 	struct ieee80211_channel *channels[0];
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 185f9c7..5038240 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1640,6 +1640,9 @@ enum nl80211_commands {
+  * @NL80211_ATTR_SOCKET_OWNER: Flag attribute, if set during interface
+  *	creation then the new interface will be owned by the netlink socket
+  *	that created it and will be destroyed when the socket is closed.
++ *	If set during scheduled scan start then the new scan req will be
++ *	owned by the netlink socket that created it and the scheduled scan will
++ *	be stopped when the socket is closed.
+  *
+  * @NL80211_ATTR_TDLS_INITIATOR: flag attribute indicating the current end is
+  *	the TDLS link initiator.
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index a4d2792..9d33df6 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -850,8 +850,10 @@ void __cfg80211_leave(struct cfg80211_registered_device *rdev,
+ 		break;
+ 	case NL80211_IFTYPE_P2P_CLIENT:
+ 	case NL80211_IFTYPE_STATION:
+-		if (rdev->sched_scan_req && dev == rdev->sched_scan_req->dev)
++		if (rdev->sched_scan_req && dev == rdev->sched_scan_req->dev) {
++			flush_work(&rdev->sched_scan_req->sched_scan_stop_wk);
+ 			__cfg80211_stop_sched_scan(rdev, false);
++		}
+ 
+ #ifdef CONFIG_CFG80211_WEXT
+ 		kfree(wdev->wext.ie);
+@@ -991,6 +993,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 
+ 		if (WARN_ON(rdev->sched_scan_req &&
+ 			    rdev->sched_scan_req->dev == wdev->netdev)) {
++			flush_work(&rdev->sched_scan_req->sched_scan_stop_wk);
+ 			__cfg80211_stop_sched_scan(rdev, false);
+ 		}
+ 
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index df447c0..87a4b71 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -5681,6 +5681,22 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
+ 	return err;
+ }
+ 
++static void nl80211_sched_scan_stop_wk(struct work_struct *work)
++{
++	struct cfg80211_sched_scan_request *req;
++	struct cfg80211_registered_device *rdev;
++
++	req = container_of(work, struct cfg80211_sched_scan_request,
++			   sched_scan_stop_wk);
++
++	rdev = wiphy_to_rdev(req->wiphy);
++
++	if (rtnl_trylock()) {
++		__cfg80211_stop_sched_scan(rdev, false);
++		rtnl_unlock();
++	}
++}
++
+ static int nl80211_start_sched_scan(struct sk_buff *skb,
+ 				    struct genl_info *info)
+ {
+@@ -5955,6 +5971,13 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
+ 
+ 	err = rdev_sched_scan_start(rdev, dev, request);
+ 	if (!err) {
++		if (info->attrs[NL80211_ATTR_SOCKET_OWNER]) {
++			INIT_WORK(&request->sched_scan_stop_wk,
++				  nl80211_sched_scan_stop_wk);
++
++			request->owner_nlportid = info->snd_portid;
 +		}
 +
- 		break;
- 	default:
- 		break;
-@@ -3119,6 +3125,10 @@ static int iwl_mvm_post_channel_switch(struct ieee80211_hw *hw,
- 		iwl_mvm_sta_modify_disable_tx(mvm, mvmsta, false);
+ 		rdev->sched_scan_req = request;
+ 		nl80211_send_sched_scan(rdev, dev,
+ 					NL80211_CMD_START_SCHED_SCAN);
+@@ -12127,6 +12150,12 @@ static int nl80211_netlink_notify(struct notifier_block * nb,
  
- 		iwl_mvm_mac_ctxt_changed(mvm, vif, false, NULL);
+ 	list_for_each_entry_rcu(rdev, &cfg80211_rdev_list, list) {
+ 		bool schedule_destroy_work = false;
++		bool schedule_scan_stop = false;
++		struct cfg80211_sched_scan_request *req = rdev->sched_scan_req;
 +
-+		ret = iwl_mvm_enable_beacon_filter(mvm, vif, 0);
-+		if (ret)
-+			goto out_unlock;
++		if (req && req->owner_nlportid == notify->portid &&
++		    notify->portid)
++			schedule_scan_stop = true;
+ 
+ 		list_for_each_entry_rcu(wdev, &rdev->wdev_list, list) {
+ 			cfg80211_mlme_unregister_socket(wdev, notify->portid);
+@@ -12157,6 +12186,12 @@ static int nl80211_netlink_notify(struct notifier_block * nb,
+ 				spin_unlock(&rdev->destroy_list_lock);
+ 				schedule_work(&rdev->destroy_work);
+ 			}
++		} else if (schedule_scan_stop) {
++			req->owner_nlportid = 0;
++
++			if (rdev->ops->sched_scan_stop &&
++			    rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_SCHED_SCAN)
++				schedule_work(&req->sched_scan_stop_wk);
+ 		}
  	}
  
- 	mvmvif->ps_disabled = false;
 -- 
-2.1.1
+1.8.3.1
 
