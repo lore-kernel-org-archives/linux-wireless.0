@@ -1,56 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:5988 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755821AbaKSUgc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Nov 2014 15:36:32 -0500
-Message-ID: <546CFF4D.7010306@broadcom.com> (sfid-20141119_213635_728990_94BD1558)
-Date: Wed, 19 Nov 2014 21:36:29 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	<brcm80211-dev-list@broadcom.com>,
-	John Linville <linville@tuxdriver.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [PATCH] brcmfmac: don't include linux/unaligned/access_ok.h
-References: <1416428298-10000-1-git-send-email-johannes@sipsolutions.net>
-In-Reply-To: <1416428298-10000-1-git-send-email-johannes@sipsolutions.net>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Received: from mga11.intel.com ([192.55.52.93]:14229 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752261AbaKMP3s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Nov 2014 10:29:48 -0500
+From: Jukka Rissanen <jukka.rissanen@linux.intel.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH v5 1/2] nl80211: Replace interface socket owner attribute with more generic one
+Date: Thu, 13 Nov 2014 17:25:14 +0200
+Message-Id: <1415892315-2911-2-git-send-email-jukka.rissanen@linux.intel.com> (sfid-20141113_162952_563314_9252CA5A)
+In-Reply-To: <1415892315-2911-1-git-send-email-jukka.rissanen@linux.intel.com>
+References: <1415892315-2911-1-git-send-email-jukka.rissanen@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/19/14 21:18, Johannes Berg wrote:
-> From: Johannes Berg<johannes.berg@intel.com>
->
-> This is a specific implementation,<asm/unaligned.h>  is the
-> multiplexer that has the arch-specific knowledge of which
-> of the implementations needs to be used, so include that.
+Replace NL80211_ATTR_IFACE_SOCKET_OWNER attribute with more generic
+NL80211_ATTR_SOCKET_OWNER that can be used with other commands
+that interface creation.
 
-Thanks, Johannes
+Signed-off-by: Jukka Rissanen <jukka.rissanen@linux.intel.com>
+---
+ include/uapi/linux/nl80211.h | 7 ++++---
+ net/wireless/nl80211.c       | 4 ++--
+ 2 files changed, 6 insertions(+), 5 deletions(-)
 
-Maybe it would be good to mention this was found by kbuild test robot.
-
-Acked-by: Arend van Spriel <arend@broadcom.com>
-> Signed-off-by: Johannes Berg<johannes.berg@intel.com>
-> ---
->   drivers/net/wireless/brcm80211/brcmfmac/pcie.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
-> index b0ae7993e2e8..138691a1365a 100644
-> --- a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
-> +++ b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
-> @@ -19,10 +19,10 @@
->   #include<linux/pci.h>
->   #include<linux/vmalloc.h>
->   #include<linux/delay.h>
-> -#include<linux/unaligned/access_ok.h>
->   #include<linux/interrupt.h>
->   #include<linux/bcma/bcma.h>
->   #include<linux/sched.h>
-> +#include<asm/unaligned.h>
->
->   #include<soc.h>
->   #include<chipcommon.h>
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 442369f..185f9c7 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1637,9 +1637,9 @@ enum nl80211_commands {
+  * @NL80211_ATTR_TDLS_PEER_CAPABILITY: flags for TDLS peer capabilities, u32.
+  *	As specified in the &enum nl80211_tdls_peer_capability.
+  *
+- * @NL80211_ATTR_IFACE_SOCKET_OWNER: flag attribute, if set during interface
++ * @NL80211_ATTR_SOCKET_OWNER: Flag attribute, if set during interface
+  *	creation then the new interface will be owned by the netlink socket
+- *	that created it and will be destroyed when the socket is closed
++ *	that created it and will be destroyed when the socket is closed.
+  *
+  * @NL80211_ATTR_TDLS_INITIATOR: flag attribute indicating the current end is
+  *	the TDLS link initiator.
+@@ -2004,7 +2004,7 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_TDLS_PEER_CAPABILITY,
+ 
+-	NL80211_ATTR_IFACE_SOCKET_OWNER,
++	NL80211_ATTR_SOCKET_OWNER,
+ 
+ 	NL80211_ATTR_CSA_C_OFFSETS_TX,
+ 	NL80211_ATTR_MAX_CSA_COUNTERS,
+@@ -2030,6 +2030,7 @@ enum nl80211_attrs {
+ /* source-level API compatibility */
+ #define NL80211_ATTR_SCAN_GENERATION NL80211_ATTR_GENERATION
+ #define	NL80211_ATTR_MESH_PARAMS NL80211_ATTR_MESH_CONFIG
++#define NL80211_ATTR_IFACE_SOCKET_OWNER NL80211_ATTR_SOCKET_OWNER
+ 
+ /*
+  * Allow user space programs to use #ifdef on new attributes by defining them
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index d0a8361..df447c0 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -388,7 +388,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
+ 	[NL80211_ATTR_MAC_HINT] = { .len = ETH_ALEN },
+ 	[NL80211_ATTR_WIPHY_FREQ_HINT] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_TDLS_PEER_CAPABILITY] = { .type = NLA_U32 },
+-	[NL80211_ATTR_IFACE_SOCKET_OWNER] = { .type = NLA_FLAG },
++	[NL80211_ATTR_SOCKET_OWNER] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_CSA_C_OFFSETS_TX] = { .type = NLA_BINARY },
+ 	[NL80211_ATTR_USE_RRM] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_TSID] = { .type = NLA_U8 },
+@@ -2646,7 +2646,7 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
+ 		return PTR_ERR(wdev);
+ 	}
+ 
+-	if (info->attrs[NL80211_ATTR_IFACE_SOCKET_OWNER])
++	if (info->attrs[NL80211_ATTR_SOCKET_OWNER])
+ 		wdev->owner_nlportid = info->snd_portid;
+ 
+ 	switch (type) {
+-- 
+1.8.3.1
 
