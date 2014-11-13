@@ -1,64 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:59951 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754202AbaKXOfd (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:14451 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932468AbaKMKzT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2014 09:35:33 -0500
-Received: by mail-wi0-f180.google.com with SMTP id n3so6017263wiv.1
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:35:32 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Avri Altman <avri.altman@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 22/75] iwlwifi: mvm: Fix the keep_alive calculation
-Date: Mon, 24 Nov 2014 16:33:58 +0200
-Message-Id: <1416839691-28533-22-git-send-email-egrumbach@gmail.com> (sfid-20141124_154428_030603_1C0A9F1E)
-In-Reply-To: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
-References: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
+	Thu, 13 Nov 2014 05:55:19 -0500
+From: Avinash Patil <patila@marvell.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
+	<cluo@marvell.com>, <yangyang@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH 3/6] mwifiex: wmm support for TDLS link
+Date: Thu, 13 Nov 2014 21:54:15 +0530
+Message-ID: <1415895858-4007-4-git-send-email-patila@marvell.com> (sfid-20141113_115524_317245_7F3F7F5A)
+In-Reply-To: <1415895858-4007-1-git-send-email-patila@marvell.com>
+References: <1415895858-4007-1-git-send-email-patila@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avri Altman <avri.altman@intel.com>
+This patch adds WMM support for TDLS link. Patch
+add WMM info IE for TDLS setup request/response frames
+while WMM parameter for TDLS confirm frame.
 
-The driver must set the keep alive period regardless of power
-management state. The keep alive period must be greater or equal to
-both the NIC's maximum sleep period, and the listen interval.
-However, we were confusing time units (TU) and msec, so fix that.
-
-Signed-off-by: Avri Altman <avri.altman@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/power.c | 9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+ drivers/net/wireless/mwifiex/tdls.c | 55 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 55 insertions(+)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/power.c b/drivers/net/wireless/iwlwifi/mvm/power.c
-index cb653ac..2620dd0 100644
---- a/drivers/net/wireless/iwlwifi/mvm/power.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/power.c
-@@ -329,7 +329,7 @@ static void iwl_mvm_power_build_cmd(struct iwl_mvm *mvm,
- 				    struct ieee80211_vif *vif,
- 				    struct iwl_mac_power_cmd *cmd)
- {
--	int dtimper, dtimper_msec, bi;
-+	int dtimper, bi;
- 	int keep_alive;
- 	bool radar_detect = false;
- 	struct iwl_mvm_vif *mvmvif __maybe_unused =
-@@ -346,10 +346,9 @@ static void iwl_mvm_power_build_cmd(struct iwl_mvm *mvm,
- 	 * immediately after association. Check that keep alive period
- 	 * is at least 3 * DTIM
- 	 */
--	dtimper_msec = dtimper * bi;
--	keep_alive = max_t(int, 3 * dtimper_msec,
--			   MSEC_PER_SEC * POWER_KEEP_ALIVE_PERIOD_SEC);
--	keep_alive = DIV_ROUND_UP(keep_alive, MSEC_PER_SEC);
-+	keep_alive = DIV_ROUND_UP(ieee80211_tu_to_usec(3 * dtimper * bi),
-+				  USEC_PER_SEC);
-+	keep_alive = max(keep_alive, POWER_KEEP_ALIVE_PERIOD_SEC);
- 	cmd->keep_alive_seconds = cpu_to_le16(keep_alive);
+diff --git a/drivers/net/wireless/mwifiex/tdls.c b/drivers/net/wireless/mwifiex/tdls.c
+index e294907..93a492f 100644
+--- a/drivers/net/wireless/mwifiex/tdls.c
++++ b/drivers/net/wireless/mwifiex/tdls.c
+@@ -24,6 +24,7 @@
+ #define TDLS_REQ_FIX_LEN      6
+ #define TDLS_RESP_FIX_LEN     8
+ #define TDLS_CONFIRM_FIX_LEN  6
++#define MWIFIEX_TDLS_WMM_INFO_SIZE 7
  
- 	if (mvm->ps_disabled)
+ static void mwifiex_restore_tdls_packets(struct mwifiex_private *priv,
+ 					 const u8 *mac, u8 status)
+@@ -367,6 +368,55 @@ static void mwifiex_tdls_add_qos_capab(struct sk_buff *skb)
+ 	*pos++ = MWIFIEX_TDLS_DEF_QOS_CAPAB;
+ }
+ 
++static void
++mwifiex_tdls_add_wmm_param_ie(struct mwifiex_private *priv, struct sk_buff *skb)
++{
++	struct ieee80211_wmm_param_ie *wmm;
++	u8 ac_vi[] = {0x42, 0x43, 0x5e, 0x00};
++	u8 ac_vo[] = {0x62, 0x32, 0x2f, 0x00};
++	u8 ac_be[] = {0x03, 0xa4, 0x00, 0x00};
++	u8 ac_bk[] = {0x27, 0xa4, 0x00, 0x00};
++
++	wmm = (void *)skb_put(skb, sizeof(*wmm));
++	memset(wmm, 0, sizeof(*wmm));
++
++	wmm->element_id = WLAN_EID_VENDOR_SPECIFIC;
++	wmm->len = sizeof(*wmm) - 2;
++	wmm->oui[0] = 0x00; /* Microsoft OUI 00:50:F2 */
++	wmm->oui[1] = 0x50;
++	wmm->oui[2] = 0xf2;
++	wmm->oui_type = 2; /* WME */
++	wmm->oui_subtype = 1; /* WME param */
++	wmm->version = 1; /* WME ver */
++	wmm->qos_info = 0; /* U-APSD not in use */
++
++	/* use default WMM AC parameters for TDLS link*/
++	memcpy(&wmm->ac[0], ac_be, sizeof(ac_be));
++	memcpy(&wmm->ac[1], ac_bk, sizeof(ac_bk));
++	memcpy(&wmm->ac[2], ac_vi, sizeof(ac_vi));
++	memcpy(&wmm->ac[3], ac_vo, sizeof(ac_vo));
++}
++
++static void
++mwifiex_add_wmm_info_ie(struct mwifiex_private *priv, struct sk_buff *skb,
++			u8 qosinfo)
++{
++	u8 *buf;
++
++	buf = (void *)skb_put(skb, MWIFIEX_TDLS_WMM_INFO_SIZE +
++			      sizeof(struct ieee_types_header));
++
++	*buf++ = WLAN_EID_VENDOR_SPECIFIC;
++	*buf++ = 7; /* len */
++	*buf++ = 0x00; /* Microsoft OUI 00:50:F2 */
++	*buf++ = 0x50;
++	*buf++ = 0xf2;
++	*buf++ = 2; /* WME */
++	*buf++ = 0; /* WME info */
++	*buf++ = 1; /* WME ver */
++	*buf++ = qosinfo; /* U-APSD no in use */
++}
++
+ static int mwifiex_prep_tdls_encap_data(struct mwifiex_private *priv,
+ 					const u8 *peer, u8 action_code,
+ 					u8 dialog_token,
+@@ -421,6 +471,7 @@ static int mwifiex_prep_tdls_encap_data(struct mwifiex_private *priv,
+ 
+ 		mwifiex_tdls_add_ext_capab(priv, skb);
+ 		mwifiex_tdls_add_qos_capab(skb);
++		mwifiex_add_wmm_info_ie(priv, skb, 0);
+ 		break;
+ 
+ 	case WLAN_TDLS_SETUP_RESPONSE:
+@@ -458,6 +509,7 @@ static int mwifiex_prep_tdls_encap_data(struct mwifiex_private *priv,
+ 
+ 		mwifiex_tdls_add_ext_capab(priv, skb);
+ 		mwifiex_tdls_add_qos_capab(skb);
++		mwifiex_add_wmm_info_ie(priv, skb, 0);
+ 		break;
+ 
+ 	case WLAN_TDLS_SETUP_CONFIRM:
+@@ -466,6 +518,8 @@ static int mwifiex_prep_tdls_encap_data(struct mwifiex_private *priv,
+ 		skb_put(skb, sizeof(tf->u.setup_cfm));
+ 		tf->u.setup_cfm.status_code = cpu_to_le16(status_code);
+ 		tf->u.setup_cfm.dialog_token = dialog_token;
++
++		mwifiex_tdls_add_wmm_param_ie(priv, skb);
+ 		if (priv->adapter->is_hw_11ac_capable) {
+ 			ret = mwifiex_tdls_add_vht_oper(priv, peer, skb);
+ 			if (ret) {
+@@ -544,6 +598,7 @@ int mwifiex_send_tdls_data_frame(struct mwifiex_private *priv, const u8 *peer,
+ 		  sizeof(struct ieee_types_bss_co_2040) +
+ 		  sizeof(struct ieee80211_ht_operation) +
+ 		  sizeof(struct ieee80211_tdls_lnkie) +
++		  sizeof(struct ieee80211_wmm_param_ie) +
+ 		  extra_ies_len;
+ 
+ 	if (priv->adapter->is_hw_11ac_capable)
 -- 
-1.9.1
+1.8.1.4
 
