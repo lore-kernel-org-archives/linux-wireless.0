@@ -1,60 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:40851 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:43837 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932166AbaKSURc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Nov 2014 15:17:32 -0500
+	id S932639AbaKMMot (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Nov 2014 07:44:49 -0500
+Message-ID: <1415882683.2021.3.camel@sipsolutions.net> (sfid-20141113_134506_152448_998BB541)
+Subject: Re: Can fb4e156886ce6e8309e912d8b370d192330d19d3 be reverted ?
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] nfc drivers: don't include linux/unaligned/access_ok.h
-Date: Wed, 19 Nov 2014 21:17:22 +0100
-Message-Id: <1416428242-9942-1-git-send-email-johannes@sipsolutions.net> (sfid-20141119_211747_436533_EB111305)
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+	Marcel Holtmann <marcel@holtmann.org>
+Date: Thu, 13 Nov 2014 13:44:43 +0100
+In-Reply-To: <20141113123313.GA1926@redhat.com> (sfid-20141113_133628_786084_BDEA3269)
+References: <20141113123313.GA1926@redhat.com>
+	 (sfid-20141113_133628_786084_BDEA3269)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Thu, 2014-11-13 at 13:33 +0100, Stanislaw Gruszka wrote:
+> I've updated wireless code on RHEL and get complain that now
+> cfg80211 and rfkill modules are loaded on machines that do not have
+> wireless hardware. Modules are auto-loaded because NetworkManager send
+> nl80211 messages to check if there are wireless devices in the system.
+> 
+> Hence my question, can we revert commit fb4e156886ce
+> "nl80211: Add generic netlink module alias for cfg80211/nl80211" ?
 
-This is a specific implementation, <asm/unaligned.h> is the
-multiplexer that has the arch-specific knowledge of which
-of the implementations needs to be used, so include that.
+Realistically, we can't revert it, but only remove the
+MODULE_ALIAS_GENL_FAMILY() line.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/nfc/pn544/i2c.c    | 2 +-
- drivers/nfc/st21nfca/i2c.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+> Auto loading nl80211 does not seems to be necessary, if there are
+> wireless devices nl80211 will be loaded anyway.
 
-diff --git a/drivers/nfc/pn544/i2c.c b/drivers/nfc/pn544/i2c.c
-index 440291ab7263..fc02e8d6a193 100644
---- a/drivers/nfc/pn544/i2c.c
-+++ b/drivers/nfc/pn544/i2c.c
-@@ -29,8 +29,8 @@
- #include <linux/delay.h>
- #include <linux/nfc.h>
- #include <linux/firmware.h>
--#include <linux/unaligned/access_ok.h>
- #include <linux/platform_data/pn544.h>
-+#include <asm/unaligned.h>
- 
- #include <net/nfc/hci.h>
- #include <net/nfc/llc.h>
-diff --git a/drivers/nfc/st21nfca/i2c.c b/drivers/nfc/st21nfca/i2c.c
-index 0ea756b77519..ff6dacb4d482 100644
---- a/drivers/nfc/st21nfca/i2c.c
-+++ b/drivers/nfc/st21nfca/i2c.c
-@@ -28,8 +28,8 @@
- #include <linux/delay.h>
- #include <linux/nfc.h>
- #include <linux/firmware.h>
--#include <linux/unaligned/access_ok.h>
- #include <linux/platform_data/st21nfca.h>
-+#include <asm/unaligned.h>
- 
- #include <net/nfc/hci.h>
- #include <net/nfc/llc.h>
--- 
-2.1.1
+Maybe other applications would like to see an empty list of devices? But
+OTOH, if they're robust at all, they have to cope with kernels not even
+compiled with nl80211, so I guess for me I don't really see a big
+difference in whether the module alias exists or not.
+
+johannes
 
