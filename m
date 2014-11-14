@@ -1,59 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:5345 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751197AbaKDL6O (ORCPT
+Received: from mail-vc0-f175.google.com ([209.85.220.175]:51305 "EHLO
+	mail-vc0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754631AbaKNJGU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Nov 2014 06:58:14 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Avinash Patil <patila@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 4/5] mwifiex: do not setup AMPDU/AMSDU with broadcast receiver
-Date: Tue, 4 Nov 2014 03:57:02 -0800
-Message-ID: <1415102223-7118-4-git-send-email-akarwar@marvell.com> (sfid-20141104_125817_041875_1CFE13E6)
-In-Reply-To: <1415102223-7118-1-git-send-email-akarwar@marvell.com>
-References: <1415102223-7118-1-git-send-email-akarwar@marvell.com>
+	Fri, 14 Nov 2014 04:06:20 -0500
+Received: by mail-vc0-f175.google.com with SMTP id hy10so612978vcb.6
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Nov 2014 01:06:19 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <5465C333.7030704@rempel-privat.de>
+References: <1415941631-24140-1-git-send-email-yeohchunyeow@gmail.com>
+	<5465C333.7030704@rempel-privat.de>
+Date: Fri, 14 Nov 2014 17:06:18 +0800
+Message-ID: <CAEFj987ng6Jxa4u3+Z+0oGFX7LUnkLPP96bBrCSnSetjU+YjpQ@mail.gmail.com> (sfid-20141114_100627_819568_BC7860A1)
+Subject: Re: [PATCH] ath9k_htc: turn on software mgmt crypto for secured mesh
+From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+To: Oleksij Rempel <linux@rempel-privat.de>
+Cc: John Linville <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath9k-devel@lists.ath9k.org, Adrian Chadd <adrian@freebsd.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+On Fri, Nov 14, 2014 at 4:54 PM, Oleksij Rempel <linux@rempel-privat.de> wrote:
+> Am 14.11.2014 um 06:07 schrieb Chun-Yeow Yeoh:
+>> Secured mesh encrypts the unicast mgmt frame using the same
+>> key that used for encrypting the unicast data frame. The patch
+>> "ath9k_htc_firmware: fix the offset of CCMP header for mesh
+>> data frame" applied to open-ath9k-htc-firmware allows the
+>> ath9k_htc to be loaded without "nohwcrypt=1". Unfortunately,
+>> this is not working and we still need CCMP encryption of
+>> management frames to be done in software. Fix this.
+>>
+>> This patch is tested with the following hardwares:
+>> - TP-Link TL-WN821N v3 802.11n [Atheros AR7010+AR9287]
+>> - AR9271 802.11n
+>>
+>> and managed to work with peer mesh STA equipped with ath9k.
+>>
+>> Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+>> ---
+>>  drivers/net/wireless/ath/ath9k/htc_drv_main.c | 3 ++-
+>>  1 file changed, 2 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+>> index 689ac99..d3f65a2 100644
+>> --- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+>> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+>> @@ -1447,7 +1447,8 @@ static int ath9k_htc_set_key(struct ieee80211_hw *hw,
+>>                       key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
+>>                       if (key->cipher == WLAN_CIPHER_SUITE_TKIP)
+>>                               key->flags |= IEEE80211_KEY_FLAG_GENERATE_MMIC;
+>> -                     if (priv->ah->sw_mgmt_crypto &&
+>> +                     if ((vif->type == NL80211_IFTYPE_MESH_POINT ||
+>> +                          priv->ah->sw_mgmt_crypto) &&
+>>                           key->cipher == WLAN_CIPHER_SUITE_CCMP)
+>>                               key->flags |= IEEE80211_KEY_FLAG_SW_MGMT_TX;
+>>                       ret = 0;
+>>
+>
+>
+> Hmm.. may be we should generally do it here:
+>         if ((vif->type == NL80211_IFTYPE_ADHOC ||
+>              vif->type == NL80211_IFTYPE_MESH_POINT) &&
+>             (key->cipher == WLAN_CIPHER_SUITE_TKIP ||
+>              key->cipher == WLAN_CIPHER_SUITE_CCMP) &&
+>             !(key->flags & IEEE80211_KEY_FLAG_PAIRWISE)) {
+>
 
-It is observed that device sometimes sends BA setup requests for
-broadcast mac address.
-Its pointless to check for availablity of AMPDU/AMSDU streams
-for broadcast mac address. This patch adds this check.
+Not so sure doing here is correctly. It is a pairwise key for unicast
+management frame, right?
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Avinash Patil <patila@marvell.com>
+> or probably set "sw_mgmt_crypto = true" in ath9k_hw_init_mfp() for all
+> usb devices?
+
+All ath9k USB devices don't have MFP support?
+
 ---
- drivers/net/wireless/mwifiex/11n.h | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/drivers/net/wireless/mwifiex/11n.h b/drivers/net/wireless/mwifiex/11n.h
-index 2ee268b..f275675 100644
---- a/drivers/net/wireless/mwifiex/11n.h
-+++ b/drivers/net/wireless/mwifiex/11n.h
-@@ -84,6 +84,8 @@ mwifiex_is_amsdu_in_ampdu_allowed(struct mwifiex_private *priv,
- {
- 	struct mwifiex_tx_ba_stream_tbl *tx_tbl;
- 
-+	if (is_broadcast_ether_addr(ptr->ra))
-+		return false;
- 	tx_tbl = mwifiex_get_ba_tbl(priv, tid, ptr->ra);
- 	if (tx_tbl)
- 		return tx_tbl->amsdu;
-@@ -96,6 +98,8 @@ static inline u8
- mwifiex_is_ampdu_allowed(struct mwifiex_private *priv,
- 			 struct mwifiex_ra_list_tbl *ptr, int tid)
- {
-+	if (is_broadcast_ether_addr(ptr->ra))
-+		return false;
- 	if (GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_UAP) {
- 		return mwifiex_is_station_ampdu_allowed(priv, ptr, tid);
- 	} else {
--- 
-1.8.1.4
-
+ChunYeow
