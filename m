@@ -1,136 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:57040 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932130AbaKROJr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Nov 2014 09:09:47 -0500
-From: Jiri Slaby <jslaby@suse.cz>
-To: stable@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	Jiri Slaby <jslaby@suse.cz>
-Subject: [PATCH 3.12 048/206] wireless: rt2x00: rt2800usb: add new devices
-Date: Tue, 18 Nov 2014 15:06:43 +0100
-Message-Id: <f8c0eb576c0dc53ecf22087359a7f0d79abeb277.1416319692.git.jslaby@suse.cz> (sfid-20141118_160113_544399_90D8FF62)
-In-Reply-To: <28f04bcc068a44c5641c727883947960fb8dcbd5.1416319692.git.jslaby@suse.cz>
-References: <28f04bcc068a44c5641c727883947960fb8dcbd5.1416319692.git.jslaby@suse.cz>
-In-Reply-To: <cover.1416319692.git.jslaby@suse.cz>
-References: <cover.1416319692.git.jslaby@suse.cz>
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:62832 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965580AbaKNTa1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Nov 2014 14:30:27 -0500
+Message-ID: <54665850.9070007@broadcom.com> (sfid-20141114_203031_089665_76B94698)
+Date: Fri, 14 Nov 2014 20:30:24 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Felipe Contreras <felipe.contreras@gmail.com>
+CC: linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>
+Subject: Re: brcmfmac not working on ECS LIVA
+References: <CAMP44s2XAmaiK2=BJA3TCW48Uo=5qyT5WsASDsZnOiSNgK6b0A@mail.gmail.com>	<545F4611.3010207@broadcom.com>	<CAMP44s2V59VDx0s7q5Yr=KvGZNn8ptRJGHS4W8Ja=+ciKZaSzg@mail.gmail.com>	<54633939.6000400@broadcom.com>	<CAMP44s1DOA31ob24=qzz83MnVFmm60EpgaPYvLbwUv-AP5FRbw@mail.gmail.com>	<54648C50.6000702@broadcom.com> <CAMP44s0j+i3zADu=Y3fUWqNEgDFeESs2_aFYmxQt9kZRcXkCjA@mail.gmail.com>
+In-Reply-To: <CAMP44s0j+i3zADu=Y3fUWqNEgDFeESs2_aFYmxQt9kZRcXkCjA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+On 11/14/14 18:03, Felipe Contreras wrote:
+> On Thu, Nov 13, 2014 at 4:47 AM, Arend van Spriel<arend@broadcom.com>  wrote:
+>> On 12-11-14 16:23, Felipe Contreras wrote:
+>>> On Wed, Nov 12, 2014 at 4:40 AM, Arend van Spriel<arend@broadcom.com>  wrote:
+>
+>>> I tried this patch, and although it seems to make a difference, it
+>>> still doesn't work.
+>>>
+>>> http://people.freedesktop.org/~felipec/dmesg-brcm-2.txt
+>>
+>> Hi Felipe,
+>>
+>> All the messages to the firmware seem ok. If connection would succeed I
+>> normally see a LINK event followed by SET_SSID event. In your log I only
+>> see the SET_SSID event with failed status, hence the connect is
+>> unsuccessful. Do you have any control over the AP? Could you try without
+>> WPA security to quickly confirm connection works? May help in root
+>> causing the issue.
+>
+> I tried disabled WPA security, it's still not working.
 
-3.12-stable review patch.  If anyone has any objections, please let me know.
+Thanks, Felipe
 
-===============
+Could you check the runtime-pm for mmc1 controller. You need to find 
+sdhci-acpi driver in sysfs. I think it is under 
+/sys/bus/platform/drivers. One of the bound devices is mmc1 (although 
+probably will have different nameing there) and there is subfolder power 
+with file named control. Can you cat that file and do 'echo on > 
+control' if it says auto.
 
-commit 274dede8c52036a1849ea970fab8d185fb0dce2b upstream.
-
-0411,0241  RT5572  BUFFALO WI-U2-300D Wireless LAN Adapter
-0789,0170  RT3572  Logitec LAN-W300AN/U2
-0846,9013  RT3573  NETGEAR Adaptador USB Inalambrico Movistar
-0df6,006e  RT3573  Sitecom WiFi USB adapter N900
-2001,3c1f  RT3573  D-Link DWA-162 Wireless N900 Dual Band Adapter
-2001,3c20  RT5372  D-Link DWA-140 Wireless N USB Adapter(rev.D)
-2001,3c21  RT5572  D-Link DWA-160 Xtreme N Dual Band USB Adapter(rev.C)
-2001,3c22  RT5372  D-Link DWA-132 Wireless N USB Adapter(rev.B)
-2001,3c23  RT5372  D-Link GO-USB-N300 Wireless N Easy USB Adapter
-2019,ab29  ?       Planex GW-USMirco300
-20f4,724a  RT5572  TRENDnet N600 Wireless Dual Band USB Adapter
-
-Cc: Ivo van Doorn <IvDoorn@gmail.com>
-Cc: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: John W. Linville <linville@tuxdriver.com>
-Cc: users@rt2x00.serialmonkey.com
-Cc: linux-wireless@vger.kernel.org
-Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
-Signed-off-by: Jiri Slaby <jslaby@suse.cz>
----
- drivers/net/wireless/rt2x00/rt2800usb.c | 17 ++++++++++++++++-
- 1 file changed, 16 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index 4feb35aef990..997df03a0c2e 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -1180,6 +1180,8 @@ static struct usb_device_id rt2800usb_device_table[] = {
- 	/* Linksys */
- 	{ USB_DEVICE(0x13b1, 0x002f) },
- 	{ USB_DEVICE(0x1737, 0x0079) },
-+	/* Logitec */
-+	{ USB_DEVICE(0x0789, 0x0170) },
- 	/* Ralink */
- 	{ USB_DEVICE(0x148f, 0x3572) },
- 	/* Sitecom */
-@@ -1203,6 +1205,8 @@ static struct usb_device_id rt2800usb_device_table[] = {
- 	{ USB_DEVICE(0x050d, 0x1103) },
- 	/* Cameo */
- 	{ USB_DEVICE(0x148f, 0xf301) },
-+	/* D-Link */
-+	{ USB_DEVICE(0x2001, 0x3c1f) },
- 	/* Edimax */
- 	{ USB_DEVICE(0x7392, 0x7733) },
- 	/* Hawking */
-@@ -1216,6 +1220,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
- 	{ USB_DEVICE(0x0789, 0x016b) },
- 	/* NETGEAR */
- 	{ USB_DEVICE(0x0846, 0x9012) },
-+	{ USB_DEVICE(0x0846, 0x9013) },
- 	{ USB_DEVICE(0x0846, 0x9019) },
- 	/* Planex */
- 	{ USB_DEVICE(0x2019, 0xed19) },
-@@ -1224,6 +1229,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
- 	/* Sitecom */
- 	{ USB_DEVICE(0x0df6, 0x0067) },
- 	{ USB_DEVICE(0x0df6, 0x006a) },
-+	{ USB_DEVICE(0x0df6, 0x006e) },
- 	/* ZyXEL */
- 	{ USB_DEVICE(0x0586, 0x3421) },
- #endif
-@@ -1240,6 +1246,9 @@ static struct usb_device_id rt2800usb_device_table[] = {
- 	{ USB_DEVICE(0x2001, 0x3c1c) },
- 	{ USB_DEVICE(0x2001, 0x3c1d) },
- 	{ USB_DEVICE(0x2001, 0x3c1e) },
-+	{ USB_DEVICE(0x2001, 0x3c20) },
-+	{ USB_DEVICE(0x2001, 0x3c22) },
-+	{ USB_DEVICE(0x2001, 0x3c23) },
- 	/* LG innotek */
- 	{ USB_DEVICE(0x043e, 0x7a22) },
- 	{ USB_DEVICE(0x043e, 0x7a42) },
-@@ -1262,12 +1271,17 @@ static struct usb_device_id rt2800usb_device_table[] = {
- 	{ USB_DEVICE(0x043e, 0x7a32) },
- 	/* AVM GmbH */
- 	{ USB_DEVICE(0x057c, 0x8501) },
--	/* D-Link DWA-160-B2 */
-+	/* Buffalo */
-+	{ USB_DEVICE(0x0411, 0x0241) },
-+	/* D-Link */
- 	{ USB_DEVICE(0x2001, 0x3c1a) },
-+	{ USB_DEVICE(0x2001, 0x3c21) },
- 	/* Proware */
- 	{ USB_DEVICE(0x043e, 0x7a13) },
- 	/* Ralink */
- 	{ USB_DEVICE(0x148f, 0x5572) },
-+	/* TRENDnet */
-+	{ USB_DEVICE(0x20f4, 0x724a) },
- #endif
- #ifdef CONFIG_RT2800USB_UNKNOWN
- 	/*
-@@ -1337,6 +1351,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
- 	{ USB_DEVICE(0x1d4d, 0x0010) },
- 	/* Planex */
- 	{ USB_DEVICE(0x2019, 0xab24) },
-+	{ USB_DEVICE(0x2019, 0xab29) },
- 	/* Qcom */
- 	{ USB_DEVICE(0x18e8, 0x6259) },
- 	/* RadioShack */
--- 
-2.1.3
+Regards,
+Arend
 
