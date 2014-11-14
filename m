@@ -1,42 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f172.google.com ([209.85.217.172]:52577 "EHLO
-	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753847AbaKDPPQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Nov 2014 10:15:16 -0500
-Received: by mail-lb0-f172.google.com with SMTP id w7so4146404lbi.17
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Nov 2014 07:15:14 -0800 (PST)
-From: Henning Rogge <hrogge@gmail.com>
-To: "linux-wireless @ vger . kernel . org"
-	<linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Henning Rogge <henning.rogge@fkie.fraunhofer.de>
-Subject: [PATCH] cfg80211: fix nl80211 cmd id in nl80211_send_mpath()
-Date: Tue,  4 Nov 2014 16:14:58 +0100
-Message-Id: <1415114098-25517-1-git-send-email-henning.rogge@fkie.fraunhofer.de> (sfid-20141104_161521_331754_66B15464)
+Received: from s3.sipsolutions.net ([5.9.151.49]:53210 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1161286AbaKNTec (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Nov 2014 14:34:32 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC] mac80211: send statistics with delete station event
+Date: Fri, 14 Nov 2014 20:34:27 +0100
+Message-Id: <1415993667-6527-1-git-send-email-johannes@sipsolutions.net> (sfid-20141114_203435_813324_FEF04A9E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Netlink command for nl80211_send_mpath() should be NL80211_CMD_NEW_MPATH.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Henning Rogge <henning.rogge@fkie.fraunhofer.de>
+Use the new cfg80211_del_sta_sinfo() function to send the
+statistics about the deleted station with the delete event.
+This lets userspace see how much traffic etc. the deleted
+station used.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/wireless/nl80211.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ net/mac80211/sta_info.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index cb9f5a4..7c20040 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -4423,7 +4423,7 @@ static int nl80211_send_mpath(struct sk_buff *msg, u32 portid, u32 seq,
- 	void *hdr;
- 	struct nlattr *pinfoattr;
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index adc25371b171..bffab579be1b 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -862,6 +862,7 @@ static void __sta_info_destroy_part2(struct sta_info *sta)
+ {
+ 	struct ieee80211_local *local = sta->local;
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
++	struct station_info sinfo = {};
+ 	int ret;
  
--	hdr = nl80211hdr_put(msg, portid, seq, flags, NL80211_CMD_NEW_STATION);
-+	hdr = nl80211hdr_put(msg, portid, seq, flags, NL80211_CMD_NEW_MPATH);
- 	if (!hdr)
- 		return -1;
+ 	/*
+@@ -896,7 +897,8 @@ static void __sta_info_destroy_part2(struct sta_info *sta)
  
+ 	sta_dbg(sdata, "Removed STA %pM\n", sta->sta.addr);
+ 
+-	cfg80211_del_sta(sdata->dev, sta->sta.addr, GFP_KERNEL);
++	sta_set_sinfo(sta, &sinfo);
++	cfg80211_del_sta_sinfo(sdata->dev, sta->sta.addr, &sinfo, GFP_KERNEL);
+ 
+ 	rate_control_remove_sta_debugfs(sta);
+ 	ieee80211_sta_debugfs_remove(sta);
 -- 
-2.1.0
+2.1.1
 
