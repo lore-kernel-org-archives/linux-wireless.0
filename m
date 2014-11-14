@@ -1,67 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:53126 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751243AbaKEVJi (ORCPT
+Received: from mailrelay012.isp.belgacom.be ([195.238.6.179]:61796 "EHLO
+	mailrelay012.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1161286AbaKNU4L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Nov 2014 16:09:38 -0500
-Received: by mail-wi0-f174.google.com with SMTP id d1so13653309wiv.1
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Nov 2014 13:09:37 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 02/11] staging: vt6655: mac.c/h remove member type comments
-Date: Wed,  5 Nov 2014 21:08:50 +0000
-Message-Id: <1415221739-3045-2-git-send-email-tvboxspy@gmail.com> (sfid-20141105_220941_188816_80EEB69E)
-In-Reply-To: <1415221739-3045-1-git-send-email-tvboxspy@gmail.com>
-References: <1415221739-3045-1-git-send-email-tvboxspy@gmail.com>
+	Fri, 14 Nov 2014 15:56:11 -0500
+From: Fabian Frederick <fabf@skynet.be>
+To: linux-kernel@vger.kernel.org
+Cc: Fabian Frederick <fabf@skynet.be>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	netdev@vger.kernel.org
+Subject: [PATCH 1/1 net-next] wireless: remove unnecessary sizeof(u8)
+Date: Fri, 14 Nov 2014 21:55:53 +0100
+Message-Id: <1415998553-12636-1-git-send-email-fabf@skynet.be> (sfid-20141114_215633_032361_3E763F01)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/mac.c | 10 ----------
- drivers/staging/vt6655/mac.h |  6 ------
- 2 files changed, 16 deletions(-)
+sizeof(u8) is always 1.
 
-diff --git a/drivers/staging/vt6655/mac.c b/drivers/staging/vt6655/mac.c
-index 122a6a3..2ea74a1 100644
---- a/drivers/staging/vt6655/mac.c
-+++ b/drivers/staging/vt6655/mac.c
-@@ -71,16 +71,6 @@
- #include "tmacro.h"
- #include "mac.h"
+Signed-off-by: Fabian Frederick <fabf@skynet.be>
+---
+ drivers/net/wireless/b43/ppr.c            |  2 +-
+ drivers/net/wireless/iwlwifi/pcie/trans.c |  2 +-
+ drivers/net/wireless/rtlwifi/efuse.c      | 16 ++++++++--------
+ 3 files changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/wireless/b43/ppr.c b/drivers/net/wireless/b43/ppr.c
+index 9a77027..6bc1c6f 100644
+--- a/drivers/net/wireless/b43/ppr.c
++++ b/drivers/net/wireless/b43/ppr.c
+@@ -28,7 +28,7 @@ void b43_ppr_clear(struct b43_wldev *dev, struct b43_ppr *ppr)
+ 	memset(ppr, 0, sizeof(*ppr));
  
--/*---------------------  Static Classes  ----------------------------*/
--
--/*---------------------  Static Variables  --------------------------*/
--
--/*---------------------  Static Functions  --------------------------*/
--
--/*---------------------  Export Variables  --------------------------*/
--
--/*---------------------  Export Functions  --------------------------*/
--
- /*
-  * Description:
-  *      Read All MAC Registers to buffer
-diff --git a/drivers/staging/vt6655/mac.h b/drivers/staging/vt6655/mac.h
-index 23162a9..3f37014 100644
---- a/drivers/staging/vt6655/mac.h
-+++ b/drivers/staging/vt6655/mac.h
-@@ -964,12 +964,6 @@ do {								\
- #define MACvSetRFLE_LatchBase(dwIoBase)                                 \
- 	MACvWordRegBitsOn(dwIoBase, MAC_REG_SOFTPWRCTL, SOFTPWRCTL_RFLEOPT)
+ 	/* Compile-time PPR check */
+-	BUILD_BUG_ON(sizeof(struct b43_ppr) != B43_PPR_RATES_NUM * sizeof(u8));
++	BUILD_BUG_ON(sizeof(struct b43_ppr) != B43_PPR_RATES_NUM);
+ }
  
--/*---------------------  Export Classes  ----------------------------*/
--
--/*---------------------  Export Variables  --------------------------*/
--
--/*---------------------  Export Functions  --------------------------*/
--
- void MACvReadAllRegs(void __iomem *dwIoBase, unsigned char *pbyMacRegs);
+ void b43_ppr_add(struct b43_wldev *dev, struct b43_ppr *ppr, int diff)
+diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
+index 836725e..f016824 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
+@@ -1157,7 +1157,7 @@ static void iwl_trans_pcie_configure(struct iwl_trans *trans,
+ 		trans_pcie->n_no_reclaim_cmds = trans_cfg->n_no_reclaim_cmds;
+ 	if (trans_pcie->n_no_reclaim_cmds)
+ 		memcpy(trans_pcie->no_reclaim_cmds, trans_cfg->no_reclaim_cmds,
+-		       trans_pcie->n_no_reclaim_cmds * sizeof(u8));
++		       trans_pcie->n_no_reclaim_cmds);
  
- bool MACbIsRegBitsOn(void __iomem *dwIoBase, unsigned char byRegOfs, unsigned char byTestBits);
+ 	trans_pcie->rx_buf_size_8k = trans_cfg->rx_buf_size_8k;
+ 	if (trans_pcie->rx_buf_size_8k)
+diff --git a/drivers/net/wireless/rtlwifi/efuse.c b/drivers/net/wireless/rtlwifi/efuse.c
+index 0b4082c..a3135c5 100644
+--- a/drivers/net/wireless/rtlwifi/efuse.c
++++ b/drivers/net/wireless/rtlwifi/efuse.c
+@@ -251,8 +251,8 @@ void read_efuse(struct ieee80211_hw *hw, u16 _offset, u16 _size_byte, u8 *pbuf)
+ 	}
+ 
+ 	/* allocate memory for efuse_tbl and efuse_word */
+-	efuse_tbl = kzalloc(rtlpriv->cfg->maps[EFUSE_HWSET_MAX_SIZE] *
+-			    sizeof(u8), GFP_ATOMIC);
++	efuse_tbl = kzalloc(rtlpriv->cfg->maps[EFUSE_HWSET_MAX_SIZE],
++			    GFP_ATOMIC);
+ 	if (!efuse_tbl)
+ 		return;
+ 	efuse_word = kzalloc(EFUSE_MAX_WORD_UNIT * sizeof(u16 *), GFP_ATOMIC);
+@@ -733,8 +733,8 @@ static int efuse_pg_packet_read(struct ieee80211_hw *hw, u8 offset, u8 *data)
+ 	if (offset > 15)
+ 		return false;
+ 
+-	memset(data, 0xff, PGPKT_DATA_SIZE * sizeof(u8));
+-	memset(tmpdata, 0xff, PGPKT_DATA_SIZE * sizeof(u8));
++	memset(data, 0xff, PGPKT_DATA_SIZE);
++	memset(tmpdata, 0xff, PGPKT_DATA_SIZE);
+ 
+ 	while (continual && (efuse_addr < EFUSE_MAX_SIZE)) {
+ 		if (readstate & PG_STATE_HEADER) {
+@@ -772,7 +772,7 @@ static void efuse_write_data_case1(struct ieee80211_hw *hw, u16 *efuse_addr,
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct pgpkt_struct tmp_pkt;
+ 	int dataempty = true;
+-	u8 originaldata[8 * sizeof(u8)];
++	u8 originaldata[8];
+ 	u8 badworden = 0x0F;
+ 	u8 match_word_en, tmp_word_en;
+ 	u8 tmpindex;
+@@ -881,7 +881,7 @@ static void efuse_write_data_case2(struct ieee80211_hw *hw, u16 *efuse_addr,
+ 	struct pgpkt_struct tmp_pkt;
+ 	u8 pg_header;
+ 	u8 tmp_header;
+-	u8 originaldata[8 * sizeof(u8)];
++	u8 originaldata[8];
+ 	u8 tmp_word_cnts;
+ 	u8 badworden = 0x0F;
+ 
+@@ -904,7 +904,7 @@ static void efuse_write_data_case2(struct ieee80211_hw *hw, u16 *efuse_addr,
+ 
+ 		tmp_word_cnts = efuse_calculate_word_cnts(tmp_pkt.word_en);
+ 
+-		memset(originaldata, 0xff,  8 * sizeof(u8));
++		memset(originaldata, 0xff,  8);
+ 
+ 		if (efuse_pg_packet_read(hw, tmp_pkt.offset, originaldata)) {
+ 			badworden = enable_efuse_data_write(hw,
+@@ -962,7 +962,7 @@ static int efuse_pg_packet_write(struct ieee80211_hw *hw,
+ 	target_pkt.offset = offset;
+ 	target_pkt.word_en = word_en;
+ 
+-	memset(target_pkt.data, 0xFF,  8 * sizeof(u8));
++	memset(target_pkt.data, 0xFF,  8);
+ 
+ 	efuse_word_enable_data_read(word_en, data, target_pkt.data);
+ 	target_word_cnts = efuse_calculate_word_cnts(target_pkt.word_en);
 -- 
-2.1.0
+1.9.3
 
