@@ -1,48 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f180.google.com ([209.85.214.180]:47803 "EHLO
-	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751650AbaK3Twd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Nov 2014 14:52:33 -0500
-Message-ID: <547B757F.2040900@lwfinger.net> (sfid-20141130_205259_928233_D5A73523)
-Date: Sun, 30 Nov 2014 13:52:31 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mx1.redhat.com ([209.132.183.28]:58885 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754440AbaKNIoZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Nov 2014 03:44:25 -0500
+Date: Fri, 14 Nov 2014 09:41:24 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Luca Coelho <luca@coelho.fi>, Dan Williams <dcbw@redhat.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Can fb4e156886ce6e8309e912d8b370d192330d19d3 be reverted ?
+Message-ID: <20141114084123.GB1949@redhat.com> (sfid-20141114_094428_280014_B3E7EFEE)
+References: <20141113123313.GA1926@redhat.com>
+ <1415882683.2021.3.camel@sipsolutions.net>
+ <A21755E2-3054-46B2-9BA6-07347FB91E1E@holtmann.org>
+ <1415933712.2629.12.camel@dcbw.local>
+ <1415945381.3117.17.camel@coelho.fi>
+ <6A994E9F-1272-4285-BDF5-8CF00C86FDA7@holtmann.org>
 MIME-Version: 1.0
-To: nick <xerofoify@gmail.com>
-CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: Non Explained TODOs in halbtcoutsrc.c
-References: <547A581A.7040609@gmail.com> <547A9D91.9080406@lwfinger.net> <547A9F9D.8050103@gmail.com>
-In-Reply-To: <547A9F9D.8050103@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <6A994E9F-1272-4285-BDF5-8CF00C86FDA7@holtmann.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/29/2014 10:39 PM, nick wrote:
-> Larry,
-> Do you known who wrote that code as this I can email them for the explanations for them.
-> If not I assume we can remove them as the code makes logical sense unless there are
-> hardware or other quirks that need to be handled. :)
-> Cheers and Thanks for Your Time,
-> Nick
->
-> On 2014-11-29 11:31 PM, Larry Finger wrote:
->> On 11/29/2014 05:34 PM, nick wrote:
->>> Greetings Larry,
->>> After reading the code around the TODOS, I can't understand you reasoning for them in this file as they seem to
->>> unneeded as the logic for the switch statement with them seems to be fine. If there are reasons for them in this
->>> file, it would be nice to hear from you on why they are needed as TODO as a comment is rather unclear for anybody
->>> reading this file.
->>> Nick
->>
->> I did not write that code. I merely make it available through the git repo, and modify it so that it will build on all kernel versions. I do not understand the TODOs any more than you do.
->>
->> Larry
+On Fri, Nov 14, 2014 at 03:57:40PM +0900, Marcel Holtmann wrote:
+> Hi Luca,
+> 
+> >>>>> I've updated wireless code on RHEL and get complain that now
+> >>>>> cfg80211 and rfkill modules are loaded on machines that do not have
+> >>>>> wireless hardware. Modules are auto-loaded because NetworkManager send
+> >>>>> nl80211 messages to check if there are wireless devices in the system.
+> >>>>> 
+> >>>>> Hence my question, can we revert commit fb4e156886ce
+> >>>>> "nl80211: Add generic netlink module alias for cfg80211/nl80211" ?
+> >>>> 
+> >>>> Realistically, we can't revert it, but only remove the
+> >>>> MODULE_ALIAS_GENL_FAMILY() line.
+> >>>> 
+> >>>>> Auto loading nl80211 does not seems to be necessary, if there are
+> >>>>> wireless devices nl80211 will be loaded anyway.
+> >>>> 
+> >>>> Maybe other applications would like to see an empty list of devices? But
+> >>>> OTOH, if they're robust at all, they have to cope with kernels not even
+> >>>> compiled with nl80211, so I guess for me I don't really see a big
+> >>>> difference in whether the module alias exists or not.
+> >>> 
+> >>> auto-loading cfg80211 module when userspace requests nl80211 netlink family is exactly the right thing to do. Systems compiled without nl80211 support and systems with no wireless device attached are two different things.
+> >>> 
+> >>> Someone can fix NetworkManager to not send nl80211 messages or just plain accept that cfg80211 will be loaded.
+> >> 
+> >> NM uses nl80211 initially to determine whether *any* ethernet-type
+> >> interface (a) is actually WiFi, and (b) should be driven by nl80211 or
+> >> WEXT.  Because of the variety of drivers (both in-kernel and
+> >> out-of-kernel) and the variety of kernel versions (NM supports back to
+> >> early 3.x series) we cannot rely on specific behavior.
+> >> 
+> >> So given an ethernet-type interface, how do we determine that it is
+> >> wifi?
+> >> 
+> >> DEVTYPE=wlan - not always reliable due to driver and kernel versions
+> >> 
+> >> "phy80211" in sysfs: same reason; also doesn't capture WEXT or
+> >> out-of-tree drivers
+> >> 
+> >> nl80211 calls: this is the only 100% reliable mechanism to detect
+> >> whether an ethernet-type interface is actually WiFi and nl80211-capable.
+> >> 
+> >> And unfortunately calling nl80211 loads the module...
+> > 
+> > So, basically the conclusion is: there's no way around it.  If someone
+> > in userspace uses nl80211 it must be loaded, regardless of whether
+> > nl80211 is automatically loaded or if depmod bring it in.
+> 
+> yes, that is how it should be. And actually that is how every other subsystem does. Including modules that get loaded because we have a socket() system call for an address family.
 
-Sorry, I do not have permission to reveal the E-mail addresses of any Realtek 
-software developers. I have added the appropriate developer as a Bcc to this 
-E-mail. That will leave it up to that individual to respond to you.
+On other subsystems auto loading make sense. For example on netfiler,
+we really want to load netfiler modules when user-space want to
+configure it and started talking to it by socket. But here situation
+is different. If there is no hardware we can not configure it.
 
-Larry
-
-
+Stanislaw
