@@ -1,56 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:63559 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753933AbaKMPz3 (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:41035 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752609AbaKNHCf convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Nov 2014 10:55:29 -0500
-Received: by mail-wi0-f179.google.com with SMTP id ex7so1465532wid.0
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Nov 2014 07:55:28 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAB=NE6WNtZOm-u0HxdCziuV7rZvQG=X=HN6r=FytVDKaaOmUnA@mail.gmail.com>
-References: <1414046257-22184-1-git-send-email-arik@wizery.com>
- <1414046257-22184-6-git-send-email-arik@wizery.com> <CAB=NE6WLnVcBtC5_HyVuDXJnrCUfhUKsPN_rAHL6VYEfek1TMA@mail.gmail.com>
- <CA+XVXfcMhrHUhg4yj_dOf97XWu_HyvdQ-LqF4KbjXL4ewGn5PQ@mail.gmail.com> <CAB=NE6WNtZOm-u0HxdCziuV7rZvQG=X=HN6r=FytVDKaaOmUnA@mail.gmail.com>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Thu, 13 Nov 2014 17:55:13 +0200
-Message-ID: <CA+XVXfd-Z-mv7iL-Og=_Spr053HgW8pZXMR3jmbaQc-jX7v3-g@mail.gmail.com> (sfid-20141113_165534_251264_E031F53D)
-Subject: Re: [PATCH 5/5] cfg80211: Allow usermode to query wiphy specific regd info
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: "Luis R. Rodriguez" <mcgrof@suse.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Jonathan Doron <jond@wizery.com>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 14 Nov 2014 02:02:35 -0500
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 8.0 \(1990.1\))
+Subject: Re: Can fb4e156886ce6e8309e912d8b370d192330d19d3 be reverted ?
+From: Marcel Holtmann <marcel@holtmann.org>
+In-Reply-To: <1415933712.2629.12.camel@dcbw.local>
+Date: Fri, 14 Nov 2014 16:02:33 +0900
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	linux-wireless@vger.kernel.org
+Message-Id: <6E4E0F42-B794-4F90-8AE9-0C208E40F7CD@holtmann.org> (sfid-20141114_080238_687008_F17EE1F6)
+References: <20141113123313.GA1926@redhat.com> <1415882683.2021.3.camel@sipsolutions.net> <A21755E2-3054-46B2-9BA6-07347FB91E1E@holtmann.org> <1415933712.2629.12.camel@dcbw.local>
+To: Dan Williams <dcbw@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->
->> 2. And then if userspace sends a wiphy idx to the NL80211_CMD_GET_REG,
->> we'll return wiphy->regd for that case as well?
->
-> That's right, for now we'd be able to send the regd when either
-> NL80211_ATTR_WIPHY_SELF_MANAGED_REG is set or when
-> NL80211_ATTR_WIPHY_SELF_MANAGED_REG is not set but regulatory_hint()
-> was used. Note that some users may have REGULATORY_CUSTOM_REG. and
-> then later use regulatory_hint(), this is done to for example set a
-> more restrictive custom world regdomain and then later use the CRDA
-> data for a specific alpha2.
+Hi Dan,
 
-Well always sending wiphy->regd whenever it is set is easy, but it
-might be problematic I guess:
+>>>> I've updated wireless code on RHEL and get complain that now
+>>>> cfg80211 and rfkill modules are loaded on machines that do not have
+>>>> wireless hardware. Modules are auto-loaded because NetworkManager send
+>>>> nl80211 messages to check if there are wireless devices in the system.
+>>>> 
+>>>> Hence my question, can we revert commit fb4e156886ce
+>>>> "nl80211: Add generic netlink module alias for cfg80211/nl80211" ?
+>>> 
+>>> Realistically, we can't revert it, but only remove the
+>>> MODULE_ALIAS_GENL_FAMILY() line.
+>>> 
+>>>> Auto loading nl80211 does not seems to be necessary, if there are
+>>>> wireless devices nl80211 will be loaded anyway.
+>>> 
+>>> Maybe other applications would like to see an empty list of devices? But
+>>> OTOH, if they're robust at all, they have to cope with kernels not even
+>>> compiled with nl80211, so I guess for me I don't really see a big
+>>> difference in whether the module alias exists or not.
+>> 
+>> auto-loading cfg80211 module when userspace requests nl80211 netlink family is exactly the right thing to do. Systems compiled without nl80211 support and systems with no wireless device attached are two different things.
+>> 
+>> Someone can fix NetworkManager to not send nl80211 messages or just plain accept that cfg80211 will be loaded.
+> 
+> NM uses nl80211 initially to determine whether *any* ethernet-type
+> interface (a) is actually WiFi, and (b) should be driven by nl80211 or
+> WEXT.  Because of the variety of drivers (both in-kernel and
+> out-of-kernel) and the variety of kernel versions (NM supports back to
+> early 3.x series) we cannot rely on specific behavior.
+> 
+> So given an ethernet-type interface, how do we determine that it is
+> wifi?
+> 
+> DEVTYPE=wlan - not always reliable due to driver and kernel versions
 
-We intend to add a patch to wpa_s to always add the wiphy_idx to
-NL80211_CMD_GET_REG. With the current approach only drivers with
-SELF_MANAGED_REG will get wiphy->regd back. This is ok since these are
-new drivers, which are familiar with this API.
+if anybody wants to write kernel patches, then making sure that all wireless drivers expose DEVTYPE=wlan is the way to go. If for some reason a driver does not do it, that is a bug.
 
-But if we use your suggestion and always return wiphy->regd, then some
-driver like ath9k that uses regulatory_hint() will now get it's
-private regd returned to the wpa_s that manages it. I'm not saying
-it's necessarily bad, but it's different than what was returned
-before. The cfg80211 regdomain is intersected with wiphy->regd, so now
-ath9k will start getting more permissive channels in usermode.
+> "phy80211" in sysfs: same reason; also doesn't capture WEXT or
+> out-of-tree drivers
+> 
+> nl80211 calls: this is the only 100% reliable mechanism to detect
+> whether an ethernet-type interface is actually WiFi and nl80211-capable.
+> 
+> And unfortunately calling nl80211 loads the module...
 
-So we thought it's best to enable the new behavior only if the driver
-explicitly wants it, using a new regulatory flag.
+So be it then, the cfg80211 modules gets loaded. People have to live with that.
 
-Arik
+And just to be clear, this is not a kernel bug. Exposing the correct module alias for its netlink family is what the module should be doing.
+
+Regards
+
+Marcel
+
