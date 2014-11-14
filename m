@@ -1,62 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f52.google.com ([74.125.82.52]:47692 "EHLO
-	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933088AbaKMQNp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Nov 2014 11:13:45 -0500
-Received: by mail-wg0-f52.google.com with SMTP id b13so17156185wgh.25
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Nov 2014 08:13:43 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: "Luis R. Rodriguez" <mcgrof@suse.com>,
-	Jonathan Doron <jond@wizery.com>
-Subject: [PATCH v2 2/4] cfg80211: update missing fields in custom regulatory path
-Date: Thu, 13 Nov 2014 18:13:37 +0200
-Message-Id: <1415895219-19848-2-git-send-email-arik@wizery.com> (sfid-20141113_171404_702797_E220AB6F)
-In-Reply-To: <1415895219-19848-1-git-send-email-arik@wizery.com>
-References: <1415895219-19848-1-git-send-email-arik@wizery.com>
+Received: from mx1.redhat.com ([209.132.183.28]:46630 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1161512AbaKNRKu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Nov 2014 12:10:50 -0500
+Message-ID: <1415985041.22965.31.camel@dcbw.local> (sfid-20141114_181116_853811_58629C45)
+Subject: Re: Can fb4e156886ce6e8309e912d8b370d192330d19d3 be reverted ?
+From: Dan Williams <dcbw@redhat.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	linux-wireless@vger.kernel.org
+Date: Fri, 14 Nov 2014 11:10:41 -0600
+In-Reply-To: <1415980967.22965.14.camel@dcbw.local>
+References: <20141113123313.GA1926@redhat.com>
+	 <1415882683.2021.3.camel@sipsolutions.net>
+	 <A21755E2-3054-46B2-9BA6-07347FB91E1E@holtmann.org>
+	 <1415933712.2629.12.camel@dcbw.local>
+	 <6E4E0F42-B794-4F90-8AE9-0C208E40F7CD@holtmann.org>
+	 <1415980967.22965.14.camel@dcbw.local>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jonathan Doron <jond@wizery.com>
+On Fri, 2014-11-14 at 10:02 -0600, Dan Williams wrote:
+> On Fri, 2014-11-14 at 16:02 +0900, Marcel Holtmann wrote:
+> > Hi Dan,
+> > 
+> > >>>> I've updated wireless code on RHEL and get complain that now
+> > >>>> cfg80211 and rfkill modules are loaded on machines that do not have
+> > >>>> wireless hardware. Modules are auto-loaded because NetworkManager send
+> > >>>> nl80211 messages to check if there are wireless devices in the system.
+> > >>>> 
+> > >>>> Hence my question, can we revert commit fb4e156886ce
+> > >>>> "nl80211: Add generic netlink module alias for cfg80211/nl80211" ?
+> > >>> 
+> > >>> Realistically, we can't revert it, but only remove the
+> > >>> MODULE_ALIAS_GENL_FAMILY() line.
+> > >>> 
+> > >>>> Auto loading nl80211 does not seems to be necessary, if there are
+> > >>>> wireless devices nl80211 will be loaded anyway.
+> > >>> 
+> > >>> Maybe other applications would like to see an empty list of devices? But
+> > >>> OTOH, if they're robust at all, they have to cope with kernels not even
+> > >>> compiled with nl80211, so I guess for me I don't really see a big
+> > >>> difference in whether the module alias exists or not.
+> > >> 
+> > >> auto-loading cfg80211 module when userspace requests nl80211 netlink family is exactly the right thing to do. Systems compiled without nl80211 support and systems with no wireless device attached are two different things.
+> > >> 
+> > >> Someone can fix NetworkManager to not send nl80211 messages or just plain accept that cfg80211 will be loaded.
+> > > 
+> > > NM uses nl80211 initially to determine whether *any* ethernet-type
+> > > interface (a) is actually WiFi, and (b) should be driven by nl80211 or
+> > > WEXT.  Because of the variety of drivers (both in-kernel and
+> > > out-of-kernel) and the variety of kernel versions (NM supports back to
+> > > early 3.x series) we cannot rely on specific behavior.
+> > > 
+> > > So given an ethernet-type interface, how do we determine that it is
+> > > wifi?
+> > > 
+> > > DEVTYPE=wlan - not always reliable due to driver and kernel versions
+> > 
+> > if anybody wants to write kernel patches, then making sure that all wireless drivers expose DEVTYPE=wlan is the way to go. If for some reason a driver does not do it, that is a bug.
+> 
+> Yeah, that's nice, and should be done.  It seems a number of drivers
+> don't have it.  Obviously everything mac80211 does, and it seems we're
+> left with:
+> 
+> 1) legacy drivers that only support WEXT (airo, etc)
+> 2) out-of-tree drivers (wl.o and various realtek/ralink stuff?)
+> 
+> So it seems that new best practice is:
+> 
+> a) if DEVTYPE=wlan, hit up nl80211 to determine whether the interface
+> supports nl80211 or WEXT (minimal cfg80211 ports like ipw2x00 don't
+> actually support nl80211 at all and must use WEXT)
+> 
+> b) if DEVTYPE is missing, WEXT can be tried if it is available
+> 
+> c) treat interface as 'ethernet'; out-of-tree WiFi drivers may end up
+> here but that is life
+> 
+> Does that sound valid to everyone else?
 
-Some channels fields were not being updated in the custom regulatory
-path. Update them according to the code in handle_channel().
+Potential NM fix filed at:
 
-Signed-off-by: Jonathan Doron <jonathanx.doron@intel.com>
-Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
----
- net/wireless/reg.c | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
+https://bugzilla.gnome.org/show_bug.cgi?id=740131
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 6459ddd..174d8f82 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1693,10 +1693,23 @@ static void handle_channel_custom(struct wiphy *wiphy,
- 	if (max_bandwidth_khz < MHZ_TO_KHZ(160))
- 		bw_flags |= IEEE80211_CHAN_NO_160MHZ;
- 
-+	chan->dfs_state = NL80211_DFS_USABLE;
-+	chan->dfs_state_entered = jiffies;
-+
-+	chan->beacon_found = false;
- 	chan->flags |= map_regdom_flags(reg_rule->flags) | bw_flags;
- 	chan->max_antenna_gain = (int) MBI_TO_DBI(power_rule->max_antenna_gain);
- 	chan->max_reg_power = chan->max_power =
- 		(int) MBM_TO_DBM(power_rule->max_eirp);
-+
-+	if (chan->flags & IEEE80211_CHAN_RADAR) {
-+		if (reg_rule->dfs_cac_ms)
-+			chan->dfs_cac_ms = reg_rule->dfs_cac_ms;
-+		else
-+			chan->dfs_cac_ms = IEEE80211_DFS_MIN_CAC_TIME_MS;
-+	}
-+
-+	chan->max_power = chan->max_reg_power;
- }
- 
- static void handle_band_custom(struct wiphy *wiphy,
--- 
-1.9.1
+Dan
 
