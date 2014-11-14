@@ -1,118 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:63387 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751051AbaKFUCg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Nov 2014 15:02:36 -0500
-Received: by mail-wi0-f172.google.com with SMTP id bs8so2604714wib.5
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Nov 2014 12:02:34 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 3/6] staging: vt6655: baseband/rf s_bAL7230Init change  __iomem for baseband functions
-Date: Thu,  6 Nov 2014 20:02:02 +0000
-Message-Id: <1415304125-5165-3-git-send-email-tvboxspy@gmail.com> (sfid-20141106_210251_671784_0E82DCBF)
-In-Reply-To: <1415304125-5165-1-git-send-email-tvboxspy@gmail.com>
-References: <1415304125-5165-1-git-send-email-tvboxspy@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:50551 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965653AbaKNQB4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Nov 2014 11:01:56 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: nbd@openwrt.org, Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 3/3] cfg80211: add scan time to survey data
+Date: Fri, 14 Nov 2014 17:01:50 +0100
+Message-Id: <1415980910-9105-3-git-send-email-johannes@sipsolutions.net> (sfid-20141114_170204_313567_B912C582)
+In-Reply-To: <1415980910-9105-1-git-send-email-johannes@sipsolutions.net>
+References: <1415980910-9105-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Replace __iomem with vnt_private providing pointer for dwIoBase
+From: Johannes Berg <johannes.berg@intel.com>
 
-Change BBvPowerSaveModeON and BBvPowerSaveModeOFF to vnt_private and
-reference __iomem there, to be removed later.
+Add the time spent scanning to the survey data so it can be
+reported by drivers that collect such information.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/staging/vt6655/baseband.c | 6 ++++--
- drivers/staging/vt6655/baseband.h | 4 ++--
- drivers/staging/vt6655/rf.c       | 9 +++++----
- 3 files changed, 11 insertions(+), 8 deletions(-)
+ include/net/cfg80211.h       | 3 +++
+ include/uapi/linux/nl80211.h | 3 +++
+ net/wireless/nl80211.c       | 4 ++++
+ net/wireless/trace.h         | 7 +++++--
+ 4 files changed, 15 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/vt6655/baseband.c b/drivers/staging/vt6655/baseband.c
-index c6c811b..9d5288c 100644
---- a/drivers/staging/vt6655/baseband.c
-+++ b/drivers/staging/vt6655/baseband.c
-@@ -2289,8 +2289,9 @@ BBvSoftwareReset(struct vnt_private *priv)
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 07fafce7dc83..c59b93714728 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -525,6 +525,7 @@ ieee80211_chandef_max_power(struct cfg80211_chan_def *chandef)
+  * @SURVEY_INFO_TIME_EXT_BUSY: extension channel busy time was filled in
+  * @SURVEY_INFO_TIME_RX: receive time was filled in
+  * @SURVEY_INFO_TIME_TX: transmit time was filled in
++ * @SURVEY_INFO_TIME_SCAN: scan time was filled in
   *
-  */
- void
--BBvPowerSaveModeON(void __iomem *dwIoBase)
-+BBvPowerSaveModeON(struct vnt_private *priv)
- {
-+	void __iomem *dwIoBase = priv->PortOffset;
- 	unsigned char byOrgData;
+  * Used by the driver to indicate which info in &struct survey_info
+  * it has filled in during the get_survey().
+@@ -537,6 +538,7 @@ enum survey_info_flags {
+ 	SURVEY_INFO_TIME_EXT_BUSY	= BIT(4),
+ 	SURVEY_INFO_TIME_RX		= BIT(5),
+ 	SURVEY_INFO_TIME_TX		= BIT(6),
++	SURVEY_INFO_TIME_SCAN		= BIT(7),
+ };
  
- 	BBbReadEmbedded(dwIoBase, 0x0D, &byOrgData);
-@@ -2311,8 +2312,9 @@ BBvPowerSaveModeON(void __iomem *dwIoBase)
-  *
-  */
- void
--BBvPowerSaveModeOFF(void __iomem *dwIoBase)
-+BBvPowerSaveModeOFF(struct vnt_private *priv)
- {
-+	void __iomem *dwIoBase = priv->PortOffset;
- 	unsigned char byOrgData;
+ /**
+@@ -565,6 +567,7 @@ struct survey_info {
+ 	u64 time_ext_busy;
+ 	u64 time_rx;
+ 	u64 time_tx;
++	u64 time_scan;
+ 	u32 filled;
+ 	s8 noise;
+ };
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 92593e4e3c85..6eab1ba27f38 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2766,6 +2766,8 @@ enum nl80211_user_reg_hint_type {
+  *	receiving data (on channel or globally)
+  * @NL80211_SURVEY_INFO_TIME_TX: amount of time the radio spent
+  *	transmitting data (on channel or globally)
++ * @NL80211_SURVEY_INFO_TIME_SCAN: time the radio spent for scan
++ *	(on this channel or globally)
+  * @NL80211_SURVEY_INFO_MAX: highest survey info attribute number
+  *	currently defined
+  * @__NL80211_SURVEY_INFO_AFTER_LAST: internal use
+@@ -2780,6 +2782,7 @@ enum nl80211_survey_info {
+ 	NL80211_SURVEY_INFO_TIME_EXT_BUSY,
+ 	NL80211_SURVEY_INFO_TIME_RX,
+ 	NL80211_SURVEY_INFO_TIME_TX,
++	NL80211_SURVEY_INFO_TIME_SCAN,
  
- 	BBbReadEmbedded(dwIoBase, 0x0D, &byOrgData);
-diff --git a/drivers/staging/vt6655/baseband.h b/drivers/staging/vt6655/baseband.h
-index 8594347..26f9cdc 100644
---- a/drivers/staging/vt6655/baseband.h
-+++ b/drivers/staging/vt6655/baseband.h
-@@ -86,8 +86,8 @@ void BBvSetVGAGainOffset(struct vnt_private *, unsigned char byData);
- /* VT3253 Baseband */
- bool BBbVT3253Init(struct vnt_private *);
- void BBvSoftwareReset(struct vnt_private *);
--void BBvPowerSaveModeON(void __iomem *dwIoBase);
--void BBvPowerSaveModeOFF(void __iomem *dwIoBase);
-+void BBvPowerSaveModeON(struct vnt_private *);
-+void BBvPowerSaveModeOFF(struct vnt_private *);
- void BBvSetTxAntennaMode(struct vnt_private *, unsigned char byAntennaMode);
- void BBvSetRxAntennaMode(struct vnt_private *, unsigned char byAntennaMode);
- void BBvSetDeepSleep(struct vnt_private *, unsigned char byLocalID);
-diff --git a/drivers/staging/vt6655/rf.c b/drivers/staging/vt6655/rf.c
-index e505af9..2b1e7a0 100644
---- a/drivers/staging/vt6655/rf.c
-+++ b/drivers/staging/vt6655/rf.c
-@@ -424,8 +424,9 @@ static const unsigned long dwAL7230ChannelTable2[CB_MAX_CHANNEL] = {
-  * Return Value: true if succeeded; false if failed.
-  *
-  */
--static bool s_bAL7230Init(void __iomem *dwIoBase)
-+static bool s_bAL7230Init(struct vnt_private *priv)
- {
-+	void __iomem *dwIoBase = priv->PortOffset;
- 	int     ii;
- 	bool bResult;
+ 	/* keep last */
+ 	__NL80211_SURVEY_INFO_AFTER_LAST,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 6aba8de1e032..648374c4f815 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -6400,6 +6400,10 @@ static int nl80211_send_survey(struct sk_buff *msg, u32 portid, u32 seq,
+ 	    nla_put_u64(msg, NL80211_SURVEY_INFO_TIME_TX,
+ 			survey->time_tx))
+ 		goto nla_put_failure;
++	if ((survey->filled & SURVEY_INFO_TIME_SCAN) &&
++	    nla_put_u64(msg, NL80211_SURVEY_INFO_TIME_SCAN,
++			survey->time_scan))
++		goto nla_put_failure;
  
-@@ -436,7 +437,7 @@ static bool s_bAL7230Init(void __iomem *dwIoBase)
+ 	nla_nest_end(msg, infoattr);
  
- 	MACvWordRegBitsOn(dwIoBase, MAC_REG_SOFTPWRCTL, (SOFTPWRCTL_SWPECTI  |
- 							 SOFTPWRCTL_TXPEINV));
--	BBvPowerSaveModeOFF(dwIoBase); //RobertYu:20050106, have DC value for Calibration
-+	BBvPowerSaveModeOFF(priv); /* RobertYu:20050106, have DC value for Calibration */
+diff --git a/net/wireless/trace.h b/net/wireless/trace.h
+index 2e2885ec2912..3d59b5100156 100644
+--- a/net/wireless/trace.h
++++ b/net/wireless/trace.h
+@@ -1609,6 +1609,7 @@ TRACE_EVENT(rdev_return_int_survey_info,
+ 		__field(u64, time_ext_busy)
+ 		__field(u64, time_rx)
+ 		__field(u64, time_tx)
++		__field(u64, time_scan)
+ 		__field(u32, filled)
+ 		__field(s8, noise)
+ 	),
+@@ -1621,17 +1622,19 @@ TRACE_EVENT(rdev_return_int_survey_info,
+ 		__entry->time_ext_busy = info->time_ext_busy;
+ 		__entry->time_rx = info->time_rx;
+ 		__entry->time_tx = info->time_tx;
++		__entry->time_scan = info->time_scan;
+ 		__entry->filled = info->filled;
+ 		__entry->noise = info->noise;
+ 	),
+ 	TP_printk(WIPHY_PR_FMT ", returned: %d, " CHAN_PR_FMT
+ 		  ", channel time: %llu, channel time busy: %llu, "
+ 		  "channel time extension busy: %llu, channel time rx: %llu, "
+-		  "channel time tx: %llu, filled: %u, noise: %d",
++		  "channel time tx: %llu, scan time: %llu, filled: %u, noise: %d",
+ 		  WIPHY_PR_ARG, __entry->ret, CHAN_PR_ARG,
+ 		  __entry->time, __entry->time_busy,
+ 		  __entry->time_ext_busy, __entry->time_rx,
+-		  __entry->time_tx, __entry->filled, __entry->noise)
++		  __entry->time_tx, __entry->time_scan,
++		  __entry->filled, __entry->noise)
+ );
  
- 	for (ii = 0; ii < CB_AL7230_INIT_SEQ; ii++)
- 		bResult &= IFRFbWriteEmbedded(dwIoBase, dwAL7230InitTable[ii]);
-@@ -457,7 +458,7 @@ static bool s_bAL7230Init(void __iomem *dwIoBase)
- 							 SOFTPWRCTL_SWPECTI  |
- 							 SOFTPWRCTL_TXPEINV));
- 
--	BBvPowerSaveModeON(dwIoBase); // RobertYu:20050106
-+	BBvPowerSaveModeON(priv); /* RobertYu:20050106 */
- 
- 	// PE1: TX_ON, PE2: RX_ON, PE3: PLLON
- 	//3-wire control for power saving mode
-@@ -759,7 +760,7 @@ bool RFbInit(
- 		break;
- 	case RF_AIROHA7230:
- 		pDevice->byMaxPwrLevel = AL7230_PWR_IDX_LEN;
--		bResult = s_bAL7230Init(pDevice->PortOffset);
-+		bResult = s_bAL7230Init(pDevice);
- 		break;
- 	case RF_NOTHING:
- 		bResult = true;
+ TRACE_EVENT(rdev_tdls_oper,
 -- 
-2.1.0
+2.1.1
 
