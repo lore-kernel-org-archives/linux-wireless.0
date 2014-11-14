@@ -1,68 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:59324 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753529AbaKCSGy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Nov 2014 13:06:54 -0500
-Received: by mail-wi0-f177.google.com with SMTP id ex7so7174050wid.4
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Nov 2014 10:06:53 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Eran Harary <eran.harary@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH] ieee80211: add "max length of AMPDU" enum for VHT
-Date: Mon,  3 Nov 2014 20:06:47 +0200
-Message-Id: <1415038007-2873-1-git-send-email-egrumbach@gmail.com> (sfid-20141103_190707_571153_B05E8D88)
+Received: from mga09.intel.com ([134.134.136.24]:48802 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754814AbaKNKFd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Nov 2014 05:05:33 -0500
+From: Jukka Rissanen <jukka.rissanen@linux.intel.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] mac80211-hwsim: hwname is always known in wiphy
+Date: Fri, 14 Nov 2014 12:05:29 +0200
+Message-Id: <1415959529-15830-1-git-send-email-jukka.rissanen@linux.intel.com> (sfid-20141114_110544_086156_A7A475A2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eran Harary <eran.harary@intel.com>
-
-Maximum length of AMPDU that an STA can receive in VHT.
-length = 2 ^ (13 + max_ampdu_length_exp) - 1.
-
-Signed-off-by: Eran Harary <eran.harary@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+We can always know the hwname of the radio so use the value
+from wiphy.
 ---
- include/linux/ieee80211.h | 17 ++++++++++++++++-
- 1 file changed, 16 insertions(+), 1 deletion(-)
+ drivers/net/wireless/mac80211_hwsim.c | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index b1be39c..42c910e 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -1274,7 +1274,7 @@ struct ieee80211_ht_cap {
- #define		IEEE80211_HT_AMPDU_PARM_DENSITY_SHIFT	2
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 58f11bb..d1bb775 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -2474,12 +2474,10 @@ static void hwsim_mcast_del_radio(int id, const char *hwname,
+ 	if (ret < 0)
+ 		goto error;
  
- /*
-- * Maximum length of AMPDU that the STA can receive.
-+ * Maximum length of AMPDU that the STA can receive in high-throughput (HT).
-  * Length = 2 ^ (13 + max_ampdu_length_exp) - 1 (octets)
-  */
- enum ieee80211_max_ampdu_length_exp {
-@@ -1284,6 +1284,21 @@ enum ieee80211_max_ampdu_length_exp {
- 	IEEE80211_HT_MAX_AMPDU_64K = 3
- };
+-	if (hwname) {
+-		ret = nla_put(skb, HWSIM_ATTR_RADIO_NAME, strlen(hwname),
+-			      hwname);
+-		if (ret < 0)
+-			goto error;
+-	}
++	ret = nla_put(skb, HWSIM_ATTR_RADIO_NAME, strlen(hwname),
++		      hwname);
++	if (ret < 0)
++		goto error;
  
-+/*
-+ * Maximum length of AMPDU that the STA can receive in VHT.
-+ * Length = 2 ^ (13 + max_ampdu_length_exp) - 1 (octets)
-+ */
-+enum ieee80211_vht_max_ampdu_length_exp {
-+	IEEE80211_VHT_MAX_AMPDU_8K = 0,
-+	IEEE80211_VHT_MAX_AMPDU_16K = 1,
-+	IEEE80211_VHT_MAX_AMPDU_32K = 2,
-+	IEEE80211_VHT_MAX_AMPDU_64K = 3,
-+	IEEE80211_VHT_MAX_AMPDU_128K = 4,
-+	IEEE80211_VHT_MAX_AMPDU_256K = 5,
-+	IEEE80211_VHT_MAX_AMPDU_512K = 6,
-+	IEEE80211_VHT_MAX_AMPDU_1024K = 7
-+};
-+
- #define IEEE80211_HT_MAX_AMPDU_FACTOR 13
+ 	genlmsg_end(skb, data);
  
- /* Minimum MPDU start spacing */
+@@ -2513,7 +2511,8 @@ static void mac80211_hwsim_free(void)
+ 						list))) {
+ 		list_del(&data->list);
+ 		spin_unlock_bh(&hwsim_radio_lock);
+-		mac80211_hwsim_del_radio(data, NULL, NULL);
++		mac80211_hwsim_del_radio(data, wiphy_name(data->hw->wiphy),
++					 NULL);
+ 		spin_lock_bh(&hwsim_radio_lock);
+ 	}
+ 	spin_unlock_bh(&hwsim_radio_lock);
+@@ -2799,7 +2798,8 @@ static int hwsim_del_radio_nl(struct sk_buff *msg, struct genl_info *info)
+ 
+ 		list_del(&data->list);
+ 		spin_unlock_bh(&hwsim_radio_lock);
+-		mac80211_hwsim_del_radio(data, hwname, info);
++		mac80211_hwsim_del_radio(data, wiphy_name(data->hw->wiphy),
++					 info);
+ 		return 0;
+ 	}
+ 	spin_unlock_bh(&hwsim_radio_lock);
+@@ -2844,7 +2844,7 @@ static void destroy_radio(struct work_struct *work)
+ 	struct mac80211_hwsim_data *data =
+ 		container_of(work, struct mac80211_hwsim_data, destroy_work);
+ 
+-	mac80211_hwsim_del_radio(data, NULL, NULL);
++	mac80211_hwsim_del_radio(data, wiphy_name(data->hw->wiphy), NULL);
+ }
+ 
+ static void remove_user_radios(u32 portid)
 -- 
-1.9.1
+1.8.3.1
 
