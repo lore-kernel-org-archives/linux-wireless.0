@@ -1,36 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:34347 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751297AbaKQLw0 (ORCPT
+Received: from mail-ig0-f170.google.com ([209.85.213.170]:57967 "EHLO
+	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422754AbaKNWc1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Nov 2014 06:52:26 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-Message-ID: <21609.57811.107846.718878@gargle.gargle.HOWL> (sfid-20141117_125230_160559_02BF5714)
-Date: Mon, 17 Nov 2014 17:23:55 +0530
+	Fri, 14 Nov 2014 17:32:27 -0500
+Received: by mail-ig0-f170.google.com with SMTP id a13so543973igq.3
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Nov 2014 14:32:27 -0800 (PST)
+Date: Fri, 14 Nov 2014 14:32:24 -0800
+From: Dmitry Torokhov <dtor@chromium.org>
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
+Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	Christophe Ricard <christophe.ricard@gmail.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] NFC: st21nfca: fix error handling of irq_of_parse_and_map
+Message-ID: <20141114223224.GA1448@dtor-ws> (sfid-20141114_233244_416544_F5E582B3)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: "ath10k\@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: Block radar events when requested
-In-Reply-To: <CA+BoTQkpqVKVHFoXuTJtkTmFZA0XfU56nLRaVegWUr29z83_tQ@mail.gmail.com>
-References: <1416209393-24736-1-git-send-email-sujith@msujith.org>
-	<CA+BoTQkpqVKVHFoXuTJtkTmFZA0XfU56nLRaVegWUr29z83_tQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior wrote:
-> The simulate_radar knob is meant to be used with
-> dfs_block_radar_events being true in the first place so you can easily
-> block real DFS events and inject fake ones for testing of DFS upper
-> layers with ath10k.
-> 
-> Your patch breaks this. Why would you want to do that?
+Return value of irq_of_parse_and_map() is unsigned int, with 0
+indicating failure, so testing for negative result never works.
 
-Apparently, this knob is also being used to make sure that
-radar detection doesn't happen when NOL is disabled.
+Also report error returned by devm_gpio_request_one instead of
+clobbering it with -ENODEV.
 
-I'll check if this test case is needed at all before
-adding another knob to the existing pile...
+Signed-off-by: Dmitry Torokhov <dtor@chromium.org>
+---
+ drivers/nfc/st21nfca/i2c.c | 11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
 
-Sujith
+diff --git a/drivers/nfc/st21nfca/i2c.c b/drivers/nfc/st21nfca/i2c.c
+index 0ea756b..6d6d282 100644
+--- a/drivers/nfc/st21nfca/i2c.c
++++ b/drivers/nfc/st21nfca/i2c.c
+@@ -531,20 +531,19 @@ static int st21nfca_hci_i2c_of_request_resources(struct i2c_client *client)
+ 				  "clf_enable");
+ 	if (r) {
+ 		nfc_err(&client->dev, "Failed to request enable pin\n");
+-		return -ENODEV;
++		return r;
+ 	}
+ 
+ 	phy->gpio_ena = gpio;
+ 
+ 	/* IRQ */
+-	r = irq_of_parse_and_map(pp, 0);
+-	if (r < 0) {
+-		nfc_err(&client->dev, "Unable to get irq, error: %d\n", r);
+-		return r;
++	client->irq = irq_of_parse_and_map(pp, 0);
++	if (!client->irq) {
++		nfc_err(&client->dev, "Unable to get irq\n");
++		return -EINVAL;
+ 	}
+ 
+ 	phy->irq_polarity = irq_get_trigger_type(r);
+-	client->irq = r;
+ 
+ 	return 0;
+ }
+-- 
+2.1.0.rc2.206.gedb03e5
+
+
+-- 
+Dmitry
