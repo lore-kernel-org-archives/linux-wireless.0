@@ -1,71 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:59359 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752265AbaKJJKe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Nov 2014 04:10:34 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: emmanuel.grumbach@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Luciano Coelho <luciano.coelho@intel.com>
-Date: Mon, 10 Nov 2014 11:10:05 +0200
-Message-Id: <1415610621-27438-1-git-send-email-luca@coelho.fi> (sfid-20141110_101124_236371_621C42F1)
-Subject: [PATCH 00/16] iwlwifi: mvm: more CSA patches
+Received: from mx1.redhat.com ([209.132.183.28]:57640 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932883AbaKNC5D (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Nov 2014 21:57:03 -0500
+Message-ID: <1415933817.2629.14.camel@dcbw.local> (sfid-20141114_035707_848045_824C3952)
+Subject: Re: [PATCH] cfg80211: remove net-pf-16-proto-16-family-nl80211
+ module alias
+From: Dan Williams <dcbw@redhat.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Date: Thu, 13 Nov 2014 20:56:57 -0600
+In-Reply-To: <4E8F3B23-EC77-4B53-8180-7DB12042E0B5@holtmann.org>
+References: <20141113123313.GA1926@redhat.com>
+	 <1415882683.2021.3.camel@sipsolutions.net>
+	 <20141113132252.GB1926@redhat.com>
+	 <252AB6B9-9D33-4932-B75F-D3B2B057D3C0@holtmann.org>
+	 <20141113133928.GC1926@redhat.com>
+	 <4E8F3B23-EC77-4B53-8180-7DB12042E0B5@holtmann.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+On Thu, 2014-11-13 at 22:48 +0900, Marcel Holtmann wrote:
+> Hi Stanislaw,
+> 
+> >>> With the alias cfg80211 module is loaded on systems without the wireless
+> >>> hardware when user-space use nl80211 to discover if there are wireless
+> >>> devices, what is considered as resources wastage. On systems with
+> >>> wireless hardware cfg80211 module will be loaded anyway.
+> >>> 
+> >>> Cc: Marcel Holtmann <marcel@holtmann.org>
+> >>> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> >>> ---
+> >>> net/wireless/core.c | 1 -
+> >>> 1 file changed, 1 deletion(-)
+> >>> 
+> >>> diff --git a/net/wireless/core.c b/net/wireless/core.c
+> >>> index a4d2792..badcabe 100644
+> >>> --- a/net/wireless/core.c
+> >>> +++ b/net/wireless/core.c
+> >>> @@ -34,7 +34,6 @@
+> >>> MODULE_AUTHOR("Johannes Berg");
+> >>> MODULE_LICENSE("GPL");
+> >>> MODULE_DESCRIPTION("wireless configuration support");
+> >>> -MODULE_ALIAS_GENL_FAMILY(NL80211_GENL_NAME);
+> >> 
+> >> NAK.
+> >> 
+> >> We want to auto-load cfg80211 when userspace asked for nl80211 netlink family.
+> > 
+> > Could you elaborate more why?
+> 
+> you want to talk to the nl80211 family. The kernel has a module that allows you to talk to this family. So let it load the netlink family.
+> 
+> If you do not want cfg80211 loaded, then fix NetworkManager and not hack the kernel. NetworkManager asks to talk to nl80211 in the first place. That one is causing the loading of cfg80211 module.
 
-Hi,
+Unfortunately there seems to be no reliable way of detecting that an
+ethernet-type interface is WiFi (and talks nl80211) or is not WiFi, than
+by asking it, using nl80211.  Unless you have suggestions for this?
 
-These patches finalize the CSA implementation for iwlmvm.  These are
-the remaining patches that were still pending in our internal tree.
-After this, I believe we are aligned.
-
-This series depends on the mac80211/cfg80211 series I sent to Johannes
-last Friday (2014-11-07), we probably need to wait those to get
-applied to sync things up.
-
-There is one more mac80211 patch that I need to send.  This series
-removes the usage of the channel_switch_beacon operation in iwlmvm.
-It's the last user of it in the mainline, so we can remove it from
-mac80211 after the trees are in sync.
-
---
-Luca.
-
-Andrei Otcheretianski (2):
-  iwlwifi: mvm: Handle failed beacon transmissions during CSA
-  iwlwifi: mvm: Insert DS Parameter Set placeholder in probes
-
-Luciano Coelho (14):
-  iwlwifi: mvm: use new pre_channel_switch op instead of
-    channel_switch_beacon
-  iwlwifi: mvm: only save csa_vif in AP/GO mode
-  iwlwifi: mvm: refactor iwl_mvm_switch_vif_chanctx to support other
-    modes
-  iwlwifi: mvm: add support for CHANCTX_SWMODE_REASSIGN_VIF
-  iwlwifi: mvm: return the actual error code when switch_vif_chanctx
-    fails
-  iwlwifi: mvm: disable PS during channel switch
-  iwlwifi: mvm: use switching_chanctx argument instead of csa_active
-  iwlwifi: mvm: add CSA absent time event for clients
-  iwlwifi: mvm: schedule CSA time event a bit before beacon 1
-  iwlwifi: mvm: finalize on post_switch instead of unassign
-  iwlwifi: mvm: add a channel_switch op to bypass mac80211 timer
-  iwlwifi: mvm: disable beacon filtering during CSA
-  iwlwifi: mvm: clear TE data if CSA time event fails to start
-  iwlwifi: mvm: protect session during CSA
-
- drivers/net/wireless/iwlwifi/iwl-fw.h         |   4 +-
- drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c   |  21 ++-
- drivers/net/wireless/iwlwifi/mvm/mac80211.c   | 254 +++++++++++++++++++++-----
- drivers/net/wireless/iwlwifi/mvm/mvm.h        |  36 +++-
- drivers/net/wireless/iwlwifi/mvm/scan.c       |  53 +++++-
- drivers/net/wireless/iwlwifi/mvm/sta.c        |  15 ++
- drivers/net/wireless/iwlwifi/mvm/sta.h        |   1 +
- drivers/net/wireless/iwlwifi/mvm/time-event.c |  39 +++-
- 8 files changed, 356 insertions(+), 67 deletions(-)
-
--- 
-2.1.1
+Dan
 
