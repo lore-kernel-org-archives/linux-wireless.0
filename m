@@ -1,218 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.15]:61916 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750736AbaKZSaE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Nov 2014 13:30:04 -0500
-Message-ID: <54761C1D.9050207@rempel-privat.de> (sfid-20141126_193012_450752_4E111E63)
-Date: Wed, 26 Nov 2014 19:29:49 +0100
-From: Oleksij Rempel <linux@rempel-privat.de>
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:44777 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753044AbaKNAHv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Nov 2014 19:07:51 -0500
+Date: Thu, 13 Nov 2014 16:07:47 -0800
+From: Jeremiah Mahler <jmmahler@gmail.com>
+To: Oleksij Rempel <linux@rempel-privat.de>
+Cc: Jeremiah Mahler <jmmahler@gmail.com>, linux-kernel@vger.kernel.org,
+	ath9k-devel@qca.qualcomm.com, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	netdev@vger.kernel.org
+Subject: linux-next: ath9k: build failure, ath_cmn_process_fft() redefinition
+Message-ID: <20141114000747.GA6865@hudson.localdomain> (sfid-20141114_010811_679228_85151040)
 MIME-Version: 1.0
-To: David Lechner <david@lechnology.com>,
-	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org
-CC: anders.darander@gmail.com
-Subject: Re: ath9k -> bogus usb xfer on at91
-References: <54751EAC.4080402@lechnology.com>
-In-Reply-To: <54751EAC.4080402@lechnology.com>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="KWb6cmM54TmJUwcxpdu5Gpi3PKTlJGXNT"
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---KWb6cmM54TmJUwcxpdu5Gpi3PKTlJGXNT
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
 
-Am 26.11.2014 um 01:28 schrieb David Lechner:
->> On 7 July 2014 17:08, Oleksij Rempel <linux@xxxxxxxxxxxxxxxx> wrote:
->> >/  Am 07.07.2014 15:40, schrieb Anders Darander:/
->> >/> On 4 July 2014 18:54, Oleksij Rempel <linux@xxxxxxxxxxxxxxxx> wrot=
-e:/
->> >/>> Am 04.07.2014 18:30, schrieb Alan Stern:/
->> >/>>> On Fri, 4 Jul 2014, Anders Darander wrote:/
->> >/>>>> ~# usb 1-1: new full-speed USB device number 3 using at91_ohci/=
+In version 20141113 of the linux-next kernel, if it is compiled with
+CONFIG_ATH9K_DEBUGFS unset, an error about ath_cmn_process_fft() being
+redefined will be produced.
 
->> >/>>>> usb 1-1: ath9k_htc: Firmware htc_9271.fw requested/
->> >/>>>> usb 1-1: ath9k_htc: Transferred FW: htc_9271.fw, size: 51272/
->> >/>>>> -----------[ cut here ]-----------/
->> >/>>>> WARNING: CPU: 0 PID: 93 at/
->> >/>>>>
->> /mnt/cs-builds/anders/oe-build/build-ccu/tmp-eglibc/work/ccu-oe-linux-=
-gnueabi/linux-yocto-ccu/3.14+gitAUTOINC+7b03bd3dfd-r0/linux/drivers/usb/c=
-ore/urb.c:450/
->>
->> >/>>>> usb_submit_urb+0x2ac/0x460()/
->> >/>>>> usb 1-1: BOGUS urb xfer, pipe 1 !=3D type 3/
->> >/>/
->> >/>>>/
->> >/>>> I can't tell exactly where the fault is, but this message means
->> that an/
->> >/>>> URB was submitted for a bulk endpoint with a pipe of type/
->> >/>>> PIPE_INTERRUPT./
->> >/>>/
->> >/>> Then kernel driver and firmware should be updated. There was some=
-/
->> >/>> Bulk/Interrupt issues which was fixed last year./
->> >/>/
->> >/> Any pointers to the bulk/interrupt issues? Was it a general issue,=
+  make
+  ...
+    LD [M]  drivers/net/wireless/ath/ath9k/ath9k_hw.o
+    CC [M]  drivers/net/wireless/ath/ath9k/common-spectral.o
+    CC      lib/debug_locks.o
+    CC      lib/random32.o
+  drivers/net/wireless/ath/ath9k/common-spectral.c:40:5: error:
+  redefinition of ‘ath_cmn_process_fft’
+   int ath_cmn_process_fft(struct ath_spec_scan_priv *spec_priv, struct
+  ieee80211_hdr *hdr,
+       ^
+  In file included from drivers/net/wireless/ath/ath9k/common.h:27:0,
+                   from drivers/net/wireless/ath/ath9k/ath9k.h:27,
+                   from
+  drivers/net/wireless/ath/ath9k/common-spectral.c:18:
+  drivers/net/wireless/ath/ath9k/common-spectral.h:146:19: note: previous
+  definition of ‘ath_cmn_process_fft’ was here
+   static inline int ath_cmn_process_fft(struct ath_spec_scan_priv
+  *spec_priv,
+                     ^
+  scripts/Makefile.build:257: recipe for target
+  'drivers/net/wireless/ath/ath9k/common-spectral.o' failed
+  make[5]: *** [drivers/net/wireless/ath/ath9k/common-spectral.o] Error 1
+  scripts/Makefile.build:402: recipe for target
+  'drivers/net/wireless/ath/ath9k' failed
+  make[4]: *** [drivers/net/wireless/ath/ath9k] Error 2
+  scripts/Makefile.build:402: recipe for target 'drivers/net/wireless/ath'
+  failed
+  make[3]: *** [drivers/net/wireless/ath] Error 2
+  scripts/Makefile.build:402: recipe for target 'drivers/net/wireless'
+  failed
+  make[2]: *** [drivers/net/wireless] Error 2
+  scripts/Makefile.build:402: recipe for target 'drivers/net' failed
+  make[1]: *** [drivers/net] Error 2
+  Makefile:953: recipe for target 'drivers' failed
+  make: *** [drivers] Error 2
+  make: *** Waiting for unfinished jobs....
+    CC      lib/bust_spinlocks.o
+  ...
 
->> or/
->> >/> related either to/
->> >/> at91-ohci or ar9271?/
->> >
->> >/  It is primary ar9271 issue. The interrupt EP has different
->> response time/
->> >/  on different host controllers. Initially as workaround ath9k was
->> forcing/
->> >/  Bulk traffic on Interrupt EP. But this workaround is working with
->> some/
->> >/  host controllers and completely fails on others. So i removed it.
->> The/
->> >/  patches are included in master kernel branch and git firmware
->> source./
->>
->> Thanks for the comments!
->> I'll take a look at it, though it might have to be scheduled after the=
+Bisecting the kernel found that the following patch was the cause.
 
->> upcoming vacations...
->>
->> I'll sure try to look into those workarounds (and your removal of
->> those). I guess that
->> it's the firmware in open-ath9-htc-firmware you're talking about.
->>
->> >/>/
->> >/> As far as I've been able to find out, I've got the latest firmware=
-/
->> >/> (check again with linux-firmware)./
->> >/> I've also tried with the master from open-ath9k-htc-firmware./
->> >/>/
->> >/>> I hope this HW will not be used as AP./
->> >/>/
->> >/> Is this based on the use of at91- SoC, or based on the ar9271?/
->> >
->> >/  ar9271 can work as AP with limit on 8 stations but according to us=
-er/
->> >/  reports it fails even with one station on at91/
->> >
->> >/> The primary use case is to run as a client, though there will like=
-ly/
->> >/> be some instances where it'll/
->> >/> function as a AP. (Though primarily for M2M communications), thus/=
+  commit 67dc74f15f147b9f88702de2952d2951e3e000ec
+  Author: Oleksij Rempel <linux@rempel-privat.de>
+  Date:   Thu Nov 6 08:53:30 2014 +0100
+  
+      ath9k: move spectral.* to common-spectral.*
+      
+      and rename exports from ath9k_spectral_* to ath9k_cmn_spectral_*
+      
+      Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+      Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
->> >/> pretty low traffic./
->> >
->> >/  For AP usually should be created monitor mode interface for
->> receiving/
->> >/  and transmitting management frames. Depending on location and STAs=
+This patch mostly consists of renaming functions and moving code but
+there was a functional change to the Makefile.
 
->> or/
->> >/  APs working on same channel, you will get a lot of traffic on this=
+common-spectral.h uses CONFIG_ATH9K_DEBUGFS to conditionally provide a
+prototype of ath_cmn_process_fft() when set or to define it as a noop
+when it is unset.  The Makefile was changed so that CONFIG_ATH9K_DEBUGFS
+no longer applied to common-spectral and this will result in two
+definitions of ath_cmn_process_fft().
 
->> usb/
->> >/  interface./
->> >/  Some users reported huge traffic drops on at91 based APs. Since i
->> can't/
->> >/  debug it, i can't promise that it will be fixed any time soon./
->>
->> Again, thanks for the information.
->> I think I've got a much better understanding of the issues (both those=
+  > --- a/drivers/net/wireless/ath/ath9k/Makefile
+  > +++ b/drivers/net/wireless/ath/ath9k/Makefile
+  > @@ -16,8 +16,7 @@ ath9k-$(CONFIG_ATH9K_DFS_CERTIFIED) += dfs.o
+  >  ath9k-$(CONFIG_ATH9K_TX99) += tx99.o
+  >  ath9k-$(CONFIG_ATH9K_WOW) += wow.o
+  >
+  > -ath9k-$(CONFIG_ATH9K_DEBUGFS) += debug.o \
+  > -                                spectral.o
+  > +ath9k-$(CONFIG_ATH9K_DEBUGFS) += debug.o
+  >
+  >  ath9k-$(CONFIG_ATH9K_STATION_STATISTICS) += debug_sta.o
+  >
+  > @@ -59,7 +58,8 @@ obj-$(CONFIG_ATH9K_COMMON) += ath9k_common.o
+  >  ath9k_common-y:=       common.o \
+  >                         common-init.o \
+  >                         common-beacon.o \
+  > -                       common-debug.o
+  > +                       common-debug.o \
+  > +                       common-spectral.o
 
->> that I've
->> seen, and those that you have mentioned / explained). I'll see
->> when/what I can
->> look into this and what I can find out.
->>
->> Cheers,
->> Anders
->=20
-> Anders, did you ever have a chance to look at this? I am seeing this
-> same warning that is filling up the kernel logs in v3.18-rc6.
->=20
-> The device I am using is:
->=20
-> |ID 0846:9030 NetGear, Inc. WNA1100 Wireless-N 150 [Atheros AR9271]||
->=20
-> I found that if I revert kernel commit 2b72111 that the warning stops,
-> but the device does not work very well.||If you are interested to know
-> more about the symptoms we are seeing, there is a bug report here:
-> <https://github.com/ev3dev/ev3dev/issues/152>. But, I figured at least
-> knowing the kernel commit that introduced the problem would be helpful.=
-|
->=20
+Reverting the patch solves one error, but then a new one is produced.
 
-i assume you mean this:
+  make
+  ...
+    MODPOST 185 modules
+    CC      arch/x86/boot/edd.o
+    VOFFSET arch/x86/boot/voffset.h
+  ERROR: "ath9k_cmn_spectral_scan_trigger"
+  [drivers/net/wireless/ath/ath9k/ath9k.ko] undefined!
+  scripts/Makefile.modpost:90: recipe for target '__modpost' failed
+  make[1]: *** [__modpost] Error 1
+  ...
 
-commit 2b721118b7821107757eb1d37af4b60e877b27e7
-Author: Oleksij Rempel <linux@rempel-privat.de>
-Date:   Tue Aug 13 21:10:19 2013 +0200
+This error is caused by the patch before it.
 
-    ath9k_htc: do not use bulk on EP3 and EP4
+  commit f00a422cc81ef665f5098c0bc43cb0c616e55a9b
+  Author: Oleksij Rempel <linux@rempel-privat.de>
+  Date:   Thu Nov 6 08:53:29 2014 +0100
+  
+      ath9k: move ath9k_spectral_scan_ from main.c to spectral.c
+      
+      Now we should be ready to make this code common.
+      
+      Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+      Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-    If usb auto suspend is enabled or system run in to suspend/resume
-    cycle, ath9k-htc adapter will stop to response. It is reproducible
-on xhci H
+Since the code was moved from main.c to spectral.c, it is now involved
+with CONFIG_ATH9K_DEBUGFS, which causes it to break.
 
-    Host part of problem:
-    XHCI do timing calculation based on Transfer Type and bInterval,
-    immediately after device was detected. Ath9k-htc try to overwrite
-    this parameters on module probe and some changes in FW,
-    since we do not initiate usb reset from the driver this changes
-    are not took to account. So, before any kind of suspend or reset,
-    host controller will operate with old parameters. Only after
-suspend/resume
-    and if interface id stay unchanged, new parameters will be applied. H=
-ost
-    will send bulk data with no intervals (?), which will cause
-    overflow on FIFO of EP4.
+Reverting both the above patches resolves the build errors.
 
-    Firmware part of problem:
-    By default, ath9k-htc adapters configured with EP3 and EP4
-    as interrupt endpoints. Current firmware will try to overwrite
-    ConfigDescriptor to make EP3 and EP4 bulk. FIFO for this endpoints
-    stay not reconfigured, so under the hood it is still Int EP.
-
-    This patch is revert of 4a0e8ecca4ee commit which trying to
-    reduce CPU usage on some systems. Since it will produce more bug
-    as fixes, we will need to find other way to fix it.
-
-    here is comment from kernel source which has some more explanation:
-    * Some buggy high speed devices have bulk endpoints using
-    * maxpacket sizes other than 512.  High speed HCDs may not
-    * be able to handle that particular bug, so let's warn...
-
-    in our case EP3 and EP4 have maxpacket sizes =3D 64!!!
-
-    Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
-
-
->=20
-> ||
-> --=20
-> To unsubscribe from this list: send the line "unsubscribe
-> linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
---=20
-Regards,
-Oleksij
-
-
---KWb6cmM54TmJUwcxpdu5Gpi3PKTlJGXNT
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iF4EAREIAAYFAlR2HB0ACgkQHwImuRkmbWkpwAEAjUnZOFsNbkxqOPpYzH1Gu/CP
-7Zh9oc1H5k/dEzImtz0BAJZ07nOoP6AzsNgbLFOQQE9Bz0tpu/4VbX9B2PW6RJ8I
-=Fmxg
------END PGP SIGNATURE-----
-
---KWb6cmM54TmJUwcxpdu5Gpi3PKTlJGXNT--
+-- 
+Jeremiah Mahler
+jmmahler@gmail.com
+http://github.com/jmahler
