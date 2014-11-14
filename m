@@ -1,40 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f176.google.com ([209.85.223.176]:40971 "EHLO
-	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751196AbaK2Iya (ORCPT
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:40377 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754550AbaKNWfa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Nov 2014 03:54:30 -0500
+	Fri, 14 Nov 2014 17:35:30 -0500
+Received: by mail-ie0-f174.google.com with SMTP id x19so18872149ier.33
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Nov 2014 14:35:30 -0800 (PST)
+Date: Fri, 14 Nov 2014 14:35:27 -0800
+From: Dmitry Torokhov <dtor@chromium.org>
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
+Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	Christophe Ricard <christophe.ricard@gmail.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] NFC: st21nfcb: fix error handling of irq_of_parse_and_map
+Message-ID: <20141114223527.GA2622@dtor-ws> (sfid-20141114_233547_980457_6069318D)
 MIME-Version: 1.0
-In-Reply-To: <54793E4E.7050602@gmail.com>
-References: <1417213013-19758-1-git-send-email-xerofoify@gmail.com>
-	<CACna6rxmOC0h9hOpa=5iWFM1THQ8Q4hCi8MnmqkZJbB_U0PJ0A@mail.gmail.com>
-	<20141129002148.1beb21d9@wiggum>
-	<54793E4E.7050602@gmail.com>
-Date: Sat, 29 Nov 2014 09:54:29 +0100
-Message-ID: <CACna6rzfZjKg4diAEE9hFcN5DFadhxC-Uv9aS1RDMXmJ4zbgVQ@mail.gmail.com> (sfid-20141129_095501_076057_50B3F7D5)
-Subject: Re: [PATCH] drivers:net:wireless: Add mutex locking for function,
- b43_op_beacon_set_time in main.c
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: nick <xerofoify@gmail.com>
-Cc: =?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	Network Development <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 29 November 2014 at 04:32, nick <xerofoify@gmail.com> wrote:
-> I don't have hardware for this driver on me, so I didn't test it. However this seems to
-> be correct from my reading of the code around this function and other locking related
-> to this driver.
+Return value of irq_of_parse_and_map() is unsigned int, with 0
+indicating failure, so testing for negative result never works.
 
-So do you say it's not executed in an atomic?
+Also report error returned by devm_gpio_request_one instead of
+clobbering it with -ENODEV.
 
->From *early* look it seems b43_update_templates is called from
-b43_op_beacon_set_tim and b43_op_bss_info_changed, both or them are
-mac80211 callbacks. That also should be safe, however I didn't check
-if it may conflict with some in-kernel code (still, assuming it's not
-atomic code, which I don't know!).
+Signed-off-by: Dmitry Torokhov <dtor@chromium.org>
+---
+
+Not tested, found by casual code inspection.
+
+ drivers/nfc/st21nfcb/i2c.c | 11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/nfc/st21nfcb/i2c.c b/drivers/nfc/st21nfcb/i2c.c
+index c5d2427..abe73ec 100644
+--- a/drivers/nfc/st21nfcb/i2c.c
++++ b/drivers/nfc/st21nfcb/i2c.c
+@@ -258,19 +258,18 @@ static int st21nfcb_nci_i2c_of_request_resources(struct i2c_client *client)
+ 				GPIOF_OUT_INIT_HIGH, "clf_reset");
+ 	if (r) {
+ 		nfc_err(&client->dev, "Failed to request reset pin\n");
+-		return -ENODEV;
++		return r;
+ 	}
+ 	phy->gpio_reset = gpio;
+ 
+ 	/* IRQ */
+-	r = irq_of_parse_and_map(pp, 0);
+-	if (r < 0) {
+-		nfc_err(&client->dev, "Unable to get irq, error: %d\n", r);
+-		return r;
++	client->irq = irq_of_parse_and_map(pp, 0);
++	if (!client->irq) {
++		nfc_err(&client->dev, "Unable to get irq\n");
++		return -EINVAL;
+ 	}
+ 
+ 	phy->irq_polarity = irq_get_trigger_type(r);
+-	client->irq = r;
+ 
+ 	return 0;
+ }
+-- 
+2.1.0.rc2.206.gedb03e5
+
+
+-- 
+Dmitry
