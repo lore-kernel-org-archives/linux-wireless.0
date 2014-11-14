@@ -1,169 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:9507 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752633AbaK0MAo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Nov 2014 07:00:44 -0500
-Subject: [PATCH v3 2/2] ath10k: read calibration data from Device Tree
-To: <ath10k@lists.infradead.org>
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <devicetree-discuss@lists.ozlabs.org>,
-	<linux-wireless@vger.kernel.org>, <toshik@chromium.org>
-Date: Thu, 27 Nov 2014 14:00:39 +0200
-Message-ID: <20141127120039.28539.90373.stgit@potku.adurom.net> (sfid-20141127_130047_079848_E809EFF0)
-In-Reply-To: <20141127115922.28539.9482.stgit@potku.adurom.net>
-References: <20141127115922.28539.9482.stgit@potku.adurom.net>
+Received: from mout.gmx.net ([212.227.15.19]:51709 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754643AbaKNJwJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Nov 2014 04:52:09 -0500
+Message-ID: <5465D09C.3040809@rempel-privat.de> (sfid-20141114_105217_645561_DB84523C)
+Date: Fri, 14 Nov 2014 10:51:24 +0100
+From: Oleksij Rempel <linux@rempel-privat.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+CC: John Linville <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath9k-devel@lists.ath9k.org, Adrian Chadd <adrian@freebsd.org>
+Subject: Re: [PATCH] ath9k_htc: turn on software mgmt crypto for secured mesh
+References: <1415941631-24140-1-git-send-email-yeohchunyeow@gmail.com>	<5465C333.7030704@rempel-privat.de>	<CAEFj987ng6Jxa4u3+Z+0oGFX7LUnkLPP96bBrCSnSetjU+YjpQ@mail.gmail.com> <CAEFj984+StN9RzwOdM5O=4ycku8smLqvp3S+Tq2jkQ_U+=P2Tw@mail.gmail.com>
+In-Reply-To: <CAEFj984+StN9RzwOdM5O=4ycku8smLqvp3S+Tq2jkQ_U+=P2Tw@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="QQFkaLmJaO1Jt6Na240ODh0THB2c0wWQD"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Toshi Kikuchi <toshik@chromium.org>
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--QQFkaLmJaO1Jt6Na240ODh0THB2c0wWQD
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-This patch adds support for reading calibration data from Device Tree.
-It looks for the calibration data in Device Tree if it can't find it
-in a file. If there's no node in Device Tree, ath10k will try to find the
-calibration data from OTP.
+Am 14.11.2014 um 10:18 schrieb Yeoh Chun-Yeow:
+> Hi, Oleksij Rpel
+>=20
+> If we do it in ath9k_hw_init_mfp, these MAC version are related to USB =
+devices:
+>=20
+> AR_SREV_VERSION_9271
+> AR_SREV_VERSION_9280
+> AR_SREV_VERSION_9287
+>=20
+> Right?
 
-The node for the calibration data should be defined like this:
+yes. ar9271 with usb interface. ar9280 and ar9287 are pcie attached to
+ar7010 cpu.
 
-pci {
-        pcie@0 {
-                reg = <0 0 0 0 0>;
-                #interrupt-cells = <1>;
-                #size-cells = <2>;
-                #address-cells = <3>;
-                device_type = "pci";
+> ----
+> ChunYeow
+>=20
+> On Fri, Nov 14, 2014 at 5:06 PM, Yeoh Chun-Yeow <yeohchunyeow@gmail.com=
+> wrote:
+>> On Fri, Nov 14, 2014 at 4:54 PM, Oleksij Rempel <linux@rempel-privat.d=
+e> wrote:
+>>> Am 14.11.2014 um 06:07 schrieb Chun-Yeow Yeoh:
+>>>> Secured mesh encrypts the unicast mgmt frame using the same
+>>>> key that used for encrypting the unicast data frame. The patch
+>>>> "ath9k_htc_firmware: fix the offset of CCMP header for mesh
+>>>> data frame" applied to open-ath9k-htc-firmware allows the
+>>>> ath9k_htc to be loaded without "nohwcrypt=3D1". Unfortunately,
+>>>> this is not working and we still need CCMP encryption of
+>>>> management frames to be done in software. Fix this.
+>>>>
+>>>> This patch is tested with the following hardwares:
+>>>> - TP-Link TL-WN821N v3 802.11n [Atheros AR7010+AR9287]
+>>>> - AR9271 802.11n
+>>>>
+>>>> and managed to work with peer mesh STA equipped with ath9k.
+>>>>
+>>>> Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+>>>> ---
+>>>>  drivers/net/wireless/ath/ath9k/htc_drv_main.c | 3 ++-
+>>>>  1 file changed, 2 insertions(+), 1 deletion(-)
+>>>>
+>>>> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers=
+/net/wireless/ath/ath9k/htc_drv_main.c
+>>>> index 689ac99..d3f65a2 100644
+>>>> --- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+>>>> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+>>>> @@ -1447,7 +1447,8 @@ static int ath9k_htc_set_key(struct ieee80211_=
+hw *hw,
+>>>>                       key->flags |=3D IEEE80211_KEY_FLAG_GENERATE_IV=
+;
+>>>>                       if (key->cipher =3D=3D WLAN_CIPHER_SUITE_TKIP)=
 
-                ath10k@0,0 {
-                        reg = <0 0 0 0 0>;
-                        device_type = "pci";
-                        qcom,ath10k-calibration-data = [ 01 02 03 ... ];
-                };
-        };
-};
+>>>>                               key->flags |=3D IEEE80211_KEY_FLAG_GEN=
+ERATE_MMIC;
+>>>> -                     if (priv->ah->sw_mgmt_crypto &&
+>>>> +                     if ((vif->type =3D=3D NL80211_IFTYPE_MESH_POIN=
+T ||
+>>>> +                          priv->ah->sw_mgmt_crypto) &&
+>>>>                           key->cipher =3D=3D WLAN_CIPHER_SUITE_CCMP)=
 
-Signed-off-by: Toshi Kikuchi <toshik@chromium.org>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.c |   70 ++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/core.h |    3 +
- 2 files changed, 72 insertions(+), 1 deletion(-)
+>>>>                               key->flags |=3D IEEE80211_KEY_FLAG_SW_=
+MGMT_TX;
+>>>>                       ret =3D 0;
+>>>>
+>>>
+>>>
+>>> Hmm.. may be we should generally do it here:
+>>>         if ((vif->type =3D=3D NL80211_IFTYPE_ADHOC ||
+>>>              vif->type =3D=3D NL80211_IFTYPE_MESH_POINT) &&
+>>>             (key->cipher =3D=3D WLAN_CIPHER_SUITE_TKIP ||
+>>>              key->cipher =3D=3D WLAN_CIPHER_SUITE_CCMP) &&
+>>>             !(key->flags & IEEE80211_KEY_FLAG_PAIRWISE)) {
+>>>
+>>
+>> Not so sure doing here is correctly. It is a pairwise key for unicast
+>> management frame, right?
+>>
+>>> or probably set "sw_mgmt_crypto =3D true" in ath9k_hw_init_mfp() for =
+all
+>>> usb devices?
+>>
+>> All ath9k USB devices don't have MFP support?
+>>
+>> ---
+>> ChunYeow
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 7762061a1944..6165f2735b35 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -17,6 +17,7 @@
- 
- #include <linux/module.h>
- #include <linux/firmware.h>
-+#include <linux/of.h>
- 
- #include "core.h"
- #include "mac.h"
-@@ -249,6 +250,63 @@ static int ath10k_download_cal_file(struct ath10k *ar)
- 	return 0;
- }
- 
-+static int ath10k_download_cal_dt(struct ath10k *ar)
-+{
-+	struct device_node *node;
-+	int data_len;
-+	void *data;
-+	int ret;
-+
-+	node = ar->dev->of_node;
-+	if (!node)
-+		/* Device Tree is optional, don't print any warnings if
-+		 * there's no node for ath10k.
-+		 */
-+		return -ENOENT;
-+
-+	if (!of_get_property(node, "qcom,ath10k-calibration-data",
-+			     &data_len)) {
-+		/* The calibration data node is optional */
-+		return -ENOENT;
-+	}
-+
-+	if (data_len != QCA988X_CAL_DATA_LEN) {
-+		ath10k_warn(ar, "invalid calibration data length in DT: %d\n",
-+			    data_len);
-+		ret = -EMSGSIZE;
-+		goto out;
-+	}
-+
-+	data = kmalloc(data_len, GFP_KERNEL);
-+	if (!data) {
-+		ret = -ENOMEM;
-+		goto out;
-+	}
-+
-+	ret = of_property_read_u8_array(node, "qcom,ath10k-calibration-data",
-+					data, data_len);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to read calibration data from DT: %d\n",
-+			    ret);
-+		goto out_free;
-+	}
-+
-+	ret = ath10k_download_board_data(ar, data, data_len);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to download calibration data from Device Tree: %d\n",
-+			    ret);
-+		goto out_free;
-+	}
-+
-+	ret = 0;
-+
-+out_free:
-+	kfree(data);
-+
-+out:
-+	return ret;
-+}
-+
- static int ath10k_download_and_run_otp(struct ath10k *ar)
- {
- 	u32 result, address = ar->hw_params.patch_load_addr;
-@@ -662,7 +720,17 @@ static int ath10k_download_cal_data(struct ath10k *ar)
- 	}
- 
- 	ath10k_dbg(ar, ATH10K_DBG_BOOT,
--		   "boot did not find a calibration file, try OTP next: %d\n",
-+		   "boot did not find a calibration file, try DT next: %d\n",
-+		   ret);
-+
-+	ret = ath10k_download_cal_dt(ar);
-+	if (ret == 0) {
-+		ar->cal_mode = ATH10K_CAL_MODE_DT;
-+		goto done;
-+	}
-+
-+	ath10k_dbg(ar, ATH10K_DBG_BOOT,
-+		   "boot did not find DT entry, try OTP next: %d\n",
- 		   ret);
- 
- 	ret = ath10k_download_and_run_otp(ar);
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 4a294987736c..2dd1bb05a3fc 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -400,6 +400,7 @@ enum ath10k_dev_flags {
- enum ath10k_cal_mode {
- 	ATH10K_CAL_MODE_FILE,
- 	ATH10K_CAL_MODE_OTP,
-+	ATH10K_CAL_MODE_DT,
- };
- 
- static inline const char *ath10k_cal_mode_str(enum ath10k_cal_mode mode)
-@@ -409,6 +410,8 @@ static inline const char *ath10k_cal_mode_str(enum ath10k_cal_mode mode)
- 		return "file";
- 	case ATH10K_CAL_MODE_OTP:
- 		return "otp";
-+	case ATH10K_CAL_MODE_DT:
-+		return "dt";
- 	}
- 
- 	return "unknown";
 
+--=20
+Regards,
+Oleksij
+
+
+--QQFkaLmJaO1Jt6Na240ODh0THB2c0wWQD
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iF4EAREIAAYFAlRl0JwACgkQHwImuRkmbWmjDQD8DF7kaeK5UwN957eQemaoWM/z
+MtT+/Fhzhf042hsf0RYA/RQWMKn68ym4xqSbOQAw/M2orEQOgY7Ogt8hYknYbh16
+=OCFW
+-----END PGP SIGNATURE-----
+
+--QQFkaLmJaO1Jt6Na240ODh0THB2c0wWQD--
