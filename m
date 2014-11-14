@@ -1,66 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:59564 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751399AbaKLHbw convert rfc822-to-8bit (ORCPT
+Received: from mail-pd0-f172.google.com ([209.85.192.172]:40128 "EHLO
+	mail-pd0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750800AbaKNFH1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Nov 2014 02:31:52 -0500
-Received: by mail-wi0-f176.google.com with SMTP id h11so3935776wiw.3
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Nov 2014 23:31:50 -0800 (PST)
-MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <CA+icZUVurGqVhvmn4vNkb_pOKW8++4F9iFjwUGeL8Ap_Tb=2jw@mail.gmail.com>
-References: <87d28zdplq.fsf@mat.ucm.es>
-	<CANUX_P0f0WAHoq3CsC3V-jp4m3_Q7qLz7X+Mvn1hk9_JPrPTGg@mail.gmail.com>
-	<87egtbxs8t.fsf@mat.ucm.es>
-	<1415615960.1847.11.camel@sipsolutions.net>
-	<8761ellhbc.fsf@mat.ucm.es>
-	<CA+icZUVurGqVhvmn4vNkb_pOKW8++4F9iFjwUGeL8Ap_Tb=2jw@mail.gmail.com>
-Date: Wed, 12 Nov 2014 08:31:50 +0100
-Message-ID: <CA+icZUXM45emQoNfiY_81JQupUAxUeX9Tkxus_szuVxxxSBPvw@mail.gmail.com> (sfid-20141112_083155_329099_5F05C3AE)
-Subject: Re: Thinkpad X60s/200s: Intel 3945/5100 works with kernel
- 2.6.32-67/3.0.0-32 but not 3.7 vanilla.
-From: Sedat Dilek <sedat.dilek@gmail.com>
-To: Uwe Brauer <oub@mat.ucm.es>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Emmanuel Grumbach <egrumbach@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 14 Nov 2014 00:07:27 -0500
+Received: by mail-pd0-f172.google.com with SMTP id r10so16066237pdi.3
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Nov 2014 21:07:26 -0800 (PST)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH] ath9k_htc: turn on software mgmt crypto for secured mesh
+Date: Fri, 14 Nov 2014 13:07:11 +0800
+Message-Id: <1415941631-24140-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20141114_060730_646428_2668060C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 12, 2014 at 8:25 AM, Sedat Dilek <sedat.dilek@gmail.com> wrote:
-> On Tue, Nov 11, 2014 at 7:31 PM, Uwe Brauer <oub@mat.ucm.es> wrote:
->>
->>    > On Mon, 2014-11-10 at 11:30 +0100, Uwe Brauer wrote:
->>
->>    > You'd need CONFIG_CFG80211_WEXT (or so) as well, but realistically you
->>
->> Thanks indeed that solved the problem. So I can use ubuntu
->> 10.04+jfs+trim+wireless great!
->>
->>    > should stop using wireless extensions and use nl80211 (via the "iw"
->>    > tool) instead.
->>
->> Thanks but I am not sure whether it will work in Ubuntu 10.04 I am
->> currently using.
->>
->
+Secured mesh encrypts the unicast mgmt frame using the same
+key that used for encrypting the unicast data frame. The patch
+"ath9k_htc_firmware: fix the offset of CCMP header for mesh
+data frame" applied to open-ath9k-htc-firmware allows the
+ath9k_htc to be loaded without "nohwcrypt=1". Unfortunately,
+this is not working and we still need CCMP encryption of
+management frames to be done in software. Fix this.
 
-[ To answer myself... ]
+This patch is tested with the following hardwares:
+- TP-Link TL-WN821N v3 802.11n [Atheros AR7010+AR9287]
+- AR9271 802.11n
 
-> Is 10.04 an LTS version (means support till 2015)?
+and managed to work with peer mesh STA equipped with ath9k.
 
-Yupp (see below).
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-> Might be there exist some 3rd party or the $-backports which will have
-> an iw package.
->
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index 689ac99..d3f65a2 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -1447,7 +1447,8 @@ static int ath9k_htc_set_key(struct ieee80211_hw *hw,
+ 			key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
+ 			if (key->cipher == WLAN_CIPHER_SUITE_TKIP)
+ 				key->flags |= IEEE80211_KEY_FLAG_GENERATE_MMIC;
+-			if (priv->ah->sw_mgmt_crypto &&
++			if ((vif->type == NL80211_IFTYPE_MESH_POINT ||
++			     priv->ah->sw_mgmt_crypto) &&
+ 			    key->cipher == WLAN_CIPHER_SUITE_CCMP)
+ 				key->flags |= IEEE80211_KEY_FLAG_SW_MGMT_TX;
+ 			ret = 0;
+-- 
+2.1.1
 
-» Ubuntu » Packages » lucid (10.04LTS) » net » iw
-
-iw (0.9.19~ubuntu1) [universe] <--- Activate "universe"!
-
-http://packages.ubuntu.com/lucid/iw
-
-- Sedat -
