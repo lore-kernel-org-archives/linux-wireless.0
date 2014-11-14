@@ -1,82 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:43455 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751905AbaKLLgl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Nov 2014 06:36:41 -0500
-From: Jukka Rissanen <jukka.rissanen@linux.intel.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 1/2] nl80211: Replace interface socket owner attribute with more generic one
-Date: Wed, 12 Nov 2014 13:36:36 +0200
-Message-Id: <1415792197-23080-2-git-send-email-jukka.rissanen@linux.intel.com> (sfid-20141112_123645_909643_6A7A6F1B)
-In-Reply-To: <1415792197-23080-1-git-send-email-jukka.rissanen@linux.intel.com>
-References: <1415792197-23080-1-git-send-email-jukka.rissanen@linux.intel.com>
+Received: from mail-vc0-f178.google.com ([209.85.220.178]:51700 "EHLO
+	mail-vc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934378AbaKNLAv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Nov 2014 06:00:51 -0500
+Received: by mail-vc0-f178.google.com with SMTP id hq12so5282943vcb.23
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Nov 2014 03:00:50 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <5465D217.2050107@rempel-privat.de>
+References: <1415941631-24140-1-git-send-email-yeohchunyeow@gmail.com>
+	<5465C333.7030704@rempel-privat.de>
+	<CAEFj987ng6Jxa4u3+Z+0oGFX7LUnkLPP96bBrCSnSetjU+YjpQ@mail.gmail.com>
+	<5465D217.2050107@rempel-privat.de>
+Date: Fri, 14 Nov 2014 19:00:50 +0800
+Message-ID: <CAEFj986fsGDtJVkGXJLZ+_a9rt9XPG=QfKWtq9Ofba_3Qu0BCA@mail.gmail.com> (sfid-20141114_120055_192649_59A8F90B)
+Subject: Re: [PATCH] ath9k_htc: turn on software mgmt crypto for secured mesh
+From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+To: Oleksij Rempel <linux@rempel-privat.de>
+Cc: John Linville <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath9k-devel@lists.ath9k.org, Adrian Chadd <adrian@freebsd.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Replace NL80211_ATTR_IFACE_SOCKET_OWNER attribute with more generic
-NL80211_ATTR_SOCKET_OWNER that can be used with other commands
-that interface creation.
+Unfortunately, I don't have any docs for this. Any others?
+
 ---
- include/uapi/linux/nl80211.h | 8 +++++---
- net/wireless/nl80211.c       | 4 ++--
- 2 files changed, 7 insertions(+), 5 deletions(-)
+ChunYeow
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 442369f..c410284 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1637,9 +1637,9 @@ enum nl80211_commands {
-  * @NL80211_ATTR_TDLS_PEER_CAPABILITY: flags for TDLS peer capabilities, u32.
-  *	As specified in the &enum nl80211_tdls_peer_capability.
-  *
-- * @NL80211_ATTR_IFACE_SOCKET_OWNER: flag attribute, if set during interface
-+ * @NL80211_ATTR_SOCKET_OWNER: Flag attribute, if set during interface
-  *	creation then the new interface will be owned by the netlink socket
-- *	that created it and will be destroyed when the socket is closed
-+ *	that created it and will be destroyed when the socket is closed.
-  *
-  * @NL80211_ATTR_TDLS_INITIATOR: flag attribute indicating the current end is
-  *	the TDLS link initiator.
-@@ -2004,7 +2004,7 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_TDLS_PEER_CAPABILITY,
- 
--	NL80211_ATTR_IFACE_SOCKET_OWNER,
-+	NL80211_ATTR_SOCKET_OWNER,
- 
- 	NL80211_ATTR_CSA_C_OFFSETS_TX,
- 	NL80211_ATTR_MAX_CSA_COUNTERS,
-@@ -2056,6 +2056,8 @@ enum nl80211_attrs {
- #define NL80211_ATTR_KEY NL80211_ATTR_KEY
- #define NL80211_ATTR_KEYS NL80211_ATTR_KEYS
- #define NL80211_ATTR_FEATURE_FLAGS NL80211_ATTR_FEATURE_FLAGS
-+#define NL80211_ATTR_IFACE_SOCKET_OWNER NL80211_ATTR_SOCKET_OWNER
-+#define NL80211_ATTR_SOCKET_OWNER NL80211_ATTR_SOCKET_OWNER
- 
- #define NL80211_MAX_SUPP_RATES			32
- #define NL80211_MAX_SUPP_HT_RATES		77
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index d0a8361..df447c0 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -388,7 +388,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
- 	[NL80211_ATTR_MAC_HINT] = { .len = ETH_ALEN },
- 	[NL80211_ATTR_WIPHY_FREQ_HINT] = { .type = NLA_U32 },
- 	[NL80211_ATTR_TDLS_PEER_CAPABILITY] = { .type = NLA_U32 },
--	[NL80211_ATTR_IFACE_SOCKET_OWNER] = { .type = NLA_FLAG },
-+	[NL80211_ATTR_SOCKET_OWNER] = { .type = NLA_FLAG },
- 	[NL80211_ATTR_CSA_C_OFFSETS_TX] = { .type = NLA_BINARY },
- 	[NL80211_ATTR_USE_RRM] = { .type = NLA_FLAG },
- 	[NL80211_ATTR_TSID] = { .type = NLA_U8 },
-@@ -2646,7 +2646,7 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
- 		return PTR_ERR(wdev);
- 	}
- 
--	if (info->attrs[NL80211_ATTR_IFACE_SOCKET_OWNER])
-+	if (info->attrs[NL80211_ATTR_SOCKET_OWNER])
- 		wdev->owner_nlportid = info->snd_portid;
- 
- 	switch (type) {
--- 
-1.8.3.1
-
+On Fri, Nov 14, 2014 at 5:57 PM, Oleksij Rempel <linux@rempel-privat.de> wrote:
+> Am 14.11.2014 um 10:06 schrieb Yeoh Chun-Yeow:
+>> On Fri, Nov 14, 2014 at 4:54 PM, Oleksij Rempel <linux@rempel-privat.de> wrote:
+>>> Am 14.11.2014 um 06:07 schrieb Chun-Yeow Yeoh:
+>>>> Secured mesh encrypts the unicast mgmt frame using the same
+>>>> key that used for encrypting the unicast data frame. The patch
+>>>> "ath9k_htc_firmware: fix the offset of CCMP header for mesh
+>>>> data frame" applied to open-ath9k-htc-firmware allows the
+>>>> ath9k_htc to be loaded without "nohwcrypt=1". Unfortunately,
+>>>> this is not working and we still need CCMP encryption of
+>>>> management frames to be done in software. Fix this.
+>>>>
+>>>> This patch is tested with the following hardwares:
+>>>> - TP-Link TL-WN821N v3 802.11n [Atheros AR7010+AR9287]
+>>>> - AR9271 802.11n
+>>>>
+>>>> and managed to work with peer mesh STA equipped with ath9k.
+>>>>
+>>>> Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+>>>> ---
+>>>>  drivers/net/wireless/ath/ath9k/htc_drv_main.c | 3 ++-
+>>>>  1 file changed, 2 insertions(+), 1 deletion(-)
+>>>>
+>>>> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+>>>> index 689ac99..d3f65a2 100644
+>>>> --- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+>>>> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+>>>> @@ -1447,7 +1447,8 @@ static int ath9k_htc_set_key(struct ieee80211_hw *hw,
+>>>>                       key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
+>>>>                       if (key->cipher == WLAN_CIPHER_SUITE_TKIP)
+>>>>                               key->flags |= IEEE80211_KEY_FLAG_GENERATE_MMIC;
+>>>> -                     if (priv->ah->sw_mgmt_crypto &&
+>>>> +                     if ((vif->type == NL80211_IFTYPE_MESH_POINT ||
+>>>> +                          priv->ah->sw_mgmt_crypto) &&
+>>>>                           key->cipher == WLAN_CIPHER_SUITE_CCMP)
+>>>>                               key->flags |= IEEE80211_KEY_FLAG_SW_MGMT_TX;
+>>>>                       ret = 0;
+>>>>
+>>>
+>>>
+>>> Hmm.. may be we should generally do it here:
+>>>         if ((vif->type == NL80211_IFTYPE_ADHOC ||
+>>>              vif->type == NL80211_IFTYPE_MESH_POINT) &&
+>>>             (key->cipher == WLAN_CIPHER_SUITE_TKIP ||
+>>>              key->cipher == WLAN_CIPHER_SUITE_CCMP) &&
+>>>             !(key->flags & IEEE80211_KEY_FLAG_PAIRWISE)) {
+>>>
+>>
+>> Not so sure doing here is correctly. It is a pairwise key for unicast
+>> management frame, right?
+>
+> yes.
+> this code is identical to ath9k, so i will move it to common. This is
+> the reason of my doubts.
+>
+>>> or probably set "sw_mgmt_crypto = true" in ath9k_hw_init_mfp() for all
+>>> usb devices?
+>>
+>> All ath9k USB devices don't have MFP support?
+>
+> Hmm... do you have docs?
+>
+> --
+> Regards,
+> Oleksij
+>
