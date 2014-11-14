@@ -1,61 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60919 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753214AbaKZOcX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Nov 2014 09:32:23 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: users@rt2x00.serialmonkey.com,
-	Richard Genoud <richard.genoud@gmail.com>
-Subject: [PATCH 4/4] Revert "rt2x00: Endless loop on hub port power down"
-Date: Wed, 26 Nov 2014 15:29:16 +0100
-Message-Id: <1417012156-26197-4-git-send-email-sgruszka@redhat.com> (sfid-20141126_153231_102698_BDBC0057)
-In-Reply-To: <1417012156-26197-1-git-send-email-sgruszka@redhat.com>
-References: <1417012156-26197-1-git-send-email-sgruszka@redhat.com>
+Received: from mail-ie0-f173.google.com ([209.85.223.173]:61008 "EHLO
+	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965015AbaKNPlr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Nov 2014 10:41:47 -0500
+Message-ID: <1415979703.3805.4.camel@maggy.simpson.net> (sfid-20141114_164209_645890_A4820955)
+Subject: Re: [PATCH] rtlwifi: Add more checks for get_btc_status callback
+From: Mike Galbraith <umgwanakikbuti@gmail.com>
+To: Murilo Opsfelder =?ISO-8859-1?Q?Ara=FAjo?= <mopsfelder@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Thadeu Cascardo <cascardo@cascardo.eti.br>,
+	=?UTF-8?Q?=E8=B0=AD=E6=9D=AD=E6=B3=A2?= <troy_tan@realsil.com.cn>
+Date: Fri, 14 Nov 2014 08:41:43 -0700
+In-Reply-To: <CA+LKeY6xca=f-qFJoVFaqywRpfHPmMAWDrMmbkUiDf9atA_jVQ@mail.gmail.com>
+References: <1414625302-3654-1-git-send-email-mopsfelder@gmail.com>
+	 <5451BED0.2060906@lwfinger.net>
+	 <1415178975.5402.66.camel@marge.simpson.net>
+	 <545A6894.7040506@lwfinger.net> <545B5E19.7030704@gmail.com>
+	 <545BFBB4.3040005@gmail.com> <545C0487.1090707@lwfinger.net>
+	 <CA+LKeY6xca=f-qFJoVFaqywRpfHPmMAWDrMmbkUiDf9atA_jVQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This reverts commit 2ad69ac5976191e9bb7dc4044204a504653ad1bb. It
-causes wireless device disappear when we get -EPROTO error form USB
-request. I encounter such situation occasionally when resume form
-suspend with RT3070 adapter:
+On Wed, 2014-11-12 at 21:03 -0200, Murilo Opsfelder Araújo wrote:
 
-[  289.619985] ieee80211 phy0: rt2x00usb_vendor_request: Error - Vendor Request 0x06 failed for offset 0x0404 with error -71
-[  289.639368] ieee80211 phy0: rt2800_wait_bbp_ready: Error - BBP register access failed, aborting
-[  289.639374] ieee80211 phy0: rt2800usb_set_device_state: Error - Device failed to enter state 4 (-5)
+> Hello, Larry.
+> 
+> I'd like to let you know that next-20141112 brought my rtl8192se
+> device back to life.  I didn't need to build rtlwifi_new to be able to
+> connect to my wifi network.  It worked just fine.
 
-Without the patch, except printing error, device works just fine after
-resume.
+Yeah, unsurprisingly, merging those fixed up my lappy as well.
 
-Currently after timeouts and REGISTER_BUSY_COUNT tuning, we should
-not have any "endless loop", though we can wait quite long when driver
-is trying to communicate with the device through non functioning USB
-connection. Generally the problem that commit 2ad69ac597619 solves
-is kinda artificial.
-
-Cc: Richard Genoud <richard.genoud@gmail.com>
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/rt2x00/rt2x00usb.c | 6 ------
- 1 file changed, 6 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
-index c2346f8..892270d 100644
---- a/drivers/net/wireless/rt2x00/rt2x00usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
-@@ -64,12 +64,6 @@ int rt2x00usb_vendor_request(struct rt2x00_dev *rt2x00dev,
- 		}
- 	} while (time_before(jiffies, expire));
- 
--	/* If the port is powered down, we get a -EPROTO error, and this
--	 * leads to a endless loop. So just say that the device is gone.
--	 */
--	if (status == -EPROTO)
--		clear_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
--
- 	rt2x00_err(rt2x00dev,
- 		   "Vendor Request 0x%02x failed for offset 0x%04x with error %d\n",
- 		   request, offset, status);
--- 
-1.8.3.1
+	-Mike
 
