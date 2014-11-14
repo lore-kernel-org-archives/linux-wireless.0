@@ -1,48 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from zimbra.real-time.com ([63.170.91.9]:40154 "EHLO
-	zimbra.real-time.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751316AbaKKFVq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Nov 2014 00:21:46 -0500
-Date: Tue, 11 Nov 2014 16:21:28 +1100
-From: James Cameron <quozl@laptop.org>
-To: linux-wireless@vger.kernel.org, Avinash Patil <patila@marvell.com>
-Subject: [PATCH] mwifiex: simplify ad hoc join capability info
-Message-ID: <20141111052127.GA18499@us.netrek.org> (sfid-20141111_062151_944217_A836729A)
+Received: from mout.gmx.net ([212.227.17.21]:52423 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754727AbaKNJ54 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Nov 2014 04:57:56 -0500
+Message-ID: <5465D217.2050107@rempel-privat.de> (sfid-20141114_105801_178533_14728601)
+Date: Fri, 14 Nov 2014 10:57:43 +0100
+From: Oleksij Rempel <linux@rempel-privat.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+CC: John Linville <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath9k-devel@lists.ath9k.org, Adrian Chadd <adrian@freebsd.org>
+Subject: Re: [PATCH] ath9k_htc: turn on software mgmt crypto for secured mesh
+References: <1415941631-24140-1-git-send-email-yeohchunyeow@gmail.com>	<5465C333.7030704@rempel-privat.de> <CAEFj987ng6Jxa4u3+Z+0oGFX7LUnkLPP96bBrCSnSetjU+YjpQ@mail.gmail.com>
+In-Reply-To: <CAEFj987ng6Jxa4u3+Z+0oGFX7LUnkLPP96bBrCSnSetjU+YjpQ@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="6HDBJHDibria2TCKQA5lbtuGHtdVhs9Ja"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While preparing an ad-hoc start command, the capability info bitmap is
-needlessly set from the command, and then the ESS bit cleared.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--6HDBJHDibria2TCKQA5lbtuGHtdVhs9Ja
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Change to set the bitmap directly without reference to the command.
+Am 14.11.2014 um 10:06 schrieb Yeoh Chun-Yeow:
+> On Fri, Nov 14, 2014 at 4:54 PM, Oleksij Rempel <linux@rempel-privat.de=
+> wrote:
+>> Am 14.11.2014 um 06:07 schrieb Chun-Yeow Yeoh:
+>>> Secured mesh encrypts the unicast mgmt frame using the same
+>>> key that used for encrypting the unicast data frame. The patch
+>>> "ath9k_htc_firmware: fix the offset of CCMP header for mesh
+>>> data frame" applied to open-ath9k-htc-firmware allows the
+>>> ath9k_htc to be loaded without "nohwcrypt=3D1". Unfortunately,
+>>> this is not working and we still need CCMP encryption of
+>>> management frames to be done in software. Fix this.
+>>>
+>>> This patch is tested with the following hardwares:
+>>> - TP-Link TL-WN821N v3 802.11n [Atheros AR7010+AR9287]
+>>> - AR9271 802.11n
+>>>
+>>> and managed to work with peer mesh STA equipped with ath9k.
+>>>
+>>> Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+>>> ---
+>>>  drivers/net/wireless/ath/ath9k/htc_drv_main.c | 3 ++-
+>>>  1 file changed, 2 insertions(+), 1 deletion(-)
+>>>
+>>> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/=
+net/wireless/ath/ath9k/htc_drv_main.c
+>>> index 689ac99..d3f65a2 100644
+>>> --- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+>>> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+>>> @@ -1447,7 +1447,8 @@ static int ath9k_htc_set_key(struct ieee80211_h=
+w *hw,
+>>>                       key->flags |=3D IEEE80211_KEY_FLAG_GENERATE_IV;=
 
-Signed-off-by: James Cameron <quozl@laptop.org>
----
- drivers/net/wireless/mwifiex/join.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+>>>                       if (key->cipher =3D=3D WLAN_CIPHER_SUITE_TKIP)
+>>>                               key->flags |=3D IEEE80211_KEY_FLAG_GENE=
+RATE_MMIC;
+>>> -                     if (priv->ah->sw_mgmt_crypto &&
+>>> +                     if ((vif->type =3D=3D NL80211_IFTYPE_MESH_POINT=
+ ||
+>>> +                          priv->ah->sw_mgmt_crypto) &&
+>>>                           key->cipher =3D=3D WLAN_CIPHER_SUITE_CCMP)
+>>>                               key->flags |=3D IEEE80211_KEY_FLAG_SW_M=
+GMT_TX;
+>>>                       ret =3D 0;
+>>>
+>>
+>>
+>> Hmm.. may be we should generally do it here:
+>>         if ((vif->type =3D=3D NL80211_IFTYPE_ADHOC ||
+>>              vif->type =3D=3D NL80211_IFTYPE_MESH_POINT) &&
+>>             (key->cipher =3D=3D WLAN_CIPHER_SUITE_TKIP ||
+>>              key->cipher =3D=3D WLAN_CIPHER_SUITE_CCMP) &&
+>>             !(key->flags & IEEE80211_KEY_FLAG_PAIRWISE)) {
+>>
+>=20
+> Not so sure doing here is correctly. It is a pairwise key for unicast
+> management frame, right?
 
-diff --git a/drivers/net/wireless/mwifiex/join.c b/drivers/net/wireless/mwifiex/join.c
-index 8d6c259..411a6c2 100644
---- a/drivers/net/wireless/mwifiex/join.c
-+++ b/drivers/net/wireless/mwifiex/join.c
-@@ -880,9 +880,7 @@ mwifiex_cmd_802_11_ad_hoc_start(struct mwifiex_private *priv,
- 
- 	/* Set Capability info */
- 	bss_desc->cap_info_bitmap |= WLAN_CAPABILITY_IBSS;
--	tmp_cap = le16_to_cpu(adhoc_start->cap_info_bitmap);
--	tmp_cap &= ~WLAN_CAPABILITY_ESS;
--	tmp_cap |= WLAN_CAPABILITY_IBSS;
-+	tmp_cap = WLAN_CAPABILITY_IBSS;
- 
- 	/* Set up privacy in bss_desc */
- 	if (priv->sec_info.encryption_mode) {
--- 
-1.9.1
+yes.
+this code is identical to ath9k, so i will move it to common. This is
+the reason of my doubts.
+
+>> or probably set "sw_mgmt_crypto =3D true" in ath9k_hw_init_mfp() for a=
+ll
+>> usb devices?
+>=20
+> All ath9k USB devices don't have MFP support?
+
+Hmm... do you have docs?
+
+--=20
+Regards,
+Oleksij
 
 
--- 
-James Cameron
-http://quozl.linux.org.au/
+--6HDBJHDibria2TCKQA5lbtuGHtdVhs9Ja
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iF4EAREIAAYFAlRl0hcACgkQHwImuRkmbWksGQD+PL5Bi3tJyKtlNmUxSSuWI8Ra
+PdTAzlGh82QtDg+juIoA/jJkqcO9gmlaKFLszs2Gi3mVV+0d0aVRHnyrdyQivtGi
+=/tUW
+-----END PGP SIGNATURE-----
+
+--6HDBJHDibria2TCKQA5lbtuGHtdVhs9Ja--
