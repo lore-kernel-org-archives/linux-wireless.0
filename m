@@ -1,45 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:60814 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752648AbaKLMJD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Nov 2014 07:09:03 -0500
-From: Jukka Rissanen <jukka.rissanen@linux.intel.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH v3 0/2] Stop scheduled scan if netlink client disappears
-Date: Wed, 12 Nov 2014 14:08:57 +0200
-Message-Id: <1415794139-7124-1-git-send-email-jukka.rissanen@linux.intel.com> (sfid-20141112_130911_380299_334063EF)
+Received: from dedo.coelho.fi ([88.198.205.34]:35696 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754243AbaKNGKA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Nov 2014 01:10:00 -0500
+Message-ID: <1415945381.3117.17.camel@coelho.fi> (sfid-20141114_071008_279571_EBF6B6C7)
+From: Luca Coelho <luca@coelho.fi>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	linux-wireless@vger.kernel.org
+Date: Fri, 14 Nov 2014 08:09:41 +0200
+In-Reply-To: <1415933712.2629.12.camel@dcbw.local>
+References: <20141113123313.GA1926@redhat.com>
+	 <1415882683.2021.3.camel@sipsolutions.net>
+	 <A21755E2-3054-46B2-9BA6-07347FB91E1E@holtmann.org>
+	 <1415933712.2629.12.camel@dcbw.local>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: Can fb4e156886ce6e8309e912d8b370d192330d19d3 be reverted ?
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Thu, 2014-11-13 at 20:55 -0600, Dan Williams wrote:
+> On Thu, 2014-11-13 at 22:41 +0900, Marcel Holtmann wrote:
+> > Hi Johannes,
+> > 
+> > >> I've updated wireless code on RHEL and get complain that now
+> > >> cfg80211 and rfkill modules are loaded on machines that do not have
+> > >> wireless hardware. Modules are auto-loaded because NetworkManager send
+> > >> nl80211 messages to check if there are wireless devices in the system.
+> > >> 
+> > >> Hence my question, can we revert commit fb4e156886ce
+> > >> "nl80211: Add generic netlink module alias for cfg80211/nl80211" ?
+> > > 
+> > > Realistically, we can't revert it, but only remove the
+> > > MODULE_ALIAS_GENL_FAMILY() line.
+> > > 
+> > >> Auto loading nl80211 does not seems to be necessary, if there are
+> > >> wireless devices nl80211 will be loaded anyway.
+> > > 
+> > > Maybe other applications would like to see an empty list of devices? But
+> > > OTOH, if they're robust at all, they have to cope with kernels not even
+> > > compiled with nl80211, so I guess for me I don't really see a big
+> > > difference in whether the module alias exists or not.
+> > 
+> > auto-loading cfg80211 module when userspace requests nl80211 netlink family is exactly the right thing to do. Systems compiled without nl80211 support and systems with no wireless device attached are two different things.
+> > 
+> > Someone can fix NetworkManager to not send nl80211 messages or just plain accept that cfg80211 will be loaded.
+> 
+> NM uses nl80211 initially to determine whether *any* ethernet-type
+> interface (a) is actually WiFi, and (b) should be driven by nl80211 or
+> WEXT.  Because of the variety of drivers (both in-kernel and
+> out-of-kernel) and the variety of kernel versions (NM supports back to
+> early 3.x series) we cannot rely on specific behavior.
+> 
+> So given an ethernet-type interface, how do we determine that it is
+> wifi?
+> 
+> DEVTYPE=wlan - not always reliable due to driver and kernel versions
+> 
+> "phy80211" in sysfs: same reason; also doesn't capture WEXT or
+> out-of-tree drivers
+> 
+> nl80211 calls: this is the only 100% reliable mechanism to detect
+> whether an ethernet-type interface is actually WiFi and nl80211-capable.
+> 
+> And unfortunately calling nl80211 loads the module...
 
-v3:
-- backward compatibility define tweaked in patch 1
-- added missing signed-off-by:
+So, basically the conclusion is: there's no way around it.  If someone
+in userspace uses nl80211 it must be loaded, regardless of whether
+nl80211 is automatically loaded or if depmod bring it in.
 
-v2:
-- split the patch
-- In patch 1, use a generic NL80211_ATTR_SOCKET_OWNER attribute and
-  convert the old code that uses NL80211_ATTR_IFACE_SOCKET_OWNER to
-  use the new value. A define is provided for backward compatibility.
-- Any pending schedule scan stop worker is cancelled when interface is
-  taken down in patch 2
+The only way to address Stanislaw's initial concern is, as already
+proposed before, to change userspace.
 
-Cheers,
-Jukka
+Or, maybe nl80211/cfg80211 could be unloaded automatically as well? If
+no driver uses it from below and nobody from userspace uses it for a
+period of time, off it goes...
 
-
-Jukka Rissanen (2):
-  nl80211: Replace interface socket owner attribute with more generic
-    one
-  nl80211: Stop scheduled scan if netlink client disappears
-
- include/net/cfg80211.h       |  2 ++
- include/uapi/linux/nl80211.h | 10 +++++++---
- net/wireless/core.c          | 10 +++++++++-
- net/wireless/nl80211.c       | 38 ++++++++++++++++++++++++++++++++++++--
- 4 files changed, 54 insertions(+), 6 deletions(-)
-
--- 
-1.8.3.1
+--
+Luca.
 
