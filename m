@@ -1,126 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.19]:62633 "EHLO mout.gmx.net"
+Received: from mx1.redhat.com ([209.132.183.28]:50506 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751424AbaKFHzZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Nov 2014 02:55:25 -0500
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: ath9k-devel@qca.qualcomm.com, sujith@msujith.org, nbd@openwrt.org,
-	patro@cs.wisc.edu, linville@tuxdriver.com,
+	id S1754440AbaKNImf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Nov 2014 03:42:35 -0500
+Date: Fri, 14 Nov 2014 09:39:37 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
 	linux-wireless@vger.kernel.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH 10/21] ath9k: use ath_common instead of ieee80211_hw in ath9k_spectral_scan_
-Date: Thu,  6 Nov 2014 08:53:27 +0100
-Message-Id: <1415260418-14321-11-git-send-email-linux@rempel-privat.de> (sfid-20141106_085536_307198_686291D6)
-In-Reply-To: <1415260418-14321-1-git-send-email-linux@rempel-privat.de>
-References: <1415260418-14321-1-git-send-email-linux@rempel-privat.de>
+Subject: Re: [PATCH] cfg80211: remove net-pf-16-proto-16-family-nl80211
+ module alias
+Message-ID: <20141114083936.GA1949@redhat.com> (sfid-20141114_094240_083593_916E821F)
+References: <20141113123313.GA1926@redhat.com>
+ <1415882683.2021.3.camel@sipsolutions.net>
+ <20141113132252.GB1926@redhat.com>
+ <252AB6B9-9D33-4932-B75F-D3B2B057D3C0@holtmann.org>
+ <20141113133928.GC1926@redhat.com>
+ <4E8F3B23-EC77-4B53-8180-7DB12042E0B5@holtmann.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4E8F3B23-EC77-4B53-8180-7DB12042E0B5@holtmann.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-we don't have here any ieee80211_hw dependencies any way.
+On Thu, Nov 13, 2014 at 10:48:11PM +0900, Marcel Holtmann wrote:
+> Hi Stanislaw,
+> 
+> >>> With the alias cfg80211 module is loaded on systems without the wireless
+> >>> hardware when user-space use nl80211 to discover if there are wireless
+> >>> devices, what is considered as resources wastage. On systems with
+> >>> wireless hardware cfg80211 module will be loaded anyway.
+> >>> 
+> >>> Cc: Marcel Holtmann <marcel@holtmann.org>
+> >>> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> >>> ---
+> >>> net/wireless/core.c | 1 -
+> >>> 1 file changed, 1 deletion(-)
+> >>> 
+> >>> diff --git a/net/wireless/core.c b/net/wireless/core.c
+> >>> index a4d2792..badcabe 100644
+> >>> --- a/net/wireless/core.c
+> >>> +++ b/net/wireless/core.c
+> >>> @@ -34,7 +34,6 @@
+> >>> MODULE_AUTHOR("Johannes Berg");
+> >>> MODULE_LICENSE("GPL");
+> >>> MODULE_DESCRIPTION("wireless configuration support");
+> >>> -MODULE_ALIAS_GENL_FAMILY(NL80211_GENL_NAME);
+> >> 
+> >> NAK.
+> >> 
+> >> We want to auto-load cfg80211 when userspace asked for nl80211 netlink family.
+> > 
+> > Could you elaborate more why?
+> 
+> you want to talk to the nl80211 family. The kernel has a module that allows you to talk to this family. So let it load the netlink family.
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/channel.c  |  2 +-
- drivers/net/wireless/ath/ath9k/main.c     | 12 +++++-------
- drivers/net/wireless/ath/ath9k/spectral.c | 10 +++++-----
- drivers/net/wireless/ath/ath9k/spectral.h |  4 ++--
- 4 files changed, 13 insertions(+), 15 deletions(-)
+This is not strictly true. User-space does not wan to talk to nl80211, it
+wants to talk to hardware via nl80211. If there is no hardware, there is
+nothing to talk to.
 
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index 25a21fa..814178a 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -93,7 +93,7 @@ static int ath_set_channel(struct ath_softc *sc)
- 		/* perform spectral scan if requested. */
- 		if (test_bit(ATH_OP_SCANNING, &common->op_flags) &&
- 			sc->spec_priv.spectral_mode == SPECTRAL_CHANSCAN)
--			ath9k_spectral_scan_trigger(hw);
-+			ath9k_spectral_scan_trigger(common);
- 	}
- 
- 	return 0;
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 747dd5a..6edd4d3 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1339,11 +1339,10 @@ static void ath9k_disable_ps(struct ath_softc *sc)
- 	ath_dbg(common, PS, "PowerSave disabled\n");
- }
- 
--void ath9k_spectral_scan_trigger(struct ieee80211_hw *hw)
-+void ath9k_spectral_scan_trigger(struct ath_common *common)
- {
--	struct ath_softc *sc = hw->priv;
-+	struct ath_softc *sc = common->priv;
- 	struct ath_hw *ah = sc->sc_ah;
--	struct ath_common *common = ath9k_hw_common(ah);
- 	u32 rxfilter;
- 
- 	if (config_enabled(CONFIG_ATH9K_TX99))
-@@ -1365,17 +1364,16 @@ void ath9k_spectral_scan_trigger(struct ieee80211_hw *hw)
- 	 * configuration, otherwise the register will have its values reset
- 	 * (on my ar9220 to value 0x01002310)
- 	 */
--	ath9k_spectral_scan_config(hw, sc->spec_priv.spectral_mode);
-+	ath9k_spectral_scan_config(common, sc->spec_priv.spectral_mode);
- 	ath9k_hw_ops(ah)->spectral_scan_trigger(ah);
- 	ath_ps_ops(common)->restore(common);
- }
- 
--int ath9k_spectral_scan_config(struct ieee80211_hw *hw,
-+int ath9k_spectral_scan_config(struct ath_common *common,
- 			       enum spectral_mode spectral_mode)
- {
--	struct ath_softc *sc = hw->priv;
-+	struct ath_softc *sc = common->priv;
- 	struct ath_hw *ah = sc->sc_ah;
--	struct ath_common *common = ath9k_hw_common(ah);
- 
- 	if (!ath9k_hw_ops(ah)->spectral_scan_trigger) {
- 		ath_err(common, "spectrum analyzer not implemented on this hardware\n");
-diff --git a/drivers/net/wireless/ath/ath9k/spectral.c b/drivers/net/wireless/ath/ath9k/spectral.c
-index 50af6bc..4549dce 100644
---- a/drivers/net/wireless/ath/ath9k/spectral.c
-+++ b/drivers/net/wireless/ath/ath9k/spectral.c
-@@ -253,18 +253,18 @@ static ssize_t write_file_spec_scan_ctl(struct file *file,
- 	buf[len] = '\0';
- 
- 	if (strncmp("trigger", buf, 7) == 0) {
--		ath9k_spectral_scan_trigger(common->hw);
-+		ath9k_spectral_scan_trigger(common);
- 	} else if (strncmp("background", buf, 10) == 0) {
--		ath9k_spectral_scan_config(common->hw, SPECTRAL_BACKGROUND);
-+		ath9k_spectral_scan_config(common, SPECTRAL_BACKGROUND);
- 		ath_dbg(common, CONFIG, "spectral scan: background mode enabled\n");
- 	} else if (strncmp("chanscan", buf, 8) == 0) {
--		ath9k_spectral_scan_config(common->hw, SPECTRAL_CHANSCAN);
-+		ath9k_spectral_scan_config(common, SPECTRAL_CHANSCAN);
- 		ath_dbg(common, CONFIG, "spectral scan: channel scan mode enabled\n");
- 	} else if (strncmp("manual", buf, 6) == 0) {
--		ath9k_spectral_scan_config(common->hw, SPECTRAL_MANUAL);
-+		ath9k_spectral_scan_config(common, SPECTRAL_MANUAL);
- 		ath_dbg(common, CONFIG, "spectral scan: manual mode enabled\n");
- 	} else if (strncmp("disable", buf, 7) == 0) {
--		ath9k_spectral_scan_config(common->hw, SPECTRAL_DISABLED);
-+		ath9k_spectral_scan_config(common, SPECTRAL_DISABLED);
- 		ath_dbg(common, CONFIG, "spectral scan: disabled\n");
- 	} else {
- 		return -EINVAL;
-diff --git a/drivers/net/wireless/ath/ath9k/spectral.h b/drivers/net/wireless/ath/ath9k/spectral.h
-index 555fcbb..53660e6 100644
---- a/drivers/net/wireless/ath/ath9k/spectral.h
-+++ b/drivers/net/wireless/ath/ath9k/spectral.h
-@@ -133,8 +133,8 @@ static inline u8 spectral_bitmap_weight(u8 *bins)
- void ath9k_spectral_init_debug(struct ath_spec_scan_priv *spec_priv, struct dentry *debugfs_phy);
- void ath9k_spectral_deinit_debug(struct ath_spec_scan_priv *spec_priv);
- 
--void ath9k_spectral_scan_trigger(struct ieee80211_hw *hw);
--int ath9k_spectral_scan_config(struct ieee80211_hw *hw,
-+void ath9k_spectral_scan_trigger(struct ath_common *common);
-+int ath9k_spectral_scan_config(struct ath_common *common,
- 			       enum spectral_mode spectral_mode);
- 
- #ifdef CONFIG_ATH9K_DEBUGFS
--- 
-1.9.1
+> If you do not want cfg80211 loaded, then fix NetworkManager and not hack the kernel. NetworkManager asks to talk to nl80211 in the first place. That one is causing the loading of cfg80211 module.
+> 
+> You can also de-install the NetworkManager module for wireless, right. Then none of this should happen. Seriously, fix your userspace and do not blame the kernel for a perfect valid behavior.
 
+Maybe this is perfectly valid behaviour, but if it makes perfect sense
+is dubious.
+
+Stanislaw 
