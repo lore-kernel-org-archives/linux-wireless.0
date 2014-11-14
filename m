@@ -1,52 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37891 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751507AbaKLMQA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Nov 2014 07:16:00 -0500
-Message-ID: <1415794552.1798.2.camel@sipsolutions.net> (sfid-20141112_131604_846326_5FB6B1C9)
-Subject: Re: [PATCH v3 2/2] nl80211: Stop scheduled scan if netlink client
- disappears
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jukka Rissanen <jukka.rissanen@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 12 Nov 2014 13:15:52 +0100
-In-Reply-To: <1415794139-7124-3-git-send-email-jukka.rissanen@linux.intel.com> (sfid-20141112_130909_519151_DCCF3FB0)
-References: <1415794139-7124-1-git-send-email-jukka.rissanen@linux.intel.com>
-	 <1415794139-7124-3-git-send-email-jukka.rissanen@linux.intel.com>
-	 (sfid-20141112_130909_519151_DCCF3FB0)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:57338 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750872AbaKNS3P (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Nov 2014 13:29:15 -0500
+Received: by mail-wi0-f178.google.com with SMTP id bs8so3531767wib.17
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Nov 2014 10:29:14 -0800 (PST)
+Date: Fri, 14 Nov 2014 19:29:03 +0100
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Jouni Malinen <j@w1.fi>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Karl Beldan <karl.beldan@rivierawaves.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: Re: [PATCH v6] mac80211: minstrel_ht: add basic support for VHT
+ rates <= 3SS@80MHz
+Message-ID: <20141114182902.GA14439@gobelin> (sfid-20141114_192918_783916_DCE2D1E4)
+References: <1413812762-6605-5-git-send-email-karl.beldan@gmail.com>
+ <1413880718-31273-1-git-send-email-karl.beldan@gmail.com>
+ <20141114164328.GA30967@w1.fi>
+ <20141114171832.GA16541@magnum.frso.rivierawaves.com>
+ <20141114173648.GA31675@w1.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20141114173648.GA31675@w1.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-11-12 at 14:08 +0200, Jukka Rissanen wrote:
+On Fri, Nov 14, 2014 at 07:36:48PM +0200, Jouni Malinen wrote:
+> On Fri, Nov 14, 2014 at 06:18:32PM +0100, Karl Beldan wrote:
+> > Yes, only with iw and nothing fancy, I also have had it running on some 
+> > boards for some weeks as is and with rfc version for more than a year at
+> > work (minstrel not the whole tree).
+> > I guess I can take the tip of wireless-testing but can you give your
+> > HEAD though ?
+> 
+> It looks like pretty much any snapshot between master-2014-11-04 and now
+> is affected.. Anyway, the current master snapshot in my tests was
+> 0e204e2422876c18034ca960c4fccf727a02a5c1.
+> 
+> > > For example, with nfc_p2p_go_neg test case:
+> > 
+> > Have you reproduced it with other testcases (maybe more regular so that
+> > I can get my hands on it faster) ?
+> > Is it also happening when VHT support is not advertized by upper layers
+> > ?
+> 
+> This seems to be specific to exact timing of frames since the same issue
+> does not show up in non-NFC P2P test cases. So no, this does not show up
+> with anything else than the nfc_p2p_* test cases (well, at least not in
+> my desktop+kvm setup; YMMV with other CPU speeds that could potentially
+> affect timing):
+> nfc_p2p_go_neg
+> nfc_p2p_go_neg_reverse
+> nfc_p2p_ip_addr_assignment
+> nfc_p2p_static_handover_tagdev_client
+> nfc_p2p_static_handover_tagdev_client_group_iface
+> nfc_p2p_static_handover_tagdev_go
+> 
+> I'd assume the key here is in P2P with NFC trigger having the fastest
+> possible connection process due to all the optimizations in channel
+> selection on WPS (which is those EAPOL Data frames that hit these rate
+> selection issues immediately after association).
+> 
+> That said, if you use the tests/hwsim scripts from
+> git://w1.fi/hostap.git there should be no difference on running some of
+> these cases vs. something more regular..
+> 
+> If you have not used these test scripts previously, you can find more
+> information about the setup here:
+> http://w1.fi/cgit/hostap/plain/tests/hwsim/README
+> http://w1.fi/cgit/hostap/plain/tests/hwsim/vm/README
+> 
 
-> @@ -850,8 +852,10 @@ void __cfg80211_leave(struct cfg80211_registered_device *rdev,
->  		break;
->  	case NL80211_IFTYPE_P2P_CLIENT:
->  	case NL80211_IFTYPE_STATION:
-> -		if (rdev->sched_scan_req && dev == rdev->sched_scan_req->dev)
-> +		if (sched_scan_req && dev == sched_scan_req->dev) {
-> +			cancel_work_sync(&sched_scan_req->sched_scan_stop_wk);
->  			__cfg80211_stop_sched_scan(rdev, false);
-> +		}
->  
->  #ifdef CONFIG_CFG80211_WEXT
->  		kfree(wdev->wext.ie);
-> @@ -991,6 +995,10 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
->  
->  		if (WARN_ON(rdev->sched_scan_req &&
->  			    rdev->sched_scan_req->dev == wdev->netdev)) {
-> +			struct cfg80211_sched_scan_request *sched_scan_req =
-> +				rdev->sched_scan_req;
-> +
-> +			cancel_work_sync(&sched_scan_req->sched_scan_stop_wk);
->  			__cfg80211_stop_sched_scan(rdev, false);
->  		}
->  
-
-This can cause deadlocks as it's done with the RTNL held, yet the work
-acquires the RTNL.
-
-johannes
-
+Ok, thanks for your pointers Jouni, I should get back to you soon.
+ 
+Karl
