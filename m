@@ -1,132 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37067 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:39370 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755666AbaKSPHE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Nov 2014 10:07:04 -0500
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Aleh Suprunovich <br@ahlamon.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	devel@driverdev.osuosl.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
+	id S934249AbaKNCzV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Nov 2014 21:55:21 -0500
+Message-ID: <1415933712.2629.12.camel@dcbw.local> (sfid-20141114_035524_922363_89381C95)
+Subject: Re: Can fb4e156886ce6e8309e912d8b370d192330d19d3 be reverted ?
+From: Dan Williams <dcbw@redhat.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
 	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] staging: rtl8723au: fix sparse warning
-References: <1416219761-1938-1-git-send-email-br@ahlamon.org>
-Date: Wed, 19 Nov 2014 10:06:52 -0500
-In-Reply-To: <1416219761-1938-1-git-send-email-br@ahlamon.org> (Aleh
-	Suprunovich's message of "Mon, 17 Nov 2014 13:22:41 +0300")
-Message-ID: <wrfj4mtvp6ur.fsf@redhat.com> (sfid-20141119_160716_497167_E2E9D9F3)
-MIME-Version: 1.0
-Content-Type: text/plain
+Date: Thu, 13 Nov 2014 20:55:12 -0600
+In-Reply-To: <A21755E2-3054-46B2-9BA6-07347FB91E1E@holtmann.org>
+References: <20141113123313.GA1926@redhat.com>
+	 <1415882683.2021.3.camel@sipsolutions.net>
+	 <A21755E2-3054-46B2-9BA6-07347FB91E1E@holtmann.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Aleh Suprunovich <br@ahlamon.org> writes:
-> drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c:747:1: warning: symbol
-> 'rtl8723a_EfusePgPacketRead' was not declared. Should it be static?
->
-> Function 'rtl8723a_EfusePgPacketRead' seems to be unused in current
-> staging code.
->
-> Before, it was available as 'static s32 Hal_EfusePgPacketRead',
-> but code that was using it removed, in the same commit as rename and
-> signature change to 'bool rtl8723a_EfusePgPacketRead' has taken place.
->
-> Signed-off-by: Aleh Suprunovich <br@ahlamon.org>
-> ---
->  drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c | 78 -----------------------
->  1 file changed, 78 deletions(-)
+On Thu, 2014-11-13 at 22:41 +0900, Marcel Holtmann wrote:
+> Hi Johannes,
+> 
+> >> I've updated wireless code on RHEL and get complain that now
+> >> cfg80211 and rfkill modules are loaded on machines that do not have
+> >> wireless hardware. Modules are auto-loaded because NetworkManager send
+> >> nl80211 messages to check if there are wireless devices in the system.
+> >> 
+> >> Hence my question, can we revert commit fb4e156886ce
+> >> "nl80211: Add generic netlink module alias for cfg80211/nl80211" ?
+> > 
+> > Realistically, we can't revert it, but only remove the
+> > MODULE_ALIAS_GENL_FAMILY() line.
+> > 
+> >> Auto loading nl80211 does not seems to be necessary, if there are
+> >> wireless devices nl80211 will be loaded anyway.
+> > 
+> > Maybe other applications would like to see an empty list of devices? But
+> > OTOH, if they're robust at all, they have to cope with kernels not even
+> > compiled with nl80211, so I guess for me I don't really see a big
+> > difference in whether the module alias exists or not.
+> 
+> auto-loading cfg80211 module when userspace requests nl80211 netlink family is exactly the right thing to do. Systems compiled without nl80211 support and systems with no wireless device attached are two different things.
+> 
+> Someone can fix NetworkManager to not send nl80211 messages or just plain accept that cfg80211 will be loaded.
 
-Looks good to me
+NM uses nl80211 initially to determine whether *any* ethernet-type
+interface (a) is actually WiFi, and (b) should be driven by nl80211 or
+WEXT.  Because of the variety of drivers (both in-kernel and
+out-of-kernel) and the variety of kernel versions (NM supports back to
+early 3.x series) we cannot rely on specific behavior.
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+So given an ethernet-type interface, how do we determine that it is
+wifi?
 
->
-> diff --git a/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c b/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c
-> index 9a75eb6..3e61a45 100644
-> --- a/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c
-> +++ b/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c
-> @@ -743,84 +743,6 @@ u16 rtl8723a_EfuseGetCurrentSize_BT(struct rtw_adapter *padapter)
->  	return retU2;
->  }
->  
-> -bool
-> -rtl8723a_EfusePgPacketRead(struct rtw_adapter *padapter, u8 offset, u8 *data)
-> -{
-> -	u8 efuse_data, word_cnts = 0;
-> -	u16 efuse_addr = 0;
-> -	u8 hoffset = 0, hworden = 0;
-> -	u8 i;
-> -	u8 max_section = 0;
-> -	s32 ret;
-> -
-> -	if (data == NULL)
-> -		return false;
-> -
-> -	EFUSE_GetEfuseDefinition23a(padapter, EFUSE_WIFI, TYPE_EFUSE_MAX_SECTION,
-> -				 &max_section);
-> -	if (offset > max_section) {
-> -		DBG_8723A("%s: Packet offset(%d) is illegal(>%d)!\n",
-> -			  __func__, offset, max_section);
-> -		return false;
-> -	}
-> -
-> -	memset(data, 0xFF, PGPKT_DATA_SIZE);
-> -	ret = true;
-> -
-> -	/*  */
-> -	/*  <Roger_TODO> Efuse has been pre-programmed dummy 5Bytes at the
-> -	    end of Efuse by CP. */
-> -	/*  Skip dummy parts to prevent unexpected data read from Efuse. */
-> -	/*  By pass right now. 2009.02.19. */
-> -	/*  */
-> -	while (AVAILABLE_EFUSE_ADDR(efuse_addr)) {
-> -		if (efuse_OneByteRead23a(padapter, efuse_addr++, &efuse_data) ==
-> -		    _FAIL) {
-> -			ret = false;
-> -			break;
-> -		}
-> -
-> -		if (efuse_data == 0xFF)
-> -			break;
-> -
-> -		if (EXT_HEADER(efuse_data)) {
-> -			hoffset = GET_HDR_OFFSET_2_0(efuse_data);
-> -			efuse_OneByteRead23a(padapter, efuse_addr++, &efuse_data);
-> -			if (ALL_WORDS_DISABLED(efuse_data)) {
-> -				DBG_8723A("%s: Error!! All words disabled!\n",
-> -					  __func__);
-> -				continue;
-> -			}
-> -
-> -			hoffset |= ((efuse_data & 0xF0) >> 1);
-> -			hworden = efuse_data & 0x0F;
-> -		} else {
-> -			hoffset = (efuse_data >> 4) & 0x0F;
-> -			hworden = efuse_data & 0x0F;
-> -		}
-> -
-> -		if (hoffset == offset) {
-> -			for (i = 0; i < EFUSE_MAX_WORD_UNIT; i++) {
-> -				/* Check word enable condition in the section */
-> -				if (!(hworden & (0x01 << i))) {
-> -					ReadEFuseByte23a(padapter, efuse_addr++,
-> -						      &efuse_data);
-> -					data[i * 2] = efuse_data;
-> -
-> -					ReadEFuseByte23a(padapter, efuse_addr++,
-> -						      &efuse_data);
-> -					data[(i * 2) + 1] = efuse_data;
-> -				}
-> -			}
-> -		} else {
-> -			word_cnts = Efuse_CalculateWordCnts23a(hworden);
-> -			efuse_addr += word_cnts * 2;
-> -		}
-> -	}
-> -
-> -	return ret;
-> -}
-> -
->  void rtl8723a_read_chip_version(struct rtw_adapter *padapter)
->  {
->  	u32 value32;
+DEVTYPE=wlan - not always reliable due to driver and kernel versions
+
+"phy80211" in sysfs: same reason; also doesn't capture WEXT or
+out-of-tree drivers
+
+nl80211 calls: this is the only 100% reliable mechanism to detect
+whether an ethernet-type interface is actually WiFi and nl80211-capable.
+
+And unfortunately calling nl80211 loads the module...
+
+Dan
+
