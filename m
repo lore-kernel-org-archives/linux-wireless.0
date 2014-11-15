@@ -1,130 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:50551 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965653AbaKNQB4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Nov 2014 11:01:56 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:54088
+	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755011AbaKOCuV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Nov 2014 21:50:21 -0500
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-Cc: nbd@openwrt.org, Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 3/3] cfg80211: add scan time to survey data
-Date: Fri, 14 Nov 2014 17:01:50 +0100
-Message-Id: <1415980910-9105-3-git-send-email-johannes@sipsolutions.net> (sfid-20141114_170204_313567_B912C582)
-In-Reply-To: <1415980910-9105-1-git-send-email-johannes@sipsolutions.net>
-References: <1415980910-9105-1-git-send-email-johannes@sipsolutions.net>
+Cc: johannes@sipsolutions.net, karl.beldan@rivierawaves.com
+Subject: [PATCH] mac80211: skip legacy rate mask handling for VHT rates
+Date: Sat, 15 Nov 2014 03:48:54 +0100
+Message-Id: <1416019734-17509-1-git-send-email-nbd@openwrt.org> (sfid-20141115_035025_060445_C6858D08)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+The rate mask code currently assumes that a rate is legacy if
+IEEE80211_TX_RC_MCS is not set. This might be the cause of bogus VHT
+rates being reported with minstrel_ht.
 
-Add the time spent scanning to the survey data so it can be
-reported by drivers that collect such information.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- include/net/cfg80211.h       | 3 +++
- include/uapi/linux/nl80211.h | 3 +++
- net/wireless/nl80211.c       | 4 ++++
- net/wireless/trace.h         | 7 +++++--
- 4 files changed, 15 insertions(+), 2 deletions(-)
+ net/mac80211/rate.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 07fafce7dc83..c59b93714728 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -525,6 +525,7 @@ ieee80211_chandef_max_power(struct cfg80211_chan_def *chandef)
-  * @SURVEY_INFO_TIME_EXT_BUSY: extension channel busy time was filled in
-  * @SURVEY_INFO_TIME_RX: receive time was filled in
-  * @SURVEY_INFO_TIME_TX: transmit time was filled in
-+ * @SURVEY_INFO_TIME_SCAN: scan time was filled in
-  *
-  * Used by the driver to indicate which info in &struct survey_info
-  * it has filled in during the get_survey().
-@@ -537,6 +538,7 @@ enum survey_info_flags {
- 	SURVEY_INFO_TIME_EXT_BUSY	= BIT(4),
- 	SURVEY_INFO_TIME_RX		= BIT(5),
- 	SURVEY_INFO_TIME_TX		= BIT(6),
-+	SURVEY_INFO_TIME_SCAN		= BIT(7),
- };
- 
- /**
-@@ -565,6 +567,7 @@ struct survey_info {
- 	u64 time_ext_busy;
- 	u64 time_rx;
- 	u64 time_tx;
-+	u64 time_scan;
- 	u32 filled;
- 	s8 noise;
- };
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 92593e4e3c85..6eab1ba27f38 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -2766,6 +2766,8 @@ enum nl80211_user_reg_hint_type {
-  *	receiving data (on channel or globally)
-  * @NL80211_SURVEY_INFO_TIME_TX: amount of time the radio spent
-  *	transmitting data (on channel or globally)
-+ * @NL80211_SURVEY_INFO_TIME_SCAN: time the radio spent for scan
-+ *	(on this channel or globally)
-  * @NL80211_SURVEY_INFO_MAX: highest survey info attribute number
-  *	currently defined
-  * @__NL80211_SURVEY_INFO_AFTER_LAST: internal use
-@@ -2780,6 +2782,7 @@ enum nl80211_survey_info {
- 	NL80211_SURVEY_INFO_TIME_EXT_BUSY,
- 	NL80211_SURVEY_INFO_TIME_RX,
- 	NL80211_SURVEY_INFO_TIME_TX,
-+	NL80211_SURVEY_INFO_TIME_SCAN,
- 
- 	/* keep last */
- 	__NL80211_SURVEY_INFO_AFTER_LAST,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 6aba8de1e032..648374c4f815 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -6400,6 +6400,10 @@ static int nl80211_send_survey(struct sk_buff *msg, u32 portid, u32 seq,
- 	    nla_put_u64(msg, NL80211_SURVEY_INFO_TIME_TX,
- 			survey->time_tx))
- 		goto nla_put_failure;
-+	if ((survey->filled & SURVEY_INFO_TIME_SCAN) &&
-+	    nla_put_u64(msg, NL80211_SURVEY_INFO_TIME_SCAN,
-+			survey->time_scan))
-+		goto nla_put_failure;
- 
- 	nla_nest_end(msg, infoattr);
- 
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index 2e2885ec2912..3d59b5100156 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -1609,6 +1609,7 @@ TRACE_EVENT(rdev_return_int_survey_info,
- 		__field(u64, time_ext_busy)
- 		__field(u64, time_rx)
- 		__field(u64, time_tx)
-+		__field(u64, time_scan)
- 		__field(u32, filled)
- 		__field(s8, noise)
- 	),
-@@ -1621,17 +1622,19 @@ TRACE_EVENT(rdev_return_int_survey_info,
- 		__entry->time_ext_busy = info->time_ext_busy;
- 		__entry->time_rx = info->time_rx;
- 		__entry->time_tx = info->time_tx;
-+		__entry->time_scan = info->time_scan;
- 		__entry->filled = info->filled;
- 		__entry->noise = info->noise;
- 	),
- 	TP_printk(WIPHY_PR_FMT ", returned: %d, " CHAN_PR_FMT
- 		  ", channel time: %llu, channel time busy: %llu, "
- 		  "channel time extension busy: %llu, channel time rx: %llu, "
--		  "channel time tx: %llu, filled: %u, noise: %d",
-+		  "channel time tx: %llu, scan time: %llu, filled: %u, noise: %d",
- 		  WIPHY_PR_ARG, __entry->ret, CHAN_PR_ARG,
- 		  __entry->time, __entry->time_busy,
- 		  __entry->time_ext_busy, __entry->time_rx,
--		  __entry->time_tx, __entry->filled, __entry->noise)
-+		  __entry->time_tx, __entry->time_scan,
-+		  __entry->filled, __entry->noise)
- );
- 
- TRACE_EVENT(rdev_tdls_oper,
+diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
+index 6081329..f6fea67f 100644
+--- a/net/mac80211/rate.c
++++ b/net/mac80211/rate.c
+@@ -385,7 +385,7 @@ static void rate_idx_match_mask(struct ieee80211_tx_rate *rate,
+ 			*rate = alt_rate;
+ 			return;
+ 		}
+-	} else {
++	} else if (!(rate->flags & IEEE80211_TX_RC_VHT_MCS)) {
+ 		/* handle legacy rates */
+ 		if (rate_idx_match_legacy_mask(rate, sband->n_bitrates, mask))
+ 			return;
 -- 
-2.1.1
+2.1.2
 
