@@ -1,67 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:59384 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752506AbaKJJKk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Nov 2014 04:10:40 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: emmanuel.grumbach@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Luciano Coelho <luciano.coelho@intel.com>
-Date: Mon, 10 Nov 2014 11:10:13 +0200
-Message-Id: <1415610621-27438-9-git-send-email-luca@coelho.fi> (sfid-20141110_101052_041494_9D847317)
-In-Reply-To: <1415610621-27438-1-git-send-email-luca@coelho.fi>
-References: <1415610621-27438-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH 08/16] iwlwifi: mvm: use switching_chanctx argument instead of csa_active
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:51230 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754567AbaKOUvx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 15 Nov 2014 15:51:53 -0500
+Date: Sat, 15 Nov 2014 21:51:49 +0100
+From: Christophe RICARD <christophe.ricard@gmail.com>
+To: Dmitry Torokhov <dtor@chromium.org>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-nfc@lists.01.org
+Subject: Re: [PATCH] NFC: st21nfcb: fix error handling of
+ irq_of_parse_and_map
+Message-ID: <20141115215149.5d68464f@toffy-MacBookPro> (sfid-20141115_215214_857208_B1BF1DBA)
+In-Reply-To: <20141114223527.GA2622@dtor-ws>
+References: <20141114223527.GA2622@dtor-ws>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+Hi Dmitry,
 
-Now that all CSA flows are using the switch_vif_chanctx op, we can
-rely on the switching_chanctx boolean that is passed to the
-__iwl_mvm_assign_vif_chanctx() and __iwl_mvm_unassign_vif_chanctx()
-functions to decide whether the context switch flows need to be
-executed.  In this way we make the chanctx switch flow more generic,
-without having to rely on the csa_active flag being set.
+Thank you for your feedback.
+A patch got already pushed earlier this month:
+https://lists.01.org/pipermail/linux-nfc/2014-November/003126.html
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+The i2c-core is already running the i2c_of_parse_and_map function when
+registering the slave device when using dts. This step got removed for
+this reason. 
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index 221f823..ddbdb78 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -2669,8 +2669,8 @@ static int __iwl_mvm_assign_vif_chanctx(struct iwl_mvm *mvm,
- 
- 	switch (vif->type) {
- 	case NL80211_IFTYPE_AP:
--		/* Unless it's a CSA flow we have nothing to do here */
--		if (vif->csa_active) {
-+		/* only needed if we're switching chanctx (i.e. during CSA) */
-+		if (switching_chanctx) {
- 			mvmvif->ap_ibss_active = true;
- 			break;
- 		}
-@@ -2720,7 +2720,7 @@ static int __iwl_mvm_assign_vif_chanctx(struct iwl_mvm *mvm,
- 		iwl_mvm_mac_ctxt_changed(mvm, vif, false, NULL);
- 	}
- 
--	if (vif->csa_active && vif->type == NL80211_IFTYPE_STATION) {
-+	if (switching_chanctx && vif->type == NL80211_IFTYPE_STATION) {
- 		struct iwl_mvm_sta *mvmsta;
- 
- 		mvmsta = iwl_mvm_sta_from_staid_protected(mvm,
-@@ -2779,7 +2779,7 @@ static void __iwl_mvm_unassign_vif_chanctx(struct iwl_mvm *mvm,
- 		break;
- 	case NL80211_IFTYPE_AP:
- 		/* This part is triggered only during CSA */
--		if (!vif->csa_active || !mvmvif->ap_ibss_active)
-+		if (!switching_chanctx || !mvmvif->ap_ibss_active)
- 			goto out;
- 
- 		mvmvif->csa_countdown = false;
--- 
-2.1.1
+However, i will take into account your second point in order to report
+devm_gpio_request_one instead of -ENODEV in a future patchset.
+
+Best Regards
+Christophe
+
+On Fri, 14 Nov 2014 14:35:27 -0800
+Dmitry Torokhov <dtor@chromium.org> wrote:
+
+> Return value of irq_of_parse_and_map() is unsigned int, with 0
+> indicating failure, so testing for negative result never works.
+> 
+> Also report error returned by devm_gpio_request_one instead of
+> clobbering it with -ENODEV.
+> 
+> Signed-off-by: Dmitry Torokhov <dtor@chromium.org>
+> ---
+> 
+> Not tested, found by casual code inspection.
+> 
+>  drivers/nfc/st21nfcb/i2c.c | 11 +++++------
+>  1 file changed, 5 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/nfc/st21nfcb/i2c.c b/drivers/nfc/st21nfcb/i2c.c
+> index c5d2427..abe73ec 100644
+> --- a/drivers/nfc/st21nfcb/i2c.c
+> +++ b/drivers/nfc/st21nfcb/i2c.c
+> @@ -258,19 +258,18 @@ static int
+> st21nfcb_nci_i2c_of_request_resources(struct i2c_client *client)
+> GPIOF_OUT_INIT_HIGH, "clf_reset"); if (r) {
+>  		nfc_err(&client->dev, "Failed to request reset
+> pin\n");
+> -		return -ENODEV;
+> +		return r;
+>  	}
+>  	phy->gpio_reset = gpio;
+>  
+>  	/* IRQ */
+> -	r = irq_of_parse_and_map(pp, 0);
+> -	if (r < 0) {
+> -		nfc_err(&client->dev, "Unable to get irq, error:
+> %d\n", r);
+> -		return r;
+> +	client->irq = irq_of_parse_and_map(pp, 0);
+> +	if (!client->irq) {
+> +		nfc_err(&client->dev, "Unable to get irq\n");
+> +		return -EINVAL;
+>  	}
+>  
+>  	phy->irq_polarity = irq_get_trigger_type(r);
+> -	client->irq = r;
+>  
+>  	return 0;
+>  }
 
