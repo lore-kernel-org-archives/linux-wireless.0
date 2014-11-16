@@ -1,109 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f182.google.com ([209.85.217.182]:48397 "EHLO
-	mail-lb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753376AbaKDOeZ (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:46372 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932152AbaKPAjp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Nov 2014 09:34:25 -0500
-Received: by mail-lb0-f182.google.com with SMTP id f15so12485510lbj.27
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Nov 2014 06:34:24 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 3/7] ath10k: refactor htt->rx_confused
-Date: Tue,  4 Nov 2014 15:22:07 +0100
-Message-Id: <1415110931-10945-4-git-send-email-michal.kazior@tieto.com> (sfid-20141104_153431_963266_59218147)
-In-Reply-To: <1415110931-10945-1-git-send-email-michal.kazior@tieto.com>
-References: <1415110931-10945-1-git-send-email-michal.kazior@tieto.com>
+	Sat, 15 Nov 2014 19:39:45 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	Kobi Cohen-Arazi <kobic@qti.qualcomm.com>
+Subject: [PATCH v2 04/11] ath9k: Enable TSF2 for generic HW timers
+Date: Sun, 16 Nov 2014 06:11:03 +0530
+Message-Id: <1416098470-14122-5-git-send-email-sujith@msujith.org> (sfid-20141116_013958_784998_56CA5FA2)
+In-Reply-To: <1416098470-14122-1-git-send-email-sujith@msujith.org>
+References: <1416098470-14122-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Make the rx_confused be handled by the rx
-indication handlers instead of the buffer popping
-function.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+The base TSF is used for HW timers 0..7, but chips
+in the AR9003 family and above can support more generic
+timers. To use them, however, a second HW TSF needs to
+be enabled. This patch allows usage of the extra
+timers by starting the second TSF properly.
+
+The extra set of HW timers is apparently also present
+in AR9287, but we enable it only for the AR9003 family.
+
+Cc: Kobi Cohen-Arazi <kobic@qti.qualcomm.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath10k/htt_rx.c | 29 ++++++++++++-----------------
- 1 file changed, 12 insertions(+), 17 deletions(-)
+ drivers/net/wireless/ath/ath9k/hw.c  | 23 ++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath9k/hw.h  |  2 ++
+ drivers/net/wireless/ath/ath9k/reg.h |  3 +++
+ 3 files changed, 27 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index cba2f3b..651028e 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -316,20 +316,13 @@ static int ath10k_htt_rx_amsdu_pop(struct ath10k_htt *htt,
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 04ae1f8..11a1fbd 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1941,6 +1941,8 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
  
- 	lockdep_assert_held(&htt->rx_ring.lock);
+ 	REGWRITE_BUFFER_FLUSH(ah);
  
--	if (htt->rx_confused) {
--		ath10k_warn(ar, "htt is confused. refusing rx\n");
--		return -1;
--	}
--
- 	for (;;) {
- 		int last_msdu, msdu_len_invalid, msdu_chained;
- 
- 		msdu = ath10k_htt_rx_netbuf_pop(htt);
- 		if (!msdu) {
--			ath10k_err(ar, "failed to pop msdu\n");
- 			__skb_queue_purge(amsdu);
--			htt->rx_confused = true;
--			break;
-+			return -ENOENT;
- 		}
- 
- 		__skb_queue_tail(amsdu, msdu);
-@@ -351,10 +344,8 @@ static int ath10k_htt_rx_amsdu_pop(struct ath10k_htt *htt,
- 		 */
- 		if (!(__le32_to_cpu(rx_desc->attention.flags)
- 				& RX_ATTENTION_FLAGS_MSDU_DONE)) {
--			ath10k_err(ar, "popped an incomplete msdu\n");
- 			__skb_queue_purge(amsdu);
--			htt->rx_confused = true;
--			break;
-+			return -EIO;
- 		}
- 
- 		*attention |= __le32_to_cpu(rx_desc->attention.flags) &
-@@ -422,10 +413,8 @@ static int ath10k_htt_rx_amsdu_pop(struct ath10k_htt *htt,
- 		while (msdu_chained--) {
- 			msdu = ath10k_htt_rx_netbuf_pop(htt);
- 			if (!msdu) {
--				ath10k_warn(ar, "failed to pop chained msdu\n");
- 				__skb_queue_purge(amsdu);
--				htt->rx_confused = true;
--				break;
-+				return -ENOENT;
- 			}
- 
- 			__skb_queue_tail(amsdu, msdu);
-@@ -1201,6 +1190,9 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
- 
- 	lockdep_assert_held(&htt->rx_ring.lock);
- 
-+	if (htt->rx_confused)
-+		return;
++	ath9k_hw_gen_timer_start_tsf2(ah);
 +
- 	fw_desc_len = __le16_to_cpu(rx->prefix.fw_rx_desc_bytes);
- 	fw_desc = (u8 *)&rx->fw_desc;
+ 	ath9k_hw_init_desc(ah);
  
-@@ -1246,10 +1238,13 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
- 					      &fw_desc_len, &amsdu,
- 					      &attention);
- 		if (ret < 0) {
--			ath10k_warn(ar, "failed to pop amsdu from htt rx ring %d\n",
--				    ret);
-+			ath10k_warn(ar, "rx ring became corrupted: %d\n", ret);
- 			__skb_queue_purge(&amsdu);
--			continue;
-+			/* FIXME: It's probably a good idea to reboot the
-+			 * device instead of leaving it inoperable.
-+			 */
-+			htt->rx_confused = true;
-+			break;
- 		}
+ 	if (ath9k_hw_btcoex_is_enabled(ah))
+@@ -2905,6 +2907,16 @@ u32 ath9k_hw_gettsf32(struct ath_hw *ah)
+ }
+ EXPORT_SYMBOL(ath9k_hw_gettsf32);
  
- 		if (!ath10k_htt_rx_amsdu_allowed(htt, skb_peek(&amsdu),
++void ath9k_hw_gen_timer_start_tsf2(struct ath_hw *ah)
++{
++	struct ath_gen_timer_table *timer_table = &ah->hw_gen_timers;
++
++	if (timer_table->tsf2_enabled) {
++		REG_SET_BIT(ah, AR_DIRECT_CONNECT, AR_DC_AP_STA_EN);
++		REG_SET_BIT(ah, AR_RESET_TSF, AR_RESET_TSF2_ONCE);
++	}
++}
++
+ struct ath_gen_timer *ath_gen_timer_alloc(struct ath_hw *ah,
+ 					  void (*trigger)(void *),
+ 					  void (*overflow)(void *),
+@@ -2915,7 +2927,11 @@ struct ath_gen_timer *ath_gen_timer_alloc(struct ath_hw *ah,
+ 	struct ath_gen_timer *timer;
+ 
+ 	if ((timer_index < AR_FIRST_NDP_TIMER) ||
+-		(timer_index >= ATH_MAX_GEN_TIMER))
++	    (timer_index >= ATH_MAX_GEN_TIMER))
++		return NULL;
++
++	if ((timer_index > AR_FIRST_NDP_TIMER) &&
++	    !AR_SREV_9300_20_OR_LATER(ah))
+ 		return NULL;
+ 
+ 	timer = kzalloc(sizeof(struct ath_gen_timer), GFP_KERNEL);
+@@ -2929,6 +2945,11 @@ struct ath_gen_timer *ath_gen_timer_alloc(struct ath_hw *ah,
+ 	timer->overflow = overflow;
+ 	timer->arg = arg;
+ 
++	if ((timer_index > AR_FIRST_NDP_TIMER) && !timer_table->tsf2_enabled) {
++		timer_table->tsf2_enabled = true;
++		ath9k_hw_gen_timer_start_tsf2(ah);
++	}
++
+ 	return timer;
+ }
+ EXPORT_SYMBOL(ath_gen_timer_alloc);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 10ab060..a4f0f65 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -525,6 +525,7 @@ struct ath_gen_timer {
+ struct ath_gen_timer_table {
+ 	struct ath_gen_timer *timers[ATH_MAX_GEN_TIMER];
+ 	u16 timer_mask;
++	bool tsf2_enabled;
+ };
+ 
+ struct ath_hw_antcomb_conf {
+@@ -1036,6 +1037,7 @@ void ath9k_hw_gen_timer_start(struct ath_hw *ah,
+ 			      struct ath_gen_timer *timer,
+ 			      u32 timer_next,
+ 			      u32 timer_period);
++void ath9k_hw_gen_timer_start_tsf2(struct ath_hw *ah);
+ void ath9k_hw_gen_timer_stop(struct ath_hw *ah, struct ath_gen_timer *timer);
+ 
+ void ath_gen_timer_free(struct ath_hw *ah, struct ath_gen_timer *timer);
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index 1c0b1c1..ced36b4 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -1605,6 +1605,7 @@ enum {
+ 
+ #define AR_RESET_TSF        0x8020
+ #define AR_RESET_TSF_ONCE   0x01000000
++#define AR_RESET_TSF2_ONCE  0x02000000
+ 
+ #define AR_MAX_CFP_DUR      0x8038
+ #define AR_CFP_VAL          0x0000FFFF
+@@ -1966,6 +1967,8 @@ enum {
+ #define AR_MAC_PCU_ASYNC_FIFO_REG3_SOFT_RESET		0x80000000
+ #define AR_MAC_PCU_GEN_TIMER_TSF_SEL			0x83d8
+ 
++#define AR_DIRECT_CONNECT                              0x83a0
++#define AR_DC_AP_STA_EN                                0x00000001
+ 
+ #define AR_AES_MUTE_MASK0       0x805c
+ #define AR_AES_MUTE_MASK0_FC    0x0000FFFF
 -- 
-1.8.5.3
+2.1.3
 
