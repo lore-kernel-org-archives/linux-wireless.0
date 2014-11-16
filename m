@@ -1,93 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f54.google.com ([74.125.82.54]:48647 "EHLO
-	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750881AbaKZQnx (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:35272 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932086AbaKPAjq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Nov 2014 11:43:53 -0500
-Received: by mail-wg0-f54.google.com with SMTP id l2so4251202wgh.27
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Nov 2014 08:43:52 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20141125202847.GL25677@wotan.suse.de>
-References: <1416754941-4439-1-git-send-email-arik@wizery.com>
- <1416754941-4439-3-git-send-email-arik@wizery.com> <20141125202847.GL25677@wotan.suse.de>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Wed, 26 Nov 2014 18:43:37 +0200
-Message-ID: <CA+XVXfeXd0moKyx5MOio_Naqq3K+9VkbYmNkyyPSVU-nxuqzhw@mail.gmail.com> (sfid-20141126_174356_975691_08EF19B6)
-Subject: Re: [PATCH v3 3/3] cfg80211: Allow usermode to query wiphy specific
- regd info
-To: "Luis R. Rodriguez" <mcgrof@suse.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jonathan Doron <jond@wizery.com>
-Content-Type: text/plain; charset=UTF-8
+	Sat, 15 Nov 2014 19:39:46 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	Russell Hu <rhu@qca.qualcomm.com>
+Subject: [PATCH v2 03/11] ath9k: Fix LED configuration
+Date: Sun, 16 Nov 2014 06:11:02 +0530
+Message-Id: <1416098470-14122-4-git-send-email-sujith@msujith.org> (sfid-20141116_013950_033148_1CF2E650)
+In-Reply-To: <1416098470-14122-1-git-send-email-sujith@msujith.org>
+References: <1416098470-14122-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 25, 2014 at 10:28 PM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
-> On Sun, Nov 23, 2014 at 05:02:21PM +0200, Arik Nemtsov wrote:
->> From: Jonathan Doron <jond@wizery.com>
->>
->> Allow usermode to query wiphy-specific regd info, for drivers that use
->> wiphy-specific regulatory management.
->>
->> Use the existing API for sending regdomain info to usermode, but return
->> the wiphy-specific regd in case wiphy index is provided and the driver
->> employs wiphy-specific management. This implies user and kernel-mode
->> support for the feature and is backward compatible.
->>
->> Signed-off-by: Jonathan Doron <jonathanx.doron@intel.com>
->> Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
->> ---
->>  include/uapi/linux/nl80211.h | 18 ++++++++++-
->>  net/wireless/nl80211.c       | 71 ++++++++++++++++++++++++++++++++++++--------
->>  net/wireless/reg.c           |  2 +-
->>  net/wireless/reg.h           |  1 +
->>  4 files changed, 78 insertions(+), 14 deletions(-)
->>
->> diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
->> index 3771e7d..b222e5c 100644
->> --- a/include/uapi/linux/nl80211.h
->> +++ b/include/uapi/linux/nl80211.h
->> @@ -252,7 +252,12 @@
->>   *   %NL80211_ATTR_IFINDEX.
->>   *
->>   * @NL80211_CMD_GET_REG: ask the wireless core to send us its currently set
->> - *   regulatory domain.
->> + *   regulatory domain. If %NL80211_ATTR_WIPHY is specified and the device
->> + *   self-manages its regulatory settings, its private regulatory domain
->> + *   will be returned.
->> + *   If %NL80211_ATTR_WIPHY_GET_PRIV_REG is specified in addition to
->> + *   %NL80211_ATTR_WIPHY, a device's private regulatory domain will be
->> + *   returned, even if it's regulatory is not self-managed.
->>   * @NL80211_CMD_SET_REG: Set current regulatory domain. CRDA sends this command
->>   *   after being queried by the kernel. CRDA replies by sending a regulatory
->>   *   domain structure which consists of %NL80211_ATTR_REG_ALPHA set to our
->> @@ -1693,6 +1698,14 @@ enum nl80211_commands {
->>   *
->>   * @NL80211_ATTR_MAC_MASK: MAC address mask
->>   *
->> + * @NL80211_ATTR_WIPHY_SELF_MANAGED_REG: flag attribute indicating the
->> + *   regulatory information was obtained from the private regdomain
->> + *   of a device with self-managed regulatory.
->> + * @NL80211_ATTR_WIPHY_GET_PRIV_REG: flag attribute indicating the regulatory
->> + *   information should be obtained from a device's private regdomain,
->> + *   if it exists. This will happen even if the device is not self-managing
->> + *   its regulatory.
->
-> As with REGULATORY_WIPHY_SELF_MANAGED we need a flag that cfg80211 sets for
-> drivers that use regulatory_hint() API, perhaps REGULATORY_WIPHY_REG_HINT.
-> Then this can be used by cfg80211 to send to userspace regdomains for wiphys
-> that have used this API. Below you enable userspace to only query for these
-> explictly but we want to be able to let userspace get all information, ie
-> through 'iw reg get'. This should go in as a separate patch along with
-> NL80211_ATTR_WIPHY_GET_PRIV_REG as its use predates
-> NL80211_ATTR_WIPHY_SELF_MANAGED_REG, this will also let you stuff in the boiler
-> plate code for getting that reg first, getting self managed regd's can then
-> go in as a clear secondary evolutionary step.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Note that we don't really need the new REGULATORY_WIPHY_REG_HINT.. If
-a wiphy is not self-managed, we can just put
-NL80211_ATTR_WIPHY_PRIV_REG, since it's obvious the regulatory_hint
-API was used.
+On some x86 platforms, the LED gpio is active high
+instead of active low. Identify such cards and modify
+the GPIO usage to make sure LED works properly.
 
-Arik
+Cc: Russell Hu <rhu@qca.qualcomm.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h | 1 +
+ drivers/net/wireless/ath/ath9k/gpio.c  | 9 +++++++--
+ drivers/net/wireless/ath/ath9k/hw.h    | 1 +
+ drivers/net/wireless/ath/ath9k/init.c  | 3 +++
+ drivers/net/wireless/ath/ath9k/main.c  | 6 ++++--
+ drivers/net/wireless/ath/ath9k/pci.c   | 4 +++-
+ 6 files changed, 19 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index d5a2019..0f6db12 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -931,6 +931,7 @@ void ath_ant_comb_scan(struct ath_softc *sc, struct ath_rx_status *rs);
+ #define ATH9K_PCI_AR9565_2ANT     0x0100
+ #define ATH9K_PCI_NO_PLL_PWRSAVE  0x0200
+ #define ATH9K_PCI_KILLER          0x0400
++#define ATH9K_PCI_LED_ACT_HI      0x0800
+ 
+ /*
+  * Default cache line size, in bytes.
+diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
+index b1956bf..2fef7a4 100644
+--- a/drivers/net/wireless/ath/ath9k/gpio.c
++++ b/drivers/net/wireless/ath/ath9k/gpio.c
+@@ -25,7 +25,12 @@ static void ath_led_brightness(struct led_classdev *led_cdev,
+ 			       enum led_brightness brightness)
+ {
+ 	struct ath_softc *sc = container_of(led_cdev, struct ath_softc, led_cdev);
+-	ath9k_hw_set_gpio(sc->sc_ah, sc->sc_ah->led_pin, (brightness == LED_OFF));
++	u32 val = (brightness == LED_OFF);
++
++	if (sc->sc_ah->config.led_active_high)
++		val = !val;
++
++	ath9k_hw_set_gpio(sc->sc_ah, sc->sc_ah->led_pin, val);
+ }
+ 
+ void ath_deinit_leds(struct ath_softc *sc)
+@@ -82,7 +87,7 @@ void ath_fill_led_pin(struct ath_softc *sc)
+ 	ath9k_hw_cfg_output(ah, ah->led_pin, AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
+ 
+ 	/* LED off, active low */
+-	ath9k_hw_set_gpio(ah, ah->led_pin, 1);
++	ath9k_hw_set_gpio(ah, ah->led_pin, (ah->config.led_active_high) ? 0 : 1);
+ }
+ #endif
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index e49721e8..10ab060 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -329,6 +329,7 @@ struct ath9k_ops_config {
+ 	bool alt_mingainidx;
+ 	bool no_pll_pwrsave;
+ 	bool tx_gain_buffalo;
++	bool led_active_high;
+ };
+ 
+ enum ath9k_int {
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index c5bcddd..8bc968f 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -441,6 +441,9 @@ static void ath9k_init_pcoem_platform(struct ath_softc *sc)
+ 		ah->config.no_pll_pwrsave = true;
+ 		ath_info(common, "Disable PLL PowerSave\n");
+ 	}
++
++	if (sc->driver_data & ATH9K_PCI_LED_ACT_HI)
++		ah->config.led_active_high = true;
+ }
+ 
+ static void ath9k_eeprom_request_cb(const struct firmware *eeprom_blob,
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 644552c..5d5d8b4 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -727,7 +727,8 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 	if (ah->led_pin >= 0) {
+ 		ath9k_hw_cfg_output(ah, ah->led_pin,
+ 				    AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
+-		ath9k_hw_set_gpio(ah, ah->led_pin, 0);
++		ath9k_hw_set_gpio(ah, ah->led_pin,
++				  (ah->config.led_active_high) ? 1 : 0);
+ 	}
+ 
+ 	/*
+@@ -869,7 +870,8 @@ static void ath9k_stop(struct ieee80211_hw *hw)
+ 	spin_lock_bh(&sc->sc_pcu_lock);
+ 
+ 	if (ah->led_pin >= 0) {
+-		ath9k_hw_set_gpio(ah, ah->led_pin, 1);
++		ath9k_hw_set_gpio(ah, ah->led_pin,
++				  (ah->config.led_active_high) ? 0 : 1);
+ 		ath9k_hw_cfg_gpio_input(ah, ah->led_pin);
+ 	}
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
+index e3f60d5..f009b5b 100644
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -657,7 +657,9 @@ static const struct pci_device_id ath_pci_id_table[] = {
+ 			 0x0036,
+ 			 PCI_VENDOR_ID_DELL,
+ 			 0x020E),
+-	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
++	  .driver_data = ATH9K_PCI_AR9565_2ANT |
++			 ATH9K_PCI_BT_ANT_DIV |
++			 ATH9K_PCI_LED_ACT_HI},
+ 
+ 	/* PCI-E AR9565 (WB335) */
+ 	{ PCI_VDEVICE(ATHEROS, 0x0036),
+-- 
+2.1.3
+
