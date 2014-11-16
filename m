@@ -1,245 +1,568 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:33879 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932267AbaKXOgJ (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:46683 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932086AbaKPAjm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2014 09:36:09 -0500
-Received: by mail-wi0-f172.google.com with SMTP id n3so5878080wiv.5
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:36:08 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Arik Nemtsov <arik@wizery.com>,
-	Arik Nemtsov <arikx.nemtsov@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 43/75] iwlwifi: mvm: configure TDLS peers to FW
-Date: Mon, 24 Nov 2014 16:34:19 +0200
-Message-Id: <1416839691-28533-43-git-send-email-egrumbach@gmail.com> (sfid-20141124_153624_378002_451426C9)
-In-Reply-To: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
-References: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
+	Sat, 15 Nov 2014 19:39:42 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH v2 01/11] ath9k: Update QCA953x initvals
+Date: Sun, 16 Nov 2014 06:11:00 +0530
+Message-Id: <1416098470-14122-2-git-send-email-sujith@msujith.org> (sfid-20141116_013947_766830_70002A68)
+In-Reply-To: <1416098470-14122-1-git-send-email-sujith@msujith.org>
+References: <1416098470-14122-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Send a dedicated TDLS_CONFIG command when a TDLS peer joins/leaves. The
-fields for the command are mostly place-holders, as most of the FW
-functionality is not implemented. In the future the dedicated FW TID
-will be used for channel-switching and buffer-sta functionality.
+* Duplicates have been marked.
+* New initvals for 1.1 and 2.0 versions.
+* xPA support.
+* Fix for low power issue.
 
-Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/fw-api.h | 63 ++++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/mvm/mvm.h    |  7 +++
- drivers/net/wireless/iwlwifi/mvm/ops.c    |  1 +
- drivers/net/wireless/iwlwifi/mvm/tdls.c   | 80 ++++++++++++++++++++++++++++---
- 4 files changed, 145 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar953x_initvals.h | 498 +++++++++++++++++++++--
+ 1 file changed, 468 insertions(+), 30 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/iwlwifi/mvm/fw-api.h
-index a71fad2e..0f3c07a 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw-api.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw-api.h
-@@ -131,6 +131,7 @@ enum {
- 	/* TDLS */
- 	TDLS_CHANNEL_SWITCH_CMD = 0x27,
- 	TDLS_CHANNEL_SWITCH_NOTIFICATION = 0xaa,
-+	TDLS_CONFIG_CMD = 0xa7,
+diff --git a/drivers/net/wireless/ath/ath9k/ar953x_initvals.h b/drivers/net/wireless/ath/ath9k/ar953x_initvals.h
+index 812a9d7..159cc6f 100644
+--- a/drivers/net/wireless/ath/ath9k/ar953x_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar953x_initvals.h
+@@ -20,6 +20,8 @@
  
- 	/* MAC and Binding commands */
- 	MAC_CONTEXT_CMD = 0x28,
-@@ -1800,4 +1801,66 @@ struct iwl_tdls_channel_switch_notif {
- 	__le32 sta_id;
- } __packed; /* TDLS_STA_CHANNEL_SWITCH_NTFY_API_S_VER_1 */
+ #define qca953x_1p0_mac_postamble ar9300_2p2_mac_postamble
  
-+/**
-+ * TDLS station info
-+ *
-+ * @sta_id: station id of the TDLS peer
-+ * @tx_to_peer_tid: TID reserved vs. the peer for FW based Tx
-+ * @tx_to_peer_ssn: initial SSN the FW should use for Tx on its TID vs the peer
-+ * @is_initiator: 1 if the peer is the TDLS link initiator, 0 otherwise
-+ */
-+struct iwl_tdls_sta_info {
-+	u8 sta_id;
-+	u8 tx_to_peer_tid;
-+	__le16 tx_to_peer_ssn;
-+	__le32 is_initiator;
-+} __packed; /* TDLS_STA_INFO_VER_1 */
++#define qca953x_1p0_soc_preamble ar955x_1p0_soc_preamble
 +
-+/**
-+ * TDLS basic config command
-+ *
-+ * @id_and_color: MAC id and color being configured
-+ * @tdls_peer_count: amount of currently connected TDLS peers
-+ * @tx_to_ap_tid: TID reverved vs. the AP for FW based Tx
-+ * @tx_to_ap_ssn: initial SSN the FW should use for Tx on its TID vs. the AP
-+ * @sta_info: per-station info. Only the first tdls_peer_count entries are set
-+ * @pti_req_data_offset: offset of network-level data for the PTI template
-+ * @pti_req_tx_cmd: Tx parameters for PTI request template
-+ * @pti_req_template: PTI request template data
-+ */
-+struct iwl_tdls_config_cmd {
-+	__le32 id_and_color; /* mac id and color */
-+	u8 tdls_peer_count;
-+	u8 tx_to_ap_tid;
-+	__le16 tx_to_ap_ssn;
-+	struct iwl_tdls_sta_info sta_info[IWL_MVM_TDLS_STA_COUNT];
-+
-+	__le32 pti_req_data_offset;
-+	struct iwl_tx_cmd pti_req_tx_cmd;
-+	u8 pti_req_template[0];
-+} __packed; /* TDLS_CONFIG_CMD_API_S_VER_1 */
-+
-+/**
-+ * TDLS per-station config information from FW
-+ *
-+ * @sta_id: station id of the TDLS peer
-+ * @tx_to_peer_last_seq: last sequence number used by FW during FW-based Tx to
-+ *	the peer
-+ */
-+struct iwl_tdls_config_sta_info_res {
-+	__le16 sta_id;
-+	__le16 tx_to_peer_last_seq;
-+} __packed; /* TDLS_STA_INFO_RSP_VER_1 */
-+
-+/**
-+ * TDLS config information from FW
-+ *
-+ * @tx_to_ap_last_seq: last sequence number used by FW during FW-based Tx to AP
-+ * @sta_info: per-station TDLS config information
-+ */
-+struct iwl_tdls_config_res {
-+	__le32 tx_to_ap_last_seq;
-+	struct iwl_tdls_config_sta_info_res sta_info[IWL_MVM_TDLS_STA_COUNT];
-+} __packed; /* TDLS_CONFIG_RSP_API_S_VER_1 */
-+
- #endif /* __fw_api_h__ */
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index db52f65..be0285d 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -1242,6 +1242,13 @@ int iwl_mvm_sf_update(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 		      bool added_vif);
+ #define qca953x_1p0_soc_postamble ar9300_2p2_soc_postamble
  
- /* TDLS */
+ #define qca953x_1p0_common_rx_gain_table ar9300Common_rx_gain_table_2p2
+@@ -28,6 +30,10 @@
+ 
+ #define qca953x_1p0_modes_fast_clock ar9300Modes_fast_clock_2p2
+ 
++#define qca953x_1p0_common_wo_xlna_rx_gain_bounds ar955x_1p0_common_wo_xlna_rx_gain_bounds
 +
-+/*
-+ * We use TID 4 (VI) as a FW-used-only TID when TDLS connections are present.
-+ * This TID is marked as used vs the AP and all connected TDLS peers.
-+ */
-+#define IWL_MVM_TDLS_FW_TID 4
++#define qca953x_1p0_common_rx_gain_bounds ar955x_1p0_common_rx_gain_bounds
 +
- int iwl_mvm_tdls_sta_count(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
- void iwl_mvm_teardown_tdls_peers(struct iwl_mvm *mvm);
- void iwl_mvm_recalc_tdls_state(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
-diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
-index 8ee7362..9f9c767 100644
---- a/drivers/net/wireless/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
-@@ -354,6 +354,7 @@ static const char *const iwl_mvm_cmd_strings[REPLY_MAX] = {
- 	CMD(SCAN_COMPLETE_UMAC),
- 	CMD(TDLS_CHANNEL_SWITCH_CMD),
- 	CMD(TDLS_CHANNEL_SWITCH_NOTIFICATION),
-+	CMD(TDLS_CONFIG_CMD),
+ static const u32 qca953x_1p0_mac_core[][2] = {
+ 	/* Addr      allmodes  */
+ 	{0x00000008, 0x00000000},
+@@ -490,35 +496,6 @@ static const u32 qca953x_1p0_radio_postamble[][5] = {
+ 	{0x00016540, 0x10804008, 0x10804008, 0x50804000, 0x50804000},
  };
- #undef CMD
  
-diff --git a/drivers/net/wireless/iwlwifi/mvm/tdls.c b/drivers/net/wireless/iwlwifi/mvm/tdls.c
-index 66c82df..6dc381b 100644
---- a/drivers/net/wireless/iwlwifi/mvm/tdls.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/tdls.c
-@@ -113,17 +113,85 @@ int iwl_mvm_tdls_sta_count(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
- 	return count;
- }
+-static const u32 qca953x_1p0_soc_preamble[][2] = {
+-	/* Addr      allmodes  */
+-	{0x00007000, 0x00000000},
+-	{0x00007004, 0x00000000},
+-	{0x00007008, 0x00000000},
+-	{0x0000700c, 0x00000000},
+-	{0x0000701c, 0x00000000},
+-	{0x00007020, 0x00000000},
+-	{0x00007024, 0x00000000},
+-	{0x00007028, 0x00000000},
+-	{0x0000702c, 0x00000000},
+-	{0x00007030, 0x00000000},
+-	{0x00007034, 0x00000002},
+-	{0x00007038, 0x000004c2},
+-	{0x00007048, 0x00000000},
+-};
+-
+-static const u32 qca953x_1p0_common_rx_gain_bounds[][5] = {
+-	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
+-	{0x00009e44, 0xfe321e27, 0xfe321e27, 0xfe291e27, 0xfe291e27},
+-	{0x00009e48, 0x5030201a, 0x5030201a, 0x50302018, 0x50302018},
+-};
+-
+-static const u32 qca953x_1p0_common_wo_xlna_rx_gain_bounds[][5] = {
+-	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
+-	{0x00009e44, 0xfe321e27, 0xfe321e27, 0xfe291e27, 0xfe291e27},
+-	{0x00009e48, 0x5030201a, 0x5030201a, 0x50302012, 0x50302012},
+-};
+-
+ static const u32 qca953x_1p0_modes_xpa_tx_gain_table[][2] = {
+ 	/* Addr      allmodes  */
+ 	{0x0000a2dc, 0xfffd5aaa},
+@@ -715,8 +692,73 @@ static const u32 qca953x_1p1_modes_no_xpa_tx_gain_table[][2] = {
+ 	{0x00016448, 0x6c927a70},
+ };
  
-+static void iwl_mvm_tdls_config(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
-+{
-+	struct iwl_rx_packet *pkt;
-+	struct iwl_tdls_config_res *resp;
-+	struct iwl_tdls_config_cmd tdls_cfg_cmd = {};
-+	struct iwl_host_cmd cmd = {
-+		.id = TDLS_CONFIG_CMD,
-+		.flags = CMD_WANT_SKB,
-+		.data = { &tdls_cfg_cmd, },
-+		.len = { sizeof(struct iwl_tdls_config_cmd), },
-+	};
-+	struct ieee80211_sta *sta;
-+	int ret, i, cnt;
-+	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
++static const u32 qca953x_1p1_modes_xpa_tx_gain_table[][2] = {
++	/* Addr      allmodes  */
++	{0x0000a2dc, 0xfffb52aa},
++	{0x0000a2e0, 0xfffd64cc},
++	{0x0000a2e4, 0xfffe80f0},
++	{0x0000a2e8, 0xffffff00},
++	{0x0000a410, 0x000050d5},
++	{0x0000a500, 0x00000000},
++	{0x0000a504, 0x04000002},
++	{0x0000a508, 0x08000004},
++	{0x0000a50c, 0x0c000006},
++	{0x0000a510, 0x1000000a},
++	{0x0000a514, 0x1400000c},
++	{0x0000a518, 0x1800000e},
++	{0x0000a51c, 0x1c000048},
++	{0x0000a520, 0x2000004a},
++	{0x0000a524, 0x2400004c},
++	{0x0000a528, 0x2800004e},
++	{0x0000a52c, 0x2b00024a},
++	{0x0000a530, 0x2f00024c},
++	{0x0000a534, 0x3300024e},
++	{0x0000a538, 0x36000668},
++	{0x0000a53c, 0x38000669},
++	{0x0000a540, 0x3a000868},
++	{0x0000a544, 0x3d00086a},
++	{0x0000a548, 0x4000086c},
++	{0x0000a54c, 0x4200086e},
++	{0x0000a550, 0x43000a6e},
++	{0x0000a554, 0x43000a6e},
++	{0x0000a558, 0x43000a6e},
++	{0x0000a55c, 0x43000a6e},
++	{0x0000a560, 0x43000a6e},
++	{0x0000a564, 0x43000a6e},
++	{0x0000a568, 0x43000a6e},
++	{0x0000a56c, 0x43000a6e},
++	{0x0000a570, 0x43000a6e},
++	{0x0000a574, 0x43000a6e},
++	{0x0000a578, 0x43000a6e},
++	{0x0000a57c, 0x43000a6e},
++	{0x0000a600, 0x00000000},
++	{0x0000a604, 0x00000000},
++	{0x0000a608, 0x00000000},
++	{0x0000a60c, 0x03804000},
++	{0x0000a610, 0x03804e01},
++	{0x0000a614, 0x03804e01},
++	{0x0000a618, 0x03804e01},
++	{0x0000a61c, 0x04009002},
++	{0x0000a620, 0x04009002},
++	{0x0000a624, 0x04009002},
++	{0x0000a628, 0x04009002},
++	{0x0000a62c, 0x04009002},
++	{0x0000a630, 0x04009002},
++	{0x0000a634, 0x04009002},
++	{0x0000a638, 0x04009002},
++	{0x0000a63c, 0x04009002},
++	{0x0000b2dc, 0xfffb52aa},
++	{0x0000b2e0, 0xfffd64cc},
++	{0x0000b2e4, 0xfffe80f0},
++	{0x0000b2e8, 0xffffff00},
++	{0x00016044, 0x024922db},
++	{0x00016048, 0x6c927a70},
++	{0x00016444, 0x024922db},
++	{0x00016448, 0x6c927a70},
++};
 +
-+	lockdep_assert_held(&mvm->mutex);
-+
-+	tdls_cfg_cmd.id_and_color =
-+		cpu_to_le32(FW_CMD_ID_AND_COLOR(mvmvif->id, mvmvif->color));
-+	tdls_cfg_cmd.tx_to_ap_tid = IWL_MVM_TDLS_FW_TID;
-+	tdls_cfg_cmd.tx_to_ap_ssn = cpu_to_le16(0); /* not used for now */
-+
-+	/* for now the Tx cmd is empty and unused */
-+
-+	/* populate TDLS peer data */
-+	cnt = 0;
-+	for (i = 0; i < IWL_MVM_STATION_COUNT; i++) {
-+		sta = rcu_dereference_protected(mvm->fw_id_to_mac_id[i],
-+						lockdep_is_held(&mvm->mutex));
-+		if (IS_ERR_OR_NULL(sta) || !sta->tdls)
-+			continue;
-+
-+		tdls_cfg_cmd.sta_info[cnt].sta_id = i;
-+		tdls_cfg_cmd.sta_info[cnt].tx_to_peer_tid =
-+							IWL_MVM_TDLS_FW_TID;
-+		tdls_cfg_cmd.sta_info[cnt].tx_to_peer_ssn = cpu_to_le16(0);
-+		tdls_cfg_cmd.sta_info[cnt].is_initiator =
-+				cpu_to_le32(sta->tdls_initiator ? 1 : 0);
-+
-+		cnt++;
-+	}
-+
-+	tdls_cfg_cmd.tdls_peer_count = cnt;
-+	IWL_DEBUG_TDLS(mvm, "send TDLS config to FW for %d peers\n", cnt);
-+
-+	ret = iwl_mvm_send_cmd(mvm, &cmd);
-+	if (WARN_ON_ONCE(ret))
-+		return;
-+
-+	pkt = cmd.resp_pkt;
-+	if (pkt->hdr.flags & IWL_CMD_FAILED_MSK) {
-+		IWL_ERR(mvm, "Bad return from TDLS_CONFIG_COMMAND (0x%08X)\n",
-+			pkt->hdr.flags);
-+		goto exit;
-+	}
-+
-+	if (WARN_ON_ONCE(iwl_rx_packet_payload_len(pkt) != sizeof(*resp)))
-+		goto exit;
-+
-+	/* we don't really care about the response at this point */
-+
-+exit:
-+	iwl_free_resp(&cmd);
-+}
-+
- void iwl_mvm_recalc_tdls_state(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 			       bool sta_added)
- {
- 	int tdls_sta_cnt = iwl_mvm_tdls_sta_count(mvm, vif);
+ static const u32 qca953x_2p0_baseband_core[][2] = {
+-	/* Addr      allmodes */
++	/* Addr      allmodes  */
+ 	{0x00009800, 0xafe68e30},
+ 	{0x00009804, 0xfd14e000},
+ 	{0x00009808, 0x9c0a9f6b},
+@@ -914,4 +956,400 @@ static const u32 qca953x_2p0_baseband_postamble[][5] = {
+ 	{0x0000b284, 0x00000000, 0x00000000, 0x00000010, 0x00000010},
+ };
  
--	/*
--	 * Disable ps when the first TDLS sta is added and re-enable it
--	 * when the last TDLS sta is removed
--	 */
--	if ((tdls_sta_cnt == 1 && sta_added) ||
--	    (tdls_sta_cnt == 0 && !sta_added))
-+	/* when the first peer joins, send a power update first */
-+	if (tdls_sta_cnt == 1 && sta_added)
-+		iwl_mvm_power_update_mac(mvm);
++static const u32 qca953x_2p0_common_wo_xlna_rx_gain_table[][2] = {
++	/* Addr      allmodes  */
++	{0x0000a000, 0x00010000},
++	{0x0000a004, 0x00030002},
++	{0x0000a008, 0x00050004},
++	{0x0000a00c, 0x00810080},
++	{0x0000a010, 0x00830082},
++	{0x0000a014, 0x01810180},
++	{0x0000a018, 0x01830182},
++	{0x0000a01c, 0x01850184},
++	{0x0000a020, 0x01890188},
++	{0x0000a024, 0x018b018a},
++	{0x0000a028, 0x018d018c},
++	{0x0000a02c, 0x03820190},
++	{0x0000a030, 0x03840383},
++	{0x0000a034, 0x03880385},
++	{0x0000a038, 0x038a0389},
++	{0x0000a03c, 0x038c038b},
++	{0x0000a040, 0x0390038d},
++	{0x0000a044, 0x03920391},
++	{0x0000a048, 0x03940393},
++	{0x0000a04c, 0x03960395},
++	{0x0000a050, 0x00000000},
++	{0x0000a054, 0x00000000},
++	{0x0000a058, 0x00000000},
++	{0x0000a05c, 0x00000000},
++	{0x0000a060, 0x00000000},
++	{0x0000a064, 0x00000000},
++	{0x0000a068, 0x00000000},
++	{0x0000a06c, 0x00000000},
++	{0x0000a070, 0x00000000},
++	{0x0000a074, 0x00000000},
++	{0x0000a078, 0x00000000},
++	{0x0000a07c, 0x00000000},
++	{0x0000a080, 0x29292929},
++	{0x0000a084, 0x29292929},
++	{0x0000a088, 0x29292929},
++	{0x0000a08c, 0x29292929},
++	{0x0000a090, 0x22292929},
++	{0x0000a094, 0x1d1d2222},
++	{0x0000a098, 0x0c111117},
++	{0x0000a09c, 0x00030303},
++	{0x0000a0a0, 0x00000000},
++	{0x0000a0a4, 0x00000000},
++	{0x0000a0a8, 0x00000000},
++	{0x0000a0ac, 0x00000000},
++	{0x0000a0b0, 0x00000000},
++	{0x0000a0b4, 0x00000000},
++	{0x0000a0b8, 0x00000000},
++	{0x0000a0bc, 0x00000000},
++	{0x0000a0c0, 0x001f0000},
++	{0x0000a0c4, 0x01000101},
++	{0x0000a0c8, 0x011e011f},
++	{0x0000a0cc, 0x011c011d},
++	{0x0000a0d0, 0x02030204},
++	{0x0000a0d4, 0x02010202},
++	{0x0000a0d8, 0x021f0200},
++	{0x0000a0dc, 0x0302021e},
++	{0x0000a0e0, 0x03000301},
++	{0x0000a0e4, 0x031e031f},
++	{0x0000a0e8, 0x0402031d},
++	{0x0000a0ec, 0x04000401},
++	{0x0000a0f0, 0x041e041f},
++	{0x0000a0f4, 0x0502041d},
++	{0x0000a0f8, 0x05000501},
++	{0x0000a0fc, 0x051e051f},
++	{0x0000a100, 0x06010602},
++	{0x0000a104, 0x061f0600},
++	{0x0000a108, 0x061d061e},
++	{0x0000a10c, 0x07020703},
++	{0x0000a110, 0x07000701},
++	{0x0000a114, 0x00000000},
++	{0x0000a118, 0x00000000},
++	{0x0000a11c, 0x00000000},
++	{0x0000a120, 0x00000000},
++	{0x0000a124, 0x00000000},
++	{0x0000a128, 0x00000000},
++	{0x0000a12c, 0x00000000},
++	{0x0000a130, 0x00000000},
++	{0x0000a134, 0x00000000},
++	{0x0000a138, 0x00000000},
++	{0x0000a13c, 0x00000000},
++	{0x0000a140, 0x001f0000},
++	{0x0000a144, 0x01000101},
++	{0x0000a148, 0x011e011f},
++	{0x0000a14c, 0x011c011d},
++	{0x0000a150, 0x02030204},
++	{0x0000a154, 0x02010202},
++	{0x0000a158, 0x021f0200},
++	{0x0000a15c, 0x0302021e},
++	{0x0000a160, 0x03000301},
++	{0x0000a164, 0x031e031f},
++	{0x0000a168, 0x0402031d},
++	{0x0000a16c, 0x04000401},
++	{0x0000a170, 0x041e041f},
++	{0x0000a174, 0x0502041d},
++	{0x0000a178, 0x05000501},
++	{0x0000a17c, 0x051e051f},
++	{0x0000a180, 0x06010602},
++	{0x0000a184, 0x061f0600},
++	{0x0000a188, 0x061d061e},
++	{0x0000a18c, 0x07020703},
++	{0x0000a190, 0x07000701},
++	{0x0000a194, 0x00000000},
++	{0x0000a198, 0x00000000},
++	{0x0000a19c, 0x00000000},
++	{0x0000a1a0, 0x00000000},
++	{0x0000a1a4, 0x00000000},
++	{0x0000a1a8, 0x00000000},
++	{0x0000a1ac, 0x00000000},
++	{0x0000a1b0, 0x00000000},
++	{0x0000a1b4, 0x00000000},
++	{0x0000a1b8, 0x00000000},
++	{0x0000a1bc, 0x00000000},
++	{0x0000a1c0, 0x00000000},
++	{0x0000a1c4, 0x00000000},
++	{0x0000a1c8, 0x00000000},
++	{0x0000a1cc, 0x00000000},
++	{0x0000a1d0, 0x00000000},
++	{0x0000a1d4, 0x00000000},
++	{0x0000a1d8, 0x00000000},
++	{0x0000a1dc, 0x00000000},
++	{0x0000a1e0, 0x00000000},
++	{0x0000a1e4, 0x00000000},
++	{0x0000a1e8, 0x00000000},
++	{0x0000a1ec, 0x00000000},
++	{0x0000a1f0, 0x00000396},
++	{0x0000a1f4, 0x00000396},
++	{0x0000a1f8, 0x00000396},
++	{0x0000a1fc, 0x00000196},
++	{0x0000b000, 0x00010000},
++	{0x0000b004, 0x00030002},
++	{0x0000b008, 0x00050004},
++	{0x0000b00c, 0x00810080},
++	{0x0000b010, 0x00830082},
++	{0x0000b014, 0x01810180},
++	{0x0000b018, 0x01830182},
++	{0x0000b01c, 0x01850184},
++	{0x0000b020, 0x02810280},
++	{0x0000b024, 0x02830282},
++	{0x0000b028, 0x02850284},
++	{0x0000b02c, 0x02890288},
++	{0x0000b030, 0x028b028a},
++	{0x0000b034, 0x0388028c},
++	{0x0000b038, 0x038a0389},
++	{0x0000b03c, 0x038c038b},
++	{0x0000b040, 0x0390038d},
++	{0x0000b044, 0x03920391},
++	{0x0000b048, 0x03940393},
++	{0x0000b04c, 0x03960395},
++	{0x0000b050, 0x00000000},
++	{0x0000b054, 0x00000000},
++	{0x0000b058, 0x00000000},
++	{0x0000b05c, 0x00000000},
++	{0x0000b060, 0x00000000},
++	{0x0000b064, 0x00000000},
++	{0x0000b068, 0x00000000},
++	{0x0000b06c, 0x00000000},
++	{0x0000b070, 0x00000000},
++	{0x0000b074, 0x00000000},
++	{0x0000b078, 0x00000000},
++	{0x0000b07c, 0x00000000},
++	{0x0000b080, 0x32323232},
++	{0x0000b084, 0x2f2f3232},
++	{0x0000b088, 0x23282a2d},
++	{0x0000b08c, 0x1c1e2123},
++	{0x0000b090, 0x14171919},
++	{0x0000b094, 0x0e0e1214},
++	{0x0000b098, 0x03050707},
++	{0x0000b09c, 0x00030303},
++	{0x0000b0a0, 0x00000000},
++	{0x0000b0a4, 0x00000000},
++	{0x0000b0a8, 0x00000000},
++	{0x0000b0ac, 0x00000000},
++	{0x0000b0b0, 0x00000000},
++	{0x0000b0b4, 0x00000000},
++	{0x0000b0b8, 0x00000000},
++	{0x0000b0bc, 0x00000000},
++	{0x0000b0c0, 0x003f0020},
++	{0x0000b0c4, 0x00400041},
++	{0x0000b0c8, 0x0140005f},
++	{0x0000b0cc, 0x0160015f},
++	{0x0000b0d0, 0x017e017f},
++	{0x0000b0d4, 0x02410242},
++	{0x0000b0d8, 0x025f0240},
++	{0x0000b0dc, 0x027f0260},
++	{0x0000b0e0, 0x0341027e},
++	{0x0000b0e4, 0x035f0340},
++	{0x0000b0e8, 0x037f0360},
++	{0x0000b0ec, 0x04400441},
++	{0x0000b0f0, 0x0460045f},
++	{0x0000b0f4, 0x0541047f},
++	{0x0000b0f8, 0x055f0540},
++	{0x0000b0fc, 0x057f0560},
++	{0x0000b100, 0x06400641},
++	{0x0000b104, 0x0660065f},
++	{0x0000b108, 0x067e067f},
++	{0x0000b10c, 0x07410742},
++	{0x0000b110, 0x075f0740},
++	{0x0000b114, 0x077f0760},
++	{0x0000b118, 0x07800781},
++	{0x0000b11c, 0x07a0079f},
++	{0x0000b120, 0x07c107bf},
++	{0x0000b124, 0x000007c0},
++	{0x0000b128, 0x00000000},
++	{0x0000b12c, 0x00000000},
++	{0x0000b130, 0x00000000},
++	{0x0000b134, 0x00000000},
++	{0x0000b138, 0x00000000},
++	{0x0000b13c, 0x00000000},
++	{0x0000b140, 0x003f0020},
++	{0x0000b144, 0x00400041},
++	{0x0000b148, 0x0140005f},
++	{0x0000b14c, 0x0160015f},
++	{0x0000b150, 0x017e017f},
++	{0x0000b154, 0x02410242},
++	{0x0000b158, 0x025f0240},
++	{0x0000b15c, 0x027f0260},
++	{0x0000b160, 0x0341027e},
++	{0x0000b164, 0x035f0340},
++	{0x0000b168, 0x037f0360},
++	{0x0000b16c, 0x04400441},
++	{0x0000b170, 0x0460045f},
++	{0x0000b174, 0x0541047f},
++	{0x0000b178, 0x055f0540},
++	{0x0000b17c, 0x057f0560},
++	{0x0000b180, 0x06400641},
++	{0x0000b184, 0x0660065f},
++	{0x0000b188, 0x067e067f},
++	{0x0000b18c, 0x07410742},
++	{0x0000b190, 0x075f0740},
++	{0x0000b194, 0x077f0760},
++	{0x0000b198, 0x07800781},
++	{0x0000b19c, 0x07a0079f},
++	{0x0000b1a0, 0x07c107bf},
++	{0x0000b1a4, 0x000007c0},
++	{0x0000b1a8, 0x00000000},
++	{0x0000b1ac, 0x00000000},
++	{0x0000b1b0, 0x00000000},
++	{0x0000b1b4, 0x00000000},
++	{0x0000b1b8, 0x00000000},
++	{0x0000b1bc, 0x00000000},
++	{0x0000b1c0, 0x00000000},
++	{0x0000b1c4, 0x00000000},
++	{0x0000b1c8, 0x00000000},
++	{0x0000b1cc, 0x00000000},
++	{0x0000b1d0, 0x00000000},
++	{0x0000b1d4, 0x00000000},
++	{0x0000b1d8, 0x00000000},
++	{0x0000b1dc, 0x00000000},
++	{0x0000b1e0, 0x00000000},
++	{0x0000b1e4, 0x00000000},
++	{0x0000b1e8, 0x00000000},
++	{0x0000b1ec, 0x00000000},
++	{0x0000b1f0, 0x00000396},
++	{0x0000b1f4, 0x00000396},
++	{0x0000b1f8, 0x00000396},
++	{0x0000b1fc, 0x00000196},
++};
 +
-+	/* configure the FW with TDLS peer info */
-+	iwl_mvm_tdls_config(mvm, vif);
++static const u32 qca953x_2p0_common_wo_xlna_rx_gain_bounds[][5] = {
++	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
++	{0x00009e44, 0xfe321e27, 0xfe321e27, 0xfe291e27, 0xfe291e27},
++	{0x00009e48, 0x5030201a, 0x5030201a, 0x50302012, 0x50302012},
++};
 +
-+	/* when the last peer leaves, send a power update last */
-+	if (tdls_sta_cnt == 0 && !sta_added)
- 		iwl_mvm_power_update_mac(mvm);
- }
- 
++static const u32 qca953x_2p0_modes_xpa_tx_gain_table[][2] = {
++	/* Addr      allmodes  */
++	{0x0000a2dc, 0xfffb52aa},
++	{0x0000a2e0, 0xfffd64cc},
++	{0x0000a2e4, 0xfffe80f0},
++	{0x0000a2e8, 0xffffff00},
++	{0x0000a410, 0x000050d5},
++	{0x0000a500, 0x00000000},
++	{0x0000a504, 0x04000002},
++	{0x0000a508, 0x08000004},
++	{0x0000a50c, 0x0c000006},
++	{0x0000a510, 0x1000000a},
++	{0x0000a514, 0x1400000c},
++	{0x0000a518, 0x1800000e},
++	{0x0000a51c, 0x1c000048},
++	{0x0000a520, 0x2000004a},
++	{0x0000a524, 0x2400004c},
++	{0x0000a528, 0x2800004e},
++	{0x0000a52c, 0x2b00024a},
++	{0x0000a530, 0x2f00024c},
++	{0x0000a534, 0x3300024e},
++	{0x0000a538, 0x36000668},
++	{0x0000a53c, 0x38000669},
++	{0x0000a540, 0x3a000868},
++	{0x0000a544, 0x3d00086a},
++	{0x0000a548, 0x4000086c},
++	{0x0000a54c, 0x4200086e},
++	{0x0000a550, 0x43000a6e},
++	{0x0000a554, 0x43000a6e},
++	{0x0000a558, 0x43000a6e},
++	{0x0000a55c, 0x43000a6e},
++	{0x0000a560, 0x43000a6e},
++	{0x0000a564, 0x43000a6e},
++	{0x0000a568, 0x43000a6e},
++	{0x0000a56c, 0x43000a6e},
++	{0x0000a570, 0x43000a6e},
++	{0x0000a574, 0x43000a6e},
++	{0x0000a578, 0x43000a6e},
++	{0x0000a57c, 0x43000a6e},
++	{0x0000a600, 0x00000000},
++	{0x0000a604, 0x00000000},
++	{0x0000a608, 0x00000000},
++	{0x0000a60c, 0x03804000},
++	{0x0000a610, 0x03804e01},
++	{0x0000a614, 0x03804e01},
++	{0x0000a618, 0x03804e01},
++	{0x0000a61c, 0x04009002},
++	{0x0000a620, 0x04009002},
++	{0x0000a624, 0x04009002},
++	{0x0000a628, 0x04009002},
++	{0x0000a62c, 0x04009002},
++	{0x0000a630, 0x04009002},
++	{0x0000a634, 0x04009002},
++	{0x0000a638, 0x04009002},
++	{0x0000a63c, 0x04009002},
++	{0x0000b2dc, 0xfffb52aa},
++	{0x0000b2e0, 0xfffd64cc},
++	{0x0000b2e4, 0xfffe80f0},
++	{0x0000b2e8, 0xffffff00},
++	{0x00016044, 0x024922db},
++	{0x00016048, 0x6c927a70},
++	{0x00016444, 0x024922db},
++	{0x00016448, 0x6c927a70},
++};
++
++static const u32 qca953x_2p0_modes_no_xpa_tx_gain_table[][2] = {
++	/* Addr      allmodes  */
++	{0x0000a2dc, 0xffd5f552},
++	{0x0000a2e0, 0xffe60664},
++	{0x0000a2e4, 0xfff80780},
++	{0x0000a2e8, 0xfffff800},
++	{0x0000a410, 0x000050de},
++	{0x0000a500, 0x00000061},
++	{0x0000a504, 0x04000063},
++	{0x0000a508, 0x08000065},
++	{0x0000a50c, 0x0c000261},
++	{0x0000a510, 0x10000263},
++	{0x0000a514, 0x14000265},
++	{0x0000a518, 0x18000482},
++	{0x0000a51c, 0x1b000484},
++	{0x0000a520, 0x1f000486},
++	{0x0000a524, 0x240008c2},
++	{0x0000a528, 0x28000cc1},
++	{0x0000a52c, 0x2d000ce3},
++	{0x0000a530, 0x31000ce5},
++	{0x0000a534, 0x350010e5},
++	{0x0000a538, 0x360012e5},
++	{0x0000a53c, 0x380014e5},
++	{0x0000a540, 0x3b0018e5},
++	{0x0000a544, 0x3d001d04},
++	{0x0000a548, 0x3e001d05},
++	{0x0000a54c, 0x40001d07},
++	{0x0000a550, 0x42001f27},
++	{0x0000a554, 0x43001f67},
++	{0x0000a558, 0x46001fe7},
++	{0x0000a55c, 0x47001f2b},
++	{0x0000a560, 0x49001f0d},
++	{0x0000a564, 0x4b001ed2},
++	{0x0000a568, 0x4c001ed4},
++	{0x0000a56c, 0x4e001f15},
++	{0x0000a570, 0x4f001ff6},
++	{0x0000a574, 0x4f001ff6},
++	{0x0000a578, 0x4f001ff6},
++	{0x0000a57c, 0x4f001ff6},
++	{0x0000a600, 0x00000000},
++	{0x0000a604, 0x00000000},
++	{0x0000a608, 0x00000000},
++	{0x0000a60c, 0x00804201},
++	{0x0000a610, 0x01008201},
++	{0x0000a614, 0x0180c402},
++	{0x0000a618, 0x0180c603},
++	{0x0000a61c, 0x0180c603},
++	{0x0000a620, 0x01c10603},
++	{0x0000a624, 0x01c10704},
++	{0x0000a628, 0x02c18b05},
++	{0x0000a62c, 0x02c14c07},
++	{0x0000a630, 0x01008704},
++	{0x0000a634, 0x01c10402},
++	{0x0000a638, 0x0301cc07},
++	{0x0000a63c, 0x0301cc07},
++	{0x0000b2dc, 0xffd5f552},
++	{0x0000b2e0, 0xffe60664},
++	{0x0000b2e4, 0xfff80780},
++	{0x0000b2e8, 0xfffff800},
++	{0x00016044, 0x049242db},
++	{0x00016048, 0x6c927a70},
++	{0x00016444, 0x049242db},
++	{0x00016448, 0x6c927a70},
++};
++
+ #endif /* INITVALS_953X_H */
 -- 
-1.9.1
+2.1.3
 
