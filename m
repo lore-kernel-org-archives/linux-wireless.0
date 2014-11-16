@@ -1,44 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:18235 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754060AbaKEKmz (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:55985 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932085AbaKPAjk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Nov 2014 05:42:55 -0500
-Date: Wed, 5 Nov 2014 16:14:59 +0530
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Kalle Valo <kvalo@qca.qualcomm.com>, <ath10k@lists.infradead.org>,
-	<linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: Re: [PATCH v2] ath10k: handle ieee80211 header and payload tracing
- separately
-Message-ID: <20141105104458.GA13249@qca.qualcomm.com> (sfid-20141105_114300_642840_0A2D1F79)
-References: <1414661336-20764-1-git-send-email-rmanohar@qti.qualcomm.com>
- <874muf7t9u.fsf@kamboji.qca.qualcomm.com>
- <20141104051643.GA14509@qca.qualcomm.com>
- <87k33a1lli.fsf@kamboji.qca.qualcomm.com>
- <20141105094437.GA21839@qca.qualcomm.com>
- <1415182321.2589.14.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1415182321.2589.14.camel@sipsolutions.net>
+	Sat, 15 Nov 2014 19:39:40 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH v2 00/11] ath9k patches
+Date: Sun, 16 Nov 2014 06:10:59 +0530
+Message-Id: <1416098470-14122-1-git-send-email-sujith@msujith.org> (sfid-20141116_013946_393565_297D5389)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 05, 2014 at 11:12:01AM +0100, Johannes Berg wrote:
-> On Wed, 2014-11-05 at 15:14 +0530, Rajkumar Manoharan wrote:
-> 
-> > The macro is defined to ease readability and reduce # of line changes.
-> > I originally thought of naming the macro as IEEE80211_HDR_LEN. But such
-> > definition does not look correct inside driver.
-> 
-> FWIW, I pointed Kalle to the macro on IRC - IMHO you should pass
-> arguments to the macro (and probably even make it an inline function)
-> rather than having it assume certain variables exist when the macro is
-> used.
-> 
-> Kalle may have misunderstood what I was trying to say :)
-> 
-Sounds clear..Thanks for pointing out. Will change it as inline funtion..
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
--Rajkumar
+Fixes for -next. Some of the patches have been
+posted earlier, this series addresses Felix's review
+comments.
+
+Sujith
+
+Miaoqing Pan (1):
+  ath9k: Use new QCA953x initvals
+
+Sujith Manoharan (10):
+  ath9k: Update QCA953x initvals
+  ath9k: Fix LED configuration
+  ath9k: Enable TSF2 for generic HW timers
+  ath9k: Store the chip chainmask in HW capabilities
+  ath9k: Fix thermometer programming
+  ath9k: Clear offchannel state properly
+  ath9k: Cancel pending offchannel operations
+  ath9k: Handle failure to send NoA
+  ath9k: Adjust tbtt delta properly
+  ath9k: Move roc completion to the offchannel timer
+
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c   |   9 +-
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c       |  51 ++-
+ drivers/net/wireless/ath/ath9k/ar953x_initvals.h | 498 +++++++++++++++++++++--
+ drivers/net/wireless/ath/ath9k/ath9k.h           |   2 +
+ drivers/net/wireless/ath/ath9k/channel.c         |  17 +-
+ drivers/net/wireless/ath/ath9k/gpio.c            |   9 +-
+ drivers/net/wireless/ath/ath9k/hw.c              |  43 +-
+ drivers/net/wireless/ath/ath9k/hw.h              |   4 +
+ drivers/net/wireless/ath/ath9k/init.c            |   3 +
+ drivers/net/wireless/ath/ath9k/main.c            |  58 ++-
+ drivers/net/wireless/ath/ath9k/pci.c             |   4 +-
+ drivers/net/wireless/ath/ath9k/reg.h             |   3 +
+ 12 files changed, 620 insertions(+), 81 deletions(-)
+
+-- 
+2.1.3
+
