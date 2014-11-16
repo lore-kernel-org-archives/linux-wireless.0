@@ -1,43 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:50210 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751647AbaKDIvC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Nov 2014 03:51:02 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH] mac80211: Increase uapsd max SP frames number
-Date: Tue,  4 Nov 2014 10:40:36 +0200
-Message-Id: <1415090436-12588-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20141104_095109_365394_483B6F11)
+Received: from s72.web-hosting.com ([198.187.29.22]:58058 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932086AbaKPAjk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 15 Nov 2014 19:39:40 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH v2 02/11] ath9k: Use new QCA953x initvals
+Date: Sun, 16 Nov 2014 06:11:01 +0530
+Message-Id: <1416098470-14122-3-git-send-email-sujith@msujith.org> (sfid-20141116_013947_001876_C640035E)
+In-Reply-To: <1416098470-14122-1-git-send-email-sujith@msujith.org>
+References: <1416098470-14122-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+From: Miaoqing Pan <miaoqing@qca.qualcomm.com>
 
-Deliver up to 128 frames during SP instead of 8 if unlimited max SP
-is specified during association.
+This patch updates the initvals for QCA953x v1.1 and v2.0
 
-Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Miaoqing Pan <miaoqing@qca.qualcomm.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- net/mac80211/sta_info.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c | 51 ++++++++++++++++++++++++------
+ 1 file changed, 41 insertions(+), 10 deletions(-)
 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index de494df..3352741 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -1531,7 +1531,7 @@ void ieee80211_sta_ps_deliver_uapsd(struct sta_info *sta)
- 		break;
- 	case 0:
- 		/* XXX: what is a good value? */
--		n_frames = 8;
-+		n_frames = 128;
- 		break;
- 	}
- 
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+index cb09102..06ad217 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+@@ -333,12 +333,29 @@ static void ar9003_hw_init_mode_regs(struct ath_hw *ah)
+ 			       qca953x_1p0_soc_preamble);
+ 		INIT_INI_ARRAY(&ah->iniSOC[ATH_INI_POST],
+ 			       qca953x_1p0_soc_postamble);
+-		INIT_INI_ARRAY(&ah->iniModesRxGain,
+-			       qca953x_1p0_common_wo_xlna_rx_gain_table);
+-		INIT_INI_ARRAY(&ah->ini_modes_rx_gain_bounds,
+-			       qca953x_1p0_common_wo_xlna_rx_gain_bounds);
+-		INIT_INI_ARRAY(&ah->iniModesTxGain,
+-			       qca953x_1p0_modes_no_xpa_tx_gain_table);
++
++		if (AR_SREV_9531_20(ah)) {
++			INIT_INI_ARRAY(&ah->iniModesRxGain,
++				       qca953x_2p0_common_wo_xlna_rx_gain_table);
++			INIT_INI_ARRAY(&ah->ini_modes_rx_gain_bounds,
++				       qca953x_2p0_common_wo_xlna_rx_gain_bounds);
++		} else {
++			INIT_INI_ARRAY(&ah->iniModesRxGain,
++				       qca953x_1p0_common_wo_xlna_rx_gain_table);
++			INIT_INI_ARRAY(&ah->ini_modes_rx_gain_bounds,
++				       qca953x_1p0_common_wo_xlna_rx_gain_bounds);
++		}
++
++		if (AR_SREV_9531_20(ah))
++			INIT_INI_ARRAY(&ah->iniModesTxGain,
++				       qca953x_2p0_modes_no_xpa_tx_gain_table);
++		else if (AR_SREV_9531_11(ah))
++			INIT_INI_ARRAY(&ah->iniModesTxGain,
++				       qca953x_1p1_modes_no_xpa_tx_gain_table);
++		else
++			INIT_INI_ARRAY(&ah->iniModesTxGain,
++				       qca953x_1p0_modes_no_xpa_tx_gain_table);
++
+ 		INIT_INI_ARRAY(&ah->iniModesFastClock,
+ 			       qca953x_1p0_modes_fast_clock);
+ 	} else if (AR_SREV_9580(ah)) {
+@@ -518,9 +535,15 @@ static void ar9003_tx_gain_table_mode0(struct ath_hw *ah)
+ 	else if (AR_SREV_9550(ah))
+ 		INIT_INI_ARRAY(&ah->iniModesTxGain,
+ 			ar955x_1p0_modes_xpa_tx_gain_table);
+-	else if (AR_SREV_9531(ah))
++	else if (AR_SREV_9531_10(ah))
++		INIT_INI_ARRAY(&ah->iniModesTxGain,
++			       qca953x_1p0_modes_xpa_tx_gain_table);
++	else if (AR_SREV_9531_11(ah))
+ 		INIT_INI_ARRAY(&ah->iniModesTxGain,
+-			qca953x_1p0_modes_xpa_tx_gain_table);
++			       qca953x_1p1_modes_xpa_tx_gain_table);
++	else if (AR_SREV_9531_20(ah))
++		INIT_INI_ARRAY(&ah->iniModesTxGain,
++			       qca953x_2p0_modes_xpa_tx_gain_table);
+ 	else if (AR_SREV_9580(ah))
+ 		INIT_INI_ARRAY(&ah->iniModesTxGain,
+ 			ar9580_1p0_lowest_ob_db_tx_gain_table);
+@@ -562,7 +585,10 @@ static void ar9003_tx_gain_table_mode1(struct ath_hw *ah)
+ 		INIT_INI_ARRAY(&ah->iniModesTxGain,
+ 			ar955x_1p0_modes_no_xpa_tx_gain_table);
+ 	else if (AR_SREV_9531(ah)) {
+-		if (AR_SREV_9531_11(ah))
++		if (AR_SREV_9531_20(ah))
++			INIT_INI_ARRAY(&ah->iniModesTxGain,
++				       qca953x_2p0_modes_no_xpa_tx_gain_table);
++		else if (AR_SREV_9531_11(ah))
+ 			INIT_INI_ARRAY(&ah->iniModesTxGain,
+ 				       qca953x_1p1_modes_no_xpa_tx_gain_table);
+ 		else
+@@ -789,11 +815,16 @@ static void ar9003_rx_gain_table_mode1(struct ath_hw *ah)
+ 			ar955x_1p0_common_wo_xlna_rx_gain_table);
+ 		INIT_INI_ARRAY(&ah->ini_modes_rx_gain_bounds,
+ 			ar955x_1p0_common_wo_xlna_rx_gain_bounds);
+-	} else if (AR_SREV_9531(ah)) {
++	} else if (AR_SREV_9531_10(ah) || AR_SREV_9531_11(ah)) {
+ 		INIT_INI_ARRAY(&ah->iniModesRxGain,
+ 			       qca953x_1p0_common_wo_xlna_rx_gain_table);
+ 		INIT_INI_ARRAY(&ah->ini_modes_rx_gain_bounds,
+ 			       qca953x_1p0_common_wo_xlna_rx_gain_bounds);
++	} else if (AR_SREV_9531_20(ah)) {
++		INIT_INI_ARRAY(&ah->iniModesRxGain,
++			       qca953x_2p0_common_wo_xlna_rx_gain_table);
++		INIT_INI_ARRAY(&ah->ini_modes_rx_gain_bounds,
++			       qca953x_2p0_common_wo_xlna_rx_gain_bounds);
+ 	} else if (AR_SREV_9580(ah))
+ 		INIT_INI_ARRAY(&ah->iniModesRxGain,
+ 			ar9580_1p0_wo_xlna_rx_gain_table);
 -- 
-1.9.1
+2.1.3
 
