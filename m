@@ -1,58 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:59296 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750812AbaKJHZ1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Nov 2014 02:25:27 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: dan.carpenter@oracle.com
-Date: Mon, 10 Nov 2014 09:25:17 +0200
-Message-Id: <1415604317-26688-1-git-send-email-luca@coelho.fi> (sfid-20141110_082532_717496_8D341475)
-In-Reply-To: <20141107100543.GA16332@mwanda>
-References: <20141107100543.GA16332@mwanda>
-Subject: [PATCH] wlcore: check minimum buffer size in some cmd_send functions
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:54569 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750903AbaKPWd5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 16 Nov 2014 17:33:57 -0500
+MIME-Version: 1.0
+In-Reply-To: <1415998553-12636-1-git-send-email-fabf@skynet.be>
+References: <1415998553-12636-1-git-send-email-fabf@skynet.be>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Mon, 17 Nov 2014 09:33:35 +1100
+Message-ID: <CAGRGNgWqjsDu_mQK=_agBWjOequb4b7ffgCuxRH=9d72grDYtQ@mail.gmail.com> (sfid-20141116_233437_351152_2E0865E5)
+Subject: Re: [PATCH 1/1 net-next] wireless: remove unnecessary sizeof(u8)
+To: Fabian Frederick <fabf@skynet.be>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>,
+	netdev <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+Hi Fabian,
 
-Check for the minimum required buffer length in wlcore_cmd_send() and
-wlcore_cmd_configure_failsafe.  This ensures that we will never try to
-use a buffer that is smaller than the required header.
+On Sat, Nov 15, 2014 at 7:55 AM, Fabian Frederick <fabf@skynet.be> wrote:
+> sizeof(u8) is always 1.
 
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
----
+I thought that sizeof(*variable) was preferred over sizeof(type), so
+shouldn't these be switched to that format instead?
 
-NOTE: this is only compile-tested.
+(I know that this is all no-op, but it should reduce the potential for
+highly unlikely bugs in the future. Also, the extra processing is
+compile-time not run-time.)
 
-drivers/net/wireless/ti/wlcore/cmd.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+Thanks,
 
-diff --git a/drivers/net/wireless/ti/wlcore/cmd.c b/drivers/net/wireless/ti/wlcore/cmd.c
-index 05604ee..5c6f3c8 100644
---- a/drivers/net/wireless/ti/wlcore/cmd.c
-+++ b/drivers/net/wireless/ti/wlcore/cmd.c
-@@ -64,6 +64,9 @@ static int __wlcore_cmd_send(struct wl1271 *wl, u16 id, void *buf,
- 		     id != CMD_STOP_FWLOGGER))
- 		return -EIO;
- 
-+	if (WARN_ON_ONCE(len < sizeof(*cmd)))
-+		return -EIO;
-+
- 	cmd = buf;
- 	cmd->id = cpu_to_le16(id);
- 	cmd->status = 0;
-@@ -891,6 +894,9 @@ int wlcore_cmd_configure_failsafe(struct wl1271 *wl, u16 id, void *buf,
- 
- 	wl1271_debug(DEBUG_CMD, "cmd configure (%d)", id);
- 
-+	if (WARN_ON_ONCE(len < sizeof(*acx)))
-+		return -EIO;
-+
- 	acx->id = cpu_to_le16(id);
- 
- 	/* payload length, does not include any headers */
+Julian Calaby
+
+
+> Signed-off-by: Fabian Frederick <fabf@skynet.be>
+> ---
+>  drivers/net/wireless/b43/ppr.c            |  2 +-
+>  drivers/net/wireless/iwlwifi/pcie/trans.c |  2 +-
+>  drivers/net/wireless/rtlwifi/efuse.c      | 16 ++++++++--------
+>  3 files changed, 10 insertions(+), 10 deletions(-)
+>
+> diff --git a/drivers/net/wireless/b43/ppr.c b/drivers/net/wireless/b43/ppr.c
+> index 9a77027..6bc1c6f 100644
+> --- a/drivers/net/wireless/b43/ppr.c
+> +++ b/drivers/net/wireless/b43/ppr.c
+> @@ -28,7 +28,7 @@ void b43_ppr_clear(struct b43_wldev *dev, struct b43_ppr *ppr)
+>         memset(ppr, 0, sizeof(*ppr));
+>
+>         /* Compile-time PPR check */
+> -       BUILD_BUG_ON(sizeof(struct b43_ppr) != B43_PPR_RATES_NUM * sizeof(u8));
+> +       BUILD_BUG_ON(sizeof(struct b43_ppr) != B43_PPR_RATES_NUM);
+>  }
+>
+>  void b43_ppr_add(struct b43_wldev *dev, struct b43_ppr *ppr, int diff)
+> diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
+> index 836725e..f016824 100644
+> --- a/drivers/net/wireless/iwlwifi/pcie/trans.c
+> +++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
+> @@ -1157,7 +1157,7 @@ static void iwl_trans_pcie_configure(struct iwl_trans *trans,
+>                 trans_pcie->n_no_reclaim_cmds = trans_cfg->n_no_reclaim_cmds;
+>         if (trans_pcie->n_no_reclaim_cmds)
+>                 memcpy(trans_pcie->no_reclaim_cmds, trans_cfg->no_reclaim_cmds,
+> -                      trans_pcie->n_no_reclaim_cmds * sizeof(u8));
+> +                      trans_pcie->n_no_reclaim_cmds);
+>
+>         trans_pcie->rx_buf_size_8k = trans_cfg->rx_buf_size_8k;
+>         if (trans_pcie->rx_buf_size_8k)
+> diff --git a/drivers/net/wireless/rtlwifi/efuse.c b/drivers/net/wireless/rtlwifi/efuse.c
+> index 0b4082c..a3135c5 100644
+> --- a/drivers/net/wireless/rtlwifi/efuse.c
+> +++ b/drivers/net/wireless/rtlwifi/efuse.c
+> @@ -251,8 +251,8 @@ void read_efuse(struct ieee80211_hw *hw, u16 _offset, u16 _size_byte, u8 *pbuf)
+>         }
+>
+>         /* allocate memory for efuse_tbl and efuse_word */
+> -       efuse_tbl = kzalloc(rtlpriv->cfg->maps[EFUSE_HWSET_MAX_SIZE] *
+> -                           sizeof(u8), GFP_ATOMIC);
+> +       efuse_tbl = kzalloc(rtlpriv->cfg->maps[EFUSE_HWSET_MAX_SIZE],
+> +                           GFP_ATOMIC);
+>         if (!efuse_tbl)
+>                 return;
+>         efuse_word = kzalloc(EFUSE_MAX_WORD_UNIT * sizeof(u16 *), GFP_ATOMIC);
+> @@ -733,8 +733,8 @@ static int efuse_pg_packet_read(struct ieee80211_hw *hw, u8 offset, u8 *data)
+>         if (offset > 15)
+>                 return false;
+>
+> -       memset(data, 0xff, PGPKT_DATA_SIZE * sizeof(u8));
+> -       memset(tmpdata, 0xff, PGPKT_DATA_SIZE * sizeof(u8));
+> +       memset(data, 0xff, PGPKT_DATA_SIZE);
+> +       memset(tmpdata, 0xff, PGPKT_DATA_SIZE);
+>
+>         while (continual && (efuse_addr < EFUSE_MAX_SIZE)) {
+>                 if (readstate & PG_STATE_HEADER) {
+> @@ -772,7 +772,7 @@ static void efuse_write_data_case1(struct ieee80211_hw *hw, u16 *efuse_addr,
+>         struct rtl_priv *rtlpriv = rtl_priv(hw);
+>         struct pgpkt_struct tmp_pkt;
+>         int dataempty = true;
+> -       u8 originaldata[8 * sizeof(u8)];
+> +       u8 originaldata[8];
+>         u8 badworden = 0x0F;
+>         u8 match_word_en, tmp_word_en;
+>         u8 tmpindex;
+> @@ -881,7 +881,7 @@ static void efuse_write_data_case2(struct ieee80211_hw *hw, u16 *efuse_addr,
+>         struct pgpkt_struct tmp_pkt;
+>         u8 pg_header;
+>         u8 tmp_header;
+> -       u8 originaldata[8 * sizeof(u8)];
+> +       u8 originaldata[8];
+>         u8 tmp_word_cnts;
+>         u8 badworden = 0x0F;
+>
+> @@ -904,7 +904,7 @@ static void efuse_write_data_case2(struct ieee80211_hw *hw, u16 *efuse_addr,
+>
+>                 tmp_word_cnts = efuse_calculate_word_cnts(tmp_pkt.word_en);
+>
+> -               memset(originaldata, 0xff,  8 * sizeof(u8));
+> +               memset(originaldata, 0xff,  8);
+>
+>                 if (efuse_pg_packet_read(hw, tmp_pkt.offset, originaldata)) {
+>                         badworden = enable_efuse_data_write(hw,
+> @@ -962,7 +962,7 @@ static int efuse_pg_packet_write(struct ieee80211_hw *hw,
+>         target_pkt.offset = offset;
+>         target_pkt.word_en = word_en;
+>
+> -       memset(target_pkt.data, 0xFF,  8 * sizeof(u8));
+> +       memset(target_pkt.data, 0xFF,  8);
+>
+>         efuse_word_enable_data_read(word_en, data, target_pkt.data);
+>         target_word_cnts = efuse_calculate_word_cnts(target_pkt.word_en);
+> --
+> 1.9.3
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
 -- 
-2.1.1
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
