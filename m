@@ -1,115 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:40310 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754781AbaKSSip (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Nov 2014 13:38:45 -0500
-Message-ID: <1416422321.9374.24.camel@sipsolutions.net> (sfid-20141119_193848_630824_ECE2C0C6)
-Subject: Re: [PATCH 6/6] mac80211: add ieee80211_tx_status_noskb
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 19 Nov 2014 19:38:41 +0100
-In-Reply-To: <1416094080-49220-6-git-send-email-nbd@openwrt.org>
-References: <1416094080-49220-1-git-send-email-nbd@openwrt.org>
-	 <1416094080-49220-6-git-send-email-nbd@openwrt.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wg0-f46.google.com ([74.125.82.46]:37901 "EHLO
+	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755075AbaKPLB1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 16 Nov 2014 06:01:27 -0500
+Received: by mail-wg0-f46.google.com with SMTP id x13so22807070wgg.5
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Nov 2014 03:01:26 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20141113225528.GE24486@wotan.suse.de>
+References: <1415895219-19848-1-git-send-email-arik@wizery.com>
+ <1415895219-19848-2-git-send-email-arik@wizery.com> <20141113225528.GE24486@wotan.suse.de>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Sun, 16 Nov 2014 13:01:11 +0200
+Message-ID: <CA+XVXfeLd9YN6CQFN1aPix4Ee_fWSZAmZP0jqOu98eC7wGBcUQ@mail.gmail.com> (sfid-20141116_120130_659140_490D1246)
+Subject: Re: [PATCH v2 2/4] cfg80211: update missing fields in custom
+ regulatory path
+To: "Luis R. Rodriguez" <mcgrof@suse.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Jonathan Doron <jond@wizery.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Nov 14, 2014 at 12:55 AM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
+> On Thu, Nov 13, 2014 at 06:13:37PM +0200, Arik Nemtsov wrote:
+>> From: Jonathan Doron <jond@wizery.com>
+>>
+>> Some channels fields were not being updated in the custom regulatory
+>> path. Update them according to the code in handle_channel().
+>>
+>> Signed-off-by: Jonathan Doron <jonathanx.doron@intel.com>
+>> Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+>> ---
+>>  net/wireless/reg.c | 13 +++++++++++++
+>>  1 file changed, 13 insertions(+)
+>>
+>> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+>> index 6459ddd..174d8f82 100644
+>> --- a/net/wireless/reg.c
+>> +++ b/net/wireless/reg.c
+>> @@ -1693,10 +1693,23 @@ static void handle_channel_custom(struct wiphy *wiphy,
+>>       if (max_bandwidth_khz < MHZ_TO_KHZ(160))
+>>               bw_flags |= IEEE80211_CHAN_NO_160MHZ;
+>>
+>> +     chan->dfs_state = NL80211_DFS_USABLE;
+>
+> NL80211_DFS_USABLE is 0 so this is not needed. Being explicit about it
+> is OK I suppose though.
+>
+>> +     chan->dfs_state_entered = jiffies;
+>
+> OK.
+>
+>> +
+>> +     chan->beacon_found = false;
+>
+> false is 0 so this is not needed but being explicit about it is OK.
+>
+>>       chan->flags |= map_regdom_flags(reg_rule->flags) | bw_flags;
+>>       chan->max_antenna_gain = (int) MBI_TO_DBI(power_rule->max_antenna_gain);
+>>       chan->max_reg_power = chan->max_power =
+>>               (int) MBM_TO_DBM(power_rule->max_eirp);
+>> +
+>> +     if (chan->flags & IEEE80211_CHAN_RADAR) {
+>> +             if (reg_rule->dfs_cac_ms)
+>> +                     chan->dfs_cac_ms = reg_rule->dfs_cac_ms;
+>> +             else
+>> +                     chan->dfs_cac_ms = IEEE80211_DFS_MIN_CAC_TIME_MS;
+>> +     }
+>> +
+>> +     chan->max_power = chan->max_reg_power;
+>>  }
+>
+> I rather you split this up into the stuff not required (things which
+> are good to be explicit about) Vs possible fixes, these last are
+> good fixes. Also put them as part of your first set of patches
+> and add my Acked-by so Johannes can already merge them. If you want
+> them merged faster just send them separately now.
+>
+> Acked-by: Luis R. Rodriguez <mcgrof@suse.com>
 
->  /**
-> + * ieee80211_tx_status_noskb - transmit status callback without skb
-> + *
-> + * This function can be used as a replacement for ieee80211_tx_status
-> + * in drivers that cannot reliably map tx status information back to
-> + * specific skbs.
-> + *
-> + * This function may not be called in IRQ context. Calls to this function
-> + * for a single hardware must be synchronized against each other. Calls
-> + * to this function, ieee80211_tx_status_ni() and ieee80211_tx_status_irqsafe()
-> + * may not be mixed for a single hardware. Must not run concurrently with
-> + * ieee80211_rx() or ieee80211_rx_ni().
+Thanks.
 
-None of that seems very likely. Did you just copy/paste it? :)
+I'll split into 2 and send then.
 
-
-> +static inline void
-> +rate_control_tx_status_noskb(struct ieee80211_local *local,
-> +			     struct ieee80211_supported_band *sband,
-> +			     struct sta_info *sta,
-> +			     struct ieee80211_tx_info *info)
-> +{
-> +	struct rate_control_ref *ref = local->rate_ctrl;
-> +	struct ieee80211_sta *ista = &sta->sta;
-> +	void *priv_sta = sta->rate_ctrl_priv;
-> +
-> +	if (!ref || !test_sta_flag(sta, WLAN_STA_RATE_CONTROL))
-> +		return;
-> +
-> +	ref->ops->tx_status_noskb(ref->priv, sband, ista, priv_sta, info);
-> +}
-
-Oh, so you're adding another one ... I guess I understand better now.
-
-> +
-> +
-
-two blank lines?
-
-> -static void ieee80211_lost_packet(struct sta_info *sta, struct sk_buff *skb)
-> +static void ieee80211_lost_packet(struct sta_info *sta,
-> +				  struct ieee80211_tx_info *info)
->  {
-> -	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-> -
-
-some of this refactoring might better be in a separate patch.
-
->  	/* This packet was aggregated but doesn't carry status info */
->  	if ((info->flags & IEEE80211_TX_CTL_AMPDU) &&
->  	    !(info->flags & IEEE80211_TX_STAT_AMPDU))
-> @@ -571,24 +570,13 @@ static void ieee80211_lost_packet(struct sta_info *sta, struct sk_buff *skb)
->  	sta->lost_packets = 0;
->  }
->  
-> -void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
-> +static int ieee80211_tx_get_rates(struct ieee80211_hw *hw,
-> +				  struct ieee80211_tx_info *info,
-> +				  int *retry_count)
->  {
-> -	struct sk_buff *skb2;
-> -	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
-> -	struct ieee80211_local *local = hw_to_local(hw);
-> -	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-> -	__le16 fc;
-> -	struct ieee80211_supported_band *sband;
-> -	struct ieee80211_sub_if_data *sdata;
-> -	struct net_device *prev_dev = NULL;
-> -	struct sta_info *sta, *tmp;
-> -	int retry_count = -1, i;
->  	int rates_idx = -1;
-> -	bool send_to_cooked;
-> -	bool acked;
-> -	struct ieee80211_bar *bar;
-> -	int rtap_len;
-> -	int shift = 0;
-> +	int count = -1;
-> +	int i;
-
-ditto - too big for here.
-
-> +	acked = !!(info->flags & IEEE80211_TX_STAT_ACK);
-> +	if (pubsta) {
-> +		struct sta_info *sta;
-> +
-> +		sta = container_of(pubsta, struct sta_info, sta);
-> +
-> +		if (info->flags & IEEE80211_TX_STATUS_EOSP)
-> +			clear_sta_flag(sta, WLAN_STA_SP);
-
-That doesn't seem reasonable really - if you're reporting out of band
-then don't report it as TX status but rather with the eosp() call.
-
-johannes
-
+Arik
