@@ -1,102 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:54190 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751828AbaKGVaJ (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:62188 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754715AbaKPNCS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Nov 2014 16:30:09 -0500
-Date: Fri, 7 Nov 2014 16:21:18 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Peter Gent <Peter.Gent@mbie.govt.nz>
-Cc: "wireless-regdb@lists.infradead.org"
-	<wireless-regdb@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: wireless-regdb: Update regulatory rules for New Zealand (NZ) on
- 5GHz and 60 GHz [UNCLASSIFIED]
-Message-ID: <20141107212117.GF29733@tuxdriver.com> (sfid-20141107_223014_676581_88BF5CBF)
-References: <D0D2EC853BFD0147A005CC7FAC0E4A53E39A56A6@AKI2K113.wd.govt.nz>
+	Sun, 16 Nov 2014 08:02:18 -0500
+Message-ID: <5468A056.9030200@broadcom.com> (sfid-20141116_140307_638133_B746EFCA)
+Date: Sun, 16 Nov 2014 14:02:14 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <D0D2EC853BFD0147A005CC7FAC0E4A53E39A56A6@AKI2K113.wd.govt.nz>
+To: Dmitry Torokhov <dtor@chromium.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	<linux-wireless@vger.kernel.org>,
+	<brcm80211-dev-list@broadcom.com>, <netdev@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, Hans de Goede <hdegoede@redhat.com>
+Subject: Re: [PATCH] brcmfmac: fix error handling of irq_of_parse_and_map
+References: <20141114221221.GA35541@dtor-ws>
+In-Reply-To: <20141114221221.GA35541@dtor-ws>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 28, 2014 at 01:04:10AM +0000, Peter Gent wrote:
-> Hi,
-> 
-> We wish to note the following changes should be made to the wireless regulatory database to reflect some recent changes to the 60 GHz band here in New Zealand. In additional there are some inaccuracies when compared to our current licencing for the 5 GHz "Wi-Fi" band.
-> 
-> The updated entry for New Zealand should read:
-> 
-> 5150 MHz  - 5250 MHz  80MHz channels, indoor use only at -7.0 dBW EIRP TPC enabled
-> 5250 MHz -  5350 MHz  80 MHz channels, indoor use at -7.0 dBW EIRP, outdoor use at 0 dBW EIRP with DFS and TPC enabled* 
-> 5470 MHz  - 5725 MHz  80 MHz channels, 0 dBW EIRP with DFS and TPC enabled*
-> 5725 MHz  - 5875 MHz  80 MHz channels, 6.0 dBW EIRP with frequency hopping enabled  
-> 57000 MHz - 66000 MHz, indoor use only at 13.0 dBW EIRP 
-> 
-> *if TPC is not enabled, than transmit power must be reduced by 3dB
-> 
-> Further information on SRD licencing rules can be found at http://www.rsm.govt.nz/cms/licensees/types-of-licence/general-user-licences/short-range-devices 
-> 
-> Regards
-> 
-> Peter
+On 11/14/14 23:12, Dmitry Torokhov wrote:
+> Return value of irq_of_parse_and_map() is unsigned int, with 0
+> indicating failure, so testing for negative result never works.
 
-Peter,
+Whoops, that is bad. Thanks for catching this. It probably needs to go 
+to stable as well for 3.17 kernel.
 
-Thanks for making us aware of this info.  I'm sorry that there has
-been no other response so far.
++Cc: stable@vger.kernel.org # v3.17
++Acked-by: Arend van Spriel <arend@broadcom.com>
+> Signed-off-by: Dmitry Torokhov<dtor@chromium.org>
+> ---
+>
+> Not tested, found by casual code inspection.
+>
+>   drivers/net/wireless/brcm80211/brcmfmac/of.c | 4 ++--
+>   1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/of.c b/drivers/net/wireless/brcm80211/brcmfmac/of.c
+> index eb3fce82..c824570 100644
+> --- a/drivers/net/wireless/brcm80211/brcmfmac/of.c
+> +++ b/drivers/net/wireless/brcm80211/brcmfmac/of.c
+> @@ -40,8 +40,8 @@ void brcmf_of_probe(struct brcmf_sdio_dev *sdiodev)
+>   		return;
+>
+>   	irq = irq_of_parse_and_map(np, 0);
+> -	if (irq<  0) {
+> -		brcmf_err("interrupt could not be mapped: err=%d\n", irq);
+> +	if (!irq) {
+> +		brcmf_err("interrupt could not be mapped\n");
+>   		devm_kfree(dev, sdiodev->pdata);
+>   		return;
+>   	}
 
-Changes to our regulatory rules database are typically proposed in the
-form of a patch.  This promotes specificity in making such changes.
-I suspect that you are unfamiliar with this form of change proposal,
-so I have taken a first whack at it.
-
-While I maintain the database, I am not as radio proficient as I
-perhaps should be.  I normally leave writing such patches for others,
-and wait for some level of agreement to be reached before applying
-changes.  In this case, it is quite likely that I have overlooked
-something or misinterpreted (or simply misunderstood) your change
-suggestions.
-
-I hope that you and others will take a moment to comment and/or
-suggest further changes to my proposed changes below.  Without some
-affirmative commentary I will not apply any derivative of the changes
-specified below.
-
-Thanks!
-
-John
-
-diff --git a/db.txt b/db.txt
-index 6cf86e15627b..3b9db42309dc 100644
---- a/db.txt
-+++ b/db.txt
-@@ -848,12 +848,20 @@ country NP: DFS-JP
- 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
- 	(5735 - 5835 @ 80), (20)
- 
-+# 5150 MHz  - 5250 MHz  80MHz channels, indoor use only at -7.0 dBW EIRP TPC enabled
-+# 5250 MHz -  5350 MHz  80 MHz channels, indoor use at -7.0 dBW EIRP, outdoor use at 0 dBW EIRP with DFS and TPC enabled*
-+# 5470 MHz  - 5725 MHz  80 MHz channels, 0 dBW EIRP with DFS and TPC enabled*
-+# 5725 MHz  - 5875 MHz  80 MHz channels, 6.0 dBW EIRP with frequency hopping enabled
-+# 57000 MHz - 66000 MHz, indoor use only at 13.0 dBW EIRP
-+# *if TPC is not enabled, than transmit power must be reduced by 3dB
-+# http://www.rsm.govt.nz/cms/licensees/types-of-licence/general-user-licences/short-range-devices
- country NZ: DFS-FCC
- 	(2402 - 2482 @ 40), (30)
--	(5170 - 5250 @ 80), (17), AUTO-BW
--	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
--	(5490 - 5730 @ 160), (24), DFS
--	(5735 - 5835 @ 80), (30)
-+	(5150 - 5250 @ 80), (20), AUTO-BW
-+	(5250 - 5350 @ 80), (20), DFS, AUTO-BW
-+	(5470 - 5725 @ 160), (27), DFS
-+	(5725 - 5875 @ 80), (33)
-+	(57000 - 66000 @ 2160), (40)
- 
- country OM: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
-
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
