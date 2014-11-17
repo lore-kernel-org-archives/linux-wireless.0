@@ -1,58 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:35687 "EHLO mx2.suse.de"
+Received: from hauke-m.de ([5.39.93.123]:39314 "EHLO hauke-m.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752567AbaKUXiZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Nov 2014 18:38:25 -0500
-Date: Sat, 22 Nov 2014 00:38:23 +0100
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Jonathan Doron <jond@wizery.com>
-Subject: Re: [PATCH v2 4/4] cfg80211: Allow usermode to query wiphy
-	specific regd info
-Message-ID: <20141121233823.GF25677@wotan.suse.de> (sfid-20141122_003829_019192_9BFE9C67)
-References: <1415895219-19848-1-git-send-email-arik@wizery.com> <1415895219-19848-4-git-send-email-arik@wizery.com> <20141113231323.GG24486@wotan.suse.de> <CA+XVXfeqfHHDh6AcgkuBW9BwUo-s77+pnbDtP_y=e0dZQVBitg@mail.gmail.com> <1416496922.8557.7.camel@sipsolutions.net> <CA+XVXffq5h-5=wvPQ1PY0CoSa5zgi9j-kNCw5RbWjd0zDLigfA@mail.gmail.com> <20141120205459.GR24486@wotan.suse.de> <CA+XVXfc2-9Q+2AYj_GwyYN_agawk3LqLGssibzaxA6taszo4NQ@mail.gmail.com>
+	id S1752873AbaKQXFV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Nov 2014 18:05:21 -0500
+Message-ID: <546A7F2E.6090501@hauke-m.de> (sfid-20141118_000529_992640_353012D3)
+Date: Tue, 18 Nov 2014 00:05:18 +0100
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CA+XVXfc2-9Q+2AYj_GwyYN_agawk3LqLGssibzaxA6taszo4NQ@mail.gmail.com>
+To: ASIC Felix <ic.felix@gmail.com>, linux-wireless@vger.kernel.org,
+	sujith@msujith.org
+Subject: Re: backports-20141114 ath9k doesn't build for me on Ubuntu LTS 14.04
+References: <CAJqaZwxC+Us=Vis0gQry_vdF--2SCmW9wej5BY+jAfgeb4U6KQ@mail.gmail.com>
+In-Reply-To: <CAJqaZwxC+Us=Vis0gQry_vdF--2SCmW9wej5BY+jAfgeb4U6KQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 21, 2014 at 11:33:43AM +0200, Arik Nemtsov wrote:
-> On Thu, Nov 20, 2014 at 10:54 PM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
-> >>
-> >> Then it gets the global one, and it knows it via a wiphy attribute:
-> >>
-> >>       (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED) &&
-> >> +                   (nla_put_flag(msg, NL80211_ATTR_WIPHY_SELF_MANAGED_REG)))
-> >> +                       goto nla_put_failure;
-> >>
-> >> (we won't do this put_flag if it's global)
-> >
-> > You can still follow this on wpa_s for REGULATORY_WIPHY_SELF_MANAGED, and
-> > the other type that uses wiphy->regd would still follow the global regdomain.
-> > The other flag I'm looking for is more informational for userspace in particular
-> > 'iw reg get' (for central and all devices) or 'iw reg get dev wlan0'.
+On 11/18/2014 12:02 AM, ASIC Felix wrote:
+> Hi,
 > 
-> I'm not sure why another flag is needed for userspace.
+> backports-20141114 ath9k doesn't build for me on Ubuntu LTS 14.04
+> kernel 3.13.0-39
+> 
+> ] make defconfig-ath9k && make -j4
+> 
+> /home/me/Downloads/backports-20141114/drivers/net/wireless/ath/ath9k/common-spectral.c:40:5:
+> error: redefinition of \u2018ath_cmn_process_fft\u2019
+>  int ath_cmn_process_fft(struct ath_spec_scan_priv *spec_priv, struct
+> ieee80211_hdr *hdr,
+>      ^
+> In file included from
+> /home/me/Downloads/backports-20141114/drivers/net/wireless/ath/ath9k/common.h:27:0,
+>                  from
+> /home/me/Downloads/backports-20141114/drivers/net/wireless/ath/ath9k/ath9k.h:27,
+>                  from
+> /home/me/Downloads/backports-20141114/drivers/net/wireless/ath/ath9k/common-spectral.c:18:
+> /home/me/Downloads/backports-20141114/drivers/net/wireless/ath/ath9k/common-spectral.h:146:19:
+> note: previous definition of \u2018ath_cmn_process_fft\u2019 was here
+>  static inline int ath_cmn_process_fft(struct ath_spec_scan_priv *spec_priv,
+>                    ^
+> make[8]: *** [/home/me/Downloads/backports-20141114/drivers/net/wireless/ath/ath9k/common-spectral.o]
+> Error 1
+> 
+> Felix
 
-wiphy->regd will be used for REGULATORY_WIPHY_SELF_MANAGED and also on
-devices that regulatory_hint() is called. Even though users of regulatory_hint()
-will still abide by an intersection its useful to display that device's
-regulatory domain in userspace, for that you'd need to distinguish it from
-REGULATORY_WIPHY_SELF_MANAGED so another flag is needed. Showing that
-regulatory domain will be informational.
+There is a bug in upstream ath9k, you need this additional patch:
 
-> If we have
-> SELF_MANAGED, we'll return the per-wiphy one (if a wiphy_idx is given
-> to us of course). For validation purposes, the global one is used in
-> other cases. And for CUSTOM_REG, we'll return the global one (we don't
-> have the per-wiphy information in cfg80211).
+http://www.spinics.net/lists/linux-wireless/msg129456.html
 
-Atheros cards always use CUSTOM_REG first, then later if they determine
-the card was programmed with an alpha2 regulatory_hint() is called and
-the CUSTOM_REG flag cleared. Regardless if wiphy->regd is set it would
-be useful to have that information available.
-
-  Luis
+Hauke
