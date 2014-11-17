@@ -1,72 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:3444 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752051AbaK3NHN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Nov 2014 08:07:13 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
-Subject: RE: [RFC] mac80211: take reserved vif into account when calculating
- the min_def
-Date: Sun, 30 Nov 2014 13:07:09 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB31B5A60D4@hasmsx107.ger.corp.intel.com> (sfid-20141130_140717_987766_4228DC7F)
-References: <1417091446-16308-1-git-send-email-emmanuel.grumbach@intel.com>
- <CA+BoTQmRPVEqCe=tPGb5gcfnBQ=h8kDOOAXMKgbUktBabTvLXw@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:25295 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751297AbaKQMDY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Nov 2014 07:03:24 -0500
+Message-ID: <5469E3F7.7020303@broadcom.com> (sfid-20141117_130328_100301_966CBE91)
+Date: Mon, 17 Nov 2014 13:03:03 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>,
+	<linux-wireless@vger.kernel.org>
+CC: <luca@coelho.fi>, Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [RFC] mac80211: allow drivers to provide any statistics
+References: <1416221286-23126-1-git-send-email-johannes@sipsolutions.net>
+In-Reply-To: <1416221286-23126-1-git-send-email-johannes@sipsolutions.net>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiA+DQo+ID4gT24gMjcgTm92ZW1iZXIgMjAxNCBhdCAxMzozMCwgRW1tYW51ZWwgR3J1bWJhY2gN
-Cj4gPiA8ZW1tYW51ZWwuZ3J1bWJhY2hAaW50ZWwuY29tPiB3cm90ZToNCj4gPiA+IFdoZW4gd2Ug
-d2FudCB0byBjYWxjdWxhdGUgdGhlIG1pbmltYWwgYmFuZHdpZHRoIG5lZWRlZCBmb3IgYSBjaGFu
-bmVsDQo+ID4gPiBjb250ZXh0LCB3ZSBuZWVkIHRvIHRha2UgaW50byBhY2NvdW50IHZpZnMgdGhh
-dCBoYXZlIHJlc2VydmVkIHRoZQ0KPiA+ID4gY2hhbm5lbCBjb250ZXh0Lg0KPiA+ID4gSSBoaXQg
-YW4gaXNzdWUgd2l0aCBpd2x3aWZpIGFuZCBjaGFubmVsIHN3aXRjaCBhcyBhIGNsaWVudC4NCj4g
-PiA+DQo+ID4gPiBXZSB3b3VsZCBhbGxvY2F0ZSBhIHZpcmdpbiBjaGFubmVsIGNvbnRleHQgYW5k
-IHJlc2VydmUgaXQuDQo+ID4gPiBBdCB0aGF0IHN0YWdlLCB0aGUgbWluX2RlZiB3YXMgMjBNSHou
-DQo+ID4gPiBUaGVuIHdlIHdvdWxkIHVzZSBpdCBhZnRlciBDU0EsIGFuZCBzdGFydCB0cmFuc21p
-dHRpbmcsIGJ1dCB0aGUNCj4gPiA+IGNoYW5uZWwgY29udGV4dCB3YXMgc3RpbGwgMjBNSHogZXZl
-biBpZiB0aGUgR08gd2FzIGluIDQwTUh6LiBUaGlzDQo+ID4gPiBtYWRlIHRoZSBmaXJtd2FyZSB1
-bmhhcHB5Lg0KPiA+ID4NCj4gPiA+IFNpZ25lZC1vZmYtYnk6IEVtbWFudWVsIEdydW1iYWNoIDxl
-bW1hbnVlbC5ncnVtYmFjaEBpbnRlbC5jb20+DQoNClNvIHdlIGRpc2N1c3NlZCBpdCBpbnRlcm5h
-bGx5IC0gYW5kIGl0IHNlZW1zIHRoYXQgdGhlIG90aGVyIHBhdGNoIGlzIGJldHRlciAoaHR0cHM6
-Ly9wYXRjaHdvcmsua2VybmVsLm9yZy9wYXRjaC81Mzk2MzUxLykuDQpMZXQncyBkcm9wIHRoaXMg
-b25lLg0KDQo+ID4gPiAtLS0NCj4gPiA+ICBuZXQvbWFjODAyMTEvY2hhbi5jIHwgNiArKysrKy0N
-Cj4gPiA+ICAxIGZpbGUgY2hhbmdlZCwgNSBpbnNlcnRpb25zKCspLCAxIGRlbGV0aW9uKC0pDQo+
-ID4gPg0KPiA+ID4gZGlmZiAtLWdpdCBhL25ldC9tYWM4MDIxMS9jaGFuLmMgYi9uZXQvbWFjODAy
-MTEvY2hhbi5jIGluZGV4DQo+ID4gPiA0Yzc0ZThkLi43NjllMGM1IDEwMDY0NA0KPiA+ID4gLS0t
-IGEvbmV0L21hYzgwMjExL2NoYW4uYw0KPiA+ID4gKysrIGIvbmV0L21hYzgwMjExL2NoYW4uYw0K
-PiA+ID4gQEAgLTI1Niw3ICsyNTYsOCBAQCBpZWVlODAyMTFfZ2V0X2NoYW5jdHhfbWF4X3JlcXVp
-cmVkX2J3KHN0cnVjdA0KPiA+IGllZWU4MDIxMV9sb2NhbCAqbG9jYWwsDQo+ID4gPiAgICAgICAg
-ICAgICAgICAgaWYgKCFpZWVlODAyMTFfc2RhdGFfcnVubmluZyhzZGF0YSkpDQo+ID4gPiAgICAg
-ICAgICAgICAgICAgICAgICAgICBjb250aW51ZTsNCj4gPiA+DQo+ID4gPiAtICAgICAgICAgICAg
-ICAgaWYgKHJjdV9hY2Nlc3NfcG9pbnRlcihzZGF0YS0+dmlmLmNoYW5jdHhfY29uZikgIT0gY29u
-ZikNCj4gPiA+ICsgICAgICAgICAgICAgICBpZiAocmN1X2FjY2Vzc19wb2ludGVyKHNkYXRhLT52
-aWYuY2hhbmN0eF9jb25mKSAhPSBjb25mICYmDQo+ID4gPiArICAgICAgICAgICAgICAgICAgICZz
-ZGF0YS0+cmVzZXJ2ZWRfY2hhbmN0eC0+Y29uZiAhPSBjb25mKQ0KPiA+ID4gICAgICAgICAgICAg
-ICAgICAgICAgICAgY29udGludWU7DQo+ID4gPg0KPiA+ID4gICAgICAgICAgICAgICAgIHN3aXRj
-aCAodmlmLT50eXBlKSB7IEBAIC0yNzEsNiArMjcyLDcgQEANCj4gPiA+IGllZWU4MDIxMV9nZXRf
-Y2hhbmN0eF9tYXhfcmVxdWlyZWRfYncoc3RydWN0DQo+ID4gaWVlZTgwMjExX2xvY2FsICpsb2Nh
-bCwNCj4gPiA+ICAgICAgICAgICAgICAgICBjYXNlIE5MODAyMTFfSUZUWVBFX1dEUzoNCj4gPiA+
-ICAgICAgICAgICAgICAgICBjYXNlIE5MODAyMTFfSUZUWVBFX01FU0hfUE9JTlQ6DQo+ID4gPiAg
-ICAgICAgICAgICAgICAgICAgICAgICB3aWR0aCA9IHZpZi0+YnNzX2NvbmYuY2hhbmRlZi53aWR0
-aDsNCj4gPiA+ICsgICAgICAgICAgICAgICAgICAgICAgIHdpZHRoID0gbWF4KHdpZHRoLA0KPiA+
-ID4gKyBzZGF0YS0+cmVzZXJ2ZWRfY2hhbmRlZi53aWR0aCk7DQo+ID4NCj4gPiBOb3QgcmVhbGx5
-IHN1cmUgd2h5IHRoaXMgaXMgbmVlZGVkIGluIHRoaXMgcGF0Y2g/DQo+ID4NCj4gDQo+IEhtbS4u
-LiBZb3UgYXJlIHJpZ2h0IC0gSSB0aGluayBJIGdvdCBjb25mdXNlZCBoZXJlIDopIEkgZ3Vlc3Mg
-SSBuZWVkIHRvIHZlcmlmeQ0KPiB0aGF0IHJlbW92aW5nIHRoaXMgaHVuayBzdGlsbCBzb2x2ZXMg
-bXkgYnVnLg0KPiBJbiBnZW5lcmFsIHRob3VnaCwgd2hhdCBvcHRpb24gd291bGQgeW91IHByZWZl
-cj8NCj4gDQo+IEludGVybmFsbHksIHdlIGhhZCBkaWZmZXJlbnQgb3BpbmlvbnMgaGVyZS4NCj4g
-DQo+ID4NCj4gPiA+ICAgICAgICAgICAgICAgICAgICAgICAgIGJyZWFrOw0KPiA+ID4gICAgICAg
-ICAgICAgICAgIGNhc2UgTkw4MDIxMV9JRlRZUEVfVU5TUEVDSUZJRUQ6DQo+ID4gPiAgICAgICAg
-ICAgICAgICAgY2FzZSBOVU1fTkw4MDIxMV9JRlRZUEVTOg0KPiA+ID4gQEAgLTg5OSw2ICs5MDEs
-OCBAQCBpbnQgaWVlZTgwMjExX3ZpZl9yZXNlcnZlX2NoYW5jdHgoc3RydWN0DQo+ID4gaWVlZTgw
-MjExX3N1Yl9pZl9kYXRhICpzZGF0YSwNCj4gPiA+ICAgICAgICAgc2RhdGEtPnJlc2VydmVkX3Jh
-ZGFyX3JlcXVpcmVkID0gcmFkYXJfcmVxdWlyZWQ7DQo+ID4gPiAgICAgICAgIHNkYXRhLT5yZXNl
-cnZlZF9yZWFkeSA9IGZhbHNlOw0KPiA+ID4NCj4gPiA+ICsgICAgICAgaWVlZTgwMjExX3JlY2Fs
-Y19jaGFuY3R4X21pbl9kZWYobG9jYWwsIG5ld19jdHgpOw0KPiA+ID4gKw0KPiA+DQo+ID4gSG1t
-Li4gV291bGRuJ3QgaXQgbWFrZSBzZW5zZSB0byByZWNhbGMgdGhpcyBpbg0KPiA+IGllZWU4MDIx
-MV92aWZfdW5yZXNlcnZlXyBjaGFuY3R4KCkgYXMgd2VsbD8NCj4gDQo+IFByb2JhYmx5IC0gSSBu
-ZWVkIHRvIGFkZCB0aGlzLg0KPiANCj4gPg0KPiA+DQo+ID4gTWljaGHFgg0K
+On 17-11-14 11:48, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> In many cases, drivers can filter things like beacons that will
+> skew statistics reported by mac80211. To get correct statistics
+> in these cases, call drivers to obtain statistics and let them
+> override all values, filling values from mac80211 if the driver
+> didn't provide them.
+> 
+> Note that this doesn't currently allow a driver to say "I know
+> this value is wrong, don't report it at all", or to sum it up
+> with a mac80211 value (as could be useful for "dropped misc"),
+> that can be added if it turns out to be needed.
+> 
+> This also gets rid of the get_rssi() method as is can now be
+> implemented using sta_statistics().
+> 
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+>  drivers/net/wireless/ti/wlcore/main.c | 22 ++++----
+>  include/net/mac80211.h                | 14 +++--
+>  net/mac80211/driver-ops.h             | 30 +++++------
+>  net/mac80211/sta_info.c               | 97 +++++++++++++++++++++++------------
+>  net/mac80211/trace.h                  | 33 +++---------
+>  5 files changed, 108 insertions(+), 88 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+> index 6ad3fcedab9b..f3d4adb54d6e 100644
+> --- a/drivers/net/wireless/ti/wlcore/main.c
+> +++ b/drivers/net/wireless/ti/wlcore/main.c
+> @@ -5375,16 +5375,17 @@ static void wlcore_op_sta_rc_update(struct ieee80211_hw *hw,
+>  	wlcore_hw_sta_rc_update(wl, wlvif, sta, changed);
+>  }
+>  
+> -static int wlcore_op_get_rssi(struct ieee80211_hw *hw,
+> -			       struct ieee80211_vif *vif,
+> -			       struct ieee80211_sta *sta,
+> -			       s8 *rssi_dbm)
+> +static void wlcore_op_sta_statistics(struct ieee80211_hw *hw,
+> +				     struct ieee80211_vif *vif,
+> +				     struct ieee80211_sta *sta,
+> +				     struct station_info *sinfo)
+>  {
+>  	struct wl1271 *wl = hw->priv;
+>  	struct wl12xx_vif *wlvif = wl12xx_vif_to_data(vif);
+> -	int ret = 0;
+> +	int ret;
+> +	s8 rssi_dbm;
+>  
+> -	wl1271_debug(DEBUG_MAC80211, "mac80211 get_rssi");
+> +	wl1271_debug(DEBUG_MAC80211, "mac80211 sta_statistics");
+>  
+>  	mutex_lock(&wl->mutex);
+>  
+> @@ -5395,17 +5396,18 @@ static int wlcore_op_get_rssi(struct ieee80211_hw *hw,
+>  	if (ret < 0)
+>  		goto out_sleep;
+>  
+> -	ret = wlcore_acx_average_rssi(wl, wlvif, rssi_dbm);
+> +	ret = wlcore_acx_average_rssi(wl, wlvif, &rssi_dbm);
+>  	if (ret < 0)
+>  		goto out_sleep;
+>  
+> +	sinfo->filled |= STATION_INFO_SIGNAL;
+> +	sinfo->signal = rssi_dbm;
+> +
+>  out_sleep:
+>  	wl1271_ps_elp_sleep(wl);
+>  
+>  out:
+>  	mutex_unlock(&wl->mutex);
+> -
+> -	return ret;
+>  }
+>  
+>  static bool wl1271_tx_frames_pending(struct ieee80211_hw *hw)
+> @@ -5605,7 +5607,7 @@ static const struct ieee80211_ops wl1271_ops = {
+>  	.assign_vif_chanctx = wlcore_op_assign_vif_chanctx,
+>  	.unassign_vif_chanctx = wlcore_op_unassign_vif_chanctx,
+>  	.sta_rc_update = wlcore_op_sta_rc_update,
+> -	.get_rssi = wlcore_op_get_rssi,
+> +	.sta_statistics = wlcore_op_sta_statistics,
+>  	CFG80211_TESTMODE_CMD(wl1271_tm_cmd)
+>  };
+>  
+> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+> index 83232aa2f077..ab7b4bde4661 100644
+> --- a/include/net/mac80211.h
+> +++ b/include/net/mac80211.h
+> @@ -2669,6 +2669,11 @@ enum ieee80211_reconfig_type {
+>   *	otherwise the rate control algorithm is notified directly.
+>   *	Must be atomic.
+>   *
+> + * @sta_statistics: Get statistics for this station. For example with beacon
+> + *	filtering, the statistics kept by mac80211 might not be accurate, so
+> + *	let the driver pre-fill the statistics. Any statistics that the driver
+> + *	doesn't fill will be filled by mac80211. The callback can sleep.
+> + *
+>   * @conf_tx: Configure TX queue parameters (EDCF (aifs, cw_min, cw_max),
+>   *	bursting) for a hardware TX queue.
+>   *	Returns a negative error code on failure.
+> @@ -2829,9 +2834,6 @@ enum ieee80211_reconfig_type {
+>   * @get_et_strings:  Ethtool API to get a set of strings to describe stats
+>   *	and perhaps other supported types of ethtool data-sets.
+>   *
+> - * @get_rssi: Get current signal strength in dBm, the function is optional
+> - *	and can sleep.
+> - *
+>   * @mgd_prepare_tx: Prepare for transmitting a management frame for association
+>   *	before associated. In multi-channel scenarios, a virtual interface is
+>   *	bound to a channel before it is associated, but as it isn't associated
+> @@ -3009,6 +3011,10 @@ struct ieee80211_ops {
+>  			      struct ieee80211_vif *vif,
+>  			      struct ieee80211_sta *sta,
+>  			      u32 changed);
+> +	void (*sta_statistics)(struct ieee80211_hw *hw,
+> +			       struct ieee80211_vif *vif,
+> +			       struct ieee80211_sta *sta,
+> +			       struct station_info *sinfo);
+
+Could consider exposing station_info through ieee80211_sta struct.
+
+Regards,
+Arend
+
