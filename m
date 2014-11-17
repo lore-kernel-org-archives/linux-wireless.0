@@ -1,87 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:39604 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754442AbaKNG5o convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Nov 2014 01:57:44 -0500
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 8.0 \(1990.1\))
-Subject: Re: Can fb4e156886ce6e8309e912d8b370d192330d19d3 be reverted ?
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <1415945381.3117.17.camel@coelho.fi>
-Date: Fri, 14 Nov 2014 15:57:40 +0900
-Cc: Dan Williams <dcbw@redhat.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	linux-wireless@vger.kernel.org
-Message-Id: <6A994E9F-1272-4285-BDF5-8CF00C86FDA7@holtmann.org> (sfid-20141114_075748_726620_FE733A32)
-References: <20141113123313.GA1926@redhat.com> <1415882683.2021.3.camel@sipsolutions.net> <A21755E2-3054-46B2-9BA6-07347FB91E1E@holtmann.org> <1415933712.2629.12.camel@dcbw.local> <1415945381.3117.17.camel@coelho.fi>
-To: Luca Coelho <luca@coelho.fi>
+Received: from dedo.coelho.fi ([88.198.205.34]:37351 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751899AbaKQL2w (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Nov 2014 06:28:52 -0500
+Message-ID: <1416223724.14067.3.camel@coelho.fi> (sfid-20141117_122855_271548_15F57E67)
+From: Luca Coelho <luca@coelho.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Date: Mon, 17 Nov 2014 13:28:44 +0200
+In-Reply-To: <1416221286-23126-1-git-send-email-johannes@sipsolutions.net>
+References: <1416221286-23126-1-git-send-email-johannes@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [RFC] mac80211: allow drivers to provide any statistics
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luca,
-
->>>>> I've updated wireless code on RHEL and get complain that now
->>>>> cfg80211 and rfkill modules are loaded on machines that do not have
->>>>> wireless hardware. Modules are auto-loaded because NetworkManager send
->>>>> nl80211 messages to check if there are wireless devices in the system.
->>>>> 
->>>>> Hence my question, can we revert commit fb4e156886ce
->>>>> "nl80211: Add generic netlink module alias for cfg80211/nl80211" ?
->>>> 
->>>> Realistically, we can't revert it, but only remove the
->>>> MODULE_ALIAS_GENL_FAMILY() line.
->>>> 
->>>>> Auto loading nl80211 does not seems to be necessary, if there are
->>>>> wireless devices nl80211 will be loaded anyway.
->>>> 
->>>> Maybe other applications would like to see an empty list of devices? But
->>>> OTOH, if they're robust at all, they have to cope with kernels not even
->>>> compiled with nl80211, so I guess for me I don't really see a big
->>>> difference in whether the module alias exists or not.
->>> 
->>> auto-loading cfg80211 module when userspace requests nl80211 netlink family is exactly the right thing to do. Systems compiled without nl80211 support and systems with no wireless device attached are two different things.
->>> 
->>> Someone can fix NetworkManager to not send nl80211 messages or just plain accept that cfg80211 will be loaded.
->> 
->> NM uses nl80211 initially to determine whether *any* ethernet-type
->> interface (a) is actually WiFi, and (b) should be driven by nl80211 or
->> WEXT.  Because of the variety of drivers (both in-kernel and
->> out-of-kernel) and the variety of kernel versions (NM supports back to
->> early 3.x series) we cannot rely on specific behavior.
->> 
->> So given an ethernet-type interface, how do we determine that it is
->> wifi?
->> 
->> DEVTYPE=wlan - not always reliable due to driver and kernel versions
->> 
->> "phy80211" in sysfs: same reason; also doesn't capture WEXT or
->> out-of-tree drivers
->> 
->> nl80211 calls: this is the only 100% reliable mechanism to detect
->> whether an ethernet-type interface is actually WiFi and nl80211-capable.
->> 
->> And unfortunately calling nl80211 loads the module...
+On Mon, 2014-11-17 at 11:48 +0100, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
 > 
-> So, basically the conclusion is: there's no way around it.  If someone
-> in userspace uses nl80211 it must be loaded, regardless of whether
-> nl80211 is automatically loaded or if depmod bring it in.
+> In many cases, drivers can filter things like beacons that will
+> skew statistics reported by mac80211. To get correct statistics
+> in these cases, call drivers to obtain statistics and let them
+> override all values, filling values from mac80211 if the driver
+> didn't provide them.
+> 
+> Note that this doesn't currently allow a driver to say "I know
+> this value is wrong, don't report it at all", or to sum it up
+> with a mac80211 value (as could be useful for "dropped misc"),
+> that can be added if it turns out to be needed.
+> 
+> This also gets rid of the get_rssi() method as is can now be
+> implemented using sta_statistics().
+> 
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+>  drivers/net/wireless/ti/wlcore/main.c | 22 ++++----
 
-yes, that is how it should be. And actually that is how every other subsystem does. Including modules that get loaded because we have a socket() system call for an address family.
+The wlcore part of this looks fine to me.
 
-> The only way to address Stanislaw's initial concern is, as already
-> proposed before, to change userspace.
+Acked-by: Luciano Coelho <luca@coelho.fi>
 
-Or you just blacklist the module in /etc/modules.conf if you really do not want it loaded. But all of this is a userspace thing and has nothing to do with the kernel exposing the _correct_ module alias.
-
-> Or, maybe nl80211/cfg80211 could be unloaded automatically as well? If
-> no driver uses it from below and nobody from userspace uses it for a
-> period of time, off it goes...
-
-Actually unloading kernel modules is still considered a race condition. So we should not go that direction. Once loaded, they should stay loaded until reboot.
-
-Regards
-
-Marcel
+--
+Luca.
 
