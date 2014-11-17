@@ -1,27 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:54258 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:52229 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751841AbaKDPhq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Nov 2014 10:37:46 -0500
-Message-ID: <1415115463.2064.20.camel@sipsolutions.net> (sfid-20141104_163749_680087_D9336E9F)
-Subject: Re: [PATCH] cfg80211: fix nl80211 cmd id in nl80211_send_mpath()
+	id S1751959AbaKQMXj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Nov 2014 07:23:39 -0500
+Message-ID: <1416227013.2031.1.camel@sipsolutions.net> (sfid-20141117_132344_785773_14AEADE8)
+Subject: Re: [RFC] mac80211: allow drivers to provide any statistics
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Henning Rogge <hrogge@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Henning Rogge <henning.rogge@fkie.fraunhofer.de>
-Date: Tue, 04 Nov 2014 16:37:43 +0100
-In-Reply-To: <1415114098-25517-1-git-send-email-henning.rogge@fkie.fraunhofer.de> (sfid-20141104_161520_549207_D2F18EDB)
-References: <1415114098-25517-1-git-send-email-henning.rogge@fkie.fraunhofer.de>
-	 (sfid-20141104_161520_549207_D2F18EDB)
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless@vger.kernel.org, luca@coelho.fi
+Date: Mon, 17 Nov 2014 13:23:33 +0100
+In-Reply-To: <5469E3F7.7020303@broadcom.com>
+References: <1416221286-23126-1-git-send-email-johannes@sipsolutions.net>
+	 <5469E3F7.7020303@broadcom.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-11-04 at 16:14 +0100, Henning Rogge wrote:
-> Netlink command for nl80211_send_mpath() should be NL80211_CMD_NEW_MPATH.
+On Mon, 2014-11-17 at 13:03 +0100, Arend van Spriel wrote:
 
-Doh. Applied, of course.
+> > +	void (*sta_statistics)(struct ieee80211_hw *hw,
+> > +			       struct ieee80211_vif *vif,
+> > +			       struct ieee80211_sta *sta,
+> > +			       struct station_info *sinfo);
+> 
+> Could consider exposing station_info through ieee80211_sta struct.
+
+We don't keep it in there though, we build it on the fly when we're
+asked for statistics, and keep the actual values elsewhere (or even
+calculate them on the fly). That'd be a bigger change then to keep in
+the struct, and I'm not sure it's worth it since some need more info
+than just the value (like ewma) etc.
 
 johannes
 
