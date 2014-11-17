@@ -1,123 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:44527 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752104AbaKKJtF (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:42839 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753426AbaKQNpo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Nov 2014 04:49:05 -0500
-Message-ID: <5461DB8C.2020201@broadcom.com> (sfid-20141111_104941_153570_62E46F3C)
-Date: Tue, 11 Nov 2014 10:49:00 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Gautam (Gautam Kumar) Shukla" <gautams@broadcom.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	"davem@davemloft.net" <davem@davemloft.net>,
-	"linux-api@vger.kernel.org" <linux-api@vger.kernel.org>,
+	Mon, 17 Nov 2014 08:45:44 -0500
+Date: Mon, 17 Nov 2014 08:36:19 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Fabian Frederick <fabf@skynet.be>
+Cc: Julian Calaby <julian.calaby@gmail.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	netdev <netdev@vger.kernel.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	Jithu Jance <jithu@broadcom.com>,
-	Sreenath S <sreenats@broadcom.com>
-Subject: Re: [PATCH 2/2] linux-wireless:Added wiphy capability flag for offloading
- 4way handshake to driver
-References: <DF163EE1A432BF4BBE6B2088220663A6743890@SJEXCHMB06.corp.ad.broadcom.com>
-In-Reply-To: <DF163EE1A432BF4BBE6B2088220663A6743890@SJEXCHMB06.corp.ad.broadcom.com>
-Content-Type: text/plain; charset="windows-1252"
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	b43-dev <b43-dev@lists.infradead.org>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	Intel Linux Wireless <ilw@linux.intel.com>
+Subject: Re: [PATCH 1/1 net-next] wireless: remove unnecessary sizeof(u8)
+Message-ID: <20141117133618.GC3511@tuxdriver.com> (sfid-20141117_145123_690997_9CC038BC)
+References: <1415998553-12636-1-git-send-email-fabf@skynet.be>
+ <CAGRGNgWqjsDu_mQK=_agBWjOequb4b7ffgCuxRH=9d72grDYtQ@mail.gmail.com>
+ <828430032.148603.1416203787175.open-xchange@webmail.nmp.skynet.be>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <828430032.148603.1416203787175.open-xchange@webmail.nmp.skynet.be>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11-11-14 07:27, Gautam (Gautam Kumar) Shukla wrote:
+On Mon, Nov 17, 2014 at 06:56:27AM +0100, Fabian Frederick wrote:
 > 
-> For offloading 4 way handshake to driver , currently we don't have WIPHY capability flag to communicate same to supplicant.
-> I have added the flag NL80211_ATTR_4WAY_KEY_HANDSHAKE  and rest of the code for the same.
 > 
-> Tested on x86 linux machine
+> > On 16 November 2014 at 23:33 Julian Calaby <julian.calaby@gmail.com> wrote:
+> >
+> >
+> > Hi Fabian,
+> >
+> > On Sat, Nov 15, 2014 at 7:55 AM, Fabian Frederick <fabf@skynet.be> wrote:
+> > > sizeof(u8) is always 1.
+> >
+> > I thought that sizeof(*variable) was preferred over sizeof(type), so
+> > shouldn't these be switched to that format instead?
+> >
+> > (I know that this is all no-op, but it should reduce the potential for
+> > highly unlikely bugs in the future. Also, the extra processing is
+> > compile-time not run-time.)
+> >
+> > Thanks,
 > 
-> Signed-off-by: Gautam kumar shukla <gautams@broadcom.com>
-> ---
->  include/net/cfg80211.h       | 4 ++++
->  include/uapi/linux/nl80211.h | 5 ++++-
->  net/wireless/nl80211.c       | 4 ++++
->  3 files changed, 12 insertions(+), 1 deletion(-)
+> Hi Julian,
 > 
-> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-> index 6f744e0..b37de0a 100644
-> --- a/include/net/cfg80211.h
-> +++ b/include/net/cfg80211.h
-> @@ -2629,7 +2629,10 @@ struct cfg80211_ops {
->   *	TSPEC sessions (TID aka TSID 0-7) with the NL80211_CMD_ADD_TX_TS
->   *	command. Standard IEEE 802.11 TSPEC setup is not yet supported, it
->   *	needs to be able to handle Block-Ack agreements and other things.
-> + *	@WIPHY_FLAG_SUPPORTS_4WAY_HANDHSHAKE:the device supports 4way handshake
-
-Indentation seems wrong here. Also add space after the colon sign.
-
-> + *	in the driver/firmware.
->   */
-> +
->  enum wiphy_flags {
->  	WIPHY_FLAG_SUPPORTS_WMM_ADMISSION	= BIT(0),
->  	/* use hole at 1 */
-> @@ -2654,6 +2657,7 @@ enum wiphy_flags {
->  	WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL	= BIT(21),
->  	WIPHY_FLAG_SUPPORTS_5_10_MHZ		= BIT(22),
->  	WIPHY_FLAG_HAS_CHANNEL_SWITCH		= BIT(23),
-> +	WIPHY_FLAG_SUPPORTS_4WAY_HANDSHAKE	= BIT(24),
->  };
->  
->  /**
-> diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-> index b01d5dd..2c474a3 100644
-> --- a/include/uapi/linux/nl80211.h
-> +++ b/include/uapi/linux/nl80211.h
-> @@ -1640,9 +1640,11 @@ enum nl80211_commands {
->   *
->   *	@NL80211_ATTR_PSK: a PSK value (u8 attribute).This is 32-octet (256-bit)
->   *	PSK.
-> + * @NL80211_ATTR_4WAY_KEY_HANDSHAKE: Indicates whether the driver is capable
-> + * of 4way key handshake
-
-convention is to have a tab in the continuing line.
-
->   *
->   *
-> - * @NL80211_ATTR_MAX: highest attribute number currently defined
-> + * * @NL80211_ATTR_MAX: highest attribute number currently defined
-
-huh?
-
->   * @__NL80211_ATTR_AFTER_LAST: internal use
->   */
->  enum nl80211_attrs {
-> @@ -1995,6 +1997,7 @@ enum nl80211_attrs {
->  	NL80211_ATTR_SMPS_MODE,
->  
->  	NL80211_ATTR_PSK,
-> +	NL80211_ATTR_4WAY_KEY_HANDSHAKE,
->  
->  	/* add attributes here, update the policy in nl80211.c */
->  
-> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-> index 91c24b1..5f85c41 100644
-> --- a/net/wireless/nl80211.c
-> +++ b/net/wireless/nl80211.c
-> @@ -396,6 +396,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
->  	[NL80211_ATTR_ADMITTED_TIME] = { .type = NLA_U16 },
->  	[NL80211_ATTR_SMPS_MODE] = { .type = NLA_U8 },
->  	[NL80211_ATTR_PSK] = { .type = NLA_BINARY, .len = 32 },
-> +	[NL80211_ATTR_4WAY_KEY_HANDSHAKE] = { .type = NLA_FLAG },
->  };
->  
->  /* policy for the key attributes */
-> @@ -1303,6 +1304,9 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
->  		if ((rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_FW_ROAM) &&
->  		    nla_put_flag(msg, NL80211_ATTR_ROAM_SUPPORT))
->  			goto nla_put_failure;
-> +		if ((rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_4WAY_HANDSHAKE) &&
-> +			nla_put_flag(msg,NL80211_ATTR_4WAY_KEY_HANDSHAKE))
-> +			goto nla_put_failure;
->  		if ((rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_TDLS) &&
->  		    nla_put_flag(msg, NL80211_ATTR_TDLS_SUPPORT))
->  			goto nla_put_failure;
+> Of course but char/u8/s8... allocations never use it and result would be the
+> same:
+> factor 1 multiplication.
 > 
+> Those rare occurrences (+- 30 in the whole kernel) where we have
+> sizeof(u8/s8) is ambiguous.
+> 
+> Having a patch removing it gives a pointer...
+> If the developer meant something else, he will be able to fix it.
+> 
+> Regards,
+> Fabian
 
+sizeof(*variable) still seems safer.  Are the compilers unable to
+optimize-away a "multiply by one"?
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
