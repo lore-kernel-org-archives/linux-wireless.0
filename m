@@ -1,42 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:45823 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750955AbaKXPkC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2014 10:40:02 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] Revert "mac80211_hwsim: VHT add 160MHz width support"
-Date: Mon, 24 Nov 2014 16:39:52 +0100
-Message-Id: <1416843592-30818-1-git-send-email-johannes@sipsolutions.net> (sfid-20141124_164007_356692_BC4AEA3B)
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:21146 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752191AbaKQPLf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Nov 2014 10:11:35 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 4/7] ath10k: unify rx undecapping
+References: <1415110931-10945-1-git-send-email-michal.kazior@tieto.com>
+	<1415110931-10945-5-git-send-email-michal.kazior@tieto.com>
+	<87ppclq4mu.fsf@kamboji.qca.qualcomm.com>
+	<CA+BoTQ=Ws0JGsVBd2J0fe2_JqAhCVpHmNkn10CJx6BCNG-r0cg@mail.gmail.com>
+Date: Mon, 17 Nov 2014 17:11:29 +0200
+In-Reply-To: <CA+BoTQ=Ws0JGsVBd2J0fe2_JqAhCVpHmNkn10CJx6BCNG-r0cg@mail.gmail.com>
+	(Michal Kazior's message of "Mon, 17 Nov 2014 15:54:23 +0100")
+Message-ID: <87vbmdoo9q.fsf@kamboji.qca.qualcomm.com> (sfid-20141117_161138_562848_39B4C18B)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-This reverts commit c17aa52c5bf571533cc8561292f7316b9216eddc.
+> On 17 November 2014 15:32, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>> Michal Kazior <michal.kazior@tieto.com> writes:
+>>
+>>> This creates a single, common path for MSDU,
+>>> A-MSDU and fragmented Rx.
+>>>
+>>> Hopefully this will make it easier to understand
+>>> Rx path and make it easier to work with.
+>>>
+>>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>>
+>> This patch had few checkpatch warnings. I fixed them with the folded
+>> patch and full patch here:
+>>
+>> https://github.com/kvalo/ath/commit/71fbd07d43e54f5f9f442bc5f2f4f9ef83aead63
+>
+> Thanks!
+>
+> [...]
+>> @@ -1132,7 +1133,7 @@ static void ath10k_htt_rx_h_mpdu(struct ath10k *ar,
+>>         bool has_fcs_err;
+>>         bool has_crypto_err;
+>>         bool has_tkip_err;
+>> -       bool has_peer_idx_invalid;
+>> +       bool has_idx_invalid;
+>>         bool is_decrypted;
+>
+> I don't really like the has_idx_invalid. Perhaps has_peer_err conveys
+> a bit more of the original meaning?
 
-It was wrong, IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160_80PLUS80MHZ
-already implies that 160 MHz is supported, as it isn't a bitmap
-but rather a value in a 2-bit field.
+What about just peer_idx_invalid? IMHO we really don't need the has_
+prefix in that relatively small function.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/mac80211_hwsim.c | 1 -
- 1 file changed, 1 deletion(-)
+> As much as I'd like to leave the original var name I'd like to be
+> checkpatch warning free. Sigh..
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index d399a7367ce9..756eea588711 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -2388,7 +2388,6 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
- 		sband->vht_cap.cap =
- 			IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_11454 |
- 			IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160_80PLUS80MHZ |
--			IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160MHZ |
- 			IEEE80211_VHT_CAP_RXLDPC |
- 			IEEE80211_VHT_CAP_SHORT_GI_80 |
- 			IEEE80211_VHT_CAP_SHORT_GI_160 |
+Same here. The checkpatch is just so useful tool to keep the style
+unified.
+
 -- 
-2.1.1
-
+Kalle Valo
