@@ -1,69 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:32378 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751413AbaK1Jy6 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:37336 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751180AbaKQOi6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Nov 2014 04:54:58 -0500
+	Mon, 17 Nov 2014 09:38:58 -0500
 From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-CC: <ath10k@lists.infradead.org>, <devicetree@vger.kernel.org>,
-	<linux-wireless@vger.kernel.org>, <toshik@chromium.org>
-Subject: Re: [PATCH v4 1/2] dt: bindings: add ath10k wireless device
-References: <20141127120727.17546.61202.stgit@potku.adurom.net>
-	<20141127120856.17546.32014.stgit@potku.adurom.net>
-	<3202372.2AaH3c4qv1@wuerfel>
-Date: Fri, 28 Nov 2014 11:54:39 +0200
-In-Reply-To: <3202372.2AaH3c4qv1@wuerfel> (Arnd Bergmann's message of "Thu, 27
-	Nov 2014 13:28:45 +0100")
-Message-ID: <87fvd3sl9c.fsf@kamboji.qca.qualcomm.com> (sfid-20141128_105504_926039_9411F874)
+To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: Re: [PATCH v3] ath10k: handle ieee80211 header and payload tracing separately
+References: <1415195071-30250-1-git-send-email-rmanohar@qti.qualcomm.com>
+Date: Mon, 17 Nov 2014 16:38:52 +0200
+In-Reply-To: <1415195071-30250-1-git-send-email-rmanohar@qti.qualcomm.com>
+	(Rajkumar Manoharan's message of "Wed, 5 Nov 2014 19:14:31 +0530")
+Message-ID: <87egt1q4cj.fsf@kamboji.qca.qualcomm.com> (sfid-20141117_153901_567519_528D5E65)
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arnd Bergmann <arnd@arndb.de> writes:
+Rajkumar Manoharan <rmanohar@qti.qualcomm.com> writes:
 
-> On Thursday 27 November 2014 14:08:56 Kalle Valo wrote:
->> diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
->> new file mode 100644
->> index 000000000000..edefc26c6204
->> --- /dev/null
->> +++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
->> @@ -0,0 +1,30 @@
->> +* Qualcomm Atheros ath10k wireless devices
->> +
->> +For ath10k devices the calibration data can be provided through Device
->> +Tree. The node is a child node of the PCI controller.
->> +
->> +Required properties:
->> +-compatible : Should be "qcom,ath10k"
->> +
->> +Optional properties:
->> +- qcom,ath10k-calibration-data : calibration data as an array, the
->> +                                length can vary between hw versions
->> +
+> For packet log, the transmitted frame 802.11 header alone is sufficient.
+> Recording entire packet is also consuming lot of disk space. To optimize
+> this, tx and rx data tracepoints are splitted into header and payload
+> tracepoints.
 >
-> Does the device always have a valid mac address in hardware? If not,
-> how about listing that as well using the mac-address property?
+> To record tx ieee80211 headers
+>
+>      trace-cmd record -e ath10k_tx_hdr
+>
+> To record complete packets
+>
+>      trace-cmd record -e ath10k_tx_hdr -e ath10k_tx_payload
+>
+> Cc: Michal Kazior <michal.kazior@tieto.com>
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 
-Right now ath10k does not support that, but in the future we might want
-to add mac address as well. We need to do some testing with the firmware
-to make sure that we can safely change the "main" address from ath10k.
-
-And because of Virtual AP (mBSSID) feature we actually would need to
-provide multiple addresses, not just one. Maybe with addr_mask like
-struct wiphy has?
-
- * @perm_addr: permanent MAC address of this device
- * @addr_mask: If the device supports multiple MAC addresses by masking,
- *	set this to a mask with variable bits set to 1, e.g. if the last
- *	four bits are variable then set it to 00-00-00-00-00-0f. The actual
- *	variable bits shall be determined by the interfaces added, with
- *	interfaces not matching the mask being rejected to be brought up.
-
-	/* permanent MAC address(es) */
-	u8 perm_addr[ETH_ALEN];
-	u8 addr_mask[ETH_ALEN];
+Thanks, applied.
 
 -- 
 Kalle Valo
