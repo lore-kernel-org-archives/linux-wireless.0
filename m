@@ -1,52 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:34876 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750976AbaK1LZp convert rfc822-to-8bit (ORCPT
+Received: from mail-la0-f48.google.com ([209.85.215.48]:49253 "EHLO
+	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751498AbaKQS5E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Nov 2014 06:25:45 -0500
-Received: by mail-wi0-f177.google.com with SMTP id l15so10900999wiw.10
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Nov 2014 03:25:44 -0800 (PST)
+	Mon, 17 Nov 2014 13:57:04 -0500
 MIME-Version: 1.0
-In-Reply-To: <87d287u7fv.fsf@kamboji.qca.qualcomm.com>
-References: <1416838646-18801-1-git-send-email-michal.kazior@tieto.com>
-	<87vbm2whoz.fsf@kamboji.qca.qualcomm.com>
-	<CA+BoTQ=56six2CEQ6Rzr7yMEM7UVNQ3RX9UpdgmxMEoG0+kDAA@mail.gmail.com>
-	<87d287u7fv.fsf@kamboji.qca.qualcomm.com>
-Date: Fri, 28 Nov 2014 12:25:43 +0100
-Message-ID: <CA+BoTQ=0929oK8msio-zPj2v2JDZ2+3trg4QqQ-vbYJszwh0CQ@mail.gmail.com> (sfid-20141128_122548_162986_D4316EE6)
-Subject: Re: [PATCH 1/3] ath10k: embed supported chip ids in hw_params
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Date: Mon, 17 Nov 2014 22:57:01 +0400
+Message-ID: <CANoib0GyS0oxAR-xQzuKdcFm9p=zt5=aSFXQivX9GzP_4wNXMw@mail.gmail.com> (sfid-20141117_195726_692891_9A78E898)
+Subject: [PATCH 1/1] ath3k: Add support of MCI 13d3:3408 bt device
+From: Dmitry Tunin <hanipouspilot@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 28 November 2014 at 08:10, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Michal Kazior <michal.kazior@tieto.com> writes:
->
->> Hmm.. I have a couple of ideas:
->
-> [...]
->
->> 2. Have a dedicatd pci-specific structure:
->>
->>  struct ath10k_pci_supported_chip {
->>    u16 dev_id;
->>    u32 chip_id;
->>  };
->>
->>  struct ath10k_pci_supported_chip ath10k_pci_supported_chips[] = {
->>    { QCA988X_2_0_DEVICE_ID, QCA988X_HW_2_0_CHIP_ID_REV },
->>    // ...
->>  };
->>
->> Probably the simplest and has least impact.
->
-> Yeah, this seems to be the best. Can you send v2?
+Add support for bluetooth MCI WB335 (AR9565) Wi-Fi+bt module.
 
-Ok. I'll go with this approach and post a v2 when I'm done.
+Signed-off-by: Dmitry Tunin <hanipouspilot@gmail.com>
 
+---
 
-Michał
+diff --git a/drivers/bluetooth/ath3k.c b/drivers/bluetooth/ath3k.c
+index d85ced2..086240c 100644
+--- a/drivers/bluetooth/ath3k.c
++++ b/drivers/bluetooth/ath3k.c
+@@ -105,6 +105,7 @@ static const struct usb_device_id ath3k_table[] = {
+  { USB_DEVICE(0x13d3, 0x3375) },
+  { USB_DEVICE(0x13d3, 0x3393) },
+  { USB_DEVICE(0x13d3, 0x3402) },
++ { USB_DEVICE(0x13d3, 0x3408) },
+  { USB_DEVICE(0x13d3, 0x3432) },
+
+  /* Atheros AR5BBU12 with sflash firmware */
+@@ -156,6 +157,7 @@ static const struct usb_device_id ath3k_blist_tbl[] = {
+  { USB_DEVICE(0x13d3, 0x3375), .driver_info = BTUSB_ATH3012 },
+  { USB_DEVICE(0x13d3, 0x3393), .driver_info = BTUSB_ATH3012 },
+  { USB_DEVICE(0x13d3, 0x3402), .driver_info = BTUSB_ATH3012 },
++ { USB_DEVICE(0x13d3, 0x3408), .driver_info = BTUSB_ATH3012 },
+  { USB_DEVICE(0x13d3, 0x3432), .driver_info = BTUSB_ATH3012 },
+
+  /* Atheros AR5BBU22 with sflash firmware */
+diff --git a/drivers/bluetooth/btusb.c b/drivers/bluetooth/btusb.c
+index edfc17b..091c813 100644
+--- a/drivers/bluetooth/btusb.c
++++ b/drivers/bluetooth/btusb.c
+@@ -182,6 +182,7 @@ static const struct usb_device_id blacklist_table[] = {
+  { USB_DEVICE(0x13d3, 0x3375), .driver_info = BTUSB_ATH3012 },
+  { USB_DEVICE(0x13d3, 0x3393), .driver_info = BTUSB_ATH3012 },
+  { USB_DEVICE(0x13d3, 0x3402), .driver_info = BTUSB_ATH3012 },
++ { USB_DEVICE(0x13d3, 0x3408), .driver_info = BTUSB_ATH3012 },
+  { USB_DEVICE(0x13d3, 0x3432), .driver_info = BTUSB_ATH3012 },
+
+  /* Atheros AR5BBU12 with sflash firmware */
+
+---
