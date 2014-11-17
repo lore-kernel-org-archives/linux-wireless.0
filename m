@@ -1,56 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:59374 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752392AbaKJJKi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Nov 2014 04:10:38 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: emmanuel.grumbach@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Luciano Coelho <luciano.coelho@intel.com>
-Date: Mon, 10 Nov 2014 11:10:10 +0200
-Message-Id: <1415610621-27438-6-git-send-email-luca@coelho.fi> (sfid-20141110_101105_353359_3833E471)
-In-Reply-To: <1415610621-27438-1-git-send-email-luca@coelho.fi>
-References: <1415610621-27438-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH 05/16] iwlwifi: mvm: return the actual error code when switch_vif_chanctx fails
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:51319 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751947AbaKQOcr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Nov 2014 09:32:47 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 4/7] ath10k: unify rx undecapping
+References: <1415110931-10945-1-git-send-email-michal.kazior@tieto.com>
+	<1415110931-10945-5-git-send-email-michal.kazior@tieto.com>
+Date: Mon, 17 Nov 2014 16:32:41 +0200
+In-Reply-To: <1415110931-10945-5-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Tue, 4 Nov 2014 15:22:08 +0100")
+Message-ID: <87ppclq4mu.fsf@kamboji.qca.qualcomm.com> (sfid-20141117_153250_631458_0643EAFC)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-We have code to recover and go back to the original channel context if
-something fails in the middle of switch_vif_chanctx, but we return the
-error code of the recover calls instead of the original code, so if
-the recovery succeeds, we will return 0 (success).  Fix this by not
-assigning the return value of the recovery calls to ret.
+> This creates a single, common path for MSDU,
+> A-MSDU and fragmented Rx.
+>
+> Hopefully this will make it easier to understand
+> Rx path and make it easier to work with.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+This patch had few checkpatch warnings. I fixed them with the folded
+patch and full patch here:
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index b42124d..10347d1 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -2861,15 +2861,13 @@ out_remove:
- 	__iwl_mvm_remove_chanctx(mvm, vifs[0].new_ctx);
+https://github.com/kvalo/ath/commit/71fbd07d43e54f5f9f442bc5f2f4f9ef83aead63
+
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 6abfea768173..08963439891b 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -1066,7 +1066,8 @@ static void ath10k_htt_rx_h_undecap(struct ath10k *ar,
  
- out_reassign:
--	ret = __iwl_mvm_add_chanctx(mvm, vifs[0].old_ctx);
--	if (ret) {
-+	if (__iwl_mvm_add_chanctx(mvm, vifs[0].old_ctx)) {
- 		IWL_ERR(mvm, "failed to add old_ctx back after failure.\n");
- 		goto out_restart;
- 	}
+ 	switch (decap) {
+ 	case RX_MSDU_DECAP_RAW:
+-		ath10k_htt_rx_h_undecap_raw(ar, msdu, status, enctype, is_decrypted);
++		ath10k_htt_rx_h_undecap_raw(ar, msdu, status, enctype,
++					    is_decrypted);
+ 		break;
+ 	case RX_MSDU_DECAP_NATIVE_WIFI:
+ 		ath10k_htt_rx_h_undecap_nwifi(ar, msdu, status, first_hdr);
+@@ -1132,7 +1133,7 @@ static void ath10k_htt_rx_h_mpdu(struct ath10k *ar,
+ 	bool has_fcs_err;
+ 	bool has_crypto_err;
+ 	bool has_tkip_err;
+-	bool has_peer_idx_invalid;
++	bool has_idx_invalid;
+ 	bool is_decrypted;
  
--	ret = __iwl_mvm_assign_vif_chanctx(mvm, vifs[0].vif, vifs[0].old_ctx,
--					   true);
--	if (ret) {
-+	if (__iwl_mvm_assign_vif_chanctx(mvm, vifs[0].vif, vifs[0].old_ctx,
-+					 true)) {
- 		IWL_ERR(mvm, "failed to reassign old_ctx after failure.\n");
- 		goto out_restart;
- 	}
+ 	if (skb_queue_empty(amsdu))
+@@ -1167,8 +1168,8 @@ static void ath10k_htt_rx_h_mpdu(struct ath10k *ar,
+ 			    __cpu_to_le32(RX_ATTENTION_FLAGS_DECRYPT_ERR));
+ 	has_tkip_err = !!(rxd->attention.flags &
+ 			  __cpu_to_le32(RX_ATTENTION_FLAGS_TKIP_MIC_ERR));
+-	has_peer_idx_invalid = !!(rxd->attention.flags &
+-			          __cpu_to_le32(RX_ATTENTION_FLAGS_PEER_IDX_INVALID));
++	has_idx_invalid = !!(rxd->attention.flags &
++			     __cpu_to_le32(RX_ATTENTION_FLAGS_PEER_IDX_INVALID));
+ 
+ 	/* Note: If hardware captures an encrypted frame that it can't decrypt,
+ 	 * e.g. due to fcs error, missing peer or invalid key data it will
+@@ -1177,7 +1178,7 @@ static void ath10k_htt_rx_h_mpdu(struct ath10k *ar,
+ 	is_decrypted = (enctype != HTT_RX_MPDU_ENCRYPT_NONE &&
+ 			!has_fcs_err &&
+ 			!has_crypto_err &&
+-			!has_peer_idx_invalid);
++			!has_idx_invalid);
+ 
+ 	/* Clear per-MPDU flags while leaving per-PPDU flags intact. */
+ 	status->flag &= ~(RX_FLAG_FAILED_FCS_CRC |
+
+
 -- 
-2.1.1
-
+Kalle Valo
