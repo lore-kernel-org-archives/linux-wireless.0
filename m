@@ -1,49 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-hk1hn0121.outbound.protection.outlook.com ([134.170.140.121]:5528
-	"EHLO APAC01-HK1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751857AbaKUJMf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Nov 2014 04:12:35 -0500
-From: "Nishikawa, Kenzoh" <Kenzoh.Nishikawa@jp.sony.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "devel@lists.open80211s.org" <devel@lists.open80211s.org>,
-	"Bob Copeland (me@bobcopeland.com)" <me@bobcopeland.com>
-Subject: [PATCH v3] mac80211: keep sending peer candidate events while in
- listen state
-Date: Fri, 21 Nov 2014 09:11:25 +0000
-Message-ID: <2EB4F5C65A3B8E4E92660930F4EF6B5B06C8BC@JPYOKXMS113.jp.sony.com> (sfid-20141121_101258_074290_AAFA54B9)
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:49706 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752287AbaKRCvx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Nov 2014 21:51:53 -0500
+Date: Tue, 18 Nov 2014 02:51:45 +0000
+From: "Tobenna Peter, Igwe" <ptigwe@gmail.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: linux-kernel@vger.kernel.org, devel@driverdev.osuosl.org,
+	Jes.Sorensen@redhat.com, linux-wireless@vger.kernel.org,
+	Larry.Finger@lwfinger.net
+Subject: Re: [PATCH] staging:rtl8723au: Fix sparse warning cast to restricted
+ __le16
+Message-ID: <20141118025144.GA1041@Tobenna-Peter-Igwes-MacBook-Pro.local> (sfid-20141118_035213_276121_0A1C4611)
+References: <20141118014529.GA937@Tobenna-Peter-Igwes-MacBook-Pro.local>
+ <20141118015947.GA21650@kroah.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20141118015947.GA21650@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of sending peer candidate events just once, send them as long as the peer remains in the LISTEN state in the peering state machine, when userspace is implementing the peering manager.  Userspace may silence the events from a peer by progressing the state machine or by setting the link state to BLOCKED.
+On Mon, Nov 17, 2014 at 05:59:47PM -0800, Greg KH wrote:
+> On Tue, Nov 18, 2014 at 01:45:41AM +0000, Tobenna P. Igwe wrote:
+> > This patch fixes the following sparse warning:
+> > 
+> > drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c:343:36: warning:
+> > cast to restricted __le16
+> > 
+> > by using the le16_to_cpus function.
+> > 
+> > Signed-off-by: Tobenna P. Igwe <ptigwe@gmail.com>
+> > ---
+> >  drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c |    2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c b/drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c
+> > index d80ea4e..78665ee 100644
+> > --- a/drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c
+> > +++ b/drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c
+> > @@ -340,7 +340,7 @@ static u8 bthci_GetAssocInfo(struct rtw_adapter *padapter, u8 EntryNum)
+> >  			tempBuf, TotalLen-BaseMemoryShift);
+> >  
+> >  		pAmpAsoc = (struct amp_assoc_structure *)tempBuf;
+> > -		pAmpAsoc->Length = le16_to_cpu(pAmpAsoc->Length);
+> > +		le16_to_cpus(&pAmpAsoc->Length);
+> 
+> This doesn't change the logic, and you should still have the same
+> warning.  How about fixing up Length to be the proper endian type?
+> 
+> thanks,
+> 
+> greg k-h
 
-Fixes the problem that a mesh peering process won't be fired again after the previous first peering trial fails due to like air propagation error if the peering is managed by user space such as wpa_supplicant.
+I've checked and sparse doesn't return the warning anymore. Also, I
+backtracked through the file and Length seems to be set to its
+correct endian type. The reason for the conversion is tempBuf being
+an array of 'u8'.
 
-This patch works with another patch for wpa_supplicant described here which fires a peering process again triggered by the notice from kernel.
-http://lists.shmoo.com/pipermail/hostap/2014-November/031235.html
-
-Signed-off-by: Kenzoh Nishikawa <Kenzoh.Nishikawa at jp.sony.com>
----
-net/mac80211/mesh_plink.c |    7 +++++++
-1 file changed, 7 insertions(+)
-
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c index 32c7bd0..dfc429b 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -524,6 +524,13 @@ void mesh_neighbour_update(struct ieee80211_sub_if_data *sdata,
- 	    sdata->u.mesh.mshcfg.auto_open_plinks &&
- 	    rssi_threshold_check(sta, sdata))
- 		changed = mesh_plink_open(sta);
-+	else if (sta->plink_state == NL80211_PLINK_LISTEN &&
-+		(sdata->u.mesh.user_mpm ||
-+		sdata->u.mesh.security & IEEE80211_MESH_SEC_AUTHED))
-+		cfg80211_notify_new_peer_candidate(sdata->dev, hw_addr,
-+							   elems->ie_start,
-+							   elems->total_len,
-+							   GFP_ATOMIC);
- 
- 	ieee80211_mps_frame_release(sta, elems);
- out:
-
+Kind Regards,
+Tobenna P. Igwe
