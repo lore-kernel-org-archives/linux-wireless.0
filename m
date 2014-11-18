@@ -1,48 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f45.google.com ([74.125.82.45]:58494 "EHLO
-	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753744AbaKRBpx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Nov 2014 20:45:53 -0500
-Date: Tue, 18 Nov 2014 01:45:41 +0000
-From: "Tobenna P. Igwe" <ptigwe@gmail.com>
-To: linux-kernel@vger.kernel.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	gregkh@linuxfoundation.org, Larry.Finger@lwfinger.net,
-	Jes.Sorensen@redhat.com
-Subject: [PATCH] staging:rtl8723au: Fix sparse warning cast to restricted
- __le16
-Message-ID: <20141118014529.GA937@Tobenna-Peter-Igwes-MacBook-Pro.local> (sfid-20141118_024616_381345_3C8FBC0D)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from cantor2.suse.de ([195.135.220.15]:56996 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755052AbaKROKJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Nov 2014 09:10:09 -0500
+From: Jiri Slaby <jslaby@suse.cz>
+To: stable@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+	Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
+	Jiri Slaby <jslaby@suse.cz>
+Subject: [PATCH 3.12 152/206] wireless: rt2x00: add new rt2800usb devices
+Date: Tue, 18 Nov 2014 15:08:27 +0100
+Message-Id: <538563b0cc1371790a946bd227dc4e7069f18f83.1416319692.git.jslaby@suse.cz> (sfid-20141118_153926_679096_D3252BE2)
+In-Reply-To: <28f04bcc068a44c5641c727883947960fb8dcbd5.1416319692.git.jslaby@suse.cz>
+References: <28f04bcc068a44c5641c727883947960fb8dcbd5.1416319692.git.jslaby@suse.cz>
+In-Reply-To: <cover.1416319692.git.jslaby@suse.cz>
+References: <cover.1416319692.git.jslaby@suse.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes the following sparse warning:
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
 
-drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c:343:36: warning:
-cast to restricted __le16
+3.12-stable review patch.  If anyone has any objections, please let me know.
 
-by using the le16_to_cpus function.
+===============
 
-Signed-off-by: Tobenna P. Igwe <ptigwe@gmail.com>
+commit 6a06e554daef86c4e8d290284927b081fedb249e upstream.
+
+0x0b05 0x17e8 RT5372 USB 2.0  bgn 2x2 ASUS USB-N14
+0x0411 0x0253 RT5572 USB 2.0 abgn 2x2 BUFFALO WLP-U2-300D
+0x0df6 0x0078 RT???? Sitecom N300
+
+Cc: Ivo van Doorn <IvDoorn@gmail.com>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: John W. Linville <linville@tuxdriver.com>
+Cc: users@rt2x00.serialmonkey.com
+Cc: linux-wireless@vger.kernel.org
+Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Jiri Slaby <jslaby@suse.cz>
 ---
- drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/rt2x00/rt2800usb.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c b/drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c
-index d80ea4e..78665ee 100644
---- a/drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c
-+++ b/drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c
-@@ -340,7 +340,7 @@ static u8 bthci_GetAssocInfo(struct rtw_adapter *padapter, u8 EntryNum)
- 			tempBuf, TotalLen-BaseMemoryShift);
- 
- 		pAmpAsoc = (struct amp_assoc_structure *)tempBuf;
--		pAmpAsoc->Length = le16_to_cpu(pAmpAsoc->Length);
-+		le16_to_cpus(&pAmpAsoc->Length);
- 		BaseMemoryShift += 3 + pAmpAsoc->Length;
- 
- 		RTPRINT(FIOCTL, IOCTL_BT_HCICMD, ("TypeID = 0x%x, ", pAmpAsoc->TypeID));
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index b6cb308beda1..ec816e0459cc 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -1238,6 +1238,8 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	/* Arcadyan */
+ 	{ USB_DEVICE(0x043e, 0x7a12) },
+ 	{ USB_DEVICE(0x043e, 0x7a32) },
++	/* ASUS */
++	{ USB_DEVICE(0x0b05, 0x17e8) },
+ 	/* Azurewave */
+ 	{ USB_DEVICE(0x13d3, 0x3329) },
+ 	{ USB_DEVICE(0x13d3, 0x3365) },
+@@ -1274,6 +1276,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x057c, 0x8501) },
+ 	/* Buffalo */
+ 	{ USB_DEVICE(0x0411, 0x0241) },
++	{ USB_DEVICE(0x0411, 0x0253) },
+ 	/* D-Link */
+ 	{ USB_DEVICE(0x2001, 0x3c1a) },
+ 	{ USB_DEVICE(0x2001, 0x3c21) },
+@@ -1364,6 +1367,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x0df6, 0x0053) },
+ 	{ USB_DEVICE(0x0df6, 0x0069) },
+ 	{ USB_DEVICE(0x0df6, 0x006f) },
++	{ USB_DEVICE(0x0df6, 0x0078) },
+ 	/* SMC */
+ 	{ USB_DEVICE(0x083a, 0xa512) },
+ 	{ USB_DEVICE(0x083a, 0xc522) },
 -- 
-1.7.10.4
+2.1.3
 
