@@ -1,52 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:57541 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932357AbaKXOgv (ORCPT
+Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:39310
+	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753595AbaKRWih (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2014 09:36:51 -0500
-Received: by mail-wi0-f174.google.com with SMTP id h11so5900363wiw.1
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:36:50 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
+	Tue, 18 Nov 2014 17:38:37 -0500
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-Cc: Eyal Shapira <eyal@wizery.com>,
-	Eyal Shapira <eyalx.shapira@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 71/75] iwlwifi: mvm: declare support for VHT BF info in radiotap
-Date: Mon, 24 Nov 2014 16:34:47 +0200
-Message-Id: <1416839691-28533-71-git-send-email-egrumbach@gmail.com> (sfid-20141124_153658_348201_D1139576)
-In-Reply-To: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
-References: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
+Cc: johannes@sipsolutions.net
+Subject: [PATCH] mac80211: notify drivers on sta rate table changes
+Date: Tue, 18 Nov 2014 23:38:35 +0100
+Message-Id: <1416350315-82818-1-git-send-email-nbd@openwrt.org> (sfid-20141118_233840_529376_11680664)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-The driver knows whether an rx frame was beamformed and marks
-it in the radiotap VHT flags. However it should also declare
-that it knows to extract this info otherwise this gets discarded
-by sniffers like Wireshark.
+This allows drivers with a firmware or chip-based rate lookup table to
+use the most recent default rate selection without having to get it from
+per-packet data or explicit ieee80211_get_tx_rate calls
 
-Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ include/net/mac80211.h    |  6 ++++++
+ net/mac80211/driver-ops.h | 14 ++++++++++++++
+ net/mac80211/rate.c       |  3 +++
+ net/mac80211/trace.h      |  7 +++++++
+ 4 files changed, 30 insertions(+)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index d9d8d30..5dbf547 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -323,7 +323,8 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
- 	hw->offchannel_tx_hw_queue = IWL_MVM_OFFCHANNEL_QUEUE;
- 	hw->radiotap_mcs_details |= IEEE80211_RADIOTAP_MCS_HAVE_FEC |
- 				    IEEE80211_RADIOTAP_MCS_HAVE_STBC;
--	hw->radiotap_vht_details |= IEEE80211_RADIOTAP_VHT_KNOWN_STBC;
-+	hw->radiotap_vht_details |= IEEE80211_RADIOTAP_VHT_KNOWN_STBC |
-+		IEEE80211_RADIOTAP_VHT_KNOWN_BEAMFORMED;
- 	hw->rate_control_algorithm = "iwl-mvm-rs";
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 28ea999..b5b4ea2 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2631,6 +2631,9 @@ enum ieee80211_reconfig_type {
+  *	uses hardware rate control (%IEEE80211_HW_HAS_RATE_CONTROL) since
+  *	otherwise the rate control algorithm is notified directly.
+  *	Must be atomic.
++ * @sta_rate_tbl_update: Notifies the driver that the rate table changed. This
++ *	is only used if the configured rate control algorithm actually uses
++ *	the new rate table API, and is therefore optional. Must be atomic.
+  *
+  * @conf_tx: Configure TX queue parameters (EDCF (aifs, cw_min, cw_max),
+  *	bursting) for a hardware TX queue.
+@@ -2972,6 +2975,9 @@ struct ieee80211_ops {
+ 			      struct ieee80211_vif *vif,
+ 			      struct ieee80211_sta *sta,
+ 			      u32 changed);
++	void (*sta_rate_tbl_update)(struct ieee80211_hw *hw,
++				    struct ieee80211_vif *vif,
++				    struct ieee80211_sta *sta);
+ 	int (*conf_tx)(struct ieee80211_hw *hw,
+ 		       struct ieee80211_vif *vif, u16 ac,
+ 		       const struct ieee80211_tx_queue_params *params);
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 9759dd1..ba8db1b 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -621,6 +621,20 @@ static inline void drv_sta_rc_update(struct ieee80211_local *local,
+ 	trace_drv_return_void(local);
+ }
+ 
++static inline void drv_sta_rate_tbl_update(struct ieee80211_local *local,
++					   struct ieee80211_sub_if_data *sdata,
++					   struct ieee80211_sta *sta)
++{
++	sdata = get_bss_sdata(sdata);
++	check_sdata_in_driver(sdata);
++
++	trace_drv_sta_rate_tbl_update(local, sdata, sta);
++	if (local->ops->sta_rate_tbl_update)
++		local->ops->sta_rate_tbl_update(&local->hw, &sdata->vif, sta);
++
++	trace_drv_return_void(local);
++}
++
+ static inline int drv_conf_tx(struct ieee80211_local *local,
+ 			      struct ieee80211_sub_if_data *sdata, u16 ac,
+ 			      const struct ieee80211_tx_queue_params *params)
+diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
+index 6081329..7dea81d 100644
+--- a/net/mac80211/rate.c
++++ b/net/mac80211/rate.c
+@@ -696,6 +696,7 @@ int rate_control_set_rates(struct ieee80211_hw *hw,
+ 			   struct ieee80211_sta *pubsta,
+ 			   struct ieee80211_sta_rates *rates)
+ {
++	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
+ 	struct ieee80211_sta_rates *old;
  
  	/*
+@@ -709,6 +710,8 @@ int rate_control_set_rates(struct ieee80211_hw *hw,
+ 	if (old)
+ 		kfree_rcu(old, rcu_head);
+ 
++	drv_sta_rate_tbl_update(hw_to_local(hw), sta->sdata, pubsta);
++
+ 	return 0;
+ }
+ EXPORT_SYMBOL(rate_control_set_rates);
+diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
+index 809a498..5753379 100644
+--- a/net/mac80211/trace.h
++++ b/net/mac80211/trace.h
+@@ -826,6 +826,13 @@ DEFINE_EVENT(sta_event, drv_sta_pre_rcu_remove,
+ 	TP_ARGS(local, sdata, sta)
+ );
+ 
++DEFINE_EVENT(sta_event, drv_sta_rate_tbl_update,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_sub_if_data *sdata,
++		 struct ieee80211_sta *sta),
++	TP_ARGS(local, sdata, sta)
++);
++
+ TRACE_EVENT(drv_conf_tx,
+ 	TP_PROTO(struct ieee80211_local *local,
+ 		 struct ieee80211_sub_if_data *sdata,
 -- 
-1.9.1
+2.1.2
 
