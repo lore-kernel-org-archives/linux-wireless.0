@@ -1,169 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:52981 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754869AbaK0MJW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Nov 2014 07:09:22 -0500
-Subject: [PATCH v4 2/2] ath10k: read calibration data from Device Tree
-To: <ath10k@lists.infradead.org>
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <devicetree@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-	<toshik@chromium.org>
-Date: Thu, 27 Nov 2014 14:09:18 +0200
-Message-ID: <20141127120917.17546.44254.stgit@potku.adurom.net> (sfid-20141127_130928_588338_2B0C5E01)
-In-Reply-To: <20141127120727.17546.61202.stgit@potku.adurom.net>
-References: <20141127120727.17546.61202.stgit@potku.adurom.net>
+Received: from mta-out1.inet.fi ([62.71.2.203]:38788 "EHLO jenni2.inet.fi"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753520AbaKRNll (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Nov 2014 08:41:41 -0500
+Date: Tue, 18 Nov 2014 15:34:59 +0200
+From: "Kirill A. Shutemov" <kirill@shutemov.name>
+To: linux-bluetooth@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Chan-yeol Park <chanyeol.park@samsung.com>,
+	Kyungmin Park <kyungmin.park@samsung.com>,
+	Johan Hedberg <johan.hedberg@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: pull request: bluetooth-next 2014-11-07
+Message-ID: <20141118133459.GB27428@node.dhcp.inet.fi> (sfid-20141118_144200_048791_750B4164)
+References: <20141107092754.GA6995@t440s.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20141107092754.GA6995@t440s.lan>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Toshi Kikuchi <toshik@chromium.org>
+On Fri, Nov 07, 2014 at 11:27:54AM +0200, Johan Hedberg wrote:
+> Chan-yeol Park (1):
+>       Bluetooth: Fix hci_sync missing wakeup interrupt
 
-This patch adds support for reading calibration data from Device Tree.
-It looks for the calibration data in Device Tree if it can't find it
-in a file. If there's no node in Device Tree, ath10k will try to find the
-calibration data from OTP.
+Look like this commit causes problem for me:
 
-The node for the calibration data should be defined like this:
+[    2.018671] ------------[ cut here ]------------
+[    2.022836] WARNING: CPU: 2 PID: 109 at /home/kas/git/public/linux/kernel/sched/core.c:7323 __might_sleep+0xbd/0xd0()
+[    2.023166] Freeing unused kernel memory: 944K (ffff880001b14000 - ffff880001c00000)
+[    2.030362] do not call blocking ops when !TASK_RUNNING; state=1 set at [<ffffffff819ab67b>] __hci_req_sync+0x7b/0x2a0
+[    2.034193] Modules linked in:
+[    2.036133] CPU: 2 PID: 109 Comm: kworker/u17:0 Not tainted 3.18.0-rc4-next-20141117-07404-g9dad2ab6df8b #66
+[    2.036383] Freeing unused kernel memory: 1404K (ffff8800020a1000 - ffff880002200000)
+[    2.038940] Hardware name: LENOVO 3460CC6/3460CC6, BIOS G6ET93WW (2.53 ) 02/04/2013
+[    2.040233] Workqueue: hci0 hci_power_on
+[    2.041517]  ffffffff81f51d50 ffff8800d3ecfb28 ffffffff81afc316 0000000000000000
+[    2.042811]  ffff8800d3ecfb78 ffff8800d3ecfb68 ffffffff810fc11a ffff880000000000
+[    2.042812]  ffffffff81f52a28 000000000000026d 0000000000000000 ffff8800d3ec9200
+[    2.042813] Call Trace:
+[    2.042818]  [<ffffffff81afc316>] dump_stack+0x4c/0x6e
+[    2.042821]  [<ffffffff810fc11a>] warn_slowpath_common+0x8a/0xc0
+[    2.042823]  [<ffffffff810fc196>] warn_slowpath_fmt+0x46/0x50
+[    2.042825]  [<ffffffff819ab67b>] ? __hci_req_sync+0x7b/0x2a0
+[    2.042827]  [<ffffffff819ab67b>] ? __hci_req_sync+0x7b/0x2a0
+[    2.042830]  [<ffffffff811295ed>] __might_sleep+0xbd/0xd0
+[    2.042832]  [<ffffffff81b04b8f>] mutex_lock_nested+0x2f/0x450
+[    2.042835]  [<ffffffff81b0812b>] ? _raw_spin_unlock+0x2b/0x50
+[    2.042837]  [<ffffffff81131db0>] ? wake_up_process+0x50/0x50
+[    2.042840]  [<ffffffff813b9ea1>] __create_file+0x71/0x2c0
+[    2.042842]  [<ffffffff813ba10f>] debugfs_create_file+0x1f/0x30
+[    2.042844]  [<ffffffff819ac461>] hci_dev_do_open+0x431/0xa70
+[    2.042846]  [<ffffffff8111a72c>] ? process_one_work+0x13c/0x810
+[    2.042847]  [<ffffffff819ad2b1>] hci_power_on+0x31/0x1e0
+[    2.042849]  [<ffffffff8111a7c8>] process_one_work+0x1d8/0x810
+[    2.042850]  [<ffffffff8111a72c>] ? process_one_work+0x13c/0x810
+[    2.042851]  [<ffffffff8111b2db>] worker_thread+0x6b/0x4b0
+[    2.042852]  [<ffffffff8111b270>] ? init_pwq+0xf0/0xf0
+[    2.042854]  [<ffffffff81120ef9>] kthread+0x119/0x130
+[    2.042855]  [<ffffffff8112923d>] ? finish_task_switch+0x4d/0x140
+[    2.042857]  [<ffffffff81120de0>] ? kthread_create_on_node+0x240/0x240
+[    2.042859]  [<ffffffff81b08cfc>] ret_from_fork+0x7c/0xb0
+[    2.042861]  [<ffffffff81120de0>] ? kthread_create_on_node+0x240/0x240
+[    2.042863] ---[ end trace 3a40e80ec4ca7159 ]---
 
-pci {
-        pcie@0 {
-                reg = <0 0 0 0 0>;
-                #interrupt-cells = <1>;
-                #size-cells = <2>;
-                #address-cells = <3>;
-                device_type = "pci";
-
-                ath10k@0,0 {
-                        reg = <0 0 0 0 0>;
-                        device_type = "pci";
-                        qcom,ath10k-calibration-data = [ 01 02 03 ... ];
-                };
-        };
-};
-
-Signed-off-by: Toshi Kikuchi <toshik@chromium.org>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.c |   70 ++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/core.h |    3 +
- 2 files changed, 72 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 7762061a1944..6165f2735b35 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -17,6 +17,7 @@
- 
- #include <linux/module.h>
- #include <linux/firmware.h>
-+#include <linux/of.h>
- 
- #include "core.h"
- #include "mac.h"
-@@ -249,6 +250,63 @@ static int ath10k_download_cal_file(struct ath10k *ar)
- 	return 0;
- }
- 
-+static int ath10k_download_cal_dt(struct ath10k *ar)
-+{
-+	struct device_node *node;
-+	int data_len;
-+	void *data;
-+	int ret;
-+
-+	node = ar->dev->of_node;
-+	if (!node)
-+		/* Device Tree is optional, don't print any warnings if
-+		 * there's no node for ath10k.
-+		 */
-+		return -ENOENT;
-+
-+	if (!of_get_property(node, "qcom,ath10k-calibration-data",
-+			     &data_len)) {
-+		/* The calibration data node is optional */
-+		return -ENOENT;
-+	}
-+
-+	if (data_len != QCA988X_CAL_DATA_LEN) {
-+		ath10k_warn(ar, "invalid calibration data length in DT: %d\n",
-+			    data_len);
-+		ret = -EMSGSIZE;
-+		goto out;
-+	}
-+
-+	data = kmalloc(data_len, GFP_KERNEL);
-+	if (!data) {
-+		ret = -ENOMEM;
-+		goto out;
-+	}
-+
-+	ret = of_property_read_u8_array(node, "qcom,ath10k-calibration-data",
-+					data, data_len);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to read calibration data from DT: %d\n",
-+			    ret);
-+		goto out_free;
-+	}
-+
-+	ret = ath10k_download_board_data(ar, data, data_len);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to download calibration data from Device Tree: %d\n",
-+			    ret);
-+		goto out_free;
-+	}
-+
-+	ret = 0;
-+
-+out_free:
-+	kfree(data);
-+
-+out:
-+	return ret;
-+}
-+
- static int ath10k_download_and_run_otp(struct ath10k *ar)
- {
- 	u32 result, address = ar->hw_params.patch_load_addr;
-@@ -662,7 +720,17 @@ static int ath10k_download_cal_data(struct ath10k *ar)
- 	}
- 
- 	ath10k_dbg(ar, ATH10K_DBG_BOOT,
--		   "boot did not find a calibration file, try OTP next: %d\n",
-+		   "boot did not find a calibration file, try DT next: %d\n",
-+		   ret);
-+
-+	ret = ath10k_download_cal_dt(ar);
-+	if (ret == 0) {
-+		ar->cal_mode = ATH10K_CAL_MODE_DT;
-+		goto done;
-+	}
-+
-+	ath10k_dbg(ar, ATH10K_DBG_BOOT,
-+		   "boot did not find DT entry, try OTP next: %d\n",
- 		   ret);
- 
- 	ret = ath10k_download_and_run_otp(ar);
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 4a294987736c..2dd1bb05a3fc 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -400,6 +400,7 @@ enum ath10k_dev_flags {
- enum ath10k_cal_mode {
- 	ATH10K_CAL_MODE_FILE,
- 	ATH10K_CAL_MODE_OTP,
-+	ATH10K_CAL_MODE_DT,
- };
- 
- static inline const char *ath10k_cal_mode_str(enum ath10k_cal_mode mode)
-@@ -409,6 +410,8 @@ static inline const char *ath10k_cal_mode_str(enum ath10k_cal_mode mode)
- 		return "file";
- 	case ATH10K_CAL_MODE_OTP:
- 		return "otp";
-+	case ATH10K_CAL_MODE_DT:
-+		return "dt";
- 	}
- 
- 	return "unknown";
-
+-- 
+ Kirill A. Shutemov
