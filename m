@@ -1,65 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:1181 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751898AbaK3I3N (ORCPT
+Received: from mail-ob0-f169.google.com ([209.85.214.169]:53686 "EHLO
+	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755941AbaKRQM2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Nov 2014 03:29:13 -0500
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Lino Sanfilippo <LinoSanfilippo@gmx.de>, <netdev@vger.kernel.org>,
-	<ahmedtamrawi@gmail.com>, <davem@davemloft.net>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] wil6210: Fix potential memory leaks on error paths
-Date: Sun, 30 Nov 2014 10:28:39 +0200
-Message-ID: <3345120.HXl93bohCX@lx-wigig-72> (sfid-20141130_092919_133651_C46C48BA)
-In-Reply-To: <1417139239-32602-1-git-send-email-LinoSanfilippo@gmx.de>
-References: <1417139239-32602-1-git-send-email-LinoSanfilippo@gmx.de>
+	Tue, 18 Nov 2014 11:12:28 -0500
+Message-ID: <546B6FEA.1090405@lwfinger.net> (sfid-20141118_171249_656409_E28C836F)
+Date: Tue, 18 Nov 2014 10:12:26 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Gheorhios <gheorhios@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+CC: Fabian Frederick <fabf@skynet.be>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Julian Calaby <julian.calaby@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	b43-dev <b43-dev@lists.infradead.org>,
+	netdev <netdev@vger.kernel.org>
+Subject: Re: [PATCH 1/1 net-next] wireless: remove unnecessary sizeof(u8)
+References: <1415998553-12636-1-git-send-email-fabf@skynet.be>	<CAGRGNgWqjsDu_mQK=_agBWjOequb4b7ffgCuxRH=9d72grDYtQ@mail.gmail.com>	<828430032.148603.1416203787175.open-xchange@webmail.nmp.skynet.be>	<20141117133618.GC3511@tuxdriver.com> <CAFpvzpxYrjR_tSF99iosMGZTAmt=_6o_aA+iYjNhxRGJ9aJ6oA@mail.gmail.com>
+In-Reply-To: <CAFpvzpxYrjR_tSF99iosMGZTAmt=_6o_aA+iYjNhxRGJ9aJ6oA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday, November 28, 2014 02:47:19 AM Lino Sanfilippo wrote:
-> Fix missing memory deallocation on error paths in wil_write_file_wmi()
-> and wil_write_file_txmgmt().
-> 
-> Reported-by: Ahmed Tamrawi <ahmedtamrawi@gmail.com>
-> Signed-off-by: Lino Sanfilippo <LinoSanfilippo@gmx.de>
-> ---
->  drivers/net/wireless/ath/wil6210/debugfs.c | 8 ++++++--
->  1 file changed, 6 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
-> index 54a6ddc..4e6e145 100644
-> --- a/drivers/net/wireless/ath/wil6210/debugfs.c
-> +++ b/drivers/net/wireless/ath/wil6210/debugfs.c
-> @@ -573,8 +573,10 @@ static ssize_t wil_write_file_txmgmt(struct file *file, const char __user *buf,
->  	if (!frame)
->  		return -ENOMEM;
->  
-> -	if (copy_from_user(frame, buf, len))
-> +	if (copy_from_user(frame, buf, len)) {
-> +		kfree(frame);
->  		return -EIO;
-> +	}
->  
->  	params.buf = frame;
->  	params.len = len;
-> @@ -614,8 +616,10 @@ static ssize_t wil_write_file_wmi(struct file *file, const char __user *buf,
->  		return -ENOMEM;
->  
->  	rc = simple_write_to_buffer(wmi, len, ppos, buf, len);
-> -	if (rc < 0)
-> +	if (rc < 0) {
-> +		kfree(wmi);
->  		return rc;
-> +	}
->  
->  	cmd = &wmi[1];
->  	cmdid = le16_to_cpu(wmi->id);
-> 
+On 11/18/2014 07:34 AM, Gheorhios wrote:
+> Anyone could gently send the link for downloading B43 linux drivers for
+> this procedure?
+>
+>
+>
+> Then transfer it over to your Ubuntu box.
+>
+> Now in your Ubuntu Box [computer] please make your way to your Home folder.
+>
+> Once you are at your home folder right click on your home folder and make a
+> new folder and call it wireless.
+>
+> Now that you have made a new folder called wireless in your home directory,
+> it is time to move the downloaded file into the new folder called wireless.
+>
+> Move The Wireless Folder To The Firmware Directory
+>
+> sudo cp -r ~/wireless/* /lib/firmware/
+>
+> Now let's double check to make sure the download made it to the firmware
+> directory. To do this type this into the terminal:
+>
+> ls /lib/firmware
+>
+> Ok so now that the download is in the firmware directory we need to go to
+> that directory. To go there open your terminal and type in:
+>
+> cd /lib/firmware
+>
+> Now that you have changed directories let's double check to make sure you
+> are in the right directory, this next code tells us where we are in the
+> computer file directory. This next code stands for "print working
+> directory".
+>
+> pwd
+>
+> Are you at /lib/firmware if so good if not go back one step.
+>
+> Now that we are in the firmware directory. We have to extract the download,
+> to do this type in:
+>
+> sudo -s
+>
+> Then enter your password then:
+>
+> tar xvf b43-all-fw.tar_.gz
+>
+> Now is the firmware extracted properly? check by typing:
+>
+> ls /lib/firmware/b43
+>
+> or:
+>
+> ls /lib/firmware/b43legacy
+>
+> Do you see the ucode files? if so then delete the gz file:
+>
+> sudo rm *.gz
+>
+> Then:
+>
+> exit
+>
+> Reboot
 
-Lino and Ahmed: thanks for that. Here is my
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+No, I do not know where that file is found. Even if I knew of such a file, 
+Broadcom has expressly declined to provide that firmware for redistribution. 
+Posting such a file could invite legal action. If someone else has violated 
+Broadcom's directive, I would not facilitate that violation.
 
-John: please merge
+Rather than doing that, the link at 
+http://wireless.kernel.org/en/users/Drivers/b43#firmwareinstallation shows what 
+to do for Ubuntu installations. Follow those instructions - they refer to a 
+legal way to get the firmware. I would have thought that asking this question on 
+an Ubuntu Forum would have been more productive.
+
+By the way, piggybacking your request on this thread is very bad netiquette. You 
+should not have done a "reply-to".
+
+Larry
+
