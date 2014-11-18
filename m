@@ -1,43 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:52287 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752509AbaKDJZx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Nov 2014 04:25:53 -0500
-Message-ID: <1415093148.2064.5.camel@sipsolutions.net> (sfid-20141104_102617_610020_6C1CD530)
-Subject: Re: [PATCH 0/2 v3] cfg80211: mac80211: 802.11p OCB mode support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rostislav Lisovy <lisovy@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
-	jan-niklas.meier@volkswagen.de, burak.simsek@volkswagen.de,
-	Emmanuel Thierry <emmanuel.thierry@yogoko.fr>,
-	laszlo.virag@commsignia.com,
-	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
-Date: Tue, 04 Nov 2014 10:25:48 +0100
-In-Reply-To: <1415007199-31506-1-git-send-email-rostislav.lisovy@fel.cvut.cz> (sfid-20141103_103325_972796_F4E0AE3F)
-References: <1415007199-31506-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
-	 (sfid-20141103_103325_972796_F4E0AE3F)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:53768 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932124AbaKRUPP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Nov 2014 15:15:15 -0500
+Date: Tue, 18 Nov 2014 15:14:36 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: bluetooth-next 2014-11-18
+Message-ID: <20141118201435.GE13458@tuxdriver.com> (sfid-20141118_211551_826573_FDE5AA73)
+References: <20141118091952.GA14015@t440s.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20141118091952.GA14015@t440s.lan>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-11-03 at 10:33 +0100, Rostislav Lisovy wrote:
-> The IEEE 802.11p amendment (already part of IEEE 802.11-2012)
-> specifies usage of 5 and 10 MHz wide channels in 5.9GHz band for
-> vehicular environment. All the 802.11p compliant devices should
-> be set to the newly added operation mode -- OCB (Outside the
-> Context of a BSS). No authentication/association is necessary to
-> communicate. The only parameter to be configured is the channel
-> (central frequency and bandwidth) to communicate on. The channel
-> has to be known a priori. It is set during the 'ocb join'
-> operation (sent via netlink message from user-space).
+On Tue, Nov 18, 2014 at 11:19:52AM +0200, Johan Hedberg wrote:
+> Hi John,
 > 
-> This patchset adds the OCB mode, OCB join and leave handling
-> (nl80211, cfg80211, mac80211), 802.11p EDCA parameters
-> modification, RX and TX path (for unicast/broadcast messages).
+> Here's another bluetooth-next pull request for 3.19. We've got:
+> 
+>  - Various fixes, cleanups and improvements to ieee802154/mac802154
+>  - Support for a Broadcom BCM20702A1 variant
+>  - Lots of lockdep fixes
+>  - Fixed handling of LE CoC errors that should trigger SMP
+> 
+> Please let me know if there are any issues pulling. Thanks.
+> 
+> Johan
+> 
+> ---
+> The following changes since commit 56b2c3eea398c772dd895dc62c18cbdd1ba127b1:
+> 
+>   6lowpan: move skb_free from error paths in decompression (2014-11-06 22:09:48 +0100)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next.git for-upstream
+> 
+> for you to fetch changes up to a86c02ea38c53b695209b1181f9e2e18d73eb4e8:
+> 
+>   Bluetooth: Add support for Broadcom BCM20702A1 variant (2014-11-18 08:32:14 +0100)
 
-Applied, thanks for all the changes.
+Pulling now...
 
-johannes
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
