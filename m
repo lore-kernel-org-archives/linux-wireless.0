@@ -1,159 +1,543 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:60814 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752873AbaKLMJE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Nov 2014 07:09:04 -0500
-From: Jukka Rissanen <jukka.rissanen@linux.intel.com>
+Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:41692
+	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753718AbaKRXO5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Nov 2014 18:14:57 -0500
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH v3 2/2] nl80211: Stop scheduled scan if netlink client disappears
-Date: Wed, 12 Nov 2014 14:08:59 +0200
-Message-Id: <1415794139-7124-3-git-send-email-jukka.rissanen@linux.intel.com> (sfid-20141112_130909_519151_DCCF3FB0)
-In-Reply-To: <1415794139-7124-1-git-send-email-jukka.rissanen@linux.intel.com>
-References: <1415794139-7124-1-git-send-email-jukka.rissanen@linux.intel.com>
+Cc: johannes@sipsolutions.net
+Subject: [PATCH] mac80211: add an intermediate software queue implementation
+Date: Wed, 19 Nov 2014 00:14:55 +0100
+Message-Id: <1416352495-82172-1-git-send-email-nbd@openwrt.org> (sfid-20141119_001502_620004_F6772A5B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-An attribute NL80211_ATTR_SOCKET_OWNER can be set by the scan initiator.
-If present, the attribute will cause the scan to be stopped if the client
-dies.
+This allows drivers to request per-vif and per-sta-tid queues from which
+they can pull frames. This makes it easier to keep the hardware queues
+short, and to improve fairness between clients and vifs.
 
-Signed-off-by: Jukka Rissanen <jukka.rissanen@linux.intel.com>
+The task of scheduling packet transmission is left up to the driver -
+queueing is controlled by mac80211. Drivers can only dequeue packets by
+calling ieee80211_tx_dequeue. This makes it possible to add active queue
+management later without changing drivers using this code.
+
+This can also be used as a starting point to implement A-MSDU
+aggregation in a way that does not add artificially induced latency.
+
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- include/net/cfg80211.h       |  2 ++
- include/uapi/linux/nl80211.h |  3 +++
- net/wireless/core.c          | 10 +++++++++-
- net/wireless/nl80211.c       | 34 ++++++++++++++++++++++++++++++++++
- 4 files changed, 48 insertions(+), 1 deletion(-)
+ include/net/mac80211.h     | 50 ++++++++++++++++++++++++++++++++++
+ net/mac80211/driver-ops.h  | 17 ++++++++++++
+ net/mac80211/ieee80211_i.h | 14 ++++++++++
+ net/mac80211/iface.c       | 10 +++++++
+ net/mac80211/main.c        |  3 +++
+ net/mac80211/sta_info.c    | 26 ++++++++++++++++--
+ net/mac80211/sta_info.h    |  1 +
+ net/mac80211/trace.h       | 34 +++++++++++++++++++++++
+ net/mac80211/tx.c          | 67 +++++++++++++++++++++++++++++++++++++++++++---
+ net/mac80211/util.c        | 35 ++++++++++++++++++++++++
+ 10 files changed, 252 insertions(+), 5 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 220d5f5..84378bf 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1512,6 +1512,8 @@ struct cfg80211_sched_scan_request {
- 	struct wiphy *wiphy;
- 	struct net_device *dev;
- 	unsigned long scan_start;
-+	u32 owner_nlportid;
-+	struct work_struct sched_scan_stop_wk;
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 5f203a6..f1ea966 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1192,6 +1192,8 @@ struct ieee80211_vif {
+ 	u8 cab_queue;
+ 	u8 hw_queue[IEEE80211_NUM_ACS];
  
- 	/* keep last */
- 	struct ieee80211_channel *channels[0];
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 185f9c7..5038240 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1640,6 +1640,9 @@ enum nl80211_commands {
-  * @NL80211_ATTR_SOCKET_OWNER: Flag attribute, if set during interface
-  *	creation then the new interface will be owned by the netlink socket
-  *	that created it and will be destroyed when the socket is closed.
-+ *	If set during scheduled scan start then the new scan req will be
-+ *	owned by the netlink socket that created it and the scheduled scan will
-+ *	be stopped when the socket is closed.
-  *
-  * @NL80211_ATTR_TDLS_INITIATOR: flag attribute indicating the current end is
-  *	the TDLS link initiator.
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index a4d2792..88898d9 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -840,6 +840,8 @@ void __cfg80211_leave(struct cfg80211_registered_device *rdev,
- 		      struct wireless_dev *wdev)
- {
- 	struct net_device *dev = wdev->netdev;
-+	struct cfg80211_sched_scan_request *sched_scan_req =
-+		rdev->sched_scan_req;
- 
- 	ASSERT_RTNL();
- 	ASSERT_WDEV_LOCK(wdev);
-@@ -850,8 +852,10 @@ void __cfg80211_leave(struct cfg80211_registered_device *rdev,
- 		break;
- 	case NL80211_IFTYPE_P2P_CLIENT:
- 	case NL80211_IFTYPE_STATION:
--		if (rdev->sched_scan_req && dev == rdev->sched_scan_req->dev)
-+		if (sched_scan_req && dev == sched_scan_req->dev) {
-+			cancel_work_sync(&sched_scan_req->sched_scan_stop_wk);
- 			__cfg80211_stop_sched_scan(rdev, false);
-+		}
- 
- #ifdef CONFIG_CFG80211_WEXT
- 		kfree(wdev->wext.ie);
-@@ -991,6 +995,10 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
- 
- 		if (WARN_ON(rdev->sched_scan_req &&
- 			    rdev->sched_scan_req->dev == wdev->netdev)) {
-+			struct cfg80211_sched_scan_request *sched_scan_req =
-+				rdev->sched_scan_req;
++	struct ieee80211_txq *txq;
 +
-+			cancel_work_sync(&sched_scan_req->sched_scan_stop_wk);
- 			__cfg80211_stop_sched_scan(rdev, false);
- 		}
+ 	struct ieee80211_chanctx_conf __rcu *chanctx_conf;
  
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index df447c0..8fc500d 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -5681,6 +5681,21 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
- 	return err;
+ 	u32 driver_flags;
+@@ -1448,6 +1450,8 @@ struct ieee80211_sta {
+ 	bool tdls;
+ 	bool tdls_initiator;
+ 
++	struct ieee80211_txq *txq[IEEE80211_NUM_TIDS];
++
+ 	/* must be last */
+ 	u8 drv_priv[0] __aligned(sizeof(void *));
+ };
+@@ -1476,6 +1480,27 @@ struct ieee80211_tx_control {
+ };
+ 
+ /**
++ * struct ieee80211_txq - Software intermediate tx queue
++ *
++ * @vif: &struct ieee80211_vif pointer from the add_interface callback.
++ * @sta: station table entry, may be NULL for per-vif queue
++ * @tid: the TID for this queue (unset for per-vif queue)
++ * @ac: the AC for this queue
++ *
++ * The driver can obtain packets from this queue by calling
++ * ieee80211_tx_dequeue().
++ */
++struct ieee80211_txq {
++	struct ieee80211_vif *vif;
++	struct ieee80211_sta *sta;
++	u8 tid;
++	u8 ac;
++
++	/* must be last */
++	u8 drv_priv[0] __aligned(sizeof(void *));
++};
++
++/**
+  * enum ieee80211_hw_flags - hardware flags
+  *
+  * These flags are used to indicate hardware capabilities to
+@@ -1698,6 +1723,8 @@ enum ieee80211_hw_flags {
+  *	within &struct ieee80211_sta.
+  * @chanctx_data_size: size (in bytes) of the drv_priv data area
+  *	within &struct ieee80211_chanctx_conf.
++ * @txq_data_size: size (in bytes) of the drv_priv data area
++ *	within @struct ieee80211_txq.
+  *
+  * @max_rates: maximum number of alternate rate retry stages the hw
+  *	can handle.
+@@ -1746,6 +1773,9 @@ enum ieee80211_hw_flags {
+  * @n_cipher_schemes: a size of an array of cipher schemes definitions.
+  * @cipher_schemes: a pointer to an array of cipher scheme definitions
+  *	supported by HW.
++ *
++ * @txq_ac_max_pending: maximum number of frames per AC pending in all txq
++ *	entries for a vif.
+  */
+ struct ieee80211_hw {
+ 	struct ieee80211_conf conf;
+@@ -1758,6 +1788,7 @@ struct ieee80211_hw {
+ 	int vif_data_size;
+ 	int sta_data_size;
+ 	int chanctx_data_size;
++	int txq_data_size;
+ 	u16 queues;
+ 	u16 max_listen_interval;
+ 	s8 max_signal;
+@@ -1774,6 +1805,7 @@ struct ieee80211_hw {
+ 	u8 uapsd_max_sp_len;
+ 	u8 n_cipher_schemes;
+ 	const struct ieee80211_cipher_scheme *cipher_schemes;
++	int txq_ac_max_pending;
+ };
+ 
+ /**
+@@ -2878,6 +2910,8 @@ enum ieee80211_reconfig_type {
+  *
+  * @get_txpower: get current maximum tx power (in dBm) based on configuration
+  *	and hardware limits.
++ *
++ * @wake_tx_queue: Called when new packets have been added to the queue.
+  */
+ struct ieee80211_ops {
+ 	void (*tx)(struct ieee80211_hw *hw,
+@@ -3089,6 +3123,9 @@ struct ieee80211_ops {
+ 	u32 (*get_expected_throughput)(struct ieee80211_sta *sta);
+ 	int (*get_txpower)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 			   int *dbm);
++
++	void (*wake_tx_queue)(struct ieee80211_hw *hw,
++			      struct ieee80211_txq *txq);
+ };
+ 
+ /**
+@@ -5006,4 +5043,17 @@ void ieee80211_tdls_oper_request(struct ieee80211_vif *vif, const u8 *peer,
+  */
+ size_t ieee80211_ie_split(const u8 *ies, size_t ielen,
+ 			  const u8 *ids, int n_ids, size_t offset);
++
++/**
++ * ieee80211_tx_dequeue - dequeue a packet from a software tx queue
++ *
++ * @hw: pointer as obtained from ieee80211_alloc_hw()
++ * @txq: pointer obtained from .add_tx_queue() call
++ *
++ * Returns 0 if successful, -EAGAIN if no frame was available.
++ */
++int ieee80211_tx_dequeue(struct ieee80211_hw *hw, struct ieee80211_txq *txq,
++			 struct sk_buff **skb);
++
++
+ #endif /* MAC80211_H */
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 9759dd1..1dbc646 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -1296,4 +1296,21 @@ static inline int drv_get_txpower(struct ieee80211_local *local,
+ 	return ret;
  }
  
-+static void nl80211_sched_scan_stop_wk(struct work_struct *work)
++static inline void drv_wake_tx_queue(struct ieee80211_local *local,
++				     struct txq_info *txq)
 +{
-+	struct cfg80211_sched_scan_request *req;
-+	struct cfg80211_registered_device *rdev;
++	struct ieee80211_sub_if_data *sdata = vif_to_sdata(txq->txq.vif);
 +
-+	req = container_of(work, struct cfg80211_sched_scan_request,
-+			   sched_scan_stop_wk);
++	if (!check_sdata_in_driver(sdata))
++		return;
 +
-+	rdev = wiphy_to_rdev(req->wiphy);
++	if (txq->txq.sta)
++		trace_drv_wake_sta_tx_queue(local, sdata, txq->txq.sta,
++					    txq->txq.tid);
++	else
++		trace_drv_wake_vif_tx_queue(local, sdata);
 +
-+	rtnl_lock();
-+	__cfg80211_stop_sched_scan(rdev, false);
-+	rtnl_unlock();
++	local->ops->wake_tx_queue(&local->hw, &txq->txq);
 +}
 +
- static int nl80211_start_sched_scan(struct sk_buff *skb,
- 				    struct genl_info *info)
- {
-@@ -5955,6 +5970,13 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
+ #endif /* __MAC80211_DRIVER_OPS */
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 842e066..8dee646 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -793,6 +793,13 @@ struct mac80211_qos_map {
+ 	struct rcu_head rcu_head;
+ };
  
- 	err = rdev_sched_scan_start(rdev, dev, request);
- 	if (!err) {
-+		if (info->attrs[NL80211_ATTR_SOCKET_OWNER]) {
-+			INIT_WORK(&request->sched_scan_stop_wk,
-+				  nl80211_sched_scan_stop_wk);
++struct txq_info {
++	struct sk_buff_head queue;
 +
-+			request->owner_nlportid = info->snd_portid;
-+		}
++	/* keep last! */
++	struct ieee80211_txq txq;
++};
 +
- 		rdev->sched_scan_req = request;
- 		nl80211_send_sched_scan(rdev, dev,
- 					NL80211_CMD_START_SCHED_SCAN);
-@@ -12127,6 +12149,12 @@ static int nl80211_netlink_notify(struct notifier_block * nb,
+ struct ieee80211_sub_if_data {
+ 	struct list_head list;
  
- 	list_for_each_entry_rcu(rdev, &cfg80211_rdev_list, list) {
- 		bool schedule_destroy_work = false;
-+		bool schedule_scan_stop = false;
-+		struct cfg80211_sched_scan_request *req = rdev->sched_scan_req;
-+
-+		if (req && req->owner_nlportid == notify->portid &&
-+		    notify->portid)
-+			schedule_scan_stop = true;
+@@ -837,6 +844,8 @@ struct ieee80211_sub_if_data {
+ 	bool control_port_no_encrypt;
+ 	int encrypt_headroom;
  
- 		list_for_each_entry_rcu(wdev, &rdev->wdev_list, list) {
- 			cfg80211_mlme_unregister_socket(wdev, notify->portid);
-@@ -12157,6 +12185,12 @@ static int nl80211_netlink_notify(struct notifier_block * nb,
- 				spin_unlock(&rdev->destroy_list_lock);
- 				schedule_work(&rdev->destroy_work);
- 			}
-+		} else if (schedule_scan_stop) {
-+			req->owner_nlportid = 0;
++	struct txq_info *txq;
++	atomic_t txq_len[IEEE80211_NUM_ACS];
+ 	struct ieee80211_tx_queue_params tx_conf[IEEE80211_NUM_ACS];
+ 	struct mac80211_qos_map __rcu *qos_map;
+ 
+@@ -1865,6 +1874,11 @@ void ieee80211_add_pending_skbs(struct ieee80211_local *local,
+ 				struct sk_buff_head *skbs);
+ void ieee80211_flush_queues(struct ieee80211_local *local,
+ 			    struct ieee80211_sub_if_data *sdata);
++void ieee80211_init_tx_queue(struct ieee80211_sub_if_data *sdata,
++			     struct sta_info *sta,
++			     struct txq_info *txq, int tid);
++void ieee80211_flush_tx_queue(struct ieee80211_local *local,
++			      struct ieee80211_txq *txq);
+ 
+ void ieee80211_send_auth(struct ieee80211_sub_if_data *sdata,
+ 			 u16 transaction, u16 auth_alg, u16 status,
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 9df26ad..86dd429 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -967,6 +967,9 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
+ 
++	if (sdata->vif.txq)
++		ieee80211_flush_tx_queue(local, sdata->vif.txq);
 +
-+			if (rdev->ops->sched_scan_stop &&
-+			    rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_SCHED_SCAN)
-+				schedule_work(&req->sched_scan_stop_wk);
- 		}
+ 	if (local->open_count == 0)
+ 		ieee80211_clear_tx_pending(local);
+ 
+@@ -1753,6 +1756,13 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
+ 	/* setup type-dependent data */
+ 	ieee80211_setup_sdata(sdata, type);
+ 
++	if (local->ops->wake_tx_queue) {
++		sdata->txq = kzalloc(sizeof(*sdata->txq) +
++				     local->hw.txq_data_size, GFP_KERNEL);
++		if (sdata->txq)
++			ieee80211_init_tx_queue(sdata, NULL, sdata->txq, 0);
++	}
++
+ 	if (ndev) {
+ 		if (params) {
+ 			ndev->ieee80211_ptr->use_4addr = params->use_4addr;
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 282a4f3..c742f7f 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -1004,6 +1004,9 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 
+ 	local->dynamic_ps_forced_timeout = -1;
+ 
++	if (!local->hw.txq_ac_max_pending)
++		local->hw.txq_ac_max_pending = 64;
++
+ 	result = ieee80211_wep_init(local);
+ 	if (result < 0)
+ 		wiphy_debug(local->hw.wiphy, "Failed to initialize wep: %d\n",
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index adc2537..dd948c3 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -119,6 +119,11 @@ static void __cleanup_single_sta(struct sta_info *sta)
+ 		sta_info_recalc_tim(sta);
  	}
  
++	if (sta->txq) {
++		for (i = 0; i < IEEE80211_NUM_TIDS; i++)
++			ieee80211_flush_tx_queue(local, sta->sta.txq[i]);
++	}
++
+ 	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++) {
+ 		local->total_ps_buffered -= skb_queue_len(&sta->ps_tx_buf[ac]);
+ 		ieee80211_purge_tx_queue(&local->hw, &sta->ps_tx_buf[ac]);
+@@ -241,6 +246,8 @@ void sta_info_free(struct ieee80211_local *local, struct sta_info *sta)
+ 		kfree(sta->tx_lat);
+ 	}
+ 
++	kfree(sta->txq);
++
+ 	sta_dbg(sta->sdata, "Destroyed STA %pM\n", sta->sta.addr);
+ 
+ 	kfree(rcu_dereference_raw(sta->sta.rates));
+@@ -294,12 +301,13 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
+ 				const u8 *addr, gfp_t gfp)
+ {
+ 	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_hw *hw = &local->hw;
+ 	struct sta_info *sta;
+ 	struct timespec uptime;
+ 	struct ieee80211_tx_latency_bin_ranges *tx_latency;
+ 	int i;
+ 
+-	sta = kzalloc(sizeof(*sta) + local->hw.sta_data_size, gfp);
++	sta = kzalloc(sizeof(*sta) + hw->sta_data_size, gfp);
+ 	if (!sta)
+ 		return NULL;
+ 
+@@ -357,6 +365,20 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
+ 	for (i = 0; i < ARRAY_SIZE(sta->chain_signal_avg); i++)
+ 		ewma_init(&sta->chain_signal_avg[i], 1024, 8);
+ 
++	if (local->ops->wake_tx_queue) {
++		int size = sizeof(struct txq_info) +
++			   ALIGN(hw->txq_data_size, sizeof(void *));
++
++		sta->txq = kcalloc(IEEE80211_NUM_TIDS, size, gfp);
++		if (!sta->txq)
++			goto free;
++
++		for (i = 0; i < IEEE80211_NUM_TIDS; i++) {
++			struct txq_info *txq = sta->txq + i * size;
++			ieee80211_init_tx_queue(sdata, sta, txq, i);
++		}
++	}
++
+ 	if (sta_prepare_rate_control(local, sta, gfp))
+ 		goto free;
+ 
+@@ -380,7 +402,7 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
+ 	if (sdata->vif.type == NL80211_IFTYPE_AP ||
+ 	    sdata->vif.type == NL80211_IFTYPE_AP_VLAN) {
+ 		struct ieee80211_supported_band *sband =
+-			local->hw.wiphy->bands[ieee80211_get_sdata_band(sdata)];
++			hw->wiphy->bands[ieee80211_get_sdata_band(sdata)];
+ 		u8 smps = (sband->ht_cap.cap & IEEE80211_HT_CAP_SM_PS) >>
+ 				IEEE80211_HT_CAP_SM_PS_SHIFT;
+ 		/*
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index bcda2ac..3f73284 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -371,6 +371,7 @@ struct sta_info {
+ 	struct sk_buff_head ps_tx_buf[IEEE80211_NUM_ACS];
+ 	struct sk_buff_head tx_filtered[IEEE80211_NUM_ACS];
+ 	unsigned long driver_buffered_tids;
++	void *txq;
+ 
+ 	/* Updated from RX path only, no locking requirements */
+ 	unsigned long rx_packets;
+diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
+index 809a498..84780ad 100644
+--- a/net/mac80211/trace.h
++++ b/net/mac80211/trace.h
+@@ -2194,6 +2194,40 @@ TRACE_EVENT(drv_get_txpower,
+ 	)
+ );
+ 
++DEFINE_EVENT(local_sdata_evt, drv_wake_vif_tx_queue,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_sub_if_data *sdata),
++	TP_ARGS(local, sdata)
++);
++
++TRACE_EVENT(drv_wake_sta_tx_queue,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_sub_if_data *sdata,
++		 struct ieee80211_sta *sta,
++		 u8 tid),
++
++	TP_ARGS(local, sdata, sta, tid),
++
++	TP_STRUCT__entry(
++		LOCAL_ENTRY
++		VIF_ENTRY
++		STA_ENTRY
++		__field(u8, tid)
++	),
++
++	TP_fast_assign(
++		LOCAL_ASSIGN;
++		VIF_ASSIGN;
++		STA_ASSIGN;
++		__entry->tid = tid;
++	),
++
++	TP_printk(
++		LOCAL_PR_FMT  VIF_PR_FMT  STA_PR_FMT " tid: 0x%x",
++		LOCAL_PR_ARG, VIF_PR_ARG, STA_PR_ARG, __entry->tid
++	)
++);
++
+ 
+ #ifdef CONFIG_MAC80211_MESSAGE_TRACING
+ #undef TRACE_SYSTEM
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 3ffd91f..1d98e62 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1198,13 +1198,75 @@ ieee80211_tx_prepare(struct ieee80211_sub_if_data *sdata,
+ 	return TX_CONTINUE;
+ }
+ 
++static void ieee80211_drv_tx(struct ieee80211_local *local,
++			     struct ieee80211_vif *vif,
++			     struct ieee80211_sta *pubsta,
++			     struct sk_buff *skb)
++{
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
++	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++	struct ieee80211_tx_control control = {
++		.sta = pubsta
++	};
++	struct ieee80211_txq *pubtxq = NULL;
++	struct txq_info *txq;
++	u8 ac;
++
++	if (ieee80211_is_mgmt(hdr->frame_control) ||
++	    ieee80211_is_ctl(hdr->frame_control))
++		goto tx_normal;
++
++	if (pubsta) {
++		u8 tid = skb->priority & IEEE80211_QOS_CTL_TID_MASK;
++		pubtxq = pubsta->txq[tid];
++	} else {
++		pubtxq = vif->txq;
++	}
++
++	if (!pubtxq)
++		goto tx_normal;
++
++	ac = pubtxq->ac;
++	txq = container_of(pubtxq, struct txq_info, txq);
++	atomic_inc(&sdata->txq_len[ac]);
++	if (atomic_read(&sdata->txq_len[ac]) >= local->hw.txq_ac_max_pending)
++		netif_stop_subqueue(sdata->dev, ac);
++
++	skb_queue_tail(&txq->queue, skb);
++	drv_wake_tx_queue(local, txq);
++
++	return;
++
++tx_normal:
++	drv_tx(local, &control, skb);
++}
++
++int ieee80211_tx_dequeue(struct ieee80211_hw *hw, struct ieee80211_txq *pubtxq,
++			 struct sk_buff **dest)
++{
++	struct ieee80211_local *local = hw_to_local(hw);
++	struct ieee80211_sub_if_data *sdata = vif_to_sdata(pubtxq->vif);
++	struct txq_info *txq = container_of(pubtxq, struct txq_info, txq);
++	u8 ac = pubtxq->ac;
++
++	*dest = skb_dequeue(&txq->queue);
++	if (!*dest)
++		return -EAGAIN;
++
++	atomic_dec(&sdata->txq_len[ac]);
++	if (__netif_subqueue_stopped(sdata->dev, ac))
++		ieee80211_propagate_queue_wake(local, sdata->vif.hw_queue[ac]);
++
++	return 0;
++}
++EXPORT_SYMBOL(ieee80211_tx_dequeue);
++
+ static bool ieee80211_tx_frags(struct ieee80211_local *local,
+ 			       struct ieee80211_vif *vif,
+ 			       struct ieee80211_sta *sta,
+ 			       struct sk_buff_head *skbs,
+ 			       bool txpending)
+ {
+-	struct ieee80211_tx_control control;
+ 	struct sk_buff *skb, *tmp;
+ 	unsigned long flags;
+ 
+@@ -1262,10 +1324,9 @@ static bool ieee80211_tx_frags(struct ieee80211_local *local,
+ 		spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
+ 
+ 		info->control.vif = vif;
+-		control.sta = sta;
+ 
+ 		__skb_unlink(skb, skbs);
+-		drv_tx(local, &control, skb);
++		ieee80211_drv_tx(local, vif, sta, skb);
+ 	}
+ 
+ 	return true;
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index f9319a5..90e9763 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -308,6 +308,11 @@ void ieee80211_propagate_queue_wake(struct ieee80211_local *local, int queue)
+ 		for (ac = 0; ac < n_acs; ac++) {
+ 			int ac_queue = sdata->vif.hw_queue[ac];
+ 
++			if (local->ops->wake_tx_queue &&
++			    (atomic_read(&sdata->txq_len[ac]) >
++			     local->hw.txq_ac_max_pending))
++				continue;
++
+ 			if (ac_queue == queue ||
+ 			    (sdata->vif.cab_queue == queue &&
+ 			     local->queue_stop_reasons[ac_queue] == 0 &&
+@@ -3182,3 +3187,33 @@ u8 *ieee80211_add_wmm_info_ie(u8 *buf, u8 qosinfo)
+ 
+ 	return buf;
+ }
++
++void ieee80211_init_tx_queue(struct ieee80211_sub_if_data *sdata,
++			     struct sta_info *sta,
++			     struct txq_info *txq, int tid)
++{
++	skb_queue_head_init(&txq->queue);
++	txq->txq.vif = &sdata->vif;
++
++	if (sta) {
++		txq->txq.sta = &sta->sta;
++		sta->sta.txq[tid] = &txq->txq;
++		txq->txq.ac = ieee802_1d_to_ac[tid & 7];
++	} else {
++		sdata->vif.txq = &txq->txq;
++		txq->txq.ac = IEEE80211_AC_BE;
++	}
++}
++
++void ieee80211_flush_tx_queue(struct ieee80211_local *local,
++			      struct ieee80211_txq *pubtxq)
++{
++	struct txq_info *txq = container_of(pubtxq, struct txq_info, txq);
++	struct ieee80211_sub_if_data *sdata = vif_to_sdata(pubtxq->vif);
++	struct sk_buff *skb;
++
++	while ((skb = skb_dequeue(&txq->queue)) != NULL) {
++		atomic_dec(&sdata->txq_len[pubtxq->ac]);
++		ieee80211_free_txskb(&local->hw, skb);
++	}
++}
 -- 
-1.8.3.1
+2.1.2
 
