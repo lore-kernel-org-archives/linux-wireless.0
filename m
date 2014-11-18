@@ -1,178 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:49369 "EHLO
+Received: from mail.linuxfoundation.org ([140.211.169.12]:52907 "EHLO
 	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750887AbaKFPoM (ORCPT
+	with ESMTP id S1753130AbaKRB7t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Nov 2014 10:44:12 -0500
-Date: Thu, 6 Nov 2014 07:43:01 -0800
+	Mon, 17 Nov 2014 20:59:49 -0500
+Date: Mon, 17 Nov 2014 17:59:47 -0800
 From: Greg KH <gregkh@linuxfoundation.org>
-To: Sanjeev Sharma <sanjeev_sharma@mentor.com>
-Cc: Larry.Finger@lwfinger.net, Jes.Sorensen@redhat.com,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] staging:rtl8723au: core: Fix Warning reported by
- checkpatch.
-Message-ID: <20141106154301.GC19605@kroah.com> (sfid-20141106_164421_636496_731D229D)
-References: <wrfjy4rxzk5b.fsf@redhat.com>
- <1415255796-8471-1-git-send-email-sanjeev_sharma@mentor.com>
+To: "Tobenna P. Igwe" <ptigwe@gmail.com>
+Cc: linux-kernel@vger.kernel.org, devel@driverdev.osuosl.org,
+	Jes.Sorensen@redhat.com, linux-wireless@vger.kernel.org,
+	Larry.Finger@lwfinger.net
+Subject: Re: [PATCH] staging:rtl8723au: Fix sparse warning cast to restricted
+ __le16
+Message-ID: <20141118015947.GA21650@kroah.com> (sfid-20141118_030009_347980_3EC6DA58)
+References: <20141118014529.GA937@Tobenna-Peter-Igwes-MacBook-Pro.local>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1415255796-8471-1-git-send-email-sanjeev_sharma@mentor.com>
+In-Reply-To: <20141118014529.GA937@Tobenna-Peter-Igwes-MacBook-Pro.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 06, 2014 at 12:06:36PM +0530, Sanjeev Sharma wrote:
-> This is a patch to the rtw_cmd.c file that fixes following
-> Warning by introducing temporary structure.
+On Tue, Nov 18, 2014 at 01:45:41AM +0000, Tobenna P. Igwe wrote:
+> This patch fixes the following sparse warning:
 > 
-> WARNING: line over 80 characters
+> drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c:343:36: warning:
+> cast to restricted __le16
 > 
-> Signed-off-by: Sanjeev Sharma <Sanjeev_Sharma@mentor.com>
+> by using the le16_to_cpus function.
+> 
+> Signed-off-by: Tobenna P. Igwe <ptigwe@gmail.com>
 > ---
->  drivers/staging/rtl8723au/core/rtw_cmd.c | 123 +++++++++++++++----------------
->  1 file changed, 60 insertions(+), 63 deletions(-)
-
-Same as the other patch, give us a hint as to the warning in the
-subject.
-
-
+>  drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/drivers/staging/rtl8723au/core/rtw_cmd.c b/drivers/staging/rtl8723au/core/rtw_cmd.c
-> index 4eaa502..6186575 100644
-> --- a/drivers/staging/rtl8723au/core/rtw_cmd.c
-> +++ b/drivers/staging/rtl8723au/core/rtw_cmd.c
-> @@ -919,34 +919,34 @@ static void traffic_status_watchdog(struct rtw_adapter *padapter)
->  	u8 bHigherBusyTxTraffic = false;
->  	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
->  	int BusyThreshold = 100;
-> +	struct rt_link_detect *ldi = &pmlmepriv->LinkDetectInfo;
-> +
->  	/*  */
->  	/*  Determine if our traffic is busy now */
->  	/*  */
->  	if (check_fwstate(pmlmepriv, _FW_LINKED)) {
->  		if (rtl8723a_BT_coexist(padapter))
->  			BusyThreshold = 50;
-> -		else if (pmlmepriv->LinkDetectInfo.bBusyTraffic)
-> +		else if (ldi->bBusyTraffic)
->  			BusyThreshold = 75;
->  		/*  if we raise bBusyTraffic in last watchdog, using
->  		    lower threshold. */
-> -		if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod > BusyThreshold ||
-> -		    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod > BusyThreshold) {
-> +		if (ldi->NumRxOkInPeriod > BusyThreshold ||
-> +		    ldi->NumTxOkInPeriod > BusyThreshold) {
->  			bBusyTraffic = true;
+> diff --git a/drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c b/drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c
+> index d80ea4e..78665ee 100644
+> --- a/drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c
+> +++ b/drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c
+> @@ -340,7 +340,7 @@ static u8 bthci_GetAssocInfo(struct rtw_adapter *padapter, u8 EntryNum)
+>  			tempBuf, TotalLen-BaseMemoryShift);
 >  
-> -			if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod >
-> -			    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod)
-> +			if (ldi->NumRxOkInPeriod > ldi->NumTxOkInPeriod)
->  				bRxBusyTraffic = true;
->  			else
->  				bTxBusyTraffic = true;
->  		}
->  
->  		/*  Higher Tx/Rx data. */
-> -		if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod > 4000 ||
-> -		    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod > 4000) {
-> +		if (ldi->NumRxOkInPeriod > 4000 ||
-> +		    ldi->NumTxOkInPeriod > 4000) {
->  			bHigherBusyTraffic = true;
->  
-> -			if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod >
-> -			    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod)
-> +			if (ldi->NumRxOkInPeriod > ldi->NumTxOkInPeriod)
->  				bHigherBusyRxTraffic = true;
->  			else
->  				bHigherBusyTxTraffic = true;
-> @@ -955,9 +955,9 @@ static void traffic_status_watchdog(struct rtw_adapter *padapter)
->  		if (!rtl8723a_BT_coexist(padapter) ||
->  		    !rtl8723a_BT_using_antenna_1(padapter)) {
->  		/*  check traffic for  powersaving. */
-> -			if (((pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod +
-> -			      pmlmepriv->LinkDetectInfo.NumTxOkInPeriod) > 8) ||
-> -			    pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod >2)
-> +			if (((ldi->NumRxUnicastOkInPeriod +
-> +			      ldi->NumTxOkInPeriod) > 8) ||
-> +			    ldi->NumRxUnicastOkInPeriod > 2)
->  				bEnterPS = false;
->  			else
->  				bEnterPS = true;
-> @@ -971,15 +971,15 @@ static void traffic_status_watchdog(struct rtw_adapter *padapter)
->  	} else
->  		LPS_Leave23a(padapter);
->  
-> -	pmlmepriv->LinkDetectInfo.NumRxOkInPeriod = 0;
-> -	pmlmepriv->LinkDetectInfo.NumTxOkInPeriod = 0;
-> -	pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod = 0;
-> -	pmlmepriv->LinkDetectInfo.bBusyTraffic = bBusyTraffic;
-> -	pmlmepriv->LinkDetectInfo.bTxBusyTraffic = bTxBusyTraffic;
-> -	pmlmepriv->LinkDetectInfo.bRxBusyTraffic = bRxBusyTraffic;
-> -	pmlmepriv->LinkDetectInfo.bHigherBusyTraffic = bHigherBusyTraffic;
-> -	pmlmepriv->LinkDetectInfo.bHigherBusyRxTraffic = bHigherBusyRxTraffic;
-> -	pmlmepriv->LinkDetectInfo.bHigherBusyTxTraffic = bHigherBusyTxTraffic;
-> +	ldi->NumRxOkInPeriod = 0;
-> +	ldi->NumTxOkInPeriod = 0;
-> +	ldi->NumRxUnicastOkInPeriod = 0;
-> +	ldi->bBusyTraffic = bBusyTraffic;
-> +	ldi->bTxBusyTraffic = bTxBusyTraffic;
-> +	ldi->bRxBusyTraffic = bRxBusyTraffic;
-> +	ldi->bHigherBusyTraffic = bHigherBusyTraffic;
-> +	ldi->bHigherBusyRxTraffic = bHigherBusyRxTraffic;
-> +	ldi->bHigherBusyTxTraffic = bHigherBusyTxTraffic;
->  }
->  
->  static void dynamic_chk_wk_hdl(struct rtw_adapter *padapter, u8 *pbuf, int sz)
-> @@ -1017,46 +1017,44 @@ static void lps_ctrl_wk_hdl(struct rtw_adapter *padapter, u8 lps_ctrl_type)
->  	    check_fwstate(pmlmepriv, WIFI_ADHOC_STATE))
->  		return;
->  
-> -	switch (lps_ctrl_type)
-> -	{
-> -		case LPS_CTRL_SCAN:
-> -			rtl8723a_BT_wifiscan_notify(padapter, true);
-> -			if (!rtl8723a_BT_using_antenna_1(padapter)) {
-> -				if (check_fwstate(pmlmepriv, _FW_LINKED))
-> -					LPS_Leave23a(padapter);
-> -			}
-> -			break;
-> -		case LPS_CTRL_JOINBSS:
-> -			LPS_Leave23a(padapter);
-> -			break;
-> -		case LPS_CTRL_CONNECT:
-> -			mstatus = 1;/* connect */
-> -			/*  Reset LPS Setting */
-> -			padapter->pwrctrlpriv.LpsIdleCount = 0;
-> -			rtl8723a_set_FwJoinBssReport_cmd(padapter, 1);
-> -			rtl8723a_BT_mediastatus_notify(padapter, mstatus);
-> -			break;
-> -		case LPS_CTRL_DISCONNECT:
-> -			mstatus = 0;/* disconnect */
-> -			rtl8723a_BT_mediastatus_notify(padapter, mstatus);
-> -			if (!rtl8723a_BT_using_antenna_1(padapter))
-> -				LPS_Leave23a(padapter);
-> -			rtl8723a_set_FwJoinBssReport_cmd(padapter, 0);
-> -			break;
-> -		case LPS_CTRL_SPECIAL_PACKET:
-> -			pwrpriv->DelayLPSLastTimeStamp = jiffies;
-> -			rtl8723a_BT_specialpacket_notify(padapter);
-> -			if (!rtl8723a_BT_using_antenna_1(padapter))
-> -				LPS_Leave23a(padapter);
-> -			break;
-> -		case LPS_CTRL_LEAVE:
-> -			rtl8723a_BT_lps_leave(padapter);
-> -			if (!rtl8723a_BT_using_antenna_1(padapter))
-> +	switch (lps_ctrl_type) {
-> +	case LPS_CTRL_SCAN:
-> +		rtl8723a_BT_wifiscan_notify(padapter, true);
-> +		if (!rtl8723a_BT_using_antenna_1(padapter)) {
-> +			if (check_fwstate(pmlmepriv, _FW_LINKED))
->  				LPS_Leave23a(padapter);
+>  		pAmpAsoc = (struct amp_assoc_structure *)tempBuf;
+> -		pAmpAsoc->Length = le16_to_cpu(pAmpAsoc->Length);
+> +		le16_to_cpus(&pAmpAsoc->Length);
 
-You are doing more than one thing here, something you did not specify in
-your changelog above, which isn't ok :(
-
-Please fix up and resend.
+This doesn't change the logic, and you should still have the same
+warning.  How about fixing up Length to be the proper endian type?
 
 thanks,
 
