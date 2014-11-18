@@ -1,47 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:37351 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751899AbaKQL2w (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Nov 2014 06:28:52 -0500
-Message-ID: <1416223724.14067.3.camel@coelho.fi> (sfid-20141117_122855_271548_15F57E67)
-From: Luca Coelho <luca@coelho.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Date: Mon, 17 Nov 2014 13:28:44 +0200
-In-Reply-To: <1416221286-23126-1-git-send-email-johannes@sipsolutions.net>
-References: <1416221286-23126-1-git-send-email-johannes@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [RFC] mac80211: allow drivers to provide any statistics
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:34997 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751038AbaKRGqg convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Nov 2014 01:46:36 -0500
+Received: by mail-wg0-f49.google.com with SMTP id x13so26720589wgg.36
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Nov 2014 22:46:35 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <87vbmdoo9q.fsf@kamboji.qca.qualcomm.com>
+References: <1415110931-10945-1-git-send-email-michal.kazior@tieto.com>
+	<1415110931-10945-5-git-send-email-michal.kazior@tieto.com>
+	<87ppclq4mu.fsf@kamboji.qca.qualcomm.com>
+	<CA+BoTQ=Ws0JGsVBd2J0fe2_JqAhCVpHmNkn10CJx6BCNG-r0cg@mail.gmail.com>
+	<87vbmdoo9q.fsf@kamboji.qca.qualcomm.com>
+Date: Tue, 18 Nov 2014 07:46:35 +0100
+Message-ID: <CA+BoTQm1tzJhz7HtF941z8hrkOpyCpfJhqzmx1tifVFCMo=R1A@mail.gmail.com> (sfid-20141118_074656_314567_47041154)
+Subject: Re: [PATCH 4/7] ath10k: unify rx undecapping
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-11-17 at 11:48 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> In many cases, drivers can filter things like beacons that will
-> skew statistics reported by mac80211. To get correct statistics
-> in these cases, call drivers to obtain statistics and let them
-> override all values, filling values from mac80211 if the driver
-> didn't provide them.
-> 
-> Note that this doesn't currently allow a driver to say "I know
-> this value is wrong, don't report it at all", or to sum it up
-> with a mac80211 value (as could be useful for "dropped misc"),
-> that can be added if it turns out to be needed.
-> 
-> This also gets rid of the get_rssi() method as is can now be
-> implemented using sta_statistics().
-> 
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
->  drivers/net/wireless/ti/wlcore/main.c | 22 ++++----
+On 17 November 2014 16:11, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Michal Kazior <michal.kazior@tieto.com> writes:
+>> On 17 November 2014 15:32, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+[...]
+>>> This patch had few checkpatch warnings. I fixed them with the folded
+>>> patch and full patch here:
+>>>
+>>> https://github.com/kvalo/ath/commit/71fbd07d43e54f5f9f442bc5f2f4f9ef83aead63
+[...]
+>>> @@ -1132,7 +1133,7 @@ static void ath10k_htt_rx_h_mpdu(struct ath10k *ar,
+>>>         bool has_fcs_err;
+>>>         bool has_crypto_err;
+>>>         bool has_tkip_err;
+>>> -       bool has_peer_idx_invalid;
+>>> +       bool has_idx_invalid;
+>>>         bool is_decrypted;
+>>
+>> I don't really like the has_idx_invalid. Perhaps has_peer_err conveys
+>> a bit more of the original meaning?
+>
+> What about just peer_idx_invalid? IMHO we really don't need the has_
+> prefix in that relatively small function.
 
-The wlcore part of this looks fine to me.
+Good point but the assignment line with `peer_idx_invalid` will still
+be over 80 chars long, no?
 
-Acked-by: Luciano Coelho <luca@coelho.fi>
+So perhaps instead of doing `rxd->attention.flags &
+__cpu_to_le32(FLAG)` it could be `attention =
+__le32_to_cpu(rxd->attention.flags)` and then `attention & FLAG` ?
+This way it shouldn't exceed the 80 char limit and var names won't
+need to be changed. Hopefully compiler will optimize it away.
 
---
-Luca.
 
+Michał
