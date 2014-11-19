@@ -1,42 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:49359 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751176AbaKFPmb (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:5988 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755821AbaKSUgc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Nov 2014 10:42:31 -0500
-Date: Thu, 6 Nov 2014 07:41:20 -0800
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Sanjeev Sharma <sanjeev_sharma@mentor.com>
-Cc: Larry.Finger@lwfinger.net, Jes.Sorensen@redhat.com,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] staging:rtl8723au: core: Fix error reported by
- checkpatch.
-Message-ID: <20141106154120.GB19605@kroah.com> (sfid-20141106_164250_811995_8A795912)
-References: <wrfjy4rxzk5b.fsf@redhat.com>
- <1415254573-3451-1-git-send-email-sanjeev_sharma@mentor.com>
+	Wed, 19 Nov 2014 15:36:32 -0500
+Message-ID: <546CFF4D.7010306@broadcom.com> (sfid-20141119_213635_728990_94BD1558)
+Date: Wed, 19 Nov 2014 21:36:29 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1415254573-3451-1-git-send-email-sanjeev_sharma@mentor.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	<brcm80211-dev-list@broadcom.com>,
+	John Linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [PATCH] brcmfmac: don't include linux/unaligned/access_ok.h
+References: <1416428298-10000-1-git-send-email-johannes@sipsolutions.net>
+In-Reply-To: <1416428298-10000-1-git-send-email-johannes@sipsolutions.net>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Please specify the "error" in the subject in some way.
+On 11/19/14 21:18, Johannes Berg wrote:
+> From: Johannes Berg<johannes.berg@intel.com>
+>
+> This is a specific implementation,<asm/unaligned.h>  is the
+> multiplexer that has the arch-specific knowledge of which
+> of the implementations needs to be used, so include that.
 
-On Thu, Nov 06, 2014 at 11:46:13AM +0530, Sanjeev Sharma wrote:
-> This is a patch to the rtw_cmd.c file that fixes following
-> error.
-> 
-> ERROR: spaces required around that '>' (ctx:WxV)
-> ERROR: that open brace { should be on the previous line
-> 
-> Signed-off-by: Sanjeev Sharma <Sanjeev_Sharma@mentor.com>
+Thanks, Johannes
+
+Maybe it would be good to mention this was found by kbuild test robot.
+
+Acked-by: Arend van Spriel <arend@broadcom.com>
+> Signed-off-by: Johannes Berg<johannes.berg@intel.com>
 > ---
->  drivers/staging/rtl8723au/core/rtw_cmd.c | 83 +++++++++++++++-----------------
->  1 file changed, 40 insertions(+), 43 deletions(-)
+>   drivers/net/wireless/brcm80211/brcmfmac/pcie.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
+> index b0ae7993e2e8..138691a1365a 100644
+> --- a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
+> +++ b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
+> @@ -19,10 +19,10 @@
+>   #include<linux/pci.h>
+>   #include<linux/vmalloc.h>
+>   #include<linux/delay.h>
+> -#include<linux/unaligned/access_ok.h>
+>   #include<linux/interrupt.h>
+>   #include<linux/bcma/bcma.h>
+>   #include<linux/sched.h>
+> +#include<asm/unaligned.h>
+>
+>   #include<soc.h>
+>   #include<chipcommon.h>
 
-This does two different things, please make it different patches.
-
-And you sent 2 patches, with no hint as to which one comes before which.
-Please resend all of them, correctly numbered in a series, so that I
-have a chance to get the order correct when applying them.
