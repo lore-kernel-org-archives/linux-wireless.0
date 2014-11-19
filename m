@@ -1,87 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f48.google.com ([74.125.82.48]:38388 "EHLO
-	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752938AbaKMPnN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Nov 2014 10:43:13 -0500
-Received: by mail-wg0-f48.google.com with SMTP id y19so6447804wgg.35
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Nov 2014 07:43:11 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAB=NE6VXSba1=bntediLrnh+T90fBPs_U75GmtaE2XvBQF-KSA@mail.gmail.com>
-References: <1414046257-22184-1-git-send-email-arik@wizery.com>
- <1414046257-22184-3-git-send-email-arik@wizery.com> <CAB=NE6VaTS+d-NJDkezN5+4b9txVrXXynMHZGxVjG08aEC2EsQ@mail.gmail.com>
- <CA+XVXffu1tbsm=yqJnGXnJeg3GmfixcYRiY3SFcPKzB48C8p1A@mail.gmail.com> <CAB=NE6VXSba1=bntediLrnh+T90fBPs_U75GmtaE2XvBQF-KSA@mail.gmail.com>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Thu, 13 Nov 2014 17:42:56 +0200
-Message-ID: <CA+XVXffDKH+91XTngbufRbaHOvoZ9Bv4q6bB73qV2FEP8=6j8Q@mail.gmail.com> (sfid-20141113_164316_723327_09CCE42C)
-Subject: Re: [PATCH 2/5] cfg80211: leave invalid channels on regdomain change
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:39966 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755674AbaKSRfM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Nov 2014 12:35:12 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 4/4] mac80211_hwsim: support scanning with random MAC address
+Date: Wed, 19 Nov 2014 18:35:05 +0100
+Message-Id: <1416418505-7359-5-git-send-email-johannes@sipsolutions.net> (sfid-20141119_183518_341634_D4AC8D9D)
+In-Reply-To: <1416418505-7359-1-git-send-email-johannes@sipsolutions.net>
+References: <1416418505-7359-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 13, 2014 at 12:53 AM, Luis R. Rodriguez
-<mcgrof@do-not-panic.com> wrote:
-> On Wed, Nov 5, 2014 at 1:18 AM, Arik Nemtsov <arik@wizery.com> wrote:
->> On Wed, Nov 5, 2014 at 5:16 AM, Luis R. Rodriguez
->> <mcgrof@do-not-panic.com> wrote:
->>> On Wed, Oct 22, 2014 at 11:37 PM, Arik Nemtsov <arik@wizery.com> wrote:
->>>> +static bool reg_wdev_chan_valid(struct wiphy *wiphy, struct wireless_dev *wdev)
->>>> +{
->>>> +       struct ieee80211_channel *ch;
->>>> +       struct cfg80211_chan_def chandef;
->>>> +       struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
->>>> +       bool ret = true;
->>>> +
->>>> +       wdev_lock(wdev);
->>>> +
->>>> +       if (!wdev->netdev || !netif_running(wdev->netdev))
->>>> +               goto out;
->>>> +
->>>> +       switch (wdev->iftype) {
->>>> +       case NL80211_IFTYPE_AP:
->>>> +       case NL80211_IFTYPE_P2P_GO:
->>>> +               if (!wdev->beacon_interval)
->>>> +                       goto out;
->>>> +
->>>> +               ret = cfg80211_reg_can_beacon(wiphy,
->>>> +                                             &wdev->chandef, wdev->iftype);
->>>> +               break;
->>>> +       case NL80211_IFTYPE_STATION:
->>>> +       case NL80211_IFTYPE_P2P_CLIENT:
->>>> +               if (!wdev->current_bss ||
->>>> +                   !wdev->current_bss->pub.channel)
->>>> +                       goto out;
->>>> +
->>>> +               ch = wdev->current_bss->pub.channel;
->>>> +               if (rdev->ops->get_channel &&
->>>> +                   !rdev_get_channel(rdev, wdev, &chandef))
->>>> +                       ret = cfg80211_chandef_usable(wiphy, &chandef,
->>>> +                                                     IEEE80211_CHAN_DISABLED);
->>>> +               else
->>>> +                       ret = !(ch->flags & IEEE80211_CHAN_DISABLED);
->>>> +               break;
->>>> +       default:
->>>> +               /* others not implemented for now */
->>>
->>> Looks good to me except this of course, since its a flag that will
->>> enable this per wiphy might as well WARN() if you really do not want
->>> to think about this. That means that once someone does enable this on
->>> a wiphy with the other type of interfaces they'll have to think about
->>> this, likewise one could warn if a wiphy interface is registered with
->>> the flag to follow this but supports a mode not handled here yet.
->>
->> But I do want to support a wiphy that has other modes
->> (NL80211_IFTYPE_ADHOC), but I don't want people to get warnings every
->> time they use IBSS.
->> Maybe I'll rename the flag to REGULATORY_ENFORCE_AP_STA_CHANNELS?
->
-> Then it depends on how important this feature is for your regulatory
-> requirements. If its important then I'd wait until its properly
-> implemented, if its not required for the other modes then a simple
-> information message would suffice.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Let's settle for the pr_info then.
+This adds support for scanning with random MAC address for
+both software and hardware scan.
 
-Arik
+Change-Id: Ib667b4ba0f515f9d1fc073d8ae4c7785f6c3e124
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Reviewed-on: https://gerrit.rds.intel.com/r/47442
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Tested-by: IWL Jenkins
+---
+ drivers/net/wireless/mac80211_hwsim.c | 18 ++++++++++++++++--
+ 1 file changed, 16 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 6daaad595ea4..c2303dbcb63c 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -422,6 +422,7 @@ struct mac80211_hwsim_data {
+ 	struct cfg80211_scan_request *hw_scan_request;
+ 	struct ieee80211_vif *hw_scan_vif;
+ 	int scan_chan_idx;
++	u8 scan_addr[ETH_ALEN];
+ 
+ 	struct ieee80211_channel *channel;
+ 	u64 beacon_int	/* beacon interval in us */;
+@@ -830,6 +831,9 @@ static bool mac80211_hwsim_addr_match(struct mac80211_hwsim_data *data,
+ 		.ret = false,
+ 	};
+ 
++	if (data->scanning && memcmp(addr, data->scan_addr, ETH_ALEN) == 0)
++		return true;
++
+ 	memcpy(md.addr, addr, ETH_ALEN);
+ 
+ 	ieee80211_iterate_active_interfaces_atomic(data->hw,
+@@ -1802,7 +1806,7 @@ static void hw_scan_work(struct work_struct *work)
+ 			struct sk_buff *probe;
+ 
+ 			probe = ieee80211_probereq_get(hwsim->hw,
+-						       hwsim->hw_scan_vif->addr,
++						       hwsim->scan_addr,
+ 						       req->ssids[i].ssid,
+ 						       req->ssids[i].ssid_len,
+ 						       req->ie_len);
+@@ -1840,6 +1844,12 @@ static int mac80211_hwsim_hw_scan(struct ieee80211_hw *hw,
+ 	hwsim->hw_scan_request = req;
+ 	hwsim->hw_scan_vif = vif;
+ 	hwsim->scan_chan_idx = 0;
++	if (req->flags & NL80211_SCAN_FLAG_RANDOM_ADDR)
++		get_random_mask_addr(hwsim->scan_addr,
++				     hw_req->req.mac_addr,
++				     hw_req->req.mac_addr_mask);
++	else
++		memcpy(hwsim->scan_addr, vif->addr, ETH_ALEN);
+ 	mutex_unlock(&hwsim->mutex);
+ 
+ 	wiphy_debug(hw->wiphy, "hwsim hw_scan request\n");
+@@ -1880,6 +1890,8 @@ static void mac80211_hwsim_sw_scan(struct ieee80211_hw *hw,
+ 	}
+ 
+ 	printk(KERN_DEBUG "hwsim sw_scan request, prepping stuff\n");
++
++	memcpy(hwsim->scan_addr, mac_addr, ETH_ALEN);
+ 	hwsim->scanning = true;
+ 
+ out:
+@@ -1895,6 +1907,7 @@ static void mac80211_hwsim_sw_scan_complete(struct ieee80211_hw *hw,
+ 
+ 	printk(KERN_DEBUG "hwsim sw_scan_complete\n");
+ 	hwsim->scanning = false;
++	memset(hwsim->scan_addr, 0, ETH_ALEN);
+ 
+ 	mutex_unlock(&hwsim->mutex);
+ }
+@@ -2320,7 +2333,8 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
+ 	hw->wiphy->features |= NL80211_FEATURE_ACTIVE_MONITOR |
+ 			       NL80211_FEATURE_AP_MODE_CHAN_WIDTH_CHANGE |
+ 			       NL80211_FEATURE_STATIC_SMPS |
+-			       NL80211_FEATURE_DYNAMIC_SMPS;
++			       NL80211_FEATURE_DYNAMIC_SMPS |
++			       NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR;
+ 
+ 	/* ask mac80211 to reserve space for magic */
+ 	hw->vif_data_size = sizeof(struct hwsim_vif_priv);
+-- 
+2.1.1
+
