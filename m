@@ -1,59 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:62188 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754715AbaKPNCS (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:41425 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753408AbaKSNnj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Nov 2014 08:02:18 -0500
-Message-ID: <5468A056.9030200@broadcom.com> (sfid-20141116_140307_638133_B746EFCA)
-Date: Sun, 16 Nov 2014 14:02:14 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Wed, 19 Nov 2014 08:43:39 -0500
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+	Xinming Hu <huxm@marvell.com>
+Date: Wed, 19 Nov 2014 05:43:30 -0800
+Subject: RE: [PATCH] device coredump: fix minor issue in Kconfig file
+Message-ID: <5FF020A1CFFEEC49BD1E09530C4FF5951821E912CE@SC-VEXCH1.marvell.com> (sfid-20141119_144343_013934_3F9BD00A)
+References: <1416403682-9203-1-git-send-email-akarwar@marvell.com>
+ <1416404147.9374.2.camel@sipsolutions.net>
+In-Reply-To: <1416404147.9374.2.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-To: Dmitry Torokhov <dtor@chromium.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	<linux-wireless@vger.kernel.org>,
-	<brcm80211-dev-list@broadcom.com>, <netdev@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, Hans de Goede <hdegoede@redhat.com>
-Subject: Re: [PATCH] brcmfmac: fix error handling of irq_of_parse_and_map
-References: <20141114221221.GA35541@dtor-ws>
-In-Reply-To: <20141114221221.GA35541@dtor-ws>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/14/14 23:12, Dmitry Torokhov wrote:
-> Return value of irq_of_parse_and_map() is unsigned int, with 0
-> indicating failure, so testing for negative result never works.
-
-Whoops, that is bad. Thanks for catching this. It probably needs to go 
-to stable as well for 3.17 kernel.
-
-+Cc: stable@vger.kernel.org # v3.17
-+Acked-by: Arend van Spriel <arend@broadcom.com>
-> Signed-off-by: Dmitry Torokhov<dtor@chromium.org>
-> ---
->
-> Not tested, found by casual code inspection.
->
->   drivers/net/wireless/brcm80211/brcmfmac/of.c | 4 ++--
->   1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/of.c b/drivers/net/wireless/brcm80211/brcmfmac/of.c
-> index eb3fce82..c824570 100644
-> --- a/drivers/net/wireless/brcm80211/brcmfmac/of.c
-> +++ b/drivers/net/wireless/brcm80211/brcmfmac/of.c
-> @@ -40,8 +40,8 @@ void brcmf_of_probe(struct brcmf_sdio_dev *sdiodev)
->   		return;
->
->   	irq = irq_of_parse_and_map(np, 0);
-> -	if (irq<  0) {
-> -		brcmf_err("interrupt could not be mapped: err=%d\n", irq);
-> +	if (!irq) {
-> +		brcmf_err("interrupt could not be mapped\n");
->   		devm_kfree(dev, sdiodev->pdata);
->   		return;
->   	}
-
+SGkgSm9oYW5uZXMsDQoNCj4+IEN1cnJlbnRseSAibWFrZSBtZW51Y29uZmlnIiBkb2Vzbid0IGRp
+c3BsYXkgYW4gb3B0aW9uIHRvIGVuYWJsZQ0KPj4gV0FOVF9ERVZfQ09SRURVTVAuIFRoaXMgcGF0
+Y2ggdXBkYXRlcyBLY29uZmlnIHNvIHRoYXQgdXNlciBjYW4gZW5hYmxlDQo+PiBXQU5UX0RFVl9D
+T1JFRFVNUC4NCj4NCj5UaGlzIGlzIGNvbXBsZXRlbHkgaW50ZW50aW9uYWwgLSBkcml2ZXJzIHNo
+b3VsZCAic2VsZWN0DQo+V0FOVF9ERVZfQ09SRURVTVAiIGFuZCB1c2VycyBhcmUgb25seSBhYmxl
+IHRvIHNldCAiQUxMT1dfREVWX0NPUkVEVU1QPW4iDQo+dG8gcHJldmVudCBpdC4NCj4NCg0KVGhh
+bmtzIGZvciB0aGUgY2xhcmlmaWNhdGlvbi4gV2Ugd2lsbCBtb2RpZnkgb3VyIGJ0bXJ2bCBkcml2
+ZXIgcGF0Y2ggYWNjb3JkaW5nbHkgdGhlbi4NCg0KUmVnYXJkcywNCkFtaXRrdW1hcg0KDQo=
