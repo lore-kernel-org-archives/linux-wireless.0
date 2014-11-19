@@ -1,36 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:46767 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752423AbaKZGgh (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:46733 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755870AbaKSRxX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Nov 2014 01:36:37 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: don't drop corrupted mgmt frames
-References: <1416839648-31803-1-git-send-email-michal.kazior@tieto.com>
-Date: Wed, 26 Nov 2014 08:36:29 +0200
-In-Reply-To: <1416839648-31803-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Mon, 24 Nov 2014 15:34:08 +0100")
-Message-ID: <87ppcaxyc2.fsf@kamboji.qca.qualcomm.com> (sfid-20141126_073644_685113_0D487D2D)
+	Wed, 19 Nov 2014 12:53:23 -0500
+Message-ID: <546CD912.1090809@candelatech.com> (sfid-20141119_185325_711985_12C867B7)
+Date: Wed, 19 Nov 2014 09:53:22 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Bob Copeland <me@bobcopeland.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, luca@coelho.fi,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [RFC] mac80211: allow drivers to provide any statistics
+References: <1416221286-23126-1-git-send-email-johannes@sipsolutions.net> <20141119174925.GM11482@localhost>
+In-Reply-To: <20141119174925.GM11482@localhost>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+On 11/19/2014 09:49 AM, Bob Copeland wrote:
+> On Mon, Nov 17, 2014 at 11:48:06AM +0100, Johannes Berg wrote:
+>> From: Johannes Berg <johannes.berg@intel.com>
+>>
+>> In many cases, drivers can filter things like beacons that will
+>> skew statistics reported by mac80211. To get correct statistics
+>> in these cases, call drivers to obtain statistics and let them
+>> override all values, filling values from mac80211 if the driver
+>> didn't provide them.
+> 
+> Neat.
+> 
+> For mesh, it's handy to have the (somewhat imperfectly specified)
+> sta->fail_avg too for drivers that implement all the rate control
+> in firmware and thus may not report tx status for all frames.
+> 
+> At cozybit we had implemented a drv_link_stats driver op (hack) that
+> just got last_tx_rate and fail_avg so that the airtime link metric
+> could work on such devices; this call could replace that, I hope.
 
-> Some firmware revisions don't seem to deilver
-> management frames with FCS error via WMI so narrow
-> down the HTT rule to not drop corrupted management
-> frames.
->
-> This basically increases number of frames ath10k
-> reports while sniffing.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-Thanks, applied.
+The ethtool stats API could also handle at least some of this,
+but it's a bit free-form to program against...
+
+Thanks,
+Ben
 
 -- 
-Kalle Valo
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
