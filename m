@@ -1,81 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:39703 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932310AbaKXOgf (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:54412 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756366AbaKSRyZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2014 09:36:35 -0500
-Received: by mail-wi0-f173.google.com with SMTP id r20so5865653wiv.6
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:36:34 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Luciano Coelho <luciano.coelho@intel.com>
-Subject: [PATCH 60/75] iwlwifi: mvm: add a channel_switch op to bypass mac80211 timer
-Date: Mon, 24 Nov 2014 16:34:36 +0200
-Message-Id: <1416839691-28533-60-git-send-email-egrumbach@gmail.com> (sfid-20141124_153809_414663_050266FA)
-In-Reply-To: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
-References: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
+	Wed, 19 Nov 2014 12:54:25 -0500
+Message-ID: <546CD94D.9060509@broadcom.com> (sfid-20141119_185436_318257_CF68EF00)
+Date: Wed, 19 Nov 2014 18:54:21 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Michael Tokarev <mjt@tls.msk.ru>
+CC: Maximilian Engelhardt <maxi@daemonizer.de>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJl?= =?UTF-8?B?Y2tp?= <zajec5@gmail.com>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	brcm80211 development <brcm80211-dev-list@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>
+Subject: Re: BCM4313 & brcmsmac & 3.12: only semi-working?
+References: <53FDACD1.8090805@msgid.tls.msk.ru> <54363ED0.605@broadcom.com> <CACna6rw3XgdJz0uKkAuas8RTzozTdFp2mgF5g1uo7LHJVSMt4g@mail.gmail.com> <3543341.FmUQFH9nrl@eisbaer> <546C5D1F.108@msgid.tls.msk.ru>
+In-Reply-To: <546C5D1F.108@msgid.tls.msk.ru>
+Content-Type: multipart/mixed;
+	boundary="------------050002020006070408060304"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+--------------050002020006070408060304
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
 
-We need to call ieee80211_chswitch_done() ourselves just when the
-absence TE started, so we perform the actual context switch early
-enough.  To do so, add a dummy channel_switch op, which will cause
-mac80211 to skip the countdown timer and allow us to call
-ieee80211_chswitch_done() to complete the operation.
+On 11/19/14 10:04, Michael Tokarev wrote:
+> 18.11.2014 01:36, Maximilian Engelhardt wrote:
+> []
+>> I just wanted to ask if there is any progress on this issue since I haven't
+>> heard anything for a month. Please let me know if you need any additional
+>> information.
+>
+> I've no idea if there's any progress.  Meanwhile I've an easy way of
+> testing of my brcm4313 card in a mini-itx board with mini-PCIe slot.
+> It works rather nicely and the stalls are easy to trigger.
+> Running 3.16 kernel right now, tried to d/load a file from the
+> AP, -- boom, it stalled after 77Kb.
+>
+> Since the previous discussion apparently ended prematurely and no patches
+> to try emerged, I don't have anything to try on it...
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/mac80211.c   | 15 +++++++++++++++
- drivers/net/wireless/iwlwifi/mvm/time-event.c |  1 +
- 2 files changed, 16 insertions(+)
+In our last email exchange I got the impression you switch to Intel 
+board and did not want to keep replacing cards for testing. Nice to hear 
+you have an alternative setup for this and I assume are willing to do 
+some testing.
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index c85c0f1..7acdfa7 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -3143,6 +3143,20 @@ static int iwl_mvm_mac_testmode_cmd(struct ieee80211_hw *hw,
- }
- #endif
- 
-+static void iwl_mvm_channel_switch(struct ieee80211_hw *hw,
-+				   struct ieee80211_vif *vif,
-+				   struct ieee80211_channel_switch *chsw)
-+{
-+	/* By implementing this operation, we prevent mac80211 from
-+	 * starting its own channel switch timer, so that we can call
-+	 * ieee80211_chswitch_done() ourselves at the right time
-+	 * (which is when the absence time event starts).
-+	 */
-+
-+	IWL_DEBUG_MAC80211(IWL_MAC80211_GET_MVM(hw),
-+			   "dummy channel switch op\n");
-+}
-+
- static int iwl_mvm_pre_channel_switch(struct ieee80211_hw *hw,
- 				      struct ieee80211_vif *vif,
- 				      struct ieee80211_channel_switch *chsw)
-@@ -3336,6 +3350,7 @@ const struct ieee80211_ops iwl_mvm_hw_ops = {
- 
- 	.set_tim = iwl_mvm_set_tim,
- 
-+	.channel_switch = iwl_mvm_channel_switch,
- 	.pre_channel_switch = iwl_mvm_pre_channel_switch,
- 	.post_channel_switch = iwl_mvm_post_channel_switch,
- 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/time-event.c b/drivers/net/wireless/iwlwifi/mvm/time-event.c
-index 1a537be..ff631cc 100644
---- a/drivers/net/wireless/iwlwifi/mvm/time-event.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/time-event.c
-@@ -207,6 +207,7 @@ iwl_mvm_te_handle_notify_csa(struct iwl_mvm *mvm,
- 		break;
- 	case NL80211_IFTYPE_STATION:
- 		iwl_mvm_csa_client_absent(mvm, te_data->vif);
-+		ieee80211_chswitch_done(te_data->vif, true);
- 		break;
- 	default:
- 		/* should never happen */
--- 
-1.9.1
+I submitted two patches upstream and additionally I have attached two 
+other that are still under review. Could you try these patches and sent 
+me the content of the two debugfs files 'macstat' and 'hardware' after a 
+stall has occurred.
 
+Regards,
+Arend
+
+--------------050002020006070408060304
+Content-Type: text/plain;
+	name="0001-brcmutil-add-helper-function-to-format-board-revisio.patch"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+	filename*0="0001-brcmutil-add-helper-function-to-format-board-revisio.pa";
+	filename*1="tch"
+
+RnJvbSBkYmM2OWY5NzY5YjkyZjNjZTExNWZhYmY4ODBmNzY3ZDZiZDRjNDM2IE1vbiBTZXAg
+MTcgMDA6MDA6MDAgMjAwMQpGcm9tOiBBcmVuZCB2YW4gU3ByaWVsIDxhcmVuZEBicm9hZGNv
+bS5jb20+CkRhdGU6IFRodSwgMTMgTm92IDIwMTQgMTQ6MTY6MzQgKzAxMDAKU3ViamVjdDog
+W1BBVENIIDEvMl0gYnJjbXV0aWw6IGFkZCBoZWxwZXIgZnVuY3Rpb24gdG8gZm9ybWF0IGJv
+YXJkIHJldmlzaW9uCgpUaGUgYm9hcmQgcmV2aXNpb24gdGhhdCBpcyBhdmFpbGFibGUgaW4g
+aGFyZHdhcmUgY2FuIGJlIHRyYW5zbGF0ZWQKc28gaXQgbWF0Y2hlcyB0aGUgbGFiZWxsaW5n
+IG9uIHRoZSBib2FyZC4gVGhpcyBpcyBhY2NvbXBsaXNoZWQgYnkKdGhpcyBoZWxwZXIgZnVu
+Y3Rpb24uCgpSZXZpZXdlZC1ieTogSGFudGUgTWV1bGVtYW4gPG1ldWxlbWFuQGJyb2FkY29t
+LmNvbT4KUmV2aWV3ZWQtYnk6IFBpZXRlci1QYXVsIEdpZXNiZXJ0cyA8cGlldGVycGdAYnJv
+YWRjb20uY29tPgpTaWduZWQtb2ZmLWJ5OiBBcmVuZCB2YW4gU3ByaWVsIDxhcmVuZEBicm9h
+ZGNvbS5jb20+Ci0tLQogZHJpdmVycy9uZXQvd2lyZWxlc3MvYnJjbTgwMjExL2JyY211dGls
+L3V0aWxzLmMgICAgICB8IDE2ICsrKysrKysrKysrKysrKysKIGRyaXZlcnMvbmV0L3dpcmVs
+ZXNzL2JyY204MDIxMS9pbmNsdWRlL2JyY211X3V0aWxzLmggfCAgMiArKwogMiBmaWxlcyBj
+aGFuZ2VkLCAxOCBpbnNlcnRpb25zKCspCgpkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2ly
+ZWxlc3MvYnJjbTgwMjExL2JyY211dGlsL3V0aWxzLmMgYi9kcml2ZXJzL25ldC93aXJlbGVz
+cy9icmNtODAyMTEvYnJjbXV0aWwvdXRpbHMuYwppbmRleCAwZjdlMWM3Li4xNTc1YTFkIDEw
+MDY0NAotLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9icmNtODAyMTEvYnJjbXV0aWwvdXRp
+bHMuYworKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9icmNtODAyMTEvYnJjbXV0aWwvdXRp
+bHMuYwpAQCAtMjkyLDQgKzI5MiwyMCBAQCB2b2lkIGJyY211X2RiZ19oZXhfZHVtcChjb25z
+dCB2b2lkICpkYXRhLCBzaXplX3Qgc2l6ZSwgY29uc3QgY2hhciAqZm10LCAuLi4pCiAJcHJp
+bnRfaGV4X2R1bXBfYnl0ZXMoIiIsIERVTVBfUFJFRklYX09GRlNFVCwgZGF0YSwgc2l6ZSk7
+CiB9CiBFWFBPUlRfU1lNQk9MKGJyY211X2RiZ19oZXhfZHVtcCk7CisKKy8qIFByb2R1Y2Ug
+YSBodW1hbi1yZWFkYWJsZSBzdHJpbmcgZm9yIGJvYXJkcmV2ICovCitjaGFyICpicmNtdV9i
+b2FyZHJldl9zdHIodTMyIGJyZXYsIGNoYXIgKmJ1ZikKK3sKKwljaGFyIGM7CisKKwlpZiAo
+YnJldiA8IDB4MTAwKSB7CisJCXNucHJpbnRmKGJ1ZiwgOCwgIiVkLiVkIiwgKGJyZXYgJiAw
+eGYwKSA+PiA0LCBicmV2ICYgMHhmKTsKKwl9IGVsc2UgeworCQljID0gKGJyZXYgJiAweGYw
+MDApID09IDB4MTAwMCA/ICdQJyA6ICdBJzsKKwkJc25wcmludGYoYnVmLCA4LCAiJWMlMDN4
+IiwgYywgYnJldiAmIDB4ZmZmKTsKKwl9CisJcmV0dXJuIChidWYpOworfQorRVhQT1JUX1NZ
+TUJPTChicmNtdV9ib2FyZHJldl9zdHIpOworCiAjZW5kaWYJCQkJLyogZGVmaW5lZChERUJV
+RykgKi8KZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2JyY204MDIxMS9pbmNs
+dWRlL2JyY211X3V0aWxzLmggYi9kcml2ZXJzL25ldC93aXJlbGVzcy9icmNtODAyMTEvaW5j
+bHVkZS9icmNtdV91dGlscy5oCmluZGV4IDhiYTQ0NWIuLmEwNDNlMjkgMTAwNjQ0Ci0tLSBh
+L2RyaXZlcnMvbmV0L3dpcmVsZXNzL2JyY204MDIxMS9pbmNsdWRlL2JyY211X3V0aWxzLmgK
+KysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvYnJjbTgwMjExL2luY2x1ZGUvYnJjbXVfdXRp
+bHMuaApAQCAtMjE4LDQgKzIxOCw2IEBAIHZvaWQgYnJjbXVfZGJnX2hleF9kdW1wKGNvbnN0
+IHZvaWQgKmRhdGEsIHNpemVfdCBzaXplLCBjb25zdCBjaGFyICpmbXQsIC4uLikKIH0KICNl
+bmRpZgogCitjaGFyICpicmNtdV9ib2FyZHJldl9zdHIodTMyIGJyZXYsIGNoYXIgKmJ1Zik7
+CisKICNlbmRpZgkJCQkvKiBfQlJDTVVfVVRJTFNfSF8gKi8KLS0gCjEuOS4xCgo=
+--------------050002020006070408060304
+Content-Type: text/plain;
+	name="0002-brcmsmac-extend-hardware-info-shown-in-debugfs.patch"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+	filename="0002-brcmsmac-extend-hardware-info-shown-in-debugfs.patch"
+
+RnJvbSBhMTk3Y2Y0NGVmMDU4OTQyOTI4YjQ4MjIzZmNlOWQzZjExMmJlOWQwIE1vbiBTZXAg
+MTcgMDA6MDA6MDAgMjAwMQpGcm9tOiBBcmVuZCB2YW4gU3ByaWVsIDxhcmVuZEBicm9hZGNv
+bS5jb20+CkRhdGU6IFRodSwgMTMgTm92IDIwMTQgMTQ6MTk6NDkgKzAxMDAKU3ViamVjdDog
+W1BBVENIIDIvMl0gYnJjbXNtYWM6IGV4dGVuZCBoYXJkd2FyZSBpbmZvIHNob3duIGluIGRl
+YnVnZnMKClRoZSBoYXJkd2FyZSBpbmZvIG5vdyBhbHNvIGluY2x1ZGUgcmFkaW8gYW5kIHBo
+eSBpbmZvcm1hdGlvbiwgd2hpY2gKY2FuIGJlIGhlbHBmdWwgaW4gZGVidWdnaW5nIGlzc3Vl
+cy4KClJldmlld2VkLWJ5OiBIYW50ZSBNZXVsZW1hbiA8bWV1bGVtYW5AYnJvYWRjb20uY29t
+PgpSZXZpZXdlZC1ieTogUGlldGVyLVBhdWwgR2llc2JlcnRzIDxwaWV0ZXJwZ0Bicm9hZGNv
+bS5jb20+ClNpZ25lZC1vZmYtYnk6IEFyZW5kIHZhbiBTcHJpZWwgPGFyZW5kQGJyb2FkY29t
+LmNvbT4KLS0tCiBkcml2ZXJzL25ldC93aXJlbGVzcy9icmNtODAyMTEvYnJjbXNtYWMvZGVi
+dWcuYyB8IDQwICsrKysrKysrKysrKysrKysrLS0tLS0tLS0KIDEgZmlsZSBjaGFuZ2VkLCAy
+NyBpbnNlcnRpb25zKCspLCAxMyBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9kcml2ZXJz
+L25ldC93aXJlbGVzcy9icmNtODAyMTEvYnJjbXNtYWMvZGVidWcuYyBiL2RyaXZlcnMvbmV0
+L3dpcmVsZXNzL2JyY204MDIxMS9icmNtc21hYy9kZWJ1Zy5jCmluZGV4IDE5NzQwYzEuLmM5
+YThiOTMgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2JyY204MDIxMS9icmNt
+c21hYy9kZWJ1Zy5jCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2JyY204MDIxMS9icmNt
+c21hYy9kZWJ1Zy5jCkBAIC0zMCw2ICszMCw3IEBACiAjaW5jbHVkZSAibWFpbi5oIgogI2lu
+Y2x1ZGUgImRlYnVnLmgiCiAjaW5jbHVkZSAiYnJjbXNfdHJhY2VfZXZlbnRzLmgiCisjaW5j
+bHVkZSAicGh5L3BoeV9pbnQuaCIKIAogc3RhdGljIHN0cnVjdCBkZW50cnkgKnJvb3RfZm9s
+ZGVyOwogCkBAIC03NCwyMCArNzUsMzMgQEAgc3RhdGljCiBpbnQgYnJjbXNfZGVidWdmc19o
+YXJkd2FyZV9yZWFkKHN0cnVjdCBzZXFfZmlsZSAqcywgdm9pZCAqZGF0YSkKIHsKIAlzdHJ1
+Y3QgYnJjbXNfcHViICpkcnZyID0gcy0+cHJpdmF0ZTsKKwlzdHJ1Y3QgYnJjbXNfaGFyZHdh
+cmUgKmh3ID0gZHJ2ci0+d2xjLT5odzsKKwlzdHJ1Y3QgYmNtYV9kZXZpY2UgKmNvcmUgPSBo
+dy0+ZDExY29yZTsKKwlzdHJ1Y3QgYmNtYV9idXMgKmJ1cyA9IGNvcmUtPmJ1czsKKwljaGFy
+IGJvYXJkcmV2WzEwXTsKIAotCXNlcV9wcmludGYocywgImJvYXJkIHZlbmRvcjogJXhcbiIK
+LQkJICAgImJvYXJkIHR5cGU6ICV4XG4iCi0JCSAgICJib2FyZCByZXZpc2lvbjogJXhcbiIK
+LQkJICAgImJvYXJkIGZsYWdzOiAleFxuIgotCQkgICAiYm9hcmQgZmxhZ3MyOiAleFxuIgot
+CQkgICAiZmlybXdhcmUgcmV2aXNpb246ICV4XG4iLAotCQkgICBkcnZyLT53bGMtPmh3LT5k
+MTFjb3JlLT5idXMtPmJvYXJkaW5mby52ZW5kb3IsCi0JCSAgIGRydnItPndsYy0+aHctPmQx
+MWNvcmUtPmJ1cy0+Ym9hcmRpbmZvLnR5cGUsCi0JCSAgIGRydnItPndsYy0+aHctPmJvYXJk
+cmV2LAotCQkgICBkcnZyLT53bGMtPmh3LT5ib2FyZGZsYWdzLAotCQkgICBkcnZyLT53bGMt
+Pmh3LT5ib2FyZGZsYWdzMiwKLQkJICAgZHJ2ci0+d2xjLT51Y29kZV9yZXYpOwotCisJc2Vx
+X3ByaW50ZihzLCAiY2hpcG51bSAweCV4XG4iCisJCSAgICJjaGlwcmV2IDB4JXhcbiIKKwkJ
+ICAgImNoaXBwYWNrYWdlIDB4JXhcbiIKKwkJICAgImNvcmVyZXYgMHgleFxuIgorCQkgICAi
+Ym9hcmRpZCAweCV4XG4iCisJCSAgICJib2FyZHZlbmRvciAweCV4XG4iCisJCSAgICJib2Fy
+ZHJldiAlc1xuIgorCQkgICAiYm9hcmRmbGFncyAweCV4XG4iCisJCSAgICJib2FyZGZsYWdz
+MiAweCV4XG4iCisJCSAgICJ1Y29kZXJldiAweCV4XG4iCisJCSAgICJyYWRpb3JldiAweCV4
+XG4iCisJCSAgICJwaHl0eXBlIDB4JXhcbiIKKwkJICAgInBoeXJldiAweCV4XG4iCisJCSAg
+ICJhbmFyZXYgMHgleFxuIgorCQkgICAibnZyYW1yZXYgJWRcbiIsCisJCSAgIGJ1cy0+Y2hp
+cGluZm8uaWQsIGJ1cy0+Y2hpcGluZm8ucmV2LCBidXMtPmNoaXBpbmZvLnBrZywKKwkJICAg
+Y29yZS0+aWQucmV2LCBidXMtPmJvYXJkaW5mby50eXBlLCBidXMtPmJvYXJkaW5mby52ZW5k
+b3IsCisJCSAgIGJyY211X2JvYXJkcmV2X3N0cihody0+Ym9hcmRyZXYsIGJvYXJkcmV2KSwK
+KwkJICAgZHJ2ci0+d2xjLT5ody0+Ym9hcmRmbGFncywgZHJ2ci0+d2xjLT5ody0+Ym9hcmRm
+bGFnczIsCisJCSAgIGRydnItPndsYy0+dWNvZGVfcmV2LCBody0+YmFuZC0+cmFkaW9yZXYs
+CisJCSAgIGh3LT5iYW5kLT5waHl0eXBlLCBody0+YmFuZC0+cGh5cmV2LCBody0+YmFuZC0+
+cGktPmFuYV9yZXYsCisJCSAgIGh3LT5zcm9tcmV2KTsKIAlyZXR1cm4gMDsKIH0KIAotLSAK
+MS45LjEKCg==
+--------------050002020006070408060304--
