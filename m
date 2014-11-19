@@ -1,44 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f170.google.com ([209.85.217.170]:41724 "EHLO
-	mail-lb0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753239AbaKQXCy (ORCPT
+Received: from mail-wi0-f182.google.com ([209.85.212.182]:63320 "EHLO
+	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754785AbaKSOur (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Nov 2014 18:02:54 -0500
-Received: by mail-lb0-f170.google.com with SMTP id w7so8207994lbi.15
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Nov 2014 15:02:53 -0800 (PST)
+	Wed, 19 Nov 2014 09:50:47 -0500
+Received: by mail-wi0-f182.google.com with SMTP id h11so2117717wiw.3
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Nov 2014 06:50:46 -0800 (PST)
+Message-ID: <546CAE45.6090201@parkeon.com> (sfid-20141119_155051_175390_FFD2D561)
+Date: Wed, 19 Nov 2014 15:50:45 +0100
+From: Martin Fuzzey <mfuzzey@parkeon.com>
 MIME-Version: 1.0
-Date: Mon, 17 Nov 2014 15:02:52 -0800
-Message-ID: <CAJqaZwxC+Us=Vis0gQry_vdF--2SCmW9wej5BY+jAfgeb4U6KQ@mail.gmail.com> (sfid-20141118_000304_099785_38089BD1)
-Subject: backports-20141114 ath9k doesn't build for me on Ubuntu LTS 14.04
-From: ASIC Felix <ic.felix@gmail.com>
-To: linux-wireless@vger.kernel.org, sujith@msujith.org
-Content-Type: text/plain; charset=UTF-8
+To: Avinash Patil <patila@marvell.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: Re: [REGRESSION] mwifiex: memory corruption on WEP disassociation
+References: <546B5E82.7000207@parkeon.com>,<20141118184241.GD13458@tuxdriver.com> <CBACCFA0AEB13A41977475BCF3E896FC666FA7DC82@SC-VEXCH2.marvell.com>,<546C57AF.1040700@parkeon.com> <CBACCFA0AEB13A41977475BCF3E896FC666FA7DC8F@SC-VEXCH2.marvell.com>
+In-Reply-To: <CBACCFA0AEB13A41977475BCF3E896FC666FA7DC8F@SC-VEXCH2.marvell.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hi Avinash,
 
-backports-20141114 ath9k doesn't build for me on Ubuntu LTS 14.04
-kernel 3.13.0-39
+On 19/11/14 09:44, Avinash Patil wrote:
+> Could you please check if issue is seen with this FW as well?
+> Here is link:
+> http://git.marvell.com/?p=mwifiex-firmware.git;a=commit;h=3f45b8c4cc1eb1d102bc3486b19677332dd215ab
 
-] make defconfig-ath9k && make -j4
+Tried that firmware  (14.66.35.p52) with kernel 3.16, same issue.
+It still uses V1 keys.
 
-/home/me/Downloads/backports-20141114/drivers/net/wireless/ath/ath9k/common-spectral.c:40:5:
-error: redefinition of \u2018ath_cmn_process_fft\u2019
- int ath_cmn_process_fft(struct ath_spec_scan_priv *spec_priv, struct
-ieee80211_hdr *hdr,
-     ^
-In file included from
-/home/me/Downloads/backports-20141114/drivers/net/wireless/ath/ath9k/common.h:27:0,
-                 from
-/home/me/Downloads/backports-20141114/drivers/net/wireless/ath/ath9k/ath9k.h:27,
-                 from
-/home/me/Downloads/backports-20141114/drivers/net/wireless/ath/ath9k/common-spectral.c:18:
-/home/me/Downloads/backports-20141114/drivers/net/wireless/ath/ath9k/common-spectral.h:146:19:
-note: previous definition of \u2018ath_cmn_process_fft\u2019 was here
- static inline int ath_cmn_process_fft(struct ath_spec_scan_priv *spec_priv,
-                   ^
-make[8]: *** [/home/me/Downloads/backports-20141114/drivers/net/wireless/ath/ath9k/common-spectral.o]
-Error 1
+I also tried kernel 3.18-rc5 (with the original 14.66.9.p96 firmware) 
+and, while it didn't crash, some logs I added showed that a short (10 
+byte) response was still being handed to 
+mwifiex_ret_802_11_key_material_v1().
+It didn't crash because I was "lucky" enough that the non initialized 
+key length field happened to contain zero.
 
-Felix
+
+Regards,
+
+Martin
+
