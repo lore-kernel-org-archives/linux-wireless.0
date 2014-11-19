@@ -1,44 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:41382 "EHLO sipsolutions.net"
+Received: from mx1.redhat.com ([209.132.183.28]:54270 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751212AbaK1Nqb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Nov 2014 08:46:31 -0500
-Message-ID: <1417182387.27562.8.camel@sipsolutions.net> (sfid-20141128_144634_351100_51642662)
-Subject: Re: [PATCH v5 2/4] cfg80211: allow usermode to query wiphy specific
- regdom
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@suse.com>
-Date: Fri, 28 Nov 2014 14:46:27 +0100
-In-Reply-To: <1417074298-12254-2-git-send-email-arik@wizery.com> (sfid-20141127_084459_625553_BD50DF4A)
-References: <1417074298-12254-1-git-send-email-arik@wizery.com>
-	 <1417074298-12254-2-git-send-email-arik@wizery.com>
-	 (sfid-20141127_084459_625553_BD50DF4A)
+	id S1754398AbaKSRNq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Nov 2014 12:13:46 -0500
+Message-ID: <1416417218.4763.12.camel@dcbw.local> (sfid-20141119_181350_355673_EB37DB1D)
+Subject: Re: Can fb4e156886ce6e8309e912d8b370d192330d19d3 be reverted ?
+From: Dan Williams <dcbw@redhat.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	linux-wireless@vger.kernel.org
+Date: Wed, 19 Nov 2014 11:13:38 -0600
+In-Reply-To: <1415985041.22965.31.camel@dcbw.local>
+References: <20141113123313.GA1926@redhat.com>
+	 <1415882683.2021.3.camel@sipsolutions.net>
+	 <A21755E2-3054-46B2-9BA6-07347FB91E1E@holtmann.org>
+	 <1415933712.2629.12.camel@dcbw.local>
+	 <6E4E0F42-B794-4F90-8AE9-0C208E40F7CD@holtmann.org>
+	 <1415980967.22965.14.camel@dcbw.local>
+	 <1415985041.22965.31.camel@dcbw.local>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-11-27 at 09:44 +0200, Arik Nemtsov wrote:
-> If a wiphy-idx is specified, the kernel will return the wiphy specific
-> regdomain, if such exists. Otherwise return the global regdom.
+On Fri, 2014-11-14 at 11:10 -0600, Dan Williams wrote:
+> On Fri, 2014-11-14 at 10:02 -0600, Dan Williams wrote:
+> > On Fri, 2014-11-14 at 16:02 +0900, Marcel Holtmann wrote:
+> > > Hi Dan,
+> > > 
+> > > >>>> I've updated wireless code on RHEL and get complain that now
+> > > >>>> cfg80211 and rfkill modules are loaded on machines that do not have
+> > > >>>> wireless hardware. Modules are auto-loaded because NetworkManager send
+> > > >>>> nl80211 messages to check if there are wireless devices in the system.
+> > > >>>> 
+> > > >>>> Hence my question, can we revert commit fb4e156886ce
+> > > >>>> "nl80211: Add generic netlink module alias for cfg80211/nl80211" ?
+> > > >>> 
+> > > >>> Realistically, we can't revert it, but only remove the
+> > > >>> MODULE_ALIAS_GENL_FAMILY() line.
+> > > >>> 
+> > > >>>> Auto loading nl80211 does not seems to be necessary, if there are
+> > > >>>> wireless devices nl80211 will be loaded anyway.
+> > > >>> 
+> > > >>> Maybe other applications would like to see an empty list of devices? But
+> > > >>> OTOH, if they're robust at all, they have to cope with kernels not even
+> > > >>> compiled with nl80211, so I guess for me I don't really see a big
+> > > >>> difference in whether the module alias exists or not.
+> > > >> 
+> > > >> auto-loading cfg80211 module when userspace requests nl80211 netlink family is exactly the right thing to do. Systems compiled without nl80211 support and systems with no wireless device attached are two different things.
+> > > >> 
+> > > >> Someone can fix NetworkManager to not send nl80211 messages or just plain accept that cfg80211 will be loaded.
+> > > > 
+> > > > NM uses nl80211 initially to determine whether *any* ethernet-type
+> > > > interface (a) is actually WiFi, and (b) should be driven by nl80211 or
+> > > > WEXT.  Because of the variety of drivers (both in-kernel and
+> > > > out-of-kernel) and the variety of kernel versions (NM supports back to
+> > > > early 3.x series) we cannot rely on specific behavior.
+> > > > 
+> > > > So given an ethernet-type interface, how do we determine that it is
+> > > > wifi?
+> > > > 
+> > > > DEVTYPE=wlan - not always reliable due to driver and kernel versions
+> > > 
+> > > if anybody wants to write kernel patches, then making sure that all wireless drivers expose DEVTYPE=wlan is the way to go. If for some reason a driver does not do it, that is a bug.
+> > 
+> > Yeah, that's nice, and should be done.  It seems a number of drivers
+> > don't have it.  Obviously everything mac80211 does, and it seems we're
+> > left with:
+> > 
+> > 1) legacy drivers that only support WEXT (airo, etc)
+> > 2) out-of-tree drivers (wl.o and various realtek/ralink stuff?)
+> > 
+> > So it seems that new best practice is:
+> > 
+> > a) if DEVTYPE=wlan, hit up nl80211 to determine whether the interface
+> > supports nl80211 or WEXT (minimal cfg80211 ports like ipw2x00 don't
+> > actually support nl80211 at all and must use WEXT)
+> > 
+> > b) if DEVTYPE is missing, WEXT can be tried if it is available
+> > 
+> > c) treat interface as 'ethernet'; out-of-tree WiFi drivers may end up
+> > here but that is life
+> > 
+> > Does that sound valid to everyone else?
 > 
-> When no wiphy-idx is specified, return the global regdomain as well as
-> all wiphy-specific regulatory domains in the system, via a new nested
-> list of attributes.
+> Potential NM fix filed at:
+> 
+> https://bugzilla.gnome.org/show_bug.cgi?id=740131
 
-Is that really a good idea? Seems rather easy to overrun the message
-size with that, in which case your current code will not return anything
-at all... that'll cause strange errors if somebody plugs in a few
-devices or has hwsim open as well or so ...
+Merged after review and backported to 0.9.10 too.
 
-> Add a new attribute for each wiphy-specific regdomain, for usermode to
-> identify it as such.
-
-Shouldn't userspace also *request* this for backward compatibility?
-Otherwise older userspace might assume that a returned regd applies to
-everything, when it doesn't really?
-
-johannes
+Dan
 
