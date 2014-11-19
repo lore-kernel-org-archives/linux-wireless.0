@@ -1,49 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:52802 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752006AbaKSLnu (ORCPT
+Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:59383
+	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756358AbaKSTIQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Nov 2014 06:43:50 -0500
-Received: by mail-wi0-f177.google.com with SMTP id l15so1532428wiw.4
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Nov 2014 03:43:49 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1416397317.9374.1.camel@sipsolutions.net>
-References: <1415551822-20121-1-git-send-email-arik@wizery.com>
- <1415551822-20121-16-git-send-email-arik@wizery.com> <1416396152.9374.0.camel@sipsolutions.net>
- <CA+XVXfefE7=o3v52-_a9QZ3FemNJ1KxOHXG6Qt3896Q=Y4CA=A@mail.gmail.com> <1416397317.9374.1.camel@sipsolutions.net>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Wed, 19 Nov 2014 13:43:34 +0200
-Message-ID: <CA+XVXff57xFmJkqVkKX5fOK3YOL2=OBQ+Cfx+iOgatRab1Uprg@mail.gmail.com> (sfid-20141119_124353_454004_3CFDEA94)
-Subject: Re: [PATCH 16/16] mac80211: synchronously reserve TID per station
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Liad Kaufman <liad.kaufman@intel.com>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 19 Nov 2014 14:08:16 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: [PATCH v2 4/7] mac80211: minstrel_ht: switch to .tx_status_noskb
+Date: Wed, 19 Nov 2014 20:08:10 +0100
+Message-Id: <1416424093-19439-4-git-send-email-nbd@openwrt.org> (sfid-20141119_200821_782958_C9643705)
+In-Reply-To: <1416424093-19439-1-git-send-email-nbd@openwrt.org>
+References: <1416424093-19439-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 19, 2014 at 1:41 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2014-11-19 at 13:40 +0200, Arik Nemtsov wrote:
->> On Wed, Nov 19, 2014 at 1:22 PM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->> > On Sun, 2014-11-09 at 18:50 +0200, Arik Nemtsov wrote:
->> >
->> >> +     if (WARN_ON(tid >= IEEE80211_NUM_TIDS))
->> >> +             return -EINVAL;
->> >
->> > That validates < 16
->> >
->> >> +     queues = BIT(sdata->vif.hw_queue[ieee802_1d_to_ac[tid]]);
->> >
->> > but that's only valid for < 8, causing a smatch warning.
->>
->> It's a valid warning. It should be tid & 7 here. I'll send a fix.
->
-> yes, but I think &7 is wrong too - TIDs (really TSIDs) 8-15 don't have a
-> static AC mapping, and we don't support them anyway. I think the sanity
-> check should just make sure it's < 8.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ net/mac80211/rc80211_minstrel_ht.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-yea you're right. was just writing this :)
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index 2641dc8..b52996a 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -709,11 +709,10 @@ minstrel_aggr_check(struct ieee80211_sta *pubsta, struct sk_buff *skb)
+ static void
+ minstrel_ht_tx_status(void *priv, struct ieee80211_supported_band *sband,
+                       struct ieee80211_sta *sta, void *priv_sta,
+-                      struct sk_buff *skb)
++                      struct ieee80211_tx_info *info)
+ {
+ 	struct minstrel_ht_sta_priv *msp = priv_sta;
+ 	struct minstrel_ht_sta *mi = &msp->ht;
+-	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_tx_rate *ar = info->status.rates;
+ 	struct minstrel_rate_stats *rate, *rate2;
+ 	struct minstrel_priv *mp = priv;
+@@ -721,7 +720,8 @@ minstrel_ht_tx_status(void *priv, struct ieee80211_supported_band *sband,
+ 	int i;
+ 
+ 	if (!msp->is_ht)
+-		return mac80211_minstrel.tx_status(priv, sband, sta, &msp->legacy, skb);
++		return mac80211_minstrel.tx_status_noskb(priv, sband, sta,
++							 &msp->legacy, info);
+ 
+ 	/* This packet was aggregated but doesn't carry status info */
+ 	if ((info->flags & IEEE80211_TX_CTL_AMPDU) &&
+@@ -1343,7 +1343,7 @@ static u32 minstrel_ht_get_expected_throughput(void *priv_sta)
+ 
+ static const struct rate_control_ops mac80211_minstrel_ht = {
+ 	.name = "minstrel_ht",
+-	.tx_status = minstrel_ht_tx_status,
++	.tx_status_noskb = minstrel_ht_tx_status,
+ 	.get_rate = minstrel_ht_get_rate,
+ 	.rate_init = minstrel_ht_rate_init,
+ 	.rate_update = minstrel_ht_rate_update,
+-- 
+2.1.2
 
-Arik
