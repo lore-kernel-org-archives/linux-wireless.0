@@ -1,29 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f176.google.com ([209.85.213.176]:47635 "EHLO
-	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751161AbaKTMvS (ORCPT
+Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:59375
+	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756339AbaKSTIQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Nov 2014 07:51:18 -0500
-Received: by mail-ig0-f176.google.com with SMTP id l13so5021110iga.15
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Nov 2014 04:51:18 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <546DE1DB.7090900@telenet.be>
-References: <546DE1DB.7090900@telenet.be>
-Date: Thu, 20 Nov 2014 13:51:18 +0100
-Message-ID: <CACna6rzHG+mrTWq55ALSsya+bM7hOuqcwDq0Y-sHcxdHEHphqQ@mail.gmail.com> (sfid-20141120_135121_897074_7E9DD59D)
-Subject: Re: Broadcom Corporation BCM43228 802.11a/b/g/n
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Ruben De Smet <ruben.de.smet@telenet.be>
-Cc: b43-dev <b43-dev@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 19 Nov 2014 14:08:16 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: [PATCH v2 3/7] mac80211: minstrel: switch to .tx_status_noskb
+Date: Wed, 19 Nov 2014 20:08:09 +0100
+Message-Id: <1416424093-19439-3-git-send-email-nbd@openwrt.org> (sfid-20141119_200829_226435_B37AA3E9)
+In-Reply-To: <1416424093-19439-1-git-send-email-nbd@openwrt.org>
+References: <1416424093-19439-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 20 November 2014 13:43, Ruben De Smet <ruben.de.smet@telenet.be> wrote:
-> This will be the last day I'm using my Broadcom Corporation BCM43228
-> 802.11a/b/g/n miniPCI WiFi card, as I'm switching to a faster Intel AC card.
-> Is there any interest in the linux-wireless or b43 community to have
-> this device for reverse engineering purposes? I'm able to send it for free.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ net/mac80211/rc80211_minstrel.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-Did you test this device with b43? Were there any problems with it?
+diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
+index c2b91bf..d51f6b1 100644
+--- a/net/mac80211/rc80211_minstrel.c
++++ b/net/mac80211/rc80211_minstrel.c
+@@ -223,11 +223,10 @@ minstrel_update_stats(struct minstrel_priv *mp, struct minstrel_sta_info *mi)
+ static void
+ minstrel_tx_status(void *priv, struct ieee80211_supported_band *sband,
+ 		   struct ieee80211_sta *sta, void *priv_sta,
+-		   struct sk_buff *skb)
++		   struct ieee80211_tx_info *info)
+ {
+ 	struct minstrel_priv *mp = priv;
+ 	struct minstrel_sta_info *mi = priv_sta;
+-	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_tx_rate *ar = info->status.rates;
+ 	int i, ndx;
+ 	int success;
+@@ -674,7 +673,7 @@ static u32 minstrel_get_expected_throughput(void *priv_sta)
+ 
+ const struct rate_control_ops mac80211_minstrel = {
+ 	.name = "minstrel",
+-	.tx_status = minstrel_tx_status,
++	.tx_status_noskb = minstrel_tx_status,
+ 	.get_rate = minstrel_get_rate,
+ 	.rate_init = minstrel_rate_init,
+ 	.alloc = minstrel_alloc,
+-- 
+2.1.2
+
