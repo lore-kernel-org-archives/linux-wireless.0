@@ -1,51 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:53768 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932124AbaKRUPP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Nov 2014 15:15:15 -0500
-Date: Tue, 18 Nov 2014 15:14:36 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: bluetooth-next 2014-11-18
-Message-ID: <20141118201435.GE13458@tuxdriver.com> (sfid-20141118_211551_826573_FDE5AA73)
-References: <20141118091952.GA14015@t440s.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20141118091952.GA14015@t440s.lan>
+Received: from s3.sipsolutions.net ([5.9.151.49]:41038 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932297AbaKSUm3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Nov 2014 15:42:29 -0500
+Message-ID: <1416429744.9374.28.camel@sipsolutions.net> (sfid-20141119_214232_712831_43827E34)
+Subject: Re: [PATCH] brcmfmac: don't include linux/unaligned/access_ok.h
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	John Linville <linville@tuxdriver.com>
+Date: Wed, 19 Nov 2014 21:42:24 +0100
+In-Reply-To: <546CFF4D.7010306@broadcom.com>
+References: <1416428298-10000-1-git-send-email-johannes@sipsolutions.net>
+	 <546CFF4D.7010306@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 18, 2014 at 11:19:52AM +0200, Johan Hedberg wrote:
-> Hi John,
+On Wed, 2014-11-19 at 21:36 +0100, Arend van Spriel wrote:
+> On 11/19/14 21:18, Johannes Berg wrote:
+> > From: Johannes Berg<johannes.berg@intel.com>
+> >
+> > This is a specific implementation,<asm/unaligned.h>  is the
+> > multiplexer that has the arch-specific knowledge of which
+> > of the implementations needs to be used, so include that.
 > 
-> Here's another bluetooth-next pull request for 3.19. We've got:
+> Thanks, Johannes
 > 
->  - Various fixes, cleanups and improvements to ieee802154/mac802154
->  - Support for a Broadcom BCM20702A1 variant
->  - Lots of lockdep fixes
->  - Fixed handling of LE CoC errors that should trigger SMP
-> 
-> Please let me know if there are any issues pulling. Thanks.
-> 
-> Johan
-> 
-> ---
-> The following changes since commit 56b2c3eea398c772dd895dc62c18cbdd1ba127b1:
-> 
->   6lowpan: move skb_free from error paths in decompression (2014-11-06 22:09:48 +0100)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next.git for-upstream
-> 
-> for you to fetch changes up to a86c02ea38c53b695209b1181f9e2e18d73eb4e8:
-> 
->   Bluetooth: Add support for Broadcom BCM20702A1 variant (2014-11-18 08:32:14 +0100)
+> Maybe it would be good to mention this was found by kbuild test robot.
 
-Pulling now...
+Yeah, maybe. It was more or less by accident though :-)
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+John, in case I forget - I shouldn't send a mac80211-next pull request
+before you merge this.
+
+johannes
+
