@@ -1,176 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.18]:50575 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965171AbaKNMbf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Nov 2014 07:31:35 -0500
-Message-ID: <5465F5F9.6090400@rempel-privat.de> (sfid-20141114_133211_829360_3219502F)
-Date: Fri, 14 Nov 2014 13:30:49 +0100
-From: Oleksij Rempel <linux@rempel-privat.de>
-MIME-Version: 1.0
-To: Jeremiah Mahler <jmmahler@gmail.com>, linux-kernel@vger.kernel.org,
-	ath9k-devel@qca.qualcomm.com, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	netdev@vger.kernel.org
-Subject: Re: linux-next: ath9k: build failure, ath_cmn_process_fft() redefinition
-References: <20141114000747.GA6865@hudson.localdomain>
-In-Reply-To: <20141114000747.GA6865@hudson.localdomain>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="LTETF3nOOcrehvvp45PAplhPTpjP9GI7e"
+Received: from mailout4.samsung.com ([203.254.224.34]:61560 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755271AbaKSIU7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Nov 2014 03:20:59 -0500
+Message-id: <546C52CD.2030209@samsung.com> (sfid-20141119_092104_444127_435ACC9F)
+Date: Wed, 19 Nov 2014 17:20:29 +0900
+From: Chan-yeol Park <chanyeol.park@samsung.com>
+MIME-version: 1.0
+To: "Kirill A. Shutemov" <kirill@shutemov.name>,
+	linux-bluetooth@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Kyungmin Park <kyungmin.park@samsung.com>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: pull request: bluetooth-next 2014-11-07
+References: <20141118133459.GB27428@node.dhcp.inet.fi>
+ <20141118180919.GA32128@t440s.P-661HNU-F1>
+In-reply-to: <20141118180919.GA32128@t440s.P-661HNU-F1>
+Content-type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---LTETF3nOOcrehvvp45PAplhPTpjP9GI7e
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Hi
 
-Thank you,
+On 11/19/2014 03:09 AM, Johan Hedberg wrote:
+> Hi Kirill,
+>
+> On Tue, Nov 18, 2014, Kirill A. Shutemov wrote:
+>> On Fri, Nov 07, 2014 at 11:27:54AM +0200, Johan Hedberg wrote:
+>>> Chan-yeol Park (1):
+>>>        Bluetooth: Fix hci_sync missing wakeup interrupt
+>> Look like this commit causes problem for me:
+>>
+>> [    2.018671] ------------[ cut here ]------------
+>> [    2.022836] WARNING: CPU: 2 PID: 109 at /home/kas/git/public/linux/kernel/sched/core.c:7323 __might_sleep+0xbd/0xd0()
+>> [    2.023166] Freeing unused kernel memory: 944K (ffff880001b14000 - ffff880001c00000)
+>> [    2.030362] do not call blocking ops when !TASK_RUNNING; state=1 set at [<ffffffff819ab67b>] __hci_req_sync+0x7b/0x2a0
+>> [    2.034193] Modules linked in:
+>> [    2.036133] CPU: 2 PID: 109 Comm: kworker/u17:0 Not tainted 3.18.0-rc4-next-20141117-07404-g9dad2ab6df8b #66
+>> [    2.036383] Freeing unused kernel memory: 1404K (ffff8800020a1000 - ffff880002200000)
+>> [    2.038940] Hardware name: LENOVO 3460CC6/3460CC6, BIOS G6ET93WW (2.53 ) 02/04/2013
+>> [    2.040233] Workqueue: hci0 hci_power_on
+>> [    2.041517]  ffffffff81f51d50 ffff8800d3ecfb28 ffffffff81afc316 0000000000000000
+>> [    2.042811]  ffff8800d3ecfb78 ffff8800d3ecfb68 ffffffff810fc11a ffff880000000000
+>> [    2.042812]  ffffffff81f52a28 000000000000026d 0000000000000000 ffff8800d3ec9200
+>> [    2.042813] Call Trace:
+>> [    2.042818]  [<ffffffff81afc316>] dump_stack+0x4c/0x6e
+>> [    2.042821]  [<ffffffff810fc11a>] warn_slowpath_common+0x8a/0xc0
+>> [    2.042823]  [<ffffffff810fc196>] warn_slowpath_fmt+0x46/0x50
+>> [    2.042825]  [<ffffffff819ab67b>] ? __hci_req_sync+0x7b/0x2a0
+>> [    2.042827]  [<ffffffff819ab67b>] ? __hci_req_sync+0x7b/0x2a0
+>> [    2.042830]  [<ffffffff811295ed>] __might_sleep+0xbd/0xd0
+>> [    2.042832]  [<ffffffff81b04b8f>] mutex_lock_nested+0x2f/0x450
+>> [    2.042835]  [<ffffffff81b0812b>] ? _raw_spin_unlock+0x2b/0x50
+>> [    2.042837]  [<ffffffff81131db0>] ? wake_up_process+0x50/0x50
+>> [    2.042840]  [<ffffffff813b9ea1>] __create_file+0x71/0x2c0
+>> [    2.042842]  [<ffffffff813ba10f>] debugfs_create_file+0x1f/0x30
+>> [    2.042844]  [<ffffffff819ac461>] hci_dev_do_open+0x431/0xa70
+>> [    2.042846]  [<ffffffff8111a72c>] ? process_one_work+0x13c/0x810
+>> [    2.042847]  [<ffffffff819ad2b1>] hci_power_on+0x31/0x1e0
+>> [    2.042849]  [<ffffffff8111a7c8>] process_one_work+0x1d8/0x810
+>> [    2.042850]  [<ffffffff8111a72c>] ? process_one_work+0x13c/0x810
+>> [    2.042851]  [<ffffffff8111b2db>] worker_thread+0x6b/0x4b0
+>> [    2.042852]  [<ffffffff8111b270>] ? init_pwq+0xf0/0xf0
+>> [    2.042854]  [<ffffffff81120ef9>] kthread+0x119/0x130
+>> [    2.042855]  [<ffffffff8112923d>] ? finish_task_switch+0x4d/0x140
+>> [    2.042857]  [<ffffffff81120de0>] ? kthread_create_on_node+0x240/0x240
+>> [    2.042859]  [<ffffffff81b08cfc>] ret_from_fork+0x7c/0xb0
+>> [    2.042861]  [<ffffffff81120de0>] ? kthread_create_on_node+0x240/0x240
+>> [    2.042863] ---[ end trace 3a40e80ec4ca7159 ]---
+> At least one obvious bug that the patch in question seems to have is
+> that it fails to set the state back to TASK_RUNNING in case
+> hci_req_run() fails and we never call schedule_timeout(). This would
+> also seem to match the error you're getting.
+>
+> The attached patch fixes the missing set_current_state() calls - could
+> you please check if it fixes the issue for you? Out of curiosity, which
+> HW are you reproducing this with and are there any special steps
+> involved? Looking at the code it seems that at least some older
+> Bluetooth adapters could cause some hci_req_run() calls to return
+> ENODATA, however I wasn't able to get the warning with any of my own
+> adapters (I have one for pretty much every Bluetooth version).
+>
+> Johan
 
-fixes are queued for review.
+I agree I made a bug in the previous commit and I think we need to apply 
+Johan's patch.
+It is working fine on my machine.
 
-Am 14.11.2014 um 01:07 schrieb Jeremiah Mahler:
->=20
-> In version 20141113 of the linux-next kernel, if it is compiled with
-> CONFIG_ATH9K_DEBUGFS unset, an error about ath_cmn_process_fft() being
-> redefined will be produced.
->=20
->   make
->   ...
->     LD [M]  drivers/net/wireless/ath/ath9k/ath9k_hw.o
->     CC [M]  drivers/net/wireless/ath/ath9k/common-spectral.o
->     CC      lib/debug_locks.o
->     CC      lib/random32.o
->   drivers/net/wireless/ath/ath9k/common-spectral.c:40:5: error:
->   redefinition of =E2=80=98ath_cmn_process_fft=E2=80=99
->    int ath_cmn_process_fft(struct ath_spec_scan_priv *spec_priv, struct=
+Thanks
+Chanyeol
 
->   ieee80211_hdr *hdr,
->        ^
->   In file included from drivers/net/wireless/ath/ath9k/common.h:27:0,
->                    from drivers/net/wireless/ath/ath9k/ath9k.h:27,
->                    from
->   drivers/net/wireless/ath/ath9k/common-spectral.c:18:
->   drivers/net/wireless/ath/ath9k/common-spectral.h:146:19: note: previo=
-us
->   definition of =E2=80=98ath_cmn_process_fft=E2=80=99 was here
->    static inline int ath_cmn_process_fft(struct ath_spec_scan_priv
->   *spec_priv,
->                      ^
->   scripts/Makefile.build:257: recipe for target
->   'drivers/net/wireless/ath/ath9k/common-spectral.o' failed
->   make[5]: *** [drivers/net/wireless/ath/ath9k/common-spectral.o] Error=
- 1
->   scripts/Makefile.build:402: recipe for target
->   'drivers/net/wireless/ath/ath9k' failed
->   make[4]: *** [drivers/net/wireless/ath/ath9k] Error 2
->   scripts/Makefile.build:402: recipe for target 'drivers/net/wireless/a=
-th'
->   failed
->   make[3]: *** [drivers/net/wireless/ath] Error 2
->   scripts/Makefile.build:402: recipe for target 'drivers/net/wireless'
->   failed
->   make[2]: *** [drivers/net/wireless] Error 2
->   scripts/Makefile.build:402: recipe for target 'drivers/net' failed
->   make[1]: *** [drivers/net] Error 2
->   Makefile:953: recipe for target 'drivers' failed
->   make: *** [drivers] Error 2
->   make: *** Waiting for unfinished jobs....
->     CC      lib/bust_spinlocks.o
->   ...
->=20
-> Bisecting the kernel found that the following patch was the cause.
->=20
->   commit 67dc74f15f147b9f88702de2952d2951e3e000ec
->   Author: Oleksij Rempel <linux@rempel-privat.de>
->   Date:   Thu Nov 6 08:53:30 2014 +0100
->  =20
->       ath9k: move spectral.* to common-spectral.*
->      =20
->       and rename exports from ath9k_spectral_* to ath9k_cmn_spectral_*
->      =20
->       Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
->       Signed-off-by: John W. Linville <linville@tuxdriver.com>
->=20
-> This patch mostly consists of renaming functions and moving code but
-> there was a functional change to the Makefile.
->=20
-> common-spectral.h uses CONFIG_ATH9K_DEBUGFS to conditionally provide a
-> prototype of ath_cmn_process_fft() when set or to define it as a noop
-> when it is unset.  The Makefile was changed so that CONFIG_ATH9K_DEBUGF=
-S
-> no longer applied to common-spectral and this will result in two
-> definitions of ath_cmn_process_fft().
->=20
->   > --- a/drivers/net/wireless/ath/ath9k/Makefile
->   > +++ b/drivers/net/wireless/ath/ath9k/Makefile
->   > @@ -16,8 +16,7 @@ ath9k-$(CONFIG_ATH9K_DFS_CERTIFIED) +=3D dfs.o
->   >  ath9k-$(CONFIG_ATH9K_TX99) +=3D tx99.o
->   >  ath9k-$(CONFIG_ATH9K_WOW) +=3D wow.o
->   >
->   > -ath9k-$(CONFIG_ATH9K_DEBUGFS) +=3D debug.o \
->   > -                                spectral.o
->   > +ath9k-$(CONFIG_ATH9K_DEBUGFS) +=3D debug.o
->   >
->   >  ath9k-$(CONFIG_ATH9K_STATION_STATISTICS) +=3D debug_sta.o
->   >
->   > @@ -59,7 +58,8 @@ obj-$(CONFIG_ATH9K_COMMON) +=3D ath9k_common.o
->   >  ath9k_common-y:=3D       common.o \
->   >                         common-init.o \
->   >                         common-beacon.o \
->   > -                       common-debug.o
->   > +                       common-debug.o \
->   > +                       common-spectral.o
->=20
-> Reverting the patch solves one error, but then a new one is produced.
->=20
->   make
->   ...
->     MODPOST 185 modules
->     CC      arch/x86/boot/edd.o
->     VOFFSET arch/x86/boot/voffset.h
->   ERROR: "ath9k_cmn_spectral_scan_trigger"
->   [drivers/net/wireless/ath/ath9k/ath9k.ko] undefined!
->   scripts/Makefile.modpost:90: recipe for target '__modpost' failed
->   make[1]: *** [__modpost] Error 1
->   ...
->=20
-> This error is caused by the patch before it.
->=20
->   commit f00a422cc81ef665f5098c0bc43cb0c616e55a9b
->   Author: Oleksij Rempel <linux@rempel-privat.de>
->   Date:   Thu Nov 6 08:53:29 2014 +0100
->  =20
->       ath9k: move ath9k_spectral_scan_ from main.c to spectral.c
->      =20
->       Now we should be ready to make this code common.
->      =20
->       Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
->       Signed-off-by: John W. Linville <linville@tuxdriver.com>
->=20
-> Since the code was moved from main.c to spectral.c, it is now involved
-> with CONFIG_ATH9K_DEBUGFS, which causes it to break.
->=20
-> Reverting both the above patches resolves the build errors.
->=20
-
-
---=20
-Regards,
-Oleksij
-
-
---LTETF3nOOcrehvvp45PAplhPTpjP9GI7e
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iF0EAREIAAYFAlRl9fkACgkQHwImuRkmbWn0YwD+ONsG63yEhjyEpA6Av36bWngf
-VLcF2NxzSnERt5ptfLIA91bk+bNoCTlvjBablD7CmuOpSrb9sALHN6jF6ttZ4/E=
-=2ivf
------END PGP SIGNATURE-----
-
---LTETF3nOOcrehvvp45PAplhPTpjP9GI7e--
