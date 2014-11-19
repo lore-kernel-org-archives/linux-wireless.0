@@ -1,122 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f51.google.com ([74.125.82.51]:50943 "EHLO
-	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932354AbaKXOgu (ORCPT
+Received: from mail-lb0-f180.google.com ([209.85.217.180]:54140 "EHLO
+	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754878AbaKSGqm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2014 09:36:50 -0500
-Received: by mail-wg0-f51.google.com with SMTP id k14so12246603wgh.38
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:36:49 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Chaya Rachel Ivgy <chaya.rachel.ivgi@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 70/75] iwlwifi: mvm: add support to MFUART loading notification
-Date: Mon, 24 Nov 2014 16:34:46 +0200
-Message-Id: <1416839691-28533-70-git-send-email-egrumbach@gmail.com> (sfid-20141124_153701_891325_B25A3944)
-In-Reply-To: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
-References: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
+	Wed, 19 Nov 2014 01:46:42 -0500
+Message-ID: <546C3CCE.400@gmail.com> (sfid-20141119_074702_566040_FAA5E79C)
+Date: Wed, 19 Nov 2014 09:46:38 +0300
+From: Dmitry Tunin <hanipouspilot@gmail.com>
+MIME-Version: 1.0
+To: Marcel Holtmann <marcel@holtmann.org>
+CC: linux-bluetooth@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v3] ath3k: Add support of MCI 13d3:3408 bt device
+References: <CANoib0HW2umPpzzerYNq1fMMnkYxOa78o5X90-K=eNEnTGSO1w@mail.gmail.com> <F01422F2-5F7C-406A-A06B-2C2CE96B9E3A@holtmann.org>
+In-Reply-To: <F01422F2-5F7C-406A-A06B-2C2CE96B9E3A@holtmann.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chaya Rachel Ivgy <chaya.rachel.ivgi@intel.com>
+Hi Marcel,
 
-Add support to MFUART loading notification (print notification
-data with IWL_DEBUG_INFO)
+Here is information from /sys/kernel/debug/usb/devices
 
-Signed-off-by: Chaya Rachel Ivgy <chaya.rachel.ivgi@intel.com>
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+T:  Bus=01 Lev=02 Prnt=03 Port=00 Cnt=01 Dev#= 20 Spd=12 MxCh= 0
+D:  Ver= 1.10 Cls=e0(wlcon) Sub=01 Prot=01 MxPS=64 #Cfgs= 1
+P:  Vendor=13d3 ProdID=3408 Rev= 0.02
+C:* #Ifs= 2 Cfg#= 1 Atr=e0 MxPwr=100mA
+A:  FirstIf#= 0 IfCount= 2 Cls=e0(wlcon) Sub=01 Prot=01
+I:* If#= 0 Alt= 0 #EPs= 3 Cls=e0(wlcon) Sub=01 Prot=01 Driver=btusb
+E:  Ad=81(I) Atr=03(Int.) MxPS=  16 Ivl=1ms
+E:  Ad=82(I) Atr=02(Bulk) MxPS=  64 Ivl=0ms
+E:  Ad=02(O) Atr=02(Bulk) MxPS=  64 Ivl=0ms
+I:* If#= 1 Alt= 0 #EPs= 2 Cls=e0(wlcon) Sub=01 Prot=01 Driver=btusb
+E:  Ad=83(I) Atr=01(Isoc) MxPS=   0 Ivl=1ms
+E:  Ad=03(O) Atr=01(Isoc) MxPS=   0 Ivl=1ms
+I:  If#= 1 Alt= 1 #EPs= 2 Cls=e0(wlcon) Sub=01 Prot=01 Driver=btusb
+E:  Ad=83(I) Atr=01(Isoc) MxPS=   9 Ivl=1ms
+E:  Ad=03(O) Atr=01(Isoc) MxPS=   9 Ivl=1ms
+I:  If#= 1 Alt= 2 #EPs= 2 Cls=e0(wlcon) Sub=01 Prot=01 Driver=btusb
+E:  Ad=83(I) Atr=01(Isoc) MxPS=  17 Ivl=1ms
+E:  Ad=03(O) Atr=01(Isoc) MxPS=  17 Ivl=1ms
+I:  If#= 1 Alt= 3 #EPs= 2 Cls=e0(wlcon) Sub=01 Prot=01 Driver=btusb
+E:  Ad=83(I) Atr=01(Isoc) MxPS=  25 Ivl=1ms
+E:  Ad=03(O) Atr=01(Isoc) MxPS=  25 Ivl=1ms
+I:  If#= 1 Alt= 4 #EPs= 2 Cls=e0(wlcon) Sub=01 Prot=01 Driver=btusb
+E:  Ad=83(I) Atr=01(Isoc) MxPS=  33 Ivl=1ms
+E:  Ad=03(O) Atr=01(Isoc) MxPS=  33 Ivl=1ms
+I:  If#= 1 Alt= 5 #EPs= 2 Cls=e0(wlcon) Sub=01 Prot=01 Driver=btusb
+E:  Ad=83(I) Atr=01(Isoc) MxPS=  49 Ivl=1ms
+E:  Ad=03(O) Atr=01(Isoc) MxPS=  49 Ivl=1ms
+
+
+I hope this mail client is OK now.
+
+Add support for bluetooth MCI WB335 (AR9565) Wi-Fi+bt module.
+It is AR3011 device according to iProduct == 0.
+So btusb should be blacklisted
+I submitted a wrong patch before asif  it was an AR3012 device,
+but it works both ways. This is the right one.
+
+Signed-off-by: Dmitry Tunin<hanipouspilot@gmail.com>
+
 ---
- drivers/net/wireless/iwlwifi/mvm/fw-api.h | 17 +++++++++++++++++
- drivers/net/wireless/iwlwifi/mvm/fw.c     | 16 ++++++++++++++++
- drivers/net/wireless/iwlwifi/mvm/mvm.h    |  2 ++
- drivers/net/wireless/iwlwifi/mvm/ops.c    |  1 +
- 4 files changed, 36 insertions(+)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/iwlwifi/mvm/fw-api.h
-index 0f3c07a..2ff4f41 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw-api.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw-api.h
-@@ -201,6 +201,8 @@ enum {
- 	/* Power - new power table command */
- 	MAC_PM_POWER_TABLE = 0xa9,
- 
-+	MFUART_LOAD_NOTIFICATION = 0xb1,
-+
- 	REPLY_RX_PHY_CMD = 0xc0,
- 	REPLY_RX_MPDU_CMD = 0xc1,
- 	BA_NOTIF = 0xc5,
-@@ -1212,6 +1214,21 @@ struct iwl_missed_beacons_notif {
- } __packed; /* MISSED_BEACON_NTFY_API_S_VER_3 */
- 
- /**
-+ * struct iwl_mfuart_load_notif - mfuart image version & status
-+ * ( MFUART_LOAD_NOTIFICATION = 0xb1 )
-+ * @installed_ver: installed image version
-+ * @external_ver: external image version
-+ * @status: MFUART loading status
-+ * @duration: MFUART loading time
-+*/
-+struct iwl_mfuart_load_notif {
-+	__le32 installed_ver;
-+	__le32 external_ver;
-+	__le32 status;
-+	__le32 duration;
-+} __packed; /*MFU_LOADER_NTFY_API_S_VER_1*/
-+
-+/**
-  * struct iwl_set_calib_default_cmd - set default value for calibration.
-  * ( SET_CALIB_DEFAULT_CMD = 0x8e )
-  * @calib_index: the calibration to set value for
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw.c b/drivers/net/wireless/iwlwifi/mvm/fw.c
-index 5757790..bbb78710 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw.c
-@@ -599,3 +599,19 @@ int iwl_mvm_rx_radio_ver(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb,
- 		       le32_to_cpu(radio_version->radio_dash));
- 	return 0;
- }
-+
-+int iwl_mvm_rx_mfuart_notif(struct iwl_mvm *mvm,
-+			    struct iwl_rx_cmd_buffer *rxb,
-+			    struct iwl_device_cmd *cmd)
-+{
-+	struct iwl_rx_packet *pkt = rxb_addr(rxb);
-+	struct iwl_mfuart_load_notif *mfuart_notif = (void *)pkt->data;
-+
-+	IWL_DEBUG_INFO(mvm,
-+		       "MFUART: installed ver: 0x%08x, external ver: 0x%08x, status: 0x%08x, duration: 0x%08x\n",
-+		       le32_to_cpu(mfuart_notif->installed_ver),
-+		       le32_to_cpu(mfuart_notif->external_ver),
-+		       le32_to_cpu(mfuart_notif->status),
-+		       le32_to_cpu(mfuart_notif->duration));
-+	return 0;
-+}
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index e6079f4..2ab59b8 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -964,6 +964,8 @@ int iwl_mvm_rx_card_state_notif(struct iwl_mvm *mvm,
- 				struct iwl_device_cmd *cmd);
- int iwl_mvm_rx_radio_ver(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb,
- 			 struct iwl_device_cmd *cmd);
-+int iwl_mvm_rx_mfuart_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb,
-+			    struct iwl_device_cmd *cmd);
- 
- /* MVM PHY */
- int iwl_mvm_phy_ctxt_add(struct iwl_mvm *mvm, struct iwl_mvm_phy_ctxt *ctxt,
-diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
-index cc83ef5..b3ae094 100644
---- a/drivers/net/wireless/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
-@@ -260,6 +260,7 @@ static const struct iwl_rx_handlers iwl_mvm_rx_handlers[] = {
- 
- 	RX_HANDLER(TDLS_CHANNEL_SWITCH_NOTIFICATION, iwl_mvm_rx_tdls_notif,
- 		   true),
-+	RX_HANDLER(MFUART_LOAD_NOTIFICATION, iwl_mvm_rx_mfuart_notif, false),
- 
- };
- #undef RX_HANDLER
--- 
-1.9.1
+diff --git a/drivers/bluetooth/ath3k.c b/drivers/bluetooth/ath3k.c
+index d85ced2..3b53116 100644
+--- a/drivers/bluetooth/ath3k.c
++++ b/drivers/bluetooth/ath3k.c
+@@ -69,6 +69,7 @@ static const struct usb_device_id ath3k_table[] = {
+      { USB_DEVICE(0x0CF3, 0x3002) },
+      { USB_DEVICE(0x0CF3, 0xE019) },
+      { USB_DEVICE(0x13d3, 0x3304) },
++    { USB_DEVICE(0x13d3, 0x3408) },
+
+      /* Atheros AR9285 Malbec with sflash firmware */
+      { USB_DEVICE(0x03F0, 0x311D) },
+diff --git a/drivers/bluetooth/btusb.c b/drivers/bluetooth/btusb.c
+index edfc17b..bbf5c1c 100644
+--- a/drivers/bluetooth/btusb.c
++++ b/drivers/bluetooth/btusb.c
+@@ -146,6 +146,7 @@ static const struct usb_device_id blacklist_table[] = {
+      { USB_DEVICE(0x0cf3, 0x3002), .driver_info = BTUSB_IGNORE },
+      { USB_DEVICE(0x0cf3, 0xe019), .driver_info = BTUSB_IGNORE },
+      { USB_DEVICE(0x13d3, 0x3304), .driver_info = BTUSB_IGNORE },
++    { USB_DEVICE(0x13d3, 0x3408), .driver_info = BTUSB_IGNORE },
+
+      /* Atheros AR9285 Malbec with sflash firmware */
+      { USB_DEVICE(0x03f0, 0x311d), .driver_info = BTUSB_IGNORE },
+
+
+19.11.2014 01:56, Marcel Holtmann wrote:
+> Hi Dmitry,
+>
+>> Add support for bluetooth MCI WB335 (AR9565) Wi-Fi+bt module.
+>> It is AR3011 device according to iProduct == 0.
+>> So btusb should be blacklisted
+>> I submitted a wrong patch before asif  it was an AR3012 device,
+>> but it works both ways. This is the right one.
+> include the device details from /sys/kernel/debug/usb/devices.
+>
+>> Signed-off-by: Dmitry Tunin <hanipouspilot@gmail.com>
+>> are */
+> No idea what this are */ is.
+>
+>> ---
+>>
+>> diff --git a/drivers/bluetooth/ath3k.c b/drivers/bluetooth/ath3k.c
+>> index d85ced2..3b53116 100644
+>> --- a/drivers/bluetooth/ath3k.c
+>> +++ b/drivers/bluetooth/ath3k.c
+>> @@ -69,6 +69,7 @@ static const struct usb_device_id ath3k_table[] = {
+>>   { USB_DEVICE(0x0CF3, 0x3002) },
+>>   { USB_DEVICE(0x0CF3, 0xE019) },
+>>   { USB_DEVICE(0x13d3, 0x3304) },
+>> + { USB_DEVICE(0x13d3, 0x3408) },
+>>
+>>   /* Atheros AR9285 Malbec with sflash firmware */
+>>   { USB_DEVICE(0x03F0, 0x311D) },
+>> diff --git a/drivers/bluetooth/btusb.c b/drivers/bluetooth/btusb.c
+>> index edfc17b..bbf5c1c 100644
+>> --- a/drivers/bluetooth/btusb.c
+>> +++ b/drivers/bluetooth/btusb.c
+>> @@ -146,6 +146,7 @@ static const struct usb_device_id blacklist_table[] = {
+>>   { USB_DEVICE(0x0cf3, 0x3002), .driver_info = BTUSB_IGNORE },
+>>   { USB_DEVICE(0x0cf3, 0xe019), .driver_info = BTUSB_IGNORE },
+>>   { USB_DEVICE(0x13d3, 0x3304), .driver_info = BTUSB_IGNORE },
+>> + { USB_DEVICE(0x13d3, 0x3408), .driver_info = BTUSB_IGNORE },
+> Fix whitespace here or use a proper mail client.
+>
+> Regards
+>
+> Marcel
+>
 
