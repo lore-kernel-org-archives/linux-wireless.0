@@ -1,122 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:40548 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753167AbaKGTGm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Nov 2014 14:06:42 -0500
-Received: by mail-wi0-f176.google.com with SMTP id h11so5532572wiw.3
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Nov 2014 11:06:41 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 04/10] staging: vt6655: CARDvSetRSPINF us bb_type for CARD_PHY_TYPE
-Date: Fri,  7 Nov 2014 19:06:03 +0000
-Message-Id: <1415387169-3843-4-git-send-email-tvboxspy@gmail.com> (sfid-20141107_200646_201268_680AE9B8)
-In-Reply-To: <1415387169-3843-1-git-send-email-tvboxspy@gmail.com>
-References: <1415387169-3843-1-git-send-email-tvboxspy@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:40307 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755474AbaKSSfZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Nov 2014 13:35:25 -0500
+Message-ID: <1416422117.9374.22.camel@sipsolutions.net> (sfid-20141119_193533_158871_30D74330)
+Subject: Re: [PATCH 3/6] mac80211: add tx_status_noskb to rate_control_ops
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 19 Nov 2014 19:35:17 +0100
+In-Reply-To: <1416094080-49220-3-git-send-email-nbd@openwrt.org>
+References: <1416094080-49220-1-git-send-email-nbd@openwrt.org>
+	 <1416094080-49220-3-git-send-email-nbd@openwrt.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Using u8 for bb_type
+> +++ b/net/mac80211/rate.h
+> @@ -37,11 +37,15 @@ static inline void rate_control_tx_status(struct ieee80211_local *local,
+>  	struct rate_control_ref *ref = local->rate_ctrl;
+>  	struct ieee80211_sta *ista = &sta->sta;
+>  	void *priv_sta = sta->rate_ctrl_priv;
+> +	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+>  
+>  	if (!ref || !test_sta_flag(sta, WLAN_STA_RATE_CONTROL))
+>  		return;
+>  
+> -	ref->ops->tx_status(ref->priv, sband, ista, priv_sta, skb);
+> +	if (ref->ops->tx_status)
+> +		ref->ops->tx_status(ref->priv, sband, ista, priv_sta, skb);
+> +	else
+> +		ref->ops->tx_status_noskb(ref->priv, sband, ista, priv_sta, info);
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/card.c | 20 ++++++++++----------
- drivers/staging/vt6655/card.h |  2 +-
- 2 files changed, 11 insertions(+), 11 deletions(-)
+I can't say I like this - you're going to have to pass NULL or something
+as the SKB pointer, and then rely on having a rate control algorithm
+that deals with it, etc....
 
-diff --git a/drivers/staging/vt6655/card.c b/drivers/staging/vt6655/card.c
-index 6a1efd1..24ba9d4 100644
---- a/drivers/staging/vt6655/card.c
-+++ b/drivers/staging/vt6655/card.c
-@@ -669,7 +669,7 @@ static unsigned short CARDwGetOFDMControlRate(struct vnt_private *pDevice,
-  *
-  * Return Value: None.
-  */
--void CARDvSetRSPINF(struct vnt_private *pDevice, CARD_PHY_TYPE ePHYType)
-+void CARDvSetRSPINF(struct vnt_private *pDevice, u8 bb_type)
- {
- 	union vnt_phy_field_swap phy;
- 	unsigned char byTxRate, byRsvTime;      /* For OFDM */
-@@ -716,55 +716,55 @@ void CARDvSetRSPINF(struct vnt_private *pDevice, CARD_PHY_TYPE ePHYType)
- 
- 	/* RSPINF_a_6 */
- 	s_vCalculateOFDMRParameter(RATE_6M,
--				   ePHYType,
-+				   bb_type,
- 				   &byTxRate,
- 				   &byRsvTime);
- 	VNSvOutPortW(pDevice->PortOffset + MAC_REG_RSPINF_A_6, MAKEWORD(byTxRate, byRsvTime));
- 	/* RSPINF_a_9 */
- 	s_vCalculateOFDMRParameter(RATE_9M,
--				   ePHYType,
-+				   bb_type,
- 				   &byTxRate,
- 				   &byRsvTime);
- 	VNSvOutPortW(pDevice->PortOffset + MAC_REG_RSPINF_A_9, MAKEWORD(byTxRate, byRsvTime));
- 	/* RSPINF_a_12 */
- 	s_vCalculateOFDMRParameter(RATE_12M,
--				   ePHYType,
-+				   bb_type,
- 				   &byTxRate,
- 				   &byRsvTime);
- 	VNSvOutPortW(pDevice->PortOffset + MAC_REG_RSPINF_A_12, MAKEWORD(byTxRate, byRsvTime));
- 	/* RSPINF_a_18 */
- 	s_vCalculateOFDMRParameter(RATE_18M,
--				   ePHYType,
-+				   bb_type,
- 				   &byTxRate,
- 				   &byRsvTime);
- 	VNSvOutPortW(pDevice->PortOffset + MAC_REG_RSPINF_A_18, MAKEWORD(byTxRate, byRsvTime));
- 	/* RSPINF_a_24 */
- 	s_vCalculateOFDMRParameter(RATE_24M,
--				   ePHYType,
-+				   bb_type,
- 				   &byTxRate,
- 				   &byRsvTime);
- 	VNSvOutPortW(pDevice->PortOffset + MAC_REG_RSPINF_A_24, MAKEWORD(byTxRate, byRsvTime));
- 	/* RSPINF_a_36 */
- 	s_vCalculateOFDMRParameter(CARDwGetOFDMControlRate((void *)pDevice, RATE_36M),
--				   ePHYType,
-+				   bb_type,
- 				   &byTxRate,
- 				   &byRsvTime);
- 	VNSvOutPortW(pDevice->PortOffset + MAC_REG_RSPINF_A_36, MAKEWORD(byTxRate, byRsvTime));
- 	/* RSPINF_a_48 */
- 	s_vCalculateOFDMRParameter(CARDwGetOFDMControlRate((void *)pDevice, RATE_48M),
--				   ePHYType,
-+				   bb_type,
- 				   &byTxRate,
- 				   &byRsvTime);
- 	VNSvOutPortW(pDevice->PortOffset + MAC_REG_RSPINF_A_48, MAKEWORD(byTxRate, byRsvTime));
- 	/* RSPINF_a_54 */
- 	s_vCalculateOFDMRParameter(CARDwGetOFDMControlRate((void *)pDevice, RATE_54M),
--				   ePHYType,
-+				   bb_type,
- 				   &byTxRate,
- 				   &byRsvTime);
- 	VNSvOutPortW(pDevice->PortOffset + MAC_REG_RSPINF_A_54, MAKEWORD(byTxRate, byRsvTime));
- 	/* RSPINF_a_72 */
- 	s_vCalculateOFDMRParameter(CARDwGetOFDMControlRate((void *)pDevice, RATE_54M),
--				   ePHYType,
-+				   bb_type,
- 				   &byTxRate,
- 				   &byRsvTime);
- 	VNSvOutPortW(pDevice->PortOffset + MAC_REG_RSPINF_A_72, MAKEWORD(byTxRate, byRsvTime));
-diff --git a/drivers/staging/vt6655/card.h b/drivers/staging/vt6655/card.h
-index 9d19f97..306f7b7 100644
---- a/drivers/staging/vt6655/card.h
-+++ b/drivers/staging/vt6655/card.h
-@@ -73,7 +73,7 @@ typedef enum _CARD_STATUS_TYPE {
- 
- struct vnt_private;
- 
--void CARDvSetRSPINF(struct vnt_private *, CARD_PHY_TYPE ePHYType);
-+void CARDvSetRSPINF(struct vnt_private *, u8);
- void vUpdateIFS(struct vnt_private *);
- void CARDvUpdateBasicTopRate(struct vnt_private *);
- bool CARDbIsOFDMinBasicRate(struct vnt_private *);
--- 
-2.1.0
+johannes
 
