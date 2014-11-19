@@ -1,236 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f41.google.com ([74.125.82.41]:40735 "EHLO
-	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932195AbaKXOf6 (ORCPT
+Received: from mail-la0-f48.google.com ([209.85.215.48]:58574 "EHLO
+	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750757AbaKSLRy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2014 09:35:58 -0500
-Received: by mail-wg0-f41.google.com with SMTP id y19so12327261wgg.14
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:35:57 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 37/75] iwlwifi: mvm: add WEP RX hardware offload support
-Date: Mon, 24 Nov 2014 16:34:13 +0200
-Message-Id: <1416839691-28533-37-git-send-email-egrumbach@gmail.com> (sfid-20141124_153911_282405_072D8836)
-In-Reply-To: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
-References: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
+	Wed, 19 Nov 2014 06:17:54 -0500
+Date: Wed, 19 Nov 2014 13:17:44 +0200
+From: Johan Hedberg <johan.hedberg@gmail.com>
+To: "Kirill A. Shutemov" <kirill@shutemov.name>
+Cc: linux-bluetooth@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Chan-yeol Park <chanyeol.park@samsung.com>,
+	Kyungmin Park <kyungmin.park@samsung.com>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: pull request: bluetooth-next 2014-11-07
+Message-ID: <20141119111744.GA8153@t440s.lan> (sfid-20141119_121815_998522_052D3BA9)
+References: <20141118133459.GB27428@node.dhcp.inet.fi>
+ <20141118180919.GA32128@t440s.P-661HNU-F1>
+ <20141119110654.GA1894@node.dhcp.inet.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20141119110654.GA1894@node.dhcp.inet.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi Kirill,
 
-In the original driver, we decided to not implement WEP RX hardware
-offload because of a quirk with the firmware API - it allows setting
-global WEP keys that then get used for all virtual interfaces, which
-is clearly wrong if more than one exists, and it allows setting per-
-station keys but then separates multicast and unicast keys.
+On Wed, Nov 19, 2014, Kirill A. Shutemov wrote:
+> > From: Johan Hedberg <johan.hedberg@intel.com>
+> > Date: Tue, 18 Nov 2014 20:00:15 +0200
+> > Subject: [PATCH] Bluetooth: Fix setting state back to TASK_RUNNING
+> > 
+> > In __hci_cmd_sync_ev() and __hci_req_sync() if the hci_req_run() call
+> > fails and we return from the functions we should ensure that the state
+> > doesn't remain in TASK_INTERRUPTIBLE that we just set it to. This patch
+> > fixes missing calls to set_current_state(TASK_RUNNING) in both places.
+> > 
+> > Signed-off-by: Johan Hedberg <johan.hedberg@intel.com>
+> 
+> This patch helps -- warning is gone.
 
-In order to implement WEP RX hardware offload, work around these
-limitations by uploading each WEP key twice, once as multicast and
-once as unicast, but point them both to the same key slot (offset)
-and use the same key material so the slot overwrite on the second
-upload doesn't actually change anything. Upon removal, also remove
-the key twice so the station no longer references it.
+Thanks! I've resent it to linux-bluetooth with the appropriate
+Reported-by/Tested-by credits. It'll be included in the next pull
+request for the bluetooth-next tree.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 14 ++++---
- drivers/net/wireless/iwlwifi/mvm/sta.c      | 64 +++++++++++++++++++++++------
- 2 files changed, 61 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index f3379d7..08976c3 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -2330,12 +2330,16 @@ static int iwl_mvm_mac_set_key(struct ieee80211_hw *hw,
- 		break;
- 	case WLAN_CIPHER_SUITE_WEP40:
- 	case WLAN_CIPHER_SUITE_WEP104:
--		/*
--		 * Support for TX only, at least for now, so accept
--		 * the key and do nothing else. Then mac80211 will
--		 * pass it for TX but we don't have to use it for RX.
-+		/* For non-client mode, only use WEP keys for TX as we probably
-+		 * don't have a station yet anyway and would then have to keep
-+		 * track of the keys, linking them to each of the clients/peers
-+		 * as they appear. For now, don't do that, for performance WEP
-+		 * offload doesn't really matter much, but we need it for some
-+		 * other offload features in client mode.
- 		 */
--		return 0;
-+		if (vif->type != NL80211_IFTYPE_STATION)
-+			return 0;
-+		break;
- 	default:
- 		/* currently FW supports only one optional cipher scheme */
- 		if (hw->n_cipher_schemes &&
-diff --git a/drivers/net/wireless/iwlwifi/mvm/sta.c b/drivers/net/wireless/iwlwifi/mvm/sta.c
-index f94be3c..0eb8505 100644
---- a/drivers/net/wireless/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/sta.c
-@@ -1071,7 +1071,7 @@ static u8 iwl_mvm_get_key_sta_id(struct ieee80211_vif *vif,
- 
- static int iwl_mvm_send_sta_key(struct iwl_mvm *mvm,
- 				struct iwl_mvm_sta *mvm_sta,
--				struct ieee80211_key_conf *keyconf,
-+				struct ieee80211_key_conf *keyconf, bool mcast,
- 				u32 tkip_iv32, u16 *tkip_p1k, u32 cmd_flags)
- {
- 	struct iwl_mvm_add_sta_key_cmd cmd = {};
-@@ -1099,12 +1099,18 @@ static int iwl_mvm_send_sta_key(struct iwl_mvm *mvm,
- 		key_flags |= cpu_to_le16(STA_KEY_FLG_CCM);
- 		memcpy(cmd.key, keyconf->key, keyconf->keylen);
- 		break;
-+	case WLAN_CIPHER_SUITE_WEP104:
-+		key_flags |= cpu_to_le16(STA_KEY_FLG_WEP_13BYTES);
-+	case WLAN_CIPHER_SUITE_WEP40:
-+		key_flags |= cpu_to_le16(STA_KEY_FLG_WEP);
-+		memcpy(cmd.key + 3, keyconf->key, keyconf->keylen);
-+		break;
- 	default:
- 		key_flags |= cpu_to_le16(STA_KEY_FLG_EXT);
- 		memcpy(cmd.key, keyconf->key, keyconf->keylen);
- 	}
- 
--	if (!(keyconf->flags & IEEE80211_KEY_FLAG_PAIRWISE))
-+	if (mcast)
- 		key_flags |= cpu_to_le16(STA_KEY_MULTICAST);
- 
- 	cmd.key_offset = keyconf->hw_key_idx;
-@@ -1199,7 +1205,8 @@ static inline u8 *iwl_mvm_get_mac_addr(struct iwl_mvm *mvm,
- static int __iwl_mvm_set_sta_key(struct iwl_mvm *mvm,
- 				 struct ieee80211_vif *vif,
- 				 struct ieee80211_sta *sta,
--				 struct ieee80211_key_conf *keyconf)
-+				 struct ieee80211_key_conf *keyconf,
-+				 bool mcast)
- {
- 	struct iwl_mvm_sta *mvm_sta = iwl_mvm_sta_from_mac80211(sta);
- 	int ret;
-@@ -1213,15 +1220,17 @@ static int __iwl_mvm_set_sta_key(struct iwl_mvm *mvm,
- 		/* get phase 1 key from mac80211 */
- 		ieee80211_get_key_rx_seq(keyconf, 0, &seq);
- 		ieee80211_get_tkip_rx_p1k(keyconf, addr, seq.tkip.iv32, p1k);
--		ret = iwl_mvm_send_sta_key(mvm, mvm_sta, keyconf,
-+		ret = iwl_mvm_send_sta_key(mvm, mvm_sta, keyconf, mcast,
- 					   seq.tkip.iv32, p1k, 0);
- 		break;
- 	case WLAN_CIPHER_SUITE_CCMP:
--		ret = iwl_mvm_send_sta_key(mvm, mvm_sta, keyconf,
-+	case WLAN_CIPHER_SUITE_WEP40:
-+	case WLAN_CIPHER_SUITE_WEP104:
-+		ret = iwl_mvm_send_sta_key(mvm, mvm_sta, keyconf, mcast,
- 					   0, NULL, 0);
- 		break;
- 	default:
--		ret = iwl_mvm_send_sta_key(mvm, mvm_sta, keyconf,
-+		ret = iwl_mvm_send_sta_key(mvm, mvm_sta, keyconf, mcast,
- 					   0, NULL, 0);
- 	}
- 
-@@ -1229,7 +1238,8 @@ static int __iwl_mvm_set_sta_key(struct iwl_mvm *mvm,
- }
- 
- static int __iwl_mvm_remove_sta_key(struct iwl_mvm *mvm, u8 sta_id,
--				    struct ieee80211_key_conf *keyconf)
-+				    struct ieee80211_key_conf *keyconf,
-+				    bool mcast)
- {
- 	struct iwl_mvm_add_sta_key_cmd cmd = {};
- 	__le16 key_flags;
-@@ -1241,7 +1251,7 @@ static int __iwl_mvm_remove_sta_key(struct iwl_mvm *mvm, u8 sta_id,
- 	key_flags |= cpu_to_le16(STA_KEY_FLG_NO_ENC | STA_KEY_FLG_WEP_KEY_MAP);
- 	key_flags |= cpu_to_le16(STA_KEY_NOT_VALID);
- 
--	if (!(keyconf->flags & IEEE80211_KEY_FLAG_PAIRWISE))
-+	if (mcast)
- 		key_flags |= cpu_to_le16(STA_KEY_MULTICAST);
- 
- 	cmd.key_flags = key_flags;
-@@ -1271,6 +1281,7 @@ int iwl_mvm_set_sta_key(struct iwl_mvm *mvm,
- 			struct ieee80211_key_conf *keyconf,
- 			bool have_key_offset)
- {
-+	bool mcast = !(keyconf->flags & IEEE80211_KEY_FLAG_PAIRWISE);
- 	u8 sta_id;
- 	int ret;
- 
-@@ -1315,9 +1326,26 @@ int iwl_mvm_set_sta_key(struct iwl_mvm *mvm,
- 			return -ENOSPC;
- 	}
- 
--	ret = __iwl_mvm_set_sta_key(mvm, vif, sta, keyconf);
--	if (ret)
-+	ret = __iwl_mvm_set_sta_key(mvm, vif, sta, keyconf, mcast);
-+	if (ret) {
- 		__clear_bit(keyconf->hw_key_idx, mvm->fw_key_table);
-+		goto end;
-+	}
-+
-+	/*
-+	 * For WEP, the same key is used for multicast and unicast. Upload it
-+	 * again, using the same key offset, and now pointing the other one
-+	 * to the same key slot (offset).
-+	 * If this fails, remove the original as well.
-+	 */
-+	if (keyconf->cipher == WLAN_CIPHER_SUITE_WEP40 ||
-+	    keyconf->cipher == WLAN_CIPHER_SUITE_WEP104) {
-+		ret = __iwl_mvm_set_sta_key(mvm, vif, sta, keyconf, !mcast);
-+		if (ret) {
-+			__clear_bit(keyconf->hw_key_idx, mvm->fw_key_table);
-+			__iwl_mvm_remove_sta_key(mvm, sta_id, keyconf, mcast);
-+		}
-+	}
- 
- end:
- 	IWL_DEBUG_WEP(mvm, "key: cipher=%x len=%d idx=%d sta=%pM ret=%d\n",
-@@ -1331,7 +1359,9 @@ int iwl_mvm_remove_sta_key(struct iwl_mvm *mvm,
- 			   struct ieee80211_sta *sta,
- 			   struct ieee80211_key_conf *keyconf)
- {
-+	bool mcast = !(keyconf->flags & IEEE80211_KEY_FLAG_PAIRWISE);
- 	u8 sta_id;
-+	int ret;
- 
- 	lockdep_assert_held(&mvm->mutex);
- 
-@@ -1373,7 +1403,16 @@ int iwl_mvm_remove_sta_key(struct iwl_mvm *mvm,
- 	if (WARN_ON_ONCE(iwl_mvm_sta_from_mac80211(sta)->vif != vif))
- 		return -EINVAL;
- 
--	return __iwl_mvm_remove_sta_key(mvm, sta_id, keyconf);
-+	ret = __iwl_mvm_remove_sta_key(mvm, sta_id, keyconf, mcast);
-+	if (ret)
-+		return ret;
-+
-+	/* delete WEP key twice to get rid of (now useless) offset */
-+	if (keyconf->cipher == WLAN_CIPHER_SUITE_WEP40 ||
-+	    keyconf->cipher == WLAN_CIPHER_SUITE_WEP104)
-+		ret = __iwl_mvm_remove_sta_key(mvm, sta_id, keyconf, !mcast);
-+
-+	return ret;
- }
- 
- void iwl_mvm_update_tkip_key(struct iwl_mvm *mvm,
-@@ -1384,6 +1423,7 @@ void iwl_mvm_update_tkip_key(struct iwl_mvm *mvm,
- {
- 	struct iwl_mvm_sta *mvm_sta;
- 	u8 sta_id = iwl_mvm_get_key_sta_id(vif, sta);
-+	bool mcast = !(keyconf->flags & IEEE80211_KEY_FLAG_PAIRWISE);
- 
- 	if (WARN_ON_ONCE(sta_id == IWL_MVM_STATION_COUNT))
- 		return;
-@@ -1399,7 +1439,7 @@ void iwl_mvm_update_tkip_key(struct iwl_mvm *mvm,
- 	}
- 
- 	mvm_sta = iwl_mvm_sta_from_mac80211(sta);
--	iwl_mvm_send_sta_key(mvm, mvm_sta, keyconf,
-+	iwl_mvm_send_sta_key(mvm, mvm_sta, keyconf, mcast,
- 			     iv32, phase1key, CMD_ASYNC);
- 	rcu_read_unlock();
- }
--- 
-1.9.1
-
+Johan
