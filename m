@@ -1,54 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58283 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932844AbaKMNmY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Nov 2014 08:42:24 -0500
-Date: Thu, 13 Nov 2014 14:39:28 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] cfg80211: remove net-pf-16-proto-16-family-nl80211
- module alias
-Message-ID: <20141113133928.GC1926@redhat.com> (sfid-20141113_144227_815239_A481DC7D)
-References: <20141113123313.GA1926@redhat.com>
- <1415882683.2021.3.camel@sipsolutions.net>
- <20141113132252.GB1926@redhat.com>
- <252AB6B9-9D33-4932-B75F-D3B2B057D3C0@holtmann.org>
+Received: from mail-lb0-f179.google.com ([209.85.217.179]:41626 "EHLO
+	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754150AbaKSJlI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Nov 2014 04:41:08 -0500
+Received: by mail-lb0-f179.google.com with SMTP id l4so165708lbv.24
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Nov 2014 01:41:07 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <252AB6B9-9D33-4932-B75F-D3B2B057D3C0@holtmann.org>
+In-Reply-To: <CAKxAHQ4intUoy2qv9ftTJL_c2JN3kYn8bC_Jk9=93rvvXNE80Q@mail.gmail.com>
+References: <CANoib0HW2umPpzzerYNq1fMMnkYxOa78o5X90-K=eNEnTGSO1w@mail.gmail.com>
+ <F01422F2-5F7C-406A-A06B-2C2CE96B9E3A@holtmann.org> <546C3CCE.400@gmail.com> <CAKxAHQ4intUoy2qv9ftTJL_c2JN3kYn8bC_Jk9=93rvvXNE80Q@mail.gmail.com>
+From: Michel Memeteau - EKIMIA <contact@ekimia.fr>
+Date: Wed, 19 Nov 2014 10:40:50 +0100
+Message-ID: <CAKxAHQ5wDG=Bi4bLUsN5A9r4Y82444Ysnuppy+8REf7qUh1nmg@mail.gmail.com> (sfid-20141119_104139_594938_1B00BB32)
+Subject: Re: [PATCH v3] ath3k: Add support of MCI 13d3:3408 bt device
+To: Dmitry Tunin <hanipouspilot@gmail.com>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+Hi,
 
-On Thu, Nov 13, 2014 at 10:36:17PM +0900, Marcel Holtmann wrote:
-> > With the alias cfg80211 module is loaded on systems without the wireless
-> > hardware when user-space use nl80211 to discover if there are wireless
-> > devices, what is considered as resources wastage. On systems with
-> > wireless hardware cfg80211 module will be loaded anyway.
-> > 
-> > Cc: Marcel Holtmann <marcel@holtmann.org>
-> > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> > ---
-> > net/wireless/core.c | 1 -
-> > 1 file changed, 1 deletion(-)
-> > 
-> > diff --git a/net/wireless/core.c b/net/wireless/core.c
-> > index a4d2792..badcabe 100644
-> > --- a/net/wireless/core.c
-> > +++ b/net/wireless/core.c
-> > @@ -34,7 +34,6 @@
-> > MODULE_AUTHOR("Johannes Berg");
-> > MODULE_LICENSE("GPL");
-> > MODULE_DESCRIPTION("wireless configuration support");
-> > -MODULE_ALIAS_GENL_FAMILY(NL80211_GENL_NAME);
-> 
-> NAK.
-> 
-> We want to auto-load cfg80211 when userspace asked for nl80211 netlink family.
+I tried to understand why this "0x13d3, 0x3408" device support
+wouldn't go in btusb as it's really close to IMC BT chip found in
+Realtek Wifi devices which is on the path to go in btusb [1]
 
-Could you elaborate more why?
+then I guess there is a lot of code that could be shared to support
+all IMC usb devices in the btusb module.
 
-Stanislaw
+Regards.
+
+[1] https://github.com/lwfinger/rtl8723au_bt/tree/new
+
+ <------------------------------------------------------------------------------------------------------------------>
+ Michel Memeteau  - Directeur.
+
+ Notre Boutique Ordinateurs GNU/Linux : http://shop.ekimia.fr
+ 49 chemin de l'union 13720 La Bouilladisse - France.
+ Fixe :  +33 (0) 972308334   Mobile : +33(0) 624808051
+ <------------------------------------------------------------------------------------------------------------------>
+
+ 2014-11-19 7:46 GMT+01:00 Dmitry Tunin <hanipouspilot@gmail.com>:
+>
+> Hi Marcel,
+>
+> Here is information from /sys/kernel/debug/usb/devices
+>
+> T:  Bus=01 Lev=02 Prnt=03 Port=00 Cnt=01 Dev#= 20 Spd=12 MxCh= 0
+> D:  Ver= 1.10 Cls=e0(wlcon) Sub=01 Prot=01 MxPS=64 #Cfgs= 1
+> P:  Vendor=13d3 ProdID=3408 Rev= 0.02
+> C:* #Ifs= 2 Cfg#= 1 Atr=e0 MxPwr=100mA
+> A:  FirstIf#= 0 IfCount= 2 Cls=e0(wlcon) Sub=01 Prot=01
+> I:* If#= 0 Alt= 0 #EPs= 3 Cls=e0(wlcon) Sub=01 Prot=01 Driver=btusb
+> E:  Ad=81(I) Atr=03(Int.) MxPS=  16 Ivl=1ms
+> E:  Ad=82(I) Atr=02(Bulk) MxPS=  64 Ivl=0ms
+> E:  Ad=02(O) Atr=02(Bulk) MxPS=  64 Ivl=0ms
+> I:* If#= 1 Alt= 0 #EPs= 2 Cls=e0(wlcon) Sub=01 Prot=01 Driver=btusb
+> E:  Ad=83(I) Atr=01(Isoc) MxPS=   0 Ivl=1ms
+> E:  Ad=03(O) Atr=01(Isoc) MxPS=   0 Ivl=1ms
+> I:  If#= 1 Alt= 1 #EPs= 2 Cls=e0(wlcon) Sub=01 Prot=01 Driver=btusb
+> E:  Ad=83(I) Atr=01(Isoc) MxPS=   9 Ivl=1ms
+> E:  Ad=03(O) Atr=01(Isoc) MxPS=   9 Ivl=1ms
+> I:  If#= 1 Alt= 2 #EPs= 2 Cls=e0(wlcon) Sub=01 Prot=01 Driver=btusb
+> E:  Ad=83(I) Atr=01(Isoc) MxPS=  17 Ivl=1ms
+> E:  Ad=03(O) Atr=01(Isoc) MxPS=  17 Ivl=1ms
+> I:  If#= 1 Alt= 3 #EPs= 2 Cls=e0(wlcon) Sub=01 Prot=01 Driver=btusb
+> E:  Ad=83(I) Atr=01(Isoc) MxPS=  25 Ivl=1ms
+> E:  Ad=03(O) Atr=01(Isoc) MxPS=  25 Ivl=1ms
+> I:  If#= 1 Alt= 4 #EPs= 2 Cls=e0(wlcon) Sub=01 Prot=01 Driver=btusb
+> E:  Ad=83(I) Atr=01(Isoc) MxPS=  33 Ivl=1ms
+> E:  Ad=03(O) Atr=01(Isoc) MxPS=  33 Ivl=1ms
+> I:  If#= 1 Alt= 5 #EPs= 2 Cls=e0(wlcon) Sub=01 Prot=01 Driver=btusb
+> E:  Ad=83(I) Atr=01(Isoc) MxPS=  49 Ivl=1ms
+> E:  Ad=03(O) Atr=01(Isoc) MxPS=  49 Ivl=1ms
+>
+>
+> I hope this mail client is OK now.
+>
+> Add support for bluetooth MCI WB335 (AR9565) Wi-Fi+bt module.
+> It is AR3011 device according to iProduct == 0.
+> So btusb should be blacklisted
+> I submitted a wrong patch before asif  it was an AR3012 device,
+> but it works both ways. This is the right one.
+>
+> Signed-off-by: Dmitry Tunin<hanipouspilot@gmail.com>
+>
+> ---
+>
+> diff --git a/drivers/bluetooth/ath3k.c b/drivers/bluetooth/ath3k.c
+> index d85ced2..3b53116 100644
+> --- a/drivers/bluetooth/ath3k.c
+> +++ b/drivers/bluetooth/ath3k.c
+> @@ -69,6 +69,7 @@ static const struct usb_device_id ath3k_table[] = {
+>      { USB_DEVICE(0x0CF3, 0x3002) },
+>      { USB_DEVICE(0x0CF3, 0xE019) },
+>      { USB_DEVICE(0x13d3, 0x3304) },
+> +    { USB_DEVICE(0x13d3, 0x3408) },
+>
+>      /* Atheros AR9285 Malbec with sflash firmware */
+>      { USB_DEVICE(0x03F0, 0x311D) },
+> diff --git a/drivers/bluetooth/btusb.c b/drivers/bluetooth/btusb.c
+> index edfc17b..bbf5c1c 100644
+> --- a/drivers/bluetooth/btusb.c
+> +++ b/drivers/bluetooth/btusb.c
+> @@ -146,6 +146,7 @@ static const struct usb_device_id blacklist_table[] = {
+>      { USB_DEVICE(0x0cf3, 0x3002), .driver_info = BTUSB_IGNORE },
+>      { USB_DEVICE(0x0cf3, 0xe019), .driver_info = BTUSB_IGNORE },
+>      { USB_DEVICE(0x13d3, 0x3304), .driver_info = BTUSB_IGNORE },
+> +    { USB_DEVICE(0x13d3, 0x3408), .driver_info = BTUSB_IGNORE },
+>
+>      /* Atheros AR9285 Malbec with sflash firmware */
+>      { USB_DEVICE(0x03f0, 0x311d), .driver_info = BTUSB_IGNORE },
+>
+>
+> 19.11.2014 01:56, Marcel Holtmann wrote:
+>>
+>> Hi Dmitry,
+>>
+>>> Add support for bluetooth MCI WB335 (AR9565) Wi-Fi+bt module.
+>>> It is AR3011 device according to iProduct == 0.
+>>> So btusb should be blacklisted
+>>> I submitted a wrong patch before asif  it was an AR3012 device,
+>>> but it works both ways. This is the right one.
+>>
+>> include the device details from /sys/kernel/debug/usb/devices.
+>>
+>>> Signed-off-by: Dmitry Tunin <hanipouspilot@gmail.com>
+>>> are */
+>>
+>> No idea what this are */ is.
+>>
+>>> ---
+>>>
+>>> diff --git a/drivers/bluetooth/ath3k.c b/drivers/bluetooth/ath3k.c
+>>> index d85ced2..3b53116 100644
+>>> --- a/drivers/bluetooth/ath3k.c
+>>> +++ b/drivers/bluetooth/ath3k.c
+>>> @@ -69,6 +69,7 @@ static const struct usb_device_id ath3k_table[] = {
+>>>   { USB_DEVICE(0x0CF3, 0x3002) },
+>>>   { USB_DEVICE(0x0CF3, 0xE019) },
+>>>   { USB_DEVICE(0x13d3, 0x3304) },
+>>> + { USB_DEVICE(0x13d3, 0x3408) },
+>>>
+>>>   /* Atheros AR9285 Malbec with sflash firmware */
+>>>   { USB_DEVICE(0x03F0, 0x311D) },
+>>> diff --git a/drivers/bluetooth/btusb.c b/drivers/bluetooth/btusb.c
+>>> index edfc17b..bbf5c1c 100644
+>>> --- a/drivers/bluetooth/btusb.c
+>>> +++ b/drivers/bluetooth/btusb.c
+>>> @@ -146,6 +146,7 @@ static const struct usb_device_id blacklist_table[] = {
+>>   { USB_DEVICE(0x0cf3, 0x3002), .driver_info = BTUSB_IGNORE },
+>>>   { USB_DEVICE(0x0cf3, 0xe019), .driver_info = BTUSB_IGNORE },
+>>>   { USB_DEVICE(0x13d3, 0x3304), .driver_info = BTUSB_IGNORE },
+>>> + { USB_DEVICE(0x13d3, 0x3408), .driver_info = BTUSB_IGNORE },
+>>
+>> Fix whitespace here or use a proper mail client.
+>>
+>> Regards
+>>
+>> Marcel
+>>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-bluetooth" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
