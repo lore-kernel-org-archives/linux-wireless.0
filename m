@@ -1,50 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:19373 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752457AbaKDJhg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Nov 2014 04:37:36 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH v2] mac80211: Increase uapsd max SP frames number
-Date: Tue,  4 Nov 2014 11:33:04 +0200
-Message-Id: <1415093584-12767-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20141104_103742_207958_4BA8E894)
+Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:59379
+	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756284AbaKSTIQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Nov 2014 14:08:16 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: [PATCH v2 1/7] mac80211: minstrel_ht: move aggregation check to .get_rate()
+Date: Wed, 19 Nov 2014 20:08:07 +0100
+Message-Id: <1416424093-19439-1-git-send-email-nbd@openwrt.org> (sfid-20141119_200825_085239_61F71084)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Preparation for adding a no-skb tx status path
 
-Deliver up to 128 frames during SP instead of 8 if unlimited
-max SP is specified during association.
-8 was just an arbitrary value, so is 128 since unlimited can
-be any number.
-However for large traffic bursts, increasing this value looks
-reasonable. Also, it seems that a few certification tests
-expect more frames to be delivered during SP.
-
-Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
-v2: change commit message
----
- net/mac80211/sta_info.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ net/mac80211/rc80211_minstrel_ht.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index de494df..3352741 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -1531,7 +1531,7 @@ void ieee80211_sta_ps_deliver_uapsd(struct sta_info *sta)
- 		break;
- 	case 0:
- 		/* XXX: what is a good value? */
--		n_frames = 8;
-+		n_frames = 128;
- 		break;
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index 62ff7cf..2641dc8 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -782,9 +782,6 @@ minstrel_ht_tx_status(void *priv, struct ieee80211_supported_band *sband,
+ 	if (time_after(jiffies, mi->stats_update + (mp->update_interval / 2 * HZ) / 1000)) {
+ 		update = true;
+ 		minstrel_ht_update_stats(mp, mi);
+-		if (!(info->flags & IEEE80211_TX_CTL_AMPDU) &&
+-		    mi->max_prob_rate / MCS_GROUP_RATES != MINSTREL_CCK_GROUP)
+-			minstrel_aggr_check(sta, skb);
  	}
  
+ 	if (update)
+@@ -1026,6 +1023,10 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
+ 	if (!msp->is_ht)
+ 		return mac80211_minstrel.get_rate(priv, sta, &msp->legacy, txrc);
+ 
++	if (!(info->flags & IEEE80211_TX_CTL_AMPDU) &&
++	    mi->max_prob_rate / MCS_GROUP_RATES != MINSTREL_CCK_GROUP)
++		minstrel_aggr_check(sta, txrc->skb);
++
+ 	info->flags |= mi->tx_flags;
+ 	minstrel_ht_check_cck_shortpreamble(mp, mi, txrc->short_preamble);
+ 
 -- 
-1.9.1
+2.1.2
 
