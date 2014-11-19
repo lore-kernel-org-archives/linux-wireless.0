@@ -1,62 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f175.google.com ([209.85.213.175]:55375 "EHLO
-	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754568AbaKNW32 (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:61325 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932271AbaKSVNU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Nov 2014 17:29:28 -0500
-Received: by mail-ig0-f175.google.com with SMTP id h15so522484igd.8
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Nov 2014 14:29:27 -0800 (PST)
-Date: Fri, 14 Nov 2014 14:29:25 -0800
-From: Dmitry Torokhov <dtor@chromium.org>
-To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
-Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	Clement Perrochaud <clement.perrochaud@nxp.com>,
-	Arron Wang <arron.wang@intel.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] NFC: pn544: i2c: fix error handling of irq_of_parse_and_map
-Message-ID: <20141114222925.GA334@dtor-ws> (sfid-20141114_232944_010549_F25C9973)
+	Wed, 19 Nov 2014 16:13:20 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH for-3.18] brcmfmac: don't include linux/unaligned/access_ok.h
+Date: Wed, 19 Nov 2014 22:13:10 +0100
+Message-ID: <1416431594-13993-1-git-send-email-arend@broadcom.com> (sfid-20141119_221327_526226_ED71F69C)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Return value of irq_of_parse_and_map() is unsigned int, with 0
-indicating failure, so testing for negative result never works.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Dmitry Torokhov <dtor@chromium.org>
+This is a specific implementation, <asm/unaligned.h> is the
+multiplexer that has the arch-specific knowledge of which
+of the implementations needs to be used, so include that.
+
+This issue was revealed by kbuild testing
+when <asm/unaligned.h> was added in <linux/ieee80211.h>
+resulting in redefinition of get_unaligned_be16 (and
+probably others).
+
+Cc: stable@vger.kernel.org # v3.17
+Reported-by: Fengguang Wu <fengguang.wu@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
+ drivers/net/wireless/brcm80211/brcmfmac/pcie.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Not tested, found by casual code inspection.
-
- drivers/nfc/pn544/i2c.c | 9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/nfc/pn544/i2c.c b/drivers/nfc/pn544/i2c.c
-index 440291a..cfb3f0b 100644
---- a/drivers/nfc/pn544/i2c.c
-+++ b/drivers/nfc/pn544/i2c.c
-@@ -918,13 +918,12 @@ static int pn544_hci_i2c_of_request_resources(struct i2c_client *client)
- 	}
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
+index 8c0632e..16fef33 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
+@@ -19,10 +19,10 @@
+ #include <linux/pci.h>
+ #include <linux/vmalloc.h>
+ #include <linux/delay.h>
+-#include <linux/unaligned/access_ok.h>
+ #include <linux/interrupt.h>
+ #include <linux/bcma/bcma.h>
+ #include <linux/sched.h>
++#include <asm/unaligned.h>
  
- 	/* IRQ */
--	ret = irq_of_parse_and_map(pp, 0);
--	if (ret < 0) {
--		nfc_err(&client->dev,
--			"Unable to get irq, error: %d\n", ret);
-+	client->irq = irq_of_parse_and_map(pp, 0);
-+	if (!client->irq) {
-+		nfc_err(&client->dev, "Unable to get irq\n");
-+		ret = -EINVAL;
- 		goto err_gpio_fw;
- 	}
--	client->irq = ret;
- 
- 	return 0;
- 
+ #include <soc.h>
+ #include <chipcommon.h>
 -- 
-2.1.0.rc2.206.gedb03e5
+1.9.1
 
-
--- 
-Dmitry
