@@ -1,52 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f45.google.com ([209.85.215.45]:63082 "EHLO
-	mail-la0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754293AbaKRWvP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Nov 2014 17:51:15 -0500
-MIME-Version: 1.0
-Date: Wed, 19 Nov 2014 02:51:12 +0400
-Message-ID: <CANoib0HW2umPpzzerYNq1fMMnkYxOa78o5X90-K=eNEnTGSO1w@mail.gmail.com> (sfid-20141118_235131_424876_DF6C4993)
-Subject: [PATCH v2] ath3k: Add support of MCI 13d3:3408 bt device
-From: Dmitry Tunin <hanipouspilot@gmail.com>
-To: linux-bluetooth@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:49377 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751406AbaKTUJX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Nov 2014 15:09:23 -0500
+Message-ID: <1416514153.8557.9.camel@sipsolutions.net> (sfid-20141120_210926_712664_05A4FC83)
+Subject: Re: wireless-testing: unknown symbol 'wiphy_new'
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 20 Nov 2014 21:09:13 +0100
+In-Reply-To: <546E48DF.9020908@broadcom.com>
+References: <546DEAE5.80904@broadcom.com>
+	 <1416489794.8557.0.camel@sipsolutions.net> <546E48DF.9020908@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add support for bluetooth MCI WB335 (AR9565) Wi-Fi+bt module.
-It is AR3011 device according to iProduct == 0.
-So btusb should be blacklisted
-I submitted a wrong patch before asif  it was an AR3012 device,
-but it works both ways. This is the right one.
+On Thu, 2014-11-20 at 21:02 +0100, Arend van Spriel wrote:
+> On 11/20/14 14:23, Johannes Berg wrote:
+> > On Thu, 2014-11-20 at 14:21 +0100, Arend van Spriel wrote:
+> >> Build a fresh kernel today, ie. 3.18-rc5-wl from wireless-testing and
+> >> got the following message while building brcmfmac:
+> >>
+> >>     LD [M]  drivers/net/wireless/brcm80211/brcmfmac/brcmfmac.o
+> >>     Building modules, stage 2.
+> >>     MODPOST 2 modules
+> >> WARNING: "wiphy_new"
+> >> [drivers/net/wireless/brcm80211/brcmfmac/brcmfmac.ko] undefined!
+> >>
+> >> Did not sound encouraging to continue, but did anyway. Not surprisingly
+> >> the insmod failed. Checking Module.symvers showed:
+> >>
+> >> [arend@lb-bun-235 ~/scm/brcm80211-next]
+> >> $ grep wiphy_new Module.symvers
+> >> 0xba575a46	wiphy_new_nm	net/wireless/cfg80211	EXPORT_SYMBOL
+> >>
+> >> Rings a bell? We renamed the file wl_cfg80211.c that does wiphy_new()
+> >> call to cfg80211.c. Merge issue?
+> >
+> > It's probably just a build issue?
+> >
+> > wiphy_new() is a static inline pointing to wiphy_new_nm()
+> 
+> Indeed a build issue, but wiphy_new_nm() was recently introduced, right? 
+> Well, actually we were on 3.18-rc1 wireless-testing before I merged today.
 
-Signed-off-by: Dmitry Tunin <hanipouspilot@gmail.com>
-are */
+Yes, it was recently introduced, but it sounds like you merged and
+didn't get a full rebuild?
 
----
+johannes
 
-diff --git a/drivers/bluetooth/ath3k.c b/drivers/bluetooth/ath3k.c
-index d85ced2..3b53116 100644
---- a/drivers/bluetooth/ath3k.c
-+++ b/drivers/bluetooth/ath3k.c
-@@ -69,6 +69,7 @@ static const struct usb_device_id ath3k_table[] = {
-  { USB_DEVICE(0x0CF3, 0x3002) },
-  { USB_DEVICE(0x0CF3, 0xE019) },
-  { USB_DEVICE(0x13d3, 0x3304) },
-+ { USB_DEVICE(0x13d3, 0x3408) },
-
-  /* Atheros AR9285 Malbec with sflash firmware */
-  { USB_DEVICE(0x03F0, 0x311D) },
-diff --git a/drivers/bluetooth/btusb.c b/drivers/bluetooth/btusb.c
-index edfc17b..bbf5c1c 100644
---- a/drivers/bluetooth/btusb.c
-+++ b/drivers/bluetooth/btusb.c
-@@ -146,6 +146,7 @@ static const struct usb_device_id blacklist_table[] = {
-  { USB_DEVICE(0x0cf3, 0x3002), .driver_info = BTUSB_IGNORE },
-  { USB_DEVICE(0x0cf3, 0xe019), .driver_info = BTUSB_IGNORE },
-  { USB_DEVICE(0x13d3, 0x3304), .driver_info = BTUSB_IGNORE },
-+ { USB_DEVICE(0x13d3, 0x3408), .driver_info = BTUSB_IGNORE },
-
-  /* Atheros AR9285 Malbec with sflash firmware */
-  { USB_DEVICE(0x03f0, 0x311d), .driver_info = BTUSB_IGNORE },
