@@ -1,166 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:37624 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932262AbaKXOgK (ORCPT
+Received: from mail-wg0-f43.google.com ([74.125.82.43]:54625 "EHLO
+	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755664AbaKTPxR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2014 09:36:10 -0500
-Received: by mail-wg0-f44.google.com with SMTP id b13so12474803wgh.31
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:36:09 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Arik Nemtsov <arik@wizery.com>,
-	Arik Nemtsov <arikx.nemtsov@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 44/75] iwlwifi: mvm: allow private per-STA TFD queues
-Date: Mon, 24 Nov 2014 16:34:20 +0200
-Message-Id: <1416839691-28533-44-git-send-email-egrumbach@gmail.com> (sfid-20141124_153858_366204_672DB74D)
-In-Reply-To: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
-References: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
+	Thu, 20 Nov 2014 10:53:17 -0500
+Received: by mail-wg0-f43.google.com with SMTP id l18so4144930wgh.2
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Nov 2014 07:53:16 -0800 (PST)
+From: Kristian Evensen <kristian.evensen@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, akarwar@marvell.com,
+	patila@marvell.com
+Cc: Kristian Evensen <kristian.evensen@gmail.com>
+Subject: [PATCH] mwifiex: Add USB8766 support
+Date: Thu, 20 Nov 2014 16:52:58 +0100
+Message-Id: <1416498778-18742-1-git-send-email-kristian.evensen@gmail.com> (sfid-20141120_165323_886969_0A7318FB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+From: Kristian Evensen <kristian.evensen@gmail.com>
 
-TDLS stations will have private queues, so consider them as well when
-allocating a new one. Consolidate the HW-queue iterating code into
-a single exported function, to be used by the TDLS code in the future.
+Adds new VID/PID for the Marvell 88W8766. The kernel currently only supports
+the device as PCI, but it is also available using USB. An example of a device
+delivered with the 88W8766 as USB is the Globalscale Mirabox.
 
-Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+TX buffer size is set to driver default (2K), as we do not know the firmware
+requirement.
+
+Signed-off-by: Kristian Evensen <kristian.evensen@gmail.com>
+Reviewed-by: Andrew Lunn <andrew@lunn.ch>
 ---
- drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c | 65 ++++++++++++++++++++++++-----
- drivers/net/wireless/iwlwifi/mvm/mvm.h      |  2 +
- 2 files changed, 57 insertions(+), 10 deletions(-)
+ drivers/net/wireless/mwifiex/Kconfig |  2 +-
+ drivers/net/wireless/mwifiex/usb.c   | 13 +++++++++++++
+ drivers/net/wireless/mwifiex/usb.h   |  3 +++
+ 3 files changed, 17 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-index b8ab4a1..a1dc9b8 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-@@ -83,11 +83,15 @@ struct iwl_mvm_mac_iface_iterator_data {
- 	struct ieee80211_vif *vif;
- 	unsigned long available_mac_ids[BITS_TO_LONGS(NUM_MAC_INDEX_DRIVER)];
- 	unsigned long available_tsf_ids[BITS_TO_LONGS(NUM_TSF_IDS)];
--	u32 used_hw_queues;
- 	enum iwl_tsf_id preferred_tsf;
- 	bool found_vif;
- };
+diff --git a/drivers/net/wireless/mwifiex/Kconfig b/drivers/net/wireless/mwifiex/Kconfig
+index e70d0df..aa01c9b 100644
+--- a/drivers/net/wireless/mwifiex/Kconfig
++++ b/drivers/net/wireless/mwifiex/Kconfig
+@@ -31,7 +31,7 @@ config MWIFIEX_PCIE
+ 	  mwifiex_pcie.
  
-+struct iwl_mvm_hw_queues_iface_iterator_data {
-+	struct ieee80211_vif *exclude_vif;
-+	unsigned long used_hw_queues;
-+};
-+
- static void iwl_mvm_mac_tsf_id_iter(void *_data, u8 *mac,
- 				    struct ieee80211_vif *vif)
- {
-@@ -213,6 +217,54 @@ u32 iwl_mvm_mac_get_queues_mask(struct ieee80211_vif *vif)
- 	return qmask;
- }
+ config MWIFIEX_USB
+-	tristate "Marvell WiFi-Ex Driver for USB8797/8897"
++	tristate "Marvell WiFi-Ex Driver for USB8766/8797/8897"
+ 	depends on MWIFIEX && USB
+ 	select FW_LOADER
+ 	---help---
+diff --git a/drivers/net/wireless/mwifiex/usb.c b/drivers/net/wireless/mwifiex/usb.c
+index 4371e12..710dbd9 100644
+--- a/drivers/net/wireless/mwifiex/usb.c
++++ b/drivers/net/wireless/mwifiex/usb.c
+@@ -27,6 +27,11 @@ static struct mwifiex_if_ops usb_ops;
+ static struct semaphore add_remove_card_sem;
  
-+static void iwl_mvm_iface_hw_queues_iter(void *_data, u8 *mac,
-+					 struct ieee80211_vif *vif)
-+{
-+	struct iwl_mvm_hw_queues_iface_iterator_data *data = _data;
-+
-+	/* exclude the given vif */
-+	if (vif == data->exclude_vif)
-+		return;
-+
-+	data->used_hw_queues |= iwl_mvm_mac_get_queues_mask(vif);
-+}
-+
-+static void iwl_mvm_mac_sta_hw_queues_iter(void *_data,
-+					   struct ieee80211_sta *sta)
-+{
-+	struct iwl_mvm_hw_queues_iface_iterator_data *data = _data;
-+	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
-+
-+	/* Mark the queues used by the sta */
-+	data->used_hw_queues |= mvmsta->tfd_queue_msk;
-+}
-+
-+unsigned long iwl_mvm_get_used_hw_queues(struct iwl_mvm *mvm,
-+					 struct ieee80211_vif *exclude_vif)
-+{
-+	struct iwl_mvm_hw_queues_iface_iterator_data data = {
-+		.exclude_vif = exclude_vif,
-+		.used_hw_queues =
-+			BIT(IWL_MVM_OFFCHANNEL_QUEUE) |
-+			BIT(mvm->aux_queue) |
-+			BIT(IWL_MVM_CMD_QUEUE),
-+	};
-+
-+	lockdep_assert_held(&mvm->mutex);
-+
-+	/* mark all VIF used hw queues */
-+	ieee80211_iterate_active_interfaces_atomic(
-+		mvm->hw, IEEE80211_IFACE_ITER_RESUME_ALL,
-+		iwl_mvm_iface_hw_queues_iter, &data);
-+
-+	/* don't assign the same hw queues as TDLS stations */
-+	ieee80211_iterate_stations_atomic(mvm->hw,
-+					  iwl_mvm_mac_sta_hw_queues_iter,
-+					  &data);
-+
-+	return data.used_hw_queues;
-+}
-+
- static void iwl_mvm_mac_iface_iterator(void *_data, u8 *mac,
- 				       struct ieee80211_vif *vif)
- {
-@@ -225,9 +277,6 @@ static void iwl_mvm_mac_iface_iterator(void *_data, u8 *mac,
- 		return;
- 	}
+ static struct usb_device_id mwifiex_usb_table[] = {
++	/* 8766 */
++	{USB_DEVICE(USB8XXX_VID, USB8766_PID_1)},
++	{USB_DEVICE_AND_INTERFACE_INFO(USB8XXX_VID, USB8766_PID_2,
++				       USB_CLASS_VENDOR_SPEC,
++				       USB_SUBCLASS_VENDOR_SPEC, 0xff)},
+ 	/* 8797 */
+ 	{USB_DEVICE(USB8XXX_VID, USB8797_PID_1)},
+ 	{USB_DEVICE_AND_INTERFACE_INFO(USB8XXX_VID, USB8797_PID_2,
+@@ -348,10 +353,12 @@ static int mwifiex_usb_probe(struct usb_interface *intf,
  
--	/* Mark the queues used by the vif */
--	data->used_hw_queues |= iwl_mvm_mac_get_queues_mask(vif);
--
- 	/* Mark MAC IDs as used by clearing the available bit, and
- 	 * (below) mark TSFs as used if their existing use is not
- 	 * compatible with the new interface type.
-@@ -274,10 +323,6 @@ static int iwl_mvm_mac_ctxt_allocate_resources(struct iwl_mvm *mvm,
- 		.available_tsf_ids = { (1 << NUM_TSF_IDS) - 1 },
- 		/* no preference yet */
- 		.preferred_tsf = NUM_TSF_IDS,
--		.used_hw_queues =
--			BIT(IWL_MVM_OFFCHANNEL_QUEUE) |
--			BIT(mvm->aux_queue) |
--			BIT(IWL_MVM_CMD_QUEUE),
- 		.found_vif = false,
- 	};
- 	u32 ac;
-@@ -316,6 +361,8 @@ static int iwl_mvm_mac_ctxt_allocate_resources(struct iwl_mvm *mvm,
- 		mvm->hw, IEEE80211_IFACE_ITER_RESUME_ALL,
- 		iwl_mvm_mac_iface_iterator, &data);
+ 	/* PID_1 is used for firmware downloading only */
+ 	switch (id_product) {
++	case USB8766_PID_1:
+ 	case USB8797_PID_1:
+ 	case USB8897_PID_1:
+ 		card->usb_boot_state = USB8XXX_FW_DNLD;
+ 		break;
++	case USB8766_PID_2:
+ 	case USB8797_PID_2:
+ 	case USB8897_PID_2:
+ 		card->usb_boot_state = USB8XXX_FW_READY;
+@@ -780,6 +787,11 @@ static int mwifiex_register_dev(struct mwifiex_adapter *adapter)
+ 		adapter->tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_4K;
+ 		strcpy(adapter->fw_name, USB8897_DEFAULT_FW_NAME);
+ 		break;
++	case USB8766_PID_1:
++	case USB8766_PID_2:
++		adapter->tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_2K;
++		strcpy(adapter->fw_name, USB8766_DEFAULT_FW_NAME);
++		break;
+ 	case USB8797_PID_1:
+ 	case USB8797_PID_2:
+ 	default:
+@@ -1048,5 +1060,6 @@ MODULE_AUTHOR("Marvell International Ltd.");
+ MODULE_DESCRIPTION("Marvell WiFi-Ex USB Driver version" USB_VERSION);
+ MODULE_VERSION(USB_VERSION);
+ MODULE_LICENSE("GPL v2");
++MODULE_FIRMWARE(USB8766_DEFAULT_FW_NAME);
+ MODULE_FIRMWARE(USB8797_DEFAULT_FW_NAME);
+ MODULE_FIRMWARE(USB8897_DEFAULT_FW_NAME);
+diff --git a/drivers/net/wireless/mwifiex/usb.h b/drivers/net/wireless/mwifiex/usb.h
+index 4c41c2a..a7cbba1 100644
+--- a/drivers/net/wireless/mwifiex/usb.h
++++ b/drivers/net/wireless/mwifiex/usb.h
+@@ -24,6 +24,8 @@
  
-+	used_hw_queues = iwl_mvm_get_used_hw_queues(mvm, vif);
-+
- 	/*
- 	 * In the case we're getting here during resume, it's similar to
- 	 * firmware restart, and with RESUME_ALL the iterator will find
-@@ -365,8 +412,6 @@ static int iwl_mvm_mac_ctxt_allocate_resources(struct iwl_mvm *mvm,
- 		return 0;
- 	}
+ #define USB8XXX_VID		0x1286
  
--	used_hw_queues = data.used_hw_queues;
--
- 	/* Find available queues, and allocate them to the ACs */
- 	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++) {
- 		u8 queue = find_first_zero_bit(&used_hw_queues,
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index be0285d..363be83 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -937,6 +937,8 @@ int iwl_mvm_rx_missed_beacons_notif(struct iwl_mvm *mvm,
- 				    struct iwl_device_cmd *cmd);
- void iwl_mvm_mac_ctxt_recalc_tsf_id(struct iwl_mvm *mvm,
- 				    struct ieee80211_vif *vif);
-+unsigned long iwl_mvm_get_used_hw_queues(struct iwl_mvm *mvm,
-+					 struct ieee80211_vif *exclude_vif);
++#define USB8766_PID_1		0x2041
++#define USB8766_PID_2		0x2042
+ #define USB8797_PID_1		0x2043
+ #define USB8797_PID_2		0x2044
+ #define USB8897_PID_1		0x2045
+@@ -37,6 +39,7 @@
+ #define MWIFIEX_RX_DATA_URB	6
+ #define MWIFIEX_USB_TIMEOUT	100
  
- /* Bindings */
- int iwl_mvm_binding_add_vif(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
++#define USB8766_DEFAULT_FW_NAME	"mrvl/usb8766_uapsta.bin"
+ #define USB8797_DEFAULT_FW_NAME	"mrvl/usb8797_uapsta.bin"
+ #define USB8897_DEFAULT_FW_NAME	"mrvl/usb8897_uapsta.bin"
+ 
 -- 
-1.9.1
+1.8.3.2
 
