@@ -1,79 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:47219 "EHLO bues.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751293AbaK1Xr4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Nov 2014 18:47:56 -0500
-Date: Sat, 29 Nov 2014 00:21:48 +0100
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Nicholas Krause <xerofoify@gmail.com>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	Network Development <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>
-Subject: Re: [PATCH] drivers:net:wireless: Add mutex locking for function,
- b43_op_beacon_set_time in main.c
-Message-ID: <20141129002148.1beb21d9@wiggum> (sfid-20141129_004759_784645_2A236E0B)
-In-Reply-To: <CACna6rxmOC0h9hOpa=5iWFM1THQ8Q4hCi8MnmqkZJbB_U0PJ0A@mail.gmail.com>
-References: <1417213013-19758-1-git-send-email-xerofoify@gmail.com>
-	<CACna6rxmOC0h9hOpa=5iWFM1THQ8Q4hCi8MnmqkZJbB_U0PJ0A@mail.gmail.com>
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:16085 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756658AbaKTV1G (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Nov 2014 16:27:06 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 0/4] brcm80211: minor rework
+Date: Thu, 20 Nov 2014 22:26:58 +0100
+Message-ID: <1416518822-29585-1-git-send-email-arend@broadcom.com> (sfid-20141120_222717_227651_0473A362)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/a9VZzheb11hdlXkyH8hfJby"; protocol="application/pgp-signature"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/a9VZzheb11hdlXkyH8hfJby
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+This series touches some minor stuff in both drivers. The first
+change was a report from Dan Carpenter which gets rid of smatch
+warning/error. In brcmsmac I extended the hardware info file
+contents in debugfs. The last patch solves a problem in brcmfmac
+that I came across during testing.
 
-On Fri, 28 Nov 2014 23:40:46 +0100
-Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wrote:
+The series is intended for 3.19 and applies to the master branch
+of the wireless-next repository.
 
-> > @@ -5094,8 +5094,9 @@ static int b43_op_beacon_set_tim(struct ieee80211=
-_hw *hw,
-> >  {
-> >         struct b43_wl *wl =3D hw_to_b43_wl(hw);
-> >
-> > -       /* FIXME: add locking */
-> > +       mutex_lock(&wl->mutex);
-> >         b43_update_templates(wl);
-> > +       mutex_unlock(&wl->mutex);
-> >
-> >         return 0;
-> >  }
->=20
-> Does anyone remember why this simple solution wasn't implemented
-> earlier? Michael?
+Arend van Spriel (4):
+  brcmfmac: fix static checker warning in pmklist handling
+  brcmutil: add helper function to format board revision
+  brcmsmac: extend hardware info shown in debugfs
+  brcmfmac: correct .disconnect() callback while connecting
 
-I think the callback used to be (is?) in atomic context.
+ drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c |  8 ++---
+ drivers/net/wireless/brcm80211/brcmsmac/debug.c    | 40 +++++++++++++++-------
+ drivers/net/wireless/brcm80211/brcmutil/utils.c    | 16 +++++++++
+ .../net/wireless/brcm80211/include/brcmu_utils.h   |  2 ++
+ 4 files changed, 49 insertions(+), 17 deletions(-)
 
-> Nicholas: did you test it anyhow?
+-- 
+1.9.1
 
---=20
-Michael
-
---Sig_/a9VZzheb11hdlXkyH8hfJby
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBAgAGBQJUeQOPAAoJEPUyvh2QjYsOko8P/j/erXMBLKii9IzxSByO5DCs
-jxsXn8p4OBE+e5K8uVEr7CSorMlzZCU+D7Vi9h6OiUS5TnXikKx1O2fE9SRLnm4A
-N7pc/3b1HuIUCtnOdQYIRJjFglU4Ng8TV4UHJwKtCEehlgIBp3DgaR9yECv+BCd1
-cYZxWy5+Acdh/OLMEdy73vNcSYAKxiJ8ViU1fSJCVuCxRN0Z5LP/DG0Hy2dnO7c/
-/TLBkbQ8JBkzyi0k6nczEVdR5/5K8X9EN3BzE0ZsJny0BRzsQKTcQvOdMx9CaFJn
-X2zP9X2PtYLCgyl33Vr0YLXX03VXNLzgzR68g6xOa2h0tKlylMB2gYuCr0S2NR2i
-F63MhHNRYgSMnbHxCH9IAJQstVZe3p0pArnriAElNCMJbMBnI5nWy+sHsqjdOp/L
-3sL5fWwWgMvtkVeTnrTZFZ+fA2cwK2+MSRPvc11N5v3dDnZBdkfUkgW7fEdWQP0J
-/XJCNWecIW0PtpNT1xsm2WEtaq75boGgfcGW8+HXAdVTy97a4H5+5Zwn2ZpRYWst
-ClN1W34bvm9akcPxUpDp/GZMd0ij7jeo112nXVKBEwQNO/HMgq2w6FyvnJoBQrk/
-CBybaHhL4bj5+DclI8YeDATI6DPOrPBZD2ospmAqxm8w+vUpd7/2Q0Upn5QfIAey
-uRCU1p7D7b28DFDvN8zB
-=ef5U
------END PGP SIGNATURE-----
-
---Sig_/a9VZzheb11hdlXkyH8hfJby--
