@@ -1,50 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:51864 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750828AbaKYTmp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Nov 2014 14:42:45 -0500
-Date: Tue, 25 Nov 2014 20:42:44 +0100
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jonathan Doron <jond@wizery.com>
-Subject: Re: [PATCH v3 2/3] cfg80211: allow wiphy specific regdomain
-	management
-Message-ID: <20141125194244.GK25677@wotan.suse.de> (sfid-20141125_204250_263149_3AD61E27)
-References: <1416754941-4439-1-git-send-email-arik@wizery.com> <1416754941-4439-2-git-send-email-arik@wizery.com>
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:16085 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757000AbaKTV1G (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Nov 2014 16:27:06 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 4/4] brcmfmac: correct .disconnect() callback while connecting
+Date: Thu, 20 Nov 2014 22:27:02 +0100
+Message-ID: <1416518822-29585-5-git-send-email-arend@broadcom.com> (sfid-20141120_222712_983411_1B03A37B)
+In-Reply-To: <1416518822-29585-1-git-send-email-arend@broadcom.com>
+References: <1416518822-29585-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1416754941-4439-2-git-send-email-arik@wizery.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Nov 23, 2014 at 05:02:20PM +0200, Arik Nemtsov wrote:
-> From: Jonathan Doron <jond@wizery.com>
-> 
-> Add a new regulatory flag that allows a driver to manage regdomain
-> changes/updates for its own wiphy.
-> A self-managed wiphys only employs regulatory information obtained from
-> the FW and driver and does not use other cfg80211 sources like
-> beacon-hints, country-code IEs and hints from other devices on the same
-> system. Conversely, a self-managed wiphy does not share its regulatory
-> hints with other devices in the system. If a system contains several
-> devices, one or more of which are self-managed, there might be
-> contradictory regulatory settings between them. Usage of flag is
-> generally discouraged. Only use it if the FW/driver is incompatible
-> with non-locally originated hints.
-> 
-> A new API lets the driver send a complete regdomain, to be applied on
-> its wiphy only.
-> 
-> After a wiphy-specific regdomain change takes place, usermode will get
-> a new type of change notification. The regulatory core also takes care
-> enforce regulatory restrictions, in case some interfaces are on
-> forbidden channels.
-> 
-> Signed-off-by: Jonathan Doron <jonathanx.doron@intel.com>
-> Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+When the driver has sent a join iovar to the firmware it waits
+for the events to report result of the connection. However, the
+wpa_supplicant will request a .disconnect() after a timeout. So
+upon calling .disconnect() the interface state may still be
+CONNECTING. Clear the CONNECTING bit as well.
 
-Reviewed-by: Luis R. Rodriguez <mcgrof@suse.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-  Luis
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
+index d1928de..0ea3125 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
+@@ -1815,6 +1815,7 @@ brcmf_cfg80211_disconnect(struct wiphy *wiphy, struct net_device *ndev,
+ 		return -EIO;
+ 
+ 	clear_bit(BRCMF_VIF_STATUS_CONNECTED, &ifp->vif->sme_state);
++	clear_bit(BRCMF_VIF_STATUS_CONNECTING, &ifp->vif->sme_state);
+ 	cfg80211_disconnected(ndev, reason_code, NULL, 0, GFP_KERNEL);
+ 
+ 	memcpy(&scbval.ea, &profile->bssid, ETH_ALEN);
+-- 
+1.9.1
+
