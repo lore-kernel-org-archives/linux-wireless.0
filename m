@@ -1,71 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:40763 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932189AbaKPAjt (ORCPT
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:42258 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757609AbaKTNbp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Nov 2014 19:39:49 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-	Miaoqing Pan <miaoqing@qca.qualcomm.com>
-Subject: [PATCH v2 06/11] ath9k: Fix thermometer programming
-Date: Sun, 16 Nov 2014 06:11:05 +0530
-Message-Id: <1416098470-14122-7-git-send-email-sujith@msujith.org> (sfid-20141116_013953_371573_DF3321B2)
-In-Reply-To: <1416098470-14122-1-git-send-email-sujith@msujith.org>
-References: <1416098470-14122-1-git-send-email-sujith@msujith.org>
+	Thu, 20 Nov 2014 08:31:45 -0500
+Received: by mail-wi0-f179.google.com with SMTP id ex7so5364502wid.6
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Nov 2014 05:31:44 -0800 (PST)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: nbd@openwrt.org, thomas@net.t-labs.tu-berlin.de, adrian@freebsd.org
+Subject: [RFC 1/3] ath9k: add chainmask parameter to ath9k_hw_get_scaled_power()
+Date: Thu, 20 Nov 2014 14:31:38 +0100
+Message-Id: <1416490300-6451-2-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20141120_143155_665529_8A2B72C7)
+In-Reply-To: <1416490300-6451-1-git-send-email-lorenzo.bianconi83@gmail.com>
+References: <1416490300-6451-1-git-send-email-lorenzo.bianconi83@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Add chainmask parameter to ath9k_hw_get_scaled_power() in order to compute
+maximum TX power per rate for different number of tx chains.
+ath9k_hw_get_scaled_power() will be used during TPC TX power initialization
 
-The registers that control the on-chip thermometer
-need to be programmed based on the chainmask that
-the solution supports, not the chainmask that is
-present in the eeprom.
-
-Cc: Miaoqing Pan <miaoqing@qca.qualcomm.com>
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 3 ++-
+ drivers/net/wireless/ath/ath9k/eeprom.c        | 4 ++--
+ drivers/net/wireless/ath/ath9k/eeprom.h        | 2 +-
+ drivers/net/wireless/ath/ath9k/eeprom_9287.c   | 3 ++-
+ drivers/net/wireless/ath/ath9k/eeprom_def.c    | 3 ++-
+ 5 files changed, 9 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 80c6eac..e726e40 100644
+index e726e40..96d7538 100644
 --- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
 +++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -4079,27 +4079,28 @@ static int ar9003_hw_get_thermometer(struct ath_hw *ah)
+@@ -5114,7 +5114,8 @@ static void ar9003_hw_set_power_per_rate_table(struct ath_hw *ah,
  
- static void ar9003_hw_thermometer_apply(struct ath_hw *ah)
+ 	ath9k_hw_get_channel_centers(ah, chan, &centers);
+ 	scaledPower = ath9k_hw_get_scaled_power(ah, powerLimit,
+-						antenna_reduction);
++						antenna_reduction,
++						ah->txchainmask);
+ 
+ 	if (is2ghz) {
+ 		/* Setup for CTL modes */
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom.c b/drivers/net/wireless/ath/ath9k/eeprom.c
+index 971d770..9304dca 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom.c
+@@ -308,7 +308,7 @@ u16 ath9k_hw_get_max_edge_power(u16 freq, struct cal_ctl_edges *pRdEdgesPower,
+ }
+ 
+ u16 ath9k_hw_get_scaled_power(struct ath_hw *ah, u16 power_limit,
+-			      u8 antenna_reduction)
++			      u8 antenna_reduction, u8 chainmask)
  {
-+	struct ath9k_hw_capabilities *pCap = &ah->caps;
- 	int thermometer = ar9003_hw_get_thermometer(ah);
- 	u8 therm_on = (thermometer < 0) ? 0 : 1;
+ 	u16 reduction = antenna_reduction;
  
- 	REG_RMW_FIELD(ah, AR_PHY_65NM_CH0_RXTX4,
- 		      AR_PHY_65NM_CH0_RXTX4_THERM_ON_OVR, therm_on);
--	if (ah->caps.tx_chainmask & BIT(1))
-+	if (pCap->chip_chainmask & BIT(1))
- 		REG_RMW_FIELD(ah, AR_PHY_65NM_CH1_RXTX4,
- 			      AR_PHY_65NM_CH0_RXTX4_THERM_ON_OVR, therm_on);
--	if (ah->caps.tx_chainmask & BIT(2))
-+	if (pCap->chip_chainmask & BIT(2))
- 		REG_RMW_FIELD(ah, AR_PHY_65NM_CH2_RXTX4,
- 			      AR_PHY_65NM_CH0_RXTX4_THERM_ON_OVR, therm_on);
+@@ -316,7 +316,7 @@ u16 ath9k_hw_get_scaled_power(struct ath_hw *ah, u16 power_limit,
+ 	 * Reduce scaled Power by number of chains active
+ 	 * to get the per chain tx power level.
+ 	 */
+-	switch (ar5416_get_ntxchains(ah->txchainmask)) {
++	switch (ar5416_get_ntxchains(chainmask)) {
+ 	case 1:
+ 		break;
+ 	case 2:
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
+index 40d4f62..f83bc0f 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom.h
++++ b/drivers/net/wireless/ath/ath9k/eeprom.h
+@@ -684,7 +684,7 @@ void ath9k_hw_get_target_powers(struct ath_hw *ah,
+ u16 ath9k_hw_get_max_edge_power(u16 freq, struct cal_ctl_edges *pRdEdgesPower,
+ 				bool is2GHz, int num_band_edges);
+ u16 ath9k_hw_get_scaled_power(struct ath_hw *ah, u16 power_limit,
+-			      u8 antenna_reduction);
++			      u8 antenna_reduction, u8 chainmask);
+ void ath9k_hw_update_regulatory_maxpower(struct ath_hw *ah);
+ int ath9k_hw_eeprom_init(struct ath_hw *ah);
  
- 	therm_on = (thermometer < 0) ? 0 : (thermometer == 0);
- 	REG_RMW_FIELD(ah, AR_PHY_65NM_CH0_RXTX4,
- 		      AR_PHY_65NM_CH0_RXTX4_THERM_ON, therm_on);
--	if (ah->caps.tx_chainmask & BIT(1)) {
-+	if (pCap->chip_chainmask & BIT(1)) {
- 		therm_on = (thermometer < 0) ? 0 : (thermometer == 1);
- 		REG_RMW_FIELD(ah, AR_PHY_65NM_CH1_RXTX4,
- 			      AR_PHY_65NM_CH0_RXTX4_THERM_ON, therm_on);
- 	}
--	if (ah->caps.tx_chainmask & BIT(2)) {
-+	if (pCap->chip_chainmask & BIT(2)) {
- 		therm_on = (thermometer < 0) ? 0 : (thermometer == 2);
- 		REG_RMW_FIELD(ah, AR_PHY_65NM_CH2_RXTX4,
- 			      AR_PHY_65NM_CH0_RXTX4_THERM_ON, therm_on);
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_9287.c b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
+index 5ba1385..beb5b6b 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_9287.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
+@@ -584,7 +584,8 @@ static void ath9k_hw_set_ar9287_power_per_rate_table(struct ath_hw *ah,
+ 
+ 	ath9k_hw_get_channel_centers(ah, chan, &centers);
+ 	scaledPower = ath9k_hw_get_scaled_power(ah, powerLimit,
+-						antenna_reduction);
++						antenna_reduction,
++						ah->txchainmask);
+ 
+ 	/*
+ 	 * Get TX power from EEPROM.
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+index 122b846..8de2874 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+@@ -1009,7 +1009,8 @@ static void ath9k_hw_set_def_power_per_rate_table(struct ath_hw *ah,
+ 	ath9k_hw_get_channel_centers(ah, chan, &centers);
+ 
+ 	scaledPower = ath9k_hw_get_scaled_power(ah, powerLimit,
+-						antenna_reduction);
++						antenna_reduction,
++						ah->txchainmask);
+ 
+ 	if (IS_CHAN_2GHZ(chan)) {
+ 		numCtlModes = ARRAY_SIZE(ctlModesFor11g) -
 -- 
-2.1.3
+2.1.0
 
