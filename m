@@ -1,44 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:61509 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750726AbaKYU47 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Nov 2014 15:56:59 -0500
-Message-ID: <5474ED18.5090306@broadcom.com> (sfid-20141125_215702_650840_AA88FB6E)
-Date: Tue, 25 Nov 2014 21:56:56 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH V2 1/2] brcmutil: add helper function to format board
- revision
-References: <1416945354-23346-1-git-send-email-arend@broadcom.com>	<1416945354-23346-2-git-send-email-arend@broadcom.com> <CACna6rwjieystZYnHGPiRZkgYWA=x3rOVQ8oGk=ZS4YezWiUkA@mail.gmail.com>
-In-Reply-To: <CACna6rwjieystZYnHGPiRZkgYWA=x3rOVQ8oGk=ZS4YezWiUkA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:47846 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757675AbaKTPRE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Nov 2014 10:17:04 -0500
+Message-ID: <1416496620.8557.4.camel@sipsolutions.net> (sfid-20141120_161712_138678_0FB0F963)
+Subject: Re: [PATCH v2 1/4] cfg80211: leave invalid channels on regdomain
+ change
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@suse.com>
+Date: Thu, 20 Nov 2014 16:17:00 +0100
+In-Reply-To: <1415895219-19848-1-git-send-email-arik@wizery.com> (sfid-20141113_171404_076764_CE8901A9)
+References: <1415895219-19848-1-git-send-email-arik@wizery.com>
+	 (sfid-20141113_171404_076764_CE8901A9)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/25/14 21:39, Rafał Miłecki wrote:
-> On 25 November 2014 at 20:55, Arend van Spriel<arend@broadcom.com>  wrote:
->> +/* Produce a human-readable string for boardrev */
->> +char *brcmu_boardrev_str(u32 brev, char *buf)
->> +{
->> +       char c;
->> +
->> +       if (brev<  0x100) {
->> +               snprintf(buf, 8, "%d.%d", (brev&  0xf0)>>  4, brev&  0xf);
->> +       } else {
->> +               c = (brev&  0xf000) == 0x1000 ? 'P' : 'A';
->> +               snprintf(buf, 8, "%c%03x", c, brev&  0xfff);
->> +       }
->> +       return buf;
->> +}
->
-> Is this known what do 'P' and 'A' mean? Just curious.
+On Thu, 2014-11-13 at 18:13 +0200, Arik Nemtsov wrote:
+> When the regulatory settings change, some channels might become invalid.
+> Disconnect interfaces acting on these channels, after giving userspace
+> code a grace period to leave them.
 
-Me too, but never found out ;-) The test boards I have over here all 
-have 'P' prefix.
+So as we discussed, I think you should add a note here that the flag
+only works for some interface types, and prohibit setting the flag when
+unsupported ones are supported. Then you can also remove the message and
+just put in a WARN_ON(1) or something since you can't really get to that
+code path.
 
-Regards,
-Arend
+IMHO that's a reasonable trade-off between generalisation and not doing
+all the work now especially since you can't validate it over Intel hw
+for other interface types - if anyone else needs/wants the flag then
+they can add those interface types and change the conditions.
+
+johannes
+
