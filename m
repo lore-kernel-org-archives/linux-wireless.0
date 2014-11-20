@@ -1,89 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:37539 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932288AbaKXOgc (ORCPT
+Received: from mail-ob0-f175.google.com ([209.85.214.175]:54564 "EHLO
+	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756640AbaKTWeM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2014 09:36:32 -0500
-Received: by mail-wi0-f175.google.com with SMTP id l15so5859214wiw.14
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:36:31 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Luciano Coelho <luciano.coelho@intel.com>
-Subject: [PATCH 58/75] iwlwifi: mvm: schedule CSA time event a bit before beacon 1
-Date: Mon, 24 Nov 2014 16:34:34 +0200
-Message-Id: <1416839691-28533-58-git-send-email-egrumbach@gmail.com> (sfid-20141124_153639_980007_CE1AA722)
-In-Reply-To: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
-References: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
+	Thu, 20 Nov 2014 17:34:12 -0500
+Received: by mail-ob0-f175.google.com with SMTP id wp4so3026795obc.6
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Nov 2014 14:34:12 -0800 (PST)
+Message-ID: <546E6C62.9010808@lwfinger.net> (sfid-20141120_233416_081836_110E7AE6)
+Date: Thu, 20 Nov 2014 16:34:10 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Catalin Iacob <iacobcatalin@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: rtl8192ce 3.18 regression scan doesn't find any APs
+References: <CAHg_5go+AZTytHq7OyoV_r35sj2wW0OwgBq+sm8R+zJbOXiYcA@mail.gmail.com>
+In-Reply-To: <CAHg_5go+AZTytHq7OyoV_r35sj2wW0OwgBq+sm8R+zJbOXiYcA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+On 11/20/2014 02:10 PM, Catalin Iacob wrote:
+> Since the 3.18 merge window my wireless card cannot find any access
+> point (tested with both NetworkManager and sudo /usr/sbin/iw dev
+> wlp2s0 scan). More precisely, in 3.18-rc1 I got the oops described at
+> http://marc.info/?l=linux-wireless&m=141324391807122&w=2. Sometime
+> after rc1 Larry fixed this but when I tested again I found that scan
+> doesn't work (tested 3.18-rc3 and just now 3.18-rc5).
+>
+> According to lspci -nn my hardware is:
+> 02:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd.
+> RTL8188CE 802.11b/g/n WiFi Adapter [10ec:8176] (rev 01)
+>
+> If I grep dmesg for rtl, for 3.17 which works I get:
+> [   31.208206] rtl8192ce:_rtl92ce_read_chip_version():<0-0> Chip
+> Version ID: B_CHIP_88C
+> [   31.219973] rtl8192ce: Using firmware rtlwifi/rtl8192cfw.bin
+> [   31.861478] ieee80211 phy0: Selected rate control algorithm 'rtl_rc'
+> [   31.865655] rtlwifi: wireless switch is on
+> [   31.872019] rtl8192ce 0000:02:00.0 wlp2s0: renamed from wlan0
+> [   41.428487] rtl8192ce 0000:02:00.0 wlp2s0: disabling HT as WMM/QoS
+> is not supported by the AP
+> [   41.428499] rtl8192ce 0000:02:00.0 wlp2s0: disabling VHT as WMM/QoS
+> is not supported by the AP
+>
+> 3.18 says:
+> [   29.213829] rtl8192ce:_rtl92ce_read_chip_version():<0-0> Chip
+> Version ID: B_CHIP_88C
+> [   29.230599] rtl8192ce: Using firmware rtlwifi/rtl8192cfw.bin
+> [   29.330232] ieee80211 phy0: Selected rate control algorithm 'rtl_rc'
+> [   29.332250] rtlwifi: rtlwifi: wireless switch is on
+> [   29.339416] rtl8192ce 0000:02:00.0 wlp2s0: renamed from wlan0
+> [  344.942070] rtl8192ce:rtl92ce_get_hw_reg():<0-0> switch case not processed
+>
+> I added some debug prints and the last line comes from core.c,
+> rtl_op_stop which calls get_hw_reg with HAL_DEF_WOWLAN. This happens
+> indeed when I untick Enable wireless in NetworkManager. I assume it's
+> not related to the more serious scan issue.
+>
+> How can I help with debugging this?
 
-Instead of using a hardcoded number of TUs before beacon 0 as the time
-to start the absence and actual channel switch, calculate it in
-relation to the beacon interval.  We use 10 TUs + beacon interval
-before beacon 0 to target a bit before beacon 1.  This gives us enough
-time to switch to the new channel before the AP/GO switches.
+I do not believe that "switch case not processed" is serious, but I will check it.
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 12 ++++++++----
- drivers/net/wireless/iwlwifi/mvm/mvm.h      | 13 +++++++++----
- 2 files changed, 17 insertions(+), 8 deletions(-)
+I have reproduced the problem, but I do not yet know the fix. Please file a bug 
+report at bugzilla.kernel.org on this problem. Be sure to mark it as a 
+regression, and assign it to me. When I find the fix, being able to cite the bug 
+report will help get a last-minute patch into 3.18.
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index ac1cef6..3ce5831 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -3189,14 +3189,18 @@ static int iwl_mvm_pre_channel_switch(struct ieee80211_hw *hw,
- 
- 		break;
- 	case NL80211_IFTYPE_STATION:
--		apply_time = chsw->timestamp +
--			(vif->bss_conf.beacon_int * chsw->count * 1024);
-+		/* Schedule the time event to a bit before beacon 1,
-+		 * to make sure we're in the new channel when the
-+		 * GO/AP arrives.
-+		 */
-+		apply_time = chsw->device_timestamp +
-+			((vif->bss_conf.beacon_int * (chsw->count - 1) -
-+			  IWL_MVM_CHANNEL_SWITCH_TIME_CLIENT) * 1024);
- 
- 		if (chsw->block_tx)
- 			iwl_mvm_csa_client_absent(mvm, vif);
- 
--		iwl_mvm_schedule_csa_period(mvm, vif,
--					    IWL_MVM_CHANNEL_SWITCH_TIME_CLIENT,
-+		iwl_mvm_schedule_csa_period(mvm, vif, vif->bss_conf.beacon_int,
- 					    apply_time);
- 		break;
- 	default:
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index 2816c6b..99a2590 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -87,12 +87,17 @@
- /* A TimeUnit is 1024 microsecond */
- #define MSEC_TO_TU(_msec)	(_msec*1000/1024)
- 
--/* These values represent the number of TUs before CSA "beacon 0" TBTT
-- * when the CSA time-event needs to be scheduled to start.  They must
-- * be big enough to ensure that we switch in time.
-+/* For GO, this value represents the number of TUs before CSA "beacon
-+ * 0" TBTT when the CSA time-event needs to be scheduled to start.  It
-+ * must be big enough to ensure that we switch in time.
-  */
- #define IWL_MVM_CHANNEL_SWITCH_TIME_GO		40
--#define IWL_MVM_CHANNEL_SWITCH_TIME_CLIENT	110
-+
-+/* For client, this value represents the number of TUs before CSA
-+ * "beacon 1" TBTT, instead.  This is because we don't know when the
-+ * GO/AP will be in the new channel, so we switch early enough.
-+ */
-+#define IWL_MVM_CHANNEL_SWITCH_TIME_CLIENT	10
- 
- /*
-  * This value (in TUs) is used to fine tune the CSA NoA end time which should
--- 
-1.9.1
+Larry
+
 
