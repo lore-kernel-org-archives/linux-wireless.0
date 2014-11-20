@@ -1,49 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f51.google.com ([74.125.82.51]:46314 "EHLO
-	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753865AbaKXOfY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2014 09:35:24 -0500
-Received: by mail-wg0-f51.google.com with SMTP id k14so12193111wgh.24
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:35:23 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eliad Peller <eliad@wizery.com>,
-	Eliad Peller <eliadx.peller@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 16/75] iwlwifi: mvm: wake up d0i3_exit_waitq when aborting d0i3
-Date: Mon, 24 Nov 2014 16:33:52 +0200
-Message-Id: <1416839691-28533-16-git-send-email-egrumbach@gmail.com> (sfid-20141124_154431_519213_F9F53ED9)
-In-Reply-To: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
-References: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:49515 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755849AbaKTUjB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Nov 2014 15:39:01 -0500
+Message-ID: <1416515933.8557.13.camel@sipsolutions.net> (sfid-20141120_213905_048168_4153038E)
+Subject: Re: [PATCH v2 1/4] cfg80211: leave invalid channels on regdomain
+ change
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@suse.com>
+Cc: Arik Nemtsov <arik@wizery.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 20 Nov 2014 21:38:53 +0100
+In-Reply-To: <20141120203525.GP24486@wotan.suse.de> (sfid-20141120_213544_633693_4A91930E)
+References: <1415895219-19848-1-git-send-email-arik@wizery.com>
+	 <20141113224556.GD24486@wotan.suse.de>
+	 <CA+XVXffuKE2heFPWmVWGre8cL3VZX5U63_Rru9uXKiqbpz5xYA@mail.gmail.com>
+	 <20141120203525.GP24486@wotan.suse.de>
+	 (sfid-20141120_213544_633693_4A91930E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+On Thu, 2014-11-20 at 21:35 +0100, Luis R. Rodriguez wrote:
 
-When aborting d0i3 due to taken refs, other threads might
-already wait on d0i3_exit_waitq for IWL_MVM_STATUS_IN_D0I3
-to get cleared (it's somewhat likely, as synchronize_rcu()
-might take a while), so make sure to wake them up.
+> It really should only kick you off of channels you are not allowed to use,
+> I welcome this change and think it is important as a standard feature.
+> Please rename to REGULATORY_IGNORE_STALE_KICKOFF and make the behaviour
+> change to ignore the kick off rather than opt-in. We take measures to
+> operate properly regulatory and this change helps in that direction, we
+> want opt-in features to let folks that know what they are doing ingore
+> certain fatures.
 
-Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/ops.c | 1 +
- 1 file changed, 1 insertion(+)
+> > I don't want to add modes I cannot test with HW I have. I think that's
+> > irresponsible, especially when the side-effects are disconnections.
+> > I can add IBSS as well with the HW I have, but that's about it.
+> 
+> I'd like to see IBSS and Mesh considered and addressed.
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
-index 737aac3..8664f61 100644
---- a/drivers/net/wireless/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
-@@ -1052,6 +1052,7 @@ static int iwl_mvm_enter_d0i3(struct iwl_op_mode *op_mode)
- 	if (iwl_mvm_ref_taken(mvm)) {
- 		IWL_DEBUG_RPM(mvm->trans, "abort d0i3 due to taken ref\n");
- 		clear_bit(IWL_MVM_STATUS_IN_D0I3, &mvm->status);
-+		wake_up(&mvm->d0i3_exit_waitq);
- 		return 1;
- 	}
- 
--- 
-1.9.1
+And I want a cookie :-)
+
+I outlined what I'll accept in my other email, and since I think it's
+unreasonable to force Arik to revamp the whole thing the behaviour will
+have to stay opt-in, at least until all modes are addressed, at which
+point the flag could even go away.
+
+johannes
 
