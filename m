@@ -1,173 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vern.gendns.com ([206.190.152.46]:36101 "EHLO vern.gendns.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752875AbaKZSym (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Nov 2014 13:54:42 -0500
-Message-ID: <547621ED.3030608@lechnology.com> (sfid-20141126_195455_127550_3F9311FE)
-Date: Wed, 26 Nov 2014 12:54:37 -0600
-From: David Lechner <david@lechnology.com>
+Received: from mail-wg0-f53.google.com ([74.125.82.53]:41079 "EHLO
+	mail-wg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757402AbaKTQrl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Nov 2014 11:47:41 -0500
+Received: by mail-wg0-f53.google.com with SMTP id l18so4266631wgh.12
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Nov 2014 08:47:39 -0800 (PST)
 MIME-Version: 1.0
-To: Oleksij Rempel <linux@rempel-privat.de>,
-	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org
-CC: anders.darander@gmail.com
-Subject: Re: ath9k -> bogus usb xfer on at91
-References: <54751EAC.4080402@lechnology.com> <54761C1D.9050207@rempel-privat.de>
-In-Reply-To: <54761C1D.9050207@rempel-privat.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <1416496922.8557.7.camel@sipsolutions.net>
+References: <1415895219-19848-1-git-send-email-arik@wizery.com>
+ <1415895219-19848-4-git-send-email-arik@wizery.com> <20141113231323.GG24486@wotan.suse.de>
+ <CA+XVXfeqfHHDh6AcgkuBW9BwUo-s77+pnbDtP_y=e0dZQVBitg@mail.gmail.com> <1416496922.8557.7.camel@sipsolutions.net>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Thu, 20 Nov 2014 18:47:24 +0200
+Message-ID: <CA+XVXffq5h-5=wvPQ1PY0CoSa5zgi9j-kNCw5RbWjd0zDLigfA@mail.gmail.com> (sfid-20141120_174801_454167_036C4F5F)
+Subject: Re: [PATCH v2 4/4] cfg80211: Allow usermode to query wiphy specific
+ regd info
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "Luis R. Rodriguez" <mcgrof@suse.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Jonathan Doron <jond@wizery.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/26/14 12:29 PM, Oleksij Rempel wrote:
-> Am 26.11.2014 um 01:28 schrieb David Lechner:
->>> On 7 July 2014 17:08, Oleksij Rempel <linux@xxxxxxxxxxxxxxxx> wrote:
->>>> /  Am 07.07.2014 15:40, schrieb Anders Darander:/
->>>> /> On 4 July 2014 18:54, Oleksij Rempel <linux@xxxxxxxxxxxxxxxx> wrote:/
->>>> />> Am 04.07.2014 18:30, schrieb Alan Stern:/
->>>> />>> On Fri, 4 Jul 2014, Anders Darander wrote:/
->>>> />>>> ~# usb 1-1: new full-speed USB device number 3 using at91_ohci/
->>>> />>>> usb 1-1: ath9k_htc: Firmware htc_9271.fw requested/
->>>> />>>> usb 1-1: ath9k_htc: Transferred FW: htc_9271.fw, size: 51272/
->>>> />>>> -----------[ cut here ]-----------/
->>>> />>>> WARNING: CPU: 0 PID: 93 at/
->>>> />>>>
->>> /mnt/cs-builds/anders/oe-build/build-ccu/tmp-eglibc/work/ccu-oe-linux-gnueabi/linux-yocto-ccu/3.14+gitAUTOINC+7b03bd3dfd-r0/linux/drivers/usb/core/urb.c:450/
->>>
->>>> />>>> usb_submit_urb+0x2ac/0x460()/
->>>> />>>> usb 1-1: BOGUS urb xfer, pipe 1 != type 3/
->>>> />/
->>>> />>>/
->>>> />>> I can't tell exactly where the fault is, but this message means
->>> that an/
->>>> />>> URB was submitted for a bulk endpoint with a pipe of type/
->>>> />>> PIPE_INTERRUPT./
->>>> />>/
->>>> />> Then kernel driver and firmware should be updated. There was some/
->>>> />> Bulk/Interrupt issues which was fixed last year./
->>>> />/
->>>> /> Any pointers to the bulk/interrupt issues? Was it a general issue,
->>> or/
->>>> /> related either to/
->>>> /> at91-ohci or ar9271?/
->>>>
->>>> /  It is primary ar9271 issue. The interrupt EP has different
->>> response time/
->>>> /  on different host controllers. Initially as workaround ath9k was
->>> forcing/
->>>> /  Bulk traffic on Interrupt EP. But this workaround is working with
->>> some/
->>>> /  host controllers and completely fails on others. So i removed it.
->>> The/
->>>> /  patches are included in master kernel branch and git firmware
->>> source./
->>>
->>> Thanks for the comments!
->>> I'll take a look at it, though it might have to be scheduled after the
->>> upcoming vacations...
->>>
->>> I'll sure try to look into those workarounds (and your removal of
->>> those). I guess that
->>> it's the firmware in open-ath9-htc-firmware you're talking about.
->>>
->>>> />/
->>>> /> As far as I've been able to find out, I've got the latest firmware/
->>>> /> (check again with linux-firmware)./
->>>> /> I've also tried with the master from open-ath9k-htc-firmware./
->>>> />/
->>>> />> I hope this HW will not be used as AP./
->>>> />/
->>>> /> Is this based on the use of at91- SoC, or based on the ar9271?/
->>>>
->>>> /  ar9271 can work as AP with limit on 8 stations but according to user/
->>>> /  reports it fails even with one station on at91/
->>>>
->>>> /> The primary use case is to run as a client, though there will likely/
->>>> /> be some instances where it'll/
->>>> /> function as a AP. (Though primarily for M2M communications), thus/
->>>> /> pretty low traffic./
->>>>
->>>> /  For AP usually should be created monitor mode interface for
->>> receiving/
->>>> /  and transmitting management frames. Depending on location and STAs
->>> or/
->>>> /  APs working on same channel, you will get a lot of traffic on this
->>> usb/
->>>> /  interface./
->>>> /  Some users reported huge traffic drops on at91 based APs. Since i
->>> can't/
->>>> /  debug it, i can't promise that it will be fixed any time soon./
->>> Again, thanks for the information.
->>> I think I've got a much better understanding of the issues (both those
->>> that I've
->>> seen, and those that you have mentioned / explained). I'll see
->>> when/what I can
->>> look into this and what I can find out.
->>>
->>> Cheers,
->>> Anders
->> Anders, did you ever have a chance to look at this? I am seeing this
->> same warning that is filling up the kernel logs in v3.18-rc6.
+On Thu, Nov 20, 2014 at 5:22 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Sun, 2014-11-16 at 13:06 +0200, Arik Nemtsov wrote:
+>
+>> We intend to add a patch to wpa_s to always add the wiphy_idx to
+>> NL80211_CMD_GET_REG. With the current approach only drivers with
+>> SELF_MANAGED_REG will get wiphy->regd back. This is ok since these are
+>> new drivers, which are familiar with this API.
 >>
->> The device I am using is:
+>> But if we use your suggestion and always return wiphy->regd, then some
+>> driver like ath9k that uses regulatory_hint() will now get it's
+>> private regd returned to the wpa_s that manages it. I'm not saying
+>> it's necessarily bad, but it's different than what was returned
+>> before. The cfg80211 regdomain is intersected with wiphy->regd, so now
+>> ath9k will start getting more permissive channels in usermode.
 >>
->> |ID 0846:9030 NetGear, Inc. WNA1100 Wireless-N 150 [Atheros AR9271]||
->>
->> I found that if I revert kernel commit 2b72111 that the warning stops,
->> but the device does not work very well.||If you are interested to know
->> more about the symptoms we are seeing, there is a bug report here:
->> <https://github.com/ev3dev/ev3dev/issues/152>. But, I figured at least
->> knowing the kernel commit that introduced the problem would be helpful.|
->>
-> i assume you mean this:
+>> So we thought it's best to enable the new behavior only if the driver
+>> explicitly wants it, using a new regulatory flag.
 >
-> commit 2b721118b7821107757eb1d37af4b60e877b27e7
-> Author: Oleksij Rempel <linux@rempel-privat.de>
-> Date:   Tue Aug 13 21:10:19 2013 +0200
+> How does this work the other way around - i.e. a newer wpa_s requesting
+> per-wiphy information but it not being present?
+
+Then it gets the global one, and it knows it via a wiphy attribute:
+
+      (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED) &&
++                   (nla_put_flag(msg, NL80211_ATTR_WIPHY_SELF_MANAGED_REG)))
++                       goto nla_put_failure;
+
+(we won't do this put_flag if it's global)
+
+The supplicant patches are not up yet, but I think for now we will
+just act according to the global one. Anyway it has the option to
+change policy, since it knows.
+
 >
->      ath9k_htc: do not use bulk on EP3 and EP4
+> It seems to me that either way what the kernel should return is the
+> information that will actually be applied when validated, which is of
+> course not possible when there are wiphy-specific regdomains and a
+> global one is requested (unless there's just one wiphy, which might be
+> something to consider making work?)
+
+Well the cfg80211 regdomain is always intersected with all wiphy->regd
+in the system, so the global one is always less permissive.
+This is of course true before REGULATORY_WIPHY_SELF_MANAGED - in this
+case wiphy->regd will not affect the global regd.
+
+With CUSTOM_REG we have a special case, since the regulatory code
+doesn't set wiphy->regd, it just applies a user supplied regd to the
+wiphy channels (which get validated).
+If the user also happens to set  wiphy->regd himself with CUSTOM_REG,
+then it makes sense to return the per-wiphy one. The global regd is
+meaningless anyway for CUSTOM_REG, and the per-wiphy one might be too.
+But I guess we can return it if it's there?
+
 >
->      If usb auto suspend is enabled or system run in to suspend/resume
->      cycle, ath9k-htc adapter will stop to response. It is reproducible
-> on xhci H
->
->      Host part of problem:
->      XHCI do timing calculation based on Transfer Type and bInterval,
->      immediately after device was detected. Ath9k-htc try to overwrite
->      this parameters on module probe and some changes in FW,
->      since we do not initiate usb reset from the driver this changes
->      are not took to account. So, before any kind of suspend or reset,
->      host controller will operate with old parameters. Only after
-> suspend/resume
->      and if interface id stay unchanged, new parameters will be applied. Host
->      will send bulk data with no intervals (?), which will cause
->      overflow on FIFO of EP4.
->
->      Firmware part of problem:
->      By default, ath9k-htc adapters configured with EP3 and EP4
->      as interrupt endpoints. Current firmware will try to overwrite
->      ConfigDescriptor to make EP3 and EP4 bulk. FIFO for this endpoints
->      stay not reconfigured, so under the hood it is still Int EP.
->
->      This patch is revert of 4a0e8ecca4ee commit which trying to
->      reduce CPU usage on some systems. Since it will produce more bug
->      as fixes, we will need to find other way to fix it.
->
->      here is comment from kernel source which has some more explanation:
->      * Some buggy high speed devices have bulk endpoints using
->      * maxpacket sizes other than 512.  High speed HCDs may not
->      * be able to handle that particular bug, so let's warn...
->
->      in our case EP3 and EP4 have maxpacket sizes = 64!!!
->
->      Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
->      Signed-off-by: John W. Linville <linville@tuxdriver.com>
->
->
->
->> ||
->> -- 
->> To unsubscribe from this list: send the line "unsubscribe
->> linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-Yes, this is the commit I am referring to.
+> I also don't actually see a driver regulatory flag in this patch, as
+> expected, so not sure what exactly you're talking about above?
+
+The regulatory flag is in the previous patch and is called
+REGULATORY_WIPHY_SELF_MANAGED. The relevant code here is:
+
++               if (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED)
++                       regdom = get_wiphy_regdom(wiphy);
+
+Arik
