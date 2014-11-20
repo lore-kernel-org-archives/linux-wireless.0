@@ -1,265 +1,169 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:53104 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752111AbaKYKYo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Nov 2014 05:24:44 -0500
-Subject: [PATCH v3 1/2] ath10k: add register access debugfs interface
-To: <ath10k@lists.infradead.org>
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Date: Tue, 25 Nov 2014 12:24:33 +0200
-Message-ID: <20141125102433.3951.37783.stgit@potku.adurom.net> (sfid-20141125_112447_475475_83067AD2)
-In-Reply-To: <20141125102302.3951.10641.stgit@potku.adurom.net>
-References: <20141125102302.3951.10641.stgit@potku.adurom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mga01.intel.com ([192.55.52.88]:12286 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755490AbaKTLdI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Nov 2014 06:33:08 -0500
+From: Jukka Rissanen <jukka.rissanen@linux.intel.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH v6] nl80211: Stop scheduled scan if netlink client disappears
+Date: Thu, 20 Nov 2014 13:32:58 +0200
+Message-Id: <1416483178-5528-1-git-send-email-jukka.rissanen@linux.intel.com> (sfid-20141120_123314_318179_38B7117E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yanbo Li <yanbol@qti.qualcomm.com>
+An attribute NL80211_ATTR_SOCKET_OWNER can be set by the scan initiator.
+If present, the attribute will cause the scan to be stopped if the client
+dies.
 
-Debugfs files reg_addr and reg_val are used for reading and writing to the
-firmware (target) registers. reg_addr contains the address to be accessed,
-which also needs to be set first, and reg_value is when used for reading and
-writing the actual value in ASCII.
-
-To read a value from the firmware register 0x100000:
-
-# echo 0x100000 > reg_addr
-# cat reg_value
-0x00100000:0x000002d3
-
-To write value 0x2400 to address 0x100000:
-
-# echo 0x100000 > reg_addr
-# echo  0x2400 > reg_value
-#
-
-Signed-off-by: Yanbo Li <yanbol@qti.qualcomm.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Jukka Rissanen <jukka.rissanen@linux.intel.com>
 ---
- drivers/net/wireless/ath/ath10k/core.h  |    1 
- drivers/net/wireless/ath/ath10k/debug.c |  125 +++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/hif.h   |   26 ++++++
- drivers/net/wireless/ath/ath10k/pci.c   |    2 
- 4 files changed, 154 insertions(+)
+Hi,
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 8f86bd34e823..f5f2dcd2b65d 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -320,6 +320,7 @@ struct ath10k_debug {
- 	/* protected by conf_mutex */
- 	u32 fw_dbglog_mask;
- 	u32 pktlog_filter;
-+	u32 reg_addr;
- 
- 	u8 htt_max_amsdu;
- 	u8 htt_max_ampdu;
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index f10721da4980..d0397d119862 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -928,6 +928,125 @@ static const struct file_operations fops_fw_crash_dump = {
- 	.llseek = default_llseek,
- };
- 
-+static ssize_t ath10k_reg_addr_read(struct file *file,
-+				    char __user *user_buf,
-+				    size_t count, loff_t *ppos)
-+{
-+	struct ath10k *ar = file->private_data;
-+	u8 buf[32];
-+	unsigned int len = 0;
-+	u32 reg_addr;
-+
-+	mutex_lock(&ar->conf_mutex);
-+	reg_addr = ar->debug.reg_addr;
-+	mutex_unlock(&ar->conf_mutex);
-+
-+	len += scnprintf(buf + len, sizeof(buf) - len, "0x%x\n", reg_addr);
-+
-+	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
-+}
-+
-+static ssize_t ath10k_reg_addr_write(struct file *file,
-+				     const char __user *user_buf,
-+				     size_t count, loff_t *ppos)
-+{
-+	struct ath10k *ar = file->private_data;
-+	u32 reg_addr;
-+	int ret;
-+
-+	ret = kstrtou32_from_user(user_buf, count, 0, &reg_addr);
-+	if (ret)
-+		return ret;
-+
-+	if (!IS_ALIGNED(reg_addr, 4))
-+		return -EFAULT;
-+
-+	mutex_lock(&ar->conf_mutex);
-+	ar->debug.reg_addr = reg_addr;
-+	mutex_unlock(&ar->conf_mutex);
-+
-+	return count;
-+}
-+
-+static const struct file_operations fops_reg_addr = {
-+	.read = ath10k_reg_addr_read,
-+	.write = ath10k_reg_addr_write,
-+	.open = simple_open,
-+	.owner = THIS_MODULE,
-+	.llseek = default_llseek,
-+};
-+
-+static ssize_t ath10k_reg_value_read(struct file *file,
-+				     char __user *user_buf,
-+				     size_t count, loff_t *ppos)
-+{
-+	struct ath10k *ar = file->private_data;
-+	u8 buf[48];
-+	unsigned int len;
-+	u32 reg_addr, reg_val;
-+	int ret;
-+
-+	mutex_lock(&ar->conf_mutex);
-+
-+	if (ar->state != ATH10K_STATE_ON &&
-+	    ar->state != ATH10K_STATE_UTF) {
-+		ret = -ENETDOWN;
-+		goto exit;
-+	}
-+
-+	reg_addr = ar->debug.reg_addr;
-+
-+	reg_val = ath10k_hif_read32(ar, reg_addr);
-+	len = scnprintf(buf, sizeof(buf), "0x%08x:0x%08x\n", reg_addr, reg_val);
-+
-+	ret = simple_read_from_buffer(user_buf, count, ppos, buf, len);
-+
-+exit:
-+	mutex_unlock(&ar->conf_mutex);
-+
-+	return ret;
-+}
-+
-+static ssize_t ath10k_reg_value_write(struct file *file,
-+				      const char __user *user_buf,
-+				      size_t count, loff_t *ppos)
-+{
-+	struct ath10k *ar = file->private_data;
-+	u32 reg_addr, reg_val;
-+	int ret;
-+
-+	mutex_lock(&ar->conf_mutex);
-+
-+	if (ar->state != ATH10K_STATE_ON &&
-+	    ar->state != ATH10K_STATE_UTF) {
-+		ret = -ENETDOWN;
-+		goto exit;
-+	}
-+
-+	reg_addr = ar->debug.reg_addr;
-+
-+	ret = kstrtou32_from_user(user_buf, count, 0, &reg_val);
-+	if (ret)
-+		goto exit;
-+
-+	ath10k_hif_write32(ar, reg_addr, reg_val);
-+
-+	ret = count;
-+
-+exit:
-+	mutex_unlock(&ar->conf_mutex);
-+
-+	return ret;
-+}
-+
-+static const struct file_operations fops_reg_value = {
-+	.read = ath10k_reg_value_read,
-+	.write = ath10k_reg_value_write,
-+	.open = simple_open,
-+	.owner = THIS_MODULE,
-+	.llseek = default_llseek,
-+};
-+
- static int ath10k_debug_htt_stats_req(struct ath10k *ar)
- {
- 	u64 cookie;
-@@ -1629,6 +1748,12 @@ int ath10k_debug_register(struct ath10k *ar)
- 	debugfs_create_file("fw_crash_dump", S_IRUSR, ar->debug.debugfs_phy,
- 			    ar, &fops_fw_crash_dump);
- 
-+	debugfs_create_file("reg_addr", S_IRUSR | S_IWUSR,
-+			    ar->debug.debugfs_phy, ar, &fops_reg_addr);
-+
-+	debugfs_create_file("reg_value", S_IRUSR | S_IWUSR,
-+			    ar->debug.debugfs_phy, ar, &fops_reg_value);
-+
- 	debugfs_create_file("chip_id", S_IRUSR, ar->debug.debugfs_phy,
- 			    ar, &fops_chip_id);
- 
-diff --git a/drivers/net/wireless/ath/ath10k/hif.h b/drivers/net/wireless/ath/ath10k/hif.h
-index 30301f5b6051..bad071906540 100644
---- a/drivers/net/wireless/ath/ath10k/hif.h
-+++ b/drivers/net/wireless/ath/ath10k/hif.h
-@@ -20,6 +20,7 @@
- 
- #include <linux/kernel.h>
- #include "core.h"
-+#include "debug.h"
- 
- struct ath10k_hif_sg_item {
- 	u16 transfer_id;
-@@ -84,6 +85,10 @@ struct ath10k_hif_ops {
- 
- 	u16 (*get_free_queue_number)(struct ath10k *ar, u8 pipe_id);
- 
-+	u32 (*read32)(struct ath10k *ar, u32 address);
-+
-+	void (*write32)(struct ath10k *ar, u32 address, u32 value);
-+
- 	/* Power up the device and enter BMI transfer mode for FW download */
- 	int (*power_up)(struct ath10k *ar);
- 
-@@ -187,4 +192,25 @@ static inline int ath10k_hif_resume(struct ath10k *ar)
- 	return ar->hif.ops->resume(ar);
+v6:
+- moved owner netlink port id from cfg80211_sched_scan_request to
+  rdev in order to avoid possible races
+
+v5:
+- discarded the locking changes in v4
+- instead of trying to schedule sched_scan_stop worker from
+  struct cfg80211_sched_scan_request, move the worker to wiphy
+  as that makes it easier to manage the sched_scan_stop worker.
+  There are also one scheduled scan / wiphy so it is also logical
+  to do it like this.
+
+v4:
+- rtnl locking issues fixed in patch 2
+
+v3:
+- backward compatibility define tweaked in patch 1
+- added missing signed-off-by:
+
+v2:
+- split the patch
+- In patch 1, use a generic NL80211_ATTR_SOCKET_OWNER attribute and
+  convert the old code that uses NL80211_ATTR_IFACE_SOCKET_OWNER to
+  use the new value. A define is provided for backward compatibility.
+- Any pending schedule scan stop worker is cancelled when interface is
+  taken down in patch 2
+
+Cheers,
+Jukka
+
+
+ include/uapi/linux/nl80211.h |  3 +++
+ net/wireless/core.c          | 17 +++++++++++++++++
+ net/wireless/core.h          |  2 ++
+ net/wireless/nl80211.c       | 14 ++++++++++++++
+ 4 files changed, 36 insertions(+)
+
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 185f9c7..5038240 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1640,6 +1640,9 @@ enum nl80211_commands {
+  * @NL80211_ATTR_SOCKET_OWNER: Flag attribute, if set during interface
+  *	creation then the new interface will be owned by the netlink socket
+  *	that created it and will be destroyed when the socket is closed.
++ *	If set during scheduled scan start then the new scan req will be
++ *	owned by the netlink socket that created it and the scheduled scan will
++ *	be stopped when the socket is closed.
+  *
+  * @NL80211_ATTR_TDLS_INITIATOR: flag attribute indicating the current end is
+  *	the TDLS link initiator.
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index a4d2792..6fffcb3 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -320,6 +320,21 @@ static void cfg80211_destroy_iface_wk(struct work_struct *work)
+ 	rtnl_unlock();
  }
  
-+static inline u32 ath10k_hif_read32(struct ath10k *ar, u32 address)
++static void cfg80211_sched_scan_stop_wk(struct work_struct *work)
 +{
-+	if (!ar->hif.ops->read32) {
-+		ath10k_warn(ar, "hif read32 not supported\n");
-+		return 0xdeaddead;
-+	}
++	struct cfg80211_registered_device *rdev;
 +
-+	return ar->hif.ops->read32(ar, address);
++	rdev = container_of(work, struct cfg80211_registered_device,
++			   sched_scan_stop_wk);
++
++	rtnl_lock();
++
++	if (rdev->sched_scan_req)
++		__cfg80211_stop_sched_scan(rdev, false);
++
++	rtnl_unlock();
 +}
 +
-+static inline void ath10k_hif_write32(struct ath10k *ar,
-+				      u32 address, u32 data)
-+{
-+	if (!ar->hif.ops->write32) {
-+		ath10k_warn(ar, "hif write32 not supported\n");
-+		return;
-+	}
-+
-+	ar->hif.ops->write32(ar, address, data);
-+}
-+
- #endif /* _HIF_H_ */
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 3a6b8a5ca96c..328ab6c5d053 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -1998,6 +1998,8 @@ static const struct ath10k_hif_ops ath10k_pci_hif_ops = {
- 	.get_free_queue_number	= ath10k_pci_hif_get_free_queue_number,
- 	.power_up		= ath10k_pci_hif_power_up,
- 	.power_down		= ath10k_pci_hif_power_down,
-+	.read32			= ath10k_pci_read32,
-+	.write32		= ath10k_pci_write32,
+ /* exported functions */
+ 
+ struct wiphy *wiphy_new_nm(const struct cfg80211_ops *ops, int sizeof_priv,
+@@ -406,6 +421,7 @@ use_default_name:
+ 	INIT_LIST_HEAD(&rdev->destroy_list);
+ 	spin_lock_init(&rdev->destroy_list_lock);
+ 	INIT_WORK(&rdev->destroy_work, cfg80211_destroy_iface_wk);
++	INIT_WORK(&rdev->sched_scan_stop_wk, cfg80211_sched_scan_stop_wk);
+ 
+ #ifdef CONFIG_CFG80211_DEFAULT_PS
+ 	rdev->wiphy.flags |= WIPHY_FLAG_PS_ON_BY_DEFAULT;
+@@ -760,6 +776,7 @@ void wiphy_unregister(struct wiphy *wiphy)
+ 	flush_work(&rdev->event_work);
+ 	cancel_delayed_work_sync(&rdev->dfs_update_channels_wk);
+ 	flush_work(&rdev->destroy_work);
++	flush_work(&rdev->sched_scan_stop_wk);
+ 
  #ifdef CONFIG_PM
- 	.suspend		= ath10k_pci_hif_suspend,
- 	.resume			= ath10k_pci_hif_resume,
+ 	if (rdev->wiphy.wowlan_config && rdev->ops->set_wakeup)
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 61ee664..c27615e 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -67,6 +67,8 @@ struct cfg80211_registered_device {
+ 	unsigned long suspend_at;
+ 	struct work_struct scan_done_wk;
+ 	struct work_struct sched_scan_results_wk;
++	struct work_struct sched_scan_stop_wk;
++	u32 sched_scan_owner_nlportid;
+ 
+ 	struct genl_info *cur_cmd_info;
+ 
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index df447c0..9ed6a34 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -5955,6 +5955,9 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
+ 
+ 	err = rdev_sched_scan_start(rdev, dev, request);
+ 	if (!err) {
++		if (info->attrs[NL80211_ATTR_SOCKET_OWNER])
++			rdev->sched_scan_owner_nlportid = info->snd_portid;
++
+ 		rdev->sched_scan_req = request;
+ 		nl80211_send_sched_scan(rdev, dev,
+ 					NL80211_CMD_START_SCHED_SCAN);
+@@ -12127,6 +12130,11 @@ static int nl80211_netlink_notify(struct notifier_block * nb,
+ 
+ 	list_for_each_entry_rcu(rdev, &cfg80211_rdev_list, list) {
+ 		bool schedule_destroy_work = false;
++		bool schedule_scan_stop = false;
++
++		if (rdev->sched_scan_req && notify->portid &&
++		    rdev->sched_scan_owner_nlportid == notify->portid)
++			schedule_scan_stop = true;
+ 
+ 		list_for_each_entry_rcu(wdev, &rdev->wdev_list, list) {
+ 			cfg80211_mlme_unregister_socket(wdev, notify->portid);
+@@ -12157,6 +12165,12 @@ static int nl80211_netlink_notify(struct notifier_block * nb,
+ 				spin_unlock(&rdev->destroy_list_lock);
+ 				schedule_work(&rdev->destroy_work);
+ 			}
++		} else if (schedule_scan_stop) {
++			rdev->sched_scan_owner_nlportid = 0;
++
++			if (rdev->ops->sched_scan_stop &&
++			    rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_SCHED_SCAN)
++				schedule_work(&rdev->sched_scan_stop_wk);
+ 		}
+ 	}
+ 
+-- 
+1.8.3.1
 
