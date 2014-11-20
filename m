@@ -1,366 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:34765 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751400AbaKWPC2 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:41042 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756884AbaKTVPL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Nov 2014 10:02:28 -0500
-Received: by mail-wi0-f181.google.com with SMTP id r20so3459606wiv.8
-        for <linux-wireless@vger.kernel.org>; Sun, 23 Nov 2014 07:02:26 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Jonathan Doron <jond@wizery.com>
-Subject: [PATCH v3 2/3] cfg80211: allow wiphy specific regdomain management
-Date: Sun, 23 Nov 2014 17:02:20 +0200
-Message-Id: <1416754941-4439-2-git-send-email-arik@wizery.com> (sfid-20141123_160232_874801_2316E9D8)
-In-Reply-To: <1416754941-4439-1-git-send-email-arik@wizery.com>
-References: <1416754941-4439-1-git-send-email-arik@wizery.com>
+	Thu, 20 Nov 2014 16:15:11 -0500
+Date: Thu, 20 Nov 2014 16:10:42 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: pull-request: mac80211-next 2014-11-20
+Message-ID: <20141120211041.GF31881@tuxdriver.com> (sfid-20141120_221536_475374_8EBE05A3)
+References: <1416497339.8557.8.camel@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1416497339.8557.8.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jonathan Doron <jond@wizery.com>
+On Thu, Nov 20, 2014 at 04:28:59PM +0100, Johannes Berg wrote:
+> Hi John,
+> 
+> Here's another relatively large batch of changes - arguably the most
+> important being the VHT fix from Felix :-)
+> 
+> Let me know of any problems!
+> 
+> johannes
+> 
+> The following changes since commit 47b6308b643302e642ca2a5cb6470926f7e1c428:
+> 
+>   ath9k: Move roc completion to the offchannel timer (2014-11-17 15:32:17 -0500)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git tags/mac80211-next-for-john-2014-11-20
+> 
+> for you to fetch changes up to 75769c80e381653994293b5aa5a8cfec50088f9f:
+> 
+>   mac80211: minstrel_ht: add a small optimization to minstrel_aggr_check (2014-11-19 19:31:07 +0100)
+> 
+> ----------------------------------------------------------------
+> It has been a while since my last pull request, so we accumulated
+> another relatively large set of changes:
+>  * TDLS off-channel support set from Arik/Liad, with some support
+>    patches I did
+>  * custom regulatory fixes from Arik
+>  * minstrel VHT fix (and a small optimisation) from Felix
+>  * add back radiotap vendor namespace support (myself)
+>  * random MAC address scanning for cfg80211/mac80211/hwsim (myself)
+>  * CSA improvements (Luca)
+>  * WoWLAN Net Detect (wake on network found) support (Luca)
+>  * and lots of other smaller changes from many people
 
-Add a new regulatory flag that allows a driver to manage regdomain
-changes/updates for its own wiphy.
-A self-managed wiphys only employs regulatory information obtained from
-the FW and driver and does not use other cfg80211 sources like
-beacon-hints, country-code IEs and hints from other devices on the same
-system. Conversely, a self-managed wiphy does not share its regulatory
-hints with other devices in the system. If a system contains several
-devices, one or more of which are self-managed, there might be
-contradictory regulatory settings between them. Usage of flag is
-generally discouraged. Only use it if the FW/driver is incompatible
-with non-locally originated hints.
+Pulling now...
 
-A new API lets the driver send a complete regdomain, to be applied on
-its wiphy only.
-
-After a wiphy-specific regdomain change takes place, usermode will get
-a new type of change notification. The regulatory core also takes care
-enforce regulatory restrictions, in case some interfaces are on
-forbidden channels.
-
-Signed-off-by: Jonathan Doron <jonathanx.doron@intel.com>
-Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
----
- include/net/cfg80211.h       | 16 +++++++++
- include/net/regulatory.h     | 19 +++++++++++
- include/uapi/linux/nl80211.h |  5 +++
- net/wireless/core.c          |  8 +++++
- net/wireless/nl80211.c       | 80 ++++++++++++++++++++++++++++++++++----------
- net/wireless/nl80211.h       |  1 +
- net/wireless/reg.c           | 59 ++++++++++++++++++++++++++++++++
- 7 files changed, 170 insertions(+), 18 deletions(-)
-
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index bb748c4..bfe630f 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -3808,6 +3808,22 @@ const u8 *cfg80211_find_vendor_ie(unsigned int oui, u8 oui_type,
- int regulatory_hint(struct wiphy *wiphy, const char *alpha2);
- 
- /**
-+ * regulatory_set_wiphy_regd_rtnl - set regdom info for self managed drivers
-+ * @wiphy: the wireless device we want to process the regulatory domain on
-+ * @rd: the regulatory domain informatoin to use for this wiphy
-+ *
-+ * Set the regulatory domain information for self-managed wiphys, only they
-+ * may use this function. See %REGULATORY_WIPHY_SELF_MANAGED for more
-+ * information.
-+ *
-+ * This function requires the caller to hold the rtnl_lock.
-+ *
-+ * Return: 0 on success. -EINVAL, -EPERM
-+ */
-+int regulatory_set_wiphy_regd_rtnl(struct wiphy *wiphy,
-+				   struct ieee80211_regdomain *rd);
-+
-+/**
-  * wiphy_apply_custom_regulatory - apply a custom driver regulatory domain
-  * @wiphy: the wireless device we want to process the regulatory domain on
-  * @regd: the custom regulatory domain to use for this wiphy
-diff --git a/include/net/regulatory.h b/include/net/regulatory.h
-index 701177c..d69c3db 100644
---- a/include/net/regulatory.h
-+++ b/include/net/regulatory.h
-@@ -141,6 +141,24 @@ struct regulatory_request {
-  *	change, the interfaces are given a grace period to disconnect or move
-  *	to an allowed channels. Interfaces on forbidden channels are forcibly
-  *	disconnected.
-+ * @REGULATORY_WIPHY_SELF_MANAGED: for devices that employ wiphy-specific
-+ *	regdom management. These devices will ignore all regdom changes not
-+ *	originating from their own wiphy.
-+ *	A self-managed wiphys only employs regulatory information obtained from
-+ *	the FW and driver and does not use other cfg80211 sources like
-+ *	beacon-hints, country-code IEs and hints from other devices on the same
-+ *	system. Conversely, a self-managed wiphy does not share its regulatory
-+ *	hints with other devices in the system. If a system contains several
-+ *	devices, one or more of which are self-managed, there might be
-+ *	contradictory regulatory settings between them. Usage of flag is
-+ *	generally discouraged. Only use it if the FW/driver is incompatible
-+ *	with non-locally originated hints.
-+ *	This flag is incompatible with the flags: %REGULATORY_CUSTOM_REG,
-+ *	%REGULATORY_STRICT_REG, %REGULATORY_COUNTRY_IE_FOLLOW_POWER,
-+ *	%REGULATORY_COUNTRY_IE_IGNORE and %REGULATORY_DISABLE_BEACON_HINTS.
-+ *	Mixing any of the above flags with this flag will result in a failure
-+ *	to register the wiphy. This flag implies
-+ *	%REGULATORY_DISABLE_BEACON_HINTS.
-  */
- enum ieee80211_regulatory_flags {
- 	REGULATORY_CUSTOM_REG			= BIT(0),
-@@ -150,6 +168,7 @@ enum ieee80211_regulatory_flags {
- 	REGULATORY_COUNTRY_IE_IGNORE		= BIT(4),
- 	REGULATORY_ENABLE_RELAX_NO_IR           = BIT(5),
- 	REGULATORY_ENFORCE_CHANNELS             = BIT(6),
-+	REGULATORY_WIPHY_SELF_MANAGED		= BIT(7),
- };
- 
- struct ieee80211_freq_range {
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index d775245..3771e7d 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -774,6 +774,9 @@
-  *	peer given by %NL80211_ATTR_MAC. Both peers must be on the base channel
-  *	when this command completes.
-  *
-+ * @NL80211_CMD_WIPHY_REG_CHANGE: Similar to %NL80211_CMD_REG_CHANGE, but used
-+ *	for indicating changes for devices with wiphy-specific regdom management
-+ *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-  */
-@@ -958,6 +961,8 @@ enum nl80211_commands {
- 	NL80211_CMD_TDLS_CHANNEL_SWITCH,
- 	NL80211_CMD_TDLS_CANCEL_CHANNEL_SWITCH,
- 
-+	NL80211_CMD_WIPHY_REG_CHANGE,
-+
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 5295456..15036a4 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -559,6 +559,14 @@ int wiphy_register(struct wiphy *wiphy)
- 		     BIT(NL80211_IFTYPE_MONITOR)))))
- 		return -EINVAL;
- 
-+	if (WARN_ON((wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED) &&
-+		    (wiphy->regulatory_flags &
-+		     (REGULATORY_CUSTOM_REG | REGULATORY_STRICT_REG |
-+		      REGULATORY_COUNTRY_IE_FOLLOW_POWER |
-+		      REGULATORY_COUNTRY_IE_IGNORE |
-+		      REGULATORY_DISABLE_BEACON_HINTS))))
-+		return -EINVAL;
-+
- 	if (WARN_ON(wiphy->coalesce &&
- 		    (!wiphy->coalesce->n_rules ||
- 		     !wiphy->coalesce->n_patterns) &&
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 6e41777..de3a47a 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -10942,25 +10942,9 @@ void nl80211_send_sched_scan(struct cfg80211_registered_device *rdev,
- 				NL80211_MCGRP_SCAN, GFP_KERNEL);
- }
- 
--/*
-- * This can happen on global regulatory changes or device specific settings
-- * based on custom world regulatory domains.
-- */
--void nl80211_send_reg_change_event(struct regulatory_request *request)
-+static bool nl80211_reg_change_event_fill(struct sk_buff *msg,
-+					  struct regulatory_request *request)
- {
--	struct sk_buff *msg;
--	void *hdr;
--
--	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
--	if (!msg)
--		return;
--
--	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_REG_CHANGE);
--	if (!hdr) {
--		nlmsg_free(msg);
--		return;
--	}
--
- 	/* Userspace can always count this one always being set */
- 	if (nla_put_u8(msg, NL80211_ATTR_REG_INITIATOR, request->initiator))
- 		goto nla_put_failure;
-@@ -10990,6 +10974,66 @@ void nl80211_send_reg_change_event(struct regulatory_request *request)
- 	    nla_put_u32(msg, NL80211_ATTR_WIPHY, request->wiphy_idx))
- 		goto nla_put_failure;
- 
-+	return true;
-+
-+nla_put_failure:
-+	return false;
-+}
-+
-+/*
-+ * This can happen on global regulatory changes or device specific settings
-+ * based on custom world regulatory domains.
-+ */
-+void nl80211_send_reg_change_event(struct regulatory_request *request)
-+{
-+	struct sk_buff *msg;
-+	void *hdr;
-+
-+	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
-+	if (!msg)
-+		return;
-+
-+	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_REG_CHANGE);
-+	if (!hdr) {
-+		nlmsg_free(msg);
-+		return;
-+	}
-+
-+	if (nl80211_reg_change_event_fill(msg, request) == false)
-+		goto nla_put_failure;
-+
-+	genlmsg_end(msg, hdr);
-+
-+	rcu_read_lock();
-+	genlmsg_multicast_allns(&nl80211_fam, msg, 0,
-+				NL80211_MCGRP_REGULATORY, GFP_ATOMIC);
-+	rcu_read_unlock();
-+
-+	return;
-+
-+nla_put_failure:
-+	genlmsg_cancel(msg, hdr);
-+	nlmsg_free(msg);
-+}
-+
-+void nl80211_send_wiphy_reg_change_event(struct regulatory_request *request)
-+{
-+	struct sk_buff *msg;
-+	void *hdr;
-+
-+	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
-+	if (!msg)
-+		return;
-+
-+	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_WIPHY_REG_CHANGE);
-+	if (!hdr) {
-+		nlmsg_free(msg);
-+		return;
-+	}
-+
-+	if (nl80211_reg_change_event_fill(msg, request) == false)
-+		goto nla_put_failure;
-+
- 	genlmsg_end(msg, hdr);
- 
- 	rcu_read_lock();
-diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
-index 7ad70d6..b91b9c5 100644
---- a/net/wireless/nl80211.h
-+++ b/net/wireless/nl80211.h
-@@ -18,6 +18,7 @@ void nl80211_send_sched_scan(struct cfg80211_registered_device *rdev,
- void nl80211_send_sched_scan_results(struct cfg80211_registered_device *rdev,
- 				     struct net_device *netdev);
- void nl80211_send_reg_change_event(struct regulatory_request *request);
-+void nl80211_send_wiphy_reg_change_event(struct regulatory_request *request);
- void nl80211_send_rx_auth(struct cfg80211_registered_device *rdev,
- 			  struct net_device *netdev,
- 			  const u8 *buf, size_t len, gfp_t gfp);
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 922d00a..18cf13b 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1307,6 +1307,9 @@ static bool ignore_reg_update(struct wiphy *wiphy,
- {
- 	struct regulatory_request *lr = get_last_request();
- 
-+	if (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED)
-+		return true;
-+
- 	if (!lr) {
- 		REG_DBG_PRINT("Ignoring regulatory request set by %s "
- 			      "since last_request is not set\n",
-@@ -1370,6 +1373,9 @@ static void handle_reg_beacon(struct wiphy *wiphy, unsigned int chan_idx,
- 	sband = wiphy->bands[reg_beacon->chan.band];
- 	chan = &sband->channels[chan_idx];
- 
-+	if (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED)
-+		return;
-+
- 	if (likely(chan->center_freq != reg_beacon->chan.center_freq))
- 		return;
- 
-@@ -2431,6 +2437,9 @@ static void restore_regulatory_settings(bool reset_user)
- 	world_alpha2[1] = cfg80211_world_regdom->alpha2[1];
- 
- 	list_for_each_entry(rdev, &cfg80211_rdev_list, list) {
-+		if (rdev->wiphy.regulatory_flags &
-+						REGULATORY_WIPHY_SELF_MANAGED)
-+			continue;
- 		if (rdev->wiphy.regulatory_flags & REGULATORY_CUSTOM_REG)
- 			restore_custom_reg_settings(&rdev->wiphy);
- 	}
-@@ -2834,6 +2843,56 @@ int set_regdom(const struct ieee80211_regdomain *rd)
- 	return 0;
- }
- 
-+int regulatory_set_wiphy_regd_rtnl(struct wiphy *wiphy,
-+				   struct ieee80211_regdomain *rd)
-+{
-+	const struct ieee80211_regdomain *regd;
-+	const struct ieee80211_regdomain *tmp;
-+	enum ieee80211_band band;
-+	struct regulatory_request request = {};
-+
-+	if (WARN_ON(!wiphy || !rd))
-+		return -EINVAL;
-+
-+	if (WARN(!(wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED),
-+		 "wiphy should have REGULATORY_WIPHY_SELF_MANAGED\n"))
-+		return -EPERM;
-+
-+	WARN_ON_ONCE(!lockdep_rtnl_is_held());
-+
-+	if (WARN(!is_valid_rd(rd), "Invalid regulatory domain detected\n")) {
-+		print_regdomain_info(rd);
-+		return -EINVAL;
-+	}
-+
-+	regd = reg_copy_regd(rd);
-+	if (IS_ERR(regd))
-+		return PTR_ERR(regd);
-+
-+	tmp = get_wiphy_regdom(wiphy);
-+	rcu_assign_pointer(wiphy->regd, regd);
-+	rcu_free_regdom(tmp);
-+
-+	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
-+		handle_band_custom(wiphy,
-+				   wiphy->bands[band],
-+				   regd);
-+	}
-+
-+	reg_process_ht_flags(wiphy);
-+
-+	request.wiphy_idx = get_wiphy_idx(wiphy);
-+	request.alpha2[0] = rd->alpha2[0];
-+	request.alpha2[1] = rd->alpha2[1];
-+	request.initiator = NL80211_REGDOM_SET_BY_DRIVER;
-+
-+	nl80211_send_wiphy_reg_change_event(&request);
-+
-+	reg_check_channels();
-+	return 0;
-+}
-+EXPORT_SYMBOL(regulatory_set_wiphy_regd_rtnl);
-+
- void wiphy_regulatory_register(struct wiphy *wiphy)
- {
- 	struct regulatory_request *lr;
 -- 
-1.9.1
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
