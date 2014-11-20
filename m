@@ -1,87 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f46.google.com ([74.125.82.46]:37901 "EHLO
-	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755075AbaKPLB1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Nov 2014 06:01:27 -0500
-Received: by mail-wg0-f46.google.com with SMTP id x13so22807070wgg.5
-        for <linux-wireless@vger.kernel.org>; Sun, 16 Nov 2014 03:01:26 -0800 (PST)
+Received: from mout.web.de ([212.227.15.4]:59144 "EHLO mout.web.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756904AbaKTPu6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Nov 2014 10:50:58 -0500
+Message-ID: <546E0DC8.3050906@users.sourceforge.net> (sfid-20141120_165129_062120_10E1E30D)
+Date: Thu, 20 Nov 2014 16:50:32 +0100
+From: SF Markus Elfring <elfring@users.sourceforge.net>
 MIME-Version: 1.0
-In-Reply-To: <20141113225528.GE24486@wotan.suse.de>
-References: <1415895219-19848-1-git-send-email-arik@wizery.com>
- <1415895219-19848-2-git-send-email-arik@wizery.com> <20141113225528.GE24486@wotan.suse.de>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Sun, 16 Nov 2014 13:01:11 +0200
-Message-ID: <CA+XVXfeLd9YN6CQFN1aPix4Ee_fWSZAmZP0jqOu98eC7wGBcUQ@mail.gmail.com> (sfid-20141116_120130_659140_490D1246)
-Subject: Re: [PATCH v2 2/4] cfg80211: update missing fields in custom
- regulatory path
-To: "Luis R. Rodriguez" <mcgrof@suse.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Jonathan Doron <jond@wizery.com>
-Content-Type: text/plain; charset=UTF-8
+To: Arend van Spriel <arend@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	netdev@vger.kernel.org
+CC: LKML <linux-kernel@vger.kernel.org>,
+	kernel-janitors@vger.kernel.org,
+	Julia Lawall <julia.lawall@lip6.fr>
+Subject: [PATCH 1/1] net: brcm80211: Deletion of unnecessary checks before
+ two function calls
+References: <5307CAA2.8060406@users.sourceforge.net> <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6> <530A086E.8010901@users.sourceforge.net> <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6> <530A72AA.3000601@users.sourceforge.net> <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6> <530B5FB6.6010207@users.sourceforge.net> <alpine.DEB.2.10.1402241710370.2074@hadrien> <530C5E18.1020800@users.sourceforge.net> <alpine.DEB.2.10.1402251014170.2080@hadrien> <530CD2C4.4050903@users.sourceforge.net> <alpine.DEB.2.10.1402251840450.7035@hadrien> <530CF8FF.8080600@users.sourceforge.net> <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6> <530DD06F.4090703@users.sourceforge.net> <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6> <5317A59D.4@users.sourceforge.net>
+In-Reply-To: <5317A59D.4@users.sourceforge.net>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 14, 2014 at 12:55 AM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
-> On Thu, Nov 13, 2014 at 06:13:37PM +0200, Arik Nemtsov wrote:
->> From: Jonathan Doron <jond@wizery.com>
->>
->> Some channels fields were not being updated in the custom regulatory
->> path. Update them according to the code in handle_channel().
->>
->> Signed-off-by: Jonathan Doron <jonathanx.doron@intel.com>
->> Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
->> ---
->>  net/wireless/reg.c | 13 +++++++++++++
->>  1 file changed, 13 insertions(+)
->>
->> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
->> index 6459ddd..174d8f82 100644
->> --- a/net/wireless/reg.c
->> +++ b/net/wireless/reg.c
->> @@ -1693,10 +1693,23 @@ static void handle_channel_custom(struct wiphy *wiphy,
->>       if (max_bandwidth_khz < MHZ_TO_KHZ(160))
->>               bw_flags |= IEEE80211_CHAN_NO_160MHZ;
->>
->> +     chan->dfs_state = NL80211_DFS_USABLE;
->
-> NL80211_DFS_USABLE is 0 so this is not needed. Being explicit about it
-> is OK I suppose though.
->
->> +     chan->dfs_state_entered = jiffies;
->
-> OK.
->
->> +
->> +     chan->beacon_found = false;
->
-> false is 0 so this is not needed but being explicit about it is OK.
->
->>       chan->flags |= map_regdom_flags(reg_rule->flags) | bw_flags;
->>       chan->max_antenna_gain = (int) MBI_TO_DBI(power_rule->max_antenna_gain);
->>       chan->max_reg_power = chan->max_power =
->>               (int) MBM_TO_DBM(power_rule->max_eirp);
->> +
->> +     if (chan->flags & IEEE80211_CHAN_RADAR) {
->> +             if (reg_rule->dfs_cac_ms)
->> +                     chan->dfs_cac_ms = reg_rule->dfs_cac_ms;
->> +             else
->> +                     chan->dfs_cac_ms = IEEE80211_DFS_MIN_CAC_TIME_MS;
->> +     }
->> +
->> +     chan->max_power = chan->max_reg_power;
->>  }
->
-> I rather you split this up into the stuff not required (things which
-> are good to be explicit about) Vs possible fixes, these last are
-> good fixes. Also put them as part of your first set of patches
-> and add my Acked-by so Johannes can already merge them. If you want
-> them merged faster just send them separately now.
->
-> Acked-by: Luis R. Rodriguez <mcgrof@suse.com>
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Thu, 20 Nov 2014 16:42:51 +0100
 
-Thanks.
+The functions brcmu_pkt_buf_free_skb() and release_firmware() test whether
+their argument is NULL and then return immediately. Thus the test around
+the call is not needed.
 
-I'll split into 2 and send then.
+This issue was detected by using the Coccinelle software.
 
-Arik
+Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c | 3 +--
+ drivers/net/wireless/brcm80211/brcmfmac/firmware.c | 3 +--
+ drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c   | 3 +--
+ drivers/net/wireless/brcm80211/brcmsmac/main.c     | 3 +--
+ 4 files changed, 4 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index f55f625..8ff7037 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -2539,8 +2539,7 @@ static void brcmf_sdio_bus_stop(struct device *dev)
+ 	brcmu_pktq_flush(&bus->txq, true, NULL, NULL);
+ 
+ 	/* Clear any held glomming stuff */
+-	if (bus->glomd)
+-		brcmu_pkt_buf_free_skb(bus->glomd);
++	brcmu_pkt_buf_free_skb(bus->glomd);
+ 	brcmf_sdio_free_glom(bus);
+ 
+ 	/* Clear rx control and wake any waiters */
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
+index 8ea9f28..3a2d014 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
+@@ -262,8 +262,7 @@ static void brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
+ 
+ fail:
+ 	brcmf_dbg(TRACE, "failed: dev=%s\n", dev_name(fwctx->dev));
+-	if (fwctx->code)
+-		release_firmware(fwctx->code);
++	release_firmware(fwctx->code);
+ 	device_release_driver(fwctx->dev);
+ 	kfree(fwctx);
+ }
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
+index 8f8b937..0cb00dc 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
+@@ -506,8 +506,7 @@ static int brcmf_msgbuf_query_dcmd(struct brcmf_pub *drvr, int ifidx,
+ 		memcpy(buf, skb->data, (len < msgbuf->ioctl_resp_ret_len) ?
+ 				       len : msgbuf->ioctl_resp_ret_len);
+ 	}
+-	if (skb)
+-		brcmu_pkt_buf_free_skb(skb);
++	brcmu_pkt_buf_free_skb(skb);
+ 
+ 	return msgbuf->ioctl_resp_status;
+ }
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index 1b47482..ce538a1 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -1009,8 +1009,7 @@ brcms_c_dotxstatus(struct brcms_c_info *wlc, struct tx_status *txs)
+ 		if (txh)
+ 			trace_brcms_txdesc(&wlc->hw->d11core->dev, txh,
+ 					   sizeof(*txh));
+-		if (p)
+-			brcmu_pkt_buf_free_skb(p);
++		brcmu_pkt_buf_free_skb(p);
+ 	}
+ 
+ 	if (dma && queue < NFIFO) {
+-- 
+2.1.3
+
