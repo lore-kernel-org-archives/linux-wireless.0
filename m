@@ -1,82 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:61038 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750890AbaK1MVv (ORCPT
+Received: from baptiste.telenet-ops.be ([195.130.132.51]:40813 "EHLO
+	baptiste.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751575AbaKTMnL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Nov 2014 07:21:51 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-CC: <ath10k@lists.infradead.org>, <devicetree@vger.kernel.org>,
-	<linux-wireless@vger.kernel.org>, <toshik@chromium.org>
-Subject: Re: [PATCH v4 1/2] dt: bindings: add ath10k wireless device
-References: <20141127120727.17546.61202.stgit@potku.adurom.net>
-	<3202372.2AaH3c4qv1@wuerfel> <87fvd3sl9c.fsf@kamboji.qca.qualcomm.com>
-	<5247714.HacITJUipJ@wuerfel>
-Date: Fri, 28 Nov 2014 14:21:39 +0200
-In-Reply-To: <5247714.HacITJUipJ@wuerfel> (Arnd Bergmann's message of "Fri, 28
-	Nov 2014 11:23:08 +0100")
-Message-ID: <874mtjsegc.fsf@kamboji.qca.qualcomm.com> (sfid-20141128_132155_502302_045DA30B)
+	Thu, 20 Nov 2014 07:43:11 -0500
+Message-ID: <546DE1DB.7090900@telenet.be> (sfid-20141120_134314_899758_61D31545)
+Date: Thu, 20 Nov 2014 13:43:07 +0100
+From: Ruben De Smet <ruben.de.smet@telenet.be>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: b43-dev <b43-dev@lists.infradead.org>,
+	linux-wireless@vger.kernel.org
+Subject: Broadcom Corporation BCM43228 802.11a/b/g/n
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="0kSHDaKW4ADNTHjAAC4eevT1VtHfNGOLK"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arnd Bergmann <arnd@arndb.de> writes:
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--0kSHDaKW4ADNTHjAAC4eevT1VtHfNGOLK
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-> On Friday 28 November 2014 11:54:39 Kalle Valo wrote:
->> 
->> Right now ath10k does not support that, but in the future we might want
->> to add mac address as well. We need to do some testing with the firmware
->> to make sure that we can safely change the "main" address from ath10k.
->
-> This is from Documentation/devicetree/bindings/net/ethernet.txt:
->
-> - local-mac-address: array of 6 bytes, specifies the MAC address that was
->   assigned to the network device;
-> - mac-address: array of 6 bytes, specifies the MAC address that was last used by
->   the boot program; should be used in cases where the MAC address assigned to
->   the device by the boot program is different from the "local-mac-address"
->   property;
->
-> If the address is fixed, you might still be able to use the local-mac-address
-> property to communicate the main address. Normally you only have to pass
-> the mac address in DT if the device itself doesn't know the address. Do you
-> know where the main address is stored?
+Hello b43 and linux-wireless
 
-The ath10k main address is stored in the calibration data and the
-firmware delivers the address to ath10k.
+I'm not subscribed (anymore) to these lists, so please use the "reply
+all" feature of your mailclient. Thank you :)
 
-> If it's always known to the card, we don't need to pass it, and if the
-> card doesn't know it, I suspect it would be safe to change it.
+This will be the last day I'm using my Broadcom Corporation BCM43228
+802.11a/b/g/n miniPCI WiFi card, as I'm switching to a faster Intel AC ca=
+rd.
+Is there any interest in the linux-wireless or b43 community to have
+this device for reverse engineering purposes? I'm able to send it for fre=
+e.
 
-I suspect we can change the address afterwards, but I need to check to
-be sure.
+Ruben
 
->> And because of Virtual AP (mBSSID) feature we actually would need to
->> provide multiple addresses, not just one. Maybe with addr_mask like
->> struct wiphy has?
->> 
->>  * @perm_addr: permanent MAC address of this device
->>  * @addr_mask: If the device supports multiple MAC addresses by masking,
->>  *      set this to a mask with variable bits set to 1, e.g. if the last
->>  *      four bits are variable then set it to 00-00-00-00-00-0f. The actual
->>  *      variable bits shall be determined by the interfaces added, with
->>  *      interfaces not matching the mask being rejected to be brought up.
->> 
->>         /* permanent MAC address(es) */
->>         u8 perm_addr[ETH_ALEN];
->>         u8 addr_mask[ETH_ALEN];
->
-> We don't have a common binding for this yet, I think drivers that do this
-> at the moment just know how many addresses they are allowed to take.
->
-> If the mask is generally considered useful, we could probably add that to
-> the binding though.
+--=20
+I prefer encrypted email. My key's signature ends in 1213DC10 and here's
+a tutorial: http://lifehacker.com/180878/how-to-encrypt-your-email
 
-Currently ath10k supports up to 8 Virtual APs but the manufacturer can
-choose to allocate any number of MAC addresses (1-8). Something like
-addr_mask would be good way to inform ath10k what address range it has
-available.
 
--- 
-Kalle Valo
+--0kSHDaKW4ADNTHjAAC4eevT1VtHfNGOLK
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQEcBAEBAgAGBQJUbeHbAAoJEPgmWogSE9wQoKUIAIQfwo6GWojsZYDj+oR8dGQA
+1wMasssk36sgRjG9NPEKHry0wyYxDy5c8O8UdVli21LncUG84LdK4frgdVxHqWN4
+Mwd7LWxLl9LJEocr2IF78WtTcw7hdzNxxkpEfyC0PDrar8wdWeQC+4TnU6Z9DIcc
+MfHtTBVVI1MlmzMxYsNqJ4eGhW2sDjlND0Ey5fCkqgPLlxjA5Zl6qu0sjfkhIdGr
+7sWsurdWCVoycH674F+xFj1+jD5RLogdJtOPC69XhwAS9yW25tcYxW1GwbSNgp+Z
+OBcHs4gweD864bSEk88b62ZJrTQxxiJW3AsLt/mSElRVeAy3Sc5Jy9ZoGoZo2jA=
+=V7Pb
+-----END PGP SIGNATURE-----
+
+--0kSHDaKW4ADNTHjAAC4eevT1VtHfNGOLK--
