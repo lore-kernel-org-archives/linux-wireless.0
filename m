@@ -1,615 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:1961 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752040AbaK3MEf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Nov 2014 07:04:35 -0500
-Message-ID: <547B07CF.90501@broadcom.com> (sfid-20141130_130457_612124_1E644A91)
-Date: Sun, 30 Nov 2014 13:04:31 +0100
-From: Arend van Spriel <arend@broadcom.com>
+Received: from cantor2.suse.de ([195.135.220.15]:39749 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757929AbaKTUf1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Nov 2014 15:35:27 -0500
+Date: Thu, 20 Nov 2014 21:35:25 +0100
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 1/4] cfg80211: leave invalid channels on regdomain
+	change
+Message-ID: <20141120203525.GP24486@wotan.suse.de> (sfid-20141120_213544_633693_4A91930E)
+References: <1415895219-19848-1-git-send-email-arik@wizery.com> <20141113224556.GD24486@wotan.suse.de> <CA+XVXffuKE2heFPWmVWGre8cL3VZX5U63_Rru9uXKiqbpz5xYA@mail.gmail.com>
 MIME-Version: 1.0
-To: Michael Tokarev <mjt@tls.msk.ru>
-CC: Maximilian Engelhardt <maxi@daemonizer.de>,
-	=?UTF-8?B?UmFmYcWCIE1pxYJl?= =?UTF-8?B?Y2tp?= <zajec5@gmail.com>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	brcm80211 development <brcm80211-dev-list@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>
-Subject: Re: BCM4313 & brcmsmac & 3.12: only semi-working?
-References: <53FDACD1.8090805@msgid.tls.msk.ru> <54363ED0.605@broadcom.com> <CACna6rw3XgdJz0uKkAuas8RTzozTdFp2mgF5g1uo7LHJVSMt4g@mail.gmail.com> <3543341.FmUQFH9nrl@eisbaer> <546C5D1F.108@msgid.tls.msk.ru> <546CD94D.9060509@broadcom.com> <546CF66A.3000207@msgid.tls.msk.ru> <546D04EE.1030200@msgid.tls.msk.ru> <5471AC29.6040009@broadcom.com> <5475A2DC.80502@msgid.tls.msk.ru>
-In-Reply-To: <5475A2DC.80502@msgid.tls.msk.ru>
-Content-Type: multipart/mixed;
-	boundary="------------030701070605020304000106"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CA+XVXffuKE2heFPWmVWGre8cL3VZX5U63_Rru9uXKiqbpz5xYA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---------------030701070605020304000106
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-
-On 26-11-14 10:52, Michael Tokarev wrote:
-> I'm sorry this took so long - I was AFK during weekend and had
-> to deal with a huge backlog after that.  Now it is all sorted.
+On Sun, Nov 16, 2014 at 01:00:16PM +0200, Arik Nemtsov wrote:
+> On Fri, Nov 14, 2014 at 12:45 AM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
+> >> + * @REGULATORY_ENFORCE_CHANNELS: the regulatory core will make sure all
+> >> + *   interfaces on this wiphy reside on allowed channels. Upon a regdomain
+> >> + *   change, the interfaces are given a grace period to disconnect or move
+> >> + *   to an allowed channels. Interfaces on forbidden channels are forcibly
+> >> + *   disconnected.
+> >
+> > I don't like this name, it would seem folks not using this don't
+> > get to enforce channels, and that's not right, this is a feature,
+> > and in fact I am not sure why this is being implemented as optional
+> > rather than a standard feature. Care to explain the reasoning there?
 > 
-> 23.11.2014 12:43, Arend van Spriel wrote:
->> On 19-11-14 22:00, Michael Tokarev wrote:
-> []
->> Well, it shows tx looks ok, but with download there is not much of that
->> going on. At least no large packets. However, I did find some missing
->> pieces related to bt-coex. Given that you device is a wifi-bt combo card
->> that is likely an issue for you. One of the missing pieces looks in
->> sprom for parameters and that is provided by bcma. However, it does not
->> seem to extract bt-coex related stuff. So I have attached a patch based
->> on 3.18-rc5 for bcma that dumps the sprom contents. Could you sent that
->> content to me.
+> This is a big change in behavior. It can hurt certification tests etc.
+> I believe a chip vendor should opt-in for this change. Otherwise we
+> risk bad user experience.
+
+It really should only kick you off of channels you are not allowed to use,
+I welcome this change and think it is important as a standard feature.
+Please rename to REGULATORY_IGNORE_STALE_KICKOFF and make the behaviour
+change to ignore the kick off rather than opt-in. We take measures to
+operate properly regulatory and this change helps in that direction, we
+want opt-in features to let folks that know what they are doing ingore
+certain fatures.
+
+> >> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+> >> index 7449a8c..6459ddd 100644
+> >> --- a/net/wireless/reg.c
+> >> +++ b/net/wireless/reg.c
+> >> @@ -56,6 +56,7 @@
+> >>  #include <net/cfg80211.h>
+> >>  #include "core.h"
+> >>  #include "reg.h"
+> >> +#include "rdev-ops.h"
+> >>  #include "regdb.h"
+> >>  #include "nl80211.h"
+> >>
+> >> @@ -66,6 +67,12 @@
+> >>  #define REG_DBG_PRINT(args...)
+> >>  #endif
+> >>
+> >> +/*
+> >> + * Grace period we give before making sure all current interfaces reside on
+> >> + * channels allowed by the current regulatory domain.
+> >> + */
+> >> +#define REG_ENFORCE_GRACE_MS 60000
+> >> +
+> >>  /**
+> >>   * enum reg_request_treatment - regulatory request treatment
+> >>   *
+> >> @@ -210,6 +217,9 @@ struct reg_beacon {
+> >>       struct ieee80211_channel chan;
+> >>  };
+> >>
+> >> +static void reg_check_chans_work(struct work_struct *work);
+> >> +static DECLARE_DELAYED_WORK(reg_check_chans, reg_check_chans_work);
+> >> +
+> >>  static void reg_todo(struct work_struct *work);
+> >>  static DECLARE_WORK(reg_work, reg_todo);
+> >>
+> >> @@ -1518,6 +1528,90 @@ static void reg_call_notifier(struct wiphy *wiphy,
+> >>               wiphy->reg_notifier(wiphy, request);
+> >>  }
+> >>
+> >> +static bool reg_wdev_chan_valid(struct wiphy *wiphy, struct wireless_dev *wdev)
+> >> +{
+> >> +     struct ieee80211_channel *ch;
+> >> +     struct cfg80211_chan_def chandef;
+> >> +     struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
+> >> +     bool ret = true;
+> >> +
+> >> +     wdev_lock(wdev);
+> >> +
+> >> +     if (!wdev->netdev || !netif_running(wdev->netdev))
+> >> +             goto out;
+> >> +
+> >> +     switch (wdev->iftype) {
+> >> +     case NL80211_IFTYPE_AP:
+> >> +     case NL80211_IFTYPE_P2P_GO:
+> >> +             if (!wdev->beacon_interval)
+> >> +                     goto out;
+> >> +
+> >> +             ret = cfg80211_reg_can_beacon(wiphy,
+> >> +                                           &wdev->chandef, wdev->iftype);
+> >> +             break;
+> >> +     case NL80211_IFTYPE_STATION:
+> >> +     case NL80211_IFTYPE_P2P_CLIENT:
+> >> +             if (!wdev->current_bss ||
+> >> +                 !wdev->current_bss->pub.channel)
+> >> +                     goto out;
+> >> +
+> >> +             ch = wdev->current_bss->pub.channel;
+> >> +             if (rdev->ops->get_channel &&
+> >> +                 !rdev_get_channel(rdev, wdev, &chandef))
+> >> +                     ret = cfg80211_chandef_usable(wiphy, &chandef,
+> >> +                                                   IEEE80211_CHAN_DISABLED);
+> >> +             else
+> >> +                     ret = !(ch->flags & IEEE80211_CHAN_DISABLED);
+> >> +             break;
+> >> +     default:
+> >> +             /* others not implemented for now */
+> >> +             pr_info("Regulatory channel check not implemented for mode %d\n",
+> >> +                     wdev->iftype);
+> >
+> > I feel you are being lazy here, come on, think of it and address it.
+> > It can't be that hard. In fact cfg80211_leave() already deals with
+> > all the logic to leave properly for all types of interfaces, you
+> > just have to come up with the logic to know things should kick
+> > the device off. Its not that hard.
 > 
-> Here we go.  I had to replace pr_debug with pr_err - haven't looked yet,
-> but the thing is that pr_debug isn't even being compiled into the kernel
-> here, all the messages are not present in the compiled modules.
+> I don't want to add modes I cannot test with HW I have. I think that's
+> irresponsible, especially when the side-effects are disconnections.
+> I can add IBSS as well with the HW I have, but that's about it.
 
-Thanks. Did not find what I was looking for, but I started working on
-integrating btcoex related functionality. The attached patch will print
-some info so I can focus on the required functionality for your device.
-It is based on 3.18-rc5.
+I'd like to see IBSS and Mesh considered and addressed.
 
-Regards,
-Arend
-
-> [  525.693474] bcma: bcmasprom:
-> [  525.693528] bcma:
-> 	
-> [  525.693592] bcma: 2801
-> [  525.693613] bcma: 0000
-> [  525.693659] bcma: 1795
-> [  525.693679] bcma: 103C
-> [  525.693725] bcma: 0070
-> [  525.693746] bcma: EDBE
-> [  525.693791] bcma: 0000
-> [  525.693811] bcma: 2BC4
-> [  525.693856] bcma: 2A64
-> [  525.693877] bcma: 2964
-> [  525.693922] bcma:
-> 	
-> [  525.693938] bcma: 2C64
-> [  525.693984] bcma: 3CE7
-> [  525.694004] bcma: 46FF
-> [  525.694049] bcma: 47FF
-> [  525.694070] bcma: 0C00
-> [  525.694115] bcma: 0820
-> [  525.694136] bcma: 0030
-> [  525.694181] bcma: 1002
-> [  525.694202] bcma: 9F28
-> [  525.694247] bcma: 5D44
-> [  525.694267] bcma:
-> 	
-> [  525.694329] bcma: 8080
-> [  525.694349] bcma: 1D8F
-> [  525.694395] bcma: 0032
-> [  525.694415] bcma: 0100
-> [  525.694461] bcma: DF00
-> [  525.694481] bcma: 71F5
-> [  525.694526] bcma: 8400
-> [  525.694547] bcma: 0083
-> [  525.694592] bcma: 8500
-> [  525.694613] bcma: 2010
-> [  525.694658] bcma:
-> 	
-> [  525.694674] bcma: 0001
-> [  525.694719] bcma: 0000
-> [  525.694740] bcma: 0000
-> [  525.694785] bcma: 0000
-> [  525.694805] bcma: 0000
-> [  525.694850] bcma: 0000
-> [  525.694871] bcma: 0000
-> [  525.694916] bcma: 0000
-> [  525.694937] bcma: 0000
-> [  525.694982] bcma: 0000
-> [  525.695002] bcma:
-> 	
-> [  525.695063] bcma: 0000
-> [  525.695084] bcma: 0000
-> [  525.695129] bcma: 1008
-> [  525.695150] bcma: 0305
-> [  525.695195] bcma: 0000
-> [  525.695215] bcma: 0000
-> [  525.695261] bcma: 0000
-> [  525.695281] bcma: 0000
-> [  525.695326] bcma: 4727
-> [  525.695347] bcma: 8000
-> [  525.695392] bcma:
-> 	
-> [  525.695409] bcma: 0002
-> [  525.695454] bcma: 0000
-> [  525.695474] bcma: 1800
-> [  525.695520] bcma: 1800
-> [  525.695561] bcma: 0000
-> [  525.695610] bcma: 0000
-> [  525.695631] bcma: 0000
-> [  525.695677] bcma: 0000
-> [  525.695698] bcma: 0000
-> [  525.695746] bcma: 0000
-> [  525.695766] bcma:
-> 	
-> [  525.695827] bcma: 0000
-> [  525.695848] bcma: 0000
-> [  525.695893] bcma: 0000
-> [  525.695914] bcma: 0000
-> [  525.695961] bcma: 5372
-> [  525.695982] bcma: 1107
-> [  525.696027] bcma: 2201
-> [  525.696048] bcma: 0040
-> [  525.696093] bcma: 0884
-> [  525.696116] bcma: 0000
-> [  525.696161] bcma:
-> 	
-> [  525.696178] bcma: E006
-> [  525.696223] bcma: E659
-> [  525.696244] bcma: 5F5A
-> [  525.696290] bcma: 5856
-> [  525.696310] bcma: 0001
-> [  525.696356] bcma: FFFF
-> [  525.696376] bcma: 83FF
-> [  525.696422] bcma: FFFF
-> [  525.696443] bcma: 0003
-> [  525.696488] bcma: 0202
-> [  525.696508] bcma:
-> 	
-> [  525.696570] bcma: FFFF
-> [  525.696590] bcma: 0011
-> [  525.698381] bcma: 017A
-> [  525.698402] bcma: 0000
-> [  525.700181] bcma: 0000
-> [  525.700202] bcma: 0000
-> [  525.701936] bcma: 0000
-> [  525.701957] bcma: 0201
-> [  525.703650] bcma: 0000
-> [  525.703672] bcma: 7800
-> [  525.705278] bcma:
-> 	
-> [  525.706808] bcma: 6410
-> [  525.708296] bcma: E398
-> [  525.708318] bcma: 0008
-> [  525.709774] bcma: 0000
-> [  525.709796] bcma: 0000
-> [  525.711186] bcma: 0000
-> [  525.711207] bcma: 0044
-> [  525.712532] bcma: 2400
-> [  525.712556] bcma: FCF7
-> [  525.713867] bcma: 0089
-> [  525.713888] bcma:
-> 	
-> [  525.716500] bcma: 0000
-> [  525.716524] bcma: 0000
-> [  525.717834] bcma: 0000
-> [  525.717855] bcma: 0000
-> [  525.719195] bcma: 0000
-> [  525.719217] bcma: 0000
-> [  525.720530] bcma: 0000
-> [  525.720551] bcma: 0000
-> [  525.721862] bcma: 0000
-> [  525.721882] bcma: 0000
-> [  525.723176] bcma:
-> 	
-> [  525.724400] bcma: 0000
-> [  525.725678] bcma: 0000
-> [  525.725699] bcma: 0048
-> [  525.726996] bcma: FED2
-> [  525.727017] bcma: 15D9
-> [  525.728308] bcma: FAC6
-> [  525.728329] bcma: 0000
-> [  525.729642] bcma: 0000
-> [  525.729664] bcma: 0000
-> [  525.730958] bcma: 0000
-> [  525.730978] bcma:
-> 	
-> [  525.733526] bcma: 0000
-> [  525.733549] bcma: 0000
-> [  525.734827] bcma: 0000
-> [  525.734848] bcma: 0000
-> [  525.736155] bcma: 0000
-> [  525.736179] bcma: 0000
-> [  525.737466] bcma: 0000
-> [  525.737487] bcma: 0000
-> [  525.738764] bcma: 0000
-> [  525.738785] bcma: 0000
-> [  525.740049] bcma:
-> 	
-> [  525.741240] bcma: 0000
-> [  525.742501] bcma: 0000
-> [  525.742522] bcma: 0000
-> [  525.743806] bcma: 0000
-> [  525.743827] bcma: 0000
-> [  525.745111] bcma: 0000
-> [  525.745132] bcma: 0000
-> [  525.746433] bcma: 0000
-> [  525.746456] bcma: 0000
-> [  525.747725] bcma: 0000
-> [  525.747746] bcma:
-> 	
-> [  525.750251] bcma: 0000
-> [  525.750272] bcma: 0000
-> [  525.751532] bcma: 0000
-> [  525.751553] bcma: 0000
-> [  525.752847] bcma: 0000
-> [  525.752871] bcma: 0000
-> [  525.754150] bcma: 0000
-> [  525.754171] bcma: 0000
-> [  525.755441] bcma: 0000
-> [  525.755462] bcma: 0000
-> [  525.756717] bcma:
-> 	
-> [  525.757900] bcma: 0000
-> [  525.759148] bcma: 0000
-> [  525.759170] bcma: 0000
-> [  525.760436] bcma: 0000
-> [  525.760457] bcma: 0000
-> [  525.761720] bcma: 0000
-> [  525.761741] bcma: 0000
-> [  525.763023] bcma: 0000
-> [  525.763047] bcma: 0000
-> [  525.764301] bcma: 0000
-> [  525.764321] bcma:
-> 	
-> [  525.766790] bcma: 0000
-> [  525.766813] bcma: 1111
-> [  525.768057] bcma: 1111
-> [  525.768078] bcma: 0000
-> [  525.769355] bcma: 0000
-> [  525.769378] bcma: 0000
-> [  525.770631] bcma: 0000
-> [  525.770652] bcma: 0000
-> [  525.771898] bcma: 0000
-> [  525.771919] bcma: 2222
-> [  525.773158] bcma:
-> 	
-> [  525.774325] bcma: 3222
-> [  525.775540] bcma: 0000
-> [  525.775561] bcma: 0000
-> [  525.776816] bcma: 0000
-> [  525.776840] bcma: 0000
-> [  525.778089] bcma: 0000
-> [  525.778110] bcma: 0000
-> [  525.779355] bcma: 0000
-> [  525.779380] bcma: 0000
-> [  525.780600] bcma: 0000
-> [  525.780621] bcma:
-> 	
-> [  525.783015] bcma: 0000
-> [  525.783038] bcma: 0000
-> [  525.784247] bcma: 0000
-> [  525.784268] bcma: 0000
-> [  525.785500] bcma: 0000
-> [  525.785521] bcma: 0000
-> [  525.786759] bcma: 0000
-> [  525.786781] bcma: 0000
-> [  525.787995] bcma: 0000
-> [  525.788016] bcma: 0000
-> [  525.789217] bcma:
-> 	
-> [  525.790337] bcma: 0000
-> [  525.791505] bcma: 0000
-> [  525.791525] bcma: 0000
-> [  525.792740] bcma: 0000
-> [  525.792765] bcma: 0000
-> [  525.793965] bcma: 0000
-> [  525.793986] bcma: 0000
-> [  525.795168] bcma: 0000
-> [  525.795189] bcma: 0000
-> [  525.796375] bcma: 0000
-> [  525.796399] bcma:
-> 	
-> [  525.798682] bcma: 0000
-> [  525.798703] bcma: 0000
-> [  525.799885] bcma: 0000
-> [  525.799906] bcma: 0000
-> [  525.801038] bcma: 0000
-> [  525.801058] bcma: 0000
-> [  525.802177] bcma: 0000
-> [  525.802197] bcma: 0000
-> [  525.803320] bcma: 0000
-> [  525.803340] bcma: 0000
-> [  525.804433] bcma:
-> 	
-> [  525.805460] bcma: 0000
-> [  525.806547] bcma: 0000
-> [  525.806567] bcma: 0000
-> [  525.807671] bcma: 0000
-> [  525.807691] bcma: 0000
-> [  525.808777] bcma: 0000
-> [  525.808796] bcma: 0000
-> [  525.809899] bcma: 0000
-> [  525.809919] bcma: 0000
-> [  525.821789] bcma: bus0: Bus registered
-> 
-> Thanks,
-> 
-> /mjt
-> 
-
-
---------------030701070605020304000106
-Content-Type: text/x-patch;
-	name="0001-brcmsmac-obtain-more-btcoex-related-details.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename="0001-brcmsmac-obtain-more-btcoex-related-details.patch"
-
->From 1389fc3ce6787af145d0851ba5a4931bd8d72b23 Mon Sep 17 00:00:00 2001
-From: Arend van Spriel <arend@broadcom.com>
-Date: Sat, 29 Nov 2014 16:31:44 +0100
-Subject: [PATCH] brcmsmac: obtain more btcoex related details
-
-Added initial btcoex module for supporting bcm4313 combo chips. For
-now it just detects the btcoex support and flavours.
-
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmsmac/Makefile   |   1 +
- drivers/net/wireless/brcm80211/brcmsmac/btcoex.c   | 114 +++++++++++++++++++++
- drivers/net/wireless/brcm80211/brcmsmac/btcoex.h   |  25 +++++
- drivers/net/wireless/brcm80211/brcmsmac/d11.h      |   2 +-
- drivers/net/wireless/brcm80211/brcmsmac/main.c     |   5 +
- drivers/net/wireless/brcm80211/brcmsmac/main.h     |   1 +
- drivers/net/wireless/brcm80211/brcmsmac/types.h    |   3 +-
- .../net/wireless/brcm80211/include/chipcommon.h    |   2 +
- 8 files changed, 151 insertions(+), 2 deletions(-)
- create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/btcoex.c
- create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/btcoex.h
-
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/Makefile b/drivers/net/wireless/brcm80211/brcmsmac/Makefile
-index 32464ac..aa341bb 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/Makefile
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/Makefile
-@@ -26,6 +26,7 @@ brcmsmac-y := \
- 	ucode_loader.o \
- 	ampdu.o \
- 	antsel.o \
-+	btcoex.o \
- 	channel.o \
- 	main.o \
- 	phy_shim.o \
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/btcoex.c b/drivers/net/wireless/brcm80211/brcmsmac/btcoex.c
-new file mode 100644
-index 0000000..01cd10d
---- /dev/null
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/btcoex.c
-@@ -0,0 +1,114 @@
-+/*
-+ * Copyright (c) 2014 Broadcom Corporation
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-+ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
-+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#include <linux/types.h>
-+#include <net/mac80211.h>
-+
-+#include <chipcommon.h>
-+#include "types.h"
-+#include "debug.h"
-+#include "btcoex.h"
-+#include "main.h"
-+
-+struct brcms_btcoex {
-+	struct brcms_hardware *hw;
-+};
-+
-+static bool brcms_btc_ecicoex_enab(struct brcms_hardware *wlc_hw)
-+{
-+	struct bcma_bus *bus;
-+	bool enab;
-+
-+	enab = brcms_btc_ecicoex_enab(wlc_hw);
-+	if (!enab)
-+		return false;
-+
-+	bus = wlc_hw->d11core->bus;
-+	enab = D11REV_GE(wlc_hw->corerev, 15) &&
-+	       (bus->drv_cc.capabilities & CC_CAP_ECI) &&
-+	       (wlc_hw->machwcap & MCAP_BTCX) &&
-+	       (wlc_hw->boardflags & BFL_BTCOEX) &&
-+	       (wlc_hw->boardflags2 & BFL2_LEGACY) &&
-+	       !(bus->drv_cc.capabilities_ext & CC_CAP2_SECI);
-+
-+	return enab;
-+}
-+
-+static bool brcms_btc_secicoex_enab(struct brcms_hardware *wlc_hw)
-+{
-+	struct bcma_bus *bus;
-+	bool enab;
-+
-+	bus = wlc_hw->d11core->bus;
-+	enab = (wlc_hw->boardflags & BFL_BTCOEX) &&
-+	       (wlc_hw->boardflags2 & BFL2_LEGACY) &&
-+	       (bus->drv_cc.capabilities_ext & CC_CAP2_SECI) &&
-+	       (wlc_hw->machwcap & MCAP_BTCX);
-+
-+	return enab;
-+}
-+
-+static bool brcms_btc_gcicoex_enab(struct brcms_hardware *wlc_hw)
-+{
-+	struct bcma_bus *bus;
-+	bool enab;
-+
-+	bus = wlc_hw->d11core->bus;
-+	enab = (wlc_hw->boardflags & BFL_BTCOEX) &&
-+	       (wlc_hw->boardflags2 & BFL2_LEGACY) &&
-+	       (bus->drv_cc.capabilities_ext & CC_CAP_EXT_GCI_PRESENT) &&
-+	       (wlc_hw->machwcap & MCAP_BTCX);
-+
-+	return enab;
-+}
-+
-+static bool brcms_btc_coex_enab(struct brcms_hardware *wlc_hw)
-+{
-+	bool enab;
-+
-+	enab = brcms_btc_ecicoex_enab(wlc_hw) ||
-+	       brcms_btc_secicoex_enab(wlc_hw) ||
-+	       brcms_btc_gcicoex_enab(wlc_hw);
-+
-+	return enab;
-+}
-+
-+struct brcms_btcoex *brcms_btcoex_attach(struct brcms_hardware *wlc_hw)
-+{
-+	struct brcms_btcoex *btc;
-+
-+	if (!brcms_btc_coex_enab(wlc_hw)) {
-+		brcms_err(wlc_hw->d11core, "no btcoex supported\n");
-+		return NULL;
-+	}
-+	btc = kzalloc(sizeof(*btc), GFP_KERNEL);
-+	if (!btc)
-+		return NULL;
-+
-+	btc->hw = wlc_hw;
-+
-+	brcms_err(wlc_hw->d11core, "hardware:%s%s%s\n",
-+		  brcms_btc_ecicoex_enab(wlc_hw) ? " ECI" : "",
-+		  brcms_btc_secicoex_enab(wlc_hw) ? " SECI" : "",
-+		  brcms_btc_gcicoex_enab(wlc_hw) ? " GCI" : "");
-+
-+	return btc;
-+}
-+
-+void brcms_btcoex_detach(struct brcms_btcoex *btc)
-+{
-+	kfree(btc);
-+}
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/btcoex.h b/drivers/net/wireless/brcm80211/brcmsmac/btcoex.h
-new file mode 100644
-index 0000000..92032d8
---- /dev/null
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/btcoex.h
-@@ -0,0 +1,25 @@
-+/*
-+ * Copyright (c) 2014 Broadcom Corporation
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-+ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
-+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+#ifndef _BRCMS_BTCOEX_H_
-+#define _BRCMS_BTCOEX_H_
-+
-+struct brcms_btcoex;
-+
-+struct brcms_btcoex *brcms_btcoex_attach(struct brcms_hardware *wlc_hw);
-+void brcms_btcoex_detach(struct brcms_btcoex *btc);
-+
-+#endif /* _BRCMS_BTCOEX_H_ */
-+
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/d11.h b/drivers/net/wireless/brcm80211/brcmsmac/d11.h
-index 9035cc4..a4754f8 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/d11.h
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/d11.h
-@@ -548,7 +548,7 @@ struct d11regs {
- /* Mac capabilities registers */
- /*== machwcap ==*/
- #define	MCAP_TKIPMIC		0x80000000	/* TKIP MIC hardware present */
--
-+#define MCAP_BTCX               0x20000000      /* BT coex hardware present */
- /*== pmqhost data ==*/
- /* data entry of head pmq entry */
- #define	PMQH_DATA_MASK		0xffff0000
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index bc9be78..fbb8b83 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -33,6 +33,7 @@
- #include "ampdu.h"
- #include "mac80211_if.h"
- #include "ucode_loader.h"
-+#include "btcoex.h"
- #include "main.h"
- #include "soc.h"
- #include "dma.h"
-@@ -4665,6 +4666,8 @@ static int brcms_b_attach(struct brcms_c_info *wlc, struct bcma_device *core,
- 		}
- 	}
- 
-+	wlc_hw->btc = brcms_btcoex_attach(wlc_hw);
-+
- 	/* disable core to match driver "down" state */
- 	brcms_c_coredisable(wlc_hw);
- 
-@@ -4856,6 +4859,8 @@ static void brcms_b_detach(struct brcms_c_info *wlc)
- 
- 	wlc_phy_shim_detach(wlc_hw->physhim);
- 
-+	brcms_btcoex_detach(wlc_hw->btc);
-+
- 	if (wlc_hw->sih) {
- 		ai_detach(wlc_hw->sih);
- 		wlc_hw->sih = NULL;
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.h b/drivers/net/wireless/brcm80211/brcmsmac/main.h
-index c4d135c..1089264 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.h
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.h
-@@ -376,6 +376,7 @@ struct brcms_hardware {
- 				 * put struct antsel_info here if more info is
- 				 * needed
- 				 */
-+	struct brcms_btcoex *btc;
- };
- 
- /*
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/types.h b/drivers/net/wireless/brcm80211/brcmsmac/types.h
-index ae1f3ad..ac8e3df 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/types.h
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/types.h
-@@ -26,7 +26,8 @@
- #define WL_CHAN_FREQ_RANGE_5GH     3
- 
- /* boardflags */
--
-+/* Board supports BTCOEX */
-+#define BFL_BTCOEX		0x00000001
- /* Board has gpio 9 controlling the PA */
- #define	BFL_PACTRL		0x00000002
- /* Not ok to power down the chip pll and oscillator */
-diff --git a/drivers/net/wireless/brcm80211/include/chipcommon.h b/drivers/net/wireless/brcm80211/include/chipcommon.h
-index d242333..d2d424c 100644
---- a/drivers/net/wireless/brcm80211/include/chipcommon.h
-+++ b/drivers/net/wireless/brcm80211/include/chipcommon.h
-@@ -254,6 +254,7 @@ struct chipcregs {
- #define CC_CAP_ROM		0x00800000	/* Internal boot rom active */
- #define CC_CAP_BKPLN64		0x08000000	/* 64-bit backplane */
- #define	CC_CAP_PMU		0x10000000	/* PMU Present, rev >= 20 */
-+#define CC_CAP_ECI              0x20000000      /* ECI Present, rev >= 21 */
- #define	CC_CAP_SROM		0x40000000	/* Srom Present, rev >= 32 */
- /* Nand flash present, rev >= 35 */
- #define	CC_CAP_NFLASH		0x80000000
-@@ -261,6 +262,7 @@ struct chipcregs {
- #define	CC_CAP2_SECI		0x00000001	/* SECI Present, rev >= 36 */
- /* GSIO (spi/i2c) present, rev >= 37 */
- #define	CC_CAP2_GSIO		0x00000002
-+#define CC_CAP_EXT_GCI_PRESENT  0x00000004    /* GCI present */
- 
- /* pmucapabilities */
- #define PCAP_REV_MASK	0x000000ff
--- 
-1.9.1
-
-
---------------030701070605020304000106--
+  Luis
