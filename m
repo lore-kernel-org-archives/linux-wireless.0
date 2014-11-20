@@ -1,66 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:56061
-	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754604AbaKOX2F (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Nov 2014 18:28:05 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH 3/6] mac80211: add tx_status_noskb to rate_control_ops
-Date: Sun, 16 Nov 2014 00:27:57 +0100
-Message-Id: <1416094080-49220-3-git-send-email-nbd@openwrt.org> (sfid-20141116_002816_229761_ED72DD64)
-In-Reply-To: <1416094080-49220-1-git-send-email-nbd@openwrt.org>
-References: <1416094080-49220-1-git-send-email-nbd@openwrt.org>
+Received: from s3.sipsolutions.net ([5.9.151.49]:47828 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757356AbaKTPOZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Nov 2014 10:14:25 -0500
+Message-ID: <1416496456.8557.2.camel@sipsolutions.net> (sfid-20141120_161431_016981_3E18F3E1)
+Subject: Re: [PATCH v6] nl80211: Stop scheduled scan if netlink client
+ disappears
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jukka Rissanen <jukka.rissanen@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 20 Nov 2014 16:14:16 +0100
+In-Reply-To: <1416483178-5528-1-git-send-email-jukka.rissanen@linux.intel.com> (sfid-20141120_123314_318179_38B7117E)
+References: <1416483178-5528-1-git-send-email-jukka.rissanen@linux.intel.com>
+	 (sfid-20141120_123314_318179_38B7117E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This op works like .tx_status, except it does not need access to the
-skb. This will be used by drivers that cannot match tx status
-information to specific packets.
+On Thu, 2014-11-20 at 13:32 +0200, Jukka Rissanen wrote:
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- include/net/mac80211.h | 4 ++++
- net/mac80211/rate.h    | 6 +++++-
- 2 files changed, 9 insertions(+), 1 deletion(-)
+> - moved owner netlink port id from cfg80211_sched_scan_request to
+>   rdev in order to avoid possible races
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 5f203a6..32a779c 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -4727,6 +4727,10 @@ struct rate_control_ops {
- 	void (*free_sta)(void *priv, struct ieee80211_sta *sta,
- 			 void *priv_sta);
- 
-+	void (*tx_status_noskb)(void *priv,
-+				struct ieee80211_supported_band *sband,
-+				struct ieee80211_sta *sta, void *priv_sta,
-+				struct ieee80211_tx_info *info);
- 	void (*tx_status)(void *priv, struct ieee80211_supported_band *sband,
- 			  struct ieee80211_sta *sta, void *priv_sta,
- 			  struct sk_buff *skb);
-diff --git a/net/mac80211/rate.h b/net/mac80211/rate.h
-index 18babe3..dd25964 100644
---- a/net/mac80211/rate.h
-+++ b/net/mac80211/rate.h
-@@ -37,11 +37,15 @@ static inline void rate_control_tx_status(struct ieee80211_local *local,
- 	struct rate_control_ref *ref = local->rate_ctrl;
- 	struct ieee80211_sta *ista = &sta->sta;
- 	void *priv_sta = sta->rate_ctrl_priv;
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 
- 	if (!ref || !test_sta_flag(sta, WLAN_STA_RATE_CONTROL))
- 		return;
- 
--	ref->ops->tx_status(ref->priv, sband, ista, priv_sta, skb);
-+	if (ref->ops->tx_status)
-+		ref->ops->tx_status(ref->priv, sband, ista, priv_sta, skb);
-+	else
-+		ref->ops->tx_status_noskb(ref->priv, sband, ista, priv_sta, info);
- }
- 
- 
--- 
-2.1.2
+How does that really help though? You're not really locking it anyway.
+
+I think you should consider keeping it inside the sched_scan_request,
+but maybe make that an __rcu pointer.
+
+Your patch also still has the problem I pointed out to you before - you
+can get the following sequence of events:
+
+start_sched_scan (owner=true)
+close socket - schedule worker
+start_sched_scan (from another socket, owner doesn't matter)
+run worker - cancels the new sched_scan
+
+You need to make sure the worker is flushed in start_sched_scan or so,
+which might require RTNL work there or something.
+
+johannes
 
