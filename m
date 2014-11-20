@@ -1,82 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58885 "EHLO mx1.redhat.com"
+Received: from cantor2.suse.de ([195.135.220.15]:39956 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754440AbaKNIoZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Nov 2014 03:44:25 -0500
-Date: Fri, 14 Nov 2014 09:41:24 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Luca Coelho <luca@coelho.fi>, Dan Williams <dcbw@redhat.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Can fb4e156886ce6e8309e912d8b370d192330d19d3 be reverted ?
-Message-ID: <20141114084123.GB1949@redhat.com> (sfid-20141114_094428_280014_B3E7EFEE)
-References: <20141113123313.GA1926@redhat.com>
- <1415882683.2021.3.camel@sipsolutions.net>
- <A21755E2-3054-46B2-9BA6-07347FB91E1E@holtmann.org>
- <1415933712.2629.12.camel@dcbw.local>
- <1415945381.3117.17.camel@coelho.fi>
- <6A994E9F-1272-4285-BDF5-8CF00C86FDA7@holtmann.org>
+	id S1756223AbaKTUzB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Nov 2014 15:55:01 -0500
+Date: Thu, 20 Nov 2014 21:54:59 +0100
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Jonathan Doron <jond@wizery.com>
+Subject: Re: [PATCH v2 4/4] cfg80211: Allow usermode to query wiphy
+	specific regd info
+Message-ID: <20141120205459.GR24486@wotan.suse.de> (sfid-20141120_215506_544112_0E6D9B75)
+References: <1415895219-19848-1-git-send-email-arik@wizery.com> <1415895219-19848-4-git-send-email-arik@wizery.com> <20141113231323.GG24486@wotan.suse.de> <CA+XVXfeqfHHDh6AcgkuBW9BwUo-s77+pnbDtP_y=e0dZQVBitg@mail.gmail.com> <1416496922.8557.7.camel@sipsolutions.net> <CA+XVXffq5h-5=wvPQ1PY0CoSa5zgi9j-kNCw5RbWjd0zDLigfA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <6A994E9F-1272-4285-BDF5-8CF00C86FDA7@holtmann.org>
+In-Reply-To: <CA+XVXffq5h-5=wvPQ1PY0CoSa5zgi9j-kNCw5RbWjd0zDLigfA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 14, 2014 at 03:57:40PM +0900, Marcel Holtmann wrote:
-> Hi Luca,
+On Thu, Nov 20, 2014 at 06:47:24PM +0200, Arik Nemtsov wrote:
+> On Thu, Nov 20, 2014 at 5:22 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Sun, 2014-11-16 at 13:06 +0200, Arik Nemtsov wrote:
+> >
+> >> We intend to add a patch to wpa_s to always add the wiphy_idx to
+> >> NL80211_CMD_GET_REG. With the current approach only drivers with
+> >> SELF_MANAGED_REG will get wiphy->regd back. This is ok since these are
+> >> new drivers, which are familiar with this API.
+> >>
+> >> But if we use your suggestion and always return wiphy->regd, then some
+> >> driver like ath9k that uses regulatory_hint() will now get it's
+> >> private regd returned to the wpa_s that manages it. I'm not saying
+> >> it's necessarily bad, but it's different than what was returned
+> >> before. The cfg80211 regdomain is intersected with wiphy->regd, so now
+> >> ath9k will start getting more permissive channels in usermode.
+> >>
+> >> So we thought it's best to enable the new behavior only if the driver
+> >> explicitly wants it, using a new regulatory flag.
+> >
+> > How does this work the other way around - i.e. a newer wpa_s requesting
+> > per-wiphy information but it not being present?
 > 
-> >>>>> I've updated wireless code on RHEL and get complain that now
-> >>>>> cfg80211 and rfkill modules are loaded on machines that do not have
-> >>>>> wireless hardware. Modules are auto-loaded because NetworkManager send
-> >>>>> nl80211 messages to check if there are wireless devices in the system.
-> >>>>> 
-> >>>>> Hence my question, can we revert commit fb4e156886ce
-> >>>>> "nl80211: Add generic netlink module alias for cfg80211/nl80211" ?
-> >>>> 
-> >>>> Realistically, we can't revert it, but only remove the
-> >>>> MODULE_ALIAS_GENL_FAMILY() line.
-> >>>> 
-> >>>>> Auto loading nl80211 does not seems to be necessary, if there are
-> >>>>> wireless devices nl80211 will be loaded anyway.
-> >>>> 
-> >>>> Maybe other applications would like to see an empty list of devices? But
-> >>>> OTOH, if they're robust at all, they have to cope with kernels not even
-> >>>> compiled with nl80211, so I guess for me I don't really see a big
-> >>>> difference in whether the module alias exists or not.
-> >>> 
-> >>> auto-loading cfg80211 module when userspace requests nl80211 netlink family is exactly the right thing to do. Systems compiled without nl80211 support and systems with no wireless device attached are two different things.
-> >>> 
-> >>> Someone can fix NetworkManager to not send nl80211 messages or just plain accept that cfg80211 will be loaded.
-> >> 
-> >> NM uses nl80211 initially to determine whether *any* ethernet-type
-> >> interface (a) is actually WiFi, and (b) should be driven by nl80211 or
-> >> WEXT.  Because of the variety of drivers (both in-kernel and
-> >> out-of-kernel) and the variety of kernel versions (NM supports back to
-> >> early 3.x series) we cannot rely on specific behavior.
-> >> 
-> >> So given an ethernet-type interface, how do we determine that it is
-> >> wifi?
-> >> 
-> >> DEVTYPE=wlan - not always reliable due to driver and kernel versions
-> >> 
-> >> "phy80211" in sysfs: same reason; also doesn't capture WEXT or
-> >> out-of-tree drivers
-> >> 
-> >> nl80211 calls: this is the only 100% reliable mechanism to detect
-> >> whether an ethernet-type interface is actually WiFi and nl80211-capable.
-> >> 
-> >> And unfortunately calling nl80211 loads the module...
-> > 
-> > So, basically the conclusion is: there's no way around it.  If someone
-> > in userspace uses nl80211 it must be loaded, regardless of whether
-> > nl80211 is automatically loaded or if depmod bring it in.
+> Then it gets the global one, and it knows it via a wiphy attribute:
 > 
-> yes, that is how it should be. And actually that is how every other subsystem does. Including modules that get loaded because we have a socket() system call for an address family.
+>       (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED) &&
+> +                   (nla_put_flag(msg, NL80211_ATTR_WIPHY_SELF_MANAGED_REG)))
+> +                       goto nla_put_failure;
+> 
+> (we won't do this put_flag if it's global)
 
-On other subsystems auto loading make sense. For example on netfiler,
-we really want to load netfiler modules when user-space want to
-configure it and started talking to it by socket. But here situation
-is different. If there is no hardware we can not configure it.
+You can still follow this on wpa_s for REGULATORY_WIPHY_SELF_MANAGED, and
+the other type that uses wiphy->regd would still follow the global regdomain.
+The other flag I'm looking for is more informational for userspace in particular
+'iw reg get' (for central and all devices) or 'iw reg get dev wlan0'.
 
-Stanislaw
+> The supplicant patches are not up yet, but I think for now we will
+> just act according to the global one. Anyway it has the option to
+> change policy, since it knows.
+> 
+> >
+> > It seems to me that either way what the kernel should return is the
+> > information that will actually be applied when validated, which is of
+> > course not possible when there are wiphy-specific regdomains and a
+> > global one is requested (unless there's just one wiphy, which might be
+> > something to consider making work?)
+> 
+> Well the cfg80211 regdomain is always intersected with all wiphy->regd
+> in the system, so the global one is always less permissive.
+> This is of course true before REGULATORY_WIPHY_SELF_MANAGED - in this
+> case wiphy->regd will not affect the global regd.
+
+The discrepancy is a long term issue when device combing but it seems folks
+dealing with REGULATORY_WIPHY_SELF_MANAGED are OK with supporting whatever
+issues come up.
+
+> With CUSTOM_REG we have a special case, since the regulatory code
+> doesn't set wiphy->regd, it just applies a user supplied regd to the
+> wiphy channels (which get validated).
+
+Its a custom world regdom, its a minimum base set. New information is
+always welcomed to help it comply further, and that's what happens.
+
+> If the user also happens to set  wiphy->regd himself with CUSTOM_REG,
+> then it makes sense to return the per-wiphy one. The global regd is
+> meaningless anyway for CUSTOM_REG, and the per-wiphy one might be too.
+> But I guess we can return it if it's there?
+
+When CUSTOM_REG is used we already have code that deals with what is
+allowed or now given new hints from different sources, wpa_s can
+and should rely on the channel information state it is in already.
+All the intersection logic is already dealt for the device. The only
+thing wpa_s could probably care more about from the regulatory data is
+the actual ISO3166 alpha2 used for country IEs.
+
+  Luis
