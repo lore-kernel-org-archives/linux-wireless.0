@@ -1,48 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:32648 "EHLO mga11.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:49790 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751812AbaK3PV5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Nov 2014 10:21:57 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH] mac80211: update the channel context after channel switch
-Date: Sun, 30 Nov 2014 17:17:26 +0200
-Message-Id: <1417360646-5262-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20141130_162203_905775_DC707337)
+	id S1756899AbaKTVbZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Nov 2014 16:31:25 -0500
+Message-ID: <1416519074.8557.15.camel@sipsolutions.net> (sfid-20141120_223129_412885_17C22543)
+Subject: Re: [RFC] net: ipv4: drop unicast encapsulated in L2 multicast
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: ja@ssi.bg, linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Date: Thu, 20 Nov 2014 22:31:14 +0100
+In-Reply-To: <20140822.105405.1982870131653082781.davem@davemloft.net>
+References: <1408641747-22199-1-git-send-email-johannes@sipsolutions.net>
+	 <alpine.LFD.2.11.1408212119510.1896@ja.home.ssi.bg>
+	 <20140822.105405.1982870131653082781.davem@davemloft.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When the channel switch has been made, a vif is now using
-the channel context which was reserved. When that happens,
-we need to update the channel context since its parameters
-may change.
+On Fri, 2014-08-22 at 10:54 -0700, David Miller wrote:
 
-I hit a case in which I switched to a 40Mhz channel but the
-reserved channel context was still on 20Mhz. The rate control
-would try to send 40Mhz packets on a 20Mhz channel context and
-that made iwlwifi's firmware unhappy.
+> >>  	if (res.type == RTN_BROADCAST)
+> >>  		goto brd_input;
+> > 
+> > 	Is this place better, after checking for RTN_BROADCAST?
+> > 
+> > 	/* ARP link-layer broadcasts are acceptable here */
+> > 	if ((skb->pkt_type == PACKET_BROADCAST ||
+> > 	     skb->pkt_type == PACKET_MULTICAST) &&
+> > 	    skb->protocol == htons(ETH_P_IP))
+> > 		goto e_inval;
+> 
+> Indeed, this would make ARP happier, but that still leaves open the
+> issue of CLUSTERIP.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- net/mac80211/chan.c | 4 ++++
- 1 file changed, 4 insertions(+)
+I'm back looking at this, but must admit I'm completely confused now :-)
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index c7c5142..bde457d 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -996,6 +996,10 @@ ieee80211_vif_use_reserved_reassign(struct ieee80211_sub_if_data *sdata)
- 
- 	sdata->vif.bss_conf.chandef = sdata->reserved_chandef;
- 
-+	ieee80211_recalc_smps_chanctx(local, new_ctx);
-+	ieee80211_recalc_radar_chanctx(local, new_ctx);
-+	ieee80211_recalc_chanctx_min_def(local, new_ctx);
-+
- 	if (changed)
- 		ieee80211_bss_info_change_notify(sdata, changed);
- 
--- 
-1.9.1
+I could add an IPv4 sysctl to control this behaviour:
+  0 - off
+  1 - RFC 1122 "SHOULD"
+  2 - also drop unicast-in-multicast (for wireless)
+
+But I guess due to cluster-IP it would have to default to 0.
+
+
+However, talk about ip_local_deliver_finish() in this thread has me
+wondering if we could just implement it using iptables? I guess
+ipt_addrtype and ip6t_addrtype would let me do that?
+
+johannes
+
 
