@@ -1,70 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:42718 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751303AbaKDVdi (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:3626 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757152AbaKUCjo convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Nov 2014 16:33:38 -0500
-Message-ID: <54594631.9020707@candelatech.com> (sfid-20141104_223341_330635_A3CE0954)
-Date: Tue, 04 Nov 2014 13:33:37 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Thu, 20 Nov 2014 21:39:44 -0500
+From: "Li, Yanbo" <yanbol@qti.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: "Valo, Kalle" <kvalo@qca.qualcomm.com>,
+	"dreamfly281@gmail.com" <dreamfly281@gmail.com>,
+	"michal.kazior@tieto.com" <michal.kazior@tieto.com>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH] Add the target register read/write and memory dump
+ debugfs interface
+Date: Fri, 21 Nov 2014 02:39:42 +0000
+Message-ID: <5b9b8ec5e5234a81be5fffcaab520d4e@nasanexm02e.na.qualcomm.com> (sfid-20141121_033951_245066_B8EAC8FF)
+References: <1416500565-29875-1-git-send-email-yanbol@qti.qualcomm.com>
+ <20141120194521.GC31881@tuxdriver.com>
+In-Reply-To: <20141120194521.GC31881@tuxdriver.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: "ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	rmanohar@qti.qualcomm.com
-Subject: Re: 3.17 regression, ath9k: Summarize hw state per channel context
-References: <542F124C.50406@candelatech.com>
-In-Reply-To: <542F124C.50406@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/03/2014 02:17 PM, Ben Greear wrote:
-> Took a while, but I found the regression that has been bugging me.
-
-[snip]
-
-Ok, so I started looking at this problem.  The bug appears to lie in
-the calculating of the BSSID mask.  I think the BSSID calculation must
-be broken any time you have vifs in more than one ctx.
-
-The reason is that ath9k_calculate_iter_data is now called per
-ctx, but the bssid mask must be per radio, not per ctxt.
-
-Maybe we need two different iter methods now..one similar to the new
-one for ctx related summary state, and one like the older code for
-the bssid mask?
-
-Thanks,
-Ben
-
-> Bisect points at this patch:
+> -----Original Message-----
+> From: John W. Linville [mailto:linville@tuxdriver.com]
+> Sent: Friday, November 21, 2014 3:45 AM
+> To: Li, Yanbo
+> Cc: Valo, Kalle; dreamfly281@gmail.com; michal.kazior@tieto.com;
+> ath10k@lists.infradead.org; linux-wireless@vger.kernel.org
+> Subject: Re: [PATCH] Add the target register read/write and memory dump
+> debugfs interface
 > 
-> 9a9c4fbc3fcabc0d510600743204f890ebdbb141 is the first bad commit
-> commit 9a9c4fbc3fcabc0d510600743204f890ebdbb141
-> Author: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-> Date:   Wed Jun 11 16:18:03 2014 +0530
+> The subject should start like "ath10k: ..."
 > 
->     ath9k: Summarize hw state per channel context
-> 
->     Group and set hw state (opmode, primary_sta, beacon conf) per
->     channel context instead of whole list of vifs. This would allow
->     each channel context to run in different mode (STA/AP).
-> 
->     Signed-off-by: Felix Fietkau <nbd@openwrt.org>
->     Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
->     Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> 
-> :040000 040000 aa6eab9d17a0b3468075ff7c1abfee2ccfcb521e e15af8b46ce047c8b46177e2d4cf74a4590a2181 M	drivers
-> 
-> I will be happy to test patches if anyone has a suggested fix or needs
-> debug output...
-> 
-> Thanks,
-> Ben
-> 
+Resend with the prefix, please review base on the new thread.
 
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Thanks 
+BR /Yanbo
