@@ -1,42 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:16085 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756658AbaKTV1G (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:35036 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751257AbaKUUAJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Nov 2014 16:27:06 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 0/4] brcm80211: minor rework
-Date: Thu, 20 Nov 2014 22:26:58 +0100
-Message-ID: <1416518822-29585-1-git-send-email-arend@broadcom.com> (sfid-20141120_222717_227651_0473A362)
+	Fri, 21 Nov 2014 15:00:09 -0500
+Date: Fri, 21 Nov 2014 14:53:19 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next 2014-11-21
+Message-ID: <20141121195318.GB24984@tuxdriver.com> (sfid-20141121_210029_603237_ED5BD346)
+References: <20141121183014.GA24984@tuxdriver.com>
+ <546F8D2F.2070003@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <546F8D2F.2070003@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series touches some minor stuff in both drivers. The first
-change was a report from Dan Carpenter which gets rid of smatch
-warning/error. In brcmsmac I extended the hardware info file
-contents in debugfs. The last patch solves a problem in brcmfmac
-that I came across during testing.
+On Fri, Nov 21, 2014 at 01:06:23PM -0600, Larry Finger wrote:
+> On 11/21/2014 12:30 PM, John W. Linville wrote:
+> >Dave,
+> >
+> >Please pull this batch of updates intended for the 3.19 stream...
+> >
+> 
+> ---snip---
+> 
+> >Larry Finger (3):
+> >       rtlwifi: Fix setting of tx descriptor for new trx flow
+> >       rtlwifi: Fix errors in descriptor manipulation
+> >       rtlwifi: rtl8192se: Fix connection problems
+> 
+> I probably do not understand the update process, but the above 3 patches
+> need to be in kernel 3.18, not 3.19.
 
-The series is intended for 3.19 and applies to the master branch
-of the wireless-next repository.
-
-Arend van Spriel (4):
-  brcmfmac: fix static checker warning in pmklist handling
-  brcmutil: add helper function to format board revision
-  brcmsmac: extend hardware info shown in debugfs
-  brcmfmac: correct .disconnect() callback while connecting
-
- drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c |  8 ++---
- drivers/net/wireless/brcm80211/brcmsmac/debug.c    | 40 +++++++++++++++-------
- drivers/net/wireless/brcm80211/brcmutil/utils.c    | 16 +++++++++
- .../net/wireless/brcm80211/include/brcmu_utils.h   |  2 ++
- 4 files changed, 49 insertions(+), 17 deletions(-)
+They are -- I pulled the wireless tree in order to avoid some merge
+problems...
 
 -- 
-1.9.1
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
