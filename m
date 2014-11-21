@@ -1,83 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:13244 "EHLO mga14.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:55368 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753777AbaKMNt7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Nov 2014 08:49:59 -0500
-From: Jukka Rissanen <jukka.rissanen@linux.intel.com>
+	id S1750839AbaKUMLV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Nov 2014 07:11:21 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+	(Exim 4.84)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1Xrn3X-0007VG-Hy
+	for linux-wireless@vger.kernel.org; Fri, 21 Nov 2014 13:11:19 +0100
+Message-ID: <1416571877.1881.6.camel@sipsolutions.net> (sfid-20141121_131124_428211_BB9B8130)
+Subject: Re: [RFC] nl80211: clarify packet statistics descriptions
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH v4 1/2] nl80211: Replace interface socket owner attribute with more generic one
-Date: Thu, 13 Nov 2014 15:49:51 +0200
-Message-Id: <1415886592-18253-2-git-send-email-jukka.rissanen@linux.intel.com> (sfid-20141113_145004_277851_96074746)
-In-Reply-To: <1415886592-18253-1-git-send-email-jukka.rissanen@linux.intel.com>
-References: <1415886592-18253-1-git-send-email-jukka.rissanen@linux.intel.com>
+Date: Fri, 21 Nov 2014 13:11:17 +0100
+In-Reply-To: <1416570248-14253-1-git-send-email-johannes@sipsolutions.net> (sfid-20141121_124420_478299_8C0A3FE7)
+References: <1416570248-14253-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20141121_124420_478299_8C0A3FE7)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Replace NL80211_ATTR_IFACE_SOCKET_OWNER attribute with more generic
-NL80211_ATTR_SOCKET_OWNER that can be used with other commands
-that interface creation.
+On Fri, 2014-11-21 at 12:44 +0100, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> The current statistics we keep aren't very clear, some are on
+> MPDUs and some on MSDUs/MMPDUs. Clarify the decriptions based
+> on the counters mac80211 keeps.
 
-Signed-off-by: Jukka Rissanen <jukka.rissanen@linux.intel.com>
----
- include/uapi/linux/nl80211.h | 7 ++++---
- net/wireless/nl80211.c       | 4 ++--
- 2 files changed, 6 insertions(+), 5 deletions(-)
+Or maybe we shouldn't do this, but instead take advantage of the unclear
+definitions and actually change them? I'm also adding MSDU statistics
+(per TID) so we could, to avoid double-accounting, just put those into
+these fields ...
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 442369f..185f9c7 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1637,9 +1637,9 @@ enum nl80211_commands {
-  * @NL80211_ATTR_TDLS_PEER_CAPABILITY: flags for TDLS peer capabilities, u32.
-  *	As specified in the &enum nl80211_tdls_peer_capability.
-  *
-- * @NL80211_ATTR_IFACE_SOCKET_OWNER: flag attribute, if set during interface
-+ * @NL80211_ATTR_SOCKET_OWNER: Flag attribute, if set during interface
-  *	creation then the new interface will be owned by the netlink socket
-- *	that created it and will be destroyed when the socket is closed
-+ *	that created it and will be destroyed when the socket is closed.
-  *
-  * @NL80211_ATTR_TDLS_INITIATOR: flag attribute indicating the current end is
-  *	the TDLS link initiator.
-@@ -2004,7 +2004,7 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_TDLS_PEER_CAPABILITY,
- 
--	NL80211_ATTR_IFACE_SOCKET_OWNER,
-+	NL80211_ATTR_SOCKET_OWNER,
- 
- 	NL80211_ATTR_CSA_C_OFFSETS_TX,
- 	NL80211_ATTR_MAX_CSA_COUNTERS,
-@@ -2030,6 +2030,7 @@ enum nl80211_attrs {
- /* source-level API compatibility */
- #define NL80211_ATTR_SCAN_GENERATION NL80211_ATTR_GENERATION
- #define	NL80211_ATTR_MESH_PARAMS NL80211_ATTR_MESH_CONFIG
-+#define NL80211_ATTR_IFACE_SOCKET_OWNER NL80211_ATTR_SOCKET_OWNER
- 
- /*
-  * Allow user space programs to use #ifdef on new attributes by defining them
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index d0a8361..df447c0 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -388,7 +388,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
- 	[NL80211_ATTR_MAC_HINT] = { .len = ETH_ALEN },
- 	[NL80211_ATTR_WIPHY_FREQ_HINT] = { .type = NLA_U32 },
- 	[NL80211_ATTR_TDLS_PEER_CAPABILITY] = { .type = NLA_U32 },
--	[NL80211_ATTR_IFACE_SOCKET_OWNER] = { .type = NLA_FLAG },
-+	[NL80211_ATTR_SOCKET_OWNER] = { .type = NLA_FLAG },
- 	[NL80211_ATTR_CSA_C_OFFSETS_TX] = { .type = NLA_BINARY },
- 	[NL80211_ATTR_USE_RRM] = { .type = NLA_FLAG },
- 	[NL80211_ATTR_TSID] = { .type = NLA_U8 },
-@@ -2646,7 +2646,7 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
- 		return PTR_ERR(wdev);
- 	}
- 
--	if (info->attrs[NL80211_ATTR_IFACE_SOCKET_OWNER])
-+	if (info->attrs[NL80211_ATTR_SOCKET_OWNER])
- 		wdev->owner_nlportid = info->snd_portid;
- 
- 	switch (type) {
--- 
-1.8.3.1
+johannes
 
