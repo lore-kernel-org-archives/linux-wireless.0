@@ -1,221 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:38733 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751290AbaKWPCa (ORCPT
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:44701 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758592AbaKUPMP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Nov 2014 10:02:30 -0500
-Received: by mail-wi0-f176.google.com with SMTP id ex7so3431993wid.3
-        for <linux-wireless@vger.kernel.org>; Sun, 23 Nov 2014 07:02:28 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Jonathan Doron <jond@wizery.com>
-Subject: [PATCH v3 3/3] cfg80211: Allow usermode to query wiphy specific regd info
-Date: Sun, 23 Nov 2014 17:02:21 +0200
-Message-Id: <1416754941-4439-3-git-send-email-arik@wizery.com> (sfid-20141123_160234_292469_6765BC47)
-In-Reply-To: <1416754941-4439-1-git-send-email-arik@wizery.com>
-References: <1416754941-4439-1-git-send-email-arik@wizery.com>
+	Fri, 21 Nov 2014 10:12:15 -0500
+Received: by mail-pa0-f44.google.com with SMTP id et14so5110976pad.3
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Nov 2014 07:12:14 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAGKQeFjfMwFE8d4FVOZY7n3R1=x3naDoxT4-YKUEnA3T7AJcLw@mail.gmail.com>
+References: <CAGKQeFjfMwFE8d4FVOZY7n3R1=x3naDoxT4-YKUEnA3T7AJcLw@mail.gmail.com>
+Date: Fri, 21 Nov 2014 20:42:14 +0530
+Message-ID: <CAGKQeFhjmo4LM9xTCSeuxu8R4VUwUSBiw-q9MaSiwB0eDpKBxg@mail.gmail.com> (sfid-20141121_161223_938651_58C628D0)
+Subject: Fwd: Linux kernel 3.12 PN-KEY Mismatch in wpa.c, packet drop
+From: deepak kumar Pradhan <hydipu@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jonathan Doron <jond@wizery.com>
+Hi,
 
-Allow usermode to query wiphy-specific regd info, for drivers that use
-wiphy-specific regulatory management.
+Sorry for interrupting you.
+The below patch do recovers from pn-key mismatch in kernel 3.12 kernel
+packet drop issue.
+I don't know where I need to submit this patch for proper solution.
 
-Use the existing API for sending regdomain info to usermode, but return
-the wiphy-specific regd in case wiphy index is provided and the driver
-employs wiphy-specific management. This implies user and kernel-mode
-support for the feature and is backward compatible.
 
-Signed-off-by: Jonathan Doron <jonathanx.doron@intel.com>
-Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
----
- include/uapi/linux/nl80211.h | 18 ++++++++++-
- net/wireless/nl80211.c       | 71 ++++++++++++++++++++++++++++++++++++--------
- net/wireless/reg.c           |  2 +-
- net/wireless/reg.h           |  1 +
- 4 files changed, 78 insertions(+), 14 deletions(-)
+---------- Forwarded message ----------
+From: deepak kumar Pradhan <hydipu@gmail.com>
+Date: Fri, Nov 21, 2014 at 8:31 PM
+Subject: Linux kernel 3.12 PN-KEY Mismatch in wpa.c, packet drop
+To: linux-wireless@vger.kernel.org
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 3771e7d..b222e5c 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -252,7 +252,12 @@
-  *	%NL80211_ATTR_IFINDEX.
-  *
-  * @NL80211_CMD_GET_REG: ask the wireless core to send us its currently set
-- * 	regulatory domain.
-+ *	regulatory domain. If %NL80211_ATTR_WIPHY is specified and the device
-+ *	self-manages its regulatory settings, its private regulatory domain
-+ *	will be returned.
-+ *	If %NL80211_ATTR_WIPHY_GET_PRIV_REG is specified in addition to
-+ *	%NL80211_ATTR_WIPHY, a device's private regulatory domain will be
-+ *	returned, even if it's regulatory is not self-managed.
-  * @NL80211_CMD_SET_REG: Set current regulatory domain. CRDA sends this command
-  *	after being queried by the kernel. CRDA replies by sending a regulatory
-  *	domain structure which consists of %NL80211_ATTR_REG_ALPHA set to our
-@@ -1693,6 +1698,14 @@ enum nl80211_commands {
-  *
-  * @NL80211_ATTR_MAC_MASK: MAC address mask
-  *
-+ * @NL80211_ATTR_WIPHY_SELF_MANAGED_REG: flag attribute indicating the
-+ *	regulatory information was obtained from the private regdomain
-+ *	of a device with self-managed regulatory.
-+ * @NL80211_ATTR_WIPHY_GET_PRIV_REG: flag attribute indicating the regulatory
-+ *	information should be obtained from a device's private regdomain,
-+ *	if it exists. This will happen even if the device is not self-managing
-+ *	its regulatory.
-+ *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -2050,6 +2063,9 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_MAC_MASK,
- 
-+	NL80211_ATTR_WIPHY_SELF_MANAGED_REG,
-+	NL80211_ATTR_WIPHY_GET_PRIV_REG,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index de3a47a..42ccca7 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -396,6 +396,8 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
- 	[NL80211_ATTR_ADMITTED_TIME] = { .type = NLA_U16 },
- 	[NL80211_ATTR_SMPS_MODE] = { .type = NLA_U8 },
- 	[NL80211_ATTR_MAC_MASK] = { .len = ETH_ALEN },
-+	[NL80211_ATTR_WIPHY_SELF_MANAGED_REG] = { .type = NLA_FLAG },
-+	[NL80211_ATTR_WIPHY_GET_PRIV_REG] = { .type = NLA_FLAG },
- };
- 
- /* policy for the key attributes */
-@@ -5328,15 +5330,12 @@ static int nl80211_update_mesh_config(struct sk_buff *skb,
- 
- static int nl80211_get_reg(struct sk_buff *skb, struct genl_info *info)
- {
--	const struct ieee80211_regdomain *regdom;
-+	const struct ieee80211_regdomain *regdom = NULL;
- 	struct sk_buff *msg;
- 	void *hdr = NULL;
- 	struct nlattr *nl_reg_rules;
- 	unsigned int i;
- 
--	if (!cfg80211_regdomain)
--		return -EINVAL;
+
+Hi,
+When I am sending heavy traffic through wireless, the packet number
+and key is mismatching.
+I have applied the below patch which solves my pn-key mismatch packet drop.
+diff -Nurp linux-custom_1/net/mac80211/wpa.c linux-custom/net/mac80211/wpa.c
+--- linux-custom_1/net/mac80211/wpa.c   2014-11-09 23:14:57.000000000 -0800
++++ linux-custom/net/mac80211/wpa.c     2014-11-13 05:16:45.000000000 -0800
+@@ -483,7 +483,7 @@ ieee80211_crypto_ccmp_encrypt(struct iee
+        return TX_CONTINUE;
+ }
+
 -
- 	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
- 	if (!msg)
- 		return -ENOBUFS;
-@@ -5346,13 +5345,54 @@ static int nl80211_get_reg(struct sk_buff *skb, struct genl_info *info)
- 	if (!hdr)
- 		goto put_failure;
- 
--	if (reg_last_request_cell_base() &&
--	    nla_put_u32(msg, NL80211_ATTR_USER_REG_HINT_TYPE,
--			NL80211_USER_REG_HINT_CELL_BASE))
--		goto nla_put_failure;
-+	if (info->attrs[NL80211_ATTR_WIPHY]) {
-+		u32 reg_flags;
-+		struct wiphy *wiphy;
-+		struct cfg80211_registered_device *rdev =
-+			cfg80211_get_dev_from_info(genl_info_net(info), info);
-+
-+		if (IS_ERR(rdev)) {
-+			nlmsg_free(msg);
-+			return PTR_ERR(rdev);
-+		}
-+
-+		wiphy = &rdev->wiphy;
-+		reg_flags = wiphy->regulatory_flags;
-+		if (reg_flags & REGULATORY_WIPHY_SELF_MANAGED ||
-+		    info->attrs[NL80211_ATTR_WIPHY_GET_PRIV_REG]) {
-+			regdom = get_wiphy_regdom(wiphy);
-+			if (!regdom) {
-+				nlmsg_free(msg);
-+				return -EINVAL;
-+			}
-+
-+			if (nla_put_u32(msg, NL80211_ATTR_WIPHY,
-+					rdev->wiphy_idx))
-+				goto nla_put_failure;
-+
-+			if (reg_flags & REGULATORY_WIPHY_SELF_MANAGED &&
-+			    nla_put_flag(msg,
-+					 NL80211_ATTR_WIPHY_SELF_MANAGED_REG))
-+				goto nla_put_failure;
-+		}
-+	}
-+
-+	if (!regdom) {
-+		if (!cfg80211_regdomain) {
-+			nlmsg_free(msg);
-+			return -EINVAL;
-+		}
-+
-+		if (reg_last_request_cell_base() &&
-+		    nla_put_u32(msg, NL80211_ATTR_USER_REG_HINT_TYPE,
-+				NL80211_USER_REG_HINT_CELL_BASE))
-+			goto nla_put_failure;
-+	}
- 
- 	rcu_read_lock();
--	regdom = rcu_dereference(cfg80211_regdomain);
-+
-+	if (!regdom)
-+		regdom = rcu_dereference(cfg80211_regdomain);
- 
- 	if (nla_put_string(msg, NL80211_ATTR_REG_ALPHA2, regdom->alpha2) ||
- 	    (regdom->dfs_region &&
-@@ -10970,9 +11010,16 @@ static bool nl80211_reg_change_event_fill(struct sk_buff *msg,
- 			goto nla_put_failure;
- 	}
- 
--	if (request->wiphy_idx != WIPHY_IDX_INVALID &&
--	    nla_put_u32(msg, NL80211_ATTR_WIPHY, request->wiphy_idx))
--		goto nla_put_failure;
-+	if (request->wiphy_idx != WIPHY_IDX_INVALID) {
-+		struct wiphy *wiphy;
-+
-+		wiphy = wiphy_idx_to_wiphy(request->wiphy_idx);
-+		if (wiphy &&
-+		    nla_put_u32(msg, NL80211_ATTR_WIPHY, request->wiphy_idx) &&
-+		    wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED &&
-+		    nla_put_flag(msg, NL80211_ATTR_WIPHY_SELF_MANAGED_REG))
-+			goto nla_put_failure;
-+	}
- 
- 	return true;
- 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 18cf13b..662d947 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -142,7 +142,7 @@ static const struct ieee80211_regdomain *get_cfg80211_regdom(void)
- 	return rtnl_dereference(cfg80211_regdomain);
- }
- 
--static const struct ieee80211_regdomain *get_wiphy_regdom(struct wiphy *wiphy)
-+const struct ieee80211_regdomain *get_wiphy_regdom(struct wiphy *wiphy)
++#define MAX_PN_TOLERANCE 0x05  //PN-KEY mismatch
+ ieee80211_rx_result
+ ieee80211_crypto_ccmp_decrypt(struct ieee80211_rx_data *rx)
  {
- 	return rtnl_dereference(wiphy->regd);
- }
-diff --git a/net/wireless/reg.h b/net/wireless/reg.h
-index 5e48031..4b45d6e 100644
---- a/net/wireless/reg.h
-+++ b/net/wireless/reg.h
-@@ -38,6 +38,7 @@ unsigned int reg_get_max_bandwidth(const struct ieee80211_regdomain *rd,
- 				   const struct ieee80211_reg_rule *rule);
- 
- bool reg_last_request_cell_base(void);
-+const struct ieee80211_regdomain *get_wiphy_regdom(struct wiphy *wiphy);
- 
- /**
-  * regulatory_hint_found_beacon - hints a beacon was found on a channel
--- 
-1.9.1
+@@ -495,6 +495,7 @@ ieee80211_crypto_ccmp_decrypt(struct iee
+        u8 pn[IEEE80211_CCMP_PN_LEN];
+        int data_len;
+        int queue;
++       static const u8 zero_pn[IEEE80211_CCMP_PN_LEN] = {0};
 
+        hdrlen = ieee80211_hdrlen(hdr->frame_control);
+
+@@ -537,8 +538,16 @@ ieee80211_crypto_ccmp_decrypt(struct iee
+                            skb->data + hdrlen + IEEE80211_CCMP_HDR_LEN))
+                        return RX_DROP_UNUSABLE;
+        }
+-
+-       memcpy(key->u.ccmp.rx_pn[queue], pn, IEEE80211_CCMP_PN_LEN);
++
++       //PN-KEY mismatch start
++       if (memcmp(key->u.ccmp.rx_pn[queue], zero_pn,
+IEEE80211_CCMP_PN_LEN) == 0)
++       {
++               if((memcmp(pn,zero_pn,(IEEE80211_CCMP_PN_LEN-1)) == 0)
+&& (pn[IEEE80211_CCMP_PN_LEN-1] < MAX_PN_TOLERANCE))
++                       memcpy(key->u.ccmp.rx_pn[queue], pn,
+IEEE80211_CCMP_PN_LEN);
++       }
++       else
++               memcpy(key->u.ccmp.rx_pn[queue], pn, IEEE80211_CCMP_PN_LEN);
++       //PN-KEY mismatch end
+
+        /* Remove CCMP header and MIC */
+        if (pskb_trim(skb, skb->len - IEEE80211_CCMP_MIC_LEN))
+
+
+--
+Deepak Kumar Pradhan
