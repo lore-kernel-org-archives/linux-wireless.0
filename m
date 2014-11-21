@@ -1,50 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:34266 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756845AbaKTUCr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Nov 2014 15:02:47 -0500
-Message-ID: <546E48DF.9020908@broadcom.com> (sfid-20141120_210249_745687_19FB173E)
-Date: Thu, 20 Nov 2014 21:02:39 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: wireless-testing: unknown symbol 'wiphy_new'
-References: <546DEAE5.80904@broadcom.com> <1416489794.8557.0.camel@sipsolutions.net>
-In-Reply-To: <1416489794.8557.0.camel@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:53711 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752639AbaKUJro (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Nov 2014 04:47:44 -0500
+Message-ID: <1416563244.1881.1.camel@sipsolutions.net> (sfid-20141121_104759_725228_CF4DFC5E)
+Subject: Re: [PATCH v3] mac80211: keep sending peer candidate events while
+ in listen state
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Nishikawa, Kenzoh" <Kenzoh.Nishikawa@jp.sony.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devel@lists.open80211s.org" <devel@lists.open80211s.org>,
+	"Bob Copeland (me@bobcopeland.com)" <me@bobcopeland.com>
+Date: Fri, 21 Nov 2014 10:47:24 +0100
+In-Reply-To: <2EB4F5C65A3B8E4E92660930F4EF6B5B06C8BC@JPYOKXMS113.jp.sony.com> (sfid-20141121_101258_074290_AAFA54B9)
+References: <2EB4F5C65A3B8E4E92660930F4EF6B5B06C8BC@JPYOKXMS113.jp.sony.com>
+	 (sfid-20141121_101258_074290_AAFA54B9)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/20/14 14:23, Johannes Berg wrote:
-> On Thu, 2014-11-20 at 14:21 +0100, Arend van Spriel wrote:
->> Build a fresh kernel today, ie. 3.18-rc5-wl from wireless-testing and
->> got the following message while building brcmfmac:
->>
->>     LD [M]  drivers/net/wireless/brcm80211/brcmfmac/brcmfmac.o
->>     Building modules, stage 2.
->>     MODPOST 2 modules
->> WARNING: "wiphy_new"
->> [drivers/net/wireless/brcm80211/brcmfmac/brcmfmac.ko] undefined!
->>
->> Did not sound encouraging to continue, but did anyway. Not surprisingly
->> the insmod failed. Checking Module.symvers showed:
->>
->> [arend@lb-bun-235 ~/scm/brcm80211-next]
->> $ grep wiphy_new Module.symvers
->> 0xba575a46	wiphy_new_nm	net/wireless/cfg80211	EXPORT_SYMBOL
->>
->> Rings a bell? We renamed the file wl_cfg80211.c that does wiphy_new()
->> call to cfg80211.c. Merge issue?
->
-> It's probably just a build issue?
->
-> wiphy_new() is a static inline pointing to wiphy_new_nm()
+On Fri, 2014-11-21 at 09:11 +0000, Nishikawa, Kenzoh wrote:
+> Instead of sending peer candidate events just once, send them as long as the peer remains in the LISTEN state in the peering state machine, when userspace is implementing the peering manager.  Userspace may silence the events from a peer by progressing the state machine or by setting the link state to BLOCKED.
+> 
+> Fixes the problem that a mesh peering process won't be fired again after the previous first peering trial fails due to like air propagation error if the peering is managed by user space such as wpa_supplicant.
+> 
+> This patch works with another patch for wpa_supplicant described here which fires a peering process again triggered by the notice from kernel.
+> http://lists.shmoo.com/pipermail/hostap/2014-November/031235.html
 
-Indeed a build issue, but wiphy_new_nm() was recently introduced, right? 
-Well, actually we were on 3.18-rc1 wireless-testing before I merged today.
+Please break those long lines to <72 characters.
 
-Thanks,
-Arend
+
+> +	else if (sta->plink_state == NL80211_PLINK_LISTEN &&
+> +		(sdata->u.mesh.user_mpm ||
+> +		sdata->u.mesh.security & IEEE80211_MESH_SEC_AUTHED))
+
+the latter two lines should be indented by one more space
+
+johannes
+
