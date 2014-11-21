@@ -1,50 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f47.google.com ([209.85.215.47]:55122 "EHLO
-	mail-la0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751623AbaKKK7s (ORCPT
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:46761 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758212AbaKUKOH convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Nov 2014 05:59:48 -0500
-Received: by mail-la0-f47.google.com with SMTP id gd6so9098772lab.20
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Nov 2014 02:59:46 -0800 (PST)
+	Fri, 21 Nov 2014 05:14:07 -0500
+Received: by mail-wi0-f170.google.com with SMTP id bs8so2173227wib.1
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Nov 2014 02:14:03 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <7ffaf316-b423-4f1e-a3f4-2b458aeba323@me.com>
-References: <7ffaf316-b423-4f1e-a3f4-2b458aeba323@me.com>
-Date: Tue, 11 Nov 2014 10:59:46 +0000
-Message-ID: <CABUTiXUwE162nRuLkMus-oKQM32FbcnqKE5JtiJwr29VAdB-Rw@mail.gmail.com> (sfid-20141111_115951_606173_35EEF35E)
-Subject: Re: linux + 5G band + AP mode
-From: Bruno Antunes <baantunes@gmail.com>
-To: Efill <efill@me.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <21615.3019.437408.992893@gargle.gargle.HOWL>
+References: <1416492382-18058-1-git-send-email-sujith@msujith.org>
+	<CA+BoTQnyf0tvg8ngLqsoux-A9-3J46cDuJdd-V=kS24wWS4Y1A@mail.gmail.com>
+	<21615.3019.437408.992893@gargle.gargle.HOWL>
+Date: Fri, 21 Nov 2014 11:14:03 +0100
+Message-ID: <CA+BoTQm_X3-kpJanZu=dJ3LDPqjAfnUoyBwqzgYGX3bK+H1f2g@mail.gmail.com> (sfid-20141121_111412_930708_F6CDED7F)
+Subject: Re: [RFC] ath10k: Fix shared WEP
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Sujith Manoharan <sujith@msujith.org>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+On 21 November 2014 10:54, Sujith Manoharan <sujith@msujith.org> wrote:
+> Michal Kazior wrote:
+[...]
+>> Read access to peer->keys should be protected by either data_lock or
+>> conf_mutex. Obviously the latter can't be used because this function
+>> will be called from an atomic context leaving the data_lock. The
+>> entire is_peer_wep_key_set() should require data_lock to be held while
+>> it is called to avoid races.
+>>
+>> Oh, and apparently this is buggy anyway because
+>> ath10k_install_peer_wep_keys() is oblivious to this. Oops..
+>
+> I don't think it can happen, though ? ath10k_install_peer_wep_keys()
+> would be called only when a station transitions to ASSOC and message 3
+> can't be received when that happens ?
 
-On 11 November 2014 10:41, Efill <efill@me.com> wrote:
-> Dear all,
->
->
-> Are there any working (m)PCI(e) adapters out there suitable to run an AP at
-> 5G (using 802.11ac)?
+Good point, but what I'm worried it'll be easier to miss this subtlety
+and introduce races in the future.
 
-You can use atheros cards they support both AP and Sta modes on 802.11ac.
 
-Linux wireless mailing list is the place to ask not hostap.
+> (But, I did see a lockdep splat when using WEP).
 
->
-> Does someone have a working dualband (using two adapters one for 11n@2G and
-> one for 11ac@5G) setup she/he is willing to share? I appreciate any thoughts
-> on this.
->
->
-> Thanks,
-> Efill
->
->
->
-> _______________________________________________
-> HostAP mailing list
-> HostAP@lists.shmoo.com
-> http://lists.shmoo.com/mailman/listinfo/hostap
->
+Do you have it saved somewhere? If so, can you post it, please?
+
+
+Michał
