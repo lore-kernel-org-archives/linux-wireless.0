@@ -1,161 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:2030 "EHLO mga03.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:9844 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750919AbaKGIWC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Nov 2014 03:22:02 -0500
-From: Patrik Flykt <patrik.flykt@linux.intel.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/2] mac80211-hwsim: Factor out netlink attribute appending
-Date: Fri,  7 Nov 2014 10:21:59 +0200
-Message-Id: <1415348520-28558-2-git-send-email-patrik.flykt@linux.intel.com> (sfid-20141107_092208_883031_E35223C8)
-In-Reply-To: <1415348520-28558-1-git-send-email-patrik.flykt@linux.intel.com>
-References: <1415348520-28558-1-git-send-email-patrik.flykt@linux.intel.com>
+	id S1751174AbaKUIAY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Nov 2014 03:00:24 -0500
+Message-ID: <1416556822.2703.4.camel@jrissane-mobl.ger.corp.intel.com> (sfid-20141121_090027_589581_06E8081E)
+Subject: Re: [PATCH v6] nl80211: Stop scheduled scan if netlink client
+ disappears
+From: Jukka Rissanen <jukka.rissanen@linux.intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 21 Nov 2014 10:00:22 +0200
+In-Reply-To: <1416496456.8557.2.camel@sipsolutions.net>
+References: <1416483178-5528-1-git-send-email-jukka.rissanen@linux.intel.com>
+	 (sfid-20141120_123314_318179_38B7117E) <1416496456.8557.2.camel@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Factor out netlink message attribute appending in order to reuse it
-with later code. As a result move netlink skb allocation to the calling
-function.
+Hi Johannes,
 
-Signed-off-by: Patrik Flykt <patrik.flykt@linux.intel.com>
----
- drivers/net/wireless/mac80211_hwsim.c | 60 +++++++++++++++++------------------
- 1 file changed, 30 insertions(+), 30 deletions(-)
+On to, 2014-11-20 at 16:14 +0100, Johannes Berg wrote:
+> On Thu, 2014-11-20 at 13:32 +0200, Jukka Rissanen wrote:
+> 
+> > - moved owner netlink port id from cfg80211_sched_scan_request to
+> >   rdev in order to avoid possible races
+> 
+> How does that really help though? You're not really locking it anyway.
+> 
+> I think you should consider keeping it inside the sched_scan_request,
+> but maybe make that an __rcu pointer.
+> 
+> Your patch also still has the problem I pointed out to you before - you
+> can get the following sequence of events:
+> 
+> start_sched_scan (owner=true)
+> close socket - schedule worker
+> start_sched_scan (from another socket, owner doesn't matter)
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 209db62..686975e 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -2057,36 +2057,26 @@ static void hwsim_mcast_config_msg(struct sk_buff *mcast_skb,
- 				  HWSIM_MCGRP_CONFIG, GFP_KERNEL);
- }
- 
--static struct sk_buff *build_radio_msg(int cmd, int id,
--				       struct hwsim_new_radio_params *param)
-+static int append_radio_msg(struct sk_buff *skb, int id,
-+			    struct hwsim_new_radio_params *param)
- {
--	struct sk_buff *skb;
--	void *data;
- 	int ret;
- 
--	skb = genlmsg_new(GENLMSG_DEFAULT_SIZE, GFP_KERNEL);
--	if (!skb)
--		return NULL;
--
--	data = genlmsg_put(skb, 0, 0, &hwsim_genl_family, 0, cmd);
--	if (!data)
--		goto error;
--
- 	ret = nla_put_u32(skb, HWSIM_ATTR_RADIO_ID, id);
- 	if (ret < 0)
--		goto error;
-+		return ret;
- 
- 	if (param->channels) {
- 		ret = nla_put_u32(skb, HWSIM_ATTR_CHANNELS, param->channels);
- 		if (ret < 0)
--			goto error;
-+			return ret;
- 	}
- 
- 	if (param->reg_alpha2) {
- 		ret = nla_put(skb, HWSIM_ATTR_REG_HINT_ALPHA2, 2,
- 			      param->reg_alpha2);
- 		if (ret < 0)
--			goto error;
-+			return ret;
- 	}
- 
- 	if (param->regd) {
-@@ -2099,54 +2089,64 @@ static struct sk_buff *build_radio_msg(int cmd, int id,
- 		if (i < ARRAY_SIZE(hwsim_world_regdom_custom)) {
- 			ret = nla_put_u32(skb, HWSIM_ATTR_REG_CUSTOM_REG, i);
- 			if (ret < 0)
--				goto error;
-+				return ret;
- 		}
- 	}
- 
- 	if (param->reg_strict) {
- 		ret = nla_put_flag(skb, HWSIM_ATTR_REG_STRICT_REG);
- 		if (ret < 0)
--			goto error;
-+			return ret;
- 	}
- 
- 	if (param->p2p_device) {
- 		ret = nla_put_flag(skb, HWSIM_ATTR_SUPPORT_P2P_DEVICE);
- 		if (ret < 0)
--			goto error;
-+			return ret;
- 	}
- 
- 	if (param->use_chanctx) {
- 		ret = nla_put_flag(skb, HWSIM_ATTR_USE_CHANCTX);
- 		if (ret < 0)
--			goto error;
-+			return ret;
- 	}
- 
- 	if (param->hwname) {
- 		ret = nla_put(skb, HWSIM_ATTR_RADIO_NAME,
- 			      strlen(param->hwname), param->hwname);
- 		if (ret < 0)
--			goto error;
-+			return ret;
- 	}
- 
--	genlmsg_end(skb, data);
--
--	return skb;
--
--error:
--	nlmsg_free(skb);
--	return NULL;
-+	return 0;
- }
- 
--static void hswim_mcast_new_radio(int id, struct genl_info *info,
-+static void hwsim_mcast_new_radio(int id, struct genl_info *info,
- 				  struct hwsim_new_radio_params *param)
- {
- 	struct sk_buff *mcast_skb;
-+	void *data;
- 
--	mcast_skb = build_radio_msg(HWSIM_CMD_NEW_RADIO, id, param);
-+	mcast_skb = genlmsg_new(GENLMSG_DEFAULT_SIZE, GFP_KERNEL);
- 	if (!mcast_skb)
- 		return;
- 
-+	data = genlmsg_put(mcast_skb, 0, 0, &hwsim_genl_family, 0,
-+			   HWSIM_CMD_NEW_RADIO);
-+	if (!data)
-+		goto out_err;
-+
-+	if (append_radio_msg(mcast_skb, id, param) < 0)
-+		goto out_err;
-+
-+	if (genlmsg_end(mcast_skb, data))
-+		goto out_err;
-+
- 	hwsim_mcast_config_msg(mcast_skb, info);
-+	return;
-+
-+out_err:
-+	genlmsg_cancel(mcast_skb, data);
- }
- 
- static int mac80211_hwsim_new_radio(struct genl_info *info,
-@@ -2392,7 +2392,7 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
- 	spin_unlock_bh(&hwsim_radio_lock);
- 
- 	if (idx > 0)
--		hswim_mcast_new_radio(idx, info, param);
-+		hwsim_mcast_new_radio(idx, info, param);
- 
- 	return idx;
- 
--- 
-2.1.1
+If I am reading the code correctly from
+nl80211.c:nl80211_start_sched_scan() this socket will get -EINPROGRESS.
+Only after the worker has finished and called
+__cfg80211_stop_sched_scan() will the other socket able to start a new
+scheduled scan. Or I might have just missed some important detail
+here :)
+
+> run worker - cancels the new sched_scan
+> 
+> You need to make sure the worker is flushed in start_sched_scan or so,
+> which might require RTNL work there or something.
+> 
+> johannes
+> 
+
+
+Cheers,
+Jukka
+
 
