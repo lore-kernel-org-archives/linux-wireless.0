@@ -1,39 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:34639 "EHLO mga09.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:53740 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751144AbaK1L5H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Nov 2014 06:57:07 -0500
-Date: Fri, 28 Nov 2014 12:57:03 +0100
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [PATCH] nfc drivers: don't include linux/unaligned/access_ok.h
-Message-ID: <20141128115703.GE29389@ribalta.mp.intel.com> (sfid-20141128_125711_608481_74DDC966)
-References: <1416428242-9942-1-git-send-email-johannes@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1416428242-9942-1-git-send-email-johannes@sipsolutions.net>
+	id S1757523AbaKUJtA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Nov 2014 04:49:00 -0500
+Message-ID: <1416563318.1881.2.camel@sipsolutions.net> (sfid-20141121_104905_153658_B6932C44)
+Subject: Re: [PATCH v3] mac80211: keep sending peer candidate events while
+ in listen state
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Nishikawa, Kenzoh" <Kenzoh.Nishikawa@jp.sony.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devel@lists.open80211s.org" <devel@lists.open80211s.org>,
+	"Bob Copeland (me@bobcopeland.com)" <me@bobcopeland.com>
+Date: Fri, 21 Nov 2014 10:48:38 +0100
+In-Reply-To: <1416563244.1881.1.camel@sipsolutions.net> (sfid-20141121_104759_725228_CF4DFC5E)
+References: <2EB4F5C65A3B8E4E92660930F4EF6B5B06C8BC@JPYOKXMS113.jp.sony.com>
+	 (sfid-20141121_101258_074290_AAFA54B9) <1416563244.1881.1.camel@sipsolutions.net>
+	 (sfid-20141121_104759_725228_CF4DFC5E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+On Fri, 2014-11-21 at 10:47 +0100, Johannes Berg wrote:
 
-On Wed, Nov 19, 2014 at 09:17:22PM +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
+> > +	else if (sta->plink_state == NL80211_PLINK_LISTEN &&
+> > +		(sdata->u.mesh.user_mpm ||
+> > +		sdata->u.mesh.security & IEEE80211_MESH_SEC_AUTHED))
 > 
-> This is a specific implementation, <asm/unaligned.h> is the
-> multiplexer that has the arch-specific knowledge of which
-> of the implementations needs to be used, so include that.
-> 
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
->  drivers/nfc/pn544/i2c.c    | 2 +-
->  drivers/nfc/st21nfca/i2c.c | 2 +-
->  2 files changed, 2 insertions(+), 2 deletions(-)
-Applied to nfc-next, thanks.
+> the latter two lines should be indented by one more space
 
-Cheers,
-Samuel.
+Actually the third by 2 to match the containing parenthesis.
+
+johannes
+
