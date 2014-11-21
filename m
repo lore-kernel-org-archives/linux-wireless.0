@@ -1,138 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f49.google.com ([74.125.82.49]:36269 "EHLO
-	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753309AbaKLVLw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Nov 2014 16:11:52 -0500
-Received: by mail-wg0-f49.google.com with SMTP id x13so15241240wgg.36
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Nov 2014 13:11:51 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 1/8] staging: vt6655: card Remove function vUpdateIFS
-Date: Wed, 12 Nov 2014 21:11:08 +0000
-Message-Id: <1415826675-8446-1-git-send-email-tvboxspy@gmail.com> (sfid-20141112_221155_959075_A3685DD9)
+Received: from mail-hk1hn0121.outbound.protection.outlook.com ([134.170.140.121]:5528
+	"EHLO APAC01-HK1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751857AbaKUJMf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Nov 2014 04:12:35 -0500
+From: "Nishikawa, Kenzoh" <Kenzoh.Nishikawa@jp.sony.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: "devel@lists.open80211s.org" <devel@lists.open80211s.org>,
+	"Bob Copeland (me@bobcopeland.com)" <me@bobcopeland.com>
+Subject: [PATCH v3] mac80211: keep sending peer candidate events while in
+ listen state
+Date: Fri, 21 Nov 2014 09:11:25 +0000
+Message-ID: <2EB4F5C65A3B8E4E92660930F4EF6B5B06C8BC@JPYOKXMS113.jp.sony.com> (sfid-20141121_101258_074290_AAFA54B9)
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-vUpdateIFS does the same operations of CARDbSetPhyParameter there
-is not need to call this function.
+Instead of sending peer candidate events just once, send them as long as the peer remains in the LISTEN state in the peering state machine, when userspace is implementing the peering manager.  Userspace may silence the events from a peer by progressing the state machine or by setting the link state to BLOCKED.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Fixes the problem that a mesh peering process won't be fired again after the previous first peering trial fails due to like air propagation error if the peering is managed by user space such as wpa_supplicant.
+
+This patch works with another patch for wpa_supplicant described here which fires a peering process again triggered by the notice from kernel.
+http://lists.shmoo.com/pipermail/hostap/2014-November/031235.html
+
+Signed-off-by: Kenzoh Nishikawa <Kenzoh.Nishikawa at jp.sony.com>
 ---
- drivers/staging/vt6655/card.c        | 65 ------------------------------------
- drivers/staging/vt6655/card.h        |  1 -
- drivers/staging/vt6655/device_main.c |  1 -
- 3 files changed, 67 deletions(-)
+net/mac80211/mesh_plink.c |    7 +++++++
+1 file changed, 7 insertions(+)
 
-diff --git a/drivers/staging/vt6655/card.c b/drivers/staging/vt6655/card.c
-index 532c3c8..a93ca16 100644
---- a/drivers/staging/vt6655/card.c
-+++ b/drivers/staging/vt6655/card.c
-@@ -21,7 +21,6 @@
-  * Functions:
-  *      s_vSafeResetTx - Rest Tx
-  *      CARDvSetRSPINF - Set RSPINF
-- *      vUpdateIFS - Update slotTime,SIFS,DIFS, and EIFS
-  *      CARDvUpdateBasicTopRate - Update BasicTopRate
-  *      CARDbAddBasicRate - Add to BasicRateSet
-  *      CARDbIsOFDMinBasicRate - Check if any OFDM rate is in BasicRateSet
-@@ -770,70 +769,6 @@ void CARDvSetRSPINF(struct vnt_private *pDevice, u8 bb_type)
- 	MACvSelectPage0(pDevice->PortOffset);
- }
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c index 32c7bd0..dfc429b 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -524,6 +524,13 @@ void mesh_neighbour_update(struct ieee80211_sub_if_data *sdata,
+ 	    sdata->u.mesh.mshcfg.auto_open_plinks &&
+ 	    rssi_threshold_check(sta, sdata))
+ 		changed = mesh_plink_open(sta);
++	else if (sta->plink_state == NL80211_PLINK_LISTEN &&
++		(sdata->u.mesh.user_mpm ||
++		sdata->u.mesh.security & IEEE80211_MESH_SEC_AUTHED))
++		cfg80211_notify_new_peer_candidate(sdata->dev, hw_addr,
++							   elems->ie_start,
++							   elems->total_len,
++							   GFP_ATOMIC);
  
--/*
-- * Description: Update IFS
-- *
-- * Parameters:
-- *  In:
-- *      pDevice             - The adapter to be set
-- *  Out:
-- *      none
-- *
-- * Return Value: None.
-- */
--void vUpdateIFS(struct vnt_private *pDevice)
--{
--	/* Set SIFS, DIFS, EIFS, SlotTime, CwMin */
--
--	unsigned char byMaxMin = 0;
--
--	if (pDevice->byPacketType == PK_TYPE_11A) { /*0000 0000 0000 0000,11a*/
--		pDevice->uSlot = C_SLOT_SHORT;
--		pDevice->uSIFS = C_SIFS_A;
--		pDevice->uDIFS = C_SIFS_A + 2*C_SLOT_SHORT;
--		pDevice->uCwMin = C_CWMIN_A;
--		byMaxMin = 4;
--	} else if (pDevice->byPacketType == PK_TYPE_11B) {
--					/* 0000 0001 0000 0000,11b */
--		pDevice->uSlot = C_SLOT_LONG;
--		pDevice->uSIFS = C_SIFS_BG;
--		pDevice->uDIFS = C_SIFS_BG + 2*C_SLOT_LONG;
--		pDevice->uCwMin = C_CWMIN_B;
--		byMaxMin = 5;
--	} else { /* PK_TYPE_11GA & PK_TYPE_11GB */
--		pDevice->uSIFS = C_SIFS_BG;
--		if (pDevice->bShortSlotTime)
--			pDevice->uSlot = C_SLOT_SHORT;
--		else
--			pDevice->uSlot = C_SLOT_LONG;
--
--		pDevice->uDIFS = C_SIFS_BG + 2*pDevice->uSlot;
--		if (pDevice->wBasicRate & 0x0150) {
--			/* 0000 0001 0101 0000,24M,12M,6M */
--			pDevice->uCwMin = C_CWMIN_A;
--			byMaxMin = 4;
--		} else {
--			pDevice->uCwMin = C_CWMIN_B;
--			byMaxMin = 5;
--		}
--	}
--
--	pDevice->uCwMax = C_CWMAX;
--	pDevice->uEIFS = C_EIFS;
--	if (pDevice->byRFType == RF_RFMD2959) {
--		/* bcs TX_PE will reserve 3 us */
--		VNSvOutPortB(pDevice->PortOffset + MAC_REG_SIFS, (unsigned char)(pDevice->uSIFS - 3));
--		VNSvOutPortB(pDevice->PortOffset + MAC_REG_DIFS, (unsigned char)(pDevice->uDIFS - 3));
--	} else {
--		VNSvOutPortB(pDevice->PortOffset + MAC_REG_SIFS, (unsigned char)pDevice->uSIFS);
--		VNSvOutPortB(pDevice->PortOffset + MAC_REG_DIFS, (unsigned char)pDevice->uDIFS);
--	}
--	VNSvOutPortB(pDevice->PortOffset + MAC_REG_EIFS, (unsigned char)pDevice->uEIFS);
--	VNSvOutPortB(pDevice->PortOffset + MAC_REG_SLOT, (unsigned char)pDevice->uSlot);
--	byMaxMin |= 0xA0; /* 1010 1111,C_CWMAX = 1023 */
--	VNSvOutPortB(pDevice->PortOffset + MAC_REG_CWMAXMIN0, (unsigned char)byMaxMin);
--}
--
- void CARDvUpdateBasicTopRate(struct vnt_private *pDevice)
- {
- 	unsigned char byTopOFDM = RATE_24M, byTopCCK = RATE_1M;
-diff --git a/drivers/staging/vt6655/card.h b/drivers/staging/vt6655/card.h
-index 605d8a8..2e56710 100644
---- a/drivers/staging/vt6655/card.h
-+++ b/drivers/staging/vt6655/card.h
-@@ -67,7 +67,6 @@ typedef enum _CARD_STATUS_TYPE {
- struct vnt_private;
- 
- void CARDvSetRSPINF(struct vnt_private *, u8);
--void vUpdateIFS(struct vnt_private *);
- void CARDvUpdateBasicTopRate(struct vnt_private *);
- bool CARDbIsOFDMinBasicRate(struct vnt_private *);
- void CARDvSetLoopbackMode(void __iomem *dwIoBase, unsigned short wLoopbackMode);
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index 2e31784..1392332 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -1485,7 +1485,6 @@ static void vnt_bss_info_changed(struct ieee80211_hw *hw,
- 		else
- 			priv->bShortSlotTime = false;
- 
--		vUpdateIFS(priv);
- 		CARDbSetPhyParameter(priv, priv->byBBType);
- 		BBvSetVGAGainOffset(priv, priv->abyBBVGA[0]);
- 	}
--- 
-2.1.0
+ 	ieee80211_mps_frame_release(sta, elems);
+ out:
 
