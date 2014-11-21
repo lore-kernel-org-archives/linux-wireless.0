@@ -1,411 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:39958 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751406AbaKTUAX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Nov 2014 15:00:23 -0500
-Date: Thu, 20 Nov 2014 14:45:22 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Yanbo Li <yanbol@qti.qualcomm.com>
-Cc: kvalo@qca.qualcomm.com, dreamfly281@gmail.com,
-	michal.kazior@tieto.com, ath10k@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] Add the target register read/write and memory dump
- debugfs interface
-Message-ID: <20141120194521.GC31881@tuxdriver.com> (sfid-20141120_210027_484704_A310DBFF)
-References: <1416500565-29875-1-git-send-email-yanbol@qti.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1416500565-29875-1-git-send-email-yanbol@qti.qualcomm.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:55261 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752098AbaKULoP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Nov 2014 06:44:15 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC] nl80211: clarify packet statistics descriptions
+Date: Fri, 21 Nov 2014 12:44:08 +0100
+Message-Id: <1416570248-14253-1-git-send-email-johannes@sipsolutions.net> (sfid-20141121_124420_478299_8C0A3FE7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The subject should start like "ath10k: ..."
+From: Johannes Berg <johannes.berg@intel.com>
 
-On Fri, Nov 21, 2014 at 12:22:45AM +0800, Yanbo Li wrote:
-> The debugfs interface reg_addr&reg_val used to read and write the target
-> register.
-> The interface mmem_val used to dump the targer memory and also can be
-> used to assign value to target memory
-> 
-> The basic usage explain as below:
-> 
-> Register read/write:
-> reg_addr       (the register address)                    (read&write)
-> reg_value      (the register value,  output is ASCII)    (read&write)
-> 
-> Read operation:
-> 1. Write the reg address to reg_addr
->    IE:  echo 0x100000 > reg_addr
-> 2. Read the value from reg_value
->    IE:  cat reg_value
-> Write operation:
-> 1. Write the reg address to reg_addr IE:  echo 0x100000 > reg_addr
-> 2. Write the value to the reg_value  IE:  echo  0x2400 > reg_value
-> 
-> Target memory dump:
-> mem_value (the target memory, access with the length and start address
-> 							(read&write)
-> Read operation:
-> 
-> 1: Read 4K(bs*count)) from address 0x400000(bs*skip)
-> dd if=mem_value bs=4 count=1024 skip=1048576 | xxd -g1
-> 
-> 2: Read 0x50000(bs*count) from address 0x400000(bs*skip)
-> dd if=mem_value bs=4 count=81920 skip=1048576 | xxd -g1
-> 
-> Write operation:
-> 
-> 1: Write the 0x01020304 to address 0x400400(bs*seek)
-> echo 0x01020304 | xxd -r | dd of=mem_value bs=4 seek=1048832
-> 
-> 2: Read the memory and then write back after edit
-> dd if=mem_value bs=4 count=1024 skip=1048576 > tmp.bin
-> edit the tmp.bin
-> dd if=tmp.bin of=mem_value bs=4 count=4 seek=1048576
-> 
-> It suggests assign the 4 align number to bs, IE, 4, 8, 16 ....
-> Cause the target memory width is 32bit
-> 
-> Signed-off-by: Yanbo Li <yanbol@qti.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath10k/core.h  |    2 +
->  drivers/net/wireless/ath/ath10k/debug.c |  189 +++++++++++++++++++++++++++++++
->  drivers/net/wireless/ath/ath10k/hif.h   |   37 ++++++
->  drivers/net/wireless/ath/ath10k/pci.c   |    3 +
->  4 files changed, 231 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-> index 8f86bd3..5cb4fe9 100644
-> --- a/drivers/net/wireless/ath/ath10k/core.h
-> +++ b/drivers/net/wireless/ath/ath10k/core.h
-> @@ -321,6 +321,8 @@ struct ath10k_debug {
->  	u32 fw_dbglog_mask;
->  	u32 pktlog_filter;
->  
-> +	u32 reg_addr;
-> +
->  	u8 htt_max_amsdu;
->  	u8 htt_max_ampdu;
->  
-> diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-> index a8f5a72..302ad55 100644
-> --- a/drivers/net/wireless/ath/ath10k/debug.c
-> +++ b/drivers/net/wireless/ath/ath10k/debug.c
-> @@ -22,6 +22,7 @@
->  #include <linux/vmalloc.h>
->  
->  #include "core.h"
-> +#include "hif.h"
->  #include "debug.h"
->  #include "hif.h"
->  
-> @@ -929,6 +930,185 @@ static const struct file_operations fops_fw_crash_dump = {
->  	.llseek = default_llseek,
->  };
->  
-> +static ssize_t ath10k_reg_addr_read(struct file *file,
-> +				    char __user *user_buf,
-> +				    size_t count, loff_t *ppos)
-> +{
-> +	struct ath10k *ar = file->private_data;
-> +	u8 buf[32];
-> +	unsigned int len = 0;
-> +	u32 reg_addr;
-> +
-> +	spin_lock_bh(&ar->data_lock);
-> +	reg_addr = ar->debug.reg_addr;
-> +	spin_unlock_bh(&ar->data_lock);
-> +
-> +	len += scnprintf(buf + len, sizeof(buf) - len, "0x%x\n", reg_addr);
-> +
-> +	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
-> +}
-> +
-> +static ssize_t ath10k_reg_addr_write(struct file *file,
-> +				     const char __user *user_buf,
-> +				     size_t count, loff_t *ppos)
-> +{
-> +	struct ath10k *ar = file->private_data;
-> +	u32 reg_addr;
-> +	int ret;
-> +
-> +	ret = kstrtou32_from_user(user_buf, count, 0, &reg_addr);
-> +	if (ret)
-> +		return ret;
-> +
-> +	if (!IS_ALIGNED(reg_addr, 4))
-> +		return -EFAULT;
-> +
-> +	spin_lock_bh(&ar->data_lock);
-> +	ar->debug.reg_addr = reg_addr;
-> +	spin_unlock_bh(&ar->data_lock);
-> +
-> +	return count;
-> +}
-> +
-> +static const struct file_operations fops_reg_addr = {
-> +	.read = ath10k_reg_addr_read,
-> +	.write = ath10k_reg_addr_write,
-> +	.open = simple_open,
-> +	.owner = THIS_MODULE,
-> +	.llseek = default_llseek,
-> +};
-> +
-> +static ssize_t ath10k_reg_value_read(struct file *file,
-> +				     char __user *user_buf,
-> +				     size_t count, loff_t *ppos)
-> +{
-> +	struct ath10k *ar = file->private_data;
-> +	u8 buf[48];
-> +	unsigned int len;
-> +	u32 reg_addr, reg_val;
-> +
-> +	spin_lock_bh(&ar->data_lock);
-> +	reg_addr = ar->debug.reg_addr;
-> +	spin_unlock_bh(&ar->data_lock);
-> +
-> +	reg_val = ath10k_hif_read32(ar, reg_addr);
-> +	len = scnprintf(buf, sizeof(buf), "0x%08x:0x%08x\n", reg_addr, reg_val);
-> +
-> +	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
-> +}
-> +
-> +static ssize_t ath10k_reg_value_write(struct file *file,
-> +				      const char __user *user_buf,
-> +				      size_t count, loff_t *ppos)
-> +{
-> +	struct ath10k *ar = file->private_data;
-> +	u32 reg_addr, reg_val;
-> +	int ret;
-> +
-> +	spin_lock_bh(&ar->data_lock);
-> +	reg_addr = ar->debug.reg_addr;
-> +	spin_unlock_bh(&ar->data_lock);
-> +
-> +	ret = kstrtou32_from_user(user_buf, count, 0, &reg_val);
-> +	if (ret)
-> +		return ret;
-> +
-> +	ath10k_hif_write32(ar, reg_addr, reg_val);
-> +
-> +	return count;
-> +}
-> +
-> +static const struct file_operations fops_reg_value = {
-> +	.read = ath10k_reg_value_read,
-> +	.write = ath10k_reg_value_write,
-> +	.open = simple_open,
-> +	.owner = THIS_MODULE,
-> +	.llseek = default_llseek,
-> +};
-> +
-> +static ssize_t ath10k_mem_value_read(struct file *file,
-> +				     char __user *user_buf,
-> +				     size_t count, loff_t *ppos)
-> +{
-> +	struct ath10k *ar = file->private_data;
-> +	u8 *buf;
-> +	int ret;
-> +
-> +	if (*ppos < 0)
-> +		return -EINVAL;
-> +
-> +	if (!count)
-> +		return 0;
-> +
-> +	buf = vmalloc(count);
-> +	if (!buf)
-> +		return -ENOMEM;
-> +
-> +	ret = ath10k_hif_diag_read(ar, *ppos, buf, count);
-> +	if (ret) {
-> +		ath10k_warn(ar, "failed to read address 0x%08x via diagnose window from debugfs: %d\n",
-> +			    (u32)(*ppos), ret);
-> +		goto read_err;
-> +	}
-> +
-> +	ret = copy_to_user(user_buf, buf, count);
-> +	if (ret == count)
-> +		return -EFAULT;
-> +
-> +	count -= ret;
-> +	*ppos += count;
-> +	ret = count;
-> +
-> +read_err:
-> +	vfree(buf);
-> +	return ret;
-> +}
-> +
-> +static ssize_t ath10k_mem_value_write(struct file *file,
-> +				      const char __user *user_buf,
-> +				      size_t count, loff_t *ppos)
-> +{
-> +	struct ath10k *ar = file->private_data;
-> +	u8 *buf;
-> +	int ret;
-> +
-> +	if (*ppos < 0)
-> +		return -EINVAL;
-> +
-> +	if (!count)
-> +		return 0;
-> +
-> +	buf = vmalloc(count);
-> +	if (!buf)
-> +		return -ENOMEM;
-> +
-> +	ret = copy_from_user(buf, user_buf, count);
-> +	if (ret)
-> +		goto err_free_copy;
-> +
-> +	ret = ath10k_hif_diag_write(ar, *ppos, buf, count);
-> +	if (ret) {
-> +		ath10k_warn(ar, "failed to write address 0x%08x via diagnose window from debugfs: %d\n",
-> +			    (u32)(*ppos), ret);
-> +		goto err_free_copy;
-> +	}
-> +
-> +	*ppos += count;
-> +	ret = count;
-> +
-> +err_free_copy:
-> +	vfree(buf);
-> +	return ret;
-> +}
-> +
-> +static const struct file_operations fops_mem_value = {
-> +	.read = ath10k_mem_value_read,
-> +	.write = ath10k_mem_value_write,
-> +	.open = simple_open,
-> +	.owner = THIS_MODULE,
-> +	.llseek = default_llseek,
-> +};
-> +
->  static int ath10k_debug_htt_stats_req(struct ath10k *ar)
->  {
->  	u64 cookie;
-> @@ -1630,6 +1810,15 @@ int ath10k_debug_register(struct ath10k *ar)
->  	debugfs_create_file("fw_crash_dump", S_IRUSR, ar->debug.debugfs_phy,
->  			    ar, &fops_fw_crash_dump);
->  
-> +	debugfs_create_file("reg_addr", S_IRUSR | S_IWUSR,
-> +			    ar->debug.debugfs_phy, ar, &fops_reg_addr);
-> +
-> +	debugfs_create_file("reg_value", S_IRUSR | S_IWUSR,
-> +			    ar->debug.debugfs_phy, ar, &fops_reg_value);
-> +
-> +	debugfs_create_file("mem_value", S_IRUSR | S_IWUSR,
-> +			    ar->debug.debugfs_phy, ar, &fops_mem_value);
-> +
->  	debugfs_create_file("chip_id", S_IRUSR, ar->debug.debugfs_phy,
->  			    ar, &fops_chip_id);
->  
-> diff --git a/drivers/net/wireless/ath/ath10k/hif.h b/drivers/net/wireless/ath/ath10k/hif.h
-> index 30301f5..6ac5523 100644
-> --- a/drivers/net/wireless/ath/ath10k/hif.h
-> +++ b/drivers/net/wireless/ath/ath10k/hif.h
-> @@ -20,6 +20,7 @@
->  
->  #include <linux/kernel.h>
->  #include "core.h"
-> +#include "debug.h"
->  
->  struct ath10k_hif_sg_item {
->  	u16 transfer_id;
-> @@ -47,6 +48,8 @@ struct ath10k_hif_ops {
->  	int (*diag_read)(struct ath10k *ar, u32 address, void *buf,
->  			 size_t buf_len);
->  
-> +	int (*diag_write)(struct ath10k *ar, u32 address, const void *data,
-> +			  int nbytes);
->  	/*
->  	 * API to handle HIF-specific BMI message exchanges, this API is
->  	 * synchronous and only allowed to be called from a context that
-> @@ -84,6 +87,10 @@ struct ath10k_hif_ops {
->  
->  	u16 (*get_free_queue_number)(struct ath10k *ar, u8 pipe_id);
->  
-> +	u32 (*read32)(struct ath10k *ar, u32 address);
-> +
-> +	void (*write32)(struct ath10k *ar, u32 address, u32 value);
-> +
->  	/* Power up the device and enter BMI transfer mode for FW download */
->  	int (*power_up)(struct ath10k *ar);
->  
-> @@ -108,6 +115,15 @@ static inline int ath10k_hif_diag_read(struct ath10k *ar, u32 address, void *buf
->  	return ar->hif.ops->diag_read(ar, address, buf, buf_len);
->  }
->  
-> +static inline int ath10k_hif_diag_write(struct ath10k *ar, u32 address,
-> +					const void *data, int nbytes)
-> +{
-> +	if (!ar->hif.ops->diag_write)
-> +		return -EOPNOTSUPP;
-> +
-> +	return ar->hif.ops->diag_write(ar, address, data, nbytes);
-> +}
-> +
->  static inline int ath10k_hif_exchange_bmi_msg(struct ath10k *ar,
->  					      void *request, u32 request_len,
->  					      void *response, u32 *response_len)
-> @@ -187,4 +203,25 @@ static inline int ath10k_hif_resume(struct ath10k *ar)
->  	return ar->hif.ops->resume(ar);
->  }
->  
-> +static inline u32 ath10k_hif_read32(struct ath10k *ar, u32 address)
-> +{
-> +	if (!ar->hif.ops->read32) {
-> +		ath10k_warn(ar, "hif read32 not supported\n");
-> +		return 0xdeaddead;
-> +	}
-> +
-> +	return ar->hif.ops->read32(ar, address);
-> +}
-> +
-> +static inline void ath10k_hif_write32(struct ath10k *ar,
-> +				      u32 address, u32 data)
-> +{
-> +	if (!ar->hif.ops->write32) {
-> +		ath10k_warn(ar, "hif write32 not supported\n");
-> +		return;
-> +	}
-> +
-> +	ar->hif.ops->write32(ar, address, data);
-> +}
-> +
->  #endif /* _HIF_H_ */
-> diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-> index 3a6b8a5..0816098 100644
-> --- a/drivers/net/wireless/ath/ath10k/pci.c
-> +++ b/drivers/net/wireless/ath/ath10k/pci.c
-> @@ -1988,6 +1988,7 @@ static int ath10k_pci_hif_resume(struct ath10k *ar)
->  static const struct ath10k_hif_ops ath10k_pci_hif_ops = {
->  	.tx_sg			= ath10k_pci_hif_tx_sg,
->  	.diag_read		= ath10k_pci_hif_diag_read,
-> +	.diag_write		= ath10k_pci_diag_write_mem,
->  	.exchange_bmi_msg	= ath10k_pci_hif_exchange_bmi_msg,
->  	.start			= ath10k_pci_hif_start,
->  	.stop			= ath10k_pci_hif_stop,
-> @@ -1998,6 +1999,8 @@ static const struct ath10k_hif_ops ath10k_pci_hif_ops = {
->  	.get_free_queue_number	= ath10k_pci_hif_get_free_queue_number,
->  	.power_up		= ath10k_pci_hif_power_up,
->  	.power_down		= ath10k_pci_hif_power_down,
-> +	.read32			= ath10k_pci_read32,
-> +	.write32		= ath10k_pci_write32,
->  #ifdef CONFIG_PM
->  	.suspend		= ath10k_pci_hif_suspend,
->  	.resume			= ath10k_pci_hif_resume,
-> -- 
-> 1.7.9.5
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+The current statistics we keep aren't very clear, some are on
+MPDUs and some on MSDUs/MMPDUs. Clarify the decriptions based
+on the counters mac80211 keeps.
 
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/cfg80211.h       | 12 ++++++------
+ include/uapi/linux/nl80211.h | 24 +++++++++++++++---------
+ 2 files changed, 21 insertions(+), 15 deletions(-)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 4e4ccc433140..0eee821624f8 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -949,8 +949,8 @@ struct sta_bss_parameters {
+  *	indicate the relevant values in this struct for them
+  * @connected_time: time(in secs) since a station is last connected
+  * @inactive_time: time since last station activity (tx/rx) in milliseconds
+- * @rx_bytes: bytes received from this station
+- * @tx_bytes: bytes transmitted to this station
++ * @rx_bytes: bytes (size of MPDUs) received from this station
++ * @tx_bytes: bytes (size of MPDUs) transmitted to this station
+  * @llid: mesh local link id
+  * @plid: mesh peer link id
+  * @plink_state: mesh peer link state
+@@ -963,10 +963,10 @@ struct sta_bss_parameters {
+  * @chain_signal_avg: per-chain signal strength average in dBm
+  * @txrate: current unicast bitrate from this station
+  * @rxrate: current unicast bitrate to this station
+- * @rx_packets: packets received from this station
+- * @tx_packets: packets transmitted to this station
+- * @tx_retries: cumulative retry counts
+- * @tx_failed: number of failed transmissions (retries exceeded, no ACK)
++ * @rx_packets: packets (MSDUs & MMPDUs) received from this station
++ * @tx_packets: packets (MSDUs & MMPDUs) transmitted to this station
++ * @tx_retries: cumulative retry counts (MPDUs)
++ * @tx_failed: number of failed transmissions (MPDUs) (retries exceeded, no ACK)
+  * @rx_dropped_misc:  Dropped for un-specified reason.
+  * @bss_param: current BSS parameters
+  * @generation: generation number for nl80211 dumps.
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index a13b5399d9ef..29b7eb164b6f 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2290,18 +2290,24 @@ enum nl80211_sta_bss_param {
+  *
+  * @__NL80211_STA_INFO_INVALID: attribute number 0 is reserved
+  * @NL80211_STA_INFO_INACTIVE_TIME: time since last activity (u32, msecs)
+- * @NL80211_STA_INFO_RX_BYTES: total received bytes (u32, from this station)
+- * @NL80211_STA_INFO_TX_BYTES: total transmitted bytes (u32, to this station)
+- * @NL80211_STA_INFO_RX_BYTES64: total received bytes (u64, from this station)
+- * @NL80211_STA_INFO_TX_BYTES64: total transmitted bytes (u64, to this station)
++ * @NL80211_STA_INFO_RX_BYTES: total received bytes (MPDU length)
++ *	(u32, from this station)
++ * @NL80211_STA_INFO_TX_BYTES: total transmitted bytes (MPDU length)
++ *	(u32, to this station)
++ * @NL80211_STA_INFO_RX_BYTES64: total received bytes (MPDU length)
++ *	(u64, from this station)
++ * @NL80211_STA_INFO_TX_BYTES64: total transmitted bytes (MPDU length)
++ *	(u64, to this station)
+  * @NL80211_STA_INFO_SIGNAL: signal strength of last received PPDU (u8, dBm)
+  * @NL80211_STA_INFO_TX_BITRATE: current unicast tx rate, nested attribute
+  * 	containing info as possible, see &enum nl80211_rate_info
+- * @NL80211_STA_INFO_RX_PACKETS: total received packet (u32, from this station)
+- * @NL80211_STA_INFO_TX_PACKETS: total transmitted packets (u32, to this
+- *	station)
+- * @NL80211_STA_INFO_TX_RETRIES: total retries (u32, to this station)
+- * @NL80211_STA_INFO_TX_FAILED: total failed packets (u32, to this station)
++ * @NL80211_STA_INFO_RX_PACKETS: total received packet (MSDUs and MMPDUs)
++ *	(u32, from this station)
++ * @NL80211_STA_INFO_TX_PACKETS: total transmitted packets (MSDUs and MMPDUs)
++ *	(u32, to this station)
++ * @NL80211_STA_INFO_TX_RETRIES: total retries (MPDUs) (u32, to this station)
++ * @NL80211_STA_INFO_TX_FAILED: total failed packets (MPDUs)
++ *	(u32, to this station)
+  * @NL80211_STA_INFO_SIGNAL_AVG: signal strength average (u8, dBm)
+  * @NL80211_STA_INFO_LLID: the station's mesh LLID
+  * @NL80211_STA_INFO_PLID: the station's mesh PLID
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+2.1.1
+
