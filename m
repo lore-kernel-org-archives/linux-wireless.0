@@ -1,30 +1,25 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:40098 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755184AbaKSSBQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Nov 2014 13:01:16 -0500
-Message-ID: <1416420073.9374.15.camel@sipsolutions.net> (sfid-20141119_190120_115764_F0EA1E18)
-Subject: Re: [PATCH v2 1/2] mac80211-hwsim: Factor out netlink attribute
- appending
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Patrik Flykt <patrik.flykt@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 19 Nov 2014 19:01:13 +0100
-In-Reply-To: <1415803360-4073-2-git-send-email-patrik.flykt@linux.intel.com> (sfid-20141112_154252_610154_3687E769)
-References: <1415803360-4073-1-git-send-email-patrik.flykt@linux.intel.com>
-	 <1415803360-4073-2-git-send-email-patrik.flykt@linux.intel.com>
-	 (sfid-20141112_154252_610154_3687E769)
-Content-Type: text/plain; charset="UTF-8"
+Received: from shards.monkeyblade.net ([149.20.54.216]:39312 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751738AbaKUVkY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Nov 2014 16:40:24 -0500
+Date: Fri, 21 Nov 2014 16:40:21 -0500 (EST)
+Message-Id: <20141121.164021.2072321279665250358.davem@davemloft.net> (sfid-20141121_224036_629816_33B76A3E)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next 2014-11-21
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20141121183014.GA24984@tuxdriver.com>
+References: <20141121183014.GA24984@tuxdriver.com>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-11-12 at 16:42 +0200, Patrik Flykt wrote:
-> Factor out netlink message attribute appending in order to reuse it
-> with later code. As a result move netlink skb allocation to the
-> calling function.
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Fri, 21 Nov 2014 13:30:15 -0500
 
-Applied.
+> Please pull this batch of updates intended for the 3.19 stream...
 
-johannes
-
+Pulled into net-next, thanks John.
