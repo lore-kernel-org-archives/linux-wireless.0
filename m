@@ -1,41 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:42792 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752654AbaKGTE4 (ORCPT
+Received: from mail-pd0-f171.google.com ([209.85.192.171]:37181 "EHLO
+	mail-pd0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755377AbaKUPBW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Nov 2014 14:04:56 -0500
-Date: Fri, 7 Nov 2014 11:04:55 -0800
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: Re: [PATCH 1/3] debugfs: add helper function to create device
- related seq_file
-Message-ID: <20141107190455.GA4653@kroah.com> (sfid-20141107_200459_840020_489EEA7A)
-References: <1414498752-9746-1-git-send-email-arend@broadcom.com>
- <1414498752-9746-2-git-send-email-arend@broadcom.com>
+	Fri, 21 Nov 2014 10:01:22 -0500
+Received: by mail-pd0-f171.google.com with SMTP id v10so5458515pde.30
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Nov 2014 07:01:21 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1414498752-9746-2-git-send-email-arend@broadcom.com>
+Date: Fri, 21 Nov 2014 20:31:21 +0530
+Message-ID: <CAGKQeFjfMwFE8d4FVOZY7n3R1=x3naDoxT4-YKUEnA3T7AJcLw@mail.gmail.com> (sfid-20141121_160125_227508_3AE6478A)
+Subject: Linux kernel 3.12 PN-KEY Mismatch in wpa.c, packet drop
+From: deepak kumar Pradhan <hydipu@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 28, 2014 at 01:19:10PM +0100, Arend van Spriel wrote:
-> This patch adds a helper function that simplifies adding a
-> so-called single_open sequence file for device drivers. The
-> calling device driver needs to provide a read function and
-> a device pointer. The field struct seq_file::private will
-> reference the device pointer upon call to the read function
-> so the driver can obtain his data from it and do its task
-> of providing the file content using seq_printf() calls and
-> alike. Using this helper function also gets rid of the need
-> to specify file operations per debugfs file.
-> 
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
-> ---
->  fs/debugfs/file.c       | 54 +++++++++++++++++++++++++++++++++++++++++++++++++
->  include/linux/debugfs.h | 16 ++++++++++++++-
->  2 files changed, 69 insertions(+), 1 deletion(-)
+Hi,
+When I am sending heavy traffic through wireless, the packet number
+and key is mismatching.
+I have applied the below patch which solves my pn-key mismatch packet drop.
+diff -Nurp linux-custom_1/net/mac80211/wpa.c linux-custom/net/mac80211/wpa.c
+--- linux-custom_1/net/mac80211/wpa.c   2014-11-09 23:14:57.000000000 -0800
++++ linux-custom/net/mac80211/wpa.c     2014-11-13 05:16:45.000000000 -0800
+@@ -483,7 +483,7 @@ ieee80211_crypto_ccmp_encrypt(struct iee
+        return TX_CONTINUE;
+ }
 
-Please run your patches through checkpatch before sending them so you
-don't get grumpy emails from maintainers complaining about whitespace
-errors :(
+-
++#define MAX_PN_TOLERANCE 0x05  //PN-KEY mismatch
+ ieee80211_rx_result
+ ieee80211_crypto_ccmp_decrypt(struct ieee80211_rx_data *rx)
+ {
+@@ -495,6 +495,7 @@ ieee80211_crypto_ccmp_decrypt(struct iee
+        u8 pn[IEEE80211_CCMP_PN_LEN];
+        int data_len;
+        int queue;
++       static const u8 zero_pn[IEEE80211_CCMP_PN_LEN] = {0};
+
+        hdrlen = ieee80211_hdrlen(hdr->frame_control);
+
+@@ -537,8 +538,16 @@ ieee80211_crypto_ccmp_decrypt(struct iee
+                            skb->data + hdrlen + IEEE80211_CCMP_HDR_LEN))
+                        return RX_DROP_UNUSABLE;
+        }
+-
+-       memcpy(key->u.ccmp.rx_pn[queue], pn, IEEE80211_CCMP_PN_LEN);
++
++       //PN-KEY mismatch start
++       if (memcmp(key->u.ccmp.rx_pn[queue], zero_pn,
+IEEE80211_CCMP_PN_LEN) == 0)
++       {
++               if((memcmp(pn,zero_pn,(IEEE80211_CCMP_PN_LEN-1)) == 0)
+&& (pn[IEEE80211_CCMP_PN_LEN-1] < MAX_PN_TOLERANCE))
++                       memcpy(key->u.ccmp.rx_pn[queue], pn,
+IEEE80211_CCMP_PN_LEN);
++       }
++       else
++               memcpy(key->u.ccmp.rx_pn[queue], pn, IEEE80211_CCMP_PN_LEN);
++       //PN-KEY mismatch end
+
+        /* Remove CCMP header and MIC */
+        if (pskb_trim(skb, skb->len - IEEE80211_CCMP_MIC_LEN))
+
+
+-- 
+Deepak Kumar Pradhan
