@@ -1,35 +1,176 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:42801 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753127AbaKGTFb (ORCPT
+Received: from mail3-relais-sop.national.inria.fr ([192.134.164.104]:54078
+	"EHLO mail3-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750961AbaKVOom (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Nov 2014 14:05:31 -0500
-Date: Fri, 7 Nov 2014 11:05:30 -0800
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: Re: [PATCH 3/3] ath: ath9k: use debugfs_create_devm_seqfile() helper
- for seq_file entries
-Message-ID: <20141107190530.GB4694@kroah.com> (sfid-20141107_200533_274184_52EC85B6)
-References: <1414498752-9746-1-git-send-email-arend@broadcom.com>
- <1414498752-9746-4-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1414498752-9746-4-git-send-email-arend@broadcom.com>
+	Sat, 22 Nov 2014 09:44:42 -0500
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+To: linux-rdma@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-edac@vger.kernel.org,
+	linux-atm-general@lists.sourceforge.net, netdev@vger.kernel.org,
+	Dan Williams <dan.j.williams@intel.com>,
+	linux-arm-kernel@lists.infradead.org, dmaengine@vger.kernel.org
+Subject: [PATCH 0/6] fix error return code
+Date: Sat, 22 Nov 2014 15:39:13 +0100
+Message-Id: <1416667159-9808-1-git-send-email-Julia.Lawall@lip6.fr> (sfid-20141122_154642_678846_7E2CF298)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 28, 2014 at 01:19:12PM +0100, Arend van Spriel wrote:
-> Use the helper to get rid of the file operations per debugfs file. The
-> struct ath9k_softc pointer is set as device driver data to be obtained
-> in the seq_file read operation.
-> 
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
-> Acked-by: John W. Linville <linville@tuxdriver.com>
-> ---
->  drivers/net/wireless/ath/ath9k/ahb.c   |   1 +
->  drivers/net/wireless/ath/ath9k/debug.c | 122 ++++++---------------------------
->  drivers/net/wireless/ath/ath9k/pci.c   |   1 +
->  3 files changed, 24 insertions(+), 100 deletions(-)
+The complate semantic patch that finds this problem is as follows:
+(http://coccinelle.lip6.fr/)
 
-This also didn't apply :(
+// <smpl>
+@ok exists@
+identifier f,ret,i;
+expression e;
+constant c;
+@@
+
+// identify a function that returns a negative return value at least once.
+f(...) {
+... when any
+(
+return -c@i;
+|
+ret = -c@i;
+... when != ret = e
+return ret;
+|
+if (ret < 0) { ... return ret; }
+)
+... when any
+}
+
+@r exists@
+identifier ret,ok.f,fn;
+expression e1,e2,e3,e4,e5,e6,x;
+statement S,S1;
+position p1,p2,p3;
+@@
+
+// identify a case where the return variable is set to a non-negative value
+// and then returned in error-handling code
+f(...) {
+... when any
+(
+if@p1 (\(ret < 0\|ret != 0\))
+ { ... return ret; }
+|
+ret@p1 = 0
+)
+... when != \(ret = e1\|ret++\|ret--\|ret+=e1\|ret-=e1\)
+    when != &ret
+    when any
+(
+ if (<+... ret = e5 ...+>) S1
+|
+ if (<+... &ret ...+>) S1
+|
+if@p2(<+...x = fn(...)...+>)
+ {
+  ... when != ret = e6
+      when forall
+ return@p3 ret;
+}
+|
+break;
+|
+x = fn(...)
+... when != \(ret = e4\|ret++\|ret--\|ret+=e4\|ret-=e4\)
+    when != &ret
+(
+ if (<+... ret = e3 ...+>) S
+|
+ if (<+... &ret ...+>) S
+|
+if@p2(<+...\(x != 0\|x < 0\|x == NULL\|IS_ERR(x)\)...+>)
+ {
+  ... when != ret = e2
+      when forall
+ return@p3 ret;
+}
+)
+)
+... when any
+}
+
+@printer depends on r@
+position p;
+identifier ok.f,pr;
+constant char [] c;
+@@
+
+f(...) { <...pr@p(...,c,...)...> }
+
+@bad0 exists@
+identifier r.ret,ok.f,g != {ERR_PTR,IS_ERR};
+position p != printer.p;
+@@
+
+f(...) { ... when any
+g@p(...,ret,...)
+... when any
+ }
+
+@bad depends on !bad0 exists@
+position r.p1,r.p2;
+statement S1,S2;
+identifier r.ret;
+expression e1;
+@@
+
+// ignore the above if there is some path where the variable is set to
+// something else
+(
+if@p1 (\(ret < 0\|ret != 0\)) S1
+|
+ret@p1 = 0
+)
+... when any
+ \(ret = e1\|ret++\|ret--\|ret+=e1\|ret-=e1\|&ret\)
+... when any
+if@p2(...) S2
+
+@bad1 depends on !bad0 && !bad exists@
+position r.p2;
+statement S2;
+identifier r.ret;
+expression e1;
+constant c;
+@@
+
+ret = -c
+... when != \(ret = e1\|ret++\|ret--\|ret+=e1\|ret-=e1\)
+    when != &ret
+    when any
+if@p2(...) S2
+
+@bad2 depends on !bad0 && !bad && !bad1 exists@
+position r.p1,r.p2;
+identifier r.ret;
+expression e1;
+statement S2;
+constant c;
+@@
+
+// likewise ignore it if there has been an intervening return
+ret@p1 = 0
+... when != if (...) { ... ret = e1 ... return ret; }
+    when != if (...) { ... return -c; }
+    when any
+if@p2(...) S2
+
+
+@script:python depends on !bad0 && !bad && !bad1 && !bad2@
+p1 << r.p1;
+p2 << r.p2;
+p3 << r.p3;
+@@
+
+cocci.print_main("",p1)
+cocci.print_secs("",p2)
+cocci.print_secs("",p3)
+
+// </smpl>
+
