@@ -1,57 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:46620 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753893AbaKXSyh (ORCPT
+Received: from mail3-relais-sop.national.inria.fr ([192.134.164.104]:54078
+	"EHLO mail3-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750781AbaKVOoj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2014 13:54:37 -0500
-Message-ID: <54737EEB.2050104@candelatech.com> (sfid-20141124_195439_996232_7C832436)
-Date: Mon, 24 Nov 2014 10:54:35 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Subject: Re: [PATCH 2/2] ath10k: re-config ht_caps when chainmask is modified.
-References: <1411576506-11815-1-git-send-email-greearb@candelatech.com> <1411576506-11815-2-git-send-email-greearb@candelatech.com> <87ioi47vvd.fsf@kamboji.qca.qualcomm.com> <87egss7tv3.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87egss7tv3.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sat, 22 Nov 2014 09:44:39 -0500
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
+Cc: kernel-janitors@vger.kernel.org,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 1/6] NFC: pn533: fix error return code
+Date: Sat, 22 Nov 2014 15:39:14 +0100
+Message-Id: <1416667159-9808-2-git-send-email-Julia.Lawall@lip6.fr> (sfid-20141122_154657_147880_6C1D47AB)
+In-Reply-To: <1416667159-9808-1-git-send-email-Julia.Lawall@lip6.fr>
+References: <1416667159-9808-1-git-send-email-Julia.Lawall@lip6.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/24/2014 02:53 AM, Kalle Valo wrote:
-> Kalle Valo <kvalo@qca.qualcomm.com> writes:
-> 
->>> @@ -2537,6 +2560,17 @@ static int __ath10k_set_antenna(struct ath10k *ar, u32 tx_ant, u32 rx_ant)
->>>  	ar->cfg_tx_chainmask = tx_ant;
->>>  	ar->cfg_rx_chainmask = rx_ant;
->>>  
->>> +	ht_cap = ath10k_get_ht_cap(ar, true);
->>> +	vht_cap = ath10k_create_vht_cap(ar, true);
->>> +
->>> +	if (ar->phy_capability & WHAL_WLAN_11G_CAPABILITY)
->>> +		ar->mac.sbands[IEEE80211_BAND_2GHZ].ht_cap = ht_cap;
->>> +
->>> +	if (ar->phy_capability & WHAL_WLAN_11A_CAPABILITY) {
->>> +		ar->mac.sbands[IEEE80211_BAND_5GHZ].ht_cap = ht_cap;
->>> +		ar->mac.sbands[IEEE80211_BAND_5GHZ].vht_cap = vht_cap;
->>> +	}
->>
->> So this modifies stryct wiphy::bands after we have called
->> ieee80211_register_hw(). Is this something which both cfg80211 and
->> mac80211 support? I didn't find the documentation mentioning anything
->> about this so I got a bit worried.
-> 
-> Johannes mentioned me that this is not supported so I am reluctant to
-> take these. Unless I'm missing something, of course.
+From: Julia Lawall <Julia.Lawall@lip6.fr>
 
-I did test the code, and it seems to work fine.  But, I could
-be missing some subtle issues.
+Return a negative error code on failure.
 
-Any idea how this is supposed to be done?
+A simplified version of the semantic match that finds this problem is as
+follows: (http://coccinelle.lip6.fr/)
 
-Thanks,
-Ben
+// <smpl>
+@@
+identifier ret; expression e1,e2;
+@@
+(
+if (\(ret < 0\|ret != 0\))
+ { ... return ret; }
+|
+ret = 0
+)
+... when != ret = e1
+    when != &ret
+*if(...)
+{
+  ... when != ret = e2
+      when forall
+ return ret;
+}
+// </smpl>
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+
+---
+The error code is chosen according to the other call to this function
+in the same file.
+
+ drivers/nfc/pn533.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/nfc/pn533.c b/drivers/nfc/pn533.c
+index d46a700..a859303 100644
+--- a/drivers/nfc/pn533.c
++++ b/drivers/nfc/pn533.c
+@@ -2554,8 +2554,10 @@ static int pn533_data_exchange_complete(struct pn533 *dev, void *_arg,
+ 	}
+ 
+ 	skb = pn533_build_response(dev);
+-	if (!skb)
++	if (!skb) {
++		rc = -EIO;
+ 		goto error;
++	}
+ 
+ 	arg->cb(arg->cb_context, skb, 0);
+ 	kfree(arg);
 
