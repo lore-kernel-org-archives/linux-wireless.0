@@ -1,166 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:3699 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751169AbaKYUCs (ORCPT
+Received: from mail-wi0-f182.google.com ([209.85.212.182]:54898 "EHLO
+	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751926AbaKWUKH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Nov 2014 15:02:48 -0500
-From: Peter Oh <poh@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/2] ath10k: add new wmi interface of NF cal period
-Date: Tue, 25 Nov 2014 12:02:45 -0800
-Message-ID: <1416945765-26902-2-git-send-email-poh@qca.qualcomm.com> (sfid-20141125_210305_098792_9CB978FB)
-In-Reply-To: <1416945765-26902-1-git-send-email-poh@qca.qualcomm.com>
-References: <1416945765-26902-1-git-send-email-poh@qca.qualcomm.com>
+	Sun, 23 Nov 2014 15:10:07 -0500
+Received: by mail-wi0-f182.google.com with SMTP id h11so3869288wiw.9
+        for <linux-wireless@vger.kernel.org>; Sun, 23 Nov 2014 12:10:06 -0800 (PST)
+Message-ID: <54723F1B.4030509@gmail.com> (sfid-20141123_211012_454350_97D55AF0)
+Date: Sun, 23 Nov 2014 22:10:03 +0200
+From: Emmanuel Grumbach <egrumbach@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: linux-firmware@kernel.org
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: pull request: firmware updates for Intel Wireless devices 3160/7260/7265
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="fU8meD5NHJ3RFU0vGBnSep2T0slws89n5"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Introduce a new wmi interface controls noise floor (NF) calibration
-period via debugfs as firmware has introduced it on v10.2.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--fU8meD5NHJ3RFU0vGBnSep2T0slws89n5
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-It allows users to modify frequency of NF calibration in millisecond
-and changes RSSI reporting frequency consequently.
-Short calibration period will trigger more frequent NF calibration,
-so that RSSI reported in receive frames is more realistic.
+Hello,
 
-Till now calibration was done at 30 seconds.
+Intel officially released a new spin of the -9 version of the firmware fo=
+r devices 3160, 7260 and 7265.
+This release had been announced a while ago, but the linux-firmware.git's=
+ maintainers didn't pick it up.
+This is a new pull request with almost the exact same -9 version - it has=
+ one more bug fix.
+Version: 25.228.9.0.
 
-Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.h  |  1 +
- drivers/net/wireless/ath/ath10k/debug.c | 64 +++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi.c   |  2 ++
- drivers/net/wireless/ath/ath10k/wmi.h   |  1 +
- 4 files changed, 68 insertions(+)
+We also release new version (-10) of the firmware for the same devices. T=
+his firmware includes new features
+such as TDLS, Channel switch and others.
+Version: 23.10.10.0.
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 8f86bd3..5de988c 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -320,6 +320,7 @@ struct ath10k_debug {
- 	/* protected by conf_mutex */
- 	u32 fw_dbglog_mask;
- 	u32 pktlog_filter;
-+	u32 fw_cal_period;
- 
- 	u8 htt_max_amsdu;
- 	u8 htt_max_ampdu;
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index f10721d..d8426fd 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -1381,6 +1381,67 @@ static const struct file_operations fops_cal_data = {
- 	.llseek = default_llseek,
- };
- 
-+static ssize_t ath10k_read_cal_period(struct file *file,
-+				      char __user *user_buf,
-+				      size_t count, loff_t *ppos)
-+{
-+	struct ath10k *ar = file->private_data;
-+	unsigned int len;
-+	char buf[32];
-+
-+	len = scnprintf(buf, sizeof(buf), "%d\n",
-+			ar->debug.fw_cal_period);
-+
-+	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
-+}
-+
-+static ssize_t ath10k_write_cal_period(struct file *file,
-+				       const char __user *user_buf,
-+				       size_t count, loff_t *ppos)
-+{
-+	struct ath10k *ar = file->private_data;
-+	unsigned long period;
-+	int ret;
-+
-+	ret = kstrtoul_from_user(user_buf, count, 0, &period);
-+	if (ret)
-+		return ret;
-+	/* period unit in millisecond */
-+	if (period < 1 || period > 60000)
-+		return -EINVAL;
-+
-+	mutex_lock(&ar->conf_mutex);
-+
-+	ar->debug.fw_cal_period = period;
-+
-+	if (ar->state == ATH10K_STATE_ON) {
-+		ret = ath10k_wmi_pdev_set_param
-+			(ar, ar->wmi.pdev_param->cal_period,
-+			ar->debug.fw_cal_period);
-+		if (ret) {
-+			ath10k_warn
-+				(ar, "cal period cfg failed from debugfs: %d\n",
-+				ret);
-+			goto exit;
-+		}
-+	}
-+
-+	ret = count;
-+
-+exit:
-+	mutex_unlock(&ar->conf_mutex);
-+
-+	return ret;
-+}
-+
-+static const struct file_operations fops_cal_period = {
-+	.read = ath10k_read_cal_period,
-+	.write = ath10k_write_cal_period,
-+	.open = simple_open,
-+	.owner = THIS_MODULE,
-+	.llseek = default_llseek,
-+};
-+
- int ath10k_debug_start(struct ath10k *ar)
- {
- 	int ret;
-@@ -1645,6 +1706,9 @@ int ath10k_debug_register(struct ath10k *ar)
- 	debugfs_create_file("cal_data", S_IRUSR, ar->debug.debugfs_phy,
- 			    ar, &fops_cal_data);
- 
-+	debugfs_create_file("cal_period", S_IRUSR | S_IWUSR,
-+			    ar->debug.debugfs_phy, ar, &fops_cal_period);
-+
- 	if (config_enabled(CONFIG_ATH10K_DFS_CERTIFIED)) {
- 		debugfs_create_file("dfs_simulate_radar", S_IWUSR,
- 				    ar->debug.debugfs_phy, ar,
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index c300a53..b144b39 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -434,6 +434,7 @@ static struct wmi_pdev_param_map wmi_pdev_param_map = {
- 	.fast_channel_reset = WMI_PDEV_PARAM_UNSUPPORTED,
- 	.burst_dur = WMI_PDEV_PARAM_UNSUPPORTED,
- 	.burst_enable = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.cal_period = WMI_PDEV_PARAM_UNSUPPORTED,
- };
- 
- static struct wmi_pdev_param_map wmi_10x_pdev_param_map = {
-@@ -486,6 +487,7 @@ static struct wmi_pdev_param_map wmi_10x_pdev_param_map = {
- 	.fast_channel_reset = WMI_10X_PDEV_PARAM_FAST_CHANNEL_RESET,
- 	.burst_dur = WMI_10X_PDEV_PARAM_BURST_DUR,
- 	.burst_enable = WMI_10X_PDEV_PARAM_BURST_ENABLE,
-+	.cal_period = WMI_10X_PDEV_PARAM_CAL_PERIOD,
- };
- 
- /* firmware 10.2 specific mappings */
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 8fa0192..fe35ba9 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -2497,6 +2497,7 @@ struct wmi_pdev_param_map {
- 	u32 fast_channel_reset;
- 	u32 burst_dur;
- 	u32 burst_enable;
-+	u32 cal_period; /* valid period is 1 ~ 60000ms */
- };
- 
- #define WMI_PDEV_PARAM_UNSUPPORTED 0
--- 
-1.9.1
+Please pull...
 
+The following changes since commit 0e5f63771d0df6d7859f7c4100a74d737c62ac=
+88:
+
+  linux-firmware: Add firmware patch for Intel Bluetooth 7265 ROM-spin(D0=
+) (2014-10-09 11:59:44 -0400)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/egrumbach/linux-firmware.=
+git master
+
+for you to fetch changes up to 064309720ed861dde985c39cdc1a34e7bcf93cc9:
+
+  iwlwifi: add new firmware for 3160 / 7260 / 7265 / 7265D (2014-11-21 11=
+:11:06 +0200)
+
+----------------------------------------------------------------
+Emmanuel Grumbach (2):
+      iwlwifi: update firmware for 3160 / 7260 / 7265
+      iwlwifi: add new firmware for 3160 / 7260 / 7265 / 7265D
+
+ WHENCE                 |  18 +++++++++++++++---
+ iwlwifi-3160-10.ucode  | Bin 0 -> 610168 bytes
+ iwlwifi-3160-9.ucode   | Bin 669156 -> 669872 bytes
+ iwlwifi-7260-10.ucode  | Bin 0 -> 672480 bytes
+ iwlwifi-7260-9.ucode   | Bin 681464 -> 680508 bytes
+ iwlwifi-7265-10.ucode  | Bin 0 -> 736968 bytes
+ iwlwifi-7265-9.ucode   | Bin 697012 -> 697828 bytes
+ iwlwifi-7265D-10.ucode | Bin 0 -> 740636 bytes
+ 8 files changed, 15 insertions(+), 3 deletions(-)
+ create mode 100644 iwlwifi-3160-10.ucode
+ create mode 100644 iwlwifi-7260-10.ucode
+ create mode 100644 iwlwifi-7265-10.ucode
+ create mode 100644 iwlwifi-7265D-10.ucode
+
+diff --git a/WHENCE b/WHENCE
+index b77516d..a4bf645 100644
+--- a/WHENCE
++++ b/WHENCE
+@@ -813,7 +813,10 @@ File: iwlwifi-7260-8.ucode
+ Version: 22.24.8.0
+=20
+ File: iwlwifi-7260-9.ucode
+-Version: 25.222.9.0
++Version: 25.228.9.0
++
++File: iwlwifi-7260-10.ucode
++Version: 23.10.10.0
+=20
+ File: iwlwifi-3160-7.ucode
+ Version: 22.1.7.0
+@@ -822,13 +825,22 @@ File: iwlwifi-3160-8.ucode
+ Version: 22.24.8.0
+=20
+ File: iwlwifi-3160-9.ucode
+-Version: 25.222.9.0
++Version: 25.228.9.0
++
++File: iwlwifi-3160-10.ucode
++Version: 23.10.10.0
+=20
+ File: iwlwifi-7265-8.ucode
+ Version: 22.24.8.0
+=20
+ File: iwlwifi-7265-9.ucode
+-Version: 25.222.9.0
++Version: 25.228.9.0
++
++File: iwlwifi-7265-10.ucode
++Version: 23.10.10.0
++
++File: iwlwifi-7265D-10.ucode
++Version: 23.10.10.0
+=20
+ Licence: Redistributable. See LICENCE.iwlwifi_firmware for details
+=20
+diff --git a/iwlwifi-3160-10.ucode b/iwlwifi-3160-10.ucode
+new file mode 100644
+index 0000000..8cec7bf
+Binary files /dev/null and b/iwlwifi-3160-10.ucode differ
+diff --git a/iwlwifi-3160-9.ucode b/iwlwifi-3160-9.ucode
+index 638c7fa..287a3a5 100644
+Binary files a/iwlwifi-3160-9.ucode and b/iwlwifi-3160-9.ucode differ
+diff --git a/iwlwifi-7260-10.ucode b/iwlwifi-7260-10.ucode
+new file mode 100644
+index 0000000..9e5b930
+Binary files /dev/null and b/iwlwifi-7260-10.ucode differ
+diff --git a/iwlwifi-7260-9.ucode b/iwlwifi-7260-9.ucode
+index 3175322..b271e86 100644
+Binary files a/iwlwifi-7260-9.ucode and b/iwlwifi-7260-9.ucode differ
+diff --git a/iwlwifi-7265-10.ucode b/iwlwifi-7265-10.ucode
+new file mode 100644
+index 0000000..488ddd0
+Binary files /dev/null and b/iwlwifi-7265-10.ucode differ
+diff --git a/iwlwifi-7265-9.ucode b/iwlwifi-7265-9.ucode
+index 1767a33..bbca2fe 100644
+Binary files a/iwlwifi-7265-9.ucode and b/iwlwifi-7265-9.ucode differ
+diff --git a/iwlwifi-7265D-10.ucode b/iwlwifi-7265D-10.ucode
+new file mode 100644
+index 0000000..01194db
+Binary files /dev/null and b/iwlwifi-7265D-10.ucode differ
+
+
+--fU8meD5NHJ3RFU0vGBnSep2T0slws89n5
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJUcj8cAAoJEC0Llv5uNjIBOCoP/3lkBmlUDquRto2QNFNTbxfd
+TZ5J2bi/7Qgv0jankKBpQDY7s53B8LhksLeo6j0UNGsxqYDo0DFZ9XZxzx70/skK
+k++IB/SOwWMAH6Ugfu7FmdXq6Or8OFxps/ItM5abdR4ZGt1gT4LnYPXdyhgMFyh/
+JC3CqgE8mcaO3v1dpve5acd3f18dbOjBkrthWvki9jhMR6rfN2HffJ1n0EysM+bo
+glM7iMVcyHN0B9duB9rIndy+ibOcFmBCn30McpgVKG/ZuUwTGFwt9ZfPtXW3wEDq
+3gkVcJUoQfgoS3XNNMRr9V+rZUXvX0JZNjco9LxVaMXjQpU2qPMh2mfPchGVaOVM
+m/yUwsSqyUbP0XsyQBo5dz1lEclMRWnWyeNudr9IsqHlYt+HwsOWwDy+XxTytNAj
+jPg/Z3OTGaG+lwL++aSpeWD15aqQuSENhsM/PqWzokJlPdCErx2ofBGqRWbdDW2h
+l2Sj7NjFXTZda6JQM2Jq/1CsN4VyRn+n/G9mE+AhUHQbmk3p7PcoukKXK/3Fw4Qg
+sFYmDSonfdN9g0IenMlGyE3DYjJ8jUJWfq1JwsKts78byyChcQcStWkbQgZuZ5yi
+pScVCm4/eRSTOtF7KjZyc9wHRTDmXOerJJ+2SBJeuErD6mnO1piLVdCsZppf+wR1
+RpPqIgPbu7yx91tDKp0H
+=jlVX
+-----END PGP SIGNATURE-----
+
+--fU8meD5NHJ3RFU0vGBnSep2T0slws89n5--
