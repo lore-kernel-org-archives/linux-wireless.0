@@ -1,66 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:57809 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751160AbaKDJ12 (ORCPT
+Received: from mail-wg0-f54.google.com ([74.125.82.54]:61746 "EHLO
+	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752825AbaKXOLK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Nov 2014 04:27:28 -0500
-Received: by mail-wi0-f177.google.com with SMTP id ex7so8693223wid.4
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Nov 2014 01:27:27 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <B2CD83211F5FDD478D7EFFF030D107ED2AE2FDE7@hasmsx107.ger.corp.intel.com>
-References: <1415090436-12588-1-git-send-email-emmanuel.grumbach@intel.com>
- <CABPxzYKfoO+NYi7Zs+5t6mRU+XwW5u=dKiBMsrzZ5VLO3ABDAg@mail.gmail.com> <B2CD83211F5FDD478D7EFFF030D107ED2AE2FDE7@hasmsx107.ger.corp.intel.com>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Tue, 4 Nov 2014 14:57:07 +0530
-Message-ID: <CABPxzYLFx7M=8E1pGYP7b7k-3xL9J8kYJ868BNDgkYgFOQNUQg@mail.gmail.com> (sfid-20141104_102733_673057_80D12D8D)
-Subject: Re: [PATCH] mac80211: Increase uapsd max SP frames number
-To: "Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
-Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 24 Nov 2014 09:11:10 -0500
+Received: by mail-wg0-f54.google.com with SMTP id l2so1837267wgh.13
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:11:09 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 2/3] ath10k: make hw roc more reliable
+Date: Mon, 24 Nov 2014 14:58:32 +0100
+Message-Id: <1416837513-13386-2-git-send-email-michal.kazior@tieto.com> (sfid-20141124_151116_150754_1EBD9AE2)
+In-Reply-To: <1416837513-13386-1-git-send-email-michal.kazior@tieto.com>
+References: <1416837513-13386-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 4, 2014 at 2:53 PM, Otcheretianski, Andrei
-<andrei.otcheretianski@intel.com> wrote:
-> The spec doesn't require unlimited to be really "unlimited" and the AP decides when to end the SP, so any value here is ok.
-> However for large traffic bursts increasing this value looks reasonable. Also looks like some certification tests expect more frames to be delivered during SP.
-> 128 is still kind of arbitrary value
->
->> -----Original Message-----
->> From: Krishna Chaitanya [mailto:chaitanya.mgit@gmail.com]
->> Sent: Tuesday, November 04, 2014 11:03
->> To: Grumbach, Emmanuel
->> Cc: Johannes Berg; linux-wireless; Otcheretianski, Andrei
->> Subject: Re: [PATCH] mac80211: Increase uapsd max SP frames number
->>
->> On Tue, Nov 4, 2014 at 2:10 PM, Emmanuel Grumbach
->> <emmanuel.grumbach@intel.com> wrote:
->> > From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
->> >
->> > Deliver up to 128 frames during SP instead of 8 if unlimited max SP is
->> > specified during association.
->> >
->> > Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
->> > Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
->> > ---
->> >  net/mac80211/sta_info.c | 2 +-
->> >  1 file changed, 1 insertion(+), 1 deletion(-)
->> >
->> > diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c index
->> > de494df..3352741 100644
->> > --- a/net/mac80211/sta_info.c
->> > +++ b/net/mac80211/sta_info.c
->> > @@ -1531,7 +1531,7 @@ void ieee80211_sta_ps_deliver_uapsd(struct
->> sta_info *sta)
->> >                 break;
->> >         case 0:
->> >                 /* XXX: what is a good value? */
->> > -               n_frames = 8;
->> > +               n_frames = 128;
->> >                 break;
->> >         }
->> What is criteria for deciding the threshold?
->> Any specific use case for 128?
-I understand, thanks for the explanation.
+With P2P concurrency requested hw roc duration
+time can be very small. Some firmware revisions
+refuse scan requests with too small channel dwell
+time.
+
+This prevents messages like, e.g. with connected
+STA vif and performing P2P Find:
+
+ ath10k_pci 0000:00:05.0: failed to switch to channel for roc scan
+ ieee80211 phy3: failed to start next HW ROC (-110)
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 2 ++
+ drivers/net/wireless/ath/ath10k/wmi.h | 5 +++++
+ 2 files changed, 7 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 8deae4d..272a9d9 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3807,6 +3807,8 @@ static int ath10k_remain_on_channel(struct ieee80211_hw *hw,
+ 	if (ret)
+ 		goto exit;
+ 
++	duration = max(duration, WMI_SCAN_CHAN_MIN_TIME_MSEC);
++
+ 	memset(&arg, 0, sizeof(arg));
+ 	ath10k_wmi_start_scan_init(ar, &arg);
+ 	arg.vdev_id = arvif->vdev_id;
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index a38d788..1b7141a 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -1952,6 +1952,11 @@ struct wmi_ssid_list {
+ #define WLAN_SCAN_PARAMS_MAX_BSSID   4
+ #define WLAN_SCAN_PARAMS_MAX_IE_LEN  256
+ 
++/* Values lower than this may be refused by some firmware revisions with a scan
++ * completion with a timedout reason.
++ */
++#define WMI_SCAN_CHAN_MIN_TIME_MSEC 40
++
+ /* Scan priority numbers must be sequential, starting with 0 */
+ enum wmi_scan_priority {
+ 	WMI_SCAN_PRIORITY_VERY_LOW = 0,
+-- 
+1.8.5.3
+
