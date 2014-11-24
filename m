@@ -1,66 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:16619 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750849AbaKCXfV (ORCPT
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:59417 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753223AbaKXOLL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Nov 2014 18:35:21 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-	"Michal Kazior" <michal.kazior@tieto.com>
-Subject: Re: [PATCH v2] ath10k: handle ieee80211 header and payload tracing separately
-References: <1414661336-20764-1-git-send-email-rmanohar@qti.qualcomm.com>
-Date: Tue, 4 Nov 2014 01:34:37 +0200
-In-Reply-To: <1414661336-20764-1-git-send-email-rmanohar@qti.qualcomm.com>
-	(Rajkumar Manoharan's message of "Thu, 30 Oct 2014 14:58:56 +0530")
-Message-ID: <874muf7t9u.fsf@kamboji.qca.qualcomm.com> (sfid-20141104_003524_831422_37C2BAC4)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 24 Nov 2014 09:11:11 -0500
+Received: by mail-wi0-f171.google.com with SMTP id bs8so5747672wib.16
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:11:10 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 3/3] ath10k: fix offchannel cancel failures
+Date: Mon, 24 Nov 2014 14:58:33 +0100
+Message-Id: <1416837513-13386-3-git-send-email-michal.kazior@tieto.com> (sfid-20141124_151117_263423_6A735F5F)
+In-Reply-To: <1416837513-13386-1-git-send-email-michal.kazior@tieto.com>
+References: <1416837513-13386-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rajkumar Manoharan <rmanohar@qti.qualcomm.com> writes:
+When mac80211 requests driver to cancel a hw roc
+the driver must not call the expired() callback or
+else roc will fail in some cases depending on how
+things get scheduled.
 
-> For packet log, the transmitted frame 802.11 header alone is sufficient.
-> Recording entire packet is also consuming lot of disk space. To optimize
-> this, tx and rx data tracepoints are splitted into header and payload
-> tracepoints.
->
-> To record tx ieee80211 headers
->
->      trace-cmd record -e ath10k_tx_hdr
->
-> To record complete packets
->
->      trace-cmd record -e ath10k_tx_hdr -e ath10k_tx_payload
->
-> Cc: Michal Kazior <michal.kazior@tieto.com>
-> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-[...]
-
-> --- a/drivers/net/wireless/ath/ath10k/trace.h
-> +++ b/drivers/net/wireless/ath/ath10k/trace.h
-> @@ -341,7 +341,10 @@ TRACE_EVENT(ath10k_txrx_tx_unref,
->  	 )
->  );
->  
-> -DECLARE_EVENT_CLASS(ath10k_data_event,
-> +#define ATH10K_FRM_HDR_LEN  \
-> +	ieee80211_hdrlen(((struct ieee80211_hdr *)data)->frame_control)
-
-This macro does not look good. I would recommend to follow what Johannes
-suggested:
-
-"It would be worth hiding that inside the tracepoint's assign function,
-so instead of passing data/len here you'd pass the full skb, or the full
-skb data/skb len, like this:
-
-ar, skb->data, skb->len
-
-to both tracers. Then inside the tracer you can do the hdrlen check, and
-that way move the code into the tracing so it's not hit when tracing is
-disabled."
-
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 272a9d9..42b5982 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -2184,10 +2184,10 @@ void __ath10k_scan_finish(struct ath10k *ar)
+ 	case ATH10K_SCAN_IDLE:
+ 		break;
+ 	case ATH10K_SCAN_RUNNING:
+-	case ATH10K_SCAN_ABORTING:
+ 		if (ar->scan.is_roc)
+ 			ieee80211_remain_on_channel_expired(ar->hw);
+-		else
++	case ATH10K_SCAN_ABORTING:
++		if (!ar->scan.is_roc)
+ 			ieee80211_scan_completed(ar->hw,
+ 						 (ar->scan.state ==
+ 						  ATH10K_SCAN_ABORTING));
 -- 
-Kalle Valo
+1.8.5.3
+
