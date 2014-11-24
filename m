@@ -1,27 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:40296 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754781AbaKSSeZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Nov 2014 13:34:25 -0500
-Message-ID: <1416422062.9374.20.camel@sipsolutions.net> (sfid-20141119_193428_525681_B844AD8C)
-Subject: Re: [PATCH 1/6] mac80211: minstrel_ht: add a small optimization to
- minstrel_aggr_check
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 19 Nov 2014 19:34:22 +0100
-In-Reply-To: <1416094080-49220-1-git-send-email-nbd@openwrt.org>
-References: <1416094080-49220-1-git-send-email-nbd@openwrt.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:33053 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754059AbaKXOfF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Nov 2014 09:35:05 -0500
+Received: by mail-wi0-f172.google.com with SMTP id n3so5855814wiv.11
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:35:03 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 05/75] iwlwifi: mvm: rs: don't use shadowing variable
+Date: Mon, 24 Nov 2014 16:33:41 +0200
+Message-Id: <1416839691-28533-5-git-send-email-egrumbach@gmail.com> (sfid-20141124_154446_194815_1141B6F7)
+In-Reply-To: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
+References: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2014-11-16 at 00:27 +0100, Felix Fietkau wrote:
-> Check the queue mapping earlier, skb->queue_mapping is more likely than
-> skb->data to still be in d-cache.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Applied.
+The variable 'tid' is already defined in this function, so use
+just 't' for the new one. As we return from the function just
+overwriting 'tid' would be acceptable, but less obvious to the
+reader.
 
-johannes
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/rs.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
+index ce88484..6775100 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
+@@ -1110,10 +1110,11 @@ void iwl_mvm_rs_tx_status(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+ 
+ 	if (time_after(jiffies,
+ 		       (unsigned long)(lq_sta->last_tx + RS_IDLE_TIMEOUT))) {
+-		int tid;
++		int t;
++
+ 		IWL_DEBUG_RATE(mvm, "Tx idle for too long. reinit rs\n");
+-		for (tid = 0; tid < IWL_MAX_TID_COUNT; tid++)
+-			ieee80211_stop_tx_ba_session(sta, tid);
++		for (t = 0; t < IWL_MAX_TID_COUNT; t++)
++			ieee80211_stop_tx_ba_session(sta, t);
+ 
+ 		iwl_mvm_rs_rate_init(mvm, sta, info->band, false);
+ 		return;
+-- 
+1.9.1
 
