@@ -1,49 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:27217 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751074AbaKYTQU (ORCPT
+Received: from mail-wg0-f47.google.com ([74.125.82.47]:38867 "EHLO
+	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752125AbaKXO3l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Nov 2014 14:16:20 -0500
-Message-ID: <5474D581.5010909@broadcom.com> (sfid-20141125_201659_499811_1E2DA0D8)
-Date: Tue, 25 Nov 2014 20:16:17 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 3/4] brcmsmac: extend hardware info shown in debugfs
-References: <1416518822-29585-1-git-send-email-arend@broadcom.com> <1416518822-29585-4-git-send-email-arend@broadcom.com> <20141124215049.GA4484@tuxdriver.com> <54747232.3030503@broadcom.com> <20141125184945.GD15476@tuxdriver.com> <20141125190533.GH15476@tuxdriver.com>
-In-Reply-To: <20141125190533.GH15476@tuxdriver.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Mon, 24 Nov 2014 09:29:41 -0500
+Received: by mail-wg0-f47.google.com with SMTP id n12so12502680wgh.34
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:29:40 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 3/3] ath10k: move uart pin config into hw_params
+Date: Mon, 24 Nov 2014 15:17:26 +0100
+Message-Id: <1416838646-18801-3-git-send-email-michal.kazior@tieto.com> (sfid-20141124_152946_976931_F7B20934)
+In-Reply-To: <1416838646-18801-1-git-send-email-michal.kazior@tieto.com>
+References: <1416838646-18801-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/25/14 20:05, John W. Linville wrote:
-> On Tue, Nov 25, 2014 at 01:49:45PM -0500, John W. Linville wrote:
->> On Tue, Nov 25, 2014 at 01:12:34PM +0100, Arend van Spriel wrote:
->>> On 11/24/14 22:50, John W. Linville wrote:
->>>> Hmmm...I'm not sure why, but this is causing problems for me...
->>>>
->>>> ERROR: "brcmu_boardrev_str" [drivers/net/wireless/brcm80211/brcmsmac/brcmsmac.ko] undefined!
->>>
->>> I am confused as well. I did not have such an issue. The function is
->>> provided by brcmutil.ko (patch 2/4) and I did an EXPORT_SYMBOL and added it
->>> to the include file. Missing something? Also I don't see this issue over
->>> here. I will do a clean build on the wireless-next tree and see if I can
->>> reproduce this.
->>
->> I did a clean build after applying the patches in question, and I
->> still got the same issue at link time.  I'll attach my .config for
->> you to try.
->
-> I think that was too big...trying the compressed version...
+This will make it possible to easily support
+different hardware with different uart pin
+configuration.
 
-I received both. I assume he commit mentioned below is without the patches.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c | 3 ++-
+ drivers/net/wireless/ath/ath10k/core.h | 1 +
+ 2 files changed, 3 insertions(+), 1 deletion(-)
 
-Regards,
-Arend
-
->> FWIW, I am building wireless-testing at commit
->> 733ea24c8c98d99c747b89710e520ac6e9f3951b.
->
-> John
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 204aa04..0bce152 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -58,6 +58,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.patch_load_addr = QCA988X_HW_2_0_PATCH_LOAD_ADDR,
+ 		.supported_chips = qca988x_supported_chips,
+ 		.num_supported_chips = ARRAY_SIZE(qca988x_supported_chips),
++		.uart_pin = 7,
+ 		.fw = {
+ 			.dir = QCA988X_HW_2_0_FW_DIR,
+ 			.fw = QCA988X_HW_2_0_FW_FILE,
+@@ -708,7 +709,7 @@ static int ath10k_init_uart(struct ath10k *ar)
+ 	if (!uart_print)
+ 		return 0;
+ 
+-	ret = ath10k_bmi_write32(ar, hi_dbg_uart_txpin, 7);
++	ret = ath10k_bmi_write32(ar, hi_dbg_uart_txpin, ar->hw_params.uart_pin);
+ 	if (ret) {
+ 		ath10k_warn(ar, "could not enable UART prints (%d)\n", ret);
+ 		return ret;
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 1cc81e8..f8dd904 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -477,6 +477,7 @@ struct ath10k {
+ 		u32 patch_load_addr;
+ 		const u32 *supported_chips;
+ 		int num_supported_chips;
++		int uart_pin;
+ 		struct ath10k_hw_params_fw {
+ 			const char *dir;
+ 			const char *fw;
+-- 
+1.8.5.3
 
