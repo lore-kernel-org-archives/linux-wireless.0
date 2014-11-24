@@ -1,77 +1,166 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f181.google.com ([209.85.217.181]:38747 "EHLO
-	mail-lb0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750974AbaKGIwH convert rfc822-to-8bit (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:37624 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932262AbaKXOgK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Nov 2014 03:52:07 -0500
-Received: by mail-lb0-f181.google.com with SMTP id l4so2286657lbv.26
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Nov 2014 00:52:04 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20141106135217.11DF985248@smtp04.mail.de>
-References: <20141106135217.11DF985248@smtp04.mail.de>
-Date: Fri, 7 Nov 2014 10:52:04 +0200
-Message-ID: <CANUX_P3eiKam=rvoawQybiaLLk+hcs2i4Ly8xnm0Qmnhijx+ag@mail.gmail.com> (sfid-20141107_095211_309067_8AE83ECC)
-Subject: Re: Problem with Intel Wireless-N 7260 and Ubuntu 14.10
+	Mon, 24 Nov 2014 09:36:10 -0500
+Received: by mail-wg0-f44.google.com with SMTP id b13so12474803wgh.31
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:36:09 -0800 (PST)
 From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: =?UTF-8?Q?Henry_W=C3=BCnsche?= <henry.wuensche@mail.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: linux-wireless@vger.kernel.org
+Cc: Arik Nemtsov <arik@wizery.com>,
+	Arik Nemtsov <arikx.nemtsov@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 44/75] iwlwifi: mvm: allow private per-STA TFD queues
+Date: Mon, 24 Nov 2014 16:34:20 +0200
+Message-Id: <1416839691-28533-44-git-send-email-egrumbach@gmail.com> (sfid-20141124_153858_366204_672DB74D)
+In-Reply-To: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
+References: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 6, 2014 at 3:52 PM, Henry Wünsche <henry.wuensche@mail.de> wrote:
-> Hello!
-> I got a problem with an Lenovo U330p botebook and it's build in Intel
-> Wireless-N 7260 in combination with Ubuntu 14.10 .
-> If the WiFi card is running in N-mode after a few minutes I am no more able
-> to ping my router or visit any website. If the N-mode is disabled via the
-> command "options iwlwifi 11n_disable=1" in "/etc/modprobe.d/iwlwifi.conf"
-> it works for me.
+From: Arik Nemtsov <arik@wizery.com>
 
-Can you please enable 11n and record tracing while you can't ping your router?
+TDLS stations will have private queues, so consider them as well when
+allocating a new one. Consolidate the HW-queue iterating code into
+a single exported function, to be used by the TDLS code in the future.
 
-sudo trace-cmd record -e iwlwifi -e mac80211 -e cfg80211 -e iwlwifi_msg
+Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c | 65 ++++++++++++++++++++++++-----
+ drivers/net/wireless/iwlwifi/mvm/mvm.h      |  2 +
+ 2 files changed, 57 insertions(+), 10 deletions(-)
 
-This will create a trace.dat file which you can send.
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
+index b8ab4a1..a1dc9b8 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
+@@ -83,11 +83,15 @@ struct iwl_mvm_mac_iface_iterator_data {
+ 	struct ieee80211_vif *vif;
+ 	unsigned long available_mac_ids[BITS_TO_LONGS(NUM_MAC_INDEX_DRIVER)];
+ 	unsigned long available_tsf_ids[BITS_TO_LONGS(NUM_TSF_IDS)];
+-	u32 used_hw_queues;
+ 	enum iwl_tsf_id preferred_tsf;
+ 	bool found_vif;
+ };
+ 
++struct iwl_mvm_hw_queues_iface_iterator_data {
++	struct ieee80211_vif *exclude_vif;
++	unsigned long used_hw_queues;
++};
++
+ static void iwl_mvm_mac_tsf_id_iter(void *_data, u8 *mac,
+ 				    struct ieee80211_vif *vif)
+ {
+@@ -213,6 +217,54 @@ u32 iwl_mvm_mac_get_queues_mask(struct ieee80211_vif *vif)
+ 	return qmask;
+ }
+ 
++static void iwl_mvm_iface_hw_queues_iter(void *_data, u8 *mac,
++					 struct ieee80211_vif *vif)
++{
++	struct iwl_mvm_hw_queues_iface_iterator_data *data = _data;
++
++	/* exclude the given vif */
++	if (vif == data->exclude_vif)
++		return;
++
++	data->used_hw_queues |= iwl_mvm_mac_get_queues_mask(vif);
++}
++
++static void iwl_mvm_mac_sta_hw_queues_iter(void *_data,
++					   struct ieee80211_sta *sta)
++{
++	struct iwl_mvm_hw_queues_iface_iterator_data *data = _data;
++	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
++
++	/* Mark the queues used by the sta */
++	data->used_hw_queues |= mvmsta->tfd_queue_msk;
++}
++
++unsigned long iwl_mvm_get_used_hw_queues(struct iwl_mvm *mvm,
++					 struct ieee80211_vif *exclude_vif)
++{
++	struct iwl_mvm_hw_queues_iface_iterator_data data = {
++		.exclude_vif = exclude_vif,
++		.used_hw_queues =
++			BIT(IWL_MVM_OFFCHANNEL_QUEUE) |
++			BIT(mvm->aux_queue) |
++			BIT(IWL_MVM_CMD_QUEUE),
++	};
++
++	lockdep_assert_held(&mvm->mutex);
++
++	/* mark all VIF used hw queues */
++	ieee80211_iterate_active_interfaces_atomic(
++		mvm->hw, IEEE80211_IFACE_ITER_RESUME_ALL,
++		iwl_mvm_iface_hw_queues_iter, &data);
++
++	/* don't assign the same hw queues as TDLS stations */
++	ieee80211_iterate_stations_atomic(mvm->hw,
++					  iwl_mvm_mac_sta_hw_queues_iter,
++					  &data);
++
++	return data.used_hw_queues;
++}
++
+ static void iwl_mvm_mac_iface_iterator(void *_data, u8 *mac,
+ 				       struct ieee80211_vif *vif)
+ {
+@@ -225,9 +277,6 @@ static void iwl_mvm_mac_iface_iterator(void *_data, u8 *mac,
+ 		return;
+ 	}
+ 
+-	/* Mark the queues used by the vif */
+-	data->used_hw_queues |= iwl_mvm_mac_get_queues_mask(vif);
+-
+ 	/* Mark MAC IDs as used by clearing the available bit, and
+ 	 * (below) mark TSFs as used if their existing use is not
+ 	 * compatible with the new interface type.
+@@ -274,10 +323,6 @@ static int iwl_mvm_mac_ctxt_allocate_resources(struct iwl_mvm *mvm,
+ 		.available_tsf_ids = { (1 << NUM_TSF_IDS) - 1 },
+ 		/* no preference yet */
+ 		.preferred_tsf = NUM_TSF_IDS,
+-		.used_hw_queues =
+-			BIT(IWL_MVM_OFFCHANNEL_QUEUE) |
+-			BIT(mvm->aux_queue) |
+-			BIT(IWL_MVM_CMD_QUEUE),
+ 		.found_vif = false,
+ 	};
+ 	u32 ac;
+@@ -316,6 +361,8 @@ static int iwl_mvm_mac_ctxt_allocate_resources(struct iwl_mvm *mvm,
+ 		mvm->hw, IEEE80211_IFACE_ITER_RESUME_ALL,
+ 		iwl_mvm_mac_iface_iterator, &data);
+ 
++	used_hw_queues = iwl_mvm_get_used_hw_queues(mvm, vif);
++
+ 	/*
+ 	 * In the case we're getting here during resume, it's similar to
+ 	 * firmware restart, and with RESUME_ALL the iterator will find
+@@ -365,8 +412,6 @@ static int iwl_mvm_mac_ctxt_allocate_resources(struct iwl_mvm *mvm,
+ 		return 0;
+ 	}
+ 
+-	used_hw_queues = data.used_hw_queues;
+-
+ 	/* Find available queues, and allocate them to the ACs */
+ 	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++) {
+ 		u8 queue = find_first_zero_bit(&used_hw_queues,
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index be0285d..363be83 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -937,6 +937,8 @@ int iwl_mvm_rx_missed_beacons_notif(struct iwl_mvm *mvm,
+ 				    struct iwl_device_cmd *cmd);
+ void iwl_mvm_mac_ctxt_recalc_tsf_id(struct iwl_mvm *mvm,
+ 				    struct ieee80211_vif *vif);
++unsigned long iwl_mvm_get_used_hw_queues(struct iwl_mvm *mvm,
++					 struct ieee80211_vif *exclude_vif);
+ 
+ /* Bindings */
+ int iwl_mvm_binding_add_vif(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
+-- 
+1.9.1
 
-Take into account this kind of system issues are very hard to debug
-remotely, so.... I am not sure I'll be able to do a lot for you.
-And I'll be travelling to San Francisco the next two weeks, so I will
-have very little time for that.
-
-
->
-> I also noticed that the wifi range with that wireless card on Ubuntu is
-> terrible. I dual boot with Windows 8.1 and there  wifi range is much better
-> and even N-mode works.
->
-> after booting Ubuntu (mainline kernel 3.17.1) dmesg shows this:
->
-> [    4.133139] iwlwifi 0000:02:00.0: irq 49 for MSI/MSI-X
-> [    4.133484] iwlwifi 0000:02:00.0: Direct firmware load for
-> iwlwifi-7260-10.ucode failed with error -2
-> [    4.133487] iwlwifi 0000:02:00.0: Falling back to user helper
-> [    4.253735] iwlwifi 0000:02:00.0: loaded firmware version 25.222.9.0
-> op_mode iwlmvm
-> [    5.816514] iwlwifi 0000:02:00.0: Detected Intel(R) Wireless N 7260,
-> REV=0x144
-> [    5.816562] iwlwifi 0000:02:00.0: L1 Disabled; Enabling L0S
-> [    5.816777] iwlwifi 0000:02:00.0: L1 Disabled; Enabling L0S
-> [    6.086593] iwlwifi 0000:02:00.0: L1 Disabled; Enabling L0S
-> [    6.086802] iwlwifi 0000:02:00.0: L1 Disabled; Enabling L0S
-> [    7.167833] iwlwifi 0000:02:00.0: Time Event end notification failure
->
-> the mentioned firmware  iwlwifi-7260-10.ucode isn't installed, but
->  iwlwifi-7260-7.ucode
->  iwlwifi-7260-8.ucode
->  iwlwifi-7260-9.ucode
->
-> are.
->
-> Is there any solution for this problem or any fix?
-> I read that  iwlwifi-7260-10.ucode isn't atable yet, so I haven't installed
-> it at the moment.
->
-> Thanks in advance and best regards,
->
-> Henry Wünsche
