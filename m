@@ -1,121 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay1.mentorg.com ([192.94.38.131]:60976 "EHLO
-	relay1.mentorg.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752258AbaKKJ6Y (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:49679 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932366AbaKXOg6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Nov 2014 04:58:24 -0500
-From: Sanjeev Sharma <sanjeev_sharma@mentor.com>
-To: <Larry.Finger@lwfinger.net>, <Jes.Sorensen@redhat.com>
-CC: <gregkh@linuxfoundation.org>, <linux-wireless@vger.kernel.org>,
-	<devel@driverdev.osuosl.org>, <linux-kernel@vger.kernel.org>,
-	Sanjeev Sharma <sanjeev_sharma@mentor.com>,
-	Sanjeev Sharma <Sanjeev_Sharma@mentor.com>
-Subject: [PATCH] staging:rtl8723au: core: Fix checkpatch warning
-Date: Tue, 11 Nov 2014 15:28:14 +0530
-Message-ID: <1415699894-20243-1-git-send-email-sanjeev_sharma@mentor.com> (sfid-20141111_105841_826581_02BC022F)
-In-Reply-To: <wrfjy4rxzk5b.fsf@redhat.com>
-References: <wrfjy4rxzk5b.fsf@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 24 Nov 2014 09:36:58 -0500
+Received: by mail-wi0-f172.google.com with SMTP id n3so5862287wiv.11
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:36:57 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 75/75] iwlwifi: update the secure mem space and for the CPUs
+Date: Mon, 24 Nov 2014 16:34:51 +0200
+Message-Id: <1416839691-28533-75-git-send-email-egrumbach@gmail.com> (sfid-20141124_153710_962045_94490C36)
+In-Reply-To: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
+References: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a patch to the rtw_cmd.c file that fixes following
-Warning by introducing temporary structure.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-WARNING: line over 80 characters
+Also update the timeout for the data verification.
 
-Signed-off-by: Sanjeev Sharma <Sanjeev_Sharma@mentor.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/staging/rtl8723au/core/rtw_cmd.c | 42 ++++++++++++++++----------------
- 1 file changed, 21 insertions(+), 21 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-prph.h | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_cmd.c b/drivers/staging/rtl8723au/core/rtw_cmd.c
-index cd2e915..6eccd86 100644
---- a/drivers/staging/rtl8723au/core/rtw_cmd.c
-+++ b/drivers/staging/rtl8723au/core/rtw_cmd.c
-@@ -919,34 +919,34 @@ static void traffic_status_watchdog(struct rtw_adapter *padapter)
- 	u8 bHigherBusyTxTraffic = false;
- 	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
- 	int BusyThreshold = 100;
-+	struct rt_link_detect *ldi = &pmlmepriv->LinkDetectInfo;
-+
- 	/*  */
- 	/*  Determine if our traffic is busy now */
- 	/*  */
- 	if (check_fwstate(pmlmepriv, _FW_LINKED)) {
- 		if (rtl8723a_BT_coexist(padapter))
- 			BusyThreshold = 50;
--		else if (pmlmepriv->LinkDetectInfo.bBusyTraffic)
-+		else if (ldi->bBusyTraffic)
- 			BusyThreshold = 75;
- 		/*  if we raise bBusyTraffic in last watchdog, using
- 		    lower threshold. */
--		if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod > BusyThreshold ||
--		    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod > BusyThreshold) {
-+		if (ldi->NumRxOkInPeriod > BusyThreshold ||
-+		    ldi->NumTxOkInPeriod > BusyThreshold) {
- 			bBusyTraffic = true;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-prph.h b/drivers/net/wireless/iwlwifi/iwl-prph.h
+index 90011b1..1dae702 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-prph.h
++++ b/drivers/net/wireless/iwlwifi/iwl-prph.h
+@@ -349,10 +349,10 @@ enum secure_load_status_reg {
  
--			if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod >
--			    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod)
-+			if (ldi->NumRxOkInPeriod > ldi->NumTxOkInPeriod)
- 				bRxBusyTraffic = true;
- 			else
- 				bTxBusyTraffic = true;
- 		}
+ #define LMPM_SECURE_INSPECTOR_CODE_MEM_SPACE	(0x400000)
+ #define LMPM_SECURE_INSPECTOR_DATA_MEM_SPACE	(0x402000)
+-#define LMPM_SECURE_CPU1_HDR_MEM_SPACE		(0x420000)
+-#define LMPM_SECURE_CPU2_HDR_MEM_SPACE		(0x420400)
++#define LMPM_SECURE_CPU1_HDR_MEM_SPACE		(0x404000)
++#define LMPM_SECURE_CPU2_HDR_MEM_SPACE		(0x405000)
  
- 		/*  Higher Tx/Rx data. */
--		if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod > 4000 ||
--		    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod > 4000) {
-+		if (ldi->NumRxOkInPeriod > 4000 ||
-+		    ldi->NumTxOkInPeriod > 4000) {
- 			bHigherBusyTraffic = true;
+-#define LMPM_SECURE_TIME_OUT	(100)
++#define LMPM_SECURE_TIME_OUT	(50000) /* 5 msec */
  
--			if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod >
--			    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod)
-+			if (ldi->NumRxOkInPeriod > ldi->NumTxOkInPeriod)
- 				bHigherBusyRxTraffic = true;
- 			else
- 				bHigherBusyTxTraffic = true;
-@@ -955,9 +955,9 @@ static void traffic_status_watchdog(struct rtw_adapter *padapter)
- 		if (!rtl8723a_BT_coexist(padapter) ||
- 		    !rtl8723a_BT_using_antenna_1(padapter)) {
- 		/*  check traffic for  powersaving. */
--			if (((pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod +
--			      pmlmepriv->LinkDetectInfo.NumTxOkInPeriod) > 8) ||
--			    pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod > 2)
-+			if (((ldi->NumRxUnicastOkInPeriod +
-+			      ldi->NumTxOkInPeriod) > 8) ||
-+			    ldi->NumRxUnicastOkInPeriod > 2)
- 				bEnterPS = false;
- 			else
- 				bEnterPS = true;
-@@ -971,15 +971,15 @@ static void traffic_status_watchdog(struct rtw_adapter *padapter)
- 	} else
- 		LPS_Leave23a(padapter);
- 
--	pmlmepriv->LinkDetectInfo.NumRxOkInPeriod = 0;
--	pmlmepriv->LinkDetectInfo.NumTxOkInPeriod = 0;
--	pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod = 0;
--	pmlmepriv->LinkDetectInfo.bBusyTraffic = bBusyTraffic;
--	pmlmepriv->LinkDetectInfo.bTxBusyTraffic = bTxBusyTraffic;
--	pmlmepriv->LinkDetectInfo.bRxBusyTraffic = bRxBusyTraffic;
--	pmlmepriv->LinkDetectInfo.bHigherBusyTraffic = bHigherBusyTraffic;
--	pmlmepriv->LinkDetectInfo.bHigherBusyRxTraffic = bHigherBusyRxTraffic;
--	pmlmepriv->LinkDetectInfo.bHigherBusyTxTraffic = bHigherBusyTxTraffic;
-+	ldi->NumRxOkInPeriod = 0;
-+	ldi->NumTxOkInPeriod = 0;
-+	ldi->NumRxUnicastOkInPeriod = 0;
-+	ldi->bBusyTraffic = bBusyTraffic;
-+	ldi->bTxBusyTraffic = bTxBusyTraffic;
-+	ldi->bRxBusyTraffic = bRxBusyTraffic;
-+	ldi->bHigherBusyTraffic = bHigherBusyTraffic;
-+	ldi->bHigherBusyRxTraffic = bHigherBusyRxTraffic;
-+	ldi->bHigherBusyTxTraffic = bHigherBusyTxTraffic;
- }
- 
- static void dynamic_chk_wk_hdl(struct rtw_adapter *padapter, u8 *pbuf, int sz)
+ /* Rx FIFO */
+ #define RXF_SIZE_ADDR			(0xa00c88)
 -- 
-1.7.11.7
+1.9.1
 
