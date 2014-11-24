@@ -1,56 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:41850
-	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752090AbaK3U6e (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:9727 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751084AbaKXPb6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Nov 2014 15:58:34 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
-Subject: [PATCH v2 1/3] ath9k: prevent early IRQs from accessing hardware
-Date: Sun, 30 Nov 2014 21:58:30 +0100
-Message-Id: <1417381112-33402-1-git-send-email-nbd@openwrt.org> (sfid-20141130_215840_351869_3B950928)
+	Mon, 24 Nov 2014 10:31:58 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Yanbo Li <yanbol@qti.qualcomm.com>
+CC: <dreamfly281@gmail.com>, <linux-wireless@vger.kernel.org>,
+	<michal.kazior@tieto.com>, <ath10k@lists.infradead.org>
+Subject: Re: [PATCH] ath10k: Add the target register access and memory dump debugfs interface
+References: <1416656922-6645-1-git-send-email-yanbol@qti.qualcomm.com>
+Date: Mon, 24 Nov 2014 17:31:51 +0200
+In-Reply-To: <1416656922-6645-1-git-send-email-yanbol@qti.qualcomm.com> (Yanbo
+	Li's message of "Sat, 22 Nov 2014 19:48:42 +0800")
+Message-ID: <87wq6k4ntk.fsf@kamboji.qca.qualcomm.com> (sfid-20141124_163201_883880_B3F655B0)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-IRQs are suppressed if ah == NULL and ATH_OP_INVALID being set in
-common->op_flags. Close a short time window between those two.
+Yanbo Li <yanbol@qti.qualcomm.com> writes:
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/init.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+> --- a/drivers/net/wireless/ath/ath10k/debug.c
+> +++ b/drivers/net/wireless/ath/ath10k/debug.c
+> @@ -22,6 +22,7 @@
+>  #include <linux/vmalloc.h>
+>  
+>  #include "core.h"
+> +#include "hif.h"
+>  #include "debug.h"
+>  #include "hif.h"
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 59d679c..d1c3934 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -532,10 +532,14 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
- 	ah->reg_ops.read = ath9k_ioread32;
- 	ah->reg_ops.write = ath9k_iowrite32;
- 	ah->reg_ops.rmw = ath9k_reg_rmw;
--	sc->sc_ah = ah;
- 	pCap = &ah->caps;
- 
- 	common = ath9k_hw_common(ah);
-+
-+	/* Will be cleared in ath9k_start() */
-+	set_bit(ATH_OP_INVALID, &common->op_flags);
-+
-+	sc->sc_ah = ah;
- 	sc->dfs_detector = dfs_pattern_detector_init(common, NL80211_DFS_UNSET);
- 	sc->tx99_power = MAX_RATE_POWER + 1;
- 	init_waitqueue_head(&sc->tx_wait);
-@@ -896,9 +900,6 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc,
- 	common = ath9k_hw_common(ah);
- 	ath9k_set_hw_capab(sc, hw);
- 
--	/* Will be cleared in ath9k_start() */
--	set_bit(ATH_OP_INVALID, &common->op_flags);
--
- 	/* Initialize regulatory */
- 	error = ath_regd_init(&common->regulatory, sc->hw->wiphy,
- 			      ath9k_reg_notifier);
+hif.h is now included twice.
+
+Let me send a v2. I'll also try splitting the patches as then it makes
+it easier to write the commit log.
+
 -- 
-2.1.2
-
+Kalle Valo
