@@ -1,87 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:47096 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750868AbaKFFVA (ORCPT
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:59436 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932150AbaKXOfp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Nov 2014 00:21:00 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-	stable@vger.kernel.org
-Subject: [PATCH v2] ath9k: Fix RTC_DERIVED_CLK usage
-Date: Thu,  6 Nov 2014 10:52:23 +0530
-Message-Id: <1415251343-17046-1-git-send-email-sujith@msujith.org> (sfid-20141106_062105_993687_1CA6B035)
+	Mon, 24 Nov 2014 09:35:45 -0500
+Received: by mail-wi0-f176.google.com with SMTP id ex7so5894523wid.3
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:35:44 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Luciano Coelho <luciano.coelho@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 29/75] iwlwifi: mvm: make nd_ies part of the mvm struct
+Date: Mon, 24 Nov 2014 16:34:05 +0200
+Message-Id: <1416839691-28533-29-git-send-email-egrumbach@gmail.com> (sfid-20141124_154213_424567_643229AF)
+In-Reply-To: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
+References: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Miaoqing Pan <miaoqing@qca.qualcomm.com>
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-Based on the reference clock, which could be 25MHz or 40MHz,
-AR_RTC_DERIVED_CLK is programmed differently for AR9340 and AR9550.
-But, when a chip reset is done, processing the initvals
-sets the register back to the default value.
+Instead of allocating nd_ies separately, make it part of the iwl_mvm
+structure so it's easier to handle its lifetime.
 
-Fix this by moving the code in ath9k_hw_init_pll() to
-ar9003_hw_override_ini(). Also, do this override for AR9531.
-
-Cc: stable@vger.kernel.org
-Signed-off-by: Miaoqing Pan <miaoqing@qca.qualcomm.com>
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
-v2 - Fix author address.
+ drivers/net/wireless/iwlwifi/mvm/d3.c      | 2 +-
+ drivers/net/wireless/iwlwifi/mvm/debugfs.c | 8 --------
+ drivers/net/wireless/iwlwifi/mvm/mvm.h     | 2 +-
+ drivers/net/wireless/iwlwifi/mvm/ops.c     | 2 --
+ 4 files changed, 2 insertions(+), 12 deletions(-)
 
- drivers/net/wireless/ath/ath9k/ar9003_phy.c | 13 +++++++++++++
- drivers/net/wireless/ath/ath9k/hw.c         | 13 -------------
- 2 files changed, 13 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index 9bdaa0a..2df6d2e 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -664,6 +664,19 @@ static void ar9003_hw_override_ini(struct ath_hw *ah)
- 		ah->enabled_cals |= TX_CL_CAL;
- 	else
- 		ah->enabled_cals &= ~TX_CL_CAL;
-+
-+	if (AR_SREV_9340(ah) || AR_SREV_9531(ah) || AR_SREV_9550(ah)) {
-+		if (ah->is_clk_25mhz) {
-+			REG_WRITE(ah, AR_RTC_DERIVED_CLK, 0x17c << 1);
-+			REG_WRITE(ah, AR_SLP32_MODE, 0x0010f3d7);
-+			REG_WRITE(ah, AR_SLP32_INC, 0x0001e7ae);
-+		} else {
-+			REG_WRITE(ah, AR_RTC_DERIVED_CLK, 0x261 << 1);
-+			REG_WRITE(ah, AR_SLP32_MODE, 0x0010f400);
-+			REG_WRITE(ah, AR_SLP32_INC, 0x0001e800);
-+		}
-+		udelay(100);
-+	}
- }
+diff --git a/drivers/net/wireless/iwlwifi/mvm/d3.c b/drivers/net/wireless/iwlwifi/mvm/d3.c
+index faa7d5c..0fc72fc 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/d3.c
++++ b/drivers/net/wireless/iwlwifi/mvm/d3.c
+@@ -1036,7 +1036,7 @@ static int __iwl_mvm_suspend(struct ieee80211_hw *hw,
+ 			goto out;
  
- static void ar9003_hw_prog_ini(struct ath_hw *ah,
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index ee9fb52..04ae1f8 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -870,19 +870,6 @@ static void ath9k_hw_init_pll(struct ath_hw *ah,
- 	udelay(RTC_PLL_SETTLE_DELAY);
+ 		ret = iwl_mvm_scan_offload_start(mvm, vif, mvm->nd_config,
+-						 mvm->nd_ies);
++						 &mvm->nd_ies);
+ 		if (ret)
+ 			goto out;
+ 	} else {
+diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
+index 8212b00..5a0f104 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/debugfs.c
++++ b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
+@@ -1198,14 +1198,8 @@ static ssize_t iwl_dbgfs_netdetect_write(struct iwl_mvm *mvm, char *buf,
+ 		kfree(mvm->nd_config->match_sets);
+ 		kfree(mvm->nd_config);
+ 		mvm->nd_config = NULL;
+-		kfree(mvm->nd_ies);
+-		mvm->nd_ies = NULL;
+ 	}
  
- 	REG_WRITE(ah, AR_RTC_SLEEP_CLK, AR_RTC_FORCE_DERIVED_CLK);
+-	mvm->nd_ies = kzalloc(sizeof(*mvm->nd_ies), GFP_KERNEL);
+-	if (!mvm->nd_ies)
+-		return -ENOMEM;
 -
--	if (AR_SREV_9340(ah) || AR_SREV_9550(ah)) {
--		if (ah->is_clk_25mhz) {
--			REG_WRITE(ah, AR_RTC_DERIVED_CLK, 0x17c << 1);
--			REG_WRITE(ah, AR_SLP32_MODE, 0x0010f3d7);
--			REG_WRITE(ah,  AR_SLP32_INC, 0x0001e7ae);
--		} else {
--			REG_WRITE(ah, AR_RTC_DERIVED_CLK, 0x261 << 1);
--			REG_WRITE(ah, AR_SLP32_MODE, 0x0010f400);
--			REG_WRITE(ah,  AR_SLP32_INC, 0x0001e800);
--		}
--		udelay(100);
--	}
+ 	mvm->nd_config = kzalloc(sizeof(*mvm->nd_config) +
+ 				 (11 * sizeof(struct ieee80211_channel *)),
+ 				 GFP_KERNEL);
+@@ -1262,8 +1256,6 @@ out_free:
+ 		kfree(mvm->nd_config->match_sets);
+ 	kfree(mvm->nd_config);
+ 	mvm->nd_config = NULL;
+-	kfree(mvm->nd_ies);
+-	mvm->nd_ies = NULL;
+ out:
+ 	return ret;
  }
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index cbfba80..db52f65 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -666,7 +666,7 @@ struct iwl_mvm {
  
- static void ath9k_hw_init_interrupt_masks(struct ath_hw *ah,
+ 	/* sched scan settings for net detect */
+ 	struct cfg80211_sched_scan_request *nd_config;
+-	struct ieee80211_scan_ies *nd_ies;
++	struct ieee80211_scan_ies nd_ies;
+ #ifdef CONFIG_IWLWIFI_DEBUGFS
+ 	u32 d3_wake_sysassert; /* must be u32 for debugfs_create_bool */
+ 	bool d3_test_active;
+diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
+index 5ab10fb..b022fc0 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
+@@ -597,8 +597,6 @@ static void iwl_op_mode_mvm_stop(struct iwl_op_mode *op_mode)
+ 		kfree(mvm->nd_config->match_sets);
+ 		kfree(mvm->nd_config);
+ 		mvm->nd_config = NULL;
+-		kfree(mvm->nd_ies);
+-		mvm->nd_ies = NULL;
+ 	}
+ #endif
+ 
 -- 
-2.1.3
+1.9.1
 
