@@ -1,52 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f177.google.com ([209.85.192.177]:59457 "EHLO
-	mail-pd0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752454AbaKXHKn (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:32534 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753223AbaKXOTM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2014 02:10:43 -0500
-Received: by mail-pd0-f177.google.com with SMTP id ft15so9221492pdb.36
-        for <linux-wireless@vger.kernel.org>; Sun, 23 Nov 2014 23:10:42 -0800 (PST)
+	Mon, 24 Nov 2014 09:19:12 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <greearb@candelatech.com>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: Re: [PATCH v2 04/10] ath10k: make firmware text debug messages more verbose.
+References: <1411507045-18973-1-git-send-email-greearb@candelatech.com>
+	<1411507045-18973-4-git-send-email-greearb@candelatech.com>
+Date: Mon, 24 Nov 2014 16:19:06 +0200
+In-Reply-To: <1411507045-18973-4-git-send-email-greearb@candelatech.com>
+	(greearb@candelatech.com's message of "Tue, 23 Sep 2014 14:17:19
+	-0700")
+Message-ID: <87sih865r9.fsf@kamboji.qca.qualcomm.com> (sfid-20141124_151915_858982_9E62BCE7)
 MIME-Version: 1.0
-In-Reply-To: <1416583183.1881.10.camel@sipsolutions.net>
-References: <CAGKQeFjfMwFE8d4FVOZY7n3R1=x3naDoxT4-YKUEnA3T7AJcLw@mail.gmail.com>
-	<CAGKQeFhjmo4LM9xTCSeuxu8R4VUwUSBiw-q9MaSiwB0eDpKBxg@mail.gmail.com>
-	<1416583183.1881.10.camel@sipsolutions.net>
-Date: Mon, 24 Nov 2014 12:40:42 +0530
-Message-ID: <CAGKQeFg2Jd3EJi1asZgRC2S4WPRxakkcBLz48BKM7FOyWDK3xQ@mail.gmail.com> (sfid-20141124_081046_579136_B625B3BD)
-Subject: Re: Fwd: Linux kernel 3.12 PN-KEY Mismatch in wpa.c, packet drop
-From: deepak kumar Pradhan <hydipu@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thank you Johannes for your response. Since we were facing this issue,
-i looked at the available patches. None solved the issue for us.
-I may be missing something, can you please let me know if the solution
-for this is already available?
-Any inputs much appreciated.
+greearb@candelatech.com writes:
 
-regards
-
-On Fri, Nov 21, 2014 at 8:49 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Fri, 2014-11-21 at 20:42 +0530, deepak kumar Pradhan wrote:
->> Hi,
->>
->> Sorry for interrupting you.
->> The below patch do recovers from pn-key mismatch in kernel 3.12 kernel
->> packet drop issue.
->> I don't know where I need to submit this patch for proper solution.
+> From: Ben Greear <greearb@candelatech.com>
 >
-> This is the right place for submitting a proper solution, but I believe
-> you've already been told that what you're doing isn't a proper solution
-> at all.
+> There are not many of these messages producted by the
+> firmware, but they are generally fairly useful, so print
+> them at info level.
 >
-> johannes
->
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
 
+Thanks, applied. Though I did change the commit log:
 
+commit 3be004c3aa4341c7c2461b37612a3a7a3323579d
+Author: Ben Greear <greearb@candelatech.com>
+Date:   Tue Sep 23 14:17:19 2014 -0700
+
+    ath10k: add ATH10K_DBG_WMI_PRINT debug level
+    
+    There are not many of these messages producted by the
+    firmware, but they are generally fairly useful, so make it easy to print them
+    with a separate debug level.
+    
+    kvalo: fix commit log, rename debug level
+    
+    Signed-off-by: Ben Greear <greearb@candelatech.com>
+    Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
 -- 
-Deepak Kumar Pradhan
+Kalle Valo
