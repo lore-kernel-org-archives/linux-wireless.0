@@ -1,49 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:14338 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751042AbaKYOof (ORCPT
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:49911 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754144AbaKXOfi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Nov 2014 09:44:35 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Marc Yang <yangyang@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 2/5] mwifiex: fix scan problem on big endian platforms
-Date: Tue, 25 Nov 2014 06:43:03 -0800
-Message-ID: <1416926586-19286-3-git-send-email-akarwar@marvell.com> (sfid-20141125_154438_415126_1D238058)
-In-Reply-To: <1416926586-19286-1-git-send-email-akarwar@marvell.com>
-References: <1416926586-19286-1-git-send-email-akarwar@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 24 Nov 2014 09:35:38 -0500
+Received: by mail-wi0-f178.google.com with SMTP id hi2so5935486wib.17
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:35:37 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eyal Shapira <eyal@wizery.com>,
+	Eyal Shapira <eyalx.shapira@intel.com>,
+	Eliad Peller <eliadx.peller@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 25/75] iwlwifi: mvm: rs: consider a missing BA as a single tx failure
+Date: Mon, 24 Nov 2014 16:34:01 +0200
+Message-Id: <1416839691-28533-25-git-send-email-egrumbach@gmail.com> (sfid-20141124_154322_583281_2BFD4B56)
+In-Reply-To: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
+References: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds missing endian conversion for beacon size while
-processing scan response.
+From: Eyal Shapira <eyal@wizery.com>
 
-Reported-by: Daniel Mosquera <daniel.mosquera@ctag.com>
-Tested-by: Daniel Mosquera <daniel.mosquera@ctag.com>
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+The fw now indicates missing BA with ampdu_ack_len=0.
+
+This will make the whole aggregation being marked
+as failed, although it's most likely not the case (and
+only the BA itself was failed).
+
+Consider this case as a single tx failure.
+
+Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
+Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/mwifiex/scan.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/iwlwifi/mvm/rs.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
-index 3a17821..984a7a4 100644
---- a/drivers/net/wireless/mwifiex/scan.c
-+++ b/drivers/net/wireless/mwifiex/scan.c
-@@ -1623,7 +1623,7 @@ mwifiex_parse_single_response_buf(struct mwifiex_private *priv, u8 **bss_info,
- 
- 	if (*bytes_left >= sizeof(beacon_size)) {
- 		/* Extract & convert beacon size from command buffer */
--		memcpy(&beacon_size, *bss_info, sizeof(beacon_size));
-+		beacon_size = le16_to_cpu(*(__le16 *)(*bss_info));
- 		*bytes_left -= sizeof(beacon_size);
- 		*bss_info += sizeof(beacon_size);
- 	}
+diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
+index c05f5a5..30ceb67 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
+@@ -1204,6 +1204,13 @@ void iwl_mvm_rs_tx_status(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+ 	 * first index into rate scale table.
+ 	 */
+ 	if (info->flags & IEEE80211_TX_STAT_AMPDU) {
++		/* ampdu_ack_len = 0 marks no BA was received. In this case
++		 * treat it as a single frame loss as we don't want the success
++		 * ratio to dip too quickly because a BA wasn't received
++		 */
++		if (info->status.ampdu_ack_len == 0)
++			info->status.ampdu_len = 1;
++
+ 		ucode_rate = le32_to_cpu(table->rs_table[0]);
+ 		rs_rate_from_ucode_rate(ucode_rate, info->band, &rate);
+ 		rs_collect_tx_data(lq_sta, curr_tbl, rate.index,
 -- 
-1.8.1.4
+1.9.1
 
