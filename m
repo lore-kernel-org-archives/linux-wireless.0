@@ -1,46 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:51995 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751325AbaKEVJr (ORCPT
+Received: from mail-wg0-f43.google.com ([74.125.82.43]:45240 "EHLO
+	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932357AbaKXOgz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Nov 2014 16:09:47 -0500
-Received: by mail-wi0-f178.google.com with SMTP id bs8so1267235wib.17
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Nov 2014 13:09:45 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 07/11] staging: vt6655: device_init_registers remove uConnectionRate
-Date: Wed,  5 Nov 2014 21:08:55 +0000
-Message-Id: <1415221739-3045-7-git-send-email-tvboxspy@gmail.com> (sfid-20141105_220952_774775_067B5F34)
-In-Reply-To: <1415221739-3045-1-git-send-email-tvboxspy@gmail.com>
-References: <1415221739-3045-1-git-send-email-tvboxspy@gmail.com>
+	Mon, 24 Nov 2014 09:36:55 -0500
+Received: by mail-wg0-f43.google.com with SMTP id l18so12590353wgh.30
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:36:54 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eliad Peller <eliad@wizery.com>,
+	Eliad Peller <eliadx.peller@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 73/75] iwlwifi: declare d0i3 support for IWL_DEVICE_8000
+Date: Mon, 24 Nov 2014 16:34:49 +0200
+Message-Id: <1416839691-28533-73-git-send-email-egrumbach@gmail.com> (sfid-20141124_153707_241053_8A2CE2FF)
+In-Reply-To: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
+References: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The device starts up with a default rate of 54M
+From: Eliad Peller <eliad@wizery.com>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/staging/vt6655/device_main.c | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-8000.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index ee60624..a35069b 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -456,10 +456,7 @@ static void device_init_registers(struct vnt_private *pDevice)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-8000.c b/drivers/net/wireless/iwlwifi/iwl-8000.c
+index 0919759..436efad 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-8000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-8000.c
+@@ -123,6 +123,7 @@ static const struct iwl_ht_params iwl8000_ht_params = {
+ 	.base_params = &iwl8000_base_params,			\
+ 	.led_mode = IWL_LED_RF_STATE,				\
+ 	.nvm_hw_section_num = NVM_HW_SECTION_NUM_FAMILY_8000,	\
++	.d0i3 = true,						\
+ 	.non_shared_ant = ANT_A
  
- 	/* Set BB and packet type at the same time. */
- 	/* Set Short Slot Time, xIFS, and RSPINF. */
--	if (pDevice->uConnectionRate == RATE_AUTO)
--		pDevice->wCurrentRate = RATE_54M;
--	else
--		pDevice->wCurrentRate = (unsigned short)pDevice->uConnectionRate;
-+	pDevice->wCurrentRate = RATE_54M;
- 
- 	pDevice->bRadioOff = false;
- 
+ const struct iwl_cfg iwl8260_2n_cfg = {
 -- 
-2.1.0
+1.9.1
 
