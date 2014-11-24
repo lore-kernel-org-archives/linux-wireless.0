@@ -1,212 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:54625 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750772AbaKXXVr (ORCPT
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:35506 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754268AbaKXOfh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2014 18:21:47 -0500
-Received: by mail-wg0-f47.google.com with SMTP id n12so13591154wgh.6
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 15:21:46 -0800 (PST)
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, nbd@openwrt.org,
-	thomas@net.t-labs.tu-berlin.de, adrian@freebsd.org
-Subject: [PATCH 2/2] ath9k: add TPC capability to TX descriptor path
-Date: Tue, 25 Nov 2014 00:21:41 +0100
-Message-Id: <1416871301-9595-3-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20141125_002151_935439_9E2788F4)
-In-Reply-To: <1416871301-9595-1-git-send-email-lorenzo.bianconi83@gmail.com>
-References: <1416871301-9595-1-git-send-email-lorenzo.bianconi83@gmail.com>
+	Mon, 24 Nov 2014 09:35:37 -0500
+Received: by mail-wi0-f173.google.com with SMTP id r20so5862321wiv.6
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:35:36 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 24/75] iwlwifi: mvm: BT Coex - add support for TTC / RRC
+Date: Mon, 24 Nov 2014 16:34:00 +0200
+Message-Id: <1416839691-28533-24-git-send-email-egrumbach@gmail.com> (sfid-20141124_154350_791724_622C68E2)
+In-Reply-To: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
+References: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add TPC capability to TX descriptor path. Cap per-packet TX power according to
-TX power per-rate tables. Currently TPC is supported just by AR9003 based chips
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+The TTC and RRC features are supported by the newer
+firmwares. It allows to reach better overall WiFi and BT
+performance. When the RRC is enabled, we don't need to force
+the AP to send SISO frames, but it can keeps sending MIMO
+frames.
+
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9002_mac.c |  8 +++----
- drivers/net/wireless/ath/ath9k/ar9003_mac.c |  8 +++----
- drivers/net/wireless/ath/ath9k/ath9k.h      |  1 +
- drivers/net/wireless/ath/ath9k/beacon.c     |  5 ++--
- drivers/net/wireless/ath/ath9k/mac.h        |  2 +-
- drivers/net/wireless/ath/ath9k/xmit.c       | 37 ++++++++++++++++++++++++++++-
- 6 files changed, 49 insertions(+), 12 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/coex_legacy.c | 13 ++++++++++++-
+ drivers/net/wireless/iwlwifi/mvm/constants.h   |  2 ++
+ drivers/net/wireless/iwlwifi/mvm/fw-api-coex.h |  9 ++++++++-
+ 3 files changed, 22 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_mac.c b/drivers/net/wireless/ath/ath9k/ar9002_mac.c
-index 2a93519..f816909 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_mac.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_mac.c
-@@ -281,7 +281,7 @@ ar9002_set_txdesc(struct ath_hw *ah, void *ds, struct ath_tx_info *i)
+diff --git a/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c b/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c
+index cda5111..b3210cf 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c
++++ b/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c
+@@ -612,7 +612,9 @@ int iwl_send_bt_init_conf_old(struct iwl_mvm *mvm)
+ 					    BT_VALID_ANT_ISOLATION_THRS |
+ 					    BT_VALID_TXTX_DELTA_FREQ_THRS |
+ 					    BT_VALID_TXRX_MAX_FREQ_0 |
+-					    BT_VALID_SYNC_TO_SCO);
++					    BT_VALID_SYNC_TO_SCO |
++					    BT_VALID_TTC |
++					    BT_VALID_RRC);
  
- 	ACCESS_ONCE(ads->ds_ctl0) = (i->pkt_len & AR_FrameLen)
- 		| (i->flags & ATH9K_TXDESC_VMF ? AR_VirtMoreFrag : 0)
--		| SM(i->txpower, AR_XmitPower0)
-+		| SM(i->txpower[0], AR_XmitPower0)
- 		| (i->flags & ATH9K_TXDESC_VEOL ? AR_VEOL : 0)
- 		| (i->flags & ATH9K_TXDESC_INTREQ ? AR_TxIntrReq : 0)
- 		| (i->keyix != ATH9K_TXKEYIX_INVALID ? AR_DestIdxValid : 0)
-@@ -307,9 +307,9 @@ ar9002_set_txdesc(struct ath_hw *ah, void *ds, struct ath_tx_info *i)
- 		| set11nRateFlags(i->rates, 3)
- 		| SM(i->rtscts_rate, AR_RTSCTSRate);
- 
--	ACCESS_ONCE(ads->ds_ctl9) = SM(i->txpower, AR_XmitPower1);
--	ACCESS_ONCE(ads->ds_ctl10) = SM(i->txpower, AR_XmitPower2);
--	ACCESS_ONCE(ads->ds_ctl11) = SM(i->txpower, AR_XmitPower3);
-+	ACCESS_ONCE(ads->ds_ctl9) = SM(i->txpower[1], AR_XmitPower1);
-+	ACCESS_ONCE(ads->ds_ctl10) = SM(i->txpower[2], AR_XmitPower2);
-+	ACCESS_ONCE(ads->ds_ctl11) = SM(i->txpower[3], AR_XmitPower3);
- }
- 
- static int ar9002_hw_proc_txdesc(struct ath_hw *ah, void *ds,
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-index 057b165..da84b70 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-@@ -101,7 +101,7 @@ ar9003_set_txdesc(struct ath_hw *ah, void *ds, struct ath_tx_info *i)
- 
- 	ACCESS_ONCE(ads->ctl11) = (i->pkt_len & AR_FrameLen)
- 		| (i->flags & ATH9K_TXDESC_VMF ? AR_VirtMoreFrag : 0)
--		| SM(i->txpower, AR_XmitPower0)
-+		| SM(i->txpower[0], AR_XmitPower0)
- 		| (i->flags & ATH9K_TXDESC_VEOL ? AR_VEOL : 0)
- 		| (i->keyix != ATH9K_TXKEYIX_INVALID ? AR_DestIdxValid : 0)
- 		| (i->flags & ATH9K_TXDESC_LOWRXCHAIN ? AR_LowRxChain : 0)
-@@ -152,9 +152,9 @@ ar9003_set_txdesc(struct ath_hw *ah, void *ds, struct ath_tx_info *i)
- 
- 	ACCESS_ONCE(ads->ctl19) = AR_Not_Sounding;
- 
--	ACCESS_ONCE(ads->ctl20) = SM(i->txpower, AR_XmitPower1);
--	ACCESS_ONCE(ads->ctl21) = SM(i->txpower, AR_XmitPower2);
--	ACCESS_ONCE(ads->ctl22) = SM(i->txpower, AR_XmitPower3);
-+	ACCESS_ONCE(ads->ctl20) = SM(i->txpower[1], AR_XmitPower1);
-+	ACCESS_ONCE(ads->ctl21) = SM(i->txpower[2], AR_XmitPower2);
-+	ACCESS_ONCE(ads->ctl22) = SM(i->txpower[3], AR_XmitPower3);
- }
- 
- static u16 ar9003_calc_ptr_chksum(struct ar9003_txc *ads)
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index abe8bd6..1a9fe09 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -189,6 +189,7 @@ struct ath_frame_info {
- 	u8 rtscts_rate;
- 	u8 retries : 7;
- 	u8 baw_tracked : 1;
-+	u8 tx_power;
- };
- 
- struct ath_rxbuf {
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index ecb783b..cb366ad 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -78,7 +78,7 @@ static void ath9k_beacon_setup(struct ath_softc *sc, struct ieee80211_vif *vif,
- 	struct ath_tx_info info;
- 	struct ieee80211_supported_band *sband;
- 	u8 chainmask = ah->txchainmask;
--	u8 rate = 0;
-+	u8 i, rate = 0;
- 
- 	sband = &common->sbands[sc->cur_chandef.chan->band];
- 	rate = sband->bitrates[rateidx].hw_value;
-@@ -88,7 +88,8 @@ static void ath9k_beacon_setup(struct ath_softc *sc, struct ieee80211_vif *vif,
- 	memset(&info, 0, sizeof(info));
- 	info.pkt_len = skb->len + FCS_LEN;
- 	info.type = ATH9K_PKT_TYPE_BEACON;
--	info.txpower = MAX_RATE_POWER;
-+	for (i = 0; i < 4; i++)
-+		info.txpower[i] = MAX_RATE_POWER;
- 	info.keyix = ATH9K_TXKEYIX_INVALID;
- 	info.keytype = ATH9K_KEY_TYPE_CLEAR;
- 	info.flags = ATH9K_TXDESC_NOACK | ATH9K_TXDESC_CLRDMASK;
-diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
-index aa69cea..e55fa11 100644
---- a/drivers/net/wireless/ath/ath9k/mac.h
-+++ b/drivers/net/wireless/ath/ath9k/mac.h
-@@ -704,7 +704,7 @@ struct ath_tx_info {
- 	enum ath9k_pkt_type type;
- 	enum ath9k_key_type keytype;
- 	u8 keyix;
--	u8 txpower;
-+	u8 txpower[4];
- };
- 
- struct ath_hw;
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index d6e54a3..e9bd02c 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1096,6 +1096,37 @@ void ath_update_max_aggr_framelen(struct ath_softc *sc, int queue, int txop)
- 	}
- }
- 
-+static u8 ath_get_rate_txpower(struct ath_softc *sc, struct ath_buf *bf,
-+			       u8 rateidx)
-+{
-+	u8 max_power;
-+	struct ath_hw *ah = sc->sc_ah;
-+
-+	if (sc->tx99_state)
-+		return MAX_RATE_POWER;
-+
-+	if (!AR_SREV_9300_20_OR_LATER(ah)) {
-+		/* ar9002 is not sipported for the moment */
-+		return MAX_RATE_POWER;
-+	}
-+
-+	if (!bf->bf_state.bfs_paprd) {
-+		struct sk_buff *skb = bf->bf_mpdu;
-+		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+		struct ath_frame_info *fi = get_frame_info(skb);
-+
-+		if (rateidx < 8 && (info->flags & IEEE80211_TX_CTL_STBC))
-+			max_power = min(ah->tx_power_stbc[rateidx],
-+					fi->tx_power);
-+		else
-+			max_power = min(ah->tx_power[rateidx], fi->tx_power);
-+	} else {
-+		max_power = ah->paprd_training_power;
-+	}
-+
-+	return max_power;
-+}
-+
- static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf,
- 			     struct ath_tx_info *info, int len, bool rts)
- {
-@@ -1166,6 +1197,8 @@ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf,
- 				 is_40, is_sgi, is_sp);
- 			if (rix < 8 && (tx_info->flags & IEEE80211_TX_CTL_STBC))
- 				info->rates[i].RateFlags |= ATH9K_RATESERIES_STBC;
-+
-+			info->txpower[i] = ath_get_rate_txpower(sc, bf, rix);
- 			continue;
- 		}
- 
-@@ -1193,6 +1226,8 @@ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf,
- 
- 		info->rates[i].PktDuration = ath9k_hw_computetxtime(sc->sc_ah,
- 			phy, rate->bitrate * 100, len, rix, is_sp);
-+
-+		info->txpower[i] = ath_get_rate_txpower(sc, bf, rix);
+ 	if (IWL_MVM_BT_COEX_SYNC2SCO)
+ 		bt_cmd->flags |= cpu_to_le32(BT_COEX_SYNC2SCO);
+@@ -628,6 +630,12 @@ int iwl_send_bt_init_conf_old(struct iwl_mvm *mvm)
+ 		bt_cmd->valid_bit_msk |= cpu_to_le32(BT_VALID_MULTI_PRIO_LUT);
  	}
  
- 	/* For AR5416 - RTS cannot be followed by a frame larger than 8K */
-@@ -1239,7 +1274,6 @@ static void ath_tx_fill_desc(struct ath_softc *sc, struct ath_buf *bf,
- 	memset(&info, 0, sizeof(info));
- 	info.is_first = true;
- 	info.is_last = true;
--	info.txpower = MAX_RATE_POWER;
- 	info.qcu = txq->axq_qnum;
++	if (IWL_MVM_BT_COEX_TTC)
++		bt_cmd->flags |= cpu_to_le32(BT_COEX_TTC);
++
++	if (IWL_MVM_BT_COEX_RRC)
++		bt_cmd->flags |= cpu_to_le32(BT_COEX_RRC);
++
+ 	if (mvm->cfg->bt_shared_single_ant)
+ 		memcpy(&bt_cmd->decision_lut, iwl_single_shared_ant,
+ 		       sizeof(iwl_single_shared_ant));
+@@ -824,6 +832,9 @@ static void iwl_mvm_bt_notif_iterator(void *_data, u8 *mac,
+ 	if (!vif->bss_conf.assoc)
+ 		smps_mode = IEEE80211_SMPS_AUTOMATIC;
  
- 	while (bf) {
-@@ -2063,6 +2097,7 @@ static void setup_frame_info(struct ieee80211_hw *hw,
- 		fi->keyix = ATH9K_TXKEYIX_INVALID;
- 	fi->keytype = keytype;
- 	fi->framelen = framelen;
-+	fi->tx_power = MAX_RATE_POWER;
++	if (data->notif->rrc_enabled & BIT(mvmvif->phy_ctxt->id))
++		smps_mode = IEEE80211_SMPS_AUTOMATIC;
++
+ 	IWL_DEBUG_COEX(data->mvm,
+ 		       "mac %d: bt_status %d bt_activity_grading %d smps_req %d\n",
+ 		       mvmvif->id, data->notif->bt_status, bt_activity_grading,
+diff --git a/drivers/net/wireless/iwlwifi/mvm/constants.h b/drivers/net/wireless/iwlwifi/mvm/constants.h
+index 5c1ea80..1716031 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/constants.h
++++ b/drivers/net/wireless/iwlwifi/mvm/constants.h
+@@ -92,6 +92,8 @@
+ #define IWL_MVM_BT_COEX_SYNC2SCO		1
+ #define IWL_MVM_BT_COEX_CORUNNING		0
+ #define IWL_MVM_BT_COEX_MPLUT			1
++#define IWL_MVM_BT_COEX_RRC			1
++#define IWL_MVM_BT_COEX_TTC			1
+ #define IWL_MVM_BT_COEX_MPLUT_REG0		0x2e402280
+ #define IWL_MVM_BT_COEX_MPLUT_REG1		0x7711a751
+ #define IWL_MVM_BT_COEX_ANTENNA_COUPLING_THRS	30
+diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api-coex.h b/drivers/net/wireless/iwlwifi/mvm/fw-api-coex.h
+index 816883f..f3b1189 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/fw-api-coex.h
++++ b/drivers/net/wireless/iwlwifi/mvm/fw-api-coex.h
+@@ -84,6 +84,8 @@
+  * @BT_COEX_SYNC2SCO:
+  * @BT_COEX_CORUNNING:
+  * @BT_COEX_MPLUT:
++ * @BT_COEX_TTC:
++ * @BT_COEX_RRC:
+  *
+  * The COEX_MODE must be set for each command. Even if it is not changed.
+  */
+@@ -100,6 +102,8 @@ enum iwl_bt_coex_flags {
+ 	BT_COEX_SYNC2SCO		= BIT(7),
+ 	BT_COEX_CORUNNING		= BIT(8),
+ 	BT_COEX_MPLUT			= BIT(9),
++	BT_COEX_TTC			= BIT(20),
++	BT_COEX_RRC			= BIT(21),
+ };
  
- 	if (!rate)
- 		return;
+ /*
+@@ -127,6 +131,8 @@ enum iwl_bt_coex_valid_bit_msk {
+ 	BT_VALID_TXTX_DELTA_FREQ_THRS	= BIT(16),
+ 	BT_VALID_TXRX_MAX_FREQ_0	= BIT(17),
+ 	BT_VALID_SYNC_TO_SCO		= BIT(18),
++	BT_VALID_TTC			= BIT(20),
++	BT_VALID_RRC			= BIT(21),
+ };
+ 
+ /**
+@@ -506,7 +512,8 @@ struct iwl_bt_coex_profile_notif_old {
+ 	u8 bt_agg_traffic_load;
+ 	u8 bt_ci_compliance;
+ 	u8 ttc_enabled;
+-	__le16 reserved;
++	u8 rrc_enabled;
++	u8 reserved;
+ 
+ 	__le32 primary_ch_lut;
+ 	__le32 secondary_ch_lut;
 -- 
-2.1.0
+1.9.1
 
