@@ -1,59 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:49447 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753725AbaKHQ0c (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Nov 2014 11:26:32 -0500
-Date: Sat, 8 Nov 2014 08:25:17 -0800
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: Re: [PATCH 2/3] ath: use seq_file api for ath9k debugfs files
-Message-ID: <20141108162517.GA16580@kroah.com> (sfid-20141108_172940_945522_19007F21)
-References: <1414498752-9746-1-git-send-email-arend@broadcom.com>
- <1414498752-9746-3-git-send-email-arend@broadcom.com>
- <20141107190522.GA4694@kroah.com>
- <545E1E45.9040204@broadcom.com>
- <545E23B6.1060004@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <545E23B6.1060004@broadcom.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:45823 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750955AbaKXPkC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Nov 2014 10:40:02 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] Revert "mac80211_hwsim: VHT add 160MHz width support"
+Date: Mon, 24 Nov 2014 16:39:52 +0100
+Message-Id: <1416843592-30818-1-git-send-email-johannes@sipsolutions.net> (sfid-20141124_164007_356692_BC4AEA3B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Nov 08, 2014 at 03:07:50PM +0100, Arend van Spriel wrote:
-> On 11/08/14 14:44, Arend van Spriel wrote:
-> >On 11/07/14 20:05, Greg Kroah-Hartman wrote:
-> >>On Tue, Oct 28, 2014 at 01:19:11PM +0100, Arend van Spriel wrote:
-> >>>The debugfs files that are defined in debug.c which are read-only
-> >>>and using a simple_open as .open file operation have been modified
-> >>>to use the single_open seq_file API. This simplifies the read
-> >>>functions defining the file contents.
-> >>>
-> >>>Signed-off-by: Arend van Spriel<arend@broadcom.com>
-> >>>Acked-by: John W. Linville<linville@tuxdriver.com>
-> >>>---
-> >>>drivers/net/wireless/ath/ath9k/debug.c | 425
-> >>>+++++++++++++--------------------
-> >>>drivers/net/wireless/ath/ath9k/debug.h | 3 +-
-> >>>2 files changed, 173 insertions(+), 255 deletions(-)
-> >>
-> >>I can't take patch 1/3 right now, but even if I could, this one doesn't
-> >>apply to 3.18-rc3 :(
-> 
-> driver-core/driver-core-next branch is not on 3.18-rc3.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Yes it is based on that branch.  Why do you think it isn't?
+This reverts commit c17aa52c5bf571533cc8561292f7316b9216eddc.
 
-> Should I rebase the series on driver-core/master?
+It was wrong, IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160_80PLUS80MHZ
+already implies that 160 MHz is supported, as it isn't a bitmap
+but rather a value in a 2-bit field.
 
-No, that's a "clean" 3.18-rc3, which doesn't include any patches that
-I've accepted so far for 3.19.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/mac80211_hwsim.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-> As this is for 3.19 I figured it needed to go on some -next branch.
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index d399a7367ce9..756eea588711 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -2388,7 +2388,6 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
+ 		sband->vht_cap.cap =
+ 			IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_11454 |
+ 			IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160_80PLUS80MHZ |
+-			IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160MHZ |
+ 			IEEE80211_VHT_CAP_RXLDPC |
+ 			IEEE80211_VHT_CAP_SHORT_GI_80 |
+ 			IEEE80211_VHT_CAP_SHORT_GI_160 |
+-- 
+2.1.1
 
-Yes, if you make it against driver-core-next that is fine, please do so.
-
-thanks,
-
-greg k-h
