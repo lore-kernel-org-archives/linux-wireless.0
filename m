@@ -1,169 +1,168 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:50620 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934046AbaKNQPn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Nov 2014 11:15:43 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC] cfg80211: allow including station info in delete event
-Date: Fri, 14 Nov 2014 17:15:38 +0100
-Message-Id: <1415981738-17439-1-git-send-email-johannes@sipsolutions.net> (sfid-20141114_171546_974067_83E11164)
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:61266 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753455AbaKXO3j (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Nov 2014 09:29:39 -0500
+Received: by mail-wi0-f180.google.com with SMTP id n3so5930922wiv.13
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:29:37 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 1/3] ath10k: embed supported chip ids in hw_params
+Date: Mon, 24 Nov 2014 15:17:24 +0100
+Message-Id: <1416838646-18801-1-git-send-email-michal.kazior@tieto.com> (sfid-20141124_152942_472047_415F3649)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This will make it easier to extend and maintain
+list of supported hardware.
 
-When a station is removed, its statistics may be interesting to
-userspace, for example for further aggregation of statistics of
-all stations that ever connected to an AP.
+As a requirement this moves chip_id checking a
+little later because target_version isn't known
+until BMI can be queried.
 
-Introduce a new cfg80211_del_sta_sinfo() function (and make the
-cfg80211_del_sta() a static inline calling it) to allow passing
-a struct station_info along with this, and send the data in the
-nl80211 event message.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- include/net/cfg80211.h | 16 +++++++++++++++-
- net/wireless/nl80211.c | 37 ++++++++++++++++---------------------
- 2 files changed, 31 insertions(+), 22 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.c | 72 ++++++++++++++++------------------
+ drivers/net/wireless/ath/ath10k/core.h |  3 +-
+ 2 files changed, 36 insertions(+), 39 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index c59b93714728..bd46a4901383 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -4489,13 +4489,27 @@ void cfg80211_new_sta(struct net_device *dev, const u8 *mac_addr,
- 		      struct station_info *sinfo, gfp_t gfp);
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index f660553..3904ce3 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -43,11 +43,21 @@ MODULE_PARM_DESC(uart_print, "Uart target debugging");
+ MODULE_PARM_DESC(p2p, "Enable ath10k P2P support");
+ MODULE_PARM_DESC(skip_otp, "Skip otp failure for calibration in testmode");
  
- /**
-+ * cfg80211_del_sta_sinfo - notify userspace about deletion of a station
-+ * @dev: the netdev
-+ * @mac_addr: the station's address
-+ * @sinfo: the station information/statistics
-+ * @gfp: allocation flags
-+ */
-+void cfg80211_del_sta_sinfo(struct net_device *dev, const u8 *mac_addr,
-+			    struct station_info *sinfo, gfp_t gfp);
++static u32 qca988x_supported_chips[] = {
++	/* QCA988X_HW_1_0_CHIP_ID_REV is not supported. It's way too buggy and
++	 * crashes because ath10k doesn't have hacks and workarounds for it.
++	 */
 +
-+/**
-  * cfg80211_del_sta - notify userspace about deletion of a station
-  *
-  * @dev: the netdev
-  * @mac_addr: the station's address
-  * @gfp: allocation flags
-  */
--void cfg80211_del_sta(struct net_device *dev, const u8 *mac_addr, gfp_t gfp);
-+static inline void cfg80211_del_sta(struct net_device *dev,
-+				    const u8 *mac_addr, gfp_t gfp)
++	QCA988X_HW_2_0_CHIP_ID_REV
++};
++
+ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 	{
+ 		.id = QCA988X_HW_2_0_VERSION,
+ 		.name = "qca988x hw2.0",
+ 		.patch_load_addr = QCA988X_HW_2_0_PATCH_LOAD_ADDR,
++		.supported_chips = qca988x_supported_chips,
++		.num_supported_chips = ARRAY_SIZE(qca988x_supported_chips),
+ 		.fw = {
+ 			.dir = QCA988X_HW_2_0_FW_DIR,
+ 			.fw = QCA988X_HW_2_0_FW_FILE,
+@@ -719,10 +729,26 @@ static int ath10k_init_uart(struct ath10k *ar)
+ 	return 0;
+ }
+ 
++static int ath10k_core_check_chip_id(struct ath10k *ar, u32 chip_id,
++				     const struct ath10k_hw_params *hw_params)
 +{
-+	cfg80211_del_sta_sinfo(dev, mac_addr, NULL, gfp);
-+}
- 
- /**
-  * cfg80211_conn_failed - connection request failed notification
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 648374c4f815..5ff4ed4312cd 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -3598,8 +3598,8 @@ static bool nl80211_put_signal(struct sk_buff *msg, u8 mask, s8 *signal,
- 	return true;
- }
- 
--static int nl80211_send_station(struct sk_buff *msg, u32 portid, u32 seq,
--				int flags,
-+static int nl80211_send_station(struct sk_buff *msg, u32 cmd, u32 portid,
-+				u32 seq, int flags,
- 				struct cfg80211_registered_device *rdev,
- 				struct net_device *dev,
- 				const u8 *mac_addr, struct station_info *sinfo)
-@@ -3607,7 +3607,7 @@ static int nl80211_send_station(struct sk_buff *msg, u32 portid, u32 seq,
- 	void *hdr;
- 	struct nlattr *sinfoattr, *bss_param;
- 
--	hdr = nl80211hdr_put(msg, portid, seq, flags, NL80211_CMD_NEW_STATION);
-+	hdr = nl80211hdr_put(msg, portid, seq, flags, cmd);
- 	if (!hdr)
- 		return -1;
- 
-@@ -3802,7 +3802,7 @@ static int nl80211_dump_station(struct sk_buff *skb,
- 		if (err)
- 			goto out_err;
- 
--		if (nl80211_send_station(skb,
-+		if (nl80211_send_station(skb, NL80211_CMD_NEW_STATION,
- 				NETLINK_CB(cb->skb).portid,
- 				cb->nlh->nlmsg_seq, NLM_F_MULTI,
- 				rdev, wdev->netdev, mac_addr,
-@@ -3849,7 +3849,8 @@ static int nl80211_get_station(struct sk_buff *skb, struct genl_info *info)
- 	if (!msg)
- 		return -ENOMEM;
- 
--	if (nl80211_send_station(msg, info->snd_portid, info->snd_seq, 0,
-+	if (nl80211_send_station(msg, NL80211_CMD_NEW_STATION,
-+				 info->snd_portid, info->snd_seq, 0,
- 				 rdev, dev, mac_addr, &sinfo) < 0) {
- 		nlmsg_free(msg);
- 		return -ENOBUFS;
-@@ -11256,7 +11257,7 @@ void cfg80211_new_sta(struct net_device *dev, const u8 *mac_addr,
- 	if (!msg)
- 		return;
- 
--	if (nl80211_send_station(msg, 0, 0, 0,
-+	if (nl80211_send_station(msg, NL80211_CMD_NEW_STATION, 0, 0, 0,
- 				 rdev, dev, mac_addr, sinfo) < 0) {
- 		nlmsg_free(msg);
- 		return;
-@@ -11267,12 +11268,17 @@ void cfg80211_new_sta(struct net_device *dev, const u8 *mac_addr,
- }
- EXPORT_SYMBOL(cfg80211_new_sta);
- 
--void cfg80211_del_sta(struct net_device *dev, const u8 *mac_addr, gfp_t gfp)
-+void cfg80211_del_sta_sinfo(struct net_device *dev, const u8 *mac_addr,
-+			    struct station_info *sinfo, gfp_t gfp)
- {
- 	struct wiphy *wiphy = dev->ieee80211_ptr->wiphy;
- 	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
- 	struct sk_buff *msg;
- 	void *hdr;
-+	struct station_info empty_sinfo = {};
++	u32 hw_revision = MS(chip_id, SOC_CHIP_ID_REV);
++	int i;
 +
-+	if (!sinfo)
-+		sinfo = &_empty;
++	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot chip_id 0x%08x hw_revision 0x%x\n",
++		   chip_id, hw_revision);
++
++	for (i = 0; i < hw_params->num_supported_chips; i++)
++		if (hw_params->supported_chips[i] == hw_revision)
++			return 0;
++
++	return -ENOTSUPP;
++}
++
+ static int ath10k_init_hw_params(struct ath10k *ar)
+ {
+ 	const struct ath10k_hw_params *uninitialized_var(hw_params);
+-	int i;
++	int i, ret;
  
- 	trace_cfg80211_del_sta(dev, mac_addr);
- 
-@@ -11280,27 +11286,16 @@ void cfg80211_del_sta(struct net_device *dev, const u8 *mac_addr, gfp_t gfp)
- 	if (!msg)
- 		return;
- 
--	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_DEL_STATION);
--	if (!hdr) {
-+	if (nl80211_send_station(msg, NL80211_CMD_DEL_STATION, 0, 0, 0,
-+				 rdev, dev, mac_addr, sinfo)) {
- 		nlmsg_free(msg);
- 		return;
+ 	for (i = 0; i < ARRAY_SIZE(ath10k_hw_params_list); i++) {
+ 		hw_params = &ath10k_hw_params_list[i];
+@@ -737,6 +763,13 @@ static int ath10k_init_hw_params(struct ath10k *ar)
+ 		return -EINVAL;
  	}
  
--	if (nla_put_u32(msg, NL80211_ATTR_IFINDEX, dev->ifindex) ||
--	    nla_put(msg, NL80211_ATTR_MAC, ETH_ALEN, mac_addr))
--		goto nla_put_failure;
--
--	genlmsg_end(msg, hdr);
--
- 	genlmsg_multicast_netns(&nl80211_fam, wiphy_net(&rdev->wiphy), msg, 0,
- 				NL80211_MCGRP_MLME, gfp);
--	return;
--
-- nla_put_failure:
--	genlmsg_cancel(msg, hdr);
--	nlmsg_free(msg);
- }
--EXPORT_SYMBOL(cfg80211_del_sta);
-+EXPORT_SYMBOL(cfg80211_del_sta_sinfo);
++	ret = ath10k_core_check_chip_id(ar, ar->chip_id, hw_params);
++	if (ret) {
++		ath10k_err(ar, "unsupported hardware %s chip_id 0x%08x\n",
++			   hw_params->name, ar->chip_id);
++		return ret;
++	}
++
+ 	ar->hw_params = *hw_params;
  
- void cfg80211_conn_failed(struct net_device *dev, const u8 *mac_addr,
- 			  enum nl80211_connect_failed_reason reason,
+ 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "Hardware name %s version 0x%x\n",
+@@ -1055,34 +1088,6 @@ static int ath10k_core_probe_fw(struct ath10k *ar)
+ 	return 0;
+ }
+ 
+-static int ath10k_core_check_chip_id(struct ath10k *ar)
+-{
+-	u32 hw_revision = MS(ar->chip_id, SOC_CHIP_ID_REV);
+-
+-	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot chip_id 0x%08x hw_revision 0x%x\n",
+-		   ar->chip_id, hw_revision);
+-
+-	/* Check that we are not using hw1.0 (some of them have same pci id
+-	 * as hw2.0) before doing anything else as ath10k crashes horribly
+-	 * due to missing hw1.0 workarounds. */
+-	switch (hw_revision) {
+-	case QCA988X_HW_1_0_CHIP_ID_REV:
+-		ath10k_err(ar, "ERROR: qca988x hw1.0 is not supported\n");
+-		return -EOPNOTSUPP;
+-
+-	case QCA988X_HW_2_0_CHIP_ID_REV:
+-		/* known hardware revision, continue normally */
+-		return 0;
+-
+-	default:
+-		ath10k_warn(ar, "Warning: hardware revision unknown (0x%x), expect problems\n",
+-			    ar->chip_id);
+-		return 0;
+-	}
+-
+-	return 0;
+-}
+-
+ static void ath10k_core_register_work(struct work_struct *work)
+ {
+ 	struct ath10k *ar = container_of(work, struct ath10k, register_work);
+@@ -1130,16 +1135,7 @@ err:
+ 
+ int ath10k_core_register(struct ath10k *ar, u32 chip_id)
+ {
+-	int status;
+-
+ 	ar->chip_id = chip_id;
+-
+-	status = ath10k_core_check_chip_id(ar);
+-	if (status) {
+-		ath10k_err(ar, "Unsupported chip id 0x%08x\n", ar->chip_id);
+-		return status;
+-	}
+-
+ 	queue_work(ar->workqueue, &ar->register_work);
+ 
+ 	return 0;
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 8f86bd3..d37ffd6 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -475,7 +475,8 @@ struct ath10k {
+ 		u32 id;
+ 		const char *name;
+ 		u32 patch_load_addr;
+-
++		const u32 *supported_chips;
++		int num_supported_chips;
+ 		struct ath10k_hw_params_fw {
+ 			const char *dir;
+ 			const char *fw;
 -- 
-2.1.1
+1.8.5.3
 
