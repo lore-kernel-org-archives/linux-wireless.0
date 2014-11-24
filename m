@@ -1,48 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:31957 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932329AbaKMKzM (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:14399 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751081AbaKXL5E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Nov 2014 05:55:12 -0500
-From: Avinash Patil <patila@marvell.com>
+	Mon, 24 Nov 2014 06:57:04 -0500
+From: Vivek Natarajan <nataraja@qti.qualcomm.com>
 To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
-	<cluo@marvell.com>, <yangyang@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCH 2/6] mwifiex: do not explicitly disable TDLS link during teardown
-Date: Thu, 13 Nov 2014 21:54:14 +0530
-Message-ID: <1415895858-4007-3-git-send-email-patila@marvell.com> (sfid-20141113_115516_766576_8377DDAD)
-In-Reply-To: <1415895858-4007-1-git-send-email-patila@marvell.com>
-References: <1415895858-4007-1-git-send-email-patila@marvell.com>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: [PATCH] ath: Fix a false radar detection pattern
+Date: Mon, 24 Nov 2014 17:26:22 +0530
+Message-ID: <1416830183-2985-1-git-send-email-nataraja@qti.qualcomm.com> (sfid-20141124_125718_672093_010112AB)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When Teardown event from FW is indicated to userspace, userspace
-would trigger tdls_oper handler to disable TDLS link.
-We need not do this explicitly here.
+For FCC and JP, in one of the radar patterns, PPB and PRF seems to be
+interchanged leading to frequent incorrect radar detections.
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Vivek Natarajan <nataraja@qti.qualcomm.com>
 ---
- drivers/net/wireless/mwifiex/sta_event.c | 3 ---
- 1 file changed, 3 deletions(-)
+ drivers/net/wireless/ath/dfs_pattern_detector.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/sta_event.c b/drivers/net/wireless/mwifiex/sta_event.c
-index f1c240e..0efd6f0 100644
---- a/drivers/net/wireless/mwifiex/sta_event.c
-+++ b/drivers/net/wireless/mwifiex/sta_event.c
-@@ -163,9 +163,6 @@ static int mwifiex_parse_tdls_event(struct mwifiex_private *priv,
- 					   NL80211_TDLS_TEARDOWN,
- 					   le16_to_cpu(tdls_evt->u.reason_code),
- 					   GFP_KERNEL);
--		ret = mwifiex_tdls_oper(priv, tdls_evt->peer_mac,
--					MWIFIEX_TDLS_DISABLE_LINK);
--		queue_work(adapter->workqueue, &adapter->main_work);
- 		break;
- 	default:
- 		break;
+diff --git a/drivers/net/wireless/ath/dfs_pattern_detector.c b/drivers/net/wireless/ath/dfs_pattern_detector.c
+index 7a16686..0e383ef 100644
+--- a/drivers/net/wireless/ath/dfs_pattern_detector.c
++++ b/drivers/net/wireless/ath/dfs_pattern_detector.c
+@@ -86,7 +86,7 @@ static const struct radar_detector_specs fcc_radar_ref_types[] = {
+ 	FCC_PATTERN(1, 0, 5, 150, 230, 1, 23),
+ 	FCC_PATTERN(2, 6, 10, 200, 500, 1, 16),
+ 	FCC_PATTERN(3, 11, 20, 200, 500, 1, 12),
+-	FCC_PATTERN(4, 50, 100, 1000, 2000, 20, 1),
++	FCC_PATTERN(4, 50, 100, 1000, 2000, 1, 20),
+ 	FCC_PATTERN(5, 0, 1, 333, 333, 1, 9),
+ };
+ 
+@@ -105,7 +105,7 @@ static const struct radar_detector_specs jp_radar_ref_types[] = {
+ 	JP_PATTERN(4, 0, 5, 150, 230, 1, 23),
+ 	JP_PATTERN(5, 6, 10, 200, 500, 1, 16),
+ 	JP_PATTERN(6, 11, 20, 200, 500, 1, 12),
+-	JP_PATTERN(7, 50, 100, 1000, 2000, 20, 1),
++	JP_PATTERN(7, 50, 100, 1000, 2000, 1, 20),
+ 	JP_PATTERN(5, 0, 1, 333, 333, 1, 9),
+ };
+ 
 -- 
-1.8.1.4
+1.7.9.5
 
