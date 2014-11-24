@@ -1,61 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34157 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751278AbaKZAKA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Nov 2014 19:10:00 -0500
-Message-ID: <1416960593.32537.2.camel@dcbw.local> (sfid-20141126_011003_863750_232F1BD4)
-Subject: Re: Setting WLAN RF Sensitivity value
-From: Dan Williams <dcbw@redhat.com>
-To: Sergey Ryazanov <ryazanov.s.a@gmail.com>
-Cc: Mohammad Ali Ma Abu Shattal <mohammad.a.shattal@wmich.edu>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ilw@linux.intel.com
-Date: Tue, 25 Nov 2014 18:09:53 -0600
-In-Reply-To: <CAHNKnsRhPW2YGSTvmD-_hPci7V0hqCGyUHy4CfFr5QQtsF=FGw@mail.gmail.com>
-References: <2109154365.18865892.1416932147808.JavaMail.root@wmich.edu>
-	 <1013439490.18867944.1416932462547.JavaMail.root@wmich.edu>
-	 <CAHNKnsRhPW2YGSTvmD-_hPci7V0hqCGyUHy4CfFr5QQtsF=FGw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:49981 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932275AbaKXOgP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Nov 2014 09:36:15 -0500
+Received: by mail-wi0-f177.google.com with SMTP id l15so6003326wiw.4
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:36:14 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Liad Kaufman <liad.kaufman@intel.com>,
+	Arik Nemtsov <arikx.nemtsov@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 47/75] iwlwifi: mvm: block TID when using TDLS
+Date: Mon, 24 Nov 2014 16:34:23 +0200
+Message-Id: <1416839691-28533-47-git-send-email-egrumbach@gmail.com> (sfid-20141124_153856_866205_48C1EA1B)
+In-Reply-To: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
+References: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-11-26 at 02:12 +0300, Sergey Ryazanov wrote:
-> 2014-11-25 19:21 GMT+03:00 Mohammad Ali Ma Abu Shattal
-> <mohammad.a.shattal@wmich.edu>:
-> > Dear Sir/Madam,
-> >
-> > I'm working on a project in which we need to set and get RF sensitivity of WLAN device.
-> Could you specify, what exactly parameter do you want to control? In
-> the your askubuntu post, you refer to "iwconfig wlan0 sens" command,
-> which can control too many aspects, including the selection of the
-> best AP and the detection of channel busy condition. And actual
-> parameter "depends on the hardware implementation" as said in iwconfig
-> manpage.
+From: Liad Kaufman <liad.kaufman@intel.com>
 
-Indeed, only airo, ipw2200, hostap, and prism54 support this feature,
-all of these are extremely old drivers.  mac80211 does not support it.
-It appears to be used in the old drivers to ignore any signal quieter
-than the given sensitivity.
+Block TID 4 (VI) on a vif when using TDLS. This TID will be used by FW
+for TDLS channel-switch requests and PTI requests.
 
-Dan
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-> > I tried to set other settings such as operation mode, txpower and frequency using Linux commands : "ioctl" and "iwconfig" and it works fine.
-> Consider using NL80211 and "iw" utility, since IOCTL based
-> wireless-extensions interface is deprecated.
-> 
-> > Manufacturer of my device is Broadcom. It seems that either the hardware or the driver doesn't support setting and getting sensitivity. I need to know if there exists a device and/or device driver that support this feature. details of my current hardware and device driver are posted in the askubuntu question:
-> > http://askubuntu.com/questions/553286/wlan-sensitivity-setting-is-not-supported
-> > kindly send me your recommendation for such device or device driver.
-> >
-> > best regards,
-> > Mohammad
-> > ----------------------------
-> > Mohammad Abu Shattal
-> > Ph.D Student
-> > Department of Electrical & Computer Engineering
-> > Western Michigan University
-> > Kalamazoo, MI 49008
-> 
-
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 64e89e8..5aedf9d 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -2186,6 +2186,15 @@ static int iwl_mvm_mac_sta_state(struct ieee80211_hw *hw,
+  out_unlock:
+ 	mutex_unlock(&mvm->mutex);
+ 
++	if (sta->tdls && ret == 0) {
++		if (old_state == IEEE80211_STA_NOTEXIST &&
++		    new_state == IEEE80211_STA_NONE)
++			ieee80211_reserve_tid(sta, IWL_MVM_TDLS_FW_TID);
++		else if (old_state == IEEE80211_STA_NONE &&
++			 new_state == IEEE80211_STA_NOTEXIST)
++			ieee80211_unreserve_tid(sta, IWL_MVM_TDLS_FW_TID);
++	}
++
+ 	return ret;
+ }
+ 
+-- 
+1.9.1
 
