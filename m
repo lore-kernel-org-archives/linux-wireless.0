@@ -1,80 +1,226 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:57944 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751636AbaK0PSW (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:49841 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932296AbaKXOgb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Nov 2014 10:18:22 -0500
-Date: Thu, 27 Nov 2014 07:16:55 -0800
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
-Cc: Ming Lei <ming.lei@canonical.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Grazvydas Ignotas <notasas@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Pavel Machek <pavel@ucw.cz>,
-	Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-	Aaro Koskinen <aaro.koskinen@iki.fi>,
-	Kalle Valo <kvalo@adurom.com>,
-	Sebastian Reichel <sre@ring0.de>,
-	David Gnedt <david.gnedt@davizone.at>
-Subject: Re: wl1251: NVS firmware data
-Message-ID: <20141127151655.GB23064@kroah.com> (sfid-20141127_161846_438866_E431D44E)
-References: <201411271506.20457@pali>
- <CACVXFVMr8jH1ZzyPNG91VDK8DuVjQsHn9ks62sSNjOfUnNsURQ@mail.gmail.com>
- <201411271543.23527@pali>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <201411271543.23527@pali>
+	Mon, 24 Nov 2014 09:36:31 -0500
+Received: by mail-wi0-f174.google.com with SMTP id h11so5899164wiw.1
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:36:30 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Luciano Coelho <luciano.coelho@intel.com>
+Subject: [PATCH 57/75] iwlwifi: mvm: add CSA absent time event for clients
+Date: Mon, 24 Nov 2014 16:34:33 +0200
+Message-Id: <1416839691-28533-57-git-send-email-egrumbach@gmail.com> (sfid-20141124_153849_082739_61F8E402)
+In-Reply-To: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
+References: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 27, 2014 at 03:43:23PM +0100, Pali Rohár wrote:
-> On Thursday 27 November 2014 15:21:44 Ming Lei wrote:
-> > On Thu, Nov 27, 2014 at 10:06 PM, Pali Rohár 
-> <pali.rohar@gmail.com> wrote:
-> > > Hello,
-> > > 
-> > > wifi driver wl1251 needs NVS calibration data for working.
-> > > These data are loaded by driver via request_firmware from
-> > > userspace file: ti-connectivity/wl1251-nvs.bin. In
-> > > linux-fimrware git tree there is generic wl1251-nvs.bin
-> > > file which is used by default.
-> > > 
-> > > Driver wl1251 is used on Nokia N900 cellphone for its wifi
-> > > chip. This cellphone has one special MTD partition (called
-> > > CAL) where are stored some configuration data in special
-> > > binary (key-value) format. And there is also stored correct
-> > > calibration data for specific device (each device has
-> > > different data). It is preferred to use those data instead
-> > > generic one (provided by linux-firmware git tree).
-> > > 
-> > > Now my question is: How to correctly load calibration data
-> > > from special Nokia N900 CAL partition into wl1251 kernel
-> > > driver?
-> > 
-> > It is better to let user space script handle the request.
-> > 
-> 
-> Yes, this makes sense. Implementing CAL parser in kernel wl1251 
-> driver would be hard...
-> 
-> > > By default kernel reads ti-connectivity/wl1251-nvs.bin file
-> > > from VFS if exists without any userspace support. If it
-> > > fails then it fallback to loading via udev.
-> > 
-> > You can remove or rename this file so that loading from user
-> > space can be triggered.
-> > 
-> 
-> It is no so easy... In case when CAL does not contains NVS data 
-> then we want to use this generic NVS file. And telling everybody 
-> to rename this is file is not good solution...
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-But that's up to your system configuration, not the kernel.  Make a
-userspace package for the firmware that creates it in the format you
-need it to be in, for the hardware you have, and then there would not be
-any need for a kernel change, right?
+Add an absent time event when pre_channel_switch is called and use the
+time event started indication to set the disable_tx bit instead of
+doing it in unassign_vif().  This is done so that the firmware queues
+are stopped before the actual switch takes place to avoid losing
+packets while the AP/GO is performing its actual switch.
 
-greg k-h
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c   | 19 +++++++++-----
+ drivers/net/wireless/iwlwifi/mvm/mvm.h        | 27 ++++++++++++++++---
+ drivers/net/wireless/iwlwifi/mvm/sta.c        | 15 +++++++++++
+ drivers/net/wireless/iwlwifi/mvm/sta.h        |  1 +
+ drivers/net/wireless/iwlwifi/mvm/time-event.c | 37 +++++++++++++++++++++------
+ 5 files changed, 81 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index fdeaab3..ac1cef6 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -2891,7 +2891,6 @@ static void __iwl_mvm_unassign_vif_chanctx(struct iwl_mvm *mvm,
+ {
+ 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
+ 	struct ieee80211_vif *disabled_vif = NULL;
+-	struct iwl_mvm_sta *mvmsta;
+ 
+ 	lockdep_assert_held(&mvm->mutex);
+ 
+@@ -2925,12 +2924,6 @@ static void __iwl_mvm_unassign_vif_chanctx(struct iwl_mvm *mvm,
+ 
+ 		disabled_vif = vif;
+ 
+-		mvmsta = iwl_mvm_sta_from_staid_protected(mvm,
+-							  mvmvif->ap_sta_id);
+-
+-		if (!WARN_ON(!mvmsta))
+-			iwl_mvm_sta_modify_disable_tx(mvm, mvmsta, true);
+-
+ 		iwl_mvm_mac_ctxt_changed(mvm, vif, true, NULL);
+ 		break;
+ 	default:
+@@ -3167,6 +3160,7 @@ static int iwl_mvm_pre_channel_switch(struct ieee80211_hw *hw,
+ 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
+ 	struct ieee80211_vif *csa_vif;
+ 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
++	u32 apply_time;
+ 	int ret;
+ 
+ 	mutex_lock(&mvm->mutex);
+@@ -3194,6 +3188,17 @@ static int iwl_mvm_pre_channel_switch(struct ieee80211_hw *hw,
+ 		}
+ 
+ 		break;
++	case NL80211_IFTYPE_STATION:
++		apply_time = chsw->timestamp +
++			(vif->bss_conf.beacon_int * chsw->count * 1024);
++
++		if (chsw->block_tx)
++			iwl_mvm_csa_client_absent(mvm, vif);
++
++		iwl_mvm_schedule_csa_period(mvm, vif,
++					    IWL_MVM_CHANNEL_SWITCH_TIME_CLIENT,
++					    apply_time);
++		break;
+ 	default:
+ 		break;
+ 	}
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index 2c54c52..2816c6b 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -87,11 +87,12 @@
+ /* A TimeUnit is 1024 microsecond */
+ #define MSEC_TO_TU(_msec)	(_msec*1000/1024)
+ 
+-/* This value represents the number of TUs before CSA "beacon 0" TBTT
+- * when the CSA time-event needs to be scheduled to start.  It must be
+- * big enough to ensure that we switch in time.
++/* These values represent the number of TUs before CSA "beacon 0" TBTT
++ * when the CSA time-event needs to be scheduled to start.  They must
++ * be big enough to ensure that we switch in time.
+  */
+ #define IWL_MVM_CHANNEL_SWITCH_TIME_GO		40
++#define IWL_MVM_CHANNEL_SWITCH_TIME_CLIENT	110
+ 
+ /*
+  * This value (in TUs) is used to fine tune the CSA NoA end time which should
+@@ -797,6 +798,26 @@ static inline bool iwl_mvm_is_radio_killed(struct iwl_mvm *mvm)
+ 	       test_bit(IWL_MVM_STATUS_HW_CTKILL, &mvm->status);
+ }
+ 
++/* Must be called with rcu_read_lock() held and it can only be
++ * released when mvmsta is not needed anymore.
++ */
++static inline struct iwl_mvm_sta *
++iwl_mvm_sta_from_staid_rcu(struct iwl_mvm *mvm, u8 sta_id)
++{
++	struct ieee80211_sta *sta;
++
++	if (sta_id >= ARRAY_SIZE(mvm->fw_id_to_mac_id))
++		return NULL;
++
++	sta = rcu_dereference(mvm->fw_id_to_mac_id[sta_id]);
++
++	/* This can happen if the station has been removed right now */
++	if (IS_ERR_OR_NULL(sta))
++		return NULL;
++
++	return iwl_mvm_sta_from_mac80211(sta);
++}
++
+ static inline struct iwl_mvm_sta *
+ iwl_mvm_sta_from_staid_protected(struct iwl_mvm *mvm, u8 sta_id)
+ {
+diff --git a/drivers/net/wireless/iwlwifi/mvm/sta.c b/drivers/net/wireless/iwlwifi/mvm/sta.c
+index a38f1f1..d86fe43 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/iwlwifi/mvm/sta.c
+@@ -1732,3 +1732,18 @@ void iwl_mvm_modify_all_sta_disable_tx(struct iwl_mvm *mvm,
+ 		iwl_mvm_sta_modify_disable_tx_ap(mvm, sta, disable);
+ 	}
+ }
++
++void iwl_mvm_csa_client_absent(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
++{
++	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
++	struct iwl_mvm_sta *mvmsta;
++
++	rcu_read_lock();
++
++	mvmsta = iwl_mvm_sta_from_staid_rcu(mvm, mvmvif->ap_sta_id);
++
++	if (!WARN_ON(!mvmsta))
++		iwl_mvm_sta_modify_disable_tx(mvm, mvmsta, true);
++
++	rcu_read_unlock();
++}
+diff --git a/drivers/net/wireless/iwlwifi/mvm/sta.h b/drivers/net/wireless/iwlwifi/mvm/sta.h
+index 2c869bc..d8f48975 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/sta.h
++++ b/drivers/net/wireless/iwlwifi/mvm/sta.h
+@@ -422,5 +422,6 @@ void iwl_mvm_sta_modify_disable_tx_ap(struct iwl_mvm *mvm,
+ void iwl_mvm_modify_all_sta_disable_tx(struct iwl_mvm *mvm,
+ 				       struct iwl_mvm_vif *mvmvif,
+ 				       bool disable);
++void iwl_mvm_csa_client_absent(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
+ 
+ #endif /* __sta_h__ */
+diff --git a/drivers/net/wireless/iwlwifi/mvm/time-event.c b/drivers/net/wireless/iwlwifi/mvm/time-event.c
+index 8cf246b..1a537be 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/time-event.c
++++ b/drivers/net/wireless/iwlwifi/mvm/time-event.c
+@@ -191,6 +191,33 @@ static bool iwl_mvm_te_check_disconnect(struct iwl_mvm *mvm,
+ 	return true;
+ }
+ 
++static void
++iwl_mvm_te_handle_notify_csa(struct iwl_mvm *mvm,
++			     struct iwl_mvm_time_event_data *te_data,
++			     struct iwl_time_event_notif *notif)
++{
++	if (!le32_to_cpu(notif->status)) {
++		IWL_DEBUG_TE(mvm, "CSA time event failed to start\n");
++		return;
++	}
++
++	switch (te_data->vif->type) {
++	case NL80211_IFTYPE_AP:
++		iwl_mvm_csa_noa_start(mvm);
++		break;
++	case NL80211_IFTYPE_STATION:
++		iwl_mvm_csa_client_absent(mvm, te_data->vif);
++		break;
++	default:
++		/* should never happen */
++		WARN_ON_ONCE(1);
++		break;
++	}
++
++	/* we don't need it anymore */
++	iwl_mvm_te_clear_data(mvm, te_data);
++}
++
+ /*
+  * Handles a FW notification for an event that is known to the driver.
+  *
+@@ -252,14 +279,8 @@ static void iwl_mvm_te_handle_notif(struct iwl_mvm *mvm,
+ 			set_bit(IWL_MVM_STATUS_ROC_RUNNING, &mvm->status);
+ 			iwl_mvm_ref(mvm, IWL_MVM_REF_ROC);
+ 			ieee80211_ready_on_channel(mvm->hw);
+-		} else if (te_data->vif->type == NL80211_IFTYPE_AP) {
+-			if (le32_to_cpu(notif->status))
+-				iwl_mvm_csa_noa_start(mvm);
+-			else
+-				IWL_DEBUG_TE(mvm, "CSA NOA failed to start\n");
+-
+-			/* we don't need it anymore */
+-			iwl_mvm_te_clear_data(mvm, te_data);
++		} else if (te_data->id == TE_CHANNEL_SWITCH_PERIOD) {
++			iwl_mvm_te_handle_notify_csa(mvm, te_data, notif);
+ 		}
+ 	} else {
+ 		IWL_WARN(mvm, "Got TE with unknown action\n");
+-- 
+1.9.1
+
