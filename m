@@ -1,51 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:18478 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753829AbaKSN3J (ORCPT
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:61057 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932135AbaKXOfO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Nov 2014 08:29:09 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	<dri-devel@lists.freedesktop.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Xinming Hu <huxm@marvell.com>
-Subject: [PATCH] device coredump: fix minor issue in Kconfig file
-Date: Wed, 19 Nov 2014 05:28:02 -0800
-Message-ID: <1416403682-9203-1-git-send-email-akarwar@marvell.com> (sfid-20141119_142927_722539_72E3339B)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 24 Nov 2014 09:35:14 -0500
+Received: by mail-wi0-f181.google.com with SMTP id r20so5974669wiv.14
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:35:13 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 11/75] iwlwifi: mvm: don't capture firmware coredump for D3->D0 reconfig
+Date: Mon, 24 Nov 2014 16:33:47 +0200
+Message-Id: <1416839691-28533-11-git-send-email-egrumbach@gmail.com> (sfid-20141124_153524_006973_04785463)
+In-Reply-To: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
+References: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-if "CONFIG_DEV_COREDUMP=y" is added to configuration file, it
-gets removed when final configuration file is generated. The
-reason is it requires CONFIG_WANT_DEV_COREDUMP to be enabled.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Currently "make menuconfig" doesn't display an option to enable
-WANT_DEV_COREDUMP. This patch updates Kconfig so that user can
-enable WANT_DEV_COREDUMP.
+The code to capture firmware errors works during the reconfiguration
+phase after an error. As the D3->D0 transition uses the same flow to
+get the D0 image reconfigured, this triggered and caused a firmware
+coredump to be collected. This in turn, if it isn't picked up by
+userspace, can cause module unloading to fail, which is how the bug
+was detected.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Tested-by: Xinming Hu <huxm@marvell.com>
+To fix this issue, introduce a new status flag (D3_RECONFIG) and use
+it to detect that during reconfiguration no coredump should be taken
+and reported.
+
+Reported-by: Avi Kraif <avix.kraif@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/base/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/iwlwifi/mvm/d3.c       | 1 +
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 7 ++++++-
+ drivers/net/wireless/iwlwifi/mvm/mvm.h      | 1 +
+ 3 files changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/base/Kconfig b/drivers/base/Kconfig
-index 61a33f4..e491b07 100644
---- a/drivers/base/Kconfig
-+++ b/drivers/base/Kconfig
-@@ -166,7 +166,7 @@ config FW_LOADER_USER_HELPER_FALLBACK
- 	  If you are unsure about this, say N here.
+diff --git a/drivers/net/wireless/iwlwifi/mvm/d3.c b/drivers/net/wireless/iwlwifi/mvm/d3.c
+index 3bbb511..b61075b 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/d3.c
++++ b/drivers/net/wireless/iwlwifi/mvm/d3.c
+@@ -1651,6 +1651,7 @@ static int __iwl_mvm_resume(struct iwl_mvm *mvm, bool test)
  
- config WANT_DEV_COREDUMP
--	bool
-+	bool "Want device coredump"
- 	help
- 	  Drivers should "select" this option if they desire to use the
- 	  device coredump mechanism.
+ 	/* return 1 to reconfigure the device */
+ 	set_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status);
++	set_bit(IWL_MVM_STATUS_D3_RECONFIG, &mvm->status);
+ 	return 1;
+ }
+ 
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 4f9f77f..ed2c219 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -839,7 +839,12 @@ void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
+ 
+ static void iwl_mvm_restart_cleanup(struct iwl_mvm *mvm)
+ {
+-	iwl_mvm_fw_error_dump(mvm);
++	/* clear the D3 reconfig, we only need it to avoid dumping a
++	 * firmware coredump on reconfiguration, we shouldn't do that
++	 * on D3->D0 transition
++	 */
++	if (!test_and_clear_bit(IWL_MVM_STATUS_D3_RECONFIG, &mvm->status))
++		iwl_mvm_fw_error_dump(mvm);
+ 
+ 	iwl_trans_stop_device(mvm->trans);
+ 
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index 105a76b..e56abdd 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -750,6 +750,7 @@ enum iwl_mvm_status {
+ 	IWL_MVM_STATUS_IN_HW_RESTART,
+ 	IWL_MVM_STATUS_IN_D0I3,
+ 	IWL_MVM_STATUS_ROC_AUX_RUNNING,
++	IWL_MVM_STATUS_D3_RECONFIG,
+ };
+ 
+ static inline bool iwl_mvm_is_radio_killed(struct iwl_mvm *mvm)
 -- 
-1.8.1.4
+1.9.1
 
