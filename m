@@ -1,52 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:43739 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750811AbaKZLUH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Nov 2014 06:20:07 -0500
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1Xtadf-0003Nc-9o
-	for linux-wireless@vger.kernel.org; Wed, 26 Nov 2014 12:20:03 +0100
-Received: from 187.113.19.133.static.host.gvt.net.br ([187.113.19.133.static.host.gvt.net.br])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Nov 2014 12:20:03 +0100
-Received: from husnih by 187.113.19.133.static.host.gvt.net.br with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Nov 2014 12:20:03 +0100
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:49150 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932370AbaKXOg4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Nov 2014 09:36:56 -0500
+Received: by mail-wi0-f176.google.com with SMTP id ex7so5842866wid.15
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:36:55 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
 To: linux-wireless@vger.kernel.org
-From: Husni Ali Husni <husnih@ibest.com.br>
-Subject: Message ->  RX: wrong xfer size (usblen=72)
-Date: Wed, 26 Nov 2014 11:02:42 +0000 (UTC)
-Message-ID: <loom.20141126T114442-775@post.gmane.org> (sfid-20141126_122011_256028_0DD41598)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Cc: Oren Givon <oren.givon@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 74/75] iwlwifi: sdio: new SDIO card id for 4165 series
+Date: Mon, 24 Nov 2014 16:34:50 +0200
+Message-Id: <1416839691-28533-74-git-send-email-egrumbach@gmail.com> (sfid-20141124_153707_814817_F10FB855)
+In-Reply-To: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
+References: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello!
+From: Oren Givon <oren.givon@intel.com>
 
-  I installed Linux Mint Quiana in my computer.
-  My computer is old and it have D-link DWL-G132 (wireless) to navigate at
-internet, ready as research, it use driver ar5523.
-  I saw the log archive (Kernel, dmesg) and all second I receive the message:
-[   38.094218] usb 2-8: RX: wrong xfer size (usblen=72) 
-[   38.094458] usb 2-8: RX: wrong xfer size (usblen=72) 
-[   38.094709] usb 2-8: RX: wrong xfer size (usblen=72) 
-[   38.196593] usb 2-8: RX: wrong xfer size (usblen=72) 
-[   38.196830] usb 2-8: RX: wrong xfer size (usblen=72) 
-[   38.197079] usb 2-8: RX: wrong xfer size (usblen=72) 
-[   38.298963] usb 2-8: RX: wrong xfer size (usblen=72) 
-[   38.299328] usb 2-8: RX: wrong xfer size (usblen=72) 
-[   38.299492] usb 2-8: RX: wrong xfer size (usblen=72) 
+Add a new SDIO card id intended for the new 4165 series.
 
-  This message stuff may log partition.
+Signed-off-by: Oren Givon <oren.givon@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-8000.c   | 15 +++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-config.h |  1 +
+ 2 files changed, 16 insertions(+)
 
-  What I need to do to solve this problem?
-
-  Thank You!
-
-    Husni Ali Husni (Brazil)
-
-Ps.: Sorry my English!
+diff --git a/drivers/net/wireless/iwlwifi/iwl-8000.c b/drivers/net/wireless/iwlwifi/iwl-8000.c
+index 436efad..d0357b3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-8000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-8000.c
+@@ -159,4 +159,19 @@ const struct iwl_cfg iwl8260_2ac_sdio_cfg = {
+ 	.max_vht_ampdu_exponent = MAX_VHT_AMPDU_EXPONENT_8260_SDIO,
+ };
+ 
++const struct iwl_cfg iwl4265_2ac_sdio_cfg = {
++	.name = "Intel(R) Dual Band Wireless-AC 4265",
++	.fw_name_pre = IWL8000_FW_PRE,
++	IWL_DEVICE_8000,
++	.ht_params = &iwl8000_ht_params,
++	.nvm_ver = IWL8000_NVM_VERSION,
++	.nvm_calib_ver = IWL8000_TX_POWER_VERSION,
++	.default_nvm_file = DEFAULT_NVM_FILE_FAMILY_8000,
++	.max_rx_agg_size = MAX_RX_AGG_SIZE_8260_SDIO,
++	.bt_shared_single_ant = true,
++	.disable_dummy_notification = true,
++	.max_ht_ampdu_exponent  = MAX_HT_AMPDU_EXPONENT_8260_SDIO,
++	.max_vht_ampdu_exponent = MAX_VHT_AMPDU_EXPONENT_8260_SDIO,
++};
++
+ MODULE_FIRMWARE(IWL8000_MODULE_FIRMWARE(IWL8000_UCODE_API_OK));
+diff --git a/drivers/net/wireless/iwlwifi/iwl-config.h b/drivers/net/wireless/iwlwifi/iwl-config.h
+index d43e90d..e63cafa 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-config.h
++++ b/drivers/net/wireless/iwlwifi/iwl-config.h
+@@ -370,6 +370,7 @@ extern const struct iwl_cfg iwl7265d_n_cfg;
+ extern const struct iwl_cfg iwl8260_2n_cfg;
+ extern const struct iwl_cfg iwl8260_2ac_cfg;
+ extern const struct iwl_cfg iwl8260_2ac_sdio_cfg;
++extern const struct iwl_cfg iwl4265_2ac_sdio_cfg;
+ #endif /* CONFIG_IWLMVM */
+ 
+ #endif /* __IWL_CONFIG_H__ */
+-- 
+1.9.1
 
