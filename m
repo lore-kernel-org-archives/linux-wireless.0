@@ -1,87 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:34456 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750768AbaKFFAo (ORCPT
+Received: from mail-wg0-f51.google.com ([74.125.82.51]:50943 "EHLO
+	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932354AbaKXOgu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Nov 2014 00:00:44 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-	stable@vger.kernel.org
-Subject: [PATCH] ath9k: Fix RTC_DERIVED_CLK usage
-Date: Thu,  6 Nov 2014 10:32:03 +0530
-Message-Id: <1415250123-16055-1-git-send-email-sujith@msujith.org> (sfid-20141106_060048_297701_1A158F15)
+	Mon, 24 Nov 2014 09:36:50 -0500
+Received: by mail-wg0-f51.google.com with SMTP id k14so12246603wgh.38
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:36:49 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Chaya Rachel Ivgy <chaya.rachel.ivgi@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 70/75] iwlwifi: mvm: add support to MFUART loading notification
+Date: Mon, 24 Nov 2014 16:34:46 +0200
+Message-Id: <1416839691-28533-70-git-send-email-egrumbach@gmail.com> (sfid-20141124_153701_891325_B25A3944)
+In-Reply-To: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
+References: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+From: Chaya Rachel Ivgy <chaya.rachel.ivgi@intel.com>
 
-From: Miaoqing Pan <miaoqing@qca.qualcomm.com>
+Add support to MFUART loading notification (print notification
+data with IWL_DEBUG_INFO)
 
-Based on the reference clock, which could be 25MHz or 40MHz,
-AR_RTC_DERIVED_CLK is programmed differently for AR9340 and AR9550.
-But, when a chip reset is done, processing the initvals
-sets the register back to the default value.
-
-Fix this by moving the code in ath9k_hw_init_pll() to
-ar9003_hw_override_ini(). Also, do this override for AR9531.
-
-Cc: stable@vger.kernel.org
-Signed-off-by: Miaoqing Pan <miaoqing@qca.qualcomm.com>
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Chaya Rachel Ivgy <chaya.rachel.ivgi@intel.com>
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_phy.c | 13 +++++++++++++
- drivers/net/wireless/ath/ath9k/hw.c         | 13 -------------
- 2 files changed, 13 insertions(+), 13 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/fw-api.h | 17 +++++++++++++++++
+ drivers/net/wireless/iwlwifi/mvm/fw.c     | 16 ++++++++++++++++
+ drivers/net/wireless/iwlwifi/mvm/mvm.h    |  2 ++
+ drivers/net/wireless/iwlwifi/mvm/ops.c    |  1 +
+ 4 files changed, 36 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index 9bdaa0a..2df6d2e 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -664,6 +664,19 @@ static void ar9003_hw_override_ini(struct ath_hw *ah)
- 		ah->enabled_cals |= TX_CL_CAL;
- 	else
- 		ah->enabled_cals &= ~TX_CL_CAL;
+diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/iwlwifi/mvm/fw-api.h
+index 0f3c07a..2ff4f41 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/fw-api.h
++++ b/drivers/net/wireless/iwlwifi/mvm/fw-api.h
+@@ -201,6 +201,8 @@ enum {
+ 	/* Power - new power table command */
+ 	MAC_PM_POWER_TABLE = 0xa9,
+ 
++	MFUART_LOAD_NOTIFICATION = 0xb1,
 +
-+	if (AR_SREV_9340(ah) || AR_SREV_9531(ah) || AR_SREV_9550(ah)) {
-+		if (ah->is_clk_25mhz) {
-+			REG_WRITE(ah, AR_RTC_DERIVED_CLK, 0x17c << 1);
-+			REG_WRITE(ah, AR_SLP32_MODE, 0x0010f3d7);
-+			REG_WRITE(ah, AR_SLP32_INC, 0x0001e7ae);
-+		} else {
-+			REG_WRITE(ah, AR_RTC_DERIVED_CLK, 0x261 << 1);
-+			REG_WRITE(ah, AR_SLP32_MODE, 0x0010f400);
-+			REG_WRITE(ah, AR_SLP32_INC, 0x0001e800);
-+		}
-+		udelay(100);
-+	}
+ 	REPLY_RX_PHY_CMD = 0xc0,
+ 	REPLY_RX_MPDU_CMD = 0xc1,
+ 	BA_NOTIF = 0xc5,
+@@ -1212,6 +1214,21 @@ struct iwl_missed_beacons_notif {
+ } __packed; /* MISSED_BEACON_NTFY_API_S_VER_3 */
+ 
+ /**
++ * struct iwl_mfuart_load_notif - mfuart image version & status
++ * ( MFUART_LOAD_NOTIFICATION = 0xb1 )
++ * @installed_ver: installed image version
++ * @external_ver: external image version
++ * @status: MFUART loading status
++ * @duration: MFUART loading time
++*/
++struct iwl_mfuart_load_notif {
++	__le32 installed_ver;
++	__le32 external_ver;
++	__le32 status;
++	__le32 duration;
++} __packed; /*MFU_LOADER_NTFY_API_S_VER_1*/
++
++/**
+  * struct iwl_set_calib_default_cmd - set default value for calibration.
+  * ( SET_CALIB_DEFAULT_CMD = 0x8e )
+  * @calib_index: the calibration to set value for
+diff --git a/drivers/net/wireless/iwlwifi/mvm/fw.c b/drivers/net/wireless/iwlwifi/mvm/fw.c
+index 5757790..bbb78710 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/iwlwifi/mvm/fw.c
+@@ -599,3 +599,19 @@ int iwl_mvm_rx_radio_ver(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb,
+ 		       le32_to_cpu(radio_version->radio_dash));
+ 	return 0;
  }
++
++int iwl_mvm_rx_mfuart_notif(struct iwl_mvm *mvm,
++			    struct iwl_rx_cmd_buffer *rxb,
++			    struct iwl_device_cmd *cmd)
++{
++	struct iwl_rx_packet *pkt = rxb_addr(rxb);
++	struct iwl_mfuart_load_notif *mfuart_notif = (void *)pkt->data;
++
++	IWL_DEBUG_INFO(mvm,
++		       "MFUART: installed ver: 0x%08x, external ver: 0x%08x, status: 0x%08x, duration: 0x%08x\n",
++		       le32_to_cpu(mfuart_notif->installed_ver),
++		       le32_to_cpu(mfuart_notif->external_ver),
++		       le32_to_cpu(mfuart_notif->status),
++		       le32_to_cpu(mfuart_notif->duration));
++	return 0;
++}
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index e6079f4..2ab59b8 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -964,6 +964,8 @@ int iwl_mvm_rx_card_state_notif(struct iwl_mvm *mvm,
+ 				struct iwl_device_cmd *cmd);
+ int iwl_mvm_rx_radio_ver(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb,
+ 			 struct iwl_device_cmd *cmd);
++int iwl_mvm_rx_mfuart_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb,
++			    struct iwl_device_cmd *cmd);
  
- static void ar9003_hw_prog_ini(struct ath_hw *ah,
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index ee9fb52..04ae1f8 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -870,19 +870,6 @@ static void ath9k_hw_init_pll(struct ath_hw *ah,
- 	udelay(RTC_PLL_SETTLE_DELAY);
+ /* MVM PHY */
+ int iwl_mvm_phy_ctxt_add(struct iwl_mvm *mvm, struct iwl_mvm_phy_ctxt *ctxt,
+diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
+index cc83ef5..b3ae094 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
+@@ -260,6 +260,7 @@ static const struct iwl_rx_handlers iwl_mvm_rx_handlers[] = {
  
- 	REG_WRITE(ah, AR_RTC_SLEEP_CLK, AR_RTC_FORCE_DERIVED_CLK);
--
--	if (AR_SREV_9340(ah) || AR_SREV_9550(ah)) {
--		if (ah->is_clk_25mhz) {
--			REG_WRITE(ah, AR_RTC_DERIVED_CLK, 0x17c << 1);
--			REG_WRITE(ah, AR_SLP32_MODE, 0x0010f3d7);
--			REG_WRITE(ah,  AR_SLP32_INC, 0x0001e7ae);
--		} else {
--			REG_WRITE(ah, AR_RTC_DERIVED_CLK, 0x261 << 1);
--			REG_WRITE(ah, AR_SLP32_MODE, 0x0010f400);
--			REG_WRITE(ah,  AR_SLP32_INC, 0x0001e800);
--		}
--		udelay(100);
--	}
- }
+ 	RX_HANDLER(TDLS_CHANNEL_SWITCH_NOTIFICATION, iwl_mvm_rx_tdls_notif,
+ 		   true),
++	RX_HANDLER(MFUART_LOAD_NOTIFICATION, iwl_mvm_rx_mfuart_notif, false),
  
- static void ath9k_hw_init_interrupt_masks(struct ath_hw *ah,
+ };
+ #undef RX_HANDLER
 -- 
-2.1.3
+1.9.1
 
