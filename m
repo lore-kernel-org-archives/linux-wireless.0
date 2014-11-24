@@ -1,139 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f179.google.com ([209.85.214.179]:39769 "EHLO
-	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751229AbaKGQFX (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:30717 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753558AbaKXPSj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Nov 2014 11:05:23 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, troy_tan@realsil.com.cn,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH V2 3.18] rtlwifi: rtl8192se: Fix connection problems
-Date: Fri,  7 Nov 2014 10:05:12 -0600
-Message-Id: <1415376312-27158-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20141107_170535_602666_99A724A9)
+	Mon, 24 Nov 2014 10:18:39 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Ben Greear <greearb@candelatech.com>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: Re: [PATCH v2 04/10] ath10k: make firmware text debug messages more verbose.
+References: <1411507045-18973-1-git-send-email-greearb@candelatech.com>
+	<1411507045-18973-4-git-send-email-greearb@candelatech.com>
+	<878uj38dbd.fsf@kamboji.qca.qualcomm.com>
+	<5470B4D5.7090508@candelatech.com>
+Date: Mon, 24 Nov 2014 17:18:20 +0200
+In-Reply-To: <5470B4D5.7090508@candelatech.com> (Ben Greear's message of "Sat,
+	22 Nov 2014 08:07:49 -0800")
+Message-ID: <87d28c630j.fsf@kamboji.qca.qualcomm.com> (sfid-20141124_161842_622822_1D5E2F3E)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Changes in the vendor driver were added to rtlwifi, but some updates
-to rtl8192se were missed, and the driver could neither scan nor connect.
-There are other changes that will enhance performance, but this minimal
-set fix the basic functionality.
+Ben Greear <greearb@candelatech.com> writes:
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+> On 11/22/2014 07:28 AM, Kalle Valo wrote:
+>> greearb@candelatech.com writes:
+>>
+>>> From: Ben Greear <greearb@candelatech.com>
+>>>
+>>> There are not many of these messages producted by the
+>>> firmware, but they are generally fairly useful, so print
+>>> them at info level.
+>>>
+>>> Signed-off-by: Ben Greear <greearb@candelatech.com>
+>>
+>> [...]
+>>
+>>> --- a/drivers/net/wireless/ath/ath10k/debug.h
+>>> +++ b/drivers/net/wireless/ath/ath10k/debug.h
+>>> @@ -35,6 +35,7 @@ enum ath10k_debug_mask {
+>>>   	ATH10K_DBG_BMI		= 0x00000400,
+>>>   	ATH10K_DBG_REGULATORY	= 0x00000800,
+>>>   	ATH10K_DBG_TESTMODE	= 0x00001000,
+>>> +	ATH10K_DBG_FW_MSG	= 0x00002000,
+>>
+>> I think FW_MSG is a bit too ambiguous, so I changed this to WMI_PRINT so
+>> that it's closer the real event name.
+>
+> Better than nothing, but my idea was that this flag would be able to affect
+> more than one thing related to firmware debugging.  Calling it something about
+> WMI does not indicate to me that it is really about firmware debugging.
 
-V2 - As requested by John Linville, the patch was reduced to its bare essentials
-as the first version was too large to be a fix.
+For other debug methods we can always add a new debug level, or rename
+this one.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/rtlwifi/pci.c           |  3 ++-
- drivers/net/wireless/rtlwifi/rtl8192se/hw.c  |  7 +++++--
- drivers/net/wireless/rtlwifi/rtl8192se/phy.c |  2 ++
- drivers/net/wireless/rtlwifi/rtl8192se/sw.c  | 16 ++++++++++++++++
- 4 files changed, 25 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
-index 25daa87..2487eee 100644
---- a/drivers/net/wireless/rtlwifi/pci.c
-+++ b/drivers/net/wireless/rtlwifi/pci.c
-@@ -842,7 +842,8 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
- 			break;
- 		}
- 		/* handle command packet here */
--		if (rtlpriv->cfg->ops->rx_command_packet(hw, stats, skb)) {
-+		if (rtlpriv->cfg->ops->rx_command_packet &&
-+		    rtlpriv->cfg->ops->rx_command_packet(hw, stats, skb)) {
- 				dev_kfree_skb_any(skb);
- 				goto end;
- 		}
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/hw.c b/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
-index 00e0670..5761d5b 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
-@@ -1201,6 +1201,9 @@ static int _rtl92se_set_media_status(struct ieee80211_hw *hw,
- 
- 	}
- 
-+	if (type != NL80211_IFTYPE_AP &&
-+	    rtlpriv->mac80211.link_state < MAC80211_LINKED)
-+		bt_msr = rtl_read_byte(rtlpriv, MSR) & ~MSR_LINK_MASK;
- 	rtl_write_byte(rtlpriv, (MSR), bt_msr);
- 
- 	temp = rtl_read_dword(rtlpriv, TCR);
-@@ -1262,6 +1265,7 @@ void rtl92se_enable_interrupt(struct ieee80211_hw *hw)
- 	rtl_write_dword(rtlpriv, INTA_MASK, rtlpci->irq_mask[0]);
- 	/* Support Bit 32-37(Assign as Bit 0-5) interrupt setting now */
- 	rtl_write_dword(rtlpriv, INTA_MASK + 4, rtlpci->irq_mask[1] & 0x3F);
-+	rtlpci->irq_enabled = true;
- }
- 
- void rtl92se_disable_interrupt(struct ieee80211_hw *hw)
-@@ -1276,8 +1280,7 @@ void rtl92se_disable_interrupt(struct ieee80211_hw *hw)
- 	rtlpci = rtl_pcidev(rtl_pcipriv(hw));
- 	rtl_write_dword(rtlpriv, INTA_MASK, 0);
- 	rtl_write_dword(rtlpriv, INTA_MASK + 4, 0);
--
--	synchronize_irq(rtlpci->pdev->irq);
-+	rtlpci->irq_enabled = false;
- }
- 
- static u8 _rtl92s_set_sysclk(struct ieee80211_hw *hw, u8 data)
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/phy.c b/drivers/net/wireless/rtlwifi/rtl8192se/phy.c
-index 77c5b5f..4b4612f 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192se/phy.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192se/phy.c
-@@ -399,6 +399,8 @@ static bool _rtl92s_phy_sw_chnl_step_by_step(struct ieee80211_hw *hw,
- 		case 2:
- 			currentcmd = &postcommoncmd[*step];
- 			break;
-+		default:
-+			return true;
- 		}
- 
- 		if (currentcmd->cmdid == CMDID_END) {
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/sw.c b/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
-index aadba29..fb00386 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
-@@ -236,6 +236,19 @@ static void rtl92s_deinit_sw_vars(struct ieee80211_hw *hw)
- 	}
- }
- 
-+static bool rtl92se_is_tx_desc_closed(struct ieee80211_hw *hw, u8 hw_queue,
-+				      u16 index)
-+{
-+	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
-+	struct rtl8192_tx_ring *ring = &rtlpci->tx_ring[hw_queue];
-+	u8 *entry = (u8 *)(&ring->desc[ring->idx]);
-+	u8 own = (u8)rtl92se_get_desc(entry, true, HW_DESC_OWN);
-+
-+	if (own)
-+		return false;
-+	return true;
-+}
-+
- static struct rtl_hal_ops rtl8192se_hal_ops = {
- 	.init_sw_vars = rtl92s_init_sw_vars,
- 	.deinit_sw_vars = rtl92s_deinit_sw_vars,
-@@ -269,6 +282,7 @@ static struct rtl_hal_ops rtl8192se_hal_ops = {
- 	.led_control = rtl92se_led_control,
- 	.set_desc = rtl92se_set_desc,
- 	.get_desc = rtl92se_get_desc,
-+	.is_tx_desc_closed = rtl92se_is_tx_desc_closed,
- 	.tx_polling = rtl92se_tx_polling,
- 	.enable_hw_sec = rtl92se_enable_hw_security_config,
- 	.set_key = rtl92se_set_key,
-@@ -306,6 +320,8 @@ static struct rtl_hal_cfg rtl92se_hal_cfg = {
- 	.maps[MAC_RCR_ACRC32] = RCR_ACRC32,
- 	.maps[MAC_RCR_ACF] = RCR_ACF,
- 	.maps[MAC_RCR_AAP] = RCR_AAP,
-+	.maps[MAC_HIMR] = INTA_MASK,
-+	.maps[MAC_HIMRE] = INTA_MASK + 4,
- 
- 	.maps[EFUSE_TEST] = REG_EFUSE_TEST,
- 	.maps[EFUSE_CTRL] = REG_EFUSE_CTRL,
 -- 
-2.1.2
-
+Kalle Valo
