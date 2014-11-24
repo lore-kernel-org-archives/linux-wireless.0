@@ -1,51 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:16323 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751197AbaKDL6S (ORCPT
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:43567 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932149AbaKXOfn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Nov 2014 06:58:18 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Avinash Patil <patila@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 5/5] mwifiex: fix warning while starting BSS
-Date: Tue, 4 Nov 2014 03:57:03 -0800
-Message-ID: <1415102223-7118-5-git-send-email-akarwar@marvell.com> (sfid-20141104_125822_131905_09EB0CBD)
-In-Reply-To: <1415102223-7118-1-git-send-email-akarwar@marvell.com>
-References: <1415102223-7118-1-git-send-email-akarwar@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 24 Nov 2014 09:35:43 -0500
+Received: by mail-wg0-f45.google.com with SMTP id b13so12389339wgh.32
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:35:42 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 28/75] iwlwifi: pcie: properly reset the device
+Date: Mon, 24 Nov 2014 16:34:04 +0200
+Message-Id: <1416839691-28533-28-git-send-email-egrumbach@gmail.com> (sfid-20141124_154347_136499_605DA36D)
+In-Reply-To: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
+References: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-We see this warning while starting mwifiex AP:
-Unsupported RX-STBC, default to 2x2
+We were toggling the wrong bit when we reset the device,
+fix that. Moreover, since the reset can take time, we need
+to wait before we set the rfkill interrupt. Not doing so
+can be racy since the driver is enabling the rfkill
+interrupt while the device is resetting which will clear
+all the registers including the CSR_INT_MASK.
+This can basically lead to a situation where we don't
+enable the rfkill interrupt. If that happens, the user will
+not be able to re-enable the device when de-asserting
+rfkill.
 
-This was happening because of wrong offset while copying HT
-capabilities from BSS configuration of start_ap handler.
+This scenario happened to the submitter of:
+https://bugzilla.kernel.org/show_bug.cgi?id=87191
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/mwifiex/uap_cmd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/iwlwifi/pcie/trans.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mwifiex/uap_cmd.c b/drivers/net/wireless/mwifiex/uap_cmd.c
-index 300bab4..0f347fd 100644
---- a/drivers/net/wireless/mwifiex/uap_cmd.c
-+++ b/drivers/net/wireless/mwifiex/uap_cmd.c
-@@ -167,7 +167,7 @@ mwifiex_set_ht_params(struct mwifiex_private *priv,
- 	ht_ie = cfg80211_find_ie(WLAN_EID_HT_CAPABILITY, params->beacon.tail,
- 				 params->beacon.tail_len);
- 	if (ht_ie) {
--		memcpy(&bss_cfg->ht_cap, ht_ie + 2,
-+		memcpy(&bss_cfg->ht_cap, ht_ie,
- 		       sizeof(struct ieee80211_ht_cap));
- 		cap_info = le16_to_cpu(bss_cfg->ht_cap.cap_info);
- 		memset(&bss_cfg->ht_cap.mcs, 0,
+diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
+index ee2ec51..b81d141 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
+@@ -942,7 +942,8 @@ static void iwl_trans_pcie_stop_device(struct iwl_trans *trans)
+ 	spin_unlock(&trans_pcie->irq_lock);
+ 
+ 	/* stop and reset the on-board processor */
+-	iwl_write32(trans, CSR_RESET, CSR_RESET_REG_FLAG_NEVO_RESET);
++	iwl_write32(trans, CSR_RESET, CSR_RESET_REG_FLAG_SW_RESET);
++	udelay(20);
+ 
+ 	/* clear all status bits */
+ 	clear_bit(STATUS_SYNC_HCMD_ACTIVE, &trans->status);
 -- 
-1.8.1.4
+1.9.1
 
