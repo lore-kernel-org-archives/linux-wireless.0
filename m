@@ -1,99 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.18]:59498 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751474AbaKFHzU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Nov 2014 02:55:20 -0500
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: ath9k-devel@qca.qualcomm.com, sujith@msujith.org, nbd@openwrt.org,
-	patro@cs.wisc.edu, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH 01/21] ath9k: add struct ath_spec_scan_priv
-Date: Thu,  6 Nov 2014 08:53:18 +0100
-Message-Id: <1415260418-14321-2-git-send-email-linux@rempel-privat.de> (sfid-20141106_085530_001813_209BB6AE)
-In-Reply-To: <1415260418-14321-1-git-send-email-linux@rempel-privat.de>
-References: <1415260418-14321-1-git-send-email-linux@rempel-privat.de>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:21935 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751055AbaKXPMy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Nov 2014 10:12:54 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Sujith Manoharan <sujith@msujith.org>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/3] ath10k: Fix shared WEP
+References: <1416796657-24657-1-git-send-email-sujith@msujith.org>
+	<1416796657-24657-2-git-send-email-sujith@msujith.org>
+Date: Mon, 24 Nov 2014 17:12:47 +0200
+In-Reply-To: <1416796657-24657-2-git-send-email-sujith@msujith.org> (Sujith
+	Manoharan's message of "Mon, 24 Nov 2014 08:07:35 +0530")
+Message-ID: <87lhn0639s.fsf@kamboji.qca.qualcomm.com> (sfid-20141124_161257_584374_8242C1F3)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-and move rfs_chan_spec_scan to this struct. We will need it
-for common spectral scan code.
+Sujith Manoharan <sujith@msujith.org> writes:
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/ath9k.h    |  2 +-
- drivers/net/wireless/ath/ath9k/spectral.c | 12 ++++++------
- drivers/net/wireless/ath/ath9k/spectral.h |  3 +++
- 3 files changed, 10 insertions(+), 7 deletions(-)
+> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+>
+> When static keys are used in shared WEP, when a
+> station is associated, message 3 is sent with an
+> encrypted payload. But, for subsequent
+> authentications that are triggered without a
+> deauth, the auth frame is decrypted by the HW.
+>
+> To handle this, check if the WEP keys have already
+> been set for the peer and if so, mark the
+> frame as decrypted. This scenario can happen
+> when a station changes its default TX key and initiates
+> a new authentication sequence.
+>
+> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 85d74ff..65feda3 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -1029,9 +1029,9 @@ struct ath_softc {
- 	u64 dfs_prev_pulse_ts;
- 	u32 wow_enabled;
- 	/* relay(fs) channel for spectral scan */
--	struct rchan *rfs_chan_spec_scan;
- 	enum spectral_mode spectral_mode;
- 	struct ath_spec_scan spec_config;
-+	struct ath_spec_scan_priv spec_priv;
- 
- 	struct ieee80211_vif *tx99_vif;
- 	struct sk_buff *tx99_skb;
-diff --git a/drivers/net/wireless/ath/ath9k/spectral.c b/drivers/net/wireless/ath/ath9k/spectral.c
-index 8f68426..348dddd 100644
---- a/drivers/net/wireless/ath/ath9k/spectral.c
-+++ b/drivers/net/wireless/ath/ath9k/spectral.c
-@@ -28,12 +28,12 @@ static void ath_debug_send_fft_sample(struct ath_softc *sc,
- 				      struct fft_sample_tlv *fft_sample_tlv)
- {
- 	int length;
--	if (!sc->rfs_chan_spec_scan)
-+	if (!sc->spec_priv.rfs_chan_spec_scan)
- 		return;
- 
- 	length = __be16_to_cpu(fft_sample_tlv->length) +
- 		 sizeof(*fft_sample_tlv);
--	relay_write(sc->rfs_chan_spec_scan, fft_sample_tlv, length);
-+	relay_write(sc->spec_priv.rfs_chan_spec_scan, fft_sample_tlv, length);
- }
- 
- /* returns 1 if this was a spectral frame, even if not handled. */
-@@ -508,15 +508,15 @@ static struct rchan_callbacks rfs_spec_scan_cb = {
- 
- void ath9k_spectral_deinit_debug(struct ath_softc *sc)
- {
--	if (config_enabled(CONFIG_ATH9K_DEBUGFS) && sc->rfs_chan_spec_scan) {
--		relay_close(sc->rfs_chan_spec_scan);
--		sc->rfs_chan_spec_scan = NULL;
-+	if (config_enabled(CONFIG_ATH9K_DEBUGFS) && sc->spec_priv.rfs_chan_spec_scan) {
-+		relay_close(sc->spec_priv.rfs_chan_spec_scan);
-+		sc->spec_priv.rfs_chan_spec_scan = NULL;
- 	}
- }
- 
- void ath9k_spectral_init_debug(struct ath_softc *sc)
- {
--	sc->rfs_chan_spec_scan = relay_open("spectral_scan",
-+	sc->spec_priv.rfs_chan_spec_scan = relay_open("spectral_scan",
- 					    sc->debug.debugfs_phy,
- 					    1024, 256, &rfs_spec_scan_cb,
- 					    NULL);
-diff --git a/drivers/net/wireless/ath/ath9k/spectral.h b/drivers/net/wireless/ath/ath9k/spectral.h
-index 7b410c6..533d8a1 100644
---- a/drivers/net/wireless/ath/ath9k/spectral.h
-+++ b/drivers/net/wireless/ath/ath9k/spectral.h
-@@ -92,6 +92,9 @@ struct ath_ht20_40_fft_packet {
- 	struct ath_radar_info radar_info;
- } __packed;
- 
-+struct ath_spec_scan_priv {
-+	struct rchan *rfs_chan_spec_scan;
-+};
- 
- #define SPECTRAL_HT20_40_TOTAL_DATA_LEN	(sizeof(struct ath_ht20_40_fft_packet))
- 
+[...]
+
+> +bool ath10k_mac_is_peer_wep_key_set(struct ath10k *ar, const u8 *addr,
+> +				    u8 keyidx)
+> +{
+> +	struct ath10k_peer *peer;
+> +	int i;
+> +
+> +	/* We don't know which vdev this peer belongs to,
+> +	 * since WMI doesn't give us that information.
+> +	 *
+> +	 * FIXME: multi-bss needs to be handled.
+> +	 */
+> +	peer = ath10k_peer_find(ar, 0, addr);
+> +	if (!peer)
+> +		return false;
+
+This requires that data_lock is taken, right? If yes, can you document
+that with lockdep_assert_held(), please?
+
+> +static void ath10k_wmi_handle_wep_reauth(struct ath10k *ar,
+> +					 struct sk_buff *skb,
+> +					 struct ieee80211_rx_status *status)
+> +{
+> +	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+> +	unsigned int hdrlen;
+> +	bool peer_key;
+> +	u8 *addr, keyidx;
+
+Some kind of comment to document what this workaround is about would be
+good to have. For example, the first paragraph from the commit log
+sounds perfect.
+
+> +
+> +	if (!ieee80211_is_auth(hdr->frame_control) ||
+> +	    !ieee80211_has_protected(hdr->frame_control))
+> +		return;
+> +
+> +	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+> +	if (skb->len < (hdrlen + IEEE80211_WEP_IV_LEN))
+> +		return;
+> +
+> +	keyidx = skb->data[hdrlen + 3] >> 6;
+
+No magic numbers, please. I didn't find anything for IV internals from
+ieee80211.h, not sure if we should add them there or just use ath10k
+internal defines.
+
+> +	addr = ieee80211_get_SA(hdr);
+> +
+> +	spin_lock_bh(&ar->data_lock);
+> +	peer_key = ath10k_mac_is_peer_wep_key_set(ar, addr, keyidx);
+> +	spin_unlock_bh(&ar->data_lock);
+> +
+> +	if (peer_key) {
+> +		ath10k_dbg(ar, ATH10K_DBG_MAC,
+> +			   "wep key present for peer: %pM\n", addr);
+
+"mac wep key present for peer %pM"
+
 -- 
-1.9.1
-
+Kalle Valo
