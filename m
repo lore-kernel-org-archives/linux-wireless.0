@@ -1,61 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:50257 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750921AbaKYI66 convert rfc822-to-8bit (ORCPT
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:40855 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932262AbaKXOgF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Nov 2014 03:58:58 -0500
-Received: by mail-wi0-f172.google.com with SMTP id n3so8367539wiv.5
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Nov 2014 00:58:57 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <87vbm31xno.fsf@kamboji.qca.qualcomm.com>
-References: <20141124164037.29422.14033.stgit@potku.adurom.net>
-	<20141124164159.29422.98462.stgit@potku.adurom.net>
-	<87vbm31xno.fsf@kamboji.qca.qualcomm.com>
-Date: Tue, 25 Nov 2014 09:58:57 +0100
-Message-ID: <CA+BoTQmZ=xa=z3237E55cejfOOZM3GYp8OstJobF7NHe=8wTHA@mail.gmail.com> (sfid-20141125_095901_571359_9E8F22EC)
-Subject: Re: [PATCH v2 1/2] ath10k: add register access debugfs interface
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 24 Nov 2014 09:36:05 -0500
+Received: by mail-wi0-f177.google.com with SMTP id l15so6002808wiw.4
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:36:04 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Arik Nemtsov <arik@wizery.com>,
+	Arik Nemtsov <arikx.nemtsov@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 41/75] iwlwifi: mvm: declare TDLS support
+Date: Mon, 24 Nov 2014 16:34:17 +0200
+Message-Id: <1416839691-28533-41-git-send-email-egrumbach@gmail.com> (sfid-20141124_153623_783839_B8208BEA)
+In-Reply-To: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
+References: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 25 November 2014 at 09:39, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Kalle Valo <kvalo@qca.qualcomm.com> writes:
->
->> +static ssize_t ath10k_reg_value_read(struct file *file,
->> +                                  char __user *user_buf,
->> +                                  size_t count, loff_t *ppos)
->> +{
->> +     struct ath10k *ar = file->private_data;
->> +     u8 buf[48];
->> +     unsigned int len;
->> +     u32 reg_addr, reg_val;
->> +
->> +     spin_lock_bh(&ar->data_lock);
->> +     reg_addr = ar->debug.reg_addr;
->> +     spin_unlock_bh(&ar->data_lock);
->> +
->> +     reg_val = ath10k_hif_read32(ar, reg_addr);
->> +     len = scnprintf(buf, sizeof(buf), "0x%08x:0x%08x\n", reg_addr, reg_val);
->> +
->> +     return simple_read_from_buffer(user_buf, count, ppos, buf, len);
->> +}
->
-> I just realised that we need to check ar->state to make sure that
-> firmware is running. Because of that I'll need to change the data_lock
-> to conf_mutex as well.
+From: Arik Nemtsov <arik@wizery.com>
 
-Hmm.. It could actually work without firmware running. It just reads MMIO.
+The driver/FW combination now support TDLS.
+Check the FW support with the TLV bit.
 
-The problem I see now is the target may not be awake (Bartosz recently
-fixed suspend bug by moving ath10k_pci_wake/sleep back to
-hif_power_up) and accessing target registers without it being fully
-awake can lead to host memory corruption. I guess ar->state will do
-for now because getting this to work otherwise is going to be a little
-tricky.
+Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-debug.h    | 3 ++-
+ drivers/net/wireless/iwlwifi/iwl-fw.h       | 2 ++
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 5 +++++
+ 3 files changed, 9 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
+index 0a70bcd..6842545 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debug.h
++++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
+@@ -143,7 +143,7 @@ do {                                            			\
+ #define IWL_DL_INFO		0x00000001
+ #define IWL_DL_MAC80211		0x00000002
+ #define IWL_DL_HCMD		0x00000004
+-#define IWL_DL_STATE		0x00000008
++#define IWL_DL_TDLS		0x00000008
+ /* 0x000000F0 - 0x00000010 */
+ #define IWL_DL_QUOTA		0x00000010
+ #define IWL_DL_TE		0x00000020
+@@ -180,6 +180,7 @@ do {                                            			\
+ #define IWL_DL_TX_QUEUES	0x80000000
+ 
+ #define IWL_DEBUG_INFO(p, f, a...)	IWL_DEBUG(p, IWL_DL_INFO, f, ## a)
++#define IWL_DEBUG_TDLS(p, f, a...)	IWL_DEBUG(p, IWL_DL_TDLS, f, ## a)
+ #define IWL_DEBUG_MAC80211(p, f, a...)	IWL_DEBUG(p, IWL_DL_MAC80211, f, ## a)
+ #define IWL_DEBUG_EXTERNAL(p, f, a...)	IWL_DEBUG(p, IWL_DL_EXTERNAL, f, ## a)
+ #define IWL_DEBUG_TEMP(p, f, a...)	IWL_DEBUG(p, IWL_DL_TEMP, f, ## a)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fw.h b/drivers/net/wireless/iwlwifi/iwl-fw.h
+index 133022a..78d3e5f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fw.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fw.h
+@@ -146,6 +146,7 @@ enum iwl_ucode_tlv_api {
+  * enum iwl_ucode_tlv_capa - ucode capabilities
+  * @IWL_UCODE_TLV_CAPA_D0I3_SUPPORT: supports D0i3
+  * @IWL_UCODE_TLV_CAPA_UMAC_SCAN: supports UMAC scan.
++ * @IWL_UCODE_TLV_CAPA_TDLS_SUPPORT: support basic TDLS functionality
+  * @IWL_UCODE_TLV_CAPA_TXPOWER_INSERTION_SUPPORT: supports insertion of current
+  *	tx power value into TPC Report action frame and Link Measurement Report
+  *	action frame
+@@ -160,6 +161,7 @@ enum iwl_ucode_tlv_api {
+ enum iwl_ucode_tlv_capa {
+ 	IWL_UCODE_TLV_CAPA_D0I3_SUPPORT			= BIT(0),
+ 	IWL_UCODE_TLV_CAPA_UMAC_SCAN			= BIT(2),
++	IWL_UCODE_TLV_CAPA_TDLS_SUPPORT			= BIT(6),
+ 	IWL_UCODE_TLV_CAPA_TXPOWER_INSERTION_SUPPORT	= BIT(8),
+ 	IWL_UCODE_TLV_CAPA_DS_PARAM_SET_IE_SUPPORT	= BIT(9),
+ 	IWL_UCODE_TLV_CAPA_WFA_TPC_REP_IE_SUPPORT	= BIT(10),
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 08976c3..801abcf 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -490,6 +490,11 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
+ 	if (ret)
+ 		return ret;
+ 
++	if (mvm->fw->ucode_capa.capa[0] & IWL_UCODE_TLV_CAPA_TDLS_SUPPORT) {
++		IWL_DEBUG_TDLS(mvm, "TDLS supported\n");
++		hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_TDLS;
++	}
++
+ 	ret = ieee80211_register_hw(mvm->hw);
+ 	if (ret)
+ 		iwl_mvm_leds_exit(mvm);
+-- 
+1.9.1
 
-Michał
