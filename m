@@ -1,47 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57683 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932637AbaKMNZv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Nov 2014 08:25:51 -0500
-Date: Thu, 13 Nov 2014 14:22:53 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Marcel Holtmann <marcel@holtmann.org>
-Subject: [PATCH] cfg80211: remove net-pf-16-proto-16-family-nl80211 module
- alias
-Message-ID: <20141113132252.GB1926@redhat.com> (sfid-20141113_142554_506705_35608414)
-References: <20141113123313.GA1926@redhat.com>
- <1415882683.2021.3.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1415882683.2021.3.camel@sipsolutions.net>
+Received: from mail-wg0-f50.google.com ([74.125.82.50]:53124 "EHLO
+	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932288AbaKXOg3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Nov 2014 09:36:29 -0500
+Received: by mail-wg0-f50.google.com with SMTP id k14so12497779wgh.9
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:36:28 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Luciano Coelho <luciano.coelho@intel.com>
+Subject: [PATCH 56/75] iwlwifi: mvm: use switching_chanctx argument instead of csa_active
+Date: Mon, 24 Nov 2014 16:34:32 +0200
+Message-Id: <1416839691-28533-56-git-send-email-egrumbach@gmail.com> (sfid-20141124_153843_093186_24CFC50B)
+In-Reply-To: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
+References: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With the alias cfg80211 module is loaded on systems without the wireless
-hardware when user-space use nl80211 to discover if there are wireless
-devices, what is considered as resources wastage. On systems with
-wireless hardware cfg80211 module will be loaded anyway.
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-Cc: Marcel Holtmann <marcel@holtmann.org>
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Now that all CSA flows are using the switch_vif_chanctx op, we can
+rely on the switching_chanctx boolean that is passed to the
+__iwl_mvm_assign_vif_chanctx() and __iwl_mvm_unassign_vif_chanctx()
+functions to decide whether the context switch flows need to be
+executed.  In this way we make the chanctx switch flow more generic,
+without having to rely on the csa_active flag being set.
+
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
 ---
- net/wireless/core.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index a4d2792..badcabe 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -34,7 +34,6 @@
- MODULE_AUTHOR("Johannes Berg");
- MODULE_LICENSE("GPL");
- MODULE_DESCRIPTION("wireless configuration support");
--MODULE_ALIAS_GENL_FAMILY(NL80211_GENL_NAME);
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index b536590..fdeaab3 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -2796,8 +2796,8 @@ static int __iwl_mvm_assign_vif_chanctx(struct iwl_mvm *mvm,
  
- /* RCU-protected (and RTNL for writers) */
- LIST_HEAD(cfg80211_rdev_list);
+ 	switch (vif->type) {
+ 	case NL80211_IFTYPE_AP:
+-		/* Unless it's a CSA flow we have nothing to do here */
+-		if (vif->csa_active) {
++		/* only needed if we're switching chanctx (i.e. during CSA) */
++		if (switching_chanctx) {
+ 			mvmvif->ap_ibss_active = true;
+ 			break;
+ 		}
+@@ -2847,7 +2847,7 @@ static int __iwl_mvm_assign_vif_chanctx(struct iwl_mvm *mvm,
+ 		iwl_mvm_mac_ctxt_changed(mvm, vif, false, NULL);
+ 	}
+ 
+-	if (vif->csa_active && vif->type == NL80211_IFTYPE_STATION) {
++	if (switching_chanctx && vif->type == NL80211_IFTYPE_STATION) {
+ 		struct iwl_mvm_sta *mvmsta;
+ 
+ 		mvmsta = iwl_mvm_sta_from_staid_protected(mvm,
+@@ -2906,7 +2906,7 @@ static void __iwl_mvm_unassign_vif_chanctx(struct iwl_mvm *mvm,
+ 		break;
+ 	case NL80211_IFTYPE_AP:
+ 		/* This part is triggered only during CSA */
+-		if (!vif->csa_active || !mvmvif->ap_ibss_active)
++		if (!switching_chanctx || !mvmvif->ap_ibss_active)
+ 			goto out;
+ 
+ 		mvmvif->csa_countdown = false;
 -- 
-1.8.3.1
+1.9.1
 
