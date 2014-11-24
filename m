@@ -1,34 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:41220 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751865AbaKLIsN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Nov 2014 03:48:13 -0500
-Message-ID: <54631EC7.1030009@openwrt.org> (sfid-20141112_094816_971387_0D07C64D)
-Date: Wed, 12 Nov 2014 09:48:07 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Sujith Manoharan <sujith@msujith.org>
-CC: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>,
-	John Linville <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath9k-devel <ath9k-devel@qca.qualcomm.com>
-Subject: Re: [PATCH 4/6] ath9k: Fix high tx power in multi-chain mode
-References: <1415689644-29693-1-git-send-email-sujith@msujith.org>	<1415689644-29693-5-git-send-email-sujith@msujith.org>	<54621BFF.7080709@openwrt.org>	<21602.40415.179942.572517@gargle.gargle.HOWL>	<5326b4c51c744de285b390d8c78a47be@NASANEXM01E.na.qualcomm.com> <21602.54599.303861.990586@gargle.gargle.HOWL>
-In-Reply-To: <21602.54599.303861.990586@gargle.gargle.HOWL>
-Content-Type: text/plain; charset=windows-1252
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:51931 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753762AbaKXO3j (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Nov 2014 09:29:39 -0500
+Received: by mail-wi0-f176.google.com with SMTP id ex7so5818394wid.15
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:29:38 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 2/3] ath10k: put board size into hw_params
+Date: Mon, 24 Nov 2014 15:17:25 +0100
+Message-Id: <1416838646-18801-2-git-send-email-michal.kazior@tieto.com> (sfid-20141124_152944_941645_2AE46294)
+In-Reply-To: <1416838646-18801-1-git-send-email-michal.kazior@tieto.com>
+References: <1416838646-18801-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2014-11-12 04:34, Sujith Manoharan wrote:
-> Pan, Miaoqing wrote:
->> the issue was found on ap143(QCA9531, 11n, 2x2), reported by Korea team.  They
->> want to make ap143 to work on 1x2 or 2x2 mode.
-> 
-> Ok, so apparently there are boards that are 2x2 in the HW, but the
-> tx chainmask is set as 1 in the eeprom. In such cases, the thermometer
-> has to be enabled for both the chains. So, I think we need this fix.
-Makes sense. I don't like all these duplicated SREV checks though.
-Let's store the chip_chainmask variable from ath9k_hw_fill_cap_info
-somewhere in ath_hw and use that.
+This makes it easier to extend the list of
+supported hardware.
 
-- Felix
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c | 8 +++++---
+ drivers/net/wireless/ath/ath10k/core.h | 2 ++
+ 2 files changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 3904ce3..204aa04 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -63,6 +63,8 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 			.fw = QCA988X_HW_2_0_FW_FILE,
+ 			.otp = QCA988X_HW_2_0_OTP_FILE,
+ 			.board = QCA988X_HW_2_0_BOARD_DATA_FILE,
++			.board_size = QCA988X_BOARD_DATA_SZ,
++			.board_ext_size = QCA988X_BOARD_EXT_DATA_SZ,
+ 		},
+ 	},
+ };
+@@ -156,8 +158,8 @@ static const struct firmware *ath10k_fetch_fw_file(struct ath10k *ar,
+ static int ath10k_push_board_ext_data(struct ath10k *ar, const void *data,
+ 				      size_t data_len)
+ {
+-	u32 board_data_size = QCA988X_BOARD_DATA_SZ;
+-	u32 board_ext_data_size = QCA988X_BOARD_EXT_DATA_SZ;
++	u32 board_data_size = ar->hw_params.fw.board_size;
++	u32 board_ext_data_size = ar->hw_params.fw.board_ext_size;
+ 	u32 board_ext_data_addr;
+ 	int ret;
+ 
+@@ -203,7 +205,7 @@ static int ath10k_push_board_ext_data(struct ath10k *ar, const void *data,
+ static int ath10k_download_board_data(struct ath10k *ar, const void *data,
+ 				      size_t data_len)
+ {
+-	u32 board_data_size = QCA988X_BOARD_DATA_SZ;
++	u32 board_data_size = ar->hw_params.fw.board_size;
+ 	u32 address;
+ 	int ret;
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index d37ffd6..1cc81e8 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -482,6 +482,8 @@ struct ath10k {
+ 			const char *fw;
+ 			const char *otp;
+ 			const char *board;
++			size_t board_size;
++			size_t board_ext_size;
+ 		} fw;
+ 	} hw_params;
+ 
+-- 
+1.8.5.3
+
