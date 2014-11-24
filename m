@@ -1,49 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f180.google.com ([209.85.216.180]:39156 "EHLO
-	mail-qc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752245AbaKADl1 (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:46620 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753893AbaKXSyh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Oct 2014 23:41:27 -0400
-Received: by mail-qc0-f180.google.com with SMTP id o8so6952441qcw.11
-        for <linux-wireless@vger.kernel.org>; Fri, 31 Oct 2014 20:41:26 -0700 (PDT)
-From: "S. Gilles" <sgilles@terpmail.umd.edu>
-Date: Fri, 31 Oct 2014 23:41:18 -0400
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: "S. Gilles" <sgilles@terpmail.umd.edu>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	linux-wireless@vger.kernel.org
-Subject: Re: PROBLEM: Boot failure with bad RIP value
-Message-ID: <20141101034118.GA20771@number18> (sfid-20141101_044131_940125_D42B9FFA)
-References: <20141013234509.GD22088@number18>
- <543C9B66.6050705@lwfinger.net>
- <20141014041313.GF22088@number18>
- <20141031135636.GB21718@number18>
- <5453A5CF.90107@lwfinger.net>
+	Mon, 24 Nov 2014 13:54:37 -0500
+Message-ID: <54737EEB.2050104@candelatech.com> (sfid-20141124_195439_996232_7C832436)
+Date: Mon, 24 Nov 2014 10:54:35 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5453A5CF.90107@lwfinger.net>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Subject: Re: [PATCH 2/2] ath10k: re-config ht_caps when chainmask is modified.
+References: <1411576506-11815-1-git-send-email-greearb@candelatech.com> <1411576506-11815-2-git-send-email-greearb@candelatech.com> <87ioi47vvd.fsf@kamboji.qca.qualcomm.com> <87egss7tv3.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87egss7tv3.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 31, 2014 at 10:07:59AM -0500, Larry Finger wrote:
-> On 10/31/2014 08:56 AM, S. Gilles wrote:
-> >> 03:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd. RTL8188CE 802.11b/g/n WiFi Adapter [10ec:8176] (rev 01)
-> >
-> > Any progress on this, or duplication?  If this isn't replicable with
-> > the information in Bugzilla, I can provide anything requested.
+On 11/24/2014 02:53 AM, Kalle Valo wrote:
+> Kalle Valo <kvalo@qca.qualcomm.com> writes:
 > 
-> Thanks for posting the PCI ID. I am currently on a family vacation, and I have 
-> had little time for driver problems, and none for chasing missing information.
+>>> @@ -2537,6 +2560,17 @@ static int __ath10k_set_antenna(struct ath10k *ar, u32 tx_ant, u32 rx_ant)
+>>>  	ar->cfg_tx_chainmask = tx_ant;
+>>>  	ar->cfg_rx_chainmask = rx_ant;
+>>>  
+>>> +	ht_cap = ath10k_get_ht_cap(ar, true);
+>>> +	vht_cap = ath10k_create_vht_cap(ar, true);
+>>> +
+>>> +	if (ar->phy_capability & WHAL_WLAN_11G_CAPABILITY)
+>>> +		ar->mac.sbands[IEEE80211_BAND_2GHZ].ht_cap = ht_cap;
+>>> +
+>>> +	if (ar->phy_capability & WHAL_WLAN_11A_CAPABILITY) {
+>>> +		ar->mac.sbands[IEEE80211_BAND_5GHZ].ht_cap = ht_cap;
+>>> +		ar->mac.sbands[IEEE80211_BAND_5GHZ].vht_cap = vht_cap;
+>>> +	}
+>>
+>> So this modifies stryct wiphy::bands after we have called
+>> ieee80211_register_hw(). Is this something which both cfg80211 and
+>> mac80211 support? I didn't find the documentation mentioning anything
+>> about this so I got a bit worried.
+> 
+> Johannes mentioned me that this is not supported so I am reluctant to
+> take these. Unless I'm missing something, of course.
 
-My apologies, I didn't realize you were still away.
+I did test the code, and it seems to work fine.  But, I could
+be missing some subtle issues.
 
-> The attached patches should fix the kernel crashes; however, I doubt that the 
-> driver will work. There seems to be a problem with DMA buffers that I have not 
-> had time to find.
+Any idea how this is supposed to be done?
 
-For the sake of followp, I can confirm on my machine: the boot is fine
-but no /dev/wlan0. Thanks for the patches, I'll remain available to
-test any more if needed.
+Thanks,
+Ben
 
 -- 
-S. Gilles
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
