@@ -1,35 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx-tmp.wmich.edu ([141.218.1.43]:11632 "EHLO mx-tmp.wmich.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750898AbaKYQ0R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Nov 2014 11:26:17 -0500
-Received: from avs01.service.private (avs01.service.private [172.30.31.161])
- by mta02.service.private
- (Sun Java System Messaging Server 6.1 HotFix 0.13 (built Jun  8 2005))
- with ESMTP id <0NFL00MS5S39Z830@mta02.service.private> for
- linux-wireless@vger.kernel.org; Tue, 25 Nov 2014 11:21:15 -0500 (EST)
-Date: Tue, 25 Nov 2014 11:21:02 -0500 (EST)
-From: Mohammad Ali Ma Abu Shattal <mohammad.a.shattal@wmich.edu>
-Subject: Setting WLAN RF Sensitivity value
-In-reply-to: <2109154365.18865892.1416932147808.JavaMail.root@wmich.edu>
-To: linux-wireless@vger.kernel.org, ilw@linux.intel.com
-Message-id: <1013439490.18867944.1416932462547.JavaMail.root@wmich.edu> (sfid-20141125_172623_933801_54803406)
-MIME-version: 1.0
-Content-type: text/plain; charset=utf-8
+Received: from s72.web-hosting.com ([198.187.29.22]:40622 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751090AbaKXCf5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 23 Nov 2014 21:35:57 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 3/3] ath10k: Fix bug reported by lockdep
+Date: Mon, 24 Nov 2014 08:07:37 +0530
+Message-Id: <1416796657-24657-4-git-send-email-sujith@msujith.org> (sfid-20141124_033623_602086_121E54A4)
+In-Reply-To: <1416796657-24657-1-git-send-email-sujith@msujith.org>
+References: <1416796657-24657-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear Sir/Madam,
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-I'm working on a project in which we need to set and get RF sensitivity of WLAN device. I tried to set other settings such as operation mode, txpower and frequency using Linux commands : "ioctl" and "iwconfig" and it works fine. Manufacturer of my device is Broadcom. It seems that either the hardware or the driver doesn't support setting and getting sensitivity. I need to know if there exists a device and/or device driver that support this feature. details of my current hardware and device driver are posted in the askubuntu question:
-http://askubuntu.com/questions/553286/wlan-sensitivity-setting-is-not-supported
-kindly send me your recommendation for such device or device driver.
+ath10k_tx_wep_key_work() acquires conf_mutex, so
+cancelling it when conf_mutex is already taken
+in ath10k_remove_interface() is incorrect, so
+move it outside the lock.
 
-best regards,
-Mohammad
----------------------------- 
-Mohammad Abu Shattal
-Ph.D Student
-Department of Electrical & Computer Engineering
-Western Michigan University
-Kalamazoo, MI 49008
+Snippet from the lockdep report:
+
+kernel: ======================================================
+kernel: [ INFO: possible circular locking dependency detected ]
+kernel: 3.18.0-rc5-wl-debug #34 Tainted: G           O
+kernel: -------------------------------------------------------
+kernel: hostapd/451 is trying to acquire lock:
+kernel:  ((&arvif->wep_key_work)){+.+...}, at: [<ffffffff810872d5>] flush_work+0x5/0x290
+kernel: but task is already holding lock:
+kernel:  (&ar->conf_mutex){+.+.+.}, at: [<ffffffffa0b99f00>] ath10k_remove_interface+0x40/0x290 [ath10k_core]
+kernel: which lock already depends on the new lock.
+
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 2200c64..651e318 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3041,10 +3041,10 @@ static void ath10k_remove_interface(struct ieee80211_hw *hw,
+ 	struct ath10k_vif *arvif = ath10k_vif_to_arvif(vif);
+ 	int ret;
+ 
+-	mutex_lock(&ar->conf_mutex);
+-
+ 	cancel_work_sync(&arvif->wep_key_work);
+ 
++	mutex_lock(&ar->conf_mutex);
++
+ 	spin_lock_bh(&ar->data_lock);
+ 	ath10k_mac_vif_beacon_cleanup(arvif);
+ 	spin_unlock_bh(&ar->data_lock);
+-- 
+2.1.3
+
