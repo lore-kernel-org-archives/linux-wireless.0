@@ -1,113 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:63022 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752471AbaK0KgP (ORCPT
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:53162 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932178AbaKXOfv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Nov 2014 05:36:15 -0500
-Date: Thu, 27 Nov 2014 12:36:06 +0200
-From: Johan Hedberg <johan.hedberg@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: bluetooth-next 2014-11-27
-Message-ID: <20141127103606.GA11964@t440s> (sfid-20141127_113634_315554_E57FA8F0)
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="W/nzBZO5zC0uMSeA"
+	Mon, 24 Nov 2014 09:35:51 -0500
+Received: by mail-wi0-f180.google.com with SMTP id n3so5952578wiv.13
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:35:50 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 33/75] iwlwifi: mvm: use unsigned for ssid_bitmap
+Date: Mon, 24 Nov 2014 16:34:09 +0200
+Message-Id: <1416839691-28533-33-git-send-email-egrumbach@gmail.com> (sfid-20141124_154013_498859_75E935AB)
+In-Reply-To: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
+References: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes.berg@intel.com>
 
---W/nzBZO5zC0uMSeA
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+The ssid_bitmap should be unsigned, though it doesn't matter
+much as the high bits aren't used.
 
-Hi John,
-
-Here's one more bluetooth-next pull request for 3.19:
-
- - Minor cleanups for ieee802154 & mac802154
- - Fix for the kernel warning with !TASK_RUNNING reported by Kirill A.
-   Shutemov
- - Support for another ath3k device
- - Fix for tracking link key based security level
- - Device tree bindings for btmrvl + a state update fix
- - Fix for wrong ACL flags on LE links
-
-Please let me know if there are any issues pulling. Thanks.
-
-Johan
-
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
-The following changes since commit a86c02ea38c53b695209b1181f9e2e18d73eb4e8:
+ drivers/net/wireless/iwlwifi/mvm/scan.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-  Bluetooth: Add support for Broadcom BCM20702A1 variant (2014-11-18 08:32:14 +0100)
+diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
+index 54303d9..b6719b6 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/scan.c
++++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
+@@ -1324,7 +1324,7 @@ int iwl_mvm_unified_scan_lmac(struct iwl_mvm *mvm,
+ 	struct iwl_scan_probe_req *preq;
+ 	struct iwl_mvm_scan_params params = {};
+ 	u32 flags;
+-	int ssid_bitmap = 0;
++	u32 ssid_bitmap = 0;
+ 	int ret, i;
+ 
+ 	lockdep_assert_held(&mvm->mutex);
+@@ -1763,7 +1763,7 @@ int iwl_mvm_scan_umac(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 			mvm->fw->ucode_capa.n_scan_channels;
+ 	struct iwl_mvm_scan_params params = {};
+ 	u32 uid, flags;
+-	int ssid_bitmap = 0;
++	u32 ssid_bitmap = 0;
+ 	int ret, i, uid_idx;
+ 
+ 	lockdep_assert_held(&mvm->mutex);
+@@ -1853,7 +1853,7 @@ int iwl_mvm_sched_scan_umac(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 			mvm->fw->ucode_capa.n_scan_channels;
+ 	struct iwl_mvm_scan_params params = {};
+ 	u32 uid, flags;
+-	int ssid_bitmap = 0;
++	u32 ssid_bitmap = 0;
+ 	int ret, uid_idx;
+ 
+ 	lockdep_assert_held(&mvm->mutex);
+-- 
+1.9.1
 
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next.git for-upstream
-
-for you to fetch changes up to f6af675ef5489c69fc3d4faf8c6f477df3cbf8b9:
-
-  Bluetooth: Automatically flushable packets aren't allowed on LE links (2014-11-27 12:12:27 +0200)
-
-----------------------------------------------------------------
-Amitkumar Karwar (3):
-      Bluetooth: btmrvl: add DT bindings documentation
-      Bluetooth: btmrvl: add DT-bindings for gpio-gap
-      Bluetooth: btmrvl: update hs_state in interrupt handler
-
-Dmitry Tunin (1):
-      Bluetooth: ath3k: Add support of MCI 13d3:3408 bt device
-
-Johan Hedberg (3):
-      Bluetooth: Fix setting state back to TASK_RUNNING
-      Bluetooth: Fix setting conn->pending_sec_level value from link key
-      Bluetooth: Convert link keys list to use RCU
-
-Steven Walter (1):
-      Bluetooth: Automatically flushable packets aren't allowed on LE links
-
-Varka Bhadram (2):
-      ieee802154: fix spelling mistakes
-      mac802154: remove unnecessary if statement
-
- Documentation/devicetree/bindings/btmrvl.txt | 29 +++++++++++++++
- drivers/bluetooth/ath3k.c                    |  2 +
- drivers/bluetooth/btmrvl_main.c              | 51 +++++++++++++++-----------
- drivers/bluetooth/btusb.c                    |  1 +
- include/net/bluetooth/hci_core.h             |  1 +
- net/bluetooth/hci_core.c                     | 39 ++++++++++----------
- net/bluetooth/hci_event.c                    | 51 +++++++++++++++++++++-----
- net/bluetooth/l2cap_core.c                   | 14 +++++--
- net/ieee802154/6lowpan_rtnl.c                |  2 +-
- net/ieee802154/netlink.c                     |  2 +-
- net/ieee802154/nl-mac.c                      |  2 +-
- net/ieee802154/nl-phy.c                      |  2 +-
- net/mac802154/iface.c                        |  8 ++--
- 13 files changed, 143 insertions(+), 61 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/btmrvl.txt
-
-
---W/nzBZO5zC0uMSeA
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJUdv6WAAoJECQj9vv5qNQSPXQP/jckknbn5iFKfmmIGQ30cGZ2
-204iVLAt80f8s7k6Vv6+AJHq8P75vvuRjaNrIoOV5c9Liwax6jOEiuYNIIg5ln5e
-YqvrrB6fa5MmIVcbooWcs8zLVOEllOmZ7ThB+CmEPj2GDPqlXXgiB3JiNiyxuLwS
-jANFkMGuizt7tEW1V0/s+tjRTaxqERx2aWk8e1wXiP6XApFvlUJvU0vTZ6qArQ+9
-rh+au7+Zcjb/72e4akhAuL/rbhQS/7H1shVyGnzxRJxlGFNrAp1gDh3mJgMlFtmJ
-WHv5AfoNBoYjTnqRuSQEfhbD8tjS/0v1yK0v4KI42efdr/gkzINuRZRH+HqAXP6E
-thgmBfsL4jh/cu56bgux06tTJ91IWoJL+TujT5hEKOE0SqSCjB7gfyWjYz3/01Gf
-OMHcuwlWyo/bEZuuf/KxDNgw/6dMeK6COu61hf0gi++Fo+i0O32QWL1K/Zrr300x
-DtTHT2LPmjCbk06E0T55G8ezme6dsTZKIvU7Rb45V/FDR4kmf891J/gEn44WMPdk
-HBEDb5mblHyIRc48BysY6FkaDMF8Yq0QIqVU+1x0EyEbds4w0M7YYKxw+73Fycxu
-LzRWu3/N+jLlRGIuX1OQMJ3j2x0h+skoDpbTLc9IR9LW/ELb2OjjBj/JdQ5dUqsw
-C70ymmKUNL4RCue+D1Ws
-=rjl9
------END PGP SIGNATURE-----
-
---W/nzBZO5zC0uMSeA--
