@@ -1,43 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:40273 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750708AbaKRFAJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Nov 2014 00:00:09 -0500
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1XqatZ-0002BO-5X
-	for linux-wireless@vger.kernel.org; Tue, 18 Nov 2014 06:00:07 +0100
-Received: from 76-14-102-124.rk.wavecable.com ([76.14.102.124])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Nov 2014 06:00:05 +0100
-Received: from ptcongdon by 76-14-102-124.rk.wavecable.com with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Nov 2014 06:00:05 +0100
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:42967 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754382AbaKXOfl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Nov 2014 09:35:41 -0500
+Received: by mail-wi0-f173.google.com with SMTP id r20so5902807wiv.0
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:35:40 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
 To: linux-wireless@vger.kernel.org
-From: Paul <ptcongdon@ucdavis.edu>
-Subject: Error code -149 trying to receive Probe Requests using =?utf-8?b?Tkw4MDIxMV9DTURfUkVHSVNURVJfRlJBTUU=?=
-Date: Tue, 18 Nov 2014 04:53:24 +0000 (UTC)
-Message-ID: <loom.20141118T054805-587@post.gmane.org> (sfid-20141118_060256_456012_8635C1A6)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Cc: Avri Altman <avri.altman@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 21/75] iwlwifi: mvm: New skip over dtim policy
+Date: Mon, 24 Nov 2014 16:33:57 +0200
+Message-Id: <1416839691-28533-21-git-send-email-egrumbach@gmail.com> (sfid-20141124_154141_225139_5CD757F6)
+In-Reply-To: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
+References: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+From: Avri Altman <avri.altman@intel.com>
 
-I'm trying to write an linux process that will receive Probe Request 
-messages from nl80211 using NL80211_CMD_REGISTER_FRAME.   This process 
-will run at the same time hostapd is doing its job.  Is it possible for 
-multiple linux processes to receive the same set of Probe Request messages 
-this way?   I'm getting an error code -149 after issuing my 
-NL80211_CMD_REGISTER_FRAME command. The command is exactly the same 
-command that hostapd is issuing.  It looks like -149 implies EALREADY, 
-which leads me to believe that only one process can register for these 
-frames?  Any suggestions or examples of successfully using 
-NL80211_CMD_REGISTER_FRAME in a separate user space program?
+Our firmware scheduler suffers from false wake-up on 500 time units.
+that is if the dtim interval exceeds 500 time units, the fw wakes up,
+understands that the next wake-up event is still ahead, and if this event
+is more than 10msec in the future - goes back to sleep, otherwise - stay
+awake.  For example, say that the beacon interval is 101 and the dtim
+period is 5, the dtim interval is 101 x 5 = 505, and we will stay awake
+for those extra 5msec.
+So on the one hand the dtim interval should be congruent to the beacon
+interval times the dtim period, and on the other should minimize
+the false wake-ups event.
+This change applies only to D0/D3 power modes.
 
-Thanks very much,
-Paul
+Signed-off-by: Avri Altman <avri.altman@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/power.c | 35 +++++++++++++++++++++++++++-----
+ 1 file changed, 30 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/mvm/power.c b/drivers/net/wireless/iwlwifi/mvm/power.c
+index 5b85b0c..cb653ac 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/power.c
++++ b/drivers/net/wireless/iwlwifi/mvm/power.c
+@@ -286,6 +286,27 @@ static bool iwl_mvm_power_allow_uapsd(struct iwl_mvm *mvm,
+ 	return true;
+ }
+ 
++static int iwl_mvm_power_get_skip_over_dtim(int dtimper, int bi)
++{
++	int numerator;
++	int dtim_interval = dtimper * bi;
++
++	if (WARN_ON(!dtim_interval))
++		return 0;
++
++	if (dtimper == 1) {
++		if (bi > 100)
++			numerator = 408;
++		else
++			numerator = 510;
++	} else if (dtimper < 10) {
++		numerator = 612;
++	} else {
++		return 0;
++	}
++	return max(1, (numerator / dtim_interval));
++}
++
+ static bool iwl_mvm_power_is_radar(struct ieee80211_vif *vif)
+ {
+ 	struct ieee80211_chanctx_conf *chanctx_conf;
+@@ -308,7 +329,7 @@ static void iwl_mvm_power_build_cmd(struct iwl_mvm *mvm,
+ 				    struct ieee80211_vif *vif,
+ 				    struct iwl_mac_power_cmd *cmd)
+ {
+-	int dtimper, dtimper_msec;
++	int dtimper, dtimper_msec, bi;
+ 	int keep_alive;
+ 	bool radar_detect = false;
+ 	struct iwl_mvm_vif *mvmvif __maybe_unused =
+@@ -317,6 +338,7 @@ static void iwl_mvm_power_build_cmd(struct iwl_mvm *mvm,
+ 	cmd->id_and_color = cpu_to_le32(FW_CMD_ID_AND_COLOR(mvmvif->id,
+ 							    mvmvif->color));
+ 	dtimper = vif->bss_conf.dtim_period;
++	bi = vif->bss_conf.beacon_int;
+ 
+ 	/*
+ 	 * Regardless of power management state the driver must set
+@@ -324,7 +346,7 @@ static void iwl_mvm_power_build_cmd(struct iwl_mvm *mvm,
+ 	 * immediately after association. Check that keep alive period
+ 	 * is at least 3 * DTIM
+ 	 */
+-	dtimper_msec = dtimper * vif->bss_conf.beacon_int;
++	dtimper_msec = dtimper * bi;
+ 	keep_alive = max_t(int, 3 * dtimper_msec,
+ 			   MSEC_PER_SEC * POWER_KEEP_ALIVE_PERIOD_SEC);
+ 	keep_alive = DIV_ROUND_UP(keep_alive, MSEC_PER_SEC);
+@@ -352,11 +374,14 @@ static void iwl_mvm_power_build_cmd(struct iwl_mvm *mvm,
+ 	radar_detect = iwl_mvm_power_is_radar(vif);
+ 
+ 	/* Check skip over DTIM conditions */
+-	if (!radar_detect && (dtimper <= 10) &&
++	if (!radar_detect && (dtimper < 10) &&
+ 	    (iwlmvm_mod_params.power_scheme == IWL_POWER_SCHEME_LP ||
+ 	     mvm->cur_ucode == IWL_UCODE_WOWLAN)) {
+-		cmd->flags |= cpu_to_le16(POWER_FLAGS_SKIP_OVER_DTIM_MSK);
+-		cmd->skip_dtim_periods = 3;
++		cmd->skip_dtim_periods =
++			iwl_mvm_power_get_skip_over_dtim(dtimper, bi);
++		if (cmd->skip_dtim_periods)
++			cmd->flags |=
++				cpu_to_le16(POWER_FLAGS_SKIP_OVER_DTIM_MSK);
+ 	}
+ 
+ 	if (mvm->cur_ucode != IWL_UCODE_WOWLAN) {
+-- 
+1.9.1
 
