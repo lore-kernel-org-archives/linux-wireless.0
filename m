@@ -1,172 +1,169 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:32947 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751105AbaK0KY5 (ORCPT
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:42112 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932105AbaKXOfN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Nov 2014 05:24:57 -0500
-Received: by mail-wi0-f175.google.com with SMTP id l15so15308091wiw.2
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Nov 2014 02:24:56 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] ath10k: simplify rx ring size/fill calculation
-Date: Thu, 27 Nov 2014 11:12:43 +0100
-Message-Id: <1417083163-2962-1-git-send-email-michal.kazior@tieto.com> (sfid-20141127_112500_742578_210365E3)
+	Mon, 24 Nov 2014 09:35:13 -0500
+Received: by mail-wi0-f173.google.com with SMTP id r20so5860906wiv.6
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:35:11 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 10/75] iwlwifi: mvm: rs - don't use the shared antenna when BT load is high
+Date: Mon, 24 Nov 2014 16:33:46 +0200
+Message-Id: <1416839691-28533-10-git-send-email-egrumbach@gmail.com> (sfid-20141124_154441_142599_47274279)
+In-Reply-To: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
+References: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Don't bother with fancy arithmetic and just
-hardcode the final values.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+When we need only one antenna, we should refrain from using
+the antenna that is shared with BT if BT load is high.
+Fix this.
+
+Reviewed-by: Eyal Shapira <eyal@wizery.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/htt.h    |  3 +
- drivers/net/wireless/ath/ath10k/htt_rx.c | 98 +++-----------------------------
- 2 files changed, 12 insertions(+), 89 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/coex.c        | 16 ++++++++++++++++
+ drivers/net/wireless/iwlwifi/mvm/coex_legacy.c |  6 ++++++
+ drivers/net/wireless/iwlwifi/mvm/mvm.h         |  2 ++
+ drivers/net/wireless/iwlwifi/mvm/rs.c          | 16 ++++++++++++++++
+ 4 files changed, 40 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index 17ca6ac..1bd5545 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -158,6 +158,9 @@ enum htt_rx_ring_flags {
- 	HTT_RX_RING_FLAGS_PHY_DATA_RX  = 1 << 15
+diff --git a/drivers/net/wireless/iwlwifi/mvm/coex.c b/drivers/net/wireless/iwlwifi/mvm/coex.c
+index 508c813..a3bfda4 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/coex.c
++++ b/drivers/net/wireless/iwlwifi/mvm/coex.c
+@@ -1137,6 +1137,22 @@ bool iwl_mvm_bt_coex_is_mimo_allowed(struct iwl_mvm *mvm,
+ 	return lut_type != BT_COEX_LOOSE_LUT;
+ }
+ 
++bool iwl_mvm_bt_coex_is_ant_avail(struct iwl_mvm *mvm, u8 ant)
++{
++	/* there is no other antenna, shared antenna is always available */
++	if (mvm->cfg->bt_shared_single_ant)
++		return true;
++
++	if (ant & mvm->cfg->non_shared_ant)
++		return true;
++
++	if (!(mvm->fw->ucode_capa.api[0] & IWL_UCODE_TLV_API_BT_COEX_SPLIT))
++		return iwl_mvm_bt_coex_is_shared_ant_avail_old(mvm);
++
++	return le32_to_cpu(mvm->last_bt_notif.bt_activity_grading) <
++		BT_HIGH_TRAFFIC;
++}
++
+ bool iwl_mvm_bt_coex_is_shared_ant_avail(struct iwl_mvm *mvm)
+ {
+ 	/* there is no other antenna, shared antenna is always available */
+diff --git a/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c b/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c
+index b571e1b..cda5111 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c
++++ b/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c
+@@ -1156,6 +1156,12 @@ bool iwl_mvm_bt_coex_is_mimo_allowed_old(struct iwl_mvm *mvm,
+ 	return lut_type != BT_COEX_LOOSE_LUT;
+ }
+ 
++bool iwl_mvm_bt_coex_is_ant_avail_old(struct iwl_mvm *mvm, u8 ant)
++{
++	u32 ag = le32_to_cpu(mvm->last_bt_notif_old.bt_activity_grading);
++	return ag < BT_HIGH_TRAFFIC;
++}
++
+ bool iwl_mvm_bt_coex_is_shared_ant_avail_old(struct iwl_mvm *mvm)
+ {
+ 	u32 ag = le32_to_cpu(mvm->last_bt_notif_old.bt_activity_grading);
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index c89ac95..105a76b 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -1086,12 +1086,14 @@ u16 iwl_mvm_coex_agg_time_limit(struct iwl_mvm *mvm,
+ 				struct ieee80211_sta *sta);
+ bool iwl_mvm_bt_coex_is_mimo_allowed(struct iwl_mvm *mvm,
+ 				     struct ieee80211_sta *sta);
++bool iwl_mvm_bt_coex_is_ant_avail(struct iwl_mvm *mvm, u8 ant);
+ bool iwl_mvm_bt_coex_is_shared_ant_avail(struct iwl_mvm *mvm);
+ bool iwl_mvm_bt_coex_is_tpc_allowed(struct iwl_mvm *mvm,
+ 				    enum ieee80211_band band);
+ u8 iwl_mvm_bt_coex_tx_prio(struct iwl_mvm *mvm, struct ieee80211_hdr *hdr,
+ 			   struct ieee80211_tx_info *info, u8 ac);
+ 
++bool iwl_mvm_bt_coex_is_ant_avail_old(struct iwl_mvm *mvm, u8 ant);
+ bool iwl_mvm_bt_coex_is_shared_ant_avail_old(struct iwl_mvm *mvm);
+ void iwl_mvm_bt_coex_vif_change_old(struct iwl_mvm *mvm);
+ int iwl_send_bt_init_conf_old(struct iwl_mvm *mvm);
+diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
+index bbd2f9b..c05f5a5 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
+@@ -158,6 +158,12 @@ struct rs_tx_column {
+ 	allow_column_func_t checks[MAX_COLUMN_CHECKS];
  };
  
-+#define HTT_RX_RING_SIZE_MIN 128
-+#define HTT_RX_RING_SIZE_MAX 2048
++static bool rs_ant_allow(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
++			 struct iwl_scale_tbl_info *tbl)
++{
++	return iwl_mvm_bt_coex_is_ant_avail(mvm, tbl->rate.ant);
++}
 +
- struct htt_rx_ring_setup_ring {
- 	__le32 fw_idx_shadow_reg_paddr;
- 	__le32 rx_ring_base_paddr;
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 85910b2..9c782a4 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -25,19 +25,8 @@
- 
- #include <linux/log2.h>
- 
--/* slightly larger than one large A-MPDU */
--#define HTT_RX_RING_SIZE_MIN 128
--
--/* roughly 20 ms @ 1 Gbps of 1500B MSDUs */
--#define HTT_RX_RING_SIZE_MAX 2048
--
--#define HTT_RX_AVG_FRM_BYTES 1000
--
--/* ms, very conservative */
--#define HTT_RX_HOST_LATENCY_MAX_MS 20
--
--/* ms, conservative */
--#define HTT_RX_HOST_LATENCY_WORST_LIKELY_MS 10
-+#define HTT_RX_RING_SIZE 1024
-+#define HTT_RX_RING_FILL_LEVEL 1000
- 
- /* when under memory pressure rx ring refill may fail and needs a retry */
- #define HTT_RX_RING_REFILL_RETRY_MS 50
-@@ -45,68 +34,6 @@
- static int ath10k_htt_rx_get_csum_state(struct sk_buff *skb);
- static void ath10k_htt_txrx_compl_task(unsigned long ptr);
- 
--static int ath10k_htt_rx_ring_size(struct ath10k_htt *htt)
--{
--	int size;
--
--	/*
--	 * It is expected that the host CPU will typically be able to
--	 * service the rx indication from one A-MPDU before the rx
--	 * indication from the subsequent A-MPDU happens, roughly 1-2 ms
--	 * later. However, the rx ring should be sized very conservatively,
--	 * to accomodate the worst reasonable delay before the host CPU
--	 * services a rx indication interrupt.
--	 *
--	 * The rx ring need not be kept full of empty buffers. In theory,
--	 * the htt host SW can dynamically track the low-water mark in the
--	 * rx ring, and dynamically adjust the level to which the rx ring
--	 * is filled with empty buffers, to dynamically meet the desired
--	 * low-water mark.
--	 *
--	 * In contrast, it's difficult to resize the rx ring itself, once
--	 * it's in use. Thus, the ring itself should be sized very
--	 * conservatively, while the degree to which the ring is filled
--	 * with empty buffers should be sized moderately conservatively.
--	 */
--
--	/* 1e6 bps/mbps / 1e3 ms per sec = 1000 */
--	size =
--	    htt->max_throughput_mbps +
--	    1000  /
--	    (8 * HTT_RX_AVG_FRM_BYTES) * HTT_RX_HOST_LATENCY_MAX_MS;
--
--	if (size < HTT_RX_RING_SIZE_MIN)
--		size = HTT_RX_RING_SIZE_MIN;
--
--	if (size > HTT_RX_RING_SIZE_MAX)
--		size = HTT_RX_RING_SIZE_MAX;
--
--	size = roundup_pow_of_two(size);
--
--	return size;
--}
--
--static int ath10k_htt_rx_ring_fill_level(struct ath10k_htt *htt)
--{
--	int size;
--
--	/* 1e6 bps/mbps / 1e3 ms per sec = 1000 */
--	size =
--	    htt->max_throughput_mbps *
--	    1000  /
--	    (8 * HTT_RX_AVG_FRM_BYTES) * HTT_RX_HOST_LATENCY_WORST_LIKELY_MS;
--
--	/*
--	 * Make sure the fill level is at least 1 less than the ring size.
--	 * Leaving 1 element empty allows the SW to easily distinguish
--	 * between a full ring vs. an empty ring.
--	 */
--	if (size >= htt->rx_ring.size)
--		size = htt->rx_ring.size - 1;
--
--	return size;
--}
--
- static void ath10k_htt_rx_ring_free(struct ath10k_htt *htt)
+ static bool rs_mimo_allow(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+ 			  struct iwl_scale_tbl_info *tbl)
  {
- 	struct sk_buff *skb;
-@@ -462,25 +389,18 @@ int ath10k_htt_rx_alloc(struct ath10k_htt *htt)
- 
- 	htt->rx_confused = false;
- 
--	htt->rx_ring.size = ath10k_htt_rx_ring_size(htt);
-+	/* XXX: The fill level could be changed during runtime in response to
-+	 * the host processing latency. Is this really worth it?
-+	 */
-+	htt->rx_ring.size = HTT_RX_RING_SIZE;
-+	htt->rx_ring.size_mask = htt->rx_ring.size - 1;
-+	htt->rx_ring.fill_level = HTT_RX_RING_FILL_LEVEL;
-+
- 	if (!is_power_of_2(htt->rx_ring.size)) {
- 		ath10k_warn(ar, "htt rx ring size is not power of 2\n");
- 		return -EINVAL;
- 	}
- 
--	htt->rx_ring.size_mask = htt->rx_ring.size - 1;
--
--	/*
--	 * Set the initial value for the level to which the rx ring
--	 * should be filled, based on the max throughput and the
--	 * worst likely latency for the host to fill the rx ring
--	 * with new buffers. In theory, this fill level can be
--	 * dynamically adjusted from the initial value set here, to
--	 * reflect the actual host latency rather than a
--	 * conservative assumption about the host latency.
--	 */
--	htt->rx_ring.fill_level = ath10k_htt_rx_ring_fill_level(htt);
--
- 	htt->rx_ring.netbufs_ring =
- 		kzalloc(htt->rx_ring.size * sizeof(struct sk_buff *),
- 			GFP_KERNEL);
+@@ -218,6 +224,9 @@ static const struct rs_tx_column rs_tx_columns[] = {
+ 			RS_COLUMN_INVALID,
+ 			RS_COLUMN_INVALID,
+ 		},
++		.checks = {
++			rs_ant_allow,
++		},
+ 	},
+ 	[RS_COLUMN_LEGACY_ANT_B] = {
+ 		.mode = RS_LEGACY,
+@@ -231,6 +240,9 @@ static const struct rs_tx_column rs_tx_columns[] = {
+ 			RS_COLUMN_INVALID,
+ 			RS_COLUMN_INVALID,
+ 		},
++		.checks = {
++			rs_ant_allow,
++		},
+ 	},
+ 	[RS_COLUMN_SISO_ANT_A] = {
+ 		.mode = RS_SISO,
+@@ -246,6 +258,7 @@ static const struct rs_tx_column rs_tx_columns[] = {
+ 		},
+ 		.checks = {
+ 			rs_siso_allow,
++			rs_ant_allow,
+ 		},
+ 	},
+ 	[RS_COLUMN_SISO_ANT_B] = {
+@@ -262,6 +275,7 @@ static const struct rs_tx_column rs_tx_columns[] = {
+ 		},
+ 		.checks = {
+ 			rs_siso_allow,
++			rs_ant_allow,
+ 		},
+ 	},
+ 	[RS_COLUMN_SISO_ANT_A_SGI] = {
+@@ -279,6 +293,7 @@ static const struct rs_tx_column rs_tx_columns[] = {
+ 		},
+ 		.checks = {
+ 			rs_siso_allow,
++			rs_ant_allow,
+ 			rs_sgi_allow,
+ 		},
+ 	},
+@@ -297,6 +312,7 @@ static const struct rs_tx_column rs_tx_columns[] = {
+ 		},
+ 		.checks = {
+ 			rs_siso_allow,
++			rs_ant_allow,
+ 			rs_sgi_allow,
+ 		},
+ 	},
 -- 
-1.8.5.3
+1.9.1
 
