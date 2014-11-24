@@ -1,117 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f45.google.com ([74.125.82.45]:64104 "EHLO
-	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753367AbaK0KW0 (ORCPT
+Received: from mail-wg0-f53.google.com ([74.125.82.53]:46091 "EHLO
+	mail-wg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754178AbaKXOf3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Nov 2014 05:22:26 -0500
-Received: by mail-wg0-f45.google.com with SMTP id b13so6089420wgh.18
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Nov 2014 02:22:25 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 2/3] ath10k: remove callback argument
-Date: Thu, 27 Nov 2014 11:09:37 +0100
-Message-Id: <1417082978-1701-2-git-send-email-michal.kazior@tieto.com> (sfid-20141127_112232_019071_8CEA0589)
-In-Reply-To: <1417082978-1701-1-git-send-email-michal.kazior@tieto.com>
-References: <1417082978-1701-1-git-send-email-michal.kazior@tieto.com>
+	Mon, 24 Nov 2014 09:35:29 -0500
+Received: by mail-wg0-f53.google.com with SMTP id l18so12191245wgh.26
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:35:28 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 19/75] iwlwifi: mvm: add support for WMM Access Control
+Date: Mon, 24 Nov 2014 16:33:55 +0200
+Message-Id: <1416839691-28533-19-git-send-email-egrumbach@gmail.com> (sfid-20141124_154434_382069_ADA51228)
+In-Reply-To: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
+References: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pass the eid argument via skbuff control buffer.
-This will make it possible to work with queues of
-HTC event buffers.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+After the corresponding mac80211 patch, we can now report the airtime
+used for each transmitted packet and mac80211 will be able to implement
+WMM-AC with that information.
+
+To support WMM-AC in the driver then, report the airtime and advertise
+support.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/core.h |  1 +
- drivers/net/wireless/ath/ath10k/hif.h  |  3 +--
- drivers/net/wireless/ath/ath10k/htc.c  | 10 +++++++---
- drivers/net/wireless/ath/ath10k/pci.c  |  4 ++--
- 4 files changed, 11 insertions(+), 7 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c |  3 ++-
+ drivers/net/wireless/iwlwifi/mvm/sta.h      |  2 ++
+ drivers/net/wireless/iwlwifi/mvm/tx.c       | 10 ++++++++++
+ 3 files changed, 14 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 4a29498..226b2d2 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -79,6 +79,7 @@ static inline const char *ath10k_bus_str(enum ath10k_bus bus)
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 92e1810..19aff50 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -423,7 +423,8 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
+ 			       NL80211_FEATURE_LOW_PRIORITY_SCAN |
+ 			       NL80211_FEATURE_P2P_GO_OPPPS |
+ 			       NL80211_FEATURE_DYNAMIC_SMPS |
+-			       NL80211_FEATURE_STATIC_SMPS;
++			       NL80211_FEATURE_STATIC_SMPS |
++			       NL80211_FEATURE_SUPPORTS_WMM_ADMISSION;
  
- struct ath10k_skb_cb {
- 	dma_addr_t paddr;
-+	u8 eid;
- 	u8 vdev_id;
- 
- 	struct {
-diff --git a/drivers/net/wireless/ath/ath10k/hif.h b/drivers/net/wireless/ath/ath10k/hif.h
-index 91d24a5..0c92e02 100644
---- a/drivers/net/wireless/ath/ath10k/hif.h
-+++ b/drivers/net/wireless/ath/ath10k/hif.h
-@@ -32,8 +32,7 @@ struct ath10k_hif_sg_item {
- 
- struct ath10k_hif_cb {
- 	int (*tx_completion)(struct ath10k *ar,
--			     struct sk_buff *wbuf,
--			     unsigned transfer_id);
-+			     struct sk_buff *wbuf);
- 	int (*rx_completion)(struct ath10k *ar,
- 			     struct sk_buff *wbuf);
+ 	if (mvm->fw->ucode_capa.capa[0] &
+ 	    IWL_UCODE_TLV_CAPA_TXPOWER_INSERTION_SUPPORT)
+diff --git a/drivers/net/wireless/iwlwifi/mvm/sta.h b/drivers/net/wireless/iwlwifi/mvm/sta.h
+index d9c0d7b..84f37ca 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/sta.h
++++ b/drivers/net/wireless/iwlwifi/mvm/sta.h
+@@ -264,6 +264,7 @@ enum iwl_mvm_agg_state {
+  *	the first packet to be sent in legacy HW queue in Tx AGG stop flow.
+  *	Basically when next_reclaimed reaches ssn, we can tell mac80211 that
+  *	we are ready to finish the Tx AGG stop / start flow.
++ * @tx_time: medium time consumed by this A-MPDU
+  */
+ struct iwl_mvm_tid_data {
+ 	u16 seq_number;
+@@ -274,6 +275,7 @@ struct iwl_mvm_tid_data {
+ 	enum iwl_mvm_agg_state state;
+ 	u16 txq_id;
+ 	u16 ssn;
++	u16 tx_time;
  };
-diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
-index e245e34..f1946a6 100644
---- a/drivers/net/wireless/ath/ath10k/htc.c
-+++ b/drivers/net/wireless/ath/ath10k/htc.c
-@@ -160,6 +160,7 @@ int ath10k_htc_send(struct ath10k_htc *htc,
  
- 	ath10k_htc_prepare_tx_skb(ep, skb);
+ static inline u16 iwl_mvm_tid_queued(struct iwl_mvm_tid_data *tid_data)
+diff --git a/drivers/net/wireless/iwlwifi/mvm/tx.c b/drivers/net/wireless/iwlwifi/mvm/tx.c
+index 4789c77..b54708e 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/iwlwifi/mvm/tx.c
+@@ -658,6 +658,12 @@ static void iwl_mvm_rx_tx_cmd_single(struct iwl_mvm *mvm,
+ 			seq_ctl = le16_to_cpu(hdr->seq_ctrl);
+ 		}
  
-+	skb_cb->eid = eid;
- 	skb_cb->paddr = dma_map_single(dev, skb->data, skb->len, DMA_TO_DEVICE);
- 	ret = dma_mapping_error(dev, skb_cb->paddr);
- 	if (ret)
-@@ -197,15 +198,18 @@ err_pull:
- }
- 
- static int ath10k_htc_tx_completion_handler(struct ath10k *ar,
--					    struct sk_buff *skb,
--					    unsigned int eid)
-+					    struct sk_buff *skb)
- {
- 	struct ath10k_htc *htc = &ar->htc;
--	struct ath10k_htc_ep *ep = &htc->endpoint[eid];
-+	struct ath10k_skb_cb *skb_cb;
-+	struct ath10k_htc_ep *ep;
- 
- 	if (WARN_ON_ONCE(!skb))
- 		return 0;
- 
-+	skb_cb = ATH10K_SKB_CB(skb);
-+	ep = &htc->endpoint[skb_cb->eid];
-+
- 	ath10k_htc_notify_tx_completion(ep, skb);
- 	/* the skb now belongs to the completion handler */
- 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 541f3bc..95e9066 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -835,7 +835,7 @@ static void ath10k_pci_ce_send_done(struct ath10k_ce_pipe *ce_state)
- 		if (transfer_context == NULL)
- 			continue;
- 
--		cb->tx_completion(ar, transfer_context, transfer_id);
-+		cb->tx_completion(ar, transfer_context);
++		/*
++		 * TODO: this is not accurate if we are freeing more than one
++		 * packet.
++		 */
++		info->status.tx_time =
++			le16_to_cpu(tx_resp->wireless_media_time);
+ 		BUILD_BUG_ON(ARRAY_SIZE(info->status.status_driver_data) < 1);
+ 		info->status.status_driver_data[0] =
+ 				(void *)(uintptr_t)tx_resp->reduced_tpc;
+@@ -850,6 +856,8 @@ static void iwl_mvm_rx_tx_cmd_agg(struct iwl_mvm *mvm,
+ 		mvmsta->tid_data[tid].rate_n_flags =
+ 			le32_to_cpu(tx_resp->initial_rate);
+ 		mvmsta->tid_data[tid].reduced_tpc = tx_resp->reduced_tpc;
++		mvmsta->tid_data[tid].tx_time =
++			le16_to_cpu(tx_resp->wireless_media_time);
  	}
+ 
+ 	rcu_read_unlock();
+@@ -878,6 +886,8 @@ static void iwl_mvm_tx_info_from_ba_notif(struct ieee80211_tx_info *info,
+ 	info->status.ampdu_len = ba_notif->txed;
+ 	iwl_mvm_hwrate_to_tx_status(tid_data->rate_n_flags,
+ 				    info);
++	/* TODO: not accounted if the whole A-MPDU failed */
++	info->status.tx_time = tid_data->tx_time;
+ 	info->status.status_driver_data[0] =
+ 		(void *)(uintptr_t)tid_data->reduced_tpc;
  }
- 
-@@ -1263,7 +1263,7 @@ static void ath10k_pci_tx_pipe_cleanup(struct ath10k_pci_pipe *pci_pipe)
- 		id = MS(__le16_to_cpu(ce_desc[i].flags),
- 			CE_DESC_FLAGS_META_DATA);
- 
--		ar_pci->msg_callbacks_current.tx_completion(ar, skb, id);
-+		ar_pci->msg_callbacks_current.tx_completion(ar, skb);
- 	}
- }
- 
 -- 
-1.8.5.3
+1.9.1
 
