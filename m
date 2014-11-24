@@ -1,36 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:36081 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750896AbaK1Mmb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Nov 2014 07:42:31 -0500
-Date: Fri, 28 Nov 2014 13:42:23 +0100
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Axel Lin <axel.lin@ingics.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] NFC: llcp: Use list_for_each_entry in llcp_accept_poll
-Message-ID: <20141128124223.GF29389@ribalta.mp.intel.com> (sfid-20141128_134235_289160_7476BF1C)
-References: <1415269241.17088.1.camel@phoenix>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1415269241.17088.1.camel@phoenix>
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:55569 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932138AbaKXOfW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Nov 2014 09:35:22 -0500
+Received: by mail-wi0-f175.google.com with SMTP id l15so5876658wiw.8
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:35:21 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 15/75] iwlwifi: pcie: newer platform needs a OS alive indication
+Date: Mon, 24 Nov 2014 16:33:51 +0200
+Message-Id: <1416839691-28533-15-git-send-email-egrumbach@gmail.com> (sfid-20141124_154346_925296_3F7B2AD3)
+In-Reply-To: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
+References: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Axel,
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-On Thu, Nov 06, 2014 at 06:20:41PM +0800, Axel Lin wrote:
-> list_for_each_entry_safe() is necessary if list objects are deleted from
-> the list while traversing it. Not the case here, so we can use the base
-> list_for_each_entry variant.
-> 
-> Signed-off-by: Axel Lin <axel.lin@ingics.com>
-> ---
->  net/nfc/llcp_sock.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
-Applied to nfc-next, thanks.
+This is fully backward compatible with older platforms.
 
-Cheers,
-Samuel.
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-csr.h    | 4 ++++
+ drivers/net/wireless/iwlwifi/pcie/trans.c | 3 +++
+ 2 files changed, 7 insertions(+)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-csr.h b/drivers/net/wireless/iwlwifi/iwl-csr.h
+index 3f6f015..9965717 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-csr.h
++++ b/drivers/net/wireless/iwlwifi/iwl-csr.h
+@@ -129,6 +129,8 @@
+ #define CSR_UCODE_DRV_GP1_CLR   (CSR_BASE+0x05c)
+ #define CSR_UCODE_DRV_GP2       (CSR_BASE+0x060)
+ 
++#define CSR_MBOX_SET_REG	(CSR_BASE + 0x88)
++
+ #define CSR_LED_REG             (CSR_BASE+0x094)
+ #define CSR_DRAM_INT_TBL_REG	(CSR_BASE+0x0A0)
+ #define CSR_MAC_SHADOW_REG_CTRL	(CSR_BASE+0x0A8) /* 6000 and up */
+@@ -184,6 +186,8 @@
+ #define CSR_HW_IF_CONFIG_REG_PREPARE		  (0x08000000) /* WAKE_ME */
+ #define CSR_HW_IF_CONFIG_REG_PERSIST_MODE	  (0x40000000) /* PERSISTENCE */
+ 
++#define CSR_MBOX_SET_REG_OS_ALIVE		BIT(5)
++
+ #define CSR_INT_PERIODIC_DIS			(0x00) /* disable periodic int*/
+ #define CSR_INT_PERIODIC_ENA			(0xFF) /* 255*32 usec ~ 8 msec*/
+ 
+diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
+index d872749..12cb427 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
+@@ -512,6 +512,9 @@ static int iwl_pcie_set_hw_ready(struct iwl_trans *trans)
+ 			   CSR_HW_IF_CONFIG_REG_BIT_NIC_READY,
+ 			   HW_READY_TIMEOUT);
+ 
++	if (ret >= 0)
++		iwl_set_bit(trans, CSR_MBOX_SET_REG, CSR_MBOX_SET_REG_OS_ALIVE);
++
+ 	IWL_DEBUG_INFO(trans, "hardware%s ready\n", ret < 0 ? " not" : "");
+ 	return ret;
+ }
+-- 
+1.9.1
 
