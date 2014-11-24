@@ -1,78 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:60573 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932834AbaKLBpB (ORCPT
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:64087 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754391AbaKXOfs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Nov 2014 20:45:01 -0500
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	stable@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	Xose Vazquez Perez <xose.vazquez@gmail.com>
-Subject: [PATCH 3.14 142/203] wireless: rt2x00: add new rt2800usb devices
-Date: Wed, 12 Nov 2014 10:16:52 +0900
-Message-Id: <20141112011549.213858125@linuxfoundation.org> (sfid-20141112_034441_178921_CD3691C6)
-In-Reply-To: <20141112011542.686743533@linuxfoundation.org>
-References: <20141112011542.686743533@linuxfoundation.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
+	Mon, 24 Nov 2014 09:35:48 -0500
+Received: by mail-wi0-f173.google.com with SMTP id r20so5903158wiv.0
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:35:47 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Arik Nemtsov <arik@wizery.com>,
+	Arik Nemtsov <arikx.nemtsov@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 31/75] iwlwifi: pcie: support loading FW with extended mem range
+Date: Mon, 24 Nov 2014 16:34:07 +0200
+Message-Id: <1416839691-28533-31-git-send-email-egrumbach@gmail.com> (sfid-20141124_154114_709666_0A538369)
+In-Reply-To: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
+References: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-3.14-stable review patch.  If anyone has any objections, please let me know.
+From: Arik Nemtsov <arik@wizery.com>
 
-------------------
+Toggle the LMPM_CHICK register when writing chunks into the FW's extended
+SRAM. This tells the FW to put the chunk into a different memory space.
 
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-
-commit 6a06e554daef86c4e8d290284927b081fedb249e upstream.
-
-0x0b05 0x17e8 RT5372 USB 2.0  bgn 2x2 ASUS USB-N14
-0x0411 0x0253 RT5572 USB 2.0 abgn 2x2 BUFFALO WLP-U2-300D
-0x0df6 0x0078 RT???? Sitecom N300
-
-Cc: Ivo van Doorn <IvDoorn@gmail.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: John W. Linville <linville@tuxdriver.com>
-Cc: users@rt2x00.serialmonkey.com
-Cc: linux-wireless@vger.kernel.org
-Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-
+Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/rt2x00/rt2800usb.c |    4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/net/wireless/iwlwifi/iwl-prph.h   |  6 ++++++
+ drivers/net/wireless/iwlwifi/pcie/trans.c | 26 ++++++++++++++++++++++----
+ 2 files changed, 28 insertions(+), 4 deletions(-)
 
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -1235,6 +1235,8 @@ static struct usb_device_id rt2800usb_de
- 	/* Arcadyan */
- 	{ USB_DEVICE(0x043e, 0x7a12) },
- 	{ USB_DEVICE(0x043e, 0x7a32) },
-+	/* ASUS */
-+	{ USB_DEVICE(0x0b05, 0x17e8) },
- 	/* Azurewave */
- 	{ USB_DEVICE(0x13d3, 0x3329) },
- 	{ USB_DEVICE(0x13d3, 0x3365) },
-@@ -1271,6 +1273,7 @@ static struct usb_device_id rt2800usb_de
- 	{ USB_DEVICE(0x057c, 0x8501) },
- 	/* Buffalo */
- 	{ USB_DEVICE(0x0411, 0x0241) },
-+	{ USB_DEVICE(0x0411, 0x0253) },
- 	/* D-Link */
- 	{ USB_DEVICE(0x2001, 0x3c1a) },
- 	{ USB_DEVICE(0x2001, 0x3c21) },
-@@ -1361,6 +1364,7 @@ static struct usb_device_id rt2800usb_de
- 	{ USB_DEVICE(0x0df6, 0x0053) },
- 	{ USB_DEVICE(0x0df6, 0x0069) },
- 	{ USB_DEVICE(0x0df6, 0x006f) },
-+	{ USB_DEVICE(0x0df6, 0x0078) },
- 	/* SMC */
- 	{ USB_DEVICE(0x083a, 0xa512) },
- 	{ USB_DEVICE(0x083a, 0xc522) },
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-prph.h b/drivers/net/wireless/iwlwifi/iwl-prph.h
+index 1560f45..90011b1 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-prph.h
++++ b/drivers/net/wireless/iwlwifi/iwl-prph.h
+@@ -368,4 +368,10 @@ enum secure_load_status_reg {
+ #define MON_BUFF_WRPTR			(0xa03c44)
+ #define MON_BUFF_CYCLE_CNT		(0xa03c48)
+ 
++/* FW chicken bits */
++#define LMPM_CHICK			0xA01FF8
++enum {
++	LMPM_CHICK_EXTENDED_ADDR_SPACE = BIT(0),
++};
++
+ #endif				/* __iwl_prph_h__ */
+diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
+index b81d141..a3b63b7 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
+@@ -79,6 +79,10 @@
+ #include "iwl-fw-error-dump.h"
+ #include "internal.h"
+ 
++/* extended range in FW SRAM */
++#define IWL_FW_MEM_EXTENDED_START	0x40000
++#define IWL_FW_MEM_EXTENDED_END		0x57FFF
++
+ static void iwl_pcie_free_fw_monitor(struct iwl_trans *trans)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+@@ -627,14 +631,28 @@ static int iwl_pcie_load_section(struct iwl_trans *trans, u8 section_num,
+ 	}
+ 
+ 	for (offset = 0; offset < section->len; offset += chunk_sz) {
+-		u32 copy_size;
++		u32 copy_size, dst_addr;
++		bool extended_addr = false;
+ 
+ 		copy_size = min_t(u32, chunk_sz, section->len - offset);
++		dst_addr = section->offset + offset;
++
++		if (dst_addr >= IWL_FW_MEM_EXTENDED_START &&
++		    dst_addr <= IWL_FW_MEM_EXTENDED_END)
++			extended_addr = true;
++
++		if (extended_addr)
++			iwl_set_bits_prph(trans, LMPM_CHICK,
++					  LMPM_CHICK_EXTENDED_ADDR_SPACE);
+ 
+ 		memcpy(v_addr, (u8 *)section->data + offset, copy_size);
+-		ret = iwl_pcie_load_firmware_chunk(trans,
+-						   section->offset + offset,
+-						   p_addr, copy_size);
++		ret = iwl_pcie_load_firmware_chunk(trans, dst_addr, p_addr,
++						   copy_size);
++
++		if (extended_addr)
++			iwl_clear_bits_prph(trans, LMPM_CHICK,
++					    LMPM_CHICK_EXTENDED_ADDR_SPACE);
++
+ 		if (ret) {
+ 			IWL_ERR(trans,
+ 				"Could not load the [%d] uCode section\n",
+-- 
+1.9.1
 
