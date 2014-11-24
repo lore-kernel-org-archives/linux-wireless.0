@@ -1,147 +1,199 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:39698 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754162AbaKXOf2 (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:21021 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753419AbaKXQmN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2014 09:35:28 -0500
-Received: by mail-wi0-f176.google.com with SMTP id ex7so5893457wid.3
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:35:26 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eran Harary <eran.harary@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 18/75] iwlwifi: change max HT and VHT A-MPDU exponent
-Date: Mon, 24 Nov 2014 16:33:54 +0200
-Message-Id: <1416839691-28533-18-git-send-email-egrumbach@gmail.com> (sfid-20141124_154432_934069_43A948AA)
-In-Reply-To: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
-References: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
+	Mon, 24 Nov 2014 11:42:13 -0500
+Subject: [PATCH v2 2/2] ath10k: add memory dump debugfs interface
+To: <ath10k@lists.infradead.org>
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Date: Mon, 24 Nov 2014 18:42:08 +0200
+Message-ID: <20141124164208.29422.76134.stgit@potku.adurom.net> (sfid-20141124_174216_590967_A877215A)
+In-Reply-To: <20141124164037.29422.14033.stgit@potku.adurom.net>
+References: <20141124164037.29422.14033.stgit@potku.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eran Harary <eran.harary@intel.com>
+From: Yanbo Li <yanbol@qti.qualcomm.com>
 
-Add two new parameters to iwl_cfg:
-max_ht_ampdu_exponent and max_vht_ampdu_exponent.
-These parameters, if set, will set new values to the maximum of
-HT and VHT A-MPDU exponent for the A-MPDU length exponent.
+Add mem_val debugfs file for dumping the firmware (target) memory and also for
+writing to the memory. The firmware memory is accessed through one file which
+uses position of the file as the firmware memory address. For example, with dd
+use skip parameter for the address.
 
-Signed-off-by: Eran Harary <eran.harary@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Beucase target memory width is 32 bits it's strongly recommended to use
+blocksize divisable with 4 when using this interface. For example, when using
+dd use bs=4 to set the block size to 4 and remember to divide both count and
+skip values with four.
+
+To read 4 kB chunk from address 0x400000:
+
+dd if=mem_value bs=4 count=1024 skip=1048576 | xxd -g1
+
+To write value 0x01020304 to address 0x400400:
+
+echo 0x01020304 | xxd -r | dd of=mem_value bs=4 seek=1048832
+
+To read 4 KB chunk of memory and then write back after edit:
+
+dd if=mem_value of=tmp.bin bs=4 count=1024 skip=1048576
+emacs tmp.bin
+dd if=tmp.bin of=mem_value bs=4 count=1024 seek=1048576
+
+Signed-off-by: Yanbo Li <yanbol@qti.qualcomm.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-7000.c         | 4 ++--
- drivers/net/wireless/iwlwifi/iwl-8000.c         | 7 +++++++
- drivers/net/wireless/iwlwifi/iwl-config.h       | 6 ++++++
- drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c | 2 +-
- drivers/net/wireless/iwlwifi/iwl-nvm-parse.c    | 5 ++++-
- 5 files changed, 20 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath10k/debug.c |   86 +++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/hif.h   |   11 ++++
+ drivers/net/wireless/ath/ath10k/pci.c   |    1 
+ 3 files changed, 98 insertions(+)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-7000.c b/drivers/net/wireless/iwlwifi/iwl-7000.c
-index b04b885..b4e9bc7 100644
---- a/drivers/net/wireless/iwlwifi/iwl-7000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-7000.c
-@@ -132,8 +132,8 @@ static const struct iwl_ht_params iwl7000_ht_params = {
- 	.base_params = &iwl7000_base_params,			\
- 	.led_mode = IWL_LED_RF_STATE,				\
- 	.nvm_hw_section_num = NVM_HW_SECTION_NUM_FAMILY_7000,	\
--	.non_shared_ant = ANT_A
--
-+	.non_shared_ant = ANT_A,				\
-+	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index b500cd619c05..3988220e3e66 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -1024,6 +1024,89 @@ static const struct file_operations fops_reg_value = {
+ 	.llseek = default_llseek,
+ };
  
- const struct iwl_cfg iwl7260_2ac_cfg = {
- 	.name = "Intel(R) Dual Band Wireless AC 7260",
-diff --git a/drivers/net/wireless/iwlwifi/iwl-8000.c b/drivers/net/wireless/iwlwifi/iwl-8000.c
-index 896ea90..0919759 100644
---- a/drivers/net/wireless/iwlwifi/iwl-8000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-8000.c
-@@ -91,6 +91,10 @@
- /* Max SDIO RX aggregation size of the ADDBA request/response */
- #define MAX_RX_AGG_SIZE_8260_SDIO	28
- 
-+/* Max A-MPDU exponent for HT and VHT */
-+#define MAX_HT_AMPDU_EXPONENT_8260_SDIO	IEEE80211_HT_MAX_AMPDU_32K
-+#define MAX_VHT_AMPDU_EXPONENT_8260_SDIO	IEEE80211_VHT_MAX_AMPDU_32K
++static ssize_t ath10k_mem_value_read(struct file *file,
++				     char __user *user_buf,
++				     size_t count, loff_t *ppos)
++{
++	struct ath10k *ar = file->private_data;
++	u8 *buf;
++	int ret;
 +
- static const struct iwl_base_params iwl8000_base_params = {
- 	.eeprom_size = OTP_LOW_IMAGE_SIZE_FAMILY_8000,
- 	.num_of_queues = IWLAGN_NUM_QUEUES,
-@@ -137,6 +141,7 @@ const struct iwl_cfg iwl8260_2ac_cfg = {
- 	.ht_params = &iwl8000_ht_params,
- 	.nvm_ver = IWL8000_NVM_VERSION,
- 	.nvm_calib_ver = IWL8000_TX_POWER_VERSION,
-+	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
- };
- 
- const struct iwl_cfg iwl8260_2ac_sdio_cfg = {
-@@ -149,6 +154,8 @@ const struct iwl_cfg iwl8260_2ac_sdio_cfg = {
- 	.default_nvm_file = DEFAULT_NVM_FILE_FAMILY_8000,
- 	.max_rx_agg_size = MAX_RX_AGG_SIZE_8260_SDIO,
- 	.disable_dummy_notification = true,
-+	.max_ht_ampdu_exponent  = MAX_HT_AMPDU_EXPONENT_8260_SDIO,
-+	.max_vht_ampdu_exponent = MAX_VHT_AMPDU_EXPONENT_8260_SDIO,
- };
- 
- MODULE_FIRMWARE(IWL8000_MODULE_FIRMWARE(IWL8000_UCODE_API_OK));
-diff --git a/drivers/net/wireless/iwlwifi/iwl-config.h b/drivers/net/wireless/iwlwifi/iwl-config.h
-index f8aa9cf..c6ae4d4e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-config.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-config.h
-@@ -257,6 +257,10 @@ struct iwl_pwr_tx_backoff {
-  * @pwr_tx_backoffs: translation table between power limits and backoffs
-  * @max_rx_agg_size: max RX aggregation size of the ADDBA request/response
-  * @max_tx_agg_size: max TX aggregation size of the ADDBA request/response
-+ * @max_ht_ampdu_factor: the exponent of the max length of A-MPDU that the
-+ *	station can receive in HT
-+ * @max_vht_ampdu_exponent: the exponent of the max length of A-MPDU that the
-+ *	station can receive in VHT
-  *
-  * We enable the driver to be backward compatible wrt. hardware features.
-  * API differences in uCode shouldn't be handled here but through TLVs
-@@ -297,6 +301,8 @@ struct iwl_cfg {
- 	unsigned int max_rx_agg_size;
- 	bool disable_dummy_notification;
- 	unsigned int max_tx_agg_size;
-+	unsigned int max_ht_ampdu_exponent;
-+	unsigned int max_vht_ampdu_exponent;
- };
- 
- /*
-diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c b/drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c
-index 74b796d..41ff85d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c
-@@ -764,7 +764,7 @@ void iwl_init_ht_hw_capab(const struct iwl_cfg *cfg,
- 	if (iwlwifi_mod_params.amsdu_size_8K)
- 		ht_info->cap |= IEEE80211_HT_CAP_MAX_AMSDU;
- 
--	ht_info->ampdu_factor = IEEE80211_HT_MAX_AMPDU_64K;
-+	ht_info->ampdu_factor = cfg->max_ht_ampdu_exponent;
- 	ht_info->ampdu_density = IEEE80211_HT_MPDU_DENSITY_4;
- 
- 	ht_info->mcs.rx_mask[0] = 0xFF;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-index c302e74..06e02fc 100644
---- a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-@@ -325,6 +325,8 @@ static void iwl_init_vht_hw_capab(const struct iwl_cfg *cfg,
++	if (*ppos < 0)
++		return -EINVAL;
++
++	if (!count)
++		return 0;
++
++	buf = vmalloc(count);
++	if (!buf)
++		return -ENOMEM;
++
++	ret = ath10k_hif_diag_read(ar, *ppos, buf, count);
++	if (ret) {
++		ath10k_warn(ar, "failed to read address 0x%08x via diagnose window from debugfs: %d\n",
++			    (u32)(*ppos), ret);
++		goto read_err;
++	}
++
++	ret = copy_to_user(user_buf, buf, count);
++	if (ret == count)
++		return -EFAULT;
++
++	count -= ret;
++	*ppos += count;
++	ret = count;
++
++read_err:
++	vfree(buf);
++	return ret;
++}
++
++static ssize_t ath10k_mem_value_write(struct file *file,
++				      const char __user *user_buf,
++				      size_t count, loff_t *ppos)
++{
++	struct ath10k *ar = file->private_data;
++	u8 *buf;
++	int ret;
++
++	if (*ppos < 0)
++		return -EINVAL;
++
++	if (!count)
++		return 0;
++
++	buf = vmalloc(count);
++	if (!buf)
++		return -ENOMEM;
++
++	ret = copy_from_user(buf, user_buf, count);
++	if (ret)
++		goto err_free_copy;
++
++	ret = ath10k_hif_diag_write(ar, *ppos, buf, count);
++	if (ret) {
++		ath10k_warn(ar, "failed to write address 0x%08x via diagnose window from debugfs: %d\n",
++			    (u32)(*ppos), ret);
++		goto err_free_copy;
++	}
++
++	*ppos += count;
++	ret = count;
++
++err_free_copy:
++	vfree(buf);
++	return ret;
++}
++
++static const struct file_operations fops_mem_value = {
++	.read = ath10k_mem_value_read,
++	.write = ath10k_mem_value_write,
++	.open = simple_open,
++	.owner = THIS_MODULE,
++	.llseek = default_llseek,
++};
++
+ static int ath10k_debug_htt_stats_req(struct ath10k *ar)
  {
- 	int num_rx_ants = num_of_ant(rx_chains);
- 	int num_tx_ants = num_of_ant(tx_chains);
-+	unsigned int max_ampdu_exponent = (cfg->max_vht_ampdu_exponent ?:
-+					   IEEE80211_VHT_MAX_AMPDU_1024K);
+ 	u64 cookie;
+@@ -1731,6 +1814,9 @@ int ath10k_debug_register(struct ath10k *ar)
+ 	debugfs_create_file("reg_value", S_IRUSR | S_IWUSR,
+ 			    ar->debug.debugfs_phy, ar, &fops_reg_value);
  
- 	vht_cap->vht_supported = true;
++	debugfs_create_file("mem_value", S_IRUSR | S_IWUSR,
++			    ar->debug.debugfs_phy, ar, &fops_mem_value);
++
+ 	debugfs_create_file("chip_id", S_IRUSR, ar->debug.debugfs_phy,
+ 			    ar, &fops_chip_id);
  
-@@ -332,7 +334,8 @@ static void iwl_init_vht_hw_capab(const struct iwl_cfg *cfg,
- 		       IEEE80211_VHT_CAP_RXSTBC_1 |
- 		       IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE |
- 		       3 << IEEE80211_VHT_CAP_BEAMFORMEE_STS_SHIFT |
--		       7 << IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_SHIFT;
-+		       max_ampdu_exponent <<
-+		       IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_SHIFT;
+diff --git a/drivers/net/wireless/ath/ath10k/hif.h b/drivers/net/wireless/ath/ath10k/hif.h
+index bad071906540..6ac552304546 100644
+--- a/drivers/net/wireless/ath/ath10k/hif.h
++++ b/drivers/net/wireless/ath/ath10k/hif.h
+@@ -48,6 +48,8 @@ struct ath10k_hif_ops {
+ 	int (*diag_read)(struct ath10k *ar, u32 address, void *buf,
+ 			 size_t buf_len);
  
- 	if (cfg->ht_params->ldpc)
- 		vht_cap->cap |= IEEE80211_VHT_CAP_RXLDPC;
--- 
-1.9.1
++	int (*diag_write)(struct ath10k *ar, u32 address, const void *data,
++			  int nbytes);
+ 	/*
+ 	 * API to handle HIF-specific BMI message exchanges, this API is
+ 	 * synchronous and only allowed to be called from a context that
+@@ -113,6 +115,15 @@ static inline int ath10k_hif_diag_read(struct ath10k *ar, u32 address, void *buf
+ 	return ar->hif.ops->diag_read(ar, address, buf, buf_len);
+ }
+ 
++static inline int ath10k_hif_diag_write(struct ath10k *ar, u32 address,
++					const void *data, int nbytes)
++{
++	if (!ar->hif.ops->diag_write)
++		return -EOPNOTSUPP;
++
++	return ar->hif.ops->diag_write(ar, address, data, nbytes);
++}
++
+ static inline int ath10k_hif_exchange_bmi_msg(struct ath10k *ar,
+ 					      void *request, u32 request_len,
+ 					      void *response, u32 *response_len)
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 328ab6c5d053..0816098af578 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -1988,6 +1988,7 @@ static int ath10k_pci_hif_resume(struct ath10k *ar)
+ static const struct ath10k_hif_ops ath10k_pci_hif_ops = {
+ 	.tx_sg			= ath10k_pci_hif_tx_sg,
+ 	.diag_read		= ath10k_pci_hif_diag_read,
++	.diag_write		= ath10k_pci_diag_write_mem,
+ 	.exchange_bmi_msg	= ath10k_pci_hif_exchange_bmi_msg,
+ 	.start			= ath10k_pci_hif_start,
+ 	.stop			= ath10k_pci_hif_stop,
 
