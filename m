@@ -1,83 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:60814 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752541AbaKLMJD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Nov 2014 07:09:03 -0500
-From: Jukka Rissanen <jukka.rissanen@linux.intel.com>
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:57559 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754205AbaKXOfk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Nov 2014 09:35:40 -0500
+Received: by mail-wi0-f174.google.com with SMTP id h11so5847555wiw.13
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:35:39 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH v3 1/2] nl80211: Replace interface socket owner attribute with more generic one
-Date: Wed, 12 Nov 2014 14:08:58 +0200
-Message-Id: <1415794139-7124-2-git-send-email-jukka.rissanen@linux.intel.com> (sfid-20141112_130914_215126_729270A3)
-In-Reply-To: <1415794139-7124-1-git-send-email-jukka.rissanen@linux.intel.com>
-References: <1415794139-7124-1-git-send-email-jukka.rissanen@linux.intel.com>
+Cc: David Spinadel <david.spinadel@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 26/75] iwlwifi: mvm: go to umac scan even if lmac tlv bit is on
+Date: Mon, 24 Nov 2014 16:34:02 +0200
+Message-Id: <1416839691-28533-26-git-send-email-egrumbach@gmail.com> (sfid-20141124_154347_254261_070AF5AC)
+In-Reply-To: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
+References: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Replace NL80211_ATTR_IFACE_SOCKET_OWNER attribute with more generic
-NL80211_ATTR_SOCKET_OWNER that can be used with other commands
-that interface creation.
+From: David Spinadel <david.spinadel@intel.com>
 
-Signed-off-by: Jukka Rissanen <jukka.rissanen@linux.intel.com>
+LMAC TLV bit may be on in FWs that support UMAC scan; so check
+for UMAC TLV bit first.
+
+Signed-off-by: David Spinadel <david.spinadel@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- include/uapi/linux/nl80211.h | 7 ++++---
- net/wireless/nl80211.c       | 4 ++--
- 2 files changed, 6 insertions(+), 5 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c |  6 +++---
+ drivers/net/wireless/iwlwifi/mvm/scan.c     | 10 +++++-----
+ 2 files changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 442369f..185f9c7 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1637,9 +1637,9 @@ enum nl80211_commands {
-  * @NL80211_ATTR_TDLS_PEER_CAPABILITY: flags for TDLS peer capabilities, u32.
-  *	As specified in the &enum nl80211_tdls_peer_capability.
-  *
-- * @NL80211_ATTR_IFACE_SOCKET_OWNER: flag attribute, if set during interface
-+ * @NL80211_ATTR_SOCKET_OWNER: Flag attribute, if set during interface
-  *	creation then the new interface will be owned by the netlink socket
-- *	that created it and will be destroyed when the socket is closed
-+ *	that created it and will be destroyed when the socket is closed.
-  *
-  * @NL80211_ATTR_TDLS_INITIATOR: flag attribute indicating the current end is
-  *	the TDLS link initiator.
-@@ -2004,7 +2004,7 @@ enum nl80211_attrs {
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 79ad695..bc5883a 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -1951,10 +1951,10 @@ static int iwl_mvm_mac_hw_scan(struct ieee80211_hw *hw,
  
- 	NL80211_ATTR_TDLS_PEER_CAPABILITY,
+ 	iwl_mvm_ref(mvm, IWL_MVM_REF_SCAN);
  
--	NL80211_ATTR_IFACE_SOCKET_OWNER,
-+	NL80211_ATTR_SOCKET_OWNER,
+-	if (mvm->fw->ucode_capa.api[0] & IWL_UCODE_TLV_API_LMAC_SCAN)
+-		ret = iwl_mvm_unified_scan_lmac(mvm, vif, hw_req);
+-	else if (mvm->fw->ucode_capa.capa[0] & IWL_UCODE_TLV_CAPA_UMAC_SCAN)
++	if (mvm->fw->ucode_capa.capa[0] & IWL_UCODE_TLV_CAPA_UMAC_SCAN)
+ 		ret = iwl_mvm_scan_umac(mvm, vif, hw_req);
++	else if (mvm->fw->ucode_capa.api[0] & IWL_UCODE_TLV_API_LMAC_SCAN)
++		ret = iwl_mvm_unified_scan_lmac(mvm, vif, hw_req);
+ 	else
+ 		ret = iwl_mvm_scan_request(mvm, vif, req);
  
- 	NL80211_ATTR_CSA_C_OFFSETS_TX,
- 	NL80211_ATTR_MAX_CSA_COUNTERS,
-@@ -2030,6 +2030,7 @@ enum nl80211_attrs {
- /* source-level API compatibility */
- #define NL80211_ATTR_SCAN_GENERATION NL80211_ATTR_GENERATION
- #define	NL80211_ATTR_MESH_PARAMS NL80211_ATTR_MESH_CONFIG
-+#define NL80211_ATTR_IFACE_SOCKET_OWNER NL80211_ATTR_SOCKET_OWNER
+diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
+index c440b7b..2191745 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/scan.c
++++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
+@@ -1025,17 +1025,17 @@ int iwl_mvm_scan_offload_start(struct iwl_mvm *mvm,
+ {
+ 	int ret;
  
- /*
-  * Allow user space programs to use #ifdef on new attributes by defining them
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index d0a8361..df447c0 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -388,7 +388,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
- 	[NL80211_ATTR_MAC_HINT] = { .len = ETH_ALEN },
- 	[NL80211_ATTR_WIPHY_FREQ_HINT] = { .type = NLA_U32 },
- 	[NL80211_ATTR_TDLS_PEER_CAPABILITY] = { .type = NLA_U32 },
--	[NL80211_ATTR_IFACE_SOCKET_OWNER] = { .type = NLA_FLAG },
-+	[NL80211_ATTR_SOCKET_OWNER] = { .type = NLA_FLAG },
- 	[NL80211_ATTR_CSA_C_OFFSETS_TX] = { .type = NLA_BINARY },
- 	[NL80211_ATTR_USE_RRM] = { .type = NLA_FLAG },
- 	[NL80211_ATTR_TSID] = { .type = NLA_U8 },
-@@ -2646,7 +2646,7 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
- 		return PTR_ERR(wdev);
- 	}
- 
--	if (info->attrs[NL80211_ATTR_IFACE_SOCKET_OWNER])
-+	if (info->attrs[NL80211_ATTR_SOCKET_OWNER])
- 		wdev->owner_nlportid = info->snd_portid;
- 
- 	switch (type) {
+-	if ((mvm->fw->ucode_capa.api[0] & IWL_UCODE_TLV_API_LMAC_SCAN)) {
+-		mvm->scan_status = IWL_MVM_SCAN_SCHED;
++	if (mvm->fw->ucode_capa.capa[0] & IWL_UCODE_TLV_CAPA_UMAC_SCAN) {
+ 		ret = iwl_mvm_config_sched_scan_profiles(mvm, req);
+ 		if (ret)
+ 			return ret;
+-		ret = iwl_mvm_unified_sched_scan_lmac(mvm, vif, req, ies);
+-	} else if (mvm->fw->ucode_capa.capa[0] & IWL_UCODE_TLV_CAPA_UMAC_SCAN) {
++		ret = iwl_mvm_sched_scan_umac(mvm, vif, req, ies);
++	} else if ((mvm->fw->ucode_capa.api[0] & IWL_UCODE_TLV_API_LMAC_SCAN)) {
++		mvm->scan_status = IWL_MVM_SCAN_SCHED;
+ 		ret = iwl_mvm_config_sched_scan_profiles(mvm, req);
+ 		if (ret)
+ 			return ret;
+-		ret = iwl_mvm_sched_scan_umac(mvm, vif, req, ies);
++		ret = iwl_mvm_unified_sched_scan_lmac(mvm, vif, req, ies);
+ 	} else {
+ 		mvm->scan_status = IWL_MVM_SCAN_SCHED;
+ 		ret = iwl_mvm_config_sched_scan(mvm, vif, req, ies);
 -- 
-1.8.3.1
+1.9.1
 
