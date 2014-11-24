@@ -1,36 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f175.google.com ([209.85.214.175]:40142 "EHLO
-	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753163AbaKNAJB (ORCPT
+Received: from mail-wg0-f41.google.com ([74.125.82.41]:57333 "EHLO
+	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753938AbaKXSe5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Nov 2014 19:09:01 -0500
-Received: by mail-ob0-f175.google.com with SMTP id wp4so11012obc.20
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Nov 2014 16:09:00 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <87zje528im.fsf@kamboji.qca.qualcomm.com>
-References: <20140910152136.12610.18499.stgit@potku.adurom.net> <87zje528im.fsf@kamboji.qca.qualcomm.com>
-From: Pushpal Sidhu <psidhu@gateworks.com>
-Date: Thu, 13 Nov 2014 16:08:30 -0800
-Message-ID: <CAD1M061Gky-a28Rokmgyd-5x_m_h1SNmj9ZxUd4v1fP=bae35g@mail.gmail.com> (sfid-20141114_010905_726901_62FF04B7)
-Subject: Re: [PATCH v4 0/2] ath10k: testmode support
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Mon, 24 Nov 2014 13:34:57 -0500
+Received: by mail-wg0-f41.google.com with SMTP id y19so13107003wgg.0
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 10:34:56 -0800 (PST)
+From: Andreas Ruprecht <rupran@einserver.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Andreas Ruprecht <rupran@einserver.de>
+Subject: [PATCH 2/2] net: wireless: rtlwifi: rtl8192ee: Fix compilation of the driver
+Date: Mon, 24 Nov 2014 19:34:32 +0100
+Message-Id: <1416854072-14794-3-git-send-email-rupran@einserver.de> (sfid-20141124_193519_651298_9417F76F)
+In-Reply-To: <1416854072-14794-1-git-send-email-rupran@einserver.de>
+References: <1416854072-14794-1-git-send-email-rupran@einserver.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 11, 2014 at 1:43 PM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Kalle Valo <kvalo@qca.qualcomm.com> writes:
->
->> latest version of my testmode patches. Getting closer, more or less cosmetic
->> changes this time :)
+In the Makefile for this driver, the wrong Kconfig option is used
+to trigger the compilation of the object file. This leads to the
+driver only being included into the kernel when both CONFIG_RTL8821AE
+and CONFIG_RTL8192AE are set to "y".
 
-While looking through this patchset (sorry it took two months), I have
-to wonder: what's this utf.bin blob? It seems in order to use
-testmode, we need this binary blob that I can't seem to find (I looked
-in linux-firmware and https://github.com/kvalo/ath10k-firmware). If,
-for whatever reason, this binary blob is not releasable, what's the
-point of adding in testmode to this driver?
+Signed-off-by: Andreas Ruprecht <rupran@einserver.de>
+---
+ drivers/net/wireless/rtlwifi/rtl8192ee/Makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-- Pushpal
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ee/Makefile b/drivers/net/wireless/rtlwifi/rtl8192ee/Makefile
+index 6bd46a9..0315eed 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ee/Makefile
++++ b/drivers/net/wireless/rtlwifi/rtl8192ee/Makefile
+@@ -11,6 +11,6 @@ rtl8192ee-objs :=		\
+ 		trx.o		\
+ 
+ 
+-obj-$(CONFIG_RTL8821AE) += rtl8192ee.o
++obj-$(CONFIG_RTL8192EE) += rtl8192ee.o
+ 
+ ccflags-y += -D__CHECK_ENDIAN__
+-- 
+1.9.1
+
