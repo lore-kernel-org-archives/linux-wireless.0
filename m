@@ -1,39 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:52660 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751632AbaKQNUj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Nov 2014 08:20:39 -0500
-Message-ID: <1416230435.2031.5.camel@sipsolutions.net> (sfid-20141117_142041_989603_03055222)
-Subject: Re: [PATCH] mac80211: fix 11b fragmentation rx
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Mon, 17 Nov 2014 14:20:35 +0100
-In-Reply-To: <CA+BoTQ=JAVb+ROVu2cVz=Rtvgtcb=16pK6fLOvCJNzn_L5v7og@mail.gmail.com> (sfid-20141117_140719_994177_97277096)
-References: <1416223626-10980-1-git-send-email-michal.kazior@tieto.com>
-	 <1416227346.2031.3.camel@sipsolutions.net>
-	 <CA+BoTQ=JAVb+ROVu2cVz=Rtvgtcb=16pK6fLOvCJNzn_L5v7og@mail.gmail.com>
-	 (sfid-20141117_140719_994177_97277096)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:8416 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751019AbaKYT4B (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Nov 2014 14:56:01 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH V2 1/2] brcmutil: add helper function to format board revision
+Date: Tue, 25 Nov 2014 20:55:53 +0100
+Message-ID: <1416945354-23346-2-git-send-email-arend@broadcom.com> (sfid-20141125_205613_782797_289D97EA)
+In-Reply-To: <1416945354-23346-1-git-send-email-arend@broadcom.com>
+References: <1416945354-23346-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-11-17 at 14:07 +0100, Michal Kazior wrote:
+The board revision that is available in hardware can be translated
+so it matches the labelling on the board. This is accomplished by
+this helper function.
 
-> My hunch was right. Apparently this happens when I use my kernel
-> .config with some debug stuff enabled. In case you're interested:
-> 
->  * http://pastebin.com/7shTYtFy -- good
->  * http://pastebin.com/pxwdJ5hS -- panic
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmutil/utils.c      | 16 ++++++++++++++++
+ drivers/net/wireless/brcm80211/include/brcmu_utils.h |  2 ++
+ 2 files changed, 18 insertions(+)
 
-Yeah, not much of a surprise since the pointer might still be valid or
-at least readable (even if the data there is garbage) ... if we get a
-good pointer.
-
-But we try to run with many debug options turned on anyway, so I don't
-know why this showed up only recently. Maybe some unrelated changes
-(compiler changing to load the pointer again, for example)
-
-johannes
+diff --git a/drivers/net/wireless/brcm80211/brcmutil/utils.c b/drivers/net/wireless/brcm80211/brcmutil/utils.c
+index 0f7e1c7..906e89d 100644
+--- a/drivers/net/wireless/brcm80211/brcmutil/utils.c
++++ b/drivers/net/wireless/brcm80211/brcmutil/utils.c
+@@ -261,6 +261,21 @@ struct sk_buff *brcmu_pktq_mdeq(struct pktq *pq, uint prec_bmp,
+ }
+ EXPORT_SYMBOL(brcmu_pktq_mdeq);
+ 
++/* Produce a human-readable string for boardrev */
++char *brcmu_boardrev_str(u32 brev, char *buf)
++{
++	char c;
++
++	if (brev < 0x100) {
++		snprintf(buf, 8, "%d.%d", (brev & 0xf0) >> 4, brev & 0xf);
++	} else {
++		c = (brev & 0xf000) == 0x1000 ? 'P' : 'A';
++		snprintf(buf, 8, "%c%03x", c, brev & 0xfff);
++	}
++	return buf;
++}
++EXPORT_SYMBOL(brcmu_boardrev_str);
++
+ #if defined(DEBUG)
+ /* pretty hex print a pkt buffer chain */
+ void brcmu_prpkt(const char *msg, struct sk_buff *p0)
+@@ -292,4 +307,5 @@ void brcmu_dbg_hex_dump(const void *data, size_t size, const char *fmt, ...)
+ 	print_hex_dump_bytes("", DUMP_PREFIX_OFFSET, data, size);
+ }
+ EXPORT_SYMBOL(brcmu_dbg_hex_dump);
++
+ #endif				/* defined(DEBUG) */
+diff --git a/drivers/net/wireless/brcm80211/include/brcmu_utils.h b/drivers/net/wireless/brcm80211/include/brcmu_utils.h
+index 8ba445b..a043e29 100644
+--- a/drivers/net/wireless/brcm80211/include/brcmu_utils.h
++++ b/drivers/net/wireless/brcm80211/include/brcmu_utils.h
+@@ -218,4 +218,6 @@ void brcmu_dbg_hex_dump(const void *data, size_t size, const char *fmt, ...)
+ }
+ #endif
+ 
++char *brcmu_boardrev_str(u32 brev, char *buf);
++
+ #endif				/* _BRCMU_UTILS_H_ */
+-- 
+1.9.1
 
