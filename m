@@ -1,59 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:55943 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752063AbaKVQHu (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:50257 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750921AbaKYI66 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Nov 2014 11:07:50 -0500
-Message-ID: <5470B4D5.7090508@candelatech.com> (sfid-20141122_170755_855038_CF8FD37F)
-Date: Sat, 22 Nov 2014 08:07:49 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Tue, 25 Nov 2014 03:58:58 -0500
+Received: by mail-wi0-f172.google.com with SMTP id n3so8367539wiv.5
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Nov 2014 00:58:57 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <87vbm31xno.fsf@kamboji.qca.qualcomm.com>
+References: <20141124164037.29422.14033.stgit@potku.adurom.net>
+	<20141124164159.29422.98462.stgit@potku.adurom.net>
+	<87vbm31xno.fsf@kamboji.qca.qualcomm.com>
+Date: Tue, 25 Nov 2014 09:58:57 +0100
+Message-ID: <CA+BoTQmZ=xa=z3237E55cejfOOZM3GYp8OstJobF7NHe=8wTHA@mail.gmail.com> (sfid-20141125_095901_571359_9E8F22EC)
+Subject: Re: [PATCH v2 1/2] ath10k: add register access debugfs interface
+From: Michal Kazior <michal.kazior@tieto.com>
 To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Subject: Re: [PATCH v2 04/10] ath10k: make firmware text debug messages more
- verbose.
-References: <1411507045-18973-1-git-send-email-greearb@candelatech.com>	<1411507045-18973-4-git-send-email-greearb@candelatech.com> <878uj38dbd.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <878uj38dbd.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On 11/22/2014 07:28 AM, Kalle Valo wrote:
-> greearb@candelatech.com writes:
+On 25 November 2014 at 09:39, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Kalle Valo <kvalo@qca.qualcomm.com> writes:
 >
->> From: Ben Greear <greearb@candelatech.com>
->>
->> There are not many of these messages producted by the
->> firmware, but they are generally fairly useful, so print
->> them at info level.
->>
->> Signed-off-by: Ben Greear <greearb@candelatech.com>
+>> +static ssize_t ath10k_reg_value_read(struct file *file,
+>> +                                  char __user *user_buf,
+>> +                                  size_t count, loff_t *ppos)
+>> +{
+>> +     struct ath10k *ar = file->private_data;
+>> +     u8 buf[48];
+>> +     unsigned int len;
+>> +     u32 reg_addr, reg_val;
+>> +
+>> +     spin_lock_bh(&ar->data_lock);
+>> +     reg_addr = ar->debug.reg_addr;
+>> +     spin_unlock_bh(&ar->data_lock);
+>> +
+>> +     reg_val = ath10k_hif_read32(ar, reg_addr);
+>> +     len = scnprintf(buf, sizeof(buf), "0x%08x:0x%08x\n", reg_addr, reg_val);
+>> +
+>> +     return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+>> +}
 >
-> [...]
->
->> --- a/drivers/net/wireless/ath/ath10k/debug.h
->> +++ b/drivers/net/wireless/ath/ath10k/debug.h
->> @@ -35,6 +35,7 @@ enum ath10k_debug_mask {
->>   	ATH10K_DBG_BMI		= 0x00000400,
->>   	ATH10K_DBG_REGULATORY	= 0x00000800,
->>   	ATH10K_DBG_TESTMODE	= 0x00001000,
->> +	ATH10K_DBG_FW_MSG	= 0x00002000,
->
-> I think FW_MSG is a bit too ambiguous, so I changed this to WMI_PRINT so
-> that it's closer the real event name.
+> I just realised that we need to check ar->state to make sure that
+> firmware is running. Because of that I'll need to change the data_lock
+> to conf_mutex as well.
 
-Better than nothing, but my idea was that this flag would be able to affect
-more than one thing related to firmware debugging.  Calling it something about
-WMI does not indicate to me that it is really about firmware debugging.
+Hmm.. It could actually work without firmware running. It just reads MMIO.
 
-Thanks,
-Ben
+The problem I see now is the target may not be awake (Bartosz recently
+fixed suspend bug by moving ath10k_pci_wake/sleep back to
+hif_power_up) and accessing target registers without it being fully
+awake can lead to host memory corruption. I guess ar->state will do
+for now because getting this to work otherwise is going to be a little
+tricky.
 
-> Full patch: https://github.com/kvalo/ath/commit/ce4269787f4b5e538731f34cb3a7358343efaa00
->
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Michał
