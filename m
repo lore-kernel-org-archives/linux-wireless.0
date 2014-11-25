@@ -1,32 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:25893 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751141AbaKZGpA (ORCPT
+Received: from mail-ob0-f178.google.com ([209.85.214.178]:36621 "EHLO
+	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751017AbaKYQcS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Nov 2014 01:45:00 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 1/3] ath10k: add missing goto
-References: <1416834909-7130-1-git-send-email-michal.kazior@tieto.com>
-	<1416924965-28216-1-git-send-email-michal.kazior@tieto.com>
-Date: Wed, 26 Nov 2014 08:44:55 +0200
-In-Reply-To: <1416924965-28216-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Tue, 25 Nov 2014 15:16:03 +0100")
-Message-ID: <87d28axxy0.fsf@kamboji.qca.qualcomm.com> (sfid-20141126_074505_423738_3085D7BF)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 25 Nov 2014 11:32:18 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org, Valerio Passini <valerio.passini@unicam.it>
+Subject: [PATCH 1/2 3.18] rtlwifi: rtl8821ae: Fix 5G detection problem
+Date: Tue, 25 Nov 2014 10:32:06 -0600
+Message-Id: <1416933127-25912-2-git-send-email-Larry.Finger@lwfinger.net> (sfid-20141125_173236_847623_15DE9E2D)
+In-Reply-To: <1416933127-25912-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1416933127-25912-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+The changes associated with moving this driver from staging to the regular
+tree missed one section setting the allowable rates for the 5GHz band.
 
-> This prevents warning spamming if peer creation
-> fails during sta_state in some cases.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+This patch is needed to fix the regression reported in Bug #88811
+(https://bugzilla.kernel.org/show_bug.cgi?id=88811).
 
-Thanks, all three patches applied.
+Reported-by: Valerio Passini <valerio.passini@unicam.it>
+Tested-by: Valerio Passini <valerio.passini@unicam.it>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Valerio Passini <valerio.passini@unicam.it>
+---
+ drivers/net/wireless/rtlwifi/rtl8821ae/hw.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
+index 310d316..18f34f7 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
+@@ -3672,8 +3672,9 @@ static void rtl8821ae_update_hal_rate_mask(struct ieee80211_hw *hw,
+ 		mac->opmode == NL80211_IFTYPE_ADHOC)
+ 		macid = sta->aid + 1;
+ 	if (wirelessmode == WIRELESS_MODE_N_5G ||
+-	    wirelessmode == WIRELESS_MODE_AC_5G)
+-		ratr_bitmap = sta->supp_rates[NL80211_BAND_5GHZ];
++	    wirelessmode == WIRELESS_MODE_AC_5G ||
++	    wirelessmode == WIRELESS_MODE_A)
++		ratr_bitmap = (sta->supp_rates[NL80211_BAND_5GHZ])<<4;
+ 	else
+ 		ratr_bitmap = sta->supp_rates[NL80211_BAND_2GHZ];
+ 
 -- 
-Kalle Valo
+2.1.2
+
