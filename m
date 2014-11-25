@@ -1,92 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:32286 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751143AbaKYTz6 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:17381 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750841AbaKYI6p (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Nov 2014 14:55:58 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH V2 2/2] brcmsmac: extend hardware info shown in debugfs
-Date: Tue, 25 Nov 2014 20:55:54 +0100
-Message-ID: <1416945354-23346-3-git-send-email-arend@broadcom.com> (sfid-20141125_205611_716518_27A82D8B)
-In-Reply-To: <1416945354-23346-1-git-send-email-arend@broadcom.com>
-References: <1416945354-23346-1-git-send-email-arend@broadcom.com>
+	Tue, 25 Nov 2014 03:58:45 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 3/3] ath10k: fix station count enforcement
+References: <1416834909-7130-1-git-send-email-michal.kazior@tieto.com>
+	<1416834909-7130-3-git-send-email-michal.kazior@tieto.com>
+	<87d28b3dzg.fsf@kamboji.qca.qualcomm.com>
+	<CA+BoTQmf6+U20083pHxMdDPMDZf=MNoup+CxBTn=azLZupQYPw@mail.gmail.com>
+Date: Tue, 25 Nov 2014 10:58:39 +0200
+In-Reply-To: <CA+BoTQmf6+U20083pHxMdDPMDZf=MNoup+CxBTn=azLZupQYPw@mail.gmail.com>
+	(Michal Kazior's message of "Tue, 25 Nov 2014 09:38:41 +0100")
+Message-ID: <87ioi31wsg.fsf@kamboji.qca.qualcomm.com> (sfid-20141125_095848_640687_92E9B383)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The hardware info now also include radio and phy information, which
-can be helpful in debugging issues.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmsmac/debug.c | 40 +++++++++++++++++--------
- 1 file changed, 27 insertions(+), 13 deletions(-)
+>>>  int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode)
+>>>  {
+>>>       int status;
+>>> @@ -939,6 +950,8 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode)
+>>>       else
+>>>               ar->free_vdev_map = (1LL << TARGET_NUM_VDEVS) - 1;
+>>>
+>>> +     ath10k_core_init_max_sta_count(ar);
+>>
+>> I don't see the need to call this during every firmware start as these
+>> are not changed afterwards. I think it would be better to call this once
+>> just after ath10k_core_fetch_firmware_files() is called.
+>
+> Hmm.. It makes sense but now that I think about it the max number of
+> peers should actually depend on WMI_SERVICE_IRAM_TIDS which is known
+> after booting firmware. However since only 10.x was released with the
+> service enabled we used fw_features. So..
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/debug.c b/drivers/net/wireless/brcm80211/brcmsmac/debug.c
-index 19740c1..c9a8b93 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/debug.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/debug.c
-@@ -30,6 +30,7 @@
- #include "main.h"
- #include "debug.h"
- #include "brcms_trace_events.h"
-+#include "phy/phy_int.h"
- 
- static struct dentry *root_folder;
- 
-@@ -74,20 +75,33 @@ static
- int brcms_debugfs_hardware_read(struct seq_file *s, void *data)
- {
- 	struct brcms_pub *drvr = s->private;
-+	struct brcms_hardware *hw = drvr->wlc->hw;
-+	struct bcma_device *core = hw->d11core;
-+	struct bcma_bus *bus = core->bus;
-+	char boardrev[10];
- 
--	seq_printf(s, "board vendor: %x\n"
--		   "board type: %x\n"
--		   "board revision: %x\n"
--		   "board flags: %x\n"
--		   "board flags2: %x\n"
--		   "firmware revision: %x\n",
--		   drvr->wlc->hw->d11core->bus->boardinfo.vendor,
--		   drvr->wlc->hw->d11core->bus->boardinfo.type,
--		   drvr->wlc->hw->boardrev,
--		   drvr->wlc->hw->boardflags,
--		   drvr->wlc->hw->boardflags2,
--		   drvr->wlc->ucode_rev);
--
-+	seq_printf(s, "chipnum 0x%x\n"
-+		   "chiprev 0x%x\n"
-+		   "chippackage 0x%x\n"
-+		   "corerev 0x%x\n"
-+		   "boardid 0x%x\n"
-+		   "boardvendor 0x%x\n"
-+		   "boardrev %s\n"
-+		   "boardflags 0x%x\n"
-+		   "boardflags2 0x%x\n"
-+		   "ucoderev 0x%x\n"
-+		   "radiorev 0x%x\n"
-+		   "phytype 0x%x\n"
-+		   "phyrev 0x%x\n"
-+		   "anarev 0x%x\n"
-+		   "nvramrev %d\n",
-+		   bus->chipinfo.id, bus->chipinfo.rev, bus->chipinfo.pkg,
-+		   core->id.rev, bus->boardinfo.type, bus->boardinfo.vendor,
-+		   brcmu_boardrev_str(hw->boardrev, boardrev),
-+		   drvr->wlc->hw->boardflags, drvr->wlc->hw->boardflags2,
-+		   drvr->wlc->ucode_rev, hw->band->radiorev,
-+		   hw->band->phytype, hw->band->phyrev, hw->band->pi->ana_rev,
-+		   hw->sromrev);
- 	return 0;
- }
- 
+I think this is good enough for now. We can always improve this later.
+
+> yeah. I can move the function call if you want though.
+
+Please do that. To keep things simple I would like to have the absolute
+minimum in start() calls.
+
 -- 
-1.9.1
-
+Kalle Valo
