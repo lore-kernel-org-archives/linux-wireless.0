@@ -1,72 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:13327 "EHLO mga11.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:50160 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751113AbaK1LdO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Nov 2014 06:33:14 -0500
-From: Tomasz Bursztyka <tomasz.bursztyka@linux.intel.com>
+	id S1751107AbaKYKXd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Nov 2014 05:23:33 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: Tomasz Bursztyka <tomasz.bursztyka@linux.intel.com>
-Subject: [PATCH] nl80211: Fix a null dereference issue in nl80211_send_iface on removal
-Date: Fri, 28 Nov 2014 13:32:59 +0200
-Message-Id: <1417174379-7150-1-git-send-email-tomasz.bursztyka@linux.intel.com> (sfid-20141128_123317_336378_911A7066)
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: check if channels allow 80 MHz for VHT probe requests
+Date: Tue, 25 Nov 2014 11:23:29 +0100
+Message-Id: <1416911009-22405-1-git-send-email-johannes@sipsolutions.net> (sfid-20141125_112336_239353_958B9666)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is no need trying to add any channels information in the nelink
-message when the interface is being removed.
+From: Johannes Berg <johannes.berg@intel.com>
 
-This fixes this kernel panic issue:
+If there are no channels allowing 80 MHz to be used, then the
+station isn't really VHT capable even if the driver and device
+support it in general. In this case, exclude the VHT capability
+IE from probe request frames.
 
-[    6.275502] Call Trace:
-[    6.275690]  [<ffffffff814e6044>] dump_stack+0x4e/0x71
-[    6.276069]  [<ffffffff8108fbe1>] ? console_unlock+0x1f1/0x4d0
-[    6.276498]  [<ffffffff81040bbc>] warn_slowpath_common+0x7c/0xa0
-[    6.276939]  [<ffffffff81040cca>] warn_slowpath_null+0x1a/0x20
-[    6.277368]  [<ffffffff813f9677>] nl80211_send_chandef+0x127/0x130
-[    6.277821]  [<ffffffff813f9a35>] nl80211_send_iface+0x3b5/0x5e0
-[    6.278281]  [<ffffffff813f9ccc>] nl80211_del_interface+0x6c/0x520
-[    6.278736]  [<ffffffff8131b9a4>] genl_family_rcv_msg+0x194/0x330
-[    6.279183]  [<ffffffff8131bb40>] ? genl_family_rcv_msg+0x330/0x330
-[    6.279644]  [<ffffffff8131bbce>] genl_rcv_msg+0x8e/0xd0
-[    6.280047]  [<ffffffff8131b081>] netlink_rcv_skb+0xb1/0xc0
-[    6.280679]  [<ffffffff8131b7ed>] ? genl_rcv+0x1d/0x40
-[    6.281251]  [<ffffffff8131b7fc>] genl_rcv+0x2c/0x40
-[    6.281797]  [<ffffffff81319786>] netlink_unicast+0x156/0x230
-[    6.282355]  [<ffffffff8131a0e0>] netlink_sendmsg+0x320/0x410
-[    6.282870]  [<ffffffff812d6eb9>] sock_sendmsg+0x69/0x90
-[    6.283343]  [<ffffffff812e5b66>] ? verify_iovec+0x56/0xe0
-[    6.283830]  [<ffffffff812d71a8>] ___sys_sendmsg.part.38+0x2c8/0x2e0
-[    6.284373]  [<ffffffff810889e0>] ? __lock_acquire+0x430/0xbd0
-[    6.284882]  [<ffffffff81089aa0>] ? lock_release_non_nested+0xa0/0x300
-[    6.285425]  [<ffffffff8111b18c>] ? might_fault+0x8c/0xa0
-[    6.285898]  [<ffffffff8111b143>] ? might_fault+0x43/0xa0
-[    6.286384]  [<ffffffff812d892e>] __sys_sendmsg+0x4e/0x90
-[    6.286849]  [<ffffffff812d897e>] SyS_sendmsg+0xe/0x10
-[    6.287312]  [<ffffffff814f0be9>] system_call_fastpath+0x12/0x17
-
-Reported-by: Jouni Malinen <j@w1.fi>
-Signed-off-by: Tomasz Bursztyka <tomasz.bursztyka@linux.intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
+ net/mac80211/util.c | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
 
-@Jouni: Thanks for finding the issue. Can you check this patch fixes it?
-	It seems to do the trick for me at least.
-
- net/wireless/nl80211.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 6e41777..018f18d 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2372,7 +2372,7 @@ static int nl80211_send_iface(struct sk_buff *msg, u32 portid, u32 seq, int flag
- 			(cfg80211_rdev_list_generation << 2)))
- 		goto nla_put_failure;
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index bb9664cb8831..974ebe70f5b0 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1339,6 +1339,7 @@ static int ieee80211_build_preq_ies_band(struct ieee80211_local *local,
+ 	int ext_rates_len;
+ 	int shift;
+ 	u32 rate_flags;
++	bool have_80mhz = false;
  
--	if (rdev->ops->get_channel) {
-+	if (!removal && rdev->ops->get_channel) {
- 		int ret;
- 		struct cfg80211_chan_def chandef;
+ 	*offset = 0;
  
+@@ -1467,7 +1468,15 @@ static int ieee80211_build_preq_ies_band(struct ieee80211_local *local,
+ 		*offset = noffset;
+ 	}
+ 
+-	if (sband->vht_cap.vht_supported) {
++	/* Check if any channel in this sband supports at least 80 MHz */
++	for (i = 0; i < sband->n_channels; i++) {
++		if (!(sband->channels[i].flags & IEEE80211_CHAN_NO_80MHZ)) {
++			have_80mhz = true;
++			break;
++		}
++	}
++
++	if (sband->vht_cap.vht_supported && have_80mhz) {
+ 		if (end - pos < 2 + sizeof(struct ieee80211_vht_cap))
+ 			goto out_err;
+ 		pos = ieee80211_ie_build_vht_cap(pos, &sband->vht_cap,
 -- 
-2.0.4
+2.1.1
 
