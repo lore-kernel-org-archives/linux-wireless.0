@@ -1,54 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:62832 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965580AbaKNTa1 (ORCPT
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:55495 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750882AbaKYO2U (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Nov 2014 14:30:27 -0500
-Message-ID: <54665850.9070007@broadcom.com> (sfid-20141114_203031_089665_76B94698)
-Date: Fri, 14 Nov 2014 20:30:24 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Felipe Contreras <felipe.contreras@gmail.com>
-CC: linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>
-Subject: Re: brcmfmac not working on ECS LIVA
-References: <CAMP44s2XAmaiK2=BJA3TCW48Uo=5qyT5WsASDsZnOiSNgK6b0A@mail.gmail.com>	<545F4611.3010207@broadcom.com>	<CAMP44s2V59VDx0s7q5Yr=KvGZNn8ptRJGHS4W8Ja=+ciKZaSzg@mail.gmail.com>	<54633939.6000400@broadcom.com>	<CAMP44s1DOA31ob24=qzz83MnVFmm60EpgaPYvLbwUv-AP5FRbw@mail.gmail.com>	<54648C50.6000702@broadcom.com> <CAMP44s0j+i3zADu=Y3fUWqNEgDFeESs2_aFYmxQt9kZRcXkCjA@mail.gmail.com>
-In-Reply-To: <CAMP44s0j+i3zADu=Y3fUWqNEgDFeESs2_aFYmxQt9kZRcXkCjA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+	Tue, 25 Nov 2014 09:28:20 -0500
+Received: by mail-wi0-f179.google.com with SMTP id ex7so1625445wid.12
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Nov 2014 06:28:18 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 2/3] ath10k: clean up num_peers locking
+Date: Tue, 25 Nov 2014 15:16:04 +0100
+Message-Id: <1416924965-28216-2-git-send-email-michal.kazior@tieto.com> (sfid-20141125_152824_429158_839ACDA1)
+In-Reply-To: <1416924965-28216-1-git-send-email-michal.kazior@tieto.com>
+References: <1416834909-7130-1-git-send-email-michal.kazior@tieto.com>
+ <1416924965-28216-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/14/14 18:03, Felipe Contreras wrote:
-> On Thu, Nov 13, 2014 at 4:47 AM, Arend van Spriel<arend@broadcom.com>  wrote:
->> On 12-11-14 16:23, Felipe Contreras wrote:
->>> On Wed, Nov 12, 2014 at 4:40 AM, Arend van Spriel<arend@broadcom.com>  wrote:
->
->>> I tried this patch, and although it seems to make a difference, it
->>> still doesn't work.
->>>
->>> http://people.freedesktop.org/~felipec/dmesg-brcm-2.txt
->>
->> Hi Felipe,
->>
->> All the messages to the firmware seem ok. If connection would succeed I
->> normally see a LINK event followed by SET_SSID event. In your log I only
->> see the SET_SSID event with failed status, hence the connect is
->> unsuccessful. Do you have any control over the AP? Could you try without
->> WPA security to quickly confirm connection works? May help in root
->> causing the issue.
->
-> I tried disabled WPA security, it's still not working.
+The var was supposed to be protected by data_lock
+but it wasn't so in all instances. It's actually
+not necessary to have a spinlock protected
+num_peers so drop it.
 
-Thanks, Felipe
+All instances of num_peers are already within
+conf_mutex sections so use that.
 
-Could you check the runtime-pm for mmc1 controller. You need to find 
-sdhci-acpi driver in sysfs. I think it is under 
-/sys/bus/platform/drivers. One of the bound devices is mmc1 (although 
-probably will have different nameing there) and there is subfolder power 
-with file named control. Can you cat that file and do 'echo on > 
-control' if it says auto.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/core.h | 2 +-
+ drivers/net/wireless/ath/ath10k/mac.c  | 8 +++-----
+ 2 files changed, 4 insertions(+), 6 deletions(-)
 
-Regards,
-Arend
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 8f86bd3..be7e50b6 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -560,7 +560,7 @@ struct ath10k {
+ 	struct list_head peers;
+ 	wait_queue_head_t peer_mapping_wq;
+ 
+-	/* number of created peers; protected by data_lock */
++	/* protected by conf_mutex */
+ 	int num_peers;
+ 
+ 	struct work_struct offchan_tx_work;
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 7b5a888..3312e75 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -339,9 +339,8 @@ static int ath10k_peer_create(struct ath10k *ar, u32 vdev_id, const u8 *addr)
+ 			    addr, vdev_id, ret);
+ 		return ret;
+ 	}
+-	spin_lock_bh(&ar->data_lock);
++
+ 	ar->num_peers++;
+-	spin_unlock_bh(&ar->data_lock);
+ 
+ 	return 0;
+ }
+@@ -432,9 +431,7 @@ static int ath10k_peer_delete(struct ath10k *ar, u32 vdev_id, const u8 *addr)
+ 	if (ret)
+ 		return ret;
+ 
+-	spin_lock_bh(&ar->data_lock);
+ 	ar->num_peers--;
+-	spin_unlock_bh(&ar->data_lock);
+ 
+ 	return 0;
+ }
+@@ -471,8 +468,9 @@ static void ath10k_peer_cleanup_all(struct ath10k *ar)
+ 		list_del(&peer->list);
+ 		kfree(peer);
+ 	}
+-	ar->num_peers = 0;
+ 	spin_unlock_bh(&ar->data_lock);
++
++	ar->num_peers = 0;
+ }
+ 
+ /************************/
+-- 
+1.8.5.3
 
