@@ -1,53 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from tpesmarthost.raritan.com ([220.128.57.202]:37481 "EHLO
-	tpesmarthost.raritan.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751187AbaKFNuu (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:51804 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751027AbaKYKNX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Nov 2014 08:50:50 -0500
-Message-ID: <545B7CB2.4080507@raritan.com> (sfid-20141106_145055_984268_8A283FD1)
-Date: Thu, 6 Nov 2014 14:50:42 +0100
-From: Ronald Wahl <ronald.wahl@raritan.com>
+	Tue, 25 Nov 2014 05:13:23 -0500
+Message-ID: <5474538B.70207@broadcom.com> (sfid-20141125_111330_496448_6EEE9DA0)
+Date: Tue, 25 Nov 2014 11:01:47 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Arend van Spriel <arend@broadcom.com>,
-	<linux-wireless@vger.kernel.org>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Subject: Re: [PATCH] mac80211: Fix regression that triggers a kernel BUG with
- CCMP
-References: <1415267752-4704-1-git-send-email-ronald.wahl@raritan.com>		 <1415268135.1884.1.camel@sipsolutions.net> <545B6AD3.8020301@broadcom.com>	 <1415277562.17015.4.camel@sipsolutions.net> <545B7290.6060409@raritan.com> <1415279690.17015.7.camel@sipsolutions.net>
-In-Reply-To: <1415279690.17015.7.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/4] brcmutil: add helper function to format board revision
+References: <1416518822-29585-1-git-send-email-arend@broadcom.com> <1416518822-29585-3-git-send-email-arend@broadcom.com> <20141124215352.GB4484@tuxdriver.com>
+In-Reply-To: <20141124215352.GB4484@tuxdriver.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06.11.2014 14:14, Johannes Berg wrote:
-> On Thu, 2014-11-06 at 14:07 +0100, Ronald Wahl wrote:
+On 11/24/14 22:53, John W. Linville wrote:
+> I am holding patches 2-4 until we resolve the brcmu_boardrev_str
+> build thing...
+
+Actually, only patch 2 and 3 are related to the build thing. If that is 
+what this is.
+
+Regards,
+Arend
+
+> On Thu, Nov 20, 2014 at 10:27:00PM +0100, Arend van Spriel wrote:
+>> The board revision that is available in hardware can be translated
+>> so it matches the labelling on the board. This is accomplished by
+>> this helper function.
+>>
+>> Reviewed-by: Hante Meuleman<meuleman@broadcom.com>
+>> Reviewed-by: Pieter-Paul Giesberts<pieterpg@broadcom.com>
+>> Signed-off-by: Arend van Spriel<arend@broadcom.com>
+>> ---
+>>   drivers/net/wireless/brcm80211/brcmutil/utils.c      | 16 ++++++++++++++++
+>>   drivers/net/wireless/brcm80211/include/brcmu_utils.h |  2 ++
+>>   2 files changed, 18 insertions(+)
+>>
+>> diff --git a/drivers/net/wireless/brcm80211/brcmutil/utils.c b/drivers/net/wireless/brcm80211/brcmutil/utils.c
+>> index 0f7e1c7..af97f8b 100644
+>> --- a/drivers/net/wireless/brcm80211/brcmutil/utils.c
+>> +++ b/drivers/net/wireless/brcm80211/brcmutil/utils.c
+>> @@ -292,4 +292,20 @@ void brcmu_dbg_hex_dump(const void *data, size_t size, const char *fmt, ...)
+>>   	print_hex_dump_bytes("", DUMP_PREFIX_OFFSET, data, size);
+>>   }
+>>   EXPORT_SYMBOL(brcmu_dbg_hex_dump);
+>> +
+>> +/* Produce a human-readable string for boardrev */
+>> +char *brcmu_boardrev_str(u32 brev, char *buf)
+>> +{
+>> +	char c;
+>> +
+>> +	if (brev<  0x100) {
+>> +		snprintf(buf, 8, "%d.%d", (brev&  0xf0)>>  4, brev&  0xf);
+>> +	} else {
+>> +		c = (brev&  0xf000) == 0x1000 ? 'P' : 'A';
+>> +		snprintf(buf, 8, "%c%03x", c, brev&  0xfff);
+>> +	}
+>> +	return buf;
+>> +}
+>> +EXPORT_SYMBOL(brcmu_boardrev_str);
+>> +
+>>   #endif				/* defined(DEBUG) */
+>> diff --git a/drivers/net/wireless/brcm80211/include/brcmu_utils.h b/drivers/net/wireless/brcm80211/include/brcmu_utils.h
+>> index 8ba445b..a043e29 100644
+>> --- a/drivers/net/wireless/brcm80211/include/brcmu_utils.h
+>> +++ b/drivers/net/wireless/brcm80211/include/brcmu_utils.h
+>> @@ -218,4 +218,6 @@ void brcmu_dbg_hex_dump(const void *data, size_t size, const char *fmt, ...)
+>>   }
+>>   #endif
+>>
+>> +char *brcmu_boardrev_str(u32 brev, char *buf);
+>> +
+>>   #endif				/* _BRCMU_UTILS_H_ */
+>> --
+>> 1.9.1
+>>
+>>
 >
->> But there are LTS kernels not maintained by Greg like 3.12 and 3.16. How
->> about these? If sending patches to stable@kernel org is optional then
->> it's better to kill that list or silently drop emails send to this list
->> so no errors are returned for this address.
->
-> They can pick it up the same way though, no? Actually I think they
-> usually pick it up from Greg's tree anyway :)
 
-"Can" and "do" are different things. And you "think" you know what 
-others people do but do you really "know" it? Anyway your original 
-comment sounded a bit like "avoid sending it to the stable kernel 
-mailinglist otherwise unwanted things might happen". In the end this 
-raises the question why that stable kernel mailing still list exists or 
-why there is no general rule not to send mails to it.
-
-So in the end that currently means that it is not wrong to send mail to 
-stable@vger.kernel.org but it is your opinion that it is just not really 
-necessary, right?
-
-- ron
-
--- 
-Ronald Wahl - ronald.wahl@raritan.com - Phone +49 375271349-0 Fax -99
-Raritan Deutschland GmbH, Kornmarkt 7, 08056 Zwickau, Germany
-USt-IdNr. DE813094160, Steuer-Nr. 227/117/01749
-Amtsgericht Chemnitz HRB 23605
-Geschäftsführung: Stuart Hopper, Ralf Ploenes
