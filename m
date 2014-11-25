@@ -1,79 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:59421 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752146AbaKJJXs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Nov 2014 04:23:48 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: emmanuel.grumbach@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Luciano Coelho <luciano.coelho@intel.com>
-Date: Mon, 10 Nov 2014 11:10:17 +0200
-Message-Id: <1415610621-27438-13-git-send-email-luca@coelho.fi> (sfid-20141110_102400_075552_1E18D7C3)
-In-Reply-To: <1415610621-27438-1-git-send-email-luca@coelho.fi>
-References: <1415610621-27438-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH 12/16] iwlwifi: mvm: add a channel_switch op to bypass mac80211 timer
+Received: from s72.web-hosting.com ([198.187.29.22]:48753 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750770AbaKYGPQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Nov 2014 01:15:16 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH v2 2/3] ath10k: Fix locking for WEP keys
+Date: Tue, 25 Nov 2014 11:46:59 +0530
+Message-Id: <1416896220-29691-2-git-send-email-sujith@msujith.org> (sfid-20141125_071520_247414_8C31078E)
+In-Reply-To: <1416896220-29691-1-git-send-email-sujith@msujith.org>
+References: <1416896220-29691-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-We need to call ieee80211_chswitch_done() ourselves just when the
-absence TE started, so we perform the actual context switch early
-enough.  To do so, add a dummy channel_switch op, which will cause
-mac80211 to skip the countdown timer and allow us to call
-ieee80211_chswitch_done() to complete the operation.
+peer->keys needs to be protected by data_lock
+since it is also accessed from the WMI path.
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Both install() and clear() routines for peer
+keys modify the key contents, so use the data_lock
+to avoid races.
+
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/mac80211.c   | 15 +++++++++++++++
- drivers/net/wireless/iwlwifi/mvm/time-event.c |  1 +
- 2 files changed, 16 insertions(+)
+ drivers/net/wireless/ath/ath10k/core.h | 2 ++
+ drivers/net/wireless/ath/ath10k/mac.c  | 4 ++++
+ 2 files changed, 6 insertions(+)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index de6a64d..55ab81e 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -3016,6 +3016,20 @@ static int iwl_mvm_mac_testmode_cmd(struct ieee80211_hw *hw,
- }
- #endif
- 
-+static void iwl_mvm_channel_switch(struct ieee80211_hw *hw,
-+				   struct ieee80211_vif *vif,
-+				   struct ieee80211_channel_switch *chsw)
-+{
-+	/* By implementing this operation, we prevent mac80211 from
-+	 * starting its own channel switch timer, so that we can call
-+	 * ieee80211_chswitch_done() ourselves at the right time
-+	 * (which is when the absence time event starts).
-+	 */
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 8f86bd3..73da1bb 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -218,6 +218,8 @@ struct ath10k_peer {
+ 	int vdev_id;
+ 	u8 addr[ETH_ALEN];
+ 	DECLARE_BITMAP(peer_ids, ATH10K_MAX_NUM_PEER_IDS);
 +
-+	IWL_DEBUG_MAC80211(IWL_MAC80211_GET_MVM(hw),
-+			   "dummy channel switch op\n");
-+}
-+
- static int iwl_mvm_pre_channel_switch(struct ieee80211_hw *hw,
- 				      struct ieee80211_vif *vif,
- 				      struct ieee80211_channel_switch *chsw)
-@@ -3190,6 +3204,7 @@ const struct ieee80211_ops iwl_mvm_hw_ops = {
++	/* protected by ar->data_lock */
+ 	struct ieee80211_key_conf *keys[WMI_MAX_KEY_INDEX + 1];
+ };
  
- 	.set_tim = iwl_mvm_set_tim,
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index fb95d4d..01de6f3 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -136,7 +136,9 @@ static int ath10k_install_peer_wep_keys(struct ath10k_vif *arvif,
+ 		if (ret)
+ 			return ret;
  
-+	.channel_switch = iwl_mvm_channel_switch,
- 	.pre_channel_switch = iwl_mvm_pre_channel_switch,
- 	.post_channel_switch = iwl_mvm_post_channel_switch,
++		spin_lock_bh(&ar->data_lock);
+ 		peer->keys[i] = arvif->wep_keys[i];
++		spin_unlock_bh(&ar->data_lock);
+ 	}
  
-diff --git a/drivers/net/wireless/iwlwifi/mvm/time-event.c b/drivers/net/wireless/iwlwifi/mvm/time-event.c
-index aa05a71..2feff15 100644
---- a/drivers/net/wireless/iwlwifi/mvm/time-event.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/time-event.c
-@@ -207,6 +207,7 @@ iwl_mvm_te_handle_notify_csa(struct iwl_mvm *mvm,
- 		break;
- 	case NL80211_IFTYPE_STATION:
- 		iwl_mvm_csa_client_absent(mvm, te_data->vif);
-+		ieee80211_chswitch_done(te_data->vif, true);
- 		break;
- 	default:
- 		/* should never happen */
+ 	return 0;
+@@ -173,7 +175,9 @@ static int ath10k_clear_peer_keys(struct ath10k_vif *arvif,
+ 			ath10k_warn(ar, "failed to remove peer wep key %d: %d\n",
+ 				    i, ret);
+ 
++		spin_lock_bh(&ar->data_lock);
+ 		peer->keys[i] = NULL;
++		spin_unlock_bh(&ar->data_lock);
+ 	}
+ 
+ 	return first_errno;
 -- 
-2.1.1
+2.1.3
 
