@@ -1,47 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:41501
-	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751650AbaK3UxD (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:48307 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751152AbaKYUCs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Nov 2014 15:53:03 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
-Subject: [PATCH] ath5k: fix hardware queue index assignment
-Date: Sun, 30 Nov 2014 21:52:57 +0100
-Message-Id: <1417380777-25796-1-git-send-email-nbd@openwrt.org> (sfid-20141130_215307_864315_0AA58115)
+	Tue, 25 Nov 2014 15:02:48 -0500
+From: Peter Oh <poh@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 1/2] ath10k: add new pdev parameters for fw 10.2
+Date: Tue, 25 Nov 2014 12:02:44 -0800
+Message-ID: <1416945765-26902-1-git-send-email-poh@qca.qualcomm.com> (sfid-20141125_210305_756145_81C9814E)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Like with ath9k, ath5k queues also need to be ordered by priority.
-queue_info->tqi_subtype already contains the correct index, so use it
-instead of relying on the order of ath5k_hw_setup_tx_queue calls.
+New pdev paramters have been added to firmware 10.2,
+hence update wmi interfaces to sync with.
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath5k/qcu.c | 8 +-------
- 1 file changed, 1 insertion(+), 7 deletions(-)
+ drivers/net/wireless/ath/ath10k/wmi.h | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath5k/qcu.c b/drivers/net/wireless/ath/ath5k/qcu.c
-index 0583c69..ddaad71 100644
---- a/drivers/net/wireless/ath/ath5k/qcu.c
-+++ b/drivers/net/wireless/ath/ath5k/qcu.c
-@@ -225,13 +225,7 @@ ath5k_hw_setup_tx_queue(struct ath5k_hw *ah, enum ath5k_tx_queue queue_type,
- 	} else {
- 		switch (queue_type) {
- 		case AR5K_TX_QUEUE_DATA:
--			for (queue = AR5K_TX_QUEUE_ID_DATA_MIN;
--				ah->ah_txq[queue].tqi_type !=
--				AR5K_TX_QUEUE_INACTIVE; queue++) {
--
--				if (queue > AR5K_TX_QUEUE_ID_DATA_MAX)
--					return -EINVAL;
--			}
-+			queue = queue_info->tqi_subtype;
- 			break;
- 		case AR5K_TX_QUEUE_UAPSD:
- 			queue = AR5K_TX_QUEUE_ID_UAPSD;
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index a38d788..8fa0192 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -2707,6 +2707,9 @@ enum wmi_10x_pdev_param {
+ 	WMI_10X_PDEV_PARAM_SET_MCAST2UCAST_MODE,
+ 	WMI_10X_PDEV_PARAM_SET_MCAST2UCAST_BUFFER,
+ 	WMI_10X_PDEV_PARAM_REMOVE_MCAST2UCAST_BUFFER,
++	WMI_10X_PDEV_PEER_STA_PS_STATECHG_ENABLE,
++	WMI_10X_PDEV_PARAM_RTS_FIXED_RATE,
++	WMI_10X_PDEV_PARAM_CAL_PERIOD
+ };
+ 
+ struct wmi_pdev_set_param_cmd {
 -- 
-2.1.2
+1.9.1
 
