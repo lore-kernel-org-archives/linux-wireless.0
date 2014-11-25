@@ -1,54 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:41112 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751544AbaKFUCl (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:39113 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750812AbaKYJES (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Nov 2014 15:02:41 -0500
-Received: by mail-wi0-f177.google.com with SMTP id ex7so2599207wid.16
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Nov 2014 12:02:40 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 6/6] staging: vt6655: Fix issue of byPacketType is not set at all.
-Date: Thu,  6 Nov 2014 20:02:05 +0000
-Message-Id: <1415304125-5165-6-git-send-email-tvboxspy@gmail.com> (sfid-20141106_210252_945484_82286F76)
-In-Reply-To: <1415304125-5165-1-git-send-email-tvboxspy@gmail.com>
-References: <1415304125-5165-1-git-send-email-tvboxspy@gmail.com>
+	Tue, 25 Nov 2014 04:04:18 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: don't drop corrupted mgmt frames
+References: <1416839648-31803-1-git-send-email-michal.kazior@tieto.com>
+Date: Tue, 25 Nov 2014 11:04:12 +0200
+In-Reply-To: <1416839648-31803-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Mon, 24 Nov 2014 15:34:08 +0100")
+Message-ID: <87egsr1wj7.fsf@kamboji.qca.qualcomm.com> (sfid-20141125_100423_812846_86960266)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-set by calling CARDbyGetPktType.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-change CARDbIsOFDMinBasicRate to check basic_rates.
+> --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
+> +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+> @@ -1381,6 +1381,8 @@ static bool ath10k_htt_rx_amsdu_allowed(struct ath10k *ar,
+>  {
+>  	struct sk_buff *msdu;
+>  	struct htt_rx_desc *rxd;
+> +	bool is_mgmt;
+> +	bool has_fcs_err;
+>  
+>  	msdu = skb_peek(amsdu);
+>  	rxd = (void *)msdu->data - sizeof(*rxd);
+> @@ -1394,12 +1396,19 @@ static bool ath10k_htt_rx_amsdu_allowed(struct ath10k *ar,
+>  		return false;
+>  	}
+>  
+> +	is_mgmt = !!(rxd->attention.flags &
+> +		     __cpu_to_le32(RX_ATTENTION_FLAGS_MGMT_TYPE));
+> +	has_fcs_err = !!(rxd->attention.flags &
+> +			 __cpu_to_le32(RX_ATTENTION_FLAGS_FCS_ERR));
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/card.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+I think I asked this before in some other patch, but isn't '!!' operator
+useless here? is_mgmt is a boolean so the compiler should convert it
+correctly without '!!' anyway, right?
 
-diff --git a/drivers/staging/vt6655/card.c b/drivers/staging/vt6655/card.c
-index 1869557..aaa7289 100644
---- a/drivers/staging/vt6655/card.c
-+++ b/drivers/staging/vt6655/card.c
-@@ -342,6 +342,8 @@ bool CARDbSetPhyParameter(struct vnt_private *pDevice, CARD_PHY_TYPE ePHYType,
- 		VNSvOutPortB(pDevice->PortOffset + MAC_REG_CWMAXMIN0, pDevice->byCWMaxMin);
- 	}
- 
-+	pDevice->byPacketType = CARDbyGetPktType(pDevice);
-+
- 	CARDvSetRSPINF(pDevice, ePHYType);
- 
- 	return true;
-@@ -876,7 +878,7 @@ bool CARDbIsOFDMinBasicRate(struct vnt_private *pDevice)
- 	int ii;
- 
- 	for (ii = RATE_54M; ii >= RATE_6M; ii--) {
--		if ((pDevice->wBasicRate) & ((unsigned short)(1 << ii)))
-+		if ((pDevice->basic_rates) & ((u32)(1 << ii)))
- 			return true;
- 	}
- 	return false;
 -- 
-2.1.0
-
+Kalle Valo
