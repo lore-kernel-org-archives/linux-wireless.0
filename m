@@ -1,316 +1,200 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:19632 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753629AbaKMJTQ (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:56363 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751042AbaKYOow (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Nov 2014 04:19:16 -0500
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <wireless-regdb@lists.infradead.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH] wireless-regdb: Reorder country codes to be in alphabetical order
-Date: Thu, 13 Nov 2014 11:18:38 +0200
-Message-ID: <1415870318-8505-1-git-send-email-jouni@qca.qualcomm.com> (sfid-20141113_101937_724712_BDAF529C)
+	Tue, 25 Nov 2014 09:44:52 -0500
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Marc Yang <yangyang@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 5/5] mwifiex: add Tx status support for ACTION frames
+Date: Tue, 25 Nov 2014 06:43:06 -0800
+Message-ID: <1416926586-19286-6-git-send-email-akarwar@marvell.com> (sfid-20141125_154456_895946_63DF0AFA)
+In-Reply-To: <1416926586-19286-1-git-send-email-akarwar@marvell.com>
+References: <1416926586-19286-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This makes it easier to write (semi-)automated synchronization and
-validation scripts against external databases. I'd assume this order was
-already supposed to be used, but couple of the countries have been
-placed in incorrect locations in the file over the years.
+ACK status (0/1) for ACTION frames is informed to cfg80211. We
+will extend existing logic used for EAPOL frames. The cfg80211
+API is different here. Also, we need to explicitly free cloned
+skb.
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 ---
- db.txt | 134 ++++++++++++++++++++++++++++++++---------------------------------
- 1 file changed, 67 insertions(+), 67 deletions(-)
+ drivers/net/wireless/mwifiex/cfg80211.c | 13 ++++++++++---
+ drivers/net/wireless/mwifiex/decl.h     |  2 ++
+ drivers/net/wireless/mwifiex/main.c     | 10 +++++++---
+ drivers/net/wireless/mwifiex/main.h     |  4 ++++
+ drivers/net/wireless/mwifiex/sta_tx.c   |  3 ++-
+ drivers/net/wireless/mwifiex/txrx.c     | 17 ++++++++++++++---
+ drivers/net/wireless/mwifiex/uap_txrx.c |  3 ++-
+ 7 files changed, 41 insertions(+), 11 deletions(-)
 
-diff --git a/db.txt b/db.txt
-index 6cf86e1..df7f7b1 100644
---- a/db.txt
-+++ b/db.txt
-@@ -411,19 +411,6 @@ country FR: DFS-ETSI
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57000 - 66000 @ 2160), (40)
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 68d5874..f881044 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -194,10 +194,17 @@ mwifiex_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 	tx_info->pkt_len = pkt_len;
  
--country GE: DFS-ETSI
--	(2402 - 2482 @ 40), (20)
--	(5170 - 5250 @ 80), (18), AUTO-BW
--	(5250 - 5330 @ 80), (18), DFS, AUTO-BW
--	# 60 gHz band channels 1-4, ref: Etsi En 302 567
--	(57000 - 66000 @ 2160), (40)
+ 	mwifiex_form_mgmt_frame(skb, buf, len);
+-	mwifiex_queue_tx_pkt(priv, skb);
 -
--country GF: DFS-ETSI
--	(2402 - 2482 @ 40), (20)
--	(5170 - 5250 @ 80), (20), AUTO-BW
--	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
--	(5490 - 5710 @ 160), (27), DFS
--
- country GB: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 80), (20), AUTO-BW
-@@ -439,6 +426,19 @@ country GD: DFS-FCC
- 	(5490 - 5730 @ 160), (24), DFS
- 	(5735 - 5835 @ 80), (30)
- 
-+country GE: DFS-ETSI
-+	(2402 - 2482 @ 40), (20)
-+	(5170 - 5250 @ 80), (18), AUTO-BW
-+	(5250 - 5330 @ 80), (18), DFS, AUTO-BW
-+	# 60 gHz band channels 1-4, ref: Etsi En 302 567
-+	(57000 - 66000 @ 2160), (40)
+ 	*cookie = prandom_u32() | 1;
+-	cfg80211_mgmt_tx_status(wdev, *cookie, buf, len, true, GFP_ATOMIC);
 +
-+country GF: DFS-ETSI
-+	(2402 - 2482 @ 40), (20)
-+	(5170 - 5250 @ 80), (20), AUTO-BW
-+	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
-+	(5490 - 5710 @ 160), (27), DFS
++	if (ieee80211_is_action(mgmt->frame_control))
++		skb = mwifiex_clone_skb_for_tx_status(priv,
++						      skb,
++				MWIFIEX_BUF_FLAG_ACTION_TX_STATUS, cookie);
++	else
++		cfg80211_mgmt_tx_status(wdev, *cookie, buf, len, true,
++					GFP_ATOMIC);
 +
- country GH: DFS-FCC
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 80), (17), AUTO-BW
-@@ -446,6 +446,12 @@ country GH: DFS-FCC
- 	(5490 - 5730 @ 160), (24), DFS
- 	(5735 - 5835 @ 80), (30)
++	mwifiex_queue_tx_pkt(priv, skb);
  
-+country GL: DFS-ETSI
-+	(2402 - 2482 @ 40), (20)
-+	(5170 - 5250 @ 80), (20)
-+	(5250 - 5330 @ 80), (20), DFS
-+	(5490 - 5710 @ 80), (27), DFS
+ 	wiphy_dbg(wiphy, "info: management frame transmitted\n");
+ 	return 0;
+diff --git a/drivers/net/wireless/mwifiex/decl.h b/drivers/net/wireless/mwifiex/decl.h
+index 9daa88a..2269acf 100644
+--- a/drivers/net/wireless/mwifiex/decl.h
++++ b/drivers/net/wireless/mwifiex/decl.h
+@@ -77,6 +77,7 @@
+ #define MWIFIEX_BUF_FLAG_BRIDGED_PKT	   BIT(1)
+ #define MWIFIEX_BUF_FLAG_TDLS_PKT	   BIT(2)
+ #define MWIFIEX_BUF_FLAG_EAPOL_TX_STATUS   BIT(3)
++#define MWIFIEX_BUF_FLAG_ACTION_TX_STATUS  BIT(4)
+ 
+ #define MWIFIEX_BRIDGED_PKTS_THR_HIGH      1024
+ #define MWIFIEX_BRIDGED_PKTS_THR_LOW        128
+@@ -161,6 +162,7 @@ struct mwifiex_txinfo {
+ 	u8 bss_type;
+ 	u32 pkt_len;
+ 	u8 ack_frame_id;
++	u64 cookie;
+ };
+ 
+ enum mwifiex_wmm_ac_e {
+diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
+index cf31d36..d4d2223 100644
+--- a/drivers/net/wireless/mwifiex/main.c
++++ b/drivers/net/wireless/mwifiex/main.c
+@@ -608,9 +608,9 @@ int mwifiex_queue_tx_pkt(struct mwifiex_private *priv, struct sk_buff *skb)
+ 	return 0;
+ }
+ 
+-static struct sk_buff *
++struct sk_buff *
+ mwifiex_clone_skb_for_tx_status(struct mwifiex_private *priv,
+-				struct sk_buff *skb, u8 flag)
++				struct sk_buff *skb, u8 flag, u64 *cookie)
+ {
+ 	struct sk_buff *orig_skb = skb;
+ 	struct mwifiex_txinfo *tx_info, *orig_tx_info;
+@@ -632,6 +632,10 @@ mwifiex_clone_skb_for_tx_status(struct mwifiex_private *priv,
+ 			orig_tx_info = MWIFIEX_SKB_TXCB(orig_skb);
+ 			orig_tx_info->ack_frame_id = id;
+ 			orig_tx_info->flags |= flag;
 +
- country GP: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 80), (20), AUTO-BW
-@@ -460,12 +466,6 @@ country GR: DFS-ETSI
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57000 - 66000 @ 2160), (40)
- 
--country GL: DFS-ETSI
--	(2402 - 2482 @ 40), (20)
--	(5170 - 5250 @ 80), (20)
--	(5250 - 5330 @ 80), (20), DFS
--	(5490 - 5710 @ 80), (27), DFS
--
- country GT: DFS-FCC
- 	(2402 - 2472 @ 40), (30)
- 	(5170 - 5250 @ 80), (17), AUTO-BW
-@@ -483,18 +483,18 @@ country GY:
- 	(2402 - 2482 @ 40), (30)
- 	(5735 - 5835 @ 80), (30)
- 
--country HN: DFS-FCC
-+country HK:
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 80), (17), AUTO-BW
- 	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
--	(5490 - 5730 @ 160), (24), DFS
-+	(5490 - 5710 @ 160), (24), DFS
- 	(5735 - 5835 @ 80), (30)
- 
--country HK:
-+country HN: DFS-FCC
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 80), (17), AUTO-BW
- 	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
--	(5490 - 5710 @ 160), (24), DFS
-+	(5490 - 5730 @ 160), (24), DFS
- 	(5735 - 5835 @ 80), (30)
- 
- country HR: DFS-ETSI
-@@ -544,6 +544,10 @@ country IN: DFS-JP
- 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
- 	(5735 - 5835 @ 80), (20)
- 
-+country IR: DFS-JP
-+	(2402 - 2482 @ 40), (20)
-+	(5735 - 5835 @ 80), (30)
++			if (flag == MWIFIEX_BUF_FLAG_ACTION_TX_STATUS && cookie)
++				orig_tx_info->cookie = *cookie;
 +
- country IS: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 80), (20), AUTO-BW
-@@ -552,10 +556,6 @@ country IS: DFS-ETSI
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57000 - 66000 @ 2160), (40)
+ 		} else if (skb_shared(skb)) {
+ 			kfree_skb(orig_skb);
+ 		} else {
+@@ -703,7 +707,7 @@ mwifiex_hard_start_xmit(struct sk_buff *skb, struct net_device *dev)
+ 		     priv->adapter->fw_api_ver == MWIFIEX_FW_V15))
+ 		skb = mwifiex_clone_skb_for_tx_status(priv,
+ 						      skb,
+-					MWIFIEX_BUF_FLAG_EAPOL_TX_STATUS);
++					MWIFIEX_BUF_FLAG_EAPOL_TX_STATUS, NULL);
  
--country IR: DFS-JP
--	(2402 - 2482 @ 40), (20)
--	(5735 - 5835 @ 80), (30)
--
- country IT: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 80), (20), AUTO-BW
-@@ -571,6 +571,11 @@ country JM: DFS-FCC
- 	(5490 - 5730 @ 160), (24), DFS
- 	(5735 - 5835 @ 80), (30)
+ 	/* Record the current time the packet was queued; used to
+ 	 * determine the amount of time the packet was queued in
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index e19fc2f..bdba37b 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -1342,6 +1342,10 @@ void mwifiex_clean_auto_tdls(struct mwifiex_private *priv);
+ void mwifiex_parse_tx_status_event(struct mwifiex_private *priv,
+ 				   void *event_body);
  
-+country JO: DFS-JP
-+	(2402 - 2482 @ 40), (20)
-+	(5170 - 5250 @ 80), (23)
-+	(5735 - 5835 @ 80), (23)
++struct sk_buff *
++mwifiex_clone_skb_for_tx_status(struct mwifiex_private *priv,
++				struct sk_buff *skb, u8 flag, u64 *cookie);
 +
- country JP: DFS-JP
- 	(2402 - 2482 @ 40), (20)
- 	(2474 - 2494 @ 20), (20), NO-OFDM
-@@ -580,11 +585,6 @@ country JP: DFS-JP
- 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
- 	(5490 - 5710 @ 160), (23), DFS
+ #ifdef CONFIG_DEBUG_FS
+ void mwifiex_debugfs_init(void);
+ void mwifiex_debugfs_remove(void);
+diff --git a/drivers/net/wireless/mwifiex/sta_tx.c b/drivers/net/wireless/mwifiex/sta_tx.c
+index c69ecbc..b896d73 100644
+--- a/drivers/net/wireless/mwifiex/sta_tx.c
++++ b/drivers/net/wireless/mwifiex/sta_tx.c
+@@ -77,7 +77,8 @@ void *mwifiex_process_sta_txpd(struct mwifiex_private *priv,
+ 	local_tx_pd->pkt_delay_2ms =
+ 				mwifiex_wmm_compute_drv_pkt_delay(priv, skb);
  
--country JO: DFS-JP
--	(2402 - 2482 @ 40), (20)
--	(5170 - 5250 @ 80), (23)
--	(5735 - 5835 @ 80), (23)
--
- country KE: DFS-JP
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 80), (23)
-@@ -696,16 +696,16 @@ country LV: DFS-ETSI
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57000 - 66000 @ 2160), (40)
+-	if (tx_info->flags & MWIFIEX_BUF_FLAG_EAPOL_TX_STATUS) {
++	if (tx_info->flags & MWIFIEX_BUF_FLAG_EAPOL_TX_STATUS ||
++	    tx_info->flags & MWIFIEX_BUF_FLAG_ACTION_TX_STATUS) {
+ 		local_tx_pd->tx_token_id = tx_info->ack_frame_id;
+ 		local_tx_pd->flags |= MWIFIEX_TXPD_FLAGS_REQ_TX_STATUS;
+ 	}
+diff --git a/drivers/net/wireless/mwifiex/txrx.c b/drivers/net/wireless/mwifiex/txrx.c
+index 782bfd6..6ae1333 100644
+--- a/drivers/net/wireless/mwifiex/txrx.c
++++ b/drivers/net/wireless/mwifiex/txrx.c
+@@ -209,6 +209,7 @@ void mwifiex_parse_tx_status_event(struct mwifiex_private *priv,
+ 	struct tx_status_event *tx_status = (void *)priv->adapter->event_body;
+ 	struct sk_buff *ack_skb;
+ 	unsigned long flags;
++	struct mwifiex_txinfo *tx_info;
  
--country MC: DFS-ETSI
-+country MA: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 80), (20), AUTO-BW
- 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
--	(5490 - 5710 @ 160), (27), DFS
+ 	if (!tx_status->tx_token_id)
+ 		return;
+@@ -219,7 +220,17 @@ void mwifiex_parse_tx_status_event(struct mwifiex_private *priv,
+ 		idr_remove(&priv->ack_status_frames, tx_status->tx_token_id);
+ 	spin_unlock_irqrestore(&priv->ack_status_lock, flags);
  
--country MA: DFS-ETSI
-+country MC: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 80), (20), AUTO-BW
- 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
-+	(5490 - 5710 @ 160), (27), DFS
- 
- # Source:
- # http://www.cnfr.md/index.php?pag=sec&id=117&l=en
-@@ -729,12 +729,6 @@ country MF: DFS-ETSI
- 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
- 	(5490 - 5710 @ 160), (27), DFS
- 
--country MO:
--	(2402 - 2482 @ 40), (20)
--	(5170 - 5250 @ 40), (23)
--	(5250 - 5330 @ 40), (23), DFS
--	(5735 - 5835 @ 40), (30)
--
- country MH: DFS-FCC
- 	(2402 - 2472 @ 40), (30)
- 	(5170 - 5250 @ 80), (24), AUTO-BW
-@@ -757,6 +751,12 @@ country MN: DFS-FCC
- 	(5490 - 5730 @ 160), (24), DFS
- 	(5735 - 5835 @ 80), (30)
- 
-+country MO:
-+	(2402 - 2482 @ 40), (20)
-+	(5170 - 5250 @ 40), (23)
-+	(5250 - 5330 @ 40), (23), DFS
-+	(5735 - 5835 @ 40), (30)
+-	/* consumes ack_skb */
+-	if (ack_skb)
+-		skb_complete_wifi_ack(ack_skb, !tx_status->status);
++	if (ack_skb) {
++		tx_info = MWIFIEX_SKB_TXCB(ack_skb);
 +
- country MP: DFS-FCC
- 	(2402 - 2472 @ 40), (30)
- 	(5170 - 5250 @ 80), (24), AUTO-BW
-@@ -799,17 +799,17 @@ country MW: DFS-ETSI
- 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
- 	(5490 - 5710 @ 160), (27), DFS
++		if (tx_info->flags & MWIFIEX_BUF_FLAG_EAPOL_TX_STATUS) {
++			/* consumes ack_skb */
++			skb_complete_wifi_ack(ack_skb, !tx_status->status);
++		} else {
++			cfg80211_mgmt_tx_status(priv->wdev, tx_info->cookie,
++						ack_skb->data, ack_skb->len,
++						!tx_status->status, GFP_ATOMIC);
++			dev_kfree_skb_any(ack_skb);
++		}
++	}
+ }
+diff --git a/drivers/net/wireless/mwifiex/uap_txrx.c b/drivers/net/wireless/mwifiex/uap_txrx.c
+index 4580942..e7d326f 100644
+--- a/drivers/net/wireless/mwifiex/uap_txrx.c
++++ b/drivers/net/wireless/mwifiex/uap_txrx.c
+@@ -374,7 +374,8 @@ void *mwifiex_process_uap_txpd(struct mwifiex_private *priv,
  
--country MY: DFS-FCC
-+country MX: DFS-FCC
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 80), (17), AUTO-BW
--	(5250 - 5330 @ 80), (23), DFS, AUTO-BW
-+	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
-+	(5490 - 5730 @ 160), (24), DFS
- 	(5735 - 5835 @ 80), (30)
+ 	txpd->pkt_delay_2ms = mwifiex_wmm_compute_drv_pkt_delay(priv, skb);
  
--country MX: DFS-FCC
-+country MY: DFS-FCC
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 80), (17), AUTO-BW
--	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
--	(5490 - 5730 @ 160), (24), DFS
-+	(5250 - 5330 @ 80), (23), DFS, AUTO-BW
- 	(5735 - 5835 @ 80), (30)
- 
- country NI: DFS-FCC
-@@ -912,6 +912,13 @@ country PM: DFS-ETSI
- 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
- 	(5490 - 5710 @ 160), (27), DFS
- 
-+country PR: DFS-FCC
-+	(2402 - 2472 @ 40), (30)
-+	(5170 - 5250 @ 80), (17), AUTO-BW
-+	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
-+	(5490 - 5730 @ 160), (24), DFS
-+	(5735 - 5835 @ 80), (30)
-+
- country PT: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 80), (20), AUTO-BW
-@@ -920,13 +927,6 @@ country PT: DFS-ETSI
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57000 - 66000 @ 2160), (40)
- 
--country PR: DFS-FCC
--	(2402 - 2472 @ 40), (30)
--	(5170 - 5250 @ 80), (17), AUTO-BW
--	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
--	(5490 - 5730 @ 160), (24), DFS
--	(5735 - 5835 @ 80), (30)
--
- country PW: DFS-FCC
- 	(2402 - 2472 @ 40), (30)
- 	(5170 - 5250 @ 80), (24), AUTO-BW
-@@ -1065,13 +1065,6 @@ country TG: DFS-ETSI
- 	(5250 - 5330 @ 40), (20), DFS
- 	(5490 - 5710 @ 40), (27), DFS
- 
--country TW: DFS-JP
--	(2402 - 2472 @ 40), (30)
--	(5270 - 5330 @ 40), (17), DFS
--	(5490 - 5590 @ 80), (30), DFS
--	(5650 - 5710 @ 40), (30), DFS
--	(5735 - 5835 @ 80), (30)
--
- country TH: DFS-FCC
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 80), (17), AUTO-BW
-@@ -1079,13 +1072,6 @@ country TH: DFS-FCC
- 	(5490 - 5730 @ 160), (24), DFS
- 	(5735 - 5835 @ 80), (30)
- 
--country TT: DFS-FCC
--	(2402 - 2482 @ 40), (20)
--	(5170 - 5250 @ 80), (17), AUTO-BW
--	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
--	(5490 - 5730 @ 160), (24), DFS
--	(5735 - 5835 @ 80), (30)
--
- country TN: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 80), (20), AUTO-BW
-@@ -1098,6 +1084,20 @@ country TR: DFS-ETSI
- 	(5490 - 5710 @ 160), (27), DFS
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57000 - 66000 @ 2160), (40)
-+
-+country TT: DFS-FCC
-+	(2402 - 2482 @ 40), (20)
-+	(5170 - 5250 @ 80), (17), AUTO-BW
-+	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
-+	(5490 - 5730 @ 160), (24), DFS
-+	(5735 - 5835 @ 80), (30)
-+
-+country TW: DFS-JP
-+	(2402 - 2472 @ 40), (30)
-+	(5270 - 5330 @ 40), (17), DFS
-+	(5490 - 5590 @ 80), (30), DFS
-+	(5650 - 5710 @ 40), (30), DFS
-+	(5735 - 5835 @ 80), (30)
-  
- # Source:
- # #914 / 06 Sep 2007: http://www.ucrf.gov.ua/uk/doc/nkrz/1196068874
+-	if (tx_info->flags & MWIFIEX_BUF_FLAG_EAPOL_TX_STATUS) {
++	if (tx_info->flags & MWIFIEX_BUF_FLAG_EAPOL_TX_STATUS ||
++	    tx_info->flags & MWIFIEX_BUF_FLAG_ACTION_TX_STATUS) {
+ 		txpd->tx_token_id = tx_info->ack_frame_id;
+ 		txpd->flags |= MWIFIEX_TXPD_FLAGS_REQ_TX_STATUS;
+ 	}
 -- 
-1.9.1
+1.8.1.4
 
