@@ -1,180 +1,227 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from isrv.corpit.ru ([86.62.121.231]:35580 "EHLO isrv.corpit.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932885AbaKSVAc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Nov 2014 16:00:32 -0500
-Message-ID: <546D04EE.1030200@msgid.tls.msk.ru> (sfid-20141119_220045_768660_E0A7EE85)
-Date: Thu, 20 Nov 2014 00:00:30 +0300
-From: Michael Tokarev <mjt@tls.msk.ru>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:28773 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752098AbaKYKZF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Nov 2014 05:25:05 -0500
+Subject: [PATCH v3 2/2] ath10k: add memory dump debugfs interface
+To: <ath10k@lists.infradead.org>
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Date: Tue, 25 Nov 2014 12:24:48 +0200
+Message-ID: <20141125102448.3951.97429.stgit@potku.adurom.net> (sfid-20141125_112511_053641_5FA9FC9F)
+In-Reply-To: <20141125102302.3951.10641.stgit@potku.adurom.net>
+References: <20141125102302.3951.10641.stgit@potku.adurom.net>
 MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
-CC: Maximilian Engelhardt <maxi@daemonizer.de>,
-	=?UTF-8?B?UmFmYcWCIE1pxYJl?= =?UTF-8?B?Y2tp?= <zajec5@gmail.com>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	brcm80211 development <brcm80211-dev-list@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>
-Subject: Re: BCM4313 & brcmsmac & 3.12: only semi-working?
-References: <53FDACD1.8090805@msgid.tls.msk.ru> <54363ED0.605@broadcom.com> <CACna6rw3XgdJz0uKkAuas8RTzozTdFp2mgF5g1uo7LHJVSMt4g@mail.gmail.com> <3543341.FmUQFH9nrl@eisbaer> <546C5D1F.108@msgid.tls.msk.ru> <546CD94D.9060509@broadcom.com> <546CF66A.3000207@msgid.tls.msk.ru>
-In-Reply-To: <546CF66A.3000207@msgid.tls.msk.ru>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-19.11.2014 22:58, Michael Tokarev wrote:
-> 19.11.2014 20:54, Arend van Spriel wrote:
-[]
->> I submitted two patches upstream and additionally I have attached two other that are still under review. Could you try these patches and sent me the content of the two debugfs files 'macstat' and 'hardware' after a stall has occurred.
-> 
-> You didn't tell which kernel it is based on.  So I tried it on 3.16,
+From: Yanbo Li <yanbol@qti.qualcomm.com>
 
-Ok, I misunderstood you apparently, -- I only tried 2 patches,
-while I should try all 4.  So here it goes.
+Add mem_val debugfs file for dumping the firmware (target) memory and also for
+writing to the memory. The firmware memory is accessed through one file which
+uses position of the file as the firmware memory address. For example, with dd
+use skip parameter for the address.
 
-The hardware info again:
+Beucase target memory width is 32 bits it's strongly recommended to use
+blocksize divisable with 4 when using this interface. For example, when using
+dd use bs=4 to set the block size to 4 and remember to divide both count and
+skip values with four.
 
-> chipnum 0x4313
-> chiprev 0x1
-> chippackage 0x8
-> corerev 0x18
-> boardid 0x1795
-> boardvendor 0x103c
-> boardrev P107
-> boardflags 0x402201
-> boardflags2 0x884
-> ucoderev 0x262032c
-> radiorev 0x1
-> phytype 0x8
-> phyrev 0x1
-> anarev 0xa
-> nvramrev 8
+To read 4 kB chunk from address 0x400000:
 
-Macstat:
+dd if=mem_value bs=4 count=1024 skip=1048576 | xxd -g1
 
-txallfrm: 287
-txrtsfrm: 118
-txctsfrm: 25
-txackfrm: 60
-txdnlfrm: 0
-txbcnfrm: 0
-txfunfl[8]: 0 0 0 0 0 0 0 0
-txtplunfl: 0
-txphyerr: 0
-pktengrxducast: 0
-pktengrxdmcast: 0
-rxfrmtoolong: 330
-rxfrmtooshrt: 16
-rxinvmachdr: 722
-rxbadfcs: 4306
-rxbadplcp: 7257
-rxcrsglitch: 61757
-rxstrt: 6667
-rxdfrmucastmbss: 41
-rxmfrmucastmbss: 25
-rxcfrmucast: 116
-rxrtsucast: 0
-rxctsucast: 59
-rxackucast: 19
-rxdfrmocast: 70
-rxmfrmocast: 84
-rxcfrmocast: 211
-rxrtsocast: 3
-rxctsocast: 20
-rxdfrmmcast: 9
-rxmfrmmcast: 1486
-rxcfrmmcast: 0
-rxbeaconmbss: 377
-rxdfrmucastobss: 0
-rxbeaconobss: 1086
-rxrsptmout: 94
-bcntxcancl: 0
-rxf0ovfl: 0
-rxf1ovfl: 0
-rxf2ovfl: 0
-txsfovfl: 0
-pmqovfl: 0
-rxcgprqfrm: 0
-rxcgprsqovfl: 0
-txcgprsfail: 0
-txcgprssuc: 0
-prs_timeout: 0
-rxnack: 0
-frmscons: 0
-txnack: 0
-txglitch_nack: 38
-txburst: 4
-bphy_rxcrsglitch: 2
-phywatchdog: 0
-bphy_badplcp: 0
+To write value 0x01020304 to address 0x400400:
 
+echo 0x01020304 | xxd -r | dd of=mem_value bs=4 seek=1048832
 
-As far as I can see, the stats are never updated during stall,
-no numbers are changing, at least while the download is waiting
-for the next packet.  Sometimes wpa_supplicant does something
-little, so some stats gets updated, eg, this is how it looks like
-after about 2..3 minutes:
+To read 4 KB chunk of memory and then write back after edit:
 
-txallfrm: 420
-txrtsfrm: 201
-txctsfrm: 25
-txackfrm: 69
-txdnlfrm: 0
-txbcnfrm: 0
-txfunfl[8]: 0 0 0 0 0 0 0 0
-txtplunfl: 0
-txphyerr: 0
-pktengrxducast: 0
-pktengrxdmcast: 0
-rxfrmtoolong: 1908
-rxfrmtooshrt: 73
-rxinvmachdr: 4115
-rxbadfcs: 15064
-rxbadplcp: 42368
-rxcrsglitch: 36620
-rxstrt: 26393
-rxdfrmucastmbss: 48
-rxmfrmucastmbss: 27
-rxcfrmucast: 158
-rxrtsucast: 0
-rxctsucast: 92
-rxackucast: 25
-rxdfrmocast: 113
-rxmfrmocast: 390
-rxcfrmocast: 962
-rxrtsocast: 38
-rxctsocast: 59
-rxdfrmmcast: 48
-rxmfrmmcast: 7681
-rxcfrmmcast: 0
-rxbeaconmbss: 1505
-rxdfrmucastobss: 0
-rxbeaconobss: 6059
-rxrsptmout: 171
-bcntxcancl: 0
-rxf0ovfl: 0
-rxf1ovfl: 0
-rxf2ovfl: 0
-txsfovfl: 0
-pmqovfl: 0
-rxcgprqfrm: 0
-rxcgprsqovfl: 0
-txcgprsfail: 0
-txcgprssuc: 0
-prs_timeout: 0
-rxnack: 0
-frmscons: 0
-txnack: 0
-txglitch_nack: 41
-txburst: 4
-bphy_rxcrsglitch: 5
-phywatchdog: 0
-bphy_badplcp: 0
+dd if=mem_value of=tmp.bin bs=4 count=1024 skip=1048576
+emacs tmp.bin
+dd if=tmp.bin of=mem_value bs=4 count=1024 seek=1048576
 
+Signed-off-by: Yanbo Li <yanbol@qti.qualcomm.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/debug.c |  114 +++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/hif.h   |   11 +++
+ drivers/net/wireless/ath/ath10k/pci.c   |    1 
+ 3 files changed, 126 insertions(+)
 
-This is with 3.18-tobe kernel (current Linus git).
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index d0397d119862..ff831ca507f7 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -1047,6 +1047,117 @@ static const struct file_operations fops_reg_value = {
+ 	.llseek = default_llseek,
+ };
+ 
++static ssize_t ath10k_mem_value_read(struct file *file,
++				     char __user *user_buf,
++				     size_t count, loff_t *ppos)
++{
++	struct ath10k *ar = file->private_data;
++	u8 *buf;
++	int ret;
++
++	if (*ppos < 0)
++		return -EINVAL;
++
++	if (!count)
++		return 0;
++
++	mutex_lock(&ar->conf_mutex);
++
++	buf = vmalloc(count);
++	if (!buf) {
++		ret = -ENOMEM;
++		goto exit;
++	}
++
++	if (ar->state != ATH10K_STATE_ON &&
++	    ar->state != ATH10K_STATE_UTF) {
++		ret = -ENETDOWN;
++		goto exit;
++	}
++
++	ret = ath10k_hif_diag_read(ar, *ppos, buf, count);
++	if (ret) {
++		ath10k_warn(ar, "failed to read address 0x%08x via diagnose window fnrom debugfs: %d\n",
++			    (u32)(*ppos), ret);
++		goto exit;
++	}
++
++	ret = copy_to_user(user_buf, buf, count);
++	if (ret) {
++		ret = -EFAULT;
++		goto exit;
++	}
++
++	count -= ret;
++	*ppos += count;
++	ret = count;
++
++exit:
++	vfree(buf);
++	mutex_unlock(&ar->conf_mutex);
++
++	return ret;
++}
++
++static ssize_t ath10k_mem_value_write(struct file *file,
++				      const char __user *user_buf,
++				      size_t count, loff_t *ppos)
++{
++	struct ath10k *ar = file->private_data;
++	u8 *buf;
++	int ret;
++
++	if (*ppos < 0)
++		return -EINVAL;
++
++	if (!count)
++		return 0;
++
++	mutex_lock(&ar->conf_mutex);
++
++	buf = vmalloc(count);
++	if (!buf) {
++		ret = -ENOMEM;
++		goto exit;
++	}
++
++	if (ar->state != ATH10K_STATE_ON &&
++	    ar->state != ATH10K_STATE_UTF) {
++		ret = -ENETDOWN;
++		goto exit;
++	}
++
++	ret = copy_from_user(buf, user_buf, count);
++	if (ret) {
++		ret = -EFAULT;
++		goto exit;
++	}
++
++	ret = ath10k_hif_diag_write(ar, *ppos, buf, count);
++	if (ret) {
++		ath10k_warn(ar, "failed to write address 0x%08x via diagnose window from debugfs: %d\n",
++			    (u32)(*ppos), ret);
++		goto exit;
++	}
++
++	*ppos += count;
++	ret = count;
++
++exit:
++	vfree(buf);
++	mutex_unlock(&ar->conf_mutex);
++
++	return ret;
++}
++
++static const struct file_operations fops_mem_value = {
++	.read = ath10k_mem_value_read,
++	.write = ath10k_mem_value_write,
++	.open = simple_open,
++	.owner = THIS_MODULE,
++	.llseek = default_llseek,
++};
++
+ static int ath10k_debug_htt_stats_req(struct ath10k *ar)
+ {
+ 	u64 cookie;
+@@ -1754,6 +1865,9 @@ int ath10k_debug_register(struct ath10k *ar)
+ 	debugfs_create_file("reg_value", S_IRUSR | S_IWUSR,
+ 			    ar->debug.debugfs_phy, ar, &fops_reg_value);
+ 
++	debugfs_create_file("mem_value", S_IRUSR | S_IWUSR,
++			    ar->debug.debugfs_phy, ar, &fops_mem_value);
++
+ 	debugfs_create_file("chip_id", S_IRUSR, ar->debug.debugfs_phy,
+ 			    ar, &fops_chip_id);
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/hif.h b/drivers/net/wireless/ath/ath10k/hif.h
+index bad071906540..6ac552304546 100644
+--- a/drivers/net/wireless/ath/ath10k/hif.h
++++ b/drivers/net/wireless/ath/ath10k/hif.h
+@@ -48,6 +48,8 @@ struct ath10k_hif_ops {
+ 	int (*diag_read)(struct ath10k *ar, u32 address, void *buf,
+ 			 size_t buf_len);
+ 
++	int (*diag_write)(struct ath10k *ar, u32 address, const void *data,
++			  int nbytes);
+ 	/*
+ 	 * API to handle HIF-specific BMI message exchanges, this API is
+ 	 * synchronous and only allowed to be called from a context that
+@@ -113,6 +115,15 @@ static inline int ath10k_hif_diag_read(struct ath10k *ar, u32 address, void *buf
+ 	return ar->hif.ops->diag_read(ar, address, buf, buf_len);
+ }
+ 
++static inline int ath10k_hif_diag_write(struct ath10k *ar, u32 address,
++					const void *data, int nbytes)
++{
++	if (!ar->hif.ops->diag_write)
++		return -EOPNOTSUPP;
++
++	return ar->hif.ops->diag_write(ar, address, data, nbytes);
++}
++
+ static inline int ath10k_hif_exchange_bmi_msg(struct ath10k *ar,
+ 					      void *request, u32 request_len,
+ 					      void *response, u32 *response_len)
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 328ab6c5d053..0816098af578 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -1988,6 +1988,7 @@ static int ath10k_pci_hif_resume(struct ath10k *ar)
+ static const struct ath10k_hif_ops ath10k_pci_hif_ops = {
+ 	.tx_sg			= ath10k_pci_hif_tx_sg,
+ 	.diag_read		= ath10k_pci_hif_diag_read,
++	.diag_write		= ath10k_pci_diag_write_mem,
+ 	.exchange_bmi_msg	= ath10k_pci_hif_exchange_bmi_msg,
+ 	.start			= ath10k_pci_hif_start,
+ 	.stop			= ath10k_pci_hif_stop,
 
-Dunno if this is helpful or not...
-
-Thanks,
-
-/mjt
