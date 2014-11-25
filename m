@@ -1,30 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:41425 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753408AbaKSNnj (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:48702 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751160AbaKYTAO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Nov 2014 08:43:39 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-	Xinming Hu <huxm@marvell.com>
-Date: Wed, 19 Nov 2014 05:43:30 -0800
-Subject: RE: [PATCH] device coredump: fix minor issue in Kconfig file
-Message-ID: <5FF020A1CFFEEC49BD1E09530C4FF5951821E912CE@SC-VEXCH1.marvell.com> (sfid-20141119_144343_013934_3F9BD00A)
-References: <1416403682-9203-1-git-send-email-akarwar@marvell.com>
- <1416404147.9374.2.camel@sipsolutions.net>
-In-Reply-To: <1416404147.9374.2.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+	Tue, 25 Nov 2014 14:00:14 -0500
+Date: Tue, 25 Nov 2014 13:46:25 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Valerio Passini <valerio.passini@unicam.it>
+Subject: Re: [PATCH 1/2 3.18] rtlwifi: rtl8821ae: Fix 5G detection problem
+Message-ID: <20141125184625.GC15476@tuxdriver.com> (sfid-20141125_200027_750144_51E4605E)
+References: <1416933127-25912-1-git-send-email-Larry.Finger@lwfinger.net>
+ <1416933127-25912-2-git-send-email-Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1416933127-25912-2-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSm9oYW5uZXMsDQoNCj4+IEN1cnJlbnRseSAibWFrZSBtZW51Y29uZmlnIiBkb2Vzbid0IGRp
-c3BsYXkgYW4gb3B0aW9uIHRvIGVuYWJsZQ0KPj4gV0FOVF9ERVZfQ09SRURVTVAuIFRoaXMgcGF0
-Y2ggdXBkYXRlcyBLY29uZmlnIHNvIHRoYXQgdXNlciBjYW4gZW5hYmxlDQo+PiBXQU5UX0RFVl9D
-T1JFRFVNUC4NCj4NCj5UaGlzIGlzIGNvbXBsZXRlbHkgaW50ZW50aW9uYWwgLSBkcml2ZXJzIHNo
-b3VsZCAic2VsZWN0DQo+V0FOVF9ERVZfQ09SRURVTVAiIGFuZCB1c2VycyBhcmUgb25seSBhYmxl
-IHRvIHNldCAiQUxMT1dfREVWX0NPUkVEVU1QPW4iDQo+dG8gcHJldmVudCBpdC4NCj4NCg0KVGhh
-bmtzIGZvciB0aGUgY2xhcmlmaWNhdGlvbi4gV2Ugd2lsbCBtb2RpZnkgb3VyIGJ0bXJ2bCBkcml2
-ZXIgcGF0Y2ggYWNjb3JkaW5nbHkgdGhlbi4NCg0KUmVnYXJkcywNCkFtaXRrdW1hcg0KDQo=
+On Tue, Nov 25, 2014 at 10:32:06AM -0600, Larry Finger wrote:
+> The changes associated with moving this driver from staging to the regular
+> tree missed one section setting the allowable rates for the 5GHz band.
+> 
+> This patch is needed to fix the regression reported in Bug #88811
+> (https://bugzilla.kernel.org/show_bug.cgi?id=88811).
+> 
+> Reported-by: Valerio Passini <valerio.passini@unicam.it>
+> Tested-by: Valerio Passini <valerio.passini@unicam.it>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Valerio Passini <valerio.passini@unicam.it>
+> ---
+>  drivers/net/wireless/rtlwifi/rtl8821ae/hw.c | 5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
+> index 310d316..18f34f7 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
+> @@ -3672,8 +3672,9 @@ static void rtl8821ae_update_hal_rate_mask(struct ieee80211_hw *hw,
+>  		mac->opmode == NL80211_IFTYPE_ADHOC)
+>  		macid = sta->aid + 1;
+>  	if (wirelessmode == WIRELESS_MODE_N_5G ||
+> -	    wirelessmode == WIRELESS_MODE_AC_5G)
+> -		ratr_bitmap = sta->supp_rates[NL80211_BAND_5GHZ];
+> +	    wirelessmode == WIRELESS_MODE_AC_5G ||
+> +	    wirelessmode == WIRELESS_MODE_A)
+> +		ratr_bitmap = (sta->supp_rates[NL80211_BAND_5GHZ])<<4;
+
+The parenthesis seem superfluous.  How about this line instead?
+
++		ratr_bitmap = sta->supp_rates[NL80211_BAND_5GHZ] << 4;
+
+>  	else
+>  		ratr_bitmap = sta->supp_rates[NL80211_BAND_2GHZ];
+>  
+> -- 
+> 2.1.2
+> 
+> 
+
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
