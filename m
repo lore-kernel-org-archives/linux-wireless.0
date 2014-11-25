@@ -1,118 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:58058 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932086AbaKPAjk (ORCPT
+Received: from mail-lb0-f178.google.com ([209.85.217.178]:37518 "EHLO
+	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751302AbaKYUKl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Nov 2014 19:39:40 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH v2 02/11] ath9k: Use new QCA953x initvals
-Date: Sun, 16 Nov 2014 06:11:01 +0530
-Message-Id: <1416098470-14122-3-git-send-email-sujith@msujith.org> (sfid-20141116_013947_001876_C640035E)
-In-Reply-To: <1416098470-14122-1-git-send-email-sujith@msujith.org>
-References: <1416098470-14122-1-git-send-email-sujith@msujith.org>
+	Tue, 25 Nov 2014 15:10:41 -0500
+Received: by mail-lb0-f178.google.com with SMTP id f15so1378847lbj.9
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Nov 2014 12:10:39 -0800 (PST)
+Message-ID: <5474E23C.8090208@cogentembedded.com> (sfid-20141125_211047_961395_86DD772A)
+Date: Tue, 25 Nov 2014 23:10:36 +0300
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+MIME-Version: 1.0
+To: Larry Finger <Larry.Finger@lwfinger.net>, linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Valerio Passini <valerio.passini@unicam.it>
+Subject: Re: [PATCH 1/2 V2 3.18] rtlwifi: rtl8821ae: Fix 5G detection problem
+References: <1416945727-10743-1-git-send-email-Larry.Finger@lwfinger.net>
+In-Reply-To: <1416945727-10743-1-git-send-email-Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Miaoqing Pan <miaoqing@qca.qualcomm.com>
+Hello.
 
-This patch updates the initvals for QCA953x v1.1 and v2.0
+On 11/25/2014 11:02 PM, Larry Finger wrote:
 
-Signed-off-by: Miaoqing Pan <miaoqing@qca.qualcomm.com>
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_hw.c | 51 ++++++++++++++++++++++++------
- 1 file changed, 41 insertions(+), 10 deletions(-)
+> The changes associated with moving this driver from staging to the regular
+> tree missed one section setting the allowable rates for the 5GHz band.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-index cb09102..06ad217 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-@@ -333,12 +333,29 @@ static void ar9003_hw_init_mode_regs(struct ath_hw *ah)
- 			       qca953x_1p0_soc_preamble);
- 		INIT_INI_ARRAY(&ah->iniSOC[ATH_INI_POST],
- 			       qca953x_1p0_soc_postamble);
--		INIT_INI_ARRAY(&ah->iniModesRxGain,
--			       qca953x_1p0_common_wo_xlna_rx_gain_table);
--		INIT_INI_ARRAY(&ah->ini_modes_rx_gain_bounds,
--			       qca953x_1p0_common_wo_xlna_rx_gain_bounds);
--		INIT_INI_ARRAY(&ah->iniModesTxGain,
--			       qca953x_1p0_modes_no_xpa_tx_gain_table);
-+
-+		if (AR_SREV_9531_20(ah)) {
-+			INIT_INI_ARRAY(&ah->iniModesRxGain,
-+				       qca953x_2p0_common_wo_xlna_rx_gain_table);
-+			INIT_INI_ARRAY(&ah->ini_modes_rx_gain_bounds,
-+				       qca953x_2p0_common_wo_xlna_rx_gain_bounds);
-+		} else {
-+			INIT_INI_ARRAY(&ah->iniModesRxGain,
-+				       qca953x_1p0_common_wo_xlna_rx_gain_table);
-+			INIT_INI_ARRAY(&ah->ini_modes_rx_gain_bounds,
-+				       qca953x_1p0_common_wo_xlna_rx_gain_bounds);
-+		}
-+
-+		if (AR_SREV_9531_20(ah))
-+			INIT_INI_ARRAY(&ah->iniModesTxGain,
-+				       qca953x_2p0_modes_no_xpa_tx_gain_table);
-+		else if (AR_SREV_9531_11(ah))
-+			INIT_INI_ARRAY(&ah->iniModesTxGain,
-+				       qca953x_1p1_modes_no_xpa_tx_gain_table);
-+		else
-+			INIT_INI_ARRAY(&ah->iniModesTxGain,
-+				       qca953x_1p0_modes_no_xpa_tx_gain_table);
-+
- 		INIT_INI_ARRAY(&ah->iniModesFastClock,
- 			       qca953x_1p0_modes_fast_clock);
- 	} else if (AR_SREV_9580(ah)) {
-@@ -518,9 +535,15 @@ static void ar9003_tx_gain_table_mode0(struct ath_hw *ah)
- 	else if (AR_SREV_9550(ah))
- 		INIT_INI_ARRAY(&ah->iniModesTxGain,
- 			ar955x_1p0_modes_xpa_tx_gain_table);
--	else if (AR_SREV_9531(ah))
-+	else if (AR_SREV_9531_10(ah))
-+		INIT_INI_ARRAY(&ah->iniModesTxGain,
-+			       qca953x_1p0_modes_xpa_tx_gain_table);
-+	else if (AR_SREV_9531_11(ah))
- 		INIT_INI_ARRAY(&ah->iniModesTxGain,
--			qca953x_1p0_modes_xpa_tx_gain_table);
-+			       qca953x_1p1_modes_xpa_tx_gain_table);
-+	else if (AR_SREV_9531_20(ah))
-+		INIT_INI_ARRAY(&ah->iniModesTxGain,
-+			       qca953x_2p0_modes_xpa_tx_gain_table);
- 	else if (AR_SREV_9580(ah))
- 		INIT_INI_ARRAY(&ah->iniModesTxGain,
- 			ar9580_1p0_lowest_ob_db_tx_gain_table);
-@@ -562,7 +585,10 @@ static void ar9003_tx_gain_table_mode1(struct ath_hw *ah)
- 		INIT_INI_ARRAY(&ah->iniModesTxGain,
- 			ar955x_1p0_modes_no_xpa_tx_gain_table);
- 	else if (AR_SREV_9531(ah)) {
--		if (AR_SREV_9531_11(ah))
-+		if (AR_SREV_9531_20(ah))
-+			INIT_INI_ARRAY(&ah->iniModesTxGain,
-+				       qca953x_2p0_modes_no_xpa_tx_gain_table);
-+		else if (AR_SREV_9531_11(ah))
- 			INIT_INI_ARRAY(&ah->iniModesTxGain,
- 				       qca953x_1p1_modes_no_xpa_tx_gain_table);
- 		else
-@@ -789,11 +815,16 @@ static void ar9003_rx_gain_table_mode1(struct ath_hw *ah)
- 			ar955x_1p0_common_wo_xlna_rx_gain_table);
- 		INIT_INI_ARRAY(&ah->ini_modes_rx_gain_bounds,
- 			ar955x_1p0_common_wo_xlna_rx_gain_bounds);
--	} else if (AR_SREV_9531(ah)) {
-+	} else if (AR_SREV_9531_10(ah) || AR_SREV_9531_11(ah)) {
- 		INIT_INI_ARRAY(&ah->iniModesRxGain,
- 			       qca953x_1p0_common_wo_xlna_rx_gain_table);
- 		INIT_INI_ARRAY(&ah->ini_modes_rx_gain_bounds,
- 			       qca953x_1p0_common_wo_xlna_rx_gain_bounds);
-+	} else if (AR_SREV_9531_20(ah)) {
-+		INIT_INI_ARRAY(&ah->iniModesRxGain,
-+			       qca953x_2p0_common_wo_xlna_rx_gain_table);
-+		INIT_INI_ARRAY(&ah->ini_modes_rx_gain_bounds,
-+			       qca953x_2p0_common_wo_xlna_rx_gain_bounds);
- 	} else if (AR_SREV_9580(ah))
- 		INIT_INI_ARRAY(&ah->iniModesRxGain,
- 			ar9580_1p0_wo_xlna_rx_gain_table);
--- 
-2.1.3
+> This patch is needed to fix the regression reported in Bug #88811
+> (https://bugzilla.kernel.org/show_bug.cgi?id=88811).
+
+> Reported-by: Valerio Passini <valerio.passini@unicam.it>
+> Tested-by: Valerio Passini <valerio.passini@unicam.it>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Valerio Passini <valerio.passini@unicam.it>
+> ---
+
+> V2 - removed extra parentheses as suggested by John Linville.
+
+    He's also suggested spaces around << in his example
+
+> ---
+>   drivers/net/wireless/rtlwifi/rtl8821ae/hw.c | 5 +++--
+>   1 file changed, 3 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
+> index 310d316..18f34f7 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
+> @@ -3672,8 +3672,9 @@ static void rtl8821ae_update_hal_rate_mask(struct ieee80211_hw *hw,
+>   		mac->opmode == NL80211_IFTYPE_ADHOC)
+>   		macid = sta->aid + 1;
+>   	if (wirelessmode == WIRELESS_MODE_N_5G ||
+> -	    wirelessmode == WIRELESS_MODE_AC_5G)
+> -		ratr_bitmap = sta->supp_rates[NL80211_BAND_5GHZ];
+> +	    wirelessmode == WIRELESS_MODE_AC_5G ||
+> +	    wirelessmode == WIRELESS_MODE_A)
+> +		ratr_bitmap = sta->supp_rates[NL80211_BAND_5GHZ]<<4;
+
+    The kernel style generally assumes spaces around operators, and it would 
+only be consistent with the other code in the vicinity if you added them...
+
+WBR, Sergei
 
