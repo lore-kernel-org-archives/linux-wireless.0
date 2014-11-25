@@ -1,52 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:58989 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750720AbaKLHAn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Nov 2014 02:00:43 -0500
-Message-ID: <1415775644.1761.1.camel@linux-0dmf.site> (sfid-20141112_080046_698941_C6CC4936)
-Subject: Re: [PATCH] brcmfmac: unlink URB when request timed out
-From: Oliver Neukum <oneukum@suse.de>
-To: Mathy Vanhoef <vanhoefm@gmail.com>
-Cc: brudley@broadcom.com, Arend van Spriel <arend@broadcom.com>,
-	Franky Lin <frankyl@broadcom.com>, meuleman@broadcom.com,
-	John Linville <linville@tuxdriver.com>, pieterpg@broadcom.com,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Wed, 12 Nov 2014 08:00:44 +0100
-In-Reply-To: <5462B1A3.9020401@gmail.com>
-References: <545FAE05.2030701@gmail.com>
-	 <1415610506.16488.20.camel@linux-0dmf.site> <5462B1A3.9020401@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:23104 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751187AbaKYOoU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Nov 2014 09:44:20 -0500
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Marc Yang <yangyang@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 1/5] mwifiex: fix sparse warning
+Date: Tue, 25 Nov 2014 06:43:02 -0800
+Message-ID: <1416926586-19286-2-git-send-email-akarwar@marvell.com> (sfid-20141125_154431_039039_F8C1DDA5)
+In-Reply-To: <1416926586-19286-1-git-send-email-akarwar@marvell.com>
+References: <1416926586-19286-1-git-send-email-akarwar@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-11-11 at 20:02 -0500, Mathy Vanhoef wrote:
-> On 11/10/2014 04:08 AM, Oliver Neukum wrote:
+This patch fixes following sparse warnings:
 
-> > Which means that you are freeing memory that may still be used by DMA
-> > at this time.
-> > In addition you have no guarantee that the unlink is indeed finished
-> > by the time the URB is reused.
-> > If you wish to take this approach you better forget about this URB
-> > and allocate a new one and free the buffer from the callback.
-> 
-> Hi Oliver,
-> 
-> Good catch. I think the DMA issue is also present in the current driver: it
-> frees the buffer without unlinking/killing the URB at all. Can a malicious USB
+drivers/net/wireless/mwifiex/util.c:152:19: warning: cast from restricted __le16
+drivers/net/wireless/mwifiex/util.c:152:19: warning: restricted __le16 degrades to integer
 
-Yes, it is present.
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/mwifiex/util.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> device force a timeout to occur (i.e. delay the call to the completion
-> handler)? If so this might be a use-after-free vulnerability.
-> 
-> It seems using usb_kill_urb instead of usb_unlink_urb in the patch prevents any
-> possible use-after-free. Can someone double check?
-
-usb_kill_urb() will do the job.
-
-	Regards
-		Oliver
-
+diff --git a/drivers/net/wireless/mwifiex/util.c b/drivers/net/wireless/mwifiex/util.c
+index a113ef8..b1768fb 100644
+--- a/drivers/net/wireless/mwifiex/util.c
++++ b/drivers/net/wireless/mwifiex/util.c
+@@ -149,7 +149,7 @@ mwifiex_parse_mgmt_packet(struct mwifiex_private *priv, u8 *payload, u16 len,
+ 	u8 category, action_code;
+ 	struct ieee80211_hdr *ieee_hdr = (void *)payload;
+ 
+-	stype =  (cpu_to_le16(ieee_hdr->frame_control) & IEEE80211_FCTL_STYPE);
++	stype = (le16_to_cpu(ieee_hdr->frame_control) & IEEE80211_FCTL_STYPE);
+ 
+ 	switch (stype) {
+ 	case IEEE80211_STYPE_ACTION:
+-- 
+1.8.1.4
 
