@@ -1,31 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:45735 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750850AbaKLL0n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Nov 2014 06:26:43 -0500
-Message-ID: <546343EF.5090803@openwrt.org> (sfid-20141112_122647_180113_0C39602E)
-Date: Wed, 12 Nov 2014 12:26:39 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:31301 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750770AbaKYIlb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Nov 2014 03:41:31 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 2/2] ath10k: add memory dump debugfs interface
+References: <20141124164037.29422.14033.stgit@potku.adurom.net>
+	<20141124164208.29422.76134.stgit@potku.adurom.net>
+Date: Tue, 25 Nov 2014 10:41:25 +0200
+In-Reply-To: <20141124164208.29422.76134.stgit@potku.adurom.net> (Kalle Valo's
+	message of "Mon, 24 Nov 2014 18:42:08 +0200")
+Message-ID: <87r3wr1xl6.fsf@kamboji.qca.qualcomm.com> (sfid-20141125_094139_615259_AF645BC2)
 MIME-Version: 1.0
-To: Sujith Manoharan <sujith@msujith.org>,
-	John Linville <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: Re: [PATCH 1/6] ath9k: disable overriding AR9340 SLP32 registers
-References: <1415689644-29693-1-git-send-email-sujith@msujith.org> <1415689644-29693-2-git-send-email-sujith@msujith.org>
-In-Reply-To: <1415689644-29693-2-git-send-email-sujith@msujith.org>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2014-11-11 08:07, Sujith Manoharan wrote:
-> From: Miaoqing Pan <miaoqing@qca.qualcomm.com>
-> 
-> For AR9340, the correct values for SLP32 registers are present
-> in the initvals, so overriding them is not needed.
-> 
-> Signed-off-by: Miaoqing Pan <miaoqing@qca.qualcomm.com>
-> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-What's the point in doing this? The writes don't hurt, and this change
-is making the code uglier.
+Kalle Valo <kvalo@qca.qualcomm.com> writes:
 
-- Felix
+> +static ssize_t ath10k_mem_value_read(struct file *file,
+> +				     char __user *user_buf,
+> +				     size_t count, loff_t *ppos)
+> +{
+> +	struct ath10k *ar = file->private_data;
+> +	u8 *buf;
+> +	int ret;
+> +
+> +	if (*ppos < 0)
+> +		return -EINVAL;
+> +
+> +	if (!count)
+> +		return 0;
+> +
+> +	buf = vmalloc(count);
+> +	if (!buf)
+> +		return -ENOMEM;
+> +
+> +	ret = ath10k_hif_diag_read(ar, *ppos, buf, count);
+> +	if (ret) {
+> +		ath10k_warn(ar, "failed to read address 0x%08x via diagnose window from debugfs: %d\n",
+> +			    (u32)(*ppos), ret);
+> +		goto read_err;
+> +	}
+> +
+
+[...]
+
+> +static ssize_t ath10k_mem_value_write(struct file *file,
+> +				      const char __user *user_buf,
+> +				      size_t count, loff_t *ppos)
+> +{
+> +	struct ath10k *ar = file->private_data;
+> +	u8 *buf;
+> +	int ret;
+> +
+> +	if (*ppos < 0)
+> +		return -EINVAL;
+> +
+> +	if (!count)
+> +		return 0;
+> +
+> +	buf = vmalloc(count);
+> +	if (!buf)
+> +		return -ENOMEM;
+> +
+> +	ret = copy_from_user(buf, user_buf, count);
+> +	if (ret)
+> +		goto err_free_copy;
+> +
+> +	ret = ath10k_hif_diag_write(ar, *ppos, buf, count);
+> +	if (ret) {
+> +		ath10k_warn(ar, "failed to write address 0x%08x via diagnose window from debugfs: %d\n",
+> +			    (u32)(*ppos), ret);
+> +		goto err_free_copy;
+> +	}
+
+In these two functions we also need to check ar->state.
+
+-- 
+Kalle Valo
