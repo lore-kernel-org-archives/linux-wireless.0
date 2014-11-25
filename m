@@ -1,161 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:50346 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753404AbaKLVLy (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:50436 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750946AbaKYUqJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Nov 2014 16:11:54 -0500
-Received: by mail-wi0-f174.google.com with SMTP id d1so6299171wiv.1
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Nov 2014 13:11:53 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 2/8] staging: vt6655: card.c move __iomem into functions.
-Date: Wed, 12 Nov 2014 21:11:09 +0000
-Message-Id: <1415826675-8446-2-git-send-email-tvboxspy@gmail.com> (sfid-20141112_221158_169623_E11B9383)
-In-Reply-To: <1415826675-8446-1-git-send-email-tvboxspy@gmail.com>
-References: <1415826675-8446-1-git-send-email-tvboxspy@gmail.com>
+	Tue, 25 Nov 2014 15:46:09 -0500
+Date: Tue, 25 Nov 2014 14:53:34 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Valerio Passini <valerio.passini@unicam.it>
+Subject: Re: [PATCH 1/2 3.18] rtlwifi: rtl8821ae: Fix 5G detection problem
+Message-ID: <20141125195333.GJ15476@tuxdriver.com> (sfid-20141125_214613_382845_DBFC2ECB)
+References: <1416933127-25912-1-git-send-email-Larry.Finger@lwfinger.net>
+ <1416933127-25912-2-git-send-email-Larry.Finger@lwfinger.net>
+ <20141125184625.GC15476@tuxdriver.com>
+ <5474DD88.7060002@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5474DD88.7060002@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Removing dereferencing from callers
+On Tue, Nov 25, 2014 at 01:50:32PM -0600, Larry Finger wrote:
+> On 11/25/2014 12:46 PM, John W. Linville wrote:
+> >On Tue, Nov 25, 2014 at 10:32:06AM -0600, Larry Finger wrote:
+> >>The changes associated with moving this driver from staging to the regular
+> >>tree missed one section setting the allowable rates for the 5GHz band.
+> >>
+> >>This patch is needed to fix the regression reported in Bug #88811
+> >>(https://bugzilla.kernel.org/show_bug.cgi?id=88811).
+> >>
+> >>Reported-by: Valerio Passini <valerio.passini@unicam.it>
+> >>Tested-by: Valerio Passini <valerio.passini@unicam.it>
+> >>Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> >>Cc: Valerio Passini <valerio.passini@unicam.it>
+> >>---
+> >>  drivers/net/wireless/rtlwifi/rtl8821ae/hw.c | 5 +++--
+> >>  1 file changed, 3 insertions(+), 2 deletions(-)
+> >>
+> >>diff --git a/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
+> >>index 310d316..18f34f7 100644
+> >>--- a/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
+> >>+++ b/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
+> >>@@ -3672,8 +3672,9 @@ static void rtl8821ae_update_hal_rate_mask(struct ieee80211_hw *hw,
+> >>  		mac->opmode == NL80211_IFTYPE_ADHOC)
+> >>  		macid = sta->aid + 1;
+> >>  	if (wirelessmode == WIRELESS_MODE_N_5G ||
+> >>-	    wirelessmode == WIRELESS_MODE_AC_5G)
+> >>-		ratr_bitmap = sta->supp_rates[NL80211_BAND_5GHZ];
+> >>+	    wirelessmode == WIRELESS_MODE_AC_5G ||
+> >>+	    wirelessmode == WIRELESS_MODE_A)
+> >>+		ratr_bitmap = (sta->supp_rates[NL80211_BAND_5GHZ])<<4;
+> >
+> >The parenthesis seem superfluous.  How about this line instead?
+> >
+> >+		ratr_bitmap = sta->supp_rates[NL80211_BAND_5GHZ] << 4;
+> >
+> >>  	else
+> >>  		ratr_bitmap = sta->supp_rates[NL80211_BAND_2GHZ];
+> 
+> Good idea. V2 is on its way.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/card.c        | 18 ++++++++++++------
- drivers/staging/vt6655/card.h        |  8 ++++----
- drivers/staging/vt6655/device_main.c |  7 +++----
- drivers/staging/vt6655/rxtx.c        |  2 +-
- 4 files changed, 20 insertions(+), 15 deletions(-)
+No need -- I merged it with my version of the line. :-)
 
-diff --git a/drivers/staging/vt6655/card.c b/drivers/staging/vt6655/card.c
-index a93ca16..a079640 100644
---- a/drivers/staging/vt6655/card.c
-+++ b/drivers/staging/vt6655/card.c
-@@ -394,7 +394,7 @@ bool CARDbSetBeaconPeriod(struct vnt_private *pDevice,
- {
- 	u64 qwNextTBTT = 0;
- 
--	CARDbGetCurrentTSF(pDevice->PortOffset, &qwNextTBTT); /* Get Local TSF counter */
-+	CARDbGetCurrentTSF(pDevice, &qwNextTBTT); /* Get Local TSF counter */
- 
- 	qwNextTBTT = CARDqGetNextTBTT(qwNextTBTT, wBeaconInterval);
- 
-@@ -828,8 +828,10 @@ unsigned char CARDbyGetPktType(struct vnt_private *pDevice)
-  *
-  * Return Value: none
-  */
--void CARDvSetLoopbackMode(void __iomem *dwIoBase, unsigned short wLoopbackMode)
-+void CARDvSetLoopbackMode(struct vnt_private *priv, unsigned short wLoopbackMode)
- {
-+	void __iomem *dwIoBase = priv->PortOffset;
-+
- 	switch (wLoopbackMode) {
- 	case CARD_LB_NONE:
- 	case CARD_LB_MAC:
-@@ -905,8 +907,9 @@ u64 CARDqGetTSFOffset(unsigned char byRxRate, u64 qwTSF1, u64 qwTSF2)
-  *
-  * Return Value: true if success; otherwise false
-  */
--bool CARDbGetCurrentTSF(void __iomem *dwIoBase, u64 *pqwCurrTSF)
-+bool CARDbGetCurrentTSF(struct vnt_private *priv, u64 *pqwCurrTSF)
- {
-+	void __iomem *dwIoBase = priv->PortOffset;
- 	unsigned short ww;
- 	unsigned char byData;
- 
-@@ -964,11 +967,12 @@ u64 CARDqGetNextTBTT(u64 qwTSF, unsigned short wBeaconInterval)
-  *
-  * Return Value: none
-  */
--void CARDvSetFirstNextTBTT(void __iomem *dwIoBase, unsigned short wBeaconInterval)
-+void CARDvSetFirstNextTBTT(struct vnt_private *priv, unsigned short wBeaconInterval)
- {
-+	void __iomem *dwIoBase = priv->PortOffset;
- 	u64 qwNextTBTT = 0;
- 
--	CARDbGetCurrentTSF(dwIoBase, &qwNextTBTT); /* Get Local TSF counter */
-+	CARDbGetCurrentTSF(priv, &qwNextTBTT); /* Get Local TSF counter */
- 
- 	qwNextTBTT = CARDqGetNextTBTT(qwNextTBTT, wBeaconInterval);
- 	/* Set NextTBTT */
-@@ -991,8 +995,10 @@ void CARDvSetFirstNextTBTT(void __iomem *dwIoBase, unsigned short wBeaconInterva
-  *
-  * Return Value: none
-  */
--void CARDvUpdateNextTBTT(void __iomem *dwIoBase, u64 qwTSF, unsigned short wBeaconInterval)
-+void CARDvUpdateNextTBTT(struct vnt_private *priv, u64 qwTSF, unsigned short wBeaconInterval)
- {
-+	void __iomem *dwIoBase = priv->PortOffset;
-+
- 	qwTSF = CARDqGetNextTBTT(qwTSF, wBeaconInterval);
- 	/* Set NextTBTT */
- 	VNSvOutPortD(dwIoBase + MAC_REG_NEXTTBTT, (u32)qwTSF);
-diff --git a/drivers/staging/vt6655/card.h b/drivers/staging/vt6655/card.h
-index 2e56710..2dfc419 100644
---- a/drivers/staging/vt6655/card.h
-+++ b/drivers/staging/vt6655/card.h
-@@ -69,11 +69,11 @@ struct vnt_private;
- void CARDvSetRSPINF(struct vnt_private *, u8);
- void CARDvUpdateBasicTopRate(struct vnt_private *);
- bool CARDbIsOFDMinBasicRate(struct vnt_private *);
--void CARDvSetLoopbackMode(void __iomem *dwIoBase, unsigned short wLoopbackMode);
-+void CARDvSetLoopbackMode(struct vnt_private *, unsigned short wLoopbackMode);
- bool CARDbSoftwareReset(struct vnt_private *);
--void CARDvSetFirstNextTBTT(void __iomem *dwIoBase, unsigned short wBeaconInterval);
--void CARDvUpdateNextTBTT(void __iomem *dwIoBase, u64 qwTSF, unsigned short wBeaconInterval);
--bool CARDbGetCurrentTSF(void __iomem *dwIoBase, u64 *pqwCurrTSF);
-+void CARDvSetFirstNextTBTT(struct vnt_private *, unsigned short wBeaconInterval);
-+void CARDvUpdateNextTBTT(struct vnt_private *, u64 qwTSF, unsigned short wBeaconInterval);
-+bool CARDbGetCurrentTSF(struct vnt_private *, u64 *pqwCurrTSF);
- u64 CARDqGetNextTBTT(u64 qwTSF, unsigned short wBeaconInterval);
- u64 CARDqGetTSFOffset(unsigned char byRxRate, u64 qwTSF1, u64 qwTSF2);
- unsigned char CARDbyGetPktType(struct vnt_private *);
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index 1392332..83e4162 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -1513,8 +1513,7 @@ static void vnt_bss_info_changed(struct ieee80211_hw *hw,
- 
- 			CARDbSetBeaconPeriod(priv, conf->beacon_int);
- 
--			CARDvSetFirstNextTBTT(priv->PortOffset,
--					      conf->beacon_int);
-+			CARDvSetFirstNextTBTT(priv, conf->beacon_int);
- 		} else {
- 			VNSvOutPortB(priv->PortOffset + MAC_REG_TFTCTL,
- 				     TFTCTL_TSFCNTRST);
-@@ -1633,7 +1632,7 @@ static u64 vnt_get_tsf(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
- 	struct vnt_private *priv = hw->priv;
- 	u64 tsf;
- 
--	CARDbGetCurrentTSF(priv->PortOffset, &tsf);
-+	CARDbGetCurrentTSF(priv, &tsf);
- 
- 	return tsf;
- }
-@@ -1643,7 +1642,7 @@ static void vnt_set_tsf(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- {
- 	struct vnt_private *priv = hw->priv;
- 
--	CARDvUpdateNextTBTT(priv->PortOffset, tsf, vif->bss_conf.beacon_int);
-+	CARDvUpdateNextTBTT(priv, tsf, vif->bss_conf.beacon_int);
- }
- 
- static void vnt_reset_tsf(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
-diff --git a/drivers/staging/vt6655/rxtx.c b/drivers/staging/vt6655/rxtx.c
-index f4da7e7..4189405 100644
---- a/drivers/staging/vt6655/rxtx.c
-+++ b/drivers/staging/vt6655/rxtx.c
-@@ -1521,7 +1521,7 @@ int vnt_beacon_enable(struct vnt_private *priv, struct ieee80211_vif *vif,
- 
- 	VNSvOutPortB(priv->PortOffset + MAC_REG_TFTCTL, TFTCTL_TSFCNTREN);
- 
--	CARDvSetFirstNextTBTT(priv->PortOffset, conf->beacon_int);
-+	CARDvSetFirstNextTBTT(priv, conf->beacon_int);
- 
- 	CARDbSetBeaconPeriod(priv, conf->beacon_int);
- 
+John
 -- 
-2.1.0
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
