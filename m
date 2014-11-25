@@ -1,64 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.22]:50478 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751416AbaKKLzp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Nov 2014 06:55:45 -0500
-Message-ID: <5461F937.9060004@rempel-privat.de> (sfid-20141111_125555_279766_6C7E2160)
-Date: Tue, 11 Nov 2014 12:55:35 +0100
-From: Oleksij Rempel <linux@rempel-privat.de>
-MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>,
-	Arend van Spriel <arend@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-CC: Etna <etna@openmailbox.org>, linux-wireless@vger.kernel.org
-Subject: Re: MediaTek WiFi hardware support in upstream kernel
-References: <544DB5A8.7090405@openmailbox.org> <20141027152026.GB19976@tuxdriver.com> <544E8CB4.3000607@rempel-privat.de> <20141028134608.GA26283@tuxdriver.com> <544FA303.5060303@broadcom.com> <544FA627.3000004@rempel-privat.de> <5450BEB2.60208@openwrt.org>
-In-Reply-To: <5450BEB2.60208@openwrt.org>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="G20kD17AR8Ts9tu5vtA7F1JXHNbhc5VgW"
+Received: from mail-ob0-f178.google.com ([209.85.214.178]:64393 "EHLO
+	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751151AbaKYQcT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Nov 2014 11:32:19 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org, Valerio Passini <valerio.passini@unicam.it>
+Subject: [PATCH 2/2 3.18] rtlwifi: Change order in device startup
+Date: Tue, 25 Nov 2014 10:32:07 -0600
+Message-Id: <1416933127-25912-3-git-send-email-Larry.Finger@lwfinger.net> (sfid-20141125_173229_297469_183C1708)
+In-Reply-To: <1416933127-25912-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1416933127-25912-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---G20kD17AR8Ts9tu5vtA7F1JXHNbhc5VgW
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+The existing order of steps when starting the PCI devices works for
+2.4G devices, but fails to initialize the 5G section of the RTL8821AE
+hardware.
 
-Am 29.10.2014 um 11:17 schrieb Felix Fietkau:
-> Hi Hackers,
->=20
-> Just a quick heads up:
-> I'm working on a new driver for MT7662E/MT7612E, written from scratch.
-> It is already able to bring up the firmware, init the MAC and do basic
-> TX/RX DMA communication with the firmware.
-> I've decided to not integrate it with rt2x00, because I want to avoid
-> dealing with the the unnecessarily convoluted abstractions and legacy
-> code in there. I believe the result will be simpler and easier to
-> maintain as a new driver.
-> As soon as the basic structure is in place, I will put it on a public
-> git tree and post a link here.
->=20
-> - Felix
+This patch is needed to fix the regression reported in Bug #88811
+(https://bugzilla.kernel.org/show_bug.cgi?id=88811).
 
-Which chip would you suggest for starting?
+Reported-by: Valerio Passini <valerio.passini@unicam.it>
+Tested-by: Valerio Passini <valerio.passini@unicam.it>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Valerio Passini <valerio.passini@unicam.it>
+---
+ drivers/net/wireless/rtlwifi/pci.c | 20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
 
---=20
-Regards,
-Oleksij
+diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
+index 61f5d36..846a2e6 100644
+--- a/drivers/net/wireless/rtlwifi/pci.c
++++ b/drivers/net/wireless/rtlwifi/pci.c
+@@ -2249,6 +2249,16 @@ int rtl_pci_probe(struct pci_dev *pdev,
+ 	/*like read eeprom and so on */
+ 	rtlpriv->cfg->ops->read_eeprom_info(hw);
+ 
++	if (rtlpriv->cfg->ops->init_sw_vars(hw)) {
++		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Can't init_sw_vars\n");
++		err = -ENODEV;
++		goto fail3;
++	}
++	rtlpriv->cfg->ops->init_sw_leds(hw);
++
++	/*aspm */
++	rtl_pci_init_aspm(hw);
++
+ 	/* Init mac80211 sw */
+ 	err = rtl_init_core(hw);
+ 	if (err) {
+@@ -2264,16 +2274,6 @@ int rtl_pci_probe(struct pci_dev *pdev,
+ 		goto fail3;
+ 	}
+ 
+-	if (rtlpriv->cfg->ops->init_sw_vars(hw)) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Can't init_sw_vars\n");
+-		err = -ENODEV;
+-		goto fail3;
+-	}
+-	rtlpriv->cfg->ops->init_sw_leds(hw);
+-
+-	/*aspm */
+-	rtl_pci_init_aspm(hw);
+-
+ 	err = ieee80211_register_hw(hw);
+ 	if (err) {
+ 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-- 
+2.1.2
 
-
---G20kD17AR8Ts9tu5vtA7F1JXHNbhc5VgW
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iF4EAREIAAYFAlRh+TcACgkQHwImuRkmbWk3FwEAmdWDJcOw3AkxrX8UeQCC3kR3
-EmJhRUW9kLackzI2eKUBAIx/Bu0yd8XFiOCxhvn/FUF/AjzIb8twJDvbmn4i7cK6
-=wBMc
------END PGP SIGNATURE-----
-
---G20kD17AR8Ts9tu5vtA7F1JXHNbhc5VgW--
