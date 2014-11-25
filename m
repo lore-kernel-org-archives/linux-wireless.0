@@ -1,92 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:38032 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932305AbaKXOgd (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:27217 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751074AbaKYTQU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2014 09:36:33 -0500
-Received: by mail-wi0-f169.google.com with SMTP id r20so9053861wiv.2
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:36:32 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Luciano Coelho <luciano.coelho@intel.com>
-Subject: [PATCH 59/75] iwlwifi: mvm: finalize on post_switch instead of unassign
-Date: Mon, 24 Nov 2014 16:34:35 +0200
-Message-Id: <1416839691-28533-59-git-send-email-egrumbach@gmail.com> (sfid-20141124_153839_765150_994B49D0)
-In-Reply-To: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
-References: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
+	Tue, 25 Nov 2014 14:16:20 -0500
+Message-ID: <5474D581.5010909@broadcom.com> (sfid-20141125_201659_499811_1E2DA0D8)
+Date: Tue, 25 Nov 2014 20:16:17 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 3/4] brcmsmac: extend hardware info shown in debugfs
+References: <1416518822-29585-1-git-send-email-arend@broadcom.com> <1416518822-29585-4-git-send-email-arend@broadcom.com> <20141124215049.GA4484@tuxdriver.com> <54747232.3030503@broadcom.com> <20141125184945.GD15476@tuxdriver.com> <20141125190533.GH15476@tuxdriver.com>
+In-Reply-To: <20141125190533.GH15476@tuxdriver.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+On 11/25/14 20:05, John W. Linville wrote:
+> On Tue, Nov 25, 2014 at 01:49:45PM -0500, John W. Linville wrote:
+>> On Tue, Nov 25, 2014 at 01:12:34PM +0100, Arend van Spriel wrote:
+>>> On 11/24/14 22:50, John W. Linville wrote:
+>>>> Hmmm...I'm not sure why, but this is causing problems for me...
+>>>>
+>>>> ERROR: "brcmu_boardrev_str" [drivers/net/wireless/brcm80211/brcmsmac/brcmsmac.ko] undefined!
+>>>
+>>> I am confused as well. I did not have such an issue. The function is
+>>> provided by brcmutil.ko (patch 2/4) and I did an EXPORT_SYMBOL and added it
+>>> to the include file. Missing something? Also I don't see this issue over
+>>> here. I will do a clean build on the wireless-next tree and see if I can
+>>> reproduce this.
+>>
+>> I did a clean build after applying the patches in question, and I
+>> still got the same issue at link time.  I'll attach my .config for
+>> you to try.
+>
+> I think that was too big...trying the compressed version...
 
-Now that mac80211 waits for the first beacon on the new channel before
-calling post_channel_switch, the reconfiguration of the firmware
-should be done in the post_channel_switch operation instead of when
-assigning the vif to the new context.
+I received both. I assume he commit mentioned below is without the patches.
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 31 ++++++++++++++++++-----------
- 1 file changed, 19 insertions(+), 12 deletions(-)
+Regards,
+Arend
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index 3ce5831..c85c0f1 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -2841,23 +2841,13 @@ static int __iwl_mvm_assign_vif_chanctx(struct iwl_mvm *mvm,
- 	}
- 
- 	/* Handle binding during CSA */
--	if ((vif->type == NL80211_IFTYPE_AP) ||
--	    (switching_chanctx && (vif->type == NL80211_IFTYPE_STATION))) {
-+	if (vif->type == NL80211_IFTYPE_AP) {
- 		iwl_mvm_update_quotas(mvm, NULL);
- 		iwl_mvm_mac_ctxt_changed(mvm, vif, false, NULL);
- 	}
- 
- 	if (switching_chanctx && vif->type == NL80211_IFTYPE_STATION) {
--		struct iwl_mvm_sta *mvmsta;
--
--		mvmsta = iwl_mvm_sta_from_staid_protected(mvm,
--							  mvmvif->ap_sta_id);
--
--		if (WARN_ON(!mvmsta))
--			goto out;
--
--		/* TODO: only re-enable after the first beacon */
--		iwl_mvm_sta_modify_disable_tx(mvm, mvmsta, false);
-+		iwl_mvm_update_quotas(mvm, NULL);
- 	}
- 
- 	goto out;
-@@ -3228,10 +3218,27 @@ static int iwl_mvm_post_channel_switch(struct ieee80211_hw *hw,
- 
- 	mutex_lock(&mvm->mutex);
- 
-+	if (vif->type == NL80211_IFTYPE_STATION) {
-+		struct iwl_mvm_sta *mvmsta;
-+
-+		mvmsta = iwl_mvm_sta_from_staid_protected(mvm,
-+							  mvmvif->ap_sta_id);
-+
-+		if (WARN_ON(!mvmsta)) {
-+			ret = -EIO;
-+			goto out_unlock;
-+		}
-+
-+		iwl_mvm_sta_modify_disable_tx(mvm, mvmsta, false);
-+
-+		iwl_mvm_mac_ctxt_changed(mvm, vif, false, NULL);
-+	}
-+
- 	mvmvif->ps_disabled = false;
- 
- 	ret = iwl_mvm_power_update_ps(mvm);
- 
-+out_unlock:
- 	mutex_unlock(&mvm->mutex);
- 
- 	return ret;
--- 
-1.9.1
+>> FWIW, I am building wireless-testing at commit
+>> 733ea24c8c98d99c747b89710e520ac6e9f3951b.
+>
+> John
 
