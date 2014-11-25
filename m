@@ -1,61 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:40794 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750906AbaKYGPR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Nov 2014 01:15:17 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 3/3] ath10k: Fix bug reported by lockdep
-Date: Tue, 25 Nov 2014 11:47:00 +0530
-Message-Id: <1416896220-29691-3-git-send-email-sujith@msujith.org> (sfid-20141125_071526_072163_D7CDB3B6)
-In-Reply-To: <1416896220-29691-1-git-send-email-sujith@msujith.org>
-References: <1416896220-29691-1-git-send-email-sujith@msujith.org>
+Received: from s3.sipsolutions.net ([5.9.151.49]:51220 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751597AbaKYOSN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Nov 2014 09:18:13 -0500
+Message-ID: <1416925085.2045.7.camel@sipsolutions.net> (sfid-20141125_151821_011194_2260EBE7)
+Subject: Re: [PATCH] mac80211: check if channels allow 80 MHz for VHT probe
+ requests
+From: Johannes Berg <johannes@sipsolutions.net>
+To: YanBo <dreamfly281@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 25 Nov 2014 15:18:05 +0100
+In-Reply-To: <CAFuUQkiXfYf1s4UJyvtFT9Jsh=Dd_1vYH6XiJ0B5iSfRxWA8dQ@mail.gmail.com> (sfid-20141125_151401_364139_C8F262C6)
+References: <1416911009-22405-1-git-send-email-johannes@sipsolutions.net>
+	 <CAFuUQkh-fX3rz9+FUBfF8GxbkxrZxP7-iJwmypo5EEANwODqzQ@mail.gmail.com>
+	 <1416913453.2045.4.camel@sipsolutions.net>
+	 <CAFuUQkhuUDVcfv-pxLkhNT7C2TOqOS4nh+3qDj0uFV3OpoAS5w@mail.gmail.com>
+	 <1416917279.2045.5.camel@sipsolutions.net>
+	 <CAFuUQkiXfYf1s4UJyvtFT9Jsh=Dd_1vYH6XiJ0B5iSfRxWA8dQ@mail.gmail.com>
+	 (sfid-20141125_151401_364139_C8F262C6)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Tue, 2014-11-25 at 22:13 +0800, YanBo wrote:
 
-ath10k_tx_wep_key_work() acquires conf_mutex, so
-cancelling it when conf_mutex is already taken
-in ath10k_remove_interface() is incorrect, so
-move it outside the lock.
+> > But is all of that really the right way? I'm not completely convinced.
+> 
+> Except set the flag, the HW itself should support this feature, or
+> else it also doesn't work, I'd
+> send the patch in soon for public review.
 
-Snippet from the lockdep report:
+Yeah, but is it really the right way to advertise VHT? In the spec, VHT
+means you also have 80 MHz support - do you really think you can/will do
+80 MHz on 2.4 GHz? Seems like all of this will cause more corner cases.
 
-kernel: ======================================================
-kernel: [ INFO: possible circular locking dependency detected ]
-kernel: 3.18.0-rc5-wl-debug #34 Tainted: G           O
-kernel: -------------------------------------------------------
-kernel: hostapd/451 is trying to acquire lock:
-kernel:  ((&arvif->wep_key_work)){+.+...}, at: [<ffffffff810872d5>] flush_work+0x5/0x290
-kernel: but task is already holding lock:
-kernel:  (&ar->conf_mutex){+.+.+.}, at: [<ffffffffa0b99f00>] ath10k_remove_interface+0x40/0x290 [ath10k_core]
-kernel: which lock already depends on the new lock.
+> >
+> > I guess we can make this check conditional for 5GHz when the VHT support
+> > lands and is discussed.
+> >
+> That is sounds good if it only check for 5GHz for what I know CMIIW.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Even on 2.4 GHz it technically isn't enough though - there's enough
+spectrum in 2.4 GHz for a single 80 MHz channel; how long until somebody
+wants to do *that* for some reason? But the rest of us really doesn't
+think that's applicable ...
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 01de6f3..cf1e579 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3043,10 +3043,10 @@ static void ath10k_remove_interface(struct ieee80211_hw *hw,
- 	struct ath10k_vif *arvif = ath10k_vif_to_arvif(vif);
- 	int ret;
- 
--	mutex_lock(&ar->conf_mutex);
--
- 	cancel_work_sync(&arvif->wep_key_work);
- 
-+	mutex_lock(&ar->conf_mutex);
-+
- 	spin_lock_bh(&ar->data_lock);
- 	ath10k_mac_vif_beacon_cleanup(arvif);
- 	spin_unlock_bh(&ar->data_lock);
--- 
-2.1.3
+Anyway, it probably needs mac80211 patches anyway since mlme.c already
+disables VHT if you can't do 80 MHz, so I think you should post those as
+part of a bigger discussion about how we want to support it and what it
+really means etc.
+
+johannes
 
