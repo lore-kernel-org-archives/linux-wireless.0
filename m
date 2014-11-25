@@ -1,55 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from tpesmarthost.raritan.com ([220.128.57.202]:55533 "EHLO
-	tpesmarthost.raritan.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751269AbaKFK5G (ORCPT
+Received: from smtp27.msg.oleane.net ([62.161.4.27]:49261 "EHLO
+	smtp27.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753665AbaKYLSh convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Nov 2014 05:57:06 -0500
-Message-ID: <545B51B3.9000901@raritan.com> (sfid-20141106_115711_044560_B6796199)
-Date: Thu, 6 Nov 2014 11:47:15 +0100
-From: Ronald Wahl <ronald.wahl@raritan.com>
+	Tue, 25 Nov 2014 06:18:37 -0500
+Received: from acksys.fr ([195.6.104.67]) (authenticated)
+	by smtp27.msg.oleane.net (MTA) with ESMTP id sAPBIYt0006634
+	for <linux-wireless@vger.kernel.org>; Tue, 25 Nov 2014 12:18:34 +0100
+Subject: Question : WMM queue management in AP role
+Date: Tue, 25 Nov 2014 12:18:34 +0100
+Message-ID: <773DB8A82AB6A046AE0195C68612A31901925A6D@sbs2003.acksys.local> (sfid-20141125_121955_074682_2DA84B28)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Subject: Re: [PATCH] mac80211: Fix regression that triggers a kernel BUG with
- CCMP
-References: <1415267752-4704-1-git-send-email-ronald.wahl@raritan.com> <1415268135.1884.1.camel@sipsolutions.net>
-In-Reply-To: <1415268135.1884.1.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
+From: "Cedric VONCKEN" <cedric.voncken@acksys.fr>
+To: <linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06.11.2014 11:02, Johannes Berg wrote:
-> On Thu, 2014-11-06 at 10:55 +0100, Ronald Wahl wrote:
->> Commit 7ec7c4a9a686c608315739ab6a2b0527a240883c (mac80211: port CCMP to
->> cryptoapi's CCM driver) introduced a regression when decrypting empty
->> packets (data_len == 0). This will lead to backtraces like:
->
-> Not good.
->
->> This patch adds an additional length check.
->>
->> Signed-off-by: Ronald Wahl <ronald.wahl@raritan.com>
->
-> Please add
->
-> Cc: stable@vger.kernel.org
-> Fixes: 7ec7c4a9a686 ("mac80211: port CCMP to cryptoapi's CCM driver")
->
->> +	if (data_len == 0)
->> +		return EINVAL;
->
-> error codes should be negative.
+Hi all,
 
-Argh. New patch on the way...
+The AP role can manage several sta.
+In case of WMM, each sta have a separate queue or all sta use the same
+queue? 
 
-thx,
-ron
+Where can I found any information on the WMM queue management in linux
+wireless?
 
--- 
-Ronald Wahl - ronald.wahl@raritan.com - Phone +49 375271349-0 Fax -99
-Raritan Deutschland GmbH, Kornmarkt 7, 08056 Zwickau, Germany
-USt-IdNr. DE813094160, Steuer-Nr. 227/117/01749
-Amtsgericht Chemnitz HRB 23605
-Geschäftsführung: Stuart Hopper, Ralf Ploenes
+I'm using ath9k driver.
+
+Cedric Voncken
+
