@@ -1,45 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:11973 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932329AbaKMKzA (ORCPT
+Received: from mail-oi0-f42.google.com ([209.85.218.42]:59779 "EHLO
+	mail-oi0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751008AbaKYTvD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Nov 2014 05:55:00 -0500
-From: Avinash Patil <patila@marvell.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
-	<cluo@marvell.com>, <yangyang@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCH 1/6] mwifiex: update rx packet descriptor structure to match FW
-Date: Thu, 13 Nov 2014 21:54:13 +0530
-Message-ID: <1415895858-4007-2-git-send-email-patila@marvell.com> (sfid-20141113_115505_083760_2C09742C)
-In-Reply-To: <1415895858-4007-1-git-send-email-patila@marvell.com>
-References: <1415895858-4007-1-git-send-email-patila@marvell.com>
+	Tue, 25 Nov 2014 14:51:03 -0500
+Message-ID: <5474DD88.7060002@lwfinger.net> (sfid-20141125_205111_707109_45740B53)
+Date: Tue, 25 Nov 2014 13:50:32 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Valerio Passini <valerio.passini@unicam.it>
+Subject: Re: [PATCH 1/2 3.18] rtlwifi: rtl8821ae: Fix 5G detection problem
+References: <1416933127-25912-1-git-send-email-Larry.Finger@lwfinger.net> <1416933127-25912-2-git-send-email-Larry.Finger@lwfinger.net> <20141125184625.GC15476@tuxdriver.com>
+In-Reply-To: <20141125184625.GC15476@tuxdriver.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RX packet descriptor structure has recently changed in FW.
-This patch updates rxpd accordingly.
+On 11/25/2014 12:46 PM, John W. Linville wrote:
+> On Tue, Nov 25, 2014 at 10:32:06AM -0600, Larry Finger wrote:
+>> The changes associated with moving this driver from staging to the regular
+>> tree missed one section setting the allowable rates for the 5GHz band.
+>>
+>> This patch is needed to fix the regression reported in Bug #88811
+>> (https://bugzilla.kernel.org/show_bug.cgi?id=88811).
+>>
+>> Reported-by: Valerio Passini <valerio.passini@unicam.it>
+>> Tested-by: Valerio Passini <valerio.passini@unicam.it>
+>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+>> Cc: Valerio Passini <valerio.passini@unicam.it>
+>> ---
+>>   drivers/net/wireless/rtlwifi/rtl8821ae/hw.c | 5 +++--
+>>   1 file changed, 3 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
+>> index 310d316..18f34f7 100644
+>> --- a/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
+>> +++ b/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
+>> @@ -3672,8 +3672,9 @@ static void rtl8821ae_update_hal_rate_mask(struct ieee80211_hw *hw,
+>>   		mac->opmode == NL80211_IFTYPE_ADHOC)
+>>   		macid = sta->aid + 1;
+>>   	if (wirelessmode == WIRELESS_MODE_N_5G ||
+>> -	    wirelessmode == WIRELESS_MODE_AC_5G)
+>> -		ratr_bitmap = sta->supp_rates[NL80211_BAND_5GHZ];
+>> +	    wirelessmode == WIRELESS_MODE_AC_5G ||
+>> +	    wirelessmode == WIRELESS_MODE_A)
+>> +		ratr_bitmap = (sta->supp_rates[NL80211_BAND_5GHZ])<<4;
+>
+> The parenthesis seem superfluous.  How about this line instead?
+>
+> +		ratr_bitmap = sta->supp_rates[NL80211_BAND_5GHZ] << 4;
+>
+>>   	else
+>>   		ratr_bitmap = sta->supp_rates[NL80211_BAND_2GHZ];
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
----
- drivers/net/wireless/mwifiex/fw.h | 1 +
- 1 file changed, 1 insertion(+)
+Good idea. V2 is on its way.
 
-diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
-index 7f922a8..e095f37 100644
---- a/drivers/net/wireless/mwifiex/fw.h
-+++ b/drivers/net/wireless/mwifiex/fw.h
-@@ -584,6 +584,7 @@ struct rxpd {
- 	 * [Bit 7] Reserved
- 	 */
- 	u8 ht_info;
-+	u8 reserved[3];
- 	u8 flags;
- } __packed;
- 
--- 
-1.8.1.4
+Larry
+
 
