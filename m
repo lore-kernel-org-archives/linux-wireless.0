@@ -1,49 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:47503 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932684AbaKSVAL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Nov 2014 16:00:11 -0500
-Date: Wed, 19 Nov 2014 15:46:40 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: pull-request: mac80211 2014-11-18
-Message-ID: <20141119204640.GE13783@tuxdriver.com> (sfid-20141119_220023_505452_A2466CC8)
-References: <1416347463.1939.9.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1416347463.1939.9.camel@sipsolutions.net>
+Received: from mx-tmp.wmich.edu ([141.218.1.43]:11632 "EHLO mx-tmp.wmich.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750898AbaKYQ0R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Nov 2014 11:26:17 -0500
+Received: from avs01.service.private (avs01.service.private [172.30.31.161])
+ by mta02.service.private
+ (Sun Java System Messaging Server 6.1 HotFix 0.13 (built Jun  8 2005))
+ with ESMTP id <0NFL00MS5S39Z830@mta02.service.private> for
+ linux-wireless@vger.kernel.org; Tue, 25 Nov 2014 11:21:15 -0500 (EST)
+Date: Tue, 25 Nov 2014 11:21:02 -0500 (EST)
+From: Mohammad Ali Ma Abu Shattal <mohammad.a.shattal@wmich.edu>
+Subject: Setting WLAN RF Sensitivity value
+In-reply-to: <2109154365.18865892.1416932147808.JavaMail.root@wmich.edu>
+To: linux-wireless@vger.kernel.org, ilw@linux.intel.com
+Message-id: <1013439490.18867944.1416932462547.JavaMail.root@wmich.edu> (sfid-20141125_172623_933801_54803406)
+MIME-version: 1.0
+Content-type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 18, 2014 at 10:51:03PM +0100, Johannes Berg wrote:
-> John,
-> 
-> And another patch, I'm a bit surprised nobody found this issue before.
-> 
-> johannes
-> 
-> The following changes since commit 4f031fa9f188b2b0641ac20087d9e16bcfb4e49d:
-> 
->   mac80211: Fix regression that triggers a kernel BUG with CCMP (2014-11-06 12:42:22 +0100)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-john-2014-11-18
-> 
-> for you to fetch changes up to 280ba51d60be6f4ca3347eaa60783314f38df72e:
-> 
->   mac80211: minstrel_ht: fix a crash in rate sorting (2014-11-18 22:39:16 +0100)
-> 
-> ----------------------------------------------------------------
-> Here's another last minute fix, for minstrel HT crashing
-> depending on the value of some uninitialised stack.
-> 
-> ----------------------------------------------------------------
+Dear Sir/Madam,
 
-Pulling now...
+I'm working on a project in which we need to set and get RF sensitivity of WLAN device. I tried to set other settings such as operation mode, txpower and frequency using Linux commands : "ioctl" and "iwconfig" and it works fine. Manufacturer of my device is Broadcom. It seems that either the hardware or the driver doesn't support setting and getting sensitivity. I need to know if there exists a device and/or device driver that support this feature. details of my current hardware and device driver are posted in the askubuntu question:
+http://askubuntu.com/questions/553286/wlan-sensitivity-setting-is-not-supported
+kindly send me your recommendation for such device or device driver.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+best regards,
+Mohammad
+---------------------------- 
+Mohammad Abu Shattal
+Ph.D Student
+Department of Electrical & Computer Engineering
+Western Michigan University
+Kalamazoo, MI 49008
