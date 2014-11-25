@@ -1,49 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vms173023pub.verizon.net ([206.46.173.23]:47151 "EHLO
-	vms173023pub.verizon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751241AbaKDVTK (ORCPT
+Received: from mail-ob0-f182.google.com ([209.85.214.182]:50026 "EHLO
+	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750828AbaKYUDu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Nov 2014 16:19:10 -0500
-Received: from [192.168.1.2] ([108.28.174.148]) by vms173023.mailsrvcs.net
- (Oracle Communications Messaging Server 7.0.5.32.0 64bit (built Jul 16 2014))
- with ESMTPA id <0NEJ00JZP733ZW80@vms173023.mailsrvcs.net> for
- linux-wireless@vger.kernel.org; Tue, 04 Nov 2014 14:18:40 -0600 (CST)
-Message-id: <5459349F.9020903@verizon.net> (sfid-20141104_221913_784006_45BE169C)
-Date: Tue, 04 Nov 2014 15:18:39 -0500
-From: "C. McPherson" <ccmcphe@verizon.net>
-MIME-version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	radiotap@radiotap.org
-Subject: Re: Vendor Namespace Question
-References: <54591CF9.7030106@verizon.net>
- (sfid-20141104_203850_228702_C706EE9A)
- <1415130476.2064.22.camel@sipsolutions.net>
-In-reply-to: <1415130476.2064.22.camel@sipsolutions.net>
-Content-type: text/plain; charset=windows-1252; format=flowed
+	Tue, 25 Nov 2014 15:03:50 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org, Valerio Passini <valerio.passini@unicam.it>
+Subject: [PATCH 1/2 V2 3.18] rtlwifi: rtl8821ae: Fix 5G detection problem
+Date: Tue, 25 Nov 2014 14:02:07 -0600
+Message-Id: <1416945727-10743-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20141125_210358_280566_4A7D67CF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks so much for the info Johannes. I did notice that rx_status was 
-getting full.  I'll go ahead and put it in skb->data, that's a good idea.
-Clyde
+The changes associated with moving this driver from staging to the regular
+tree missed one section setting the allowable rates for the 5GHz band.
 
-On 11/04/2014 02:47 PM, Johannes Berg wrote:
-> On Tue, 2014-11-04 at 13:37 -0500, C. McPherson wrote:
->> Hello all:
->> I was just trying to use the latest stable backports-3.18-rc1-1 and I
->> noticed that there is no longer structure members in the
->> ieee80211_rx_status structure for Vendor namespace information?  In my
->> backports 3.14 version I used them to add some register information to
->> the radiotap header in the lab. How does one use the vendor name space
->> without those structure members?
-> We removed this from the Linux kernel because there was no driver using
-> it and we needed the space for other purposes. That said, it shouldn't
-> be too difficult to put it back by keeping the OUI/subtype also in the
-> skb->data rather than the rx_status (which is now full enough to no
-> longer have space for it, I believe)
->
-> johannes
->
->
+This patch is needed to fix the regression reported in Bug #88811
+(https://bugzilla.kernel.org/show_bug.cgi?id=88811).
+
+Reported-by: Valerio Passini <valerio.passini@unicam.it>
+Tested-by: Valerio Passini <valerio.passini@unicam.it>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Valerio Passini <valerio.passini@unicam.it>
+---
+
+V2 - removed extra parentheses as suggested by John Linville.
+
+---
+ drivers/net/wireless/rtlwifi/rtl8821ae/hw.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
+index 310d316..18f34f7 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
+@@ -3672,8 +3672,9 @@ static void rtl8821ae_update_hal_rate_mask(struct ieee80211_hw *hw,
+ 		mac->opmode == NL80211_IFTYPE_ADHOC)
+ 		macid = sta->aid + 1;
+ 	if (wirelessmode == WIRELESS_MODE_N_5G ||
+-	    wirelessmode == WIRELESS_MODE_AC_5G)
+-		ratr_bitmap = sta->supp_rates[NL80211_BAND_5GHZ];
++	    wirelessmode == WIRELESS_MODE_AC_5G ||
++	    wirelessmode == WIRELESS_MODE_A)
++		ratr_bitmap = sta->supp_rates[NL80211_BAND_5GHZ]<<4;
+ 	else
+ 		ratr_bitmap = sta->supp_rates[NL80211_BAND_2GHZ];
+ 
+-- 
+2.1.2
 
