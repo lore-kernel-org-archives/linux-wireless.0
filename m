@@ -1,66 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:16077 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752419AbaKQOlw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Nov 2014 09:41:52 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/2] ath10k: add modpram 'skip_otp' to ignore empty otp error during BMI
-References: <1415366205-11672-1-git-send-email-rmanohar@qti.qualcomm.com>
-Date: Mon, 17 Nov 2014 16:41:47 +0200
-In-Reply-To: <1415366205-11672-1-git-send-email-rmanohar@qti.qualcomm.com>
-	(Rajkumar Manoharan's message of "Fri, 7 Nov 2014 18:46:44 +0530")
-Message-ID: <87a93pq47o.fsf@kamboji.qca.qualcomm.com> (sfid-20141117_154155_654417_E0D7E712)
+Received: from mx1.redhat.com ([209.132.183.28]:39298 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751353AbaKYOBQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Nov 2014 09:01:16 -0500
+Date: Tue, 25 Nov 2014 14:57:45 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Ronald Wahl <ronald.wahl@raritan.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Mike Romberg <mike-romberg@comcast.net>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [rt2x00-users] [PATCH] rt2800: fix RT5592 TX power settings
+ regression
+Message-ID: <20141125135744.GA2032@redhat.com> (sfid-20141125_150121_137484_D86FA5B4)
+References: <1415207010-9622-1-git-send-email-ronald.wahl@raritan.com>
+ <20141106102753.GA1891@redhat.com>
+ <20141120210859.GE31881@tuxdriver.com>
+ <546F085B.3060408@raritan.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <546F085B.3060408@raritan.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rajkumar Manoharan <rmanohar@qti.qualcomm.com> writes:
+On Fri, Nov 21, 2014 at 10:39:39AM +0100, Ronald Wahl wrote:
+> For me the patch will work but there is a change for RT3290 and RT5390. On
+> both chipsets BBP 1 was not written before but with this patch it is going
+> to be written now and the value depends on the return of
+> rt2800_get_txpower_bw_comp(). It should be checked that the function does
+> the correct things for these chips.
 
-> This patch would help bring up wifi interface with default board
-> data in case of failures in otp download. It is useful for initial
-> caliberation.
->
-> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+I tested the patch on RT5390, it does not make troubles. Going to post
+it ...
 
-[...]
+Stanislaw
 
-> --- a/drivers/net/wireless/ath/ath10k/core.c
-> +++ b/drivers/net/wireless/ath/ath10k/core.c
-> @@ -31,12 +31,15 @@
->  unsigned int ath10k_debug_mask;
->  static bool uart_print;
->  static unsigned int ath10k_p2p;
-> +static bool skip_otp;
->  module_param_named(debug_mask, ath10k_debug_mask, uint, 0644);
->  module_param(uart_print, bool, 0644);
->  module_param_named(p2p, ath10k_p2p, uint, 0644);
-> +module_param(skip_otp, bool, 0644);
->  MODULE_PARM_DESC(debug_mask, "Debugging mask");
->  MODULE_PARM_DESC(uart_print, "Uart target debugging");
->  MODULE_PARM_DESC(p2p, "Enable ath10k P2P support");
-> +MODULE_PARM_DESC(skip_otp, "Skip otp failure for calibration in testmode");
-
-I added back the newlines:
-
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -32,10 +32,12 @@ unsigned int ath10k_debug_mask;
- static bool uart_print;
- static unsigned int ath10k_p2p;
- static bool skip_otp;
-+
- module_param_named(debug_mask, ath10k_debug_mask, uint, 0644);
- module_param(uart_print, bool, 0644);
- module_param_named(p2p, ath10k_p2p, uint, 0644);
- module_param(skip_otp, bool, 0644);
-+
- MODULE_PARM_DESC(debug_mask, "Debugging mask");
- MODULE_PARM_DESC(uart_print, "Uart target debugging");
- MODULE_PARM_DESC(p2p, "Enable ath10k P2P support");
-
--- 
-Kalle Valo
