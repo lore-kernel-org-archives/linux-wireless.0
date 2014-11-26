@@ -1,151 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:33057 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751262AbaK0JXs (ORCPT
+Received: from mail-qa0-f52.google.com ([209.85.216.52]:38083 "EHLO
+	mail-qa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750768AbaKZNnj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Nov 2014 04:23:48 -0500
-Received: by mail-wg0-f47.google.com with SMTP id n12so5910401wgh.34
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Nov 2014 01:23:47 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 3/7] ath10k: make wmi service bitmap non-debug
-Date: Thu, 27 Nov 2014 10:11:17 +0100
-Message-Id: <1417079481-22255-4-git-send-email-michal.kazior@tieto.com> (sfid-20141127_102401_689070_73990257)
-In-Reply-To: <1417079481-22255-1-git-send-email-michal.kazior@tieto.com>
-References: <1417079481-22255-1-git-send-email-michal.kazior@tieto.com>
+	Wed, 26 Nov 2014 08:43:39 -0500
+Received: by mail-qa0-f52.google.com with SMTP id dc16so1870652qab.39
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Nov 2014 05:43:38 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1417000056-16920-1-git-send-email-patila@marvell.com>
+References: <1417000056-16920-1-git-send-email-patila@marvell.com>
+Date: Wed, 26 Nov 2014 14:43:38 +0100
+Message-ID: <CAPDyKFr-iaPWKWWgk-5_XcJm9sag=y=uZjfJvo-DQiJFM8BVLw@mail.gmail.com> (sfid-20141126_144343_867943_2BCA05FF)
+Subject: Re: [PATCH] mmc: new API for data write using scatter gather DMA
+From: Ulf Hansson <ulf.hansson@linaro.org>
+To: Avinash Patil <patila@marvell.com>
+Cc: linux-mmc <linux-mmc@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	akarwar@marvell.com, cluo@marvell.com, yangyang@marvell.com,
+	huxm@marvell.com, bin9zha0@gmail.com, Bing Zhao <bzhao@marvell.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The service bitmap can be used to determine
-firmware capabilities.
+On 26 November 2014 at 12:07, Avinash Patil <patila@marvell.com> wrote:
+> From: Bing Zhao <bzhao@marvell.com>
+>
+> This patch adds new API to handle scatter gather aggregation.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/core.h  |  2 +-
- drivers/net/wireless/ath/ath10k/debug.c | 11 +++--------
- drivers/net/wireless/ath/ath10k/debug.h |  9 ---------
- drivers/net/wireless/ath/ath10k/wmi.c   |  8 ++++----
- 4 files changed, 8 insertions(+), 22 deletions(-)
+Why is this needed?
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 4a29498..5af9a24 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -123,6 +123,7 @@ struct ath10k_wmi {
- 	struct completion service_ready;
- 	struct completion unified_ready;
- 	wait_queue_head_t tx_credits_wq;
-+	DECLARE_BITMAP(svc_map, WMI_SERVICE_MAX);
- 	struct wmi_cmd_map *cmd;
- 	struct wmi_vdev_param_map *vdev_param;
- 	struct wmi_pdev_param_map *pdev_param;
-@@ -313,7 +314,6 @@ struct ath10k_debug {
- 	struct ath10k_fw_stats fw_stats;
- 	struct completion fw_stats_complete;
- 	bool fw_stats_done;
--	DECLARE_BITMAP(wmi_service_bitmap, WMI_SERVICE_MAX);
- 
- 	unsigned long htt_stats_mask;
- 	struct delayed_work htt_stats_dwork;
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index c096d00a..a716758 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -179,13 +179,6 @@ EXPORT_SYMBOL(ath10k_warn);
- 
- #ifdef CONFIG_ATH10K_DEBUGFS
- 
--void ath10k_debug_read_service_map(struct ath10k *ar,
--				   const void *service_map,
--				   size_t map_size)
--{
--	memcpy(ar->debug.wmi_service_bitmap, service_map, map_size);
--}
--
- static ssize_t ath10k_read_wmi_services(struct file *file,
- 					char __user *user_buf,
- 					size_t count, loff_t *ppos)
-@@ -207,8 +200,9 @@ static ssize_t ath10k_read_wmi_services(struct file *file,
- 	if (len > buf_len)
- 		len = buf_len;
- 
-+	spin_lock_bh(&ar->data_lock);
- 	for (i = 0; i < WMI_SERVICE_MAX; i++) {
--		enabled = test_bit(i, ar->debug.wmi_service_bitmap);
-+		enabled = test_bit(i, ar->wmi.svc_map);
- 		name = wmi_service_name(i);
- 
- 		if (!name) {
-@@ -224,6 +218,7 @@ static ssize_t ath10k_read_wmi_services(struct file *file,
- 				 "%-40s %s\n",
- 				 name, enabled ? "enabled" : "-");
- 	}
-+	spin_unlock_bh(&ar->data_lock);
- 
- 	ret_cnt = simple_read_from_buffer(user_buf, count, ppos, buf, len);
- 
-diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
-index 815d325..1b87a5d 100644
---- a/drivers/net/wireless/ath/ath10k/debug.h
-+++ b/drivers/net/wireless/ath/ath10k/debug.h
-@@ -62,9 +62,6 @@ int ath10k_debug_create(struct ath10k *ar);
- void ath10k_debug_destroy(struct ath10k *ar);
- int ath10k_debug_register(struct ath10k *ar);
- void ath10k_debug_unregister(struct ath10k *ar);
--void ath10k_debug_read_service_map(struct ath10k *ar,
--				   const void *service_map,
--				   size_t map_size);
- void ath10k_debug_fw_stats_process(struct ath10k *ar, struct sk_buff *skb);
- struct ath10k_fw_crash_data *
- ath10k_debug_get_new_fw_crash_data(struct ath10k *ar);
-@@ -109,12 +106,6 @@ static inline void ath10k_debug_unregister(struct ath10k *ar)
- {
- }
- 
--static inline void ath10k_debug_read_service_map(struct ath10k *ar,
--						 const void *service_map,
--						 size_t map_size)
--{
--}
--
- static inline void ath10k_debug_fw_stats_process(struct ath10k *ar,
- 						 struct sk_buff *skb)
- {
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 81ccc2e..c0f3e4d 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -2511,16 +2511,17 @@ static void ath10k_wmi_event_service_ready(struct ath10k *ar,
- {
- 	struct wmi_svc_rdy_ev_arg arg = {};
- 	u32 num_units, req_id, unit_size, num_mem_reqs, num_unit_info, i;
--	DECLARE_BITMAP(svc_bmap, WMI_SERVICE_MAX) = {};
- 	int ret;
- 
-+	memset(&ar->wmi.svc_map, 0, sizeof(ar->wmi.svc_map));
-+
- 	if (test_bit(ATH10K_FW_FEATURE_WMI_10X, ar->fw_features)) {
- 		ret = ath10k_wmi_10x_pull_svc_rdy_ev(skb, &arg);
--		wmi_10x_svc_map(arg.service_map, svc_bmap,
-+		wmi_10x_svc_map(arg.service_map, ar->wmi.svc_map,
- 				arg.service_map_len);
- 	} else {
- 		ret = ath10k_wmi_main_pull_svc_rdy_ev(skb, &arg);
--		wmi_main_svc_map(arg.service_map, svc_bmap,
-+		wmi_main_svc_map(arg.service_map, ar->wmi.svc_map,
- 				 arg.service_map_len);
- 	}
- 
-@@ -2543,7 +2544,6 @@ static void ath10k_wmi_event_service_ready(struct ath10k *ar,
- 	ar->num_rf_chains = __le32_to_cpu(arg.num_rf_chains);
- 	ar->ath_common.regulatory.current_rd = __le32_to_cpu(arg.eeprom_rd);
- 
--	ath10k_debug_read_service_map(ar, svc_bmap, sizeof(svc_bmap));
- 	ath10k_dbg_dump(ar, ATH10K_DBG_WMI, NULL, "wmi svc: ",
- 			arg.service_map, arg.service_map_len);
- 
--- 
-1.8.5.3
+>
+> Signed-off-by: Bing Zhao <bzhao@marvell.com>
+> Signed-off-by: Avinash Patil <patila@marvell.com>
+> Signed-off-by: Xinming Hu <huxm@marvell.com>
+> Signed-off-by: Cathy Luo <cluo@marvell.com>
+> ---
+>  drivers/mmc/core/sdio_ops.c   | 65 +++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/mmc/sdio_func.h |  5 ++++
+>  2 files changed, 70 insertions(+)
+>
+> diff --git a/drivers/mmc/core/sdio_ops.c b/drivers/mmc/core/sdio_ops.c
+> index 62508b4..4c5e362 100644
+> --- a/drivers/mmc/core/sdio_ops.c
+> +++ b/drivers/mmc/core/sdio_ops.c
+> @@ -15,6 +15,7 @@
+>  #include <linux/mmc/card.h>
+>  #include <linux/mmc/mmc.h>
+>  #include <linux/mmc/sdio.h>
+> +#include <linux/export.h>
+>
+>  #include "core.h"
+>  #include "sdio_ops.h"
+> @@ -204,6 +205,70 @@ int mmc_io_rw_extended(struct mmc_card *card, int write, unsigned fn,
+>         return 0;
+>  }
+>
+> +int mmc_io_rw_extended_sg(struct mmc_card *card, int write, unsigned fn,
+> +                         unsigned addr, int incr_addr,
+> +                         struct sg_table *sgt, unsigned blksz)
+> +{
+> +       struct mmc_request mrq = {NULL};
+> +       struct mmc_command cmd = {0};
+> +       struct mmc_data data = {0};
+> +       struct scatterlist *sg_ptr;
+> +       unsigned blocks = 0;
+> +       int i;
+> +
+> +       BUG_ON(!card || !card->host);
+> +       BUG_ON(fn > 7);
+> +       BUG_ON(!blksz);
 
+No BUG_ON() here please. Better to return an error.
+
+> +       for_each_sg(sgt->sgl, sg_ptr, sgt->nents, i) {
+> +               WARN_ON(sg_ptr->length > card->host->max_seg_size);
+> +               blocks += DIV_ROUND_UP(sg_ptr->length, blksz);
+> +       }
+> +
+> +       /* sanity check */
+> +       if (addr & ~0x1FFFF)
+> +               return -EINVAL;
+> +
+> +       mrq.cmd = &cmd;
+> +       mrq.data = &data;
+> +
+> +       cmd.opcode = SD_IO_RW_EXTENDED;
+> +       cmd.arg = write ? 0x80000000 : 0x00000000;
+> +       cmd.arg |= fn << 28;
+> +       cmd.arg |= incr_addr ? 0x04000000 : 0x00000000;
+> +       cmd.arg |= addr << 9;
+> +       cmd.arg |= 0x08000000 | blocks;
+> +       cmd.flags = MMC_RSP_SPI_R5 | MMC_RSP_R5 | MMC_CMD_ADTC;
+> +
+> +       data.blksz = blksz;
+> +       data.blocks = blocks;
+> +       data.flags = write ? MMC_DATA_WRITE : MMC_DATA_READ;
+> +
+> +       data.sg = sgt->sgl;
+> +       data.sg_len = sgt->nents;
+> +
+> +       mmc_set_data_timeout(&data, card);
+> +       mmc_wait_for_req(card->host, &mrq);
+> +
+> +       if (cmd.error)
+> +               return cmd.error;
+> +       if (data.error)
+> +               return data.error;
+> +
+> +       if (mmc_host_is_spi(card->host)) {
+> +               /* host driver already reported errors */
+> +       } else {
+> +               if (cmd.resp[0] & R5_ERROR)
+> +                       return -EIO;
+> +               if (cmd.resp[0] & R5_FUNCTION_NUMBER)
+> +                       return -EINVAL;
+> +               if (cmd.resp[0] & R5_OUT_OF_RANGE)
+> +                       return -ERANGE;
+> +       }
+> +
+> +       return 0;
+> +}
+> +EXPORT_SYMBOL_GPL(mmc_io_rw_extended_sg);
+> +
+>  int sdio_reset(struct mmc_host *host)
+>  {
+>         int ret;
+> diff --git a/include/linux/mmc/sdio_func.h b/include/linux/mmc/sdio_func.h
+> index 50f0bc9..927ea8f 100644
+> --- a/include/linux/mmc/sdio_func.h
+> +++ b/include/linux/mmc/sdio_func.h
+> @@ -14,6 +14,7 @@
+>
+>  #include <linux/device.h>
+>  #include <linux/mod_devicetable.h>
+> +#include <linux/scatterlist.h>
+>
+>  #include <linux/mmc/pm.h>
+>
+> @@ -153,6 +154,10 @@ extern int sdio_memcpy_toio(struct sdio_func *func, unsigned int addr,
+>  extern int sdio_writesb(struct sdio_func *func, unsigned int addr,
+>         void *src, int count);
+>
+> +int mmc_io_rw_extended_sg(struct mmc_card *card, int write, unsigned fn,
+> +                         unsigned addr, int incr_addr,
+> +                         struct sg_table *sgt, unsigned blksz);
+> +
+>  extern unsigned char sdio_f0_readb(struct sdio_func *func,
+>         unsigned int addr, int *err_ret);
+>  extern void sdio_f0_writeb(struct sdio_func *func, unsigned char b,
+> --
+> 1.8.1.4
+>
+
+Kind regards
+Uffe
