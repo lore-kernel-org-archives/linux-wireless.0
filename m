@@ -1,176 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail3-relais-sop.national.inria.fr ([192.134.164.104]:54078
-	"EHLO mail3-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750961AbaKVOom (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:51225 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752633AbaKZPGx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Nov 2014 09:44:42 -0500
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-To: linux-rdma@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-edac@vger.kernel.org,
-	linux-atm-general@lists.sourceforge.net, netdev@vger.kernel.org,
-	Dan Williams <dan.j.williams@intel.com>,
-	linux-arm-kernel@lists.infradead.org, dmaengine@vger.kernel.org
-Subject: [PATCH 0/6] fix error return code
-Date: Sat, 22 Nov 2014 15:39:13 +0100
-Message-Id: <1416667159-9808-1-git-send-email-Julia.Lawall@lip6.fr> (sfid-20141122_154642_678846_7E2CF298)
+	Wed, 26 Nov 2014 10:06:53 -0500
+Received: by mail-wi0-f174.google.com with SMTP id h11so12810603wiw.13
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Nov 2014 07:06:52 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20141125193846.GJ25677@wotan.suse.de>
+References: <1416754941-4439-1-git-send-email-arik@wizery.com> <20141125193846.GJ25677@wotan.suse.de>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Wed, 26 Nov 2014 17:06:37 +0200
+Message-ID: <CA+XVXfdn52z88FZJdzE66-NKVUQ-vj1Wu0TGgq8FNjBVaYa9pA@mail.gmail.com> (sfid-20141126_160657_623426_A07A7B75)
+Subject: Re: [PATCH v3 1/3] cfg80211: leave invalid channels on regdomain change
+To: "Luis R. Rodriguez" <mcgrof@suse.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The complate semantic patch that finds this problem is as follows:
-(http://coccinelle.lip6.fr/)
+On Tue, Nov 25, 2014 at 9:38 PM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
+> On Sun, Nov 23, 2014 at 05:02:19PM +0200, Arik Nemtsov wrote:
+>> When the regulatory settings change, some channels might become invalid.
+>> Disconnect interfaces acting on these channels, after giving userspace
+>> code a grace period to leave them.
+>>
+>> This mode is currently opt-in, and not all interface operating modes are
+>> supported for regulatory-enforcement checks. A wiphy that wishes to use
+>> the new enforcement code must specify an appropriate regulatory flag,
+>> and all its supported interface modes must be supported by the chekcing
+>> code.
+>
+> This is all looking beter now, since I had a few requests for the last patch
+> I'll ask for some other things here without asking  to negage the flag purpose
+> as I originally wanted.
+>
+>> Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+>> ---
+>>  include/net/regulatory.h |   6 +++
+>>  net/wireless/core.c      |  13 ++++++
+>>  net/wireless/reg.c       | 106 ++++++++++++++++++++++++++++++++++++++++++++++-
+>>  3 files changed, 124 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/include/net/regulatory.h b/include/net/regulatory.h
+>> index dad7ab2..701177c 100644
+>> --- a/include/net/regulatory.h
+>> +++ b/include/net/regulatory.h
+>> @@ -136,6 +136,11 @@ struct regulatory_request {
+>>   *      otherwise initiating radiation is not allowed. This will enable the
+>>   *      relaxations enabled under the CFG80211_REG_RELAX_NO_IR configuration
+>>   *      option
+>> + * @REGULATORY_ENFORCE_CHANNELS: the regulatory core will make sure all
+>> + *   interfaces on this wiphy reside on allowed channels. Upon a regdomain
+>> + *   change, the interfaces are given a grace period to disconnect or move
+>> + *   to an allowed channels. Interfaces on forbidden channels are forcibly
+>> + *   disconnected.
+>
+> Please rename to REGULATORY_IGNORE_STALE_KICKOFF, also please add
+> some information about the amount current of grace period used,
+> and types of interfaces supported. Since this is a regulatory flag
+> this information will help folks decide whether to enable or not.
+> Also encourage its use, and mention that once all supported devices
+> get support for this will be enabled by default. In the meantime
+> I'd prefer if this feature was enabled by default if the supported
+> interface types of a dveice match the white list of supported
+> interfaces.
 
-// <smpl>
-@ok exists@
-identifier f,ret,i;
-expression e;
-constant c;
-@@
+btw, I think you meant REGULATORY_STALE_KICKOFF, since it's an opt-in flag.
 
-// identify a function that returns a negative return value at least once.
-f(...) {
-... when any
-(
-return -c@i;
-|
-ret = -c@i;
-... when != ret = e
-return ret;
-|
-if (ret < 0) { ... return ret; }
-)
-... when any
-}
-
-@r exists@
-identifier ret,ok.f,fn;
-expression e1,e2,e3,e4,e5,e6,x;
-statement S,S1;
-position p1,p2,p3;
-@@
-
-// identify a case where the return variable is set to a non-negative value
-// and then returned in error-handling code
-f(...) {
-... when any
-(
-if@p1 (\(ret < 0\|ret != 0\))
- { ... return ret; }
-|
-ret@p1 = 0
-)
-... when != \(ret = e1\|ret++\|ret--\|ret+=e1\|ret-=e1\)
-    when != &ret
-    when any
-(
- if (<+... ret = e5 ...+>) S1
-|
- if (<+... &ret ...+>) S1
-|
-if@p2(<+...x = fn(...)...+>)
- {
-  ... when != ret = e6
-      when forall
- return@p3 ret;
-}
-|
-break;
-|
-x = fn(...)
-... when != \(ret = e4\|ret++\|ret--\|ret+=e4\|ret-=e4\)
-    when != &ret
-(
- if (<+... ret = e3 ...+>) S
-|
- if (<+... &ret ...+>) S
-|
-if@p2(<+...\(x != 0\|x < 0\|x == NULL\|IS_ERR(x)\)...+>)
- {
-  ... when != ret = e2
-      when forall
- return@p3 ret;
-}
-)
-)
-... when any
-}
-
-@printer depends on r@
-position p;
-identifier ok.f,pr;
-constant char [] c;
-@@
-
-f(...) { <...pr@p(...,c,...)...> }
-
-@bad0 exists@
-identifier r.ret,ok.f,g != {ERR_PTR,IS_ERR};
-position p != printer.p;
-@@
-
-f(...) { ... when any
-g@p(...,ret,...)
-... when any
- }
-
-@bad depends on !bad0 exists@
-position r.p1,r.p2;
-statement S1,S2;
-identifier r.ret;
-expression e1;
-@@
-
-// ignore the above if there is some path where the variable is set to
-// something else
-(
-if@p1 (\(ret < 0\|ret != 0\)) S1
-|
-ret@p1 = 0
-)
-... when any
- \(ret = e1\|ret++\|ret--\|ret+=e1\|ret-=e1\|&ret\)
-... when any
-if@p2(...) S2
-
-@bad1 depends on !bad0 && !bad exists@
-position r.p2;
-statement S2;
-identifier r.ret;
-expression e1;
-constant c;
-@@
-
-ret = -c
-... when != \(ret = e1\|ret++\|ret--\|ret+=e1\|ret-=e1\)
-    when != &ret
-    when any
-if@p2(...) S2
-
-@bad2 depends on !bad0 && !bad && !bad1 exists@
-position r.p1,r.p2;
-identifier r.ret;
-expression e1;
-statement S2;
-constant c;
-@@
-
-// likewise ignore it if there has been an intervening return
-ret@p1 = 0
-... when != if (...) { ... ret = e1 ... return ret; }
-    when != if (...) { ... return -c; }
-    when any
-if@p2(...) S2
-
-
-@script:python depends on !bad0 && !bad && !bad1 && !bad2@
-p1 << r.p1;
-p2 << r.p2;
-p3 << r.p3;
-@@
-
-cocci.print_main("",p1)
-cocci.print_secs("",p2)
-cocci.print_secs("",p3)
-
-// </smpl>
-
+Arik
