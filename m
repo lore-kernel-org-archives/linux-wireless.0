@@ -1,61 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:40622 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751090AbaKXCf5 (ORCPT
+Received: from mail-lb0-f180.google.com ([209.85.217.180]:41018 "EHLO
+	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750945AbaKZP7H (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Nov 2014 21:35:57 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 3/3] ath10k: Fix bug reported by lockdep
-Date: Mon, 24 Nov 2014 08:07:37 +0530
-Message-Id: <1416796657-24657-4-git-send-email-sujith@msujith.org> (sfid-20141124_033623_602086_121E54A4)
-In-Reply-To: <1416796657-24657-1-git-send-email-sujith@msujith.org>
-References: <1416796657-24657-1-git-send-email-sujith@msujith.org>
+	Wed, 26 Nov 2014 10:59:07 -0500
+Received: by mail-lb0-f180.google.com with SMTP id l4so2706467lbv.11
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Nov 2014 07:59:05 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CA+XVXff+c1qEz6reAozm1wh-4wMxsH9BD=St2Gr9Mrmg2n6GHQ@mail.gmail.com>
+References: <1416754941-4439-1-git-send-email-arik@wizery.com>
+ <20141125193846.GJ25677@wotan.suse.de> <CA+XVXfdn52z88FZJdzE66-NKVUQ-vj1Wu0TGgq8FNjBVaYa9pA@mail.gmail.com>
+ <20141126152810.GN25677@wotan.suse.de> <CA+XVXff+c1qEz6reAozm1wh-4wMxsH9BD=St2Gr9Mrmg2n6GHQ@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+Date: Wed, 26 Nov 2014 10:58:45 -0500
+Message-ID: <CAB=NE6U2pQb1FkBJM_4TTjXjpxs6DBq2x1xbk0KrfG1ZwMsTKA@mail.gmail.com> (sfid-20141126_165911_931064_CDBA7F96)
+Subject: Re: [PATCH v3 1/3] cfg80211: leave invalid channels on regdomain change
+To: Arik Nemtsov <arik@wizery.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Wed, Nov 26, 2014 at 10:39 AM, Arik Nemtsov <arik@wizery.com> wrote:
+> On Wed, Nov 26, 2014 at 5:28 PM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
+>> On Wed, Nov 26, 2014 at 05:06:37PM +0200, Arik Nemtsov wrote:
+>>> On Tue, Nov 25, 2014 at 9:38 PM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
+>>> > On Sun, Nov 23, 2014 at 05:02:19PM +0200, Arik Nemtsov wrote:
+>>> >> When the regulatory settings change, some channels might become invalid.
+>>> >> Disconnect interfaces acting on these channels, after giving userspace
+>>> >> code a grace period to leave them.
+>>> >>
+>>> >> This mode is currently opt-in, and not all interface operating modes are
+>>> >> supported for regulatory-enforcement checks. A wiphy that wishes to use
+>>> >> the new enforcement code must specify an appropriate regulatory flag,
+>>> >> and all its supported interface modes must be supported by the chekcing
+>>> >> code.
+>>> >
+>>> > This is all looking beter now, since I had a few requests for the last patch
+>>> > I'll ask for some other things here without asking  to negage the flag purpose
+>>> > as I originally wanted.
+>>> >
+>>> >> Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+>>> >> ---
+>>> >>  include/net/regulatory.h |   6 +++
+>>> >>  net/wireless/core.c      |  13 ++++++
+>>> >>  net/wireless/reg.c       | 106 ++++++++++++++++++++++++++++++++++++++++++++++-
+>>> >>  3 files changed, 124 insertions(+), 1 deletion(-)
+>>> >>
+>>> >> diff --git a/include/net/regulatory.h b/include/net/regulatory.h
+>>> >> index dad7ab2..701177c 100644
+>>> >> --- a/include/net/regulatory.h
+>>> >> +++ b/include/net/regulatory.h
+>>> >> @@ -136,6 +136,11 @@ struct regulatory_request {
+>>> >>   *      otherwise initiating radiation is not allowed. This will enable the
+>>> >>   *      relaxations enabled under the CFG80211_REG_RELAX_NO_IR configuration
+>>> >>   *      option
+>>> >> + * @REGULATORY_ENFORCE_CHANNELS: the regulatory core will make sure all
+>>> >> + *   interfaces on this wiphy reside on allowed channels. Upon a regdomain
+>>> >> + *   change, the interfaces are given a grace period to disconnect or move
+>>> >> + *   to an allowed channels. Interfaces on forbidden channels are forcibly
+>>> >> + *   disconnected.
+>>> >
+>>> > Please rename to REGULATORY_IGNORE_STALE_KICKOFF, also please add
+>>> > some information about the amount current of grace period used,
+>>> > and types of interfaces supported. Since this is a regulatory flag
+>>> > this information will help folks decide whether to enable or not.
+>>> > Also encourage its use, and mention that once all supported devices
+>>> > get support for this will be enabled by default. In the meantime
+>>> > I'd prefer if this feature was enabled by default if the supported
+>>> > interface types of a dveice match the white list of supported
+>>> > interfaces.
+>>>
+>>> btw, I think you meant REGULATORY_STALE_KICKOFF, since it's an opt-in flag.
+>>
+>> Indeed, the REGULATORY_IGNORE_STALE_KICKOFF would be the inversion, which
+>> is really a better way to deal with this but Johannes considered it more
+>> work. I'll leave it up to you but if the supported interfaces on a driver
+>> work with it we should enable this by default. This is why the inversion
+>> (REGULATORY_IGNORE_STALE_KICKOFF) would work better in the end, as we want
+>> to keep this on by default and only let folks opt out.
+>
+> I thought we agreed this to be opt-in,
 
-ath10k_tx_wep_key_work() acquires conf_mutex, so
-cancelling it when conf_mutex is already taken
-in ath10k_remove_interface() is incorrect, so
-move it outside the lock.
+We agreed to not have to require this to be opt-out, that's different
+than having it enabled by default for supported devices.
 
-Snippet from the lockdep report:
+> even if all interfaces are
+> supported? I still think an untested driver might be hurt by this
+> patch. For instance if it requires a different grace period, etc.
 
-kernel: ======================================================
-kernel: [ INFO: possible circular locking dependency detected ]
-kernel: 3.18.0-rc5-wl-debug #34 Tainted: G           O
-kernel: -------------------------------------------------------
-kernel: hostapd/451 is trying to acquire lock:
-kernel:  ((&arvif->wep_key_work)){+.+...}, at: [<ffffffff810872d5>] flush_work+0x5/0x290
-kernel: but task is already holding lock:
-kernel:  (&ar->conf_mutex){+.+.+.}, at: [<ffffffffa0b99f00>] ath10k_remove_interface+0x40/0x290 [ath10k_core]
-kernel: which lock already depends on the new lock.
+This is a generic feature and I think its important to enable it by
+default, if a different grace period can be used it sounds like you
+can easily fold that in as an alternative to override the default.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 2200c64..651e318 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3041,10 +3041,10 @@ static void ath10k_remove_interface(struct ieee80211_hw *hw,
- 	struct ath10k_vif *arvif = ath10k_vif_to_arvif(vif);
- 	int ret;
- 
--	mutex_lock(&ar->conf_mutex);
--
- 	cancel_work_sync(&arvif->wep_key_work);
- 
-+	mutex_lock(&ar->conf_mutex);
-+
- 	spin_lock_bh(&ar->data_lock);
- 	ath10k_mac_vif_beacon_cleanup(arvif);
- 	spin_unlock_bh(&ar->data_lock);
--- 
-2.1.3
-
+ Luis
