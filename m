@@ -1,78 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:57338 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750872AbaKNS3P (ORCPT
+Received: from mail-la0-f47.google.com ([209.85.215.47]:50770 "EHLO
+	mail-la0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750895AbaKZVnz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Nov 2014 13:29:15 -0500
-Received: by mail-wi0-f178.google.com with SMTP id bs8so3531767wib.17
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Nov 2014 10:29:14 -0800 (PST)
-Date: Fri, 14 Nov 2014 19:29:03 +0100
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Jouni Malinen <j@w1.fi>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Karl Beldan <karl.beldan@rivierawaves.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: Re: [PATCH v6] mac80211: minstrel_ht: add basic support for VHT
- rates <= 3SS@80MHz
-Message-ID: <20141114182902.GA14439@gobelin> (sfid-20141114_192918_783916_DCE2D1E4)
-References: <1413812762-6605-5-git-send-email-karl.beldan@gmail.com>
- <1413880718-31273-1-git-send-email-karl.beldan@gmail.com>
- <20141114164328.GA30967@w1.fi>
- <20141114171832.GA16541@magnum.frso.rivierawaves.com>
- <20141114173648.GA31675@w1.fi>
+	Wed, 26 Nov 2014 16:43:55 -0500
+Received: by mail-la0-f47.google.com with SMTP id hz20so3125869lab.20
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Nov 2014 13:43:54 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20141114173648.GA31675@w1.fi>
+In-Reply-To: <20141126213531.GT25677@wotan.suse.de>
+References: <1417035388-2511-1-git-send-email-arik@wizery.com>
+ <1417035388-2511-3-git-send-email-arik@wizery.com> <20141126213531.GT25677@wotan.suse.de>
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+Date: Wed, 26 Nov 2014 16:43:33 -0500
+Message-ID: <CAB=NE6VXWdjE=ZJvjJ4K56vXMZvi15j2WLi7Vj6cOkA=X2ArOA@mail.gmail.com> (sfid-20141126_224359_126164_E5106AD7)
+Subject: Re: [PATCH v4 3/4] cfg80211: allow usermode to query wiphy specific regdom
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 14, 2014 at 07:36:48PM +0200, Jouni Malinen wrote:
-> On Fri, Nov 14, 2014 at 06:18:32PM +0100, Karl Beldan wrote:
-> > Yes, only with iw and nothing fancy, I also have had it running on some 
-> > boards for some weeks as is and with rfc version for more than a year at
-> > work (minstrel not the whole tree).
-> > I guess I can take the tip of wireless-testing but can you give your
-> > HEAD though ?
-> 
-> It looks like pretty much any snapshot between master-2014-11-04 and now
-> is affected.. Anyway, the current master snapshot in my tests was
-> 0e204e2422876c18034ca960c4fccf727a02a5c1.
-> 
-> > > For example, with nfc_p2p_go_neg test case:
-> > 
-> > Have you reproduced it with other testcases (maybe more regular so that
-> > I can get my hands on it faster) ?
-> > Is it also happening when VHT support is not advertized by upper layers
-> > ?
-> 
-> This seems to be specific to exact timing of frames since the same issue
-> does not show up in non-NFC P2P test cases. So no, this does not show up
-> with anything else than the nfc_p2p_* test cases (well, at least not in
-> my desktop+kvm setup; YMMV with other CPU speeds that could potentially
-> affect timing):
-> nfc_p2p_go_neg
-> nfc_p2p_go_neg_reverse
-> nfc_p2p_ip_addr_assignment
-> nfc_p2p_static_handover_tagdev_client
-> nfc_p2p_static_handover_tagdev_client_group_iface
-> nfc_p2p_static_handover_tagdev_go
-> 
-> I'd assume the key here is in P2P with NFC trigger having the fastest
-> possible connection process due to all the optimizations in channel
-> selection on WPS (which is those EAPOL Data frames that hit these rate
-> selection issues immediately after association).
-> 
-> That said, if you use the tests/hwsim scripts from
-> git://w1.fi/hostap.git there should be no difference on running some of
-> these cases vs. something more regular..
-> 
-> If you have not used these test scripts previously, you can find more
-> information about the setup here:
-> http://w1.fi/cgit/hostap/plain/tests/hwsim/README
-> http://w1.fi/cgit/hostap/plain/tests/hwsim/vm/README
-> 
+On Wed, Nov 26, 2014 at 4:35 PM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
+> We're not checking here if this was a managed wiphy or not, we
+> want userspace to be able to tell if a wiphy was managed or not.
 
-Ok, thanks for your pointers Jouni, I should get back to you soon.
- 
-Karl
+Ah I see what you did, yes that is what I wanted but since you allowed
+for self managed regdomains *first* the placement of this patch in
+terms of order would mean we are not giving userspace information it
+should have needed right after this commit. After your 4th patch we do
+though. We want commits to work well linearly in history so can you
+move this patch to number 2 in the series and bump number 2 to be
+patch number 3? That way right after commit 2 we are not lying to
+userspace.
+
+The question about having userspace specify the wiphy still stands as
+I'd expect userspace asking only for a regd for a wiphy would want
+only that one, not all, or the central one.
+
+ Luis
