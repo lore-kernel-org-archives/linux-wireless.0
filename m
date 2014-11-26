@@ -1,149 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wn1-mbie.dmzglobal.net ([203.144.33.76]:50875 "EHLO
-	wn1-mbie.dmzglobal.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750875AbaKXBWu convert rfc822-to-8bit (ORCPT
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:35209 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750845AbaKZQQR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Nov 2014 20:22:50 -0500
-From: Peter Gent <Peter.Gent@mbie.govt.nz>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: "wireless-regdb@lists.infradead.org"
-	<wireless-regdb@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: wireless-regdb: Update regulatory rules for New Zealand (NZ) on
- 5GHz and 60 GHz [UNCLASSIFIED]
-Date: Mon, 24 Nov 2014 01:22:46 +0000
-Message-ID: <D0D2EC853BFD0147A005CC7FAC0E4A53EBFDFF94@AKI2K113.wd.govt.nz> (sfid-20141124_022254_629327_748B2D83)
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 26 Nov 2014 11:16:17 -0500
+Received: by mail-wi0-f178.google.com with SMTP id hi2so5529708wib.5
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Nov 2014 08:16:15 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <CAB=NE6U2pQb1FkBJM_4TTjXjpxs6DBq2x1xbk0KrfG1ZwMsTKA@mail.gmail.com>
+References: <1416754941-4439-1-git-send-email-arik@wizery.com>
+ <20141125193846.GJ25677@wotan.suse.de> <CA+XVXfdn52z88FZJdzE66-NKVUQ-vj1Wu0TGgq8FNjBVaYa9pA@mail.gmail.com>
+ <20141126152810.GN25677@wotan.suse.de> <CA+XVXff+c1qEz6reAozm1wh-4wMxsH9BD=St2Gr9Mrmg2n6GHQ@mail.gmail.com>
+ <CAB=NE6U2pQb1FkBJM_4TTjXjpxs6DBq2x1xbk0KrfG1ZwMsTKA@mail.gmail.com>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Wed, 26 Nov 2014 18:16:00 +0200
+Message-ID: <CA+XVXfd7By_-dR0jJFhOFWnvJ=NrSFZwrVCTRRKoPjipXJ7tYA@mail.gmail.com> (sfid-20141126_171620_816790_9DB6A64A)
+Subject: Re: [PATCH v3 1/3] cfg80211: leave invalid channels on regdomain change
+To: "Luis R. Rodriguez" <mcgrof@suse.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Wed, Nov 26, 2014 at 5:58 PM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
+> On Wed, Nov 26, 2014 at 10:39 AM, Arik Nemtsov <arik@wizery.com> wrote:
+>> On Wed, Nov 26, 2014 at 5:28 PM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
+>>> On Wed, Nov 26, 2014 at 05:06:37PM +0200, Arik Nemtsov wrote:
+>>>> On Tue, Nov 25, 2014 at 9:38 PM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
+>>>> > On Sun, Nov 23, 2014 at 05:02:19PM +0200, Arik Nemtsov wrote:
+>>>> >> When the regulatory settings change, some channels might become invalid.
+>>>> >> Disconnect interfaces acting on these channels, after giving userspace
+>>>> >> code a grace period to leave them.
+>>>> >>
+>>>> >> This mode is currently opt-in, and not all interface operating modes are
+>>>> >> supported for regulatory-enforcement checks. A wiphy that wishes to use
+>>>> >> the new enforcement code must specify an appropriate regulatory flag,
+>>>> >> and all its supported interface modes must be supported by the chekcing
+>>>> >> code.
+>>>> >
+>>>> > This is all looking beter now, since I had a few requests for the last patch
+>>>> > I'll ask for some other things here without asking  to negage the flag purpose
+>>>> > as I originally wanted.
+>>>> >
+>>>> >> Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+>>>> >> ---
+>>>> >>  include/net/regulatory.h |   6 +++
+>>>> >>  net/wireless/core.c      |  13 ++++++
+>>>> >>  net/wireless/reg.c       | 106 ++++++++++++++++++++++++++++++++++++++++++++++-
+>>>> >>  3 files changed, 124 insertions(+), 1 deletion(-)
+>>>> >>
+>>>> >> diff --git a/include/net/regulatory.h b/include/net/regulatory.h
+>>>> >> index dad7ab2..701177c 100644
+>>>> >> --- a/include/net/regulatory.h
+>>>> >> +++ b/include/net/regulatory.h
+>>>> >> @@ -136,6 +136,11 @@ struct regulatory_request {
+>>>> >>   *      otherwise initiating radiation is not allowed. This will enable the
+>>>> >>   *      relaxations enabled under the CFG80211_REG_RELAX_NO_IR configuration
+>>>> >>   *      option
+>>>> >> + * @REGULATORY_ENFORCE_CHANNELS: the regulatory core will make sure all
+>>>> >> + *   interfaces on this wiphy reside on allowed channels. Upon a regdomain
+>>>> >> + *   change, the interfaces are given a grace period to disconnect or move
+>>>> >> + *   to an allowed channels. Interfaces on forbidden channels are forcibly
+>>>> >> + *   disconnected.
+>>>> >
+>>>> > Please rename to REGULATORY_IGNORE_STALE_KICKOFF, also please add
+>>>> > some information about the amount current of grace period used,
+>>>> > and types of interfaces supported. Since this is a regulatory flag
+>>>> > this information will help folks decide whether to enable or not.
+>>>> > Also encourage its use, and mention that once all supported devices
+>>>> > get support for this will be enabled by default. In the meantime
+>>>> > I'd prefer if this feature was enabled by default if the supported
+>>>> > interface types of a dveice match the white list of supported
+>>>> > interfaces.
+>>>>
+>>>> btw, I think you meant REGULATORY_STALE_KICKOFF, since it's an opt-in flag.
+>>>
+>>> Indeed, the REGULATORY_IGNORE_STALE_KICKOFF would be the inversion, which
+>>> is really a better way to deal with this but Johannes considered it more
+>>> work. I'll leave it up to you but if the supported interfaces on a driver
+>>> work with it we should enable this by default. This is why the inversion
+>>> (REGULATORY_IGNORE_STALE_KICKOFF) would work better in the end, as we want
+>>> to keep this on by default and only let folks opt out.
+>>
+>> I thought we agreed this to be opt-in,
+>
+> We agreed to not have to require this to be opt-out, that's different
+> than having it enabled by default for supported devices.
+>
+>> even if all interfaces are
+>> supported? I still think an untested driver might be hurt by this
+>> patch. For instance if it requires a different grace period, etc.
+>
+> This is a generic feature and I think its important to enable it by
+> default, if a different grace period can be used it sounds like you
+> can easily fold that in as an alternative to override the default.
 
-John - thank you for the suggested patch. 
+Let's not start adding features out of speculation. I was just proving my point.
+Everything can be easily added, but perhaps not easily predicted.
 
-We have a couple of queries and comments on what is proposed so far for the list. 
-1) Our top 2 GHz in the 60 GHz band "64000 - 66000 MHz" is indoor only and comments are edited as such
-2) Is it possible to define an indoor / outdoor limit inside the processing rules? I guess sensing this might prove problematic but could anyone advise on what other countries do?
-3) As our limits are in EIRP, suggest to modify the patch to match the EIRP formatting in the processing rules
-4) Can Transmitter power control be added to the patch, if so how is it enabled? 
-5) Finally can someone confirm to me the use of AUTO-BW as I can't find any direct reference to it in the processing rules? 
+But sure, I can make this default-on if only supported interfaces are
+present. And for that case, I'll set the flag as opt-out.
 
-There is still a little more work on this, but this is our next iteration of the New Zealand patch
-
-
-+# 5150 MHz  - 5250 MHz  80MHz channels, indoor use only at -7.0 dBW 
-+EIRP TPC enabled # 5250 MHz -  5350 MHz  80 MHz channels, indoor use at 
-+-7.0 dBW EIRP, outdoor use at 0 dBW EIRP with DFS and TPC enabled* # 
-+5470 MHz  - 5725 MHz  80 MHz channels, 0 dBW EIRP with DFS and TPC 
-+enabled* # 5725 MHz  - 5875 MHz  80 MHz channels, 6.0 dBW EIRP 
-+# 57000 MHz - 64000 MHz, at 13.0 dBW EIRP # 64000 - 66000 MHz, 
-+indoor use only at 13.0 dBW EIRP # *if TPC is not enabled, than transmit power must be 
-+reduced by 3dB # 
-+http://www.rsm.govt.nz/cms/licensees/types-of-licence/general-user-licences/short-range-devices
-
-
-
-country NZ: DFS-FCC
- 	(2402 - 2482 @ 40), (30)
--	(5170 - 5250 @ 80), (17), AUTO-BW
--	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
--	(5490 - 5730 @ 160), (24), DFS
--	(5735 - 5835 @ 80), (30)
-+	(5150 - 5250 @ 80), (N/A,23), AUTO-BW
-+	(5250 - 5350 @ 80), (N/A, 23), DFS, AUTO-BW
-+	(5470 - 5725 @ 160), (N/A, 30), DFS
-+	(5725 - 5875 @ 80), (N/A, 36)
-+	(57000 - 64000 @ 2160), (N/A, 43)
-
-
-
------Original Message-----
-From: John W. Linville [mailto:linville@tuxdriver.com] 
-Sent: Saturday, 8 November 2014 10:21 a.m.
-To: Peter Gent
-Cc: wireless-regdb@lists.infradead.org; linux-wireless@vger.kernel.org
-Subject: Re: wireless-regdb: Update regulatory rules for New Zealand (NZ) on 5GHz and 60 GHz [UNCLASSIFIED]
-
-On Tue, Oct 28, 2014 at 01:04:10AM +0000, Peter Gent wrote:
-> Hi,
-> 
-> We wish to note the following changes should be made to the wireless regulatory database to reflect some recent changes to the 60 GHz band here in New Zealand. In additional there are some inaccuracies when compared to our current licencing for the 5 GHz "Wi-Fi" band.
-> 
-> The updated entry for New Zealand should read:
-> 
-> 5150 MHz  - 5250 MHz  80MHz channels, indoor use only at -7.0 dBW EIRP 
-> TPC enabled
-> 5250 MHz -  5350 MHz  80 MHz channels, indoor use at -7.0 dBW EIRP, 
-> outdoor use at 0 dBW EIRP with DFS and TPC enabled*
-> 5470 MHz  - 5725 MHz  80 MHz channels, 0 dBW EIRP with DFS and TPC 
-> enabled*
-> 5725 MHz  - 5875 MHz  80 MHz channels, 6.0 dBW EIRP with frequency 
-> hopping enabled
-> 57000 MHz - 66000 MHz, indoor use only at 13.0 dBW EIRP
-> 
-> *if TPC is not enabled, than transmit power must be reduced by 3dB
-> 
-> Further information on SRD licencing rules can be found at 
-> http://www.rsm.govt.nz/cms/licensees/types-of-licence/general-user-lic
-> ences/short-range-devices
-> 
-> Regards
-> 
-> Peter
-
-Peter,
-
-Thanks for making us aware of this info.  I'm sorry that there has been no other response so far.
-
-Changes to our regulatory rules database are typically proposed in the form of a patch.  This promotes specificity in making such changes.
-I suspect that you are unfamiliar with this form of change proposal, so I have taken a first whack at it.
-
-While I maintain the database, I am not as radio proficient as I perhaps should be.  I normally leave writing such patches for others, and wait for some level of agreement to be reached before applying changes.  In this case, it is quite likely that I have overlooked something or misinterpreted (or simply misunderstood) your change suggestions.
-
-I hope that you and others will take a moment to comment and/or suggest further changes to my proposed changes below.  Without some affirmative commentary I will not apply any derivative of the changes specified below.
-
-Thanks!
-
-John
-
-diff --git a/db.txt b/db.txt
-index 6cf86e15627b..3b9db42309dc 100644
---- a/db.txt
-+++ b/db.txt
-@@ -848,12 +848,20 @@ country NP: DFS-JP
- 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
- 	(5735 - 5835 @ 80), (20)
- 
-+# 5150 MHz  - 5250 MHz  80MHz channels, indoor use only at -7.0 dBW 
-+EIRP TPC enabled # 5250 MHz -  5350 MHz  80 MHz channels, indoor use at 
-+-7.0 dBW EIRP, outdoor use at 0 dBW EIRP with DFS and TPC enabled* # 
-+5470 MHz  - 5725 MHz  80 MHz channels, 0 dBW EIRP with DFS and TPC 
-+enabled* # 5725 MHz  - 5875 MHz  80 MHz channels, 6.0 dBW EIRP with 
-+frequency hopping enabled # 57000 MHz - 66000 MHz, indoor use only at 
-+13.0 dBW EIRP # *if TPC is not enabled, than transmit power must be 
-+reduced by 3dB # 
-+http://www.rsm.govt.nz/cms/licensees/types-of-licence/general-user-lice
-+nces/short-range-devices
- country NZ: DFS-FCC
- 	(2402 - 2482 @ 40), (30)
--	(5170 - 5250 @ 80), (17), AUTO-BW
--	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
--	(5490 - 5730 @ 160), (24), DFS
--	(5735 - 5835 @ 80), (30)
-+	(5150 - 5250 @ 80), (20), AUTO-BW
-+	(5250 - 5350 @ 80), (20), DFS, AUTO-BW
-+	(5470 - 5725 @ 160), (27), DFS
-+	(5725 - 5875 @ 80), (33)
-+	(57000 - 66000 @ 2160), (40)
- 
- country OM: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
-
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
-newzealand.govt.nz - connecting you to New Zealand central & local government services
-
-Any opinions expressed in this message are not necessarily those of the Ministry of Business, Innovation and Employment. This message and any files transmitted with it are confidential and solely for the use of the intended recipient. If you are not the intended recipient or the person responsible for delivery to the intended recipient, be advised that you have received this message in error and that any use is strictly prohibited. Please contact the sender and delete the message and any attachment from your computer.
-
+Arik
