@@ -1,51 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:52451 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750772AbaKXXVp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2014 18:21:45 -0500
-Received: by mail-wi0-f181.google.com with SMTP id r20so7555794wiv.14
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 15:21:44 -0800 (PST)
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, nbd@openwrt.org,
-	thomas@net.t-labs.tu-berlin.de, adrian@freebsd.org
-Subject: [PATCH 0/2] add TPC capability for AR9003 based chips
-Date: Tue, 25 Nov 2014 00:21:39 +0100
-Message-Id: <1416871301-9595-1-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20141125_002148_823120_77E3A9E6)
+Received: from mga14.intel.com ([192.55.52.115]:50776 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751053AbaKZKbB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Nov 2014 05:31:01 -0500
+Message-ID: <1416997856.2703.29.camel@jrissane-mobl.ger.corp.intel.com> (sfid-20141126_113107_962612_9B8A5993)
+Subject: Re: [PATCH v7] nl80211: Stop scheduled scan if netlink client
+ disappears
+From: Jukka Rissanen <jukka.rissanen@linux.intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 26 Nov 2014 12:30:56 +0200
+In-Reply-To: <1416994339.2019.4.camel@sipsolutions.net>
+References: <1416992841-15728-1-git-send-email-jukka.rissanen@linux.intel.com>
+	 (sfid-20141126_100742_107746_BD7B37FA) <1416994339.2019.4.camel@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patchset adds TPC capability to ath9k for AR9003 based chips. For the time
-being some FCC checks are missing in ar9003_hw_init_txpower_stbc() and CDD mode
-is not supported.
+On ke, 2014-11-26 at 10:32 +0100, Johannes Berg wrote:
+> On Wed, 2014-11-26 at 11:07 +0200, Jukka Rissanen wrote:
+> > An attribute NL80211_ATTR_SOCKET_OWNER can be set by the scan initiator.
+> > If present, the attribute will cause the scan to be stopped if the client
+> > dies.
+> > 
+> > Signed-off-by: Jukka Rissanen <jukka.rissanen@linux.intel.com>
+> > ---
+> > Hi,
+> > 
+> > v7:
+> > - convert the cfg80211_sched_scan_request to __rcu pointer in order
+> >   to avoid races when accessing it
+> 
+> You totally need to revisit how to use RCU.
 
-*[PATCH 1/2]: add TX power per-rate tables to cap TX power in TX descriptor path
-*[PATCH 2/2]: cap per-packet TX power according to TX power per-rate tables
+Yes, probably. This is very new stuff to me :)
 
-This pachset is based on Adrian Chadd's hints
-(https://www.mail-archive.com/ath9k-devel@lists.ath9k.org/msg10396.html)
+> 
+> Just some examples:
+>  * don't synchronize_rcu() after assignment - what did you do that for?
 
-Changes since RFC:
-- make the ah->txpower array one-dimensional and store max TX power for the
-  current chainmask only
+Following the examples described in Documentation/RCU/whatisRCU.txt
 
-Lorenzo Bianconi (2):
-  ath9k: add TX power per-rate tables
-  ath9k: add TPC capability to TX descriptor path
+>  * don't use rcu_read_lock() when you already have the write lock (rtnl)
+>  * don't use rcu_access_pointer(), use
+>     - local variables
+>     - rcu_dereference_protected() (or rather rtnl_dereference())
+>     - rcu_dereference()
+>  * actually fix it to assign the values before rcu_assign_pointer() so
+> they're
+>    all published together ...
+> 
+> Also, please make that a separate patch so it isn't mixed with the
+> functional changes.
+> 
+> johannes
+> 
 
- drivers/net/wireless/ath/ath9k/ar9002_mac.c    |   8 +-
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |  47 +++++++
- drivers/net/wireless/ath/ath9k/ar9003_mac.c    |   8 +-
- drivers/net/wireless/ath/ath9k/ar9003_phy.c    | 174 +++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/ath9k.h         |   1 +
- drivers/net/wireless/ath/ath9k/beacon.c        |   5 +-
- drivers/net/wireless/ath/ath9k/hw.h            |   6 +
- drivers/net/wireless/ath/ath9k/mac.h           |   2 +-
- drivers/net/wireless/ath/ath9k/reg.h           |   2 +
- drivers/net/wireless/ath/ath9k/xmit.c          |  37 +++++-
- 10 files changed, 278 insertions(+), 12 deletions(-)
+Jukka
 
--- 
-2.1.0
 
