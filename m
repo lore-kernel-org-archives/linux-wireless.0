@@ -1,45 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f48.google.com ([209.85.215.48]:58574 "EHLO
-	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750757AbaKSLRy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Nov 2014 06:17:54 -0500
-Date: Wed, 19 Nov 2014 13:17:44 +0200
-From: Johan Hedberg <johan.hedberg@gmail.com>
-To: "Kirill A. Shutemov" <kirill@shutemov.name>
-Cc: linux-bluetooth@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Chan-yeol Park <chanyeol.park@samsung.com>,
-	Kyungmin Park <kyungmin.park@samsung.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: pull request: bluetooth-next 2014-11-07
-Message-ID: <20141119111744.GA8153@t440s.lan> (sfid-20141119_121815_998522_052D3BA9)
-References: <20141118133459.GB27428@node.dhcp.inet.fi>
- <20141118180919.GA32128@t440s.P-661HNU-F1>
- <20141119110654.GA1894@node.dhcp.inet.fi>
+Received: from mail-bn1bon0061.outbound.protection.outlook.com ([157.56.111.61]:59072
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752119AbaKZTYb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Nov 2014 14:24:31 -0500
+Received: by mail-ie0-f179.google.com with SMTP id rp18so3261251iec.38
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Nov 2014 11:24:24 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20141119110654.GA1894@node.dhcp.inet.fi>
+From: Ashkan Parcham Kashani <ashkan.parchamkashani@mail.utoronto.ca>
+Date: Wed, 26 Nov 2014 14:24:03 -0500
+Message-ID: <CAPZAZS5EiYg9DPRjJjKmjm680Xh5ycmn9fZw9f2SuJ_TxnYemQ@mail.gmail.com> (sfid-20141126_202434_108146_8D1C33A5)
+Subject: Wireless Module: Carl9170 driver and firmware communication
+To: <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kirill,
+Hello,
 
-On Wed, Nov 19, 2014, Kirill A. Shutemov wrote:
-> > From: Johan Hedberg <johan.hedberg@intel.com>
-> > Date: Tue, 18 Nov 2014 20:00:15 +0200
-> > Subject: [PATCH] Bluetooth: Fix setting state back to TASK_RUNNING
-> > 
-> > In __hci_cmd_sync_ev() and __hci_req_sync() if the hci_req_run() call
-> > fails and we return from the functions we should ensure that the state
-> > doesn't remain in TASK_INTERRUPTIBLE that we just set it to. This patch
-> > fixes missing calls to set_current_state(TASK_RUNNING) in both places.
-> > 
-> > Signed-off-by: Johan Hedberg <johan.hedberg@intel.com>
-> 
-> This patch helps -- warning is gone.
+I'm working on a project where I need to communicate some additional
+control information between the carl9170 driver and firmware. I am not
+exactly sure where the best place to add this information would be. I
+assumed that the DMA might work if I can extend it and reserve some
+space for the controls. I only need a few bytes for the communication.
 
-Thanks! I've resent it to linux-bluetooth with the appropriate
-Reported-by/Tested-by credits. It'll be included in the next pull
-request for the bluetooth-next tree.
+I also considered using device registers for this, but it's hard to
+find documentation of which registers may be free to use.
 
-Johan
+It would be great to get some opinions on the best way to do this;
+would you have any advice?
+
+If the DMA is a possible way to go, how would I go about extending it?
+To my understanding, the firmware sets the needed sizes, and the
+driver allocates the DMA accorting to specification.
+
+I'm also wondering how one would go about interrupting the firmware.
+At times, the driver will need to interrupt the firmware, in which
+case the firmware should stop transmitting any packets it is currently
+transmitting.
+
+Any help would be much appreciated. Thanks so much!
+--
+Ashkan Kashani
+ashkan.parchamkashani@mail.utoronto.ca
