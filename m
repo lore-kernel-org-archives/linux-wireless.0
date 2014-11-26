@@ -1,47 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:39985 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750827AbaK1HKb (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:53122 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752047AbaKZHMK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Nov 2014 02:10:31 -0500
+	Wed, 26 Nov 2014 02:12:10 -0500
 From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH 1/3] ath10k: embed supported chip ids in hw_params
-References: <1416838646-18801-1-git-send-email-michal.kazior@tieto.com>
-	<87vbm2whoz.fsf@kamboji.qca.qualcomm.com>
-	<CA+BoTQ=56six2CEQ6Rzr7yMEM7UVNQ3RX9UpdgmxMEoG0+kDAA@mail.gmail.com>
-Date: Fri, 28 Nov 2014 09:10:12 +0200
-In-Reply-To: <CA+BoTQ=56six2CEQ6Rzr7yMEM7UVNQ3RX9UpdgmxMEoG0+kDAA@mail.gmail.com>
-	(Michal Kazior's message of "Wed, 26 Nov 2014 08:54:30 +0100")
-Message-ID: <87d287u7fv.fsf@kamboji.qca.qualcomm.com> (sfid-20141128_081051_972537_D8454D8D)
+To: Peter Oh <poh@qca.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/2] ath10k: add new wmi interface of NF cal period
+References: <1416945765-26902-1-git-send-email-poh@qca.qualcomm.com>
+	<1416945765-26902-2-git-send-email-poh@qca.qualcomm.com>
+Date: Wed, 26 Nov 2014 09:12:04 +0200
+In-Reply-To: <1416945765-26902-2-git-send-email-poh@qca.qualcomm.com> (Peter
+	Oh's message of "Tue, 25 Nov 2014 12:02:45 -0800")
+Message-ID: <874mtmxwor.fsf@kamboji.qca.qualcomm.com> (sfid-20141126_081213_947479_A5FC6398)
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+Peter Oh <poh@qca.qualcomm.com> writes:
 
-> Hmm.. I have a couple of ideas:
-
-[...]
-
-> 2. Have a dedicatd pci-specific structure:
+> Introduce a new wmi interface controls noise floor (NF) calibration
+> period via debugfs as firmware has introduced it on v10.2.
 >
->  struct ath10k_pci_supported_chip {
->    u16 dev_id;
->    u32 chip_id;
->  };
+> It allows users to modify frequency of NF calibration in millisecond
+> and changes RSSI reporting frequency consequently.
+> Short calibration period will trigger more frequent NF calibration,
+> so that RSSI reported in receive frames is more realistic.
 >
->  struct ath10k_pci_supported_chip ath10k_pci_supported_chips[] = {
->    { QCA988X_2_0_DEVICE_ID, QCA988X_HW_2_0_CHIP_ID_REV },
->    // ...
->  };
+> Till now calibration was done at 30 seconds.
 >
-> Probably the simplest and has least impact.
+> Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
 
-Yeah, this seems to be the best. Can you send v2?
+There was a trivial conflict in struct ath10k_debug, please double check
+my conflict resolution:
+
+https://github.com/kvalo/ath/commit/1abcc1aa6046231a55a296ea78ab2f374f6f791b
 
 -- 
 Kalle Valo
