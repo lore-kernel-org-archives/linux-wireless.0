@@ -1,81 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:9217 "EHLO mga01.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:60919 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964896AbaKNLQk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Nov 2014 06:16:40 -0500
-From: Jukka Rissanen <jukka.rissanen@linux.intel.com>
+	id S1753214AbaKZOcX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Nov 2014 09:32:23 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH v2] mac80211-hwsim: hwname is always known so use the value from wiphy
-Date: Fri, 14 Nov 2014 13:16:34 +0200
-Message-Id: <1415963794-28664-1-git-send-email-jukka.rissanen@linux.intel.com> (sfid-20141114_121658_943954_812D6F1D)
+Cc: users@rt2x00.serialmonkey.com,
+	Richard Genoud <richard.genoud@gmail.com>
+Subject: [PATCH 4/4] Revert "rt2x00: Endless loop on hub port power down"
+Date: Wed, 26 Nov 2014 15:29:16 +0100
+Message-Id: <1417012156-26197-4-git-send-email-sgruszka@redhat.com> (sfid-20141126_153231_102698_BDBC0057)
+In-Reply-To: <1417012156-26197-1-git-send-email-sgruszka@redhat.com>
+References: <1417012156-26197-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We can always know the hwname of the radio so use the value
-from wiphy.
+This reverts commit 2ad69ac5976191e9bb7dc4044204a504653ad1bb. It
+causes wireless device disappear when we get -EPROTO error form USB
+request. I encounter such situation occasionally when resume form
+suspend with RT3070 adapter:
 
-Signed-off-by: Jukka Rissanen <jukka.rissanen@linux.intel.com>
+[  289.619985] ieee80211 phy0: rt2x00usb_vendor_request: Error - Vendor Request 0x06 failed for offset 0x0404 with error -71
+[  289.639368] ieee80211 phy0: rt2800_wait_bbp_ready: Error - BBP register access failed, aborting
+[  289.639374] ieee80211 phy0: rt2800usb_set_device_state: Error - Device failed to enter state 4 (-5)
+
+Without the patch, except printing error, device works just fine after
+resume.
+
+Currently after timeouts and REGISTER_BUSY_COUNT tuning, we should
+not have any "endless loop", though we can wait quite long when driver
+is trying to communicate with the device through non functioning USB
+connection. Generally the problem that commit 2ad69ac597619 solves
+is kinda artificial.
+
+Cc: Richard Genoud <richard.genoud@gmail.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
-Hi,
+ drivers/net/wireless/rt2x00/rt2x00usb.c | 6 ------
+ 1 file changed, 6 deletions(-)
 
-this v2 adds the missing signed-off-by
-
-Cheers,
-Jukka
-
- drivers/net/wireless/mac80211_hwsim.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 58f11bb..d1bb775 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -2474,12 +2474,10 @@ static void hwsim_mcast_del_radio(int id, const char *hwname,
- 	if (ret < 0)
- 		goto error;
+diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
+index c2346f8..892270d 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00usb.c
++++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
+@@ -64,12 +64,6 @@ int rt2x00usb_vendor_request(struct rt2x00_dev *rt2x00dev,
+ 		}
+ 	} while (time_before(jiffies, expire));
  
--	if (hwname) {
--		ret = nla_put(skb, HWSIM_ATTR_RADIO_NAME, strlen(hwname),
--			      hwname);
--		if (ret < 0)
--			goto error;
--	}
-+	ret = nla_put(skb, HWSIM_ATTR_RADIO_NAME, strlen(hwname),
-+		      hwname);
-+	if (ret < 0)
-+		goto error;
- 
- 	genlmsg_end(skb, data);
- 
-@@ -2513,7 +2511,8 @@ static void mac80211_hwsim_free(void)
- 						list))) {
- 		list_del(&data->list);
- 		spin_unlock_bh(&hwsim_radio_lock);
--		mac80211_hwsim_del_radio(data, NULL, NULL);
-+		mac80211_hwsim_del_radio(data, wiphy_name(data->hw->wiphy),
-+					 NULL);
- 		spin_lock_bh(&hwsim_radio_lock);
- 	}
- 	spin_unlock_bh(&hwsim_radio_lock);
-@@ -2799,7 +2798,8 @@ static int hwsim_del_radio_nl(struct sk_buff *msg, struct genl_info *info)
- 
- 		list_del(&data->list);
- 		spin_unlock_bh(&hwsim_radio_lock);
--		mac80211_hwsim_del_radio(data, hwname, info);
-+		mac80211_hwsim_del_radio(data, wiphy_name(data->hw->wiphy),
-+					 info);
- 		return 0;
- 	}
- 	spin_unlock_bh(&hwsim_radio_lock);
-@@ -2844,7 +2844,7 @@ static void destroy_radio(struct work_struct *work)
- 	struct mac80211_hwsim_data *data =
- 		container_of(work, struct mac80211_hwsim_data, destroy_work);
- 
--	mac80211_hwsim_del_radio(data, NULL, NULL);
-+	mac80211_hwsim_del_radio(data, wiphy_name(data->hw->wiphy), NULL);
- }
- 
- static void remove_user_radios(u32 portid)
+-	/* If the port is powered down, we get a -EPROTO error, and this
+-	 * leads to a endless loop. So just say that the device is gone.
+-	 */
+-	if (status == -EPROTO)
+-		clear_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
+-
+ 	rt2x00_err(rt2x00dev,
+ 		   "Vendor Request 0x%02x failed for offset 0x%04x with error %d\n",
+ 		   request, offset, status);
 -- 
 1.8.3.1
 
