@@ -1,905 +1,332 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:36381 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751325AbaKEVJk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Nov 2014 16:09:40 -0500
-Received: by mail-wi0-f176.google.com with SMTP id h11so13632589wiw.9
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Nov 2014 13:09:39 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 03/11] staging: vt6655: mac.c and mac.h remove dead functions.
-Date: Wed,  5 Nov 2014 21:08:51 +0000
-Message-Id: <1415221739-3045-3-git-send-email-tvboxspy@gmail.com> (sfid-20141105_220944_150146_FCA362EE)
-In-Reply-To: <1415221739-3045-1-git-send-email-tvboxspy@gmail.com>
-References: <1415221739-3045-1-git-send-email-tvboxspy@gmail.com>
+Received: from mga09.intel.com ([134.134.136.24]:45570 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750809AbaKZJH1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Nov 2014 04:07:27 -0500
+From: Jukka Rissanen <jukka.rissanen@linux.intel.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH v7] nl80211: Stop scheduled scan if netlink client disappears
+Date: Wed, 26 Nov 2014 11:07:21 +0200
+Message-Id: <1416992841-15728-1-git-send-email-jukka.rissanen@linux.intel.com> (sfid-20141126_100742_107746_BD7B37FA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-MACvReadAllRegs
-MACbyReadMultiAddr
-MACvWriteMultiAddr
-MACvSetMultiAddrByHash
-MACvResetMultiAddrByHash
-MACvSetRxThreshold
-MACvGetRxThreshold
-MACvSetTxThreshold
-MACvGetTxThreshold
-MACvSetDmaLength
-MACvGetDmaLength
-MACvGetLongRetryLimit
-MACbIsInLoopbackMode
-MACbCompareContext
-MACvOneShotTimer0MicroSec
-MACbTxDMAOff
-MACvClearBusSusInd
-MACvEnableBusSusEn
-MACbFlushSYNCFifo
-MACvSetDefaultKeyEntry
-MACvEnableDefaultKey
-MACvDisableDefaultKey
-MACvSetDefaultTKIPKeyEntry
-MACvSetDefaultKeyCtl
+An attribute NL80211_ATTR_SOCKET_OWNER can be set by the scan initiator.
+If present, the attribute will cause the scan to be stopped if the client
+dies.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
-
+Signed-off-by: Jukka Rissanen <jukka.rissanen@linux.intel.com>
 ---
- drivers/staging/vt6655/mac.c | 702 -------------------------------------------
- drivers/staging/vt6655/mac.h |  32 --
- 2 files changed, 734 deletions(-)
+Hi,
 
-diff --git a/drivers/staging/vt6655/mac.c b/drivers/staging/vt6655/mac.c
-index 2ea74a1..af96606 100644
---- a/drivers/staging/vt6655/mac.c
-+++ b/drivers/staging/vt6655/mac.c
-@@ -26,30 +26,16 @@
-  * Date: May 21, 1996
-  *
-  * Functions:
-- *      MACvReadAllRegs - Read All MAC Registers to buffer
-  *      MACbIsRegBitsOn - Test if All test Bits On
-  *      MACbIsRegBitsOff - Test if All test Bits Off
-  *      MACbIsIntDisable - Test if MAC interrupt disable
-- *      MACbyReadMultiAddr - Read Multicast Address Mask Pattern
-- *      MACvWriteMultiAddr - Write Multicast Address Mask Pattern
-- *      MACvSetMultiAddrByHash - Set Multicast Address Mask by Hash value
-- *      MACvResetMultiAddrByHash - Clear Multicast Address Mask by Hash value
-- *      MACvSetRxThreshold - Set Rx Threshold value
-- *      MACvGetRxThreshold - Get Rx Threshold value
-- *      MACvSetTxThreshold - Set Tx Threshold value
-- *      MACvGetTxThreshold - Get Tx Threshold value
-- *      MACvSetDmaLength - Set Dma Length value
-- *      MACvGetDmaLength - Get Dma Length value
-  *      MACvSetShortRetryLimit - Set 802.11 Short Retry limit
-  *      MACvGetShortRetryLimit - Get 802.11 Short Retry limit
-  *      MACvSetLongRetryLimit - Set 802.11 Long Retry limit
-- *      MACvGetLongRetryLimit - Get 802.11 Long Retry limit
-  *      MACvSetLoopbackMode - Set MAC Loopback Mode
-- *      MACbIsInLoopbackMode - Test if MAC in Loopback mode
-  *      MACvSetPacketFilter - Set MAC Address Filter
-  *      MACvSaveContext - Save Context of MAC Registers
-  *      MACvRestoreContext - Restore Context of MAC Registers
-- *      MACbCompareContext - Compare if values of MAC Registers same as Context
-  *      MACbSoftwareReset - Software Reset MAC
-  *      MACbSafeRxOff - Turn Off MAC Rx
-  *      MACbSafeTxOff - Turn Off MAC Tx
-@@ -73,40 +59,6 @@
+v7:
+- convert the cfg80211_sched_scan_request to __rcu pointer in order
+  to avoid races when accessing it
+- reverting the patch v6, the port id is back in request struct
+
+v6:
+- moved owner netlink port id from cfg80211_sched_scan_request to
+  rdev in order to avoid possible races
+
+v5:
+- discarded the locking changes in v4
+- instead of trying to schedule sched_scan_stop worker from
+  struct cfg80211_sched_scan_request, move the worker to wiphy
+  as that makes it easier to manage the sched_scan_stop worker.
+  There are also one scheduled scan / wiphy so it is also logical
+  to do it like this.
+
+v4:
+- rtnl locking issues fixed in patch 2
+
+v3:
+- backward compatibility define tweaked in patch 1
+- added missing signed-off-by:
+
+v2:
+- split the patch
+- In patch 1, use a generic NL80211_ATTR_SOCKET_OWNER attribute and
+  convert the old code that uses NL80211_ATTR_IFACE_SOCKET_OWNER to
+  use the new value. A define is provided for backward compatibility.
+- Any pending schedule scan stop worker is cancelled when interface is
+  taken down in patch 2
+
+Cheers,
+Jukka
+
+
+ include/net/cfg80211.h       |  2 ++
+ include/uapi/linux/nl80211.h |  3 +++
+ net/wireless/core.c          | 28 +++++++++++++++++++++++++---
+ net/wireless/core.h          |  4 +++-
+ net/wireless/nl80211.c       | 40 +++++++++++++++++++++++++++++++++-------
+ net/wireless/scan.c          | 27 +++++++++++++++++++++------
+ 6 files changed, 87 insertions(+), 17 deletions(-)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index bb748c4..0e540fc 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1537,6 +1537,8 @@ struct cfg80211_sched_scan_request {
+ 	struct wiphy *wiphy;
+ 	struct net_device *dev;
+ 	unsigned long scan_start;
++	u32 owner_nlportid;
++	struct rcu_head rcu_head;
  
- /*
-  * Description:
-- *      Read All MAC Registers to buffer
-- *
-- * Parameters:
-- *  In:
-- *      dwIoBase    - Base Address for MAC
-- *  Out:
-- *      pbyMacRegs  - buffer to read
-- *
-- * Return Value: none
-- *
-- */
--void MACvReadAllRegs(void __iomem *dwIoBase, unsigned char *pbyMacRegs)
--{
--	int ii;
--
--	// read page0 register
--	for (ii = 0; ii < MAC_MAX_CONTEXT_SIZE_PAGE0; ii++) {
--		VNSvInPortB(dwIoBase + ii, pbyMacRegs);
--		pbyMacRegs++;
--	}
--
--	MACvSelectPage1(dwIoBase);
--
--	// read page1 register
--	for (ii = 0; ii < MAC_MAX_CONTEXT_SIZE_PAGE1; ii++) {
--		VNSvInPortB(dwIoBase + ii, pbyMacRegs);
--		pbyMacRegs++;
--	}
--
--	MACvSelectPage0(dwIoBase);
--}
--
--/*
-- * Description:
-  *      Test if all test bits on
+ 	/* keep last */
+ 	struct ieee80211_channel *channels[0];
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index d775245..a0e3b32 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1655,6 +1655,9 @@ enum nl80211_commands {
+  * @NL80211_ATTR_SOCKET_OWNER: Flag attribute, if set during interface
+  *	creation then the new interface will be owned by the netlink socket
+  *	that created it and will be destroyed when the socket is closed.
++ *	If set during scheduled scan start then the new scan req will be
++ *	owned by the netlink socket that created it and the scheduled scan will
++ *	be stopped when the socket is closed.
   *
-  * Parameters:
-@@ -177,252 +129,6 @@ bool MACbIsIntDisable(void __iomem *dwIoBase)
- 
- /*
-  * Description:
-- *      Read MAC Multicast Address Mask
-- *
-- * Parameters:
-- *  In:
-- *      dwIoBase    - Base Address for MAC
-- *      uByteidx    - Index of Mask
-- *  Out:
-- *      none
-- *
-- * Return Value: Mask Value read
-- *
-- */
--unsigned char MACbyReadMultiAddr(void __iomem *dwIoBase, unsigned int uByteIdx)
--{
--	unsigned char byData;
--
--	MACvSelectPage1(dwIoBase);
--	VNSvInPortB(dwIoBase + MAC_REG_MAR0 + uByteIdx, &byData);
--	MACvSelectPage0(dwIoBase);
--	return byData;
--}
--
--/*
-- * Description:
-- *      Write MAC Multicast Address Mask
-- *
-- * Parameters:
-- *  In:
-- *      dwIoBase    - Base Address for MAC
-- *      uByteidx    - Index of Mask
-- *      byData      - Mask Value to write
-- *  Out:
-- *      none
-- *
-- * Return Value: none
-- *
-- */
--void MACvWriteMultiAddr(void __iomem *dwIoBase, unsigned int uByteIdx, unsigned char byData)
--{
--	MACvSelectPage1(dwIoBase);
--	VNSvOutPortB(dwIoBase + MAC_REG_MAR0 + uByteIdx, byData);
--	MACvSelectPage0(dwIoBase);
--}
--
--/*
-- * Description:
-- *      Set this hash index into multicast address register bit
-- *
-- * Parameters:
-- *  In:
-- *      dwIoBase    - Base Address for MAC
-- *      byHashIdx   - Hash index to set
-- *  Out:
-- *      none
-- *
-- * Return Value: none
-- *
-- */
--void MACvSetMultiAddrByHash(void __iomem *dwIoBase, unsigned char byHashIdx)
--{
--	unsigned int uByteIdx;
--	unsigned char byBitMask;
--	unsigned char byOrgValue;
--
--	// calculate byte position
--	uByteIdx = byHashIdx / 8;
--	ASSERT(uByteIdx < 8);
--	// calculate bit position
--	byBitMask = 1;
--	byBitMask <<= (byHashIdx % 8);
--	// turn on the bit
--	byOrgValue = MACbyReadMultiAddr(dwIoBase, uByteIdx);
--	MACvWriteMultiAddr(dwIoBase, uByteIdx, (unsigned char)(byOrgValue | byBitMask));
--}
--
--/*
-- * Description:
-- *      Reset this hash index into multicast address register bit
-- *
-- * Parameters:
-- *  In:
-- *      dwIoBase    - Base Address for MAC
-- *      byHashIdx   - Hash index to clear
-- *  Out:
-- *      none
-- *
-- * Return Value: none
-- *
-- */
--void MACvResetMultiAddrByHash(void __iomem *dwIoBase, unsigned char byHashIdx)
--{
--	unsigned int uByteIdx;
--	unsigned char byBitMask;
--	unsigned char byOrgValue;
--
--	// calculate byte position
--	uByteIdx = byHashIdx / 8;
--	ASSERT(uByteIdx < 8);
--	// calculate bit position
--	byBitMask = 1;
--	byBitMask <<= (byHashIdx % 8);
--	// turn off the bit
--	byOrgValue = MACbyReadMultiAddr(dwIoBase, uByteIdx);
--	MACvWriteMultiAddr(dwIoBase, uByteIdx, (unsigned char)(byOrgValue & (~byBitMask)));
--}
--
--/*
-- * Description:
-- *      Set Rx Threshold
-- *
-- * Parameters:
-- *  In:
-- *      dwIoBase    - Base Address for MAC
-- *      byThreshold - Threshold Value
-- *  Out:
-- *      none
-- *
-- * Return Value: none
-- *
-- */
--void MACvSetRxThreshold(void __iomem *dwIoBase, unsigned char byThreshold)
--{
--	unsigned char byOrgValue;
--
--	ASSERT(byThreshold < 4);
--
--	// set FCR0
--	VNSvInPortB(dwIoBase + MAC_REG_FCR0, &byOrgValue);
--	byOrgValue = (byOrgValue & 0xCF) | (byThreshold << 4);
--	VNSvOutPortB(dwIoBase + MAC_REG_FCR0, byOrgValue);
--}
--
--/*
-- * Description:
-- *      Get Rx Threshold
-- *
-- * Parameters:
-- *  In:
-- *      dwIoBase    - Base Address for MAC
-- *  Out:
-- *      pbyThreshold- Threshold Value Get
-- *
-- * Return Value: none
-- *
-- */
--void MACvGetRxThreshold(void __iomem *dwIoBase, unsigned char *pbyThreshold)
--{
--	// get FCR0
--	VNSvInPortB(dwIoBase + MAC_REG_FCR0, pbyThreshold);
--	*pbyThreshold = (*pbyThreshold >> 4) & 0x03;
--}
--
--/*
-- * Description:
-- *      Set Tx Threshold
-- *
-- * Parameters:
-- *  In:
-- *      dwIoBase    - Base Address for MAC
-- *      byThreshold - Threshold Value
-- *  Out:
-- *      none
-- *
-- * Return Value: none
-- *
-- */
--void MACvSetTxThreshold(void __iomem *dwIoBase, unsigned char byThreshold)
--{
--	unsigned char byOrgValue;
--
--	ASSERT(byThreshold < 4);
--
--	// set FCR0
--	VNSvInPortB(dwIoBase + MAC_REG_FCR0, &byOrgValue);
--	byOrgValue = (byOrgValue & 0xF3) | (byThreshold << 2);
--	VNSvOutPortB(dwIoBase + MAC_REG_FCR0, byOrgValue);
--}
--
--/*
-- * Description:
-- *      Get Tx Threshold
-- *
-- * Parameters:
-- *  In:
-- *      dwIoBase    - Base Address for MAC
-- *  Out:
-- *      pbyThreshold- Threshold Value Get
-- *
-- * Return Value: none
-- *
-- */
--void MACvGetTxThreshold(void __iomem *dwIoBase, unsigned char *pbyThreshold)
--{
--	// get FCR0
--	VNSvInPortB(dwIoBase + MAC_REG_FCR0, pbyThreshold);
--	*pbyThreshold = (*pbyThreshold >> 2) & 0x03;
--}
--
--/*
-- * Description:
-- *      Set Dma Length
-- *
-- * Parameters:
-- *  In:
-- *      dwIoBase    - Base Address for MAC
-- *      byDmaLength - Dma Length Value
-- *  Out:
-- *      none
-- *
-- * Return Value: none
-- *
-- */
--void MACvSetDmaLength(void __iomem *dwIoBase, unsigned char byDmaLength)
--{
--	unsigned char byOrgValue;
--
--	ASSERT(byDmaLength < 4);
--
--	// set FCR0
--	VNSvInPortB(dwIoBase + MAC_REG_FCR0, &byOrgValue);
--	byOrgValue = (byOrgValue & 0xFC) | byDmaLength;
--	VNSvOutPortB(dwIoBase + MAC_REG_FCR0, byOrgValue);
--}
--
--/*
-- * Description:
-- *      Get Dma Length
-- *
-- * Parameters:
-- *  In:
-- *      dwIoBase    - Base Address for MAC
-- *  Out:
-- *      pbyDmaLength- Dma Length Value Get
-- *
-- * Return Value: none
-- *
-- */
--void MACvGetDmaLength(void __iomem *dwIoBase, unsigned char *pbyDmaLength)
--{
--	// get FCR0
--	VNSvInPortB(dwIoBase + MAC_REG_FCR0, pbyDmaLength);
--	*pbyDmaLength &= 0x03;
--}
--
--/*
-- * Description:
-  *      Set 802.11 Short Retry Limit
-  *
-  * Parameters:
-@@ -482,25 +188,6 @@ void MACvSetLongRetryLimit(void __iomem *dwIoBase, unsigned char byRetryLimit)
- 
- /*
-  * Description:
-- *      Get 802.11 Long Retry Limit
-- *
-- * Parameters:
-- *  In:
-- *      dwIoBase        - Base Address for MAC
-- *  Out:
-- *      pbyRetryLimit   - Retry Limit Get
-- *
-- * Return Value: none
-- *
-- */
--void MACvGetLongRetryLimit(void __iomem *dwIoBase, unsigned char *pbyRetryLimit)
--{
--	// get LRT
--	VNSvInPortB(dwIoBase + MAC_REG_LRT, pbyRetryLimit);
--}
--
--/*
-- * Description:
-  *      Set MAC Loopback mode
-  *
-  * Parameters:
-@@ -528,29 +215,6 @@ void MACvSetLoopbackMode(void __iomem *dwIoBase, unsigned char byLoopbackMode)
- 
- /*
-  * Description:
-- *      Test if MAC in Loopback mode
-- *
-- * Parameters:
-- *  In:
-- *      dwIoBase        - Base Address for MAC
-- *  Out:
-- *      none
-- *
-- * Return Value: true if in Loopback mode; otherwise false
-- *
-- */
--bool MACbIsInLoopbackMode(void __iomem *dwIoBase)
--{
--	unsigned char byOrgValue;
--
--	VNSvInPortB(dwIoBase + MAC_REG_TEST, &byOrgValue);
--	if (byOrgValue & (TEST_LBINT | TEST_LBEXT))
--		return true;
--	return false;
--}
--
--/*
-- * Description:
-  *      Set MAC Address filter
-  *
-  * Parameters:
-@@ -690,47 +354,6 @@ void MACvRestoreContext(void __iomem *dwIoBase, unsigned char *pbyCxtBuf)
- 
- /*
-  * Description:
-- *      Compare if MAC registers same as context buffer
-- *
-- * Parameters:
-- *  In:
-- *      dwIoBase    - Base Address for MAC
-- *      pbyCxtBuf   - Context buffer
-- *  Out:
-- *      none
-- *
-- * Return Value: true if all values are the same; otherwise false
-- *
-- */
--bool MACbCompareContext(void __iomem *dwIoBase, unsigned char *pbyCxtBuf)
--{
--	unsigned long dwData;
--
--	// compare MAC context to determine if this is a power lost init,
--	// return true for power remaining init, return false for power lost init
--
--	// compare CURR_RX_DESC_ADDR, CURR_TX_DESC_ADDR
--	VNSvInPortD(dwIoBase + MAC_REG_TXDMAPTR0, &dwData);
--	if (dwData != *(unsigned long *)(pbyCxtBuf + MAC_REG_TXDMAPTR0))
--		return false;
--
--	VNSvInPortD(dwIoBase + MAC_REG_AC0DMAPTR, &dwData);
--	if (dwData != *(unsigned long *)(pbyCxtBuf + MAC_REG_AC0DMAPTR))
--		return false;
--
--	VNSvInPortD(dwIoBase + MAC_REG_RXDMAPTR0, &dwData);
--	if (dwData != *(unsigned long *)(pbyCxtBuf + MAC_REG_RXDMAPTR0))
--		return false;
--
--	VNSvInPortD(dwIoBase + MAC_REG_RXDMAPTR1, &dwData);
--	if (dwData != *(unsigned long *)(pbyCxtBuf + MAC_REG_RXDMAPTR1))
--		return false;
--
--	return true;
--}
--
--/*
-- * Description:
-  *      Software Reset MAC
-  *
-  * Parameters:
-@@ -1222,27 +845,6 @@ void MACvTimer0MicroSDelay(void __iomem *dwIoBase, unsigned int uDelay)
-  * Return Value: none
-  *
-  */
--void MACvOneShotTimer0MicroSec(void __iomem *dwIoBase, unsigned int uDelayTime)
--{
--	VNSvOutPortB(dwIoBase + MAC_REG_TMCTL0, 0);
--	VNSvOutPortD(dwIoBase + MAC_REG_TMDATA0, uDelayTime);
--	VNSvOutPortB(dwIoBase + MAC_REG_TMCTL0, (TMCTL_TMD | TMCTL_TE));
--}
--
--/*
-- * Description:
-- *      Micro Second One shot timer via MAC
-- *
-- * Parameters:
-- *  In:
-- *      dwIoBase    - Base Address for MAC
-- *      uDelay      - Delay time
-- *  Out:
-- *      none
-- *
-- * Return Value: none
-- *
-- */
- void MACvOneShotTimer1MicroSec(void __iomem *dwIoBase, unsigned int uDelayTime)
- {
- 	VNSvOutPortB(dwIoBase + MAC_REG_TMCTL1, 0);
-@@ -1259,102 +861,6 @@ void MACvSetMISCFifo(void __iomem *dwIoBase, unsigned short wOffset, unsigned lo
- 	VNSvOutPortW(dwIoBase + MAC_REG_MISCFFCTL, MISCFFCTL_WRITE);
+  * @NL80211_ATTR_TDLS_INITIATOR: flag attribute indicating the current end is
+  *	the TDLS link initiator.
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 4c2e501..368e276 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -320,6 +320,20 @@ static void cfg80211_destroy_iface_wk(struct work_struct *work)
+ 	rtnl_unlock();
  }
  
--bool MACbTxDMAOff(void __iomem *dwIoBase, unsigned int idx)
--{
--	unsigned char byData;
--	unsigned int ww = 0;
--
--	if (idx == TYPE_TXDMA0) {
--		VNSvOutPortB(dwIoBase + MAC_REG_TXDMACTL0+2, DMACTL_RUN);
--		for (ww = 0; ww < W_MAX_TIMEOUT; ww++) {
--			VNSvInPortB(dwIoBase + MAC_REG_TXDMACTL0, &byData);
--			if (!(byData & DMACTL_RUN))
--				break;
--		}
--	} else if (idx == TYPE_AC0DMA) {
--		VNSvOutPortB(dwIoBase + MAC_REG_AC0DMACTL+2, DMACTL_RUN);
--		for (ww = 0; ww < W_MAX_TIMEOUT; ww++) {
--			VNSvInPortB(dwIoBase + MAC_REG_AC0DMACTL, &byData);
--			if (!(byData & DMACTL_RUN))
--				break;
--		}
--	}
--	if (ww == W_MAX_TIMEOUT) {
--		DBG_PORT80(0x29);
--		pr_debug(" DBG_PORT80(0x29)\n");
--		return false;
--	}
--	return true;
--}
--
--void MACvClearBusSusInd(void __iomem *dwIoBase)
--{
--	unsigned long dwOrgValue;
--	unsigned int ww;
--	// check if BcnSusInd enabled
--	VNSvInPortD(dwIoBase + MAC_REG_ENCFG , &dwOrgValue);
--	if (!(dwOrgValue & EnCFG_BcnSusInd))
--		return;
--	//Set BcnSusClr
--	dwOrgValue = dwOrgValue | EnCFG_BcnSusClr;
--	VNSvOutPortD(dwIoBase + MAC_REG_ENCFG, dwOrgValue);
--	for (ww = 0; ww < W_MAX_TIMEOUT; ww++) {
--		VNSvInPortD(dwIoBase + MAC_REG_ENCFG , &dwOrgValue);
--		if (!(dwOrgValue & EnCFG_BcnSusInd))
--			break;
--	}
--	if (ww == W_MAX_TIMEOUT) {
--		DBG_PORT80(0x33);
--		pr_debug(" DBG_PORT80(0x33)\n");
--	}
--}
--
--void MACvEnableBusSusEn(void __iomem *dwIoBase)
--{
--	unsigned char byOrgValue;
--	unsigned long dwOrgValue;
--	unsigned int ww;
--	// check if BcnSusInd enabled
--	VNSvInPortB(dwIoBase + MAC_REG_CFG , &byOrgValue);
--
--	//Set BcnSusEn
--	byOrgValue = byOrgValue | CFG_BCNSUSEN;
--	VNSvOutPortB(dwIoBase + MAC_REG_ENCFG, byOrgValue);
--	for (ww = 0; ww < W_MAX_TIMEOUT; ww++) {
--		VNSvInPortD(dwIoBase + MAC_REG_ENCFG , &dwOrgValue);
--		if (dwOrgValue & EnCFG_BcnSusInd)
--			break;
--	}
--	if (ww == W_MAX_TIMEOUT) {
--		DBG_PORT80(0x34);
--		pr_debug(" DBG_PORT80(0x34)\n");
--	}
--}
--
--bool MACbFlushSYNCFifo(void __iomem *dwIoBase)
--{
--	unsigned char byOrgValue;
--	unsigned int ww;
--	// Read MACCR
--	VNSvInPortB(dwIoBase + MAC_REG_MACCR , &byOrgValue);
--
--	// Set SYNCFLUSH
--	byOrgValue = byOrgValue | MACCR_SYNCFLUSH;
--	VNSvOutPortB(dwIoBase + MAC_REG_MACCR, byOrgValue);
--
--	// Check if SyncFlushOK
--	for (ww = 0; ww < W_MAX_TIMEOUT; ww++) {
--		VNSvInPortB(dwIoBase + MAC_REG_MACCR , &byOrgValue);
--		if (byOrgValue & MACCR_SYNCFLUSHOK)
--			break;
--	}
--	if (ww == W_MAX_TIMEOUT) {
--		DBG_PORT80(0x35);
--		pr_debug(" DBG_PORT80(0x33)\n");
--	}
--	return true;
--}
--
- bool MACbPSWakeup(void __iomem *dwIoBase)
- {
- 	unsigned char byOrgValue;
-@@ -1472,211 +978,3 @@ void MACvDisableKeyEntry(void __iomem *dwIoBase, unsigned int uEntryIdx)
- 	VNSvOutPortD(dwIoBase + MAC_REG_MISCFFDATA, 0);
- 	VNSvOutPortW(dwIoBase + MAC_REG_MISCFFCTL, MISCFFCTL_WRITE);
++static void cfg80211_sched_scan_stop_wk(struct work_struct *work)
++{
++	struct cfg80211_registered_device *rdev;
++
++	rdev = container_of(work, struct cfg80211_registered_device,
++			   sched_scan_stop_wk);
++
++	rtnl_lock();
++
++	__cfg80211_stop_sched_scan(rdev, false);
++
++	rtnl_unlock();
++}
++
+ /* exported functions */
+ 
+ struct wiphy *wiphy_new_nm(const struct cfg80211_ops *ops, int sizeof_priv,
+@@ -406,6 +420,7 @@ use_default_name:
+ 	INIT_LIST_HEAD(&rdev->destroy_list);
+ 	spin_lock_init(&rdev->destroy_list_lock);
+ 	INIT_WORK(&rdev->destroy_work, cfg80211_destroy_iface_wk);
++	INIT_WORK(&rdev->sched_scan_stop_wk, cfg80211_sched_scan_stop_wk);
+ 
+ #ifdef CONFIG_CFG80211_DEFAULT_PS
+ 	rdev->wiphy.flags |= WIPHY_FLAG_PS_ON_BY_DEFAULT;
+@@ -764,6 +779,7 @@ void wiphy_unregister(struct wiphy *wiphy)
+ 	flush_work(&rdev->event_work);
+ 	cancel_delayed_work_sync(&rdev->dfs_update_channels_wk);
+ 	flush_work(&rdev->destroy_work);
++	flush_work(&rdev->sched_scan_stop_wk);
+ 
+ #ifdef CONFIG_PM
+ 	if (rdev->wiphy.wowlan_config && rdev->ops->set_wakeup)
+@@ -854,8 +870,11 @@ void __cfg80211_leave(struct cfg80211_registered_device *rdev,
+ 		break;
+ 	case NL80211_IFTYPE_P2P_CLIENT:
+ 	case NL80211_IFTYPE_STATION:
+-		if (rdev->sched_scan_req && dev == rdev->sched_scan_req->dev)
++		rcu_read_lock();
++		if (rcu_access_pointer(rdev->sched_scan_req) &&
++		    dev == rtnl_dereference(rdev->sched_scan_req)->dev)
+ 			__cfg80211_stop_sched_scan(rdev, false);
++		rcu_read_unlock();
+ 
+ #ifdef CONFIG_CFG80211_WEXT
+ 		kfree(wdev->wext.ie);
+@@ -993,10 +1012,13 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 			___cfg80211_scan_done(rdev, false);
+ 		}
+ 
+-		if (WARN_ON(rdev->sched_scan_req &&
+-			    rdev->sched_scan_req->dev == wdev->netdev)) {
++		rcu_read_lock();
++		if (WARN_ON(rcu_access_pointer(rdev->sched_scan_req) &&
++			    rtnl_dereference(rdev->sched_scan_req)->dev ==
++				wdev->netdev)) {
+ 			__cfg80211_stop_sched_scan(rdev, false);
+ 		}
++		rcu_read_unlock();
+ 
+ 		rdev->opencount--;
+ 		wake_up(&rdev->dev_wait);
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index faa5b16..4e3630b 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -63,7 +63,7 @@ struct cfg80211_registered_device {
+ 	u32 bss_generation;
+ 	struct cfg80211_scan_request *scan_req; /* protected by RTNL */
+ 	struct sk_buff *scan_msg;
+-	struct cfg80211_sched_scan_request *sched_scan_req;
++	struct cfg80211_sched_scan_request __rcu *sched_scan_req;
+ 	unsigned long suspend_at;
+ 	struct work_struct scan_done_wk;
+ 	struct work_struct sched_scan_results_wk;
+@@ -84,6 +84,8 @@ struct cfg80211_registered_device {
+ 	struct list_head destroy_list;
+ 	struct work_struct destroy_work;
+ 
++	struct work_struct sched_scan_stop_wk;
++
+ 	/* must be last because of the way we do wiphy_priv(),
+ 	 * and it should at least be aligned to NETDEV_ALIGN */
+ 	struct wiphy wiphy __aligned(NETDEV_ALIGN);
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 6e41777..11ed9df 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -6077,27 +6077,40 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
+ 	if (rdev->sched_scan_req)
+ 		return -EINPROGRESS;
+ 
+-	rdev->sched_scan_req = nl80211_parse_sched_scan(&rdev->wiphy, wdev,
+-							info->attrs);
++	rcu_assign_pointer(rdev->sched_scan_req,
++			   nl80211_parse_sched_scan(&rdev->wiphy, wdev,
++						    info->attrs));
++	synchronize_rcu();
++
+ 	err = PTR_ERR_OR_ZERO(rdev->sched_scan_req);
+ 	if (err)
+ 		goto out_err;
+ 
+-	err = rdev_sched_scan_start(rdev, dev, rdev->sched_scan_req);
++	err = rdev_sched_scan_start(rdev, dev,
++				    rcu_access_pointer(rdev->sched_scan_req));
+ 	if (err)
+ 		goto out_free;
+ 
+-	rdev->sched_scan_req->dev = dev;
+-	rdev->sched_scan_req->wiphy = &rdev->wiphy;
++	rcu_read_lock();
++
++	if (info->attrs[NL80211_ATTR_SOCKET_OWNER])
++		rtnl_dereference(rdev->sched_scan_req)->owner_nlportid =
++			info->snd_portid;
++
++	rtnl_dereference(rdev->sched_scan_req)->dev = dev;
++	rtnl_dereference(rdev->sched_scan_req)->wiphy = &rdev->wiphy;
++
++	rcu_read_unlock();
+ 
+ 	nl80211_send_sched_scan(rdev, dev,
+ 				NL80211_CMD_START_SCHED_SCAN);
+ 	return 0;
+ 
+ out_free:
+-	kfree(rdev->sched_scan_req);
++	kfree_rcu(rcu_access_pointer(rdev->sched_scan_req), rcu_head);
+ out_err:
+-	rdev->sched_scan_req = NULL;
++	rcu_assign_pointer(rdev->sched_scan_req, NULL);
++	synchronize_rcu();
+ 	return err;
  }
--
--/*
-- * Description:
-- *      Set the default Key (KeyEntry[10]) by MISCFIFO
-- *
-- * Parameters:
-- *  In:
-- *      dwIoBase        - Base Address for MAC
-- *
-- *  Out:
-- *      none
-- *
-- * Return Value: none
-- *
-- */
--
--void MACvSetDefaultKeyEntry(void __iomem *dwIoBase, unsigned int uKeyLen,
--			    unsigned int uKeyIdx, unsigned long *pdwKey, unsigned char byLocalID)
--{
--	unsigned short wOffset;
--	unsigned long dwData;
--	int     ii;
--
--	if (byLocalID <= 1)
--		return;
--
--	pr_debug("MACvSetDefaultKeyEntry\n");
--	wOffset = MISCFIFO_KEYETRY0;
--	wOffset += (10 * MISCFIFO_KEYENTRYSIZE);
--
--	wOffset++;
--	wOffset++;
--	wOffset += (uKeyIdx * 4);
--	// always push 128 bits
--	for (ii = 0; ii < 3; ii++) {
--		pr_debug("(%d) wOffset: %d, Data: %lX\n",
--			 ii, wOffset+ii, *pdwKey);
--		VNSvOutPortW(dwIoBase + MAC_REG_MISCFFNDEX, wOffset+ii);
--		VNSvOutPortD(dwIoBase + MAC_REG_MISCFFDATA, *pdwKey++);
--		VNSvOutPortW(dwIoBase + MAC_REG_MISCFFCTL, MISCFFCTL_WRITE);
--	}
--	dwData = *pdwKey;
--	if (uKeyLen == WLAN_KEY_LEN_WEP40)
--		dwData |= 0x80000000;
--
--	VNSvOutPortW(dwIoBase + MAC_REG_MISCFFNDEX, wOffset+3);
--	VNSvOutPortD(dwIoBase + MAC_REG_MISCFFDATA, dwData);
--	VNSvOutPortW(dwIoBase + MAC_REG_MISCFFCTL, MISCFFCTL_WRITE);
--	pr_debug("End. wOffset: %d, Data: %lX\n", wOffset+3, dwData);
--}
--
--/*
-- * Description:
-- *      Enable default Key (KeyEntry[10]) by MISCFIFO
-- *
-- * Parameters:
-- *  In:
-- *      dwIoBase        - Base Address for MAC
-- *
-- *  Out:
-- *      none
-- *
-- * Return Value: none
-- *
-- */
--/*
--  void MACvEnableDefaultKey(void __iomem *dwIoBase, unsigned char byLocalID)
--  {
--  unsigned short wOffset;
--  unsigned long dwData;
--
--  if (byLocalID <= 1)
--  return;
--
--  wOffset = MISCFIFO_KEYETRY0;
--  wOffset += (10 * MISCFIFO_KEYENTRYSIZE);
--
--  dwData = 0xC0440000;
--  VNSvOutPortW(dwIoBase + MAC_REG_MISCFFNDEX, wOffset);
--  VNSvOutPortD(dwIoBase + MAC_REG_MISCFFDATA, dwData);
--  VNSvOutPortW(dwIoBase + MAC_REG_MISCFFCTL, MISCFFCTL_WRITE);
--  pr_debug("MACvEnableDefaultKey: wOffset: %d, Data: %lX\n", wOffset, dwData);
--
--  }
--*/
--
--/*
-- * Description:
-- *      Disable default Key (KeyEntry[10]) by MISCFIFO
-- *
-- * Parameters:
-- *  In:
-- *      dwIoBase        - Base Address for MAC
-- *
-- *  Out:
-- *      none
-- *
-- * Return Value: none
-- *
-- */
--void MACvDisableDefaultKey(void __iomem *dwIoBase)
--{
--	unsigned short wOffset;
--	unsigned long dwData;
--
--	wOffset = MISCFIFO_KEYETRY0;
--	wOffset += (10 * MISCFIFO_KEYENTRYSIZE);
--
--	dwData = 0x0;
--	VNSvOutPortW(dwIoBase + MAC_REG_MISCFFNDEX, wOffset);
--	VNSvOutPortD(dwIoBase + MAC_REG_MISCFFDATA, dwData);
--	VNSvOutPortW(dwIoBase + MAC_REG_MISCFFCTL, MISCFFCTL_WRITE);
--	pr_debug("MACvDisableDefaultKey: wOffset: %d, Data: %lX\n",
--		 wOffset, dwData);
--}
--
--/*
-- * Description:
-- *      Set the default TKIP Group Key (KeyEntry[10]) by MISCFIFO
-- *
-- * Parameters:
-- *  In:
-- *      dwIoBase        - Base Address for MAC
-- *
-- *  Out:
-- *      none
-- *
-- * Return Value: none
-- *
-- */
--void MACvSetDefaultTKIPKeyEntry(void __iomem *dwIoBase, unsigned int uKeyLen,
--				unsigned int uKeyIdx, unsigned long *pdwKey, unsigned char byLocalID)
--{
--	unsigned short wOffset;
--	unsigned long dwData;
--	int     ii;
--
--	if (byLocalID <= 1)
--		return;
--
--	pr_debug("MACvSetDefaultTKIPKeyEntry\n");
--	wOffset = MISCFIFO_KEYETRY0;
--	// Kyle test : change offset from 10 -> 0
--	wOffset += (10 * MISCFIFO_KEYENTRYSIZE);
--
--	dwData = 0xC0660000;
--	VNSvOutPortW(dwIoBase + MAC_REG_MISCFFNDEX, wOffset);
--	VNSvOutPortD(dwIoBase + MAC_REG_MISCFFDATA, dwData);
--	VNSvOutPortW(dwIoBase + MAC_REG_MISCFFCTL, MISCFFCTL_WRITE);
--	wOffset++;
--
--	dwData = 0;
--	VNSvOutPortW(dwIoBase + MAC_REG_MISCFFNDEX, wOffset);
--	VNSvOutPortD(dwIoBase + MAC_REG_MISCFFDATA, dwData);
--	VNSvOutPortW(dwIoBase + MAC_REG_MISCFFCTL, MISCFFCTL_WRITE);
--	wOffset++;
--
--	wOffset += (uKeyIdx * 4);
--	pr_debug("1. wOffset: %d, Data: %lX, idx:%d\n",
--		 wOffset, *pdwKey, uKeyIdx);
--	// always push 128 bits
--	for (ii = 0; ii < 4; ii++) {
--		pr_debug("2.(%d) wOffset: %d, Data: %lX\n",
--			 ii, wOffset+ii, *pdwKey);
--		VNSvOutPortW(dwIoBase + MAC_REG_MISCFFNDEX, wOffset+ii);
--		VNSvOutPortD(dwIoBase + MAC_REG_MISCFFDATA, *pdwKey++);
--		VNSvOutPortW(dwIoBase + MAC_REG_MISCFFCTL, MISCFFCTL_WRITE);
--	}
--}
--
--/*
-- * Description:
-- *      Set the Key Control by MISCFIFO
-- *
-- * Parameters:
-- *  In:
-- *      dwIoBase        - Base Address for MAC
-- *
-- *  Out:
-- *      none
-- *
-- * Return Value: none
-- *
-- */
--
--void MACvSetDefaultKeyCtl(void __iomem *dwIoBase, unsigned short wKeyCtl, unsigned int uEntryIdx, unsigned char byLocalID)
--{
--	unsigned short wOffset;
--	unsigned long dwData;
--
--	if (byLocalID <= 1)
--		return;
--
--	pr_debug("MACvSetKeyEntry\n");
--	wOffset = MISCFIFO_KEYETRY0;
--	wOffset += (uEntryIdx * MISCFIFO_KEYENTRYSIZE);
--
--	dwData = 0;
--	dwData |= wKeyCtl;
--	dwData <<= 16;
--	dwData |= 0xffff;
--	pr_debug("1. wOffset: %d, Data: %lX, KeyCtl:%X\n",
--		 wOffset, dwData, wKeyCtl);
--
--	VNSvOutPortW(dwIoBase + MAC_REG_MISCFFNDEX, wOffset);
--	VNSvOutPortD(dwIoBase + MAC_REG_MISCFFDATA, dwData);
--	VNSvOutPortW(dwIoBase + MAC_REG_MISCFFCTL, MISCFFCTL_WRITE);
--}
-diff --git a/drivers/staging/vt6655/mac.h b/drivers/staging/vt6655/mac.h
-index 3f37014..7d39a7f 100644
---- a/drivers/staging/vt6655/mac.h
-+++ b/drivers/staging/vt6655/mac.h
-@@ -964,41 +964,22 @@ do {								\
- #define MACvSetRFLE_LatchBase(dwIoBase)                                 \
- 	MACvWordRegBitsOn(dwIoBase, MAC_REG_SOFTPWRCTL, SOFTPWRCTL_RFLEOPT)
  
--void MACvReadAllRegs(void __iomem *dwIoBase, unsigned char *pbyMacRegs);
--
- bool MACbIsRegBitsOn(void __iomem *dwIoBase, unsigned char byRegOfs, unsigned char byTestBits);
- bool MACbIsRegBitsOff(void __iomem *dwIoBase, unsigned char byRegOfs, unsigned char byTestBits);
+@@ -12475,6 +12488,13 @@ static int nl80211_netlink_notify(struct notifier_block * nb,
  
- bool MACbIsIntDisable(void __iomem *dwIoBase);
+ 	list_for_each_entry_rcu(rdev, &cfg80211_rdev_list, list) {
+ 		bool schedule_destroy_work = false;
++		bool schedule_scan_stop = false;
++		struct cfg80211_sched_scan_request __rcu *req =
++			rdev->sched_scan_req;
++
++		if (rcu_access_pointer(req) && notify->portid &&
++		    rcu_dereference(req)->owner_nlportid == notify->portid)
++			schedule_scan_stop = true;
  
--unsigned char MACbyReadMultiAddr(void __iomem *dwIoBase, unsigned int uByteIdx);
--void MACvWriteMultiAddr(void __iomem *dwIoBase, unsigned int uByteIdx, unsigned char byData);
--void MACvSetMultiAddrByHash(void __iomem *dwIoBase, unsigned char byHashIdx);
--void MACvResetMultiAddrByHash(void __iomem *dwIoBase, unsigned char byHashIdx);
--
--void MACvSetRxThreshold(void __iomem *dwIoBase, unsigned char byThreshold);
--void MACvGetRxThreshold(void __iomem *dwIoBase, unsigned char *pbyThreshold);
--
--void MACvSetTxThreshold(void __iomem *dwIoBase, unsigned char byThreshold);
--void MACvGetTxThreshold(void __iomem *dwIoBase, unsigned char *pbyThreshold);
--
--void MACvSetDmaLength(void __iomem *dwIoBase, unsigned char byDmaLength);
--void MACvGetDmaLength(void __iomem *dwIoBase, unsigned char *pbyDmaLength);
--
- void MACvSetShortRetryLimit(void __iomem *dwIoBase, unsigned char byRetryLimit);
--void MACvGetShortRetryLimit(void __iomem *dwIoBase, unsigned char *pbyRetryLimit);
+ 		list_for_each_entry_rcu(wdev, &rdev->wdev_list, list) {
+ 			cfg80211_mlme_unregister_socket(wdev, notify->portid);
+@@ -12505,6 +12525,12 @@ static int nl80211_netlink_notify(struct notifier_block * nb,
+ 				spin_unlock(&rdev->destroy_list_lock);
+ 				schedule_work(&rdev->destroy_work);
+ 			}
++		} else if (schedule_scan_stop) {
++			rcu_dereference(req)->owner_nlportid = 0;
++
++			if (rdev->ops->sched_scan_stop &&
++			    rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_SCHED_SCAN)
++				schedule_work(&rdev->sched_scan_stop_wk);
+ 		}
+ 	}
  
- void MACvSetLongRetryLimit(void __iomem *dwIoBase, unsigned char byRetryLimit);
- void MACvGetLongRetryLimit(void __iomem *dwIoBase, unsigned char *pbyRetryLimit);
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index bda39f1..782d04f 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -257,7 +257,9 @@ void __cfg80211_sched_scan_results(struct work_struct *wk)
  
- void MACvSetLoopbackMode(void __iomem *dwIoBase, unsigned char byLoopbackMode);
--bool MACbIsInLoopbackMode(void __iomem *dwIoBase);
+ 	rtnl_lock();
  
- void MACvSetPacketFilter(void __iomem *dwIoBase, unsigned short wFilterType);
+-	request = rdev->sched_scan_req;
++	rcu_read_lock();
++	request = rtnl_dereference(rdev->sched_scan_req);
++	rcu_read_unlock();
  
- void MACvSaveContext(void __iomem *dwIoBase, unsigned char *pbyCxtBuf);
- void MACvRestoreContext(void __iomem *dwIoBase, unsigned char *pbyCxtBuf);
--bool MACbCompareContext(void __iomem *dwIoBase, unsigned char *pbyCxtBuf);
+ 	/* we don't have sched_scan_req anymore if the scan is stopping */
+ 	if (request) {
+@@ -277,9 +279,16 @@ void __cfg80211_sched_scan_results(struct work_struct *wk)
  
- bool MACbSoftwareReset(void __iomem *dwIoBase);
- bool MACbSafeSoftwareReset(void __iomem *dwIoBase);
-@@ -1015,27 +996,14 @@ void MACvSetCurrAC0DescAddrEx(void __iomem *dwIoBase, unsigned long dwCurrDescAd
- void MACvSetCurrSyncDescAddrEx(void __iomem *dwIoBase, unsigned long dwCurrDescAddr);
- void MACvSetCurrATIMDescAddrEx(void __iomem *dwIoBase, unsigned long dwCurrDescAddr);
- void MACvTimer0MicroSDelay(void __iomem *dwIoBase, unsigned int uDelay);
--void MACvOneShotTimer0MicroSec(void __iomem *dwIoBase, unsigned int uDelayTime);
- void MACvOneShotTimer1MicroSec(void __iomem *dwIoBase, unsigned int uDelayTime);
+ void cfg80211_sched_scan_results(struct wiphy *wiphy)
+ {
++	struct cfg80211_sched_scan_request *request;
++
+ 	trace_cfg80211_sched_scan_results(wiphy);
+ 	/* ignore if we're not scanning */
+-	if (wiphy_to_rdev(wiphy)->sched_scan_req)
++
++	rcu_read_lock();
++	request = rcu_dereference(wiphy_to_rdev(wiphy)->sched_scan_req);
++	rcu_read_unlock();
++
++	if (request)
+ 		queue_work(cfg80211_wq,
+ 			   &wiphy_to_rdev(wiphy)->sched_scan_results_wk);
+ }
+@@ -309,13 +318,16 @@ int __cfg80211_stop_sched_scan(struct cfg80211_registered_device *rdev,
+ 			       bool driver_initiated)
+ {
+ 	struct net_device *dev;
++	struct cfg80211_sched_scan_request *req;
  
- void MACvSetMISCFifo(void __iomem *dwIoBase, unsigned short wOffset, unsigned long dwData);
+ 	ASSERT_RTNL();
  
--bool MACbTxDMAOff(void __iomem *dwIoBase, unsigned int idx);
--
--void MACvClearBusSusInd(void __iomem *dwIoBase);
--void MACvEnableBusSusEn(void __iomem *dwIoBase);
--
--bool MACbFlushSYNCFifo(void __iomem *dwIoBase);
- bool MACbPSWakeup(void __iomem *dwIoBase);
+-	if (!rdev->sched_scan_req)
++	if (!rcu_access_pointer(rdev->sched_scan_req))
+ 		return -ENOENT;
  
- void MACvSetKeyEntry(void __iomem *dwIoBase, unsigned short wKeyCtl, unsigned int uEntryIdx,
- 		     unsigned int uKeyIdx, unsigned char *pbyAddr, u32 *pdwKey, unsigned char byLocalID);
- void MACvDisableKeyEntry(void __iomem *dwIoBase, unsigned int uEntryIdx);
--void MACvSetDefaultKeyEntry(void __iomem *dwIoBase, unsigned int uKeyLen,
--			    unsigned int uKeyIdx, unsigned long *pdwKey, unsigned char byLocalID);
--void MACvDisableDefaultKey(void __iomem *dwIoBase);
--void MACvSetDefaultTKIPKeyEntry(void __iomem *dwIoBase, unsigned int uKeyLen,
--				unsigned int uKeyIdx, unsigned long *pdwKey, unsigned char byLocalID);
--void MACvSetDefaultKeyCtl(void __iomem *dwIoBase, unsigned short wKeyCtl, unsigned int uEntryIdx, unsigned char byLocalID);
+-	dev = rdev->sched_scan_req->dev;
++	rcu_read_lock();
++	dev = rtnl_dereference(rdev->sched_scan_req)->dev;
++	rcu_read_unlock();
  
- #endif // __MAC_H__
+ 	if (!driver_initiated) {
+ 		int err = rdev_sched_scan_stop(rdev, dev);
+@@ -325,8 +337,11 @@ int __cfg80211_stop_sched_scan(struct cfg80211_registered_device *rdev,
+ 
+ 	nl80211_send_sched_scan(rdev, dev, NL80211_CMD_SCHED_SCAN_STOPPED);
+ 
+-	kfree(rdev->sched_scan_req);
+-	rdev->sched_scan_req = NULL;
++	req = rcu_access_pointer(rdev->sched_scan_req);
++
++	rcu_assign_pointer(rdev->sched_scan_req, NULL);
++
++	kfree_rcu(req, rcu_head);
+ 
+ 	return 0;
+ }
 -- 
-2.1.0
+1.8.3.1
 
