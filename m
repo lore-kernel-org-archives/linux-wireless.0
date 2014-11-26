@@ -1,53 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f46.google.com ([209.85.218.46]:35426 "EHLO
-	mail-oi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750993AbaKJUsr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Nov 2014 15:48:47 -0500
-Received: by mail-oi0-f46.google.com with SMTP id g201so5977048oib.5
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Nov 2014 12:48:46 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <545F4611.3010207@broadcom.com>
-References: <CAMP44s2XAmaiK2=BJA3TCW48Uo=5qyT5WsASDsZnOiSNgK6b0A@mail.gmail.com>
-	<545F4611.3010207@broadcom.com>
-Date: Mon, 10 Nov 2014 14:48:46 -0600
-Message-ID: <CAMP44s1NiYrFkN=DQcyGiJyW+JvCGvRVzcEBGLtvGyhfWs17kQ@mail.gmail.com> (sfid-20141110_214850_581335_3012A075)
-Subject: Re: brcmfmac not working on ECS LIVA
-From: Felipe Contreras <felipe.contreras@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	Franky Lin <frankyl@broadcom.com>,
-	Samuel Ortiz <sameo@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from plane.gmane.org ([80.91.229.3]:43739 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750811AbaKZLUH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Nov 2014 06:20:07 -0500
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1Xtadf-0003Nc-9o
+	for linux-wireless@vger.kernel.org; Wed, 26 Nov 2014 12:20:03 +0100
+Received: from 187.113.19.133.static.host.gvt.net.br ([187.113.19.133.static.host.gvt.net.br])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Nov 2014 12:20:03 +0100
+Received: from husnih by 187.113.19.133.static.host.gvt.net.br with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Nov 2014 12:20:03 +0100
+To: linux-wireless@vger.kernel.org
+From: Husni Ali Husni <husnih@ibest.com.br>
+Subject: Message ->  RX: wrong xfer size (usblen=72)
+Date: Wed, 26 Nov 2014 11:02:42 +0000 (UTC)
+Message-ID: <loom.20141126T114442-775@post.gmane.org> (sfid-20141126_122011_256028_0DD41598)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hello!
 
-On Sun, Nov 9, 2014 at 4:46 AM, Arend van Spriel <arend@broadcom.com> wrote:
+  I installed Linux Mint Quiana in my computer.
+  My computer is old and it have D-link DWL-G132 (wireless) to navigate at
+internet, ready as research, it use driver ar5523.
+  I saw the log archive (Kernel, dmesg) and all second I receive the message:
+[   38.094218] usb 2-8: RX: wrong xfer size (usblen=72) 
+[   38.094458] usb 2-8: RX: wrong xfer size (usblen=72) 
+[   38.094709] usb 2-8: RX: wrong xfer size (usblen=72) 
+[   38.196593] usb 2-8: RX: wrong xfer size (usblen=72) 
+[   38.196830] usb 2-8: RX: wrong xfer size (usblen=72) 
+[   38.197079] usb 2-8: RX: wrong xfer size (usblen=72) 
+[   38.298963] usb 2-8: RX: wrong xfer size (usblen=72) 
+[   38.299328] usb 2-8: RX: wrong xfer size (usblen=72) 
+[   38.299492] usb 2-8: RX: wrong xfer size (usblen=72) 
 
-> The ideas may come to us with a bit more trace information. The logging
-> above is the usual stuff so no problem indication there.
->
-> I looked at the nvram file from [1]. At the end there are some entries about
-> OOB wakeup, ie. starting with 'sd_'. You may remove those, but giving the
-> logging it would not be the first thing to do.
+  This message stuff may log partition.
 
-I removed the sd_ lines, it didn't help.
+  What I need to do to solve this problem?
 
-> Could you share the nvram obtained from EFI? Also please create a kernel log
-> with debug=0xd416.
+  Thank You!
 
-Sure, the nvram file is here:
+    Husni Ali Husni (Brazil)
 
-http://pastie.org/9710358
+Ps.: Sorry my English!
 
-I tried adding this file:
-
-/etc/modprobe.d/brcmfmac.conf
-options brcmfmac debug=0xd416
-
-I see nothing extra in the debug log... Am I doing something wrong?
-
--- 
-Felipe Contreras
