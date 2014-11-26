@@ -1,80 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f175.google.com ([209.85.220.175]:51305 "EHLO
-	mail-vc0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754631AbaKNJGU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Nov 2014 04:06:20 -0500
-Received: by mail-vc0-f175.google.com with SMTP id hy10so612978vcb.6
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Nov 2014 01:06:19 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <5465C333.7030704@rempel-privat.de>
-References: <1415941631-24140-1-git-send-email-yeohchunyeow@gmail.com>
-	<5465C333.7030704@rempel-privat.de>
-Date: Fri, 14 Nov 2014 17:06:18 +0800
-Message-ID: <CAEFj987ng6Jxa4u3+Z+0oGFX7LUnkLPP96bBrCSnSetjU+YjpQ@mail.gmail.com> (sfid-20141114_100627_819568_BC7860A1)
-Subject: Re: [PATCH] ath9k_htc: turn on software mgmt crypto for secured mesh
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-To: Oleksij Rempel <linux@rempel-privat.de>
-Cc: John Linville <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath9k-devel@lists.ath9k.org, Adrian Chadd <adrian@freebsd.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:56124 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751402AbaKZKpN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Nov 2014 05:45:13 -0500
+Message-ID: <1416998709.2019.5.camel@sipsolutions.net> (sfid-20141126_114518_357195_9DE3FBDB)
+Subject: Re: [PATCH v7] nl80211: Stop scheduled scan if netlink client
+ disappears
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jukka Rissanen <jukka.rissanen@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 26 Nov 2014 11:45:09 +0100
+In-Reply-To: <1416997856.2703.29.camel@jrissane-mobl.ger.corp.intel.com>
+References: <1416992841-15728-1-git-send-email-jukka.rissanen@linux.intel.com>
+	 (sfid-20141126_100742_107746_BD7B37FA) <1416994339.2019.4.camel@sipsolutions.net>
+	 <1416997856.2703.29.camel@jrissane-mobl.ger.corp.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 14, 2014 at 4:54 PM, Oleksij Rempel <linux@rempel-privat.de> wrote:
-> Am 14.11.2014 um 06:07 schrieb Chun-Yeow Yeoh:
->> Secured mesh encrypts the unicast mgmt frame using the same
->> key that used for encrypting the unicast data frame. The patch
->> "ath9k_htc_firmware: fix the offset of CCMP header for mesh
->> data frame" applied to open-ath9k-htc-firmware allows the
->> ath9k_htc to be loaded without "nohwcrypt=1". Unfortunately,
->> this is not working and we still need CCMP encryption of
->> management frames to be done in software. Fix this.
->>
->> This patch is tested with the following hardwares:
->> - TP-Link TL-WN821N v3 802.11n [Atheros AR7010+AR9287]
->> - AR9271 802.11n
->>
->> and managed to work with peer mesh STA equipped with ath9k.
->>
->> Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
->> ---
->>  drivers/net/wireless/ath/ath9k/htc_drv_main.c | 3 ++-
->>  1 file changed, 2 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
->> index 689ac99..d3f65a2 100644
->> --- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
->> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
->> @@ -1447,7 +1447,8 @@ static int ath9k_htc_set_key(struct ieee80211_hw *hw,
->>                       key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
->>                       if (key->cipher == WLAN_CIPHER_SUITE_TKIP)
->>                               key->flags |= IEEE80211_KEY_FLAG_GENERATE_MMIC;
->> -                     if (priv->ah->sw_mgmt_crypto &&
->> +                     if ((vif->type == NL80211_IFTYPE_MESH_POINT ||
->> +                          priv->ah->sw_mgmt_crypto) &&
->>                           key->cipher == WLAN_CIPHER_SUITE_CCMP)
->>                               key->flags |= IEEE80211_KEY_FLAG_SW_MGMT_TX;
->>                       ret = 0;
->>
->
->
-> Hmm.. may be we should generally do it here:
->         if ((vif->type == NL80211_IFTYPE_ADHOC ||
->              vif->type == NL80211_IFTYPE_MESH_POINT) &&
->             (key->cipher == WLAN_CIPHER_SUITE_TKIP ||
->              key->cipher == WLAN_CIPHER_SUITE_CCMP) &&
->             !(key->flags & IEEE80211_KEY_FLAG_PAIRWISE)) {
->
+On Wed, 2014-11-26 at 12:30 +0200, Jukka Rissanen wrote:
 
-Not so sure doing here is correctly. It is a pairwise key for unicast
-management frame, right?
+> > Just some examples:
+> >  * don't synchronize_rcu() after assignment - what did you do that for?
+> 
+> Following the examples described in Documentation/RCU/whatisRCU.txt
 
-> or probably set "sw_mgmt_crypto = true" in ath9k_hw_init_mfp() for all
-> usb devices?
+Hmm, I don't think that documentation says that - was where you took it
+from the example of replacing? But it's only needed for freeing, not for
+assigning.
 
-All ath9k USB devices don't have MFP support?
+johannes
 
----
-ChunYeow
