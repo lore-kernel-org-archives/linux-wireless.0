@@ -1,99 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:43844 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751804AbaKDXYC (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:14713 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752349AbaKZHVq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Nov 2014 18:24:02 -0500
-From: greearb@candelatech.com
-To: ath9k-devel@lists.ath9k.org
-Cc: linux-wireless@vger.kernel.org, rmanohar@qti.qualcomm.com,
-	nbd@openwrt.org, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 2/2] ath9k:  fix regression in bssidmask calculation
-Date: Tue,  4 Nov 2014 15:22:50 -0800
-Message-Id: <1415143370-15173-2-git-send-email-greearb@candelatech.com> (sfid-20141105_002408_545863_3603EAAC)
-In-Reply-To: <1415143370-15173-1-git-send-email-greearb@candelatech.com>
-References: <1415143370-15173-1-git-send-email-greearb@candelatech.com>
+	Wed, 26 Nov 2014 02:21:46 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/3] ath10k: embed supported chip ids in hw_params
+References: <1416838646-18801-1-git-send-email-michal.kazior@tieto.com>
+Date: Wed, 26 Nov 2014 09:21:16 +0200
+In-Reply-To: <1416838646-18801-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Mon, 24 Nov 2014 15:17:24 +0100")
+Message-ID: <87vbm2whoz.fsf@kamboji.qca.qualcomm.com> (sfid-20141126_082149_682152_02A49D0F)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-The commit that went into 3.17:
+> This will make it easier to extend and maintain
+> list of supported hardware.
+>
+> As a requirement this moves chip_id checking a
+> little later because target_version isn't known
+> until BMI can be queried.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-    ath9k: Summarize hw state per channel context
+The reason why I originally added the chip_id check was that QCA988X hw
+1.0 failed badly (ath10k might have even crashed, don't remember
+anymore) and I added this chip_id as an ugly workaround to detect hw1.0
+early. Most likely with this patch the problem comes back again.
 
-    Group and set hw state (opmode, primary_sta, beacon conf) per
-    channel context instead of whole list of vifs. This would allow
-    each channel context to run in different mode (STA/AP).
+I don't know what's a good solution, need to think more. Any ideas?
 
-    Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-    Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
-broke multi-vif configuration due to not properly calculating
-the bssid mask.
-
-The test case that caught this was:
-
- create wlan0 and sta0-4 (6 total), not sure how much that matters.
- associate all 6 (works fine)
- disconnect 5 of them, leaving sta0 up
- Start trying to bring up the other 5 one at a time.  It will
- fail, with iw events looking like this (in these logs, several
- sta are trying to come up, but symptom is the same with just one)
-
-The patch causing the regression made quite a few changes, but
-the part I think caused this particular problem was not
-recalculating the bssid mask when adding and removing interfaces.
-
-Re-adding those calls fixes my test case.  Fix bad comment
-as well.
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-
-This needs to be reviewed by ath9k driver folks that added
-the original patch, at least.
-
-And, should be considered for 3.17 stable if fix is accepted upstream.
-
- drivers/net/wireless/ath/ath9k/main.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index fbf23ac..d2ad9e95 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -947,9 +947,8 @@ void ath9k_calculate_iter_data(struct ath_softc *sc,
- 	struct ath_vif *avp;
- 
- 	/*
--	 * Pick the MAC address of the first interface as the new hardware
--	 * MAC address. The hardware will use it together with the BSSID mask
--	 * when matching addresses.
-+	 * The hardware will use primary station addr together with the
-+	 * BSSID mask when matching addresses.
- 	 */
- 	memset(iter_data, 0, sizeof(*iter_data));
- 	memset(&iter_data->mask, 0xff, ETH_ALEN);
-@@ -1169,6 +1168,8 @@ static int ath9k_add_interface(struct ieee80211_hw *hw,
- 		list_add_tail(&avp->list, &avp->chanctx->vifs);
- 	}
- 
-+	ath9k_calculate_summary_state(sc, avp->chanctx);
-+
- 	ath9k_assign_hw_queues(hw, vif);
- 
- 	an->sc = sc;
-@@ -1238,6 +1239,8 @@ static void ath9k_remove_interface(struct ieee80211_hw *hw,
- 
- 	ath_tx_node_cleanup(sc, &avp->mcast_node);
- 
-+	ath9k_calculate_summary_state(sc, avp->chanctx);
-+
- 	mutex_unlock(&sc->mutex);
- }
- 
 -- 
-1.9.3
-
+Kalle Valo
