@@ -1,41 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:34072 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753988AbaKEKMH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Nov 2014 05:12:07 -0500
-Message-ID: <1415182321.2589.14.camel@sipsolutions.net> (sfid-20141105_111212_842708_C366D72A)
-Subject: Re: [PATCH v2] ath10k: handle ieee80211 header and payload tracing
- separately
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>, ath10k@lists.infradead.org,
-	linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Date: Wed, 05 Nov 2014 11:12:01 +0100
-In-Reply-To: <20141105094437.GA21839@qca.qualcomm.com> (sfid-20141105_104310_542370_58A02806)
-References: <1414661336-20764-1-git-send-email-rmanohar@qti.qualcomm.com>
-	 <874muf7t9u.fsf@kamboji.qca.qualcomm.com>
-	 <20141104051643.GA14509@qca.qualcomm.com>
-	 <87k33a1lli.fsf@kamboji.qca.qualcomm.com>
-	 <20141105094437.GA21839@qca.qualcomm.com>
-	 (sfid-20141105_104310_542370_58A02806)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:39634 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752173AbaKZGfM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Nov 2014 01:35:12 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: don't drop corrupted mgmt frames
+References: <1416839648-31803-1-git-send-email-michal.kazior@tieto.com>
+Date: Wed, 26 Nov 2014 08:35:07 +0200
+In-Reply-To: <1416839648-31803-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Mon, 24 Nov 2014 15:34:08 +0100")
+Message-ID: <87tx1mxyec.fsf@kamboji.qca.qualcomm.com> (sfid-20141126_073516_502220_7C0B6934)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-11-05 at 15:14 +0530, Rajkumar Manoharan wrote:
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-> The macro is defined to ease readability and reduce # of line changes.
-> I originally thought of naming the macro as IEEE80211_HDR_LEN. But such
-> definition does not look correct inside driver.
+> Some firmware revisions don't seem to deilver
+> management frames with FCS error via WMI so narrow
+> down the HTT rule to not drop corrupted management
+> frames.
+>
+> This basically increases number of frames ath10k
+> reports while sniffing.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-FWIW, I pointed Kalle to the macro on IRC - IMHO you should pass
-arguments to the macro (and probably even make it an inline function)
-rather than having it assume certain variables exist when the macro is
-used.
+Thanks, applied.
 
-Kalle may have misunderstood what I was trying to say :)
-
-johannes
-
+-- 
+Kalle Valo
