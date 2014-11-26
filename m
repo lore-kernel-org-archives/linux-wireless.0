@@ -1,56 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f48.google.com ([209.85.218.48]:34108 "EHLO
-	mail-oi0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752377AbaKLPXn (ORCPT
+Received: from mail-wg0-f51.google.com ([74.125.82.51]:40125 "EHLO
+	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750856AbaKZQuA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Nov 2014 10:23:43 -0500
-Received: by mail-oi0-f48.google.com with SMTP id x69so8652296oia.7
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Nov 2014 07:23:42 -0800 (PST)
+	Wed, 26 Nov 2014 11:50:00 -0500
+Received: by mail-wg0-f51.google.com with SMTP id k14so4208323wgh.24
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Nov 2014 08:49:59 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <54633939.6000400@broadcom.com>
-References: <CAMP44s2XAmaiK2=BJA3TCW48Uo=5qyT5WsASDsZnOiSNgK6b0A@mail.gmail.com>
-	<545F4611.3010207@broadcom.com>
-	<CAMP44s2V59VDx0s7q5Yr=KvGZNn8ptRJGHS4W8Ja=+ciKZaSzg@mail.gmail.com>
-	<54633939.6000400@broadcom.com>
-Date: Wed, 12 Nov 2014 09:23:42 -0600
-Message-ID: <CAMP44s1DOA31ob24=qzz83MnVFmm60EpgaPYvLbwUv-AP5FRbw@mail.gmail.com> (sfid-20141112_162346_690746_7FF8F167)
-Subject: Re: brcmfmac not working on ECS LIVA
-From: Felipe Contreras <felipe.contreras@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>
+In-Reply-To: <CAB=NE6WTKrBNhEYP0ymrtHgT3sv=me=CMtkJbbRXb31_PHvN=g@mail.gmail.com>
+References: <1416754941-4439-1-git-send-email-arik@wizery.com>
+ <1416754941-4439-3-git-send-email-arik@wizery.com> <20141125202847.GL25677@wotan.suse.de>
+ <CA+XVXfeXd0moKyx5MOio_Naqq3K+9VkbYmNkyyPSVU-nxuqzhw@mail.gmail.com> <CAB=NE6WTKrBNhEYP0ymrtHgT3sv=me=CMtkJbbRXb31_PHvN=g@mail.gmail.com>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Wed, 26 Nov 2014 18:49:43 +0200
+Message-ID: <CA+XVXfdvYHEC+miXSxCBbDNxnardt2J5Z8QZoL8Fq2RkO81dXA@mail.gmail.com> (sfid-20141126_175006_205990_B37303FF)
+Subject: Re: [PATCH v3 3/3] cfg80211: Allow usermode to query wiphy specific
+ regd info
+To: "Luis R. Rodriguez" <mcgrof@suse.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jonathan Doron <jond@wizery.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 12, 2014 at 4:40 AM, Arend van Spriel <arend@broadcom.com> wrote:
-> On 11-11-14 23:32, Felipe Contreras wrote:
->> On Sun, Nov 9, 2014 at 4:46 AM, Arend van Spriel <arend@broadcom.com> wrote:
+On Wed, Nov 26, 2014 at 6:47 PM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
+> On Wed, Nov 26, 2014 at 11:43 AM, Arik Nemtsov <arik@wizery.com> wrote:
+>> On Tue, Nov 25, 2014 at 10:28 PM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
+>>> On Sun, Nov 23, 2014 at 05:02:21PM +0200, Arik Nemtsov wrote:
+>>>> From: Jonathan Doron <jond@wizery.com>
+>>>>
+>>>> Allow usermode to query wiphy-specific regd info, for drivers that use
+>>>> wiphy-specific regulatory management.
+>>>>
+>>>> Use the existing API for sending regdomain info to usermode, but return
+>>>> the wiphy-specific regd in case wiphy index is provided and the driver
+>>>> employs wiphy-specific management. This implies user and kernel-mode
+>>>> support for the feature and is backward compatible.
+>>>>
+>>>> Signed-off-by: Jonathan Doron <jonathanx.doron@intel.com>
+>>>> Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+>>>> ---
+>>>>  include/uapi/linux/nl80211.h | 18 ++++++++++-
+>>>>  net/wireless/nl80211.c       | 71 ++++++++++++++++++++++++++++++++++++--------
+>>>>  net/wireless/reg.c           |  2 +-
+>>>>  net/wireless/reg.h           |  1 +
+>>>>  4 files changed, 78 insertions(+), 14 deletions(-)
+>>>>
+>>>> diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+>>>> index 3771e7d..b222e5c 100644
+>>>> --- a/include/uapi/linux/nl80211.h
+>>>> +++ b/include/uapi/linux/nl80211.h
+>>>> @@ -252,7 +252,12 @@
+>>>>   *   %NL80211_ATTR_IFINDEX.
+>>>>   *
+>>>>   * @NL80211_CMD_GET_REG: ask the wireless core to send us its currently set
+>>>> - *   regulatory domain.
+>>>> + *   regulatory domain. If %NL80211_ATTR_WIPHY is specified and the device
+>>>> + *   self-manages its regulatory settings, its private regulatory domain
+>>>> + *   will be returned.
+>>>> + *   If %NL80211_ATTR_WIPHY_GET_PRIV_REG is specified in addition to
+>>>> + *   %NL80211_ATTR_WIPHY, a device's private regulatory domain will be
+>>>> + *   returned, even if it's regulatory is not self-managed.
+>>>>   * @NL80211_CMD_SET_REG: Set current regulatory domain. CRDA sends this command
+>>>>   *   after being queried by the kernel. CRDA replies by sending a regulatory
+>>>>   *   domain structure which consists of %NL80211_ATTR_REG_ALPHA set to our
+>>>> @@ -1693,6 +1698,14 @@ enum nl80211_commands {
+>>>>   *
+>>>>   * @NL80211_ATTR_MAC_MASK: MAC address mask
+>>>>   *
+>>>> + * @NL80211_ATTR_WIPHY_SELF_MANAGED_REG: flag attribute indicating the
+>>>> + *   regulatory information was obtained from the private regdomain
+>>>> + *   of a device with self-managed regulatory.
+>>>> + * @NL80211_ATTR_WIPHY_GET_PRIV_REG: flag attribute indicating the regulatory
+>>>> + *   information should be obtained from a device's private regdomain,
+>>>> + *   if it exists. This will happen even if the device is not self-managing
+>>>> + *   its regulatory.
+>>>
+>>> As with REGULATORY_WIPHY_SELF_MANAGED we need a flag that cfg80211 sets for
+>>> drivers that use regulatory_hint() API, perhaps REGULATORY_WIPHY_REG_HINT.
+>>> Then this can be used by cfg80211 to send to userspace regdomains for wiphys
+>>> that have used this API. Below you enable userspace to only query for these
+>>> explictly but we want to be able to let userspace get all information, ie
+>>> through 'iw reg get'. This should go in as a separate patch along with
+>>> NL80211_ATTR_WIPHY_GET_PRIV_REG as its use predates
+>>> NL80211_ATTR_WIPHY_SELF_MANAGED_REG, this will also let you stuff in the boiler
+>>> plate code for getting that reg first, getting self managed regd's can then
+>>> go in as a clear secondary evolutionary step.
 >>
->>> Could you share the nvram obtained from EFI? Also please create a kernel log
->>> with debug=0xd416.
->>
->> There you go:
->> http://people.freedesktop.org/~felipec/dmesg-brcm.txt
->>
+>> Note that we don't really need the new REGULATORY_WIPHY_REG_HINT.. If
+>> a wiphy is not self-managed, we can just put
+>> NL80211_ATTR_WIPHY_PRIV_REG, since it's obvious the regulatory_hint
+>> API was used.
 >
-> It is using the sdhci-acpi driver for the sdio host controller. If I am
-> not mistaken that one does runtime-pm. This has caused issues with our
-> device. This is what happens:
->
-> 1. driver sends control message and waits for firmware response.
->  2. runtime pm kicks in and suspends host controller.
->   3. host controller suspend disable sdio clock.
->    4. host controller does not detect firmware interrupt for response.
->     5. control message times out.
->
-> You can disable it through sysfs, but the patch below may do it.
+> What if a driver sets the managed flag and then uses regulatory_hint()
+> ? Either way if this is addressed and we can also infer what type of
+> wiphy->regd it is well that's OK with me, the flag idea was just in
+> case we needed it, so I think you might be right.
 
-I tried this patch, and although it seems to make a difference, it
-still doesn't work.
+A self-managed device can't use regulatory_hint().. This is the
+regular path which also updates the cfg80211 regdomain.
+If a device tries to do that, the new regd from CRDA will never reach
+it. So we're covered here.
 
-http://people.freedesktop.org/~felipec/dmesg-brcm-2.txt
-
--- 
-Felipe Contreras
+Arik
