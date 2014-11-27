@@ -1,77 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:48723 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933065AbaKMWz3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Nov 2014 17:55:29 -0500
-Date: Thu, 13 Nov 2014 23:55:28 +0100
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org, Jonathan Doron <jond@wizery.com>
-Subject: Re: [PATCH v2 2/4] cfg80211: update missing fields in custom
-	regulatory path
-Message-ID: <20141113225528.GE24486@wotan.suse.de> (sfid-20141113_235533_002768_08F6C733)
-References: <1415895219-19848-1-git-send-email-arik@wizery.com> <1415895219-19848-2-git-send-email-arik@wizery.com>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:56935 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750781AbaK0PQK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Nov 2014 10:16:10 -0500
+Date: Thu, 27 Nov 2014 07:14:48 -0800
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
+Cc: Ming Lei <ming.lei@canonical.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Grazvydas Ignotas <notasas@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Pavel Machek <pavel@ucw.cz>,
+	Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+	Aaro Koskinen <aaro.koskinen@iki.fi>,
+	Kalle Valo <kvalo@adurom.com>,
+	Sebastian Reichel <sre@ring0.de>,
+	David Gnedt <david.gnedt@davizone.at>
+Subject: Re: wl1251: NVS firmware data
+Message-ID: <20141127151448.GA23064@kroah.com> (sfid-20141127_161631_806741_56F7B4C8)
+References: <201411271506.20457@pali>
+ <CACVXFVMr8jH1ZzyPNG91VDK8DuVjQsHn9ks62sSNjOfUnNsURQ@mail.gmail.com>
+ <201411271543.23527@pali>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1415895219-19848-2-git-send-email-arik@wizery.com>
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <201411271543.23527@pali>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 13, 2014 at 06:13:37PM +0200, Arik Nemtsov wrote:
-> From: Jonathan Doron <jond@wizery.com>
-> 
-> Some channels fields were not being updated in the custom regulatory
-> path. Update them according to the code in handle_channel().
-> 
-> Signed-off-by: Jonathan Doron <jonathanx.doron@intel.com>
-> Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
-> ---
->  net/wireless/reg.c | 13 +++++++++++++
->  1 file changed, 13 insertions(+)
-> 
-> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-> index 6459ddd..174d8f82 100644
-> --- a/net/wireless/reg.c
-> +++ b/net/wireless/reg.c
-> @@ -1693,10 +1693,23 @@ static void handle_channel_custom(struct wiphy *wiphy,
->  	if (max_bandwidth_khz < MHZ_TO_KHZ(160))
->  		bw_flags |= IEEE80211_CHAN_NO_160MHZ;
->  
-> +	chan->dfs_state = NL80211_DFS_USABLE;
+On Thu, Nov 27, 2014 at 03:43:23PM +0100, Pali Rohár wrote:
+> Which userspace helper programs for (automatic) firmware loading 
+> are used? Can be udev configured to use own program for loading 
+> firmware instead that udev integrated which looking for firmware 
+> only in /lib/firmware files?
 
-NL80211_DFS_USABLE is 0 so this is not needed. Being explicit about it
-is OK I suppose though.
+The code to load firmware from userspace has been removed from udev, so
+that's not going to work at all, sorry.
 
-> +	chan->dfs_state_entered = jiffies;
-
-OK.
-
-> +
-> +	chan->beacon_found = false;
-
-false is 0 so this is not needed but being explicit about it is OK.
-
->  	chan->flags |= map_regdom_flags(reg_rule->flags) | bw_flags;
->  	chan->max_antenna_gain = (int) MBI_TO_DBI(power_rule->max_antenna_gain);
->  	chan->max_reg_power = chan->max_power =
->  		(int) MBM_TO_DBM(power_rule->max_eirp);
-> +
-> +	if (chan->flags & IEEE80211_CHAN_RADAR) {
-> +		if (reg_rule->dfs_cac_ms)
-> +			chan->dfs_cac_ms = reg_rule->dfs_cac_ms;
-> +		else
-> +			chan->dfs_cac_ms = IEEE80211_DFS_MIN_CAC_TIME_MS;
-> +	}
-> +
-> +	chan->max_power = chan->max_reg_power;
->  }
-
-I rather you split this up into the stuff not required (things which
-are good to be explicit about) Vs possible fixes, these last are
-good fixes. Also put them as part of your first set of patches
-and add my Acked-by so Johannes can already merge them. If you want
-them merged faster just send them separately now.
-
-Acked-by: Luis R. Rodriguez <mcgrof@suse.com>
-
-  Luis
+greg k-h
