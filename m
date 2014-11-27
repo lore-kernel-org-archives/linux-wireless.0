@@ -1,44 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f50.google.com ([74.125.82.50]:60182 "EHLO
-	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932315AbaKXOgi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2014 09:36:38 -0500
-Received: by mail-wg0-f50.google.com with SMTP id k14so12256407wgh.23
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:36:37 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
+Received: from mga11.intel.com ([192.55.52.93]:5645 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754703AbaK0MfU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Nov 2014 07:35:20 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 To: linux-wireless@vger.kernel.org
-Cc: Luciano Coelho <luciano.coelho@intel.com>
-Subject: [PATCH 62/75] iwlwifi: mvm: clear TE data if CSA time event fails to start
-Date: Mon, 24 Nov 2014 16:34:38 +0200
-Message-Id: <1416839691-28533-62-git-send-email-egrumbach@gmail.com> (sfid-20141124_153813_897504_35ACE26A)
-In-Reply-To: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
-References: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
+Cc: michal.kazior@tieto.com,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [RFC] mac80211: take reserved vif into account when calculating the min_def
+Date: Thu, 27 Nov 2014 14:30:46 +0200
+Message-Id: <1417091446-16308-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20141127_133530_532731_BC566918)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+When we want to calculate the minimal bandwidth needed for
+a channel context, we need to take into account vifs that
+have reserved the channel context.
+I hit an issue with iwlwifi and channel switch as a client.
 
-If setting the CSA time event fails, we must clear the TE data,
-otherwise we'll try to remove it when, for instance, a disconnection
-occurs, causing a SYSASSERT.
+We would allocate a virgin channel context and reserve it.
+At that stage, the min_def was 20MHz.
+Then we would use it after CSA, and start transmitting, but
+the channel context was still 20MHz even if the GO was in
+40MHz. This made the firmware unhappy.
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/time-event.c | 1 +
- 1 file changed, 1 insertion(+)
+ net/mac80211/chan.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/time-event.c b/drivers/net/wireless/iwlwifi/mvm/time-event.c
-index ff631cc..54fafbf 100644
---- a/drivers/net/wireless/iwlwifi/mvm/time-event.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/time-event.c
-@@ -198,6 +198,7 @@ iwl_mvm_te_handle_notify_csa(struct iwl_mvm *mvm,
- {
- 	if (!le32_to_cpu(notif->status)) {
- 		IWL_DEBUG_TE(mvm, "CSA time event failed to start\n");
-+		iwl_mvm_te_clear_data(mvm, te_data);
- 		return;
- 	}
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index 4c74e8d..769e0c5 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -256,7 +256,8 @@ ieee80211_get_chanctx_max_required_bw(struct ieee80211_local *local,
+ 		if (!ieee80211_sdata_running(sdata))
+ 			continue;
+ 
+-		if (rcu_access_pointer(sdata->vif.chanctx_conf) != conf)
++		if (rcu_access_pointer(sdata->vif.chanctx_conf) != conf &&
++		    &sdata->reserved_chanctx->conf != conf)
+ 			continue;
+ 
+ 		switch (vif->type) {
+@@ -271,6 +272,7 @@ ieee80211_get_chanctx_max_required_bw(struct ieee80211_local *local,
+ 		case NL80211_IFTYPE_WDS:
+ 		case NL80211_IFTYPE_MESH_POINT:
+ 			width = vif->bss_conf.chandef.width;
++			width = max(width, sdata->reserved_chandef.width);
+ 			break;
+ 		case NL80211_IFTYPE_UNSPECIFIED:
+ 		case NUM_NL80211_IFTYPES:
+@@ -899,6 +901,8 @@ int ieee80211_vif_reserve_chanctx(struct ieee80211_sub_if_data *sdata,
+ 	sdata->reserved_radar_required = radar_required;
+ 	sdata->reserved_ready = false;
+ 
++	ieee80211_recalc_chanctx_min_def(local, new_ctx);
++
+ 	return 0;
+ }
  
 -- 
 1.9.1
