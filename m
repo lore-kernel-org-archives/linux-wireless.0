@@ -1,66 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:59381
-	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756311AbaKSTIQ (ORCPT
+Received: from zucker2.schokokeks.org ([178.63.68.90]:57939 "EHLO
+	zucker2.schokokeks.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751042AbaK0XpY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Nov 2014 14:08:16 -0500
-From: Felix Fietkau <nbd@openwrt.org>
+	Thu, 27 Nov 2014 18:45:24 -0500
+Date: Fri, 28 Nov 2014 00:40:32 +0100
+From: Hanno =?UTF-8?B?QsO2Y2s=?= <hanno@hboeck.de>
 To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH v2 2/7] mac80211: add tx_status_noskb to rate_control_ops
-Date: Wed, 19 Nov 2014 20:08:08 +0100
-Message-Id: <1416424093-19439-2-git-send-email-nbd@openwrt.org> (sfid-20141119_200831_671896_C488E81D)
-In-Reply-To: <1416424093-19439-1-git-send-email-nbd@openwrt.org>
-References: <1416424093-19439-1-git-send-email-nbd@openwrt.org>
+Subject: firmware loading fails (iwl 7260)
+Message-ID: <20141128004032.441c4670@pc> (sfid-20141128_004532_966878_41477395)
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha512; protocol="application/pgp-signature"; boundary="=_zucker.schokokeks.org-2491-1417131619-0001-2"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This op works like .tx_status, except it does not need access to the
-skb. This will be used by drivers that cannot match tx status
-information to specific packets.
+This is a MIME-formatted message.  If you see this text it means that your
+E-mail software does not support MIME-formatted messages.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- include/net/mac80211.h | 4 ++++
- net/mac80211/rate.h    | 6 +++++-
- 2 files changed, 9 insertions(+), 1 deletion(-)
+--=_zucker.schokokeks.org-2491-1417131619-0001-2
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 5f203a6..32a779c 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -4727,6 +4727,10 @@ struct rate_control_ops {
- 	void (*free_sta)(void *priv, struct ieee80211_sta *sta,
- 			 void *priv_sta);
- 
-+	void (*tx_status_noskb)(void *priv,
-+				struct ieee80211_supported_band *sband,
-+				struct ieee80211_sta *sta, void *priv_sta,
-+				struct ieee80211_tx_info *info);
- 	void (*tx_status)(void *priv, struct ieee80211_supported_band *sband,
- 			  struct ieee80211_sta *sta, void *priv_sta,
- 			  struct sk_buff *skb);
-diff --git a/net/mac80211/rate.h b/net/mac80211/rate.h
-index 18babe3..dd25964 100644
---- a/net/mac80211/rate.h
-+++ b/net/mac80211/rate.h
-@@ -37,11 +37,15 @@ static inline void rate_control_tx_status(struct ieee80211_local *local,
- 	struct rate_control_ref *ref = local->rate_ctrl;
- 	struct ieee80211_sta *ista = &sta->sta;
- 	void *priv_sta = sta->rate_ctrl_priv;
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 
- 	if (!ref || !test_sta_flag(sta, WLAN_STA_RATE_CONTROL))
- 		return;
- 
--	ref->ops->tx_status(ref->priv, sband, ista, priv_sta, skb);
-+	if (ref->ops->tx_status)
-+		ref->ops->tx_status(ref->priv, sband, ista, priv_sta, skb);
-+	else
-+		ref->ops->tx_status_noskb(ref->priv, sband, ista, priv_sta, info);
- }
- 
- 
--- 
-2.1.2
+Hi,
 
+I have an X1 Carbon laptop with an intel 7260 chip.
+
+The automatic firmware loading doesn't work (kernel 3.17.2). I get this
+in dmesg:
+[    1.615155] iwlwifi 0000:03:00.0: Direct firmware load for
+iwlwifi-7260-10.ucode failed with error -2
+
+The firmware then gets loaded by the userspace helper, however as far
+as I understand it (and the description of the kernel option) this is
+deprecated and shouldn't be used. Also, it takes quite a while
+(minutes) till the wifi is available after boot which is quite annoying.
+
+Any idea what I should do to debug/fix this? Is this a bug? (firmware
+is the latest from intel's page, 23.10.10.0)
+
+cu,
+--=20
+Hanno B=C3=B6ck
+http://hboeck.de/
+
+mail/jabber: hanno@hboeck.de
+GPG: BBB51E42
+
+--=_zucker.schokokeks.org-2491-1417131619-0001-2
+Content-Type: application/pgp-signature
+Content-Transfer-Encoding: 7bit
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCgAGBQJUd7ZwAAoJEKWIAHK7tR5CfWAQAIywsunEicFlmKdnwfJq+qZT
+jW0sd9QSPjDOtrCXgrmjJ4bhwme0kvLzajS5lbpmCHm08kVpjwDbDYiH7EdN41os
+NSCaVBCyLcDZDll3xExmkyEXiZaVijH7LGN2XrTDqTfoakfGk6/kCbKclLD6pMSy
+0aFqUioZT29VnQQDYxWSHVX/xq+ifK7Bi6aRNnK4H3xr6oswBs/6v1ecxorhR2r5
+0RUteD50jAEVjaVcns9i2YA7tbDoGJRR8j5M8Ahmn3f6DliikgsbVdVm4WDPtoEo
+N0AhIwtVTaPv7+wFo998uBm2UnsJ6/mrXiHrEAzmedk9PmU/maXJMgjPr3gTfKGk
+tcP5y28VKQaMgJ/zsIK8GJITYzOk9v3vqy9WpjSO5h7o4l2818DwVHwNCOEh00+M
+J6ig9o18B0go49PKA3+/s62Q9hSiBtc+3NyXwwZtb+9o6iVT77C82punrPROnwzu
+DZHpxvzxma9HPDebhjNhnQL8mBEw5pdt/+jQi+uJi9/p2kYduKBUqBbOwFNBgYPS
+jCKt+1a/476wavLYKokOvMtFR5uu6THyFeNEkw6F4s2NEdi0FwzUk20Ju8gwUwlQ
+bmitsen2kA5PPYFlx6lJcbX+rod9HW1JJQ+GpFjzzIleftZzbA5ehDnAzLSr6GL0
+tsV2JzJpAbAJNqd5yO/x
+=r/3h
+-----END PGP SIGNATURE-----
+
+--=_zucker.schokokeks.org-2491-1417131619-0001-2--
