@@ -1,97 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f180.google.com ([209.85.217.180]:41018 "EHLO
-	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750945AbaKZP7H (ORCPT
+Received: from mail-wi0-f182.google.com ([209.85.212.182]:50869 "EHLO
+	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751173AbaK0HpD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Nov 2014 10:59:07 -0500
-Received: by mail-lb0-f180.google.com with SMTP id l4so2706467lbv.11
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Nov 2014 07:59:05 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CA+XVXff+c1qEz6reAozm1wh-4wMxsH9BD=St2Gr9Mrmg2n6GHQ@mail.gmail.com>
-References: <1416754941-4439-1-git-send-email-arik@wizery.com>
- <20141125193846.GJ25677@wotan.suse.de> <CA+XVXfdn52z88FZJdzE66-NKVUQ-vj1Wu0TGgq8FNjBVaYa9pA@mail.gmail.com>
- <20141126152810.GN25677@wotan.suse.de> <CA+XVXff+c1qEz6reAozm1wh-4wMxsH9BD=St2Gr9Mrmg2n6GHQ@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-Date: Wed, 26 Nov 2014 10:58:45 -0500
-Message-ID: <CAB=NE6U2pQb1FkBJM_4TTjXjpxs6DBq2x1xbk0KrfG1ZwMsTKA@mail.gmail.com> (sfid-20141126_165911_931064_CDBA7F96)
-Subject: Re: [PATCH v3 1/3] cfg80211: leave invalid channels on regdomain change
-To: Arik Nemtsov <arik@wizery.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 27 Nov 2014 02:45:03 -0500
+Received: by mail-wi0-f182.google.com with SMTP id h11so7344580wiw.9
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Nov 2014 23:45:02 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v5 4/4] cfg80211: return private regdom for self-managed devices
+Date: Thu, 27 Nov 2014 09:44:58 +0200
+Message-Id: <1417074298-12254-4-git-send-email-arik@wizery.com> (sfid-20141127_084512_440860_F9F86EDD)
+In-Reply-To: <1417074298-12254-1-git-send-email-arik@wizery.com>
+References: <1417074298-12254-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 26, 2014 at 10:39 AM, Arik Nemtsov <arik@wizery.com> wrote:
-> On Wed, Nov 26, 2014 at 5:28 PM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
->> On Wed, Nov 26, 2014 at 05:06:37PM +0200, Arik Nemtsov wrote:
->>> On Tue, Nov 25, 2014 at 9:38 PM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
->>> > On Sun, Nov 23, 2014 at 05:02:19PM +0200, Arik Nemtsov wrote:
->>> >> When the regulatory settings change, some channels might become invalid.
->>> >> Disconnect interfaces acting on these channels, after giving userspace
->>> >> code a grace period to leave them.
->>> >>
->>> >> This mode is currently opt-in, and not all interface operating modes are
->>> >> supported for regulatory-enforcement checks. A wiphy that wishes to use
->>> >> the new enforcement code must specify an appropriate regulatory flag,
->>> >> and all its supported interface modes must be supported by the chekcing
->>> >> code.
->>> >
->>> > This is all looking beter now, since I had a few requests for the last patch
->>> > I'll ask for some other things here without asking  to negage the flag purpose
->>> > as I originally wanted.
->>> >
->>> >> Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
->>> >> ---
->>> >>  include/net/regulatory.h |   6 +++
->>> >>  net/wireless/core.c      |  13 ++++++
->>> >>  net/wireless/reg.c       | 106 ++++++++++++++++++++++++++++++++++++++++++++++-
->>> >>  3 files changed, 124 insertions(+), 1 deletion(-)
->>> >>
->>> >> diff --git a/include/net/regulatory.h b/include/net/regulatory.h
->>> >> index dad7ab2..701177c 100644
->>> >> --- a/include/net/regulatory.h
->>> >> +++ b/include/net/regulatory.h
->>> >> @@ -136,6 +136,11 @@ struct regulatory_request {
->>> >>   *      otherwise initiating radiation is not allowed. This will enable the
->>> >>   *      relaxations enabled under the CFG80211_REG_RELAX_NO_IR configuration
->>> >>   *      option
->>> >> + * @REGULATORY_ENFORCE_CHANNELS: the regulatory core will make sure all
->>> >> + *   interfaces on this wiphy reside on allowed channels. Upon a regdomain
->>> >> + *   change, the interfaces are given a grace period to disconnect or move
->>> >> + *   to an allowed channels. Interfaces on forbidden channels are forcibly
->>> >> + *   disconnected.
->>> >
->>> > Please rename to REGULATORY_IGNORE_STALE_KICKOFF, also please add
->>> > some information about the amount current of grace period used,
->>> > and types of interfaces supported. Since this is a regulatory flag
->>> > this information will help folks decide whether to enable or not.
->>> > Also encourage its use, and mention that once all supported devices
->>> > get support for this will be enabled by default. In the meantime
->>> > I'd prefer if this feature was enabled by default if the supported
->>> > interface types of a dveice match the white list of supported
->>> > interfaces.
->>>
->>> btw, I think you meant REGULATORY_STALE_KICKOFF, since it's an opt-in flag.
->>
->> Indeed, the REGULATORY_IGNORE_STALE_KICKOFF would be the inversion, which
->> is really a better way to deal with this but Johannes considered it more
->> work. I'll leave it up to you but if the supported interfaces on a driver
->> work with it we should enable this by default. This is why the inversion
->> (REGULATORY_IGNORE_STALE_KICKOFF) would work better in the end, as we want
->> to keep this on by default and only let folks opt out.
->
-> I thought we agreed this to be opt-in,
+If a device has self-managed regulatory, insist on returning the wiphy
+specific regdomain if a wiphy-idx is specified. The global regdomain is
+meaningless for such devices.
 
-We agreed to not have to require this to be opt-out, that's different
-than having it enabled by default for supported devices.
+Also add an attribute for self-managed devices, so usermode can distinguish
+them as such.
 
-> even if all interfaces are
-> supported? I still think an untested driver might be hurt by this
-> patch. For instance if it requires a different grace period, etc.
+Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+---
+ include/uapi/linux/nl80211.h |  7 +++++++
+ net/wireless/nl80211.c       | 31 ++++++++++++++++++++++++++++---
+ 2 files changed, 35 insertions(+), 3 deletions(-)
 
-This is a generic feature and I think its important to enable it by
-default, if a different grace period can be used it sounds like you
-can easily fold that in as an alternative to override the default.
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 0143c59..67eb8ff 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1703,6 +1703,11 @@ enum nl80211_commands {
+  * @NL80211_ATTR_WIPHY_REGDOM_LIST: Nested set of attributes containing
+  *	a list of wiphy specific regdomains.
+  *
++ * @NL80211_ATTR_WIPHY_SELF_MANAGED_REG: flag attribute indicating this device
++ *	is self-managing its regulatory information and any regulatory domain
++ *	obtained from it is coming from the device's wiphy and not the global
++ *	cfg80211 regdomain.
++ *
+  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+@@ -2064,6 +2069,8 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_WIPHY_REGDOM_LIST,
+ 
++	NL80211_ATTR_WIPHY_SELF_MANAGED_REG,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 361a897..42bc9ed 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -398,6 +398,7 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
+ 	[NL80211_ATTR_MAC_MASK] = { .len = ETH_ALEN },
+ 	[NL80211_ATTR_WIPHY_PRIV_REG] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_WIPHY_REGDOM_LIST] = { .type = NLA_NESTED },
++	[NL80211_ATTR_WIPHY_SELF_MANAGED_REG] = { .type = NLA_FLAG },
+ };
+ 
+ /* policy for the key attributes */
+@@ -5409,6 +5410,7 @@ static int nl80211_get_reg(struct sk_buff *skb, struct genl_info *info)
+ 		goto put_failure;
+ 
+ 	if (info->attrs[NL80211_ATTR_WIPHY]) {
++		bool self_managed;
+ 		rdev = cfg80211_get_dev_from_info(genl_info_net(info), info);
+ 		if (IS_ERR(rdev)) {
+ 			nlmsg_free(msg);
+@@ -5416,10 +5418,22 @@ static int nl80211_get_reg(struct sk_buff *skb, struct genl_info *info)
+ 		}
+ 
+ 		wiphy = &rdev->wiphy;
++		self_managed = wiphy->regulatory_flags &
++			       REGULATORY_WIPHY_SELF_MANAGED;
+ 		regdom = get_wiphy_regdom(wiphy);
+ 		if (regdom &&
+ 		    nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx))
+ 			goto nla_put_failure;
++
++		/* a self-managed-reg device must have a private regdom */
++		if (WARN_ON(!regdom && self_managed)) {
++			nlmsg_free(msg);
++			return -EINVAL;
++		}
++
++		if (self_managed &&
++		    nla_put_flag(msg, NL80211_ATTR_WIPHY_SELF_MANAGED_REG))
++			goto nla_put_failure;
+ 	}
+ 
+ 	if (!regdom) {
+@@ -5467,6 +5481,10 @@ static int nl80211_get_reg(struct sk_buff *skb, struct genl_info *info)
+ 		if (nla_put_flag(msg, NL80211_ATTR_WIPHY_PRIV_REG))
+ 			goto nla_put_failure_rcu;
+ 
++		if (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED &&
++		    nla_put_flag(msg, NL80211_ATTR_WIPHY_SELF_MANAGED_REG))
++			goto nla_put_failure_rcu;
++
+ 		nla_nest_end(msg, nl_priv_regdom);
+ 		i++;
+ 	}
+@@ -11035,9 +11053,16 @@ static bool nl80211_reg_change_event_fill(struct sk_buff *msg,
+ 			goto nla_put_failure;
+ 	}
+ 
+-	if (request->wiphy_idx != WIPHY_IDX_INVALID &&
+-	    nla_put_u32(msg, NL80211_ATTR_WIPHY, request->wiphy_idx))
+-		goto nla_put_failure;
++	if (request->wiphy_idx != WIPHY_IDX_INVALID) {
++		struct wiphy *wiphy;
++
++		wiphy = wiphy_idx_to_wiphy(request->wiphy_idx);
++		if (wiphy &&
++		    nla_put_u32(msg, NL80211_ATTR_WIPHY, request->wiphy_idx) &&
++		    wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED &&
++		    nla_put_flag(msg, NL80211_ATTR_WIPHY_SELF_MANAGED_REG))
++			goto nla_put_failure;
++	}
+ 
+ 	return true;
+ 
+-- 
+1.9.1
 
- Luis
