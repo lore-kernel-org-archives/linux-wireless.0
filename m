@@ -1,40 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:51446 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751933AbaKKWfn (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:60479 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750926AbaK0QAC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Nov 2014 17:35:43 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] ath9k_htc: remove return of value in empty definintion of ath9k_htc_deinit_debug
-Date: Tue, 11 Nov 2014 17:23:49 -0500
-Message-Id: <1415744629-6946-1-git-send-email-linville@tuxdriver.com> (sfid-20141111_233546_395834_3CCD2223)
+	Thu, 27 Nov 2014 11:00:02 -0500
+Date: Thu, 27 Nov 2014 07:58:40 -0800
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
+Cc: Ming Lei <ming.lei@canonical.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Grazvydas Ignotas <notasas@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Pavel Machek <pavel@ucw.cz>,
+	Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+	Aaro Koskinen <aaro.koskinen@iki.fi>,
+	Kalle Valo <kvalo@adurom.com>,
+	Sebastian Reichel <sre@ring0.de>,
+	David Gnedt <david.gnedt@davizone.at>
+Subject: Re: wl1251: NVS firmware data
+Message-ID: <20141127155840.GC24149@kroah.com> (sfid-20141127_170038_744062_6D9674E8)
+References: <201411271506.20457@pali>
+ <201411271543.23527@pali>
+ <20141127151655.GB23064@kroah.com>
+ <201411271622.58916@pali>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <201411271622.58916@pali>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/ath/ath9k/htc.h | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+On Thu, Nov 27, 2014 at 04:22:58PM +0100, Pali Rohár wrote:
+> On Thursday 27 November 2014 16:16:55 Greg Kroah-Hartman wrote:
+> > On Thu, Nov 27, 2014 at 03:43:23PM +0100, Pali Rohár wrote:
+> > > On Thursday 27 November 2014 15:21:44 Ming Lei wrote:
+> > > > On Thu, Nov 27, 2014 at 10:06 PM, Pali Rohár
+> > > 
+> > > <pali.rohar@gmail.com> wrote:
+> > > > > Hello,
+> > > > > 
+> > > > > wifi driver wl1251 needs NVS calibration data for
+> > > > > working. These data are loaded by driver via
+> > > > > request_firmware from userspace file:
+> > > > > ti-connectivity/wl1251-nvs.bin. In linux-fimrware git
+> > > > > tree there is generic wl1251-nvs.bin file which is used
+> > > > > by default.
+> > > > > 
+> > > > > Driver wl1251 is used on Nokia N900 cellphone for its
+> > > > > wifi chip. This cellphone has one special MTD partition
+> > > > > (called CAL) where are stored some configuration data
+> > > > > in special binary (key-value) format. And there is also
+> > > > > stored correct calibration data for specific device
+> > > > > (each device has different data). It is preferred to
+> > > > > use those data instead generic one (provided by
+> > > > > linux-firmware git tree).
+> > > > > 
+> > > > > Now my question is: How to correctly load calibration
+> > > > > data from special Nokia N900 CAL partition into wl1251
+> > > > > kernel driver?
+> > > > 
+> > > > It is better to let user space script handle the request.
+> > > 
+> > > Yes, this makes sense. Implementing CAL parser in kernel
+> > > wl1251 driver would be hard...
+> > > 
+> > > > > By default kernel reads ti-connectivity/wl1251-nvs.bin
+> > > > > file from VFS if exists without any userspace support.
+> > > > > If it fails then it fallback to loading via udev.
+> > > > 
+> > > > You can remove or rename this file so that loading from
+> > > > user space can be triggered.
+> > > 
+> > > It is no so easy... In case when CAL does not contains NVS
+> > > data then we want to use this generic NVS file. And telling
+> > > everybody to rename this is file is not good solution...
+> > 
+> > But that's up to your system configuration, not the kernel. 
+> > Make a userspace package for the firmware that creates it in
+> > the format you need it to be in, for the hardware you have,
+> > and then there would not be any need for a kernel change,
+> > right?
+> > 
+> > greg k-h
+> 
+> Not so simple as you think. Some parts of NVS data are configured 
+> based on location and cellular station. Data are not static.
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index b34acdeb1f21..9dde265d3f84 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -629,7 +629,9 @@ int ath9k_htc_init_debug(struct ath_hw *ah);
- void ath9k_htc_deinit_debug(struct ath9k_htc_priv *priv);
- #else
- static inline int ath9k_htc_init_debug(struct ath_hw *ah) { return 0; };
--static inline void ath9k_htc_deinit_debug(struct ath9k_htc_priv *priv) { return 0; };
-+static inline void ath9k_htc_deinit_debug(struct ath9k_htc_priv *priv)
-+{
-+}
- #endif /* CONFIG_ATH9K_HTC_DEBUGFS */
- 
- #endif /* HTC_H */
--- 
-1.9.3
+Then you need a dynamic program that you control, in userspace, to dump
+the needed data into the kernel.  Don't try to do it with "static"
+firmware files.  Use the binary sysfs file interface for this if you
+want.
 
+good luck,
+
+greg k-h
