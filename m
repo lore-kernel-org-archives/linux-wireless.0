@@ -1,61 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:49911 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754144AbaKXOfi (ORCPT
+Received: from mail-wg0-f50.google.com ([74.125.82.50]:63105 "EHLO
+	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755449AbaK0JXo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2014 09:35:38 -0500
-Received: by mail-wi0-f178.google.com with SMTP id hi2so5935486wib.17
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:35:37 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eyal Shapira <eyal@wizery.com>,
-	Eyal Shapira <eyalx.shapira@intel.com>,
-	Eliad Peller <eliadx.peller@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 25/75] iwlwifi: mvm: rs: consider a missing BA as a single tx failure
-Date: Mon, 24 Nov 2014 16:34:01 +0200
-Message-Id: <1416839691-28533-25-git-send-email-egrumbach@gmail.com> (sfid-20141124_154322_583281_2BFD4B56)
-In-Reply-To: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
-References: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
+	Thu, 27 Nov 2014 04:23:44 -0500
+Received: by mail-wg0-f50.google.com with SMTP id k14so5887053wgh.37
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Nov 2014 01:23:43 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 0/7] ath10k: add support for new wmi-tlv backend
+Date: Thu, 27 Nov 2014 10:11:14 +0100
+Message-Id: <1417079481-22255-1-git-send-email-michal.kazior@tieto.com> (sfid-20141127_102354_570757_452C6088)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+Hi,
 
-The fw now indicates missing BA with ampdu_ack_len=0.
+First 2 patches are simple fixes. Patch 3 isn't
+strictly related to wmi-tlv but I decided to
+include it anyway. Other patches gradually
+implement wmi-tlv.
 
-This will make the whole aggregation being marked
-as failed, although it's most likely not the case (and
-only the BA itself was failed).
+There's a bunch of false-positive checkpatch
+warnings regarding `CHECK: No space is necessary
+after a cast`.
 
-Consider this case as a single tx failure.
+v2:
+ * a lot of fixes (see notes on patch #7)
 
-Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
-Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/rs.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+Michal Kazior (7):
+  ath10k: fix wmi svc bitmap dbg print
+  ath10k: add sanity checks for service bmap parsing
+  ath10k: make wmi service bitmap non-debug
+  ath10k: implement intermediate event args
+  ath10k: introduce wmi ops
+  ath10k: make some wmi functions public
+  ath10k: implement wmi-tlv backend
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
-index c05f5a5..30ceb67 100644
---- a/drivers/net/wireless/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
-@@ -1204,6 +1204,13 @@ void iwl_mvm_rs_tx_status(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 	 * first index into rate scale table.
- 	 */
- 	if (info->flags & IEEE80211_TX_STAT_AMPDU) {
-+		/* ampdu_ack_len = 0 marks no BA was received. In this case
-+		 * treat it as a single frame loss as we don't want the success
-+		 * ratio to dip too quickly because a BA wasn't received
-+		 */
-+		if (info->status.ampdu_ack_len == 0)
-+			info->status.ampdu_len = 1;
-+
- 		ucode_rate = le32_to_cpu(table->rs_table[0]);
- 		rs_rate_from_ucode_rate(ucode_rate, info->band, &rate);
- 		rs_collect_tx_data(lq_sta, curr_tbl, rate.index,
+ drivers/net/wireless/ath/ath10k/Makefile   |    1 +
+ drivers/net/wireless/ath/ath10k/ce.c       |    2 +
+ drivers/net/wireless/ath/ath10k/core.c     |    4 +
+ drivers/net/wireless/ath/ath10k/core.h     |    6 +-
+ drivers/net/wireless/ath/ath10k/debug.c    |   12 +-
+ drivers/net/wireless/ath/ath10k/debug.h    |    9 -
+ drivers/net/wireless/ath/ath10k/hw.h       |    9 +
+ drivers/net/wireless/ath/ath10k/mac.c      |   47 +
+ drivers/net/wireless/ath/ath10k/spectral.c |    1 +
+ drivers/net/wireless/ath/ath10k/wmi-ops.h  |  820 ++++++++++
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c  | 2218 ++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi-tlv.h  | 1380 +++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.c      | 1359 ++++++++++-------
+ drivers/net/wireless/ath/ath10k/wmi.h      |  386 +++--
+ 14 files changed, 5593 insertions(+), 661 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath10k/wmi-ops.h
+ create mode 100644 drivers/net/wireless/ath/ath10k/wmi-tlv.c
+ create mode 100644 drivers/net/wireless/ath/ath10k/wmi-tlv.h
+
 -- 
-1.9.1
+1.8.5.3
 
