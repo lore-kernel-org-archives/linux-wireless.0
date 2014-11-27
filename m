@@ -1,88 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:43806 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751954AbaKIQuf (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:2819 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754765AbaK0MJO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Nov 2014 11:50:35 -0500
-Received: by mail-wi0-f174.google.com with SMTP id d1so8338512wiv.1
-        for <linux-wireless@vger.kernel.org>; Sun, 09 Nov 2014 08:50:34 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 07/16] mac80211: add BSS coex IE to TDLS setup frames
-Date: Sun,  9 Nov 2014 18:50:13 +0200
-Message-Id: <1415551822-20121-7-git-send-email-arik@wizery.com> (sfid-20141109_175041_600694_C7ADF79D)
-In-Reply-To: <1415551822-20121-1-git-send-email-arik@wizery.com>
-References: <1415551822-20121-1-git-send-email-arik@wizery.com>
+	Thu, 27 Nov 2014 07:09:14 -0500
+Subject: [PATCH v4 1/2] dt: bindings: add ath10k wireless device
+To: <ath10k@lists.infradead.org>
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <devicetree@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+	<toshik@chromium.org>
+Date: Thu, 27 Nov 2014 14:08:56 +0200
+Message-ID: <20141127120856.17546.32014.stgit@potku.adurom.net> (sfid-20141127_130920_943180_1DCBA747)
+In-Reply-To: <20141127120727.17546.61202.stgit@potku.adurom.net>
+References: <20141127120727.17546.61202.stgit@potku.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add the BSS coex IE in case we support HT40 channels, as mandated by
-section 8.5.13 in IEEE802.11 2012.
+Document how calibration data can be provided to ath10k via Device Tree.
 
-Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- include/linux/ieee80211.h |  3 +++
- net/mac80211/tdls.c       | 15 +++++++++++++++
- 2 files changed, 18 insertions(+)
+ .../bindings/net/wireless/qcom,ath10k.txt          |   30 ++++++++++++++++++++
+ 1 file changed, 30 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 4e2bb91..adac1be 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -2037,6 +2037,9 @@ enum ieee80211_tdls_actioncode {
- /* TDLS specific payload type in the LLC/SNAP header */
- #define WLAN_TDLS_SNAP_RFTYPE	0x2
- 
-+/* BSS Coex IE information field bits */
-+#define WLAN_BSS_COEX_INFORMATION_REQUEST	BIT(0)
+diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+new file mode 100644
+index 000000000000..edefc26c6204
+--- /dev/null
++++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+@@ -0,0 +1,30 @@
++* Qualcomm Atheros ath10k wireless devices
 +
- /**
-  * enum - mesh synchronization method identifier
-  *
-diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
-index 8fb314b..30a4c10 100644
---- a/net/mac80211/tdls.c
-+++ b/net/mac80211/tdls.c
-@@ -117,6 +117,16 @@ ieee80211_tdls_add_supp_channels(struct ieee80211_sub_if_data *sdata,
- 	*pos = 2 * subband_cnt;
- }
- 
-+static void ieee80211_tdls_add_bss_coex_ie(struct sk_buff *skb)
-+{
-+	u8 *pos = (void *)skb_put(skb, 3);
++For ath10k devices the calibration data can be provided through Device
++Tree. The node is a child node of the PCI controller.
 +
-+	*pos++ = WLAN_EID_BSS_COEX_2040;
-+	*pos++ = 1; /* len */
++Required properties:
++-compatible : Should be "qcom,ath10k"
 +
-+	*pos++ = WLAN_BSS_COEX_INFORMATION_REQUEST;
-+}
++Optional properties:
++- qcom,ath10k-calibration-data : calibration data as an array, the
++				 length can vary between hw versions
 +
- static u16 ieee80211_get_tdls_sta_capab(struct ieee80211_sub_if_data *sdata,
- 					u16 status_code)
- {
-@@ -341,6 +351,10 @@ ieee80211_tdls_add_setup_start_ies(struct ieee80211_sub_if_data *sdata,
- 
- 	rcu_read_unlock();
- 
-+	if (ht_cap.ht_supported &&
-+	    (ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40))
-+		ieee80211_tdls_add_bss_coex_ie(skb);
 +
- 	/* add any remaining IEs */
- 	if (extra_ies_len) {
- 		noffset = extra_ies_len;
-@@ -597,6 +611,7 @@ ieee80211_tdls_prep_mgmt_packet(struct wiphy *wiphy, struct net_device *dev,
- 			       2 + max(sizeof(struct ieee80211_ht_cap),
- 				       sizeof(struct ieee80211_ht_operation)) +
- 			       50 + /* supported channels */
-+			       3 + /* 40/20 BSS coex */
- 			       extra_ies_len +
- 			       sizeof(struct ieee80211_tdls_lnkie));
- 	if (!skb)
--- 
-1.9.1
++Example:
++
++pci {
++	pcie@0 {
++		reg = <0 0 0 0 0>;
++		#interrupt-cells = <1>;
++		#size-cells = <2>;
++		#address-cells = <3>;
++		device_type = "pci";
++
++		ath10k@0,0 {
++			reg = <0 0 0 0 0>;
++			device_type = "pci";
++			qcom,ath10k-calibration-data = [ 01 02 03 ... ];
++		};
++	};
++};
 
