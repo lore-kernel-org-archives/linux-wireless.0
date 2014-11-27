@@ -1,40 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:14713 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752349AbaKZHVq (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:44663 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750736AbaK0POA convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Nov 2014 02:21:46 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/3] ath10k: embed supported chip ids in hw_params
-References: <1416838646-18801-1-git-send-email-michal.kazior@tieto.com>
-Date: Wed, 26 Nov 2014 09:21:16 +0200
-In-Reply-To: <1416838646-18801-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Mon, 24 Nov 2014 15:17:24 +0100")
-Message-ID: <87vbm2whoz.fsf@kamboji.qca.qualcomm.com> (sfid-20141126_082149_682152_02A49D0F)
+	Thu, 27 Nov 2014 10:14:00 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <201411271543.23527@pali>
+References: <201411271506.20457@pali>
+	<CACVXFVMr8jH1ZzyPNG91VDK8DuVjQsHn9ks62sSNjOfUnNsURQ@mail.gmail.com>
+	<201411271543.23527@pali>
+Date: Thu, 27 Nov 2014 23:13:51 +0800
+Message-ID: <CACVXFVMCJxQRUo94C8peT7G-VFkVeNYCWGKPYE5jq=twCULrpA@mail.gmail.com> (sfid-20141127_161425_616101_3B1E7DB4)
+Subject: Re: wl1251: NVS firmware data
+From: Ming Lei <ming.lei@canonical.com>
+To: =?UTF-8?Q?Pali_Roh=C3=A1r?= <pali.rohar@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Grazvydas Ignotas <notasas@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Pavel Machek <pavel@ucw.cz>,
+	Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+	Aaro Koskinen <aaro.koskinen@iki.fi>,
+	Kalle Valo <kvalo@adurom.com>,
+	Sebastian Reichel <sre@ring0.de>,
+	David Gnedt <david.gnedt@davizone.at>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
-
-> This will make it easier to extend and maintain
-> list of supported hardware.
+On Thu, Nov 27, 2014 at 10:43 PM, Pali Rohár <pali.rohar@gmail.com> wrote:
+> On Thursday 27 November 2014 15:21:44 Ming Lei wrote:
+>> On Thu, Nov 27, 2014 at 10:06 PM, Pali Rohár
+> <pali.rohar@gmail.com> wrote:
+>> > Hello,
+>> >
+>> > wifi driver wl1251 needs NVS calibration data for working.
+>> > These data are loaded by driver via request_firmware from
+>> > userspace file: ti-connectivity/wl1251-nvs.bin. In
+>> > linux-fimrware git tree there is generic wl1251-nvs.bin
+>> > file which is used by default.
+>> >
+>> > Driver wl1251 is used on Nokia N900 cellphone for its wifi
+>> > chip. This cellphone has one special MTD partition (called
+>> > CAL) where are stored some configuration data in special
+>> > binary (key-value) format. And there is also stored correct
+>> > calibration data for specific device (each device has
+>> > different data). It is preferred to use those data instead
+>> > generic one (provided by linux-firmware git tree).
+>> >
+>> > Now my question is: How to correctly load calibration data
+>> > from special Nokia N900 CAL partition into wl1251 kernel
+>> > driver?
+>>
+>> It is better to let user space script handle the request.
+>>
 >
-> As a requirement this moves chip_id checking a
-> little later because target_version isn't known
-> until BMI can be queried.
+> Yes, this makes sense. Implementing CAL parser in kernel wl1251
+> driver would be hard...
 >
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>> > By default kernel reads ti-connectivity/wl1251-nvs.bin file
+>> > from VFS if exists without any userspace support. If it
+>> > fails then it fallback to loading via udev.
+>>
+>> You can remove or rename this file so that loading from user
+>> space can be triggered.
+>>
+>
+> It is no so easy... In case when CAL does not contains NVS data
+> then we want to use this generic NVS file. And telling everybody
+> to rename this is file is not good solution...
+>
+>> > Reading correct data from CAL partition is not easy
+>> > (structure is difficult), but there is open source program
+>> > which can parse CAL partition and write NVS data to stdout.
+>> > So adding this CAL parser into kernel is not good idea
+>> > (program is GPLv3+ code -- incompatible with kernel).
+>> >
+>> > So how to solve this problem? How to load correct NVS data
+>> > from CAL partition into wl1251 driver?
+>> >
+>> > It is possible to tell kernel to use some helper userspace
+>> > program for loading data and if it fails then fallback to
+>> > direct loading? E.g first try to use model specific data
+>> > and if it fails for some reasons then fallback to reading
+>> > genetic data.
+>>
+>> One solution is to introduce request_firmware_user() and let
+>> this API handle your case, but CONFIG_FW_LOADER_USER_HELPER
+>> has to be enabled.
+>>
+>> If request_firmware_user() fails, request_firmware_direct()
+>> can be tried further.
+>>
+>> Thanks,
+>> Ming Lei
+>
+> Ok, new kernel function which will change order of loading
+> firmware should work.
 
-The reason why I originally added the chip_id check was that QCA988X hw
-1.0 failed badly (ath10k might have even crashed, don't remember
-anymore) and I added this chip_id as an ugly workaround to detect hw1.0
-early. Most likely with this patch the problem comes back again.
+I mean you can do that in your driver.
 
-I don't know what's a good solution, need to think more. Any ideas?
+>
+> Which userspace helper programs for (automatic) firmware loading
+> are used? Can be udev configured to use own program for loading
 
--- 
-Kalle Valo
+At default, udev had its builtin firmware helper, but some new
+udev stops to handle firmware request.
+
+If the udev you are using still supports to handle firmware request,
+you can write your load helper and add your rule for handling
+the special case. Otherwise, you need to write code to monitor
+the netlink uevents from the kernel and handle your firmware
+loading request.
+
+Thanks,
+Ming Lei
