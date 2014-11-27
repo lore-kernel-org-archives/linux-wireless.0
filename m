@@ -1,54 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:58930 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751590AbaKJKUt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Nov 2014 05:20:49 -0500
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1Xnm5S-0007GJ-RT
-	for linux-wireless@vger.kernel.org; Mon, 10 Nov 2014 11:20:42 +0100
-Received: from cantest1.felk.cvut.cz ([147.32.86.75])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Nov 2014 11:20:42 +0100
-Received: from lisovy by cantest1.felk.cvut.cz with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Nov 2014 11:20:42 +0100
-To: linux-wireless@vger.kernel.org
-From: Rostislav Lisovy <lisovy@gmail.com>
-Subject: Re: [ath5k-devel] Rookie needs helps with ath5k basics
-Date: Mon, 10 Nov 2014 10:20:31 +0000 (UTC)
-Message-ID: <loom.20141110T111634-865@post.gmane.org> (sfid-20141110_112052_923769_CDFEA8EF)
-References: <loom.20140215T180245-390@post.gmane.org> <CAOpc7mFVD-+CgrFm+cBVkrOSoeQZ0TRk-jNE32D0S6rtYJp9_g@mail.gmail.com> <CAJ-Vmom7Pk09o9GPdRxEzCTinB2X9bvQE_g83nJ-1m9zD9804g@mail.gmail.com> <CAK4gkpzR=pS+XzCHLpQwzCNjaQmm7JoUE_NhVGK_mhj=EXgadw@mail.gmail.com> <CAK4gkpy8uvWJW9RaHqkxTiSza0Y+79owD=2K8V-VHf6qOH_bdA@mail.gmail.com> <CAHNKnsS_tD0GJj9xLJJM-Lf0Np=L208BeY+fwj1tnRTVU_gyjA@mail.gmail.com> <loom.20141110T105051-618@post.gmane.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from youngberry.canonical.com ([91.189.89.112]:44777 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750792AbaK0Pev convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Nov 2014 10:34:51 -0500
+MIME-Version: 1.0
+In-Reply-To: <201411271624.03066@pali>
+References: <201411271506.20457@pali>
+	<201411271543.23527@pali>
+	<20141127151448.GA23064@kroah.com>
+	<201411271624.03066@pali>
+Date: Thu, 27 Nov 2014 23:34:47 +0800
+Message-ID: <CACVXFVMMpY_99NrhLXeY-PMBFFACZxaE4hsq0+gff0YzHmeywg@mail.gmail.com> (sfid-20141127_163541_579785_B495D048)
+Subject: Re: wl1251: NVS firmware data
+From: Ming Lei <ming.lei@canonical.com>
+To: =?UTF-8?Q?Pali_Roh=C3=A1r?= <pali.rohar@gmail.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Grazvydas Ignotas <notasas@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Pavel Machek <pavel@ucw.cz>,
+	Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+	Aaro Koskinen <aaro.koskinen@iki.fi>,
+	Kalle Valo <kvalo@adurom.com>,
+	Sebastian Reichel <sre@ring0.de>,
+	David Gnedt <david.gnedt@davizone.at>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rostislav Lisovy <lisovy@...> writes:
-> 
-> The questions that are still unanswered (and will definitely require
-> more effort to answer) are the 802.11p standard interpretation
-> regarding the OCB mode / 5.9GHz usage limitation. More specific --
-> Is the 5.9GHz limited for ITS (Intelligent transportation system)
-> usage only. Or for any usage as long as it uses the OCB mode? If one
-> of this limitation is valid, who does actually define the restriction -
+On Thu, Nov 27, 2014 at 11:24 PM, Pali Rohár <pali.rohar@gmail.com> wrote:
+> On Thursday 27 November 2014 16:14:48 Greg Kroah-Hartman wrote:
+>> On Thu, Nov 27, 2014 at 03:43:23PM +0100, Pali Rohár wrote:
+>> > Which userspace helper programs for (automatic) firmware
+>> > loading are used? Can be udev configured to use own program
+>> > for loading firmware instead that udev integrated which
+>> > looking for firmware only in /lib/firmware files?
+>>
+>> The code to load firmware from userspace has been removed from
+>> udev, so that's not going to work at all, sorry.
+>>
+>> greg k-h
+>
+> Ok and how to load (dynamic) firmware files into kernel? What is
+> preferred way if not udev (because it removed that support)?
 
-I don't know why but the message got truncated. The last paragraph
-should be:
+As I said, it isn't difficult to write a helper with uevent monitor for
+your case, and you can refer to mdev or android's implementation.
 
-The questions that are still unanswered (and will definitely require
-more effort to answer) are the 802.11p standard interpretation
-regarding the OCB mode / 5.9GHz usage limitation. More specific --
-Is the 5.9GHz limited for ITS (Intelligent transportation system) usage
-only. Or for any usage as long as it uses the OCB mode? If one of this
-limitation is valid, who does actually define the restriction --
-regulatory rules of particular countries?
-Another question is if the OCB mode may be used outside the 5.9GHz
-range? Do we need to define the OCB_ONLY flag for 5.9GHz channels in
-CRDA/wireless-regdb?
-
-Best regards;
-Rostislav
-
-
+Thanks,
+Ming Lei
