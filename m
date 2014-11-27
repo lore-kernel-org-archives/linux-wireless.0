@@ -1,57 +1,323 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shout01.mail.de ([213.128.151.216]:60526 "EHLO shout01.mail.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751081AbaKFN7E (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Nov 2014 08:59:04 -0500
-Received: from postfix01.mail.de (postfix01.bt.mail.de [10.0.121.125])
-	by shout01.mail.de (Postfix) with ESMTP id 9F3274761D
-	for <linux-wireless@vger.kernel.org>; Thu,  6 Nov 2014 14:52:18 +0100 (CET)
-Received: from smtp04.mail.de (smtp04.bt.mail.de [10.0.121.214])
-	by postfix01.mail.de (Postfix) with ESMTP id 6FDC442AA5
-	for <linux-wireless@vger.kernel.org>; Thu,  6 Nov 2014 14:52:18 +0100 (CET)
-Received: from [127.0.0.1] (localhost [127.0.0.1])
-	(using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by smtp04.mail.de (Postfix) with ESMTPSA id 11DF985248
-	for <linux-wireless@vger.kernel.org>; Thu,  6 Nov 2014 14:52:16 +0100 (CET)
-Date: Thu, 06 Nov 2014 14:52:12 +0100
-Subject: Problem with Intel Wireless-N 7260 and Ubuntu 14.10
-From: =?ISO-8859-1?Q?Henry_W=FCnsche?= <henry.wuensche@mail.de>
-To: linux-wireless@vger.kernel.org
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:30143 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750754AbaK0V3I (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Nov 2014 16:29:08 -0500
+Message-ID: <547797A2.9060406@broadcom.com> (sfid-20141127_222912_965086_AE1B4423)
+Date: Thu, 27 Nov 2014 22:29:06 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-Id: <20141106135217.11DF985248@smtp04.mail.de> (sfid-20141106_145908_962686_A47A8B72)
+To: Luca Coelho <luca@coelho.fi>
+CC: <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH iw 2/2] add WoWLAN net-detect trigger
+References: <1417122413-2935-1-git-send-email-luca@coelho.fi> <1417122413-2935-2-git-send-email-luca@coelho.fi>
+In-Reply-To: <1417122413-2935-2-git-send-email-luca@coelho.fi>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGVsbG8hCkkgZ290IGEgcHJvYmxlbSB3aXRoIGFuIExlbm92byBVMzMwcCBib3RlYm9vayBhbmQg
-aXQncyBidWlsZCBpbiBJbnRlbApXaXJlbGVzcy1OIDcyNjAgaW4gY29tYmluYXRpb24gd2l0aCBV
-YnVudHUgMTQuMTAgLgpJZiB0aGUgV2lGaSBjYXJkIGlzIHJ1bm5pbmcgaW4gTi1tb2RlIGFmdGVy
-IGEgZmV3IG1pbnV0ZXMgSSBhbSBubyBtb3JlIGFibGUKdG8gcGluZyBteSByb3V0ZXIgb3Igdmlz
-aXQgYW55IHdlYnNpdGUuIElmIHRoZSBOLW1vZGUgaXMgZGlzYWJsZWQgdmlhIHRoZQpjb21tYW5k
-ICJvcHRpb25zIGl3bHdpZmkgMTFuX2Rpc2FibGU9MSIgaW4gIi9ldGMvbW9kcHJvYmUuZC9pd2x3
-aWZpLmNvbmYiCml0IHdvcmtzIGZvciBtZS4KCkkgYWxzbyBub3RpY2VkIHRoYXQgdGhlIHdpZmkg
-cmFuZ2Ugd2l0aCB0aGF0IHdpcmVsZXNzIGNhcmQgb24gVWJ1bnR1IGlzCnRlcnJpYmxlLiBJIGR1
-YWwgYm9vdCB3aXRoIFdpbmRvd3MgOC4xIGFuZCB0aGVyZcKgIHdpZmkgcmFuZ2UgaXMgbXVjaCBi
-ZXR0ZXIKYW5kIGV2ZW4gTi1tb2RlIHdvcmtzLgoKYWZ0ZXIgYm9vdGluZyBVYnVudHUgKG1haW5s
-aW5lIGtlcm5lbCAzLjE3LjEpIGRtZXNnIHNob3dzIHRoaXM6CgpbwqAgwqAgNC4xMzMxMzldIGl3
-bHdpZmkgMDAwMDowMjowMC4wOiBpcnEgNDkgZm9yIE1TSS9NU0ktWApbwqAgwqAgNC4xMzM0ODRd
-IGl3bHdpZmkgMDAwMDowMjowMC4wOiBEaXJlY3QgZmlybXdhcmUgbG9hZCBmb3IKaXdsd2lmaS03
-MjYwLTEwLnVjb2RlIGZhaWxlZCB3aXRoIGVycm9yIC0yClvCoCDCoCA0LjEzMzQ4N10gaXdsd2lm
-aSAwMDAwOjAyOjAwLjA6IEZhbGxpbmcgYmFjayB0byB1c2VyIGhlbHBlcgpbwqAgwqAgNC4yNTM3
-MzVdIGl3bHdpZmkgMDAwMDowMjowMC4wOiBsb2FkZWQgZmlybXdhcmUgdmVyc2lvbiAyNS4yMjIu
-OS4wCm9wX21vZGUgaXdsbXZtClvCoCDCoCA1LjgxNjUxNF0gaXdsd2lmaSAwMDAwOjAyOjAwLjA6
-IERldGVjdGVkIEludGVsKFIpIFdpcmVsZXNzIE4gNzI2MCwKUkVWPTB4MTQ0ClvCoCDCoCA1Ljgx
-NjU2Ml0gaXdsd2lmaSAwMDAwOjAyOjAwLjA6IEwxIERpc2FibGVkOyBFbmFibGluZyBMMFMKW8Kg
-IMKgIDUuODE2Nzc3XSBpd2x3aWZpIDAwMDA6MDI6MDAuMDogTDEgRGlzYWJsZWQ7IEVuYWJsaW5n
-IEwwUwpbwqAgwqAgNi4wODY1OTNdIGl3bHdpZmkgMDAwMDowMjowMC4wOiBMMSBEaXNhYmxlZDsg
-RW5hYmxpbmcgTDBTClvCoCDCoCA2LjA4NjgwMl0gaXdsd2lmaSAwMDAwOjAyOjAwLjA6IEwxIERp
-c2FibGVkOyBFbmFibGluZyBMMFMKW8KgIMKgIDcuMTY3ODMzXSBpd2x3aWZpIDAwMDA6MDI6MDAu
-MDogVGltZSBFdmVudCBlbmQgbm90aWZpY2F0aW9uIGZhaWx1cmUKCnRoZSBtZW50aW9uZWQgZmly
-bXdhcmXCoCBpd2x3aWZpLTcyNjAtMTAudWNvZGUgaXNuJ3QgaW5zdGFsbGVkLCBidXQKwqBpd2x3
-aWZpLTcyNjAtNy51Y29kZQrCoGl3bHdpZmktNzI2MC04LnVjb2RlCsKgaXdsd2lmaS03MjYwLTku
-dWNvZGUKCmFyZS4KCklzIHRoZXJlIGFueSBzb2x1dGlvbiBmb3IgdGhpcyBwcm9ibGVtIG9yIGFu
-eSBmaXg/CkkgcmVhZCB0aGF0wqAgaXdsd2lmaS03MjYwLTEwLnVjb2RlIGlzbid0IGF0YWJsZSB5
-ZXQsIHNvIEkgaGF2ZW4ndCBpbnN0YWxsZWQKaXQgYXQgdGhlIG1vbWVudC4KClRoYW5rcyBpbiBh
-ZHZhbmNlIGFuZCBiZXN0IHJlZ2FyZHMsCgpIZW5yeSBXw7xuc2NoZQ==
+On 11/27/14 22:06, Luca Coelho wrote:
+> From: Luciano Coelho<luciano.coelho@intel.com>
+>
+> Adds a netdetect option to the wowlan triggers that allows the user to
+> request network detection to be started when the device goes to
+> suspend mode.
+
+So it can start heating up my backpack when I get home. Nice ;-)
+
+Arend
+
+> Signed-off-by: Luciano Coelho<luciano.coelho@intel.com>
+> ---
+>   event.c  |  30 ++++++++++-
+>   info.c   |   3 ++
+>   wowlan.c | 177 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+>   3 files changed, 207 insertions(+), 3 deletions(-)
+>
+> diff --git a/event.c b/event.c
+> index 25f8099..99f9f15 100644
+> --- a/event.c
+> +++ b/event.c
+> @@ -200,7 +200,8 @@ static void parse_mic_failure(struct nlattr **attrs)
+>
+>   static void parse_wowlan_wake_event(struct nlattr **attrs)
+>   {
+> -	struct nlattr *tb[NUM_NL80211_WOWLAN_TRIG];
+> +	struct nlattr *tb[NUM_NL80211_WOWLAN_TRIG],
+> +		*tb_match[NUM_NL80211_ATTR];
+>
+>   	printf("WoWLAN wakeup\n");
+>   	if (!attrs[NL80211_ATTR_WOWLAN_TRIGGERS]) {
+> @@ -227,6 +228,33 @@ static void parse_wowlan_wake_event(struct nlattr **attrs)
+>   		printf("\t* 4-way handshake\n");
+>   	if (tb[NL80211_WOWLAN_TRIG_RFKILL_RELEASE])
+>   		printf("\t* RF-kill released\n");
+> +	if (tb[NL80211_WOWLAN_TRIG_NET_DETECT_RESULTS]) {
+> +		struct nlattr *match, *freq;
+> +		int rem_nst, rem_nst2;
+> +
+> +		printf("\t* network detected\n");
+> +		nla_for_each_nested(match,
+> +				    tb[NL80211_WOWLAN_TRIG_NET_DETECT_RESULTS],
+> +				    rem_nst) {
+> +			nla_parse(tb_match, NUM_NL80211_ATTR, nla_data(match),
+> +				  nla_len(match),
+> +				  NULL);
+> +			printf("\t\tSSID: \"");
+> +			/* printf("len %d %p\n", nla_len(tb_match[NL80211_ATTR_SSID]), */
+> +			/*        nla_data(tb_match[NL80211_ATTR_SSID])); */
+> +			print_ssid_escaped(nla_len(tb_match[NL80211_ATTR_SSID]),
+> +					   nla_data(tb_match[NL80211_ATTR_SSID]));
+> +			printf("\"");
+> +			if (tb_match[NL80211_ATTR_SCAN_FREQUENCIES]) {
+> +				printf(" freq(s):");
+> +				nla_for_each_nested(freq,
+> +						    tb_match[NL80211_ATTR_SCAN_FREQUENCIES],
+> +						    rem_nst2)
+> +					printf(" %d", nla_get_u32(freq));
+> +			}
+> +			printf("\n");
+> +		}
+> +	}
+>   	if (tb[NL80211_WOWLAN_TRIG_WAKEUP_PKT_80211]) {
+>   		uint8_t *d = nla_data(tb[NL80211_WOWLAN_TRIG_WAKEUP_PKT_80211]);
+>   		int l = nla_len(tb[NL80211_WOWLAN_TRIG_WAKEUP_PKT_80211]);
+> diff --git a/info.c b/info.c
+> index 7499290..d934c58 100644
+> --- a/info.c
+> +++ b/info.c
+> @@ -455,6 +455,7 @@ broken_combination:
+>   			[NL80211_WOWLAN_TRIG_EAP_IDENT_REQUEST] = { .type = NLA_FLAG },
+>   			[NL80211_WOWLAN_TRIG_4WAY_HANDSHAKE] = { .type = NLA_FLAG },
+>   			[NL80211_WOWLAN_TRIG_RFKILL_RELEASE] = { .type = NLA_FLAG },
+> +			[NL80211_WOWLAN_TRIG_NET_DETECT] = { .type = NLA_FLAG },
+>   			[NL80211_WOWLAN_TRIG_TCP_CONNECTION] = { .type = NLA_NESTED },
+>   		};
+>   		struct nl80211_pattern_support *pat;
+> @@ -492,6 +493,8 @@ broken_combination:
+>   				printf("\t\t * wake up on 4-way handshake\n");
+>   			if (tb_wowlan[NL80211_WOWLAN_TRIG_RFKILL_RELEASE])
+>   				printf("\t\t * wake up on rfkill release\n");
+> +			if (tb_wowlan[NL80211_WOWLAN_TRIG_NET_DETECT])
+> +				printf("\t\t * wake up on network detection\n");
+>   			if (tb_wowlan[NL80211_WOWLAN_TRIG_TCP_CONNECTION])
+>   				printf("\t\t * wake up on TCP connection\n");
+>   		}
+> diff --git a/wowlan.c b/wowlan.c
+> index fc8e2c3..b52a4f9 100644
+> --- a/wowlan.c
+> +++ b/wowlan.c
+> @@ -181,6 +181,163 @@ static int wowlan_parse_tcp_file(struct nl_msg *msg, const char *fn)
+>   	return err;
+>   }
+>
+> +static int wowlan_parse_net_detect(struct nl_msg *msg, int *argc, char ***argv)
+> +{
+> +	struct nl_msg *matchset = NULL, *freqs = NULL;
+> +	struct nlattr *nd, *match = NULL;
+> +	enum {
+> +		ND_TOPLEVEL,
+> +		ND_MATCH,
+> +		ND_FREQS,
+> +	} parse_state = ND_TOPLEVEL;
+> +	int c  = *argc;
+> +	char *end, **v = *argv;
+> +	int err = 0, i = 0;
+> +	unsigned int freq, interval = 0;
+> +	bool have_matchset = false, have_freqs = false;
+> +
+> +	nd = nla_nest_start(msg, NL80211_WOWLAN_TRIG_NET_DETECT);
+> +	if (!nd) {
+> +		err = -ENOBUFS;
+> +		goto out;
+> +	}
+> +
+> +	matchset = nlmsg_alloc();
+> +	if (!matchset) {
+> +		err = -ENOBUFS;
+> +		goto out;
+> +	}
+> +
+> +	freqs = nlmsg_alloc();
+> +	if (!freqs) {
+> +		err = -ENOBUFS;
+> +		goto out;
+> +	}
+> +
+> +	while (c) {
+> +		switch (parse_state) {
+> +		case ND_TOPLEVEL:
+> +			if (!strcmp(v[0], "interval")) {
+> +				c--; v++;
+> +				if (c == 0) {
+> +					err = -EINVAL;
+> +					goto nla_put_failure;
+> +				}
+> +
+> +				if (interval) {
+> +					err = -EINVAL;
+> +					goto nla_put_failure;
+> +				}
+> +				interval = strtoul(v[0],&end, 10);
+> +				if (*end || !interval) {
+> +					err = -EINVAL;
+> +					goto nla_put_failure;
+> +				}
+> +				NLA_PUT_U32(msg,
+> +					    NL80211_ATTR_SCHED_SCAN_INTERVAL,
+> +					    interval);
+> +			} else if (!strcmp(v[0], "match")) {
+> +				parse_state = ND_MATCH;
+> +				if (have_matchset) {
+> +					err = -EINVAL;
+> +					goto nla_put_failure;
+> +				}
+> +
+> +				i = 0;
+> +			} else if (!strcmp(v[0], "freqs")) {
+> +				parse_state = ND_FREQS;
+> +				if (have_freqs) {
+> +					err = -EINVAL;
+> +					goto nla_put_failure;
+> +				}
+> +
+> +				have_freqs = true;
+> +				i = 0;
+> +			} else {
+> +				/* this element is not for us, so
+> +				 * return to continue parsing.
+> +				 */
+> +				goto nla_put_failure;
+> +			}
+> +			c--; v++;
+> +
+> +			break;
+> +		case ND_MATCH:
+> +			if (!strcmp(v[0], "ssid")) {
+> +				c--; v++;
+> +				if (c == 0) {
+> +					err = -EINVAL;
+> +					goto nla_put_failure;
+> +				}
+> +
+> +				/* TODO: for now we can only have an
+> +				 * SSID in the match, so we can start
+> +				 * the match nest here.
+> +				 */
+> +				match = nla_nest_start(matchset, i);
+> +				if (!match) {
+> +					err = -ENOBUFS;
+> +					goto nla_put_failure;
+> +				}
+> +
+> +				NLA_PUT(matchset,
+> +					NL80211_SCHED_SCAN_MATCH_ATTR_SSID,
+> +					strlen(v[0]), v[0]);
+> +				nla_nest_end(matchset, match);
+> +				match = NULL;
+> +
+> +				have_matchset = true;
+> +				i++;
+> +				c--; v++;
+> +			} else {
+> +				/* other element that cannot be part
+> +				 * of a match indicates the end of the
+> +				 * match. */
+> +				/* need at least one match in the matchset */
+> +				if (i == 0) {
+> +					err = -EINVAL;
+> +					goto nla_put_failure;
+> +				}
+> +
+> +				parse_state = ND_TOPLEVEL;
+> +			}
+> +
+> +			break;
+> +		case ND_FREQS:
+> +			freq = strtoul(v[0],&end, 10);
+> +			if (*end) {
+> +				if (i == 0) {
+> +					err = -EINVAL;
+> +					goto nla_put_failure;
+> +				}
+> +
+> +				parse_state = ND_TOPLEVEL;
+> +			} else {
+> +				NLA_PUT_U32(freqs, i, freq);
+> +				i++;
+> +				c--; v++;
+> +			}
+> +			break;
+> +		}
+> +	}
+> +
+> +	if (have_freqs)
+> +		nla_put_nested(msg, NL80211_ATTR_SCAN_FREQUENCIES, freqs);
+> +	if (have_matchset)
+> +		nla_put_nested(msg, NL80211_ATTR_SCHED_SCAN_MATCH, matchset);
+> +
+> +nla_put_failure:
+> +	if (match)
+> +		nla_nest_end(msg, match);
+> +	nlmsg_free(freqs);
+> +	nlmsg_free(matchset);
+> +	nla_nest_end(msg, nd);
+> +out:
+> +	*argc = c;
+> +	*argv = v;
+> +	return err;
+> +}
+> +
+>   static int handle_wowlan_enable(struct nl80211_state *state, struct nl_cb *cb,
+>   				struct nl_msg *msg, int argc, char **argv,
+>   				enum id_input id)
+> @@ -235,6 +392,17 @@ static int handle_wowlan_enable(struct nl80211_state *state, struct nl_cb *cb,
+>   					err = -ENOMEM;
+>   					goto nla_put_failure;
+>   				}
+> +			} else if (strcmp(argv[0], "net-detect") == 0) {
+> +				argv++;
+> +				argc--;
+> +				if (!argc) {
+> +					err = 1;
+> +					goto nla_put_failure;
+> +				}
+> +				err = wowlan_parse_net_detect(msg,&argc,&argv);
+> +				if (err)
+> +					goto nla_put_failure;
+> +				continue;
+>   			} else {
+>   				err = 1;
+>   				goto nla_put_failure;
+> @@ -286,7 +454,8 @@ static int handle_wowlan_enable(struct nl80211_state *state, struct nl_cb *cb,
+>   	return err;
+>   }
+>   COMMAND(wowlan, enable, "[any] [disconnect] [magic-packet] [gtk-rekey-failure] [eap-identity-request]"
+> -	" [4way-handshake] [rfkill-release] [tcp<config-file>] [patterns [offset1+]<pattern1>  ...]",
+> +	" [4way-handshake] [rfkill-release] [net-detect interval<in_msecs>  [freqs<freq>+] [matches [ssid<ssid>]+]]"
+> +	" [tcp<config-file>] [patterns [offset1+]<pattern1>  ...]",
+>   	NL80211_CMD_SET_WOWLAN, 0, CIB_PHY, handle_wowlan_enable,
+>   	"Enable WoWLAN with the given triggers.\n"
+>   	"Each pattern is given as a bytestring with '-' in places where any byte\n"
+> @@ -301,7 +470,9 @@ COMMAND(wowlan, enable, "[any] [disconnect] [magic-packet] [gtk-rekey-failure] [
+>   	"  data.interval=seconds\n"
+>   	"  [wake=<hex packet with masked out bytes indicated by '-'>]\n"
+>   	"  [data.seq=len,offset[,start]]\n"
+> -	"  [data.tok=len,offset,<token stream>]");
+> +	"  [data.tok=len,offset,<token stream>]\n\n"
+> +	"Net-detect configuration example:\n"
+> +	" iw phy0 wowlan enable net-detect interval 5000 freqs 2412 2422 matches ssid foo ssid bar");
+>
+>
+>   static int handle_wowlan_disable(struct nl80211_state *state, struct nl_cb *cb,
+> @@ -352,6 +523,8 @@ static int print_wowlan_handler(struct nl_msg *msg, void *arg)
+>   		printf(" * wake up on 4-way handshake\n");
+>   	if (trig[NL80211_WOWLAN_TRIG_RFKILL_RELEASE])
+>   		printf(" * wake up on RF-kill release\n");
+> +	if (trig[NL80211_WOWLAN_TRIG_NET_DETECT])
+> +		printf(" * wake up on network detection\n");
+>   	if (trig[NL80211_WOWLAN_TRIG_PKT_PATTERN]) {
+>   		nla_for_each_nested(pattern,
+>   				    trig[NL80211_WOWLAN_TRIG_PKT_PATTERN],
 
