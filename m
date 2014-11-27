@@ -1,69 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from andre.telenet-ops.be ([195.130.132.53]:53255 "EHLO
-	andre.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753228AbaKLS4i (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:1574 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753771AbaK0MAf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Nov 2014 13:56:38 -0500
-Message-ID: <5463AD5D.6060708@telenet.be> (sfid-20141112_195641_440553_E76588AE)
-Date: Wed, 12 Nov 2014 19:56:29 +0100
-From: Ruben De Smet <ruben.de.smet@telenet.be>
+	Thu, 27 Nov 2014 07:00:35 -0500
+Subject: [PATCH v3 1/2] dt: bindings: add ath10k wireless device
+To: <ath10k@lists.infradead.org>
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <devicetree-discuss@lists.ozlabs.org>,
+	<linux-wireless@vger.kernel.org>, <toshik@chromium.org>
+Date: Thu, 27 Nov 2014 14:00:23 +0200
+Message-ID: <20141127120023.28539.68895.stgit@potku.adurom.net> (sfid-20141127_130038_464036_676062FA)
+In-Reply-To: <20141127115922.28539.9482.stgit@potku.adurom.net>
+References: <20141127115922.28539.9482.stgit@potku.adurom.net>
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: b43-dev <b43-dev@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Looking for someone with BCM43227 and (maybe) compilation skill
- ; )
-References: <CACna6rxVjnpMgQx9+d_LbROYNnnjnuMEGo-38MPwjsPtxYdN8w@mail.gmail.com>	<CACna6rx+EkoCPQ06qDTbaDFEJ1hrn_CYSbrPmosF0ikhkqDxpA@mail.gmail.com>	<53FF21AA.5040406@telenet.be> <CACna6rwde+H8K42FgsHH=FT2tW_3o_NwVbk0ZyM_L3fVtfwAsA@mail.gmail.com>
-In-Reply-To: <CACna6rwde+H8K42FgsHH=FT2tW_3o_NwVbk0ZyM_L3fVtfwAsA@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="j2jJCMWXi0xrkJRd7ksArAKGrRbGk7MJt"
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---j2jJCMWXi0xrkJRd7ksArAKGrRbGk7MJt
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Document how calibration data can be provided to ath10k via Device Tree.
 
-On 08/28/2014 02:39 PM, Rafa=C5=82 Mi=C5=82ecki wrote:
-> It has appeared that BCM43227 and BCM43228 are pretty much identical
-> from programming POV. You can try 3.17-rc1 (or newer) to see if it
-> supports your wireless card :)
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ .../bindings/net/wireless/qcom,ath10k.txt          |   30 ++++++++++++++++++++
+ 1 file changed, 30 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
 
-Hi!
+diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+new file mode 100644
+index 000000000000..edefc26c6204
+--- /dev/null
++++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+@@ -0,0 +1,30 @@
++* Qualcomm Atheros ath10k wireless devices
++
++For ath10k devices the calibration data can be provided through Device
++Tree. The node is a child node of the PCI controller.
++
++Required properties:
++-compatible : Should be "qcom,ath10k"
++
++Optional properties:
++- qcom,ath10k-calibration-data : calibration data as an array, the
++				 length can vary between hw versions
++
++
++Example:
++
++pci {
++	pcie@0 {
++		reg = <0 0 0 0 0>;
++		#interrupt-cells = <1>;
++		#size-cells = <2>;
++		#address-cells = <3>;
++		device_type = "pci";
++
++		ath10k@0,0 {
++			reg = <0 0 0 0 0>;
++			device_type = "pci";
++			qcom,ath10k-calibration-data = [ 01 02 03 ... ];
++		};
++	};
++};
 
-Today Fedora 20 updated to 3.17 and so I was pretty eager to try b43
-instead of wl. It didn't work like I hoped it would; networkmanager was
-able to scan but not to connect with my BCM43228.
-I've ordered an Intel WiFi card some days ago. So if the b43 team wants
-to, I can send a developer my BCM card for free for developing, reverse
-engineering and debugging purposes.
-
-(I googled an excerpt of the dmesg error message (because it had a MAC
-address in it I didn't want to give to Google), but I forgot to write
-down the original message:
-
-deauthenticating by local choice (Reason: 3=3DDEAUTH_LEAVING)
-
-Ruben
-
-
---j2jJCMWXi0xrkJRd7ksArAKGrRbGk7MJt
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQEcBAEBAgAGBQJUY61dAAoJEPgmWogSE9wQzKAH/R68dTmFgG3wrgC5ReFAY3I+
-8SwEXaIIB4XwsyzQJs9LxlyD7YHoVLV9JvfUi0VG3QhAWvprnQQ7UATB4tIKdkFH
-3iOp9DFxVoyarAWZLK1qOdRDoa7VSp6PGLbgvLbhyxfr5N16Sa2MGHaOlooVy6cK
-+BoQIvTDOM9RtH8ZQ3R7HR4Y8LuQS+HoHQHEi6aPhVI0bNsJrPWQA+YCJo+Arkd6
-kWEcL9glmqvasXRMdq6OGaiZTgRctRUdK6WYC2Jk+GXDvuTb8f8elNniE0ZTYcUx
-mHkuY0aoyuVQm3ExH+fkqwZvR9ImbT9WPPO8Dbl9piF5HtBuho6j9y0e/ZGT1og=
-=RUqY
------END PGP SIGNATURE-----
-
---j2jJCMWXi0xrkJRd7ksArAKGrRbGk7MJt--
