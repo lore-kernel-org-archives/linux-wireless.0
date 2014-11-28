@@ -1,89 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:8941 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751042AbaKEGFX (ORCPT
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:52830 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751508AbaK1PCs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Nov 2014 01:05:23 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <cluo@marvell.com>,
-	<huxm@marvell.com>, <yangyang@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [Patch v2 2/5] mwifiex: remove data_complete handler
-Date: Wed, 5 Nov 2014 17:04:28 +0530
-Message-ID: <1415187271-17914-2-git-send-email-akarwar@marvell.com> (sfid-20141105_070528_739494_D31D5069)
-In-Reply-To: <1415187271-17914-1-git-send-email-akarwar@marvell.com>
-References: <1415187271-17914-1-git-send-email-akarwar@marvell.com>
+	Fri, 28 Nov 2014 10:02:48 -0500
+Received: by mail-wg0-f45.google.com with SMTP id b13so9132139wgh.18
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Nov 2014 07:02:46 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1417181014.27562.4.camel@sipsolutions.net>
+References: <1417095547-12197-1-git-send-email-lorenzo.bianconi83@gmail.com>
+	<1417099707.19919.0.camel@sipsolutions.net>
+	<CAA2SeNJuMYXRAU3NFABsKk27_ojZARBByRx4oU3xApaDnBJYug@mail.gmail.com>
+	<1417181014.27562.4.camel@sipsolutions.net>
+Date: Fri, 28 Nov 2014 16:02:36 +0100
+Message-ID: <CAA2SeNJy4UmLujROiKwj0aScRfQkPpNLNTeb_8e68FDgxKKwqg@mail.gmail.com> (sfid-20141128_160252_323861_636C535B)
+Subject: Re: [PATCH] mac80211: enable TPC through mac80211 stack
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>,
+	=?UTF-8?B?VGhvbWFzIEjDvGhu?= <thomas@net.t-labs.tu-berlin.de>,
+	adrian@freebsd.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+>
+>> I would like to enable TPC in ath9k using iw command:
+>>
+>> iw dev wlan0 set txpower auto
+>>
+>> I knew user_power_level is set to IEEE80211_UNSET_POWER_LEVEL in that
+>> case. Is there a better way than to check user_power_level?
+>
+> But ... the API already allows for that flexibility? I think if anything
+> you should expose the "TX power type" that the nl80211 API has.
+>
 
-This patch removes redundant data complete handler.
+I just need to notify lower driver (ath9k in my case) to setup TPC
+registers in order to take into account TX power configured in frame
+descriptors. For that purpose I added tpc_enabled flags in
+ieee80211_bss_conf and in ieee80211_conf. Is there any other variables
+I can use to notify that configuration?
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
- drivers/net/wireless/mwifiex/main.h | 1 -
- drivers/net/wireless/mwifiex/txrx.c | 4 ----
- drivers/net/wireless/mwifiex/usb.c  | 6 ------
- 3 files changed, 11 deletions(-)
+Lorenzo
 
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index a9eea9b..df6f877 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -687,7 +687,6 @@ struct mwifiex_if_ops {
- 	void (*cleanup_mpa_buf) (struct mwifiex_adapter *);
- 	int (*cmdrsp_complete) (struct mwifiex_adapter *, struct sk_buff *);
- 	int (*event_complete) (struct mwifiex_adapter *, struct sk_buff *);
--	int (*data_complete) (struct mwifiex_adapter *);
- 	int (*init_fw_port) (struct mwifiex_adapter *);
- 	int (*dnld_fw) (struct mwifiex_adapter *, struct mwifiex_fw_image *);
- 	void (*card_reset) (struct mwifiex_adapter *);
-diff --git a/drivers/net/wireless/mwifiex/txrx.c b/drivers/net/wireless/mwifiex/txrx.c
-index 96a2126..a5983fc 100644
---- a/drivers/net/wireless/mwifiex/txrx.c
-+++ b/drivers/net/wireless/mwifiex/txrx.c
-@@ -64,10 +64,6 @@ int mwifiex_handle_rx_packet(struct mwifiex_adapter *adapter,
- 	else
- 		ret = mwifiex_process_sta_rx_packet(priv, skb);
- 
--	/* Decrement RX pending counter for each packet */
--	if (adapter->if_ops.data_complete)
--		adapter->if_ops.data_complete(adapter);
--
- 	return ret;
- }
- EXPORT_SYMBOL_GPL(mwifiex_handle_rx_packet);
-diff --git a/drivers/net/wireless/mwifiex/usb.c b/drivers/net/wireless/mwifiex/usb.c
-index 00afcf6..08e9ec0 100644
---- a/drivers/net/wireless/mwifiex/usb.c
-+++ b/drivers/net/wireless/mwifiex/usb.c
-@@ -967,11 +967,6 @@ static int mwifiex_usb_cmd_event_complete(struct mwifiex_adapter *adapter,
- 	return 0;
- }
- 
--static int mwifiex_usb_data_complete(struct mwifiex_adapter *adapter)
--{
--	return 0;
--}
--
- /* This function wakes up the card. */
- static int mwifiex_pm_wakeup_card(struct mwifiex_adapter *adapter)
- {
-@@ -993,7 +988,6 @@ static struct mwifiex_if_ops usb_ops = {
- 	.dnld_fw =		mwifiex_usb_dnld_fw,
- 	.cmdrsp_complete =	mwifiex_usb_cmd_event_complete,
- 	.event_complete =	mwifiex_usb_cmd_event_complete,
--	.data_complete =	mwifiex_usb_data_complete,
- 	.host_to_card =		mwifiex_usb_host_to_card,
- };
- 
+> johannes
+>
+
+
+
 -- 
-1.8.1.4
-
+UNIX is Sexy: who | grep -i blonde | talk; cd ~; wine; talk; touch;
+unzip; touch; strip; gasp; finger; gasp; mount; fsck; more; yes; gasp;
+umount; make clean; sleep
