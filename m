@@ -1,92 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:39717 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932281AbaKXOgX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2014 09:36:23 -0500
-Received: by mail-wi0-f172.google.com with SMTP id n3so5878917wiv.5
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:36:22 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Luciano Coelho <luciano.coelho@intel.com>
-Subject: [PATCH 52/75] iwlwifi: mvm: add support for CHANCTX_SWMODE_REASSIGN_VIF
-Date: Mon, 24 Nov 2014 16:34:28 +0200
-Message-Id: <1416839691-28533-52-git-send-email-egrumbach@gmail.com> (sfid-20141124_153848_096600_F46AF2B9)
-In-Reply-To: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
-References: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:41382 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751212AbaK1Nqb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Nov 2014 08:46:31 -0500
+Message-ID: <1417182387.27562.8.camel@sipsolutions.net> (sfid-20141128_144634_351100_51642662)
+Subject: Re: [PATCH v5 2/4] cfg80211: allow usermode to query wiphy specific
+ regdom
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@suse.com>
+Date: Fri, 28 Nov 2014 14:46:27 +0100
+In-Reply-To: <1417074298-12254-2-git-send-email-arik@wizery.com> (sfid-20141127_084459_625553_BD50DF4A)
+References: <1417074298-12254-1-git-send-email-arik@wizery.com>
+	 <1417074298-12254-2-git-send-email-arik@wizery.com>
+	 (sfid-20141127_084459_625553_BD50DF4A)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+On Thu, 2014-11-27 at 09:44 +0200, Arik Nemtsov wrote:
+> If a wiphy-idx is specified, the kernel will return the wiphy specific
+> regdomain, if such exists. Otherwise return the global regdom.
+> 
+> When no wiphy-idx is specified, return the global regdomain as well as
+> all wiphy-specific regulatory domains in the system, via a new nested
+> list of attributes.
 
-Add support to reassign vif in switch_vif_chanctx.  This is similar to
-the existing CHANCTX_SWMODE_SWAP_CONTEXTS mode, but doesn't delete the
-old context nor creates a new one, doing to switch between two
-existing contexts.
+Is that really a good idea? Seems rather easy to overrun the message
+size with that, in which case your current code will not return anything
+at all... that'll cause strange errors if somebody plugs in a few
+devices or has hwsim open as well or so ...
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 40 ++++++++++++++++++++++++++++-
- 1 file changed, 39 insertions(+), 1 deletion(-)
+> Add a new attribute for each wiphy-specific regdomain, for usermode to
+> identify it as such.
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index 1966a60..542e59f 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -3013,6 +3013,44 @@ out:
- 	return ret;
- }
- 
-+static int
-+iwl_mvm_switch_vif_chanctx_reassign(struct iwl_mvm *mvm,
-+				    struct ieee80211_vif_chanctx_switch *vifs)
-+{
-+	int ret;
-+
-+	mutex_lock(&mvm->mutex);
-+	__iwl_mvm_unassign_vif_chanctx(mvm, vifs[0].vif, vifs[0].old_ctx, true);
-+
-+	ret = __iwl_mvm_assign_vif_chanctx(mvm, vifs[0].vif, vifs[0].new_ctx,
-+					   true);
-+	if (ret) {
-+		IWL_ERR(mvm,
-+			"failed to assign new_ctx during channel switch\n");
-+		goto out_reassign;
-+	}
-+
-+	goto out;
-+
-+out_reassign:
-+	if (__iwl_mvm_assign_vif_chanctx(mvm, vifs[0].vif, vifs[0].old_ctx,
-+					 true)) {
-+		IWL_ERR(mvm, "failed to reassign old_ctx after failure.\n");
-+		goto out_restart;
-+	}
-+
-+	goto out;
-+
-+out_restart:
-+	/* things keep failing, better restart the hw */
-+	iwl_mvm_nic_restart(mvm, false);
-+
-+out:
-+	mutex_unlock(&mvm->mutex);
-+
-+	return ret;
-+}
-+
- static int iwl_mvm_switch_vif_chanctx(struct ieee80211_hw *hw,
- 				      struct ieee80211_vif_chanctx_switch *vifs,
- 				      int n_vifs,
-@@ -3030,7 +3068,7 @@ static int iwl_mvm_switch_vif_chanctx(struct ieee80211_hw *hw,
- 		ret = iwl_mvm_switch_vif_chanctx_swap(mvm, vifs);
- 		break;
- 	case CHANCTX_SWMODE_REASSIGN_VIF:
--		ret = -EOPNOTSUPP;
-+		ret = iwl_mvm_switch_vif_chanctx_reassign(mvm, vifs);
- 		break;
- 	default:
- 		ret = -EOPNOTSUPP;
--- 
-1.9.1
+Shouldn't userspace also *request* this for backward compatibility?
+Otherwise older userspace might assume that a returned regd applies to
+everything, when it doesn't really?
+
+johannes
 
