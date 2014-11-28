@@ -1,44 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:36839 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753033AbaKGTGz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Nov 2014 14:06:55 -0500
-Received: by mail-wi0-f172.google.com with SMTP id bs8so5777098wib.17
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Nov 2014 11:06:51 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 10/10] staging: vt6655: always keep abyCurrentNetAddr aligned to 2
-Date: Fri,  7 Nov 2014 19:06:09 +0000
-Message-Id: <1415387169-3843-10-git-send-email-tvboxspy@gmail.com> (sfid-20141107_201320_747909_ECDCD323)
-In-Reply-To: <1415387169-3843-1-git-send-email-tvboxspy@gmail.com>
-References: <1415387169-3843-1-git-send-email-tvboxspy@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:41309 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751134AbaK1NZk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Nov 2014 08:25:40 -0500
+Message-ID: <1417181118.27562.5.camel@sipsolutions.net> (sfid-20141128_142543_205716_571DFBE4)
+Subject: Re: [PATCH] mac80211: add more missing checks for VHT tx rates
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, j@w1.fi
+Date: Fri, 28 Nov 2014 14:25:18 +0100
+In-Reply-To: <1416608954-84560-1-git-send-email-nbd@openwrt.org>
+References: <1416608954-84560-1-git-send-email-nbd@openwrt.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Because the driver now uses ether_addr_copy the alignment of this
-variable must be maintained at 2.
+On Fri, 2014-11-21 at 23:29 +0100, Felix Fietkau wrote:
+> Fixes a crash on attempting to calculate the frame duration for a VHT
+> packet (which needs to be handled by hw/driver instead).
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/device.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Applied, thanks.
 
-diff --git a/drivers/staging/vt6655/device.h b/drivers/staging/vt6655/device.h
-index 55aa48b..83efbfb 100644
---- a/drivers/staging/vt6655/device.h
-+++ b/drivers/staging/vt6655/device.h
-@@ -283,7 +283,7 @@ struct vnt_private {
- 	bool bZoneRegExist;
- 	unsigned char byOriginalZonetype;
- 
--	unsigned char abyCurrentNetAddr[ETH_ALEN];
-+	unsigned char abyCurrentNetAddr[ETH_ALEN]; __aligned(2)
- 	bool bLinkPass;          /* link status: OK or fail */
- 
- 	/* Adapter statistics */
--- 
-2.1.0
+johannes
 
