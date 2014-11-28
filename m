@@ -1,156 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:54569 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750903AbaKPWd5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Nov 2014 17:33:57 -0500
-MIME-Version: 1.0
-In-Reply-To: <1415998553-12636-1-git-send-email-fabf@skynet.be>
-References: <1415998553-12636-1-git-send-email-fabf@skynet.be>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Mon, 17 Nov 2014 09:33:35 +1100
-Message-ID: <CAGRGNgWqjsDu_mQK=_agBWjOequb4b7ffgCuxRH=9d72grDYtQ@mail.gmail.com> (sfid-20141116_233437_351152_2E0865E5)
-Subject: Re: [PATCH 1/1 net-next] wireless: remove unnecessary sizeof(u8)
-To: Fabian Frederick <fabf@skynet.be>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>,
-	netdev <netdev@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga11.intel.com ([192.55.52.93]:13327 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751113AbaK1LdO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Nov 2014 06:33:14 -0500
+From: Tomasz Bursztyka <tomasz.bursztyka@linux.intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Tomasz Bursztyka <tomasz.bursztyka@linux.intel.com>
+Subject: [PATCH] nl80211: Fix a null dereference issue in nl80211_send_iface on removal
+Date: Fri, 28 Nov 2014 13:32:59 +0200
+Message-Id: <1417174379-7150-1-git-send-email-tomasz.bursztyka@linux.intel.com> (sfid-20141128_123317_336378_911A7066)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Fabian,
+There is no need trying to add any channels information in the nelink
+message when the interface is being removed.
 
-On Sat, Nov 15, 2014 at 7:55 AM, Fabian Frederick <fabf@skynet.be> wrote:
-> sizeof(u8) is always 1.
+This fixes this kernel panic issue:
 
-I thought that sizeof(*variable) was preferred over sizeof(type), so
-shouldn't these be switched to that format instead?
+[    6.275502] Call Trace:
+[    6.275690]  [<ffffffff814e6044>] dump_stack+0x4e/0x71
+[    6.276069]  [<ffffffff8108fbe1>] ? console_unlock+0x1f1/0x4d0
+[    6.276498]  [<ffffffff81040bbc>] warn_slowpath_common+0x7c/0xa0
+[    6.276939]  [<ffffffff81040cca>] warn_slowpath_null+0x1a/0x20
+[    6.277368]  [<ffffffff813f9677>] nl80211_send_chandef+0x127/0x130
+[    6.277821]  [<ffffffff813f9a35>] nl80211_send_iface+0x3b5/0x5e0
+[    6.278281]  [<ffffffff813f9ccc>] nl80211_del_interface+0x6c/0x520
+[    6.278736]  [<ffffffff8131b9a4>] genl_family_rcv_msg+0x194/0x330
+[    6.279183]  [<ffffffff8131bb40>] ? genl_family_rcv_msg+0x330/0x330
+[    6.279644]  [<ffffffff8131bbce>] genl_rcv_msg+0x8e/0xd0
+[    6.280047]  [<ffffffff8131b081>] netlink_rcv_skb+0xb1/0xc0
+[    6.280679]  [<ffffffff8131b7ed>] ? genl_rcv+0x1d/0x40
+[    6.281251]  [<ffffffff8131b7fc>] genl_rcv+0x2c/0x40
+[    6.281797]  [<ffffffff81319786>] netlink_unicast+0x156/0x230
+[    6.282355]  [<ffffffff8131a0e0>] netlink_sendmsg+0x320/0x410
+[    6.282870]  [<ffffffff812d6eb9>] sock_sendmsg+0x69/0x90
+[    6.283343]  [<ffffffff812e5b66>] ? verify_iovec+0x56/0xe0
+[    6.283830]  [<ffffffff812d71a8>] ___sys_sendmsg.part.38+0x2c8/0x2e0
+[    6.284373]  [<ffffffff810889e0>] ? __lock_acquire+0x430/0xbd0
+[    6.284882]  [<ffffffff81089aa0>] ? lock_release_non_nested+0xa0/0x300
+[    6.285425]  [<ffffffff8111b18c>] ? might_fault+0x8c/0xa0
+[    6.285898]  [<ffffffff8111b143>] ? might_fault+0x43/0xa0
+[    6.286384]  [<ffffffff812d892e>] __sys_sendmsg+0x4e/0x90
+[    6.286849]  [<ffffffff812d897e>] SyS_sendmsg+0xe/0x10
+[    6.287312]  [<ffffffff814f0be9>] system_call_fastpath+0x12/0x17
 
-(I know that this is all no-op, but it should reduce the potential for
-highly unlikely bugs in the future. Also, the extra processing is
-compile-time not run-time.)
+Reported-by: Jouni Malinen <j@w1.fi>
+Signed-off-by: Tomasz Bursztyka <tomasz.bursztyka@linux.intel.com>
+---
 
-Thanks,
+@Jouni: Thanks for finding the issue. Can you check this patch fixes it?
+	It seems to do the trick for me at least.
 
-Julian Calaby
+ net/wireless/nl80211.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-
-> Signed-off-by: Fabian Frederick <fabf@skynet.be>
-> ---
->  drivers/net/wireless/b43/ppr.c            |  2 +-
->  drivers/net/wireless/iwlwifi/pcie/trans.c |  2 +-
->  drivers/net/wireless/rtlwifi/efuse.c      | 16 ++++++++--------
->  3 files changed, 10 insertions(+), 10 deletions(-)
->
-> diff --git a/drivers/net/wireless/b43/ppr.c b/drivers/net/wireless/b43/ppr.c
-> index 9a77027..6bc1c6f 100644
-> --- a/drivers/net/wireless/b43/ppr.c
-> +++ b/drivers/net/wireless/b43/ppr.c
-> @@ -28,7 +28,7 @@ void b43_ppr_clear(struct b43_wldev *dev, struct b43_ppr *ppr)
->         memset(ppr, 0, sizeof(*ppr));
->
->         /* Compile-time PPR check */
-> -       BUILD_BUG_ON(sizeof(struct b43_ppr) != B43_PPR_RATES_NUM * sizeof(u8));
-> +       BUILD_BUG_ON(sizeof(struct b43_ppr) != B43_PPR_RATES_NUM);
->  }
->
->  void b43_ppr_add(struct b43_wldev *dev, struct b43_ppr *ppr, int diff)
-> diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
-> index 836725e..f016824 100644
-> --- a/drivers/net/wireless/iwlwifi/pcie/trans.c
-> +++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
-> @@ -1157,7 +1157,7 @@ static void iwl_trans_pcie_configure(struct iwl_trans *trans,
->                 trans_pcie->n_no_reclaim_cmds = trans_cfg->n_no_reclaim_cmds;
->         if (trans_pcie->n_no_reclaim_cmds)
->                 memcpy(trans_pcie->no_reclaim_cmds, trans_cfg->no_reclaim_cmds,
-> -                      trans_pcie->n_no_reclaim_cmds * sizeof(u8));
-> +                      trans_pcie->n_no_reclaim_cmds);
->
->         trans_pcie->rx_buf_size_8k = trans_cfg->rx_buf_size_8k;
->         if (trans_pcie->rx_buf_size_8k)
-> diff --git a/drivers/net/wireless/rtlwifi/efuse.c b/drivers/net/wireless/rtlwifi/efuse.c
-> index 0b4082c..a3135c5 100644
-> --- a/drivers/net/wireless/rtlwifi/efuse.c
-> +++ b/drivers/net/wireless/rtlwifi/efuse.c
-> @@ -251,8 +251,8 @@ void read_efuse(struct ieee80211_hw *hw, u16 _offset, u16 _size_byte, u8 *pbuf)
->         }
->
->         /* allocate memory for efuse_tbl and efuse_word */
-> -       efuse_tbl = kzalloc(rtlpriv->cfg->maps[EFUSE_HWSET_MAX_SIZE] *
-> -                           sizeof(u8), GFP_ATOMIC);
-> +       efuse_tbl = kzalloc(rtlpriv->cfg->maps[EFUSE_HWSET_MAX_SIZE],
-> +                           GFP_ATOMIC);
->         if (!efuse_tbl)
->                 return;
->         efuse_word = kzalloc(EFUSE_MAX_WORD_UNIT * sizeof(u16 *), GFP_ATOMIC);
-> @@ -733,8 +733,8 @@ static int efuse_pg_packet_read(struct ieee80211_hw *hw, u8 offset, u8 *data)
->         if (offset > 15)
->                 return false;
->
-> -       memset(data, 0xff, PGPKT_DATA_SIZE * sizeof(u8));
-> -       memset(tmpdata, 0xff, PGPKT_DATA_SIZE * sizeof(u8));
-> +       memset(data, 0xff, PGPKT_DATA_SIZE);
-> +       memset(tmpdata, 0xff, PGPKT_DATA_SIZE);
->
->         while (continual && (efuse_addr < EFUSE_MAX_SIZE)) {
->                 if (readstate & PG_STATE_HEADER) {
-> @@ -772,7 +772,7 @@ static void efuse_write_data_case1(struct ieee80211_hw *hw, u16 *efuse_addr,
->         struct rtl_priv *rtlpriv = rtl_priv(hw);
->         struct pgpkt_struct tmp_pkt;
->         int dataempty = true;
-> -       u8 originaldata[8 * sizeof(u8)];
-> +       u8 originaldata[8];
->         u8 badworden = 0x0F;
->         u8 match_word_en, tmp_word_en;
->         u8 tmpindex;
-> @@ -881,7 +881,7 @@ static void efuse_write_data_case2(struct ieee80211_hw *hw, u16 *efuse_addr,
->         struct pgpkt_struct tmp_pkt;
->         u8 pg_header;
->         u8 tmp_header;
-> -       u8 originaldata[8 * sizeof(u8)];
-> +       u8 originaldata[8];
->         u8 tmp_word_cnts;
->         u8 badworden = 0x0F;
->
-> @@ -904,7 +904,7 @@ static void efuse_write_data_case2(struct ieee80211_hw *hw, u16 *efuse_addr,
->
->                 tmp_word_cnts = efuse_calculate_word_cnts(tmp_pkt.word_en);
->
-> -               memset(originaldata, 0xff,  8 * sizeof(u8));
-> +               memset(originaldata, 0xff,  8);
->
->                 if (efuse_pg_packet_read(hw, tmp_pkt.offset, originaldata)) {
->                         badworden = enable_efuse_data_write(hw,
-> @@ -962,7 +962,7 @@ static int efuse_pg_packet_write(struct ieee80211_hw *hw,
->         target_pkt.offset = offset;
->         target_pkt.word_en = word_en;
->
-> -       memset(target_pkt.data, 0xFF,  8 * sizeof(u8));
-> +       memset(target_pkt.data, 0xFF,  8);
->
->         efuse_word_enable_data_read(word_en, data, target_pkt.data);
->         target_word_cnts = efuse_calculate_word_cnts(target_pkt.word_en);
-> --
-> 1.9.3
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 6e41777..018f18d 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2372,7 +2372,7 @@ static int nl80211_send_iface(struct sk_buff *msg, u32 portid, u32 seq, int flag
+ 			(cfg80211_rdev_list_generation << 2)))
+ 		goto nla_put_failure;
+ 
+-	if (rdev->ops->get_channel) {
++	if (!removal && rdev->ops->get_channel) {
+ 		int ret;
+ 		struct cfg80211_chan_def chandef;
+ 
 -- 
-Julian Calaby
+2.0.4
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
