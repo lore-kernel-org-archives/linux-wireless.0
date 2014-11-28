@@ -1,142 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:44777 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753044AbaKNAHv (ORCPT
+Received: from mail-oi0-f52.google.com ([209.85.218.52]:42904 "EHLO
+	mail-oi0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752010AbaK1Ql0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Nov 2014 19:07:51 -0500
-Date: Thu, 13 Nov 2014 16:07:47 -0800
-From: Jeremiah Mahler <jmmahler@gmail.com>
-To: Oleksij Rempel <linux@rempel-privat.de>
-Cc: Jeremiah Mahler <jmmahler@gmail.com>, linux-kernel@vger.kernel.org,
-	ath9k-devel@qca.qualcomm.com, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	netdev@vger.kernel.org
-Subject: linux-next: ath9k: build failure, ath_cmn_process_fft() redefinition
-Message-ID: <20141114000747.GA6865@hudson.localdomain> (sfid-20141114_010811_679228_85151040)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	Fri, 28 Nov 2014 11:41:26 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org, Catalin Iacob <iacobcatalin@gmail.com>
+Subject: [PATCH 1/3 for 3.18] rtlwifi: rtl8192ce: Fix editing error that causes silent memory corruption
+Date: Fri, 28 Nov 2014 10:41:14 -0600
+Message-Id: <1417192876-12101-2-git-send-email-Larry.Finger@lwfinger.net> (sfid-20141128_174145_305530_432AE253)
+In-Reply-To: <1417192876-12101-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1417192876-12101-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+In the major update of the rtlwifi-family of drivers, there was an editing
+mistake. Unfortunately, this particular error leads to memory corruption that
+silently leads to failure of the system. This patch is one of three needed to
+fix the kernel regression reported at https://bugzilla.kernel.org/show_bug.cgi?id=88951.
 
-In version 20141113 of the linux-next kernel, if it is compiled with
-CONFIG_ATH9K_DEBUGFS unset, an error about ath_cmn_process_fft() being
-redefined will be produced.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Reported-by: Catalin Iacob <iacobcatalin@gmail.com>
+Tested-by: Catalin Iacob <iacobcatalin@gmail.com>
+Cc: Catalin Iacob <iacobcatalin@gmail.com>
+---
+ drivers/net/wireless/rtlwifi/rtl8192ce/trx.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-  make
-  ...
-    LD [M]  drivers/net/wireless/ath/ath9k/ath9k_hw.o
-    CC [M]  drivers/net/wireless/ath/ath9k/common-spectral.o
-    CC      lib/debug_locks.o
-    CC      lib/random32.o
-  drivers/net/wireless/ath/ath9k/common-spectral.c:40:5: error:
-  redefinition of ‘ath_cmn_process_fft’
-   int ath_cmn_process_fft(struct ath_spec_scan_priv *spec_priv, struct
-  ieee80211_hdr *hdr,
-       ^
-  In file included from drivers/net/wireless/ath/ath9k/common.h:27:0,
-                   from drivers/net/wireless/ath/ath9k/ath9k.h:27,
-                   from
-  drivers/net/wireless/ath/ath9k/common-spectral.c:18:
-  drivers/net/wireless/ath/ath9k/common-spectral.h:146:19: note: previous
-  definition of ‘ath_cmn_process_fft’ was here
-   static inline int ath_cmn_process_fft(struct ath_spec_scan_priv
-  *spec_priv,
-                     ^
-  scripts/Makefile.build:257: recipe for target
-  'drivers/net/wireless/ath/ath9k/common-spectral.o' failed
-  make[5]: *** [drivers/net/wireless/ath/ath9k/common-spectral.o] Error 1
-  scripts/Makefile.build:402: recipe for target
-  'drivers/net/wireless/ath/ath9k' failed
-  make[4]: *** [drivers/net/wireless/ath/ath9k] Error 2
-  scripts/Makefile.build:402: recipe for target 'drivers/net/wireless/ath'
-  failed
-  make[3]: *** [drivers/net/wireless/ath] Error 2
-  scripts/Makefile.build:402: recipe for target 'drivers/net/wireless'
-  failed
-  make[2]: *** [drivers/net/wireless] Error 2
-  scripts/Makefile.build:402: recipe for target 'drivers/net' failed
-  make[1]: *** [drivers/net] Error 2
-  Makefile:953: recipe for target 'drivers' failed
-  make: *** [drivers] Error 2
-  make: *** Waiting for unfinished jobs....
-    CC      lib/bust_spinlocks.o
-  ...
-
-Bisecting the kernel found that the following patch was the cause.
-
-  commit 67dc74f15f147b9f88702de2952d2951e3e000ec
-  Author: Oleksij Rempel <linux@rempel-privat.de>
-  Date:   Thu Nov 6 08:53:30 2014 +0100
-  
-      ath9k: move spectral.* to common-spectral.*
-      
-      and rename exports from ath9k_spectral_* to ath9k_cmn_spectral_*
-      
-      Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
-      Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
-This patch mostly consists of renaming functions and moving code but
-there was a functional change to the Makefile.
-
-common-spectral.h uses CONFIG_ATH9K_DEBUGFS to conditionally provide a
-prototype of ath_cmn_process_fft() when set or to define it as a noop
-when it is unset.  The Makefile was changed so that CONFIG_ATH9K_DEBUGFS
-no longer applied to common-spectral and this will result in two
-definitions of ath_cmn_process_fft().
-
-  > --- a/drivers/net/wireless/ath/ath9k/Makefile
-  > +++ b/drivers/net/wireless/ath/ath9k/Makefile
-  > @@ -16,8 +16,7 @@ ath9k-$(CONFIG_ATH9K_DFS_CERTIFIED) += dfs.o
-  >  ath9k-$(CONFIG_ATH9K_TX99) += tx99.o
-  >  ath9k-$(CONFIG_ATH9K_WOW) += wow.o
-  >
-  > -ath9k-$(CONFIG_ATH9K_DEBUGFS) += debug.o \
-  > -                                spectral.o
-  > +ath9k-$(CONFIG_ATH9K_DEBUGFS) += debug.o
-  >
-  >  ath9k-$(CONFIG_ATH9K_STATION_STATISTICS) += debug_sta.o
-  >
-  > @@ -59,7 +58,8 @@ obj-$(CONFIG_ATH9K_COMMON) += ath9k_common.o
-  >  ath9k_common-y:=       common.o \
-  >                         common-init.o \
-  >                         common-beacon.o \
-  > -                       common-debug.o
-  > +                       common-debug.o \
-  > +                       common-spectral.o
-
-Reverting the patch solves one error, but then a new one is produced.
-
-  make
-  ...
-    MODPOST 185 modules
-    CC      arch/x86/boot/edd.o
-    VOFFSET arch/x86/boot/voffset.h
-  ERROR: "ath9k_cmn_spectral_scan_trigger"
-  [drivers/net/wireless/ath/ath9k/ath9k.ko] undefined!
-  scripts/Makefile.modpost:90: recipe for target '__modpost' failed
-  make[1]: *** [__modpost] Error 1
-  ...
-
-This error is caused by the patch before it.
-
-  commit f00a422cc81ef665f5098c0bc43cb0c616e55a9b
-  Author: Oleksij Rempel <linux@rempel-privat.de>
-  Date:   Thu Nov 6 08:53:29 2014 +0100
-  
-      ath9k: move ath9k_spectral_scan_ from main.c to spectral.c
-      
-      Now we should be ready to make this code common.
-      
-      Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
-      Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
-Since the code was moved from main.c to spectral.c, it is now involved
-with CONFIG_ATH9K_DEBUGFS, which causes it to break.
-
-Reverting both the above patches resolves the build errors.
-
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c b/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
+index dc3d20b..0916275 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
+@@ -720,16 +720,15 @@ u32 rtl92ce_get_desc(u8 *p_desc, bool istx, u8 desc_name)
+ 			break;
+ 		}
+ 	} else {
+-		struct rx_desc_92c *pdesc = (struct rx_desc_92c *)p_desc;
+ 		switch (desc_name) {
+ 		case HW_DESC_OWN:
+-			ret = GET_RX_DESC_OWN(pdesc);
++			ret = GET_RX_DESC_OWN(p_desc);
+ 			break;
+ 		case HW_DESC_RXPKT_LEN:
+-			ret = GET_RX_DESC_PKT_LEN(pdesc);
++			ret = GET_RX_DESC_PKT_LEN(p_desc);
+ 			break;
+ 		case HW_DESC_RXBUFF_ADDR:
+-			ret = GET_RX_STATUS_DESC_BUFF_ADDR(pdesc);
++			ret = GET_RX_DESC_BUFF_ADDR(p_desc);
+ 			break;
+ 		default:
+ 			RT_ASSERT(false, "ERR rxdesc :%d not process\n",
 -- 
-Jeremiah Mahler
-jmmahler@gmail.com
-http://github.com/jmahler
+2.1.2
+
