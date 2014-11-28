@@ -1,95 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54270 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754398AbaKSRNq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Nov 2014 12:13:46 -0500
-Message-ID: <1416417218.4763.12.camel@dcbw.local> (sfid-20141119_181350_355673_EB37DB1D)
-Subject: Re: Can fb4e156886ce6e8309e912d8b370d192330d19d3 be reverted ?
-From: Dan Williams <dcbw@redhat.com>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	linux-wireless@vger.kernel.org
-Date: Wed, 19 Nov 2014 11:13:38 -0600
-In-Reply-To: <1415985041.22965.31.camel@dcbw.local>
-References: <20141113123313.GA1926@redhat.com>
-	 <1415882683.2021.3.camel@sipsolutions.net>
-	 <A21755E2-3054-46B2-9BA6-07347FB91E1E@holtmann.org>
-	 <1415933712.2629.12.camel@dcbw.local>
-	 <6E4E0F42-B794-4F90-8AE9-0C208E40F7CD@holtmann.org>
-	 <1415980967.22965.14.camel@dcbw.local>
-	 <1415985041.22965.31.camel@dcbw.local>
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:24837 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751503AbaK1KI0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Nov 2014 05:08:26 -0500
+Message-ID: <5478498E.3070508@broadcom.com> (sfid-20141128_110847_146062_30176CBB)
+Date: Fri, 28 Nov 2014 11:08:14 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Dan Carpenter <dan.carpenter@oracle.com>,
+	Brett Rudley <brudley@broadcom.com>
+CC: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Julia Lawall" <Julia.Lawall@lip6.fr>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	Markus Elfring <elfring@users.sourceforge.net>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	<linux-wireless@vger.kernel.org>,
+	<brcm80211-dev-list@broadcom.com>,
+	<kernel-janitors@vger.kernel.org>
+Subject: Re: [patch] brcmsmac: NULL dereferences in brcms_c_detach_mfree()
+References: <20141128094340.GA10364@mwanda>
+In-Reply-To: <20141128094340.GA10364@mwanda>
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-11-14 at 11:10 -0600, Dan Williams wrote:
-> On Fri, 2014-11-14 at 10:02 -0600, Dan Williams wrote:
-> > On Fri, 2014-11-14 at 16:02 +0900, Marcel Holtmann wrote:
-> > > Hi Dan,
-> > > 
-> > > >>>> I've updated wireless code on RHEL and get complain that now
-> > > >>>> cfg80211 and rfkill modules are loaded on machines that do not have
-> > > >>>> wireless hardware. Modules are auto-loaded because NetworkManager send
-> > > >>>> nl80211 messages to check if there are wireless devices in the system.
-> > > >>>> 
-> > > >>>> Hence my question, can we revert commit fb4e156886ce
-> > > >>>> "nl80211: Add generic netlink module alias for cfg80211/nl80211" ?
-> > > >>> 
-> > > >>> Realistically, we can't revert it, but only remove the
-> > > >>> MODULE_ALIAS_GENL_FAMILY() line.
-> > > >>> 
-> > > >>>> Auto loading nl80211 does not seems to be necessary, if there are
-> > > >>>> wireless devices nl80211 will be loaded anyway.
-> > > >>> 
-> > > >>> Maybe other applications would like to see an empty list of devices? But
-> > > >>> OTOH, if they're robust at all, they have to cope with kernels not even
-> > > >>> compiled with nl80211, so I guess for me I don't really see a big
-> > > >>> difference in whether the module alias exists or not.
-> > > >> 
-> > > >> auto-loading cfg80211 module when userspace requests nl80211 netlink family is exactly the right thing to do. Systems compiled without nl80211 support and systems with no wireless device attached are two different things.
-> > > >> 
-> > > >> Someone can fix NetworkManager to not send nl80211 messages or just plain accept that cfg80211 will be loaded.
-> > > > 
-> > > > NM uses nl80211 initially to determine whether *any* ethernet-type
-> > > > interface (a) is actually WiFi, and (b) should be driven by nl80211 or
-> > > > WEXT.  Because of the variety of drivers (both in-kernel and
-> > > > out-of-kernel) and the variety of kernel versions (NM supports back to
-> > > > early 3.x series) we cannot rely on specific behavior.
-> > > > 
-> > > > So given an ethernet-type interface, how do we determine that it is
-> > > > wifi?
-> > > > 
-> > > > DEVTYPE=wlan - not always reliable due to driver and kernel versions
-> > > 
-> > > if anybody wants to write kernel patches, then making sure that all wireless drivers expose DEVTYPE=wlan is the way to go. If for some reason a driver does not do it, that is a bug.
-> > 
-> > Yeah, that's nice, and should be done.  It seems a number of drivers
-> > don't have it.  Obviously everything mac80211 does, and it seems we're
-> > left with:
-> > 
-> > 1) legacy drivers that only support WEXT (airo, etc)
-> > 2) out-of-tree drivers (wl.o and various realtek/ralink stuff?)
-> > 
-> > So it seems that new best practice is:
-> > 
-> > a) if DEVTYPE=wlan, hit up nl80211 to determine whether the interface
-> > supports nl80211 or WEXT (minimal cfg80211 ports like ipw2x00 don't
-> > actually support nl80211 at all and must use WEXT)
-> > 
-> > b) if DEVTYPE is missing, WEXT can be tried if it is available
-> > 
-> > c) treat interface as 'ethernet'; out-of-tree WiFi drivers may end up
-> > here but that is life
-> > 
-> > Does that sound valid to everyone else?
+On 28-11-14 10:43, Dan Carpenter wrote:
+> The brcms_c_attach_malloc() function can call this with a NULL
+> "wlc->corestate" or "wlc->hw".
 > 
-> Potential NM fix filed at:
+> Also I threw in a bonus cleanup by deleting an obvious comment and a
+> no-op NULL assignment.  :)
+
+Thanks for the patch+bonus
+
+Acked-by: Arend van Spriel <arend@broadcom.com>
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 > 
-> https://bugzilla.gnome.org/show_bug.cgi?id=740131
-
-Merged after review and backported to 0.9.10 too.
-
-Dan
+> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+> index 738cfac..a104d7a 100644
+> --- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
+> +++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+> @@ -445,18 +445,18 @@ static void brcms_c_detach_mfree(struct brcms_c_info *wlc)
+>  	kfree(wlc->protection);
+>  	kfree(wlc->stf);
+>  	kfree(wlc->bandstate[0]);
+> -	kfree(wlc->corestate->macstat_snapshot);
+> +	if (wlc->corestate)
+> +		kfree(wlc->corestate->macstat_snapshot);
+>  	kfree(wlc->corestate);
+> -	kfree(wlc->hw->bandstate[0]);
+> +	if (wlc->hw)
+> +		kfree(wlc->hw->bandstate[0]);
+>  	kfree(wlc->hw);
+>  	if (wlc->beacon)
+>  		dev_kfree_skb_any(wlc->beacon);
+>  	if (wlc->probe_resp)
+>  		dev_kfree_skb_any(wlc->probe_resp);
+>  
+> -	/* free the wlc */
+>  	kfree(wlc);
+> -	wlc = NULL;
+>  }
+>  
+>  static struct brcms_bss_cfg *brcms_c_bsscfg_malloc(uint unit)
+> 
 
