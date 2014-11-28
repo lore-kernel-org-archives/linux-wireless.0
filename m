@@ -1,76 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:47083 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751901AbaKKHGE (ORCPT
+Received: from mail-ob0-f182.google.com ([209.85.214.182]:35930 "EHLO
+	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752030AbaK1Ql1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Nov 2014 02:06:04 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH 4/6] ath9k: Fix high tx power in multi-chain mode
-Date: Tue, 11 Nov 2014 12:37:22 +0530
-Message-Id: <1415689644-29693-5-git-send-email-sujith@msujith.org> (sfid-20141111_080615_790455_5EE3E642)
-In-Reply-To: <1415689644-29693-1-git-send-email-sujith@msujith.org>
-References: <1415689644-29693-1-git-send-email-sujith@msujith.org>
+	Fri, 28 Nov 2014 11:41:27 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org, Catalin Iacob <iacobcatalin@gmail.com>
+Subject: [PATCH 2/3 for 3.18] rtlwifi: rtl8192ce: Fix kernel crashes due to missing callback entry
+Date: Fri, 28 Nov 2014 10:41:15 -0600
+Message-Id: <1417192876-12101-3-git-send-email-Larry.Finger@lwfinger.net> (sfid-20141128_174146_577589_4149E00C)
+In-Reply-To: <1417192876-12101-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1417192876-12101-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Miaoqing Pan <miaoqing@qca.qualcomm.com>
+In the major update of the rtlwifi-family of drivers, one of the callback entries
+was missed, which leads to memory corruption. Unfortunately, this corruption
+never caused a kernel oops, but showed up in other parts of the system.
+This patch is one of three needed to fix the kernel regression reported at
+https://bugzilla.kernel.org/show_bug.cgi?id=88951.
 
-For multi-chain chips, if the thermometer is switched off for a chain
-which can be disabled by software(e.g tx_chainmask=0x1), the measured tx
-power is about 5dB higher than target power.
-
-Set thermometer on for all chains to fix this issue.
-
-Signed-off-by: Miaoqing Pan <miaoqing@qca.qualcomm.com>
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Reported-by: Catalin Iacob <iacobcatalin@gmail.com>
+Tested-by: Catalin Iacob <iacobcatalin@gmail.com>
+Cc: Catalin Iacob <iacobcatalin@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 22 ++++++++++++----------
- 1 file changed, 12 insertions(+), 10 deletions(-)
+ drivers/net/wireless/rtlwifi/rtl8192ce/sw.c  |  3 +++
+ drivers/net/wireless/rtlwifi/rtl8192ce/trx.c | 17 +++++++++++++++++
+ drivers/net/wireless/rtlwifi/rtl8192ce/trx.h |  2 ++
+ 3 files changed, 22 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 80c6eac..a5f4b19 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -4084,25 +4084,27 @@ static void ar9003_hw_thermometer_apply(struct ath_hw *ah)
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c b/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
+index 46ea076..dd5aa08 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
+@@ -228,6 +228,7 @@ static struct rtl_hal_ops rtl8192ce_hal_ops = {
+ 	.led_control = rtl92ce_led_control,
+ 	.set_desc = rtl92ce_set_desc,
+ 	.get_desc = rtl92ce_get_desc,
++	.is_tx_desc_closed = rtl92ce_is_tx_desc_closed,
+ 	.tx_polling = rtl92ce_tx_polling,
+ 	.enable_hw_sec = rtl92ce_enable_hw_security_config,
+ 	.set_key = rtl92ce_set_key,
+@@ -271,6 +272,8 @@ static struct rtl_hal_cfg rtl92ce_hal_cfg = {
+ 	.maps[MAC_RCR_ACRC32] = ACRC32,
+ 	.maps[MAC_RCR_ACF] = ACF,
+ 	.maps[MAC_RCR_AAP] = AAP,
++	.maps[MAC_HIMR] = REG_HIMR,
++	.maps[MAC_HIMRE] = REG_HIMRE,
  
- 	REG_RMW_FIELD(ah, AR_PHY_65NM_CH0_RXTX4,
- 		      AR_PHY_65NM_CH0_RXTX4_THERM_ON_OVR, therm_on);
--	if (ah->caps.tx_chainmask & BIT(1))
-+	if (!AR_SREV_9330(ah) && !AR_SREV_9485(ah)) {
- 		REG_RMW_FIELD(ah, AR_PHY_65NM_CH1_RXTX4,
- 			      AR_PHY_65NM_CH0_RXTX4_THERM_ON_OVR, therm_on);
--	if (ah->caps.tx_chainmask & BIT(2))
--		REG_RMW_FIELD(ah, AR_PHY_65NM_CH2_RXTX4,
--			      AR_PHY_65NM_CH0_RXTX4_THERM_ON_OVR, therm_on);
-+		if (!AR_SREV_9340(ah) && !AR_SREV_9462(ah) && !AR_SREV_9531(ah))
-+			REG_RMW_FIELD(ah, AR_PHY_65NM_CH2_RXTX4,
-+				      AR_PHY_65NM_CH0_RXTX4_THERM_ON_OVR,
-+				      therm_on);
-+	}
- 
- 	therm_on = (thermometer < 0) ? 0 : (thermometer == 0);
- 	REG_RMW_FIELD(ah, AR_PHY_65NM_CH0_RXTX4,
- 		      AR_PHY_65NM_CH0_RXTX4_THERM_ON, therm_on);
--	if (ah->caps.tx_chainmask & BIT(1)) {
-+	if (!AR_SREV_9330(ah) && !AR_SREV_9485(ah)) {
- 		therm_on = (thermometer < 0) ? 0 : (thermometer == 1);
- 		REG_RMW_FIELD(ah, AR_PHY_65NM_CH1_RXTX4,
- 			      AR_PHY_65NM_CH0_RXTX4_THERM_ON, therm_on);
--	}
--	if (ah->caps.tx_chainmask & BIT(2)) {
--		therm_on = (thermometer < 0) ? 0 : (thermometer == 2);
--		REG_RMW_FIELD(ah, AR_PHY_65NM_CH2_RXTX4,
--			      AR_PHY_65NM_CH0_RXTX4_THERM_ON, therm_on);
-+		if (!AR_SREV_9340(ah) && !AR_SREV_9462(ah) && !AR_SREV_9531(ah)) {
-+			therm_on = (thermometer < 0) ? 0 : (thermometer == 2);
-+			REG_RMW_FIELD(ah, AR_PHY_65NM_CH2_RXTX4,
-+				      AR_PHY_65NM_CH0_RXTX4_THERM_ON, therm_on);
-+		}
- 	}
+ 	.maps[EFUSE_TEST] = REG_EFUSE_TEST,
+ 	.maps[EFUSE_CTRL] = REG_EFUSE_CTRL,
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c b/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
+index 0916275..e88dcd0 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
+@@ -739,6 +739,23 @@ u32 rtl92ce_get_desc(u8 *p_desc, bool istx, u8 desc_name)
+ 	return ret;
  }
  
++bool rtl92ce_is_tx_desc_closed(struct ieee80211_hw *hw,
++			       u8 hw_queue, u16 index)
++{
++	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
++	struct rtl8192_tx_ring *ring = &rtlpci->tx_ring[hw_queue];
++	u8 *entry = (u8 *)(&ring->desc[ring->idx]);
++	u8 own = (u8)rtl92ce_get_desc(entry, true, HW_DESC_OWN);
++
++	/*beacon packet will only use the first
++	 *descriptor defautly,and the own may not
++	 *be cleared by the hardware
++	 */
++	if (own)
++		return false;
++	return true;
++}
++
+ void rtl92ce_tx_polling(struct ieee80211_hw *hw, u8 hw_queue)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/trx.h b/drivers/net/wireless/rtlwifi/rtl8192ce/trx.h
+index 9a39ec4..4bec4b0 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ce/trx.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192ce/trx.h
+@@ -723,6 +723,8 @@ bool rtl92ce_rx_query_desc(struct ieee80211_hw *hw,
+ void rtl92ce_set_desc(struct ieee80211_hw *hw, u8 *pdesc, bool istx,
+ 		      u8 desc_name, u8 *val);
+ u32 rtl92ce_get_desc(u8 *pdesc, bool istx, u8 desc_name);
++bool rtl92ce_is_tx_desc_closed(struct ieee80211_hw *hw,
++			       u8 hw_queue, u16 index);
+ void rtl92ce_tx_polling(struct ieee80211_hw *hw, u8 hw_queue);
+ void rtl92ce_tx_fill_cmddesc(struct ieee80211_hw *hw, u8 *pdesc,
+ 			     bool b_firstseg, bool b_lastseg,
 -- 
-2.1.3
+2.1.2
 
