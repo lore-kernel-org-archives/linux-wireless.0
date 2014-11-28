@@ -1,52 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:53081 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751077AbaKYKY2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Nov 2014 05:24:28 -0500
-Subject: [PATCH v3 0/2] ath10k: firmware memory debugfs interface
-To: <ath10k@lists.infradead.org>
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Date: Tue, 25 Nov 2014 12:24:23 +0200
-Message-ID: <20141125102302.3951.10641.stgit@potku.adurom.net> (sfid-20141125_112431_880717_B9497874)
+Received: from mga09.intel.com ([134.134.136.24]:34639 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751144AbaK1L5H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Nov 2014 06:57:07 -0500
+Date: Fri, 28 Nov 2014 12:57:03 +0100
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [PATCH] nfc drivers: don't include linux/unaligned/access_ok.h
+Message-ID: <20141128115703.GE29389@ribalta.mp.intel.com> (sfid-20141128_125711_608481_74DDC966)
+References: <1416428242-9942-1-git-send-email-johannes@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1416428242-9942-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hi Johannes,
 
-this is v3 of Yanbo's firmware memory debugfs interface.
+On Wed, Nov 19, 2014 at 09:17:22PM +0100, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> This is a specific implementation, <asm/unaligned.h> is the
+> multiplexer that has the arch-specific knowledge of which
+> of the implementations needs to be used, so include that.
+> 
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+>  drivers/nfc/pn544/i2c.c    | 2 +-
+>  drivers/nfc/st21nfca/i2c.c | 2 +-
+>  2 files changed, 2 insertions(+), 2 deletions(-)
+Applied to nfc-next, thanks.
 
-Changelog:
-
-v3:
-
-* check ath10k state and return an error if firmware is not running
-
-* switch to use conf_mutex because using ar->state
-
-* fix copy_from_user() error handling
-
-v2:
-
-* split patches into two
-
-* simplify the commit logs
-
-* remove extra #include "hif.h" from debug.c
-
----
-
-Yanbo Li (2):
-      ath10k: add register access debugfs interface
-      ath10k: add memory dump debugfs interface
-
-
- drivers/net/wireless/ath/ath10k/core.h  |    1 
- drivers/net/wireless/ath/ath10k/debug.c |  239 +++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/hif.h   |   37 +++++
- drivers/net/wireless/ath/ath10k/pci.c   |    3 
- 4 files changed, 280 insertions(+)
-
+Cheers,
+Samuel.
