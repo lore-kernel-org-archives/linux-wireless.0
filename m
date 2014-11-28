@@ -1,39 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:23299 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752397AbaKCXDM (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:63004 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750938AbaK1F7n (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Nov 2014 18:03:12 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Alexey Khoroshilov <khoroshilov@ispras.ru>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <ldv-project@linuxtesting.org>
-Subject: Re: [PATCH] ath6kl: remove incorrect reset_resume handler
-References: <1414180972-16413-1-git-send-email-khoroshilov@ispras.ru>
-Date: Tue, 4 Nov 2014 01:02:58 +0200
-In-Reply-To: <1414180972-16413-1-git-send-email-khoroshilov@ispras.ru> (Alexey
-	Khoroshilov's message of "Sat, 25 Oct 2014 00:02:52 +0400")
-Message-ID: <87h9yf7uql.fsf@kamboji.qca.qualcomm.com> (sfid-20141104_000322_276481_D210F6EA)
+	Fri, 28 Nov 2014 00:59:43 -0500
+From: Avinash Patil <patila@marvell.com>
+To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>
+CC: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
+	<linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
+	<cluo@marvell.com>, Avinash Patil <patila@marvell.com>
+Subject: [PATCH] cfg80211: do not check for carrier during start_radar_detect
+Date: Fri, 28 Nov 2014 16:58:47 +0530
+Message-ID: <1417174127-24712-1-git-send-email-patila@marvell.com> (sfid-20141128_065946_328398_4C9C2336)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Alexey Khoroshilov <khoroshilov@ispras.ru> writes:
+Radar detection happens before starting AP; so netdev carrier may be dormant
+at this time. Remove this check from cfg80211_start_radar_detection.
 
-> Existing implementation of reset_resume handler just calls
-> ath6kl_usb_remove() that deallocates all resources.
-> It can lead to double free, etc. on disconnect.
->
-> The patch removes reset_resume handler,
-> so usb core could conservatively reset the driver.
->
-> Found by Linux Driver Verification project (linuxtesting.org).
->
-> Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+---
+ net/wireless/nl80211.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-Thanks, applied.
-
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 6e41777..25f68d6 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -6132,9 +6132,6 @@ static int nl80211_start_radar_detection(struct sk_buff *skb,
+ 	if (err)
+ 		return err;
+ 
+-	if (netif_carrier_ok(dev))
+-		return -EBUSY;
+-
+ 	if (wdev->cac_started)
+ 		return -EBUSY;
+ 
 -- 
-Kalle Valo
+1.8.1.4
+
