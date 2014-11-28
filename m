@@ -1,105 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:52485 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751498AbaKQPah (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Nov 2014 10:30:37 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl@lists.infradead.org>,
-	<ath10k@lists.infradead.org>
-Subject: Pull request: ath 20141117
-Date: Mon, 17 Nov 2014 17:30:07 +0200
-Message-ID: <87r3x1oneo.fsf@kamboji.qca.qualcomm.com> (sfid-20141117_163041_019564_7E65AE05)
+Received: from bues.ch ([80.190.117.144]:47219 "EHLO bues.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751293AbaK1Xr4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Nov 2014 18:47:56 -0500
+Date: Sat, 29 Nov 2014 00:21:48 +0100
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Nicholas Krause <xerofoify@gmail.com>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	Network Development <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>
+Subject: Re: [PATCH] drivers:net:wireless: Add mutex locking for function,
+ b43_op_beacon_set_time in main.c
+Message-ID: <20141129002148.1beb21d9@wiggum> (sfid-20141129_004759_784645_2A236E0B)
+In-Reply-To: <CACna6rxmOC0h9hOpa=5iWFM1THQ8Q4hCi8MnmqkZJbB_U0PJ0A@mail.gmail.com>
+References: <1417213013-19758-1-git-send-email-xerofoify@gmail.com>
+	<CACna6rxmOC0h9hOpa=5iWFM1THQ8Q4hCi8MnmqkZJbB_U0PJ0A@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/a9VZzheb11hdlXkyH8hfJby"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+--Sig_/a9VZzheb11hdlXkyH8hfJby
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-new pull request again, here's the changelog:
+On Fri, 28 Nov 2014 23:40:46 +0100
+Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wrote:
 
-----------------------------------------------------------------------
-One ath6kl patch and rest for ath10k, but nothing really major which
-stands out. Most notable:
+> > @@ -5094,8 +5094,9 @@ static int b43_op_beacon_set_tim(struct ieee80211=
+_hw *hw,
+> >  {
+> >         struct b43_wl *wl =3D hw_to_b43_wl(hw);
+> >
+> > -       /* FIXME: add locking */
+> > +       mutex_lock(&wl->mutex);
+> >         b43_update_templates(wl);
+> > +       mutex_unlock(&wl->mutex);
+> >
+> >         return 0;
+> >  }
+>=20
+> Does anyone remember why this simple solution wasn't implemented
+> earlier? Michael?
 
-o fix resume (Bartosz)
+I think the callback used to be (is?) in atomic context.
 
-o firmware restart is now faster and more reliable (Michal)
+> Nicholas: did you test it anyhow?
 
-o it's now possible to test hardware restart functionality without
-  crashing the firmware using hw-restart parameter with
-  simulate_fw_crash debugfs file (Michal)
+--=20
+Michael
 
-----------------------------------------------------------------------
+--Sig_/a9VZzheb11hdlXkyH8hfJby
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
 
-The following changes since commit 84cbf3a7592879810f80cece6c7f736f099ab163:
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
 
-  ath10k: split ce pipe init/alloc further (2014-10-23 16:41:32 +0300)
+iQIcBAEBAgAGBQJUeQOPAAoJEPUyvh2QjYsOko8P/j/erXMBLKii9IzxSByO5DCs
+jxsXn8p4OBE+e5K8uVEr7CSorMlzZCU+D7Vi9h6OiUS5TnXikKx1O2fE9SRLnm4A
+N7pc/3b1HuIUCtnOdQYIRJjFglU4Ng8TV4UHJwKtCEehlgIBp3DgaR9yECv+BCd1
+cYZxWy5+Acdh/OLMEdy73vNcSYAKxiJ8ViU1fSJCVuCxRN0Z5LP/DG0Hy2dnO7c/
+/TLBkbQ8JBkzyi0k6nczEVdR5/5K8X9EN3BzE0ZsJny0BRzsQKTcQvOdMx9CaFJn
+X2zP9X2PtYLCgyl33Vr0YLXX03VXNLzgzR68g6xOa2h0tKlylMB2gYuCr0S2NR2i
+F63MhHNRYgSMnbHxCH9IAJQstVZe3p0pArnriAElNCMJbMBnI5nWy+sHsqjdOp/L
+3sL5fWwWgMvtkVeTnrTZFZ+fA2cwK2+MSRPvc11N5v3dDnZBdkfUkgW7fEdWQP0J
+/XJCNWecIW0PtpNT1xsm2WEtaq75boGgfcGW8+HXAdVTy97a4H5+5Zwn2ZpRYWst
+ClN1W34bvm9akcPxUpDp/GZMd0ij7jeo112nXVKBEwQNO/HMgq2w6FyvnJoBQrk/
+CBybaHhL4bj5+DclI8YeDATI6DPOrPBZD2ospmAqxm8w+vUpd7/2Q0Upn5QfIAey
+uRCU1p7D7b28DFDvN8zB
+=ef5U
+-----END PGP SIGNATURE-----
 
-are available in the git repository at:
-
-  git://github.com/kvalo/ath.git for-linville
-
-for you to fetch changes up to 9de8f26f0038133bdfb8cf847936645dab949d88:
-
-  ath10k: fix mismatched wmi api call (2014-11-17 16:48:49 +0200)
-
-----------------------------------------------------------------
-Alexey Khoroshilov (1):
-      ath6kl: remove incorrect reset_resume handler
-
-Bartosz Markowski (1):
-      ath10k: fix pm resume after suspend
-
-Felix Fietkau (1):
-      ath10k: add SURVEY_INFO_IN_USE for current channel on survey
-
-Michal Kazior (20):
-      ath10k: don't drop control and null func Rx
-      ath10k: remove unused variable
-      ath10k: use ieee80211 defines for crypto param lengths
-      ath10k: fix rx buffer tracing
-      ath10k: deduplicate htt rx dma unmapping
-      ath10k: don't drop frames aggressively
-      ath10k: add extra sanity check when popping amsdu
-      ath10k: don't forget to replenish after fragmented Rx
-      ath10k: clear htt->rx_confused on load
-      ath10k: remove tsf argument from rx_desc tracing
-      ath10k: re-use trace class
-      ath10k: call correct function for frag threshold
-      ath10k: avoid possible deadlock with scan timeout
-      ath10k: change ce ring cleanup logic
-      ath10k: make warm reset a bit safer and faster
-      ath10k: split reset logic from power up
-      ath10k: don't reset chip on power_down
-      ath10k: fix possible bmi crash
-      ath10k: expose hw restart via debugfs
-      ath10k: speed up hw recovery
-
-Peter Oh (1):
-      ath10k: fix mismatched wmi api call
-
-Rajkumar Manoharan (3):
-      ath10k: handle ieee80211 header and payload tracing separately
-      ath10k: add modpram 'skip_otp' to ignore empty otp error during BMI
-      ath10k: advertise support for AP mode channel width changes
-
- drivers/net/wireless/ath/ath10k/ce.c     |    9 +-
- drivers/net/wireless/ath/ath10k/core.c   |   30 ++-
- drivers/net/wireless/ath/ath10k/core.h   |    5 +
- drivers/net/wireless/ath/ath10k/debug.c  |    7 +-
- drivers/net/wireless/ath/ath10k/htt_rx.c |   99 ++++----
- drivers/net/wireless/ath/ath10k/htt_tx.c |    4 +-
- drivers/net/wireless/ath/ath10k/mac.c    |   27 ++-
- drivers/net/wireless/ath/ath10k/mac.h    |    1 +
- drivers/net/wireless/ath/ath10k/pci.c    |  364 ++++++++++++++++--------------
- drivers/net/wireless/ath/ath10k/trace.h  |  109 +++++----
- drivers/net/wireless/ath/ath10k/txrx.c   |    3 +-
- drivers/net/wireless/ath/ath10k/wmi.c    |   16 +-
- drivers/net/wireless/ath/ath6kl/usb.c    |    9 -
- 13 files changed, 388 insertions(+), 295 deletions(-)
-
--- 
-Kalle Valo
+--Sig_/a9VZzheb11hdlXkyH8hfJby--
