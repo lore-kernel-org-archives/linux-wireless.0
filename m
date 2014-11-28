@@ -1,49 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.18]:52818 "EHLO mout.gmx.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:41373 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751949AbaKFHyk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Nov 2014 02:54:40 -0500
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: ath9k-devel@qca.qualcomm.com, sujith@msujith.org, nbd@openwrt.org,
-	patro@cs.wisc.edu, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH 14/21] ath9k: For AR9271 chipsets, set count = 0 for endless samples.
-Date: Thu,  6 Nov 2014 08:53:31 +0100
-Message-Id: <1415260418-14321-15-git-send-email-linux@rempel-privat.de> (sfid-20141106_085446_898399_5B34029F)
-In-Reply-To: <1415260418-14321-1-git-send-email-linux@rempel-privat.de>
-References: <1415260418-14321-1-git-send-email-linux@rempel-privat.de>
+	id S1751142AbaK1Non (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Nov 2014 08:44:43 -0500
+Message-ID: <1417182278.27562.6.camel@sipsolutions.net> (sfid-20141128_144446_468202_6ADE7474)
+Subject: Re: [PATCH v5 1/4] cfg80211: leave invalid channels on regdomain
+ change
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@suse.com>
+Date: Fri, 28 Nov 2014 14:44:38 +0100
+In-Reply-To: <1417074298-12254-1-git-send-email-arik@wizery.com> (sfid-20141127_084458_008782_038693EB)
+References: <1417074298-12254-1-git-send-email-arik@wizery.com>
+	 (sfid-20141127_084458_008782_038693EB)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-not sure why.
-Initially provided by Ashish Patro <patro@cs.wisc.edu>
+On Thu, 2014-11-27 at 09:44 +0200, Arik Nemtsov wrote:
+> When the regulatory settings change, some channels might become invalid.
+> Disconnect interfaces acting on these channels, after giving userspace
+> code a grace period to leave them.
+> 
+> This mode is currently opt-in, and not all interface operating modes are
+> supported for regulatory-enforcement checks. A wiphy that wishes to use
+> the new enforcement code must specify an appropriate regulatory flag,
+> and all its supported interface modes must be supported by the chekcing
+> code.
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/ar9002_phy.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+Applied, with some trivial changes.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_phy.c b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-index 9a2afa2..fc08162 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-@@ -643,9 +643,12 @@ static void ar9002_hw_spectral_scan_config(struct ath_hw *ah,
- 	 * and fix otherwise.
- 	 */
- 	count = param->count;
--	if (param->endless)
--		count = 0x80;
--	else if (count & 0x80)
-+	if (param->endless) {
-+		if (AR_SREV_9271(ah))
-+			count = 0;
-+		else
-+			count = 0x80;
-+	} else if (count & 0x80)
- 		count = 0x7f;
- 
- 	REG_RMW_FIELD(ah, AR_PHY_SPECTRAL_SCAN,
--- 
-1.9.1
+johannes
 
