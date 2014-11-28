@@ -1,70 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:17644 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752408AbaKJU32 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Nov 2014 15:29:28 -0500
-Message-ID: <54611FF5.40405@broadcom.com> (sfid-20141110_212944_091505_1482334E)
-Date: Mon, 10 Nov 2014 21:28:37 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Jes Sorensen <Jes.Sorensen@redhat.com>,
-	Chris Ruffin <cmruffin@gmail.com>
-CC: <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<devel@driverdev.osuosl.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	"Greg Kroah-Hartman" <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH] staging: rtl8723au: change typecast to match type returned
- by htons()
-References: <1415650025-16403-1-git-send-email-cmruffin@gmail.com> <wrfjlhnivmb9.fsf@redhat.com>
-In-Reply-To: <wrfjlhnivmb9.fsf@redhat.com>
-Content-Type: text/plain; charset="windows-1252"
+Received: from dedo.coelho.fi ([88.198.205.34]:47822 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751057AbaK1USB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Nov 2014 15:18:01 -0500
+Message-ID: <1417205873.5813.1.camel@coelho.fi> (sfid-20141128_211806_189558_CB672DB7)
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 28 Nov 2014 22:17:53 +0200
+In-Reply-To: <1417162740-4044-2-git-send-email-luca@coelho.fi>
+References: <1417162740-4044-1-git-send-email-luca@coelho.fi>
+	 <1417162740-4044-2-git-send-email-luca@coelho.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH iw v2 2/2] add WoWLAN net-detect trigger
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10-11-14 21:21, Jes Sorensen wrote:
-> Chris Ruffin <cmruffin@gmail.com> writes:
->> Using a u16 pointer typecast for a result from htons() results in the following warning from sparse:
->>
->> drivers/staging/rtl8723au/core/rtw_xmit.c:1279:36: warning: incorrect type in assignment (different base types)
->> drivers/staging/rtl8723au/core/rtw_xmit.c:1279:36:    expected unsigned short [unsigned] [short] [usertype] <noident>
->> drivers/staging/rtl8723au/core/rtw_xmit.c:1279:36:    got restricted __be16 [usertype] <noident>
->>
->> This patch fixes the issue by using an endian-specific typecast
->> that will always match the type returned by htons().
->>
->> Signed-off-by: Chris Ruffin <cmruffin@gmail.com>
->> ---
->>  drivers/staging/rtl8723au/core/rtw_xmit.c |    2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
+On Fri, 2014-11-28 at 10:19 +0200, Luca Coelho wrote:
+> From: Luciano Coelho <luciano.coelho@intel.com>
 > 
-> Looks fine to me
+> Adds a netdetect option to the wowlan triggers that allows the user to
+> request network detection to be started when the device goes to
+> suspend mode.
 > 
-> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+> Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+> ---
 > 
->>
->> diff --git a/drivers/staging/rtl8723au/core/rtw_xmit.c b/drivers/staging/rtl8723au/core/rtw_xmit.c
->> index a0f7e27..44ef55c 100644
->> --- a/drivers/staging/rtl8723au/core/rtw_xmit.c
->> +++ b/drivers/staging/rtl8723au/core/rtw_xmit.c
->> @@ -1276,7 +1276,7 @@ s32 rtw_put_snap23a(u8 *data, u16 h_proto)
->>  	snap->oui[0] = oui[0];
->>  	snap->oui[1] = oui[1];
->>  	snap->oui[2] = oui[2];
->> -	*(u16 *)(data + SNAP_SIZE) = htons(h_proto);
->> +	*(__be16 *)(data + SNAP_SIZE) = htons(h_proto);
+> In v2:
+> 
+>    * renamed the option in the code from "match" to "matches" (the
+>      help already used the plural form).
+> ---
+>  event.c  |  30 ++++++++++-
+>  info.c   |   3 ++
+>  wowlan.c | 177 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+>  3 files changed, 207 insertions(+), 3 deletions(-)
+> 
+> diff --git a/event.c b/event.c
+> index 25f8099..99f9f15 100644
+> --- a/event.c
+> +++ b/event.c
+> @@ -200,7 +200,8 @@ static void parse_mic_failure(struct nlattr **attrs)
+>  
+>  static void parse_wowlan_wake_event(struct nlattr **attrs)
+>  {
+> -	struct nlattr *tb[NUM_NL80211_WOWLAN_TRIG];
+> +	struct nlattr *tb[NUM_NL80211_WOWLAN_TRIG],
+> +		*tb_match[NUM_NL80211_ATTR];
+>  
+>  	printf("WoWLAN wakeup\n");
+>  	if (!attrs[NL80211_ATTR_WOWLAN_TRIGGERS]) {
+> @@ -227,6 +228,33 @@ static void parse_wowlan_wake_event(struct nlattr **attrs)
+>  		printf("\t* 4-way handshake\n");
+>  	if (tb[NL80211_WOWLAN_TRIG_RFKILL_RELEASE])
+>  		printf("\t* RF-kill released\n");
+> +	if (tb[NL80211_WOWLAN_TRIG_NET_DETECT_RESULTS]) {
+> +		struct nlattr *match, *freq;
+> +		int rem_nst, rem_nst2;
+> +
+> +		printf("\t* network detected\n");
+> +		nla_for_each_nested(match,
+> +				    tb[NL80211_WOWLAN_TRIG_NET_DETECT_RESULTS],
+> +				    rem_nst) {
+> +			nla_parse(tb_match, NUM_NL80211_ATTR, nla_data(match),
+> +				  nla_len(match),
+> +				  NULL);
+> +			printf("\t\tSSID: \"");
+> +			/* printf("len %d %p\n", nla_len(tb_match[NL80211_ATTR_SSID]), */
+> +			/*        nla_data(tb_match[NL80211_ATTR_SSID])); */
 
-Could (data + SNAP_SIZE) be on a unaligned address?
+Argh, this shouldn't be here... I'll respin.
 
-Regards,
-Arend
-
->>  	return SNAP_SIZE + sizeof(u16);
->>  }
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-> 
+--
+Luca.
 
