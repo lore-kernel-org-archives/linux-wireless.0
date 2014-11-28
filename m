@@ -1,46 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:57173 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751097AbaKKQLc (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:26341 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750957AbaK1HC4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Nov 2014 11:11:32 -0500
-Received: by mail-wi0-f180.google.com with SMTP id hi2so2106545wib.13
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Nov 2014 08:11:31 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>,
-	Eliad Peller <eliadx.peller@intel.com>
-Subject: [PATCH] mac80211: don't allow 40MHz tx rates in case of 20MHz chandef
-Date: Tue, 11 Nov 2014 18:11:22 +0200
-Message-Id: <1415722282-29309-1-git-send-email-egrumbach@gmail.com> (sfid-20141111_171135_471270_7DB91DD2)
+	Fri, 28 Nov 2014 02:02:56 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH 1/3] ath10k: embed supported chip ids in hw_params
+References: <1416838646-18801-1-git-send-email-michal.kazior@tieto.com>
+	<87vbm2whoz.fsf@kamboji.qca.qualcomm.com>
+	<CA+BoTQ=56six2CEQ6Rzr7yMEM7UVNQ3RX9UpdgmxMEoG0+kDAA@mail.gmail.com>
+	<87ppc9umm6.fsf@kamboji.qca.qualcomm.com>
+	<CA+BoTQ=dt9fMHpCYk6ofX5W4=Ynn7C4t+vCoHHuZM1oF3Ngdtw@mail.gmail.com>
+Date: Fri, 28 Nov 2014 09:02:50 +0200
+In-Reply-To: <CA+BoTQ=dt9fMHpCYk6ofX5W4=Ynn7C4t+vCoHHuZM1oF3Ngdtw@mail.gmail.com>
+	(Michal Kazior's message of "Thu, 27 Nov 2014 08:45:38 +0100")
+Message-ID: <87h9xju7s5.fsf@kamboji.qca.qualcomm.com> (sfid-20141128_080259_238208_7846BCFA)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-When 20MHz chandef is used, 40MHz rates shouldn't be
-used (by the rate-control algorithm), even if the sta
-ht capabilities indicate support for it.
+> On 27 November 2014 at 08:30, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>> Michal Kazior <michal.kazior@tieto.com> writes:
+>>
+>>> 2. Have a dedicatd pci-specific structure:
+>>>
+>>>  struct ath10k_pci_supported_chip {
+>>>    u16 dev_id;
+>>>    u32 chip_id;
+>>>  };
+>>>
+>>>  struct ath10k_pci_supported_chip ath10k_pci_supported_chips[] = {
+>>>    { QCA988X_2_0_DEVICE_ID, QCA988X_HW_2_0_CHIP_ID_REV },
+>>>    // ...
+>>>  };
+>>>
+>>> Probably the simplest and has least impact.
+>>
+>> Another idea which is a variation of this:
+>>
+>> In ath10k_core_register() we iterate through ath10k_hw_params_list and
+>> make sure that the chip id is supported and if not, bail out. If the
+>> chip id is found from the array continue the registration process like
+>> in this patch. Basically this would be a whitelist check.
+>
+> This won't work because chip ids can overlap between different
+> hardware designs and you'd get false positives.
 
-Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
-Singed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- net/mac80211/vht.c | 2 ++
- 1 file changed, 2 insertions(+)
+Ah, let's forget that then.
 
-diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
-index 671ce0d..bc9e8fc 100644
---- a/net/mac80211/vht.c
-+++ b/net/mac80211/vht.c
-@@ -287,6 +287,8 @@ enum ieee80211_sta_rx_bandwidth ieee80211_sta_cur_vht_bw(struct sta_info *sta)
- 		/* fall through */
- 	case NL80211_CHAN_WIDTH_20_NOHT:
- 	case NL80211_CHAN_WIDTH_20:
-+		bw = IEEE80211_STA_RX_BW_20;
-+		break;
- 	case NL80211_CHAN_WIDTH_40:
- 		bw = sta->sta.ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40 ?
- 				IEEE80211_STA_RX_BW_40 : IEEE80211_STA_RX_BW_20;
 -- 
-1.9.1
-
+Kalle Valo
