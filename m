@@ -1,32 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:51090 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751103AbaKTOuA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Nov 2014 09:50:00 -0500
-Message-ID: <546DFF95.6030804@openwrt.org> (sfid-20141120_155005_406493_E2DD0D1D)
-Date: Thu, 20 Nov 2014 15:49:57 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
-	linux-wireless@vger.kernel.org
-CC: thomas@net.t-labs.tu-berlin.de, adrian@freebsd.org
-Subject: Re: [RFC 2/3] ath9k: add TX power per-rate per-chain tables
-References: <1416490300-6451-1-git-send-email-lorenzo.bianconi83@gmail.com> <1416490300-6451-3-git-send-email-lorenzo.bianconi83@gmail.com>
-In-Reply-To: <1416490300-6451-3-git-send-email-lorenzo.bianconi83@gmail.com>
-Content-Type: text/plain; charset=windows-1252
+Received: from dedo.coelho.fi ([88.198.205.34]:47834 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751117AbaK1VGK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Nov 2014 16:06:10 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 28 Nov 2014 23:05:53 +0200
+Message-Id: <1417208756-14839-1-git-send-email-luca@coelho.fi> (sfid-20141128_220614_548432_2BCD1C79)
+Subject: [PATCH iw v3 0/3] add WoWLAN net-detect trigger
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2014-11-20 14:31, Lorenzo Bianconi wrote:
-> Add TX power per-rate per-chain tables for different MIMO modes (e.g STBC) in
-> order to cap the maximum TX power value per-rate in the TX descriptor path.
-> Cap TX power for self generated frames (ACK, RTS/CTS).
-> Currently TPC is supported just by AR9003 based chips
-> 
-> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-I think you should make the ah->txpower array one-dimensional and store
-it for the current chainmask only - this will simplify the code.
-The chainmask cannot be changed while the interface is up, so there's no
-need to make this dynamically switchable.
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-- Felix
+A third spin.  This one includes parsing of some configuration
+information related to net-detect (patch 3/3).  I haven't send the
+nl80211 counterpart yet, but it's backwards compatible with the
+existing nl80211 code, so it doesn't matter if it's added in iw first.
+
+In v3:
+   * removed silly commented out SSID printing stuff
+   * added new patch to parse get_wowlan information
+
+In v2:
+   * renamed the option in the code from "match" to "matches" (the
+     help already used the plural form).
+
+--
+Luca.
+
+Luciano Coelho (3):
+  update nl80211.h
+  add WoWLAN net-detect trigger
+  parse net detect wowlan configuration information
+
+ event.c   |  28 +++++++-
+ info.c    |   3 +
+ nl80211.h | 119 ++++++++++++++++++++++++++++++++--
+ wowlan.c  | 214 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ 4 files changed, 357 insertions(+), 7 deletions(-)
+
+-- 
+2.1.3
+
