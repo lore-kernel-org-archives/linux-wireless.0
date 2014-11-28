@@ -1,57 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:61325 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932271AbaKSVNU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Nov 2014 16:13:20 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH for-3.18] brcmfmac: don't include linux/unaligned/access_ok.h
-Date: Wed, 19 Nov 2014 22:13:10 +0100
-Message-ID: <1416431594-13993-1-git-send-email-arend@broadcom.com> (sfid-20141119_221327_526226_ED71F69C)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from dedo.coelho.fi ([88.198.205.34]:47312 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750919AbaK1GgR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Nov 2014 01:36:17 -0500
+Message-ID: <1417156566.2144.46.camel@coelho.fi> (sfid-20141128_073621_445448_97899A8F)
+From: Luca Coelho <luca@coelho.fi>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Date: Fri, 28 Nov 2014 08:36:06 +0200
+In-Reply-To: <547797A2.9060406@broadcom.com>
+References: <1417122413-2935-1-git-send-email-luca@coelho.fi>
+	 <1417122413-2935-2-git-send-email-luca@coelho.fi>
+	 <547797A2.9060406@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH iw 2/2] add WoWLAN net-detect trigger
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Thu, 2014-11-27 at 22:29 +0100, Arend van Spriel wrote:
+> On 11/27/14 22:06, Luca Coelho wrote:
+> > From: Luciano Coelho<luciano.coelho@intel.com>
+> >
+> > Adds a netdetect option to the wowlan triggers that allows the user to
+> > request network detection to be started when the device goes to
+> > suspend mode.
+> 
+> So it can start heating up my backpack when I get home. Nice ;-)
 
-This is a specific implementation, <asm/unaligned.h> is the
-multiplexer that has the arch-specific knowledge of which
-of the implementations needs to be used, so include that.
+Yeah, that's the main benefit of this feature, especially if you
+configure the scan interval properly. :D
 
-This issue was revealed by kbuild testing
-when <asm/unaligned.h> was added in <linux/ieee80211.h>
-resulting in redefinition of get_unaligned_be16 (and
-probably others).
-
-Cc: stable@vger.kernel.org # v3.17
-Reported-by: Fengguang Wu <fengguang.wu@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/pcie.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
-index 8c0632e..16fef33 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
-@@ -19,10 +19,10 @@
- #include <linux/pci.h>
- #include <linux/vmalloc.h>
- #include <linux/delay.h>
--#include <linux/unaligned/access_ok.h>
- #include <linux/interrupt.h>
- #include <linux/bcma/bcma.h>
- #include <linux/sched.h>
-+#include <asm/unaligned.h>
- 
- #include <soc.h>
- #include <chipcommon.h>
--- 
-1.9.1
+--
+Luca.
 
