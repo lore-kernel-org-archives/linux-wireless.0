@@ -1,53 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay1.mentorg.com ([192.94.38.131]:32927 "EHLO
-	relay1.mentorg.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751435AbaKGL4j convert rfc822-to-8bit (ORCPT
+Received: from mout.kundenserver.de ([212.227.17.24]:60094 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750870AbaK1KXx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Nov 2014 06:56:39 -0500
-From: "Sharma, Sanjeev" <Sanjeev_Sharma@mentor.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-CC: "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
-	"Jes.Sorensen@redhat.com" <Jes.Sorensen@redhat.com>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH] staging:rtl8723au: core: Fix error reported by
- checkpatch.
-Date: Fri, 7 Nov 2014 11:56:35 +0000
-Message-ID: <FDC088D3B5555644AE135ED28A7ABDE950E8B8F8@EU-MBX-02.mgc.mentorg.com> (sfid-20141107_125711_127748_0B5E360C)
-References: <wrfjy4rxzk5b.fsf@redhat.com>
- <1415254573-3451-1-git-send-email-sanjeev_sharma@mentor.com>
- <20141106154120.GB19605@kroah.com>
-In-Reply-To: <20141106154120.GB19605@kroah.com>
-Content-Type: text/plain; charset="us-ascii"
+	Fri, 28 Nov 2014 05:23:53 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath10k@lists.infradead.org, devicetree@vger.kernel.org,
+	linux-wireless@vger.kernel.org, toshik@chromium.org
+Subject: Re: [PATCH v4 1/2] dt: bindings: add ath10k wireless device
+Date: Fri, 28 Nov 2014 11:23:08 +0100
+Message-ID: <5247714.HacITJUipJ@wuerfel> (sfid-20141128_112358_615379_5E9C98F0)
+In-Reply-To: <87fvd3sl9c.fsf@kamboji.qca.qualcomm.com>
+References: <20141127120727.17546.61202.stgit@potku.adurom.net> <3202372.2AaH3c4qv1@wuerfel> <87fvd3sl9c.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
------Original Message-----
-From: Greg KH [mailto:gregkh@linuxfoundation.org] 
-Sent: Thursday, November 06, 2014 9:11 PM
-To: Sharma, Sanjeev
-Cc: Larry.Finger@lwfinger.net; Jes.Sorensen@redhat.com; devel@driverdev.osuosl.org; linux-wireless@vger.kernel.org; linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] staging:rtl8723au: core: Fix error reported by checkpatch.
-
-Please specify the "error" in the subject in some way.
-
-On Thu, Nov 06, 2014 at 11:46:13AM +0530, Sanjeev Sharma wrote:
-> This is a patch to the rtw_cmd.c file that fixes following error.
+On Friday 28 November 2014 11:54:39 Kalle Valo wrote:
 > 
-> ERROR: spaces required around that '>' (ctx:WxV)
-> ERROR: that open brace { should be on the previous line
+> Right now ath10k does not support that, but in the future we might want
+> to add mac address as well. We need to do some testing with the firmware
+> to make sure that we can safely change the "main" address from ath10k.
+
+This is from Documentation/devicetree/bindings/net/ethernet.txt:
+
+- local-mac-address: array of 6 bytes, specifies the MAC address that was
+  assigned to the network device;
+- mac-address: array of 6 bytes, specifies the MAC address that was last used by
+  the boot program; should be used in cases where the MAC address assigned to
+  the device by the boot program is different from the "local-mac-address"
+  property;
+
+If the address is fixed, you might still be able to use the local-mac-address
+property to communicate the main address. Normally you only have to pass
+the mac address in DT if the device itself doesn't know the address. Do you
+know where the main address is stored? If it's always known to the card,
+we don't need to pass it, and if the card doesn't know it, I suspect it would
+be safe to change it.
+
+> And because of Virtual AP (mBSSID) feature we actually would need to
+> provide multiple addresses, not just one. Maybe with addr_mask like
+> struct wiphy has?
 > 
-> Signed-off-by: Sanjeev Sharma <Sanjeev_Sharma@mentor.com>
-> ---
->  drivers/staging/rtl8723au/core/rtw_cmd.c | 83 
-> +++++++++++++++-----------------
->  1 file changed, 40 insertions(+), 43 deletions(-)
+>  * @perm_addr: permanent MAC address of this device
+>  * @addr_mask: If the device supports multiple MAC addresses by masking,
+>  *      set this to a mask with variable bits set to 1, e.g. if the last
+>  *      four bits are variable then set it to 00-00-00-00-00-0f. The actual
+>  *      variable bits shall be determined by the interfaces added, with
+>  *      interfaces not matching the mask being rejected to be brought up.
+> 
+>         /* permanent MAC address(es) */
+>         u8 perm_addr[ETH_ALEN];
+>         u8 addr_mask[ETH_ALEN];
 
-This does two different things, please make it different patches.
+We don't have a common binding for this yet, I think drivers that do this
+at the moment just know how many addresses they are allowed to take.
 
-For individual Error, is Separate patch needed. If Error has been mentioned in description. then it should be OK IMO. 
+If the mask is generally considered useful, we could probably add that to
+the binding though.
 
-And you sent 2 patches, with no hint as to which one comes before which.
-Please resend all of them, correctly numbered in a series, so that I have a chance to get the order correct when applying them.
+	Arnd
