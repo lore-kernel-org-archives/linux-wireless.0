@@ -1,51 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f50.google.com ([74.125.82.50]:57092 "EHLO
-	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751098AbaKKFih (ORCPT
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:52207 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750895AbaK1Gy5 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Nov 2014 00:38:37 -0500
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Liad Kaufman <liad.kaufman@intel.com>, <stable@vger.kernel.org>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 2/2] iwlwifi: pcie: fix prph dump length
-Date: Tue, 11 Nov 2014 07:38:29 +0200
-Message-Id: <1415684309-18816-2-git-send-email-egrumbach@gmail.com> (sfid-20141111_063841_373372_8CD8206A)
-In-Reply-To: <CANUX_P2Q31DLtiZJ-GNcnME3LDXE2vWLN61QqNOxsjqxgfb4Gg@mail.gmail.com>
-References: <CANUX_P2Q31DLtiZJ-GNcnME3LDXE2vWLN61QqNOxsjqxgfb4Gg@mail.gmail.com>
+	Fri, 28 Nov 2014 01:54:57 -0500
+Received: by mail-wi0-f173.google.com with SMTP id r20so17598863wiv.6
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Nov 2014 22:54:56 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1417091446-16308-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1417091446-16308-1-git-send-email-emmanuel.grumbach@intel.com>
+Date: Fri, 28 Nov 2014 07:54:56 +0100
+Message-ID: <CA+BoTQmRPVEqCe=tPGb5gcfnBQ=h8kDOOAXMKgbUktBabTvLXw@mail.gmail.com> (sfid-20141128_075505_972449_FBA60A41)
+Subject: Re: [RFC] mac80211: take reserved vif into account when calculating
+ the min_def
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Liad Kaufman <liad.kaufman@intel.com>
+On 27 November 2014 at 13:30, Emmanuel Grumbach
+<emmanuel.grumbach@intel.com> wrote:
+> When we want to calculate the minimal bandwidth needed for
+> a channel context, we need to take into account vifs that
+> have reserved the channel context.
+> I hit an issue with iwlwifi and channel switch as a client.
+>
+> We would allocate a virgin channel context and reserve it.
+> At that stage, the min_def was 20MHz.
+> Then we would use it after CSA, and start transmitting, but
+> the channel context was still 20MHz even if the GO was in
+> 40MHz. This made the firmware unhappy.
+>
+> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> ---
+>  net/mac80211/chan.c | 6 +++++-
+>  1 file changed, 5 insertions(+), 1 deletion(-)
+>
+> diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+> index 4c74e8d..769e0c5 100644
+> --- a/net/mac80211/chan.c
+> +++ b/net/mac80211/chan.c
+> @@ -256,7 +256,8 @@ ieee80211_get_chanctx_max_required_bw(struct ieee80211_local *local,
+>                 if (!ieee80211_sdata_running(sdata))
+>                         continue;
+>
+> -               if (rcu_access_pointer(sdata->vif.chanctx_conf) != conf)
+> +               if (rcu_access_pointer(sdata->vif.chanctx_conf) != conf &&
+> +                   &sdata->reserved_chanctx->conf != conf)
+>                         continue;
+>
+>                 switch (vif->type) {
+> @@ -271,6 +272,7 @@ ieee80211_get_chanctx_max_required_bw(struct ieee80211_local *local,
+>                 case NL80211_IFTYPE_WDS:
+>                 case NL80211_IFTYPE_MESH_POINT:
+>                         width = vif->bss_conf.chandef.width;
+> +                       width = max(width, sdata->reserved_chandef.width);
 
-The length counting previously done had an error in it, causing
-the length down the data dumping function to be shorter than it
-should be, causing the end of the data to get truncated off and
-lost.
+Not really sure why this is needed in this patch?
 
-Cc: <stable@vger.kernel.org> [3.17+]
-Fixes: 67c65f2cf710 ("iwlwifi: dump periphery registers to fw-error-dump")
-Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/pcie/trans.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
-index 160c3eb..dd2f3f8 100644
---- a/drivers/net/wireless/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
-@@ -1894,8 +1894,7 @@ static u32 iwl_trans_pcie_dump_prph(struct iwl_trans *trans,
- 		int reg;
- 		__le32 *val;
- 
--		prph_len += sizeof(*data) + sizeof(*prph) +
--			num_bytes_in_chunk;
-+		prph_len += sizeof(**data) + sizeof(*prph) + num_bytes_in_chunk;
- 
- 		(*data)->type = cpu_to_le32(IWL_FW_ERROR_DUMP_PRPH);
- 		(*data)->len = cpu_to_le32(sizeof(*prph) +
--- 
-1.9.1
+>                         break;
+>                 case NL80211_IFTYPE_UNSPECIFIED:
+>                 case NUM_NL80211_IFTYPES:
+> @@ -899,6 +901,8 @@ int ieee80211_vif_reserve_chanctx(struct ieee80211_sub_if_data *sdata,
+>         sdata->reserved_radar_required = radar_required;
+>         sdata->reserved_ready = false;
+>
+> +       ieee80211_recalc_chanctx_min_def(local, new_ctx);
+> +
 
+Hmm.. Wouldn't it make sense to recalc this in
+ieee80211_vif_unreserve_ chanctx() as well?
+
+
+Michał
