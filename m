@@ -1,53 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:17381 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750841AbaKYI6p (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:61261 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751846AbaK1OjD convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Nov 2014 03:58:45 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 3/3] ath10k: fix station count enforcement
-References: <1416834909-7130-1-git-send-email-michal.kazior@tieto.com>
-	<1416834909-7130-3-git-send-email-michal.kazior@tieto.com>
-	<87d28b3dzg.fsf@kamboji.qca.qualcomm.com>
-	<CA+BoTQmf6+U20083pHxMdDPMDZf=MNoup+CxBTn=azLZupQYPw@mail.gmail.com>
-Date: Tue, 25 Nov 2014 10:58:39 +0200
-In-Reply-To: <CA+BoTQmf6+U20083pHxMdDPMDZf=MNoup+CxBTn=azLZupQYPw@mail.gmail.com>
-	(Michal Kazior's message of "Tue, 25 Nov 2014 09:38:41 +0100")
-Message-ID: <87ioi31wsg.fsf@kamboji.qca.qualcomm.com> (sfid-20141125_095848_640687_92E9B383)
+	Fri, 28 Nov 2014 09:39:03 -0500
+Received: by mail-wi0-f172.google.com with SMTP id n3so18776554wiv.5
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Nov 2014 06:39:01 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1417079481-22255-8-git-send-email-michal.kazior@tieto.com>
+References: <1417079481-22255-1-git-send-email-michal.kazior@tieto.com>
+	<1417079481-22255-8-git-send-email-michal.kazior@tieto.com>
+Date: Fri, 28 Nov 2014 15:39:01 +0100
+Message-ID: <CA+BoTQn=g8-=FEEoW7Ux+p6s=EBy_3rwCP3qXWk_8ijR6jXY+Q@mail.gmail.com> (sfid-20141128_153907_825870_5B9F6D66)
+Subject: Re: [PATCH v2 7/7] ath10k: implement wmi-tlv backend
+From: Michal Kazior <michal.kazior@tieto.com>
+To: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
-
->>>  int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode)
->>>  {
->>>       int status;
->>> @@ -939,6 +950,8 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode)
->>>       else
->>>               ar->free_vdev_map = (1LL << TARGET_NUM_VDEVS) - 1;
->>>
->>> +     ath10k_core_init_max_sta_count(ar);
->>
->> I don't see the need to call this during every firmware start as these
->> are not changed afterwards. I think it would be better to call this once
->> just after ath10k_core_fetch_firmware_files() is called.
+On 27 November 2014 at 10:11, Michal Kazior <michal.kazior@tieto.com> wrote:
+> Latest main firmware branch introduced a new WMI
+> ABI called wmi-tlv. It is not a tlv strictly
+> speaking but something that resembles it because
+> it is ordered and may have duplicate id entries.
 >
-> Hmm.. It makes sense but now that I think about it the max number of
-> peers should actually depend on WMI_SERVICE_IRAM_TIDS which is known
-> after booting firmware. However since only 10.x was released with the
-> service enabled we used fw_features. So..
+> This prepares ath10k to support new hw.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+[...]
+> @@ -215,6 +254,42 @@ static inline char *wmi_service_name(int service_id)
+>         SVCSTR(WMI_SERVICE_BURST);
+>         SVCSTR(WMI_SERVICE_SMART_ANTENNA_SW_SUPPORT);
+>         SVCSTR(WMI_SERVICE_SMART_ANTENNA_HW_SUPPORT);
+> +       SVCSTR(WMI_SERVICE_ROAM_SCAN_OFFLOAD);
+> +       SVCSTR(WMI_SERVICE_AP_PS_DETECT_OUT_OF_SYNC);
+> +       SVCSTR(WMI_SERVICE_EARLY_RX);
+[...]
+> +       SVCSTR(WMI_SERVICE_RX_FULL_REORDER);
+> +       SVCSTR(WMI_SERVICE_DHCP_OFFLOAD);
 
-I think this is good enough for now. We can always improve this later.
+I've added 3 new service enums in v2:
+WMI_SERVICE_STA_RX_IPA_OFFLOAD_SUPPORT, WMI_SERVICE_MDNS_OFFLOAD,
+WMI_SERVICE_SAP_AUTH_OFFLOAD but apparently I forgot to add SVCSTR()
+for that..
 
-> yeah. I can move the function call if you want though.
 
-Please do that. To keep things simple I would like to have the absolute
-minimum in start() calls.
-
--- 
-Kalle Valo
+Michał
