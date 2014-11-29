@@ -1,145 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:48071 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751083AbaK0Hy3 (ORCPT
+Received: from homie.mail.dreamhost.com ([208.97.132.208]:33776 "EHLO
+	homiemail-a62.g.dreamhost.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751335AbaK2QbH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Nov 2014 02:54:29 -0500
-Received: by mail-wi0-f178.google.com with SMTP id hi2so7380365wib.11
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Nov 2014 23:54:28 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] ath10k: add pointer constness to traces
-Date: Thu, 27 Nov 2014 08:42:11 +0100
-Message-Id: <1417074131-18460-1-git-send-email-michal.kazior@tieto.com> (sfid-20141127_085433_380924_D0E27FB7)
+	Sat, 29 Nov 2014 11:31:07 -0500
+Date: Sat, 29 Nov 2014 17:31:05 +0100
+From: Jurriaan <jurriaan@onderneming10.net>
+To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ilw@linux.intel.com
+Subject: iwlwifi intel 6300 slow
+Message-ID: <20141129163104.GA23040@qnap.onderneming10.net> (sfid-20141129_173111_400699_8C155F60)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Traces shouldn't modified passed data. This will
-make it possible to pass const arguments to
-traces.
+I had a Lenovo W700 laptop with Intel 5300 wireless card, running Debian
+Testing. Speed to and from my NAS via a Western Digital N900 router was
+about 16 megabyte/s - limited by the NAS.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/trace.h | 31 +++++++++++++++++--------------
- 1 file changed, 17 insertions(+), 14 deletions(-)
+After updating to a W701 with an Intel 6300 wireless card, speed is down
+to 1-2 megabyte/s. Replacing the card is not really an option, Lenovo
+has blessed this model with a whitelist in the BIOS.
 
-diff --git a/drivers/net/wireless/ath/ath10k/trace.h b/drivers/net/wireless/ath/ath10k/trace.h
-index ceea566..b289378 100644
---- a/drivers/net/wireless/ath/ath10k/trace.h
-+++ b/drivers/net/wireless/ath/ath10k/trace.h
-@@ -21,9 +21,11 @@
- #include "core.h"
- 
- #if !defined(_TRACE_H_)
--static inline u32 ath10k_frm_hdr_len(void *buf)
-+static inline u32 ath10k_frm_hdr_len(const void *buf)
- {
--	return ieee80211_hdrlen(((struct ieee80211_hdr *)buf)->frame_control);
-+	const struct ieee80211_hdr *hdr = buf;
-+
-+	return ieee80211_hdrlen(hdr->frame_control);
- }
- #endif
- 
-@@ -145,7 +147,8 @@ TRACE_EVENT(ath10k_log_dbg_dump,
- );
- 
- TRACE_EVENT(ath10k_wmi_cmd,
--	TP_PROTO(struct ath10k *ar, int id, void *buf, size_t buf_len, int ret),
-+	TP_PROTO(struct ath10k *ar, int id, const void *buf, size_t buf_len,
-+		 int ret),
- 
- 	TP_ARGS(ar, id, buf, buf_len, ret),
- 
-@@ -178,7 +181,7 @@ TRACE_EVENT(ath10k_wmi_cmd,
- );
- 
- TRACE_EVENT(ath10k_wmi_event,
--	TP_PROTO(struct ath10k *ar, int id, void *buf, size_t buf_len),
-+	TP_PROTO(struct ath10k *ar, int id, const void *buf, size_t buf_len),
- 
- 	TP_ARGS(ar, id, buf, buf_len),
- 
-@@ -208,7 +211,7 @@ TRACE_EVENT(ath10k_wmi_event,
- );
- 
- TRACE_EVENT(ath10k_htt_stats,
--	TP_PROTO(struct ath10k *ar, void *buf, size_t buf_len),
-+	TP_PROTO(struct ath10k *ar, const void *buf, size_t buf_len),
- 
- 	TP_ARGS(ar, buf, buf_len),
- 
-@@ -235,7 +238,7 @@ TRACE_EVENT(ath10k_htt_stats,
- );
- 
- TRACE_EVENT(ath10k_wmi_dbglog,
--	TP_PROTO(struct ath10k *ar, void *buf, size_t buf_len),
-+	TP_PROTO(struct ath10k *ar, const void *buf, size_t buf_len),
- 
- 	TP_ARGS(ar, buf, buf_len),
- 
-@@ -262,7 +265,7 @@ TRACE_EVENT(ath10k_wmi_dbglog,
- );
- 
- TRACE_EVENT(ath10k_htt_pktlog,
--	    TP_PROTO(struct ath10k *ar, void *buf, u16 buf_len),
-+	    TP_PROTO(struct ath10k *ar, const void *buf, u16 buf_len),
- 
- 	TP_ARGS(ar, buf, buf_len),
- 
-@@ -349,7 +352,7 @@ TRACE_EVENT(ath10k_txrx_tx_unref,
- );
- 
- DECLARE_EVENT_CLASS(ath10k_hdr_event,
--		    TP_PROTO(struct ath10k *ar, void *data, size_t len),
-+		    TP_PROTO(struct ath10k *ar, const void *data, size_t len),
- 
- 	TP_ARGS(ar, data, len),
- 
-@@ -376,7 +379,7 @@ DECLARE_EVENT_CLASS(ath10k_hdr_event,
- );
- 
- DECLARE_EVENT_CLASS(ath10k_payload_event,
--		    TP_PROTO(struct ath10k *ar, void *data, size_t len),
-+		    TP_PROTO(struct ath10k *ar, const void *data, size_t len),
- 
- 	TP_ARGS(ar, data, len),
- 
-@@ -404,27 +407,27 @@ DECLARE_EVENT_CLASS(ath10k_payload_event,
- );
- 
- DEFINE_EVENT(ath10k_hdr_event, ath10k_tx_hdr,
--	     TP_PROTO(struct ath10k *ar, void *data, size_t len),
-+	     TP_PROTO(struct ath10k *ar, const void *data, size_t len),
- 	     TP_ARGS(ar, data, len)
- );
- 
- DEFINE_EVENT(ath10k_payload_event, ath10k_tx_payload,
--	     TP_PROTO(struct ath10k *ar, void *data, size_t len),
-+	     TP_PROTO(struct ath10k *ar, const void *data, size_t len),
- 	     TP_ARGS(ar, data, len)
- );
- 
- DEFINE_EVENT(ath10k_hdr_event, ath10k_rx_hdr,
--	     TP_PROTO(struct ath10k *ar, void *data, size_t len),
-+	     TP_PROTO(struct ath10k *ar, const void *data, size_t len),
- 	     TP_ARGS(ar, data, len)
- );
- 
- DEFINE_EVENT(ath10k_payload_event, ath10k_rx_payload,
--	     TP_PROTO(struct ath10k *ar, void *data, size_t len),
-+	     TP_PROTO(struct ath10k *ar, const void *data, size_t len),
- 	     TP_ARGS(ar, data, len)
- );
- 
- TRACE_EVENT(ath10k_htt_rx_desc,
--	    TP_PROTO(struct ath10k *ar, void *data, size_t len),
-+	    TP_PROTO(struct ath10k *ar, const void *data, size_t len),
- 
- 	TP_ARGS(ar, data, len),
- 
--- 
-1.8.5.3
+I tried booting 3.18-rc6, but that made no difference against 3.16.
 
+There's a lot of complaints about this card on the net, but it seems
+most are about poor performance when roaming or with a weak signal. 
+I've tries the various 11n_disable=x swcrypto=x options, I've tried
+fiddling with the router (20/40 MHz, N only or mixed etc) but so far,
+the speed remains abysmal.
+
+1)
+Can anybody tell me what logs/debugging I can post to help clear up this
+issue?
+
+2)
+If anybody has this card running great with another router, I'd be very
+interested to learn which one!
+
+Thanks,
+Jurriaan
+
+wlan0     IEEE 802.11abgn  ESSID:"onderneming10_5"
+          Mode:Managed  Frequency:5.2 GHz  Access Point: 00:90:A9:0E:D5:58
+          Bit Rate=270 Mb/s   Tx-Power=15 dBm
+          Retry short limit:7   RTS thr:off   Fragment thr:off
+          Encryption key:off
+          Power Management:off
+          Link Quality=52/70  Signal level=-58 dBm
+          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+          Tx excessive retries:0  Invalid misc:101   Missed beacon:0
+
+i03:00.0 Network controller: Intel Corporation Centrino Ultimate-N 6300 (rev 35)
+	Subsystem: Intel Corporation Centrino Ultimate-N 6300 3x3 AGN
+        Flags: bus master, fast devsel, latency 0, IRQ 56
+        Memory at f6000000 (64-bit, non-prefetchable) [size=8K]
+        Capabilities: [c8] Power Management version 3
+        Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
+        Capabilities: [e0] Express Endpoint, MSI 00
+        Capabilities: [100] Advanced Error Reporting
+        Capabilities: [140] Device Serial Number 00-24-d7-ff-ff-61-65-8c
+        Kernel driver in use: iwlwifi
+
+iwlwifi 0000:03:00.0: CONFIG_IWLWIFI_DEBUG disabled
+iwlwifi 0000:03:00.0: CONFIG_IWLWIFI_DEBUGFS disabled
+iwlwifi 0000:03:00.0: CONFIG_IWLWIFI_DEVICE_TRACING disabled
+iwlwifi 0000:03:00.0: Detected Intel(R) Centrino(R) Ultimate-N 6300 AGN, REV=0x74
+iwlwifi 0000:03:00.0: L1 Enabled; Disabling L0S
