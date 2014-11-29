@@ -1,58 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:64233 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964989AbaKNI5J (ORCPT
+Received: from mail-ie0-f169.google.com ([209.85.223.169]:62414 "EHLO
+	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751360AbaK2JEE convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Nov 2014 03:57:09 -0500
-Message-ID: <5465C3E0.3070402@broadcom.com> (sfid-20141114_095729_507014_49ACD2DE)
-Date: Fri, 14 Nov 2014 09:57:04 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Sat, 29 Nov 2014 04:04:04 -0500
 MIME-Version: 1.0
-To: Mathy Vanhoef <vanhoefm@gmail.com>, <brudley@broadcom.com>,
-	<frankyl@broadcom.com>, <meuleman@broadcom.com>,
-	John Linville <linville@tuxdriver.com>,
-	<pieterpg@broadcom.com>, <linux-wireless@vger.kernel.org>,
-	<brcm80211-dev-list@broadcom.com>, <netdev@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] brcmfmac: kill URB when request timed out
-References: <5464187E.5060208@gmail.com>
-In-Reply-To: <5464187E.5060208@gmail.com>
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20141129095632.69361457@wiggum>
+References: <1417213013-19758-1-git-send-email-xerofoify@gmail.com>
+	<CACna6rxmOC0h9hOpa=5iWFM1THQ8Q4hCi8MnmqkZJbB_U0PJ0A@mail.gmail.com>
+	<20141129002148.1beb21d9@wiggum>
+	<54793E4E.7050602@gmail.com>
+	<20141129095632.69361457@wiggum>
+Date: Sat, 29 Nov 2014 10:04:02 +0100
+Message-ID: <CACna6ryjZ-LY06wAMzoL77Wca3McUUT+VYsO4EPO87NqjBnaNw@mail.gmail.com> (sfid-20141129_100439_715452_573D8E43)
+Subject: Re: [PATCH] drivers:net:wireless: Add mutex locking for function,
+ b43_op_beacon_set_time in main.c
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: =?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>
+Cc: nick <xerofoify@gmail.com>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	Network Development <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 13-11-14 03:33, Mathy Vanhoef wrote:
-> Kill the submitted URB in brcmf_usb_dl_cmd if the request timed out. This
-> assures the URB is never submitted twice. It also prevents a possible
-> use-after-free of the URB transfer buffer if a timeout occurs.
-> 
-Acked-by: Arend van Spriel <arend@broadcom.com>
-> Signed-off-by: Mathy Vanhoef <vanhoefm@gmail.com>
-> ---
-> For a discussion about this patch and the underlying problem, see the mails
-> with as subject "[PATCH] brcmfmac: unlink URB when request timed out".
-> 
->  drivers/net/wireless/brcm80211/brcmfmac/usb.c |    6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-> index 5265aa7..4572def 100644
-> --- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-> +++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-> @@ -738,10 +738,12 @@ static int brcmf_usb_dl_cmd(struct brcmf_usbdev_info *devinfo, u8 cmd,
->  		goto finalize;
->  	}
->  
-> -	if (!brcmf_usb_ioctl_resp_wait(devinfo))
-> +	if (!brcmf_usb_ioctl_resp_wait(devinfo)) {
-> +		usb_kill_urb(devinfo->ctl_urb);
->  		ret = -ETIMEDOUT;
-> -	else
-> +	} else {
->  		memcpy(buffer, tmpbuf, buflen);
-> +	}
->  
->  finalize:
->  	kfree(tmpbuf);
-> 
+On 29 November 2014 at 09:56, Michael Büsch <m@bues.ch> wrote:
+> On Fri, 28 Nov 2014 22:32:30 -0500
+> nick <xerofoify@gmail.com> wrote:
+>
+>> I don't have hardware for this driver on me, so I didn't test it. However this seems to
+>> be correct from my reading of the code around this function and other locking related
+>> to this driver.
+>
+> From the current docs:
+>
+>>  * @set_tim: Set TIM bit. mac80211 calls this function when a TIM bit
+>>  *      must be set or cleared for a given STA. Must be atomic.
+>
+> So it is not allowed to lock a mutex here.
 
+Nicholas please be more careful with your patches. It seems your patch
+is wrong, you didn't check the docs and you didn't even say in the
+first place that it wasn't tested. You could at least submit with with
+RFT tag or sth.
+
+-- 
+Rafał
