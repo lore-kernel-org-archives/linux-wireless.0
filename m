@@ -1,130 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:35506 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754268AbaKXOfh (ORCPT
+Received: from mail-ie0-f176.google.com ([209.85.223.176]:40971 "EHLO
+	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751196AbaK2Iya (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Nov 2014 09:35:37 -0500
-Received: by mail-wi0-f173.google.com with SMTP id r20so5862321wiv.6
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Nov 2014 06:35:36 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 24/75] iwlwifi: mvm: BT Coex - add support for TTC / RRC
-Date: Mon, 24 Nov 2014 16:34:00 +0200
-Message-Id: <1416839691-28533-24-git-send-email-egrumbach@gmail.com> (sfid-20141124_154350_791724_622C68E2)
-In-Reply-To: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
-References: <CANUX_P32q7EFvuOvm+c=yYP9okVEfSUvdDg0gDHHCSg2G+gA0g@mail.gmail.com>
+	Sat, 29 Nov 2014 03:54:30 -0500
+MIME-Version: 1.0
+In-Reply-To: <54793E4E.7050602@gmail.com>
+References: <1417213013-19758-1-git-send-email-xerofoify@gmail.com>
+	<CACna6rxmOC0h9hOpa=5iWFM1THQ8Q4hCi8MnmqkZJbB_U0PJ0A@mail.gmail.com>
+	<20141129002148.1beb21d9@wiggum>
+	<54793E4E.7050602@gmail.com>
+Date: Sat, 29 Nov 2014 09:54:29 +0100
+Message-ID: <CACna6rzfZjKg4diAEE9hFcN5DFadhxC-Uv9aS1RDMXmJ4zbgVQ@mail.gmail.com> (sfid-20141129_095501_076057_50B3F7D5)
+Subject: Re: [PATCH] drivers:net:wireless: Add mutex locking for function,
+ b43_op_beacon_set_time in main.c
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: nick <xerofoify@gmail.com>
+Cc: =?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	Network Development <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On 29 November 2014 at 04:32, nick <xerofoify@gmail.com> wrote:
+> I don't have hardware for this driver on me, so I didn't test it. However this seems to
+> be correct from my reading of the code around this function and other locking related
+> to this driver.
 
-The TTC and RRC features are supported by the newer
-firmwares. It allows to reach better overall WiFi and BT
-performance. When the RRC is enabled, we don't need to force
-the AP to send SISO frames, but it can keeps sending MIMO
-frames.
+So do you say it's not executed in an atomic?
 
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/coex_legacy.c | 13 ++++++++++++-
- drivers/net/wireless/iwlwifi/mvm/constants.h   |  2 ++
- drivers/net/wireless/iwlwifi/mvm/fw-api-coex.h |  9 ++++++++-
- 3 files changed, 22 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c b/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c
-index cda5111..b3210cf 100644
---- a/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c
-@@ -612,7 +612,9 @@ int iwl_send_bt_init_conf_old(struct iwl_mvm *mvm)
- 					    BT_VALID_ANT_ISOLATION_THRS |
- 					    BT_VALID_TXTX_DELTA_FREQ_THRS |
- 					    BT_VALID_TXRX_MAX_FREQ_0 |
--					    BT_VALID_SYNC_TO_SCO);
-+					    BT_VALID_SYNC_TO_SCO |
-+					    BT_VALID_TTC |
-+					    BT_VALID_RRC);
- 
- 	if (IWL_MVM_BT_COEX_SYNC2SCO)
- 		bt_cmd->flags |= cpu_to_le32(BT_COEX_SYNC2SCO);
-@@ -628,6 +630,12 @@ int iwl_send_bt_init_conf_old(struct iwl_mvm *mvm)
- 		bt_cmd->valid_bit_msk |= cpu_to_le32(BT_VALID_MULTI_PRIO_LUT);
- 	}
- 
-+	if (IWL_MVM_BT_COEX_TTC)
-+		bt_cmd->flags |= cpu_to_le32(BT_COEX_TTC);
-+
-+	if (IWL_MVM_BT_COEX_RRC)
-+		bt_cmd->flags |= cpu_to_le32(BT_COEX_RRC);
-+
- 	if (mvm->cfg->bt_shared_single_ant)
- 		memcpy(&bt_cmd->decision_lut, iwl_single_shared_ant,
- 		       sizeof(iwl_single_shared_ant));
-@@ -824,6 +832,9 @@ static void iwl_mvm_bt_notif_iterator(void *_data, u8 *mac,
- 	if (!vif->bss_conf.assoc)
- 		smps_mode = IEEE80211_SMPS_AUTOMATIC;
- 
-+	if (data->notif->rrc_enabled & BIT(mvmvif->phy_ctxt->id))
-+		smps_mode = IEEE80211_SMPS_AUTOMATIC;
-+
- 	IWL_DEBUG_COEX(data->mvm,
- 		       "mac %d: bt_status %d bt_activity_grading %d smps_req %d\n",
- 		       mvmvif->id, data->notif->bt_status, bt_activity_grading,
-diff --git a/drivers/net/wireless/iwlwifi/mvm/constants.h b/drivers/net/wireless/iwlwifi/mvm/constants.h
-index 5c1ea80..1716031 100644
---- a/drivers/net/wireless/iwlwifi/mvm/constants.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/constants.h
-@@ -92,6 +92,8 @@
- #define IWL_MVM_BT_COEX_SYNC2SCO		1
- #define IWL_MVM_BT_COEX_CORUNNING		0
- #define IWL_MVM_BT_COEX_MPLUT			1
-+#define IWL_MVM_BT_COEX_RRC			1
-+#define IWL_MVM_BT_COEX_TTC			1
- #define IWL_MVM_BT_COEX_MPLUT_REG0		0x2e402280
- #define IWL_MVM_BT_COEX_MPLUT_REG1		0x7711a751
- #define IWL_MVM_BT_COEX_ANTENNA_COUPLING_THRS	30
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api-coex.h b/drivers/net/wireless/iwlwifi/mvm/fw-api-coex.h
-index 816883f..f3b1189 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw-api-coex.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw-api-coex.h
-@@ -84,6 +84,8 @@
-  * @BT_COEX_SYNC2SCO:
-  * @BT_COEX_CORUNNING:
-  * @BT_COEX_MPLUT:
-+ * @BT_COEX_TTC:
-+ * @BT_COEX_RRC:
-  *
-  * The COEX_MODE must be set for each command. Even if it is not changed.
-  */
-@@ -100,6 +102,8 @@ enum iwl_bt_coex_flags {
- 	BT_COEX_SYNC2SCO		= BIT(7),
- 	BT_COEX_CORUNNING		= BIT(8),
- 	BT_COEX_MPLUT			= BIT(9),
-+	BT_COEX_TTC			= BIT(20),
-+	BT_COEX_RRC			= BIT(21),
- };
- 
- /*
-@@ -127,6 +131,8 @@ enum iwl_bt_coex_valid_bit_msk {
- 	BT_VALID_TXTX_DELTA_FREQ_THRS	= BIT(16),
- 	BT_VALID_TXRX_MAX_FREQ_0	= BIT(17),
- 	BT_VALID_SYNC_TO_SCO		= BIT(18),
-+	BT_VALID_TTC			= BIT(20),
-+	BT_VALID_RRC			= BIT(21),
- };
- 
- /**
-@@ -506,7 +512,8 @@ struct iwl_bt_coex_profile_notif_old {
- 	u8 bt_agg_traffic_load;
- 	u8 bt_ci_compliance;
- 	u8 ttc_enabled;
--	__le16 reserved;
-+	u8 rrc_enabled;
-+	u8 reserved;
- 
- 	__le32 primary_ch_lut;
- 	__le32 secondary_ch_lut;
--- 
-1.9.1
-
+>From *early* look it seems b43_update_templates is called from
+b43_op_beacon_set_tim and b43_op_bss_info_changed, both or them are
+mac80211 callbacks. That also should be safe, however I didn't check
+if it may conflict with some in-kernel code (still, assuming it's not
+atomic code, which I don't know!).
