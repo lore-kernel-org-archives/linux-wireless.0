@@ -1,72 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from zucker2.schokokeks.org ([178.63.68.90]:57939 "EHLO
-	zucker2.schokokeks.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751042AbaK0XpY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Nov 2014 18:45:24 -0500
-Date: Fri, 28 Nov 2014 00:40:32 +0100
-From: Hanno =?UTF-8?B?QsO2Y2s=?= <hanno@hboeck.de>
-To: linux-wireless@vger.kernel.org
-Subject: firmware loading fails (iwl 7260)
-Message-ID: <20141128004032.441c4670@pc> (sfid-20141128_004532_966878_41477395)
+Received: from s3.sipsolutions.net ([5.9.151.49]:52748 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751958AbaK3NOR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 30 Nov 2014 08:14:17 -0500
+Message-ID: <1417353252.2156.4.camel@sipsolutions.net> (sfid-20141130_141420_785214_6D01E099)
+Subject: Re: [RFC] mac80211: update the channel context after channel switch
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: linux-wireless@vger.kernel.org, michal.kazior@tieto.com
+Date: Sun, 30 Nov 2014 14:14:12 +0100
+In-Reply-To: <1417095717-23017-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20141127_144646_275597_38604860)
+References: <1417095717-23017-1-git-send-email-emmanuel.grumbach@intel.com>
+	 (sfid-20141127_144646_275597_38604860)
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512; protocol="application/pgp-signature"; boundary="=_zucker.schokokeks.org-2491-1417131619-0001-2"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a MIME-formatted message.  If you see this text it means that your
-E-mail software does not support MIME-formatted messages.
+On Thu, 2014-11-27 at 15:41 +0200, Emmanuel Grumbach wrote:
+> When the channel switch has been made, a vif is now using
+> the channel context which was reserved. When that happens,
+> we need to update the channel context since its parameters
+> may change.
+> 
+> I hit a case in which I switched to a 40Mhz channel but the
+> reserved channel context was still on 20Mhz. The rate control
+> would try to send 40Mhz packets on a 20Mhz channel context and
+> that made iwlwifi's firmware unhappy.
+> 
+> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> ---
+> This is a second version of the patch I sent earlier.
+> I think the first version is more generic.
 
---=_zucker.schokokeks.org-2491-1417131619-0001-2
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+I prefer this version
 
-Hi,
+1) if there really is a chanctx that can be in use and reserved at the
+same time, it seems strange to mix the two concepts for the actual
+operation of the chanctx
 
-I have an X1 Carbon laptop with an intel 7260 chip.
+2) semantically, the reservation is so that nothing can steal the
+chanctx, we don't really care much about the contents until we need it.
 
-The automatic firmware loading doesn't work (kernel 3.17.2). I get this
-in dmesg:
-[    1.615155] iwlwifi 0000:03:00.0: Direct firmware load for
-iwlwifi-7260-10.ucode failed with error -2
+Please resend with [PATCH] and I'll merge it.
 
-The firmware then gets loaded by the userspace helper, however as far
-as I understand it (and the description of the kernel option) this is
-deprecated and shouldn't be used. Also, it takes quite a while
-(minutes) till the wifi is available after boot which is quite annoying.
+johannes
 
-Any idea what I should do to debug/fix this? Is this a bug? (firmware
-is the latest from intel's page, 23.10.10.0)
-
-cu,
---=20
-Hanno B=C3=B6ck
-http://hboeck.de/
-
-mail/jabber: hanno@hboeck.de
-GPG: BBB51E42
-
---=_zucker.schokokeks.org-2491-1417131619-0001-2
-Content-Type: application/pgp-signature
-Content-Transfer-Encoding: 7bit
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCgAGBQJUd7ZwAAoJEKWIAHK7tR5CfWAQAIywsunEicFlmKdnwfJq+qZT
-jW0sd9QSPjDOtrCXgrmjJ4bhwme0kvLzajS5lbpmCHm08kVpjwDbDYiH7EdN41os
-NSCaVBCyLcDZDll3xExmkyEXiZaVijH7LGN2XrTDqTfoakfGk6/kCbKclLD6pMSy
-0aFqUioZT29VnQQDYxWSHVX/xq+ifK7Bi6aRNnK4H3xr6oswBs/6v1ecxorhR2r5
-0RUteD50jAEVjaVcns9i2YA7tbDoGJRR8j5M8Ahmn3f6DliikgsbVdVm4WDPtoEo
-N0AhIwtVTaPv7+wFo998uBm2UnsJ6/mrXiHrEAzmedk9PmU/maXJMgjPr3gTfKGk
-tcP5y28VKQaMgJ/zsIK8GJITYzOk9v3vqy9WpjSO5h7o4l2818DwVHwNCOEh00+M
-J6ig9o18B0go49PKA3+/s62Q9hSiBtc+3NyXwwZtb+9o6iVT77C82punrPROnwzu
-DZHpxvzxma9HPDebhjNhnQL8mBEw5pdt/+jQi+uJi9/p2kYduKBUqBbOwFNBgYPS
-jCKt+1a/476wavLYKokOvMtFR5uu6THyFeNEkw6F4s2NEdi0FwzUk20Ju8gwUwlQ
-bmitsen2kA5PPYFlx6lJcbX+rod9HW1JJQ+GpFjzzIleftZzbA5ehDnAzLSr6GL0
-tsV2JzJpAbAJNqd5yO/x
-=r/3h
------END PGP SIGNATURE-----
-
---=_zucker.schokokeks.org-2491-1417131619-0001-2--
