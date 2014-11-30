@@ -1,43 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:58027 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751579AbaKGMcF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Nov 2014 07:32:05 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, emmanuel.grumbach@intel.com
-Date: Fri,  7 Nov 2014 14:31:34 +0200
-Message-Id: <1415363497-8475-1-git-send-email-luca@coelho.fi> (sfid-20141107_133209_072804_B8FED68C)
-Subject: [PATCH v2 0/3] cfg80211/mac80211: CSA notification
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:57571 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751893AbaK3IjI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 30 Nov 2014 03:39:08 -0500
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: nick <xerofoify@gmail.com>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
+	<wil6210@qca.qualcomm.com>, <netdev@vger.kernel.org>
+Subject: Re: Question about function. wil_vring_alloc_skb in txrx.c
+Date: Sun, 30 Nov 2014 10:39:03 +0200
+Message-ID: <8489393.vIdH6vj4qd@lx-wigig-72> (sfid-20141130_093911_854404_66786781)
+In-Reply-To: <547A5554.3010900@gmail.com>
+References: <547A5554.3010900@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+On Saturday, November 29, 2014 06:23:00 PM nick wrote:
+> Greetings Vladimr,John and others,
+> I am wondering about the TODO in the function in my message at it seems to be no longer needed due to us reserving headroom for the skb packet used in this function. The other reason I can see that this is needed is if we need to 
+> align the sk_buff for performance or hardware alignment reasons. If that is the case, would someone we willing to
+> explain to me how the maintainers would like me to align the sk_buff packet used in the function, wil_vring_alloc_skb.
+Hi Nick,
+ignore this TODO, I'll remove it. I was not sure what is better for the hardware, now I know there is no hardware
+limitation.
 
-This is a rework of the channel switch started notification that I
-sent a long time ago.  According to the review, I removed the failure
-notification.  Additionally, some other small changes were made to fix
-some things and adapt to the current code.
-
-Please review.
-
---
-Luca.
-
-Luciano Coelho (3):
-  cfg80211/nl80211: add channel switch started notification
-  mac80211: send channel switch started notifications
-  cfg80211/nl80211: allow any interface to send channel switch
-    notifications
-
- include/net/cfg80211.h       | 14 ++++++++++++++
- include/uapi/linux/nl80211.h | 15 ++++++++++++++-
- net/mac80211/cfg.c           |  3 +++
- net/mac80211/mlme.c          |  5 +++++
- net/wireless/nl80211.c       | 34 +++++++++++++++++++++++++---------
- net/wireless/trace.h         | 16 ++++++++++++++++
- 6 files changed, 77 insertions(+), 10 deletions(-)
-
--- 
-2.1.1
-
+Thanks, Vladimir
