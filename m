@@ -1,39 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f48.google.com ([209.85.218.48]:47658 "EHLO
-	mail-oi0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750918AbaKUTGZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Nov 2014 14:06:25 -0500
-Message-ID: <546F8D2F.2070003@lwfinger.net> (sfid-20141121_200634_217596_8BC657A3)
-Date: Fri, 21 Nov 2014 13:06:23 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mga11.intel.com ([192.55.52.93]:3444 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752051AbaK3NHN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 30 Nov 2014 08:07:13 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
+Subject: RE: [RFC] mac80211: take reserved vif into account when calculating
+ the min_def
+Date: Sun, 30 Nov 2014 13:07:09 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB31B5A60D4@hasmsx107.ger.corp.intel.com> (sfid-20141130_140717_987766_4228DC7F)
+References: <1417091446-16308-1-git-send-email-emmanuel.grumbach@intel.com>
+ <CA+BoTQmRPVEqCe=tPGb5gcfnBQ=h8kDOOAXMKgbUktBabTvLXw@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>, davem@davemloft.net
-CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next 2014-11-21
-References: <20141121183014.GA24984@tuxdriver.com>
-In-Reply-To: <20141121183014.GA24984@tuxdriver.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/21/2014 12:30 PM, John W. Linville wrote:
-> Dave,
->
-> Please pull this batch of updates intended for the 3.19 stream...
->
-
----snip---
-
-> Larry Finger (3):
->        rtlwifi: Fix setting of tx descriptor for new trx flow
->        rtlwifi: Fix errors in descriptor manipulation
->        rtlwifi: rtl8192se: Fix connection problems
-
-I probably do not understand the update process, but the above 3 patches need to 
-be in kernel 3.18, not 3.19.
-
-Thanks,
-
-Larry
-
+PiA+DQo+ID4gT24gMjcgTm92ZW1iZXIgMjAxNCBhdCAxMzozMCwgRW1tYW51ZWwgR3J1bWJhY2gN
+Cj4gPiA8ZW1tYW51ZWwuZ3J1bWJhY2hAaW50ZWwuY29tPiB3cm90ZToNCj4gPiA+IFdoZW4gd2Ug
+d2FudCB0byBjYWxjdWxhdGUgdGhlIG1pbmltYWwgYmFuZHdpZHRoIG5lZWRlZCBmb3IgYSBjaGFu
+bmVsDQo+ID4gPiBjb250ZXh0LCB3ZSBuZWVkIHRvIHRha2UgaW50byBhY2NvdW50IHZpZnMgdGhh
+dCBoYXZlIHJlc2VydmVkIHRoZQ0KPiA+ID4gY2hhbm5lbCBjb250ZXh0Lg0KPiA+ID4gSSBoaXQg
+YW4gaXNzdWUgd2l0aCBpd2x3aWZpIGFuZCBjaGFubmVsIHN3aXRjaCBhcyBhIGNsaWVudC4NCj4g
+PiA+DQo+ID4gPiBXZSB3b3VsZCBhbGxvY2F0ZSBhIHZpcmdpbiBjaGFubmVsIGNvbnRleHQgYW5k
+IHJlc2VydmUgaXQuDQo+ID4gPiBBdCB0aGF0IHN0YWdlLCB0aGUgbWluX2RlZiB3YXMgMjBNSHou
+DQo+ID4gPiBUaGVuIHdlIHdvdWxkIHVzZSBpdCBhZnRlciBDU0EsIGFuZCBzdGFydCB0cmFuc21p
+dHRpbmcsIGJ1dCB0aGUNCj4gPiA+IGNoYW5uZWwgY29udGV4dCB3YXMgc3RpbGwgMjBNSHogZXZl
+biBpZiB0aGUgR08gd2FzIGluIDQwTUh6LiBUaGlzDQo+ID4gPiBtYWRlIHRoZSBmaXJtd2FyZSB1
+bmhhcHB5Lg0KPiA+ID4NCj4gPiA+IFNpZ25lZC1vZmYtYnk6IEVtbWFudWVsIEdydW1iYWNoIDxl
+bW1hbnVlbC5ncnVtYmFjaEBpbnRlbC5jb20+DQoNClNvIHdlIGRpc2N1c3NlZCBpdCBpbnRlcm5h
+bGx5IC0gYW5kIGl0IHNlZW1zIHRoYXQgdGhlIG90aGVyIHBhdGNoIGlzIGJldHRlciAoaHR0cHM6
+Ly9wYXRjaHdvcmsua2VybmVsLm9yZy9wYXRjaC81Mzk2MzUxLykuDQpMZXQncyBkcm9wIHRoaXMg
+b25lLg0KDQo+ID4gPiAtLS0NCj4gPiA+ICBuZXQvbWFjODAyMTEvY2hhbi5jIHwgNiArKysrKy0N
+Cj4gPiA+ICAxIGZpbGUgY2hhbmdlZCwgNSBpbnNlcnRpb25zKCspLCAxIGRlbGV0aW9uKC0pDQo+
+ID4gPg0KPiA+ID4gZGlmZiAtLWdpdCBhL25ldC9tYWM4MDIxMS9jaGFuLmMgYi9uZXQvbWFjODAy
+MTEvY2hhbi5jIGluZGV4DQo+ID4gPiA0Yzc0ZThkLi43NjllMGM1IDEwMDY0NA0KPiA+ID4gLS0t
+IGEvbmV0L21hYzgwMjExL2NoYW4uYw0KPiA+ID4gKysrIGIvbmV0L21hYzgwMjExL2NoYW4uYw0K
+PiA+ID4gQEAgLTI1Niw3ICsyNTYsOCBAQCBpZWVlODAyMTFfZ2V0X2NoYW5jdHhfbWF4X3JlcXVp
+cmVkX2J3KHN0cnVjdA0KPiA+IGllZWU4MDIxMV9sb2NhbCAqbG9jYWwsDQo+ID4gPiAgICAgICAg
+ICAgICAgICAgaWYgKCFpZWVlODAyMTFfc2RhdGFfcnVubmluZyhzZGF0YSkpDQo+ID4gPiAgICAg
+ICAgICAgICAgICAgICAgICAgICBjb250aW51ZTsNCj4gPiA+DQo+ID4gPiAtICAgICAgICAgICAg
+ICAgaWYgKHJjdV9hY2Nlc3NfcG9pbnRlcihzZGF0YS0+dmlmLmNoYW5jdHhfY29uZikgIT0gY29u
+ZikNCj4gPiA+ICsgICAgICAgICAgICAgICBpZiAocmN1X2FjY2Vzc19wb2ludGVyKHNkYXRhLT52
+aWYuY2hhbmN0eF9jb25mKSAhPSBjb25mICYmDQo+ID4gPiArICAgICAgICAgICAgICAgICAgICZz
+ZGF0YS0+cmVzZXJ2ZWRfY2hhbmN0eC0+Y29uZiAhPSBjb25mKQ0KPiA+ID4gICAgICAgICAgICAg
+ICAgICAgICAgICAgY29udGludWU7DQo+ID4gPg0KPiA+ID4gICAgICAgICAgICAgICAgIHN3aXRj
+aCAodmlmLT50eXBlKSB7IEBAIC0yNzEsNiArMjcyLDcgQEANCj4gPiA+IGllZWU4MDIxMV9nZXRf
+Y2hhbmN0eF9tYXhfcmVxdWlyZWRfYncoc3RydWN0DQo+ID4gaWVlZTgwMjExX2xvY2FsICpsb2Nh
+bCwNCj4gPiA+ICAgICAgICAgICAgICAgICBjYXNlIE5MODAyMTFfSUZUWVBFX1dEUzoNCj4gPiA+
+ICAgICAgICAgICAgICAgICBjYXNlIE5MODAyMTFfSUZUWVBFX01FU0hfUE9JTlQ6DQo+ID4gPiAg
+ICAgICAgICAgICAgICAgICAgICAgICB3aWR0aCA9IHZpZi0+YnNzX2NvbmYuY2hhbmRlZi53aWR0
+aDsNCj4gPiA+ICsgICAgICAgICAgICAgICAgICAgICAgIHdpZHRoID0gbWF4KHdpZHRoLA0KPiA+
+ID4gKyBzZGF0YS0+cmVzZXJ2ZWRfY2hhbmRlZi53aWR0aCk7DQo+ID4NCj4gPiBOb3QgcmVhbGx5
+IHN1cmUgd2h5IHRoaXMgaXMgbmVlZGVkIGluIHRoaXMgcGF0Y2g/DQo+ID4NCj4gDQo+IEhtbS4u
+LiBZb3UgYXJlIHJpZ2h0IC0gSSB0aGluayBJIGdvdCBjb25mdXNlZCBoZXJlIDopIEkgZ3Vlc3Mg
+SSBuZWVkIHRvIHZlcmlmeQ0KPiB0aGF0IHJlbW92aW5nIHRoaXMgaHVuayBzdGlsbCBzb2x2ZXMg
+bXkgYnVnLg0KPiBJbiBnZW5lcmFsIHRob3VnaCwgd2hhdCBvcHRpb24gd291bGQgeW91IHByZWZl
+cj8NCj4gDQo+IEludGVybmFsbHksIHdlIGhhZCBkaWZmZXJlbnQgb3BpbmlvbnMgaGVyZS4NCj4g
+DQo+ID4NCj4gPiA+ICAgICAgICAgICAgICAgICAgICAgICAgIGJyZWFrOw0KPiA+ID4gICAgICAg
+ICAgICAgICAgIGNhc2UgTkw4MDIxMV9JRlRZUEVfVU5TUEVDSUZJRUQ6DQo+ID4gPiAgICAgICAg
+ICAgICAgICAgY2FzZSBOVU1fTkw4MDIxMV9JRlRZUEVTOg0KPiA+ID4gQEAgLTg5OSw2ICs5MDEs
+OCBAQCBpbnQgaWVlZTgwMjExX3ZpZl9yZXNlcnZlX2NoYW5jdHgoc3RydWN0DQo+ID4gaWVlZTgw
+MjExX3N1Yl9pZl9kYXRhICpzZGF0YSwNCj4gPiA+ICAgICAgICAgc2RhdGEtPnJlc2VydmVkX3Jh
+ZGFyX3JlcXVpcmVkID0gcmFkYXJfcmVxdWlyZWQ7DQo+ID4gPiAgICAgICAgIHNkYXRhLT5yZXNl
+cnZlZF9yZWFkeSA9IGZhbHNlOw0KPiA+ID4NCj4gPiA+ICsgICAgICAgaWVlZTgwMjExX3JlY2Fs
+Y19jaGFuY3R4X21pbl9kZWYobG9jYWwsIG5ld19jdHgpOw0KPiA+ID4gKw0KPiA+DQo+ID4gSG1t
+Li4gV291bGRuJ3QgaXQgbWFrZSBzZW5zZSB0byByZWNhbGMgdGhpcyBpbg0KPiA+IGllZWU4MDIx
+MV92aWZfdW5yZXNlcnZlXyBjaGFuY3R4KCkgYXMgd2VsbD8NCj4gDQo+IFByb2JhYmx5IC0gSSBu
+ZWVkIHRvIGFkZCB0aGlzLg0KPiANCj4gPg0KPiA+DQo+ID4gTWljaGHFgg0K
