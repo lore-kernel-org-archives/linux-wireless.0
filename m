@@ -1,64 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:40361 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751712AbaKIKqo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Nov 2014 05:46:44 -0500
-Message-ID: <545F4611.3010207@broadcom.com> (sfid-20141109_114835_601788_9368F95A)
-Date: Sun, 9 Nov 2014 11:46:41 +0100
-From: Arend van Spriel <arend@broadcom.com>
+Received: from mga09.intel.com ([134.134.136.24]:37242 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752070AbaK3LzZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 30 Nov 2014 06:55:25 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
+Subject: RE: [RFC] mac80211: take reserved vif into account when calculating
+ the min_def
+Date: Sun, 30 Nov 2014 11:55:18 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB31B5A5F52@hasmsx107.ger.corp.intel.com> (sfid-20141130_125537_135709_A3F6633D)
+References: <1417091446-16308-1-git-send-email-emmanuel.grumbach@intel.com>
+ <CA+BoTQmRPVEqCe=tPGb5gcfnBQ=h8kDOOAXMKgbUktBabTvLXw@mail.gmail.com>
+In-Reply-To: <CA+BoTQmRPVEqCe=tPGb5gcfnBQ=h8kDOOAXMKgbUktBabTvLXw@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-To: Felipe Contreras <felipe.contreras@gmail.com>
-CC: linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	<frankyl@broadcom.com>, Samuel Ortiz <sameo@linux.intel.com>
-Subject: Re: brcmfmac not working on ECS LIVA
-References: <CAMP44s2XAmaiK2=BJA3TCW48Uo=5qyT5WsASDsZnOiSNgK6b0A@mail.gmail.com>
-In-Reply-To: <CAMP44s2XAmaiK2=BJA3TCW48Uo=5qyT5WsASDsZnOiSNgK6b0A@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/08/14 21:39, Felipe Contreras wrote:
-> Hi,
->
-> I just got an ECS LIVA and I haven't been able to get the wireless
-> working. First I got the error that the brcmfmac43241b4-sdio.txt file
-> was missing. I got the file from the ECS's beta drivers [1], but it's
-> still not working.
->
-> brcmfmac: brcmf_sdio_drivestrengthinit: No SDIO Drive strength init
-> done for chip 4324 rev 5 pmurev 17
-> brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0: Jul 17 2013
-> 07:36:07 version 6.10.197.71 (r412987) FWID 01-882d2634
-> brcmfmac: brcmf_add_if: ERROR: netdev:wlan0 already exists
-> brcmfmac: brcmf_add_if: ignore IF event
->
-> WPA association/authentication failed for interface 'wlan0'
->
-> I also tried a nvram file that is stored in EFI variables, but it
-> didn't work either.
->
-> Some things seem to work some times, but not the whole association.
->
-> This is a 3.17.2 kernel.
->
-> Any ideas?
-
-Hi Felipe,
-
-The ideas may come to us with a bit more trace information. The logging 
-above is the usual stuff so no problem indication there.
-
-I looked at the nvram file from [1]. At the end there are some entries 
-about OOB wakeup, ie. starting with 'sd_'. You may remove those, but 
-giving the logging it would not be the first thing to do.
-
-Could you share the nvram obtained from EFI? Also please create a kernel 
-log with debug=0xd416.
-
-Regards,
-Arend
-
-> [1] http://www.ecs.com.tw/LIVA/support.html
->
-
+PiANCj4gT24gMjcgTm92ZW1iZXIgMjAxNCBhdCAxMzozMCwgRW1tYW51ZWwgR3J1bWJhY2gNCj4g
+PGVtbWFudWVsLmdydW1iYWNoQGludGVsLmNvbT4gd3JvdGU6DQo+ID4gV2hlbiB3ZSB3YW50IHRv
+IGNhbGN1bGF0ZSB0aGUgbWluaW1hbCBiYW5kd2lkdGggbmVlZGVkIGZvcg0KPiA+IGEgY2hhbm5l
+bCBjb250ZXh0LCB3ZSBuZWVkIHRvIHRha2UgaW50byBhY2NvdW50IHZpZnMgdGhhdA0KPiA+IGhh
+dmUgcmVzZXJ2ZWQgdGhlIGNoYW5uZWwgY29udGV4dC4NCj4gPiBJIGhpdCBhbiBpc3N1ZSB3aXRo
+IGl3bHdpZmkgYW5kIGNoYW5uZWwgc3dpdGNoIGFzIGEgY2xpZW50Lg0KPiA+DQo+ID4gV2Ugd291
+bGQgYWxsb2NhdGUgYSB2aXJnaW4gY2hhbm5lbCBjb250ZXh0IGFuZCByZXNlcnZlIGl0Lg0KPiA+
+IEF0IHRoYXQgc3RhZ2UsIHRoZSBtaW5fZGVmIHdhcyAyME1Iei4NCj4gPiBUaGVuIHdlIHdvdWxk
+IHVzZSBpdCBhZnRlciBDU0EsIGFuZCBzdGFydCB0cmFuc21pdHRpbmcsIGJ1dA0KPiA+IHRoZSBj
+aGFubmVsIGNvbnRleHQgd2FzIHN0aWxsIDIwTUh6IGV2ZW4gaWYgdGhlIEdPIHdhcyBpbg0KPiA+
+IDQwTUh6LiBUaGlzIG1hZGUgdGhlIGZpcm13YXJlIHVuaGFwcHkuDQo+ID4NCj4gPiBTaWduZWQt
+b2ZmLWJ5OiBFbW1hbnVlbCBHcnVtYmFjaCA8ZW1tYW51ZWwuZ3J1bWJhY2hAaW50ZWwuY29tPg0K
+PiA+IC0tLQ0KPiA+ICBuZXQvbWFjODAyMTEvY2hhbi5jIHwgNiArKysrKy0NCj4gPiAgMSBmaWxl
+IGNoYW5nZWQsIDUgaW5zZXJ0aW9ucygrKSwgMSBkZWxldGlvbigtKQ0KPiA+DQo+ID4gZGlmZiAt
+LWdpdCBhL25ldC9tYWM4MDIxMS9jaGFuLmMgYi9uZXQvbWFjODAyMTEvY2hhbi5jDQo+ID4gaW5k
+ZXggNGM3NGU4ZC4uNzY5ZTBjNSAxMDA2NDQNCj4gPiAtLS0gYS9uZXQvbWFjODAyMTEvY2hhbi5j
+DQo+ID4gKysrIGIvbmV0L21hYzgwMjExL2NoYW4uYw0KPiA+IEBAIC0yNTYsNyArMjU2LDggQEAg
+aWVlZTgwMjExX2dldF9jaGFuY3R4X21heF9yZXF1aXJlZF9idyhzdHJ1Y3QNCj4gaWVlZTgwMjEx
+X2xvY2FsICpsb2NhbCwNCj4gPiAgICAgICAgICAgICAgICAgaWYgKCFpZWVlODAyMTFfc2RhdGFf
+cnVubmluZyhzZGF0YSkpDQo+ID4gICAgICAgICAgICAgICAgICAgICAgICAgY29udGludWU7DQo+
+ID4NCj4gPiAtICAgICAgICAgICAgICAgaWYgKHJjdV9hY2Nlc3NfcG9pbnRlcihzZGF0YS0+dmlm
+LmNoYW5jdHhfY29uZikgIT0gY29uZikNCj4gPiArICAgICAgICAgICAgICAgaWYgKHJjdV9hY2Nl
+c3NfcG9pbnRlcihzZGF0YS0+dmlmLmNoYW5jdHhfY29uZikgIT0gY29uZiAmJg0KPiA+ICsgICAg
+ICAgICAgICAgICAgICAgJnNkYXRhLT5yZXNlcnZlZF9jaGFuY3R4LT5jb25mICE9IGNvbmYpDQo+
+ID4gICAgICAgICAgICAgICAgICAgICAgICAgY29udGludWU7DQo+ID4NCj4gPiAgICAgICAgICAg
+ICAgICAgc3dpdGNoICh2aWYtPnR5cGUpIHsNCj4gPiBAQCAtMjcxLDYgKzI3Miw3IEBAIGllZWU4
+MDIxMV9nZXRfY2hhbmN0eF9tYXhfcmVxdWlyZWRfYncoc3RydWN0DQo+IGllZWU4MDIxMV9sb2Nh
+bCAqbG9jYWwsDQo+ID4gICAgICAgICAgICAgICAgIGNhc2UgTkw4MDIxMV9JRlRZUEVfV0RTOg0K
+PiA+ICAgICAgICAgICAgICAgICBjYXNlIE5MODAyMTFfSUZUWVBFX01FU0hfUE9JTlQ6DQo+ID4g
+ICAgICAgICAgICAgICAgICAgICAgICAgd2lkdGggPSB2aWYtPmJzc19jb25mLmNoYW5kZWYud2lk
+dGg7DQo+ID4gKyAgICAgICAgICAgICAgICAgICAgICAgd2lkdGggPSBtYXgod2lkdGgsIHNkYXRh
+LT5yZXNlcnZlZF9jaGFuZGVmLndpZHRoKTsNCj4gDQo+IE5vdCByZWFsbHkgc3VyZSB3aHkgdGhp
+cyBpcyBuZWVkZWQgaW4gdGhpcyBwYXRjaD8NCj4gDQoNCkhtbS4uLiBZb3UgYXJlIHJpZ2h0IC0g
+SSB0aGluayBJIGdvdCBjb25mdXNlZCBoZXJlIDopDQpJIGd1ZXNzIEkgbmVlZCB0byB2ZXJpZnkg
+dGhhdCByZW1vdmluZyB0aGlzIGh1bmsgc3RpbGwgc29sdmVzIG15IGJ1Zy4NCkluIGdlbmVyYWwg
+dGhvdWdoLCB3aGF0IG9wdGlvbiB3b3VsZCB5b3UgcHJlZmVyPw0KDQpJbnRlcm5hbGx5LCB3ZSBo
+YWQgZGlmZmVyZW50IG9waW5pb25zIGhlcmUuDQoNCj4gDQo+ID4gICAgICAgICAgICAgICAgICAg
+ICAgICAgYnJlYWs7DQo+ID4gICAgICAgICAgICAgICAgIGNhc2UgTkw4MDIxMV9JRlRZUEVfVU5T
+UEVDSUZJRUQ6DQo+ID4gICAgICAgICAgICAgICAgIGNhc2UgTlVNX05MODAyMTFfSUZUWVBFUzoN
+Cj4gPiBAQCAtODk5LDYgKzkwMSw4IEBAIGludCBpZWVlODAyMTFfdmlmX3Jlc2VydmVfY2hhbmN0
+eChzdHJ1Y3QNCj4gaWVlZTgwMjExX3N1Yl9pZl9kYXRhICpzZGF0YSwNCj4gPiAgICAgICAgIHNk
+YXRhLT5yZXNlcnZlZF9yYWRhcl9yZXF1aXJlZCA9IHJhZGFyX3JlcXVpcmVkOw0KPiA+ICAgICAg
+ICAgc2RhdGEtPnJlc2VydmVkX3JlYWR5ID0gZmFsc2U7DQo+ID4NCj4gPiArICAgICAgIGllZWU4
+MDIxMV9yZWNhbGNfY2hhbmN0eF9taW5fZGVmKGxvY2FsLCBuZXdfY3R4KTsNCj4gPiArDQo+IA0K
+PiBIbW0uLiBXb3VsZG4ndCBpdCBtYWtlIHNlbnNlIHRvIHJlY2FsYyB0aGlzIGluDQo+IGllZWU4
+MDIxMV92aWZfdW5yZXNlcnZlXyBjaGFuY3R4KCkgYXMgd2VsbD8NCg0KUHJvYmFibHkgLSBJIG5l
+ZWQgdG8gYWRkIHRoaXMuDQoNCj4gDQo+IA0KPiBNaWNoYcWCDQo=
