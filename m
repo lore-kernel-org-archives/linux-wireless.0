@@ -1,105 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f49.google.com ([74.125.82.49]:55737 "EHLO
-	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750764AbaLOQo1 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:12961 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752404AbaLANgY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Dec 2014 11:44:27 -0500
-Received: by mail-wg0-f49.google.com with SMTP id n12so15012341wgh.8
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Dec 2014 08:44:25 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v2] iw: support multiple regdom print
-Date: Mon, 15 Dec 2014 18:44:23 +0200
-Message-Id: <1418661863-2630-1-git-send-email-arik@wizery.com> (sfid-20141215_174430_870110_9A1200DE)
+	Mon, 1 Dec 2014 08:36:24 -0500
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: [PATCH 7/9] wil6210: Rate limit "ring full" error message
+Date: Mon, 1 Dec 2014 15:36:03 +0200
+Message-ID: <1417440963-27304-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20141201_143627_700257_5AFD6422)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When a phy is given, print only its regdomain. Otherwise, use the newly
-implement dump functionality to print all regdomains in the system.
+In the wil_tx_ring, error message printed when tx attempted
+while vring has no space to accommodate all fragments of frame.
+Normally, such situation handled by stopping tx queue.
+But, if tx queue is by-passed (like pktgen does), this error
+will be triggered at high rate and dmesg will be flooded with
+this message. Whole system may become unstable and hang with
+no possible recover except power cycle.
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Rate-limit it to prevent dmesg flooding.
+
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
-v2: fix reg get for older kernels
+ drivers/net/wireless/ath/wil6210/txrx.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
- reg.c | 40 ++++++++++++++++++++++++++++++++++++----
- 1 file changed, 36 insertions(+), 4 deletions(-)
-
-diff --git a/reg.c b/reg.c
-index a02c982..0aef7ba 100644
---- a/reg.c
-+++ b/reg.c
-@@ -114,7 +114,6 @@ COMMAND(reg, set, "<ISO/IEC 3166-1 alpha2>",
- 	"Notify the kernel about the current regulatory domain.");
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index c3a5489..405ede6 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -928,8 +928,9 @@ static int wil_tx_vring(struct wil6210_priv *wil, struct vring *vring,
+ 	wil_dbg_txrx(wil, "%s()\n", __func__);
  
- static int print_reg_handler(struct nl_msg *msg, void *arg)
--
- {
- #define PARSE_FLAG(nl_flag, string_value)  do { \
- 		if ((flags & nl_flag)) { \
-@@ -150,6 +149,13 @@ static int print_reg_handler(struct nl_msg *msg, void *arg)
- 		return NL_SKIP;
+ 	if (avail < 1 + nr_frags) {
+-		wil_err(wil, "Tx ring full. No space for %d fragments\n",
+-			1 + nr_frags);
++		wil_err_ratelimited(wil,
++				    "Tx ring full. No space for %d fragments\n",
++				    1 + nr_frags);
+ 		return -ENOMEM;
  	}
- 
-+	if (tb_msg[NL80211_ATTR_WIPHY])
-+		printf("phy#%d%s\n", nla_get_u32(tb_msg[NL80211_ATTR_WIPHY]),
-+		       tb_msg[NL80211_ATTR_WIPHY_SELF_MANAGED_REG] ?
-+		       " (self-managed)" : "");
-+	else
-+		printf("global\n");
-+
- 	if (tb_msg[NL80211_ATTR_DFS_REGION])
- 		dfs_domain = nla_get_u8(tb_msg[NL80211_ATTR_DFS_REGION]);
- 	else
-@@ -216,18 +222,44 @@ static int print_reg_handler(struct nl_msg *msg, void *arg)
- 
- 		printf("\n");
- 	}
--	return NL_OK;
-+
-+	printf("\n");
-+	return NL_SKIP;
- #undef PARSE_FLAG
- }
- 
-+static int handle_reg_dump(struct nl80211_state *state,
-+			   struct nl_cb *cb,
-+			   struct nl_msg *msg,
-+			   int argc, char **argv,
-+			   enum id_input id)
-+{
-+	nl_cb_set(cb, NL_CB_VALID, NL_CB_CUSTOM, print_reg_handler, NULL);
-+	return 0;
-+}
-+
- static int handle_reg_get(struct nl80211_state *state,
- 			  struct nl_cb *cb,
- 			  struct nl_msg *msg,
- 			  int argc, char **argv,
- 			  enum id_input id)
- {
--	nl_cb_set(cb, NL_CB_VALID, NL_CB_CUSTOM, print_reg_handler, NULL);
--	return 0;
-+	char *dump_args[] = { "reg", "dump" };
-+	int err;
-+
-+	err = handle_cmd(state, CIB_NONE, 2, dump_args);
-+	/* dump might fail since it's not supported on older kernels */
-+	if (err == -EOPNOTSUPP) {
-+		nl_cb_set(cb, NL_CB_VALID, NL_CB_CUSTOM, print_reg_handler,
-+			  NULL);
-+		return 0;
-+	}
-+
-+	return err;
- }
- COMMAND(reg, get, NULL, NL80211_CMD_GET_REG, 0, CIB_NONE, handle_reg_get,
- 	"Print out the kernel's current regulatory domain information.");
-+COMMAND(reg, get, NULL, NL80211_CMD_GET_REG, 0, CIB_PHY, handle_reg_get,
-+	"Print out the devices' current regulatory domain information.");
-+HIDDEN(reg, dump, NULL, NL80211_CMD_GET_REG, NLM_F_DUMP, CIB_NONE,
-+       handle_reg_dump);
+ 	_d = &vring->va[i].tx;
 -- 
-1.9.1
+2.1.0
 
