@@ -1,120 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:55418 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751623AbaLXJKp (ORCPT
+Received: from mail-qg0-f46.google.com ([209.85.192.46]:57621 "EHLO
+	mail-qg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754037AbaLAStG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Dec 2014 04:10:45 -0500
-Message-ID: <549A8312.7080004@broadcom.com> (sfid-20141224_101112_954661_7F73A8E2)
-Date: Wed, 24 Dec 2014 10:10:42 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Mon, 1 Dec 2014 13:49:06 -0500
+Received: by mail-qg0-f46.google.com with SMTP id z107so7953370qgd.5
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Dec 2014 10:49:05 -0800 (PST)
 MIME-Version: 1.0
-To: Vaishali Thakkar <vthakkar1994@gmail.com>
-CC: <linux-wireless@vger.kernel.org>, <lauro.venancio@openbossa.org>,
-	<aloisio.almeida@openbossa.org>, <sameo@linux.intel.com>,
-	<linux-kernel@vger.kernel.org>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [PATCH] NFC: port100: Introduce the use of function put_unaligned_le16
-References: <20141223152747.GA14667@vaishali-Ideapad-Z570>	<5499C154.3000500@broadcom.com> <CAK-LDb+PkqTXebZ2=5S42b+c7DGzgxs3Ey3d0S0NBDWuFNi7pw@mail.gmail.com>
-In-Reply-To: <CAK-LDb+PkqTXebZ2=5S42b+c7DGzgxs3Ey3d0S0NBDWuFNi7pw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+In-Reply-To: <CAP+RiCBDAi7e6vj5vvrcEpt17JicdmPwq16zhG9Fun11HfnBkw@mail.gmail.com>
+References: <CAP+RiCBDAi7e6vj5vvrcEpt17JicdmPwq16zhG9Fun11HfnBkw@mail.gmail.com>
+Date: Mon, 1 Dec 2014 12:49:05 -0600
+Message-ID: <CAP+RiCDMerG_8EYi=0Ta3BvAwuWinNPYuNevjF85w08HsX4f2Q@mail.gmail.com> (sfid-20141201_194915_624090_64125FF2)
+Subject: Re: Laptop disassociating by local choice (reason=17)
+From: Brent Taylor <motobud@gmail.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>, ath6kl@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/24/14 03:35, Vaishali Thakkar wrote:
-> On Wed, Dec 24, 2014 at 12:54 AM, Arend van Spriel<arend@broadcom.com>  wrote:
->> On 12/23/14 16:27, Vaishali Thakkar wrote:
->>>
->>> This patch introduces the use of function put_unaligned_le16.
->>>
->>> This is done using Coccinelle and semantic patch used is as follows:
->>>
->>> @a@
->>> typedef u16, __le16;
->>> {u16,__le16} e16;
->>> identifier tmp;
->>> expression ptr;
->>> expression y,e;
->>> type T;
->>> @@
->>>
->>> - tmp = cpu_to_le16(y);
->>>
->>>     <+... when != tmp
->>> (
->>> - memcpy(ptr, (T)&tmp, \(2\|sizeof(u16)\|sizeof(__le16)\|sizeof(e16)\));
->>> + put_unaligned_le16(y,ptr);
->>> |
->>> - memcpy(ptr, (T)&tmp, ...);
->>> + put_unaligned_le16(y,ptr);
->>> )
->>>     ...+>
->>> ? tmp = e
->>>
->>> @@ type T; identifier a.tmp; @@
->>>
->>> - T tmp;
->>> ...when != tmp
->>>
->>> Signed-off-by: Vaishali Thakkar<vthakkar1994@gmail.com>
->>> ---
->>>    drivers/nfc/port100.c | 6 ++----
->>>    1 file changed, 2 insertions(+), 4 deletions(-)
->>>
->>> diff --git a/drivers/nfc/port100.c b/drivers/nfc/port100.c
->>> index 4ac4d31..f7cbca8 100644
->>> --- a/drivers/nfc/port100.c
->>> +++ b/drivers/nfc/port100.c
->>> @@ -18,6 +18,7 @@
->>>    #include<linux/module.h>
->>>    #include<linux/usb.h>
->>>    #include<net/nfc/digital.h>
->>> +#include<linux/unaligned/access_ok.h>
->>
->>
->> It is incorrect to use this header file as was pointed out by Johannes to me
->> in a brcmfmac driver patch [1]. Unless this driver is architecture specific.
->>
->> Regards,
->> Arend
->>
->> [1]
->> https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=a1d69c60c44
+On Mon, Nov 10, 2014 at 12:12 PM, Brent Taylor <motobud@gmail.com> wrote:
+> Resending in plain text mode...
 >
-> Ok. Thanks for pointing out. I didn't know this. So, I guess using
-> <asm/unaligned.h>  could make sense. Should I include this??
-
-That's the one.
-
-Regards,
-Arend
-
->>>    #define VERSION "0.1"
->>>
->>> @@ -1136,7 +1137,6 @@ static int port100_in_send_cmd(struct
->>> nfc_digital_dev *ddev,
->>>    {
->>>          struct port100 *dev = nfc_digital_get_drvdata(ddev);
->>>          struct port100_cb_arg *cb_arg;
->>> -       __le16 timeout;
->>>
->>>          cb_arg = kzalloc(sizeof(struct port100_cb_arg), GFP_KERNEL);
->>>          if (!cb_arg)
->>> @@ -1145,9 +1145,7 @@ static int port100_in_send_cmd(struct
->>> nfc_digital_dev *ddev,
->>>          cb_arg->complete_cb = cb;
->>>          cb_arg->complete_arg = arg;
->>>
->>> -       timeout = cpu_to_le16(_timeout * 10);
->>> -
->>> -       memcpy(skb_push(skb, sizeof(__le16)),&timeout, sizeof(__le16));
->>> +       put_unaligned_le16(_timeout * 10, skb_push(skb, sizeof(__le16)));
->>>
->>>          return port100_send_cmd_async(dev, PORT100_CMD_IN_COMM_RF, skb,
->>>                                        port100_in_comm_rf_complete,
->>> cb_arg);
->>
->>
+> Hi Kalle,
+>    I have a custom built board with an AR6003 WiFi chip running
+> linux-3.10.40 and hostapd 2.2 that I'm trying to use as an access
+> point.
 >
+> My configuration file for hostapd is:
+> interface=wlan0
+> driver=nl80211
+> ssid=testssid
+> channel=1
+> own_ip_addr=**********
+> auth_algs=1
+> wpa=2
+> wpa_passphrase=**********
+> wpa_key_mgmt=WPA-PSK
+> wpa_pairwise=TKIP
+> rns_pairwise=CCMP
+> ignore_broadcase_ssid=1
 >
+> I should mention that this configuration works with a USB WiFi stick
+> with an ath9k chipset running the same linux kernel and hostapd
+> binary.
 >
+> When using the AR6003 chipset the client Laptop (HP EliteBook 8440p
+> running ubuntu 12.04.3 LTS) does not connect and prints the message:
+> wlan0: disassociating from <device mac> by local choice (reason=17)
+>
+> Running Wireshark on the Laptop, I see "Key (msg 1/4)", "Key (msg
+> 2/4)", and then "Key (msg 3/4)" before it tries to reauthenticate.
+>
+> On the access point device, I see the logs from WAP that message 3/4
+> was sent and the next message received is NL80211_CMD_DEL_STATION.
+>
+> I've searched online for the reason=17 and haven't come across an
+> answer yet.  The access point device is not connected to a computer
+> that is connected to the internet, so while getting log files is
+> possible, it 's just not the easiest thing to do.  If requested, I
+> could get a log dump from hostapd and/or debug output from the ath6kl
+> driver.
+>
+> Thanks for any help
+> Brent Taylor
 
+
+Does anyone know where the "reason=17" comes from?  I traced it down
+in the kernel and it looks like it comes from the WIFI Chip in the
+Laptop, but I can not find what it means.
+
+Is there more information from somewhere that I provide to get some
+help with this?
+
+Thanks,
+Brent
