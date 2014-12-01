@@ -1,75 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:1977 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753733AbaLANdz (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:44481 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752426AbaLAHLF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Dec 2014 08:33:55 -0500
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH 4/9] wil6210: remove wil_to_pcie_dev()
-Date: Mon, 1 Dec 2014 15:33:18 +0200
-Message-ID: <1417440803-26883-5-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20141201_143411_540735_289CB4E2)
-In-Reply-To: <1417440803-26883-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1417440803-26883-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Mon, 1 Dec 2014 02:11:05 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 0/7] ath10k: add support for new wmi-tlv backend
+References: <1417079481-22255-1-git-send-email-michal.kazior@tieto.com>
+Date: Mon, 1 Dec 2014 09:10:59 +0200
+In-Reply-To: <1417079481-22255-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Thu, 27 Nov 2014 10:11:14 +0100")
+Message-ID: <87mw77rgjg.fsf@kamboji.qca.qualcomm.com> (sfid-20141201_081109_176007_653F5B7B)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is no need to obtain physical device through
-wil->pdev->dev path, as it is done by this macro.
-The same device already stored as wiphy's device, thus
-wil_to_dev() returns the same device as wil_to_pcie_dev()
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Remove unnecessary macros, this allows to drop dependency
-by pci.h in the firmware download code.
+> First 2 patches are simple fixes. Patch 3 isn't
+> strictly related to wmi-tlv but I decided to
+> include it anyway. Other patches gradually
+> implement wmi-tlv.
+>
+> There's a bunch of false-positive checkpatch
+> warnings regarding `CHECK: No space is necessary
+> after a cast`.
+>
+> v2:
+>  * a lot of fixes (see notes on patch #7)
+>
+> Michal Kazior (7):
+>   ath10k: fix wmi svc bitmap dbg print
+>   ath10k: add sanity checks for service bmap parsing
+>   ath10k: make wmi service bitmap non-debug
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/fw.c      | 1 -
- drivers/net/wireless/ath/wil6210/fw_inc.c  | 2 +-
- drivers/net/wireless/ath/wil6210/wil6210.h | 1 -
- 3 files changed, 1 insertion(+), 3 deletions(-)
+These three are applied.
 
-diff --git a/drivers/net/wireless/ath/wil6210/fw.c b/drivers/net/wireless/ath/wil6210/fw.c
-index 8c6f3b0..93c5cc1 100644
---- a/drivers/net/wireless/ath/wil6210/fw.c
-+++ b/drivers/net/wireless/ath/wil6210/fw.c
-@@ -15,7 +15,6 @@
-  */
- #include <linux/firmware.h>
- #include <linux/module.h>
--#include <linux/pci.h>
- #include <linux/crc32.h>
- #include "wil6210.h"
- #include "fw.h"
-diff --git a/drivers/net/wireless/ath/wil6210/fw_inc.c b/drivers/net/wireless/ath/wil6210/fw_inc.c
-index 44cb71f..2658455 100644
---- a/drivers/net/wireless/ath/wil6210/fw_inc.c
-+++ b/drivers/net/wireless/ath/wil6210/fw_inc.c
-@@ -471,7 +471,7 @@ int wil_request_firmware(struct wil6210_priv *wil, const char *name)
- 	size_t sz;
- 	const void *d;
- 
--	rc = request_firmware(&fw, name, wil_to_pcie_dev(wil));
-+	rc = request_firmware(&fw, name, wil_to_dev(wil));
- 	if (rc) {
- 		wil_err_fw(wil, "Failed to load firmware %s\n", name);
- 		return rc;
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index f2f89e0..8c09700 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -469,7 +469,6 @@ struct wil6210_priv {
- #define wdev_to_wil(w) (struct wil6210_priv *)(wdev_priv(w))
- #define wil_to_ndev(i) (wil_to_wdev(i)->netdev)
- #define ndev_to_wil(n) (wdev_to_wil(n->ieee80211_ptr))
--#define wil_to_pcie_dev(i) (&i->pdev->dev)
- 
- __printf(2, 3)
- void wil_dbg_trace(struct wil6210_priv *wil, const char *fmt, ...);
+>   ath10k: implement intermediate event args
+>   ath10k: introduce wmi ops
+>   ath10k: make some wmi functions public
+>   ath10k: implement wmi-tlv backend
+
+I'm still looking at these.
+
 -- 
-2.1.0
-
+Kalle Valo
