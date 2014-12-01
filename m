@@ -1,35 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:58084 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750948AbaLLVvX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Dec 2014 16:51:23 -0500
-Date: Fri, 12 Dec 2014 22:51:21 +0100
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] cfg80211: avoid intersection when applying custom reg
-Message-ID: <20141212215121.GS25677@wotan.suse.de> (sfid-20141212_225126_401941_AF6714D9)
-References: <1417968225-17518-1-git-send-email-arik@wizery.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:64161 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753458AbaLAOTg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Dec 2014 09:19:36 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 7/7] ath10k: implement wmi-tlv backend
+References: <1417079481-22255-1-git-send-email-michal.kazior@tieto.com>
+	<1417079481-22255-8-git-send-email-michal.kazior@tieto.com>
+	<CA+BoTQn=g8-=FEEoW7Ux+p6s=EBy_3rwCP3qXWk_8ijR6jXY+Q@mail.gmail.com>
+Date: Mon, 1 Dec 2014 16:19:23 +0200
+In-Reply-To: <CA+BoTQn=g8-=FEEoW7Ux+p6s=EBy_3rwCP3qXWk_8ijR6jXY+Q@mail.gmail.com>
+	(Michal Kazior's message of "Fri, 28 Nov 2014 15:39:01 +0100")
+Message-ID: <87wq6bpi50.fsf@kamboji.qca.qualcomm.com> (sfid-20141201_151939_601125_2FAC760E)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1417968225-17518-1-git-send-email-arik@wizery.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Dec 07, 2014 at 06:03:45PM +0200, Arik Nemtsov wrote:
-> The custom-reg handling function can currently only add flags to a given
-> channel. This results in stale flags being left applied. In some cases
-> a channel was disabled and even the orig_flags were changed to reflect
-> this.
-> 
-> Previously the API was designed for a single invocation before wiphy
-> registration, so this didn't matter. The previous approach doesn't scale
-> well to self-managed regulatory devices, particularly when a more
-> permissive regdom is applied after a restrictive one.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-So why not make this an excemption to only managed devices? You show the
-issue but am not convinced this won't introduce regressions so would
-prefer to make this an exception for managed devices.
+> On 27 November 2014 at 10:11, Michal Kazior <michal.kazior@tieto.com> wrote:
+>> Latest main firmware branch introduced a new WMI
+>> ABI called wmi-tlv. It is not a tlv strictly
+>> speaking but something that resembles it because
+>> it is ordered and may have duplicate id entries.
+>>
+>> This prepares ath10k to support new hw.
+>>
+>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> [...]
+>> @@ -215,6 +254,42 @@ static inline char *wmi_service_name(int service_id)
+>>         SVCSTR(WMI_SERVICE_BURST);
+>>         SVCSTR(WMI_SERVICE_SMART_ANTENNA_SW_SUPPORT);
+>>         SVCSTR(WMI_SERVICE_SMART_ANTENNA_HW_SUPPORT);
+>> +       SVCSTR(WMI_SERVICE_ROAM_SCAN_OFFLOAD);
+>> +       SVCSTR(WMI_SERVICE_AP_PS_DETECT_OUT_OF_SYNC);
+>> +       SVCSTR(WMI_SERVICE_EARLY_RX);
+> [...]
+>> +       SVCSTR(WMI_SERVICE_RX_FULL_REORDER);
+>> +       SVCSTR(WMI_SERVICE_DHCP_OFFLOAD);
+>
+> I've added 3 new service enums in v2:
+> WMI_SERVICE_STA_RX_IPA_OFFLOAD_SUPPORT, WMI_SERVICE_MDNS_OFFLOAD,
+> WMI_SERVICE_SAP_AUTH_OFFLOAD but apparently I forgot to add SVCSTR()
+> for that..
 
-  Luis
+I added those in my not-yet-submitted v3:
+
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index a31a3028a847..7d091a74d3f3 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -290,6 +290,9 @@ static inline char *wmi_service_name(int service_id)
+        SVCSTR(WMI_SERVICE_ROAM_HO_OFFLOAD);
+        SVCSTR(WMI_SERVICE_RX_FULL_REORDER);
+        SVCSTR(WMI_SERVICE_DHCP_OFFLOAD);
++       SVCSTR(WMI_SERVICE_STA_RX_IPA_OFFLOAD_SUPPORT);
++       SVCSTR(WMI_SERVICE_MDNS_OFFLOAD);
++       SVCSTR(WMI_SERVICE_SAP_AUTH_OFFLOAD);
+        default:
+                return NULL;
+        }
+
+
+-- 
+Kalle Valo
