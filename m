@@ -1,65 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f41.google.com ([74.125.82.41]:43687 "EHLO
-	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751404AbaLZKid (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:1977 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753733AbaLANdz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Dec 2014 05:38:33 -0500
-Received: by mail-wg0-f41.google.com with SMTP id y19so14328579wgg.0
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Dec 2014 02:38:32 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Christopher Chavez <chrischavez@gmx.us>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: p54usb kernel panic on recent mainline kernels
-Date: Thu, 25 Dec 2014 23:27:13 +0100
-Message-ID: <94642933.uAVENFRu8I@debian64> (sfid-20141226_113838_995697_D2DE8327)
-In-Reply-To: <CAAFQ00kq-5+TFkH+i5fMXATxVCy-DeLP4G+D6+dxDSRo-fh6Xw@mail.gmail.com>
-References: <CAAFQ00kq-5+TFkH+i5fMXATxVCy-DeLP4G+D6+dxDSRo-fh6Xw@mail.gmail.com>
+	Mon, 1 Dec 2014 08:33:55 -0500
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: [PATCH 4/9] wil6210: remove wil_to_pcie_dev()
+Date: Mon, 1 Dec 2014 15:33:18 +0200
+Message-ID: <1417440803-26883-5-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20141201_143411_540735_289CB4E2)
+In-Reply-To: <1417440803-26883-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1417440803-26883-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+There is no need to obtain physical device through
+wil->pdev->dev path, as it is done by this macro.
+The same device already stored as wiphy's device, thus
+wil_to_dev() returns the same device as wil_to_pcie_dev()
 
-On Wednesday, December 24, 2014 10:39:55 PM Christopher Chavez wrote:
-> When a device using p54usb joins/connects/associates with an access
-> point, a kernel panic occurs.
-I've just got out one of two of my p54usb devices. My device is able
-scan, connect, receive and pass traffic to and from my WPA2 AP without
-causing any panics.
+Remove unnecessary macros, this allows to drop dependency
+by pci.h in the firmware download code.
 
-> The AP tested uses WPA2; have not tested whether the issue occurs for
-> other security types or ad hoc connections. The specific devices
-> tested are 2Wire 802.11g USB v1 (vendor 1630 device 0005).
-All I have are p54usb V2 devices [Specifically, Dell 1450 USB V2]. 
-I don't know if V1 works or not - So, this might actually be the
-culprit right here.
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/fw.c      | 1 -
+ drivers/net/wireless/ath/wil6210/fw_inc.c  | 2 +-
+ drivers/net/wireless/ath/wil6210/wil6210.h | 1 -
+ 3 files changed, 1 insertion(+), 3 deletions(-)
 
-> The firmware used is 2.13.1.0.lm86.arm (a.k.a. "isl3886usb" 
-> recommended on wireless.kernel.org). Tested on Ubuntu 14.10,
-> 32-bit x86 (have not tested 64-bit or other architectures).
-V2 firmware (due to V2 device). I only have 64-Bit arch. 
+diff --git a/drivers/net/wireless/ath/wil6210/fw.c b/drivers/net/wireless/ath/wil6210/fw.c
+index 8c6f3b0..93c5cc1 100644
+--- a/drivers/net/wireless/ath/wil6210/fw.c
++++ b/drivers/net/wireless/ath/wil6210/fw.c
+@@ -15,7 +15,6 @@
+  */
+ #include <linux/firmware.h>
+ #include <linux/module.h>
+-#include <linux/pci.h>
+ #include <linux/crc32.h>
+ #include "wil6210.h"
+ #include "fw.h"
+diff --git a/drivers/net/wireless/ath/wil6210/fw_inc.c b/drivers/net/wireless/ath/wil6210/fw_inc.c
+index 44cb71f..2658455 100644
+--- a/drivers/net/wireless/ath/wil6210/fw_inc.c
++++ b/drivers/net/wireless/ath/wil6210/fw_inc.c
+@@ -471,7 +471,7 @@ int wil_request_firmware(struct wil6210_priv *wil, const char *name)
+ 	size_t sz;
+ 	const void *d;
+ 
+-	rc = request_firmware(&fw, name, wil_to_pcie_dev(wil));
++	rc = request_firmware(&fw, name, wil_to_dev(wil));
+ 	if (rc) {
+ 		wil_err_fw(wil, "Failed to load firmware %s\n", name);
+ 		return rc;
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index f2f89e0..8c09700 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -469,7 +469,6 @@ struct wil6210_priv {
+ #define wdev_to_wil(w) (struct wil6210_priv *)(wdev_priv(w))
+ #define wil_to_ndev(i) (wil_to_wdev(i)->netdev)
+ #define ndev_to_wil(n) (wdev_to_wil(n->ieee80211_ptr))
+-#define wil_to_pcie_dev(i) (&i->pdev->dev)
+ 
+ __printf(2, 3)
+ void wil_dbg_trace(struct wil6210_priv *wil, const char *fmt, ...);
+-- 
+2.1.0
 
-> Tested on machines with Intel and SiS USB chipsets.
-It works with the Intel Z87 chipset I have. Don't know
-about other chipsets from different vendors.
-
-> I can try collecting more info (e.g. dmesg output), and am currently 
-> bisecting the kernel somewhere around 3.17-rc1.
-I'm running 3.19-rc1(-wl). I haven't seen or heard anything wrong
-with it in the past. It is supposed to work.
-
-> Should this be reported as a kernel bug or with the driver?
-"no special mailing list, use the linux wireless list 
-<yes, linux-wireless@vger.kernel.org is fine> for development
-and firmware issues."
-
-<http://wireless.kernel.org/en/users/Drivers/p54#Contact>
-
-I can't really dig into anything specific to v1 [no device],
-chipset or usb-subsystem. It would be nice if you can capture
-a crash and post it [preferably with the right subsystem in CC].
-
-Regards,
-
-Christian
