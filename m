@@ -1,101 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:62581 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751746AbaL2OSW (ORCPT
+Received: from mail-wg0-f41.google.com ([74.125.82.41]:42151 "EHLO
+	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753947AbaLAPxu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Dec 2014 09:18:22 -0500
-Received: by mail-wi0-f181.google.com with SMTP id r20so22181154wiv.14
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Dec 2014 06:18:21 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <54A15896.2020008@rempel-privat.de>
-References: <1419689545-26965-1-git-send-email-lorenzo.bianconi83@gmail.com>
-	<549FFB8F.9010701@rempel-privat.de>
-	<CAA2SeNKxDk+sgpP9be=8MUgVOBHO26=oA4r4v+wRHfN1b6fH8w@mail.gmail.com>
-	<54A15896.2020008@rempel-privat.de>
-Date: Mon, 29 Dec 2014 15:18:21 +0100
-Message-ID: <CAA2SeNKM34-DWGFw5ahKVt2N=yr97OK6zCcf=FNRU5jrDJc6gQ@mail.gmail.com> (sfid-20141229_151826_078306_F7A73C71)
-Subject: Re: [RFC 0/3] add TPC capability for AR9002 based chips
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: Oleksij Rempel <linux@rempel-privat.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>,
-	=?UTF-8?B?VGhvbWFzIEjDvGhu?= <thomas@net.t-labs.tu-berlin.de>,
-	adrian@freebsd.org
-Content-Type: text/plain; charset=UTF-8
+	Mon, 1 Dec 2014 10:53:50 -0500
+Received: by mail-wg0-f41.google.com with SMTP id y19so14577539wgg.0
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Dec 2014 07:53:49 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v2 3/4] iw: fix attr max for reg_rule
+Date: Mon,  1 Dec 2014 17:53:43 +0200
+Message-Id: <1417449224-10293-3-git-send-email-arik@wizery.com> (sfid-20141201_165354_139601_D7EC8123)
+In-Reply-To: <1417449224-10293-1-git-send-email-arik@wizery.com>
+References: <1417449224-10293-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Am 28.12.2014 um 15:32 schrieb Lorenzo Bianconi:
->>> Hi, can you please describe some testcases for you patches.
->>>
->>
->> This patchset adds Transmission Power Control (TPC) for AR9002 based
->> chips. IOW it enables the capability of correct TX power on per-packet
->> basis. It is preparatory for upcoming Thomas's joint rate and power
->> control
->>  algorithm.
->
-> Do you mean, right now there is no way to test your patches?
->
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ reg.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-I have just added TPC support to ath9k. In order to exploit that hw
-feature we have to wait Thomas's algorithm :).
-However in order to test patches you can set tx_power field of
-ath_frame_info data structure in setup_frame_info() to a different
-value (for the moment it is set to MAX_RATE_POWER) and measure the RX
-power on the other end of the link (this is what I did).
-
-Regards,
-Lorenzo
-
->
->> Regards,
->> Lorenzo
->>
->>> Am 27.12.2014 um 15:12 schrieb Lorenzo Bianconi:
->>>> This patchset adds TPC capability to ath9k for AR9002 based chips
->>>>
->>>> *[RFC 1/3]: add TX power per-rate tables to cap TX power in TX descriptor path
->>>> *[RFC 2/3]: cap per-packet TX power according to TX power per-rate tables
->>>> *[RFC 3/3]: enable per-packet TPC on AR9002 based chips by default
->>>>
->>>> This pachset is based on Adrian Chadd's hints
->>>> (https://www.mail-archive.com/ath9k-devel@lists.ath9k.org/msg10396.html)
->>>>
->>>> Lorenzo Bianconi (3):
->>>>   ath9k: add power per-rate tables for AR9002 chips
->>>>   ath9k: add TPC to TX path for AR9002 based chips
->>>>   ath9k: enable per-packet TPC on AR9002 based chips
->>>>
->>>>  drivers/net/wireless/ath/ath9k/ar5008_phy.c  | 80 ++++++++++++++++++++++++++++
->>>>  drivers/net/wireless/ath/ath9k/debug.c       |  5 --
->>>>  drivers/net/wireless/ath/ath9k/eeprom_4k.c   | 14 +++++
->>>>  drivers/net/wireless/ath/ath9k/eeprom_9287.c | 15 ++++++
->>>>  drivers/net/wireless/ath/ath9k/eeprom_def.c  | 14 +++++
->>>>  drivers/net/wireless/ath/ath9k/hw.c          |  3 +-
->>>>  drivers/net/wireless/ath/ath9k/hw.h          |  2 +
->>>>  drivers/net/wireless/ath/ath9k/xmit.c        | 66 +++++++++++++++++++----
->>>>  8 files changed, 181 insertions(+), 18 deletions(-)
->>>>
->>>
->>>
->>> --
->>> Regards,
->>> Oleksij
->>>
->>
->>
->>
->
->
-> --
-> Regards,
-> Oleksij
->
-
-
-
+diff --git a/reg.c b/reg.c
+index 9af8e7e..a02c982 100644
+--- a/reg.c
++++ b/reg.c
+@@ -127,7 +127,7 @@ static int print_reg_handler(struct nl_msg *msg, void *arg)
+ 	struct nlattr *nl_rule;
+ 	int rem_rule;
+ 	enum nl80211_dfs_regions dfs_domain;
+-	static struct nla_policy reg_rule_policy[NL80211_FREQUENCY_ATTR_MAX + 1] = {
++	static struct nla_policy reg_rule_policy[NL80211_REG_RULE_ATTR_MAX + 1] = {
+ 		[NL80211_ATTR_REG_RULE_FLAGS]		= { .type = NLA_U32 },
+ 		[NL80211_ATTR_FREQ_RANGE_START]		= { .type = NLA_U32 },
+ 		[NL80211_ATTR_FREQ_RANGE_END]		= { .type = NLA_U32 },
+@@ -159,10 +159,10 @@ static int print_reg_handler(struct nl_msg *msg, void *arg)
+ 	printf("country %c%c: %s\n", alpha2[0], alpha2[1], dfs_domain_name(dfs_domain));
+ 
+ 	nla_for_each_nested(nl_rule, tb_msg[NL80211_ATTR_REG_RULES], rem_rule) {
+-		struct nlattr *tb_rule[NL80211_FREQUENCY_ATTR_MAX + 1];
++		struct nlattr *tb_rule[NL80211_REG_RULE_ATTR_MAX + 1];
+ 		__u32 flags, start_freq_khz, end_freq_khz, max_bw_khz, max_ant_gain_mbi, max_eirp_mbm;
+ 
+-		nla_parse(tb_rule, NL80211_FREQUENCY_ATTR_MAX, nla_data(nl_rule), nla_len(nl_rule), reg_rule_policy);
++		nla_parse(tb_rule, NL80211_REG_RULE_ATTR_MAX, nla_data(nl_rule), nla_len(nl_rule), reg_rule_policy);
+ 
+ 		flags = nla_get_u32(tb_rule[NL80211_ATTR_REG_RULE_FLAGS]);
+ 		start_freq_khz = nla_get_u32(tb_rule[NL80211_ATTR_FREQ_RANGE_START]);
 -- 
-UNIX is Sexy: who | grep -i blonde | talk; cd ~; wine; talk; touch;
-unzip; touch; strip; gasp; finger; gasp; mount; fsck; more; yes; gasp;
-umount; make clean; sleep
+1.9.1
+
