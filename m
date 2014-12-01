@@ -1,84 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:23105 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750845AbaLCIJm (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:6657 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753491AbaLANiz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Dec 2014 03:09:42 -0500
-Subject: [PATCH v4 0/8] ath10k: add support for new wmi-tlv backend
-To: <ath10k@lists.infradead.org>
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Date: Wed, 3 Dec 2014 10:09:16 +0200
-Message-ID: <20141203080803.31187.85059.stgit@potku.adurom.net> (sfid-20141203_090945_564864_8C9A1155)
+	Mon, 1 Dec 2014 08:38:55 -0500
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: [PATCH 8/9] wil6210: reset flow update
+Date: Mon, 1 Dec 2014 15:36:31 +0200
+Message-ID: <1417440991-27358-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20141201_143859_470762_837CEC95)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+If card reset with firmware download executed, followed by reset
+with use of firmware from build in flash, firmware download indication
+remains in the hardware register.
+When running firmware download flow,
+the SW download indication is written by the driver to bit 0 in usage_6:
+wil_fw_load(), "S(RGF_USER_USAGE_6, 1);"
+This register, like all USER RGF, wasn't reset in SW reset flow.
+Therefore the driver must clear it on SW reset flow.
 
-here's v4 of Michal's patches to add WMI TLV interface support to
-ath10k.
-
-v4:
-
-* fix error handling for ath10k_core_init_firmware_features()
-
-* ar->htt.max_num_pending_tx = TARGET_TLV_NUM_MSDU_DESC
-
-* use enum ath10k_fw_wmi_op_version op_version in struct ath10k_wmi
-
-* add ATH10K_FW_WMI_OP_VERSION_UNSET
-
-* add ATH10K_FW_WMI_OP_VERSION_MAX
-
-
-v3:
-
-* add ATH10K_FW_IE_WMI_OP_VERSION
-
-* deprecate ATH10K_FW_FEATURE_WMI_10* feature flags
-
-* remove ATH10K_FW_FEATURE_WMI_TLV, functionality replaced by
-  ATH10K_FW_IE_WMI_OP_VERSION
-
-* remove struct ieee80211_iface_combination ath10k_tlv_if_comb[] & co.
-  Those can be added in a different patch.
-
-* add SVCSTR() for STA_RX_IPA_OFFLOAD_SUPPORT, MDNS_OFFLOAD and SAP_AUTH_OFFLOAD
-
-
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
+ drivers/net/wireless/ath/wil6210/main.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-Kalle Valo (4):
-      ath10k: clean up error handling in ath10k_core_probe_fw()
-      ath10k: create ath10k_core_init_features()
-      ath10k: add ATH10K_FW_IE_WMI_OP_VERSION
-      ath10k: set max_num_pending_tx in ath10k_core_init_firmware_features()
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index 8f257a4..8ff3fe3 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -493,6 +493,9 @@ static int wil_target_reset(struct wil6210_priv *wil)
+ 
+ 	wil_halt_cpu(wil);
+ 
++	/* Clear Fw Download notification */
++	C(RGF_USER_USAGE_6, BIT(0));
++
+ 	if (is_sparrow) {
+ 		S(RGF_CAF_OSC_CONTROL, BIT_CAF_OSC_XTAL_EN);
+ 		/* XTAL stabilization should take about 3ms */
+-- 
+2.1.0
 
-Michal Kazior (4):
-      ath10k: implement intermediate event args
-      ath10k: introduce wmi ops
-      ath10k: make some wmi functions public
-      ath10k: implement wmi-tlv backend
-
-
- drivers/net/wireless/ath/ath10k/Makefile   |    1 
- drivers/net/wireless/ath/ath10k/ce.c       |    2 
- drivers/net/wireless/ath/ath10k/core.c     |  105 +
- drivers/net/wireless/ath/ath10k/core.h     |   10 
- drivers/net/wireless/ath/ath10k/debug.c    |    1 
- drivers/net/wireless/ath/ath10k/htt_tx.c   |    5 
- drivers/net/wireless/ath/ath10k/hw.h       |   26 
- drivers/net/wireless/ath/ath10k/mac.c      |    2 
- drivers/net/wireless/ath/ath10k/spectral.c |    1 
- drivers/net/wireless/ath/ath10k/testmode.c |    5 
- drivers/net/wireless/ath/ath10k/wmi-ops.h  |  821 ++++++++++
- drivers/net/wireless/ath/ath10k/wmi-tlv.c  | 2218 ++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi-tlv.h  | 1380 +++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi.c      | 1375 +++++++++++------
- drivers/net/wireless/ath/ath10k/wmi.h      |  268 +++
- 15 files changed, 5597 insertions(+), 623 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath10k/wmi-ops.h
- create mode 100644 drivers/net/wireless/ath/ath10k/wmi-tlv.c
- create mode 100644 drivers/net/wireless/ath/ath10k/wmi-tlv.h
