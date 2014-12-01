@@ -1,37 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f175.google.com ([209.85.213.175]:38758 "EHLO
-	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751216AbaLWSF7 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:46858 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932275AbaLAVAN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Dec 2014 13:05:59 -0500
-Received: by mail-ig0-f175.google.com with SMTP id h15so5838485igd.2
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Dec 2014 10:05:59 -0800 (PST)
+	Mon, 1 Dec 2014 16:00:13 -0500
+Date: Mon, 1 Dec 2014 15:50:27 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: bluetooth-next 2014-11-27
+Message-ID: <20141201205027.GB7266@tuxdriver.com> (sfid-20141201_220020_514784_FC39978D)
+References: <20141127103606.GA11964@t440s>
 MIME-Version: 1.0
-In-Reply-To: <5499A391.2060705@rempel-privat.de>
-References: <CA+A7n+jFWWs-U2DapExRqYgK=e2kGowPzFHJPh72DRwzBmVggg@mail.gmail.com>
-	<54991B32.2010105@rempel-privat.de>
-	<CA+A7n+hbr2ctPkSta9-MWT1opAT2hCB9jYHvFu7N3C_ZvxXSzw@mail.gmail.com>
-	<5499A391.2060705@rempel-privat.de>
-Date: Tue, 23 Dec 2014 13:05:58 -0500
-Message-ID: <CA+A7n+gcZnaVjvXb8DAsOC_RsVJ5qUzKU5bFF4YhKGZs6SaYXg@mail.gmail.com> (sfid-20141223_190603_470855_06944F5E)
-Subject: Re: bug report for ath9k_htc driver
-From: Jeremy Audet <ichimonji10@gmail.com>
-To: Oleksij Rempel <linux@rempel-privat.de>
-Cc: linux-wireless@vger.kernel.org, Adrian Chadd <adrian@freebsd.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20141127103606.GA11964@t440s>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> I would suggest to test other cable or other usb controller.
-> With other words, I have no idea about the reason for initial
-> disconnection. It can be bad usb connection, noise or not enough power.
+On Thu, Nov 27, 2014 at 12:36:06PM +0200, Johan Hedberg wrote:
+> Hi John,
+> 
+> Here's one more bluetooth-next pull request for 3.19:
+> 
+>  - Minor cleanups for ieee802154 & mac802154
+>  - Fix for the kernel warning with !TASK_RUNNING reported by Kirill A.
+>    Shutemov
+>  - Support for another ath3k device
+>  - Fix for tracking link key based security level
+>  - Device tree bindings for btmrvl + a state update fix
+>  - Fix for wrong ACL flags on LE links
+> 
+> Please let me know if there are any issues pulling. Thanks.
+> 
+> Johan
+> 
+> ---
+> The following changes since commit a86c02ea38c53b695209b1181f9e2e18d73eb4e8:
+> 
+>   Bluetooth: Add support for Broadcom BCM20702A1 variant (2014-11-18 08:32:14 +0100)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next.git for-upstream
+> 
+> for you to fetch changes up to f6af675ef5489c69fc3d4faf8c6f477df3cbf8b9:
+> 
+>   Bluetooth: Automatically flushable packets aren't allowed on LE links (2014-11-27 12:12:27 +0200)
 
-Oh lordy. I connected the TL-WN722N directly to my computer, set up a
-wireless access point and have been streaming music off of it for the
-past 30 minutes with no issues. It appears that the issue was the USB
-cradle [1] that shipped with the TL-WN722N. Thank you very much for
-your help, and I'm sorry for having raised a false alarm.
+Pulling now...
 
--Jeremy "Ichimonji10" Audet
-
-[1] http://www.newegg.com/Product/Product.aspx?Item=N82E16833997218
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
