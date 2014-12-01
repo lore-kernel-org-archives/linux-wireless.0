@@ -1,91 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f48.google.com ([209.85.218.48]:57018 "EHLO
-	mail-oi0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750785AbaLTSHb (ORCPT
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:58061 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932147AbaLAPsz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Dec 2014 13:07:31 -0500
-Message-ID: <5495BAE1.6090202@lwfinger.net> (sfid-20141220_190751_898721_973BE9DC)
-Date: Sat, 20 Dec 2014 12:07:29 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
-	Chaoming Li <chaoming_li@realsil.com.cn>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-	Joe Perches <joe@perches.com>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] net: wireless: rtlwifi: rtl8192ee: trx.c:  Remove unused
- function
-References: <1419079694-32476-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-In-Reply-To: <1419079694-32476-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+	Mon, 1 Dec 2014 10:48:55 -0500
+Received: by mail-wi0-f178.google.com with SMTP id hi2so17810458wib.5
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Dec 2014 07:48:54 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v6 4/4] cfg80211: correctly check ad-hoc channels
+Date: Mon,  1 Dec 2014 17:48:47 +0200
+Message-Id: <1417448927-9337-4-git-send-email-arik@wizery.com> (sfid-20141201_164859_011286_55B72C0C)
+In-Reply-To: <1417448927-9337-1-git-send-email-arik@wizery.com>
+References: <1417448927-9337-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/20/2014 06:48 AM, Rickard Strandqvist wrote:
-> Remove the function rtl92ee_get_available_desc() that is not used anywhere.
->
-> This was partially found by using a static code analysis program called cppcheck.
->
-> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-> ---
->   drivers/net/wireless/rtlwifi/rtl8192ee/trx.c |   21 ---------------------
->   drivers/net/wireless/rtlwifi/rtl8192ee/trx.h |    1 -
->   2 files changed, 22 deletions(-)
+Ad-hoc requires beaconing for regulatory purposes. Validate that the
+channel is valid for beaconing, and not only enabled.
 
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+---
+Ilan Peer mentioned this bug privately, so I thought I'd roll it up into
+this patch-set
 
-Richard: FYI, John Linville stepped down as wireless maintainer this week, thus 
-there is no need to send patches to him anymore. Kalle Valo, the new maintainer, 
-has stated that it is not necessary to Cc him.
+ net/wireless/reg.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-Larry
-
->
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c b/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c
-> index 2fcbef1..8186ed2 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c
-> @@ -710,27 +710,6 @@ static u16 get_desc_addr_fr_q_idx(u16 queue_index)
->   	return desc_address;
->   }
->
-> -void rtl92ee_get_available_desc(struct ieee80211_hw *hw, u8 q_idx)
-> -{
-> -	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
-> -	struct rtl_priv *rtlpriv = rtl_priv(hw);
-> -	u16 point_diff = 0;
-> -	u16 current_tx_read_point = 0, current_tx_write_point = 0;
-> -	u32 tmp_4byte;
-> -
-> -	tmp_4byte = rtl_read_dword(rtlpriv,
-> -				   get_desc_addr_fr_q_idx(q_idx));
-> -	current_tx_read_point = (u16)((tmp_4byte >> 16) & 0x0fff);
-> -	current_tx_write_point = (u16)((tmp_4byte) & 0x0fff);
-> -
-> -	point_diff = ((current_tx_read_point > current_tx_write_point) ?
-> -		      (current_tx_read_point - current_tx_write_point) :
-> -		      (TX_DESC_NUM_92E - current_tx_write_point +
-> -		       current_tx_read_point));
-> -
-> -	rtlpci->tx_ring[q_idx].avl_desc = point_diff;
-> -}
-> -
->   void rtl92ee_pre_fill_tx_bd_desc(struct ieee80211_hw *hw,
->   				 u8 *tx_bd_desc, u8 *desc, u8 queue_index,
->   				 struct sk_buff *skb, dma_addr_t addr)
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192ee/trx.h b/drivers/net/wireless/rtlwifi/rtl8192ee/trx.h
-> index 6f9be1c..4426c49 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192ee/trx.h
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192ee/trx.h
-> @@ -829,7 +829,6 @@ void rtl92ee_rx_check_dma_ok(struct ieee80211_hw *hw, u8 *header_desc,
->   			     u8 queue_index);
->   u16	rtl92ee_rx_desc_buff_remained_cnt(struct ieee80211_hw *hw,
->   					  u8 queue_index);
-> -void rtl92ee_get_available_desc(struct ieee80211_hw *hw, u8 queue_index);
->   void rtl92ee_pre_fill_tx_bd_desc(struct ieee80211_hw *hw,
->   				 u8 *tx_bd_desc, u8 *desc, u8 queue_index,
->   				 struct sk_buff *skb, dma_addr_t addr);
->
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index c3e6f80..004ea14 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1552,9 +1552,15 @@ static bool reg_wdev_chan_valid(struct wiphy *wiphy, struct wireless_dev *wdev)
+ 		ret = cfg80211_reg_can_beacon(wiphy,
+ 					      &wdev->chandef, wdev->iftype);
+ 		break;
++	case NL80211_IFTYPE_ADHOC:
++		if (!wdev->ssid_len)
++			goto out;
++
++		ret = cfg80211_reg_can_beacon(wiphy,
++					      &wdev->chandef, wdev->iftype);
++		break;
+ 	case NL80211_IFTYPE_STATION:
+ 	case NL80211_IFTYPE_P2P_CLIENT:
+-	case NL80211_IFTYPE_ADHOC:
+ 		if (!wdev->current_bss ||
+ 		    !wdev->current_bss->pub.channel)
+ 			goto out;
+-- 
+1.9.1
 
