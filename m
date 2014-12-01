@@ -1,79 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.21]:62411 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751344AbaL1MqZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Dec 2014 07:46:25 -0500
-Message-ID: <549FFB8F.9010701@rempel-privat.de> (sfid-20141228_134747_666903_0B23969F)
-Date: Sun, 28 Dec 2014 13:46:07 +0100
-From: Oleksij Rempel <linux@rempel-privat.de>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:15486 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753744AbaLAOpa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Dec 2014 09:45:30 -0500
+Subject: [PATCH v3 2/7] ath10k: add ATH10K_FW_IE_WMI_OP_VERSION
+To: <ath10k@lists.infradead.org>
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Date: Mon, 1 Dec 2014 16:45:07 +0200
+Message-ID: <20141201144507.18248.9856.stgit@potku.adurom.net> (sfid-20141201_154534_281529_1885044E)
+In-Reply-To: <20141201144400.18248.62714.stgit@potku.adurom.net>
+References: <20141201144400.18248.62714.stgit@potku.adurom.net>
 MIME-Version: 1.0
-To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
-	linux-wireless@vger.kernel.org
-CC: nbd@openwrt.org, thomas@net.t-labs.tu-berlin.de, adrian@freebsd.org
-Subject: Re: [RFC 0/3] add TPC capability for AR9002 based chips
-References: <1419689545-26965-1-git-send-email-lorenzo.bianconi83@gmail.com>
-In-Reply-To: <1419689545-26965-1-git-send-email-lorenzo.bianconi83@gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="CFSNfwaXIqAPXdjLGCSCL7XdPrPRe7ddD"
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---CFSNfwaXIqAPXdjLGCSCL7XdPrPRe7ddD
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Instead of using feature flags, add new 32 bit variable for managing different
+WMI versions. This makes it firmware interface tests a bit less convoluted,
+especially when we add one more interface.
 
-Hi, can you please describe some testcases for you patches.
-
-Am 27.12.2014 um 15:12 schrieb Lorenzo Bianconi:
-> This patchset adds TPC capability to ath9k for AR9002 based chips
->=20
-> *[RFC 1/3]: add TX power per-rate tables to cap TX power in TX descript=
-or path
-> *[RFC 2/3]: cap per-packet TX power according to TX power per-rate tabl=
-es
-> *[RFC 3/3]: enable per-packet TPC on AR9002 based chips by default
->=20
-> This pachset is based on Adrian Chadd's hints
-> (https://www.mail-archive.com/ath9k-devel@lists.ath9k.org/msg10396.html=
-)
->=20
-> Lorenzo Bianconi (3):
->   ath9k: add power per-rate tables for AR9002 chips
->   ath9k: add TPC to TX path for AR9002 based chips
->   ath9k: enable per-packet TPC on AR9002 based chips
->=20
->  drivers/net/wireless/ath/ath9k/ar5008_phy.c  | 80 ++++++++++++++++++++=
-++++++++
->  drivers/net/wireless/ath/ath9k/debug.c       |  5 --
->  drivers/net/wireless/ath/ath9k/eeprom_4k.c   | 14 +++++
->  drivers/net/wireless/ath/ath9k/eeprom_9287.c | 15 ++++++
->  drivers/net/wireless/ath/ath9k/eeprom_def.c  | 14 +++++
->  drivers/net/wireless/ath/ath9k/hw.c          |  3 +-
->  drivers/net/wireless/ath/ath9k/hw.h          |  2 +
->  drivers/net/wireless/ath/ath9k/xmit.c        | 66 +++++++++++++++++++-=
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
->  8 files changed, 181 insertions(+), 18 deletions(-)
->=20
+ drivers/net/wireless/ath/ath10k/core.c |   30 +++++++++++++++++++++++++++---
+ drivers/net/wireless/ath/ath10k/core.h |    8 +++++---
+ drivers/net/wireless/ath/ath10k/hw.h   |   10 ++++++++++
+ 3 files changed, 42 insertions(+), 6 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index bd6315952ad0..f8ddc8087db9 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -447,7 +447,7 @@ static int ath10k_core_fetch_firmware_api_n(struct ath10k *ar, const char *name)
+ 	int ie_id, i, index, bit, ret;
+ 	struct ath10k_fw_ie *hdr;
+ 	const u8 *data;
+-	__le32 *timestamp;
++	__le32 *timestamp, *version;
+ 
+ 	/* first fetch the firmware file (firmware-*.bin) */
+ 	ar->firmware = ath10k_fetch_fw_file(ar, ar->hw_params.fw.dir, name);
+@@ -562,6 +562,17 @@ static int ath10k_core_fetch_firmware_api_n(struct ath10k *ar, const char *name)
+ 			ar->otp_len = ie_len;
+ 
+ 			break;
++		case ATH10K_FW_IE_WMI_OP_VERSION:
++			if (ie_len != sizeof(u32))
++				break;
++
++			version = (__le32 *)data;
++
++			ar->wmi.op_version = le32_to_cpup(version);
++
++			ath10k_dbg(ar, ATH10K_DBG_BOOT, "found fw ie wmi op version %d\n",
++				   ar->wmi.op_version);
++			break;
+ 		default:
+ 			ath10k_warn(ar, "Unknown FW IE: %u\n",
+ 				    le32_to_cpu(hdr->id));
+@@ -801,11 +812,24 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
+ 	}
+ 
+ 	if (test_bit(ATH10K_FW_FEATURE_WMI_10X, ar->fw_features)) {
+-		ar->max_num_peers = TARGET_10X_NUM_PEERS;
+-		ar->max_num_stations = TARGET_10X_NUM_STATIONS;
++		if (test_bit(ATH10K_FW_FEATURE_WMI_10_2, ar->fw_features))
++			ar->wmi.op_version = ATH10K_FW_WMI_OP_VERSION_10_2;
++		else
++			ar->wmi.op_version = ATH10K_FW_WMI_OP_VERSION_10_1;
+ 	} else {
++		ar->wmi.op_version = ATH10K_FW_WMI_OP_VERSION_MAIN;
++	}
++
++	switch (ar->wmi.op_version) {
++	case ATH10K_FW_WMI_OP_VERSION_MAIN:
+ 		ar->max_num_peers = TARGET_NUM_PEERS;
+ 		ar->max_num_stations = TARGET_NUM_STATIONS;
++		break;
++	case ATH10K_FW_WMI_OP_VERSION_10_1:
++	case ATH10K_FW_WMI_OP_VERSION_10_2:
++		ar->max_num_peers = TARGET_10X_NUM_PEERS;
++		ar->max_num_stations = TARGET_10X_NUM_STATIONS;
++		break;
+ 	}
+ 
+ 	return 0;
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 514c219263a5..92b04fe73151 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -120,6 +120,7 @@ struct ath10k_mem_chunk {
+ };
+ 
+ struct ath10k_wmi {
++	unsigned int op_version;
+ 	enum ath10k_htc_ep_id eid;
+ 	struct completion service_ready;
+ 	struct completion unified_ready;
+@@ -369,7 +370,7 @@ enum ath10k_fw_features {
+ 	/* wmi_mgmt_rx_hdr contains extra RSSI information */
+ 	ATH10K_FW_FEATURE_EXT_WMI_MGMT_RX = 0,
+ 
+-	/* firmware from 10X branch */
++	/* Firmware from 10X branch. Deprecated, don't use in new code. */
+ 	ATH10K_FW_FEATURE_WMI_10X = 1,
+ 
+ 	/* firmware support tx frame management over WMI, otherwise it's HTT */
+@@ -378,8 +379,9 @@ enum ath10k_fw_features {
+ 	/* Firmware does not support P2P */
+ 	ATH10K_FW_FEATURE_NO_P2P = 3,
+ 
+-	/* Firmware 10.2 feature bit. The ATH10K_FW_FEATURE_WMI_10X feature bit
+-	 * is required to be set as well.
++	/* Firmware 10.2 feature bit. The ATH10K_FW_FEATURE_WMI_10X feature
++	 * bit is required to be set as well. Deprecated, don't use in new
++	 * code.
+ 	 */
+ 	ATH10K_FW_FEATURE_WMI_10_2 = 4,
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index dfedfd0e0f34..04aaf9af3ca0 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -58,6 +58,16 @@ enum ath10k_fw_ie_type {
+ 	ATH10K_FW_IE_FEATURES = 2,
+ 	ATH10K_FW_IE_FW_IMAGE = 3,
+ 	ATH10K_FW_IE_OTP_IMAGE = 4,
++
++	/* WMI "operations" interface version, 32 bit value. Supported from
++	 * FW API 4 and above. */
++	ATH10K_FW_IE_WMI_OP_VERSION = 5,
++};
++
++enum ath10k_fw_wmi_op_version {
++	ATH10K_FW_WMI_OP_VERSION_MAIN = 0,
++	ATH10K_FW_WMI_OP_VERSION_10_1 = 1,
++	ATH10K_FW_WMI_OP_VERSION_10_2 = 2,
+ };
+ 
+ /* Known pecularities:
 
---=20
-Regards,
-Oleksij
-
-
---CFSNfwaXIqAPXdjLGCSCL7XdPrPRe7ddD
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iF4EAREIAAYFAlSf+48ACgkQHwImuRkmbWkBIAD7BeOCPzd+tNwhC4+b/2YGvfQL
-ee0xkvPItxkqey14zhoA/i/eE9Y8Z/rPBQwGzoCZwJnbdq++CAgQEUzBLl9Lnp82
-=hEAk
------END PGP SIGNATURE-----
-
---CFSNfwaXIqAPXdjLGCSCL7XdPrPRe7ddD--
