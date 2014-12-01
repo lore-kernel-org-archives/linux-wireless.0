@@ -1,52 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bl2on0122.outbound.protection.outlook.com ([65.55.169.122]:30812
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754194AbaLBABU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Dec 2014 19:01:20 -0500
-Received: by mail-oi0-f48.google.com with SMTP id u20so8181749oif.21
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Dec 2014 14:27:45 -0800 (PST)
-MIME-Version: 1.0
-From: Eric Schultz <eschultz@prplfoundation.org>
-Date: Mon, 1 Dec 2014 16:27:25 -0600
-Message-ID: <CAMkzgA5=NA-yLEWcvhXYpHmTAyqqiR7s58ndv-0gcSiZ3Ps88g@mail.gmail.com> (sfid-20141202_010123_646301_A9D39528)
-Subject: New FCC requirements and Linux Wifi
+Received: from mail-wi0-f182.google.com ([209.85.212.182]:49245 "EHLO
+	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753685AbaLAPvj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Dec 2014 10:51:39 -0500
+Received: by mail-wi0-f182.google.com with SMTP id h11so17800945wiw.9
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Dec 2014 07:51:38 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
 To: <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 3/4] iw: fix attr max for reg_rule
+Date: Mon,  1 Dec 2014 17:51:32 +0200
+Message-Id: <1417449093-9470-3-git-send-email-arik@wizery.com> (sfid-20141201_165142_805328_21D372F6)
+In-Reply-To: <1417449093-9470-1-git-send-email-arik@wizery.com>
+References: <1417449093-9470-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-All,
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ reg.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-I work for the prpl Foundation, an open source foundation organized by
-a number of companies, most related to MIPS. One project we work with
-externally is the OpenWrt project. Recently one of our members
-mentioned a new FCC requirement (described in FCC publication 594280)
-which requires wifi hardware devices to restrict modifications in ways
-that were not previously required. Some of the suggestions the company
-had internally for complying would be to use features like Secure Boot
-and other types of DRM-like mechanisms to prevent routers from being
-modified. This obviously would be quite bad for the OpenWrt community
-(and the embedded Linux community as a whole) so we agreed as a group
-to try to provide hardware companies with a way of complying without
-harming the community.
-
-I'm looking to find individuals (and other companies!) interested in
-working with myself and the foundation, companies, the OpenWrt
-community and eventually regulators to provide guidance to hardware
-companies on how to best comply with these rules. If you're interested
-in getting involved or just would like to know more, please get in
-touch with me. We want to make sure that routers and related embedded
-Linux hardware is hackable and we could use all the help we could get.
-
-Thanks and I look forward to working with you,
-
-Eric
-
+diff --git a/reg.c b/reg.c
+index 9af8e7e..a02c982 100644
+--- a/reg.c
++++ b/reg.c
+@@ -127,7 +127,7 @@ static int print_reg_handler(struct nl_msg *msg, void *arg)
+ 	struct nlattr *nl_rule;
+ 	int rem_rule;
+ 	enum nl80211_dfs_regions dfs_domain;
+-	static struct nla_policy reg_rule_policy[NL80211_FREQUENCY_ATTR_MAX + 1] = {
++	static struct nla_policy reg_rule_policy[NL80211_REG_RULE_ATTR_MAX + 1] = {
+ 		[NL80211_ATTR_REG_RULE_FLAGS]		= { .type = NLA_U32 },
+ 		[NL80211_ATTR_FREQ_RANGE_START]		= { .type = NLA_U32 },
+ 		[NL80211_ATTR_FREQ_RANGE_END]		= { .type = NLA_U32 },
+@@ -159,10 +159,10 @@ static int print_reg_handler(struct nl_msg *msg, void *arg)
+ 	printf("country %c%c: %s\n", alpha2[0], alpha2[1], dfs_domain_name(dfs_domain));
+ 
+ 	nla_for_each_nested(nl_rule, tb_msg[NL80211_ATTR_REG_RULES], rem_rule) {
+-		struct nlattr *tb_rule[NL80211_FREQUENCY_ATTR_MAX + 1];
++		struct nlattr *tb_rule[NL80211_REG_RULE_ATTR_MAX + 1];
+ 		__u32 flags, start_freq_khz, end_freq_khz, max_bw_khz, max_ant_gain_mbi, max_eirp_mbm;
+ 
+-		nla_parse(tb_rule, NL80211_FREQUENCY_ATTR_MAX, nla_data(nl_rule), nla_len(nl_rule), reg_rule_policy);
++		nla_parse(tb_rule, NL80211_REG_RULE_ATTR_MAX, nla_data(nl_rule), nla_len(nl_rule), reg_rule_policy);
+ 
+ 		flags = nla_get_u32(tb_rule[NL80211_ATTR_REG_RULE_FLAGS]);
+ 		start_freq_khz = nla_get_u32(tb_rule[NL80211_ATTR_FREQ_RANGE_START]);
 -- 
-Eric Schultz, Community Manager, prpl Foundation
-http://www.prplfoundation.org
-eschultz@prplfoundation.org
-cell: 920-539-0404
-skype: ericschultzwi
-@EricPrpl
+1.9.1
+
