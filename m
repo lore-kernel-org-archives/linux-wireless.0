@@ -1,48 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41453 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030303AbaLLRLp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Dec 2014 12:11:45 -0500
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Krzysztof Konopko <kris@konagma.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] staging: rtl8723au: Fix sparse warnings
-References: <1418336609-10191-1-git-send-email-kris@konagma.com>
-	<548A2E7A.4010303@lwfinger.net> <548AD2F1.3080200@konagma.com>
-Date: Fri, 12 Dec 2014 12:10:36 -0500
-In-Reply-To: <548AD2F1.3080200@konagma.com> (Krzysztof Konopko's message of
-	"Fri, 12 Dec 2014 12:35:13 +0100")
-Message-ID: <wrfjbnn8yesz.fsf@redhat.com> (sfid-20141212_181202_016818_E86E1E8B)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-wg0-f53.google.com ([74.125.82.53]:48256 "EHLO
+	mail-wg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753359AbaLAQ27 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Dec 2014 11:28:59 -0500
+Received: by mail-wg0-f53.google.com with SMTP id l18so14625180wgh.40
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Dec 2014 08:28:58 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v7 4/4] cfg80211: correctly check ad-hoc channels
+Date: Mon,  1 Dec 2014 18:28:51 +0200
+Message-Id: <1417451331-20536-4-git-send-email-arik@wizery.com> (sfid-20141201_172907_400666_ACBAFA0F)
+In-Reply-To: <1417451331-20536-1-git-send-email-arik@wizery.com>
+References: <1417451331-20536-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Krzysztof Konopko <kris@konagma.com> writes:
-> On 12/12/14 00:53, Larry Finger wrote:
->> In RTL8188EU, both BA_starting_seqctrl and TXOP_limit are unsigned short.
->> 
->
-> That's not quite the case.  `TXOP_limit` is __le16 in RTL8188EU [1].
-> It's __le16 even in your GitHub repo [2].  And that made me thinking
-> that there's probably some inconsistency in the header.
->
-> I'm _far_ from being a wireless expert but doesn't data coming out of
-> the wire/air have the endianess defined explicitly?  And both `AC_param`
-> and `ADDBA_request` come out of air?
->
-> I was hunting particularly for inconsistencies with `sparse` and came
-> across this one.  But I dug a bit further and I wonder why the driver is
-> not using standard stuff like the one in `include/linux/ieee80211.h`
-> where any data wider than one byte is clearly declared as __le<nn>?
+Ad-hoc requires beaconing for regulatory purposes. Validate that the
+channel is valid for beaconing, and not only enabled.
 
-In general all over the wire data is little-endian. The driver has been
-slowly moved towards using the standard defines from the Linux headers,
-but this is a *lot* of work, and it requires testing. I really don't get
-warm fuzzy feelings from patches that blindly make these kinds of
-changes without also testing them.
+Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+Reviewed-by: Luis R. Rodriguez <mcgrof@suse.com>
+---
+ net/wireless/reg.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-Jes
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index c3e6f80..004ea14 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1552,9 +1552,15 @@ static bool reg_wdev_chan_valid(struct wiphy *wiphy, struct wireless_dev *wdev)
+ 		ret = cfg80211_reg_can_beacon(wiphy,
+ 					      &wdev->chandef, wdev->iftype);
+ 		break;
++	case NL80211_IFTYPE_ADHOC:
++		if (!wdev->ssid_len)
++			goto out;
++
++		ret = cfg80211_reg_can_beacon(wiphy,
++					      &wdev->chandef, wdev->iftype);
++		break;
+ 	case NL80211_IFTYPE_STATION:
+ 	case NL80211_IFTYPE_P2P_CLIENT:
+-	case NL80211_IFTYPE_ADHOC:
+ 		if (!wdev->current_bss ||
+ 		    !wdev->current_bss->pub.channel)
+ 			goto out;
+-- 
+1.9.1
+
