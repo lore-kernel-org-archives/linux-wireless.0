@@ -1,164 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:46250 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751645AbaLETbB (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:52207 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753489AbaLANfR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Dec 2014 14:31:01 -0500
-Received: by mail-ob0-f174.google.com with SMTP id nt9so1112404obb.5
-        for <linux-wireless@vger.kernel.org>; Fri, 05 Dec 2014 11:31:01 -0800 (PST)
-Date: Fri, 5 Dec 2014 13:30:39 -0600
-From: Seth Forshee <seth.forshee@canonical.com>
-To: "Luis R. Rodriguez" <mcgrof@suse.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] crda: Trust regulatory.bin from Seth Forshee
-Message-ID: <20141205193039.GB53560@ubuntu-hedt> (sfid-20141205_203106_613133_72D2D1D5)
+	Mon, 1 Dec 2014 08:35:17 -0500
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: [PATCH 5/9] wil6210: configurable vring sizes
+Date: Mon, 1 Dec 2014 15:35:02 +0200
+Message-ID: <1417440903-27066-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20141201_143522_365111_6B7C6835)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="EeQfGwPcQSOJBaQU"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Allow to configure VRING size for both Rx and Tx via module parameters:
+rx_ring_order and tx_ring_order. Parameters are ring size orders, i.e.
+ring size calculated as 1 << order.
+Defaults for both Tx and Rx are order 9, i.e. size 512
 
---EeQfGwPcQSOJBaQU
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-I have taken over maintenance of the regulatory database from
-linville. Add my key so that regulatory.bin files signed by me
-will be trusted, but also keep John's key so that existing files
-will continue to be trusted. Update the makefile to point to the
-new wireless-regdb repository location, and update the readme and
-man page to reflect the change in maintainership.
-
-Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- Makefile                     |  2 +-
- README                       | 16 +++++++++-------
- crda.8                       |  6 ++++--
- pubkeys/sforshee.key.pub.pem |  9 +++++++++
- 4 files changed, 23 insertions(+), 10 deletions(-)
- create mode 100644 pubkeys/sforshee.key.pub.pem
+ drivers/net/wireless/ath/wil6210/main.c    | 34 ++++++++++++++++++++++++++++--
+ drivers/net/wireless/ath/wil6210/txrx.c    |  4 ++--
+ drivers/net/wireless/ath/wil6210/wil6210.h |  9 +++++---
+ 3 files changed, 40 insertions(+), 7 deletions(-)
 
-diff --git a/Makefile b/Makefile
-index 1f25509..a3ead30 100644
---- a/Makefile
-+++ b/Makefile
-@@ -1,7 +1,7 @@
- # Modify as you see fit, note this is built into crda,
- # so if you change it here you will have to change crda.c
- REG_BIN?=3D/usr/lib/crda/regulatory.bin
--REG_GIT?=3Dgit://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless=
--regdb.git
-+REG_GIT?=3Dgit://git.kernel.org/pub/scm/linux/kernel/git/sforshee/wireless=
--regdb.git
-=20
- PREFIX ?=3D /usr/
- MANDIR ?=3D $(PREFIX)/share/man/
-diff --git a/README b/README
-index f3ead48..5d89b83 100644
---- a/README
-+++ b/README
-@@ -23,12 +23,13 @@ The package build requirements currently are:
-  * libgcrypt or libssl (openssl) header files
-  * nl library and header files (libnl1 and libnl-dev)
-    available at git://git.kernel.org/pub/scm/libs/netlink/libnl.git
-- * RSA public key of John Linville, we include this as part of this package
--   so you do not need to install it. This RSA public key comes
--   from the wireless-regdb.git tree and we keep it up to date here.
-+ * RSA public key of John Linville and Seth Forshee, we include these
-+   as part of this package so you do not need to install it. The RSA
-+   public keys comes from the wireless-regdb.git tree and we keep them
-+   up to date here.
-  * regulatory database, clone this tree:
-=20
--   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-regdb.g=
-it
-+   git://git.kernel.org/pub/scm/linux/kernel/git/sforshee/wireless-regdb.g=
-it
-=20
-    and then stuff regulatory.bin (no need to build) provided there in
-    REG_BIN location specified in this Makefile. This regulatory.bin file
-@@ -62,13 +63,14 @@ user reboots or all the wireless modules get unloaded a=
-nd reloaded.
-=20
- Under certain circumstances it may be desirable to have the regulatory
- agent accept multiple keys, this can be achieved by stuffing all the keys
--desired into pubkeys. Right now we only use John Linville's public key.
-+desired into pubkeys. Right now we use John Linville's and Seth Forshee's
-+public keys.
-=20
-  REGDB AUTHORS
- =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-=20
--Authors of regulatory.bin (John Linville) first need a private key, which =
-can
--be generated with something like this:
-+Authors of regulatory.bin first need a private key, which can be generated
-+with something like this:
-=20
- 	openssl genrsa -out your.key.priv.pem 2048
-=20
-diff --git a/crda.8 b/crda.8
-index d45af30..d934228 100644
---- a/crda.8
-+++ b/crda.8
-@@ -49,11 +49,13 @@ files. Authorship is respected by the RSA public key pa=
-cked into
- .I This
- specific
- .B crda
--package has been built with an RSA public key from
-+package has been built with RSA public keys from
- .I John Linville (the Linux wireless kernel maintainer)
-+and
-+.I Seth Forshee (the wireless regulatory databse maintainer)
- and as such will only read
- .B regulatory.bin
--files signed by him. For further information see the
-+files signed by one of them. For further information see the
- .B regulatory.bin
- man page.
-=20
-diff --git a/pubkeys/sforshee.key.pub.pem b/pubkeys/sforshee.key.pub.pem
-new file mode 100644
-index 0000000..73d580e
---- /dev/null
-+++ b/pubkeys/sforshee.key.pub.pem
-@@ -0,0 +1,9 @@
-+-----BEGIN PUBLIC KEY-----
-+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtUDjnCiEOQPyOddmLEE4
-+Fax+pYNxJX6QfGjdbz/Z11k4n3xqUsIDKi1+ZvQesxJwIFvUlzI9cYs7GwgXFGth
-+xFeLlhYc/STVCwn5aBGE+8pRDNFFGdoQRIrZ/nap/WAtGAsolbIt6oiYuNFWIfBT
-+H/ECb+lGm5NfKJAPrDb6aCNxV1b2zNPffSrZG3NF67onhe96f6XLgMcwNtJT7uys
-+Hucx8TainGPGZVt/JXVooerTfgBcml7YIBgydwcpEmYeNnPnlwRBN7Gxciv0oSkg
-+fJZ5CyvQ2N7IbD+T+8XueFIRFRt69uJomef7RhaE48eh5uDSRtXhxF+gZvTaxP+V
-+HQIDAQAB
-+-----END PUBLIC KEY-----
---=20
-1.9.1
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index 3bef153..8f257a4 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -67,6 +67,36 @@ static struct kernel_param_ops mtu_max_ops = {
+ module_param_cb(mtu_max, &mtu_max_ops, &mtu_max, S_IRUGO);
+ MODULE_PARM_DESC(mtu_max, " Max MTU value.");
+ 
++static uint rx_ring_order = WIL_RX_RING_SIZE_ORDER_DEFAULT;
++static uint tx_ring_order = WIL_TX_RING_SIZE_ORDER_DEFAULT;
++
++static int ring_order_set(const char *val, const struct kernel_param *kp)
++{
++	int ret;
++	uint x;
++
++	ret = kstrtouint(val, 0, &x);
++	if (ret)
++		return ret;
++
++	if ((x < WIL_RING_SIZE_ORDER_MIN) || (x > WIL_RING_SIZE_ORDER_MAX))
++		return -EINVAL;
++
++	*((uint *)kp->arg) = x;
++
++	return 0;
++}
++
++static struct kernel_param_ops ring_order_ops = {
++	.set = ring_order_set,
++	.get = param_get_uint,
++};
++
++module_param_cb(rx_ring_order, &ring_order_ops, &rx_ring_order, S_IRUGO);
++MODULE_PARM_DESC(rx_ring_order, " Rx ring order; size = 1 << order");
++module_param_cb(tx_ring_order, &ring_order_ops, &tx_ring_order, S_IRUGO);
++MODULE_PARM_DESC(tx_ring_order, " Tx ring order; size = 1 << order");
++
+ #define RST_DELAY (20) /* msec, for loop in @wil_target_reset */
+ #define RST_COUNT (1 + 1000/RST_DELAY) /* round up to be above 1 sec total */
+ 
+@@ -332,7 +362,7 @@ static void wil_connect_worker(struct work_struct *work)
+ 
+ 	wil_dbg_wmi(wil, "Configure for connection CID %d\n", cid);
+ 
+-	rc = wil_vring_init_tx(wil, ringid, WIL6210_TX_RING_SIZE, cid, 0);
++	rc = wil_vring_init_tx(wil, ringid, 1 << tx_ring_order, cid, 0);
+ 	wil->pending_connect_cid = -1;
+ 	if (rc == 0) {
+ 		wil->sta[cid].status = wil_sta_connected;
+@@ -705,7 +735,7 @@ int __wil_up(struct wil6210_priv *wil)
+ 		return rc;
+ 
+ 	/* Rx VRING. After MAC and beacon */
+-	rc = wil_rx_init(wil);
++	rc = wil_rx_init(wil, 1 << rx_ring_order);
+ 	if (rc)
+ 		return rc;
+ 
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index c680906..c3a5489 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -596,7 +596,7 @@ void wil_rx_handle(struct wil6210_priv *wil, int *quota)
+ 	wil_rx_refill(wil, v->size);
+ }
+ 
+-int wil_rx_init(struct wil6210_priv *wil)
++int wil_rx_init(struct wil6210_priv *wil, u16 size)
+ {
+ 	struct vring *vring = &wil->vring_rx;
+ 	int rc;
+@@ -608,7 +608,7 @@ int wil_rx_init(struct wil6210_priv *wil)
+ 		return -EINVAL;
+ 	}
+ 
+-	vring->size = WIL6210_RX_RING_SIZE;
++	vring->size = size;
+ 	rc = wil_vring_alloc(wil, vring);
+ 	if (rc)
+ 		return rc;
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 8c09700..c6ec5b9 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -49,8 +49,11 @@ static inline u32 WIL_GET_BITS(u32 x, int b0, int b1)
+ 
+ #define WIL6210_MEM_SIZE (2*1024*1024UL)
+ 
+-#define WIL6210_RX_RING_SIZE	(128)
+-#define WIL6210_TX_RING_SIZE	(512)
++#define WIL_RX_RING_SIZE_ORDER_DEFAULT	(9)
++#define WIL_TX_RING_SIZE_ORDER_DEFAULT	(9)
++/* limit ring size in range [32..32k] */
++#define WIL_RING_SIZE_ORDER_MIN	(5)
++#define WIL_RING_SIZE_ORDER_MAX	(15)
+ #define WIL6210_MAX_TX_RINGS	(24) /* HW limit */
+ #define WIL6210_MAX_CID		(8) /* HW limit */
+ #define WIL6210_NAPI_BUDGET	(16) /* arbitrary */
+@@ -590,7 +593,7 @@ int wmi_pcp_stop(struct wil6210_priv *wil);
+ void wil6210_disconnect(struct wil6210_priv *wil, const u8 *bssid,
+ 			u16 reason_code, bool from_event);
+ 
+-int wil_rx_init(struct wil6210_priv *wil);
++int wil_rx_init(struct wil6210_priv *wil, u16 size);
+ void wil_rx_fini(struct wil6210_priv *wil);
+ 
+ /* TX API */
+-- 
+2.1.0
 
---EeQfGwPcQSOJBaQU
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBCgAGBQJUggffAAoJEKtIAKYtufc65+QQAIsLYN+NGzfMYW7Y9d85O+X3
-n8FxBo4NkFPVaeI4K6zglGxvlUQ9Ct8NrqnyFk2dL6qH0LBlKb36XDkbqoygg6WJ
-YuM/+gxT4fScOLKpUsLdmSRZE5Y4XwbbGOOa/MxLgPUo1NlN1aKkrPpR0hUtErg+
-MEK1vC3Uy8bhYOF9cpiGEh6lgG1/h+z/R7EKXd6vrNfo16DIksbhw8TM+2mGJWga
-ZMrwu3qXiXbpw1yUi49RqcL6Cq4hPfg33k/kAh0N4Rcy3F6y4d2Z9mDQkKI9Q0Lu
-nEgUUSaZxIYyoT0eqZeauKEuNWom6jE7q1bTYQvAoaa1o4sy2BVGl9CD8QFF5DRn
-HhviTHpQFEHbE6/h8o6KHUUm+9e2qJ9/vsjJ4wWbtZs4usWYcAMTt3cYMNovzJHC
-mThOvMYDkrUDj1+lvTVmOP6IMEvdBfu2CnFtbdyFDt4oRrhKqllDC9nse7D3XhbZ
-EZJNViqL+X+MXUlIsRD6pBWqkxocRwQYmX76JEYqpkP5L/5Nr35iZazSReX9CRjp
-PlWWV6AxRHtdZObDos3x+IlNqod4Zt5tOg02ziDxW81VsVBkpjBUKW47HmfJQ9Sa
-OVQJDe2lilAcsWWLbjkkb5QGPXputY7EiLtv8YNvbWKGyBS4mdp8PAfOit4t9xgB
-5cop8kG7uaTPfxWeuIPG
-=rG5V
------END PGP SIGNATURE-----
-
---EeQfGwPcQSOJBaQU--
