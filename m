@@ -1,43 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:16559 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751694AbaLWHqh (ORCPT
+Received: from mail-oi0-f42.google.com ([209.85.218.42]:40996 "EHLO
+	mail-oi0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752936AbaLAQ5G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Dec 2014 02:46:37 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: "Manoharan, Rajkumar" <rmanohar@qti.qualcomm.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 8/8] ath10k: ath10k: add support to send delba
-References: <1418972099-5296-1-git-send-email-rmanohar@qti.qualcomm.com>
-	<1418972099-5296-9-git-send-email-rmanohar@qti.qualcomm.com>
-	<1419142431590.38389@qti.qualcomm.com>
-Date: Tue, 23 Dec 2014 09:46:28 +0200
-In-Reply-To: <1419142431590.38389@qti.qualcomm.com> (Rajkumar Manoharan's
-	message of "Sun, 21 Dec 2014 06:13:52 +0000")
-Message-ID: <87d27ag65n.fsf@kamboji.qca.qualcomm.com> (sfid-20141223_084758_718845_BA09F1AB)
+	Mon, 1 Dec 2014 11:57:06 -0500
+Message-ID: <547C9DDF.5060906@lwfinger.net> (sfid-20141201_175710_636313_3175A986)
+Date: Mon, 01 Dec 2014 10:57:03 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Anjana Sasindran <anjanasasindran123@gmail.com>,
+	gregkh@linuxfoundation.org, es.Sorensen@redhat.com
+CC: linux-kernel@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] staging: rtl8723au: hal: Removed spaces before starting
+ of a line
+References: <1417449197-3227-1-git-send-email-anjanasasindran123@gmail.com>
+In-Reply-To: <1417449197-3227-1-git-send-email-anjanasasindran123@gmail.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Manoharan, Rajkumar" <rmanohar@qti.qualcomm.com> writes:
-
->> Subject: [PATCH 8/8] ath10k: ath10k: add support to send delba
->> 
->> This per-station debugfs entry helps to send delba in manual mode
->> for debugging purpose. It accepts tid, initiator and reason code
->> as inputs.
-> Kalle,
+On 12/01/2014 09:53 AM, Anjana Sasindran wrote:
+> This patch fix the checkpatch.pl warning:
 >
-> Subject needs small correction (ath10k: ath10k:). Do you want
-> me send v2 patch for this change?
+> WARNING: please, no spaces at the start of a line
+>
+> Signed-off-by: Anjana Sasindran <anjanasasindran123@gmail.com>
+> ---
+>   drivers/staging/rtl8723au/hal/odm_RegConfig8723A.c | 6 +++---
+>   1 file changed, 3 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/staging/rtl8723au/hal/odm_RegConfig8723A.c b/drivers/staging/rtl8723au/hal/odm_RegConfig8723A.c
+> index 88e0126..959e89e 100644
+> --- a/drivers/staging/rtl8723au/hal/odm_RegConfig8723A.c
+> +++ b/drivers/staging/rtl8723au/hal/odm_RegConfig8723A.c
+> @@ -20,7 +20,7 @@ odm_ConfigRFReg_8723A(
+>   	struct dm_odm_t *pDM_Odm,
+>   	u32					Addr,
+>   	u32					Data,
+> -  enum RF_RADIO_PATH     RF_PATH,
+> +enum RF_RADIO_PATH     RF_PATH,
 
-No need to send v2, I can do the change myself. But I noticed that you
-already sent it :)
+NACK. You are blindly "fixing" a checkpatch warning, but you are making the code 
+worse!! Obviously, this line should start with a tab to make the arguments of 
+this routine line up. Even if you were to do that, the style would be wrong.
 
-But in the future please don't resubmit individual patches, that's just
-too error prone. Instead just resubmit the whole series.
+If I were fixing this section, my patch would look like:
 
--- 
-Kalle Valo
+--- a/drivers/staging/rtl8723au/hal/odm_RegConfig8723A.c
++++ b/drivers/staging/rtl8723au/hal/odm_RegConfig8723A.c
+@@ -15,14 +15,8 @@
+
+  #include "odm_precomp.h"
+
+-void
+-odm_ConfigRFReg_8723A(
+-       struct dm_odm_t *pDM_Odm,
+-       u32                                     Addr,
+-       u32                                     Data,
+-  enum RF_RADIO_PATH     RF_PATH,
+-       u32                                 RegAddr
+-       )
++void odm_ConfigRFReg_8723A(struct dm_odm_t *pDM_Odm, u32 Addr, u32 Data,
++			    enum RF_RADIO_PATH RF_PATH, u32 RegAddr)
+  {
+  	if (Addr == 0xfe) {
+  		msleep(50);
+
+That change would make the procedure entry line easier to read. Of course, the 
+commit message would need to say something like "checkpatch warns of spaces at 
+the beginning of a line. To fix this, the procedure entry is reformatted."
+
+Caution, my patch fragment is white-space damaged. You will need to do it yourself.
+
+>   	u32				    RegAddr
+>   	)
+>   {
+> @@ -60,7 +60,7 @@ odm_ConfigBB_AGC_8723A(
+>   	u32		Addr,
+>   	u32		Bitmask,
+>   	u32		Data
+> -  )
+> +)
+>   {
+>   	ODM_SetBBReg(pDM_Odm, Addr, Bitmask, Data);
+>   	/*  Add 1us delay between BB/RF register setting. */
+> @@ -77,7 +77,7 @@ odm_ConfigBB_PHY_8723A(
+>   	u32		Addr,
+>   	u32		Bitmask,
+>   	u32		Data
+> -  )
+> +)
+>   {
+>   	if (Addr == 0xfe)
+>   		msleep(50);
+>
+
+Same criticism here.
+
+Larry
+
