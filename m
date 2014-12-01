@@ -1,219 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:14431 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751068AbaLQJX7 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:41931 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753778AbaLAOpi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Dec 2014 04:23:59 -0500
-From: Avinash Patil <patila@marvell.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
-	<cluo@marvell.com>, <yangyang@marvell.com>,
-	Xinming Hu <huxm@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCH 3/4] mwifiex: make tx packet 64 byte DMA aligned
-Date: Wed, 17 Dec 2014 17:20:42 +0530
-Message-ID: <1418817043-22511-3-git-send-email-patila@marvell.com> (sfid-20141217_102404_628791_E28F6F23)
-In-Reply-To: <1418817043-22511-1-git-send-email-patila@marvell.com>
-References: <1418817043-22511-1-git-send-email-patila@marvell.com>
+	Mon, 1 Dec 2014 09:45:38 -0500
+Subject: [PATCH v3 3/7] ath10k: set max_num_pending_tx in
+ ath10k_core_init_firmware_features()
+To: <ath10k@lists.infradead.org>
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Date: Mon, 1 Dec 2014 16:45:34 +0200
+Message-ID: <20141201144534.18248.51909.stgit@potku.adurom.net> (sfid-20141201_154541_135020_FAA9C8B5)
+In-Reply-To: <20141201144400.18248.62714.stgit@potku.adurom.net>
+References: <20141201144400.18248.62714.stgit@potku.adurom.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+Better to have this in same place as other firmware interface handling.
 
-This patch adds support for DMA alignment of 64 bytes for TX packets.
-
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/net/wireless/mwifiex/11n_aggr.c | 15 ++++++++++++---
- drivers/net/wireless/mwifiex/decl.h     |  6 ++++--
- drivers/net/wireless/mwifiex/sta_tx.c   | 19 ++++++++++---------
- drivers/net/wireless/mwifiex/uap_txrx.c | 28 +++++++++++++++-------------
- 4 files changed, 41 insertions(+), 27 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.c   |    2 ++
+ drivers/net/wireless/ath/ath10k/htt_tx.c |    5 -----
+ 2 files changed, 2 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/11n_aggr.c b/drivers/net/wireless/mwifiex/11n_aggr.c
-index 8720a3d..20b7ff7 100644
---- a/drivers/net/wireless/mwifiex/11n_aggr.c
-+++ b/drivers/net/wireless/mwifiex/11n_aggr.c
-@@ -101,6 +101,13 @@ mwifiex_11n_form_amsdu_txpd(struct mwifiex_private *priv,
- {
- 	struct txpd *local_tx_pd;
- 	struct mwifiex_txinfo *tx_info = MWIFIEX_SKB_TXCB(skb);
-+	u8 pad;
-+	int headroom = (priv->adapter->iface_type ==
-+			MWIFIEX_USB) ? 0 : INTF_HEADER_LEN;
-+
-+	pad = ((void *)skb->data - sizeof(*local_tx_pd) -
-+		headroom - NULL) & (MWIFIEX_DMA_ALIGN_SZ - 1);
-+	skb_push(skb, pad);
- 
- 	skb_push(skb, sizeof(*local_tx_pd));
- 
-@@ -114,10 +121,12 @@ mwifiex_11n_form_amsdu_txpd(struct mwifiex_private *priv,
- 	local_tx_pd->bss_num = priv->bss_num;
- 	local_tx_pd->bss_type = priv->bss_type;
- 	/* Always zero as the data is followed by struct txpd */
--	local_tx_pd->tx_pkt_offset = cpu_to_le16(sizeof(struct txpd));
-+	local_tx_pd->tx_pkt_offset = cpu_to_le16(sizeof(struct txpd) +
-+						 pad);
- 	local_tx_pd->tx_pkt_type = cpu_to_le16(PKT_TYPE_AMSDU);
- 	local_tx_pd->tx_pkt_length = cpu_to_le16(skb->len -
--						 sizeof(*local_tx_pd));
-+						 sizeof(*local_tx_pd) -
-+						 pad);
- 
- 	if (tx_info->flags & MWIFIEX_BUF_FLAG_TDLS_PKT)
- 		local_tx_pd->flags |= MWIFIEX_TXPD_FLAGS_TDLS_PACKET;
-@@ -182,7 +191,7 @@ mwifiex_11n_aggregate_pkt(struct mwifiex_private *priv,
- 				       ra_list_flags);
- 		return -1;
- 	}
--	skb_reserve(skb_aggr, headroom + sizeof(struct txpd));
-+	skb_reserve(skb_aggr, MWIFIEX_MIN_DATA_HEADER_LEN);
- 	tx_info_aggr =  MWIFIEX_SKB_TXCB(skb_aggr);
- 
- 	memset(tx_info_aggr, 0, sizeof(*tx_info_aggr));
-diff --git a/drivers/net/wireless/mwifiex/decl.h b/drivers/net/wireless/mwifiex/decl.h
-index 2269acf..12addae 100644
---- a/drivers/net/wireless/mwifiex/decl.h
-+++ b/drivers/net/wireless/mwifiex/decl.h
-@@ -32,8 +32,10 @@
- 
- #define MWIFIEX_MAX_BSS_NUM         (3)
- 
--#define MWIFIEX_MIN_DATA_HEADER_LEN 36	/* sizeof(mwifiex_txpd)
--					 *   + 4 byte alignment
-+#define MWIFIEX_DMA_ALIGN_SZ	    64
-+#define MWIFIEX_MIN_DATA_HEADER_LEN 100	/* sizeof(mwifiex_txpd)
-+					 *   + 4 byte interface header alignment
-+					 *   + 64 byte dma alignment
- 					 */
- #define MWIFIEX_MGMT_FRAME_HEADER_SIZE	8	/* sizeof(pkt_type)
- 						 *   + sizeof(tx_control)
-diff --git a/drivers/net/wireless/mwifiex/sta_tx.c b/drivers/net/wireless/mwifiex/sta_tx.c
-index b896d73..9796334 100644
---- a/drivers/net/wireless/mwifiex/sta_tx.c
-+++ b/drivers/net/wireless/mwifiex/sta_tx.c
-@@ -47,8 +47,10 @@ void *mwifiex_process_sta_txpd(struct mwifiex_private *priv,
- 	struct mwifiex_adapter *adapter = priv->adapter;
- 	struct txpd *local_tx_pd;
- 	struct mwifiex_txinfo *tx_info = MWIFIEX_SKB_TXCB(skb);
--	u8 pad;
-+	int pad;
- 	u16 pkt_type, pkt_offset;
-+	int hroom = (priv->adapter->iface_type == MWIFIEX_USB) ? 0 :
-+		       INTF_HEADER_LEN;
- 
- 	if (!skb->len) {
- 		dev_err(adapter->dev, "Tx: bad packet length: %d\n", skb->len);
-@@ -56,13 +58,12 @@ void *mwifiex_process_sta_txpd(struct mwifiex_private *priv,
- 		return skb->data;
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index f8ddc8087db9..1170fd739675 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -824,11 +824,13 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
+ 	case ATH10K_FW_WMI_OP_VERSION_MAIN:
+ 		ar->max_num_peers = TARGET_NUM_PEERS;
+ 		ar->max_num_stations = TARGET_NUM_STATIONS;
++		ar->htt.max_num_pending_tx = TARGET_NUM_MSDU_DESC;
+ 		break;
+ 	case ATH10K_FW_WMI_OP_VERSION_10_1:
+ 	case ATH10K_FW_WMI_OP_VERSION_10_2:
+ 		ar->max_num_peers = TARGET_10X_NUM_PEERS;
+ 		ar->max_num_stations = TARGET_10X_NUM_STATIONS;
++		ar->htt.max_num_pending_tx = TARGET_10X_NUM_MSDU_DESC;
+ 		break;
  	}
  
--	pkt_type = mwifiex_is_skb_mgmt_frame(skb) ? PKT_TYPE_MGMT : 0;
-+	BUG_ON(skb_headroom(skb) < MWIFIEX_MIN_DATA_HEADER_LEN);
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index 4bc51d8a14a3..a1bda41fb543 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -93,11 +93,6 @@ int ath10k_htt_tx_alloc(struct ath10k_htt *htt)
  
--	/* If skb->data is not aligned; add padding */
--	pad = (4 - (((void *)skb->data - NULL) & 0x3)) % 4;
-+	pkt_type = mwifiex_is_skb_mgmt_frame(skb) ? PKT_TYPE_MGMT : 0;
+ 	spin_lock_init(&htt->tx_lock);
  
--	BUG_ON(skb_headroom(skb) < (sizeof(*local_tx_pd) + INTF_HEADER_LEN
--				    + pad));
-+	pad = ((void *)skb->data - (sizeof(*local_tx_pd) + hroom)-
-+			 NULL) & (MWIFIEX_DMA_ALIGN_SZ - 1);
- 	skb_push(skb, sizeof(*local_tx_pd) + pad);
- 
- 	local_tx_pd = (struct txpd *) skb->data;
-@@ -70,8 +71,8 @@ void *mwifiex_process_sta_txpd(struct mwifiex_private *priv,
- 	local_tx_pd->bss_num = priv->bss_num;
- 	local_tx_pd->bss_type = priv->bss_type;
- 	local_tx_pd->tx_pkt_length = cpu_to_le16((u16)(skb->len -
--						       (sizeof(struct txpd)
--							+ pad)));
-+						       (sizeof(struct txpd) +
-+							pad)));
- 
- 	local_tx_pd->priority = (u8) skb->priority;
- 	local_tx_pd->pkt_delay_2ms =
-@@ -115,7 +116,7 @@ void *mwifiex_process_sta_txpd(struct mwifiex_private *priv,
- 	local_tx_pd->tx_pkt_offset = cpu_to_le16(pkt_offset);
- 
- 	/* make space for INTF_HEADER_LEN */
--	skb_push(skb, INTF_HEADER_LEN);
-+	skb_push(skb, hroom);
- 
- 	if (!local_tx_pd->tx_control)
- 		/* TxCtrl set by user or default */
-diff --git a/drivers/net/wireless/mwifiex/uap_txrx.c b/drivers/net/wireless/mwifiex/uap_txrx.c
-index be3a203..38ac4d7 100644
---- a/drivers/net/wireless/mwifiex/uap_txrx.c
-+++ b/drivers/net/wireless/mwifiex/uap_txrx.c
-@@ -348,8 +348,10 @@ void *mwifiex_process_uap_txpd(struct mwifiex_private *priv,
- 	struct mwifiex_adapter *adapter = priv->adapter;
- 	struct uap_txpd *txpd;
- 	struct mwifiex_txinfo *tx_info = MWIFIEX_SKB_TXCB(skb);
--	int pad, len;
--	u16 pkt_type;
-+	int pad;
-+	u16 pkt_type, pkt_offset;
-+	int hroom = (priv->adapter->iface_type == MWIFIEX_USB) ? 0 :
-+		       INTF_HEADER_LEN;
- 
- 	if (!skb->len) {
- 		dev_err(adapter->dev, "Tx: bad packet length: %d\n", skb->len);
-@@ -357,22 +359,21 @@ void *mwifiex_process_uap_txpd(struct mwifiex_private *priv,
- 		return skb->data;
- 	}
- 
--	pkt_type = mwifiex_is_skb_mgmt_frame(skb) ? PKT_TYPE_MGMT : 0;
+-	if (test_bit(ATH10K_FW_FEATURE_WMI_10X, htt->ar->fw_features))
+-		htt->max_num_pending_tx = TARGET_10X_NUM_MSDU_DESC;
+-	else
+-		htt->max_num_pending_tx = TARGET_NUM_MSDU_DESC;
 -
--	/* If skb->data is not aligned, add padding */
--	pad = (4 - (((void *)skb->data - NULL) & 0x3)) % 4;
-+	BUG_ON(skb_headroom(skb) < MWIFIEX_MIN_DATA_HEADER_LEN);
+ 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "htt tx max num pending tx %d\n",
+ 		   htt->max_num_pending_tx);
  
--	len = sizeof(*txpd) + pad;
-+	pkt_type = mwifiex_is_skb_mgmt_frame(skb) ? PKT_TYPE_MGMT : 0;
- 
--	BUG_ON(skb_headroom(skb) < len + INTF_HEADER_LEN);
-+	pad = ((void *)skb->data - (sizeof(*txpd) + hroom) - NULL) &
-+			(MWIFIEX_DMA_ALIGN_SZ - 1);
- 
--	skb_push(skb, len);
-+	skb_push(skb, sizeof(*txpd) + pad);
- 
- 	txpd = (struct uap_txpd *)skb->data;
- 	memset(txpd, 0, sizeof(*txpd));
- 	txpd->bss_num = priv->bss_num;
- 	txpd->bss_type = priv->bss_type;
--	txpd->tx_pkt_length = cpu_to_le16((u16)(skb->len - len));
-+	txpd->tx_pkt_length = cpu_to_le16((u16)(skb->len - (sizeof(*txpd) +
-+						pad)));
- 	txpd->priority = (u8)skb->priority;
- 
- 	txpd->pkt_delay_2ms = mwifiex_wmm_compute_drv_pkt_delay(priv, skb);
-@@ -392,16 +393,17 @@ void *mwifiex_process_uap_txpd(struct mwifiex_private *priv,
- 		    cpu_to_le32(priv->wmm.user_pri_pkt_tx_ctrl[txpd->priority]);
- 
- 	/* Offset of actual data */
-+	pkt_offset = sizeof(*txpd) + pad;
- 	if (pkt_type == PKT_TYPE_MGMT) {
- 		/* Set the packet type and add header for management frame */
- 		txpd->tx_pkt_type = cpu_to_le16(pkt_type);
--		len += MWIFIEX_MGMT_FRAME_HEADER_SIZE;
-+		pkt_offset += MWIFIEX_MGMT_FRAME_HEADER_SIZE;
- 	}
- 
--	txpd->tx_pkt_offset = cpu_to_le16(len);
-+	txpd->tx_pkt_offset = cpu_to_le16(pkt_offset);
- 
- 	/* make space for INTF_HEADER_LEN */
--	skb_push(skb, INTF_HEADER_LEN);
-+	skb_push(skb, hroom);
- 
- 	if (!txpd->tx_control)
- 		/* TxCtrl set by user or default */
--- 
-1.8.1.4
 
