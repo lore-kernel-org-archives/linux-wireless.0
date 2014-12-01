@@ -1,54 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:62991 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932909AbaLBMQf convert rfc822-to-8bit (ORCPT
+Received: from mail-ig0-f181.google.com ([209.85.213.181]:36325 "EHLO
+	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751336AbaLAHNg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Dec 2014 07:16:35 -0500
-Received: by mail-wi0-f178.google.com with SMTP id em10so1264024wid.5
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Dec 2014 04:16:34 -0800 (PST)
+	Mon, 1 Dec 2014 02:13:36 -0500
+Received: by mail-ig0-f181.google.com with SMTP id l13so8929510iga.14
+        for <linux-wireless@vger.kernel.org>; Sun, 30 Nov 2014 23:13:35 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20141201144507.18248.9856.stgit@potku.adurom.net>
-References: <20141201144400.18248.62714.stgit@potku.adurom.net>
-	<20141201144507.18248.9856.stgit@potku.adurom.net>
-Date: Tue, 2 Dec 2014 13:16:33 +0100
-Message-ID: <CA+BoTQkXnHnMsLvRt2PnnDCAv8P8gDsJTLNFPmf+CNaDX0frfg@mail.gmail.com> (sfid-20141202_131638_697793_7F509358)
-Subject: Re: [PATCH v3 2/7] ath10k: add ATH10K_FW_IE_WMI_OP_VERSION
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <CBACCFA0AEB13A41977475BCF3E896FC66736E7972@SC-VEXCH2.marvell.com>
+References: <CBACCFA0AEB13A41977475BCF3E896FC66736E7972@SC-VEXCH2.marvell.com>
+Date: Mon, 1 Dec 2014 08:13:35 +0100
+Message-ID: <CALhHN=qA7icuY_MNvBebDsOMOkh6hEsWNkrZoGDGsQg+-f6Xog@mail.gmail.com> (sfid-20141201_081339_655815_23846C70)
+Subject: Re: [PATCH] cfg80211: do not check for carrier during start_radar_detect
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: Avinash Patil <patila@marvell.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Cathy Luo <cluo@marvell.com>,
+	"John W. Linville" <linville@tuxdriver.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 1 December 2014 at 15:45, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-[...]
-> @@ -801,11 +812,24 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
->         }
+On 28 November 2014 at 17:35, Avinash Patil <patila@marvell.com> wrote:
+> Yes; beats me as well.
 >
->         if (test_bit(ATH10K_FW_FEATURE_WMI_10X, ar->fw_features)) {
-> -               ar->max_num_peers = TARGET_10X_NUM_PEERS;
-> -               ar->max_num_stations = TARGET_10X_NUM_STATIONS;
-> +               if (test_bit(ATH10K_FW_FEATURE_WMI_10_2, ar->fw_features))
-> +                       ar->wmi.op_version = ATH10K_FW_WMI_OP_VERSION_10_2;
-> +               else
-> +                       ar->wmi.op_version = ATH10K_FW_WMI_OP_VERSION_10_1;
->         } else {
-> +               ar->wmi.op_version = ATH10K_FW_WMI_OP_VERSION_MAIN;
-> +       }
+> That's why I added original authors - Simon and Janusz.
+>
+> -Avinash
+>
+> On Nov 28, 2014 8:41 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>>
+>> On Fri, 2014-11-28 at 16:58 +0530, Avinash Patil wrote:
+>> > Radar detection happens before starting AP; so netdev carrier may be dormant
+>> > at this time. Remove this check from cfg80211_start_radar_detection.
+>>
+>> Looks fine to me, but I wonder how it ever worked?
+>>
+radar detection starts before we setup AP, so woks fine
 
-You always overwrite ar->wmi.op_version with MAIN if it's not 10.x
-which means TLV is/wiil be effectively overwritten.
+Seems this patch unlock off-channel CAC (we are connected/ap started
+and detect radar on other channel), but seem mac80211 don't support
+this correctly now.
+So, at least we should move if (netif_carrier_ok(dev)) check to
+mac80211 otherwise we might change channel of the running interface
+(via vif_use_channel).
 
-Perhaps the op_version enum values should start with 1 so that 0 can
-be used as "unset" and only in that case should the above fallback be
-attempted.
+BR
+Janusz
 
-
-Also, I think it might be a good idea to reset ar->wmi.op_version in
-ath10k_core_fetch_firmware_api_n (and api_1 as well) so that if any
-attempt fails (e.g. due to IE binary corruption) ar->wmi.op_version
-isn't propagated/left unchanged to another fw API attempt.
-
-
-Michał
+>> johannes
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
