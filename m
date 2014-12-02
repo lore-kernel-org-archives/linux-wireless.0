@@ -1,52 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:23343 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750734AbaLaPC2 (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:24849 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753164AbaLBJxl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Dec 2014 10:02:28 -0500
-Message-ID: <54A41000.3040306@broadcom.com> (sfid-20141231_160254_376983_6726DD20)
-Date: Wed, 31 Dec 2014 16:02:24 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Tue, 2 Dec 2014 04:53:41 -0500
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+CC: Joe Perches <joe@perches.com>,
+	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: [PATCH v2 10/10] wil6210: remove TODO wrt buffer alignment
+Date: Tue, 2 Dec 2014 11:53:07 +0200
+Message-ID: <1417513987-18729-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20141202_105347_941272_BC8CA04B)
+In-Reply-To: <1417513598-18304-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1417513598-18304-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Jiri Kosina <jkosina@suse.cz>
-CC: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Borislav Petkov <bp@alien8.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"egrumbach@gmail.com" <egrumbach@gmail.com>,
-	"peter@hurleysoftware.com" <peter@hurleysoftware.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] Revert "cfg80211: make WEXT compatibility unselectable"
-References: <alpine.LNX.2.00.1412301427430.31609@pobox.suse.cz> <CANUX_P0=wJiKrR4cUgEN=LO+eQ2byprz0K9m9QxzJc+kf4+_bA@mail.gmail.com> <54A2B807.1020202@hurleysoftware.com> <0BA3FCBA62E2DC44AF3030971E174FB31B5DC915@hasmsx107.ger.corp.intel.com> <alpine.LNX.2.00.1412301610320.31609@pobox.suse.cz> <1419971304.30412.0.camel@egrumbacBox> <alpine.LNX.2.00.1412302135520.31609@pobox.suse.cz> <20141230212326.GA29263@pd.tnic> <54A328C2.5080606@lwfinger.net> <alpine.LNX.2.00.1412302341290.31609@pobox.suse.cz> <alpine.LNX.2.00.1412302351030.31609@pobox.suse.cz> <54A3D955.6020809@broadcom.com> <0BA3FCBA62E2DC44AF3030971E174FB31B5DD72E@hasmsx107.ger.corp.intel.com> <54A3E1F1.7030807@broadcom.com> <alpine.LNX.2.00.1412311505100.31609@pobox.suse.cz>
-In-Reply-To: <alpine.LNX.2.00.1412311505100.31609@pobox.suse.cz>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/31/14 15:07, Jiri Kosina wrote:
-> On Wed, 31 Dec 2014, Arend van Spriel wrote:
->
->> The thing with WEXT is that it will stay as is. So if tools like wicd
->> want to support new features like P2P it will need to make the switch. I
->> checked out wicd repo and found a number of iwconfig calls and they kick
->> off wpa_supplicant with wext driver.
->
-> Unfortunately this is by no means just about wicd. I have already received
-> a few off-list mails from people who were wondering why their home-made
-> scripts / tools, which are running 'iwconfig' directly suddenly stopped to
-> work, and that it was indeed fallout of WEXT going away. Given the very
-> short time this has been in mainline, you can probably imagine the
-> fireworks once this appears in major release.
+Hardware doesn't place any restrictions on the buffer alignment,
+consider this TODO resolved.
 
-It is unfortunately indeed. I think iwconfig and friends will never go 
-away although iw is a better alternative, simply because people don't 
-like to change their home-made scripts/tools. WIRELESS_EXT actually is 
-largely, but not entirely, gone in upstream drivers and what we are 
-talking about here is CFG80211_WEXT which allows WEXT userspace to 
-interact with cfg80211-based drivers through a compatibility layer.
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/txrx.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-Regards,
-Arend
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index 405ede6..e3f8bdc 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -210,8 +210,6 @@ static int wil_vring_alloc_skb(struct wil6210_priv *wil, struct vring *vring,
+ 	struct vring_rx_desc dd, *d = &dd;
+ 	volatile struct vring_rx_desc *_d = &vring->va[i].rx;
+ 	dma_addr_t pa;
+-
+-	/* TODO align */
+ 	struct sk_buff *skb = dev_alloc_skb(sz + headroom);
+ 
+ 	if (unlikely(!skb))
+-- 
+2.1.0
+
