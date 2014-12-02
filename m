@@ -1,46 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:56549 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751643AbaLXRhF (ORCPT
+Received: from mail-wg0-f53.google.com ([74.125.82.53]:33013 "EHLO
+	mail-wg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750869AbaLBG6L convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Dec 2014 12:37:05 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	"Rob Herring" <rob.herring@linaro.org>,
-	John Stultz <john.stultz@linaro.org>
-Subject: Re: [PATCH V2 3/10] brcmfmac: Add support for bcm43340/1 wireless chipsets
-References: <1419357863-2018-1-git-send-email-arend@broadcom.com>
-	<5499BDE9.7020807@broadcom.com>
-Date: Wed, 24 Dec 2014 19:36:59 +0200
-In-Reply-To: <5499BDE9.7020807@broadcom.com> (Arend van Spriel's message of
-	"Tue, 23 Dec 2014 20:09:29 +0100")
-Message-ID: <87mw6d6jb8.fsf@kamboji.qca.qualcomm.com> (sfid-20141224_183724_368124_58B87C75)
+	Tue, 2 Dec 2014 01:58:11 -0500
+Received: by mail-wg0-f53.google.com with SMTP id l18so15906233wgh.26
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Dec 2014 22:58:10 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20141201144458.18248.28568.stgit@potku.adurom.net>
+References: <20141201144400.18248.62714.stgit@potku.adurom.net>
+	<20141201144458.18248.28568.stgit@potku.adurom.net>
+Date: Tue, 2 Dec 2014 07:58:09 +0100
+Message-ID: <CA+BoTQkrqeWcr2vrd-b18HezZhyBkfvOYE3SgF39oYu54BX-Fw@mail.gmail.com> (sfid-20141202_075814_731735_9E08D1B4)
+Subject: Re: [PATCH v3 1/7] ath10k: create ath10k_core_init_features()
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend@broadcom.com> writes:
-
-> On 12/23/14 19:04, Arend van Spriel wrote:
->> This patch adds support for the bcm43340 and bcm43341 wireless
->> chipsets. These two chipsets are identical from wireless parts
->> perspective. As such they use the same firmware image.
+On 1 December 2014 at 15:44, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+[...]
+>  int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode)
+> @@ -1046,7 +1047,12 @@ static int ath10k_core_probe_fw(struct ath10k *ar)
+>                 return ret;
+>         }
 >
-> Kalle,
->
-> Just curious. Would this patch have ended up on [1] when I would have
-> filled In-Reply-to: properly during git send-email? If so I can add
-> that to our internal process description.
+> -       ath10k_core_init_max_sta_count(ar);
+> +       ret = ath10k_core_init_firmware_features(ar);
+> +       if (ret) {
+> +               ath10k_err(ar, "fatal problem with firmware features: %d\n",
+> +                          ret);
+> +               return ret;
 
-Not sure, I'm not very familiar with patchwork yet. I saw some
-documentation that it's possible to update the patch with pwclient, but
-I haven't seen anything about doing it via email.
+I think you should call ath10k_core_free_firmware_files() and
+ath10k_hif_power_down() before returning (similar to how
+ath10k_core_start() failure is handled).
 
-IMHO it's just best to resend the whole series even if just one patch
-needs changes. Anything else would be just confusing and error prone.
 
--- 
-Kalle Valo
+Michał
