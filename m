@@ -1,101 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:58691 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751255AbaLFTTq (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:53038 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932826AbaLBSL5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Dec 2014 14:19:46 -0500
-Message-ID: <548356CF.3040001@broadcom.com> (sfid-20141206_202158_976832_68AE3F3B)
-Date: Sat, 6 Dec 2014 20:19:43 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: =?UTF-8?B?SsO2cmcgS3JhdXNl?= <jkrause@posteo.de>
-CC: <linux-wireless@vger.kernel.org>,
-	brcm80211 development <brcm80211-dev-list@broadcom.com>,
-	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>
-Subject: Re: [PATCH 7/7] brcmfmac: add multiple BSS support.
-References: <1417885078.22723.24.camel@posteo.de> <54834833.50204@broadcom.com>
-In-Reply-To: <54834833.50204@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+	Tue, 2 Dec 2014 13:11:57 -0500
+Received: by mail-wi0-f172.google.com with SMTP id n3so28830854wiv.11
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Dec 2014 10:11:56 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Liad Kaufman <liad.kaufman@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 23/26] iwlwifi: mvm: send dbg config hcmds to fw if set in tlv
+Date: Tue,  2 Dec 2014 20:11:14 +0200
+Message-Id: <1417543877-24193-23-git-send-email-egrumbach@gmail.com> (sfid-20141202_191202_610210_74F706E9)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB31B5A7D27@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB31B5A7D27@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/06/14 19:17, Arend van Spriel wrote:
-> On 12/06/14 17:57, Jörg Krause wrote:
->> First, I just subscribed to this mailing list and copied the subject
->> from the archive. I didn't know better.
->>
->> Second, many thanks for this new feature to the Broadcom developers!
->>
->> I've tested this series of patches with the linux-next-20141205 kernel
->> on a custom ARM board with a BCM43362 chip running a Linux system build
->> with Buildroot. I'm using the wireless tools hostapd/wpa_supplicant 2.3.
->>
->> I was able to create a virtual interface:
->> # iw dev wlan0 interface add wlan0_ap type __ap
->>
->> Add IP and set MAC:
->> # ip addr add 192.168.2.1/24 broadcast 255.255.255.0 dev
->> wlan0_ap
->> # ip link set dev wlan0_ap address 12:34:56:78:ab:ce
->>
->> Start hostapd with the following minimal configuration:
->> # cat /etc/hostapd-minimal.conf
->> interface=wlan0_ap
->> driver=nl80211
->> ssid=myAP
->> channel=1
->> # hostapd -B /etc/hostapd-minimal.conf
->>
->> Start dnsmasq daemon with minimal configuration:
->> # cat /etc/dnsmasq
->> interface=wlan0_ap
->> dhcp-range=192.168.2.2,192.168.2.254,24h
->> # dnsmasq
->>
->>
->> ifconfig shows:
->> wlan0_ap Link encap:Ethernet HWaddr 12:34:56:78:AB:CE
->> inet addr:192.168.2.1 Bcast:255.255.255.0
->> Mask:255.255.255.0
->> inet6 addr: fe80::1034:56ff:fe78:abce/64 Scope:Link
->> UP BROADCAST RUNNING MULTICAST MTU:1500 Metric:1
->> RX packets:1 errors:0 dropped:1 overruns:0 frame:0
->> TX packets:60 errors:0 dropped:0 overruns:0 carrier:0
->> collisions:0 txqueuelen:1000
->> RX bytes:60 (60.0 B) TX bytes:20728 (20.2 KiB)
->>
->> Looks good so far.
->>
->> Unfortunatly, I do not see any SSID 'myAP', but an SSID
->> 'BRCM_TEST_SSID'. Trying to associate with the SSID using wpa_supplicant
->> 2.3 fails.
->
-> That is one suspicious looking SSID. We tested Multiple-BSSID feature
-> using a single hostapd instance. You can find more info if you search
-> for term "Multiple BSSID support" in hostapd.conf in the git repo. I
-> have attached it for your convenience. hostapd will take care of
-> creating and configuring the additional AP interface(s).
+From: Liad Kaufman <liad.kaufman@intel.com>
 
-I realized that what you are trying to do here is adding a virtual AP 
-interface wlan0_ap and wlan0 is still configured as STA. This is not 
-possible with the current driver code. So actually it should not be 
-possible to create an AP interface when wlan0 is STA. At least for now.
+Send all debug-configuration HCMDs that are set in the TLVs
+to the FW. This may include HCMDs to configure the FW
+monitor and FW log level, for example.
 
-Regards,
-Arend
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/fw.c  | 39 ++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/mvm/mvm.h |  1 +
+ 2 files changed, 40 insertions(+)
 
-> Regards,
-> Arend
->
->> Do I missed something within the setup?
->>
->> Best regards
->> Jörg Krause
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe
->> linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at http://vger.kernel.org/majordomo-info.html
->
+diff --git a/drivers/net/wireless/iwlwifi/mvm/fw.c b/drivers/net/wireless/iwlwifi/mvm/fw.c
+index bbb78710..1f1337a 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/iwlwifi/mvm/fw.c
+@@ -394,6 +394,42 @@ out:
+ 	return ret;
+ }
+ 
++static int iwl_mvm_start_fw_dbg_conf(struct iwl_mvm *mvm,
++				     enum iwl_fw_dbg_conf conf_id)
++{
++	u8 *ptr;
++	int ret;
++	int i;
++
++	if (WARN_ONCE(conf_id >= ARRAY_SIZE(mvm->fw->dbg_conf_tlv),
++		      "Invalid configuration %d\n", conf_id))
++		return -EINVAL;
++
++	if (!mvm->fw->dbg_conf_tlv[conf_id])
++		return -EINVAL;
++
++	if (mvm->fw_dbg_conf != FW_DBG_INVALID)
++		IWL_WARN(mvm, "FW already configured (%d) - re-configuring\n",
++			 mvm->fw_dbg_conf);
++
++	/* Send all HCMDs for configuring the FW debug */
++	ptr = (void *)&mvm->fw->dbg_conf_tlv[conf_id]->hcmd;
++	for (i = 0; i < mvm->fw->dbg_conf_tlv[conf_id]->num_of_hcmds; i++) {
++		struct iwl_fw_dbg_conf_hcmd *cmd = (void *)ptr;
++
++		ret = iwl_mvm_send_cmd_pdu(mvm, cmd->id, 0,
++					   le16_to_cpu(cmd->len), cmd->data);
++		if (ret)
++			return ret;
++
++		ptr += sizeof(*cmd);
++		ptr += le16_to_cpu(cmd->len);
++	}
++
++	mvm->fw_dbg_conf = conf_id;
++	return ret;
++}
++
+ int iwl_mvm_up(struct iwl_mvm *mvm)
+ {
+ 	int ret, i;
+@@ -445,6 +481,9 @@ int iwl_mvm_up(struct iwl_mvm *mvm)
+ 	if (ret)
+ 		IWL_ERR(mvm, "Failed to initialize Smart Fifo\n");
+ 
++	mvm->fw_dbg_conf = FW_DBG_INVALID;
++	iwl_mvm_start_fw_dbg_conf(mvm, FW_DBG_CUSTOM);
++
+ 	ret = iwl_send_tx_ant_cfg(mvm, mvm->fw->valid_tx_ant);
+ 	if (ret)
+ 		goto error;
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index 12be7f3..d24660f 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -670,6 +670,7 @@ struct iwl_mvm {
+ 	/* -1 for always, 0 for never, >0 for that many times */
+ 	s8 restart_fw;
+ 	struct work_struct fw_error_dump_wk;
++	enum iwl_fw_dbg_conf fw_dbg_conf;
+ 
+ #ifdef CONFIG_IWLWIFI_LEDS
+ 	struct led_classdev led;
+-- 
+1.9.1
 
