@@ -1,102 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f42.google.com ([209.85.218.42]:40996 "EHLO
-	mail-oi0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752936AbaLAQ5G (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Dec 2014 11:57:06 -0500
-Message-ID: <547C9DDF.5060906@lwfinger.net> (sfid-20141201_175710_636313_3175A986)
-Date: Mon, 01 Dec 2014 10:57:03 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Anjana Sasindran <anjanasasindran123@gmail.com>,
-	gregkh@linuxfoundation.org, es.Sorensen@redhat.com
-CC: linux-kernel@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] staging: rtl8723au: hal: Removed spaces before starting
- of a line
-References: <1417449197-3227-1-git-send-email-anjanasasindran123@gmail.com>
-In-Reply-To: <1417449197-3227-1-git-send-email-anjanasasindran123@gmail.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from mx1.redhat.com ([209.132.183.28]:56266 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933065AbaLBXck (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Dec 2014 18:32:40 -0500
+Message-ID: <1417563128.32003.8.camel@dcbw.local> (sfid-20141203_003243_577567_31F6D47B)
+Subject: Re: Laptop disassociating by local choice (reason=17)
+From: Dan Williams <dcbw@redhat.com>
+To: Brent Taylor <motobud@gmail.com>
+Cc: Krishna Chaitanya <chaitanya.mgit@gmail.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	ath6kl@lists.infradead.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 02 Dec 2014 17:32:08 -0600
+In-Reply-To: <CAP+RiCC4KmgNMGCiCzDeL_0-frGw7acoZf5FDv4OTmauQPU5Hw@mail.gmail.com>
+References: <CAP+RiCBDAi7e6vj5vvrcEpt17JicdmPwq16zhG9Fun11HfnBkw@mail.gmail.com>
+	 <CAP+RiCDMerG_8EYi=0Ta3BvAwuWinNPYuNevjF85w08HsX4f2Q@mail.gmail.com>
+	 <CABPxzY+oxDH7QysFNWQg6fMWpsQDSFm5YgOusaz0KibEnH++yQ@mail.gmail.com>
+	 <CAP+RiCCD7EefqNKKXonrvd9T3G=+4aKZQXe0QbXBKKCzHvgAzQ@mail.gmail.com>
+	 <CABPxzY+Eimssqcxs0W79_5zGBHmFnrTc5+qeTnmYr_UH_9ti6A@mail.gmail.com>
+	 <CAP+RiCC4KmgNMGCiCzDeL_0-frGw7acoZf5FDv4OTmauQPU5Hw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/01/2014 09:53 AM, Anjana Sasindran wrote:
-> This patch fix the checkpatch.pl warning:
->
-> WARNING: please, no spaces at the start of a line
->
-> Signed-off-by: Anjana Sasindran <anjanasasindran123@gmail.com>
-> ---
->   drivers/staging/rtl8723au/hal/odm_RegConfig8723A.c | 6 +++---
->   1 file changed, 3 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/staging/rtl8723au/hal/odm_RegConfig8723A.c b/drivers/staging/rtl8723au/hal/odm_RegConfig8723A.c
-> index 88e0126..959e89e 100644
-> --- a/drivers/staging/rtl8723au/hal/odm_RegConfig8723A.c
-> +++ b/drivers/staging/rtl8723au/hal/odm_RegConfig8723A.c
-> @@ -20,7 +20,7 @@ odm_ConfigRFReg_8723A(
->   	struct dm_odm_t *pDM_Odm,
->   	u32					Addr,
->   	u32					Data,
-> -  enum RF_RADIO_PATH     RF_PATH,
-> +enum RF_RADIO_PATH     RF_PATH,
+On Tue, 2014-12-02 at 16:35 -0600, Brent Taylor wrote:
+> 1417557229.339147: WPA: RSN IE in EAPOL-Key - hexdump(len=22): 30 14
+> 01 00 00 0f ac 04 01 00 00 0f ac 04 01 00 00 0f ac 02 00 00
+> 1417557229.339179: WPA: RSN IE in Beacon/ProbeResp - hexdump(len=26):
+> 30 18 01 00 00 0f ac 04 02 00 00 0f ac 04 00 0f ac 02 01 00 00 0f ac
+> 02 00 00
+> 1417557229.339192: WPA: RSN IE in 3/4 msg - hexdump(len=22): 30 14 01
+> 00 00 0f ac 04 01 00 00 0f ac 04 01 00 00 0f ac 02 00 00
 
-NACK. You are blindly "fixing" a checkpatch warning, but you are making the code 
-worse!! Obviously, this line should start with a tab to make the arguments of 
-this routine line up. Even if you were to do that, the style would be wrong.
+On the STA side:
 
-If I were fixing this section, my patch would look like:
+The RSN IE in the EAPOL-Key and the 3/4msg are the same, and contain
+only the CCMP pairwise suite.  The RSN IE in the Beacon/ProbeResp debug
+message contains both CCMP and TKIP pairwise suites.
 
---- a/drivers/staging/rtl8723au/hal/odm_RegConfig8723A.c
-+++ b/drivers/staging/rtl8723au/hal/odm_RegConfig8723A.c
-@@ -15,14 +15,8 @@
+Earlier in the run we have:
 
-  #include "odm_precomp.h"
+1417557228.979261: WPA: set AP RSN IE - hexdump(len=26): 30 18 01 00
+00 0f ac 04 02 00 00 0f ac 04 00 0f ac 02 01 00 00 0f ac 02 00 00
+1417557228.979342: WPA: Set own WPA IE default - hexdump(len=22): 30
+14 01 00 00 0f ac 04 01 00 00 0f ac 04 01 00 00 0f ac 02 00 00
 
--void
--odm_ConfigRFReg_8723A(
--       struct dm_odm_t *pDM_Odm,
--       u32                                     Addr,
--       u32                                     Data,
--  enum RF_RADIO_PATH     RF_PATH,
--       u32                                 RegAddr
--       )
-+void odm_ConfigRFReg_8723A(struct dm_odm_t *pDM_Odm, u32 Addr, u32 Data,
-+			    enum RF_RADIO_PATH RF_PATH, u32 RegAddr)
-  {
-  	if (Addr == 0xfe) {
-  		msleep(50);
+which is where the extra TKIP bit comes from.  I'm guessing this is from
+wpa_supplicant_set_suites() because of the closely paired AP RSN IE/own
+WPA IE calls.
 
-That change would make the procedure entry line easier to read. Of course, the 
-commit message would need to say something like "checkpatch warns of spaces at 
-the beginning of a line. To fix this, the procedure entry is reformatted."
+Brent, is there any chance you can run the supplicant on the laptop with
+"-dddt" to get *all* the debug messages?  It seems the logs are missing
+quite a few that could tell us where wpa_supplicant_set_suites() is
+getting called.
 
-Caution, my patch fragment is white-space damaged. You will need to do it yourself.
-
->   	u32				    RegAddr
->   	)
->   {
-> @@ -60,7 +60,7 @@ odm_ConfigBB_AGC_8723A(
->   	u32		Addr,
->   	u32		Bitmask,
->   	u32		Data
-> -  )
-> +)
->   {
->   	ODM_SetBBReg(pDM_Odm, Addr, Bitmask, Data);
->   	/*  Add 1us delay between BB/RF register setting. */
-> @@ -77,7 +77,7 @@ odm_ConfigBB_PHY_8723A(
->   	u32		Addr,
->   	u32		Bitmask,
->   	u32		Data
-> -  )
-> +)
->   {
->   	if (Addr == 0xfe)
->   		msleep(50);
->
-
-Same criticism here.
-
-Larry
+Dan
 
