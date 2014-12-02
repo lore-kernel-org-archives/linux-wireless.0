@@ -1,104 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.21]:63206 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751451AbaL2Nf0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Dec 2014 08:35:26 -0500
-Message-ID: <54A15896.2020008@rempel-privat.de> (sfid-20141229_143529_451822_9F51C1AE)
-Date: Mon, 29 Dec 2014 14:35:18 +0100
-From: Oleksij Rempel <linux@rempel-privat.de>
-MIME-Version: 1.0
-To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>,
-	=?UTF-8?B?VGhvbWFzIEjDvGhu?= <thomas@net.t-labs.tu-berlin.de>,
-	adrian@freebsd.org
-Subject: Re: [RFC 0/3] add TPC capability for AR9002 based chips
-References: <1419689545-26965-1-git-send-email-lorenzo.bianconi83@gmail.com>	<549FFB8F.9010701@rempel-privat.de> <CAA2SeNKxDk+sgpP9be=8MUgVOBHO26=oA4r4v+wRHfN1b6fH8w@mail.gmail.com>
-In-Reply-To: <CAA2SeNKxDk+sgpP9be=8MUgVOBHO26=oA4r4v+wRHfN1b6fH8w@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="opwE1R6fgPMlEE237EA0XUfjhkP6iNNSO"
+Received: from mail-wg0-f48.google.com ([74.125.82.48]:40785 "EHLO
+	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932236AbaLBSLf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Dec 2014 13:11:35 -0500
+Received: by mail-wg0-f48.google.com with SMTP id y19so17765758wgg.35
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Dec 2014 10:11:33 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eliad Peller <eliad@wizery.com>,
+	Eliad Peller <eliadx.peller@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 08/26] iwlwifi: mvm: add missing mvm ref debug print
+Date: Tue,  2 Dec 2014 20:10:59 +0200
+Message-Id: <1417543877-24193-8-git-send-email-egrumbach@gmail.com> (sfid-20141202_191143_371316_73A21553)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB31B5A7D27@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB31B5A7D27@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---opwE1R6fgPMlEE237EA0XUfjhkP6iNNSO
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+From: Eliad Peller <eliad@wizery.com>
 
-Am 28.12.2014 um 15:32 schrieb Lorenzo Bianconi:
->> Hi, can you please describe some testcases for you patches.
->>
->=20
-> This patchset adds Transmission Power Control (TPC) for AR9002 based
-> chips. IOW it enables the capability of correct TX power on per-packet
-> basis. It is preparatory for upcoming Thomas's joint rate and power
-> control
->  algorithm.
+IWL_MVM_REF_PROTECT_CSA is missing from the ref strings
+used by debugfs.
 
-Do you mean, right now there is no way to test your patches?
+Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/debugfs.c | 1 +
+ 1 file changed, 1 insertion(+)
 
+diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
+index 5a0f104..33bf915 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/debugfs.c
++++ b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
+@@ -1339,6 +1339,7 @@ static ssize_t iwl_dbgfs_d0i3_refs_read(struct file *file,
+ 	PRINT_MVM_REF(IWL_MVM_REF_NMI);
+ 	PRINT_MVM_REF(IWL_MVM_REF_TM_CMD);
+ 	PRINT_MVM_REF(IWL_MVM_REF_EXIT_WORK);
++	PRINT_MVM_REF(IWL_MVM_REF_PROTECT_CSA);
+ 
+ 	return simple_read_from_buffer(user_buf, count, ppos, buf, pos);
+ }
+-- 
+1.9.1
 
-> Regards,
-> Lorenzo
->=20
->> Am 27.12.2014 um 15:12 schrieb Lorenzo Bianconi:
->>> This patchset adds TPC capability to ath9k for AR9002 based chips
->>>
->>> *[RFC 1/3]: add TX power per-rate tables to cap TX power in TX descri=
-ptor path
->>> *[RFC 2/3]: cap per-packet TX power according to TX power per-rate ta=
-bles
->>> *[RFC 3/3]: enable per-packet TPC on AR9002 based chips by default
->>>
->>> This pachset is based on Adrian Chadd's hints
->>> (https://www.mail-archive.com/ath9k-devel@lists.ath9k.org/msg10396.ht=
-ml)
->>>
->>> Lorenzo Bianconi (3):
->>>   ath9k: add power per-rate tables for AR9002 chips
->>>   ath9k: add TPC to TX path for AR9002 based chips
->>>   ath9k: enable per-packet TPC on AR9002 based chips
->>>
->>>  drivers/net/wireless/ath/ath9k/ar5008_phy.c  | 80 ++++++++++++++++++=
-++++++++++
->>>  drivers/net/wireless/ath/ath9k/debug.c       |  5 --
->>>  drivers/net/wireless/ath/ath9k/eeprom_4k.c   | 14 +++++
->>>  drivers/net/wireless/ath/ath9k/eeprom_9287.c | 15 ++++++
->>>  drivers/net/wireless/ath/ath9k/eeprom_def.c  | 14 +++++
->>>  drivers/net/wireless/ath/ath9k/hw.c          |  3 +-
->>>  drivers/net/wireless/ath/ath9k/hw.h          |  2 +
->>>  drivers/net/wireless/ath/ath9k/xmit.c        | 66 ++++++++++++++++++=
-+----
->>>  8 files changed, 181 insertions(+), 18 deletions(-)
->>>
->>
->>
->> --
->> Regards,
->> Oleksij
->>
->=20
->=20
->=20
-
-
---=20
-Regards,
-Oleksij
-
-
---opwE1R6fgPMlEE237EA0XUfjhkP6iNNSO
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iF4EAREIAAYFAlShWJYACgkQHwImuRkmbWkdCwD/fH/fiPQUoLGo/O1I0a8oyHvM
-3MymnVhy/Lc3JtWTQvMA/i9+rc2L8CnjGJFJZ3xAOt+V8Kw7e41OwKFYXbv2YNKu
-=Wm1z
------END PGP SIGNATURE-----
-
---opwE1R6fgPMlEE237EA0XUfjhkP6iNNSO--
