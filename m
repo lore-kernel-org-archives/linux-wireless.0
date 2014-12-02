@@ -1,57 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:45377 "EHLO
-	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755976AbaLHPRy (ORCPT
+Received: from smtprelay0163.hostedemail.com ([216.40.44.163]:53630 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S932758AbaLBDoN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Dec 2014 10:17:54 -0500
-Date: Mon, 8 Dec 2014 15:17:33 +0000
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-arm-kernel@lists.infradead.org,
-	Hante Meuleman <meuleman@broadcom.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>,
-	Will Deacon <will.deacon@arm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Arend Van Spriel <arend@broadcom.com>,
-	David Miller <davem@davemloft.net>,
-	Marek Szyprowski <m.szyprowski@samsung.com>, hauke@hauke-m.de
-Subject: Re: using DMA-API on ARM
-Message-ID: <20141208151733.GF11285@n2100.arm.linux.org.uk> (sfid-20141208_161821_668640_AFD9FC54)
-References: <5481794E.4050406@broadcom.com>
- <F51492713EF10846800D8C0ED37A7DCE01901765@SJEXCHMB15.corp.ad.broadcom.com>
- <F51492713EF10846800D8C0ED37A7DCE01902076@SJEXCHMB15.corp.ad.broadcom.com>
- <2863746.4sUSEYqahB@wuerfel>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <2863746.4sUSEYqahB@wuerfel>
+	Mon, 1 Dec 2014 22:44:13 -0500
+Message-ID: <1417491850.4894.10.camel@perches.com> (sfid-20141202_044417_057975_0C6B8A75)
+Subject: Re: [PATCH 2/9] wil6210: add handling of RX HTRSH interrupt
+From: Joe Perches <joe@perches.com>
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Cc: "John W . Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Date: Mon, 01 Dec 2014 19:44:10 -0800
+In-Reply-To: <1417440803-26883-3-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1417440803-26883-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	 <1417440803-26883-3-git-send-email-qca_vkondrat@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 08, 2014 at 04:01:32PM +0100, Arnd Bergmann wrote:
-> In your log, I see this message:
-> 
-> [    0.000000] PL310 OF: cache setting yield illegal associativity
-> [    0.000000] PL310 OF: -1069781724 calculated, only 8 and 16 legal
-> [    0.000000] L2C-310 enabling early BRESP for Cortex-A9
-> [    0.000000] L2C-310 full line of zeros enabled for Cortex-A9
-> [    0.000000] L2C-310 dynamic clock gating enabled, standby mode enabled
-> [    0.000000] L2C-310 cache controller enabled, 16 ways, 256 kB
-> [    0.000000] L2C-310: CACHE_ID 0x410000c8, AUX_CTRL 0x4e130001
-> 
-> Evidently the cache controller information in DT is incorrect and
-> the setup may be wrong as a consequence, which may explain cache
-> coherency problems.
+On Mon, 2014-12-01 at 15:33 +0200, Vladimir Kondratiev wrote:
+> In addition there's a rate limitted warning message.
 
-No.  See d0b92845e54 (ARM: 8182/1: l2c: Make l2x0_cache_size_of_parse() return 'int')
-which was merged in rc3, post-dating this kernel.  The original commit
-was buggy, and produces those harmless "illegal associativity" messages.
-They occur if DT *doesn't* specify the cache parameters, in which case
-we use the hardware-set value (which /should/ be correct.)
+limited.
 
-We made these optional in DT as hardware really should set these
-correctly in the first place.
+I think this _ratelimited bit should be a separate patch.
+(and a suggestion / comment below too)
 
--- 
-FTTC broadband for 0.8mile line: currently at 9.5Mbps down 400kbps up
-according to speedtest.net.
+> diff --git a/drivers/net/wireless/ath/wil6210/debug.c b/drivers/net/wireless/ath/wil6210/debug.c
+[]
+> +void wil_err_ratelimited(struct wil6210_priv *wil, const char *fmt, ...)
+> +{
+> +	if (net_ratelimit()) {
+> +		struct net_device *ndev = wil_to_ndev(wil);
+> +		struct va_format vaf = {
+> +			.fmt = fmt,
+> +		};
+> +		va_list args;
+> +
+> +		va_start(args, fmt);
+> +		vaf.va = &args;
+> +		netdev_err(ndev, "%pV", &vaf);
+> +		trace_wil6210_log_err(&vaf);
+> +		va_end(args);
+> +	}
+> +}
+[]
+> diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+[]
+> @@ -475,6 +476,8 @@ void wil_dbg_trace(struct wil6210_priv *wil, const char *fmt, ...);
+>  __printf(2, 3)
+>  void wil_err(struct wil6210_priv *wil, const char *fmt, ...);
+>  __printf(2, 3)
+> +void wil_err_ratelimited(struct wil6210_priv *wil, const char *fmt, ...);
+> +__printf(2, 3)
+>  void wil_info(struct wil6210_priv *wil, const char *fmt, ...);
+>  #define wil_dbg(wil, fmt, arg...) do { \
+>  	netdev_dbg(wil_to_ndev(wil), fmt, ##arg); \
+
+I think it'd be simpler and smaller to use a macro:
+
+#define wil_err_ratelimited(wil, fmt, ...)		\
+do {							\
+	if (net_ratelimit())				\
+		wil_err(wil, fmt, ##__VA_ARGS__);	\
+} while (0)
+
