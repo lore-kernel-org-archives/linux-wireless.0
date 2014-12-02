@@ -1,39 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:28170 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753732AbaLDLCv (ORCPT
+Received: from smtprelay0062.hostedemail.com ([216.40.44.62]:54065 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S932252AbaLBQUH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Dec 2014 06:02:51 -0500
-Date: Thu, 4 Dec 2014 14:02:20 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Johannes Berg <johannes.berg@intel.com>
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [patch -next] iwlwifi: use a format string for an snprintf()
-Message-ID: <20141204110220.GE22643@mwanda> (sfid-20141204_120256_172346_207B7F52)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Tue, 2 Dec 2014 11:20:07 -0500
+Message-ID: <1417537201.3365.3.camel@perches.com> (sfid-20141202_172012_772472_3FE3DA59)
+Subject: Re: [PATCH v2 02/10] wil6210: introduce wil_err_ratelimited()
+From: Joe Perches <joe@perches.com>
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Cc: "John W . Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Date: Tue, 02 Dec 2014 08:20:01 -0800
+In-Reply-To: <1745741.h3nTIlTg0C@lx-wigig-72>
+References: <1417440803-26883-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	 <1417513598-18304-3-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	 <1417532867.3365.1.camel@perches.com> <1745741.h3nTIlTg0C@lx-wigig-72>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This will make Kees Cook happy if we specify a format string and, who
-knows, maybe someday there will be a firmware version with a percent
-character and we'll be glad for this.
+On Tue, 2014-12-02 at 18:07 +0200, Vladimir Kondratiev wrote:
+> On Tuesday, December 02, 2014 07:07:47 AM Joe Perches wrote:
+> > net_<foo>_ratelimited uses the same form.
+> > 
+> > include/linux/net.h:#define net_ratelimited_function(function, ...)             
+> > include/linux/net.h-do {                                                        
+> > include/linux/net.h-    if (net_ratelimit())                                    
+> > include/linux/net.h-            function(__VA_ARGS__);                          
+> > include/linux/net.h-} while (0)
+> > 
+> Yes, I see. There are representatives of both "schools". As counter example,
+> netdev_<foo> uses "long" way:
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+These used to be macros.
+They were converted to reduce overall code "size".
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-drv.c b/drivers/net/wireless/iwlwifi/iwl-drv.c
-index 38de151..68efe97 100644
---- a/drivers/net/wireless/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-drv.c
-@@ -1296,7 +1296,7 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
- 		iwl_dealloc_ucode(drv);
- 
- 		/* Build name of correct-step FW */
--		snprintf(firmware_name, sizeof(firmware_name),
-+		snprintf(firmware_name, sizeof(firmware_name), "%s",
- 			 strrchr(drv->firmware_name, '-'));
- 		snprintf(drv->firmware_name, sizeof(drv->firmware_name),
- 			 "%s%s", drv->cfg->fw_name_pre, firmware_name);
+commit 256df2f3879efdb2e9808bdb1b54b16fbb11fa38
+Date:   Sun Jun 27 01:02:35 2010 +0000
+
+    netdevice.h net/core/dev.c: Convert netdev_<level> logging macros to functions
+    
+    Reduces an x86 defconfig text and data ~2k.
+    text is smaller, data is larger.
+    
+    $ size vmlinux*
+       text        data     bss     dec     hex filename
+    7198862      720112 1366288 9285262  8dae8e vmlinux
+    7205273      716016 1366288 9287577  8db799 vmlinux.device_h
+    
+    Uses %pV and struct va_format
+    Format arguments are verified before printk
+
+> I agree it is bad practice to have non-trivial arguments in printk-like functions,
+
+true.
+
+It limits the ability to make side-effect
+free smaller code when printk is a no-op.
+
+> but it is hard to detect, specifically if one just automatically replace function with its
+> "ratelimited" version.
+
+Also true.
+
+It is and remains just a suggestion.
+
+Your code, your choices...
+
+
+
