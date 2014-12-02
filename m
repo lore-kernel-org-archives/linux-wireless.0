@@ -1,43 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f53.google.com ([74.125.82.53]:33013 "EHLO
-	mail-wg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750869AbaLBG6L convert rfc822-to-8bit (ORCPT
+Received: from mail-wg0-f47.google.com ([74.125.82.47]:56831 "EHLO
+	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932613AbaLBSLm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Dec 2014 01:58:11 -0500
-Received: by mail-wg0-f53.google.com with SMTP id l18so15906233wgh.26
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Dec 2014 22:58:10 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20141201144458.18248.28568.stgit@potku.adurom.net>
-References: <20141201144400.18248.62714.stgit@potku.adurom.net>
-	<20141201144458.18248.28568.stgit@potku.adurom.net>
-Date: Tue, 2 Dec 2014 07:58:09 +0100
-Message-ID: <CA+BoTQkrqeWcr2vrd-b18HezZhyBkfvOYE3SgF39oYu54BX-Fw@mail.gmail.com> (sfid-20141202_075814_731735_9E08D1B4)
-Subject: Re: [PATCH v3 1/7] ath10k: create ath10k_core_init_features()
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 2 Dec 2014 13:11:42 -0500
+Received: by mail-wg0-f47.google.com with SMTP id n12so17672637wgh.6
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Dec 2014 10:11:41 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 13/26] iwlwifi: don't load on 7265D with old NVM
+Date: Tue,  2 Dec 2014 20:11:04 +0200
+Message-Id: <1417543877-24193-13-git-send-email-egrumbach@gmail.com> (sfid-20141202_191149_159489_23E789ED)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB31B5A7D27@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB31B5A7D27@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 1 December 2014 at 15:44, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-[...]
->  int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode)
-> @@ -1046,7 +1047,12 @@ static int ath10k_core_probe_fw(struct ath10k *ar)
->                 return ret;
->         }
->
-> -       ath10k_core_init_max_sta_count(ar);
-> +       ret = ath10k_core_init_firmware_features(ar);
-> +       if (ret) {
-> +               ath10k_err(ar, "fatal problem with firmware features: %d\n",
-> +                          ret);
-> +               return ret;
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-I think you should call ath10k_core_free_firmware_files() and
-ath10k_hif_power_down() before returning (similar to how
-ath10k_core_start() failure is handled).
+7265D are new devices that should always have a new NVM
+(at least 0x0c11). The firmware has issues with older
+versions of the NVM which are not and will not be available
+to the common mortals.
 
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-7000.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-Michał
+diff --git a/drivers/net/wireless/iwlwifi/iwl-7000.c b/drivers/net/wireless/iwlwifi/iwl-7000.c
+index 8155988..e5be2d2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-7000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-7000.c
+@@ -89,6 +89,8 @@
+ #define IWL3165_TX_POWER_VERSION	0xffff /* meaningless */
+ #define IWL7265_NVM_VERSION		0x0a1d
+ #define IWL7265_TX_POWER_VERSION	0xffff /* meaningless */
++#define IWL7265D_NVM_VERSION		0x0c11
++#define IWL7265_TX_POWER_VERSION	0xffff /* meaningless */
+ 
+ #define IWL7260_FW_PRE "iwlwifi-7260-"
+ #define IWL7260_MODULE_FIRMWARE(api) IWL7260_FW_PRE __stringify(api) ".ucode"
+@@ -275,7 +277,7 @@ const struct iwl_cfg iwl7265d_2ac_cfg = {
+ 	.fw_name_pre = IWL7265D_FW_PRE,
+ 	IWL_DEVICE_7000,
+ 	.ht_params = &iwl7265_ht_params,
+-	.nvm_ver = IWL7265_NVM_VERSION,
++	.nvm_ver = IWL7265D_NVM_VERSION,
+ 	.nvm_calib_ver = IWL7265_TX_POWER_VERSION,
+ 	.pwr_tx_backoffs = iwl7265_pwr_tx_backoffs,
+ };
+@@ -285,7 +287,7 @@ const struct iwl_cfg iwl7265d_2n_cfg = {
+ 	.fw_name_pre = IWL7265D_FW_PRE,
+ 	IWL_DEVICE_7000,
+ 	.ht_params = &iwl7265_ht_params,
+-	.nvm_ver = IWL7265_NVM_VERSION,
++	.nvm_ver = IWL7265D_NVM_VERSION,
+ 	.nvm_calib_ver = IWL7265_TX_POWER_VERSION,
+ 	.pwr_tx_backoffs = iwl7265_pwr_tx_backoffs,
+ };
+@@ -295,7 +297,7 @@ const struct iwl_cfg iwl7265d_n_cfg = {
+ 	.fw_name_pre = IWL7265D_FW_PRE,
+ 	IWL_DEVICE_7000,
+ 	.ht_params = &iwl7265_ht_params,
+-	.nvm_ver = IWL7265_NVM_VERSION,
++	.nvm_ver = IWL7265D_NVM_VERSION,
+ 	.nvm_calib_ver = IWL7265_TX_POWER_VERSION,
+ 	.pwr_tx_backoffs = iwl7265_pwr_tx_backoffs,
+ };
+-- 
+1.9.1
+
