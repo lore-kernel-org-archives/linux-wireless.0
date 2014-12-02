@@ -1,52 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f45.google.com ([74.125.82.45]:58588 "EHLO
-	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754868AbaLVQcv (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:48279 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751666AbaLBLGs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Dec 2014 11:32:51 -0500
-Received: by mail-wg0-f45.google.com with SMTP id b13so7069114wgh.32
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Dec 2014 08:32:50 -0800 (PST)
-Date: Mon, 22 Dec 2014 19:32:47 +0300
-From: Alexey Tulia <alexey.tulia@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
-Subject: [PATCH] staging: rtl8723au: fix sparse warning
-Message-ID: <20141222163247.GA25707@epbyminw1710.minsk.epam.com> (sfid-20141222_173255_304772_64DEA321)
+	Tue, 2 Dec 2014 06:06:48 -0500
+Subject: [PATCH v2 0/2] ath10k: NF calibration period debugfs file
+To: <ath10k@lists.infradead.org>
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Date: Tue, 2 Dec 2014 13:06:31 +0200
+Message-ID: <20141202110443.14817.85639.stgit@potku.adurom.net> (sfid-20141202_120654_068002_7DB8D96C)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-drivers/staging/rtl8723au/core/rtw_xmit.c:2375 warning: symbol
-'rtl8723a_EfusePgPacketRead' was not declared. Should it be static?
+Hi,
 
-Function 'rtw_ack_tx_done23a' seems to be unused in current staging
-code.
+here are some changes I made to Peter's NF calibdation period patches. Please
+review.
 
-Signed-off-by: Alexey Tulia <alexey.tulia@gmail.com>
+v2:
+
+* add _MAX define
+
+* support firmware restart
+
+* set cal_period in wmi_tlv_pdev_param_map
+
+* simplify ar->state check
+
+* rename debugfs file to nf_cal_period to not confuse with cal_data
+  file (which is about calibration data)
+
+* WMI_10X_PDEV_PEER_STA_PS_STATECHG_ENABLE -> WMI_10X_PDEV_PARAM_PEER_STA_PS_STATECHG_ENABLE
+
 ---
- drivers/staging/rtl8723au/core/rtw_xmit.c | 9 ---------
- 1 file changed, 9 deletions(-)
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_xmit.c b/drivers/staging/rtl8723au/core/rtw_xmit.c
-index 7a5e6bf..1c82dff 100644
---- a/drivers/staging/rtl8723au/core/rtw_xmit.c
-+++ b/drivers/staging/rtl8723au/core/rtw_xmit.c
-@@ -2372,12 +2372,3 @@ int rtw_ack_tx_wait23a(struct xmit_priv *pxmitpriv, u32 timeout_ms)
- 	return rtw_sctx_wait23a(pack_tx_ops);
- }
+Peter Oh (2):
+      ath10k: add new pdev parameters for fw 10.2
+      ath10k: add new wmi interface of NF cal period
 
--void rtw_ack_tx_done23a(struct xmit_priv *pxmitpriv, int status)
--{
--	struct submit_ctx *pack_tx_ops = &pxmitpriv->ack_tx_ops;
--
--	if (pxmitpriv->ack_tx)
--		rtw23a_sctx_done_err(&pack_tx_ops, status);
--	else
--		DBG_8723A("%s ack_tx not set\n", __func__);
--}
---
-2.1.0
+
+ drivers/net/wireless/ath/ath10k/core.h    |    1 
+ drivers/net/wireless/ath/ath10k/debug.c   |   80 +++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c |    1 
+ drivers/net/wireless/ath/ath10k/wmi.c     |    2 +
+ drivers/net/wireless/ath/ath10k/wmi.h     |    7 +++
+ 5 files changed, 91 insertions(+)
 
