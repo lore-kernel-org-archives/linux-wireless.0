@@ -1,68 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:40835 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750845AbaLWRBB (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:24887 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751021AbaLBJwz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Dec 2014 12:01:01 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-	<linux-wireless@vger.kernel.org>,
-	Brett Rudley <brudley@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Christophe Prigent <christophe.prigent@intel.com>,
-	<linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] brcmfmac: Do not crash if platform data is not populated
-References: <1419346112-173303-1-git-send-email-mika.westerberg@linux.intel.com>
-	<54998C31.9090500@broadcom.com>
-	<20141223154738.GM1314@lahna.fi.intel.com> <54999161.504@broadcom.com>
-Date: Tue, 23 Dec 2014 19:00:51 +0200
-In-Reply-To: <54999161.504@broadcom.com> (Arend van Spriel's message of "Tue,
-	23 Dec 2014 16:59:29 +0100")
-Message-ID: <877fxie1x8.fsf@kamboji.qca.qualcomm.com> (sfid-20141223_180134_385223_7C62DF7F)
+	Tue, 2 Dec 2014 04:52:55 -0500
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+CC: Joe Perches <joe@perches.com>,
+	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: [PATCH v2 09/10] wil6210: reset flow update
+Date: Tue, 2 Dec 2014 11:52:31 +0200
+Message-ID: <1417513951-18676-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20141202_105259_323057_713464CB)
+In-Reply-To: <1417513598-18304-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1417513598-18304-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend@broadcom.com> writes:
+If card reset with firmware download executed, followed by reset
+with use of firmware from build in flash, firmware download indication
+remains in the hardware register.
+When running firmware download flow,
+the SW download indication is written by the driver to bit 0 in usage_6:
+wil_fw_load(), "S(RGF_USER_USAGE_6, 1);"
+This register, like all USER RGF, wasn't reset in SW reset flow.
+Therefore the driver must clear it on SW reset flow.
 
-> On 12/23/14 16:47, Mika Westerberg wrote:
->> On Tue, Dec 23, 2014 at 04:37:21PM +0100, Arend van Spriel wrote:
->>> On 12/23/14 15:48, Mika Westerberg wrote:
->>>> The driver looks for pdata->oob_irq_supported to find out if wowl can be
->>>> supported. However, not all platforms populate pdata in which case we crash
->>>> the kernel because of NULL pointer dereference.
->>>
->>> Thanks, Mika
->>>
->>> However, this was already reported by Dan Carpenter and I submitted a patch
->>> for that a couple of days ago: "[PATCH 02/10] brcmfmac: Fix possible
->>> dereference of NULL pointer." [1].
->>>
->>> Regards,
->>> Arend
->>>
->>> [1]
->>> http://mid.gmane.org/1419162233-19492-3-git-send-email-arend@broadcom.com
->>
->> Oh, good. I didn't notice that one.
->>
->> Thanks for fixing it :)
->>
->> BTW, that patch seems to miss brcmf_ops_sdio_resume(), perhaps it is
->> fixed in another patch?
->
-> Aargh, a nice "BTW" this is as there is no other patch for the resume
-> code. Maybe I should ask Kalle to apply your patch instead of ours. If
-> it did not already got applied.
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/main.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-I have been waiting for net-next to open so I haven't applied any -next
-patches yet. So if you want I can take Mika's patch as well. Just send a
-reply to your patch I should drop.
-
-And should this patch go to 3.19?
-
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index 8f257a4..8ff3fe3 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -493,6 +493,9 @@ static int wil_target_reset(struct wil6210_priv *wil)
+ 
+ 	wil_halt_cpu(wil);
+ 
++	/* Clear Fw Download notification */
++	C(RGF_USER_USAGE_6, BIT(0));
++
+ 	if (is_sparrow) {
+ 		S(RGF_CAF_OSC_CONTROL, BIT_CAF_OSC_XTAL_EN);
+ 		/* XTAL stabilization should take about 3ms */
 -- 
-Kalle Valo
+2.1.0
+
