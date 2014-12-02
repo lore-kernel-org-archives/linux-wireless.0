@@ -1,67 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f176.google.com ([209.85.213.176]:56866 "EHLO
-	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752438AbaLUQhh (ORCPT
+Received: from mail-wg0-f53.google.com ([74.125.82.53]:52164 "EHLO
+	mail-wg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750860AbaLBGi2 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Dec 2014 11:37:37 -0500
-Received: by mail-ig0-f176.google.com with SMTP id l13so3160691iga.9
-        for <linux-wireless@vger.kernel.org>; Sun, 21 Dec 2014 08:37:36 -0800 (PST)
+	Tue, 2 Dec 2014 01:38:28 -0500
+Received: by mail-wg0-f53.google.com with SMTP id l18so15877708wgh.26
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Dec 2014 22:38:26 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1419179100.2387.3.camel@sipsolutions.net>
-References: <1419168328-6114-1-git-send-email-eliad@wizery.com>
-	<5496D6F6.6050001@gmail.com>
-	<CAB3XZEeQJs7pye+SBr-s09gO8crqkbVWJndVKx836QGQcrjKDQ@mail.gmail.com>
-	<1419179100.2387.3.camel@sipsolutions.net>
-Date: Sun, 21 Dec 2014 18:37:36 +0200
-Message-ID: <CAB3XZEf41cWUgHSe2O4oWMQxugHUpfgJVmrwr0cA-fNT_KPitw@mail.gmail.com> (sfid-20141221_173744_535213_99327E57)
-Subject: Re: [PATCH] mac80211: fix dot11MulticastTransmittedFrameCount tested address
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Fred Chou <fred.chou.nd@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20141201144639.18248.27619.stgit@potku.adurom.net>
+References: <20141201144400.18248.62714.stgit@potku.adurom.net>
+	<20141201144639.18248.27619.stgit@potku.adurom.net>
+Date: Tue, 2 Dec 2014 07:38:26 +0100
+Message-ID: <CA+BoTQk2p54jJAxdKS3p3+YyU+6dHibyQ=sxrVpHtwMLjzuU0g@mail.gmail.com> (sfid-20141202_073834_360155_11417DDB)
+Subject: Re: [PATCH v3 7/7] ath10k: implement wmi-tlv backend
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Dec 21, 2014 at 6:25 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Sun, 2014-12-21 at 17:27 +0200, Eliad Peller wrote:
->> On Sun, Dec 21, 2014 at 4:19 PM, Fred Chou <fred.chou.nd@gmail.com> wrote:
->> > On 21/12/2014 9:25 PM, Eliad Peller wrote:
->> >> dot11MulticastTransmittedFrameCount should be updated according
->> >> to the DA, which might be different from hdr1.
->> >
->> > Shouldn't address 1 be used to determine whether the MPDU is multicast?
->> > From Std-2012 definition of multicast: "When applied to a MAC protocol
->> > data unit (MPDU), it is an MPDU with a group address in the Address 1
->> > field."
->> >
->> good point. i guess it depends on the meaning of
->> dot11MulticastTransmittedFrameCount -
->> multicast frames sent by sta are not multicast frames per se (as they
->> are sent directly to the AP), but they are destined to multicast
->> group.
->>
->> i tried understanding the meaning of this MIB from here (as i couldn't
->> find clear definition in the spec):
->> http://tools.cisco.com/Support/SNMP/do/BrowseOID.do?local=en&translate=Translate&objectInput=dot11MulticastTransmittedFrameCount
->
-> Yeah I can't find a good reference in the spec either - anyone want to
-> dig through the flow charts? :)
->
-> Btw, since this is ancient code from devicescape, it is possible that
-> they only cared about AP mode then - and there there's no difference
-> between the addresses.
->
-makes sense.
+On 1 December 2014 at 15:46, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+[...]
+> diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+> index b1cb90bb4c1c..ac7fbe8605bc 100644
+> --- a/drivers/net/wireless/ath/ath10k/core.c
+> +++ b/drivers/net/wireless/ath/ath10k/core.c
+> @@ -833,6 +833,11 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
+>                 ar->max_num_stations = TARGET_10X_NUM_STATIONS;
+>                 ar->htt.max_num_pending_tx = TARGET_10X_NUM_MSDU_DESC;
+>                 break;
+> +       case ATH10K_FW_WMI_OP_VERSION_TLV:
+> +               ar->max_num_peers = TARGET_TLV_NUM_PEERS;
+> +               ar->max_num_stations = TARGET_TLV_NUM_STATIONS;
+> +               ar->htt.max_num_pending_tx = TARGET_NUM_MSDU_DESC;
 
->> where it seems to be similar (IIUC) to the way i interpreted it, but i
->> might got it wrong :)
->
-> I think you're probably right - however I wonder if we can stick the
-> code elsewhere (like subif xmit?) instead of introducing more
-> conditionals here?
->
-well, we look for the tx status, so i think it makes sense to leave it here.
+Just a quick note: TARGET_TLV_NUM_MSDU_DESC should be used for
+max_num_pending_tx here.
 
-Eliad.
+
+Michał
