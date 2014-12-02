@@ -1,60 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:3226 "EHLO
-	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753466AbaLGT0w (ORCPT
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:45026 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932079AbaLBLv7 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Dec 2014 14:26:52 -0500
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-To: Daniel Drake <dsd@gentoo.org>
-Cc: kernel-janitors@vger.kernel.org, linux@rasmusvillemoes.dk,
-	joe@perches.com, Ulrich Kunitz <kune@deine-taler.de>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 13/20] zd1211rw: fix misspelling of current function in string
-Date: Sun,  7 Dec 2014 20:20:55 +0100
-Message-Id: <1417980062-25151-14-git-send-email-Julia.Lawall@lip6.fr> (sfid-20141207_203000_199674_03D99D10)
-In-Reply-To: <1417980062-25151-1-git-send-email-Julia.Lawall@lip6.fr>
-References: <1417980062-25151-1-git-send-email-Julia.Lawall@lip6.fr>
+	Tue, 2 Dec 2014 06:51:59 -0500
+Received: by mail-wi0-f176.google.com with SMTP id ex7so27715411wid.15
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Dec 2014 03:51:58 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20141201144507.18248.9856.stgit@potku.adurom.net>
+References: <20141201144400.18248.62714.stgit@potku.adurom.net>
+	<20141201144507.18248.9856.stgit@potku.adurom.net>
+Date: Tue, 2 Dec 2014 12:51:58 +0100
+Message-ID: <CA+BoTQm+JqCEXPQ4njxGvm-v_Typ0BDTK5g8627O_-gKiTWHZw@mail.gmail.com> (sfid-20141202_125202_362421_D682FC13)
+Subject: Re: [PATCH v3 2/7] ath10k: add ATH10K_FW_IE_WMI_OP_VERSION
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Replace a misspelled function name by %s and then __func__.
+On 1 December 2014 at 15:45, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+[...]
+> @@ -562,6 +562,17 @@ static int ath10k_core_fetch_firmware_api_n(struct ath10k *ar, const char *name)
+>                         ar->otp_len = ie_len;
+>
+>                         break;
+> +               case ATH10K_FW_IE_WMI_OP_VERSION:
+> +                       if (ie_len != sizeof(u32))
+> +                               break;
+> +
+> +                       version = (__le32 *)data;
+> +
+> +                       ar->wmi.op_version = le32_to_cpup(version);
+> +
+> +                       ath10k_dbg(ar, ATH10K_DBG_BOOT, "found fw ie wmi op version %d\n",
+> +                                  ar->wmi.op_version);
 
-This was done using Coccinelle, including the use of Levenshtein distance,
-as proposed by Rasmus Villemoes.
+Hmm.. wouldn't it make sense to have a ATH10K_FW_WMI_OP_VERSION_MAX
+(or _LAST) and verify if the IE value doesn't exceed the last known
+value? This way switch()es won't need default handler by design and
+thus we'll get the benefit of compiler telling us about unhandled
+cases when we add new enums.
 
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
 
----
-The semantic patch is difficult to summarize, but is available in the cover
-letter of this patch series.
-
- drivers/net/wireless/zd1211rw/zd_chip.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/zd1211rw/zd_chip.c b/drivers/net/wireless/zd1211rw/zd_chip.c
-index 73a49b8..07b94ed 100644
---- a/drivers/net/wireless/zd1211rw/zd_chip.c
-+++ b/drivers/net/wireless/zd1211rw/zd_chip.c
-@@ -129,7 +129,7 @@ int zd_ioread32v_locked(struct zd_chip *chip, u32 *values, const zd_addr_t *addr
- 	r = zd_ioread16v_locked(chip, v16, a16, count16);
- 	if (r) {
- 		dev_dbg_f(zd_chip_dev(chip),
--			  "error: zd_ioread16v_locked. Error number %d\n", r);
-+			  "error: %s. Error number %d\n", __func__, r);
- 		return r;
- 	}
- 
-@@ -256,8 +256,8 @@ int zd_iowrite32a_locked(struct zd_chip *chip,
- 		if (r) {
- 			zd_usb_iowrite16v_async_end(&chip->usb, 0);
- 			dev_dbg_f(zd_chip_dev(chip),
--				"error _zd_iowrite32v_locked."
--				" Error number %d\n", r);
-+				"error _%s. Error number %d\n", __func__,
-+				r);
- 			return r;
- 		}
- 	}
-
+Michał
