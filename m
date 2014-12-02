@@ -1,73 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f171.google.com ([209.85.214.171]:42495 "EHLO
-	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934040AbaLKXxc (ORCPT
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:61683 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932692AbaLBSLd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Dec 2014 18:53:32 -0500
-Message-ID: <548A2E7A.4010303@lwfinger.net> (sfid-20141212_005349_387518_B6CEC4E5)
-Date: Thu, 11 Dec 2014 17:53:30 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Krzysztof Konopko <kris@konagma.com>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] staging: rtl8723au: Fix sparse warnings
-References: <1418336609-10191-1-git-send-email-kris@konagma.com>
-In-Reply-To: <1418336609-10191-1-git-send-email-kris@konagma.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+	Tue, 2 Dec 2014 13:11:33 -0500
+Received: by mail-wg0-f45.google.com with SMTP id b13so17803510wgh.32
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Dec 2014 10:11:32 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 06/26] iwlwifi: mvm: remove IWL_UCODE_TLV_API_CSA_FLOW
+Date: Tue,  2 Dec 2014 20:10:57 +0200
+Message-Id: <1417543877-24193-6-git-send-email-egrumbach@gmail.com> (sfid-20141202_191137_221608_0EAFDDDE)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB31B5A7D27@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB31B5A7D27@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/11/2014 04:23 PM, Krzysztof Konopko wrote:
-> Some struct fields in wifi.h are meant to be __le16 bu were declared as
-> unsigned short.  This was reported by sparse:
->
->    rtw_wlan_util.c:538:24: warning: cast to restricted __le16
->    rtw_wlan_util.c:1544:29: warning: cast to restricted __le16
->    rtw_wlan_util.c:1546:25: warning: cast to restricted __le16
->
-> This patch changes declared types of the struct fields involved.
->
-> Signed-off-by: Krzysztof Konopko <kris@konagma.com>
-> ---
->   drivers/staging/rtl8723au/include/wifi.h | 6 +++---
->   1 file changed, 3 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/staging/rtl8723au/include/wifi.h b/drivers/staging/rtl8723au/include/wifi.h
-> index fd3da3b..8a2adc5 100644
-> --- a/drivers/staging/rtl8723au/include/wifi.h
-> +++ b/drivers/staging/rtl8723au/include/wifi.h
-> @@ -28,7 +28,7 @@
->   struct AC_param {
->   	unsigned char		ACI_AIFSN;
->   	unsigned char		CW;
-> -	unsigned short	TXOP_limit;
-> +	__le16			TXOP_limit;
->   }  __packed;
->
->   struct WMM_para_element {
-> @@ -39,9 +39,9 @@ struct WMM_para_element {
->
->   struct ADDBA_request {
->   	unsigned char		dialog_token;
-> -	unsigned short	BA_para_set;
-> +	__le16		BA_para_set;
->   	unsigned short	BA_timeout_value;
-> -	unsigned short	BA_starting_seqctrl;
-> +	__le16		BA_starting_seqctrl;
->   }  __packed;
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-This fix may make the sparse warnings go away, but I think it introduces new 
-bugs. In particular, did you test on big-endian hardware after you made this 
-change? I recently found that the driver for RTL8188EU needed to have 
-BA_para_set to unsigned short, and the endianess warnings needed to be fixed in 
-the code. Then it would work on my PowerBook G4 with a PPC processor.
+All the supported firmwares have this TLV flag set.
 
-In RTL8188EU, both BA_starting_seqctrl and TXOP_limit are unsigned short.
+Reviewed-by: Luciano Coelho <luciano.coelho@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-Larry
-
-
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 598fabf..31a5b3f 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -369,8 +369,7 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
+ 	if (mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_GO_UAPSD)
+ 		hw->wiphy->flags |= WIPHY_FLAG_AP_UAPSD;
+ 
+-	if (mvm->fw->ucode_capa.api[0] & IWL_UCODE_TLV_API_CSA_FLOW)
+-		hw->wiphy->flags |= WIPHY_FLAG_HAS_CHANNEL_SWITCH;
++	hw->wiphy->flags |= WIPHY_FLAG_HAS_CHANNEL_SWITCH;
+ 
+ 	hw->wiphy->iface_combinations = iwl_mvm_iface_combinations;
+ 	hw->wiphy->n_iface_combinations =
+-- 
+1.9.1
 
