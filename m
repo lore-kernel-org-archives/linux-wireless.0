@@ -1,43 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38024 "EHLO sipsolutions.net"
+Received: from isrv.corpit.ru ([86.62.121.231]:59353 "EHLO isrv.corpit.ru"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755673AbaLWKgj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Dec 2014 05:36:39 -0500
-Message-ID: <1419330994.6091.2.camel@sipsolutions.net> (sfid-20141223_113642_547667_1737F2DD)
-Subject: Re: [PATCH] cfg80211: do not check for carrier during
- start_radar_detect
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Avinash Patil <patila@marvell.com>
-Cc: "janusz.dziedzic@tieto.com" <janusz.dziedzic@tieto.com>,
+	id S1750769AbaLBVkQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Dec 2014 16:40:16 -0500
+Message-ID: <547E31BD.8090302@msgid.tls.msk.ru> (sfid-20141202_224031_042637_0C0AA73E)
+Date: Wed, 03 Dec 2014 00:40:13 +0300
+From: Michael Tokarev <mjt@tls.msk.ru>
+MIME-Version: 1.0
+To: Arend van Spriel <arend@broadcom.com>
+CC: Maximilian Engelhardt <maxi@daemonizer.de>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJl?= =?UTF-8?B?Y2tp?= <zajec5@gmail.com>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	brcm80211 development <brcm80211-dev-list@broadcom.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Cathy Luo <cluo@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Date: Tue, 23 Dec 2014 11:36:34 +0100
-In-Reply-To: <CBACCFA0AEB13A41977475BCF3E896FC66736E7A38@SC-VEXCH2.marvell.com>
-References: <CBACCFA0AEB13A41977475BCF3E896FC66736E7972@SC-VEXCH2.marvell.com>
-	 <CALhHN=qA7icuY_MNvBebDsOMOkh6hEsWNkrZoGDGsQg+-f6Xog@mail.gmail.com>
-	 ,<5FF020A1CFFEEC49BD1E09530C4FF5951B160B81A7@SC-VEXCH1.marvell.com>
-	 <CBACCFA0AEB13A41977475BCF3E896FC66736E7A37@SC-VEXCH2.marvell.com>
-	,<1419330394.6091.0.camel@sipsolutions.net>
-	 <CBACCFA0AEB13A41977475BCF3E896FC66736E7A38@SC-VEXCH2.marvell.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Network Development <netdev@vger.kernel.org>
+Subject: Re: BCM4313 & brcmsmac & 3.12: only semi-working?
+References: <53FDACD1.8090805@msgid.tls.msk.ru> <54363ED0.605@broadcom.com> <CACna6rw3XgdJz0uKkAuas8RTzozTdFp2mgF5g1uo7LHJVSMt4g@mail.gmail.com> <3543341.FmUQFH9nrl@eisbaer> <546C5D1F.108@msgid.tls.msk.ru> <546CD94D.9060509@broadcom.com> <546CF66A.3000207@msgid.tls.msk.ru> <546D04EE.1030200@msgid.tls.msk.ru> <5471AC29.6040009@broadcom.com> <5475A2DC.80502@msgid.tls.msk.ru> <547B07CF.90501@broadcom.com>
+In-Reply-To: <547B07CF.90501@broadcom.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-12-23 at 02:30 -0800, Avinash Patil wrote:
-> Oops..
-> 
-> Are you talking about this?
-> >>So, at least we should move if (netif_carrier_ok(dev)) check to mac80211 otherwise we might change channel of the running interface (via vif_use_channel).
-> 
-> I can move this check to ieee80211_start_radar_detection but I dont have any hardware to test these modifications.
+30.11.2014 15:04, Arend van Spriel wrote:
 
-That should be ok - however maybe you don't need those modifications at
-all?
+> Thanks. Did not find what I was looking for, but I started working on
+> integrating btcoex related functionality. The attached patch will print
+> some info so I can focus on the required functionality for your device.
+> It is based on 3.18-rc5.
 
-Frankly I'm not even sure how off-channel CAC stuff would work but
-Janusz probably knows what he's talking about :)
+With this patch applied against 3.18-rc5, the machine instantly reboots
+once brcmsmac module is loaded.  I'm still debugging this.
 
-johannes
+Thanks,
 
+/mjt
