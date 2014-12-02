@@ -1,105 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:36020 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750744AbaLELtu convert rfc822-to-8bit (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:36879 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932800AbaLBSLv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Dec 2014 06:49:50 -0500
-From: Hante Meuleman <meuleman@broadcom.com>
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>
-CC: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Arend Van Spriel <arend@broadcom.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>,
-	David Miller <davem@davemloft.net>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: using DMA-API on ARM
-Date: Fri, 5 Dec 2014 11:49:48 +0000
-Message-ID: <F51492713EF10846800D8C0ED37A7DCE01901691@SJEXCHMB15.corp.ad.broadcom.com> (sfid-20141205_125011_284224_336B0B41)
-References: <5481794E.4050406@broadcom.com> <4565667.WCBuNmaazQ@wuerfel>
- <20141205111114.GQ11285@n2100.arm.linux.org.uk>
-In-Reply-To: <20141205111114.GQ11285@n2100.arm.linux.org.uk>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Tue, 2 Dec 2014 13:11:51 -0500
+Received: by mail-wi0-f172.google.com with SMTP id n3so28814002wiv.17
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Dec 2014 10:11:50 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Liad Kaufman <liad.kaufman@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 19/26] iwlwifi: use correct fw file in 8000 b-step
+Date: Tue,  2 Dec 2014 20:11:10 +0200
+Message-Id: <1417543877-24193-19-git-send-email-egrumbach@gmail.com> (sfid-20141202_191219_754485_6355FDA5)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB31B5A7D27@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB31B5A7D27@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thank you for investigating. Your analysis matches what was intended to be done. Regarding the cast, you're right, I'll improve it. My idea was that long long is always 64bit, but when casting directly to long long I get a compiler (when using C=2) warning: "warning: right shift by bigger than source value". Probably I concluded wrongly that I should cast it to long first. On the targets used the high address was always 0, so I got away with it thusfar, but indeed it should and shall be fixed.
+From: Liad Kaufman <liad.kaufman@intel.com>
 
-Regards,
-Hante
+In 8000 B-step the FW file has changed, but by the time we
+know the HW step, the FW file is already requested.
 
------Original Message-----
-From: Russell King - ARM Linux [mailto:linux@arm.linux.org.uk] 
-Sent: vrijdag 5 december 2014 12:11
-To: Arnd Bergmann
-Cc: linux-arm-kernel@lists.infradead.org; Arend Van Spriel; linux-wireless; brcm80211-dev-list; David Miller; linux-kernel@vger.kernel.org
-Subject: Re: using DMA-API on ARM
+This patch defaults 8000 family to B-step if no HW step is
+detected in time. When it can it checks what HW step it
+really is (in 8000 family) and if it isn't B-step, the FW
+file is released and the A-step file is requested.
 
-On Fri, Dec 05, 2014 at 10:52:02AM +0100, Arnd Bergmann wrote:
-> I'm still puzzled why you'd need a single dma_sync_single_for_cpu()
-> after dma_alloc_coherent though, you should not need any. Is it possible
-> that the driver accidentally uses __raw_readl() instead of readl()
-> in some places and you are just lacking an appropriate barrier?
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-drv.c | 54 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 54 insertions(+)
 
-Digging into the driver, it looks like individual DMA buffers are
-allocated (via brcmf_pcie_init_dmabuffer_for_device) and registered
-into a "commonring" layer.
-
-Whenever the buffer is written to, space is first allocated via a call
-to brcmf_commonring_reserve_for_write() or
-brcmf_commonring_reserve_for_write_multiple(), data written to the
-buffer, followed by a call to brcmf_commonring_write_complete().
-
-brcmf_commonring_write_complete() calls two methods at that point:
-cr_write_wptr() and cr_ring_bell(), which will be
-brcmf_pcie_ring_mb_write_wptr() and brcmf_pcie_ring_mb_ring_bell().
-
-The first calls brcmf_pcie_write_tcm16(), which uses iowrite16(),
-which contains the appropriate barrier.  The bell ringing functions
-also use ioread*/iowrite*().
-
-So, on the write side, it looks fine from the barrier perspective.
-
-On the read side, brcmf_commonring_get_read_ptr() is used before
-a read access to the ring - which calls the cr_update_wptr() method,
-which in turn uses an ioread16() call.  After the CPU has read data
-from the ring, brcmf_commonring_read_complete() is used, which uses
-iowrite16().
-
-So, I don't see a barrier problem on the read side.
-
-However, I did trip over this:
-
-static void *
-brcmf_pcie_init_dmabuffer_for_device(struct brcmf_pciedev_info *devinfo,
-                                     u32 size, u32 tcm_dma_phys_addr,
-                                     dma_addr_t *dma_handle)
-{
-        void *ring;
-        long long address;
-
-        ring = dma_alloc_coherent(&devinfo->pdev->dev, size, dma_handle,
-                                  GFP_KERNEL);
-        if (!ring)
-                return NULL;
-
-        address = (long long)(long)*dma_handle;
-
-Casting to (long) will truncate the DMA handle to 32-bits on a 32-bit
-architecture, even if it supports 64-bit DMA addresses.  There's a couple
-of other places where this same truncation occurs:
-
-        address = (long long)(long)devinfo->shared.scratch_dmahandle;
-
-and
-
-        address = (long long)(long)devinfo->shared.ringupd_dmahandle;
-
-In any case, wouldn't using a u64 type for "address" be better - isn't
-"long long" 128-bit on 64-bit architectures?
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-drv.c b/drivers/net/wireless/iwlwifi/iwl-drv.c
+index 249ed3b..2c6e830 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/iwlwifi/iwl-drv.c
+@@ -245,6 +245,9 @@ static int iwl_request_firmware(struct iwl_drv *drv, bool first)
+ 	/*
+ 	 * Starting 8000B - FW name format has changed. This overwrites the
+ 	 * previous name and uses the new format.
++	 *
++	 * TODO:
++	 * Once there is only one supported step for 8000 family - delete this!
+ 	 */
+ 	if (drv->trans->cfg->device_family == IWL_DEVICE_FAMILY_8000) {
+ 		char rev_step[2] = {
+@@ -255,6 +258,13 @@ static int iwl_request_firmware(struct iwl_drv *drv, bool first)
+ 		if (CSR_HW_REV_STEP(drv->trans->hw_rev) == SILICON_A_STEP)
+ 			rev_step[0] = 0;
+ 
++		/*
++		 * If hw_rev wasn't set yet - default as B-step. If it IS A-step
++		 * we'll reload that FW later instead.
++		 */
++		if (drv->trans->hw_rev == 0)
++			rev_step[0] = 'B';
++
+ 		snprintf(drv->firmware_name, sizeof(drv->firmware_name),
+ 			 "%s%s-%s.ucode", name_pre, rev_step, tag);
+ 	}
+@@ -993,6 +1003,7 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
+ 	u32 api_ver;
+ 	int i;
+ 	bool load_module = false;
++	u32 hw_rev = drv->trans->hw_rev;
+ 
+ 	fw->ucode_capa.max_probe_length = IWL_DEFAULT_MAX_PROBE_LENGTH;
+ 	fw->ucode_capa.standard_phy_calibration_size =
+@@ -1159,6 +1170,49 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
+ 				op->name, err);
+ #endif
+ 	}
++
++	/*
++	 * We may have loaded the wrong FW file in 8000 HW family if it is an
++	 * A-step card, and if drv->trans->hw_rev wasn't properly read when
++	 * the FW file had been loaded. (This might happen in SDIO.) In such a
++	 * case - unload and reload the correct file.
++	 *
++	 * TODO:
++	 * Once there is only one supported step for 8000 family - delete this!
++	 */
++	if (drv->trans->cfg->device_family == IWL_DEVICE_FAMILY_8000 &&
++	    CSR_HW_REV_STEP(drv->trans->hw_rev) == SILICON_A_STEP &&
++	    drv->trans->hw_rev != hw_rev) {
++		char firmware_name[32];
++
++		/* Free previous FW resources */
++		if (drv->op_mode)
++			_iwl_op_mode_stop(drv);
++		iwl_dealloc_ucode(drv);
++
++		/* Build name of correct-step FW */
++		snprintf(firmware_name, sizeof(firmware_name),
++			 strrchr(drv->firmware_name, '-'));
++		snprintf(drv->firmware_name, sizeof(drv->firmware_name),
++			 "%s%s", drv->cfg->fw_name_pre, firmware_name);
++
++		/* Clear data before loading correct FW */
++		list_del(&drv->list);
++
++		/* Request correct FW file this time */
++		IWL_DEBUG_INFO(drv, "attempting to load A-step FW %s\n",
++			       drv->firmware_name);
++		err = request_firmware(&ucode_raw, drv->firmware_name,
++				       drv->trans->dev);
++		if (err) {
++			IWL_ERR(drv, "Failed swapping FW!\n");
++			goto out_unbind;
++		}
++
++		/* Redo callback function - this time with right FW */
++		iwl_req_fw_callback(ucode_raw, context);
++	}
++
+ 	return;
+ 
+  try_again:
 -- 
-FTTC broadband for 0.8mile line: currently at 9.5Mbps down 400kbps up
-according to speedtest.net.
+1.9.1
+
