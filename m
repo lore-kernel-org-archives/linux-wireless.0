@@ -1,264 +1,465 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:55151 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750873AbaLOLgA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Dec 2014 06:36:00 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from mail-wg0-f53.google.com ([74.125.82.53]:52614 "EHLO
+	mail-wg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932569AbaLBSLz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Dec 2014 13:11:55 -0500
+Received: by mail-wg0-f53.google.com with SMTP id l18so17759814wgh.40
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Dec 2014 10:11:54 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: kvalo@adurom.com, pizza@shaftnet.org, luca@coelho.fi,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: move U-APSD enablement to vif flags
-Date: Mon, 15 Dec 2014 12:35:54 +0100
-Message-Id: <1418643354-5597-1-git-send-email-johannes@sipsolutions.net> (sfid-20141215_123606_679110_53D4BB15)
+Cc: Liad Kaufman <liad.kaufman@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 22/26] iwlwifi: define the .ucode file format for debug
+Date: Tue,  2 Dec 2014 20:11:13 +0200
+Message-Id: <1417543877-24193-22-git-send-email-egrumbach@gmail.com> (sfid-20141202_191210_652396_F77910BC)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB31B5A7D27@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB31B5A7D27@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Liad Kaufman <liad.kaufman@intel.com>
 
-In order to let drivers have more dynamic U-APSD support,
-move the enablement flag to the virtual interface driver
-flags. This lets drivers not only set it up differently
-for different interfaces, but also enable/disable on the
-fly if needed.
+Debug information can be appended to the firmware file. This
+information will be used by the driver to enable / disable
+debugging features in the firmware.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c       |  3 ++-
- drivers/net/wireless/cw1200/main.c          |  1 -
- drivers/net/wireless/cw1200/sta.c           |  1 +
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 13 ++++++-------
- drivers/net/wireless/ti/wl1251/main.c       |  5 ++---
- drivers/net/wireless/ti/wlcore/main.c       |  2 +-
- include/net/mac80211.h                      | 15 +++++++--------
- net/mac80211/debugfs.c                      |  2 --
- net/mac80211/main.c                         |  4 ----
- net/mac80211/mlme.c                         |  7 ++++++-
- 10 files changed, 25 insertions(+), 28 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-drv.c     | 121 ++++++++++++++++++++++++----
+ drivers/net/wireless/iwlwifi/iwl-fw-file.h | 124 +++++++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-fw.h      |  55 +++++++++++++
+ 3 files changed, 285 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index c4005670cba2..2619db1e3e74 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2871,6 +2871,8 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
- 	int bit;
- 	u32 vdev_param;
- 
-+	vif->driver_flags |= IEEE80211_VIF_SUPPORTS_UAPSD;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-drv.c b/drivers/net/wireless/iwlwifi/iwl-drv.c
+index 2c6e830..a53b534 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/iwlwifi/iwl-drv.c
+@@ -184,6 +184,11 @@ static void iwl_free_fw_img(struct iwl_drv *drv, struct fw_img *img)
+ static void iwl_dealloc_ucode(struct iwl_drv *drv)
+ {
+ 	int i;
 +
- 	mutex_lock(&ar->conf_mutex);
++	kfree(drv->fw.dbg_dest_tlv);
++	for (i = 0; i < ARRAY_SIZE(drv->fw.dbg_conf_tlv); i++)
++		kfree(drv->fw.dbg_conf_tlv[i]);
++
+ 	for (i = 0; i < IWL_UCODE_TYPE_MAX; i++)
+ 		iwl_free_fw_img(drv, drv->fw.img + i);
+ }
+@@ -308,6 +313,11 @@ struct iwl_firmware_pieces {
  
- 	memset(arvif, 0, sizeof(*arvif));
-@@ -5024,7 +5026,6 @@ int ath10k_mac_register(struct ath10k *ar)
- 	ar->hw->flags = IEEE80211_HW_SIGNAL_DBM |
- 			IEEE80211_HW_SUPPORTS_PS |
- 			IEEE80211_HW_SUPPORTS_DYNAMIC_PS |
--			IEEE80211_HW_SUPPORTS_UAPSD |
- 			IEEE80211_HW_MFP_CAPABLE |
- 			IEEE80211_HW_REPORTS_TX_ACK_STATUS |
- 			IEEE80211_HW_HAS_RATE_CONTROL |
-diff --git a/drivers/net/wireless/cw1200/main.c b/drivers/net/wireless/cw1200/main.c
-index 3e78cc3ccb78..0da6e423da63 100644
---- a/drivers/net/wireless/cw1200/main.c
-+++ b/drivers/net/wireless/cw1200/main.c
-@@ -282,7 +282,6 @@ static struct ieee80211_hw *cw1200_init_common(const u8 *macaddr,
- 		    IEEE80211_HW_SUPPORTS_PS |
- 		    IEEE80211_HW_SUPPORTS_DYNAMIC_PS |
- 		    IEEE80211_HW_REPORTS_TX_ACK_STATUS |
--		    IEEE80211_HW_SUPPORTS_UAPSD |
- 		    IEEE80211_HW_CONNECTION_MONITOR |
- 		    IEEE80211_HW_AMPDU_AGGREGATION |
- 		    IEEE80211_HW_TX_AMPDU_SETUP_IN_HW |
-diff --git a/drivers/net/wireless/cw1200/sta.c b/drivers/net/wireless/cw1200/sta.c
-index 5b84664db13b..a1e3237c0be8 100644
---- a/drivers/net/wireless/cw1200/sta.c
-+++ b/drivers/net/wireless/cw1200/sta.c
-@@ -213,6 +213,7 @@ int cw1200_add_interface(struct ieee80211_hw *dev,
- 	/* __le32 auto_calibration_mode = __cpu_to_le32(1); */
- 
- 	vif->driver_flags |= IEEE80211_VIF_BEACON_FILTER |
-+			     IEEE80211_VIF_SUPPORTS_UAPSD |
- 			     IEEE80211_VIF_SUPPORTS_CQM_RSSI;
- 
- 	mutex_lock(&priv->conf_mutex);
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index 31a5b3f4266c..346331d3c696 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -326,6 +326,8 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
- 	hw->radiotap_vht_details |= IEEE80211_RADIOTAP_VHT_KNOWN_STBC |
- 		IEEE80211_RADIOTAP_VHT_KNOWN_BEAMFORMED;
- 	hw->rate_control_algorithm = "iwl-mvm-rs";
-+	hw->uapsd_queues = IWL_MVM_UAPSD_QUEUES;
-+	hw->uapsd_max_sp_len = IWL_UAPSD_MAX_SP;
- 
- 	/*
- 	 * Enable 11w if advertised by firmware and software crypto
-@@ -336,13 +338,6 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
- 	    !iwlwifi_mod_params.sw_crypto)
- 		hw->flags |= IEEE80211_HW_MFP_CAPABLE;
- 
--	if (mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_UAPSD_SUPPORT &&
--	    !iwlwifi_mod_params.uapsd_disable) {
--		hw->flags |= IEEE80211_HW_SUPPORTS_UAPSD;
--		hw->uapsd_queues = IWL_MVM_UAPSD_QUEUES;
--		hw->uapsd_max_sp_len = IWL_UAPSD_MAX_SP;
--	}
--
- 	if (mvm->fw->ucode_capa.api[0] & IWL_UCODE_TLV_API_LMAC_SCAN ||
- 	    mvm->fw->ucode_capa.capa[0] & IWL_UCODE_TLV_CAPA_UMAC_SCAN) {
- 		hw->flags |= IEEE80211_SINGLE_HW_SCAN_ON_ALL_BANDS;
-@@ -1147,6 +1142,10 @@ static int iwl_mvm_mac_add_interface(struct ieee80211_hw *hw,
- 		mvm->bf_allowed_vif = mvmvif;
- 		vif->driver_flags |= IEEE80211_VIF_BEACON_FILTER |
- 				     IEEE80211_VIF_SUPPORTS_CQM_RSSI;
-+		if (mvm->fw->ucode_capa.flags &
-+					IWL_UCODE_TLV_FLAGS_UAPSD_SUPPORT &&
-+		    !iwlwifi_mod_params.uapsd_disable)
-+			vif->driver_flags |= IEEE80211_VIF_SUPPORTS_UAPSD;
- 	}
- 
- 	/*
-diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
-index 0b30a7b4d663..d4ba009ac9aa 100644
---- a/drivers/net/wireless/ti/wl1251/main.c
-+++ b/drivers/net/wireless/ti/wl1251/main.c
-@@ -500,6 +500,7 @@ static int wl1251_op_add_interface(struct ieee80211_hw *hw,
- 	int ret = 0;
- 
- 	vif->driver_flags |= IEEE80211_VIF_BEACON_FILTER |
-+			     IEEE80211_VIF_SUPPORTS_UAPSD |
- 			     IEEE80211_VIF_SUPPORTS_CQM_RSSI;
- 
- 	wl1251_debug(DEBUG_MAC80211, "mac80211 add interface type %d mac %pM",
-@@ -1480,9 +1481,7 @@ int wl1251_init_ieee80211(struct wl1251 *wl)
- 	/* unit us */
- 	/* FIXME: find a proper value */
- 
--	wl->hw->flags = IEEE80211_HW_SIGNAL_DBM |
--		IEEE80211_HW_SUPPORTS_PS |
--		IEEE80211_HW_SUPPORTS_UAPSD;
-+	wl->hw->flags = IEEE80211_HW_SIGNAL_DBM | IEEE80211_HW_SUPPORTS_PS;
- 
- 	wl->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
- 					 BIT(NL80211_IFTYPE_ADHOC);
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 6ad3fcedab9b..2a99456b6b8f 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -2508,6 +2508,7 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
- 	}
- 
- 	vif->driver_flags |= IEEE80211_VIF_BEACON_FILTER |
-+			     IEEE80211_VIF_SUPPORTS_UAPSD |
- 			     IEEE80211_VIF_SUPPORTS_CQM_RSSI;
- 
- 	wl1271_debug(DEBUG_MAC80211, "mac80211 add interface type %d mac %pM",
-@@ -5776,7 +5777,6 @@ static int wl1271_init_ieee80211(struct wl1271 *wl)
- 	wl->hw->flags = IEEE80211_HW_SIGNAL_DBM |
- 		IEEE80211_HW_SUPPORTS_PS |
- 		IEEE80211_HW_SUPPORTS_DYNAMIC_PS |
--		IEEE80211_HW_SUPPORTS_UAPSD |
- 		IEEE80211_HW_HAS_RATE_CONTROL |
- 		IEEE80211_HW_CONNECTION_MONITOR |
- 		IEEE80211_HW_REPORTS_TX_ACK_STATUS |
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index b24ef577aed9..4913c00539fb 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1187,10 +1187,15 @@ struct ieee80211_channel_switch {
-  *	monitoring on this virtual interface -- i.e. it can monitor
-  *	connection quality related parameters, such as the RSSI level and
-  *	provide notifications if configured trigger levels are reached.
-+ * @IEEE80211_VIF_SUPPORTS_UAPSD: The device can do U-APSD for this
-+ *	interface. This flag should be set during interface addition,
-+ *	but may be set/cleared as late as authentication to an AP. It is
-+ *	only valid for managed/station mode interfaces.
-  */
- enum ieee80211_vif_flags {
- 	IEEE80211_VIF_BEACON_FILTER		= BIT(0),
- 	IEEE80211_VIF_SUPPORTS_CQM_RSSI		= BIT(1),
-+	IEEE80211_VIF_SUPPORTS_UAPSD		= BIT(2),
+ 	u32 init_evtlog_ptr, init_evtlog_size, init_errlog_ptr;
+ 	u32 inst_evtlog_ptr, inst_evtlog_size, inst_errlog_ptr;
++
++	/* FW debug data parsed for driver usage */
++	struct iwl_fw_dbg_dest_tlv *dbg_dest_tlv;
++	struct iwl_fw_dbg_conf_tlv *dbg_conf_tlv[FW_DBG_MAX];
++	size_t dbg_conf_tlv_len[FW_DBG_MAX];
  };
  
- /**
-@@ -1589,11 +1594,6 @@ struct ieee80211_tx_control {
-  * @IEEE80211_HW_MFP_CAPABLE:
-  *	Hardware supports management frame protection (MFP, IEEE 802.11w).
-  *
-- * @IEEE80211_HW_SUPPORTS_UAPSD:
-- *	Hardware supports Unscheduled Automatic Power Save Delivery
-- *	(U-APSD) in managed mode. The mode is configured with
-- *	conf_tx() operation.
-- *
-  * @IEEE80211_HW_REPORTS_TX_ACK_STATUS:
-  *	Hardware can provide ack status reports of Tx frames to
-  *	the stack.
-@@ -1679,8 +1679,7 @@ enum ieee80211_hw_flags {
- 	IEEE80211_HW_MFP_CAPABLE			= 1<<13,
- 	IEEE80211_HW_WANT_MONITOR_VIF			= 1<<14,
- 	IEEE80211_HW_NO_AUTO_VIF			= 1<<15,
--	/* free slot */
--	IEEE80211_HW_SUPPORTS_UAPSD			= 1<<17,
-+	/* free slots */
- 	IEEE80211_HW_REPORTS_TX_ACK_STATUS		= 1<<18,
- 	IEEE80211_HW_CONNECTION_MONITOR			= 1<<19,
- 	IEEE80211_HW_QUEUE_CONTROL			= 1<<20,
-@@ -2032,7 +2031,7 @@ void ieee80211_free_txskb(struct ieee80211_hw *hw, struct sk_buff *skb);
-  * enabled whenever user has enabled powersave.
-  *
-  * Driver informs U-APSD client support by enabling
-- * %IEEE80211_HW_SUPPORTS_UAPSD flag. The mode is configured through the
-+ * %IEEE80211_VIF_SUPPORTS_UAPSD flag. The mode is configured through the
-  * uapsd parameter in conf_tx() operation. Hardware needs to send the QoS
-  * Nullfunc frames and stay awake until the service period has ended. To
-  * utilize U-APSD, dynamic powersave is disabled for voip AC and all frames
-diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
-index 54a189f0393e..eeb0bbd69d98 100644
---- a/net/mac80211/debugfs.c
-+++ b/net/mac80211/debugfs.c
-@@ -303,8 +303,6 @@ static ssize_t hwflags_read(struct file *file, char __user *user_buf,
- 		sf += scnprintf(buf + sf, mxln - sf, "SUPPORTS_DYNAMIC_PS\n");
- 	if (local->hw.flags & IEEE80211_HW_MFP_CAPABLE)
- 		sf += scnprintf(buf + sf, mxln - sf, "MFP_CAPABLE\n");
--	if (local->hw.flags & IEEE80211_HW_SUPPORTS_UAPSD)
--		sf += scnprintf(buf + sf, mxln - sf, "SUPPORTS_UAPSD\n");
- 	if (local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS)
- 		sf += scnprintf(buf + sf, mxln - sf,
- 				"REPORTS_TX_ACK_STATUS\n");
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 6ab99da38db9..d9ce33663c73 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -916,10 +916,6 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 		}
+ /*
+@@ -853,6 +863,58 @@ static int iwl_parse_tlv_firmware(struct iwl_drv *drv,
+ 			capa->n_scan_channels =
+ 				le32_to_cpup((__le32 *)tlv_data);
+ 			break;
++		case IWL_UCODE_TLV_FW_DBG_DEST: {
++			struct iwl_fw_dbg_dest_tlv *dest = (void *)tlv_data;
++
++			if (pieces->dbg_dest_tlv) {
++				IWL_ERR(drv,
++					"dbg destination ignored, already exists\n");
++				break;
++			}
++
++			pieces->dbg_dest_tlv = dest;
++			IWL_INFO(drv, "Found debug destination: %s\n",
++				 get_fw_dbg_mode_string(dest->monitor_mode));
++
++			drv->fw.dbg_dest_reg_num =
++				tlv_len - offsetof(struct iwl_fw_dbg_dest_tlv,
++						   reg_ops);
++			drv->fw.dbg_dest_reg_num /=
++				sizeof(drv->fw.dbg_dest_tlv->reg_ops[0]);
++
++			break;
++			}
++		case IWL_UCODE_TLV_FW_DBG_CONF: {
++			struct iwl_fw_dbg_conf_tlv *conf = (void *)tlv_data;
++
++			if (!pieces->dbg_dest_tlv) {
++				IWL_ERR(drv,
++					"Ignore dbg config %d - no destination configured\n",
++					conf->id);
++				break;
++			}
++
++			if (conf->id >= ARRAY_SIZE(drv->fw.dbg_conf_tlv)) {
++				IWL_ERR(drv,
++					"Skip unknown configuration: %d\n",
++					conf->id);
++				break;
++			}
++
++			if (pieces->dbg_conf_tlv[conf->id]) {
++				IWL_ERR(drv,
++					"Ignore duplicate dbg config %d\n",
++					conf->id);
++				break;
++			}
++
++			IWL_INFO(drv, "Found debug configuration: %d\n",
++				 conf->id);
++
++			pieces->dbg_conf_tlv[conf->id] = conf;
++			pieces->dbg_conf_tlv_len[conf->id] = tlv_len;
++			break;
++			}
+ 		default:
+ 			IWL_DEBUG_INFO(drv, "unknown TLV: %d\n", tlv_type);
+ 			break;
+@@ -996,7 +1058,7 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
+ 	struct iwl_ucode_header *ucode;
+ 	struct iwlwifi_opmode_table *op;
+ 	int err;
+-	struct iwl_firmware_pieces pieces;
++	struct iwl_firmware_pieces *pieces;
+ 	const unsigned int api_max = drv->cfg->ucode_api_max;
+ 	unsigned int api_ok = drv->cfg->ucode_api_ok;
+ 	const unsigned int api_min = drv->cfg->ucode_api_min;
+@@ -1013,7 +1075,9 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
+ 	if (!api_ok)
+ 		api_ok = api_max;
+ 
+-	memset(&pieces, 0, sizeof(pieces));
++	pieces = kzalloc(sizeof(*pieces), GFP_KERNEL);
++	if (!pieces)
++		return;
+ 
+ 	if (!ucode_raw) {
+ 		if (drv->fw_index <= api_ok)
+@@ -1036,10 +1100,10 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
+ 	ucode = (struct iwl_ucode_header *)ucode_raw->data;
+ 
+ 	if (ucode->ver)
+-		err = iwl_parse_v1_v2_firmware(drv, ucode_raw, &pieces);
++		err = iwl_parse_v1_v2_firmware(drv, ucode_raw, pieces);
+ 	else
+-		err = iwl_parse_tlv_firmware(drv, ucode_raw, &pieces,
+-					   &fw->ucode_capa);
++		err = iwl_parse_tlv_firmware(drv, ucode_raw, pieces,
++					     &fw->ucode_capa);
+ 
+ 	if (err)
+ 		goto try_again;
+@@ -1079,7 +1143,7 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
+ 	 * In mvm uCode there is no difference between data and instructions
+ 	 * sections.
+ 	 */
+-	if (!fw->mvm_fw && validate_sec_sizes(drv, &pieces, drv->cfg))
++	if (!fw->mvm_fw && validate_sec_sizes(drv, pieces, drv->cfg))
+ 		goto try_again;
+ 
+ 	/* Allocate ucode buffers for card's bus-master loading ... */
+@@ -1088,9 +1152,33 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
+ 	 * 1) unmodified from disk
+ 	 * 2) backup cache for save/restore during power-downs */
+ 	for (i = 0; i < IWL_UCODE_TYPE_MAX; i++)
+-		if (iwl_alloc_ucode(drv, &pieces, i))
++		if (iwl_alloc_ucode(drv, pieces, i))
+ 			goto out_free_fw;
+ 
++	if (pieces->dbg_dest_tlv) {
++		drv->fw.dbg_dest_tlv =
++			kmemdup(pieces->dbg_dest_tlv,
++				sizeof(*pieces->dbg_dest_tlv) +
++				sizeof(pieces->dbg_dest_tlv->reg_ops[0]) *
++				drv->fw.dbg_dest_reg_num, GFP_KERNEL);
++
++		if (!drv->fw.dbg_dest_tlv)
++			goto out_free_fw;
++	}
++
++	for (i = 0; i < ARRAY_SIZE(drv->fw.dbg_conf_tlv); i++) {
++		if (pieces->dbg_conf_tlv[i]) {
++			drv->fw.dbg_conf_tlv_len[i] =
++				pieces->dbg_conf_tlv_len[i];
++			drv->fw.dbg_conf_tlv[i] =
++				kmemdup(pieces->dbg_conf_tlv[i],
++					drv->fw.dbg_conf_tlv_len[i],
++					GFP_KERNEL);
++			if (!drv->fw.dbg_conf_tlv[i])
++				goto out_free_fw;
++		}
++	}
++
+ 	/* Now that we can no longer fail, copy information */
+ 
+ 	/*
+@@ -1098,20 +1186,20 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
+ 	 * for each event, which is of mode 1 (including timestamp) for all
+ 	 * new microcodes that include this information.
+ 	 */
+-	fw->init_evtlog_ptr = pieces.init_evtlog_ptr;
+-	if (pieces.init_evtlog_size)
+-		fw->init_evtlog_size = (pieces.init_evtlog_size - 16)/12;
++	fw->init_evtlog_ptr = pieces->init_evtlog_ptr;
++	if (pieces->init_evtlog_size)
++		fw->init_evtlog_size = (pieces->init_evtlog_size - 16)/12;
+ 	else
+ 		fw->init_evtlog_size =
+ 			drv->cfg->base_params->max_event_log_size;
+-	fw->init_errlog_ptr = pieces.init_errlog_ptr;
+-	fw->inst_evtlog_ptr = pieces.inst_evtlog_ptr;
+-	if (pieces.inst_evtlog_size)
+-		fw->inst_evtlog_size = (pieces.inst_evtlog_size - 16)/12;
++	fw->init_errlog_ptr = pieces->init_errlog_ptr;
++	fw->inst_evtlog_ptr = pieces->inst_evtlog_ptr;
++	if (pieces->inst_evtlog_size)
++		fw->inst_evtlog_size = (pieces->inst_evtlog_size - 16)/12;
+ 	else
+ 		fw->inst_evtlog_size =
+ 			drv->cfg->base_params->max_event_log_size;
+-	fw->inst_errlog_ptr = pieces.inst_errlog_ptr;
++	fw->inst_errlog_ptr = pieces->inst_errlog_ptr;
+ 
+ 	/*
+ 	 * figure out the offset of chain noise reset and gain commands
+@@ -1213,10 +1301,12 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
+ 		iwl_req_fw_callback(ucode_raw, context);
  	}
  
--	WARN((local->hw.flags & IEEE80211_HW_SUPPORTS_UAPSD)
--	     && (local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK),
--	     "U-APSD not supported with HW_PS_NULLFUNC_STACK\n");
--
- 	/*
- 	 * Calculate scan IE length -- we need this to alloc
- 	 * memory and to subtract from the driver limit. It
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 75a9bf50207e..f495b800b92c 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -4667,8 +4667,13 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
- 		ifmgd->flags |= IEEE80211_STA_DISABLE_VHT;
- 	rcu_read_unlock();
++	kfree(pieces);
+ 	return;
  
-+	if (WARN((sdata->vif.driver_flags & IEEE80211_VIF_SUPPORTS_UAPSD) &&
-+		 (local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK),
-+	     "U-APSD not supported with HW_PS_NULLFUNC_STACK\n"))
-+		sdata->vif.driver_flags &= ~IEEE80211_VIF_SUPPORTS_UAPSD;
+  try_again:
+ 	/* try next, if any */
++	kfree(pieces);
+ 	release_firmware(ucode_raw);
+ 	if (iwl_request_firmware(drv, false))
+ 		goto out_unbind;
+@@ -1227,6 +1317,7 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
+ 	iwl_dealloc_ucode(drv);
+ 	release_firmware(ucode_raw);
+  out_unbind:
++	kfree(pieces);
+ 	complete(&drv->request_firmware_complete);
+ 	device_release_driver(drv->trans->dev);
+ }
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fw-file.h b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
+index df5613a..9faad69 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fw-file.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
+@@ -131,6 +131,8 @@ enum iwl_ucode_tlv_type {
+ 	IWL_UCODE_TLV_API_CHANGES_SET	= 29,
+ 	IWL_UCODE_TLV_ENABLED_CAPABILITIES	= 30,
+ 	IWL_UCODE_TLV_N_SCAN_CHANNELS		= 31,
++	IWL_UCODE_TLV_FW_DBG_DEST	= 38,
++	IWL_UCODE_TLV_FW_DBG_CONF	= 39,
+ };
+ 
+ struct iwl_ucode_tlv {
+@@ -362,4 +364,126 @@ struct iwl_fw_cipher_scheme {
+ 	u8 hw_cipher;
+ } __packed;
+ 
++enum iwl_fw_dbg_reg_operator {
++	CSR_ASSIGN,
++	CSR_SETBIT,
++	CSR_CLEARBIT,
 +
- 	if (bss->wmm_used && bss->uapsd_supported &&
--	    (sdata->local->hw.flags & IEEE80211_HW_SUPPORTS_UAPSD)) {
-+	    (sdata->vif.driver_flags & IEEE80211_VIF_SUPPORTS_UAPSD)) {
- 		assoc_data->uapsd = true;
- 		ifmgd->flags |= IEEE80211_STA_UAPSD_ENABLED;
- 	} else {
++	PRPH_ASSIGN,
++	PRPH_SETBIT,
++	PRPH_CLEARBIT,
++};
++
++/**
++ * struct iwl_fw_dbg_reg_op - an operation on a register
++ *
++ * @op: %enum iwl_fw_dbg_reg_operator
++ * @addr: offset of the register
++ * @val: value
++ */
++struct iwl_fw_dbg_reg_op {
++	u8 op;
++	u8 reserved[3];
++	__le32 addr;
++	__le32 val;
++} __packed;
++
++/**
++ * enum iwl_fw_dbg_monitor_mode - available monitor recording modes
++ *
++ * @SMEM_MODE: monitor stores the data in SMEM
++ * @EXTERNAL_MODE: monitor stores the data in allocated DRAM
++ * @MARBH_MODE: monitor stores the data in MARBH buffer
++ */
++enum iwl_fw_dbg_monitor_mode {
++	SMEM_MODE = 0,
++	EXTERNAL_MODE = 1,
++	MARBH_MODE = 2,
++};
++
++/**
++ * struct iwl_fw_dbg_dest_tlv - configures the destination of the debug data
++ *
++ * @version: version of the TLV - currently 0
++ * @monitor_mode: %enum iwl_fw_dbg_monitor_mode
++ * @base_reg: addr of the base addr register (PRPH)
++ * @end_reg:  addr of the end addr register (PRPH)
++ * @write_ptr_reg: the addr of the reg of the write pointer
++ * @wrap_count: the addr of the reg of the wrap_count
++ * @base_shift: shift right of the base addr reg
++ * @end_shift: shift right of the end addr reg
++ * @reg_ops: array of registers operations
++ *
++ * This parses IWL_UCODE_TLV_FW_DBG_DEST
++ */
++struct iwl_fw_dbg_dest_tlv {
++	u8 version;
++	u8 monitor_mode;
++	u8 reserved[2];
++	__le32 base_reg;
++	__le32 end_reg;
++	__le32 write_ptr_reg;
++	__le32 wrap_count;
++	u8 base_shift;
++	u8 end_shift;
++	struct iwl_fw_dbg_reg_op reg_ops[0];
++} __packed;
++
++struct iwl_fw_dbg_conf_hcmd {
++	u8 id;
++	u8 reserved;
++	__le16 len;
++	u8 data[0];
++} __packed;
++
++/**
++ * struct iwl_fw_dbg_trigger - a TLV that describes a debug configuration
++ *
++ * @enabled: is this trigger enabled
++ * @reserved:
++ * @len: length, in bytes, of the %trigger field
++ * @trigger: pointer to a trigger struct
++ */
++struct iwl_fw_dbg_trigger {
++	u8 enabled;
++	u8 reserved;
++	u8 len;
++	u8 trigger[0];
++} __packed;
++
++/**
++ * enum iwl_fw_dbg_conf - configurations available
++ *
++ * @FW_DBG_CUSTOM: take this configuration from alive
++ *	Note that the trigger is NO-OP for this configuration
++ */
++enum iwl_fw_dbg_conf {
++	FW_DBG_CUSTOM = 0,
++
++	/* must be last */
++	FW_DBG_MAX,
++	FW_DBG_INVALID = 0xff,
++};
++
++/**
++ * struct iwl_fw_dbg_conf_tlv - a TLV that describes a debug configuration
++ *
++ * @id: %enum iwl_fw_dbg_conf
++ * @usniffer: should the uSniffer image be used
++ * @num_of_hcmds: how many HCMDs to send are present here
++ * @hcmd: a variable length host command to be sent to apply the configuration.
++ *	If there is more than one HCMD to send, they will appear one after the
++ *	other and be sent in the order that they appear in.
++ * This parses IWL_UCODE_TLV_FW_DBG_CONF
++ */
++struct iwl_fw_dbg_conf_tlv {
++	u8 id;
++	u8 usniffer;
++	u8 reserved;
++	u8 num_of_hcmds;
++	struct iwl_fw_dbg_conf_hcmd hcmd;
++
++	/* struct iwl_fw_dbg_trigger sits after all variable length hcmds */
++} __packed;
++
+ #endif  /* __iwl_fw_file_h__ */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fw.h b/drivers/net/wireless/iwlwifi/iwl-fw.h
+index eaf1ff0..20d44ea 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fw.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fw.h
+@@ -150,6 +150,10 @@ struct iwl_fw_cscheme_list {
+  * @mvm_fw: indicates this is MVM firmware
+  * @cipher_scheme: optional external cipher scheme.
+  * @human_readable: human readable version
++ * @dbg_dest_tlv: points to the destination TLV for debug
++ * @dbg_conf_tlv: array of pointers to configuration TLVs for debug
++ * @dbg_conf_tlv_len: lengths of the @dbg_conf_tlv entries
++ * @dbg_dest_reg_num: num of reg_ops in %dbg_dest_tlv
+  */
+ struct iwl_fw {
+ 	u32 ucode_ver;
+@@ -174,6 +178,57 @@ struct iwl_fw {
+ 
+ 	struct ieee80211_cipher_scheme cs[IWL_UCODE_MAX_CS];
+ 	u8 human_readable[FW_VER_HUMAN_READABLE_SZ];
++
++	struct iwl_fw_dbg_dest_tlv *dbg_dest_tlv;
++	struct iwl_fw_dbg_conf_tlv *dbg_conf_tlv[FW_DBG_MAX];
++	size_t dbg_conf_tlv_len[FW_DBG_MAX];
++
++	u8 dbg_dest_reg_num;
+ };
+ 
++static inline const char *get_fw_dbg_mode_string(int mode)
++{
++	switch (mode) {
++	case SMEM_MODE:
++		return "SMEM";
++	case EXTERNAL_MODE:
++		return "EXTERNAL_DRAM";
++	case MARBH_MODE:
++		return "MARBH";
++	default:
++		return "UNKNOWN";
++	}
++}
++
++static inline const struct iwl_fw_dbg_trigger *
++iwl_fw_dbg_conf_get_trigger(const struct iwl_fw *fw, u8 id)
++{
++	const struct iwl_fw_dbg_conf_tlv *conf_tlv = fw->dbg_conf_tlv[id];
++	u8 *ptr;
++	int i;
++
++	if (!conf_tlv)
++		return NULL;
++
++	ptr = (void *)&conf_tlv->hcmd;
++	for (i = 0; i < conf_tlv->num_of_hcmds; i++) {
++		ptr += sizeof(conf_tlv->hcmd);
++		ptr += le16_to_cpu(conf_tlv->hcmd.len);
++	}
++
++	return (const struct iwl_fw_dbg_trigger *)ptr;
++}
++
++static inline bool
++iwl_fw_dbg_conf_enabled(const struct iwl_fw *fw, u8 id)
++{
++	const struct iwl_fw_dbg_trigger *trigger =
++		iwl_fw_dbg_conf_get_trigger(fw, id);
++
++	if (!trigger)
++		return false;
++
++	return trigger->enabled;
++}
++
+ #endif  /* __iwl_fw_h__ */
 -- 
-2.1.1
+1.9.1
 
