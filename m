@@ -1,41 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:32930 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965571AbaLLLkx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Dec 2014 06:40:53 -0500
-Message-ID: <1418384444.2470.22.camel@sipsolutions.net> (sfid-20141212_124056_697035_1D659956)
-Subject: Re: [PATCH 3/4] ath10k: Fix no-ack frame status
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: Sujith Manoharan <sujith@msujith.org>,
-	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Date: Fri, 12 Dec 2014 12:40:44 +0100
-In-Reply-To: <87oarazecg.fsf@kamboji.qca.qualcomm.com>
-References: <1418226973-13779-1-git-send-email-sujith@msujith.org>
-	 <1418226973-13779-3-git-send-email-sujith@msujith.org>
-	 <87oarazecg.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wg0-f42.google.com ([74.125.82.42]:55339 "EHLO
+	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754651AbaLBSL3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Dec 2014 13:11:29 -0500
+Received: by mail-wg0-f42.google.com with SMTP id z12so17760239wgg.1
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Dec 2014 10:11:28 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 04/26] iwlwifi: mvm: remove IWL_UCODE_TLV_CAPA_EXTENDED_BEACON
+Date: Tue,  2 Dec 2014 20:10:55 +0200
+Message-Id: <1417543877-24193-4-git-send-email-egrumbach@gmail.com> (sfid-20141202_191132_061717_1200F5BA)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB31B5A7D27@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB31B5A7D27@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-12-11 at 12:10 +0200, Kalle Valo wrote:
-> Sujith Manoharan <sujith@msujith.org> writes:
-> 
-> > From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-> >
-> > Use the new IEEE80211_TX_STAT_NOACK_TRANSMITTED flag
-> > to indicate successful transmission of no-ack frames.
-> > This fixes multicast frame accounting.
-> >
-> > Cc: ath10k@lists.infradead.org
-> > Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-> 
-> Johannes, are you planning to take this? Or should I take this once the
-> corresponding mac80211 patch trickles down to my tree?
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-I don't really want to take the driver patches, but I'll try to get to
-the mac80211 ones today.
+This TLV flag is set for all the supported firmwares.
 
-johannes
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c | 19 +++++--------------
+ 1 file changed, 5 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
+index 0cb79bc..f6d86cc 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
+@@ -1304,31 +1304,22 @@ int iwl_mvm_rx_beacon_notif(struct iwl_mvm *mvm,
+ 			    struct iwl_device_cmd *cmd)
+ {
+ 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
++	struct iwl_extended_beacon_notif *beacon = (void *)pkt->data;
+ 	struct iwl_mvm_tx_resp *beacon_notify_hdr;
+ 	struct ieee80211_vif *csa_vif;
+ 	struct ieee80211_vif *tx_blocked_vif;
+-	u64 tsf;
+ 	u16 status;
+ 
+ 	lockdep_assert_held(&mvm->mutex);
+ 
+-	if (mvm->fw->ucode_capa.api[0] & IWL_UCODE_TLV_CAPA_EXTENDED_BEACON) {
+-		struct iwl_extended_beacon_notif *beacon = (void *)pkt->data;
+-
+-		beacon_notify_hdr = &beacon->beacon_notify_hdr;
+-		tsf = le64_to_cpu(beacon->tsf);
+-		mvm->ap_last_beacon_gp2 = le32_to_cpu(beacon->gp2);
+-	} else {
+-		struct iwl_beacon_notif *beacon = (void *)pkt->data;
+-
+-		beacon_notify_hdr = &beacon->beacon_notify_hdr;
+-		tsf = le64_to_cpu(beacon->tsf);
+-	}
++	beacon_notify_hdr = &beacon->beacon_notify_hdr;
++	mvm->ap_last_beacon_gp2 = le32_to_cpu(beacon->gp2);
+ 
+ 	status = le16_to_cpu(beacon_notify_hdr->status.status) & TX_STATUS_MSK;
+ 	IWL_DEBUG_RX(mvm,
+ 		     "beacon status %#x retries:%d tsf:0x%16llX gp2:0x%X rate:%d\n",
+-		     status, beacon_notify_hdr->failure_frame, tsf,
++		     status, beacon_notify_hdr->failure_frame,
++		     le64_to_cpu(beacon->tsf),
+ 		     mvm->ap_last_beacon_gp2,
+ 		     le32_to_cpu(beacon_notify_hdr->initial_rate));
+ 
+-- 
+1.9.1
 
