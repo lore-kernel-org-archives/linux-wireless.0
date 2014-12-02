@@ -1,54 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:29875 "EHLO mga01.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:50960 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751194AbaLPOPw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Dec 2014 09:15:52 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Luciano Coelho <luciano.coelho@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH] mac80211: notify channel switch at the end of ieee80211_chswitch_post_beacon()
-Date: Tue, 16 Dec 2014 16:01:39 +0200
-Message-Id: <1418738499-4488-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20141216_151558_539651_10F9C387)
+	id S1753796AbaLBMSf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Dec 2014 07:18:35 -0500
+Date: Tue, 2 Dec 2014 13:15:32 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Richard Genoud <richard.genoud@gmail.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [PATCH 4/4] Revert "rt2x00: Endless loop on hub port power down"
+Message-ID: <20141202121531.GA2676@redhat.com> (sfid-20141202_131838_063725_01D2B9C1)
+References: <1417012156-26197-1-git-send-email-sgruszka@redhat.com>
+ <1417012156-26197-4-git-send-email-sgruszka@redhat.com>
+ <547D9FE5.1010006@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <547D9FE5.1010006@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+On Tue, Dec 02, 2014 at 12:17:57PM +0100, Richard Genoud wrote:
+> It tested this serie but unfortunately, reverting this still caused an infinite loop.
+> (cf https://lkml.org/lkml/2014/4/3/492 to reproduce)
 
-The call to cfg80211_ch_switch_notify() should be at the end of the
-ieee80211_chswitch_post_beacon() function, because it should only be
-sent if everything succeeded.
+It is possible to disable internal hub? It fails here, but perhaps I do
+not have compiled proper options in the kernel:
 
-Fixes: d04b5ac9e70b ("cfg80211/mac80211: allow any interface to send channel switch notifications")
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- net/mac80211/mlme.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+[stasiu@localhost Downloads]$ lsusb -t
+/:  Bus 04.Port 1: Dev 1, Class=root_hub, Driver=ehci-pci/3p, 480M
+    |__ Port 1: Dev 2, If 0, Class=Hub, Driver=hub/8p, 480M
+/:  Bus 03.Port 1: Dev 1, Class=root_hub, Driver=ehci-pci/3p, 480M
+    |__ Port 1: Dev 2, If 0, Class=Hub, Driver=hub/6p, 480M
+        |__ Port 3: Dev 3, If 0, Class=Vendor Specific Class, Driver=, 12M
+        |__ Port 4: Dev 4, If 0, Class=Vendor Specific Class, Driver=btusb, 12M
+        |__ Port 4: Dev 4, If 1, Class=Vendor Specific Class, Driver=btusb, 12M
+        |__ Port 4: Dev 4, If 2, Class=Vendor Specific Class, Driver=, 12M
+        |__ Port 4: Dev 4, If 3, Class=Application Specific Interface, Driver=, 12M
+        |__ Port 6: Dev 5, If 0, Class=Video, Driver=uvcvideo, 480M
+        |__ Port 6: Dev 5, If 1, Class=Video, Driver=uvcvideo, 480M
+/:  Bus 02.Port 1: Dev 1, Class=root_hub, Driver=xhci_hcd/4p, 5000M
+/:  Bus 01.Port 1: Dev 1, Class=root_hub, Driver=xhci_hcd/4p, 480M
+    |__ Port 2: Dev 2, If 0, Class=Vendor Specific Class, Driver=rt2800usb, 480M
+    |__ Port 3: Dev 3, If 0, Class=Human Interface Device, Driver=usbhid, 12M
+[stasiu@localhost Downloads]$ sudo ./hub-ctrl -b 1 -d 1 -P 1 -p 0
+Device not found.
+[stasiu@localhost Downloads]$ sudo ./hub-ctrl -b 1 -d 2 -P 2 -p 0
+Device not found.
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 75a9bf5..0c6848e 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1053,8 +1053,6 @@ static void ieee80211_chswitch_post_beacon(struct ieee80211_sub_if_data *sdata)
- 		sdata->csa_block_tx = false;
- 	}
- 
--	cfg80211_ch_switch_notify(sdata->dev, &sdata->reserved_chandef);
--
- 	sdata->vif.csa_active = false;
- 	ifmgd->csa_waiting_bcn = false;
- 
-@@ -1066,6 +1064,8 @@ static void ieee80211_chswitch_post_beacon(struct ieee80211_sub_if_data *sdata)
- 				     &ifmgd->csa_connection_drop_work);
- 		return;
- 	}
-+
-+	cfg80211_ch_switch_notify(sdata->dev, &sdata->reserved_chandef);
- }
- 
- void ieee80211_chswitch_done(struct ieee80211_vif *vif, bool success)
--- 
-1.9.1
+> [  642.476562] ieee80211 phy0: rt2800usb_watchdog: Warning - TX HW queue 1 timed out, invoke forced kick
+> [  642.585937] ieee80211 phy0: rt2x00usb_vendor_request: Error - Vendor Request 0x06 failed for offset 0x0408 with error -71
+> [  642.695312] ieee80211 phy0: rt2x00usb_vendor_request: Error - Vendor Request 0x06 failed for offset 0x0408 with error -71
+> [  642.796875] ieee80211 phy0: rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed -71
+> [...]
+> So it seems the "forced kick" is not done 
 
+"Forced kick" does not mean to remove device, it means restarting
+hardware queue. It is not done, because it requires write to PBF_CFG
+register (0x0408), which is not possible.
+
+I do not see an "infinite" loop. What I can see is continues failures
+when sending requests to to the hardware. I consider this as proper
+behaviour, taking that USB layer continuously return -EPROTO error. If
+for example there will be not possible to down interface or remove
+rt2800usb module in such condition, I would consider this as a minor
+bug, but I'm not sure if that happen or not.
+
+Stanislaw
