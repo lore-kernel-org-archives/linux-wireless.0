@@ -1,144 +1,204 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:20369 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750964AbaLBJvP (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:33760 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932795AbaLBSLw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Dec 2014 04:51:15 -0500
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Joe Perches <joe@perches.com>,
-	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH v2 06/10] wil6210: configurable vring sizes
-Date: Tue, 2 Dec 2014 11:50:57 +0200
-Message-ID: <1417513857-18520-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20141202_105119_743763_F94EFB52)
-In-Reply-To: <1417513598-18304-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1417513598-18304-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 2 Dec 2014 13:11:52 -0500
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	<stable@vger.kernel.org>
+Subject: [PATCH 20/26] iwlwifi: dvm: fix flush support for old firmware
+Date: Tue,  2 Dec 2014 20:11:11 +0200
+Message-Id: <1417543877-24193-20-git-send-email-egrumbach@gmail.com> (sfid-20141202_191212_686348_E1F9DEEC)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB31B5A7D27@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB31B5A7D27@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Allow to configure VRING size for both Rx and Tx via module parameters:
-rx_ring_order and tx_ring_order. Parameters are ring size orders, i.e.
-ring size calculated as 1 << order.
-Defaults for both Tx and Rx are order 9, i.e. size 512
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Since the commit below, iwldvm sends the FLUSH command to
+the firmware. All the devices that use iwldvm have a
+firmware that expects the _v3 version of this command,
+besides 5150.
+5150's latest available firmware still expects a _v2 version
+of the FLUSH command.
+This means that since the commit below, we had a mismatch for
+this specific device only.
+This mismatch led to the NMI below:
+
+Loaded firmware version: 8.24.2.2
+Start IWL Error Log Dump:
+Status: 0x0000004C, count: 5
+0x00000004 | NMI_INTERRUPT_WDG
+0x000006F4 | uPc
+0x000005BA | branchlink1
+0x000006F8 | branchlink2
+0x000008C2 | interruptlink1
+0x00005B02 | interruptlink2
+0x00000002 | data1
+0x07030000 | data2
+0x00000068 | line
+0x3E80510C | beacon time
+0x728A0EF4 | tsf low
+0x0000002A | tsf hi
+0x00000000 | time gp1
+0x01BDC977 | time gp2
+0x00000000 | time gp3
+0x00010818 | uCode version
+0x00000000 | hw version
+0x00484704 | board version
+0x00000002 | hcmd
+0x2FF23080 | isr0
+0x0103E000 | isr1
+0x0000001A | isr2
+0x1443FCC3 | isr3
+0x11800112 | isr4
+0x00000068 | isr_pref
+0x000000D4 | wait_event
+0x00000000 | l2p_control
+0x00000007 | l2p_duration
+0x00103040 | l2p_mhvalid
+0x00000007 | l2p_addr_match
+0x00000000 | lmpm_pmg_sel
+0x00000000 | timestamp
+0x00000200 | flow_handler
+
+This was reported here:
+https://bugzilla.kernel.org/show_bug.cgi?id=88961
+
+Cc: <stable@vger.kernel.org>
+Fixes: a0855054e59b ("iwlwifi: dvm: drop non VO frames when flushing")
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/wil6210/main.c    | 34 ++++++++++++++++++++++++++++--
- drivers/net/wireless/ath/wil6210/txrx.c    |  4 ++--
- drivers/net/wireless/ath/wil6210/wil6210.h |  9 +++++---
- 3 files changed, 40 insertions(+), 7 deletions(-)
+ drivers/net/wireless/iwlwifi/dvm/commands.h | 31 +++++++++++--------
+ drivers/net/wireless/iwlwifi/dvm/lib.c      | 47 +++++++++++++++--------------
+ 2 files changed, 42 insertions(+), 36 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 3bef153..8f257a4 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -67,6 +67,36 @@ static struct kernel_param_ops mtu_max_ops = {
- module_param_cb(mtu_max, &mtu_max_ops, &mtu_max, S_IRUGO);
- MODULE_PARM_DESC(mtu_max, " Max MTU value.");
+diff --git a/drivers/net/wireless/iwlwifi/dvm/commands.h b/drivers/net/wireless/iwlwifi/dvm/commands.h
+index 751ae1d..7a34e4d 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/commands.h
++++ b/drivers/net/wireless/iwlwifi/dvm/commands.h
+@@ -966,21 +966,21 @@ struct iwl_rem_sta_cmd {
  
-+static uint rx_ring_order = WIL_RX_RING_SIZE_ORDER_DEFAULT;
-+static uint tx_ring_order = WIL_TX_RING_SIZE_ORDER_DEFAULT;
-+
-+static int ring_order_set(const char *val, const struct kernel_param *kp)
-+{
-+	int ret;
-+	uint x;
-+
-+	ret = kstrtouint(val, 0, &x);
-+	if (ret)
-+		return ret;
-+
-+	if ((x < WIL_RING_SIZE_ORDER_MIN) || (x > WIL_RING_SIZE_ORDER_MAX))
-+		return -EINVAL;
-+
-+	*((uint *)kp->arg) = x;
-+
-+	return 0;
-+}
-+
-+static struct kernel_param_ops ring_order_ops = {
-+	.set = ring_order_set,
-+	.get = param_get_uint,
-+};
-+
-+module_param_cb(rx_ring_order, &ring_order_ops, &rx_ring_order, S_IRUGO);
-+MODULE_PARM_DESC(rx_ring_order, " Rx ring order; size = 1 << order");
-+module_param_cb(tx_ring_order, &ring_order_ops, &tx_ring_order, S_IRUGO);
-+MODULE_PARM_DESC(tx_ring_order, " Tx ring order; size = 1 << order");
-+
- #define RST_DELAY (20) /* msec, for loop in @wil_target_reset */
- #define RST_COUNT (1 + 1000/RST_DELAY) /* round up to be above 1 sec total */
  
-@@ -332,7 +362,7 @@ static void wil_connect_worker(struct work_struct *work)
+ /* WiFi queues mask */
+-#define IWL_SCD_BK_MSK			cpu_to_le32(BIT(0))
+-#define IWL_SCD_BE_MSK			cpu_to_le32(BIT(1))
+-#define IWL_SCD_VI_MSK			cpu_to_le32(BIT(2))
+-#define IWL_SCD_VO_MSK			cpu_to_le32(BIT(3))
+-#define IWL_SCD_MGMT_MSK		cpu_to_le32(BIT(3))
++#define IWL_SCD_BK_MSK			BIT(0)
++#define IWL_SCD_BE_MSK			BIT(1)
++#define IWL_SCD_VI_MSK			BIT(2)
++#define IWL_SCD_VO_MSK			BIT(3)
++#define IWL_SCD_MGMT_MSK		BIT(3)
  
- 	wil_dbg_wmi(wil, "Configure for connection CID %d\n", cid);
+ /* PAN queues mask */
+-#define IWL_PAN_SCD_BK_MSK		cpu_to_le32(BIT(4))
+-#define IWL_PAN_SCD_BE_MSK		cpu_to_le32(BIT(5))
+-#define IWL_PAN_SCD_VI_MSK		cpu_to_le32(BIT(6))
+-#define IWL_PAN_SCD_VO_MSK		cpu_to_le32(BIT(7))
+-#define IWL_PAN_SCD_MGMT_MSK		cpu_to_le32(BIT(7))
+-#define IWL_PAN_SCD_MULTICAST_MSK	cpu_to_le32(BIT(8))
++#define IWL_PAN_SCD_BK_MSK		BIT(4)
++#define IWL_PAN_SCD_BE_MSK		BIT(5)
++#define IWL_PAN_SCD_VI_MSK		BIT(6)
++#define IWL_PAN_SCD_VO_MSK		BIT(7)
++#define IWL_PAN_SCD_MGMT_MSK		BIT(7)
++#define IWL_PAN_SCD_MULTICAST_MSK	BIT(8)
  
--	rc = wil_vring_init_tx(wil, ringid, WIL6210_TX_RING_SIZE, cid, 0);
-+	rc = wil_vring_init_tx(wil, ringid, 1 << tx_ring_order, cid, 0);
- 	wil->pending_connect_cid = -1;
- 	if (rc == 0) {
- 		wil->sta[cid].status = wil_sta_connected;
-@@ -705,7 +735,7 @@ int __wil_up(struct wil6210_priv *wil)
- 		return rc;
+-#define IWL_AGG_TX_QUEUE_MSK		cpu_to_le32(0xffc00)
++#define IWL_AGG_TX_QUEUE_MSK		0xffc00
  
- 	/* Rx VRING. After MAC and beacon */
--	rc = wil_rx_init(wil);
-+	rc = wil_rx_init(wil, 1 << rx_ring_order);
- 	if (rc)
- 		return rc;
+ #define IWL_DROP_ALL			BIT(1)
  
-diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
-index c680906..c3a5489 100644
---- a/drivers/net/wireless/ath/wil6210/txrx.c
-+++ b/drivers/net/wireless/ath/wil6210/txrx.c
-@@ -596,7 +596,7 @@ void wil_rx_handle(struct wil6210_priv *wil, int *quota)
- 	wil_rx_refill(wil, v->size);
+@@ -1005,12 +1005,17 @@ struct iwl_rem_sta_cmd {
+  *	1: Dump multiple MSDU according to PS, INVALID STA, TTL, TID disable.
+  *	2: Dump all FIFO
+  */
+-struct iwl_txfifo_flush_cmd {
++struct iwl_txfifo_flush_cmd_v3 {
+ 	__le32 queue_control;
+ 	__le16 flush_control;
+ 	__le16 reserved;
+ } __packed;
+ 
++struct iwl_txfifo_flush_cmd_v2 {
++	__le16 queue_control;
++	__le16 flush_control;
++} __packed;
++
+ /*
+  * REPLY_WEP_KEY = 0x20
+  */
+diff --git a/drivers/net/wireless/iwlwifi/dvm/lib.c b/drivers/net/wireless/iwlwifi/dvm/lib.c
+index 02e4ede..1d2223d 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/lib.c
++++ b/drivers/net/wireless/iwlwifi/dvm/lib.c
+@@ -137,37 +137,38 @@ int iwlagn_manage_ibss_station(struct iwl_priv *priv,
+  */
+ int iwlagn_txfifo_flush(struct iwl_priv *priv, u32 scd_q_msk)
+ {
+-	struct iwl_txfifo_flush_cmd flush_cmd;
+-	struct iwl_host_cmd cmd = {
+-		.id = REPLY_TXFIFO_FLUSH,
+-		.len = { sizeof(struct iwl_txfifo_flush_cmd), },
+-		.data = { &flush_cmd, },
++	struct iwl_txfifo_flush_cmd_v3 flush_cmd_v3 = {
++		.flush_control = cpu_to_le16(IWL_DROP_ALL),
++	};
++	struct iwl_txfifo_flush_cmd_v2 flush_cmd_v2 = {
++		.flush_control = cpu_to_le16(IWL_DROP_ALL),
+ 	};
+ 
+-	memset(&flush_cmd, 0, sizeof(flush_cmd));
++	u32 queue_control = IWL_SCD_VO_MSK | IWL_SCD_VI_MSK |
++			    IWL_SCD_BE_MSK | IWL_SCD_BK_MSK | IWL_SCD_MGMT_MSK;
+ 
+-	flush_cmd.queue_control = IWL_SCD_VO_MSK | IWL_SCD_VI_MSK |
+-				  IWL_SCD_BE_MSK | IWL_SCD_BK_MSK |
+-				  IWL_SCD_MGMT_MSK;
+ 	if ((priv->valid_contexts != BIT(IWL_RXON_CTX_BSS)))
+-		flush_cmd.queue_control |= IWL_PAN_SCD_VO_MSK |
+-					   IWL_PAN_SCD_VI_MSK |
+-					   IWL_PAN_SCD_BE_MSK |
+-					   IWL_PAN_SCD_BK_MSK |
+-					   IWL_PAN_SCD_MGMT_MSK |
+-					   IWL_PAN_SCD_MULTICAST_MSK;
++		queue_control |= IWL_PAN_SCD_VO_MSK | IWL_PAN_SCD_VI_MSK |
++				 IWL_PAN_SCD_BE_MSK | IWL_PAN_SCD_BK_MSK |
++				 IWL_PAN_SCD_MGMT_MSK |
++				 IWL_PAN_SCD_MULTICAST_MSK;
+ 
+ 	if (priv->nvm_data->sku_cap_11n_enable)
+-		flush_cmd.queue_control |= IWL_AGG_TX_QUEUE_MSK;
++		queue_control |= IWL_AGG_TX_QUEUE_MSK;
+ 
+ 	if (scd_q_msk)
+-		flush_cmd.queue_control = cpu_to_le32(scd_q_msk);
+-
+-	IWL_DEBUG_INFO(priv, "queue control: 0x%x\n",
+-		       flush_cmd.queue_control);
+-	flush_cmd.flush_control = cpu_to_le16(IWL_DROP_ALL);
+-
+-	return iwl_dvm_send_cmd(priv, &cmd);
++		queue_control = scd_q_msk;
++
++	IWL_DEBUG_INFO(priv, "queue control: 0x%x\n", queue_control);
++	flush_cmd_v3.queue_control = cpu_to_le32(queue_control);
++	flush_cmd_v2.queue_control = cpu_to_le16((u16)queue_control);
++
++	if (IWL_UCODE_API(priv->fw->ucode_ver) > 2)
++		return iwl_dvm_send_cmd_pdu(priv, REPLY_TXFIFO_FLUSH, 0,
++					    sizeof(flush_cmd_v3),
++					    &flush_cmd_v3);
++	return iwl_dvm_send_cmd_pdu(priv, REPLY_TXFIFO_FLUSH, 0,
++				    sizeof(flush_cmd_v2), &flush_cmd_v2);
  }
  
--int wil_rx_init(struct wil6210_priv *wil)
-+int wil_rx_init(struct wil6210_priv *wil, u16 size)
- {
- 	struct vring *vring = &wil->vring_rx;
- 	int rc;
-@@ -608,7 +608,7 @@ int wil_rx_init(struct wil6210_priv *wil)
- 		return -EINVAL;
- 	}
- 
--	vring->size = WIL6210_RX_RING_SIZE;
-+	vring->size = size;
- 	rc = wil_vring_alloc(wil, vring);
- 	if (rc)
- 		return rc;
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index 8c09700..c6ec5b9 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -49,8 +49,11 @@ static inline u32 WIL_GET_BITS(u32 x, int b0, int b1)
- 
- #define WIL6210_MEM_SIZE (2*1024*1024UL)
- 
--#define WIL6210_RX_RING_SIZE	(128)
--#define WIL6210_TX_RING_SIZE	(512)
-+#define WIL_RX_RING_SIZE_ORDER_DEFAULT	(9)
-+#define WIL_TX_RING_SIZE_ORDER_DEFAULT	(9)
-+/* limit ring size in range [32..32k] */
-+#define WIL_RING_SIZE_ORDER_MIN	(5)
-+#define WIL_RING_SIZE_ORDER_MAX	(15)
- #define WIL6210_MAX_TX_RINGS	(24) /* HW limit */
- #define WIL6210_MAX_CID		(8) /* HW limit */
- #define WIL6210_NAPI_BUDGET	(16) /* arbitrary */
-@@ -590,7 +593,7 @@ int wmi_pcp_stop(struct wil6210_priv *wil);
- void wil6210_disconnect(struct wil6210_priv *wil, const u8 *bssid,
- 			u16 reason_code, bool from_event);
- 
--int wil_rx_init(struct wil6210_priv *wil);
-+int wil_rx_init(struct wil6210_priv *wil, u16 size);
- void wil_rx_fini(struct wil6210_priv *wil);
- 
- /* TX API */
+ void iwlagn_dev_txfifo_flush(struct iwl_priv *priv)
 -- 
-2.1.0
+1.9.1
 
