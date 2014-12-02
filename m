@@ -1,54 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:49796 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751745AbaLSBBv (ORCPT
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:62991 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932909AbaLBMQf convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Dec 2014 20:01:51 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@qca.qualcomm.com
-Subject: [PATCH 0/5] ath9k patches
-Date: Fri, 19 Dec 2014 06:33:54 +0530
-Message-Id: <1418951039-12309-1-git-send-email-sujith@msujith.org> (sfid-20141219_020212_980257_15B180CB)
+	Tue, 2 Dec 2014 07:16:35 -0500
+Received: by mail-wi0-f178.google.com with SMTP id em10so1264024wid.5
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Dec 2014 04:16:34 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20141201144507.18248.9856.stgit@potku.adurom.net>
+References: <20141201144400.18248.62714.stgit@potku.adurom.net>
+	<20141201144507.18248.9856.stgit@potku.adurom.net>
+Date: Tue, 2 Dec 2014 13:16:33 +0100
+Message-ID: <CA+BoTQkXnHnMsLvRt2PnnDCAv8P8gDsJTLNFPmf+CNaDX0frfg@mail.gmail.com> (sfid-20141202_131638_697793_7F509358)
+Subject: Re: [PATCH v3 2/7] ath10k: add ATH10K_FW_IE_WMI_OP_VERSION
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On 1 December 2014 at 15:45, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+[...]
+> @@ -801,11 +812,24 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
+>         }
+>
+>         if (test_bit(ATH10K_FW_FEATURE_WMI_10X, ar->fw_features)) {
+> -               ar->max_num_peers = TARGET_10X_NUM_PEERS;
+> -               ar->max_num_stations = TARGET_10X_NUM_STATIONS;
+> +               if (test_bit(ATH10K_FW_FEATURE_WMI_10_2, ar->fw_features))
+> +                       ar->wmi.op_version = ATH10K_FW_WMI_OP_VERSION_10_2;
+> +               else
+> +                       ar->wmi.op_version = ATH10K_FW_WMI_OP_VERSION_10_1;
+>         } else {
+> +               ar->wmi.op_version = ATH10K_FW_WMI_OP_VERSION_MAIN;
+> +       }
 
-Pending patches for ath9k, rebased over wireless-drivers-next.
-All of these are for -next.
+You always overwrite ar->wmi.op_version with MAIN if it's not 10.x
+which means TLV is/wiil be effectively overwritten.
 
-The patch "ath9k: Fix no-ack frame status" depends on two commits
-that have been merged in mac80211-next, so it needs to be pulled
-into wireless-drivers-next.
+Perhaps the op_version enum values should start with 1 so that 0 can
+be used as "unset" and only in that case should the above fallback be
+attempted.
 
-Sujith
 
-Miaoqing Pan (4):
-  ath9k: Add HW IDs for QCA956x
-  ath9k: Add initvals for QCA956x
-  ath9k: Fix register definitions for QCA956x
-  ath9k: Add QCA956x HW support
+Also, I think it might be a good idea to reset ar->wmi.op_version in
+ath10k_core_fetch_firmware_api_n (and api_1 as well) so that if any
+attempt fails (e.g. due to IE binary corruption) ar->wmi.op_version
+isn't propagated/left unchanged to another fw API attempt.
 
-Sujith Manoharan (1):
-  ath9k: Fix no-ack frame status
 
- drivers/net/wireless/ath/ath9k/ahb.c             |    4 +
- drivers/net/wireless/ath/ath9k/ani.c             |    3 +-
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c   |   15 +-
- drivers/net/wireless/ath/ath9k/ar9003_hw.c       |   61 +-
- drivers/net/wireless/ath/ath9k/ar9003_phy.c      |   47 +-
- drivers/net/wireless/ath/ath9k/ar9003_phy.h      |   19 +-
- drivers/net/wireless/ath/ath9k/ar956x_initvals.h | 1046 ++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/hw.c              |   41 +-
- drivers/net/wireless/ath/ath9k/hw.h              |    1 +
- drivers/net/wireless/ath/ath9k/mac.c             |    3 +-
- drivers/net/wireless/ath/ath9k/recv.c            |    3 +-
- drivers/net/wireless/ath/ath9k/reg.h             |    4 +
- drivers/net/wireless/ath/ath9k/xmit.c            |    9 +-
- 13 files changed, 1212 insertions(+), 44 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath9k/ar956x_initvals.h
-
--- 
-2.1.3
-
+Michał
