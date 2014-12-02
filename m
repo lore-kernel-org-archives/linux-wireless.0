@@ -1,104 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:52687 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751783AbaL3OTs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Dec 2014 09:19:48 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Received: from mail-wg0-f41.google.com ([74.125.82.41]:56937 "EHLO
+	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932236AbaLBSLl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Dec 2014 13:11:41 -0500
+Received: by mail-wg0-f41.google.com with SMTP id y19so17711493wgg.14
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Dec 2014 10:11:39 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 05/33] iwlwifi: pcie: let the Manageability Engine know when we leave
-Date: Tue, 30 Dec 2014 16:18:40 +0200
-Message-Id: <1419949148-24046-5-git-send-email-emmanuel.grumbach@intel.com> (sfid-20141230_151956_407020_35F09C5B)
-In-Reply-To: <1419948357.21410.4.camel@egrumbacBox>
-References: <1419948357.21410.4.camel@egrumbacBox>
+Cc: Idan Kahlon <idanx.kahlon@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 12/26] iwlwifi: mvm: support NVM file with header
+Date: Tue,  2 Dec 2014 20:11:03 +0200
+Message-Id: <1417543877-24193-12-git-send-email-egrumbach@gmail.com> (sfid-20141202_191347_182436_17315FD8)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB31B5A7D27@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB31B5A7D27@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When the driver is unload, the Manageability Engine should
-know about that - send an event to inform it about this
-event.
+From: Idan Kahlon <idanx.kahlon@intel.com>
 
-Reviewed-by: Reuven Borok <reuven.borok@intel.com>
+Handle NVM file header. When NVM header detected, skip
+the header and reading only the sections data.
+
+Signed-off-by: Idan Kahlon <idanx.kahlon@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-csr.h    |  1 +
- drivers/net/wireless/iwlwifi/iwl-prph.h   |  1 +
- drivers/net/wireless/iwlwifi/pcie/trans.c | 21 ++++++++++++++++++---
- 3 files changed, 20 insertions(+), 3 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/nvm.c | 31 +++++++++++++++++++++++--------
+ 1 file changed, 23 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-csr.h b/drivers/net/wireless/iwlwifi/iwl-csr.h
-index aff63c3..7f40cf3 100644
---- a/drivers/net/wireless/iwlwifi/iwl-csr.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-csr.h
-@@ -184,6 +184,7 @@
- #define CSR_HW_IF_CONFIG_REG_BIT_NIC_READY	(0x00400000) /* PCI_OWN_SEM */
- #define CSR_HW_IF_CONFIG_REG_BIT_NIC_PREPARE_DONE (0x02000000) /* ME_OWN */
- #define CSR_HW_IF_CONFIG_REG_PREPARE		  (0x08000000) /* WAKE_ME */
-+#define CSR_HW_IF_CONFIG_REG_ENABLE_PME		  (0x10000000)
- #define CSR_HW_IF_CONFIG_REG_PERSIST_MODE	  (0x40000000) /* PERSISTENCE */
+diff --git a/drivers/net/wireless/iwlwifi/mvm/nvm.c b/drivers/net/wireless/iwlwifi/mvm/nvm.c
+index af07456..d55fd8e 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/nvm.c
++++ b/drivers/net/wireless/iwlwifi/mvm/nvm.c
+@@ -339,11 +339,15 @@ static int iwl_mvm_read_external_nvm(struct iwl_mvm *mvm)
+ 	} *file_sec;
+ 	const u8 *eof, *temp;
+ 	int max_section_size;
++	const __le32 *dword_buff;
  
- #define CSR_MBOX_SET_REG_OS_ALIVE		BIT(5)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-prph.h b/drivers/net/wireless/iwlwifi/iwl-prph.h
-index 2df51ea..ea3b970 100644
---- a/drivers/net/wireless/iwlwifi/iwl-prph.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-prph.h
-@@ -99,6 +99,7 @@
+ #define NVM_WORD1_LEN(x) (8 * (x & 0x03FF))
+ #define NVM_WORD2_ID(x) (x >> 12)
+ #define NVM_WORD2_LEN_FAMILY_8000(x) (2 * ((x & 0xFF) << 8 | x >> 8))
+ #define NVM_WORD1_ID_FAMILY_8000(x) (x >> 4)
++#define NVM_HEADER_0	(0x2A504C54)
++#define NVM_HEADER_1	(0x4E564D2A)
++#define NVM_HEADER_SIZE	(4 * sizeof(u32))
  
- #define APMG_PCIDEV_STT_VAL_PERSIST_DIS	(0x00000200)
- #define APMG_PCIDEV_STT_VAL_L1_ACT_DIS	(0x00000800)
-+#define APMG_PCIDEV_STT_VAL_WAKE_ME	(0x00004000)
+ 	IWL_DEBUG_EEPROM(mvm->trans->dev, "Read from external NVM\n");
  
- #define APMG_RTC_INT_STT_RFKILL		(0x10000000)
+@@ -372,12 +376,6 @@ static int iwl_mvm_read_external_nvm(struct iwl_mvm *mvm)
+ 	IWL_INFO(mvm, "Loaded NVM file %s (%zu bytes)\n",
+ 		 mvm->nvm_file_name, fw_entry->size);
  
-diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
-index 5d79a1f..4b42de3 100644
---- a/drivers/net/wireless/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
-@@ -443,10 +443,25 @@ static int iwl_pcie_apm_stop_master(struct iwl_trans *trans)
- 	return ret;
- }
+-	if (fw_entry->size < sizeof(*file_sec)) {
+-		IWL_ERR(mvm, "NVM file too small\n");
+-		ret = -EINVAL;
+-		goto out;
+-	}
+-
+ 	if (fw_entry->size > MAX_NVM_FILE_LEN) {
+ 		IWL_ERR(mvm, "NVM file too large\n");
+ 		ret = -EINVAL;
+@@ -385,8 +383,25 @@ static int iwl_mvm_read_external_nvm(struct iwl_mvm *mvm)
+ 	}
  
--static void iwl_pcie_apm_stop(struct iwl_trans *trans)
-+static void iwl_pcie_apm_stop(struct iwl_trans *trans, bool op_mode_leave)
- {
- 	IWL_DEBUG_INFO(trans, "Stop card, put in low power state\n");
- 
-+	if (op_mode_leave) {
-+		if (!test_bit(STATUS_DEVICE_ENABLED, &trans->status))
-+			iwl_pcie_apm_init(trans);
+ 	eof = fw_entry->data + fw_entry->size;
+-
+-	file_sec = (void *)fw_entry->data;
++	dword_buff = (__le32 *)fw_entry->data;
 +
-+		/* inform ME that we are leaving */
-+		if (trans->cfg->device_family == IWL_DEVICE_FAMILY_7000)
-+			iwl_set_bits_prph(trans, APMG_PCIDEV_STT_REG,
-+					  APMG_PCIDEV_STT_VAL_WAKE_ME);
-+		else if (trans->cfg->device_family == IWL_DEVICE_FAMILY_8000)
-+			iwl_set_bit(trans, CSR_HW_IF_CONFIG_REG,
-+				    CSR_HW_IF_CONFIG_REG_PREPARE |
-+				    CSR_HW_IF_CONFIG_REG_ENABLE_PME);
-+		mdelay(5);
++	/* some NVM file will contain a header.
++	 * The header is identified by 2 dwords header as follow:
++	 * dword[0] = 0x2A504C54
++	 * dword[1] = 0x4E564D2A
++	 *
++	 * This header must be skipped when providing the NVM data to the FW.
++	 */
++	if (fw_entry->size > NVM_HEADER_SIZE &&
++	    dword_buff[0] == cpu_to_le32(NVM_HEADER_0) &&
++	    dword_buff[1] == cpu_to_le32(NVM_HEADER_1)) {
++		file_sec = (void *)(fw_entry->data + NVM_HEADER_SIZE);
++		IWL_INFO(mvm, "NVM Version %08X\n", le32_to_cpu(dword_buff[2]));
++		IWL_INFO(mvm, "NVM Manufacturing date %08X\n",
++			 le32_to_cpu(dword_buff[3]));
++	} else {
++		file_sec = (void *)fw_entry->data;
 +	}
-+
- 	clear_bit(STATUS_DEVICE_ENABLED, &trans->status);
  
- 	/* Stop device's DMA activity */
-@@ -1010,7 +1025,7 @@ static void iwl_trans_pcie_stop_device(struct iwl_trans *trans)
- 		      CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
- 
- 	/* Stop the device, and put it in low power state */
--	iwl_pcie_apm_stop(trans);
-+	iwl_pcie_apm_stop(trans, false);
- 
- 	/* Upon stop, the APM issues an interrupt if HW RF kill is set.
- 	 * Clean again the interrupt here
-@@ -1187,7 +1202,7 @@ static void iwl_trans_pcie_op_mode_leave(struct iwl_trans *trans)
- 	iwl_disable_interrupts(trans);
- 	spin_unlock(&trans_pcie->irq_lock);
- 
--	iwl_pcie_apm_stop(trans);
-+	iwl_pcie_apm_stop(trans, true);
- 
- 	spin_lock(&trans_pcie->irq_lock);
- 	iwl_disable_interrupts(trans);
+ 	while (true) {
+ 		if (file_sec->data > eof) {
 -- 
 1.9.1
 
