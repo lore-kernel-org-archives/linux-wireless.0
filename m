@@ -1,80 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:29936 "EHLO
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:63570 "EHLO
 	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750734AbaLaLJN (ORCPT
+	with ESMTP id S1751639AbaLCUFk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Dec 2014 06:09:13 -0500
-Message-ID: <54A3D955.6020809@broadcom.com> (sfid-20141231_120937_661051_AF51AAFC)
-Date: Wed, 31 Dec 2014 12:09:09 +0100
+	Wed, 3 Dec 2014 15:05:40 -0500
 From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 2/7] brcmfmac: Fix ifidx for rx data by msgbuf.
+Date: Wed, 3 Dec 2014 21:05:28 +0100
+Message-ID: <1417637133-6966-3-git-send-email-arend@broadcom.com> (sfid-20141203_210552_340386_85C85310)
+In-Reply-To: <1417637133-6966-1-git-send-email-arend@broadcom.com>
+References: <1417637133-6966-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: Jiri Kosina <jkosina@suse.cz>
-CC: Linus Torvalds <torvalds@linux-foundation.org>,
-	Borislav Petkov <bp@alien8.de>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"egrumbach@gmail.com" <egrumbach@gmail.com>,
-	"peter@hurleysoftware.com" <peter@hurleysoftware.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] Revert "cfg80211: make WEXT compatibility unselectable"
-References: <alpine.LNX.2.00.1412301427430.31609@pobox.suse.cz> <CANUX_P0=wJiKrR4cUgEN=LO+eQ2byprz0K9m9QxzJc+kf4+_bA@mail.gmail.com> <54A2B807.1020202@hurleysoftware.com> <0BA3FCBA62E2DC44AF3030971E174FB31B5DC915@hasmsx107.ger.corp.intel.com> <alpine.LNX.2.00.1412301610320.31609@pobox.suse.cz> <1419971304.30412.0.camel@egrumbacBox> <alpine.LNX.2.00.1412302135520.31609@pobox.suse.cz> <20141230212326.GA29263@pd.tnic> <54A328C2.5080606@lwfinger.net> <alpine.LNX.2.00.1412302341290.31609@pobox.suse.cz> <alpine.LNX.2.00.1412302351030.31609@pobox.suse.cz>
-In-Reply-To: <alpine.LNX.2.00.1412302351030.31609@pobox.suse.cz>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/30/14 23:52, Jiri Kosina wrote:
-> This reverts commit 24a0aa212ee2dbe44360288684478d76a8e20a0a.
->
-> It's causing severe userspace breakage. Namely, all the utilities
-> from wireless-utils which are relying on CONFIG_WEXT (which means
-> tools like 'iwconfig', 'iwlist', etc) are not working anymore. There
-> is a 'iw' utility in newer wireless-tools, which is supposed to be
-> a replacement for all the "deprecated" binaries, but it's far away
-> from being massively adopted.
->
-> Please see [1] for example of the userspace breakage this is causing.
->
-> In addition to that, Larry Finger reports [2] that this patch is also
-> causing ipw2200 driver being impossible to build.
->
-> To me this clearly shows that CONFIG_WEXT is far, far away from being
-> "deprecated enough" to be removed.
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Hi Jiri,
+The ifidx provided by FW needs to be offsetted when receiving data
+packets.
 
-You mentioned in the discussion and I quote: "*If* wireless maintainers 
-think otherwise, I'll send a revert request to Linus for 
-consideration.". However, you did not wait for any response from the 
-wireless maintainers nor from the author of the patch you are reverting. 
-Seems like an overreaction to me though personally I do not disgree with 
-the revert itself.
+Cc: stable@vger.kernel.org # v3.17, v3.18
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-Regards,
-Arend
-
-> [1] http://thread.gmane.org/gmane.linux.kernel/1857010
-> [2] http://thread.gmane.org/gmane.linux.network/343688
->
-> Signed-off-by: Jiri Kosina<jkosina@suse.cz>
-> ---
->   net/wireless/Kconfig | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
-> index 22ba971..29c8675 100644
-> --- a/net/wireless/Kconfig
-> +++ b/net/wireless/Kconfig
-> @@ -175,7 +175,7 @@ config CFG80211_INTERNAL_REGDB
->   	  Most distributions have a CRDA package.  So if unsure, say N.
->
->   config CFG80211_WEXT
-> -	bool
-> +	bool "cfg80211 wireless extensions compatibility"
->   	depends on CFG80211
->   	select WEXT_CORE
->   	help
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
+index 5b0b70f..456944a 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
+@@ -1080,8 +1080,17 @@ brcmf_msgbuf_rx_skb(struct brcmf_msgbuf *msgbuf, struct sk_buff *skb,
+ {
+ 	struct brcmf_if *ifp;
+ 
++	/* The ifidx is the idx to map to matching netdev/ifp. When receiving
++	 * events this is easy because it contains the bssidx which maps
++	 * 1-on-1 to the netdev/ifp. But for data frames the ifidx is rcvd.
++	 * bssidx 1 is used for p2p0 and no data can be received or
++	 * transmitted on it. Therefor bssidx is ifidx + 1 if ifidx > 0
++	 */
++	if (ifidx)
++		(ifidx)++;
+ 	ifp = msgbuf->drvr->iflist[ifidx];
+ 	if (!ifp || !ifp->ndev) {
++		brcmf_err("Received pkt for invalid ifidx %d\n", ifidx);
+ 		brcmu_pkt_buf_free_skb(skb);
+ 		return;
+ 	}
+-- 
+1.9.1
 
