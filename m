@@ -1,45 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:24849 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753164AbaLBJxl (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:35110 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751088AbaLCJJW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Dec 2014 04:53:41 -0500
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Joe Perches <joe@perches.com>,
-	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH v2 10/10] wil6210: remove TODO wrt buffer alignment
-Date: Tue, 2 Dec 2014 11:53:07 +0200
-Message-ID: <1417513987-18729-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20141202_105347_941272_BC8CA04B)
-In-Reply-To: <1417513598-18304-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1417513598-18304-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Wed, 3 Dec 2014 04:09:22 -0500
+Message-ID: <547ED33C.5020409@broadcom.com> (sfid-20141203_101012_944160_E2210051)
+Date: Wed, 3 Dec 2014 10:09:16 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Eric Schultz <eschultz@prplfoundation.org>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: New FCC requirements and Linux Wifi
+References: <CAMkzgA5=NA-yLEWcvhXYpHmTAyqqiR7s58ndv-0gcSiZ3Ps88g@mail.gmail.com> <20141202003143.GA11546@tuxdriver.com> <547E1485.40302@broadcom.com>
+In-Reply-To: <547E1485.40302@broadcom.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hardware doesn't place any restrictions on the buffer alignment,
-consider this TODO resolved.
+On 12/02/14 20:35, Arend van Spriel wrote:
+> On 12/02/14 01:31, John W. Linville wrote:
+>> On Mon, Dec 01, 2014 at 04:27:25PM -0600, Eric Schultz wrote:
+>>> All,
+>>>
+>>> I work for the prpl Foundation, an open source foundation organized by
+>>> a number of companies, most related to MIPS. One project we work with
+>>> externally is the OpenWrt project. Recently one of our members
+>>> mentioned a new FCC requirement (described in FCC publication 594280)
+>>> which requires wifi hardware devices to restrict modifications in ways
+>>> that were not previously required. Some of the suggestions the company
+>>> had internally for complying would be to use features like Secure Boot
+>>> and other types of DRM-like mechanisms to prevent routers from being
+>>> modified. This obviously would be quite bad for the OpenWrt community
+>>> (and the embedded Linux community as a whole) so we agreed as a group
+>>> to try to provide hardware companies with a way of complying without
+>>> harming the community.
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/txrx.c | 2 --
- 1 file changed, 2 deletions(-)
+The FCC publication can be found here:
 
-diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
-index 405ede6..e3f8bdc 100644
---- a/drivers/net/wireless/ath/wil6210/txrx.c
-+++ b/drivers/net/wireless/ath/wil6210/txrx.c
-@@ -210,8 +210,6 @@ static int wil_vring_alloc_skb(struct wil6210_priv *wil, struct vring *vring,
- 	struct vring_rx_desc dd, *d = &dd;
- 	volatile struct vring_rx_desc *_d = &vring->va[i].rx;
- 	dma_addr_t pa;
--
--	/* TODO align */
- 	struct sk_buff *skb = dev_alloc_skb(sz + headroom);
- 
- 	if (unlikely(!skb))
--- 
-2.1.0
+https://apps.fcc.gov/oetcf/kdb/forms/FTSSearchResultPage.cfm?switch=P&id=39498
+
+I had issues downloading the guidance document itself.
+
+Another fine read from 2010 is here:
+
+http://www.fcc.gov/oet/ea/presentations/files/oct10/FCC_Roundtable_General_Discussion_101910-Staff.pdf
+
+At page 13 of this document are draft updates that Eric is probably 
+referring to.
+
+Regards,
+Arend
+
+>>> I'm looking to find individuals (and other companies!) interested in
+>>> working with myself and the foundation, companies, the OpenWrt
+>>> community and eventually regulators to provide guidance to hardware
+>>> companies on how to best comply with these rules. If you're interested
+>>> in getting involved or just would like to know more, please get in
+>>> touch with me. We want to make sure that routers and related embedded
+>>> Linux hardware is hackable and we could use all the help we could get.
+>>>
+>>> Thanks and I look forward to working with you,
+>>>
+>>> Eric
+>>
+>> Eric,
+>>
+>> Obviously, I would be interested in hearing more. I suspect there
+>> are others on the list that will be interested as well...
+>
+> I think so too. Just not sure what "Linux hardware is hackable" really
+> means here. Well, I guess I mean to say: tell me more. I guess with
+> hardware companies you mean OEMs here, right?
+>
+> Regards,
+> Arend
+> --
+> To unsubscribe from this list: send the line "unsubscribe
+> linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at http://vger.kernel.org/majordomo-info.html
 
