@@ -1,66 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f47.google.com ([209.85.218.47]:40163 "EHLO
-	mail-oi0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964843AbaLMDSe (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:23105 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750845AbaLCIJm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Dec 2014 22:18:34 -0500
-Message-ID: <548BB000.8020202@lwfinger.net> (sfid-20141213_041904_268703_5B40E51F)
-Date: Fri, 12 Dec 2014 21:18:24 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 3 Dec 2014 03:09:42 -0500
+Subject: [PATCH v4 0/8] ath10k: add support for new wmi-tlv backend
+To: <ath10k@lists.infradead.org>
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Date: Wed, 3 Dec 2014 10:09:16 +0200
+Message-ID: <20141203080803.31187.85059.stgit@potku.adurom.net> (sfid-20141203_090945_564864_8C9A1155)
 MIME-Version: 1.0
-To: Krzysztof Konopko <kris@konagma.com>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] staging: rtl8723au: Fix sparse warnings
-References: <1418336609-10191-1-git-send-email-kris@konagma.com> <548A2E7A.4010303@lwfinger.net> <548AD2F1.3080200@konagma.com> <548B2752.7030607@lwfinger.net> <548B7120.8010008@konagma.com>
-In-Reply-To: <548B7120.8010008@konagma.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/12/2014 04:50 PM, Krzysztof Konopko wrote:
-> On 12/12/14 18:35, Larry Finger wrote:
->> On 12/12/2014 05:35 AM, Krzysztof Konopko wrote:
->>> On 12/12/14 00:53, Larry Finger wrote:
->>>> In particular, did you test on big-endian hardware after you
->>>> made this change?
->>>
->>> Nope.  I don't have any big-endian hardware.  I don't even have the
->>> wireless card TBH.  But I'm happy to try to get one.  Is Rtl8723AE the
->>> right model?
->>
->> No. The device numbers that end in E are PCIe and use a mac80211-based
->> driver. As none of my BE hardware has PCIe, I cannot test those drivers
->> on other than LE hardware. I do not have the hardware either for the
->> RTL8723AU. For that reason, I am careful when modifying the driver - I
->> let Jes do that.
->>
->
-> Silly me.  'U' stands for USB here.  But can't find this device on any
-> auction.  It's included in some ultrabooks but can't afford that for the
-> sake of fixing some sparse warnings :)
+Hi,
 
-There are no stand-alone USB devices that I have found for either RTL8723AU or 
-RTL8723BU. The closest are modules CM-8723U and CM-8723BU by CC&C 
-(http://www.ccandc.com.tw/) with RTL8723AU and RTL8723BU, respectively. The 
-former is obsolete and no longer on the web site. These modules have D+ and D- 
-connectors for USB, but they take 3.3 V, not 5. As a result, one would need some 
-sort of voltage regulator circuit. That would not be complicated as it would 
-consist of a TI LM2937-3.3 and a couple of capacitors. I wrote to them to see if 
-I could get samples, but no response yet.
+here's v4 of Michal's patches to add WMI TLV interface support to
+ath10k.
 
->> To be able to fix the kernel driver for RTL8188EU on PPC, I need to sort
->> out these endian problems. Once I do, I will port them to the other
->> drivers.
->>
->
-> Isn't `sparse` useful here? :)
+v4:
 
-Yes, but the git repo works, and the kernel version does not, even though both 
-do not have any Sparse warhings.
+* fix error handling for ath10k_core_init_firmware_features()
 
-Larry
+* ar->htt.max_num_pending_tx = TARGET_TLV_NUM_MSDU_DESC
+
+* use enum ath10k_fw_wmi_op_version op_version in struct ath10k_wmi
+
+* add ATH10K_FW_WMI_OP_VERSION_UNSET
+
+* add ATH10K_FW_WMI_OP_VERSION_MAX
 
 
+v3:
+
+* add ATH10K_FW_IE_WMI_OP_VERSION
+
+* deprecate ATH10K_FW_FEATURE_WMI_10* feature flags
+
+* remove ATH10K_FW_FEATURE_WMI_TLV, functionality replaced by
+  ATH10K_FW_IE_WMI_OP_VERSION
+
+* remove struct ieee80211_iface_combination ath10k_tlv_if_comb[] & co.
+  Those can be added in a different patch.
+
+* add SVCSTR() for STA_RX_IPA_OFFLOAD_SUPPORT, MDNS_OFFLOAD and SAP_AUTH_OFFLOAD
+
+
+---
+
+Kalle Valo (4):
+      ath10k: clean up error handling in ath10k_core_probe_fw()
+      ath10k: create ath10k_core_init_features()
+      ath10k: add ATH10K_FW_IE_WMI_OP_VERSION
+      ath10k: set max_num_pending_tx in ath10k_core_init_firmware_features()
+
+Michal Kazior (4):
+      ath10k: implement intermediate event args
+      ath10k: introduce wmi ops
+      ath10k: make some wmi functions public
+      ath10k: implement wmi-tlv backend
+
+
+ drivers/net/wireless/ath/ath10k/Makefile   |    1 
+ drivers/net/wireless/ath/ath10k/ce.c       |    2 
+ drivers/net/wireless/ath/ath10k/core.c     |  105 +
+ drivers/net/wireless/ath/ath10k/core.h     |   10 
+ drivers/net/wireless/ath/ath10k/debug.c    |    1 
+ drivers/net/wireless/ath/ath10k/htt_tx.c   |    5 
+ drivers/net/wireless/ath/ath10k/hw.h       |   26 
+ drivers/net/wireless/ath/ath10k/mac.c      |    2 
+ drivers/net/wireless/ath/ath10k/spectral.c |    1 
+ drivers/net/wireless/ath/ath10k/testmode.c |    5 
+ drivers/net/wireless/ath/ath10k/wmi-ops.h  |  821 ++++++++++
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c  | 2218 ++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi-tlv.h  | 1380 +++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.c      | 1375 +++++++++++------
+ drivers/net/wireless/ath/ath10k/wmi.h      |  268 +++
+ 15 files changed, 5597 insertions(+), 623 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath10k/wmi-ops.h
+ create mode 100644 drivers/net/wireless/ath/ath10k/wmi-tlv.c
+ create mode 100644 drivers/net/wireless/ath/ath10k/wmi-tlv.h
