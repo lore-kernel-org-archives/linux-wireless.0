@@ -1,112 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:62989 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751602AbaLXPBq (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:38604 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750707AbaLCOpM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Dec 2014 10:01:46 -0500
-Message-ID: <549AD54F.3020605@gmail.com> (sfid-20141224_160153_281855_4231A577)
-Date: Wed, 24 Dec 2014 23:01:35 +0800
-From: Chen Gang <gang.chen.5i5j@gmail.com>
+	Wed, 3 Dec 2014 09:45:12 -0500
+Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
+	(envelope-from <linville@tuxdriver.com>)
+	id 1XwBAz-0000kR-Je
+	for linux-wireless@vger.kernel.org; Wed, 03 Dec 2014 09:45:09 -0500
+Received: from linville-x1.hq.tuxdriver.com (localhost.localdomain [127.0.0.1])
+	by linville-x1.hq.tuxdriver.com (8.14.8/8.14.6) with ESMTP id sB3EWktJ005058
+	for <linux-wireless@vger.kernel.org>; Wed, 3 Dec 2014 09:32:46 -0500
+Received: (from linville@localhost)
+	by linville-x1.hq.tuxdriver.com (8.14.8/8.14.8/Submit) id sB3EWkKr005057
+	for linux-wireless@vger.kernel.org; Wed, 3 Dec 2014 09:32:46 -0500
+Date: Wed, 3 Dec 2014 09:32:46 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Subject: new stuff for 3.19 needs to be posted _now_
+Message-ID: <20141203143245.GB2896@tuxdriver.com> (sfid-20141203_154517_560627_5344C50D)
 MIME-Version: 1.0
-To: qca_vkondrat@qca.qualcomm.com, kvalo@codeaurora.org
-CC: linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	linux-next@vger.kernel.org
-Subject: Re: [PATCH next] drivers/net/wireless/ath/wil6210/debugfs.c: Use
- 'uint64_t' instead of 'cycles_t' to avoid warnings
-References: <549AD067.80608@gmail.com>
-In-Reply-To: <549AD067.80608@gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Oh, sorry, I forgot the word wrap (after change a new pc). I shall send
-patch v2 for it.
+You may have noticed that Linus has released 3.18-rc7.  So, the merge
+window for 3.19 is around the corner!
 
-On 12/24/2014 10:40 PM, Chen Gang wrote:
-> do_div() checks the type strictly. 'cycles_t' may be 32-bit under quite
-> a few architectures (parisc, arm, avr32 ...). So use 'uint64_t' instead
-> of, the related warning (with allmodconfig under parisc):
-> 
->     CC [M]  drivers/net/wireless/ath/wil6210/debugfs.o
->   In file included from arch/parisc/include/generated/asm/div64.h:1:0,
->                    from include/linux/kernel.h:124,
->                    from include/linux/list.h:8,
->                    from include/linux/module.h:9,
->                    from drivers/net/wireless/ath/wil6210/debugfs.c:17:
->   drivers/net/wireless/ath/wil6210/debugfs.c: In function
-> ‘wil_vring_debugfs_show’:
->   include/asm-generic/div64.h:43:28: warning: comparison of distinct
-> pointer types lacks a cast
->     (void)(((typeof((n)) *)0) == ((uint64_t *)0)); \
->                               ^
->   drivers/net/wireless/ath/wil6210/debugfs.c:107:4: note: in expansion
-> of macro ‘do_div’
->       do_div(idle, total);
->       ^
->   In file included from include/uapi/linux/stddef.h:1:0,
->                    from include/linux/stddef.h:4,
->                    from ./include/uapi/linux/posix_types.h:4,
->                    from include/uapi/linux/types.h:13,
->                    from include/linux/types.h:5,
->                    from include/linux/list.h:4,
->                    from include/linux/module.h:9,
->                    from drivers/net/wireless/ath/wil6210/debugfs.c:17:
->   include/asm-generic/div64.h:44:18: warning: right shift count >= width
-> of type [-Wshift-count-overflow]
->     if (likely(((n) >> 32) == 0)) {   \
->                     ^
->   include/linux/compiler.h:159:40: note: in definition of macro ‘likely’
->    # define likely(x) __builtin_expect(!!(x), 1)
->                                           ^
->   drivers/net/wireless/ath/wil6210/debugfs.c:107:4: note: in expansion
-> of macro ‘do_div’
->       do_div(idle, total);
->       ^
->   In file included from arch/parisc/include/generated/asm/div64.h:1:0,
->                    from include/linux/kernel.h:124,
->                    from include/linux/list.h:8,
->                    from include/linux/module.h:9,
->                    from drivers/net/wireless/ath/wil6210/debugfs.c:17:
->   include/asm-generic/div64.h:48:22: warning: passing argument 1 of
-> ‘__div64_32’ from incompatible pointer type [-Wincompatible-pointer-types]
->      __rem = __div64_32(&(n), __base); \
->                         ^
->   drivers/net/wireless/ath/wil6210/debugfs.c:107:4: note: in expansion
-> of macro ‘do_div’
->       do_div(idle, total);
->       ^
->   include/asm-generic/div64.h:35:17: note: expected ‘uint64_t * {aka
-> long long unsigned int *}’ but argument is of type ‘cycles_t * {aka long
-> unsigned int *}’
->    extern uint32_t __div64_32(uint64_t *dividend, uint32_t divisor);
->                    ^
-> 
-> Signed-off-by: Chen Gang <gang.chen.5i5j@gmail.com>
-> ---
->  drivers/net/wireless/ath/wil6210/debugfs.c |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c
-> b/drivers/net/wireless/ath/wil6210/debugfs.c
-> index 4e6e145..cd991fa 100644
-> --- a/drivers/net/wireless/ath/wil6210/debugfs.c
-> +++ b/drivers/net/wireless/ath/wil6210/debugfs.c
-> @@ -101,8 +101,8 @@ static int wil_vring_debugfs_show(struct seq_file
-> *s, void *data)
->  			char name[10];
->  			/* performance monitoring */
->  			cycles_t now = get_cycles();
-> -			cycles_t idle = txdata->idle * 100;
-> -			cycles_t total = now - txdata->begin;
-> +			uint64_t idle = txdata->idle * 100;
-> +			uint64_t total = now - txdata->begin;
-> 
->  			do_div(idle, total);
->  			txdata->begin = now;
-> 
+For those that need a reminder, the opening of the merge window is
+a _deadline_ for new features.  Once the merge window opens, only
+fixes will be accepted for 3.19.  In fact, any non-fix patches need to
+already be in wireless-next when the merge window opens if you want
+them in 3.19.  That means you need to get them posted _now_, so they
+can be reviewed and I can find time to merge them before the deadline.
 
+You have been warned...this means you!
+
+John
 -- 
-Chen Gang
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
 
-Open, share, and attitude like air, water, and life which God blessed
