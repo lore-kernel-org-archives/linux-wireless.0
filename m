@@ -1,88 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:36987 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750789AbaLPJNi (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:52331 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751295AbaLCGaS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Dec 2014 04:13:38 -0500
-Received: by mail-wi0-f179.google.com with SMTP id ex7so11732508wid.12
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Dec 2014 01:13:37 -0800 (PST)
-Date: Tue, 16 Dec 2014 11:13:23 +0200
-From: Asaf Vertz <asaf.vertz@tandemg.com>
-To: Larry.Finger@lwfinger.net, Jes.Sorensen@redhat.com
-Cc: gregkh@linuxfoundation.org, ninox@posteo.net,
-	tapaswenipathak@gmail.com, gdonald@gmail.com, cmroliv@gmail.com,
-	asaf.vertz@tandemg.com, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] staging: rtl8723au: core: fixing "foo * bar" should be
- "foo *bar"
-Message-ID: <20141216091323.GA28072@ubuntu> (sfid-20141216_101354_950063_437878D0)
+	Wed, 3 Dec 2014 01:30:18 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v3 2/7] ath10k: add ATH10K_FW_IE_WMI_OP_VERSION
+References: <20141201144400.18248.62714.stgit@potku.adurom.net>
+	<20141201144507.18248.9856.stgit@potku.adurom.net>
+	<CA+BoTQkXnHnMsLvRt2PnnDCAv8P8gDsJTLNFPmf+CNaDX0frfg@mail.gmail.com>
+Date: Wed, 3 Dec 2014 08:30:05 +0200
+In-Reply-To: <CA+BoTQkXnHnMsLvRt2PnnDCAv8P8gDsJTLNFPmf+CNaDX0frfg@mail.gmail.com>
+	(Michal Kazior's message of "Tue, 2 Dec 2014 13:16:33 +0100")
+Message-ID: <87vbltjlea.fsf@kamboji.qca.qualcomm.com> (sfid-20141203_073022_331852_503F604D)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixed a coding style error, "foo * bar" should be "foo *bar"
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Signed-off-by: Asaf Vertz <asaf.vertz@tandemg.com>
----
- drivers/staging/rtl8723au/core/rtw_efuse.c |   12 ++++++------
- 1 files changed, 6 insertions(+), 6 deletions(-)
+> On 1 December 2014 at 15:45, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> [...]
+>> @@ -801,11 +812,24 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
+>>         }
+>>
+>>         if (test_bit(ATH10K_FW_FEATURE_WMI_10X, ar->fw_features)) {
+>> -               ar->max_num_peers = TARGET_10X_NUM_PEERS;
+>> -               ar->max_num_stations = TARGET_10X_NUM_STATIONS;
+>> +               if (test_bit(ATH10K_FW_FEATURE_WMI_10_2, ar->fw_features))
+>> +                       ar->wmi.op_version = ATH10K_FW_WMI_OP_VERSION_10_2;
+>> +               else
+>> +                       ar->wmi.op_version = ATH10K_FW_WMI_OP_VERSION_10_1;
+>>         } else {
+>> +               ar->wmi.op_version = ATH10K_FW_WMI_OP_VERSION_MAIN;
+>> +       }
+>
+> You always overwrite ar->wmi.op_version with MAIN if it's not 10.x
+> which means TLV is/wiil be effectively overwritten.
+>
+> Perhaps the op_version enum values should start with 1 so that 0 can
+> be used as "unset" and only in that case should the above fallback be
+> attempted.
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_efuse.c b/drivers/staging/rtl8723au/core/rtw_efuse.c
-index 81960e7..0e64d12 100644
---- a/drivers/staging/rtl8723au/core/rtw_efuse.c
-+++ b/drivers/staging/rtl8723au/core/rtw_efuse.c
-@@ -328,12 +328,12 @@ EFUSE_Read1Byte23a(struct rtw_adapter *Adapter, u16 Address)
- 
- void
- EFUSE_Write1Byte(
--	struct rtw_adapter *	Adapter,
-+	struct rtw_adapter *Adapter,
- 	u16		Address,
- 	u8		Value);
- void
- EFUSE_Write1Byte(
--	struct rtw_adapter *	Adapter,
-+	struct rtw_adapter *Adapter,
- 	u16		Address,
- 	u8		Value)
- {
-@@ -636,7 +636,7 @@ Efuse_ReadAllMap(struct rtw_adapter *pAdapter, u8 efuseType, u8 *Efuse)
-  *---------------------------------------------------------------------------*/
- static void
- efuse_ShadowRead1Byte(
--	struct rtw_adapter *	pAdapter,
-+	struct rtw_adapter *pAdapter,
- 	u16		Offset,
- 	u8		*Value)
- {
-@@ -648,7 +648,7 @@ efuse_ShadowRead1Byte(
- /* Read Two Bytes */
- static void
- efuse_ShadowRead2Byte(
--	struct rtw_adapter *	pAdapter,
-+	struct rtw_adapter *pAdapter,
- 	u16		Offset,
- 	u16		*Value)
- {
-@@ -661,7 +661,7 @@ efuse_ShadowRead2Byte(
- /* Read Four Bytes */
- static void
- efuse_ShadowRead4Byte(
--	struct rtw_adapter *	pAdapter,
-+	struct rtw_adapter *pAdapter,
- 	u16		Offset,
- 	u32		*Value)
- {
-@@ -723,7 +723,7 @@ void EFUSE_ShadowMapUpdate23a(struct rtw_adapter *pAdapter, u8 efuseType)
-  *---------------------------------------------------------------------------*/
- void
- EFUSE_ShadowRead23a(
--	struct rtw_adapter *	pAdapter,
-+	struct rtw_adapter *pAdapter,
- 	u8		Type,
- 	u16		Offset,
- 	u32		*Value)
+That's a good idea, I'll add that.
+
+> Also, I think it might be a good idea to reset ar->wmi.op_version in
+> ath10k_core_fetch_firmware_api_n (and api_1 as well) so that if any
+> attempt fails (e.g. due to IE binary corruption) ar->wmi.op_version
+> isn't propagated/left unchanged to another fw API attempt.
+
+Yeah, we should do that. But that's an existing problem, not something
+introduced by this patchset (we have the same problem with
+ar->fw_features) . So I would like to fix that later and added it to the
+TODO list:
+
+http://wireless.kernel.org/en/users/Drivers/ath10k/todo
+
 -- 
-1.7.0.4
-
+Kalle Valo
