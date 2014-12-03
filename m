@@ -1,57 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f171.google.com ([209.85.213.171]:37653 "EHLO
-	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932144AbaLDMDS (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:37812 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752003AbaLCIKE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Dec 2014 07:03:18 -0500
-Received: by mail-ig0-f171.google.com with SMTP id z20so14501780igj.10
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Dec 2014 04:03:17 -0800 (PST)
+	Wed, 3 Dec 2014 03:10:04 -0500
+Subject: [PATCH v4 2/8] ath10k: create ath10k_core_init_features()
+To: <ath10k@lists.infradead.org>
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Date: Wed, 3 Dec 2014 10:09:59 +0200
+Message-ID: <20141203080958.31187.62552.stgit@potku.adurom.net> (sfid-20141203_091016_213307_BB26268D)
+In-Reply-To: <20141203080803.31187.85059.stgit@potku.adurom.net>
+References: <20141203080803.31187.85059.stgit@potku.adurom.net>
 MIME-Version: 1.0
-In-Reply-To: <54784001.7020706@broadcom.com>
-References: <54784001.7020706@broadcom.com>
-Date: Thu, 4 Dec 2014 13:03:17 +0100
-Message-ID: <CACna6rzGB7EvMbiteWGbwjdmx+LMZymdk_04L_RKiFkT0hokvA@mail.gmail.com> (sfid-20141204_130325_747050_1DC87502)
-Subject: Re: Multiple-BSSID issues with hostapd
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Jouni Malinen <j@w1.fi>,
-	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 28 November 2014 at 10:27, Arend van Spriel <arend@broadcom.com> wrote:
-> For the brcmfmac we started working on Multiple-BSSID support and came
-> across some issues with hostapd that are listed listed below.
->
-> BSS1 setup on netdev wlan0
-> BSS2 setup on netdev wlan0_0
->
-> * get_station() done on wrong netdev
->
-> observed:
-> Upon association of STA1 with BSS2 (wlan0_0) a get_station() is done for
-> STA1 with wlan0 as netdev.
-> expected:
-> get_station() for STA1 with wlan0_0 as netdev. We verified that wlan0_0
-> ifindex was used in NL80211_CMD_NEW_STATION event.
+It's easier to manage firmware version differences when we configure them in
+one place. Rename ath10k_core_init_max_sta_count() to
+ath10k_core_init_firmware_features() and start moving most of the firmware
+version ("features") handling to that function.
 
-Did you do any progress on this?
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c |   25 ++++++++++++++++---------
+ 1 file changed, 16 insertions(+), 9 deletions(-)
 
-According to the nl80211.h you are correct of course, every
-NL80211_CMD_foo_STATION command should include NL80211_ATTR_IFINDEX.
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 09784c68339b..05ca1b6ac704 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -582,13 +582,6 @@ static int ath10k_core_fetch_firmware_api_n(struct ath10k *ar, const char *name)
+ 		goto err;
+ 	}
+ 
+-	if (test_bit(ATH10K_FW_FEATURE_WMI_10_2, ar->fw_features) &&
+-	    !test_bit(ATH10K_FW_FEATURE_WMI_10X, ar->fw_features)) {
+-		ath10k_err(ar, "feature bits corrupted: 10.2 feature requires 10.x feature to be set as well");
+-		ret = -EINVAL;
+-		goto err;
+-	}
+-
+ 	/* now fetch the board file */
+ 	if (ar->hw_params.fw.board == NULL) {
+ 		ath10k_err(ar, "board data file not defined");
+@@ -799,8 +792,14 @@ static void ath10k_core_restart(struct work_struct *work)
+ 	mutex_unlock(&ar->conf_mutex);
+ }
+ 
+-static void ath10k_core_init_max_sta_count(struct ath10k *ar)
++static int ath10k_core_init_firmware_features(struct ath10k *ar)
+ {
++	if (test_bit(ATH10K_FW_FEATURE_WMI_10_2, ar->fw_features) &&
++	    !test_bit(ATH10K_FW_FEATURE_WMI_10X, ar->fw_features)) {
++		ath10k_err(ar, "feature bits corrupted: 10.2 feature requires 10.x feature to be set as well");
++		return -EINVAL;
++	}
++
+ 	if (test_bit(ATH10K_FW_FEATURE_WMI_10X, ar->fw_features)) {
+ 		ar->max_num_peers = TARGET_10X_NUM_PEERS;
+ 		ar->max_num_stations = TARGET_10X_NUM_STATIONS;
+@@ -808,6 +807,8 @@ static void ath10k_core_init_max_sta_count(struct ath10k *ar)
+ 		ar->max_num_peers = TARGET_NUM_PEERS;
+ 		ar->max_num_stations = TARGET_NUM_STATIONS;
+ 	}
++
++	return 0;
+ }
+ 
+ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode)
+@@ -1043,7 +1044,12 @@ static int ath10k_core_probe_fw(struct ath10k *ar)
+ 		goto err_power_down;
+ 	}
+ 
+-	ath10k_core_init_max_sta_count(ar);
++	ret = ath10k_core_init_firmware_features(ar);
++	if (ret) {
++		ath10k_err(ar, "fatal problem with firmware features: %d\n",
++			   ret);
++		goto err_free_firmware_files;
++	}
+ 
+ 	mutex_lock(&ar->conf_mutex);
+ 
+@@ -1064,6 +1070,7 @@ static int ath10k_core_probe_fw(struct ath10k *ar)
+ err_unlock:
+ 	mutex_unlock(&ar->conf_mutex);
+ 
++err_free_firmware_files:
+ 	ath10k_core_free_firmware_files(ar);
+ 
+ err_power_down:
 
-There are two functions in driver_nl80211.c where
-NL80211_CMD_GET_STATION is used.
-
-1) nl80211_get_link_signal
-It fills NL80211_ATTR_IFINDEX in the following way:
-NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, drv->ifindex);
-
-2) i802_read_sta_data
-It fills NL80211_ATTR_IFINDEX in the following way:
-NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, if_nametoindex(bss->ifname));
-
-Did you track down which of the above functions in the one sending
-wrong NL80211_ATTR_IFINDEX?
