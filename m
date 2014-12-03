@@ -1,233 +1,167 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:7916 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750756AbaLOFN4 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:31059 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750707AbaLCIKN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Dec 2014 00:13:56 -0500
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+	Wed, 3 Dec 2014 03:10:13 -0500
+Subject: [PATCH v4 3/8] ath10k: add ATH10K_FW_IE_WMI_OP_VERSION
 To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH 4/5] ath10k: add wmi interface for pdev_get_temperature
-Date: Mon, 15 Dec 2014 10:41:13 +0530
-Message-ID: <1418620274-3081-5-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20141215_061359_445187_C3078591)
-In-Reply-To: <1418620274-3081-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1418620274-3081-1-git-send-email-rmanohar@qti.qualcomm.com>
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Date: Wed, 3 Dec 2014 10:10:08 +0200
+Message-ID: <20141203081008.31187.99268.stgit@potku.adurom.net> (sfid-20141203_091022_882828_A2220323)
+In-Reply-To: <20141203080803.31187.85059.stgit@potku.adurom.net>
+References: <20141203080803.31187.85059.stgit@potku.adurom.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add WMI command support for reading temperature from the target and
-corresponding WMI temperature event handler. The pdev_get_temperature
-command is currently supported in 10.2 firmware alone.
+Instead of using feature flags, add new 32 bit variable for managing different
+WMI versions. This makes it firmware interface tests a bit less convoluted,
+especially when we add one more interface.
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath10k/wmi-ops.h | 17 ++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi-tlv.c |  2 ++
- drivers/net/wireless/ath/ath10k/wmi.c     | 33 +++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi.h     | 13 ++++++++++++
- 4 files changed, 65 insertions(+)
+ drivers/net/wireless/ath/ath10k/core.c |   49 +++++++++++++++++++++++++++++---
+ drivers/net/wireless/ath/ath10k/core.h |    8 +++--
+ drivers/net/wireless/ath/ath10k/hw.h   |   16 ++++++++++
+ 3 files changed, 65 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-ops.h b/drivers/net/wireless/ath/ath10k/wmi-ops.h
-index feed0fe..20e2c30 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-ops.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi-ops.h
-@@ -118,6 +118,7 @@ struct wmi_ops {
- 						   u32 period, u32 duration,
- 						   u32 next_offset,
- 						   u32 enabled);
-+	struct sk_buff *(*gen_pdev_get_temperature)(struct ath10k *ar);
- };
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 05ca1b6ac704..30891f5d6830 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -447,7 +447,7 @@ static int ath10k_core_fetch_firmware_api_n(struct ath10k *ar, const char *name)
+ 	int ie_id, i, index, bit, ret;
+ 	struct ath10k_fw_ie *hdr;
+ 	const u8 *data;
+-	__le32 *timestamp;
++	__le32 *timestamp, *version;
  
- int ath10k_wmi_cmd_send(struct ath10k *ar, struct sk_buff *skb, u32 cmd_id);
-@@ -840,4 +841,20 @@ ath10k_wmi_pdev_set_quiet_mode(struct ath10k *ar, u32 period, u32 duration,
- 				   ar->wmi.cmd->pdev_set_quiet_mode_cmdid);
- }
+ 	/* first fetch the firmware file (firmware-*.bin) */
+ 	ar->firmware = ath10k_fetch_fw_file(ar, ar->hw_params.fw.dir, name);
+@@ -562,6 +562,17 @@ static int ath10k_core_fetch_firmware_api_n(struct ath10k *ar, const char *name)
+ 			ar->otp_len = ie_len;
  
-+static inline int
-+ath10k_wmi_pdev_get_temperature(struct ath10k *ar)
-+{
-+	struct sk_buff *skb;
+ 			break;
++		case ATH10K_FW_IE_WMI_OP_VERSION:
++			if (ie_len != sizeof(u32))
++				break;
 +
-+	if (!ar->wmi.ops->gen_pdev_get_temperature)
-+		return -EOPNOTSUPP;
++			version = (__le32 *)data;
 +
-+	skb = ar->wmi.ops->gen_pdev_get_temperature(ar);
-+	if (IS_ERR(skb))
-+		return PTR_ERR(skb);
++			ar->wmi.op_version = le32_to_cpup(version);
 +
-+	return ath10k_wmi_cmd_send(ar, skb,
-+				   ar->wmi.cmd->pdev_get_temperature_cmdid);
-+}
++			ath10k_dbg(ar, ATH10K_DBG_BOOT, "found fw ie wmi op version %d\n",
++				   ar->wmi.op_version);
++			break;
+ 		default:
+ 			ath10k_warn(ar, "Unknown FW IE: %u\n",
+ 				    le32_to_cpu(hdr->id));
+@@ -800,12 +811,40 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
+ 		return -EINVAL;
+ 	}
+ 
+-	if (test_bit(ATH10K_FW_FEATURE_WMI_10X, ar->fw_features)) {
+-		ar->max_num_peers = TARGET_10X_NUM_PEERS;
+-		ar->max_num_stations = TARGET_10X_NUM_STATIONS;
+-	} else {
++	if (ar->wmi.op_version >= ATH10K_FW_WMI_OP_VERSION_MAX) {
++		ath10k_err(ar, "unsupported WMI OP version (max %d): %d\n",
++			   ATH10K_FW_WMI_OP_VERSION_MAX, ar->wmi.op_version);
++		return -EINVAL;
++	}
 +
- #endif
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index e203dad..4c050ce 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -2044,6 +2044,7 @@ static struct wmi_cmd_map wmi_tlv_cmd_map = {
- 	.force_fw_hang_cmdid = WMI_TLV_FORCE_FW_HANG_CMDID,
- 	.gpio_config_cmdid = WMI_TLV_GPIO_CONFIG_CMDID,
- 	.gpio_output_cmdid = WMI_TLV_GPIO_OUTPUT_CMDID,
-+	.pdev_get_temperature_cmdid = WMI_TLV_CMD_UNSUPPORTED,
- };
- 
- static struct wmi_pdev_param_map wmi_tlv_pdev_param_map = {
-@@ -2205,6 +2206,7 @@ static const struct wmi_ops wmi_tlv_ops = {
- 	.gen_pktlog_enable = ath10k_wmi_tlv_op_gen_pktlog_enable,
- 	.gen_pktlog_disable = ath10k_wmi_tlv_op_gen_pktlog_disable,
- 	/* .gen_pdev_set_quiet_mode not implemented */
-+	/* .gen_pdev_get_temperature not implemented */
- };
- 
- /************/
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index abf4c98..c32dc19 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -145,6 +145,7 @@ static struct wmi_cmd_map wmi_cmd_map = {
- 	.force_fw_hang_cmdid = WMI_FORCE_FW_HANG_CMDID,
- 	.gpio_config_cmdid = WMI_GPIO_CONFIG_CMDID,
- 	.gpio_output_cmdid = WMI_GPIO_OUTPUT_CMDID,
-+	.pdev_get_temperature_cmdid = WMI_CMD_UNSUPPORTED,
- };
- 
- /* 10.X WMI cmd track */
-@@ -267,6 +268,7 @@ static struct wmi_cmd_map wmi_10x_cmd_map = {
- 	.force_fw_hang_cmdid = WMI_CMD_UNSUPPORTED,
- 	.gpio_config_cmdid = WMI_10X_GPIO_CONFIG_CMDID,
- 	.gpio_output_cmdid = WMI_10X_GPIO_OUTPUT_CMDID,
-+	.pdev_get_temperature_cmdid = WMI_CMD_UNSUPPORTED,
- };
- 
- /* MAIN WMI VDEV param map */
-@@ -611,6 +613,7 @@ static struct wmi_cmd_map wmi_10_2_cmd_map = {
- 	.force_fw_hang_cmdid = WMI_CMD_UNSUPPORTED,
- 	.gpio_config_cmdid = WMI_10_2_GPIO_CONFIG_CMDID,
- 	.gpio_output_cmdid = WMI_10_2_GPIO_OUTPUT_CMDID,
-+	.pdev_get_temperature_cmdid = WMI_10_2_PDEV_GET_TEMPERATURE_CMDID,
- };
- 
- void ath10k_wmi_put_wmi_channel(struct wmi_channel *ch,
-@@ -2794,6 +2797,17 @@ int ath10k_wmi_event_ready(struct ath10k *ar, struct sk_buff *skb)
- 	return 0;
- }
- 
-+static int ath10k_wmi_event_temperature(struct ath10k *ar, struct sk_buff *skb)
-+{
-+	const struct wmi_pdev_temperature_event *ev;
++	/* Backwards compatibility for firmwares without
++	 * ATH10K_FW_IE_WMI_OP_VERSION.
++	 */
++	if (ar->wmi.op_version == ATH10K_FW_WMI_OP_VERSION_UNSET) {
++		if (test_bit(ATH10K_FW_FEATURE_WMI_10X, ar->fw_features)) {
++			if (test_bit(ATH10K_FW_FEATURE_WMI_10_2, ar->fw_features))
++				ar->wmi.op_version = ATH10K_FW_WMI_OP_VERSION_10_2;
++			else
++				ar->wmi.op_version = ATH10K_FW_WMI_OP_VERSION_10_1;
++		} else {
++			ar->wmi.op_version = ATH10K_FW_WMI_OP_VERSION_MAIN;
++		}
++	}
 +
-+	ev = (struct wmi_pdev_temperature_event *)skb->data;
-+	if (WARN_ON(skb->len < sizeof(*ev)))
-+		return -EPROTO;
-+
-+	return 0;
-+}
-+
- static void ath10k_wmi_op_rx(struct ath10k *ar, struct sk_buff *skb)
- {
- 	struct wmi_cmd_hdr *cmd_hdr;
-@@ -3133,6 +3147,9 @@ static void ath10k_wmi_10_2_op_rx(struct ath10k *ar, struct sk_buff *skb)
- 	case WMI_10_2_READY_EVENTID:
- 		ath10k_wmi_event_ready(ar, skb);
- 		break;
-+	case WMI_10_2_PDEV_TEMPERATURE_EVENTID:
-+		ath10k_wmi_event_temperature(ar, skb);
++	switch (ar->wmi.op_version) {
++	case ATH10K_FW_WMI_OP_VERSION_MAIN:
+ 		ar->max_num_peers = TARGET_NUM_PEERS;
+ 		ar->max_num_stations = TARGET_NUM_STATIONS;
 +		break;
- 	case WMI_10_2_RTT_KEEPALIVE_EVENTID:
- 	case WMI_10_2_GPIO_INPUT_EVENTID:
- 	case WMI_10_2_PEER_RATECODE_LIST_EVENTID:
-@@ -4414,6 +4431,19 @@ ath10k_wmi_10_2_op_gen_peer_assoc(struct ath10k *ar,
- 	return skb;
- }
++	case ATH10K_FW_WMI_OP_VERSION_10_1:
++	case ATH10K_FW_WMI_OP_VERSION_10_2:
++		ar->max_num_peers = TARGET_10X_NUM_PEERS;
++		ar->max_num_stations = TARGET_10X_NUM_STATIONS;
++		break;
++	case ATH10K_FW_WMI_OP_VERSION_UNSET:
++	case ATH10K_FW_WMI_OP_VERSION_MAX:
++		WARN_ON(1);
++		return -EINVAL;
+ 	}
  
-+static struct sk_buff *
-+ath10k_wmi_10_2_op_gen_pdev_get_temperature(struct ath10k *ar)
-+{
-+	struct sk_buff *skb;
+ 	return 0;
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 514c219263a5..e0999cdaa18f 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -120,6 +120,7 @@ struct ath10k_mem_chunk {
+ };
+ 
+ struct ath10k_wmi {
++	enum ath10k_fw_wmi_op_version op_version;
+ 	enum ath10k_htc_ep_id eid;
+ 	struct completion service_ready;
+ 	struct completion unified_ready;
+@@ -369,7 +370,7 @@ enum ath10k_fw_features {
+ 	/* wmi_mgmt_rx_hdr contains extra RSSI information */
+ 	ATH10K_FW_FEATURE_EXT_WMI_MGMT_RX = 0,
+ 
+-	/* firmware from 10X branch */
++	/* Firmware from 10X branch. Deprecated, don't use in new code. */
+ 	ATH10K_FW_FEATURE_WMI_10X = 1,
+ 
+ 	/* firmware support tx frame management over WMI, otherwise it's HTT */
+@@ -378,8 +379,9 @@ enum ath10k_fw_features {
+ 	/* Firmware does not support P2P */
+ 	ATH10K_FW_FEATURE_NO_P2P = 3,
+ 
+-	/* Firmware 10.2 feature bit. The ATH10K_FW_FEATURE_WMI_10X feature bit
+-	 * is required to be set as well.
++	/* Firmware 10.2 feature bit. The ATH10K_FW_FEATURE_WMI_10X feature
++	 * bit is required to be set as well. Deprecated, don't use in new
++	 * code.
+ 	 */
+ 	ATH10K_FW_FEATURE_WMI_10_2 = 4,
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index dfedfd0e0f34..5bae90c3db99 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -58,6 +58,22 @@ enum ath10k_fw_ie_type {
+ 	ATH10K_FW_IE_FEATURES = 2,
+ 	ATH10K_FW_IE_FW_IMAGE = 3,
+ 	ATH10K_FW_IE_OTP_IMAGE = 4,
 +
-+	skb = ath10k_wmi_alloc_skb(ar, 0);
-+	if (!skb)
-+		return ERR_PTR(-ENOMEM);
++	/* WMI "operations" interface version, 32 bit value. Supported from
++	 * FW API 4 and above.
++	 */
++	ATH10K_FW_IE_WMI_OP_VERSION = 5,
++};
 +
-+	ath10k_dbg(ar, ATH10K_DBG_WMI, "wmi pdev get temperature\n");
-+	return skb;
-+}
++enum ath10k_fw_wmi_op_version {
++	ATH10K_FW_WMI_OP_VERSION_UNSET = 0,
 +
- /* This function assumes the beacon is already DMA mapped */
- static struct sk_buff *
- ath10k_wmi_op_gen_beacon_dma(struct ath10k_vif *arvif)
-@@ -4663,6 +4693,7 @@ static const struct wmi_ops wmi_ops = {
- 	.gen_pktlog_enable = ath10k_wmi_op_gen_pktlog_enable,
- 	.gen_pktlog_disable = ath10k_wmi_op_gen_pktlog_disable,
- 	.gen_pdev_set_quiet_mode = ath10k_wmi_op_gen_pdev_set_quiet_mode,
-+	/* .gen_pdev_get_temperature not implemented */
- };
- 
- static const struct wmi_ops wmi_10_1_ops = {
-@@ -4674,6 +4705,7 @@ static const struct wmi_ops wmi_10_1_ops = {
- 	.gen_pdev_set_rd = ath10k_wmi_10x_op_gen_pdev_set_rd,
- 	.gen_start_scan = ath10k_wmi_10x_op_gen_start_scan,
- 	.gen_peer_assoc = ath10k_wmi_10_1_op_gen_peer_assoc,
-+	/* .gen_pdev_get_temperature not implemented */
- 
- 	/* shared with main branch */
- 	.pull_scan = ath10k_wmi_op_pull_scan_ev,
-@@ -4722,6 +4754,7 @@ static const struct wmi_ops wmi_10_2_ops = {
- 	.rx = ath10k_wmi_10_2_op_rx,
- 	.gen_init = ath10k_wmi_10_2_op_gen_init,
- 	.gen_peer_assoc = ath10k_wmi_10_2_op_gen_peer_assoc,
-+	.gen_pdev_get_temperature = ath10k_wmi_10_2_op_gen_pdev_get_temperature,
- 
- 	/* shared with 10.1 */
- 	.map_svc = wmi_10x_svc_map,
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index ce517bf..f26531f 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -550,6 +550,7 @@ struct wmi_cmd_map {
- 	u32 force_fw_hang_cmdid;
- 	u32 gpio_config_cmdid;
- 	u32 gpio_output_cmdid;
-+	u32 pdev_get_temperature_cmdid;
- };
- 
- /*
-@@ -1154,6 +1155,11 @@ enum wmi_10_2_cmd_id {
- 	WMI_10_2_PDEV_SET_MIMOGAIN_TABLE_CMDID,
- 	WMI_10_2_PDEV_RATEPWR_TABLE_CMDID,
- 	WMI_10_2_PDEV_RATEPWR_CHAINMSK_TABLE_CMDID,
-+	WMI_10_2_PDEV_GET_INFO,
-+	WMI_10_2_VDEV_GET_INFO,
-+	WMI_10_2_VDEV_ATF_REQUEST_CMDID,
-+	WMI_10_2_PEER_ATF_REQUEST_CMDID,
-+	WMI_10_2_PDEV_GET_TEMPERATURE_CMDID,
- 	WMI_10_2_PDEV_UTF_CMDID = WMI_10_2_END_CMDID - 1,
- };
- 
-@@ -1195,6 +1201,8 @@ enum wmi_10_2_event_id {
- 	WMI_10_2_MCAST_BUF_RELEASE_EVENTID,
- 	WMI_10_2_MCAST_LIST_AGEOUT_EVENTID,
- 	WMI_10_2_WDS_PEER_EVENTID,
-+	WMI_10_2_PEER_STA_PS_STATECHG_EVENTID,
-+	WMI_10_2_PDEV_TEMPERATURE_EVENTID,
- 	WMI_10_2_PDEV_UTF_EVENTID = WMI_10_2_END_EVENTID - 1,
- };
- 
-@@ -4733,6 +4741,11 @@ struct wmi_rdy_ev_arg {
- 	const u8 *mac_addr;
- };
- 
-+struct wmi_pdev_temperature_event {
-+	/* temperature value in Celcius degree */
-+	__le32 temperature;
-+} __packed;
++	ATH10K_FW_WMI_OP_VERSION_MAIN = 1,
++	ATH10K_FW_WMI_OP_VERSION_10_1 = 2,
++	ATH10K_FW_WMI_OP_VERSION_10_2 = 3,
 +
- struct ath10k;
- struct ath10k_vif;
- struct ath10k_fw_stats_pdev;
--- 
-2.1.3
++	/* keep last */
++	ATH10K_FW_WMI_OP_VERSION_MAX,
+ };
+ 
+ /* Known pecularities:
 
