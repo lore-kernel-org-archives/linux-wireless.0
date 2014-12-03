@@ -1,63 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:40641 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752144AbaLHKHo (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:28975 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751046AbaLCUFi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Dec 2014 05:07:44 -0500
-Received: by mail-wi0-f172.google.com with SMTP id n3so4199298wiv.5
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Dec 2014 02:07:43 -0800 (PST)
+	Wed, 3 Dec 2014 15:05:38 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 1/7] brcmfmac: Fix bitmap malloc bug in msgbuf.
+Date: Wed, 3 Dec 2014 21:05:27 +0100
+Message-ID: <1417637133-6966-2-git-send-email-arend@broadcom.com> (sfid-20141203_210543_187922_E1F16984)
+In-Reply-To: <1417637133-6966-1-git-send-email-arend@broadcom.com>
+References: <1417637133-6966-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1418023628.2001.0.camel@sipsolutions.net>
-References: <1417947627-2329-1-git-send-email-vadim4j@gmail.com>
-	<1418023628.2001.0.camel@sipsolutions.net>
-Date: Mon, 8 Dec 2014 12:07:42 +0200
-Message-ID: <CAMw6YJ+8JpgTG4AbJo71JuOW8jpEo5HxFX=bDDPcpd4L_b6drA@mail.gmail.com> (sfid-20141208_110808_108273_B2308FCC)
-Subject: Re: [PATCH v2] mac80211: Supporting of IFLA_INFO_KIND rtnl attribute
-From: Vadim Kochan <vadim4j@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-You meant here ?
+From: Hante Meuleman <meuleman@broadcom.com>
 
-net/wireless/core.c : static int cfg80211_netdev_notifier_call(struct
-notifier_block *nb,
-                                          unsigned long state, void *ptr)
-{
+Cc: stable@vger.kernel.org # v3.17, v3.18
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-    ...
-    switch (state) {
-             case NETDEV_POST_INIT:
-                     SET_NETDEV_DEVTYPE(dev, &wiphy_type);
-                     break;
-             case NETDEV_REGISTER:
-                     ...
-                     dev->rtnl_link_ops = &wireless_link_ops;
-                     ...
-    }
-    ...
-}
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
+index 9f783db..5b0b70f 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
+@@ -1354,6 +1354,7 @@ int brcmf_proto_msgbuf_attach(struct brcmf_pub *drvr)
+ 	}
+ 	INIT_WORK(&msgbuf->txflow_work, brcmf_msgbuf_txflow_worker);
+ 	count = BITS_TO_LONGS(if_msgbuf->nrof_flowrings);
++	count = count * sizeof(unsigned long);
+ 	msgbuf->flow_map = kzalloc(count, GFP_KERNEL);
+ 	if (!msgbuf->flow_map)
+ 		goto fail;
+-- 
+1.9.1
 
-Regards,
-
-On Mon, Dec 8, 2014 at 9:27 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Sun, 2014-12-07 at 12:20 +0200, Vadim Kochan wrote:
->
->> +++ b/net/mac80211/iface.c
->
->> @@ -1624,6 +1625,10 @@ static void ieee80211_assign_perm_addr(struct ieee80211_local *local,
->>       mutex_unlock(&local->iflist_mtx);
->>  }
->>
->> +static struct rtnl_link_ops wireless_link_ops __read_mostly = {
->> +     .kind = "wlan",
->> +};
->
-> I think it would make sense to set it - if not already set - in the
-> netdev notifier in cfg80211.
->
-> johannes
->
