@@ -1,192 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:46991 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751801AbaLSP6J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Dec 2014 10:58:09 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: nbd@openwrt.org, j@w1.fi, Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 1/3] nl80211: support per-TID station statistics
-Date: Fri, 19 Dec 2014 16:58:01 +0100
-Message-Id: <1419004683-25369-1-git-send-email-johannes@sipsolutions.net> (sfid-20141219_165814_500210_8072218A)
+Received: from mail-qa0-f48.google.com ([209.85.216.48]:54432 "EHLO
+	mail-qa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751045AbaLCR00 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Dec 2014 12:26:26 -0500
+Received: by mail-qa0-f48.google.com with SMTP id v10so10671981qac.21
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Dec 2014 09:26:26 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAP+RiCC5Ck97dKaQStu07RnO9aDOLAeo25CfuMuY+VnEEb10_Q@mail.gmail.com>
+References: <CAP+RiCBDAi7e6vj5vvrcEpt17JicdmPwq16zhG9Fun11HfnBkw@mail.gmail.com>
+	<CAP+RiCDMerG_8EYi=0Ta3BvAwuWinNPYuNevjF85w08HsX4f2Q@mail.gmail.com>
+	<CABPxzY+oxDH7QysFNWQg6fMWpsQDSFm5YgOusaz0KibEnH++yQ@mail.gmail.com>
+	<CAP+RiCCD7EefqNKKXonrvd9T3G=+4aKZQXe0QbXBKKCzHvgAzQ@mail.gmail.com>
+	<CABPxzY+Eimssqcxs0W79_5zGBHmFnrTc5+qeTnmYr_UH_9ti6A@mail.gmail.com>
+	<CAP+RiCC4KmgNMGCiCzDeL_0-frGw7acoZf5FDv4OTmauQPU5Hw@mail.gmail.com>
+	<1417563128.32003.8.camel@dcbw.local>
+	<CAP+RiCD2vtZyVOTykKwBcm12g8mpPKc8ZBWUgFL90TU0C5ciUw@mail.gmail.com>
+	<87h9xdl30j.fsf@kamboji.qca.qualcomm.com>
+	<CAP+RiCCE1Z96z6+YX=Cfnb0O3vGdnZeivJH5T3XQ5DWbCbbH_w@mail.gmail.com>
+	<878uipl2dl.fsf@kamboji.qca.qualcomm.com>
+	<CAP+RiCDFPX0r82eNwoNPv=YrE3xjfAztH_VghVNa__UKzKZBQA@mail.gmail.com>
+	<CAP+RiCC5Ck97dKaQStu07RnO9aDOLAeo25CfuMuY+VnEEb10_Q@mail.gmail.com>
+Date: Wed, 3 Dec 2014 11:26:25 -0600
+Message-ID: <CAP+RiCDpR7DwHLg3Pu_tyjUpcCT7hvM_Ex5+hof17XA968Tvpg@mail.gmail.com> (sfid-20141203_182630_848136_8A3A339B)
+Subject: Re: Laptop disassociating by local choice (reason=17)
+From: Brent Taylor <motobud@gmail.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Dan Williams <dcbw@redhat.com>,
+	Krishna Chaitanya <chaitanya.mgit@gmail.com>,
+	ath6kl@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Wed, Dec 3, 2014 at 10:58 AM, Brent Taylor <motobud@gmail.com> wrote:
+> On Wed, Dec 3, 2014 at 8:05 AM, Brent Taylor <motobud@gmail.com> wrote:
+>> On Tue, Dec 2, 2014 at 11:37 PM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>>> Brent Taylor <motobud@gmail.com> writes:
+>>>
+>>>> On Dec 2, 2014 11:24 PM, "Kalle Valo" <kvalo@qca.qualcomm.com> wrote:
+>>>>>
+>>>>> Brent Taylor <motobud@gmail.com> writes:
+>>>>>
+>>>>> >    I actually ran the wpa_supplicant with -ddddt as the parameter not
+>>>>> > knowing how many 'd's I could put there before I hit the limit of the
+>>>>> > debugging.  The wpa_supplicant on the ubuntu laptop is v0.7.3.  I'll
+>>>>> > change the -ddddt to just -dddt and re-run the test again.
+>>>>>
+>>>>> IMHO 0.7.3 is ancient. Please use something more recent.
+>>>>
+>>>> Ancient it may be, but why would it work with the ath9k chip and not
+>>>> the ath6kl chip?
+>>>
+>>> Because of a bug we are not aware of? ath6kl and ath9k are very
+>>> different drivers and 0.7.3 might have some problem which only comes
+>>> with ath6kl. Up to you, but I would not waste time testing on that old
+>>> wpasupplicant.
+>>>
+>>> --
+>>> Kalle Valo
+>>
+>> Apologies for my last reply not making it through the mailing lists, I
+>> sent it from my phone and it was automatically formatted in HTML and
+>> not Plain Text.
+>>
+>> The ultimate goal is to use an Android device to communicate with my
+>> custom device being the Access Point.  The laptop is easier to debug
+>> (at the moment) than an Android device.  I'm currently using a Samsung
+>> S4 running 4.4.4 and it was not able to complete the authentication
+>> step either.  This is when I turned to using the laptop.  Any idea
+>> what version of the wpa_supplicant is running on Kit Kat?
+>>
+>> -- Brent Taylor
+>
+>
+> Here is another log capture from the device and the laptop.  This time
+> both were using -dddt as the debug parameter to wpa_supplicant.
+>
+> Laptop wpa_supplicant Log
+>
 
-The base for the current statistics is pretty mixed up, support
-exporting RX/TX statistics for MSDUs per TID. This (currently)
-covers received MSDUs, transmitted MSDUs and retries/failures
-thereof.
+-- snip last log data from 2014-12-03 --
 
-Doing it per TID for MSDUs makes more sense than say only per AC
-because it's symmetric - we could export per-AC statistics for all
-frames (which AC we used for transmission can be determined also
-for management frames) but per TID is better and usually data
-frames are really the ones we care about. Also, on RX we can't
-determine the AC - but we do know the TID for any QoS MPDU we
-received.
+I just found out that the Samsung S4 that we are testing with has
+wpa_supplicant version v2.0-devel-4.2.2 which is not KitKat, but Jelly
+Bean.  Does anyone know if the logging can be turned on without
+rooting the phone?
 
-Change-Id: I22d8a889ef73c603a968bed15afa66710aef61e7
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/cfg80211.h       | 21 +++++++++++++++++++++
- include/uapi/linux/nl80211.h | 29 +++++++++++++++++++++++++++++
- net/wireless/nl80211.c       | 41 +++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 91 insertions(+)
-
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index e62ac77da365..43cc58652185 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -938,6 +938,24 @@ struct sta_bss_parameters {
- 	u16 beacon_interval;
- };
- 
-+/**
-+ * struct cfg80211_tid_stats - per-TID statistics
-+ * @filled: bitmap of flags using the bits of &enum nl80211_tid_stats to
-+ *	indicate the relevant values in this struct are filled
-+ * @rx_msdu: number of received MSDUs
-+ * @tx_msdu: number of (attempted) transmitted MSDUs
-+ * @tx_msdu_retries: number of retries (not counting the first) for
-+ *	transmitted MSDUs
-+ * @tx_msdu_failed: number of failed transmitted MSDUs
-+ */
-+struct cfg80211_tid_stats {
-+	u32 filled;
-+	u64 rx_msdu;
-+	u64 tx_msdu;
-+	u64 tx_msdu_retries;
-+	u64 tx_msdu_failed;
-+};
-+
- #define IEEE80211_MAX_CHAINS	4
- 
- /**
-@@ -989,6 +1007,8 @@ struct sta_bss_parameters {
-  * @rx_beacon: number of beacons received from this peer
-  * @rx_beacon_signal_avg: signal strength average (in dBm) for beacons received
-  *	from this peer
-+ * @pertid: per-TID statistics, see &struct cfg80211_tid_stats, using the last
-+ *	(IEEE80211_NUM_TIDS) index for MSDUs not encapsulated in QoS-MPDUs.
-  */
- struct station_info {
- 	u32 filled;
-@@ -1031,6 +1051,7 @@ struct station_info {
- 
- 	u64 rx_beacon;
- 	u8 rx_beacon_signal_avg;
-+	struct cfg80211_tid_stats pertid[IEEE80211_NUM_TIDS + 1];
- };
- 
- /**
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index e25af350962d..ef99b90e9241 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -2367,6 +2367,11 @@ enum nl80211_sta_bss_param {
-  * @NL80211_STA_INFO_BEACON_RX: number of beacons received from this peer (u64)
-  * @NL80211_STA_INFO_BEACON_SIGNAL_AVG: signal strength average
-  *	for beacons only (u8, dBm)
-+ * @NL80211_STA_INFO_TID_STATS: per-TID statistics (see &enum nl80211_tid_stats)
-+ *	This is a nested attribute where each the inner attribute number is the
-+ *	TID+1 and the special TID 16 (i.e. value 17) is used for non-QoS frames;
-+ *	each one of those is again nested with &enum nl80211_tid_stats
-+ *	attributes carrying the actual values.
-  * @__NL80211_STA_INFO_AFTER_LAST: internal
-  * @NL80211_STA_INFO_MAX: highest possible station info attribute
-  */
-@@ -2402,6 +2407,7 @@ enum nl80211_sta_info {
- 	NL80211_STA_INFO_RX_DROP_MISC,
- 	NL80211_STA_INFO_BEACON_RX,
- 	NL80211_STA_INFO_BEACON_SIGNAL_AVG,
-+	NL80211_STA_INFO_TID_STATS,
- 
- 	/* keep last */
- 	__NL80211_STA_INFO_AFTER_LAST,
-@@ -2409,6 +2415,29 @@ enum nl80211_sta_info {
- };
- 
- /**
-+ * enum nl80211_tid_stats - per TID statistics attributes
-+ * @__NL80211_TID_STATS_INVALID: attribute number 0 is reserved
-+ * @NL80211_TID_STATS_RX_MSDU: number of MSDUs received (u64)
-+ * @NL80211_TID_STATS_TX_MSDU: number of MSDUs transmitted (or
-+ *	attempted to transmit; u64)
-+ * @NL80211_TID_STATS_TX_MSDU_RETRIES: number of retries for
-+ *	transmitted MSDUs (not counting the first attempt; u64)
-+ * @NL80211_TID_STATS_TX_MSDU_FAILED: number of failed transmitted
-+ *	MSDUs (u64)
-+ */
-+enum nl80211_tid_stats {
-+	__NL80211_TID_STATS_INVALID,
-+	NL80211_TID_STATS_RX_MSDU,
-+	NL80211_TID_STATS_TX_MSDU,
-+	NL80211_TID_STATS_TX_MSDU_RETRIES,
-+	NL80211_TID_STATS_TX_MSDU_FAILED,
-+
-+	/* keep last */
-+	NUM_NL80211_TID_STATS,
-+	NL80211_TID_STATS_MAX = NUM_NL80211_TID_STATS - 1
-+};
-+
-+/**
-  * enum nl80211_mpath_flags - nl80211 mesh path flags
-  *
-  * @NL80211_MPATH_FLAG_ACTIVE: the mesh path is active
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 80ba3e6f4c15..379dfc0ae384 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -3801,6 +3801,47 @@ static int nl80211_send_station(struct sk_buff *msg, u32 cmd, u32 portid,
- 	PUT_SINFO(BEACON_SIGNAL_AVG, rx_beacon_signal_avg, u8);
- 
- #undef PUT_SINFO
-+
-+	if (sinfo->filled & BIT(NL80211_STA_INFO_TID_STATS)) {
-+		struct nlattr *tidsattr;
-+		int tid;
-+
-+		tidsattr = nla_nest_start(msg, NL80211_STA_INFO_TID_STATS);
-+		if (!tidsattr)
-+			goto nla_put_failure;
-+
-+		for (tid = 0; tid < IEEE80211_NUM_TIDS + 1; tid++) {
-+			struct cfg80211_tid_stats *tidstats;
-+			struct nlattr *tidattr;
-+
-+			tidstats = &sinfo->pertid[tid];
-+
-+			if (!tidstats->filled)
-+				continue;
-+
-+			tidattr = nla_nest_start(msg, tid + 1);
-+			if (!tidattr)
-+				goto nla_put_failure;
-+
-+#define PUT_TIDVAL(attr, memb, type) do {				\
-+	if (tidstats->filled & BIT(NL80211_TID_STATS_ ## attr) &&	\
-+	    nla_put_ ## type(msg, NL80211_TID_STATS_ ## attr,		\
-+			     tidstats->memb))				\
-+		goto nla_put_failure;					\
-+	} while (0)
-+
-+			PUT_TIDVAL(RX_MSDU, rx_msdu, u64);
-+			PUT_TIDVAL(TX_MSDU, tx_msdu, u64);
-+			PUT_TIDVAL(TX_MSDU_RETRIES, tx_msdu_retries, u64);
-+			PUT_TIDVAL(TX_MSDU_FAILED, tx_msdu_failed, u64);
-+
-+#undef PUT_TIDVAL
-+			nla_nest_end(msg, tidattr);
-+		}
-+
-+		nla_nest_end(msg, tidsattr);
-+	}
-+
- 	nla_nest_end(msg, sinfoattr);
- 
- 	if (sinfo->assoc_req_ies_len &&
--- 
-2.1.1
-
+-- Brent Taylor
