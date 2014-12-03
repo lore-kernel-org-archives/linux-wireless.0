@@ -1,71 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:49862 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750776AbaLHG6i (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:61402 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751537AbaLCMnh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Dec 2014 01:58:38 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH v4 6/8] ath10k: introduce wmi ops
-References: <20141203080803.31187.85059.stgit@potku.adurom.net>
-	<20141203081054.31187.10953.stgit@potku.adurom.net>
-	<CA+BoTQmEG2UQdp=42qHMMQDE04xm2Xnss4su0TNav1Z_RQEX3Q@mail.gmail.com>
-Date: Mon, 8 Dec 2014 08:58:11 +0200
-In-Reply-To: <CA+BoTQmEG2UQdp=42qHMMQDE04xm2Xnss4su0TNav1Z_RQEX3Q@mail.gmail.com>
-	(Michal Kazior's message of "Wed, 3 Dec 2014 13:59:59 +0100")
-Message-ID: <87k3224oho.fsf@kamboji.qca.qualcomm.com> (sfid-20141208_075841_777064_94276D24)
+	Wed, 3 Dec 2014 07:43:37 -0500
+Message-ID: <547F0575.7010104@broadcom.com> (sfid-20141203_134344_866827_1EAF630B)
+Date: Wed, 3 Dec 2014 13:43:33 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Michael Tokarev <mjt@tls.msk.ru>
+CC: Maximilian Engelhardt <maxi@daemonizer.de>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJl?= =?UTF-8?B?Y2tp?= <zajec5@gmail.com>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	brcm80211 development <brcm80211-dev-list@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>
+Subject: Re: BCM4313 & brcmsmac & 3.12: only semi-working?
+References: <53FDACD1.8090805@msgid.tls.msk.ru> <54363ED0.605@broadcom.com> <CACna6rw3XgdJz0uKkAuas8RTzozTdFp2mgF5g1uo7LHJVSMt4g@mail.gmail.com> <3543341.FmUQFH9nrl@eisbaer> <546C5D1F.108@msgid.tls.msk.ru> <546CD94D.9060509@broadcom.com> <546CF66A.3000207@msgid.tls.msk.ru> <546D04EE.1030200@msgid.tls.msk.ru> <5471AC29.6040009@broadcom.com> <5475A2DC.80502@msgid.tls.msk.ru> <547B07CF.90501@broadcom.com> <547E31BD.8090302@msgid.tls.msk.ru>
+In-Reply-To: <547E31BD.8090302@msgid.tls.msk.ru>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
-
-> On 3 December 2014 at 09:10, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+On 12/02/14 22:40, Michael Tokarev wrote:
+> 30.11.2014 15:04, Arend van Spriel wrote:
 >
->> --- a/drivers/net/wireless/ath/ath10k/testmode.c
->> +++ b/drivers/net/wireless/ath/ath10k/testmode.c
->> @@ -187,13 +187,14 @@ static int ath10k_tm_cmd_utf_start(struct ath10k *ar, struct nlattr *tb[])
->>
->>         memcpy(ar->testmode.orig_fw_features, ar->fw_features,
->>                sizeof(ar->fw_features));
->> +       ar->testmode.orig_wmi_op_version = ar->wmi.op_version;
->>
->>         /* utf.bin firmware image does not advertise firmware features. Do
->>          * an ugly hack where we force the firmware features so that wmi.c
->>          * will use the correct WMI interface.
->>          */
->>         memset(ar->fw_features, 0, sizeof(ar->fw_features));
->> -       __set_bit(ATH10K_FW_FEATURE_WMI_10X, ar->fw_features);
->> +       ar->wmi.op_version = ATH10K_FW_WMI_OP_VERSION_10_1;
->>
->>         ret = ath10k_hif_power_up(ar);
->>         if (ret) {
->> @@ -224,6 +225,7 @@ err_fw_features:
->>         /* return the original firmware features */
->>         memcpy(ar->fw_features, ar->testmode.orig_fw_features,
->>                sizeof(ar->fw_features));
->> +       ar->wmi.op_version = ar->testmode.orig_wmi_op_version;
->>
->>         release_firmware(ar->testmode.utf);
->>         ar->testmode.utf = NULL;
->> @@ -250,6 +252,7 @@ static void __ath10k_tm_cmd_utf_stop(struct ath10k *ar)
->>         /* return the original firmware features */
->>         memcpy(ar->fw_features, ar->testmode.orig_fw_features,
->>                sizeof(ar->fw_features));
->> +       ar->wmi.op_version = ar->testmode.orig_wmi_op_version;
->>
->>         release_firmware(ar->testmode.utf);
->>         ar->testmode.utf = NULL;
+>> Thanks. Did not find what I was looking for, but I started working on
+>> integrating btcoex related functionality. The attached patch will print
+>> some info so I can focus on the required functionality for your device.
+>> It is based on 3.18-rc5.
 >
-> Does testmode stuff really belong to this patchset? Shouldn't this be
-> done in the one that introduces WMI OP version?
+> With this patch applied against 3.18-rc5, the machine instantly reboots
+> once brcmsmac module is loaded.  I'm still debugging this.
 
-Actually the WMI code in wmi.c starts using ar->wmi.op_version only in
-this patch. Before this patch ATH10K_FW_FEATURE_WMI_* flags are heavily
-used in wmi.c. So that's why the change is made in this patch.
+Argh. Probably the register access I added end up in limbo land or some 
+other stupid mistake. I will double check my patch.
 
--- 
-Kalle Valo
+Regards,
+Arend
+
+> Thanks,
+>
+> /mjt
+
