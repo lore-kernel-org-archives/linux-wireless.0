@@ -1,141 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:43412 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752013AbaLSGzr (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:6017 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751877AbaLCUFk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Dec 2014 01:55:47 -0500
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH 2/8] ath10k: add wmi support for addba_send
-Date: Fri, 19 Dec 2014 12:24:53 +0530
-Message-ID: <1418972099-5296-3-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20141219_075614_605002_D5FB7B66)
-In-Reply-To: <1418972099-5296-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1418972099-5296-1-git-send-email-rmanohar@qti.qualcomm.com>
+	Wed, 3 Dec 2014 15:05:40 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 5/7] brcmfmac: Fix vendor cmds used interface.
+Date: Wed, 3 Dec 2014 21:05:31 +0100
+Message-ID: <1417637133-6966-6-git-send-email-arend@broadcom.com> (sfid-20141203_210548_930352_4479AAEE)
+In-Reply-To: <1417637133-6966-1-git-send-email-arend@broadcom.com>
+References: <1417637133-6966-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add WMI support for sending addba request. This command is meant
-for debugging purpose.
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+The vendor specific commands was always using main interface,
+change this to use the by caller supplied interface.
+
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/ath/ath10k/wmi-ops.h | 19 +++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi-tlv.c |  1 +
- drivers/net/wireless/ath/ath10k/wmi.c     | 29 +++++++++++++++++++++++++++++
- 3 files changed, 49 insertions(+)
+ drivers/net/wireless/brcm80211/brcmfmac/vendor.c | 15 +++++++++------
+ 1 file changed, 9 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-ops.h b/drivers/net/wireless/ath/ath10k/wmi-ops.h
-index b161043..badf422 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-ops.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi-ops.h
-@@ -121,6 +121,8 @@ struct wmi_ops {
- 	struct sk_buff *(*gen_pdev_get_temperature)(struct ath10k *ar);
- 	struct sk_buff *(*gen_addba_clear_resp)(struct ath10k *ar, u32 vdev_id,
- 						const u8 *mac);
-+	struct sk_buff *(*gen_addba_send)(struct ath10k *ar, u32 vdev_id,
-+					  const u8 *mac, u32 tid, u32 buf_size);
- };
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/vendor.c b/drivers/net/wireless/brcm80211/brcmfmac/vendor.c
+index 222f26a..50cdf70 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/vendor.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/vendor.c
+@@ -31,8 +31,8 @@ static int brcmf_cfg80211_vndr_cmds_dcmd_handler(struct wiphy *wiphy,
+ 						 struct wireless_dev *wdev,
+ 						 const void *data, int len)
+ {
+-	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
+-	struct net_device *ndev = cfg_to_ndev(cfg);
++	struct brcmf_cfg80211_vif *vif;
++	struct brcmf_if *ifp;
+ 	const struct brcmf_vndr_dcmd_hdr *cmdhdr = data;
+ 	struct sk_buff *reply;
+ 	int ret, payload, ret_len;
+@@ -42,6 +42,9 @@ static int brcmf_cfg80211_vndr_cmds_dcmd_handler(struct wiphy *wiphy,
+ 	brcmf_dbg(TRACE, "cmd %x set %d len %d\n", cmdhdr->cmd, cmdhdr->set,
+ 		  cmdhdr->len);
  
- int ath10k_wmi_cmd_send(struct ath10k *ar, struct sk_buff *skb, u32 cmd_id);
-@@ -875,4 +877,21 @@ ath10k_wmi_addba_clear_resp(struct ath10k *ar, u32 vdev_id, const u8 *mac)
- 				   ar->wmi.cmd->addba_clear_resp_cmdid);
- }
++	vif = container_of(wdev, struct brcmf_cfg80211_vif, wdev);
++	ifp = vif->ifp;
++
+ 	len -= sizeof(struct brcmf_vndr_dcmd_hdr);
+ 	ret_len = cmdhdr->len;
+ 	if (ret_len > 0 || len > 0) {
+@@ -63,11 +66,11 @@ static int brcmf_cfg80211_vndr_cmds_dcmd_handler(struct wiphy *wiphy,
+ 	}
  
-+static inline int
-+ath10k_wmi_addba_send(struct ath10k *ar, u32 vdev_id, const u8 *mac,
-+		      u32 tid, u32 buf_size)
-+{
-+	struct sk_buff *skb;
-+
-+	if (!ar->wmi.ops->gen_addba_send)
-+		return -EOPNOTSUPP;
-+
-+	skb = ar->wmi.ops->gen_addba_send(ar, vdev_id, mac, tid, buf_size);
-+	if (IS_ERR(skb))
-+		return PTR_ERR(skb);
-+
-+	return ath10k_wmi_cmd_send(ar, skb,
-+				   ar->wmi.cmd->addba_send_cmdid);
-+}
-+
- #endif
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index 499a779..74a0598 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -2208,6 +2208,7 @@ static const struct wmi_ops wmi_tlv_ops = {
- 	/* .gen_pdev_set_quiet_mode not implemented */
- 	/* .gen_pdev_get_temperature not implemented */
- 	/* .gen_addba_clear_resp not implemented */
-+	/* .gen_addba_send not implemented */
- };
+ 	if (cmdhdr->set)
+-		ret = brcmf_fil_cmd_data_set(netdev_priv(ndev), cmdhdr->cmd,
+-					     dcmd_buf, ret_len);
++		ret = brcmf_fil_cmd_data_set(ifp, cmdhdr->cmd, dcmd_buf,
++					     ret_len);
+ 	else
+-		ret = brcmf_fil_cmd_data_get(netdev_priv(ndev), cmdhdr->cmd,
+-					     dcmd_buf, ret_len);
++		ret = brcmf_fil_cmd_data_get(ifp, cmdhdr->cmd, dcmd_buf,
++					     ret_len);
+ 	if (ret != 0)
+ 		goto exit;
  
- /************/
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 0053641..b118795 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -4668,6 +4668,32 @@ ath10k_wmi_op_gen_addba_clear_resp(struct ath10k *ar, u32 vdev_id,
- 	return skb;
- }
- 
-+static struct sk_buff *
-+ath10k_wmi_op_gen_addba_send(struct ath10k *ar, u32 vdev_id, const u8 *mac,
-+			     u32 tid, u32 buf_size)
-+{
-+	struct wmi_addba_send_cmd *cmd;
-+	struct sk_buff *skb;
-+
-+	if (!mac)
-+		return ERR_PTR(-EINVAL);
-+
-+	skb = ath10k_wmi_alloc_skb(ar, sizeof(*cmd));
-+	if (!skb)
-+		return ERR_PTR(-ENOMEM);
-+
-+	cmd = (struct wmi_addba_send_cmd *)skb->data;
-+	cmd->vdev_id = __cpu_to_le32(vdev_id);
-+	ether_addr_copy(cmd->peer_macaddr.addr, mac);
-+	cmd->tid = __cpu_to_le32(tid);
-+	cmd->buffersize = __cpu_to_le32(buf_size);
-+
-+	ath10k_dbg(ar, ATH10K_DBG_WMI,
-+		   "wmi addba send vdev_id 0x%X mac_addr %pM tid %u bufsize %u\n",
-+		   vdev_id, mac, tid, buf_size);
-+	return skb;
-+}
-+
- static const struct wmi_ops wmi_ops = {
- 	.rx = ath10k_wmi_op_rx,
- 	.map_svc = wmi_main_svc_map,
-@@ -4720,6 +4746,7 @@ static const struct wmi_ops wmi_ops = {
- 	.gen_pdev_set_quiet_mode = ath10k_wmi_op_gen_pdev_set_quiet_mode,
- 	/* .gen_pdev_get_temperature not implemented */
- 	.gen_addba_clear_resp = ath10k_wmi_op_gen_addba_clear_resp,
-+	.gen_addba_send = ath10k_wmi_op_gen_addba_send,
- };
- 
- static const struct wmi_ops wmi_10_1_ops = {
-@@ -4775,6 +4802,7 @@ static const struct wmi_ops wmi_10_1_ops = {
- 	.gen_pktlog_disable = ath10k_wmi_op_gen_pktlog_disable,
- 	.gen_pdev_set_quiet_mode = ath10k_wmi_op_gen_pdev_set_quiet_mode,
- 	.gen_addba_clear_resp = ath10k_wmi_op_gen_addba_clear_resp,
-+	.gen_addba_send = ath10k_wmi_op_gen_addba_send,
- };
- 
- static const struct wmi_ops wmi_10_2_ops = {
-@@ -4831,6 +4859,7 @@ static const struct wmi_ops wmi_10_2_ops = {
- 	.gen_pktlog_disable = ath10k_wmi_op_gen_pktlog_disable,
- 	.gen_pdev_set_quiet_mode = ath10k_wmi_op_gen_pdev_set_quiet_mode,
- 	.gen_addba_clear_resp = ath10k_wmi_op_gen_addba_clear_resp,
-+	.gen_addba_send = ath10k_wmi_op_gen_addba_send,
- };
- 
- int ath10k_wmi_attach(struct ath10k *ar)
 -- 
-2.2.0
+1.9.1
 
