@@ -1,98 +1,501 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:55786 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752261AbaLIAsc convert rfc822-to-8bit (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:12624 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751401AbaLCILg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Dec 2014 19:48:32 -0500
+	Wed, 3 Dec 2014 03:11:36 -0500
+Subject: [PATCH v4 7/8] ath10k: make some wmi functions public
+To: <ath10k@lists.infradead.org>
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Date: Wed, 3 Dec 2014 10:11:22 +0200
+Message-ID: <20141203081122.31187.98098.stgit@potku.adurom.net> (sfid-20141203_091139_831991_D15DAD50)
+In-Reply-To: <20141203080803.31187.85059.stgit@potku.adurom.net>
+References: <20141203080803.31187.85059.stgit@potku.adurom.net>
 MIME-Version: 1.0
-In-Reply-To: <20141208205721.GA14895@kroah.com>
-References: <201411271506.20457@pali>
-	<CACVXFVPOLfDuqc0nLb-zM8vH618DLXy0xtZbUOn5_XvdxRZSDw@mail.gmail.com>
-	<20141208163714.GA31169@kroah.com>
-	<201412081747.30965@pali>
-	<20141208205721.GA14895@kroah.com>
-Date: Tue, 9 Dec 2014 08:48:28 +0800
-Message-ID: <CACVXFVO+pX29UE53EDP4va0hoWQw8h0E9Ji9t3OL=e0FyERxyA@mail.gmail.com> (sfid-20141209_014844_094164_79E1D015)
-Subject: Re: wl1251: NVS firmware data
-From: Ming Lei <ming.lei@canonical.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: =?UTF-8?Q?Pali_Roh=C3=A1r?= <pali.rohar@gmail.com>,
-	Pavel Machek <pavel@ucw.cz>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Grazvydas Ignotas <notasas@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-	Aaro Koskinen <aaro.koskinen@iki.fi>,
-	Kalle Valo <kvalo@adurom.com>,
-	Sebastian Reichel <sre@ring0.de>,
-	David Gnedt <david.gnedt@davizone.at>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 9, 2014 at 4:57 AM, Greg Kroah-Hartman
-<gregkh@linuxfoundation.org> wrote:
-> On Mon, Dec 08, 2014 at 05:47:30PM +0100, Pali Rohár wrote:
->> On Monday 08 December 2014 17:37:14 Greg Kroah-Hartman wrote:
->> > On Mon, Dec 08, 2014 at 11:18:18PM +0800, Ming Lei wrote:
->> > > On Sat, Dec 6, 2014 at 9:02 PM, Pali Rohár
->> <pali.rohar@gmail.com> wrote:
->> > > > On Saturday 06 December 2014 13:49:54 Pavel Machek wrote:
->> > > >  /**
->> > > >
->> > > > + * request_firmware_prefer_user: - prefer usermode helper
->> > > > for loading firmware + * @firmware_p: pointer to firmware
->> > > > image
->> > > > + * @name: name of firmware file
->> > > > + * @device: device for which firmware is being loaded
->> > > > + *
->> > > > + * This function works pretty much like
->> > > > request_firmware(), but it prefer + * usermode helper. If
->> > > > usermode helper fails then it fallback to direct access.
->> > > > + * Usefull for dynamic or model specific firmware data.
->> > > > + **/
->> > > > +int request_firmware_prefer_user(const struct firmware
->> > > > **firmware_p, +                           const char
->> > > > *name, struct device *device) +{
->> > > > +       int ret;
->> > > > +       __module_get(THIS_MODULE);
->> > > > +       ret = _request_firmware(firmware_p, name, device,
->> > > > +                               FW_OPT_UEVENT |
->> > > > FW_OPT_PREFER_USER); +       module_put(THIS_MODULE);
->> > > > +       return ret;
->> > > > +}
->> > > > +EXPORT_SYMBOL_GPL(request_firmware_prefer_user);
->> > >
->> > > I'd like to introduce request_firmware_user() which only
->> > > requests firmware from user space, and this way is simpler
->> > > and more flexible since we have request_firmware_direct()
->> > > already.
->> >
->> > Why would a driver care about what program provides the
->> > firmware?  It shouldn't at all, and we want to get rid of the
->> > userspace firmware loader, not encourage drivers to use it
->> > "exclusively" at all.
->> >
->>
->> Do not remove it! Without userspace firmware loader it is
->> impossible to load dynamic firmware files.
->
-> You should not be loading "dynamic" firmware files with the firmware
-> interface, as that's not a "firmware" file anymore, it's a "special
-> binary file that my driver needs to be created and sent into the
-> kernel."
+From: Michal Kazior <michal.kazior@tieto.com>
 
-It is reasonable to put firmware somewhere instead of default
-search path, maybe in network.
+Some functions can be shared across different WMI
+ABIs. Make them public so different WMI backends
+can use them from different source files in the
+future.
 
->
-> Use your own custom usermode helper for stuff like this, not the
-> firmware interface.  But use a binary sysfs file if you want, that seems
-> to make sense for it...
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi.c |  136 ++++++++++++++-------------------
+ drivers/net/wireless/ath/ath10k/wmi.h |   61 +++++++++++++++
+ 2 files changed, 117 insertions(+), 80 deletions(-)
 
-It sounds like implementing an variant of request_firmware_user(), :-)
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 054f58a3041e..1530cf0190a8 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -610,9 +610,8 @@ static struct wmi_cmd_map wmi_10_2_cmd_map = {
+ 	.gpio_output_cmdid = WMI_10_2_GPIO_OUTPUT_CMDID,
+ };
+ 
+-static void
+-ath10k_wmi_put_wmi_channel(struct wmi_channel *ch,
+-			   const struct wmi_channel_arg *arg)
++void ath10k_wmi_put_wmi_channel(struct wmi_channel *ch,
++				const struct wmi_channel_arg *arg)
+ {
+ 	u32 flags = 0;
+ 
+@@ -987,7 +986,7 @@ static int ath10k_wmi_op_pull_scan_ev(struct ath10k *ar, struct sk_buff *skb,
+ 	return 0;
+ }
+ 
+-static int ath10k_wmi_event_scan(struct ath10k *ar, struct sk_buff *skb)
++int ath10k_wmi_event_scan(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	struct wmi_scan_ev_arg arg = {};
+ 	enum wmi_scan_event_type event_type;
+@@ -1206,7 +1205,7 @@ static int ath10k_wmi_op_pull_mgmt_rx_ev(struct ath10k *ar, struct sk_buff *skb,
+ 	return 0;
+ }
+ 
+-static int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
++int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	struct wmi_mgmt_rx_ev_arg arg = {};
+ 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
+@@ -1359,7 +1358,7 @@ static int ath10k_wmi_op_pull_ch_info_ev(struct ath10k *ar, struct sk_buff *skb,
+ 	return 0;
+ }
+ 
+-static void ath10k_wmi_event_chan_info(struct ath10k *ar, struct sk_buff *skb)
++void ath10k_wmi_event_chan_info(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	struct wmi_ch_info_ev_arg arg = {};
+ 	struct survey_info *survey;
+@@ -1427,12 +1426,12 @@ exit:
+ 	spin_unlock_bh(&ar->data_lock);
+ }
+ 
+-static void ath10k_wmi_event_echo(struct ath10k *ar, struct sk_buff *skb)
++void ath10k_wmi_event_echo(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	ath10k_dbg(ar, ATH10K_DBG_WMI, "WMI_ECHO_EVENTID\n");
+ }
+ 
+-static int ath10k_wmi_event_debug_mesg(struct ath10k *ar, struct sk_buff *skb)
++int ath10k_wmi_event_debug_mesg(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	ath10k_dbg(ar, ATH10K_DBG_WMI, "wmi event debug mesg len %d\n",
+ 		   skb->len);
+@@ -1442,8 +1441,8 @@ static int ath10k_wmi_event_debug_mesg(struct ath10k *ar, struct sk_buff *skb)
+ 	return 0;
+ }
+ 
+-static void ath10k_wmi_pull_pdev_stats(const struct wmi_pdev_stats *src,
+-				       struct ath10k_fw_stats_pdev *dst)
++void ath10k_wmi_pull_pdev_stats(const struct wmi_pdev_stats *src,
++				struct ath10k_fw_stats_pdev *dst)
+ {
+ 	const struct wal_dbg_tx_stats *tx = &src->wal.tx;
+ 	const struct wal_dbg_rx_stats *rx = &src->wal.rx;
+@@ -1495,8 +1494,8 @@ static void ath10k_wmi_pull_pdev_stats(const struct wmi_pdev_stats *src,
+ 	dst->mpdu_errs = __le32_to_cpu(rx->mpdu_errs);
+ }
+ 
+-static void ath10k_wmi_pull_peer_stats(const struct wmi_peer_stats *src,
+-				       struct ath10k_fw_stats_peer *dst)
++void ath10k_wmi_pull_peer_stats(const struct wmi_peer_stats *src,
++				struct ath10k_fw_stats_peer *dst)
+ {
+ 	ether_addr_copy(dst->peer_macaddr, src->peer_macaddr.addr);
+ 	dst->peer_rssi = __le32_to_cpu(src->peer_rssi);
+@@ -1618,8 +1617,7 @@ static int ath10k_wmi_10x_op_pull_fw_stats(struct ath10k *ar,
+ 	return 0;
+ }
+ 
+-static void ath10k_wmi_event_update_stats(struct ath10k *ar,
+-					  struct sk_buff *skb)
++void ath10k_wmi_event_update_stats(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	ath10k_dbg(ar, ATH10K_DBG_WMI, "WMI_UPDATE_STATS_EVENTID\n");
+ 	ath10k_debug_fw_stats_process(ar, skb);
+@@ -1643,8 +1641,7 @@ ath10k_wmi_op_pull_vdev_start_ev(struct ath10k *ar, struct sk_buff *skb,
+ 	return 0;
+ }
+ 
+-static void ath10k_wmi_event_vdev_start_resp(struct ath10k *ar,
+-					     struct sk_buff *skb)
++void ath10k_wmi_event_vdev_start_resp(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	struct wmi_vdev_start_ev_arg arg = {};
+ 	int ret;
+@@ -1663,8 +1660,7 @@ static void ath10k_wmi_event_vdev_start_resp(struct ath10k *ar,
+ 	complete(&ar->vdev_setup_done);
+ }
+ 
+-static void ath10k_wmi_event_vdev_stopped(struct ath10k *ar,
+-					  struct sk_buff *skb)
++void ath10k_wmi_event_vdev_stopped(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	ath10k_dbg(ar, ATH10K_DBG_WMI, "WMI_VDEV_STOPPED_EVENTID\n");
+ 	complete(&ar->vdev_setup_done);
+@@ -1685,8 +1681,7 @@ ath10k_wmi_op_pull_peer_kick_ev(struct ath10k *ar, struct sk_buff *skb,
+ 	return 0;
+ }
+ 
+-static void ath10k_wmi_event_peer_sta_kickout(struct ath10k *ar,
+-					      struct sk_buff *skb)
++void ath10k_wmi_event_peer_sta_kickout(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	struct wmi_peer_kick_ev_arg arg = {};
+ 	struct ieee80211_sta *sta;
+@@ -1965,7 +1960,7 @@ static int ath10k_wmi_op_pull_swba_ev(struct ath10k *ar, struct sk_buff *skb,
+ 	return 0;
+ }
+ 
+-static void ath10k_wmi_event_host_swba(struct ath10k *ar, struct sk_buff *skb)
++void ath10k_wmi_event_host_swba(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	struct wmi_swba_ev_arg arg = {};
+ 	u32 map;
+@@ -2086,8 +2081,7 @@ skip:
+ 	}
+ }
+ 
+-static void ath10k_wmi_event_tbttoffset_update(struct ath10k *ar,
+-					       struct sk_buff *skb)
++void ath10k_wmi_event_tbttoffset_update(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	ath10k_dbg(ar, ATH10K_DBG_WMI, "WMI_TBTTOFFSET_UPDATE_EVENTID\n");
+ }
+@@ -2208,9 +2202,9 @@ static int ath10k_dfs_fft_report(struct ath10k *ar,
+ 	return 0;
+ }
+ 
+-static void ath10k_wmi_event_dfs(struct ath10k *ar,
+-				 const struct wmi_phyerr *phyerr,
+-				 u64 tsf)
++void ath10k_wmi_event_dfs(struct ath10k *ar,
++			  const struct wmi_phyerr *phyerr,
++			  u64 tsf)
+ {
+ 	int buf_len, tlv_len, res, i = 0;
+ 	const struct phyerr_tlv *tlv;
+@@ -2273,10 +2267,9 @@ static void ath10k_wmi_event_dfs(struct ath10k *ar,
+ 	}
+ }
+ 
+-static void
+-ath10k_wmi_event_spectral_scan(struct ath10k *ar,
+-			       const struct wmi_phyerr *phyerr,
+-			       u64 tsf)
++void ath10k_wmi_event_spectral_scan(struct ath10k *ar,
++				    const struct wmi_phyerr *phyerr,
++				    u64 tsf)
+ {
+ 	int buf_len, tlv_len, res, i = 0;
+ 	struct phyerr_tlv *tlv;
+@@ -2345,7 +2338,7 @@ static int ath10k_wmi_op_pull_phyerr_ev(struct ath10k *ar, struct sk_buff *skb,
+ 	return 0;
+ }
+ 
+-static void ath10k_wmi_event_phyerr(struct ath10k *ar, struct sk_buff *skb)
++void ath10k_wmi_event_phyerr(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	struct wmi_phyerr_ev_arg arg = {};
+ 	const struct wmi_phyerr *phyerr;
+@@ -2414,19 +2407,17 @@ static void ath10k_wmi_event_phyerr(struct ath10k *ar, struct sk_buff *skb)
+ 	}
+ }
+ 
+-static void ath10k_wmi_event_roam(struct ath10k *ar, struct sk_buff *skb)
++void ath10k_wmi_event_roam(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	ath10k_dbg(ar, ATH10K_DBG_WMI, "WMI_ROAM_EVENTID\n");
+ }
+ 
+-static void ath10k_wmi_event_profile_match(struct ath10k *ar,
+-					   struct sk_buff *skb)
++void ath10k_wmi_event_profile_match(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	ath10k_dbg(ar, ATH10K_DBG_WMI, "WMI_PROFILE_MATCH\n");
+ }
+ 
+-static void ath10k_wmi_event_debug_print(struct ath10k *ar,
+-					 struct sk_buff *skb)
++void ath10k_wmi_event_debug_print(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	char buf[101], c;
+ 	int i;
+@@ -2459,103 +2450,90 @@ static void ath10k_wmi_event_debug_print(struct ath10k *ar,
+ 	ath10k_dbg(ar, ATH10K_DBG_WMI_PRINT, "wmi print '%s'\n", buf);
+ }
+ 
+-static void ath10k_wmi_event_pdev_qvit(struct ath10k *ar, struct sk_buff *skb)
++void ath10k_wmi_event_pdev_qvit(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	ath10k_dbg(ar, ATH10K_DBG_WMI, "WMI_PDEV_QVIT_EVENTID\n");
+ }
+ 
+-static void ath10k_wmi_event_wlan_profile_data(struct ath10k *ar,
+-					       struct sk_buff *skb)
++void ath10k_wmi_event_wlan_profile_data(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	ath10k_dbg(ar, ATH10K_DBG_WMI, "WMI_WLAN_PROFILE_DATA_EVENTID\n");
+ }
+ 
+-static void ath10k_wmi_event_rtt_measurement_report(struct ath10k *ar,
+-						    struct sk_buff *skb)
++void ath10k_wmi_event_rtt_measurement_report(struct ath10k *ar,
++					     struct sk_buff *skb)
+ {
+ 	ath10k_dbg(ar, ATH10K_DBG_WMI, "WMI_RTT_MEASUREMENT_REPORT_EVENTID\n");
+ }
+ 
+-static void ath10k_wmi_event_tsf_measurement_report(struct ath10k *ar,
+-						    struct sk_buff *skb)
++void ath10k_wmi_event_tsf_measurement_report(struct ath10k *ar,
++					     struct sk_buff *skb)
+ {
+ 	ath10k_dbg(ar, ATH10K_DBG_WMI, "WMI_TSF_MEASUREMENT_REPORT_EVENTID\n");
+ }
+ 
+-static void ath10k_wmi_event_rtt_error_report(struct ath10k *ar,
+-					      struct sk_buff *skb)
++void ath10k_wmi_event_rtt_error_report(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	ath10k_dbg(ar, ATH10K_DBG_WMI, "WMI_RTT_ERROR_REPORT_EVENTID\n");
+ }
+ 
+-static void ath10k_wmi_event_wow_wakeup_host(struct ath10k *ar,
+-					     struct sk_buff *skb)
++void ath10k_wmi_event_wow_wakeup_host(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	ath10k_dbg(ar, ATH10K_DBG_WMI, "WMI_WOW_WAKEUP_HOST_EVENTID\n");
+ }
+ 
+-static void ath10k_wmi_event_dcs_interference(struct ath10k *ar,
+-					      struct sk_buff *skb)
++void ath10k_wmi_event_dcs_interference(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	ath10k_dbg(ar, ATH10K_DBG_WMI, "WMI_DCS_INTERFERENCE_EVENTID\n");
+ }
+ 
+-static void ath10k_wmi_event_pdev_tpc_config(struct ath10k *ar,
+-					     struct sk_buff *skb)
++void ath10k_wmi_event_pdev_tpc_config(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	ath10k_dbg(ar, ATH10K_DBG_WMI, "WMI_PDEV_TPC_CONFIG_EVENTID\n");
+ }
+ 
+-static void ath10k_wmi_event_pdev_ftm_intg(struct ath10k *ar,
+-					   struct sk_buff *skb)
++void ath10k_wmi_event_pdev_ftm_intg(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	ath10k_dbg(ar, ATH10K_DBG_WMI, "WMI_PDEV_FTM_INTG_EVENTID\n");
+ }
+ 
+-static void ath10k_wmi_event_gtk_offload_status(struct ath10k *ar,
+-						struct sk_buff *skb)
++void ath10k_wmi_event_gtk_offload_status(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	ath10k_dbg(ar, ATH10K_DBG_WMI, "WMI_GTK_OFFLOAD_STATUS_EVENTID\n");
+ }
+ 
+-static void ath10k_wmi_event_gtk_rekey_fail(struct ath10k *ar,
+-					    struct sk_buff *skb)
++void ath10k_wmi_event_gtk_rekey_fail(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	ath10k_dbg(ar, ATH10K_DBG_WMI, "WMI_GTK_REKEY_FAIL_EVENTID\n");
+ }
+ 
+-static void ath10k_wmi_event_delba_complete(struct ath10k *ar,
+-					    struct sk_buff *skb)
++void ath10k_wmi_event_delba_complete(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	ath10k_dbg(ar, ATH10K_DBG_WMI, "WMI_TX_DELBA_COMPLETE_EVENTID\n");
+ }
+ 
+-static void ath10k_wmi_event_addba_complete(struct ath10k *ar,
+-					    struct sk_buff *skb)
++void ath10k_wmi_event_addba_complete(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	ath10k_dbg(ar, ATH10K_DBG_WMI, "WMI_TX_ADDBA_COMPLETE_EVENTID\n");
+ }
+ 
+-static void ath10k_wmi_event_vdev_install_key_complete(struct ath10k *ar,
+-						       struct sk_buff *skb)
++void ath10k_wmi_event_vdev_install_key_complete(struct ath10k *ar,
++						struct sk_buff *skb)
+ {
+ 	ath10k_dbg(ar, ATH10K_DBG_WMI, "WMI_VDEV_INSTALL_KEY_COMPLETE_EVENTID\n");
+ }
+ 
+-static void ath10k_wmi_event_inst_rssi_stats(struct ath10k *ar,
+-					     struct sk_buff *skb)
++void ath10k_wmi_event_inst_rssi_stats(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	ath10k_dbg(ar, ATH10K_DBG_WMI, "WMI_INST_RSSI_STATS_EVENTID\n");
+ }
+ 
+-static void ath10k_wmi_event_vdev_standby_req(struct ath10k *ar,
+-					      struct sk_buff *skb)
++void ath10k_wmi_event_vdev_standby_req(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	ath10k_dbg(ar, ATH10K_DBG_WMI, "WMI_VDEV_STANDBY_REQ_EVENTID\n");
+ }
+ 
+-static void ath10k_wmi_event_vdev_resume_req(struct ath10k *ar,
+-					     struct sk_buff *skb)
++void ath10k_wmi_event_vdev_resume_req(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	ath10k_dbg(ar, ATH10K_DBG_WMI, "WMI_VDEV_RESUME_REQ_EVENTID\n");
+ }
+@@ -2664,8 +2642,7 @@ ath10k_wmi_10x_op_pull_svc_rdy_ev(struct ath10k *ar, struct sk_buff *skb,
+ 	return 0;
+ }
+ 
+-static void ath10k_wmi_event_service_ready(struct ath10k *ar,
+-					   struct sk_buff *skb)
++void ath10k_wmi_event_service_ready(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	struct wmi_svc_rdy_ev_arg arg = {};
+ 	u32 num_units, req_id, unit_size, num_mem_reqs, num_unit_info, i;
+@@ -2790,7 +2767,7 @@ static int ath10k_wmi_op_pull_rdy_ev(struct ath10k *ar, struct sk_buff *skb,
+ 	return 0;
+ }
+ 
+-static int ath10k_wmi_event_ready(struct ath10k *ar, struct sk_buff *skb)
++int ath10k_wmi_event_ready(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	struct wmi_rdy_ev_arg arg = {};
+ 	int ret;
+@@ -3311,8 +3288,8 @@ ath10k_wmi_op_gen_pdev_set_param(struct ath10k *ar, u32 id, u32 value)
+ 	return skb;
+ }
+ 
+-static void ath10k_wmi_put_host_mem_chunks(struct ath10k *ar,
+-					   struct wmi_host_mem_chunks *chunks)
++void ath10k_wmi_put_host_mem_chunks(struct ath10k *ar,
++				    struct wmi_host_mem_chunks *chunks)
+ {
+ 	struct host_memory_chunk *chunk;
+ 	int i;
+@@ -3539,7 +3516,7 @@ static struct sk_buff *ath10k_wmi_10_2_op_gen_init(struct ath10k *ar)
+ 	return buf;
+ }
+ 
+-static int ath10k_wmi_start_scan_verify(const struct wmi_start_scan_arg *arg)
++int ath10k_wmi_start_scan_verify(const struct wmi_start_scan_arg *arg)
+ {
+ 	if (arg->ie_len && !arg->ie)
+ 		return -EINVAL;
+@@ -3590,9 +3567,8 @@ ath10k_wmi_start_scan_tlvs_len(const struct wmi_start_scan_arg *arg)
+ 	return len;
+ }
+ 
+-static void
+-ath10k_wmi_put_start_scan_common(struct wmi_start_scan_common *cmn,
+-				 const struct wmi_start_scan_arg *arg)
++void ath10k_wmi_put_start_scan_common(struct wmi_start_scan_common *cmn,
++				      const struct wmi_start_scan_arg *arg)
+ {
+ 	u32 scan_id;
+ 	u32 scan_req_id;
+@@ -4470,8 +4446,8 @@ ath10k_wmi_op_gen_beacon_dma(struct ath10k_vif *arvif)
+ 	return skb;
+ }
+ 
+-static void ath10k_wmi_pdev_set_wmm_param(struct wmi_wmm_params *params,
+-					  const struct wmi_wmm_params_arg *arg)
++void ath10k_wmi_pdev_set_wmm_param(struct wmi_wmm_params *params,
++				   const struct wmi_wmm_params_arg *arg)
+ {
+ 	params->cwmin  = __cpu_to_le32(arg->cwmin);
+ 	params->cwmax  = __cpu_to_le32(arg->cwmax);
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 7172f3cb772e..032a8bdb0420 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -4644,12 +4644,15 @@ struct wmi_rdy_ev_arg {
+ 
+ struct ath10k;
+ struct ath10k_vif;
++struct ath10k_fw_stats_pdev;
++struct ath10k_fw_stats_peer;
+ 
+ int ath10k_wmi_attach(struct ath10k *ar);
+ void ath10k_wmi_detach(struct ath10k *ar);
+ int ath10k_wmi_wait_for_service_ready(struct ath10k *ar);
+ int ath10k_wmi_wait_for_unified_ready(struct ath10k *ar);
+ 
++struct sk_buff *ath10k_wmi_alloc_skb(struct ath10k *ar, u32 len);
+ int ath10k_wmi_connect(struct ath10k *ar);
+ 
+ struct sk_buff *ath10k_wmi_alloc_skb(struct ath10k *ar, u32 len);
+@@ -4658,4 +4661,62 @@ int ath10k_wmi_cmd_send_nowait(struct ath10k *ar, struct sk_buff *skb,
+ 			       u32 cmd_id);
+ void ath10k_wmi_start_scan_init(struct ath10k *ar, struct wmi_start_scan_arg *);
+ 
++void ath10k_wmi_pull_pdev_stats(const struct wmi_pdev_stats *src,
++				struct ath10k_fw_stats_pdev *dst);
++void ath10k_wmi_pull_peer_stats(const struct wmi_peer_stats *src,
++				struct ath10k_fw_stats_peer *dst);
++void ath10k_wmi_put_host_mem_chunks(struct ath10k *ar,
++				    struct wmi_host_mem_chunks *chunks);
++void ath10k_wmi_put_start_scan_common(struct wmi_start_scan_common *cmn,
++				      const struct wmi_start_scan_arg *arg);
++void ath10k_wmi_pdev_set_wmm_param(struct wmi_wmm_params *params,
++				   const struct wmi_wmm_params_arg *arg);
++void ath10k_wmi_put_wmi_channel(struct wmi_channel *ch,
++				const struct wmi_channel_arg *arg);
++int ath10k_wmi_start_scan_verify(const struct wmi_start_scan_arg *arg);
++
++int ath10k_wmi_event_scan(struct ath10k *ar, struct sk_buff *skb);
++int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb);
++void ath10k_wmi_event_chan_info(struct ath10k *ar, struct sk_buff *skb);
++void ath10k_wmi_event_echo(struct ath10k *ar, struct sk_buff *skb);
++int ath10k_wmi_event_debug_mesg(struct ath10k *ar, struct sk_buff *skb);
++void ath10k_wmi_event_update_stats(struct ath10k *ar, struct sk_buff *skb);
++void ath10k_wmi_event_vdev_start_resp(struct ath10k *ar, struct sk_buff *skb);
++void ath10k_wmi_event_vdev_stopped(struct ath10k *ar, struct sk_buff *skb);
++void ath10k_wmi_event_peer_sta_kickout(struct ath10k *ar, struct sk_buff *skb);
++void ath10k_wmi_event_host_swba(struct ath10k *ar, struct sk_buff *skb);
++void ath10k_wmi_event_tbttoffset_update(struct ath10k *ar, struct sk_buff *skb);
++void ath10k_wmi_event_dfs(struct ath10k *ar,
++			  const struct wmi_phyerr *phyerr, u64 tsf);
++void ath10k_wmi_event_spectral_scan(struct ath10k *ar,
++				    const struct wmi_phyerr *phyerr,
++				    u64 tsf);
++void ath10k_wmi_event_phyerr(struct ath10k *ar, struct sk_buff *skb);
++void ath10k_wmi_event_roam(struct ath10k *ar, struct sk_buff *skb);
++void ath10k_wmi_event_profile_match(struct ath10k *ar, struct sk_buff *skb);
++void ath10k_wmi_event_debug_print(struct ath10k *ar, struct sk_buff *skb);
++void ath10k_wmi_event_pdev_qvit(struct ath10k *ar, struct sk_buff *skb);
++void ath10k_wmi_event_wlan_profile_data(struct ath10k *ar, struct sk_buff *skb);
++void ath10k_wmi_event_rtt_measurement_report(struct ath10k *ar,
++					     struct sk_buff *skb);
++void ath10k_wmi_event_tsf_measurement_report(struct ath10k *ar,
++					     struct sk_buff *skb);
++void ath10k_wmi_event_rtt_error_report(struct ath10k *ar, struct sk_buff *skb);
++void ath10k_wmi_event_wow_wakeup_host(struct ath10k *ar, struct sk_buff *skb);
++void ath10k_wmi_event_dcs_interference(struct ath10k *ar, struct sk_buff *skb);
++void ath10k_wmi_event_pdev_tpc_config(struct ath10k *ar, struct sk_buff *skb);
++void ath10k_wmi_event_pdev_ftm_intg(struct ath10k *ar, struct sk_buff *skb);
++void ath10k_wmi_event_gtk_offload_status(struct ath10k *ar,
++					 struct sk_buff *skb);
++void ath10k_wmi_event_gtk_rekey_fail(struct ath10k *ar, struct sk_buff *skb);
++void ath10k_wmi_event_delba_complete(struct ath10k *ar, struct sk_buff *skb);
++void ath10k_wmi_event_addba_complete(struct ath10k *ar, struct sk_buff *skb);
++void ath10k_wmi_event_vdev_install_key_complete(struct ath10k *ar,
++						struct sk_buff *skb);
++void ath10k_wmi_event_inst_rssi_stats(struct ath10k *ar, struct sk_buff *skb);
++void ath10k_wmi_event_vdev_standby_req(struct ath10k *ar, struct sk_buff *skb);
++void ath10k_wmi_event_vdev_resume_req(struct ath10k *ar, struct sk_buff *skb);
++void ath10k_wmi_event_service_ready(struct ath10k *ar, struct sk_buff *skb);
++int ath10k_wmi_event_ready(struct ath10k *ar, struct sk_buff *skb);
++
+ #endif /* _WMI_H_ */
 
-Thanks,
-Ming Lei
