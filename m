@@ -1,49 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.osadl.org ([62.245.132.105]:51273 "EHLO www.osadl.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752657AbaL3NDq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Dec 2014 08:03:46 -0500
-From: Nicholas Mc Guire <der.herr@hofr.at>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: Michal Kazior <michal.kazior@tieto.com>,
-	Ben Greear <greearb@candelatech.com>,
-	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>,
-	Yanbo Li <yanbol@qti.qualcomm.com>, ath10k@lists.infradead.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Nicholas Mc Guire <der.herr@hofr.at>
-Subject: [PATCH 1/4] ath10k: fixup wait_for_completion_timeout return handling
-Date: Tue, 30 Dec 2014 07:20:43 -0500
-Message-Id: <1419942046-17985-2-git-send-email-der.herr@hofr.at> (sfid-20141230_140350_495145_90FF1D7B)
-In-Reply-To: <1419942046-17985-1-git-send-email-der.herr@hofr.at>
-References: <1419942046-17985-1-git-send-email-der.herr@hofr.at>
+Received: from mail-wg0-f53.google.com ([74.125.82.53]:36192 "EHLO
+	mail-wg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752840AbaLCQIV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Dec 2014 11:08:21 -0500
+Received: by mail-wg0-f53.google.com with SMTP id l18so20276950wgh.40
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Dec 2014 08:08:19 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v8 3/4] cfg80211: return private regdom for self-managed devices
+Date: Wed,  3 Dec 2014 18:08:16 +0200
+Message-Id: <1417622897-30768-3-git-send-email-arik@wizery.com> (sfid-20141203_171639_510566_86144DD7)
+In-Reply-To: <1417622897-30768-1-git-send-email-arik@wizery.com>
+References: <1417622897-30768-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-wait_for_completion_timeout does not return negative values so
-"ret" handling here should check for timeout only.
+If a device has self-managed regulatory, insist on returning the wiphy
+specific regdomain if a wiphy-idx is specified. The global regdomain is
+meaningless for such devices.
 
-patch was only compile tested for x86_64_defconfig + CONFIG_ATH_DEBUG=y
+Also add an attribute for self-managed devices, so usermode can
+distinguish them as such.
 
-patch is against linux-next 3.19.0-rc1 -next-20141226
-
-Signed-off-by: Nicholas Mc Guire <der.herr@hofr.at>
+Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+Reviewed-by: Luis R. Rodriguez <mcgrof@suse.com>
 ---
- drivers/net/wireless/ath/ath10k/debug.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+v8: no need to add more splits to the wiphy info
 
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index a716758..7e1fe93 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -373,7 +373,7 @@ static int ath10k_debug_fw_stats_request(struct ath10k *ar)
+ include/uapi/linux/nl80211.h | 10 ++++++++++
+ net/wireless/nl80211.c       | 24 ++++++++++++++++++++++++
+ 2 files changed, 34 insertions(+)
+
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 9ee06de..5a13958 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -259,6 +259,9 @@
+  *	regulatory_hint() API. Even when a private regdomain is used the channel
+  *	information will still be mended according to further hints from
+  *	the regulatory core to help with compliance.
++ *	If a wiphy is self-managed (%NL80211_ATTR_WIPHY_SELF_MANAGED_REG), then
++ *	its private regdomain is the only valid one for it. The regulatory
++ *	core is not used to help with compliance in this case.
+  * @NL80211_CMD_SET_REG: Set current regulatory domain. CRDA sends this command
+  *	after being queried by the kernel. CRDA replies by sending a regulatory
+  *	domain structure which consists of %NL80211_ATTR_REG_ALPHA set to our
+@@ -1700,6 +1703,11 @@ enum nl80211_commands {
+  *
+  * @NL80211_ATTR_MAC_MASK: MAC address mask
+  *
++ * @NL80211_ATTR_WIPHY_SELF_MANAGED_REG: flag attribute indicating this device
++ *	is self-managing its regulatory information and any regulatory domain
++ *	obtained from it is coming from the device's wiphy and not the global
++ *	cfg80211 regdomain.
++ *
+  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+@@ -2057,6 +2065,8 @@ enum nl80211_attrs {
  
- 		ret = wait_for_completion_timeout(&ar->debug.fw_stats_complete,
- 						  1*HZ);
--		if (ret <= 0)
-+		if (ret == 0)
- 			return -ETIMEDOUT;
+ 	NL80211_ATTR_MAC_MASK,
  
- 		spin_lock_bh(&ar->data_lock);
++	NL80211_ATTR_WIPHY_SELF_MANAGED_REG,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index de523aa..cd85a9f 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -396,6 +396,7 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
+ 	[NL80211_ATTR_ADMITTED_TIME] = { .type = NLA_U16 },
+ 	[NL80211_ATTR_SMPS_MODE] = { .type = NLA_U8 },
+ 	[NL80211_ATTR_MAC_MASK] = { .len = ETH_ALEN },
++	[NL80211_ATTR_WIPHY_SELF_MANAGED_REG] = { .type = NLA_FLAG },
+ };
+ 
+ /* policy for the key attributes */
+@@ -1701,6 +1702,10 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
+ 			       rdev->wiphy.max_num_csa_counters))
+ 			goto nla_put_failure;
+ 
++		if (rdev->wiphy.regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED &&
++		    nla_put_flag(msg, NL80211_ATTR_WIPHY_SELF_MANAGED_REG))
++			goto nla_put_failure;
++
+ 		/* done */
+ 		state->split_start = 0;
+ 		break;
+@@ -5406,6 +5411,8 @@ static int nl80211_get_reg_do(struct sk_buff *skb, struct genl_info *info)
+ 		goto put_failure;
+ 
+ 	if (info->attrs[NL80211_ATTR_WIPHY]) {
++		bool self_managed;
++
+ 		rdev = cfg80211_get_dev_from_info(genl_info_net(info), info);
+ 		if (IS_ERR(rdev)) {
+ 			nlmsg_free(msg);
+@@ -5413,8 +5420,16 @@ static int nl80211_get_reg_do(struct sk_buff *skb, struct genl_info *info)
+ 		}
+ 
+ 		wiphy = &rdev->wiphy;
++		self_managed = wiphy->regulatory_flags &
++			       REGULATORY_WIPHY_SELF_MANAGED;
+ 		regdom = get_wiphy_regdom(wiphy);
+ 
++		/* a self-managed-reg device must have a private regdom */
++		if (WARN_ON(!regdom && self_managed)) {
++			nlmsg_free(msg);
++			return -EINVAL;
++		}
++
+ 		if (regdom &&
+ 		    nla_put_u32(msg, NL80211_ATTR_WIPHY, get_wiphy_idx(wiphy)))
+ 			goto nla_put_failure;
+@@ -5476,6 +5491,10 @@ static int nl80211_send_regdom(struct sk_buff *msg, struct netlink_callback *cb,
+ 	    nla_put_u32(msg, NL80211_ATTR_WIPHY, get_wiphy_idx(wiphy)))
+ 		goto nla_put_failure;
+ 
++	if (wiphy && wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED &&
++	    nla_put_flag(msg, NL80211_ATTR_WIPHY_SELF_MANAGED_REG))
++		goto nla_put_failure;
++
+ 	return genlmsg_end(msg, hdr);
+ 
+ nla_put_failure:
+@@ -11081,6 +11100,11 @@ static bool nl80211_reg_change_event_fill(struct sk_buff *msg,
+ 		if (wiphy &&
+ 		    nla_put_u32(msg, NL80211_ATTR_WIPHY, request->wiphy_idx))
+ 			goto nla_put_failure;
++
++		if (wiphy &&
++		    wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED &&
++		    nla_put_flag(msg, NL80211_ATTR_WIPHY_SELF_MANAGED_REG))
++			goto nla_put_failure;
+ 	}
+ 
+ 	return true;
 -- 
-1.7.10.4
+1.9.1
 
