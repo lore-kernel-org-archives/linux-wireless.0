@@ -1,73 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:43895 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751413AbaLPHpk (ORCPT
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:50565 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751911AbaLDExN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Dec 2014 02:45:40 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <backports@vger.kernel.org>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: Re: [PATCH 3/5] ath10k: add thermal cooling device support
-References: <1418620274-3081-1-git-send-email-rmanohar@qti.qualcomm.com>
-	<1418620274-3081-4-git-send-email-rmanohar@qti.qualcomm.com>
-Date: Tue, 16 Dec 2014 09:45:32 +0200
-In-Reply-To: <1418620274-3081-4-git-send-email-rmanohar@qti.qualcomm.com>
-	(Rajkumar Manoharan's message of "Mon, 15 Dec 2014 10:41:12 +0530")
-Message-ID: <87bnn4t4v7.fsf@kamboji.qca.qualcomm.com> (sfid-20141216_084544_601212_B53CF4A0)
+	Wed, 3 Dec 2014 23:53:13 -0500
+Received: by mail-wi0-f177.google.com with SMTP id l15so26636040wiw.10
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Dec 2014 20:53:12 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20141204043945.GA22144@kroah.com>
+References: <CAD-4tLW3cvGrw3MYiLQni7OMJYGa=QJbrk_q9=9P2QuBb1EVFg@mail.gmail.com>
+ <CA+55aFw6zo4rTsEEX5uQe+8zeNR87JzmM8T=wYW7jvrHZPjB8A@mail.gmail.com>
+ <20141129191601.GA1234@kroah.com> <CAD-4tLXYVtKJMWYW6cQ9aCL6rusUx3YpWSHys4xcTRN_dJ+kOA@mail.gmail.com>
+ <20141130184615.GA3122@kroah.com> <CAD-4tLU-3otYOTO98s359z80SSbTJbiSstAYijiU__ekOPJkOA@mail.gmail.com>
+ <20141204012407.GA31191@kroah.com> <CAD-4tLVrOqiUX2V9_VWMBbnFT-qEsO=zQF4qejd_N2H=scb4aw@mail.gmail.com>
+ <20141204043945.GA22144@kroah.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Thu, 4 Dec 2014 15:52:52 +1100
+Message-ID: <CAGRGNgXiAAcFoUJyJiC2=yi7LGAU-=6L=NZpJxNj3V4E74RxCw@mail.gmail.com> (sfid-20141204_055316_985097_A27F5849)
+Subject: Re: Ralink 6570 / Mediatek MT7601STA (was Re: Addition of a wifi
+ kernel module to the linux source tree)
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Parth Sane <laerdevstudios@gmail.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	driverdev-devel@linuxdriverproject.org,
+	Larry Finger <larry.finger@lwfinger.net>,
+	Oleksij Rempel <linux@rempel-privat.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A heads up for the backports project:
+Hi Greg,
 
-Rajkumar Manoharan <rmanohar@qti.qualcomm.com> writes:
-
-> Thermal cooling device support is added to control the temperature
-> by throttling the data transmission for the given duration. Throttling
-> is done using hw MAC quiet time setting. Period, duration and offset
-> from TBTT can be set up to quiet the MAC transmits for the required duty
-> cycle (% of quiet duration). The thermal device allows user to configure
-> duty cycle.
+On Thu, Dec 4, 2014 at 3:39 PM, Greg Kroah-Hartman
+<gregkh@linuxfoundation.org> wrote:
+> On Thu, Dec 04, 2014 at 07:07:58AM +0530, Parth Sane wrote:
+>> Hi,
+>> I'd say I'm midway through with c programming(part of my computer
+>> engineering degree course) and know a decent amount of git. So yes I'm
+>> comfortable writing code.
 >
-> The quiet params are derived as follows.
-> 	period = max(25TU, beacon interval / number of bss)
-> 	duration = period * duty cycle / 100
->
-> Quiet mode can be disabled by setting the duty cycle to 0. The cooling
-> device can be found under /sys/class/thermal/cooling_deviceX/.
-> Corresponding soft link to this device can be found under phy folder.
->
-> /sys/class/ieee80211/phy*/device/cooling_device.
->
-> To set duty cycle as 40%,
->
-> echo 40 >/sys/class/ieee80211/phy*/device/cooling_device/cur_state
->
-> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+> Ok great, let's see if it's just a matter of some changes to the
+> existing kernel driver before we decide to add the whole huge tarball
+> to the staging tree as fixing it up will be a lot of work.
 
-[...]
+I believe some people (CC'd) may have been working on / had an
+interest in writing such a driver. I'm not sure what the status of
+that effort is though.
 
-> +int ath10k_thermal_register(struct ath10k *ar)
-> +{
-> +	struct thermal_cooling_device *cdev;
-> +	int ret;
-> +
-> +	cdev = thermal_cooling_device_register("ath10k_thermal", ar,
-> +					       &ath10k_thermal_ops);
-> +
-> +	if (IS_ERR(cdev)) {
-> +		ath10k_err(ar, "failed to setup thermal device result: %ld\n",
-> +			   PTR_ERR(cdev));
-> +		return -EINVAL;
-> +	}
-
-Will this break the backports build? We have the below in Makefile, is
-it enough or what's the best way to handle this?
-
-+ath10k_core-$(CONFIG_THERMAL) += thermal.o
-
+Thanks,
 
 -- 
-Kalle Valo
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
