@@ -1,76 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f175.google.com ([209.85.223.175]:34127 "EHLO
-	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751205AbaL0XnA convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Dec 2014 18:43:00 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:56103 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753837AbaLDOjZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Dec 2014 09:39:25 -0500
+Date: Thu, 4 Dec 2014 15:36:02 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Oleksij Rempel <linux@rempel-privat.de>
+Cc: Julian Calaby <julian.calaby@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Parth Sane <laerdevstudios@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	driverdev-devel@linuxdriverproject.org,
+	Larry Finger <larry.finger@lwfinger.net>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: Re: Ralink 6570 / Mediatek MT7601STA (was Re: Addition of a wifi
+ kernel module to the linux source tree)
+Message-ID: <20141204143601.GA6798@redhat.com> (sfid-20141204_153928_569198_8C8B0AD0)
+References: <20141129191601.GA1234@kroah.com>
+ <CAD-4tLXYVtKJMWYW6cQ9aCL6rusUx3YpWSHys4xcTRN_dJ+kOA@mail.gmail.com>
+ <20141130184615.GA3122@kroah.com>
+ <CAD-4tLU-3otYOTO98s359z80SSbTJbiSstAYijiU__ekOPJkOA@mail.gmail.com>
+ <20141204012407.GA31191@kroah.com>
+ <CAD-4tLVrOqiUX2V9_VWMBbnFT-qEsO=zQF4qejd_N2H=scb4aw@mail.gmail.com>
+ <20141204043945.GA22144@kroah.com>
+ <CAGRGNgXiAAcFoUJyJiC2=yi7LGAU-=6L=NZpJxNj3V4E74RxCw@mail.gmail.com>
+ <20141204082348.GA1989@redhat.com>
+ <54802031.7010709@rempel-privat.de>
 MIME-Version: 1.0
-In-Reply-To: <CADZ0XgJ=LU3n55MxcHUMdX7uRcOm-m+=DFLGDi6PPkj+5=y1sg@mail.gmail.com>
-References: <1419708268-14114-1-git-send-email-oscar.forner.martinez@gmail.com>
-	<CACna6rxjrcpZXiv0jxmY4+EtLESYtKh=6W2RgqUDLHYy3AQ4rA@mail.gmail.com>
-	<CADZ0Xg++nexnzmuaOp+MHXBbODwSpoEYNcbDU=X9tNYbzh=W-w@mail.gmail.com>
-	<CADZ0XgJ=LU3n55MxcHUMdX7uRcOm-m+=DFLGDi6PPkj+5=y1sg@mail.gmail.com>
-Date: Sun, 28 Dec 2014 00:42:59 +0100
-Message-ID: <CACna6ry78Gs5PTUxjXy+tZAS-DNzTmqrSmwa_EVYRO6L-5_3ZA@mail.gmail.com> (sfid-20141228_004320_305725_6630C600)
-Subject: Re: [PATCH] bcma: fix three coding style issues, more than 80
- characters per line
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Oscar Forner Martinez <oscar.forner.martinez@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <54802031.7010709@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 27 December 2014 at 23:04, Oscar Forner Martinez
-<oscar.forner.martinez@gmail.com> wrote:
-> 2014-12-27 21:14 GMT+00:00 Oscar Forner Martinez
-> <oscar.forner.martinez@gmail.com>:
->>
->> 2014-12-27 20:19 GMT+00:00 Rafał Miłecki <zajec5@gmail.com>:
->>>
->>> On 27 December 2014 at 20:24, Oscar Forner Martinez
->>> <oscar.forner.martinez@gmail.com> wrote:
->>> > Three lines with more than 80 characters per line have been split in
->>> > several lines.
->>>
->>> Thanks for the next version :)
->>>
->>> 1) You missed version number. Something like
->>> git format-patch --subject-prefix="PATCH V3"
->>> (you saying for the future).
->>
->>
->> Yes, sorry I forgot to put -v 3 in git format-patch.
->>
->>>
->>>
->>> 2) I'm OK with your changes, but when checking the patch I get some
->>> errors like
->>> ERROR: trailing whitespace
->>> ERROR: DOS line endings
->>> (I used ./scripts/checkpatch.pl, see attached checkpatch log).
->>>
->>> I think that "trailing whitespace" errors are caused by DOS line
->>> endings, because I don't see anything wrong about your code.
->>>
->>> Is there something wrong with your emacs? git-send-email shouldn't
->>> malform patches I believe.
->>
->>
->> When I run ./scripts/checkpatch.pl with my patch does not show any error
->> (please find attached the output). I will try to run it with the one from my
->> e-mail. My only configuration in the .emacs file is: (setq c-default-style
->> "linux").
->
->
-> I ran the ./scripts/checkpatch.pl with the patch got it from
-> http://marc.info/?l=linux-wireless&m=141970834908165 and it does not show
-> any error. Could you please tell me how I have to check in the same way as
-> you did?
+On Thu, Dec 04, 2014 at 09:49:53AM +0100, Oleksij Rempel wrote:
+> So far i know, Felix is working on abgn+ac (MT7662 and MT7612) devices.
+> MT7601STA is (a)bgn. Are there similar regs?
 
-False alarm, sorry. GMail changed sth again or my browser
-change/update broke saving e-mails.
+All Mediatek/Ralink devices I know have the same MAC registers, but
+different BBP and RF registers.
 
--- 
-Rafał
+> In mt7601 code i see parts like "if (IS_RT3290(pAd) || IS_RT65XX(pAd) ||
+> IS_MT7601(pAd))".  RT3290 is supported by rt2x00.
+
+Hence looks that support for this devices should be added to rt2x00.
+
+Stanislaw
+
