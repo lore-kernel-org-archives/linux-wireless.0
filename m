@@ -1,57 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:60917 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755704AbaLWOs4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Dec 2014 09:48:56 -0500
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Christophe Prigent <christophe.prigent@intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] brcmfmac: Do not crash if platform data is not populated
-Date: Tue, 23 Dec 2014 16:48:32 +0200
-Message-Id: <1419346112-173303-1-git-send-email-mika.westerberg@linux.intel.com> (sfid-20141223_154918_251479_92BFCF9F)
+Received: from mail-ig0-f171.google.com ([209.85.213.171]:37653 "EHLO
+	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932144AbaLDMDS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Dec 2014 07:03:18 -0500
+Received: by mail-ig0-f171.google.com with SMTP id z20so14501780igj.10
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Dec 2014 04:03:17 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <54784001.7020706@broadcom.com>
+References: <54784001.7020706@broadcom.com>
+Date: Thu, 4 Dec 2014 13:03:17 +0100
+Message-ID: <CACna6rzGB7EvMbiteWGbwjdmx+LMZymdk_04L_RKiFkT0hokvA@mail.gmail.com> (sfid-20141204_130325_747050_1DC87502)
+Subject: Re: Multiple-BSSID issues with hostapd
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Jouni Malinen <j@w1.fi>,
+	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver looks for pdata->oob_irq_supported to find out if wowl can be
-supported. However, not all platforms populate pdata in which case we crash
-the kernel because of NULL pointer dereference.
+On 28 November 2014 at 10:27, Arend van Spriel <arend@broadcom.com> wrote:
+> For the brcmfmac we started working on Multiple-BSSID support and came
+> across some issues with hostapd that are listed listed below.
+>
+> BSS1 setup on netdev wlan0
+> BSS2 setup on netdev wlan0_0
+>
+> * get_station() done on wrong netdev
+>
+> observed:
+> Upon association of STA1 with BSS2 (wlan0_0) a get_station() is done for
+> STA1 with wlan0 as netdev.
+> expected:
+> get_station() for STA1 with wlan0_0 as netdev. We verified that wlan0_0
+> ifindex was used in NL80211_CMD_NEW_STATION event.
 
-Fixes: 330b4e4be937 ("brcmfmac: Add wowl support for SDIO devices.")
-Reported-by: Christophe Prigent <christophe.prigent@intel.com>
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Did you do any progress on this?
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-index 3c06e9365949..9880dae2a569 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-@@ -1070,7 +1070,7 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
- 	 */
- 	if ((sdio_get_host_pm_caps(sdiodev->func[1]) & MMC_PM_KEEP_POWER) &&
- 	    ((sdio_get_host_pm_caps(sdiodev->func[1]) & MMC_PM_WAKE_SDIO_IRQ) ||
--	     (sdiodev->pdata->oob_irq_supported)))
-+	     (sdiodev->pdata && sdiodev->pdata->oob_irq_supported)))
- 		bus_if->wowl_supported = true;
- #endif
- 
-@@ -1167,7 +1167,7 @@ static int brcmf_ops_sdio_resume(struct device *dev)
- 	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
- 
- 	brcmf_dbg(SDIO, "Enter\n");
--	if (sdiodev->pdata->oob_irq_supported)
-+	if (sdiodev->pdata && sdiodev->pdata->oob_irq_supported)
- 		disable_irq_wake(sdiodev->pdata->oob_irq_nr);
- 	brcmf_sdio_wd_timer(sdiodev->bus, BRCMF_WD_POLL_MS);
- 	atomic_set(&sdiodev->suspend, false);
--- 
-2.1.3
+According to the nl80211.h you are correct of course, every
+NL80211_CMD_foo_STATION command should include NL80211_ATTR_IFINDEX.
 
+There are two functions in driver_nl80211.c where
+NL80211_CMD_GET_STATION is used.
+
+1) nl80211_get_link_signal
+It fills NL80211_ATTR_IFINDEX in the following way:
+NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, drv->ifindex);
+
+2) i802_read_sta_data
+It fills NL80211_ATTR_IFINDEX in the following way:
+NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, if_nametoindex(bss->ifname));
+
+Did you track down which of the above functions in the one sending
+wrong NL80211_ATTR_IFINDEX?
