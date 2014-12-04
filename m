@@ -1,79 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:45215 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753003AbaLEMYZ (ORCPT
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:60038 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933105AbaLDWOk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Dec 2014 07:24:25 -0500
-Date: Fri, 5 Dec 2014 12:24:23 +0000
-From: Will Deacon <will.deacon@arm.com>
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	Marek Szyprowski <m.szyprowski@samsung.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	David Miller <davem@davemloft.net>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: using DMA-API on ARM
-Message-ID: <20141205122423.GK1630@arm.com> (sfid-20141205_132450_520743_03E32AD7)
-References: <5481794E.4050406@broadcom.com>
- <20141205094507.GP11285@n2100.arm.linux.org.uk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20141205094507.GP11285@n2100.arm.linux.org.uk>
+	Thu, 4 Dec 2014 17:14:40 -0500
+Received: by mail-wg0-f52.google.com with SMTP id a1so23799904wgh.11
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Dec 2014 14:14:39 -0800 (PST)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 6/6] staging: vt6655: RFbSetPower remove unused variable byPwrdBm
+Date: Thu,  4 Dec 2014 22:12:47 +0000
+Message-Id: <1417731167-3231-6-git-send-email-tvboxspy@gmail.com> (sfid-20141204_231443_631763_6895BE01)
+In-Reply-To: <1417731167-3231-1-git-send-email-tvboxspy@gmail.com>
+References: <1417731167-3231-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 05, 2014 at 09:45:08AM +0000, Russell King - ARM Linux wrote:
-> On Fri, Dec 05, 2014 at 10:22:22AM +0100, Arend van Spriel wrote:
-> > For our brcm80211 development we are working on getting brcmfmac driver
-> > up and running on a Broadcom ARM-based platform. The wireless device is
-> > a PCIe device, which is hooked up to the system behind a PCIe host
-> > bridge, and we transfer information between host and device using a
-> > descriptor ring buffer allocated using dma_alloc_coherent(). We mostly
-> > tested on x86 and seen no issue. However, on this ARM platform
-> > (single-core A9) we detect occasionally that the descriptor content is
-> > invalid. When this occurs we do a dma_sync_single_for_cpu() and this is
-> > retried a number of times if the problem persists. Actually, found out
-> > that someone made a mistake by using virt_to_dma(va) to get the
-> > dma_handle parameter. So probably we only provided a delay in the retry
-> > loop. After fixing that a single call to dma_sync_single_for_cpu() is
-> > sufficient. The DMA-API-HOWTO clearly states that:
-> > 
-> > """
-> > the hardware should guarantee that the device and the CPU can access the
-> > data in parallel and will see updates made by each other without any
-> > explicit software flushing.
-> > """
-> > 
-> > So it seems incorrect that we would need to do a dma_sync for this
-> > memory. That we do need it seems like this memory can end up in
-> > cache(?), or whatever happens, in some rare condition. Is there anyway
-> > to investigate this situation either through DMA-API or some low-level
-> > ARM specific functions.
-> 
-> It's been a long while since I looked at the code, and the code for
-> dma_alloc_coherent() has completely changed since then with the
-> addition of CMA.  I'm afraid that anything I would say about it would
-> not be accurate without research into the possible paths through that
-> code - it's no longer just a simple allocator.
-> 
-> What you say is correct however: the memory should not have any cache
-> lines associated with it, if it does, there's a bug somewhere.
-> 
-> Also, the memory will be weakly ordered, which means that writes to such
-> memory can be reordered.  If ordering matters, barriers should be used.
-> rmb() and wmb() can be used for this.
-> 
-> (Added Marek for comment on dma_alloc_coherent(), Will for comment on
-> barrier stuff.)
+byPwrdBm is set but never used.
 
-I'm not quite clear on the issue being seen here: is this on write from
-the CPU to the descriptor ring, or the other way around (or both?).
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/rf.c | 12 ------------
+ 1 file changed, 12 deletions(-)
 
-Either way, you need barriers on the CPU side to ensure ordering of
-accesses to the buffer. rmb/wmb will work, but are heavier than what you
-need (relaxed versions have been proposed on LKML recently).
+diff --git a/drivers/staging/vt6655/rf.c b/drivers/staging/vt6655/rf.c
+index a6eabde..941b2ad 100644
+--- a/drivers/staging/vt6655/rf.c
++++ b/drivers/staging/vt6655/rf.c
+@@ -775,7 +775,6 @@ bool RFbSetPower(
+ 	bool bResult = true;
+ 	unsigned char byPwr = 0;
+ 	unsigned char byDec = 0;
+-	unsigned char byPwrdBm = 0;
+ 
+ 	if (priv->dwDiagRefCount != 0)
+ 		return true;
+@@ -792,7 +791,6 @@ bool RFbSetPower(
+ 			return false;
+ 
+ 		byPwr = priv->abyCCKPwrTbl[uCH];
+-		byPwrdBm = priv->abyCCKDefaultPwr[uCH];
+ 		break;
+ 	case RATE_6M:
+ 	case RATE_9M:
+@@ -806,15 +804,6 @@ bool RFbSetPower(
+ 		if (byDec >= priv->byMaxPwrLevel)
+ 			byDec = priv->byMaxPwrLevel-1;
+ 
+-		if (priv->byRFType == RF_UW2452) {
+-			byPwrdBm = byDec - byPwr;
+-			byPwrdBm /= 3;
+-		} else {
+-			byPwrdBm = byDec - byPwr;
+-			byPwrdBm >>= 1;
+-		}
+-
+-		byPwrdBm += priv->abyOFDMDefaultPwr[uCH];
+ 		byPwr = byDec;
+ 		break;
+ 	case RATE_24M:
+@@ -822,7 +811,6 @@ bool RFbSetPower(
+ 	case RATE_48M:
+ 	case RATE_54M:
+ 		byPwr = priv->abyOFDMPwrTbl[uCH];
+-		byPwrdBm = priv->abyOFDMDefaultPwr[uCH];
+ 		break;
+ 	}
+ 
+-- 
+2.1.0
 
-Will
