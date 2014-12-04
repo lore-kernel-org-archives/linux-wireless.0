@@ -1,64 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.w1.fi ([212.71.239.96]:47928 "EHLO
-	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750770AbaLNPqd (ORCPT
+Received: from mail-oi0-f49.google.com ([209.85.218.49]:44133 "EHLO
+	mail-oi0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752526AbaLDJ0l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Dec 2014 10:46:33 -0500
-Date: Sun, 14 Dec 2014 17:46:29 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] nl80211: report new station / assoc event for the
- correct BSS
-Message-ID: <20141214154629.GC13745@w1.fi> (sfid-20141214_164638_021471_B31C1401)
-References: <1417878395-19235-1-git-send-email-zajec5@gmail.com>
- <CACna6rxzRg3oak6Zg=KDV2LyRQfobS40oEWdESXAqXC6YVHTJA@mail.gmail.com>
- <548D5799.306@broadcom.com>
+	Thu, 4 Dec 2014 04:26:41 -0500
+Received: by mail-oi0-f49.google.com with SMTP id i138so11977401oig.36
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Dec 2014 01:26:41 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <548D5799.306@broadcom.com>
+In-Reply-To: <54802031.7010709@rempel-privat.de>
+References: <CAD-4tLW3cvGrw3MYiLQni7OMJYGa=QJbrk_q9=9P2QuBb1EVFg@mail.gmail.com>
+	<CA+55aFw6zo4rTsEEX5uQe+8zeNR87JzmM8T=wYW7jvrHZPjB8A@mail.gmail.com>
+	<20141129191601.GA1234@kroah.com>
+	<CAD-4tLXYVtKJMWYW6cQ9aCL6rusUx3YpWSHys4xcTRN_dJ+kOA@mail.gmail.com>
+	<20141130184615.GA3122@kroah.com>
+	<CAD-4tLU-3otYOTO98s359z80SSbTJbiSstAYijiU__ekOPJkOA@mail.gmail.com>
+	<20141204012407.GA31191@kroah.com>
+	<CAD-4tLVrOqiUX2V9_VWMBbnFT-qEsO=zQF4qejd_N2H=scb4aw@mail.gmail.com>
+	<20141204043945.GA22144@kroah.com>
+	<CAGRGNgXiAAcFoUJyJiC2=yi7LGAU-=6L=NZpJxNj3V4E74RxCw@mail.gmail.com>
+	<20141204082348.GA1989@redhat.com>
+	<54802031.7010709@rempel-privat.de>
+Date: Thu, 4 Dec 2014 14:56:40 +0530
+Message-ID: <CAD-4tLWoLO8=NXnzuV8eHXcW5WDeS-Wv8uTvw=uiWEdDa9HKHg@mail.gmail.com> (sfid-20141204_102650_325050_14CA71F3)
+Subject: Re: Ralink 6570 / Mediatek MT7601STA (was Re: Addition of a wifi
+ kernel module to the linux source tree)
+From: Parth Sane <laerdevstudios@gmail.com>
+To: Oleksij Rempel <linux@rempel-privat.de>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	Julian Calaby <julian.calaby@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"driverdev-devel@linuxdriverproject.org"
+	<driverdev-devel@linuxdriverproject.org>,
+	Larry Finger <larry.finger@lwfinger.net>,
+	Felix Fietkau <nbd@openwrt.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Dec 14, 2014 at 10:25:45AM +0100, Arend van Spriel wrote:
-> On 12/13/14 23:31, Rafał Miłecki wrote:
-> >On 6 December 2014 at 16:06, Rafał Miłecki<zajec5@gmail.com>  wrote:
-> >>drv->ctx always points to the first BSS and we should report event using
-> >>BSS related to the interface we got NL80211_CMD_NEW_STATION from.
-> >>This fixes STA association for drivers using NL80211_CMD_NEW_STATION and
-> >>multiple virtual interfaces.
+Hi,
+Guys I'll be using my other account on my private domain laer.in now
+onwards. Be sure to add me in your contacts. My new email is
+parthsane@laer.in
+-Parth
 
-> >>As you can see in the log called "Before", hostapd was getting event from
-> >>wlan0-1 but then association was happening on the wlan0. This was breaking AP
-> >>mode on virtual interfaces (BSS other than the first one).
-
-> >>If you review this patch and it appears to be OK, I guess we will need similar
-> >>modification for other events.
-
-> I would say you are right in your analysis. I have not tried this
-> patch. I will ask Hante as he added Multiple-BSSID support. I assume
-> this bug is not visible to any mac80211-based driver, right?
-
-I think this is the first time I've heard of anyone using the multi-BSS
-design where multiple BSSes are maintained within a single struct
-hostapd_data instance with a driver that does not use hostapd as the AP
-SME and MLME.  As such, this is getting to areas that have never been
-even assumed to work.. Not that I have anything against making this
-work, but it should be understood that this was not part of the criteria
-for the event message design and yes, this would indeed require fixing
-number of other places as well.
-
-In practice, all cases where the driver takes care of authentication and
-association frame exchanges have used multi-BSS design in a way that
-hostapd gets two "radios" configured (e.g., two configuration files on
-the command line, each pointing to a separate virtual interface). I'd
-assume that could be used with nl80211 as well, but it may be reasonable
-to extend the internal BSS control case (bss=<ifname> in hostapd.conf)
-to provide a more consistent alternative for all drivers using the
-nl80211 interface.
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+On 4 December 2014 at 14:19, Oleksij Rempel <linux@rempel-privat.de> wrote:
+> Am 04.12.2014 um 09:23 schrieb Stanislaw Gruszka:
+>> On Thu, Dec 04, 2014 at 03:52:52PM +1100, Julian Calaby wrote:
+>>> On Thu, Dec 4, 2014 at 3:39 PM, Greg Kroah-Hartman
+>>> <gregkh@linuxfoundation.org> wrote:
+>>>> On Thu, Dec 04, 2014 at 07:07:58AM +0530, Parth Sane wrote:
+>>>>> Hi,
+>>>>> I'd say I'm midway through with c programming(part of my computer
+>>>>> engineering degree course) and know a decent amount of git. So yes I'm
+>>>>> comfortable writing code.
+>>>>
+>>>> Ok great, let's see if it's just a matter of some changes to the
+>>>> existing kernel driver before we decide to add the whole huge tarball
+>>>> to the staging tree as fixing it up will be a lot of work.
+>>>
+>>> I believe some people (CC'd) may have been working on / had an
+>>> interest in writing such a driver. I'm not sure what the status of
+>>> that effort is though.
+>>
+>> Right. Felix is working on new linux friendly driver for new Mediatek
+>> chips.
+>
+> So far i know, Felix is working on abgn+ac (MT7662 and MT7612) devices.
+> MT7601STA is (a)bgn. Are there similar regs?
+>
+> In mt7601 code i see parts like "if (IS_RT3290(pAd) || IS_RT65XX(pAd) ||
+> IS_MT7601(pAd))".  RT3290 is supported by rt2x00.
+>
+> --
+> Regards,
+> Oleksij
+>
