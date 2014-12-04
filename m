@@ -1,54 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f176.google.com ([209.85.192.176]:64615 "EHLO
-	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751074AbaLXPyP (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:37744 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754507AbaLDTEG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Dec 2014 10:54:15 -0500
-Message-ID: <549AE19E.9030008@gmail.com> (sfid-20141224_165422_779886_3319D79B)
-Date: Wed, 24 Dec 2014 23:54:06 +0800
-From: Chen Gang <gang.chen.5i5j@gmail.com>
+	Thu, 4 Dec 2014 14:04:06 -0500
+Message-ID: <5480B024.5050302@broadcom.com> (sfid-20141204_200419_493035_06F83F64)
+Date: Thu, 4 Dec 2014 20:04:04 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: qca_vkondrat@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-	wil6210@qca.qualcomm.com,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	linux-next@vger.kernel.org
-Subject: Re: [PATCH next] drivers/net/wireless/ath/wil6210/debugfs.c: Use
- 'uint64_t' instead of 'cycles_t' to avoid warnings
-References: <549AD067.80608@gmail.com> <549AD54F.3020605@gmail.com>	<8761d19j6z.fsf@kamboji.qca.qualcomm.com> <549ADA1D.8030509@gmail.com> <87oaqt83is.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87oaqt83is.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: Jouni Malinen <j@w1.fi>,
+	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Multiple-BSSID issues with hostapd
+References: <54784001.7020706@broadcom.com> <CACna6rzGB7EvMbiteWGbwjdmx+LMZymdk_04L_RKiFkT0hokvA@mail.gmail.com>
+In-Reply-To: <CACna6rzGB7EvMbiteWGbwjdmx+LMZymdk_04L_RKiFkT0hokvA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/24/2014 11:35 PM, Kalle Valo wrote:
-> Chen Gang <gang.chen.5i5j@gmail.com> writes:
-> 
->> On 12/24/2014 11:11 PM, Kalle Valo wrote:
->>> Chen Gang <gang.chen.5i5j@gmail.com> writes:
->>>
->>>> Oh, sorry, I forgot the word wrap (after change a new pc). I shall send
->>>> patch v2 for it.
->>>
->>> While at it, could you also please simplify the title. You don't have to
->>> put the full directory there, it just makes it more difficult to read.
->>> This should be enough:
->>>
->>> wil6210: Use 'uint64_t' instead of 'cycles_t' to avoid warnings
->>>
+On 12/04/14 13:03, Rafał Miłecki wrote:
+> On 28 November 2014 at 10:27, Arend van Spriel<arend@broadcom.com>  wrote:
+>> For the brcmfmac we started working on Multiple-BSSID support and came
+>> across some issues with hostapd that are listed listed below.
 >>
->> Oh, I have sent patch v2, if necessary, I will send patch v3 for it.
->> (if necessary, please let me know)
-> 
-> I can edit it this time, but in the future please be use less verbose
-> titles.
-> 
+>> BSS1 setup on netdev wlan0
+>> BSS2 setup on netdev wlan0_0
+>>
+>> * get_station() done on wrong netdev
+>>
+>> observed:
+>> Upon association of STA1 with BSS2 (wlan0_0) a get_station() is done for
+>> STA1 with wlan0 as netdev.
+>> expected:
+>> get_station() for STA1 with wlan0_0 as netdev. We verified that wlan0_0
+>> ifindex was used in NL80211_CMD_NEW_STATION event.
+>
+> Did you do any progress on this?
 
-OK, thanks. Next, I shall use the short subject for drivers.
+Nope.
 
+> According to the nl80211.h you are correct of course, every
+> NL80211_CMD_foo_STATION command should include NL80211_ATTR_IFINDEX.
+>
+> There are two functions in driver_nl80211.c where
+> NL80211_CMD_GET_STATION is used.
+>
+> 1) nl80211_get_link_signal
+> It fills NL80211_ATTR_IFINDEX in the following way:
+> NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, drv->ifindex);
+>
+> 2) i802_read_sta_data
+> It fills NL80211_ATTR_IFINDEX in the following way:
+> NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, if_nametoindex(bss->ifname));
+>
+> Did you track down which of the above functions in the one sending
+> wrong NL80211_ATTR_IFINDEX?
 
-Thanks.
--- 
-Chen Gang
+Nope. We simply return empty sta_info. We used the hostapd that comes 
+with Ubuntu 12.04 (i think) to assure it is usable. I suppose the code 
+you mention here is driver_nl80211.c from the git repo. I intended to 
+retry the scenario with hostapd build from git.
 
-Open, share, and attitude like air, water, and life which God blessed
+Regards,
+Arend
