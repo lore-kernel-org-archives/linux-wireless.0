@@ -1,109 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f50.google.com ([209.85.218.50]:53158 "EHLO
-	mail-oi0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750905AbaLQQmb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Dec 2014 11:42:31 -0500
-Message-ID: <5491B275.2090403@lwfinger.net> (sfid-20141217_174236_999964_8D86292B)
-Date: Wed, 17 Dec 2014 10:42:29 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mx1.redhat.com ([209.132.183.28]:53375 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751617AbaLDI1J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Dec 2014 03:27:09 -0500
+Date: Thu, 4 Dec 2014 09:23:49 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Parth Sane <laerdevstudios@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	driverdev-devel@linuxdriverproject.org,
+	Larry Finger <larry.finger@lwfinger.net>,
+	Oleksij Rempel <linux@rempel-privat.de>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: Re: Ralink 6570 / Mediatek MT7601STA (was Re: Addition of a wifi
+ kernel module to the linux source tree)
+Message-ID: <20141204082348.GA1989@redhat.com> (sfid-20141204_092713_856211_AEB3E93A)
+References: <CAD-4tLW3cvGrw3MYiLQni7OMJYGa=QJbrk_q9=9P2QuBb1EVFg@mail.gmail.com>
+ <CA+55aFw6zo4rTsEEX5uQe+8zeNR87JzmM8T=wYW7jvrHZPjB8A@mail.gmail.com>
+ <20141129191601.GA1234@kroah.com>
+ <CAD-4tLXYVtKJMWYW6cQ9aCL6rusUx3YpWSHys4xcTRN_dJ+kOA@mail.gmail.com>
+ <20141130184615.GA3122@kroah.com>
+ <CAD-4tLU-3otYOTO98s359z80SSbTJbiSstAYijiU__ekOPJkOA@mail.gmail.com>
+ <20141204012407.GA31191@kroah.com>
+ <CAD-4tLVrOqiUX2V9_VWMBbnFT-qEsO=zQF4qejd_N2H=scb4aw@mail.gmail.com>
+ <20141204043945.GA22144@kroah.com>
+ <CAGRGNgXiAAcFoUJyJiC2=yi7LGAU-=6L=NZpJxNj3V4E74RxCw@mail.gmail.com>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-nfc@ml01.01.org
-CC: "David S. Miller" <davem@davemloft.net>,
-	Kalle Valo <kvalo@codeaurora.org>, lwn@lwn.net
-Subject: Re: changes to Linux wireless maintenance
-References: <20141217155951.GA3144@tuxdriver.com>
-In-Reply-To: <20141217155951.GA3144@tuxdriver.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAGRGNgXiAAcFoUJyJiC2=yi7LGAU-=6L=NZpJxNj3V4E74RxCw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/17/2014 09:59 AM, John W. Linville wrote:
-> Greetings,
->
-> Almost 9 years ago, Jeff Garzik wrote a message on LKML detailing
-> the sad state of wireless LANs in the Linux world.  The point of his
-> message was "So... there it is.  We suck.  There's hope.  No Luke
-> Skywalker in sight.":
->
-> 	https://lkml.org/lkml/2006/1/5/671
->
-> Shortly thereafter, I became the maintainer for wireless LANs in the
-> Linux kernel:
->
-> 	https://lkml.org/lkml/2006/1/18/377
->
-> Since then, we have had a number of wireless summit meetings all around
-> the world.  Items were discussed, patches were merged, and friendships
-> were made.  Over time, we garnered support from a large range of
-> wireless networking vendors.  Eventually even other technologies
-> were sending their patches through my trees, and I was consistently
-> ranked amongst the top 10 "gate keepers" for getting changes into the
-> Linux kernel.  In fact, a couple of years ago I even gave a talk on
-> how Linux wireless got better.	It has been quite a ride!
->
-> 	https://events.linuxfoundation.org/images/stories/pdf/lfcs2012_linville.pdf
->
-> Nevertheless, I think it is time for some changes.  I have been
-> the wireless maintainer for a long time, and I personally would
-> like to develop in a different direction.  Plus, I think that Linux
-> will benefit from having some fresh blood involved in more of the
-> maintenance duties.  I will be stepping aside to let that happen.
->
-> The mac80211, bluetooth, and nfc trees have fed through me for some
-> time.  I am now asking these trees to send pull request directly to
-> David Miller.  Since these trees are managed through git, my hope is
-> that they will not place any significant burden on Dave.
->
-> As for the wireless driver patches, I have asked Kalle Valo
-> to handle patch review and merge duties for everything under the
-> drivers/net/wireless directory.  This will now include not only the ath
-> patches he already manages, but other drivers that don't have trees
-> such as mwifiex, rt2x00, rtlwifi, and others.  For consistency, the
-> iwlwifi tree will also be merged through Kalle's new tree.  I expect
-> that Kalle will announce any relevant details in a follow-up message.
->
-> The wireless-testing tree is a resource that some people value.
-> I will continue to provide a wireless-testing tree.  Now that tree
-> will feed from the various wireless trees managed by others, probably
-> with some sort of regularly scheduled pulls.  Details are still to be
-> determined, but the tree will still exist and will be substantially
-> similar to how it has been so far.
->
-> I also receive notices of new bug reports for wireless LANs on
-> bugzilla.kernel.org.  For now I will continue to triage those reports,
-> so don't ignore me!! :-)
->
-> Some may ask what I will do now -- I wish I had a specific answer.
-> Immediate plans are to enjoy the coming holidays and my traditional
-> year-end time away from work.  After that...well, I'm sure I will
-> find something to do.  If you have any suggestions for good uses of
-> my talents, feel free to contact me -- I'm not hard to find!
->
-> In closing, I hope everyone will support Kalle and the other wireless
-> maintainers at least as much as you have supported me for the past
-> several years.	These are good, hard working folks.  You are in
-> good hands!
->
-> Regards,
->
-> John
->
-> P.S.  Bonus points for anyone that finds a way for me to become a
-> professional retro-computing hobbyist... :-)
+On Thu, Dec 04, 2014 at 03:52:52PM +1100, Julian Calaby wrote:
+> On Thu, Dec 4, 2014 at 3:39 PM, Greg Kroah-Hartman
+> <gregkh@linuxfoundation.org> wrote:
+> > On Thu, Dec 04, 2014 at 07:07:58AM +0530, Parth Sane wrote:
+> >> Hi,
+> >> I'd say I'm midway through with c programming(part of my computer
+> >> engineering degree course) and know a decent amount of git. So yes I'm
+> >> comfortable writing code.
+> >
+> > Ok great, let's see if it's just a matter of some changes to the
+> > existing kernel driver before we decide to add the whole huge tarball
+> > to the staging tree as fixing it up will be a lot of work.
+> 
+> I believe some people (CC'd) may have been working on / had an
+> interest in writing such a driver. I'm not sure what the status of
+> that effort is though.
 
-John,
+Right. Felix is working on new linux friendly driver for new Mediatek
+chips.
 
-Many thanks for your service to the wireless community. Although some 
-individuals still consider Linux wireless to be a mess, you have had a major 
-impact on coordinating large-scale improvements. I hope you enjoy your new 
-endeavors as much as I have enjoyed my second career.
-
-I look forward to working with Kalle.
-
-Larry
-
-
-
+Stanislaw
