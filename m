@@ -1,61 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:4736 "EHLO
-	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752042AbaLZOmh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Dec 2014 09:42:37 -0500
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: kernel-janitors@vger.kernel.org,
-	Avinash Patil <patila@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 25/27] mwifiex: tdls: Use setup_timer
-Date: Fri, 26 Dec 2014 15:35:58 +0100
-Message-Id: <1419604558-29743-28-git-send-email-Julia.Lawall@lip6.fr> (sfid-20141226_154459_307193_39879F8E)
-In-Reply-To: <1419604558-29743-1-git-send-email-Julia.Lawall@lip6.fr>
-References: <1419604558-29743-1-git-send-email-Julia.Lawall@lip6.fr>
+Received: from cantor2.suse.de ([195.135.220.15]:58587 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932281AbaLDRhh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Dec 2014 12:37:37 -0500
+Date: Thu, 4 Dec 2014 18:37:35 +0100
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	stable@vger.kernel.org
+Subject: Re: [PATCH] cfg80211: avoid mem leak on driver hint set
+Message-ID: <20141204173735.GG25677@wotan.suse.de> (sfid-20141204_183740_980137_91943039)
+References: <1417688536-9145-1-git-send-email-arik@wizery.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1417688536-9145-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Convert a call to init_timer and accompanying intializations of
-the timer's data and function fields to a call to setup_timer.
+On Thu, Dec 04, 2014 at 12:22:16PM +0200, Arik Nemtsov wrote:
+> In the already-set and intersect case of a driver-hint, the previous
+> wiphy regdomain was not freed before being reset with a copy of the
+> cfg80211 regdomain.
+> 
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
 
-A simplified version of the semantic match that fixes this problem is as
-follows: (http://coccinelle.lip6.fr/)
+Acked-by: Luis R. Rodriguez <mcgrof@suse.com>
 
-// <smpl>
-@@
-expression t,f,d;
-@@
-
--init_timer(&t);
-+setup_timer(&t,f,d);
--t.function = f;
--t.data = d;
-// </smpl>
-
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-
----
- drivers/net/wireless/mwifiex/tdls.c |    5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/tdls.c b/drivers/net/wireless/mwifiex/tdls.c
-index 22884b4..5a64681 100644
---- a/drivers/net/wireless/mwifiex/tdls.c
-+++ b/drivers/net/wireless/mwifiex/tdls.c
-@@ -1367,9 +1367,8 @@ void mwifiex_check_auto_tdls(unsigned long context)
- 
- void mwifiex_setup_auto_tdls_timer(struct mwifiex_private *priv)
- {
--	init_timer(&priv->auto_tdls_timer);
--	priv->auto_tdls_timer.function = mwifiex_check_auto_tdls;
--	priv->auto_tdls_timer.data = (unsigned long)priv;
-+	setup_timer(&priv->auto_tdls_timer, mwifiex_check_auto_tdls,
-+		    (unsigned long)priv);
- 	priv->auto_tdls_timer_active = true;
- 	mod_timer(&priv->auto_tdls_timer,
- 		  jiffies + msecs_to_jiffies(MWIFIEX_TIMER_10S));
-
+  Luis
