@@ -1,53 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:10174 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751410AbaLQKVI (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:25221 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750893AbaLESzj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Dec 2014 05:21:08 -0500
-Subject: [PATCH v2 3/8] ath10k: print ath10k wmi op version
-To: <ath10k@lists.infradead.org>
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Date: Wed, 17 Dec 2014 12:21:03 +0200
-Message-ID: <20141217102103.15964.40410.stgit@potku.adurom.net> (sfid-20141217_112111_759830_9F3A1198)
-In-Reply-To: <20141217101755.15964.2625.stgit@potku.adurom.net>
-References: <20141217101755.15964.2625.stgit@potku.adurom.net>
+	Fri, 5 Dec 2014 13:55:39 -0500
+Message-ID: <5481FFA8.6090209@broadcom.com> (sfid-20141205_195542_206590_DFE750C2)
+Date: Fri, 5 Dec 2014 19:55:36 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Seth Forshee <seth.forshee@canonical.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	<wireless-regdb@lists.infradead.org>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] wireless-regdb: Update keys and maintainer information
+References: <20141205163134.GC13629@ubuntu-mba51> <20141205163353.GC28319@tuxdriver.com> <20141205164742.GB40007@ubuntu-hedt>
+In-Reply-To: <20141205164742.GB40007@ubuntu-hedt>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The internal firmware version doesn't tell much to the user, it's more
-informative to use that field to print the wmi op version.
+On 12/05/14 17:47, Seth Forshee wrote:
+> On Fri, Dec 05, 2014 at 11:33:53AM -0500, John W. Linville wrote:
+>> On Fri, Dec 05, 2014 at 10:31:34AM -0600, Seth Forshee wrote:
+>>> As announced by John [1], I'm taking over maintaintership of the
+>>> wireless regulatory databse. Make it official by adding my key,
+>>> removing John's, and updating the Makefile and documentation to
+>>> reflect the change in maintainer.
+>>>
+>>> [1] http://permalink.gmane.org/gmane.linux.kernel.wireless.general/131573
+>>>
+>>> Signed-off-by: Seth Forshee<seth.forshee@canonical.com>
+>>
+>> ACK
+>>
+>> Although, I would have changed "In linville we trust" to "In Seth we
+>> trust"... ;-)
+>
+> Well, I didn't want to put words into anyone's mount ;-)
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/debug.c |    7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
+Ouch, Seth. Hope your use of words were not deliberate :-p
 
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index 70a9599aeb7a..6ca24427e184 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -124,7 +124,7 @@ EXPORT_SYMBOL(ath10k_info);
- 
- void ath10k_print_driver_info(struct ath10k *ar)
- {
--	ath10k_info(ar, "%s (0x%08x, 0x%08x) fw %s api %d htt %d.%d wmi %d.%d.%d.%d cal %s max_sta %d\n",
-+	ath10k_info(ar, "%s (0x%08x, 0x%08x) fw %s api %d htt %d.%d wmi %d cal %s max_sta %d\n",
- 		    ar->hw_params.name,
- 		    ar->target_version,
- 		    ar->chip_id,
-@@ -132,10 +132,7 @@ void ath10k_print_driver_info(struct ath10k *ar)
- 		    ar->fw_api,
- 		    ar->htt.target_version_major,
- 		    ar->htt.target_version_minor,
--		    ar->fw_version_major,
--		    ar->fw_version_minor,
--		    ar->fw_version_release,
--		    ar->fw_version_build,
-+		    ar->wmi.op_version,
- 		    ath10k_cal_mode_str(ar->cal_mode),
- 		    ar->max_num_stations);
- 	ath10k_info(ar, "debug %d debugfs %d tracing %d dfs %d testmode %d\n",
+Regards,
+Arend
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
