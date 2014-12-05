@@ -1,50 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:59021 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750734AbaLaNK2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Dec 2014 08:10:28 -0500
-Date: Wed, 31 Dec 2014 14:10:24 +0100 (CET)
-From: Jiri Kosina <jkosina@suse.cz>
-To: Arend van Spriel <arend@broadcom.com>
-cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Borislav Petkov <bp@alien8.de>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:45463 "EHLO
+	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750975AbaLES3I (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Dec 2014 13:29:08 -0500
+Date: Fri, 5 Dec 2014 18:28:51 +0000
+From: Catalin Marinas <catalin.marinas@arm.com>
+To: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Cc: Hante Meuleman <meuleman@broadcom.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"egrumbach@gmail.com" <egrumbach@gmail.com>,
-	"peter@hurleysoftware.com" <peter@hurleysoftware.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] Revert "cfg80211: make WEXT compatibility
- unselectable"
-In-Reply-To: <54A3D955.6020809@broadcom.com>
-Message-ID: <alpine.LNX.2.00.1412311408090.31609@pobox.suse.cz> (sfid-20141231_141054_675659_9DA64C9D)
-References: <alpine.LNX.2.00.1412301427430.31609@pobox.suse.cz> <CANUX_P0=wJiKrR4cUgEN=LO+eQ2byprz0K9m9QxzJc+kf4+_bA@mail.gmail.com> <54A2B807.1020202@hurleysoftware.com> <0BA3FCBA62E2DC44AF3030971E174FB31B5DC915@hasmsx107.ger.corp.intel.com>
- <alpine.LNX.2.00.1412301610320.31609@pobox.suse.cz> <1419971304.30412.0.camel@egrumbacBox> <alpine.LNX.2.00.1412302135520.31609@pobox.suse.cz> <20141230212326.GA29263@pd.tnic> <54A328C2.5080606@lwfinger.net> <alpine.LNX.2.00.1412302341290.31609@pobox.suse.cz>
- <alpine.LNX.2.00.1412302351030.31609@pobox.suse.cz> <54A3D955.6020809@broadcom.com>
+	Will Deacon <Will.Deacon@arm.com>,
+	Arend Van Spriel <arend@broadcom.com>,
+	David Miller <davem@davemloft.net>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Marek Szyprowski <m.szyprowski@samsung.com>
+Subject: Re: using DMA-API on ARM
+Message-ID: <20141205182851.GC31222@e104818-lin.cambridge.arm.com> (sfid-20141205_192927_094904_17516AE8)
+References: <5481794E.4050406@broadcom.com>
+ <20141205094507.GP11285@n2100.arm.linux.org.uk>
+ <20141205122423.GK1630@arm.com>
+ <F51492713EF10846800D8C0ED37A7DCE019016E1@SJEXCHMB15.corp.ad.broadcom.com>
+ <20141205132332.GS11285@n2100.arm.linux.org.uk>
+ <20141205150648.GT11285@n2100.arm.linux.org.uk>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20141205150648.GT11285@n2100.arm.linux.org.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 31 Dec 2014, Arend van Spriel wrote:
+On Fri, Dec 05, 2014 at 03:06:48PM +0000, Russell King - ARM Linux wrote:
+> I've been doing more digging into the current DMA code, and I'm dismayed
+> to see that there's new bugs in it...
+> 
+> commit 513510ddba9650fc7da456eefeb0ead7632324f6
+> Author: Laura Abbott <lauraa@codeaurora.org>
+> Date:   Thu Oct 9 15:26:40 2014 -0700
+> 
+>     common: dma-mapping: introduce common remapping functions
+> 
+> This uses map_vm_area() to achieve the remapping of pages allocated inside
+> dma_alloc_coherent().  dma_alloc_coherent() is documented in a rather
+> round-about way in Documentation/DMA-API.txt:
+> 
+> | Part Ia - Using large DMA-coherent buffers
+> | ------------------------------------------
+> | 
+> | void *
+> | dma_alloc_coherent(struct device *dev, size_t size,
+> |                              dma_addr_t *dma_handle, gfp_t flag)
+> | 
+> | void
+> | dma_free_coherent(struct device *dev, size_t size, void *cpu_addr,
+> |                            dma_addr_t dma_handle)
+> | 
+> | Free a region of consistent memory you previously allocated.  dev,
+> | size and dma_handle must all be the same as those passed into
+> | dma_alloc_coherent().  cpu_addr must be the virtual address returned by
+> | the dma_alloc_coherent().
+> | 
+> | Note that unlike their sibling allocation calls, these routines
+> | may only be called with IRQs enabled.
+> 
+> Note that very last paragraph.  What this says is that it is explicitly
+> permitted to call dma_alloc_coherent() with IRQs disabled.
 
-> You mentioned in the discussion and I quote: "*If* wireless maintainers 
-> think otherwise, I'll send a revert request to Linus for 
-> consideration.". However, you did not wait for any response from the 
-> wireless maintainers nor from the author of the patch you are reverting. 
-> Seems like an overreaction to me though personally I do not disgree with 
-> the revert itself.
+This is solved by using a pre-allocated, pre-mapped atomic_pool which
+avoids any further mapping. __dma_alloc() calls __alloc_from_pool() when
+!__GFP_WAIT.
 
-My understanding from the whole thread was that Emmanuel disagrees with 
-the revert, and I consider Emmanuel to definitely belong to the "wireless 
-maintainers" group. If my understanding was wrong on this, sorry for that.
+This code got pretty complex and we may find bugs. It can be simplified
+by a pre-allocated non-cacheable region that is safe in atomic context
+(how big you allocate this is hard to say).
 
-One way or another, the revert really is a-must-have, as it causes visible 
-userspace regressions. I am really surprised that it's causing so lively 
-discussion and doubts.
+> If the problem which you (Broadcom) are suffering from is down to the
+> issue I suspect (that being having mappings with different cache
+> attributes) then I'm not sure that there's anything we can realistically
+> do about that.  There's a number of issues which make it hard to see a
+> way forward.
+
+I'm still puzzled by this problem, so I don't have any suggestion yet. I
+wouldn't blame the mismatched attributes yet as I haven't seen such
+problem in practice (but you never know).
+
+How does the DT describe this device? Could it have some dma-coherent
+property in there that causes dma_alloc_coherent() to create a cacheable
+memory?
+
+The reverse could also cause problems: the device is coherent but the
+CPU creates a non-cacheable mapping.
 
 -- 
-Jiri Kosina
-SUSE Labs
+Catalin
