@@ -1,54 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:49344 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751441AbaLXJJN (ORCPT
+Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:45526 "EHLO
+	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751386AbaLESxN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Dec 2014 04:09:13 -0500
-Message-ID: <549A82B6.40105@broadcom.com> (sfid-20141224_100936_540183_C79E2943)
-Date: Wed, 24 Dec 2014 10:09:10 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Fri, 5 Dec 2014 13:53:13 -0500
+Date: Fri, 5 Dec 2014 18:53:03 +0000
+From: Catalin Marinas <catalin.marinas@arm.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Russell King <linux@arm.linux.org.uk>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
+	David Miller <davem@davemloft.net>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: using DMA-API on ARM
+Message-ID: <20141205185303.GG31222@e104818-lin.cambridge.arm.com> (sfid-20141205_195330_110506_B336D69E)
+References: <5481794E.4050406@broadcom.com>
+ <20141205183945.GE31222@e104818-lin.cambridge.arm.com>
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: Oscar Forner Martinez <oscar.forner.martinez@gmail.com>,
-	<zajec5@gmail.com>, <linux-wireless@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] Drivers: bcma: Fix three coding style issues, more than
- 80 characters per line.
-References: <1419378909-14414-1-git-send-email-oscar.forner.martinez@gmail.com> <877fxhbjj8.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <877fxhbjj8.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20141205183945.GE31222@e104818-lin.cambridge.arm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/24/14 08:20, Kalle Valo wrote:
-> Oscar Forner Martinez<oscar.forner.martinez@gmail.com>  writes:
->
->> Three lines with more than 80 characters per line have been split in several lines.
->>
->> Signed-off-by: Oscar Forner Martinez<oscar.forner.martinez@gmail.com>
->> ---
->>   drivers/bcma/driver_chipcommon.c | 10 +++++++---
->>   1 file changed, 7 insertions(+), 3 deletions(-)
->
-> Just to handle the bureaucracy before v2 is submitted:
->
-> To which tree should this go to? I see that earlier John has applied
-> patches to drivers/bcma/, but what about now? Should I take these? John,
-> any suggestions?
+On Fri, Dec 05, 2014 at 06:39:45PM +0000, Catalin Marinas wrote:
+> On Fri, Dec 05, 2014 at 09:22:22AM +0000, Arend van Spriel wrote:
+> > For our brcm80211 development we are working on getting brcmfmac driver
+> > up and running on a Broadcom ARM-based platform. The wireless device is
+> > a PCIe device, which is hooked up to the system behind a PCIe host
+> > bridge, and we transfer information between host and device using a
+> > descriptor ring buffer allocated using dma_alloc_coherent(). We mostly
+> > tested on x86 and seen no issue. However, on this ARM platform
+> > (single-core A9) we detect occasionally that the descriptor content is
+> > invalid. When this occurs we do a dma_sync_single_for_cpu() and this is
+> > retried a number of times if the problem persists. Actually, found out
+> > that someone made a mistake by using virt_to_dma(va) to get the
+> > dma_handle parameter. So probably we only provided a delay in the retry
+> > loop. After fixing that a single call to dma_sync_single_for_cpu() is
+> > sufficient. The DMA-API-HOWTO clearly states that:
+> 
+> Does your system have an L2 cache? What's the SoC topology, can PCIe see
+> such L2 cache (or snoop the L1 caches)?
 
-It is a bit of an odd ball, but there are couple of wireless driver 
-relying on bcma and it is more than just a bus driver. It also does some 
-steps of the device initialization (which is convenient, but not sure I 
-like it). So I would hope it can stay with wireless subsystem to catch 
-issue caused in that area early on.
+BTW, if you really have a PL310-like L2 cache, have a look at some
+patches (I've seen similar symptoms) and make sure your configuration is
+correct:
 
-Regards,
-Arend
+http://www.arm.linux.org.uk/developer/patches/viewpatch.php?id=6395/1
 
-> Oscar, the patchwork entry for this patch looked odd. I'm guessing it
-> was because your time (or timezone) is wrong:
->
-> https://patchwork.kernel.org/patch/5535751/
->
+http://www.arm.linux.org.uk/developer/patches/viewpatch.php?id=6529/1
 
+The first one is vexpress specific. The second one was eventually
+discarded by Russell (I don't remember the reason, I guess it's because
+SoC code is supposed to set the right bits in there anyway). In your
+case, such bits may be set up by firmware, so Linux cannot fix anything
+up.
+
+-- 
+Catalin
