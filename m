@@ -1,90 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:34242 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752073AbaLXPIu (ORCPT
+Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:39032 "EHLO
+	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750942AbaLELLd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Dec 2014 10:08:50 -0500
-Message-ID: <549AD6FC.8060706@gmail.com> (sfid-20141224_160855_182552_088FDD30)
-Date: Wed, 24 Dec 2014 23:08:44 +0800
-From: Chen Gang <gang.chen.5i5j@gmail.com>
+	Fri, 5 Dec 2014 06:11:33 -0500
+Date: Fri, 5 Dec 2014 11:11:14 +0000
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-arm-kernel@lists.infradead.org,
+	Arend van Spriel <arend@broadcom.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
+	David Miller <davem@davemloft.net>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: using DMA-API on ARM
+Message-ID: <20141205111114.GQ11285@n2100.arm.linux.org.uk> (sfid-20141205_121137_241927_9E304A45)
+References: <5481794E.4050406@broadcom.com>
+ <4565667.WCBuNmaazQ@wuerfel>
 MIME-Version: 1.0
-To: qca_vkondrat@qca.qualcomm.com, kvalo@codeaurora.org
-CC: linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-	netdev@vger.kernel.org, linux-next@vger.kernel.org
-Subject: [PATCH next v2] drivers/net/wireless/ath/wil6210/debugfs.c: Use 'uint64_t'
- instead of 'cycles_t' to avoid warnings
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4565667.WCBuNmaazQ@wuerfel>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-do_div() checks the type strictly. 'cycles_t' may be 32-bit under quite
-a few architectures (parisc, arm, avr32 ...). So use 'uint64_t' instead
-of, the related warning (with allmodconfig under parisc):
+On Fri, Dec 05, 2014 at 10:52:02AM +0100, Arnd Bergmann wrote:
+> I'm still puzzled why you'd need a single dma_sync_single_for_cpu()
+> after dma_alloc_coherent though, you should not need any. Is it possible
+> that the driver accidentally uses __raw_readl() instead of readl()
+> in some places and you are just lacking an appropriate barrier?
 
-    CC [M]  drivers/net/wireless/ath/wil6210/debugfs.o
-  In file included from arch/parisc/include/generated/asm/div64.h:1:0,
-                   from include/linux/kernel.h:124,
-                   from include/linux/list.h:8,
-                   from include/linux/module.h:9,
-                   from drivers/net/wireless/ath/wil6210/debugfs.c:17:
-  drivers/net/wireless/ath/wil6210/debugfs.c: In function ‘wil_vring_debugfs_show’:
-  include/asm-generic/div64.h:43:28: warning: comparison of distinct pointer types lacks a cast
-    (void)(((typeof((n)) *)0) == ((uint64_t *)0)); \
-                              ^
-  drivers/net/wireless/ath/wil6210/debugfs.c:107:4: note: in expansion of macro ‘do_div’
-      do_div(idle, total);
-      ^
-  In file included from include/uapi/linux/stddef.h:1:0,
-                   from include/linux/stddef.h:4,
-                   from ./include/uapi/linux/posix_types.h:4,
-                   from include/uapi/linux/types.h:13,
-                   from include/linux/types.h:5,
-                   from include/linux/list.h:4,
-                   from include/linux/module.h:9,
-                   from drivers/net/wireless/ath/wil6210/debugfs.c:17:
-  include/asm-generic/div64.h:44:18: warning: right shift count >= width of type [-Wshift-count-overflow]
-    if (likely(((n) >> 32) == 0)) {   \
-                    ^
-  include/linux/compiler.h:159:40: note: in definition of macro ‘likely’
-   # define likely(x) __builtin_expect(!!(x), 1)
-                                          ^
-  drivers/net/wireless/ath/wil6210/debugfs.c:107:4: note: in expansion of macro ‘do_div’
-      do_div(idle, total);
-      ^
-  In file included from arch/parisc/include/generated/asm/div64.h:1:0,
-                   from include/linux/kernel.h:124,
-                   from include/linux/list.h:8,
-                   from include/linux/module.h:9,
-                   from drivers/net/wireless/ath/wil6210/debugfs.c:17:
-  include/asm-generic/div64.h:48:22: warning: passing argument 1 of ‘__div64_32’ from incompatible pointer type [-Wincompatible-pointer-types]
-     __rem = __div64_32(&(n), __base); \
-                        ^
-  drivers/net/wireless/ath/wil6210/debugfs.c:107:4: note: in expansion of macro ‘do_div’
-      do_div(idle, total);
-      ^
-  include/asm-generic/div64.h:35:17: note: expected ‘uint64_t * {aka long long unsigned int *}’ but argument is of type ‘cycles_t * {aka long unsigned int *}’
-   extern uint32_t __div64_32(uint64_t *dividend, uint32_t divisor);
-                   ^
+Digging into the driver, it looks like individual DMA buffers are
+allocated (via brcmf_pcie_init_dmabuffer_for_device) and registered
+into a "commonring" layer.
 
-Signed-off-by: Chen Gang <gang.chen.5i5j@gmail.com>
----
- drivers/net/wireless/ath/wil6210/debugfs.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Whenever the buffer is written to, space is first allocated via a call
+to brcmf_commonring_reserve_for_write() or
+brcmf_commonring_reserve_for_write_multiple(), data written to the
+buffer, followed by a call to brcmf_commonring_write_complete().
 
-diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
-index 4e6e145..cd991fa 100644
---- a/drivers/net/wireless/ath/wil6210/debugfs.c
-+++ b/drivers/net/wireless/ath/wil6210/debugfs.c
-@@ -101,8 +101,8 @@ static int wil_vring_debugfs_show(struct seq_file *s, void *data)
- 			char name[10];
- 			/* performance monitoring */
- 			cycles_t now = get_cycles();
--			cycles_t idle = txdata->idle * 100;
--			cycles_t total = now - txdata->begin;
-+			uint64_t idle = txdata->idle * 100;
-+			uint64_t total = now - txdata->begin;
- 
- 			do_div(idle, total);
- 			txdata->begin = now;
+brcmf_commonring_write_complete() calls two methods at that point:
+cr_write_wptr() and cr_ring_bell(), which will be
+brcmf_pcie_ring_mb_write_wptr() and brcmf_pcie_ring_mb_ring_bell().
+
+The first calls brcmf_pcie_write_tcm16(), which uses iowrite16(),
+which contains the appropriate barrier.  The bell ringing functions
+also use ioread*/iowrite*().
+
+So, on the write side, it looks fine from the barrier perspective.
+
+On the read side, brcmf_commonring_get_read_ptr() is used before
+a read access to the ring - which calls the cr_update_wptr() method,
+which in turn uses an ioread16() call.  After the CPU has read data
+from the ring, brcmf_commonring_read_complete() is used, which uses
+iowrite16().
+
+So, I don't see a barrier problem on the read side.
+
+However, I did trip over this:
+
+static void *
+brcmf_pcie_init_dmabuffer_for_device(struct brcmf_pciedev_info *devinfo,
+                                     u32 size, u32 tcm_dma_phys_addr,
+                                     dma_addr_t *dma_handle)
+{
+        void *ring;
+        long long address;
+
+        ring = dma_alloc_coherent(&devinfo->pdev->dev, size, dma_handle,
+                                  GFP_KERNEL);
+        if (!ring)
+                return NULL;
+
+        address = (long long)(long)*dma_handle;
+
+Casting to (long) will truncate the DMA handle to 32-bits on a 32-bit
+architecture, even if it supports 64-bit DMA addresses.  There's a couple
+of other places where this same truncation occurs:
+
+        address = (long long)(long)devinfo->shared.scratch_dmahandle;
+
+and
+
+        address = (long long)(long)devinfo->shared.ringupd_dmahandle;
+
+In any case, wouldn't using a u64 type for "address" be better - isn't
+"long long" 128-bit on 64-bit architectures?
+
 -- 
-1.7.9.5
+FTTC broadband for 0.8mile line: currently at 9.5Mbps down 400kbps up
+according to speedtest.net.
