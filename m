@@ -1,75 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f51.google.com ([209.85.218.51]:33881 "EHLO
-	mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751766AbaLRJGK (ORCPT
+Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:45215 "EHLO
+	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753003AbaLEMYZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Dec 2014 04:06:10 -0500
-Received: by mail-oi0-f51.google.com with SMTP id e131so109479oig.10
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Dec 2014 01:06:10 -0800 (PST)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH 14/16] rtlwifi: rtl8192cu: Rework calls to rate-control routine
-Date: Thu, 18 Dec 2014 03:05:38 -0600
-Message-Id: <1418893540-19944-15-git-send-email-Larry.Finger@lwfinger.net> (sfid-20141218_100629_937463_37D219A1)
-In-Reply-To: <1418893540-19944-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1418893540-19944-1-git-send-email-Larry.Finger@lwfinger.net>
+	Fri, 5 Dec 2014 07:24:25 -0500
+Date: Fri, 5 Dec 2014 12:24:23 +0000
+From: Will Deacon <will.deacon@arm.com>
+To: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	Marek Szyprowski <m.szyprowski@samsung.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	David Miller <davem@davemloft.net>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: using DMA-API on ARM
+Message-ID: <20141205122423.GK1630@arm.com> (sfid-20141205_132450_520743_03E32AD7)
+References: <5481794E.4050406@broadcom.com>
+ <20141205094507.GP11285@n2100.arm.linux.org.uk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20141205094507.GP11285@n2100.arm.linux.org.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The code uses macros to determine the parameters that are passed to the
-rate setting routine. A simpler method is implemented.
+On Fri, Dec 05, 2014 at 09:45:08AM +0000, Russell King - ARM Linux wrote:
+> On Fri, Dec 05, 2014 at 10:22:22AM +0100, Arend van Spriel wrote:
+> > For our brcm80211 development we are working on getting brcmfmac driver
+> > up and running on a Broadcom ARM-based platform. The wireless device is
+> > a PCIe device, which is hooked up to the system behind a PCIe host
+> > bridge, and we transfer information between host and device using a
+> > descriptor ring buffer allocated using dma_alloc_coherent(). We mostly
+> > tested on x86 and seen no issue. However, on this ARM platform
+> > (single-core A9) we detect occasionally that the descriptor content is
+> > invalid. When this occurs we do a dma_sync_single_for_cpu() and this is
+> > retried a number of times if the problem persists. Actually, found out
+> > that someone made a mistake by using virt_to_dma(va) to get the
+> > dma_handle parameter. So probably we only provided a delay in the retry
+> > loop. After fixing that a single call to dma_sync_single_for_cpu() is
+> > sufficient. The DMA-API-HOWTO clearly states that:
+> > 
+> > """
+> > the hardware should guarantee that the device and the CPU can access the
+> > data in parallel and will see updates made by each other without any
+> > explicit software flushing.
+> > """
+> > 
+> > So it seems incorrect that we would need to do a dma_sync for this
+> > memory. That we do need it seems like this memory can end up in
+> > cache(?), or whatever happens, in some rare condition. Is there anyway
+> > to investigate this situation either through DMA-API or some low-level
+> > ARM specific functions.
+> 
+> It's been a long while since I looked at the code, and the code for
+> dma_alloc_coherent() has completely changed since then with the
+> addition of CMA.  I'm afraid that anything I would say about it would
+> not be accurate without research into the possible paths through that
+> code - it's no longer just a simple allocator.
+> 
+> What you say is correct however: the memory should not have any cache
+> lines associated with it, if it does, there's a bug somewhere.
+> 
+> Also, the memory will be weakly ordered, which means that writes to such
+> memory can be reordered.  If ordering matters, barriers should be used.
+> rmb() and wmb() can be used for this.
+> 
+> (Added Marek for comment on dma_alloc_coherent(), Will for comment on
+> barrier stuff.)
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/rtlwifi/rtl8192cu/trx.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+I'm not quite clear on the issue being seen here: is this on write from
+the CPU to the descriptor ring, or the other way around (or both?).
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
-index fe29876..5eccaba 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
-@@ -325,6 +325,7 @@ bool rtl92cu_rx_query_desc(struct ieee80211_hw *hw,
- 				   && (GET_RX_DESC_FAGGR(pdesc) == 1));
- 	stats->timestamp_low = GET_RX_DESC_TSFL(pdesc);
- 	stats->rx_is40Mhzpacket = (bool) GET_RX_DESC_BW(pdesc);
-+	stats->is_ht = (bool)GET_RX_DESC_RX_HT(pdesc);
- 	rx_status->freq = hw->conf.chandef.chan->center_freq;
- 	rx_status->band = hw->conf.chandef.chan->band;
- 	if (GET_RX_DESC_CRC32(pdesc))
-@@ -338,9 +339,8 @@ bool rtl92cu_rx_query_desc(struct ieee80211_hw *hw,
- 	rx_status->flag |= RX_FLAG_MACTIME_START;
- 	if (stats->decrypted)
- 		rx_status->flag |= RX_FLAG_DECRYPTED;
--	rx_status->rate_idx = rtlwifi_rate_mapping(hw,
--					(bool)GET_RX_DESC_RX_HT(pdesc),
--					(u8)GET_RX_DESC_RX_MCS(pdesc));
-+	rx_status->rate_idx = rtlwifi_rate_mapping(hw, stats->is_ht,
-+						   stats->rate);
- 	rx_status->mactime = GET_RX_DESC_TSFL(pdesc);
- 	if (phystatus) {
- 		p_drvinfo = (struct rx_fwinfo_92c *)(skb->data +
-@@ -392,6 +392,7 @@ static void _rtl_rx_process(struct ieee80211_hw *hw, struct sk_buff *skb)
- 				   && (GET_RX_DESC_FAGGR(rxdesc) == 1));
- 	stats.timestamp_low = GET_RX_DESC_TSFL(rxdesc);
- 	stats.rx_is40Mhzpacket = (bool) GET_RX_DESC_BW(rxdesc);
-+	stats.is_ht = (bool)GET_RX_DESC_RX_HT(rxdesc);
- 	/* TODO: is center_freq changed when doing scan? */
- 	/* TODO: Shall we add protection or just skip those two step? */
- 	rx_status->freq = hw->conf.chandef.chan->center_freq;
-@@ -405,9 +406,8 @@ static void _rtl_rx_process(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	if (GET_RX_DESC_RX_HT(rxdesc))
- 		rx_status->flag |= RX_FLAG_HT;
- 	/* Data rate */
--	rx_status->rate_idx = rtlwifi_rate_mapping(hw,
--					(bool)GET_RX_DESC_RX_HT(rxdesc),
--					(u8)GET_RX_DESC_RX_MCS(rxdesc));
-+	rx_status->rate_idx = rtlwifi_rate_mapping(hw, stats.is_ht,
-+						   stats.rate);
- 	/*  There is a phy status after this rx descriptor. */
- 	if (GET_RX_DESC_PHY_STATUS(rxdesc)) {
- 		p_drvinfo = (struct rx_fwinfo_92c *)(rxdesc + RTL_RX_DESC_SIZE);
--- 
-2.1.2
+Either way, you need barriers on the CPU side to ensure ordering of
+accesses to the buffer. rmb/wmb will work, but are heavier than what you
+need (relaxed versions have been proposed on LKML recently).
 
+Will
