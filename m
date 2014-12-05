@@ -1,41 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:29731 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752924AbaLYR6M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Dec 2014 12:58:12 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "arioniadrian@gmail.com" <arioniadrian@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>
-Subject: Re: [Ilw] Issue intel 6205 wlan card
-Date: Thu, 25 Dec 2014 17:58:09 +0000
-Message-ID: <1419530289.19887.4.camel@egrumbacBox> (sfid-20141225_185838_979898_698ED905)
-References: <CAN_RdTSCyyRzHOink26pfOOZXxa0yp6tVUDLsLSVV5+vbsR0OA@mail.gmail.com>
-In-Reply-To: <CAN_RdTSCyyRzHOink26pfOOZXxa0yp6tVUDLsLSVV5+vbsR0OA@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:39873 "EHLO
+	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751374AbaLETZy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Dec 2014 14:25:54 -0500
+Date: Fri, 5 Dec 2014 19:25:44 +0000
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Catalin Marinas <catalin.marinas@arm.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	David Miller <davem@davemloft.net>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Marek Szyprowski <m.szyprowski@samsung.com>
+Subject: Re: using DMA-API on ARM
+Message-ID: <20141205192544.GY11285@n2100.arm.linux.org.uk> (sfid-20141205_202556_843071_40805C08)
+References: <5481794E.4050406@broadcom.com>
+ <20141205094507.GP11285@n2100.arm.linux.org.uk>
+ <20141205122423.GK1630@arm.com>
+ <F51492713EF10846800D8C0ED37A7DCE019016E1@SJEXCHMB15.corp.ad.broadcom.com>
+ <20141205132332.GS11285@n2100.arm.linux.org.uk>
+ <20141205150648.GT11285@n2100.arm.linux.org.uk>
+ <20141205182851.GC31222@e104818-lin.cambridge.arm.com>
+ <548205DD.4080101@broadcom.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <548205DD.4080101@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGksDQoNCg0KDQo+IEhlbGxvLA0KPiANCj4gDQo+IEkgaGF2ZSBhIHRoaW5rcGFkIHQ0MzAgd2l0
-aCBpbnRlbCA2MjA1IHdpZmkgY2FyZC4gSSBhbSBydW5uaW5nDQo+IHNsYWNrd2FyZSAxNC4xIHdp
-dGgga2VybmVsIDMuMTAuMTcgYnV0IHdpdGggb3RoZXIga2VybmVscyBsaWtlDQo+IDMuMTQuMjcs
-IDMuMTcuNyBhbmQgMy4xOC4xIGlzIG5vdCB3b3JraW5nLg0KPiANCj4gDQo+IEkgY29tcGlsZWQg
-dGhlIGtlcm5lbHMgd2l0aCBhbGwgbW9kdWxlcyByZWxhdGVkIHRvIGludGVsIHdpZmkgY2FyZC4g
-DQo+IA0KPiANCj4gTm93IEkgY2FuIHNlZSB3bGFuMCB1bmRlciAiIGlmY29uZmlnIg0KPiANCldo
-YXQgZG8geW91IG1lYW4gYnkgIm5vdyI/DQpXaXRoIHRoZSBlcnJvcnMgYmVsb3csIHlvdSdsbCBz
-dXJlbHkgbm90IHNlZSB3bGFuMCBpbiBpZmNvbmZpZydzIG91cHV0Lg0KPiANCj4gSSBhbSBnZXR0
-aW5nIHRoaXMgZXJyb3JzOg0KPiANCj4gZG1lc2cgfCBncmVwIGl3bHdpZmkgICAgICANCj4gWyAg
-ICAxLjUxMDc0OV0gaXdsd2lmaSAwMDAwOjAzOjAwLjA6IGNhbid0IGRpc2FibGUgQVNQTTsgT1Mg
-ZG9lc24ndA0KPiBoYXZlIEFTUE0gY29udHJvbA0KPiBbICAgIDEuNTEyOTI1XSBpd2x3aWZpIDAw
-MDA6MDM6MDAuMDogaXJxIDI3IGZvciBNU0kvTVNJLVgNCj4gWyAgICAxLjUxMzM2MF0gaXdsd2lm
-aSAwMDAwOjAzOjAwLjA6IERpcmVjdCBmaXJtd2FyZSBsb2FkIGZvcg0KPiBpd2x3aWZpLTYwMDBn
-MmEtNi51Y29kZSBmYWlsZWQgd2l0aCBlcnJvciAtMg0KPiBbICAgIDEuNTE1MjU5XSBpd2x3aWZp
-IDAwMDA6MDM6MDAuMDogRGlyZWN0IGZpcm13YXJlIGxvYWQgZm9yDQo+IGl3bHdpZmktNjAwMGcy
-YS01LnVjb2RlIGZhaWxlZCB3aXRoIGVycm9yIC0yDQo+IFsgICAgMS43MDI2MTRdIGl3bHdpZmkg
-MDAwMDowMzowMC4wOiByZXF1ZXN0IGZvciBmaXJtd2FyZSBmaWxlDQo+ICdpd2x3aWZpLTYwMDBn
-MmEtNS51Y29kZScgZmFpbGVkLg0KPiBbICAgIDEuNzAyNjE4XSBpd2x3aWZpIDAwMDA6MDM6MDAu
-MDogbm8gc3VpdGFibGUgZmlybXdhcmUgZm91bmQhDQo+IA0KcGxlYXNlIG1ha2Ugc3VyZSB5b3Ug
-eW91IGhhdmUgaXdsd2lmaS02MDAwZzJhLTYudWNvZGUNCnVuZGVyIC9saWIvZmlybXdhcmUuDQpJ
-IGNhbid0IHJlYWxseSBleHBsYWluIGFueSByZWdyZXNzaW9uIGJldHdlZW4gMy4xMC4xNyBhbmQg
-bW9yZSByZWNlbnQNCmtlcm5lbHMuDQoNCg0KDQo=
+On Fri, Dec 05, 2014 at 08:22:05PM +0100, Arend van Spriel wrote:
+> On 12/05/14 19:28, Catalin Marinas wrote:
+> >This is solved by using a pre-allocated, pre-mapped atomic_pool which
+> >avoids any further mapping. __dma_alloc() calls __alloc_from_pool() when
+> >!__GFP_WAIT.
+> 
+> So we are actually calling dma_alloc_coherent() with GFP_KERNEL during
+> device probe. That last paragraph Russell pointed out seems to suggest this
+> is not allowed.
+
+device probe is a schedulable, sleepable context, so dma_alloc_coherent()
+is fine there.  As Catalin points out, and as I realised after sending
+them ail, it does check for __GFP_WAIT and uses a smaller atomic pool
+for those allocations.  This explains why no one has hit any warnings in
+map_vm_area.
+
+So, it's safe from atomic contexts after all.
+
+-- 
+FTTC broadband for 0.8mile line: currently at 9.5Mbps down 400kbps up
+according to speedtest.net.
