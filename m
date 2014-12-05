@@ -1,109 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:48092 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751672AbaLXIBU (ORCPT
+Received: from mail-oi0-f45.google.com ([209.85.218.45]:60160 "EHLO
+	mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751620AbaLEQsE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Dec 2014 03:01:20 -0500
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH v2 8/8] ath10k: add support to send delba
-Date: Wed, 24 Dec 2014 13:29:09 +0530
-Message-ID: <1419407949-32367-9-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20141224_090136_361391_FC628CD9)
-In-Reply-To: <1419407949-32367-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1419407949-32367-1-git-send-email-rmanohar@qti.qualcomm.com>
+	Fri, 5 Dec 2014 11:48:04 -0500
+Received: by mail-oi0-f45.google.com with SMTP id a141so703960oig.32
+        for <linux-wireless@vger.kernel.org>; Fri, 05 Dec 2014 08:48:03 -0800 (PST)
+Date: Fri, 5 Dec 2014 10:47:42 -0600
+From: Seth Forshee <seth.forshee@canonical.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] wireless-regdb: Update keys and maintainer information
+Message-ID: <20141205164742.GB40007@ubuntu-hedt> (sfid-20141205_174808_572077_2F3CAB8E)
+References: <20141205163134.GC13629@ubuntu-mba51>
+ <20141205163353.GC28319@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20141205163353.GC28319@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This per-station debugfs entry helps to send delba in manual mode
-for debugging purpose. It accepts tid, initiator and reason code
-as inputs.
+On Fri, Dec 05, 2014 at 11:33:53AM -0500, John W. Linville wrote:
+> On Fri, Dec 05, 2014 at 10:31:34AM -0600, Seth Forshee wrote:
+> > As announced by John [1], I'm taking over maintaintership of the
+> > wireless regulatory databse. Make it official by adding my key,
+> > removing John's, and updating the Makefile and documentation to
+> > reflect the change in maintainer.
+> > 
+> > [1] http://permalink.gmane.org/gmane.linux.kernel.wireless.general/131573
+> > 
+> > Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+> 
+> ACK
+> 
+> Although, I would have changed "In linville we trust" to "In Seth we
+> trust"... ;-)
 
-To send delba,
-
-echo 0 1 37 >/sys/kernel/debug/ieee80211/phyX/netdev:wlanX/
-	     stations/XX:XX:XX:XX:XX:XX/delba
-
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/debugfs_sta.c | 56 +++++++++++++++++++++++++++
- 1 file changed, 56 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath10k/debugfs_sta.c b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
-index 95eb5a1..5effd7bb 100644
---- a/drivers/net/wireless/ath/ath10k/debugfs_sta.c
-+++ b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
-@@ -190,6 +190,61 @@ static const struct file_operations fops_addba_resp = {
- 	.llseek = default_llseek,
- };
- 
-+static ssize_t ath10k_dbg_sta_write_delba(struct file *file,
-+					  const char __user *user_buf,
-+					  size_t count, loff_t *ppos)
-+{
-+	struct ieee80211_sta *sta = file->private_data;
-+	struct ath10k_sta *arsta = (struct ath10k_sta *)sta->drv_priv;
-+	struct ath10k *ar = arsta->arvif->ar;
-+	u32 tid, initiator, reason;
-+	int ret;
-+	char buf[64];
-+
-+	simple_write_to_buffer(buf, sizeof(buf) - 1, ppos, user_buf, count);
-+
-+	/* make sure that buf is null terminated */
-+	buf[sizeof(buf) - 1] = '\0';
-+
-+	ret = sscanf(buf, "%u %u %u", &tid, &initiator, &reason);
-+	if (ret != 3) {
-+		ath10k_warn(ar, "ex: echo <tid> <initiator> <reason code> >delba\n");
-+		return -EINVAL;
-+	}
-+
-+	/* Valid TID values are 0 through 15 */
-+	if (tid > HTT_DATA_TX_EXT_TID_MGMT - 2) {
-+		ath10k_warn(ar, "Invalid TID %u\n", tid);
-+		return -EINVAL;
-+	}
-+
-+	mutex_lock(&ar->conf_mutex);
-+	if ((ar->state != ATH10K_STATE_ON) ||
-+	    (arsta->aggr_mode != ATH10K_DBG_AGGR_MODE_MANUAL)) {
-+		ret = count;
-+		goto out;
-+	}
-+
-+	ret = ath10k_wmi_delba_send(ar, arsta->arvif->vdev_id, sta->addr,
-+				    tid, initiator, reason);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to send delba: vdev_id %u peer %pM tid %u initiator %u reason %u\n",
-+			    arsta->arvif->vdev_id, sta->addr, tid, initiator,
-+			    reason);
-+	}
-+	ret = count;
-+out:
-+	mutex_unlock(&ar->conf_mutex);
-+	return ret;
-+}
-+
-+static const struct file_operations fops_delba = {
-+	.write = ath10k_dbg_sta_write_delba,
-+	.open = simple_open,
-+	.owner = THIS_MODULE,
-+	.llseek = default_llseek,
-+};
-+
- void ath10k_sta_add_debugfs(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			    struct ieee80211_sta *sta, struct dentry *dir)
- {
-@@ -197,4 +252,5 @@ void ath10k_sta_add_debugfs(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			    &fops_aggr_mode);
- 	debugfs_create_file("addba", S_IWUSR, dir, sta, &fops_addba);
- 	debugfs_create_file("addba_resp", S_IWUSR, dir, sta, &fops_addba_resp);
-+	debugfs_create_file("delba", S_IWUSR, dir, sta, &fops_delba);
- }
--- 
-2.2.1
+Well, I didn't want to put words into anyone's mount ;-)
 
