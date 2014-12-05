@@ -1,49 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f182.google.com ([209.85.212.182]:65191 "EHLO
-	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752099AbaLRILZ (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:44577 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751046AbaLEOrK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Dec 2014 03:11:25 -0500
-Received: by mail-wi0-f182.google.com with SMTP id h11so873401wiw.9
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Dec 2014 00:11:24 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 4/5] iwlwifi: add new device IDs for 3165
-Date: Thu, 18 Dec 2014 10:10:00 +0200
-Message-Id: <1418890201-15177-4-git-send-email-egrumbach@gmail.com> (sfid-20141218_091130_103980_83D08509)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB31B5CD8C0@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB31B5CD8C0@hasmsx107.ger.corp.intel.com>
+	Fri, 5 Dec 2014 09:47:10 -0500
+Message-ID: <5481C567.9040108@broadcom.com> (sfid-20141205_154727_882325_AF5119E5)
+Date: Fri, 5 Dec 2014 15:47:03 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Hante Meuleman <meuleman@broadcom.com>
+CC: Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Will Deacon <will.deacon@arm.com>,
+	Marek Szyprowski <m.szyprowski@samsung.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	David Miller <davem@davemloft.net>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: using DMA-API on ARM
+References: <5481794E.4050406@broadcom.com> <20141205094507.GP11285@n2100.arm.linux.org.uk> <20141205122423.GK1630@arm.com> <F51492713EF10846800D8C0ED37A7DCE019016E1@SJEXCHMB15.corp.ad.broadcom.com> <20141205132332.GS11285@n2100.arm.linux.org.uk> <F51492713EF10846800D8C0ED37A7DCE01901765@SJEXCHMB15.corp.ad.broadcom.com>
+In-Reply-To: <F51492713EF10846800D8C0ED37A7DCE01901765@SJEXCHMB15.corp.ad.broadcom.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On 12/05/14 15:20, Hante Meuleman wrote:
+> Ok, I'll add the necessary debug to get all the information out,
+> but it will take some time to get it done, so I won't have anything
+> before Monday.
+>
+> -----Original Message-----
+> From: Russell King - ARM Linux [mailto:linux@arm.linux.org.uk]
+> Sent: vrijdag 5 december 2014 14:24
+> To: Hante Meuleman
+> Cc: Will Deacon; Arend Van Spriel; Marek Szyprowski; linux-arm-kernel@lists.infradead.org; David Miller; linux-kernel@vger.kernel.org; brcm80211-dev-list; linux-wireless
+> Subject: Re: using DMA-API on ARM
+>
+> Please wrap your message - replying to a message which looks like this in
+> my editor is far from easy, and gives me much more work to /manually/
+> reformat it before I can reply to it:
 
-A few device IDs were added, reflect this change in the
-driver.
+That's what happens with corporate IT forcing to use Outlook. We can 
+workaround that using Thunderbird on Citrix. I will enlighten Hante 
+about that option :-)
 
-Cc; <stable@vger.kernel.org> [3.13+]
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/pcie/drv.c | 4 ++++
- 1 file changed, 4 insertions(+)
+Regards,
+Arend
 
-diff --git a/drivers/net/wireless/iwlwifi/pcie/drv.c b/drivers/net/wireless/iwlwifi/pcie/drv.c
-index 3ee8e38..2f0c4b1 100644
---- a/drivers/net/wireless/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/drv.c
-@@ -367,7 +367,11 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- 
- /* 3165 Series */
- 	{IWL_PCI_DEVICE(0x3165, 0x4010, iwl3165_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x3165, 0x4012, iwl3165_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x3165, 0x4110, iwl3165_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x3165, 0x4210, iwl3165_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x3165, 0x4410, iwl3165_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x3165, 0x4510, iwl3165_2ac_cfg)},
- 
- /* 7265 Series */
- 	{IWL_PCI_DEVICE(0x095A, 0x5010, iwl7265_2ac_cfg)},
--- 
-1.9.1
+> On Fri, Dec 05, 2014 at 12:56:45PM +0000, Hante Meuleman wrote:
+>> The problem is with data coming from device, so DMA from device to host. The $
+>>
+>> However: this indicates that dma_alloc_coherent on an ARM target may result i$
+>>
+>> Regards,
+>> Hante
+>
+> Thanks.
+>
+> On Fri, Dec 05, 2014 at 12:56:45PM +0000, Hante Meuleman wrote:
+>> However: this indicates that dma_alloc_coherent on an ARM target may
+>> result in a memory buffer which can be cached which conflicts with
+>> the API of this function.
+>
+> If the memory has an alias which is cacheable, it is possible for cache
+> lines to get allocated via that alias, even if the alias has no explicit
+> accesses to it.
+>
+> This is something which I've been going on for quite literally /years/ -
+> mismatched cache attributes can cause unpredictable behaviour.  I've had
+> a lot of push back from people who are of the opinion that "if it works
+> for me, then there isn't a problem" and I eventually gave up fighting
+> the battle, especially as the ARM architecture people weakened my
+> reasoning behind it by publishing a relaxation of the "no differing
+> attributes" issue.  This was particularly true of those who wanted to
+> use ioremap() on system memory - and cases such as
+> dma_init_coherent_memory().
+>
+> So, I never fixed this problem in the original DMA allocator code; I
+> basically gave up with it.  It's a latent bug which did need to be fixed,
+> and is still present today in the non-CMA case.
+>
+> The symptoms which you are reporting sound very much like this kind of
+> problem - the virtual address for the memory returned by
+> dma_alloc_coherent() will not be cacheable memory - it will have been
+> remapped using map_vm_area().  However, there could very well be a fully
+> cacheable lowmem mapping of that memory, which if a read (speculative or
+> otherwise) will bring a cache line in, and because the caches are VIPT
+> or PIPT, that cache line can be hit via the non-cacheable mapping too.
+>
+> What I /really/ need is more evidence of this to tell those disbelievers
+> where to stick their flawed arguments. :)
+>
 
