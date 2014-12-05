@@ -1,278 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:61200 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754320AbaLBSSQ (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:36020 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750744AbaLELtu convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Dec 2014 13:18:16 -0500
-Received: by mail-wg0-f47.google.com with SMTP id n12so17912049wgh.20
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Dec 2014 10:18:15 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 05/26] iwlwifi: mvm: remove IWL_UCODE_TLV_API_WOWLAN_CONFIG_TID
-Date: Tue,  2 Dec 2014 20:10:56 +0200
-Message-Id: <1417543877-24193-5-git-send-email-egrumbach@gmail.com> (sfid-20141202_191836_923791_3D58CFF6)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB31B5A7D27@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB31B5A7D27@hasmsx107.ger.corp.intel.com>
+	Fri, 5 Dec 2014 06:49:50 -0500
+From: Hante Meuleman <meuleman@broadcom.com>
+To: Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>
+CC: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Arend Van Spriel <arend@broadcom.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>,
+	David Miller <davem@davemloft.net>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: using DMA-API on ARM
+Date: Fri, 5 Dec 2014 11:49:48 +0000
+Message-ID: <F51492713EF10846800D8C0ED37A7DCE01901691@SJEXCHMB15.corp.ad.broadcom.com> (sfid-20141205_125011_284224_336B0B41)
+References: <5481794E.4050406@broadcom.com> <4565667.WCBuNmaazQ@wuerfel>
+ <20141205111114.GQ11285@n2100.arm.linux.org.uk>
+In-Reply-To: <20141205111114.GQ11285@n2100.arm.linux.org.uk>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Thank you for investigating. Your analysis matches what was intended to be done. Regarding the cast, you're right, I'll improve it. My idea was that long long is always 64bit, but when casting directly to long long I get a compiler (when using C=2) warning: "warning: right shift by bigger than source value". Probably I concluded wrongly that I should cast it to long first. On the targets used the high address was always 0, so I got away with it thusfar, but indeed it should and shall be fixed.
 
-All the supported firmwares have this TLV flag set.
+Regards,
+Hante
 
-Reviewed-by: Luciano Coelho <luciano.coelho@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/d3.c         | 56 +++++++++++----------------
- drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h  |  6 +--
- drivers/net/wireless/iwlwifi/mvm/mvm.h        |  2 +-
- drivers/net/wireless/iwlwifi/mvm/offloading.c |  2 +-
- drivers/net/wireless/iwlwifi/mvm/ops.c        | 19 ++++-----
- 5 files changed, 34 insertions(+), 51 deletions(-)
+-----Original Message-----
+From: Russell King - ARM Linux [mailto:linux@arm.linux.org.uk] 
+Sent: vrijdag 5 december 2014 12:11
+To: Arnd Bergmann
+Cc: linux-arm-kernel@lists.infradead.org; Arend Van Spriel; linux-wireless; brcm80211-dev-list; David Miller; linux-kernel@vger.kernel.org
+Subject: Re: using DMA-API on ARM
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/d3.c b/drivers/net/wireless/iwlwifi/mvm/d3.c
-index 8970386..c7297c5 100644
---- a/drivers/net/wireless/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/d3.c
-@@ -786,32 +786,18 @@ static int iwl_mvm_switch_to_d3(struct iwl_mvm *mvm)
- }
- 
- static int
--iwl_mvm_send_wowlan_config_cmd(struct iwl_mvm *mvm,
--			       const struct iwl_wowlan_config_cmd_v3 *cmd)
--{
--	/* start only with the v2 part of the command */
--	u16 cmd_len = sizeof(cmd->common);
--
--	if (mvm->fw->ucode_capa.api[0] & IWL_UCODE_TLV_API_WOWLAN_CONFIG_TID)
--		cmd_len = sizeof(*cmd);
--
--	return iwl_mvm_send_cmd_pdu(mvm, WOWLAN_CONFIGURATION, 0,
--				    cmd_len, cmd);
--}
--
--static int
- iwl_mvm_get_wowlan_config(struct iwl_mvm *mvm,
- 			  struct cfg80211_wowlan *wowlan,
--			  struct iwl_wowlan_config_cmd_v3 *wowlan_config_cmd,
-+			  struct iwl_wowlan_config_cmd *wowlan_config_cmd,
- 			  struct ieee80211_vif *vif, struct iwl_mvm_vif *mvmvif,
- 			  struct ieee80211_sta *ap_sta)
- {
- 	int ret;
- 	struct iwl_mvm_sta *mvm_ap_sta = (struct iwl_mvm_sta *)ap_sta->drv_priv;
- 
--	/* TODO: wowlan_config_cmd->common.wowlan_ba_teardown_tids */
-+	/* TODO: wowlan_config_cmd->wowlan_ba_teardown_tids */
- 
--	wowlan_config_cmd->common.is_11n_connection =
-+	wowlan_config_cmd->is_11n_connection =
- 					ap_sta->ht_cap.ht_supported;
- 
- 	/* Query the last used seqno and set it */
-@@ -819,32 +805,32 @@ iwl_mvm_get_wowlan_config(struct iwl_mvm *mvm,
- 	if (ret < 0)
- 		return ret;
- 
--	wowlan_config_cmd->common.non_qos_seq = cpu_to_le16(ret);
-+	wowlan_config_cmd->non_qos_seq = cpu_to_le16(ret);
- 
--	iwl_mvm_set_wowlan_qos_seq(mvm_ap_sta, &wowlan_config_cmd->common);
-+	iwl_mvm_set_wowlan_qos_seq(mvm_ap_sta, wowlan_config_cmd);
- 
- 	if (wowlan->disconnect)
--		wowlan_config_cmd->common.wakeup_filter |=
-+		wowlan_config_cmd->wakeup_filter |=
- 			cpu_to_le32(IWL_WOWLAN_WAKEUP_BEACON_MISS |
- 				    IWL_WOWLAN_WAKEUP_LINK_CHANGE);
- 	if (wowlan->magic_pkt)
--		wowlan_config_cmd->common.wakeup_filter |=
-+		wowlan_config_cmd->wakeup_filter |=
- 			cpu_to_le32(IWL_WOWLAN_WAKEUP_MAGIC_PACKET);
- 	if (wowlan->gtk_rekey_failure)
--		wowlan_config_cmd->common.wakeup_filter |=
-+		wowlan_config_cmd->wakeup_filter |=
- 			cpu_to_le32(IWL_WOWLAN_WAKEUP_GTK_REKEY_FAIL);
- 	if (wowlan->eap_identity_req)
--		wowlan_config_cmd->common.wakeup_filter |=
-+		wowlan_config_cmd->wakeup_filter |=
- 			cpu_to_le32(IWL_WOWLAN_WAKEUP_EAP_IDENT_REQ);
- 	if (wowlan->four_way_handshake)
--		wowlan_config_cmd->common.wakeup_filter |=
-+		wowlan_config_cmd->wakeup_filter |=
- 			cpu_to_le32(IWL_WOWLAN_WAKEUP_4WAY_HANDSHAKE);
- 	if (wowlan->n_patterns)
--		wowlan_config_cmd->common.wakeup_filter |=
-+		wowlan_config_cmd->wakeup_filter |=
- 			cpu_to_le32(IWL_WOWLAN_WAKEUP_PATTERN_MATCH);
- 
- 	if (wowlan->rfkill_release)
--		wowlan_config_cmd->common.wakeup_filter |=
-+		wowlan_config_cmd->wakeup_filter |=
- 			cpu_to_le32(IWL_WOWLAN_WAKEUP_RF_KILL_DEASSERT);
- 
- 	if (wowlan->tcp) {
-@@ -852,7 +838,7 @@ iwl_mvm_get_wowlan_config(struct iwl_mvm *mvm,
- 		 * Set the "link change" (really "link lost") flag as well
- 		 * since that implies losing the TCP connection.
- 		 */
--		wowlan_config_cmd->common.wakeup_filter |=
-+		wowlan_config_cmd->wakeup_filter |=
- 			cpu_to_le32(IWL_WOWLAN_WAKEUP_REMOTE_LINK_LOSS |
- 				    IWL_WOWLAN_WAKEUP_REMOTE_SIGNATURE_TABLE |
- 				    IWL_WOWLAN_WAKEUP_REMOTE_WAKEUP_PACKET |
-@@ -865,7 +851,7 @@ iwl_mvm_get_wowlan_config(struct iwl_mvm *mvm,
- static int
- iwl_mvm_wowlan_config(struct iwl_mvm *mvm,
- 		      struct cfg80211_wowlan *wowlan,
--		      struct iwl_wowlan_config_cmd_v3 *wowlan_config_cmd,
-+		      struct iwl_wowlan_config_cmd *wowlan_config_cmd,
- 		      struct ieee80211_vif *vif, struct iwl_mvm_vif *mvmvif,
- 		      struct ieee80211_sta *ap_sta)
- {
-@@ -947,7 +933,9 @@ iwl_mvm_wowlan_config(struct iwl_mvm *mvm,
- 		}
- 	}
- 
--	ret = iwl_mvm_send_wowlan_config_cmd(mvm, wowlan_config_cmd);
-+	ret = iwl_mvm_send_cmd_pdu(mvm, WOWLAN_CONFIGURATION, 0,
-+				   sizeof(*wowlan_config_cmd),
-+				   wowlan_config_cmd);
- 	if (ret)
- 		goto out;
- 
-@@ -972,7 +960,7 @@ iwl_mvm_netdetect_config(struct iwl_mvm *mvm,
- 			 struct cfg80211_sched_scan_request *nd_config,
- 			 struct ieee80211_vif *vif)
- {
--	struct iwl_wowlan_config_cmd_v3 wowlan_config_cmd = {};
-+	struct iwl_wowlan_config_cmd wowlan_config_cmd = {};
- 	int ret;
- 
- 	ret = iwl_mvm_switch_to_d3(mvm);
-@@ -981,10 +969,12 @@ iwl_mvm_netdetect_config(struct iwl_mvm *mvm,
- 
- 	/* rfkill release can be either for wowlan or netdetect */
- 	if (wowlan->rfkill_release)
--		wowlan_config_cmd.common.wakeup_filter |=
-+		wowlan_config_cmd.wakeup_filter |=
- 			cpu_to_le32(IWL_WOWLAN_WAKEUP_RF_KILL_DEASSERT);
- 
--	ret = iwl_mvm_send_wowlan_config_cmd(mvm, &wowlan_config_cmd);
-+	ret = iwl_mvm_send_cmd_pdu(mvm, WOWLAN_CONFIGURATION, 0,
-+				   sizeof(wowlan_config_cmd),
-+				   &wowlan_config_cmd);
- 	if (ret)
- 		return ret;
- 
-@@ -1051,7 +1041,7 @@ static int __iwl_mvm_suspend(struct ieee80211_hw *hw,
- 
- 		mvm->net_detect = true;
- 	} else {
--		struct iwl_wowlan_config_cmd_v3 wowlan_config_cmd = {};
-+		struct iwl_wowlan_config_cmd wowlan_config_cmd = {};
- 
- 		ap_sta = rcu_dereference_protected(
- 			mvm->fw_id_to_mac_id[mvmvif->ap_sta_id],
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h b/drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h
-index e74cdf2..6d3bea5 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h
-@@ -241,16 +241,12 @@ enum iwl_wowlan_wakeup_filters {
- 	IWL_WOWLAN_WAKEUP_BCN_FILTERING			= BIT(16),
- }; /* WOWLAN_WAKEUP_FILTER_API_E_VER_4 */
- 
--struct iwl_wowlan_config_cmd_v2 {
-+struct iwl_wowlan_config_cmd {
- 	__le32 wakeup_filter;
- 	__le16 non_qos_seq;
- 	__le16 qos_seq[8];
- 	u8 wowlan_ba_teardown_tids;
- 	u8 is_11n_connection;
--} __packed; /* WOWLAN_CONFIG_API_S_VER_2 */
--
--struct iwl_wowlan_config_cmd_v3 {
--	struct iwl_wowlan_config_cmd_v2 common;
- 	u8 offloading_tid;
- 	u8 reserved[3];
- } __packed; /* WOWLAN_CONFIG_API_S_VER_3 */
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index 2ab59b8..09d4833 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -1143,7 +1143,7 @@ iwl_mvm_set_last_nonqos_seq(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
- }
- #endif
- void iwl_mvm_set_wowlan_qos_seq(struct iwl_mvm_sta *mvm_ap_sta,
--				struct iwl_wowlan_config_cmd_v2 *cmd);
-+				struct iwl_wowlan_config_cmd *cmd);
- int iwl_mvm_send_proto_offload(struct iwl_mvm *mvm,
- 			       struct ieee80211_vif *vif,
- 			       bool disable_offloading,
-diff --git a/drivers/net/wireless/iwlwifi/mvm/offloading.c b/drivers/net/wireless/iwlwifi/mvm/offloading.c
-index adcbf4c..68b0169 100644
---- a/drivers/net/wireless/iwlwifi/mvm/offloading.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/offloading.c
-@@ -67,7 +67,7 @@
- #include "mvm.h"
- 
- void iwl_mvm_set_wowlan_qos_seq(struct iwl_mvm_sta *mvm_ap_sta,
--				struct iwl_wowlan_config_cmd_v2 *cmd)
-+				struct iwl_wowlan_config_cmd *cmd)
- {
- 	int i;
- 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
-index b952e79..daad985 100644
---- a/drivers/net/wireless/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
-@@ -1000,7 +1000,7 @@ static void iwl_mvm_enter_d0i3_iterator(void *_data, u8 *mac,
- }
- 
- static void iwl_mvm_set_wowlan_data(struct iwl_mvm *mvm,
--				    struct iwl_wowlan_config_cmd_v3 *cmd,
-+				    struct iwl_wowlan_config_cmd *cmd,
- 				    struct iwl_d0i3_iter_data *iter_data)
- {
- 	struct ieee80211_sta *ap_sta;
-@@ -1016,14 +1016,14 @@ static void iwl_mvm_set_wowlan_data(struct iwl_mvm *mvm,
- 		goto out;
- 
- 	mvm_ap_sta = iwl_mvm_sta_from_mac80211(ap_sta);
--	cmd->common.is_11n_connection = ap_sta->ht_cap.ht_supported;
-+	cmd->is_11n_connection = ap_sta->ht_cap.ht_supported;
- 	cmd->offloading_tid = iter_data->offloading_tid;
- 
- 	/*
- 	 * The d0i3 uCode takes care of the nonqos counters,
- 	 * so configure only the qos seq ones.
- 	 */
--	iwl_mvm_set_wowlan_qos_seq(mvm_ap_sta, &cmd->common);
-+	iwl_mvm_set_wowlan_qos_seq(mvm_ap_sta, cmd);
- out:
- 	rcu_read_unlock();
- }
-@@ -1035,14 +1035,11 @@ static int iwl_mvm_enter_d0i3(struct iwl_op_mode *op_mode)
- 	struct iwl_d0i3_iter_data d0i3_iter_data = {
- 		.mvm = mvm,
- 	};
--	struct iwl_wowlan_config_cmd_v3 wowlan_config_cmd = {
--		.common = {
--			.wakeup_filter =
--				cpu_to_le32(IWL_WOWLAN_WAKEUP_RX_FRAME |
--					    IWL_WOWLAN_WAKEUP_BEACON_MISS |
--					    IWL_WOWLAN_WAKEUP_LINK_CHANGE |
--					    IWL_WOWLAN_WAKEUP_BCN_FILTERING),
--		},
-+	struct iwl_wowlan_config_cmd wowlan_config_cmd = {
-+		.wakeup_filter = cpu_to_le32(IWL_WOWLAN_WAKEUP_RX_FRAME |
-+					     IWL_WOWLAN_WAKEUP_BEACON_MISS |
-+					     IWL_WOWLAN_WAKEUP_LINK_CHANGE |
-+					     IWL_WOWLAN_WAKEUP_BCN_FILTERING),
- 	};
- 	struct iwl_d3_manager_config d3_cfg_cmd = {
- 		.min_sleep_time = cpu_to_le32(1000),
+On Fri, Dec 05, 2014 at 10:52:02AM +0100, Arnd Bergmann wrote:
+> I'm still puzzled why you'd need a single dma_sync_single_for_cpu()
+> after dma_alloc_coherent though, you should not need any. Is it possible
+> that the driver accidentally uses __raw_readl() instead of readl()
+> in some places and you are just lacking an appropriate barrier?
+
+Digging into the driver, it looks like individual DMA buffers are
+allocated (via brcmf_pcie_init_dmabuffer_for_device) and registered
+into a "commonring" layer.
+
+Whenever the buffer is written to, space is first allocated via a call
+to brcmf_commonring_reserve_for_write() or
+brcmf_commonring_reserve_for_write_multiple(), data written to the
+buffer, followed by a call to brcmf_commonring_write_complete().
+
+brcmf_commonring_write_complete() calls two methods at that point:
+cr_write_wptr() and cr_ring_bell(), which will be
+brcmf_pcie_ring_mb_write_wptr() and brcmf_pcie_ring_mb_ring_bell().
+
+The first calls brcmf_pcie_write_tcm16(), which uses iowrite16(),
+which contains the appropriate barrier.  The bell ringing functions
+also use ioread*/iowrite*().
+
+So, on the write side, it looks fine from the barrier perspective.
+
+On the read side, brcmf_commonring_get_read_ptr() is used before
+a read access to the ring - which calls the cr_update_wptr() method,
+which in turn uses an ioread16() call.  After the CPU has read data
+from the ring, brcmf_commonring_read_complete() is used, which uses
+iowrite16().
+
+So, I don't see a barrier problem on the read side.
+
+However, I did trip over this:
+
+static void *
+brcmf_pcie_init_dmabuffer_for_device(struct brcmf_pciedev_info *devinfo,
+                                     u32 size, u32 tcm_dma_phys_addr,
+                                     dma_addr_t *dma_handle)
+{
+        void *ring;
+        long long address;
+
+        ring = dma_alloc_coherent(&devinfo->pdev->dev, size, dma_handle,
+                                  GFP_KERNEL);
+        if (!ring)
+                return NULL;
+
+        address = (long long)(long)*dma_handle;
+
+Casting to (long) will truncate the DMA handle to 32-bits on a 32-bit
+architecture, even if it supports 64-bit DMA addresses.  There's a couple
+of other places where this same truncation occurs:
+
+        address = (long long)(long)devinfo->shared.scratch_dmahandle;
+
+and
+
+        address = (long long)(long)devinfo->shared.ringupd_dmahandle;
+
+In any case, wouldn't using a u64 type for "address" be better - isn't
+"long long" 128-bit on 64-bit architectures?
+
 -- 
-1.9.1
-
+FTTC broadband for 0.8mile line: currently at 9.5Mbps down 400kbps up
+according to speedtest.net.
