@@ -1,46 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:55593 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751637AbaLXQ4c (ORCPT
+Received: from mail-oi0-f49.google.com ([209.85.218.49]:61570 "EHLO
+	mail-oi0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751482AbaLETmz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Dec 2014 11:56:32 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-	Joe Perches <joe@perches.com>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] net: wireless: rtlwifi: rtl8192ee: trx.c:  Remove unused function
-References: <1419079694-32476-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-Date: Wed, 24 Dec 2014 18:56:23 +0200
-In-Reply-To: <1419079694-32476-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-	(Rickard Strandqvist's message of "Sat, 20 Dec 2014 13:48:14 +0100")
-Message-ID: <87bnmt7zrc.fsf@kamboji.qca.qualcomm.com> (sfid-20141224_175636_485781_88B4F2A2)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Fri, 5 Dec 2014 14:42:55 -0500
+Received: by mail-oi0-f49.google.com with SMTP id i138so938053oig.22
+        for <linux-wireless@vger.kernel.org>; Fri, 05 Dec 2014 11:42:54 -0800 (PST)
+From: Seth Forshee <seth.forshee@canonical.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] wireless: Update location of wireless-regdb repository
+Date: Fri,  5 Dec 2014 13:42:32 -0600
+Message-Id: <1417808552-56153-1-git-send-email-seth.forshee@canonical.com> (sfid-20141205_204258_254869_FE3EED69)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se> writes:
+I've taken over maintenance of the wireless regulatory database
+from linville. Update references to John's repository to point
+at my repository instead.
 
-> Remove the function rtl92ee_get_available_desc() that is not used anywhere.
->
-> This was partially found by using a static code analysis program called cppcheck.
->
-> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+---
+ Documentation/networking/regulatory.txt | 2 +-
+ net/wireless/db.txt                     | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-Thanks, applied to wireless-drivers-next.git.
-
-But I simplified the patch title:
-
-commit 9898b77536b8569be2704964d3c519ef070e4a27
-Author: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-Date:   Sat Dec 20 13:48:14 2014 +0100
-
-    rtlwifi: rtl8192ee: trx.c: Remove unused function
-
+diff --git a/Documentation/networking/regulatory.txt b/Documentation/networking/regulatory.txt
+index 356f791af574..b4af93fbbff6 100644
+--- a/Documentation/networking/regulatory.txt
++++ b/Documentation/networking/regulatory.txt
+@@ -205,7 +205,7 @@ the data in regdb.c as an alternative to using CRDA.
+ The file net/wireless/db.txt should be kept up-to-date with the db.txt
+ file available in the git repository here:
+ 
+-    git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-regdb.git
++    git://git.kernel.org/pub/scm/linux/kernel/git/sforshee/wireless-regdb.git
+ 
+ Again, most users in most situations should be using the CRDA package
+ provided with their distribution, and in most other situations users
+diff --git a/net/wireless/db.txt b/net/wireless/db.txt
+index a2fc3a09ccdc..4f7715d87979 100644
+--- a/net/wireless/db.txt
++++ b/net/wireless/db.txt
+@@ -13,5 +13,5 @@
+ # best option is to extract the db.txt file from the wireless-regdb git
+ # repository:
+ #
+-#   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-regdb.git
++#   git://git.kernel.org/pub/scm/linux/kernel/git/sforshee/wireless-regdb.git
+ #
 -- 
-Kalle Valo
+1.9.1
+
