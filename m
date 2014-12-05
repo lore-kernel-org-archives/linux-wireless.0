@@ -1,57 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33152 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754616AbaLVLxL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Dec 2014 06:53:11 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: David Binderman <dcb314@hotmail.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211_hwsim: fix check for custom world regdom array size
-Date: Mon, 22 Dec 2014 12:53:07 +0100
-Message-Id: <1419249187-8823-1-git-send-email-johannes@sipsolutions.net> (sfid-20141222_125317_968318_6BEE314D)
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:44845 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753000AbaLEMYZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Dec 2014 07:24:25 -0500
+From: Avinash Patil <patila@marvell.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
+	<cluo@marvell.com>, <yangyang@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH 1/4] mwifiex: do not delete station entries in del_sta handler
+Date: Fri, 5 Dec 2014 23:23:39 +0530
+Message-ID: <1417802022-7364-1-git-send-email-patila@marvell.com> (sfid-20141205_132451_700597_19532DE6)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+A crash was observed while cfg80211 del_station handler is
+called while stopping AP. This was happening because we were
+deleting station list and Rx reorder table entries in del_sta
+handler. While station entry is being deleted here, it may happen
+that station deauth event from FW would also try to delete station
+entry.
 
-David Binderman reports that the conditions in the first loop
-are the wrong way around - checking the array contents before
-the size.
+This patch fixes this crash by not deleting station entries in del_station
+handler. Entry would be deleted while processing station deauth event; which
+is triggered by del_station command to FW.
 
-Instead of leaving the empty loop there and reordering the two
-checks unify it into a single loop that skips over non-matches
-and exits after the first match.
-
-Reported-by: David Binderman <dcb314@hotmail.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Reported by: Tim Shepard <shep@xplot.org>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
 ---
- drivers/net/wireless/mac80211_hwsim.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/mwifiex/cfg80211.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index a71b9d5e353d..057a99e01637 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -2150,14 +2150,14 @@ static int append_radio_msg(struct sk_buff *skb, int id,
- 	if (param->regd) {
- 		int i;
- 
--		for (i = 0; hwsim_world_regdom_custom[i] != param->regd &&
--		     i < ARRAY_SIZE(hwsim_world_regdom_custom); i++)
--			;
-+		for (i = 0; i < ARRAY_SIZE(hwsim_world_regdom_custom); i++) {
-+			if (hwsim_world_regdom_custom[i] != param->regd)
-+				continue;
- 
--		if (i < ARRAY_SIZE(hwsim_world_regdom_custom)) {
- 			ret = nla_put_u32(skb, HWSIM_ATTR_REG_CUSTOM_REG, i);
- 			if (ret < 0)
- 				return ret;
-+			break;
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index f881044..e111ff5 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -1308,7 +1308,6 @@ mwifiex_cfg80211_del_station(struct wiphy *wiphy, struct net_device *dev,
+ 					     HostCmd_ACT_GEN_SET, 0,
+ 					     sta_node->mac_addr, true))
+ 				return -1;
+-			mwifiex_uap_del_sta_data(priv, sta_node);
+ 		}
+ 	} else {
+ 		wiphy_dbg(wiphy, "%s: mac address %pM\n", __func__,
+@@ -1321,7 +1320,6 @@ mwifiex_cfg80211_del_station(struct wiphy *wiphy, struct net_device *dev,
+ 					     HostCmd_ACT_GEN_SET, 0,
+ 					     sta_node->mac_addr, true))
+ 				return -1;
+-			mwifiex_uap_del_sta_data(priv, sta_node);
  		}
  	}
  
 -- 
-2.1.1
+1.8.1.4
 
