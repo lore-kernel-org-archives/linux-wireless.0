@@ -1,133 +1,197 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:42071 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751116AbaLRQLc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Dec 2014 11:11:32 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 2/2] mac80211: provide per-TID RX/TX MSDU counters
-Date: Thu, 18 Dec 2014 17:11:23 +0100
-Message-Id: <1418919083-28297-2-git-send-email-johannes@sipsolutions.net> (sfid-20141218_171135_871645_CC51D416)
-In-Reply-To: <1418919083-28297-1-git-send-email-johannes@sipsolutions.net>
-References: <1418919083-28297-1-git-send-email-johannes@sipsolutions.net>
+Received: from mail-qg0-f52.google.com ([209.85.192.52]:38316 "EHLO
+	mail-qg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751544AbaLEKQJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Dec 2014 05:16:09 -0500
+Received: by mail-qg0-f52.google.com with SMTP id a108so211501qge.11
+        for <linux-wireless@vger.kernel.org>; Fri, 05 Dec 2014 02:16:08 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CBACCFA0AEB13A41977475BCF3E896FC66736E79A6@SC-VEXCH2.marvell.com>
+References: <1417000056-16920-1-git-send-email-patila@marvell.com>
+	<CAPDyKFr-iaPWKWWgk-5_XcJm9sag=y=uZjfJvo-DQiJFM8BVLw@mail.gmail.com>
+	<CBACCFA0AEB13A41977475BCF3E896FC66736E7987@SC-VEXCH2.marvell.com>
+	<CBACCFA0AEB13A41977475BCF3E896FC66736E79A6@SC-VEXCH2.marvell.com>
+Date: Fri, 5 Dec 2014 11:16:08 +0100
+Message-ID: <CAPDyKFr-NiJHszPdVEUCSYQbK3TXbsdRsW0JHfgZ3P_DGbFPdA@mail.gmail.com> (sfid-20141205_111614_871642_1A8CFC41)
+Subject: Re: [PATCH] mmc: new API for data write using scatter gather DMA
+From: Ulf Hansson <ulf.hansson@linaro.org>
+To: Avinash Patil <patila@marvell.com>
+Cc: linux-mmc <linux-mmc@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Cathy Luo <cluo@marvell.com>, Marc Yang <yangyang@marvell.com>,
+	Xinming Hu <huxm@marvell.com>,
+	"bin9zha0@gmail.com" <bin9zha0@gmail.com>,
+	Bing Zhao <bzhao@marvell.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 5 December 2014 at 10:24, Avinash Patil <patila@marvell.com> wrote:
+> Hi Ulf,
+>
+> We have decided to drop this patch.
 
-Implement the new counters cfg80211 can now advertise to userspace.
-The TX code is in the sequence number handler, which is a bit odd,
-but that place already knows the TID and frame type, so it was
-easiest and least impact there.
+Why?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/rx.c       |  9 +++++++++
- net/mac80211/sta_info.c | 22 ++++++++++++++++++++++
- net/mac80211/sta_info.h |  7 +++++++
- net/mac80211/tx.c       |  3 +++
- 4 files changed, 41 insertions(+)
+Kind regards
+Uffe
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 444ebff955c1..52c5932adbd9 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2313,6 +2313,15 @@ ieee80211_rx_h_data(struct ieee80211_rx_data *rx)
- 	if (unlikely(!ieee80211_is_data_present(hdr->frame_control)))
- 		return RX_DROP_MONITOR;
- 
-+	if (rx->sta) {
-+		/* The security index has the same property as needed
-+		 * for the rx_msdu field, i.e. it is IEEE80211_NUM_TIDS
-+		 * for non-QoS-data frames. Here we know it's a data
-+		 * frame, so count MSDUs.
-+		 */
-+		rx->sta->rx_msdu[rx->security_idx]++;
-+	}
-+
- 	/*
- 	 * Send unexpected-4addr-frame event to hostapd. For older versions,
- 	 * also drop the frame to cooked monitor interfaces.
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 64b53b943d98..b20854bfd02b 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -1843,6 +1843,28 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
- 		sinfo->filled |= BIT(NL80211_STA_INFO_RX_BITRATE);
- 	}
- 
-+	if (!(sinfo->filled & BIT(NL80211_STA_INFO_RX_QOS_MSDU))) {
-+		for (i = 0; i < IEEE80211_NUM_TIDS; i++)
-+			sinfo->rx_qos_msdu[i] = sta->rx_msdu[i];
-+		sinfo->filled |= BIT(NL80211_STA_INFO_RX_QOS_MSDU);
-+	}
-+
-+	if (!(sinfo->filled & BIT_ULL(NL80211_STA_INFO_RX_NONQOS_MSDU))) {
-+		sinfo->rx_nonqos_msdu = sta->rx_msdu[IEEE80211_NUM_TIDS];
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_RX_NONQOS_MSDU);
-+	}
-+
-+	if (!(sinfo->filled & BIT_ULL(NL80211_STA_INFO_TX_QOS_MSDU))) {
-+		for (i = 0; i < 8; i++)
-+			sinfo->tx_qos_msdu[i] = sta->tx_msdu_qos[i];
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_QOS_MSDU);
-+	}
-+
-+	if (!(sinfo->filled & BIT_ULL(NL80211_STA_INFO_TX_NONQOS_MSDU))) {
-+		sinfo->tx_nonqos_msdu = sta->tx_msdu_nonqos;
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_NONQOS_MSDU);
-+	}
-+
- 	if (ieee80211_vif_is_mesh(&sdata->vif)) {
- #ifdef CONFIG_MAC80211_MESH
- 		sinfo->filled |= BIT(NL80211_STA_INFO_LLID) |
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 4f052bb2a5ad..d34392b44293 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -346,6 +346,10 @@ struct ieee80211_tx_latency_stat {
-  * @cipher_scheme: optional cipher scheme for this station
-  * @last_tdls_pkt_time: holds the time in jiffies of last TDLS pkt ACKed
-  * @reserved_tid: reserved TID (if any, otherwise IEEE80211_TID_UNRESERVED)
-+ * @tx_msdu_qos: QoS MSDUs transmitted to this station
-+ * @tx_msdu_nonqos: non-QoS MSDUs transmitted to this station
-+ * @rx_msdu: MSDUs received from this station, using IEEE80211_NUM_TID
-+ *	entry for non-QoS frames
-  */
- struct sta_info {
- 	/* General information, mostly static */
-@@ -416,6 +420,9 @@ struct sta_info {
- 	u32 last_rx_rate_vht_flag;
- 	u8 last_rx_rate_vht_nss;
- 	u16 tid_seq[IEEE80211_QOS_CTL_TID_MASK + 1];
-+	u64 tx_msdu_qos[IEEE80211_NUM_TIDS];
-+	u64 tx_msdu_nonqos;
-+	u64 rx_msdu[IEEE80211_NUM_TIDS + 1];
- 
- 	/*
- 	 * Aggregation information, locked with lock.
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 058686a721a1..5f3e29c06f64 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -815,6 +815,8 @@ ieee80211_tx_h_sequence(struct ieee80211_tx_data *tx)
- 		/* for pure STA mode without beacons, we can do it */
- 		hdr->seq_ctrl = cpu_to_le16(tx->sdata->sequence_number);
- 		tx->sdata->sequence_number += 0x10;
-+		if (tx->sta)
-+			tx->sta->tx_msdu_nonqos++;
- 		return TX_CONTINUE;
- 	}
- 
-@@ -831,6 +833,7 @@ ieee80211_tx_h_sequence(struct ieee80211_tx_data *tx)
- 	qc = ieee80211_get_qos_ctl(hdr);
- 	tid = *qc & IEEE80211_QOS_CTL_TID_MASK;
- 	seq = &tx->sta->tid_seq[tid];
-+	tx->sta->tx_msdu_qos[tid]++;
- 
- 	hdr->seq_ctrl = cpu_to_le16(*seq);
- 
--- 
-2.1.1
-
+>
+> Thanks,
+> Avinash
+> ________________________________________
+> From: Avinash Patil
+> Sent: Tuesday, December 02, 2014 2:55 PM
+> To: Ulf Hansson
+> Cc: linux-mmc; linux-wireless@vger.kernel.org; Amitkumar Karwar; Cathy Luo; Marc Yang; Xinming Hu; bin9zha0@gmail.com; Bing Zhao
+> Subject: RE: [PATCH] mmc: new API for data write using scatter gather DMA
+>
+> Hi Ulf,
+>
+> Purpose of patch is to offload scatter gather list population to host driver.
+> Patch provides MMC API using which host driver can directly use to program SG DMA.
+>
+>
+> Thanks,
+> Avinash
+> ________________________________________
+> From: Ulf Hansson [ulf.hansson@linaro.org]
+> Sent: Wednesday, November 26, 2014 7:13 PM
+> To: Avinash Patil
+> Cc: linux-mmc; linux-wireless@vger.kernel.org; Amitkumar Karwar; Cathy Luo; Marc Yang; Xinming Hu; bin9zha0@gmail.com; Bing Zhao
+> Subject: Re: [PATCH] mmc: new API for data write using scatter gather DMA
+>
+> On 26 November 2014 at 12:07, Avinash Patil <patila@marvell.com> wrote:
+>> From: Bing Zhao <bzhao@marvell.com>
+>>
+>> This patch adds new API to handle scatter gather aggregation.
+>
+> Why is this needed?
+>
+>>
+>> Signed-off-by: Bing Zhao <bzhao@marvell.com>
+>> Signed-off-by: Avinash Patil <patila@marvell.com>
+>> Signed-off-by: Xinming Hu <huxm@marvell.com>
+>> Signed-off-by: Cathy Luo <cluo@marvell.com>
+>> ---
+>>  drivers/mmc/core/sdio_ops.c   | 65 +++++++++++++++++++++++++++++++++++++++++++
+>>  include/linux/mmc/sdio_func.h |  5 ++++
+>>  2 files changed, 70 insertions(+)
+>>
+>> diff --git a/drivers/mmc/core/sdio_ops.c b/drivers/mmc/core/sdio_ops.c
+>> index 62508b4..4c5e362 100644
+>> --- a/drivers/mmc/core/sdio_ops.c
+>> +++ b/drivers/mmc/core/sdio_ops.c
+>> @@ -15,6 +15,7 @@
+>>  #include <linux/mmc/card.h>
+>>  #include <linux/mmc/mmc.h>
+>>  #include <linux/mmc/sdio.h>
+>> +#include <linux/export.h>
+>>
+>>  #include "core.h"
+>>  #include "sdio_ops.h"
+>> @@ -204,6 +205,70 @@ int mmc_io_rw_extended(struct mmc_card *card, int write, unsigned fn,
+>>         return 0;
+>>  }
+>>
+>> +int mmc_io_rw_extended_sg(struct mmc_card *card, int write, unsigned fn,
+>> +                         unsigned addr, int incr_addr,
+>> +                         struct sg_table *sgt, unsigned blksz)
+>> +{
+>> +       struct mmc_request mrq = {NULL};
+>> +       struct mmc_command cmd = {0};
+>> +       struct mmc_data data = {0};
+>> +       struct scatterlist *sg_ptr;
+>> +       unsigned blocks = 0;
+>> +       int i;
+>> +
+>> +       BUG_ON(!card || !card->host);
+>> +       BUG_ON(fn > 7);
+>> +       BUG_ON(!blksz);
+>
+> No BUG_ON() here please. Better to return an error.
+>
+>> +       for_each_sg(sgt->sgl, sg_ptr, sgt->nents, i) {
+>> +               WARN_ON(sg_ptr->length > card->host->max_seg_size);
+>> +               blocks += DIV_ROUND_UP(sg_ptr->length, blksz);
+>> +       }
+>> +
+>> +       /* sanity check */
+>> +       if (addr & ~0x1FFFF)
+>> +               return -EINVAL;
+>> +
+>> +       mrq.cmd = &cmd;
+>> +       mrq.data = &data;
+>> +
+>> +       cmd.opcode = SD_IO_RW_EXTENDED;
+>> +       cmd.arg = write ? 0x80000000 : 0x00000000;
+>> +       cmd.arg |= fn << 28;
+>> +       cmd.arg |= incr_addr ? 0x04000000 : 0x00000000;
+>> +       cmd.arg |= addr << 9;
+>> +       cmd.arg |= 0x08000000 | blocks;
+>> +       cmd.flags = MMC_RSP_SPI_R5 | MMC_RSP_R5 | MMC_CMD_ADTC;
+>> +
+>> +       data.blksz = blksz;
+>> +       data.blocks = blocks;
+>> +       data.flags = write ? MMC_DATA_WRITE : MMC_DATA_READ;
+>> +
+>> +       data.sg = sgt->sgl;
+>> +       data.sg_len = sgt->nents;
+>> +
+>> +       mmc_set_data_timeout(&data, card);
+>> +       mmc_wait_for_req(card->host, &mrq);
+>> +
+>> +       if (cmd.error)
+>> +               return cmd.error;
+>> +       if (data.error)
+>> +               return data.error;
+>> +
+>> +       if (mmc_host_is_spi(card->host)) {
+>> +               /* host driver already reported errors */
+>> +       } else {
+>> +               if (cmd.resp[0] & R5_ERROR)
+>> +                       return -EIO;
+>> +               if (cmd.resp[0] & R5_FUNCTION_NUMBER)
+>> +                       return -EINVAL;
+>> +               if (cmd.resp[0] & R5_OUT_OF_RANGE)
+>> +                       return -ERANGE;
+>> +       }
+>> +
+>> +       return 0;
+>> +}
+>> +EXPORT_SYMBOL_GPL(mmc_io_rw_extended_sg);
+>> +
+>>  int sdio_reset(struct mmc_host *host)
+>>  {
+>>         int ret;
+>> diff --git a/include/linux/mmc/sdio_func.h b/include/linux/mmc/sdio_func.h
+>> index 50f0bc9..927ea8f 100644
+>> --- a/include/linux/mmc/sdio_func.h
+>> +++ b/include/linux/mmc/sdio_func.h
+>> @@ -14,6 +14,7 @@
+>>
+>>  #include <linux/device.h>
+>>  #include <linux/mod_devicetable.h>
+>> +#include <linux/scatterlist.h>
+>>
+>>  #include <linux/mmc/pm.h>
+>>
+>> @@ -153,6 +154,10 @@ extern int sdio_memcpy_toio(struct sdio_func *func, unsigned int addr,
+>>  extern int sdio_writesb(struct sdio_func *func, unsigned int addr,
+>>         void *src, int count);
+>>
+>> +int mmc_io_rw_extended_sg(struct mmc_card *card, int write, unsigned fn,
+>> +                         unsigned addr, int incr_addr,
+>> +                         struct sg_table *sgt, unsigned blksz);
+>> +
+>>  extern unsigned char sdio_f0_readb(struct sdio_func *func,
+>>         unsigned int addr, int *err_ret);
+>>  extern void sdio_f0_writeb(struct sdio_func *func, unsigned char b,
+>> --
+>> 1.8.1.4
+>>
+>
+> Kind regards
+> Uffe
