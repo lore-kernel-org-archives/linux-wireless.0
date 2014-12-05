@@ -1,49 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.osadl.org ([62.245.132.105]:51273 "EHLO www.osadl.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752657AbaL3NDs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Dec 2014 08:03:48 -0500
-From: Nicholas Mc Guire <der.herr@hofr.at>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: Michal Kazior <michal.kazior@tieto.com>,
-	Ben Greear <greearb@candelatech.com>,
-	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>,
-	Yanbo Li <yanbol@qti.qualcomm.com>, ath10k@lists.infradead.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Nicholas Mc Guire <der.herr@hofr.at>
-Subject: [PATCH 4/4] ath10k: fixup wait_for_completion_timeout return handling
-Date: Tue, 30 Dec 2014 07:20:46 -0500
-Message-Id: <1419942046-17985-5-git-send-email-der.herr@hofr.at> (sfid-20141230_140351_742193_36B6E97C)
-In-Reply-To: <1419942046-17985-1-git-send-email-der.herr@hofr.at>
-References: <1419942046-17985-1-git-send-email-der.herr@hofr.at>
+Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:39269 "EHLO
+	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750823AbaLENXy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Dec 2014 08:23:54 -0500
+Date: Fri, 5 Dec 2014 13:23:32 +0000
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+To: Hante Meuleman <meuleman@broadcom.com>
+Cc: Will Deacon <will.deacon@arm.com>,
+	Arend Van Spriel <arend@broadcom.com>,
+	Marek Szyprowski <m.szyprowski@samsung.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	David Miller <davem@davemloft.net>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: using DMA-API on ARM
+Message-ID: <20141205132332.GS11285@n2100.arm.linux.org.uk> (sfid-20141205_142407_804424_87044869)
+References: <5481794E.4050406@broadcom.com>
+ <20141205094507.GP11285@n2100.arm.linux.org.uk>
+ <20141205122423.GK1630@arm.com>
+ <F51492713EF10846800D8C0ED37A7DCE019016E1@SJEXCHMB15.corp.ad.broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <F51492713EF10846800D8C0ED37A7DCE019016E1@SJEXCHMB15.corp.ad.broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-wait_for_completion_timeout does not return negative values so
-"ret" handling here should check for timeout only.
+Please wrap your message - replying to a message which looks like this in
+my editor is far from easy, and gives me much more work to /manually/
+reformat it before I can reply to it:
 
-patch was only compile tested for x86_64_defconfig + CONFIG_ATH10K=m
+On Fri, Dec 05, 2014 at 12:56:45PM +0000, Hante Meuleman wrote:
+> The problem is with data coming from device, so DMA from device to host. The $
+>
+> However: this indicates that dma_alloc_coherent on an ARM target may result i$
+>
+> Regards,
+> Hante
 
-patch is against linux-next 3.19.0-rc1 -next-20141226
+Thanks.
 
-Signed-off-by: Nicholas Mc Guire <der.herr@hofr.at>
----
- drivers/net/wireless/ath/ath10k/htt.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On Fri, Dec 05, 2014 at 12:56:45PM +0000, Hante Meuleman wrote:
+> However: this indicates that dma_alloc_coherent on an ARM target may
+> result in a memory buffer which can be cached which conflicts with
+> the API of this function.
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt.c b/drivers/net/wireless/ath/ath10k/htt.c
-index 56cb4ac..58b6fc1 100644
---- a/drivers/net/wireless/ath/ath10k/htt.c
-+++ b/drivers/net/wireless/ath/ath10k/htt.c
-@@ -102,7 +102,7 @@ int ath10k_htt_setup(struct ath10k_htt *htt)
- 
- 	status = wait_for_completion_timeout(&htt->target_version_received,
- 					     HTT_TARGET_VERSION_TIMEOUT_HZ);
--	if (status <= 0) {
-+	if (status == 0) {
- 		ath10k_warn(ar, "htt version request timed out\n");
- 		return -ETIMEDOUT;
- 	}
+If the memory has an alias which is cacheable, it is possible for cache
+lines to get allocated via that alias, even if the alias has no explicit
+accesses to it.
+
+This is something which I've been going on for quite literally /years/ -
+mismatched cache attributes can cause unpredictable behaviour.  I've had
+a lot of push back from people who are of the opinion that "if it works
+for me, then there isn't a problem" and I eventually gave up fighting
+the battle, especially as the ARM architecture people weakened my
+reasoning behind it by publishing a relaxation of the "no differing
+attributes" issue.  This was particularly true of those who wanted to
+use ioremap() on system memory - and cases such as
+dma_init_coherent_memory().
+
+So, I never fixed this problem in the original DMA allocator code; I
+basically gave up with it.  It's a latent bug which did need to be fixed,
+and is still present today in the non-CMA case.
+
+The symptoms which you are reporting sound very much like this kind of
+problem - the virtual address for the memory returned by
+dma_alloc_coherent() will not be cacheable memory - it will have been
+remapped using map_vm_area().  However, there could very well be a fully
+cacheable lowmem mapping of that memory, which if a read (speculative or
+otherwise) will bring a cache line in, and because the caches are VIPT
+or PIPT, that cache line can be hit via the non-cacheable mapping too.
+
+What I /really/ need is more evidence of this to tell those disbelievers
+where to stick their flawed arguments. :)
+
 -- 
-1.7.10.4
-
+FTTC broadband for 0.8mile line: currently at 9.5Mbps down 400kbps up
+according to speedtest.net.
