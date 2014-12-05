@@ -1,66 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f172.google.com ([209.85.217.172]:51144 "EHLO
-	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751026AbaLaO2p (ORCPT
+Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:45483 "EHLO
+	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751233AbaLESkB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Dec 2014 09:28:45 -0500
-Received: by mail-lb0-f172.google.com with SMTP id z12so5654487lbi.3
-        for <linux-wireless@vger.kernel.org>; Wed, 31 Dec 2014 06:28:43 -0800 (PST)
+	Fri, 5 Dec 2014 13:40:01 -0500
+Date: Fri, 5 Dec 2014 18:39:45 +0000
+From: Catalin Marinas <catalin.marinas@arm.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Russell King <linux@arm.linux.org.uk>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
+	David Miller <davem@davemloft.net>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: using DMA-API on ARM
+Message-ID: <20141205183945.GE31222@e104818-lin.cambridge.arm.com> (sfid-20141205_194028_377758_33F4BDAE)
+References: <5481794E.4050406@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1416352495-82172-1-git-send-email-nbd@openwrt.org>
-References: <1416352495-82172-1-git-send-email-nbd@openwrt.org>
-Date: Wed, 31 Dec 2014 15:28:43 +0100
-Message-ID: <CAJWpbEg0oRG6GYF_mP=m+gBKVp8Q7Gu36HBjtuxiddXFxA2fFA@mail.gmail.com> (sfid-20141231_152848_547136_B9177278)
-Subject: Re: [PATCH] mac80211: add an intermediate software queue implementation
-From: Johan Almbladh <ja@anyfi.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5481794E.4050406@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 19, 2014 at 12:14 AM, Felix Fietkau <nbd@openwrt.org> wrote:
->
-> +static void ieee80211_drv_tx(struct ieee80211_local *local,
-> +                            struct ieee80211_vif *vif,
-> +                            struct ieee80211_sta *pubsta,
-> +                            struct sk_buff *skb)
-> +{
-> +       struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
-> +       struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
-> +       struct ieee80211_tx_control control = {
-> +               .sta = pubsta
-> +       };
-> +       struct ieee80211_txq *pubtxq = NULL;
-> +       struct txq_info *txq;
-> +       u8 ac;
-> +
-> +       if (ieee80211_is_mgmt(hdr->frame_control) ||
-> +           ieee80211_is_ctl(hdr->frame_control))
-> +               goto tx_normal;
-> +
-> +       if (pubsta) {
-> +               u8 tid = skb->priority & IEEE80211_QOS_CTL_TID_MASK;
-> +               pubtxq = pubsta->txq[tid];
-> +       } else {
-> +               pubtxq = vif->txq;
-> +       }
+On Fri, Dec 05, 2014 at 09:22:22AM +0000, Arend van Spriel wrote:
+> For our brcm80211 development we are working on getting brcmfmac driver
+> up and running on a Broadcom ARM-based platform. The wireless device is
+> a PCIe device, which is hooked up to the system behind a PCIe host
+> bridge, and we transfer information between host and device using a
+> descriptor ring buffer allocated using dma_alloc_coherent(). We mostly
+> tested on x86 and seen no issue. However, on this ARM platform
+> (single-core A9) we detect occasionally that the descriptor content is
+> invalid. When this occurs we do a dma_sync_single_for_cpu() and this is
+> retried a number of times if the problem persists. Actually, found out
+> that someone made a mistake by using virt_to_dma(va) to get the
+> dma_handle parameter. So probably we only provided a delay in the retry
+> loop. After fixing that a single call to dma_sync_single_for_cpu() is
+> sufficient. The DMA-API-HOWTO clearly states that:
 
-In the monitor frame injection tx path the vif pointer may actually be
-NULL when we get here, see the function __ieee80211_tx(). This causes
-a NULL pointer dereference crash. The wperf tool
-(https://github.com/anyfi/wperf) can be used to reproduce the crash by
-specifying a BSSID that does not belong to a vif.
+Does your system have an L2 cache? What's the SoC topology, can PCIe see
+such L2 cache (or snoop the L1 caches)?
 
-The following one-line change in the patch fixes the crash for me:
+Also, are you certain that dma_alloc_coherent() ends up creating a
+non-cacheable mapping in Linux (this call translates to a function
+pointer call which may or may not create non-cacheable memory, depending
+on the "dma-coherent" property passed via DT).
 
-       if (pubsta) {
-               u8 tid = skb->priority & IEEE80211_QOS_CTL_TID_MASK;
-               pubtxq = pubsta->txq[tid];
--     } else {
-+     } else if (vif) {
-               pubtxq = vif->txq;
-       }
-
-Johan
+-- 
+Catalin
