@@ -1,160 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:46994 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751963AbaLSP6J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Dec 2014 10:58:09 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: nbd@openwrt.org, j@w1.fi, Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 3/3] nl80211: support per-rate/per-station statistics
-Date: Fri, 19 Dec 2014 16:58:03 +0100
-Message-Id: <1419004683-25369-3-git-send-email-johannes@sipsolutions.net> (sfid-20141219_165815_958575_D3B60856)
-In-Reply-To: <1419004683-25369-1-git-send-email-johannes@sipsolutions.net>
-References: <1419004683-25369-1-git-send-email-johannes@sipsolutions.net>
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:1235 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750924AbaLEOUc convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Dec 2014 09:20:32 -0500
+From: Hante Meuleman <meuleman@broadcom.com>
+To: Russell King - ARM Linux <linux@arm.linux.org.uk>
+CC: Will Deacon <will.deacon@arm.com>,
+	Arend Van Spriel <arend@broadcom.com>,
+	Marek Szyprowski <m.szyprowski@samsung.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	David Miller <davem@davemloft.net>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: RE: using DMA-API on ARM
+Date: Fri, 5 Dec 2014 14:20:30 +0000
+Message-ID: <F51492713EF10846800D8C0ED37A7DCE01901765@SJEXCHMB15.corp.ad.broadcom.com> (sfid-20141205_152049_624496_4B1D3F89)
+References: <5481794E.4050406@broadcom.com>
+ <20141205094507.GP11285@n2100.arm.linux.org.uk>
+ <20141205122423.GK1630@arm.com>
+ <F51492713EF10846800D8C0ED37A7DCE019016E1@SJEXCHMB15.corp.ad.broadcom.com>
+ <20141205132332.GS11285@n2100.arm.linux.org.uk>
+In-Reply-To: <20141205132332.GS11285@n2100.arm.linux.org.uk>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Ok, I'll add the necessary debug to get all the information out, 
+but it will take some time to get it done, so I won't have anything 
+before Monday.
 
-Per-rate/per-station statistics can be desirable to have but they're
-quite expensive (keeping the four counters for each rate would take
-close to 4k of memory per station only for VHT MCSes for a moderately
-capable VHT chip (with 2 spatial streams and 80MHz support) so it's
-not a good idea to keep all of this in the kernel. Using a hash table
-instead can be done, but then addressing becomes more expensive.
+-----Original Message-----
+From: Russell King - ARM Linux [mailto:linux@arm.linux.org.uk] 
+Sent: vrijdag 5 december 2014 14:24
+To: Hante Meuleman
+Cc: Will Deacon; Arend Van Spriel; Marek Szyprowski; linux-arm-kernel@lists.infradead.org; David Miller; linux-kernel@vger.kernel.org; brcm80211-dev-list; linux-wireless
+Subject: Re: using DMA-API on ARM
 
-Instead, this API provides a way for interested clients in userspace
-to subscribe to such statistics. When supported by a driver, it can
-then start collecting the data only when subscribers exist. To avoid
-the kernel's data collection becoming too big, it can send out the
-data at any point in time, for example to limit the counters to u32
-internally and send it out when they're close to reaching the limit,
-or to keep a hash table and sending it out when too many collisions
-occur. Userspace can then keep track of the full state.
+Please wrap your message - replying to a message which looks like this in
+my editor is far from easy, and gives me much more work to /manually/
+reformat it before I can reply to it:
 
-This RFC defines only the userspace API so far, without even a trace
-of implementation.
+On Fri, Dec 05, 2014 at 12:56:45PM +0000, Hante Meuleman wrote:
+> The problem is with data coming from device, so DMA from device to host. The $
+>
+> However: this indicates that dma_alloc_coherent on an ARM target may result i$
+>
+> Regards,
+> Hante
 
-Change-Id: I80313d3a62502bf28a7e241807a585fb4e976ab9
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/uapi/linux/nl80211.h | 77 ++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 77 insertions(+)
+Thanks.
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index ef99b90e9241..2ca0cc2a5d87 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -787,6 +787,13 @@
-  *	as an event to indicate changes for devices with wiphy-specific regdom
-  *	management.
-  *
-+ * @NL80211_CMD_RATE_STATISTICS: Used as a command to subscribe to per-rate
-+ *	packet statistics, and as a notification to send those statistics to
-+ *	the subscribers. See the "per-rate statistics" documentation section.
-+ * @NL80211_CMD_RATE_STATISTICS_GET: This command can be used to trigger the
-+ *	rate statistics dump to userspace, which also clears the data in the
-+ *	kernel (driver). See the "per-rate statistics" documentation section.
-+ *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-  */
-@@ -973,6 +980,9 @@ enum nl80211_commands {
- 
- 	NL80211_CMD_WIPHY_REG_CHANGE,
- 
-+	NL80211_CMD_RATE_STATISTICS,
-+	NL80211_CMD_RATE_STATISTICS_GET,
-+
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-@@ -1718,6 +1728,10 @@ enum nl80211_commands {
-  *	should be contained in the result as the sum of the respective counters
-  *	over all channels.
-  *
-+ * @NL80211_ATTR_RATE_STATS: per-rate statistics container attribute, this is
-+ *	used as an array with each entry containing &enum nl80211_rate_stats
-+ *	attributes.
-+ *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -2079,6 +2093,8 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_SURVEY_RADIO_STATS,
- 
-+	NL80211_ATTR_RATE_STATS,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	NL80211_ATTR_REG_INDOOR = 0x1000,
-@@ -4505,4 +4521,65 @@ enum nl80211_tdls_peer_capability {
- 	NL80211_TDLS_PEER_WMM = 1<<2,
- };
- 
-+/**
-+ * DOC: per-rate statistics
-+ *
-+ * The nl80211 API provides a way to subscribe to per-bitrate statistics. Since
-+ * there are many bitrates it isn't always desirable to keep statistics for all
-+ * of the rates in the kernel. As a consequence, the API allows the drivers to
-+ * dump the information to userspace and reset their internal values. As it can
-+ * also be expensive to keep the counters, this is only done when subscribers
-+ * exist.
-+ *
-+ * To use this facility, a userspace client must subscribe to the data using the
-+ * %NL80211_CMD_RATE_STATISTICS command. This starts data collection. If other
-+ * clients already exists, those are also sent the current statistics (as if the
-+ * %NL80211_CMD_RATE_STATISTICS_GET command had been issued) to allow the new
-+ * client to collect only the data while subscribed.
-+ *
-+ * While subscribed, the client must listen for %NL80211_CMD_RATE_STATISTICS
-+ * events sent to the subscribed socket, and accumulate data retrieved in them.
-+ * Every time such an event is sent by the kernel, the in-kernel data is also
-+ * cleared. Therefore, to achieve data collection over longer periods of time,
-+ * the subscribers must accumulate data. No representation is made about how
-+ * long the kernel will collect data, but (as an implementation guideline) the
-+ * data shouldn't be sent out frequently, and only while traffic is keeping the
-+ * CPU busy anyway (i.e. it is recommended to not use timers.)
-+ *
-+ * In order to obtain a sample or clear the statistics at a given point in time,
-+ * the %NL80211_CMD_RATE_STATISTICS_GET command can be used. This command can
-+ * be called by any nl80211 client (even non-subscribers) and causes the kernel
-+ * to send out and clear (atomically) the currently accumulated data to all of
-+ * the subscribers.
-+ *
-+ * Note that the data sent out in each %NL80211_CMD_RATE_STATISTICS notification
-+ * pertains only to a single station (identified by the interface index and the
-+ * station's MAC address.) It is therefore expected that multiple messages will
-+ * be received by an application, and subscribers must ensure that their socket
-+ * buffers are big enough to retrieve all the data.
-+ *
-+ * To unsubscribe, simply close the subscribed socket.
-+ */
-+
-+/**
-+ * enum nl80211_rate_stats - per-rate statistics container attributes
-+ * @__NL80211_ATTR_RATE_STATS_INVALID: attribute number 0 is reserved
-+ * @NL80211_ATTR_RATE_STATS_RATE: bitrate definition, nested attribute
-+ *	containing the attributes from &enum nl80211_rate_info.
-+ * @NL80211_ATTR_RATE_STATS_STATS: statistics values, nested attribute
-+ *	containing the attributes from &enum nl80211_tid_stats (even
-+ *	though the statistics are not per TID)
-+ * @NUM_NL80211_ATTR_RATE_STATS: number of attributes here
-+ * @NL80211_ATTR_RATE_STATS_MAX: highest numbered attribute here
-+ */
-+enum nl80211_rate_stats {
-+	__NL80211_ATTR_RATE_STATS_INVALID,
-+	NL80211_ATTR_RATE_STATS_RATE,
-+	NL80211_ATTR_RATE_STATS_STATS,
-+
-+	/* keep last */
-+	NUM_NL80211_ATTR_RATE_STATS,
-+	NL80211_ATTR_RATE_STATS_MAX = NUM_NL80211_ATTR_RATE_STATS - 1
-+};
-+
- #endif /* __LINUX_NL80211_H */
+On Fri, Dec 05, 2014 at 12:56:45PM +0000, Hante Meuleman wrote:
+> However: this indicates that dma_alloc_coherent on an ARM target may
+> result in a memory buffer which can be cached which conflicts with
+> the API of this function.
+
+If the memory has an alias which is cacheable, it is possible for cache
+lines to get allocated via that alias, even if the alias has no explicit
+accesses to it.
+
+This is something which I've been going on for quite literally /years/ -
+mismatched cache attributes can cause unpredictable behaviour.  I've had
+a lot of push back from people who are of the opinion that "if it works
+for me, then there isn't a problem" and I eventually gave up fighting
+the battle, especially as the ARM architecture people weakened my
+reasoning behind it by publishing a relaxation of the "no differing
+attributes" issue.  This was particularly true of those who wanted to
+use ioremap() on system memory - and cases such as
+dma_init_coherent_memory().
+
+So, I never fixed this problem in the original DMA allocator code; I
+basically gave up with it.  It's a latent bug which did need to be fixed,
+and is still present today in the non-CMA case.
+
+The symptoms which you are reporting sound very much like this kind of
+problem - the virtual address for the memory returned by
+dma_alloc_coherent() will not be cacheable memory - it will have been
+remapped using map_vm_area().  However, there could very well be a fully
+cacheable lowmem mapping of that memory, which if a read (speculative or
+otherwise) will bring a cache line in, and because the caches are VIPT
+or PIPT, that cache line can be hit via the non-cacheable mapping too.
+
+What I /really/ need is more evidence of this to tell those disbelievers
+where to stick their flawed arguments. :)
+
 -- 
-2.1.1
-
+FTTC broadband for 0.8mile line: currently at 9.5Mbps down 400kbps up
+according to speedtest.net.
