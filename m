@@ -1,39 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm.newmedia-net.de ([217.113.179.122]:33579 "EHLO
-	webmail.newmedia-net.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751525AbaLWTwI (ORCPT
+Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:38902 "EHLO
+	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752695AbaLEJpb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Dec 2014 14:52:08 -0500
-Message-ID: <5499C7ED.2020404@dd-wrt.com> (sfid-20141223_205212_313170_1F09BE96)
-Date: Tue, 23 Dec 2014 20:52:13 +0100
-From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+	Fri, 5 Dec 2014 04:45:31 -0500
+Date: Fri, 5 Dec 2014 09:45:08 +0000
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+To: Arend van Spriel <arend@broadcom.com>,
+	Marek Szyprowski <m.szyprowski@samsung.com>,
+	Will Deacon <will.deacon@arm.com>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	David Miller <davem@davemloft.net>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: using DMA-API on ARM
+Message-ID: <20141205094507.GP11285@n2100.arm.linux.org.uk> (sfid-20141205_104547_759613_BB354465)
+References: <5481794E.4050406@broadcom.com>
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-References: <20141217101755.15964.2625.stgit@potku.adurom.net>	<20141217102226.15964.32919.stgit@potku.adurom.net>	<5491D20F.2020202@dd-wrt.com> <87tx0mcled.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87tx0mcled.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Subject: Re: [PATCH v2 8/8] ath10k: add thermal sensor device support
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5481794E.4050406@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 23.12.2014 um 18:43 schrieb Kalle Valo:
-> Sebastian Gottschall <s.gottschall@dd-wrt.com> writes:
->
->> the whole code will not work. the firmware 10.2.4 returns op_version 3
->> so this check here fails
->>
->> if (ar->wmi.op_version != ATH10K_FW_WMI_OP_VERSION_10_2_4)
->>
->> since 5 is required
-> I know, I used firmware-4.bin_10.2.4.13-2 to test this. I just didn't
-> have a chance to upload it until now:
->
-> https://github.com/kvalo/ath10k-firmware/tree/master/10.2.4
-:-) thanks
-i tested it using a hardcoded api version patch based on the firmware 
-version  and it worked as well so far. (just tested temperture sensor 
-readout)
+On Fri, Dec 05, 2014 at 10:22:22AM +0100, Arend van Spriel wrote:
+> For our brcm80211 development we are working on getting brcmfmac driver
+> up and running on a Broadcom ARM-based platform. The wireless device is
+> a PCIe device, which is hooked up to the system behind a PCIe host
+> bridge, and we transfer information between host and device using a
+> descriptor ring buffer allocated using dma_alloc_coherent(). We mostly
+> tested on x86 and seen no issue. However, on this ARM platform
+> (single-core A9) we detect occasionally that the descriptor content is
+> invalid. When this occurs we do a dma_sync_single_for_cpu() and this is
+> retried a number of times if the problem persists. Actually, found out
+> that someone made a mistake by using virt_to_dma(va) to get the
+> dma_handle parameter. So probably we only provided a delay in the retry
+> loop. After fixing that a single call to dma_sync_single_for_cpu() is
+> sufficient. The DMA-API-HOWTO clearly states that:
+> 
+> """
+> the hardware should guarantee that the device and the CPU can access the
+> data in parallel and will see updates made by each other without any
+> explicit software flushing.
+> """
+> 
+> So it seems incorrect that we would need to do a dma_sync for this
+> memory. That we do need it seems like this memory can end up in
+> cache(?), or whatever happens, in some rare condition. Is there anyway
+> to investigate this situation either through DMA-API or some low-level
+> ARM specific functions.
 
-Sebastian
+It's been a long while since I looked at the code, and the code for
+dma_alloc_coherent() has completely changed since then with the
+addition of CMA.  I'm afraid that anything I would say about it would
+not be accurate without research into the possible paths through that
+code - it's no longer just a simple allocator.
 
+What you say is correct however: the memory should not have any cache
+lines associated with it, if it does, there's a bug somewhere.
+
+Also, the memory will be weakly ordered, which means that writes to such
+memory can be reordered.  If ordering matters, barriers should be used.
+rmb() and wmb() can be used for this.
+
+(Added Marek for comment on dma_alloc_coherent(), Will for comment on
+barrier stuff.)
+
+-- 
+FTTC broadband for 0.8mile line: currently at 9.5Mbps down 400kbps up
+according to speedtest.net.
