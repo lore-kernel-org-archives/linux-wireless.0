@@ -1,90 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from daemonizer.de ([87.230.18.164]:44792 "EHLO daemonizer.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751058AbaLUOYc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Dec 2014 09:24:32 -0500
-From: Maximilian Engelhardt <maxi@daemonizer.de>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Michael Tokarev <mjt@tls.msk.ru>,
-	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	brcm80211 development <brcm80211-dev-list@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>
-Subject: Re: BCM4313 & brcmsmac & 3.12: only semi-working?
-Date: Sun, 21 Dec 2014 15:24:29 +0100
-Message-ID: <9234001.YBqfvtcJFx@fuchs> (sfid-20141221_152440_143467_073E46B3)
-In-Reply-To: <5496D59E.5030601@broadcom.com>
-References: <53FDACD1.8090805@msgid.tls.msk.ru> <141935691.MGh8oJCUVD@fuchs> <5496D59E.5030601@broadcom.com>
+Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:39442 "EHLO
+	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750920AbaLEPG7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Dec 2014 10:06:59 -0500
+Date: Fri, 5 Dec 2014 15:06:48 +0000
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+To: Hante Meuleman <meuleman@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>,
+	Will Deacon <will.deacon@arm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Arend Van Spriel <arend@broadcom.com>,
+	David Miller <davem@davemloft.net>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Marek Szyprowski <m.szyprowski@samsung.com>
+Subject: Re: using DMA-API on ARM
+Message-ID: <20141205150648.GT11285@n2100.arm.linux.org.uk> (sfid-20141205_160702_971587_BB2864AC)
+References: <5481794E.4050406@broadcom.com>
+ <20141205094507.GP11285@n2100.arm.linux.org.uk>
+ <20141205122423.GK1630@arm.com>
+ <F51492713EF10846800D8C0ED37A7DCE019016E1@SJEXCHMB15.corp.ad.broadcom.com>
+ <20141205132332.GS11285@n2100.arm.linux.org.uk>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart2165607.tNvV9YbdjW"; micalg="pgp-sha512"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20141205132332.GS11285@n2100.arm.linux.org.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+I've been doing more digging into the current DMA code, and I'm dismayed
+to see that there's new bugs in it...
 
---nextPart2165607.tNvV9YbdjW
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+commit 513510ddba9650fc7da456eefeb0ead7632324f6
+Author: Laura Abbott <lauraa@codeaurora.org>
+Date:   Thu Oct 9 15:26:40 2014 -0700
 
-On Sunday 21 December 2014 15:13:50 Arend van Spriel wrote:
-> On 12/21/14 15:08, Maximilian Engelhardt wrote:
-> > On Sunday 21 December 2014 11:12:40 Arend van Spriel wrote:
-> >> On 12/21/14 10:58, Michael Tokarev wrote:
-> >>> 16.12.2014 19:51, Arend van Spriel wrote:
-> >>>> Hmm. The function brcms_btc_ecicoex_enab() is calling itself. Please
-> >>>> remove that call as it causes endless recursion and eventually reboot.>
-> >>> 
-> >>> Ok, that was easy.  Now it loads, but wifi link still
-> >>> does not work, stalling as before.  What we're looking
-> >>> at now?
-> >> 
-> >> The patch is just to provide me with extra bt-coex related information
-> >> in the kernel log. So if you can provide that to me I have to info
-> >> needed to look in the proprietary code base to determine what is missing.
-> >> 
-> >> Regards,
-> >> Arend
-> > 
-> > Hi Arend,
-> 
-> > here is the output from my card:
-> Thanks. It shows you have have the same bt-coex version as Michael. I am
-> not familiar with bluetooth side of things. Are you both using bluetooth
-> on 4313?
-> 
-> Regards,
-> Arend
+    common: dma-mapping: introduce common remapping functions
 
-I don't know. I think I have Bluetooth somehow enabled but I'm not really 
-using it. I definitely don't have any Bluetooth devices connected. I could try 
-to unload/disable Bluetooth it to see if it makes any difference.
+This uses map_vm_area() to achieve the remapping of pages allocated inside
+dma_alloc_coherent().  dma_alloc_coherent() is documented in a rather
+round-about way in Documentation/DMA-API.txt:
 
-Greetings,
-Maxi
+| Part Ia - Using large DMA-coherent buffers
+| ------------------------------------------
+| 
+| void *
+| dma_alloc_coherent(struct device *dev, size_t size,
+|                              dma_addr_t *dma_handle, gfp_t flag)
+| 
+| void
+| dma_free_coherent(struct device *dev, size_t size, void *cpu_addr,
+|                            dma_addr_t dma_handle)
+| 
+| Free a region of consistent memory you previously allocated.  dev,
+| size and dma_handle must all be the same as those passed into
+| dma_alloc_coherent().  cpu_addr must be the virtual address returned by
+| the dma_alloc_coherent().
+| 
+| Note that unlike their sibling allocation calls, these routines
+| may only be called with IRQs enabled.
 
+Note that very last paragraph.  What this says is that it is explicitly
+permitted to call dma_alloc_coherent() with IRQs disabled.
 
---nextPart2165607.tNvV9YbdjW
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
+Now, the question is: is it safe to call map_vm_area() with IRQs disabled?
+Well, map_vm_area() calls pud_alloc(), pmd_alloc(), and pte_alloc_kernel().
+These functions all call into the kernel memory allocator *without*
+GFP_ATOMIC - in other words, these allocations are permitted to sleep.
+Except, IRQs are off, so it's a bug to call these functions from
+dma_alloc_coherent().
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
+Now, if we look at the previous code, it used ioremap_page_range().  This
+has the same problem: it needs to allocate page tables, and it can only
+do it via functions which may sleep.
 
-iQIcBAABCgAGBQJUltgdAAoJEIHqZH0kK9IVq08P/3+pOrkLsDb4JbRN3+M9klXr
-Oj+R9rl7PglaE7ADWwZWHdwJuacC/aUQEBEof4/WT7xyPDGIepfPguXSA0pHhyDR
-y4z6O1xeMLijlooVKto8b/6A6V04WJQ0IEDBef6gtYNGaQlIyo2jVTqqbtU4Exlu
-4tRnPkMvFQLV1LFQMDYTicn/ODqEjqsguVlorwui47cJso2xu5LngWB0re1ihEOS
-V2K+2CTN0WNfY1QQEWNU9La5cvDdW+tzXF/sMAZNvwQmDx2CrfBCnBiUvKdr34kt
-km5c7f1GgGKV3Eqp2Y65oRGB3bhdItOwlt/I8rpa2dZLUMVEoK2FAP9fO+PyOffq
-crZ+VU+EGp7lZ1CgcuDycefyjc4UHrs2GLFJ7jqT+9Okl7XwhNFRaxr7fwXnl3jt
-PEMsmGcjbaD6imiwhahDQyffUy84T9K++DfDLwZkhQr+frjKPZAMMgi++IqRAhBD
-SoNLQ4YtpvqQPnV8GyiyE1FxIco3lZzY7ntx5wM9IG2qmH5OzRgXhyJhHcz7fT8n
-upAcU615EI33uP2NRfZMegyOP6uU78KP1/pGo0vrsvqqe0a7U7vNKFLcnU/Cu8Zz
-+nV3P2An/4/E412CYY58K/eLTKxDBpBgQ5yTpCcbl69SXMXbTuYQ3nKuCWn5HM1T
-jDfJuKahssXm68eVg/FQ
-=RurE
------END PGP SIGNATURE-----
+If we go back even further, we find that the use of ioremap_page_range()
+in dma_alloc_coherent() was introduced by:
 
---nextPart2165607.tNvV9YbdjW--
+commit e9da6e9905e639b0f842a244bc770b48ad0523e9
+Author: Marek Szyprowski <m.szyprowski@samsung.com>
+Date:   Mon Jul 30 09:11:33 2012 +0200
 
+    ARM: dma-mapping: remove custom consistent dma region
+
+which is the commit which removed my pre-allocated page tables for the
+DMA re-mapping region - code which I explicitly had to specifically
+avoid this issue.
+
+Obviously, this isn't a big problem, because people haven't reported
+that they've hit any of the might_sleep() checks in the memory
+allocators, which I think is our only saving grace - but it's still
+wrong to the specified calling conditions of the DMA API.
+
+If the problem which you (Broadcom) are suffering from is down to the
+issue I suspect (that being having mappings with different cache
+attributes) then I'm not sure that there's anything we can realistically
+do about that.  There's a number of issues which make it hard to see a
+way forward.
+
+One example is that if we allocate memory, we need to be able to change
+(or remove) the cacheable mappings associated with that memory.  We'd
+need to touch the L1 page table, either to change the attributes of the
+section mapping, or to convert the section mapping to a L2 page table
+pointer.  We need to change the attributes in a break-flush-make sequence
+to avoid TLB conflicts.
+
+However, those mappings may be shared between other CPUs in a SMP system.
+So, we would need to flush the TLBs on other CPUs before we could proceed
+to create replacement mappings.  That means something like stop_machine()
+or sending (and waiting for completion) of an IPI to the other CPUs.  That
+is totally impractical due to dma_alloc_coherent() being allowed to be
+called with IRQs off.
+
+I'll continue to think about it, but I don't see many possibilities to
+satisfy dma_alloc_coherent()'s documented requirements other than by
+pre-allocating a chunk of memory at boot time to be served out as
+DMA-able memory for these horrid cases.
+
+I don't see much point in keeping the map_vm_area() approach on ARM
+even if we did fallback - if we're re-establishing mappings for
+the surrounding pages in lowmem, we might as well insert appropriately
+attributed mappings for the DMA memory as well.
+
+On the face of it, it would be better to allocate one section at a
+time, but my unfortunate experience is that 3.x kernels are a /lot/
+more trigger happy with the OOM killer, and the chances of being able
+to allocate 1MB of memory at a go after the system has been running
+for a while is near-on impossible.  So I don't think that's a reality.
+
+Even if we did break up section mappings in this way, it would also
+mean that over time, we'd end up with much of lowmem mapped using 4K
+page table entries, which would place significant pressure on the MMU
+TLBs.
+
+So, we might just be far better off pre-allocating enough "DMA
+coherent" memory at boot time and be done with it.  Those who want
+it dynamic can use CMA instead.
+
+-- 
+FTTC broadband for 0.8mile line: currently at 9.5Mbps down 400kbps up
+according to speedtest.net.
