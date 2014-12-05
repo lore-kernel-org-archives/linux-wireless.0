@@ -1,63 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f178.google.com ([209.85.192.178]:62751 "EHLO
-	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752102AbaLCQMf (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:50559 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751764AbaLEMYb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Dec 2014 11:12:35 -0500
-From: Anjana Sasindran <anjanasasindran123@gmail.com>
-To: gregkh@linuxfoundation.org, Larry.Finger@lwfinger.net,
-	Jes.Sorensen@redhat.com
-Cc: linux-kernel@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-wireless@vger.kernel.org,
-	Anjana Sasindran <anjanasasindran123@gmail.com>
-Subject: [PATCH] staging: rtl8723au: hal: Removed spaces before semicolon
-Date: Wed,  3 Dec 2014 21:42:09 +0530
-Message-Id: <1417623129-2868-1-git-send-email-anjanasasindran123@gmail.com> (sfid-20141203_171258_621379_1F03585A)
+	Fri, 5 Dec 2014 07:24:31 -0500
+From: Avinash Patil <patila@marvell.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
+	<cluo@marvell.com>, <yangyang@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH 2/4] mwifiex: delete peer station's RA list upon deauthentication
+Date: Fri, 5 Dec 2014 23:23:40 +0530
+Message-ID: <1417802022-7364-2-git-send-email-patila@marvell.com> (sfid-20141205_132445_952263_0CCC33FB)
+In-Reply-To: <1417802022-7364-1-git-send-email-patila@marvell.com>
+References: <1417802022-7364-1-git-send-email-patila@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fix the checkpatch.pl warning:
+This patch adds support to delete peer station's RA lists
+upon station deautheticate event on AP interface. Patch also
+decrements TX pending count upon removing packets from RA list.
 
-WARNING: space prohibited before semicolon
-
-Signed-off-by: Anjana Sasindran <anjanasasindran123@gmail.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
 ---
- drivers/staging/rtl8723au/hal/odm_HWConfig.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/mwifiex/main.h      |  2 ++
+ drivers/net/wireless/mwifiex/uap_event.c |  1 +
+ drivers/net/wireless/mwifiex/wmm.c       | 26 ++++++++++++++++++++++++++
+ 3 files changed, 29 insertions(+)
 
-diff --git a/drivers/staging/rtl8723au/hal/odm_HWConfig.c b/drivers/staging/rtl8723au/hal/odm_HWConfig.c
-index 29d844d..a516b6e 100644
---- a/drivers/staging/rtl8723au/hal/odm_HWConfig.c
-+++ b/drivers/staging/rtl8723au/hal/odm_HWConfig.c
-@@ -113,7 +113,7 @@ static void odm_RxPhyStatus92CSeries_Parsing(struct dm_odm_t *pDM_Odm,
- 
- 		cck_highpwr = pDM_Odm->bCckHighPower;
- 
--		cck_agc_rpt =  pPhyStaRpt->cck_agc_rpt_ofdm_cfosho_a ;
-+		cck_agc_rpt =  pPhyStaRpt->cck_agc_rpt_ofdm_cfosho_a;
- 
- 		/* The RSSI formula should be modified according to the gain table */
- 		if (!cck_highpwr) {
-@@ -138,16 +138,16 @@ static void odm_RxPhyStatus92CSeries_Parsing(struct dm_odm_t *pDM_Odm,
- 			report = (cck_agc_rpt & 0x60)>>5;
- 			switch (report) {
- 			case 0x3:
--				rx_pwr_all = -46 - ((cck_agc_rpt & 0x1f)<<1) ;
-+				rx_pwr_all = -46 - ((cck_agc_rpt & 0x1f)<<1);
- 				break;
- 			case 0x2:
- 				rx_pwr_all = -26 - ((cck_agc_rpt & 0x1f)<<1);
- 				break;
- 			case 0x1:
--				rx_pwr_all = -12 - ((cck_agc_rpt & 0x1f)<<1) ;
-+				rx_pwr_all = -12 - ((cck_agc_rpt & 0x1f)<<1);
- 				break;
- 			case 0x0:
--				rx_pwr_all = 16 - ((cck_agc_rpt & 0x1f)<<1) ;
-+				rx_pwr_all = 16 - ((cck_agc_rpt & 0x1f)<<1);
- 				break;
- 			}
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index bdba37b..e66993c 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -975,6 +975,8 @@ int mwifiex_handle_uap_rx_forward(struct mwifiex_private *priv,
+ int mwifiex_process_sta_event(struct mwifiex_private *);
+ int mwifiex_process_uap_event(struct mwifiex_private *);
+ void mwifiex_delete_all_station_list(struct mwifiex_private *priv);
++void mwifiex_wmm_del_peer_ra_list(struct mwifiex_private *priv,
++				  const u8 *ra_addr);
+ void *mwifiex_process_sta_txpd(struct mwifiex_private *, struct sk_buff *skb);
+ void *mwifiex_process_uap_txpd(struct mwifiex_private *, struct sk_buff *skb);
+ int mwifiex_sta_init_cmd(struct mwifiex_private *, u8 first_sta);
+diff --git a/drivers/net/wireless/mwifiex/uap_event.c b/drivers/net/wireless/mwifiex/uap_event.c
+index 38390cb..c54a537 100644
+--- a/drivers/net/wireless/mwifiex/uap_event.c
++++ b/drivers/net/wireless/mwifiex/uap_event.c
+@@ -110,6 +110,7 @@ int mwifiex_process_uap_event(struct mwifiex_private *priv)
+ 			mwifiex_11n_del_rx_reorder_tbl_by_ta(priv, deauth_mac);
+ 			mwifiex_del_tx_ba_stream_tbl_by_ra(priv, deauth_mac);
  		}
++		mwifiex_wmm_del_peer_ra_list(priv, deauth_mac);
+ 		mwifiex_del_sta_entry(priv, deauth_mac);
+ 		break;
+ 	case EVENT_UAP_BSS_IDLE:
+diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
+index dc1f2ad..0dafcb0 100644
+--- a/drivers/net/wireless/mwifiex/wmm.c
++++ b/drivers/net/wireless/mwifiex/wmm.c
+@@ -611,6 +611,32 @@ mwifiex_wmm_get_queue_raptr(struct mwifiex_private *priv, u8 tid,
+ }
+ 
+ /*
++ * This function deletes RA list nodes for given mac for all TIDs.
++ * Function also decrements TX pending count accordingly.
++ */
++void
++mwifiex_wmm_del_peer_ra_list(struct mwifiex_private *priv, const u8 *ra_addr)
++{
++	struct mwifiex_ra_list_tbl *ra_list;
++	unsigned long flags;
++	int i;
++
++	spin_lock_irqsave(&priv->wmm.ra_list_spinlock, flags);
++
++	for (i = 0; i < MAX_NUM_TID; ++i) {
++		ra_list = mwifiex_wmm_get_ralist_node(priv, i, ra_addr);
++
++		if (!ra_list)
++			continue;
++		mwifiex_wmm_del_pkts_in_ralist_node(priv, ra_list);
++		atomic_sub(ra_list->total_pkt_count, &priv->wmm.tx_pkts_queued);
++		list_del(&ra_list->list);
++		kfree(ra_list);
++	}
++	spin_unlock_irqrestore(&priv->wmm.ra_list_spinlock, flags);
++}
++
++/*
+  * This function checks if a particular RA list node exists in a given TID
+  * table index.
+  */
 -- 
-1.9.1
+1.8.1.4
 
