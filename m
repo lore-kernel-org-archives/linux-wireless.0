@@ -1,63 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:60321 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750722AbaLIF0D convert rfc822-to-8bit (ORCPT
+Received: from mail-pd0-f169.google.com ([209.85.192.169]:37536 "EHLO
+	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750934AbaLEPrX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Dec 2014 00:26:03 -0500
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 8.1 \(1993\))
-Subject: Re: wl1251: NVS firmware data
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <201412090027.46485@pali>
-Date: Tue, 9 Dec 2014 06:25:59 +0100
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Ming Lei <ming.lei@canonical.com>, Pavel Machek <pavel@ucw.cz>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Grazvydas Ignotas <notasas@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-	Aaro Koskinen <aaro.koskinen@iki.fi>,
-	Kalle Valo <kvalo@adurom.com>,
-	Sebastian Reichel <sre@ring0.de>,
-	David Gnedt <david.gnedt@davizone.at>
-Message-Id: <BB715185-F9EC-4FE6-8F23-79F47CE5BE04@holtmann.org> (sfid-20141209_062630_298641_97282B4F)
-References: <201411271506.20457@pali> <201412081747.30965@pali> <20141208205721.GA14895@kroah.com> <201412090027.46485@pali>
-To: =?utf-8?Q?Pali_Roh=C3=A1r?= <pali.rohar@gmail.com>
+	Fri, 5 Dec 2014 10:47:23 -0500
+From: Anjana Sasindran <anjanasasindran123@gmail.com>
+To: gregkh@linuxfoundation.org, roberta.dobrescu@gmail.com
+Cc: linux-kernel@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-wireless@vger.kernel.org,
+	Anjana Sasindran <anjanasasindran123@gmail.com>
+Subject: [PATCH] staging: rtl8723au: hal: Removed a space before semicolon
+Date: Fri,  5 Dec 2014 21:17:02 +0530
+Message-Id: <1417794422-6383-1-git-send-email-anjanasasindran123@gmail.com> (sfid-20141205_164739_674701_4EA5040E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Pali,
+This patch fix the checkpatch.pl warning:
 
->> Use your own custom usermode helper for stuff like this, not
->> the firmware interface.  But use a binary sysfs file if you
->> want, that seems to make sense for it...
->> 
->> greg k-h
-> 
-> Patch for telling permanent mac address from userspace via sysfs 
-> file was rejected for inclusion into mainline kernel.
-> 
-> So I do not think that now maintainers of network subsystem allow 
-> it for nvs data...
-> 
-> https://lkml.org/lkml/2013/12/8/35
+WARNING: space before semicolon prohibited
 
-this magic sysfs that has to be written to at the right time of the boot process to make this all work is something that will not work. I does not work for WiFi and it does not work for Bluetooth. Seems the discussion come full circle now and we are back to square one.
+Signed-off-by: Anjana Sasindran <anjanasasindran123@gmail.com>
+---
+ drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-The problem is that either the driver does not register the device with mac80211 until it gets the MAC address provided by userspace or mac80211 should get an unconfigured state. The unconfigured state is something telling userspace that the device is present, but needs a few extra configuration information before it can become useful.
-
-For Bluetooth, I went the later route. Mainly because the missing address is such a generic problem that solving it in the core makes a lot more sense. The driver just tells the core that it has no address for this device and provides a custom callback to configure the address when provided. After that everything resumes as normal.
-
-However userspace gets informed when an unconfigured device gets added and at boot it can just query the list of unconfigured devices, or at runtime wait to be told there is a new unconfigured device that needs its attention. And then just provide the information. Once all information are present, the devices disappears as unconfigured and shows up as configured device ready for normal operation.
-
-https://git.kernel.org/cgit/bluetooth/bluez.git/tree/doc/mgmt-api.txt#n2006
-http://permalink.gmane.org/gmane.linux.bluez.kernel/50716
-
-Can something similar be added to cfg80211 + nl80211. It bet it can, but that is up to Johannes to decide and someone to actually do the work and implement it.
-
-Regards
-
-Marcel
+diff --git a/drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c b/drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c
+index 6151e85..6878c91 100644
+--- a/drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c
++++ b/drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c
+@@ -9145,7 +9145,7 @@ u32 BTDM_BtTxRxCounterL(struct rtw_adapter *padapter)
+ 	u32	counters = 0;
+ 
+ 	counters = pHalData->bt_coexist.halCoex8723.lowPriorityTx+
+-		pHalData->bt_coexist.halCoex8723.lowPriorityRx ;
++		pHalData->bt_coexist.halCoex8723.lowPriorityRx;
+ 	return counters;
+ }
+ 
+-- 
+1.9.1
 
