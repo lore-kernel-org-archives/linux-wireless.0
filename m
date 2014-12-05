@@ -1,95 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:41734 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751602AbaLXNGD (ORCPT
+Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:39754 "EHLO
+	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750862AbaLESYw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Dec 2014 08:06:03 -0500
-Date: Wed, 24 Dec 2014 18:35:54 +0530
-From: Vaishali Thakkar <vthakkar1994@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
-	sameo@linux.intel.com, linux-kernel@vger.kernel.org,
-	johannes.berg@intel.com, arend@broadcom.com
-Subject: [PATCH v2] NFC: port100: Introduce the use of function
- put_unaligned_le16ameo@linux.intel.com,
-Message-ID: <20141224130554.GA2301@vaishali-Ideapad-Z570> (sfid-20141224_140632_955905_A948CA9C)
+	Fri, 5 Dec 2014 13:24:52 -0500
+Date: Fri, 5 Dec 2014 18:24:43 +0000
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+To: Catalin Marinas <catalin.marinas@arm.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>,
+	David Miller <davem@davemloft.net>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: using DMA-API on ARM
+Message-ID: <20141205182443.GX11285@n2100.arm.linux.org.uk> (sfid-20141205_192456_070057_2DB1A164)
+References: <5481794E.4050406@broadcom.com>
+ <4565667.WCBuNmaazQ@wuerfel>
+ <20141205111114.GQ11285@n2100.arm.linux.org.uk>
+ <20141205173839.GB31222@e104818-lin.cambridge.arm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20141205173839.GB31222@e104818-lin.cambridge.arm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch introduces the use of function put_unaligned_le16.
+On Fri, Dec 05, 2014 at 05:38:39PM +0000, Catalin Marinas wrote:
+> On Fri, Dec 05, 2014 at 11:11:14AM +0000, Russell King - ARM Linux wrote:
+> > In any case, wouldn't using a u64 type for "address" be better - isn't
+> > "long long" 128-bit on 64-bit architectures?
+> 
+> No, it's still 64-bit. There is no 128-bit integer in the C standard.
 
-This is done using Coccinelle and semantic patch used is as follows:
+Actually, that's a fallicy.
 
-@a@
-typedef u16, __le16;
-{u16,__le16} e16;
-identifier tmp;
-expression ptr;
-expression y,e;
-type T;
-@@
+The C99 standard (like previous versions) does not define exactly the
+number of bits in each type.  It defines ranks of type, and says that
+lower ranks are a subrange of integers with higher ranks (for the same
+signed-ness.)  See section 6.2.5.
 
-- tmp = cpu_to_le16(y);
+So, it merely states that:
 
-  <+... when != tmp
-(
-- memcpy(ptr, (T)&tmp, \(2\|sizeof(u16)\|sizeof(__le16)\|sizeof(e16)\));
-+ put_unaligned_le16(y,ptr);
-|
-- memcpy(ptr, (T)&tmp, ...);
-+ put_unaligned_le16(y,ptr);
-)
-  ...+>
-? tmp = e
+range(char) <= range(short) <= range(int) <= range(long) <= range(long long)
 
-@@ type T; identifier a.tmp; @@
+So, an implementation could have:
 
-- T tmp;
-...when != tmp
+char: 8  short: 16 int: 16 long: 32 long long: 64
+char: 8  short: 16 int: 32 long: 32 long long: 64
+char: 8  short: 16 int: 32 long: 64 long long: 64
+char: 8  short: 16 int: 64 long: 64 long long: 64
 
-Signed-off-by: Vaishali Thakkar <vthakkar1994@gmail.com>
----
-Changes since v1:
-	<asm/unaligned.h>  has arch-specific knowlege of which of
-	the implementations needs to be used. So, include it instaed
-	of <linux/unaligned/access_ok.h>.
+or even:
 
- drivers/nfc/port100.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+char: 8  short: 16 int: 32 long: 64 long long: 128
 
-diff --git a/drivers/nfc/port100.c b/drivers/nfc/port100.c
-index 4ac4d31..440f0f3 100644
---- a/drivers/nfc/port100.c
-+++ b/drivers/nfc/port100.c
-@@ -18,6 +18,7 @@
- #include <linux/module.h>
- #include <linux/usb.h>
- #include <net/nfc/digital.h>
-+#include <asm/unaligned.h>
- 
- #define VERSION "0.1"
- 
-@@ -1136,7 +1137,6 @@ static int port100_in_send_cmd(struct nfc_digital_dev *ddev,
- {
- 	struct port100 *dev = nfc_digital_get_drvdata(ddev);
- 	struct port100_cb_arg *cb_arg;
--	__le16 timeout;
- 
- 	cb_arg = kzalloc(sizeof(struct port100_cb_arg), GFP_KERNEL);
- 	if (!cb_arg)
-@@ -1145,9 +1145,7 @@ static int port100_in_send_cmd(struct nfc_digital_dev *ddev,
- 	cb_arg->complete_cb = cb;
- 	cb_arg->complete_arg = arg;
- 
--	timeout = cpu_to_le16(_timeout * 10);
--
--	memcpy(skb_push(skb, sizeof(__le16)), &timeout, sizeof(__le16));
-+	put_unaligned_le16(_timeout * 10, skb_push(skb, sizeof(__le16)));
- 
- 	return port100_send_cmd_async(dev, PORT100_CMD_IN_COMM_RF, skb,
- 				      port100_in_comm_rf_complete, cb_arg);
+and that would still be compliant with C99, since it continues to meet
+the criteria about the required data types specified in the standard.
+
 -- 
-1.9.1
-
+FTTC broadband for 0.8mile line: currently at 9.5Mbps down 400kbps up
+according to speedtest.net.
