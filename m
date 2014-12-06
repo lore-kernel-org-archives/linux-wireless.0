@@ -1,81 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:50567 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752047AbaL3OUa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Dec 2014 09:20:30 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Haim Dreyfuss <haim.dreyfuss@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 30/33] iwlwifi: mvm: Configure EBS scan ratio
-Date: Tue, 30 Dec 2014 16:19:05 +0200
-Message-Id: <1419949148-24046-30-git-send-email-emmanuel.grumbach@intel.com> (sfid-20141230_154350_127631_5B27DF01)
-In-Reply-To: <1419948357.21410.4.camel@egrumbacBox>
-References: <1419948357.21410.4.camel@egrumbacBox>
+Received: from mail-wi0-f182.google.com ([209.85.212.182]:37339 "EHLO
+	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752453AbaLFNAP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Dec 2014 08:00:15 -0500
+From: Pali =?utf-8?q?Roh=C3=A1r?= <pali.rohar@gmail.com>
+To: Ming Lei <ming.lei@canonical.com>
+Subject: Re: wl1251: NVS firmware data
+Date: Sat, 6 Dec 2014 14:00:11 +0100
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Grazvydas Ignotas <notasas@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
+	Pavel Machek <pavel@ucw.cz>,
+	Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+	Aaro Koskinen <aaro.koskinen@iki.fi>,
+	Kalle Valo <kvalo@adurom.com>,
+	Sebastian Reichel <sre@ring0.de>,
+	David Gnedt <david.gnedt@davizone.at>
+References: <201411271506.20457@pali> <201411271543.23527@pali> <CACVXFVMCJxQRUo94C8peT7G-VFkVeNYCWGKPYE5jq=twCULrpA@mail.gmail.com>
+In-Reply-To: <CACVXFVMCJxQRUo94C8peT7G-VFkVeNYCWGKPYE5jq=twCULrpA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart3920280.KLWdcTxFn6";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <201412061400.11406@pali> (sfid-20141206_140039_258151_D373E4C3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Haim Dreyfuss <haim.dreyfuss@intel.com>
+--nextPart3920280.KLWdcTxFn6
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 
-This configuration defines the ratio between number of scan iterations
-where EBS is involved to those where it is not.
-This configuration was left unconfigured due to inaccurate documentation.
-Fix documentation as well.
+On Thursday 27 November 2014 16:13:51 Ming Lei wrote:
+> > Which userspace helper programs for (automatic) firmware
+> > loading are used? Can be udev configured to use own program
+> > for loading
+>=20
+> At default, udev had its builtin firmware helper, but some new
+> udev stops to handle firmware request.
+>=20
+> If the udev you are using still supports to handle firmware
+> request, you can write your load helper and add your rule for
+> handling the special case. Otherwise, you need to write code
+> to monitor the netlink uevents from the kernel and handle
+> your firmware loading request.
+>=20
+> Thanks,
+> Ming Lei
 
-Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h | 7 +++++--
- drivers/net/wireless/iwlwifi/mvm/scan.c        | 6 ++++++
- 2 files changed, 11 insertions(+), 2 deletions(-)
+=46or Nokia N900 (and Maemo system) we are using older udev version=20
+(0.125), so here should be support for firmware helper.
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h b/drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h
-index 1f2acf4..2d1a81c 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h
-@@ -653,8 +653,11 @@ enum iwl_scan_channel_flags {
- };
- 
- /* iwl_scan_channel_opt - CHANNEL_OPTIMIZATION_API_S
-- * @flags: enum iwl_scan_channel_flgs
-- * @non_ebs_ratio: how many regular scan iteration before EBS
-+ * @flags: enum iwl_scan_channel_flags
-+ * @non_ebs_ratio: defines the ratio of number of scan iterations where EBS is
-+ *	involved.
-+ *	1 - EBS is disabled.
-+ *	2 - every second scan will be full scan(and so on).
-  */
- struct iwl_scan_channel_opt {
- 	__le16 flags;
-diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
-index 2433676..ed229a8 100644
---- a/drivers/net/wireless/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
-@@ -72,6 +72,8 @@
- 
- #define IWL_PLCP_QUIET_THRESH 1
- #define IWL_ACTIVE_QUIET_TIME 10
-+#define IWL_DENSE_EBS_SCAN_RATIO 5
-+#define IWL_SPARSE_EBS_SCAN_RATIO 1
- 
- struct iwl_mvm_scan_params {
- 	u32 max_out_time;
-@@ -1296,10 +1298,14 @@ iwl_mvm_build_generic_unified_scan_cmd(struct iwl_mvm *mvm,
- 			cpu_to_le16(IWL_SCAN_CHANNEL_FLAG_EBS |
- 				    IWL_SCAN_CHANNEL_FLAG_EBS_ACCURATE |
- 				    IWL_SCAN_CHANNEL_FLAG_CACHE_ADD);
-+		cmd->channel_opt[0].non_ebs_ratio =
-+			cpu_to_le16(IWL_DENSE_EBS_SCAN_RATIO);
- 		cmd->channel_opt[1].flags =
- 			cpu_to_le16(IWL_SCAN_CHANNEL_FLAG_EBS |
- 				    IWL_SCAN_CHANNEL_FLAG_EBS_ACCURATE |
- 				    IWL_SCAN_CHANNEL_FLAG_CACHE_ADD);
-+		cmd->channel_opt[1].non_ebs_ratio =
-+			cpu_to_le16(IWL_SPARSE_EBS_SCAN_RATIO);
- 	}
- 
- 	if (iwl_mvm_rrm_scan_needed(mvm))
--- 
-1.9.1
+And if some new udev version will not work, we can just revert=20
+back to older working... No need to use super-uber-fantastic=20
+systemd-udevd software which removing old useful code.
 
+So looks like adding new rule file to udev for handling firmware=20
+requests from kernel could work...
+
+=2D-=20
+Pali Roh=C3=A1r
+pali.rohar@gmail.com
+
+--nextPart3920280.KLWdcTxFn6
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iEYEABECAAYFAlSC/dsACgkQi/DJPQPkQ1LW0wCdHNXDxWf9cplGRZ/UoMOq/0AA
+5g0AnAt0Mc6UgJCnsqCOORi2jzB2XkjA
+=PR6b
+-----END PGP SIGNATURE-----
+
+--nextPart3920280.KLWdcTxFn6--
