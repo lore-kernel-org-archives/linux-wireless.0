@@ -1,52 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:11186 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755629AbaLHPoz (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:33199 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751124AbaLFRvg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Dec 2014 10:44:55 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 0/2] ath10k: NF calibration period debugfs file
-References: <20141202110443.14817.85639.stgit@potku.adurom.net>
-Date: Mon, 8 Dec 2014 17:44:10 +0200
-In-Reply-To: <20141202110443.14817.85639.stgit@potku.adurom.net> (Kalle Valo's
-	message of "Tue, 2 Dec 2014 13:06:31 +0200")
-Message-ID: <87sigqywmt.fsf@kamboji.qca.qualcomm.com> (sfid-20141208_164502_627094_20330A07)
+	Sat, 6 Dec 2014 12:51:36 -0500
+Date: Sat, 6 Dec 2014 09:51:35 -0800
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: parthsane@laer.in
+Cc: Felix Fietkau <nbd@openwrt.org>,
+	Oleksij Rempel <linux@rempel-privat.de>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Driverdev devel <driverdev-devel@linuxdriverproject.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: My new email + some notes on mt7601
+Message-ID: <20141206175135.GA27544@kroah.com> (sfid-20141206_185246_392221_CBBCFA9B)
+References: <0b2102651a76997bd04f6be7e98d3ac0@laer.in>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <0b2102651a76997bd04f6be7e98d3ac0@laer.in>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
+On Thu, Dec 04, 2014 at 09:54:29AM +0000, parthsane@laer.in wrote:
+> Hi again,
+> Please note my new email parthsane@laer.in . Also If you guys don't know
+> there's a working source supplied by mediatek for mt7601. Please find the
+> attached tarball. Also please apply this patch I mentioned about earlier.
+> It's at https://gist.github.com/Boggartfly/b18bd86b8eb60fabe160
+> 
+> rt_linux.h has the following path in the driver directory.
+> 
+> /include/os/rt_linux.h
+> 
+> After you replace the patched file everything works and compiles
+> successfully!! Any pointers on what should be done to make it kernel
+> compatible?
 
-> Hi,
->
-> here are some changes I made to Peter's NF calibdation period patches. Please
-> review.
->
-> v2:
->
-> * add _MAX define
->
-> * support firmware restart
->
-> * set cal_period in wmi_tlv_pdev_param_map
->
-> * simplify ar->state check
->
-> * rename debugfs file to nf_cal_period to not confuse with cal_data
->   file (which is about calibration data)
->
-> * WMI_10X_PDEV_PEER_STA_PS_STATECHG_ENABLE -> WMI_10X_PDEV_PARAM_PEER_STA_PS_STATECHG_ENABLE
->
-> ---
->
-> Peter Oh (2):
->       ath10k: add new pdev parameters for fw 10.2
->       ath10k: add new wmi interface of NF cal period
+Let's wait to see if we have a "real" driver support working in the tree
+soon before adding this huge driver to staging, where it will take a
+long time to clean up and get merged "properly".
 
-Both patches applied. Thanks Peter.
+thanks,
 
--- 
-Kalle Valo
+greg k-h
