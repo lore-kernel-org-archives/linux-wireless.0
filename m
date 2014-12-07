@@ -1,53 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:4796 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751125AbaLPQvN (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:44582 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751757AbaLGJG4 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Dec 2014 11:51:13 -0500
-Message-ID: <549062FE.2000808@broadcom.com> (sfid-20141216_175118_540494_F6B5C58B)
-Date: Tue, 16 Dec 2014 17:51:10 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Michael Tokarev <mjt@tls.msk.ru>
-CC: Maximilian Engelhardt <maxi@daemonizer.de>,
-	=?UTF-8?B?UmFmYcWCIE1pxYJl?= =?UTF-8?B?Y2tp?= <zajec5@gmail.com>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	brcm80211 development <brcm80211-dev-list@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>
-Subject: Re: BCM4313 & brcmsmac & 3.12: only semi-working?
-References: <53FDACD1.8090805@msgid.tls.msk.ru> <54363ED0.605@broadcom.com> <CACna6rw3XgdJz0uKkAuas8RTzozTdFp2mgF5g1uo7LHJVSMt4g@mail.gmail.com> <3543341.FmUQFH9nrl@eisbaer> <546C5D1F.108@msgid.tls.msk.ru> <546CD94D.9060509@broadcom.com> <546CF66A.3000207@msgid.tls.msk.ru> <546D04EE.1030200@msgid.tls.msk.ru> <5471AC29.6040009@broadcom.com> <5475A2DC.80502@msgid.tls.msk.ru> <547B07CF.90501@broadcom.com> <547E31BD.8090302@msgid.tls.msk.ru> <547F0575.7010104@broadcom.com>
-In-Reply-To: <547F0575.7010104@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+	Sun, 7 Dec 2014 04:06:56 -0500
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 8.1 \(1993\))
+Subject: Re: [PATCH] mac80211: Supporting of IFLA_INFO_KIND rtnl attribute
+From: Marcel Holtmann <marcel@holtmann.org>
+In-Reply-To: <1417910690-2021-1-git-send-email-vadim4j@gmail.com>
+Date: Sun, 7 Dec 2014 10:06:52 +0100
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev@vger.kernel.org
+Message-Id: <88214C7B-ED89-4E9C-BB24-8F0187B88D5E@holtmann.org> (sfid-20141207_100709_656382_06AE4BAD)
+References: <1417910690-2021-1-git-send-email-vadim4j@gmail.com>
+To: Vadim Kochan <vadim4j@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/03/14 13:43, Arend van Spriel wrote:
-> On 12/02/14 22:40, Michael Tokarev wrote:
->> 30.11.2014 15:04, Arend van Spriel wrote:
->>
->>> Thanks. Did not find what I was looking for, but I started working on
->>> integrating btcoex related functionality. The attached patch will print
->>> some info so I can focus on the required functionality for your device.
->>> It is based on 3.18-rc5.
->>
->> With this patch applied against 3.18-rc5, the machine instantly reboots
->> once brcmsmac module is loaded. I'm still debugging this.
+Hi Vadim,
 
-Hmm. The function brcms_btc_ecicoex_enab() is calling itself. Please 
-remove that call as it causes endless recursion and eventually reboot.
+> It allows to identify the wireless kind of device for
+> the user application, e.g.:
+> 
+>    # ip -d link
+> 
+>    1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default
+>        link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00 promiscuity 0
+>    2: enp0s25: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc pfifo_fast state DOWN mode DEFAULT group default qlen 1000
+>        link/ether XX:XX:XX:XX:XX:XX brd ff:ff:ff:ff:ff:ff promiscuity 0
+>    3: wlp3s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP mode DEFAULT group default qlen 1000
+>        link/ether XX:XX:XX:XX:XX:XX brd ff:ff:ff:ff:ff:ff promiscuity 0
+>        wireless
+>    4: wlp0s26u1u2: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN mode DEFAULT group default qlen 1000
+>        link/ether XX:XX:XX:XX:XX:XX brd ff:ff:ff:ff:ff:ff promiscuity 0 
+>        wireless 
+> 
+> Signed-off-by: Vadim Kochan <vadim4j@gmail.com>
+> ---
+> net/mac80211/iface.c | 7 +++++++
+> 1 file changed, 7 insertions(+)
+> 
+> diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+> index 653f5eb..b993c7d 100644
+> --- a/net/mac80211/iface.c
+> +++ b/net/mac80211/iface.c
+> @@ -18,6 +18,7 @@
+> #include <linux/rtnetlink.h>
+> #include <net/mac80211.h>
+> #include <net/ieee80211_radiotap.h>
+> +#include <net/rtnetlink.h>
+> #include "ieee80211_i.h"
+> #include "sta_info.h"
+> #include "debugfs_netdev.h"
+> @@ -1624,6 +1625,10 @@ static void ieee80211_assign_perm_addr(struct ieee80211_local *local,
+> 	mutex_unlock(&local->iflist_mtx);
+> }
+> 
+> +static struct rtnl_link_ops wireless_link_ops __read_mostly = {
+> +	.kind = "wireless",
+> +};
+> +
 
-Regards,
-Arend
+I would prefer if we use "wlan" here. Same as what we use for DEVTYPE and RFKILL switches. Being consistent across the kernel helps a lot. Since other subsystems including Bluetooth might want to identify their netdev as well and "wireless" would be just too generic.
 
-> Argh. Probably the register access I added end up in limbo land or some
-> other stupid mistake. I will double check my patch.
->
-> Regards,
-> Arend
->
->> Thanks,
->>
->> /mjt
->
+Regards
+
+Marcel
 
