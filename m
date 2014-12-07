@@ -1,79 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51965 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754656AbaLHWm1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Dec 2014 17:42:27 -0500
-Message-ID: <1418078493.31640.4.camel@dcbw.local> (sfid-20141208_234253_783434_DE111F8B)
-Subject: Re: wl1251: NVS firmware data
-From: Dan Williams <dcbw@redhat.com>
-To: Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>
-Cc: Pali =?ISO-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Ming Lei <ming.lei@canonical.com>, Pavel Machek <pavel@ucw.cz>,
+Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:3226 "EHLO
+	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753507AbaLGT0y (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 7 Dec 2014 14:26:54 -0500
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: kernel-janitors@vger.kernel.org, linux@rasmusvillemoes.dk,
+	joe@perches.com, Chaoming Li <chaoming_li@realsil.com.cn>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	Grazvydas Ignotas <notasas@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Aaro Koskinen <aaro.koskinen@iki.fi>,
-	Kalle Valo <kvalo@adurom.com>,
-	Sebastian Reichel <sre@ring0.de>,
-	David Gnedt <david.gnedt@davizone.at>
-Date: Mon, 08 Dec 2014 16:41:33 -0600
-In-Reply-To: <5485FF17.1070504@gmail.com>
-References: <201411271506.20457@pali> <201412081811.46943@pali>
-		 <30072B9E-2495-4F90-AC91-9C0D7E08F44E@holtmann.org>
-		 <201412082015.18501@pali> <1418066813.1350.18.camel@dcbw.local>
-	 <5485FF17.1070504@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 16/20] rtlwifi: rtl8821ae: fix misspelling of current function in string
+Date: Sun,  7 Dec 2014 20:20:58 +0100
+Message-Id: <1417980062-25151-17-git-send-email-Julia.Lawall@lip6.fr> (sfid-20141207_202843_231129_DAA43212)
+In-Reply-To: <1417980062-25151-1-git-send-email-Julia.Lawall@lip6.fr>
+References: <1417980062-25151-1-git-send-email-Julia.Lawall@lip6.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-12-08 at 21:42 +0200, Ivaylo Dimitrov wrote:
-> 
-> On  8.12.2014 21:26, Dan Williams wrote:
-> >
-> > a) change driver to prefer a new "wl1251-nvs-n900.bin" file, but fall
-> > back to "wl1251-nvs.bin" if the first one isn't present
-> > b) have a "wl1251-cal-nvs-update" service that, if wl1521-nvs-n900.bin
-> > is *not* present mounts the CAL MTD, reads the data, writes it out into
-> > wl1521-nvs-n900.bin, and the rmmod/modprobes the driver
-> >
-> > and done?  Stuff that's not N900 just wouldn't ship the update service
-> > and would proceed like none of this happened.
-> >
-> > Dan
-> >
-> >
-> 
-> That would mean that the driver should not be built-in, as afaik we 
-> cannot rmmod built-in drivers. Sure, it will work after a reboot, but 
-> this is a bit hacky, agree?
-> 
-> Also, new NVS file needs to be loaded when fcc regulation changes(flying 
-> abroad), so that would mean that the device would be outside of those 
-> until reboot (in case of built-in driver)
+Replace a misspelled function name by %s and then __func__.
 
-Regulatory stuff needs to be hooked into CRDA or the existing regulatory
-codepaths, not some other path.  So when cfg80211 sets the regulatory
-domain on the driver the driver needs to get the necessary NVS data.
-Either the NVS for every domain (which cannot be a lot of them) gets
-hardcoded into the driver, and then selected based on what cfg80211
-says, or the driver needs to ask userspace for the NVS data based on
-what cfg80211 says.  In all cases, cfg80211 drives the regulatory domain
-[1].
+8821 was written as 8812.
 
-a) How many regulatory domains does the driver support, how much data is
-there for each domain, and can that be put into the driver instead of
-getting it from the CAL partition?
+This was done using Coccinelle, including the use of Levenshtein distance,
+as proposed by Rasmus Villemoes.
 
-b) what do *other* (non-N900) wl1251 devices do for regulatory data?
+Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
 
-Dan
+---
+The semantic patch is difficult to summarize, but is available in the cover
+letter of this patch series.
 
-[1] unless there's some *restriction* hardcoded into the EEPROM of the
-device, which in the case of the N900 there isn't, since the regulatory
-data changes based on the MCC/MNC of the cellular side.
+ drivers/net/wireless/rtlwifi/rtl8821ae/dm.c |   11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
 
+diff --git a/drivers/net/wireless/rtlwifi/rtl8821ae/dm.c b/drivers/net/wireless/rtlwifi/rtl8821ae/dm.c
+index 9be1061..ba30b0d 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8821ae/dm.c
++++ b/drivers/net/wireless/rtlwifi/rtl8821ae/dm.c
+@@ -2078,8 +2078,7 @@ void rtl8821ae_dm_txpwr_track_set_pwr(struct ieee80211_hw *hw,
+ 	if (rtldm->tx_rate != 0xFF)
+ 		tx_rate = rtl8821ae_hw_rate_to_mrate(hw, rtldm->tx_rate);
+ 
+-	RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
+-		 "===>rtl8812ae_dm_txpwr_track_set_pwr\n");
++	RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD, "===>%s\n", __func__);
+ 
+ 	if (tx_rate != 0xFF) { /* Mimic Modify High Rate BBSwing Limit.*/
+ 		/*CCK*/
+@@ -2128,7 +2127,7 @@ void rtl8821ae_dm_txpwr_track_set_pwr(struct ieee80211_hw *hw,
+ 
+ 	if (method == BBSWING) {
+ 		RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
+-			 "===>rtl8812ae_dm_txpwr_track_set_pwr\n");
++			 "===>%s\n", __func__);
+ 		if (rf_path == RF90_PATH_A) {
+ 			final_swing_idx[RF90_PATH_A] =
+ 				(rtldm->ofdm_index[RF90_PATH_A] >
+@@ -2260,7 +2259,8 @@ void rtl8821ae_dm_txpower_tracking_callback_thermalmeter(
+ 	rtldm->txpower_trackinginit = true;
+ 
+ 	RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
+-		 "===>rtl8812ae_dm_txpower_tracking_callback_thermalmeter,\n pDM_Odm->BbSwingIdxCckBase: %d,pDM_Odm->BbSwingIdxOfdmBase[A]:%d, pDM_Odm->DefaultOfdmIndex: %d\n",
++		 "===>%s,\n pDM_Odm->BbSwingIdxCckBase: %d,pDM_Odm->BbSwingIdxOfdmBase[A]:%d, pDM_Odm->DefaultOfdmIndex: %d\n",
++		 __func__,
+ 		 rtldm->swing_idx_cck_base,
+ 		 rtldm->swing_idx_ofdm_base[RF90_PATH_A],
+ 		 rtldm->default_ofdm_index);
+@@ -2539,8 +2539,7 @@ void rtl8821ae_dm_txpower_tracking_callback_thermalmeter(
+ 		}
+ 	}
+ 
+-	RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
+-		 "<===rtl8812ae_dm_txpower_tracking_callback_thermalmeter\n");
++	RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD, "<===%s\n", __func__);
+ }
+ 
+ void rtl8821ae_dm_check_txpower_tracking_thermalmeter(struct ieee80211_hw *hw)
