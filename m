@@ -1,142 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:61302 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750886AbaLUIAr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Dec 2014 03:00:47 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "linux-firmware@kernel.org" <linux-firmware@kernel.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: pull request: firmware update for iwlwifi (3160 / 7260 / 7265)
-Date: Sun, 21 Dec 2014 08:00:42 +0000
-Message-ID: <1419148843.2316.8.camel@egrumbacBox> (sfid-20141221_090052_564064_E65FE9FD)
-References: <1419148696.2316.7.camel@egrumbacBox>
-In-Reply-To: <1419148696.2316.7.camel@egrumbacBox>
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="=-ZiDyMiAtNmrD5v4UfK4q"
+Received: from mail-lb0-f171.google.com ([209.85.217.171]:38927 "EHLO
+	mail-lb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752800AbaLGKHB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 7 Dec 2014 05:07:01 -0500
+Received: by mail-lb0-f171.google.com with SMTP id n15so2506969lbi.16
+        for <linux-wireless@vger.kernel.org>; Sun, 07 Dec 2014 02:06:59 -0800 (PST)
+Date: Sun, 7 Dec 2014 11:57:13 +0200
+From: vadim4j@gmail.com
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mac80211: Supporting of IFLA_INFO_KIND rtnl attribute
+Message-ID: <20141207095713.GA24783@angus-think.lan> (sfid-20141207_110707_291452_7F3A8384)
+References: <1417910690-2021-1-git-send-email-vadim4j@gmail.com>
+ <88214C7B-ED89-4E9C-BB24-8F0187B88D5E@holtmann.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <88214C7B-ED89-4E9C-BB24-8F0187B88D5E@holtmann.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---=-ZiDyMiAtNmrD5v4UfK4q
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+On Sun, Dec 07, 2014 at 10:06:52AM +0100, Marcel Holtmann wrote:
+> Hi Vadim,
+> 
+> > It allows to identify the wireless kind of device for
+> > the user application, e.g.:
+> > 
+> >    # ip -d link
+> > 
+> >    1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default
+> >        link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00 promiscuity 0
+> >    2: enp0s25: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc pfifo_fast state DOWN mode DEFAULT group default qlen 1000
+> >        link/ether XX:XX:XX:XX:XX:XX brd ff:ff:ff:ff:ff:ff promiscuity 0
+> >    3: wlp3s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP mode DEFAULT group default qlen 1000
+> >        link/ether XX:XX:XX:XX:XX:XX brd ff:ff:ff:ff:ff:ff promiscuity 0
+> >        wireless
+> >    4: wlp0s26u1u2: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN mode DEFAULT group default qlen 1000
+> >        link/ether XX:XX:XX:XX:XX:XX brd ff:ff:ff:ff:ff:ff promiscuity 0 
+> >        wireless 
+> > 
+> > Signed-off-by: Vadim Kochan <vadim4j@gmail.com>
+> > ---
+> > net/mac80211/iface.c | 7 +++++++
+> > 1 file changed, 7 insertions(+)
+> > 
+> > diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+> > index 653f5eb..b993c7d 100644
+> > --- a/net/mac80211/iface.c
+> > +++ b/net/mac80211/iface.c
+> > @@ -18,6 +18,7 @@
+> > #include <linux/rtnetlink.h>
+> > #include <net/mac80211.h>
+> > #include <net/ieee80211_radiotap.h>
+> > +#include <net/rtnetlink.h>
+> > #include "ieee80211_i.h"
+> > #include "sta_info.h"
+> > #include "debugfs_netdev.h"
+> > @@ -1624,6 +1625,10 @@ static void ieee80211_assign_perm_addr(struct ieee80211_local *local,
+> > 	mutex_unlock(&local->iflist_mtx);
+> > }
+> > 
+> > +static struct rtnl_link_ops wireless_link_ops __read_mostly = {
+> > +	.kind = "wireless",
+> > +};
+> > +
+> 
+> I would prefer if we use "wlan" here. Same as what we use for DEVTYPE and RFKILL switches. Being consistent across the kernel helps a lot. Since other subsystems including Bluetooth might want to identify their netdev as well and "wireless" would be just too generic.
+> 
+> Regards
+> 
+> Marcel
+> 
 
-with the correct address of the linux firmware maintainers this time...
+Hi Marcel,
 
+It make sense.
 
-On Sun, 2014-12-21 at 09:58 +0200, Emamnuel Grumbach wrote:
-> Dear Linux firmware maintainers,
->=20
-> Here is new release of the -10.ucode firmware for the following Intel
-> Wireless devices:
-> 3160 / 7260 / 7265 / 7265D
->=20
-> This release includes bug fixes only. We fix here firmware assertions
-> and association with buggy APs.
->=20
-> Please pull - thanks.
->=20
->=20
-> The following changes since commit
-> 38e5405c96d10bb42b629b45210c46166461fc21:
->=20
->   cxgb4: Update firmware to revision 1.12.25.0 (2014-12-01 15:48:02
-> -0500)
->=20
-> are available in the git repository at:
->=20
->=20
-> git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/linux-firmware.git
-> master
->=20
-> for you to fetch changes up to 571ad1ab9f6c85ba859387166f528a70ee1aa151:
->=20
->   iwlwifi: update -10.ucode for 3160 / 7260 / 7265 / 7265D (2014-12-21
-> 09:52:07 +0200)
->=20
-> ----------------------------------------------------------------
-> Emmanuel Grumbach (1):
->       iwlwifi: update -10.ucode for 3160 / 7260 / 7265 / 7265D
->=20
->  WHENCE                 |   8 ++++----
->  iwlwifi-3160-10.ucode  | Bin 610168 -> 610064 bytes
->  iwlwifi-7260-10.ucode  | Bin 672480 -> 672372 bytes
->  iwlwifi-7265-10.ucode  | Bin 736968 -> 736864 bytes
->  iwlwifi-7265D-10.ucode | Bin 740636 -> 740456 bytes
->  5 files changed, 4 insertions(+), 4 deletions(-)
->=20
-> diff --git a/WHENCE b/WHENCE
-> index 44c41c7..df2dffa 100644
-> --- a/WHENCE
-> +++ b/WHENCE
-> @@ -816,7 +816,7 @@ File: iwlwifi-7260-9.ucode
->  Version: 25.228.9.0
-> =20
->  File: iwlwifi-7260-10.ucode
-> -Version: 23.10.10.0
-> +Version: 23.11.10.0
-> =20
->  File: iwlwifi-3160-7.ucode
->  Version: 22.1.7.0
-> @@ -828,7 +828,7 @@ File: iwlwifi-3160-9.ucode
->  Version: 25.228.9.0
-> =20
->  File: iwlwifi-3160-10.ucode
-> -Version: 23.10.10.0
-> +Version: 23.11.10.0
-> =20
->  File: iwlwifi-7265-8.ucode
->  Version: 22.24.8.0
-> @@ -837,10 +837,10 @@ File: iwlwifi-7265-9.ucode
->  Version: 25.228.9.0
-> =20
->  File: iwlwifi-7265-10.ucode
-> -Version: 23.10.10.0
-> +Version: 23.11.10.0
-> =20
->  File: iwlwifi-7265D-10.ucode
-> -Version: 23.10.10.0
-> +Version: 23.11.10.0
-> =20
->  Licence: Redistributable. See LICENCE.iwlwifi_firmware for details
-> =20
-> diff --git a/iwlwifi-3160-10.ucode b/iwlwifi-3160-10.ucode
-> index 8cec7bf..241bd4e 100644
-> Binary files a/iwlwifi-3160-10.ucode and b/iwlwifi-3160-10.ucode differ
-> diff --git a/iwlwifi-7260-10.ucode b/iwlwifi-7260-10.ucode
-> index 9e5b930..c7d8532 100644
-> Binary files a/iwlwifi-7260-10.ucode and b/iwlwifi-7260-10.ucode differ
-> diff --git a/iwlwifi-7265-10.ucode b/iwlwifi-7265-10.ucode
-> index 488ddd0..bda8dff 100644
-> Binary files a/iwlwifi-7265-10.ucode and b/iwlwifi-7265-10.ucode differ
-> diff --git a/iwlwifi-7265D-10.ucode b/iwlwifi-7265D-10.ucode
-> index 01194db..ebda04c 100644
-> Binary files a/iwlwifi-7265D-10.ucode and b/iwlwifi-7265D-10.ucode
-> differ
->=20
-
-
---=-ZiDyMiAtNmrD5v4UfK4q
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAABAgAGBQJUln4rAAoJEC0Llv5uNjIBzFcP/3nw26vT2Z7sVFSsTsRFuyZg
-yE6czjftmXljKs20zC6im4XhUuf+V/cdrymQOulCnca3cGVeMZU+/1GBN/qQeeSE
-UYepX/x1se6i4ZPzqIvctxu6CyZOnltQmxN012E/tZkb+zZFDywWIFxKjF0n7lvd
-N3ysMUTNddxAh9M6DaLi2MDi69du6e+HPKWeaspAs0kkBzVH9Cyt6cEZMoq8tGBC
-7Q6i1U2tjU4GRygWR8Md9151AFz77hpvTcXELVubEAG7/9ons0uMmkSVGoJXNNbf
-obFuCKPT3d4eiXBF3n6sbOBdde81HbHUSDPROfYVfSUkDrYmZ6RvkL8Ro/pSZtBW
-3oc1nUkkIJBHAGMiC3/vZNRvz3sVEJ2Z3ql+x+fqe/8TgfGuoNxf/ZTM9kJWd0gC
-vasZJJUBoz3A0CX4VUZNwubmNA9hniGf1NmKHSP3yOtpkfW05nrLfom+d32Yj0RR
-nnFo50//dm85SLwFdYHIxj8ntBiZc3UAlCxDc8oH0+aJCHMPTo9Z/zBm7ThhFzLS
-XywUuEuN0s6rkgIb0iQ3ac2sSGjtF5Bt5dpYnNvy8JXJyq6OYFVOA/8RbIUjajIC
-2S+eRZlNhQ0mEo0tK4mw9FCI/EabEmm8DRkLqxhn82xuUYh39KCnnwIPKuVTqe0C
-aehpMqaBpP5sixXZfdQL
-=lhIz
------END PGP SIGNATURE-----
-
---=-ZiDyMiAtNmrD5v4UfK4q--
+Thanks,
