@@ -1,47 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:58965 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751512AbaLXUkM (ORCPT
+Received: from mail-lb0-f178.google.com ([209.85.217.178]:47681 "EHLO
+	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752855AbaLGKaP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Dec 2014 15:40:12 -0500
-Message-ID: <549B24A9.4080001@broadcom.com> (sfid-20141224_214016_714216_DDC0BD4C)
-Date: Wed, 24 Dec 2014 21:40:09 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Jouni Malinen <j@w1.fi>
-CC: "hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	"Gautam (Gautam Kumar) Shukla" <gautams@broadcom.com>
-Subject: Re: hostapd and 11h support
-References: <549A8827.3070703@broadcom.com> <20141224173227.GA1969@w1.fi> <549B05F0.9020704@broadcom.com> <20141224190452.GA6933@w1.fi>
-In-Reply-To: <20141224190452.GA6933@w1.fi>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Sun, 7 Dec 2014 05:30:15 -0500
+Received: by mail-lb0-f178.google.com with SMTP id f15so2787483lbj.9
+        for <linux-wireless@vger.kernel.org>; Sun, 07 Dec 2014 02:30:13 -0800 (PST)
+From: Vadim Kochan <vadim4j@gmail.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org
+Cc: Vadim Kochan <vadim4j@gmail.com>
+Subject: [PATCH v2] mac80211: Supporting of IFLA_INFO_KIND rtnl attribute
+Date: Sun,  7 Dec 2014 12:20:27 +0200
+Message-Id: <1417947627-2329-1-git-send-email-vadim4j@gmail.com> (sfid-20141207_113019_533467_65EC6AAA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/24/14 20:04, Jouni Malinen wrote:
-> On Wed, Dec 24, 2014 at 07:29:04PM +0100, Arend van Spriel wrote:
->> The firmware on the device *can* have CAC logic built-in. When it
->> *is* built-in it is however disabled by default. Based on your
->> feedback I will just detect firmware support, enable dfs in
->> firmware, and signal DFS offload to hostapd. I would suggest
->> introducing a new common capability flag for this instead of using a
->> QCA vendor specific one. That would be odd ;-)
->
-> I see nothing odd in other drivers using the already defined QCA vendor
-> specific nl80211 command. Anyway, I have no issues with a new nl80211
-> capability flag added for this purpose. You'll probably have better
-> chances of getting that accepted with an upstream driver using it.
+It allows to identify the wlan kind of device for
+the user application, e.g.:
 
-Maybe not odd but counter-intuitive to some people. Anyway, I was 
-looking at the code in driver_nl80211_capa.c and stumbled upon 
-WPA_DRIVER_FLAGS_KEY_MGMT_OFFLOAD. I introduced entensible feature flags 
-upstream just yesterday to accomodate this type of offload. Just curious 
-but are those QCA vendor specific nl80211 commands used by the upstream 
-QCA drivers or is this for supporting QCA proprietary drivers. I guess 
-the latter as that would be the only reason I can think of to have 
-vendor specific commands.
+    # ip -d link
 
-Regards,
-Arend
+    1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default
+        link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00 promiscuity 0
+    2: enp0s25: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc pfifo_fast state DOWN mode DEFAULT group default qlen 1000
+        link/ether XX:XX:XX:XX:XX:XX brd ff:ff:ff:ff:ff:ff promiscuity 0
+    3: wlp3s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP mode DEFAULT group default qlen 1000
+        link/ether XX:XX:XX:XX:XX:XX brd ff:ff:ff:ff:ff:ff promiscuity 0
+        wlan
+
+Signed-off-by: Vadim Kochan <vadim4j@gmail.com>
+---
+ net/mac80211/iface.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 653f5eb..e48372b 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -18,6 +18,7 @@
+ #include <linux/rtnetlink.h>
+ #include <net/mac80211.h>
+ #include <net/ieee80211_radiotap.h>
++#include <net/rtnetlink.h>
+ #include "ieee80211_i.h"
+ #include "sta_info.h"
+ #include "debugfs_netdev.h"
+@@ -1624,6 +1625,10 @@ static void ieee80211_assign_perm_addr(struct ieee80211_local *local,
+ 	mutex_unlock(&local->iflist_mtx);
+ }
+ 
++static struct rtnl_link_ops wireless_link_ops __read_mostly = {
++	.kind = "wlan",
++};
++
+ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
+ 		     struct wireless_dev **new_wdev, enum nl80211_iftype type,
+ 		     struct vif_params *params)
+@@ -1684,6 +1689,8 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
+ 		memcpy(sdata->vif.addr, ndev->dev_addr, ETH_ALEN);
+ 		memcpy(sdata->name, ndev->name, IFNAMSIZ);
+ 
++		ndev->rtnl_link_ops = &wireless_link_ops;
++
+ 		sdata->dev = ndev;
+ 	}
+ 
+-- 
+2.1.3
+
