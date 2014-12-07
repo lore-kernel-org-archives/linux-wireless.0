@@ -1,31 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:53312 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751344AbaLXP3N (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:43019 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751244AbaLGQDt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Dec 2014 10:29:13 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Peter Oh <poh@qca.qualcomm.com>
-Cc: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath: fix incorrect PPB on FCC radar type 5
-References: <1418669734-12921-1-git-send-email-poh@qca.qualcomm.com>
-Date: Wed, 24 Dec 2014 17:29:07 +0200
-In-Reply-To: <1418669734-12921-1-git-send-email-poh@qca.qualcomm.com> (Peter
-	Oh's message of "Mon, 15 Dec 2014 10:55:34 -0800")
-Message-ID: <87sig583ss.fsf@kamboji.qca.qualcomm.com> (sfid-20141224_162916_774493_95827E62)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Sun, 7 Dec 2014 11:03:49 -0500
+Received: by mail-wi0-f174.google.com with SMTP id h11so2696953wiw.13
+        for <linux-wireless@vger.kernel.org>; Sun, 07 Dec 2014 08:03:48 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH] cfg80211: avoid intersection when applying custom reg
+Date: Sun,  7 Dec 2014 18:03:45 +0200
+Message-Id: <1417968225-17518-1-git-send-email-arik@wizery.com> (sfid-20141207_170524_482778_BC240F77)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Peter Oh <poh@qca.qualcomm.com> writes:
+The custom-reg handling function can currently only add flags to a given
+channel. This results in stale flags being left applied. In some cases
+a channel was disabled and even the orig_flags were changed to reflect
+this.
 
-> The minimum number of pulses per burst on FCC radar type 5 is 1.
-> Use this number for correct radar detection.
->
-> Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+Previously the API was designed for a single invocation before wiphy
+registration, so this didn't matter. The previous approach doesn't scale
+well to self-managed regulatory devices, particularly when a more
+permissive regdom is applied after a restrictive one.
 
-Thanks, applied to wireless-drivers-next.git.
+Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+---
+ net/wireless/reg.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 8941e1c..e4f4619 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1686,8 +1686,7 @@ static void handle_channel_custom(struct wiphy *wiphy,
+ 	if (IS_ERR(reg_rule)) {
+ 		REG_DBG_PRINT("Disabling freq %d MHz as custom regd has no rule that fits it\n",
+ 			      chan->center_freq);
+-		chan->orig_flags |= IEEE80211_CHAN_DISABLED;
+-		chan->flags = chan->orig_flags;
++		chan->flags |= IEEE80211_CHAN_DISABLED;
+ 		return;
+ 	}
+ 
+@@ -1712,7 +1711,7 @@ static void handle_channel_custom(struct wiphy *wiphy,
+ 	chan->dfs_state = NL80211_DFS_USABLE;
+ 
+ 	chan->beacon_found = false;
+-	chan->flags |= map_regdom_flags(reg_rule->flags) | bw_flags;
++	chan->flags = map_regdom_flags(reg_rule->flags) | bw_flags;
+ 	chan->max_antenna_gain = (int) MBI_TO_DBI(power_rule->max_antenna_gain);
+ 	chan->max_reg_power = chan->max_power =
+ 		(int) MBM_TO_DBM(power_rule->max_eirp);
 -- 
-Kalle Valo
+1.9.1
+
