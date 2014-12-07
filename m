@@ -1,65 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:22186 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754735AbaLIKTu (ORCPT
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:38051 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752703AbaLGV5f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Dec 2014 05:19:50 -0500
-Message-ID: <5486CCBC.3@broadcom.com> (sfid-20141209_112013_764828_AEA3CF05)
-Date: Tue, 9 Dec 2014 11:19:40 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>
-CC: Catalin Marinas <catalin.marinas@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"Hante Meuleman" <meuleman@broadcom.com>,
-	"hauke@hauke-m.de" <hauke@hauke-m.de>,
-	David Miller <davem@davemloft.net>,
-	Marek Szyprowski <m.szyprowski@samsung.com>
-Subject: Re: using DMA-API on ARM
-References: <5481794E.4050406@broadcom.com> <F51492713EF10846800D8C0ED37A7DCE01901765@SJEXCHMB15.corp.ad.broadcom.com> <F51492713EF10846800D8C0ED37A7DCE01902076@SJEXCHMB15.corp.ad.broadcom.com> <2863746.4sUSEYqahB@wuerfel> <20141208160316.GM16185@e104818-lin.cambridge.arm.com> <5485D97D.1040404@broadcom.com>
-In-Reply-To: <5485D97D.1040404@broadcom.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Sun, 7 Dec 2014 16:57:35 -0500
+Received: by mail-wi0-f173.google.com with SMTP id r20so3143095wiv.12
+        for <linux-wireless@vger.kernel.org>; Sun, 07 Dec 2014 13:57:34 -0800 (PST)
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] net: wireless: rtlwifi: rtl8192de: fw.c:  Remove unused function
+Date: Sun,  7 Dec 2014 23:00:13 +0100
+Message-Id: <1417989613-18300-1-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20141207_225749_805184_DF2D2985)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/08/14 18:01, Arend van Spriel wrote:
-> On 12/08/14 17:03, Catalin Marinas wrote:
->> On Mon, Dec 08, 2014 at 03:01:32PM +0000, Arnd Bergmann wrote:
->>> [ 0.000000] PL310 OF: cache setting yield illegal associativity
->>> [ 0.000000] PL310 OF: -1069781724 calculated, only 8 and 16 legal
->>> [ 0.000000] L2C-310 enabling early BRESP for Cortex-A9
->>> [ 0.000000] L2C-310 full line of zeros enabled for Cortex-A9
->>> [ 0.000000] L2C-310 dynamic clock gating enabled, standby mode enabled
->>> [ 0.000000] L2C-310 cache controller enabled, 16 ways, 256 kB
->>> [ 0.000000] L2C-310: CACHE_ID 0x410000c8, AUX_CTRL 0x4e130001
->>
->> If the above value is correct, they should make sure bit 22 is set in
->> AUX_CTRL.
->
-> Hante applied the patch and it now says:
->
-> [ 0.000000] PL310 OF: cache setting yield illegal associativity
-> [ 0.000000] PL310 OF: -1069781724 calculated, only 8 and 16 legal
-> [ 0.000000] L2C-310 enabling early BRESP for Cortex-A9
-> [ 0.000000] L2C-310 full line of zeros enabled for Cortex-A9
-> [ 0.000000] L2C-310 dynamic clock gating enabled, standby mode enabled
-> [ 0.000000] L2C-310 cache controller enabled, 16 ways, 256 kB
-> [ 0.000000] L2C-310: CACHE_ID 0x410000c8, AUX_CTRL 0x4e530001
->
-> He started running a test overnight. So will see if it hits the failure
-> with this L2 cache configuration.
+Remove the function rtl92d_set_fw_pwrmode_cmd() that is not used anywhere.
 
-The issue did not trigger overnight so it seems setting bit 22 <Shared 
-Attribute _Override_ Enable> solves the issue over here. Now the 
-question is how to move forward with this. As I understood from Catalin 
-this patch was not included as it was not considered responsibility of 
-the linux kernel.
+This was partially found by using a static code analysis program called cppcheck.
 
-Regards,
-Arend
+Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+---
+ drivers/net/wireless/rtlwifi/rtl8192de/fw.c |   17 -----------------
+ drivers/net/wireless/rtlwifi/rtl8192de/fw.h |    1 -
+ 2 files changed, 18 deletions(-)
+
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/fw.c b/drivers/net/wireless/rtlwifi/rtl8192de/fw.c
+index 2317707..62ef820 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192de/fw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192de/fw.c
+@@ -540,23 +540,6 @@ void rtl92d_fill_h2c_cmd(struct ieee80211_hw *hw,
+ 	return;
+ }
+ 
+-void rtl92d_set_fw_pwrmode_cmd(struct ieee80211_hw *hw, u8 mode)
+-{
+-	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	u8 u1_h2c_set_pwrmode[3] = { 0 };
+-	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
+-
+-	RT_TRACE(rtlpriv, COMP_POWER, DBG_LOUD, "FW LPS mode = %d\n", mode);
+-	SET_H2CCMD_PWRMODE_PARM_MODE(u1_h2c_set_pwrmode, mode);
+-	SET_H2CCMD_PWRMODE_PARM_SMART_PS(u1_h2c_set_pwrmode, 1);
+-	SET_H2CCMD_PWRMODE_PARM_BCN_PASS_TIME(u1_h2c_set_pwrmode,
+-					      ppsc->reg_max_lps_awakeintvl);
+-	RT_PRINT_DATA(rtlpriv, COMP_CMD, DBG_DMESG,
+-		      "rtl92d_set_fw_rsvdpagepkt(): u1_h2c_set_pwrmode",
+-		      u1_h2c_set_pwrmode, 3);
+-	rtl92d_fill_h2c_cmd(hw, H2C_SETPWRMODE, 3, u1_h2c_set_pwrmode);
+-}
+-
+ static bool _rtl92d_cmd_send_packet(struct ieee80211_hw *hw,
+ 				    struct sk_buff *skb)
+ {
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/fw.h b/drivers/net/wireless/rtlwifi/rtl8192de/fw.h
+index a55a803..1646e7c 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192de/fw.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192de/fw.h
+@@ -136,7 +136,6 @@ int rtl92d_download_fw(struct ieee80211_hw *hw);
+ void rtl92d_fill_h2c_cmd(struct ieee80211_hw *hw, u8 element_id,
+ 			 u32 cmd_len, u8 *p_cmdbuffer);
+ void rtl92d_firmware_selfreset(struct ieee80211_hw *hw);
+-void rtl92d_set_fw_pwrmode_cmd(struct ieee80211_hw *hw, u8 mode);
+ void rtl92d_set_fw_rsvdpagepkt(struct ieee80211_hw *hw, bool b_dl_finished);
+ void rtl92d_set_fw_joinbss_report_cmd(struct ieee80211_hw *hw, u8 mstatus);
+ 
+-- 
+1.7.10.4
+
