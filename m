@@ -1,124 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:40625 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751090AbaLUQcc (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:64321 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750965AbaLGOhe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Dec 2014 11:32:32 -0500
-Received: by mail-wg0-f42.google.com with SMTP id k14so5058111wgh.1
-        for <linux-wireless@vger.kernel.org>; Sun, 21 Dec 2014 08:32:31 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/2] mac80211: allow some multi-channel combinations with DFS master
-Date: Sun, 21 Dec 2014 18:32:26 +0200
-Message-Id: <1419179546-29313-2-git-send-email-eliad@wizery.com> (sfid-20141221_173245_372519_F88C3546)
-In-Reply-To: <1419179546-29313-1-git-send-email-eliad@wizery.com>
-References: <1419179546-29313-1-git-send-email-eliad@wizery.com>
+	Sun, 7 Dec 2014 09:37:34 -0500
+From: Emil Renner Berthing <kernel@esmil.dk>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: Emil Renner Berthing <kernel@esmil.dk>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] drivers: staging: rtl8723au: get rid of unneeded memset/memcpy
+Date: Sun,  7 Dec 2014 15:37:20 +0100
+Message-Id: <1417963040-9014-1-git-send-email-kernel@esmil.dk> (sfid-20141207_153751_750797_73AE911F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Allow some multi-channel interface combinations along with
-DFS master support, if there is only a single AP/GO.
+This also fixes a sparse warning.
 
-Allowing other interface types at the same time is fine
-(as long as the device supports them), and doesn't require
-additional code.
-
-Update ieee80211_dfs_radar_detected_work() to consider
-this case, and look specifically for the chanctx with
-radar_enabled.
-
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Emil Renner Berthing <kernel@esmil.dk>
 ---
- net/mac80211/main.c | 11 -----------
- net/mac80211/util.c |  3 +++
- net/wireless/core.c | 23 +++++++++++++++++------
- 3 files changed, 20 insertions(+), 17 deletions(-)
+ drivers/staging/rtl8723au/hal/rtl8723a_cmd.c | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index d9ce336..78d8c6d 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -792,17 +792,6 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 		 */
- 		if (local->hw.wiphy->interface_modes & BIT(NL80211_IFTYPE_WDS))
- 			return -EINVAL;
--
--		/* DFS is not supported with multi-channel combinations yet */
--		for (i = 0; i < local->hw.wiphy->n_iface_combinations; i++) {
--			const struct ieee80211_iface_combination *comb;
--
--			comb = &local->hw.wiphy->iface_combinations[i];
--
--			if (comb->radar_detect_widths &&
--			    comb->num_different_channels > 1)
--				return -EINVAL;
--		}
- 	}
+diff --git a/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c b/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
+index 7b56411..d8c4c8b 100644
+--- a/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
++++ b/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
+@@ -124,14 +124,15 @@ int rtl8723a_set_rssi_cmd(struct rtw_adapter *padapter, u8 *param)
  
- 	/* Only HW csum features are currently compatible with mac80211 */
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 974ebe7..61affe6 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -2625,6 +2625,9 @@ void ieee80211_dfs_radar_detected_work(struct work_struct *work)
- 		if (ctx->replace_state == IEEE80211_CHANCTX_REPLACES_OTHER)
- 			continue;
+ int rtl8723a_set_raid_cmd(struct rtw_adapter *padapter, u32 mask, u8 arg)
+ {
+-	u8 buf[5];
++	struct {
++		__le32 mask;
++		u8 arg;
++	} __packed buf;
  
-+		if (!ctx->conf.radar_enabled)
-+			continue;
-+
- 		num_chanctx++;
- 		chandef = ctx->conf.def;
- 	}
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 4910758..8bcadd9 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -453,7 +453,7 @@ static int wiphy_verify_combinations(struct wiphy *wiphy)
- 	int i, j;
+-	memset(buf, 0, 5);
+-	mask = cpu_to_le32(mask);
+-	memcpy(buf, &mask, 4);
+-	buf[4]  = arg;
++	buf.mask = cpu_to_le32(mask);
++	buf.arg = arg;
  
- 	for (i = 0; i < wiphy->n_iface_combinations; i++) {
--		u32 cnt = 0;
-+		u32 cnt = 0, dfs_cnt = 0;
- 		u16 all_iftypes = 0;
+-	FillH2CCmd(padapter, MACID_CONFIG_EID, 5, buf);
++	FillH2CCmd(padapter, MACID_CONFIG_EID, 5, (u8 *)&buf);
  
- 		c = &wiphy->iface_combinations[i];
-@@ -477,11 +477,6 @@ static int wiphy_verify_combinations(struct wiphy *wiphy)
- 				CFG80211_MAX_NUM_DIFFERENT_CHANNELS))
- 			return -EINVAL;
- 
--		/* DFS only works on one channel. */
--		if (WARN_ON(c->radar_detect_widths &&
--			    (c->num_different_channels > 1)))
--			return -EINVAL;
--
- 		if (WARN_ON(!c->n_limits))
- 			return -EINVAL;
- 
-@@ -505,6 +500,22 @@ static int wiphy_verify_combinations(struct wiphy *wiphy)
- 				    c->limits[j].max > 1))
- 				return -EINVAL;
- 
-+			if (types & (BIT(NL80211_IFTYPE_AP) |
-+				     BIT(NL80211_IFTYPE_P2P_GO) |
-+				     BIT(NL80211_IFTYPE_ADHOC) |
-+				     BIT(NL80211_IFTYPE_MESH_POINT))) {
-+				dfs_cnt += c->limits[j].max;
-+
-+				/*
-+				 * Multiple DFS masters on multiple channels
-+				 * are not supported yet.
-+				 */
-+				if (WARN_ON(c->radar_detect_widths &&
-+					    c->num_different_channels > 1 &&
-+					    dfs_cnt > 1))
-+					return -EINVAL;
-+			}
-+
- 			cnt += c->limits[j].max;
- 			/*
- 			 * Don't advertise an unsupported type
+ 	return _SUCCESS;
+ }
 -- 
-1.8.5.1.109.g3d252a9
+2.1.3
 
