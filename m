@@ -1,35 +1,210 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:41602 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751737AbaLRN4Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Dec 2014 08:56:24 -0500
-Message-ID: <1418910981.6134.9.camel@sipsolutions.net> (sfid-20141218_145628_745961_945194E6)
-Subject: Re: [PATCH] nl80211: increase the max number of rules in regdomain
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@suse.com>
-Date: Thu, 18 Dec 2014 14:56:21 +0100
-In-Reply-To: <1418832044-25582-1-git-send-email-arik@wizery.com> (sfid-20141217_170045_082207_4F64BED6)
-References: <1418832044-25582-1-git-send-email-arik@wizery.com>
-	 (sfid-20141217_170045_082207_4F64BED6)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:3211 "EHLO
+	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753377AbaLGT0n (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 7 Dec 2014 14:26:43 -0500
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+To: linux-wireless@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux@rasmusvillemoes.dk,
+	joe@perches.com, devel@driverdev.osuosl.org,
+	linux-scsi@vger.kernel.org, dri-devel@lists.freedesktop.org,
+	intel-gfx@lists.freedesktop.org, linux-mtd@lists.infradead.org,
+	linux-samsung-soc@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, netdev@vger.kernel.org,
+	linux-usb@vger.kernel.org
+Subject: [PATCH 0/20] fix misspelling of current function in string
+Date: Sun,  7 Dec 2014 20:20:42 +0100
+Message-Id: <1417980062-25151-1-git-send-email-Julia.Lawall@lip6.fr> (sfid-20141207_203024_664995_9E3CECFF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-12-17 at 18:00 +0200, Arik Nemtsov wrote:
-> Some network cards (Intel) produce per-channel regdomains and rely on
-> cfg80211 to merge rules as needed. This hits the max rules limit and
-> fails.
+These patches replace what appears to be a reference to the name of the
+current function but is misspelled in some way by either the name of the
+function itself, or by %s and then __func__ in an argument list.
 
-Maybe we should consider just getting rid of this or bumping it to
-something ridiculously large like 1000? Looking at how this is (not)
-used, there's no real sense in limiting it. The only possible problem is
-the O(n^2) complexity when doing an intersection, but processing a
-million combinations is probably not a big deal? In fact, even if that
-becomes a problem, we can easily optimise that complexity away by
-sorting the rules or so. Then it becomes O(n log n)...
+// <smpl>
+// sudo apt-get install python-pip
+// sudo pip install python-Levenshtein
+// spatch requires the argument --in-place
 
-johannes
+virtual after_start
+
+@initialize:ocaml@
+@@
+
+let extensible_functions = ref ([] : string list)
+let restarted = ref false
+
+let restart _ =
+  restarted := true;
+  let it = new iteration() in
+  it#add_virtual_rule After_start;
+  Printf.eprintf "restarting\n";
+  it#register()
+
+@initialize:python@
+@@
+import re
+from Levenshtein import distance
+mindist = 1 // 1 to find only misspellings
+maxdist = 2
+ignore_leading = True
+
+// ---------------------------------------------------------------------
+
+@r0@
+constant char [] c;
+identifier f;
+@@
+
+f(...,c,...)
+
+@script:ocaml@
+c << r0.c;
+f << r0.f;
+@@
+
+(if not !restarted then restart());
+match Str.split_delim (Str.regexp "%") c with
+  _::_::_ ->
+    if not (List.mem f !extensible_functions)
+    then extensible_functions := f :: !extensible_functions
+| _ -> ()
+
+// ---------------------------------------------------------------------
+
+@r depends on after_start@
+constant char [] c;
+position p;
+identifier f;
+@@
+
+f(...,c@p,...)
+
+@script:python flt@
+c << r.c;
+p << r.p;
+matched;
+@@
+
+func = p[0].current_element
+wpattern = "[a-zA-Z_][a-zA-Z0-9_]*"
+if ignore_leading:
+   func = func.strip("_")
+   wpattern = "[a-zA-Z][a-zA-Z0-9_]*"
+lf = len(func)
+cocci.include_match(False)
+// ignore extremely short function names
+if lf > 3:
+   words = [w for w in re.findall(wpattern, c) if abs(len(w) - lf) <= maxdist]
+   for w in words:
+       d = distance(w, func) 
+       if mindist <= d and d <= maxdist:
+          coccinelle.matched = w
+          cocci.include_match(True)
+     	  //print "%s:%d:%s():%d: %s" % (p[0].file, int(p[0].line), func, d, c)
+	  break
+
+@script:ocaml r2@
+c << r.c;
+f << r.f;
+matched << flt.matched;
+fixed;
+@@
+
+let pieces = Str.split_delim (Str.regexp_string matched) c in
+match pieces with
+  [before;after] ->
+    let preceeding =
+      List.length(Str.split (Str.regexp_string "%") before) > 1 in
+    if preceeding
+    then Coccilib.include_match false
+    else
+      if List.mem f !extensible_functions
+      then fixed := before ^ "%s" ^ after
+      else Coccilib.include_match false
+| _ -> Coccilib.include_match false
+
+@changed1@
+constant char [] r.c;
+identifier r2.fixed;
+position r.p;
+identifier r.f;
+@@
+
+f(...,
+-c@p
++fixed,__func__
+ ,...)
+
+// -------------------------------------------------------------------
+
+@s depends on after_start@
+constant char [] c;
+position p;
+identifier f;
+@@
+
+f(...,c@p,...)
+
+@script:python flt2@
+c << s.c;
+p << s.p;
+matched;
+@@
+
+func = p[0].current_element
+wpattern = "[a-zA-Z_][a-zA-Z0-9_]*"
+if ignore_leading:
+   func = func.strip("_")
+   wpattern = "[a-zA-Z][a-zA-Z0-9_]*"
+lf = len(func)
+cocci.include_match(False)
+// ignore extremely short function names
+if lf > 3:
+   words = [w for w in re.findall(wpattern, c) if abs(len(w) - lf) <= maxdist]
+   for w in words:
+       d = distance(w, func) 
+       if mindist <= d and d <= maxdist:
+          coccinelle.matched = w
+          cocci.include_match(True)
+     	  //print "%s:%d:%s():%d: %s" % (p[0].file, int(p[0].line), func, d, c)
+	  break
+
+@script:ocaml s2@
+c << s.c;
+f << s.f;
+p << s.p;
+matched << flt2.matched;
+fixed;
+@@
+
+let ce = (List.hd p).current_element in
+let pieces = Str.split_delim (Str.regexp_string matched) c in
+match pieces with
+  [before;after] ->
+    let preceeding =
+      List.length(Str.split (Str.regexp_string "%") before) > 1 in
+    if preceeding
+    then Coccilib.include_match false
+    else
+      if List.mem f !extensible_functions
+      then Coccilib.include_match false
+      else fixed := before ^ ce ^ after
+| _ -> Coccilib.include_match false
+
+@changed2@
+constant char [] s.c;
+identifier s2.fixed;
+position s.p;
+identifier s.f;
+@@
+
+f(...,
+-c@p
++fixed
+ ,...)
+// </smpl>
 
