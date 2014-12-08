@@ -1,51 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f46.google.com ([74.125.82.46]:64546 "EHLO
-	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752722AbaLTAQ4 (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:11733 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754151AbaLHHDr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Dec 2014 19:16:56 -0500
-Received: by mail-wg0-f46.google.com with SMTP id x13so2606422wgg.33
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Dec 2014 16:16:55 -0800 (PST)
+	Mon, 8 Dec 2014 02:03:47 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v4 6/8] ath10k: introduce wmi ops
+References: <20141203080803.31187.85059.stgit@potku.adurom.net>
+	<20141203081054.31187.10953.stgit@potku.adurom.net>
+	<CA+BoTQ=MbCkF11QwqCGbtPm4veFKrUmN=3dQ_zK+APeWifCRPQ@mail.gmail.com>
+Date: Mon, 8 Dec 2014 09:03:30 +0200
+In-Reply-To: <CA+BoTQ=MbCkF11QwqCGbtPm4veFKrUmN=3dQ_zK+APeWifCRPQ@mail.gmail.com>
+	(Michal Kazior's message of "Mon, 8 Dec 2014 07:51:28 +0100")
+Message-ID: <87fvcq4o8t.fsf@kamboji.qca.qualcomm.com> (sfid-20141208_080357_466470_410658AF)
 MIME-Version: 1.0
-Date: Sat, 20 Dec 2014 00:16:55 +0000
-Message-ID: <CACZYS+o80M7OkxUTOumCf1VhPRjM-U0zj8xebGQ8-1W_qPDo5Q@mail.gmail.com> (sfid-20141220_011659_481869_F88C0051)
-Subject: nl80211: send_and_recv->nl_recvmsgs failed: -33
-From: Notes Jonny <jongmob@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-I am seeing this error message quite often in syslog. Was wondering if
-it is something I can fix. Not sure if related, but the laptop drops
-off the established wifi at this location (that problem happens ever
-few days).
+> On 3 December 2014 at 09:10, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> [...]
+>>  int ath10k_wmi_attach(struct ath10k *ar)
+>>  {
+>> -       if (test_bit(ATH10K_FW_FEATURE_WMI_10X, ar->fw_features)) {
+>> -               if (test_bit(ATH10K_FW_FEATURE_WMI_10_2, ar->fw_features))
+>> -                       ar->wmi.cmd = &wmi_10_2_cmd_map;
+>> -               else
+>> -                       ar->wmi.cmd = &wmi_10x_cmd_map;
+>> -
+>> +       switch (ar->wmi.op_version) {
+>> +       case ATH10K_FW_WMI_OP_VERSION_10_2:
+>> +               ar->wmi.cmd = &wmi_10_2_cmd_map;
+>> +               ar->wmi.ops = &wmi_10_2_ops;
+>>                 ar->wmi.vdev_param = &wmi_10x_vdev_param_map;
+>>                 ar->wmi.pdev_param = &wmi_10x_pdev_param_map;
+>> -       } else {
+>> +               break;
+>> +       case ATH10K_FW_WMI_OP_VERSION_10_1:
+>> +               ar->wmi.cmd = &wmi_10x_cmd_map;
+>> +               ar->wmi.ops = &wmi_10_1_ops;
+>> +               ar->wmi.vdev_param = &wmi_10x_vdev_param_map;
+>> +               ar->wmi.pdev_param = &wmi_10x_pdev_param_map;
+>> +               break;
+>> +       case ATH10K_FW_WMI_OP_VERSION_MAIN:
+>>                 ar->wmi.cmd = &wmi_cmd_map;
+>> +               ar->wmi.ops = &wmi_ops;
+>>                 ar->wmi.vdev_param = &wmi_vdev_param_map;
+>>                 ar->wmi.pdev_param = &wmi_pdev_param_map;
+>> +               break;
+>> +       default:
+>
+> I think we don't need the `default` here now, do we? Instead _UNSET
+> and _MAX should be handled.
 
-Could the -33 be replaced with an error string? I wonder what -33 is,
-perhaps -EDOM?
+Correct. I folded this change:
 
-Regards, Jonny
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -4786,7 +4786,8 @@ int ath10k_wmi_attach(struct ath10k *ar)
+                ar->wmi.vdev_param = &wmi_vdev_param_map;
+                ar->wmi.pdev_param = &wmi_pdev_param_map;
+                break;
+-       default:
++       case ATH10K_FW_WMI_OP_VERSION_UNSET:
++       case ATH10K_FW_WMI_OP_VERSION_MAX:
+                ath10k_err(ar, "unsupported WMI op version: %d\n",
+                           ar->wmi.op_version);
+                return -EINVAL;
 
-Dec 20 00:07:28 ubuntu1404 NetworkManager[749]: <info> Activation
-(wlan0) Stage 4 of 5 (IPv6 Configure Timeout) started...
-Dec 20 00:07:28 ubuntu1404 NetworkManager[749]: <info> Activation
-(wlan0) Stage 4 of 5 (IPv6 Configure Timeout) complete.
-Dec 20 00:07:28 ubuntu1404 wpa_supplicant[1095]: wlan0: CTRL-EVENT-SCAN-STARTED
-Dec 20 00:07:29 ubuntu1404 wpa_supplicant[1095]: nl80211:
-send_and_recv->nl_recvmsgs failed: -33
-Dec 20 00:08:11 ubuntu1404 wpa_supplicant[1095]: wlan0: CTRL-EVENT-SCAN-STARTED
-Dec 20 00:08:12 ubuntu1404 wpa_supplicant[1095]: nl80211:
-send_and_recv->nl_recvmsgs failed: -33
-Dec 20 00:09:14 ubuntu1404 wpa_supplicant[1095]: wlan0: CTRL-EVENT-SCAN-STARTED
-Dec 20 00:09:15 ubuntu1404 wpa_supplicant[1095]: nl80211:
-send_and_recv->nl_recvmsgs failed: -33
-Dec 20 00:09:45 ubuntu1404 wpa_supplicant[1095]: wlan0: WPA: Group
-rekeying completed with xxxxxxxxxxxxxx [GTK=TKIP]
-Dec 20 00:10:37 ubuntu1404 wpa_supplicant[1095]: wlan0: CTRL-EVENT-SCAN-STARTED
-Dec 20 00:10:38 ubuntu1404 wpa_supplicant[1095]: nl80211:
-send_and_recv->nl_recvmsgs failed: -33
-Dec 20 00:12:20 ubuntu1404 wpa_supplicant[1095]: wlan0: CTRL-EVENT-SCAN-STARTED
-Dec 20 00:12:21 ubuntu1404 wpa_supplicant[1095]: nl80211:
-send_and_recv->nl_recvmsgs failed: -33
+-- 
+Kalle Valo
