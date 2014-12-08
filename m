@@ -1,67 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.19]:58498 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750725AbaLWRRS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Dec 2014 12:17:18 -0500
-Message-ID: <5499A391.2060705@rempel-privat.de> (sfid-20141223_181721_766725_78935D3F)
-Date: Tue, 23 Dec 2014 18:17:05 +0100
-From: Oleksij Rempel <linux@rempel-privat.de>
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:46187 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750998AbaLHXwy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Dec 2014 18:52:54 -0500
+From: Pali =?utf-8?q?Roh=C3=A1r?= <pali.rohar@gmail.com>
+To: Dan Williams <dcbw@redhat.com>
+Subject: Re: wl1251: NVS firmware data
+Date: Tue, 9 Dec 2014 00:52:50 +0100
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+	"Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
+	Ming Lei <ming.lei@canonical.com>, Pavel Machek <pavel@ucw.cz>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Grazvydas Ignotas <notasas@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+	Aaro Koskinen <aaro.koskinen@iki.fi>,
+	Kalle Valo <kvalo@adurom.com>,
+	Sebastian Reichel <sre@ring0.de>,
+	David Gnedt <david.gnedt@davizone.at>
+References: <201411271506.20457@pali> <201412090023.18173@pali> <1418082137.31640.14.camel@dcbw.local>
+In-Reply-To: <1418082137.31640.14.camel@dcbw.local>
 MIME-Version: 1.0
-To: Jeremy Audet <ichimonji10@gmail.com>
-CC: linux-wireless@vger.kernel.org, Adrian Chadd <adrian@freebsd.org>
-Subject: Re: bug report for ath9k_htc driver
-References: <CA+A7n+jFWWs-U2DapExRqYgK=e2kGowPzFHJPh72DRwzBmVggg@mail.gmail.com>	<54991B32.2010105@rempel-privat.de> <CA+A7n+hbr2ctPkSta9-MWT1opAT2hCB9jYHvFu7N3C_ZvxXSzw@mail.gmail.com>
-In-Reply-To: <CA+A7n+hbr2ctPkSta9-MWT1opAT2hCB9jYHvFu7N3C_ZvxXSzw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: multipart/signed;
+  boundary="nextPart1822501.dZCGejN3eR";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <201412090052.50900@pali> (sfid-20141209_005315_800384_AB4DA0EE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 23.12.2014 um 16:31 schrieb Jeremy Audet:
-> Hi Oleksij,
-> 
-> Sure thing. I cloned your ath9k-htc-firmware-blob repository and
-> copied the htc_9271.fw file to /usr/lib/firmware/. I then plugged in
-> the TL-WN722N USB adapter, brought up the wireless device with `sudo
-> ip link set dev wlp0s18f2u4 up; echo $?` (return code 0), and sat back
-> and waited. I did not interact with the machine beyond keeping open an
-> SSH session (via a wired interface) and watching the log file. About
-> five minutes later, a similar error occurred as described in my
-> previous email.
-> 
-> I've collected some logging output with the command `journalctl -k
-> --since=today`. You may find this log a bit more useful than the dmesg
-> log linked to in my previous email. You can find the log here:
-> http://www.ichimonji10.name/downloads/tl-wn722n-journalctl.txt
-> 
-> -Jeremy "Ichimonji10" Audet
-> 
+--nextPart1822501.dZCGejN3eR
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 
-So, at some point usb layer dropped connection, and reconnected in
-full-speed mode, which is slow:
-=================================================================
-Dec 23 10:07:49 pine kernel: usb 5-4: USB disconnect, device number 9
-Dec 23 10:07:49 pine kernel: ath: phy6: Failed to wakeup in 500us
-Dec 23 10:07:50 pine kernel: ath: phy6: RX failed to go idle in 10 ms
-RXSM=0xb063df84
-Dec 23 10:07:50 pine kernel: ath: phy6: Failed to wakeup in 500us
-Dec 23 10:07:50 pine kernel: usb 5-4: ath9k_htc: USB layer deinitialized
-Dec 23 10:07:50 pine kernel: usb 5-4: new high-speed USB device number
-10 using ehci-pci
-Dec 23 10:07:51 pine kernel: usb 1-4: new full-speed USB device number 5
-using ohci-pci
-Dec 23 10:07:51 pine kernel: usb 1-4: not running at top speed; connect
-to a high speed hub
-Dec 23 10:07:51 pine kernel: usb 1-4: ath9k_htc: Firmware htc_9271.fw
-requested
-Dec 23 10:07:51 pine kernel: usb 1-4: ath9k_htc: Transferred FW:
-htc_9271.fw, size: 51008
-==================================================================
+On Tuesday 09 December 2014 00:42:17 Dan Williams wrote:
+> On Tue, 2014-12-09 at 00:23 +0100, Pali Roh=C3=A1r wrote:
+> > On Monday 08 December 2014 23:51:07 Dan Williams wrote:
+> > > Is the CAL data format generic to all wl1251 devices?  Or
+> > > is the stuff in the CAL partition Nokia-specific?
+> >=20
+> > Specific for Nokia devices.
+>=20
+> Ok, but then something must transform that data into a format
+> that the wl1251 chip can consume, correct?  What do other
+> wl1251 platforms do to retrieve this information and set
+> regulatory region?
+>=20
+> Dan
 
-After reconnecting to fulls-speed, ath9k-htc was unusable. I would
-suggest to test other cable or other usb controller.
-With other words, I have no idea about the reason for initial
-disconnection. It can be bad usb connection, noise or not enough power.
+It looks like wl1251 driver supports standard way to set=20
+regulatory settings. There is application which reads CAL data,=20
+cellular network info, ... and sent it to kernel (via Nokia=20
+specific netlink interface patch). And binary data which are sent=20
+are in same format as file wl1251-nvs.bin. And some bits which=20
+deterministically send to kernl depends on fcc.
 
--- 
-Regards,
-Oleksij
+=2D-=20
+Pali Roh=C3=A1r
+pali.rohar@gmail.com
+
+--nextPart1822501.dZCGejN3eR
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iEYEABECAAYFAlSGOdIACgkQi/DJPQPkQ1JMVwCfbojo5JPjO0nH/3q17ZEAUyfq
+W1EAoICqO/v9eSzdH5a8Dc8YA7slrhUy
+=jhZt
+-----END PGP SIGNATURE-----
+
+--nextPart1822501.dZCGejN3eR--
