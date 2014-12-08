@@ -1,74 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:49317 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751033AbaLQKUw (ORCPT
+Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:45548 "EHLO
+	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751482AbaLHQzG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Dec 2014 05:20:52 -0500
-Subject: [PATCH v2 1/8] ath10k: set max_num_vdevs based on wmi op version
-To: <ath10k@lists.infradead.org>
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Date: Wed, 17 Dec 2014 12:20:45 +0200
-Message-ID: <20141217102044.15964.60991.stgit@potku.adurom.net> (sfid-20141217_112055_255353_B93AAC7A)
-In-Reply-To: <20141217101755.15964.2625.stgit@potku.adurom.net>
-References: <20141217101755.15964.2625.stgit@potku.adurom.net>
+	Mon, 8 Dec 2014 11:55:06 -0500
+Date: Mon, 8 Dec 2014 16:54:52 +0000
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+To: Catalin Marinas <catalin.marinas@arm.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	Arend van Spriel <arend@broadcom.com>,
+	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	"hauke@hauke-m.de" <hauke@hauke-m.de>,
+	David Miller <davem@davemloft.net>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Marek Szyprowski <m.szyprowski@samsung.com>
+Subject: Re: using DMA-API on ARM
+Message-ID: <20141208165451.GH11285@n2100.arm.linux.org.uk> (sfid-20141208_175639_342697_FCEE303A)
+References: <5481794E.4050406@broadcom.com>
+ <2863746.4sUSEYqahB@wuerfel>
+ <5485D054.7090109@broadcom.com>
+ <2048819.2EPzBi8E3T@wuerfel>
+ <20141208165042.GO16185@e104818-lin.cambridge.arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20141208165042.GO16185@e104818-lin.cambridge.arm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To make it easier to manage firmware differences, we should not use
-ATH10K_FW_FEATURE_WMI_10X outside ath10k_core_init_firmware_features(). To
-achieve that create new field ar->max_num_vdevs and set it based on wmi op
-version.
+On Mon, Dec 08, 2014 at 04:50:43PM +0000, Catalin Marinas wrote:
+> On Mon, Dec 08, 2014 at 04:38:57PM +0000, Arnd Bergmann wrote:
+> > On Monday 08 December 2014 17:22:44 Arend van Spriel wrote:
+> > > >> The log: first the ring allocation info is printed. Starting at
+> > > >> 16.124847, ring 2, 3 and 4 are rings used for device to host. In this
+> > > >> log the failure is on a read of ring 3. Ring 3 is 1024 entries of each
+> > > >> 16 bytes. The next thing printed is the kernel page tables. Then some
+> > > >> OpenWRT info and the logging of part of the connection setup. Then at
+> > > >> 1780.130752 the logging of the failure starts. The sequence number is
+> > > >> modulo 253 with ring size of 1024 matches an "old" entry (read 40,
+> > > >> expected 52). Then the different pointers are printed followed by
+> > > >> the kernel page table. The code does then a cache invalidate on the
+> > > >> dma_handle and the next read the sequence number is correct.
+> > > >
+> > > > How do you invalidate the cache? A dma_handle is of type dma_addr_t
+> > > > and we don't define an operation for that, nor does it make sense
+> > > > on an allocation from dma_alloc_coherent(). What happens if you
+> > > > take out the invalidate?
+> > > 
+> > > dma_sync_single_for_cpu(, DMA_FROM_DEVICE) which ends up invalidating 
+> > > the cache (or that is our suspicion).
+> > 
+> > I'm not sure about that:
+> > 
+> > static void arm_dma_sync_single_for_cpu(struct device *dev,
+> >                 dma_addr_t handle, size_t size, enum dma_data_direction dir)
+> > {
+> >         unsigned int offset = handle & (PAGE_SIZE - 1);
+> >         struct page *page = pfn_to_page(dma_to_pfn(dev, handle-offset));
+> >         __dma_page_dev_to_cpu(page, offset, size, dir);
+> > }
+> > 
+> > Assuming a noncoherent linear (no IOMMU, no swiotlb, no dmabounce) mapping,
+> > dma_to_pfn will return the correct pfn here, but pfn_to_page will return a
+> > page pointer into the kernel linear mapping,
+> 
+> Or a highmem page, both should be handled by dma_cache_maint_page().
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.c |    7 +++----
- drivers/net/wireless/ath/ath10k/core.h |    1 +
- 2 files changed, 4 insertions(+), 4 deletions(-)
+A valid point, but one which is irrelevant to this thread, because we're
+talking about a platform with only 128MB, and a PAGE_OFFSET of 2GB (hence
+no highmem):
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 577a3d76df22..f17366620fde 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -907,12 +907,14 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
- 	case ATH10K_FW_WMI_OP_VERSION_MAIN:
- 		ar->max_num_peers = TARGET_NUM_PEERS;
- 		ar->max_num_stations = TARGET_NUM_STATIONS;
-+		ar->max_num_vdevs = TARGET_NUM_VDEVS;
- 		ar->htt.max_num_pending_tx = TARGET_NUM_MSDU_DESC;
- 		break;
- 	case ATH10K_FW_WMI_OP_VERSION_10_1:
- 	case ATH10K_FW_WMI_OP_VERSION_10_2:
- 		ar->max_num_peers = TARGET_10X_NUM_PEERS;
- 		ar->max_num_stations = TARGET_10X_NUM_STATIONS;
-+		ar->max_num_vdevs = TARGET_10X_NUM_VDEVS;
- 		ar->htt.max_num_pending_tx = TARGET_10X_NUM_MSDU_DESC;
- 		break;
- 	case ATH10K_FW_WMI_OP_VERSION_TLV:
-@@ -1064,10 +1066,7 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode)
- 	if (status)
- 		goto err_hif_stop;
- 
--	if (test_bit(ATH10K_FW_FEATURE_WMI_10X, ar->fw_features))
--		ar->free_vdev_map = (1LL << TARGET_10X_NUM_VDEVS) - 1;
--	else
--		ar->free_vdev_map = (1LL << TARGET_NUM_VDEVS) - 1;
-+	ar->free_vdev_map = (1LL << ar->max_num_vdevs) - 1;
- 
- 	INIT_LIST_HEAD(&ar->arvifs);
- 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 613355cc6895..3998f1e33874 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -581,6 +581,7 @@ struct ath10k {
- 
- 	int max_num_peers;
- 	int max_num_stations;
-+	int max_num_vdevs;
- 
- 	struct work_struct offchan_tx_work;
- 	struct sk_buff_head offchan_tx_queue;
+Memory: 125936K/131072K available (2682K kernel code, 103K rwdata,
+ 744K rodata, 164K init, 188K bss, 5136K reserved)
 
+Can we stay on-point to getting this problem solved, rather than drifting
+off topic please?
+
+-- 
+FTTC broadband for 0.8mile line: currently at 9.5Mbps down 400kbps up
+according to speedtest.net.
