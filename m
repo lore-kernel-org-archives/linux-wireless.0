@@ -1,79 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f54.google.com ([74.125.82.54]:64545 "EHLO
-	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753964AbaLAPxw (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:7386 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752018AbaLHPlm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Dec 2014 10:53:52 -0500
-Received: by mail-wg0-f54.google.com with SMTP id l2so14558186wgh.41
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Dec 2014 07:53:50 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v2 4/4] iw: support multiple regdom print
-Date: Mon,  1 Dec 2014 17:53:44 +0200
-Message-Id: <1417449224-10293-4-git-send-email-arik@wizery.com> (sfid-20141201_165414_895678_A05DDD4C)
-In-Reply-To: <1417449224-10293-1-git-send-email-arik@wizery.com>
-References: <1417449224-10293-1-git-send-email-arik@wizery.com>
+	Mon, 8 Dec 2014 10:41:42 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v4 0/8] ath10k: add support for new wmi-tlv backend
+References: <20141203080803.31187.85059.stgit@potku.adurom.net>
+Date: Mon, 8 Dec 2014 17:41:31 +0200
+In-Reply-To: <20141203080803.31187.85059.stgit@potku.adurom.net> (Kalle Valo's
+	message of "Wed, 3 Dec 2014 10:09:16 +0200")
+Message-ID: <87wq62ywr8.fsf@kamboji.qca.qualcomm.com> (sfid-20141208_164153_786463_3FD4B77C)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When a phy is given, print only its regdomain. Otherwise, use the newly
-implement dump functionality to print all regdomains in the system.
+Kalle Valo <kvalo@qca.qualcomm.com> writes:
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- reg.c | 17 ++++++++++++++---
- 1 file changed, 14 insertions(+), 3 deletions(-)
+> here's v4 of Michal's patches to add WMI TLV interface support to
+> ath10k.
 
-diff --git a/reg.c b/reg.c
-index a02c982..4e4c707 100644
---- a/reg.c
-+++ b/reg.c
-@@ -114,7 +114,6 @@ COMMAND(reg, set, "<ISO/IEC 3166-1 alpha2>",
- 	"Notify the kernel about the current regulatory domain.");
- 
- static int print_reg_handler(struct nl_msg *msg, void *arg)
--
- {
- #define PARSE_FLAG(nl_flag, string_value)  do { \
- 		if ((flags & nl_flag)) { \
-@@ -150,6 +149,13 @@ static int print_reg_handler(struct nl_msg *msg, void *arg)
- 		return NL_SKIP;
- 	}
- 
-+	if (tb_msg[NL80211_ATTR_WIPHY])
-+		printf("phy#%d%s\n", nla_get_u32(tb_msg[NL80211_ATTR_WIPHY]),
-+		       tb_msg[NL80211_ATTR_WIPHY_SELF_MANAGED_REG] ?
-+		       " (self-managed)" : "");
-+	else
-+		printf("global\n");
-+
- 	if (tb_msg[NL80211_ATTR_DFS_REGION])
- 		dfs_domain = nla_get_u8(tb_msg[NL80211_ATTR_DFS_REGION]);
- 	else
-@@ -216,7 +222,9 @@ static int print_reg_handler(struct nl_msg *msg, void *arg)
- 
- 		printf("\n");
- 	}
--	return NL_OK;
-+
-+	printf("\n");
-+	return NL_SKIP;
- #undef PARSE_FLAG
- }
- 
-@@ -229,5 +237,8 @@ static int handle_reg_get(struct nl80211_state *state,
- 	nl_cb_set(cb, NL_CB_VALID, NL_CB_CUSTOM, print_reg_handler, NULL);
- 	return 0;
- }
--COMMAND(reg, get, NULL, NL80211_CMD_GET_REG, 0, CIB_NONE, handle_reg_get,
-+COMMAND(reg, get, NULL, NL80211_CMD_GET_REG, NLM_F_DUMP, CIB_NONE,
-+	handle_reg_get,
- 	"Print out the kernel's current regulatory domain information.");
-+COMMAND(reg, get, NULL, NL80211_CMD_GET_REG, 0, CIB_PHY, handle_reg_get,
-+	"Print out the devices' current regulatory domain information.");
+[...]
+
+> Kalle Valo (4):
+>       ath10k: clean up error handling in ath10k_core_probe_fw()
+>       ath10k: create ath10k_core_init_features()
+>       ath10k: add ATH10K_FW_IE_WMI_OP_VERSION
+>       ath10k: set max_num_pending_tx in ath10k_core_init_firmware_features()
+>
+> Michal Kazior (4):
+>       ath10k: implement intermediate event args
+>       ath10k: introduce wmi ops
+>       ath10k: make some wmi functions public
+>       ath10k: implement wmi-tlv backend
+
+All four applied. Thanks Michal.
+
 -- 
-1.9.1
-
+Kalle Valo
