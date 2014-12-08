@@ -1,74 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f54.google.com ([209.85.215.54]:45132 "EHLO
-	mail-la0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750880AbaL3Oai (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:54125 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754493AbaLHU5Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Dec 2014 09:30:38 -0500
-Received: by mail-la0-f54.google.com with SMTP id pv20so12710459lab.13
-        for <linux-wireless@vger.kernel.org>; Tue, 30 Dec 2014 06:30:36 -0800 (PST)
+	Mon, 8 Dec 2014 15:57:24 -0500
+Date: Mon, 8 Dec 2014 15:57:21 -0500
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
+Cc: Ming Lei <ming.lei@canonical.com>, Pavel Machek <pavel@ucw.cz>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Grazvydas Ignotas <notasas@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+	Aaro Koskinen <aaro.koskinen@iki.fi>,
+	Kalle Valo <kvalo@adurom.com>,
+	Sebastian Reichel <sre@ring0.de>,
+	David Gnedt <david.gnedt@davizone.at>
+Subject: Re: wl1251: NVS firmware data
+Message-ID: <20141208205721.GA14895@kroah.com> (sfid-20141208_215746_080407_D3D722BE)
+References: <201411271506.20457@pali>
+ <CACVXFVPOLfDuqc0nLb-zM8vH618DLXy0xtZbUOn5_XvdxRZSDw@mail.gmail.com>
+ <20141208163714.GA31169@kroah.com>
+ <201412081747.30965@pali>
 MIME-Version: 1.0
-In-Reply-To: <CAAk3=uvCn84yBEa+hUoX7Wp799-O-Xy6QJFgNiQwt3rH3PLsWQ@mail.gmail.com>
-References: <CAAk3=uumFdCe69HVPGp0TL6-RDuk58B5qxLxAsTOBCwY43fVkA@mail.gmail.com>
-	<CAAk3=uvCn84yBEa+hUoX7Wp799-O-Xy6QJFgNiQwt3rH3PLsWQ@mail.gmail.com>
-Date: Tue, 30 Dec 2014 16:30:36 +0200
-Message-ID: <CANUX_P2CMvw4wZnpydPprw0=VwKMXBAcONSVyKSTcsnun=OCGQ@mail.gmail.com> (sfid-20141230_153512_463873_630F7047)
-Subject: Re: [iwlwifi] fail to flush all tx queues on kernel 3.17.6
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Gerlof Fokkema <gerlof.fokkema@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <201412081747.30965@pali>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Mon, Dec 08, 2014 at 05:47:30PM +0100, Pali Rohár wrote:
+> On Monday 08 December 2014 17:37:14 Greg Kroah-Hartman wrote:
+> > On Mon, Dec 08, 2014 at 11:18:18PM +0800, Ming Lei wrote:
+> > > On Sat, Dec 6, 2014 at 9:02 PM, Pali Rohár 
+> <pali.rohar@gmail.com> wrote:
+> > > > On Saturday 06 December 2014 13:49:54 Pavel Machek wrote:
+> > > >  /**
+> > > > 
+> > > > + * request_firmware_prefer_user: - prefer usermode helper
+> > > > for loading firmware + * @firmware_p: pointer to firmware
+> > > > image
+> > > > + * @name: name of firmware file
+> > > > + * @device: device for which firmware is being loaded
+> > > > + *
+> > > > + * This function works pretty much like
+> > > > request_firmware(), but it prefer + * usermode helper. If
+> > > > usermode helper fails then it fallback to direct access.
+> > > > + * Usefull for dynamic or model specific firmware data.
+> > > > + **/
+> > > > +int request_firmware_prefer_user(const struct firmware
+> > > > **firmware_p, +                           const char
+> > > > *name, struct device *device) +{
+> > > > +       int ret;
+> > > > +       __module_get(THIS_MODULE);
+> > > > +       ret = _request_firmware(firmware_p, name, device,
+> > > > +                               FW_OPT_UEVENT |
+> > > > FW_OPT_PREFER_USER); +       module_put(THIS_MODULE);
+> > > > +       return ret;
+> > > > +}
+> > > > +EXPORT_SYMBOL_GPL(request_firmware_prefer_user);
+> > > 
+> > > I'd like to introduce request_firmware_user() which only
+> > > requests firmware from user space, and this way is simpler
+> > > and more flexible since we have request_firmware_direct()
+> > > already.
+> > 
+> > Why would a driver care about what program provides the
+> > firmware?  It shouldn't at all, and we want to get rid of the
+> > userspace firmware loader, not encourage drivers to use it
+> > "exclusively" at all.
+> > 
+> 
+> Do not remove it! Without userspace firmware loader it is 
+> impossible to load dynamic firmware files.
 
-Sorry for the delay. This one got lost in my inbox.
+You should not be loading "dynamic" firmware files with the firmware
+interface, as that's not a "firmware" file anymore, it's a "special
+binary file that my driver needs to be created and sent into the
+kernel."
 
-On Sat, Dec 27, 2014 at 4:03 PM, Gerlof Fokkema
-<gerlof.fokkema@gmail.com> wrote:
-> Hi all,
->
-> Since a few weeks I own a laptop with an Intel Wireless 7260 wireless adapter.
-> I first noticed that my connection started dropping when I transferred
-> large files over WiFi.
-> Later on I noticed this problem when the signal strength was low as well.
->
-> I seem to be experiencing the bug described here:
-> https://bugzilla.kernel.org/show_bug.cgi?id=56581
+Use your own custom usermode helper for stuff like this, not the
+firmware interface.  But use a binary sysfs file if you want, that seems
+to make sense for it...
 
-This bug relates to dvm - which is de-facto another driver. We made
-this work around because
-of firmware issues. These issues aren't supposed to happen on devices
-supported by iwlmvm.
-Obviously, they do. You are not the only one to report this issue.
-I will discuss it with our firmware team.
-
->
-> However, if I read the changelogs correctly, this should've been fixed
-> in 3.17.3.
->
-> Atttached you'll find dmesg.log with the error.
-> Excerpt:
-> [  152.941067] iwlwifi 0000:03:00.0: fail to flush all tx fifo queues Q 2
-> [  152.941072] iwlwifi 0000:03:00.0: Current SW read_ptr 209 write_ptr 234
-> [  152.941097] iwl data: 00000000: 00 00 00 00 00 00 00 00 00 00 00 00
-> 00 00 00 00  ................
-> [  152.941111] iwlwifi 0000:03:00.0: FH TRBs(0) = 0x80003000
-> [  152.941125] iwlwifi 0000:03:00.0: FH TRBs(1) = 0xc01100f2
-> [  152.941139] iwlwifi 0000:03:00.0: FH TRBs(2) = 0x00000000
-> When I try reconnecting to WiFi I get dozens more of those errors.
->
-> Can someone point me in the right direction for this?
-> Is there already a bugreport for this on kernel 3.17.6?
-> Should you need more information, I'm happy to supply.
->
-> For now I've reverted to 3.16.4, since it seems to work better...
-
-Probably because 3.16 uses an older firmware (-9.ucode).
-This is also an interesting input - although I heard complaints about
-this very same issue on -9.ucode as well.
-
->
-> Kind regards,
-> Gerlof Fokkema
+greg k-h
