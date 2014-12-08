@@ -1,143 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:39442 "EHLO
-	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750920AbaLEPG7 (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:54141 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752586AbaLHVAU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Dec 2014 10:06:59 -0500
-Date: Fri, 5 Dec 2014 15:06:48 +0000
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-To: Hante Meuleman <meuleman@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>,
-	Will Deacon <will.deacon@arm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Arend Van Spriel <arend@broadcom.com>,
-	David Miller <davem@davemloft.net>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Marek Szyprowski <m.szyprowski@samsung.com>
-Subject: Re: using DMA-API on ARM
-Message-ID: <20141205150648.GT11285@n2100.arm.linux.org.uk> (sfid-20141205_160702_971587_BB2864AC)
-References: <5481794E.4050406@broadcom.com>
- <20141205094507.GP11285@n2100.arm.linux.org.uk>
- <20141205122423.GK1630@arm.com>
- <F51492713EF10846800D8C0ED37A7DCE019016E1@SJEXCHMB15.corp.ad.broadcom.com>
- <20141205132332.GS11285@n2100.arm.linux.org.uk>
+	Mon, 8 Dec 2014 16:00:20 -0500
+Date: Mon, 8 Dec 2014 16:00:18 -0500
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+	Ming Lei <ming.lei@canonical.com>, Pavel Machek <pavel@ucw.cz>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Grazvydas Ignotas <notasas@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+	Aaro Koskinen <aaro.koskinen@iki.fi>,
+	Kalle Valo <kvalo@adurom.com>,
+	Sebastian Reichel <sre@ring0.de>,
+	David Gnedt <david.gnedt@davizone.at>
+Subject: Re: wl1251: NVS firmware data
+Message-ID: <20141208210018.GB14895@kroah.com> (sfid-20141208_220042_461004_2D92B882)
+References: <201411271506.20457@pali>
+ <201412081811.46943@pali>
+ <30072B9E-2495-4F90-AC91-9C0D7E08F44E@holtmann.org>
+ <201412082015.18501@pali>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20141205132332.GS11285@n2100.arm.linux.org.uk>
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <201412082015.18501@pali>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I've been doing more digging into the current DMA code, and I'm dismayed
-to see that there's new bugs in it...
+On Mon, Dec 08, 2014 at 08:15:18PM +0100, Pali Rohár wrote:
+> On Nokia N900 NVS data are generated on-the-fly from some bytes 
+> from CAL (/dev/mtd1), from state of cellular network and from 
+> some other regulation settings.
 
-commit 513510ddba9650fc7da456eefeb0ead7632324f6
-Author: Laura Abbott <lauraa@codeaurora.org>
-Date:   Thu Oct 9 15:26:40 2014 -0700
+When is this "generated"?  At boot time?  Or by the firmware loader
+program you have hooked into being called by the kernel at "load the
+firmware now please" call time?
 
-    common: dma-mapping: introduce common remapping functions
+> So I think that files stored in linux-firmware.git tree (which 
+> are also installed into /lib/firmware/) should be loaded with 
+> request_firmware function. Or not? Do you think something else? 
+> What other developers think?
+> 
+> I'm against kernel driver for CAL (/dev/mtd1) for more reasons:
+> 
+> 1) we have userspace open source code, but licensed under GPLv3. 
+> And until kernel change license, we cannot include it.
 
-This uses map_vm_area() to achieve the remapping of pages allocated inside
-dma_alloc_coherent().  dma_alloc_coherent() is documented in a rather
-round-about way in Documentation/DMA-API.txt:
+You can change the license of your code if you want to, don't make this
+type of nonsense argument.
 
-| Part Ia - Using large DMA-coherent buffers
-| ------------------------------------------
-| 
-| void *
-| dma_alloc_coherent(struct device *dev, size_t size,
-|                              dma_addr_t *dma_handle, gfp_t flag)
-| 
-| void
-| dma_free_coherent(struct device *dev, size_t size, void *cpu_addr,
-|                            dma_addr_t dma_handle)
-| 
-| Free a region of consistent memory you previously allocated.  dev,
-| size and dma_handle must all be the same as those passed into
-| dma_alloc_coherent().  cpu_addr must be the virtual address returned by
-| the dma_alloc_coherent().
-| 
-| Note that unlike their sibling allocation calls, these routines
-| may only be called with IRQs enabled.
+> 2) NVS data are (probably) not in one place, plus they depends on 
+> something other.
 
-Note that very last paragraph.  What this says is that it is explicitly
-permitted to call dma_alloc_coherent() with IRQs disabled.
+What is "something other"?  Where are they located?  Why would the
+firmware interface know or care anything about this?
 
-Now, the question is: is it safe to call map_vm_area() with IRQs disabled?
-Well, map_vm_area() calls pud_alloc(), pmd_alloc(), and pte_alloc_kernel().
-These functions all call into the kernel memory allocator *without*
-GFP_ATOMIC - in other words, these allocations are permitted to sleep.
-Except, IRQs are off, so it's a bug to call these functions from
-dma_alloc_coherent().
+> 3) If manufacture XYZ create new device with its own storage 
+> format of calibration data this means that correct solution for 
+> XYZ is also to implement new kernel fs driver for its own format. 
 
-Now, if we look at the previous code, it used ioremap_page_range().  This
-has the same problem: it needs to allocate page tables, and it can only
-do it via functions which may sleep.
+Yes, as it is doing it's own custom thing, why overload an existing
+interface to do something it was never designed to do?
 
-If we go back even further, we find that the use of ioremap_page_range()
-in dma_alloc_coherent() was introduced by:
+> Do you really want to have in kernel all those drivers for all 
+> different (proprietary) storage formats?
 
-commit e9da6e9905e639b0f842a244bc770b48ad0523e9
-Author: Marek Szyprowski <m.szyprowski@samsung.com>
-Date:   Mon Jul 30 09:11:33 2012 +0200
+Yes, we are not afraid of lots of different drivers.  That is not even a
+valid argument, you know better than this :)
 
-    ARM: dma-mapping: remove custom consistent dma region
+> 4) It does not help us with existence of generic file 
+> /lib/firmware/ti-connectivity/wl1251-nvs.bin which comes from 
+> linux-firmware.git tree.
 
-which is the commit which removed my pre-allocated page tables for the
-DMA re-mapping region - code which I explicitly had to specifically
-avoid this issue.
+Again, not an issue.  If you don't want that file in the repo, ask for
+it to be removed, and it will be, just send a patch to do it.
 
-Obviously, this isn't a big problem, because people haven't reported
-that they've hit any of the might_sleep() checks in the memory
-allocators, which I think is our only saving grace - but it's still
-wrong to the specified calling conditions of the DMA API.
-
-If the problem which you (Broadcom) are suffering from is down to the
-issue I suspect (that being having mappings with different cache
-attributes) then I'm not sure that there's anything we can realistically
-do about that.  There's a number of issues which make it hard to see a
-way forward.
-
-One example is that if we allocate memory, we need to be able to change
-(or remove) the cacheable mappings associated with that memory.  We'd
-need to touch the L1 page table, either to change the attributes of the
-section mapping, or to convert the section mapping to a L2 page table
-pointer.  We need to change the attributes in a break-flush-make sequence
-to avoid TLB conflicts.
-
-However, those mappings may be shared between other CPUs in a SMP system.
-So, we would need to flush the TLBs on other CPUs before we could proceed
-to create replacement mappings.  That means something like stop_machine()
-or sending (and waiting for completion) of an IPI to the other CPUs.  That
-is totally impractical due to dma_alloc_coherent() being allowed to be
-called with IRQs off.
-
-I'll continue to think about it, but I don't see many possibilities to
-satisfy dma_alloc_coherent()'s documented requirements other than by
-pre-allocating a chunk of memory at boot time to be served out as
-DMA-able memory for these horrid cases.
-
-I don't see much point in keeping the map_vm_area() approach on ARM
-even if we did fallback - if we're re-establishing mappings for
-the surrounding pages in lowmem, we might as well insert appropriately
-attributed mappings for the DMA memory as well.
-
-On the face of it, it would be better to allocate one section at a
-time, but my unfortunate experience is that 3.x kernels are a /lot/
-more trigger happy with the OOM killer, and the chances of being able
-to allocate 1MB of memory at a go after the system has been running
-for a while is near-on impossible.  So I don't think that's a reality.
-
-Even if we did break up section mappings in this way, it would also
-mean that over time, we'd end up with much of lowmem mapped using 4K
-page table entries, which would place significant pressure on the MMU
-TLBs.
-
-So, we might just be far better off pre-allocating enough "DMA
-coherent" memory at boot time and be done with it.  Those who want
-it dynamic can use CMA instead.
-
--- 
-FTTC broadband for 0.8mile line: currently at 9.5Mbps down 400kbps up
-according to speedtest.net.
+greg k-h
