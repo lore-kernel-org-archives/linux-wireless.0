@@ -1,46 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:57995 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752517AbaLKTMy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Dec 2014 14:12:54 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-	(Exim 4.84)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1Xz9AQ-0007GF-7R
-	for linux-wireless@vger.kernel.org; Thu, 11 Dec 2014 20:12:50 +0100
-Message-ID: <1418325168.1947.3.camel@sipsolutions.net> (sfid-20141211_201257_636536_44C3CF3F)
-Subject: Re: wireless workshop - was: Netdev 0.1 Call for Proposals
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 11 Dec 2014 20:12:48 +0100
-In-Reply-To: <1417595097.2640.3.camel@sipsolutions.net> (sfid-20141203_092515_439169_C2643555)
-References: <20141203022815.GM4612@toccata2.tricolour.ca>
-	 (sfid-20141203_033529_861866_D2E3478C) <1417595097.2640.3.camel@sipsolutions.net>
-	 (sfid-20141203_092515_439169_C2643555)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:57630 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753091AbaLHVLZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Dec 2014 16:11:25 -0500
+From: Pali =?utf-8?q?Roh=C3=A1r?= <pali.rohar@gmail.com>
+To: "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>
+Subject: Re: wl1251: NVS firmware data
+Date: Mon, 8 Dec 2014 22:11:22 +0100
+Cc: Ming Lei <ming.lei@canonical.com>, Pavel Machek <pavel@ucw.cz>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Grazvydas Ignotas <notasas@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+	Aaro Koskinen <aaro.koskinen@iki.fi>,
+	Kalle Valo <kvalo@adurom.com>,
+	Sebastian Reichel <sre@ring0.de>,
+	David Gnedt <david.gnedt@davizone.at>
+References: <201411271506.20457@pali> <201412081747.30965@pali> <20141208205721.GA14895@kroah.com>
+In-Reply-To: <20141208205721.GA14895@kroah.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart3309978.raKky74fON";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <201412082211.22352@pali> (sfid-20141208_221147_873904_837F2D4A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-12-03 at 09:24 +0100, Johannes Berg wrote:
+--nextPart3309978.raKky74fON
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 
-> FWIW, we're planning a wireless summit as a workshop here, which should
-> give us a little more breathing room than e.g. the 3-hour slot at LPC.
-> I'll put up the wiki page and other things and start working on an
-> agenda when I'm back home next week.
+On Monday 08 December 2014 21:57:21 Greg Kroah-Hartman wrote:
+> On Mon, Dec 08, 2014 at 05:47:30PM +0100, Pali Roh=C3=A1r wrote:
+> > On Monday 08 December 2014 17:37:14 Greg Kroah-Hartman wrote:
+> > > On Mon, Dec 08, 2014 at 11:18:18PM +0800, Ming Lei wrote:
+> > > > On Sat, Dec 6, 2014 at 9:02 PM, Pali Roh=C3=A1r
+> >=20
+> > <pali.rohar@gmail.com> wrote:
+> > > > > On Saturday 06 December 2014 13:49:54 Pavel Machek=20
+wrote:
+> > > > >  /**
+> > > > >=20
+> > > > > + * request_firmware_prefer_user: - prefer usermode
+> > > > > helper for loading firmware + * @firmware_p: pointer
+> > > > > to firmware image
+> > > > > + * @name: name of firmware file
+> > > > > + * @device: device for which firmware is being loaded
+> > > > > + *
+> > > > > + * This function works pretty much like
+> > > > > request_firmware(), but it prefer + * usermode helper.
+> > > > > If usermode helper fails then it fallback to direct
+> > > > > access. + * Usefull for dynamic or model specific
+> > > > > firmware data. + **/
+> > > > > +int request_firmware_prefer_user(const struct
+> > > > > firmware **firmware_p, +                         =20
+> > > > > const char *name, struct device *device) +{
+> > > > > +       int ret;
+> > > > > +       __module_get(THIS_MODULE);
+> > > > > +       ret =3D _request_firmware(firmware_p, name,
+> > > > > device, +                               FW_OPT_UEVENT
+> > > > > | FW_OPT_PREFER_USER); +     =20
+> > > > > module_put(THIS_MODULE); +       return ret;
+> > > > > +}
+> > > > > +EXPORT_SYMBOL_GPL(request_firmware_prefer_user);
+> > > >=20
+> > > > I'd like to introduce request_firmware_user() which only
+> > > > requests firmware from user space, and this way is
+> > > > simpler and more flexible since we have
+> > > > request_firmware_direct() already.
+> > >=20
+> > > Why would a driver care about what program provides the
+> > > firmware?  It shouldn't at all, and we want to get rid of
+> > > the userspace firmware loader, not encourage drivers to
+> > > use it "exclusively" at all.
+> >=20
+> > Do not remove it! Without userspace firmware loader it is
+> > impossible to load dynamic firmware files.
+>=20
+> You should not be loading "dynamic" firmware files with the
+> firmware interface, as that's not a "firmware" file anymore,
+> it's a "special binary file that my driver needs to be
+> created and sent into the kernel."
+>=20
+> Use your own custom usermode helper for stuff like this, not
+> the firmware interface.  But use a binary sysfs file if you
+> want, that seems to make sense for it...
+>=20
+> greg k-h
 
-I've put up a very very very early version of the wiki page here:
+Nokia for this problem invented its own netlink interface into=20
+wl1251 driver. But because it was specific for N900 device it was=20
+rejected for inclusion into mainline kernel.
 
-http://wireless.kernel.org/en/developers/Summits/Ottawa-2015
+=2D-=20
+Pali Roh=C3=A1r
+pali.rohar@gmail.com
 
-Please submit topics for the workshop.
+--nextPart3309978.raKky74fON
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
-> Wireless-related submissions for the remainder of the conference are
-> also very welcome and encouraged!
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
 
-These would be papers for the remainder of the conference, separate from
-the discussion topics for the workshop and for the bigger conference
-audience.
+iEYEABECAAYFAlSGE/oACgkQi/DJPQPkQ1Li4ACfUYeNAfILh+bSTeMLUeaNxmoP
+lBMAmgNKHgHgFHFsXaApXxS0uSzMPEJz
+=85FL
+-----END PGP SIGNATURE-----
 
-johannes
-
+--nextPart3309978.raKky74fON--
