@@ -1,95 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:54956 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752960AbaLHPWa (ORCPT
+Received: from mout.kundenserver.de ([212.227.17.13]:54637 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752477AbaLHPCn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Dec 2014 10:22:30 -0500
-From: Pali =?utf-8?q?Roh=C3=A1r?= <pali.rohar@gmail.com>
-To: Ming Lei <ming.lei@canonical.com>
-Subject: Re: wl1251: NVS firmware data
-Date: Mon, 8 Dec 2014 16:22:25 +0100
-Cc: Pavel Machek <pavel@ucw.cz>,
-	"Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Grazvydas Ignotas <notasas@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-	Aaro Koskinen <aaro.koskinen@iki.fi>,
-	Kalle Valo <kvalo@adurom.com>,
-	Sebastian Reichel <sre@ring0.de>,
-	David Gnedt <david.gnedt@davizone.at>
-References: <201411271506.20457@pali> <201412061402.21514@pali> <CACVXFVPOLfDuqc0nLb-zM8vH618DLXy0xtZbUOn5_XvdxRZSDw@mail.gmail.com>
-In-Reply-To: <CACVXFVPOLfDuqc0nLb-zM8vH618DLXy0xtZbUOn5_XvdxRZSDw@mail.gmail.com>
+	Mon, 8 Dec 2014 10:02:43 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Hante Meuleman <meuleman@broadcom.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>,
+	Will Deacon <will.deacon@arm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Arend Van Spriel <arend@broadcom.com>,
+	David Miller <davem@davemloft.net>,
+	Marek Szyprowski <m.szyprowski@samsung.com>, hauke@hauke-m.de
+Subject: Re: using DMA-API on ARM
+Date: Mon, 08 Dec 2014 16:01:32 +0100
+Message-ID: <2863746.4sUSEYqahB@wuerfel> (sfid-20141208_160300_887175_D5381E2B)
+In-Reply-To: <F51492713EF10846800D8C0ED37A7DCE01902076@SJEXCHMB15.corp.ad.broadcom.com>
+References: <5481794E.4050406@broadcom.com> <F51492713EF10846800D8C0ED37A7DCE01901765@SJEXCHMB15.corp.ad.broadcom.com> <F51492713EF10846800D8C0ED37A7DCE01902076@SJEXCHMB15.corp.ad.broadcom.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart6013142.Y7C6ce8dYc";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <201412081622.25541@pali> (sfid-20141208_162252_387102_057A1D0A)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart6013142.Y7C6ce8dYc
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+On Monday 08 December 2014 13:47:38 Hante Meuleman wrote:
+> Still using outlook, but will limit the line length, I hope that works for the
+> moment. Attached is a log with the requested information, it is a little
+> bit non-standard though. The dump code from the mm was copied in
+> the driver and called from there, mapping the prints back to our local
+> printf, but it should produce the same. I did this because I didn't realize
+> the table is static.
+> 
+> Some background on the test setup: I'm using a Broadcom reference 
+> design AP platform with an BRCM 4708 host SOC.
 
-On Monday 08 December 2014 16:18:18 Ming Lei wrote:
-> On Sat, Dec 6, 2014 at 9:02 PM, Pali Roh=C3=A1r=20
-<pali.rohar@gmail.com> wrote:
-> > On Saturday 06 December 2014 13:49:54 Pavel Machek wrote:
-> >  /**
-> >=20
-> > + * request_firmware_prefer_user: - prefer usermode helper
-> > for loading firmware + * @firmware_p: pointer to firmware
-> > image
-> > + * @name: name of firmware file
-> > + * @device: device for which firmware is being loaded
-> > + *
-> > + * This function works pretty much like request_firmware(),
-> > but it prefer + * usermode helper. If usermode helper fails
-> > then it fallback to direct access. + * Usefull for dynamic
-> > or model specific firmware data. + **/
-> > +int request_firmware_prefer_user(const struct firmware
-> > **firmware_p, +                           const char *name,
-> > struct device *device) +{
-> > +       int ret;
-> > +       __module_get(THIS_MODULE);
-> > +       ret =3D _request_firmware(firmware_p, name, device,
-> > +                               FW_OPT_UEVENT |
-> > FW_OPT_PREFER_USER); +       module_put(THIS_MODULE);
-> > +       return ret;
-> > +}
-> > +EXPORT_SYMBOL_GPL(request_firmware_prefer_user);
->=20
-> I'd like to introduce request_firmware_user() which only
-> requests firmware from user space, and this way is simpler
-> and more flexible since we have request_firmware_direct()
-> already.
->=20
-> Thanks,
-> Ming Lei
+I think you are using the wrong dtb file, the log says this is
+a "Buffalo WZR-1750DHP", not the reference design.
 
-Ming, for wl1251 NVS data we need to load use usermode helper and=20
-fallback to direct load. So I think it is better to handle this=20
-request in firmware code and not in driver.
+> For the AP router 
+> platform the opensource packet OpenWRT was used. Some small
+> modifications were made to get it to work on our HW. Only one core
+> is enabled for the moment (no time to figure out how to enable the
+> other one). Openwrt was configured to use kernel 3.18-rc2 and 
+> the brcmfmac of the compat-wireless code was updated with our 
+> latest code (minor patches, which have been submitted already). 
+> The device used is 43602 pcie device. Some modifications to the build
+> system were made to enable PCIE. The test is to connect with a 
+> client to the AP and run iperf (TCP). The test can run for many hours
+> without a problem, but sometimes fails very quickly.
 
-=2D-=20
-Pali Roh=C3=A1r
-pali.rohar@gmail.com
+The bcm4708 platform is maintained by Hauke Mehrtens, adding him to Cc.
 
---nextPart6013142.Y7C6ce8dYc
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+In your log, I see this message:
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
+[    0.000000] PL310 OF: cache setting yield illegal associativity
+[    0.000000] PL310 OF: -1069781724 calculated, only 8 and 16 legal
+[    0.000000] L2C-310 enabling early BRESP for Cortex-A9
+[    0.000000] L2C-310 full line of zeros enabled for Cortex-A9
+[    0.000000] L2C-310 dynamic clock gating enabled, standby mode enabled
+[    0.000000] L2C-310 cache controller enabled, 16 ways, 256 kB
+[    0.000000] L2C-310: CACHE_ID 0x410000c8, AUX_CTRL 0x4e130001
 
-iEYEABECAAYFAlSFwjEACgkQi/DJPQPkQ1LiOwCfYDvcaBsb2UkGRzsc6RY/9zSb
-K5cAnj47jXkv66tvdcHMuFCFs2a0Itc2
-=mV9Q
------END PGP SIGNATURE-----
+Evidently the cache controller information in DT is incorrect and
+the setup may be wrong as a consequence, which may explain cache
+coherency problems.
 
---nextPart6013142.Y7C6ce8dYc--
+Can you verify that the AUX_CTRL value is the same one you see
+in a working kernel?
+
+> The log: first the ring allocation info is printed. Starting at
+> 16.124847, ring 2, 3 and 4 are rings used for device to host. In this
+> log the failure is on a read of ring 3. Ring 3 is 1024 entries of each
+> 16 bytes. The next thing printed is the kernel page tables. Then some 
+> OpenWRT info and the logging of part of the connection setup. Then at 
+> 1780.130752 the logging of the failure starts. The sequence number is 
+> modulo 253 with ring size of 1024 matches an "old" entry (read 40, 
+> expected 52). Then the different pointers are printed followed by 
+> the kernel page table. The code does then a cache invalidate on the 
+> dma_handle and the next read the sequence number is correct.
+
+How do you invalidate the cache? A dma_handle is of type dma_addr_t
+and we don't define an operation for that, nor does it make sense
+on an allocation from dma_alloc_coherent(). What happens if you
+take out the invalidate?
+
+Can you post the patch that you use (both platform and driver) relative
+to the snapshot of the the mainline kernel you are basing on?
+
+	Arnd
+
