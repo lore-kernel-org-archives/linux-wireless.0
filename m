@@ -1,126 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:35513 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932324AbaLJPyN (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:54077 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750908AbaLHRFp convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Dec 2014 10:54:13 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/4] mac80211: Move IEEE80211_TX_CTL_PS_RESPONSE
-Date: Wed, 10 Dec 2014 21:26:10 +0530
-Message-Id: <1418226973-13779-1-git-send-email-sujith@msujith.org> (sfid-20141210_165421_248226_3D261803)
+	Mon, 8 Dec 2014 12:05:45 -0500
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 8.1 \(1993\))
+Subject: Re: wl1251: NVS firmware data
+From: Marcel Holtmann <marcel@holtmann.org>
+In-Reply-To: <201412081747.30965@pali>
+Date: Mon, 8 Dec 2014 18:05:37 +0100
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Ming Lei <ming.lei@canonical.com>, Pavel Machek <pavel@ucw.cz>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Grazvydas Ignotas <notasas@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+	Aaro Koskinen <aaro.koskinen@iki.fi>,
+	Kalle Valo <kvalo@adurom.com>,
+	Sebastian Reichel <sre@ring0.de>,
+	David Gnedt <david.gnedt@davizone.at>
+Message-Id: <E5F3BB54-6365-4856-A231-A5FEDAEA217F@holtmann.org> (sfid-20141208_180608_419719_EF8F562C)
+References: <201411271506.20457@pali> <CACVXFVPOLfDuqc0nLb-zM8vH618DLXy0xtZbUOn5_XvdxRZSDw@mail.gmail.com> <20141208163714.GA31169@kroah.com> <201412081747.30965@pali>
+To: =?utf-8?Q?Pali_Roh=C3=A1r?= <pali.rohar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Hi Pali,
 
-Move IEEE80211_TX_CTL_PS_RESPONSE to info->control.flags since
-this is used only in the TX path (by ath9k). This frees up
-a bit which can be used for other purposes.
+>>>> On Saturday 06 December 2014 13:49:54 Pavel Machek wrote:
+>>>> /**
+>>>> 
+>>>> + * request_firmware_prefer_user: - prefer usermode helper
+>>>> for loading firmware + * @firmware_p: pointer to firmware
+>>>> image
+>>>> + * @name: name of firmware file
+>>>> + * @device: device for which firmware is being loaded
+>>>> + *
+>>>> + * This function works pretty much like
+>>>> request_firmware(), but it prefer + * usermode helper. If
+>>>> usermode helper fails then it fallback to direct access.
+>>>> + * Usefull for dynamic or model specific firmware data.
+>>>> + **/
+>>>> +int request_firmware_prefer_user(const struct firmware
+>>>> **firmware_p, +                           const char
+>>>> *name, struct device *device) +{
+>>>> +       int ret;
+>>>> +       __module_get(THIS_MODULE);
+>>>> +       ret = _request_firmware(firmware_p, name, device,
+>>>> +                               FW_OPT_UEVENT |
+>>>> FW_OPT_PREFER_USER); +       module_put(THIS_MODULE);
+>>>> +       return ret;
+>>>> +}
+>>>> +EXPORT_SYMBOL_GPL(request_firmware_prefer_user);
+>>> 
+>>> I'd like to introduce request_firmware_user() which only
+>>> requests firmware from user space, and this way is simpler
+>>> and more flexible since we have request_firmware_direct()
+>>> already.
+>> 
+>> Why would a driver care about what program provides the
+>> firmware?  It shouldn't at all, and we want to get rid of the
+>> userspace firmware loader, not encourage drivers to use it
+>> "exclusively" at all.
+>> 
+> 
+> Do not remove it! Without userspace firmware loader it is 
+> impossible to load dynamic firmware files.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/xmit.c | 6 ++++--
- include/net/mac80211.h                | 6 +++---
- net/mac80211/sta_info.c               | 7 ++++---
- 3 files changed, 11 insertions(+), 8 deletions(-)
+why is this dynamic in the first place. It does not sound like dynamic data to me at all. This is like the WiFi MAC address(es) or Bluetooth BD_ADDR. They are all static information. The only difference is that they are on the host accessibly filesystem or storage and not on the device itself.
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index e9bd02c..4caee66 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -2259,7 +2259,7 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	struct ath_txq *txq = txctl->txq;
- 	struct ath_atx_tid *tid = NULL;
- 	struct ath_buf *bf;
--	bool queue, skip_uapsd = false;
-+	bool queue, skip_uapsd = false, ps_resp;
- 	int q, ret;
- 
- 	if (vif)
-@@ -2268,6 +2268,8 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	if (info->flags & IEEE80211_TX_CTL_TX_OFFCHAN)
- 		txctl->force_channel = true;
- 
-+	ps_resp = !!(info->control.flags & IEEE80211_TX_CTRL_PS_RESPONSE);
-+
- 	ret = ath_tx_prepare(hw, skb, txctl);
- 	if (ret)
- 	    return ret;
-@@ -2310,7 +2312,7 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	if (txctl->an && queue)
- 		tid = ath_get_skb_tid(sc, txctl->an, skb);
- 
--	if (!skip_uapsd && (info->flags & IEEE80211_TX_CTL_PS_RESPONSE)) {
-+	if (!skip_uapsd && ps_resp) {
- 		ath_txq_unlock(sc, txq);
- 		txq = sc->tx.uapsdq;
- 		ath_txq_lock(sc, txq);
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 58d719d..b36e60d 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -505,8 +505,6 @@ struct ieee80211_bss_conf {
-  * @IEEE80211_TX_CTL_DONTFRAG: Don't fragment this packet even if it
-  *	would be fragmented by size (this is optional, only used for
-  *	monitor injection).
-- * @IEEE80211_TX_CTL_PS_RESPONSE: This frame is a response to a poll
-- *	frame (PS-Poll or uAPSD).
-  *
-  * Note: If you have to add new flags to the enumeration, then don't
-  *	 forget to update %IEEE80211_TX_TEMPORARY_FLAGS when necessary.
-@@ -542,7 +540,6 @@ enum mac80211_tx_info_flags {
- 	IEEE80211_TX_STATUS_EOSP		= BIT(28),
- 	IEEE80211_TX_CTL_USE_MINRATE		= BIT(29),
- 	IEEE80211_TX_CTL_DONTFRAG		= BIT(30),
--	IEEE80211_TX_CTL_PS_RESPONSE		= BIT(31),
- };
- 
- #define IEEE80211_TX_CTL_STBC_SHIFT		23
-@@ -552,11 +549,14 @@ enum mac80211_tx_info_flags {
-  *
-  * @IEEE80211_TX_CTRL_PORT_CTRL_PROTO: this frame is a port control
-  *	protocol frame (e.g. EAP)
-+ * @IEEE80211_TX_CTRL_PS_RESPONSE: This frame is a response to a poll
-+ *	frame (PS-Poll or uAPSD).
-  *
-  * These flags are used in tx_info->control.flags.
-  */
- enum mac80211_tx_control_flags {
- 	IEEE80211_TX_CTRL_PORT_CTRL_PROTO	= BIT(0),
-+	IEEE80211_TX_CTRL_PS_RESPONSE		= BIT(1),
- };
- 
- /*
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index a42f5b2..db8b07a 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -1243,10 +1243,11 @@ static void ieee80211_send_null_response(struct ieee80211_sub_if_data *sdata,
- 	 * ends the poll/service period.
- 	 */
- 	info->flags |= IEEE80211_TX_CTL_NO_PS_BUFFER |
--		       IEEE80211_TX_CTL_PS_RESPONSE |
- 		       IEEE80211_TX_STATUS_EOSP |
- 		       IEEE80211_TX_CTL_REQ_TX_STATUS;
- 
-+	info->control.flags |= IEEE80211_TX_CTRL_PS_RESPONSE;
-+
- 	if (call_driver)
- 		drv_allow_buffered_frames(local, sta, BIT(tid), 1,
- 					  reason, false);
-@@ -1395,8 +1396,8 @@ ieee80211_sta_ps_deliver_response(struct sta_info *sta,
- 			 * STA may still remain is PS mode after this frame
- 			 * exchange.
- 			 */
--			info->flags |= IEEE80211_TX_CTL_NO_PS_BUFFER |
--				       IEEE80211_TX_CTL_PS_RESPONSE;
-+			info->flags |= IEEE80211_TX_CTL_NO_PS_BUFFER;
-+			info->control.flags |= IEEE80211_TX_CTRL_PS_RESPONSE;
- 
- 			/*
- 			 * Use MoreData flag to indicate whether there are
--- 
-2.1.3
+To be honest, for Bluetooth we solved this now. If the device is missing key information like the calibration data or BD_ADDR, then it comes up unconfigured. A userspace process can then go and load the right data into it and then the device becomes available as Bluetooth device.
+
+Trying to use request_firmware to load some random data and insist on going through userspace helper for that sounds crazy to me. Especially since we are trying hard to get away from the userspace loader. Forcing to keep it for new stuff sounds backwards to me.
+
+With the special Nokia partition in mind, why hasn't this been turned into a mountable filesystem or into a driver/subsystem that can access the data direct from the kernel. I advocated for this some time ago. Maybe there should be a special subsystem for access to these factory persistent information that drivers then just can access. I seem to remember that some systems provide these via ACPI. Why does the ARM platform has to be special here?
+
+And the problem of getting Ethernet and WiFi MAC address and Bluetooth BD_ADDR comes up many many times. Why not have something generic here. And don't tell me request_firmware is that generic solution ;)
+
+Regards
+
+Marcel
 
