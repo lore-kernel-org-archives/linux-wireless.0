@@ -1,43 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f179.google.com ([209.85.223.179]:36399 "EHLO
-	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751096AbaLZV0E convert rfc822-to-8bit (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:52961 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754716AbaLHPSW convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Dec 2014 16:26:04 -0500
+	Mon, 8 Dec 2014 10:18:22 -0500
 MIME-Version: 1.0
-In-Reply-To: <1419618798-9275-1-git-send-email-oscar.forner.martinez@gmail.com>
-References: <1419618798-9275-1-git-send-email-oscar.forner.martinez@gmail.com>
-Date: Fri, 26 Dec 2014 22:26:03 +0100
-Message-ID: <CACna6rx4CPwzH0K9R3AtdXN8GbRcu-6VqXue7fFPh770WhR_aw@mail.gmail.com> (sfid-20141226_222608_491023_CB69FC5E)
-Subject: Re: [PATCH v2] bcma: Fix three coding style issues, more than 80
- characters per line
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Oscar Forner Martinez <oscar.forner.martinez@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+In-Reply-To: <201412061402.21514@pali>
+References: <201411271506.20457@pali>
+	<20141127155840.GC24149@kroah.com>
+	<20141206124954.GB17289@amd>
+	<201412061402.21514@pali>
+Date: Mon, 8 Dec 2014 23:18:18 +0800
+Message-ID: <CACVXFVPOLfDuqc0nLb-zM8vH618DLXy0xtZbUOn5_XvdxRZSDw@mail.gmail.com> (sfid-20141208_161849_136833_036ABEDF)
+Subject: Re: wl1251: NVS firmware data
+From: Ming Lei <ming.lei@canonical.com>
+To: =?UTF-8?Q?Pali_Roh=C3=A1r?= <pali.rohar@gmail.com>
+Cc: Pavel Machek <pavel@ucw.cz>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Grazvydas Ignotas <notasas@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+	Aaro Koskinen <aaro.koskinen@iki.fi>,
+	Kalle Valo <kvalo@adurom.com>,
+	Sebastian Reichel <sre@ring0.de>,
+	David Gnedt <david.gnedt@davizone.at>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 26 December 2014 at 19:33, Oscar Forner Martinez
-<oscar.forner.martinez@gmail.com> wrote:
-> -                       /* 4706 CC and PMU watchdogs are clocked at 1/4 of ALP clock */
-> +                       /* 4706 CC and PMU watchdogs are clocked
-> +                        * at 1/4 of ALP clock
-> +                        */
+On Sat, Dec 6, 2014 at 9:02 PM, Pali Rohár <pali.rohar@gmail.com> wrote:
+> On Saturday 06 December 2014 13:49:54 Pavel Machek wrote:
 
-Your editor seems to be treating tabs incorrectly. Like more than 8
-chars. After your patch "clocked" ends after  64 chars. You should try
-to use up to 80 chars.
+>
+>  /**
+> + * request_firmware_prefer_user: - prefer usermode helper for loading firmware
+> + * @firmware_p: pointer to firmware image
+> + * @name: name of firmware file
+> + * @device: device for which firmware is being loaded
+> + *
+> + * This function works pretty much like request_firmware(), but it prefer
+> + * usermode helper. If usermode helper fails then it fallback to direct access.
+> + * Usefull for dynamic or model specific firmware data.
+> + **/
+> +int request_firmware_prefer_user(const struct firmware **firmware_p,
+> +                           const char *name, struct device *device)
+> +{
+> +       int ret;
+> +       __module_get(THIS_MODULE);
+> +       ret = _request_firmware(firmware_p, name, device,
+> +                               FW_OPT_UEVENT | FW_OPT_PREFER_USER);
+> +       module_put(THIS_MODULE);
+> +       return ret;
+> +}
+> +EXPORT_SYMBOL_GPL(request_firmware_prefer_user);
 
+I'd like to introduce request_firmware_user() which only requests
+firmware from user space, and this way is simpler and more flexible
+since we have request_firmware_direct() already.
 
-> -               bcma_err(cc->core->bus, "serial not supported on this device ccrev: 0x%x\n", ccrev);
-> +               bcma_err(cc->core->bus,
-> +                        "serial not supported on this device ccrev: 0x%x\n",
-> +                        ccrev);
-
-I think you ignored my comment to V1, see it again please ;) It was
-about putting pointer and string in one line.
-
--- 
-Rafał
+Thanks,
+Ming Lei
