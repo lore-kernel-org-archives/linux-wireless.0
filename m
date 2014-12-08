@@ -1,52 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:8921 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933271AbaLBH6C (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Dec 2014 02:58:02 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: mcgrof@suse.com, linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	<stable@vger.kernel.org>
-Subject: [PATCH] cfg80211: don't WARN about two consecutive Country IE hint
-Date: Tue,  2 Dec 2014 09:53:25 +0200
-Message-Id: <1417506805-20361-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20141202_085842_898186_BB549435)
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:54956 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752960AbaLHPWa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Dec 2014 10:22:30 -0500
+From: Pali =?utf-8?q?Roh=C3=A1r?= <pali.rohar@gmail.com>
+To: Ming Lei <ming.lei@canonical.com>
+Subject: Re: wl1251: NVS firmware data
+Date: Mon, 8 Dec 2014 16:22:25 +0100
+Cc: Pavel Machek <pavel@ucw.cz>,
+	"Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Grazvydas Ignotas <notasas@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+	Aaro Koskinen <aaro.koskinen@iki.fi>,
+	Kalle Valo <kvalo@adurom.com>,
+	Sebastian Reichel <sre@ring0.de>,
+	David Gnedt <david.gnedt@davizone.at>
+References: <201411271506.20457@pali> <201412061402.21514@pali> <CACVXFVPOLfDuqc0nLb-zM8vH618DLXy0xtZbUOn5_XvdxRZSDw@mail.gmail.com>
+In-Reply-To: <CACVXFVPOLfDuqc0nLb-zM8vH618DLXy0xtZbUOn5_XvdxRZSDw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart6013142.Y7C6ce8dYc";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <201412081622.25541@pali> (sfid-20141208_162252_387102_057A1D0A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This can happen and there is no point in added more
-detection code lower in the stack. Catching these in one
-single point (cfg80211) is enough. Stop WARNING about this
-case.
+--nextPart6013142.Y7C6ce8dYc
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 
-This fixes:
-https://bugzilla.kernel.org/show_bug.cgi?id=89001
+On Monday 08 December 2014 16:18:18 Ming Lei wrote:
+> On Sat, Dec 6, 2014 at 9:02 PM, Pali Roh=C3=A1r=20
+<pali.rohar@gmail.com> wrote:
+> > On Saturday 06 December 2014 13:49:54 Pavel Machek wrote:
+> >  /**
+> >=20
+> > + * request_firmware_prefer_user: - prefer usermode helper
+> > for loading firmware + * @firmware_p: pointer to firmware
+> > image
+> > + * @name: name of firmware file
+> > + * @device: device for which firmware is being loaded
+> > + *
+> > + * This function works pretty much like request_firmware(),
+> > but it prefer + * usermode helper. If usermode helper fails
+> > then it fallback to direct access. + * Usefull for dynamic
+> > or model specific firmware data. + **/
+> > +int request_firmware_prefer_user(const struct firmware
+> > **firmware_p, +                           const char *name,
+> > struct device *device) +{
+> > +       int ret;
+> > +       __module_get(THIS_MODULE);
+> > +       ret =3D _request_firmware(firmware_p, name, device,
+> > +                               FW_OPT_UEVENT |
+> > FW_OPT_PREFER_USER); +       module_put(THIS_MODULE);
+> > +       return ret;
+> > +}
+> > +EXPORT_SYMBOL_GPL(request_firmware_prefer_user);
+>=20
+> I'd like to introduce request_firmware_user() which only
+> requests firmware from user space, and this way is simpler
+> and more flexible since we have request_firmware_direct()
+> already.
+>=20
+> Thanks,
+> Ming Lei
 
-Cc: <stable@vger.kernel.org>
-Fixes: 2f1c6c572d7b ("cfg80211: process non country IE conflicting first")
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- net/wireless/reg.c | 7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
+Ming, for wl1251 NVS data we need to load use usermode helper and=20
+fallback to direct load. So I think it is better to handle this=20
+request in firmware code and not in driver.
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 8fe21c0..3e69554 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -2047,11 +2047,8 @@ __reg_process_hint_country_ie(struct wiphy *wiphy,
- 			return REG_REQ_IGNORE;
- 		return REG_REQ_ALREADY_SET;
- 	}
--	/*
--	 * Two consecutive Country IE hints on the same wiphy.
--	 * This should be picked up early by the driver/stack
--	 */
--	if (WARN_ON(regdom_changes(country_ie_request->alpha2)))
-+
-+	if (regdom_changes(country_ie_request->alpha2))
- 		return REG_REQ_OK;
- 	return REG_REQ_ALREADY_SET;
- }
--- 
-1.9.1
+=2D-=20
+Pali Roh=C3=A1r
+pali.rohar@gmail.com
 
+--nextPart6013142.Y7C6ce8dYc
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iEYEABECAAYFAlSFwjEACgkQi/DJPQPkQ1LiOwCfYDvcaBsb2UkGRzsc6RY/9zSb
+K5cAnj47jXkv66tvdcHMuFCFs2a0Itc2
+=mV9Q
+-----END PGP SIGNATURE-----
+
+--nextPart6013142.Y7C6ce8dYc--
