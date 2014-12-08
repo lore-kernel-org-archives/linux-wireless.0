@@ -1,29 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33284 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S967608AbaLLM4S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Dec 2014 07:56:18 -0500
-Message-ID: <1418388974.2470.42.camel@sipsolutions.net> (sfid-20141212_135620_522289_F19FE48A)
-Subject: Re: [PATCH v2 4/4] iw: support multiple regdom print
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@suse.com>
-Date: Fri, 12 Dec 2014 13:56:14 +0100
-In-Reply-To: <1417449224-10293-4-git-send-email-arik@wizery.com> (sfid-20141201_165351_209717_CDF765FE)
-References: <1417449224-10293-1-git-send-email-arik@wizery.com>
-	 <1417449224-10293-4-git-send-email-arik@wizery.com>
-	 (sfid-20141201_165351_209717_CDF765FE)
-Content-Type: text/plain; charset="UTF-8"
+Received: from smtprelay0053.hostedemail.com ([216.40.44.53]:40903 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752005AbaLHDzS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 7 Dec 2014 22:55:18 -0500
+Message-ID: <1418010912.31745.29.camel@perches.com> (sfid-20141208_045547_519662_C4BD1423)
+Subject: Re: [PATCH 0/20] fix misspelling of current function in string
+From: Joe Perches <joe@perches.com>
+To: Julia Lawall <Julia.Lawall@lip6.fr>
+Cc: linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org,
+	linux@rasmusvillemoes.dk, devel@driverdev.osuosl.org,
+	linux-scsi@vger.kernel.org, dri-devel@lists.freedesktop.org,
+	intel-gfx@lists.freedesktop.org, linux-mtd@lists.infradead.org,
+	linux-samsung-soc@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, netdev@vger.kernel.org,
+	linux-usb@vger.kernel.org
+Date: Sun, 07 Dec 2014 19:55:12 -0800
+In-Reply-To: <1417980062-25151-1-git-send-email-Julia.Lawall@lip6.fr>
+References: <1417980062-25151-1-git-send-email-Julia.Lawall@lip6.fr>
+Content-Type: text/plain; charset="ISO-8859-1"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-12-01 at 17:53 +0200, Arik Nemtsov wrote:
-> When a phy is given, print only its regdomain. Otherwise, use the newly
-> implement dump functionality to print all regdomains in the system.
+On Sun, 2014-12-07 at 20:20 +0100, Julia Lawall wrote:
+> These patches replace what appears to be a reference to the name of the
+> current function but is misspelled in some way by either the name of the
+> function itself, or by %s and then __func__ in an argument list.
 
-This breaks on existing kernels.
-
-johannes
+At least a few of these seem to be function tracing
+style uses that might as well be deleted instead.
 
