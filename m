@@ -1,94 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:43685 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753123AbaLTQrt (ORCPT
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:56291 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751831AbaLHRLv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Dec 2014 11:47:49 -0500
-From: Yannis Damigos <giannis.damigos@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>,
-	linux-wireless@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
-	Yannis Damigos <giannis.damigos@gmail.com>
-Subject: [PATCHv2 1/1] staging: rtl8723au: Fix sparse invalid assignment warnings
-Date: Sat, 20 Dec 2014 18:47:27 +0200
-Message-Id: <1419094047-16107-1-git-send-email-giannis.damigos@gmail.com> (sfid-20141220_174807_937014_CB5B3D72)
-In-Reply-To: <1418567365-18168-1-git-send-email-giannis.damigos@gmail.com>
-References: <1418567365-18168-1-git-send-email-giannis.damigos@gmail.com>
+	Mon, 8 Dec 2014 12:11:51 -0500
+From: Pali =?utf-8?q?Roh=C3=A1r?= <pali.rohar@gmail.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Subject: Re: wl1251: NVS firmware data
+Date: Mon, 8 Dec 2014 18:11:46 +0100
+Cc: "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
+	Ming Lei <ming.lei@canonical.com>, Pavel Machek <pavel@ucw.cz>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Grazvydas Ignotas <notasas@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+	Aaro Koskinen <aaro.koskinen@iki.fi>,
+	Kalle Valo <kvalo@adurom.com>,
+	Sebastian Reichel <sre@ring0.de>,
+	David Gnedt <david.gnedt@davizone.at>
+References: <201411271506.20457@pali> <201412081747.30965@pali> <E5F3BB54-6365-4856-A231-A5FEDAEA217F@holtmann.org>
+In-Reply-To: <E5F3BB54-6365-4856-A231-A5FEDAEA217F@holtmann.org>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart1715012.6Goo9eDEJj";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <201412081811.46943@pali> (sfid-20141208_181247_667174_D552FE41)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a patch to the hal/rtl8723au_xmit.c file that fixes the
-following warnings found by sparse tool:
+--nextPart1715012.6Goo9eDEJj
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 
-drivers/staging/rtl8723au//hal/rtl8723au_xmit.c:88:22: warning: invalid assignment: |=
-drivers/staging/rtl8723au//hal/rtl8723au_xmit.c:88:22:    left side has type unsigned int
-drivers/staging/rtl8723au//hal/rtl8723au_xmit.c:88:22:    right side has type restricted __le32
-drivers/staging/rtl8723au//hal/rtl8723au_xmit.c:91:22: warning: invalid assignment: |=
-drivers/staging/rtl8723au//hal/rtl8723au_xmit.c:91:22:    left side has type unsigned int
-drivers/staging/rtl8723au//hal/rtl8723au_xmit.c:91:22:    right side has type restricted __le32
-drivers/staging/rtl8723au//hal/rtl8723au_xmit.c:99:22: warning: invalid assignment: |=
-drivers/staging/rtl8723au//hal/rtl8723au_xmit.c:99:22:    left side has type unsigned int
-drivers/staging/rtl8723au//hal/rtl8723au_xmit.c:99:22:    right side has type restricted __le32
-drivers/staging/rtl8723au//hal/rtl8723au_xmit.c:103:30: warning: invalid assignment: |=
-drivers/staging/rtl8723au//hal/rtl8723au_xmit.c:103:30:    left side has type unsigned int
-drivers/staging/rtl8723au//hal/rtl8723au_xmit.c:103:30:    right side has type restricted __le32
-drivers/staging/rtl8723au//hal/rtl8723au_xmit.c:106:38: warning: invalid assignment: |=
-drivers/staging/rtl8723au//hal/rtl8723au_xmit.c:106:38:    left side has type unsigned int
-drivers/staging/rtl8723au//hal/rtl8723au_xmit.c:106:38:    right side has type restricted __le32
-drivers/staging/rtl8723au//hal/rtl8723au_xmit.c:108:38: warning: invalid assignment: |=
-drivers/staging/rtl8723au//hal/rtl8723au_xmit.c:108:38:    left side has type unsigned int
-drivers/staging/rtl8723au//hal/rtl8723au_xmit.c:108:38:    right side has type restricted __le32
-drivers/staging/rtl8723au//hal/rtl8723au_xmit.c:112:38: warning: invalid assignment: |=
-drivers/staging/rtl8723au//hal/rtl8723au_xmit.c:112:38:    left side has type unsigned int
-drivers/staging/rtl8723au//hal/rtl8723au_xmit.c:112:38:    right side has type restricted __le32
-drivers/staging/rtl8723au//hal/rtl8723au_xmit.c:120:22: warning: invalid assignment: |=
-drivers/staging/rtl8723au//hal/rtl8723au_xmit.c:120:22:    left side has type unsigned int
-drivers/staging/rtl8723au//hal/rtl8723au_xmit.c:120:22:    right side has type restricted __le32
-drivers/staging/rtl8723au//hal/rtl8723au_xmit.c:123:30: warning: invalid assignment: |=
-drivers/staging/rtl8723au//hal/rtl8723au_xmit.c:123:30:    left side has type unsigned int
-drivers/staging/rtl8723au//hal/rtl8723au_xmit.c:123:30:    right side has type restricted __le32
-drivers/staging/rtl8723au//hal/rtl8723au_xmit.c:125:30: warning: invalid assignment: |=
-drivers/staging/rtl8723au//hal/rtl8723au_xmit.c:125:30:    left side has type unsigned int
-drivers/staging/rtl8723au//hal/rtl8723au_xmit.c:125:30:    right side has type restricted __le32
-drivers/staging/rtl8723au//hal/rtl8723au_xmit.c:129:30: warning: invalid assignment: |=
-drivers/staging/rtl8723au//hal/rtl8723au_xmit.c:129:30:    left side has type unsigned int
-drivers/staging/rtl8723au//hal/rtl8723au_xmit.c:129:30:    right side has type restricted __le32
-drivers/staging/rtl8723au//hal/rtl8723au_xmit.c:184:51: warning: incorrect type in argument 2 (different base types)
-drivers/staging/rtl8723au//hal/rtl8723au_xmit.c:184:51:    expected unsigned int [usertype] *pdw
-drivers/staging/rtl8723au//hal/rtl8723au_xmit.c:184:51:    got restricted __le32 *<noident>
-drivers/staging/rtl8723au//hal/rtl8723au_xmit.c:185:51: warning: incorrect type in argument 2 (different base types)
-drivers/staging/rtl8723au//hal/rtl8723au_xmit.c:185:51:    expected unsigned int [usertype] *pdw
-drivers/staging/rtl8723au//hal/rtl8723au_xmit.c:185:51:    got restricted __le32 *<noident>
+On Monday 08 December 2014 18:05:37 Marcel Holtmann wrote:
+> Hi Pali,
+>=20
+> >>>> On Saturday 06 December 2014 13:49:54 Pavel Machek wrote:
+> >>>> /**
+> >>>>=20
+> >>>> + * request_firmware_prefer_user: - prefer usermode
+> >>>> helper for loading firmware + * @firmware_p: pointer to
+> >>>> firmware image
+> >>>> + * @name: name of firmware file
+> >>>> + * @device: device for which firmware is being loaded
+> >>>> + *
+> >>>> + * This function works pretty much like
+> >>>> request_firmware(), but it prefer + * usermode helper. If
+> >>>> usermode helper fails then it fallback to direct access.
+> >>>> + * Usefull for dynamic or model specific firmware data.
+> >>>> + **/
+> >>>> +int request_firmware_prefer_user(const struct firmware
+> >>>> **firmware_p, +                           const char
+> >>>> *name, struct device *device) +{
+> >>>> +       int ret;
+> >>>> +       __module_get(THIS_MODULE);
+> >>>> +       ret =3D _request_firmware(firmware_p, name, device,
+> >>>> +                               FW_OPT_UEVENT |
+> >>>> FW_OPT_PREFER_USER); +       module_put(THIS_MODULE);
+> >>>> +       return ret;
+> >>>> +}
+> >>>> +EXPORT_SYMBOL_GPL(request_firmware_prefer_user);
+> >>>=20
+> >>> I'd like to introduce request_firmware_user() which only
+> >>> requests firmware from user space, and this way is simpler
+> >>> and more flexible since we have request_firmware_direct()
+> >>> already.
+> >>=20
+> >> Why would a driver care about what program provides the
+> >> firmware?  It shouldn't at all, and we want to get rid of
+> >> the userspace firmware loader, not encourage drivers to
+> >> use it "exclusively" at all.
+> >=20
+> > Do not remove it! Without userspace firmware loader it is
+> > impossible to load dynamic firmware files.
+>=20
+> why is this dynamic in the first place. It does not sound like
+> dynamic data to me at all. This is like the WiFi MAC
+> address(es) or Bluetooth BD_ADDR. They are all static
+> information. The only difference is that they are on the host
+> accessibly filesystem or storage and not on the device
+> itself.
+>=20
+> To be honest, for Bluetooth we solved this now. If the device
+> is missing key information like the calibration data or
+> BD_ADDR, then it comes up unconfigured. A userspace process
+> can then go and load the right data into it and then the
+> device becomes available as Bluetooth device.
+>=20
+> Trying to use request_firmware to load some random data and
+> insist on going through userspace helper for that sounds
+> crazy to me. Especially since we are trying hard to get away
+> from the userspace loader. Forcing to keep it for new stuff
+> sounds backwards to me.
+>=20
+> With the special Nokia partition in mind, why hasn't this been
+> turned into a mountable filesystem or into a driver/subsystem
+> that can access the data direct from the kernel. I advocated
+> for this some time ago. Maybe there should be a special
+> subsystem for access to these factory persistent information
+> that drivers then just can access. I seem to remember that
+> some systems provide these via ACPI. Why does the ARM
+> platform has to be special here?
+>=20
+> And the problem of getting Ethernet and WiFi MAC address and
+> Bluetooth BD_ADDR comes up many many times. Why not have
+> something generic here. And don't tell me request_firmware is
+> that generic solution ;)
+>=20
+> Regards
+>=20
+> Marcel
 
-Signed-off-by: Yannis Damigos <giannis.damigos@gmail.com>
----
- drivers/staging/rtl8723au/hal/rtl8723au_xmit.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Hi Marcel. I think you did not understand this problem. This=20
+discussion is not about mac address. Please read email thread=20
+again and if there are some unclear pars, then ask. Thanks!
 
-diff --git a/drivers/staging/rtl8723au/hal/rtl8723au_xmit.c b/drivers/staging/rtl8723au/hal/rtl8723au_xmit.c
-index 6070510..1759487 100644
---- a/drivers/staging/rtl8723au/hal/rtl8723au_xmit.c
-+++ b/drivers/staging/rtl8723au/hal/rtl8723au_xmit.c
-@@ -79,7 +79,7 @@ static void fill_txdesc_sectype(struct pkt_attrib *pattrib, struct tx_desc *ptxd
- 	}
- }
- 
--static void fill_txdesc_vcs(struct pkt_attrib *pattrib, u32 *pdw)
-+static void fill_txdesc_vcs(struct pkt_attrib *pattrib, __le32 *pdw)
- {
- 	/* DBG_8723A("cvs_mode =%d\n", pattrib->vcs_mode); */
- 
-@@ -114,7 +114,7 @@ static void fill_txdesc_vcs(struct pkt_attrib *pattrib, u32 *pdw)
- 	}
- }
- 
--static void fill_txdesc_phy(struct pkt_attrib *pattrib, u32 *pdw)
-+static void fill_txdesc_phy(struct pkt_attrib *pattrib, __le32 *pdw)
- {
- 	if (pattrib->ht_en) {
- 		*pdw |= (pattrib->bwmode&HT_CHANNEL_WIDTH_40) ? cpu_to_le32(BIT(25)) : 0;
--- 
-2.2.1
+=2D-=20
+Pali Roh=C3=A1r
+pali.rohar@gmail.com
 
+--nextPart1715012.6Goo9eDEJj
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iEYEABECAAYFAlSF29IACgkQi/DJPQPkQ1KsDgCeNZmwr8tIOz9uchTfCHmTGhqs
+mwsAni5d+CRKG11fYsdVEyk4Mz3LMAWN
+=8APv
+-----END PGP SIGNATURE-----
+
+--nextPart1715012.6Goo9eDEJj--
