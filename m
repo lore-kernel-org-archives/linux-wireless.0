@@ -1,221 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:4736 "EHLO
-	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751046AbaLZOmY (ORCPT
+Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:46365 "EHLO
+	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755572AbaLHP4H (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Dec 2014 09:42:24 -0500
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-To: wil6210@qca.qualcomm.com
-Cc: kernel-janitors@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-media@vger.kernel.org, linux-usb@vger.kernel.org
-Subject: [PATCH 0/27] Use setup_timer
-Date: Fri, 26 Dec 2014 15:35:31 +0100
-Message-Id: <1419604558-29743-1-git-send-email-Julia.Lawall@lip6.fr> (sfid-20141226_155209_056410_EDD3E093)
+	Mon, 8 Dec 2014 10:56:07 -0500
+Date: Mon, 8 Dec 2014 15:55:57 +0000
+From: Catalin Marinas <catalin.marinas@arm.com>
+To: Johannes Stezenbach <js@sig21.net>
+Cc: Russell King <linux@arm.linux.org.uk>,
+	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>,
+	David Miller <davem@davemloft.net>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: using DMA-API on ARM
+Message-ID: <20141208155556.GL16185@e104818-lin.cambridge.arm.com> (sfid-20141208_165610_992491_9CA09733)
+References: <5481794E.4050406@broadcom.com>
+ <20141205183945.GE31222@e104818-lin.cambridge.arm.com>
+ <20141205185303.GG31222@e104818-lin.cambridge.arm.com>
+ <20141208125538.GA26983@sig21.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20141208125538.GA26983@sig21.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These patches group a call to init_timer and initialization of the function
-and data fields into a call to setup_timer.  Is there is no initialization
-of the data field before add_timer is called, the the data value is set to
-0UL.  If the data value has a cast to something other than unsigned long,
-it is changes to a cast to unsigned long, which is the type of the data
-field.
+On Mon, Dec 08, 2014 at 12:55:38PM +0000, Johannes Stezenbach wrote:
+> On Fri, Dec 05, 2014 at 06:53:03PM +0000, Catalin Marinas wrote:
+> > On Fri, Dec 05, 2014 at 06:39:45PM +0000, Catalin Marinas wrote:
+> > > 
+> > > Does your system have an L2 cache? What's the SoC topology, can PCIe see
+> > > such L2 cache (or snoop the L1 caches)?
+> > 
+> > BTW, if you really have a PL310-like L2 cache, have a look at some
+> > patches (I've seen similar symptoms) and make sure your configuration is
+> > correct:
+> > 
+> > http://www.arm.linux.org.uk/developer/patches/viewpatch.php?id=6395/1
+> > 
+> > http://www.arm.linux.org.uk/developer/patches/viewpatch.php?id=6529/1
+> > 
+> > The first one is vexpress specific. The second one was eventually
+> > discarded by Russell (I don't remember the reason, I guess it's because
+> > SoC code is supposed to set the right bits in there anyway). In your
+> > case, such bits may be set up by firmware, so Linux cannot fix anything
+> > up.
+> 
+> How do you avoid the unpredictable behavior mentioned in the
+> PL310 TRM when the Shared Attribute Invalidate Enable bit is set?
+> http://infocenter.arm.com/help/topic/com.arm.doc.ddi0246h/Ceggcfcj.html
 
-The semantic patch that performs this change is shown below
-(http://coccinelle.lip6.fr/).  This semantic patch is fairly restrictive on
-what appears between the init_timer call and the two field initializations,
-to ensure that the there is no code that the initializations depend on.
+So you talk about "Shared Attribute _Invalidate_ Enable" (bit 13) while
+I talk about "Shared Attribute _Override_ Enable" (bit 22).
 
-// <smpl>
-@@
-expression t,d,f,e1,e2;
-identifier x1,x2;
-statement S1,S2;
-@@
+In addition, Shared _Invalidate_ behaviour can only be enabled if Shared
+Attribute _Override_ Enable bit is not set.
 
-(
--t.data = d;
-|
--t.function = f;
-|
--init_timer(&t);
-+setup_timer(&t,f,d);
-|
--init_timer_on_stack(&t);
-+setup_timer_on_stack(&t,f,d);
-)
-<... when != S1
-t.x1 = e1;
-...>
-(
--t.data = d;
-|
--t.function = f;
-|
--init_timer(&t);
-+setup_timer(&t,f,d);
-|
--init_timer_on_stack(&t);
-+setup_timer_on_stack(&t,f,d);
-)
-<... when != S2
-t.x2 = e2;
-...>
-(
--t.data = d;
-|
--t.function = f;
-|
--init_timer(&t);
-+setup_timer(&t,f,d);
-|
--init_timer_on_stack(&t);
-+setup_timer_on_stack(&t,f,d);
-)
-
-// ----------------------
-
-@@
-expression t,d,f,e1,e2;
-identifier x1,x2;
-statement S1,S2;
-@@
-
-(
--t->data = d;
-|
--t->function = f;
-|
--init_timer(t);
-+setup_timer(t,f,d);
-|
--init_timer_on_stack(t);
-+setup_timer_on_stack(t,f,d);
-)
-<... when != S1
-t->x1 = e1;
-...>
-(
--t->data = d;
-|
--t->function = f;
-|
--init_timer(t);
-+setup_timer(t,f,d);
-|
--init_timer_on_stack(t);
-+setup_timer_on_stack(t,f,d);
-)
-<... when != S2
-t->x2 = e2;
-...>
-(
--t->data = d;
-|
--t->function = f;
-|
--init_timer(t);
-+setup_timer(t,f,d);
-|
--init_timer_on_stack(t);
-+setup_timer_on_stack(t,f,d);
-)
-
-// ---------------------------------------------------------------------
-// no initialization of data field
-
-@@
-expression t,d1,d2,f;
-@@
-
-(
--init_timer(&t);
-+setup_timer(&t,f,0UL);
-|
--init_timer_on_stack(&t);
-+setup_timer_on_stack(&t,f,0UL);
-)
-... when != t.data = d1;
--t.function = f;
-... when != t.data = d2;
-add_timer(&t);
-
-@@
-expression t,d,f,fn;
-type T;
-@@
-
--t.function = f;
-... when != t.data
-    when != fn(...,(T)t,...)
-(
--init_timer(&t);
-+setup_timer(&t,f,d);
-|
--init_timer_on_stack(&t);
-+setup_timer_on_stack(&t,f,0UL);
-)
-... when != t.data = d;
-add_timer(&t);
-
-// ----------------------
-
-@@
-expression t,d1,d2,f;
-@@
-
-(
--init_timer(t);
-+setup_timer(t,f,0UL);
-|
--init_timer_on_stack(t);
-+setup_timer_on_stack(t,f,0UL);
-)
-... when != t->data = d1;
--t->function = f;
-... when != t->data = d2;
-add_timer(t);
-
-@@
-expression t,d,f,fn;
-type T;
-@@
-
--t->function = f;
-... when != t.data
-    when != fn(...,(T)t,...)
-(
--init_timer(t);
-+setup_timer(t,f,d);
-|
--init_timer_on_stack(t);
-+setup_timer_on_stack(t,f,0UL);
-)
-... when != t->data = d;
-add_timer(t);
-
-// ---------------------------------------------------------------------
-// change data field type
-
-@@
-expression d;
-type T;
-@@
-
-(
-setup_timer
-|
-setup_timer_on_stack
-)
- (...,
-(
-  (unsigned long)d
-|
-- (T)
-+ (unsigned long)
-  d
-)
- )
-// </smpl>
-
+-- 
+Catalin
