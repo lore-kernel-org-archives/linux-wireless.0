@@ -1,47 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:46747 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751042AbaLOUFL (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:40641 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752144AbaLHKHo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Dec 2014 15:05:11 -0500
-Received: by mail-wi0-f180.google.com with SMTP id n3so10272531wiv.13
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Dec 2014 12:05:10 -0800 (PST)
-Message-ID: <548F3EF2.9020005@gmail.com> (sfid-20141215_210516_483453_2E909200)
-Date: Mon, 15 Dec 2014 22:05:06 +0200
-From: Emmanuel Grumbach <egrumbach@gmail.com>
+	Mon, 8 Dec 2014 05:07:44 -0500
+Received: by mail-wi0-f172.google.com with SMTP id n3so4199298wiv.5
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Dec 2014 02:07:43 -0800 (PST)
 MIME-Version: 1.0
-To: Jonathan Marcille <marcille.jonathan@me.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Issue with iwlwifi in Wi-Fi N mode on ThinkPad x201 (Debian Testing)
-References: <548EEC55.5060804@me.com>
-In-Reply-To: <548EEC55.5060804@me.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1418023628.2001.0.camel@sipsolutions.net>
+References: <1417947627-2329-1-git-send-email-vadim4j@gmail.com>
+	<1418023628.2001.0.camel@sipsolutions.net>
+Date: Mon, 8 Dec 2014 12:07:42 +0200
+Message-ID: <CAMw6YJ+8JpgTG4AbJo71JuOW8jpEo5HxFX=bDDPcpd4L_b6drA@mail.gmail.com> (sfid-20141208_110808_108273_B2308FCC)
+Subject: Re: [PATCH v2] mac80211: Supporting of IFLA_INFO_KIND rtnl attribute
+From: Vadim Kochan <vadim4j@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+You meant here ?
 
+net/wireless/core.c : static int cfg80211_netdev_notifier_call(struct
+notifier_block *nb,
+                                          unsigned long state, void *ptr)
+{
 
-On 12/15/2014 04:12 PM, Jonathan Marcille wrote:
-> Hello,
-> 
-> I have an issue with iwlwifi driver.
+    ...
+    switch (state) {
+             case NETDEV_POST_INIT:
+                     SET_NETDEV_DEVTYPE(dev, &wiphy_type);
+                     break;
+             case NETDEV_REGISTER:
+                     ...
+                     dev->rtnl_link_ops = &wireless_link_ops;
+                     ...
+    }
+    ...
+}
 
-What version of the kernel do you have?
+Regards,
 
-> 
-> I installed iwlwifi-6000-ucode-9.193.4.1 on my ThinkPad x201 (Intel® Centrino® Advanced-N 6200) running Debian Testing (Jessie)
-> It works fine in b/g mode but not in N mode.
-> 
-> Is there something I need to do to make it work in N mode ? Or is it a driver issue with N mode ?
-
-What do you mean by N mode?
-Just the "n" being printed somewhere?
-Are you sniffing the packets the device is sending and you see you don't have 11n specific data?
-Are you seeing low throughput?
-
-> 
-> Thanks for the help.
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Mon, Dec 8, 2014 at 9:27 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Sun, 2014-12-07 at 12:20 +0200, Vadim Kochan wrote:
+>
+>> +++ b/net/mac80211/iface.c
+>
+>> @@ -1624,6 +1625,10 @@ static void ieee80211_assign_perm_addr(struct ieee80211_local *local,
+>>       mutex_unlock(&local->iflist_mtx);
+>>  }
+>>
+>> +static struct rtnl_link_ops wireless_link_ops __read_mostly = {
+>> +     .kind = "wlan",
+>> +};
+>
+> I think it would make sense to set it - if not already set - in the
+> netdev notifier in cfg80211.
+>
+> johannes
+>
