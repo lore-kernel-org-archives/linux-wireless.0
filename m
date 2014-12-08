@@ -1,35 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37986 "EHLO sipsolutions.net"
+Received: from bar.sig21.net ([80.81.252.164]:46210 "EHLO bar.sig21.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755510AbaLWK0h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Dec 2014 05:26:37 -0500
-Message-ID: <1419330394.6091.0.camel@sipsolutions.net> (sfid-20141223_112641_136943_BB7E0CA0)
-Subject: Re: [PATCH] cfg80211: do not check for carrier during
- start_radar_detect
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Avinash Patil <patila@marvell.com>
-Cc: "janusz.dziedzic@tieto.com" <janusz.dziedzic@tieto.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Cathy Luo <cluo@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Date: Tue, 23 Dec 2014 11:26:34 +0100
-In-Reply-To: <CBACCFA0AEB13A41977475BCF3E896FC66736E7A37@SC-VEXCH2.marvell.com>
-References: <CBACCFA0AEB13A41977475BCF3E896FC66736E7972@SC-VEXCH2.marvell.com>
-	 <CALhHN=qA7icuY_MNvBebDsOMOkh6hEsWNkrZoGDGsQg+-f6Xog@mail.gmail.com>
-	,<5FF020A1CFFEEC49BD1E09530C4FF5951B160B81A7@SC-VEXCH1.marvell.com>
-	 <CBACCFA0AEB13A41977475BCF3E896FC66736E7A37@SC-VEXCH2.marvell.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1751520AbaLHQuc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Dec 2014 11:50:32 -0500
+Date: Mon, 8 Dec 2014 17:50:16 +0100
+From: Johannes Stezenbach <js@sig21.net>
+To: Catalin Marinas <catalin.marinas@arm.com>
+Cc: Russell King <linux@arm.linux.org.uk>,
+	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>,
+	David Miller <davem@davemloft.net>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: using DMA-API on ARM
+Message-ID: <20141208165016.GA28471@sig21.net> (sfid-20141208_175049_886037_446876CD)
+References: <5481794E.4050406@broadcom.com>
+ <20141205183945.GE31222@e104818-lin.cambridge.arm.com>
+ <20141205185303.GG31222@e104818-lin.cambridge.arm.com>
+ <20141208125538.GA26983@sig21.net>
+ <20141208155556.GL16185@e104818-lin.cambridge.arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20141208155556.GL16185@e104818-lin.cambridge.arm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-12-23 at 02:13 -0800, Avinash Patil wrote:
-> Hi Janusz,
+On Mon, Dec 08, 2014 at 03:55:57PM +0000, Catalin Marinas wrote:
+> On Mon, Dec 08, 2014 at 12:55:38PM +0000, Johannes Stezenbach wrote:
+> > On Fri, Dec 05, 2014 at 06:53:03PM +0000, Catalin Marinas wrote:
+> > > 
+> > > BTW, if you really have a PL310-like L2 cache, have a look at some
+> > > patches (I've seen similar symptoms) and make sure your configuration is
+> > > correct:
+> > > 
+> > > http://www.arm.linux.org.uk/developer/patches/viewpatch.php?id=6395/1
+> > > 
+> > > http://www.arm.linux.org.uk/developer/patches/viewpatch.php?id=6529/1
+> > > 
+> > > The first one is vexpress specific. The second one was eventually
+> > > discarded by Russell (I don't remember the reason, I guess it's because
+> > > SoC code is supposed to set the right bits in there anyway). In your
+> > > case, such bits may be set up by firmware, so Linux cannot fix anything
+> > > up.
+> > 
+> > How do you avoid the unpredictable behavior mentioned in the
+> > PL310 TRM when the Shared Attribute Invalidate Enable bit is set?
+> > http://infocenter.arm.com/help/topic/com.arm.doc.ddi0246h/Ceggcfcj.html
 > 
-> Any further update on this?
+> So you talk about "Shared Attribute _Invalidate_ Enable" (bit 13) while
+> I talk about "Shared Attribute _Override_ Enable" (bit 22).
+> 
+> In addition, Shared _Invalidate_ behaviour can only be enabled if Shared
+> Attribute _Override_ Enable bit is not set.
 
-We were waiting for you to send a new patch?
+Yeah, I got confused, sorry for the noise.
 
-johannes
-
-
+Thanks,
+Johannes
