@@ -1,180 +1,305 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:36818 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751163AbaLQN6G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Dec 2014 08:58:06 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 2/9] cfg80211: allow survey data to return global data
-Date: Wed, 17 Dec 2014 14:57:52 +0100
-Message-Id: <1418824679-31530-3-git-send-email-johannes@sipsolutions.net> (sfid-20141217_145824_499407_85AFE6C3)
-In-Reply-To: <1418824679-31530-1-git-send-email-johannes@sipsolutions.net>
-References: <1418824679-31530-1-git-send-email-johannes@sipsolutions.net>
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:42077 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753514AbaLHT4l (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Dec 2014 14:56:41 -0500
+From: Pali =?utf-8?q?Roh=C3=A1r?= <pali.rohar@gmail.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Subject: Re: wl1251: NVS firmware data
+Date: Mon, 8 Dec 2014 20:56:37 +0100
+Cc: Dan Williams <dcbw@redhat.com>,
+	"Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
+	Ming Lei <ming.lei@canonical.com>, Pavel Machek <pavel@ucw.cz>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Grazvydas Ignotas <notasas@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+	Aaro Koskinen <aaro.koskinen@iki.fi>,
+	Kalle Valo <kvalo@adurom.com>,
+	Sebastian Reichel <sre@ring0.de>,
+	David Gnedt <david.gnedt@davizone.at>
+References: <201411271506.20457@pali> <201412082036.14609@pali> <508290C6-B3D7-4E07-BE5E-EF6BDE568E92@holtmann.org>
+In-Reply-To: <508290C6-B3D7-4E07-BE5E-EF6BDE568E92@holtmann.org>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart3380800.rBeIzVeWLx";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <201412082056.37353@pali> (sfid-20141208_205705_116339_B2C831B1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+--nextPart3380800.rBeIzVeWLx
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 
-Not all devices are able to report survey data (particularly
-time spent for various operations) per channel. As all these
-statistics already exist in survey data, allow such devices
-to report them (if userspace requested it)
+On Monday 08 December 2014 20:46:07 Marcel Holtmann wrote:
+> Hi Pali,
+>=20
+> >>>>>>>>>> On Saturday 06 December 2014 13:49:54 Pavel Machek
+> >>>>>>>>>> wrote: /**
+> >>>>>>>>>>=20
+> >>>>>>>>>> + * request_firmware_prefer_user: - prefer usermode
+> >>>>>>>>>> helper for loading firmware + * @firmware_p:
+> >>>>>>>>>> pointer to firmware image
+> >>>>>>>>>> + * @name: name of firmware file
+> >>>>>>>>>> + * @device: device for which firmware is being
+> >>>>>>>>>> loaded + *
+> >>>>>>>>>> + * This function works pretty much like
+> >>>>>>>>>> request_firmware(), but it prefer + * usermode
+> >>>>>>>>>> helper. If usermode helper fails then it fallback
+> >>>>>>>>>> to direct access. + * Usefull for dynamic or model
+> >>>>>>>>>> specific firmware data. + **/
+> >>>>>>>>>> +int request_firmware_prefer_user(const struct
+> >>>>>>>>>> firmware **firmware_p, +
+> >>>>>>>>>> const char *name, struct device *device) +{
+> >>>>>>>>>> +       int ret;
+> >>>>>>>>>> +       __module_get(THIS_MODULE);
+> >>>>>>>>>> +       ret =3D _request_firmware(firmware_p, name,
+> >>>>>>>>>> device, +
+> >>>>>>>>>> FW_OPT_UEVENT
+> >>>>>>>>>>=20
+> >>>>>>>>>> | FW_OPT_PREFER_USER); +
+> >>>>>>>>>>=20
+> >>>>>>>>>> module_put(THIS_MODULE); +       return ret;
+> >>>>>>>>>> +}
+> >>>>>>>>>> +EXPORT_SYMBOL_GPL(request_firmware_prefer_user);
+> >>>>>>>>>=20
+> >>>>>>>>> I'd like to introduce request_firmware_user() which
+> >>>>>>>>> only requests firmware from user space, and this
+> >>>>>>>>> way is simpler and more flexible since we have
+> >>>>>>>>> request_firmware_direct() already.
+> >>>>>>>>=20
+> >>>>>>>> Why would a driver care about what program provides
+> >>>>>>>> the firmware?  It shouldn't at all, and we want to
+> >>>>>>>> get rid of the userspace firmware loader, not
+> >>>>>>>> encourage drivers to use it "exclusively" at all.
+> >>>>>>>=20
+> >>>>>>> Do not remove it! Without userspace firmware loader it
+> >>>>>>> is impossible to load dynamic firmware files.
+> >>>>>>=20
+> >>>>>> why is this dynamic in the first place. It does not
+> >>>>>> sound like dynamic data to me at all. This is like the
+> >>>>>> WiFi MAC address(es) or Bluetooth BD_ADDR. They are
+> >>>>>> all static information. The only difference is that
+> >>>>>> they are on the host accessibly filesystem or storage
+> >>>>>> and not on the device itself.
+> >>>>>>=20
+> >>>>>> To be honest, for Bluetooth we solved this now. If the
+> >>>>>> device is missing key information like the calibration
+> >>>>>> data or BD_ADDR, then it comes up unconfigured. A
+> >>>>>> userspace process can then go and load the right data
+> >>>>>> into it and then the device becomes available as
+> >>>>>> Bluetooth device.
+> >>>>>>=20
+> >>>>>> Trying to use request_firmware to load some random data
+> >>>>>> and insist on going through userspace helper for that
+> >>>>>> sounds crazy to me. Especially since we are trying
+> >>>>>> hard to get away from the userspace loader. Forcing to
+> >>>>>> keep it for new stuff sounds backwards to me.
+> >>>>>>=20
+> >>>>>> With the special Nokia partition in mind, why hasn't
+> >>>>>> this been turned into a mountable filesystem or into a
+> >>>>>> driver/subsystem that can access the data direct from
+> >>>>>> the kernel. I advocated for this some time ago. Maybe
+> >>>>>> there should be a special subsystem for access to
+> >>>>>> these factory persistent information that drivers then
+> >>>>>> just can access. I seem to remember that some systems
+> >>>>>> provide these via ACPI. Why does the ARM platform has
+> >>>>>> to be special here?
+> >>>>>>=20
+> >>>>>> And the problem of getting Ethernet and WiFi MAC
+> >>>>>> address and Bluetooth BD_ADDR comes up many many
+> >>>>>> times. Why not have something generic here. And don't
+> >>>>>> tell me request_firmware is that generic solution ;)
+> >>>>>>=20
+> >>>>>> Regards
+> >>>>>>=20
+> >>>>>> Marcel
+> >>>>>=20
+> >>>>> Hi Marcel. I think you did not understand this problem.
+> >>>>> This discussion is not about mac address. Please read
+> >>>>> email thread again and if there are some unclear pars,
+> >>>>> then ask. Thanks!
+> >>>>=20
+> >>>> I think that I pretty clearly understand the problem.
+> >>>> Calibration data, MAC address, what is the difference?
+> >>>> For me this is all the same. It is data that is specific
+> >>>> to a device or type of devices and it is stored
+> >>>> somewhere else. In most cases in some immutable
+> >>>> memory/flash area.
+> >>>=20
+> >>> Those calibration data (in form of binary NVS firmware
+> >>> file) needs to be sent to wl1251 chip. Mac address is not
+> >>> needed at this step (and kernel generate some random if
+> >>> is not provided).
+> >>>=20
+> >>> (Just to note wl1271 driver loads both MAC address and NVS
+> >>> data via one firmware file which is prepared by userspace,
+> >>> but this discussion is about wl1251...)
+> >>>=20
+> >>>> What you want is access to this data since the kernel
+> >>>> driver needs it. Do I get this so far ;)
+> >>>=20
+> >>> Yes, we need to provide NVS data to kernel when kernel ask
+> >>> for them.
+> >>>=20
+> >>>> So my take is that request_firmware is not the right way
+> >>>> to get this data. Or more precisely make sure that this
+> >>>> data is available to kernel drivers. And what I am seeing
+> >>>> here is that instead of actually solving the bigger
+> >>>> problem, we just hack around it with request_firmware.
+> >>>> Now surprisingly the request_firmware loads files
+> >>>> directly from the kernel and all the hacks do not work
+> >>>> anymore.
+> >>>>=20
+> >>>> Regards
+> >>>>=20
+> >>>> Marcel
+> >>>=20
+> >>> Just read emails again...
+> >>>=20
+> >>> Our problem is:
+> >>>=20
+> >>> linux-firmware.git tree provides two binary firmware
+> >>> files:
+> >>>=20
+> >>> ti-connectivity/wl1251-fw.bin
+> >>> ti-connectivity/wl1251-nvs.bin
+> >>>=20
+> >>> First is firmware file, second NVS file with generic
+> >>> calibration data. Kernel driver wl1251 now loads both
+> >>> firmware files via request_firmware. Generic calibration
+> >>> data are enough for wl1251 chip (it should work). But
+> >>> devices have own calibration data stored somewhere else.
+> >>>=20
+> >>> On Nokia N900 NVS data are generated on-the-fly from some
+> >>> bytes from CAL (/dev/mtd1), from state of cellular network
+> >>> and from some other regulation settings.
+> >>>=20
+> >>> So I think that files stored in linux-firmware.git tree
+> >>> (which are also installed into /lib/firmware/) should be
+> >>> loaded with request_firmware function. Or not? Do you
+> >>> think something else? What other developers think?
+> >>>=20
+> >>> I'm against kernel driver for CAL (/dev/mtd1) for more
+> >>> reasons:
+> >>>=20
+> >>> 1) we have userspace open source code, but licensed under
+> >>> GPLv3. And until kernel change license, we cannot include
+> >>> it.
+> >>>=20
+> >>> 2) NVS data are (probably) not in one place, plus they
+> >>> depends on something other.
+> >>>=20
+> >>> 3) If manufacture XYZ create new device with its own
+> >>> storage format of calibration data this means that
+> >>> correct solution for XYZ is also to implement new kernel
+> >>> fs driver for its own format. Do you really want to have
+> >>> in kernel all those drivers for all different
+> >>> (proprietary) storage formats?
+> >>>=20
+> >>> 4) It does not help us with existence of generic file
+> >>> /lib/firmware/ti-connectivity/wl1251-nvs.bin which comes
+> >>> from linux-firmware.git tree.
+> >>=20
+> >> a) change driver to prefer a new "wl1251-nvs-n900.bin"
+> >> file,
+> >=20
+> > Why to "*-n900.bin" ? wl1251 driver is used on other devices
+> > too.
+> >=20
+> >> but fall back to "wl1251-nvs.bin" if the first one isn't
+> >> present
+> >>=20
+> >> b) have a "wl1251-cal-nvs-update" service that, if
+> >> wl1521-nvs-n900.bin is *not* present mounts the CAL MTD,
+> >> reads the data, writes it out into wl1521-nvs-n900.bin, and
+> >> the rmmod/modprobes the driver
+> >=20
+> > Quote:
+> >> On Nokia N900 NVS data are generated on-the-fly from some
+> >> bytes from CAL (/dev/mtd1), from state of cellular network
+> >> and from some other regulation settings.
+> >=20
+> > This basically means to rewrite it every boot or everytime
+> > when country was changed (for regulation settings). And Ii
+> > really do not want to do that.
+> >=20
+> > And rmmod is not working on statically linked drivers into
+> > zImage. So this is not solution.
+>=20
+> actually module removal is still considered a race condition.
+> If re-loading a module is part of your solution, then you are
+> already heading into the wrong direction.
+>=20
 
-Change-Id: I90795632de9427e62a740c7910536149d37058cb
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/cfg80211.h       |  3 ++-
- include/uapi/linux/nl80211.h | 16 +++++++++++++---
- net/wireless/nl80211.c       | 31 ++++++++++++++++++-------------
- 3 files changed, 33 insertions(+), 17 deletions(-)
+No, I'm not doing it and I want to have driver still loaded.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 27117a78656e..3db6a9990ebd 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -542,7 +542,8 @@ enum survey_info_flags {
- /**
-  * struct survey_info - channel survey response
-  *
-- * @channel: the channel this survey record reports, mandatory
-+ * @channel: the channel this survey record reports, may be %NULL for a single
-+ *	record to report global statistics
-  * @filled: bitflag of flags from &enum survey_info_flags
-  * @noise: channel noise in dBm. This and all following fields are
-  *	optional
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 4bf0805ba419..35242ad7be0b 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1710,6 +1710,14 @@ enum nl80211_commands {
-  *	obtained from it is coming from the device's wiphy and not the global
-  *	cfg80211 regdomain.
-  *
-+ * @NL80211_ATTR_SURVEY_RADIO_STATS: Request overall radio statistics to be
-+ *	returned along with other survey data. If set, @NL80211_CMD_GET_SURVEY
-+ *	may return a survey entry without a channel indicating global radio
-+ *	statistics (only some values are valid and make sense.)
-+ *	For devices that don't return such an entry even then, the information
-+ *	should be contained in the result as the sum of the respective counters
-+ *	over all channels.
-+ *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -2069,6 +2077,8 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_WIPHY_SELF_MANAGED_REG,
- 
-+	NL80211_ATTR_SURVEY_RADIO_STATS,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -2797,15 +2807,15 @@ enum nl80211_user_reg_hint_type {
-  * @NL80211_SURVEY_INFO_NOISE: noise level of channel (u8, dBm)
-  * @NL80211_SURVEY_INFO_IN_USE: channel is currently being used
-  * @NL80211_SURVEY_INFO_TIME: amount of time (in ms) that the radio
-- *	spent on this channel
-+ *	was turned on (on channel or globally)
-  * @NL80211_SURVEY_INFO_TIME_BUSY: amount of the time the primary
-  *	channel was sensed busy (either due to activity or energy detect)
-  * @NL80211_SURVEY_INFO_TIME_EXT_BUSY: amount of time the extension
-  *	channel was sensed busy
-  * @NL80211_SURVEY_INFO_TIME_RX: amount of time the radio spent
-- *	receiving data
-+ *	receiving data (on channel or globally)
-  * @NL80211_SURVEY_INFO_TIME_TX: amount of time the radio spent
-- *	transmitting data
-+ *	transmitting data (on channel or globally)
-  * @NL80211_SURVEY_INFO_MAX: highest survey info attribute number
-  *	currently defined
-  * @__NL80211_SURVEY_INFO_AFTER_LAST: internal use
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 40e0b33941ce..22085e0cd70a 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -6602,12 +6602,17 @@ static int nl80211_dump_scan(struct sk_buff *skb, struct netlink_callback *cb)
- }
- 
- static int nl80211_send_survey(struct sk_buff *msg, u32 portid, u32 seq,
--				int flags, struct net_device *dev,
--				struct survey_info *survey)
-+			       int flags, struct net_device *dev,
-+			       bool allow_radio_stats,
-+			       struct survey_info *survey)
- {
- 	void *hdr;
- 	struct nlattr *infoattr;
- 
-+	/* skip radio stats if userspace didn't request them */
-+	if (!survey->channel && !allow_radio_stats)
-+		return 0;
-+
- 	hdr = nl80211hdr_put(msg, portid, seq, flags,
- 			     NL80211_CMD_NEW_SURVEY_RESULTS);
- 	if (!hdr)
-@@ -6620,7 +6625,8 @@ static int nl80211_send_survey(struct sk_buff *msg, u32 portid, u32 seq,
- 	if (!infoattr)
- 		goto nla_put_failure;
- 
--	if (nla_put_u32(msg, NL80211_SURVEY_INFO_FREQUENCY,
-+	if (survey->channel &&
-+	    nla_put_u32(msg, NL80211_SURVEY_INFO_FREQUENCY,
- 			survey->channel->center_freq))
- 		goto nla_put_failure;
- 
-@@ -6660,19 +6666,22 @@ static int nl80211_send_survey(struct sk_buff *msg, u32 portid, u32 seq,
- 	return -EMSGSIZE;
- }
- 
--static int nl80211_dump_survey(struct sk_buff *skb,
--			struct netlink_callback *cb)
-+static int nl80211_dump_survey(struct sk_buff *skb, struct netlink_callback *cb)
- {
- 	struct survey_info survey;
- 	struct cfg80211_registered_device *rdev;
- 	struct wireless_dev *wdev;
- 	int survey_idx = cb->args[2];
- 	int res;
-+	bool radio_stats;
- 
- 	res = nl80211_prepare_wdev_dump(skb, cb, &rdev, &wdev);
- 	if (res)
- 		return res;
- 
-+	/* prepare_wdev_dump parsed the attributes */
-+	radio_stats = nl80211_fam.attrbuf[NL80211_ATTR_SURVEY_RADIO_STATS];
-+
- 	if (!wdev->netdev) {
- 		res = -EINVAL;
- 		goto out_err;
-@@ -6690,13 +6699,9 @@ static int nl80211_dump_survey(struct sk_buff *skb,
- 		if (res)
- 			goto out_err;
- 
--		/* Survey without a channel doesn't make sense */
--		if (!survey.channel) {
--			res = -EINVAL;
--			goto out;
--		}
--
--		if (survey.channel->flags & IEEE80211_CHAN_DISABLED) {
-+		/* don't send disabled channels, but do send non-channel data */
-+		if (survey.channel &&
-+		    survey.channel->flags & IEEE80211_CHAN_DISABLED) {
- 			survey_idx++;
- 			continue;
- 		}
-@@ -6704,7 +6709,7 @@ static int nl80211_dump_survey(struct sk_buff *skb,
- 		if (nl80211_send_survey(skb,
- 				NETLINK_CB(cb->skb).portid,
- 				cb->nlh->nlmsg_seq, NLM_F_MULTI,
--				wdev->netdev, &survey) < 0)
-+				wdev->netdev, radio_stats, &survey) < 0)
- 			goto out;
- 		survey_idx++;
- 	}
--- 
-2.1.1
+> WiFi subsystem have a solution for handling regulatory
+> enforcement. I don't know why would you try to invent that
+> same via NVS files.
+>=20
 
+Both firmware and NVS files are sent to chip as blob data. And=20
+they are sent every time when userspace ask to bring interface=20
+up.
+
+So looks like modprobing driver works without data. Kernel ask=20
+for them once userspace want to use wifi network.
+
+> >> and done?  Stuff that's not N900 just wouldn't ship the
+> >> update service and would proceed like none of this
+> >> happened.
+> >>=20
+> >> Dan
+> >=20
+> > Again, what is wrong with userspace firmware helper? I think
+> > that it fix this problem in a clean way without any hacks
+> > (like CAL in kernel or creating new FS specially for
+> > parsing NVS and so on) in kernel. And in userspace we can
+> > implement program which generate NVS firmware data
+> > on-the-fly and send them to kernel in compatible format of
+> > ti-connectivity/wl1251-nvs.bin
+>=20
+> How do you run a userspace firmware helper if the root
+> filesystem has not yet been mounted? How do you run userspace
+> helper during resume?
+>=20
+
+I cannot do that.
+
+> Honestly for drivers linked statically into the kernel, the
+> best approach is that they stay unconfigured until userspace
+> is available and can run a tool to provide the correct data.
+>=20
+> Regards
+>=20
+> Marcel
+
+So ifconfig wlan0 should fail? In our case for wl1251 I think we=20
+should fallback to generic NVS data if are available (and maybe=20
+later when request will be there again, userspace can provide=20
+data).
+
+=2D-=20
+Pali Roh=C3=A1r
+pali.rohar@gmail.com
+
+--nextPart3380800.rBeIzVeWLx
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iEYEABECAAYFAlSGAnUACgkQi/DJPQPkQ1LB8ACgx4huc1oWxmvIGLtdgZjn+77c
+TyMAnj5CI9+kiXEzYHc3LwWfjmKqQtsx
+=ZBz0
+-----END PGP SIGNATURE-----
+
+--nextPart3380800.rBeIzVeWLx--
