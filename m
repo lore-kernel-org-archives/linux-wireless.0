@@ -1,23 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:36904 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751118AbaLQOMx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Dec 2014 09:12:53 -0500
-Message-ID: <1418825568.2135.16.camel@sipsolutions.net> (sfid-20141217_151259_260335_037AF0B2)
-Subject: Re: [PATCH v9 0/2] Stop scheduled scan if netlink client disappears
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jukka Rissanen <jukka.rissanen@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 17 Dec 2014 15:12:48 +0100
-In-Reply-To: <1418642739-11016-1-git-send-email-jukka.rissanen@linux.intel.com> (sfid-20141215_122547_530053_7D0B3D0D)
-References: <1418642739-11016-1-git-send-email-jukka.rissanen@linux.intel.com>
-	 (sfid-20141215_122547_530053_7D0B3D0D)
-Content-Type: text/plain
-Mime-Version: 1.0
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:47645 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750998AbaLHX1t (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Dec 2014 18:27:49 -0500
+From: Pali =?utf-8?q?Roh=C3=A1r?= <pali.rohar@gmail.com>
+To: "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>
+Subject: Re: wl1251: NVS firmware data
+Date: Tue, 9 Dec 2014 00:27:46 +0100
+Cc: Ming Lei <ming.lei@canonical.com>, Pavel Machek <pavel@ucw.cz>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Grazvydas Ignotas <notasas@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+	Aaro Koskinen <aaro.koskinen@iki.fi>,
+	Kalle Valo <kvalo@adurom.com>,
+	Sebastian Reichel <sre@ring0.de>,
+	David Gnedt <david.gnedt@davizone.at>
+References: <201411271506.20457@pali> <201412081747.30965@pali> <20141208205721.GA14895@kroah.com>
+In-Reply-To: <20141208205721.GA14895@kroah.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart2457874.dXyCdr0QfX";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <201412090027.46485@pali> (sfid-20141209_002812_558963_B53B799D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Both applied.
+--nextPart2457874.dXyCdr0QfX
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 
-johannes
+On Monday 08 December 2014 21:57:21 Greg Kroah-Hartman wrote:
+> Use your own custom usermode helper for stuff like this, not
+> the firmware interface.  But use a binary sysfs file if you
+> want, that seems to make sense for it...
+>=20
+> greg k-h
 
+Patch for telling permanent mac address from userspace via sysfs=20
+file was rejected for inclusion into mainline kernel.
+
+So I do not think that now maintainers of network subsystem allow=20
+it for nvs data...
+
+https://lkml.org/lkml/2013/12/8/35
+
+=2D-=20
+Pali Roh=C3=A1r
+pali.rohar@gmail.com
+
+--nextPart2457874.dXyCdr0QfX
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iEYEABECAAYFAlSGM/IACgkQi/DJPQPkQ1KNvwCfRf56KOnmL0C2Cvjpu/NLHJu2
+94QAn1ZupkdOsiVp9JCu1l9gpw45C43F
+=vsxa
+-----END PGP SIGNATURE-----
+
+--nextPart2457874.dXyCdr0QfX--
