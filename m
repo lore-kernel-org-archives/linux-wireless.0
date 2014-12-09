@@ -1,50 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f48.google.com ([74.125.82.48]:35714 "EHLO
-	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753947AbaLAPxs (ORCPT
+Received: from mail-la0-f42.google.com ([209.85.215.42]:41901 "EHLO
+	mail-la0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753513AbaLIWa4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Dec 2014 10:53:48 -0500
-Received: by mail-wg0-f48.google.com with SMTP id y19so14400476wgg.21
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Dec 2014 07:53:47 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v2 2/4] iw: print new RRF_ regulatory flags
-Date: Mon,  1 Dec 2014 17:53:42 +0200
-Message-Id: <1417449224-10293-2-git-send-email-arik@wizery.com> (sfid-20141201_165352_129558_E7D3E484)
-In-Reply-To: <1417449224-10293-1-git-send-email-arik@wizery.com>
-References: <1417449224-10293-1-git-send-email-arik@wizery.com>
+	Tue, 9 Dec 2014 17:30:56 -0500
+Received: by mail-la0-f42.google.com with SMTP id gd6so1425376lab.15
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Dec 2014 14:30:55 -0800 (PST)
+From: Vadim Kochan <vadim4j@gmail.com>
+To: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, Vadim Kochan <vadim4j@gmail.com>
+Subject: [PATCH v3] wireless: Supporting of IFLA_INFO_KIND rtnl attribute
+Date: Wed, 10 Dec 2014 00:21:06 +0200
+Message-Id: <1418163666-9206-1-git-send-email-vadim4j@gmail.com> (sfid-20141209_233059_981907_431B13F1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These were added to cfg80211 recently
+It allows to identify the wlan kind of device for the user application,
+e.g.:
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
+    # ip -d link
+
+    1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default
+        link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00 promiscuity 0
+    2: enp0s25: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc pfifo_fast state DOWN mode DEFAULT group default qlen 1000
+        link/ether XX:XX:XX:XX:XX:XX brd ff:ff:ff:ff:ff:ff promiscuity 0
+    3: wlp3s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP mode DEFAULT group default qlen 1000
+        link/ether XX:XX:XX:XX:XX:XX brd ff:ff:ff:ff:ff:ff promiscuity 0
+        wlan
+
+Signed-off-by: Vadim Kochan <vadim4j@gmail.com>
 ---
-v2: remove XXX from title, apparently the ML doesn't like them :)
-
- reg.c | 6 ++++++
+ net/wireless/core.c | 6 ++++++
  1 file changed, 6 insertions(+)
 
-diff --git a/reg.c b/reg.c
-index e1bb0d2..9af8e7e 100644
---- a/reg.c
-+++ b/reg.c
-@@ -199,6 +199,12 @@ static int print_reg_handler(struct nl_msg *msg, void *arg)
- 		PARSE_FLAG(NL80211_RRF_NO_OUTDOOR, "NO-OUTDOOR");
- 		PARSE_FLAG(NL80211_RRF_DFS, "DFS");
- 		PARSE_FLAG(NL80211_RRF_PTP_ONLY, "PTP-ONLY");
-+		PARSE_FLAG(NL80211_RRF_AUTO_BW, "AUTO-BW");
-+		PARSE_FLAG(NL80211_RRF_GO_CONCURRENT, "GO-CONCURRENT");
-+		PARSE_FLAG(NL80211_RRF_NO_HT40MINUS, "NO-HT40MINUS");
-+		PARSE_FLAG(NL80211_RRF_NO_HT40PLUS, "NO-HT40PLUS");
-+		PARSE_FLAG(NL80211_RRF_NO_80MHZ, "NO-80MHZ");
-+		PARSE_FLAG(NL80211_RRF_NO_160MHZ, "NO-160MHZ");
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index f52a4cd..eb7c088 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -21,6 +21,7 @@
+ #include <linux/sched.h>
+ #include <net/genetlink.h>
+ #include <net/cfg80211.h>
++#include <net/rtnetlink.h>
+ #include "nl80211.h"
+ #include "core.h"
+ #include "sysfs.h"
+@@ -866,6 +867,10 @@ void cfg80211_stop_iface(struct wiphy *wiphy, struct wireless_dev *wdev,
+ }
+ EXPORT_SYMBOL(cfg80211_stop_iface);
  
- 		/* Kernels that support NO_IR always turn on both flags */
- 		if ((flags & NL80211_RRF_NO_IR) && (flags & __NL80211_RRF_NO_IBSS)) {
++static struct rtnl_link_ops wireless_link_ops __read_mostly = {
++	.kind = "wlan",
++};
++
+ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 					 unsigned long state, void *ptr)
+ {
+@@ -883,6 +888,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 	switch (state) {
+ 	case NETDEV_POST_INIT:
+ 		SET_NETDEV_DEVTYPE(dev, &wiphy_type);
++		dev->rtnl_link_ops = &wireless_link_ops;
+ 		break;
+ 	case NETDEV_REGISTER:
+ 		/*
 -- 
-1.9.1
+2.1.3
 
