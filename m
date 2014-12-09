@@ -1,55 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:29563 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751211AbaLBJwT (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:39919 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753263AbaLIXWf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Dec 2014 04:52:19 -0500
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Joe Perches <joe@perches.com>,
-	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH v2 08/10] wil6210: Rate limit "ring full" error message
-Date: Tue, 2 Dec 2014 11:52:00 +0200
-Message-ID: <1417513920-18624-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20141202_105227_619913_E085F43A)
-In-Reply-To: <1417513598-18304-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1417513598-18304-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 9 Dec 2014 18:22:35 -0500
+Date: Tue, 09 Dec 2014 18:22:33 -0500 (EST)
+Message-Id: <20141209.182233.1341650327810529864.davem@davemloft.net> (sfid-20141210_002243_353980_44416F4B)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next 2014-12-08
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20141208193223.GA14086@tuxdriver.com>
+References: <20141208193223.GA14086@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In the wil_tx_ring, error message printed when tx attempted
-while vring has no space to accommodate all fragments of frame.
-Normally, such situation handled by stopping tx queue.
-But, if tx queue is by-passed (like pktgen does), this error
-will be triggered at high rate and dmesg will be flooded with
-this message. Whole system may become unstable and hang with
-no possible recover except power cycle.
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Mon, 8 Dec 2014 14:32:23 -0500
 
-Rate-limit it to prevent dmesg flooding.
+> Please pull this last batch of pending wireless updates for the 3.19
+> tree...
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/txrx.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+Wow that's a lot :)
 
-diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
-index c3a5489..405ede6 100644
---- a/drivers/net/wireless/ath/wil6210/txrx.c
-+++ b/drivers/net/wireless/ath/wil6210/txrx.c
-@@ -928,8 +928,9 @@ static int wil_tx_vring(struct wil6210_priv *wil, struct vring *vring,
- 	wil_dbg_txrx(wil, "%s()\n", __func__);
- 
- 	if (avail < 1 + nr_frags) {
--		wil_err(wil, "Tx ring full. No space for %d fragments\n",
--			1 + nr_frags);
-+		wil_err_ratelimited(wil,
-+				    "Tx ring full. No space for %d fragments\n",
-+				    1 + nr_frags);
- 		return -ENOMEM;
- 	}
- 	_d = &vring->va[i].tx;
--- 
-2.1.0
-
+Pulled, thanks John.
