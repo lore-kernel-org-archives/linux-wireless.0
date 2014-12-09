@@ -1,61 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:17526 "EHLO
-	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752055AbaLZOmi (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:59394 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756195AbaLIEIK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Dec 2014 09:42:38 -0500
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: kernel-janitors@vger.kernel.org,
-	Avinash Patil <patila@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 27/27] mwifiex: main: Use setup_timer
-Date: Fri, 26 Dec 2014 15:35:56 +0100
-Message-Id: <1419604558-29743-26-git-send-email-Julia.Lawall@lip6.fr> (sfid-20141226_154429_061939_B3F40239)
-In-Reply-To: <1419604558-29743-1-git-send-email-Julia.Lawall@lip6.fr>
-References: <1419604558-29743-1-git-send-email-Julia.Lawall@lip6.fr>
+	Mon, 8 Dec 2014 23:08:10 -0500
+Date: Mon, 8 Dec 2014 23:08:06 -0500
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Ming Lei <ming.lei@canonical.com>
+Cc: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>,
+	Pavel Machek <pavel@ucw.cz>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Grazvydas Ignotas <notasas@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+	Aaro Koskinen <aaro.koskinen@iki.fi>,
+	Kalle Valo <kvalo@adurom.com>,
+	Sebastian Reichel <sre@ring0.de>,
+	David Gnedt <david.gnedt@davizone.at>
+Subject: Re: wl1251: NVS firmware data
+Message-ID: <20141209040806.GA1257@kroah.com> (sfid-20141209_050832_912835_3EF19917)
+References: <201411271506.20457@pali>
+ <CACVXFVPOLfDuqc0nLb-zM8vH618DLXy0xtZbUOn5_XvdxRZSDw@mail.gmail.com>
+ <20141208163714.GA31169@kroah.com>
+ <201412081747.30965@pali>
+ <20141208205721.GA14895@kroah.com>
+ <CACVXFVO+pX29UE53EDP4va0hoWQw8h0E9Ji9t3OL=e0FyERxyA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <CACVXFVO+pX29UE53EDP4va0hoWQw8h0E9Ji9t3OL=e0FyERxyA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Convert a call to init_timer and accompanying intializations of
-the timer's data and function fields to a call to setup_timer.
+On Tue, Dec 09, 2014 at 08:48:28AM +0800, Ming Lei wrote:
+> On Tue, Dec 9, 2014 at 4:57 AM, Greg Kroah-Hartman
+> <gregkh@linuxfoundation.org> wrote:
+> > On Mon, Dec 08, 2014 at 05:47:30PM +0100, Pali Rohár wrote:
+> >> On Monday 08 December 2014 17:37:14 Greg Kroah-Hartman wrote:
+> >> > On Mon, Dec 08, 2014 at 11:18:18PM +0800, Ming Lei wrote:
+> >> > > On Sat, Dec 6, 2014 at 9:02 PM, Pali Rohár
+> >> <pali.rohar@gmail.com> wrote:
+> >> > > > On Saturday 06 December 2014 13:49:54 Pavel Machek wrote:
+> >> > > >  /**
+> >> > > >
+> >> > > > + * request_firmware_prefer_user: - prefer usermode helper
+> >> > > > for loading firmware + * @firmware_p: pointer to firmware
+> >> > > > image
+> >> > > > + * @name: name of firmware file
+> >> > > > + * @device: device for which firmware is being loaded
+> >> > > > + *
+> >> > > > + * This function works pretty much like
+> >> > > > request_firmware(), but it prefer + * usermode helper. If
+> >> > > > usermode helper fails then it fallback to direct access.
+> >> > > > + * Usefull for dynamic or model specific firmware data.
+> >> > > > + **/
+> >> > > > +int request_firmware_prefer_user(const struct firmware
+> >> > > > **firmware_p, +                           const char
+> >> > > > *name, struct device *device) +{
+> >> > > > +       int ret;
+> >> > > > +       __module_get(THIS_MODULE);
+> >> > > > +       ret = _request_firmware(firmware_p, name, device,
+> >> > > > +                               FW_OPT_UEVENT |
+> >> > > > FW_OPT_PREFER_USER); +       module_put(THIS_MODULE);
+> >> > > > +       return ret;
+> >> > > > +}
+> >> > > > +EXPORT_SYMBOL_GPL(request_firmware_prefer_user);
+> >> > >
+> >> > > I'd like to introduce request_firmware_user() which only
+> >> > > requests firmware from user space, and this way is simpler
+> >> > > and more flexible since we have request_firmware_direct()
+> >> > > already.
+> >> >
+> >> > Why would a driver care about what program provides the
+> >> > firmware?  It shouldn't at all, and we want to get rid of the
+> >> > userspace firmware loader, not encourage drivers to use it
+> >> > "exclusively" at all.
+> >> >
+> >>
+> >> Do not remove it! Without userspace firmware loader it is
+> >> impossible to load dynamic firmware files.
+> >
+> > You should not be loading "dynamic" firmware files with the firmware
+> > interface, as that's not a "firmware" file anymore, it's a "special
+> > binary file that my driver needs to be created and sent into the
+> > kernel."
+> 
+> It is reasonable to put firmware somewhere instead of default
+> search path, maybe in network.
 
-A simplified version of the semantic match that fixes this problem is as
-follows: (http://coccinelle.lip6.fr/)
+That's why we allow you to change the firmware search path at build
+time, and kernel boot time (or firmware class module load time.)  To do
+this on a per-firmware-file basis is crazy.
 
-// <smpl>
-@@
-expression t,f,d;
-@@
+thanks,
 
--init_timer(&t);
-+setup_timer(&t,f,d);
--t.function = f;
--t.data = d;
-// </smpl>
-
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-
----
- drivers/net/wireless/mwifiex/main.c |    5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
-index d4d2223..53f4202 100644
---- a/drivers/net/wireless/mwifiex/main.c
-+++ b/drivers/net/wireless/mwifiex/main.c
-@@ -83,9 +83,8 @@ static int mwifiex_register(void *card, struct mwifiex_if_ops *if_ops,
- 	}
- 	mwifiex_init_lock_list(adapter);
- 
--	init_timer(&adapter->cmd_timer);
--	adapter->cmd_timer.function = mwifiex_cmd_timeout_func;
--	adapter->cmd_timer.data = (unsigned long) adapter;
-+	setup_timer(&adapter->cmd_timer, mwifiex_cmd_timeout_func,
-+		    (unsigned long)adapter);
- 
- 	return 0;
- 
-
+greg k-h
