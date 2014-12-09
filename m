@@ -1,54 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.osadl.org ([62.245.132.105]:51273 "EHLO www.osadl.org"
+Received: from m12-17.163.com ([220.181.12.17]:33531 "EHLO m12-17.163.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752022AbaL3NDu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Dec 2014 08:03:50 -0500
-From: Nicholas Mc Guire <der.herr@hofr.at>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: Michal Kazior <michal.kazior@tieto.com>,
-	Ben Greear <greearb@candelatech.com>,
-	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>,
-	Yanbo Li <yanbol@qti.qualcomm.com>, ath10k@lists.infradead.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Nicholas Mc Guire <der.herr@hofr.at>
-Subject: [PATCH 3/4] ath10k: fixup wait_for_completion_timeout return handling
-Date: Tue, 30 Dec 2014 07:20:45 -0500
-Message-Id: <1419942046-17985-4-git-send-email-der.herr@hofr.at> (sfid-20141230_140354_895238_1C36D4F5)
-In-Reply-To: <1419942046-17985-1-git-send-email-der.herr@hofr.at>
-References: <1419942046-17985-1-git-send-email-der.herr@hofr.at>
+	id S1757058AbaLINUm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Dec 2014 08:20:42 -0500
+From: weiyj_lk@163.com
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>,
+	Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
+	Ben Hutchings <ben@decadent.org.uk>,
+	Peter Wu <lekensteyn@gmail.com>,
+	Karsten Wiese <fzuuzf@googlemail.com>,
+	Andy Spencer <andy753421@ucla.edu>
+Cc: Wei Yongjun <yongjun_wei@trendmicro.com.cn>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH -next] rtlwifi: rtl8192cu: Fix sparse non static symbol warning
+Date: Tue,  9 Dec 2014 21:18:43 +0800
+Message-Id: <1418131123-3606-1-git-send-email-weiyj_lk@163.com> (sfid-20141209_142046_265509_F10E1959)
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-wait_for_completion_timeout does not return negative values so
-"ret" handling here should check for timeout only.
+From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-patch was only compile tested for x86_64_defconfig + CONFIG_ATH10K=m
+Fixes the following sparse warnings:
 
-patch is against linux-next 3.19.0-rc1 -next-20141226
+drivers/net/wireless/rtlwifi/rtl8192cu/hw.c:1595:6: warning:
+ symbol 'usb_cmd_send_packet' was not declared. Should it be static?
 
-Signed-off-by: Nicholas Mc Guire <der.herr@hofr.at>
+Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 ---
- drivers/net/wireless/ath/ath10k/htc.c |    6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ drivers/net/wireless/rtlwifi/rtl8192cu/hw.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
-index f1946a6..2fd9e18 100644
---- a/drivers/net/wireless/ath/ath10k/htc.c
-+++ b/drivers/net/wireless/ath/ath10k/htc.c
-@@ -703,11 +703,9 @@ int ath10k_htc_connect_service(struct ath10k_htc *htc,
- 	/* wait for response */
- 	status = wait_for_completion_timeout(&htc->ctl_resp,
- 					     ATH10K_HTC_CONN_SVC_TIMEOUT_HZ);
--	if (status <= 0) {
--		if (status == 0)
--			status = -ETIMEDOUT;
-+	if (status == 0) {
- 		ath10k_err(ar, "Service connect timeout: %d\n", status);
--		return status;
-+		return -ETIMEDOUT;
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+index 873363ac..5513217 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+@@ -1592,7 +1592,7 @@ void rtl92cu_get_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
  	}
+ }
  
- 	/* we controlled the buffer creation, it's aligned */
--- 
-1.7.10.4
+-bool usb_cmd_send_packet(struct ieee80211_hw *hw, struct sk_buff *skb)
++static bool usb_cmd_send_packet(struct ieee80211_hw *hw, struct sk_buff *skb)
+ {
+   /* Currently nothing happens here.
+    * Traffic stops after some seconds in WPA2 802.11n mode.
 
