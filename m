@@ -1,96 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:16757 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750734AbaLaLp5 (ORCPT
+Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:46890 "EHLO
+	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755486AbaLILyf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Dec 2014 06:45:57 -0500
-Message-ID: <54A3E1F1.7030807@broadcom.com> (sfid-20141231_124627_423946_22BCB8E8)
-Date: Wed, 31 Dec 2014 12:45:53 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-CC: Jiri Kosina <jkosina@suse.cz>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Borislav Petkov <bp@alien8.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Tue, 9 Dec 2014 06:54:35 -0500
+Date: Tue, 9 Dec 2014 11:54:26 +0000
+From: Catalin Marinas <catalin.marinas@arm.com>
+To: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"egrumbach@gmail.com" <egrumbach@gmail.com>,
-	"peter@hurleysoftware.com" <peter@hurleysoftware.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] Revert "cfg80211: make WEXT compatibility unselectable"
-References: <alpine.LNX.2.00.1412301427430.31609@pobox.suse.cz> <CANUX_P0=wJiKrR4cUgEN=LO+eQ2byprz0K9m9QxzJc+kf4+_bA@mail.gmail.com> <54A2B807.1020202@hurleysoftware.com> <0BA3FCBA62E2DC44AF3030971E174FB31B5DC915@hasmsx107.ger.corp.intel.com> <alpine.LNX.2.00.1412301610320.31609@pobox.suse.cz> <1419971304.30412.0.camel@egrumbacBox> <alpine.LNX.2.00.1412302135520.31609@pobox.suse.cz> <20141230212326.GA29263@pd.tnic> <54A328C2.5080606@lwfinger.net> <alpine.LNX.2.00.1412302341290.31609@pobox.suse.cz> <alpine.LNX.2.00.1412302351030.31609@pobox.suse.cz> <54A3D955.6020809@broadcom.com> <0BA3FCBA62E2DC44AF3030971E174FB31B5DD72E@hasmsx107.ger.corp.intel.com>
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB31B5DD72E@hasmsx107.ger.corp.intel.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Will Deacon <Will.Deacon@arm.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	"hauke@hauke-m.de" <hauke@hauke-m.de>,
+	David Miller <davem@davemloft.net>,
+	Marek Szyprowski <m.szyprowski@samsung.com>
+Subject: Re: using DMA-API on ARM
+Message-ID: <20141209115425.GB31129@e104818-lin.cambridge.arm.com> (sfid-20141209_125452_609304_DA461F7D)
+References: <5481794E.4050406@broadcom.com>
+ <F51492713EF10846800D8C0ED37A7DCE01901765@SJEXCHMB15.corp.ad.broadcom.com>
+ <F51492713EF10846800D8C0ED37A7DCE01902076@SJEXCHMB15.corp.ad.broadcom.com>
+ <2863746.4sUSEYqahB@wuerfel>
+ <20141208160316.GM16185@e104818-lin.cambridge.arm.com>
+ <5485D97D.1040404@broadcom.com>
+ <5486CCBC.3@broadcom.com>
+ <20141209102904.GJ11285@n2100.arm.linux.org.uk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20141209102904.GJ11285@n2100.arm.linux.org.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/31/14 12:10, Grumbach, Emmanuel wrote:
->> On 12/30/14 23:52, Jiri Kosina wrote:
->>> This reverts commit 24a0aa212ee2dbe44360288684478d76a8e20a0a.
->>>
->>> It's causing severe userspace breakage. Namely, all the utilities from
->>> wireless-utils which are relying on CONFIG_WEXT (which means tools
->>> like 'iwconfig', 'iwlist', etc) are not working anymore. There is a
->>> 'iw' utility in newer wireless-tools, which is supposed to be a
->>> replacement for all the "deprecated" binaries, but it's far away from
->>> being massively adopted.
->>>
->>> Please see [1] for example of the userspace breakage this is causing.
->>>
->>> In addition to that, Larry Finger reports [2] that this patch is also
->>> causing ipw2200 driver being impossible to build.
->>>
->>> To me this clearly shows that CONFIG_WEXT is far, far away from being
->>> "deprecated enough" to be removed.
->>
->> Hi Jiri,
->>
->> You mentioned in the discussion and I quote: "*If* wireless maintainers think
->> otherwise, I'll send a revert request to Linus for consideration.". However,
->> you did not wait for any response from the wireless maintainers nor from the
->> author of the patch you are reverting.
->> Seems like an overreaction to me though personally I do not disgree with the
->> revert itself.
->
-> Not to mention the patch has already been applied on Linus's tree...
+On Tue, Dec 09, 2014 at 10:29:05AM +0000, Russell King - ARM Linux wrote:
+> On Tue, Dec 09, 2014 at 11:19:40AM +0100, Arend van Spriel wrote:
+> > The issue did not trigger overnight so it seems setting bit 22 <Shared
+> > Attribute _Override_ Enable> solves the issue over here. Now the question is
+> > how to move forward with this. As I understood from Catalin this patch was
+> > not included as it was not considered responsibility of the linux kernel.
+> 
+> It is preferable for firmware to configure the L2 cache appropriately,
+> which includes things like the prefetch offsets as well as feature bits
+> like bit 22.
+> 
+> I think what I'll do is queue up a patch which adds a warning if bit 22
+> is not set, suggesting that firmware is updated to set this bit.
 
-Water under the bridge. The thing with WEXT is that it will stay as is. 
-So if tools like wicd want to support new features like P2P it will need 
-to make the switch. I checked out wicd repo and found a number of 
-iwconfig calls and they kick off wpa_supplicant with wext driver.
+I'm fine with a (big) warning on this bit. But when you boot in secure
+mode on 32-bit, do we still have a read/modify/write sequence for
+L2X0_AUX_CTRL? A quick look at l2c310_enable() didn't reveal this (the
+code has changed since I proposed the bit 22 setting patch).
 
-With libnl python support wicd could use nl80211 directly avoiding 
-screen-scraping iw output, but it seems not included in distros.
-
-Regards,
-Arend
-
->>
->> Regards,
->> Arend
->>
->>> [1] http://thread.gmane.org/gmane.linux.kernel/1857010
->>> [2] http://thread.gmane.org/gmane.linux.network/343688
->>>
->>> Signed-off-by: Jiri Kosina<jkosina@suse.cz>
->>> ---
->>>    net/wireless/Kconfig | 2 +-
->>>    1 file changed, 1 insertion(+), 1 deletion(-)
->>>
->>> diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig index
->>> 22ba971..29c8675 100644
->>> --- a/net/wireless/Kconfig
->>> +++ b/net/wireless/Kconfig
->>> @@ -175,7 +175,7 @@ config CFG80211_INTERNAL_REGDB
->>>    	  Most distributions have a CRDA package.  So if unsure, say N.
->>>
->>>    config CFG80211_WEXT
->>> -	bool
->>> +	bool "cfg80211 wireless extensions compatibility"
->>>    	depends on CFG80211
->>>    	select WEXT_CORE
->>>    	help
->
-
+-- 
+Catalin
