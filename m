@@ -1,58 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:4736 "EHLO
-	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751841AbaLZOm2 (ORCPT
+Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:47092 "EHLO
+	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755404AbaLIK31 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Dec 2014 09:42:28 -0500
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-To: Solomon Peachy <pizza@shaftnet.org>
-Cc: kernel-janitors@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 6/27] cw1200: queue: Use setup_timer
-Date: Fri, 26 Dec 2014 15:35:39 +0100
-Message-Id: <1419604558-29743-9-git-send-email-Julia.Lawall@lip6.fr> (sfid-20141226_154759_778268_11F4A79A)
-In-Reply-To: <1419604558-29743-1-git-send-email-Julia.Lawall@lip6.fr>
-References: <1419604558-29743-1-git-send-email-Julia.Lawall@lip6.fr>
+	Tue, 9 Dec 2014 05:29:27 -0500
+Date: Tue, 9 Dec 2014 10:29:05 +0000
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Catalin Marinas <catalin.marinas@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	"hauke@hauke-m.de" <hauke@hauke-m.de>,
+	David Miller <davem@davemloft.net>,
+	Marek Szyprowski <m.szyprowski@samsung.com>
+Subject: Re: using DMA-API on ARM
+Message-ID: <20141209102904.GJ11285@n2100.arm.linux.org.uk> (sfid-20141209_112945_557419_E48A517F)
+References: <5481794E.4050406@broadcom.com>
+ <F51492713EF10846800D8C0ED37A7DCE01901765@SJEXCHMB15.corp.ad.broadcom.com>
+ <F51492713EF10846800D8C0ED37A7DCE01902076@SJEXCHMB15.corp.ad.broadcom.com>
+ <2863746.4sUSEYqahB@wuerfel>
+ <20141208160316.GM16185@e104818-lin.cambridge.arm.com>
+ <5485D97D.1040404@broadcom.com>
+ <5486CCBC.3@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5486CCBC.3@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Convert a call to init_timer and accompanying intializations of
-the timer's data and function fields to a call to setup_timer.
+On Tue, Dec 09, 2014 at 11:19:40AM +0100, Arend van Spriel wrote:
+> The issue did not trigger overnight so it seems setting bit 22 <Shared
+> Attribute _Override_ Enable> solves the issue over here. Now the question is
+> how to move forward with this. As I understood from Catalin this patch was
+> not included as it was not considered responsibility of the linux kernel.
 
-A simplified version of the semantic match that fixes this problem is as
-follows: (http://coccinelle.lip6.fr/)
+It is preferable for firmware to configure the L2 cache appropriately,
+which includes things like the prefetch offsets as well as feature bits
+like bit 22.
 
-// <smpl>
-@@
-expression t,f,d;
-@@
+I think what I'll do is queue up a patch which adds a warning if bit 22
+is not set, suggesting that firmware is updated to set this bit.
 
--init_timer(&t);
-+setup_timer(&t,f,d);
--t.data = d;
--t.function = f;
-// </smpl>
-
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-
----
- drivers/net/wireless/cw1200/queue.c |    4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/cw1200/queue.c b/drivers/net/wireless/cw1200/queue.c
-index 9c3925f..0ba5ef9 100644
---- a/drivers/net/wireless/cw1200/queue.c
-+++ b/drivers/net/wireless/cw1200/queue.c
-@@ -179,9 +179,7 @@ int cw1200_queue_init(struct cw1200_queue *queue,
- 	INIT_LIST_HEAD(&queue->pending);
- 	INIT_LIST_HEAD(&queue->free_pool);
- 	spin_lock_init(&queue->lock);
--	init_timer(&queue->gc);
--	queue->gc.data = (unsigned long)queue;
--	queue->gc.function = cw1200_queue_gc;
-+	setup_timer(&queue->gc, cw1200_queue_gc, (unsigned long)queue);
- 
- 	queue->pool = kzalloc(sizeof(struct cw1200_queue_item) * capacity,
- 			GFP_KERNEL);
-
+-- 
+FTTC broadband for 0.8mile line: currently at 9.5Mbps down 400kbps up
+according to speedtest.net.
