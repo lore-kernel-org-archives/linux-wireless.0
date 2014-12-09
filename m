@@ -1,109 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:4044 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752085AbaLSG5I (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:22186 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754735AbaLIKTu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Dec 2014 01:57:08 -0500
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH 8/8] ath10k: ath10k: add support to send delba
-Date: Fri, 19 Dec 2014 12:24:59 +0530
-Message-ID: <1418972099-5296-9-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20141219_075714_167800_757DC38B)
-In-Reply-To: <1418972099-5296-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1418972099-5296-1-git-send-email-rmanohar@qti.qualcomm.com>
+	Tue, 9 Dec 2014 05:19:50 -0500
+Message-ID: <5486CCBC.3@broadcom.com> (sfid-20141209_112013_764828_AEA3CF05)
+Date: Tue, 9 Dec 2014 11:19:40 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Russell King - ARM Linux <linux@arm.linux.org.uk>
+CC: Catalin Marinas <catalin.marinas@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	"Hante Meuleman" <meuleman@broadcom.com>,
+	"hauke@hauke-m.de" <hauke@hauke-m.de>,
+	David Miller <davem@davemloft.net>,
+	Marek Szyprowski <m.szyprowski@samsung.com>
+Subject: Re: using DMA-API on ARM
+References: <5481794E.4050406@broadcom.com> <F51492713EF10846800D8C0ED37A7DCE01901765@SJEXCHMB15.corp.ad.broadcom.com> <F51492713EF10846800D8C0ED37A7DCE01902076@SJEXCHMB15.corp.ad.broadcom.com> <2863746.4sUSEYqahB@wuerfel> <20141208160316.GM16185@e104818-lin.cambridge.arm.com> <5485D97D.1040404@broadcom.com>
+In-Reply-To: <5485D97D.1040404@broadcom.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This per-station debugfs entry helps to send delba in manual mode
-for debugging purpose. It accepts tid, initiator and reason code
-as inputs.
+On 12/08/14 18:01, Arend van Spriel wrote:
+> On 12/08/14 17:03, Catalin Marinas wrote:
+>> On Mon, Dec 08, 2014 at 03:01:32PM +0000, Arnd Bergmann wrote:
+>>> [ 0.000000] PL310 OF: cache setting yield illegal associativity
+>>> [ 0.000000] PL310 OF: -1069781724 calculated, only 8 and 16 legal
+>>> [ 0.000000] L2C-310 enabling early BRESP for Cortex-A9
+>>> [ 0.000000] L2C-310 full line of zeros enabled for Cortex-A9
+>>> [ 0.000000] L2C-310 dynamic clock gating enabled, standby mode enabled
+>>> [ 0.000000] L2C-310 cache controller enabled, 16 ways, 256 kB
+>>> [ 0.000000] L2C-310: CACHE_ID 0x410000c8, AUX_CTRL 0x4e130001
+>>
+>> If the above value is correct, they should make sure bit 22 is set in
+>> AUX_CTRL.
+>
+> Hante applied the patch and it now says:
+>
+> [ 0.000000] PL310 OF: cache setting yield illegal associativity
+> [ 0.000000] PL310 OF: -1069781724 calculated, only 8 and 16 legal
+> [ 0.000000] L2C-310 enabling early BRESP for Cortex-A9
+> [ 0.000000] L2C-310 full line of zeros enabled for Cortex-A9
+> [ 0.000000] L2C-310 dynamic clock gating enabled, standby mode enabled
+> [ 0.000000] L2C-310 cache controller enabled, 16 ways, 256 kB
+> [ 0.000000] L2C-310: CACHE_ID 0x410000c8, AUX_CTRL 0x4e530001
+>
+> He started running a test overnight. So will see if it hits the failure
+> with this L2 cache configuration.
 
-To send delba,
+The issue did not trigger overnight so it seems setting bit 22 <Shared 
+Attribute _Override_ Enable> solves the issue over here. Now the 
+question is how to move forward with this. As I understood from Catalin 
+this patch was not included as it was not considered responsibility of 
+the linux kernel.
 
-echo 0 1 37 >/sys/kernel/debug/ieee80211/phyX/netdev:wlanX/
-	     stations/XX:XX:XX:XX:XX:XX/delba
-
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/debugfs_sta.c | 56 +++++++++++++++++++++++++++
- 1 file changed, 56 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath10k/debugfs_sta.c b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
-index 95eb5a1..5effd7bb 100644
---- a/drivers/net/wireless/ath/ath10k/debugfs_sta.c
-+++ b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
-@@ -190,6 +190,61 @@ static const struct file_operations fops_addba_resp = {
- 	.llseek = default_llseek,
- };
- 
-+static ssize_t ath10k_dbg_sta_write_delba(struct file *file,
-+					  const char __user *user_buf,
-+					  size_t count, loff_t *ppos)
-+{
-+	struct ieee80211_sta *sta = file->private_data;
-+	struct ath10k_sta *arsta = (struct ath10k_sta *)sta->drv_priv;
-+	struct ath10k *ar = arsta->arvif->ar;
-+	u32 tid, initiator, reason;
-+	int ret;
-+	char buf[64];
-+
-+	simple_write_to_buffer(buf, sizeof(buf) - 1, ppos, user_buf, count);
-+
-+	/* make sure that buf is null terminated */
-+	buf[sizeof(buf) - 1] = '\0';
-+
-+	ret = sscanf(buf, "%u %u %u", &tid, &initiator, &reason);
-+	if (ret != 3) {
-+		ath10k_warn(ar, "ex: echo <tid> <initiator> <reason code> >delba\n");
-+		return -EINVAL;
-+	}
-+
-+	/* Valid TID values are 0 through 15 */
-+	if (tid > HTT_DATA_TX_EXT_TID_MGMT - 2) {
-+		ath10k_warn(ar, "Invalid TID %u\n", tid);
-+		return -EINVAL;
-+	}
-+
-+	mutex_lock(&ar->conf_mutex);
-+	if ((ar->state != ATH10K_STATE_ON) ||
-+	    (arsta->aggr_mode != ATH10K_DBG_AGGR_MODE_MANUAL)) {
-+		ret = count;
-+		goto out;
-+	}
-+
-+	ret = ath10k_wmi_delba_send(ar, arsta->arvif->vdev_id, sta->addr,
-+				    tid, initiator, reason);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to send delba: vdev_id %u peer %pM tid %u initiator %u reason %u\n",
-+			    arsta->arvif->vdev_id, sta->addr, tid, initiator,
-+			    reason);
-+	}
-+	ret = count;
-+out:
-+	mutex_unlock(&ar->conf_mutex);
-+	return ret;
-+}
-+
-+static const struct file_operations fops_delba = {
-+	.write = ath10k_dbg_sta_write_delba,
-+	.open = simple_open,
-+	.owner = THIS_MODULE,
-+	.llseek = default_llseek,
-+};
-+
- void ath10k_sta_add_debugfs(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			    struct ieee80211_sta *sta, struct dentry *dir)
- {
-@@ -197,4 +252,5 @@ void ath10k_sta_add_debugfs(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			    &fops_aggr_mode);
- 	debugfs_create_file("addba", S_IWUSR, dir, sta, &fops_addba);
- 	debugfs_create_file("addba_resp", S_IWUSR, dir, sta, &fops_addba_resp);
-+	debugfs_create_file("delba", S_IWUSR, dir, sta, &fops_delba);
- }
--- 
-2.2.0
-
+Regards,
+Arend
