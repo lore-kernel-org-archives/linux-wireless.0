@@ -1,51 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:38529 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932167AbaLJPyV (ORCPT
+Received: from mail-wg0-f41.google.com ([74.125.82.41]:49295 "EHLO
+	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754961AbaLJMoX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Dec 2014 10:54:21 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 4/4] ath9k: Fix no-ack frame status
-Date: Wed, 10 Dec 2014 21:26:13 +0530
-Message-Id: <1418226973-13779-4-git-send-email-sujith@msujith.org> (sfid-20141210_165439_319387_FC6C8A38)
-In-Reply-To: <1418226973-13779-1-git-send-email-sujith@msujith.org>
-References: <1418226973-13779-1-git-send-email-sujith@msujith.org>
+	Wed, 10 Dec 2014 07:44:23 -0500
+Received: by mail-wg0-f41.google.com with SMTP id y19so3490311wgg.14
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Dec 2014 04:44:21 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 3/5] ath10k: prevent invalid ps timeout config
+Date: Wed, 10 Dec 2014 13:31:52 +0100
+Message-Id: <1418214714-29689-4-git-send-email-michal.kazior@tieto.com> (sfid-20141210_134427_277599_31CEC900)
+In-Reply-To: <1418214714-29689-1-git-send-email-michal.kazior@tieto.com>
+References: <1418214714-29689-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Setting 0 ps timeout to firmware yields very poor
+latency and traffic issues. This is the case when
+multi-vif is active.
 
-Check if the frame has been completed without any
-error and use IEEE80211_TX_STAT_NOACK_TRANSMITTED to
-indicate successful transmission of no-ack frames.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/ath/ath9k/xmit.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath10k/mac.c | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 4caee66..c7ff9a8 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -2445,9 +2445,12 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
- 	if (sc->sc_ah->caldata)
- 		set_bit(PAPRD_PACKET_SENT, &sc->sc_ah->caldata->cal_flags);
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 969d187..d41e3d5 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -1079,10 +1079,12 @@ static int ath10k_mac_vif_recalc_ps_wake_threshold(struct ath10k_vif *arvif)
+ static int ath10k_mac_vif_setup_ps(struct ath10k_vif *arvif)
+ {
+ 	struct ath10k *ar = arvif->ar;
++	struct ieee80211_vif *vif = arvif->vif;
+ 	struct ieee80211_conf *conf = &ar->hw->conf;
+ 	enum wmi_sta_powersave_param param;
+ 	enum wmi_sta_ps_mode psmode;
+ 	int ret;
++	int ps_timeout;
  
--	if (!(tx_flags & ATH_TX_ERROR))
--		/* Frame was ACKed */
--		tx_info->flags |= IEEE80211_TX_STAT_ACK;
-+	if (!(tx_flags & ATH_TX_ERROR)) {
-+		if (tx_info->flags & IEEE80211_TX_CTL_NO_ACK)
-+			tx_info->flags |= IEEE80211_TX_STAT_NOACK_TRANSMITTED;
-+		else
-+			tx_info->flags |= IEEE80211_TX_STAT_ACK;
-+	}
+ 	lockdep_assert_held(&arvif->ar->conf_mutex);
  
- 	padpos = ieee80211_hdrlen(hdr->frame_control);
- 	padsize = padpos & 3;
+@@ -1093,8 +1095,15 @@ static int ath10k_mac_vif_setup_ps(struct ath10k_vif *arvif)
+ 		psmode = WMI_STA_PS_MODE_ENABLED;
+ 		param = WMI_STA_PS_PARAM_INACTIVITY_TIME;
+ 
++		ps_timeout = conf->dynamic_ps_timeout;
++		if (ps_timeout == 0) {
++			/* Firmware doesn't like 0 */
++			ps_timeout = ieee80211_tu_to_usec(
++				vif->bss_conf.beacon_int) / 1000;
++		}
++
+ 		ret = ath10k_wmi_set_sta_ps_param(ar, arvif->vdev_id, param,
+-						  conf->dynamic_ps_timeout);
++						  ps_timeout);
+ 		if (ret) {
+ 			ath10k_warn(ar, "failed to set inactivity time for vdev %d: %i\n",
+ 				    arvif->vdev_id, ret);
 -- 
-2.1.3
+1.8.5.3
 
