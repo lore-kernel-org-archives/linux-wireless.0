@@ -1,59 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f181.google.com ([209.85.217.181]:34858 "EHLO
-	mail-lb0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752447AbaLUAV4 (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:39432 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753902AbaLJMoT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Dec 2014 19:21:56 -0500
-Received: by mail-lb0-f181.google.com with SMTP id l4so2386604lbv.40
-        for <linux-wireless@vger.kernel.org>; Sat, 20 Dec 2014 16:21:54 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1419120588-14105-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-References: <1419120588-14105-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-Date: Sun, 21 Dec 2014 01:21:34 +0100
-Message-ID: <CAFo99ga9L3x0cS1kBfSx2dt2JLi1br=USBGvi9PF7=rSejCQYg@mail.gmail.com> (sfid-20141221_012231_815700_DB420EE7)
-Subject: Re: [PATCH v2] net: wireless: brcm80211: brcmsmac: phy: phy_cmn.c:
- Remove some unused functions
-To: Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Kalle Valo <kvalo@adurom.com>,
-	Fabian Frederick <fabf@skynet.be>,
-	Peter Senna Tschudin <peter.senna@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
-	Network Development <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 10 Dec 2014 07:44:19 -0500
+Received: by mail-wi0-f172.google.com with SMTP id n3so11076680wiv.17
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Dec 2014 04:44:18 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 0/5] ath10k: a bunch of STA-related fixes
+Date: Wed, 10 Dec 2014 13:31:49 +0100
+Message-Id: <1418214714-29689-1-git-send-email-michal.kazior@tieto.com> (sfid-20141210_134423_324465_FCF08703)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2014-12-21 1:09 GMT+01:00 Rickard Strandqvist
-<rickard_strandqvist@spectrumdigital.se>:
-> Removes some functions that are not used anywhere:
-> wlc_phy_edcrs_lock() wlc_phy_txpower_ipa_ison() wlc_phy_upd_rssi_offset()
-> wlc_phy_get_pwrdet_offsets() wlc_lcnphy_epa_switch() wlc_phy_stf_ssmode_get()
-> wlc_phy_stf_chain_get() write_phy_channel_reg() wlc_phy_BSSinit()
-> wlc_phy_set_deaf() wlc_phy_freqtrack_end() wlc_phy_freqtrack_start()
-> wlc_phy_noise_sample_request_external() wlc_phy_test_ison()
-> wlc_phy_txpower_hw_ctrl_set() wlc_phy_bf_preempt_enable()
-> wlc_phy_runbist_config() wlc_phy_txpwr_percent_set()
-> wlc_phy_txpower_get_target_max() wlc_radioreg_exit()
-> wlc_phy_txpower_get_target_min() wlc_phy_txpower_boardlimit_band()
-> wlc_phy_txpower_sromlimit_max_get() wlc_radioreg_enter()
-> wlc_phy_txpower_target_set() wlc_phy_chanspec_band_firstch()
-> wlc_phy_chanspec_bandrange_get() wlc_phy_bw_state_get() wlc_phy_clear_tssi()
 
+Michal Kazior (5):
+  ath10k: improve 11b coex
+  ath10k: fix STA u-APSD
+  ath10k: prevent invalid ps timeout config
+  ath10k: enable per-vif sta powersave
+  ath10k: advertise p2p dev support
 
-Hi
+ drivers/net/wireless/ath/ath10k/core.c |  6 ---
+ drivers/net/wireless/ath/ath10k/mac.c  | 89 ++++++++++++++++++++++++++++------
+ 2 files changed, 74 insertions(+), 21 deletions(-)
 
-Sorry!  Wrong again :(
+-- 
+1.8.5.3
 
-wlc_lcnphy_crsuprs () should not be removed from hedder file.
-V2 was the same problem with wlc_phy_txpwr_idx_get_nphy()
-A new V3 comes in same minute.
-
-
-Kind regards
-Rickard Strandqvist
