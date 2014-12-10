@@ -1,46 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:53576 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751321AbaL3Ulo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Dec 2014 15:41:44 -0500
-Date: Tue, 30 Dec 2014 21:41:41 +0100 (CET)
-From: Jiri Kosina <jkosina@suse.cz>
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"egrumbach@gmail.com" <egrumbach@gmail.com>,
-	"peter@hurleysoftware.com" <peter@hurleysoftware.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>
-Subject: Re: iwlwifi-driver card doesn't work with 3.19-rc2+
-In-Reply-To: <1419971304.30412.0.camel@egrumbacBox>
-Message-ID: <alpine.LNX.2.00.1412302135520.31609@pobox.suse.cz> (sfid-20141230_214202_019420_5DDA94F2)
-References: <alpine.LNX.2.00.1412301427430.31609@pobox.suse.cz>  <CANUX_P0=wJiKrR4cUgEN=LO+eQ2byprz0K9m9QxzJc+kf4+_bA@mail.gmail.com>  <54A2B807.1020202@hurleysoftware.com>  <0BA3FCBA62E2DC44AF3030971E174FB31B5DC915@hasmsx107.ger.corp.intel.com>
- <alpine.LNX.2.00.1412301610320.31609@pobox.suse.cz> <1419971304.30412.0.camel@egrumbacBox>
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:54376 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752651AbaLJC4p (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Dec 2014 21:56:45 -0500
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+In-Reply-To: <alpine.DEB.2.02.1412080738210.2100@localhost6.localdomain6>
+References: <1417980062-25151-1-git-send-email-Julia.Lawall@lip6.fr>
+ <CAGRGNgWDJqV=XD+6q26Ma=m1sEi1kvLWsjq6=RjRVSFTxow0Qg@mail.gmail.com> <alpine.DEB.2.02.1412080738210.2100@localhost6.localdomain6>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Wed, 10 Dec 2014 13:56:23 +1100
+Message-ID: <CAGRGNgVGEo8qqpjDvYOJRBtEjXsKmFtXSQrS_Q+tDEYS+nAQqA@mail.gmail.com> (sfid-20141210_035656_187708_906752D8)
+Subject: Re: [PATCH 0/20] fix misspelling of current function in string
+To: Julia Lawall <julia.lawall@lip6.fr>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	kernel-janitors@vger.kernel.org, linux@rasmusvillemoes.dk,
+	Joe Perches <joe@perches.com>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	linux-scsi <linux-scsi@vger.kernel.org>,
+	dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org,
+	linux-mtd@lists.infradead.org, linux-samsung-soc@vger.kernel.org,
+	"Mailing List, Arm" <linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org, netdev <netdev@vger.kernel.org>,
+	linux-usb@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 30 Dec 2014, Grumbach, Emmanuel wrote:
+Hi Julia,
 
-> You should also have the iw tool which will provide all you need
-> using the nl80211 interface which is now the preferred interface.
+On Mon, Dec 8, 2014 at 5:43 PM, Julia Lawall <julia.lawall@lip6.fr> wrote:
+> On Mon, 8 Dec 2014, Julian Calaby wrote:
+>
+>> Hi Julia,
+>>
+>> On Mon, Dec 8, 2014 at 6:20 AM, Julia Lawall <Julia.Lawall@lip6.fr> wrote:
+>> > These patches replace what appears to be a reference to the name of the
+>> > current function but is misspelled in some way by either the name of the
+>> > function itself, or by %s and then __func__ in an argument list.
+>>
+>> Would there be any value in doing this for _all_ cases where the
+>> function name is written in a format string?
+>
+> Probably.  But there are a lot of them.  Even for the misspellings, I have
+> only don about 1/3 of the cases.
+>
+> On the other hand, the misspelling have to be checked carefully, because a
+> misspelling of one thing could be the correct spelling of the thing thst
+> was actually intended.
+>
+> Joe, however, points out that a lot of these prints are just for function
+> tracing, and could be removed.  I worked on another semantic patch that
+> tries to do that.  It might be better to remove those prints completely,
+> rather than sending one patch to transform them and then one patch to
+> remove them after that.  That is why for this series I did only the ones
+> where there was actually a problem.
 
-There indeed is an iw tool.
+Ok, that makes sense.
 
-The thing is really as simple as -- userspace which is calling other 
-wireless-utils directly (such as, but absolutely not limited to, wicd), 
-will completely stop working after commit 24a0aa212e.
-
-I am still convinced that 24a0aa212e needs to be reverted, and compat 
-layer maintained for *much* longer than 2 years.
-
-If wireless maintainers think otherwise, I'll send a revert request to 
-Linus for consideration.
+Either way though, this is a really interesting application of the
+semantic patching. Nice work!
 
 Thanks,
 
 -- 
-Jiri Kosina
-SUSE Labs
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
