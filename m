@@ -1,107 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:40347 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751753AbaLXIAw (ORCPT
+Received: from mail-wg0-f51.google.com ([74.125.82.51]:33829 "EHLO
+	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751621AbaLJJXb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Dec 2014 03:00:52 -0500
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH v2 6/8] ath10k: add support to send addba request
-Date: Wed, 24 Dec 2014 13:29:07 +0530
-Message-ID: <1419407949-32367-7-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20141224_090054_831263_8E309E6F)
-In-Reply-To: <1419407949-32367-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1419407949-32367-1-git-send-email-rmanohar@qti.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 10 Dec 2014 04:23:31 -0500
+Received: by mail-wg0-f51.google.com with SMTP id x12so2994204wgg.38
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Dec 2014 01:23:29 -0800 (PST)
+From: Henning Rogge <hrogge@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Henning Rogge <hrogge@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Henning Rogge <henning.rogge@fkie.fraunhofer.de>
+Subject: [PATCH] iw: Fix calculation of maximum supported 802.11n data rate
+Date: Wed, 10 Dec 2014 10:23:20 +0100
+Message-Id: <1418203400-6451-1-git-send-email-hrogge@gmail.com> (sfid-20141210_102335_618229_C219E8CD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This per-station debugfs entry helps to send addba request in manual
-mode. Need to pass two configuration parameters (tid, buffer size)
-as input.
+Fix typo in calculation, binary AND combination of low byte
+and high byte is always zero.
 
-To send addba,
-
-echo 1 32 >/sys/kernel/debug/ieee80211/phyX/netdev:wlanX/
-	   stations/XX:XX:XX:XX:XX:XX/addba
-
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Signed-off-by: Henning Rogge <henning.rogge@fkie.fraunhofer.de>
 ---
- drivers/net/wireless/ath/ath10k/debugfs_sta.c | 56 +++++++++++++++++++++++++++
- 1 file changed, 56 insertions(+)
+ util.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/debugfs_sta.c b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
-index d5fca70..89e5e5a 100644
---- a/drivers/net/wireless/ath/ath10k/debugfs_sta.c
-+++ b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
-@@ -81,9 +81,65 @@ static const struct file_operations fops_aggr_mode = {
- 	.llseek = default_llseek,
- };
+diff --git a/util.c b/util.c
+index ce4b0ac..c61955c 100644
+--- a/util.c
++++ b/util.c
+@@ -594,7 +594,7 @@ void print_ht_mcs(const __u8 *mcs)
+ 	unsigned int tx_max_num_spatial_streams, max_rx_supp_data_rate;
+ 	bool tx_mcs_set_defined, tx_mcs_set_equal, tx_unequal_modulation;
  
-+static ssize_t ath10k_dbg_sta_write_addba(struct file *file,
-+					  const char __user *user_buf,
-+					  size_t count, loff_t *ppos)
-+{
-+	struct ieee80211_sta *sta = file->private_data;
-+	struct ath10k_sta *arsta = (struct ath10k_sta *)sta->drv_priv;
-+	struct ath10k *ar = arsta->arvif->ar;
-+	u32 tid, buf_size;
-+	int ret;
-+	char buf[64];
-+
-+	simple_write_to_buffer(buf, sizeof(buf) - 1, ppos, user_buf, count);
-+
-+	/* make sure that buf is null terminated */
-+	buf[sizeof(buf) - 1] = '\0';
-+
-+	ret = sscanf(buf, "%u %u", &tid, &buf_size);
-+	if (ret != 2) {
-+		ath10k_warn(ar, "ex: echo <tid> <buffer size> >addba\n");
-+		return -EINVAL;
-+	}
-+
-+	/* Valid TID values are 0 through 15 */
-+	if (tid > HTT_DATA_TX_EXT_TID_MGMT - 2) {
-+		ath10k_warn(ar, "Invalid TID %u\n", tid);
-+		return -EINVAL;
-+	}
-+
-+	mutex_lock(&ar->conf_mutex);
-+	if ((ar->state != ATH10K_STATE_ON) ||
-+	    (arsta->aggr_mode != ATH10K_DBG_AGGR_MODE_MANUAL)) {
-+		ret = count;
-+		goto out;
-+	}
-+
-+	ret = ath10k_wmi_addba_send(ar, arsta->arvif->vdev_id, sta->addr,
-+				    tid, buf_size);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to send addba request: vdev_id %u peer %pM tid %u buf_size %u\n",
-+			    arsta->arvif->vdev_id, sta->addr, tid, buf_size);
-+	}
-+
-+	ret = count;
-+out:
-+	mutex_unlock(&ar->conf_mutex);
-+	return ret;
-+}
-+
-+static const struct file_operations fops_addba = {
-+	.write = ath10k_dbg_sta_write_addba,
-+	.open = simple_open,
-+	.owner = THIS_MODULE,
-+	.llseek = default_llseek,
-+};
-+
- void ath10k_sta_add_debugfs(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			    struct ieee80211_sta *sta, struct dentry *dir)
- {
- 	debugfs_create_file("aggr_mode", S_IRUGO | S_IWUSR, dir, sta,
- 			    &fops_aggr_mode);
-+	debugfs_create_file("addba", S_IWUSR, dir, sta, &fops_addba);
- }
+-	max_rx_supp_data_rate = (mcs[10] & ((mcs[11] & 0x3) << 8));
++	max_rx_supp_data_rate = (mcs[10] | ((mcs[11] & 0x3) << 8));
+ 	tx_mcs_set_defined = !!(mcs[12] & (1 << 0));
+ 	tx_mcs_set_equal = !(mcs[12] & (1 << 1));
+ 	tx_max_num_spatial_streams = ((mcs[12] >> 2) & 3) + 1;
 -- 
-2.2.1
+1.9.3
 
