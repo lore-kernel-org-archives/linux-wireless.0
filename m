@@ -1,134 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f45.google.com ([74.125.82.45]:44889 "EHLO
-	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753027AbaLTRH1 (ORCPT
+Received: from mail-wg0-f51.google.com ([74.125.82.51]:50156 "EHLO
+	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932839AbaLKJ4q convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Dec 2014 12:07:27 -0500
-Received: by mail-wg0-f45.google.com with SMTP id b13so3721930wgh.18
-        for <linux-wireless@vger.kernel.org>; Sat, 20 Dec 2014 09:07:26 -0800 (PST)
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] staging: rtl8723au: core: rtw_cmd.c:  Remove some unused functions
-Date: Sat, 20 Dec 2014 18:10:13 +0100
-Message-Id: <1419095413-10163-1-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20141220_180730_989705_F0E43DD0)
+	Thu, 11 Dec 2014 04:56:46 -0500
+Received: by mail-wg0-f51.google.com with SMTP id x12so5829266wgg.24
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Dec 2014 01:56:45 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1418214714-29689-3-git-send-email-michal.kazior@tieto.com>
+References: <1418214714-29689-1-git-send-email-michal.kazior@tieto.com>
+	<1418214714-29689-3-git-send-email-michal.kazior@tieto.com>
+Date: Thu, 11 Dec 2014 10:56:43 +0100
+Message-ID: <CA+BoTQ=yrruA_D_M8P=szxy75x=r7oxG9ukCedEZwZBp-5JX1g@mail.gmail.com> (sfid-20141211_105651_013568_9A3C5A5F)
+Subject: Re: [PATCH 2/5] ath10k: fix STA u-APSD
+From: Michal Kazior <michal.kazior@tieto.com>
+To: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Removes some functions that are not used anywhere:
-rtw_set_ch_cmd23a() rtw_cmd_clr_isr23a()
+On 10 December 2014 at 13:31, Michal Kazior <michal.kazior@tieto.com> wrote:
+[...]
+> @@ -3036,14 +3061,11 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
+>                         goto err_peer_delete;
+>                 }
+>
+> -               param = WMI_STA_PS_PARAM_TX_WAKE_THRESHOLD;
+> -               value = WMI_STA_PS_TX_WAKE_THRESHOLD_ALWAYS;
+> -               ret = ath10k_wmi_set_sta_ps_param(ar, arvif->vdev_id,
+> -                                                 param, value);
+> +               ret = ath10k_mac_vif_recalc_ps_wake_threshold(arvif);
+>                 if (ret) {
+> -                       ath10k_warn(ar, "failed to set vdev %i TX wake thresh: %d\n",
+> +                       ath10k_warn(ar, "failed to recalc ps wake threshold on vdev %i: %d\n",
+>                                     arvif->vdev_id, ret);
+> -                       goto err_peer_delete;
+> +                       return ret;
 
-This was partially found by using a static code analysis program called cppcheck.
+Oops. This is wrong. I should keep the goto.
 
-Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
----
- drivers/staging/rtl8723au/core/rtw_cmd.c    |   61 ---------------------------
- drivers/staging/rtl8723au/include/rtw_cmd.h |    2 -
- 2 files changed, 63 deletions(-)
+There are also some Rx performance issues related to excessive PS-Poll usage.
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_cmd.c b/drivers/staging/rtl8723au/core/rtw_cmd.c
-index 4eaa502..a69e9bd 100644
---- a/drivers/staging/rtl8723au/core/rtw_cmd.c
-+++ b/drivers/staging/rtl8723au/core/rtw_cmd.c
-@@ -245,11 +245,6 @@ exit:
- 	return res;
- }
- 
--void rtw_cmd_clr_isr23a(struct	cmd_priv *pcmdpriv)
--{
--	pcmdpriv->cmd_done_cnt++;
--}
--
- void rtw_free_cmd_obj23a(struct cmd_obj *pcmd)
- {
- 
-@@ -855,62 +850,6 @@ exit:
- 	return res;
- }
- 
--/*
-- * This is only ever called from on_action_spct23a_ch_switch () which isn't
-- * called from anywhere itself
-- */
--int rtw_set_ch_cmd23a(struct rtw_adapter*padapter, u8 ch, u8 bw, u8 ch_offset,
--		      u8 enqueue)
--{
--	struct cmd_obj *pcmdobj;
--	struct set_ch_parm *set_ch_parm;
--	struct cmd_priv *pcmdpriv = &padapter->cmdpriv;
--	int res = _SUCCESS;
--
--	DBG_8723A("%s(%s): ch:%u, bw:%u, ch_offset:%u\n", __func__,
--		  padapter->pnetdev->name, ch, bw, ch_offset);
--
--	/* check input parameter */
--
--	/* prepare cmd parameter */
--	set_ch_parm = kzalloc(sizeof(*set_ch_parm), GFP_KERNEL);
--	if (!set_ch_parm) {
--		res = _FAIL;
--		goto exit;
--	}
--	set_ch_parm->ch = ch;
--	set_ch_parm->bw = bw;
--	set_ch_parm->ch_offset = ch_offset;
--
--	if (enqueue) {
--		/* need enqueue, prepare cmd_obj and enqueue */
--		pcmdobj = kzalloc(sizeof(struct cmd_obj), GFP_KERNEL);
--		if (!pcmdobj) {
--			kfree(set_ch_parm);
--			res = _FAIL;
--			goto exit;
--		}
--
--		init_h2fwcmd_w_parm_no_rsp(pcmdobj, set_ch_parm,
--					   GEN_CMD_CODE(_SetChannel));
--		res = rtw_enqueue_cmd23a(pcmdpriv, pcmdobj);
--	} else {
--		/* no need to enqueue, do the cmd hdl directly and
--		   free cmd parameter */
--		if (H2C_SUCCESS != set_ch_hdl23a(padapter, (u8 *)set_ch_parm))
--			res = _FAIL;
--
--		kfree(set_ch_parm);
--	}
--
--	/* do something based on res... */
--exit:
--
--	DBG_8723A("%s(%s): res:%u\n", __func__, padapter->pnetdev->name, res);
--
--	return res;
--}
--
- static void traffic_status_watchdog(struct rtw_adapter *padapter)
- {
- 	u8 bEnterPS;
-diff --git a/drivers/staging/rtl8723au/include/rtw_cmd.h b/drivers/staging/rtl8723au/include/rtw_cmd.h
-index ef67068..2322b27 100644
---- a/drivers/staging/rtl8723au/include/rtw_cmd.h
-+++ b/drivers/staging/rtl8723au/include/rtw_cmd.h
-@@ -100,7 +100,6 @@ int rtw_init_cmd_priv23a(struct cmd_priv *pcmdpriv);
- 
- u32 rtw_init_evt_priv23a (struct evt_priv *pevtpriv);
- void rtw_free_evt_priv23a (struct evt_priv *pevtpriv);
--void rtw_cmd_clr_isr23a(struct cmd_priv *pcmdpriv);
- void rtw_evt_notify_isr(struct evt_priv *pevtpriv);
- 
- enum rtw_drvextra_cmd_id
-@@ -715,7 +714,6 @@ int rtw_ps_cmd23a(struct rtw_adapter*padapter);
- int rtw_chk_hi_queue_cmd23a(struct rtw_adapter*padapter);
- #endif
- 
--int rtw_set_ch_cmd23a(struct rtw_adapter*padapter, u8 ch, u8 bw, u8 ch_offset, u8 enqueue);
- int rtw_set_chplan_cmd(struct rtw_adapter*padapter, u8 chplan, u8 enqueue);
- int rtw_led_blink_cmd(struct rtw_adapter*padapter, struct led_8723a *pLed);
- int rtw_set_csa_cmd(struct rtw_adapter*padapter, u8 new_ch_no);
--- 
-1.7.10.4
+I'll re-spin later.
 
+
+Michał
