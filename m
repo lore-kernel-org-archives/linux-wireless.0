@@ -1,49 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:6657 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753491AbaLANiz (ORCPT
+Received: from mail-wg0-f51.google.com ([74.125.82.51]:38411 "EHLO
+	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759105AbaLKWXx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Dec 2014 08:38:55 -0500
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH 8/9] wil6210: reset flow update
-Date: Mon, 1 Dec 2014 15:36:31 +0200
-Message-ID: <1417440991-27358-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20141201_143859_470762_837CEC95)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 11 Dec 2014 17:23:53 -0500
+Received: by mail-wg0-f51.google.com with SMTP id x12so7553564wgg.24
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Dec 2014 14:23:51 -0800 (PST)
+From: Krzysztof Konopko <kris@konagma.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org, kris@konagma.com
+Subject: [PATCH] staging: rtl8723au: Fix sparse warnings
+Date: Thu, 11 Dec 2014 23:23:29 +0100
+Message-Id: <1418336609-10191-1-git-send-email-kris@konagma.com> (sfid-20141211_232356_785592_817C6402)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If card reset with firmware download executed, followed by reset
-with use of firmware from build in flash, firmware download indication
-remains in the hardware register.
-When running firmware download flow,
-the SW download indication is written by the driver to bit 0 in usage_6:
-wil_fw_load(), "S(RGF_USER_USAGE_6, 1);"
-This register, like all USER RGF, wasn't reset in SW reset flow.
-Therefore the driver must clear it on SW reset flow.
+Some struct fields in wifi.h are meant to be __le16 bu were declared as
+unsigned short.  This was reported by sparse:
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+  rtw_wlan_util.c:538:24: warning: cast to restricted __le16
+  rtw_wlan_util.c:1544:29: warning: cast to restricted __le16
+  rtw_wlan_util.c:1546:25: warning: cast to restricted __le16
+
+This patch changes declared types of the struct fields involved.
+
+Signed-off-by: Krzysztof Konopko <kris@konagma.com>
 ---
- drivers/net/wireless/ath/wil6210/main.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/staging/rtl8723au/include/wifi.h | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 8f257a4..8ff3fe3 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -493,6 +493,9 @@ static int wil_target_reset(struct wil6210_priv *wil)
+diff --git a/drivers/staging/rtl8723au/include/wifi.h b/drivers/staging/rtl8723au/include/wifi.h
+index fd3da3b..8a2adc5 100644
+--- a/drivers/staging/rtl8723au/include/wifi.h
++++ b/drivers/staging/rtl8723au/include/wifi.h
+@@ -28,7 +28,7 @@
+ struct AC_param {
+ 	unsigned char		ACI_AIFSN;
+ 	unsigned char		CW;
+-	unsigned short	TXOP_limit;
++	__le16			TXOP_limit;
+ }  __packed;
  
- 	wil_halt_cpu(wil);
+ struct WMM_para_element {
+@@ -39,9 +39,9 @@ struct WMM_para_element {
  
-+	/* Clear Fw Download notification */
-+	C(RGF_USER_USAGE_6, BIT(0));
-+
- 	if (is_sparrow) {
- 		S(RGF_CAF_OSC_CONTROL, BIT_CAF_OSC_XTAL_EN);
- 		/* XTAL stabilization should take about 3ms */
+ struct ADDBA_request {
+ 	unsigned char		dialog_token;
+-	unsigned short	BA_para_set;
++	__le16		BA_para_set;
+ 	unsigned short	BA_timeout_value;
+-	unsigned short	BA_starting_seqctrl;
++	__le16		BA_starting_seqctrl;
+ }  __packed;
+ 
+ 
 -- 
-2.1.0
+2.1.3
 
