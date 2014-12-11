@@ -1,141 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f46.google.com ([74.125.82.46]:63215 "EHLO
-	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751860AbaL3WK1 (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:50236 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932937AbaLKBvk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Dec 2014 17:10:27 -0500
-Received: by mail-wg0-f46.google.com with SMTP id x13so21445613wgg.33
-        for <linux-wireless@vger.kernel.org>; Tue, 30 Dec 2014 14:10:26 -0800 (PST)
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: nbd@openwrt.org, thomas@net.t-labs.tu-berlin.de, adrian@freebsd.org
-Subject: [PATCH 2/3] ath9k: add TPC to TX path for AR9002 based chips
-Date: Tue, 30 Dec 2014 23:10:19 +0100
-Message-Id: <1419977420-23732-3-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20141230_231047_725627_3F71FAD8)
-In-Reply-To: <1419977420-23732-1-git-send-email-lorenzo.bianconi83@gmail.com>
-References: <1419977420-23732-1-git-send-email-lorenzo.bianconi83@gmail.com>
+	Wed, 10 Dec 2014 20:51:40 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: [PATCH 1/4] ath9k: Add HW IDs for QCA956x
+Date: Thu, 11 Dec 2014 07:23:37 +0530
+Message-Id: <1418262820-24856-2-git-send-email-sujith@msujith.org> (sfid-20141211_025143_817770_26D21CF4)
+In-Reply-To: <1418262820-24856-1-git-send-email-sujith@msujith.org>
+References: <1418262820-24856-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add TPC capability to TX descriptor path for AR9002 based chips. Scale
-per-packet TX power according to eeprom power bias, power adjustments for
-HT40 mode and open loop CCK rates. Cap per-packet TX power according to
-TX power per-rate tables
+From: Miaoqing Pan <miaoqing@qca.qualcomm.com>
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+Signed-off-by: Miaoqing Pan <miaoqing@qca.qualcomm.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath9k/xmit.c | 68 ++++++++++++++++++++++++++++-------
- 1 file changed, 56 insertions(+), 12 deletions(-)
+ drivers/net/wireless/ath/ath9k/ahb.c | 4 ++++
+ drivers/net/wireless/ath/ath9k/hw.c  | 4 ++++
+ drivers/net/wireless/ath/ath9k/hw.h  | 1 +
+ drivers/net/wireless/ath/ath9k/reg.h | 4 ++++
+ 4 files changed, 13 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 52d63de..9c332f9 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1097,24 +1097,65 @@ void ath_update_max_aggr_framelen(struct ath_softc *sc, int queue, int txop)
- }
+diff --git a/drivers/net/wireless/ath/ath9k/ahb.c b/drivers/net/wireless/ath/ath9k/ahb.c
+index 4173838..d8bb603 100644
+--- a/drivers/net/wireless/ath/ath9k/ahb.c
++++ b/drivers/net/wireless/ath/ath9k/ahb.c
+@@ -43,6 +43,10 @@ static const struct platform_device_id ath9k_platform_id_table[] = {
+ 		.name = "qca953x_wmac",
+ 		.driver_data = AR9300_DEVID_AR953X,
+ 	},
++	{
++		.name = "qca956x_wmac",
++		.driver_data = AR9300_DEVID_QCA956X,
++	},
+ 	{},
+ };
  
- static u8 ath_get_rate_txpower(struct ath_softc *sc, struct ath_buf *bf,
--			       u8 rateidx)
-+			       u8 rateidx, bool is_40, bool is_cck)
- {
- 	u8 max_power;
-+	struct sk_buff *skb;
-+	struct ath_frame_info *fi;
-+	struct ieee80211_tx_info *info;
- 	struct ath_hw *ah = sc->sc_ah;
- 
--	if (sc->tx99_state)
-+	if (sc->tx99_state || !ah->tpc_enabled)
- 		return MAX_RATE_POWER;
- 
-+	skb = bf->bf_mpdu;
-+	fi = get_frame_info(skb);
-+	info = IEEE80211_SKB_CB(skb);
-+
- 	if (!AR_SREV_9300_20_OR_LATER(ah)) {
--		/* ar9002 does not support TPC for the moment */
--		return MAX_RATE_POWER;
--	}
-+		int txpower = fi->tx_power;
- 
--	if (!bf->bf_state.bfs_paprd) {
--		struct sk_buff *skb = bf->bf_mpdu;
--		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
--		struct ath_frame_info *fi = get_frame_info(skb);
-+		if (is_40) {
-+			u8 power_ht40delta;
-+			struct ar5416_eeprom_def *eep = &ah->eeprom.def;
- 
-+			if (AR5416_VER_MASK >= AR5416_EEP_MINOR_VER_2) {
-+				bool is_2ghz;
-+				struct modal_eep_header *pmodal;
-+
-+				is_2ghz = info->band == IEEE80211_BAND_2GHZ;
-+				pmodal = &eep->modalHeader[is_2ghz];
-+				power_ht40delta = pmodal->ht40PowerIncForPdadc;
-+			} else {
-+				power_ht40delta = 2;
-+			}
-+			txpower += power_ht40delta;
-+		}
-+
-+		if (AR_SREV_9287(ah) || AR_SREV_9285(ah) ||
-+		    AR_SREV_9271(ah)) {
-+			txpower -= 2 * AR9287_PWR_TABLE_OFFSET_DB;
-+		} else if (AR_SREV_9280_20_OR_LATER(ah)) {
-+			s8 power_offset;
-+
-+			power_offset = ah->eep_ops->get_eeprom(ah,
-+							EEP_PWR_TABLE_OFFSET);
-+			txpower -= 2 * power_offset;
-+		}
-+
-+		if (OLC_FOR_AR9280_20_LATER && is_cck)
-+			txpower -= 2;
-+
-+		txpower = max(txpower, 0);
-+		max_power = min_t(u8, ah->tx_power[rateidx], txpower);
-+
-+		/* XXX: clamp minimum TX power at 1 for AR9160 since if
-+		 * max_power is set to 0, frames are transmitted at max
-+		 * TX power
-+		 */
-+		if (!max_power && !AR_SREV_9280_20_OR_LATER(ah))
-+			max_power = 1;
-+	} else if (!bf->bf_state.bfs_paprd) {
- 		if (rateidx < 8 && (info->flags & IEEE80211_TX_CTL_STBC))
- 			max_power = min(ah->tx_power_stbc[rateidx],
- 					fi->tx_power);
-@@ -1152,7 +1193,7 @@ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf,
- 	info->rtscts_rate = fi->rtscts_rate;
- 
- 	for (i = 0; i < ARRAY_SIZE(bf->rates); i++) {
--		bool is_40, is_sgi, is_sp;
-+		bool is_40, is_sgi, is_sp, is_cck;
- 		int phy;
- 
- 		if (!rates[i].count || (rates[i].idx < 0))
-@@ -1198,7 +1239,8 @@ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf,
- 			if (rix < 8 && (tx_info->flags & IEEE80211_TX_CTL_STBC))
- 				info->rates[i].RateFlags |= ATH9K_RATESERIES_STBC;
- 
--			info->txpower[i] = ath_get_rate_txpower(sc, bf, rix);
-+			info->txpower[i] = ath_get_rate_txpower(sc, bf, rix,
-+								is_40, false);
- 			continue;
- 		}
- 
-@@ -1227,7 +1269,9 @@ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf,
- 		info->rates[i].PktDuration = ath9k_hw_computetxtime(sc->sc_ah,
- 			phy, rate->bitrate * 100, len, rix, is_sp);
- 
--		info->txpower[i] = ath_get_rate_txpower(sc, bf, rix);
-+		is_cck = IS_CCK_RATE(info->rates[i].Rate);
-+		info->txpower[i] = ath_get_rate_txpower(sc, bf, rix, false,
-+							is_cck);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 6d4b273..49510ff 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -246,6 +246,8 @@ static void ath9k_hw_read_revisions(struct ath_hw *ah)
+ 	case AR9300_DEVID_AR953X:
+ 		ah->hw_version.macVersion = AR_SREV_VERSION_9531;
+ 		return;
++	case AR9300_DEVID_QCA956X:
++		ah->hw_version.macVersion = AR_SREV_VERSION_9561;
  	}
  
- 	/* For AR5416 - RTS cannot be followed by a frame larger than 8K */
+ 	val = REG_READ(ah, AR_SREV) & AR_SREV_ID;
+@@ -536,6 +538,7 @@ static int __ath9k_hw_init(struct ath_hw *ah)
+ 	case AR_SREV_VERSION_9550:
+ 	case AR_SREV_VERSION_9565:
+ 	case AR_SREV_VERSION_9531:
++	case AR_SREV_VERSION_9561:
+ 		break;
+ 	default:
+ 		ath_err(common,
+@@ -636,6 +639,7 @@ int ath9k_hw_init(struct ath_hw *ah)
+ 	case AR9485_DEVID_AR1111:
+ 	case AR9300_DEVID_AR9565:
+ 	case AR9300_DEVID_AR953X:
++	case AR9300_DEVID_QCA956X:
+ 		break;
+ 	default:
+ 		if (common->bus_ops->ath_bus_type == ATH_USB)
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 1cbd335..64bfcbd 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -54,6 +54,7 @@
+ #define AR9485_DEVID_AR1111	0x0037
+ #define AR9300_DEVID_AR9565     0x0036
+ #define AR9300_DEVID_AR953X     0x003d
++#define AR9300_DEVID_QCA956X    0x003f
+ 
+ #define AR5416_AR9100_DEVID	0x000b
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index fb11a91..eb2bb0d 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -814,6 +814,7 @@
+ #define AR_SREV_REVISION_9531_10        0
+ #define AR_SREV_REVISION_9531_11        1
+ #define AR_SREV_REVISION_9531_20        2
++#define AR_SREV_VERSION_9561            0x600
+ 
+ #define AR_SREV_5416(_ah) \
+ 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_5416_PCI) || \
+@@ -974,6 +975,9 @@
+ 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9531) && \
+ 	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9531_20))
+ 
++#define AR_SREV_9561(_ah) \
++	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9561))
++
+ /* NOTE: When adding chips newer than Peacock, add chip check here */
+ #define AR_SREV_9580_10_OR_LATER(_ah) \
+ 	(AR_SREV_9580(_ah))
 -- 
-2.1.0
+2.1.3
 
