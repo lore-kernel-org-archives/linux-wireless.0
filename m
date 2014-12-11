@@ -1,54 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f173.google.com ([209.85.217.173]:52191 "EHLO
-	mail-lb0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752260AbaLIWSA (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:49714 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933609AbaLKKK6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Dec 2014 17:18:00 -0500
-Received: by mail-lb0-f173.google.com with SMTP id z12so1320670lbi.32
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Dec 2014 14:17:58 -0800 (PST)
-Date: Wed, 10 Dec 2014 00:08:04 +0200
-From: vadim4j@gmail.com
+	Thu, 11 Dec 2014 05:10:58 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: vadim4j@gmail.com, John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] mac80211: Supporting of IFLA_INFO_KIND rtnl attribute
-Message-ID: <20141209220804.GA3485@angus-think.lan> (sfid-20141209_231804_990080_05CF7106)
-References: <1417947627-2329-1-git-send-email-vadim4j@gmail.com>
- <1418023628.2001.0.camel@sipsolutions.net>
- <CAMw6YJ+8JpgTG4AbJo71JuOW8jpEo5HxFX=bDDPcpd4L_b6drA@mail.gmail.com>
- <1418033823.2001.1.camel@sipsolutions.net>
- <20141208214845.GA1709@angus-think.lan>
- <1418113458.2621.0.camel@sipsolutions.net>
+CC: Sujith Manoharan <sujith@msujith.org>,
+	<linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: Re: [PATCH 3/4] ath10k: Fix no-ack frame status
+References: <1418226973-13779-1-git-send-email-sujith@msujith.org>
+	<1418226973-13779-3-git-send-email-sujith@msujith.org>
+Date: Thu, 11 Dec 2014 12:10:39 +0200
+In-Reply-To: <1418226973-13779-3-git-send-email-sujith@msujith.org> (Sujith
+	Manoharan's message of "Wed, 10 Dec 2014 21:26:12 +0530")
+Message-ID: <87oarazecg.fsf@kamboji.qca.qualcomm.com> (sfid-20141211_111106_498830_ABE8173A)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1418113458.2621.0.camel@sipsolutions.net>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 09, 2014 at 09:24:18AM +0100, Johannes Berg wrote:
-> On Mon, 2014-12-08 at 23:48 +0200, vadim4j@gmail.com wrote:
-> 
-> > What I worry about is this peace of code in net/core/dev.c : 
-> > 
-> >     int register_netdevice(struct net_device *dev)
-> >     {
-> >             ...
-> > 
-> >             if (!dev->rtnl_link_ops ||
-> >                 dev->rtnl_link_state == RTNL_LINK_INITIALIZED)
-> >                     rtmsg_ifinfo(RTM_NEWLINK, dev, ~0U, GFP_KERNEL);
-> >             ...
-> >     }
-> 
-> rtnl_link_state should be RTNL_LINK_INITIALIZED though, unless somebody
-> set something else.
-> 
-> johannes
-> 
+Sujith Manoharan <sujith@msujith.org> writes:
 
-OK I tested & checked by code that RTNL_LINK_INITIALIZED is set, and
-RTM_NEWLINK message will be sent as it was before.
+> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+>
+> Use the new IEEE80211_TX_STAT_NOACK_TRANSMITTED flag
+> to indicate successful transmission of no-ack frames.
+> This fixes multicast frame accounting.
+>
+> Cc: ath10k@lists.infradead.org
+> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-I will resend the patch.
+Johannes, are you planning to take this? Or should I take this once the
+corresponding mac80211 patch trickles down to my tree?
 
-Thanks,
+-- 
+Kalle Valo
