@@ -1,62 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:59317 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751127AbaLZSd3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Dec 2014 13:33:29 -0500
-From: Oscar Forner Martinez <oscar.forner.martinez@gmail.com>
-To: zajec5@gmail.com
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Oscar Forner Martinez <oscar.forner.martinez@gmail.com>
-Subject: [PATCH v2] bcma: Fix three coding style issues, more than 80 characters per line
-Date: Fri, 26 Dec 2014 18:33:18 +0000
-Message-Id: <1419618798-9275-1-git-send-email-oscar.forner.martinez@gmail.com> (sfid-20141226_193347_483651_98F486A9)
+Received: from s3.sipsolutions.net ([5.9.151.49]:57995 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752517AbaLKTMy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Dec 2014 14:12:54 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+	(Exim 4.84)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1Xz9AQ-0007GF-7R
+	for linux-wireless@vger.kernel.org; Thu, 11 Dec 2014 20:12:50 +0100
+Message-ID: <1418325168.1947.3.camel@sipsolutions.net> (sfid-20141211_201257_636536_44C3CF3F)
+Subject: Re: wireless workshop - was: Netdev 0.1 Call for Proposals
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 11 Dec 2014 20:12:48 +0100
+In-Reply-To: <1417595097.2640.3.camel@sipsolutions.net> (sfid-20141203_092515_439169_C2643555)
+References: <20141203022815.GM4612@toccata2.tricolour.ca>
+	 (sfid-20141203_033529_861866_D2E3478C) <1417595097.2640.3.camel@sipsolutions.net>
+	 (sfid-20141203_092515_439169_C2643555)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Three lines with more than 80 characters per line have been split in several lines.
+On Wed, 2014-12-03 at 09:24 +0100, Johannes Berg wrote:
 
-Signed-off-by: Oscar Forner Martinez <oscar.forner.martinez@gmail.com>
----
- drivers/bcma/driver_chipcommon.c | 11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
+> FWIW, we're planning a wireless summit as a workshop here, which should
+> give us a little more breathing room than e.g. the 3-hour slot at LPC.
+> I'll put up the wiki page and other things and start working on an
+> agenda when I'm back home next week.
 
-diff --git a/drivers/bcma/driver_chipcommon.c b/drivers/bcma/driver_chipcommon.c
-index 19f6796..15f044d 100644
---- a/drivers/bcma/driver_chipcommon.c
-+++ b/drivers/bcma/driver_chipcommon.c
-@@ -79,7 +79,9 @@ static int bcma_chipco_watchdog_ticks_per_ms(struct bcma_drv_cc *cc)
- 
- 	if (cc->capabilities & BCMA_CC_CAP_PMU) {
- 		if (bus->chipinfo.id == BCMA_CHIP_ID_BCM4706)
--			/* 4706 CC and PMU watchdogs are clocked at 1/4 of ALP clock */
-+			/* 4706 CC and PMU watchdogs are clocked
-+			 * at 1/4 of ALP clock
-+			 */
- 			return bcma_chipco_get_alp_clock(cc) / 4000;
- 		else
- 			/* based on 32KHz ILP clock */
-@@ -97,7 +99,8 @@ int bcma_chipco_watchdog_register(struct bcma_drv_cc *cc)
- 	wdt.driver_data = cc;
- 	wdt.timer_set = bcma_chipco_watchdog_timer_set_wdt;
- 	wdt.timer_set_ms = bcma_chipco_watchdog_timer_set_ms_wdt;
--	wdt.max_timer_ms = bcma_chipco_watchdog_get_max_timer(cc) / cc->ticks_per_ms;
-+	wdt.max_timer_ms =
-+		bcma_chipco_watchdog_get_max_timer(cc) / cc->ticks_per_ms;
- 
- 	pdev = platform_device_register_data(NULL, "bcm47xx-wdt",
- 					     cc->core->bus->num, &wdt,
-@@ -335,7 +338,9 @@ void bcma_chipco_serial_init(struct bcma_drv_cc *cc)
- 				       | BCMA_CC_CORECTL_UARTCLKEN);
- 		}
- 	} else {
--		bcma_err(cc->core->bus, "serial not supported on this device ccrev: 0x%x\n", ccrev);
-+		bcma_err(cc->core->bus,
-+			 "serial not supported on this device ccrev: 0x%x\n",
-+			 ccrev);
- 		return;
- 	}
- 
--- 
-2.2.1
+I've put up a very very very early version of the wiki page here:
+
+http://wireless.kernel.org/en/developers/Summits/Ottawa-2015
+
+Please submit topics for the workshop.
+
+> Wireless-related submissions for the remainder of the conference are
+> also very welcome and encouraged!
+
+These would be papers for the remainder of the conference, separate from
+the discussion topics for the workshop and for the bigger conference
+audience.
+
+johannes
 
