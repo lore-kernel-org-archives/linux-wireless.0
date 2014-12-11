@@ -1,29 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33248 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S967013AbaLLMp2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Dec 2014 07:45:28 -0500
-Message-ID: <1418388320.2470.36.camel@sipsolutions.net> (sfid-20141212_134531_785154_CC321668)
-Subject: Re: [PATCH 1/4] mac80211: Move IEEE80211_TX_CTL_PS_RESPONSE
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sujith Manoharan <sujith@msujith.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 12 Dec 2014 13:45:20 +0100
-In-Reply-To: <1418226973-13779-1-git-send-email-sujith@msujith.org>
-References: <1418226973-13779-1-git-send-email-sujith@msujith.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from toccata2.tricolour.ca ([204.225.221.17]:36956 "EHLO
+	toccata2.tricolour.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932855AbaLKBDh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Dec 2014 20:03:37 -0500
+Date: Wed, 10 Dec 2014 20:03:31 -0500
+From: Richard Guy Briggs <rgb@tricolour.ca>
+To: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	lwn@lwn.net, netdev01@lists.netfilter.org, lartc@vger.kernel.org,
+	netfilter@vger.kernel.org, netfilter-devel@vger.kernel.org
+Subject: NetDev 0.1 Registration open
+Message-ID: <20141211010331.GP21601@toccata2.tricolour.ca> (sfid-20141211_020345_245819_FB957413)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-12-10 at 21:26 +0530, Sujith Manoharan wrote:
-> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-> 
-> Move IEEE80211_TX_CTL_PS_RESPONSE to info->control.flags since
-> this is used only in the TX path (by ath9k). This frees up
-> a bit which can be used for other purposes.
+We are pleased to announce that registration is now open for netdev 0.1, the
+community-driven Linux networking conference held back-to-back with netconf in 
+Ottawa, Canada, February 14-17, 2015.
 
-Applied.
+Registration is now open at https://onlineregistrations.ca/netdev01.
+Fees: $100/day, or $350 for 4 days (Canadian Dollars)
 
-johannes
+Online registration closes Feb 12.
 
+
+Main site:                      https://www.netdev01.org/
+Announcement:                   https://www.netdev01.org/announce
+CFP:                            https://www.netdev01.org/cfp
+Travel/hotel/weather/clothing:  https://www.netdev01.org/travel
+
+
+
+	slainte mhath, RGB
+
+--
+Richard Guy Briggs               --  ~\    -- ~\
+<www.TriColour.ca>                 --  \___   o \@       @
+Ottawa, ON, CANADA                  --  Lo_>__M__\\/\%__\\/\%
+_____________________________GTVS6#790__(*)__(*)________(*)(*)_________________
