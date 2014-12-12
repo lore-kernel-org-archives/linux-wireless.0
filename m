@@ -1,116 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:41759 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751096AbaLXCfX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Dec 2014 21:35:23 -0500
+Received: from arrakis.dune.hu ([78.24.191.176]:58815 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S967589AbaLLNk3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Dec 2014 08:40:29 -0500
+Message-ID: <548AF047.9080404@openwrt.org> (sfid-20141212_144032_336936_0EBB7A96)
+Date: Fri, 12 Dec 2014 14:40:23 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <5499C154.3000500@broadcom.com>
-References: <20141223152747.GA14667@vaishali-Ideapad-Z570>
-	<5499C154.3000500@broadcom.com>
-Date: Wed, 24 Dec 2014 08:05:22 +0530
-Message-ID: <CAK-LDb+PkqTXebZ2=5S42b+c7DGzgxs3Ey3d0S0NBDWuFNi7pw@mail.gmail.com> (sfid-20141224_033543_033611_197F06C4)
-Subject: Re: [PATCH] NFC: port100: Introduce the use of function put_unaligned_le16
-From: Vaishali Thakkar <vthakkar1994@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless@vger.kernel.org, lauro.venancio@openbossa.org,
-	aloisio.almeida@openbossa.org, sameo@linux.intel.com,
-	linux-kernel@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Content-Type: text/plain; charset=UTF-8
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: add an intermediate software queue implementation
+References: <1416352495-82172-1-git-send-email-nbd@openwrt.org> <1418390516.2470.46.camel@sipsolutions.net>
+In-Reply-To: <1418390516.2470.46.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 24, 2014 at 12:54 AM, Arend van Spriel <arend@broadcom.com> wrote:
-> On 12/23/14 16:27, Vaishali Thakkar wrote:
->>
->> This patch introduces the use of function put_unaligned_le16.
->>
->> This is done using Coccinelle and semantic patch used is as follows:
->>
->> @a@
->> typedef u16, __le16;
->> {u16,__le16} e16;
->> identifier tmp;
->> expression ptr;
->> expression y,e;
->> type T;
->> @@
->>
->> - tmp = cpu_to_le16(y);
->>
->>    <+... when != tmp
->> (
->> - memcpy(ptr, (T)&tmp, \(2\|sizeof(u16)\|sizeof(__le16)\|sizeof(e16)\));
->> + put_unaligned_le16(y,ptr);
->> |
->> - memcpy(ptr, (T)&tmp, ...);
->> + put_unaligned_le16(y,ptr);
->> )
->>    ...+>
->> ? tmp = e
->>
->> @@ type T; identifier a.tmp; @@
->>
->> - T tmp;
->> ...when != tmp
->>
->> Signed-off-by: Vaishali Thakkar<vthakkar1994@gmail.com>
->> ---
->>   drivers/nfc/port100.c | 6 ++----
->>   1 file changed, 2 insertions(+), 4 deletions(-)
->>
->> diff --git a/drivers/nfc/port100.c b/drivers/nfc/port100.c
->> index 4ac4d31..f7cbca8 100644
->> --- a/drivers/nfc/port100.c
->> +++ b/drivers/nfc/port100.c
->> @@ -18,6 +18,7 @@
->>   #include<linux/module.h>
->>   #include<linux/usb.h>
->>   #include<net/nfc/digital.h>
->> +#include<linux/unaligned/access_ok.h>
->
->
-> It is incorrect to use this header file as was pointed out by Johannes to me
-> in a brcmfmac driver patch [1]. Unless this driver is architecture specific.
->
-> Regards,
-> Arend
->
-> [1]
-> https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=a1d69c60c44
+On 2014-12-12 14:21, Johannes Berg wrote:
+> On Wed, 2014-11-19 at 00:14 +0100, Felix Fietkau wrote:
+> 
+>> +	struct txq_info *txq;
+>> +	atomic_t txq_len[IEEE80211_NUM_ACS];
+> 
+> I think you should consider renaming the latter to txqs_len or so - it
+> doesn't just cover one txq as is be implied by the name now. Otherwise
+> the skb_queue_head also maintains the length anyway, but I think you
+> need the aggregate for all stations here...
+> 
+> Some documentation for this and the vif.txq would be good too :)
+> 
+> In fact - it might be worthwhile to take parts of the commit message and
+> elaborate a bit on it and write a whole DOC: section?
+Yeah, makes sense.
 
-Ok. Thanks for pointing out. I didn't know this. So, I guess using
-<asm/unaligned.h> could make sense. Should I include this??
+>> --- a/net/mac80211/sta_info.h
+>> +++ b/net/mac80211/sta_info.h
+>> @@ -371,6 +371,7 @@ struct sta_info {
+>>  	struct sk_buff_head ps_tx_buf[IEEE80211_NUM_ACS];
+>>  	struct sk_buff_head tx_filtered[IEEE80211_NUM_ACS];
+>>  	unsigned long driver_buffered_tids;
+>> +	void *txq;
+> 
+> You can still use struct txq_info * here even when it's not declared yet
+> (since it's in the other header file)
+OK.
 
->>   #define VERSION "0.1"
->>
->> @@ -1136,7 +1137,6 @@ static int port100_in_send_cmd(struct
->> nfc_digital_dev *ddev,
->>   {
->>         struct port100 *dev = nfc_digital_get_drvdata(ddev);
->>         struct port100_cb_arg *cb_arg;
->> -       __le16 timeout;
->>
->>         cb_arg = kzalloc(sizeof(struct port100_cb_arg), GFP_KERNEL);
->>         if (!cb_arg)
->> @@ -1145,9 +1145,7 @@ static int port100_in_send_cmd(struct
->> nfc_digital_dev *ddev,
->>         cb_arg->complete_cb = cb;
->>         cb_arg->complete_arg = arg;
->>
->> -       timeout = cpu_to_le16(_timeout * 10);
->> -
->> -       memcpy(skb_push(skb, sizeof(__le16)),&timeout, sizeof(__le16));
->> +       put_unaligned_le16(_timeout * 10, skb_push(skb, sizeof(__le16)));
->>
->>         return port100_send_cmd_async(dev, PORT100_CMD_IN_COMM_RF, skb,
->>                                       port100_in_comm_rf_complete,
->> cb_arg);
->
->
+>> +static void ieee80211_drv_tx(struct ieee80211_local *local,
+>> +			     struct ieee80211_vif *vif,
+>> +			     struct ieee80211_sta *pubsta,
+>> +			     struct sk_buff *skb)
+>> +{
+>> +	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+>> +	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
+>> +	struct ieee80211_tx_control control = {
+>> +		.sta = pubsta
+>> +	};
+>> +	struct ieee80211_txq *pubtxq = NULL;
+>> +	struct txq_info *txq;
+>> +	u8 ac;
+>> +
+>> +	if (ieee80211_is_mgmt(hdr->frame_control) ||
+>> +	    ieee80211_is_ctl(hdr->frame_control))
+>> +		goto tx_normal;
+>> +
+>> +	if (pubsta) {
+>> +		u8 tid = skb->priority & IEEE80211_QOS_CTL_TID_MASK;
+>> +		pubtxq = pubsta->txq[tid];
+>> +	} else {
+>> +		pubtxq = vif->txq;
+>> +	}
+> 
+> This is a bit confusing - isn't this the same as &sdata->txq.txq?
+Right, I should probably use that.
 
+> Then
+> again what even sets vif->txq? Shouldn't those be per-AC? Do you really
+> want to mix 'normal' and txq-TX?
+Are we even using multiple ACs for packets that don't belong to a
+particular sta? I thought normal mcast data frames only use non-QoS
+frames. And yes, I'm currently mixing normal and txq-TX to prioritize
+ctl/mgmt frames over other less important traffic.
 
+> I think you should also use txqi as variables for txq_info - it gets
+> cumbersome to distinguish the two everywhere.
+Will do.
 
--- 
-Vaishali
+> Also in many cases where you have txq allocation failures you just
+> continue as is, I'm not sure that's such a great idea. Those driver
+> paths will practically never get tested.
+It will just do normal tx in that case, which should work.
+
+>> +	if (!pubtxq)
+>> +		goto tx_normal;
+>> +
+>> +	ac = pubtxq->ac;
+>> +	txq = container_of(pubtxq, struct txq_info, txq);
+>> +	atomic_inc(&sdata->txq_len[ac]);
+>> +	if (atomic_read(&sdata->txq_len[ac]) >= local->hw.txq_ac_max_pending)
+>> +		netif_stop_subqueue(sdata->dev, ac);
+>> +
+>> +	skb_queue_tail(&txq->queue, skb);
+>> +	drv_wake_tx_queue(local, txq);
+> 
+> You might consider doing locking differently here - I think you probably
+> don't need the txq->queue spinlock at all since you're in per-AC and
+> mappings are static. Not sure how that interacts with other parts of the
+> code though.
+I wanted to use the lock to give the driver the freedom to call
+ieee80211_tx_dequeue from outside of normal per-AC tx context.
+
+>> +int ieee80211_tx_dequeue(struct ieee80211_hw *hw, struct ieee80211_txq *pubtxq,
+>> +			 struct sk_buff **dest)
+> 
+> I'd prefer you return the skb and use ERR_PTR() for errors.
+Will do
+
+>> +void ieee80211_init_tx_queue(struct ieee80211_sub_if_data *sdata,
+>> +			     struct sta_info *sta,
+>> +			     struct txq_info *txq, int tid)
+>> +{
+>> +	skb_queue_head_init(&txq->queue);
+>> +	txq->txq.vif = &sdata->vif;
+>> +
+>> +	if (sta) {
+>> +		txq->txq.sta = &sta->sta;
+>> +		sta->sta.txq[tid] = &txq->txq;
+>> +		txq->txq.ac = ieee802_1d_to_ac[tid & 7];
+>> +	} else {
+>> +		sdata->vif.txq = &txq->txq;
+>> +		txq->txq.ac = IEEE80211_AC_BE;
+>> +	}
+> 
+> Again, I don't quite understand the single AC queue here per vif. It
+> seems it should be one for each AC and possibly one for cab? Or none at
+> all - I don't really see what this single one would be used for, in the
+> TX code you seem to use it for mcast data only but then I don't really
+> see the point. It's also not part of the queue length accounting.
+I handle CAB through normal mac80211 mcast buffering.
+
+>> +void ieee80211_flush_tx_queue(struct ieee80211_local *local,
+>> +			      struct ieee80211_txq *pubtxq)
+>> +{
+>> +	struct txq_info *txq = container_of(pubtxq, struct txq_info, txq);
+>> +	struct ieee80211_sub_if_data *sdata = vif_to_sdata(pubtxq->vif);
+>> +	struct sk_buff *skb;
+>> +
+>> +	while ((skb = skb_dequeue(&txq->queue)) != NULL) {
+>> +		atomic_dec(&sdata->txq_len[pubtxq->ac]);
+>> +		ieee80211_free_txskb(&local->hw, skb);
+>> +	}
+>> +}
+> 
+> You can rewrite this a bit smarter to just do one atomic op.
+Will do.
+
+- Felix
