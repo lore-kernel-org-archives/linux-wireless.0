@@ -1,150 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:40254 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751733AbaLXIAK (ORCPT
+Received: from mail-wg0-f41.google.com ([74.125.82.41]:36926 "EHLO
+	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S967353AbaLLLyf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Dec 2014 03:00:10 -0500
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH v2 3/8] ath10k: add wmi support for addba_set_resp
-Date: Wed, 24 Dec 2014 13:29:04 +0530
-Message-ID: <1419407949-32367-4-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20141224_090014_179405_31865841)
-In-Reply-To: <1419407949-32367-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1419407949-32367-1-git-send-email-rmanohar@qti.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 12 Dec 2014 06:54:35 -0500
+Received: by mail-wg0-f41.google.com with SMTP id y19so8931334wgg.0
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Dec 2014 03:54:34 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 4/5] ath10k: enable per-vif sta powersave
+Date: Fri, 12 Dec 2014 12:41:38 +0100
+Message-Id: <1418384499-31660-5-git-send-email-michal.kazior@tieto.com> (sfid-20141212_125440_918470_56448083)
+In-Reply-To: <1418384499-31660-1-git-send-email-michal.kazior@tieto.com>
+References: <1418214714-29689-1-git-send-email-michal.kazior@tieto.com>
+ <1418384499-31660-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add WMI support for sending addba response manually. This command
-is used for debugging purpose.
+Per-vif bss_conf.ps should be used to configure
+powersave.
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/ath/ath10k/wmi-ops.h | 20 ++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi-tlv.c |  1 +
- drivers/net/wireless/ath/ath10k/wmi.c     | 30 ++++++++++++++++++++++++++++++
- 3 files changed, 51 insertions(+)
+ drivers/net/wireless/ath/ath10k/mac.c | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-ops.h b/drivers/net/wireless/ath/ath10k/wmi-ops.h
-index badf422..e8f49de 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-ops.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi-ops.h
-@@ -123,6 +123,9 @@ struct wmi_ops {
- 						const u8 *mac);
- 	struct sk_buff *(*gen_addba_send)(struct ath10k *ar, u32 vdev_id,
- 					  const u8 *mac, u32 tid, u32 buf_size);
-+	struct sk_buff *(*gen_addba_set_resp)(struct ath10k *ar, u32 vdev_id,
-+					      const u8 *mac, u32 tid,
-+					      u32 status);
- };
- 
- int ath10k_wmi_cmd_send(struct ath10k *ar, struct sk_buff *skb, u32 cmd_id);
-@@ -894,4 +897,21 @@ ath10k_wmi_addba_send(struct ath10k *ar, u32 vdev_id, const u8 *mac,
- 				   ar->wmi.cmd->addba_send_cmdid);
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 2804952..19ddbc6 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -1099,9 +1099,6 @@ static int ath10k_mac_vif_recalc_ps_poll_count(struct ath10k_vif *arvif)
+ 	return 0;
  }
  
-+static inline int
-+ath10k_wmi_addba_set_resp(struct ath10k *ar, u32 vdev_id, const u8 *mac,
-+			  u32 tid, u32 status)
-+{
-+	struct sk_buff *skb;
-+
-+	if (!ar->wmi.ops->gen_addba_set_resp)
-+		return -EOPNOTSUPP;
-+
-+	skb = ar->wmi.ops->gen_addba_set_resp(ar, vdev_id, mac, tid, status);
-+	if (IS_ERR(skb))
-+		return PTR_ERR(skb);
-+
-+	return ath10k_wmi_cmd_send(ar, skb,
-+				   ar->wmi.cmd->addba_set_resp_cmdid);
-+}
-+
- #endif
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index 74a0598..63f9860 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -2209,6 +2209,7 @@ static const struct wmi_ops wmi_tlv_ops = {
- 	/* .gen_pdev_get_temperature not implemented */
- 	/* .gen_addba_clear_resp not implemented */
- 	/* .gen_addba_send not implemented */
-+	/* .gen_addba_set_resp not implemented */
- };
+-/*
+- * Review this when mac80211 gains per-interface powersave support.
+- */
+ static int ath10k_mac_vif_setup_ps(struct ath10k_vif *arvif)
+ {
+ 	struct ath10k *ar = arvif->ar;
+@@ -1117,7 +1114,7 @@ static int ath10k_mac_vif_setup_ps(struct ath10k_vif *arvif)
+ 	if (arvif->vif->type != NL80211_IFTYPE_STATION)
+ 		return 0;
  
- /************/
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 8103cbc..dd17c00 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -4927,6 +4927,32 @@ ath10k_wmi_op_gen_addba_send(struct ath10k *ar, u32 vdev_id, const u8 *mac,
- 	return skb;
+-	if (conf->flags & IEEE80211_CONF_PS) {
++	if (vif->bss_conf.ps) {
+ 		psmode = WMI_STA_PS_MODE_ENABLED;
+ 		param = WMI_STA_PS_PARAM_INACTIVITY_TIME;
+ 
+@@ -3378,6 +3375,13 @@ static void ath10k_bss_info_changed(struct ieee80211_hw *hw,
+ 			ath10k_warn(ar, "failed to recalc tx power: %d\n", ret);
+ 	}
+ 
++	if (changed & BSS_CHANGED_PS) {
++		ret = ath10k_mac_vif_setup_ps(arvif);
++		if (ret)
++			ath10k_warn(ar, "failed to setup ps on vdev %i: %d\n",
++				    arvif->vdev_id, ret);
++	}
++
+ 	mutex_unlock(&ar->conf_mutex);
  }
  
-+static struct sk_buff *
-+ath10k_wmi_op_gen_addba_set_resp(struct ath10k *ar, u32 vdev_id, const u8 *mac,
-+				 u32 tid, u32 status)
-+{
-+	struct wmi_addba_setresponse_cmd *cmd;
-+	struct sk_buff *skb;
-+
-+	if (!mac)
-+		return ERR_PTR(-EINVAL);
-+
-+	skb = ath10k_wmi_alloc_skb(ar, sizeof(*cmd));
-+	if (!skb)
-+		return ERR_PTR(-ENOMEM);
-+
-+	cmd = (struct wmi_addba_setresponse_cmd *)skb->data;
-+	cmd->vdev_id = __cpu_to_le32(vdev_id);
-+	ether_addr_copy(cmd->peer_macaddr.addr, mac);
-+	cmd->tid = __cpu_to_le32(tid);
-+	cmd->statuscode = __cpu_to_le32(status);
-+
-+	ath10k_dbg(ar, ATH10K_DBG_WMI,
-+		   "wmi addba set resp vdev_id 0x%X mac_addr %pM tid %u status %u\n",
-+		   vdev_id, mac, tid, status);
-+	return skb;
-+}
-+
- static const struct wmi_ops wmi_ops = {
- 	.rx = ath10k_wmi_op_rx,
- 	.map_svc = wmi_main_svc_map,
-@@ -4980,6 +5006,7 @@ static const struct wmi_ops wmi_ops = {
- 	/* .gen_pdev_get_temperature not implemented */
- 	.gen_addba_clear_resp = ath10k_wmi_op_gen_addba_clear_resp,
- 	.gen_addba_send = ath10k_wmi_op_gen_addba_send,
-+	.gen_addba_set_resp = ath10k_wmi_op_gen_addba_set_resp,
- };
- 
- static const struct wmi_ops wmi_10_1_ops = {
-@@ -5036,6 +5063,7 @@ static const struct wmi_ops wmi_10_1_ops = {
- 	.gen_pdev_set_quiet_mode = ath10k_wmi_op_gen_pdev_set_quiet_mode,
- 	.gen_addba_clear_resp = ath10k_wmi_op_gen_addba_clear_resp,
- 	.gen_addba_send = ath10k_wmi_op_gen_addba_send,
-+	.gen_addba_set_resp = ath10k_wmi_op_gen_addba_set_resp,
- };
- 
- static const struct wmi_ops wmi_10_2_ops = {
-@@ -5093,6 +5121,7 @@ static const struct wmi_ops wmi_10_2_ops = {
- 	.gen_pdev_set_quiet_mode = ath10k_wmi_op_gen_pdev_set_quiet_mode,
- 	.gen_addba_clear_resp = ath10k_wmi_op_gen_addba_clear_resp,
- 	.gen_addba_send = ath10k_wmi_op_gen_addba_send,
-+	.gen_addba_set_resp = ath10k_wmi_op_gen_addba_set_resp,
- };
- 
- static const struct wmi_ops wmi_10_2_4_ops = {
-@@ -5150,6 +5179,7 @@ static const struct wmi_ops wmi_10_2_4_ops = {
- 	.gen_pdev_set_quiet_mode = ath10k_wmi_op_gen_pdev_set_quiet_mode,
- 	.gen_addba_clear_resp = ath10k_wmi_op_gen_addba_clear_resp,
- 	.gen_addba_send = ath10k_wmi_op_gen_addba_send,
-+	.gen_addba_set_resp = ath10k_wmi_op_gen_addba_set_resp,
- };
- 
- int ath10k_wmi_attach(struct ath10k *ar)
 -- 
-2.2.1
+1.8.5.3
 
