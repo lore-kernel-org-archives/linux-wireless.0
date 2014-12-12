@@ -1,61 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f54.google.com ([74.125.82.54]:53805 "EHLO
-	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750963AbaLXJst (ORCPT
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:36578 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752069AbaLLWa2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Dec 2014 04:48:49 -0500
+	Fri, 12 Dec 2014 17:30:28 -0500
+Received: by mail-wi0-f171.google.com with SMTP id bs8so3874115wib.10
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Dec 2014 14:30:26 -0800 (PST)
+Message-ID: <548B6C80.5020607@konagma.com> (sfid-20141212_233044_684890_F4708602)
+Date: Fri, 12 Dec 2014 23:30:24 +0100
+From: Krzysztof Konopko <kris@konagma.com>
 MIME-Version: 1.0
-In-Reply-To: <1413802344.10246.20.camel@jlt4.sipsolutions.net>
-References: <1410467723-2550-1-git-send-email-vadim4j@gmail.com>
-	<1411075535.2034.5.camel@jlt4.sipsolutions.net>
-	<20141014121627.GA5115@angus-think.lan>
-	<1413798437.10246.12.camel@jlt4.sipsolutions.net>
-	<128188DF-5A9B-47A5-8A89-974CF7CF9064@holtmann.org>
-	<1413802344.10246.20.camel@jlt4.sipsolutions.net>
-Date: Wed, 24 Dec 2014 11:48:48 +0200
-Message-ID: <CAMw6YJKLWQmT-fqg1QLDHbCxnpxWyJUSX+wvOB_pFyE=8HfSfQ@mail.gmail.com> (sfid-20141224_104857_546968_53FCC802)
-Subject: Re: [PATCH net-next] Allow to set net namespace for wireless device
- via RTM_LINK
-From: Vadim Kochan <vadim4j@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Dan Carpenter <dan.carpenter@oracle.com>
+CC: Jes Sorensen <Jes.Sorensen@redhat.com>, devel@driverdev.osuosl.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] staging: rtl8723au: Fix sparse warnings
+References: <1418336609-10191-1-git-send-email-kris@konagma.com> <548A2E7A.4010303@lwfinger.net> <20141212125255.GB4921@mwanda> <548B1B18.6050307@lwfinger.net>
+In-Reply-To: <548B1B18.6050307@lwfinger.net>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 20, 2014 at 1:52 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2014-10-20 at 12:46 +0200, Marcel Holtmann wrote:
->
->> Maybe relaxing the check and allow ip link to move a wireless netdev
->> into a namespace (and having the wiphy follow) could be allowed if it
->> is the only netdev or the original wlan0 that each wiphy creates. I
->> really do not know if this is worth it, but for some simpler container
->> cases it could be beneficial if RTNL can be used instead of having to
->> go through nl80211.
->
-> The thought crossed my mind, but
->
-> 1) it's relatively complex, though by no means impossible
-> 2) it still moves more than you bargained for, since in theory the wiphy
-> could be
->    used to create new interfaces etc.
->
-> That said, I'm much more inclined to believe such a patch would be
-> worthwhile than the original.
->
-> johannes
->
+On 12/12/14 17:43, Larry Finger wrote:
+> On 12/12/2014 06:52 AM, Dan Carpenter wrote:
+>> On Thu, Dec 11, 2014 at 05:53:30PM -0600, Larry Finger wrote:
+>>> On 12/11/2014 04:23 PM, Krzysztof Konopko wrote:
+>>>> Some struct fields in wifi.h are meant to be __le16 bu were declared as
+>>>> unsigned short.  This was reported by sparse:
+>>>>
+>>>>    rtw_wlan_util.c:538:24: warning: cast to restricted __le16
+>>>>    rtw_wlan_util.c:1544:29: warning: cast to restricted __le16
+>>>>    rtw_wlan_util.c:1546:25: warning: cast to restricted __le16
+>>>>
+>>>> This patch changes declared types of the struct fields involved.
+>>>>
+>>>> Signed-off-by: Krzysztof Konopko <kris@konagma.com>
+>>>> ---
+>>>>   drivers/staging/rtl8723au/include/wifi.h | 6 +++---
+>>>>   1 file changed, 3 insertions(+), 3 deletions(-)
+>>>>
+>>>> diff --git a/drivers/staging/rtl8723au/include/wifi.h
+>>>> b/drivers/staging/rtl8723au/include/wifi.h
+>>>> index fd3da3b..8a2adc5 100644
+>>>> --- a/drivers/staging/rtl8723au/include/wifi.h
+>>>> +++ b/drivers/staging/rtl8723au/include/wifi.h
+>>>> @@ -28,7 +28,7 @@
+>>>>   struct AC_param {
+>>>>       unsigned char        ACI_AIFSN;
+>>>>       unsigned char        CW;
+>>>> -    unsigned short    TXOP_limit;
+>>>> +    __le16            TXOP_limit;
+>>>>   }  __packed;
+>>>>
+>>>>   struct WMM_para_element {
+>>>> @@ -39,9 +39,9 @@ struct WMM_para_element {
+>>>>
+>>>>   struct ADDBA_request {
+>>>>       unsigned char        dialog_token;
+>>>> -    unsigned short    BA_para_set;
+>>>> +    __le16        BA_para_set;
+>>>>       unsigned short    BA_timeout_value;
+>>>> -    unsigned short    BA_starting_seqctrl;
+>>>> +    __le16        BA_starting_seqctrl;
+>>>>   }  __packed;
+>>>
+>>> This fix may make the sparse warnings go away, but I think it
+>>> introduces new bugs.
+>>
+>> This kind of change, doesn't change the compiled code only how Sparse
+>> sees it.  It can't introduce bugs.
+>>
+>> But it may well be that the calls to le16_to_cpu() should be removed.  I
+>> looked at it a bit but I don't know.
+> 
+> Your point regarding bugs is taken. What I should have said is that
+> blindly making _le changes to hide Sparse messages may hide existing
+> bugs for BE hardware.
+> 
+> Larry
+> 
+> 
 
-Hi Johannes,
+Yes, I started it off blindly but dug further and now have a better
+understanding.  Looking in ieee80211.h and getting your feedback helped
+me to get a better understanding of the situation.
 
-What about the following thoughts:
+I see nothing wrong in declaring data that is supposed to be
+little-endian as __le.  You say that making these changes blindly may
+hide existing bugs but:
 
-    1) Set NETIF_F_NETNS_LOCAL for phy wireless device only if there
-is at least one virtual interface which was created on it
-    2) What about to inherit netns for newer created interfaces from
-the phy device ?
+* not doing anything about it is not helpful either
 
-Thanks,
+* this is no longer changing anything blindly
+Relevant structs: `addba_req` and `ieee80211_wmm_ac_param` do declare
+their fields as __le where needed.
+
+I do take a point though about making this change inconsistently
+(blindly) in my initial patch.
+
+Kris
