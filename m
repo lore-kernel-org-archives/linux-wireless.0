@@ -1,43 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:54914 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932937AbaLKBvi (ORCPT
+Received: from userp1040.oracle.com ([156.151.31.81]:27873 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S967631AbaLLMxZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Dec 2014 20:51:38 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH 0/4] ath9k patches
-Date: Thu, 11 Dec 2014 07:23:36 +0530
-Message-Id: <1418262820-24856-1-git-send-email-sujith@msujith.org> (sfid-20141211_025143_089155_B218E17C)
+	Fri, 12 Dec 2014 07:53:25 -0500
+Date: Fri, 12 Dec 2014 15:52:55 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Krzysztof Konopko <kris@konagma.com>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>,
+	devel@driverdev.osuosl.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] staging: rtl8723au: Fix sparse warnings
+Message-ID: <20141212125255.GB4921@mwanda> (sfid-20141212_135329_106366_EDE7D80E)
+References: <1418336609-10191-1-git-send-email-kris@konagma.com>
+ <548A2E7A.4010303@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <548A2E7A.4010303@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Thu, Dec 11, 2014 at 05:53:30PM -0600, Larry Finger wrote:
+> On 12/11/2014 04:23 PM, Krzysztof Konopko wrote:
+> >Some struct fields in wifi.h are meant to be __le16 bu were declared as
+> >unsigned short.  This was reported by sparse:
+> >
+> >   rtw_wlan_util.c:538:24: warning: cast to restricted __le16
+> >   rtw_wlan_util.c:1544:29: warning: cast to restricted __le16
+> >   rtw_wlan_util.c:1546:25: warning: cast to restricted __le16
+> >
+> >This patch changes declared types of the struct fields involved.
+> >
+> >Signed-off-by: Krzysztof Konopko <kris@konagma.com>
+> >---
+> >  drivers/staging/rtl8723au/include/wifi.h | 6 +++---
+> >  1 file changed, 3 insertions(+), 3 deletions(-)
+> >
+> >diff --git a/drivers/staging/rtl8723au/include/wifi.h b/drivers/staging/rtl8723au/include/wifi.h
+> >index fd3da3b..8a2adc5 100644
+> >--- a/drivers/staging/rtl8723au/include/wifi.h
+> >+++ b/drivers/staging/rtl8723au/include/wifi.h
+> >@@ -28,7 +28,7 @@
+> >  struct AC_param {
+> >  	unsigned char		ACI_AIFSN;
+> >  	unsigned char		CW;
+> >-	unsigned short	TXOP_limit;
+> >+	__le16			TXOP_limit;
+> >  }  __packed;
+> >
+> >  struct WMM_para_element {
+> >@@ -39,9 +39,9 @@ struct WMM_para_element {
+> >
+> >  struct ADDBA_request {
+> >  	unsigned char		dialog_token;
+> >-	unsigned short	BA_para_set;
+> >+	__le16		BA_para_set;
+> >  	unsigned short	BA_timeout_value;
+> >-	unsigned short	BA_starting_seqctrl;
+> >+	__le16		BA_starting_seqctrl;
+> >  }  __packed;
+> 
+> This fix may make the sparse warnings go away, but I think it
+> introduces new bugs.
 
-This series adds initial support for QCA956x.
+This kind of change, doesn't change the compiled code only how Sparse
+sees it.  It can't introduce bugs.
 
-Miaoqing Pan (4):
-  ath9k: Add HW IDs for QCA956x
-  ath9k: Add initvals for QCA956x
-  ath9k: Fix register definitions for QCA956x
-  ath9k: Add QCA956x HW support
+But it may well be that the calls to le16_to_cpu() should be removed.  I
+looked at it a bit but I don't know.
 
- drivers/net/wireless/ath/ath9k/ahb.c             |    4 +
- drivers/net/wireless/ath/ath9k/ani.c             |    3 +-
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c   |   15 +-
- drivers/net/wireless/ath/ath9k/ar9003_hw.c       |   61 +-
- drivers/net/wireless/ath/ath9k/ar9003_phy.c      |   47 +-
- drivers/net/wireless/ath/ath9k/ar9003_phy.h      |   19 +-
- drivers/net/wireless/ath/ath9k/ar956x_initvals.h | 1046 ++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/hw.c              |   41 +-
- drivers/net/wireless/ath/ath9k/hw.h              |    1 +
- drivers/net/wireless/ath/ath9k/mac.c             |    3 +-
- drivers/net/wireless/ath/ath9k/recv.c            |    3 +-
- drivers/net/wireless/ath/ath9k/reg.h             |    4 +
- 12 files changed, 1206 insertions(+), 41 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath9k/ar956x_initvals.h
-
--- 
-2.1.3
+regards,
+dan carpenter
 
