@@ -1,49 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:64881 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751945AbaL2GYi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Dec 2014 01:24:38 -0500
-Received: by mail-wi0-f169.google.com with SMTP id r20so22878843wiv.0
-        for <linux-wireless@vger.kernel.org>; Sun, 28 Dec 2014 22:24:37 -0800 (PST)
-Received: from muse.ger.corp.intel.com (85-250-108-142.bb.netvision.net.il. [85.250.108.142])
-        by mx.google.com with ESMTPSA id gb10sm23488030wjb.21.2014.12.28.22.24.36
-        for <linux-wireless@vger.kernel.org>
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Sun, 28 Dec 2014 22:24:37 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 13/13] wl18xx: declare radar_detect_widths support for ap interfaces
-Date: Mon, 29 Dec 2014 08:24:13 +0200
-Message-Id: <1419834253-18331-13-git-send-email-eliad@wizery.com> (sfid-20141229_074347_189276_93DD230F)
-In-Reply-To: <1419834253-18331-1-git-send-email-eliad@wizery.com>
-References: <1419834253-18331-1-git-send-email-eliad@wizery.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:32859 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965845AbaLLLTY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Dec 2014 06:19:24 -0500
+Message-ID: <1418383161.2470.12.camel@sipsolutions.net> (sfid-20141212_121927_491262_66C7DCCB)
+Subject: Re: [PATCH] cfg80211: Fix 160 MHz channels with 80+80 and 160 MHz
+ drivers
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <jouni@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 12 Dec 2014 12:19:21 +0100
+In-Reply-To: <20141211214855.GA9826@jouni.qca.qualcomm.com>
+References: <20141211214855.GA9826@jouni.qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After having all the dfs infrastructure in place, declare
-radar_detect_widths support for the ap interfaces combination.
+On Thu, 2014-12-11 at 23:48 +0200, Jouni Malinen wrote:
+> The VHT supported channel width field is a two bit integer, not a
+> bitfield. cfg80211_chandef_usable() was interpreting it incorrectly and
+> ended up rejecting 160 MHz channel width if the driver indicated support
+> for both 160 and 80+80 MHz channels.
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/ti/wl18xx/main.c | 4 ++++
- 1 file changed, 4 insertions(+)
+Applied, thanks.
 
-diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
-index 604de24..e5bc557 100644
---- a/drivers/net/wireless/ti/wl18xx/main.c
-+++ b/drivers/net/wireless/ti/wl18xx/main.c
-@@ -1799,6 +1799,10 @@ wl18xx_iface_combinations[] = {
- 		.limits = wl18xx_iface_ap_limits,
- 		.n_limits = ARRAY_SIZE(wl18xx_iface_ap_limits),
- 		.num_different_channels = 1,
-+		.radar_detect_widths =	BIT(NL80211_CHAN_NO_HT) |
-+					BIT(NL80211_CHAN_HT20) |
-+					BIT(NL80211_CHAN_HT40MINUS) |
-+					BIT(NL80211_CHAN_HT40PLUS),
- 	}
- };
- 
--- 
-1.8.5.2.229.g4448466.dirty
+johannes
 
