@@ -1,62 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:57376 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752310AbaLWRIL (ORCPT
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:63671 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751226AbaLLWuL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Dec 2014 12:08:11 -0500
-Message-ID: <5499A15E.9080307@broadcom.com> (sfid-20141223_180814_336978_C604CB76)
-Date: Tue, 23 Dec 2014 18:07:42 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Fri, 12 Dec 2014 17:50:11 -0500
+Received: by mail-wi0-f176.google.com with SMTP id ex7so3939003wid.3
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Dec 2014 14:50:10 -0800 (PST)
+Message-ID: <548B7120.8010008@konagma.com> (sfid-20141212_235032_786109_B7636BE9)
+Date: Fri, 12 Dec 2014 23:50:08 +0100
+From: Krzysztof Konopko <kris@konagma.com>
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: Arend van Spriel <arend@broadcom.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>
-Subject: Re: [PATCH 02/10] brcmfmac: Fix possible dereference of NULL pointer.
-References: <1419162233-19492-1-git-send-email-arend@broadcom.com> <1419162233-19492-3-git-send-email-arend@broadcom.com>
-In-Reply-To: <1419162233-19492-3-git-send-email-arend@broadcom.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] staging: rtl8723au: Fix sparse warnings
+References: <1418336609-10191-1-git-send-email-kris@konagma.com> <548A2E7A.4010303@lwfinger.net> <548AD2F1.3080200@konagma.com> <548B2752.7030607@lwfinger.net>
+In-Reply-To: <548B2752.7030607@lwfinger.net>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/21/14 12:43, Arend van Spriel wrote:
-> From: Hante Meuleman<meuleman@broadcom.com>
+On 12/12/14 18:35, Larry Finger wrote:
+> On 12/12/2014 05:35 AM, Krzysztof Konopko wrote:
+>> On 12/12/14 00:53, Larry Finger wrote:
+>>> In particular, did you test on big-endian hardware after you
+>>> made this change?
+>>
+>> Nope.  I don't have any big-endian hardware.  I don't even have the
+>> wireless card TBH.  But I'm happy to try to get one.  Is Rtl8723AE the
+>> right model?
+> 
+> No. The device numbers that end in E are PCIe and use a mac80211-based
+> driver. As none of my BE hardware has PCIe, I cannot test those drivers
+> on other than LE hardware. I do not have the hardware either for the
+> RTL8723AU. For that reason, I am careful when modifying the driver - I
+> let Jes do that.
+> 
+
+Silly me.  'U' stands for USB here.  But can't find this device on any
+auction.  It's included in some ultrabooks but can't afford that for the
+sake of fixing some sparse warnings :)
+
+>>> In RTL8188EU, both BA_starting_seqctrl and TXOP_limit are unsigned
+>>> short.
+>>>
+>>
+>> That's not quite the case.  `TXOP_limit` is __le16 in RTL8188EU [1].
+>> It's __le16 even in your GitHub repo [2].  And that made me thinking
+>> that there's probably some inconsistency in the header.
+> 
+> All the USB drivers are a mess. The kernel version of rtl8188eu does not
+> work on PPC; however, the git repo now does. I'm working on finding the
+> differences and fixing the kernel version.
+> 
+
+Right.  I found your introductory message:
+https://lkml.org/lkml/2013/4/1/280
+
+>> I was hunting particularly for inconsistencies with `sparse` and came
+>> across this one.  But I dug a bit further and I wonder why the driver is
+>> not using standard stuff like the one in `include/linux/ieee80211.h`
+>> where any data wider than one byte is clearly declared as __le<nn>?
+> 
+> That is a good question. One possibility is that those definitions do
+> not exist on some of the older kernels that Realtek supports. They
+> generally work with 2.6.18 and newer.
 >
-> With the introduction of WOWL for SDIO a possible dereference of a
-> NULL pointer got introduced. Found by static checker.
 
-Kalle,
+That would be important if the driver was kept out of the tree.  Isn't
+it the point of having the driver in the mainline to keep up with the
+kernel and don't bother with older versions?
 
-Can you drop this patch and take the one from Mika instead with 
-Message-ID: 
-1419346112-173303-1-git-send-email-mika.westerberg@linux.intel.com [1]
+> To be able to fix the kernel driver for RTL8188EU on PPC, I need to sort
+> out these endian problems. Once I do, I will port them to the other
+> drivers.
+> 
 
-Regards,
-Arend
+Isn't `sparse` useful here? :)
 
-[1] 
-http://mid.gmane.org/1419346112-173303-1-git-send-email-mika.westerberg@linux.intel.com
-
-> Reported-by: Dan Carpenter<dan.carpenter@oracle.com>
-> Reviewed-by: Arend Van Spriel<arend@broadcom.com>
-> Reviewed-by: Pieter-Paul Giesberts<pieterpg@broadcom.com>
-> Signed-off-by: Hante Meuleman<meuleman@broadcom.com>
-> Signed-off-by: Arend van Spriel<arend@broadcom.com>
-> ---
->   drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-> index 3c06e93..9583dcd 100644
-> --- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-> +++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-> @@ -1070,7 +1070,7 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
->   	 */
->   	if ((sdio_get_host_pm_caps(sdiodev->func[1])&  MMC_PM_KEEP_POWER)&&
->   	((sdio_get_host_pm_caps(sdiodev->func[1])&  MMC_PM_WAKE_SDIO_IRQ) ||
-> -	     (sdiodev->pdata->oob_irq_supported)))
-> +	     ((sdiodev->pdata)&&  (sdiodev->pdata->oob_irq_supported))))
->   		bus_if->wowl_supported = true;
->   #endif
->
+Kris
 
