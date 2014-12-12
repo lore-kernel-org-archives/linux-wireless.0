@@ -1,62 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f51.google.com ([74.125.82.51]:38411 "EHLO
-	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759105AbaLKWXx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Dec 2014 17:23:53 -0500
-Received: by mail-wg0-f51.google.com with SMTP id x12so7553564wgg.24
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Dec 2014 14:23:51 -0800 (PST)
-From: Krzysztof Konopko <kris@konagma.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org, kris@konagma.com
-Subject: [PATCH] staging: rtl8723au: Fix sparse warnings
-Date: Thu, 11 Dec 2014 23:23:29 +0100
-Message-Id: <1418336609-10191-1-git-send-email-kris@konagma.com> (sfid-20141211_232356_785592_817C6402)
+Received: from arrakis.dune.hu ([78.24.191.176]:35975 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S967484AbaLLO2s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Dec 2014 09:28:48 -0500
+Message-ID: <548AFB9C.1060408@openwrt.org> (sfid-20141212_152852_707708_4AB14ED2)
+Date: Fri, 12 Dec 2014 15:28:44 +0100
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: add an intermediate software queue implementation
+References: <1416352495-82172-1-git-send-email-nbd@openwrt.org>	 <1418390516.2470.46.camel@sipsolutions.net> <548AF047.9080404@openwrt.org> <1418392866.2470.49.camel@sipsolutions.net>
+In-Reply-To: <1418392866.2470.49.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some struct fields in wifi.h are meant to be __le16 bu were declared as
-unsigned short.  This was reported by sparse:
+On 2014-12-12 15:01, Johannes Berg wrote:
+> On Fri, 2014-12-12 at 14:40 +0100, Felix Fietkau wrote:
+> 
+>> > Then
+>> > again what even sets vif->txq? Shouldn't those be per-AC? Do you really
+>> > want to mix 'normal' and txq-TX?
+>> Are we even using multiple ACs for packets that don't belong to a
+>> particular sta? I thought normal mcast data frames only use non-QoS
+>> frames. And yes, I'm currently mixing normal and txq-TX to prioritize
+>> ctl/mgmt frames over other less important traffic.
+> 
+> Management (and maybe control) frames can have different priorities as
+> well, this is only used for something with TDLS now I think though.
+With my implementation, those would go through the normal tx codepath,
+bypassing the software tx queues. Can you think of anything else that
+would need per-AC vif queues?
 
-  rtw_wlan_util.c:538:24: warning: cast to restricted __le16
-  rtw_wlan_util.c:1544:29: warning: cast to restricted __le16
-  rtw_wlan_util.c:1546:25: warning: cast to restricted __le16
-
-This patch changes declared types of the struct fields involved.
-
-Signed-off-by: Krzysztof Konopko <kris@konagma.com>
----
- drivers/staging/rtl8723au/include/wifi.h | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/staging/rtl8723au/include/wifi.h b/drivers/staging/rtl8723au/include/wifi.h
-index fd3da3b..8a2adc5 100644
---- a/drivers/staging/rtl8723au/include/wifi.h
-+++ b/drivers/staging/rtl8723au/include/wifi.h
-@@ -28,7 +28,7 @@
- struct AC_param {
- 	unsigned char		ACI_AIFSN;
- 	unsigned char		CW;
--	unsigned short	TXOP_limit;
-+	__le16			TXOP_limit;
- }  __packed;
- 
- struct WMM_para_element {
-@@ -39,9 +39,9 @@ struct WMM_para_element {
- 
- struct ADDBA_request {
- 	unsigned char		dialog_token;
--	unsigned short	BA_para_set;
-+	__le16		BA_para_set;
- 	unsigned short	BA_timeout_value;
--	unsigned short	BA_starting_seqctrl;
-+	__le16		BA_starting_seqctrl;
- }  __packed;
- 
- 
--- 
-2.1.3
-
+- Felix
