@@ -1,91 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:1495 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751192AbaLBIsx (ORCPT
+Received: from mail-wg0-f41.google.com ([74.125.82.41]:38383 "EHLO
+	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966399AbaLLOQJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Dec 2014 03:48:53 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v3 2/7] ath10k: add ATH10K_FW_IE_WMI_OP_VERSION
-References: <20141201144400.18248.62714.stgit@potku.adurom.net>
-	<20141201144507.18248.9856.stgit@potku.adurom.net>
-	<CA+BoTQ=mx2PSX2uDKrN6pk+YN0e8s8Q1xGZpe0yG-4rT+Hn25Q@mail.gmail.com>
-Date: Tue, 2 Dec 2014 10:48:46 +0200
-In-Reply-To: <CA+BoTQ=mx2PSX2uDKrN6pk+YN0e8s8Q1xGZpe0yG-4rT+Hn25Q@mail.gmail.com>
-	(Michal Kazior's message of "Tue, 2 Dec 2014 09:28:34 +0100")
-Message-ID: <8761duphch.fsf@kamboji.qca.qualcomm.com> (sfid-20141202_094856_215644_61C2D5D6)
+	Fri, 12 Dec 2014 09:16:09 -0500
+Received: by mail-wg0-f41.google.com with SMTP id y19so9203407wgg.28
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Dec 2014 06:16:07 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1418387190.2470.28.camel@sipsolutions.net>
+References: <1417429814-9618-1-git-send-email-lorenzo.bianconi83@gmail.com>
+	<1418387190.2470.28.camel@sipsolutions.net>
+Date: Fri, 12 Dec 2014 15:16:07 +0100
+Message-ID: <CAA2SeNJ6oiVRJmZS54Z6dSQDsEM10dCBqSGVmKe+QDaqLzgdWQ@mail.gmail.com> (sfid-20141212_151625_755183_367F05B0)
+Subject: Re: [PATCHv2] mac80211: enable TPC through mac80211 stack
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>,
+	=?UTF-8?B?VGhvbWFzIEjDvGhu?= <thomas@net.t-labs.tu-berlin.de>,
+	adrian@freebsd.org, haim.dreyfuss@intel.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
-
-> On 1 December 2014 at 15:45, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> [...]
->> diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
->> index 514c219263a5..92b04fe73151 100644
->> --- a/drivers/net/wireless/ath/ath10k/core.h
->> +++ b/drivers/net/wireless/ath/ath10k/core.h
->> @@ -120,6 +120,7 @@ struct ath10k_mem_chunk {
->>  };
+> On Mon, 2014-12-01 at 11:30 +0100, Lorenzo Bianconi wrote:
+>> Enable/disable per packet Transmit Power Control (TPC) in lower drivers
+>> according to TX power settings configured by the user. In particular TPC is
+>> enabled if value passed in enum nl80211_tx_power_setting is
+>> NL80211_TX_POWER_AUTOMATIC (no limit from userspace) or
+>> NL80211_TX_POWER_LIMITED (allow using less than specified from userspace),
+>> whereas TPC is disabled if nl80211_tx_power_setting is set to
+>> NL80211_TX_POWER_FIXED (use value configured from userspace)
 >>
->>  struct ath10k_wmi {
->> +       unsigned int op_version;
->
-> I wonder - can't we have this as `enum ath10k_fw_wmi_op_version op_version;` ?
-
-Oh yes, I was even planning to change it but apparently forgot. Will fix
-in v4.
-
->> @@ -378,8 +379,9 @@ enum ath10k_fw_features {
->>         /* Firmware does not support P2P */
->>         ATH10K_FW_FEATURE_NO_P2P = 3,
+>> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+>> ---
+>>  include/net/mac80211.h     | 10 ++++++++++
+>>  net/mac80211/cfg.c         |  6 +++++-
+>>  net/mac80211/ieee80211_i.h |  1 +
+>>  net/mac80211/iface.c       |  8 +++++++-
+>>  net/mac80211/main.c        |  8 +++++++-
+>>  5 files changed, 30 insertions(+), 3 deletions(-)
 >>
->> -       /* Firmware 10.2 feature bit. The ATH10K_FW_FEATURE_WMI_10X feature bit
->> -        * is required to be set as well.
->> +       /* Firmware 10.2 feature bit. The ATH10K_FW_FEATURE_WMI_10X feature
->> +        * bit is required to be set as well. Deprecated, don't use in new
->> +        * code.
+>> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+>> index cff3a26..7dd2432 100644
+>> --- a/include/net/mac80211.h
+>> +++ b/include/net/mac80211.h
+>> @@ -376,6 +376,8 @@ enum ieee80211_rssi_event {
+>>   * @ssid_len: Length of SSID given in @ssid.
+>>   * @hidden_ssid: The SSID of the current vif is hidden. Only valid in AP-mode.
+>>   * @txpower: TX power in dBm
+>> + * @tpc_enabled: enable/disable per packet Transmit Power Control (TPC) for the
+>> + *   current vif
 >
-> Just out of curiosity - any plans how long this is going to be
-> depracated until removed/replaced?
-
-So there are two parts:
-
-1) In the driver we should not use these deprated flags with new code,
-   and preferably remove existing uses bit by bit. But for backwards
-   compatibility we will keep the flags in
-   ath10k_core_init_firmware_features() so that we can set correct
-   wmi.op_version when using firmware images which don't have
-   ATH10K_FW_IE_WMI_OP_VERSION.
-
-2) In firmware images we will continue use the deprecated flags with
-   main, 10.1 and 10.2 firmware branches, at least for the time being.
-   This makes it possible to have new firmware releases working on older
-   drivers.
-
->> diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
->> index dfedfd0e0f34..04aaf9af3ca0 100644
->> --- a/drivers/net/wireless/ath/ath10k/hw.h
->> +++ b/drivers/net/wireless/ath/ath10k/hw.h
->> @@ -58,6 +58,16 @@ enum ath10k_fw_ie_type {
->>         ATH10K_FW_IE_FEATURES = 2,
->>         ATH10K_FW_IE_FW_IMAGE = 3,
->>         ATH10K_FW_IE_OTP_IMAGE = 4,
->> +
->> +       /* WMI "operations" interface version, 32 bit value. Supported from
->> +        * FW API 4 and above. */
->> +       ATH10K_FW_IE_WMI_OP_VERSION = 5,
+> Why not put the enum nl80211_tx_power_setting value here?
 >
-> Hmm.. shouldn't we bump up the firmware filename from -3 to -4 and try
-> loading 4..3..2..1?
 
-I was thinking that we add FW API 4 only once we have all necessary
-changes for the new hw. For example, in case we need HTT changes as
-well.
+ack
+
+>>  struct ieee80211_conf {
+>>       u32 flags;
+>>       int power_level, dynamic_ps_timeout;
+>> +     bool tpc_enabled;
+>>       int max_sleep_period;
+>
+> Do you need it here at all?
+>
+
+In multi-vif scenario, TPC could be enabled just on given interfaces,
+but driver TPC registers should be configured anyway (so I used a glob
+flag). However I can move that logic in driver code, what do you
+suggest?
+
+>> +++ b/net/mac80211/ieee80211_i.h
+>> @@ -869,6 +869,7 @@ struct ieee80211_sub_if_data {
+>>
+>>       int user_power_level; /* in dBm */
+>>       int ap_power_level; /* in dBm */
+>> +     enum nl80211_tx_power_setting tx_power_type;
+>
+> if you put this into bss_conf you can of course get rid of it here.
+>
+
+It sounds good to me. I can set nl80211_tx_power_setting value in
+ieee80211_set_tx_power()
+
+> johannes
+>
+
+Best regards,
+Lorenzo
+
 
 -- 
-Kalle Valo
+UNIX is Sexy: who | grep -i blonde | talk; cd ~; wine; talk; touch;
+unzip; touch; strip; gasp; finger; gasp; mount; fsck; more; yes; gasp;
+umount; make clean; sleep
