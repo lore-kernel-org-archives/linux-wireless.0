@@ -1,43 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:44908 "EHLO sipsolutions.net"
+Received: from mx1.redhat.com ([209.132.183.28]:41453 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751013AbaLIIY0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Dec 2014 03:24:26 -0500
-Message-ID: <1418113458.2621.0.camel@sipsolutions.net> (sfid-20141209_092430_230945_3CAD7EFE)
-Subject: Re: [PATCH v2] mac80211: Supporting of IFLA_INFO_KIND rtnl attribute
-From: Johannes Berg <johannes@sipsolutions.net>
-To: vadim4j@gmail.com
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 09 Dec 2014 09:24:18 +0100
-In-Reply-To: <20141208214845.GA1709@angus-think.lan> (sfid-20141208_225835_436613_04392401)
-References: <1417947627-2329-1-git-send-email-vadim4j@gmail.com>
-	 <1418023628.2001.0.camel@sipsolutions.net>
-	 <CAMw6YJ+8JpgTG4AbJo71JuOW8jpEo5HxFX=bDDPcpd4L_b6drA@mail.gmail.com>
-	 <1418033823.2001.1.camel@sipsolutions.net>
-	 <20141208214845.GA1709@angus-think.lan>
-	 (sfid-20141208_225835_436613_04392401)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1030303AbaLLRLp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Dec 2014 12:11:45 -0500
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Krzysztof Konopko <kris@konagma.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] staging: rtl8723au: Fix sparse warnings
+References: <1418336609-10191-1-git-send-email-kris@konagma.com>
+	<548A2E7A.4010303@lwfinger.net> <548AD2F1.3080200@konagma.com>
+Date: Fri, 12 Dec 2014 12:10:36 -0500
+In-Reply-To: <548AD2F1.3080200@konagma.com> (Krzysztof Konopko's message of
+	"Fri, 12 Dec 2014 12:35:13 +0100")
+Message-ID: <wrfjbnn8yesz.fsf@redhat.com> (sfid-20141212_181202_016818_E86E1E8B)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-12-08 at 23:48 +0200, vadim4j@gmail.com wrote:
+Krzysztof Konopko <kris@konagma.com> writes:
+> On 12/12/14 00:53, Larry Finger wrote:
+>> In RTL8188EU, both BA_starting_seqctrl and TXOP_limit are unsigned short.
+>> 
+>
+> That's not quite the case.  `TXOP_limit` is __le16 in RTL8188EU [1].
+> It's __le16 even in your GitHub repo [2].  And that made me thinking
+> that there's probably some inconsistency in the header.
+>
+> I'm _far_ from being a wireless expert but doesn't data coming out of
+> the wire/air have the endianess defined explicitly?  And both `AC_param`
+> and `ADDBA_request` come out of air?
+>
+> I was hunting particularly for inconsistencies with `sparse` and came
+> across this one.  But I dug a bit further and I wonder why the driver is
+> not using standard stuff like the one in `include/linux/ieee80211.h`
+> where any data wider than one byte is clearly declared as __le<nn>?
 
-> What I worry about is this peace of code in net/core/dev.c : 
-> 
->     int register_netdevice(struct net_device *dev)
->     {
->             ...
-> 
->             if (!dev->rtnl_link_ops ||
->                 dev->rtnl_link_state == RTNL_LINK_INITIALIZED)
->                     rtmsg_ifinfo(RTM_NEWLINK, dev, ~0U, GFP_KERNEL);
->             ...
->     }
+In general all over the wire data is little-endian. The driver has been
+slowly moved towards using the standard defines from the Linux headers,
+but this is a *lot* of work, and it requires testing. I really don't get
+warm fuzzy feelings from patches that blindly make these kinds of
+changes without also testing them.
 
-rtnl_link_state should be RTNL_LINK_INITIALIZED though, unless somebody
-set something else.
-
-johannes
-
+Jes
