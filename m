@@ -1,57 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:17530 "EHLO
-	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751991AbaLZOmd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Dec 2014 09:42:33 -0500
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: kernel-janitors@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 24/27] orinoco_usb: Use setup_timer
-Date: Fri, 26 Dec 2014 15:35:55 +0100
-Message-Id: <1419604558-29743-25-git-send-email-Julia.Lawall@lip6.fr> (sfid-20141226_154737_818120_80CC5B22)
-In-Reply-To: <1419604558-29743-1-git-send-email-Julia.Lawall@lip6.fr>
-References: <1419604558-29743-1-git-send-email-Julia.Lawall@lip6.fr>
+Received: from mx1.redhat.com ([209.132.183.28]:49396 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S967817AbaLLOCz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Dec 2014 09:02:55 -0500
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/1] wireless: mac80211: Avoid using uninitialized stack data
+References: <1418238847-3332-1-git-send-email-Jes.Sorensen@redhat.com>
+	<1418238847-3332-2-git-send-email-Jes.Sorensen@redhat.com>
+	<1418382219.2470.10.camel@sipsolutions.net>
+Date: Fri, 12 Dec 2014 09:02:49 -0500
+In-Reply-To: <1418382219.2470.10.camel@sipsolutions.net> (Johannes Berg's
+	message of "Fri, 12 Dec 2014 12:03:39 +0100")
+Message-ID: <wrfjoar90xva.fsf@redhat.com> (sfid-20141212_150258_704483_7FDF772D)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Convert a call to init_timer and accompanying intializations of
-the timer's data and function fields to a call to setup_timer.
+Johannes Berg <johannes@sipsolutions.net> writes:
+> On Wed, 2014-12-10 at 14:14 -0500, Jes.Sorensen@redhat.com wrote:
+>> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+>> 
+>> Avoid case where we would access uninitialized stack data if a driver
+>> advertises HT support without 40MHz channel support.
+>
+> I've fixed the commit message (it's actually in the check for the *AP*,
+> not the driver!)
+>
+> Also, this is complicated. We originally had the DISABLE_VHT, but then
+> found APs that were doing it wrong - see commit f3000e1b43f1 ("mac80211:
+> fix broken use of VHT/20Mhz with some APs"). That fix introduced the bug
+> here, going back now to the DISABLE_VHT as I'd suggested would break the
+> fix again ... I'm thus taking this version to just put the right data on
+> the stack, with the correct Fixes/Cc stable tags.
 
-A simplified version of the semantic match that fixes this problem is as
-follows: (http://coccinelle.lip6.fr/)
+Either patch works for me, so I'm all good! Thanks for fixing this up!
 
-// <smpl>
-@@
-expression t,f,d;
-@@
-
--init_timer(&t);
-+setup_timer(&t,f,d);
--t.function = f;
--t.data = d;
-// </smpl>
-
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-
----
- drivers/net/wireless/orinoco/orinoco_usb.c |    4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/orinoco/orinoco_usb.c b/drivers/net/wireless/orinoco/orinoco_usb.c
-index 9958464..61612a6 100644
---- a/drivers/net/wireless/orinoco/orinoco_usb.c
-+++ b/drivers/net/wireless/orinoco/orinoco_usb.c
-@@ -364,9 +364,7 @@ static struct request_context *ezusb_alloc_ctx(struct ezusb_priv *upriv,
- 	atomic_set(&ctx->refcount, 1);
- 	init_completion(&ctx->done);
- 
--	init_timer(&ctx->timer);
--	ctx->timer.function = ezusb_request_timerfn;
--	ctx->timer.data = (u_long) ctx;
-+	setup_timer(&ctx->timer, ezusb_request_timerfn, (u_long)ctx);
- 	return ctx;
- }
- 
-
+Cheers,
+Jes
