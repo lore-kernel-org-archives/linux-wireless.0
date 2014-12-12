@@ -1,46 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f52.google.com ([74.125.82.52]:36704 "EHLO
-	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751521AbaLGXpD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Dec 2014 18:45:03 -0500
-MIME-Version: 1.0
-In-Reply-To: <1417980062-25151-1-git-send-email-Julia.Lawall@lip6.fr>
-References: <1417980062-25151-1-git-send-email-Julia.Lawall@lip6.fr>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Mon, 8 Dec 2014 10:44:40 +1100
-Message-ID: <CAGRGNgWDJqV=XD+6q26Ma=m1sEi1kvLWsjq6=RjRVSFTxow0Qg@mail.gmail.com> (sfid-20141208_004530_890687_3DB33D44)
-Subject: Re: [PATCH 0/20] fix misspelling of current function in string
-To: Julia Lawall <Julia.Lawall@lip6.fr>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	kernel-janitors@vger.kernel.org, linux@rasmusvillemoes.dk,
-	Joe Perches <joe@perches.com>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	linux-scsi <linux-scsi@vger.kernel.org>,
-	dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org,
-	linux-mtd@lists.infradead.org, linux-samsung-soc@vger.kernel.org,
-	"Mailing List, Arm" <linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org, netdev <netdev@vger.kernel.org>,
-	linux-usb@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mail.ispras.ru ([83.149.199.45]:56046 "EHLO mail.ispras.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751161AbaLLVoT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Dec 2014 16:44:19 -0500
+From: Alexey Khoroshilov <khoroshilov@ispras.ru>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Fariya Fatima <fariyaf@gmail.com>
+Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
+Subject: [PATCH] rsi: fix memory leak in rsi_load_ta_instructions()
+Date: Sat, 13 Dec 2014 00:43:55 +0300
+Message-Id: <1418420635-23869-1-git-send-email-khoroshilov@ispras.ru> (sfid-20141212_224438_991396_8DABE547)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Julia,
+Memory allocated by kmemdup() in rsi_load_ta_instructions() is leaked.
+But duplication of firmware data here is useless,
+so the patch removes kmemdup() at all.
 
-On Mon, Dec 8, 2014 at 6:20 AM, Julia Lawall <Julia.Lawall@lip6.fr> wrote:
-> These patches replace what appears to be a reference to the name of the
-> current function but is misspelled in some way by either the name of the
-> function itself, or by %s and then __func__ in an argument list.
+Found by Linux Driver Verification project (linuxtesting.org).
 
-Would there be any value in doing this for _all_ cases where the
-function name is written in a format string?
+Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
+---
+ drivers/net/wireless/rsi/rsi_91x_sdio_ops.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-Thanks,
-
+diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
+index 4834a9abc171..b6cc9ff47fc2 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
++++ b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
+@@ -172,7 +172,6 @@ static int rsi_load_ta_instructions(struct rsi_common *common)
+ 		(struct rsi_91x_sdiodev *)adapter->rsi_dev;
+ 	u32 len;
+ 	u32 num_blocks;
+-	const u8 *fw;
+ 	const struct firmware *fw_entry = NULL;
+ 	u32 block_size = dev->tx_blk_size;
+ 	int status = 0;
+@@ -201,7 +200,6 @@ static int rsi_load_ta_instructions(struct rsi_common *common)
+ 		return status;
+ 	}
+ 
+-	fw = kmemdup(fw_entry->data, fw_entry->size, GFP_KERNEL);
+ 	len = fw_entry->size;
+ 
+ 	if (len % 4)
+@@ -212,7 +210,7 @@ static int rsi_load_ta_instructions(struct rsi_common *common)
+ 	rsi_dbg(INIT_ZONE, "%s: Instruction size:%d\n", __func__, len);
+ 	rsi_dbg(INIT_ZONE, "%s: num blocks: %d\n", __func__, num_blocks);
+ 
+-	status = rsi_copy_to_card(common, fw, len, num_blocks);
++	status = rsi_copy_to_card(common, fw_entry->data, len, num_blocks);
+ 	release_firmware(fw_entry);
+ 	return status;
+ }
 -- 
-Julian Calaby
+1.9.1
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
