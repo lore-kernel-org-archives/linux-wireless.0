@@ -1,58 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:54312 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751397AbaL2GSq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Dec 2014 01:18:46 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] ath10k: Fix DMA burst size
-Date: Mon, 29 Dec 2014 11:51:06 +0530
-Message-Id: <1419834066-11802-1-git-send-email-sujith@msujith.org> (sfid-20141229_071947_269938_A4A55C03)
+Received: from s3.sipsolutions.net ([5.9.151.49]:33201 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S967475AbaLLMk6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Dec 2014 07:40:58 -0500
+Message-ID: <1418388050.2470.33.camel@sipsolutions.net> (sfid-20141212_134101_600502_0695D83E)
+Subject: Re: [PATCH v8 4/4] cfg80211: correctly check ad-hoc channels
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@suse.com>
+Date: Fri, 12 Dec 2014 13:40:50 +0100
+In-Reply-To: <1417622897-30768-4-git-send-email-arik@wizery.com> (sfid-20141203_170821_596531_3A3BC82C)
+References: <1417622897-30768-1-git-send-email-arik@wizery.com>
+	 <1417622897-30768-4-git-send-email-arik@wizery.com>
+	 (sfid-20141203_170821_596531_3A3BC82C)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Wed, 2014-12-03 at 18:08 +0200, Arik Nemtsov wrote:
+> Ad-hoc requires beaconing for regulatory purposes. Validate that the
+> channel is valid for beaconing, and not only enabled.
 
-A value of zero indicates that 128B is the maximum
-DMA request size for read/writes. But PCI cards based
-on AR9880 can support 256B, so enable this for
-the 10.2 firmware.
+Applied.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/hw.h  | 3 +++
- drivers/net/wireless/ath/ath10k/wmi.c | 2 +-
- 2 files changed, 4 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 5729901..7b771ae 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -183,6 +183,9 @@ struct ath10k_pktlog_hdr {
- #define TARGET_10X_NUM_MSDU_DESC		(1024 + 400)
- #define TARGET_10X_MAX_FRAG_ENTRIES		0
- 
-+/* 10.2 parameters */
-+#define TARGET_10_2_DMA_BURST_SIZE		1
-+
- /* Target specific defines for WMI-TLV firmware */
- #define TARGET_TLV_NUM_VDEVS			3
- #define TARGET_TLV_NUM_STATIONS			32
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index ac74290..b103122 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -3744,7 +3744,7 @@ static struct sk_buff *ath10k_wmi_10_2_op_gen_init(struct ath10k *ar)
- 	config.mcast2ucast_mode = __cpu_to_le32(TARGET_10X_MCAST2UCAST_MODE);
- 	config.tx_dbg_log_size = __cpu_to_le32(TARGET_10X_TX_DBG_LOG_SIZE);
- 	config.num_wds_entries = __cpu_to_le32(TARGET_10X_NUM_WDS_ENTRIES);
--	config.dma_burst_size = __cpu_to_le32(TARGET_10X_DMA_BURST_SIZE);
-+	config.dma_burst_size = __cpu_to_le32(TARGET_10_2_DMA_BURST_SIZE);
- 	config.mac_aggr_delim = __cpu_to_le32(TARGET_10X_MAC_AGGR_DELIM);
- 
- 	val = TARGET_10X_RX_SKIP_DEFRAG_TIMEOUT_DUP_DETECTION_CHECK;
--- 
-2.2.1
+johannes
 
