@@ -1,150 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f48.google.com ([209.85.220.48]:34089 "EHLO
-	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750866AbaLPTrw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Dec 2014 14:47:52 -0500
-Received: by mail-pa0-f48.google.com with SMTP id rd3so14696230pab.7
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Dec 2014 11:47:51 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <549089B9.6040300@lwfinger.net>
-References: <CAD3NH5X-neqP-61kP=C2oNPPJTQNBkarae0rh93Hm4qzdpZRew@mail.gmail.com>
-	<549089B9.6040300@lwfinger.net>
-Date: Tue, 16 Dec 2014 20:47:51 +0100
-Message-ID: <CAD3NH5VFrC-dhY33mXWOdxD5mwCPiFX4f68wr43hxvTcZygBDQ@mail.gmail.com> (sfid-20141216_204757_647465_FAC26B1C)
-Subject: Re: mac80211 USB adapters with 5GHz support and SMA antenna
-From: Dani Camps <danicamps81@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from s3.sipsolutions.net ([5.9.151.49]:33367 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S967664AbaLLNV7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Dec 2014 08:21:59 -0500
+Message-ID: <1418390516.2470.46.camel@sipsolutions.net> (sfid-20141212_142203_849399_BEF1B9A5)
+Subject: Re: [PATCH] mac80211: add an intermediate software queue
+ implementation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
 Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Date: Fri, 12 Dec 2014 14:21:56 +0100
+In-Reply-To: <1416352495-82172-1-git-send-email-nbd@openwrt.org>
+References: <1416352495-82172-1-git-send-email-nbd@openwrt.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Larry,
+On Wed, 2014-11-19 at 00:14 +0100, Felix Fietkau wrote:
 
-Linux drivers for RTL8812AU can be downloaded from here:
-http://www.edimax.com/edimax/download/download/data/edimax/global/download/for_home/wireless_adapters/wireless_adapters_ac600_dual-band/ew-7811usc
+> +	struct txq_info *txq;
+> +	atomic_t txq_len[IEEE80211_NUM_ACS];
 
-However, they are not compatible with mac80211, and in my case I need
-that support.
+I think you should consider renaming the latter to txqs_len or so - it
+doesn't just cover one txq as is be implied by the name now. Otherwise
+the skb_queue_head also maintains the length anyway, but I think you
+need the aggregate for all stations here...
 
-Cheers
+Some documentation for this and the vif.txq would be good too :)
 
-Daniel
+In fact - it might be worthwhile to take parts of the commit message and
+elaborate a bit on it and write a whole DOC: section?
 
-On Tue, Dec 16, 2014 at 8:36 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> On 12/16/2014 01:09 PM, Dani Camps wrote:
->>
->> Dear all,
->>
->> I am looking for a Wi-Fi adapter with the following specs:
->>
->> a) Operates at 5GHz
->> b) Supports 802.11n and optionally 802.11ac
->> c) USB interface
->> d) SMA connector for external antenna(s)
->> e) It is supported by mac80211, and supports mesh mode
->>
->> I have done a survey and found only two devices that meet the previous
->> requirements, and they are only 802.11n. Most of the 802.11ac adapters
->> that I can find use the RT8812AU chipset, which as far as I know is
->> not supported by mac80211. Are there any plans to support this
->> chipset?
->>
->> I am pasting here a list of adapters, and I would appreciate if anyone
->> who has experimented with them could provide feedback on whether my
->> understanding is correct.
->>
->> Best Regards
->>
->> Daniel
->>
->> LIST OF ADAPTERS:
->> ================
->>
->> 1) ALFA AWUS051NH 2.4/ 5GHz Dual Band:
->>
->> link:
->> http://www.wifi-antennas.co.uk/alfa-awus051nh-2-4-5ghz-dual-band-300mbps-usb-wifi-dongle-with-rp-sma-antenna-4547.html
->> chipset: Ralink RT2870 A/B/G/N
->> mac80211 support: YES. rt2800usb.
->> http://wireless.kernel.org/en/users/Drivers/rt2800usb#external_links
->> mac80211s mesh support: YES. http://wireless.kernel.org/en/users/Drivers
->>
->> 2) Sveon SNT1022
->>
->> link:
->> http://sveon.com/tienda/adaptador-lan-wifi-usb-dual-band-doble-antena-rp-sma-snt1022/
->> chipset: Ralink 3572 A/B/G/N
->> mac80211 support: YES. rt2800usb.
->> http://wireless.kernel.org/en/users/Drivers/rt2800usb
->> mac80211s mesh support: YES. http://wireless.kernel.org/en/users/Drivers
->>
->>
->> 3) EDIMAX EW-7811USC
->>
->> link:
->> http://www.edimax.com/edimax/merchandise/merchandise_detail/data/edimax/global/wireless_adapters_ac600_dual-band/ew-7811usc/
->> chipset: Realtek RTL8812AU. AC/A/B/G/N
->> mac80211 support: NO. Not supported by rtlwifi.
->> http://wireless.kernel.org/en/users/Drivers/rtl819x
->> mac8011 mesh support: NO.
->>
->> 4) ALFA AWUS036HAC 1200
->>
->> link:
->> http://www.alfanetworkeurope.eu/en/alfa-awus036hac-ac1200-dual-band-ultra-fast-wifi-u.html
->> chipset: Realtek RTL8812AU. AC/A/B/G/N. link:
->> https://wikidevi.com/wiki/List_of_802.11ac_Hardware
->> mac80211 support: NO.
->> mac80211s support: NO.
->>
->> 5) ASUS USB-AC56
->>
->> link: http://www.asus.com/de/Networking/USBAC56/
->> chipset: Realtek RTL8812AU. AC/B/G/N.
->> https://wikidevi.com/wiki/List_of_802.11ac_Hardware
->> mac80211 support: NO.
->> mac80211s support: NO.
->>
->> 6) ABOCOM AU7212
->>
->> link: http://www.abocom.com.tw/product.aspx?id=180
->> chipset: Mediatek MT7610U. AC/A/B/G/N
->> mac80211 support: NO.
->> mac80211s support: NO.
->>
->> 7) D-LINK DWA-172
->>
->> link: http://www.dlink-forum.info/showthread.php?tid=3006
->> chipset: Realtek RTL8812AU.
->> mac80211 support: NO.
->> mac80211s support: NO.
->>
->> 8) HAWKING HD65U
->>
->> link: http://www.newegg.com/Product/Product.aspx?Item=N82E16833164060
->> chipset: Realtek RTL8812AU.
->> mac80211 support: NO.
->> mac80211s support: NO.
->
->
-> In general, the USB group at Realtek does not support mac80211, the way the
-> PCI group does. The only exception is driver rtl8192cu for the RTL81xxCU
-> chips, and that driver has received little attention from them since the
-> original release. I can fix problems in the interface between the hardware
-> manipulation and Linux, but I have no knowledge of the internals of any of
-> the Realtek chips.
->
-> As for the RTL8812AU, I have not seen any Linux driver for this chip, but I
-> doubt that it supports mac80211; however, most of the drivers for the latest
-> USB chips have supported cfg80211, and will work with the latest hostapd
-> version.
->
-> It is unfortunate that the USB group at Realtek has taken this stance as I
-> know of several users that have chosen not to use their chips because of the
-> incomplete Linux drivers. I assume they have good reasons, but I do not know
-> what they are.
->
-> Larry
->
+> --- a/net/mac80211/sta_info.h
+> +++ b/net/mac80211/sta_info.h
+> @@ -371,6 +371,7 @@ struct sta_info {
+>  	struct sk_buff_head ps_tx_buf[IEEE80211_NUM_ACS];
+>  	struct sk_buff_head tx_filtered[IEEE80211_NUM_ACS];
+>  	unsigned long driver_buffered_tids;
+> +	void *txq;
+
+You can still use struct txq_info * here even when it's not declared yet
+(since it's in the other header file)
+ 
+> +static void ieee80211_drv_tx(struct ieee80211_local *local,
+> +			     struct ieee80211_vif *vif,
+> +			     struct ieee80211_sta *pubsta,
+> +			     struct sk_buff *skb)
+> +{
+> +	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+> +	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
+> +	struct ieee80211_tx_control control = {
+> +		.sta = pubsta
+> +	};
+> +	struct ieee80211_txq *pubtxq = NULL;
+> +	struct txq_info *txq;
+> +	u8 ac;
+> +
+> +	if (ieee80211_is_mgmt(hdr->frame_control) ||
+> +	    ieee80211_is_ctl(hdr->frame_control))
+> +		goto tx_normal;
+> +
+> +	if (pubsta) {
+> +		u8 tid = skb->priority & IEEE80211_QOS_CTL_TID_MASK;
+> +		pubtxq = pubsta->txq[tid];
+> +	} else {
+> +		pubtxq = vif->txq;
+> +	}
+
+This is a bit confusing - isn't this the same as &sdata->txq.txq? Then
+again what even sets vif->txq? Shouldn't those be per-AC? Do you really
+want to mix 'normal' and txq-TX?
+
+I think you should also use txqi as variables for txq_info - it gets
+cumbersome to distinguish the two everywhere.
+
+Also in many cases where you have txq allocation failures you just
+continue as is, I'm not sure that's such a great idea. Those driver
+paths will practically never get tested.
+
+> +	if (!pubtxq)
+> +		goto tx_normal;
+> +
+> +	ac = pubtxq->ac;
+> +	txq = container_of(pubtxq, struct txq_info, txq);
+> +	atomic_inc(&sdata->txq_len[ac]);
+> +	if (atomic_read(&sdata->txq_len[ac]) >= local->hw.txq_ac_max_pending)
+> +		netif_stop_subqueue(sdata->dev, ac);
+> +
+> +	skb_queue_tail(&txq->queue, skb);
+> +	drv_wake_tx_queue(local, txq);
+
+You might consider doing locking differently here - I think you probably
+don't need the txq->queue spinlock at all since you're in per-AC and
+mappings are static. Not sure how that interacts with other parts of the
+code though.
+
+> +int ieee80211_tx_dequeue(struct ieee80211_hw *hw, struct ieee80211_txq *pubtxq,
+> +			 struct sk_buff **dest)
+
+I'd prefer you return the skb and use ERR_PTR() for errors.
+
+> +void ieee80211_init_tx_queue(struct ieee80211_sub_if_data *sdata,
+> +			     struct sta_info *sta,
+> +			     struct txq_info *txq, int tid)
+> +{
+> +	skb_queue_head_init(&txq->queue);
+> +	txq->txq.vif = &sdata->vif;
+> +
+> +	if (sta) {
+> +		txq->txq.sta = &sta->sta;
+> +		sta->sta.txq[tid] = &txq->txq;
+> +		txq->txq.ac = ieee802_1d_to_ac[tid & 7];
+> +	} else {
+> +		sdata->vif.txq = &txq->txq;
+> +		txq->txq.ac = IEEE80211_AC_BE;
+> +	}
+
+Again, I don't quite understand the single AC queue here per vif. It
+seems it should be one for each AC and possibly one for cab? Or none at
+all - I don't really see what this single one would be used for, in the
+TX code you seem to use it for mcast data only but then I don't really
+see the point. It's also not part of the queue length accounting.
+
+> +void ieee80211_flush_tx_queue(struct ieee80211_local *local,
+> +			      struct ieee80211_txq *pubtxq)
+> +{
+> +	struct txq_info *txq = container_of(pubtxq, struct txq_info, txq);
+> +	struct ieee80211_sub_if_data *sdata = vif_to_sdata(pubtxq->vif);
+> +	struct sk_buff *skb;
+> +
+> +	while ((skb = skb_dequeue(&txq->queue)) != NULL) {
+> +		atomic_dec(&sdata->txq_len[pubtxq->ac]);
+> +		ieee80211_free_txskb(&local->hw, skb);
+> +	}
+> +}
+
+You can rewrite this a bit smarter to just do one atomic op.
+
+johannes
+
