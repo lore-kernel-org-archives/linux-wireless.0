@@ -1,90 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:64012 "EHLO mga02.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:33284 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750710AbaLaHoU convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Dec 2014 02:44:20 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Jiri Kosina <jkosina@suse.cz>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-CC: Borislav Petkov <bp@alien8.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"egrumbach@gmail.com" <egrumbach@gmail.com>,
-	"peter@hurleysoftware.com" <peter@hurleysoftware.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
-Subject: RE: [PATCH] Revert "cfg80211: make WEXT compatibility unselectable"
-Date: Wed, 31 Dec 2014 07:44:14 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB31B5DD408@hasmsx107.ger.corp.intel.com> (sfid-20141231_084444_678204_5B158431)
-References: <alpine.LNX.2.00.1412301427430.31609@pobox.suse.cz>
- <CANUX_P0=wJiKrR4cUgEN=LO+eQ2byprz0K9m9QxzJc+kf4+_bA@mail.gmail.com>
- <54A2B807.1020202@hurleysoftware.com>
- <0BA3FCBA62E2DC44AF3030971E174FB31B5DC915@hasmsx107.ger.corp.intel.com>
- <alpine.LNX.2.00.1412301610320.31609@pobox.suse.cz>
- <1419971304.30412.0.camel@egrumbacBox>
- <alpine.LNX.2.00.1412302135520.31609@pobox.suse.cz>
- <20141230212326.GA29263@pd.tnic> <54A328C2.5080606@lwfinger.net>
- <alpine.LNX.2.00.1412302341290.31609@pobox.suse.cz>
- <alpine.LNX.2.00.1412302351030.31609@pobox.suse.cz>
-In-Reply-To: <alpine.LNX.2.00.1412302351030.31609@pobox.suse.cz>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	id S967608AbaLLM4S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Dec 2014 07:56:18 -0500
+Message-ID: <1418388974.2470.42.camel@sipsolutions.net> (sfid-20141212_135620_522289_F19FE48A)
+Subject: Re: [PATCH v2 4/4] iw: support multiple regdom print
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@suse.com>
+Date: Fri, 12 Dec 2014 13:56:14 +0100
+In-Reply-To: <1417449224-10293-4-git-send-email-arik@wizery.com> (sfid-20141201_165351_209717_CDF765FE)
+References: <1417449224-10293-1-git-send-email-arik@wizery.com>
+	 <1417449224-10293-4-git-send-email-arik@wizery.com>
+	 (sfid-20141201_165351_209717_CDF765FE)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Subject: [PATCH] Revert "cfg80211: make WEXT compatibility unselectable"
-> 
-> This reverts commit 24a0aa212ee2dbe44360288684478d76a8e20a0a.
-> 
-> It's causing severe userspace breakage. Namely, all the utilities from
-> wireless-utils which are relying on CONFIG_WEXT (which means tools like
-> 'iwconfig', 'iwlist', etc) are not working anymore. There is a 'iw' utility in
-> newer wireless-tools, which is supposed to be a replacement for all the
-> "deprecated" binaries, but it's far away from being massively adopted.
-> 
-> Please see [1] for example of the userspace breakage this is causing.
-> 
-> In addition to that, Larry Finger reports [2] that this patch is also causing
-> ipw2200 driver being impossible to build.
-> 
-> To me this clearly shows that CONFIG_WEXT is far, far away from being
-> "deprecated enough" to be removed.
-> 
-> [1] http://thread.gmane.org/gmane.linux.kernel/1857010
-> [2] http://thread.gmane.org/gmane.linux.network/343688
-> 
-> Signed-off-by: Jiri Kosina <jkosina@suse.cz>
+On Mon, 2014-12-01 at 17:53 +0200, Arik Nemtsov wrote:
+> When a phy is given, print only its regdomain. Otherwise, use the newly
+> implement dump functionality to print all regdomains in the system.
 
-Wait. I don't want to discuss the userspace API deprecation here but
-I do think that this patch should be applied to the proper tree if at all.
-The proper tree is mac80211.git. Now you are unhappy with what happens
-there and want to escalate - fine. But then, please do so following the
-natural hierarchy of the trees: net.git. Then mac80211.git's maintainer
-(Johannes) will be able to sync with your change more easily.
-Johannes doesn't need me as an advocate, but I feel that reverting a
-mac80211 patch in linux.git while we are only in -rc2 while everybody
-is on holiday leave is a bit unfair.
+This breaks on existing kernels.
 
-> ---
->  net/wireless/Kconfig | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig index
-> 22ba971..29c8675 100644
-> --- a/net/wireless/Kconfig
-> +++ b/net/wireless/Kconfig
-> @@ -175,7 +175,7 @@ config CFG80211_INTERNAL_REGDB
->  	  Most distributions have a CRDA package.  So if unsure, say N.
-> 
->  config CFG80211_WEXT
-> -	bool
-> +	bool "cfg80211 wireless extensions compatibility"
->  	depends on CFG80211
->  	select WEXT_CORE
->  	help
-> --
-> Jiri Kosina
-> SUSE Labs
+johannes
+
