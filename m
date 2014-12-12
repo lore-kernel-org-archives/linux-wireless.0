@@ -1,27 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f179.google.com ([209.85.223.179]:49532 "EHLO
-	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754702AbaLVTsp (ORCPT
+Received: from mail-wg0-f41.google.com ([74.125.82.41]:50601 "EHLO
+	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S967013AbaLLLyc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Dec 2014 14:48:45 -0500
-Date: Mon, 22 Dec 2014 13:48:43 -0600
-From: Eric Biggers <ebiggers3@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
-Subject: Re: [PATCH for 3.19] rtlwifi: Fix error when accessing unmapped
- memory in skb
-Message-ID: <20141222194843.GA7575@zzz> (sfid-20141222_204853_458483_B35F9899)
-References: <1419269826-12552-1-git-send-email-Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1419269826-12552-1-git-send-email-Larry.Finger@lwfinger.net>
+	Fri, 12 Dec 2014 06:54:32 -0500
+Received: by mail-wg0-f41.google.com with SMTP id y19so8877200wgg.14
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Dec 2014 03:54:31 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 1/5] ath10k: improve 11b coex
+Date: Fri, 12 Dec 2014 12:41:35 +0100
+Message-Id: <1418384499-31660-2-git-send-email-michal.kazior@tieto.com> (sfid-20141212_125500_292048_D9790AD1)
+In-Reply-To: <1418384499-31660-1-git-send-email-michal.kazior@tieto.com>
+References: <1418214714-29689-1-git-send-email-michal.kazior@tieto.com>
+ <1418384499-31660-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Is this really the same behavior as 3.17?  In 3.17, allocating the new skb is
-one of the first things the interrupt handler does, and if that fails it drops
-the packet and keeps using the old skb.  In this proposal, it's only after the
-packet has been received and the old skb has been freed that a new one is
-allocated.  And if that fails --- well, what are you expecting to happen
-exactly?
+Some firmware revisions need peer phymode to be
+specified as MODE_11B when associating as station
+to a 11b AP. Otherwise they can starve other
+stations.
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index fe61201..950322d 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -1416,6 +1416,12 @@ static void ath10k_peer_assoc_h_qos(struct ath10k *ar,
+ 	}
+ }
+ 
++static bool ath10k_mac_sta_has_11g_rates(struct ieee80211_sta *sta)
++{
++	/* First 4 rates in ath10k_rates are CCK (11b) rates. */
++	return sta->supp_rates[IEEE80211_BAND_2GHZ] >> 4;
++}
++
+ static void ath10k_peer_assoc_h_phymode(struct ath10k *ar,
+ 					struct ieee80211_vif *vif,
+ 					struct ieee80211_sta *sta,
+@@ -1430,8 +1436,10 @@ static void ath10k_peer_assoc_h_phymode(struct ath10k *ar,
+ 				phymode = MODE_11NG_HT40;
+ 			else
+ 				phymode = MODE_11NG_HT20;
+-		} else {
++		} else if (ath10k_mac_sta_has_11g_rates(sta)) {
+ 			phymode = MODE_11G;
++		} else {
++			phymode = MODE_11B;
+ 		}
+ 
+ 		break;
+@@ -4724,6 +4732,9 @@ static const struct ieee80211_channel ath10k_5ghz_channels[] = {
+ 	CHAN5G(165, 5825, 0),
+ };
+ 
++/* Note: Be careful if you re-order these. There is code which depends on this
++ * ordering.
++ */
+ static struct ieee80211_rate ath10k_rates[] = {
+ 	/* CCK */
+ 	RATETAB_ENT(10,  0x82, 0),
+-- 
+1.8.5.3
+
