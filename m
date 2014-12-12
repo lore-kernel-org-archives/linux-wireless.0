@@ -1,84 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:63671 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751226AbaLLWuL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Dec 2014 17:50:11 -0500
-Received: by mail-wi0-f176.google.com with SMTP id ex7so3939003wid.3
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Dec 2014 14:50:10 -0800 (PST)
-Message-ID: <548B7120.8010008@konagma.com> (sfid-20141212_235032_786109_B7636BE9)
-Date: Fri, 12 Dec 2014 23:50:08 +0100
-From: Krzysztof Konopko <kris@konagma.com>
-MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+Received: from mx1.redhat.com ([209.132.183.28]:47240 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754087AbaLLSwp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Dec 2014 13:52:45 -0500
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Krzysztof Konopko <kris@konagma.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
 	linux-kernel@vger.kernel.org
 Subject: Re: [PATCH] staging: rtl8723au: Fix sparse warnings
-References: <1418336609-10191-1-git-send-email-kris@konagma.com> <548A2E7A.4010303@lwfinger.net> <548AD2F1.3080200@konagma.com> <548B2752.7030607@lwfinger.net>
-In-Reply-To: <548B2752.7030607@lwfinger.net>
-Content-Type: text/plain; charset=windows-1252
+References: <1418336609-10191-1-git-send-email-kris@konagma.com>
+	<548A2E7A.4010303@lwfinger.net> <548AD2F1.3080200@konagma.com>
+	<548B2752.7030607@lwfinger.net>
+Date: Fri, 12 Dec 2014 13:52:35 -0500
+In-Reply-To: <548B2752.7030607@lwfinger.net> (Larry Finger's message of "Fri,
+	12 Dec 2014 11:35:14 -0600")
+Message-ID: <wrfjwq5wwvik.fsf@redhat.com> (sfid-20141212_195305_262660_09FCC8AD)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/12/14 18:35, Larry Finger wrote:
+Larry Finger <Larry.Finger@lwfinger.net> writes:
 > On 12/12/2014 05:35 AM, Krzysztof Konopko wrote:
->> On 12/12/14 00:53, Larry Finger wrote:
->>> In particular, did you test on big-endian hardware after you
->>> made this change?
->>
->> Nope.  I don't have any big-endian hardware.  I don't even have the
->> wireless card TBH.  But I'm happy to try to get one.  Is Rtl8723AE the
->> right model?
-> 
-> No. The device numbers that end in E are PCIe and use a mac80211-based
-> driver. As none of my BE hardware has PCIe, I cannot test those drivers
-> on other than LE hardware. I do not have the hardware either for the
-> RTL8723AU. For that reason, I am careful when modifying the driver - I
-> let Jes do that.
-> 
-
-Silly me.  'U' stands for USB here.  But can't find this device on any
-auction.  It's included in some ultrabooks but can't afford that for the
-sake of fixing some sparse warnings :)
-
->>> In RTL8188EU, both BA_starting_seqctrl and TXOP_limit are unsigned
->>> short.
->>>
->>
->> That's not quite the case.  `TXOP_limit` is __le16 in RTL8188EU [1].
->> It's __le16 even in your GitHub repo [2].  And that made me thinking
->> that there's probably some inconsistency in the header.
-> 
-> All the USB drivers are a mess. The kernel version of rtl8188eu does not
-> work on PPC; however, the git repo now does. I'm working on finding the
-> differences and fixing the kernel version.
-> 
-
-Right.  I found your introductory message:
-https://lkml.org/lkml/2013/4/1/280
-
 >> I was hunting particularly for inconsistencies with `sparse` and came
 >> across this one.  But I dug a bit further and I wonder why the driver is
 >> not using standard stuff like the one in `include/linux/ieee80211.h`
 >> where any data wider than one byte is clearly declared as __le<nn>?
-> 
+>
 > That is a good question. One possibility is that those definitions do
 > not exist on some of the older kernels that Realtek supports. They
 > generally work with 2.6.18 and newer.
->
 
-That would be important if the driver was kept out of the tree.  Isn't
-it the point of having the driver in the mainline to keep up with the
-kernel and don't bother with older versions?
+The reason the 8723au driver doesn't use the defines from there is that
+in ieee80211.h they are part of struct ieee80211_mgmt, while the 8723au
+driver access the addba etc. elements without the full struct in place.
 
-> To be able to fix the kernel driver for RTL8188EU on PPC, I need to sort
-> out these endian problems. Once I do, I will port them to the other
-> drivers.
-> 
-
-Isn't `sparse` useful here? :)
-
-Kris
-
+Jes
