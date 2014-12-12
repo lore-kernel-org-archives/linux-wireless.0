@@ -1,35 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:4969 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752471AbaLAH0s (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Dec 2014 02:26:48 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/3] ath10k: remove callback argument
-References: <1417082978-1701-1-git-send-email-michal.kazior@tieto.com>
-	<1417082978-1701-2-git-send-email-michal.kazior@tieto.com>
-Date: Mon, 1 Dec 2014 09:26:42 +0200
-In-Reply-To: <1417082978-1701-2-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Thu, 27 Nov 2014 11:09:37 +0100")
-Message-ID: <87iohvrft9.fsf@kamboji.qca.qualcomm.com> (sfid-20141201_082651_520166_BDC0889D)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from s3.sipsolutions.net ([5.9.151.49]:33293 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S967705AbaLLM7v (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Dec 2014 07:59:51 -0500
+Message-ID: <1418389179.2470.43.camel@sipsolutions.net> (sfid-20141212_135954_168842_A6A98282)
+Subject: Re: New WARNING from mac80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sujith Manoharan <sujith@msujith.org>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 12 Dec 2014 13:59:39 +0100
+In-Reply-To: <21595.39090.446262.985148@gargle.gargle.HOWL>
+References: <545B8CD1.8020208@lwfinger.net>
+	 <1415286217.17015.12.camel@sipsolutions.net>
+	 <21595.38533.767426.846290@gargle.gargle.HOWL>
+	 <21595.39090.446262.985148@gargle.gargle.HOWL>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+On Thu, 2014-11-06 at 21:20 +0530, Sujith Manoharan wrote:
+> Sujith Manoharan wrote:
+> > I think this is the race described here: https://patchwork.kernel.org/patch/5095061/
+> > 
+> > I haven't tried any workaround or fix yet, but it looks like this
+> > race can be hit fairly often.
+> > 
+> > https://dev.openwrt.org/ticket/9654
+> > https://dev.openwrt.org/ticket/11862
+> > https://dev.openwrt.org/ticket/13542
+> 
+> I dug out an old trace: http://pastebin.com/raw.php?i=Qj8aXJhB
 
-> Pass the eid argument via skbuff control buffer.
-> This will make it possible to work with queues of
-> HTC event buffers.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Would it be worthwhile to simply remove the warning and document how we
+can get there?
 
-To make the title more unique I changed the title to:
+johannes
 
-ath10k: remove transfer_id from ath10k_hif_cb::tx_completion
-
--- 
-Kalle Valo
