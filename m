@@ -1,43 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:23965 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750833AbaL3OTe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Dec 2014 09:19:34 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Ido Yariv <ido@wizery.com>, Ido Yariv <idox.yariv@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 08/33] iwlwifi: mvm: Set the HW step in the core dump
-Date: Tue, 30 Dec 2014 16:18:43 +0200
-Message-Id: <1419949148-24046-8-git-send-email-emmanuel.grumbach@intel.com> (sfid-20141230_151937_661302_1A45AB38)
-In-Reply-To: <1419948357.21410.4.camel@egrumbacBox>
-References: <1419948357.21410.4.camel@egrumbacBox>
+Received: from mail-oi0-f47.google.com ([209.85.218.47]:40163 "EHLO
+	mail-oi0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964843AbaLMDSe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Dec 2014 22:18:34 -0500
+Message-ID: <548BB000.8020202@lwfinger.net> (sfid-20141213_041904_268703_5B40E51F)
+Date: Fri, 12 Dec 2014 21:18:24 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Krzysztof Konopko <kris@konagma.com>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] staging: rtl8723au: Fix sparse warnings
+References: <1418336609-10191-1-git-send-email-kris@konagma.com> <548A2E7A.4010303@lwfinger.net> <548AD2F1.3080200@konagma.com> <548B2752.7030607@lwfinger.net> <548B7120.8010008@konagma.com>
+In-Reply-To: <548B7120.8010008@konagma.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ido Yariv <ido@wizery.com>
+On 12/12/2014 04:50 PM, Krzysztof Konopko wrote:
+> On 12/12/14 18:35, Larry Finger wrote:
+>> On 12/12/2014 05:35 AM, Krzysztof Konopko wrote:
+>>> On 12/12/14 00:53, Larry Finger wrote:
+>>>> In particular, did you test on big-endian hardware after you
+>>>> made this change?
+>>>
+>>> Nope.  I don't have any big-endian hardware.  I don't even have the
+>>> wireless card TBH.  But I'm happy to try to get one.  Is Rtl8723AE the
+>>> right model?
+>>
+>> No. The device numbers that end in E are PCIe and use a mac80211-based
+>> driver. As none of my BE hardware has PCIe, I cannot test those drivers
+>> on other than LE hardware. I do not have the hardware either for the
+>> RTL8723AU. For that reason, I am careful when modifying the driver - I
+>> let Jes do that.
+>>
+>
+> Silly me.  'U' stands for USB here.  But can't find this device on any
+> auction.  It's included in some ultrabooks but can't afford that for the
+> sake of fixing some sparse warnings :)
 
-The HW step member was left out of the core dump information. Fix this.
+There are no stand-alone USB devices that I have found for either RTL8723AU or 
+RTL8723BU. The closest are modules CM-8723U and CM-8723BU by CC&C 
+(http://www.ccandc.com.tw/) with RTL8723AU and RTL8723BU, respectively. The 
+former is obsolete and no longer on the web site. These modules have D+ and D- 
+connectors for USB, but they take 3.3 V, not 5. As a result, one would need some 
+sort of voltage regulator circuit. That would not be complicated as it would 
+consist of a TI LM2937-3.3 and a couple of capacitors. I wrote to them to see if 
+I could get samples, but no response yet.
 
-Signed-off-by: Ido Yariv <idox.yariv@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 1 +
- 1 file changed, 1 insertion(+)
+>> To be able to fix the kernel driver for RTL8188EU on PPC, I need to sort
+>> out these endian problems. Once I do, I will port them to the other
+>> drivers.
+>>
+>
+> Isn't `sparse` useful here? :)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index bec588d..2293a51 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -823,6 +823,7 @@ void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
- 		mvm->cfg->device_family == IWL_DEVICE_FAMILY_7000 ?
- 			cpu_to_le32(IWL_FW_ERROR_DUMP_FAMILY_7) :
- 			cpu_to_le32(IWL_FW_ERROR_DUMP_FAMILY_8);
-+	dump_info->hw_step = cpu_to_le32(CSR_HW_REV_STEP(mvm->trans->hw_rev));
- 	memcpy(dump_info->fw_human_readable, mvm->fw->human_readable,
- 	       sizeof(dump_info->fw_human_readable));
- 	strncpy(dump_info->dev_human_readable, mvm->cfg->name,
--- 
-1.9.1
+Yes, but the git repo works, and the kernel version does not, even though both 
+do not have any Sparse warhings.
+
+Larry
+
 
