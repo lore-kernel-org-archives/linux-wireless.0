@@ -1,116 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:55477 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751619AbaL1PQS (ORCPT
+Received: from v094114.home.net.pl ([79.96.170.134]:54315 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932591AbaLMBOk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Dec 2014 10:16:18 -0500
-Message-ID: <54A01EBF.2020608@broadcom.com> (sfid-20141228_161621_176791_539FF6D0)
-Date: Sun, 28 Dec 2014 16:16:15 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Fri, 12 Dec 2014 20:14:40 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: linux-wireless@vger.kernel.org
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>
+Subject: [Resend][PATCH] NFC / PM: Replace CONFIG_PM_RUNTIME with CONFIG_PM
+Date: Sat, 13 Dec 2014 02:36:19 +0100
+Message-ID: <2345337.9Neq3LLH1l@vostro.rjw.lan> (sfid-20141213_021456_815809_61280CBC)
+In-Reply-To: <1783661.J0PllbRLKd@vostro.rjw.lan>
+References: <1783661.J0PllbRLKd@vostro.rjw.lan>
 MIME-Version: 1.0
-To: Vaishali Thakkar <vthakkar1994@gmail.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Samuel Ortiz <sameo@linux.intel.com>
-Subject: Re: [PATCH v3] NFC: port100: Introduce the use of function put_unaligned_le16
-References: <20141224131557.GA2591@vaishali-Ideapad-Z570> <CAK-LDbJgwdWLZf9tH67sFdYodX0u+t2RGuwsJF3a1-8o0=RBPg@mail.gmail.com>
-In-Reply-To: <CAK-LDbJgwdWLZf9tH67sFdYodX0u+t2RGuwsJF3a1-8o0=RBPg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-+ Samuel
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Subject: NFC / PM: Replace CONFIG_PM_RUNTIME with CONFIG_PM
 
-On 12/28/14 12:33, Vaishali Thakkar wrote:
-> On Wed, Dec 24, 2014 at 6:45 PM, Vaishali Thakkar
-> <vthakkar1994@gmail.com>  wrote:
->> This patch introduces the use of function put_unaligned_le16.
->>
->> This is done using Coccinelle and semantic patch used is as follows:
->>
->> @a@
->> typedef u16, __le16;
->> {u16,__le16} e16;
->> identifier tmp;
->> expression ptr;
->> expression y,e;
->> type T;
->> @@
->>
->> - tmp = cpu_to_le16(y);
->>
->>    <+... when != tmp
->> (
->> - memcpy(ptr, (T)&tmp, \(2\|sizeof(u16)\|sizeof(__le16)\|sizeof(e16)\));
->> + put_unaligned_le16(y,ptr);
->> |
->> - memcpy(ptr, (T)&tmp, ...);
->> + put_unaligned_le16(y,ptr);
->> )
->>    ...+>
->> ? tmp = e
->>
->> @@ type T; identifier a.tmp; @@
->>
->> - T tmp;
->> ...when != tmp
->>
->> Signed-off-by: Vaishali Thakkar<vthakkar1994@gmail.com>
->> ---
->> Changes since v1:
->>          <asm/unaligned.h>   has arch-specific knowlege of which of
->>          the implementations needs to be used. So, include it instaed
->>          of<linux/unaligned/access_ok.h>.
->> Changes since v2:
->>          Fix typing mistake in subject
->>
->>   drivers/nfc/port100.c | 6 ++----
->>   1 file changed, 2 insertions(+), 4 deletions(-)
->>
->> diff --git a/drivers/nfc/port100.c b/drivers/nfc/port100.c
->> index 4ac4d31..440f0f3 100644
->> --- a/drivers/nfc/port100.c
->> +++ b/drivers/nfc/port100.c
->> @@ -18,6 +18,7 @@
->>   #include<linux/module.h>
->>   #include<linux/usb.h>
->>   #include<net/nfc/digital.h>
->> +#include<asm/unaligned.h>
->>
->>   #define VERSION "0.1"
->>
->> @@ -1136,7 +1137,6 @@ static int port100_in_send_cmd(struct nfc_digital_dev *ddev,
->>   {
->>          struct port100 *dev = nfc_digital_get_drvdata(ddev);
->>          struct port100_cb_arg *cb_arg;
->> -       __le16 timeout;
->>
->>          cb_arg = kzalloc(sizeof(struct port100_cb_arg), GFP_KERNEL);
->>          if (!cb_arg)
->> @@ -1145,9 +1145,7 @@ static int port100_in_send_cmd(struct nfc_digital_dev *ddev,
->>          cb_arg->complete_cb = cb;
->>          cb_arg->complete_arg = arg;
->>
->> -       timeout = cpu_to_le16(_timeout * 10);
->> -
->> -       memcpy(skb_push(skb, sizeof(__le16)),&timeout, sizeof(__le16));
->> +       put_unaligned_le16(_timeout * 10, skb_push(skb, sizeof(__le16)));
->>
->>          return port100_send_cmd_async(dev, PORT100_CMD_IN_COMM_RF, skb,
->>                                        port100_in_comm_rf_complete, cb_arg);
->> --
->> 1.9.1
->>
->
-> Hello...Can someone please review my patch so that I can have idea
-> about I am on a right way or not??
-> I think this is missed by developers.
+After commit b2b49ccbdd54 (PM: Kconfig: Set PM_RUNTIME if PM_SLEEP is
+selected) PM_RUNTIME is always set if PM is set, so #ifdef blocks
+depending on CONFIG_PM_RUNTIME may now be changed to depend on
+CONFIG_PM.
 
-Generally that's not how it works. You either get comments or not. It 
-may also help to send the patch to the maintainer, ie. Samuel Ortiz.
+Replace CONFIG_PM_RUNTIME with CONFIG_PM in drivers/nfc/trf7970a.c.
 
-Regards,
-Arend
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
 
-> Thank You.
->
+Please let me know if there are any objections against this.  If not, I'll
+take it through the linux-pm tree, as I'm going to remove CONFIG_PM_RUNTIME
+entirely shortly.
+
+---
+ drivers/nfc/trf7970a.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+Index: linux-pm/drivers/nfc/trf7970a.c
+===================================================================
+--- linux-pm.orig/drivers/nfc/trf7970a.c
++++ linux-pm/drivers/nfc/trf7970a.c
+@@ -2154,7 +2154,7 @@ static int trf7970a_resume(struct device
+ }
+ #endif
+ 
+-#ifdef CONFIG_PM_RUNTIME
++#ifdef CONFIG_PM
+ static int trf7970a_pm_runtime_suspend(struct device *dev)
+ {
+ 	struct spi_device *spi = container_of(dev, struct spi_device, dev);
 
