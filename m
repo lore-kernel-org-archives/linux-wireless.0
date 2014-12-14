@@ -1,142 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33367 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S967664AbaLLNV7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Dec 2014 08:21:59 -0500
-Message-ID: <1418390516.2470.46.camel@sipsolutions.net> (sfid-20141212_142203_849399_BEF1B9A5)
-Subject: Re: [PATCH] mac80211: add an intermediate software queue
- implementation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 12 Dec 2014 14:21:56 +0100
-In-Reply-To: <1416352495-82172-1-git-send-email-nbd@openwrt.org>
-References: <1416352495-82172-1-git-send-email-nbd@openwrt.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:38096 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750936AbaLNK2s (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 14 Dec 2014 05:28:48 -0500
+Received: by mail-wi0-f172.google.com with SMTP id n3so6277480wiv.11
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Dec 2014 02:28:47 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1418388114.2470.34.camel@sipsolutions.net>
+References: <1417968225-17518-1-git-send-email-arik@wizery.com> <1418388114.2470.34.camel@sipsolutions.net>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Sun, 14 Dec 2014 12:28:32 +0200
+Message-ID: <CA+XVXfc=1mm5cUaFqb5zbg7ZO9Hnyq9ofXvFzy=fZkaCnguQ8g@mail.gmail.com> (sfid-20141214_113239_514034_CD208F88)
+Subject: Re: [PATCH] cfg80211: avoid intersection when applying custom reg
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-11-19 at 00:14 +0100, Felix Fietkau wrote:
+On Fri, Dec 12, 2014 at 2:41 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+>
+> On Sun, 2014-12-07 at 18:03 +0200, Arik Nemtsov wrote:
+> > The custom-reg handling function can currently only add flags to a given
+> > channel. This results in stale flags being left applied. In some cases
+> > a channel was disabled and even the orig_flags were changed to reflect
+> > this.
+> >
+> > Previously the API was designed for a single invocation before wiphy
+> > registration, so this didn't matter. The previous approach doesn't scale
+> > well to self-managed regulatory devices, particularly when a more
+> > permissive regdom is applied after a restrictive one.
+>
+> This description (not the patch) only makes sense after the other series
+> with self-managed, please resend it in the self-managed patchset.
 
-> +	struct txq_info *txq;
-> +	atomic_t txq_len[IEEE80211_NUM_ACS];
+Sure. I'll also make it self-managed only, so avoid possible
+regressions, as Luis commented.
 
-I think you should consider renaming the latter to txqs_len or so - it
-doesn't just cover one txq as is be implied by the name now. Otherwise
-the skb_queue_head also maintains the length anyway, but I think you
-need the aggregate for all stations here...
-
-Some documentation for this and the vif.txq would be good too :)
-
-In fact - it might be worthwhile to take parts of the commit message and
-elaborate a bit on it and write a whole DOC: section?
-
-> --- a/net/mac80211/sta_info.h
-> +++ b/net/mac80211/sta_info.h
-> @@ -371,6 +371,7 @@ struct sta_info {
->  	struct sk_buff_head ps_tx_buf[IEEE80211_NUM_ACS];
->  	struct sk_buff_head tx_filtered[IEEE80211_NUM_ACS];
->  	unsigned long driver_buffered_tids;
-> +	void *txq;
-
-You can still use struct txq_info * here even when it's not declared yet
-(since it's in the other header file)
- 
-> +static void ieee80211_drv_tx(struct ieee80211_local *local,
-> +			     struct ieee80211_vif *vif,
-> +			     struct ieee80211_sta *pubsta,
-> +			     struct sk_buff *skb)
-> +{
-> +	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
-> +	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
-> +	struct ieee80211_tx_control control = {
-> +		.sta = pubsta
-> +	};
-> +	struct ieee80211_txq *pubtxq = NULL;
-> +	struct txq_info *txq;
-> +	u8 ac;
-> +
-> +	if (ieee80211_is_mgmt(hdr->frame_control) ||
-> +	    ieee80211_is_ctl(hdr->frame_control))
-> +		goto tx_normal;
-> +
-> +	if (pubsta) {
-> +		u8 tid = skb->priority & IEEE80211_QOS_CTL_TID_MASK;
-> +		pubtxq = pubsta->txq[tid];
-> +	} else {
-> +		pubtxq = vif->txq;
-> +	}
-
-This is a bit confusing - isn't this the same as &sdata->txq.txq? Then
-again what even sets vif->txq? Shouldn't those be per-AC? Do you really
-want to mix 'normal' and txq-TX?
-
-I think you should also use txqi as variables for txq_info - it gets
-cumbersome to distinguish the two everywhere.
-
-Also in many cases where you have txq allocation failures you just
-continue as is, I'm not sure that's such a great idea. Those driver
-paths will practically never get tested.
-
-> +	if (!pubtxq)
-> +		goto tx_normal;
-> +
-> +	ac = pubtxq->ac;
-> +	txq = container_of(pubtxq, struct txq_info, txq);
-> +	atomic_inc(&sdata->txq_len[ac]);
-> +	if (atomic_read(&sdata->txq_len[ac]) >= local->hw.txq_ac_max_pending)
-> +		netif_stop_subqueue(sdata->dev, ac);
-> +
-> +	skb_queue_tail(&txq->queue, skb);
-> +	drv_wake_tx_queue(local, txq);
-
-You might consider doing locking differently here - I think you probably
-don't need the txq->queue spinlock at all since you're in per-AC and
-mappings are static. Not sure how that interacts with other parts of the
-code though.
-
-> +int ieee80211_tx_dequeue(struct ieee80211_hw *hw, struct ieee80211_txq *pubtxq,
-> +			 struct sk_buff **dest)
-
-I'd prefer you return the skb and use ERR_PTR() for errors.
-
-> +void ieee80211_init_tx_queue(struct ieee80211_sub_if_data *sdata,
-> +			     struct sta_info *sta,
-> +			     struct txq_info *txq, int tid)
-> +{
-> +	skb_queue_head_init(&txq->queue);
-> +	txq->txq.vif = &sdata->vif;
-> +
-> +	if (sta) {
-> +		txq->txq.sta = &sta->sta;
-> +		sta->sta.txq[tid] = &txq->txq;
-> +		txq->txq.ac = ieee802_1d_to_ac[tid & 7];
-> +	} else {
-> +		sdata->vif.txq = &txq->txq;
-> +		txq->txq.ac = IEEE80211_AC_BE;
-> +	}
-
-Again, I don't quite understand the single AC queue here per vif. It
-seems it should be one for each AC and possibly one for cab? Or none at
-all - I don't really see what this single one would be used for, in the
-TX code you seem to use it for mcast data only but then I don't really
-see the point. It's also not part of the queue length accounting.
-
-> +void ieee80211_flush_tx_queue(struct ieee80211_local *local,
-> +			      struct ieee80211_txq *pubtxq)
-> +{
-> +	struct txq_info *txq = container_of(pubtxq, struct txq_info, txq);
-> +	struct ieee80211_sub_if_data *sdata = vif_to_sdata(pubtxq->vif);
-> +	struct sk_buff *skb;
-> +
-> +	while ((skb = skb_dequeue(&txq->queue)) != NULL) {
-> +		atomic_dec(&sdata->txq_len[pubtxq->ac]);
-> +		ieee80211_free_txskb(&local->hw, skb);
-> +	}
-> +}
-
-You can rewrite this a bit smarter to just do one atomic op.
-
-johannes
-
+Arik
