@@ -1,42 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:48727 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932623AbaLJTD4 (ORCPT
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:58003 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751931AbaLNWgd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Dec 2014 14:03:56 -0500
-Message-ID: <5488991A.9000604@candelatech.com> (sfid-20141210_200359_575143_205E5E6A)
-Date: Wed, 10 Dec 2014 11:03:54 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: poh <poh@qca.qualcomm.com>
-CC: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath10k: unregister and remove frag_threshold callback
-References: <1417799786-11391-1-git-send-email-poh@qca.qualcomm.com> <54827F30.8050005@candelatech.com> <548891FB.2060500@qca.qualcomm.com>
-In-Reply-To: <548891FB.2060500@qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252
+	Sun, 14 Dec 2014 17:36:33 -0500
+Received: by mail-wg0-f49.google.com with SMTP id n12so13199960wgh.36
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Dec 2014 14:36:31 -0800 (PST)
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] staging: rtl8723au: os_dep: usb_intf.c:  Fix for possible null pointer dereference
+Date: Sun, 14 Dec 2014 23:39:14 +0100
+Message-Id: <1418596754-24735-1-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20141214_233644_296463_1F2DC225)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/10/2014 10:33 AM, poh wrote:
-> 
-> On 12/05/2014 07:59 PM, Ben Greear wrote:
->>
->>
->> On 12/05/2014 09:16 AM, Peter Oh wrote:
->>> Setting fragmentation threshold has not been supported by
->>> any of firmware versions, hence unregister the callback and
->>> remove the function.
->>
->> How hard is it to just fix the firmware instead?
-> It's due to hardware limitation such as lack of buffers/RAM size limitation, hence it's very hard from sw perspective.
+There is otherwise a risk of a possible null pointer dereference.
 
-Out of curiosity, how much more RAM do you need?  I was able to squeeze somewhere around 80k out of the firmware
-in my quest to support 64 station vdevs....
+Was largely found by using a static code analysis program called cppcheck.
 
-Thanks,
-Ben
+Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+---
+ drivers/staging/rtl8723au/os_dep/usb_intf.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/staging/rtl8723au/os_dep/usb_intf.c b/drivers/staging/rtl8723au/os_dep/usb_intf.c
+index 865743e..71a6330 100644
+--- a/drivers/staging/rtl8723au/os_dep/usb_intf.c
++++ b/drivers/staging/rtl8723au/os_dep/usb_intf.c
+@@ -351,10 +351,11 @@ error_exit:
+ int rtw_hw_resume23a(struct rtw_adapter *padapter)
+ {
+ 	struct pwrctrl_priv *pwrpriv = &padapter->pwrctrlpriv;
+-	struct net_device *pnetdev = padapter->pnetdev;
++	struct net_device *pnetdev;
+ 
+ 	if (padapter) { /* system resume */
+ 		DBG_8723A("==> rtw_hw_resume23a\n");
++		pnetdev = padapter->pnetdev;
+ 		down(&pwrpriv->lock);
+ 		pwrpriv->bips_processing = true;
+ 		rtw_reset_drv_sw23a(padapter);
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.10.4
 
