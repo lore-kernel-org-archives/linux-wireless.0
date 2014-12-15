@@ -1,63 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:22814 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755542AbaLWLdg convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Dec 2014 06:33:36 -0500
-From: Avinash Patil <patila@marvell.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "janusz.dziedzic@tieto.com" <janusz.dziedzic@tieto.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Cathy Luo <cluo@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Date: Tue, 23 Dec 2014 03:32:14 -0800
-Subject: RE: [PATCH] cfg80211: do not check for carrier during
- start_radar_detect
-Message-ID: <CBACCFA0AEB13A41977475BCF3E896FC66736E7A39@SC-VEXCH2.marvell.com> (sfid-20141223_123339_129608_A4DDBCE7)
-References: <CBACCFA0AEB13A41977475BCF3E896FC66736E7972@SC-VEXCH2.marvell.com>
-	 <CALhHN=qA7icuY_MNvBebDsOMOkh6hEsWNkrZoGDGsQg+-f6Xog@mail.gmail.com>
-	 ,<5FF020A1CFFEEC49BD1E09530C4FF5951B160B81A7@SC-VEXCH1.marvell.com>
-	 <CBACCFA0AEB13A41977475BCF3E896FC66736E7A37@SC-VEXCH2.marvell.com>
-	 ,<1419330394.6091.0.camel@sipsolutions.net>
-	 <CBACCFA0AEB13A41977475BCF3E896FC66736E7A38@SC-VEXCH2.marvell.com>
-	 <1419330994.6091.2.camel@sipsolutions.net>
-	 (sfid-20141223_113642_547667_1737F2DD),<1419331030.6091.3.camel@sipsolutions.net>
-In-Reply-To: <1419331030.6091.3.camel@sipsolutions.net>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-lb0-f169.google.com ([209.85.217.169]:38863 "EHLO
+	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750878AbaLOXBm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Dec 2014 18:01:42 -0500
+Received: by mail-lb0-f169.google.com with SMTP id p9so9957329lbv.14
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Dec 2014 15:01:41 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <wrfjbnn4vrqa.fsf@redhat.com>
+References: <1418596754-24735-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+ <20141215103117.GC4856@mwanda> <wrfjbnn4vrqa.fsf@redhat.com>
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Date: Tue, 16 Dec 2014 00:01:20 +0100
+Message-ID: <CAFo99gZOr=1z8J_gNNRLXnKNBEiPCE_G3=ryaN5hAHvewHf0_w@mail.gmail.com> (sfid-20141216_000208_663951_E06466BE)
+Subject: Re: [PATCH] staging: rtl8723au: os_dep: usb_intf.c: Fix for possible
+ null pointer dereference
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: Dan Carpenter <dan.carpenter@oracle.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	devel@driverdev.osuosl.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+Hi
 
-How about having a flag for offchannel CAC capability and check for netdev carrier state only when this capability is supported?
+No the rtw_hw_resume23a() is not used anywhere.
+I also do a check of all functions that are not used, but not in the
+drivers/staging, I suspected that these might be under development and
+used in the future.
 
-Thanks,
-Avinash
-________________________________________
-From: Johannes Berg [johannes@sipsolutions.net]
-Sent: Tuesday, December 23, 2014 4:07 PM
-To: Avinash Patil
-Cc: janusz.dziedzic@tieto.com; linux-wireless@vger.kernel.org; Cathy Luo; Amitkumar Karwar
-Subject: Re: [PATCH] cfg80211: do not check for carrier during start_radar_detect
+What do you want to do, who decides?
 
-On Tue, 2014-12-23 at 11:36 +0100, Johannes Berg wrote:
-> On Tue, 2014-12-23 at 02:30 -0800, Avinash Patil wrote:
-> > Oops..
-> >
-> > Are you talking about this?
-> > >>So, at least we should move if (netif_carrier_ok(dev)) check to mac80211 otherwise we might change channel of the running interface (via vif_use_channel).
-> >
-> > I can move this check to ieee80211_start_radar_detection but I dont have any hardware to test these modifications.
+
+Kind regards
+Rickard Strandqvist
+
+
+2014-12-15 16:48 GMT+01:00 Jes Sorensen <Jes.Sorensen@redhat.com>:
+> Dan Carpenter <dan.carpenter@oracle.com> writes:
+>> On Sun, Dec 14, 2014 at 11:39:14PM +0100, Rickard Strandqvist wrote:
+>>> There is otherwise a risk of a possible null pointer dereference.
+>>>
+>>> Was largely found by using a static code analysis program called cppcheck.
+>>>
+>>> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+>>> ---
+>>>  drivers/staging/rtl8723au/os_dep/usb_intf.c |    3 ++-
+>>>  1 file changed, 2 insertions(+), 1 deletion(-)
+>>>
+>>> diff --git a/drivers/staging/rtl8723au/os_dep/usb_intf.c
+>>> b/drivers/staging/rtl8723au/os_dep/usb_intf.c
+>>> index 865743e..71a6330 100644
+>>> --- a/drivers/staging/rtl8723au/os_dep/usb_intf.c
+>>> +++ b/drivers/staging/rtl8723au/os_dep/usb_intf.c
+>>> @@ -351,10 +351,11 @@ error_exit:
+>>>  int rtw_hw_resume23a(struct rtw_adapter *padapter)
+>>
+>> That's weird.  Is this function even called?
 >
-> That should be ok - however maybe you don't need those modifications at
-> all?
+> [jes@ultrasam jes.git]$ find drivers/staging/rtl8723au -name \*.[ch] |xargs grep rtw_hw_resume
+> drivers/staging/rtl8723au/include/osdep_intf.h:int rtw_hw_resume23a(struct rtw_adapter *padapter);
+> drivers/staging/rtl8723au/os_dep/usb_intf.c:int rtw_hw_resume23a(struct rtw_adapter *padapter)
+> drivers/staging/rtl8723au/os_dep/usb_intf.c:            DBG_8723A("==> rtw_hw_resume23a\n");
+> [jes@ultrasam jes.git]$ find drivers/staging/rtl8723au -name \*.[ch] |xargs grep rtw_hw_suspend
+> drivers/staging/rtl8723au/include/osdep_intf.h:int rtw_hw_suspend23a(struct rtw_adapter *padapter);
+> drivers/staging/rtl8723au/os_dep/usb_intf.c:int rtw_hw_suspend23a(struct rtw_adapter *padapter)
+> drivers/staging/rtl8723au/os_dep/usb_intf.c:            DBG_8723A("==> rtw_hw_suspend23a\n");
 >
-> Frankly I'm not even sure how off-channel CAC stuff would work but
-> Janusz probably knows what he's talking about :)
-
-Also - maybe we need some sort of capability flag for this, and then the
-check doesn't have to move but just be made conditional on not having
-the feature?
-
-johannes
+> A more useful patch would be one removing those two functions IMHO.
+>
+> Jes
