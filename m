@@ -1,94 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:60606 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754137AbaLATA0 (ORCPT
+Received: from mail-wi0-f182.google.com ([209.85.212.182]:33801 "EHLO
+	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750768AbaLORVD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Dec 2014 14:00:26 -0500
-Received: by mail-wi0-f179.google.com with SMTP id ex7so18494722wid.12
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Dec 2014 11:00:25 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAP+RiCDMerG_8EYi=0Ta3BvAwuWinNPYuNevjF85w08HsX4f2Q@mail.gmail.com>
-References: <CAP+RiCBDAi7e6vj5vvrcEpt17JicdmPwq16zhG9Fun11HfnBkw@mail.gmail.com>
- <CAP+RiCDMerG_8EYi=0Ta3BvAwuWinNPYuNevjF85w08HsX4f2Q@mail.gmail.com>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Tue, 2 Dec 2014 00:30:05 +0530
-Message-ID: <CABPxzY+oxDH7QysFNWQg6fMWpsQDSFm5YgOusaz0KibEnH++yQ@mail.gmail.com> (sfid-20141201_200032_223312_632CF904)
-Subject: Re: Laptop disassociating by local choice (reason=17)
-To: Brent Taylor <motobud@gmail.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>, ath6kl@lists.infradead.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 15 Dec 2014 12:21:03 -0500
+Received: by mail-wi0-f182.google.com with SMTP id h11so9757100wiw.15
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Dec 2014 09:21:01 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v9 4/4] cfg80211: avoid intersection when applying self-managed reg
+Date: Mon, 15 Dec 2014 19:20:55 +0200
+Message-Id: <1418664055-3963-4-git-send-email-arik@wizery.com> (sfid-20141215_182108_101721_461DA0ED)
+In-Reply-To: <1418664055-3963-1-git-send-email-arik@wizery.com>
+References: <1418664055-3963-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 2, 2014 at 12:19 AM, Brent Taylor <motobud@gmail.com> wrote:
->
-> On Mon, Nov 10, 2014 at 12:12 PM, Brent Taylor <motobud@gmail.com> wrote:
-> > Resending in plain text mode...
-> >
-> > Hi Kalle,
-> >    I have a custom built board with an AR6003 WiFi chip running
-> > linux-3.10.40 and hostapd 2.2 that I'm trying to use as an access
-> > point.
-> >
-> > My configuration file for hostapd is:
-> > interface=wlan0
-> > driver=nl80211
-> > ssid=testssid
-> > channel=1
-> > own_ip_addr=**********
-> > auth_algs=1
-> > wpa=2
-> > wpa_passphrase=**********
-> > wpa_key_mgmt=WPA-PSK
-> > wpa_pairwise=TKIP
-> > rns_pairwise=CCMP
-> > ignore_broadcase_ssid=1
-> >
-> > I should mention that this configuration works with a USB WiFi stick
-> > with an ath9k chipset running the same linux kernel and hostapd
-> > binary.
-> >
-> > When using the AR6003 chipset the client Laptop (HP EliteBook 8440p
-> > running ubuntu 12.04.3 LTS) does not connect and prints the message:
-> > wlan0: disassociating from <device mac> by local choice (reason=17)
-> >
-> > Running Wireshark on the Laptop, I see "Key (msg 1/4)", "Key (msg
-> > 2/4)", and then "Key (msg 3/4)" before it tries to reauthenticate.
-> >
-> > On the access point device, I see the logs from WAP that message 3/4
-> > was sent and the next message received is NL80211_CMD_DEL_STATION.
-> >
-> > I've searched online for the reason=17 and haven't come across an
-> > answer yet.  The access point device is not connected to a computer
-> > that is connected to the internet, so while getting log files is
-> > possible, it 's just not the easiest thing to do.  If requested, I
-> > could get a log dump from hostapd and/or debug output from the ath6kl
-> > driver.
-> >
-> > Thanks for any help
-> > Brent Taylor
->
->
-> Does anyone know where the "reason=17" comes from?  I traced it down
-> in the kernel and it looks like it comes from the WIFI Chip in the
-> Laptop, but I can not find what it means.
->
-> Is there more information from somewhere that I provide to get some
-> help with this?
->
-> Thanks,
-> Brent
+The custom-reg handling function can currently only add flags to a given
+channel. This results in stale flags being left applied. In some cases
+a channel was disabled and even the orig_flags were changed to reflect
+this.
 
+Previously the API was designed for a single invocation before wiphy
+registration, so this didn't matter. The previous approach doesn't scale
+well to self-managed regulatory devices, particularly when a more
+permissive regdom is applied after a restrictive one.
 
-Reason code 17 means:
-element in 4-Way Handshake different from (Re)Association
-Request/Probe Response/Beacon frame.
+Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+---
+ net/wireless/reg.c | 16 +++++++++++++---
+ 1 file changed, 13 insertions(+), 3 deletions(-)
 
-When the MSG 3/4 is received hostapd valdiates the IE stored from the
-beacon/probe and if mismatch it issues deauth with reason code 17.
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 87ef745..8aaff02 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1686,8 +1686,12 @@ static void handle_channel_custom(struct wiphy *wiphy,
+ 	if (IS_ERR(reg_rule)) {
+ 		REG_DBG_PRINT("Disabling freq %d MHz as custom regd has no rule that fits it\n",
+ 			      chan->center_freq);
+-		chan->orig_flags |= IEEE80211_CHAN_DISABLED;
+-		chan->flags = chan->orig_flags;
++		if (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED) {
++			chan->flags |= IEEE80211_CHAN_DISABLED;
++		} else {
++			chan->orig_flags |= IEEE80211_CHAN_DISABLED;
++			chan->flags = chan->orig_flags;
++		}
+ 		return;
+ 	}
+ 
+@@ -1712,7 +1716,13 @@ static void handle_channel_custom(struct wiphy *wiphy,
+ 	chan->dfs_state = NL80211_DFS_USABLE;
+ 
+ 	chan->beacon_found = false;
+-	chan->flags |= map_regdom_flags(reg_rule->flags) | bw_flags;
++
++	if (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED)
++		chan->flags = chan->orig_flags | bw_flags |
++			      map_regdom_flags(reg_rule->flags);
++	else
++		chan->flags |= map_regdom_flags(reg_rule->flags) | bw_flags;
++
+ 	chan->max_antenna_gain = (int) MBI_TO_DBI(power_rule->max_antenna_gain);
+ 	chan->max_reg_power = chan->max_power =
+ 		(int) MBM_TO_DBM(power_rule->max_eirp);
+-- 
+1.9.1
 
-wpa_supplicant_process_3_of_4: wpa_supplicant_validate_ie in
-hostapd/src/rsn_supp/wpa.c
-Sniffer capture and hostapd logs might help to try to understand what
-is mismatched.
