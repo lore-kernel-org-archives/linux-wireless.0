@@ -1,67 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:55590 "EHLO mail.skyhub.de"
+Received: from mx1.redhat.com ([209.132.183.28]:39174 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750726AbaLaPLi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Dec 2014 10:11:38 -0500
-Date: Wed, 31 Dec 2014 16:11:35 +0100
-From: Borislav Petkov <bp@alien8.de>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: Peter Hurley <peter@hurleysoftware.com>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	Jiri Kosina <jkosina@suse.cz>,
-	Arend van Spriel <arend@broadcom.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"egrumbach@gmail.com" <egrumbach@gmail.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] Revert "cfg80211: make WEXT compatibility unselectable"
-Message-ID: <20141231151135.GF6332@pd.tnic> (sfid-20141231_161155_045536_39E71F93)
-References: <54A328C2.5080606@lwfinger.net>
- <alpine.LNX.2.00.1412302341290.31609@pobox.suse.cz>
- <alpine.LNX.2.00.1412302351030.31609@pobox.suse.cz>
- <54A3D955.6020809@broadcom.com>
- <alpine.LNX.2.00.1412311408090.31609@pobox.suse.cz>
- <0BA3FCBA62E2DC44AF3030971E174FB31B5DD8D8@hasmsx107.ger.corp.intel.com>
- <54A3FECC.7050202@hurleysoftware.com>
- <CAGRGNgVMa=P9XbuFqfKHu5Gpiw=3h_OtOzSUYCsMbVLfTuL2Zw@mail.gmail.com>
- <20141231144617.GE6332@pd.tnic>
- <CAGRGNgWcoEf87ndwTpm7zc6vdJ3PWNOSP9CBca40iSrZ4+e17g@mail.gmail.com>
+	id S1751153AbaLOPjw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Dec 2014 10:39:52 -0500
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Krzysztof Konopko <kris@konagma.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] staging: rtl8723au: Fix sparse warnings
+References: <1418336609-10191-1-git-send-email-kris@konagma.com>
+	<1418425137-13339-1-git-send-email-kris@konagma.com>
+Date: Mon, 15 Dec 2014 10:39:41 -0500
+In-Reply-To: <1418425137-13339-1-git-send-email-kris@konagma.com> (Krzysztof
+	Konopko's message of "Fri, 12 Dec 2014 23:58:57 +0100")
+Message-ID: <wrfjk31svs5e.fsf@redhat.com> (sfid-20141215_164012_209415_EB9DF23E)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CAGRGNgWcoEf87ndwTpm7zc6vdJ3PWNOSP9CBca40iSrZ4+e17g@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 01, 2015 at 01:56:54AM +1100, Julian Calaby wrote:
-> The point is that WEXT has been depreciated for _years_. Nobody
-> seems to have listened. Yes, talking to maintainers will get the
-> last holdouts of the "big" tools (e.g. wicd) to fix them, but it's
-> not going to change all the people out there with hacked together
-> home-grown setups.
+Krzysztof Konopko <kris@konagma.com> writes:
+> Some struct fields in wifi.h are meant to be __le16 but were declared as
+> unsigned short.  This was reported by sparse:
+>
+>   rtw_wlan_util.c:538:24: warning: cast to restricted __le16
+>   rtw_wlan_util.c:1544:29: warning: cast to restricted __le16
+>   rtw_wlan_util.c:1546:25: warning: cast to restricted __le16
+>
+> This patch changes the types of the struct fields involved to be
+> little-endian which is what is received over the air and consistent with
+> relevant structs in include/linux/ieee80211.h.
+>
+> Signed-off-by: Krzysztof Konopko <kris@konagma.com>
+> ---
+>  drivers/staging/rtl8723au/include/wifi.h | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
 
-That's fine - you can fix the major tools first and then take a look at
-the home-grown fun later.
+Looks OK
 
-> Yes, a full WARN() will end up with loads of duplicated bugzillas -
-> and I wish I had the time to volunteer to close every last one with
-> "upgrade your userspace to use nl80211 / iw" - but I feel that
-> speaking quietly hasn't worked: maybe now we need to yell.
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-This goes to show once again how hard it is to design a userspace
-interface properly and how hard it is to change it once it gets exposed.
 
-But yeah, screaming or not screaming, you will have to support it anyway
-as long as there are tools using it. This is why I think the proper and
-maybe faster way to address the situation is to go fix userspace tools
-instead of issuing warnings. People never look at those as long as it
-works, in my experience.
-
--- 
-Regards/Gruss,
-    Boris.
-
-Sent from a fat crate under my desk. Formatting is fine.
---
+>
+> diff --git a/drivers/staging/rtl8723au/include/wifi.h b/drivers/staging/rtl8723au/include/wifi.h
+> index fd3da3b..266c43e 100644
+> --- a/drivers/staging/rtl8723au/include/wifi.h
+> +++ b/drivers/staging/rtl8723au/include/wifi.h
+> @@ -28,7 +28,7 @@
+>  struct AC_param {
+>  	unsigned char		ACI_AIFSN;
+>  	unsigned char		CW;
+> -	unsigned short	TXOP_limit;
+> +	__le16			TXOP_limit;
+>  }  __packed;
+>  
+>  struct WMM_para_element {
+> @@ -39,9 +39,9 @@ struct WMM_para_element {
+>  
+>  struct ADDBA_request {
+>  	unsigned char		dialog_token;
+> -	unsigned short	BA_para_set;
+> -	unsigned short	BA_timeout_value;
+> -	unsigned short	BA_starting_seqctrl;
+> +	__le16		BA_para_set;
+> +	__le16		BA_timeout_value;
+> +	__le16		BA_starting_seqctrl;
+>  }  __packed;
