@@ -1,39 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:55923 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751546AbaLXRKI (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:49433 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751248AbaLOXj1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Dec 2014 12:10:08 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Avinash Patil <patila@marvell.com>
-Cc: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	<akarwar@marvell.com>, <cluo@marvell.com>, <yangyang@marvell.com>,
-	Xinming Hu <huxm@marvell.com>
-Subject: Re: [PATCH v2 3/4] mwifiex: make tx packet 64 byte DMA aligned
-References: <1418903926-11859-1-git-send-email-patila@marvell.com>
-	<1418903926-11859-3-git-send-email-patila@marvell.com>
-Date: Wed, 24 Dec 2014 19:10:02 +0200
-In-Reply-To: <1418903926-11859-3-git-send-email-patila@marvell.com> (Avinash
-	Patil's message of "Thu, 18 Dec 2014 17:28:45 +0530")
-Message-ID: <87y4px6kk5.fsf@kamboji.qca.qualcomm.com> (sfid-20141224_181012_723202_1C034840)
+	Mon, 15 Dec 2014 18:39:27 -0500
+Message-ID: <548F7101.7060602@qca.qualcomm.com> (sfid-20141216_003931_102311_5C686327)
+Date: Mon, 15 Dec 2014 15:38:41 -0800
+From: Peter Oh <poh@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Felix Fietkau <nbd@openwrt.org>, <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath: fix incorrect PPB on FCC radar type 5
+References: <1418669734-12921-1-git-send-email-poh@qca.qualcomm.com> <548F47D1.8080502@openwrt.org>
+In-Reply-To: <548F47D1.8080502@openwrt.org>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Avinash Patil <patila@marvell.com> writes:
 
-> From: Xinming Hu <huxm@marvell.com>
+On 12/15/2014 12:42 PM, Felix Fietkau wrote:
+> On 2014-12-15 19:55, Peter Oh wrote:
+>> The minimum number of pulses per burst on FCC radar type 5 is 1.
+>> Use this number for correct radar detection.
+>>
+>> Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+>> ---
+>>   drivers/net/wireless/ath/dfs_pattern_detector.c | 2 +-
+>>   1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/dfs_pattern_detector.c b/drivers/net/wireless/ath/dfs_pattern_detector.c
+>> index cfd0554..3d57f87 100644
+>> --- a/drivers/net/wireless/ath/dfs_pattern_detector.c
+>> +++ b/drivers/net/wireless/ath/dfs_pattern_detector.c
+>> @@ -86,7 +86,7 @@ static const struct radar_detector_specs fcc_radar_ref_types[] = {
+>>   	FCC_PATTERN(1, 0, 5, 150, 230, 1, 23),
+>>   	FCC_PATTERN(2, 6, 10, 200, 500, 1, 16),
+>>   	FCC_PATTERN(3, 11, 20, 200, 500, 1, 12),
+>> -	FCC_PATTERN(4, 50, 100, 1000, 2000, 1, 20),
+>> +	FCC_PATTERN(4, 50, 100, 1000, 2000, 1, 1),
+> Won't that significantly increase the false positive rate?
+No. FCC type 5 radar's PPB is in between 1~3 and DFS simulators such as 
+VeriWave machine pick one among the number (typically 1), hence to 
+detect the type 5 radar we should pick the minimum number which is 1 
+unless we won't detect the radar if pulse comes only once.
+> Here's the previous change on that pattern:
+Actually their assumption (?) on FCC is incorrect.
+PPB and PRF was not interchanged, the previous parameters simply picked 
+wrong PRF for FCC instead (FCC type 5 radar's PRF is 1).
+For Japan those parameters look quite different from what I've seen from 
+Japan's Communications Ministry (MIC, 
+www.tele.soumu.go.jp/e/sys/equ/tech/5ghz/5ghz.htm), but I couldn't say 
+if it's correct or not at this moment since I haven't run DFS on Japan yet.
+> commit 562930f8baee7a1cb5b9f382b4338c9b6fbf1139
+> Author: Vivek Natarajan <nataraja@qti.qualcomm.com>
+> Date:   Mon Nov 24 17:26:22 2014 +0530
 >
-> This patch adds support for DMA alignment of 64 bytes for TX packets.
+>      ath: Fix a false radar detection pattern
+>      
+>      For FCC and JP, in one of the radar patterns, PPB and PRF seems to be
+>      interchanged leading to frequent incorrect radar detections.
+>      
+>      Signed-off-by: Vivek Natarajan <nataraja@qti.qualcomm.com>
+>      Signed-off-by: John W. Linville <linville@tuxdriver.com>
 >
-> v2: incorporate review comments from Joe - define pad as unsigned int;
->     remove magic numbers from definition of MWIFIEX_MIN_DATA_HEADER_LEN
->
-> Signed-off-by: Xinming Hu <huxm@marvell.com>
-> Signed-off-by: Avinash Patil <patila@marvell.com>
+> diff --git a/drivers/net/wireless/ath/dfs_pattern_detector.c b/drivers/net/wireless/ath/dfs_pattern_detector.c
+> index 650be79..cfd0554 100644
+> --- a/drivers/net/wireless/ath/dfs_pattern_detector.c
+> +++ b/drivers/net/wireless/ath/dfs_pattern_detector.c
+> @@ -86,7 +86,7 @@ static const struct radar_detector_specs fcc_radar_ref_types[] = {
+>          FCC_PATTERN(1, 0, 5, 150, 230, 1, 23),
+>          FCC_PATTERN(2, 6, 10, 200, 500, 1, 16),
+>          FCC_PATTERN(3, 11, 20, 200, 500, 1, 12),
+> -       FCC_PATTERN(4, 50, 100, 1000, 2000, 20, 1),
+> +       FCC_PATTERN(4, 50, 100, 1000, 2000, 1, 20),
+>          FCC_PATTERN(5, 0, 1, 333, 333, 1, 9),
+>   };
+>   
+> @@ -105,7 +105,7 @@ static const struct radar_detector_specs jp_radar_ref_types[] = {
+>          JP_PATTERN(4, 0, 5, 150, 230, 1, 23),
+>          JP_PATTERN(5, 6, 10, 200, 500, 1, 16),
+>          JP_PATTERN(6, 11, 20, 200, 500, 1, 12),
+> -       JP_PATTERN(7, 50, 100, 1000, 2000, 20, 1),
+> +       JP_PATTERN(7, 50, 100, 1000, 2000, 1, 20),
+>          JP_PATTERN(5, 0, 1, 333, 333, 1, 9),
+>   };
 
-Same problem here, changelog in the commit log.
-
--- 
-Kalle Valo
