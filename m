@@ -1,71 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f182.google.com ([209.85.217.182]:39933 "EHLO
-	mail-lb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754150AbaLHV6f (ORCPT
+Received: from mail-wg0-f50.google.com ([74.125.82.50]:63361 "EHLO
+	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750767AbaLORNG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Dec 2014 16:58:35 -0500
-Received: by mail-lb0-f182.google.com with SMTP id f15so4907602lbj.27
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Dec 2014 13:58:33 -0800 (PST)
-Date: Mon, 8 Dec 2014 23:48:45 +0200
-From: vadim4j@gmail.com
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Vadim Kochan <vadim4j@gmail.com>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] mac80211: Supporting of IFLA_INFO_KIND rtnl attribute
-Message-ID: <20141208214845.GA1709@angus-think.lan> (sfid-20141208_225905_836969_AA489AD9)
-References: <1417947627-2329-1-git-send-email-vadim4j@gmail.com>
- <1418023628.2001.0.camel@sipsolutions.net>
- <CAMw6YJ+8JpgTG4AbJo71JuOW8jpEo5HxFX=bDDPcpd4L_b6drA@mail.gmail.com>
- <1418033823.2001.1.camel@sipsolutions.net>
+	Mon, 15 Dec 2014 12:13:06 -0500
+Received: by mail-wg0-f50.google.com with SMTP id a1so15310852wgh.9
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Dec 2014 09:13:04 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1418033823.2001.1.camel@sipsolutions.net>
+In-Reply-To: <1418387963.2470.32.camel@sipsolutions.net>
+References: <1417622897-30768-1-git-send-email-arik@wizery.com>
+ <1417622897-30768-2-git-send-email-arik@wizery.com> <1418387963.2470.32.camel@sipsolutions.net>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Mon, 15 Dec 2014 19:12:49 +0200
+Message-ID: <CA+XVXffHzjVg_KiaFz+sdQPsV+2iTmPGGoLHE7K9dhs7mYDhWg@mail.gmail.com> (sfid-20141215_181312_299042_43642185)
+Subject: Re: [PATCH v8 2/4] cfg80211: allow wiphy specific regdomain management
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	Jonathan Doron <jond@wizery.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 08, 2014 at 11:17:03AM +0100, Johannes Berg wrote:
-> On Mon, 2014-12-08 at 12:07 +0200, Vadim Kochan wrote:
-> > You meant here ?
-> > 
-> > net/wireless/core.c : static int cfg80211_netdev_notifier_call(struct
-> > notifier_block *nb,
-> >                                           unsigned long state, void *ptr)
-> > {
-> > 
-> >     ...
-> >     switch (state) {
-> >              case NETDEV_POST_INIT:
-> >                      SET_NETDEV_DEVTYPE(dev, &wiphy_type);
-> >                      break;
-> >              case NETDEV_REGISTER:
-> >                      ...
-> >                      dev->rtnl_link_ops = &wireless_link_ops;
-> >                      ...
-> >     }
-> 
-> Well it seems it could go more with the SET_NETDEV_TYPE()?
-> 
-> johannes
-> 
+On Fri, Dec 12, 2014 at 2:39 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2014-12-03 at 18:08 +0200, Arik Nemtsov wrote:
+>
+>> +void nl80211_send_reg_change_event(struct regulatory_request *request)
+>> +{
+>> +     nl80211_common_reg_change_event(NL80211_CMD_REG_CHANGE, request);
+>> +}
+>> +
+>> +void nl80211_send_wiphy_reg_change_event(struct regulatory_request *request)
+>> +{
+>> +     nl80211_common_reg_change_event(NL80211_CMD_WIPHY_REG_CHANGE, request);
+>> +}
+>
+> These are trivial wrappers, I'd make them inlines.
 
-What I worry about is this peace of code in net/core/dev.c : 
+You mean inline here or in the header header? I'll do it here..
 
-    int register_netdevice(struct net_device *dev)
-    {
-            ...
-
-            if (!dev->rtnl_link_ops ||
-                dev->rtnl_link_state == RTNL_LINK_INITIALIZED)
-                    rtmsg_ifinfo(RTM_NEWLINK, dev, ~0U, GFP_KERNEL);
-            ...
-    }
-
-which will skip sending RTM_NEWLINK message if it has rtnl_link_ops ...
-Actually meanwhile I dont see any problems as my wifi works OK with
-these changes, but I want to be sure in 100% that it does not break
-anything ...
-
-So I am under investigating this ... Maybe you can suggest ?
-
-Thanks,
+Arik
