@@ -1,90 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40255 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750882AbaLPMnz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Dec 2014 07:43:55 -0500
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Asaf Vertz <asaf.vertz@tandemg.com>
-Cc: Larry.Finger@lwfinger.net, gregkh@linuxfoundation.org,
-	ninox@posteo.net, tapaswenipathak@gmail.com, gdonald@gmail.com,
-	cmroliv@gmail.com, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] staging: rtl8723au: core: fixing "foo * bar" should be "foo *bar"
-References: <20141216091323.GA28072@ubuntu>
-Date: Tue, 16 Dec 2014 07:43:34 -0500
-In-Reply-To: <20141216091323.GA28072@ubuntu> (Asaf Vertz's message of "Tue, 16
-	Dec 2014 11:13:23 +0200")
-Message-ID: <wrfjy4q7pxxl.fsf@redhat.com> (sfid-20141216_134416_301448_0C6D4ED4)
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:64938 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750772AbaLONki (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Dec 2014 08:40:38 -0500
+Received: by mail-wi0-f180.google.com with SMTP id n3so9073771wiv.1
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Dec 2014 05:40:36 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1418646586.5731.4.camel@sipsolutions.net>
+References: <1417429814-9618-1-git-send-email-lorenzo.bianconi83@gmail.com>
+	<1418387190.2470.28.camel@sipsolutions.net>
+	<CAA2SeNJ6oiVRJmZS54Z6dSQDsEM10dCBqSGVmKe+QDaqLzgdWQ@mail.gmail.com>
+	<1418646586.5731.4.camel@sipsolutions.net>
+Date: Mon, 15 Dec 2014 14:40:36 +0100
+Message-ID: <CAA2SeN+71_ZR_H-Mkb5+PLwVe6dhCoknh8puWUjFXf73Ab1MnA@mail.gmail.com> (sfid-20141215_144045_461090_6732D0E3)
+Subject: Re: [PATCHv2] mac80211: enable TPC through mac80211 stack
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>,
+	=?UTF-8?B?VGhvbWFzIEjDvGhu?= <thomas@net.t-labs.tu-berlin.de>,
+	adrian@freebsd.org, haim.dreyfuss@intel.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Asaf Vertz <asaf.vertz@tandemg.com> writes:
-> Fixed a coding style error, "foo * bar" should be "foo *bar"
+> On Fri, 2014-12-12 at 15:16 +0100, Lorenzo Bianconi wrote:
 >
-> Signed-off-by: Asaf Vertz <asaf.vertz@tandemg.com>
-> ---
->  drivers/staging/rtl8723au/core/rtw_efuse.c |   12 ++++++------
->  1 files changed, 6 insertions(+), 6 deletions(-)
+>> In multi-vif scenario, TPC could be enabled just on given interfaces,
+>> but driver TPC registers should be configured anyway (so I used a glob
+>> flag). However I can move that logic in driver code, what do you
+>> suggest?
+>
+> It seems strange that a driver would look at both bss_conf and hw conf
+> for the same thing - so seems it might be more understandable if it was
+> in the driver?
+>
 
-If you want to fix the 'error' here, include it with a cleanup that also
-fixes the ugly multiline arguments to the functions.
+In pending driver (ath9k) patches TPC related info in hw conf and
+bss_conf are not used for the same purpose. The first one is used to
+configure HW TPC registers, since TPC should be enabled in hw if there
+is at least one interface where TPC has been configured, whereas the
+latter it use to figure out if the transmitted frame belongs to a vif
+where TPC has been previously enabled. If I do not set TPC info in hw
+conf I have to loop over all vif every time TPC configuration is
+applied from mac80211, since ath9k uses just hw conf structure to set
+TX power info. Maybe that solution is a little bit tricky. What do you
+think? Sorry if in previous emails I was not so clear :)
 
-Jes
+> johannes
+>
 
-> diff --git a/drivers/staging/rtl8723au/core/rtw_efuse.c b/drivers/staging/rtl8723au/core/rtw_efuse.c
-> index 81960e7..0e64d12 100644
-> --- a/drivers/staging/rtl8723au/core/rtw_efuse.c
-> +++ b/drivers/staging/rtl8723au/core/rtw_efuse.c
-> @@ -328,12 +328,12 @@ EFUSE_Read1Byte23a(struct rtw_adapter *Adapter, u16 Address)
->  
->  void
->  EFUSE_Write1Byte(
-> -	struct rtw_adapter *	Adapter,
-> +	struct rtw_adapter *Adapter,
->  	u16		Address,
->  	u8		Value);
->  void
->  EFUSE_Write1Byte(
-> -	struct rtw_adapter *	Adapter,
-> +	struct rtw_adapter *Adapter,
->  	u16		Address,
->  	u8		Value)
->  {
-> @@ -636,7 +636,7 @@ Efuse_ReadAllMap(struct rtw_adapter *pAdapter, u8 efuseType, u8 *Efuse)
->   *---------------------------------------------------------------------------*/
->  static void
->  efuse_ShadowRead1Byte(
-> -	struct rtw_adapter *	pAdapter,
-> +	struct rtw_adapter *pAdapter,
->  	u16		Offset,
->  	u8		*Value)
->  {
-> @@ -648,7 +648,7 @@ efuse_ShadowRead1Byte(
->  /* Read Two Bytes */
->  static void
->  efuse_ShadowRead2Byte(
-> -	struct rtw_adapter *	pAdapter,
-> +	struct rtw_adapter *pAdapter,
->  	u16		Offset,
->  	u16		*Value)
->  {
-> @@ -661,7 +661,7 @@ efuse_ShadowRead2Byte(
->  /* Read Four Bytes */
->  static void
->  efuse_ShadowRead4Byte(
-> -	struct rtw_adapter *	pAdapter,
-> +	struct rtw_adapter *pAdapter,
->  	u16		Offset,
->  	u32		*Value)
->  {
-> @@ -723,7 +723,7 @@ void EFUSE_ShadowMapUpdate23a(struct rtw_adapter *pAdapter, u8 efuseType)
->   *---------------------------------------------------------------------------*/
->  void
->  EFUSE_ShadowRead23a(
-> -	struct rtw_adapter *	pAdapter,
-> +	struct rtw_adapter *pAdapter,
->  	u8		Type,
->  	u16		Offset,
->  	u32		*Value)
+Regards,
+Lorenzo
+
+-- 
+UNIX is Sexy: who | grep -i blonde | talk; cd ~; wine; talk; touch;
+unzip; touch; strip; gasp; finger; gasp; mount; fsck; more; yes; gasp;
+umount; make clean; sleep
