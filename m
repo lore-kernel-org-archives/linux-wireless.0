@@ -1,70 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:51801 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751193AbaLWRdd (ORCPT
+Received: from mail-wg0-f53.google.com ([74.125.82.53]:63199 "EHLO
+	mail-wg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750712AbaLORHU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Dec 2014 12:33:33 -0500
-Message-ID: <5499A769.2000605@broadcom.com> (sfid-20141223_183350_077561_CB035C79)
-Date: Tue, 23 Dec 2014 18:33:29 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Mon, 15 Dec 2014 12:07:20 -0500
+Received: by mail-wg0-f53.google.com with SMTP id l18so15121301wgh.40
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Dec 2014 09:07:18 -0800 (PST)
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: Mika Westerberg <mika.westerberg@linux.intel.com>,
-	<linux-wireless@vger.kernel.org>,
-	Brett Rudley <brudley@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Christophe Prigent <christophe.prigent@intel.com>,
-	<linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] brcmfmac: Do not crash if platform data is not populated
-References: <1419346112-173303-1-git-send-email-mika.westerberg@linux.intel.com>	<54998C31.9090500@broadcom.com>	<20141223154738.GM1314@lahna.fi.intel.com> <54999161.504@broadcom.com> <877fxie1x8.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <877fxie1x8.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+In-Reply-To: <1418387875.2470.31.camel@sipsolutions.net>
+References: <1417622897-30768-1-git-send-email-arik@wizery.com> <1418387875.2470.31.camel@sipsolutions.net>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Mon, 15 Dec 2014 19:07:03 +0200
+Message-ID: <CA+XVXfcdxSBOAOXkDW+e86zxOaRiomD83=6KEj5qWro2w6Wgmg@mail.gmail.com> (sfid-20141215_180725_852426_F2B9EAE1)
+Subject: Re: [PATCH v8 1/4] cfg80211: allow usermode to query wiphy specific regdom
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/23/14 18:00, Kalle Valo wrote:
-> Arend van Spriel<arend@broadcom.com>  writes:
+On Fri, Dec 12, 2014 at 2:37 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2014-12-03 at 18:08 +0200, Arik Nemtsov wrote:
 >
->> On 12/23/14 16:47, Mika Westerberg wrote:
->>> On Tue, Dec 23, 2014 at 04:37:21PM +0100, Arend van Spriel wrote:
->>>> On 12/23/14 15:48, Mika Westerberg wrote:
->>>>> The driver looks for pdata->oob_irq_supported to find out if wowl can be
->>>>> supported. However, not all platforms populate pdata in which case we crash
->>>>> the kernel because of NULL pointer dereference.
->>>>
->>>> Thanks, Mika
->>>>
->>>> However, this was already reported by Dan Carpenter and I submitted a patch
->>>> for that a couple of days ago: "[PATCH 02/10] brcmfmac: Fix possible
->>>> dereference of NULL pointer." [1].
->>>>
->>>> Regards,
->>>> Arend
->>>>
->>>> [1]
->>>> http://mid.gmane.org/1419162233-19492-3-git-send-email-arend@broadcom.com
->>>
->>> Oh, good. I didn't notice that one.
->>>
->>> Thanks for fixing it :)
->>>
->>> BTW, that patch seems to miss brcmf_ops_sdio_resume(), perhaps it is
->>> fixed in another patch?
->>
->> Aargh, a nice "BTW" this is as there is no other patch for the resume
->> code. Maybe I should ask Kalle to apply your patch instead of ours. If
->> it did not already got applied.
+>>   * @NL80211_CMD_GET_REG: ask the wireless core to send us its currently set
+>> - *   regulatory domain.
+>> + *   regulatory domain. If %NL80211_ATTR_WIPHY is specified and the device
+>> + *   has a private regulatory domain, it will be returned. Otherwise, the
+>> + *   global regdomain will be returned.
+>> + *   A device will have a private regulatory domain if it uses the
+>> + *   regulatory_hint() API. Even when a private regdomain is used the channel
+>> + *   information will still be mended according to further hints from
+>> + *   the regulatory core to help with compliance.
 >
-> I have been waiting for net-next to open so I haven't applied any -next
-> patches yet. So if you want I can take Mika's patch as well. Just send a
-> reply to your patch I should drop.
+> I think you need to document the new availability of the dump version of
+> this now.
+
+Sure.
+
 >
-> And should this patch go to 3.19?
+>> +     if (!regdom && !cfg80211_regdomain) {
+>
+> I'm not sure why sparse doesn't warn here, but I think that should
+> probably use rcu_access_pointer(cfg80211_regdomain).
+>
+> More realistically, the regdomain can never be NULL I think, so is that
+> even needed? OTOH, if it can be NULL, then you must make this check
+> after the rcu_dereference, which would make this code easier to follow.
 
-Yeah, the issue was introduced in 3.19 so that makes sense.
+You're right. I'll remove the check. I don't see a way where it can be
+set to NULL at any point.
 
-Regards,
-Arend
-
-
+Arik
