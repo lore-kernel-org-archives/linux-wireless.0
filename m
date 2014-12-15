@@ -1,71 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:1769 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750980AbaLERRm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Dec 2014 12:17:42 -0500
-From: Peter Oh <poh@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] ath10k: unregister and remove frag_threshold callback
-Date: Fri, 5 Dec 2014 09:16:26 -0800
-Message-ID: <1417799786-11391-1-git-send-email-poh@qca.qualcomm.com> (sfid-20141205_181745_324066_C893FFBB)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:56769 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751153AbaLOSlK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Dec 2014 13:41:10 -0500
+Message-ID: <1418668867.5731.8.camel@sipsolutions.net> (sfid-20141215_194124_055984_B289E5F5)
+Subject: Re: [PATCH v8 2/4] cfg80211: allow wiphy specific regdomain
+ management
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	Jonathan Doron <jond@wizery.com>
+Date: Mon, 15 Dec 2014 19:41:07 +0100
+In-Reply-To: <CA+XVXffHzjVg_KiaFz+sdQPsV+2iTmPGGoLHE7K9dhs7mYDhWg@mail.gmail.com> (sfid-20141215_181305_579984_21253B72)
+References: <1417622897-30768-1-git-send-email-arik@wizery.com>
+	 <1417622897-30768-2-git-send-email-arik@wizery.com>
+	 <1418387963.2470.32.camel@sipsolutions.net>
+	 <CA+XVXffHzjVg_KiaFz+sdQPsV+2iTmPGGoLHE7K9dhs7mYDhWg@mail.gmail.com>
+	 (sfid-20141215_181305_579984_21253B72)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Setting fragmentation threshold has not been supported by
-any of firmware versions, hence unregister the callback and
-remove the function.
+On Mon, 2014-12-15 at 19:12 +0200, Arik Nemtsov wrote:
+> On Fri, Dec 12, 2014 at 2:39 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Wed, 2014-12-03 at 18:08 +0200, Arik Nemtsov wrote:
+> >
+> >> +void nl80211_send_reg_change_event(struct regulatory_request *request)
+> >> +{
+> >> +     nl80211_common_reg_change_event(NL80211_CMD_REG_CHANGE, request);
+> >> +}
+> >> +
+> >> +void nl80211_send_wiphy_reg_change_event(struct regulatory_request *request)
+> >> +{
+> >> +     nl80211_common_reg_change_event(NL80211_CMD_WIPHY_REG_CHANGE, request);
+> >> +}
+> >
+> > These are trivial wrappers, I'd make them inlines.
+> 
+> You mean inline here or in the header header? I'll do it here..
 
-Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 24 ------------------------
- 1 file changed, 24 deletions(-)
+Inline here makes no sense since it's declared in the header - it'd have
+to be in the header.
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index c400567..604a4bc 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3989,29 +3989,6 @@ static int ath10k_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
- 	return ret;
- }
- 
--static int ath10k_set_frag_threshold(struct ieee80211_hw *hw, u32 value)
--{
--	struct ath10k *ar = hw->priv;
--	struct ath10k_vif *arvif;
--	int ret = 0;
--
--	mutex_lock(&ar->conf_mutex);
--	list_for_each_entry(arvif, &ar->arvifs, list) {
--		ath10k_dbg(ar, ATH10K_DBG_MAC, "mac vdev %d fragmentation threshold %d\n",
--			   arvif->vdev_id, value);
--
--		ret = ath10k_mac_set_frag(arvif, value);
--		if (ret) {
--			ath10k_warn(ar, "failed to set fragmentation threshold for vdev %d: %d\n",
--				    arvif->vdev_id, ret);
--			break;
--		}
--	}
--	mutex_unlock(&ar->conf_mutex);
--
--	return ret;
--}
--
- static void ath10k_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			 u32 queues, bool drop)
- {
-@@ -4655,7 +4632,6 @@ static const struct ieee80211_ops ath10k_ops = {
- 	.remain_on_channel		= ath10k_remain_on_channel,
- 	.cancel_remain_on_channel	= ath10k_cancel_remain_on_channel,
- 	.set_rts_threshold		= ath10k_set_rts_threshold,
--	.set_frag_threshold		= ath10k_set_frag_threshold,
- 	.flush				= ath10k_flush,
- 	.tx_last_beacon			= ath10k_tx_last_beacon,
- 	.set_antenna			= ath10k_set_antenna,
--- 
-1.9.1
+johannes
 
