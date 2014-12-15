@@ -1,111 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:6213 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751132AbaLRPVn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Dec 2014 10:21:43 -0500
-Message-ID: <5492F104.9020600@broadcom.com> (sfid-20141218_162146_350502_EFB4850D)
-Date: Thu, 18 Dec 2014 16:21:40 +0100
-From: Arend van Spriel <arend@broadcom.com>
+Received: from arrakis.dune.hu ([78.24.191.176]:53103 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750716AbaLOUnA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Dec 2014 15:43:00 -0500
+Message-ID: <548F47D1.8080502@openwrt.org> (sfid-20141215_214305_449600_BF336FF2)
+Date: Mon, 15 Dec 2014 21:42:57 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-To: Eliad Peller <eliad@wizery.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Gautam Kumar Shukla <gautams@broadcom.com>
-Subject: Re: [RFC] cfg80211: Add feature flag for 4-way handshake offload
-References: <1418907095-10224-1-git-send-email-arend@broadcom.com> <CAB3XZEcF0r2fMD1GSw+ojWrsO7bxdxBfvQwLkZpTu4RP-iQtTg@mail.gmail.com>
-In-Reply-To: <CAB3XZEcF0r2fMD1GSw+ojWrsO7bxdxBfvQwLkZpTu4RP-iQtTg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+To: Peter Oh <poh@qca.qualcomm.com>, ath10k@lists.infradead.org
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath: fix incorrect PPB on FCC radar type 5
+References: <1418669734-12921-1-git-send-email-poh@qca.qualcomm.com>
+In-Reply-To: <1418669734-12921-1-git-send-email-poh@qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/18/14 14:44, Eliad Peller wrote:
-> hi,
->
-> On Thu, Dec 18, 2014 at 2:51 PM, Arend van Spriel<arend@broadcom.com>  wrote:
->> From: Gautam Kumar Shukla<gautams@broadcom.com>
->>
->> The new feature flag allows the driver to indicate that it can
->> offload the 4-way handshake for WPA/RSN-PSK. With the
->> wiphy::features flag being used up this patch adds a new
->> field wiphy::ext_features. Considering extensibility this
->> new field is declared as a byte array.
->>
->> Signed-off-by: Gautam (Gautam Kumar) Shukla<gautams@broadcom.com>
->> Signed-off-by: Arend van Spriel<arend@broadcom.com>
->> ---
->> Hi Johannes,
->>
->> Here the proposed way to deal with new feature flags. Let
->> me know if this is suitable.
->>
->> Regards,
->> Arend
->> ---
->
->> @@ -3122,6 +3124,7 @@ struct wiphy {
->>          u16 max_acl_mac_addrs;
->>
->>          u32 flags, regulatory_flags, features;
->> +       u8 ext_features[1];
->>
-> i think it would be nicer to use unsigned long (instead of u8) along
-> with BITS_TO_LONGS
+On 2014-12-15 19:55, Peter Oh wrote:
+> The minimum number of pulses per burst on FCC radar type 5 is 1.
+> Use this number for correct radar detection.
+> 
+> Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/dfs_pattern_detector.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/ath/dfs_pattern_detector.c b/drivers/net/wireless/ath/dfs_pattern_detector.c
+> index cfd0554..3d57f87 100644
+> --- a/drivers/net/wireless/ath/dfs_pattern_detector.c
+> +++ b/drivers/net/wireless/ath/dfs_pattern_detector.c
+> @@ -86,7 +86,7 @@ static const struct radar_detector_specs fcc_radar_ref_types[] = {
+>  	FCC_PATTERN(1, 0, 5, 150, 230, 1, 23),
+>  	FCC_PATTERN(2, 6, 10, 200, 500, 1, 16),
+>  	FCC_PATTERN(3, 11, 20, 200, 500, 1, 12),
+> -	FCC_PATTERN(4, 50, 100, 1000, 2000, 1, 20),
+> +	FCC_PATTERN(4, 50, 100, 1000, 2000, 1, 1),
+Won't that significantly increase the false positive rate?
+Here's the previous change on that pattern:
 
-Thanks, Eliad
+commit 562930f8baee7a1cb5b9f382b4338c9b6fbf1139
+Author: Vivek Natarajan <nataraja@qti.qualcomm.com>
+Date:   Mon Nov 24 17:26:22 2014 +0530
 
-I considered that, but decided against it. The main reason for me was 
-the fact that this is passed in nl80211 attribute and using u8 seemed 
-more straightforward to me. That said I think I will need to describe in 
-nl80211 how the bits are ordered in the byte-array.
+    ath: Fix a false radar detection pattern
+    
+    For FCC and JP, in one of the radar patterns, PPB and PRF seems to be
+    interchanged leading to frequent incorrect radar detections.
+    
+    Signed-off-by: Vivek Natarajan <nataraja@qti.qualcomm.com>
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
->>
->>   /**
->> + * enum nl80211_ext_feature_index - bit index of extended features.
->> + *
->> + * @NL80211_EXT_FEATURE_4WAY_HANDSHAKE: the device supports 4way handshake
->> + */
->> +enum nl80211_ext_feature_index {
->> +       NL80211_EXT_FEATURE_4WAY_HANDSHAKE,
->> +};
->
-> just add the standard LAST/MAX defines here, and the bitmap size will
-> be allocated automatically.
-
-I thought that was only for attribute enumerations. This is a bit index 
-within a attribute.
-
->>
->> +void cfg80211_ext_feature_set(struct wiphy *wiphy,
->> +                             enum nl80211_ext_feature_index ftidx)
->> +{
->> +       u8 *ft_byte;
->> +
->> +       ft_byte =&wiphy->ext_features[ftidx / 8];
->> +       *ft_byte |= BIT(ftidx % 8);
->> +}
->> +EXPORT_SYMBOL(cfg80211_ext_feature_set);
->> +
->> +bool cfg80211_ext_feature_isset(struct wiphy *wiphy,
->> +                               enum nl80211_ext_feature_index ftidx)
->> +{
->> +       u8 ft_byte;
->> +
->> +       ft_byte = wiphy->ext_features[ftidx / 8];
->> +       return (ft_byte&  BIT(ftidx % 8)) != 0;
->> +}
->> +EXPORT_SYMBOL(cfg80211_ext_feature_isset);
->
-> and these (or only the implementations) could be replaced by set_bit/test_bit.
-
-See above.
-
-Regards,
-Arend
-
-> Eliad.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+diff --git a/drivers/net/wireless/ath/dfs_pattern_detector.c b/drivers/net/wireless/ath/dfs_pattern_detector.c
+index 650be79..cfd0554 100644
+--- a/drivers/net/wireless/ath/dfs_pattern_detector.c
++++ b/drivers/net/wireless/ath/dfs_pattern_detector.c
+@@ -86,7 +86,7 @@ static const struct radar_detector_specs fcc_radar_ref_types[] = {
+        FCC_PATTERN(1, 0, 5, 150, 230, 1, 23),
+        FCC_PATTERN(2, 6, 10, 200, 500, 1, 16),
+        FCC_PATTERN(3, 11, 20, 200, 500, 1, 12),
+-       FCC_PATTERN(4, 50, 100, 1000, 2000, 20, 1),
++       FCC_PATTERN(4, 50, 100, 1000, 2000, 1, 20),
+        FCC_PATTERN(5, 0, 1, 333, 333, 1, 9),
+ };
+ 
+@@ -105,7 +105,7 @@ static const struct radar_detector_specs jp_radar_ref_types[] = {
+        JP_PATTERN(4, 0, 5, 150, 230, 1, 23),
+        JP_PATTERN(5, 6, 10, 200, 500, 1, 16),
+        JP_PATTERN(6, 11, 20, 200, 500, 1, 12),
+-       JP_PATTERN(7, 50, 100, 1000, 2000, 20, 1),
++       JP_PATTERN(7, 50, 100, 1000, 2000, 1, 20),
+        JP_PATTERN(5, 0, 1, 333, 333, 1, 9),
+ };
