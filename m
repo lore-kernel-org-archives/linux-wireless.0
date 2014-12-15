@@ -1,59 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:17526 "EHLO
-	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751886AbaLZOma (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:51691 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751181AbaLOBhq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Dec 2014 09:42:30 -0500
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-To: Solomon Peachy <pizza@shaftnet.org>
-Cc: kernel-janitors@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 8/27] wireless: cw1200: Use setup_timer
-Date: Fri, 26 Dec 2014 15:35:37 +0100
-Message-Id: <1419604558-29743-7-git-send-email-Julia.Lawall@lip6.fr> (sfid-20141226_154956_290951_E3EE91B7)
-In-Reply-To: <1419604558-29743-1-git-send-email-Julia.Lawall@lip6.fr>
-References: <1419604558-29743-1-git-send-email-Julia.Lawall@lip6.fr>
+	Sun, 14 Dec 2014 20:37:46 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <21646.15326.159197.316821@gargle.gargle.HOWL> (sfid-20141215_023750_376552_11818322)
+Date: Mon, 15 Dec 2014 07:09:42 +0530
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	<linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: Re: [PATCH 3/4] ath10k: Fix no-ack frame status
+In-Reply-To: <87oarazecg.fsf@kamboji.qca.qualcomm.com>
+References: <1418226973-13779-1-git-send-email-sujith@msujith.org>
+	<1418226973-13779-3-git-send-email-sujith@msujith.org>
+	<87oarazecg.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Convert a call to init_timer and accompanying intializations of
-the timer's data and function fields to a call to setup_timer.
+Kalle Valo wrote:
+> Johannes, are you planning to take this? Or should I take this once the
+> corresponding mac80211 patch trickles down to my tree?
 
-A simplified version of the semantic match that fixes this problem is as
-follows: (http://coccinelle.lip6.fr/)
+Kalle, can you please pick this one ? I'll rebase and send the ath9k patch
+to John once he starts merging patches.
 
-// <smpl>
-@@
-expression t,f,d;
-@@
-
--init_timer(&t);
-+setup_timer(&t,f,d);
--t.data = d;
--t.function = f;
-// </smpl>
-
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-
----
- drivers/net/wireless/cw1200/pm.c |    5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/cw1200/pm.c b/drivers/net/wireless/cw1200/pm.c
-index 6907c8f..d2202ae 100644
---- a/drivers/net/wireless/cw1200/pm.c
-+++ b/drivers/net/wireless/cw1200/pm.c
-@@ -101,9 +101,8 @@ int cw1200_pm_init(struct cw1200_pm_state *pm,
- {
- 	spin_lock_init(&pm->lock);
- 
--	init_timer(&pm->stay_awake);
--	pm->stay_awake.data = (unsigned long)pm;
--	pm->stay_awake.function = cw1200_pm_stay_awake_tmo;
-+	setup_timer(&pm->stay_awake, cw1200_pm_stay_awake_tmo,
-+		    (unsigned long)pm);
- 
- 	return 0;
- }
-
+Sujith
