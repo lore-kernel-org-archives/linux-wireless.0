@@ -1,42 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38744 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932319AbaLJT3l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Dec 2014 14:29:41 -0500
-From: Jes.Sorensen@redhat.com
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 1/1] wireless: mac80211: Avoid using uninitialized stack data
-Date: Wed, 10 Dec 2014 14:14:07 -0500
-Message-Id: <1418238847-3332-2-git-send-email-Jes.Sorensen@redhat.com> (sfid-20141210_202944_276875_1BFA0DC0)
-In-Reply-To: <1418238847-3332-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1418238847-3332-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:55146 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750784AbaLOR0J (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Dec 2014 12:26:09 -0500
+Received: by mail-wg0-f45.google.com with SMTP id b13so15352106wgh.18
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Dec 2014 09:26:08 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v10 4/4] cfg80211: avoid intersection when applying self-managed reg
+Date: Mon, 15 Dec 2014 19:26:02 +0200
+Message-Id: <1418664362-8319-4-git-send-email-arik@wizery.com> (sfid-20141215_182614_532768_64B49328)
+In-Reply-To: <1418664362-8319-1-git-send-email-arik@wizery.com>
+References: <1418664362-8319-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+The custom-reg handling function can currently only add flags to a given
+channel. This results in stale flags being left applied. In some cases
+a channel was disabled and even the orig_flags were changed to reflect
+this.
 
-Avoid case where we would access uninitialized stack data if a driver
-advertises HT support without 40MHz channel support.
+Previously the API was designed for a single invocation before wiphy
+registration, so this didn't matter. The previous approach doesn't scale
+well to self-managed regulatory devices, particularly when a more
+permissive regdom is applied after a restrictive one.
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
 ---
- net/mac80211/mlme.c | 1 +
- 1 file changed, 1 insertion(+)
+ net/wireless/reg.c | 16 +++++++++++++---
+ 1 file changed, 13 insertions(+), 3 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 93af0f1..da1f639 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -174,6 +174,7 @@ ieee80211_determine_chantype(struct ieee80211_sub_if_data *sdata,
- 	if (!(ht_cap->cap_info &
- 	      cpu_to_le16(IEEE80211_HT_CAP_SUP_WIDTH_20_40))) {
- 		ret = IEEE80211_STA_DISABLE_40MHZ;
-+		vht_chandef = *chandef;
- 		goto out;
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 87ef745..8aaff02 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1686,8 +1686,12 @@ static void handle_channel_custom(struct wiphy *wiphy,
+ 	if (IS_ERR(reg_rule)) {
+ 		REG_DBG_PRINT("Disabling freq %d MHz as custom regd has no rule that fits it\n",
+ 			      chan->center_freq);
+-		chan->orig_flags |= IEEE80211_CHAN_DISABLED;
+-		chan->flags = chan->orig_flags;
++		if (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED) {
++			chan->flags |= IEEE80211_CHAN_DISABLED;
++		} else {
++			chan->orig_flags |= IEEE80211_CHAN_DISABLED;
++			chan->flags = chan->orig_flags;
++		}
+ 		return;
  	}
  
+@@ -1712,7 +1716,13 @@ static void handle_channel_custom(struct wiphy *wiphy,
+ 	chan->dfs_state = NL80211_DFS_USABLE;
+ 
+ 	chan->beacon_found = false;
+-	chan->flags |= map_regdom_flags(reg_rule->flags) | bw_flags;
++
++	if (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED)
++		chan->flags = chan->orig_flags | bw_flags |
++			      map_regdom_flags(reg_rule->flags);
++	else
++		chan->flags |= map_regdom_flags(reg_rule->flags) | bw_flags;
++
+ 	chan->max_antenna_gain = (int) MBI_TO_DBI(power_rule->max_antenna_gain);
+ 	chan->max_reg_power = chan->max_power =
+ 		(int) MBM_TO_DBM(power_rule->max_eirp);
 -- 
-1.9.3
+1.9.1
 
