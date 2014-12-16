@@ -1,32 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:56878 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750830AbaLUGOB convert rfc822-to-8bit (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:34615 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750796AbaLPH1w (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Dec 2014 01:14:01 -0500
-From: "Manoharan, Rajkumar" <rmanohar@qti.qualcomm.com>
-To: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH 8/8] ath10k: ath10k: add support to send delba
-Date: Sun, 21 Dec 2014 06:13:52 +0000
-Message-ID: <1419142431590.38389@qti.qualcomm.com> (sfid-20141221_071406_722599_D8BE64F7)
-References: <1418972099-5296-1-git-send-email-rmanohar@qti.qualcomm.com>,<1418972099-5296-9-git-send-email-rmanohar@qti.qualcomm.com>
-In-Reply-To: <1418972099-5296-9-git-send-email-rmanohar@qti.qualcomm.com>
-Content-Type: text/plain; charset=US-ASCII
+	Tue, 16 Dec 2014 02:27:52 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 0/5] ath10k: a bunch of STA-related fixes
+References: <1418214714-29689-1-git-send-email-michal.kazior@tieto.com>
+	<1418384499-31660-1-git-send-email-michal.kazior@tieto.com>
+Date: Tue, 16 Dec 2014 09:27:46 +0200
+In-Reply-To: <1418384499-31660-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Fri, 12 Dec 2014 12:41:34 +0100")
+Message-ID: <87fvcgt5ot.fsf@kamboji.qca.qualcomm.com> (sfid-20141216_082755_528235_D994814A)
 MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Subject: [PATCH 8/8] ath10k: ath10k: add support to send delba
-> 
-> This per-station debugfs entry helps to send delba in manual mode
-> for debugging purpose. It accepts tid, initiator and reason code
-> as inputs.
-Kalle,
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Subject needs small correction (ath10k: ath10k:). Do you want
-me send v2 patch for this change?
+> Michal Kazior (5):
+>   ath10k: improve 11b coex
+>   ath10k: fix STA u-APSD
+>   ath10k: prevent invalid ps timeout config
+>   ath10k: enable per-vif sta powersave
+>   ath10k: advertise p2p dev support
 
-Sorry for the inconvenience.
+Thanks, all five patches applied.
 
--Rajkumar
+-- 
+Kalle Valo
