@@ -1,46 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [87.106.208.187] ([87.106.208.187]:47243 "EHLO
-	mail.holtmann.org" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1753239AbaLIXYM convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Dec 2014 18:24:12 -0500
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 8.1 \(1993\))
-Subject: Re: [PATCH v3] wireless: Supporting of IFLA_INFO_KIND rtnl attribute
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <1418163666-9206-1-git-send-email-vadim4j@gmail.com>
-Date: Wed, 10 Dec 2014 00:23:14 +0100
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Message-Id: <24A120F8-952B-4471-88A6-463CBAD168BE@holtmann.org> (sfid-20141210_002415_575363_1BE35FD3)
-References: <1418163666-9206-1-git-send-email-vadim4j@gmail.com>
-To: Vadim Kochan <vadim4j@gmail.com>
+Received: from mail-hk1on0141.outbound.protection.outlook.com ([134.170.140.141]:32670
+	"EHLO APAC01-HK1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750862AbaLPBmU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Dec 2014 20:42:20 -0500
+From: "Nishikawa, Kenzoh" <Kenzoh.Nishikawa@jp.sony.com>
+To: 'Johannes Berg' <johannes@sipsolutions.net>
+CC: "'linux-wireless@vger.kernel.org'" <linux-wireless@vger.kernel.org>,
+	"'devel@lists.open80211s.org'" <devel@lists.open80211s.org>,
+	"'Bob Copeland (me@bobcopeland.com)'" <me@bobcopeland.com>,
+	"'Thomas Pedersen (thomas@noack.us)'" <thomas@noack.us>
+Subject: [PATCH v5] mac80211: keep sending peer candidate events while in
+ listen state
+Date: Tue, 16 Dec 2014 01:41:06 +0000
+Message-ID: <2EB4F5C65A3B8E4E92660930F4EF6B5B07AB81@JPYOKXMS113.jp.sony.com> (sfid-20141216_024223_828986_BE2AEF38)
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+Instead of sending peer candidate events just once, send them as long as the peer remains in the LISTEN state in the peering state machine, when userspace is implementing the peering manager.
+Userspace may silence the events from a peer by progressing the state machine or by setting the link state to BLOCKED.
 
-> On Dec 9, 2014, at 23:21, Vadim Kochan <vadim4j@gmail.com> wrote:
-> 
-> It allows to identify the wlan kind of device for the user application,
-> e.g.:
-> 
->    # ip -d link
-> 
->    1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default
->        link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00 promiscuity 0
->    2: enp0s25: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc pfifo_fast state DOWN mode DEFAULT group default qlen 1000
->        link/ether XX:XX:XX:XX:XX:XX brd ff:ff:ff:ff:ff:ff promiscuity 0
->    3: wlp3s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP mode DEFAULT group default qlen 1000
->        link/ether XX:XX:XX:XX:XX:XX brd ff:ff:ff:ff:ff:ff promiscuity 0
->        wlan
+Fixes the problem that a mesh peering process won't be fired again after the previous first peering trial fails due to like air propagation error if the peering is managed by user space such as wpa_supplicant.
 
-have we considered also exposing the mode of this netdev. So for example sta,ap,p2p-go,p2p-client etc. If we can send dynamic updates via RTNL, we could easily tell the networking management system what type of wireless device we have here. I am thinking about it like "wlan/p2p-go" etc. Or should this be better kept strictly to "wlan".
+This patch works with another patch for wpa_supplicant described here which fires a peering process again triggered by the notice from kernel.
+http://lists.shmoo.com/pipermail/hostap/2014-November/031235.html
 
-And I am not sure RTNL would be capable of changing this kind strings at runtime anyway.
+Signed-off-by: Kenzoh Nishikawa <Kenzoh.Nishikawa at jp.sony.com>
+---
+net/mac80211/mesh_plink.c |    7 +++++++
+1 file changed, 7 insertions(+)
 
-Regards
-
-Marcel
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c index 32c7bd0..dfc429b 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -524,6 +524,13 @@ void mesh_neighbour_update(struct ieee80211_sub_if_data *sdata,
+ 	    sdata->u.mesh.mshcfg.auto_open_plinks &&
+ 	    rssi_threshold_check(sta, sdata))
+ 		changed = mesh_plink_open(sta);
++	else if (sta->plink_state == NL80211_PLINK_LISTEN &&
++		 (sdata->u.mesh.user_mpm ||
++		  sdata->u.mesh.security & IEEE80211_MESH_SEC_AUTHED))
++		cfg80211_notify_new_peer_candidate(sdata->dev, hw_addr,
++						   elems->ie_start,
++						   elems->total_len,
++						   GFP_ATOMIC);
+ 
+ 	ieee80211_mps_frame_release(sta, elems);
+ out:
 
