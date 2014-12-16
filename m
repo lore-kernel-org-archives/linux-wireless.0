@@ -1,52 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:33574 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751516AbaLOT2n (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Dec 2014 14:28:43 -0500
-Received: by mail-wi0-f180.google.com with SMTP id n3so10203379wiv.1
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Dec 2014 11:28:42 -0800 (PST)
+Received: from mx1.redhat.com ([209.132.183.28]:40255 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750882AbaLPMnz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Dec 2014 07:43:55 -0500
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Asaf Vertz <asaf.vertz@tandemg.com>
+Cc: Larry.Finger@lwfinger.net, gregkh@linuxfoundation.org,
+	ninox@posteo.net, tapaswenipathak@gmail.com, gdonald@gmail.com,
+	cmroliv@gmail.com, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] staging: rtl8723au: core: fixing "foo * bar" should be "foo *bar"
+References: <20141216091323.GA28072@ubuntu>
+Date: Tue, 16 Dec 2014 07:43:34 -0500
+In-Reply-To: <20141216091323.GA28072@ubuntu> (Asaf Vertz's message of "Tue, 16
+	Dec 2014 11:13:23 +0200")
+Message-ID: <wrfjy4q7pxxl.fsf@redhat.com> (sfid-20141216_134416_301448_0C6D4ED4)
 MIME-Version: 1.0
-In-Reply-To: <1418668867.5731.8.camel@sipsolutions.net>
-References: <1417622897-30768-1-git-send-email-arik@wizery.com>
- <1417622897-30768-2-git-send-email-arik@wizery.com> <1418387963.2470.32.camel@sipsolutions.net>
- <CA+XVXffHzjVg_KiaFz+sdQPsV+2iTmPGGoLHE7K9dhs7mYDhWg@mail.gmail.com> <1418668867.5731.8.camel@sipsolutions.net>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Mon, 15 Dec 2014 21:28:26 +0200
-Message-ID: <CA+XVXffmZD=c-B3G0FGTQ0CZh2v3ALHDwCw_66WoFgk2iqLUow@mail.gmail.com> (sfid-20141215_204736_913345_EED0513B)
-Subject: Re: [PATCH v8 2/4] cfg80211: allow wiphy specific regdomain management
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Jonathan Doron <jond@wizery.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 15, 2014 at 8:41 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2014-12-15 at 19:12 +0200, Arik Nemtsov wrote:
->> On Fri, Dec 12, 2014 at 2:39 PM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->> > On Wed, 2014-12-03 at 18:08 +0200, Arik Nemtsov wrote:
->> >
->> >> +void nl80211_send_reg_change_event(struct regulatory_request *request)
->> >> +{
->> >> +     nl80211_common_reg_change_event(NL80211_CMD_REG_CHANGE, request);
->> >> +}
->> >> +
->> >> +void nl80211_send_wiphy_reg_change_event(struct regulatory_request *request)
->> >> +{
->> >> +     nl80211_common_reg_change_event(NL80211_CMD_WIPHY_REG_CHANGE, request);
->> >> +}
->> >
->> > These are trivial wrappers, I'd make them inlines.
->>
->> You mean inline here or in the header header? I'll do it here..
+Asaf Vertz <asaf.vertz@tandemg.com> writes:
+> Fixed a coding style error, "foo * bar" should be "foo *bar"
 >
-> Inline here makes no sense since it's declared in the header - it'd have
-> to be in the header.
+> Signed-off-by: Asaf Vertz <asaf.vertz@tandemg.com>
+> ---
+>  drivers/staging/rtl8723au/core/rtw_efuse.c |   12 ++++++------
+>  1 files changed, 6 insertions(+), 6 deletions(-)
 
-Yea, that's where I put it in v10.
+If you want to fix the 'error' here, include it with a cleanup that also
+fixes the ugly multiline arguments to the functions.
 
-Arik
+Jes
+
+> diff --git a/drivers/staging/rtl8723au/core/rtw_efuse.c b/drivers/staging/rtl8723au/core/rtw_efuse.c
+> index 81960e7..0e64d12 100644
+> --- a/drivers/staging/rtl8723au/core/rtw_efuse.c
+> +++ b/drivers/staging/rtl8723au/core/rtw_efuse.c
+> @@ -328,12 +328,12 @@ EFUSE_Read1Byte23a(struct rtw_adapter *Adapter, u16 Address)
+>  
+>  void
+>  EFUSE_Write1Byte(
+> -	struct rtw_adapter *	Adapter,
+> +	struct rtw_adapter *Adapter,
+>  	u16		Address,
+>  	u8		Value);
+>  void
+>  EFUSE_Write1Byte(
+> -	struct rtw_adapter *	Adapter,
+> +	struct rtw_adapter *Adapter,
+>  	u16		Address,
+>  	u8		Value)
+>  {
+> @@ -636,7 +636,7 @@ Efuse_ReadAllMap(struct rtw_adapter *pAdapter, u8 efuseType, u8 *Efuse)
+>   *---------------------------------------------------------------------------*/
+>  static void
+>  efuse_ShadowRead1Byte(
+> -	struct rtw_adapter *	pAdapter,
+> +	struct rtw_adapter *pAdapter,
+>  	u16		Offset,
+>  	u8		*Value)
+>  {
+> @@ -648,7 +648,7 @@ efuse_ShadowRead1Byte(
+>  /* Read Two Bytes */
+>  static void
+>  efuse_ShadowRead2Byte(
+> -	struct rtw_adapter *	pAdapter,
+> +	struct rtw_adapter *pAdapter,
+>  	u16		Offset,
+>  	u16		*Value)
+>  {
+> @@ -661,7 +661,7 @@ efuse_ShadowRead2Byte(
+>  /* Read Four Bytes */
+>  static void
+>  efuse_ShadowRead4Byte(
+> -	struct rtw_adapter *	pAdapter,
+> +	struct rtw_adapter *pAdapter,
+>  	u16		Offset,
+>  	u32		*Value)
+>  {
+> @@ -723,7 +723,7 @@ void EFUSE_ShadowMapUpdate23a(struct rtw_adapter *pAdapter, u8 efuseType)
+>   *---------------------------------------------------------------------------*/
+>  void
+>  EFUSE_ShadowRead23a(
+> -	struct rtw_adapter *	pAdapter,
+> +	struct rtw_adapter *pAdapter,
+>  	u8		Type,
+>  	u16		Offset,
+>  	u32		*Value)
