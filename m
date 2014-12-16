@@ -1,44 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:21144 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755097AbaLWHsc (ORCPT
+Received: from mail-wg0-f54.google.com ([74.125.82.54]:47868 "EHLO
+	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750916AbaLPN6D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Dec 2014 02:48:32 -0500
-From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-	Hamad Kadmany <QCA_hkadmany@QCA.qualcomm.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Subject: [PATCH 11/22] wil6210: Increase number of associated stations
-Date: Tue, 23 Dec 2014 09:47:13 +0200
-Message-Id: <1419320844-23989-12-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20141223_091348_472602_AF83EC74)
-In-Reply-To: <1419320844-23989-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1419320844-23989-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Tue, 16 Dec 2014 08:58:03 -0500
+Received: by mail-wg0-f54.google.com with SMTP id l2so17551831wgh.27
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Dec 2014 05:58:02 -0800 (PST)
+Date: Tue, 16 Dec 2014 15:57:58 +0200
+From: Asaf Vertz <asaf.vertz@tandemg.com>
+To: Larry.Finger@lwfinger.net, Jes.Sorensen@redhat.com
+Cc: gregkh@linuxfoundation.org, ninox@posteo.net,
+	tapaswenipathak@gmail.com, gdonald@gmail.com, cmroliv@gmail.com,
+	asaf.vertz@tandemg.com, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v2] staging: rtl8723au: core: fixing "foo * bar" should be
+ "foo *bar"
+Message-ID: <20141216135758.GA32288@ubuntu> (sfid-20141216_145807_667471_3F5C5AA4)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Change default to support maximum number of associated
-stations to an AP
+Fixed a coding style error, "foo * bar" should be "foo *bar"
 
-Signed-off-by: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Asaf Vertz <asaf.vertz@tandemg.com>
 ---
- drivers/net/wireless/ath/wil6210/wmi.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Changes in v2:
+  - fix ugly multiline arguments to the functions
 
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index 70b055c..245215a 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -23,7 +23,7 @@
- #include "wmi.h"
- #include "trace.h"
+ drivers/staging/rtl8723au/core/rtw_efuse.c |   32 ++++++---------------------
+ 1 files changed, 7 insertions(+), 25 deletions(-)
+
+diff --git a/drivers/staging/rtl8723au/core/rtw_efuse.c b/drivers/staging/rtl8723au/core/rtw_efuse.c
+index 81960e7..a6deddc 100644
+--- a/drivers/staging/rtl8723au/core/rtw_efuse.c
++++ b/drivers/staging/rtl8723au/core/rtw_efuse.c
+@@ -327,15 +327,9 @@ EFUSE_Read1Byte23a(struct rtw_adapter *Adapter, u16 Address)
+  *---------------------------------------------------------------------------*/
  
--static uint max_assoc_sta = 1;
-+static uint max_assoc_sta = WIL6210_MAX_CID;
- module_param(max_assoc_sta, uint, S_IRUGO | S_IWUSR);
- MODULE_PARM_DESC(max_assoc_sta, " Max number of stations associated to the AP");
+ void
+-EFUSE_Write1Byte(
+-	struct rtw_adapter *	Adapter,
+-	u16		Address,
+-	u8		Value);
++EFUSE_Write1Byte(struct rtw_adapter *Adapter, u16 Address, u8 Value);
+ void
+-EFUSE_Write1Byte(
+-	struct rtw_adapter *	Adapter,
+-	u16		Address,
+-	u8		Value)
++EFUSE_Write1Byte(struct rtw_adapter *Adapter, u16 Address, u8 Value)
+ {
+ 	u8	Bytetemp = {0x00};
+ 	u8	temp = {0x00};
+@@ -635,10 +629,7 @@ Efuse_ReadAllMap(struct rtw_adapter *pAdapter, u8 efuseType, u8 *Efuse)
+  *
+  *---------------------------------------------------------------------------*/
+ static void
+-efuse_ShadowRead1Byte(
+-	struct rtw_adapter *	pAdapter,
+-	u16		Offset,
+-	u8		*Value)
++efuse_ShadowRead1Byte(struct rtw_adapter *pAdapter, u16 Offset, u8 *Value)
+ {
+ 	struct eeprom_priv *pEEPROM = GET_EEPROM_EFUSE_PRIV(pAdapter);
  
+@@ -647,10 +638,7 @@ efuse_ShadowRead1Byte(
+ 
+ /* Read Two Bytes */
+ static void
+-efuse_ShadowRead2Byte(
+-	struct rtw_adapter *	pAdapter,
+-	u16		Offset,
+-	u16		*Value)
++efuse_ShadowRead2Byte(struct rtw_adapter *pAdapter, u16 Offset, u16 *Value)
+ {
+ 	struct eeprom_priv *pEEPROM = GET_EEPROM_EFUSE_PRIV(pAdapter);
+ 
+@@ -660,10 +648,7 @@ efuse_ShadowRead2Byte(
+ 
+ /* Read Four Bytes */
+ static void
+-efuse_ShadowRead4Byte(
+-	struct rtw_adapter *	pAdapter,
+-	u16		Offset,
+-	u32		*Value)
++efuse_ShadowRead4Byte(struct rtw_adapter *pAdapter, u16 Offset, u32 *Value)
+ {
+ 	struct eeprom_priv *pEEPROM = GET_EEPROM_EFUSE_PRIV(pAdapter);
+ 
+@@ -722,11 +707,8 @@ void EFUSE_ShadowMapUpdate23a(struct rtw_adapter *pAdapter, u8 efuseType)
+  *
+  *---------------------------------------------------------------------------*/
+ void
+-EFUSE_ShadowRead23a(
+-	struct rtw_adapter *	pAdapter,
+-	u8		Type,
+-	u16		Offset,
+-	u32		*Value)
++EFUSE_ShadowRead23a(struct rtw_adapter *pAdapter,
++		    u8 Type, u16 Offset, u32 *Value)
+ {
+ 	if (Type == 1)
+ 		efuse_ShadowRead1Byte(pAdapter, Offset, (u8 *)Value);
 -- 
-2.1.0
+1.7.0.4
 
