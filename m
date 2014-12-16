@@ -1,69 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f42.google.com ([209.85.215.42]:41901 "EHLO
-	mail-la0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753513AbaLIWa4 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:43895 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751413AbaLPHpk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Dec 2014 17:30:56 -0500
-Received: by mail-la0-f42.google.com with SMTP id gd6so1425376lab.15
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Dec 2014 14:30:55 -0800 (PST)
-From: Vadim Kochan <vadim4j@gmail.com>
-To: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, Vadim Kochan <vadim4j@gmail.com>
-Subject: [PATCH v3] wireless: Supporting of IFLA_INFO_KIND rtnl attribute
-Date: Wed, 10 Dec 2014 00:21:06 +0200
-Message-Id: <1418163666-9206-1-git-send-email-vadim4j@gmail.com> (sfid-20141209_233059_981907_431B13F1)
+	Tue, 16 Dec 2014 02:45:40 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <backports@vger.kernel.org>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: Re: [PATCH 3/5] ath10k: add thermal cooling device support
+References: <1418620274-3081-1-git-send-email-rmanohar@qti.qualcomm.com>
+	<1418620274-3081-4-git-send-email-rmanohar@qti.qualcomm.com>
+Date: Tue, 16 Dec 2014 09:45:32 +0200
+In-Reply-To: <1418620274-3081-4-git-send-email-rmanohar@qti.qualcomm.com>
+	(Rajkumar Manoharan's message of "Mon, 15 Dec 2014 10:41:12 +0530")
+Message-ID: <87bnn4t4v7.fsf@kamboji.qca.qualcomm.com> (sfid-20141216_084544_601212_B53CF4A0)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It allows to identify the wlan kind of device for the user application,
-e.g.:
+A heads up for the backports project:
 
-    # ip -d link
+Rajkumar Manoharan <rmanohar@qti.qualcomm.com> writes:
 
-    1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default
-        link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00 promiscuity 0
-    2: enp0s25: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc pfifo_fast state DOWN mode DEFAULT group default qlen 1000
-        link/ether XX:XX:XX:XX:XX:XX brd ff:ff:ff:ff:ff:ff promiscuity 0
-    3: wlp3s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP mode DEFAULT group default qlen 1000
-        link/ether XX:XX:XX:XX:XX:XX brd ff:ff:ff:ff:ff:ff promiscuity 0
-        wlan
+> Thermal cooling device support is added to control the temperature
+> by throttling the data transmission for the given duration. Throttling
+> is done using hw MAC quiet time setting. Period, duration and offset
+> from TBTT can be set up to quiet the MAC transmits for the required duty
+> cycle (% of quiet duration). The thermal device allows user to configure
+> duty cycle.
+>
+> The quiet params are derived as follows.
+> 	period = max(25TU, beacon interval / number of bss)
+> 	duration = period * duty cycle / 100
+>
+> Quiet mode can be disabled by setting the duty cycle to 0. The cooling
+> device can be found under /sys/class/thermal/cooling_deviceX/.
+> Corresponding soft link to this device can be found under phy folder.
+>
+> /sys/class/ieee80211/phy*/device/cooling_device.
+>
+> To set duty cycle as 40%,
+>
+> echo 40 >/sys/class/ieee80211/phy*/device/cooling_device/cur_state
+>
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 
-Signed-off-by: Vadim Kochan <vadim4j@gmail.com>
----
- net/wireless/core.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+[...]
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index f52a4cd..eb7c088 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -21,6 +21,7 @@
- #include <linux/sched.h>
- #include <net/genetlink.h>
- #include <net/cfg80211.h>
-+#include <net/rtnetlink.h>
- #include "nl80211.h"
- #include "core.h"
- #include "sysfs.h"
-@@ -866,6 +867,10 @@ void cfg80211_stop_iface(struct wiphy *wiphy, struct wireless_dev *wdev,
- }
- EXPORT_SYMBOL(cfg80211_stop_iface);
- 
-+static struct rtnl_link_ops wireless_link_ops __read_mostly = {
-+	.kind = "wlan",
-+};
-+
- static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
- 					 unsigned long state, void *ptr)
- {
-@@ -883,6 +888,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
- 	switch (state) {
- 	case NETDEV_POST_INIT:
- 		SET_NETDEV_DEVTYPE(dev, &wiphy_type);
-+		dev->rtnl_link_ops = &wireless_link_ops;
- 		break;
- 	case NETDEV_REGISTER:
- 		/*
+> +int ath10k_thermal_register(struct ath10k *ar)
+> +{
+> +	struct thermal_cooling_device *cdev;
+> +	int ret;
+> +
+> +	cdev = thermal_cooling_device_register("ath10k_thermal", ar,
+> +					       &ath10k_thermal_ops);
+> +
+> +	if (IS_ERR(cdev)) {
+> +		ath10k_err(ar, "failed to setup thermal device result: %ld\n",
+> +			   PTR_ERR(cdev));
+> +		return -EINVAL;
+> +	}
+
+Will this break the backports build? We have the below in Makefile, is
+it enough or what's the best way to handle this?
+
++ath10k_core-$(CONFIG_THERMAL) += thermal.o
+
+
 -- 
-2.1.3
-
+Kalle Valo
