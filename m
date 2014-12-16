@@ -1,26 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:55602 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750885AbaLPURO (ORCPT
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:36987 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750789AbaLPJNi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Dec 2014 15:17:14 -0500
-Date: Tue, 16 Dec 2014 15:17:11 -0500 (EST)
-Message-Id: <20141216.151711.1844341003184093112.davem@davemloft.net> (sfid-20141216_211750_275059_393BD8C3)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless 2014-12-16
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20141216181613.GF19658@tuxdriver.com>
-References: <20141216181613.GF19658@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Tue, 16 Dec 2014 04:13:38 -0500
+Received: by mail-wi0-f179.google.com with SMTP id ex7so11732508wid.12
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Dec 2014 01:13:37 -0800 (PST)
+Date: Tue, 16 Dec 2014 11:13:23 +0200
+From: Asaf Vertz <asaf.vertz@tandemg.com>
+To: Larry.Finger@lwfinger.net, Jes.Sorensen@redhat.com
+Cc: gregkh@linuxfoundation.org, ninox@posteo.net,
+	tapaswenipathak@gmail.com, gdonald@gmail.com, cmroliv@gmail.com,
+	asaf.vertz@tandemg.com, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] staging: rtl8723au: core: fixing "foo * bar" should be
+ "foo *bar"
+Message-ID: <20141216091323.GA28072@ubuntu> (sfid-20141216_101354_950063_437878D0)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Tue, 16 Dec 2014 13:16:13 -0500
+Fixed a coding style error, "foo * bar" should be "foo *bar"
 
-> Please pull this batch of fixes intended for the 3.19 stream!
+Signed-off-by: Asaf Vertz <asaf.vertz@tandemg.com>
+---
+ drivers/staging/rtl8723au/core/rtw_efuse.c |   12 ++++++------
+ 1 files changed, 6 insertions(+), 6 deletions(-)
 
-Pulled, thanks a lot John.
+diff --git a/drivers/staging/rtl8723au/core/rtw_efuse.c b/drivers/staging/rtl8723au/core/rtw_efuse.c
+index 81960e7..0e64d12 100644
+--- a/drivers/staging/rtl8723au/core/rtw_efuse.c
++++ b/drivers/staging/rtl8723au/core/rtw_efuse.c
+@@ -328,12 +328,12 @@ EFUSE_Read1Byte23a(struct rtw_adapter *Adapter, u16 Address)
+ 
+ void
+ EFUSE_Write1Byte(
+-	struct rtw_adapter *	Adapter,
++	struct rtw_adapter *Adapter,
+ 	u16		Address,
+ 	u8		Value);
+ void
+ EFUSE_Write1Byte(
+-	struct rtw_adapter *	Adapter,
++	struct rtw_adapter *Adapter,
+ 	u16		Address,
+ 	u8		Value)
+ {
+@@ -636,7 +636,7 @@ Efuse_ReadAllMap(struct rtw_adapter *pAdapter, u8 efuseType, u8 *Efuse)
+  *---------------------------------------------------------------------------*/
+ static void
+ efuse_ShadowRead1Byte(
+-	struct rtw_adapter *	pAdapter,
++	struct rtw_adapter *pAdapter,
+ 	u16		Offset,
+ 	u8		*Value)
+ {
+@@ -648,7 +648,7 @@ efuse_ShadowRead1Byte(
+ /* Read Two Bytes */
+ static void
+ efuse_ShadowRead2Byte(
+-	struct rtw_adapter *	pAdapter,
++	struct rtw_adapter *pAdapter,
+ 	u16		Offset,
+ 	u16		*Value)
+ {
+@@ -661,7 +661,7 @@ efuse_ShadowRead2Byte(
+ /* Read Four Bytes */
+ static void
+ efuse_ShadowRead4Byte(
+-	struct rtw_adapter *	pAdapter,
++	struct rtw_adapter *pAdapter,
+ 	u16		Offset,
+ 	u32		*Value)
+ {
+@@ -723,7 +723,7 @@ void EFUSE_ShadowMapUpdate23a(struct rtw_adapter *pAdapter, u8 efuseType)
+  *---------------------------------------------------------------------------*/
+ void
+ EFUSE_ShadowRead23a(
+-	struct rtw_adapter *	pAdapter,
++	struct rtw_adapter *pAdapter,
+ 	u8		Type,
+ 	u16		Offset,
+ 	u32		*Value)
+-- 
+1.7.0.4
+
