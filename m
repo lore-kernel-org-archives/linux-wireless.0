@@ -1,104 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:48734 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752447AbaLFMt5 (ORCPT
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:43024 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751697AbaLPIyZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Dec 2014 07:49:57 -0500
-Date: Sat, 6 Dec 2014 13:49:54 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>,
-	Ming Lei <ming.lei@canonical.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Grazvydas Ignotas <notasas@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-	Aaro Koskinen <aaro.koskinen@iki.fi>,
-	Kalle Valo <kvalo@adurom.com>,
-	Sebastian Reichel <sre@ring0.de>,
-	David Gnedt <david.gnedt@davizone.at>
-Subject: Re: wl1251: NVS firmware data
-Message-ID: <20141206124954.GB17289@amd> (sfid-20141206_135032_873743_B4CC11F6)
-References: <201411271506.20457@pali>
- <201411271543.23527@pali>
- <20141127151655.GB23064@kroah.com>
- <201411271622.58916@pali>
- <20141127155840.GC24149@kroah.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20141127155840.GC24149@kroah.com>
+	Tue, 16 Dec 2014 03:54:25 -0500
+Received: by mail-wg0-f52.google.com with SMTP id x12so16663123wgg.11
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Dec 2014 00:54:23 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH 2/2] ath10k: send (re)assoc peer command when NSS changed
+Date: Tue, 16 Dec 2014 09:53:00 +0100
+Message-Id: <1418719980-19753-2-git-send-email-janusz.dziedzic@tieto.com> (sfid-20141216_095429_238015_6B6D675E)
+In-Reply-To: <1418719980-19753-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1418719980-19753-1-git-send-email-janusz.dziedzic@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu 2014-11-27 07:58:40, Greg Kroah-Hartman wrote:
-> On Thu, Nov 27, 2014 at 04:22:58PM +0100, Pali Rohár wrote:
-> > On Thursday 27 November 2014 16:16:55 Greg Kroah-Hartman wrote:
-> > > On Thu, Nov 27, 2014 at 03:43:23PM +0100, Pali Rohár wrote:
-> > > > On Thursday 27 November 2014 15:21:44 Ming Lei wrote:
-> > > > > On Thu, Nov 27, 2014 at 10:06 PM, Pali Rohár
-> > > > 
-> > > > <pali.rohar@gmail.com> wrote:
-> > > > > > Hello,
-> > > > > > 
-> > > > > > wifi driver wl1251 needs NVS calibration data for
-> > > > > > working. These data are loaded by driver via
-> > > > > > request_firmware from userspace file:
-> > > > > > ti-connectivity/wl1251-nvs.bin. In linux-fimrware git
-> > > > > > tree there is generic wl1251-nvs.bin file which is used
-> > > > > > by default.
-> > > > > > 
-> > > > > > Driver wl1251 is used on Nokia N900 cellphone for its
-> > > > > > wifi chip. This cellphone has one special MTD partition
-> > > > > > (called CAL) where are stored some configuration data
-> > > > > > in special binary (key-value) format. And there is also
-> > > > > > stored correct calibration data for specific device
-> > > > > > (each device has different data). It is preferred to
-> > > > > > use those data instead generic one (provided by
-> > > > > > linux-firmware git tree).
-> > > > > > 
-> > > > > > Now my question is: How to correctly load calibration
-> > > > > > data from special Nokia N900 CAL partition into wl1251
-> > > > > > kernel driver?
-> > > > > 
-> > > > > It is better to let user space script handle the request.
-> > > > 
-> > > > Yes, this makes sense. Implementing CAL parser in kernel
-> > > > wl1251 driver would be hard...
-> > > > 
-> > > > > > By default kernel reads ti-connectivity/wl1251-nvs.bin
-> > > > > > file from VFS if exists without any userspace support.
-> > > > > > If it fails then it fallback to loading via udev.
-> > > > > 
-> > > > > You can remove or rename this file so that loading from
-> > > > > user space can be triggered.
-> > > > 
-> > > > It is no so easy... In case when CAL does not contains NVS
-> > > > data then we want to use this generic NVS file. And telling
-> > > > everybody to rename this is file is not good solution...
-> > > 
-> > > But that's up to your system configuration, not the kernel. 
-> > > Make a userspace package for the firmware that creates it in
-> > > the format you need it to be in, for the hardware you have,
-> > > and then there would not be any need for a kernel change,
-> > > right?
-> > > 
-> > > greg k-h
-> > 
-> > Not so simple as you think. Some parts of NVS data are configured 
-> > based on location and cellular station. Data are not static.
-> 
-> Then you need a dynamic program that you control, in userspace, to dump
-> the needed data into the kernel.  Don't try to do it with "static"
-> firmware files.  Use the binary sysfs file interface for this if you
-> want.
+Assoc peer command contain information about NSS.
+When we will get IEEE80211_RC_NSS_CHANGED we should
+also send (re) assoc peer command to be sure firmware
+will know about it and RC will work correctly.
 
-Actually, this seems to be similar situation to fpga programming.
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-There, it is static firmware for 90% users, but some special use cases
-want it more dynamic.
-									Pavel
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index c9e7995..05fd620 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3592,8 +3592,9 @@ static void ath10k_sta_rc_update_wk(struct work_struct *wk)
+ 				    sta->addr, smps, err);
+ 	}
+ 
+-	if (changed & IEEE80211_RC_SUPP_RATES_CHANGED) {
+-		ath10k_dbg(ar, ATH10K_DBG_MAC, "mac update sta %pM supp rates\n",
++	if (changed & IEEE80211_RC_SUPP_RATES_CHANGED ||
++	    changed & IEEE80211_RC_NSS_CHANGED) {
++		ath10k_dbg(ar, ATH10K_DBG_MAC, "mac update sta %pM supp rates/nss\n",
+ 			   sta->addr);
+ 
+ 		err = ath10k_station_assoc(ar, arvif->vif, sta, true);
 -- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+1.9.1
+
