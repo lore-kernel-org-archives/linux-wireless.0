@@ -1,62 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail3-relais-sop.national.inria.fr ([192.134.164.104]:21740
-	"EHLO mail3-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751473AbaL2RKw (ORCPT
+Received: from mail-wg0-f51.google.com ([74.125.82.51]:58191 "EHLO
+	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751674AbaLPIyU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Dec 2014 12:10:52 -0500
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: kernel-janitors@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 6/8] adm8211: fix error return code
-Date: Mon, 29 Dec 2014 18:04:41 +0100
-Message-Id: <1419872683-32709-7-git-send-email-Julia.Lawall@lip6.fr> (sfid-20141229_181206_284119_57A99876)
-In-Reply-To: <1419872683-32709-1-git-send-email-Julia.Lawall@lip6.fr>
-References: <1419872683-32709-1-git-send-email-Julia.Lawall@lip6.fr>
+	Tue, 16 Dec 2014 03:54:20 -0500
+Received: by mail-wg0-f51.google.com with SMTP id x12so16617529wgg.38
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Dec 2014 00:54:19 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH 1/2] ath10k: fix low TX rates when IBSS and HT
+Date: Tue, 16 Dec 2014 09:52:59 +0100
+Message-Id: <1418719980-19753-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20141216_095425_519660_4A80AE46)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Return a negative error code on failure.
+This fix TX problem when IBSS used in HT mode.
+Before we used 6Mbps all the time for TX direction.
 
-A simplified version of the semantic match that finds this problem is as
-follows: (http://coccinelle.lip6.fr/)
-
-// <smpl>
-@@
-identifier ret; expression e1,e2;
-@@
-(
-if (\(ret < 0\|ret != 0\))
- { ... return ret; }
-|
-ret = 0
-)
-... when != ret = e1
-    when != &ret
-*if(...)
-{
-  ... when != ret = e2
-      when forall
- return ret;
-}
-// </smpl>
-
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-
+Reported-by: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 ---
- drivers/net/wireless/adm8211.c |    1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/ath/ath10k/mac.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/net/wireless/adm8211.c b/drivers/net/wireless/adm8211.c
-index 17fcaab..f07a618 100644
---- a/drivers/net/wireless/adm8211.c
-+++ b/drivers/net/wireless/adm8211.c
-@@ -1837,6 +1837,7 @@ static int adm8211_probe(struct pci_dev *pdev,
- 	if (!priv->map) {
- 		printk(KERN_ERR "%s (adm8211): Cannot map device memory\n",
- 		       pci_name(pdev));
-+		err = -ENOMEM;
- 		goto err_free_dev;
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 5475f0f..c9e7995 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -1411,9 +1411,16 @@ static void ath10k_peer_assoc_h_qos(struct ath10k *ar,
+ 		if (vif->bss_conf.qos)
+ 			arg->peer_flags |= WMI_PEER_QOS;
+ 		break;
++	case WMI_VDEV_TYPE_IBSS:
++		if (sta->wme)
++			arg->peer_flags |= WMI_PEER_QOS;
++		break;
+ 	default:
+ 		break;
  	}
++
++	ath10k_dbg(ar, ATH10K_DBG_MAC, "mac peer %pM qos %d\n",
++		   sta->addr, !!(arg->peer_flags & WMI_PEER_QOS));
+ }
  
+ static void ath10k_peer_assoc_h_phymode(struct ath10k *ar,
+-- 
+1.9.1
 
