@@ -1,92 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:62913 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752295AbaLRNoi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Dec 2014 08:44:38 -0500
-Received: by mail-ie0-f182.google.com with SMTP id x19so1089894ier.27
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Dec 2014 05:44:37 -0800 (PST)
+Received: from mx1.redhat.com ([209.132.183.28]:51612 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750814AbaLPOCU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Dec 2014 09:02:20 -0500
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Asaf Vertz <asaf.vertz@tandemg.com>
+Cc: Larry.Finger@lwfinger.net, gregkh@linuxfoundation.org,
+	ninox@posteo.net, tapaswenipathak@gmail.com, gdonald@gmail.com,
+	cmroliv@gmail.com, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] staging: rtl8723au: core: fixing "foo * bar" should be "foo *bar"
+References: <20141216135758.GA32288@ubuntu>
+Date: Tue, 16 Dec 2014 09:01:45 -0500
+In-Reply-To: <20141216135758.GA32288@ubuntu> (Asaf Vertz's message of "Tue, 16
+	Dec 2014 15:57:58 +0200")
+Message-ID: <wrfjoar31ynq.fsf@redhat.com> (sfid-20141216_150237_308158_C76B1595)
 MIME-Version: 1.0
-In-Reply-To: <1418907095-10224-1-git-send-email-arend@broadcom.com>
-References: <1418907095-10224-1-git-send-email-arend@broadcom.com>
-Date: Thu, 18 Dec 2014 15:44:37 +0200
-Message-ID: <CAB3XZEcF0r2fMD1GSw+ojWrsO7bxdxBfvQwLkZpTu4RP-iQtTg@mail.gmail.com> (sfid-20141218_144441_644565_EFBC9453)
-Subject: Re: [RFC] cfg80211: Add feature flag for 4-way handshake offload
-From: Eliad Peller <eliad@wizery.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Gautam Kumar Shukla <gautams@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hi,
-
-On Thu, Dec 18, 2014 at 2:51 PM, Arend van Spriel <arend@broadcom.com> wrote:
-> From: Gautam Kumar Shukla <gautams@broadcom.com>
+Asaf Vertz <asaf.vertz@tandemg.com> writes:
+> Fixed a coding style error, "foo * bar" should be "foo *bar"
 >
-> The new feature flag allows the driver to indicate that it can
-> offload the 4-way handshake for WPA/RSN-PSK. With the
-> wiphy::features flag being used up this patch adds a new
-> field wiphy::ext_features. Considering extensibility this
-> new field is declared as a byte array.
->
-> Signed-off-by: Gautam (Gautam Kumar) Shukla <gautams@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+> Signed-off-by: Asaf Vertz <asaf.vertz@tandemg.com>
 > ---
-> Hi Johannes,
+> Changes in v2:
+>   - fix ugly multiline arguments to the functions
 >
-> Here the proposed way to deal with new feature flags. Let
-> me know if this is suitable.
->
-> Regards,
-> Arend
-> ---
+>  drivers/staging/rtl8723au/core/rtw_efuse.c |   32 ++++++---------------------
+>  1 files changed, 7 insertions(+), 25 deletions(-)
 
-> @@ -3122,6 +3124,7 @@ struct wiphy {
->         u16 max_acl_mac_addrs;
->
->         u32 flags, regulatory_flags, features;
-> +       u8 ext_features[1];
->
-i think it would be nicer to use unsigned long (instead of u8) along
-with BITS_TO_LONGS
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 
->
->  /**
-> + * enum nl80211_ext_feature_index - bit index of extended features.
-> + *
-> + * @NL80211_EXT_FEATURE_4WAY_HANDSHAKE: the device supports 4way handshake
-> + */
-> +enum nl80211_ext_feature_index {
-> +       NL80211_EXT_FEATURE_4WAY_HANDSHAKE,
-> +};
-
-just add the standard LAST/MAX defines here, and the bitmap size will
-be allocated automatically.
-
->
-> +void cfg80211_ext_feature_set(struct wiphy *wiphy,
-> +                             enum nl80211_ext_feature_index ftidx)
-> +{
-> +       u8 *ft_byte;
-> +
-> +       ft_byte = &wiphy->ext_features[ftidx / 8];
-> +       *ft_byte |= BIT(ftidx % 8);
-> +}
-> +EXPORT_SYMBOL(cfg80211_ext_feature_set);
-> +
-> +bool cfg80211_ext_feature_isset(struct wiphy *wiphy,
-> +                               enum nl80211_ext_feature_index ftidx)
-> +{
-> +       u8 ft_byte;
-> +
-> +       ft_byte = wiphy->ext_features[ftidx / 8];
-> +       return (ft_byte & BIT(ftidx % 8)) != 0;
-> +}
-> +EXPORT_SYMBOL(cfg80211_ext_feature_isset);
-
-and these (or only the implementations) could be replaced by set_bit/test_bit.
-
-Eliad.
+> diff --git a/drivers/staging/rtl8723au/core/rtw_efuse.c b/drivers/staging/rtl8723au/core/rtw_efuse.c
+> index 81960e7..a6deddc 100644
+> --- a/drivers/staging/rtl8723au/core/rtw_efuse.c
+> +++ b/drivers/staging/rtl8723au/core/rtw_efuse.c
+> @@ -327,15 +327,9 @@ EFUSE_Read1Byte23a(struct rtw_adapter *Adapter, u16 Address)
+>   *---------------------------------------------------------------------------*/
+>  
+>  void
+> -EFUSE_Write1Byte(
+> -	struct rtw_adapter *	Adapter,
+> -	u16		Address,
+> -	u8		Value);
+> +EFUSE_Write1Byte(struct rtw_adapter *Adapter, u16 Address, u8 Value);
+>  void
+> -EFUSE_Write1Byte(
+> -	struct rtw_adapter *	Adapter,
+> -	u16		Address,
+> -	u8		Value)
+> +EFUSE_Write1Byte(struct rtw_adapter *Adapter, u16 Address, u8 Value)
+>  {
+>  	u8	Bytetemp = {0x00};
+>  	u8	temp = {0x00};
+> @@ -635,10 +629,7 @@ Efuse_ReadAllMap(struct rtw_adapter *pAdapter, u8 efuseType, u8 *Efuse)
+>   *
+>   *---------------------------------------------------------------------------*/
+>  static void
+> -efuse_ShadowRead1Byte(
+> -	struct rtw_adapter *	pAdapter,
+> -	u16		Offset,
+> -	u8		*Value)
+> +efuse_ShadowRead1Byte(struct rtw_adapter *pAdapter, u16 Offset, u8 *Value)
+>  {
+>  	struct eeprom_priv *pEEPROM = GET_EEPROM_EFUSE_PRIV(pAdapter);
+>  
+> @@ -647,10 +638,7 @@ efuse_ShadowRead1Byte(
+>  
+>  /* Read Two Bytes */
+>  static void
+> -efuse_ShadowRead2Byte(
+> -	struct rtw_adapter *	pAdapter,
+> -	u16		Offset,
+> -	u16		*Value)
+> +efuse_ShadowRead2Byte(struct rtw_adapter *pAdapter, u16 Offset, u16 *Value)
+>  {
+>  	struct eeprom_priv *pEEPROM = GET_EEPROM_EFUSE_PRIV(pAdapter);
+>  
+> @@ -660,10 +648,7 @@ efuse_ShadowRead2Byte(
+>  
+>  /* Read Four Bytes */
+>  static void
+> -efuse_ShadowRead4Byte(
+> -	struct rtw_adapter *	pAdapter,
+> -	u16		Offset,
+> -	u32		*Value)
+> +efuse_ShadowRead4Byte(struct rtw_adapter *pAdapter, u16 Offset, u32 *Value)
+>  {
+>  	struct eeprom_priv *pEEPROM = GET_EEPROM_EFUSE_PRIV(pAdapter);
+>  
+> @@ -722,11 +707,8 @@ void EFUSE_ShadowMapUpdate23a(struct rtw_adapter *pAdapter, u8 efuseType)
+>   *
+>   *---------------------------------------------------------------------------*/
+>  void
+> -EFUSE_ShadowRead23a(
+> -	struct rtw_adapter *	pAdapter,
+> -	u8		Type,
+> -	u16		Offset,
+> -	u32		*Value)
+> +EFUSE_ShadowRead23a(struct rtw_adapter *pAdapter,
+> +		    u8 Type, u16 Offset, u32 *Value)
+>  {
+>  	if (Type == 1)
+>  		efuse_ShadowRead1Byte(pAdapter, Offset, (u8 *)Value);
