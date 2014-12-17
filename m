@@ -1,145 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:59250 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750777AbaLOR0I (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:29147 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751692AbaLQI1u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Dec 2014 12:26:08 -0500
-Received: by mail-wi0-f174.google.com with SMTP id h11so9634855wiw.13
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Dec 2014 09:26:06 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v10 3/4] cfg80211: return private regdom for self-managed devices
-Date: Mon, 15 Dec 2014 19:26:01 +0200
-Message-Id: <1418664362-8319-3-git-send-email-arik@wizery.com> (sfid-20141215_182615_502906_63F9303F)
-In-Reply-To: <1418664362-8319-1-git-send-email-arik@wizery.com>
-References: <1418664362-8319-1-git-send-email-arik@wizery.com>
+	Wed, 17 Dec 2014 03:27:50 -0500
+From: Avinash Patil <patila@marvell.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
+	<cluo@marvell.com>, <yangyang@marvell.com>, <huxm@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH 2/4] mwifiex: do not send key material cmd when delete wep key
+Date: Wed, 17 Dec 2014 19:26:59 +0530
+Message-ID: <1418824621-2102-2-git-send-email-patila@marvell.com> (sfid-20141217_092752_660797_25D54354)
+In-Reply-To: <1418824621-2102-1-git-send-email-patila@marvell.com>
+References: <1418824621-2102-1-git-send-email-patila@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If a device has self-managed regulatory, insist on returning the wiphy
-specific regdomain if a wiphy-idx is specified. The global regdomain is
-meaningless for such devices.
+From: Xinming Hu <huxm@marvell.com>
 
-Also add an attribute for self-managed devices, so usermode can
-distinguish them as such.
+This patch fixes memory corruption reported by community developer.
 
-Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
-Reviewed-by: Luis R. Rodriguez <mcgrof@suse.com>
+"Memory corruption occurs in mwifiex_ret_802_11_key_material_v1()
+when a short command response is received without a key length
+causing non initialised memory to be interpreted as the key
+length resulting in a memcpy() overwriting the part of the
+driver's private data structure beyond the key area."
+
+For v1 key material API firmwares, there is no need to send
+command to delete WEP key. WEP encryption/decryption is controlled
+by mac_control command.
+
+This patch avoids sending key material command in del_key case.
+
+Reported-by: Martin Fuzzey <mfuzzey@parkeon.com>
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
 ---
- include/uapi/linux/nl80211.h | 10 ++++++++++
- net/wireless/nl80211.c       | 24 ++++++++++++++++++++++++
- 2 files changed, 34 insertions(+)
+ drivers/net/wireless/mwifiex/sta_ioctl.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index fb58e65..b3ada0b 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -261,6 +261,9 @@
-  *	the regulatory core to help with compliance. A dump version of this API
-  *	is now available which will returns the global regdomain as well as
-  *	all private regdomains of present wiphys (for those that have it).
-+ *	If a wiphy is self-managed (%NL80211_ATTR_WIPHY_SELF_MANAGED_REG), then
-+ *	its private regdomain is the only valid one for it. The regulatory
-+ *	core is not used to help with compliance in this case.
-  * @NL80211_CMD_SET_REG: Set current regulatory domain. CRDA sends this command
-  *	after being queried by the kernel. CRDA replies by sending a regulatory
-  *	domain structure which consists of %NL80211_ATTR_REG_ALPHA set to our
-@@ -1702,6 +1705,11 @@ enum nl80211_commands {
-  *
-  * @NL80211_ATTR_MAC_MASK: MAC address mask
-  *
-+ * @NL80211_ATTR_WIPHY_SELF_MANAGED_REG: flag attribute indicating this device
-+ *	is self-managing its regulatory information and any regulatory domain
-+ *	obtained from it is coming from the device's wiphy and not the global
-+ *	cfg80211 regdomain.
-+ *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -2059,6 +2067,8 @@ enum nl80211_attrs {
+diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
+index 1626868..fb9c5fc 100644
+--- a/drivers/net/wireless/mwifiex/sta_ioctl.c
++++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
+@@ -902,9 +902,12 @@ static int mwifiex_sec_ioctl_set_wep_key(struct mwifiex_private *priv,
+ 	if (wep_key->key_length) {
+ 		void *enc_key;
  
- 	NL80211_ATTR_MAC_MASK,
+-		if (encrypt_key->key_disable)
++		if (encrypt_key->key_disable) {
+ 			memset(&priv->wep_key[index], 0,
+ 			       sizeof(struct mwifiex_wep_key));
++			if (wep_key->key_length)
++				goto done;
++			}
  
-+	NL80211_ATTR_WIPHY_SELF_MANAGED_REG,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index eebb7e4..5b1907f 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -396,6 +396,7 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
- 	[NL80211_ATTR_ADMITTED_TIME] = { .type = NLA_U16 },
- 	[NL80211_ATTR_SMPS_MODE] = { .type = NLA_U8 },
- 	[NL80211_ATTR_MAC_MASK] = { .len = ETH_ALEN },
-+	[NL80211_ATTR_WIPHY_SELF_MANAGED_REG] = { .type = NLA_FLAG },
- };
- 
- /* policy for the key attributes */
-@@ -1701,6 +1702,10 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
- 			       rdev->wiphy.max_num_csa_counters))
- 			goto nla_put_failure;
- 
-+		if (rdev->wiphy.regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED &&
-+		    nla_put_flag(msg, NL80211_ATTR_WIPHY_SELF_MANAGED_REG))
-+			goto nla_put_failure;
-+
- 		/* done */
- 		state->split_start = 0;
- 		break;
-@@ -5406,6 +5411,8 @@ static int nl80211_get_reg_do(struct sk_buff *skb, struct genl_info *info)
- 		goto put_failure;
- 
- 	if (info->attrs[NL80211_ATTR_WIPHY]) {
-+		bool self_managed;
-+
- 		rdev = cfg80211_get_dev_from_info(genl_info_net(info), info);
- 		if (IS_ERR(rdev)) {
- 			nlmsg_free(msg);
-@@ -5413,8 +5420,16 @@ static int nl80211_get_reg_do(struct sk_buff *skb, struct genl_info *info)
- 		}
- 
- 		wiphy = &rdev->wiphy;
-+		self_managed = wiphy->regulatory_flags &
-+			       REGULATORY_WIPHY_SELF_MANAGED;
- 		regdom = get_wiphy_regdom(wiphy);
- 
-+		/* a self-managed-reg device must have a private regdom */
-+		if (WARN_ON(!regdom && self_managed)) {
-+			nlmsg_free(msg);
-+			return -EINVAL;
-+		}
-+
- 		if (regdom &&
- 		    nla_put_u32(msg, NL80211_ATTR_WIPHY, get_wiphy_idx(wiphy)))
- 			goto nla_put_failure;
-@@ -5471,6 +5486,10 @@ static int nl80211_send_regdom(struct sk_buff *msg, struct netlink_callback *cb,
- 	    nla_put_u32(msg, NL80211_ATTR_WIPHY, get_wiphy_idx(wiphy)))
- 		goto nla_put_failure;
- 
-+	if (wiphy && wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED &&
-+	    nla_put_flag(msg, NL80211_ATTR_WIPHY_SELF_MANAGED_REG))
-+		goto nla_put_failure;
-+
- 	return genlmsg_end(msg, hdr);
- 
- nla_put_failure:
-@@ -11076,6 +11095,11 @@ static bool nl80211_reg_change_event_fill(struct sk_buff *msg,
- 		if (wiphy &&
- 		    nla_put_u32(msg, NL80211_ATTR_WIPHY, request->wiphy_idx))
- 			goto nla_put_failure;
-+
-+		if (wiphy &&
-+		    wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED &&
-+		    nla_put_flag(msg, NL80211_ATTR_WIPHY_SELF_MANAGED_REG))
-+			goto nla_put_failure;
+ 		if (adapter->key_api_major_ver == KEY_API_VER_MAJOR_V2)
+ 			enc_key = encrypt_key;
+@@ -918,6 +921,7 @@ static int mwifiex_sec_ioctl_set_wep_key(struct mwifiex_private *priv,
+ 			return ret;
  	}
  
- 	return true;
++done:
+ 	if (priv->sec_info.wep_enabled)
+ 		priv->curr_pkt_filter |= HostCmd_ACT_MAC_WEP_ENABLE;
+ 	else
 -- 
-1.9.1
+1.8.1.4
 
