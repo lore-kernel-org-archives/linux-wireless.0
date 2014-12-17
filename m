@@ -1,47 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:35347 "EHLO
+Received: from senator.holtmann.net ([87.106.208.187]:36795 "EHLO
 	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932527AbaLJUgq convert rfc822-to-8bit (ORCPT
+	with ESMTP id S1750946AbaLQQUZ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Dec 2014 15:36:46 -0500
+	Wed, 17 Dec 2014 11:20:25 -0500
 Content-Type: text/plain; charset=us-ascii
 Mime-Version: 1.0 (Mac OS X Mail 8.1 \(1993\))
-Subject: Re: [PATCH v3] wireless: Supporting of IFLA_INFO_KIND rtnl attribute
+Subject: Re: changes to Linux wireless maintenance
 From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <1418163666-9206-1-git-send-email-vadim4j@gmail.com>
-Date: Wed, 10 Dec 2014 21:36:44 +0100
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Message-Id: <507569F8-73EB-4159-8170-C25B06A99B2F@holtmann.org> (sfid-20141210_213650_062743_ECFF0097)
-References: <1418163666-9206-1-git-send-email-vadim4j@gmail.com>
-To: Vadim Kochan <vadim4j@gmail.com>
+In-Reply-To: <20141217155951.GA3144@tuxdriver.com>
+Date: Wed, 17 Dec 2014 17:16:56 +0100
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	BlueZ development <linux-bluetooth@vger.kernel.org>,
+	"linux-nfc@ml01.01.org NFC" <linux-nfc@ml01.01.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Kalle Valo <kvalo@codeaurora.org>, lwn@lwn.net
+Message-Id: <A58A225C-55A5-4549-BF80-95DC158FDD6E@holtmann.org> (sfid-20141217_172032_512033_700A4543)
+References: <20141217155951.GA3144@tuxdriver.com>
+To: "John W. Linville" <linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Vadim,
+Hi John,
 
-> It allows to identify the wlan kind of device for the user application,
-> e.g.:
+> Almost 9 years ago, Jeff Garzik wrote a message on LKML detailing
+> the sad state of wireless LANs in the Linux world.  The point of his
+> message was "So... there it is.  We suck.  There's hope.  No Luke
+> Skywalker in sight.":
 > 
->    # ip -d link
+> 	https://lkml.org/lkml/2006/1/5/671
 > 
->    1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default
->        link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00 promiscuity 0
->    2: enp0s25: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc pfifo_fast state DOWN mode DEFAULT group default qlen 1000
->        link/ether XX:XX:XX:XX:XX:XX brd ff:ff:ff:ff:ff:ff promiscuity 0
->    3: wlp3s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP mode DEFAULT group default qlen 1000
->        link/ether XX:XX:XX:XX:XX:XX brd ff:ff:ff:ff:ff:ff promiscuity 0
->        wlan
+> Shortly thereafter, I became the maintainer for wireless LANs in the
+> Linux kernel:
 > 
-> Signed-off-by: Vadim Kochan <vadim4j@gmail.com>
-> ---
-> net/wireless/core.c | 6 ++++++
-> 1 file changed, 6 insertions(+)
+> 	https://lkml.org/lkml/2006/1/18/377
+> 
+> Since then, we have had a number of wireless summit meetings all around
+> the world.  Items were discussed, patches were merged, and friendships
+> were made.  Over time, we garnered support from a large range of
+> wireless networking vendors.  Eventually even other technologies
+> were sending their patches through my trees, and I was consistently
+> ranked amongst the top 10 "gate keepers" for getting changes into the
+> Linux kernel.  In fact, a couple of years ago I even gave a talk on
+> how Linux wireless got better.	It has been quite a ride!
+> 
+> 	https://events.linuxfoundation.org/images/stories/pdf/lfcs2012_linville.pdf
+> 
+> Nevertheless, I think it is time for some changes.  I have been
+> the wireless maintainer for a long time, and I personally would
+> like to develop in a different direction.  Plus, I think that Linux
+> will benefit from having some fresh blood involved in more of the
+> maintenance duties.  I will be stepping aside to let that happen.
+> 
+> The mac80211, bluetooth, and nfc trees have fed through me for some
+> time.  I am now asking these trees to send pull request directly to
+> David Miller.  Since these trees are managed through git, my hope is
+> that they will not place any significant burden on Dave.
 
-for what its worth.
-
-Acked-by: Marcel Holtmann <marcel@holtmann.org>
+it has been a pleasure merging Bluetooth (and lately IEEE 802.15.4 and 6LoWPAN) patches through the Wireless tree. Thank you so much for all your hard work in making it easy for the sub-subsystem maintainers. Hope you find some new fun stuff to work on.
 
 Regards
 
