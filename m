@@ -1,323 +1,219 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:45329 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753523AbaLULoG (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:46688 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751068AbaLQJXo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Dec 2014 06:44:06 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 06/10] brcmfmac: Fix WEP configuration for AP mode.
-Date: Sun, 21 Dec 2014 12:43:49 +0100
-Message-ID: <1419162233-19492-7-git-send-email-arend@broadcom.com> (sfid-20141221_124420_264698_95EE2D45)
-In-Reply-To: <1419162233-19492-1-git-send-email-arend@broadcom.com>
-References: <1419162233-19492-1-git-send-email-arend@broadcom.com>
+	Wed, 17 Dec 2014 04:23:44 -0500
+From: Avinash Patil <patila@marvell.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
+	<cluo@marvell.com>, <yangyang@marvell.com>,
+	Xinming Hu <huxm@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH 3/4] mwifiex: make tx packet 64 byte DMA aligned
+Date: Wed, 17 Dec 2014 17:24:32 +0530
+Message-ID: <1418817273-22669-3-git-send-email-patila@marvell.com> (sfid-20141217_102350_252348_2C14F1FC)
+In-Reply-To: <1418817273-22669-1-git-send-email-patila@marvell.com>
+References: <1418817273-22669-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+From: Xinming Hu <huxm@marvell.com>
 
-When a device is configured for AP mode and it is configured for
-WEP then the keys are plumbed first, followed by AP configuration.
-During configuration a down command is given to the firmware which
-will clear the configured keys. This patch reprograms the WEP keys
-after AP has been brought up.
+This patch adds support for DMA alignment of 64 bytes for TX packets.
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c | 95 ++++++++++++++++------
- drivers/net/wireless/brcm80211/brcmfmac/cfg80211.h |  4 +
- drivers/net/wireless/brcm80211/brcmfmac/core.c     |  3 +-
- drivers/net/wireless/brcm80211/brcmfmac/core.h     |  4 +-
- 4 files changed, 76 insertions(+), 30 deletions(-)
+ drivers/net/wireless/mwifiex/11n_aggr.c | 15 ++++++++++++---
+ drivers/net/wireless/mwifiex/decl.h     |  6 ++++--
+ drivers/net/wireless/mwifiex/sta_tx.c   | 19 ++++++++++---------
+ drivers/net/wireless/mwifiex/uap_txrx.c | 28 +++++++++++++++-------------
+ 4 files changed, 41 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-index 3aecc5f..1172551 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-@@ -452,16 +452,16 @@ static void convert_key_from_CPU(struct brcmf_wsec_key *key,
- }
- 
- static int
--send_key_to_dongle(struct net_device *ndev, struct brcmf_wsec_key *key)
-+send_key_to_dongle(struct brcmf_if *ifp, struct brcmf_wsec_key *key)
+diff --git a/drivers/net/wireless/mwifiex/11n_aggr.c b/drivers/net/wireless/mwifiex/11n_aggr.c
+index 8720a3d..20b7ff7 100644
+--- a/drivers/net/wireless/mwifiex/11n_aggr.c
++++ b/drivers/net/wireless/mwifiex/11n_aggr.c
+@@ -101,6 +101,13 @@ mwifiex_11n_form_amsdu_txpd(struct mwifiex_private *priv,
  {
- 	int err;
- 	struct brcmf_wsec_key_le key_le;
- 
- 	convert_key_from_CPU(key, &key_le);
- 
--	brcmf_netdev_wait_pend8021x(ndev);
-+	brcmf_netdev_wait_pend8021x(ifp);
- 
--	err = brcmf_fil_bsscfg_data_set(netdev_priv(ndev), "wsec_key", &key_le,
-+	err = brcmf_fil_bsscfg_data_set(ifp, "wsec_key", &key_le,
- 					sizeof(key_le));
- 
- 	if (err)
-@@ -1670,7 +1670,7 @@ brcmf_set_sharedkey(struct net_device *ndev,
- 	brcmf_dbg(CONN, "key length (%d) key index (%d) algo (%d)\n",
- 		  key.len, key.index, key.algo);
- 	brcmf_dbg(CONN, "key \"%s\"\n", key.data);
--	err = send_key_to_dongle(ndev, &key);
-+	err = send_key_to_dongle(netdev_priv(ndev), &key);
- 	if (err)
- 		return err;
- 
-@@ -2052,7 +2052,7 @@ brcmf_add_keyext(struct wiphy *wiphy, struct net_device *ndev,
- 	/* check for key index change */
- 	if (key.len == 0) {
- 		/* key delete */
--		err = send_key_to_dongle(ndev, &key);
-+		err = send_key_to_dongle(ifp, &key);
- 		if (err)
- 			brcmf_err("key delete error (%d)\n", err);
- 	} else {
-@@ -2108,7 +2108,7 @@ brcmf_add_keyext(struct wiphy *wiphy, struct net_device *ndev,
- 			brcmf_err("Invalid cipher (0x%x)\n", params->cipher);
- 			return -EINVAL;
- 		}
--		err = send_key_to_dongle(ndev, &key);
-+		err = send_key_to_dongle(ifp, &key);
- 		if (err)
- 			brcmf_err("wsec_key error (%d)\n", err);
- 	}
-@@ -2121,7 +2121,7 @@ brcmf_cfg80211_add_key(struct wiphy *wiphy, struct net_device *ndev,
- 		    struct key_params *params)
- {
- 	struct brcmf_if *ifp = netdev_priv(ndev);
--	struct brcmf_wsec_key key;
-+	struct brcmf_wsec_key *key;
- 	s32 val;
- 	s32 wsec;
- 	s32 err = 0;
-@@ -2132,54 +2132,62 @@ brcmf_cfg80211_add_key(struct wiphy *wiphy, struct net_device *ndev,
- 	if (!check_vif_up(ifp->vif))
- 		return -EIO;
- 
-+	if (key_idx >= BRCMF_MAX_DEFAULT_KEYS) {
-+		/* we ignore this key index in this case */
-+		brcmf_err("invalid key index (%d)\n", key_idx);
-+		return -EINVAL;
-+	}
+ 	struct txpd *local_tx_pd;
+ 	struct mwifiex_txinfo *tx_info = MWIFIEX_SKB_TXCB(skb);
++	u8 pad;
++	int headroom = (priv->adapter->iface_type ==
++			MWIFIEX_USB) ? 0 : INTF_HEADER_LEN;
 +
- 	if (mac_addr &&
- 		(params->cipher != WLAN_CIPHER_SUITE_WEP40) &&
- 		(params->cipher != WLAN_CIPHER_SUITE_WEP104)) {
- 		brcmf_dbg(TRACE, "Exit");
- 		return brcmf_add_keyext(wiphy, ndev, key_idx, mac_addr, params);
++	pad = ((void *)skb->data - sizeof(*local_tx_pd) -
++		headroom - NULL) & (MWIFIEX_DMA_ALIGN_SZ - 1);
++	skb_push(skb, pad);
+ 
+ 	skb_push(skb, sizeof(*local_tx_pd));
+ 
+@@ -114,10 +121,12 @@ mwifiex_11n_form_amsdu_txpd(struct mwifiex_private *priv,
+ 	local_tx_pd->bss_num = priv->bss_num;
+ 	local_tx_pd->bss_type = priv->bss_type;
+ 	/* Always zero as the data is followed by struct txpd */
+-	local_tx_pd->tx_pkt_offset = cpu_to_le16(sizeof(struct txpd));
++	local_tx_pd->tx_pkt_offset = cpu_to_le16(sizeof(struct txpd) +
++						 pad);
+ 	local_tx_pd->tx_pkt_type = cpu_to_le16(PKT_TYPE_AMSDU);
+ 	local_tx_pd->tx_pkt_length = cpu_to_le16(skb->len -
+-						 sizeof(*local_tx_pd));
++						 sizeof(*local_tx_pd) -
++						 pad);
+ 
+ 	if (tx_info->flags & MWIFIEX_BUF_FLAG_TDLS_PKT)
+ 		local_tx_pd->flags |= MWIFIEX_TXPD_FLAGS_TDLS_PACKET;
+@@ -182,7 +191,7 @@ mwifiex_11n_aggregate_pkt(struct mwifiex_private *priv,
+ 				       ra_list_flags);
+ 		return -1;
  	}
--	memset(&key, 0, sizeof(key));
+-	skb_reserve(skb_aggr, headroom + sizeof(struct txpd));
++	skb_reserve(skb_aggr, MWIFIEX_MIN_DATA_HEADER_LEN);
+ 	tx_info_aggr =  MWIFIEX_SKB_TXCB(skb_aggr);
  
--	key.len = (u32) params->key_len;
--	key.index = (u32) key_idx;
-+	key = &ifp->vif->profile.key[key_idx];
-+	memset(key, 0, sizeof(*key));
+ 	memset(tx_info_aggr, 0, sizeof(*tx_info_aggr));
+diff --git a/drivers/net/wireless/mwifiex/decl.h b/drivers/net/wireless/mwifiex/decl.h
+index 2269acf..12addae 100644
+--- a/drivers/net/wireless/mwifiex/decl.h
++++ b/drivers/net/wireless/mwifiex/decl.h
+@@ -32,8 +32,10 @@
  
--	if (key.len > sizeof(key.data)) {
--		brcmf_err("Too long key length (%u)\n", key.len);
-+	if (params->key_len > sizeof(key->data)) {
-+		brcmf_err("Too long key length (%u)\n", params->key_len);
- 		err = -EINVAL;
- 		goto done;
- 	}
--	memcpy(key.data, params->key, key.len);
-+	key->len = params->key_len;
-+	key->index = key_idx;
+ #define MWIFIEX_MAX_BSS_NUM         (3)
  
--	key.flags = BRCMF_PRIMARY_KEY;
-+	memcpy(key->data, params->key, key->len);
-+
-+	key->flags = BRCMF_PRIMARY_KEY;
- 	switch (params->cipher) {
- 	case WLAN_CIPHER_SUITE_WEP40:
--		key.algo = CRYPTO_ALGO_WEP1;
-+		key->algo = CRYPTO_ALGO_WEP1;
- 		val = WEP_ENABLED;
- 		brcmf_dbg(CONN, "WLAN_CIPHER_SUITE_WEP40\n");
- 		break;
- 	case WLAN_CIPHER_SUITE_WEP104:
--		key.algo = CRYPTO_ALGO_WEP128;
-+		key->algo = CRYPTO_ALGO_WEP128;
- 		val = WEP_ENABLED;
- 		brcmf_dbg(CONN, "WLAN_CIPHER_SUITE_WEP104\n");
- 		break;
- 	case WLAN_CIPHER_SUITE_TKIP:
- 		if (!brcmf_is_apmode(ifp->vif)) {
- 			brcmf_dbg(CONN, "Swapping RX/TX MIC key\n");
--			memcpy(keybuf, &key.data[24], sizeof(keybuf));
--			memcpy(&key.data[24], &key.data[16], sizeof(keybuf));
--			memcpy(&key.data[16], keybuf, sizeof(keybuf));
-+			memcpy(keybuf, &key->data[24], sizeof(keybuf));
-+			memcpy(&key->data[24], &key->data[16], sizeof(keybuf));
-+			memcpy(&key->data[16], keybuf, sizeof(keybuf));
- 		}
--		key.algo = CRYPTO_ALGO_TKIP;
-+		key->algo = CRYPTO_ALGO_TKIP;
- 		val = TKIP_ENABLED;
- 		brcmf_dbg(CONN, "WLAN_CIPHER_SUITE_TKIP\n");
- 		break;
- 	case WLAN_CIPHER_SUITE_AES_CMAC:
--		key.algo = CRYPTO_ALGO_AES_CCM;
-+		key->algo = CRYPTO_ALGO_AES_CCM;
- 		val = AES_ENABLED;
- 		brcmf_dbg(CONN, "WLAN_CIPHER_SUITE_AES_CMAC\n");
- 		break;
- 	case WLAN_CIPHER_SUITE_CCMP:
--		key.algo = CRYPTO_ALGO_AES_CCM;
-+		key->algo = CRYPTO_ALGO_AES_CCM;
- 		val = AES_ENABLED;
- 		brcmf_dbg(CONN, "WLAN_CIPHER_SUITE_CCMP\n");
- 		break;
-@@ -2189,7 +2197,7 @@ brcmf_cfg80211_add_key(struct wiphy *wiphy, struct net_device *ndev,
- 		goto done;
+-#define MWIFIEX_MIN_DATA_HEADER_LEN 36	/* sizeof(mwifiex_txpd)
+-					 *   + 4 byte alignment
++#define MWIFIEX_DMA_ALIGN_SZ	    64
++#define MWIFIEX_MIN_DATA_HEADER_LEN 100	/* sizeof(mwifiex_txpd)
++					 *   + 4 byte interface header alignment
++					 *   + 64 byte dma alignment
+ 					 */
+ #define MWIFIEX_MGMT_FRAME_HEADER_SIZE	8	/* sizeof(pkt_type)
+ 						 *   + sizeof(tx_control)
+diff --git a/drivers/net/wireless/mwifiex/sta_tx.c b/drivers/net/wireless/mwifiex/sta_tx.c
+index b896d73..9796334 100644
+--- a/drivers/net/wireless/mwifiex/sta_tx.c
++++ b/drivers/net/wireless/mwifiex/sta_tx.c
+@@ -47,8 +47,10 @@ void *mwifiex_process_sta_txpd(struct mwifiex_private *priv,
+ 	struct mwifiex_adapter *adapter = priv->adapter;
+ 	struct txpd *local_tx_pd;
+ 	struct mwifiex_txinfo *tx_info = MWIFIEX_SKB_TXCB(skb);
+-	u8 pad;
++	int pad;
+ 	u16 pkt_type, pkt_offset;
++	int hroom = (priv->adapter->iface_type == MWIFIEX_USB) ? 0 :
++		       INTF_HEADER_LEN;
+ 
+ 	if (!skb->len) {
+ 		dev_err(adapter->dev, "Tx: bad packet length: %d\n", skb->len);
+@@ -56,13 +58,12 @@ void *mwifiex_process_sta_txpd(struct mwifiex_private *priv,
+ 		return skb->data;
  	}
  
--	err = send_key_to_dongle(ndev, &key);
-+	err = send_key_to_dongle(ifp, key);
- 	if (err)
- 		goto done;
+-	pkt_type = mwifiex_is_skb_mgmt_frame(skb) ? PKT_TYPE_MGMT : 0;
++	BUG_ON(skb_headroom(skb) < MWIFIEX_MIN_DATA_HEADER_LEN);
  
-@@ -2222,7 +2230,7 @@ brcmf_cfg80211_del_key(struct wiphy *wiphy, struct net_device *ndev,
- 	if (!check_vif_up(ifp->vif))
- 		return -EIO;
+-	/* If skb->data is not aligned; add padding */
+-	pad = (4 - (((void *)skb->data - NULL) & 0x3)) % 4;
++	pkt_type = mwifiex_is_skb_mgmt_frame(skb) ? PKT_TYPE_MGMT : 0;
  
--	if (key_idx >= DOT11_MAX_DEFAULT_KEYS) {
-+	if (key_idx >= BRCMF_MAX_DEFAULT_KEYS) {
- 		/* we ignore this key index in this case */
- 		brcmf_err("invalid key index (%d)\n", key_idx);
- 		return -EINVAL;
-@@ -2237,7 +2245,7 @@ brcmf_cfg80211_del_key(struct wiphy *wiphy, struct net_device *ndev,
- 	brcmf_dbg(CONN, "key index (%d)\n", key_idx);
+-	BUG_ON(skb_headroom(skb) < (sizeof(*local_tx_pd) + INTF_HEADER_LEN
+-				    + pad));
++	pad = ((void *)skb->data - (sizeof(*local_tx_pd) + hroom)-
++			 NULL) & (MWIFIEX_DMA_ALIGN_SZ - 1);
+ 	skb_push(skb, sizeof(*local_tx_pd) + pad);
  
- 	/* Set the new key/index */
--	err = send_key_to_dongle(ndev, &key);
-+	err = send_key_to_dongle(ifp, &key);
+ 	local_tx_pd = (struct txpd *) skb->data;
+@@ -70,8 +71,8 @@ void *mwifiex_process_sta_txpd(struct mwifiex_private *priv,
+ 	local_tx_pd->bss_num = priv->bss_num;
+ 	local_tx_pd->bss_type = priv->bss_type;
+ 	local_tx_pd->tx_pkt_length = cpu_to_le16((u16)(skb->len -
+-						       (sizeof(struct txpd)
+-							+ pad)));
++						       (sizeof(struct txpd) +
++							pad)));
  
- 	brcmf_dbg(TRACE, "Exit\n");
- 	return err;
-@@ -2305,6 +2313,39 @@ brcmf_cfg80211_config_default_mgmt_key(struct wiphy *wiphy,
- 	return -EOPNOTSUPP;
- }
+ 	local_tx_pd->priority = (u8) skb->priority;
+ 	local_tx_pd->pkt_delay_2ms =
+@@ -115,7 +116,7 @@ void *mwifiex_process_sta_txpd(struct mwifiex_private *priv,
+ 	local_tx_pd->tx_pkt_offset = cpu_to_le16(pkt_offset);
  
-+static void
-+brcmf_cfg80211_reconfigure_wep(struct brcmf_if *ifp)
-+{
-+	s32 err;
-+	u8 key_idx;
-+	struct brcmf_wsec_key *key;
-+	s32 wsec;
-+
-+	for (key_idx = 0; key_idx < BRCMF_MAX_DEFAULT_KEYS; key_idx++) {
-+		key = &ifp->vif->profile.key[key_idx];
-+		if ((key->algo == CRYPTO_ALGO_WEP1) ||
-+		    (key->algo == CRYPTO_ALGO_WEP128))
-+			break;
-+	}
-+	if (key_idx == BRCMF_MAX_DEFAULT_KEYS)
-+		return;
-+
-+	err = send_key_to_dongle(ifp, key);
-+	if (err) {
-+		brcmf_err("Setting WEP key failed (%d)\n", err);
-+		return;
-+	}
-+	err = brcmf_fil_bsscfg_int_get(ifp, "wsec", &wsec);
-+	if (err) {
-+		brcmf_err("get wsec error (%d)\n", err);
-+		return;
-+	}
-+	wsec |= WEP_ENABLED;
-+	err = brcmf_fil_bsscfg_int_set(ifp, "wsec", wsec);
-+	if (err)
-+		brcmf_err("set wsec error (%d)\n", err);
-+}
-+
- static s32
- brcmf_cfg80211_get_station(struct wiphy *wiphy, struct net_device *ndev,
- 			   const u8 *mac, struct station_info *sinfo)
-@@ -4057,6 +4098,10 @@ brcmf_cfg80211_start_ap(struct wiphy *wiphy, struct net_device *ndev,
- 			brcmf_err("BRCMF_C_UP error (%d)\n", err);
- 			goto exit;
- 		}
-+		/* On DOWN the firmware removes the WEP keys, reconfigure
-+		 * them if they were set.
-+		 */
-+		brcmf_cfg80211_reconfigure_wep(ifp);
+ 	/* make space for INTF_HEADER_LEN */
+-	skb_push(skb, INTF_HEADER_LEN);
++	skb_push(skb, hroom);
  
- 		memset(&join_params, 0, sizeof(join_params));
- 		/* join parameters starts with ssid */
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.h b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.h
-index 9e98b8d..a5242af 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.h
-@@ -75,6 +75,8 @@
+ 	if (!local_tx_pd->tx_control)
+ 		/* TxCtrl set by user or default */
+diff --git a/drivers/net/wireless/mwifiex/uap_txrx.c b/drivers/net/wireless/mwifiex/uap_txrx.c
+index be3a203..38ac4d7 100644
+--- a/drivers/net/wireless/mwifiex/uap_txrx.c
++++ b/drivers/net/wireless/mwifiex/uap_txrx.c
+@@ -348,8 +348,10 @@ void *mwifiex_process_uap_txpd(struct mwifiex_private *priv,
+ 	struct mwifiex_adapter *adapter = priv->adapter;
+ 	struct uap_txpd *txpd;
+ 	struct mwifiex_txinfo *tx_info = MWIFIEX_SKB_TXCB(skb);
+-	int pad, len;
+-	u16 pkt_type;
++	int pad;
++	u16 pkt_type, pkt_offset;
++	int hroom = (priv->adapter->iface_type == MWIFIEX_USB) ? 0 :
++		       INTF_HEADER_LEN;
  
- #define BRCMF_VNDR_IE_P2PAF_SHIFT	12
+ 	if (!skb->len) {
+ 		dev_err(adapter->dev, "Tx: bad packet length: %d\n", skb->len);
+@@ -357,22 +359,21 @@ void *mwifiex_process_uap_txpd(struct mwifiex_private *priv,
+ 		return skb->data;
+ 	}
  
-+#define BRCMF_MAX_DEFAULT_KEYS		4
-+
- 
- /**
-  * enum brcmf_scan_status - scan engine status
-@@ -125,11 +127,13 @@ struct brcmf_cfg80211_security {
-  * @ssid: ssid of associated/associating ap.
-  * @bssid: bssid of joined/joining ibss.
-  * @sec: security information.
-+ * @key: key information
-  */
- struct brcmf_cfg80211_profile {
- 	struct brcmf_ssid ssid;
- 	u8 bssid[ETH_ALEN];
- 	struct brcmf_cfg80211_security sec;
-+	struct brcmf_wsec_key key[BRCMF_MAX_DEFAULT_KEYS];
- };
- 
- /**
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/core.c b/drivers/net/wireless/brcm80211/brcmfmac/core.c
-index effe6d7..e2a9e33 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/core.c
-@@ -1093,9 +1093,8 @@ static int brcmf_get_pend_8021x_cnt(struct brcmf_if *ifp)
- 	return atomic_read(&ifp->pend_8021x_cnt);
- }
- 
--int brcmf_netdev_wait_pend8021x(struct net_device *ndev)
-+int brcmf_netdev_wait_pend8021x(struct brcmf_if *ifp)
- {
--	struct brcmf_if *ifp = netdev_priv(ndev);
- 	int err;
- 
- 	err = wait_event_timeout(ifp->pend_8021x_wait,
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/core.h b/drivers/net/wireless/brcm80211/brcmfmac/core.h
-index 23f74b1..f2f7d3d 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/core.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/core.h
-@@ -29,8 +29,6 @@
- /* For supporting multiple interfaces */
- #define BRCMF_MAX_IFS	16
- 
--#define DOT11_MAX_DEFAULT_KEYS	4
+-	pkt_type = mwifiex_is_skb_mgmt_frame(skb) ? PKT_TYPE_MGMT : 0;
 -
- /* Small, medium and maximum buffer size for dcmd
-  */
- #define BRCMF_DCMD_SMLEN	256
-@@ -167,7 +165,7 @@ struct brcmf_skb_reorder_data {
- 	u8 *reorder;
- };
+-	/* If skb->data is not aligned, add padding */
+-	pad = (4 - (((void *)skb->data - NULL) & 0x3)) % 4;
++	BUG_ON(skb_headroom(skb) < MWIFIEX_MIN_DATA_HEADER_LEN);
  
--int brcmf_netdev_wait_pend8021x(struct net_device *ndev);
-+int brcmf_netdev_wait_pend8021x(struct brcmf_if *ifp);
+-	len = sizeof(*txpd) + pad;
++	pkt_type = mwifiex_is_skb_mgmt_frame(skb) ? PKT_TYPE_MGMT : 0;
  
- /* Return pointer to interface name */
- char *brcmf_ifname(struct brcmf_pub *drvr, int idx);
+-	BUG_ON(skb_headroom(skb) < len + INTF_HEADER_LEN);
++	pad = ((void *)skb->data - (sizeof(*txpd) + hroom) - NULL) &
++			(MWIFIEX_DMA_ALIGN_SZ - 1);
+ 
+-	skb_push(skb, len);
++	skb_push(skb, sizeof(*txpd) + pad);
+ 
+ 	txpd = (struct uap_txpd *)skb->data;
+ 	memset(txpd, 0, sizeof(*txpd));
+ 	txpd->bss_num = priv->bss_num;
+ 	txpd->bss_type = priv->bss_type;
+-	txpd->tx_pkt_length = cpu_to_le16((u16)(skb->len - len));
++	txpd->tx_pkt_length = cpu_to_le16((u16)(skb->len - (sizeof(*txpd) +
++						pad)));
+ 	txpd->priority = (u8)skb->priority;
+ 
+ 	txpd->pkt_delay_2ms = mwifiex_wmm_compute_drv_pkt_delay(priv, skb);
+@@ -392,16 +393,17 @@ void *mwifiex_process_uap_txpd(struct mwifiex_private *priv,
+ 		    cpu_to_le32(priv->wmm.user_pri_pkt_tx_ctrl[txpd->priority]);
+ 
+ 	/* Offset of actual data */
++	pkt_offset = sizeof(*txpd) + pad;
+ 	if (pkt_type == PKT_TYPE_MGMT) {
+ 		/* Set the packet type and add header for management frame */
+ 		txpd->tx_pkt_type = cpu_to_le16(pkt_type);
+-		len += MWIFIEX_MGMT_FRAME_HEADER_SIZE;
++		pkt_offset += MWIFIEX_MGMT_FRAME_HEADER_SIZE;
+ 	}
+ 
+-	txpd->tx_pkt_offset = cpu_to_le16(len);
++	txpd->tx_pkt_offset = cpu_to_le16(pkt_offset);
+ 
+ 	/* make space for INTF_HEADER_LEN */
+-	skb_push(skb, INTF_HEADER_LEN);
++	skb_push(skb, hroom);
+ 
+ 	if (!txpd->tx_control)
+ 		/* TxCtrl set by user or default */
 -- 
-1.9.1
+1.8.1.4
 
