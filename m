@@ -1,95 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:44577 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751046AbaLEOrK (ORCPT
+Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:45734
+	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750895AbaLQMii (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Dec 2014 09:47:10 -0500
-Message-ID: <5481C567.9040108@broadcom.com> (sfid-20141205_154727_882325_AF5119E5)
-Date: Fri, 5 Dec 2014 15:47:03 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Hante Meuleman <meuleman@broadcom.com>
-CC: Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Will Deacon <will.deacon@arm.com>,
-	Marek Szyprowski <m.szyprowski@samsung.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	David Miller <davem@davemloft.net>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: using DMA-API on ARM
-References: <5481794E.4050406@broadcom.com> <20141205094507.GP11285@n2100.arm.linux.org.uk> <20141205122423.GK1630@arm.com> <F51492713EF10846800D8C0ED37A7DCE019016E1@SJEXCHMB15.corp.ad.broadcom.com> <20141205132332.GS11285@n2100.arm.linux.org.uk> <F51492713EF10846800D8C0ED37A7DCE01901765@SJEXCHMB15.corp.ad.broadcom.com>
-In-Reply-To: <F51492713EF10846800D8C0ED37A7DCE01901765@SJEXCHMB15.corp.ad.broadcom.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Wed, 17 Dec 2014 07:38:38 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: [PATCH v2 3.19] mac80211: minstrel: reduce size of struct minstrel_rate_stats
+Date: Wed, 17 Dec 2014 13:38:34 +0100
+Message-Id: <1418819914-9535-1-git-send-email-nbd@openwrt.org> (sfid-20141217_133841_601607_3B3D4597)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/05/14 15:20, Hante Meuleman wrote:
-> Ok, I'll add the necessary debug to get all the information out,
-> but it will take some time to get it done, so I won't have anything
-> before Monday.
->
-> -----Original Message-----
-> From: Russell King - ARM Linux [mailto:linux@arm.linux.org.uk]
-> Sent: vrijdag 5 december 2014 14:24
-> To: Hante Meuleman
-> Cc: Will Deacon; Arend Van Spriel; Marek Szyprowski; linux-arm-kernel@lists.infradead.org; David Miller; linux-kernel@vger.kernel.org; brcm80211-dev-list; linux-wireless
-> Subject: Re: using DMA-API on ARM
->
-> Please wrap your message - replying to a message which looks like this in
-> my editor is far from easy, and gives me much more work to /manually/
-> reformat it before I can reply to it:
+On minstrel_ht, the size of the per-sta struct is almost 18k, making it
+an order-3 allocation.
+A few fields inside the per-rate statistics are bigger than they need to
+be. This patch reduces the size enough to cut down the per-sta struct to
+about 13k (order-2 allocation).
 
-That's what happens with corporate IT forcing to use Outlook. We can 
-workaround that using Thunderbird on Citrix. I will enlighten Hante 
-about that option :-)
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ net/mac80211/rc80211_minstrel.c |  6 +++---
+ net/mac80211/rc80211_minstrel.h | 15 ++++++++-------
+ 2 files changed, 11 insertions(+), 10 deletions(-)
 
-Regards,
-Arend
-
-> On Fri, Dec 05, 2014 at 12:56:45PM +0000, Hante Meuleman wrote:
->> The problem is with data coming from device, so DMA from device to host. The $
->>
->> However: this indicates that dma_alloc_coherent on an ARM target may result i$
->>
->> Regards,
->> Hante
->
-> Thanks.
->
-> On Fri, Dec 05, 2014 at 12:56:45PM +0000, Hante Meuleman wrote:
->> However: this indicates that dma_alloc_coherent on an ARM target may
->> result in a memory buffer which can be cached which conflicts with
->> the API of this function.
->
-> If the memory has an alias which is cacheable, it is possible for cache
-> lines to get allocated via that alias, even if the alias has no explicit
-> accesses to it.
->
-> This is something which I've been going on for quite literally /years/ -
-> mismatched cache attributes can cause unpredictable behaviour.  I've had
-> a lot of push back from people who are of the opinion that "if it works
-> for me, then there isn't a problem" and I eventually gave up fighting
-> the battle, especially as the ARM architecture people weakened my
-> reasoning behind it by publishing a relaxation of the "no differing
-> attributes" issue.  This was particularly true of those who wanted to
-> use ioremap() on system memory - and cases such as
-> dma_init_coherent_memory().
->
-> So, I never fixed this problem in the original DMA allocator code; I
-> basically gave up with it.  It's a latent bug which did need to be fixed,
-> and is still present today in the non-CMA case.
->
-> The symptoms which you are reporting sound very much like this kind of
-> problem - the virtual address for the memory returned by
-> dma_alloc_coherent() will not be cacheable memory - it will have been
-> remapped using map_vm_area().  However, there could very well be a fully
-> cacheable lowmem mapping of that memory, which if a read (speculative or
-> otherwise) will bring a cache line in, and because the caches are VIPT
-> or PIPT, that cache line can be hit via the non-cacheable mapping too.
->
-> What I /really/ need is more evidence of this to tell those disbelievers
-> where to stick their flawed arguments. :)
->
+diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
+index d51f6b1..7c86a00 100644
+--- a/net/mac80211/rc80211_minstrel.c
++++ b/net/mac80211/rc80211_minstrel.c
+@@ -263,12 +263,12 @@ static inline unsigned int
+ minstrel_get_retry_count(struct minstrel_rate *mr,
+ 			 struct ieee80211_tx_info *info)
+ {
+-	unsigned int retry = mr->adjusted_retry_count;
++	u8 retry = mr->adjusted_retry_count;
+ 
+ 	if (info->control.use_rts)
+-		retry = max(2U, min(mr->stats.retry_count_rtscts, retry));
++		retry = max_t(u8, 2, min(mr->stats.retry_count_rtscts, retry));
+ 	else if (info->control.use_cts_prot)
+-		retry = max(2U, min(mr->retry_count_cts, retry));
++		retry = max_t(u8, 2, min(mr->retry_count_cts, retry));
+ 	return retry;
+ }
+ 
+diff --git a/net/mac80211/rc80211_minstrel.h b/net/mac80211/rc80211_minstrel.h
+index 97eca86..410efe6 100644
+--- a/net/mac80211/rc80211_minstrel.h
++++ b/net/mac80211/rc80211_minstrel.h
+@@ -33,8 +33,8 @@ minstrel_ewma(int old, int new, int weight)
+ 
+ struct minstrel_rate_stats {
+ 	/* current / last sampling period attempts/success counters */
+-	unsigned int attempts, last_attempts;
+-	unsigned int success, last_success;
++	u16 attempts, last_attempts;
++	u16 success, last_success;
+ 
+ 	/* total attempts/success counters */
+ 	u64 att_hist, succ_hist;
+@@ -46,8 +46,8 @@ struct minstrel_rate_stats {
+ 	unsigned int cur_prob, probability;
+ 
+ 	/* maximum retry counts */
+-	unsigned int retry_count;
+-	unsigned int retry_count_rtscts;
++	u8 retry_count;
++	u8 retry_count_rtscts;
+ 
+ 	u8 sample_skipped;
+ 	bool retry_updated;
+@@ -55,14 +55,15 @@ struct minstrel_rate_stats {
+ 
+ struct minstrel_rate {
+ 	int bitrate;
+-	int rix;
++
++	s8 rix;
++	u8 retry_count_cts;
++	u8 adjusted_retry_count;
+ 
+ 	unsigned int perfect_tx_time;
+ 	unsigned int ack_time;
+ 
+ 	int sample_limit;
+-	unsigned int retry_count_cts;
+-	unsigned int adjusted_retry_count;
+ 
+ 	struct minstrel_rate_stats stats;
+ };
+-- 
+2.1.2
 
