@@ -1,85 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f48.google.com ([209.85.218.48]:58191 "EHLO
-	mail-oi0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751956AbaLRJF5 (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:62709 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751692AbaLQI14 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Dec 2014 04:05:57 -0500
-Received: by mail-oi0-f48.google.com with SMTP id u20so110051oif.7
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Dec 2014 01:05:56 -0800 (PST)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH 00/16] rtlwifi updates for kernel 3.20
-Date: Thu, 18 Dec 2014 03:05:24 -0600
-Message-Id: <1418893540-19944-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20141218_100603_491464_A350FF1C)
+	Wed, 17 Dec 2014 03:27:56 -0500
+From: Avinash Patil <patila@marvell.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
+	<cluo@marvell.com>, <yangyang@marvell.com>, <huxm@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH 4/4] mwifiex: get supported BA stream info from FW
+Date: Wed, 17 Dec 2014 19:27:01 +0530
+Message-ID: <1418824621-2102-4-git-send-email-patila@marvell.com> (sfid-20141217_092758_459935_4D399D7F)
+In-Reply-To: <1418824621-2102-1-git-send-email-patila@marvell.com>
+References: <1418824621-2102-1-git-send-email-patila@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle,
+This patch adds support to get number of BA streams
+supported information from FW. Some newer chips(e.g. 8897 series)
+support 4 BA streams for TX; so driver should not disallow BA stream
+setup just after 2 streams have been established.
 
-Welcome as the wireless-driver maintainer. I'm certain that it will take
-a while for all of us to function with the new structure, but I will try.
-
-This patch bomb is the first of a set of cleanups. As I wrote John earlier,
-my intent is to identify code that appears in multiple drivers and move such
-routines into rtlwifi. None of the changes in this set need have high priority,
-and all should be pushed into the "next" stream for kernel 3.20.
-
-Thanks,
-
-Larry
+Signed-off-by: Avinash Patil <patila@marvell.com>
 ---
+ drivers/net/wireless/mwifiex/11n.h | 14 +++++++++++---
+ drivers/net/wireless/mwifiex/fw.h  |  1 +
+ 2 files changed, 12 insertions(+), 3 deletions(-)
 
-Larry Finger (15):
-  rtlwifi: rtl8821ae: Fix typos in power-sequence macro
-  rtlwifi: rtl8192ce: Add code to set the keep-alive operation
-  rtlwifi: rtl8192ce: Update setting of the media status
-  rtlwifi: rtl8192ce: Update rate setting routines
-  rtlwifi: rtl8192ce: Improve RF sleep routine
-  rtlwifi: rtl8192ce: rtl8192cu: rtl8192de: rtl8192se:
-  rtlwifi: rtl8723be: Swith to use common rate-mapping routine
-  rtlwifi: rtl8188ee: Switch to use common rate-mapping routine
-  rtlwifi: rtl8723ae: Modify driver to use rate-mapping routine in core
-  rtlwifi: rtl8192ee: Convert driver to use common rate-mapping code
-  rtlwifi: Convert all drivers to use a common set of rate descriptors
-  rtlwifi: rtl8821ae: Add VHT rate descriptors
-  rtlwifi: rtl8192cu: Rework calls to rate-control routine
-  rtlwifi: rtl8192de: Rework calls to rate-control routine
-  rtlwifi: rtl8821ae: Switch to use common rate control routine
-
-Troy Tan (1):
-  rtlwifi: rtl8821ae: Simplify loading of WOWLAN firmware
-
- drivers/net/wireless/rtlwifi/base.c               | 156 +++++++++++----
- drivers/net/wireless/rtlwifi/base.h               |   4 +-
- drivers/net/wireless/rtlwifi/core.c               |  24 ++-
- drivers/net/wireless/rtlwifi/core.h               |   1 +
- drivers/net/wireless/rtlwifi/rtl8188ee/trx.c      | 162 +--------------
- drivers/net/wireless/rtlwifi/rtl8192c/fw_common.h |   1 +
- drivers/net/wireless/rtlwifi/rtl8192ce/hw.c       | 165 ++++++++-------
- drivers/net/wireless/rtlwifi/rtl8192ce/phy.c      |   5 +-
- drivers/net/wireless/rtlwifi/rtl8192ce/sw.c       |  30 +--
- drivers/net/wireless/rtlwifi/rtl8192ce/trx.c      |  13 +-
- drivers/net/wireless/rtlwifi/rtl8192cu/mac.c      |   4 +-
- drivers/net/wireless/rtlwifi/rtl8192cu/sw.c       |  28 +--
- drivers/net/wireless/rtlwifi/rtl8192cu/trx.c      |  20 +-
- drivers/net/wireless/rtlwifi/rtl8192de/sw.c       |  30 +--
- drivers/net/wireless/rtlwifi/rtl8192de/trx.c      |  27 ++-
- drivers/net/wireless/rtlwifi/rtl8192ee/trx.c      | 175 +---------------
- drivers/net/wireless/rtlwifi/rtl8192ee/trx.h      |   8 +-
- drivers/net/wireless/rtlwifi/rtl8192se/def.h      |   8 +-
- drivers/net/wireless/rtlwifi/rtl8192se/sw.c       |  30 +--
- drivers/net/wireless/rtlwifi/rtl8192se/trx.c      |  23 +--
- drivers/net/wireless/rtlwifi/rtl8723ae/trx.c      | 162 +--------------
- drivers/net/wireless/rtlwifi/rtl8723be/trx.c      | 162 +--------------
- drivers/net/wireless/rtlwifi/rtl8821ae/def.h      |  54 -----
- drivers/net/wireless/rtlwifi/rtl8821ae/pwrseq.h   |   4 +-
- drivers/net/wireless/rtlwifi/rtl8821ae/sw.c       |  74 +++----
- drivers/net/wireless/rtlwifi/rtl8821ae/trx.c      | 232 +---------------------
- drivers/net/wireless/rtlwifi/wifi.h               |  96 +++++----
- 27 files changed, 433 insertions(+), 1265 deletions(-)
-
+diff --git a/drivers/net/wireless/mwifiex/11n.h b/drivers/net/wireless/mwifiex/11n.h
+index f275675..8e2e394 100644
+--- a/drivers/net/wireless/mwifiex/11n.h
++++ b/drivers/net/wireless/mwifiex/11n.h
+@@ -130,7 +130,9 @@ static inline u8 mwifiex_space_avail_for_new_ba_stream(
+ {
+ 	struct mwifiex_private *priv;
+ 	u8 i;
+-	u32 ba_stream_num = 0;
++	u32 ba_stream_num = 0, ba_stream_max;
++
++	ba_stream_max = MWIFIEX_MAX_TX_BASTREAM_SUPPORTED;
+ 
+ 	for (i = 0; i < adapter->priv_num; i++) {
+ 		priv = adapter->priv[i];
+@@ -139,8 +141,14 @@ static inline u8 mwifiex_space_avail_for_new_ba_stream(
+ 				&priv->tx_ba_stream_tbl_ptr);
+ 	}
+ 
+-	return ((ba_stream_num <
+-		 MWIFIEX_MAX_TX_BASTREAM_SUPPORTED) ? true : false);
++	if (adapter->fw_api_ver == MWIFIEX_FW_V15) {
++		ba_stream_max =
++			       GETSUPP_TXBASTREAMS(adapter->hw_dot_11n_dev_cap);
++		if (!ba_stream_max)
++			ba_stream_max = MWIFIEX_MAX_TX_BASTREAM_SUPPORTED;
++	}
++
++	return ((ba_stream_num < ba_stream_max) ? true : false);
+ }
+ 
+ /*
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index fb5936e..9a82323 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -233,6 +233,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
+ #define ISSUPP_RXLDPC(Dot11nDevCap) (Dot11nDevCap & BIT(22))
+ #define ISSUPP_BEAMFORMING(Dot11nDevCap) (Dot11nDevCap & BIT(30))
+ #define ISALLOWED_CHANWIDTH40(ht_param) (ht_param & BIT(2))
++#define GETSUPP_TXBASTREAMS(Dot11nDevCap) ((Dot11nDevCap >> 18) & 0xF)
+ 
+ /* httxcfg bitmap
+  * 0		reserved
 -- 
-2.1.2
+1.8.1.4
 
