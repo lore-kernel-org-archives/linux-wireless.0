@@ -1,68 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0163.hostedemail.com ([216.40.44.163]:53630 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S932758AbaLBDoN (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:10174 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751410AbaLQKVI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Dec 2014 22:44:13 -0500
-Message-ID: <1417491850.4894.10.camel@perches.com> (sfid-20141202_044417_057975_0C6B8A75)
-Subject: Re: [PATCH 2/9] wil6210: add handling of RX HTRSH interrupt
-From: Joe Perches <joe@perches.com>
-To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Cc: "John W . Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Date: Mon, 01 Dec 2014 19:44:10 -0800
-In-Reply-To: <1417440803-26883-3-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1417440803-26883-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	 <1417440803-26883-3-git-send-email-qca_vkondrat@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Wed, 17 Dec 2014 05:21:08 -0500
+Subject: [PATCH v2 3/8] ath10k: print ath10k wmi op version
+To: <ath10k@lists.infradead.org>
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Date: Wed, 17 Dec 2014 12:21:03 +0200
+Message-ID: <20141217102103.15964.40410.stgit@potku.adurom.net> (sfid-20141217_112111_759830_9F3A1198)
+In-Reply-To: <20141217101755.15964.2625.stgit@potku.adurom.net>
+References: <20141217101755.15964.2625.stgit@potku.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-12-01 at 15:33 +0200, Vladimir Kondratiev wrote:
-> In addition there's a rate limitted warning message.
+The internal firmware version doesn't tell much to the user, it's more
+informative to use that field to print the wmi op version.
 
-limited.
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/debug.c |    7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
 
-I think this _ratelimited bit should be a separate patch.
-(and a suggestion / comment below too)
-
-> diff --git a/drivers/net/wireless/ath/wil6210/debug.c b/drivers/net/wireless/ath/wil6210/debug.c
-[]
-> +void wil_err_ratelimited(struct wil6210_priv *wil, const char *fmt, ...)
-> +{
-> +	if (net_ratelimit()) {
-> +		struct net_device *ndev = wil_to_ndev(wil);
-> +		struct va_format vaf = {
-> +			.fmt = fmt,
-> +		};
-> +		va_list args;
-> +
-> +		va_start(args, fmt);
-> +		vaf.va = &args;
-> +		netdev_err(ndev, "%pV", &vaf);
-> +		trace_wil6210_log_err(&vaf);
-> +		va_end(args);
-> +	}
-> +}
-[]
-> diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-[]
-> @@ -475,6 +476,8 @@ void wil_dbg_trace(struct wil6210_priv *wil, const char *fmt, ...);
->  __printf(2, 3)
->  void wil_err(struct wil6210_priv *wil, const char *fmt, ...);
->  __printf(2, 3)
-> +void wil_err_ratelimited(struct wil6210_priv *wil, const char *fmt, ...);
-> +__printf(2, 3)
->  void wil_info(struct wil6210_priv *wil, const char *fmt, ...);
->  #define wil_dbg(wil, fmt, arg...) do { \
->  	netdev_dbg(wil_to_ndev(wil), fmt, ##arg); \
-
-I think it'd be simpler and smaller to use a macro:
-
-#define wil_err_ratelimited(wil, fmt, ...)		\
-do {							\
-	if (net_ratelimit())				\
-		wil_err(wil, fmt, ##__VA_ARGS__);	\
-} while (0)
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index 70a9599aeb7a..6ca24427e184 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -124,7 +124,7 @@ EXPORT_SYMBOL(ath10k_info);
+ 
+ void ath10k_print_driver_info(struct ath10k *ar)
+ {
+-	ath10k_info(ar, "%s (0x%08x, 0x%08x) fw %s api %d htt %d.%d wmi %d.%d.%d.%d cal %s max_sta %d\n",
++	ath10k_info(ar, "%s (0x%08x, 0x%08x) fw %s api %d htt %d.%d wmi %d cal %s max_sta %d\n",
+ 		    ar->hw_params.name,
+ 		    ar->target_version,
+ 		    ar->chip_id,
+@@ -132,10 +132,7 @@ void ath10k_print_driver_info(struct ath10k *ar)
+ 		    ar->fw_api,
+ 		    ar->htt.target_version_major,
+ 		    ar->htt.target_version_minor,
+-		    ar->fw_version_major,
+-		    ar->fw_version_minor,
+-		    ar->fw_version_release,
+-		    ar->fw_version_build,
++		    ar->wmi.op_version,
+ 		    ath10k_cal_mode_str(ar->cal_mode),
+ 		    ar->max_num_stations);
+ 	ath10k_info(ar, "debug %d debugfs %d tracing %d dfs %d testmode %d\n",
 
