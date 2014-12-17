@@ -1,47 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:48593 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751125AbaLRUfW (ORCPT
+Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:43941
+	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750999AbaLQL0E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Dec 2014 15:35:22 -0500
-Date: Thu, 18 Dec 2014 15:35:20 -0500 (EST)
-Message-Id: <20141218.153520.221364366280641527.davem@davemloft.net> (sfid-20141218_213528_987283_98FFDCA0)
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull-request: mac80211 2014-12-18
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1418911822.6134.13.camel@sipsolutions.net>
-References: <1418911822.6134.13.camel@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 17 Dec 2014 06:26:04 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: [PATCH 3.19] mac80211: minstrel: reduce size of struct minstrel_rate_stats
+Date: Wed, 17 Dec 2014 12:26:00 +0100
+Message-Id: <1418815560-52346-1-git-send-email-nbd@openwrt.org> (sfid-20141217_122717_325651_7F1B60A3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Thu, 18 Dec 2014 15:10:22 +0100
+On minstrel_ht, the size of the per-sta struct is almost 18k, making it
+an order-3 allocation.
+A few fields inside the per-rate statistics are bigger than they need to
+be. This patch reduces the size enough to cut down the per-sta struct to
+about 13k (order-2 allocation).
 
-> Also from me a first pull request - we have a number of really old
-> issues that happened to crop up now with new work (or just more testing)
-> in the right areas as well as some small bugs newly introduced in 3.19.
-> 
-> Let me know if there are any problems.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ net/mac80211/rc80211_minstrel.c |  6 +++---
+ net/mac80211/rc80211_minstrel.h | 15 ++++++++-------
+ 2 files changed, 11 insertions(+), 10 deletions(-)
 
-Pulled, but:
+diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
+index d51f6b1..7c86a00 100644
+--- a/net/mac80211/rc80211_minstrel.c
++++ b/net/mac80211/rc80211_minstrel.c
+@@ -263,12 +263,12 @@ static inline unsigned int
+ minstrel_get_retry_count(struct minstrel_rate *mr,
+ 			 struct ieee80211_tx_info *info)
+ {
+-	unsigned int retry = mr->adjusted_retry_count;
++	u8 retry = mr->adjusted_retry_count;
+ 
+ 	if (info->control.use_rts)
+-		retry = max(2U, min(mr->stats.retry_count_rtscts, retry));
++		retry = max_t(u8, 2, min(mr->stats.retry_count_rtscts, retry));
+ 	else if (info->control.use_cts_prot)
+-		retry = max(2U, min(mr->retry_count_cts, retry));
++		retry = max_t(u8, 2, min(mr->retry_count_cts, retry));
+ 	return retry;
+ }
+ 
+diff --git a/net/mac80211/rc80211_minstrel.h b/net/mac80211/rc80211_minstrel.h
+index 97eca86..b49d663 100644
+--- a/net/mac80211/rc80211_minstrel.h
++++ b/net/mac80211/rc80211_minstrel.h
+@@ -33,8 +33,8 @@ minstrel_ewma(int old, int new, int weight)
+ 
+ struct minstrel_rate_stats {
+ 	/* current / last sampling period attempts/success counters */
+-	unsigned int attempts, last_attempts;
+-	unsigned int success, last_success;
++	u16 attempts, last_attempts;
++	u16 success, last_success;
+ 
+ 	/* total attempts/success counters */
+ 	u64 att_hist, succ_hist;
+@@ -46,8 +46,8 @@ struct minstrel_rate_stats {
+ 	unsigned int cur_prob, probability;
+ 
+ 	/* maximum retry counts */
+-	unsigned int retry_count;
+-	unsigned int retry_count_rtscts;
++	u8 retry_count;
++	u8 retry_count_rtscts;
+ 
+ 	u8 sample_skipped;
+ 	bool retry_updated;
+@@ -55,14 +55,15 @@ struct minstrel_rate_stats {
+ 
+ struct minstrel_rate {
+ 	int bitrate;
+-	int rix;
++
++	u8 rix;
++	u8 retry_count_cts;
++	u8 adjusted_retry_count;
+ 
+ 	unsigned int perfect_tx_time;
+ 	unsigned int ack_time;
+ 
+ 	int sample_limit;
+-	unsigned int retry_count_cts;
+-	unsigned int adjusted_retry_count;
+ 
+ 	struct minstrel_rate_stats stats;
+ };
+-- 
+2.1.2
 
-1) Don't put things into a merge commit, I take the text from your
-   pull request email and that becomes the merge commit contents.
-   Put it in your pull request email.
-
-2) I want every pull request I get at least CC:'d to netdev.
-
-> The following changes since commit 5fbea33740aeb948422d7b7e8aafbeac362264b2:
-> 
->   r8169:update rtl8168g pcie ephy parameter (2014-12-11 21:38:52 -0500)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2014-12-18
-> 
-> for you to fetch changes up to 28a9bc68124c319b2b3dc861e80828a8865fd1ba:
-> 
->   mac80211: free management frame keys when removing station (2014-12-17 14:00:17 +0100)
