@@ -1,60 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-sg1on0115.outbound.protection.outlook.com ([134.170.132.115]:36891
-	"EHLO APAC01-SG1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751385AbaLQLPq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Dec 2014 06:15:46 -0500
-From: "Nishikawa, Kenzoh" <Kenzoh.Nishikawa@jp.sony.com>
-To: 'Johannes Berg' <johannes@sipsolutions.net>
-CC: "'linux-wireless@vger.kernel.org'" <linux-wireless@vger.kernel.org>,
-	"'devel@lists.open80211s.org'" <devel@lists.open80211s.org>,
-	"'Bob Copeland (me@bobcopeland.com)'" <me@bobcopeland.com>,
-	"'Thomas Pedersen (thomas@noack.us)'" <thomas@noack.us>
-Subject: [Resend PATCH v5] mac80211: keep sending peer candidate events
- while in listen state
-Date: Wed, 17 Dec 2014 11:01:11 +0000
-Message-ID: <2EB4F5C65A3B8E4E92660930F4EF6B5B07C4AC@JPYOKXMS113.jp.sony.com> (sfid-20141217_121550_191316_B2077768)
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:56231 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751120AbaLQT3X (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Dec 2014 14:29:23 -0500
+Message-ID: <5491D991.30908@broadcom.com> (sfid-20141217_202931_110924_F697E311)
+Date: Wed, 17 Dec 2014 20:29:21 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+	<davem@davemloft.net>
+Subject: Re: [PATCH] MAINTAINERS: changes for wireless
+References: <1418836025-9035-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <1418836025-9035-1-git-send-email-linville@tuxdriver.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of sending peer candidate events just once, send them 
-as long as the peer remains in the LISTEN state in the peering 
-state machine, when userspace is implementing the peering manager.
-Userspace may silence the events from a peer by progressing 
-the state machine or by setting the link state to BLOCKED.
+On 12/17/14 18:07, John W. Linville wrote:
+> http://marc.info/?l=linux-wireless&m=141883202530292&w=2
+>
+> This makes it official... :-)
 
-Fixes the problem that a mesh peering process won't be fired 
-again after the previous first peering trial fails due to like 
-air propagation error if the peering is managed by user space 
-such as wpa_supplicant.
+Let see if I can comment on this patch.
 
-This patch works with another patch for wpa_supplicant described 
-here which fires a peering process again triggered by the notice 
-from kernel.
-http://lists.shmoo.com/pipermail/hostap/2014-November/031235.html
+First of all, thanks for the years of service. You already gave the 
+heads up few months ago, but now its official. It has been good working 
+with you getting rid of eye-sore code in brcm80211 drivers.
 
-Signed-off-by: Kenzoh Nishikawa <Kenzoh.Nishikawa at jp.sony.com>
----
-net/mac80211/mesh_plink.c |    7 +++++++
-1 file changed, 7 insertions(+)
+> Signed-off-by: John W. Linville<linville@tuxdriver.com>
+> ---
+>   MAINTAINERS | 19 ++++++++-----------
+>   1 file changed, 8 insertions(+), 11 deletions(-)
+>
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index fdffe962a16a..e82d31aeb936 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -6603,19 +6603,8 @@ L:	netdev@vger.kernel.org
+>   S:	Maintained
+>
+>   NETWORKING [WIRELESS]
+> -M:	"John W. Linville"<linville@tuxdriver.com>
+>   L:	linux-wireless@vger.kernel.org
+>   Q:	http://patchwork.kernel.org/project/linux-wireless/list/
+> -T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.git
+> -S:	Maintained
+> -F:	net/mac80211/
+> -F:	net/rfkill/
+> -F:	net/wireless/
+> -F:	include/net/ieee80211*
+> -F:	include/linux/wireless.h
+> -F:	include/uapi/linux/wireless.h
+> -F:	include/net/iw_handler.h
+> -F:	drivers/net/wireless/
+>
+>   NETWORKING DRIVERS
+>   L:	netdev@vger.kernel.org
+> @@ -6636,6 +6625,14 @@ F:	include/linux/inetdevice.h
+>   F:	include/uapi/linux/if_*
+>   F:	include/uapi/linux/netdevice.h
+>
+> +NETWORKING DRIVERS (WIRELESS)
+> +M:	Kalle Valo<kvalo@codeaurora.org>
+> +L:	linux-wireless@vger.kernel.org
+> +Q:	http://patchwork.kernel.org/project/linux-wireless/list/
+> +T:	git git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git/
+> +S:	Maintained
+> +F:	drivers/net/wireless/
 
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c index 32c7bd0..dfc429b 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -524,6 +524,13 @@ void mesh_neighbour_update(struct ieee80211_sub_if_data *sdata,
- 	    sdata->u.mesh.mshcfg.auto_open_plinks &&
- 	    rssi_threshold_check(sta, sdata))
- 		changed = mesh_plink_open(sta);
-+	else if (sta->plink_state == NL80211_PLINK_LISTEN &&
-+		 (sdata->u.mesh.user_mpm ||
-+		  sdata->u.mesh.security & IEEE80211_MESH_SEC_AUTHED))
-+		cfg80211_notify_new_peer_candidate(sdata->dev, hw_addr,
-+						   elems->ie_start,
-+						   elems->total_len,
-+						   GFP_ATOMIC);
- 
- 	ieee80211_mps_frame_release(sta, elems);
- out:
+So what about the other paths that were in "NETWORKING [WIRELESS]". 
+Couple of them are obviously maintained by Johannes, but..
+
+> +
+>   NETXEN (1/10) GbE SUPPORT
+>   M:	Manish Chopra<manish.chopra@qlogic.com>
+>   M:	Sony Chacko<sony.chacko@qlogic.com>
 
