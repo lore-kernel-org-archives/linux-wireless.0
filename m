@@ -1,40 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:43377 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751225AbaLRVNs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Dec 2014 16:13:48 -0500
-Message-ID: <1418936069.10864.1.camel@sipsolutions.net> (sfid-20141218_221354_904143_B4790AD5)
-Subject: Re: pull-request: mac80211 2014-12-18
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Thu, 18 Dec 2014 21:54:29 +0100
-In-Reply-To: <20141218.153520.221364366280641527.davem@davemloft.net>
-References: <1418911822.6134.13.camel@sipsolutions.net>
-	 <20141218.153520.221364366280641527.davem@davemloft.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:25660 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751884AbaLQIck convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Dec 2014 03:32:40 -0500
+From: Avinash Patil <patila@marvell.com>
+To: Martin Fuzzey <mfuzzey@parkeon.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Date: Wed, 17 Dec 2014 00:29:49 -0800
+Subject: RE: [REGRESSION] mwifiex: memory corruption on WEP disassociation
+Message-ID: <CBACCFA0AEB13A41977475BCF3E896FC66736E7A01@SC-VEXCH2.marvell.com> (sfid-20141217_093243_269125_24A50C42)
+References: <546B5E82.7000207@parkeon.com>,<20141118184241.GD13458@tuxdriver.com>
+ <CBACCFA0AEB13A41977475BCF3E896FC666FA7DC82@SC-VEXCH2.marvell.com>,<546C57AF.1040700@parkeon.com>
+ <CBACCFA0AEB13A41977475BCF3E896FC666FA7DC8F@SC-VEXCH2.marvell.com>,<546CAE45.6090201@parkeon.com>
+In-Reply-To: <546CAE45.6090201@parkeon.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-12-18 at 15:35 -0500, David Miller wrote:
+Hi Martin,
 
-> 1) Don't put things into a merge commit, I take the text from your
->    pull request email and that becomes the merge commit contents.
->    Put it in your pull request email.
+Issue has been tracked down and it was discovered that with key material v1 API FW, action delete is not supported.
+WEP encryption in such cases is disabled by resetting bit in mac_filter which happens in the same function.
 
-Hmm, ok - not sure I fully understand. I don't think I created a merge
-commit, so did you mean the tag? I thought a (signed) tag with contents
-was now the preferred way to send pull requests, but I can also send a
-signed email without a tag for you to merge a branch? Or would you
-prefer a signed tag but empty (is that even possible?) with the text in
-the email?
+Patch has been posted to linux-wireless list; here is link for your reference:
 
-> 2) I want every pull request I get at least CC:'d to netdev.
+https://patchwork.kernel.org/patch/5505651/
 
-Ok, sure.
+I have added your "reported-by".
 
 Thanks,
-johannes
+Avinash
+________________________________________
+From: Martin Fuzzey [mfuzzey@parkeon.com]
+Sent: Wednesday, November 19, 2014 8:20 PM
+To: Avinash Patil
+Cc: John W. Linville; linux-wireless@vger.kernel.org; Amitkumar Karwar
+Subject: Re: [REGRESSION] mwifiex: memory corruption on WEP disassociation
+
+Hi Avinash,
+
+On 19/11/14 09:44, Avinash Patil wrote:
+> Could you please check if issue is seen with this FW as well?
+> Here is link:
+> http://git.marvell.com/?p=mwifiex-firmware.git;a=commit;h=3f45b8c4cc1eb1d102bc3486b19677332dd215ab
+
+Tried that firmware  (14.66.35.p52) with kernel 3.16, same issue.
+It still uses V1 keys.
+
+I also tried kernel 3.18-rc5 (with the original 14.66.9.p96 firmware)
+and, while it didn't crash, some logs I added showed that a short (10
+byte) response was still being handed to
+mwifiex_ret_802_11_key_material_v1().
+It didn't crash because I was "lucky" enough that the non initialized
+key length field happened to contain zero.
 
 
+Regards,
+
+Martin
