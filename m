@@ -1,79 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from imap.thunk.org ([74.207.234.97]:48045 "EHLO imap.thunk.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751143AbaLaWUB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Dec 2014 17:20:01 -0500
-Date: Wed, 31 Dec 2014 17:19:48 -0500
-From: Theodore Ts'o <tytso@mit.edu>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	Jiri Kosina <jkosina@suse.cz>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	Borislav Petkov <bp@alien8.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"egrumbach@gmail.com" <egrumbach@gmail.com>,
-	"peter@hurleysoftware.com" <peter@hurleysoftware.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] Revert "cfg80211: make WEXT compatibility unselectable"
-Message-ID: <20141231221948.GB29273@thunk.org> (sfid-20141231_232037_187395_8829A1F1)
-References: <alpine.LNX.2.00.1412302351030.31609@pobox.suse.cz>
- <54A3D955.6020809@broadcom.com>
- <0BA3FCBA62E2DC44AF3030971E174FB31B5DD72E@hasmsx107.ger.corp.intel.com>
- <54A3E1F1.7030807@broadcom.com>
- <alpine.LNX.2.00.1412311505100.31609@pobox.suse.cz>
- <54A41000.3040306@broadcom.com>
- <20141231173113.GA443@thunk.org>
- <54A45D4D.7070302@broadcom.com>
- <20141231214421.GA29273@thunk.org>
- <CA+55aFzp2bWctqpiHyZVC9ZCtW3wN_bPsGjcbqKFgu9KOZtAJw@mail.gmail.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:56520 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751030AbaLQQAS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Dec 2014 11:00:18 -0500
+Date: Wed, 17 Dec 2014 10:59:51 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-nfc@ml01.01.org
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Kalle Valo <kvalo@codeaurora.org>, lwn@lwn.net
+Subject: changes to Linux wireless maintenance
+Message-ID: <20141217155951.GA3144@tuxdriver.com> (sfid-20141217_170024_328162_22665574)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CA+55aFzp2bWctqpiHyZVC9ZCtW3wN_bPsGjcbqKFgu9KOZtAJw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 31, 2014 at 01:57:59PM -0800, Linus Torvalds wrote:
-> Side note: does anybody think that was really a good idea to begin
-> with? I mean, Cisco iOS is just _soooo_ universally loved, right?
+Greetings,
 
-Well, at the time when it was "ip" came out, Cisco had a defacto
-monopoly on routing equipment, and some of the folks who were working
-on Linux networking had this insane dream of having Linux be better at
-the routing game than Cisco (there was this minor issue of Cisco
-having hardware assist for their fastpath :-).  So I think I
-*understand* the rationale behind the design choice, even though it's
-probably not the decision I would have made at the time, and certainly
-not with the benefit of 20/20 hindsight!
+Almost 9 years ago, Jeff Garzik wrote a message on LKML detailing
+the sad state of wireless LANs in the Linux world.  The point of his
+message was "So... there it is.  We suck.  There's hope.  No Luke
+Skywalker in sight.":
 
-And I won't say that I *loved* IOS, but I certainly used it enough
-when I was working in the MIT Network Operations group.  :-)
+	https://lkml.org/lkml/2006/1/5/671
 
-> And yeah, I refuse to use "ip link" or other insane commands. Let's
-> face it, "ifconfig" and "route" are perfectly fine commands, and a
-> whole lot less confusing than "ip" with random crap after it.  I'm
-> really not seeing why that "ip" command was seen as an improvement.
+Shortly thereafter, I became the maintainer for wireless LANs in the
+Linux kernel:
 
-The real problem is that they were trying to do way more complicated
-things in terms of routing rules (including some stuff that could be
-done by Cisco IOS).  So if you want to try to do the insanely
-complicated stuff, you have to use the "ip route" command.
+	https://lkml.org/lkml/2006/1/18/377
 
-Meh.  Could it have been shoehorned into the legacy "route" command?
-Perhaps, although it would have been a bit of mess, I suspect.
+Since then, we have had a number of wireless summit meetings all around
+the world.  Items were discussed, patches were merged, and friendships
+were made.  Over time, we garnered support from a large range of
+wireless networking vendors.  Eventually even other technologies
+were sending their patches through my trees, and I was consistently
+ranked amongst the top 10 "gate keepers" for getting changes into the
+Linux kernel.  In fact, a couple of years ago I even gave a talk on
+how Linux wireless got better.	It has been quite a ride!
 
-The question I find more interesting is how many people are actually
-*using* all of the complexity that currently can only be accessed via
-the "ip", "tc", and "ss" commands.
+	https://events.linuxfoundation.org/images/stories/pdf/lfcs2012_linville.pdf
 
-But in any case, given that "ip", "tc", "ss", etc. are using the IOS
-syntax, most users will probably find it confusing and surprising that
-"iw" is using something different.  It's probably too hard to maintain
-script compatibility to make such a UX change to iw at this point,
-though.  And besides, most users are probably using "ifconfig",
-"route", and if they're not using network-manager or wicdw, they're
-using "iwconfig" or "iwlist" --- so it's a moot point.  :-)
+Nevertheless, I think it is time for some changes.  I have been
+the wireless maintainer for a long time, and I personally would
+like to develop in a different direction.  Plus, I think that Linux
+will benefit from having some fresh blood involved in more of the
+maintenance duties.  I will be stepping aside to let that happen.
 
-						- Ted
+The mac80211, bluetooth, and nfc trees have fed through me for some
+time.  I am now asking these trees to send pull request directly to
+David Miller.  Since these trees are managed through git, my hope is
+that they will not place any significant burden on Dave.
+
+As for the wireless driver patches, I have asked Kalle Valo
+to handle patch review and merge duties for everything under the
+drivers/net/wireless directory.  This will now include not only the ath
+patches he already manages, but other drivers that don't have trees
+such as mwifiex, rt2x00, rtlwifi, and others.  For consistency, the
+iwlwifi tree will also be merged through Kalle's new tree.  I expect
+that Kalle will announce any relevant details in a follow-up message.
+
+The wireless-testing tree is a resource that some people value.
+I will continue to provide a wireless-testing tree.  Now that tree
+will feed from the various wireless trees managed by others, probably
+with some sort of regularly scheduled pulls.  Details are still to be
+determined, but the tree will still exist and will be substantially
+similar to how it has been so far.
+
+I also receive notices of new bug reports for wireless LANs on
+bugzilla.kernel.org.  For now I will continue to triage those reports,
+so don't ignore me!! :-)
+
+Some may ask what I will do now -- I wish I had a specific answer.
+Immediate plans are to enjoy the coming holidays and my traditional
+year-end time away from work.  After that...well, I'm sure I will
+find something to do.  If you have any suggestions for good uses of
+my talents, feel free to contact me -- I'm not hard to find!
+
+In closing, I hope everyone will support Kalle and the other wireless
+maintainers at least as much as you have supported me for the past
+several years.	These are good, hard working folks.  You are in
+good hands!
+
+Regards,
+
+John
+
+P.S.  Bonus points for anyone that finds a way for me to become a
+professional retro-computing hobbyist... :-)
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
