@@ -1,41 +1,23 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f182.google.com ([209.85.214.182]:61574 "EHLO
-	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751461AbaLaDcW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Dec 2014 22:32:22 -0500
-Message-ID: <54A36E23.2000804@lwfinger.net> (sfid-20141231_043230_605189_B6861B4C)
-Date: Tue, 30 Dec 2014 21:31:47 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Eric Biggers <ebiggers3@gmail.com>
-CC: kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
-Subject: Re: [PATCH 23/23 V2 for 3.19]  rtlwifi: Fix error when accessing
- unmapped memory in skb
-References: <1419711457-21469-1-git-send-email-Larry.Finger@lwfinger.net> <20141231004947.GA2007@zzz>
-In-Reply-To: <20141231004947.GA2007@zzz>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:36904 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751118AbaLQOMx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Dec 2014 09:12:53 -0500
+Message-ID: <1418825568.2135.16.camel@sipsolutions.net> (sfid-20141217_151259_260335_037AF0B2)
+Subject: Re: [PATCH v9 0/2] Stop scheduled scan if netlink client disappears
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jukka Rissanen <jukka.rissanen@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 17 Dec 2014 15:12:48 +0100
+In-Reply-To: <1418642739-11016-1-git-send-email-jukka.rissanen@linux.intel.com> (sfid-20141215_122547_530053_7D0B3D0D)
+References: <1418642739-11016-1-git-send-email-jukka.rissanen@linux.intel.com>
+	 (sfid-20141215_122547_530053_7D0B3D0D)
+Content-Type: text/plain
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/30/2014 06:49 PM, Eric Biggers wrote:
-> On Sat, Dec 27, 2014 at 02:17:37PM -0600, Larry Finger wrote:
->> These drivers use 9100-byte receive buffers, thus allocating an skb requires
->> an O(3) memory allocation. Under heavy memory loads and fragmentation, such
->> a request can fail. Previous versions of the driver have dropped the packet
->> and reused the old buffer; however, the new version introduced a bug in that
->> it released the old buffer before trying to allocate a new one. The previous
->> method is implemented here.
->
-> It looks like in the out-of-memory path, pci_map_single() gets called while the
-> skb is still mapped.  Won't this leak the IOMMU mapping?
+Both applied.
 
-Good catch. I do not know much about leaking the IOMMU mapping; however it is 
-easy to do the unmapping before trying to allocate a new skb.
-
-Thanks,
-
-Larry
-
+johannes
 
