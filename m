@@ -1,41 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:26261 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750707AbaLCFYT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Dec 2014 00:24:19 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Brent Taylor <motobud@gmail.com>
-CC: Dan Williams <dcbw@redhat.com>,
-	Krishna Chaitanya <chaitanya.mgit@gmail.com>,
-	<ath6kl@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Laptop disassociating by local choice (reason=17)
-References: <CAP+RiCBDAi7e6vj5vvrcEpt17JicdmPwq16zhG9Fun11HfnBkw@mail.gmail.com>
-	<CAP+RiCDMerG_8EYi=0Ta3BvAwuWinNPYuNevjF85w08HsX4f2Q@mail.gmail.com>
-	<CABPxzY+oxDH7QysFNWQg6fMWpsQDSFm5YgOusaz0KibEnH++yQ@mail.gmail.com>
-	<CAP+RiCCD7EefqNKKXonrvd9T3G=+4aKZQXe0QbXBKKCzHvgAzQ@mail.gmail.com>
-	<CABPxzY+Eimssqcxs0W79_5zGBHmFnrTc5+qeTnmYr_UH_9ti6A@mail.gmail.com>
-	<CAP+RiCC4KmgNMGCiCzDeL_0-frGw7acoZf5FDv4OTmauQPU5Hw@mail.gmail.com>
-	<1417563128.32003.8.camel@dcbw.local>
-	<CAP+RiCD2vtZyVOTykKwBcm12g8mpPKc8ZBWUgFL90TU0C5ciUw@mail.gmail.com>
-Date: Wed, 3 Dec 2014 07:24:12 +0200
-In-Reply-To: <CAP+RiCD2vtZyVOTykKwBcm12g8mpPKc8ZBWUgFL90TU0C5ciUw@mail.gmail.com>
-	(Brent Taylor's message of "Tue, 2 Dec 2014 17:43:55 -0600")
-Message-ID: <87h9xdl30j.fsf@kamboji.qca.qualcomm.com> (sfid-20141203_062422_907090_70EDD0DE)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from s3.sipsolutions.net ([5.9.151.49]:36632 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750829AbaLQNAs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Dec 2014 08:00:48 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: free management frame keys when removing station
+Date: Wed, 17 Dec 2014 14:00:44 +0100
+Message-Id: <1418821244-1952-1-git-send-email-johannes@sipsolutions.net> (sfid-20141217_140052_512092_763BB2DE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Brent Taylor <motobud@gmail.com> writes:
+From: Johannes Berg <johannes.berg@intel.com>
 
->    I actually ran the wpa_supplicant with -ddddt as the parameter not
-> knowing how many 'd's I could put there before I hit the limit of the
-> debugging.  The wpa_supplicant on the ubuntu laptop is v0.7.3.  I'll
-> change the -ddddt to just -dddt and re-run the test again.
+When writing the code to allow per-station GTKs, I neglected to
+take into account the management frame keys (index 4 and 5) when
+freeing the station and only added code to free the first four
+data frame keys.
 
-IMHO 0.7.3 is ancient. Please use something more recent.
+Fix this by iterating the array of keys over the right length.
 
+Cc: stable@vger.kernel.org
+Fixes: e31b82136d1a ("cfg80211/mac80211: allow per-station GTKs")
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/key.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+index 434a91ad12c8..0bb7038121ac 100644
+--- a/net/mac80211/key.c
++++ b/net/mac80211/key.c
+@@ -656,7 +656,7 @@ void ieee80211_free_sta_keys(struct ieee80211_local *local,
+ 	int i;
+ 
+ 	mutex_lock(&local->key_mtx);
+-	for (i = 0; i < NUM_DEFAULT_KEYS; i++) {
++	for (i = 0; i < ARRAY_SIZE(sta->gtk); i++) {
+ 		key = key_mtx_dereference(local, sta->gtk[i]);
+ 		if (!key)
+ 			continue;
 -- 
-Kalle Valo
+2.1.1
+
