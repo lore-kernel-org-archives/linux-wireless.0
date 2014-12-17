@@ -1,49 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f51.google.com ([74.125.82.51]:50156 "EHLO
-	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932839AbaLKJ4q convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Dec 2014 04:56:46 -0500
-Received: by mail-wg0-f51.google.com with SMTP id x12so5829266wgg.24
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Dec 2014 01:56:45 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1418214714-29689-3-git-send-email-michal.kazior@tieto.com>
-References: <1418214714-29689-1-git-send-email-michal.kazior@tieto.com>
-	<1418214714-29689-3-git-send-email-michal.kazior@tieto.com>
-Date: Thu, 11 Dec 2014 10:56:43 +0100
-Message-ID: <CA+BoTQ=yrruA_D_M8P=szxy75x=r7oxG9ukCedEZwZBp-5JX1g@mail.gmail.com> (sfid-20141211_105651_013568_9A3C5A5F)
-Subject: Re: [PATCH 2/5] ath10k: fix STA u-APSD
-From: Michal Kazior <michal.kazior@tieto.com>
-To: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:36150 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751193AbaLQKta (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Dec 2014 05:49:30 -0500
+Message-ID: <1418813359.2135.7.camel@sipsolutions.net> (sfid-20141217_114933_396855_B90F48A0)
+Subject: Re: [PATCH v5] mac80211: keep sending peer candidate events while
+ in listen state
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Nishikawa, Kenzoh" <Kenzoh.Nishikawa@jp.sony.com>
+Cc: "'linux-wireless@vger.kernel.org'" <linux-wireless@vger.kernel.org>,
+	"'devel@lists.open80211s.org'" <devel@lists.open80211s.org>,
+	"'Bob Copeland (me@bobcopeland.com)'" <me@bobcopeland.com>,
+	"'Thomas Pedersen (thomas@noack.us)'" <thomas@noack.us>
+Date: Wed, 17 Dec 2014 11:49:19 +0100
+In-Reply-To: <2EB4F5C65A3B8E4E92660930F4EF6B5B07AB81@JPYOKXMS113.jp.sony.com>
+References: <2EB4F5C65A3B8E4E92660930F4EF6B5B07AB81@JPYOKXMS113.jp.sony.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10 December 2014 at 13:31, Michal Kazior <michal.kazior@tieto.com> wrote:
-[...]
-> @@ -3036,14 +3061,11 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
->                         goto err_peer_delete;
->                 }
->
-> -               param = WMI_STA_PS_PARAM_TX_WAKE_THRESHOLD;
-> -               value = WMI_STA_PS_TX_WAKE_THRESHOLD_ALWAYS;
-> -               ret = ath10k_wmi_set_sta_ps_param(ar, arvif->vdev_id,
-> -                                                 param, value);
-> +               ret = ath10k_mac_vif_recalc_ps_wake_threshold(arvif);
->                 if (ret) {
-> -                       ath10k_warn(ar, "failed to set vdev %i TX wake thresh: %d\n",
-> +                       ath10k_warn(ar, "failed to recalc ps wake threshold on vdev %i: %d\n",
->                                     arvif->vdev_id, ret);
-> -                       goto err_peer_delete;
-> +                       return ret;
+On Tue, 2014-12-16 at 01:41 +0000, Nishikawa, Kenzoh wrote:
+> Instead of sending peer candidate events just once, send them as long as the peer remains in the LISTEN state in the peering state machine, when userspace is implementing the peering manager.
+> Userspace may silence the events from a peer by progressing the state machine or by setting the link state to BLOCKED.
+> 
+> Fixes the problem that a mesh peering process won't be fired again after the previous first peering trial fails due to like air propagation error if the peering is managed by user space such as wpa_supplicant.
+> 
+> This patch works with another patch for wpa_supplicant described here which fires a peering process again triggered by the notice from kernel.
+> http://lists.shmoo.com/pipermail/hostap/2014-November/031235.html
 
-Oops. This is wrong. I should keep the goto.
+Applied, but please try to send patches with line-broken commit
+messages.
 
-There are also some Rx performance issues related to excessive PS-Poll usage.
+johannes
 
-I'll re-spin later.
-
-
-Michał
