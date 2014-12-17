@@ -1,143 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:61369 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751772AbaLaDdZ (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:40655 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751121AbaLQJXs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Dec 2014 22:33:25 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>,
-	Eric Biggers <ebiggers3@gmail.com>
-Subject: [PATCH V3 for 3.19]  rtlwifi: Fix error when accessing unmapped memory in skb
-Date: Tue, 30 Dec 2014 21:33:07 -0600
-Message-Id: <1419996787-17395-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20141231_043329_812195_C761F258)
+	Wed, 17 Dec 2014 04:23:48 -0500
+From: Avinash Patil <patila@marvell.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
+	<cluo@marvell.com>, <yangyang@marvell.com>,
+	Xinming Hu <huxm@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH 2/4] mwifiex: do not send key material cmd when delete wep key
+Date: Wed, 17 Dec 2014 17:24:31 +0530
+Message-ID: <1418817273-22669-2-git-send-email-patila@marvell.com> (sfid-20141217_102354_747652_6984F31A)
+In-Reply-To: <1418817273-22669-1-git-send-email-patila@marvell.com>
+References: <1418817273-22669-1-git-send-email-patila@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These drivers use 9100-byte receive buffers, thus allocating an skb requires
-an O(3) memory allocation. Under heavy memory loads and fragmentation, such
-a request can fail. Previous versions of the driver have dropped the packet
-and reused the old buffer; however, the new version introduced a bug in that
-it released the old buffer before trying to allocate a new one. The previous
-method is implemented here. The skb is unmapped before any attempt is made to
-allocate another.
+From: Xinming Hu <huxm@marvell.com>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org>  [v3.18]
-Reported-by: Eric Biggers <ebiggers3@gmail.com>
-Cc: Eric Biggers <ebiggers3@gmail.com>
+This patch fixes memory corruption reported by community developer.
+
+"Memory corruption occurs in mwifiex_ret_802_11_key_material_v1()
+when a short command response is received without a key length
+causing non initialised memory to be interpreted as the key
+length resulting in a memcpy() overwriting the part of the
+driver's private data structure beyond the key area."
+
+For v1 key material API firmwares, there is no need to send
+command to delete WEP key. WEP encryption/decryption is controlled
+by mac_control command.
+
+This patch avoids sending key material command in del_key case.
+
+Reported-by: Martin Fuzzey <mfuzzey@parkeon.com>
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
 ---
+ drivers/net/wireless/mwifiex/sta_ioctl.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-V2 - Fixes an error in the logic of V1. Realtek is working on a change to
-     the RX buffer allocation, but that is likely to be too invasive for
-     a fix to -rc or stable. In the meantime, this will help.
-v3 - Unmap skb before trying to allocate a new one so as to not leak mapping.
+diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
+index 1626868..fb9c5fc 100644
+--- a/drivers/net/wireless/mwifiex/sta_ioctl.c
++++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
+@@ -902,9 +902,12 @@ static int mwifiex_sec_ioctl_set_wep_key(struct mwifiex_private *priv,
+ 	if (wep_key->key_length) {
+ 		void *enc_key;
+ 
+-		if (encrypt_key->key_disable)
++		if (encrypt_key->key_disable) {
+ 			memset(&priv->wep_key[index], 0,
+ 			       sizeof(struct mwifiex_wep_key));
++			if (wep_key->key_length)
++				goto done;
++			}
+ 
+ 		if (adapter->key_api_major_ver == KEY_API_VER_MAJOR_V2)
+ 			enc_key = encrypt_key;
+@@ -918,6 +921,7 @@ static int mwifiex_sec_ioctl_set_wep_key(struct mwifiex_private *priv,
+ 			return ret;
+ 	}
+ 
++done:
+ 	if (priv->sec_info.wep_enabled)
+ 		priv->curr_pkt_filter |= HostCmd_ACT_MAC_WEP_ENABLE;
+ 	else
+-- 
+1.8.1.4
 
-Larry
----
-
- drivers/net/wireless/rtlwifi/pci.c | 32 ++++++++++++++++++++++++--------
- 1 file changed, 24 insertions(+), 8 deletions(-)
-
-Index: wireless-drivers/drivers/net/wireless/rtlwifi/pci.c
-===================================================================
---- wireless-drivers.orig/drivers/net/wireless/rtlwifi/pci.c
-+++ wireless-drivers/drivers/net/wireless/rtlwifi/pci.c
-@@ -666,7 +666,8 @@ tx_status_ok:
- }
- 
- static int _rtl_pci_init_one_rxdesc(struct ieee80211_hw *hw,
--				    u8 *entry, int rxring_idx, int desc_idx)
-+				    struct sk_buff *new_skb, u8 *entry,
-+				    int rxring_idx, int desc_idx)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
-@@ -674,11 +675,15 @@ static int _rtl_pci_init_one_rxdesc(stru
- 	u8 tmp_one = 1;
- 	struct sk_buff *skb;
- 
-+	if (likely(new_skb)) {
-+		skb = new_skb;
-+		goto remap;
-+	}
- 	skb = dev_alloc_skb(rtlpci->rxbuffersize);
- 	if (!skb)
- 		return 0;
--	rtlpci->rx_ring[rxring_idx].rx_buf[desc_idx] = skb;
- 
-+remap:
- 	/* just set skb->cb to mapping addr for pci_unmap_single use */
- 	*((dma_addr_t *)skb->cb) =
- 		pci_map_single(rtlpci->pdev, skb_tail_pointer(skb),
-@@ -686,6 +691,7 @@ static int _rtl_pci_init_one_rxdesc(stru
- 	bufferaddress = *((dma_addr_t *)skb->cb);
- 	if (pci_dma_mapping_error(rtlpci->pdev, bufferaddress))
- 		return 0;
-+	rtlpci->rx_ring[rxring_idx].rx_buf[desc_idx] = skb;
- 	if (rtlpriv->use_new_trx_flow) {
- 		rtlpriv->cfg->ops->set_desc(hw, (u8 *)entry, false,
- 					    HW_DESC_RX_PREPARE,
-@@ -781,6 +787,7 @@ static void _rtl_pci_rx_interrupt(struct
- 		/*rx pkt */
- 		struct sk_buff *skb = rtlpci->rx_ring[rxring_idx].rx_buf[
- 				      rtlpci->rx_ring[rxring_idx].idx];
-+		struct sk_buff *new_skb;
- 
- 		if (rtlpriv->use_new_trx_flow) {
- 			rx_remained_cnt =
-@@ -807,6 +814,13 @@ static void _rtl_pci_rx_interrupt(struct
- 		pci_unmap_single(rtlpci->pdev, *((dma_addr_t *)skb->cb),
- 				 rtlpci->rxbuffersize, PCI_DMA_FROMDEVICE);
- 
-+		/* get a new skb - if fail, old one will be reused */
-+		new_skb = dev_alloc_skb(rtlpci->rxbuffersize);
-+		if (unlikely(!new_skb)) {
-+			pr_err("Allocation of new skb failed in %s\n",
-+			       __func__);
-+			goto no_new;
-+		}
- 		if (rtlpriv->use_new_trx_flow) {
- 			buffer_desc =
- 			  &rtlpci->rx_ring[rxring_idx].buffer_desc
-@@ -911,14 +925,16 @@ static void _rtl_pci_rx_interrupt(struct
- 			schedule_work(&rtlpriv->works.lps_change_work);
- 		}
- end:
-+		skb = new_skb;
-+no_new:
- 		if (rtlpriv->use_new_trx_flow) {
--			_rtl_pci_init_one_rxdesc(hw, (u8 *)buffer_desc,
-+			_rtl_pci_init_one_rxdesc(hw, skb, (u8 *)buffer_desc,
- 						 rxring_idx,
--					       rtlpci->rx_ring[rxring_idx].idx);
-+						 rtlpci->rx_ring[rxring_idx].idx);
- 		} else {
--			_rtl_pci_init_one_rxdesc(hw, (u8 *)pdesc, rxring_idx,
-+			_rtl_pci_init_one_rxdesc(hw, skb, (u8 *)pdesc,
-+						 rxring_idx,
- 						 rtlpci->rx_ring[rxring_idx].idx);
--
- 			if (rtlpci->rx_ring[rxring_idx].idx ==
- 			    rtlpci->rxringcount - 1)
- 				rtlpriv->cfg->ops->set_desc(hw, (u8 *)pdesc,
-@@ -1307,7 +1323,7 @@ static int _rtl_pci_init_rx_ring(struct
- 		rtlpci->rx_ring[rxring_idx].idx = 0;
- 		for (i = 0; i < rtlpci->rxringcount; i++) {
- 			entry = &rtlpci->rx_ring[rxring_idx].buffer_desc[i];
--			if (!_rtl_pci_init_one_rxdesc(hw, (u8 *)entry,
-+			if (!_rtl_pci_init_one_rxdesc(hw, NULL, (u8 *)entry,
- 						      rxring_idx, i))
- 				return -ENOMEM;
- 		}
-@@ -1332,7 +1348,7 @@ static int _rtl_pci_init_rx_ring(struct
- 
- 		for (i = 0; i < rtlpci->rxringcount; i++) {
- 			entry = &rtlpci->rx_ring[rxring_idx].desc[i];
--			if (!_rtl_pci_init_one_rxdesc(hw, (u8 *)entry,
-+			if (!_rtl_pci_init_one_rxdesc(hw, NULL, (u8 *)entry,
- 						      rxring_idx, i))
- 				return -ENOMEM;
- 		}
