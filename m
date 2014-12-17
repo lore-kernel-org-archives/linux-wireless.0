@@ -1,334 +1,172 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:46921 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753685AbaLAPvg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Dec 2014 10:51:36 -0500
-Received: by mail-wi0-f173.google.com with SMTP id r20so25028699wiv.12
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Dec 2014 07:51:35 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 1/4] iw: update nl80211.h
-Date: Mon,  1 Dec 2014 17:51:30 +0200
-Message-Id: <1417449093-9470-1-git-send-email-arik@wizery.com> (sfid-20141201_165140_879052_268110C7)
+Received: from s3.sipsolutions.net ([5.9.151.49]:36822 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751438AbaLQN6H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Dec 2014 08:58:07 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 4/9] cfg80211: allow including station info in delete event
+Date: Wed, 17 Dec 2014 14:57:54 +0100
+Message-Id: <1418824679-31530-5-git-send-email-johannes@sipsolutions.net> (sfid-20141217_145819_954760_B3C8F7CB)
+In-Reply-To: <1418824679-31530-1-git-send-email-johannes@sipsolutions.net>
+References: <1418824679-31530-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- nl80211.h | 143 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++----
- 1 file changed, 135 insertions(+), 8 deletions(-)
+From: Johannes Berg <johannes.berg@intel.com>
 
-diff --git a/nl80211.h b/nl80211.h
-index f7daae5..9884464 100644
---- a/nl80211.h
-+++ b/nl80211.h
-@@ -252,7 +252,9 @@
-  *	%NL80211_ATTR_IFINDEX.
-  *
-  * @NL80211_CMD_GET_REG: ask the wireless core to send us its currently set
-- * 	regulatory domain.
-+ *	regulatory domain. If %NL80211_ATTR_WIPHY is specified and the device
-+ *	has a private regulatory domain, it will be returned. Otherwise, the
-+ *	global regdomain will be returned.
-  * @NL80211_CMD_SET_REG: Set current regulatory domain. CRDA sends this command
-  *	after being queried by the kernel. CRDA replies by sending a regulatory
-  *	domain structure which consists of %NL80211_ATTR_REG_ALPHA set to our
-@@ -643,7 +645,18 @@
-  * @NL80211_CMD_CH_SWITCH_NOTIFY: An AP or GO may decide to switch channels
-  *	independently of the userspace SME, send this event indicating
-  *	%NL80211_ATTR_IFINDEX is now on %NL80211_ATTR_WIPHY_FREQ and the
-- *	attributes determining channel width.
-+ *	attributes determining channel width.  This indication may also be
-+ *	sent when a remotely-initiated switch (e.g., when a STA receives a CSA
-+ *	from the remote AP) is completed;
-+ *
-+ * @NL80211_CMD_CH_SWITCH_STARTED_NOTIFY: Notify that a channel switch
-+ *	has been started on an interface, regardless of the initiator
-+ *	(ie. whether it was requested from a remote device or
-+ *	initiated on our own).  It indicates that
-+ *	%NL80211_ATTR_IFINDEX will be on %NL80211_ATTR_WIPHY_FREQ
-+ *	after %NL80211_ATTR_CH_SWITCH_COUNT TBTT's.  The userspace may
-+ *	decide to react to this indication by requesting other
-+ *	interfaces to change channel as well.
-  *
-  * @NL80211_CMD_START_P2P_DEVICE: Start the given P2P Device, identified by
-  *	its %NL80211_ATTR_WDEV identifier. It must have been created with
-@@ -746,6 +759,27 @@
-  *	destination %NL80211_ATTR_MAC on the interface identified by
-  *	%NL80211_ATTR_IFINDEX.
-  *
-+ * @NL80211_CMD_JOIN_OCB: Join the OCB network. The center frequency and
-+ *	bandwidth of a channel must be given.
-+ * @NL80211_CMD_LEAVE_OCB: Leave the OCB network -- no special arguments, the
-+ *	network is determined by the network interface.
-+ *
-+ * @NL80211_CMD_TDLS_CHANNEL_SWITCH: Start channel-switching with a TDLS peer,
-+ *	identified by the %NL80211_ATTR_MAC parameter. A target channel is
-+ *	provided via %NL80211_ATTR_WIPHY_FREQ and other attributes determining
-+ *	channel width/type. The target operating class is given via
-+ *	%NL80211_ATTR_OPER_CLASS.
-+ *	The driver is responsible for continually initiating channel-switching
-+ *	operations and returning to the base channel for communication with the
-+ *	AP.
-+ * @NL80211_CMD_TDLS_CANCEL_CHANNEL_SWITCH: Stop channel-switching with a TDLS
-+ *	peer given by %NL80211_ATTR_MAC. Both peers must be on the base channel
-+ *	when this command completes.
-+ *
-+ * @NL80211_CMD_WIPHY_REG_CHANGE: Similar to %NL80211_CMD_REG_CHANGE, but used
-+ *	as an event to indicate changes for devices with wiphy-specific regdom
-+ *	management.
-+ *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-  */
-@@ -922,6 +956,16 @@ enum nl80211_commands {
- 
- 	NL80211_CMD_GET_MPP,
- 
-+	NL80211_CMD_JOIN_OCB,
-+	NL80211_CMD_LEAVE_OCB,
-+
-+	NL80211_CMD_CH_SWITCH_STARTED_NOTIFY,
-+
-+	NL80211_CMD_TDLS_CHANNEL_SWITCH,
-+	NL80211_CMD_TDLS_CANCEL_CHANNEL_SWITCH,
-+
-+	NL80211_CMD_WIPHY_REG_CHANGE,
-+
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-@@ -1616,9 +1660,9 @@ enum nl80211_commands {
-  * @NL80211_ATTR_TDLS_PEER_CAPABILITY: flags for TDLS peer capabilities, u32.
-  *	As specified in the &enum nl80211_tdls_peer_capability.
-  *
-- * @NL80211_ATTR_IFACE_SOCKET_OWNER: flag attribute, if set during interface
-+ * @NL80211_ATTR_SOCKET_OWNER: Flag attribute, if set during interface
-  *	creation then the new interface will be owned by the netlink socket
-- *	that created it and will be destroyed when the socket is closed
-+ *	that created it and will be destroyed when the socket is closed.
-  *
-  * @NL80211_ATTR_TDLS_INITIATOR: flag attribute indicating the current end is
-  *	the TDLS link initiator.
-@@ -1648,6 +1692,16 @@ enum nl80211_commands {
-  * @NL80211_ATTR_SMPS_MODE: SMPS mode to use (ap mode). see
-  *	&enum nl80211_smps_mode.
-  *
-+ * @NL80211_ATTR_OPER_CLASS: operating class
-+ *
-+ * @NL80211_ATTR_MAC_MASK: MAC address mask
-+ *
-+ * @NL80211_ATTR_WIPHY_SELF_MANAGED_REG: flag attribute indicating this device
-+ *	is self-managing its regulatory information and any regulatory domain
-+ *	obtained from it is coming from the device's wiphy and not the global
-+ *	cfg80211 regdomain.
-+ *
-+ * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -1983,7 +2037,7 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_TDLS_PEER_CAPABILITY,
- 
--	NL80211_ATTR_IFACE_SOCKET_OWNER,
-+	NL80211_ATTR_SOCKET_OWNER,
- 
- 	NL80211_ATTR_CSA_C_OFFSETS_TX,
- 	NL80211_ATTR_MAX_CSA_COUNTERS,
-@@ -2000,15 +2054,23 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_SMPS_MODE,
- 
-+	NL80211_ATTR_OPER_CLASS,
-+
-+	NL80211_ATTR_MAC_MASK,
-+
-+	NL80211_ATTR_WIPHY_SELF_MANAGED_REG,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-+	NUM_NL80211_ATTR = __NL80211_ATTR_AFTER_LAST,
- 	NL80211_ATTR_MAX = __NL80211_ATTR_AFTER_LAST - 1
- };
- 
- /* source-level API compatibility */
- #define NL80211_ATTR_SCAN_GENERATION NL80211_ATTR_GENERATION
- #define	NL80211_ATTR_MESH_PARAMS NL80211_ATTR_MESH_CONFIG
-+#define NL80211_ATTR_IFACE_SOCKET_OWNER NL80211_ATTR_SOCKET_OWNER
- 
- /*
-  * Allow user space programs to use #ifdef on new attributes by defining them
-@@ -2074,6 +2136,8 @@ enum nl80211_attrs {
-  *	and therefore can't be created in the normal ways, use the
-  *	%NL80211_CMD_START_P2P_DEVICE and %NL80211_CMD_STOP_P2P_DEVICE
-  *	commands to create and destroy one
-+ * @NL80211_IF_TYPE_OCB: Outside Context of a BSS
-+ *	This mode corresponds to the MIB variable dot11OCBActivated=true
-  * @NL80211_IFTYPE_MAX: highest interface type number currently defined
-  * @NUM_NL80211_IFTYPES: number of defined interface types
-  *
-@@ -2093,6 +2157,7 @@ enum nl80211_iftype {
- 	NL80211_IFTYPE_P2P_CLIENT,
- 	NL80211_IFTYPE_P2P_GO,
- 	NL80211_IFTYPE_P2P_DEVICE,
-+	NL80211_IFTYPE_OCB,
- 
- 	/* keep last */
- 	NUM_NL80211_IFTYPES,
-@@ -2641,6 +2706,11 @@ enum nl80211_sched_scan_match_attr {
-  * @NL80211_RRF_AUTO_BW: maximum available bandwidth should be calculated
-  *	base on contiguous rules and wider channels will be allowed to cross
-  *	multiple contiguous/overlapping frequency ranges.
-+ * @NL80211_RRF_GO_CONCURRENT: See &NL80211_FREQUENCY_ATTR_GO_CONCURRENT
-+ * @NL80211_RRF_NO_HT40MINUS: channels can't be used in HT40- operation
-+ * @NL80211_RRF_NO_HT40PLUS: channels can't be used in HT40+ operation
-+ * @NL80211_RRF_NO_80MHZ: 80MHz operation not allowed
-+ * @NL80211_RRF_NO_160MHZ: 160MHz operation not allowed
-  */
- enum nl80211_reg_rule_flags {
- 	NL80211_RRF_NO_OFDM		= 1<<0,
-@@ -2653,11 +2723,18 @@ enum nl80211_reg_rule_flags {
- 	NL80211_RRF_NO_IR		= 1<<7,
- 	__NL80211_RRF_NO_IBSS		= 1<<8,
- 	NL80211_RRF_AUTO_BW		= 1<<11,
-+	NL80211_RRF_GO_CONCURRENT	= 1<<12,
-+	NL80211_RRF_NO_HT40MINUS	= 1<<13,
-+	NL80211_RRF_NO_HT40PLUS		= 1<<14,
-+	NL80211_RRF_NO_80MHZ		= 1<<15,
-+	NL80211_RRF_NO_160MHZ		= 1<<16,
- };
- 
- #define NL80211_RRF_PASSIVE_SCAN	NL80211_RRF_NO_IR
- #define NL80211_RRF_NO_IBSS		NL80211_RRF_NO_IR
- #define NL80211_RRF_NO_IR		NL80211_RRF_NO_IR
-+#define NL80211_RRF_NO_HT40		(NL80211_RRF_NO_HT40MINUS |\
-+					 NL80211_RRF_NO_HT40PLUS)
- 
- /* For backport compatibility with older userspace */
- #define NL80211_RRF_NO_IR_ALL		(NL80211_RRF_NO_IR | __NL80211_RRF_NO_IBSS)
-@@ -3389,6 +3466,8 @@ enum nl80211_ps_state {
-  *	interval in which %NL80211_ATTR_CQM_TXE_PKTS and
-  *	%NL80211_ATTR_CQM_TXE_RATE must be satisfied before generating an
-  *	%NL80211_CMD_NOTIFY_CQM. Set to 0 to turn off TX error reporting.
-+ * @NL80211_ATTR_CQM_BEACON_LOSS_EVENT: flag attribute that's set in a beacon
-+ *	loss event
-  * @__NL80211_ATTR_CQM_AFTER_LAST: internal
-  * @NL80211_ATTR_CQM_MAX: highest key attribute
-  */
-@@ -3401,6 +3480,7 @@ enum nl80211_attr_cqm {
- 	NL80211_ATTR_CQM_TXE_RATE,
- 	NL80211_ATTR_CQM_TXE_PKTS,
- 	NL80211_ATTR_CQM_TXE_INTVL,
-+	NL80211_ATTR_CQM_BEACON_LOSS_EVENT,
- 
- 	/* keep last */
- 	__NL80211_ATTR_CQM_AFTER_LAST,
-@@ -3413,9 +3493,7 @@ enum nl80211_attr_cqm {
-  *      configured threshold
-  * @NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH: The RSSI is higher than the
-  *      configured threshold
-- * @NL80211_CQM_RSSI_BEACON_LOSS_EVENT: The device experienced beacon loss.
-- *	(Note that deauth/disassoc will still follow if the AP is not
-- *	available. This event might get used as roaming event, etc.)
-+ * @NL80211_CQM_RSSI_BEACON_LOSS_EVENT: (reserved, never sent)
-  */
- enum nl80211_cqm_rssi_threshold_event {
- 	NL80211_CQM_RSSI_THRESHOLD_EVENT_LOW,
-@@ -3555,6 +3633,25 @@ struct nl80211_pattern_support {
-  * @NL80211_WOWLAN_TRIG_WAKEUP_TCP_NOMORETOKENS: For wakeup reporting only,
-  *	the TCP connection ran out of tokens to use for data to send to the
-  *	service
-+ * @NL80211_WOWLAN_TRIG_NET_DETECT: wake up when a configured network
-+ *	is detected.  This is a nested attribute that contains the
-+ *	same attributes used with @NL80211_CMD_START_SCHED_SCAN.  It
-+ *	specifies how the scan is performed (e.g. the interval and the
-+ *	channels to scan) as well as the scan results that will
-+ *	trigger a wake (i.e. the matchsets).
-+ * @NL80211_WOWLAN_TRIG_NET_DETECT_RESULTS: nested attribute
-+ *	containing an array with information about what triggered the
-+ *	wake up.  If no elements are present in the array, it means
-+ *	that the information is not available.  If more than one
-+ *	element is present, it means that more than one match
-+ *	occurred.
-+ *	Each element in the array is a nested attribute that contains
-+ *	one optional %NL80211_ATTR_SSID attribute and one optional
-+ *	%NL80211_ATTR_SCAN_FREQUENCIES attribute.  At least one of
-+ *	these attributes must be present.  If
-+ *	%NL80211_ATTR_SCAN_FREQUENCIES contains more than one
-+ *	frequency, it means that the match occurred in more than one
-+ *	channel.
-  * @NUM_NL80211_WOWLAN_TRIG: number of wake on wireless triggers
-  * @MAX_NL80211_WOWLAN_TRIG: highest wowlan trigger attribute number
-  *
-@@ -3580,6 +3677,8 @@ enum nl80211_wowlan_triggers {
- 	NL80211_WOWLAN_TRIG_WAKEUP_TCP_MATCH,
- 	NL80211_WOWLAN_TRIG_WAKEUP_TCP_CONNLOST,
- 	NL80211_WOWLAN_TRIG_WAKEUP_TCP_NOMORETOKENS,
-+	NL80211_WOWLAN_TRIG_NET_DETECT,
-+	NL80211_WOWLAN_TRIG_NET_DETECT_RESULTS,
- 
- 	/* keep last */
- 	NUM_NL80211_WOWLAN_TRIG,
-@@ -4059,6 +4158,20 @@ enum nl80211_ap_sme_features {
-  * @NL80211_FEATURE_MAC_ON_CREATE: Device supports configuring
-  *	the vif's MAC address upon creation.
-  *	See 'macaddr' field in the vif_params (cfg80211.h).
-+ * @NL80211_FEATURE_TDLS_CHANNEL_SWITCH: Driver supports channel switching when
-+ *	operating as a TDLS peer.
-+ * @NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR: This device/driver supports using a
-+ *	random MAC address during scan (if the device is unassociated); the
-+ *	%NL80211_SCAN_FLAG_RANDOM_ADDR flag may be set for scans and the MAC
-+ *	address mask/value will be used.
-+ * @NL80211_FEATURE_SCHED_SCAN_RANDOM_MAC_ADDR: This device/driver supports
-+ *	using a random MAC address for every scan iteration during scheduled
-+ *	scan (while not associated), the %NL80211_SCAN_FLAG_RANDOM_ADDR may
-+ *	be set for scheduled scan and the MAC address mask/value will be used.
-+ * @NL80211_FEATURE_ND_RANDOM_MAC_ADDR: This device/driver supports using a
-+ *	random MAC address for every scan iteration during "net detect", i.e.
-+ *	scan in unassociated WoWLAN, the %NL80211_SCAN_FLAG_RANDOM_ADDR may
-+ *	be set for scheduled scan and the MAC address mask/value will be used.
-  */
- enum nl80211_feature_flags {
- 	NL80211_FEATURE_SK_TX_STATUS			= 1 << 0,
-@@ -4089,6 +4202,10 @@ enum nl80211_feature_flags {
- 	NL80211_FEATURE_DYNAMIC_SMPS			= 1 << 25,
- 	NL80211_FEATURE_SUPPORTS_WMM_ADMISSION		= 1 << 26,
- 	NL80211_FEATURE_MAC_ON_CREATE			= 1 << 27,
-+	NL80211_FEATURE_TDLS_CHANNEL_SWITCH		= 1 << 28,
-+	NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR		= 1 << 29,
-+	NL80211_FEATURE_SCHED_SCAN_RANDOM_MAC_ADDR	= 1 << 30,
-+	NL80211_FEATURE_ND_RANDOM_MAC_ADDR		= 1 << 31,
- };
+When a station is removed, its statistics may be interesting to
+userspace, for example for further aggregation of statistics of
+all stations that ever connected to an AP.
+
+Introduce a new cfg80211_del_sta_sinfo() function (and make the
+cfg80211_del_sta() a static inline calling it) to allow passing
+a struct station_info along with this, and send the data in the
+nl80211 event message.
+
+Change-Id: I6d283c40c28d75f16c3f9bb80ef0996e26260f96
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/cfg80211.h | 16 +++++++++++++++-
+ net/wireless/nl80211.c | 38 ++++++++++++++++----------------------
+ 2 files changed, 31 insertions(+), 23 deletions(-)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 3fe4a20d1b60..8909a3fb6b35 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -4583,13 +4583,27 @@ void cfg80211_new_sta(struct net_device *dev, const u8 *mac_addr,
+ 		      struct station_info *sinfo, gfp_t gfp);
  
  /**
-@@ -4137,11 +4254,21 @@ enum nl80211_connect_failed_reason {
-  *	dangerous because will destroy stations performance as a lot of frames
-  *	will be lost while scanning off-channel, therefore it must be used only
-  *	when really needed
-+ * @NL80211_SCAN_FLAG_RANDOM_ADDR: use a random MAC address for this scan (or
-+ *	for scheduled scan: a different one for every scan iteration). When the
-+ *	flag is set, depending on device capabilities the @NL80211_ATTR_MAC and
-+ *	@NL80211_ATTR_MAC_MASK attributes may also be given in which case only
-+ *	the masked bits will be preserved from the MAC address and the remainder
-+ *	randomised. If the attributes are not given full randomisation (46 bits,
-+ *	locally administered 1, multicast 0) is assumed.
-+ *	This flag must not be requested when the feature isn't supported, check
-+ *	the nl80211 feature flags for the device.
++ * cfg80211_del_sta_sinfo - notify userspace about deletion of a station
++ * @dev: the netdev
++ * @mac_addr: the station's address
++ * @sinfo: the station information/statistics
++ * @gfp: allocation flags
++ */
++void cfg80211_del_sta_sinfo(struct net_device *dev, const u8 *mac_addr,
++			    struct station_info *sinfo, gfp_t gfp);
++
++/**
+  * cfg80211_del_sta - notify userspace about deletion of a station
+  *
+  * @dev: the netdev
+  * @mac_addr: the station's address
+  * @gfp: allocation flags
   */
- enum nl80211_scan_flags {
- 	NL80211_SCAN_FLAG_LOW_PRIORITY			= 1<<0,
- 	NL80211_SCAN_FLAG_FLUSH				= 1<<1,
- 	NL80211_SCAN_FLAG_AP				= 1<<2,
-+	NL80211_SCAN_FLAG_RANDOM_ADDR			= 1<<3,
- };
+-void cfg80211_del_sta(struct net_device *dev, const u8 *mac_addr, gfp_t gfp);
++static inline void cfg80211_del_sta(struct net_device *dev,
++				    const u8 *mac_addr, gfp_t gfp)
++{
++	cfg80211_del_sta_sinfo(dev, mac_addr, NULL, gfp);
++}
  
  /**
+  * cfg80211_conn_failed - connection request failed notification
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 0e2b997b44a7..c34a66e9e5a5 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3645,8 +3645,8 @@ static bool nl80211_put_signal(struct sk_buff *msg, u8 mask, s8 *signal,
+ 	return true;
+ }
+ 
+-static int nl80211_send_station(struct sk_buff *msg, u32 portid, u32 seq,
+-				int flags,
++static int nl80211_send_station(struct sk_buff *msg, u32 cmd, u32 portid,
++				u32 seq, int flags,
+ 				struct cfg80211_registered_device *rdev,
+ 				struct net_device *dev,
+ 				const u8 *mac_addr, struct station_info *sinfo)
+@@ -3654,7 +3654,7 @@ static int nl80211_send_station(struct sk_buff *msg, u32 portid, u32 seq,
+ 	void *hdr;
+ 	struct nlattr *sinfoattr, *bss_param;
+ 
+-	hdr = nl80211hdr_put(msg, portid, seq, flags, NL80211_CMD_NEW_STATION);
++	hdr = nl80211hdr_put(msg, portid, seq, flags, cmd);
+ 	if (!hdr)
+ 		return -1;
+ 
+@@ -3849,7 +3849,7 @@ static int nl80211_dump_station(struct sk_buff *skb,
+ 		if (err)
+ 			goto out_err;
+ 
+-		if (nl80211_send_station(skb,
++		if (nl80211_send_station(skb, NL80211_CMD_NEW_STATION,
+ 				NETLINK_CB(cb->skb).portid,
+ 				cb->nlh->nlmsg_seq, NLM_F_MULTI,
+ 				rdev, wdev->netdev, mac_addr,
+@@ -3896,7 +3896,8 @@ static int nl80211_get_station(struct sk_buff *skb, struct genl_info *info)
+ 	if (!msg)
+ 		return -ENOMEM;
+ 
+-	if (nl80211_send_station(msg, info->snd_portid, info->snd_seq, 0,
++	if (nl80211_send_station(msg, NL80211_CMD_NEW_STATION,
++				 info->snd_portid, info->snd_seq, 0,
+ 				 rdev, dev, mac_addr, &sinfo) < 0) {
+ 		nlmsg_free(msg);
+ 		return -ENOBUFS;
+@@ -11676,7 +11677,7 @@ void cfg80211_new_sta(struct net_device *dev, const u8 *mac_addr,
+ 	if (!msg)
+ 		return;
+ 
+-	if (nl80211_send_station(msg, 0, 0, 0,
++	if (nl80211_send_station(msg, NL80211_CMD_NEW_STATION, 0, 0, 0,
+ 				 rdev, dev, mac_addr, sinfo) < 0) {
+ 		nlmsg_free(msg);
+ 		return;
+@@ -11687,12 +11688,16 @@ void cfg80211_new_sta(struct net_device *dev, const u8 *mac_addr,
+ }
+ EXPORT_SYMBOL(cfg80211_new_sta);
+ 
+-void cfg80211_del_sta(struct net_device *dev, const u8 *mac_addr, gfp_t gfp)
++void cfg80211_del_sta_sinfo(struct net_device *dev, const u8 *mac_addr,
++			    struct station_info *sinfo, gfp_t gfp)
+ {
+ 	struct wiphy *wiphy = dev->ieee80211_ptr->wiphy;
+ 	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
+ 	struct sk_buff *msg;
+-	void *hdr;
++	struct station_info empty_sinfo = {};
++
++	if (!sinfo)
++		sinfo = &empty_sinfo;
+ 
+ 	trace_cfg80211_del_sta(dev, mac_addr);
+ 
+@@ -11700,27 +11705,16 @@ void cfg80211_del_sta(struct net_device *dev, const u8 *mac_addr, gfp_t gfp)
+ 	if (!msg)
+ 		return;
+ 
+-	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_DEL_STATION);
+-	if (!hdr) {
++	if (nl80211_send_station(msg, NL80211_CMD_DEL_STATION, 0, 0, 0,
++				 rdev, dev, mac_addr, sinfo)) {
+ 		nlmsg_free(msg);
+ 		return;
+ 	}
+ 
+-	if (nla_put_u32(msg, NL80211_ATTR_IFINDEX, dev->ifindex) ||
+-	    nla_put(msg, NL80211_ATTR_MAC, ETH_ALEN, mac_addr))
+-		goto nla_put_failure;
+-
+-	genlmsg_end(msg, hdr);
+-
+ 	genlmsg_multicast_netns(&nl80211_fam, wiphy_net(&rdev->wiphy), msg, 0,
+ 				NL80211_MCGRP_MLME, gfp);
+-	return;
+-
+- nla_put_failure:
+-	genlmsg_cancel(msg, hdr);
+-	nlmsg_free(msg);
+ }
+-EXPORT_SYMBOL(cfg80211_del_sta);
++EXPORT_SYMBOL(cfg80211_del_sta_sinfo);
+ 
+ void cfg80211_conn_failed(struct net_device *dev, const u8 *mac_addr,
+ 			  enum nl80211_connect_failed_reason reason,
 -- 
-1.9.1
+2.1.1
 
