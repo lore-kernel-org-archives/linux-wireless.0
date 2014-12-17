@@ -1,48 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f177.google.com ([209.85.214.177]:45437 "EHLO
-	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932527AbaLJUim (ORCPT
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:65367 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751247AbaLQUeO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Dec 2014 15:38:42 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
-Subject: [PATCH for 3.19] rtlwifi: rtl8192ce: Set fw_ready flag
-Date: Wed, 10 Dec 2014 14:38:29 -0600
-Message-Id: <1418243909-23428-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20141210_213849_797967_DBDE8259)
+	Wed, 17 Dec 2014 15:34:14 -0500
+Received: by mail-wi0-f169.google.com with SMTP id r20so18257679wiv.4
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Dec 2014 12:34:13 -0800 (PST)
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] staging: rtl8723au: os_dep: usb_intf.c:  Remove some unused functions
+Date: Wed, 17 Dec 2014 21:36:54 +0100
+Message-Id: <1418848615-1745-1-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20141217_213430_215975_89870522)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The setting of this flag was missed in previous modifications.
+Removes some functions that are not used anywhere:
+rtw_hw_resume23a() rtw_hw_suspend23a()
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org>
+This was partially found by using a static code analysis program called cppcheck.
+
+Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
 ---
- drivers/net/wireless/rtlwifi/rtl8192ce/hw.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/staging/rtl8723au/include/osdep_intf.h |    3 -
+ drivers/staging/rtl8723au/os_dep/usb_intf.c    |  100 ------------------------
+ 2 files changed, 103 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-index eecb79f..1b73158 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-@@ -959,6 +959,7 @@ int rtl92ce_hw_init(struct ieee80211_hw *hw)
- 	local_save_flags(flags);
- 	local_irq_enable();
+diff --git a/drivers/staging/rtl8723au/include/osdep_intf.h b/drivers/staging/rtl8723au/include/osdep_intf.h
+index 33afa62..a157eb2 100644
+--- a/drivers/staging/rtl8723au/include/osdep_intf.h
++++ b/drivers/staging/rtl8723au/include/osdep_intf.h
+@@ -19,9 +19,6 @@
+ #include <osdep_service.h>
+ #include <drv_types.h>
  
-+	rtlhal->fw_ready = false;
- 	rtlpriv->intf_ops->disable_aspm(hw);
- 	rtstatus = _rtl92ce_init_mac(hw);
- 	if (!rtstatus) {
-@@ -975,6 +976,7 @@ int rtl92ce_hw_init(struct ieee80211_hw *hw)
- 		goto exit;
- 	}
+-int rtw_hw_suspend23a(struct rtw_adapter *padapter);
+-int rtw_hw_resume23a(struct rtw_adapter *padapter);
+-
+ int rtw_init_drv_sw23a(struct rtw_adapter *padapter);
+ int rtw_free_drv_sw23a(struct rtw_adapter *padapter);
+ int rtw_reset_drv_sw23a(struct rtw_adapter *padapter);
+diff --git a/drivers/staging/rtl8723au/os_dep/usb_intf.c b/drivers/staging/rtl8723au/os_dep/usb_intf.c
+index 865743e..42eb90b 100644
+--- a/drivers/staging/rtl8723au/os_dep/usb_intf.c
++++ b/drivers/staging/rtl8723au/os_dep/usb_intf.c
+@@ -287,106 +287,6 @@ static void rtw_dev_unload(struct rtw_adapter *padapter)
+ 	RT_TRACE(_module_hci_intfs_c_, _drv_err_, ("-rtw_dev_unload\n"));
+ }
  
-+	rtlhal->fw_ready = true;
- 	rtlhal->last_hmeboxnum = 0;
- 	rtl92c_phy_mac_config(hw);
- 	/* because last function modify RCR, so we update
+-int rtw_hw_suspend23a(struct rtw_adapter *padapter)
+-{
+-	struct pwrctrl_priv *pwrpriv = &padapter->pwrctrlpriv;
+-	struct net_device *pnetdev = padapter->pnetdev;
+-	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
+-
+-	if ((!padapter->bup) || (padapter->bDriverStopped) ||
+-	    (padapter->bSurpriseRemoved)) {
+-		DBG_8723A("padapter->bup =%d bDriverStopped =%d bSurpriseRemoved = %d\n",
+-			  padapter->bup, padapter->bDriverStopped,
+-			  padapter->bSurpriseRemoved);
+-		goto error_exit;
+-	}
+-
+-	if (padapter) { /* system suspend */
+-		LeaveAllPowerSaveMode23a(padapter);
+-
+-		DBG_8723A("==> rtw_hw_suspend23a\n");
+-		down(&pwrpriv->lock);
+-		pwrpriv->bips_processing = true;
+-		/* padapter->net_closed = true; */
+-		/* s1. */
+-		if (pnetdev) {
+-			netif_carrier_off(pnetdev);
+-			netif_tx_stop_all_queues(pnetdev);
+-		}
+-
+-		/* s2. */
+-		rtw_disassoc_cmd23a(padapter, 500, false);
+-
+-		/* s2-2.  indicate disconnect to os */
+-		/* rtw_indicate_disconnect23a(padapter); */
+-		if (check_fwstate(pmlmepriv, _FW_LINKED)) {
+-			_clr_fwstate_(pmlmepriv, _FW_LINKED);
+-
+-			rtw_led_control(padapter, LED_CTL_NO_LINK);
+-
+-			rtw_os_indicate_disconnect23a(padapter);
+-
+-			/* donnot enqueue cmd */
+-			rtw_lps_ctrl_wk_cmd23a(padapter,
+-					       LPS_CTRL_DISCONNECT, 0);
+-		}
+-		/* s2-3. */
+-		rtw_free_assoc_resources23a(padapter, 1);
+-
+-		/* s2-4. */
+-		rtw_free_network_queue23a(padapter);
+-		rtw_ips_dev_unload23a(padapter);
+-		pwrpriv->rf_pwrstate = rf_off;
+-		pwrpriv->bips_processing = false;
+-		up(&pwrpriv->lock);
+-	} else {
+-		goto error_exit;
+-	}
+-	return 0;
+-error_exit:
+-	DBG_8723A("%s, failed\n", __func__);
+-	return -1;
+-}
+-
+-int rtw_hw_resume23a(struct rtw_adapter *padapter)
+-{
+-	struct pwrctrl_priv *pwrpriv = &padapter->pwrctrlpriv;
+-	struct net_device *pnetdev = padapter->pnetdev;
+-
+-	if (padapter) { /* system resume */
+-		DBG_8723A("==> rtw_hw_resume23a\n");
+-		down(&pwrpriv->lock);
+-		pwrpriv->bips_processing = true;
+-		rtw_reset_drv_sw23a(padapter);
+-
+-		if (pm_netdev_open23a(pnetdev, false)) {
+-			up(&pwrpriv->lock);
+-			goto error_exit;
+-		}
+-
+-		netif_device_attach(pnetdev);
+-		netif_carrier_on(pnetdev);
+-
+-		if (!rtw_netif_queue_stopped(pnetdev))
+-			netif_tx_start_all_queues(pnetdev);
+-		else
+-			netif_tx_wake_all_queues(pnetdev);
+-
+-		pwrpriv->bkeepfwalive = false;
+-
+-		pwrpriv->rf_pwrstate = rf_on;
+-		pwrpriv->bips_processing = false;
+-
+-		up(&pwrpriv->lock);
+-	} else {
+-		goto error_exit;
+-	}
+-	return 0;
+-error_exit:
+-	DBG_8723A("%s, Open net dev failed\n", __func__);
+-	return -1;
+-}
+-
+ static int rtw_suspend(struct usb_interface *pusb_intf, pm_message_t message)
+ {
+ 	struct dvobj_priv *dvobj = usb_get_intfdata(pusb_intf);
 -- 
-2.1.2
+1.7.10.4
 
