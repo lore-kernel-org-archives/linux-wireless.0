@@ -1,108 +1,162 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f48.google.com ([74.125.82.48]:40320 "EHLO
-	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966245AbaLLLfR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Dec 2014 06:35:17 -0500
-Received: by mail-wg0-f48.google.com with SMTP id y19so8860424wgg.35
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Dec 2014 03:35:16 -0800 (PST)
-Message-ID: <548AD2F1.3080200@konagma.com> (sfid-20141212_123521_918435_E1E26083)
-Date: Fri, 12 Dec 2014 12:35:13 +0100
-From: Krzysztof Konopko <kris@konagma.com>
-MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+Received: from mx1.redhat.com ([209.132.183.28]:38403 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750999AbaLQVAG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Dec 2014 16:00:06 -0500
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
 	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] staging: rtl8723au: Fix sparse warnings
-References: <1418336609-10191-1-git-send-email-kris@konagma.com> <548A2E7A.4010303@lwfinger.net>
-In-Reply-To: <548A2E7A.4010303@lwfinger.net>
-Content-Type: text/plain; charset=windows-1252
+Subject: Re: [PATCH] staging: rtl8723au: os_dep: usb_intf.c:  Remove some unused functions
+References: <1418848615-1745-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+Date: Wed, 17 Dec 2014 15:59:58 -0500
+In-Reply-To: <1418848615-1745-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+	(Rickard Strandqvist's message of "Wed, 17 Dec 2014 21:36:54 +0100")
+Message-ID: <wrfjmw6mt2k1.fsf@redhat.com> (sfid-20141217_220035_427388_B3B54238)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/12/14 00:53, Larry Finger wrote:
-> On 12/11/2014 04:23 PM, Krzysztof Konopko wrote:
->> Some struct fields in wifi.h are meant to be __le16 bu were declared as
->> unsigned short.  This was reported by sparse:
->>
->>    rtw_wlan_util.c:538:24: warning: cast to restricted __le16
->>    rtw_wlan_util.c:1544:29: warning: cast to restricted __le16
->>    rtw_wlan_util.c:1546:25: warning: cast to restricted __le16
->>
->> This patch changes declared types of the struct fields involved.
->>
->> Signed-off-by: Krzysztof Konopko <kris@konagma.com>
->> ---
->>   drivers/staging/rtl8723au/include/wifi.h | 6 +++---
->>   1 file changed, 3 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/staging/rtl8723au/include/wifi.h
->> b/drivers/staging/rtl8723au/include/wifi.h
->> index fd3da3b..8a2adc5 100644
->> --- a/drivers/staging/rtl8723au/include/wifi.h
->> +++ b/drivers/staging/rtl8723au/include/wifi.h
->> @@ -28,7 +28,7 @@
->>   struct AC_param {
->>       unsigned char        ACI_AIFSN;
->>       unsigned char        CW;
->> -    unsigned short    TXOP_limit;
->> +    __le16            TXOP_limit;
->>   }  __packed;
->>
->>   struct WMM_para_element {
->> @@ -39,9 +39,9 @@ struct WMM_para_element {
->>
->>   struct ADDBA_request {
->>       unsigned char        dialog_token;
->> -    unsigned short    BA_para_set;
->> +    __le16        BA_para_set;
->>       unsigned short    BA_timeout_value;
->> -    unsigned short    BA_starting_seqctrl;
->> +    __le16        BA_starting_seqctrl;
->>   }  __packed;
-> 
-> This fix may make the sparse warnings go away, but I think it introduces
-> new bugs.
+Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se> writes:
+> Removes some functions that are not used anywhere:
+> rtw_hw_resume23a() rtw_hw_suspend23a()
+>
+> This was partially found by using a static code analysis program called cppcheck.
+>
+> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+> ---
+>  drivers/staging/rtl8723au/include/osdep_intf.h |    3 -
+>  drivers/staging/rtl8723au/os_dep/usb_intf.c    |  100 ------------------------
+>  2 files changed, 103 deletions(-)
 
-Right, I see.  Nice try though, isn't it? ;)
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-> In particular, did you test on big-endian hardware after you
-> made this change?
-
-Nope.  I don't have any big-endian hardware.  I don't even have the
-wireless card TBH.  But I'm happy to try to get one.  Is Rtl8723AE the
-right model?
-
-> I recently found that the driver for RTL8188EU needed
-> to have BA_para_set to unsigned short, and the endianess warnings needed
-> to be fixed in the code. Then it would work on my PowerBook G4 with a
-> PPC processor.
-> 
-
-OK.  Does it still work with little endian?
-
-> In RTL8188EU, both BA_starting_seqctrl and TXOP_limit are unsigned short.
-> 
-
-That's not quite the case.  `TXOP_limit` is __le16 in RTL8188EU [1].
-It's __le16 even in your GitHub repo [2].  And that made me thinking
-that there's probably some inconsistency in the header.
-
-I'm _far_ from being a wireless expert but doesn't data coming out of
-the wire/air have the endianess defined explicitly?  And both `AC_param`
-and `ADDBA_request` come out of air?
-
-I was hunting particularly for inconsistencies with `sparse` and came
-across this one.  But I dug a bit further and I wonder why the driver is
-not using standard stuff like the one in `include/linux/ieee80211.h`
-where any data wider than one byte is clearly declared as __le<nn>?
-
-Cheers,
-Kris
-
---
-
-[1] drivers/staging/rtl8188eu/include/wifi.h as of next-20141211
-[2] https://github.com/lwfinger/rtl8188eu/blob/master/include/wifi.h
+>
+> diff --git a/drivers/staging/rtl8723au/include/osdep_intf.h b/drivers/staging/rtl8723au/include/osdep_intf.h
+> index 33afa62..a157eb2 100644
+> --- a/drivers/staging/rtl8723au/include/osdep_intf.h
+> +++ b/drivers/staging/rtl8723au/include/osdep_intf.h
+> @@ -19,9 +19,6 @@
+>  #include <osdep_service.h>
+>  #include <drv_types.h>
+>  
+> -int rtw_hw_suspend23a(struct rtw_adapter *padapter);
+> -int rtw_hw_resume23a(struct rtw_adapter *padapter);
+> -
+>  int rtw_init_drv_sw23a(struct rtw_adapter *padapter);
+>  int rtw_free_drv_sw23a(struct rtw_adapter *padapter);
+>  int rtw_reset_drv_sw23a(struct rtw_adapter *padapter);
+> diff --git a/drivers/staging/rtl8723au/os_dep/usb_intf.c b/drivers/staging/rtl8723au/os_dep/usb_intf.c
+> index 865743e..42eb90b 100644
+> --- a/drivers/staging/rtl8723au/os_dep/usb_intf.c
+> +++ b/drivers/staging/rtl8723au/os_dep/usb_intf.c
+> @@ -287,106 +287,6 @@ static void rtw_dev_unload(struct rtw_adapter *padapter)
+>  	RT_TRACE(_module_hci_intfs_c_, _drv_err_, ("-rtw_dev_unload\n"));
+>  }
+>  
+> -int rtw_hw_suspend23a(struct rtw_adapter *padapter)
+> -{
+> -	struct pwrctrl_priv *pwrpriv = &padapter->pwrctrlpriv;
+> -	struct net_device *pnetdev = padapter->pnetdev;
+> -	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
+> -
+> -	if ((!padapter->bup) || (padapter->bDriverStopped) ||
+> -	    (padapter->bSurpriseRemoved)) {
+> -		DBG_8723A("padapter->bup =%d bDriverStopped =%d bSurpriseRemoved = %d\n",
+> -			  padapter->bup, padapter->bDriverStopped,
+> -			  padapter->bSurpriseRemoved);
+> -		goto error_exit;
+> -	}
+> -
+> -	if (padapter) { /* system suspend */
+> -		LeaveAllPowerSaveMode23a(padapter);
+> -
+> -		DBG_8723A("==> rtw_hw_suspend23a\n");
+> -		down(&pwrpriv->lock);
+> -		pwrpriv->bips_processing = true;
+> -		/* padapter->net_closed = true; */
+> -		/* s1. */
+> -		if (pnetdev) {
+> -			netif_carrier_off(pnetdev);
+> -			netif_tx_stop_all_queues(pnetdev);
+> -		}
+> -
+> -		/* s2. */
+> -		rtw_disassoc_cmd23a(padapter, 500, false);
+> -
+> -		/* s2-2.  indicate disconnect to os */
+> -		/* rtw_indicate_disconnect23a(padapter); */
+> -		if (check_fwstate(pmlmepriv, _FW_LINKED)) {
+> -			_clr_fwstate_(pmlmepriv, _FW_LINKED);
+> -
+> -			rtw_led_control(padapter, LED_CTL_NO_LINK);
+> -
+> -			rtw_os_indicate_disconnect23a(padapter);
+> -
+> -			/* donnot enqueue cmd */
+> -			rtw_lps_ctrl_wk_cmd23a(padapter,
+> -					       LPS_CTRL_DISCONNECT, 0);
+> -		}
+> -		/* s2-3. */
+> -		rtw_free_assoc_resources23a(padapter, 1);
+> -
+> -		/* s2-4. */
+> -		rtw_free_network_queue23a(padapter);
+> -		rtw_ips_dev_unload23a(padapter);
+> -		pwrpriv->rf_pwrstate = rf_off;
+> -		pwrpriv->bips_processing = false;
+> -		up(&pwrpriv->lock);
+> -	} else {
+> -		goto error_exit;
+> -	}
+> -	return 0;
+> -error_exit:
+> -	DBG_8723A("%s, failed\n", __func__);
+> -	return -1;
+> -}
+> -
+> -int rtw_hw_resume23a(struct rtw_adapter *padapter)
+> -{
+> -	struct pwrctrl_priv *pwrpriv = &padapter->pwrctrlpriv;
+> -	struct net_device *pnetdev = padapter->pnetdev;
+> -
+> -	if (padapter) { /* system resume */
+> -		DBG_8723A("==> rtw_hw_resume23a\n");
+> -		down(&pwrpriv->lock);
+> -		pwrpriv->bips_processing = true;
+> -		rtw_reset_drv_sw23a(padapter);
+> -
+> -		if (pm_netdev_open23a(pnetdev, false)) {
+> -			up(&pwrpriv->lock);
+> -			goto error_exit;
+> -		}
+> -
+> -		netif_device_attach(pnetdev);
+> -		netif_carrier_on(pnetdev);
+> -
+> -		if (!rtw_netif_queue_stopped(pnetdev))
+> -			netif_tx_start_all_queues(pnetdev);
+> -		else
+> -			netif_tx_wake_all_queues(pnetdev);
+> -
+> -		pwrpriv->bkeepfwalive = false;
+> -
+> -		pwrpriv->rf_pwrstate = rf_on;
+> -		pwrpriv->bips_processing = false;
+> -
+> -		up(&pwrpriv->lock);
+> -	} else {
+> -		goto error_exit;
+> -	}
+> -	return 0;
+> -error_exit:
+> -	DBG_8723A("%s, Open net dev failed\n", __func__);
+> -	return -1;
+> -}
+> -
+>  static int rtw_suspend(struct usb_interface *pusb_intf, pm_message_t message)
+>  {
+>  	struct dvobj_priv *dvobj = usb_get_intfdata(pusb_intf);
