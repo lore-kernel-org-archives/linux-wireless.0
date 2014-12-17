@@ -1,72 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:19530 "EHLO
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:19528 "EHLO
 	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751531AbaLaKiG (ORCPT
+	by vger.kernel.org with ESMTP id S1751068AbaLQJXm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Dec 2014 05:38:06 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
+	Wed, 17 Dec 2014 04:23:42 -0500
+From: Avinash Patil <patila@marvell.com>
 To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Maithili Hinge <maithili@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Cathy Luo <cluo@marvell.com>, Marc Yang <yangyang@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 1/9] mwifiex: remove redundant flag MWIFIEX_HW_STATUS_FW_READY
-Date: Wed, 31 Dec 2014 02:36:38 -0800
-Message-ID: <1420022206-11435-2-git-send-email-akarwar@marvell.com> (sfid-20141231_113810_818263_74A431A3)
-In-Reply-To: <1420022206-11435-1-git-send-email-akarwar@marvell.com>
-References: <1420022206-11435-1-git-send-email-akarwar@marvell.com>
+CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
+	<cluo@marvell.com>, <yangyang@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH 4/4] mwifiex: get supported BA stream info from FW
+Date: Wed, 17 Dec 2014 17:20:43 +0530
+Message-ID: <1418817043-22511-4-git-send-email-patila@marvell.com> (sfid-20141217_102348_731460_1683BBE0)
+In-Reply-To: <1418817043-22511-1-git-send-email-patila@marvell.com>
+References: <1418817043-22511-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This flag is never set but checked at two places. We will get rid of
-this code.
+This patch adds support to get number of BA streams
+supported information from FW. Some newer chips(e.g. 8897 series)
+support 4 BA streams for TX; so driver should not disallow BA stream
+setup just after 2 streams have been established.
 
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
 ---
- drivers/net/wireless/mwifiex/main.c | 6 ++----
- drivers/net/wireless/mwifiex/main.h | 1 -
- 2 files changed, 2 insertions(+), 5 deletions(-)
+ drivers/net/wireless/mwifiex/11n.h | 14 +++++++++++---
+ drivers/net/wireless/mwifiex/fw.h  |  1 +
+ 2 files changed, 12 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
-index 6125d1c..2568395 100644
---- a/drivers/net/wireless/mwifiex/main.c
-+++ b/drivers/net/wireless/mwifiex/main.c
-@@ -511,8 +511,7 @@ err_dnld_fw:
- 	if (adapter->if_ops.unregister_dev)
- 		adapter->if_ops.unregister_dev(adapter);
+diff --git a/drivers/net/wireless/mwifiex/11n.h b/drivers/net/wireless/mwifiex/11n.h
+index f275675..8e2e394 100644
+--- a/drivers/net/wireless/mwifiex/11n.h
++++ b/drivers/net/wireless/mwifiex/11n.h
+@@ -130,7 +130,9 @@ static inline u8 mwifiex_space_avail_for_new_ba_stream(
+ {
+ 	struct mwifiex_private *priv;
+ 	u8 i;
+-	u32 ba_stream_num = 0;
++	u32 ba_stream_num = 0, ba_stream_max;
++
++	ba_stream_max = MWIFIEX_MAX_TX_BASTREAM_SUPPORTED;
  
--	if ((adapter->hw_status == MWIFIEX_HW_STATUS_FW_READY) ||
--	    (adapter->hw_status == MWIFIEX_HW_STATUS_READY)) {
-+	if (adapter->hw_status == MWIFIEX_HW_STATUS_READY) {
- 		pr_debug("info: %s: shutdown mwifiex\n", __func__);
- 		adapter->init_wait_q_woken = false;
+ 	for (i = 0; i < adapter->priv_num; i++) {
+ 		priv = adapter->priv[i];
+@@ -139,8 +141,14 @@ static inline u8 mwifiex_space_avail_for_new_ba_stream(
+ 				&priv->tx_ba_stream_tbl_ptr);
+ 	}
  
-@@ -1116,8 +1115,7 @@ err_init_fw:
- 	pr_debug("info: %s: unregister device\n", __func__);
- 	if (adapter->if_ops.unregister_dev)
- 		adapter->if_ops.unregister_dev(adapter);
--	if ((adapter->hw_status == MWIFIEX_HW_STATUS_FW_READY) ||
--	    (adapter->hw_status == MWIFIEX_HW_STATUS_READY)) {
-+	if (adapter->hw_status == MWIFIEX_HW_STATUS_READY) {
- 		pr_debug("info: %s: shutdown mwifiex\n", __func__);
- 		adapter->init_wait_q_woken = false;
+-	return ((ba_stream_num <
+-		 MWIFIEX_MAX_TX_BASTREAM_SUPPORTED) ? true : false);
++	if (adapter->fw_api_ver == MWIFIEX_FW_V15) {
++		ba_stream_max =
++			       GETSUPP_TXBASTREAMS(adapter->hw_dot_11n_dev_cap);
++		if (!ba_stream_max)
++			ba_stream_max = MWIFIEX_MAX_TX_BASTREAM_SUPPORTED;
++	}
++
++	return ((ba_stream_num < ba_stream_max) ? true : false);
+ }
  
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index dd55bc1..f927939 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -165,7 +165,6 @@ struct mwifiex_dbg {
- enum MWIFIEX_HARDWARE_STATUS {
- 	MWIFIEX_HW_STATUS_READY,
- 	MWIFIEX_HW_STATUS_INITIALIZING,
--	MWIFIEX_HW_STATUS_FW_READY,
- 	MWIFIEX_HW_STATUS_INIT_DONE,
- 	MWIFIEX_HW_STATUS_RESET,
- 	MWIFIEX_HW_STATUS_CLOSING,
+ /*
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index fb5936e..9a82323 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -233,6 +233,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
+ #define ISSUPP_RXLDPC(Dot11nDevCap) (Dot11nDevCap & BIT(22))
+ #define ISSUPP_BEAMFORMING(Dot11nDevCap) (Dot11nDevCap & BIT(30))
+ #define ISALLOWED_CHANWIDTH40(ht_param) (ht_param & BIT(2))
++#define GETSUPP_TXBASTREAMS(Dot11nDevCap) ((Dot11nDevCap >> 18) & 0xF)
+ 
+ /* httxcfg bitmap
+  * 0		reserved
 -- 
 1.8.1.4
 
