@@ -1,76 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f42.google.com ([209.85.215.42]:63556 "EHLO
-	mail-la0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752188AbaLSM27 (ORCPT
+Received: from out21.sjc.mx.trendmicro.com ([216.99.131.78]:52636 "EHLO
+	out21.sjc.mx.trendmicro.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750829AbaLQMEt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Dec 2014 07:28:59 -0500
-Received: by mail-la0-f42.google.com with SMTP id gd6so754766lab.15
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Dec 2014 04:28:57 -0800 (PST)
+	Wed, 17 Dec 2014 07:04:49 -0500
+Received: from out13.sjc.mx.trendmicro.com (unknown [216.99.131.50])
+	by out21.sjc.mx.trendmicro.com (Postfix) with ESMTP id BE4CCAA83A7
+	for <linux-wireless@vger.kernel.org>; Wed, 17 Dec 2014 11:42:57 +0000 (UTC)
+Received: from relay04.sjc.mx.trendmicro.com (unknown [10.30.239.25])
+	by out13.sjc.mx.trendmicro.com (Postfix) with ESMTP id 31D439816D1
+	for <linux-wireless@vger.kernel.org>; Wed, 17 Dec 2014 11:42:55 +0000 (UTC)
+Received: from thinktube.com (unknown [111.68.225.247])
+	by relay04.sjc.mx.trendmicro.com (Postfix) with ESMTP id C49B398042D
+	for <linux-wireless@vger.kernel.org>; Wed, 17 Dec 2014 11:42:53 +0000 (UTC)
+Message-ID: <54916C38.80103@thinktube.com> (sfid-20141217_130454_579382_599718C0)
+Date: Wed, 17 Dec 2014 11:42:48 +0000
+From: Bruno Randolf <br1@thinktube.com>
 MIME-Version: 1.0
-In-Reply-To: <54940B8C.5070801@neratec.com>
-References: <CAGXE3d8Uv01qjfvRQkMr1w_5wB6XKpC7d2VOR3UG0DMPHk6r9A@mail.gmail.com>
-	<54940B8C.5070801@neratec.com>
-Date: Fri, 19 Dec 2014 13:28:57 +0100
-Message-ID: <CALhHN=qmhK983BHasRQKVtrHQy44wOdZc-PRL8s8v+e0GDHZHQ@mail.gmail.com> (sfid-20141219_132902_785600_95FD152D)
-Subject: Re: DFS CAC time
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Dani Camps <danicamps81@gmail.com>, linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: mac80211 USB adapters with 5GHz support and SMA antenna
+References: <CAD3NH5X-neqP-61kP=C2oNPPJTQNBkarae0rh93Hm4qzdpZRew@mail.gmail.com>
+In-Reply-To: <CAD3NH5X-neqP-61kP=C2oNPPJTQNBkarae0rh93Hm4qzdpZRew@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 19 December 2014 at 12:27, Zefir Kurtisi <zefir.kurtisi@neratec.com> wrote:
-> On 12/18/2014 05:21 PM, Helmut Schaa wrote:
->> Hi,
->>
->> [...]
->>
->> So, every channel has a CAC time of 60 seconds.
->>
->> Checking version 1.7.2 of the ETSI regulation indicates that we might
->> need some modifications to cfg80211:
->>
->> From [1] page 79:
->>
->> "NOTE 1: For channels whose nominal bandwidth falls completely or
->> partly within the
->> band 5 600 MHz to 5 650 MHz, the Channel Availability Check Time shall be
->> 10 minutes.
->> NOTE 2: For channels whose nominal bandwidth falls completely or
->> partly within the
->> band 5 600 MHz to 5 650 MHz, the Off-Channel CAC Time shall be within the
->> range 1 hour to 24 hours."
->>
->> So, for these channels we should select a longer initial CAC time.
->>
->> Is anyone aware of this issue?
->>
->> Thanks,
->> Helmut
->>
->>
->> [1] http://www.etsi.org/deliver/etsi_en/301800_301899/301893/01.07.02_20/en_301893v010702a.pdf
->> --
->
-> Hello Helmut,
->
-> just forget about those aka 'weather channels' that require a pracitcally
-> impossible to achieve radar detection probability rate (99.99% during CAC, see
-> table D.5).
->
-> They should simply be disabled, either at mac layer, or at least in ath/regd.c.
->
+Hi,
 
-You can use internal regdb and set this correctly in db.txt, eg
+On 12/16/2014 07:09 PM, Dani Camps wrote:
+> I am looking for a Wi-Fi adapter with the following specs:
+> 
+> a) Operates at 5GHz
+> b) Supports 802.11n and optionally 802.11ac
+> c) USB interface
+> d) SMA connector for external antenna(s)
+> e) It is supported by mac80211, and supports mesh mode
 
-+       (5490 - 5600 @ 80), (27), DFS, AUTO-BW
-+       (5600 - 5650 @ 40), (27), (600000), DFS, AUTO-BW
-+       (5650 - 5710 @ 40), (27), DFS, AUTO-BW
+Me too...
 
-There are also patches for crda/wireless-regdb but not merged, so use
-internal regdb.
+IHMO the best USB based chipset/driver combination is still ath9k_htc
+with Atheros AR7010/AR9280 or AR9271, which is rock solid and has very
+good thruput (and an open firmware). Unfortunately I have heard it's EOL
+but it's still possible to buy them, e.g the "TP-Link TL-WN722N" or
+"TP-LINK TL-WN822N"...
 
-BR
-Janusz
+I have not found good alternatives yet... So I repeat: Does anyone know
+a good USB dongle with a good mac/cfg80211 driver and at least 802.11n
+2x2:2 and support for AP and IBSS mode?
+
+It's a shame that vendors like Ralink/MediaTek and Realtek do not work
+on decent upstream linux drivers... Instead of wasting time cleaning up
+the mess they leave with dozens of incomplete "vendor drivers" they drop
+on us - maybe the Linux community should just choose *ONE* modern
+(preferrably "ac") and cheap USB chipset and concentrate on writing a
+driver for it?
+
+And what about the vendors which are more involved in proper linux
+wireless develpment? Qualcom/Atheros, Intel, Broadcom: don't you have
+any USB chipsets in line?
+
+bruno
+
