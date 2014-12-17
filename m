@@ -1,98 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:59394 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756195AbaLIEIK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Dec 2014 23:08:10 -0500
-Date: Mon, 8 Dec 2014 23:08:06 -0500
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Ming Lei <ming.lei@canonical.com>
-Cc: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>,
-	Pavel Machek <pavel@ucw.cz>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Grazvydas Ignotas <notasas@gmail.com>,
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:42015 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750999AbaLQTOC convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Dec 2014 14:14:02 -0500
+From: Avinash Patil <patila@marvell.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-	Aaro Koskinen <aaro.koskinen@iki.fi>,
-	Kalle Valo <kvalo@adurom.com>,
-	Sebastian Reichel <sre@ring0.de>,
-	David Gnedt <david.gnedt@davizone.at>
-Subject: Re: wl1251: NVS firmware data
-Message-ID: <20141209040806.GA1257@kroah.com> (sfid-20141209_050832_912835_3EF19917)
-References: <201411271506.20457@pali>
- <CACVXFVPOLfDuqc0nLb-zM8vH618DLXy0xtZbUOn5_XvdxRZSDw@mail.gmail.com>
- <20141208163714.GA31169@kroah.com>
- <201412081747.30965@pali>
- <20141208205721.GA14895@kroah.com>
- <CACVXFVO+pX29UE53EDP4va0hoWQw8h0E9Ji9t3OL=e0FyERxyA@mail.gmail.com>
+	"linux-bluetooth@vger.kernel.org" <linux-bluetooth@vger.kernel.org>,
+	"linux-nfc@ml01.01.org" <linux-nfc@ml01.01.org>
+CC: "David S. Miller" <davem@davemloft.net>,
+	Kalle Valo <kvalo@codeaurora.org>, "lwn@lwn.net" <lwn@lwn.net>
+Date: Wed, 17 Dec 2014 11:13:46 -0800
+Subject: RE: changes to Linux wireless maintenance
+Message-ID: <CBACCFA0AEB13A41977475BCF3E896FC6673C10602@SC-VEXCH2.marvell.com> (sfid-20141217_201407_229559_1A2D1DEB)
+References: <20141217155951.GA3144@tuxdriver.com>
+In-Reply-To: <20141217155951.GA3144@tuxdriver.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <CACVXFVO+pX29UE53EDP4va0hoWQw8h0E9Ji9t3OL=e0FyERxyA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 09, 2014 at 08:48:28AM +0800, Ming Lei wrote:
-> On Tue, Dec 9, 2014 at 4:57 AM, Greg Kroah-Hartman
-> <gregkh@linuxfoundation.org> wrote:
-> > On Mon, Dec 08, 2014 at 05:47:30PM +0100, Pali Rohár wrote:
-> >> On Monday 08 December 2014 17:37:14 Greg Kroah-Hartman wrote:
-> >> > On Mon, Dec 08, 2014 at 11:18:18PM +0800, Ming Lei wrote:
-> >> > > On Sat, Dec 6, 2014 at 9:02 PM, Pali Rohár
-> >> <pali.rohar@gmail.com> wrote:
-> >> > > > On Saturday 06 December 2014 13:49:54 Pavel Machek wrote:
-> >> > > >  /**
-> >> > > >
-> >> > > > + * request_firmware_prefer_user: - prefer usermode helper
-> >> > > > for loading firmware + * @firmware_p: pointer to firmware
-> >> > > > image
-> >> > > > + * @name: name of firmware file
-> >> > > > + * @device: device for which firmware is being loaded
-> >> > > > + *
-> >> > > > + * This function works pretty much like
-> >> > > > request_firmware(), but it prefer + * usermode helper. If
-> >> > > > usermode helper fails then it fallback to direct access.
-> >> > > > + * Usefull for dynamic or model specific firmware data.
-> >> > > > + **/
-> >> > > > +int request_firmware_prefer_user(const struct firmware
-> >> > > > **firmware_p, +                           const char
-> >> > > > *name, struct device *device) +{
-> >> > > > +       int ret;
-> >> > > > +       __module_get(THIS_MODULE);
-> >> > > > +       ret = _request_firmware(firmware_p, name, device,
-> >> > > > +                               FW_OPT_UEVENT |
-> >> > > > FW_OPT_PREFER_USER); +       module_put(THIS_MODULE);
-> >> > > > +       return ret;
-> >> > > > +}
-> >> > > > +EXPORT_SYMBOL_GPL(request_firmware_prefer_user);
-> >> > >
-> >> > > I'd like to introduce request_firmware_user() which only
-> >> > > requests firmware from user space, and this way is simpler
-> >> > > and more flexible since we have request_firmware_direct()
-> >> > > already.
-> >> >
-> >> > Why would a driver care about what program provides the
-> >> > firmware?  It shouldn't at all, and we want to get rid of the
-> >> > userspace firmware loader, not encourage drivers to use it
-> >> > "exclusively" at all.
-> >> >
-> >>
-> >> Do not remove it! Without userspace firmware loader it is
-> >> impossible to load dynamic firmware files.
-> >
-> > You should not be loading "dynamic" firmware files with the firmware
-> > interface, as that's not a "firmware" file anymore, it's a "special
-> > binary file that my driver needs to be created and sent into the
-> > kernel."
-> 
-> It is reasonable to put firmware somewhere instead of default
-> search path, maybe in network.
+Hello John,
 
-That's why we allow you to change the firmware search path at build
-time, and kernel boot time (or firmware class module load time.)  To do
-this on a per-firmware-file basis is crazy.
+Thanks a lot for maintaining wireless tree! You have been of great help to us.
+Wishing you all the best for your future endeavors!
 
-thanks,
+Best regards,
+Avinash.
 
-greg k-h
+-----Original Message-----
+From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-owner@vger.kernel.org] On Behalf Of John W. Linville
+Sent: Wednesday, December 17, 2014 9:30 PM
+To: linux-wireless@vger.kernel.org; linux-bluetooth@vger.kernel.org; linux-nfc@ml01.01.org
+Cc: David S. Miller; Kalle Valo; lwn@lwn.net
+Subject: changes to Linux wireless maintenance
+
+Greetings,
+
+Almost 9 years ago, Jeff Garzik wrote a message on LKML detailing the sad state of wireless LANs in the Linux world.  The point of his message was "So... there it is.  We suck.  There's hope.  No Luke Skywalker in sight.":
+
+	https://lkml.org/lkml/2006/1/5/671
+
+Shortly thereafter, I became the maintainer for wireless LANs in the Linux kernel:
+
+	https://lkml.org/lkml/2006/1/18/377
+
+Since then, we have had a number of wireless summit meetings all around the world.  Items were discussed, patches were merged, and friendships were made.  Over time, we garnered support from a large range of wireless networking vendors.  Eventually even other technologies were sending their patches through my trees, and I was consistently ranked amongst the top 10 "gate keepers" for getting changes into the Linux kernel.  In fact, a couple of years ago I even gave a talk on
+how Linux wireless got better.	It has been quite a ride!
+
+	https://events.linuxfoundation.org/images/stories/pdf/lfcs2012_linville.pdf
+
+Nevertheless, I think it is time for some changes.  I have been the wireless maintainer for a long time, and I personally would like to develop in a different direction.  Plus, I think that Linux will benefit from having some fresh blood involved in more of the maintenance duties.  I will be stepping aside to let that happen.
+
+The mac80211, bluetooth, and nfc trees have fed through me for some time.  I am now asking these trees to send pull request directly to David Miller.  Since these trees are managed through git, my hope is that they will not place any significant burden on Dave.
+
+As for the wireless driver patches, I have asked Kalle Valo to handle patch review and merge duties for everything under the drivers/net/wireless directory.  This will now include not only the ath patches he already manages, but other drivers that don't have trees such as mwifiex, rt2x00, rtlwifi, and others.  For consistency, the iwlwifi tree will also be merged through Kalle's new tree.  I expect that Kalle will announce any relevant details in a follow-up message.
+
+The wireless-testing tree is a resource that some people value.
+I will continue to provide a wireless-testing tree.  Now that tree will feed from the various wireless trees managed by others, probably with some sort of regularly scheduled pulls.  Details are still to be determined, but the tree will still exist and will be substantially similar to how it has been so far.
+
+I also receive notices of new bug reports for wireless LANs on bugzilla.kernel.org.  For now I will continue to triage those reports, so don't ignore me!! :-)
+
+Some may ask what I will do now -- I wish I had a specific answer.
+Immediate plans are to enjoy the coming holidays and my traditional year-end time away from work.  After that...well, I'm sure I will find something to do.  If you have any suggestions for good uses of my talents, feel free to contact me -- I'm not hard to find!
+
+In closing, I hope everyone will support Kalle and the other wireless maintainers at least as much as you have supported me for the past
+several years.	These are good, hard working folks.  You are in
+good hands!
+
+Regards,
+
+John
+
+P.S.  Bonus points for anyone that finds a way for me to become a professional retro-computing hobbyist... :-)
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in the body of a message to majordomo@vger.kernel.org More majordomo info at  http://vger.kernel.org/majordomo-info.html
