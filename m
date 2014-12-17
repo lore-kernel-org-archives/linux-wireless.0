@@ -1,91 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:52157 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754509AbaLDTUC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Dec 2014 14:20:02 -0500
-Message-ID: <5480B3DF.9030709@broadcom.com> (sfid-20141204_202008_861182_05BC0999)
-Date: Thu, 4 Dec 2014 20:19:59 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: <m_del_buon@libero.it>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: help
-References: <19484232.27307.1417719685831.JavaMail.httpd@fep-mail-gateway-l2b.virgilio.net>
-In-Reply-To: <19484232.27307.1417719685831.JavaMail.httpd@fep-mail-gateway-l2b.virgilio.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:36830 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751163AbaLQN6K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Dec 2014 08:58:10 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 8/9] cfg80211: add nl80211 beacon-only statistics
+Date: Wed, 17 Dec 2014 14:57:58 +0100
+Message-Id: <1418824679-31530-9-git-send-email-johannes@sipsolutions.net> (sfid-20141217_145817_438802_F7875A51)
+In-Reply-To: <1418824679-31530-1-git-send-email-johannes@sipsolutions.net>
+References: <1418824679-31530-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/04/14 20:01, m_del_buon@libero.it wrote:
-> can you help me with this problems? thx
+From: Johannes Berg <johannes.berg@intel.com>
 
-Suspect that you are building newer kernel driver code against an older 
-kernel. How did you populate /home/hp/rtl8192su-master/rtlwifi?
+Add these two values:
+ * BEACON_RX: number of beacons received from this peer
+ * BEACON_SIGNAL_AVG: signal strength average for beacons only
 
-Regards,
-Arend
+These can then be used for Android Lollipop's statistics request.
 
-> Sent from Libero Mobile
-> ________________________________
->
-> Il 04/12/2014, m_del_buon@libero.it ha scritto:
->
-> hi I am an italian user of one realtek based device Bus 001 Device 005: ID 0df6:004b Sitecom Europe B.V. WL-349v3 Wireless Micro Adapter 150N X1 [Realtek RTL8192SU] on an ubuntu 14.04 64bit 3.13.0-40-generic kernel and I received following error
-> make
-> make -C /lib/modules/3.13.0-40-generic/build M=/home/hp/rtl8192su-master/rtlwifi CONFIG_RTL_CARDS=y CONFIG_RTLWIFI=m CONFIG_RTLWIFI_DEBUG=y CONFIG_RTLWIFI_DEBUGFS=y CONFIG_RTLWIFI_USB=m CONFIG_RTLWIFI_PCI=m CONFIG_RTL8192SU=m CONFIG_RTL8192SE=m CONFIG_RTL8192S_COMMON=m CONFIG_RTL8192CU=n CONFIG_RTL8192DE=n CONFIG_RTL8192CE=n CONFIG_RTL8192C_COMMON=n CONFIG_RTL8723AE=n CONFIG_RTL8188EE=n  EXTRA_CFLAGS="-DDEBUG -DCONFIG_RTLWIFI_DEBUGFS=m -w"
-> make[1]: ingresso nella directory "/usr/src/linux-headers-3.13.0-40-generic"
->    CC [M]  /home/hp/rtl8192su-master/rtlwifi/regd.o
-> In file included from include/net/cfg80211.h:23:0,
->                   from include/net/mac80211.h:21,
->                   from /home/hp/rtl8192su-master/rtlwifi/wifi.h:41,
->                   from /home/hp/rtl8192su-master/rtlwifi/regd.c:30:
-> /home/hp/rtl8192su-master/rtlwifi/regd.c:62:4: error: ‘NL80211_RRF_NO_IR’ undeclared here (not in a function)
->      NL80211_RRF_NO_IR)
->      ^
-> include/net/regulatory.h:128:11: note: in definition of macro ‘REG_RULE’
->    .flags = reg_flags,    \
->             ^
-> /home/hp/rtl8192su-master/rtlwifi/regd.c:99:6: note: in expansion of macro ‘RTL819x_2GHZ_CH12_13’
->        RTL819x_2GHZ_CH12_13,
->        ^
-> /home/hp/rtl8192su-master/rtlwifi/regd.c: In function ‘_rtl_reg_apply_beaconing_flags’:
-> /home/hp/rtl8192su-master/rtlwifi/regd.c:186:20: error: ‘IEEE80211_CHAN_NO_IR’ undeclared (first use in this function)
->        ch->flags&= ~IEEE80211_CHAN_NO_IR;
->                      ^
-> /home/hp/rtl8192su-master/rtlwifi/regd.c:186:20: note: each undeclared identifier is reported only once for each function it appears in
-> /home/hp/rtl8192su-master/rtlwifi/regd.c: In function ‘_rtl_reg_apply_active_scan_flags’:
-> /home/hp/rtl8192su-master/rtlwifi/regd.c:214:19: error: ‘IEEE80211_CHAN_NO_IR’ undeclared (first use in this function)
->     if (ch->flags&  IEEE80211_CHAN_NO_IR)
->                     ^
-> /home/hp/rtl8192su-master/rtlwifi/regd.c: In function ‘_rtl_reg_apply_radar_flags’:
-> /home/hp/rtl8192su-master/rtlwifi/regd.c:279:10: error: ‘IEEE80211_CHAN_NO_IR’ undeclared (first use in this function)
->            IEEE80211_CHAN_NO_IR;
->            ^
-> /home/hp/rtl8192su-master/rtlwifi/regd.c: In function ‘_rtl_regd_init_wiphy’:
-> /home/hp/rtl8192su-master/rtlwifi/regd.c:348:7: error: ‘struct wiphy’ has no member named ‘regulatory_flags’
->    wiphy->regulatory_flags |= REGULATORY_CUSTOM_REG;
->         ^
-> /home/hp/rtl8192su-master/rtlwifi/regd.c:348:29: error: ‘REGULATORY_CUSTOM_REG’ undeclared (first use in this function)
->    wiphy->regulatory_flags |= REGULATORY_CUSTOM_REG;
->                               ^
-> /home/hp/rtl8192su-master/rtlwifi/regd.c:349:7: error: ‘struct wiphy’ has no member named ‘regulatory_flags’
->    wiphy->regulatory_flags&= ~REGULATORY_STRICT_REG;
->         ^
-> /home/hp/rtl8192su-master/rtlwifi/regd.c:349:30: error: ‘REGULATORY_STRICT_REG’ undeclared (first use in this function)
->    wiphy->regulatory_flags&= ~REGULATORY_STRICT_REG;
->                                ^
-> /home/hp/rtl8192su-master/rtlwifi/regd.c:350:7: error: ‘struct wiphy’ has no member named ‘regulatory_flags’
->    wiphy->regulatory_flags&= ~REGULATORY_DISABLE_BEACON_HINTS;
->         ^
-> /home/hp/rtl8192su-master/rtlwifi/regd.c:350:30: error: ‘REGULATORY_DISABLE_BEACON_HINTS’ undeclared (first use in this function)
->    wiphy->regulatory_flags&= ~REGULATORY_DISABLE_BEACON_HINTS;
->                                ^
-> make[2]: *** [/home/hp/rtl8192su-master/rtlwifi/regd.o] Errore 1
-> make[1]: *** [_module_/home/hp/rtl8192su-master/rtlwifi] Errore 2
-> make[1]: uscita dalla directory "/usr/src/linux-headers-3.13.0-40-generic"
-> make: *** [all] Errore 2
-> can you help me?
->
-> Sent from Libero Mobile
+Change-Id: Idab5309c15858c525b01b0202361faf93ea93fa8
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/cfg80211.h       | 6 ++++++
+ include/uapi/linux/nl80211.h | 5 +++++
+ net/wireless/nl80211.c       | 2 ++
+ 3 files changed, 13 insertions(+)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 4f5aa80edcf1..1c77d02efc06 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -986,6 +986,9 @@ struct sta_bss_parameters {
+  * @nonpeer_pm: non-peer mesh STA power save mode
+  * @expected_throughput: expected throughput in kbps (including 802.11 headers)
+  *	towards this station.
++ * @rx_beacon: number of beacons received from this peer
++ * @rx_beacon_signal_avg: signal strength average (in dBm) for beacons received
++ *	from this peer
+  */
+ struct station_info {
+ 	u32 filled;
+@@ -1025,6 +1028,9 @@ struct station_info {
+ 	enum nl80211_mesh_power_mode nonpeer_pm;
+ 
+ 	u32 expected_throughput;
++
++	u64 rx_beacon;
++	u8 rx_beacon_signal_avg;
+ };
+ 
+ /**
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index c747657b035a..b1b00164de9a 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2356,6 +2356,9 @@ enum nl80211_sta_bss_param {
+  *	802.11 header (u32, kbps)
+  * @NL80211_STA_INFO_RX_DROP_MISC: RX packets dropped for unspecified reasons
+  *	(u64)
++ * @NL80211_STA_INFO_BEACON_RX: number of beacons received from this peer (u64)
++ * @NL80211_STA_INFO_BEACON_SIGNAL_AVG: signal strength average
++ *	for beacons only (u8, dBm)
+  * @__NL80211_STA_INFO_AFTER_LAST: internal
+  * @NL80211_STA_INFO_MAX: highest possible station info attribute
+  */
+@@ -2389,6 +2392,8 @@ enum nl80211_sta_info {
+ 	NL80211_STA_INFO_CHAIN_SIGNAL_AVG,
+ 	NL80211_STA_INFO_EXPECTED_THROUGHPUT,
+ 	NL80211_STA_INFO_RX_DROP_MISC,
++	NL80211_STA_INFO_BEACON_RX,
++	NL80211_STA_INFO_BEACON_SIGNAL_AVG,
+ 
+ 	/* keep last */
+ 	__NL80211_STA_INFO_AFTER_LAST,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 906f9384a7cf..d7e21a27aef3 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3763,6 +3763,8 @@ static int nl80211_send_station(struct sk_buff *msg, u32 cmd, u32 portid,
+ 
+ 	PUT_SINFO(T_OFFSET, t_offset, u64);
+ 	PUT_SINFO(RX_DROP_MISC, rx_dropped_misc, u64);
++	PUT_SINFO(BEACON_RX, rx_beacon, u64);
++	PUT_SINFO(BEACON_SIGNAL_AVG, rx_beacon_signal_avg, u8);
+ 
+ #undef PUT_SINFO
+ 	nla_nest_end(msg, sinfoattr);
+-- 
+2.1.1
 
