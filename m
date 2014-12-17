@@ -1,218 +1,218 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f179.google.com ([209.85.223.179]:60889 "EHLO
-	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750916AbaLPLpS (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:37473 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751692AbaLQI1x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Dec 2014 06:45:18 -0500
-Received: by mail-ie0-f179.google.com with SMTP id rp18so12657385iec.38
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Dec 2014 03:45:17 -0800 (PST)
+	Wed, 17 Dec 2014 03:27:53 -0500
+From: Avinash Patil <patila@marvell.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
+	<cluo@marvell.com>, <yangyang@marvell.com>, <huxm@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH 3/4] mwifiex: make tx packet 64 byte DMA aligned
+Date: Wed, 17 Dec 2014 19:27:00 +0530
+Message-ID: <1418824621-2102-3-git-send-email-patila@marvell.com> (sfid-20141217_092756_365366_80628EDD)
+In-Reply-To: <1418824621-2102-1-git-send-email-patila@marvell.com>
+References: <1418824621-2102-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <CALhHN=oTxxeDxym9fDOrH5XLm4pNngBV7tFfxpJ5bYORZnCu=g@mail.gmail.com>
-References: <1418719980-19753-1-git-send-email-janusz.dziedzic@tieto.com>
-	<CAEFj986SVguSMp=oQ3aNKAv+nZkcYiVSiPupLj8Y6=57YVrSmQ@mail.gmail.com>
-	<CALhHN=oTxxeDxym9fDOrH5XLm4pNngBV7tFfxpJ5bYORZnCu=g@mail.gmail.com>
-Date: Tue, 16 Dec 2014 12:45:17 +0100
-Message-ID: <CALhHN=oo82mYjWKpD0Rw15bTFux37z3vz5cvs4rEe9ycP77rdQ@mail.gmail.com> (sfid-20141216_124522_228124_70BD700A)
-Subject: Re: [PATCH 1/2] ath10k: fix low TX rates when IBSS and HT
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 16 December 2014 at 12:22, Janusz Dziedzic <janusz.dziedzic@tieto.com> wrote:
-> On 16 December 2014 at 12:10, Yeoh Chun-Yeow <yeohchunyeow@gmail.com> wrote:
->> Hi, Janusz
->>
->> I have applied the three patches and tested with firmware
->> 999.999.0.636 but not working.
->>
->> Any advice what's wrong?
->>
-> mac peer 04:f0:21:0c:a5:43 qos 0 - this is suspect.
-> What is your test procedure (I see some mesh ...)?
-> Maybe additional patch for mesh is required?
->
-> I tested this using ath9k + ath10k (636) +
-> iw wlanx set type ibss
-> iw ibss join <> 5180 HT [HT40+]
-> or wpa_supplicant in ibss mode (HT20 limited in current version)
->
-> Next in airlogs I saw we are using nss>1 and higher mcs
-> But for sure qos = 1 is required.
->
-I am not sure why sta->wme is not set while we have HT rates (is it
-allowed to have HT without WMM?)
-But anyway as a quick workaroud you can try something like this:
+From: Xinming Hu <huxm@marvell.com>
 
-@@ -1212,7 +1212,7 @@ static void ath10k_peer_assoc_h_ht(struct ath10k *ar,
-        if (!ht_cap->ht_supported)
-                return;
+This patch adds support for DMA alignment of 64 bytes for TX packets.
 
--       arg->peer_flags |= WMI_PEER_HT;
-+       arg->peer_flags |= WMI_PEER_HT | WMI_PEER_QOS;
-        arg->peer_max_mpdu = (1 << (IEEE80211_HT_MAX_AMPDU_FACTOR +
-                                    ht_cap->ampdu_factor)) - 1;
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+---
+ drivers/net/wireless/mwifiex/11n_aggr.c | 15 ++++++++++++---
+ drivers/net/wireless/mwifiex/decl.h     |  6 ++++--
+ drivers/net/wireless/mwifiex/sta_tx.c   | 19 ++++++++++---------
+ drivers/net/wireless/mwifiex/uap_txrx.c | 28 +++++++++++++++-------------
+ 4 files changed, 41 insertions(+), 27 deletions(-)
 
-@@ -3464,6 +3464,13 @@ static int ath10k_set_key(struct ieee80211_hw
-*hw, enum set_key_cmd cmd,
-                      key->cipher == WLAN_CIPHER_SUITE_WEP104;
-        int ret = 0;
+diff --git a/drivers/net/wireless/mwifiex/11n_aggr.c b/drivers/net/wireless/mwifiex/11n_aggr.c
+index 8720a3d..20b7ff7 100644
+--- a/drivers/net/wireless/mwifiex/11n_aggr.c
++++ b/drivers/net/wireless/mwifiex/11n_aggr.c
+@@ -101,6 +101,13 @@ mwifiex_11n_form_amsdu_txpd(struct mwifiex_private *priv,
+ {
+ 	struct txpd *local_tx_pd;
+ 	struct mwifiex_txinfo *tx_info = MWIFIEX_SKB_TXCB(skb);
++	u8 pad;
++	int headroom = (priv->adapter->iface_type ==
++			MWIFIEX_USB) ? 0 : INTF_HEADER_LEN;
++
++	pad = ((void *)skb->data - sizeof(*local_tx_pd) -
++		headroom - NULL) & (MWIFIEX_DMA_ALIGN_SZ - 1);
++	skb_push(skb, pad);
+ 
+ 	skb_push(skb, sizeof(*local_tx_pd));
+ 
+@@ -114,10 +121,12 @@ mwifiex_11n_form_amsdu_txpd(struct mwifiex_private *priv,
+ 	local_tx_pd->bss_num = priv->bss_num;
+ 	local_tx_pd->bss_type = priv->bss_type;
+ 	/* Always zero as the data is followed by struct txpd */
+-	local_tx_pd->tx_pkt_offset = cpu_to_le16(sizeof(struct txpd));
++	local_tx_pd->tx_pkt_offset = cpu_to_le16(sizeof(struct txpd) +
++						 pad);
+ 	local_tx_pd->tx_pkt_type = cpu_to_le16(PKT_TYPE_AMSDU);
+ 	local_tx_pd->tx_pkt_length = cpu_to_le16(skb->len -
+-						 sizeof(*local_tx_pd));
++						 sizeof(*local_tx_pd) -
++						 pad);
+ 
+ 	if (tx_info->flags & MWIFIEX_BUF_FLAG_TDLS_PKT)
+ 		local_tx_pd->flags |= MWIFIEX_TXPD_FLAGS_TDLS_PACKET;
+@@ -182,7 +191,7 @@ mwifiex_11n_aggregate_pkt(struct mwifiex_private *priv,
+ 				       ra_list_flags);
+ 		return -1;
+ 	}
+-	skb_reserve(skb_aggr, headroom + sizeof(struct txpd));
++	skb_reserve(skb_aggr, MWIFIEX_MIN_DATA_HEADER_LEN);
+ 	tx_info_aggr =  MWIFIEX_SKB_TXCB(skb_aggr);
+ 
+ 	memset(tx_info_aggr, 0, sizeof(*tx_info_aggr));
+diff --git a/drivers/net/wireless/mwifiex/decl.h b/drivers/net/wireless/mwifiex/decl.h
+index 2269acf..12addae 100644
+--- a/drivers/net/wireless/mwifiex/decl.h
++++ b/drivers/net/wireless/mwifiex/decl.h
+@@ -32,8 +32,10 @@
+ 
+ #define MWIFIEX_MAX_BSS_NUM         (3)
+ 
+-#define MWIFIEX_MIN_DATA_HEADER_LEN 36	/* sizeof(mwifiex_txpd)
+-					 *   + 4 byte alignment
++#define MWIFIEX_DMA_ALIGN_SZ	    64
++#define MWIFIEX_MIN_DATA_HEADER_LEN 100	/* sizeof(mwifiex_txpd)
++					 *   + 4 byte interface header alignment
++					 *   + 64 byte dma alignment
+ 					 */
+ #define MWIFIEX_MGMT_FRAME_HEADER_SIZE	8	/* sizeof(pkt_type)
+ 						 *   + sizeof(tx_control)
+diff --git a/drivers/net/wireless/mwifiex/sta_tx.c b/drivers/net/wireless/mwifiex/sta_tx.c
+index b896d73..9796334 100644
+--- a/drivers/net/wireless/mwifiex/sta_tx.c
++++ b/drivers/net/wireless/mwifiex/sta_tx.c
+@@ -47,8 +47,10 @@ void *mwifiex_process_sta_txpd(struct mwifiex_private *priv,
+ 	struct mwifiex_adapter *adapter = priv->adapter;
+ 	struct txpd *local_tx_pd;
+ 	struct mwifiex_txinfo *tx_info = MWIFIEX_SKB_TXCB(skb);
+-	u8 pad;
++	int pad;
+ 	u16 pkt_type, pkt_offset;
++	int hroom = (priv->adapter->iface_type == MWIFIEX_USB) ? 0 :
++		       INTF_HEADER_LEN;
+ 
+ 	if (!skb->len) {
+ 		dev_err(adapter->dev, "Tx: bad packet length: %d\n", skb->len);
+@@ -56,13 +58,12 @@ void *mwifiex_process_sta_txpd(struct mwifiex_private *priv,
+ 		return skb->data;
+ 	}
+ 
+-	pkt_type = mwifiex_is_skb_mgmt_frame(skb) ? PKT_TYPE_MGMT : 0;
++	BUG_ON(skb_headroom(skb) < MWIFIEX_MIN_DATA_HEADER_LEN);
+ 
+-	/* If skb->data is not aligned; add padding */
+-	pad = (4 - (((void *)skb->data - NULL) & 0x3)) % 4;
++	pkt_type = mwifiex_is_skb_mgmt_frame(skb) ? PKT_TYPE_MGMT : 0;
+ 
+-	BUG_ON(skb_headroom(skb) < (sizeof(*local_tx_pd) + INTF_HEADER_LEN
+-				    + pad));
++	pad = ((void *)skb->data - (sizeof(*local_tx_pd) + hroom)-
++			 NULL) & (MWIFIEX_DMA_ALIGN_SZ - 1);
+ 	skb_push(skb, sizeof(*local_tx_pd) + pad);
+ 
+ 	local_tx_pd = (struct txpd *) skb->data;
+@@ -70,8 +71,8 @@ void *mwifiex_process_sta_txpd(struct mwifiex_private *priv,
+ 	local_tx_pd->bss_num = priv->bss_num;
+ 	local_tx_pd->bss_type = priv->bss_type;
+ 	local_tx_pd->tx_pkt_length = cpu_to_le16((u16)(skb->len -
+-						       (sizeof(struct txpd)
+-							+ pad)));
++						       (sizeof(struct txpd) +
++							pad)));
+ 
+ 	local_tx_pd->priority = (u8) skb->priority;
+ 	local_tx_pd->pkt_delay_2ms =
+@@ -115,7 +116,7 @@ void *mwifiex_process_sta_txpd(struct mwifiex_private *priv,
+ 	local_tx_pd->tx_pkt_offset = cpu_to_le16(pkt_offset);
+ 
+ 	/* make space for INTF_HEADER_LEN */
+-	skb_push(skb, INTF_HEADER_LEN);
++	skb_push(skb, hroom);
+ 
+ 	if (!local_tx_pd->tx_control)
+ 		/* TxCtrl set by user or default */
+diff --git a/drivers/net/wireless/mwifiex/uap_txrx.c b/drivers/net/wireless/mwifiex/uap_txrx.c
+index be3a203..38ac4d7 100644
+--- a/drivers/net/wireless/mwifiex/uap_txrx.c
++++ b/drivers/net/wireless/mwifiex/uap_txrx.c
+@@ -348,8 +348,10 @@ void *mwifiex_process_uap_txpd(struct mwifiex_private *priv,
+ 	struct mwifiex_adapter *adapter = priv->adapter;
+ 	struct uap_txpd *txpd;
+ 	struct mwifiex_txinfo *tx_info = MWIFIEX_SKB_TXCB(skb);
+-	int pad, len;
+-	u16 pkt_type;
++	int pad;
++	u16 pkt_type, pkt_offset;
++	int hroom = (priv->adapter->iface_type == MWIFIEX_USB) ? 0 :
++		       INTF_HEADER_LEN;
+ 
+ 	if (!skb->len) {
+ 		dev_err(adapter->dev, "Tx: bad packet length: %d\n", skb->len);
+@@ -357,22 +359,21 @@ void *mwifiex_process_uap_txpd(struct mwifiex_private *priv,
+ 		return skb->data;
+ 	}
+ 
+-	pkt_type = mwifiex_is_skb_mgmt_frame(skb) ? PKT_TYPE_MGMT : 0;
+-
+-	/* If skb->data is not aligned, add padding */
+-	pad = (4 - (((void *)skb->data - NULL) & 0x3)) % 4;
++	BUG_ON(skb_headroom(skb) < MWIFIEX_MIN_DATA_HEADER_LEN);
+ 
+-	len = sizeof(*txpd) + pad;
++	pkt_type = mwifiex_is_skb_mgmt_frame(skb) ? PKT_TYPE_MGMT : 0;
+ 
+-	BUG_ON(skb_headroom(skb) < len + INTF_HEADER_LEN);
++	pad = ((void *)skb->data - (sizeof(*txpd) + hroom) - NULL) &
++			(MWIFIEX_DMA_ALIGN_SZ - 1);
+ 
+-	skb_push(skb, len);
++	skb_push(skb, sizeof(*txpd) + pad);
+ 
+ 	txpd = (struct uap_txpd *)skb->data;
+ 	memset(txpd, 0, sizeof(*txpd));
+ 	txpd->bss_num = priv->bss_num;
+ 	txpd->bss_type = priv->bss_type;
+-	txpd->tx_pkt_length = cpu_to_le16((u16)(skb->len - len));
++	txpd->tx_pkt_length = cpu_to_le16((u16)(skb->len - (sizeof(*txpd) +
++						pad)));
+ 	txpd->priority = (u8)skb->priority;
+ 
+ 	txpd->pkt_delay_2ms = mwifiex_wmm_compute_drv_pkt_delay(priv, skb);
+@@ -392,16 +393,17 @@ void *mwifiex_process_uap_txpd(struct mwifiex_private *priv,
+ 		    cpu_to_le32(priv->wmm.user_pri_pkt_tx_ctrl[txpd->priority]);
+ 
+ 	/* Offset of actual data */
++	pkt_offset = sizeof(*txpd) + pad;
+ 	if (pkt_type == PKT_TYPE_MGMT) {
+ 		/* Set the packet type and add header for management frame */
+ 		txpd->tx_pkt_type = cpu_to_le16(pkt_type);
+-		len += MWIFIEX_MGMT_FRAME_HEADER_SIZE;
++		pkt_offset += MWIFIEX_MGMT_FRAME_HEADER_SIZE;
+ 	}
+ 
+-	txpd->tx_pkt_offset = cpu_to_le16(len);
++	txpd->tx_pkt_offset = cpu_to_le16(pkt_offset);
+ 
+ 	/* make space for INTF_HEADER_LEN */
+-	skb_push(skb, INTF_HEADER_LEN);
++	skb_push(skb, hroom);
+ 
+ 	if (!txpd->tx_control)
+ 		/* TxCtrl set by user or default */
+-- 
+1.8.1.4
 
-> BR
-> Janusz
->
->
->> ---
->> ChunYeow
->>
->> Some of my dmesg:
->> [  640.450000] ath10k_pci 0000:00:00.0: wmi pdev set param 3 value 34
->> [  640.450000] ath10k_pci 0000:00:00.0: wmi pdev set param 4 value 34
->> [  640.450000] ath10k_pci 0000:00:00.0: wmi pdev set wmm params
->> [  640.450000] ath10k_pci 0000:00:00.0: wmi pdev set wmm params
->> [  640.450000] ath10k_pci 0000:00:00.0: wmi pdev set wmm params
->> [  640.450000] ath10k_pci 0000:00:00.0: wmi pdev set wmm params
->> [  640.450000] ath10k_pci 0000:00:00.0: wmi peer create vdev_id 0
->> peer_addr 04:f0:21:0c:a5:1c
->> [  640.450000] ath10k_pci 0000:00:00.0: wmi vdev id 0x0 set param 16 value 0
->> [  640.450000] ath10k_pci 0000:00:00.0: wmi vdev id 0x0 set param 3 value 100
->> [  640.450000] ath10k_pci 0000:00:00.0: mac vdev 0 beacon_interval 100
->> [  640.450000] ath10k_pci 0000:00:00.0: vdev 0 set beacon tx mode to staggered
->> [  640.450000] ath10k_pci 0000:00:00.0: wmi pdev set param 7 value 0
->> [  640.450000] ath10k_pci 0000:00:00.0: mac vdev 0 start center_freq
->> 5180 phymode 11na-ht20
->> [  640.450000] ath10k_pci 0000:00:00.0: wmi vdev start id 0x0 flags:
->> 0x0, freq 5180, mode 4, ch_flags: 0x4000000, max_power: 34
->> [  640.460000] ath10k_pci 0000:00:00.0: WMI_VDEV_START_RESP_EVENTID
->> [  640.460000] ath10k_pci 0000:00:00.0: wmi mgmt vdev up id 0x0 assoc
->> id 0 bssid 52:8d:75:e5:00:52
->> [  640.460000] ath10k_pci 0000:00:00.0: mac vdev 0 up
->> [  640.460000] ath10k_pci 0000:00:00.0: mac vdev 0 cts_prot 0
->> [  640.460000] ath10k_pci 0000:00:00.0: wmi vdev id 0x0 set param 44 value 0
->> [  640.460000] ath10k_pci 0000:00:00.0: WMI_TBTTOFFSET_UPDATE_EVENTID
->> [  640.460000] ath10k_pci 0000:00:00.0: mac vdev 0 slot_time 2
->> [  640.460000] ath10k_pci 0000:00:00.0: wmi vdev id 0x0 set param 7 value 2
->> [  640.460000] ath10k_pci 0000:00:00.0: mac vdev 0 preamble 1n
->> [  640.460000] ath10k_pci 0000:00:00.0: wmi vdev id 0x0 set param 8 value 1
->> [  640.460000] ath10k_pci 0000:00:00.0: mac vdev 0 peer create
->> 04:f0:21:0c:a5:43 (new sta) sta 1 / 16 peer 2 / 24
->> [  640.460000] ath10k_pci 0000:00:00.0: wmi peer create vdev_id 0
->> peer_addr 04:f0:21:0c:a5:43
->> [  640.460000] IPv6: ADDRCONF(NETDEV_CHANGE): mesh0: link becomes ready
->> [  640.470000] ath10k_pci 0000:00:00.0: mac sta 04:f0:21:0c:a5:43 associated
->> [  640.470000] ath10k_pci 0000:00:00.0: mac peer 04:f0:21:0c:a5:43 qos 0
->> [  640.470000] ath10k_pci 0000:00:00.0: mac peer 04:f0:21:0c:a5:43 phymode 11a
->> [  640.470000] ath10k_pci 0000:00:00.0: wmi peer assoc vdev 0 addr
->> 04:f0:21:0c:a5:43 (new)
->> [  640.470000] ath10k_pci 0000:00:00.0: wmi vdev 0 peer
->> 0x04:f0:21:0c:a5:43 set param 5 value 1
->> [  640.470000] ath10k_pci 0000:00:00.0: wmi vdev id 0x0 set param 44 value 33
->> [  640.470000] ath10k_pci 0000:00:00.0: mac monitor recalc started? 0 should? 0
->> [  640.540000] ath10k_pci 0000:00:00.0: mac sta rc update for
->> 04:f0:21:0c:a5:43 changed 00000004 bw 0 nss 1 smps 2
->> [  640.540000] ath10k_pci 0000:00:00.0: mac sta rc update for
->> 04:f0:21:0c:a5:43 changed 00000008 bw 0 nss 3 smps 2
->> [  640.540000] ath10k_pci 0000:00:00.0: mac update sta 04:f0:21:0c:a5:43 nss 3
->> [  640.540000] ath10k_pci 0000:00:00.0: wmi vdev 0 peer
->> 0x04:f0:21:0c:a5:43 set param 5 value 3
->> [  640.540000] ath10k_pci 0000:00:00.0: mac update sta
->> 04:f0:21:0c:a5:43 supp rates/nss
->> [  640.540000] ath10k_pci 0000:00:00.0: mac ht peer 04:f0:21:0c:a5:43
->> mcs cnt 24 nss 3
->> [  640.540000] ath10k_pci 0000:00:00.0: mac peer 04:f0:21:0c:a5:43 qos 0
->> [  640.540000] ath10k_pci 0000:00:00.0: mac peer 04:f0:21:0c:a5:43
->> phymode 11na-ht20
->> [  640.540000] ath10k_pci 0000:00:00.0: wmi peer assoc vdev 0 addr
->> 04:f0:21:0c:a5:43 (reassociate)
->> [  640.540000] ath10k_pci 0000:00:00.0: wmi vdev 0 peer
->> 0x04:f0:21:0c:a5:43 set param 5 value 3
->> [  640.560000] ath10k_pci 0000:00:00.0: wmi event debug mesg len 460
->> [  641.400000] ath10k_pci 0000:00:00.0: rx skb 86be4b40 len 148 peer
->> 04:f0:21:0c:a5:43  mcast sn 2  rate_idx 0 vht_nss 0 freq 5180 band 1
->> flag 0x200000 fcs-err 0 mic-err 0 amsdu-more 0
->> [  642.170000] ath10k_pci 0000:00:00.0: mac monitor recalc started? 0 should? 0
->> [  642.400000] ath10k_pci 0000:00:00.0: rx skb 86b49b40 len 108 peer
->> 04:f0:21:0c:a5:43  mcast sn 3  rate_idx 0 vht_nss 0 freq 5180 band 1
->> flag 0x200000 fcs-err 0 mic-err 0 amsdu-more 0
->> [  651.560000] ath10k_pci 0000:00:00.0: wmi event debug mesg len 28
->> [ 1740.540000] ath10k_pci 0000:00:00.0: rx skb 86af8540 len 60 peer
->> 04:f0:21:0c:a5:43  mcast sn 4  rate_idx 0 vht_nss 0 freq 5180 band 1
->> flag 0x200000 fcs-err 0 mic-err 0 amsdu-more 0
->> [ 1740.540000] ath10k_pci 0000:00:00.0: rx skb 86967600 len 116 peer
->> 04:f0:21:0c:a5:43  ucast sn 0  rate_idx 0 vht_nss 0 freq 5180 band 1
->> flag 0x200000 fcs-err 0 mic-err 0 amsdu-more 0
->> [ 1741.550000] ath10k_pci 0000:00:00.0: rx skb 86967000 len 116 peer
->> 04:f0:21:0c:a5:43  ucast sn 1  rate_idx 0 vht_nss 0 freq 5180 band 1
->> flag 0x200000 fcs-err 0 mic-err 0 amsdu-more 0
->> [ 1742.550000] ath10k_pci 0000:00:00.0: rx skb 86b8acc0 len 116 peer
->> 04:f0:21:0c:a5:43  ucast sn 2  rate_idx 0 vht_nss 0 freq 5180 band 1
->> flag 0x200000 fcs-err 0 mic-err 0 amsdu-more 0
->> [ 1743.550000] ath10k_pci 0000:00:00.0: rx skb 86a7a600 len 116 peer
->> 04:f0:21:0c:a5:43  ucast sn 3  rate_idx 0 vht_nss 0 freq 5180 band 1
->> flag 0x200000 fcs-err 0 mic-err 0 amsdu-more 0
->> [ 1746.560000] ath10k_pci 0000:00:00.0: rx skb 86a79cc0 len 60 peer
->> 04:f0:21:0c:a5:43  ucast sn 4  rate_idx 0 vht_nss 0 freq 5180 band 1
->> flag 0x200000 fcs-err 0 mic-err 0 amsdu-more 0
->> [ 1752.410000] ath10k_pci 0000:00:00.0: rx skb 86a9d540 len 116 peer
->> 04:f0:21:0c:a5:43  ucast sn 5  rate_idx 0 vht_nss 0 freq 5180 band 1
->> flag 0x200000 fcs-err 0 mic-err 0 amsdu-more 0
->> [ 1753.410000] ath10k_pci 0000:00:00.0: rx skb 86a7c6c0 len 116 peer
->> 04:f0:21:0c:a5:43  ucast sn 6  rate_idx 0 vht_nss 0 freq 5180 band 1
->> flag 0x200000 fcs-err 0 mic-err 0 amsdu-more 0
->> [ 1754.410000] ath10k_pci 0000:00:00.0: rx skb 86a7f6c0 len 116 peer
->> 04:f0:21:0c:a5:43  ucast sn 7  rate_idx 0 vht_nss 0 freq 5180 band 1
->> flag 0x200000 fcs-err 0 mic-err 0 amsdu-more 0
->> [ 1755.420000] ath10k_pci 0000:00:00.0: rx skb 86afc240 len 116 peer
->> 04:f0:21:0c:a5:43  ucast sn 8  rate_idx 0 vht_nss 0 freq 5180 band 1
->> flag 0x200000 fcs-err 0 mic-err 0 amsdu-more 0
->> [ 1756.420000] ath10k_pci 0000:00:00.0: rx skb 86a7d480 len 116 peer
->> 04:f0:21:0c:a5:43  ucast sn 9  rate_idx 0 vht_nss 0 freq 5180 band 1
->> flag 0x200000 fcs-err 0 mic-err 0 amsdu-more 0
->> [ 1757.420000] ath10k_pci 0000:00:00.0: rx skb 86af0180 len 116 peer
->> 04:f0:21:0c:a5:43  ucast sn 10  rate_idx 0 vht_nss 0 freq 5180 band 1
->> flag 0x200000 fcs-err 0 mic-err 0 amsdu-more 0
->>
->>
->> On Tue, Dec 16, 2014 at 4:52 PM, Janusz Dziedzic
->> <janusz.dziedzic@tieto.com> wrote:
->>> This fix TX problem when IBSS used in HT mode.
->>> Before we used 6Mbps all the time for TX direction.
->>>
->>> Reported-by: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
->>> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
->>> ---
->>>  drivers/net/wireless/ath/ath10k/mac.c | 7 +++++++
->>>  1 file changed, 7 insertions(+)
->>>
->>> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
->>> index 5475f0f..c9e7995 100644
->>> --- a/drivers/net/wireless/ath/ath10k/mac.c
->>> +++ b/drivers/net/wireless/ath/ath10k/mac.c
->>> @@ -1411,9 +1411,16 @@ static void ath10k_peer_assoc_h_qos(struct ath10k *ar,
->>>                 if (vif->bss_conf.qos)
->>>                         arg->peer_flags |= WMI_PEER_QOS;
->>>                 break;
->>> +       case WMI_VDEV_TYPE_IBSS:
->>> +               if (sta->wme)
->>> +                       arg->peer_flags |= WMI_PEER_QOS;
->>> +               break;
->>>         default:
->>>                 break;
->>>         }
->>> +
->>> +       ath10k_dbg(ar, ATH10K_DBG_MAC, "mac peer %pM qos %d\n",
->>> +                  sta->addr, !!(arg->peer_flags & WMI_PEER_QOS));
->>>  }
->>>
->>>  static void ath10k_peer_assoc_h_phymode(struct ath10k *ar,
->>> --
->>> 1.9.1
->>>
->>>
->>> _______________________________________________
->>> ath10k mailing list
->>> ath10k@lists.infradead.org
->>> http://lists.infradead.org/mailman/listinfo/ath10k
