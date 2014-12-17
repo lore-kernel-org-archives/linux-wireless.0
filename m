@@ -1,42 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:6657 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752922AbaLANiz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Dec 2014 08:38:55 -0500
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH 6/9] wil6210: fix warning in pointer arithmetic
-Date: Mon, 1 Dec 2014 15:35:27 +0200
-Message-ID: <1417440927-27230-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20141201_143858_877630_008C9B3E)
+Received: from mail-sg1on0115.outbound.protection.outlook.com ([134.170.132.115]:36891
+	"EHLO APAC01-SG1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751385AbaLQLPq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Dec 2014 06:15:46 -0500
+From: "Nishikawa, Kenzoh" <Kenzoh.Nishikawa@jp.sony.com>
+To: 'Johannes Berg' <johannes@sipsolutions.net>
+CC: "'linux-wireless@vger.kernel.org'" <linux-wireless@vger.kernel.org>,
+	"'devel@lists.open80211s.org'" <devel@lists.open80211s.org>,
+	"'Bob Copeland (me@bobcopeland.com)'" <me@bobcopeland.com>,
+	"'Thomas Pedersen (thomas@noack.us)'" <thomas@noack.us>
+Subject: [Resend PATCH v5] mac80211: keep sending peer candidate events
+ while in listen state
+Date: Wed, 17 Dec 2014 11:01:11 +0000
+Message-ID: <2EB4F5C65A3B8E4E92660930F4EF6B5B07C4AC@JPYOKXMS113.jp.sony.com> (sfid-20141217_121550_191316_B2077768)
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In some compilation environments, result of pointer arithmetic interpreted as int
-while in others it is long int. Force conversion to long.
+Instead of sending peer candidate events just once, send them 
+as long as the peer remains in the LISTEN state in the peering 
+state machine, when userspace is implementing the peering manager.
+Userspace may silence the events from a peer by progressing 
+the state machine or by setting the link state to BLOCKED.
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Fixes the problem that a mesh peering process won't be fired 
+again after the previous first peering trial fails due to like 
+air propagation error if the peering is managed by user space 
+such as wpa_supplicant.
+
+This patch works with another patch for wpa_supplicant described 
+here which fires a peering process again triggered by the notice 
+from kernel.
+http://lists.shmoo.com/pipermail/hostap/2014-November/031235.html
+
+Signed-off-by: Kenzoh Nishikawa <Kenzoh.Nishikawa at jp.sony.com>
 ---
- drivers/net/wireless/ath/wil6210/fw_inc.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+net/mac80211/mesh_plink.c |    7 +++++++
+1 file changed, 7 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/wil6210/fw_inc.c b/drivers/net/wireless/ath/wil6210/fw_inc.c
-index 2658455..d4acf93 100644
---- a/drivers/net/wireless/ath/wil6210/fw_inc.c
-+++ b/drivers/net/wireless/ath/wil6210/fw_inc.c
-@@ -446,7 +446,7 @@ static int wil_fw_load(struct wil6210_priv *wil, const void *data, size_t size)
- 		if (size >= sizeof(*hdr)) {
- 			wil_err_fw(wil, "Stop at offset %ld"
- 				   " record type %d [%zd bytes]\n",
--				   (const void *)hdr - data,
-+				   (long)((const void *)hdr - data),
- 				   le16_to_cpu(hdr->type), hdr_sz);
- 		}
- 		return -EINVAL;
--- 
-2.1.0
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c index 32c7bd0..dfc429b 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -524,6 +524,13 @@ void mesh_neighbour_update(struct ieee80211_sub_if_data *sdata,
+ 	    sdata->u.mesh.mshcfg.auto_open_plinks &&
+ 	    rssi_threshold_check(sta, sdata))
+ 		changed = mesh_plink_open(sta);
++	else if (sta->plink_state == NL80211_PLINK_LISTEN &&
++		 (sdata->u.mesh.user_mpm ||
++		  sdata->u.mesh.security & IEEE80211_MESH_SEC_AUTHED))
++		cfg80211_notify_new_peer_candidate(sdata->dev, hw_addr,
++						   elems->ie_start,
++						   elems->total_len,
++						   GFP_ATOMIC);
+ 
+ 	ieee80211_mps_frame_release(sta, elems);
+ out:
 
