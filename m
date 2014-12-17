@@ -1,164 +1,228 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:59637 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932613AbaLBSLg (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:27929 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751911AbaLQKWi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Dec 2014 13:11:36 -0500
-Received: by mail-wg0-f42.google.com with SMTP id z12so17760620wgg.1
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Dec 2014 10:11:35 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eliad Peller <eliad@wizery.com>,
-	Eliad Peller <eliadx.peller@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 09/26] iwlwifi: pcie: refactor cmd_in_flight set/clear code
-Date: Tue,  2 Dec 2014 20:11:00 +0200
-Message-Id: <1417543877-24193-9-git-send-email-egrumbach@gmail.com> (sfid-20141202_191141_414228_F38AAEB0)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB31B5A7D27@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB31B5A7D27@hasmsx107.ger.corp.intel.com>
+	Wed, 17 Dec 2014 05:22:38 -0500
+Subject: [PATCH v2 8/8] ath10k: add thermal sensor device support
+To: <ath10k@lists.infradead.org>
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Date: Wed, 17 Dec 2014 12:22:26 +0200
+Message-ID: <20141217102226.15964.32919.stgit@potku.adurom.net> (sfid-20141217_112242_688304_C6315922)
+In-Reply-To: <20141217101755.15964.2625.stgit@potku.adurom.net>
+References: <20141217101755.15964.2625.stgit@potku.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 
-A following patche will use trans_pcie->cmd_in_flight
-for reference accounting as well. get ready for it.
+Temperature sensor generates electrical analog voltage from temperature
+of each chain. The analog voltage is converted to digital value through
+ADC. For reading temperature values fom user space, hw monitoring device
+is used.
 
-Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Whenever the user requests for current temperature, the driver sends WMI
+command and wait for response. For reading temperature,
+
+cat /sys/class/ieee80211/phy*/device/hwmon/hwmon2/temp1_input
+
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/pcie/tx.c | 102 +++++++++++++++++++++------------
- 1 file changed, 66 insertions(+), 36 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.c    |    2 +
+ drivers/net/wireless/ath/ath10k/thermal.c |   83 +++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/thermal.h |   14 +++++
+ drivers/net/wireless/ath/ath10k/wmi.c     |    1 
+ 4 files changed, 100 insertions(+)
 
-diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c b/drivers/net/wireless/iwlwifi/pcie/tx.c
-index 4a4104e..8a6c7a0 100644
---- a/drivers/net/wireless/iwlwifi/pcie/tx.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
-@@ -989,6 +989,65 @@ out:
- 	spin_unlock_bh(&txq->lock);
- }
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 28bfacb382f3..7d5a7b3add52 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -847,6 +847,7 @@ static void ath10k_core_restart(struct work_struct *work)
+ 	complete_all(&ar->offchan_tx_completed);
+ 	complete_all(&ar->install_key_done);
+ 	complete_all(&ar->vdev_setup_done);
++	complete_all(&ar->thermal.wmi_sync);
+ 	wake_up(&ar->htt.empty_tx_wq);
+ 	wake_up(&ar->wmi.tx_credits_wq);
+ 	wake_up(&ar->peer_mapping_wq);
+@@ -1322,6 +1323,7 @@ struct ath10k *ath10k_core_create(size_t priv_size, struct device *dev,
  
-+static int iwl_pcie_set_cmd_in_flight(struct iwl_trans *trans)
+ 	init_completion(&ar->install_key_done);
+ 	init_completion(&ar->vdev_setup_done);
++	init_completion(&ar->thermal.wmi_sync);
+ 
+ 	INIT_DELAYED_WORK(&ar->scan.timeout, ath10k_scan_timeout_work);
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/thermal.c b/drivers/net/wireless/ath/ath10k/thermal.c
+index e98ce8ce27e2..d93913538d18 100644
+--- a/drivers/net/wireless/ath/ath10k/thermal.c
++++ b/drivers/net/wireless/ath/ath10k/thermal.c
+@@ -17,6 +17,8 @@
+ #include <linux/device.h>
+ #include <linux/sysfs.h>
+ #include <linux/thermal.h>
++#include <linux/hwmon.h>
++#include <linux/hwmon-sysfs.h>
+ #include "core.h"
+ #include "debug.h"
+ #include "wmi-ops.h"
+@@ -119,9 +121,72 @@ static struct thermal_cooling_device_ops ath10k_thermal_ops = {
+ 	.set_cur_state = ath10k_thermal_set_cur_dutycycle,
+ };
+ 
++static ssize_t ath10k_thermal_show_temp(struct device *dev,
++					struct device_attribute *attr,
++					char *buf)
 +{
-+	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
-+	int ret;
++	struct ath10k *ar = dev_get_drvdata(dev);
++	int ret, temperature;
 +
-+	lockdep_assert_held(&trans_pcie->reg_lock);
++	mutex_lock(&ar->conf_mutex);
 +
-+	if (trans_pcie->cmd_in_flight)
-+		return 0;
-+
-+	trans_pcie->cmd_in_flight = true;
-+
-+	/*
-+	 * wake up the NIC to make sure that the firmware will see the host
-+	 * command - we will let the NIC sleep once all the host commands
-+	 * returned. This needs to be done only on NICs that have
-+	 * apmg_wake_up_wa set.
-+	 */
-+	if (trans->cfg->base_params->apmg_wake_up_wa) {
-+		__iwl_trans_pcie_set_bit(trans, CSR_GP_CNTRL,
-+					 CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
-+		if (trans->cfg->device_family == IWL_DEVICE_FAMILY_8000)
-+			udelay(2);
-+
-+		ret = iwl_poll_bit(trans, CSR_GP_CNTRL,
-+				   CSR_GP_CNTRL_REG_VAL_MAC_ACCESS_EN,
-+				   (CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY |
-+				    CSR_GP_CNTRL_REG_FLAG_GOING_TO_SLEEP),
-+				   15000);
-+		if (ret < 0) {
-+			__iwl_trans_pcie_clear_bit(trans, CSR_GP_CNTRL,
-+					CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
-+			trans_pcie->cmd_in_flight = false;
-+			IWL_ERR(trans, "Failed to wake NIC for hcmd\n");
-+			return -EIO;
-+		}
++	/* Can't get temperature when the card is off */
++	if (ar->state != ATH10K_STATE_ON) {
++		ret = -ENETDOWN;
++		goto out;
 +	}
 +
-+	return 0;
++	reinit_completion(&ar->thermal.wmi_sync);
++	ret = ath10k_wmi_pdev_get_temperature(ar);
++	if (ret) {
++		ath10k_warn(ar, "failed to read temperature %d\n", ret);
++		goto out;
++	}
++
++	if (test_bit(ATH10K_FLAG_CRASH_FLUSH, &ar->dev_flags)) {
++		ret = -ESHUTDOWN;
++		goto out;
++	}
++
++	ret = wait_for_completion_timeout(&ar->thermal.wmi_sync,
++					  ATH10K_THERMAL_SYNC_TIMEOUT_HZ);
++	if (ret == 0) {
++		ath10k_warn(ar, "failed to synchronize thermal read\n");
++		ret = -ETIMEDOUT;
++		goto out;
++	}
++
++	spin_lock_bh(&ar->data_lock);
++	temperature = ar->thermal.temperature;
++	spin_unlock_bh(&ar->data_lock);
++
++	ret = snprintf(buf, PAGE_SIZE, "%d", temperature);
++out:
++	mutex_unlock(&ar->conf_mutex);
++	return ret;
 +}
 +
-+static int iwl_pcie_clear_cmd_in_flight(struct iwl_trans *trans)
++void ath10k_thermal_event_temperature(struct ath10k *ar, int temperature)
 +{
-+	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
++	spin_lock_bh(&ar->data_lock);
++	ar->thermal.temperature = temperature;
++	spin_unlock_bh(&ar->data_lock);
++	complete(&ar->thermal.wmi_sync);
++}
 +
-+	lockdep_assert_held(&trans_pcie->reg_lock);
++static SENSOR_DEVICE_ATTR(temp1_input, S_IRUGO, ath10k_thermal_show_temp,
++			  NULL, 0);
 +
-+	if (WARN_ON(!trans_pcie->cmd_in_flight))
++static struct attribute *ath10k_hwmon_attrs[] = {
++	&sensor_dev_attr_temp1_input.dev_attr.attr,
++	NULL,
++};
++ATTRIBUTE_GROUPS(ath10k_hwmon);
++
+ int ath10k_thermal_register(struct ath10k *ar)
+ {
+ 	struct thermal_cooling_device *cdev;
++	struct device *hwmon_dev;
+ 	int ret;
+ 
+ 	cdev = thermal_cooling_device_register("ath10k_thermal", ar,
+@@ -141,8 +206,26 @@ int ath10k_thermal_register(struct ath10k *ar)
+ 	}
+ 
+ 	ar->thermal.cdev = cdev;
++
++	/* Do not register hwmon device when temperature reading is not
++	 * supported by firmware
++	 */
++	if (ar->wmi.op_version != ATH10K_FW_WMI_OP_VERSION_10_2_4)
 +		return 0;
 +
-+	trans_pcie->cmd_in_flight = false;
++	hwmon_dev = devm_hwmon_device_register_with_groups(ar->dev,
++							   "ath10k_hwmon", ar,
++							   ath10k_hwmon_groups);
++	if (IS_ERR(hwmon_dev)) {
++		ath10k_err(ar, "failed to register hwmon device: %ld\n",
++			   PTR_ERR(hwmon_dev));
++		ret = -EINVAL;
++		goto err_remove_link;
++	}
+ 	return 0;
+ 
++err_remove_link:
++	sysfs_remove_link(&ar->dev->kobj, "thermal_sensor");
+ err_cooling_destroy:
+ 	thermal_cooling_device_unregister(cdev);
+ 	return ret;
+diff --git a/drivers/net/wireless/ath/ath10k/thermal.h b/drivers/net/wireless/ath/ath10k/thermal.h
+index e20bb87849ae..bccc17ae0fde 100644
+--- a/drivers/net/wireless/ath/ath10k/thermal.h
++++ b/drivers/net/wireless/ath/ath10k/thermal.h
+@@ -20,17 +20,25 @@
+ #define ATH10K_QUIET_PERIOD_MIN         25
+ #define ATH10K_QUIET_START_OFFSET       10
+ #define ATH10K_QUIET_DUTY_CYCLE_MAX     70
++#define ATH10K_HWMON_NAME_LEN           15
++#define ATH10K_THERMAL_SYNC_TIMEOUT_HZ (5*HZ)
+ 
+ struct ath10k_thermal {
+ 	struct thermal_cooling_device *cdev;
++	struct completion wmi_sync;
+ 
+ 	/* protected by conf_mutex */
+ 	u32 duty_cycle;
++	/* temperature value in Celcius degree
++	 * protected by data_lock
++	 */
++	int temperature;
+ };
+ 
+ #ifdef CONFIG_THERMAL
+ int ath10k_thermal_register(struct ath10k *ar);
+ void ath10k_thermal_unregister(struct ath10k *ar);
++void ath10k_thermal_event_temperature(struct ath10k *ar, int temperature);
+ #else
+ static inline int ath10k_thermal_register(struct ath10k *ar)
+ {
+@@ -40,5 +48,11 @@ static inline int ath10k_thermal_register(struct ath10k *ar)
+ static inline void ath10k_thermal_unregister(struct ath10k *ar)
+ {
+ }
 +
-+	if (trans->cfg->base_params->apmg_wake_up_wa)
-+		__iwl_trans_pcie_clear_bit(trans, CSR_GP_CNTRL,
-+					CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
-+
-+	return 0;
++static inline void ath10k_thermal_event_temperature(struct ath10k *ar,
++						    int temperature)
++{
 +}
 +
- /*
-  * iwl_pcie_cmdq_reclaim - Reclaim TX command queue entries already Tx'd
-  *
-@@ -1024,14 +1083,9 @@ static void iwl_pcie_cmdq_reclaim(struct iwl_trans *trans, int txq_id, int idx)
- 		}
- 	}
+ #endif
+ #endif /* _THERMAL_ */
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index c2d7ac31fd78..ac742905331b 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -3038,6 +3038,7 @@ static int ath10k_wmi_event_temperature(struct ath10k *ar, struct sk_buff *skb)
+ 	if (WARN_ON(skb->len < sizeof(*ev)))
+ 		return -EPROTO;
  
--	if (trans->cfg->base_params->apmg_wake_up_wa &&
--	    q->read_ptr == q->write_ptr) {
-+	if (q->read_ptr == q->write_ptr) {
- 		spin_lock_irqsave(&trans_pcie->reg_lock, flags);
--		WARN_ON(!trans_pcie->cmd_in_flight);
--		trans_pcie->cmd_in_flight = false;
--		__iwl_trans_pcie_clear_bit(trans,
--					   CSR_GP_CNTRL,
--					   CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
-+		iwl_pcie_clear_cmd_in_flight(trans);
- 		spin_unlock_irqrestore(&trans_pcie->reg_lock, flags);
- 	}
++	ath10k_thermal_event_temperature(ar, __le32_to_cpu(ev->temperature));
+ 	return 0;
+ }
  
-@@ -1419,35 +1473,11 @@ static int iwl_pcie_enqueue_hcmd(struct iwl_trans *trans,
- 		mod_timer(&txq->stuck_timer, jiffies + trans_pcie->wd_timeout);
- 
- 	spin_lock_irqsave(&trans_pcie->reg_lock, flags);
--
--	/*
--	 * wake up the NIC to make sure that the firmware will see the host
--	 * command - we will let the NIC sleep once all the host commands
--	 * returned. This needs to be done only on NICs that have
--	 * apmg_wake_up_wa set.
--	 */
--	if (trans->cfg->base_params->apmg_wake_up_wa &&
--	    !trans_pcie->cmd_in_flight) {
--		trans_pcie->cmd_in_flight = true;
--		__iwl_trans_pcie_set_bit(trans, CSR_GP_CNTRL,
--					 CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
--		if (trans->cfg->device_family == IWL_DEVICE_FAMILY_8000)
--			udelay(2);
--
--		ret = iwl_poll_bit(trans, CSR_GP_CNTRL,
--				   CSR_GP_CNTRL_REG_VAL_MAC_ACCESS_EN,
--				   (CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY |
--				    CSR_GP_CNTRL_REG_FLAG_GOING_TO_SLEEP),
--				   15000);
--		if (ret < 0) {
--			__iwl_trans_pcie_clear_bit(trans, CSR_GP_CNTRL,
--				   CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
--			spin_unlock_irqrestore(&trans_pcie->reg_lock, flags);
--			trans_pcie->cmd_in_flight = false;
--			IWL_ERR(trans, "Failed to wake NIC for hcmd\n");
--			idx = -EIO;
--			goto out;
--		}
-+	ret = iwl_pcie_set_cmd_in_flight(trans);
-+	if (ret < 0) {
-+		idx = ret;
-+		spin_unlock_irqrestore(&trans_pcie->reg_lock, flags);
-+		goto out;
- 	}
- 
- 	/* Increment and update queue's write index */
--- 
-1.9.1
 
