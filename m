@@ -1,78 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f171.google.com ([209.85.214.171]:64840 "EHLO
-	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751323AbaLRGcF convert rfc822-to-8bit (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:31743 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750829AbaLQKdJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Dec 2014 01:32:05 -0500
+	Wed, 17 Dec 2014 05:33:09 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/2] ath10k: send (re)assoc peer command when NSS changed
+References: <1418719980-19753-1-git-send-email-janusz.dziedzic@tieto.com>
+	<1418719980-19753-2-git-send-email-janusz.dziedzic@tieto.com>
+Date: Wed, 17 Dec 2014 12:32:45 +0200
+In-Reply-To: <1418719980-19753-2-git-send-email-janusz.dziedzic@tieto.com>
+	(Janusz Dziedzic's message of "Tue, 16 Dec 2014 09:53:00 +0100")
+Message-ID: <87a92mr2gi.fsf@kamboji.qca.qualcomm.com> (sfid-20141217_113312_587222_720384A6)
 MIME-Version: 1.0
-In-Reply-To: <1418204358-8357-1-git-send-email-computersforpeace@gmail.com>
-References: <1418204358-8357-1-git-send-email-computersforpeace@gmail.com>
-Date: Wed, 17 Dec 2014 22:32:04 -0800
-Message-ID: <CAN8TOE--Vfa1L8dcoV=up1bA+QX0_=+DkdDa7fAv6DJBF8PHow@mail.gmail.com> (sfid-20141218_073428_083562_E7FAA59E)
-Subject: Re: [PATCH] brcmsmac: don't leak kernel memory via printk()
-From: Brian Norris <computersforpeace@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	"David S. Miller" <davem@davemloft.net>
-Cc: Brian Norris <computersforpeace@gmail.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	netdev@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-+ others [1]
+Janusz Dziedzic <janusz.dziedzic@tieto.com> writes:
 
-On Wed, Dec 10, 2014 at 1:39 AM, Brian Norris
-<computersforpeace@gmail.com> wrote:
-> Debug code prints the fifo name via custom dev_warn() wrappers. The
-> fifo_names array is only non-zero when debugging is manually enabled,
-> which is all well and good. However, it's *not* good that this array
-> uses zero-length arrays in the non-debug case, and so it doesn't
-> actually have any memory allocated to it. This means that as far as we
-> know, fifo_names[i] actually points to garbage memory.
+> Assoc peer command contain information about NSS.
+> When we will get IEEE80211_RC_NSS_CHANGED we should
+> also send (re) assoc peer command to be sure firmware
+> will know about it and RC will work correctly.
 >
-> I've seen this in my log:
->
-> [ 4601.205511] brcmsmac bcma0:1: wl0: brcms_c_d11hdrs_mac80211: �GeL txop exceeded phylen 137/256 dur 1602/1504
->
-> So let's give this array space enough to fill it with a NULL byte.
->
-> Signed-off-by: Brian Norris <computersforpeace@gmail.com>
-> Cc: Brett Rudley <brudley@broadcom.com>
-> Cc: Arend van Spriel <arend@broadcom.com>
-> Cc: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>
-> Cc: Hante Meuleman <meuleman@broadcom.com>
-> Cc: "John W. Linville" <linville@tuxdriver.com>
-> Cc: linux-wireless@vger.kernel.org
-> Cc: brcm80211-dev-list@broadcom.com
-> Cc: netdev@vger.kernel.org
+> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 
-BTW, I guess this qualifies as a security hole, albeit a small one.
-Should this be CC: stable@vger.kernel.org?
+Does this fix a user visible bug or is this something you just found
+from doing code review?
 
-> ---
->  drivers/net/wireless/brcm80211/brcmsmac/main.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-> index 1b474828d5b8..aed0c948dce8 100644
-> --- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-> +++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-> @@ -316,7 +316,7 @@ static const u16 xmtfifo_sz[][NFIFO] = {
->  static const char * const fifo_names[] = {
->         "AC_BK", "AC_BE", "AC_VI", "AC_VO", "BCMC", "ATIM" };
->  #else
-> -static const char fifo_names[6][0];
-> +static const char fifo_names[6][1];
->  #endif
->
->  #ifdef DEBUG
-
-Brian
-
-[1] http://lwn.net/Articles/626689/
+-- 
+Kalle Valo
