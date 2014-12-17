@@ -1,34 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:52124 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757135AbaLJOJb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Dec 2014 09:09:31 -0500
-Message-ID: <1418220560.3460.8.camel@sipsolutions.net> (sfid-20141210_150942_355147_E6F2070F)
-Subject: Re: [OpenWrt-Devel] ath9k / no more 'multicast_received_frame_count'
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sujith Manoharan <sujith@msujith.org>
-Cc: Bastian Bittorf <bittorf@bluebottle.com>,
-	mailinglist <openwrt-devel@lists.openwrt.org>,
-	linux-wireless@vger.kernel.org
-Date: Wed, 10 Dec 2014 15:09:20 +0100
-In-Reply-To: <21640.21270.761643.368938@gargle.gargle.HOWL>
-References: <20141210105509.GN7713@medion.lan>
-	 <21640.21270.761643.368938@gargle.gargle.HOWL>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:60138 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751119AbaLQQAq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Dec 2014 11:00:46 -0500
+Received: by mail-wi0-f169.google.com with SMTP id r20so17464421wiv.4
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Dec 2014 08:00:44 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH] nl80211: increase the max number of rules in regdomain
+Date: Wed, 17 Dec 2014 18:00:44 +0200
+Message-Id: <1418832044-25582-1-git-send-email-arik@wizery.com> (sfid-20141217_170048_965685_ADA7C904)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-12-10 at 19:35 +0530, Sujith Manoharan wrote:
-> Bastian Bittorf wrote:
-> > since some weeks the file
-> > '/sys/kernel/debug/ieee80211/$phy/statistics/multicast_received_frame_count'
-> > is not updated anymore. is this intended?
-> 
-> Reverting b8fff407a180286aa683d543d878d98d9fc57b13 in wireless-testing
-> appears to fix the issue (with ath9k).
+Some network cards (Intel) produce per-channel regdomains and rely on
+cfg80211 to merge rules as needed. This hits the max rules limit and
+fails.
 
-https://bugzilla.kernel.org/show_bug.cgi?id=89431
+Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+---
+ include/uapi/linux/nl80211.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-johannes
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index c0383e9..18cb0aa 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2112,7 +2112,7 @@ enum nl80211_attrs {
+ 
+ #define NL80211_MAX_SUPP_RATES			32
+ #define NL80211_MAX_SUPP_HT_RATES		77
+-#define NL80211_MAX_SUPP_REG_RULES		32
++#define NL80211_MAX_SUPP_REG_RULES		64
+ #define NL80211_TKIP_DATA_OFFSET_ENCR_KEY	0
+ #define NL80211_TKIP_DATA_OFFSET_TX_MIC_KEY	16
+ #define NL80211_TKIP_DATA_OFFSET_RX_MIC_KEY	24
+-- 
+1.9.1
 
