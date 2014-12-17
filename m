@@ -1,70 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f179.google.com ([209.85.217.179]:37271 "EHLO
-	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751028AbaLOXZa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Dec 2014 18:25:30 -0500
-Received: by mail-lb0-f179.google.com with SMTP id z11so9917049lbi.38
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Dec 2014 15:25:29 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1418644802.5731.3.camel@sipsolutions.net>
-References: <1416352495-82172-1-git-send-email-nbd@openwrt.org>
-	<1418390516.2470.46.camel@sipsolutions.net>
-	<548AF047.9080404@openwrt.org>
-	<1418392866.2470.49.camel@sipsolutions.net>
-	<548AFB9C.1060408@openwrt.org>
-	<1418644802.5731.3.camel@sipsolutions.net>
-Date: Tue, 16 Dec 2014 00:25:28 +0100
-Message-ID: <CAJzaN5pix=R8RR5wzv7vbtYfHcGJytuUfd3f1QsNo-QqKUf-8Q@mail.gmail.com> (sfid-20141216_002534_145605_45C428AF)
-Subject: Re: [PATCH] mac80211: add an intermediate software queue implementation
-From: Bartosz Szczepanek <barteks7r@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:36167 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751163AbaLQKvE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Dec 2014 05:51:04 -0500
+Message-ID: <1418813460.2135.9.camel@sipsolutions.net> (sfid-20141217_115108_673942_883100F6)
+Subject: Re: [PATCHv2] mac80211: enable TPC through mac80211 stack
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Thomas =?ISO-8859-1?Q?H=FChn?= <thomas@net.t-labs.tu-berlin.de>,
+	adrian@freebsd.org, haim.dreyfuss@intel.com
+Date: Wed, 17 Dec 2014 11:51:00 +0100
+In-Reply-To: <CAA2SeN+71_ZR_H-Mkb5+PLwVe6dhCoknh8puWUjFXf73Ab1MnA@mail.gmail.com> (sfid-20141215_144037_670662_0791986A)
+References: <1417429814-9618-1-git-send-email-lorenzo.bianconi83@gmail.com>
+	 <1418387190.2470.28.camel@sipsolutions.net>
+	 <CAA2SeNJ6oiVRJmZS54Z6dSQDsEM10dCBqSGVmKe+QDaqLzgdWQ@mail.gmail.com>
+	 <1418646586.5731.4.camel@sipsolutions.net>
+	 <CAA2SeN+71_ZR_H-Mkb5+PLwVe6dhCoknh8puWUjFXf73Ab1MnA@mail.gmail.com>
+	 (sfid-20141215_144037_670662_0791986A)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As for drv_wake_tx_queue and ieee80211_tx_dequeue - is it really
-necessary? There are ieee80211_tx_status and ieee80211_free_txskb
-already, which can be used to decide from mac80211 level when to
-dequeue packet. It could be used even in case of drivers that are not
-aware of new mechanism at all. We could compute difference between
-drv_tx and tx_status/free_txskb calls, therefore getting number of
-frames in HW. What could help us to keep queues short.
+On Mon, 2014-12-15 at 14:40 +0100, Lorenzo Bianconi wrote:
 
-I've already written some code. This http://pastebin.com/dSd1zWt7 is
-patch that implements counter of frames in hardware in the way
-described above. It was necessary to differentiate between free_txskb
-and free_txskb. Information about frames in HW is exported to debugfs.
-I thought I could submit it, but just now did I found this thread, so
-I hope that it's adequate place to propose that. I tested it on ath5k
-and brcmsmac.
+> In pending driver (ath9k) patches TPC related info in hw conf and
+> bss_conf are not used for the same purpose. The first one is used to
+> configure HW TPC registers, since TPC should be enabled in hw if there
+> is at least one interface where TPC has been configured, whereas the
+> latter it use to figure out if the transmitted frame belongs to a vif
+> where TPC has been previously enabled. If I do not set TPC info in hw
+> conf I have to loop over all vif every time TPC configuration is
+> applied from mac80211, since ath9k uses just hw conf structure to set
+> TX power info. Maybe that solution is a little bit tricky. What do you
+> think? Sorry if in previous emails I was not so clear :)
 
-One more thing - why not to use local->pending for holding packets?
-There is tx_pending tasklet already. I'm not sure if I understand the
-idea of local->pending queues correctly, but it seems to be a bit
-incoherent to have both pending and proposed ieee80211_txq.
+But you also didn't really implement that logic in mac80211?
 
-(It's my first post on linux kernel mailing list. Please, let me know
-if I did something wrong.)
+IMHO this is a driver quirk that the driver should worry about.
 
-Best regards.
+johannes
 
-2014-12-15 13:00 GMT+01:00 Johannes Berg <johannes@sipsolutions.net>:
-> On Fri, 2014-12-12 at 15:28 +0100, Felix Fietkau wrote:
->
->> > Management (and maybe control) frames can have different priorities as
->> > well, this is only used for something with TDLS now I think though.
->> With my implementation, those would go through the normal tx codepath,
->> bypassing the software tx queues. Can you think of anything else that
->> would need per-AC vif queues?
->
-> Not off the top of my head. I just didn't even quite understand that you
-> were still using the normal tx path
->
-> johannes
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
