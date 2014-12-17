@@ -1,49 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.osadl.org ([62.245.132.105]:51273 "EHLO www.osadl.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752022AbaL3NDr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Dec 2014 08:03:47 -0500
-From: Nicholas Mc Guire <der.herr@hofr.at>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: Michal Kazior <michal.kazior@tieto.com>,
-	Ben Greear <greearb@candelatech.com>,
-	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>,
-	Yanbo Li <yanbol@qti.qualcomm.com>, ath10k@lists.infradead.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Nicholas Mc Guire <der.herr@hofr.at>
-Subject: [PATCH 2/4] ath10k: fixup wait_for_completion_timeout return handling
-Date: Tue, 30 Dec 2014 07:20:44 -0500
-Message-Id: <1419942046-17985-3-git-send-email-der.herr@hofr.at> (sfid-20141230_140355_499894_72BF7B1E)
-In-Reply-To: <1419942046-17985-1-git-send-email-der.herr@hofr.at>
-References: <1419942046-17985-1-git-send-email-der.herr@hofr.at>
+Received: from mail-ie0-f175.google.com ([209.85.223.175]:48185 "EHLO
+	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750900AbaLQSPs convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Dec 2014 13:15:48 -0500
+MIME-Version: 1.0
+In-Reply-To: <20141217155951.GA3144@tuxdriver.com>
+References: <20141217155951.GA3144@tuxdriver.com>
+Date: Wed, 17 Dec 2014 19:15:47 +0100
+Message-ID: <CACna6rynsCu5-wMAt4+Ti8XPE=8cbsg7YYVSDAmeP2SOVgiPBg@mail.gmail.com> (sfid-20141217_191554_903859_7F5C2035)
+Subject: Re: changes to Linux wireless maintenance
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	linux-bluetooth@vger.kernel.org, linux-nfc@ml01.01.org,
+	"David S. Miller" <davem@davemloft.net>,
+	Kalle Valo <kvalo@codeaurora.org>, lwn@lwn.net
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-wait_for_completion_timeout does not return negative values so
-"ret" handling here should check for timeout only.
+On 17 December 2014 at 16:59, John W. Linville <linville@tuxdriver.com> wrote:
+> Nevertheless, I think it is time for some changes.  I have been
+> the wireless maintainer for a long time, and I personally would
+> like to develop in a different direction.  Plus, I think that Linux
+> will benefit from having some fresh blood involved in more of the
+> maintenance duties.  I will be stepping aside to let that happen.
 
-patch was only compile tested for x86_64_defconfig + CONFIG_ATH10K=m
+Thanks John for your work, help and patience over all these years.
 
-patch is against linux-next 3.19.0-rc1 -next-20141226
+Working with wireless was my first bigger kernel involvement and I'll
+always remember it has really started there :)
 
-Signed-off-by: Nicholas Mc Guire <der.herr@hofr.at>
----
- drivers/net/wireless/ath/ath10k/mac.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Thank you!
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index c400567..f9d7dbb 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2151,7 +2151,7 @@ void ath10k_offchan_tx_work(struct work_struct *work)
- 
- 		ret = wait_for_completion_timeout(&ar->offchan_tx_completed,
- 						  3 * HZ);
--		if (ret <= 0)
-+		if (ret == 0)
- 			ath10k_warn(ar, "timed out waiting for offchannel skb %p\n",
- 				    skb);
- 
 -- 
-1.7.10.4
-
+Rafał
