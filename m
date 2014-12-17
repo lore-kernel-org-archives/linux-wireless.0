@@ -1,72 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:23354 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750983AbaLWPkh (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:41859 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751033AbaLQKUk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Dec 2014 10:40:37 -0500
-Message-ID: <54998CE7.7030909@broadcom.com> (sfid-20141223_164040_955315_D7C3A837)
-Date: Tue, 23 Dec 2014 16:40:23 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Wed, 17 Dec 2014 05:20:40 -0500
+Subject: [PATCH v2 0/8] ath10k: Add thermal mitigation support
+To: <ath10k@lists.infradead.org>
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Date: Wed, 17 Dec 2014 12:20:35 +0200
+Message-ID: <20141217101755.15964.2625.stgit@potku.adurom.net> (sfid-20141217_112044_251763_1D52B1D5)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Avinash Patil <patila@marvell.com>,
-	<linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
-	<cluo@marvell.com>, <janusz.dziedzic@tieto.com>
-Subject: Re: [PATCH] cfg80211: check for carrier state only when offchanel
- CAC supported
-References: <1419365159-6577-1-git-send-email-patila@marvell.com>	 <1419346405.6091.6.camel@sipsolutions.net> <54998B8E.3020002@broadcom.com> <1419349104.6091.8.camel@sipsolutions.net>
-In-Reply-To: <1419349104.6091.8.camel@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/23/14 16:38, Johannes Berg wrote:
-> On Tue, 2014-12-23 at 16:34 +0100, Arend van Spriel wrote:
->> On 12/23/14 15:53, Johannes Berg wrote:
->>> On Wed, 2014-12-24 at 01:35 +0530, Avinash Patil wrote:
->>>> Checking for carrier state during start_radar_detection is needed
->>>> only for devices which support offchannel CAC.
->>>> This patch adds one more condition while checking for carrier state
->>>> to see if offchanel CAC is supported, else we need not check carrier
->>>> state.
->>>>
->>>> Signed-off-by: Avinash Patil<patila@marvell.com>
->>>> ---
->>>>    include/net/cfg80211.h | 2 ++
->>>>    net/wireless/nl80211.c | 3 ++-
->>>>    2 files changed, 4 insertions(+), 1 deletion(-)
->>>>
->>>> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
->>>> index 4ebb816..1b80302 100644
->>>> --- a/include/net/cfg80211.h
->>>> +++ b/include/net/cfg80211.h
->>>> @@ -2740,6 +2740,7 @@ struct cfg80211_ops {
->>>>     * @WIPHY_FLAG_SUPPORTS_5_10_MHZ: Device supports 5 MHz and 10 MHz channels.
->>>>     * @WIPHY_FLAG_HAS_CHANNEL_SWITCH: Device supports channel switch in
->>>>     *	beaconing mode (AP, IBSS, Mesh, ...).
->>>> + * @WIPHY_FLAG_OFFCHAN_CAC: Device supports offchannel CAC.
->>>
->>> I think this should be an nl80211 feature flag, so that userspace can
->>> also know whether or not this is supported.
->>>
->>> However, we've run out of nl80211 feature flags. Arend is working on
->>> adding more, see here:
->>> http://mid.gmane.org/1418935344-22159-1-git-send-email-arend@broadcom.com
->>> (ignore the 4-way-HS offload bit he's defining)
->>>
->>> I'm not sure how to proceed here - in a sense your feature flag is far
->>> less controversial and work-intensive than Arend's (who needs a lot more
->>> than just that patch) so I guess you could pick up his patch, but I
->>> expect him to also have fixed already. He's probably also on vacation
->>> for about the same time though...
->>
->> Not on vacation just yet. I indeed reworked the patch, but I was waiting
->> for wpa_supplicant patches so I can verify it works with brcmfmac. I can
->> submit the reworked feature flag patch with empty enum if that would work.
->
-> Maybe if you were to do that Avinash could resubmit it again with the
-> feature flag they need.
+The following patches add thermal sensor and thermal cooling device
+support in ath10k. For sensor, hwmon interface is used. For controlling
+temperature cooling device interface is used. For thermal mitigation,
+tx throttling is done using hw MAC quiet time setting.
 
-Fine by me. Will come out shortly.
+v2:
 
-Gr. AvS
+* use ATH10K_FW_IE_WMI_OP_VERSION instead of a feature flag
+
+* add separate wmi mappings for 10.2.4
+
+* bump up FW API to 4
+
+* new patch: ath10k: set max_num_vdevs based on wmi op version
+
+* new patch: ath10k: use wmi op version to check which iface
+  combination to use
+
+* new patch: ath10k: print ath10k wmi op version
+
+---
+
+Kalle Valo (3):
+      ath10k: set max_num_vdevs based on wmi op version
+      ath10k: use wmi op version to check which iface combination to use
+      ath10k: print ath10k wmi op version
+
+Rajkumar Manoharan (5):
+      ath10k: add 10.2.4 firmware support
+      ath10k: add wmi support for pdev_set_quiet_mode
+      ath10k: add thermal cooling device support
+      ath10k: add wmi interface for pdev_get_temperature
+      ath10k: add thermal sensor device support
+
+
+ drivers/net/wireless/ath/ath10k/Makefile  |    1 
+ drivers/net/wireless/ath/ath10k/core.c    |   30 ++
+ drivers/net/wireless/ath/ath10k/core.h    |    4 
+ drivers/net/wireless/ath/ath10k/debug.c   |    7 -
+ drivers/net/wireless/ath/ath10k/hw.h      |    4 
+ drivers/net/wireless/ath/ath10k/mac.c     |   22 +-
+ drivers/net/wireless/ath/ath10k/thermal.c |  238 +++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/thermal.h |   58 +++++
+ drivers/net/wireless/ath/ath10k/wmi-ops.h |   39 +++
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c |    3 
+ drivers/net/wireless/ath/ath10k/wmi.c     |  355 +++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.h     |   20 ++
+ 12 files changed, 764 insertions(+), 17 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath10k/thermal.c
+ create mode 100644 drivers/net/wireless/ath/ath10k/thermal.h
