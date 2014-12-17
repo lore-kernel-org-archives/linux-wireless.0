@@ -1,84 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:59143 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751907AbaLRNBw (ORCPT
+Received: from smtprelay0178.hostedemail.com ([216.40.44.178]:56637 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751121AbaLQKnV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Dec 2014 08:01:52 -0500
-Message-ID: <5492D03A.9020004@broadcom.com> (sfid-20141218_140203_159685_2132E239)
-Date: Thu, 18 Dec 2014 14:01:46 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Brian Norris <computersforpeace@gmail.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	<linux-wireless@vger.kernel.org>,
-	<brcm80211-dev-list@broadcom.com>, <netdev@vger.kernel.org>
-Subject: Re: [PATCH] brcmsmac: don't leak kernel memory via printk()
-References: <1418204358-8357-1-git-send-email-computersforpeace@gmail.com> <CAN8TOE--Vfa1L8dcoV=up1bA+QX0_=+DkdDa7fAv6DJBF8PHow@mail.gmail.com>
-In-Reply-To: <CAN8TOE--Vfa1L8dcoV=up1bA+QX0_=+DkdDa7fAv6DJBF8PHow@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+	Wed, 17 Dec 2014 05:43:21 -0500
+Message-ID: <1418812995.14140.20.camel@perches.com> (sfid-20141217_114324_989589_7927A4AD)
+Subject: Re: [PATCH 3/4] mwifiex: make tx packet 64 byte DMA aligned
+From: Joe Perches <joe@perches.com>
+To: Avinash Patil <patila@marvell.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	akarwar@marvell.com, cluo@marvell.com, yangyang@marvell.com,
+	huxm@marvell.com
+Date: Wed, 17 Dec 2014 02:43:15 -0800
+In-Reply-To: <1418824621-2102-3-git-send-email-patila@marvell.com>
+References: <1418824621-2102-1-git-send-email-patila@marvell.com>
+	 <1418824621-2102-3-git-send-email-patila@marvell.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/18/14 07:32, Brian Norris wrote:
-> + others [1]
->
-> On Wed, Dec 10, 2014 at 1:39 AM, Brian Norris
-> <computersforpeace@gmail.com>  wrote:
->> Debug code prints the fifo name via custom dev_warn() wrappers. The
->> fifo_names array is only non-zero when debugging is manually enabled,
->> which is all well and good. However, it's *not* good that this array
->> uses zero-length arrays in the non-debug case, and so it doesn't
->> actually have any memory allocated to it. This means that as far as we
->> know, fifo_names[i] actually points to garbage memory.
->>
->> I've seen this in my log:
->>
->> [ 4601.205511] brcmsmac bcma0:1: wl0: brcms_c_d11hdrs_mac80211: �GeL txop exceeded phylen 137/256 dur 1602/1504
->>
->> So let's give this array space enough to fill it with a NULL byte.
->>
->> Signed-off-by: Brian Norris<computersforpeace@gmail.com>
->> Cc: Brett Rudley<brudley@broadcom.com>
->> Cc: Arend van Spriel<arend@broadcom.com>
->> Cc: "Franky (Zhenhui) Lin"<frankyl@broadcom.com>
->> Cc: Hante Meuleman<meuleman@broadcom.com>
->> Cc: "John W. Linville"<linville@tuxdriver.com>
->> Cc: linux-wireless@vger.kernel.org
->> Cc: brcm80211-dev-list@broadcom.com
->> Cc: netdev@vger.kernel.org
->
-> BTW, I guess this qualifies as a security hole, albeit a small one.
-> Should this be CC: stable@vger.kernel.org?
+On Wed, 2014-12-17 at 19:27 +0530, Avinash Patil wrote:
+> From: Xinming Hu <huxm@marvell.com>
+[]
+> diff --git a/drivers/net/wireless/mwifiex/11n_aggr.c b/drivers/net/wireless/mwifiex/11n_aggr.c
+[]
+> @@ -101,6 +101,13 @@ mwifiex_11n_form_amsdu_txpd(struct mwifiex_private *priv,
+>  {
+>  	struct txpd *local_tx_pd;
+>  	struct mwifiex_txinfo *tx_info = MWIFIEX_SKB_TXCB(skb);
+> +	u8 pad;
 
-I have no strong opinion on this, but I guess. Feel free to do so.
+The u8 gets upcasted to unsigned int for the skb_push
+so why use u8 at all?
 
-Regards,
-Arend
+I think unsigned int makes more sense.
 
->> ---
->>   drivers/net/wireless/brcm80211/brcmsmac/main.c | 2 +-
->>   1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
->> index 1b474828d5b8..aed0c948dce8 100644
->> --- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
->> +++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
->> @@ -316,7 +316,7 @@ static const u16 xmtfifo_sz[][NFIFO] = {
->>   static const char * const fifo_names[] = {
->>          "AC_BK", "AC_BE", "AC_VI", "AC_VO", "BCMC", "ATIM" };
->>   #else
->> -static const char fifo_names[6][0];
->> +static const char fifo_names[6][1];
->>   #endif
->>
->>   #ifdef DEBUG
->
-> Brian
->
-> [1] http://lwn.net/Articles/626689/
+
+> +	int headroom = (priv->adapter->iface_type ==
+> +			MWIFIEX_USB) ? 0 : INTF_HEADER_LEN;
+> +
+> +	pad = ((void *)skb->data - sizeof(*local_tx_pd) -
+> +		headroom - NULL) & (MWIFIEX_DMA_ALIGN_SZ - 1);
+> +	skb_push(skb, pad);
+>  
+>  	skb_push(skb, sizeof(*local_tx_pd));
+
+[]
+
+> diff --git a/drivers/net/wireless/mwifiex/decl.h b/drivers/net/wireless/mwifiex/decl.h
+[]
+> @@ -32,8 +32,10 @@
+>  
+>  #define MWIFIEX_MAX_BSS_NUM         (3)
+>  
+> -#define MWIFIEX_MIN_DATA_HEADER_LEN 36	/* sizeof(mwifiex_txpd)
+> -					 *   + 4 byte alignment
+> +#define MWIFIEX_DMA_ALIGN_SZ	    64
+> +#define MWIFIEX_MIN_DATA_HEADER_LEN 100	/* sizeof(mwifiex_txpd)
+> +					 *   + 4 byte interface header alignment
+> +					 *   + 64 byte dma alignment
+
+Maybe better to use those values in the
+#define instead.
+
+> diff --git a/drivers/net/wireless/mwifiex/sta_tx.c b/drivers/net/wireless/mwifiex/sta_tx.c
+> index b896d73..9796334 100644
+> --- a/drivers/net/wireless/mwifiex/sta_tx.c
+> +++ b/drivers/net/wireless/mwifiex/sta_tx.c
+> @@ -47,8 +47,10 @@ void *mwifiex_process_sta_txpd(struct mwifiex_private *priv,
+>  	struct mwifiex_adapter *adapter = priv->adapter;
+>  	struct txpd *local_tx_pd;
+>  	struct mwifiex_txinfo *tx_info = MWIFIEX_SKB_TXCB(skb);
+> -	u8 pad;
+> +	int pad;
+
+here it's int?
+
+
 
