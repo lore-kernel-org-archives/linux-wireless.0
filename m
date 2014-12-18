@@ -1,46 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:45175 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932613AbaLBSLd (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:6213 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751132AbaLRPVn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Dec 2014 13:11:33 -0500
-Received: by mail-wi0-f181.google.com with SMTP id r20so21818502wiv.14
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Dec 2014 10:11:32 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 07/26] iwlwifi: mvm: BT Coex - change the MPLUT registers' value
-Date: Tue,  2 Dec 2014 20:10:58 +0200
-Message-Id: <1417543877-24193-7-git-send-email-egrumbach@gmail.com> (sfid-20141202_191138_557534_9A5DACEA)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB31B5A7D27@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB31B5A7D27@hasmsx107.ger.corp.intel.com>
+	Thu, 18 Dec 2014 10:21:43 -0500
+Message-ID: <5492F104.9020600@broadcom.com> (sfid-20141218_162146_350502_EFB4850D)
+Date: Thu, 18 Dec 2014 16:21:40 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Eliad Peller <eliad@wizery.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Gautam Kumar Shukla <gautams@broadcom.com>
+Subject: Re: [RFC] cfg80211: Add feature flag for 4-way handshake offload
+References: <1418907095-10224-1-git-send-email-arend@broadcom.com> <CAB3XZEcF0r2fMD1GSw+ojWrsO7bxdxBfvQwLkZpTu4RP-iQtTg@mail.gmail.com>
+In-Reply-To: <CAB3XZEcF0r2fMD1GSw+ojWrsO7bxdxBfvQwLkZpTu4RP-iQtTg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On 12/18/14 14:44, Eliad Peller wrote:
+> hi,
+>
+> On Thu, Dec 18, 2014 at 2:51 PM, Arend van Spriel<arend@broadcom.com>  wrote:
+>> From: Gautam Kumar Shukla<gautams@broadcom.com>
+>>
+>> The new feature flag allows the driver to indicate that it can
+>> offload the 4-way handshake for WPA/RSN-PSK. With the
+>> wiphy::features flag being used up this patch adds a new
+>> field wiphy::ext_features. Considering extensibility this
+>> new field is declared as a byte array.
+>>
+>> Signed-off-by: Gautam (Gautam Kumar) Shukla<gautams@broadcom.com>
+>> Signed-off-by: Arend van Spriel<arend@broadcom.com>
+>> ---
+>> Hi Johannes,
+>>
+>> Here the proposed way to deal with new feature flags. Let
+>> me know if this is suitable.
+>>
+>> Regards,
+>> Arend
+>> ---
+>
+>> @@ -3122,6 +3124,7 @@ struct wiphy {
+>>          u16 max_acl_mac_addrs;
+>>
+>>          u32 flags, regulatory_flags, features;
+>> +       u8 ext_features[1];
+>>
+> i think it would be nicer to use unsigned long (instead of u8) along
+> with BITS_TO_LONGS
 
-This impacts the partition between BT and Wifi.
+Thanks, Eliad
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/constants.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+I considered that, but decided against it. The main reason for me was 
+the fact that this is passed in nl80211 attribute and using u8 seemed 
+more straightforward to me. That said I think I will need to describe in 
+nl80211 how the bits are ordered in the byte-array.
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/constants.h b/drivers/net/wireless/iwlwifi/mvm/constants.h
-index 1716031..3bd9347 100644
---- a/drivers/net/wireless/iwlwifi/mvm/constants.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/constants.h
-@@ -94,8 +94,8 @@
- #define IWL_MVM_BT_COEX_MPLUT			1
- #define IWL_MVM_BT_COEX_RRC			1
- #define IWL_MVM_BT_COEX_TTC			1
--#define IWL_MVM_BT_COEX_MPLUT_REG0		0x2e402280
--#define IWL_MVM_BT_COEX_MPLUT_REG1		0x7711a751
-+#define IWL_MVM_BT_COEX_MPLUT_REG0		0x28412201
-+#define IWL_MVM_BT_COEX_MPLUT_REG1		0x11118451
- #define IWL_MVM_BT_COEX_ANTENNA_COUPLING_THRS	30
- #define IWL_MVM_FW_MCAST_FILTER_PASS_ALL	0
- #define IWL_MVM_FW_BCAST_FILTER_PASS_ALL	0
--- 
-1.9.1
+>>
+>>   /**
+>> + * enum nl80211_ext_feature_index - bit index of extended features.
+>> + *
+>> + * @NL80211_EXT_FEATURE_4WAY_HANDSHAKE: the device supports 4way handshake
+>> + */
+>> +enum nl80211_ext_feature_index {
+>> +       NL80211_EXT_FEATURE_4WAY_HANDSHAKE,
+>> +};
+>
+> just add the standard LAST/MAX defines here, and the bitmap size will
+> be allocated automatically.
+
+I thought that was only for attribute enumerations. This is a bit index 
+within a attribute.
+
+>>
+>> +void cfg80211_ext_feature_set(struct wiphy *wiphy,
+>> +                             enum nl80211_ext_feature_index ftidx)
+>> +{
+>> +       u8 *ft_byte;
+>> +
+>> +       ft_byte =&wiphy->ext_features[ftidx / 8];
+>> +       *ft_byte |= BIT(ftidx % 8);
+>> +}
+>> +EXPORT_SYMBOL(cfg80211_ext_feature_set);
+>> +
+>> +bool cfg80211_ext_feature_isset(struct wiphy *wiphy,
+>> +                               enum nl80211_ext_feature_index ftidx)
+>> +{
+>> +       u8 ft_byte;
+>> +
+>> +       ft_byte = wiphy->ext_features[ftidx / 8];
+>> +       return (ft_byte&  BIT(ftidx % 8)) != 0;
+>> +}
+>> +EXPORT_SYMBOL(cfg80211_ext_feature_isset);
+>
+> and these (or only the implementations) could be replaced by set_bit/test_bit.
+
+See above.
+
+Regards,
+Arend
+
+> Eliad.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
