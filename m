@@ -1,129 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:50567 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752032AbaL3OU0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Dec 2014 09:20:26 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Liad Kaufman <liad.kaufman@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 28/33] iwlwifi: tlv: add support for IWL_UCODE_TLV_SDIO_ADMA_ADDR TLV
-Date: Tue, 30 Dec 2014 16:19:03 +0200
-Message-Id: <1419949148-24046-28-git-send-email-emmanuel.grumbach@intel.com> (sfid-20141230_154349_801227_DEB5D1C5)
-In-Reply-To: <1419948357.21410.4.camel@egrumbacBox>
-References: <1419948357.21410.4.camel@egrumbacBox>
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:59909 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751068AbaLRPNd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Dec 2014 10:13:33 -0500
+MIME-Version: 1.0
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <20141217155951.GA3144@tuxdriver.com>
+References: <20141217155951.GA3144@tuxdriver.com>
+Date: Thu, 18 Dec 2014 16:13:31 +0100
+Message-ID: <CA+icZUWsv4ZR1LN09=r-g525Wyreo1HNNzUKgXnq6cSt6QXcqw@mail.gmail.com> (sfid-20141218_161337_440013_E99F4ED6)
+Subject: Re: changes to Linux wireless maintenance
+From: Sedat Dilek <sedat.dilek@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: wireless <linux-wireless@vger.kernel.org>,
+	linux-bluetooth@vger.kernel.org, linux-nfc@ml01.01.org,
+	"David S. Miller" <davem@davemloft.net>,
+	Kalle Valo <kvalo@codeaurora.org>, lwn@lwn.net
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Liad Kaufman <liad.kaufman@intel.com>
+On Wed, Dec 17, 2014 at 4:59 PM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> Greetings,
+>
+> Almost 9 years ago, Jeff Garzik wrote a message on LKML detailing
+> the sad state of wireless LANs in the Linux world.  The point of his
+> message was "So... there it is.  We suck.  There's hope.  No Luke
+> Skywalker in sight.":
+>
+>         https://lkml.org/lkml/2006/1/5/671
+>
+> Shortly thereafter, I became the maintainer for wireless LANs in the
+> Linux kernel:
+>
+>         https://lkml.org/lkml/2006/1/18/377
+>
+...
 
-A new TLV supplies the ADMA address for SDIO mode, allowing
-the driver to configure the default base address to be this
-(as given in the FW), rather than hardcoding the values to
-use until the FW sends the ALIVE message.
+Hmm, I remember testing the eraly iwlwifi stuff because I wanted that
+damn bith running on my HP nc6400 notebook these days (iwl3945).
 
-Use the value given by the FW in the IWL_UCODE_TLV_SDIO_ADMA_ADDR
-TLV for setting the default SDTM base address until the FW sends
-the ALIVE message. If it isn't given in the FW - use the current
-hardcoded values.
+Following the wireless ML made a real fun for me and I will allways
+associate "linux-wireless" with "John W. Linville".
+So life is change, I had some hurtful/wretched experiences the last two years.
+Anyway, thanks and my best wishes with any other projects :-).
 
-Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-drv.c     | 6 ++++++
- drivers/net/wireless/iwlwifi/iwl-fw-file.h | 1 +
- drivers/net/wireless/iwlwifi/iwl-fw.h      | 4 ++++
- drivers/net/wireless/iwlwifi/iwl-trans.h   | 4 ++++
- drivers/net/wireless/iwlwifi/mvm/ops.c     | 2 ++
- 5 files changed, 17 insertions(+)
+> The mac80211, bluetooth, and nfc trees have fed through me for some
+> time.  I am now asking these trees to send pull request directly to
+> David Miller.  Since these trees are managed through git, my hope is
+> that they will not place any significant burden on Dave.
+>
+> As for the wireless driver patches, I have asked Kalle Valo
+> to handle patch review and merge duties for everything under the
+> drivers/net/wireless directory.  This will now include not only the ath
+> patches he already manages, but other drivers that don't have trees
+> such as mwifiex, rt2x00, rtlwifi, and others.  For consistency, the
+> iwlwifi tree will also be merged through Kalle's new tree.  I expect
+> that Kalle will announce any relevant details in a follow-up message.
+>
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-drv.c b/drivers/net/wireless/iwlwifi/iwl-drv.c
-index 0381dc4..0d34726 100644
---- a/drivers/net/wireless/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-drv.c
-@@ -903,6 +903,12 @@ static int iwl_parse_tlv_firmware(struct iwl_drv *drv,
- 					    IWL_UCODE_REGULAR_USNIFFER,
- 					    tlv_len);
- 			break;
-+		case IWL_UCODE_TLV_SDIO_ADMA_ADDR:
-+			if (tlv_len != sizeof(u32))
-+				goto invalid_tlv_len;
-+			drv->fw.sdio_adma_addr =
-+				le32_to_cpup((__le32 *)tlv_data);
-+			break;
- 		default:
- 			IWL_DEBUG_INFO(drv, "unknown TLV: %d\n", tlv_type);
- 			break;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-fw-file.h b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
-index f2a047f..752c72b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-fw-file.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
-@@ -132,6 +132,7 @@ enum iwl_ucode_tlv_type {
- 	IWL_UCODE_TLV_ENABLED_CAPABILITIES	= 30,
- 	IWL_UCODE_TLV_N_SCAN_CHANNELS		= 31,
- 	IWL_UCODE_TLV_SEC_RT_USNIFFER	= 34,
-+	IWL_UCODE_TLV_SDIO_ADMA_ADDR	= 35,
- 	IWL_UCODE_TLV_FW_DBG_DEST	= 38,
- 	IWL_UCODE_TLV_FW_DBG_CONF	= 39,
- };
-diff --git a/drivers/net/wireless/iwlwifi/iwl-fw.h b/drivers/net/wireless/iwlwifi/iwl-fw.h
-index e6dc3b8..ffd785c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-fw.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-fw.h
-@@ -152,6 +152,8 @@ struct iwl_fw_cscheme_list {
-  * @mvm_fw: indicates this is MVM firmware
-  * @cipher_scheme: optional external cipher scheme.
-  * @human_readable: human readable version
-+ * @sdio_adma_addr: the default address to set for the ADMA in SDIO mode until
-+ *	we get the ALIVE from the uCode
-  * @dbg_dest_tlv: points to the destination TLV for debug
-  * @dbg_conf_tlv: array of pointers to configuration TLVs for debug
-  * @dbg_conf_tlv_len: lengths of the @dbg_conf_tlv entries
-@@ -181,6 +183,8 @@ struct iwl_fw {
- 	struct ieee80211_cipher_scheme cs[IWL_UCODE_MAX_CS];
- 	u8 human_readable[FW_VER_HUMAN_READABLE_SZ];
- 
-+	u32 sdio_adma_addr;
-+
- 	struct iwl_fw_dbg_dest_tlv *dbg_dest_tlv;
- 	struct iwl_fw_dbg_conf_tlv *dbg_conf_tlv[FW_DBG_MAX];
- 	size_t dbg_conf_tlv_len[FW_DBG_MAX];
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
-index 10ae9d7..84d8477 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
-@@ -382,6 +382,8 @@ enum iwl_trans_status {
-  *	are considered stuck and will trigger device restart
-  * @command_names: array of command names, must be 256 entries
-  *	(one for each command); for debugging only
-+ * @sdio_adma_addr: the default address to set for the ADMA in SDIO mode until
-+ *	we get the ALIVE from the uCode
-  */
- struct iwl_trans_config {
- 	struct iwl_op_mode *op_mode;
-@@ -396,6 +398,8 @@ struct iwl_trans_config {
- 	bool scd_set_active;
- 	unsigned int queue_watchdog_timeout;
- 	const char *const *command_names;
-+
-+	u32 sdio_adma_addr;
- };
- 
- struct iwl_trans_dump_data {
-diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
-index 6bb6546..4906967 100644
---- a/drivers/net/wireless/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
-@@ -481,6 +481,8 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
- 	trans_cfg.cmd_fifo = IWL_MVM_TX_FIFO_CMD;
- 	trans_cfg.scd_set_active = true;
- 
-+	trans_cfg.sdio_adma_addr = fw->sdio_adma_addr;
-+
- 	snprintf(mvm->hw->wiphy->fw_version,
- 		 sizeof(mvm->hw->wiphy->fw_version),
- 		 "%s", fw->fw_version);
--- 
-1.9.1
+Hmm, not sure why mac80211 stuff should not go via wireless trees?
+If I remember testing early wireless stuff I pulled this order...
 
+mac80211 -> wireless -> net (Git trees)
+
+Can you explain why mac80211 separate from wireless stuff?
+
+- Sedat -
