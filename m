@@ -1,67 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:41859 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751033AbaLQKUk (ORCPT
+Received: from mail-ob0-f171.google.com ([209.85.214.171]:60725 "EHLO
+	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751715AbaLRJGJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Dec 2014 05:20:40 -0500
-Subject: [PATCH v2 0/8] ath10k: Add thermal mitigation support
-To: <ath10k@lists.infradead.org>
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Date: Wed, 17 Dec 2014 12:20:35 +0200
-Message-ID: <20141217101755.15964.2625.stgit@potku.adurom.net> (sfid-20141217_112044_251763_1D52B1D5)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Thu, 18 Dec 2014 04:06:09 -0500
+Received: by mail-ob0-f171.google.com with SMTP id uz6so2366507obc.2
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Dec 2014 01:06:09 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH 13/16] rtlwifi: rtl8821ae: Add VHT rate descriptors
+Date: Thu, 18 Dec 2014 03:05:37 -0600
+Message-Id: <1418893540-19944-14-git-send-email-Larry.Finger@lwfinger.net> (sfid-20141218_101346_838613_42C162A5)
+In-Reply-To: <1418893540-19944-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1418893540-19944-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The following patches add thermal sensor and thermal cooling device
-support in ath10k. For sensor, hwmon interface is used. For controlling
-temperature cooling device interface is used. For thermal mitigation,
-tx throttling is done using hw MAC quiet time setting.
+Device RTL8821AE is the first if the rtlwifi devices to implement 802.11ac
+capability. As a result, VHT rate descriptors are needed. In addition, the
+driver is converted to use the descriptors in rtlwifi.
 
-v2:
-
-* use ATH10K_FW_IE_WMI_OP_VERSION instead of a feature flag
-
-* add separate wmi mappings for 10.2.4
-
-* bump up FW API to 4
-
-* new patch: ath10k: set max_num_vdevs based on wmi op version
-
-* new patch: ath10k: use wmi op version to check which iface
-  combination to use
-
-* new patch: ath10k: print ath10k wmi op version
-
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
+ drivers/net/wireless/rtlwifi/rtl8821ae/def.h | 23 -----------------------
+ drivers/net/wireless/rtlwifi/wifi.h          | 21 +++++++++++++++++++++
+ 2 files changed, 21 insertions(+), 23 deletions(-)
 
-Kalle Valo (3):
-      ath10k: set max_num_vdevs based on wmi op version
-      ath10k: use wmi op version to check which iface combination to use
-      ath10k: print ath10k wmi op version
+diff --git a/drivers/net/wireless/rtlwifi/rtl8821ae/def.h b/drivers/net/wireless/rtlwifi/rtl8821ae/def.h
+index 53dc522..ee7c208 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8821ae/def.h
++++ b/drivers/net/wireless/rtlwifi/rtl8821ae/def.h
+@@ -373,29 +373,6 @@ enum rtl_desc_qsel {
+ 	QSLT_CMD = 0x13,
+ };
+ 
+-enum rtl_desc8821ae_rate {
+-	DESC_RATEVHT1SS_MCS0 = 0x2c,
+-	DESC_RATEVHT1SS_MCS1 = 0x2d,
+-	DESC_RATEVHT1SS_MCS2 = 0x2e,
+-	DESC_RATEVHT1SS_MCS3 = 0x2f,
+-	DESC_RATEVHT1SS_MCS4 = 0x30,
+-	DESC_RATEVHT1SS_MCS5 = 0x31,
+-	DESC_RATEVHT1SS_MCS6 = 0x32,
+-	DESC_RATEVHT1SS_MCS7 = 0x33,
+-	DESC_RATEVHT1SS_MCS8 = 0x34,
+-	DESC_RATEVHT1SS_MCS9 = 0x35,
+-	DESC_RATEVHT2SS_MCS0 = 0x36,
+-	DESC_RATEVHT2SS_MCS1 = 0x37,
+-	DESC_RATEVHT2SS_MCS2 = 0x38,
+-	DESC_RATEVHT2SS_MCS3 = 0x39,
+-	DESC_RATEVHT2SS_MCS4 = 0x3a,
+-	DESC_RATEVHT2SS_MCS5 = 0x3b,
+-	DESC_RATEVHT2SS_MCS6 = 0x3c,
+-	DESC_RATEVHT2SS_MCS7 = 0x3d,
+-	DESC_RATEVHT2SS_MCS8 = 0x3e,
+-	DESC_RATEVHT2SS_MCS9 = 0x3f,
+-};
+-
+ enum rx_packet_type {
+ 	NORMAL_RX,
+ 	TX_REPORT1,
+diff --git a/drivers/net/wireless/rtlwifi/wifi.h b/drivers/net/wireless/rtlwifi/wifi.h
+index 26fd960..7a718fd 100644
+--- a/drivers/net/wireless/rtlwifi/wifi.h
++++ b/drivers/net/wireless/rtlwifi/wifi.h
+@@ -611,6 +611,27 @@ enum rtl_desc92_rate {
+ 	DESC_RATEMCS15 = 0x1b,
+ 	DESC_RATEMCS15_SG = 0x1c,
+ 	DESC_RATEMCS32 = 0x20,
++
++	DESC_RATEVHT1SS_MCS0 = 0x2c,
++	DESC_RATEVHT1SS_MCS1 = 0x2d,
++	DESC_RATEVHT1SS_MCS2 = 0x2e,
++	DESC_RATEVHT1SS_MCS3 = 0x2f,
++	DESC_RATEVHT1SS_MCS4 = 0x30,
++	DESC_RATEVHT1SS_MCS5 = 0x31,
++	DESC_RATEVHT1SS_MCS6 = 0x32,
++	DESC_RATEVHT1SS_MCS7 = 0x33,
++	DESC_RATEVHT1SS_MCS8 = 0x34,
++	DESC_RATEVHT1SS_MCS9 = 0x35,
++	DESC_RATEVHT2SS_MCS0 = 0x36,
++	DESC_RATEVHT2SS_MCS1 = 0x37,
++	DESC_RATEVHT2SS_MCS2 = 0x38,
++	DESC_RATEVHT2SS_MCS3 = 0x39,
++	DESC_RATEVHT2SS_MCS4 = 0x3a,
++	DESC_RATEVHT2SS_MCS5 = 0x3b,
++	DESC_RATEVHT2SS_MCS6 = 0x3c,
++	DESC_RATEVHT2SS_MCS7 = 0x3d,
++	DESC_RATEVHT2SS_MCS8 = 0x3e,
++	DESC_RATEVHT2SS_MCS9 = 0x3f,
+ };
+ 
+ enum rtl_var_map {
+-- 
+2.1.2
 
-Rajkumar Manoharan (5):
-      ath10k: add 10.2.4 firmware support
-      ath10k: add wmi support for pdev_set_quiet_mode
-      ath10k: add thermal cooling device support
-      ath10k: add wmi interface for pdev_get_temperature
-      ath10k: add thermal sensor device support
-
-
- drivers/net/wireless/ath/ath10k/Makefile  |    1 
- drivers/net/wireless/ath/ath10k/core.c    |   30 ++
- drivers/net/wireless/ath/ath10k/core.h    |    4 
- drivers/net/wireless/ath/ath10k/debug.c   |    7 -
- drivers/net/wireless/ath/ath10k/hw.h      |    4 
- drivers/net/wireless/ath/ath10k/mac.c     |   22 +-
- drivers/net/wireless/ath/ath10k/thermal.c |  238 +++++++++++++++++++
- drivers/net/wireless/ath/ath10k/thermal.h |   58 +++++
- drivers/net/wireless/ath/ath10k/wmi-ops.h |   39 +++
- drivers/net/wireless/ath/ath10k/wmi-tlv.c |    3 
- drivers/net/wireless/ath/ath10k/wmi.c     |  355 +++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi.h     |   20 ++
- 12 files changed, 764 insertions(+), 17 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath10k/thermal.c
- create mode 100644 drivers/net/wireless/ath/ath10k/thermal.h
