@@ -1,53 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:35359 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752145AbaLQJB7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Dec 2014 04:01:59 -0500
-Received: by mail-wi0-f181.google.com with SMTP id r20so15245038wiv.2
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Dec 2014 01:01:58 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: ath10k@lists.infradead.org, johannes@sipsolutions.net,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH v2] mac80211: notify NSS changed when IBSS and HT
-Date: Wed, 17 Dec 2014 10:00:52 +0100
-Message-Id: <1418806852-558-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20141217_100211_493020_7C0F302D)
+Received: from s3.sipsolutions.net ([5.9.151.49]:43377 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751225AbaLRVNs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Dec 2014 16:13:48 -0500
+Message-ID: <1418936069.10864.1.camel@sipsolutions.net> (sfid-20141218_221354_904143_B4790AD5)
+Subject: Re: pull-request: mac80211 2014-12-18
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Date: Thu, 18 Dec 2014 21:54:29 +0100
+In-Reply-To: <20141218.153520.221364366280641527.davem@davemloft.net>
+References: <1418911822.6134.13.camel@sipsolutions.net>
+	 <20141218.153520.221364366280641527.davem@davemloft.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When using IBSS in HT mode, we always get NSS=1
-in rc_update callback. Force NSS recalculation when
-rates updated and notify driver that NSS changed.
+On Thu, 2014-12-18 at 15:35 -0500, David Miller wrote:
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
----
- net/mac80211/ibss.c | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+> 1) Don't put things into a merge commit, I take the text from your
+>    pull request email and that becomes the merge commit contents.
+>    Put it in your pull request email.
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 509bc15..b606b53 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -1069,9 +1069,16 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
- 		}
- 
- 		if (sta && rates_updated) {
--			drv_sta_rc_update(local, sdata, &sta->sta,
--					  IEEE80211_RC_SUPP_RATES_CHANGED);
-+			u32 changed = IEEE80211_RC_SUPP_RATES_CHANGED;
-+			u8 rx_nss = sta->sta.rx_nss;
-+
-+			/* Force rx_nss recalculation */
-+			sta->sta.rx_nss = 0;
- 			rate_control_rate_init(sta);
-+			if (sta->sta.rx_nss != rx_nss)
-+				changed |= IEEE80211_RC_NSS_CHANGED;
-+
-+			drv_sta_rc_update(local, sdata, &sta->sta, changed);
- 		}
- 
- 		rcu_read_unlock();
--- 
-1.9.1
+Hmm, ok - not sure I fully understand. I don't think I created a merge
+commit, so did you mean the tag? I thought a (signed) tag with contents
+was now the preferred way to send pull requests, but I can also send a
+signed email without a tag for you to merge a branch? Or would you
+prefer a signed tag but empty (is that even possible?) with the text in
+the email?
+
+> 2) I want every pull request I get at least CC:'d to netdev.
+
+Ok, sure.
+
+Thanks,
+johannes
+
 
