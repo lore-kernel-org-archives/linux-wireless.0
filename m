@@ -1,55 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f182.google.com ([209.85.212.182]:49245 "EHLO
-	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753685AbaLAPvj (ORCPT
+Received: from mail-ie0-f182.google.com ([209.85.223.182]:62913 "EHLO
+	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752295AbaLRNoi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Dec 2014 10:51:39 -0500
-Received: by mail-wi0-f182.google.com with SMTP id h11so17800945wiw.9
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Dec 2014 07:51:38 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
+	Thu, 18 Dec 2014 08:44:38 -0500
+Received: by mail-ie0-f182.google.com with SMTP id x19so1089894ier.27
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Dec 2014 05:44:37 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1418907095-10224-1-git-send-email-arend@broadcom.com>
+References: <1418907095-10224-1-git-send-email-arend@broadcom.com>
+Date: Thu, 18 Dec 2014 15:44:37 +0200
+Message-ID: <CAB3XZEcF0r2fMD1GSw+ojWrsO7bxdxBfvQwLkZpTu4RP-iQtTg@mail.gmail.com> (sfid-20141218_144441_644565_EFBC9453)
+Subject: Re: [RFC] cfg80211: Add feature flag for 4-way handshake offload
+From: Eliad Peller <eliad@wizery.com>
+To: Arend van Spriel <arend@broadcom.com>
 Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 3/4] iw: fix attr max for reg_rule
-Date: Mon,  1 Dec 2014 17:51:32 +0200
-Message-Id: <1417449093-9470-3-git-send-email-arik@wizery.com> (sfid-20141201_165142_805328_21D372F6)
-In-Reply-To: <1417449093-9470-1-git-send-email-arik@wizery.com>
-References: <1417449093-9470-1-git-send-email-arik@wizery.com>
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Gautam Kumar Shukla <gautams@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- reg.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+hi,
 
-diff --git a/reg.c b/reg.c
-index 9af8e7e..a02c982 100644
---- a/reg.c
-+++ b/reg.c
-@@ -127,7 +127,7 @@ static int print_reg_handler(struct nl_msg *msg, void *arg)
- 	struct nlattr *nl_rule;
- 	int rem_rule;
- 	enum nl80211_dfs_regions dfs_domain;
--	static struct nla_policy reg_rule_policy[NL80211_FREQUENCY_ATTR_MAX + 1] = {
-+	static struct nla_policy reg_rule_policy[NL80211_REG_RULE_ATTR_MAX + 1] = {
- 		[NL80211_ATTR_REG_RULE_FLAGS]		= { .type = NLA_U32 },
- 		[NL80211_ATTR_FREQ_RANGE_START]		= { .type = NLA_U32 },
- 		[NL80211_ATTR_FREQ_RANGE_END]		= { .type = NLA_U32 },
-@@ -159,10 +159,10 @@ static int print_reg_handler(struct nl_msg *msg, void *arg)
- 	printf("country %c%c: %s\n", alpha2[0], alpha2[1], dfs_domain_name(dfs_domain));
- 
- 	nla_for_each_nested(nl_rule, tb_msg[NL80211_ATTR_REG_RULES], rem_rule) {
--		struct nlattr *tb_rule[NL80211_FREQUENCY_ATTR_MAX + 1];
-+		struct nlattr *tb_rule[NL80211_REG_RULE_ATTR_MAX + 1];
- 		__u32 flags, start_freq_khz, end_freq_khz, max_bw_khz, max_ant_gain_mbi, max_eirp_mbm;
- 
--		nla_parse(tb_rule, NL80211_FREQUENCY_ATTR_MAX, nla_data(nl_rule), nla_len(nl_rule), reg_rule_policy);
-+		nla_parse(tb_rule, NL80211_REG_RULE_ATTR_MAX, nla_data(nl_rule), nla_len(nl_rule), reg_rule_policy);
- 
- 		flags = nla_get_u32(tb_rule[NL80211_ATTR_REG_RULE_FLAGS]);
- 		start_freq_khz = nla_get_u32(tb_rule[NL80211_ATTR_FREQ_RANGE_START]);
--- 
-1.9.1
+On Thu, Dec 18, 2014 at 2:51 PM, Arend van Spriel <arend@broadcom.com> wrote:
+> From: Gautam Kumar Shukla <gautams@broadcom.com>
+>
+> The new feature flag allows the driver to indicate that it can
+> offload the 4-way handshake for WPA/RSN-PSK. With the
+> wiphy::features flag being used up this patch adds a new
+> field wiphy::ext_features. Considering extensibility this
+> new field is declared as a byte array.
+>
+> Signed-off-by: Gautam (Gautam Kumar) Shukla <gautams@broadcom.com>
+> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+> ---
+> Hi Johannes,
+>
+> Here the proposed way to deal with new feature flags. Let
+> me know if this is suitable.
+>
+> Regards,
+> Arend
+> ---
 
+> @@ -3122,6 +3124,7 @@ struct wiphy {
+>         u16 max_acl_mac_addrs;
+>
+>         u32 flags, regulatory_flags, features;
+> +       u8 ext_features[1];
+>
+i think it would be nicer to use unsigned long (instead of u8) along
+with BITS_TO_LONGS
+
+>
+>  /**
+> + * enum nl80211_ext_feature_index - bit index of extended features.
+> + *
+> + * @NL80211_EXT_FEATURE_4WAY_HANDSHAKE: the device supports 4way handshake
+> + */
+> +enum nl80211_ext_feature_index {
+> +       NL80211_EXT_FEATURE_4WAY_HANDSHAKE,
+> +};
+
+just add the standard LAST/MAX defines here, and the bitmap size will
+be allocated automatically.
+
+>
+> +void cfg80211_ext_feature_set(struct wiphy *wiphy,
+> +                             enum nl80211_ext_feature_index ftidx)
+> +{
+> +       u8 *ft_byte;
+> +
+> +       ft_byte = &wiphy->ext_features[ftidx / 8];
+> +       *ft_byte |= BIT(ftidx % 8);
+> +}
+> +EXPORT_SYMBOL(cfg80211_ext_feature_set);
+> +
+> +bool cfg80211_ext_feature_isset(struct wiphy *wiphy,
+> +                               enum nl80211_ext_feature_index ftidx)
+> +{
+> +       u8 ft_byte;
+> +
+> +       ft_byte = wiphy->ext_features[ftidx / 8];
+> +       return (ft_byte & BIT(ftidx % 8)) != 0;
+> +}
+> +EXPORT_SYMBOL(cfg80211_ext_feature_isset);
+
+and these (or only the implementations) could be replaced by set_bit/test_bit.
+
+Eliad.
