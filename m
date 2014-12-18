@@ -1,73 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:44582 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751757AbaLGJG4 convert rfc822-to-8bit (ORCPT
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:34198 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751965AbaLRIL0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Dec 2014 04:06:56 -0500
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 8.1 \(1993\))
-Subject: Re: [PATCH] mac80211: Supporting of IFLA_INFO_KIND rtnl attribute
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <1417910690-2021-1-git-send-email-vadim4j@gmail.com>
-Date: Sun, 7 Dec 2014 10:06:52 +0100
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev@vger.kernel.org
-Message-Id: <88214C7B-ED89-4E9C-BB24-8F0187B88D5E@holtmann.org> (sfid-20141207_100709_656382_06AE4BAD)
-References: <1417910690-2021-1-git-send-email-vadim4j@gmail.com>
-To: Vadim Kochan <vadim4j@gmail.com>
+	Thu, 18 Dec 2014 03:11:26 -0500
+Received: by mail-wi0-f176.google.com with SMTP id ex7so844701wid.15
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Dec 2014 00:11:25 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Liad Kaufman <liad.kaufman@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 5/5] iwlwifi: pcie: limit fw chunk sizes given to fh
+Date: Thu, 18 Dec 2014 10:10:01 +0200
+Message-Id: <1418890201-15177-5-git-send-email-egrumbach@gmail.com> (sfid-20141218_091132_171759_A4413DC9)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB31B5CD8C0@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB31B5CD8C0@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Vadim,
+From: Liad Kaufman <liad.kaufman@intel.com>
 
-> It allows to identify the wireless kind of device for
-> the user application, e.g.:
-> 
->    # ip -d link
-> 
->    1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default
->        link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00 promiscuity 0
->    2: enp0s25: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc pfifo_fast state DOWN mode DEFAULT group default qlen 1000
->        link/ether XX:XX:XX:XX:XX:XX brd ff:ff:ff:ff:ff:ff promiscuity 0
->    3: wlp3s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP mode DEFAULT group default qlen 1000
->        link/ether XX:XX:XX:XX:XX:XX brd ff:ff:ff:ff:ff:ff promiscuity 0
->        wireless
->    4: wlp0s26u1u2: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN mode DEFAULT group default qlen 1000
->        link/ether XX:XX:XX:XX:XX:XX brd ff:ff:ff:ff:ff:ff promiscuity 0 
->        wireless 
-> 
-> Signed-off-by: Vadim Kochan <vadim4j@gmail.com>
-> ---
-> net/mac80211/iface.c | 7 +++++++
-> 1 file changed, 7 insertions(+)
-> 
-> diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-> index 653f5eb..b993c7d 100644
-> --- a/net/mac80211/iface.c
-> +++ b/net/mac80211/iface.c
-> @@ -18,6 +18,7 @@
-> #include <linux/rtnetlink.h>
-> #include <net/mac80211.h>
-> #include <net/ieee80211_radiotap.h>
-> +#include <net/rtnetlink.h>
-> #include "ieee80211_i.h"
-> #include "sta_info.h"
-> #include "debugfs_netdev.h"
-> @@ -1624,6 +1625,10 @@ static void ieee80211_assign_perm_addr(struct ieee80211_local *local,
-> 	mutex_unlock(&local->iflist_mtx);
-> }
-> 
-> +static struct rtnl_link_ops wireless_link_ops __read_mostly = {
-> +	.kind = "wireless",
-> +};
-> +
+New FW has chunks that are larger than the size limit of the
+FH's DMA. To make sure we don't crash it - actively limit the
+max size of each chunk.
 
-I would prefer if we use "wlan" here. Same as what we use for DEVTYPE and RFKILL switches. Being consistent across the kernel helps a lot. Since other subsystems including Bluetooth might want to identify their netdev as well and "wireless" would be just too generic.
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-fh.h     | 1 +
+ drivers/net/wireless/iwlwifi/pcie/trans.c | 2 +-
+ 2 files changed, 2 insertions(+), 1 deletion(-)
 
-Regards
-
-Marcel
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fh.h b/drivers/net/wireless/iwlwifi/iwl-fh.h
+index 9564ae1..1f7f15e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fh.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fh.h
+@@ -310,6 +310,7 @@ static inline unsigned int FH_MEM_CBBC_QUEUE(unsigned int chnl)
+ #define FH_RSSR_CHNL0_RX_STATUS_CHNL_IDLE	(0x01000000)
+ 
+ #define FH_MEM_TFDIB_REG1_ADDR_BITSHIFT	28
++#define FH_MEM_TB_MAX_LENGTH			(0x00020000)
+ 
+ /* TFDB  Area - TFDs buffer table */
+ #define FH_MEM_TFDIB_DRAM_ADDR_LSB_MSK      (0xFFFFFFFF)
+diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
+index d151af3..523fe0c 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
+@@ -614,7 +614,7 @@ static int iwl_pcie_load_section(struct iwl_trans *trans, u8 section_num,
+ {
+ 	u8 *v_addr;
+ 	dma_addr_t p_addr;
+-	u32 offset, chunk_sz = section->len;
++	u32 offset, chunk_sz = min_t(u32, FH_MEM_TB_MAX_LENGTH, section->len);
+ 	int ret = 0;
+ 
+ 	IWL_DEBUG_FW(trans, "[%d] uCode section being loaded...\n",
+-- 
+1.9.1
 
