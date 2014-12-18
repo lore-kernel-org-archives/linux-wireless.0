@@ -1,101 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:12320 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750725AbaLWTYH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Dec 2014 14:24:07 -0500
-Message-ID: <5499C154.3000500@broadcom.com> (sfid-20141223_202425_107075_0E354433)
-Date: Tue, 23 Dec 2014 20:24:04 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Vaishali Thakkar <vthakkar1994@gmail.com>
-CC: <linux-wireless@vger.kernel.org>, <lauro.venancio@openbossa.org>,
-	<aloisio.almeida@openbossa.org>, <sameo@linux.intel.com>,
-	<linux-kernel@vger.kernel.org>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [PATCH] NFC: port100: Introduce the use of function put_unaligned_le16
-References: <20141223152747.GA14667@vaishali-Ideapad-Z570>
-In-Reply-To: <20141223152747.GA14667@vaishali-Ideapad-Z570>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:42071 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751116AbaLRQLc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Dec 2014 11:11:32 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 2/2] mac80211: provide per-TID RX/TX MSDU counters
+Date: Thu, 18 Dec 2014 17:11:23 +0100
+Message-Id: <1418919083-28297-2-git-send-email-johannes@sipsolutions.net> (sfid-20141218_171135_871645_CC51D416)
+In-Reply-To: <1418919083-28297-1-git-send-email-johannes@sipsolutions.net>
+References: <1418919083-28297-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/23/14 16:27, Vaishali Thakkar wrote:
-> This patch introduces the use of function put_unaligned_le16.
->
-> This is done using Coccinelle and semantic patch used is as follows:
->
-> @a@
-> typedef u16, __le16;
-> {u16,__le16} e16;
-> identifier tmp;
-> expression ptr;
-> expression y,e;
-> type T;
-> @@
->
-> - tmp = cpu_to_le16(y);
->
->    <+... when != tmp
-> (
-> - memcpy(ptr, (T)&tmp, \(2\|sizeof(u16)\|sizeof(__le16)\|sizeof(e16)\));
-> + put_unaligned_le16(y,ptr);
-> |
-> - memcpy(ptr, (T)&tmp, ...);
-> + put_unaligned_le16(y,ptr);
-> )
->    ...+>
-> ? tmp = e
->
-> @@ type T; identifier a.tmp; @@
->
-> - T tmp;
-> ...when != tmp
->
-> Signed-off-by: Vaishali Thakkar<vthakkar1994@gmail.com>
-> ---
->   drivers/nfc/port100.c | 6 ++----
->   1 file changed, 2 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/nfc/port100.c b/drivers/nfc/port100.c
-> index 4ac4d31..f7cbca8 100644
-> --- a/drivers/nfc/port100.c
-> +++ b/drivers/nfc/port100.c
-> @@ -18,6 +18,7 @@
->   #include<linux/module.h>
->   #include<linux/usb.h>
->   #include<net/nfc/digital.h>
-> +#include<linux/unaligned/access_ok.h>
+From: Johannes Berg <johannes.berg@intel.com>
 
-It is incorrect to use this header file as was pointed out by Johannes 
-to me in a brcmfmac driver patch [1]. Unless this driver is architecture 
-specific.
+Implement the new counters cfg80211 can now advertise to userspace.
+The TX code is in the sequence number handler, which is a bit odd,
+but that place already knows the TID and frame type, so it was
+easiest and least impact there.
 
-Regards,
-Arend
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/rx.c       |  9 +++++++++
+ net/mac80211/sta_info.c | 22 ++++++++++++++++++++++
+ net/mac80211/sta_info.h |  7 +++++++
+ net/mac80211/tx.c       |  3 +++
+ 4 files changed, 41 insertions(+)
 
-[1] 
-https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=a1d69c60c44
-
->   #define VERSION "0.1"
->
-> @@ -1136,7 +1137,6 @@ static int port100_in_send_cmd(struct nfc_digital_dev *ddev,
->   {
->   	struct port100 *dev = nfc_digital_get_drvdata(ddev);
->   	struct port100_cb_arg *cb_arg;
-> -	__le16 timeout;
->
->   	cb_arg = kzalloc(sizeof(struct port100_cb_arg), GFP_KERNEL);
->   	if (!cb_arg)
-> @@ -1145,9 +1145,7 @@ static int port100_in_send_cmd(struct nfc_digital_dev *ddev,
->   	cb_arg->complete_cb = cb;
->   	cb_arg->complete_arg = arg;
->
-> -	timeout = cpu_to_le16(_timeout * 10);
-> -
-> -	memcpy(skb_push(skb, sizeof(__le16)),&timeout, sizeof(__le16));
-> +	put_unaligned_le16(_timeout * 10, skb_push(skb, sizeof(__le16)));
->
->   	return port100_send_cmd_async(dev, PORT100_CMD_IN_COMM_RF, skb,
->   				      port100_in_comm_rf_complete, cb_arg);
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 444ebff955c1..52c5932adbd9 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2313,6 +2313,15 @@ ieee80211_rx_h_data(struct ieee80211_rx_data *rx)
+ 	if (unlikely(!ieee80211_is_data_present(hdr->frame_control)))
+ 		return RX_DROP_MONITOR;
+ 
++	if (rx->sta) {
++		/* The security index has the same property as needed
++		 * for the rx_msdu field, i.e. it is IEEE80211_NUM_TIDS
++		 * for non-QoS-data frames. Here we know it's a data
++		 * frame, so count MSDUs.
++		 */
++		rx->sta->rx_msdu[rx->security_idx]++;
++	}
++
+ 	/*
+ 	 * Send unexpected-4addr-frame event to hostapd. For older versions,
+ 	 * also drop the frame to cooked monitor interfaces.
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 64b53b943d98..b20854bfd02b 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -1843,6 +1843,28 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+ 		sinfo->filled |= BIT(NL80211_STA_INFO_RX_BITRATE);
+ 	}
+ 
++	if (!(sinfo->filled & BIT(NL80211_STA_INFO_RX_QOS_MSDU))) {
++		for (i = 0; i < IEEE80211_NUM_TIDS; i++)
++			sinfo->rx_qos_msdu[i] = sta->rx_msdu[i];
++		sinfo->filled |= BIT(NL80211_STA_INFO_RX_QOS_MSDU);
++	}
++
++	if (!(sinfo->filled & BIT_ULL(NL80211_STA_INFO_RX_NONQOS_MSDU))) {
++		sinfo->rx_nonqos_msdu = sta->rx_msdu[IEEE80211_NUM_TIDS];
++		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_RX_NONQOS_MSDU);
++	}
++
++	if (!(sinfo->filled & BIT_ULL(NL80211_STA_INFO_TX_QOS_MSDU))) {
++		for (i = 0; i < 8; i++)
++			sinfo->tx_qos_msdu[i] = sta->tx_msdu_qos[i];
++		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_QOS_MSDU);
++	}
++
++	if (!(sinfo->filled & BIT_ULL(NL80211_STA_INFO_TX_NONQOS_MSDU))) {
++		sinfo->tx_nonqos_msdu = sta->tx_msdu_nonqos;
++		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_NONQOS_MSDU);
++	}
++
+ 	if (ieee80211_vif_is_mesh(&sdata->vif)) {
+ #ifdef CONFIG_MAC80211_MESH
+ 		sinfo->filled |= BIT(NL80211_STA_INFO_LLID) |
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 4f052bb2a5ad..d34392b44293 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -346,6 +346,10 @@ struct ieee80211_tx_latency_stat {
+  * @cipher_scheme: optional cipher scheme for this station
+  * @last_tdls_pkt_time: holds the time in jiffies of last TDLS pkt ACKed
+  * @reserved_tid: reserved TID (if any, otherwise IEEE80211_TID_UNRESERVED)
++ * @tx_msdu_qos: QoS MSDUs transmitted to this station
++ * @tx_msdu_nonqos: non-QoS MSDUs transmitted to this station
++ * @rx_msdu: MSDUs received from this station, using IEEE80211_NUM_TID
++ *	entry for non-QoS frames
+  */
+ struct sta_info {
+ 	/* General information, mostly static */
+@@ -416,6 +420,9 @@ struct sta_info {
+ 	u32 last_rx_rate_vht_flag;
+ 	u8 last_rx_rate_vht_nss;
+ 	u16 tid_seq[IEEE80211_QOS_CTL_TID_MASK + 1];
++	u64 tx_msdu_qos[IEEE80211_NUM_TIDS];
++	u64 tx_msdu_nonqos;
++	u64 rx_msdu[IEEE80211_NUM_TIDS + 1];
+ 
+ 	/*
+ 	 * Aggregation information, locked with lock.
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 058686a721a1..5f3e29c06f64 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -815,6 +815,8 @@ ieee80211_tx_h_sequence(struct ieee80211_tx_data *tx)
+ 		/* for pure STA mode without beacons, we can do it */
+ 		hdr->seq_ctrl = cpu_to_le16(tx->sdata->sequence_number);
+ 		tx->sdata->sequence_number += 0x10;
++		if (tx->sta)
++			tx->sta->tx_msdu_nonqos++;
+ 		return TX_CONTINUE;
+ 	}
+ 
+@@ -831,6 +833,7 @@ ieee80211_tx_h_sequence(struct ieee80211_tx_data *tx)
+ 	qc = ieee80211_get_qos_ctl(hdr);
+ 	tid = *qc & IEEE80211_QOS_CTL_TID_MASK;
+ 	seq = &tx->sta->tid_seq[tid];
++	tx->sta->tx_msdu_qos[tid]++;
+ 
+ 	hdr->seq_ctrl = cpu_to_le16(*seq);
+ 
+-- 
+2.1.1
 
