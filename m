@@ -1,93 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:39192 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750757AbaLaLLA convert rfc822-to-8bit (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:57098 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751965AbaLRILY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Dec 2014 06:11:00 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Arend van Spriel <arend@broadcom.com>,
-	Jiri Kosina <jkosina@suse.cz>
-CC: Linus Torvalds <torvalds@linux-foundation.org>,
-	Borislav Petkov <bp@alien8.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"egrumbach@gmail.com" <egrumbach@gmail.com>,
-	"peter@hurleysoftware.com" <peter@hurleysoftware.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>
-Subject: RE: [PATCH] Revert "cfg80211: make WEXT compatibility unselectable"
-Date: Wed, 31 Dec 2014 11:10:54 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB31B5DD72E@hasmsx107.ger.corp.intel.com> (sfid-20141231_121121_598203_861749AA)
-References: <alpine.LNX.2.00.1412301427430.31609@pobox.suse.cz>
- <CANUX_P0=wJiKrR4cUgEN=LO+eQ2byprz0K9m9QxzJc+kf4+_bA@mail.gmail.com>
- <54A2B807.1020202@hurleysoftware.com>
- <0BA3FCBA62E2DC44AF3030971E174FB31B5DC915@hasmsx107.ger.corp.intel.com>
- <alpine.LNX.2.00.1412301610320.31609@pobox.suse.cz>
- <1419971304.30412.0.camel@egrumbacBox>
- <alpine.LNX.2.00.1412302135520.31609@pobox.suse.cz>
- <20141230212326.GA29263@pd.tnic> <54A328C2.5080606@lwfinger.net>
- <alpine.LNX.2.00.1412302341290.31609@pobox.suse.cz>
- <alpine.LNX.2.00.1412302351030.31609@pobox.suse.cz>
- <54A3D955.6020809@broadcom.com>
-In-Reply-To: <54A3D955.6020809@broadcom.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Thu, 18 Dec 2014 03:11:24 -0500
+Received: by mail-wg0-f44.google.com with SMTP id b13so895940wgh.3
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Dec 2014 00:11:22 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 3/5] iwlwifi: don't double free a pointer if no FW was found
+Date: Thu, 18 Dec 2014 10:09:59 +0200
+Message-Id: <1418890201-15177-3-git-send-email-egrumbach@gmail.com> (sfid-20141218_091128_328982_B180741A)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB31B5CD8C0@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB31B5CD8C0@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On 12/30/14 23:52, Jiri Kosina wrote:
-> > This reverts commit 24a0aa212ee2dbe44360288684478d76a8e20a0a.
-> >
-> > It's causing severe userspace breakage. Namely, all the utilities from
-> > wireless-utils which are relying on CONFIG_WEXT (which means tools
-> > like 'iwconfig', 'iwlist', etc) are not working anymore. There is a
-> > 'iw' utility in newer wireless-tools, which is supposed to be a
-> > replacement for all the "deprecated" binaries, but it's far away from
-> > being massively adopted.
-> >
-> > Please see [1] for example of the userspace breakage this is causing.
-> >
-> > In addition to that, Larry Finger reports [2] that this patch is also
-> > causing ipw2200 driver being impossible to build.
-> >
-> > To me this clearly shows that CONFIG_WEXT is far, far away from being
-> > "deprecated enough" to be removed.
-> 
-> Hi Jiri,
-> 
-> You mentioned in the discussion and I quote: "*If* wireless maintainers think
-> otherwise, I'll send a revert request to Linus for consideration.". However,
-> you did not wait for any response from the wireless maintainers nor from the
-> author of the patch you are reverting.
-> Seems like an overreaction to me though personally I do not disgree with the
-> revert itself.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Not to mention the patch has already been applied on Linus's tree...
+In the very unlikely case in which no firmware could be,
+found. the same pointer was freed twice. Fix that.
 
-> 
-> Regards,
-> Arend
-> 
-> > [1] http://thread.gmane.org/gmane.linux.kernel/1857010
-> > [2] http://thread.gmane.org/gmane.linux.network/343688
-> >
-> > Signed-off-by: Jiri Kosina<jkosina@suse.cz>
-> > ---
-> >   net/wireless/Kconfig | 2 +-
-> >   1 file changed, 1 insertion(+), 1 deletion(-)
-> >
-> > diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig index
-> > 22ba971..29c8675 100644
-> > --- a/net/wireless/Kconfig
-> > +++ b/net/wireless/Kconfig
-> > @@ -175,7 +175,7 @@ config CFG80211_INTERNAL_REGDB
-> >   	  Most distributions have a CRDA package.  So if unsure, say N.
-> >
-> >   config CFG80211_WEXT
-> > -	bool
-> > +	bool "cfg80211 wireless extensions compatibility"
-> >   	depends on CFG80211
-> >   	select WEXT_CORE
-> >   	help
+Fixes: 490fefebb6db ("iwlwifi: define the .ucode file format for debug")
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-drv.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-drv.c b/drivers/net/wireless/iwlwifi/iwl-drv.c
+index 38de151..850b85a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/iwlwifi/iwl-drv.c
+@@ -1323,10 +1323,10 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
+ 
+  try_again:
+ 	/* try next, if any */
+-	kfree(pieces);
+ 	release_firmware(ucode_raw);
+ 	if (iwl_request_firmware(drv, false))
+ 		goto out_unbind;
++	kfree(pieces);
+ 	return;
+ 
+  out_free_fw:
+-- 
+1.9.1
 
