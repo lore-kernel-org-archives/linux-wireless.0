@@ -1,130 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:12344 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751636AbaL3OTn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Dec 2014 09:19:43 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Received: from mail-wg0-f43.google.com ([74.125.82.43]:55000 "EHLO
+	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751965AbaLRILV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Dec 2014 03:11:21 -0500
+Received: by mail-wg0-f43.google.com with SMTP id l18so904410wgh.2
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Dec 2014 00:11:20 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
+Cc: Eliad Peller <eliad@wizery.com>,
+	Eliad Peller <eliadx.peller@intel.com>,
 	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 01/33] iwlwifi: remove MODULE_VERSION
-Date: Tue, 30 Dec 2014 16:18:36 +0200
-Message-Id: <1419949148-24046-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20141230_151945_929325_91F7E8D0)
-In-Reply-To: <1419948357.21410.4.camel@egrumbacBox>
-References: <1419948357.21410.4.camel@egrumbacBox>
+Subject: [PATCH 1/5] iwlwifi: mvm: clear IN_HW_RESTART flag on stop()
+Date: Thu, 18 Dec 2014 10:09:57 +0200
+Message-Id: <1418890201-15177-1-git-send-email-egrumbach@gmail.com> (sfid-20141218_091125_056547_6208D33E)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB31B5CD8C0@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB31B5CD8C0@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Eliad Peller <eliad@wizery.com>
 
-The module version "in-tree:" or "in-tree:d" is useless; there
-should be better (functional) ways to detect whether debugging
-is enabled and other than that the version says nothing.
+On stop(), we already cleared our internal state,
+and the restart_complete() callback won't be
+called, so simply clear the IN_HW_RESTART flag.
 
-Therefore remove the driver version completely.
+Keeping the flag might result in invalid state
+on the next start(), preventing the driver starting
+properly.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Additionally, don't take IWL_MVM_REF_UCODE_DOWN on stop()
+if hw restart was requested, as the ref was already
+taken in this case.
+
+Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
 Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/iwlwifi/dvm/main.c | 14 --------------
- drivers/net/wireless/iwlwifi/iwl-drv.c  | 15 +--------------
- drivers/net/wireless/iwlwifi/iwl-drv.h  |  1 -
- drivers/net/wireless/iwlwifi/mvm/ops.c  |  7 -------
- 4 files changed, 1 insertion(+), 36 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 15 +++++++++++++--
+ 1 file changed, 13 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/dvm/main.c b/drivers/net/wireless/iwlwifi/dvm/main.c
-index 0b7f46f..fcdc128 100644
---- a/drivers/net/wireless/iwlwifi/dvm/main.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/main.c
-@@ -64,22 +64,8 @@
-  *
-  ******************************************************************************/
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 31a5b3f..e880f9d 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -1004,8 +1004,13 @@ void __iwl_mvm_mac_stop(struct iwl_mvm *mvm)
+ {
+ 	lockdep_assert_held(&mvm->mutex);
  
--/*
-- * module name, copyright, version, etc.
-- */
- #define DRV_DESCRIPTION	"Intel(R) Wireless WiFi Link AGN driver for Linux"
--
--#ifdef CONFIG_IWLWIFI_DEBUG
--#define VD "d"
--#else
--#define VD
--#endif
--
--#define DRV_VERSION     IWLWIFI_VERSION VD
--
--
- MODULE_DESCRIPTION(DRV_DESCRIPTION);
--MODULE_VERSION(DRV_VERSION);
- MODULE_AUTHOR(DRV_COPYRIGHT " " DRV_AUTHOR);
- MODULE_LICENSE("GPL");
+-	/* disallow low power states when the FW is down */
+-	iwl_mvm_ref(mvm, IWL_MVM_REF_UCODE_DOWN);
++	/*
++	 * Disallow low power states when the FW is down by taking
++	 * the UCODE_DOWN ref. in case of ongoing hw restart the
++	 * ref is already taken, so don't take it again.
++	 */
++	if (!test_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status))
++		iwl_mvm_ref(mvm, IWL_MVM_REF_UCODE_DOWN);
  
-diff --git a/drivers/net/wireless/iwlwifi/iwl-drv.c b/drivers/net/wireless/iwlwifi/iwl-drv.c
-index 38de151..36ae191 100644
---- a/drivers/net/wireless/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-drv.c
-@@ -84,21 +84,8 @@
-  *
-  ******************************************************************************/
+ 	/* async_handlers_wk is now blocked */
  
--/*
-- * module name, copyright, version, etc.
-- */
- #define DRV_DESCRIPTION	"Intel(R) Wireless WiFi driver for Linux"
--
--#ifdef CONFIG_IWLWIFI_DEBUG
--#define VD "d"
--#else
--#define VD
--#endif
--
--#define DRV_VERSION     IWLWIFI_VERSION VD
--
- MODULE_DESCRIPTION(DRV_DESCRIPTION);
--MODULE_VERSION(DRV_VERSION);
- MODULE_AUTHOR(DRV_COPYRIGHT " " DRV_AUTHOR);
- MODULE_LICENSE("GPL");
+@@ -1023,6 +1028,12 @@ void __iwl_mvm_mac_stop(struct iwl_mvm *mvm)
+ 	/* the fw is stopped, the aux sta is dead: clean up driver state */
+ 	iwl_mvm_del_aux_sta(mvm);
  
-@@ -1492,7 +1479,7 @@ static int __init iwl_drv_init(void)
- 	for (i = 0; i < ARRAY_SIZE(iwlwifi_opmode_table); i++)
- 		INIT_LIST_HEAD(&iwlwifi_opmode_table[i].drv);
- 
--	pr_info(DRV_DESCRIPTION ", " DRV_VERSION "\n");
-+	pr_info(DRV_DESCRIPTION "\n");
- 	pr_info(DRV_COPYRIGHT "\n");
- 
- #ifdef CONFIG_IWLWIFI_DEBUGFS
-diff --git a/drivers/net/wireless/iwlwifi/iwl-drv.h b/drivers/net/wireless/iwlwifi/iwl-drv.h
-index be4f897..adf522c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-drv.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-drv.h
-@@ -68,7 +68,6 @@
- 
- /* for all modules */
- #define DRV_NAME        "iwlwifi"
--#define IWLWIFI_VERSION "in-tree:"
- #define DRV_COPYRIGHT	"Copyright(c) 2003- 2014 Intel Corporation"
- #define DRV_AUTHOR     "<ilw@linux.intel.com>"
- 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
-index 97dfba5..552a776 100644
---- a/drivers/net/wireless/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
-@@ -84,15 +84,8 @@
- #include "time-event.h"
- #include "iwl-fw-error-dump.h"
- 
--/*
-- * module name, copyright, version, etc.
-- */
- #define DRV_DESCRIPTION	"The new Intel(R) wireless AGN driver for Linux"
--
--#define DRV_VERSION     IWLWIFI_VERSION
--
- MODULE_DESCRIPTION(DRV_DESCRIPTION);
--MODULE_VERSION(DRV_VERSION);
- MODULE_AUTHOR(DRV_COPYRIGHT " " DRV_AUTHOR);
- MODULE_LICENSE("GPL");
++	/*
++	 * Clear IN_HW_RESTART flag when stopping the hw (as restart_complete()
++	 * won't be called in this case).
++	 */
++	clear_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status);
++
+ 	mvm->ucode_loaded = false;
+ }
  
 -- 
 1.9.1
