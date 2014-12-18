@@ -1,40 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33293 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:41602 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S967705AbaLLM7v (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Dec 2014 07:59:51 -0500
-Message-ID: <1418389179.2470.43.camel@sipsolutions.net> (sfid-20141212_135954_168842_A6A98282)
-Subject: Re: New WARNING from mac80211
+	id S1751737AbaLRN4Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Dec 2014 08:56:24 -0500
+Message-ID: <1418910981.6134.9.camel@sipsolutions.net> (sfid-20141218_145628_745961_945194E6)
+Subject: Re: [PATCH] nl80211: increase the max number of rules in regdomain
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Sujith Manoharan <sujith@msujith.org>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 12 Dec 2014 13:59:39 +0100
-In-Reply-To: <21595.39090.446262.985148@gargle.gargle.HOWL>
-References: <545B8CD1.8020208@lwfinger.net>
-	 <1415286217.17015.12.camel@sipsolutions.net>
-	 <21595.38533.767426.846290@gargle.gargle.HOWL>
-	 <21595.39090.446262.985148@gargle.gargle.HOWL>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@suse.com>
+Date: Thu, 18 Dec 2014 14:56:21 +0100
+In-Reply-To: <1418832044-25582-1-git-send-email-arik@wizery.com> (sfid-20141217_170045_082207_4F64BED6)
+References: <1418832044-25582-1-git-send-email-arik@wizery.com>
+	 (sfid-20141217_170045_082207_4F64BED6)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2014-11-06 at 21:20 +0530, Sujith Manoharan wrote:
-> Sujith Manoharan wrote:
-> > I think this is the race described here: https://patchwork.kernel.org/patch/5095061/
-> > 
-> > I haven't tried any workaround or fix yet, but it looks like this
-> > race can be hit fairly often.
-> > 
-> > https://dev.openwrt.org/ticket/9654
-> > https://dev.openwrt.org/ticket/11862
-> > https://dev.openwrt.org/ticket/13542
-> 
-> I dug out an old trace: http://pastebin.com/raw.php?i=Qj8aXJhB
+On Wed, 2014-12-17 at 18:00 +0200, Arik Nemtsov wrote:
+> Some network cards (Intel) produce per-channel regdomains and rely on
+> cfg80211 to merge rules as needed. This hits the max rules limit and
+> fails.
 
-Would it be worthwhile to simply remove the warning and document how we
-can get there?
+Maybe we should consider just getting rid of this or bumping it to
+something ridiculously large like 1000? Looking at how this is (not)
+used, there's no real sense in limiting it. The only possible problem is
+the O(n^2) complexity when doing an intersection, but processing a
+million combinations is probably not a big deal? In fact, even if that
+becomes a problem, we can easily optimise that complexity away by
+sorting the rules or so. Then it becomes O(n log n)...
 
 johannes
 
