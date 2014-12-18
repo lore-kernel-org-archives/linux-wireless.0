@@ -1,78 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f49.google.com ([209.85.215.49]:47430 "EHLO
-	mail-la0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750999AbaLQUqX (ORCPT
+Received: from mail-ob0-f172.google.com ([209.85.214.172]:57118 "EHLO
+	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752420AbaLRJGA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Dec 2014 15:46:23 -0500
-Date: Wed, 17 Dec 2014 22:46:14 +0200
-From: Johan Hedberg <johan.hedberg@gmail.com>
-To: davem@davemloft.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: pull request: bluetooth 2014-12-17
-Message-ID: <20141217204614.GA15480@t440s.P-661HNU-F1> (sfid-20141217_214643_612240_C4B07C9A)
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="sm4nu43k4a2Rpi4c"
+	Thu, 18 Dec 2014 04:06:00 -0500
+Received: by mail-ob0-f172.google.com with SMTP id va8so2354053obc.3
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Dec 2014 01:05:59 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH 03/16] rtlwifi: rtl8192ce: Add code to set the keep-alive operation
+Date: Thu, 18 Dec 2014 03:05:27 -0600
+Message-Id: <1418893540-19944-4-git-send-email-Larry.Finger@lwfinger.net> (sfid-20141218_100610_567540_07F93E11)
+In-Reply-To: <1418893540-19944-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1418893540-19944-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This change helps the device maintain a connection.
 
---sm4nu43k4a2Rpi4c
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-
-Hi Dave,
-
-Here's the first direct (i.e. skipping the wireless tree) bluetooth pull
-request for you, intended for 3.19. It's just one patch: a fix from
-Marcel for for remote service discovery filtering which also fixes a
-'used uninitialized' compiler warning.
-
-Please let me know if there are any issues pulling. Thanks.
-
-Johan
-
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
-The following changes since commit 65891feac27e26115dc4cce881743a1ac33372df:
+ drivers/net/wireless/rtlwifi/rtl8192c/fw_common.h | 1 +
+ drivers/net/wireless/rtlwifi/rtl8192ce/hw.c       | 9 +++++++--
+ 2 files changed, 8 insertions(+), 2 deletions(-)
 
-  net: Disallow providing non zero VLAN ID for NIC drivers FDB add flow (2014-12-16 15:41:19 -0500)
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.h b/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.h
+index b64ae45..e9f4281 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.h
+@@ -37,6 +37,7 @@
+ #define FW_8192C_POLLING_DELAY			5
+ #define FW_8192C_POLLING_TIMEOUT_COUNT		100
+ #define NORMAL_CHIP				BIT(4)
++#define H2C_92C_KEEP_ALIVE_CTRL			48
+ 
+ #define IS_FW_HEADER_EXIST(_pfwhdr)	\
+ 	((le16_to_cpu(_pfwhdr->signature)&0xFFF0) == 0x92C0 ||\
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+index 5c646d5..b63b78b 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+@@ -544,8 +544,13 @@ void rtl92ce_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
+ 						(u8 *)(&fw_current_inps));
+ 			}
+ 		break; }
+-	case HW_VAR_KEEP_ALIVE:
+-		break;
++	case HW_VAR_KEEP_ALIVE: {
++		u8 array[2];
++
++		array[0] = 0xff;
++		array[1] = *((u8 *)val);
++		rtl92c_fill_h2c_cmd(hw, H2C_92C_KEEP_ALIVE_CTRL, 2, array);
++		break; }
+ 	default:
+ 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+ 			 "switch case %d not processed\n", variable);
+-- 
+2.1.2
 
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth.git for-upstream
-
-for you to fetch changes up to ea8ae2516ac43028a01c40b58ffa80d3b0afb802:
-
-  Bluetooth: Fix bug with filter in service discovery optimization (2014-12-17 22:03:49 +0200)
-
-----------------------------------------------------------------
-Marcel Holtmann (1):
-      Bluetooth: Fix bug with filter in service discovery optimization
-
- net/bluetooth/mgmt.c | 14 +++++++++-----
- 1 file changed, 9 insertions(+), 5 deletions(-)
-
-
---sm4nu43k4a2Rpi4c
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJUkeuWAAoJECQj9vv5qNQSG0wQAKs/rxSc+p+v15Cl93vjjNDX
-kQGKomzrD8FYbFul7wFs63zB50yPR3enQr/93TyxDq5vMj+AD623sOBAUoYPsaSu
-SebzOrGFnsOjhHTLNH++luQSQFu/8mzJbZRILJCgbADVZ3j9AHleIiLkkzE/E7vX
-izGLu8MQl2hZsDU34JD4wPOSXHCO1TU4jrLipn2zit6MNe7ul165NfFeNjRtmnP8
-6s9eh6SwMRWILQT/Rm55/kTD9GfwF+IPj3JPu56QJG3flqF0OUHtRvHMl+ZrMa4J
-yGfI9ARhm9LW1l676Feg8OeqCQsE4Typ8xMUgPjaO9KoaJsqHJ8cnx96iGBbUTVQ
-OdeYYeFbjdIQkM702bPo69hwezIzcOBK6KBdc2s4WaAtUNC1+F0KoFciFhMuLeLy
-OVcqFcHsVon2DEpKwB9DBTNcr1uL2ATmMUunZIbeuIZYEMLQZdNnQjau2fSPchxV
-+cmP/jdKUR/wP4XoffUEhyn//fc9WMSwtfiajqubBb/MCTRgfAQxHq0JsIVa2qpo
-C0K2Nw2QL1XWXmr3xbxeTNT78M9G4iPqs5AcYH6llpfRruY2pY0P09JOjMMOvgin
-Zx9iJ9TsHJmQNufBsAwxkyM8vrmqUiO3w7H/E6J0M7a1rB2YNFDmu9rmNJwMLSXQ
-0fRuNgxzF4GaFKQiPzlY
-=JkT0
------END PGP SIGNATURE-----
-
---sm4nu43k4a2Rpi4c--
