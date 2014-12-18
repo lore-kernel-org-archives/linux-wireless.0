@@ -1,67 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:45888 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966899AbaLLLyd (ORCPT
+Received: from mail-ob0-f171.google.com ([209.85.214.171]:64840 "EHLO
+	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751323AbaLRGcF convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Dec 2014 06:54:33 -0500
-Received: by mail-wi0-f179.google.com with SMTP id ex7so2303207wid.6
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Dec 2014 03:54:32 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 3/5] ath10k: prevent invalid ps timeout config
-Date: Fri, 12 Dec 2014 12:41:37 +0100
-Message-Id: <1418384499-31660-4-git-send-email-michal.kazior@tieto.com> (sfid-20141212_125506_614107_4F73CB3E)
-In-Reply-To: <1418384499-31660-1-git-send-email-michal.kazior@tieto.com>
-References: <1418214714-29689-1-git-send-email-michal.kazior@tieto.com>
- <1418384499-31660-1-git-send-email-michal.kazior@tieto.com>
+	Thu, 18 Dec 2014 01:32:05 -0500
+MIME-Version: 1.0
+In-Reply-To: <1418204358-8357-1-git-send-email-computersforpeace@gmail.com>
+References: <1418204358-8357-1-git-send-email-computersforpeace@gmail.com>
+Date: Wed, 17 Dec 2014 22:32:04 -0800
+Message-ID: <CAN8TOE--Vfa1L8dcoV=up1bA+QX0_=+DkdDa7fAv6DJBF8PHow@mail.gmail.com> (sfid-20141218_073428_083562_E7FAA59E)
+Subject: Re: [PATCH] brcmsmac: don't leak kernel memory via printk()
+From: Brian Norris <computersforpeace@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	"David S. Miller" <davem@davemloft.net>
+Cc: Brian Norris <computersforpeace@gmail.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	netdev@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Setting 0 ps timeout to firmware yields very poor
-latency and traffic issues. This is the case when
-multi-vif is active.
++ others [1]
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
+On Wed, Dec 10, 2014 at 1:39 AM, Brian Norris
+<computersforpeace@gmail.com> wrote:
+> Debug code prints the fifo name via custom dev_warn() wrappers. The
+> fifo_names array is only non-zero when debugging is manually enabled,
+> which is all well and good. However, it's *not* good that this array
+> uses zero-length arrays in the non-debug case, and so it doesn't
+> actually have any memory allocated to it. This means that as far as we
+> know, fifo_names[i] actually points to garbage memory.
+>
+> I've seen this in my log:
+>
+> [ 4601.205511] brcmsmac bcma0:1: wl0: brcms_c_d11hdrs_mac80211: �GeL txop exceeded phylen 137/256 dur 1602/1504
+>
+> So let's give this array space enough to fill it with a NULL byte.
+>
+> Signed-off-by: Brian Norris <computersforpeace@gmail.com>
+> Cc: Brett Rudley <brudley@broadcom.com>
+> Cc: Arend van Spriel <arend@broadcom.com>
+> Cc: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>
+> Cc: Hante Meuleman <meuleman@broadcom.com>
+> Cc: "John W. Linville" <linville@tuxdriver.com>
+> Cc: linux-wireless@vger.kernel.org
+> Cc: brcm80211-dev-list@broadcom.com
+> Cc: netdev@vger.kernel.org
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 13c2bad..2804952 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -1105,10 +1105,12 @@ static int ath10k_mac_vif_recalc_ps_poll_count(struct ath10k_vif *arvif)
- static int ath10k_mac_vif_setup_ps(struct ath10k_vif *arvif)
- {
- 	struct ath10k *ar = arvif->ar;
-+	struct ieee80211_vif *vif = arvif->vif;
- 	struct ieee80211_conf *conf = &ar->hw->conf;
- 	enum wmi_sta_powersave_param param;
- 	enum wmi_sta_ps_mode psmode;
- 	int ret;
-+	int ps_timeout;
- 
- 	lockdep_assert_held(&arvif->ar->conf_mutex);
- 
-@@ -1119,8 +1121,15 @@ static int ath10k_mac_vif_setup_ps(struct ath10k_vif *arvif)
- 		psmode = WMI_STA_PS_MODE_ENABLED;
- 		param = WMI_STA_PS_PARAM_INACTIVITY_TIME;
- 
-+		ps_timeout = conf->dynamic_ps_timeout;
-+		if (ps_timeout == 0) {
-+			/* Firmware doesn't like 0 */
-+			ps_timeout = ieee80211_tu_to_usec(
-+				vif->bss_conf.beacon_int) / 1000;
-+		}
-+
- 		ret = ath10k_wmi_set_sta_ps_param(ar, arvif->vdev_id, param,
--						  conf->dynamic_ps_timeout);
-+						  ps_timeout);
- 		if (ret) {
- 			ath10k_warn(ar, "failed to set inactivity time for vdev %d: %i\n",
- 				    arvif->vdev_id, ret);
--- 
-1.8.5.3
+BTW, I guess this qualifies as a security hole, albeit a small one.
+Should this be CC: stable@vger.kernel.org?
 
+> ---
+>  drivers/net/wireless/brcm80211/brcmsmac/main.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+> index 1b474828d5b8..aed0c948dce8 100644
+> --- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
+> +++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+> @@ -316,7 +316,7 @@ static const u16 xmtfifo_sz[][NFIFO] = {
+>  static const char * const fifo_names[] = {
+>         "AC_BK", "AC_BE", "AC_VI", "AC_VO", "BCMC", "ATIM" };
+>  #else
+> -static const char fifo_names[6][0];
+> +static const char fifo_names[6][1];
+>  #endif
+>
+>  #ifdef DEBUG
+
+Brian
+
+[1] http://lwn.net/Articles/626689/
