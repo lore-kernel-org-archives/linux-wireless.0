@@ -1,64 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:17526 "EHLO
-	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751858AbaLZOm3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Dec 2014 09:42:29 -0500
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: kernel-janitors@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 18/27] iwl4965: Use setup_timer
-Date: Fri, 26 Dec 2014 15:35:48 +0100
-Message-Id: <1419604558-29743-18-git-send-email-Julia.Lawall@lip6.fr> (sfid-20141226_155000_758543_8CAB81DA)
-In-Reply-To: <1419604558-29743-1-git-send-email-Julia.Lawall@lip6.fr>
-References: <1419604558-29743-1-git-send-email-Julia.Lawall@lip6.fr>
+Received: from s3.sipsolutions.net ([5.9.151.49]:41589 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750968AbaLRNvu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Dec 2014 08:51:50 -0500
+Message-ID: <1418910705.6134.7.camel@sipsolutions.net> (sfid-20141218_145153_594429_B03B997C)
+Subject: Re: [RFC] cfg80211: Add feature flag for 4-way handshake offload
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eliad Peller <eliad@wizery.com>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Gautam Kumar Shukla <gautams@broadcom.com>
+Date: Thu, 18 Dec 2014 14:51:45 +0100
+In-Reply-To: <CAB3XZEcF0r2fMD1GSw+ojWrsO7bxdxBfvQwLkZpTu4RP-iQtTg@mail.gmail.com> (sfid-20141218_144439_055976_B01A1198)
+References: <1418907095-10224-1-git-send-email-arend@broadcom.com>
+	 <CAB3XZEcF0r2fMD1GSw+ojWrsO7bxdxBfvQwLkZpTu4RP-iQtTg@mail.gmail.com>
+	 (sfid-20141218_144439_055976_B01A1198)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Convert a call to init_timer and accompanying intializations of
-the timer's data and function fields to a call to setup_timer.
+On Thu, 2014-12-18 at 15:44 +0200, Eliad Peller wrote:
+> >         u32 flags, regulatory_flags, features;
+> > +       u8 ext_features[1];
+> >
+> i think it would be nicer to use unsigned long (instead of u8) along
+> with BITS_TO_LONGS
 
-A simplified version of the semantic match that fixes this problem is as
-follows: (http://coccinelle.lip6.fr/)
+That works in the kernel, but not in the userspace API. We can do it on
+the kernel side, but then we have to write a translation loop in
+nl80211. I'm not sure that's worth it.
 
-// <smpl>
-@@
-expression t,f,d;
-@@
+> >  /**
+> > + * enum nl80211_ext_feature_index - bit index of extended features.
+> > + *
+> > + * @NL80211_EXT_FEATURE_4WAY_HANDSHAKE: the device supports 4way handshake
+> > + */
+> > +enum nl80211_ext_feature_index {
+> > +       NL80211_EXT_FEATURE_4WAY_HANDSHAKE,
+> > +};
+> 
+> just add the standard LAST/MAX defines here, and the bitmap size will
+> be allocated automatically.
 
--init_timer(&t);
-+setup_timer(&t,f,d);
--t.data = d;
--t.function = f;
-// </smpl>
+If you add a max here then we just have to hope that in userspace nobody
+abuses it ... but I guess we can and should do that to size the flags
+array properly automatically. The problem is that if somebody tries to
+use it in userspace for parsing, like
+  u8 eflags[DIV_ROUND_UP(FEATURE_MAX, 8)];
+  memcpy(eflags, nla_data(attr), nla_len(attr));
 
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+then surely that will cause memory corruption... so we should probably
+add a note or something there.
 
----
- drivers/net/wireless/iwlegacy/4965-mac.c |    9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
+> and these (or only the implementations) could be replaced by set_bit/test_bit.
 
-diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
-index 2748fde..976f65f 100644
---- a/drivers/net/wireless/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/iwlegacy/4965-mac.c
-@@ -6247,13 +6247,10 @@ il4965_setup_deferred_work(struct il_priv *il)
- 
- 	INIT_WORK(&il->txpower_work, il4965_bg_txpower_work);
- 
--	init_timer(&il->stats_periodic);
--	il->stats_periodic.data = (unsigned long)il;
--	il->stats_periodic.function = il4965_bg_stats_periodic;
-+	setup_timer(&il->stats_periodic, il4965_bg_stats_periodic,
-+		    (unsigned long)il);
- 
--	init_timer(&il->watchdog);
--	il->watchdog.data = (unsigned long)il;
--	il->watchdog.function = il_bg_watchdog;
-+	setup_timer(&il->watchdog, il_bg_watchdog, (unsigned long)il);
- 
- 	tasklet_init(&il->irq_tasklet,
- 		     (void (*)(unsigned long))il4965_irq_tasklet,
+They could - but as I said above then we have to translate this to
+userspace. The problem with the unsigned long array thing is that the
+size of unsigned long varies on different platforms (32 vs 64 bit) and
+not all platforms are little endian where that wouldn't matter ...
+
+Maybe the better choice would be to create u8 bitmap helper functions -
+after all we already have them in at least 2 other places in wifi:
+ * TIM IE
+ * extended capabilities IE
+
+Probably there are others elsewhere?
+
+johannes
 
