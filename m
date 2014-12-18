@@ -1,141 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:39527 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750707AbaLCHsd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Dec 2014 02:48:33 -0500
-Message-ID: <1417592902.2640.1.camel@sipsolutions.net> (sfid-20141203_084838_040850_BB512F1C)
-Subject: pull-request: mac80211-next 2014-12-03
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 03 Dec 2014 08:48:22 +0100
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-JE9C5gYSyOyUXx+BUjXA"
-Mime-Version: 1.0
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:36031 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752163AbaLRILW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Dec 2014 03:11:22 -0500
+Received: by mail-wi0-f181.google.com with SMTP id r20so867647wiv.8
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Dec 2014 00:11:21 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 2/5] iwlwifi: pcie: re-ACK all interrupts after device reset
+Date: Thu, 18 Dec 2014 10:09:58 +0200
+Message-Id: <1418890201-15177-2-git-send-email-egrumbach@gmail.com> (sfid-20141218_091126_706245_2F67AE9B)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB31B5CD8C0@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB31B5CD8C0@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
---=-JE9C5gYSyOyUXx+BUjXA
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+When we reset the device, the CSR_INT gets cleared as well
+as CSR_INT_MASK. Meaning that we shouldn't get any interrupt
+but, due to a hardware bug, recent devices will keep sending
+interrupts. This leads to an interrupt storm while stopping
+the device.
+The way to fix this is to ACK all the interrupts after the
+device is reset so that the value of CSR_INT will stay
+0xffffffff.
 
-Hi John,
+Fixes: 522713c81e4e ("iwlwifi: pcie: properly reset the device")
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/pcie/trans.c | 15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
 
-Yes, you were right - I must have missed that you merged my other pull
-request. I hope you can still pull this in time for the next merge
-window.
-
-Unfortunately I can't send a signed tag because I forgot my yubikey at
-home and thus can't upload anything to kernel.org. I hope you can accept
-signed pgp email instead.
-
-This time I have Felix's no-status rate control work, which will allow
-drivers to work better with rate control even if they don't have perfect
-status reporting. In addition to this, a small hwsim fix from Patrik,
-one of the regulatory patches from Arik, and a number of cleanups and
-fixes I did myself.
-
-Of note is a patch where I disable CFG80211_WEXT so that compatibility
-is no longer selectable - this is intended as a wake-up call for anyone
-who's still using it, and is still easily worked around (it's a one-line
-patch) before we fully remove the code as well in the future.
-
-Let me know if there's any problem.
-
-johannes
-
-
-
-The following changes since commit 75769c80e381653994293b5aa5a8cfec50088f9f=
-:
-
-  mac80211: minstrel_ht: add a small optimization to minstrel_aggr_check (2=
-014-11-19 19:31:07 +0100)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git=20
-
-for you to fetch changes up to f027c2aca0cf43e0f15fc8de8841f7b566163d94:
-
-  mac80211: add ieee80211_tx_status_noskb (2014-11-28 15:01:51 +0100)
-
-----------------------------------------------------------------
-Arik Nemtsov (1):
-      cfg80211: leave invalid channels on regdomain change
-
-Felix Fietkau (9):
-      mac80211: copy chandef from AP vif to VLANs
-      mac80211: add more missing checks for VHT tx rates
-      mac80211: minstrel_ht: move aggregation check to .get_rate()
-      mac80211: add tx_status_noskb to rate_control_ops
-      mac80211: minstrel: switch to .tx_status_noskb
-      mac80211: minstrel_ht: switch to .tx_status_noskb
-      mac80211: pass tx info to ieee80211_lost_packet instead of an skb
-      mac0211: add a helper function for fixing up tx status rates
-      mac80211: add ieee80211_tx_status_noskb
-
-Johannes Berg (9):
-      Revert "mac80211_hwsim: VHT add 160MHz width support"
-      mac80211: disable 80+80/160 in VHT correctly
-      cfg80211: remove pointless channel lookup in survey code
-      mac80211: check if channels allow 80 MHz for VHT probe requests
-      cfg80211: refactor the various CQM event sending code
-      cfg80211: clean up beacon loss CQM event
-      nl80211: don't crash sending invalid chandef
-      cfg80211: make WEXT compatibility unselectable
-      cfg80211: remove unneeded initialisations in nl80211_set_reg
-
-Patrik Flykt (1):
-      mac80211_hwsim: Send alpha2 only if non-zero
-
- drivers/net/wireless/mac80211_hwsim.c  |   5 +-
- drivers/net/wireless/ti/wlcore/event.c |   5 +-
- include/net/cfg80211.h                 |  63 ++++----
- include/net/mac80211.h                 |  32 ++++
- include/net/regulatory.h               |  12 ++
- include/uapi/linux/nl80211.h           |   7 +-
- net/mac80211/chan.c                    |  23 ++-
- net/mac80211/iface.c                   |   1 +
- net/mac80211/mlme.c                    |  24 ++-
- net/mac80211/rate.c                    |   3 +-
- net/mac80211/rate.h                    |  24 ++-
- net/mac80211/rc80211_minstrel.c        |   5 +-
- net/mac80211/rc80211_minstrel_ht.c     |  15 +-
- net/mac80211/status.c                  | 113 +++++++++++---
- net/mac80211/trace.h                   |   6 +
- net/mac80211/tx.c                      |   2 +-
- net/mac80211/util.c                    |  11 +-
- net/wireless/Kconfig                   |   2 +-
- net/wireless/core.c                    |  14 ++
- net/wireless/nl80211.c                 | 260 ++++++++++++++++-------------=
-----
- net/wireless/reg.c                     | 107 +++++++++++++-
- 21 files changed, 517 insertions(+), 217 deletions(-)
-
-
---=-JE9C5gYSyOyUXx+BUjXA
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABCAAGBQJUfsBJAAoJEDBSmw7B7bqrp7AP+QGyeuJzmWeUTuaGBvOktg85
-HYxlatgexml5+mgXhKhb4F2dbxWaIUD3CopsjKm63fgLpYXDny/VckiTfFYvmX+i
-1jqLFOiNikk119zzwltr5c/qQWBvHz/99yFwbuwpSNJytZDt8CCSOTvPKyIx9fB8
-GMxqD1u3frcyXFdF+jdQ1fpT2KPfCkHwkLFt7EURKvEekZB8RtY6cQJjG2rtydug
-Z1qKAdBZu8kIHpQvMSJEqRm8IpSRSqPBM+hQNYYVIUXLNz0Uc8SAQy5otN5ijvbu
-EBhhefsxSjUqbFH9HIKOtWHtPubDvFsLL+xk5SDPwXibje9ZhqI33pfkAQdcGwct
-R9ncZFTVhJuKqy/GrduooO0GI2iT19LZXDrz+MDU0OTUMLXjJuw65Q+83fNxLTFg
-GGHB7QW2ROl/6yHSw6WUk6tBOV8yA0iAZzGhF9O5rSG+lEtJBQF+u1M36zShD0WE
-QIWWud+DLUdJ3NmxirnLBSrk0H5NIQ6QVDOOKJyu2fINnE3p4n2IKFl29ZD911BR
-lOKq331Dz7UxMPc3V5rgjZaIVuag+93oS2IGXGxAVuce25f08IC7LhAnaZ0wnQ3w
-DSHsbztp3DZCjbppC7v8rTroOMnT88b5Y/7AlDEbfimtm2toeZXQs0znHKn2Yj9x
-UH+sriDnoX1afxWKZmlf
-=7bVE
------END PGP SIGNATURE-----
-
---=-JE9C5gYSyOyUXx+BUjXA--
+diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
+index 5d79a1f..d151af3 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
+@@ -1012,16 +1012,21 @@ static void iwl_trans_pcie_stop_device(struct iwl_trans *trans)
+ 	/* Stop the device, and put it in low power state */
+ 	iwl_pcie_apm_stop(trans);
+ 
+-	/* Upon stop, the APM issues an interrupt if HW RF kill is set.
+-	 * Clean again the interrupt here
++	/* stop and reset the on-board processor */
++	iwl_write32(trans, CSR_RESET, CSR_RESET_REG_FLAG_SW_RESET);
++	udelay(20);
++
++	/*
++	 * Upon stop, the APM issues an interrupt if HW RF kill is set.
++	 * This is a bug in certain verions of the hardware.
++	 * Certain devices also keep sending HW RF kill interrupt all
++	 * the time, unless the interrupt is ACKed even if the interrupt
++	 * should be masked. Re-ACK all the interrupts here.
+ 	 */
+ 	spin_lock(&trans_pcie->irq_lock);
+ 	iwl_disable_interrupts(trans);
+ 	spin_unlock(&trans_pcie->irq_lock);
+ 
+-	/* stop and reset the on-board processor */
+-	iwl_write32(trans, CSR_RESET, CSR_RESET_REG_FLAG_SW_RESET);
+-	udelay(20);
+ 
+ 	/* clear all status bits */
+ 	clear_bit(STATUS_SYNC_HCMD_ACTIVE, &trans->status);
+-- 
+1.9.1
 
