@@ -1,48 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([46.140.151.2]:59803 "EHLO mail.neratec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750953AbaLSP4k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Dec 2014 10:56:40 -0500
-Message-ID: <54944AB4.7050208@neratec.com> (sfid-20141219_165643_099599_EAF4C46E)
-Date: Fri, 19 Dec 2014 16:56:36 +0100
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:24485 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751033AbaLRR4l (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Dec 2014 12:56:41 -0500
+Message-ID: <54931556.7020302@broadcom.com> (sfid-20141218_185644_437397_BDA76B8E)
+Date: Thu, 18 Dec 2014 18:56:38 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: DFS CAC time
-References: <CAGXE3d8Uv01qjfvRQkMr1w_5wB6XKpC7d2VOR3UG0DMPHk6r9A@mail.gmail.com>	<54940B8C.5070801@neratec.com> <CAGXE3d9ZubxEoeV+uD9GHJiAa7aB_NM87OfddNa4SC5CQkjNuA@mail.gmail.com>
-In-Reply-To: <CAGXE3d9ZubxEoeV+uD9GHJiAa7aB_NM87OfddNa4SC5CQkjNuA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Gautam Kumar Shukla <gautams@broadcom.com>
+Subject: Re: [RFC] cfg80211: Add feature flag for 4-way handshake offload
+References: <1418907095-10224-1-git-send-email-arend@broadcom.com> <1418909497.6134.5.camel@sipsolutions.net>
+In-Reply-To: <1418909497.6134.5.camel@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/19/2014 02:19 PM, Helmut Schaa wrote:
-> Hi Zefir,
-> 
-> On Fri, Dec 19, 2014 at 12:27 PM, Zefir Kurtisi
-> <zefir.kurtisi@neratec.com> wrote:
->>
->> Hello Helmut,
->>
->> just forget about those aka 'weather channels' that require a pracitcally
->> impossible to achieve radar detection probability rate (99.99% during CAC, see
->> table D.5).
-> 
-> Hmm, ok :)
-> 
-> Would it make sense to mark these somehow in the wireless-regdb in a
-> special way?
-> 
+On 12/18/14 14:31, Johannes Berg wrote:
+> On Thu, 2014-12-18 at 13:51 +0100, Arend van Spriel wrote:
+>
+>> Here the proposed way to deal with new feature flags. Let
+>> me know if this is suitable.
+>
+> I guess that works. I think those functions should be inlines - no point
+> in having them with export symbol etc (the structures needed for that
+> are *far* bigger than the functions.)
 
-To reflect the fact that channels are available from regulatory's point of view
-but not usable from driver's perspective, the correct way would be to
-* set the correct CAC time in crda
-* disable them in the driver internal regdb
+Ok. I should do some self-learning about the things going on behind the 
+scene called EXPORT_SYMBOL. Thanks.
 
-In practice, that's an overhead to manage channels that we know will never be
-available for WLAN master devices.
-
-
-Cheers,
-Zefir
-
+Regards,
+Arend
